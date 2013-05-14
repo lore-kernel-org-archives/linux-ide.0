@@ -1,52 +1,235 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH #for-3.10] libata: export ata_port port_no attribute via
- /sys
-Date: Tue, 14 May 2013 11:00:33 -0700
-Message-ID: <20130514180033.GL6795@mtj.dyndns.org>
-References: <1367962842-32299-1-git-send-email-dmilburn@redhat.com>
+Subject: [PATCH libata/for-3.10-fixes] libata: update "Maintained by:" tags
+Date: Tue, 14 May 2013 11:15:31 -0700
+Message-ID: <20130514181531.GM6795@mtj.dyndns.org>
+References: <20130507171921.GB5531@mtj.dyndns.org>
+ <51896BDF.5070101@pobox.com>
+ <20130507213011.GA14082@mtj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yh0-f44.google.com ([209.85.213.44]:34874 "EHLO
-	mail-yh0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753207Ab3ENSAj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 May 2013 14:00:39 -0400
-Received: by mail-yh0-f44.google.com with SMTP id 29so172096yhl.17
-        for <linux-ide@vger.kernel.org>; Tue, 14 May 2013 11:00:38 -0700 (PDT)
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1367962842-32299-1-git-send-email-dmilburn@redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <20130507213011.GA14082@mtj.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Milburn <dmilburn@redhat.com>
-Cc: linux-ide@vger.kernel.org, kay.sievers@vrfy.org, coughlan@redhat.com, fengguang.wu@intel.com, gwendal@google.com, hare@suse.de
 
-Hello,
+(Removed Linus from cc)
 
-On Tue, May 07, 2013 at 04:40:42PM -0500, David Milburn wrote:
-> While registering host controller track port number based upon number
-> of ports available on the controller, export port_no attribute through
-> /sys.
-> 
-> # pwd
-> /sys/devices/pci0000:00/0000:00:1f.2/ata8/ata_port/ata8
-> # ll
-> total 0
-> lrwxrwxrwx. 1 root root    0 Mar  6 12:43 device -> ../../../ata8
-> -r--r--r--. 1 root root 4096 Mar  6 12:43 idle_irq
-> -r--r--r--. 1 root root 4096 Mar  6 12:43 nr_pmp_links
-> -r--r--r--. 1 root root 4096 Mar  6 12:43 port_no
-> drwxr-xr-x. 2 root root    0 Mar  6 12:42 power
-> lrwxrwxrwx. 1 root root    0 Mar  6 12:41 subsystem -> ../../../../../../class/ata_port
-> -rw-r--r--. 1 root root 4096 Mar  6 12:40 uevent
-> # cat port_no
-> 1
-> 
-> Signed-off-by: David Milburn <dmilburn@redhat.com>
+The following patch has been applied to libata/for-3.10-fixes.  Will
+push out to Linus with the next batch of updates.
 
-No objection but can you please include in the commit message why this
-is necessary and who's gonna make use of it?
+Thanks!
 
-Thanks.
+>From 8c3d3d4b12bf8de8c59fe1eb1bf866a8676ca309 Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj@kernel.org>
+Date: Tue, 14 May 2013 11:09:50 -0700
 
+Jeff moved on to a greener pasture.
+
+ s/Maintained by: Jeff Garzik/Maintained by: Tejun Heo/g
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Jeff Garzik <jgarzik@pobox.com>
+---
+ drivers/ata/acard-ahci.c   | 2 +-
+ drivers/ata/ahci.c         | 2 +-
+ drivers/ata/ahci.h         | 2 +-
+ drivers/ata/ata_piix.c     | 2 +-
+ drivers/ata/libahci.c      | 2 +-
+ drivers/ata/libata-core.c  | 2 +-
+ drivers/ata/libata-eh.c    | 2 +-
+ drivers/ata/libata-scsi.c  | 2 +-
+ drivers/ata/libata-sff.c   | 2 +-
+ drivers/ata/pdc_adma.c     | 2 +-
+ drivers/ata/sata_promise.c | 2 +-
+ drivers/ata/sata_sil.c     | 2 +-
+ drivers/ata/sata_sx4.c     | 2 +-
+ drivers/ata/sata_via.c     | 2 +-
+ 14 files changed, 14 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/ata/acard-ahci.c b/drivers/ata/acard-ahci.c
+index 4e94ba2..9d0cf01 100644
+--- a/drivers/ata/acard-ahci.c
++++ b/drivers/ata/acard-ahci.c
+@@ -2,7 +2,7 @@
+ /*
+  *  acard-ahci.c - ACard AHCI SATA support
+  *
+- *  Maintained by:  Jeff Garzik <jgarzik@pobox.com>
++ *  Maintained by:  Tejun Heo <tj@kernel.org>
+  *		    Please ALWAYS copy linux-ide@vger.kernel.org
+  *		    on emails.
+  *
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 251e57d..2180876 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1,7 +1,7 @@
+ /*
+  *  ahci.c - AHCI SATA support
+  *
+- *  Maintained by:  Jeff Garzik <jgarzik@pobox.com>
++ *  Maintained by:  Tejun Heo <tj@kernel.org>
+  *    		    Please ALWAYS copy linux-ide@vger.kernel.org
+  *		    on emails.
+  *
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index b830e6c..10b14d4 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -1,7 +1,7 @@
+ /*
+  *  ahci.h - Common AHCI SATA definitions and declarations
+  *
+- *  Maintained by:  Jeff Garzik <jgarzik@pobox.com>
++ *  Maintained by:  Tejun Heo <tj@kernel.org>
+  *    		    Please ALWAYS copy linux-ide@vger.kernel.org
+  *		    on emails.
+  *
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 2f48123..26bda6e 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -1,7 +1,7 @@
+ /*
+  *    ata_piix.c - Intel PATA/SATA controllers
+  *
+- *    Maintained by:  Jeff Garzik <jgarzik@pobox.com>
++ *    Maintained by:  Tejun Heo <tj@kernel.org>
+  *    		    Please ALWAYS copy linux-ide@vger.kernel.org
+  *		    on emails.
+  *
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 34c8216..a70ff15 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -1,7 +1,7 @@
+ /*
+  *  libahci.c - Common AHCI SATA low-level routines
+  *
+- *  Maintained by:  Jeff Garzik <jgarzik@pobox.com>
++ *  Maintained by:  Tejun Heo <tj@kernel.org>
+  *    		    Please ALWAYS copy linux-ide@vger.kernel.org
+  *		    on emails.
+  *
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 63c743b..d35524c 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -1,7 +1,7 @@
+ /*
+  *  libata-core.c - helper library for ATA
+  *
+- *  Maintained by:  Jeff Garzik <jgarzik@pobox.com>
++ *  Maintained by:  Tejun Heo <tj@kernel.org>
+  *    		    Please ALWAYS copy linux-ide@vger.kernel.org
+  *		    on emails.
+  *
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index f9476fb..c69fcce 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1,7 +1,7 @@
+ /*
+  *  libata-eh.c - libata error handling
+  *
+- *  Maintained by:  Jeff Garzik <jgarzik@pobox.com>
++ *  Maintained by:  Tejun Heo <tj@kernel.org>
+  *    		    Please ALWAYS copy linux-ide@vger.kernel.org
+  *		    on emails.
+  *
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index dd310b27..0101af5 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1,7 +1,7 @@
+ /*
+  *  libata-scsi.c - helper library for ATA
+  *
+- *  Maintained by:  Jeff Garzik <jgarzik@pobox.com>
++ *  Maintained by:  Tejun Heo <tj@kernel.org>
+  *    		    Please ALWAYS copy linux-ide@vger.kernel.org
+  *		    on emails.
+  *
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index d8af325..b603720 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -1,7 +1,7 @@
+ /*
+  *  libata-sff.c - helper library for PCI IDE BMDMA
+  *
+- *  Maintained by:  Jeff Garzik <jgarzik@pobox.com>
++ *  Maintained by:  Tejun Heo <tj@kernel.org>
+  *    		    Please ALWAYS copy linux-ide@vger.kernel.org
+  *		    on emails.
+  *
+diff --git a/drivers/ata/pdc_adma.c b/drivers/ata/pdc_adma.c
+index 5053333..8ea6e6a 100644
+--- a/drivers/ata/pdc_adma.c
++++ b/drivers/ata/pdc_adma.c
+@@ -1,7 +1,7 @@
+ /*
+  *  pdc_adma.c - Pacific Digital Corporation ADMA
+  *
+- *  Maintained by:  Mark Lord <mlord@pobox.com>
++ *  Maintained by:  Tejun Heo <tj@kernel.org>
+  *
+  *  Copyright 2005 Mark Lord
+  *
+diff --git a/drivers/ata/sata_promise.c b/drivers/ata/sata_promise.c
+index fb0dd87..958ba2a 100644
+--- a/drivers/ata/sata_promise.c
++++ b/drivers/ata/sata_promise.c
+@@ -1,7 +1,7 @@
+ /*
+  *  sata_promise.c - Promise SATA
+  *
+- *  Maintained by:  Jeff Garzik <jgarzik@pobox.com>
++ *  Maintained by:  Tejun Heo <tj@kernel.org>
+  *		    Mikael Pettersson <mikpe@it.uu.se>
+  *  		    Please ALWAYS copy linux-ide@vger.kernel.org
+  *		    on emails.
+diff --git a/drivers/ata/sata_sil.c b/drivers/ata/sata_sil.c
+index a7b3167..0ae3ca4 100644
+--- a/drivers/ata/sata_sil.c
++++ b/drivers/ata/sata_sil.c
+@@ -1,7 +1,7 @@
+ /*
+  *  sata_sil.c - Silicon Image SATA
+  *
+- *  Maintained by:  Jeff Garzik <jgarzik@pobox.com>
++ *  Maintained by:  Tejun Heo <tj@kernel.org>
+  *  		    Please ALWAYS copy linux-ide@vger.kernel.org
+  *		    on emails.
+  *
+diff --git a/drivers/ata/sata_sx4.c b/drivers/ata/sata_sx4.c
+index 7b7127a..9947010 100644
+--- a/drivers/ata/sata_sx4.c
++++ b/drivers/ata/sata_sx4.c
+@@ -1,7 +1,7 @@
+ /*
+  *  sata_sx4.c - Promise SATA
+  *
+- *  Maintained by:  Jeff Garzik <jgarzik@pobox.com>
++ *  Maintained by:  Tejun Heo <tj@kernel.org>
+  *  		    Please ALWAYS copy linux-ide@vger.kernel.org
+  *		    on emails.
+  *
+diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
+index 5913ea9..87f056e 100644
+--- a/drivers/ata/sata_via.c
++++ b/drivers/ata/sata_via.c
+@@ -1,7 +1,7 @@
+ /*
+  *  sata_via.c - VIA Serial ATA controllers
+  *
+- *  Maintained by:  Jeff Garzik <jgarzik@pobox.com>
++ *  Maintained by:  Tejun Heo <tj@kernel.org>
+  * 		   Please ALWAYS copy linux-ide@vger.kernel.org
+  *		   on emails.
+  *
 -- 
-tejun
+1.8.1.4
