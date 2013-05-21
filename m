@@ -1,45 +1,90 @@
-From: Mauro Carvalho Chehab <mchehab@redhat.com>
-Subject: Re: [PATCH] MIPS: OCTEON: Rename Kconfig
- CAVIUM_OCTEON_REFERENCE_BOARD to CAVIUM_OCTEON_SOC
-Date: Tue, 21 May 2013 07:25:21 -0300
-Message-ID: <20130521072521.0a296a67@redhat.com>
-References: <1369088378-13957-1-git-send-email-ddaney.cavm@gmail.com>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
+Date: Tue, 21 May 2013 21:00:27 +0200
+Message-ID: <cover.1369155164.git.agordeev@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:19147 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:26394 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753452Ab3EUKZv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 21 May 2013 06:25:51 -0400
-In-Reply-To: <1369088378-13957-1-git-send-email-ddaney.cavm@gmail.com>
+	id S1752454Ab3EUS7I (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 21 May 2013 14:59:08 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Daney <ddaney.cavm@gmail.com>
-Cc: linux-mips@linux-mips.org, ralf@linux-mips.org, David Daney <david.daney@cavium.com>, linux-ide@vger.kernel.org, linux-edac@vger.kernel.org, linux-i2c@vger.kernel.org, netdev@vger.kernel.org, spi-devel-general@lists.sourceforge.net, devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>
 
-Em Mon, 20 May 2013 15:19:38 -0700
-David Daney <ddaney.cavm@gmail.com> escreveu:
+Hi Tejun,
 
-> From: David Daney <david.daney@cavium.com>
-> 
-> CAVIUM_OCTEON_SOC most place we used to use CPU_CAVIUM_OCTEON.  This
-> allows us to CPU_CAVIUM_OCTEON in places where we have no OCTEON SOC.
-> 
-> Remove CAVIUM_OCTEON_SIMULATOR as it doesn't really do anything, we can
-> get the same configuration with CAVIUM_OCTEON_SOC.
-> 
-> Signed-off-by: David Daney <david.daney@cavium.com>
-> Cc: linux-ide@vger.kernel.org
-> Cc: linux-edac@vger.kernel.org
+This is a patch I sent to Jeff few months ago. As you asked, I am
+resending it on top of 3.10-rc2 Linus tree. Jeff has said he
+applied this patch, but I am not sure what exactly it means ;)
 
-Acked-by: Mauro Carvalho Chehab <mchehab@redhat.com>
+Also, I am not sure about my reading of the statistics and the
+trade-off I identified (below), so this patch is a RFC.
 
-> Cc: linux-i2c@vger.kernel.org
-> Cc: netdev@vger.kernel.org
-> Cc: spi-devel-general@lists.sourceforge.net
-> Cc: devel@driverdev.osuosl.org
-> Cc: linux-usb@vger.kernel.org
+The numbers are taken by running 'if=/dev/sd{a,b,c} of=/dev/null'
+All time values is in us.
 
+Before this update host lock average holdtime was 3.266532061 and
+average waittime was 0.009832679 [1]. After the update average
+holdtime (slightly) rose up to 0.335267418 while average waittime
+decreased to 0.000320469 [2]. Which means host lock with local
+interrupt disabled is held roughly the same while the average
+waittime dropped 30 times.
+
+After this update port events are handled with local interrupts
+enabled and compete on individual per-port locks with average
+holdtime 1.540987475 and average waittime 0.000714864 [3].
+Comparing to [1], ata_scsi_queuecmd() holds port locks 2 times
+less and waits for locks 13 times less.
+
+The downside of this change is introduction of a kernel thread
+and (supposedly) increased total average time of handling a
+AHCI interrupt - at most 1.5 times.
+
+The upside is better access times from ata_scsi_queuecmd() to
+port locks and moving port interrupt handling out of the
+hardware interrupt context.
+
+Thanks!
+
+Lock usage statistics.
+
+	1. ahci_interrupt vs ata_scsi_queuecmd (host->lock)
+
+Test	holdtime-total	waittime-total	acquisitions	holdtime-avg	waittime-avg
+#
+01.	22732497.77	93399.89	06393367	3.555637862	0.014608874
+02.	20358052.08	52869.72	06454133	3.154265969	0.008191607
+03.	20322516.57	54981.40	06459318	3.146232554	0.008511951
+04.	18558686.89	39178.05	06469468	2.868657344	0.006055838
+05.	19069799.90	31961.00	06455953	2.953831897	0.004950625
+06.	23783542.56	97159.79	06387322	3.723554654	0.015211350
+07.	23889266.74	102625.45	06386666	3.740491007	0.016068705
+08.	19284522.61	32655.91	06450568	2.989585198	0.005062486
+							-----------	-----------
+avg							3.266532061	0.009832679
+
+	2. ahci_single_irq_intr vs ahci_port_thread_fn (host->lock)
+
+
+Alexander Gordeev (1):
+  AHCI: Optimize interrupt processing
+
+ drivers/ata/acard-ahci.c    |    8 ++---
+ drivers/ata/ahci.c          |   54 ++++++++++++++++++-------------
+ drivers/ata/ahci.h          |   10 +++--
+ drivers/ata/ahci_platform.c |    3 +-
+ drivers/ata/libahci.c       |   74 +++++++++++++++++++++++++------------------
+ 5 files changed, 85 insertions(+), 64 deletions(-)
+
+-- 
+1.7.7.6
+
+
+-- 
 Regards,
-Mauro
+Alexander Gordeev
+agordeev@redhat.com
