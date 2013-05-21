@@ -1,35 +1,46 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] sata_rcar: clear STOP bit in bmdma_start() method
-Date: Wed, 22 May 2013 08:41:28 +0900
-Message-ID: <20130521234128.GD6985@mtj.dyndns.org>
-References: <201305212307.55385.sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
+Date: Wed, 22 May 2013 08:50:03 +0900
+Message-ID: <20130521235003.GE6985@mtj.dyndns.org>
+References: <cover.1369155164.git.agordeev@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:65420 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752576Ab3EUXlc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 May 2013 19:41:32 -0400
-Received: by mail-pa0-f45.google.com with SMTP id lj1so1210917pab.32
-        for <linux-ide@vger.kernel.org>; Tue, 21 May 2013 16:41:32 -0700 (PDT)
+Received: from mail-pd0-f178.google.com ([209.85.192.178]:46542 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751139Ab3EUXuI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 May 2013 19:50:08 -0400
 Content-Disposition: inline
-In-Reply-To: <201305212307.55385.sergei.shtylyov@cogentembedded.com>
+In-Reply-To: <cover.1369155164.git.agordeev@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: linux-ide@vger.kernel.org, vladimir.barinov@cogentembedded.com
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Jens Axboe <axboe@kernel.dk>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 
-On Tue, May 21, 2013 at 11:07:54PM +0400, Sergei Shtylyov wrote:
-> Iff bmdma_setup() has to stop a DMA transfer before starting a new one, then the
-> STOP bit in the ATAPI_CONTROL1 register will remain set (it's only cleared when
-> setting the START bit to 1) and then bmdma_start() method will set both START
-> and STOP bits simultaneously which should abort the transfer being just started.
-> Avoid that by explicitly clearing the STOP bit in bmdma_start() method (in this
-> case it will be ignored on write).
+Hello, Alexander.
+
+(cc'ing Jens and Nicholas, hey guys)
+
+On Tue, May 21, 2013 at 09:00:27PM +0200, Alexander Gordeev wrote:
+> Before this update host lock average holdtime was 3.266532061 and
+> average waittime was 0.009832679 [1]. After the update average
+> holdtime (slightly) rose up to 0.335267418 while average waittime
+> decreased to 0.000320469 [2]. Which means host lock with local
+> interrupt disabled is held roughly the same while the average
+> waittime dropped 30 times.
 > 
-> Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+> After this update port events are handled with local interrupts
+> enabled and compete on individual per-port locks with average
+> holdtime 1.540987475 and average waittime 0.000714864 [3].
+> Comparing to [1], ata_scsi_queuecmd() holds port locks 2 times
+> less and waits for locks 13 times less.
 
-Applied to libata/for-3.10-fixes w/ stable cc'd.
+Hmmmmmm..... I'd normally apply this patch but block layer is just
+growing multi-queue support and libata is likely to be converted to mq
+in foreseeable future, so I'm a bit hesitant to make irq handling more
+sophiscated right now.  Would you be interested in looking into
+converting libata to blk mq support?  I'm pretty sure it'd yield far
+better outcome if done properly.
 
 Thanks.
 
