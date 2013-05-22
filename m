@@ -1,41 +1,32 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
-Date: Wed, 22 May 2013 19:03:05 +0200
-Message-ID: <20130522170305.GD9563@kernel.dk>
-References: <cover.1369155164.git.agordeev@redhat.com>
- <20130521235003.GE6985@mtj.dyndns.org>
- <20130522143923.GD19383@dhcp-26-207.brq.redhat.com>
+From: Ralf Baechle <ralf@linux-mips.org>
+Subject: Re: [PATCH] MIPS: OCTEON: Rename Kconfig
+ CAVIUM_OCTEON_REFERENCE_BOARD to CAVIUM_OCTEON_SOC
+Date: Wed, 22 May 2013 19:14:46 +0200
+Message-ID: <20130522171446.GF10769@linux-mips.org>
+References: <1369088378-13957-1-git-send-email-ddaney.cavm@gmail.com>
+ <20130521220457.GF31836@blackmetal.musicnaut.iki.fi>
+ <519BF01B.1010600@caviumnetworks.com>
+ <20130522122232.GD10769@linux-mips.org>
+ <519CEEBE.5020403@caviumnetworks.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:48014 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753984Ab3EVRD2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 May 2013 13:03:28 -0400
+Received: from eddie.linux-mips.org ([78.24.191.182]:39431 "EHLO
+	cvs.linux-mips.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752176Ab3EVRPJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 May 2013 13:15:09 -0400
 Content-Disposition: inline
-In-Reply-To: <20130522143923.GD19383@dhcp-26-207.brq.redhat.com>
+In-Reply-To: <519CEEBE.5020403@caviumnetworks.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+To: David Daney <ddaney@caviumnetworks.com>
+Cc: Aaro Koskinen <aaro.koskinen@iki.fi>, David Daney <ddaney.cavm@gmail.com>, linux-mips@linux-mips.org, David Daney <david.daney@cavium.com>, linux-ide@vger.kernel.org, linux-edac@vger.kernel.org, linux-i2c@vger.kernel.org, netdev@vger.kernel.org, spi-devel-general@lists.sourceforge.net, devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
 
-On Wed, May 22 2013, Alexander Gordeev wrote:
-> On Wed, May 22, 2013 at 08:50:03AM +0900, Tejun Heo wrote:
-> > Hmmmmmm..... I'd normally apply this patch but block layer is just
-> > growing multi-queue support and libata is likely to be converted to mq
-> > in foreseeable future, so I'm a bit hesitant to make irq handling more
-> > sophiscated right now.  Would you be interested in looking into
-> > converting libata to blk mq support?  I'm pretty sure it'd yield far
-> > better outcome if done properly.
-> 
-> I am not committing, but will look into it, sure.
+On Wed, May 22, 2013 at 09:13:50AM -0700, David Daney wrote:
 
-Would be most awesome, I'm sure Nic would not mind a bit of help on the
-SCSI/libata side :-)
+> Can you take v2 instead?  It has the missing watchdog adjustment
+> that is not in v1.
 
-And personally, can't wait to run it on the laptop! That's right, I
-alpha test on the laptop.
+Done.
 
--- 
-Jens Axboe
-
+  Ralf
