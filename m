@@ -1,96 +1,36 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH] AHCI: Make distinct names for ports in /proc/interrupts
- /proc/interrupts
-Date: Wed, 22 May 2013 08:55:19 +0900
-Message-ID: <20130521235519.GF6985@mtj.dyndns.org>
-References: <cover.1369161950.git.agordeev@redhat.com>
- <fcdc76842896b5884b480b5778339e1e6a19f181.1369161950.git.agordeev@redhat.com>
+From: Ralf Baechle <ralf-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org>
+Subject: Re: [PATCH] MIPS: OCTEON: Rename Kconfig
+ CAVIUM_OCTEON_REFERENCE_BOARD to CAVIUM_OCTEON_SOC
+Date: Wed, 22 May 2013 14:22:32 +0200
+Message-ID: <20130522122232.GD10769@linux-mips.org>
+References: <1369088378-13957-1-git-send-email-ddaney.cavm@gmail.com>
+ <20130521220457.GF31836@blackmetal.musicnaut.iki.fi>
+ <519BF01B.1010600@caviumnetworks.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-da0-f50.google.com ([209.85.210.50]:51213 "EHLO
-	mail-da0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753376Ab3EUXzY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 May 2013 19:55:24 -0400
+Return-path: <linux-i2c-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <fcdc76842896b5884b480b5778339e1e6a19f181.1369161950.git.agordeev@redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <519BF01B.1010600-M3mlKVOIwJVv6pq1l3V1OdBPR1lH4CV8@public.gmane.org>
+Sender: linux-i2c-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: David Daney <ddaney-M3mlKVOIwJVv6pq1l3V1OdBPR1lH4CV8@public.gmane.org>
+Cc: Aaro Koskinen <aaro.koskinen-X3B1VOXEql0@public.gmane.org>, David Daney <ddaney.cavm-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org, David Daney <david.daney-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-edac-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-i2c-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, spi-devel-general-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Jan Beulich <JBeulich@suse.com>
 
-I've refreshed on top of libata/for-3.11 and applied it.  If I broke
-something, please let me know.
+On Tue, May 21, 2013 at 03:07:23PM -0700, David Daney wrote:
 
-Thanks a lot!
+> >>  config USB_OCTEON_OHCI
+> >>  	bool "Octeon on-chip OHCI support"
+> >>-	depends on CPU_CAVIUM_OCTEON
+> >>+	depends on  CAVIUM_OCTEON_SOC
+> >
+> >Just a minor comment, here the extra whitespace after "depends on"
+> >could be eliminated.
+> >
+> 
+> Good point.  I will regenerate the patch to correct this.
 
->From b29900e62598cecd519c9ab2b8e4d03f8ebf702d Mon Sep 17 00:00:00 2001
-From: Alexander Gordeev <agordeev@redhat.com>
-Date: Wed, 22 May 2013 08:53:48 +0900
+I took care of that and queued the patch.
 
-Currently all interrupts assigned to AHCI ports show up in
-'/proc/interrupts' as 'ahci'. This fix adds port numbers as
-suffixes and hence makes the descriptions distinct.
+Thanks,
 
-Reported-by: Jan Beulich <JBeulich@suse.com>
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- drivers/ata/ahci.c    |  4 +++-
- drivers/ata/ahci.h    |  1 +
- drivers/ata/libahci.c | 10 ++++++++++
- 3 files changed, 14 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 251e57d..4d1c672 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1142,9 +1142,11 @@ int ahci_host_activate(struct ata_host *host, int irq, unsigned int n_msis)
- 		return rc;
- 
- 	for (i = 0; i < host->n_ports; i++) {
-+		struct ahci_port_priv *pp = host->ports[i]->private_data;
-+
- 		rc = devm_request_threaded_irq(host->dev,
- 			irq + i, ahci_hw_interrupt, ahci_thread_fn, IRQF_SHARED,
--			dev_driver_string(host->dev), host->ports[i]);
-+			pp->irq_desc, host->ports[i]);
- 		if (rc)
- 			goto out_free_irqs;
- 	}
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index b830e6c..05adf29 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -306,6 +306,7 @@ struct ahci_port_priv {
- 	int			fbs_last_dev;	/* save FBS.DEV of last FIS */
- 	/* enclosure management info per PM slot */
- 	struct ahci_em_priv	em_priv[EM_MAX_SLOTS];
-+	char			*irq_desc;	/* desc in /proc/interrupts */
- };
- 
- struct ahci_host_priv {
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 34c8216..3797a7b 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -2234,6 +2234,16 @@ static int ahci_port_start(struct ata_port *ap)
- 	if (!pp)
- 		return -ENOMEM;
- 
-+	if (ap->host->n_ports > 1) {
-+		pp->irq_desc = devm_kzalloc(dev, 8, GFP_KERNEL);
-+		if (!pp->irq_desc) {
-+			devm_kfree(dev, pp);
-+			return -ENOMEM;
-+		}
-+		snprintf(pp->irq_desc, 8,
-+			 "%s%d", dev_driver_string(dev), ap->port_no);
-+	}
-+
- 	/* check FBS capability */
- 	if ((hpriv->cap & HOST_CAP_FBS) && sata_pmp_supported(ap)) {
- 		void __iomem *port_mmio = ahci_port_base(ap);
--- 
-1.8.1.4
-
+  Ralf
