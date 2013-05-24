@@ -1,35 +1,37 @@
-From: 'Tejun Heo' <tj@kernel.org>
-Subject: Re: [PATCH] ata: use platform_{get,set}_drvdata()
-Date: Fri, 24 May 2013 10:26:40 +0900
-Message-ID: <20130524012640.GA16882@mtj.dyndns.org>
-References: <003001ce57a2$10bbbaa0$32332fe0$@samsung.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pb0-f42.google.com ([209.85.160.42]:51879 "EHLO
-	mail-pb0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759450Ab3EXB0s (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 May 2013 21:26:48 -0400
-Received: by mail-pb0-f42.google.com with SMTP id uo1so3608107pbc.15
-        for <linux-ide@vger.kernel.org>; Thu, 23 May 2013 18:26:47 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <003001ce57a2$10bbbaa0$32332fe0$@samsung.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Simon Horman <horms+renesas@verge.net.au>
+Subject: [PATCH] libata: do not limit R-Car SATA driver to shmobile
+Date: Fri, 24 May 2013 11:05:59 +0900
+Message-ID: <1369361159-20724-1-git-send-email-horms+renesas@verge.net.au>
+Return-path: <linux-sh-owner@vger.kernel.org>
+Sender: linux-sh-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-sh@vger.kernel.org
+Cc: Magnus Damm <magnus.damm@gmail.com>, Vladimir Barinov <vladimir.barinov@cogentembedded.com>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Simon Horman <horms+renesas@verge.net.au>
 List-Id: linux-ide@vger.kernel.org
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: linux-ide@vger.kernel.org, Viresh Kumar <viresh.linux@gmail.com>
 
-On Thu, May 23, 2013 at 07:41:21PM +0900, Jingoo Han wrote:
-> Use the wrapper functions for getting and setting the driver data using
-> platform_device instead of using dev_{get,set}_drvdata() with &pdev->dev,
-> so we can directly pass a struct platform_device.
-> 
-> Also, unnecessary dev_set_drvdata() is removed, because the driver core
-> clears the driver data to NULL after device_release or on probe failure.
-> 
-> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+The motivation for this is to allow the driver to be
+used with the r8a7790 SoC.
 
-Applied to libata/for-3.11.  Thanks.
+I believe that rather than adding another SoC to the list of allowed SoCs
+it is better to simply remove the dependency of the driver on shmobile all
+together.
 
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
+---
+ drivers/ata/Kconfig | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index a5a3ebc..aba6e93 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -263,7 +263,6 @@ config SATA_PROMISE
+ 
+ config SATA_RCAR
+ 	tristate "Renesas R-Car SATA support"
+-	depends on ARCH_SHMOBILE && ARCH_R8A7779
+ 	help
+ 	  This option enables support for Renesas R-Car Serial ATA.
+ 
 -- 
-tejun
+1.8.2.1
+
