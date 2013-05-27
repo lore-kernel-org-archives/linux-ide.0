@@ -1,27 +1,77 @@
 From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: [PATCH 0/3] Optimize R-Car SATA driver
-Date: Tue, 28 May 2013 02:38:17 +0400
-Message-ID: <201305280238.17867.sergei.shtylyov@cogentembedded.com>
+Subject: [PATCH 1/3] sata_rcar: kill superfluous code in sata_rcar_bmdma_fill_sg()
+Date: Tue, 28 May 2013 02:43:23 +0400
+Message-ID: <201305280243.23983.sergei.shtylyov@cogentembedded.com>
+References: <201305280238.17867.sergei.shtylyov@cogentembedded.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-sh-owner@vger.kernel.org>
+In-Reply-To: <201305280238.17867.sergei.shtylyov@cogentembedded.com>
 Sender: linux-sh-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org, tj@kernel.org
 Cc: linux-sh@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Hello.
+I've modified sata_rcar_bmdma_fill_sg() to take care of splitting long scatter/
+gather segments due to the descriptor table transfer counter being only 28 bits
+wide (bit 1 to bit 28) but that was in vain as even if 'sata_rcar_sht' specified
+a correct 'dma_boundary' field, the DMA and block layers would have split the
+S/G segments on the necassary boundaries. Since the driver uses ATA_BMDMA_SHT()
+to initilaize 'sata_rcar_sht', the boundary is much smaller, only 0xFFFF, so the
+code I've added is even more useless, and it's better to just remove it.
 
-   Here's the set of 3 patches against the Tejun Heo's 'libata.git' repo's
-'for-3.11' branch.
-   They deal with some shortcomings in the R-Car SATA driver and generally
-optimize it. I've come up with them while trying to add NCQ support to this
-driver.
+Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 
-[1/3] sata_rcar: kill superfluous code in sata_rcar_bmdma_fill_sg()
-[2/3] sata_rcar: correct 'sata_rcar_sht'
-[3/3] sata_rcar: add 'base' local variable to some functions
+---
+ drivers/ata/sata_rcar.c |   24 ++++++------------------
+ 1 file changed, 6 insertions(+), 18 deletions(-)
 
-MBR, Sergei
+Index: libata/drivers/ata/sata_rcar.c
+===================================================================
+--- libata.orig/drivers/ata/sata_rcar.c
++++ libata/drivers/ata/sata_rcar.c
+@@ -474,11 +474,10 @@ static void sata_rcar_bmdma_fill_sg(stru
+ 	struct ata_port *ap = qc->ap;
+ 	struct ata_bmdma_prd *prd = ap->bmdma_prd;
+ 	struct scatterlist *sg;
+-	unsigned int si, pi;
++	unsigned int si;
+ 
+-	pi = 0;
+ 	for_each_sg(qc->sg, sg, qc->n_elem, si) {
+-		u32 addr, sg_len, len;
++		u32 addr, sg_len;
+ 
+ 		/*
+ 		 * Note: h/w doesn't support 64-bit, so we unconditionally
+@@ -487,24 +486,13 @@ static void sata_rcar_bmdma_fill_sg(stru
+ 		addr = (u32)sg_dma_address(sg);
+ 		sg_len = sg_dma_len(sg);
+ 
+-		/* H/w transfer count is only 29 bits long, let's be careful */
+-		while (sg_len) {
+-			len = sg_len;
+-			if (len > 0x1ffffffe)
+-				len = 0x1ffffffe;
+-
+-			prd[pi].addr = cpu_to_le32(addr);
+-			prd[pi].flags_len = cpu_to_le32(len);
+-			VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", pi, addr, len);
+-
+-			pi++;
+-			sg_len -= len;
+-			addr += len;
+-		}
++		prd[si].addr = cpu_to_le32(addr);
++		prd[si].flags_len = cpu_to_le32(sg_len);
++		VPRINTK("PRD[%u] = (0x%X, 0x%X)\n", si, addr, sg_len);
+ 	}
+ 
+ 	/* end-of-table flag */
+-	prd[pi - 1].addr |= cpu_to_le32(SATA_RCAR_DTEND);
++	prd[si - 1].addr |= cpu_to_le32(SATA_RCAR_DTEND);
+ }
+ 
+ static void sata_rcar_qc_prep(struct ata_queued_cmd *qc)
