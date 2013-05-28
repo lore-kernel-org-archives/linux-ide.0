@@ -1,35 +1,37 @@
-From: "George Spelvin" <linux@horizon.com>
-Subject: Re: 88SE9172 additional PCI ID: 1b4b:9172
-Date: 28 May 2013 03:12:20 -0400
-Message-ID: <20130528071220.3601.qmail@science.horizon.com>
-References: <20130528002234.GB18531@mtj.dyndns.org>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from science.horizon.com ([71.41.210.146]:49200 "HELO
-	science.horizon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754650Ab3E1HMV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 May 2013 03:12:21 -0400
-In-Reply-To: <20130528002234.GB18531@mtj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH 0/3] Optimize R-Car SATA driver
+Date: Tue, 28 May 2013 15:53:13 +0400
+Message-ID: <51A49AA9.2070002@cogentembedded.com>
+References: <201305280238.17867.sergei.shtylyov@cogentembedded.com> <20130528002047.GA18531@mtj.dyndns.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-sh-owner@vger.kernel.org>
+In-Reply-To: <20130528002047.GA18531@mtj.dyndns.org>
+Sender: linux-sh-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-sh@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux@horizon.com, tj@kernel.org
-Cc: linux-ide@vger.kernel.org
 
-> I don't think it's a typo.
+Hello.
 
-Indeed, pci.ids has three entries.
+On 28-05-2013 4:20, Tejun Heo wrote:
 
-> And we'll need a separate entry
->
->> (If I enable VT-d and the IOMMU, the devices are recognized but not the
->> disks plugged into them, but I'm still working on figuring that out.)
->
-> when the device gets working.
+>>     Here's the set of 3 patches against the Tejun Heo's 'libata.git' repo's
+>> 'for-3.11' branch.
+>>     They deal with some shortcomings in the R-Car SATA driver and generally
+>> optimize it. I've come up with them while trying to add NCQ support to this
+>> driver.
 
-I don't quite understand this.  With VT-d disabled in the BIOS,
-the devices *are* working.  I even have a port multiplier plugged
-into one.  (Which gets all confused by hdparm -m16, but whatever.)
+>> [1/3] sata_rcar: kill superfluous code in sata_rcar_bmdma_fill_sg()
+>> [2/3] sata_rcar: correct 'sata_rcar_sht'
+>> [3/3] sata_rcar: add 'base' local variable to some functions
 
-When I get time, I'm going to play with various BIOS and kernel
-options to narrow down the problem.  But that's for later.
+> Applied to libata/for-3.11.
 
-Can you explain what you think is not working now?
+    Again, I don't see these commits on git.kernel.org thru cgit...
+
+> Thanks.
+
+WBR, Sergei
+
