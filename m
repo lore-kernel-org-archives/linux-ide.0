@@ -1,35 +1,49 @@
-From: "George Spelvin" <linux@horizon.com>
-Subject: Re: [PATCH] ahci: add an observed PCI ID for Marvell 88se9172 SATA controller
-Date: 29 May 2013 08:36:27 -0400
-Message-ID: <20130529123627.24818.qmail@science.horizon.com>
-References: <20130529012231.GB2874@mtj.dyndns.org>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from science.horizon.com ([71.41.210.146]:58004 "HELO
-	science.horizon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S965709Ab3E2Mg2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 May 2013 08:36:28 -0400
-In-Reply-To: <20130529012231.GB2874@mtj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
+From: Mark Langsdorf <mark.langsdorf@calxeda.com>
+Subject: [PATCH] ata: increase retry count but shorten duration for Calxeda controller
+Date: Wed, 29 May 2013 10:51:19 -0500
+Message-ID: <1369842679-9680-1-git-send-email-mark.langsdorf@calxeda.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, tj@kernel.org, linux-ide@vger.kernel.org
+Cc: Mark Langsdorf <mark.langsdorf@calxeda.com>
 List-Id: linux-ide@vger.kernel.org
-To: linux@horizon.com, tj@kernel.org
-Cc: linux-ide@vger.kernel.org
 
-> Applied to libata/for-3.10-fixes.  In the future, please base patches
-> on top of git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git
-> for-XXX branches.
+The Calxeda SATA phy intermittently fails to bring up a link with Gen3
+Retrying the phy hard reset can work around the issue, but the drive
+may fail again. In less than 150 out of 15000 test runs, it took more
+than 10 tries for the link to be established (but never more than 35).
+Increase the retry count to guarantee the link is established.
 
-As you saw, it didn't initially occur to me to prepare a patch at all;
-it seemed such a trivial copy/paste/one-character-edit exercise.
-After diagnosis, the most difficult part was writing a meaningful
-commit message.
+Also, the default 2 second time-out on a failed drive is too long in
+this situation. Shorten it to 500 ms. This was also tested 15000 times
+on 24 drives and none of them experienced a time out.
 
-Which I presumed would be easier for you; a lot of the difficulty for me
-was trying to figure out one line that would fit the ongoing narrative
-that is the kernel changelog.
+Signed-off-by: Mark Langsdorf <mark.langsdorf@calxeda.com>
+---
+ drivers/ata/sata_highbank.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-I was actually surprised when you asked for a full patch, so I just sent
-you a copy of my private commit, with an improved commit message and S-o-b.
-(Should I have added "Cc: stable" to it?)
-
-But since I now know you prefer even trivial changes like this in formal
-patch form, I'll try to do it right in future.
+diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
+index 0d7c4c2..536936f 100644
+--- a/drivers/ata/sata_highbank.c
++++ b/drivers/ata/sata_highbank.c
+@@ -199,7 +199,7 @@ static int highbank_initialize_phys(struct device *dev, void __iomem *addr)
+ static int ahci_highbank_hardreset(struct ata_link *link, unsigned int *class,
+ 				unsigned long deadline)
+ {
+-	const unsigned long *timing = sata_ehc_deb_timing(&link->eh_context);
++	unsigned long timing[] = { 5, 100, 500};
+ 	struct ata_port *ap = link->ap;
+ 	struct ahci_port_priv *pp = ap->private_data;
+ 	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
+@@ -207,7 +207,7 @@ static int ahci_highbank_hardreset(struct ata_link *link, unsigned int *class,
+ 	bool online;
+ 	u32 sstatus;
+ 	int rc;
+-	int retry = 10;
++	int retry = 100;
+ 
+ 	ahci_stop_engine(ap);
+ 
+-- 
+1.7.10.4
