@@ -1,31 +1,63 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ata_piix: add PCI IDs for Intel BayTail
-Date: Thu, 30 May 2013 16:03:23 +0900
-Message-ID: <20130530070323.GD22604@mtj.dyndns.org>
-References: <1368689609-26864-1-git-send-email-chiauee85@gmail.com>
- <20130516180728.GC7171@mtj.dyndns.org>
- <20130516181857.GD7171@mtj.dyndns.org>
- <CAA9G2fWUZy3-QDMjGm2vZkZfoyvKiQO-kM3-6jHNUiQ62tHXVA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Mark Langsdorf <mark.langsdorf@calxeda.com>
+Subject: [PATCH v2] ata: increase retry count but shorten duration for Calxeda controller
+Date: Thu, 30 May 2013 09:18:29 -0500
+Message-ID: <1369923509-3246-1-git-send-email-mark.langsdorf@calxeda.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:39769 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S967671Ab3E3HD2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 May 2013 03:03:28 -0400
-Content-Disposition: inline
-In-Reply-To: <CAA9G2fWUZy3-QDMjGm2vZkZfoyvKiQO-kM3-6jHNUiQ62tHXVA@mail.gmail.com>
+Received: from smtp73.ord1c.emailsrvr.com ([108.166.43.73]:48659 "EHLO
+	smtp73.ord1c.emailsrvr.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932458Ab3E3OSe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 May 2013 10:18:34 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: chew chiau ee <chiauee85@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Artem Bityutskiy <artem.bityutskiy@linux.intel.com>, Chew Chiau Ee <chiau.ee.chew@intel.com>
+To: timur@tabi.org, tj@kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: Mark Langsdorf <mark.langsdorf@calxeda.com>
 
-On Thu, May 30, 2013 at 03:02:41PM +0800, chew chiau ee wrote:
-> Baytrail supports only two SATA ports.
-> Baytrail is using the mapping table of ich8_2port_map_db  while SNB is
-> using mapping table of  ich8_map_db.
+The Calxeda SATA phy intermittently fails to bring up a link with Gen3
+Retrying the phy hard reset can work around the issue, but the drive
+may fail again. In less than 150 out of 15000 test runs, it took more
+than 10 tries for the link to be established (but never more than 35).
+Triple the maximum observed retry count to provide plenty of margin for
+rare events and to guarantee that the link is established.
 
-Ah, alright.  Thanks for the explanation. :)
+Also, the default 2 second time-out on a failed drive is too long in
+this situation. The uboot implementation of the same driver function
+uses a much shorter time-out period and never experiences a time out
+issue. Shorten the Linux time-out value for this driver to 500 ms and
+keep the other timing constants the same as the stock AHCI driver. This
+change was also tested 15000 times on 24 drives and none of them
+experienced a time out.
 
+Signed-off-by: Mark Langsdorf <mark.langsdorf@calxeda.com>
+---
+Changes from v1
+	Add const to the timing variable definition
+	Added more detail in why the various numbers were chosen
+
+ drivers/ata/sata_highbank.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
+index b20aa96..005cb13 100644
+--- a/drivers/ata/sata_highbank.c
++++ b/drivers/ata/sata_highbank.c
+@@ -199,7 +199,7 @@ static int highbank_initialize_phys(struct device *dev, void __iomem *addr)
+ static int ahci_highbank_hardreset(struct ata_link *link, unsigned int *class,
+ 				unsigned long deadline)
+ {
+-	const unsigned long *timing = sata_ehc_deb_timing(&link->eh_context);
++	const unsigned long timing[] = { 5, 100, 500};
+ 	struct ata_port *ap = link->ap;
+ 	struct ahci_port_priv *pp = ap->private_data;
+ 	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
+@@ -207,7 +207,7 @@ static int ahci_highbank_hardreset(struct ata_link *link, unsigned int *class,
+ 	bool online;
+ 	u32 sstatus;
+ 	int rc;
+-	int retry = 10;
++	int retry = 100;
+ 
+ 	ahci_stop_engine(ap);
+ 
 -- 
-tejun
+1.8.1.2
+
