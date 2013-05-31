@@ -1,67 +1,67 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH v2] ata: increase retry count but shorten duration for
- Calxeda controller
-Date: Fri, 31 May 2013 17:13:57 +0400
-Message-ID: <51A8A215.2030706@cogentembedded.com>
-References: <1369923509-3246-1-git-send-email-mark.langsdorf@calxeda.com> <51A76197.9080708@calxeda.com> <51A7646B.6080203@cogentembedded.com> <51A848F1.3040301@ladisch.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Mark Langsdorf <mark.langsdorf@calxeda.com>
+Subject: [PATCH v3] ata: increase retry count but shorten duration for Calxeda controller
+Date: Fri, 31 May 2013 10:27:26 -0500
+Message-ID: <1370014046-5202-1-git-send-email-mark.langsdorf@calxeda.com>
+References: <1369842679-9680-1-git-send-email-mark.langsdorf@calxeda.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lb0-f178.google.com ([209.85.217.178]:55318 "EHLO
-	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750825Ab3EaNNy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 31 May 2013 09:13:54 -0400
-Received: by mail-lb0-f178.google.com with SMTP id w10so1671775lbi.37
-        for <linux-ide@vger.kernel.org>; Fri, 31 May 2013 06:13:53 -0700 (PDT)
-In-Reply-To: <51A848F1.3040301@ladisch.de>
+Received: from smtp113.ord1c.emailsrvr.com ([108.166.43.113]:39025 "EHLO
+	smtp113.ord1c.emailsrvr.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755399Ab3EaP1c (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 31 May 2013 11:27:32 -0400
+In-Reply-To: <1369842679-9680-1-git-send-email-mark.langsdorf@calxeda.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Clemens Ladisch <clemens@ladisch.de>
-Cc: Timur Tabi <timur.tabi@calxeda.com>, Mark Langsdorf <mark.langsdorf@calxeda.com>, tj@kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: tj@kernel.org, timur@tabi.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, clemens@ladisch.de, sergei.shtylyov@cogentembedded.com
+Cc: Mark Langsdorf <mark.langsdorf@calxeda.com>
 
-Hello.
+The Calxeda SATA phy intermittently fails to bring up a link with Gen3
+Retrying the phy hard reset can work around the issue, but the drive
+may fail again. In less than 150 out of 15000 test runs, it took more
+than 10 tries for the link to be established (but never more than 35).
+Triple the maximum observed retry count to provide plenty of margin for
+rare events and to guarantee that the link is established.
 
-On 31-05-2013 10:53, Clemens Ladisch wrote:
+Also, the default 2 second time-out on a failed drive is too long in
+this situation. The uboot implementation of the same driver function
+uses a much shorter time-out period and never experiences a time out
+issue. Shorten the Linux time-out value for this driver to 500 ms and
+keep the other timing constants the same as the stock AHCI driver. This
+change was also tested 15000 times on 24 drives and none of them
+experienced a time out.
 
->>>> +    const unsigned long timing[] = { 5, 100, 500};
+Signed-off-by: Mark Langsdorf <mark.langsdorf@calxeda.com>
+---
+Changes from v2
+	Add static to the timing variable definition
+Changes from v1
+        Add const to the timing variable definition
+        Added more detail in why the various numbers were chosen
 
->>> You'll save space and time if you also make this array "static",
->>> otherwise the compiler will build the array every time this function is
->>> called.
+ drivers/ata/sata_highbank.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
->> No, *const* specifier is enough to not build this array every time. It will be put into the .const section.
-
-> gcc disagrees:
-
-> $ cat const_static.c
-> int f(int x) {
-> 	const unsigned long timing[] = { 5, 100, 500};
-> 	static const unsigned long timing2[] = { 5, 100, 500};
-> 	return timing[x] + timing2[x];
-> }
-> $ gcc -Os -S const_static.c
-> $ cat const_static.s
-	...
-> timing2.0:
->          .long   5
->          .long   100
->          .long   500
-> 	...
->          movl    8(%ebp), %edx
->          movl    $5, -16(%ebp)
->          movl    $100, -12(%ebp)
->          movl    $500, -8(%ebp)
->          movl    timing2.0(,%edx,4), %eax
->          addl    -16(%ebp,%edx,4), %eax
-
-    Hm, I remember I was convinced by somebody just *const* was enough 
-for the data to be put to .const section. Don't remember if he gave an 
-object code example... Well, it means that person was wrong. Mark, we 
-then need *static* as well...
-
-> Regards,
-> Clemens
-
-WBR, Sergei
+diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
+index b20aa96..46ccc1c 100644
+--- a/drivers/ata/sata_highbank.c
++++ b/drivers/ata/sata_highbank.c
+@@ -199,7 +199,7 @@ static int highbank_initialize_phys(struct device *dev, void __iomem *addr)
+ static int ahci_highbank_hardreset(struct ata_link *link, unsigned int *class,
+ 				unsigned long deadline)
+ {
+-	const unsigned long *timing = sata_ehc_deb_timing(&link->eh_context);
++	static const unsigned long timing[] = { 5, 100, 500};
+ 	struct ata_port *ap = link->ap;
+ 	struct ahci_port_priv *pp = ap->private_data;
+ 	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
+@@ -207,7 +207,7 @@ static int ahci_highbank_hardreset(struct ata_link *link, unsigned int *class,
+ 	bool online;
+ 	u32 sstatus;
+ 	int rc;
+-	int retry = 10;
++	int retry = 100;
+ 
+ 	ahci_stop_engine(ap);
+ 
+-- 
+1.8.1.2
 
