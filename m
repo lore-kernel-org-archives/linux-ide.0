@@ -1,43 +1,82 @@
-From: Jean Delvare <khali@linux-fr.org>
-Subject: Re: [PATCH 3/3] i2c-piix4: add AMD CZ SMBus device ID
-Date: Fri, 31 May 2013 09:46:43 +0200
-Message-ID: <20130531094643.5b256d2d@endymion.delvare>
-References: <1369999333-2073-1-git-send-email-shane.huang@amd.com>
-	<20130531080336.04481330@endymion.delvare>
-	<43EB3AB3EEFE8D43B525F4D2EAF507E1085B8CC5@SCYBEXDAG04.amd.com>
-	<20130531092846.51f2e202@endymion.delvare>
-	<43EB3AB3EEFE8D43B525F4D2EAF507E1085B8D06@SCYBEXDAG04.amd.com>
+From: Shane Huang <shane.huang@amd.com>
+Subject: [PATCH v2 3/3] i2c-piix4: add AMD CZ SMBus device ID
+Date: Fri, 31 May 2013 16:12:30 +0800
+Message-ID: <1369987950-2894-1-git-send-email-shane.huang@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zoneX.GCU-Squad.org ([194.213.125.0]:10003 "EHLO
-	services.gcu-squad.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753567Ab3EaHq4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 31 May 2013 03:46:56 -0400
-In-Reply-To: <43EB3AB3EEFE8D43B525F4D2EAF507E1085B8D06@SCYBEXDAG04.amd.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-pci-owner@vger.kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
+To: Jean Delvare <khali@linux-fr.org>
+Cc: Tejun Heo <tj@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, linux-i2c@vger.kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, Shane Huang <shane.huang@amd.com>
 List-Id: linux-ide@vger.kernel.org
-To: "Huang, Shane" <Shane.Huang@amd.com>
-Cc: Tejun Heo <tj@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, linux-i2c@vger.kernel.org
 
-On Fri, 31 May 2013 07:33:51 +0000, Huang, Shane wrote:
-> > Can you show the exact message? checkpatch doesn't complain here, and I
-> > can't think of any reason why it would care about that.
-> 
-> $ ./scripts/checkpatch.pl 0003-i2c-piix4-add-AMD-CZ-SMBus-device-ID.patch
-> WARNING: Avoid CamelCase: <Hudson>
-> #52: FILE: drivers/i2c/busses/i2c-piix4.c:25:
-> +       AMD Hudson-2, CZ
-> 
-> total: 0 errors, 1 warnings, 39 lines checked
+To add AMD CZ SMBus controller device ID.
 
-checkpatch is twice wrong here, firstly because there is no CamelCase
-and secondly because this is a comment and not code (ideally middle
-comment lines would start with "*" to avoid this false positive, but
-that style wasn't yet in use when the i2c-piix4 driver was written.)
+Signed-off-by: Shane Huang <shane.huang@amd.com>
+---
+ Documentation/i2c/busses/i2c-piix4 | 2 +-
+ drivers/i2c/busses/Kconfig         | 1 +
+ drivers/i2c/busses/i2c-piix4.c     | 3 ++-
+ include/linux/pci_ids.h            | 1 +
+ 4 files changed, 5 insertions(+), 2 deletions(-)
 
-So, just ignore it.
-
+diff --git a/Documentation/i2c/busses/i2c-piix4 b/Documentation/i2c/busses/i2c-piix4
+index 1e6634f..a370b20 100644
+--- a/Documentation/i2c/busses/i2c-piix4
++++ b/Documentation/i2c/busses/i2c-piix4
+@@ -13,7 +13,7 @@ Supported adapters:
+   * AMD SP5100 (SB700 derivative found on some server mainboards)
+     Datasheet: Publicly available at the AMD website
+     http://support.amd.com/us/Embedded_TechDocs/44413.pdf
+-  * AMD Hudson-2
++  * AMD Hudson-2, CZ
+     Datasheet: Not publicly available
+   * Standard Microsystems (SMSC) SLC90E66 (Victory66) southbridge
+     Datasheet: Publicly available at the SMSC website http://www.smsc.com
+diff --git a/drivers/i2c/busses/Kconfig b/drivers/i2c/busses/Kconfig
+index 631736e..4faf02b 100644
+--- a/drivers/i2c/busses/Kconfig
++++ b/drivers/i2c/busses/Kconfig
+@@ -150,6 +150,7 @@ config I2C_PIIX4
+ 	    ATI SB700/SP5100
+ 	    ATI SB800
+ 	    AMD Hudson-2
++	    AMD CZ
+ 	    Serverworks OSB4
+ 	    Serverworks CSB5
+ 	    Serverworks CSB6
+diff --git a/drivers/i2c/busses/i2c-piix4.c b/drivers/i2c/busses/i2c-piix4.c
+index 39ab78c..43c2e11 100644
+--- a/drivers/i2c/busses/i2c-piix4.c
++++ b/drivers/i2c/busses/i2c-piix4.c
+@@ -22,7 +22,7 @@
+ 	Intel PIIX4, 440MX
+ 	Serverworks OSB4, CSB5, CSB6, HT-1000, HT-1100
+ 	ATI IXP200, IXP300, IXP400, SB600, SB700/SP5100, SB800
+-	AMD Hudson-2
++	AMD Hudson-2, CZ
+ 	SMSC Victory66
+ 
+    Note: we assume there can only be one device, with one or more
+@@ -522,6 +522,7 @@ static DEFINE_PCI_DEVICE_TABLE(piix4_ids) = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP400_SMBUS) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_HUDSON2_SMBUS) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_CZ_SMBUS) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_SERVERWORKS,
+ 		     PCI_DEVICE_ID_SERVERWORKS_OSB4) },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_SERVERWORKS,
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 22449c1..b10a5b4 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -571,6 +571,7 @@
+ #define PCI_DEVICE_ID_AMD_HUDSON2_SATA_IDE	0x7800
+ #define PCI_DEVICE_ID_AMD_HUDSON2_SMBUS		0x780b
+ #define PCI_DEVICE_ID_AMD_CZ_SATA_IDE	0x7900
++#define PCI_DEVICE_ID_AMD_CZ_SMBUS	0x790b
+ 
+ #define PCI_VENDOR_ID_TRIDENT		0x1023
+ #define PCI_DEVICE_ID_TRIDENT_4DWAVE_DX	0x2000
 -- 
-Jean Delvare
+1.8.1.2
