@@ -1,89 +1,42 @@
-From: Jean Delvare <khali@linux-fr.org>
-Subject: Re: [PATCH v2 3/3] i2c-piix4: add AMD CZ SMBus device ID
-Date: Fri, 31 May 2013 10:30:43 +0200
-Message-ID: <20130531103043.253a0664@endymion.delvare>
-References: <1369987950-2894-1-git-send-email-shane.huang@amd.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH] ipr: qc_fill_rtf() method should not store alternate
+ status register
+Date: Fri, 31 May 2013 07:46:51 -0500
+Message-ID: <51A89BBB.1030705@linux.vnet.ibm.com>
+References: <201305212324.22822.sergei.shtylyov@cogentembedded.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <1369987950-2894-1-git-send-email-shane.huang@amd.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Shane Huang <shane.huang@amd.com>
-Cc: Tejun Heo <tj@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, linux-i2c@vger.kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from e39.co.us.ibm.com ([32.97.110.160]:45812 "EHLO
+	e39.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755263Ab3EaMq7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 31 May 2013 08:46:59 -0400
+Received: from /spool/local
+	by e39.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-ide@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+	Fri, 31 May 2013 06:46:58 -0600
+In-Reply-To: <201305212324.22822.sergei.shtylyov@cogentembedded.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: brking@us.ibm.com, JBottomley@parallels.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, tj@kernel.org
 
-On Fri, 31 May 2013 16:12:30 +0800, Shane Huang wrote:
-> To add AMD CZ SMBus controller device ID.
+On 05/21/2013 02:24 PM, Sergei Shtylyov wrote:
+> The 'ctl' field of  the 'struct ata_taskfile' is not really dual purpose, i.e.
+> it is not intended  for storing the alternate status register (which is mapped
+> at the same address in the legacy IDE controllers) in the qc_fill_rtf() method.
+> No other 'libata' driver except 'drivers/scsi/ipr.c' stores the alternate status
+> register's value in the 'ctl' field of 'qc->result_tf', hence this driver should
+> not do this as well...
 > 
-> Signed-off-by: Shane Huang <shane.huang@amd.com>
-> ---
->  Documentation/i2c/busses/i2c-piix4 | 2 +-
->  drivers/i2c/busses/Kconfig         | 1 +
->  drivers/i2c/busses/i2c-piix4.c     | 3 ++-
->  include/linux/pci_ids.h            | 1 +
->  4 files changed, 5 insertions(+), 2 deletions(-)
-> 
-> diff --git a/Documentation/i2c/busses/i2c-piix4 b/Documentation/i2c/busses/i2c-piix4
-> index 1e6634f..a370b20 100644
-> --- a/Documentation/i2c/busses/i2c-piix4
-> +++ b/Documentation/i2c/busses/i2c-piix4
-> @@ -13,7 +13,7 @@ Supported adapters:
->    * AMD SP5100 (SB700 derivative found on some server mainboards)
->      Datasheet: Publicly available at the AMD website
->      http://support.amd.com/us/Embedded_TechDocs/44413.pdf
-> -  * AMD Hudson-2
-> +  * AMD Hudson-2, CZ
->      Datasheet: Not publicly available
->    * Standard Microsystems (SMSC) SLC90E66 (Victory66) southbridge
->      Datasheet: Publicly available at the SMSC website http://www.smsc.com
-> diff --git a/drivers/i2c/busses/Kconfig b/drivers/i2c/busses/Kconfig
-> index 631736e..4faf02b 100644
-> --- a/drivers/i2c/busses/Kconfig
-> +++ b/drivers/i2c/busses/Kconfig
-> @@ -150,6 +150,7 @@ config I2C_PIIX4
->  	    ATI SB700/SP5100
->  	    ATI SB800
->  	    AMD Hudson-2
-> +	    AMD CZ
->  	    Serverworks OSB4
->  	    Serverworks CSB5
->  	    Serverworks CSB6
-> diff --git a/drivers/i2c/busses/i2c-piix4.c b/drivers/i2c/busses/i2c-piix4.c
-> index 39ab78c..43c2e11 100644
-> --- a/drivers/i2c/busses/i2c-piix4.c
-> +++ b/drivers/i2c/busses/i2c-piix4.c
-> @@ -22,7 +22,7 @@
->  	Intel PIIX4, 440MX
->  	Serverworks OSB4, CSB5, CSB6, HT-1000, HT-1100
->  	ATI IXP200, IXP300, IXP400, SB600, SB700/SP5100, SB800
-> -	AMD Hudson-2
-> +	AMD Hudson-2, CZ
->  	SMSC Victory66
->  
->     Note: we assume there can only be one device, with one or more
-> @@ -522,6 +522,7 @@ static DEFINE_PCI_DEVICE_TABLE(piix4_ids) = {
->  	{ PCI_DEVICE(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_IXP400_SMBUS) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_ATI, PCI_DEVICE_ID_ATI_SBX00_SMBUS) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_HUDSON2_SMBUS) },
-> +	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_CZ_SMBUS) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_SERVERWORKS,
->  		     PCI_DEVICE_ID_SERVERWORKS_OSB4) },
->  	{ PCI_DEVICE(PCI_VENDOR_ID_SERVERWORKS,
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 22449c1..b10a5b4 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -571,6 +571,7 @@
->  #define PCI_DEVICE_ID_AMD_HUDSON2_SATA_IDE	0x7800
->  #define PCI_DEVICE_ID_AMD_HUDSON2_SMBUS		0x780b
->  #define PCI_DEVICE_ID_AMD_CZ_SATA_IDE	0x7900
-> +#define PCI_DEVICE_ID_AMD_CZ_SMBUS	0x790b
->  
->  #define PCI_VENDOR_ID_TRIDENT		0x1023
->  #define PCI_DEVICE_ID_TRIDENT_4DWAVE_DX	0x2000
+> Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 
-Reviewed-by: Jean Delvare <khali@linux-fr.org>
+Acked-by: Brian King <brking@linux.vnet.ibm.com>
 
 -- 
-Jean Delvare
+Brian King
+Power Linux I/O
+IBM Linux Technology Center
+
+
