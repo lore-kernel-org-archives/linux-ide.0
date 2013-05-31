@@ -1,51 +1,41 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2] ata: increase retry count but shorten duration for
- Calxeda controller
-Date: Fri, 31 May 2013 10:20:06 +0900
-Message-ID: <20130531012006.GB29975@mtj.dyndns.org>
-References: <1369923509-3246-1-git-send-email-mark.langsdorf@calxeda.com>
+From: Shane Huang <shane.huang-5C7GfCeVMHo@public.gmane.org>
+Subject: [PATCH 1/3] pci_ids: put Hudson-2 device IDs together
+Date: Fri, 31 May 2013 19:17:19 +0800
+Message-ID: <1369999039-1983-1-git-send-email-shane.huang@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pb0-f44.google.com ([209.85.160.44]:61705 "EHLO
-	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752173Ab3EaBUL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 May 2013 21:20:11 -0400
-Content-Disposition: inline
-In-Reply-To: <1369923509-3246-1-git-send-email-mark.langsdorf@calxeda.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-i2c-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-i2c-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bjorn Helgaas <bhelgaas-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jean Delvare <khali-PUYAD+kWke1g9hUCZPvPmw@public.gmane.org>, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-i2c-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shane Huang <shane.huang-5C7GfCeVMHo@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: Mark Langsdorf <mark.langsdorf@calxeda.com>
-Cc: timur@tabi.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Thu, May 30, 2013 at 09:18:29AM -0500, Mark Langsdorf wrote:
-> The Calxeda SATA phy intermittently fails to bring up a link with Gen3
-> Retrying the phy hard reset can work around the issue, but the drive
-> may fail again. In less than 150 out of 15000 test runs, it took more
-> than 10 tries for the link to be established (but never more than 35).
-> Triple the maximum observed retry count to provide plenty of margin for
-> rare events and to guarantee that the link is established.
-> 
-> Also, the default 2 second time-out on a failed drive is too long in
-> this situation. The uboot implementation of the same driver function
-> uses a much shorter time-out period and never experiences a time out
-> issue. Shorten the Linux time-out value for this driver to 500 ms and
-> keep the other timing constants the same as the stock AHCI driver. This
-> change was also tested 15000 times on 24 drives and none of them
-> experienced a time out.
-> 
-> Signed-off-by: Mark Langsdorf <mark.langsdorf@calxeda.com>
-> ---
-> Changes from v1
-> 	Add const to the timing variable definition
-> 	Added more detail in why the various numbers were chosen
+To put all AMD Hudson-2 device IDs together for better maintenance.
 
-Can you make the detailed explanation comment in the code so that
-people don't have to try to hunt down this commit later on?  The
-commit message can explain it briefly and refer to the comment in the
-body.
+Signed-off-by: Shane Huang <shane.huang-5C7GfCeVMHo@public.gmane.org>
+---
+ include/linux/pci_ids.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks.
-
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index c129162..e0b5623 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -556,7 +556,6 @@
+ #define PCI_DEVICE_ID_AMD_8131_BRIDGE	0x7450
+ #define PCI_DEVICE_ID_AMD_8131_APIC	0x7451
+ #define PCI_DEVICE_ID_AMD_8132_BRIDGE	0x7458
+-#define PCI_DEVICE_ID_AMD_HUDSON2_SMBUS	0x780b
+ #define PCI_DEVICE_ID_AMD_CS5535_IDE    0x208F
+ #define PCI_DEVICE_ID_AMD_CS5536_ISA    0x2090
+ #define PCI_DEVICE_ID_AMD_CS5536_FLASH  0x2091
+@@ -570,6 +569,7 @@
+ #define PCI_DEVICE_ID_AMD_LX_AES    0x2082
+ #define PCI_DEVICE_ID_AMD_HUDSON2_IDE		0x780c
+ #define PCI_DEVICE_ID_AMD_HUDSON2_SATA_IDE	0x7800
++#define PCI_DEVICE_ID_AMD_HUDSON2_SMBUS		0x780b
+ 
+ #define PCI_VENDOR_ID_TRIDENT		0x1023
+ #define PCI_DEVICE_ID_TRIDENT_4DWAVE_DX	0x2000
 -- 
-tejun
+1.8.1.2
