@@ -1,40 +1,41 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 3/3] i2c-piix4: add AMD CZ SMBus device ID
-Date: Fri, 31 May 2013 16:38:32 +0900
-Message-ID: <20130531073832.GB16809@mtj.dyndns.org>
-References: <1369999333-2073-1-git-send-email-shane.huang@amd.com>
- <20130531080336.04481330@endymion.delvare>
- <43EB3AB3EEFE8D43B525F4D2EAF507E1085B8CC5@SCYBEXDAG04.amd.com>
- <20130531092846.51f2e202@endymion.delvare>
- <43EB3AB3EEFE8D43B525F4D2EAF507E1085B8D06@SCYBEXDAG04.amd.com>
+Subject: Re: [PATCH v2] ata: increase retry count but shorten duration for
+ Calxeda controller
+Date: Fri, 31 May 2013 16:40:17 +0900
+Message-ID: <20130531074017.GC16809@mtj.dyndns.org>
+References: <1369923509-3246-1-git-send-email-mark.langsdorf@calxeda.com>
+ <51A76197.9080708@calxeda.com>
+ <51A7646B.6080203@cogentembedded.com>
+ <51A848F1.3040301@ladisch.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pb0-f46.google.com ([209.85.160.46]:40335 "EHLO
-	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751195Ab3EaHig (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 31 May 2013 03:38:36 -0400
+Received: from mail-pb0-f49.google.com ([209.85.160.49]:35572 "EHLO
+	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753144Ab3EaHkV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 31 May 2013 03:40:21 -0400
 Content-Disposition: inline
-In-Reply-To: <43EB3AB3EEFE8D43B525F4D2EAF507E1085B8D06@SCYBEXDAG04.amd.com>
+In-Reply-To: <51A848F1.3040301@ladisch.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Huang, Shane" <Shane.Huang@amd.com>
-Cc: Jean Delvare <khali@linux-fr.org>, Bjorn Helgaas <bhelgaas@google.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>
+To: Clemens Ladisch <clemens@ladisch.de>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Timur Tabi <timur.tabi@calxeda.com>, Mark Langsdorf <mark.langsdorf@calxeda.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Fri, May 31, 2013 at 07:33:51AM +0000, Huang, Shane wrote:
-> > Can you show the exact message? checkpatch doesn't complain here, and I
-> > can't think of any reason why it would care about that.
+On Fri, May 31, 2013 at 08:53:37AM +0200, Clemens Ladisch wrote:
+> Sergei Shtylyov wrote:
+> > On 30-05-2013 18:26, Timur Tabi wrote:
+> >>> +    const unsigned long timing[] = { 5, 100, 500};
+> >
+> >> You'll save space and time if you also make this array "static",
+> >> otherwise the compiler will build the array every time this function is
+> >> called.
+> >
+> > No, *const* specifier is enough to not build this array every time. It will be put into the .const section.
 > 
-> $ ./scripts/checkpatch.pl 0003-i2c-piix4-add-AMD-CZ-SMBus-device-ID.patch
-> WARNING: Avoid CamelCase: <Hudson>
-> #52: FILE: drivers/i2c/busses/i2c-piix4.c:25:
-> +       AMD Hudson-2, CZ
-> 
-> total: 0 errors, 1 warnings, 39 lines checked
+> gcc disagrees:
 
-Even if checkpatch complains, there's no point in following it
-religiously.  If addressing the complaint doesn't make the code
-better, there's no point in doing so.
+Doesn't really matter this or that way but let's do static const as,
+more than anything else, that's what other places are doing.
 
 Thanks.
 
