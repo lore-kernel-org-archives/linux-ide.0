@@ -1,52 +1,33 @@
-From: Clemens Ladisch <clemens@ladisch.de>
-Subject: Re: [PATCH v2] ata: increase retry count but shorten duration for
- Calxeda controller
-Date: Fri, 31 May 2013 08:53:37 +0200
-Message-ID: <51A848F1.3040301@ladisch.de>
-References: <1369923509-3246-1-git-send-email-mark.langsdorf@calxeda.com> <51A76197.9080708@calxeda.com> <51A7646B.6080203@cogentembedded.com>
+From: Jean Delvare <khali-PUYAD+kWke1g9hUCZPvPmw@public.gmane.org>
+Subject: Re: [PATCH 3/3] i2c-piix4: add AMD CZ SMBus device ID
+Date: Fri, 31 May 2013 09:28:46 +0200
+Message-ID: <20130531092846.51f2e202@endymion.delvare>
+References: <1369999333-2073-1-git-send-email-shane.huang@amd.com>
+	<20130531080336.04481330@endymion.delvare>
+	<43EB3AB3EEFE8D43B525F4D2EAF507E1085B8CC5@SCYBEXDAG04.amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <51A7646B.6080203@cogentembedded.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: Timur Tabi <timur.tabi@calxeda.com>, Mark Langsdorf <mark.langsdorf@calxeda.com>, tj@kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-i2c-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <43EB3AB3EEFE8D43B525F4D2EAF507E1085B8CC5-7mPiUsE5EJ9oz6IQsZflRkEOCMrvLtNR@public.gmane.org>
+Sender: linux-i2c-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Huang, Shane" <Shane.Huang-5C7GfCeVMHo@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Bjorn Helgaas <bhelgaas-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-i2c-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
-Sergei Shtylyov wrote:
-> On 30-05-2013 18:26, Timur Tabi wrote:
->>> +    const unsigned long timing[] = { 5, 100, 500};
->
->> You'll save space and time if you also make this array "static",
->> otherwise the compiler will build the array every time this function is
->> called.
->
-> No, *const* specifier is enough to not build this array every time. It will be put into the .const section.
+On Fri, 31 May 2013 06:42:54 +0000, Huang, Shane wrote:
+> Hi Jean,
+> 
+> > Please don't change the case. This makes your patch larger and
+> > increases the risk of conflict with other patches, for no good reason.
+> > 
+> > Other than that, the patch looks OK.
+> 
+> I didn't want to change it but checkpatch.pl warns due to
+> "Hudson-2" in i2c-piix4.c
 
-gcc disagrees:
+Can you show the exact message? checkpatch doesn't complain here, and I
+can't think of any reason why it would care about that.
 
-$ cat const_static.c
-int f(int x) {
-	const unsigned long timing[] = { 5, 100, 500};
-	static const unsigned long timing2[] = { 5, 100, 500};
-	return timing[x] + timing2[x];
-}
-$ gcc -Os -S const_static.c
-$ cat const_static.s
-	...
-timing2.0:
-        .long   5
-        .long   100
-        .long   500
-	...
-        movl    8(%ebp), %edx
-        movl    $5, -16(%ebp)
-        movl    $100, -12(%ebp)
-        movl    $500, -8(%ebp)
-        movl    timing2.0(,%edx,4), %eax
-        addl    -16(%ebp,%edx,4), %eax
-
-
-Regards,
-Clemens
+-- 
+Jean Delvare
