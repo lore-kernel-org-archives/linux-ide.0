@@ -1,68 +1,42 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] sata_rcar: fix interrupt handling
-Date: Sun, 2 Jun 2013 00:58:21 -0700
-Message-ID: <20130602075821.GA8286@mtj.dyndns.org>
-References: <201306010238.35442.sergei.shtylyov@cogentembedded.com>
- <51A92CF0.3090804@cogentembedded.com>
+Subject: Re: [PATCH v3] ata: increase retry count but shorten duration for
+ Calxeda controller
+Date: Sun, 2 Jun 2013 01:00:10 -0700
+Message-ID: <20130602080010.GB8286@mtj.dyndns.org>
+References: <1369842679-9680-1-git-send-email-mark.langsdorf@calxeda.com>
+ <1370014046-5202-1-git-send-email-mark.langsdorf@calxeda.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pb0-f43.google.com ([209.85.160.43]:57904 "EHLO
-	mail-pb0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750805Ab3FBH6Z (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Jun 2013 03:58:25 -0400
-Received: by mail-pb0-f43.google.com with SMTP id ma3so4288158pbc.2
-        for <linux-ide@vger.kernel.org>; Sun, 02 Jun 2013 00:58:24 -0700 (PDT)
+Received: from mail-pb0-f53.google.com ([209.85.160.53]:39643 "EHLO
+	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750913Ab3FBIAQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Jun 2013 04:00:16 -0400
 Content-Disposition: inline
-In-Reply-To: <51A92CF0.3090804@cogentembedded.com>
+In-Reply-To: <1370014046-5202-1-git-send-email-mark.langsdorf@calxeda.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: linux-ide@vger.kernel.org, vladimir.barinov@cogentembedded.com
+To: Mark Langsdorf <mark.langsdorf@calxeda.com>
+Cc: timur@tabi.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, clemens@ladisch.de, sergei.shtylyov@cogentembedded.com
 
-On Sat, Jun 01, 2013 at 03:06:24AM +0400, Sergei Shtylyov wrote:
-> Hello.
->=20
-> On 06/01/2013 02:38 AM, Sergei Shtylyov wrote:
->=20
-> >The driver's interrupt handling code is too picky in deciding whethe=
-r it should
-> >handle an interrupt or not which causes completely unneeded spurious=
- interrupts.
-> >Thus make sata_rcar_{ata|serr}_interrupt() *void*; add ATA status re=
-gister read
-> >to sata_rcar_ata_interrupt() to clear an unexpected ATA interrupt --=
- it doesn't
-> >get cleared by writing to the SATAINTSTAT register in the interrupt =
-mode we use.
-> >
-> >Also, in sata_rcar_ata_interrupt() we should check SATAINTSTAT regis=
-ter only for
-> >enabled interrupts and we should clear  only those interrupts  that =
-we have read
-> >as active first time around, because else we have  a  race and risk =
-clearing  an
-> >interrupt that  can  occur between read  and write of the  SATAINTST=
-AT  register
-> >and never registering it...
-> >
-> >Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
->=20
->     Darn, I forgot to Cc: stable@vger.kernel.org again.
+On Fri, May 31, 2013 at 10:27:26AM -0500, Mark Langsdorf wrote:
+> The Calxeda SATA phy intermittently fails to bring up a link with Gen3
+> Retrying the phy hard reset can work around the issue, but the drive
+> may fail again. In less than 150 out of 15000 test runs, it took more
+> than 10 tries for the link to be established (but never more than 35).
+> Triple the maximum observed retry count to provide plenty of margin for
+> rare events and to guarantee that the link is established.
+> 
+> Also, the default 2 second time-out on a failed drive is too long in
+> this situation. The uboot implementation of the same driver function
+> uses a much shorter time-out period and never experiences a time out
+> issue. Shorten the Linux time-out value for this driver to 500 ms and
+> keep the other timing constants the same as the stock AHCI driver. This
+> change was also tested 15000 times on 24 drives and none of them
+> experienced a time out.
 
-Applied to libata/for-3.10-fixes w/ stable cc'd.  BTW, the driver
-generates the following compile warning.
+For the third time, explain the above in the comment; otherwise, it's
+not going in.
 
-   CC      drivers/ata/sata_rcar.o
-   drivers/ata/sata_rcar.c: In function =E2=80=98sata_rcar_thaw=E2=80=99=
-:
-   drivers/ata/sata_rcar.c:183:2: warning: large integer implicitly tru=
-ncated to unsigned type [-Woverflow]
-  =20
-Care to fix it?
-
-Thanks.
-
---=20
+-- 
 tejun
