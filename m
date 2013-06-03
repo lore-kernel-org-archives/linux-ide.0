@@ -1,58 +1,50 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH] sata_rcar: fix interrupt handling
-Date: Sun, 02 Jun 2013 21:00:11 +0400
-Message-ID: <51AB7A1B.4060905@cogentembedded.com>
-References: <201306010238.35442.sergei.shtylyov@cogentembedded.com> <51A92CF0.3090804@cogentembedded.com> <20130602075821.GA8286@mtj.dyndns.org> <51AB2F0A.9030703@cogentembedded.com>
+From: Shane Huang <shane.huang@amd.com>
+Subject: [PATCH RESEND 1/3] pci_ids: put Hudson-2 device IDs together
+Date: Mon, 3 Jun 2013 18:22:28 +0800
+Message-ID: <1370254948-2284-1-git-send-email-shane.huang@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lb0-f169.google.com ([209.85.217.169]:33512 "EHLO
-	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754296Ab3FBRAP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Jun 2013 13:00:15 -0400
-Received: by mail-lb0-f169.google.com with SMTP id 10so3094874lbf.0
-        for <linux-ide@vger.kernel.org>; Sun, 02 Jun 2013 10:00:14 -0700 (PDT)
-In-Reply-To: <51AB2F0A.9030703@cogentembedded.com>
+Received: from ch1ehsobe006.messaging.microsoft.com ([216.32.181.186]:11025
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753713Ab3FCCVh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Jun 2013 22:21:37 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, vladimir.barinov@cogentembedded.com
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Tejun Heo <tj@kernel.org>, Jean Delvare <khali@linux-fr.org>, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, linux-i2c@vger.kernel.org, Shane Huang <shane.huang@amd.com>, stable@vger.kernel.org
 
-Hello.
+To put all AMD Hudson-2 device IDs together for better maintenance.
 
-On 06/02/2013 03:39 PM, Sergei Shtylyov wrote:
+Signed-off-by: Shane Huang <shane.huang@amd.com>
+Reviewed-by: Tejun Heo <tj@kernel.org>
+Acked-by: Jean Delvare <khali@linux-fr.org>
+Cc: stable@vger.kernel.org
+---
+ include/linux/pci_ids.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
->
->>>      Darn, I forgot to Cc: stable@vger.kernel.org again.
->
->> Applied to libata/for-3.10-fixes w/ stable cc'd.  BTW, the driver
->> generates the following compile warning.
->
->>     CC      drivers/ata/sata_rcar.o
->>     drivers/ata/sata_rcar.c: In function =E2=80=98sata_rcar_thaw=E2=80=
-=99:
->>     drivers/ata/sata_rcar.c:183:2: warning: large integer implicitly=
-=20
->> truncated to unsigned type [-Woverflow]
->
->     It compiles without warnings for me, IIRC. What version of gcc ar=
-e=20
-> you using?
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index c129162..e0b5623 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -556,7 +556,6 @@
+ #define PCI_DEVICE_ID_AMD_8131_BRIDGE	0x7450
+ #define PCI_DEVICE_ID_AMD_8131_APIC	0x7451
+ #define PCI_DEVICE_ID_AMD_8132_BRIDGE	0x7458
+-#define PCI_DEVICE_ID_AMD_HUDSON2_SMBUS	0x780b
+ #define PCI_DEVICE_ID_AMD_CS5535_IDE    0x208F
+ #define PCI_DEVICE_ID_AMD_CS5536_ISA    0x2090
+ #define PCI_DEVICE_ID_AMD_CS5536_FLASH  0x2091
+@@ -570,6 +569,7 @@
+ #define PCI_DEVICE_ID_AMD_LX_AES    0x2082
+ #define PCI_DEVICE_ID_AMD_HUDSON2_IDE		0x780c
+ #define PCI_DEVICE_ID_AMD_HUDSON2_SATA_IDE	0x7800
++#define PCI_DEVICE_ID_AMD_HUDSON2_SMBUS		0x780b
+ 
+ #define PCI_VENDOR_ID_TRIDENT		0x1023
+ #define PCI_DEVICE_ID_TRIDENT_4DWAVE_DX	0x2000
+-- 
+1.8.1.2
 
->> Care to fix it?
->
->    I'll look into it...
-
-
-     I tried 4.2.0, 4.3.3 (that one broke with segmentation fault), and=
-=20
-4.7.3 and no warning...
-So, please tell me what version you have for the changelog.
-
->> Thanks.
->
-
-MBR, Sergei
 
