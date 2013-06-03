@@ -1,68 +1,69 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] libata fixes for v3.10-rc4
-Date: Sun, 2 Jun 2013 20:32:13 -0700
-Message-ID: <20130603033213.GB6071@mtj.dyndns.org>
+Subject: Re: [PATCH] sata_rcar: fix interrupt handling
+Date: Sun, 2 Jun 2013 20:49:12 -0700
+Message-ID: <20130603034912.GD6071@mtj.dyndns.org>
+References: <201306010238.35442.sergei.shtylyov@cogentembedded.com>
+ <51A92CF0.3090804@cogentembedded.com>
+ <20130602075821.GA8286@mtj.dyndns.org>
+ <51AB2F0A.9030703@cogentembedded.com>
+ <51AB7A1B.4060905@cogentembedded.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qe0-f54.google.com ([209.85.128.54]:59496 "EHLO
-	mail-qe0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750824Ab3FCDcJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Jun 2013 23:32:09 -0400
+Received: from mail-qe0-f42.google.com ([209.85.128.42]:36466 "EHLO
+	mail-qe0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750846Ab3FCDtK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 2 Jun 2013 23:49:10 -0400
+Received: by mail-qe0-f42.google.com with SMTP id s14so335639qeb.15
+        for <linux-ide@vger.kernel.org>; Sun, 02 Jun 2013 20:49:09 -0700 (PDT)
 Content-Disposition: inline
+In-Reply-To: <51AB7A1B.4060905@cogentembedded.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: linux-ide@vger.kernel.org, vladimir.barinov@cogentembedded.com
 
-Hello, Linus.
+Hey,
 
-libata changes for v3.10-rc4.  Nothing too interesting.  PCI ID
-additions, some sata_rcar fixes and a fringe bug fix for DMADIR
-handling which shouldn't affect any device remotely modern.  The
-changes are available in the following git branch
+On Sun, Jun 02, 2013 at 09:00:11PM +0400, Sergei Shtylyov wrote:
+> >>    CC      drivers/ata/sata_rcar.o
+> >>    drivers/ata/sata_rcar.c: In function =E2=80=98sata_rcar_thaw=E2=
+=80=99:
+> >>    drivers/ata/sata_rcar.c:183:2: warning: large integer
+> >>implicitly truncated to unsigned type [-Woverflow]
+> >
+> >    It compiles without warnings for me, IIRC. What version of gcc
+> >are you using?
+>=20
+> >>Care to fix it?
+> >
+> >   I'll look into it...
+>=20
+>     I tried 4.2.0, 4.3.3 (that one broke with segmentation fault),
+> and 4.7.3 and no warning...
+> So, please tell me what version you have for the changelog.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-3.10-fixes
+I'm on fedora 19 beta x86-64.
 
-for you to fetch changes up to 52a2a1087b5924de00484f35ef5e2a73f61dbd22:
+$ gcc --version
+gcc (GCC) 4.8.0 20130526 (Red Hat 4.8.0-8)
+Copyright (C) 2013 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is=
+ NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURP=
+OSE.
 
-  sata_rcar: fix interrupt handling (2013-06-02 00:54:45 -0700)
-
+# make drivers/ata/sata_rcar.o
+=2E..
+  CC      drivers/ata/sata_rcar.o
+  drivers/ata/sata_rcar.c: In function =E2=80=98sata_rcar_thaw=E2=80=99=
+:
+  drivers/ata/sata_rcar.c:183:2: warning: large integer implicitly trun=
+cated to unsigned type [-Woverflow]
+    iowrite32(~SATA_RCAR_INT_MASK, priv->base + SATAINTSTAT_REG);
+    ^
 Thanks.
 
-----------------------------------------------------------------
-Chew, Chiau Ee (1):
-      ata_piix: add PCI IDs for Intel BayTail
-
-George Spelvin (1):
-      ahci: add an observed PCI ID for Marvell 88se9172 SATA controller
-
-Sergei Shtylyov (2):
-      sata_rcar: clear STOP bit in bmdma_start() method
-      sata_rcar: fix interrupt handling
-
-Tejun Heo (1):
-      libata: update "Maintained by:" tags
-
-Vincent Pelletier (1):
-      libata: make ata_exec_internal_sg honor DMADIR
-
- drivers/ata/acard-ahci.c   |  2 +-
- drivers/ata/ahci.c         |  4 +++-
- drivers/ata/ahci.h         |  2 +-
- drivers/ata/ata_piix.c     | 17 ++++++++++++++++-
- drivers/ata/libahci.c      |  2 +-
- drivers/ata/libata-core.c  |  8 +++++++-
- drivers/ata/libata-eh.c    |  2 +-
- drivers/ata/libata-scsi.c  |  2 +-
- drivers/ata/libata-sff.c   |  2 +-
- drivers/ata/pdc_adma.c     |  2 +-
- drivers/ata/sata_promise.c |  2 +-
- drivers/ata/sata_rcar.c    | 24 ++++++++++++------------
- drivers/ata/sata_sil.c     |  2 +-
- drivers/ata/sata_sx4.c     |  2 +-
- drivers/ata/sata_via.c     |  2 +-
- 15 files changed, 49 insertions(+), 26 deletions(-)
-
---
+--=20
 tejun
