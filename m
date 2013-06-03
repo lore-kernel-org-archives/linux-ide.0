@@ -1,35 +1,56 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v4] ata: increase retry count but shorten duration for
- Calxeda controller
-Date: Mon, 3 Jun 2013 13:39:41 -0700
-Message-ID: <20130603203941.GC29989@mtj.dyndns.org>
-References: <1369842679-9680-1-git-send-email-mark.langsdorf@calxeda.com>
- <1370265774-13939-1-git-send-email-mark.langsdorf@calxeda.com>
+From: "Brandt, Todd E" <todd.e.brandt@intel.com>
+Subject: RE: [PATCH v2 2/2] Adds new device resume mode in PM core, async
+ plus non-blocking
+Date: Mon, 3 Jun 2013 21:10:28 +0000
+Message-ID: <11E08D716F0541429B7042699DD5C1A1706057ED@FMSMSX103.amr.corp.intel.com>
+References: <11E08D716F0541429B7042699DD5C1A16B97BD8A@FMSMSX103.amr.corp.intel.com>,<Pine.LNX.4.44L0.1305171539470.1012-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qe0-f45.google.com ([209.85.128.45]:36675 "EHLO
-	mail-qe0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756974Ab3FCUjq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Jun 2013 16:39:46 -0400
-Content-Disposition: inline
-In-Reply-To: <1370265774-13939-1-git-send-email-mark.langsdorf@calxeda.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.1305171539470.1012-100000@iolanthe.rowland.org>
+Content-Language: en-US
+Sender: linux-pm-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Jens Axboe <axboe@kernel.dk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Wysocki, Rafael J" <rafael.j.wysocki@intel.com>, Arjan van de Ven <arjan@linux.intel.com>
 List-Id: linux-ide@vger.kernel.org
-To: Mark Langsdorf <mark.langsdorf@calxeda.com>
-Cc: timur@tabi.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, clemens@ladisch.de, sergei.shtylyov@cogentembedded.com
 
-On Mon, Jun 03, 2013 at 08:22:54AM -0500, Mark Langsdorf wrote:
-> Increase the retry count for the hard reset function to 100 but
-> shorten the time out period to 500 ms. See the comment for
-> ahci_highbank_hardreset for the reasons why those vaulues were
-> chosen.
-> 
-> Signed-off-by: Mark Langsdorf <mark.langsdorf@calxeda.com>
+Thanks for the feedback, I've taken things back to the drawing board in lieu of these issues and will be resubmitting once I have a patch that fits better into the formal power management architecture. Would you like to be CC'ed?
 
-Applied to libata/for-3.10-fixes w/ stable cc'd.
+Todd Brandt
+Linux Kernel Developer OTC, Hillsboro OR
+https://opensource.intel.com/linux-wiki/ToddBrandt
 
-Thanks!
 
--- 
-tejun
+________________________________________
+From: Alan Stern [stern@rowland.harvard.edu]
+Sent: Friday, May 17, 2013 12:44 PM
+To: Brandt, Todd E
+Cc: linux-ide@vger.kernel.org; linux-scsi@vger.kernel.org; linux-pm@vger.kernel.org; Jeff Garzik; Jens Axboe; Greg Kroah-Hartman; Wysocki, Rafael J; Arjan van de Ven
+Subject: Re: [PATCH v2 2/2] Adds new device resume mode in PM core, async plus non-blocking
+
+On Fri, 17 May 2013, Brandt, Todd E wrote:
+
+> Updates the drivers/base/power subsystem to allow any devices which
+> have registred as asynchronous and who have not registered "complete"
+> callbacks to be non-blocking. i.e system resume can finish and return
+> control to the user while these devices continue resuming.
+
+This does not sound like a good idea.  The presence or absence of a
+"complete" callback has nothing to do with whether or not system resume
+can finish before the device is ready.  It is more closely related to
+whether the device's driver can register hot-plugged children below the
+device or needs to perform other actions after the children have been
+resumed.
+
+The whole approach seems wrong -- it violates the implicit agreement
+that the kernel will not try to perform I/O through a device that isn't
+at full power.
+
+A better approach would be to modify the SCSI disk driver to carry out
+the spin-up operation asynchronously with respect to the resume
+callback.  Then the disk could be reported as back to full power while
+the spin-up is taking place.
+
+Alan Stern
+
