@@ -1,40 +1,32 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH RESEND v2 3/3] i2c-piix4: add AMD CZ SMBus device ID
-Date: Mon, 03 Jun 2013 14:05:31 +0400
-Message-ID: <51AC6A6B.3090808@cogentembedded.com>
-References: <1370255095-2525-1-git-send-email-shane.huang@amd.com>
+From: Mark Langsdorf <mark.langsdorf@calxeda.com>
+Subject: Re: [PATCH v3] ata: increase retry count but shorten duration for
+ Calxeda controller
+Date: Mon, 03 Jun 2013 07:27:09 -0500
+Message-ID: <51AC8B9D.1060702@calxeda.com>
+References: <1369842679-9680-1-git-send-email-mark.langsdorf@calxeda.com> <1370014046-5202-1-git-send-email-mark.langsdorf@calxeda.com> <20130602080010.GB8286@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1370255095-2525-1-git-send-email-shane.huang@amd.com>
-Sender: stable-owner@vger.kernel.org
-To: Shane Huang <shane.huang@amd.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Tejun Heo <tj@kernel.org>, Jean Delvare <khali@linux-fr.org>, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, linux-i2c@vger.kernel.org, stable@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp105.ord1c.emailsrvr.com ([108.166.43.105]:57496 "EHLO
+	smtp105.ord1c.emailsrvr.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753564Ab3FCM1C (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Jun 2013 08:27:02 -0400
+In-Reply-To: <20130602080010.GB8286@mtj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: "timur@tabi.org" <timur@tabi.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "clemens@ladisch.de" <clemens@ladisch.de>, "sergei.shtylyov@cogentembedded.com" <sergei.shtylyov@cogentembedded.com>
 
-Hello.
+On 06/02/2013 03:00 AM, Tejun Heo wrote:
+> On Fri, May 31, 2013 at 10:27:26AM -0500, Mark Langsdorf wrote:
+> 
+> For the third time, explain the above in the comment; otherwise, it's
+> not going in.
 
-On 03-06-2013 14:24, Shane Huang wrote:
+Sorry, I completely misread your requirement. I'll move it to the
+comment as requested.
 
-> To add AMD CZ SMBus controller device ID.
+--Mark Langsdorf
+Calxeda, Inc.
 
-> Signed-off-by: Shane Huang <shane.huang@amd.com>
-> Reviewed-by: Tejun Heo <tj@kernel.org>
-> Reviewed-by: Jean Delvare <khali@linux-fr.org>
-> Cc: stable@vger.kernel.org
-[...]
-
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 22449c1..b10a5b4 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -571,6 +571,7 @@
->   #define PCI_DEVICE_ID_AMD_HUDSON2_SATA_IDE	0x7800
->   #define PCI_DEVICE_ID_AMD_HUDSON2_SMBUS		0x780b
->   #define PCI_DEVICE_ID_AMD_CZ_SATA_IDE	0x7900
-> +#define PCI_DEVICE_ID_AMD_CZ_SMBUS	0x790b
-
-    We don't add the device IDs here anymore.
-
-MBR, Sergei
