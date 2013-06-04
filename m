@@ -1,56 +1,76 @@
-From: "Brandt, Todd E" <todd.e.brandt@intel.com>
-Subject: RE: [PATCH v2 2/2] Adds new device resume mode in PM core, async
- plus non-blocking
-Date: Mon, 3 Jun 2013 21:10:28 +0000
-Message-ID: <11E08D716F0541429B7042699DD5C1A1706057ED@FMSMSX103.amr.corp.intel.com>
-References: <11E08D716F0541429B7042699DD5C1A16B97BD8A@FMSMSX103.amr.corp.intel.com>,<Pine.LNX.4.44L0.1305171539470.1012-100000@iolanthe.rowland.org>
+From: Simon Horman <horms@verge.net.au>
+Subject: Re: drivers/ata/sata_rcar.c:183:2: warning: large integer implicitly
+ truncated to unsigned type
+Date: Tue, 4 Jun 2013 10:45:21 +0900
+Message-ID: <20130604014521.GN23054@verge.net.au>
+References: <51a59c1b.AMyrU/XAl1VcZ02t%fengguang.wu@intel.com>
+ <20130529072447.GC12650@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1305171539470.1012-100000@iolanthe.rowland.org>
-Content-Language: en-US
-Sender: linux-pm-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Jens Axboe <axboe@kernel.dk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Wysocki, Rafael J" <rafael.j.wysocki@intel.com>, Arjan van de Ven <arjan@linux.intel.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-sh-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20130529072447.GC12650@localhost>
+Sender: linux-sh-owner@vger.kernel.org
+To: Fengguang Wu <fengguang.wu@intel.com>
+Cc: kbuild-all@01.org, Tejun Heo <tj@kernel.org>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Linux-SH <linux-sh@vger.kernel.org>, linux-ide@vger.kernel.org, Vladimir Barinov <vladimir.barinov@cogentembedded.com>
 List-Id: linux-ide@vger.kernel.org
 
-Thanks for the feedback, I've taken things back to the drawing board in lieu of these issues and will be resubmitting once I have a patch that fits better into the formal power management architecture. Would you like to be CC'ed?
+Hi Sergei, Hi Vladimir,
 
-Todd Brandt
-Linux Kernel Developer OTC, Hillsboro OR
-https://opensource.intel.com/linux-wiki/ToddBrandt
+could you look into a fix for this?
 
+I believe that it is a result of my patch "libata: do not limit R-Car SATA
+driver to shmobile", which now allows the R-Car SATA driver to be compiled
+for a (much) wider range of hardware.
 
-________________________________________
-From: Alan Stern [stern@rowland.harvard.edu]
-Sent: Friday, May 17, 2013 12:44 PM
-To: Brandt, Todd E
-Cc: linux-ide@vger.kernel.org; linux-scsi@vger.kernel.org; linux-pm@vger.kernel.org; Jeff Garzik; Jens Axboe; Greg Kroah-Hartman; Wysocki, Rafael J; Arjan van de Ven
-Subject: Re: [PATCH v2 2/2] Adds new device resume mode in PM core, async plus non-blocking
-
-On Fri, 17 May 2013, Brandt, Todd E wrote:
-
-> Updates the drivers/base/power subsystem to allow any devices which
-> have registred as asynchronous and who have not registered "complete"
-> callbacks to be non-blocking. i.e system resume can finish and return
-> control to the user while these devices continue resuming.
-
-This does not sound like a good idea.  The presence or absence of a
-"complete" callback has nothing to do with whether or not system resume
-can finish before the device is ready.  It is more closely related to
-whether the device's driver can register hot-plugged children below the
-device or needs to perform other actions after the children have been
-resumed.
-
-The whole approach seems wrong -- it violates the implicit agreement
-that the kernel will not try to perform I/O through a device that isn't
-at full power.
-
-A better approach would be to modify the SCSI disk driver to carry out
-the spin-up operation asynchronously with respect to the resume
-callback.  Then the disk could be reported as back to full power while
-the spin-up is taking place.
-
-Alan Stern
-
+On Wed, May 29, 2013 at 03:24:47PM +0800, Fengguang Wu wrote:
+> 
+> Hi Simon,
+> 
+> First bad commit might be:
+> 
+> tree:   git://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next master
+> head:   1ca94a12e6c269b0dfc10424c27ff295b3420e9c
+> commit: 5c23341ff66c9280c2e76dc9795cd14497ea780f libata: do not limit R-Car SATA driver to shmobile
+> date:   5 days ago
+> config: make ARCH=powerpc allmodconfig
+> 
+> All warnings:
+> 
+>    drivers/ata/sata_rcar.c: In function 'sata_rcar_thaw':
+> >> drivers/ata/sata_rcar.c:183:2: warning: large integer implicitly truncated to unsigned type [-Woverflow]
+> 
+> vim +183 drivers/ata/sata_rcar.c
+> 
+> 163cf81d Vladimir Barinov 2013-02-20  167  
+> 163cf81d Vladimir Barinov 2013-02-20  168  static void sata_rcar_freeze(struct ata_port *ap)
+> 163cf81d Vladimir Barinov 2013-02-20  169  {
+> 163cf81d Vladimir Barinov 2013-02-20  170  	struct sata_rcar_priv *priv = ap->host->private_data;
+> 163cf81d Vladimir Barinov 2013-02-20  171  
+> 163cf81d Vladimir Barinov 2013-02-20  172  	/* mask */
+> 163cf81d Vladimir Barinov 2013-02-20  173  	iowrite32(0x7ff, priv->base + SATAINTMASK_REG);
+> 163cf81d Vladimir Barinov 2013-02-20  174  
+> 163cf81d Vladimir Barinov 2013-02-20  175  	ata_sff_freeze(ap);
+> 163cf81d Vladimir Barinov 2013-02-20  176  }
+> 163cf81d Vladimir Barinov 2013-02-20  177  
+> 163cf81d Vladimir Barinov 2013-02-20  178  static void sata_rcar_thaw(struct ata_port *ap)
+> 163cf81d Vladimir Barinov 2013-02-20  179  {
+> 163cf81d Vladimir Barinov 2013-02-20  180  	struct sata_rcar_priv *priv = ap->host->private_data;
+> 163cf81d Vladimir Barinov 2013-02-20  181  
+> 163cf81d Vladimir Barinov 2013-02-20  182  	/* ack */
+> 163cf81d Vladimir Barinov 2013-02-20 @183  	iowrite32(~SATA_RCAR_INT_MASK, priv->base + SATAINTSTAT_REG);
+> 163cf81d Vladimir Barinov 2013-02-20  184  
+> 163cf81d Vladimir Barinov 2013-02-20  185  	ata_sff_thaw(ap);
+> 163cf81d Vladimir Barinov 2013-02-20  186  
+> 163cf81d Vladimir Barinov 2013-02-20  187  	/* unmask */
+> 163cf81d Vladimir Barinov 2013-02-20  188  	iowrite32(0x7ff & ~SATA_RCAR_INT_MASK, priv->base + SATAINTMASK_REG);
+> 163cf81d Vladimir Barinov 2013-02-20  189  }
+> 163cf81d Vladimir Barinov 2013-02-20  190  
+> 163cf81d Vladimir Barinov 2013-02-20  191  static void sata_rcar_ioread16_rep(void __iomem *reg, void *buffer, int count)
+> 
+> 
+> 
+> ---
+> 0-DAY kernel build testing backend              Open Source Technology Center
+> http://lists.01.org/mailman/listinfo/kbuild                 Intel Corporation
+> 
