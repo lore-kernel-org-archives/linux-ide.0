@@ -1,16 +1,16 @@
 From: Yu Liu <liuyu.ac@gmail.com>
-Subject: AHCI bug?: a lockup in ahci_interrupt with fbs enabled pmp
-Date: Thu, 6 Jun 2013 14:31:20 +0800
-Message-ID: <CAASYz_QzjJdiXk6xGq4T-k20F_cQ7Vg60YtpP4irH8sLdgrM0w@mail.gmail.com>
+Subject: AHCI bug: a lockup in ahci_interrupt with fbs enabled pmp
+Date: Thu, 6 Jun 2013 14:33:20 +0800
+Message-ID: <CAASYz_TkwEvVeKhcSedAfdxdGmRLnONnSrmhnHNAE2nfy3AABg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qe0-f68.google.com ([209.85.128.68]:46344 "EHLO
-	mail-qe0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753969Ab3FFGbV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Jun 2013 02:31:21 -0400
-Received: by mail-qe0-f68.google.com with SMTP id 6so441226qeb.3
-        for <linux-ide@vger.kernel.org>; Wed, 05 Jun 2013 23:31:20 -0700 (PDT)
+Received: from mail-qe0-f65.google.com ([209.85.128.65]:38463 "EHLO
+	mail-qe0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757702Ab3FFHgz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Jun 2013 03:36:55 -0400
+Received: by mail-qe0-f65.google.com with SMTP id b4so450238qen.0
+        for <linux-ide@vger.kernel.org>; Thu, 06 Jun 2013 00:36:54 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
@@ -22,19 +22,20 @@ with an fbs enabled pmp board and an ahci host.
 
 looks like the reason for the lockup is as below:
     ahci_interrert()
-        | spin_lock(&host->lock);        // get host->lock
+        | spin_lock(&host->lock);                // get host->lock
         | ahci_port_intr()
-            | ahci_error_intr()                // status & PORT_IRQ_ERROR
-                | ata_link_online()           // if fbs_enabled
+            | ahci_error_intr()                  // status & PORT_IRQ_ERROR
+                | ata_link_online()              // if fbs_enabled
                     | sata_scr_read()
                         | sata_pmp_scr_read()    // using pmp
-                            |ata_exec_internal()
+                            | ata_exec_internal()
                                 | ata_exec_internal_sg()
                                     | spin_lock_irqsave(ap->lock, flags);
 since ap->lock == &host->lock,
 these two spin_lock get conflict
 
-Did I miss anything? Can someone confirm the issue?
+Can someone confirm the issue? Did I miss anything?
+
 
 my dump info is listed below:
 ---
@@ -77,7 +78,3 @@ Call Trace:
  [<ffffffff814cd62c>] do_IRQ+0x6c/0xf0
  [<ffffffff81013ad3>] ret_from_intr+0x0/0x11
  <EOI>
-
-
-Thanks,
-Yu
