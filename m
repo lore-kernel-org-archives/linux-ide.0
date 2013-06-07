@@ -1,53 +1,34 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: AHCI bug: a lockup in ahci_interrupt with fbs enabled pmp
-Date: Thu, 6 Jun 2013 14:47:48 -0700
-Message-ID: <20130606214748.GL5045@htj.dyndns.org>
+From: "Huang, Shane" <Shane.Huang@amd.com>
+Subject: RE: AHCI bug: a lockup in ahci_interrupt with fbs enabled pmp
+Date: Fri, 7 Jun 2013 04:29:47 +0000
+Message-ID: <43EB3AB3EEFE8D43B525F4D2EAF507E1085BAD21@SCYBEXDAG04.amd.com>
 References: <CAASYz_TkwEvVeKhcSedAfdxdGmRLnONnSrmhnHNAE2nfy3AABg@mail.gmail.com>
+ <20130606214748.GL5045@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:33538 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751326Ab3FFVrv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Jun 2013 17:47:51 -0400
-Received: by mail-pa0-f42.google.com with SMTP id rl6so2060309pac.1
-        for <linux-ide@vger.kernel.org>; Thu, 06 Jun 2013 14:47:51 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <CAASYz_TkwEvVeKhcSedAfdxdGmRLnONnSrmhnHNAE2nfy3AABg@mail.gmail.com>
+Received: from ch1ehsobe003.messaging.microsoft.com ([216.32.181.183]:57159
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750898Ab3FGE35 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 7 Jun 2013 00:29:57 -0400
+In-Reply-To: <20130606214748.GL5045@htj.dyndns.org>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Yu Liu <liuyu.ac@gmail.com>
-Cc: linux-ide@vger.kernel.org, Shane Huang <shane.huang@amd.com>
+To: Tejun Heo <tj@kernel.org>, Yu Liu <liuyu.ac@gmail.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "Huang, Shane" <Shane.Huang@amd.com>
 
-Cc'ing Shane.
+> Yeah, it's a bug.  ata_link_online() can't be called from interrupt
+> handlers.  Shane?  Can you please look into it?  What's the purpose
+> of ata_link_online() in ahci_error_intr()?
 
-On Thu, Jun 06, 2013 at 02:33:20PM +0800, Yu Liu wrote:
-> Hi all,
-> 
-> I met a lockup while I was running IO test on disks connected
-> with an fbs enabled pmp board and an ahci host.
-> 
-> looks like the reason for the lockup is as below:
->     ahci_interrert()
->         | spin_lock(&host->lock);                // get host->lock
->         | ahci_port_intr()
->             | ahci_error_intr()                  // status & PORT_IRQ_ERROR
->                 | ata_link_online()              // if fbs_enabled
->                     | sata_scr_read()
->                         | sata_pmp_scr_read()    // using pmp
->                             | ata_exec_internal()
->                                 | ata_exec_internal_sg()
->                                     | spin_lock_irqsave(ap->lock, flags);
-> since ap->lock == &host->lock,
-> these two spin_lock get conflict
-> 
-> Can someone confirm the issue? Did I miss anything?
+ata_link_online() was used to check that pmp link is active...
+which should be replaced by ata_link_active()?
 
-Yeah, it's a bug.  ata_link_online() can't be called from interrupt
-handlers.  Shane?  Can you please look into it?  What's the purpose of
-ata_link_online() in ahci_error_intr()?
 
-Thanks.
+Thanks,
+Shane
 
--- 
-tejun
+
