@@ -1,39 +1,41 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: AHCI bug: a lockup in ahci_interrupt with fbs enabled pmp
-Date: Fri, 7 Jun 2013 15:56:39 -0700
-Message-ID: <20130607225639.GH14781@mtj.dyndns.org>
+From: "Huang, Shane" <Shane.Huang@amd.com>
+Subject: RE: AHCI bug: a lockup in ahci_interrupt with fbs enabled pmp
+Date: Sat, 8 Jun 2013 05:59:27 +0000
+Message-ID: <43EB3AB3EEFE8D43B525F4D2EAF507E1085BB1FA@SCYBEXDAG04.amd.com>
 References: <CAASYz_TkwEvVeKhcSedAfdxdGmRLnONnSrmhnHNAE2nfy3AABg@mail.gmail.com>
  <20130606214748.GL5045@htj.dyndns.org>
  <43EB3AB3EEFE8D43B525F4D2EAF507E1085BAD21@SCYBEXDAG04.amd.com>
+ <20130607225639.GH14781@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f173.google.com ([209.85.216.173]:38774 "EHLO
-	mail-qc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752956Ab3FGW4p (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Jun 2013 18:56:45 -0400
-Received: by mail-qc0-f173.google.com with SMTP id l10so1217891qcy.18
-        for <linux-ide@vger.kernel.org>; Fri, 07 Jun 2013 15:56:44 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <43EB3AB3EEFE8D43B525F4D2EAF507E1085BAD21@SCYBEXDAG04.amd.com>
+Received: from [207.46.163.27] ([207.46.163.27]:40245 "EHLO
+	co9outboundpool.messaging.microsoft.com" rhost-flags-FAIL-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1750911Ab3FHGA5 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 8 Jun 2013 02:00:57 -0400
+In-Reply-To: <20130607225639.GH14781@mtj.dyndns.org>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Huang, Shane" <Shane.Huang@amd.com>
-Cc: Yu Liu <liuyu.ac@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Yu Liu <liuyu.ac@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "Huang, Shane" <Shane.Huang@amd.com>
 
-On Fri, Jun 07, 2013 at 04:29:47AM +0000, Huang, Shane wrote:
-> > Yeah, it's a bug.  ata_link_online() can't be called from interrupt
-> > handlers.  Shane?  Can you please look into it?  What's the purpose
-> > of ata_link_online() in ahci_error_intr()?
-> 
-> ata_link_online() was used to check that pmp link is active...
-> which should be replaced by ata_link_active()?
+Tejun,
 
-ata_link_sactive() asks whether there are commands in progress.  I
-don't think that fits in there.  Can't it just bounce to EH for actual
-error handling?  Why is the link online check necessary?
+> ata_link_sactive() asks whether there are commands in progress.  I
+> don't think that fits in there.  Can't it just bounce to EH for actual
+> error handling?  Why is the link online check necessary?
 
-Thanks.
+I tried hard to recall why I put ata_link_online() check there, at
+last I find it was suggested by you in 2009 when you reviewed v2 :-)
 
--- 
-tejun
+http://marc.info/?l=linux-ide&m=125170571525422&w=2
+
+Need I submit a patch to remove online check or you will handle it?
+
+Thanks,
+Shane
+
+
