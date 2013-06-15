@@ -1,167 +1,52 @@
-From: Liu Jiang <liuj97@gmail.com>
-Subject: [PATCH] libata: remove dead code from libata-acpi.c
-Date: Sat, 15 Jun 2013 11:02:48 +0800
-Message-ID: <1371265368-7334-1-git-send-email-liuj97@gmail.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pd0-f169.google.com ([209.85.192.169]:53987 "EHLO
-	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752166Ab3FODF1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Jun 2013 23:05:27 -0400
-Sender: linux-ide-owner@vger.kernel.org
+From: scar <scar-47zfDnpWZoPQT0dZR+AlfA@public.gmane.org>
+Subject: troubleshoot disk problems / libata error messages
+Date: Fri, 14 Jun 2013 21:17:36 -0700
+Message-ID: <kpgpst$fh8$1@ger.gmane.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-ide-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Liu Jiang <liu97@gmail.com>, Matthew Garrett <mjg@redhat.com>, Aaron Lu <aaron.lu@intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Liu Jiang <jiang.liu@huawei.com>
 
-From: Liu Jiang <liu97@gmail.com>
+hello, not sure if this is best place to seek help but i couldn't seem
+to find any more appropriate mailing lists...
 
-Commit 30dcf76acc69 "libata: migrate ACPI code over to new bindings"
-removed ACPI dock notification related code, but there's some dead
-code left, so clean up it.
+i've been having HDD issues lately, and the issues have persisted across
+two different disks and two different SATA ports on the motherboard
 
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Matthew Garrett <mjg@redhat.com>
-Cc: Aaron Lu <aaron.lu@intel.com>
-Cc: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Liu Jiang <jiang.liu@huawei.com>
----
- drivers/ata/libata-acpi.c | 123 ----------------------------------------------
- 1 file changed, 123 deletions(-)
+system is running Ubuntu 10.04 Linux 2.6.32-47-generic #109-Ubuntu SMP
+Tue May 7 02:02:22 UTC 2013
 
-diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-index 87f2f39..e50c987 100644
---- a/drivers/ata/libata-acpi.c
-+++ b/drivers/ata/libata-acpi.c
-@@ -91,129 +91,6 @@ acpi_handle ata_dev_acpi_handle(struct ata_device *dev)
- }
- EXPORT_SYMBOL(ata_dev_acpi_handle);
- 
--/* @ap and @dev are the same as ata_acpi_handle_hotplug() */
--static void ata_acpi_detach_device(struct ata_port *ap, struct ata_device *dev)
--{
--	if (dev)
--		dev->flags |= ATA_DFLAG_DETACH;
--	else {
--		struct ata_link *tlink;
--		struct ata_device *tdev;
--
--		ata_for_each_link(tlink, ap, EDGE)
--			ata_for_each_dev(tdev, tlink, ALL)
--				tdev->flags |= ATA_DFLAG_DETACH;
--	}
--
--	ata_port_schedule_eh(ap);
--}
--
--/**
-- * ata_acpi_handle_hotplug - ACPI event handler backend
-- * @ap: ATA port ACPI event occurred
-- * @dev: ATA device ACPI event occurred (can be NULL)
-- * @event: ACPI event which occurred
-- *
-- * All ACPI bay / device realted events end up in this function.  If
-- * the event is port-wide @dev is NULL.  If the event is specific to a
-- * device, @dev points to it.
-- *
-- * Hotplug (as opposed to unplug) notification is always handled as
-- * port-wide while unplug only kills the target device on device-wide
-- * event.
-- *
-- * LOCKING:
-- * ACPI notify handler context.  May sleep.
-- */
--static void ata_acpi_handle_hotplug(struct ata_port *ap, struct ata_device *dev,
--				    u32 event)
--{
--	struct ata_eh_info *ehi = &ap->link.eh_info;
--	int wait = 0;
--	unsigned long flags;
--
--	spin_lock_irqsave(ap->lock, flags);
--	/*
--	 * When dock driver calls into the routine, it will always use
--	 * ACPI_NOTIFY_BUS_CHECK/ACPI_NOTIFY_DEVICE_CHECK for add and
--	 * ACPI_NOTIFY_EJECT_REQUEST for remove
--	 */
--	switch (event) {
--	case ACPI_NOTIFY_BUS_CHECK:
--	case ACPI_NOTIFY_DEVICE_CHECK:
--		ata_ehi_push_desc(ehi, "ACPI event");
--
--		ata_ehi_hotplugged(ehi);
--		ata_port_freeze(ap);
--		break;
--	case ACPI_NOTIFY_EJECT_REQUEST:
--		ata_ehi_push_desc(ehi, "ACPI event");
--
--		ata_acpi_detach_device(ap, dev);
--		wait = 1;
--		break;
--	}
--
--	spin_unlock_irqrestore(ap->lock, flags);
--
--	if (wait)
--		ata_port_wait_eh(ap);
--}
--
--static void ata_acpi_dev_notify_dock(acpi_handle handle, u32 event, void *data)
--{
--	struct ata_device *dev = data;
--
--	ata_acpi_handle_hotplug(dev->link->ap, dev, event);
--}
--
--static void ata_acpi_ap_notify_dock(acpi_handle handle, u32 event, void *data)
--{
--	struct ata_port *ap = data;
--
--	ata_acpi_handle_hotplug(ap, NULL, event);
--}
--
--static void ata_acpi_uevent(struct ata_port *ap, struct ata_device *dev,
--	u32 event)
--{
--	struct kobject *kobj = NULL;
--	char event_string[20];
--	char *envp[] = { event_string, NULL };
--
--	if (dev) {
--		if (dev->sdev)
--			kobj = &dev->sdev->sdev_gendev.kobj;
--	} else
--		kobj = &ap->dev->kobj;
--
--	if (kobj) {
--		snprintf(event_string, 20, "BAY_EVENT=%d", event);
--		kobject_uevent_env(kobj, KOBJ_CHANGE, envp);
--	}
--}
--
--static void ata_acpi_ap_uevent(acpi_handle handle, u32 event, void *data)
--{
--	ata_acpi_uevent(data, NULL, event);
--}
--
--static void ata_acpi_dev_uevent(acpi_handle handle, u32 event, void *data)
--{
--	struct ata_device *dev = data;
--	ata_acpi_uevent(dev->link->ap, dev, event);
--}
--
--static const struct acpi_dock_ops ata_acpi_dev_dock_ops = {
--	.handler = ata_acpi_dev_notify_dock,
--	.uevent = ata_acpi_dev_uevent,
--};
--
--static const struct acpi_dock_ops ata_acpi_ap_dock_ops = {
--	.handler = ata_acpi_ap_notify_dock,
--	.uevent = ata_acpi_ap_uevent,
--};
--
- /**
-  * ata_acpi_dissociate - dissociate ATA host from ACPI objects
-  * @host: target ATA host
--- 
-1.8.1.2
+at first, i was getting messages related to a Western Digital 300 GB
+drive that houses /boot and root file systems.  unfortunately i lost my
+dmesg from that time but i remember receiving a lot of "SError: {
+HostInt <one other SError too> }"  errors.  also things like "hard
+resetting link", "softreset failed (device not ready)", "applying SB600
+PMP SRST workaround and retrying", "SATA link up 3.0 Gbps (SStatus 123
+SControl 300)" were prominent in dmesg.  i noticed the SATA link would
+be dropped to 1.5 Gbps too.  eventually the system became unusable and
+unbootable, as well as filesystem corrupted.  fsck fixed it and system
+was up and running again.
 
+smartctl for the drive showed good health (i believe)[1] so i moved the
+drive to another port on the motherboard (currently ata3.00 to libata).
+ so far libata has not produced any errors related to the drive but i
+just heard a knocking sound and this logged in dmesg[2].  ata4 has
+another disk drive, another port, and also different error messages.
+smtartctl for this drive also shows good health[3].
+
+so since i have been having issues with two disks and two ports i am
+thinking it is something further up the cable?  like power or SATA cable
+issue, power supply issue, or motherboard issue... what say you? thanks
+
+
+1. http://pastebin.com/wfZ5q5TL
+2. http://pastebin.com/wrtTHWYB
+3. http://pastebin.com/2TGjGhQd
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
