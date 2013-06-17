@@ -1,39 +1,36 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata: remove dead code from libata-acpi.c
-Date: Mon, 17 Jun 2013 11:01:51 -0700
-Message-ID: <20130617180151.GG32663@mtj.dyndns.org>
-References: <1371265368-7334-1-git-send-email-liuj97@gmail.com>
- <51BE6B5C.70803@intel.com>
+Subject: Re: [PATCH V2] ahci: sata: add support for exynos5440 sata
+Date: Mon, 17 Jun 2013 11:24:46 -0700
+Message-ID: <20130617182446.GI32663@mtj.dyndns.org>
+References: <1366104482-14240-1-git-send-email-ks.giri@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qe0-f43.google.com ([209.85.128.43]:39827 "EHLO
+	mail-qe0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753152Ab3FQSYv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Jun 2013 14:24:51 -0400
 Content-Disposition: inline
-In-Reply-To: <51BE6B5C.70803@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Matthew Garrett <mjg@redhat.com>, Aaron Lu <aaron.lu@intel.com>
-Cc: Liu Jiang <liuj97@gmail.com>, Liu Jiang <liu97@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Liu Jiang <jiang.liu@huawei.com>
+In-Reply-To: <1366104482-14240-1-git-send-email-ks.giri@samsung.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Girish K S <girishks2000@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org
 
-On Mon, Jun 17, 2013 at 09:50:20AM +0800, Aaron Lu wrote:
-> On 06/15/2013 11:02 AM, Liu Jiang wrote:
-> > From: Liu Jiang <liu97@gmail.com>
-> > 
-> > Commit 30dcf76acc69 "libata: migrate ACPI code over to new bindings"
-> > removed ACPI dock notification related code, but there's some dead
-> > code left, so clean up it.
+On Tue, Apr 16, 2013 at 02:58:02PM +0530, Girish K S wrote:
+> This patch adds the compatible string of the exynos5440 sata controller
+> compliant with the ahci 1.3 and sata 3.0 specification.
 > 
-> I never noticed this, but it looks to be the case...
+> Signed-off-by: Girish K S <ks.giri@samsung.com>
 > 
-> I'm not sure the dock notification code is removed intentionally or
-> mistakenly though, if it is a mistake, then instead of removing the left
-> code here, we probably should add the dock notification code back.
-> 
-> But I have no test system or any knowledge about how ata dock works, so
-> I may be wrong :-)
+> changes in v2:
+> 		changed the compatible string by adding the actual IP
+> owners name instead of the SoC vendor name.
 
-Looks like a regression to me.  We're probably locking up on some
-older laptops which connects optical drives with hotpluggable PATA.
-Matthew, can you please fix it?
+Applied to libata/for-3.11.
+
+Can you please keep SOB at the end of the description after the
+revision history from the next time?
 
 Thanks.
 
