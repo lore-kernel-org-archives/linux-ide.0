@@ -1,22 +1,24 @@
-From: Sec Capital Loan <jose_carlos@mp.ro.gov.br>
-Subject: Quick Loans
-Date: Mon, 17 Jun 2013 09:24:19 +0530
-Message-ID: <156893a2-a9cc-4f84-bedb-b3a6b5603cb5__41707.0024101578$1371443302$gmane$org@DTI-APL-036.mpro.gov>
-Reply-To: seccapittals@mit.tc
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: Richard Zhu <richard.zhuhongxing@gmail.com>
+Subject: [PATCH V1 0/3] ahci: enable ahci sata support on imx6q
+Date: Mon, 17 Jun 2013 17:52:44 +0800
+Message-ID: <1371462767-16630-1-git-send-email-r65037@freescale.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns2.mp.ro.gov.br ([200.101.66.131]:60908 "EHLO
-	mail.mp.ro.gov.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751140Ab3FQE2K convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Jun 2013 00:28:10 -0400
-Content-Description: Mail message body
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:33902 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932201Ab3FQJuq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Jun 2013 05:50:46 -0400
+Received: by mail-pa0-f49.google.com with SMTP id ld11so2654187pab.8
+        for <linux-ide@vger.kernel.org>; Mon, 17 Jun 2013 02:50:45 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Recipients <jose_carlos@mp.ro.gov.br>
+To: shawn.guo@linaro.org
+Cc: linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, linux-ide@vger.kernel.org
 
-Do you need a personal or business loan without stress and quick approval? If yes, contact us today as we are currently offering loans at superb interest rate. Our loan is secured and safe,For more information and Application, Please reply to this Email.
+v1: add imx6q specific ahci sata support to arch/arm/mach-imx/mach-imx6q.c
 
-Sincerely,
-Vijay Nath
+These patches is based on imx/dt branch of
+"http://git.linaro.org/git-ro/people/shawnguo/linux-2.6.git"
+
+[v1 1/3] ARM: dtsi: enable ahci sata on imx6q platforms
+[v1 2/3] ata: ahci_platform: enable imx6q ahci sata support
+[v1 3/3] imx: ahci: enable ahci sata on imx6q platforms
