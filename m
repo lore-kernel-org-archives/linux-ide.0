@@ -1,44 +1,38 @@
-From: Richard Zhu <richard.zhuhongxing@gmail.com>
-Subject: [v1 2/3] ata: ahci_platform: enable imx6q ahci sata support
-Date: Mon, 17 Jun 2013 17:52:46 +0800
-Message-ID: <1371462767-16630-3-git-send-email-r65037@freescale.com>
-References: <1371462767-16630-1-git-send-email-r65037@freescale.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pb0-f49.google.com ([209.85.160.49]:34845 "EHLO
-	mail-pb0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932201Ab3FQJux (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Jun 2013 05:50:53 -0400
-Received: by mail-pb0-f49.google.com with SMTP id jt11so2611231pbb.36
-        for <linux-ide@vger.kernel.org>; Mon, 17 Jun 2013 02:50:53 -0700 (PDT)
-In-Reply-To: <1371462767-16630-1-git-send-email-r65037@freescale.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: scar <scar-47zfDnpWZoPQT0dZR+AlfA@public.gmane.org>
+Subject: Re: troubleshoot disk problems / libata error messages
+Date: Mon, 17 Jun 2013 07:45:43 -0700
+Message-ID: <kpn7ej$rdc$1@ger.gmane.org>
+References: <kpgpst$fh8$1@ger.gmane.org> <201306150442.37242.gheskett@wdtv.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <201306150442.37242.gheskett-ouEgS7marmk@public.gmane.org>
+Sender: linux-ide-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: shawn.guo@linaro.org
-Cc: linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, Richard Zhu <r65037@freescale.com>
 
-imx6q contains the Synopsys AHCI SATA controller which shares
-ahci_platform driver with other controllers.
+Gene Heskett @ 06/15/2013 01:42 AM:
+> On Saturday 15 June 2013 04:08:13 scar did opine:
+>> i've been having HDD issues lately, and the issues have persisted across
+>> two different disks and two different SATA ports on the motherboard
+>>
+> That hot red plastic die used to color MOST sata cables is a time bomb.  
+> That particular red die causes the copper in the cables to embrittle and 
+> connectivity goes away, like its some sort of acid.  
+> 
+> Ditch the hot red colored cables.  They are a time bomb that WILL go off, 
+> sooner rather than later.  
 
-This patch updates the DT compatible list for ahci_platform,
-and enable the imx6q ahci sata support.
+thank you Gene for this insightful input.  all five of my internal disks
+use these red cables! ;~;  i will check local hardware store for
+alternatives.  BTW i finally got the ata3 errors, the other SError was
+Handshk[1].
 
-Signed-off-by: Richard Zhu <r65037@freescale.com>
----
- drivers/ata/ahci_platform.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+1. http://pastie.org/private/txwmbwyuot2sebmlrigp9g
 
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index 7a8a284..61f2142 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -327,6 +327,7 @@ static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_suspend, ahci_resume);
- 
- static const struct of_device_id ahci_of_match[] = {
- 	{ .compatible = "snps,spear-ahci", },
-+	{ .compatible = "snps,imx-ahci", },
- 	{},
- };
- MODULE_DEVICE_TABLE(of, ahci_of_match);
--- 
-1.7.5.4
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
