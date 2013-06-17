@@ -1,38 +1,43 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH V2] ahci: sata: add support for exynos5440 sata
-Date: Mon, 17 Jun 2013 11:24:46 -0700
-Message-ID: <20130617182446.GI32663@mtj.dyndns.org>
-References: <1366104482-14240-1-git-send-email-ks.giri@samsung.com>
+Subject: Re: [v1 2/3] ata: ahci_platform: enable imx6q ahci sata support
+Date: Mon, 17 Jun 2013 11:27:19 -0700
+Message-ID: <CAOS58YM+ih4vLD8v5u08FS0JMcrwYNHo31zOmDd5VAed+NKbtg@mail.gmail.com>
+References: <1371462767-16630-1-git-send-email-r65037@freescale.com>
+	<1371462767-16630-3-git-send-email-r65037@freescale.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qe0-f43.google.com ([209.85.128.43]:39827 "EHLO
-	mail-qe0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753152Ab3FQSYv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Jun 2013 14:24:51 -0400
-Content-Disposition: inline
-In-Reply-To: <1366104482-14240-1-git-send-email-ks.giri@samsung.com>
+Received: from mail-pb0-f45.google.com ([209.85.160.45]:61902 "EHLO
+	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753583Ab3FQS1U (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Jun 2013 14:27:20 -0400
+Received: by mail-pb0-f45.google.com with SMTP id mc8so3049526pbc.32
+        for <linux-ide@vger.kernel.org>; Mon, 17 Jun 2013 11:27:19 -0700 (PDT)
+In-Reply-To: <1371462767-16630-3-git-send-email-r65037@freescale.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Girish K S <girishks2000@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org
+To: Richard Zhu <richard.zhuhongxing@gmail.com>
+Cc: shawn.guo@linaro.org, linux-arm-kernel@lists.infradead.org, Jeff Garzik <jgarzik@pobox.com>, linux-ide <linux-ide@vger.kernel.org>, Richard Zhu <r65037@freescale.com>
 
-On Tue, Apr 16, 2013 at 02:58:02PM +0530, Girish K S wrote:
-> This patch adds the compatible string of the exynos5440 sata controller
-> compliant with the ahci 1.3 and sata 3.0 specification.
-> 
-> Signed-off-by: Girish K S <ks.giri@samsung.com>
-> 
-> changes in v2:
-> 		changed the compatible string by adding the actual IP
-> owners name instead of the SoC vendor name.
+On Mon, Jun 17, 2013 at 2:52 AM, Richard Zhu
+<richard.zhuhongxing@gmail.com> wrote:
+> imx6q contains the Synopsys AHCI SATA controller which shares
+> ahci_platform driver with other controllers.
+>
+> This patch updates the DT compatible list for ahci_platform,
+> and enable the imx6q ahci sata support.
+>
+> Signed-off-by: Richard Zhu <r65037@freescale.com>
 
-Applied to libata/for-3.11.
+I suppose this better be routed with the rest of the series through
+the arch tree?  If not, please let me know.
 
-Can you please keep SOB at the end of the description after the
-revision history from the next time?
+Acked-by: Tejun Heo <tj@kernel.org>
+
+There probably will be a merge conflict but it's gonna be very
+trivial, so no worries.
 
 Thanks.
 
--- 
+--
 tejun
