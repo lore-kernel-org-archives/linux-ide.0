@@ -1,46 +1,48 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ata: cleanup SAT error translation
-Date: Mon, 17 Jun 2013 12:48:55 -0700
-Message-ID: <20130617194855.GL32663@mtj.dyndns.org>
-References: <1371242913-10899-1-git-send-email-gwendal@google.com>
+From: "Jiang Liu (Gerry)" <jiang.liu@huawei.com>
+Subject: Re: [PATCH] libata: remove dead code from libata-acpi.c
+Date: Tue, 18 Jun 2013 09:15:05 +0800
+Message-ID: <51BFB499.9050302@huawei.com>
+References: <1371265368-7334-1-git-send-email-liuj97@gmail.com> <51BE6B5C.70803@intel.com> <20130617180151.GG32663@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qe0-f48.google.com ([209.85.128.48]:37458 "EHLO
-	mail-qe0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751073Ab3FQTtB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Jun 2013 15:49:01 -0400
-Received: by mail-qe0-f48.google.com with SMTP id 2so1924460qea.21
-        for <linux-ide@vger.kernel.org>; Mon, 17 Jun 2013 12:49:00 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <1371242913-10899-1-git-send-email-gwendal@google.com>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:53568 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752480Ab3FRBPS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Jun 2013 21:15:18 -0400
+In-Reply-To: <20130617180151.GG32663@mtj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gwendal Grignou <gwendal@google.com>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Matthew Garrett <mjg@redhat.com>, Aaron Lu <aaron.lu@intel.com>, Liu Jiang <liuj97@gmail.com>, Liu Jiang <liu97@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello, Gwendal.
+On 2013/6/18 2:01, Tejun Heo wrote:
+> On Mon, Jun 17, 2013 at 09:50:20AM +0800, Aaron Lu wrote:
+>> On 06/15/2013 11:02 AM, Liu Jiang wrote:
+>>> From: Liu Jiang <liu97@gmail.com>
+>>>
+>>> Commit 30dcf76acc69 "libata: migrate ACPI code over to new bindings"
+>>> removed ACPI dock notification related code, but there's some dead
+>>> code left, so clean up it.
+>>
+>> I never noticed this, but it looks to be the case...
+>>
+>> I'm not sure the dock notification code is removed intentionally or
+>> mistakenly though, if it is a mistake, then instead of removing the left
+>> code here, we probably should add the dock notification code back.
+>>
+>> But I have no test system or any knowledge about how ata dock works, so
+>> I may be wrong :-)
+>
+> Looks like a regression to me.  We're probably locking up on some
+> older laptops which connects optical drives with hotpluggable PATA.
+> Matthew, can you please fix it?
+>
+> Thanks.
+>
+Yeah, Aaron is right. We should restore the dock notification
+handler to support ATA hotplug on some IBM laptops.
+Regards!
+Gerry
 
-On Fri, Jun 14, 2013 at 01:48:33PM -0700, Gwendal Grignou wrote:
-> Remove duplicate Medium Error Entry.
-> Remove the ABRT entry: it is too broad: when only ABRT is set
-> we should look at status for more information.
-> Only if status does not provide information we set ABORTED_COMMAND
-> sense key.
-> 
-> Tested: When a disk fails, it sets
-> Status = 0x71 [DRDY DF ERR] , Error = 0x4 [ABRT]
-> Ensure the sense key is HARDWARE_ERROR.
-> When there is a simple command syntax error:
-> Status = 0x51 [DRDY ERR] , Error = 0x4 [ABRT]
-> Ensure the sense key is ABORTED_COMMAND.
-
-But this would trigger "no sense translation" warning.  The
-translation in that function is pretty simplistic anyway.  Can you
-please update the patch so that there's a comment noting why we aren't
-mapping 0x04 and drop the warning?
-
-Thanks.
-
--- 
-tejun
