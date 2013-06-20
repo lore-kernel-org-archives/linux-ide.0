@@ -1,40 +1,55 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH] ide: Fix IDE PIO size calculation
-Date: Thu, 20 Jun 2013 15:05:17 +0400
-Message-ID: <51C2E1ED.8050606@cogentembedded.com>
-References: <1371701667-3908-1-git-send-email-Steven.Hill@imgtec.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: "Steven J. Hill" <Steven.Hill@imgtec.com>
+Subject: [PATCH v2] ide: Fix IDE PIO size calculation
+Date: Thu, 20 Jun 2013 10:30:37 -0500
+Message-ID: <1371742237-9929-1-git-send-email-Steven.Hill@imgtec.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-la0-f42.google.com ([209.85.215.42]:41336 "EHLO
-	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965343Ab3FTLFQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Jun 2013 07:05:16 -0400
-Received: by mail-la0-f42.google.com with SMTP id eb20so5601266lab.15
-        for <linux-ide@vger.kernel.org>; Thu, 20 Jun 2013 04:05:15 -0700 (PDT)
-In-Reply-To: <1371701667-3908-1-git-send-email-Steven.Hill@imgtec.com>
+Received: from home.bethel-hill.org ([63.228.164.32]:60601 "EHLO
+	home.bethel-hill.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756558Ab3FTPas (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Jun 2013 11:30:48 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Steven J. Hill" <Steven.Hill@imgtec.com>
-Cc: "David S . Miller" <davem@davemloft.net>, Leonid Yegoshin <Leonid.Yegoshin@imgtec.com>, linux-ide@vger.kernel.org
+To: "David S . Miller" <davem@davemloft.net>
+Cc: "Steven J. Hill" <sjhill@mips.com>, linux-ide@vger.kernel.org, Leonid Yegoshin <Leonid.Yegoshin@imgtec.com>
 
-Hello.
+From: Steven J. Hill <sjhill@mips.com>
 
-On 20-06-2013 8:14, Steven J. Hill wrote:
+IDE PIO calculates the size wrong when passing the parameter
+"ide-core.nodma=0.0" to the kernel.
 
-> From: Leonid Yegoshin <Leonid.Yegoshin@imgtec.com>
+Signed-off-by: Leonid Yegoshin <Leonid.Yegoshin@imgtec.com>
+Acked-by: Steven J. Hill <Steven.Hill@imgtec.com>
 
-> IDE PIO calculates the size wrong when passing the parameter
-> "ide-core.nodma=0.0" to the kernel.
+Signed-off-by: Steven J. Hill <sjhill@mips.com>
+---
+Changes in v2: Remove internal gerrit ID from commit message.
 
-> Change-Id: Id82c2bc5965d85960846db53d84846d9a05d75a3
+ drivers/ide/ide-taskfile.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
-   This line has no place in the upstream commit, and I've already told 
-Leonid to get rid of it.
-
-> Signed-off-by: Leonid Yegoshin <Leonid.Yegoshin@imgtec.com>
-> Acked-by: Steven J. Hill <Steven.Hill@imgtec.com>
-
-WBR, Sergei
+diff --git a/drivers/ide/ide-taskfile.c b/drivers/ide/ide-taskfile.c
+index 729428e..dabb88b 100644
+--- a/drivers/ide/ide-taskfile.c
++++ b/drivers/ide/ide-taskfile.c
+@@ -239,9 +239,6 @@ void ide_pio_bytes(ide_drive_t *drive, struct ide_cmd *cmd,
+ 		unsigned nr_bytes = min(len, cursg->length - cmd->cursg_ofs);
+ 		int page_is_high;
+ 
+-		if (nr_bytes > PAGE_SIZE)
+-			nr_bytes = PAGE_SIZE;
+-
+ 		page = sg_page(cursg);
+ 		offset = cursg->offset + cmd->cursg_ofs;
+ 
+@@ -249,6 +246,8 @@ void ide_pio_bytes(ide_drive_t *drive, struct ide_cmd *cmd,
+ 		page = nth_page(page, (offset >> PAGE_SHIFT));
+ 		offset %= PAGE_SIZE;
+ 
++		nr_bytes = min_t(unsigned, nr_bytes, (PAGE_SIZE - offset));
++
+ 		page_is_high = PageHighMem(page);
+ 		if (page_is_high)
+ 			local_irq_save(flags);
+-- 
+1.7.2.5
 
