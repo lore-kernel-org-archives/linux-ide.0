@@ -1,98 +1,73 @@
-From: Pavel Machek <pavel@ucw.cz>
-Subject: Re: SATA hdd refuses to reallocate a sector?
-Date: Sun, 23 Jun 2013 21:00:03 +0200
-Message-ID: <20130623190003.GA6714@amd.pavel.ucw.cz>
-References: <20130623101940.GA4448@amd.pavel.ucw.cz>
- <20130623112133.GA4837@amd.pavel.ucw.cz>
- <CAJBHPoj5hgp97=JH8UKX+Ty8TF9_ySQUYU6AnqcRjuLy5A-PcQ@mail.gmail.com>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: [PATCH] libata-zpodd: must use ata_tf_init()
+Date: Sun, 23 Jun 2013 23:25:04 +0400
+Message-ID: <201306232325.04732.sergei.shtylyov@cogentembedded.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAJBHPoj5hgp97=JH8UKX+Ty8TF9_ySQUYU6AnqcRjuLy5A-PcQ@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Marcus Overhagen <marcus.overhagen@gmail.com>
-Cc: kernel list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, tj@kernel.org, mlord@pobox.com
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-la0-f41.google.com ([209.85.215.41]:51805 "EHLO
+	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750879Ab3FWTZI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 23 Jun 2013 15:25:08 -0400
+Received: by mail-la0-f41.google.com with SMTP id fn20so9428572lab.0
+        for <linux-ide@vger.kernel.org>; Sun, 23 Jun 2013 12:25:06 -0700 (PDT)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, tj@kernel.org
+Cc: aaron.lu@intel.com
 
-Hi!
+There are  some SATA controllers which have both devices 0 and 1 but this module
+just zeroes out taskfile and sets then ATA_TFLAG_DEVICE (not sure that's needed)
+which could  lead to a wrong device being selected just before issuing command.
+Thus we should  call ata_tf_init()  which sets  up the device register value
+properly, like  all other users of ata_exec_internal() do...
 
-> > ...Ok, lets try with dd.
-> >
-> > root@amd:~# dd if=/dev/sda4 of=/dev/zero bs=1 skip=8958947328
-> > dd: reading `/dev/sda4': Input/output error
-> > 0+0 records in
-> > 0+0 records out
-> > 0 bytes (0 B) copied, 5.05805 s, 0.0 kB/s
-> 
-> I once noticed a similar problem. The trouble is that the kernel
-> always seems to be doing a larger read access that failes for this
-> sector, and the write is never executed.
+Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 
-And returns success writing? That's pretty antisocial :-(.
+---
+The  patch is against the 'for-3.10-fixes' branch of Tejun Heo's 'libata.git'
+repository. 
 
-> You can try: hdparam --write-sector 961237188 /dev/sda
+ drivers/ata/libata-zpodd.c |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-Thanks for the hint. (Insert rant about hdparm documentation
-explaining that it is bad idea, but not telling me _why_ is it bad
-idea. Can I expect cache consistency issues after that, or is it just
-simple "you are writing to the disk without any checks"? Plus, I guess
-documentation should mention what sector number is. I guess sectors
-are 512bytes for the old drives, but is it 512 or 4096 for new
-drives?)
-
-...but it does not do the trick :-(. It behaves strangely as if it was
-still cached somewhere. Do I need to turn off the write back cache?
-
-root@amd:~# hdparm --yes-i-know-what-i-am-doing  --read-sector
-  read-sector: bad/missing sector value
-root@amd:~# hdparm --yes-i-know-what-i-am-doing  --read-sector
-  961237188 /dev/sda
-
-/dev/sda:
-reading sector 961237188: FAILED: Input/output error
-root@amd:~# hdparm --yes-i-know-what-i-am-doing  --write-sector
-961237188 /dev/sda
-
-/dev/sda:
-re-writing sector 961237188: succeeded
-root@amd:~# hdparm --yes-i-know-what-i-am-doing  --read-sector
-961237188 /dev/sda | uniq
-
-/dev/sda:
-reading sector 961237188: succeeded
-0000 0000 0000 0000 0000 0000 0000 0000
-root@amd:~# sleep 10
-root@amd:~# hdparm --yes-i-know-what-i-am-doing  --read-sector
-961237188 /dev/sda | uniq
-
-/dev/sda:
-reading sector 961237188: succeeded
-0000 0000 0000 0000 0000 0000 0000 0000
-root@amd:~# sync
-root@amd:~# hdparm --yes-i-know-what-i-am-doing  --read-sector
-961237188 /dev/sda | uniq
-
-/dev/sda:
-reading sector 961237188: succeeded
-0000 0000 0000 0000 0000 0000 0000 0000
-root@amd:~# dd if=/dev/sda4 of=/dev/zero bs=4096
-skip=$[8958947328/4096]
-dd: reading `/dev/sda4': Input/output error
-102+0 records in
-102+0 records out
-417792 bytes (418 kB) copied, 5.36697 s, 77.8 kB/s
-root@amd:~# hdparm --yes-i-know-what-i-am-doing  --read-sector
-961237188 /dev/sda | uniq
-
-/dev/sda:
-FAILED: Input/output error
-reading sector 961237188: 
-root@amd:~# 
-
-Thanks,
-									Pavel
-
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Index: libata/drivers/ata/libata-zpodd.c
+===================================================================
+--- libata.orig/drivers/ata/libata-zpodd.c
++++ libata/drivers/ata/libata-zpodd.c
+@@ -32,13 +32,14 @@ struct zpodd {
+ 
+ static int eject_tray(struct ata_device *dev)
+ {
+-	struct ata_taskfile tf = {};
++	struct ata_taskfile tf;
+ 	const char cdb[] = {  GPCMD_START_STOP_UNIT,
+ 		0, 0, 0,
+ 		0x02,     /* LoEj */
+ 		0, 0, 0, 0, 0, 0, 0,
+ 	};
+ 
++	ata_tf_init(dev, &tf);
+ 	tf.flags = ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
+ 	tf.command = ATA_CMD_PACKET;
+ 	tf.protocol = ATAPI_PROT_NODATA;
+@@ -52,8 +53,7 @@ static enum odd_mech_type zpodd_get_mech
+ 	char buf[16];
+ 	unsigned int ret;
+ 	struct rm_feature_desc *desc = (void *)(buf + 8);
+-	struct ata_taskfile tf = {};
+-
++	struct ata_taskfile tf;
+ 	char cdb[] = {  GPCMD_GET_CONFIGURATION,
+ 			2,      /* only 1 feature descriptor requested */
+ 			0, 3,   /* 3, removable medium feature */
+@@ -62,6 +62,7 @@ static enum odd_mech_type zpodd_get_mech
+ 			0, 0, 0,
+ 	};
+ 
++	ata_tf_init(dev, &tf);
+ 	tf.flags = ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
+ 	tf.command = ATA_CMD_PACKET;
+ 	tf.protocol = ATAPI_PROT_PIO;
