@@ -1,219 +1,112 @@
-From: Ondrej Zary <linux@rainbow-software.org>
+From: Pavel Machek <pavel@ucw.cz>
 Subject: Re: SATA hdd refuses to reallocate a sector?
-Date: Mon, 24 Jun 2013 09:14:29 +0200
-Message-ID: <201306240914.29502.linux@rainbow-software.org>
-References: <20130623101940.GA4448@amd.pavel.ucw.cz> <51C76858.4060906@pobox.com> <20130623215100.GA7414@amd.pavel.ucw.cz>
+Date: Mon, 24 Jun 2013 13:06:34 +0200
+Message-ID: <20130624110634.GA18185@amd.pavel.ucw.cz>
+References: <20130623101940.GA4448@amd.pavel.ucw.cz>
+ <51C76858.4060906@pobox.com>
+ <20130623215100.GA7414@amd.pavel.ucw.cz>
+ <201306240914.29502.linux@rainbow-software.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20130623215100.GA7414@amd.pavel.ucw.cz>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:52189 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750979Ab3FXLGh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Jun 2013 07:06:37 -0400
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Mark Lord <mlord@pobox.com>, Marcus Overhagen <marcus.overhagen@gmail.com>, kernel list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, tj@kernel.org
+In-Reply-To: <201306240914.29502.linux@rainbow-software.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: Mark Lord <mlord@pobox.com>, Marcus Overhagen <marcus.overhagen@gmail.com>, kernel list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, tj@kernel.org
 
-On Sunday 23 June 2013, Pavel Machek wrote:
-> On Sun 2013-06-23 17:27:52, Mark Lord wrote:
-> > On 13-06-23 03:00 PM, Pavel Machek wrote:
-> > > Thanks for the hint. (Insert rant about hdparm documentation
-> > > explaining that it is bad idea, but not telling me _why_ is it bad
-> > > idea. Can I expect cache consistency issues after that, or is it just
-> > > simple "you are writing to the disk without any checks"? Plus, I guess
-> > > documentation should mention what sector number is. I guess sectors
-> > > are 512bytes for the old drives, but is it 512 or 4096 for new
-> > > drives?)
+Hi!
+
+> > > For ATA, use the "logical sector size".
+> > > For all existing drives out there, that's a 512 byte unit.
 > >
-> > For ATA, use the "logical sector size".
-> > For all existing drives out there, that's a 512 byte unit.
->
-> I guessed so. (It would be good to actually document it, as well as
-> documenting exactly why it is dangerous. Is it okay to send patches?)
->
-> > > ...but it does not do the trick :-(. It behaves strangely as if it was
-> > > still cached somewhere. Do I need to turn off the write back cache?
+> > I guessed so. (It would be good to actually document it, as well as
+> > documenting exactly why it is dangerous. Is it okay to send patches?)
 > >
-> > No, it works just fine.  You probably have more than one bad sector.
-> > After you see a read failure, run "smartctl -a" and look at the error
-> > logs to see what sector the drive is choking on.
->
-> Well, I definitely have more than one bad sector, but I did try to
-> read exactly the same sector and it failed. See below.
->
-> root@amd:~# hdparm --yes-i-know-what-i-am-doing  --read-sector
->  961237188 /dev/sda | uniq
->
-> /dev/sda:
-> FAILED: Input/output error
-> reading sector 961237188:
-> root@amd:~# hdparm --yes-i-know-what-i-am-doing  --write-sector
-> 961237188 /dev/sda
->
-> /dev/sda:
-> re-writing sector 961237188: succeeded
-> root@amd:~# hdparm --yes-i-know-what-i-am-doing  --read-sector
-> 961237188 /dev/sda | uniq
->
-> /dev/sda:
-> FAILED: Input/output error
-> reading sector 961237188:
-> root@amd:~# hdparm --yes-i-know-what-i-am-doing  --write-sector
-> 961237188 /dev/sda
->
-> /dev/sda:
-> re-writing sector 961237188: succeeded
-> root@amd:~# hdparm --yes-i-know-what-i-am-doing  --read-sector
-> 961237188 /dev/sda | uniq
->
-> /dev/sda:
-> reading sector 961237188: succeeded
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> root@amd:~# dd if=/dev/sda4 of=/dev/zero bs=4096
-> skip=$[8958947328/4096]
-> dd: reading `/dev/sda4': Input/output error
-> 102+0 records in
-> 102+0 records out
-> 417792 bytes (418 kB) copied, 6.12536 s, 68.2 kB/s
-> root@amd:~# hdparm --yes-i-know-what-i-am-doing  --read-sector
-> 961237188 /dev/sda | uniq
->
-> /dev/sda:
-> reading sector 961237188: succeeded
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> root@amd:~# hdparm --yes-i-know-what-i-am-doing  --read-sector
-> 961237188 /dev/sda | uniq
->
-> /dev/sda:
-> reading sector 961237188: succeeded
-> 0000 0000 0000 0000 0000 0000 0000 0000
-> root@amd:~# hdparm --yes-i-know-what-i-am-doing  --read-sector
-> 961237188 /dev/sda | uniq
->
-> /dev/sda:
-> FAILED: Input/output error
-> reading sector 961237188:
-> root@amd:~#
->
-> > Or just low-level format it all with "hdparm --security-erase".
->
-> I'd like to understand what is going on there. I can mark the blocks
-> as bad at ext3 level, but I'd really like to understand what is going
-> on there, and if it is hw issue, sata issue or block layer issue.
->
-> (Plus, given that remapping does not work, I'd be afraid that it will
-> kill the disk for good).
->
-> The disk is
->
-> root@amd:~# smartctl -a /dev/sda
-> smartctl 5.40 2010-07-12 r3124 [i686-pc-linux-gnu] (local build)
-> Copyright (C) 2002-10 by Bruce Allen,
-> http://smartmontools.sourceforge.net
->
-> === START OF INFORMATION SECTION ===
-> Model Family:     Seagate Momentus 5400.6 series
-> Device Model:     ST9500325AS
-> Serial Number:    5VE41HDA
-> Firmware Version: 0001SDM1
-> User Capacity:    500,107,862,016 bytes
-> Device is:        In smartctl database [for details use: -P show]
-> ATA Version is:   8
-> ATA Standard is:  ATA-8-ACS revision 4
-> Local Time is:    Sun Jun 23 23:49:15 2013 CEST
-> SMART support is: Available - device has SMART capability.
-> SMART support is: Enabled
->
-> Thanks for support,
-> 									Pavel
+> > > > ...but it does not do the trick :-(. It behaves strangely as if it was
+> > > > still cached somewhere. Do I need to turn off the write back cache?
+> > >
+> > > No, it works just fine.  You probably have more than one bad sector.
+> > > After you see a read failure, run "smartctl -a" and look at the error
+> > > logs to see what sector the drive is choking on.
+> >
+> > Well, I definitely have more than one bad sector, but I did try to
+> > read exactly the same sector and it failed. See below.
+...
+> > Thanks for support,
+> > 									Pavel
+> 
+> Being tired of using hdparm manually, I created a simple hdd_realloc utility
+> that reads the disk in big blocks (1 MB). When there's a read error, it reads
+> the failed block sector-by-sector and tries to rewrite the sectors that fail
+> to read. It work fine for disks with just a couple of pending
+> sectors.
 
-Being tired of using hdparm manually, I created a simple hdd_realloc utility
-that reads the disk in big blocks (1 MB). When there's a read error, it reads
-the failed block sector-by-sector and tries to rewrite the sectors that fail
-to read. It work fine for disks with just a couple of pending sectors.
+Thanks! This should really be part of distribution... And it does
+O_DIRECT, O_SYNC...
 
-#define _GNU_SOURCE
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <time.h>
-#include <unistd.h>
+It seems to have reallocated one more sector (I'm on 6 now).. but
+there are still some underlying problems. I guess I should try stock
+kernel from Debian?
 
-#define BLOCK_SIZE	1048576
-#define SECTOR_SIZE	512
+Or perhaps give up and avoid Seagate in future :-(.
 
-int main(int argc, char *argv[]) {
-	if (argc < 2) {
-		fprintf(stderr, "Usage: %s <device> [pos]\n", argv[0]);
-		return 1;
-	}
-	int dev = open(argv[1], O_RDWR | O_DIRECT | O_SYNC);
-	if (dev < 1) {
-		perror("Unable to open device");
-		return 2;
-	}
+root@amd:/data/pavel/misc# ./hdd_realloc /dev/sda4 8958947328
+Position: 8958947328 B (8543 MiB, 8 GiB, sector 17497944), rate 0
+MiB/s
+Read error: Input/output error
+Examining 8958947328
+Unable to read at 8959366144, rewriting...OK
+Unable to read at 8959366656, rewriting...OK
+Unable to read at 8959367168, rewriting...OK
+Unable to read at 8959778816, rewriting...OK
+Unable to read at 8959779840, rewriting...OK
+Position: 8959995904 B (8544 MiB, 8 GiB, sector 17499992), rate 0
+MiB/s
+Read error: Input/output error
+Examining 8959995904
+Unable to read at 8960192512, rewriting...OK
+Position: 12548222976 B (11966 MiB, 11 GiB^Csector 24506200), rate 10
+MiB/s
+root@amd:/data/pavel/misc# ./hdd_realloc /dev/sda4 8958947328
+Position: 8958947328 B (8543 MiB, 8 GiB, sector 17497944), rate 0
+MiB/s
+Read error: Input/output error
+Examining 8958947328
+Unable to read at 8959366656, rewriting...OK
+Unable to read at 8959367168, rewriting...OK
+Position: 9^C6042624 B (9389 MiB, 9 GiB, sector 19230552), rate 11
+MiB/s
+root@amd:/data/pavel/misc# 
 
-	posix_fadvise(dev, 0, 0, POSIX_FADV_RANDOM);
+(s2ram to give disk a chance to reboot).
 
-	off64_t startpos = 0, pos = 0;
-	if (argc > 2) {
-		sscanf(argv[2], "%lld", &startpos);
-	}
-	pos = startpos;
-	char *buf = valloc(BLOCK_SIZE);
-	char *zeros = valloc(SECTOR_SIZE);
-	if (!buf || !zeros) {
-		fprintf(stderr, "Memory allocation error\n");
-		return 2;
-	}
-	memset(zeros, 0, SECTOR_SIZE);
+root@amd:/data/pavel/misc# ./hdd_realloc /dev/sda4 8958947328
+Position: 8958947328 B (8543 MiB, 8 GiB, sector 17497944), rate 0
+MiB/s
+Read error: Input/output error
+Examining 8958947328
+Unable to read at 8959366656, rewriting...OK
+Unable to read at 8959367168, rewriting...OK
+Position: 14^C5529088 B (13928 MiB, 13 GiB, sector 28526424), rate 21
+MiB/s
+root@amd:/data/pavel/misc# ./hdd_realloc /dev/sda4 8958947328
+Position: 8958947328 B (8543 MiB, 8 GiB, sector 17497944), rate 0
+MiB/s
+Read error: Input/output error
+Examining 8958947328
+Unable to read at 8959366656, rewriting...OK
+Unable to read at 8959367168, rewriting...OK
+Unable to read at 8959779840, rewriting...OK
+Position: 9356357056 B (8921 MiB, 8 GiB, sector 18272088), rate 15
+MiB/s
 
-	time_t starttime = time(NULL);
-
-	while (1) {
-		printf("\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
-		printf("Position: %lld B (%lld MiB, %lld GiB, sector %lld), rate %lld MiB/s", pos, pos / 1024 / 1024,
-			pos / 1024 / 1024 / 1024, pos / SECTOR_SIZE,
-			(pos - startpos) / 1024 / 1024 / ((time(NULL) - starttime) ? (time(NULL) - starttime) : 1) );
-		lseek64(dev, pos, SEEK_SET);
-		int count = read(dev, buf, BLOCK_SIZE);
-		if (count == 0)	{/* EOF */
-			printf("End of disk\n");
-			break;
-		}
-		if (count < 0) { /* read error */
-			printf("\n");
-			perror("Read error");
-			printf("Examining %lld\n", pos);
-			for (int i = 0; i < BLOCK_SIZE/SECTOR_SIZE; i++) {
-				lseek64(dev, pos, SEEK_SET);
-				if (read(dev, buf, SECTOR_SIZE) < SECTOR_SIZE) {
-					printf("Unable to read at %lld, rewriting...", pos);
-					lseek64(dev, pos, SEEK_SET);
-					int result = write(dev, zeros, SECTOR_SIZE);
-					if (result < 0) {
-						printf("write error\n");
-					} else {
-						lseek64(dev, pos, SEEK_SET);
-						if (read(dev, buf, SECTOR_SIZE) < SECTOR_SIZE)
-							printf("read error after rewrite\n");
-						else
-							printf("OK\n");
-					}
-				}
-				pos += SECTOR_SIZE;
-			}
-		} else /* no error */
-			pos += count;
-	}
-
-	return 0;
-}
-
-
+									Pavel
 -- 
-Ondrej Zary
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
