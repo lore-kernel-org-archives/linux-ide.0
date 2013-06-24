@@ -1,28 +1,34 @@
-From: Zdenek Kaspar <zkaspar82@gmail.com>
+From: Ondrej Zary <linux@rainbow-software.org>
 Subject: Re: SATA hdd refuses to reallocate a sector?
-Date: Mon, 24 Jun 2013 14:48:56 +0200
-Message-ID: <51C84038.6090507@gmail.com>
-References: <20130623101940.GA4448@amd.pavel.ucw.cz>
+Date: Mon, 24 Jun 2013 15:08:07 +0200
+Message-ID: <201306241508.07377.linux@rainbow-software.org>
+References: <20130623101940.GA4448@amd.pavel.ucw.cz> <51C84038.6090507@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20130623101940.GA4448@amd.pavel.ucw.cz>
+In-Reply-To: <51C84038.6090507@gmail.com>
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org
+To: Zdenek Kaspar <zkaspar82@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On 06/23/2013 12:19 PM, Pavel Machek wrote:
-> Hi!
-> 
-> This may very well be hw problem, but...
-> 
-> I have error on sda4. I tried to make hdd reallocate it by writing
-> zeros there, but it will not. Is there special kind of write that
-> needs to be done to force reallocation?
+On Monday 24 June 2013, Zdenek Kaspar wrote:
+> On 06/23/2013 12:19 PM, Pavel Machek wrote:
+> > Hi!
+> >
+> > This may very well be hw problem, but...
+> >
+> > I have error on sda4. I tried to make hdd reallocate it by writing
+> > zeros there, but it will not. Is there special kind of write that
+> > needs to be done to force reallocation?
+>
+> Hi Pavel, maybe smartctl -t long /dev/sda will do the trick reliable for
+> your drive..
 
-Hi Pavel, maybe smartctl -t long /dev/sda will do the trick reliable for
-your drive..
+It's a read-only test that ends with an error on the first bad sector.
 
-Z.
+-- 
+Ondrej Zary
