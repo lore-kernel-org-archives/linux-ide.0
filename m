@@ -1,33 +1,42 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2] AHCI: use ATA_BUSY
-Date: Mon, 24 Jun 2013 16:30:24 -0700
-Message-ID: <20130624233024.GR1918@mtj.dyndns.org>
-References: <201306230139.39597.sergei.shtylyov@cogentembedded.com>
+From: Girish KS <girishks2000@gmail.com>
+Subject: Re: [PATCH V2] ahci: sata: add support for exynos5440 sata
+Date: Tue, 25 Jun 2013 10:05:29 +0530
+Message-ID: <CAKrE-KdQCCW1jjkCyh03JWK4mjzSYRtcHcZCc7wi5-y3+CLOhA@mail.gmail.com>
+References: <1366104482-14240-1-git-send-email-ks.giri@samsung.com>
+	<20130617182446.GI32663@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f50.google.com ([209.85.216.50]:35356 "EHLO
-	mail-qa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750860Ab3FXXab (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Jun 2013 19:30:31 -0400
-Received: by mail-qa0-f50.google.com with SMTP id l18so180061qak.2
-        for <linux-ide@vger.kernel.org>; Mon, 24 Jun 2013 16:30:30 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <201306230139.39597.sergei.shtylyov@cogentembedded.com>
+Received: from mail-la0-f54.google.com ([209.85.215.54]:39449 "EHLO
+	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750735Ab3FYEfb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 Jun 2013 00:35:31 -0400
+In-Reply-To: <20130617182446.GI32663@mtj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org
 
-On Sun, Jun 23, 2013 at 01:39:39AM +0400, Sergei Shtylyov wrote:
-> ahci_hardreset() and ahci_p5wdh_hardreset() use bare numbers for the BSY bit of
-> the  ATA status  register, despite it's #define'd in <linux/ata.h>.
-> 
-> Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+On Mon, Jun 17, 2013 at 11:54 PM, Tejun Heo <tj@kernel.org> wrote:
+> On Tue, Apr 16, 2013 at 02:58:02PM +0530, Girish K S wrote:
+>> This patch adds the compatible string of the exynos5440 sata controller
+>> compliant with the ahci 1.3 and sata 3.0 specification.
+>>
+>> Signed-off-by: Girish K S <ks.giri@samsung.com>
+>>
+>> changes in v2:
+>>               changed the compatible string by adding the actual IP
+>> owners name instead of the SoC vendor name.
+>
+> Applied to libata/for-3.11.
+>
+> Can you please keep SOB at the end of the description after the
+> revision history from the next time?
 
-Applied to libata/for-3.11.
+Sure. Thanks
 
-Thanks.
-
--- 
-tejun
+>
+> Thanks.
+>
+> --
+> tejun
