@@ -1,46 +1,57 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: Re: SATA hdd refuses to reallocate a sector?
-Date: Wed, 26 Jun 2013 08:11:15 +0200
-Message-ID: <201306260811.15421.linux@rainbow-software.org>
-References: <20130623101940.GA4448@amd.pavel.ucw.cz> <51C83907.2020202@pobox.com> <1372215862.2806.54.camel@dabdike>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH] libata: remove dead code from libata-acpi.c
+Date: Wed, 26 Jun 2013 14:27:52 +0800
+Message-ID: <51CA89E8.6050800@intel.com>
+References: <1371265368-7334-1-git-send-email-liuj97@gmail.com> <51BE6B5C.70803@intel.com> <20130617180151.GG32663@mtj.dyndns.org> <51C02571.3090100@intel.com> <51C26861.9050106@intel.com> <51C2E12F.4000603@cogentembedded.com> <51C3A489.1050905@intel.com> <51C43A6D.6060806@cogentembedded.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-1.atlantis.sk ([80.94.52.57]:51569 "EHLO
-	mail-1.atlantis.sk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751349Ab3FZGL6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Jun 2013 02:11:58 -0400
-In-Reply-To: <1372215862.2806.54.camel@dabdike>
-Content-Disposition: inline
+Received: from mga03.intel.com ([143.182.124.21]:2445 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751374Ab3FZG1X (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 26 Jun 2013 02:27:23 -0400
+In-Reply-To: <51C43A6D.6060806@cogentembedded.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Mark Lord <mlord@pobox.com>, Pavel Machek <pavel@ucw.cz>, Marcus Overhagen <marcus.overhagen@gmail.com>, kernel list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, tj@kernel.org
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: Tejun Heo <tj@kernel.org>, Matthew Garrett <mjg@redhat.com>, Liu Jiang <liuj97@gmail.com>, Dirk Griesbach <spamthis@freenet.de>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Liu Jiang <jiang.liu@huawei.com>
 
-On Wednesday 26 June 2013, James Bottomley wrote:
-> On Mon, 2013-06-24 at 08:18 -0400, Mark Lord wrote:
-> > And the SCSI stack in Linux has rather atrocious error handling.
-> > It lumps multiple requests together, and can fail the entire lot even
-> > if only a single sector is bad.
->
-> That's rather misleading.  SCSI doesn't lump anything together; it
-> handles the requests it was passed.  For reads and writes through the
-> page cache, block will aggregate in the elevators, but you avoid that by
-> not using the page cache (O_DIRECT or SG_IO).
+On 06/21/2013 07:35 PM, Sergei Shtylyov wrote:
+> Hello.
+> 
+> On 21-06-2013 4:55, Aaron Lu wrote:
+> 
+>>>> +void ata_acpi_hotplug_init(struct ata_host *host)
+>>>> +{
+>>>> +	int i;
+>>>> +
+>>>> +	for (i = 0; i < host->n_ports; i++) {
+>>>> +		struct ata_port *ap = host->ports[i];
+>>>> +		acpi_handle handle;
+>>>> +		struct ata_device *dev;
+>>>> +
+>>>> +		if (!ap)
+>>>> +			continue;
+>>>> +
+>>>> +		handle = ata_ap_acpi_handle(ap);
+>>>> +		if (handle) {
+>>>> +			/* we might be on a docking station */
+>>>> +			register_hotplug_dock_device(handle,
+>>>> +					&ata_acpi_ap_dock_ops, ap);
+> 
+>>>      Please indent this line under the next character after ( above.
+> 
+>> Is there a link about this rule? I might have missed something about
+>> coding style.
+> 
+>     Don't think so. This is a rule in some subsystems like networking, 
+> and it's also the way Emacs does such things. So, in principle, you can 
+> ignore my comment (although libata seems to also use this style).
 
-Yes, it works fine with O_DIRECT - that's why hdd_realloc reads 
-sector-by-sector when an error was detected. I'd also like to disable read 
-retries but that does not seem to be possible.
+FYI, the updated patch has been sent by Rafael for me:
+http://marc.info/?l=linux-acpi&m=137207724507019&w=2
+with your suggestion taken.
 
-> For devices which report failing sectors correctly data up to the failed
-> sector is returned and the request is shortened and retried from the
-> failed sector on.  If we get a second failure at the beginning (where
-> the previous bad sector was), then we give up.
->
-> James
-
-
--- 
-Ondrej Zary
+Thanks,
+Aaron
