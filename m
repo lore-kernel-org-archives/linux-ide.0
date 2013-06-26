@@ -1,42 +1,68 @@
-From: Girish KS <girishks2000@gmail.com>
-Subject: Re: [PATCH V2] ahci: sata: add support for exynos5440 sata
-Date: Tue, 25 Jun 2013 10:05:29 +0530
-Message-ID: <CAKrE-KdQCCW1jjkCyh03JWK4mjzSYRtcHcZCc7wi5-y3+CLOhA@mail.gmail.com>
-References: <1366104482-14240-1-git-send-email-ks.giri@samsung.com>
-	<20130617182446.GI32663@mtj.dyndns.org>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH] libata: remove dead code from libata-acpi.c
+Date: Wed, 26 Jun 2013 10:01:56 +0800
+Message-ID: <51CA4B94.3040008@intel.com>
+References: <1371265368-7334-1-git-send-email-liuj97@gmail.com>  <51BE6B5C.70803@intel.com> <20130617180151.GG32663@mtj.dyndns.org>  <51C02571.3090100@intel.com> <51C26861.9050106@intel.com>  <51C2E12F.4000603@cogentembedded.com> <51C3A489.1050905@intel.com> <1371828346.3040.3.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-la0-f54.google.com ([209.85.215.54]:39449 "EHLO
-	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750735Ab3FYEfb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 25 Jun 2013 00:35:31 -0400
-In-Reply-To: <20130617182446.GI32663@mtj.dyndns.org>
+Received: from mga09.intel.com ([134.134.136.24]:5490 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751195Ab3FZCB1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 25 Jun 2013 22:01:27 -0400
+In-Reply-To: <1371828346.3040.3.camel@dabdike>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Tejun Heo <tj@kernel.org>, Matthew Garrett <mjg@redhat.com>, Liu Jiang <liuj97@gmail.com>, Dirk Griesbach <spamthis@freenet.de>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Liu Jiang <jiang.liu@huawei.com>
 
-On Mon, Jun 17, 2013 at 11:54 PM, Tejun Heo <tj@kernel.org> wrote:
-> On Tue, Apr 16, 2013 at 02:58:02PM +0530, Girish K S wrote:
->> This patch adds the compatible string of the exynos5440 sata controller
->> compliant with the ahci 1.3 and sata 3.0 specification.
+On 06/21/2013 11:25 PM, James Bottomley wrote:
+> On Fri, 2013-06-21 at 08:55 +0800, Aaron Lu wrote:
+>> On 06/20/2013 07:02 PM, Sergei Shtylyov wrote:
+>>> Hello.
 >>
->> Signed-off-by: Girish K S <ks.giri@samsung.com>
+>> Hi,
 >>
->> changes in v2:
->>               changed the compatible string by adding the actual IP
->> owners name instead of the SoC vendor name.
->
-> Applied to libata/for-3.11.
->
-> Can you please keep SOB at the end of the description after the
-> revision history from the next time?
+>> Thanks for your comments.
+>>
+>>>
+>>> On 20-06-2013 6:26, Aaron Lu wrote:
+>>>>
+>>>> +void ata_acpi_hotplug_init(struct ata_host *host)
+>>>> +{
+>>>> +	int i;
+>>>> +
+>>>> +	for (i = 0; i < host->n_ports; i++) {
+>>>> +		struct ata_port *ap = host->ports[i];
+>>>> +		acpi_handle handle;
+>>>> +		struct ata_device *dev;
+>>>> +
+>>>> +		if (!ap)
+>>>> +			continue;
+>>>> +
+>>>> +		handle = ata_ap_acpi_handle(ap);
+>>>> +		if (handle) {
+>>>> +			/* we might be on a docking station */
+>>>> +			register_hotplug_dock_device(handle,
+>>>> +					&ata_acpi_ap_dock_ops, ap);
+>>>
+>>>     Please indent this line under the next character after ( above.
+>>
+>> Is there a link about this rule? I might have missed something about
+>> coding style.
+> 
+> The rule is follow the coding style in the file, unless there's
+> something really wrong with it (which there might be in the case of
+> really old drivers).  The reason is that a mixture of coding styles
+> makes the file much harder to read than a single consistent style.
 
-Sure. Thanks
+Oh right, that's the rule I missed. Thanks for letting me know.
 
->
-> Thanks.
->
-> --
-> tejun
+> 
+> In this case, if you look at libata-acpi.c you see all continuation
+> lines of function calls are aligned with open braces.
+
+Indeed.
+
+-Aaron
