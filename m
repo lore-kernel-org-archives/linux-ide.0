@@ -1,40 +1,42 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH] libata-zpodd: must use ata_tf_init()
-Date: Thu, 27 Jun 2013 09:15:19 +0800
-Message-ID: <51CB9227.30307@intel.com>
-References: <201306232325.04732.sergei.shtylyov@cogentembedded.com> <51CA4C74.50400@intel.com> <51CACC16.9050005@cogentembedded.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: Youquan Song <youquan.song@intel.com>
+Subject: [PATCH] ata: Fix DVD not dectected at some platform with Wellsburg PCH
+Date: Fri, 28 Jun 2013 14:25:45 -0400
+Message-ID: <1372443945-23717-1-git-send-email-youquan.song@intel.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:2138 "EHLO mga03.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:34707 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751271Ab3F0BOo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 26 Jun 2013 21:14:44 -0400
-In-Reply-To: <51CACC16.9050005@cogentembedded.com>
+	id S1754640Ab3F1Gjh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 28 Jun 2013 02:39:37 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: linux-ide@vger.kernel.org, tj@kernel.org
+To: jgarzik@redhat.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: seth.heasley@intel.com, james.d.ralston@intel.com, ed.ciechanowski@intel.com, Youquan Song <youquan.song@linux.intel.com>, Youquan Song <youquan.song@intel.com>
 
-On 06/26/2013 07:10 PM, Sergei Shtylyov wrote:
-> Hello.
-> 
-> On 26-06-2013 6:05, Aaron Lu wrote:
-> 
->>> There are  some SATA controllers which have both devices 0 and 1 but this module
-> 
->> Do you mean a SATA port can connect to two SATA devices without PMP?
-> 
->     No, I mean 2 SATA ports combined in one ATA channel as 2 devices. 
-> Look for SLAVE_POSS in drivers/ata/[s]ata*.c...
+There is a patch b55f84e2d527182e7c611d466cd0bb6ddce201de "ata_piix: Fix DVD
+ not dectected at some Haswell platforms" to fix an issue of DVD not 
+recognized on Haswell Desktop platform with Lynx Point. 
+Recently, it is also found the same issue at some platformas with Wellsburg PCH.
 
-Oh yes that happened when the SATA controller is in IDE programming
-mode, not AHCI.
+So deliver a similar patch to fix it by disables 32bit PIO in IDE mode.
 
-ZPODD is only supported for SATA controllers in AHCI programming mode,
-the ACPI table will not support power off the port if the controller is
-in IDE mode, so the device 1 case shouldn't happen in practice :-)
+Signed-off-by: Youquan Song <youquan.song@intel.com>
+---
+ drivers/ata/ata_piix.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Thanks,
-Aaron
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 9a8a674..424bcbe 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -330,7 +330,7 @@ static const struct pci_device_id piix_pci_tbl[] = {
+ 	/* SATA Controller IDE (Wellsburg) */
+ 	{ 0x8086, 0x8d00, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_snb },
+ 	/* SATA Controller IDE (Wellsburg) */
+-	{ 0x8086, 0x8d08, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
++	{ 0x8086, 0x8d08, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata_snb },
+ 	/* SATA Controller IDE (Wellsburg) */
+ 	{ 0x8086, 0x8d60, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_snb },
+ 	/* SATA Controller IDE (Wellsburg) */
+-- 
+1.6.4.2
+
