@@ -1,56 +1,33 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH] libata-zpodd: must use ata_tf_init()
-Date: Sat, 29 Jun 2013 21:04:54 +0800
-Message-ID: <51CEDB76.3080704@intel.com>
-References: <201306232325.04732.sergei.shtylyov@cogentembedded.com> <51CA4C74.50400@intel.com> <51CACC16.9050005@cogentembedded.com> <51CB9227.30307@intel.com> <51CD863C.7000802@cogentembedded.com>
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: SATA hdd refuses to reallocate a sector?
+Date: Sat, 29 Jun 2013 15:47:16 -0300
+Message-ID: <20130629184716.GA9330@khazad-dum.debian.net>
+References: <20130623101940.GA4448@amd.pavel.ucw.cz>
+ <51C76858.4060906@pobox.com>
+ <20130623215100.GA7414@amd.pavel.ucw.cz>
+ <201306240914.29502.linux@rainbow-software.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:11415 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750997Ab3F2NGI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 29 Jun 2013 09:06:08 -0400
-In-Reply-To: <51CD863C.7000802@cogentembedded.com>
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:39675 "EHLO
+	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752383Ab3F2SrU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 29 Jun 2013 14:47:20 -0400
+Content-Disposition: inline
+In-Reply-To: <201306240914.29502.linux@rainbow-software.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: linux-ide@vger.kernel.org, tj@kernel.org
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: Pavel Machek <pavel@ucw.cz>, Mark Lord <mlord@pobox.com>, Marcus Overhagen <marcus.overhagen@gmail.com>, kernel list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, tj@kernel.org
 
-On 06/28/2013 08:49 PM, Sergei Shtylyov wrote:
-> Hello.
-> 
-> On 27-06-2013 5:15, Aaron Lu wrote:
-> 
->>>>> There are  some SATA controllers which have both devices 0 and 1 but this module
-> 
->>>> Do you mean a SATA port can connect to two SATA devices without PMP?
-> 
->>>      No, I mean 2 SATA ports combined in one ATA channel as 2 devices.
->>> Look for SLAVE_POSS in drivers/ata/[s]ata*.c...
-> 
->> Oh yes that happened when the SATA controller is in IDE programming
->> mode, not AHCI.
-> 
->     AHCI is not the only mode for the SATA controllers.
+You know, either the "long" or the "offline" SMART test routines do exactly
+that on any spinning rust device with a firmware that is not utterly broken.
 
-Right.
+The HDD's firmware will rewrite, and even reallocate any "weak" sectors
+found by the surface scan.
 
-> 
->> ZPODD is only supported for SATA controllers in AHCI programming mode,
-> 
->     Hm, really? How about the true SATA controllers that don't use AHCI?
-
-If they don't set ATA_FLAG_ACPI_SATA, no.
-
-> 
->> the ACPI table will not support power off the port if the controller is
->> in IDE mode, so the device 1 case shouldn't happen in practice :-)
-> 
->     Anyway, I need uniform setup for ata_exec_internal() call for my to 
-> be posted cleanup patches.
-
-No problem.
-
-Thanks,
-Aaron
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
