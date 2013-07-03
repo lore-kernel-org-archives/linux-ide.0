@@ -1,74 +1,37 @@
-From: Zhu Richard-R65037 <r65037@freescale.com>
-Subject: RE: [v2 4/4] sata: imx: add ahci sata support on imx platforms
-Date: Tue, 2 Jul 2013 02:24:56 +0000
-Message-ID: <0E83723C55F66F43A6041464FE31119D30C5EF@039-SN2MPN1-013.039d.mgd.msft.net>
-References: <1372672975-2997-1-git-send-email-r65037@freescale.com>
- <1372672975-2997-5-git-send-email-r65037@freescale.com>
- <20130701124445.GW516@pengutronix.de>
- <20130701152955.GW13206@S2101-09.ap.freescale.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from co9ehsobe002.messaging.microsoft.com ([207.46.163.25]:48977
-	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751131Ab3GBCZA convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 1 Jul 2013 22:25:00 -0400
-In-Reply-To: <20130701152955.GW13206@S2101-09.ap.freescale.net>
-Content-Language: en-US
-Sender: linux-ide-owner@vger.kernel.org
+From: Youquan Song <youquan.song@intel.com>
+Subject: [PATCH] ata: Fix DVD not dectected at some platform with Wellsburg PCH
+Date: Wed,  3 Jul 2013 10:17:48 -0400
+Message-ID: <1372861068-18221-1-git-send-email-youquan.song@intel.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: tj@kernel.org, jgarzik@redhat.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: seth.heasley@intel.com, james.d.ralston@intel.com, ed.ciechanowski@intel.com, Youquan Song <youquan.song@linux.intel.com>, Youquan Song <youquan.song@intel.com>
 List-Id: linux-ide@vger.kernel.org
-To: Shawn Guo <shawn.guo@linaro.org>, Sascha Hauer <s.hauer@pengutronix.de>
-Cc: Richard Zhu <richard.zhuhongxing@gmail.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>, "avorontsov@ru.mvista.com" <avorontsov@ru.mvista.com>, "rob.herring@calxeda.com" <rob.herring@calxeda.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hi Shawn:
-Never mind, I misunderstand what you said.
+There is a patch b55f84e2d527182e7c611d466cd0bb6ddce201de "ata_piix: Fix DVD
+ not dectected at some Haswell platforms" to fix an issue of DVD not 
+recognized on Haswell Desktop platform with Lynx Point. 
+Recently, it is also found the same issue at some platformas with Wellsburg PCH.
 
-Now, I know what your are expecting now, would prepare the Version3, and send them later.
+So deliver a similar patch to fix it by disables 32bit PIO in IDE mode.
 
-Best Regards
-Richard Zhu
+Signed-off-by: Youquan Song <youquan.song@intel.com>
+---
+ drivers/ata/ata_piix.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-
------Original Message-----
-From: Shawn Guo [mailto:shawn.guo@linaro.org] 
-Sent: Monday, July 01, 2013 11:30 PM
-To: Sascha Hauer
-Cc: Richard Zhu; linux-arm-kernel@lists.infradead.org; jgarzik@pobox.com; avorontsov@ru.mvista.com; rob.herring@calxeda.com; linux-ide@vger.kernel.org; Zhu Richard-R65037
-Subject: Re: [v2 4/4] sata: imx: add ahci sata support on imx platforms
-
-On Mon, Jul 01, 2013 at 02:44:45PM +0200, Sascha Hauer wrote:
-> On Mon, Jul 01, 2013 at 06:02:55PM +0800, Richard Zhu wrote:
-> > imx6q contains one Synopsys AHCI SATA controller, But it can't 
-> > shares ahci_platform driver with other controllers.
-> > Because there are some misalignments of the bits definitions of the 
-> > HBA registers and the Vendor Specific registers
-> >  - CAP_SSS(bit20) of the HOST_CAP is writable, default  value is 
-> > '0', should be configured to be '1'
-> >  - bit0 (only one AHCI SATA port on imx6q) of the  HOST_PORTS_IMPL 
-> > should be set to be '1'.(default 0)
-> >  - One Vendor Specific register HOST_TIMER1MS(offset:0xe0)  should 
-> > be configured regarding to the frequency of AHB  bus clock.
-> > 
-> > Setup its own ahci sata driver, enable the imx6q ahci sata support, 
-> > and update the ahci sata binding document.
-> > 
-> > Signed-off-by: Richard Zhu <r65037@freescale.com>
-> 
-> Wait a minute. We suggested to add a i.MX specific ahci driver to put 
-> the i.MX speicific setup in there. Now you really post a separate i.MX 
-> driver, but instead of putting the setup in there, it's a nearly 
-> identical copy of the generic driver *without* the setup and the setup 
-> is still in arch/arm/. That doesn't make sense to me.
-
-+1
-
-Richard,
-
-You could have confused by me with pointing you to the sata_highbank driver.  Sorry.  But Sascha posted his work [1] later in the same thread.  That's obviously the way we should go, and I thought you knew you should start your v2 based on that.  You missed that?
-
-Shawn
-
-[1] http://thread.gmane.org/gmane.linux.ide/54410/focus=54434
-
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 9a8a674..424bcbe 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -330,7 +330,7 @@ static const struct pci_device_id piix_pci_tbl[] = {
+ 	/* SATA Controller IDE (Wellsburg) */
+ 	{ 0x8086, 0x8d00, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_snb },
+ 	/* SATA Controller IDE (Wellsburg) */
+-	{ 0x8086, 0x8d08, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
++	{ 0x8086, 0x8d08, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata_snb },
+ 	/* SATA Controller IDE (Wellsburg) */
+ 	{ 0x8086, 0x8d60, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_snb },
+ 	/* SATA Controller IDE (Wellsburg) */
+-- 
+1.6.4.2
