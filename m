@@ -1,49 +1,99 @@
 From: Richard Zhu <richard.zhuhongxing@gmail.com>
-Subject: [PATCH v3 0/3] ahci: enable ahci sata support on imx6q
-Date: Fri,  5 Jul 2013 17:52:19 +0800
-Message-ID: <1373017942-12583-1-git-send-email-Hong-Xing.Zhu@freescale.com>
+Subject: [v3 1/3] ARM: dtsi: enable ahci sata on imx6q platforms
+Date: Fri,  5 Jul 2013 17:52:20 +0800
+Message-ID: <1373017942-12583-2-git-send-email-Hong-Xing.Zhu@freescale.com>
+References: <1373017942-12583-1-git-send-email-Hong-Xing.Zhu@freescale.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:35341 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757208Ab3GEJuH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Jul 2013 05:50:07 -0400
-Received: by mail-pa0-f46.google.com with SMTP id fa11so2106310pad.33
-        for <linux-ide@vger.kernel.org>; Fri, 05 Jul 2013 02:50:06 -0700 (PDT)
+Received: from mail-pb0-f45.google.com ([209.85.160.45]:51278 "EHLO
+	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757226Ab3GEJuM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Jul 2013 05:50:12 -0400
+Received: by mail-pb0-f45.google.com with SMTP id mc8so1994676pbc.18
+        for <linux-ide@vger.kernel.org>; Fri, 05 Jul 2013 02:50:11 -0700 (PDT)
+In-Reply-To: <1373017942-12583-1-git-send-email-Hong-Xing.Zhu@freescale.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: shawn.guo@linaro.org
-Cc: linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, avorontsov@ru.mvista.com, rob.herring@calxeda.com, s.hauer@pengutronix.de, linux-ide@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, avorontsov@ru.mvista.com, rob.herring@calxeda.com, s.hauer@pengutronix.de, linux-ide@vger.kernel.org, Richard Zhu <r65037@freescale.com>
 
-v3: add imx6q specific ahci sata support
-  - Keep arch/arm and ahci_platform driver clean.
-  - Add the sata_imx standalone driver contained all the
-  specific setup
-  - Add the release function, support the loadable module
-  driver.
-  - Tested on imx6q sd board.
+From: Richard Zhu <r65037@freescale.com>
 
-v2: http://www.spinics.net/lists/linux-ide/msg45666.html 
- - Setup standalone imx ahci sata driver, because of
- the misalignments of the bits definition of the HBA register.
- - Replace the node by the label in the board dts.
- - 
+Only imx6q has the ahci sata controller, enable
+it on imx6q platforms.
 
-v1: http://www.spinics.net/lists/linux-ide/msg45581.html
- - add imx6q specific ahci sata support to arch/arm/mach-imx/mach-imx6q.c
+Signed-off-by: Richard Zhu <r65037@freescale.com>
+---
+ arch/arm/boot/dts/imx6q-sabreauto.dts |    4 ++++
+ arch/arm/boot/dts/imx6q-sabrelite.dts |    4 ++++
+ arch/arm/boot/dts/imx6q-sabresd.dts   |    4 ++++
+ arch/arm/boot/dts/imx6q.dtsi          |    9 +++++++++
+ 4 files changed, 21 insertions(+), 0 deletions(-)
 
-These patches is based on imx/dt branch of
-"http://git.linaro.org/git-ro/people/shawnguo/linux-2.6.git"
+diff --git a/arch/arm/boot/dts/imx6q-sabreauto.dts b/arch/arm/boot/dts/imx6q-sabreauto.dts
+index 09a7580..5cd5209 100644
+--- a/arch/arm/boot/dts/imx6q-sabreauto.dts
++++ b/arch/arm/boot/dts/imx6q-sabreauto.dts
+@@ -20,6 +20,10 @@
+ 	compatible = "fsl,imx6q-sabreauto", "fsl,imx6q";
+ };
+ 
++&ahci {
++	status = "okay";
++};
++
+ &iomuxc {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_hog>;
+diff --git a/arch/arm/boot/dts/imx6q-sabrelite.dts b/arch/arm/boot/dts/imx6q-sabrelite.dts
+index 6a00066..6bf6fec 100644
+--- a/arch/arm/boot/dts/imx6q-sabrelite.dts
++++ b/arch/arm/boot/dts/imx6q-sabrelite.dts
+@@ -65,6 +65,10 @@
+ 	};
+ };
+ 
++&ahci {
++	status = "okay";
++};
++
+ &ecspi1 {
+ 	fsl,spi-num-chipselects = <1>;
+ 	cs-gpios = <&gpio3 19 0>;
+diff --git a/arch/arm/boot/dts/imx6q-sabresd.dts b/arch/arm/boot/dts/imx6q-sabresd.dts
+index 0038228..d0579b8 100644
+--- a/arch/arm/boot/dts/imx6q-sabresd.dts
++++ b/arch/arm/boot/dts/imx6q-sabresd.dts
+@@ -20,6 +20,10 @@
+ 	compatible = "fsl,imx6q-sabresd", "fsl,imx6q";
+ };
+ 
++&ahci {
++	status = "okay";
++};
++
+ &iomuxc {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pinctrl_hog>;
+diff --git a/arch/arm/boot/dts/imx6q.dtsi b/arch/arm/boot/dts/imx6q.dtsi
+index e7dd2c4..98f071e 100644
+--- a/arch/arm/boot/dts/imx6q.dtsi
++++ b/arch/arm/boot/dts/imx6q.dtsi
+@@ -424,6 +424,15 @@
+ 			};
+ 		};
+ 
++		ahci: ahci@02200000 {
++			compatible = "fsl,imx6q-ahci";
++			reg = <0x02200000 0x4000>;
++			interrupts = <0 39 0x04>;
++			clocks = <&clks 154>, <&clks 187>;
++			clock-names = "sata", "sata_ref_100m";
++			status = "disabled";
++		};
++
+ 		ipu2: ipu@02800000 {
+ 			#crtc-cells = <1>;
+ 			compatible = "fsl,imx6q-ipu";
+-- 
+1.7.5.4
 
-[v3 1/3] ARM: dtsi: enable ahci sata on imx6q platforms
-[v3 2/3] ARM: imx6q: update the sata bits definitions of gpr13
-[v3 3/3] sata: imx: add ahci sata support on imx platforms
-
-arch/arm/boot/dts/imx6q-sabreauto.dts       |    4 +
-arch/arm/boot/dts/imx6q-sabrelite.dts       |    4 +
-arch/arm/boot/dts/imx6q-sabresd.dts         |    4 +
-arch/arm/boot/dts/imx6q.dtsi                |    9 +
-drivers/ata/Kconfig                         |    9 +
-drivers/ata/Makefile                        |    1 +
-drivers/ata/sata_imx.c                      |  221 +++++++++++++++++++++++++++
-include/linux/mfd/syscon/imx6q-iomuxc-gpr.h |  121 ++++++++++-----
-8 files changed, 336 insertions(+), 37 deletions(-)
