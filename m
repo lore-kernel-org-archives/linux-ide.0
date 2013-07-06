@@ -1,28 +1,46 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [v3 3/3] sata: imx: add ahci sata support on imx platforms
-Date: Fri, 5 Jul 2013 10:43:05 -0700
-Message-ID: <20130705174305.GA28088@mtj.dyndns.org>
+From: Zhu Richard-R65037 <r65037@freescale.com>
+Subject: RE: [v3 3/3] sata: imx: add ahci sata support on imx platforms
+Date: Sat, 6 Jul 2013 01:54:04 +0000
+Message-ID: <0E83723C55F66F43A6041464FE31119D3142E9@039-SN2MPN1-012.039d.mgd.msft.net>
 References: <1373017942-12583-1-git-send-email-Hong-Xing.Zhu@freescale.com>
- <1373017942-12583-4-git-send-email-Hong-Xing.Zhu@freescale.com>
+ <1373017942-12583-4-git-send-email-Hong-Xing.Zhu@freescale.com>,<20130705155911.GK516@pengutronix.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ve0-f171.google.com ([209.85.128.171]:39818 "EHLO
-	mail-ve0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752029Ab3GERnM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Jul 2013 13:43:12 -0400
-Received: by mail-ve0-f171.google.com with SMTP id b10so1986750vea.30
-        for <linux-ide@vger.kernel.org>; Fri, 05 Jul 2013 10:43:12 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <1373017942-12583-4-git-send-email-Hong-Xing.Zhu@freescale.com>
+Received: from va3ehsobe004.messaging.microsoft.com ([216.32.180.14]:18823
+	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752501Ab3GFByV convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 5 Jul 2013 21:54:21 -0400
+In-Reply-To: <20130705155911.GK516@pengutronix.de>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Richard Zhu <richard.zhuhongxing@gmail.com>
-Cc: shawn.guo@linaro.org, linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, avorontsov@ru.mvista.com, rob.herring@calxeda.com, s.hauer@pengutronix.de, linux-ide@vger.kernel.org, Richard Zhu <r65037@freescale.com>
+To: Sascha Hauer <s.hauer@pengutronix.de>, Richard Zhu <richard.zhuhongxing@gmail.com>
+Cc: "shawn.guo@linaro.org" <shawn.guo@linaro.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>, "avorontsov@ru.mvista.com" <avorontsov@ru.mvista.com>, "rob.herring@calxeda.com" <rob.herring@calxeda.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hello,
+Hi Sascha:
+Thanks for your comments.
+
+Best Regards
+Richard Zhu
+________________________________________
+From: Sascha Hauer [s.hauer@pengutronix.de]
+Sent: Friday, July 05, 2013 11:59 PM
+To: Richard Zhu
+Cc: shawn.guo@linaro.org; linux-arm-kernel@lists.infradead.org; jgarzik@pobox.com; avorontsov@ru.mvista.com; rob.herring@calxeda.com; linux-ide@vger.kernel.org; Zhu Richard-R65037
+Subject: Re: [v3 3/3] sata: imx: add ahci sata support on imx platforms
 
 On Fri, Jul 05, 2013 at 05:52:22PM +0800, Richard Zhu wrote:
+> From: Richard Zhu <r65037@freescale.com>
+>
+> imx6q contains one Synopsys AHCI SATA controller,
+> But it can't shares ahci_platform driver with other
+> controllers.
+> Because there are some misalignments of the bits
+> definitions of the HBA registers and the Vendor
+> Specific registers
 >  - CAP_SSS(bit20) of the HOST_CAP is writable, default
 >  value is '0', should be configured to be '1'
 >  - bit0 (only one AHCI SATA port on imx6q) of the
@@ -32,12 +50,320 @@ On Fri, Jul 05, 2013 at 05:52:22PM +0800, Richard Zhu wrote:
 >  bus clock.
 >  - Configurations of the AHCI PHY clock, and the signal
 >  parameters of the GPR13
+>
+> Setup its own ahci sata driver, enable the imx6q ahci
+> sata support.
+>
+> Signed-off-by: Richard Zhu <r65037@freescale.com>
+> ---
+>  drivers/ata/Kconfig    |    9 ++
+>  drivers/ata/Makefile   |    1 +
+>  drivers/ata/sata_imx.c |  230 ++++++++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 240 insertions(+), 0 deletions(-)
+>  create mode 100644 drivers/ata/sata_imx.c
+>
+> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+> index a5a3ebc..45ed2f0 100644
+> --- a/drivers/ata/Kconfig
+> +++ b/drivers/ata/Kconfig
+> @@ -97,6 +97,15 @@ config SATA_AHCI_PLATFORM
+>
+>         If unsure, say N.
+>
+> +config SATA_IMX
+> +     tristate "Freescale iMX AHCI SATA support"
 
-Can't you just add a platform specific init callback to ahci_platform?
-I don't see how these small differences in init sequence justify a
-separate driver.
+It's rather untypical to write iMX. Please write i.MX.
+[Richard] Accepted.
 
-Thanks.
+> +     depends on SATA_AHCI_PLATFORM
+> +     help
+> +       This option enables support for the Freescale iMX SoC's
+> +       onboard AHCI SATA.
+> +
+> +       If unsure, say N.
+> +
+>  config SATA_FSL
+>       tristate "Freescale 3.0Gbps SATA support"
+>       depends on FSL_SOC
+> diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+> index c04d0fd..04b1c6c 100644
+> --- a/drivers/ata/Makefile
+> +++ b/drivers/ata/Makefile
+> @@ -10,6 +10,7 @@ obj-$(CONFIG_SATA_INIC162X) += sata_inic162x.o
+>  obj-$(CONFIG_SATA_SIL24)     += sata_sil24.o
+>  obj-$(CONFIG_SATA_DWC)               += sata_dwc_460ex.o
+>  obj-$(CONFIG_SATA_HIGHBANK)  += sata_highbank.o libahci.o
+> +obj-$(CONFIG_SATA_IMX)               += sata_imx.o
+>
+>  # SFF w/ custom DMA
+>  obj-$(CONFIG_PDC_ADMA)               += pdc_adma.o
+> diff --git a/drivers/ata/sata_imx.c b/drivers/ata/sata_imx.c
+> new file mode 100644
+> index 0000000..a129efb
+> --- /dev/null
+> +++ b/drivers/ata/sata_imx.c
+> @@ -0,0 +1,230 @@
+> +/*
+> + * Freescale IMX AHCI SATA platform driver
+> + * Copyright 2013 Freescale Semiconductor, Inc.
+> + *
+> + * based on the AHCI SATA platform driver by Jeff Garzik and Anton Vorontsov
+> + *
+> + * This program is free software; you can redistribute it and/or modify it
+> + * under the terms and conditions of the GNU General Public License,
+> + * version 2, as published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope it will be useful, but WITHOUT
+> + * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+> + * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+> + * more details.
+> + *
+> + * You should have received a copy of the GNU General Public License along with
+> + * this program. If not, see <http://www.gnu.org/licenses/>.
+> + */
+> +
+> +#include <linux/clk.h>
+> +#include <linux/kernel.h>
+> +#include <linux/gfp.h>
+> +#include <linux/regmap.h>
+> +#include <linux/slab.h>
+> +#include <linux/module.h>
+> +#include <linux/init.h>
+> +#include <linux/interrupt.h>
+> +#include <linux/device.h>
+> +#include <linux/platform_device.h>
+> +#include <linux/libata.h>
+> +#include <linux/ahci_platform.h>
+> +#include <linux/of_device.h>
+> +#include <linux/mfd/syscon.h>
+> +#include <linux/mfd/syscon/imx6q-iomuxc-gpr.h>
+> +#include "ahci.h"
+> +#include <linux/clk-private.h>
 
--- 
-tejun
+Do you need anything from clk-private.h? You shouldn't.
+[Richard]it would be removed.
+
+> +
+> +enum {
+> +     HOST_TIMER1MS = 0xe0, /* Timer 1-ms */
+> +};
+> +
+> +/* imx6q ahci module initialization. */
+> +static int imx6q_sata_phy_clk(struct device *dev, int enable)
+> +{
+> +     int ret = 0;
+> +     struct clk *sata_ref_clk;
+> +
+> +     sata_ref_clk = devm_clk_get(dev, "sata_ref_100m");
+> +     if (IS_ERR(sata_ref_clk)) {
+> +             dev_err(dev, "can't get sata_ref clock.\n");
+> +             return PTR_ERR(sata_ref_clk);
+> +     }
+
+clk_get must be balanced with clk_put. You need to have some private
+data and keep a pointer to the clock.
+[Richard] Ok, I can create the private data, and keep a pointer to this clock.
+
+> +     if (enable) {
+> +             /* Enable PHY clock */
+> +             ret = clk_prepare_enable(sata_ref_clk);
+> +             if (ret < 0)
+> +                     dev_err(dev, "can't prepare-enable sata_ref clock\n");
+
+When printing error messages it's always helpful to print the error code
+aswell.
+[Richard] Ok, the return-err code would be added.
+
+> +     } else {
+> +             /* Disable PHY clock */
+
+This comment (also the one above enable) doesn't contain any useful
+information.
+[Richard] ok, they would be removed.
+
+> +             clk_disable_unprepare(sata_ref_clk);
+> +     }
+> +
+> +     return ret;
+> +}
+> +
+> +static int imx6q_sata_init(struct device *dev, void __iomem *mmio)
+> +{
+> +     int ret = 0;
+> +     struct regmap *gpr;
+> +     struct clk *ahb_clk;
+> +
+> +     ret = imx6q_sata_phy_clk(dev, true);
+> +     if (ret < 0)
+> +             return ret;
+> +
+> +     gpr = syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
+> +     if (IS_ERR(gpr)) {
+> +             dev_err(dev, "failed to find fsl,imx6q-iomux-gpr regmap\n");
+> +             return PTR_ERR(gpr);
+> +     }
+> +
+> +     /*
+> +      * set PHY Paremeters, two steps to configure the GPR13,
+> +      * one write for rest of parameters, mask of first write
+> +      * is 0x07fffffd, and the other one write for setting
+> +      * the mpll_clk_en.
+> +      */
+> +     regmap_update_bits(gpr, 0x34, IMX6Q_GPR13_SATA_RX_EQ_VAL_MASK
+> +                     | IMX6Q_GPR13_SATA_RX_LOS_LVL_MASK
+> +                     | IMX6Q_GPR13_SATA_RX_DPLL_MODE_MASK
+> +                     | IMX6Q_GPR13_SATA_SPD_MODE_MASK
+> +                     | IMX6Q_GPR13_SATA_MPLL_SS_EN
+> +                     | IMX6Q_GPR13_SATA_TX_ATTEN_MASK
+> +                     | IMX6Q_GPR13_SATA_TX_BOOST_MASK
+> +                     | IMX6Q_GPR13_SATA_TX_LVL_MASK
+> +                     | IMX6Q_GPR13_SATA_TX_EDGE_RATE
+> +                     , IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB
+> +                     | IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M
+> +                     | IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_4F
+> +                     | IMX6Q_GPR13_SATA_SPD_MODE_3P0G
+> +                     | IMX6Q_GPR13_SATA_MPLL_SS_EN
+> +                     | IMX6Q_GPR13_SATA_TX_ATTEN_9_16
+> +                     | IMX6Q_GPR13_SATA_TX_BOOST_3_33_DB
+> +                     | IMX6Q_GPR13_SATA_TX_LVL_1_025_V);
+> +     regmap_update_bits(gpr, 0x34, IMX6Q_GPR13_SATA_MPLL_CLK_EN,
+> +                     IMX6Q_GPR13_SATA_MPLL_CLK_EN);
+> +     usleep_range(100, 200);
+> +
+> +     /*
+> +      * Configure the HWINIT bits of the HOST_CAP and HOST_PORTS_IMPL,
+> +      * and IP vendor specific register HOST_TIMER1MS.
+> +      *
+> +      * Configure CAP_SSS (support stagered spin up).
+> +      * Implement the port0.
+> +      * Get the ahb clock rate, and configure the TIMER1MS register.
+> +      */
+> +     ret = readl(mmio + HOST_CAP);
+
+You should use a u32 type for storing readl results.
+[Richard] Accepted.
+
+> +     if (!(ret & HOST_CAP_SSS))
+> +             writel(ret |= HOST_CAP_SSS, mmio + HOST_CAP);
+
+Why do you write this conditionally? Just write it unconditionally.
+[Richard]Ok, no problem. Would write it uncontitionally.
+
+> +     ret = readl(mmio + HOST_PORTS_IMPL);
+> +     if (!(ret & 0x1))
+> +             writel((ret | 0x1), mmio + HOST_PORTS_IMPL);
+
+ditto.
+
+> +
+> +     ahb_clk = devm_clk_get(dev, "ahb");
+> +     if (IS_ERR(ahb_clk)) {
+> +             dev_err(dev, "no ahb clock.\n");
+> +             return PTR_ERR(ahb_clk);
+> +     }
+
+This leaves the phy clock enabled in the error case.
+[Richard] Yes, it is. the phy clock should be disabled.
+
+> +     ret = clk_get_rate(ahb_clk) / 1000;
+> +     writel(ret, mmio + HOST_TIMER1MS);
+> +     devm_clk_put(dev, ahb_clk);
+> +
+> +     return 0;
+> +}
+> +
+> +static void imx6q_sata_exit(struct device *dev)
+> +{
+> +     struct regmap *gpr;
+> +
+> +     gpr = syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
+> +     if (IS_ERR(gpr))
+> +             dev_err(dev, "failed to find fsl,imx6q-iomux-gpr regmap\n");
+> +
+> +     regmap_update_bits(gpr, 0x34, IMX6Q_GPR13_SATA_MPLL_CLK_EN,
+> +                     !IMX6Q_GPR13_SATA_MPLL_CLK_EN);
+> +
+> +     imx6q_sata_phy_clk(dev, false);
+> +}
+> +
+> +static struct ahci_platform_data imx6q_sata_pdata = {
+> +     .init = imx6q_sata_init,
+> +     .exit = imx6q_sata_exit,
+> +};
+> +static const struct of_device_id imx_ahci_of_match[] = {
+> +     { .compatible = "fsl,imx6q-ahci", .data = &imx6q_sata_pdata},
+> +     {},
+> +};
+> +MODULE_DEVICE_TABLE(of, imx_ahci_of_match);
+> +
+> +static void imx_ahci_platform_release(struct device *dev)
+> +{
+> +     return;
+> +}
+> +
+> +static struct platform_device ahci_pdev = {
+> +     .name = "ahci",
+> +     .id = -1,
+> +     .dev = {
+> +             .release = imx_ahci_platform_release,
+> +     }
+> +};
+> +
+> +static int imx_ahci_probe(struct platform_device *pdev)
+> +{
+> +     struct device *dev = &pdev->dev;
+> +     struct resource *mem, *irq, **res;
+> +     const struct of_device_id *of_id;
+> +     const struct ahci_platform_data *pdata = NULL;
+> +     int ret;
+> +
+> +     of_id = of_match_device(imx_ahci_of_match, &pdev->dev);
+> +     if (of_id)
+> +             pdata = of_id->data;
+> +     else
+> +             return -EINVAL;
+> +
+> +     mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+> +     irq = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
+> +     if (!mem || !irq) {
+> +             dev_err(dev, "no mmio/irq resource\n");
+> +             return -EINVAL;
+> +     }
+> +
+> +     ahci_pdev.dev.coherent_dma_mask = DMA_BIT_MASK(32);
+> +     ahci_pdev.dev.dma_mask = &ahci_pdev.dev.coherent_dma_mask;
+> +     ahci_pdev.dev.of_node = pdev->dev.of_node;
+
+No need to make ahci_pdev global. platform_device_add_data makes a copy
+anyway and making it global makes this driver broken for multiple
+instances.
+[Richard]accepted.
+
+> +
+> +     res[0] = mem;
+> +     res[1] = irq;
+
+You have an uninitalized pointer to a pointer to struct resource which
+you treat as an array here. Doesn't the compiler warn you?
+[Richard]Compiler doesn't report the warning message, anyway, I would fix it later.
+
+> +     platform_device_add_resources(&ahci_pdev, *res, 2);
+> +     platform_device_add_data(&ahci_pdev, pdata, sizeof(*pdata));
+> +
+> +     ret = platform_device_register(&ahci_pdev);
+> +     if (!ret)
+> +             return ret;
+
+s/!ret/ret/
+[Richard] Would be fixed.
+
+Sascha
+
+--
+Pengutronix e.K.                           |                             |
+Industrial Linux Solutions                 | http://www.pengutronix.de/  |
+Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-0    |
+Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
+
+
