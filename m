@@ -1,15 +1,15 @@
 From: Richard Zhu <richard.zhuhongxing@gmail.com>
-Subject: [v4 2/3] ARM: imx6q: update the sata bits definitions of gpr13
-Date: Wed, 10 Jul 2013 16:35:54 +0800
-Message-ID: <1373445355-11453-3-git-send-email-Hong-Xing.Zhu@freescale.com>
+Subject: [v4 3/3] sata: imx: add ahci sata support on imx platforms
+Date: Wed, 10 Jul 2013 16:35:55 +0800
+Message-ID: <1373445355-11453-4-git-send-email-Hong-Xing.Zhu@freescale.com>
 References: <1373445355-11453-1-git-send-email-Hong-Xing.Zhu@freescale.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pd0-f177.google.com ([209.85.192.177]:40450 "EHLO
-	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752863Ab3GJId7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Jul 2013 04:33:59 -0400
-Received: by mail-pd0-f177.google.com with SMTP id p10so6107299pdj.36
-        for <linux-ide@vger.kernel.org>; Wed, 10 Jul 2013 01:33:58 -0700 (PDT)
+Received: from mail-pd0-f171.google.com ([209.85.192.171]:56420 "EHLO
+	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752532Ab3GJIeE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Jul 2013 04:34:04 -0400
+Received: by mail-pd0-f171.google.com with SMTP id y14so6107252pdi.30
+        for <linux-ide@vger.kernel.org>; Wed, 10 Jul 2013 01:34:04 -0700 (PDT)
 In-Reply-To: <1373445355-11453-1-git-send-email-Hong-Xing.Zhu@freescale.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -18,143 +18,309 @@ Cc: linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, tj@kernel.org, rob.
 
 From: Richard Zhu <r65037@freescale.com>
 
-Replace the SATA_PHY_# by the more readable definitons.
+imx6q contains one Synopsys AHCI SATA controller,
+But it can't shares ahci_platform driver with other
+controllers.
+Because there are some misalignments of the generic
+AHCI controller.
+The bits definitions of the HBA registers, the Vendor
+Specific registers, and the AHCI PHY clock.
+ - CAP_SSS(bit20) of the HOST_CAP is writable, default
+ value is '0', should be configured to be '1'
+ - bit0 (only one AHCI SATA port on imx6q) of the
+ HOST_PORTS_IMPL should be set to be '1'.(default 0)
+ - One Vendor Specific register HOST_TIMER1MS(offset:0xe0)
+ should be configured regarding to the frequency of AHB
+ bus clock.
+ - Configurations of the AHCI PHY clock, and the signal
+ parameters of the GPR13
+
+Setup its own ahci sata driver, contained the imx6q specific
+initialized codes, and re-use the generic ahci_platform drier,
 
 Signed-off-by: Richard Zhu <r65037@freescale.com>
 ---
- include/linux/mfd/syscon/imx6q-iomuxc-gpr.h |  121 ++++++++++++++++++--------
- 1 files changed, 84 insertions(+), 37 deletions(-)
+ drivers/ata/Kconfig    |    9 ++
+ drivers/ata/Makefile   |    1 +
+ drivers/ata/sata_imx.c |  237 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 247 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/ata/sata_imx.c
 
-diff --git a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-index dab34a1..e235251 100644
---- a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-+++ b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
-@@ -279,41 +279,88 @@
- #define IMX6Q_GPR13_CAN2_STOP_REQ		BIT(29)
- #define IMX6Q_GPR13_CAN1_STOP_REQ		BIT(28)
- #define IMX6Q_GPR13_ENET_STOP_REQ		BIT(27)
--#define IMX6Q_GPR13_SATA_PHY_8_MASK		(0x7 << 24)
--#define IMX6Q_GPR13_SATA_PHY_8_0_5_DB		(0x0 << 24)
--#define IMX6Q_GPR13_SATA_PHY_8_1_0_DB		(0x1 << 24)
--#define IMX6Q_GPR13_SATA_PHY_8_1_5_DB		(0x2 << 24)
--#define IMX6Q_GPR13_SATA_PHY_8_2_0_DB		(0x3 << 24)
--#define IMX6Q_GPR13_SATA_PHY_8_2_5_DB		(0x4 << 24)
--#define IMX6Q_GPR13_SATA_PHY_8_3_0_DB		(0x5 << 24)
--#define IMX6Q_GPR13_SATA_PHY_8_3_5_DB		(0x6 << 24)
--#define IMX6Q_GPR13_SATA_PHY_8_4_0_DB		(0x7 << 24)
--#define IMX6Q_GPR13_SATA_PHY_7_MASK		(0x1f << 19)
--#define IMX6Q_GPR13_SATA_PHY_7_SATA1I		(0x10 << 19)
--#define IMX6Q_GPR13_SATA_PHY_7_SATA1M		(0x10 << 19)
--#define IMX6Q_GPR13_SATA_PHY_7_SATA1X		(0x1a << 19)
--#define IMX6Q_GPR13_SATA_PHY_7_SATA2I		(0x12 << 19)
--#define IMX6Q_GPR13_SATA_PHY_7_SATA2M		(0x12 << 19)
--#define IMX6Q_GPR13_SATA_PHY_7_SATA2X		(0x1a << 19)
--#define IMX6Q_GPR13_SATA_PHY_6_MASK		(0x7 << 16)
--#define IMX6Q_GPR13_SATA_SPEED_MASK		BIT(15)
--#define IMX6Q_GPR13_SATA_SPEED_1P5G		0x0
--#define IMX6Q_GPR13_SATA_SPEED_3P0G		BIT(15)
--#define IMX6Q_GPR13_SATA_PHY_5			BIT(14)
--#define IMX6Q_GPR13_SATA_PHY_4_MASK		(0x7 << 11)
--#define IMX6Q_GPR13_SATA_PHY_4_16_16		(0x0 << 11)
--#define IMX6Q_GPR13_SATA_PHY_4_14_16		(0x1 << 11)
--#define IMX6Q_GPR13_SATA_PHY_4_12_16		(0x2 << 11)
--#define IMX6Q_GPR13_SATA_PHY_4_10_16		(0x3 << 11)
--#define IMX6Q_GPR13_SATA_PHY_4_9_16		(0x4 << 11)
--#define IMX6Q_GPR13_SATA_PHY_4_8_16		(0x5 << 11)
--#define IMX6Q_GPR13_SATA_PHY_3_MASK		(0xf << 7)
--#define IMX6Q_GPR13_SATA_PHY_3_OFF		0x7
--#define IMX6Q_GPR13_SATA_PHY_2_MASK		(0x1f << 2)
--#define IMX6Q_GPR13_SATA_PHY_2_OFF		0x2
--#define IMX6Q_GPR13_SATA_PHY_1_MASK		(0x3 << 0)
--#define IMX6Q_GPR13_SATA_PHY_1_FAST		(0x0 << 0)
--#define IMX6Q_GPR13_SATA_PHY_1_MED		(0x1 << 0)
--#define IMX6Q_GPR13_SATA_PHY_1_SLOW		(0x2 << 0)
--
-+#define IMX6Q_GPR13_SATA_RX_EQ_VAL_MASK		(0x7 << 24)
-+#define IMX6Q_GPR13_SATA_RX_EQ_VAL_0_5_DB	(0x0 << 24)
-+#define IMX6Q_GPR13_SATA_RX_EQ_VAL_1_0_DB	(0x1 << 24)
-+#define IMX6Q_GPR13_SATA_RX_EQ_VAL_1_5_DB	(0x2 << 24)
-+#define IMX6Q_GPR13_SATA_RX_EQ_VAL_2_0_DB	(0x3 << 24)
-+#define IMX6Q_GPR13_SATA_RX_EQ_VAL_2_5_DB	(0x4 << 24)
-+#define IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB	(0x5 << 24)
-+#define IMX6Q_GPR13_SATA_RX_EQ_VAL_3_5_DB	(0x6 << 24)
-+#define IMX6Q_GPR13_SATA_RX_EQ_VAL_4_0_DB	(0x7 << 24)
-+#define IMX6Q_GPR13_SATA_RX_LOS_LVL_MASK	(0x1f << 19)
-+#define IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA1I	(0x10 << 19)
-+#define IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA1M	(0x10 << 19)
-+#define IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA1X	(0x1a << 19)
-+#define IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2I	(0x12 << 19)
-+#define IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M	(0x12 << 19)
-+#define IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2X	(0x1a << 19)
-+#define IMX6Q_GPR13_SATA_RX_DPLL_MODE_MASK	(0x7 << 16)
-+#define IMX6Q_GPR13_SATA_RX_DPLL_MODE_1P_1F	(0x0 << 16)
-+#define IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_2F	(0x1 << 16)
-+#define IMX6Q_GPR13_SATA_RX_DPLL_MODE_1P_4F	(0x2 << 16)
-+#define IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_4F	(0x3 << 16)
-+#define IMX6Q_GPR13_SATA_SPD_MODE_MASK		BIT(15)
-+#define IMX6Q_GPR13_SATA_SPD_MODE_1P5G		0x0
-+#define IMX6Q_GPR13_SATA_SPD_MODE_3P0G		BIT(15)
-+#define IMX6Q_GPR13_SATA_MPLL_SS_EN		BIT(14)
-+#define IMX6Q_GPR13_SATA_TX_ATTEN_MASK		(0x7 << 11)
-+#define IMX6Q_GPR13_SATA_TX_ATTEN_16_16		(0x0 << 11)
-+#define IMX6Q_GPR13_SATA_TX_ATTEN_14_16		(0x1 << 11)
-+#define IMX6Q_GPR13_SATA_TX_ATTEN_12_16		(0x2 << 11)
-+#define IMX6Q_GPR13_SATA_TX_ATTEN_10_16		(0x3 << 11)
-+#define IMX6Q_GPR13_SATA_TX_ATTEN_9_16		(0x4 << 11)
-+#define IMX6Q_GPR13_SATA_TX_ATTEN_8_16		(0x5 << 11)
-+#define IMX6Q_GPR13_SATA_TX_BOOST_MASK		(0xf << 7)
-+#define IMX6Q_GPR13_SATA_TX_BOOST_0_00_DB	(0x0 << 7)
-+#define IMX6Q_GPR13_SATA_TX_BOOST_0_37_DB	(0x1 << 7)
-+#define IMX6Q_GPR13_SATA_TX_BOOST_0_74_DB	(0x2 << 7)
-+#define IMX6Q_GPR13_SATA_TX_BOOST_1_11_DB	(0x3 << 7)
-+#define IMX6Q_GPR13_SATA_TX_BOOST_1_48_DB	(0x4 << 7)
-+#define IMX6Q_GPR13_SATA_TX_BOOST_1_85_DB	(0x5 << 7)
-+#define IMX6Q_GPR13_SATA_TX_BOOST_2_22_DB	(0x6 << 7)
-+#define IMX6Q_GPR13_SATA_TX_BOOST_2_59_DB	(0x7 << 7)
-+#define IMX6Q_GPR13_SATA_TX_BOOST_2_96_DB	(0x8 << 7)
-+#define IMX6Q_GPR13_SATA_TX_BOOST_3_33_DB	(0x9 << 7)
-+#define IMX6Q_GPR13_SATA_TX_BOOST_3_70_DB	(0xa << 7)
-+#define IMX6Q_GPR13_SATA_TX_BOOST_4_07_DB	(0xb << 7)
-+#define IMX6Q_GPR13_SATA_TX_BOOST_4_44_DB	(0xc << 7)
-+#define IMX6Q_GPR13_SATA_TX_BOOST_4_81_DB	(0xd << 7)
-+#define IMX6Q_GPR13_SATA_TX_BOOST_5_28_DB	(0xe << 7)
-+#define IMX6Q_GPR13_SATA_TX_BOOST_5_75_DB	(0xf << 7)
-+#define IMX6Q_GPR13_SATA_TX_LVL_MASK		(0x1f << 2)
-+#define IMX6Q_GPR13_SATA_TX_LVL_0_937_V		(0x00 << 2)
-+#define IMX6Q_GPR13_SATA_TX_LVL_0_947_V		(0x01 << 2)
-+#define IMX6Q_GPR13_SATA_TX_LVL_0_957_V		(0x02 << 2)
-+#define IMX6Q_GPR13_SATA_TX_LVL_0_966_V		(0x03 << 2)
-+#define IMX6Q_GPR13_SATA_TX_LVL_0_976_V		(0x04 << 2)
-+#define IMX6Q_GPR13_SATA_TX_LVL_0_986_V		(0x05 << 2)
-+#define IMX6Q_GPR13_SATA_TX_LVL_0_996_V		(0x06 << 2)
-+#define IMX6Q_GPR13_SATA_TX_LVL_1_005_V		(0x07 << 2)
-+#define IMX6Q_GPR13_SATA_TX_LVL_1_015_V		(0x08 << 2)
-+#define IMX6Q_GPR13_SATA_TX_LVL_1_025_V		(0x09 << 2)
-+#define IMX6Q_GPR13_SATA_TX_LVL_1_035_V		(0x0a << 2)
-+#define IMX6Q_GPR13_SATA_TX_LVL_1_045_V		(0x0b << 2)
-+#define IMX6Q_GPR13_SATA_TX_LVL_1_054_V		(0x0c << 2)
-+#define IMX6Q_GPR13_SATA_TX_LVL_1_064_V		(0x0d << 2)
-+#define IMX6Q_GPR13_SATA_TX_LVL_1_074_V		(0x0e << 2)
-+#define IMX6Q_GPR13_SATA_TX_LVL_1_084_V		(0x0f << 2)
-+#define IMX6Q_GPR13_SATA_TX_LVL_1_094_V		(0x10 << 2)
-+#define IMX6Q_GPR13_SATA_TX_LVL_1_104_V		(0x11 << 2)
-+#define IMX6Q_GPR13_SATA_TX_LVL_1_113_V		(0x12 << 2)
-+#define IMX6Q_GPR13_SATA_TX_LVL_1_123_V		(0x13 << 2)
-+#define IMX6Q_GPR13_SATA_TX_LVL_1_133_V		(0x14 << 2)
-+#define IMX6Q_GPR13_SATA_TX_LVL_1_143_V		(0x15 << 2)
-+#define IMX6Q_GPR13_SATA_TX_LVL_1_152_V		(0x16 << 2)
-+#define IMX6Q_GPR13_SATA_TX_LVL_1_162_V		(0x17 << 2)
-+#define IMX6Q_GPR13_SATA_TX_LVL_1_172_V		(0x18 << 2)
-+#define IMX6Q_GPR13_SATA_TX_LVL_1_182_V		(0x19 << 2)
-+#define IMX6Q_GPR13_SATA_TX_LVL_1_191_V		(0x1a << 2)
-+#define IMX6Q_GPR13_SATA_TX_LVL_1_201_V		(0x1b << 2)
-+#define IMX6Q_GPR13_SATA_TX_LVL_1_211_V		(0x1c << 2)
-+#define IMX6Q_GPR13_SATA_TX_LVL_1_221_V		(0x1d << 2)
-+#define IMX6Q_GPR13_SATA_TX_LVL_1_230_V		(0x1e << 2)
-+#define IMX6Q_GPR13_SATA_TX_LVL_1_240_V		(0x1f << 2)
-+#define IMX6Q_GPR13_SATA_MPLL_CLK_EN		BIT(1)
-+#define IMX6Q_GPR13_SATA_TX_EDGE_RATE		BIT(0)
- #endif /* __LINUX_IMX6Q_IOMUXC_GPR_H */
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index a5a3ebc..275dc2c 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -97,6 +97,15 @@ config SATA_AHCI_PLATFORM
+ 
+ 	  If unsure, say N.
+ 
++config SATA_IMX
++	tristate "Freescale i.MX AHCI SATA support"
++	depends on SATA_AHCI_PLATFORM
++	help
++	  This option enables support for the Freescale i.MX SoC's
++	  onboard AHCI SATA.
++
++	  If unsure, say N.
++
+ config SATA_FSL
+ 	tristate "Freescale 3.0Gbps SATA support"
+ 	depends on FSL_SOC
+diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+index c04d0fd..04b1c6c 100644
+--- a/drivers/ata/Makefile
++++ b/drivers/ata/Makefile
+@@ -10,6 +10,7 @@ obj-$(CONFIG_SATA_INIC162X)	+= sata_inic162x.o
+ obj-$(CONFIG_SATA_SIL24)	+= sata_sil24.o
+ obj-$(CONFIG_SATA_DWC)		+= sata_dwc_460ex.o
+ obj-$(CONFIG_SATA_HIGHBANK)	+= sata_highbank.o libahci.o
++obj-$(CONFIG_SATA_IMX)		+= sata_imx.o
+ 
+ # SFF w/ custom DMA
+ obj-$(CONFIG_PDC_ADMA)		+= pdc_adma.o
+diff --git a/drivers/ata/sata_imx.c b/drivers/ata/sata_imx.c
+new file mode 100644
+index 0000000..31093e7
+--- /dev/null
++++ b/drivers/ata/sata_imx.c
+@@ -0,0 +1,237 @@
++/*
++ * Freescale IMX AHCI SATA platform driver
++ * Copyright 2013 Freescale Semiconductor, Inc.
++ *
++ * based on the AHCI SATA platform driver by Jeff Garzik and Anton Vorontsov
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program. If not, see <http://www.gnu.org/licenses/>.
++ */
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/platform_device.h>
++#include <linux/regmap.h>
++#include <linux/ahci_platform.h>
++#include <linux/of_device.h>
++#include <linux/mfd/syscon.h>
++#include <linux/mfd/syscon/imx6q-iomuxc-gpr.h>
++#include "ahci.h"
++
++enum {
++	HOST_TIMER1MS = 0xe0, /* Timer 1-ms */
++};
++
++struct imx_ahci_priv {
++	struct platform_device *imx_ahci_pdev;
++	struct device *dev;
++	struct clk *sata_ref_clk;
++};
++
++/* imx6q ahci module initialization. */
++static int imx6q_sata_init(struct device *dev, void __iomem *mmio)
++{
++	int ret = 0;
++	unsigned int rc;
++	struct regmap *gpr;
++	struct clk *ahb_clk;
++	struct imx_ahci_priv *imxpriv = (struct imx_ahci_priv *)dev->p;
++
++	gpr = syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
++	if (IS_ERR(gpr)) {
++		dev_err(dev, "failed to find fsl,imx6q-iomux-gpr regmap\n");
++		return PTR_ERR(gpr);
++	}
++
++	imxpriv->sata_ref_clk = devm_clk_get(dev, "sata_ref");
++	if (IS_ERR(imxpriv->sata_ref_clk)) {
++		dev_err(dev, "can't get sata_ref clock.\n");
++		return PTR_ERR(imxpriv->sata_ref_clk);
++	}
++
++	ret = clk_prepare_enable(imxpriv->sata_ref_clk);
++	if (ret < 0) {
++		dev_err(dev, "prepare-enable sata_ref clock err:%d\n", ret);
++		return ret;
++	}
++
++	/*
++	 * set PHY Paremeters, two steps to configure the GPR13,
++	 * one write for rest of parameters, mask of first write
++	 * is 0x07fffffd, and the other one write for setting
++	 * the mpll_clk_en.
++	 */
++	regmap_update_bits(gpr, 0x34, IMX6Q_GPR13_SATA_RX_EQ_VAL_MASK
++			| IMX6Q_GPR13_SATA_RX_LOS_LVL_MASK
++			| IMX6Q_GPR13_SATA_RX_DPLL_MODE_MASK
++			| IMX6Q_GPR13_SATA_SPD_MODE_MASK
++			| IMX6Q_GPR13_SATA_MPLL_SS_EN
++			| IMX6Q_GPR13_SATA_TX_ATTEN_MASK
++			| IMX6Q_GPR13_SATA_TX_BOOST_MASK
++			| IMX6Q_GPR13_SATA_TX_LVL_MASK
++			| IMX6Q_GPR13_SATA_TX_EDGE_RATE
++			, IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB
++			| IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M
++			| IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_4F
++			| IMX6Q_GPR13_SATA_SPD_MODE_3P0G
++			| IMX6Q_GPR13_SATA_MPLL_SS_EN
++			| IMX6Q_GPR13_SATA_TX_ATTEN_9_16
++			| IMX6Q_GPR13_SATA_TX_BOOST_3_33_DB
++			| IMX6Q_GPR13_SATA_TX_LVL_1_025_V);
++	regmap_update_bits(gpr, 0x34, IMX6Q_GPR13_SATA_MPLL_CLK_EN,
++			IMX6Q_GPR13_SATA_MPLL_CLK_EN);
++	usleep_range(100, 200);
++
++	/*
++	 * Configure the HWINIT bits of the HOST_CAP and HOST_PORTS_IMPL,
++	 * and IP vendor specific register HOST_TIMER1MS.
++	 *
++	 * Configure CAP_SSS (support stagered spin up).
++	 * Implement the port0.
++	 * Get the ahb clock rate, and configure the TIMER1MS register.
++	 */
++	rc = readl(mmio + HOST_CAP);
++	if (!(rc & HOST_CAP_SSS)) {
++		rc |= HOST_CAP_SSS;
++		writel(rc, mmio + HOST_CAP);
++	}
++	rc = readl(mmio + HOST_PORTS_IMPL);
++	if (!(rc & 0x1)) {
++		rc |= 0x1;
++		writel(rc, mmio + HOST_PORTS_IMPL);
++	}
++
++	ahb_clk = devm_clk_get(dev, "ahb");
++	if (IS_ERR(ahb_clk)) {
++		dev_err(dev, "no ahb clock.\n");
++		clk_disable_unprepare(imxpriv->sata_ref_clk);
++		return PTR_ERR(ahb_clk);
++	}
++	rc = clk_get_rate(ahb_clk) / 1000;
++	writel(rc, mmio + HOST_TIMER1MS);
++	devm_clk_put(dev, ahb_clk);
++
++	return 0;
++}
++
++static void imx6q_sata_exit(struct device *dev)
++{
++	struct regmap *gpr;
++	struct imx_ahci_priv *imxpriv = (struct imx_ahci_priv *)dev->p;
++
++	gpr = syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
++	if (IS_ERR(gpr))
++		dev_err(dev, "failed to find fsl,imx6q-iomux-gpr regmap\n");
++
++	regmap_update_bits(gpr, 0x34, IMX6Q_GPR13_SATA_MPLL_CLK_EN,
++			!IMX6Q_GPR13_SATA_MPLL_CLK_EN);
++
++	clk_disable_unprepare(imxpriv->sata_ref_clk);
++}
++
++static struct ahci_platform_data imx6q_sata_pdata = {
++	.init = imx6q_sata_init,
++	.exit = imx6q_sata_exit,
++};
++static const struct of_device_id imx_ahci_of_match[] = {
++	{ .compatible = "fsl,imx6q-ahci", .data = &imx6q_sata_pdata},
++	{},
++};
++MODULE_DEVICE_TABLE(of, imx_ahci_of_match);
++
++static void imx_ahci_platform_release(struct device *dev)
++{
++	return;
++}
++
++static int imx_ahci_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct resource *mem, *irq, res[2];
++	const struct of_device_id *of_id;
++	const struct ahci_platform_data *pdata = NULL;
++	struct imx_ahci_priv *imxpriv;
++	int ret;
++
++	struct device *imx_dev;
++	struct platform_device *imx_ahci_pdev;
++
++	imx_ahci_pdev = platform_device_alloc("ahci", -1);
++	if (!imx_ahci_pdev)
++		return -ENODEV;
++
++	imx_dev = &imx_ahci_pdev->dev;
++	imx_dev->release = imx_ahci_platform_release;
++
++	imxpriv = devm_kzalloc(dev, sizeof(*imxpriv), GFP_KERNEL);
++	if (!imxpriv) {
++		dev_err(dev, "can't alloc ahci_host_priv\n");
++		return -ENOMEM;
++	}
++
++	imxpriv->dev = dev;
++	imxpriv->imx_ahci_pdev = imx_ahci_pdev;
++	platform_set_drvdata(pdev, imxpriv);
++	platform_set_drvdata(imx_ahci_pdev, imxpriv);
++
++	of_id = of_match_device(imx_ahci_of_match, dev);
++	if (of_id)
++		pdata = of_id->data;
++	else
++		return -EINVAL;
++
++	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	irq = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
++	if (!mem || !irq) {
++		dev_err(dev, "no mmio/irq resource\n");
++		return -EINVAL;
++	}
++
++	res[0] = *mem;
++	res[1] = *irq;
++
++	imx_dev->coherent_dma_mask = DMA_BIT_MASK(32);
++	imx_dev->dma_mask = &imx_dev->coherent_dma_mask;
++	imx_dev->of_node = dev->of_node;
++
++	platform_device_add_resources(imx_ahci_pdev, res, 2);
++	platform_device_add_data(imx_ahci_pdev, pdata, sizeof(*pdata));
++
++	ret = platform_device_add(imx_ahci_pdev);
++
++	return ret;
++}
++
++static int imx_ahci_remove(struct platform_device *pdev)
++{
++	struct imx_ahci_priv *imxpriv = platform_get_drvdata(pdev);
++	struct platform_device *imx_ahci_pdev = imxpriv->imx_ahci_pdev;
++
++	platform_device_unregister(imx_ahci_pdev);
++	return 0;
++}
++
++static struct platform_driver imx_ahci_driver = {
++	.probe = imx_ahci_probe,
++	.remove = imx_ahci_remove,
++	.driver = {
++		.name = "sata-imx",
++		.owner = THIS_MODULE,
++		.of_match_table = imx_ahci_of_match,
++	},
++};
++module_platform_driver(imx_ahci_driver);
++
++MODULE_DESCRIPTION("Freescale i.MX AHCI SATA platform driver");
++MODULE_AUTHOR("Richard Zhu <Hong-Xing.Zhu@freescale.com>");
++MODULE_LICENSE("GPL");
++MODULE_ALIAS("sata:imx");
 -- 
 1.7.5.4
 
