@@ -1,46 +1,59 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [v3 3/3] sata: imx: add ahci sata support on imx platforms
-Date: Fri, 5 Jul 2013 19:07:37 -0700
-Message-ID: <20130706020737.GA9029@mtj.dyndns.org>
-References: <1373017942-12583-1-git-send-email-Hong-Xing.Zhu@freescale.com>
- <1373017942-12583-4-git-send-email-Hong-Xing.Zhu@freescale.com>
- <20130705174305.GA28088@mtj.dyndns.org>
- <0E83723C55F66F43A6041464FE31119D31432D@039-SN2MPN1-012.039d.mgd.msft.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Richard Zhu <richard.zhuhongxing@gmail.com>
+Subject: [PATCH v4 0/3] ahci: enable ahci sata support on imx6q
+Date: Wed, 10 Jul 2013 16:35:52 +0800
+Message-ID: <1373445355-11453-1-git-send-email-Hong-Xing.Zhu@freescale.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:39076 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752528Ab3GFCHk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Jul 2013 22:07:40 -0400
-Received: by mail-pd0-f182.google.com with SMTP id r10so2429858pdi.13
-        for <linux-ide@vger.kernel.org>; Fri, 05 Jul 2013 19:07:39 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <0E83723C55F66F43A6041464FE31119D31432D@039-SN2MPN1-012.039d.mgd.msft.net>
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:45014 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751753Ab3GJIdg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Jul 2013 04:33:36 -0400
+Received: by mail-pa0-f42.google.com with SMTP id rl6so6495066pac.29
+        for <linux-ide@vger.kernel.org>; Wed, 10 Jul 2013 01:33:35 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Zhu Richard-R65037 <r65037@freescale.com>
-Cc: Richard Zhu <richard.zhuhongxing@gmail.com>, "shawn.guo@linaro.org" <shawn.guo@linaro.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>, "avorontsov@ru.mvista.com" <avorontsov@ru.mvista.com>, "rob.herring@calxeda.com" <rob.herring@calxeda.com>, "s.hauer@pengutronix.de" <s.hauer@pengutronix.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: shawn.guo@linaro.org
+Cc: linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, tj@kernel.org, rob.herring@calxeda.com, s.hauer@pengutronix.de, linux-ide@vger.kernel.org
 
-Hello,
+V4: add imx6q specific ahci sata support
+  Thanks for the review comments provided by Sascha, and Alexander.
+  - Use the private data and keep a pointer to the PHY clock.
+  - Don't use the global platform device variable, because that
+  it would make the driver broken for mutiple instances.
+  - Don't do the "writel" with assignment.
+  - Other minor changes, such as print the error code when printing
+  error message, use a u32 type to store readl results, and so on.
 
-On Sat, Jul 06, 2013 at 02:03:30AM +0000, Zhu Richard-R65037 wrote:
-> [Richard] Just like what we dicussed in the previous v1/v2
-> patch-set.  Shawn has the concerns that the IP speicific codes
-> shouldn't be put in the platform level.  So he suggested that setup
-> a stand-alone driver, contained the imx6q ahci sata specific codes,
-> and re-use the generic ahci_platform driver as much as possible.
-> This imx6q standalone ahci sata driver just registers the platform
-> data, and the others would be handled by ahci_platform driver.
+v3: http://www.spinics.net/lists/linux-ide/msg45688.html
+  - Keep arch/arm and ahci_platform driver clean.
+  - Add the sata_imx standalone driver contained all the
+  specific setup
+  - Add the release function, support the loadable module
+  driver.
+  - Tested on imx6q sd board.
 
-Oh, I'm not objecting to the ahci specific part not being in platform
-code.  I'm wondering whether specific handling for imx6q can be
-included into ahci_platform rather than being in its own driver.  It
-just seems that there aren't too many differences.  I could be
-misreading it so if there are enough differences to warrant a separate
-driver, please enlighten me.
+v2: http://www.spinics.net/lists/linux-ide/msg45666.html 
+ - Setup standalone imx ahci sata driver, because of
+ the misalignments of the bits definition of the HBA register.
+ - Replace the node by the label in the board dts.
+ - 
 
-Thanks!
+v1: http://www.spinics.net/lists/linux-ide/msg45581.html
+ - add imx6q specific ahci sata support to arch/arm/mach-imx/mach-imx6q.c
 
--- 
-tejun
+These patches is based on imx/dt branch of
+"http://git.linaro.org/git-ro/people/shawnguo/linux-2.6.git"
+
+[v4 1/3] ARM: dtsi: enable ahci sata on imx6q platforms
+[v4 2/3] ARM: imx6q: update the sata bits definitions of gpr13
+[v4 3/3] sata: imx: add ahci sata support on imx platforms
+
+arch/arm/boot/dts/imx6q-sabreauto.dts       |    4 +
+arch/arm/boot/dts/imx6q-sabrelite.dts       |    4 +
+arch/arm/boot/dts/imx6q-sabresd.dts         |    4 +
+arch/arm/boot/dts/imx6q.dtsi                |    9 +
+drivers/ata/Kconfig                         |    9 +
+drivers/ata/Makefile                        |    1 +
+drivers/ata/sata_imx.c                      |  237 +++++++++++++++++++++++++++
+include/linux/mfd/syscon/imx6q-iomuxc-gpr.h |  121 ++++++++++----
+8 files changed, 352 insertions(+), 37 deletions(-)
+
