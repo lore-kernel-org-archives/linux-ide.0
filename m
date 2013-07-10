@@ -1,55 +1,79 @@
-From: David Miller <davem@davemloft.net>
-Subject: [GIT] IDE
-Date: Wed, 10 Jul 2013 12:21:30 -0700 (PDT)
-Message-ID: <20130710.122130.1380851842199973691.davem@davemloft.net>
+From: Sascha Hauer <s.hauer@pengutronix.de>
+Subject: Re: [v4 3/3] sata: imx: add ahci sata support on imx platforms
+Date: Wed, 10 Jul 2013 23:04:14 +0200
+Message-ID: <20130710210414.GK516@pengutronix.de>
+References: <1373445355-11453-1-git-send-email-Hong-Xing.Zhu@freescale.com>
+ <1373445355-11453-4-git-send-email-Hong-Xing.Zhu@freescale.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:34543 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755256Ab3GJVEn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Jul 2013 17:04:43 -0400
+Content-Disposition: inline
+In-Reply-To: <1373445355-11453-4-git-send-email-Hong-Xing.Zhu@freescale.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Richard Zhu <richard.zhuhongxing@gmail.com>
+Cc: shawn.guo@linaro.org, linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, tj@kernel.org, rob.herring@calxeda.com, linux-ide@vger.kernel.org, Richard Zhu <r65037@freescale.com>
 
+On Wed, Jul 10, 2013 at 04:35:55PM +0800, Richard Zhu wrote:
+> From: Richard Zhu <r65037@freescale.com>
+> 
+> imx6q contains one Synopsys AHCI SATA controller,
+> But it can't shares ahci_platform driver with other
+> controllers.
+> Because there are some misalignments of the generic
+> AHCI controller.
+> The bits definitions of the HBA registers, the Vendor
+> Specific registers, and the AHCI PHY clock.
+>  - CAP_SSS(bit20) of the HOST_CAP is writable, default
+>  value is '0', should be configured to be '1'
+>  - bit0 (only one AHCI SATA port on imx6q) of the
+>  HOST_PORTS_IMPL should be set to be '1'.(default 0)
+>  - One Vendor Specific register HOST_TIMER1MS(offset:0xe0)
+>  should be configured regarding to the frequency of AHB
+>  bus clock.
+>  - Configurations of the AHCI PHY clock, and the signal
+>  parameters of the GPR13
+> 
+> Setup its own ahci sata driver, contained the imx6q specific
+> initialized codes, and re-use the generic ahci_platform drier,
+> 
+> Signed-off-by: Richard Zhu <r65037@freescale.com>
+> ---
+>  drivers/ata/Kconfig    |    9 ++
+>  drivers/ata/Makefile   |    1 +
+>  drivers/ata/sata_imx.c |  237 ++++++++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 247 insertions(+), 0 deletions(-)
+>  create mode 100644 drivers/ata/sata_imx.c
+> 
 
-Just a few small things:
+[...]
 
-1) module_platform_driver_probe() conversions from Jingoo Han.
+> +
+> +/* imx6q ahci module initialization. */
+> +static int imx6q_sata_init(struct device *dev, void __iomem *mmio)
+> +{
+> +	int ret = 0;
+> +	unsigned int rc;
+> +	struct regmap *gpr;
+> +	struct clk *ahb_clk;
+> +	struct imx_ahci_priv *imxpriv = (struct imx_ahci_priv *)dev->p;
 
-2) module_pci_driver() conversion from Libo Chen.
+Just because a pointer points to valid memory doesn't mean that it's
+free to use for your purposes. If you look closer maybe you realize that
+the imxpriv pointer you use here is another one than the one you
+allocate below in your probe function.
 
-3) PIO size calculation fix from Steven J. Hill.
+I give up here. Maybe I'll write a driver for this when I find time for
+it.
 
-Please pull, thanks a lot!
+Sascha
 
-The following changes since commit 47b3bc907328db968bc9b43c41f48f8d1e140750:
-
-  Merge branch 'x86-urgent-for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip (2013-03-07 15:57:38 -0800)
-
-are available in the git repository at:
-
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide.git master
-
-for you to fetch changes up to 1581208b2f0643eebfa7a3fbe5bad831c0bb7f0e:
-
-  ide: Fix IDE PIO size calculation (2013-07-10 12:09:10 -0700)
-
-----------------------------------------------------------------
-Jingoo Han (3):
-      ide: tx4938ide: use module_platform_driver_probe()
-      ide: tx4939ide: use module_platform_driver_probe()
-      ide: gayle: use module_platform_driver_probe()
-
-Libo Chen (1):
-      drivers/ide/delkin_cb: Convert to module_pci_driver
-
-Steven J. Hill (1):
-      ide: Fix IDE PIO size calculation
-
- drivers/ide/delkin_cb.c    | 13 +------------
- drivers/ide/gayle.c        | 15 +--------------
- drivers/ide/ide-taskfile.c |  5 ++---
- drivers/ide/tx4938ide.c    | 13 +------------
- drivers/ide/tx4939ide.c    | 13 +------------
- 5 files changed, 6 insertions(+), 53 deletions(-)
+-- 
+Pengutronix e.K.                           |                             |
+Industrial Linux Solutions                 | http://www.pengutronix.de/  |
+Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-0    |
+Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
