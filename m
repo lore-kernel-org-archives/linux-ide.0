@@ -1,38 +1,58 @@
-From: Youquan Song <youquan.song@intel.com>
-Subject: [PATCH] ata: Fix DVD not dectected at some platform with Wellsburg PCH
-Date: Thu, 11 Jul 2013 21:15:57 -0400
-Message-ID: <1373591757-416-1-git-send-email-youquan.song@intel.com>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: tj@kernel.org, jgarzik@redhat.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
-Cc: seth.heasley@intel.com, james.d.ralston@intel.com, ed.ciechanowski@intel.com, Youquan Song <youquan.song@linux.intel.com>, Youquan Song <youquan.song@intel.com>, stable@vger.kernel.org
+From: "George Daniels" <gdsdangeoreg1@outlook.com>
+Subject: It's private
+Date: Thu, 11 Jul 2013 13:58:51 +0300 (EEST)
+Message-ID: <59258.88.23.117.54.1373540331.squirrel__687.83947867832$1373549644$gmane$org@mail1.centrum-group.com>
+Reply-To: gdsdangeoreg1@outlook.com
+Mime-Version: 1.0
+Content-Type: text/plain;charset=WINDOWS-1251
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail1.centrum-group.com ([194.12.254.133]:39439 "EHLO
+	mail1.centrum-group.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755642Ab3GKNd2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Jul 2013 09:33:28 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-There is a patch b55f84e2d527182e7c611d466cd0bb6ddce201de "ata_piix: Fix DVD
- not dectected at some Haswell platforms" to fix an issue of DVD not 
-recognized on Haswell Desktop platform with Lynx Point. 
-Recently, it is also found the same issue at some platformas with Wellsburg PCH.
+It's private
 
-So deliver a similar patch to fix it by disables 32bit PIO in IDE mode.
+I am George Daniels, a Banker and credit system programmer (HSBC bank).
+I saw your email address while browsing through  the bank D.T.C Screen in
+my office yesterday so I decided to use this very chance to know you. I
+believe we should use every opportunity to know each other better.
+However, I am contacting you for obvious reason which you will understand.
 
-Signed-off-by: Youquan Song <youquan.song@intel.com>
-Cc: stable@vger.kernel.org
----
- drivers/ata/ata_piix.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+I am sending this mail just to know if this email address is OK,
+reply me back so that I will send  more details to you.
+I have a very important thing to discuss with you, I look forward to
+receiving your response at
+georgedaniels@postino.net. Have a pleasant day.
 
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index 9a8a674..424bcbe 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -330,7 +330,7 @@ static const struct pci_device_id piix_pci_tbl[] = {
- 	/* SATA Controller IDE (Wellsburg) */
- 	{ 0x8086, 0x8d00, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_snb },
- 	/* SATA Controller IDE (Wellsburg) */
--	{ 0x8086, 0x8d08, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata },
-+	{ 0x8086, 0x8d08, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_2port_sata_snb },
- 	/* SATA Controller IDE (Wellsburg) */
- 	{ 0x8086, 0x8d60, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich8_sata_snb },
- 	/* SATA Controller IDE (Wellsburg) */
--- 
-1.6.4.2
+George Daniels
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
