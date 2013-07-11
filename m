@@ -1,99 +1,100 @@
-From: Richard Zhu <richard.zhuhongxing@gmail.com>
-Subject: [v5 1/3] ARM: dtsi: enable ahci sata on imx6q platforms
-Date: Thu, 11 Jul 2013 17:10:29 +0800
-Message-ID: <1373533831-9500-2-git-send-email-Hong-Xing.Zhu@freescale.com>
-References: <1373533831-9500-1-git-send-email-Hong-Xing.Zhu@freescale.com>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
+Date: Thu, 11 Jul 2013 12:26:30 +0200
+Message-ID: <20130711102630.GA11133@dhcp-26-207.brq.redhat.com>
+References: <cover.1369155164.git.agordeev@redhat.com>
+ <20130521235003.GE6985@mtj.dyndns.org>
+ <20130522143923.GD19383@dhcp-26-207.brq.redhat.com>
+ <20130522170305.GD9563@kernel.dk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pb0-f42.google.com ([209.85.160.42]:36000 "EHLO
-	mail-pb0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932090Ab3GKJIV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Jul 2013 05:08:21 -0400
-Received: by mail-pb0-f42.google.com with SMTP id un1so7683766pbc.29
-        for <linux-ide@vger.kernel.org>; Thu, 11 Jul 2013 02:08:21 -0700 (PDT)
-In-Reply-To: <1373533831-9500-1-git-send-email-Hong-Xing.Zhu@freescale.com>
+Received: from mx1.redhat.com ([209.132.183.28]:61842 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751868Ab3GKKYk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 11 Jul 2013 06:24:40 -0400
+Content-Disposition: inline
+In-Reply-To: <20130522170305.GD9563@kernel.dk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: shawn.guo@linaro.org
-Cc: linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, tj@kernel.org, rob.herring@calxeda.com, s.hauer@pengutronix.de, linux-ide@vger.kernel.org, Richard Zhu <r65037@freescale.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Jens Axboe <axboe@kernel.dk>
 
-From: Richard Zhu <r65037@freescale.com>
+On Wed, May 22, 2013 at 07:03:05PM +0200, Jens Axboe wrote:
+> On Wed, May 22 2013, Alexander Gordeev wrote:
+> > On Wed, May 22, 2013 at 08:50:03AM +0900, Tejun Heo wrote:
+> > > Hmmmmmm..... I'd normally apply this patch but block layer is just
+> > > growing multi-queue support and libata is likely to be converted to mq
+> > > in foreseeable future, so I'm a bit hesitant to make irq handling more
+> > > sophiscated right now.  Would you be interested in looking into
+> > > converting libata to blk mq support?  I'm pretty sure it'd yield far
+> > > better outcome if done properly.
+> > 
+> > I am not committing, but will look into it, sure.
+> 
+> Would be most awesome, I'm sure Nic would not mind a bit of help on the
+> SCSI/libata side :-)
 
-Only imx6q has the ahci sata controller, enable
-it on imx6q platforms.
+Hi Nicholas,
 
-Signed-off-by: Richard Zhu <r65037@freescale.com>
----
- arch/arm/boot/dts/imx6q-sabreauto.dts |    4 ++++
- arch/arm/boot/dts/imx6q-sabrelite.dts |    4 ++++
- arch/arm/boot/dts/imx6q-sabresd.dts   |    4 ++++
- arch/arm/boot/dts/imx6q.dtsi          |    9 +++++++++
- 4 files changed, 21 insertions(+), 0 deletions(-)
+Could you please clarify the status of SCSI MQ support? Is it usable now?
 
-diff --git a/arch/arm/boot/dts/imx6q-sabreauto.dts b/arch/arm/boot/dts/imx6q-sabreauto.dts
-index 09a7580..5cd5209 100644
---- a/arch/arm/boot/dts/imx6q-sabreauto.dts
-+++ b/arch/arm/boot/dts/imx6q-sabreauto.dts
-@@ -20,6 +20,10 @@
- 	compatible = "fsl,imx6q-sabreauto", "fsl,imx6q";
+I tried git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git,
+but it does not appear working without (at least) changes below to SCSI lib:
+
+Thanks!
+
+diff --git a/drivers/scsi/scsi-mq.c b/drivers/scsi/scsi-mq.c
+index ca6ff67..d8cc7a4 100644
+--- a/drivers/scsi/scsi-mq.c
++++ b/drivers/scsi/scsi-mq.c
+@@ -155,6 +155,7 @@ void scsi_mq_done(struct scsi_cmnd *sc)
+ static struct blk_mq_ops scsi_mq_ops = {
+ 	.queue_rq	= scsi_mq_queue_rq,
+ 	.map_queue	= blk_mq_map_queue,
++	.timeout	= scsi_times_out,
+ 	.alloc_hctx	= blk_mq_alloc_single_hw_queue,
+ 	.free_hctx	= blk_mq_free_single_hw_queue,
  };
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 65360db..33aa373 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -283,7 +283,10 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+ 	/*
+ 	 * head injection *required* here otherwise quiesce won't work
+ 	 */
+-	blk_execute_rq(req->q, NULL, req, 1);
++	if (q->mq_ops)
++		blk_mq_execute_rq(req->q, req);
++	else
++		blk_execute_rq(req->q, NULL, req, 1);
  
-+&ahci {
-+	status = "okay";
-+};
-+
- &iomuxc {
- 	pinctrl-names = "default";
- 	pinctrl-0 = <&pinctrl_hog>;
-diff --git a/arch/arm/boot/dts/imx6q-sabrelite.dts b/arch/arm/boot/dts/imx6q-sabrelite.dts
-index 6a00066..6bf6fec 100644
---- a/arch/arm/boot/dts/imx6q-sabrelite.dts
-+++ b/arch/arm/boot/dts/imx6q-sabrelite.dts
-@@ -65,6 +65,10 @@
- 	};
- };
+ 	/*
+ 	 * Some devices (USB mass-storage in particular) may transfer
+@@ -298,12 +301,8 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+ 		*resid = req->resid_len;
+ 	ret = req->errors;
+  out:
+-	if (q->mq_ops) {
+-		printk("scsi_execute(): Calling blk_mq_free_request >>>\n");
+-		blk_mq_free_request(req);
+-	} else {
++	if (!q->mq_ops)
+ 		blk_put_request(req);
+-	}
  
-+&ahci {
-+	status = "okay";
-+};
-+
- &ecspi1 {
- 	fsl,spi-num-chipselects = <1>;
- 	cs-gpios = <&gpio3 19 0>;
-diff --git a/arch/arm/boot/dts/imx6q-sabresd.dts b/arch/arm/boot/dts/imx6q-sabresd.dts
-index 0038228..d0579b8 100644
---- a/arch/arm/boot/dts/imx6q-sabresd.dts
-+++ b/arch/arm/boot/dts/imx6q-sabresd.dts
-@@ -20,6 +20,10 @@
- 	compatible = "fsl,imx6q-sabresd", "fsl,imx6q";
- };
- 
-+&ahci {
-+	status = "okay";
-+};
-+
- &iomuxc {
- 	pinctrl-names = "default";
- 	pinctrl-0 = <&pinctrl_hog>;
-diff --git a/arch/arm/boot/dts/imx6q.dtsi b/arch/arm/boot/dts/imx6q.dtsi
-index e7dd2c4..40db926 100644
---- a/arch/arm/boot/dts/imx6q.dtsi
-+++ b/arch/arm/boot/dts/imx6q.dtsi
-@@ -424,6 +424,15 @@
- 			};
- 		};
- 
-+		ahci: ahci@02200000 {
-+			compatible = "fsl,imx6q-ahci";
-+			reg = <0x02200000 0x4000>;
-+			interrupts = <0 39 0x04>;
-+			clocks = <&clks 154>, <&clks 187>;
-+			clock-names = "sata", "sata_ref";
-+			status = "disabled";
-+		};
-+
- 		ipu2: ipu@02800000 {
- 			#crtc-cells = <1>;
- 			compatible = "fsl,imx6q-ipu";
+ 	return ret;
+ }
+
+
+> And personally, can't wait to run it on the laptop! That's right, I
+> alpha test on the laptop.
+> 
+> -- 
+> Jens Axboe
+> 
+
 -- 
-1.7.5.4
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
