@@ -1,48 +1,63 @@
-From: Shawn Guo <shawn.guo@linaro.org>
-Subject: Re: [v5 3/3] sata: imx: add ahci sata support on imx platforms
-Date: Fri, 12 Jul 2013 15:01:32 +0800
-Message-ID: <20130712070130.GC25501@S2101-09.ap.freescale.net>
+From: Zhu Richard-R65037 <r65037@freescale.com>
+Subject: RE: [v5 3/3] sata: imx: add ahci sata support on imx platforms
+Date: Fri, 12 Jul 2013 07:42:13 +0000
+Message-ID: <0E83723C55F66F43A6041464FE31119D338480@039-SN2MPN1-011.039d.mgd.msft.net>
 References: <1373533831-9500-1-git-send-email-Hong-Xing.Zhu@freescale.com>
  <1373533831-9500-4-git-send-email-Hong-Xing.Zhu@freescale.com>
+ <20130712070130.GC25501@S2101-09.ap.freescale.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-db8lp0186.outbound.messaging.microsoft.com ([213.199.154.186]:15595
+Received: from mail-db8lp0184.outbound.messaging.microsoft.com ([213.199.154.184]:53978
 	"EHLO db8outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756818Ab3GLHBk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Jul 2013 03:01:40 -0400
-Content-Disposition: inline
-In-Reply-To: <1373533831-9500-4-git-send-email-Hong-Xing.Zhu@freescale.com>
+	by vger.kernel.org with ESMTP id S1757019Ab3GLHmU convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 12 Jul 2013 03:42:20 -0400
+In-Reply-To: <20130712070130.GC25501@S2101-09.ap.freescale.net>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Richard Zhu <richard.zhuhongxing@gmail.com>
-Cc: linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, tj@kernel.org, rob.herring@calxeda.com, s.hauer@pengutronix.de, linux-ide@vger.kernel.org, Richard Zhu <r65037@freescale.com>
+To: Shawn Guo <shawn.guo@linaro.org>, Richard Zhu <richard.zhuhongxing@gmail.com>
+Cc: "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>, "tj@kernel.org" <tj@kernel.org>, "rob.herring@calxeda.com" <rob.herring@calxeda.com>, "s.hauer@pengutronix.de" <s.hauer@pengutronix.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+
+Hi Shawn:
+Thanks for your comments.
+
+Best Regards
+Richard Zhu
+
+
+-----Original Message-----
+From: Shawn Guo [mailto:shawn.guo@linaro.org] 
+Sent: Friday, July 12, 2013 3:02 PM
+To: Richard Zhu
+Cc: linux-arm-kernel@lists.infradead.org; jgarzik@pobox.com; tj@kernel.org; rob.herring@calxeda.com; s.hauer@pengutronix.de; linux-ide@vger.kernel.org; Zhu Richard-R65037
+Subject: Re: [v5 3/3] sata: imx: add ahci sata support on imx platforms
 
 On Thu, Jul 11, 2013 at 05:10:31PM +0800, Richard Zhu wrote:
 > From: Richard Zhu <r65037@freescale.com>
 > 
-> imx6q contains one Synopsys AHCI SATA controller,
-> But it can't shares ahci_platform driver with other
-> controllers.
-> Because there are some misalignments of the generic
-> AHCI controller.
-> The bits definitions of the HBA registers, the Vendor
-> Specific registers, the AHCI PHY clock and the AHCI
-> signals adjustment window(GPR13 Reg).
->  - CAP_SSS(bit20) of the HOST_CAP is writable, default
->  value is '0', should be configured to be '1'
->  - bit0 (only one AHCI SATA port on imx6q) of the
->  HOST_PORTS_IMPL should be set to be '1'.(default 0)
->  - One Vendor Specific register HOST_TIMER1MS(offset:0xe0)
->  should be configured regarding to the frequency of AHB
->  bus clock.
->  - Configurations of the AHCI PHY clock, and the signal
->  parameters of the GPR13
+> imx6q contains one Synopsys AHCI SATA controller, But it can't shares 
+> ahci_platform driver with other controllers.
+> Because there are some misalignments of the generic AHCI controller.
+> The bits definitions of the HBA registers, the Vendor Specific 
+> registers, the AHCI PHY clock and the AHCI signals adjustment 
+> window(GPR13 Reg).
+>  - CAP_SSS(bit20) of the HOST_CAP is writable, default  value is '0', 
+> should be configured to be '1'
+>  - bit0 (only one AHCI SATA port on imx6q) of the  HOST_PORTS_IMPL 
+> should be set to be '1'.(default 0)
+>  - One Vendor Specific register HOST_TIMER1MS(offset:0xe0)  should be 
+> configured regarding to the frequency of AHB  bus clock.
+>  - Configurations of the AHCI PHY clock, and the signal  parameters of 
+> the GPR13
 > 
-> Setup its own ahci sata driver, contained the imx6q specific
+> Setup its own ahci sata driver, contained the imx6q specific 
 > initialized codes, re-use the generic ahci_platform drier, and
 
 s/drier/driver
+[Richard] One typo error, would be changed.
 
 > keep the generic ahci_platform driver clean as much as possible.
 > 
@@ -50,12 +65,13 @@ s/drier/driver
 > ---
 >  drivers/ata/Kconfig    |    9 ++
 >  drivers/ata/Makefile   |    1 +
->  drivers/ata/sata_imx.c |  233 ++++++++++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 243 insertions(+), 0 deletions(-)
->  create mode 100644 drivers/ata/sata_imx.c
+>  drivers/ata/sata_imx.c |  233 
+> ++++++++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 243 insertions(+), 0 deletions(-)  create mode 
+> 100644 drivers/ata/sata_imx.c
 > 
-> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-> index a5a3ebc..275dc2c 100644
+> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig index 
+> a5a3ebc..275dc2c 100644
 > --- a/drivers/ata/Kconfig
 > +++ b/drivers/ata/Kconfig
 > @@ -97,6 +97,15 @@ config SATA_AHCI_PLATFORM
@@ -74,8 +90,8 @@ s/drier/driver
 >  config SATA_FSL
 >  	tristate "Freescale 3.0Gbps SATA support"
 >  	depends on FSL_SOC
-> diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
-> index c04d0fd..04b1c6c 100644
+> diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile index 
+> c04d0fd..04b1c6c 100644
 > --- a/drivers/ata/Makefile
 > +++ b/drivers/ata/Makefile
 > @@ -10,6 +10,7 @@ obj-$(CONFIG_SATA_INIC162X)	+= sata_inic162x.o
@@ -86,9 +102,8 @@ s/drier/driver
 >  
 >  # SFF w/ custom DMA
 >  obj-$(CONFIG_PDC_ADMA)		+= pdc_adma.o
-> diff --git a/drivers/ata/sata_imx.c b/drivers/ata/sata_imx.c
-> new file mode 100644
-> index 0000000..de6330e
+> diff --git a/drivers/ata/sata_imx.c b/drivers/ata/sata_imx.c new file 
+> mode 100644 index 0000000..de6330e
 > --- /dev/null
 > +++ b/drivers/ata/sata_imx.c
 > @@ -0,0 +1,233 @@
@@ -96,18 +111,24 @@ s/drier/driver
 > + * Freescale IMX AHCI SATA platform driver
 > + * Copyright 2013 Freescale Semiconductor, Inc.
 > + *
-> + * based on the AHCI SATA platform driver by Jeff Garzik and Anton Vorontsov
+> + * based on the AHCI SATA platform driver by Jeff Garzik and Anton 
+> +Vorontsov
 > + *
-> + * This program is free software; you can redistribute it and/or modify it
+> + * This program is free software; you can redistribute it and/or 
+> +modify it
 > + * under the terms and conditions of the GNU General Public License,
 > + * version 2, as published by the Free Software Foundation.
 > + *
-> + * This program is distributed in the hope it will be useful, but WITHOUT
-> + * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-> + * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+> + * This program is distributed in the hope it will be useful, but 
+> +WITHOUT
+> + * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY 
+> +or
+> + * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public 
+> +License for
 > + * more details.
 > + *
-> + * You should have received a copy of the GNU General Public License along with
+> + * You should have received a copy of the GNU General Public License 
+> +along with
 > + * this program. If not, see <http://www.gnu.org/licenses/>.
 > + */
 > +
@@ -122,8 +143,7 @@ s/drier/driver
 > +#include "ahci.h"
 > +
 > +enum {
-> +	HOST_TIMER1MS = 0xe0, /* Timer 1-ms */
-> +};
+> +	HOST_TIMER1MS = 0xe0, /* Timer 1-ms */ };
 > +
 > +struct imx_ahci_priv {
 > +	struct platform_device *imx_ahci_pdev;
@@ -131,20 +151,19 @@ s/drier/driver
 > +	struct regmap *gpr;
 > +};
 > +
-> +/* imx6q ahci module initialization. */
-> +static int imx6q_sata_init(struct device *dev, void __iomem *mmio)
-> +{
+> +/* imx6q ahci module initialization. */ static int 
+> +imx6q_sata_init(struct device *dev, void __iomem *mmio) {
 > +	int ret = 0;
 > +	unsigned int rc;
 
 The variable name is confusing. "rc" generally means return code.
-
+[Richard] Accepted. Would be changed.
 > +	struct clk *ahb_clk;
 > +	struct device *p_dev = dev->parent;
 > +	struct imx_ahci_priv *imxpriv =  dev_get_drvdata(p_dev);
 
-I would go dev_get_drvdata(dev->parent), since dev->parent is even more
-readable than p_dev.
+I would go dev_get_drvdata(dev->parent), since dev->parent is even more readable than p_dev.
+[Richard] Accepted.
 
 > +
 > +	imxpriv->gpr =
@@ -155,6 +174,9 @@ readable than p_dev.
 > +	}
 
 Move it into imx_ahci_probe().
+[Richard] The codes "> +		syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr"); " is imx6q specific.
+I think it's better to place these codes in the imx6q_sata_init(). Otherwise, the probe maybe broken here, when imx53
+sata use sata_imx driver in future.
 
 > +
 > +	imxpriv->sata_ref_clk = devm_clk_get(dev, "sata_ref");
@@ -164,6 +186,7 @@ Move it into imx_ahci_probe().
 > +	}
 
 Ditto
+[Richard] Accepted.
 
 > +
 > +	ret = clk_prepare_enable(imxpriv->sata_ref_clk);
@@ -220,8 +243,7 @@ Ditto
 > +
 > +	ahb_clk = devm_clk_get(dev, "ahb");
 
-If you need to get ahb clock, please specify it in your DTS node.  Right
-now, you only have the following two clocks in the DTS.
+If you need to get ahb clock, please specify it in your DTS node.  Right now, you only have the following two clocks in the DTS.
 
 	clocks = <&clks 154>, <&clks 187>;
 	clock-names = "sata", "sata_ref";
@@ -230,11 +252,10 @@ You code happens to work because of the following call in clk-imx6q.c.
 
 	clk_register_clkdev(clk[ahb], "ahb", NULL);
 
-But you shouldn't reply on that.  With all users moved to looking up
-clocks from device tree, we would remove it from clock driver.
+But you shouldn't reply on that.  With all users moved to looking up clocks from device tree, we would remove it from clock driver.
 
-Also, please have a clk pointer in imx_ahci_priv and call devm_clk_get()
-in imx_ahci_probe().
+Also, please have a clk pointer in imx_ahci_priv and call devm_clk_get() in imx_ahci_probe().
+[Richard] Accepted. Would add "ahb" to sata related dts changes.
 
 > +	if (IS_ERR(ahb_clk)) {
 > +		dev_err(dev, "no ahb clock.\n");
@@ -249,12 +270,12 @@ in imx_ahci_probe().
 > +	return 0;
 > +}
 > +
-> +static void imx6q_sata_exit(struct device *dev)
-> +{
+> +static void imx6q_sata_exit(struct device *dev) {
 > +	struct device *p_dev = dev->parent;
 > +	struct imx_ahci_priv *imxpriv =  dev_get_drvdata(p_dev);
 
 dev_get_drvdata(dev->parent);
+[Richard] Accepted.
 
 > +
 > +	regmap_update_bits(imxpriv->gpr, 0x34, IMX6Q_GPR13_SATA_MPLL_CLK_EN,
@@ -275,16 +296,15 @@ Put a blank line here.
 > +};
 > +MODULE_DEVICE_TABLE(of, imx_ahci_of_match);
 > +
-> +static void imx_ahci_platform_release(struct device *dev)
-> +{
+> +static void imx_ahci_platform_release(struct device *dev) {
 > +	return;
 > +}
 
 Is this empty function mandatory?
+[Richard] Introduce in the previous patch-set, It can be removed in the current version.
 
 > +
-> +static int imx_ahci_probe(struct platform_device *pdev)
-> +{
+> +static int imx_ahci_probe(struct platform_device *pdev) {
 > +	struct device *dev = &pdev->dev;
 > +	struct resource *mem, *irq, res[2];
 > +	const struct of_device_id *of_id;
@@ -292,15 +312,14 @@ Is this empty function mandatory?
 > +	struct imx_ahci_priv *imxpriv;
 > +	int ret;
 > +
-I would drop this blank line and move the following two line above
-"int ret;".
+I would drop this blank line and move the following two line above "int ret;".
+[Richard] Accepted. 
 
 > +	struct device *imx_dev;
 > +	struct platform_device *imx_ahci_pdev;
 
-These two variable names are confusing.  I would name them ahci_dev and
-ahci_pdev, as they are all about generic "ahci" rather than imx specific
-one.
+These two variable names are confusing.  I would name them ahci_dev and ahci_pdev, as they are all about generic "ahci" rather than imx specific one.
+[Richard] Accepted.
 
 > +
 > +	imx_ahci_pdev = platform_device_alloc("ahci", -1);
@@ -320,6 +339,7 @@ one.
 > +	imxpriv->imx_ahci_pdev = imx_ahci_pdev;
 
 So imx_ahci_pdev in imx_ahci_priv is also confusing.
+[Richard] imx_ahci_pdev would be replaced by ahci_pdev.
 
 > +	platform_set_drvdata(pdev, imxpriv);
 > +
@@ -351,13 +371,13 @@ So imx_ahci_pdev in imx_ahci_priv is also confusing.
 > +	return ret;
 
 Can just be return platform_device_add(imx_ahci_pdev);
+[Richard] Accepted.
 
 Shawn
 
 > +}
 > +
-> +static int imx_ahci_remove(struct platform_device *pdev)
-> +{
+> +static int imx_ahci_remove(struct platform_device *pdev) {
 > +	struct imx_ahci_priv *imxpriv = platform_get_drvdata(pdev);
 > +	struct platform_device *imx_ahci_pdev = imxpriv->imx_ahci_pdev;
 > +
@@ -376,11 +396,10 @@ Shawn
 > +};
 > +module_platform_driver(imx_ahci_driver);
 > +
-> +MODULE_DESCRIPTION("Freescale i.MX AHCI SATA platform driver");
-> +MODULE_AUTHOR("Richard Zhu <Hong-Xing.Zhu@freescale.com>");
-> +MODULE_LICENSE("GPL");
-> +MODULE_ALIAS("sata:imx");
-> -- 
+> +MODULE_DESCRIPTION("Freescale i.MX AHCI SATA platform driver"); 
+> +MODULE_AUTHOR("Richard Zhu <Hong-Xing.Zhu@freescale.com>"); 
+> +MODULE_LICENSE("GPL"); MODULE_ALIAS("sata:imx");
+> --
 > 1.7.5.4
 > 
 
