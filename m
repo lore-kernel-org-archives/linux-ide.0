@@ -1,53 +1,160 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [v6 1/3] ARM: dtsi: enable ahci sata on imx6q platforms
-Date: Sat, 13 Jul 2013 00:40:48 +0400
-Message-ID: <51E069D0.7030204@cogentembedded.com>
-References: <1373622078-18723-1-git-send-email-Hong-Xing.Zhu@freescale.com> <1373622078-18723-2-git-send-email-Hong-Xing.Zhu@freescale.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
+Date: Fri, 12 Jul 2013 22:20:12 -0700
+Message-ID: <1373692812.7397.625.camel@haakon3.risingtidesystems.com>
+References: <cover.1369155164.git.agordeev@redhat.com>
+	 <20130521235003.GE6985@mtj.dyndns.org>
+	 <20130522143923.GD19383@dhcp-26-207.brq.redhat.com>
+	 <20130522170305.GD9563@kernel.dk>
+	 <20130711102630.GA11133@dhcp-26-207.brq.redhat.com>
+	 <1373583637.7397.370.camel@haakon3.risingtidesystems.com>
+	 <20130712074559.GA8727@dhcp-26-207.brq.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-la0-f48.google.com ([209.85.215.48]:47747 "EHLO
-	mail-la0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965331Ab3GLUkw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Jul 2013 16:40:52 -0400
-Received: by mail-la0-f48.google.com with SMTP id lx15so8086800lab.35
-        for <linux-ide@vger.kernel.org>; Fri, 12 Jul 2013 13:40:50 -0700 (PDT)
-In-Reply-To: <1373622078-18723-2-git-send-email-Hong-Xing.Zhu@freescale.com>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:42483 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750958Ab3GMFPH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 Jul 2013 01:15:07 -0400
+In-Reply-To: <20130712074559.GA8727@dhcp-26-207.brq.redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Richard Zhu <richard.zhuhongxing@gmail.com>
-Cc: shawn.guo@linaro.org, linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, tj@kernel.org, rob.herring@calxeda.com, s.hauer@pengutronix.de, linux-ide@vger.kernel.org, Richard Zhu <r65037@freescale.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Jens Axboe <axboe@kernel.dk>
 
-On 07/12/2013 01:41 PM, Richard Zhu wrote:
+On Fri, 2013-07-12 at 09:46 +0200, Alexander Gordeev wrote:
+> On Thu, Jul 11, 2013 at 04:00:37PM -0700, Nicholas A. Bellinger wrote:
+> > On Thu, 2013-07-11 at 12:26 +0200, Alexander Gordeev wrote:
+> > > On Wed, May 22, 2013 at 07:03:05PM +0200, Jens Axboe wrote:
+> > > > On Wed, May 22 2013, Alexander Gordeev wrote:
+> > > > > On Wed, May 22, 2013 at 08:50:03AM +0900, Tejun Heo wrote:
+> > > > > > Hmmmmmm..... I'd normally apply this patch but block layer is just
+> > > > > > growing multi-queue support and libata is likely to be converted to mq
+> > > > > > in foreseeable future, so I'm a bit hesitant to make irq handling more
+> > > > > > sophiscated right now.  Would you be interested in looking into
+> > > > > > converting libata to blk mq support?  I'm pretty sure it'd yield far
+> > > > > > better outcome if done properly.
+> > > > > 
+> > > > > I am not committing, but will look into it, sure.
+> > > > 
+> > > > Would be most awesome, I'm sure Nic would not mind a bit of help on the
+> > > > SCSI/libata side :-)
+> > > 
+> > > Hi Nicholas,
+> > > 
+> > > Could you please clarify the status of SCSI MQ support? Is it usable now?
+> > > 
+> > 
+> > Hi Alexander,
+> > 
+> > Thanks for taking a look.  I've not made further progress in the last
+> > weeks on scsi-mq, but am still using virtio-scsi + scsi-mq <->
+> > vhost-scsi + per-cpu-ida for quite a bit for benchmarking purposes.
+> 
+> Thanks for the clarification, Nicholas.
+> 
+> > > I tried git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git,
+> > > but it does not appear working without (at least) changes below to SCSI lib:
+> > > 
+> > 
+> > The only scsi-mq LLD conversions so far have been to virtio-scsi +
+> > scsi_debug to nop REQ_TYPE_FS.
+> 
+> I see. Do you think the changes I made is a right way to go?
+> 
+> I had to make it to avoid a NULL-pointer assignent and make BIO bounce
+> buffers work, but I do not really understand the mixture of old and
+> new code ( neither in fact :) )
+> 
 
-> From: Richard Zhu <r65037@freescale.com>
+Hi Alexander,
 
-> Only imx6q has the ahci sata controller, enable
-> it on imx6q platforms.
+Comments below.
 
-> Signed-off-by: Richard Zhu <r65037@freescale.com>
-[...]
+> > Just so I understand, your patch below is required in order to make what
+> > LLD function with scsi-mq..?
+> 
+> ata_piix
+> 
 
-> diff --git a/arch/arm/boot/dts/imx6q.dtsi b/arch/arm/boot/dts/imx6q.dtsi
-> index e7dd2c4..93b65d9 100644
-> --- a/arch/arm/boot/dts/imx6q.dtsi
-> +++ b/arch/arm/boot/dts/imx6q.dtsi
-> @@ -424,6 +424,15 @@
->   			};
->   		};
->
-> +		ahci: ahci@02200000 {
+<nod>
 
-    According to ePAPR [1] section 2.2.2, "the name of the node should 
-be somewhat generic, reflecting the function of the device and not its
-precise programming model. If appropriate, the name should be one of the 
-following choices:
-[...]
-- sata;
-[...]"
+> > 
+> > Thanks!
+> > 
+> > --nab
+> > 
+> > > Thanks!
+> > > 
+> > > diff --git a/drivers/scsi/scsi-mq.c b/drivers/scsi/scsi-mq.c
+> > > index ca6ff67..d8cc7a4 100644
+> > > --- a/drivers/scsi/scsi-mq.c
+> > > +++ b/drivers/scsi/scsi-mq.c
+> > > @@ -155,6 +155,7 @@ void scsi_mq_done(struct scsi_cmnd *sc)
+> > >  static struct blk_mq_ops scsi_mq_ops = {
+> > >  	.queue_rq	= scsi_mq_queue_rq,
+> > >  	.map_queue	= blk_mq_map_queue,
+> > > +	.timeout	= scsi_times_out,
+> > >  	.alloc_hctx	= blk_mq_alloc_single_hw_queue,
+> > >  	.free_hctx	= blk_mq_free_single_hw_queue,
+> > >  };
 
-[1] http://www.power.org/resources/downloads/Power_ePAPR_APPROVED_v1.0.pdf
+So your actually triggering a blk-mq timeout with ata_piix..?
 
-WBR, Sergei
+> > > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> > > index 65360db..33aa373 100644
+> > > --- a/drivers/scsi/scsi_lib.c
+> > > +++ b/drivers/scsi/scsi_lib.c
+> > > @@ -283,7 +283,10 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+> > >  	/*
+> > >  	 * head injection *required* here otherwise quiesce won't work
+> > >  	 */
+> > > -	blk_execute_rq(req->q, NULL, req, 1);
+> > > +	if (q->mq_ops)
+> > > +		blk_mq_execute_rq(req->q, req);
+> > > +	else
+> > > +		blk_execute_rq(req->q, NULL, req, 1);
+> > >  
+
+The scsi_execute() -> REQ_TYPE_BLOCK_RQ special case (scsi_scan +
+scsi_ioctl) has a small issue preventing it's conversion to use
+blk_mq_execute_rq().
+
+Namely that scsi_execute_cmd() currently expects to be able to check for
+the existence of req->errors + req->resid_len *after*
+blk_mq_execute_rq() -> blk_mq_finish_request() -> blk_mq_free_request()
+has been called to mark the pre-allocated struct request as free for
+blk-mq re-use.
+
+That is why scsi-mq still uses blk_execute_rq() for this reason, and
+this will need be addressed in order to safely use blk_mq_execute_rq()
+in the above context.
+
+> > >  	/*
+> > >  	 * Some devices (USB mass-storage in particular) may transfer
+> > > @@ -298,12 +301,8 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+> > >  		*resid = req->resid_len;
+> > >  	ret = req->errors;
+> > >   out:
+> > > -	if (q->mq_ops) {
+> > > -		printk("scsi_execute(): Calling blk_mq_free_request >>>\n");
+> > > -		blk_mq_free_request(req);
+> > > -	} else {
+> > > +	if (!q->mq_ops)
+> > >  		blk_put_request(req);
+> > > -	}
+> > >  
+
+Do you have an OOPs backtrace handy to post w/o the last two changes in
+place..?
+
+Also, just a heads up that so far I've been using IDE (/dev/hdX) for the
+root-device in order to make scsi-mq debugging safer and easier.
+
+I *very* much recommend doing the same if at all possible for ata_piix
+scsi-mq development + testing, as you'll want to be very careful when
+using a real file-system on top of this early alpha code.
+
+--nab
 
