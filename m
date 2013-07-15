@@ -1,160 +1,355 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
-Date: Fri, 12 Jul 2013 22:20:12 -0700
-Message-ID: <1373692812.7397.625.camel@haakon3.risingtidesystems.com>
-References: <cover.1369155164.git.agordeev@redhat.com>
-	 <20130521235003.GE6985@mtj.dyndns.org>
-	 <20130522143923.GD19383@dhcp-26-207.brq.redhat.com>
-	 <20130522170305.GD9563@kernel.dk>
-	 <20130711102630.GA11133@dhcp-26-207.brq.redhat.com>
-	 <1373583637.7397.370.camel@haakon3.risingtidesystems.com>
-	 <20130712074559.GA8727@dhcp-26-207.brq.redhat.com>
+From: Shawn Guo <shawn.guo@linaro.org>
+Subject: Re: [v6 3/3] sata: imx: add ahci sata support on imx platforms
+Date: Mon, 15 Jul 2013 10:02:56 +0800
+Message-ID: <20130715020254.GC2730@S2101-09.ap.freescale.net>
+References: <1373622078-18723-1-git-send-email-Hong-Xing.Zhu@freescale.com>
+ <1373622078-18723-4-git-send-email-Hong-Xing.Zhu@freescale.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:42483 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750958Ab3GMFPH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 Jul 2013 01:15:07 -0400
-In-Reply-To: <20130712074559.GA8727@dhcp-26-207.brq.redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Content-Disposition: inline
+In-Reply-To: <1373622078-18723-4-git-send-email-Hong-Xing.Zhu@freescale.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Richard Zhu <richard.zhuhongxing@gmail.com>
+Cc: Richard Zhu <r65037@freescale.com>, s.hauer@pengutronix.de, rob.herring@calxeda.com, linux-ide@vger.kernel.org, tj@kernel.org, jgarzik@pobox.com, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Jens Axboe <axboe@kernel.dk>
 
-On Fri, 2013-07-12 at 09:46 +0200, Alexander Gordeev wrote:
-> On Thu, Jul 11, 2013 at 04:00:37PM -0700, Nicholas A. Bellinger wrote:
-> > On Thu, 2013-07-11 at 12:26 +0200, Alexander Gordeev wrote:
-> > > On Wed, May 22, 2013 at 07:03:05PM +0200, Jens Axboe wrote:
-> > > > On Wed, May 22 2013, Alexander Gordeev wrote:
-> > > > > On Wed, May 22, 2013 at 08:50:03AM +0900, Tejun Heo wrote:
-> > > > > > Hmmmmmm..... I'd normally apply this patch but block layer is just
-> > > > > > growing multi-queue support and libata is likely to be converted to mq
-> > > > > > in foreseeable future, so I'm a bit hesitant to make irq handling more
-> > > > > > sophiscated right now.  Would you be interested in looking into
-> > > > > > converting libata to blk mq support?  I'm pretty sure it'd yield far
-> > > > > > better outcome if done properly.
-> > > > > 
-> > > > > I am not committing, but will look into it, sure.
-> > > > 
-> > > > Would be most awesome, I'm sure Nic would not mind a bit of help on the
-> > > > SCSI/libata side :-)
-> > > 
-> > > Hi Nicholas,
-> > > 
-> > > Could you please clarify the status of SCSI MQ support? Is it usable now?
-> > > 
-> > 
-> > Hi Alexander,
-> > 
-> > Thanks for taking a look.  I've not made further progress in the last
-> > weeks on scsi-mq, but am still using virtio-scsi + scsi-mq <->
-> > vhost-scsi + per-cpu-ida for quite a bit for benchmarking purposes.
+On Fri, Jul 12, 2013 at 05:41:18PM +0800, Richard Zhu wrote:
+> From: Richard Zhu <r65037@freescale.com>
 > 
-> Thanks for the clarification, Nicholas.
+> imx6q contains one Synopsys AHCI SATA controller,
+> But it can't share ahci_platform driver with other
+> controllers.
+> Because there are some misalignments of the generic
+> AHCI controller.
+> The bits definitions of the HBA registers, the Vendor
+> Specific registers, the AHCI PHY clock and the AHCI
+> signals adjustment window(GPR13 register).
+>  - CAP_SSS(bit20) of the HOST_CAP is writable, default
+>  value is '0', should be configured to be '1'
+>  - bit0 (only one AHCI SATA port on imx6q) of the
+>  HOST_PORTS_IMPL should be set to be '1'.(default 0)
+>  - One Vendor Specific register HOST_TIMER1MS(offset:0xe0)
+>  should be configured regarding to the frequency of AHB
+>  bus clock.
+>  - Configurations of the AHCI PHY clock, and the signal
+>  parameters of the GPR13
 > 
-> > > I tried git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git,
-> > > but it does not appear working without (at least) changes below to SCSI lib:
-> > > 
-> > 
-> > The only scsi-mq LLD conversions so far have been to virtio-scsi +
-> > scsi_debug to nop REQ_TYPE_FS.
+> Setup its own ahci sata driver, contained the imx6q specific
+> initialized codes, re-use the generic ahci_platform driver, and
+> keep the generic ahci_platform driver clean as much as possible.
 > 
-> I see. Do you think the changes I made is a right way to go?
+> Signed-off-by: Richard Zhu <r65037@freescale.com>
+> ---
+>  drivers/ata/Kconfig    |    9 ++
+>  drivers/ata/Makefile   |    1 +
+>  drivers/ata/sata_imx.c |  241 ++++++++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 251 insertions(+), 0 deletions(-)
+>  create mode 100644 drivers/ata/sata_imx.c
 > 
-> I had to make it to avoid a NULL-pointer assignent and make BIO bounce
-> buffers work, but I do not really understand the mixture of old and
-> new code ( neither in fact :) )
+> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+> index a5a3ebc..275dc2c 100644
+> --- a/drivers/ata/Kconfig
+> +++ b/drivers/ata/Kconfig
+> @@ -97,6 +97,15 @@ config SATA_AHCI_PLATFORM
+>  
+>  	  If unsure, say N.
+>  
+> +config SATA_IMX
+> +	tristate "Freescale i.MX AHCI SATA support"
+> +	depends on SATA_AHCI_PLATFORM
+> +	help
+> +	  This option enables support for the Freescale i.MX SoC's
+> +	  onboard AHCI SATA.
+> +
+> +	  If unsure, say N.
+> +
+>  config SATA_FSL
+>  	tristate "Freescale 3.0Gbps SATA support"
+>  	depends on FSL_SOC
+> diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+> index c04d0fd..04b1c6c 100644
+> --- a/drivers/ata/Makefile
+> +++ b/drivers/ata/Makefile
+> @@ -10,6 +10,7 @@ obj-$(CONFIG_SATA_INIC162X)	+= sata_inic162x.o
+>  obj-$(CONFIG_SATA_SIL24)	+= sata_sil24.o
+>  obj-$(CONFIG_SATA_DWC)		+= sata_dwc_460ex.o
+>  obj-$(CONFIG_SATA_HIGHBANK)	+= sata_highbank.o libahci.o
+> +obj-$(CONFIG_SATA_IMX)		+= sata_imx.o
+>  
+>  # SFF w/ custom DMA
+>  obj-$(CONFIG_PDC_ADMA)		+= pdc_adma.o
+> diff --git a/drivers/ata/sata_imx.c b/drivers/ata/sata_imx.c
+> new file mode 100644
+> index 0000000..fb13867
+> --- /dev/null
+> +++ b/drivers/ata/sata_imx.c
+> @@ -0,0 +1,241 @@
+> +/*
+> + * Freescale IMX AHCI SATA platform driver
+> + * Copyright 2013 Freescale Semiconductor, Inc.
+> + *
+> + * based on the AHCI SATA platform driver by Jeff Garzik and Anton Vorontsov
+> + *
+> + * This program is free software; you can redistribute it and/or modify it
+> + * under the terms and conditions of the GNU General Public License,
+> + * version 2, as published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope it will be useful, but WITHOUT
+> + * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+> + * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+> + * more details.
+> + *
+> + * You should have received a copy of the GNU General Public License along with
+> + * this program. If not, see <http://www.gnu.org/licenses/>.
+> + */
+> +
+> +#include <linux/kernel.h>
+> +#include <linux/module.h>
+> +#include <linux/platform_device.h>
+> +#include <linux/regmap.h>
+> +#include <linux/ahci_platform.h>
+> +#include <linux/of_device.h>
+> +#include <linux/mfd/syscon.h>
+> +#include <linux/mfd/syscon/imx6q-iomuxc-gpr.h>
+> +#include "ahci.h"
+> +
+> +enum {
+> +	HOST_TIMER1MS = 0xe0, /* Timer 1-ms */
+> +};
+> +
+> +struct imx_ahci_priv {
+> +	struct platform_device *ahci_pdev;
+> +	struct clk *sata_ref_clk;
+> +	struct regmap *gpr;
+> +};
+> +
+> +static int imx6q_sata_init(struct device *dev, void __iomem *mmio)
+> +{
+> +	int ret = 0;
+> +	unsigned int reg_val;
+> +	struct clk *ahb_clk;
+> +	struct imx_ahci_priv *imxpriv = dev_get_drvdata(dev->parent);
+> +
+> +	imxpriv->gpr =
+> +		syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
+> +	if (IS_ERR(imxpriv->gpr)) {
+> +		dev_err(dev, "failed to find fsl,imx6q-iomux-gpr regmap\n");
+> +		return PTR_ERR(imxpriv->gpr);
+> +	}
+> +
+> +	ret = clk_prepare_enable(imxpriv->sata_ref_clk);
+> +	if (ret < 0) {
+> +		dev_err(dev, "prepare-enable sata_ref clock err:%d\n", ret);
+> +		return ret;
+> +	}
+> +
+> +	/*
+> +	 * set PHY Paremeters, two steps to configure the GPR13,
+> +	 * one write for rest of parameters, mask of first write
+> +	 * is 0x07fffffd, and the other one write for setting
+> +	 * the mpll_clk_en.
+> +	 */
+> +	regmap_update_bits(imxpriv->gpr, 0x34, IMX6Q_GPR13_SATA_RX_EQ_VAL_MASK
+> +			| IMX6Q_GPR13_SATA_RX_LOS_LVL_MASK
+> +			| IMX6Q_GPR13_SATA_RX_DPLL_MODE_MASK
+> +			| IMX6Q_GPR13_SATA_SPD_MODE_MASK
+> +			| IMX6Q_GPR13_SATA_MPLL_SS_EN
+> +			| IMX6Q_GPR13_SATA_TX_ATTEN_MASK
+> +			| IMX6Q_GPR13_SATA_TX_BOOST_MASK
+> +			| IMX6Q_GPR13_SATA_TX_LVL_MASK
+> +			| IMX6Q_GPR13_SATA_TX_EDGE_RATE
+> +			, IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB
+> +			| IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M
+> +			| IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_4F
+> +			| IMX6Q_GPR13_SATA_SPD_MODE_3P0G
+> +			| IMX6Q_GPR13_SATA_MPLL_SS_EN
+> +			| IMX6Q_GPR13_SATA_TX_ATTEN_9_16
+> +			| IMX6Q_GPR13_SATA_TX_BOOST_3_33_DB
+> +			| IMX6Q_GPR13_SATA_TX_LVL_1_025_V);
+> +	regmap_update_bits(imxpriv->gpr, 0x34, IMX6Q_GPR13_SATA_MPLL_CLK_EN,
+> +			IMX6Q_GPR13_SATA_MPLL_CLK_EN);
+> +	usleep_range(100, 200);
+> +
+> +	/*
+> +	 * Configure the HWINIT bits of the HOST_CAP and HOST_PORTS_IMPL,
+> +	 * and IP vendor specific register HOST_TIMER1MS.
+> +	 * Configure CAP_SSS (support stagered spin up).
+> +	 * Implement the port0.
+> +	 * Get the ahb clock rate, and configure the TIMER1MS register.
+> +	 */
+> +	reg_val = readl(mmio + HOST_CAP);
+> +	if (!(reg_val & HOST_CAP_SSS)) {
+> +		reg_val |= HOST_CAP_SSS;
+> +		writel(reg_val, mmio + HOST_CAP);
+> +	}
+> +	reg_val = readl(mmio + HOST_PORTS_IMPL);
+> +	if (!(reg_val & 0x1)) {
+> +		reg_val |= 0x1;
+> +		writel(reg_val, mmio + HOST_PORTS_IMPL);
+> +	}
+> +
+> +	ahb_clk = devm_clk_get(dev, "ahb");
+
+Can we move this devm_clk_get() call into .probe as well?
+
+> +	if (IS_ERR(ahb_clk)) {
+> +		dev_err(dev, "no ahb clock.\n");
+> +		clk_disable_unprepare(imxpriv->sata_ref_clk);
+> +		devm_clk_put(dev, imxpriv->sata_ref_clk);
+> +		return PTR_ERR(ahb_clk);
+> +	}
+> +	reg_val = clk_get_rate(ahb_clk) / 1000;
+> +	writel(reg_val, mmio + HOST_TIMER1MS);
+> +	devm_clk_put(dev, ahb_clk);
+> +
+> +	return 0;
+> +}
+> +
+> +static void imx6q_sata_exit(struct device *dev)
+> +{
+> +	struct imx_ahci_priv *imxpriv =  dev_get_drvdata(dev->parent);
+> +
+> +	regmap_update_bits(imxpriv->gpr, 0x34, IMX6Q_GPR13_SATA_MPLL_CLK_EN,
+> +			!IMX6Q_GPR13_SATA_MPLL_CLK_EN);
+> +	clk_disable_unprepare(imxpriv->sata_ref_clk);
+> +}
+> +
+> +static struct ahci_platform_data imx6q_sata_pdata = {
+> +	.init = imx6q_sata_init,
+> +	.exit = imx6q_sata_exit,
+> +};
+> +
+> +static const struct of_device_id imx_ahci_of_match[] = {
+> +	{ .compatible = "fsl,imx6q-ahci", .data = &imx6q_sata_pdata},
+> +	{},
+> +};
+> +MODULE_DEVICE_TABLE(of, imx_ahci_of_match);
+> +
+> +static int imx_ahci_probe(struct platform_device *pdev)
+> +{
+> +	struct device *dev = &pdev->dev;
+> +	struct resource *mem, *irq, res[2];
+> +	const struct of_device_id *of_id;
+> +	const struct ahci_platform_data *pdata = NULL;
+> +	struct imx_ahci_priv *imxpriv;
+> +	struct device *ahci_dev;
+> +	struct platform_device *ahci_pdev;
+> +	int ret;
+> +
+> +	imxpriv = devm_kzalloc(dev, sizeof(*imxpriv), GFP_KERNEL);
+> +	if (!imxpriv) {
+> +		dev_err(dev, "can't alloc ahci_host_priv\n");
+> +		return -ENOMEM;
+> +	}
+> +
+> +	ahci_pdev = platform_device_alloc("ahci", -1);
+> +	if (!ahci_pdev)
+> +		return -ENODEV;
+> +
+> +	ahci_dev = &ahci_pdev->dev;
+> +	ahci_dev->parent = dev;
+> +
+> +	imxpriv->sata_ref_clk = devm_clk_get(dev, "sata_ref");
+> +	if (IS_ERR(imxpriv->sata_ref_clk)) {
+> +		dev_err(dev, "can't get sata_ref clock.\n");
+> +		ret = PTR_ERR(imxpriv->sata_ref_clk);
+> +		goto err_pdev_put;
+> +	}
+> +
+> +	imxpriv->ahci_pdev = ahci_pdev;
+> +	platform_set_drvdata(pdev, imxpriv);
+> +
+> +	of_id = of_match_device(imx_ahci_of_match, dev);
+> +	if (of_id) {
+> +		pdata = of_id->data;
+> +	} else {
+> +		ret = -EINVAL;
+> +		goto err_out;
+> +	}
+> +
+> +	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+> +	irq = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
+> +	if (!mem || !irq) {
+> +		dev_err(dev, "no mmio/irq resource\n");
+> +		ret = -ENOMEM;
+> +		goto err_out;
+> +	}
+> +
+> +	res[0] = *mem;
+> +	res[1] = *irq;
+> +
+> +	ahci_dev->coherent_dma_mask = DMA_BIT_MASK(32);
+> +	ahci_dev->dma_mask = &ahci_dev->coherent_dma_mask;
+> +	ahci_dev->of_node = dev->of_node;
+> +
+> +	ret = platform_device_add_resources(ahci_pdev, res, 2);
+> +	if (ret)
+> +		goto err_out;
+> +
+> +	ret = platform_device_add_data(ahci_pdev, pdata, sizeof(*pdata));
+> +	if (ret)
+> +		goto err_out;
+> +
+> +	ret = platform_device_add(ahci_pdev);
+> +	if (ret) {
+> +err_out:
+> +		platform_set_drvdata(pdev, NULL);
+
+I do not think you need this.
+
+> +		devm_clk_put(dev, imxpriv->sata_ref_clk);
+
+The good thing about using devm_clk_get() above is you do not need to
+explicitly call devm_clk_put() on either .remove or .probe failure.
+
+> +err_pdev_put:
+> +		platform_device_put(ahci_pdev);
+> +		return ret;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static int imx_ahci_remove(struct platform_device *pdev)
+> +{
+> +	struct imx_ahci_priv *imxpriv = platform_get_drvdata(pdev);
+> +	struct platform_device *ahci_pdev = imxpriv->ahci_pdev;
+> +
+> +	platform_device_unregister(ahci_pdev);
+> +	platform_set_drvdata(pdev, NULL);
+
+Ditto, you do not need to do this.
+
+Shawn
+
+> +	return 0;
+> +}
+> +
+> +static struct platform_driver imx_ahci_driver = {
+> +	.probe = imx_ahci_probe,
+> +	.remove = imx_ahci_remove,
+> +	.driver = {
+> +		.name = "sata-imx",
+> +		.owner = THIS_MODULE,
+> +		.of_match_table = imx_ahci_of_match,
+> +	},
+> +};
+> +module_platform_driver(imx_ahci_driver);
+> +
+> +MODULE_DESCRIPTION("Freescale i.MX AHCI SATA platform driver");
+> +MODULE_AUTHOR("Richard Zhu <Hong-Xing.Zhu@freescale.com>");
+> +MODULE_LICENSE("GPL");
+> +MODULE_ALIAS("sata:imx");
+> -- 
+> 1.7.5.4
 > 
-
-Hi Alexander,
-
-Comments below.
-
-> > Just so I understand, your patch below is required in order to make what
-> > LLD function with scsi-mq..?
-> 
-> ata_piix
-> 
-
-<nod>
-
-> > 
-> > Thanks!
-> > 
-> > --nab
-> > 
-> > > Thanks!
-> > > 
-> > > diff --git a/drivers/scsi/scsi-mq.c b/drivers/scsi/scsi-mq.c
-> > > index ca6ff67..d8cc7a4 100644
-> > > --- a/drivers/scsi/scsi-mq.c
-> > > +++ b/drivers/scsi/scsi-mq.c
-> > > @@ -155,6 +155,7 @@ void scsi_mq_done(struct scsi_cmnd *sc)
-> > >  static struct blk_mq_ops scsi_mq_ops = {
-> > >  	.queue_rq	= scsi_mq_queue_rq,
-> > >  	.map_queue	= blk_mq_map_queue,
-> > > +	.timeout	= scsi_times_out,
-> > >  	.alloc_hctx	= blk_mq_alloc_single_hw_queue,
-> > >  	.free_hctx	= blk_mq_free_single_hw_queue,
-> > >  };
-
-So your actually triggering a blk-mq timeout with ata_piix..?
-
-> > > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> > > index 65360db..33aa373 100644
-> > > --- a/drivers/scsi/scsi_lib.c
-> > > +++ b/drivers/scsi/scsi_lib.c
-> > > @@ -283,7 +283,10 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
-> > >  	/*
-> > >  	 * head injection *required* here otherwise quiesce won't work
-> > >  	 */
-> > > -	blk_execute_rq(req->q, NULL, req, 1);
-> > > +	if (q->mq_ops)
-> > > +		blk_mq_execute_rq(req->q, req);
-> > > +	else
-> > > +		blk_execute_rq(req->q, NULL, req, 1);
-> > >  
-
-The scsi_execute() -> REQ_TYPE_BLOCK_RQ special case (scsi_scan +
-scsi_ioctl) has a small issue preventing it's conversion to use
-blk_mq_execute_rq().
-
-Namely that scsi_execute_cmd() currently expects to be able to check for
-the existence of req->errors + req->resid_len *after*
-blk_mq_execute_rq() -> blk_mq_finish_request() -> blk_mq_free_request()
-has been called to mark the pre-allocated struct request as free for
-blk-mq re-use.
-
-That is why scsi-mq still uses blk_execute_rq() for this reason, and
-this will need be addressed in order to safely use blk_mq_execute_rq()
-in the above context.
-
-> > >  	/*
-> > >  	 * Some devices (USB mass-storage in particular) may transfer
-> > > @@ -298,12 +301,8 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
-> > >  		*resid = req->resid_len;
-> > >  	ret = req->errors;
-> > >   out:
-> > > -	if (q->mq_ops) {
-> > > -		printk("scsi_execute(): Calling blk_mq_free_request >>>\n");
-> > > -		blk_mq_free_request(req);
-> > > -	} else {
-> > > +	if (!q->mq_ops)
-> > >  		blk_put_request(req);
-> > > -	}
-> > >  
-
-Do you have an OOPs backtrace handy to post w/o the last two changes in
-place..?
-
-Also, just a heads up that so far I've been using IDE (/dev/hdX) for the
-root-device in order to make scsi-mq debugging safer and easier.
-
-I *very* much recommend doing the same if at all possible for ata_piix
-scsi-mq development + testing, as you'll want to be very careful when
-using a real file-system on top of this early alpha code.
-
---nab
-
