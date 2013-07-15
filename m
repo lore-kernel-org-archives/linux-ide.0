@@ -1,370 +1,104 @@
-From: Zhu Richard-R65037 <r65037@freescale.com>
-Subject: RE: [v6 3/3] sata: imx: add ahci sata support on imx platforms
-Date: Mon, 15 Jul 2013 05:21:08 +0000
-Message-ID: <0E83723C55F66F43A6041464FE31119D33BDB4@039-SN2MPN1-011.039d.mgd.msft.net>
-References: <1373622078-18723-1-git-send-email-Hong-Xing.Zhu@freescale.com>
- <1373622078-18723-4-git-send-email-Hong-Xing.Zhu@freescale.com>
- <20130715020254.GC2730@S2101-09.ap.freescale.net>
+From: Alex Williamson <alex.williamson@redhat.com>
+Subject: ahci_host_activate NULL pointer (was Re: Linux 3.11-rc1)
+Date: Mon, 15 Jul 2013 10:49:20 -0600
+Message-ID: <1373906960.8441.258.camel@ul30vt.home>
+References: <CA+55aFyfTJKRnsFHGxQ+-2+GVstMUj6t4f0q5-8wJMbN-Y93+g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20130715020254.GC2730@S2101-09.ap.freescale.net>
-Content-Language: en-US
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Shawn Guo <shawn.guo@linaro.org>, Richard Zhu <richard.zhuhongxing@gmail.com>
-Cc: "s.hauer@pengutronix.de" <s.hauer@pengutronix.de>, "rob.herring@calxeda.com" <rob.herring@calxeda.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "tj@kernel.org" <tj@kernel.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:4382 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756082Ab3GOQtX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 15 Jul 2013 12:49:23 -0400
+In-Reply-To: <CA+55aFyfTJKRnsFHGxQ+-2+GVstMUj6t4f0q5-8wJMbN-Y93+g@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-kernel <linux-kernel@vger.kernel.org>
+Cc: tj <tj@kernel.org>, linux-ide@vger.kernel.org
 
-Hi Shawn:
-Thanks a lot for your great help on the patch-review.
-
-Best Regards
-Richard Zhu
-
-
------Original Message-----
-From: Shawn Guo [mailto:shawn.guo@linaro.org] 
-Sent: Monday, July 15, 2013 10:03 AM
-To: Richard Zhu
-Cc: linux-arm-kernel@lists.infradead.org; jgarzik@pobox.com; tj@kernel.org; rob.herring@calxeda.com; s.hauer@pengutronix.de; linux-ide@vger.kernel.org; Zhu Richard-R65037
-Subject: Re: [v6 3/3] sata: imx: add ahci sata support on imx platforms
-
-On Fri, Jul 12, 2013 at 05:41:18PM +0800, Richard Zhu wrote:
-> From: Richard Zhu <r65037@freescale.com>
+On Sun, 2013-07-14 at 16:57 -0700, Linus Torvalds wrote:
+> It's been two weeks, and the merge window has closed. If I missed
+> anything, holler, but I don't have anything pending that I am aware
+> of.
 > 
-> imx6q contains one Synopsys AHCI SATA controller, But it can't share 
-> ahci_platform driver with other controllers.
-> Because there are some misalignments of the generic AHCI controller.
-> The bits definitions of the HBA registers, the Vendor Specific 
-> registers, the AHCI PHY clock and the AHCI signals adjustment 
-> window(GPR13 register).
->  - CAP_SSS(bit20) of the HOST_CAP is writable, default  value is '0', 
-> should be configured to be '1'
->  - bit0 (only one AHCI SATA port on imx6q) of the  HOST_PORTS_IMPL 
-> should be set to be '1'.(default 0)
->  - One Vendor Specific register HOST_TIMER1MS(offset:0xe0)  should be 
-> configured regarding to the frequency of AHB  bus clock.
->  - Configurations of the AHCI PHY clock, and the signal  parameters of 
-> the GPR13
+> This merge window was smaller in terms of number of commits than the
+> 3.10 merge window, but we actually have more new lines. Most of that
+> seems to be in staging - a full third of all changes by line-count is
+> staging, and merging in Lustre is the bulk of that. Let's see how that
+> all turns out, I have to say that we don't have a great track record
+> on merging filesystems through staging.
 > 
-> Setup its own ahci sata driver, contained the imx6q specific 
-> initialized codes, re-use the generic ahci_platform driver, and keep 
-> the generic ahci_platform driver clean as much as possible.
+> Ignoring the lustre merge, I think this really was a somewhat calmer
+> merge window. We had a few trees with problems, and we have an
+> on-going debate about stable patches that was triggered largely thanks
+> to this merge window, so now we'll have something to discuss for the
+> kernel summit. But on the whole, I suspect we might be starting to see
+> the traditional summer slump (Australia notwithstanding).
 > 
-> Signed-off-by: Richard Zhu <r65037@freescale.com>
-> ---
->  drivers/ata/Kconfig    |    9 ++
->  drivers/ata/Makefile   |    1 +
->  drivers/ata/sata_imx.c |  241 
-> ++++++++++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 251 insertions(+), 0 deletions(-)  create mode 
-> 100644 drivers/ata/sata_imx.c
+> Despite being a bit smaller than the last merge window, it's not like
+> this was a _tiny_ one, and so as usual I'm only summarizing with the
+> normal -rc1 mergelog: and as usual the people credited here are *not*
+> the people who actually wrote the code (although in some cases that is
+> true), they are the people who I merged the code from.
 > 
-> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig index 
-> a5a3ebc..275dc2c 100644
-> --- a/drivers/ata/Kconfig
-> +++ b/drivers/ata/Kconfig
-> @@ -97,6 +97,15 @@ config SATA_AHCI_PLATFORM
->  
->  	  If unsure, say N.
->  
-> +config SATA_IMX
-> +	tristate "Freescale i.MX AHCI SATA support"
-> +	depends on SATA_AHCI_PLATFORM
-> +	help
-> +	  This option enables support for the Freescale i.MX SoC's
-> +	  onboard AHCI SATA.
-> +
-> +	  If unsure, say N.
-> +
->  config SATA_FSL
->  	tristate "Freescale 3.0Gbps SATA support"
->  	depends on FSL_SOC
-> diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile index 
-> c04d0fd..04b1c6c 100644
-> --- a/drivers/ata/Makefile
-> +++ b/drivers/ata/Makefile
-> @@ -10,6 +10,7 @@ obj-$(CONFIG_SATA_INIC162X)	+= sata_inic162x.o
->  obj-$(CONFIG_SATA_SIL24)	+= sata_sil24.o
->  obj-$(CONFIG_SATA_DWC)		+= sata_dwc_460ex.o
->  obj-$(CONFIG_SATA_HIGHBANK)	+= sata_highbank.o libahci.o
-> +obj-$(CONFIG_SATA_IMX)		+= sata_imx.o
->  
->  # SFF w/ custom DMA
->  obj-$(CONFIG_PDC_ADMA)		+= pdc_adma.o
-> diff --git a/drivers/ata/sata_imx.c b/drivers/ata/sata_imx.c new file 
-> mode 100644 index 0000000..fb13867
-> --- /dev/null
-> +++ b/drivers/ata/sata_imx.c
-> @@ -0,0 +1,241 @@
-> +/*
-> + * Freescale IMX AHCI SATA platform driver
-> + * Copyright 2013 Freescale Semiconductor, Inc.
-> + *
-> + * based on the AHCI SATA platform driver by Jeff Garzik and Anton 
-> +Vorontsov
-> + *
-> + * This program is free software; you can redistribute it and/or 
-> +modify it
-> + * under the terms and conditions of the GNU General Public License,
-> + * version 2, as published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope it will be useful, but 
-> +WITHOUT
-> + * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY 
-> +or
-> + * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public 
-> +License for
-> + * more details.
-> + *
-> + * You should have received a copy of the GNU General Public License 
-> +along with
-> + * this program. If not, see <http://www.gnu.org/licenses/>.
-> + */
-> +
-> +#include <linux/kernel.h>
-> +#include <linux/module.h>
-> +#include <linux/platform_device.h>
-> +#include <linux/regmap.h>
-> +#include <linux/ahci_platform.h>
-> +#include <linux/of_device.h>
-> +#include <linux/mfd/syscon.h>
-> +#include <linux/mfd/syscon/imx6q-iomuxc-gpr.h>
-> +#include "ahci.h"
-> +
-> +enum {
-> +	HOST_TIMER1MS = 0xe0, /* Timer 1-ms */ };
-> +
-> +struct imx_ahci_priv {
-> +	struct platform_device *ahci_pdev;
-> +	struct clk *sata_ref_clk;
-> +	struct regmap *gpr;
-> +};
-> +
-> +static int imx6q_sata_init(struct device *dev, void __iomem *mmio) {
-> +	int ret = 0;
-> +	unsigned int reg_val;
-> +	struct clk *ahb_clk;
-> +	struct imx_ahci_priv *imxpriv = dev_get_drvdata(dev->parent);
-> +
-> +	imxpriv->gpr =
-> +		syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
-> +	if (IS_ERR(imxpriv->gpr)) {
-> +		dev_err(dev, "failed to find fsl,imx6q-iomux-gpr regmap\n");
-> +		return PTR_ERR(imxpriv->gpr);
-> +	}
-> +
-> +	ret = clk_prepare_enable(imxpriv->sata_ref_clk);
-> +	if (ret < 0) {
-> +		dev_err(dev, "prepare-enable sata_ref clock err:%d\n", ret);
-> +		return ret;
-> +	}
-> +
-> +	/*
-> +	 * set PHY Paremeters, two steps to configure the GPR13,
-> +	 * one write for rest of parameters, mask of first write
-> +	 * is 0x07fffffd, and the other one write for setting
-> +	 * the mpll_clk_en.
-> +	 */
-> +	regmap_update_bits(imxpriv->gpr, 0x34, IMX6Q_GPR13_SATA_RX_EQ_VAL_MASK
-> +			| IMX6Q_GPR13_SATA_RX_LOS_LVL_MASK
-> +			| IMX6Q_GPR13_SATA_RX_DPLL_MODE_MASK
-> +			| IMX6Q_GPR13_SATA_SPD_MODE_MASK
-> +			| IMX6Q_GPR13_SATA_MPLL_SS_EN
-> +			| IMX6Q_GPR13_SATA_TX_ATTEN_MASK
-> +			| IMX6Q_GPR13_SATA_TX_BOOST_MASK
-> +			| IMX6Q_GPR13_SATA_TX_LVL_MASK
-> +			| IMX6Q_GPR13_SATA_TX_EDGE_RATE
-> +			, IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB
-> +			| IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M
-> +			| IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_4F
-> +			| IMX6Q_GPR13_SATA_SPD_MODE_3P0G
-> +			| IMX6Q_GPR13_SATA_MPLL_SS_EN
-> +			| IMX6Q_GPR13_SATA_TX_ATTEN_9_16
-> +			| IMX6Q_GPR13_SATA_TX_BOOST_3_33_DB
-> +			| IMX6Q_GPR13_SATA_TX_LVL_1_025_V);
-> +	regmap_update_bits(imxpriv->gpr, 0x34, IMX6Q_GPR13_SATA_MPLL_CLK_EN,
-> +			IMX6Q_GPR13_SATA_MPLL_CLK_EN);
-> +	usleep_range(100, 200);
-> +
-> +	/*
-> +	 * Configure the HWINIT bits of the HOST_CAP and HOST_PORTS_IMPL,
-> +	 * and IP vendor specific register HOST_TIMER1MS.
-> +	 * Configure CAP_SSS (support stagered spin up).
-> +	 * Implement the port0.
-> +	 * Get the ahb clock rate, and configure the TIMER1MS register.
-> +	 */
-> +	reg_val = readl(mmio + HOST_CAP);
-> +	if (!(reg_val & HOST_CAP_SSS)) {
-> +		reg_val |= HOST_CAP_SSS;
-> +		writel(reg_val, mmio + HOST_CAP);
-> +	}
-> +	reg_val = readl(mmio + HOST_PORTS_IMPL);
-> +	if (!(reg_val & 0x1)) {
-> +		reg_val |= 0x1;
-> +		writel(reg_val, mmio + HOST_PORTS_IMPL);
-> +	}
-> +
-> +	ahb_clk = devm_clk_get(dev, "ahb");
+> Hey, let's all start testing,
 
-Can we move this devm_clk_get() call into .probe as well?
-[Ok] it would be moved to .probe.
+Anyone else seeing this:
 
-> +	if (IS_ERR(ahb_clk)) {
-> +		dev_err(dev, "no ahb clock.\n");
-> +		clk_disable_unprepare(imxpriv->sata_ref_clk);
-> +		devm_clk_put(dev, imxpriv->sata_ref_clk);
-> +		return PTR_ERR(ahb_clk);
-> +	}
-> +	reg_val = clk_get_rate(ahb_clk) / 1000;
-> +	writel(reg_val, mmio + HOST_TIMER1MS);
-> +	devm_clk_put(dev, ahb_clk);
-> +
-> +	return 0;
-> +}
-> +
-> +static void imx6q_sata_exit(struct device *dev) {
-> +	struct imx_ahci_priv *imxpriv =  dev_get_drvdata(dev->parent);
-> +
-> +	regmap_update_bits(imxpriv->gpr, 0x34, IMX6Q_GPR13_SATA_MPLL_CLK_EN,
-> +			!IMX6Q_GPR13_SATA_MPLL_CLK_EN);
-> +	clk_disable_unprepare(imxpriv->sata_ref_clk);
-> +}
-> +
-> +static struct ahci_platform_data imx6q_sata_pdata = {
-> +	.init = imx6q_sata_init,
-> +	.exit = imx6q_sata_exit,
-> +};
-> +
-> +static const struct of_device_id imx_ahci_of_match[] = {
-> +	{ .compatible = "fsl,imx6q-ahci", .data = &imx6q_sata_pdata},
-> +	{},
-> +};
-> +MODULE_DEVICE_TABLE(of, imx_ahci_of_match);
-> +
-> +static int imx_ahci_probe(struct platform_device *pdev) {
-> +	struct device *dev = &pdev->dev;
-> +	struct resource *mem, *irq, res[2];
-> +	const struct of_device_id *of_id;
-> +	const struct ahci_platform_data *pdata = NULL;
-> +	struct imx_ahci_priv *imxpriv;
-> +	struct device *ahci_dev;
-> +	struct platform_device *ahci_pdev;
-> +	int ret;
-> +
-> +	imxpriv = devm_kzalloc(dev, sizeof(*imxpriv), GFP_KERNEL);
-> +	if (!imxpriv) {
-> +		dev_err(dev, "can't alloc ahci_host_priv\n");
-> +		return -ENOMEM;
-> +	}
-> +
-> +	ahci_pdev = platform_device_alloc("ahci", -1);
-> +	if (!ahci_pdev)
-> +		return -ENODEV;
-> +
-> +	ahci_dev = &ahci_pdev->dev;
-> +	ahci_dev->parent = dev;
-> +
-> +	imxpriv->sata_ref_clk = devm_clk_get(dev, "sata_ref");
-> +	if (IS_ERR(imxpriv->sata_ref_clk)) {
-> +		dev_err(dev, "can't get sata_ref clock.\n");
-> +		ret = PTR_ERR(imxpriv->sata_ref_clk);
-> +		goto err_pdev_put;
-> +	}
-> +
-> +	imxpriv->ahci_pdev = ahci_pdev;
-> +	platform_set_drvdata(pdev, imxpriv);
-> +
-> +	of_id = of_match_device(imx_ahci_of_match, dev);
-> +	if (of_id) {
-> +		pdata = of_id->data;
-> +	} else {
-> +		ret = -EINVAL;
-> +		goto err_out;
-> +	}
-> +
-> +	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-> +	irq = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
-> +	if (!mem || !irq) {
-> +		dev_err(dev, "no mmio/irq resource\n");
-> +		ret = -ENOMEM;
-> +		goto err_out;
-> +	}
-> +
-> +	res[0] = *mem;
-> +	res[1] = *irq;
-> +
-> +	ahci_dev->coherent_dma_mask = DMA_BIT_MASK(32);
-> +	ahci_dev->dma_mask = &ahci_dev->coherent_dma_mask;
-> +	ahci_dev->of_node = dev->of_node;
-> +
-> +	ret = platform_device_add_resources(ahci_pdev, res, 2);
-> +	if (ret)
-> +		goto err_out;
-> +
-> +	ret = platform_device_add_data(ahci_pdev, pdata, sizeof(*pdata));
-> +	if (ret)
-> +		goto err_out;
-> +
-> +	ret = platform_device_add(ahci_pdev);
-> +	if (ret) {
-> +err_out:
-> +		platform_set_drvdata(pdev, NULL);
+[    2.212548] ahci 0000:00:1f.2: AHCI 0001.0200 32 slots 6 ports 3 Gbps 0x29 impl SATA mode
+[    2.220732] ahci 0000:00:1f.2: flags: 64bit ncq sntf led clo pmp pio slum part ccc sxs 
+[    2.228997] BUG: unable to handle kernel NULL pointer dereference at 0000000000000508
+[    2.236850] IP: [<ffffffff814084f7>] ahci_host_activate+0x87/0x140
+[    2.243047] PGD 0 
+[    2.245077] Oops: 0000 [#1] SMP 
+[    2.248335] Modules linked in:
+[    2.251405] CPU: 7 PID: 1 Comm: swapper/0 Not tainted 3.11.0-rc1+ #574
+[    2.257929] Hardware name: LENOVO 4157CTO/LENOVO, BIOS 60KT41AUS 01/04/2011
+[    2.264880] task: ffff880371508000 ti: ffff880371510000 task.ti: ffff880371510000
+[    2.272353] RIP: 0010:[<ffffffff814084f7>]  [<ffffffff814084f7>] ahci_host_activate+0x87/0x140
+[    2.280969] RSP: 0018:ffff880371511b38  EFLAGS: 00010293
+[    2.286273] RAX: ffff88036e724000 RBX: ffff88036e71c028 RCX: ffffffff8140bce0
+[    2.293397] RDX: 0000000000000000 RSI: 000000000000002f RDI: ffff88037122f098
+[    2.300521] RBP: ffff880371511b68 R08: 0000000000000080 R09: 0000000000000001
+[    2.307645] R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000001
+[    2.314772] R13: 000000000000002e R14: 0000000000000000 R15: ffff88037122f000
+[    2.321896] FS:  0000000000000000(0000) GS:ffff88037fdc0000(0000) knlGS:0000000000000000
+[    2.329973] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[    2.335711] CR2: 0000000000000508 CR3: 0000000001c0b000 CR4: 00000000000007e0
+[    2.342835] Stack:
+[    2.344848]  ffff88036e720000 ffff88037122f000 0000000000000005 ffff88037122f098
+[    2.352301]  ffff88036e734000 ffff88036e71c028 ffff880371511c38 ffffffff81408eae
+[    2.359756]  ffff880300000000 ffff88037122f098 ffff8803710be7a8 ffff880300000010
+[    2.367210] Call Trace:
+[    2.369655]  [<ffffffff81408eae>] ahci_init_one+0x8fe/0xaa0
+[    2.375221]  [<ffffffff816141cf>] ? _raw_spin_unlock_irqrestore+0x3f/0x70
+[    2.382006]  [<ffffffff8132529b>] local_pci_probe+0x4b/0x80
+[    2.387571]  [<ffffffff81325501>] pci_device_probe+0x111/0x120
+[    2.393405]  [<ffffffff813bf43b>] driver_probe_device+0x8b/0x390
+[    2.399411]  [<ffffffff813bf7eb>] __driver_attach+0xab/0xb0
+[    2.404984]  [<ffffffff813bf740>] ? driver_probe_device+0x390/0x390
+[    2.411241]  [<ffffffff813bd2cd>] bus_for_each_dev+0x5d/0xa0
+[    2.416893]  [<ffffffff813bed7e>] driver_attach+0x1e/0x20
+[    2.422284]  [<ffffffff813be917>] bus_add_driver+0x117/0x290
+[    2.427937]  [<ffffffff81d54755>] ? libata_transport_init+0x5e/0x5e
+[    2.434201]  [<ffffffff813bfc8a>] driver_register+0x7a/0x170
+[    2.439853]  [<ffffffff81d54755>] ? libata_transport_init+0x5e/0x5e
+[    2.446110]  [<ffffffff81324ce4>] __pci_register_driver+0x64/0x70
+[    2.452196]  [<ffffffff81d5476e>] ahci_pci_driver_init+0x19/0x1b
+[    2.458196]  [<ffffffff810002fa>] do_one_initcall+0xfa/0x1b0
+[    2.463853]  [<ffffffff8107b100>] ? parse_args+0x1f0/0x450
+[    2.469332]  [<ffffffff81d13ff8>] kernel_init_freeable+0x154/0x1e3
+[    2.475510]  [<ffffffff81d1383f>] ? do_early_param+0x8c/0x8c
+[    2.481163]  [<ffffffff81602140>] ? rest_init+0xe0/0xe0
+[    2.486390]  [<ffffffff8160214e>] kernel_init+0xe/0xf0
+[    2.491530]  [<ffffffff8161cf5c>] ret_from_fork+0x7c/0xb0
+[    2.496928]  [<ffffffff81602140>] ? rest_init+0xe0/0xe0
+[    2.502144] Code: 88 00 00 00 49 63 c4 48 8b 7b 38 43 8d 34 2c 48 8b 84 c3 00 01 00 00 41 b8 80 00 00 00 48 c7 c1 e0 bc 40 81 48 8b 90 78 37 00 00 <4c> 8b 8a 08 05 00 00 48 89 04 24 48 c7 c2 90 be 40 81 e8 f2 b7 
+[    2.522097] RIP  [<ffffffff814084f7>] ahci_host_activate+0x87/0x140
+[    2.528372]  RSP <ffff880371511b38>
+[    2.531858] CR2: 0000000000000508
+[    2.535184] ---[ end trace 66267c9b7b73f56b ]---
+[    2.539808] Kernel panic - not syncing: Attempted to kill init! exitcode=0x00000009
 
-I do not think you need this.
-[Richard] ok, they would be removed.
 
-> +		devm_clk_put(dev, imxpriv->sata_ref_clk);
-
-The good thing about using devm_clk_get() above is you do not need to explicitly call devm_clk_put() on either .remove or .probe failure.
-[Richard] ok, they would be removed.
-
-> +err_pdev_put:
-> +		platform_device_put(ahci_pdev);
-> +		return ret;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static int imx_ahci_remove(struct platform_device *pdev) {
-> +	struct imx_ahci_priv *imxpriv = platform_get_drvdata(pdev);
-> +	struct platform_device *ahci_pdev = imxpriv->ahci_pdev;
-> +
-> +	platform_device_unregister(ahci_pdev);
-> +	platform_set_drvdata(pdev, NULL);
-
-Ditto, you do not need to do this.
-[Richard] ok, they would be removed. 
-
-Shawn
-
-> +	return 0;
-> +}
-> +
-> +static struct platform_driver imx_ahci_driver = {
-> +	.probe = imx_ahci_probe,
-> +	.remove = imx_ahci_remove,
-> +	.driver = {
-> +		.name = "sata-imx",
-> +		.owner = THIS_MODULE,
-> +		.of_match_table = imx_ahci_of_match,
-> +	},
-> +};
-> +module_platform_driver(imx_ahci_driver);
-> +
-> +MODULE_DESCRIPTION("Freescale i.MX AHCI SATA platform driver"); 
-> +MODULE_AUTHOR("Richard Zhu <Hong-Xing.Zhu@freescale.com>"); 
-> +MODULE_LICENSE("GPL"); MODULE_ALIAS("sata:imx");
-> --
-> 1.7.5.4
-> 
