@@ -1,7 +1,7 @@
 From: Xiaotian Feng <xtfeng@gmail.com>
 Subject: Re: ahci_host_activate NULL pointer (was Re: Linux 3.11-rc1)
-Date: Mon, 15 Jul 2013 17:24:02 -0400
-Message-ID: <CAJn8CcEYN=4mvejM6VX_nV892JvedsOCZiuNtdexnyL8EoTSJQ@mail.gmail.com>
+Date: Mon, 15 Jul 2013 21:02:39 -0400
+Message-ID: <CAJn8CcHbFtNxDr6N1qjUe_2RUSU=VqN9_XBRNi5rBHnV65bQ4w@mail.gmail.com>
 References: <CA+55aFyfTJKRnsFHGxQ+-2+GVstMUj6t4f0q5-8wJMbN-Y93+g@mail.gmail.com>
 	<1373906960.8441.258.camel@ul30vt.home>
 	<1373909907.8441.259.camel@ul30vt.home>
@@ -11,10 +11,10 @@ References: <CA+55aFyfTJKRnsFHGxQ+-2+GVstMUj6t4f0q5-8wJMbN-Y93+g@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f43.google.com ([209.85.216.43]:52351 "EHLO
-	mail-qa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756164Ab3GOVYE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Jul 2013 17:24:04 -0400
+Received: from mail-qe0-f42.google.com ([209.85.128.42]:37787 "EHLO
+	mail-qe0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755371Ab3GPBCk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Jul 2013 21:02:40 -0400
 In-Reply-To: <1373917448.8441.264.camel@ul30vt.home>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -175,15 +175,36 @@ On Mon, Jul 15, 2013 at 3:44 PM, Alex Williamson
 > because ->private_data is null.  Thanks,
 >
 
-My bad, I should have seen "ahci 0000:00:1f.2: AHCI 0001.0200 32 slots
-6 ports 3 Gbps
-0x29 impl SATA mode"....
+I think following patch can fix this panic. For ahci ports, when the
+port is dummy port, its private_data will be NULL, as dummy_port_ops
+doesn't support ->port_start. Could you please try this?
 
-I think the root cause is, if the port is disabled/not implemented,
-ap->ops is ata_dummy_port_ops, which doesn't have
-a ->port_start.
+drivers/ata/ahci.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-Could you please check if ata_port_is_dummy(host->ports[i]) is true on i = 1?
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 5064f3e..26e07ba 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1147,10 +1147,16 @@ int ahci_host_activate(struct ata_host *host,
+int irq, unsigned int n_msis)
+
+        for (i = 0; i < host->n_ports; i++) {
+                struct ahci_port_priv *pp = host->ports[i]->private_data;
++               const char *desc;
++
++               if (ata_port_is_dummy(host->ports[i]))
++                       desc = dev_driver_string(host->dev);
++               else
++                       desc = pp->irq_desc;
+
+                rc = devm_request_threaded_irq(host->dev,
+                        irq + i, ahci_hw_interrupt, ahci_thread_fn, IRQF_SHARED,
+-                       pp->irq_desc, host->ports[i]);
++                       desc, host->ports[i]);
+                if (rc)
+                        goto out_free_irqs;
+        }
 
 
 > Alex
