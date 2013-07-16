@@ -1,50 +1,39 @@
-From: Zhu Richard-R65037 <r65037@freescale.com>
-Subject: RE: [v7 2/3] ARM: imx6q: update the sata bits definitions of gpr13
-Date: Tue, 16 Jul 2013 09:18:25 +0000
-Message-ID: <0E83723C55F66F43A6041464FE31119D33DA0D@039-SN2MPN1-011.039d.mgd.msft.net>
-References: <1373945328-20893-1-git-send-email-Hong-Xing.Zhu@freescale.com>
- <1373945328-20893-3-git-send-email-Hong-Xing.Zhu@freescale.com>
- <20130716033951.GG28375@S2101-09.ap.freescale.net>
- <0E83723C55F66F43A6041464FE31119D33D959@039-SN2MPN1-011.039d.mgd.msft.net>
- <20130716080521.GI28375@S2101-09.ap.freescale.net>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] libata: move 'struct ata_taskfile' and friends from
+ ata.h to libata.h
+Date: Tue, 16 Jul 2013 05:47:29 -0600
+Message-ID: <20130716114729.GA23827@mtj.dyndns.org>
+References: <201307010001.32816.sergei.shtylyov@cogentembedded.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ch1ehsobe002.messaging.microsoft.com ([216.32.181.182]:49593
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753658Ab3GPJSa convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 Jul 2013 05:18:30 -0400
-In-Reply-To: <20130716080521.GI28375@S2101-09.ap.freescale.net>
-Content-Language: en-US
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:35096 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932306Ab3GPLri (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Jul 2013 07:47:38 -0400
+Received: by mail-pa0-f43.google.com with SMTP id hz11so694879pad.2
+        for <linux-ide@vger.kernel.org>; Tue, 16 Jul 2013 04:47:37 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <201307010001.32816.sergei.shtylyov@cogentembedded.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Shawn Guo <shawn.guo@linaro.org>
-Cc: "tj@kernel.org" <tj@kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>, "rob.herring@calxeda.com" <rob.herring@calxeda.com>, "s.hauer@pengutronix.de" <s.hauer@pengutronix.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: linux-ide@vger.kernel.org
 
-Thanks.
-Yes, it is. Both #2 and #3 should be merged together.
-
-Best Regards
-Richard Zhu
-
-
------Original Message-----
-From: Shawn Guo [mailto:shawn.guo@linaro.org] 
-Sent: Tuesday, July 16, 2013 4:05 PM
-To: Zhu Richard-R65037
-Cc: tj@kernel.org; linux-arm-kernel@lists.infradead.org; jgarzik@pobox.com; rob.herring@calxeda.com; s.hauer@pengutronix.de; linux-ide@vger.kernel.org
-Subject: Re: [v7 2/3] ARM: imx6q: update the sata bits definitions of gpr13
-
-On Tue, Jul 16, 2013 at 07:56:52AM +0000, Zhu Richard-R65037 wrote:
-> Hi Shawn:
-> Thanks.
+On Mon, Jul 01, 2013 at 12:01:32AM +0400, Sergei Shtylyov wrote:
+> From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 > 
-> Hi Tejun:
-> Can you help to pick up the #3 of this patch-set?
+> Move 'struct ata_taskfile', ata_prot_flags() and their friends from
+> <linux/ata.h> to <linux/libata.h>. They were misplaced from the beginning,  as
+> <linux/ata.h> should cover ATA/ATAPI and related standards only -- to which the
+> aforementioned structure and function have only remote relation. 
+> 
+> I would have moved 'enum ata_tf_protocols' closely related to 'struct
+> ata_taskfile' but it unfortunately gets used by 'drivers/ide/ide-ioctls.c'...
+> 
+> Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-#2 and #3, I think.
+Applied to libata/for-3.12.  Thanks!
 
-Shawn
-
+-- 
+tejun
