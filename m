@@ -1,15 +1,15 @@
 From: Richard Zhu <richard.zhuhongxing@gmail.com>
-Subject: [v7 1/3] ARM: dtsi: enable ahci sata on imx6q platforms
-Date: Tue, 16 Jul 2013 11:28:46 +0800
-Message-ID: <1373945328-20893-2-git-send-email-Hong-Xing.Zhu@freescale.com>
+Subject: [v7 2/3] ARM: imx6q: update the sata bits definitions of gpr13
+Date: Tue, 16 Jul 2013 11:28:47 +0800
+Message-ID: <1373945328-20893-3-git-send-email-Hong-Xing.Zhu@freescale.com>
 References: <1373945328-20893-1-git-send-email-Hong-Xing.Zhu@freescale.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:42739 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755257Ab3GPD00 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Jul 2013 23:26:26 -0400
-Received: by mail-pa0-f50.google.com with SMTP id fb1so288342pad.23
-        for <linux-ide@vger.kernel.org>; Mon, 15 Jul 2013 20:26:25 -0700 (PDT)
+Received: from mail-pb0-f50.google.com ([209.85.160.50]:46727 "EHLO
+	mail-pb0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753834Ab3GPD0a (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Jul 2013 23:26:30 -0400
+Received: by mail-pb0-f50.google.com with SMTP id wz7so196987pbc.37
+        for <linux-ide@vger.kernel.org>; Mon, 15 Jul 2013 20:26:30 -0700 (PDT)
 In-Reply-To: <1373945328-20893-1-git-send-email-Hong-Xing.Zhu@freescale.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -18,82 +18,143 @@ Cc: linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, tj@kernel.org, rob.
 
 From: Richard Zhu <r65037@freescale.com>
 
-Only imx6q has the ahci sata controller, enable
-it on imx6q platforms.
+Replace the SATA_PHY_# by the more readable definitons.
 
 Signed-off-by: Richard Zhu <r65037@freescale.com>
 ---
- arch/arm/boot/dts/imx6q-sabreauto.dts |    4 ++++
- arch/arm/boot/dts/imx6q-sabrelite.dts |    4 ++++
- arch/arm/boot/dts/imx6q-sabresd.dts   |    4 ++++
- arch/arm/boot/dts/imx6q.dtsi          |    9 +++++++++
- 4 files changed, 21 insertions(+), 0 deletions(-)
+ include/linux/mfd/syscon/imx6q-iomuxc-gpr.h |  121 ++++++++++++++++++--------
+ 1 files changed, 84 insertions(+), 37 deletions(-)
 
-diff --git a/arch/arm/boot/dts/imx6q-sabreauto.dts b/arch/arm/boot/dts/imx6q-sabreauto.dts
-index 09a7580..18efcbd 100644
---- a/arch/arm/boot/dts/imx6q-sabreauto.dts
-+++ b/arch/arm/boot/dts/imx6q-sabreauto.dts
-@@ -20,6 +20,10 @@
- 	compatible = "fsl,imx6q-sabreauto", "fsl,imx6q";
- };
- 
-+&sata {
-+	status = "okay";
-+};
-+
- &iomuxc {
- 	pinctrl-names = "default";
- 	pinctrl-0 = <&pinctrl_hog>;
-diff --git a/arch/arm/boot/dts/imx6q-sabrelite.dts b/arch/arm/boot/dts/imx6q-sabrelite.dts
-index 6a00066..6021c99 100644
---- a/arch/arm/boot/dts/imx6q-sabrelite.dts
-+++ b/arch/arm/boot/dts/imx6q-sabrelite.dts
-@@ -65,6 +65,10 @@
- 	};
- };
- 
-+&sata {
-+	status = "okay";
-+};
-+
- &ecspi1 {
- 	fsl,spi-num-chipselects = <1>;
- 	cs-gpios = <&gpio3 19 0>;
-diff --git a/arch/arm/boot/dts/imx6q-sabresd.dts b/arch/arm/boot/dts/imx6q-sabresd.dts
-index 0038228..d5a90c3 100644
---- a/arch/arm/boot/dts/imx6q-sabresd.dts
-+++ b/arch/arm/boot/dts/imx6q-sabresd.dts
-@@ -20,6 +20,10 @@
- 	compatible = "fsl,imx6q-sabresd", "fsl,imx6q";
- };
- 
-+&sata {
-+	status = "okay";
-+};
-+
- &iomuxc {
- 	pinctrl-names = "default";
- 	pinctrl-0 = <&pinctrl_hog>;
-diff --git a/arch/arm/boot/dts/imx6q.dtsi b/arch/arm/boot/dts/imx6q.dtsi
-index e7dd2c4..af64b81 100644
---- a/arch/arm/boot/dts/imx6q.dtsi
-+++ b/arch/arm/boot/dts/imx6q.dtsi
-@@ -424,6 +424,15 @@
- 			};
- 		};
- 
-+		sata: sata@02200000 {
-+			compatible = "fsl,imx6q-ahci";
-+			reg = <0x02200000 0x4000>;
-+			interrupts = <0 39 0x04>;
-+			clocks =  <&clks 154>, <&clks 187>, <&clks 105>;
-+			clock-names = "sata", "sata_ref", "ahb";
-+			status = "disabled";
-+		};
-+
- 		ipu2: ipu@02800000 {
- 			#crtc-cells = <1>;
- 			compatible = "fsl,imx6q-ipu";
+diff --git a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
+index dab34a1..e235251 100644
+--- a/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
++++ b/include/linux/mfd/syscon/imx6q-iomuxc-gpr.h
+@@ -279,41 +279,88 @@
+ #define IMX6Q_GPR13_CAN2_STOP_REQ		BIT(29)
+ #define IMX6Q_GPR13_CAN1_STOP_REQ		BIT(28)
+ #define IMX6Q_GPR13_ENET_STOP_REQ		BIT(27)
+-#define IMX6Q_GPR13_SATA_PHY_8_MASK		(0x7 << 24)
+-#define IMX6Q_GPR13_SATA_PHY_8_0_5_DB		(0x0 << 24)
+-#define IMX6Q_GPR13_SATA_PHY_8_1_0_DB		(0x1 << 24)
+-#define IMX6Q_GPR13_SATA_PHY_8_1_5_DB		(0x2 << 24)
+-#define IMX6Q_GPR13_SATA_PHY_8_2_0_DB		(0x3 << 24)
+-#define IMX6Q_GPR13_SATA_PHY_8_2_5_DB		(0x4 << 24)
+-#define IMX6Q_GPR13_SATA_PHY_8_3_0_DB		(0x5 << 24)
+-#define IMX6Q_GPR13_SATA_PHY_8_3_5_DB		(0x6 << 24)
+-#define IMX6Q_GPR13_SATA_PHY_8_4_0_DB		(0x7 << 24)
+-#define IMX6Q_GPR13_SATA_PHY_7_MASK		(0x1f << 19)
+-#define IMX6Q_GPR13_SATA_PHY_7_SATA1I		(0x10 << 19)
+-#define IMX6Q_GPR13_SATA_PHY_7_SATA1M		(0x10 << 19)
+-#define IMX6Q_GPR13_SATA_PHY_7_SATA1X		(0x1a << 19)
+-#define IMX6Q_GPR13_SATA_PHY_7_SATA2I		(0x12 << 19)
+-#define IMX6Q_GPR13_SATA_PHY_7_SATA2M		(0x12 << 19)
+-#define IMX6Q_GPR13_SATA_PHY_7_SATA2X		(0x1a << 19)
+-#define IMX6Q_GPR13_SATA_PHY_6_MASK		(0x7 << 16)
+-#define IMX6Q_GPR13_SATA_SPEED_MASK		BIT(15)
+-#define IMX6Q_GPR13_SATA_SPEED_1P5G		0x0
+-#define IMX6Q_GPR13_SATA_SPEED_3P0G		BIT(15)
+-#define IMX6Q_GPR13_SATA_PHY_5			BIT(14)
+-#define IMX6Q_GPR13_SATA_PHY_4_MASK		(0x7 << 11)
+-#define IMX6Q_GPR13_SATA_PHY_4_16_16		(0x0 << 11)
+-#define IMX6Q_GPR13_SATA_PHY_4_14_16		(0x1 << 11)
+-#define IMX6Q_GPR13_SATA_PHY_4_12_16		(0x2 << 11)
+-#define IMX6Q_GPR13_SATA_PHY_4_10_16		(0x3 << 11)
+-#define IMX6Q_GPR13_SATA_PHY_4_9_16		(0x4 << 11)
+-#define IMX6Q_GPR13_SATA_PHY_4_8_16		(0x5 << 11)
+-#define IMX6Q_GPR13_SATA_PHY_3_MASK		(0xf << 7)
+-#define IMX6Q_GPR13_SATA_PHY_3_OFF		0x7
+-#define IMX6Q_GPR13_SATA_PHY_2_MASK		(0x1f << 2)
+-#define IMX6Q_GPR13_SATA_PHY_2_OFF		0x2
+-#define IMX6Q_GPR13_SATA_PHY_1_MASK		(0x3 << 0)
+-#define IMX6Q_GPR13_SATA_PHY_1_FAST		(0x0 << 0)
+-#define IMX6Q_GPR13_SATA_PHY_1_MED		(0x1 << 0)
+-#define IMX6Q_GPR13_SATA_PHY_1_SLOW		(0x2 << 0)
+-
++#define IMX6Q_GPR13_SATA_RX_EQ_VAL_MASK		(0x7 << 24)
++#define IMX6Q_GPR13_SATA_RX_EQ_VAL_0_5_DB	(0x0 << 24)
++#define IMX6Q_GPR13_SATA_RX_EQ_VAL_1_0_DB	(0x1 << 24)
++#define IMX6Q_GPR13_SATA_RX_EQ_VAL_1_5_DB	(0x2 << 24)
++#define IMX6Q_GPR13_SATA_RX_EQ_VAL_2_0_DB	(0x3 << 24)
++#define IMX6Q_GPR13_SATA_RX_EQ_VAL_2_5_DB	(0x4 << 24)
++#define IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB	(0x5 << 24)
++#define IMX6Q_GPR13_SATA_RX_EQ_VAL_3_5_DB	(0x6 << 24)
++#define IMX6Q_GPR13_SATA_RX_EQ_VAL_4_0_DB	(0x7 << 24)
++#define IMX6Q_GPR13_SATA_RX_LOS_LVL_MASK	(0x1f << 19)
++#define IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA1I	(0x10 << 19)
++#define IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA1M	(0x10 << 19)
++#define IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA1X	(0x1a << 19)
++#define IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2I	(0x12 << 19)
++#define IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M	(0x12 << 19)
++#define IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2X	(0x1a << 19)
++#define IMX6Q_GPR13_SATA_RX_DPLL_MODE_MASK	(0x7 << 16)
++#define IMX6Q_GPR13_SATA_RX_DPLL_MODE_1P_1F	(0x0 << 16)
++#define IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_2F	(0x1 << 16)
++#define IMX6Q_GPR13_SATA_RX_DPLL_MODE_1P_4F	(0x2 << 16)
++#define IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_4F	(0x3 << 16)
++#define IMX6Q_GPR13_SATA_SPD_MODE_MASK		BIT(15)
++#define IMX6Q_GPR13_SATA_SPD_MODE_1P5G		0x0
++#define IMX6Q_GPR13_SATA_SPD_MODE_3P0G		BIT(15)
++#define IMX6Q_GPR13_SATA_MPLL_SS_EN		BIT(14)
++#define IMX6Q_GPR13_SATA_TX_ATTEN_MASK		(0x7 << 11)
++#define IMX6Q_GPR13_SATA_TX_ATTEN_16_16		(0x0 << 11)
++#define IMX6Q_GPR13_SATA_TX_ATTEN_14_16		(0x1 << 11)
++#define IMX6Q_GPR13_SATA_TX_ATTEN_12_16		(0x2 << 11)
++#define IMX6Q_GPR13_SATA_TX_ATTEN_10_16		(0x3 << 11)
++#define IMX6Q_GPR13_SATA_TX_ATTEN_9_16		(0x4 << 11)
++#define IMX6Q_GPR13_SATA_TX_ATTEN_8_16		(0x5 << 11)
++#define IMX6Q_GPR13_SATA_TX_BOOST_MASK		(0xf << 7)
++#define IMX6Q_GPR13_SATA_TX_BOOST_0_00_DB	(0x0 << 7)
++#define IMX6Q_GPR13_SATA_TX_BOOST_0_37_DB	(0x1 << 7)
++#define IMX6Q_GPR13_SATA_TX_BOOST_0_74_DB	(0x2 << 7)
++#define IMX6Q_GPR13_SATA_TX_BOOST_1_11_DB	(0x3 << 7)
++#define IMX6Q_GPR13_SATA_TX_BOOST_1_48_DB	(0x4 << 7)
++#define IMX6Q_GPR13_SATA_TX_BOOST_1_85_DB	(0x5 << 7)
++#define IMX6Q_GPR13_SATA_TX_BOOST_2_22_DB	(0x6 << 7)
++#define IMX6Q_GPR13_SATA_TX_BOOST_2_59_DB	(0x7 << 7)
++#define IMX6Q_GPR13_SATA_TX_BOOST_2_96_DB	(0x8 << 7)
++#define IMX6Q_GPR13_SATA_TX_BOOST_3_33_DB	(0x9 << 7)
++#define IMX6Q_GPR13_SATA_TX_BOOST_3_70_DB	(0xa << 7)
++#define IMX6Q_GPR13_SATA_TX_BOOST_4_07_DB	(0xb << 7)
++#define IMX6Q_GPR13_SATA_TX_BOOST_4_44_DB	(0xc << 7)
++#define IMX6Q_GPR13_SATA_TX_BOOST_4_81_DB	(0xd << 7)
++#define IMX6Q_GPR13_SATA_TX_BOOST_5_28_DB	(0xe << 7)
++#define IMX6Q_GPR13_SATA_TX_BOOST_5_75_DB	(0xf << 7)
++#define IMX6Q_GPR13_SATA_TX_LVL_MASK		(0x1f << 2)
++#define IMX6Q_GPR13_SATA_TX_LVL_0_937_V		(0x00 << 2)
++#define IMX6Q_GPR13_SATA_TX_LVL_0_947_V		(0x01 << 2)
++#define IMX6Q_GPR13_SATA_TX_LVL_0_957_V		(0x02 << 2)
++#define IMX6Q_GPR13_SATA_TX_LVL_0_966_V		(0x03 << 2)
++#define IMX6Q_GPR13_SATA_TX_LVL_0_976_V		(0x04 << 2)
++#define IMX6Q_GPR13_SATA_TX_LVL_0_986_V		(0x05 << 2)
++#define IMX6Q_GPR13_SATA_TX_LVL_0_996_V		(0x06 << 2)
++#define IMX6Q_GPR13_SATA_TX_LVL_1_005_V		(0x07 << 2)
++#define IMX6Q_GPR13_SATA_TX_LVL_1_015_V		(0x08 << 2)
++#define IMX6Q_GPR13_SATA_TX_LVL_1_025_V		(0x09 << 2)
++#define IMX6Q_GPR13_SATA_TX_LVL_1_035_V		(0x0a << 2)
++#define IMX6Q_GPR13_SATA_TX_LVL_1_045_V		(0x0b << 2)
++#define IMX6Q_GPR13_SATA_TX_LVL_1_054_V		(0x0c << 2)
++#define IMX6Q_GPR13_SATA_TX_LVL_1_064_V		(0x0d << 2)
++#define IMX6Q_GPR13_SATA_TX_LVL_1_074_V		(0x0e << 2)
++#define IMX6Q_GPR13_SATA_TX_LVL_1_084_V		(0x0f << 2)
++#define IMX6Q_GPR13_SATA_TX_LVL_1_094_V		(0x10 << 2)
++#define IMX6Q_GPR13_SATA_TX_LVL_1_104_V		(0x11 << 2)
++#define IMX6Q_GPR13_SATA_TX_LVL_1_113_V		(0x12 << 2)
++#define IMX6Q_GPR13_SATA_TX_LVL_1_123_V		(0x13 << 2)
++#define IMX6Q_GPR13_SATA_TX_LVL_1_133_V		(0x14 << 2)
++#define IMX6Q_GPR13_SATA_TX_LVL_1_143_V		(0x15 << 2)
++#define IMX6Q_GPR13_SATA_TX_LVL_1_152_V		(0x16 << 2)
++#define IMX6Q_GPR13_SATA_TX_LVL_1_162_V		(0x17 << 2)
++#define IMX6Q_GPR13_SATA_TX_LVL_1_172_V		(0x18 << 2)
++#define IMX6Q_GPR13_SATA_TX_LVL_1_182_V		(0x19 << 2)
++#define IMX6Q_GPR13_SATA_TX_LVL_1_191_V		(0x1a << 2)
++#define IMX6Q_GPR13_SATA_TX_LVL_1_201_V		(0x1b << 2)
++#define IMX6Q_GPR13_SATA_TX_LVL_1_211_V		(0x1c << 2)
++#define IMX6Q_GPR13_SATA_TX_LVL_1_221_V		(0x1d << 2)
++#define IMX6Q_GPR13_SATA_TX_LVL_1_230_V		(0x1e << 2)
++#define IMX6Q_GPR13_SATA_TX_LVL_1_240_V		(0x1f << 2)
++#define IMX6Q_GPR13_SATA_MPLL_CLK_EN		BIT(1)
++#define IMX6Q_GPR13_SATA_TX_EDGE_RATE		BIT(0)
+ #endif /* __LINUX_IMX6Q_IOMUXC_GPR_H */
 -- 
 1.7.5.4
 
