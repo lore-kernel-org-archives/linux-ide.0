@@ -1,43 +1,31 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH] AHCI: fix Null pointer dereference in achi_host_active()
-Date: Tue, 16 Jul 2013 15:48:16 +0400
-Message-ID: <51E53300.6010000@cogentembedded.com>
-References: <1373951920-31699-1-git-send-email-xtfeng@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] ata: Fix DVD not dectected at some platform with
+ Wellsburg PCH
+Date: Tue, 16 Jul 2013 05:48:26 -0600
+Message-ID: <20130716114826.GB23827@mtj.dyndns.org>
+References: <1373591757-416-1-git-send-email-youquan.song@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-la0-f41.google.com ([209.85.215.41]:47155 "EHLO
-	mail-la0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932210Ab3GPLsR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Jul 2013 07:48:17 -0400
-Received: by mail-la0-f41.google.com with SMTP id fn20so443967lab.0
-        for <linux-ide@vger.kernel.org>; Tue, 16 Jul 2013 04:48:16 -0700 (PDT)
-In-Reply-To: <1373951920-31699-1-git-send-email-xtfeng@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <stable-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1373591757-416-1-git-send-email-youquan.song@intel.com>
+Sender: stable-owner@vger.kernel.org
+To: Youquan Song <youquan.song@intel.com>
+Cc: jgarzik@redhat.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, seth.heasley@intel.com, james.d.ralston@intel.com, ed.ciechanowski@intel.com, Youquan Song <youquan.song@linux.intel.com>, stable@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Xiaotian Feng <xtfeng@gmail.com>
-Cc: Alexander Gordeev <agordeev@redhat.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello.
+On Thu, Jul 11, 2013 at 09:15:57PM -0400, Youquan Song wrote:
+> There is a patch b55f84e2d527182e7c611d466cd0bb6ddce201de "ata_piix: Fix DVD
+>  not dectected at some Haswell platforms" to fix an issue of DVD not 
+> recognized on Haswell Desktop platform with Lynx Point. 
+> Recently, it is also found the same issue at some platformas with Wellsburg PCH.
+> 
+> So deliver a similar patch to fix it by disables 32bit PIO in IDE mode.
+> 
+> Signed-off-by: Youquan Song <youquan.song@intel.com>
+> Cc: stable@vger.kernel.org
 
-On 16-07-2013 9:18, Xiaotian Feng wrote:
+Applied to libata/for-3.12.  Thanks!
 
-> commit b29900e6 introuded a regression, which resulted Null pointer
-
-    Please also specify that commit's summary in parens.
-
-> dereference for achi host with dummy ports. For ahci ports, when the
-> port is dummy port, its private_data will be NULL, as ata_dummy_port_ops
-> doesn't support ->port_start.
-
-> Reported-and-tested-by: Alex Williamson <alex.williamson@redhat.com>
-> Signed-off-by: Xiaotian Feng <xtfeng@gmail.com>
-> Cc: Alexander Gordeev <agordeev@redhat.com>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: linux-ide@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-
-MBR, Sergei
-
-
+-- 
+tejun
