@@ -1,55 +1,70 @@
-From: Xiaotian Feng <xtfeng@gmail.com>
-Subject: [PATCH] AHCI: fix Null pointer dereference in achi_host_active()
-Date: Wed, 17 Jul 2013 14:10:39 +0800
-Message-ID: <1374041439-34122-1-git-send-email-xtfeng@gmail.com>
-References: <51E53300.6010000@cogentembedded.com>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
+Date: Wed, 17 Jul 2013 18:19:10 +0200
+Message-ID: <20130717161909.GB21468@dhcp-26-207.brq.redhat.com>
+References: <cover.1369155164.git.agordeev@redhat.com>
+ <20130521235003.GE6985@mtj.dyndns.org>
+ <20130522143923.GD19383@dhcp-26-207.brq.redhat.com>
+ <20130522170305.GD9563@kernel.dk>
+ <20130711102630.GA11133@dhcp-26-207.brq.redhat.com>
+ <1373583637.7397.370.camel@haakon3.risingtidesystems.com>
+ <20130712074559.GA8727@dhcp-26-207.brq.redhat.com>
+ <1373692812.7397.625.camel@haakon3.risingtidesystems.com>
+ <20130716183207.GA6402@dhcp-26-207.brq.redhat.com>
+ <1374010683.7397.880.camel@haakon3.risingtidesystems.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:45696 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751341Ab3GQGKw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Jul 2013 02:10:52 -0400
-In-Reply-To: <51E53300.6010000@cogentembedded.com>
+Received: from mx1.redhat.com ([209.132.183.28]:39353 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755052Ab3GQQVs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 17 Jul 2013 12:21:48 -0400
+Content-Disposition: inline
+In-Reply-To: <1374010683.7397.880.camel@haakon3.risingtidesystems.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-Cc: Xiaotian Feng <xtfeng@gmail.com>, Alexander Gordeev <agordeev@redhat.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Jens Axboe <axboe@kernel.dk>, linux-scsi <linux-scsi@vger.kernel.org>
 
-commit b29900e6 (AHCI: Make distinct names for ports in /proc/interrupts)
-introuded a regression, which resulted Null pointer dereference for achi
-host with dummy ports. For ahci ports, when the port is dummy port, its
-private_data will be NULL, as ata_dummy_port_ops doesn't support ->port_start.
+On Tue, Jul 16, 2013 at 02:38:03PM -0700, Nicholas A. Bellinger wrote:
+> [    7.927818] scsi_execute(): Calling blk_mq_free_request >>>
+> [    7.927826] scsi 0:0:0:0: Direct-Access     ATA      ST9500530NS      CC03 PQ: 0 ANSI: 5
+> 
+> OK, so INQUIRY response payload is looking as expected here.
 
-Reported-and-tested-by: Alex Williamson <alex.williamson@redhat.com>
-Signed-off-by: Xiaotian Feng <xtfeng@gmail.com>
-Cc: Alexander Gordeev <agordeev@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
- drivers/ata/ahci.c |    8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+Yep. It is not on the top of my head, but I remember something like INQUIRYs
+are emulated and thus do not have payload.
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 5064f3e..f1de689 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1147,10 +1147,16 @@ int ahci_host_activate(struct ata_host *host, int irq, unsigned int n_msis)
- 
- 	for (i = 0; i < host->n_ports; i++) {
- 		struct ahci_port_priv *pp = host->ports[i]->private_data;
-+		const char *desc;
- 
-+		if (ata_port_is_dummy(host->ports[i]))
-+			desc = dev_driver_string(host->dev);
-+		else
-+			desc = pp->irq_desc;
-+ 
- 		rc = devm_request_threaded_irq(host->dev,
- 			irq + i, ahci_hw_interrupt, ahci_thread_fn, IRQF_SHARED,
--			pp->irq_desc, host->ports[i]);
-+			desc, host->ports[i]);
- 		if (rc)
- 			goto out_free_irqs;
- 	}
+> [    7.927960] sd 0:0:0:0: [sda] Sector size 0 reported, assuming 512.
+> [    7.927964] sd 0:0:0:0: [sda] 1 512-byte logical blocks: (512 B/512 B)
+> [    7.927965] sd 0:0:0:0: [sda] 0-byte physical blocks
+> 
+> Strange..  READ_CAPACITY appears to be returning a payload as zeros..?
+
+Yep. Because blk_execute_rq() does not put the proper callback and data do
+not get copied from sg's to bounce buffer. That is why I tried to use
+blk_mq_execute_rq() instead. Once I do that, data start getting read and
+booting stops elsewhere.
+
+Of course, I was suspecting that change alone is not valid and wondered
+about the status of scsi-mq in the first place, and if more changes are
+coming.
+
+So I it turns out "req->errors + req->resid_len" issue (you described
+earlier) needs to be addressed before going forward with libata (only?).
+
+> Not sure why yet some control CDBs are getting back the expected
+> payload, while others are returning zeros..
+
+Bio buffers do not get updated from callback.
+
+> Also, looking at the included stack back-trace:
+
+[...]
+
+Thanks a lot for these and other your comments, Nicholas!
+
 -- 
-1.7.9.6 (Apple Git-31.1)
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
