@@ -1,25 +1,25 @@
 From: Jingoo Han <jg1.han@samsung.com>
-Subject: [PATCH] libata: replace strict_strtol() with kstrtol()
-Date: Fri, 19 Jul 2013 15:56:41 +0900
-Message-ID: <000901ce844d$1fa1aac0$5ee50040$@samsung.com>
+Subject: [PATCH] ide: replace strict_strtol() with kstrtol()
+Date: Fri, 19 Jul 2013 16:01:26 +0900
+Message-ID: <000b01ce844d$c9735490$5c59fdb0$@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:44034 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751310Ab3GSG4n (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Jul 2013 02:56:43 -0400
-Received: from epcpsbgr5.samsung.com
- (u145.gpu120.samsung.co.kr [203.254.230.145])
- by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+Received: from mailout1.samsung.com ([203.254.224.24]:29094 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750824Ab3GSHB2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Jul 2013 03:01:28 -0400
+Received: from epcpsbgr3.samsung.com
+ (u143.gpu120.samsung.co.kr [203.254.230.143])
+ by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
  (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MQ60032C8MG3LL0@mailout2.samsung.com> for
- linux-ide@vger.kernel.org; Fri, 19 Jul 2013 15:56:42 +0900 (KST)
+ with ESMTP id <0MQ600L7L8SNYDU0@mailout1.samsung.com> for
+ linux-ide@vger.kernel.org; Fri, 19 Jul 2013 16:01:27 +0900 (KST)
 Content-language: ko
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
+To: "David S. Miller" <davem@davemloft.net>
 Cc: linux-ide@vger.kernel.org, Jingoo Han <jg1.han@samsung.com>
 
 The usage of strict_strtol() is not preferred, because
@@ -28,15 +28,15 @@ used.
 
 Signed-off-by: Jingoo Han <jg1.han@samsung.com>
 ---
- drivers/ata/libata-scsi.c |    6 ++++--
+ drivers/ide/ide-park.c |    6 ++++--
  1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 83c0890..b1e880a 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -206,8 +206,10 @@ static ssize_t ata_scsi_park_store(struct device *device,
- 	unsigned long flags;
+diff --git a/drivers/ide/ide-park.c b/drivers/ide/ide-park.c
+index 6ab9ab2..f41558a 100644
+--- a/drivers/ide/ide-park.c
++++ b/drivers/ide/ide-park.c
+@@ -116,8 +116,10 @@ ssize_t ide_park_store(struct device *dev, struct device_attribute *attr,
+ 	long int input;
  	int rc;
  
 -	rc = strict_strtol(buf, 10, &input);
@@ -46,8 +46,8 @@ index 83c0890..b1e880a 100644
 +		return rc;
 +	if (input < -2)
  		return -EINVAL;
- 	if (input > ATA_TMOUT_MAX_PARK) {
- 		rc = -EOVERFLOW;
+ 	if (input > MAX_PARK_TIMEOUT) {
+ 		input = MAX_PARK_TIMEOUT;
 -- 
 1.7.10.4
 
