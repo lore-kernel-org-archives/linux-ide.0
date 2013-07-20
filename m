@@ -1,53 +1,48 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
-Date: Fri, 19 Jul 2013 14:05:34 -0700
-Message-ID: <1374267934.7397.1062.camel@haakon3.risingtidesystems.com>
-References: <cover.1369155164.git.agordeev@redhat.com>
-	 <20130521235003.GE6985@mtj.dyndns.org>
-	 <20130522143923.GD19383@dhcp-26-207.brq.redhat.com>
-	 <20130522170305.GD9563@kernel.dk>
-	 <20130711102630.GA11133@dhcp-26-207.brq.redhat.com>
-	 <1373583637.7397.370.camel@haakon3.risingtidesystems.com>
-	 <20130712074559.GA8727@dhcp-26-207.brq.redhat.com>
-	 <1373692812.7397.625.camel@haakon3.risingtidesystems.com>
-	 <20130716183207.GA6402@dhcp-26-207.brq.redhat.com>
-	 <1374010683.7397.880.camel@haakon3.risingtidesystems.com>
-	 <20130717161909.GB21468@dhcp-26-207.brq.redhat.com>
-	 <1374173515.7397.948.camel@haakon3.risingtidesystems.com>
-	 <51E83E32.9050306@cs.wisc.edu>
-	 <1374193399.7397.973.camel@haakon3.risingtidesystems.com>
-	 <51E96239.8080409@cs.wisc.edu>
+From: Marc C <marc.ceeeee@gmail.com>
+Subject: [PATCH] libata: Add additional queued command opcodes from SATA spec
+Date: Fri, 19 Jul 2013 18:17:14 -0700
+Message-ID: <CAO1A-8DmPXdM-XbzD18aQUYy4+Aph0jVwrSe1_spJJcRM57NNQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:36778 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751420Ab3GSVAH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Jul 2013 17:00:07 -0400
-In-Reply-To: <51E96239.8080409@cs.wisc.edu>
+Received: from mail-vb0-f47.google.com ([209.85.212.47]:49424 "EHLO
+	mail-vb0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752057Ab3GTBRP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Jul 2013 21:17:15 -0400
+Received: by mail-vb0-f47.google.com with SMTP id x14so3503526vbb.6
+        for <linux-ide@vger.kernel.org>; Fri, 19 Jul 2013 18:17:14 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Alexander Gordeev <agordeev@redhat.com>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, Jens Axboe <axboe@kernel.dk>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 
-On Fri, 2013-07-19 at 09:58 -0600, Mike Christie wrote:
-> On 07/18/2013 06:23 PM, Nicholas A. Bellinger wrote:
-> >> Just saw this while trying out iscsi with the scsi-mq stuff :)
-> >> > 
-> > Took at stab at this a while back, but ended getting distracted on other
-> > items.  Do you have an initial conversion running yet..?
-> 
-> Not running well :) Have a patch but I am debugging it now. I messed up
-> something with the cmd_size stuff.
+This patch adds the new queued opcodes to the ATA device command
+list.
 
-<nod>, looking forward to see ib_iser move beyond the existing
-scsi_request_fn() bottleneck.   ;)
+Rev 3.0 and 3.1 of the SATA spec introduced the following
+opcodes:
 
-Feel free to send me the WIP off-list if you'd like another pair of
-eyes.
+- NCQ QUEUE MANAGEMENT
+- SEND FPDMA QUEUED
+- RECEIVE FPDMA QUEUED
 
---nab
+Signed-off-by: Marc C <marc.ceeeee@gmail.com>
+---
+ include/linux/ata.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
-
-
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index ee0bd95..ae0e447 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -239,6 +239,9 @@ enum {
+     ATA_CMD_WRITE_QUEUED_FUA_EXT = 0x3E,
+     ATA_CMD_FPDMA_READ    = 0x60,
+     ATA_CMD_FPDMA_WRITE    = 0x61,
++    ATA_CMD_NCQ_QUEUE_MGMT    = 0x63,
++    ATA_CMD_FPDMA_SEND    = 0x64,
++    ATA_CMA_FPDMA_RECEIVE    = 0x65,
+     ATA_CMD_PIO_READ    = 0x20,
+     ATA_CMD_PIO_READ_EXT    = 0x24,
+     ATA_CMD_PIO_WRITE    = 0x30,
+--
+1.8.1.3
