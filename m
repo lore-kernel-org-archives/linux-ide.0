@@ -1,123 +1,45 @@
-From: Zhu Richard-R65037 <r65037@freescale.com>
-Subject: RE: [v3 3/3] sata: imx: add ahci sata support on imx platforms
-Date: Mon, 22 Jul 2013 07:02:56 +0000
-Message-ID: <0E83723C55F66F43A6041464FE31119D3441A3@039-SN2MPN1-011.039d.mgd.msft.net>
-References: <1373017942-12583-1-git-send-email-Hong-Xing.Zhu@freescale.com>
- <1373017942-12583-4-git-send-email-Hong-Xing.Zhu@freescale.com>
- <20130705174305.GA28088@mtj.dyndns.org>
- <0E83723C55F66F43A6041464FE31119D31432D@039-SN2MPN1-012.039d.mgd.msft.net>
- <20130706020737.GA9029@mtj.dyndns.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
+Date: Mon, 22 Jul 2013 17:03:59 +0200
+Message-ID: <20130722150359.GA16564@dhcp-26-207.brq.redhat.com>
+References: <20130717161909.GB21468@dhcp-26-207.brq.redhat.com>
+ <1374173515.7397.948.camel@haakon3.risingtidesystems.com>
+ <51E83E32.9050306@cs.wisc.edu>
+ <1374193399.7397.973.camel@haakon3.risingtidesystems.com>
+ <20130719003034.GG28005@kernel.dk>
+ <1374195825.7397.997.camel@haakon3.risingtidesystems.com>
+ <1374215660.7397.1041.camel@haakon3.risingtidesystems.com>
+ <1374248000.2266.20.camel@dabdike>
+ <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
+ <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tx2ehsobe005.messaging.microsoft.com ([65.55.88.15]:31969 "EHLO
-	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755101Ab3GVHDD convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 22 Jul 2013 03:03:03 -0400
-In-Reply-To: <20130706020737.GA9029@mtj.dyndns.org>
-Content-Language: en-US
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Richard Zhu <richard.zhuhongxing@gmail.com>, "shawn.guo@linaro.org" <shawn.guo@linaro.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>, "avorontsov@ru.mvista.com" <avorontsov@ru.mvista.com>, "rob.herring@calxeda.com" <rob.herring@calxeda.com>, "s.hauer@pengutronix.de" <s.hauer@pengutronix.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hi Tejun:
-Re-send this email to you and community.
-I'm afraid that you may be missed or don't receive it.
+On Fri, Jul 19, 2013 at 09:56:02PM -0700, Nicholas A. Bellinger wrote:
+> On Fri, 2013-07-19 at 14:01 -0700, Nicholas A. Bellinger wrote:
+> OK, after further investigation the root cause is a actually a missing
+> bio->bio_end_io() -> bio_copy_kern_endio() -> bio_put() from the
+> blk_end_sync_rq() callback path that scsi-mq REQ_TYPE_BLOCK_PC is
+> currently using.
 
-BTW, can you help to pick up the #2 and #3(reviewed and acked by Shawn) of the v7 patch-set of this serial?
-Thanks in advance.
+Yes, missing bio_copy_kern_endio() callback is exactly the reason I
+turned to blk_mq_execute_rq() initially. I should have been more
+specific on this :|
 
-2013/7/10 HongXing Zhu <richard.zhuhongxing@gmail.com>
+I will try Mike's and your other change, hopefully soon (sorry,
+constantly getting distracted).
 
-    Hi Tejun:
-    There are some differences between generic AHCI controller and imx AHCI controller.
+> Including the following patch into the scsi-mq working branch now, and
+> reverting the libata dma_alignment=0x03 hack.
 
-    The bits definitions of the HBA registers, the Vendor
-    Specific registers, and the AHCI PHY clock, and the PHY signal adjustment window.
-
-     - CAP_SSS(bit20) of the HOST_CAP is writable, default
-     value is '0', should be configured to be '1'
-     - bit0 (only one AHCI SATA port on imx6q) of the
-     HOST_PORTS_IMPL should be set to be '1'.(default 0)
-     - One Vendor Specific register HOST_TIMER1MS(offset:0xe0)
-     should be configured regarding to the frequency of AHB
-     bus clock.
-     - Configurations of the AHCI PHY clock, and the signal
-     parameters of the GPR13
-
-    I'm afraid that the generic ahci_platform driver is not a good place to contain
-    imx6q ahci specific differences.
-    As I know that, the AHCI sata on imx53 doesn't have the PHY signal parameters
-    adjustment window, but the AHCI sata on imx6q does has one.
-
-    On imx6q, the standard .port_ops = &ahci_platform_ops, is used, but
-    .port_ops       = &ahci_platform_retry_srst_ops, would be required by imx53 AHCI controller.
-
-    We can put all the imx AHCI(imx6q, imx53) specific difference into the sata_imx driver,
-    and keep ahci_platform as clean as possible, if the separate sata_imx driver can be created.
-
-    How do you think about that?
-
-    BTW, the version4 patch-set would be sent out  a moment later, any suggests and comments are appreciated.
-
-    Best Regards.
-
-
-    2013/7/6 Tejun Heo <tj@kernel.org>
-
-        Hello,
-
-        On Sat, Jul 06, 2013 at 02:03:30AM +0000, Zhu Richard-R65037 wrote:
-        > [Richard] Just like what we dicussed in the previous v1/v2
-        > patch-set.  Shawn has the concerns that the IP speicific codes
-        > shouldn't be put in the platform level.  So he suggested that setup
-        > a stand-alone driver, contained the imx6q ahci sata specific codes,
-        > and re-use the generic ahci_platform driver as much as possible.
-        > This imx6q standalone ahci sata driver just registers the platform
-        > data, and the others would be handled by ahci_platform driver.
-
-        Oh, I'm not objecting to the ahci specific part not being in platform
-        code.  I'm wondering whether specific handling for imx6q can be
-        included into ahci_platform rather than being in its own driver.  It
-        just seems that there aren't too many differences.  I could be
-        misreading it so if there are enough differences to warrant a separate
-        driver, please enlighten me.
-
-        Thanks!
-
-        --
-        tejun
-
-Best Regards
-Richard Zhu
-
-
------Original Message-----
-From: Tejun Heo [mailto:htejun@gmail.com] On Behalf Of Tejun Heo
-Sent: Saturday, July 06, 2013 10:08 AM
-To: Zhu Richard-R65037
-Cc: Richard Zhu; shawn.guo@linaro.org; linux-arm-kernel@lists.infradead.org; jgarzik@pobox.com; avorontsov@ru.mvista.com; rob.herring@calxeda.com; s.hauer@pengutronix.de; linux-ide@vger.kernel.org
-Subject: Re: [v3 3/3] sata: imx: add ahci sata support on imx platforms
-
-Hello,
-
-On Sat, Jul 06, 2013 at 02:03:30AM +0000, Zhu Richard-R65037 wrote:
-> [Richard] Just like what we dicussed in the previous v1/v2 patch-set.  
-> Shawn has the concerns that the IP speicific codes shouldn't be put in 
-> the platform level.  So he suggested that setup a stand-alone driver, 
-> contained the imx6q ahci sata specific codes, and re-use the generic 
-> ahci_platform driver as much as possible.
-> This imx6q standalone ahci sata driver just registers the platform 
-> data, and the others would be handled by ahci_platform driver.
-
-Oh, I'm not objecting to the ahci specific part not being in platform code.  I'm wondering whether specific handling for imx6q can be included into ahci_platform rather than being in its own driver.  It just seems that there aren't too many differences.  I could be misreading it so if there are enough differences to warrant a separate driver, please enlighten me.
-
-Thanks!
-
---
-tejun
-
-
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
