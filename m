@@ -1,61 +1,41 @@
-From: Marc C <marc.ceeeee@gmail.com>
-Subject: Re: [PATCH] libata: Add additional queued command opcodes from SATA spec
-Date: Mon, 22 Jul 2013 13:42:42 -0700
-Message-ID: <7D07DE2D-D421-4E79-AB4B-27566DCB3655@gmail.com>
-References: <CAO1A-8DmPXdM-XbzD18aQUYy4+Aph0jVwrSe1_spJJcRM57NNQ@mail.gmail.com> <20130722200014.GA4042@mtj.dyndns.org>
-Mime-Version: 1.0 (Mac OS X Mail 6.5 \(1508\))
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] libata: Add additional queued command opcodes from SATA
+ spec
+Date: Mon, 22 Jul 2013 16:45:10 -0400
+Message-ID: <20130722204510.GC13040@mtj.dyndns.org>
+References: <CAO1A-8DmPXdM-XbzD18aQUYy4+Aph0jVwrSe1_spJJcRM57NNQ@mail.gmail.com>
+ <20130722200014.GA4042@mtj.dyndns.org>
+ <7D07DE2D-D421-4E79-AB4B-27566DCB3655@gmail.com>
+Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:36667 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753873Ab3GVUmp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Jul 2013 16:42:45 -0400
-Received: by mail-pa0-f48.google.com with SMTP id kp1so3173039pab.21
-        for <linux-ide@vger.kernel.org>; Mon, 22 Jul 2013 13:42:44 -0700 (PDT)
-In-Reply-To: <20130722200014.GA4042@mtj.dyndns.org>
+Received: from mail-qe0-f43.google.com ([209.85.128.43]:36416 "EHLO
+	mail-qe0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753873Ab3GVUpP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Jul 2013 16:45:15 -0400
+Received: by mail-qe0-f43.google.com with SMTP id q19so4094561qeb.30
+        for <linux-ide@vger.kernel.org>; Mon, 22 Jul 2013 13:45:15 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <7D07DE2D-D421-4E79-AB4B-27566DCB3655@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
+To: Marc C <marc.ceeeee@gmail.com>
 Cc: linux-ide@vger.kernel.org
 
-Hi Tejun,
+Hello,
 
-> Hmmm, are you planning to add code making use of the above new
-> commands soon?  If not, why add the opcodes at all?  ata.h isn't
-> aiming to contain all possible ATA commands.
+On Mon, Jul 22, 2013 at 01:42:42PM -0700, Marc C wrote:
+> I have some out-of-tree user apps that exploit those opcodes
+> (via uapi). I eventually will have additional patches, but cannot 
 
-                                                        
-That is the goal.
+Hmmm?  I don't think ata.h is visible to userland, is it?
 
-I have some out-of-tree user apps that exploit those opcodes
-(via uapi). I eventually will have additional patches, but cannot 
-submit the pull request for them until the SATA 3.2 spec is public.
+> submit the pull request for them until the SATA 3.2 spec is public.
 
-Regards,
-Marc
+Let's add the opcodes when it becomes actually used in the kernel then
+unless it's gonna be a PITA on your end.
 
-On Jul 22, 2013, at 1:00 PM, Tejun Heo <tj@kernel.org> wrote:
+Thanks!
 
-> Hello,
-> 
-> On Fri, Jul 19, 2013 at 06:17:14PM -0700, Marc C wrote:
->> This patch adds the new queued opcodes to the ATA device command
->> list.
->> 
->> Rev 3.0 and 3.1 of the SATA spec introduced the following
->> opcodes:
->> 
->> - NCQ QUEUE MANAGEMENT
->> - SEND FPDMA QUEUED
->> - RECEIVE FPDMA QUEUED
-> 
-> Hmmm, are you planning to add code making use of the above new
-> commands soon?  If not, why add the opcodes at all?  ata.h isn't
-> aiming to contain all possible ATA commands.
-> 
-> Thanks.
-> 
-> -- 
-> tejun
-
+-- 
+tejun
