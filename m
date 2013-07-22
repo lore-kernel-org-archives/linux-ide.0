@@ -1,54 +1,54 @@
-From: Marc C <marc.ceeeee@gmail.com>
-Subject: Re: [PATCH] libata: Add additional queued command opcodes from SATA spec
-Date: Mon, 22 Jul 2013 13:48:14 -0700
-Message-ID: <3428D7F0-83A1-4DFE-826A-4903BF5ECD76@gmail.com>
-References: <CAO1A-8DmPXdM-XbzD18aQUYy4+Aph0jVwrSe1_spJJcRM57NNQ@mail.gmail.com> <20130722200014.GA4042@mtj.dyndns.org> <7D07DE2D-D421-4E79-AB4B-27566DCB3655@gmail.com> <20130722204510.GC13040@mtj.dyndns.org>
-Mime-Version: 1.0 (Mac OS X Mail 6.5 \(1508\))
-Content-Type: text/plain; charset=us-ascii
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
+Date: Mon, 22 Jul 2013 14:10:36 -0700
+Message-ID: <1374527436.7397.1145.camel@haakon3.risingtidesystems.com>
+References: <20130717161909.GB21468@dhcp-26-207.brq.redhat.com>
+	 <1374173515.7397.948.camel@haakon3.risingtidesystems.com>
+	 <51E83E32.9050306@cs.wisc.edu>
+	 <1374193399.7397.973.camel@haakon3.risingtidesystems.com>
+	 <20130719003034.GG28005@kernel.dk>
+	 <1374195825.7397.997.camel@haakon3.risingtidesystems.com>
+	 <1374215660.7397.1041.camel@haakon3.risingtidesystems.com>
+	 <1374248000.2266.20.camel@dabdike>
+	 <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
+	 <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
+	 <20130722150359.GA16564@dhcp-26-207.brq.redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pb0-f44.google.com ([209.85.160.44]:39711 "EHLO
-	mail-pb0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753873Ab3GVUsR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Jul 2013 16:48:17 -0400
-Received: by mail-pb0-f44.google.com with SMTP id uo1so7497525pbc.3
-        for <linux-ide@vger.kernel.org>; Mon, 22 Jul 2013 13:48:16 -0700 (PDT)
-In-Reply-To: <20130722204510.GC13040@mtj.dyndns.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:52453 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757212Ab3GVVFE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Jul 2013 17:05:04 -0400
+In-Reply-To: <20130722150359.GA16564@dhcp-26-207.brq.redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi Tejun,
+On Mon, 2013-07-22 at 17:03 +0200, Alexander Gordeev wrote:
+> On Fri, Jul 19, 2013 at 09:56:02PM -0700, Nicholas A. Bellinger wrote:
+> > On Fri, 2013-07-19 at 14:01 -0700, Nicholas A. Bellinger wrote:
+> > OK, after further investigation the root cause is a actually a missing
+> > bio->bio_end_io() -> bio_copy_kern_endio() -> bio_put() from the
+> > blk_end_sync_rq() callback path that scsi-mq REQ_TYPE_BLOCK_PC is
+> > currently using.
+> 
+> Yes, missing bio_copy_kern_endio() callback is exactly the reason I
+> turned to blk_mq_execute_rq() initially. I should have been more
+> specific on this :|
+> 
+> I will try Mike's and your other change, hopefully soon (sorry,
+> constantly getting distracted).
+> 
 
-> Hmmm?  I don't think ata.h is visible to userland, is it?
-I had done so locally so I wouldn't have to re-define all of
-the opcodes.
+Np.  FYI, you'll want to use the latest commit e7827b351 HEAD from
+target-pending/scsi-mq, which now has functioning scsi-generic support.
 
-> Let's add the opcodes when it becomes actually used in the kernel then
-> unless it's gonna be a PITA on your end.
-Sounds good!
+Also, your scsi_times_out patch from earlier has not been included just
+yet, but that should be the only extra patch you need to apply in order
+to get scsi-mq enabled libata/ata_piix running.
 
-Thanks,
-Marc
-
-On Jul 22, 2013, at 1:45 PM, Tejun Heo <tj@kernel.org> wrote:
-
-> Hello,
-> 
-> On Mon, Jul 22, 2013 at 01:42:42PM -0700, Marc C wrote:
->> I have some out-of-tree user apps that exploit those opcodes
->> (via uapi). I eventually will have additional patches, but cannot 
-> 
-> Hmmm?  I don't think ata.h is visible to userland, is it?
-> 
->> submit the pull request for them until the SATA 3.2 spec is public.
-> 
-> Let's add the opcodes when it becomes actually used in the kernel then
-> unless it's gonna be a PITA on your end.
-> 
-> Thanks!
-> 
-> -- 
-> tejun
+--nab
 
