@@ -1,46 +1,59 @@
 From: Xiaotian Feng <xtfeng@gmail.com>
-Subject: Re: [PATCH] AHCI: fix Null pointer dereference in achi_host_active()
-Date: Tue, 23 Jul 2013 05:31:21 +0800
-Message-ID: <CAJn8CcFE8v8PVkxdsfwi4=f=pVjK6R6uLAs68CtCmv2GU+7b4g@mail.gmail.com>
-References: <51E53300.6010000@cogentembedded.com>
-	<1374041439-34122-1-git-send-email-xtfeng@gmail.com>
-	<20130722212822.GB16776@mtj.dyndns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Subject: [PATCH v2] AHCI: fix Null pointer dereference in achi_host_active()
+Date: Tue, 23 Jul 2013 11:54:10 +0800
+Message-ID: <1374551650-56759-1-git-send-email-xtfeng@gmail.com>
+References: <20130722212822.GB16776@mtj.dyndns.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f175.google.com ([209.85.216.175]:64751 "EHLO
-	mail-qc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932234Ab3GVVbW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Jul 2013 17:31:22 -0400
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:42438 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752803Ab3GWDyU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Jul 2013 23:54:20 -0400
 In-Reply-To: <20130722212822.GB16776@mtj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Alexander Gordeev <agordeev@redhat.com>, linux-ide@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+Cc: Xiaotian Feng <xtfeng@gmail.com>, Alexander Gordeev <agordeev@redhat.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Jul 23, 2013 at 5:28 AM, Tejun Heo <tj@kernel.org> wrote:
-> Hello, Xiaotian.
->
-> Thanks for the fix.  A couple comments below.
->
-> On Wed, Jul 17, 2013 at 02:10:39PM +0800, Xiaotian Feng wrote:
->>       for (i = 0; i < host->n_ports; i++) {
->>               struct ahci_port_priv *pp = host->ports[i]->private_data;
->> +             const char *desc;
->>
->> +             if (ata_port_is_dummy(host->ports[i]))
->> +                     desc = dev_driver_string(host->dev);
->> +             else
->> +                     desc = pp->irq_desc;
->
-> I think it'd be better to branch on pp.  ie. do "if (pp) desc =
-> pp->... " instead and then add a comment saying "pp is NULL for
-> dummies".
->
+commit b29900e6 (AHCI: Make distinct names for ports in /proc/interrupts)
+introuded a regression, which resulted Null pointer dereference for achi
+host with dummy ports. For ahci ports, when the port is dummy port, its
+private_data will be NULL, as ata_dummy_port_ops doesn't support ->port_start.
 
-Okay, I'll update v2 patch, thanks :)
+changes in v2: use pp to check dummy ports, update comments
 
-> Thanks!
->
-> --
-> tejun
+Reported-and-tested-by: Alex Williamson <alex.williamson@redhat.com>
+Signed-off-by: Xiaotian Feng <xtfeng@gmail.com>
+Cc: Alexander Gordeev <agordeev@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/ata/ahci.c |    9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 5064f3e..db4380d 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1146,11 +1146,18 @@ int ahci_host_activate(struct ata_host *host, int irq, unsigned int n_msis)
+ 		return rc;
+ 
+ 	for (i = 0; i < host->n_ports; i++) {
++		const char* desc;
+ 		struct ahci_port_priv *pp = host->ports[i]->private_data;
+ 
++		/* pp is NULL for dummy ports */
++		if (pp)
++			desc = pp->irq_desc;
++		else
++			desc = dev_driver_string(host->dev);
++
+ 		rc = devm_request_threaded_irq(host->dev,
+ 			irq + i, ahci_hw_interrupt, ahci_thread_fn, IRQF_SHARED,
+-			pp->irq_desc, host->ports[i]);
++			desc, host->ports[i]);
+ 		if (rc)
+ 			goto out_free_irqs;
+ 	}
+-- 
+1.7.9.6 (Apple Git-31.1)
+
