@@ -1,34 +1,37 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
-Date: Thu, 25 Jul 2013 12:16:42 +0200
-Message-ID: <20130725101641.GB31994@dhcp-26-207.brq.redhat.com>
-References: <51E83E32.9050306@cs.wisc.edu>
- <1374193399.7397.973.camel@haakon3.risingtidesystems.com>
- <20130719003034.GG28005@kernel.dk>
- <1374195825.7397.997.camel@haakon3.risingtidesystems.com>
- <1374215660.7397.1041.camel@haakon3.risingtidesystems.com>
- <1374248000.2266.20.camel@dabdike>
- <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
- <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
- <20130722150359.GA16564@dhcp-26-207.brq.redhat.com>
- <1374527436.7397.1145.camel@haakon3.risingtidesystems.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1374527436.7397.1145.camel@haakon3.risingtidesystems.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
+From: Xinghai Yu <yuxinghai@cn.fujitsu.com>
+Subject: [PATCH] ide-disk_proc: use macro to replace magic number
+Date: Thu, 25 Jul 2013 18:32:42 +0800
+Message-ID: <1374748362-19687-1-git-send-email-yuxinghai@cn.fujitsu.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from cn.fujitsu.com ([222.73.24.84]:45218 "EHLO song.cn.fujitsu.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1755345Ab3GYKgL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 25 Jul 2013 06:36:11 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: davem@davemloft.net
+Cc: linux-ide@vger.kernel.org, Xinghai Yu <yuxinghai@cn.fujitsu.com>
 
-On Mon, Jul 22, 2013 at 02:10:36PM -0700, Nicholas A. Bellinger wrote:
-> Np.  FYI, you'll want to use the latest commit e7827b351 HEAD from
-> target-pending/scsi-mq, which now has functioning scsi-generic support.
+Signed-off-by: Xinghai Yu <yuxinghai@cn.fujitsu.com>
+---
+ drivers/ide/ide-ioctls.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Survives a boot, a kernel build and the build's result :)
-
+diff --git a/drivers/ide/ide-ioctls.c b/drivers/ide/ide-ioctls.c
+index 4d19eb9..6233fa2 100644
+--- a/drivers/ide/ide-ioctls.c
++++ b/drivers/ide/ide-ioctls.c
+@@ -141,8 +141,8 @@ static int ide_cmd_ioctl(ide_drive_t *drive, unsigned long arg)
+ 	if (args[0] == ATA_CMD_SMART) {
+ 		tf->nsect = args[3];
+ 		tf->lbal  = args[1];
+-		tf->lbam  = 0x4f;
+-		tf->lbah  = 0xc2;
++		tf->lbam  = ATA_SMART_LBAM_PASS;
++		tf->lbah  = ATA_SMART_LBAH_PASS;
+ 		cmd.valid.out.tf = IDE_VALID_OUT_TF;
+ 		cmd.valid.in.tf  = IDE_VALID_NSECT;
+ 	} else {
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+1.7.1
+
