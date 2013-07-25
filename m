@@ -1,47 +1,61 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
-Date: Thu, 25 Jul 2013 15:08:02 -0700
-Message-ID: <1374790082.7397.1411.camel@haakon3.risingtidesystems.com>
-References: <51E83E32.9050306@cs.wisc.edu>
-	 <1374193399.7397.973.camel@haakon3.risingtidesystems.com>
-	 <20130719003034.GG28005@kernel.dk>
-	 <1374195825.7397.997.camel@haakon3.risingtidesystems.com>
-	 <1374215660.7397.1041.camel@haakon3.risingtidesystems.com>
-	 <1374248000.2266.20.camel@dabdike>
-	 <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
-	 <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
-	 <20130722150359.GA16564@dhcp-26-207.brq.redhat.com>
-	 <1374527436.7397.1145.camel@haakon3.risingtidesystems.com>
-	 <20130725101641.GB31994@dhcp-26-207.brq.redhat.com>
+From: Dave Hansen <dave@sr71.net>
+Subject: SATA hotplug not detecting new disks
+Date: Thu, 25 Jul 2013 16:15:05 -0700
+Message-ID: <51F1B179.4070309@sr71.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20130725101641.GB31994@dhcp-26-207.brq.redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Aaron Lu <aaron.lu@intel.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, 2013-07-25 at 12:16 +0200, Alexander Gordeev wrote:
-> On Mon, Jul 22, 2013 at 02:10:36PM -0700, Nicholas A. Bellinger wrote:
-> > Np.  FYI, you'll want to use the latest commit e7827b351 HEAD from
-> > target-pending/scsi-mq, which now has functioning scsi-generic support.
-> 
-> Survives a boot, a kernel build and the build's result :)
+I've got a relatively new system that doesn't seem to be able to hotplug
+SATA disks.  I see the same behavior on 3.10, 3.11-rc2, and Ubuntu's
+3.8.0-25-generic.  The disks are detected right away on reboots, but
+even after poking the /sys/class/scsi_host/host*/scan files, new disks
+are never detected.  I've disabled link power management.
 
-Great.  Thanks for the feedback Alexander!
+Am I doing something stupid here?  I thought this "just worked" on my
+previous hardware.
 
-So the next step on my end is to enable -mq for ahci, and verify initial
-correctness using QEMU/KVM hardware emulation.
+The motherboard is an Intel DH87RL. The SATA controller is:
 
-Btw, I've been looking at enabling the SHT->cmd_size for struct
-ata_queued_cmd descriptor pre-allocation, but AFAICT these descriptors
-are already all pre-allocated by libata and obtained via ata_qc_new() ->
-__ata_qc_from_tag() during ata_scsi_queuecmd().
+> 00:1f.2 SATA controller: Intel Corporation Lynx Point 6-port SATA Controller 1 [AHCI mode] (rev 04) (prog-if 01 [AHCI 1.0])
+> 	Subsystem: Intel Corporation Device 204a
+> 	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
+> 	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+> 	Latency: 0
+> 	Interrupt: pin B routed to IRQ 41
+> 	Region 0: I/O ports at f0d0 [size=8]
+> 	Region 1: I/O ports at f0c0 [size=4]
+> 	Region 2: I/O ports at f0b0 [size=8]
+> 	Region 3: I/O ports at f0a0 [size=4]
+> 	Region 4: I/O ports at f060 [size=32]
+> 	Region 5: Memory at f7d3a000 (32-bit, non-prefetchable) [size=2K]
+> 	Capabilities: [80] MSI: Enable+ Count=1/1 Maskable- 64bit-
+> 		Address: fee2200c  Data: 4191
+> 	Capabilities: [70] Power Management version 3
+> 		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot+,D3cold-)
+> 		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+> 	Capabilities: [a8] SATA HBA v1.0 BAR4 Offset=00000004
+> 	Kernel driver in use: ahci
 
-So that said, with the struct request + struct scsi_cmnd pre-allocations
-already provided by blk-mq -> scsi-mq code, all memory allocations
-should have already been eliminated from I/O fast path.
+Relevant dmesg from boot:
 
---nab
+ahci 0000:00:1f.2: version 3.0
+ahci 0000:00:1f.2: irq 41 for MSI/MSI-X
+ahci 0000:00:1f.2: AHCI 0001.0300 32 slots 5 ports 6 Gbps 0x1e impl SATA
+mode
+ahci 0000:00:1f.2: flags: 64bit ncq pm led clo pio slum part ems apst
+ahci 0000:00:1f.2: setting latency timer to 64
+scsi0 : ahci
+scsi1 : ahci
+scsi2 : ahci
+scsi3 : ahci
+scsi4 : ahci
+ata1: DUMMY
+ata2: SATA max UDMA/133 abar m2048@0xf7d3a000 port 0xf7d3a180 irq 41
+ata3: SATA max UDMA/133 abar m2048@0xf7d3a000 port 0xf7d3a200 irq 41
+ata4: SATA max UDMA/133 abar m2048@0xf7d3a000 port 0xf7d3a280 irq 41
+ata5: SATA max UDMA/133 abar m2048@0xf7d3a000 port 0xf7d3a300 irq 41
