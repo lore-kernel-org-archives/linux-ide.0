@@ -1,36 +1,58 @@
-From: "tj@kernel.org" <tj@kernel.org>
-Subject: Re: linux-next: Tree for Jul 25 (ahci_imx.c)
-Date: Fri, 26 Jul 2013 07:18:50 -0400
-Message-ID: <20130726111850.GD30786@mtj.dyndns.org>
-References: <20130725151253.8b9b53b3a3cf6cacd501dc54@canb.auug.org.au>
- <51F16F17.4030002@infradead.org>
- <0E83723C55F66F43A6041464FE31119D3487F2@039-SN2MPN1-011.039d.mgd.msft.net>
- <20130726040349.GA29268@S2101-09.ap.freescale.net>
- <0E83723C55F66F43A6041464FE31119D34886A@039-SN2MPN1-011.039d.mgd.msft.net>
- <20130726052519.GB29268@S2101-09.ap.freescale.net>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [RFC PATCH 2/2] ata: acpi: rework the ata acpi bind support
+Date: Fri, 26 Jul 2013 14:48:24 +0200
+Message-ID: <3280105.XAGTl9YUDR@vostro.rjw.lan>
+References: <1374731223-28685-1-git-send-email-aaron.lu@intel.com> <20130725145229.GB26107@mtj.dyndns.org> <51F1D2C5.1050809@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20130726052519.GB29268@S2101-09.ap.freescale.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Shawn Guo <shawn.guo@linaro.org>
-Cc: Zhu Richard-R65037 <r65037@freescale.com>, Randy Dunlap <rdunlap@infradead.org>, Stephen Rothwell <sfr@canb.auug.org.au>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <51F1D2C5.1050809@intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Wu <jeff.wu@amd.com>, Shane Huang <shane.huang@amd.com>, Matthew Garrett <mjg@redhat.com>, Holger Macht <holger@homac.de>, Zhang Rui <rui.zhang@intel.com>, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Fri, Jul 26, 2013 at 01:25:21PM +0800, Shawn Guo wrote:
-> On Fri, Jul 26, 2013 at 04:58:14AM +0000, Zhu Richard-R65037 wrote:
-> > Hi Shawn:
-> > yes, it is.
+On Friday, July 26, 2013 09:37:09 AM Aaron Lu wrote:
+> On 07/25/2013 10:52 PM, Tejun Heo wrote:
+> > On Thu, Jul 25, 2013 at 01:47:03PM +0800, Aaron Lu wrote:
+> >> Binding ACPI handle to SCSI device has several drawbacks, namely:
+> >> 1 During ATA device initialization time, ACPI handle will be needed
+> >>   while SCSI devices are not created yet. So each time ACPI handle is
+> >>   needed, instead of retrieving the handle by ACPI_HANDLE macro,
+> >>   a namespace scan is performed to find the handle for the corresponding
+> >>   ATA device. This is inefficient, and also expose a restriction on
+> >>   calling path not holding any lock.
+> >> 2 The binding to SCSI device tree makes code complex, while at the same
+> >>   time doesn't bring us any benefit. All ACPI handlings are still done
+> >>   in ATA module, not in SCSI.
+> >>
+> >> Rework the ATA ACPI binding code to bind ACPI handle to ATA transport
+> >> devices(ATA port and ATA device). The binding needs to be done only once,
+> >> since the ATA transport devices do not go away with hotplug. And due to
+> >> this, the flush_work call in hotplug handler for ATA bay is no longer
+> >> needed.
 > > 
-> > BTW, Should I re-send the AHCI_IMX patch-set or send out one stand-alone patch to fix this issue?
-> > 
+> > I like it but am wondering why we weren't doing this before.  Was the
+> > acpi support added before we made ata objects proper devices?
 > 
-> I think an incremental fixing patch is good.
+> I think so. But since I didn't do the original binding, I can only guess
+> :-)
+> 
+> At the time of the original binding, ACPI binding logic requires the
+> binding device has a bus type, which these ATA transport devices don't
+> have.
+> 
+> Later, the ACPI binding code evolves and no such limitation exists
+> anymore. As you can see, we can simply set the ACPI handle before this
+> device is added in driver core, and the binding will be done.
 
-Yeap, it's already upstream.  There's no other way.
+Yeah, we made that change in the ACPI core around 3.8 IIRC.
 
-Thanks.
+Thanks,
+Rafael
+
 
 -- 
-tejun
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
