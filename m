@@ -1,51 +1,54 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH libata/for-3.11-fixes] libata: make it clear that
- sata_inic162x is experimental
-Date: Fri, 26 Jul 2013 08:46:23 -0400
-Message-ID: <20130726124623.GA3013@htj.dyndns.org>
-References: <1372353297.24346.4.camel@phoenix>
- <20130627173142.GM4752@decadent.org.uk>
- <1372375714.330.17.camel@phoenix>
- <1372383087.23847.35.camel@deadeye.wl.decadent.org.uk>
- <1372427725.23094.17.camel@phoenix>
- <1372603764.5155.17.camel@deadeye.wl.decadent.org.uk>
- <20130701061726.GA10717@mtj.dyndns.org>
- <1372668742.17064.23.camel@phoenix>
- <20130722211307.GA16776@mtj.dyndns.org>
- <1374814640.13555.1.camel@deadeye.wl.decadent.org.uk>
+From: "tj@kernel.org" <tj@kernel.org>
+Subject: [PATCH] ahci_imx: depend on CONFIG_MFD_SYSCON
+Date: Fri, 26 Jul 2013 09:06:35 -0400
+Message-ID: <20130726130635.GB3013@htj.dyndns.org>
+References: <20130725151253.8b9b53b3a3cf6cacd501dc54@canb.auug.org.au>
+ <51F16F17.4030002@infradead.org>
+ <0E83723C55F66F43A6041464FE31119D3487F2@039-SN2MPN1-011.039d.mgd.msft.net>
+ <20130726040349.GA29268@S2101-09.ap.freescale.net>
+ <0E83723C55F66F43A6041464FE31119D34886A@039-SN2MPN1-011.039d.mgd.msft.net>
+ <20130726052519.GB29268@S2101-09.ap.freescale.net>
+ <20130726111850.GD30786@mtj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ye0-f170.google.com ([209.85.213.170]:57433 "EHLO
-	mail-ye0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758811Ab3GZMq2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Jul 2013 08:46:28 -0400
-Received: by mail-ye0-f170.google.com with SMTP id g12so547660yee.15
-        for <linux-ide@vger.kernel.org>; Fri, 26 Jul 2013 05:46:27 -0700 (PDT)
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1374814640.13555.1.camel@deadeye.wl.decadent.org.uk>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <20130726111850.GD30786@mtj.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Shawn Guo <shawn.guo@linaro.org>
+Cc: Zhu Richard-R65037 <r65037@freescale.com>, Randy Dunlap <rdunlap@infradead.org>, Stephen Rothwell <sfr@canb.auug.org.au>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Ben Hutchings <ben@decadent.org.uk>
-Cc: Martin Braure de Calignon <braurede@free.fr>, 714295@bugs.debian.org, linux-ide@vger.kernel.org, risc4all@yahoo.com
 
-On Fri, Jul 26, 2013 at 05:57:20AM +0100, Ben Hutchings wrote:
-> On Mon, 2013-07-22 at 17:13 -0400, Tejun Heo wrote:
-> > Hello, guys.
-> > 
-> > I've committed the following patch to for-3.11-fixes.  It's
-> > unfortunate but I can't see a good way out at this point.  :(
-> [...]
-> 
-> This change is also appropriate for a stable update.
+>From 867974fc09f93bdd7f98d46ac3733934486bbf4a Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj@kernel.org>
+Date: Fri, 26 Jul 2013 08:57:56 -0400
 
-Indeed.  Will forward the patch to Greg.
+ahci_imx makes use of regmap but the dependency wasn't specified in
+Kconfig leading build failures if CONFIG_AHCI_IMX is enabled but
+CONFIG_MFD_SYSCON is not.  Add the Kconfig dependency.
 
-> I will also remove the driver from Debian packages.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
+---
+Applied to libata/for-3.11-fixes.
 
-Yeap, please do so.
+Thanks.
 
-Thanks!
+ drivers/ata/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index a4af0a2..4e73772 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -99,7 +99,7 @@ config SATA_AHCI_PLATFORM
+ 
+ config AHCI_IMX
+ 	tristate "Freescale i.MX AHCI SATA support"
+-	depends on SATA_AHCI_PLATFORM
++	depends on SATA_AHCI_PLATFORM && MFD_SYSCON
+ 	help
+ 	  This option enables support for the Freescale i.MX SoC's
+ 	  onboard AHCI SATA.
 -- 
-tejun
+1.8.3.1
