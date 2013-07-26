@@ -1,58 +1,51 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [RFC PATCH 2/2] ata: acpi: rework the ata acpi bind support
-Date: Fri, 26 Jul 2013 14:48:24 +0200
-Message-ID: <3280105.XAGTl9YUDR@vostro.rjw.lan>
-References: <1374731223-28685-1-git-send-email-aaron.lu@intel.com> <20130725145229.GB26107@mtj.dyndns.org> <51F1D2C5.1050809@intel.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH libata/for-3.11-fixes] libata: make it clear that
+ sata_inic162x is experimental
+Date: Fri, 26 Jul 2013 08:46:23 -0400
+Message-ID: <20130726124623.GA3013@htj.dyndns.org>
+References: <1372353297.24346.4.camel@phoenix>
+ <20130627173142.GM4752@decadent.org.uk>
+ <1372375714.330.17.camel@phoenix>
+ <1372383087.23847.35.camel@deadeye.wl.decadent.org.uk>
+ <1372427725.23094.17.camel@phoenix>
+ <1372603764.5155.17.camel@deadeye.wl.decadent.org.uk>
+ <20130701061726.GA10717@mtj.dyndns.org>
+ <1372668742.17064.23.camel@phoenix>
+ <20130722211307.GA16776@mtj.dyndns.org>
+ <1374814640.13555.1.camel@deadeye.wl.decadent.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <51F1D2C5.1050809@intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Jeff Wu <jeff.wu@amd.com>, Shane Huang <shane.huang@amd.com>, Matthew Garrett <mjg@redhat.com>, Holger Macht <holger@homac.de>, Zhang Rui <rui.zhang@intel.com>, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ye0-f170.google.com ([209.85.213.170]:57433 "EHLO
+	mail-ye0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758811Ab3GZMq2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Jul 2013 08:46:28 -0400
+Received: by mail-ye0-f170.google.com with SMTP id g12so547660yee.15
+        for <linux-ide@vger.kernel.org>; Fri, 26 Jul 2013 05:46:27 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <1374814640.13555.1.camel@deadeye.wl.decadent.org.uk>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: Martin Braure de Calignon <braurede@free.fr>, 714295@bugs.debian.org, linux-ide@vger.kernel.org, risc4all@yahoo.com
 
-On Friday, July 26, 2013 09:37:09 AM Aaron Lu wrote:
-> On 07/25/2013 10:52 PM, Tejun Heo wrote:
-> > On Thu, Jul 25, 2013 at 01:47:03PM +0800, Aaron Lu wrote:
-> >> Binding ACPI handle to SCSI device has several drawbacks, namely:
-> >> 1 During ATA device initialization time, ACPI handle will be needed
-> >>   while SCSI devices are not created yet. So each time ACPI handle is
-> >>   needed, instead of retrieving the handle by ACPI_HANDLE macro,
-> >>   a namespace scan is performed to find the handle for the corresponding
-> >>   ATA device. This is inefficient, and also expose a restriction on
-> >>   calling path not holding any lock.
-> >> 2 The binding to SCSI device tree makes code complex, while at the same
-> >>   time doesn't bring us any benefit. All ACPI handlings are still done
-> >>   in ATA module, not in SCSI.
-> >>
-> >> Rework the ATA ACPI binding code to bind ACPI handle to ATA transport
-> >> devices(ATA port and ATA device). The binding needs to be done only once,
-> >> since the ATA transport devices do not go away with hotplug. And due to
-> >> this, the flush_work call in hotplug handler for ATA bay is no longer
-> >> needed.
+On Fri, Jul 26, 2013 at 05:57:20AM +0100, Ben Hutchings wrote:
+> On Mon, 2013-07-22 at 17:13 -0400, Tejun Heo wrote:
+> > Hello, guys.
 > > 
-> > I like it but am wondering why we weren't doing this before.  Was the
-> > acpi support added before we made ata objects proper devices?
+> > I've committed the following patch to for-3.11-fixes.  It's
+> > unfortunate but I can't see a good way out at this point.  :(
+> [...]
 > 
-> I think so. But since I didn't do the original binding, I can only guess
-> :-)
-> 
-> At the time of the original binding, ACPI binding logic requires the
-> binding device has a bus type, which these ATA transport devices don't
-> have.
-> 
-> Later, the ACPI binding code evolves and no such limitation exists
-> anymore. As you can see, we can simply set the ACPI handle before this
-> device is added in driver core, and the binding will be done.
+> This change is also appropriate for a stable update.
 
-Yeah, we made that change in the ACPI core around 3.8 IIRC.
+Indeed.  Will forward the patch to Greg.
 
-Thanks,
-Rafael
+> I will also remove the driver from Debian packages.
 
+Yeap, please do so.
+
+Thanks!
 
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+tejun
