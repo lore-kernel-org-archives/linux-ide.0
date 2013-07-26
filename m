@@ -1,61 +1,55 @@
-From: Dave Hansen <dave@sr71.net>
-Subject: SATA hotplug not detecting new disks
-Date: Thu, 25 Jul 2013 16:15:05 -0700
-Message-ID: <51F1B179.4070309@sr71.net>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [RFC PATCH 2/2] ata: acpi: rework the ata acpi bind support
+Date: Fri, 26 Jul 2013 09:37:09 +0800
+Message-ID: <51F1D2C5.1050809@intel.com>
+References: <1374731223-28685-1-git-send-email-aaron.lu@intel.com> <1374731223-28685-3-git-send-email-aaron.lu@intel.com> <20130725145229.GB26107@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Aaron Lu <aaron.lu@intel.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:42866 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756215Ab3GZBg0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 25 Jul 2013 21:36:26 -0400
+In-Reply-To: <20130725145229.GB26107@mtj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Wu <jeff.wu@amd.com>, Shane Huang <shane.huang@amd.com>, Matthew Garrett <mjg@redhat.com>, Holger Macht <holger@homac.de>, Zhang Rui <rui.zhang@intel.com>, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org
 
-I've got a relatively new system that doesn't seem to be able to hotplug
-SATA disks.  I see the same behavior on 3.10, 3.11-rc2, and Ubuntu's
-3.8.0-25-generic.  The disks are detected right away on reboots, but
-even after poking the /sys/class/scsi_host/host*/scan files, new disks
-are never detected.  I've disabled link power management.
+On 07/25/2013 10:52 PM, Tejun Heo wrote:
+> On Thu, Jul 25, 2013 at 01:47:03PM +0800, Aaron Lu wrote:
+>> Binding ACPI handle to SCSI device has several drawbacks, namely:
+>> 1 During ATA device initialization time, ACPI handle will be needed
+>>   while SCSI devices are not created yet. So each time ACPI handle is
+>>   needed, instead of retrieving the handle by ACPI_HANDLE macro,
+>>   a namespace scan is performed to find the handle for the corresponding
+>>   ATA device. This is inefficient, and also expose a restriction on
+>>   calling path not holding any lock.
+>> 2 The binding to SCSI device tree makes code complex, while at the same
+>>   time doesn't bring us any benefit. All ACPI handlings are still done
+>>   in ATA module, not in SCSI.
+>>
+>> Rework the ATA ACPI binding code to bind ACPI handle to ATA transport
+>> devices(ATA port and ATA device). The binding needs to be done only once,
+>> since the ATA transport devices do not go away with hotplug. And due to
+>> this, the flush_work call in hotplug handler for ATA bay is no longer
+>> needed.
+> 
+> I like it but am wondering why we weren't doing this before.  Was the
+> acpi support added before we made ata objects proper devices?
 
-Am I doing something stupid here?  I thought this "just worked" on my
-previous hardware.
+I think so. But since I didn't do the original binding, I can only guess
+:-)
 
-The motherboard is an Intel DH87RL. The SATA controller is:
+At the time of the original binding, ACPI binding logic requires the
+binding device has a bus type, which these ATA transport devices don't
+have.
 
-> 00:1f.2 SATA controller: Intel Corporation Lynx Point 6-port SATA Controller 1 [AHCI mode] (rev 04) (prog-if 01 [AHCI 1.0])
-> 	Subsystem: Intel Corporation Device 204a
-> 	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
-> 	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-> 	Latency: 0
-> 	Interrupt: pin B routed to IRQ 41
-> 	Region 0: I/O ports at f0d0 [size=8]
-> 	Region 1: I/O ports at f0c0 [size=4]
-> 	Region 2: I/O ports at f0b0 [size=8]
-> 	Region 3: I/O ports at f0a0 [size=4]
-> 	Region 4: I/O ports at f060 [size=32]
-> 	Region 5: Memory at f7d3a000 (32-bit, non-prefetchable) [size=2K]
-> 	Capabilities: [80] MSI: Enable+ Count=1/1 Maskable- 64bit-
-> 		Address: fee2200c  Data: 4191
-> 	Capabilities: [70] Power Management version 3
-> 		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot+,D3cold-)
-> 		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-> 	Capabilities: [a8] SATA HBA v1.0 BAR4 Offset=00000004
-> 	Kernel driver in use: ahci
+Later, the ACPI binding code evolves and no such limitation exists
+anymore. As you can see, we can simply set the ACPI handle before this
+device is added in driver core, and the binding will be done.
 
-Relevant dmesg from boot:
 
-ahci 0000:00:1f.2: version 3.0
-ahci 0000:00:1f.2: irq 41 for MSI/MSI-X
-ahci 0000:00:1f.2: AHCI 0001.0300 32 slots 5 ports 6 Gbps 0x1e impl SATA
-mode
-ahci 0000:00:1f.2: flags: 64bit ncq pm led clo pio slum part ems apst
-ahci 0000:00:1f.2: setting latency timer to 64
-scsi0 : ahci
-scsi1 : ahci
-scsi2 : ahci
-scsi3 : ahci
-scsi4 : ahci
-ata1: DUMMY
-ata2: SATA max UDMA/133 abar m2048@0xf7d3a000 port 0xf7d3a180 irq 41
-ata3: SATA max UDMA/133 abar m2048@0xf7d3a000 port 0xf7d3a200 irq 41
-ata4: SATA max UDMA/133 abar m2048@0xf7d3a000 port 0xf7d3a280 irq 41
-ata5: SATA max UDMA/133 abar m2048@0xf7d3a000 port 0xf7d3a300 irq 41
+Thanks,
+Aaron
