@@ -1,66 +1,41 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [GIT PULL] libata changes for v3.11-rc2
-Date: Fri, 26 Jul 2013 09:09:26 -0400
-Message-ID: <20130726130926.GC3013@htj.dyndns.org>
-References: <20130725175310.GI26107@mtj.dyndns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20130725175310.GI26107@mtj.dyndns.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+From: Mark Langsdorf <mark.langsdorf@calxeda.com>
+Subject: [PATCH 2/5] sata highbank: enable 64-bit DMA mask when using LPAE
+Date: Fri, 26 Jul 2013 10:11:55 -0500
+Message-ID: <1374851518-4802-2-git-send-email-mark.langsdorf@calxeda.com>
+References: <1374851518-4802-1-git-send-email-mark.langsdorf@calxeda.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp121.dfw.emailsrvr.com ([67.192.241.121]:36538 "EHLO
+	smtp121.dfw.emailsrvr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932370Ab3GZPWS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Jul 2013 11:22:18 -0400
+In-Reply-To: <1374851518-4802-1-git-send-email-mark.langsdorf@calxeda.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, tj@kernel.org, devicetree@vger.kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, swarren@wwwdotorg.org, ian.campbell@citrix.com, rob.herring@calxeda.com
+Cc: Mark Langsdorf <mark.langsdorf@calxeda.com>
 
-Hello, Linus.
+From: Rob Herring <rob.herring@calxeda.com>
 
-The ahci_imx addition was missing dependency on CONFIG_MFD_SYSCON
-leading to build failures depending on config combination.  A patch
-was added to address the issue.  The modified pull request follows.
+Signed-off-by: Rob Herring <rob.herring@calxeda.com>
+Signed-off-by: Mark Langsdorf <mark.langsdorf@calxeda.com>
+---
+ drivers/ata/sata_highbank.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Thanks.
-
-The following changes since commit ad81f0545ef01ea651886dddac4bef6cec930092:
-
-  Linux 3.11-rc1 (2013-07-14 15:18:27 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-3.11-fixes
-
-for you to fetch changes up to 867974fc09f93bdd7f98d46ac3733934486bbf4a:
-
-  ahci_imx: depend on CONFIG_MFD_SYSCON (2013-07-26 08:57:56 -0400)
-
-----------------------------------------------------------------
-Jingoo Han (1):
-      libata: replace strict_strtol() with kstrtol()
-
-Richard Zhu (2):
-      ARM: imx6q: update the sata bits definitions of gpr13
-      ahci_imx: add ahci sata support on imx platforms
-
-Tejun Heo (2):
-      libata: make it clear that sata_inic162x is experimental
-      ahci_imx: depend on CONFIG_MFD_SYSCON
-
-Xiaotian Feng (1):
-      ahci: fix Null pointer dereference in achi_host_active()
-
-Youquan Song (1):
-      ata: Fix DVD not dectected at some platform with Wellsburg PCH
-
- drivers/ata/Kconfig                         |  11 +-
- drivers/ata/Makefile                        |   1 +
- drivers/ata/ahci.c                          |   9 +-
- drivers/ata/ahci_imx.c                      | 236 ++++++++++++++++++++++++++++
- drivers/ata/ata_piix.c                      |   2 +-
- drivers/ata/libata-scsi.c                   |   6 +-
- drivers/ata/sata_inic162x.c                 |  14 ++
- include/linux/mfd/syscon/imx6q-iomuxc-gpr.h | 121 +++++++++-----
- 8 files changed, 358 insertions(+), 42 deletions(-)
- create mode 100644 drivers/ata/ahci_imx.c
-
+diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
+index e9a4f46..8b40025 100644
+--- a/drivers/ata/sata_highbank.c
++++ b/drivers/ata/sata_highbank.c
+@@ -479,6 +479,9 @@ static int ahci_highbank_probe(struct platform_device *pdev)
+ 	if (hpriv->cap & HOST_CAP_PMP)
+ 		pi.flags |= ATA_FLAG_PMP;
+ 
++	if (hpriv->cap & HOST_CAP_64)
++		dma_set_coherent_mask(dev, DMA_BIT_MASK(64));
++
+ 	/* CAP.NP sometimes indicate the index of the last enabled
+ 	 * port, at other times, that of the last possible port, so
+ 	 * determining the maximum port number requires looking at
 -- 
-tejun
+1.8.1.2
+
