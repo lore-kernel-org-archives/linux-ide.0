@@ -1,92 +1,62 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: SATA hotplug not detecting new disks
-Date: Fri, 26 Jul 2013 09:51:54 +0800
-Message-ID: <51F1D63A.2010403@intel.com>
-References: <51F1B179.4070309@sr71.net>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
+Date: Thu, 25 Jul 2013 20:09:28 -0600
+Message-ID: <20130726020928.GL29296@kernel.dk>
+References: <20130719003034.GG28005@kernel.dk>
+ <1374195825.7397.997.camel@haakon3.risingtidesystems.com>
+ <1374215660.7397.1041.camel@haakon3.risingtidesystems.com>
+ <1374248000.2266.20.camel@dabdike>
+ <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
+ <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
+ <20130722150359.GA16564@dhcp-26-207.brq.redhat.com>
+ <1374527436.7397.1145.camel@haakon3.risingtidesystems.com>
+ <20130725101641.GB31994@dhcp-26-207.brq.redhat.com>
+ <1374790082.7397.1411.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:56390 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756932Ab3GZBvJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 25 Jul 2013 21:51:09 -0400
-In-Reply-To: <51F1B179.4070309@sr71.net>
+Received: from merlin.infradead.org ([205.233.59.134]:53665 "EHLO
+	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756954Ab3GZCJz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Jul 2013 22:09:55 -0400
+Content-Disposition: inline
+In-Reply-To: <1374790082.7397.1411.camel@haakon3.risingtidesystems.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dave Hansen <dave@sr71.net>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Shane Huang <shane.huang@amd.com>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Alexander Gordeev <agordeev@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On 07/26/2013 07:15 AM, Dave Hansen wrote:
-> I've got a relatively new system that doesn't seem to be able to hotplug
-> SATA disks.  I see the same behavior on 3.10, 3.11-rc2, and Ubuntu's
-> 3.8.0-25-generic.  The disks are detected right away on reboots, but
-> even after poking the /sys/class/scsi_host/host*/scan files, new disks
-> are never detected.  I've disabled link power management.
+On Thu, Jul 25 2013, Nicholas A. Bellinger wrote:
+> On Thu, 2013-07-25 at 12:16 +0200, Alexander Gordeev wrote:
+> > On Mon, Jul 22, 2013 at 02:10:36PM -0700, Nicholas A. Bellinger wrote:
+> > > Np.  FYI, you'll want to use the latest commit e7827b351 HEAD from
+> > > target-pending/scsi-mq, which now has functioning scsi-generic support.
+> > 
+> > Survives a boot, a kernel build and the build's result :)
 > 
-> Am I doing something stupid here?  I thought this "just worked" on my
-> previous hardware.
-
-My vague memory reminds me that not all SATA ports are hot pluggable -
-you can check the port's "External SATA port" bit and "Hot Plug Capable"
-bit of the PxCMD register like this:
-
-$ grep ahci /proc/iomem 
-    e1a40000-e1a407ff : ahci
-# dd if=/dev/mem of=ahcidump bs=4096 count=1 skip=0xe1a40
-You will need to change 0xe1a40 to decimal format.
-
-Then the PxCMD is at offset 0x118 for port 0, check bit 21 for E-SATA or
-bit 18 for hot pluggable bits. If any of them set to 1, this port
-should be hot pluggable; otherwise, it doesn't have this capability.
-
+> Great.  Thanks for the feedback Alexander!
 > 
-> The motherboard is an Intel DH87RL. The SATA controller is:
+> So the next step on my end is to enable -mq for ahci, and verify initial
+> correctness using QEMU/KVM hardware emulation.
 > 
->> 00:1f.2 SATA controller: Intel Corporation Lynx Point 6-port SATA Controller 1 [AHCI mode] (rev 04) (prog-if 01 [AHCI 1.0])
->> 	Subsystem: Intel Corporation Device 204a
->> 	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
->> 	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
->> 	Latency: 0
->> 	Interrupt: pin B routed to IRQ 41
->> 	Region 0: I/O ports at f0d0 [size=8]
->> 	Region 1: I/O ports at f0c0 [size=4]
->> 	Region 2: I/O ports at f0b0 [size=8]
->> 	Region 3: I/O ports at f0a0 [size=4]
->> 	Region 4: I/O ports at f060 [size=32]
->> 	Region 5: Memory at f7d3a000 (32-bit, non-prefetchable) [size=2K]
->> 	Capabilities: [80] MSI: Enable+ Count=1/1 Maskable- 64bit-
->> 		Address: fee2200c  Data: 4191
->> 	Capabilities: [70] Power Management version 3
->> 		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot+,D3cold-)
->> 		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
->> 	Capabilities: [a8] SATA HBA v1.0 BAR4 Offset=00000004
->> 	Kernel driver in use: ahci
-> 
-> Relevant dmesg from boot:
-> 
-> ahci 0000:00:1f.2: version 3.0
-> ahci 0000:00:1f.2: irq 41 for MSI/MSI-X
-> ahci 0000:00:1f.2: AHCI 0001.0300 32 slots 5 ports 6 Gbps 0x1e impl SATA
-> mode
-> ahci 0000:00:1f.2: flags: 64bit ncq pm led clo pio slum part ems apst
+> Btw, I've been looking at enabling the SHT->cmd_size for struct
+> ata_queued_cmd descriptor pre-allocation, but AFAICT these descriptors
+> are already all pre-allocated by libata and obtained via ata_qc_new() ->
+> __ata_qc_from_tag() during ata_scsi_queuecmd().
 
-This doesn't have sxs(support external sata) bit here, so no ports from
-this host is E-SATA port. Only need to check the hot pluggable bit.
+Might still not be a bad idea to do it:
 
-Hope this helps,
--Aaron
+- Cleans up a driver, getting rid of the need to alloc, maintain, and
+  free those structures.
 
-> ahci 0000:00:1f.2: setting latency timer to 64
-> scsi0 : ahci
-> scsi1 : ahci
-> scsi2 : ahci
-> scsi3 : ahci
-> scsi4 : ahci
-> ata1: DUMMY
-> ata2: SATA max UDMA/133 abar m2048@0xf7d3a000 port 0xf7d3a180 irq 41
-> ata3: SATA max UDMA/133 abar m2048@0xf7d3a000 port 0xf7d3a200 irq 41
-> ata4: SATA max UDMA/133 abar m2048@0xf7d3a000 port 0xf7d3a280 irq 41
-> ata5: SATA max UDMA/133 abar m2048@0xf7d3a000 port 0xf7d3a300 irq 41
-> 
+- Should be some cache locality benefits to having it all sequential.
+
+> So that said, with the struct request + struct scsi_cmnd pre-allocations
+> already provided by blk-mq -> scsi-mq code, all memory allocations
+> should have already been eliminated from I/O fast path.
+
+Nice!
+
+-- 
+Jens Axboe
 
