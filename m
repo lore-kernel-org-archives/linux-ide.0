@@ -1,197 +1,117 @@
 From: Mark Rutland <mark.rutland@arm.com>
-Subject: Re: [PATCH 4/5] sata, highbank: set tx_atten override bits
-Date: Fri, 26 Jul 2013 17:22:31 +0100
-Message-ID: <20130726162231.GD3528@e106331-lin.cambridge.arm.com>
+Subject: Re: [PATCH 5/5] sata, highbank: send extra clock cycles in SGPIO
+ patterns
+Date: Fri, 26 Jul 2013 17:26:06 +0100
+Message-ID: <20130726162606.GE3528@e106331-lin.cambridge.arm.com>
 References: <1374851518-4802-1-git-send-email-mark.langsdorf@calxeda.com>
- <1374851518-4802-4-git-send-email-mark.langsdorf@calxeda.com>
+ <1374851518-4802-5-git-send-email-mark.langsdorf@calxeda.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:50310 "EHLO
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:50353 "EHLO
 	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757043Ab3GZQWj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Jul 2013 12:22:39 -0400
+	by vger.kernel.org with ESMTP id S1757043Ab3GZQ0N (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Jul 2013 12:26:13 -0400
 Content-Disposition: inline
-In-Reply-To: <1374851518-4802-4-git-send-email-mark.langsdorf@calxeda.com>
-Content-Language: en-US
+In-Reply-To: <1374851518-4802-5-git-send-email-mark.langsdorf@calxeda.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Mark Langsdorf <mark.langsdorf@calxeda.com>
 Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "tj@kernel.org" <tj@kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Pawel Moll <Pawel.Moll@arm.com>, "swarren@wwwdotorg.org" <swarren@wwwdotorg.org>, "ian.campbell@citrix.com" <ian.campbell@citrix.com>, "rob.herring@calxeda.com" <rob.herring@calxeda.com>
 
-On Fri, Jul 26, 2013 at 04:11:57PM +0100, Mark Langsdorf wrote:
-> Some board designs do not drive the SATA transmit lines within the
-> specification. The ECME can provide override settings, on a per board
-> basis, to bring the transmit lines within spec. Read those settings
-> from the DTB and program them in.
+On Fri, Jul 26, 2013 at 04:11:58PM +0100, Mark Langsdorf wrote:
+> Some SGPIO PICs don't follow the standard very well and expect a
+> certain number of clock cycles or port frames in each SGPIO pattern.
+> Add two optional parameters in the DTB that can provide the number of
+> extra clock cycles to be sent before and after each SGPIO pattern.
+> Read those parameters from the DTB and send the extra clock cycles.
 
-How variable is the use of this property going to be? Would it instead
-be possible to decide that this was necessary, and choose the
-appropriate values based on a compatible property?
+Is this likely to be very variable, or something we can device based on
+a compatible string?
 
 > 
 > Signed-off-by: Mark Langsdorf <mark.langsdorf@calxeda.com>
 > ---
->  .../devicetree/bindings/ata/sata_highbank.txt      |  2 +
->  drivers/ata/sata_highbank.c                        | 57 +++++++++++++++++-----
->  2 files changed, 47 insertions(+), 12 deletions(-)
+>  Documentation/devicetree/bindings/ata/sata_highbank.txt |  4 ++++
+>  drivers/ata/sata_highbank.c                             | 16 +++++++++++++---
+>  2 files changed, 17 insertions(+), 3 deletions(-)
 > 
 > diff --git a/Documentation/devicetree/bindings/ata/sata_highbank.txt b/Documentation/devicetree/bindings/ata/sata_highbank.txt
-> index aa1b798..d692e9e 100644
+> index d692e9e..a05eb92 100644
 > --- a/Documentation/devicetree/bindings/ata/sata_highbank.txt
 > +++ b/Documentation/devicetree/bindings/ata/sata_highbank.txt
-> @@ -20,6 +20,8 @@ Optional properties:
->  			indicator lights using the indicated GPIOs
->  - calxeda,led-order : a u32 array that map port numbers to offsets within the
+> @@ -22,6 +22,10 @@ Optional properties:
 >  			SGPIO bitstream.
-> +- calxeda,tx-atten  : a u8 array that contains TX attenuation override
-> +			codes, one per port.
-
-Is this a u8 array / binary string, or is this an array of u32 cells, of
-which only 8 bits are used in each cell? The code seems to suggest the
-latter.
-
-Which of the follwoing do you expect?
-
-	calxeda,tx-atten = [ 0x00 0x01 0x02 0x03 ];
-	calxeda,tx-atten = < 0x00 0x01 0x02 0x03 >;
-
-Thanks,
-Mark.
-
+>  - calxeda,tx-atten  : a u8 array that contains TX attenuation override
+>  			codes, one per port.
+> +- calxeda,pre-clocks : a u32 that indicates the number of additional clock
+> +			cycles to transmit before sending an SGPIO pattern
+> +- calxeda,post-clocks: a u32 that indicates the number of additional clock
+> +			cycles to transmit after sending an SGPIO pattern
 >  
 >  Example:
 >          sata@ffe08000 {
-
-Please amend the example.
-
 > diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
-> index 8b40025..4c8444f 100644
+> index 4c8444f..0ca27fe 100644
 > --- a/drivers/ata/sata_highbank.c
 > +++ b/drivers/ata/sata_highbank.c
-> @@ -46,14 +46,19 @@
->  #define CR_BUSY				0x0001
->  #define CR_START			0x0001
->  #define CR_WR_RDN			0x0002
-> +#define CPHY_TX_INPUT_STS		0x2001
->  #define CPHY_RX_INPUT_STS		0x2002
-> -#define CPHY_SATA_OVERRIDE	 	0x4000
-> -#define CPHY_OVERRIDE			0x2005
-> +#define CPHY_SATA_TX_OVERRIDE		0x8000
-> +#define CPHY_SATA_RX_OVERRIDE	 	0x4000
-> +#define CPHY_TX_OVERRIDE		0x2004
-> +#define CPHY_RX_OVERRIDE		0x2005
->  #define SPHY_LANE			0x100
->  #define SPHY_HALF_RATE			0x0001
->  #define CPHY_SATA_DPLL_MODE		0x0700
->  #define CPHY_SATA_DPLL_SHIFT		8
->  #define CPHY_SATA_DPLL_RESET		(1 << 11)
-> +#define CPHY_SATA_TX_ATTEN		0x1c00
-> +#define CPHY_SATA_TX_ATTEN_SHIFT	10
->  #define CPHY_PHY_COUNT			6
->  #define CPHY_LANE_COUNT			4
->  #define CPHY_PORT_COUNT			(CPHY_PHY_COUNT * CPHY_LANE_COUNT)
-> @@ -66,6 +71,7 @@ struct phy_lane_info {
->  	void __iomem *phy_base;
->  	u8 lane_mapping;
->  	u8 phy_devs;
-> +	u8 tx_atten;
->  };
->  static struct phy_lane_info port_data[CPHY_PORT_COUNT];
+> @@ -82,9 +82,11 @@ static DEFINE_SPINLOCK(sgpio_lock);
+>  #define SGPIO_PINS			3
+>  #define SGPIO_PORTS			8
 >  
-> @@ -259,8 +265,27 @@ static void highbank_cphy_disable_overrides(u8 sata_port)
->  	if (unlikely(port_data[sata_port].phy_base == NULL))
->  		return;
->  	tmp = combo_phy_read(sata_port, CPHY_RX_INPUT_STS + lane * SPHY_LANE);
-> -	tmp &= ~CPHY_SATA_OVERRIDE;
-> -	combo_phy_write(sata_port, CPHY_OVERRIDE + lane * SPHY_LANE, tmp);
-> +	tmp &= ~CPHY_SATA_RX_OVERRIDE;
-> +	combo_phy_write(sata_port, CPHY_RX_OVERRIDE + lane * SPHY_LANE, tmp);
-> +}
+> -/* can be cast as an ahci_host_priv for compatibility with most functions */
+>  struct ecx_plat_data {
+>  	u32		n_ports;
+> +	/* number of extra clocks that the SGPIO PIC controller expects */
+> +	u32		pre_clocks;
+> +	u32		post_clocks;
+>  	unsigned	sgpio_gpio[SGPIO_PINS];
+>  	u32		sgpio_pattern;
+>  	u32		port_to_sgpio[SGPIO_PORTS];
+> @@ -144,7 +146,7 @@ static ssize_t ecx_transmit_led_message(struct ata_port *ap, u32 state,
+>  	struct ecx_plat_data *pdata = (struct ecx_plat_data *) hpriv->plat_data;
+>  	struct ahci_port_priv *pp = ap->private_data;
+>  	unsigned long flags;
+> -	int pmp, i;
+> +	int pmp, i, patt_len;
+>  	struct ahci_em_priv *emp;
+>  	u32 sgpio_out;
+>  
+> @@ -161,6 +163,9 @@ static ssize_t ecx_transmit_led_message(struct ata_port *ap, u32 state,
+>  	spin_lock_irqsave(&sgpio_lock, flags);
+>  	ecx_parse_sgpio(pdata, ap->port_no, state);
+>  	sgpio_out = pdata->sgpio_pattern;
+> +	for (i = 0; i < pdata->pre_clocks; i++)
+> +		ecx_led_cycle_clock(pdata);
 > +
-> +static void cphy_override_tx_attenuation(u8 sata_port, u32 val)
-> +{
-> +	u8 lane = port_data[sata_port].lane_mapping;
-> +	u32 tmp;
-> +
-> +	if (val & 0x8)
-> +		return;
-> +
-> +	tmp = combo_phy_read(sata_port, CPHY_TX_INPUT_STS + lane * SPHY_LANE);
-> +	tmp &= ~CPHY_SATA_TX_OVERRIDE;
-> +	combo_phy_write(sata_port, CPHY_TX_OVERRIDE + lane * SPHY_LANE, tmp);
-> +
-> +	tmp |= CPHY_SATA_TX_OVERRIDE;
-> +	combo_phy_write(sata_port, CPHY_TX_OVERRIDE + lane * SPHY_LANE, tmp);
-> +
-> +	tmp |= (val << CPHY_SATA_TX_ATTEN_SHIFT) & CPHY_SATA_TX_ATTEN;
-> +	combo_phy_write(sata_port, CPHY_TX_OVERRIDE + lane * SPHY_LANE, tmp);
->  }
+>  	gpio_set_value(pdata->sgpio_gpio[SLOAD], 1);
+>  	ecx_led_cycle_clock(pdata);
+>  	gpio_set_value(pdata->sgpio_gpio[SLOAD], 0);
+> @@ -168,11 +173,14 @@ static ssize_t ecx_transmit_led_message(struct ata_port *ap, u32 state,
+>  	 * bit-bang out the SGPIO pattern, by consuming a bit and then
+>  	 * clocking it out.
+>  	 */
+> -	for (i = 0; i < (SGPIO_SIGNALS * pdata->n_ports); i++) {
+> +	patt_len = SGPIO_SIGNALS * pdata->n_ports;
+> +	for (i = 0; i < patt_len; i++) {
+>  		gpio_set_value(pdata->sgpio_gpio[SDATA], sgpio_out & 1);
+>  		sgpio_out >>= 1;
+>  		ecx_led_cycle_clock(pdata);
+>  	}
+> +	for (i = 0; i < pdata->post_clocks; i++)
+> +		ecx_led_cycle_clock(pdata);
 >  
->  static void cphy_override_rx_mode(u8 sata_port, u32 val)
-> @@ -268,21 +293,21 @@ static void cphy_override_rx_mode(u8 sata_port, u32 val)
->  	u8 lane = port_data[sata_port].lane_mapping;
->  	u32 tmp;
->  	tmp = combo_phy_read(sata_port, CPHY_RX_INPUT_STS + lane * SPHY_LANE);
-> -	tmp &= ~CPHY_SATA_OVERRIDE;
-> -	combo_phy_write(sata_port, CPHY_OVERRIDE + lane * SPHY_LANE, tmp);
-> +	tmp &= ~CPHY_SATA_RX_OVERRIDE;
-> +	combo_phy_write(sata_port, CPHY_RX_OVERRIDE + lane * SPHY_LANE, tmp);
->  
-> -	tmp |= CPHY_SATA_OVERRIDE;
-> -	combo_phy_write(sata_port, CPHY_OVERRIDE + lane * SPHY_LANE, tmp);
-> +	tmp |= CPHY_SATA_RX_OVERRIDE;
-> +	combo_phy_write(sata_port, CPHY_RX_OVERRIDE + lane * SPHY_LANE, tmp);
->  
->  	tmp &= ~CPHY_SATA_DPLL_MODE;
->  	tmp |= val << CPHY_SATA_DPLL_SHIFT;
-> -	combo_phy_write(sata_port, CPHY_OVERRIDE + lane * SPHY_LANE, tmp);
-> +	combo_phy_write(sata_port, CPHY_RX_OVERRIDE + lane * SPHY_LANE, tmp);
->  
->  	tmp |= CPHY_SATA_DPLL_RESET;
-> -	combo_phy_write(sata_port, CPHY_OVERRIDE + lane * SPHY_LANE, tmp);
-> +	combo_phy_write(sata_port, CPHY_RX_OVERRIDE + lane * SPHY_LANE, tmp);
->  
->  	tmp &= ~CPHY_SATA_DPLL_RESET;
-> -	combo_phy_write(sata_port, CPHY_OVERRIDE + lane * SPHY_LANE, tmp);
-> +	combo_phy_write(sata_port, CPHY_RX_OVERRIDE + lane * SPHY_LANE, tmp);
->  
->  	msleep(15);
->  }
-> @@ -299,16 +324,20 @@ static void highbank_cphy_override_lane(u8 sata_port)
->  						lane * SPHY_LANE);
->  	} while ((tmp & SPHY_HALF_RATE) && (k++ < 1000));
->  	cphy_override_rx_mode(sata_port, 3);
-> +	cphy_override_tx_attenuation(sata_port, port_data[sata_port].tx_atten);
->  }
->  
->  static int highbank_initialize_phys(struct device *dev, void __iomem *addr)
->  {
->  	struct device_node *sata_node = dev->of_node;
-> -	int phy_count = 0, phy, port = 0;
-> +	int phy_count = 0, phy, port = 0, i;
->  	void __iomem *cphy_base[CPHY_PHY_COUNT];
->  	struct device_node *phy_nodes[CPHY_PHY_COUNT];
-> +	u32 tx_atten[CPHY_PORT_COUNT];
-> +
->  	memset(port_data, 0, sizeof(struct phy_lane_info) * CPHY_PORT_COUNT);
->  	memset(phy_nodes, 0, sizeof(struct device_node*) * CPHY_PHY_COUNT);
-> +	memset(tx_atten, 0xff, CPHY_PORT_COUNT);
->  
->  	do {
->  		u32 tmp;
-> @@ -336,6 +365,10 @@ static int highbank_initialize_phys(struct device *dev, void __iomem *addr)
->  		of_node_put(phy_data.np);
->  		port += 1;
->  	} while (port < CPHY_PORT_COUNT);
-> +	of_property_read_u32_array(sata_node, "calxeda,tx-atten",
-> +				tx_atten, port);
-> +	for (i = 0; i < port; i++)
-> +		port_data[i].tx_atten = (u8) tx_atten[i];
->  	return 0;
->  }
->  
-> -- 
-> 1.8.1.2
-> 
-> 
+>  	/* save off new led state for port/slot */
+>  	emp->led_state = state;
+> @@ -207,6 +215,8 @@ static void highbank_set_em_messages(struct device *dev,
+>  	of_property_read_u32_array(np, "calxeda,led-order",
+>  						pdata->port_to_sgpio,
+>  						pdata->n_ports);
+> +	of_property_read_u32(np, "calxeda,pre-clocks", &pdata->pre_clocks);
+> +	of_property_read_u32(np, "calxeda,post-clocks", &pdata->post_clocks);
+
+Are the pdata values initialised anywhere if those dt properties aren't
+present? It's not clear from the patch context.
+
+Thanks,
+Mark.
