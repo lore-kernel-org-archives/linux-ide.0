@@ -1,54 +1,66 @@
-From: "tj@kernel.org" <tj@kernel.org>
-Subject: [PATCH] ahci_imx: depend on CONFIG_MFD_SYSCON
-Date: Fri, 26 Jul 2013 09:06:35 -0400
-Message-ID: <20130726130635.GB3013@htj.dyndns.org>
-References: <20130725151253.8b9b53b3a3cf6cacd501dc54@canb.auug.org.au>
- <51F16F17.4030002@infradead.org>
- <0E83723C55F66F43A6041464FE31119D3487F2@039-SN2MPN1-011.039d.mgd.msft.net>
- <20130726040349.GA29268@S2101-09.ap.freescale.net>
- <0E83723C55F66F43A6041464FE31119D34886A@039-SN2MPN1-011.039d.mgd.msft.net>
- <20130726052519.GB29268@S2101-09.ap.freescale.net>
- <20130726111850.GD30786@mtj.dyndns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [GIT PULL] libata changes for v3.11-rc2
+Date: Fri, 26 Jul 2013 09:09:26 -0400
+Message-ID: <20130726130926.GC3013@htj.dyndns.org>
+References: <20130725175310.GI26107@mtj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20130726111850.GD30786@mtj.dyndns.org>
+In-Reply-To: <20130725175310.GI26107@mtj.dyndns.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Shawn Guo <shawn.guo@linaro.org>
-Cc: Zhu Richard-R65037 <r65037@freescale.com>, Randy Dunlap <rdunlap@infradead.org>, Stephen Rothwell <sfr@canb.auug.org.au>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
->From 867974fc09f93bdd7f98d46ac3733934486bbf4a Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj@kernel.org>
-Date: Fri, 26 Jul 2013 08:57:56 -0400
+Hello, Linus.
 
-ahci_imx makes use of regmap but the dependency wasn't specified in
-Kconfig leading build failures if CONFIG_AHCI_IMX is enabled but
-CONFIG_MFD_SYSCON is not.  Add the Kconfig dependency.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
----
-Applied to libata/for-3.11-fixes.
+The ahci_imx addition was missing dependency on CONFIG_MFD_SYSCON
+leading to build failures depending on config combination.  A patch
+was added to address the issue.  The modified pull request follows.
 
 Thanks.
 
- drivers/ata/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+The following changes since commit ad81f0545ef01ea651886dddac4bef6cec930092:
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index a4af0a2..4e73772 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -99,7 +99,7 @@ config SATA_AHCI_PLATFORM
- 
- config AHCI_IMX
- 	tristate "Freescale i.MX AHCI SATA support"
--	depends on SATA_AHCI_PLATFORM
-+	depends on SATA_AHCI_PLATFORM && MFD_SYSCON
- 	help
- 	  This option enables support for the Freescale i.MX SoC's
- 	  onboard AHCI SATA.
+  Linux 3.11-rc1 (2013-07-14 15:18:27 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-3.11-fixes
+
+for you to fetch changes up to 867974fc09f93bdd7f98d46ac3733934486bbf4a:
+
+  ahci_imx: depend on CONFIG_MFD_SYSCON (2013-07-26 08:57:56 -0400)
+
+----------------------------------------------------------------
+Jingoo Han (1):
+      libata: replace strict_strtol() with kstrtol()
+
+Richard Zhu (2):
+      ARM: imx6q: update the sata bits definitions of gpr13
+      ahci_imx: add ahci sata support on imx platforms
+
+Tejun Heo (2):
+      libata: make it clear that sata_inic162x is experimental
+      ahci_imx: depend on CONFIG_MFD_SYSCON
+
+Xiaotian Feng (1):
+      ahci: fix Null pointer dereference in achi_host_active()
+
+Youquan Song (1):
+      ata: Fix DVD not dectected at some platform with Wellsburg PCH
+
+ drivers/ata/Kconfig                         |  11 +-
+ drivers/ata/Makefile                        |   1 +
+ drivers/ata/ahci.c                          |   9 +-
+ drivers/ata/ahci_imx.c                      | 236 ++++++++++++++++++++++++++++
+ drivers/ata/ata_piix.c                      |   2 +-
+ drivers/ata/libata-scsi.c                   |   6 +-
+ drivers/ata/sata_inic162x.c                 |  14 ++
+ include/linux/mfd/syscon/imx6q-iomuxc-gpr.h | 121 +++++++++-----
+ 8 files changed, 358 insertions(+), 42 deletions(-)
+ create mode 100644 drivers/ata/ahci_imx.c
+
 -- 
-1.8.3.1
+tejun
