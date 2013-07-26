@@ -1,66 +1,49 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
-Date: Fri, 26 Jul 2013 14:14:36 -0700
-Message-ID: <1374873276.7397.1512.camel@haakon3.risingtidesystems.com>
-References: <20130719003034.GG28005@kernel.dk>
-	 <1374195825.7397.997.camel@haakon3.risingtidesystems.com>
-	 <1374215660.7397.1041.camel@haakon3.risingtidesystems.com>
-	 <1374248000.2266.20.camel@dabdike>
-	 <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
-	 <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
-	 <20130722150359.GA16564@dhcp-26-207.brq.redhat.com>
-	 <1374527436.7397.1145.camel@haakon3.risingtidesystems.com>
-	 <20130725101641.GB31994@dhcp-26-207.brq.redhat.com>
-	 <1374790082.7397.1411.camel@haakon3.risingtidesystems.com>
-	 <20130726020928.GL29296@kernel.dk>
+From: Dave Hansen <dave@sr71.net>
+Subject: Re: SATA hotplug not detecting new disks
+Date: Fri, 26 Jul 2013 14:12:22 -0700
+Message-ID: <51F2E636.50001@sr71.net>
+References: <51F1B179.4070309@sr71.net> <51F1D63A.2010403@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20130726020928.GL29296@kernel.dk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Alexander Gordeev <agordeev@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from www.sr71.net ([198.145.64.142]:46756 "EHLO blackbird.sr71.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760311Ab3GZVMX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 26 Jul 2013 17:12:23 -0400
+In-Reply-To: <51F1D63A.2010403@intel.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Shane Huang <shane.huang@amd.com>
 
-On Thu, 2013-07-25 at 20:09 -0600, Jens Axboe wrote:
-> On Thu, Jul 25 2013, Nicholas A. Bellinger wrote:
-> > On Thu, 2013-07-25 at 12:16 +0200, Alexander Gordeev wrote:
-> > > On Mon, Jul 22, 2013 at 02:10:36PM -0700, Nicholas A. Bellinger wrote:
-> > > > Np.  FYI, you'll want to use the latest commit e7827b351 HEAD from
-> > > > target-pending/scsi-mq, which now has functioning scsi-generic support.
-> > > 
-> > > Survives a boot, a kernel build and the build's result :)
-> > 
-> > Great.  Thanks for the feedback Alexander!
-> > 
-> > So the next step on my end is to enable -mq for ahci, and verify initial
-> > correctness using QEMU/KVM hardware emulation.
-> > 
-> > Btw, I've been looking at enabling the SHT->cmd_size for struct
-> > ata_queued_cmd descriptor pre-allocation, but AFAICT these descriptors
-> > are already all pre-allocated by libata and obtained via ata_qc_new() ->
-> > __ata_qc_from_tag() during ata_scsi_queuecmd().
+On 07/25/2013 06:51 PM, Aaron Lu wrote:
+> On 07/26/2013 07:15 AM, Dave Hansen wrote:
+>> > I've got a relatively new system that doesn't seem to be able to hotplug
+>> > SATA disks.  I see the same behavior on 3.10, 3.11-rc2, and Ubuntu's
+>> > 3.8.0-25-generic.  The disks are detected right away on reboots, but
+>> > even after poking the /sys/class/scsi_host/host*/scan files, new disks
+>> > are never detected.  I've disabled link power management.
+>> > 
+>> > Am I doing something stupid here?  I thought this "just worked" on my
+>> > previous hardware.
+> My vague memory reminds me that not all SATA ports are hot pluggable -
+> you can check the port's "External SATA port" bit and "Hot Plug Capable"
+> bit of the PxCMD register like this:
 > 
-> Might still not be a bad idea to do it:
+> $ grep ahci /proc/iomem 
+>     e1a40000-e1a407ff : ahci
+> # dd if=/dev/mem of=ahcidump bs=4096 count=1 skip=0xe1a40
+> You will need to change 0xe1a40 to decimal format.
 > 
-> - Cleans up a driver, getting rid of the need to alloc, maintain, and
->   free those structures.
-> 
-> - Should be some cache locality benefits to having it all sequential.
-> 
+> Then the PxCMD is at offset 0x118 for port 0, check bit 21 for E-SATA or
+> bit 18 for hot pluggable bits. If any of them set to 1, this port
+> should be hot pluggable; otherwise, it doesn't have this capability.
 
-Looking at this some more, there are a number of locations outside of
-the main blk_mq_ops->queue_rq() -> SHT->queuecommand_mq() dispatch that
-use *ata_qc_from_tag() to obtain *ata_queued_cmd, and a few without a
-associated struct scsi_cmnd like libata-core.c:ata_exec_internal_sg()
-for example..
+<sigh>
 
-So I don't think (completely) getting rid of ata_port->qcmds[] will be
-possible, and just converting the ata_scsi_queuecmd() path to use the
-extra SHT->cmd_size pre-allocation for *ata_queued_cmd might end up
-being more trouble that it's worth.  Still undecided on that part..
+I went digging back through the BIOS settings, and found a nice checkbox
+to enable hotplug support on the ports.  All seems happy now.
 
-Tejun, do you have any thoughts + input here..?
+Thanks for the help.  I hope someone else googling will hit this thread. :)
 
---nab
