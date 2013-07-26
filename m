@@ -1,38 +1,96 @@
 From: Mark Langsdorf <mark.langsdorf@calxeda.com>
-Subject: [PATCH 1/5] sata, highbank: fix ordering of SGPIO signals
-Date: Fri, 26 Jul 2013 10:11:54 -0500
-Message-ID: <1374851518-4802-1-git-send-email-mark.langsdorf@calxeda.com>
+Subject: [PATCH 3/5] devicetree: create a separate binding description for sata_highbank
+Date: Fri, 26 Jul 2013 10:11:56 -0500
+Message-ID: <1374851518-4802-3-git-send-email-mark.langsdorf@calxeda.com>
+References: <1374851518-4802-1-git-send-email-mark.langsdorf@calxeda.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1374851518-4802-1-git-send-email-mark.langsdorf@calxeda.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, tj@kernel.org, devicetree@vger.kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, swarren@wwwdotorg.org, ian.campbell@citrix.com, rob.herring@calxeda.com
 Cc: Mark Langsdorf <mark.langsdorf@calxeda.com>
 List-Id: linux-ide@vger.kernel.org
 
-The ACTIVITY and ERROR signals were reversed in the original commit.
-Fix that.
+The Calxeda sata_highbank driver has been adding its descriptions to the
+ahci driver. Separate them properly.
 
 Signed-off-by: Mark Langsdorf <mark.langsdorf@calxeda.com>
 ---
- drivers/ata/sata_highbank.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ .../devicetree/bindings/ata/ahci-platform.txt      | 14 ++--------
+ .../devicetree/bindings/ata/sata_highbank.txt      | 32 ++++++++++++++++++++++
+ 2 files changed, 34 insertions(+), 12 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/sata_highbank.txt
 
-diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
-index d047d92..e9a4f46 100644
---- a/drivers/ata/sata_highbank.c
-+++ b/drivers/ata/sata_highbank.c
-@@ -86,11 +86,11 @@ struct ecx_plat_data {
+diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+index 3ec0c5c..14d7b22 100644
+--- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
++++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+@@ -4,27 +4,17 @@ SATA nodes are defined to describe on-chip Serial ATA controllers.
+ Each SATA controller should have its own node.
  
- #define SGPIO_SIGNALS			3
- #define ECX_ACTIVITY_BITS		0x300000
--#define ECX_ACTIVITY_SHIFT		2
-+#define ECX_ACTIVITY_SHIFT		0
- #define ECX_LOCATE_BITS			0x80000
- #define ECX_LOCATE_SHIFT		1
- #define ECX_FAULT_BITS			0x400000
--#define ECX_FAULT_SHIFT			0
-+#define ECX_FAULT_SHIFT			2
- static inline int sgpio_bit_shift(struct ecx_plat_data *pdata, u32 port,
- 				u32 shift)
- {
+ Required properties:
+-- compatible        : compatible list, contains "calxeda,hb-ahci" or "snps,spear-ahci"
++- compatible        : compatible list, contains "snps,spear-ahci"
+ - interrupts        : <interrupt mapping for SATA IRQ>
+ - reg               : <registers mapping>
+ 
+ Optional properties:
+-- calxeda,port-phys: phandle-combophy and lane assignment, which maps each
+-			SATA port to a combophy and a lane within that
+-			combophy
+-- calxeda,sgpio-gpio: phandle-gpio bank, bit offset, and default on or off,
+-			which indicates that the driver supports SGPIO
+-			indicator lights using the indicated GPIOs
+-- calxeda,led-order : a u32 array that map port numbers to offsets within the
+-			SGPIO bitstream.
+ - dma-coherent      : Present if dma operations are coherent
+ 
+ Example:
+         sata@ffe08000 {
+-		compatible = "calxeda,hb-ahci";
++		compatible = "snps,spear-ahci";
+                 reg = <0xffe08000 0x1000>;
+                 interrupts = <115>;
+-		calxeda,port-phys = <&combophy5 0 &combophy0 0 &combophy0 1
+-					&combophy0 2 &combophy0 3>;
+ 
+         };
+diff --git a/Documentation/devicetree/bindings/ata/sata_highbank.txt b/Documentation/devicetree/bindings/ata/sata_highbank.txt
+new file mode 100644
+index 0000000..aa1b798
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ata/sata_highbank.txt
+@@ -0,0 +1,32 @@
++* Calxeda AHCI SATA Controller
++
++SATA nodes are defined to describe on-chip Serial ATA controllers.
++The Calxeda SATA controller mostly conforms to the AHCI interface
++with some special extensions to add functionality.
++Each SATA controller should have its own node.
++
++Required properties:
++- compatible        : compatible list, contains "calxeda,hb-ahci"
++- interrupts        : <interrupt mapping for SATA IRQ>
++- reg               : <registers mapping>
++
++Optional properties:
++- dma-coherent      : Present if dma operations are coherent
++- calxeda,port-phys: phandle-combophy and lane assignment, which maps each
++			SATA port to a combophy and a lane within that
++			combophy
++- calxeda,sgpio-gpio: phandle-gpio bank, bit offset, and default on or off,
++			which indicates that the driver supports SGPIO
++			indicator lights using the indicated GPIOs
++- calxeda,led-order : a u32 array that map port numbers to offsets within the
++			SGPIO bitstream.
++
++Example:
++        sata@ffe08000 {
++		compatible = "calxeda,hb-ahci";
++                reg = <0xffe08000 0x1000>;
++                interrupts = <115>;
++		calxeda,port-phys = <&combophy5 0 &combophy0 0 &combophy0 1
++					&combophy0 2 &combophy0 3>;
++
++        };
 -- 
 1.8.1.2
