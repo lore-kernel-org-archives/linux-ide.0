@@ -1,84 +1,39 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
-Date: Mon, 29 Jul 2013 09:28:42 +0200
-Message-ID: <51F619AA.1020704@suse.de>
-References: <20130719003034.GG28005@kernel.dk> <1374195825.7397.997.camel@haakon3.risingtidesystems.com> <1374215660.7397.1041.camel@haakon3.risingtidesystems.com> <1374248000.2266.20.camel@dabdike> <1374267684.7397.1058.camel@haakon3.risingtidesystems.com> <1374296162.7397.1098.camel@haakon3.risingtidesystems.com> <20130722150359.GA16564@dhcp-26-207.brq.redhat.com> <1374527436.7397.1145.camel@haakon3.risingtidesystems.com> <20130725101641.GB31994@dhcp-26-207.brq.redhat.com> <1374790082.7397.1411.camel@haakon3.risingtidesystems.com> <20130726020928.GL29296@kernel.dk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Niels de Vos <ndevos@redhat.com>
+Subject: [PATCH] pata_imx: expose module alias for loading from device-tree
+Date: Mon, 29 Jul 2013 09:38:38 +0200
+Message-ID: <1375083518-14899-1-git-send-email-ndevos@redhat.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:52867 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752821Ab3G2H2q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 Jul 2013 03:28:46 -0400
-In-Reply-To: <20130726020928.GL29296@kernel.dk>
+Received: from mail-we0-f175.google.com ([74.125.82.175]:55787 "EHLO
+	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751644Ab3G2Hio (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Jul 2013 03:38:44 -0400
+Received: by mail-we0-f175.google.com with SMTP id q58so3551023wes.6
+        for <linux-ide@vger.kernel.org>; Mon, 29 Jul 2013 00:38:43 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Alexander Gordeev <agordeev@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: devicetree@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Niels de Vos <ndevos@redhat.com>, Sascha Hauer <s.hauer@pengutronix.de>
 
-On 07/26/2013 04:09 AM, Jens Axboe wrote:
-> On Thu, Jul 25 2013, Nicholas A. Bellinger wrote:
->> On Thu, 2013-07-25 at 12:16 +0200, Alexander Gordeev wrote:
->>> On Mon, Jul 22, 2013 at 02:10:36PM -0700, Nicholas A. Bellinger wro=
-te:
->>>> Np.  FYI, you'll want to use the latest commit e7827b351 HEAD from
->>>> target-pending/scsi-mq, which now has functioning scsi-generic sup=
-port.
->>>
->>> Survives a boot, a kernel build and the build's result :)
->>
->> Great.  Thanks for the feedback Alexander!
->>
->> So the next step on my end is to enable -mq for ahci, and verify ini=
-tial
->> correctness using QEMU/KVM hardware emulation.
->>
->> Btw, I've been looking at enabling the SHT->cmd_size for struct
->> ata_queued_cmd descriptor pre-allocation, but AFAICT these descripto=
-rs
->> are already all pre-allocated by libata and obtained via ata_qc_new(=
-) ->
->> __ata_qc_from_tag() during ata_scsi_queuecmd().
->=20
-> Might still not be a bad idea to do it:
->=20
-> - Cleans up a driver, getting rid of the need to alloc, maintain, and
->   free those structures.
->=20
-> - Should be some cache locality benefits to having it all sequential.
->=20
->> So that said, with the struct request + struct scsi_cmnd pre-allocat=
-ions
->> already provided by blk-mq -> scsi-mq code, all memory allocations
->> should have already been eliminated from I/O fast path.
->=20
-> Nice!
->=20
-Hmm.
+Enable auto loading by udev when pata_imx is compiled as a module.
 
-I'm trying to work out if it would be possible to move multipath
-handling over to scsi-mq.
-However, when doing so I would need to reconfigure 'nr_hw_queues' on
-the fly. Now with all the static cmd preallocation going on this is
-going to be tricky.
+Signed-off-by: Niels de Vos <ndevos@redhat.com>
+Cc: Sascha Hauer <s.hauer@pengutronix.de>
+---
+ drivers/ata/pata_imx.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-This leaves me with two choices:
-- Tear down the command pool altogether whenever I need to
-  reconfigure the device (which is going to be painful)
-- Allocate some max nr_hw_queues, and mark the superfluous
-  ones as 'unused' or something. Seeing the a sane max nr_hw_queues
-  will be possibly the number of cpus this might end up hogging
-  quite some memory.
+diff --git a/drivers/ata/pata_imx.c b/drivers/ata/pata_imx.c
+index 4ec7c04..26386f0 100644
+--- a/drivers/ata/pata_imx.c
++++ b/drivers/ata/pata_imx.c
+@@ -237,6 +237,7 @@ static const struct of_device_id imx_pata_dt_ids[] = {
+ 		/* sentinel */
+ 	}
+ };
++MODULE_DEVICE_TABLE(of, imx_pata_dt_ids);
+ 
+ static struct platform_driver pata_imx_driver = {
+ 	.probe		= pata_imx_probe,
+-- 
+1.7.11.7
 
-Would you accept patches moving the static command allocation over
-to pools or is this a desired feature?
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
