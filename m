@@ -1,29 +1,31 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ATA: sata_mv: Remove unneeded forward declaration
-Date: Mon, 29 Jul 2013 11:59:10 -0400
-Message-ID: <20130729155910.GB22605@mtj.dyndns.org>
+Subject: Re: [PATCH] ATA: sata_mv: Remove uneeded CONFIG_HAVE_CLK ifdefs
+Date: Mon, 29 Jul 2013 12:00:16 -0400
+Message-ID: <20130729160016.GC22605@mtj.dyndns.org>
 References: <1375111282-22624-1-git-send-email-ezequiel.garcia@free-electrons.com>
+ <1375111282-22624-2-git-send-email-ezequiel.garcia@free-electrons.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yh0-f51.google.com ([209.85.213.51]:34778 "EHLO
-	mail-yh0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756364Ab3G2P7Q (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Jul 2013 11:59:16 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1375111282-22624-1-git-send-email-ezequiel.garcia@free-electrons.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+In-Reply-To: <1375111282-22624-2-git-send-email-ezequiel.garcia@free-electrons.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Andrew Lunn <andrew@lunn.ch>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Gregory Clement <gregory.clement@free-electrons.com>, Lior Amsalem <alior@marvell.com>
+List-Id: linux-ide@vger.kernel.org
 
-On Mon, Jul 29, 2013 at 12:21:21PM -0300, Ezequiel Garcia wrote:
-> These forward declarations are no longer needed, and are probably
-> historical left-over.
+On Mon, Jul 29, 2013 at 12:21:22PM -0300, Ezequiel Garcia wrote:
+> If CONFIG_HAVE_CLK is not selected, then all the clk API turn out
+> into stubs, so there's no need to have the ifdefs.
+> The only side-effect of this patch is the extra tiny kmalloc,
+> but that's not enough reason to have such ugly ifdefs all around
+> the code.
 > 
 > Signed-off-by: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
 
-Applied to libata/for-3.12.
+Can you please add a comment in the hpriv definition explaining what
+that clk is for and how it's optional and becomes noops when not
+needed?
 
 Thanks.
 
