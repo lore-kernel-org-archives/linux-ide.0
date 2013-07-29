@@ -1,32 +1,57 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/5] sata, highbank: fix ordering of SGPIO signals
-Date: Mon, 29 Jul 2013 12:55:30 -0400
-Message-ID: <20130729165530.GG22605@mtj.dyndns.org>
-References: <1374851518-4802-1-git-send-email-mark.langsdorf@calxeda.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
+Date: Mon, 29 Jul 2013 12:11:06 -0700
+Message-ID: <1375125066.5171.10.camel@haakon3.risingtidesystems.com>
+References: <1374248000.2266.20.camel@dabdike>
+	 <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
+	 <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
+	 <20130722150359.GA16564@dhcp-26-207.brq.redhat.com>
+	 <1374527436.7397.1145.camel@haakon3.risingtidesystems.com>
+	 <20130725101641.GB31994@dhcp-26-207.brq.redhat.com>
+	 <1374790082.7397.1411.camel@haakon3.risingtidesystems.com>
+	 <20130726020928.GL29296@kernel.dk>
+	 <1374873276.7397.1512.camel@haakon3.risingtidesystems.com>
+	 <1374885793.7397.1537.camel@haakon3.risingtidesystems.com>
+	 <20130729115011.GC20951@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-gg0-f180.google.com ([209.85.161.180]:36862 "EHLO
-	mail-gg0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752526Ab3G2Qzg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Jul 2013 12:55:36 -0400
-Content-Disposition: inline
-In-Reply-To: <1374851518-4802-1-git-send-email-mark.langsdorf@calxeda.com>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:35421 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751171Ab3G2TFO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Jul 2013 15:05:14 -0400
+In-Reply-To: <20130729115011.GC20951@mtj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Langsdorf <mark.langsdorf@calxeda.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, swarren@wwwdotorg.org, ian.campbell@citrix.com, rob.herring@calxeda.com
+To: Tejun Heo <tj@kernel.org>
+Cc: Jens Axboe <axboe@kernel.dk>, Alexander Gordeev <agordeev@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Christie <michaelc@cs.wisc.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, Jul 26, 2013 at 10:11:54AM -0500, Mark Langsdorf wrote:
-> The ACTIVITY and ERROR signals were reversed in the original commit.
-> Fix that.
+On Mon, 2013-07-29 at 07:50 -0400, Tejun Heo wrote:
+> Yo,
+> 
+> On Fri, Jul 26, 2013 at 05:43:13PM -0700, Nicholas A. Bellinger wrote:
+> > Considering there can be more than a single ata_device hanging off each
+> > ata_port, the '*sdev = ap->link.device[0].sdev' in __ata_qc_from_tag()
+> > is definitely bogus, but I'm not sure how else to correlate
+> > blk-mq/scsi-mq per device descriptors to existing code expecting
+> > ata_port->qcmd[] descriptors to be shared across multiple devices..
+> > 
+> > Tejun..?
+> 
+> I have no idea.  Let's please just do simpler conversion and worry
+> about embedding qc's into scsi_cmnds later.  libata isn't a normal
+> SCSI driver and has a rather its own thick midlayer doing the
+> impedance matching inbetween && I really don't think there is too much
+> benefit to be reaped from embedding qc's into scsi_cmnds.
+> 
 
-And what's the implication of this change?  Does this change the
-behavior of the driver?  If so, how?  If not, why not?  *Please* be
-more descriptive in patch descriptions and explain *why* the changes
-are being made.
+That is essentially the same conclusion that I came to, but wanted to at
+least give you a chance to comment here.  ;)
 
-Thanks.
+So that said, I'll include a simple conversion for libata into the
+scsi-mq WIP branch, and folks who are interested in more detailed
+conversions can pursue them as separate items.
 
--- 
-tejun
+--nab 
+
