@@ -1,55 +1,80 @@
-From: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
-Subject: Re: [PATCH] ATA: sata_mv: Remove uneeded CONFIG_HAVE_CLK ifdefs
-Date: Mon, 29 Jul 2013 16:44:53 -0300
-Message-ID: <20130729194452.GA31864@localhost>
-References: <1375111282-22624-1-git-send-email-ezequiel.garcia@free-electrons.com>
- <1375111282-22624-2-git-send-email-ezequiel.garcia@free-electrons.com>
- <20130729190431.GJ24782@lunn.ch>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH 1/3] ACPI / PM: Only set power states of devices that are power manageable
+Date: Tue, 30 Jul 2013 00:21:28 +0200
+Message-ID: <3386345.rYEkrXssx8@vostro.rjw.lan>
+References: <10433383.dueoNg39qi@vostro.rjw.lan> <1657971.1utElu0Hzo@vostro.rjw.lan> <51F677B1.9090502@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:49884 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753075Ab3G2Tor (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Jul 2013 15:44:47 -0400
-Content-Disposition: inline
-In-Reply-To: <20130729190431.GJ24782@lunn.ch>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <51F677B1.9090502@intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linux PM list <linux-pm@vger.kernel.org>, Yinghai Lu <yinghai@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Lunn <andrew@lunn.ch>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, tj@kernel.org, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Gregory Clement <gregory.clement@free-electrons.com>, Lior Amsalem <alior@marvell.com>
 
-Hi Andrew,
+On Monday, July 29, 2013 10:09:53 PM Aaron Lu wrote:
+> On 07/27/2013 09:10 PM, Rafael J. Wysocki wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > 
+> > Make acpi_device_set_power() check if the given device is power
+> > manageable before checking if the given power state is valid for that
+> > device.  Otherwise it will print that "Device does not support" that
+> > power state into the kernel log, which may not make sense for some
+> > power states (D0 and D3cold are supported by all devices by
+> > definition).
+> 
+> It will not print "Device does not support" that power state if that
+> power state is D0 or D3cold since we have unconditionally set those two
+> power state's valid flag.
 
-On Mon, Jul 29, 2013 at 09:04:31PM +0200, Andrew Lunn wrote:
-> On Mon, Jul 29, 2013 at 12:21:22PM -0300, Ezequiel Garcia wrote:
-> > If CONFIG_HAVE_CLK is not selected, then all the clk API turn out
-> > into stubs, so there's no need to have the ifdefs.
-> > The only side-effect of this patch is the extra tiny kmalloc,
-> > but that's not enough reason to have such ugly ifdefs all around
-> > the code.
-> >=20
-> > Signed-off-by: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
->=20
-> What architectures did you compile this for? PowerPC and x86 as well
-> as ARM? I _think_ this driver is also used there, and i _think_
-> without some #ifdef, it failed to build. But maybe since then, the
-> common clock is now available on all architectures?
->=20
+So you didn't actually looked at acpi_bus_get_power_flags() that set the
+power.states[].flags.valid flag, because If you had looked at it, you would
+have seen that that's not the case.
 
-Using COMPILE_TEST=3Dy, I've compiled with a working ARM config,
-as well as with a MMU-less ARM (with COMMON_CLK=3Dn).
+No, we don't set the valid flag for devices that aren't power manageable
+(i.e. have flags.power_manageable unset), which is the *whole* *point* of
+this change.
 
-And now that you mention x86, I've compiled it with an x86 config
-(with COMMON_CLK=3Dn).
+> OTOH, what value should we return for a device node that is not power
+> manageable in acpi_device_set_power when the target state is D0 or D3
+> cold? The old behavior is to return 0, meanning success without taking
+> any actual action.
+> 
+> In acpi_bus_set_power, if the device is not power manageable, we will
+> return -ENODEV; in acpi_dev_pm_full/low_power, we will return 0 as in
+> the original acpi_device_set_power. So return -EINVAL here is correct?
 
-I'm not sure this particular change is architecture dependent (at least
-nowadays), since by looking at include/linux/clk.h it seems pretty
-straightforward that all the operations are no-ops if HAVE_CLK=3Dn.
+No, the original acpi_device_set_power() will return -ENODEV then, but
+in my opinion returning -EINVAL is more accurate, because "power
+manageable" means "you can change power state of it".
 
-Am I missing something?
---=20
-Ezequiel Garc=C3=ADa, Free Electrons
-Embedded Linux, Kernel and Android Engineering
-http://free-electrons.com
+Thanks,
+Rafael
+
+
+> > Tested-by: Yinghai Lu <yinghai@kernel.org>
+> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > ---
+> >  drivers/acpi/device_pm.c |    3 ++-
+> >  1 file changed, 2 insertions(+), 1 deletion(-)
+> > 
+> > Index: linux-pm/drivers/acpi/device_pm.c
+> > ===================================================================
+> > --- linux-pm.orig/drivers/acpi/device_pm.c
+> > +++ linux-pm/drivers/acpi/device_pm.c
+> > @@ -159,7 +159,8 @@ int acpi_device_set_power(struct acpi_de
+> >  	int result = 0;
+> >  	bool cut_power = false;
+> >  
+> > -	if (!device || (state < ACPI_STATE_D0) || (state > ACPI_STATE_D3_COLD))
+> > +	if (!device || !device->flags.power_manageable
+> > +	    || (state < ACPI_STATE_D0) || (state > ACPI_STATE_D3_COLD))
+> >  		return -EINVAL;
+> >  
+> >  	/* Make sure this is a valid target state */
+> > 
+> 
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
