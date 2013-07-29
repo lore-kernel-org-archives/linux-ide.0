@@ -1,46 +1,64 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
-Date: Mon, 29 Jul 2013 08:08:09 -0600
-Message-ID: <51F67749.3070606@kernel.dk>
-References: <1374248000.2266.20.camel@dabdike> <1374267684.7397.1058.camel@haakon3.risingtidesystems.com> <1374296162.7397.1098.camel@haakon3.risingtidesystems.com> <20130722150359.GA16564@dhcp-26-207.brq.redhat.com> <1374527436.7397.1145.camel@haakon3.risingtidesystems.com> <20130725101641.GB31994@dhcp-26-207.brq.redhat.com> <1374790082.7397.1411.camel@haakon3.risingtidesystems.com> <20130726020928.GL29296@kernel.dk> <1374873276.7397.1512.camel@haakon3.risingtidesystems.com> <1374885793.7397.1537.camel@haakon3.risingtidesystems.com> <20130729111827.GA14283@dhcp-26-207.brq.redhat.com>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH 1/3] ACPI / PM: Only set power states of devices that
+ are power manageable
+Date: Mon, 29 Jul 2013 22:09:53 +0800
+Message-ID: <51F677B1.9090502@intel.com>
+References: <10433383.dueoNg39qi@vostro.rjw.lan> <1657971.1utElu0Hzo@vostro.rjw.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:43822 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755800Ab3G2OJQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Jul 2013 10:09:16 -0400
-In-Reply-To: <20130729111827.GA14283@dhcp-26-207.brq.redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <1657971.1utElu0Hzo@vostro.rjw.lan>
+Sender: linux-acpi-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linux PM list <linux-pm@vger.kernel.org>, Yinghai Lu <yinghai@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On 07/29/2013 05:18 AM, Alexander Gordeev wrote:
->> -static struct ata_queued_cmd *ata_qc_new(struct ata_port *ap)
->> +static struct ata_queued_cmd *ata_qc_new(struct ata_port *ap,
->> +                                        struct scsi_cmnd *sc)
->>  {
->>         struct ata_queued_cmd *qc = NULL;
->> -       unsigned int i;
->> +       struct request *rq = sc->request;
->>  
->>         /* no command while frozen */
->>         if (unlikely(ap->pflags & ATA_PFLAG_FROZEN))
->>                 return NULL;
->>  
->> -       /* the last tag is reserved for internal command. */
->> -       for (i = 0; i < ATA_MAX_QUEUE - 1; i++)
+On 07/27/2013 09:10 PM, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 > 
-> blk-mq does not prevent tag ATA_TAG_INTERNAL from being using. Would it make
-> sense to promote queue depth of length (ATA_MAX_QUEUE - 1) while always
-> pointing ATA_TAG_INTERNAL to qcmd (see below)?
+> Make acpi_device_set_power() check if the given device is power
+> manageable before checking if the given power state is valid for that
+> device.  Otherwise it will print that "Device does not support" that
+> power state into the kernel log, which may not make sense for some
+> power states (D0 and D3cold are supported by all devices by
+> definition).
 
-blk-mq does support a number of reserved tags, information just needs to
-be passed in appropriately. So there is support for reserving X number
-of error handling / emergency tags.
+It will not print "Device does not support" that power state if that
+power state is D0 or D3cold since we have unconditionally set those two
+power state's valid flag.
 
--- 
-Jens Axboe
+OTOH, what value should we return for a device node that is not power
+manageable in acpi_device_set_power when the target state is D0 or D3
+cold? The old behavior is to return 0, meanning success without taking
+any actual action.
+
+In acpi_bus_set_power, if the device is not power manageable, we will
+return -ENODEV; in acpi_dev_pm_full/low_power, we will return 0 as in
+the original acpi_device_set_power. So return -EINVAL here is correct?
+
+-Aaron
+
+> 
+> Tested-by: Yinghai Lu <yinghai@kernel.org>
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> ---
+>  drivers/acpi/device_pm.c |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> Index: linux-pm/drivers/acpi/device_pm.c
+> ===================================================================
+> --- linux-pm.orig/drivers/acpi/device_pm.c
+> +++ linux-pm/drivers/acpi/device_pm.c
+> @@ -159,7 +159,8 @@ int acpi_device_set_power(struct acpi_de
+>  	int result = 0;
+>  	bool cut_power = false;
+>  
+> -	if (!device || (state < ACPI_STATE_D0) || (state > ACPI_STATE_D3_COLD))
+> +	if (!device || !device->flags.power_manageable
+> +	    || (state < ACPI_STATE_D0) || (state > ACPI_STATE_D3_COLD))
+>  		return -EINVAL;
+>  
+>  	/* Make sure this is a valid target state */
+> 
 
