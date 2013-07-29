@@ -1,123 +1,48 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH 2/3] ACPI / PM: Make messages in acpi_device_set_power() print device names
-Date: Mon, 29 Jul 2013 15:36:38 +0200
-Message-ID: <8023117.JJXk2RBLtn@vostro.rjw.lan>
-References: <10433383.dueoNg39qi@vostro.rjw.lan> <1782275.A7JEhQIj8Q@vostro.rjw.lan> <51F65D1F.9050402@cogentembedded.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
+Date: Mon, 29 Jul 2013 08:03:25 -0600
+Message-ID: <51F6762D.1040906@kernel.dk>
+References: <1374215660.7397.1041.camel@haakon3.risingtidesystems.com> <1374248000.2266.20.camel@dabdike> <1374267684.7397.1058.camel@haakon3.risingtidesystems.com> <1374296162.7397.1098.camel@haakon3.risingtidesystems.com> <20130722150359.GA16564@dhcp-26-207.brq.redhat.com> <1374527436.7397.1145.camel@haakon3.risingtidesystems.com> <20130725101641.GB31994@dhcp-26-207.brq.redhat.com> <1374790082.7397.1411.camel@haakon3.risingtidesystems.com> <20130726020928.GL29296@kernel.dk> <1374873276.7397.1512.camel@haakon3.risingtidesystems.com> <20130729114653.GB20951@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:46006 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751972Ab3G2N0b (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 Jul 2013 09:26:31 -0400
-In-Reply-To: <51F65D1F.9050402@cogentembedded.com>
+Received: from merlin.infradead.org ([205.233.59.134]:43688 "EHLO
+	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755727Ab3G2OEb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Jul 2013 10:04:31 -0400
+In-Reply-To: <20130729114653.GB20951@mtj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: Joe Perches <joe@perches.com>, Lan Tianyu <lantianyu1986@gmail.com>, ACPI Devel Maling List <linux-acpi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linux PM list <linux-pm@vger.kernel.org>, Yinghai Lu <yinghai@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Aaron Lu <aaron.lu@intel.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Alexander Gordeev <agordeev@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Christie <michaelc@cs.wisc.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Monday, July 29, 2013 04:16:31 PM Sergei Shtylyov wrote:
-> Hello.
+On 07/29/2013 05:46 AM, Tejun Heo wrote:
+> Hello,
 > 
-> On 29-07-2013 16:17, Rafael J. Wysocki wrote:
+> On Fri, Jul 26, 2013 at 02:14:36PM -0700, Nicholas A. Bellinger wrote:
+>> So I don't think (completely) getting rid of ata_port->qcmds[] will be
+>> possible, and just converting the ata_scsi_queuecmd() path to use the
+>> extra SHT->cmd_size pre-allocation for *ata_queued_cmd might end up
+>> being more trouble that it's worth.  Still undecided on that part..
+>>
+>> Tejun, do you have any thoughts + input here..?
 > 
-> [...]
+> libata exception handling which includes probing doesn't go through
+> SCSI at all.  It all works inside libata proper using ata_queuecmds
+> and only the result is exposed to SCSI.  Most of those SCSI semantics
+> need to be emulated anyway, so this makes things a lot easier than
+> going through SCSI for each command.  As it currently stands, it'd be
+> a lot of effort to try to embed ata_qc's into higher layer construct.
+> Given how it's used, I don't think it's a high priority task.
 > 
-> >>>> @@ -166,20 +166,20 @@ int acpi_device_set_power(struct acpi_de
-> >> []
-> >>>>          if (device->parent && (state < device->parent->power.state)) {
-> >>>> -               printk(KERN_WARNING PREFIX
-> >>>> -                             "Cannot set device to a higher-powered"
-> >>>> -                             " state than parent\n");
-> >>>> +               dev_warn(&device->dev, "Cannot transition to a higher-powered "
-> >>>> +                        "state than parent\n");
-> 
-> >> coalesce format please.
-> 
-> > I can, but then it'll cross the 80 columns boundary.
-> 
->    It's not a problem with checkpatch.pl anymore. Contrariwise, it whines 
-> about the broken up string literals, AFAIR.
+> One thing which would probably be worthwhile tho is getting rid of the
+> bitmap based qc tag allocator in libata.  That one is just borderline
+> stupid to keep around on any setup which is supposed to be scalable.
 
-Oh, at last.
+Your border might be wider than mine :-). Yes, the bitmap should
+definitely go.
 
-Updated patch follows.
-
-Thanks,
-Rafael
-
-
----
-From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Subject: ACPI / PM: Make messages in acpi_device_set_power() print device names
-
-Modify acpi_device_set_power() so that diagnostic messages printed by
-it to the kernel log always contain the name of the device concerned
-to make it possible to identify the device that triggered the message
-if need be.
-
-Also replace printk(KERN_WARNING ) with dev_warn() everywhere in that
-function.
-
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
----
- drivers/acpi/device_pm.c |   22 ++++++++++------------
- 1 file changed, 10 insertions(+), 12 deletions(-)
-
-Index: linux-pm/drivers/acpi/device_pm.c
-===================================================================
---- linux-pm.orig/drivers/acpi/device_pm.c
-+++ linux-pm/drivers/acpi/device_pm.c
-@@ -166,20 +166,20 @@ int acpi_device_set_power(struct acpi_de
- 	/* Make sure this is a valid target state */
- 
- 	if (state == device->power.state) {
--		ACPI_DEBUG_PRINT((ACPI_DB_INFO, "Device is already at %s\n",
-+		ACPI_DEBUG_PRINT((ACPI_DB_INFO, "Device [%s] already in %s\n",
-+				  device->pnp.bus_id,
- 				  acpi_power_state_string(state)));
- 		return 0;
- 	}
- 
- 	if (!device->power.states[state].flags.valid) {
--		printk(KERN_WARNING PREFIX "Device does not support %s\n",
--		       acpi_power_state_string(state));
-+		dev_warn(&device->dev, "Power state %s not supported\n",
-+			 acpi_power_state_string(state));
- 		return -ENODEV;
- 	}
- 	if (device->parent && (state < device->parent->power.state)) {
--		printk(KERN_WARNING PREFIX
--			      "Cannot set device to a higher-powered"
--			      " state than parent\n");
-+		dev_warn(&device->dev,
-+			 "Cannot transition to a higher-powered state than parent\n");
- 		return -ENODEV;
- 	}
- 
-@@ -192,8 +192,8 @@ int acpi_device_set_power(struct acpi_de
- 
- 	if (state < device->power.state && state != ACPI_STATE_D0
- 	    && device->power.state >= ACPI_STATE_D3_HOT) {
--		printk(KERN_WARNING PREFIX
--			"Cannot transition to non-D0 state from D3\n");
-+		dev_warn(&device->dev,
-+			 "Cannot transition to non-D0 state from D3\n");
- 		return -ENODEV;
- 	}
- 
-@@ -220,10 +220,8 @@ int acpi_device_set_power(struct acpi_de
- 
-  end:
- 	if (result) {
--		printk(KERN_WARNING PREFIX
--			      "Device [%s] failed to transition to %s\n",
--			      device->pnp.bus_id,
--			      acpi_power_state_string(state));
-+		dev_warn(&device->dev, "Failed to change power state to %s\n",
-+			 acpi_power_state_string(state));
- 	} else {
- 		device->power.state = state;
- 		ACPI_DEBUG_PRINT((ACPI_DB_INFO,
+-- 
+Jens Axboe
 
