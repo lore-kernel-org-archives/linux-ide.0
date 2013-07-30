@@ -1,69 +1,39 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH 1/3] ACPI / PM: Only set power states of devices that are power manageable
-Date: Tue, 30 Jul 2013 16:04:47 +0200
-Message-ID: <1738639.5UcWLydKxR@vostro.rjw.lan>
-References: <10433383.dueoNg39qi@vostro.rjw.lan> <3386345.rYEkrXssx8@vostro.rjw.lan> <51F6FE34.2020703@intel.com>
+From: Mark Rutland <mark.rutland@arm.com>
+Subject: Re: [PATCH 4/5] sata, highbank: set tx_atten override bits
+Date: Tue, 30 Jul 2013 17:42:31 +0100
+Message-ID: <20130730164231.GH29859@e106331-lin.cambridge.arm.com>
+References: <1374851518-4802-1-git-send-email-mark.langsdorf@calxeda.com>
+ <1374851518-4802-4-git-send-email-mark.langsdorf@calxeda.com>
+ <20130726162231.GD3528@e106331-lin.cambridge.arm.com>
+ <51F2C220.5040407@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <51F6FE34.2020703@intel.com>
-Sender: linux-pm-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linux PM list <linux-pm@vger.kernel.org>, Yinghai Lu <yinghai@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <51F2C220.5040407@gmail.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Rob Herring <robherring2@gmail.com>
+Cc: Mark Langsdorf <mark.langsdorf@calxeda.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "tj@kernel.org" <tj@kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Pawel Moll <Pawel.Moll@arm.com>, "swarren@wwwdotorg.org" <swarren@wwwdotorg.org>, "ian.campbell@citrix.com" <ian.campbell@citrix.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Tuesday, July 30, 2013 07:43:48 AM Aaron Lu wrote:
-> On 07/30/2013 06:21 AM, Rafael J. Wysocki wrote:
-> > On Monday, July 29, 2013 10:09:53 PM Aaron Lu wrote:
-> >> On 07/27/2013 09:10 PM, Rafael J. Wysocki wrote:
-> >>> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> >>>
-> >>> Make acpi_device_set_power() check if the given device is power
-> >>> manageable before checking if the given power state is valid for that
-> >>> device.  Otherwise it will print that "Device does not support" that
-> >>> power state into the kernel log, which may not make sense for some
-> >>> power states (D0 and D3cold are supported by all devices by
-> >>> definition).
-> >>
-> >> It will not print "Device does not support" that power state if that
-> >> power state is D0 or D3cold since we have unconditionally set those two
-> >> power state's valid flag.
+On Fri, Jul 26, 2013 at 07:38:24PM +0100, Rob Herring wrote:
+> On 07/26/2013 11:22 AM, Mark Rutland wrote:
+> > On Fri, Jul 26, 2013 at 04:11:57PM +0100, Mark Langsdorf wrote:
+> >> Some board designs do not drive the SATA transmit lines within the
+> >> specification. The ECME can provide override settings, on a per board
+> >> basis, to bring the transmit lines within spec. Read those settings
+> >> from the DTB and program them in.
 > > 
-> > So you didn't actually looked at acpi_bus_get_power_flags() that set the
-> > power.states[].flags.valid flag, because If you had looked at it, you would
-> > have seen that that's not the case.
-> > 
-> > No, we don't set the valid flag for devices that aren't power manageable
-> > (i.e. have flags.power_manageable unset), which is the *whole* *point* of
-> > this change.
+> > How variable is the use of this property going to be? Would it instead
+> > be possible to decide that this was necessary, and choose the
+> > appropriate values based on a compatible property?
 > 
-> Right, I missed this. Sorry for the noise.
-> 
-> > 
-> >> OTOH, what value should we return for a device node that is not power
-> >> manageable in acpi_device_set_power when the target state is D0 or D3
-> >> cold? The old behavior is to return 0, meanning success without taking
-> >> any actual action.
-> >>
-> >> In acpi_bus_set_power, if the device is not power manageable, we will
-> >> return -ENODEV; in acpi_dev_pm_full/low_power, we will return 0 as in
-> >> the original acpi_device_set_power. So return -EINVAL here is correct?
-> > 
-> > No, the original acpi_device_set_power() will return -ENODEV then, but
-> > in my opinion returning -EINVAL is more accurate, because "power
-> > manageable" means "you can change power state of it".
-> 
-> Shall I prepare a patch to update the errno in acpi_bus_set_power?
+> It is based on compliance testing of the particular board design. Basing
+> on a compatible property would not work in this case.
 
-In fact, it doesn't need to check flags.power_manageable after this patch
-and the debug message won't be missed I think, so please just remove
-the whole if () from there, if that's not a problem.
+Ok. Could you clarify the u8/cell usage in the binding and amend the
+example please?
 
-Thanks,
-Rafael
-
-
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Cheers,
+Mark.
