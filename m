@@ -1,42 +1,69 @@
-From: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
-Subject: Re: [PATCH v2] ATA: sata_mv: Remove unneeded CONFIG_HAVE_CLK ifdefs
-Date: Tue, 30 Jul 2013 10:16:28 -0300
-Message-ID: <20130730131626.GC2375@localhost>
-References: <1375152363-3451-1-git-send-email-ezequiel.garcia@free-electrons.com>
- <20130730130411.GC12016@htj.dyndns.org>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: [PATCH 1/3] ACPI / PM: Only set power states of devices that are power manageable
+Date: Tue, 30 Jul 2013 16:04:47 +0200
+Message-ID: <1738639.5UcWLydKxR@vostro.rjw.lan>
+References: <10433383.dueoNg39qi@vostro.rjw.lan> <3386345.rYEkrXssx8@vostro.rjw.lan> <51F6FE34.2020703@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.free-electrons.com ([94.23.35.102]:41584 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752523Ab3G3NQh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Jul 2013 09:16:37 -0400
-Content-Disposition: inline
-In-Reply-To: <20130730130411.GC12016@htj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <51F6FE34.2020703@intel.com>
+Sender: linux-pm-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linux PM list <linux-pm@vger.kernel.org>, Yinghai Lu <yinghai@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, Andrew Lunn <andrew@lunn.ch>, Lior Amsalem <alior@marvell.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Gregory Clement <gregory.clement@free-electrons.com>
 
-On Tue, Jul 30, 2013 at 09:04:11AM -0400, Tejun Heo wrote:
-> On Mon, Jul 29, 2013 at 11:46:03PM -0300, Ezequiel Garcia wrote:
-> > If CONFIG_HAVE_CLK is not selected, then all the clk API turn out
-> > into no-ops. In other words, there's no need to have the ifdefs.
-> >=20
-> > The only side-effect of this patch is the extra tiny kmalloc,
-> > but that's not enough reason to have such ugly ifdefs all around
-> > the code.
-> >=20
-> > Signed-off-by: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
->=20
-> Applied to libata/for-3.12 with Andrew's comment suggestion applied
-> and acked-by added.
->=20
+On Tuesday, July 30, 2013 07:43:48 AM Aaron Lu wrote:
+> On 07/30/2013 06:21 AM, Rafael J. Wysocki wrote:
+> > On Monday, July 29, 2013 10:09:53 PM Aaron Lu wrote:
+> >> On 07/27/2013 09:10 PM, Rafael J. Wysocki wrote:
+> >>> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >>>
+> >>> Make acpi_device_set_power() check if the given device is power
+> >>> manageable before checking if the given power state is valid for that
+> >>> device.  Otherwise it will print that "Device does not support" that
+> >>> power state into the kernel log, which may not make sense for some
+> >>> power states (D0 and D3cold are supported by all devices by
+> >>> definition).
+> >>
+> >> It will not print "Device does not support" that power state if that
+> >> power state is D0 or D3cold since we have unconditionally set those two
+> >> power state's valid flag.
+> > 
+> > So you didn't actually looked at acpi_bus_get_power_flags() that set the
+> > power.states[].flags.valid flag, because If you had looked at it, you would
+> > have seen that that's not the case.
+> > 
+> > No, we don't set the valid flag for devices that aren't power manageable
+> > (i.e. have flags.power_manageable unset), which is the *whole* *point* of
+> > this change.
+> 
+> Right, I missed this. Sorry for the noise.
+> 
+> > 
+> >> OTOH, what value should we return for a device node that is not power
+> >> manageable in acpi_device_set_power when the target state is D0 or D3
+> >> cold? The old behavior is to return 0, meanning success without taking
+> >> any actual action.
+> >>
+> >> In acpi_bus_set_power, if the device is not power manageable, we will
+> >> return -ENODEV; in acpi_dev_pm_full/low_power, we will return 0 as in
+> >> the original acpi_device_set_power. So return -EINVAL here is correct?
+> > 
+> > No, the original acpi_device_set_power() will return -ENODEV then, but
+> > in my opinion returning -EINVAL is more accurate, because "power
+> > manageable" means "you can change power state of it".
+> 
+> Shall I prepare a patch to update the errno in acpi_bus_set_power?
 
-Great, thanks for taking care of that.
+In fact, it doesn't need to check flags.power_manageable after this patch
+and the debug message won't be missed I think, so please just remove
+the whole if () from there, if that's not a problem.
 
---=20
-Ezequiel Garc=C3=ADa, Free Electrons
-Embedded Linux, Kernel and Android Engineering
-http://free-electrons.com
+Thanks,
+Rafael
+
+
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
