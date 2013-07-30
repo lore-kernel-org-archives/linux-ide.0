@@ -1,164 +1,85 @@
 From: Jingoo Han <jg1.han@samsung.com>
-Subject: [PATCH 26/35] ata: use dev_get_platdata()
-Date: Tue, 30 Jul 2013 17:16:05 +0900
-Message-ID: <005501ce8cfd$09c47e90$1d4d7bb0$@samsung.com>
+Subject: [PATCH 27/35] ide: use dev_get_platdata()
+Date: Tue, 30 Jul 2013 17:16:47 +0900
+Message-ID: <005601ce8cfd$22cedd40$686c97c0$@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:47079 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758050Ab3G3IQI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Jul 2013 04:16:08 -0400
+Received: from mailout4.samsung.com ([203.254.224.34]:55254 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758079Ab3G3IQt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Jul 2013 04:16:49 -0400
 Received: from epcpsbgr2.samsung.com
  (u142.gpu120.samsung.co.kr [203.254.230.142])
- by mailout2.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
  (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MQQ00DDJPMUAKV0@mailout2.samsung.com> for
- linux-ide@vger.kernel.org; Tue, 30 Jul 2013 17:16:06 +0900 (KST)
+ with ESMTP id <0MQQ00FDCPNBDFS0@mailout4.samsung.com> for
+ linux-ide@vger.kernel.org; Tue, 30 Jul 2013 17:16:48 +0900 (KST)
 Content-language: ko
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: 'Tejun Heo' <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, Jingoo Han <jg1.han@samsung.com>
+To: "'David S. Miller'" <davem@davemloft.net>
+Cc: linux-ide@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
 
 Use the wrapper function for retrieving the platform data instead of
 accessing dev->platform_data directly.
 
 Signed-off-by: Jingoo Han <jg1.han@samsung.com>
 ---
- drivers/ata/pata_at32.c       |    2 +-
- drivers/ata/pata_at91.c       |    2 +-
- drivers/ata/pata_ixp4xx_cf.c  |    4 ++--
- drivers/ata/pata_octeon_cf.c  |    2 +-
- drivers/ata/pata_platform.c   |    2 +-
- drivers/ata/pata_pxa.c        |    2 +-
- drivers/ata/pata_samsung_cf.c |    4 ++--
- drivers/ata/sata_mv.c         |    2 +-
- 8 files changed, 10 insertions(+), 10 deletions(-)
+ drivers/ide/gayle.c        |    2 +-
+ drivers/ide/ide_platform.c |    2 +-
+ drivers/ide/tx4938ide.c    |    4 ++--
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/ata/pata_at32.c b/drivers/ata/pata_at32.c
-index 8d493b4..d59d523 100644
---- a/drivers/ata/pata_at32.c
-+++ b/drivers/ata/pata_at32.c
-@@ -271,7 +271,7 @@ static int __init pata_at32_probe(struct platform_device *pdev)
+diff --git a/drivers/ide/gayle.c b/drivers/ide/gayle.c
+index 0a8440a..97a2f9d 100644
+--- a/drivers/ide/gayle.c
++++ b/drivers/ide/gayle.c
+@@ -132,7 +132,7 @@ static int __init amiga_gayle_ide_probe(struct platform_device *pdev)
+ 	if (!request_mem_region(res->start, resource_size(res), "IDE"))
+ 		return -EBUSY;
  
- 	struct device		 *dev = &pdev->dev;
- 	struct at32_ide_info	 *info;
--	struct ide_platform_data *board = pdev->dev.platform_data;
-+	struct ide_platform_data *board = dev_get_platdata(&pdev->dev);
- 	struct resource		 *res;
+-	pdata = pdev->dev.platform_data;
++	pdata = dev_get_platdata(&pdev->dev);
+ 	pr_info("ide: Gayle IDE controller (A%u style%s)\n",
+ 		pdata->explicit_ack ? 1200 : 4000,
+ 		ide_doubler ? ", IDE doubler" : "");
+diff --git a/drivers/ide/ide_platform.c b/drivers/ide/ide_platform.c
+index ba4bfbe..a8b4b6a 100644
+--- a/drivers/ide/ide_platform.c
++++ b/drivers/ide/ide_platform.c
+@@ -56,7 +56,7 @@ static int plat_ide_probe(struct platform_device *pdev)
+ 	struct ide_hw hw, *hws[] = { &hw };
+ 	struct ide_port_info d = platform_ide_port_info;
  
- 	int irq;
-diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
-index 5364f97..d63ee8f 100644
---- a/drivers/ata/pata_at91.c
-+++ b/drivers/ata/pata_at91.c
-@@ -315,7 +315,7 @@ static struct ata_port_operations pata_at91_port_ops = {
+-	pdata = pdev->dev.platform_data;
++	pdata = dev_get_platdata(&pdev->dev);
  
- static int pata_at91_probe(struct platform_device *pdev)
+ 	/* get a pointer to the register memory */
+ 	res_base = platform_get_resource(pdev, IORESOURCE_IO, 0);
+diff --git a/drivers/ide/tx4938ide.c b/drivers/ide/tx4938ide.c
+index ede8575..68edd4f 100644
+--- a/drivers/ide/tx4938ide.c
++++ b/drivers/ide/tx4938ide.c
+@@ -58,7 +58,7 @@ static void tx4938ide_tune_ebusc(unsigned int ebus_ch,
+ 
+ static void tx4938ide_set_pio_mode(ide_hwif_t *hwif, ide_drive_t *drive)
  {
--	struct at91_cf_data *board = pdev->dev.platform_data;
-+	struct at91_cf_data *board = dev_get_platdata(&pdev->dev);
- 	struct device *dev = &pdev->dev;
- 	struct at91_ide_info *info;
- 	struct resource *mem_res;
-diff --git a/drivers/ata/pata_ixp4xx_cf.c b/drivers/ata/pata_ixp4xx_cf.c
-index dcc6b24..1ec53f8 100644
---- a/drivers/ata/pata_ixp4xx_cf.c
-+++ b/drivers/ata/pata_ixp4xx_cf.c
-@@ -48,7 +48,7 @@ static unsigned int ixp4xx_mmio_data_xfer(struct ata_device *dev,
- 	u16 *buf16 = (u16 *) buf;
- 	struct ata_port *ap = dev->link->ap;
- 	void __iomem *mmio = ap->ioaddr.data_addr;
--	struct ixp4xx_pata_data *data = ap->host->dev->platform_data;
-+	struct ixp4xx_pata_data *data = dev_get_platdata(ap->host->dev);
+-	struct tx4938ide_platform_info *pdata = hwif->dev->platform_data;
++	struct tx4938ide_platform_info *pdata = dev_get_platdata(hwif->dev);
+ 	u8 safe = drive->pio_mode - XFER_PIO_0;
+ 	ide_drive_t *pair;
  
- 	/* set the expansion bus in 16bit mode and restore
- 	 * 8 bit mode after the transaction.
-@@ -143,7 +143,7 @@ static int ixp4xx_pata_probe(struct platform_device *pdev)
- 	struct resource *cs0, *cs1;
- 	struct ata_host *host;
- 	struct ata_port *ap;
--	struct ixp4xx_pata_data *data = pdev->dev.platform_data;
-+	struct ixp4xx_pata_data *data = dev_get_platdata(&pdev->dev);
- 
- 	cs0 = platform_get_resource(pdev, IORESOURCE_MEM, 0);
- 	cs1 = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-diff --git a/drivers/ata/pata_octeon_cf.c b/drivers/ata/pata_octeon_cf.c
-index e73bef3..c51bbb9 100644
---- a/drivers/ata/pata_octeon_cf.c
-+++ b/drivers/ata/pata_octeon_cf.c
-@@ -1037,7 +1037,7 @@ static void octeon_cf_shutdown(struct device *dev)
- 	union cvmx_mio_boot_dma_cfgx dma_cfg;
- 	union cvmx_mio_boot_dma_intx dma_int;
- 
--	struct octeon_cf_port *cf_port = dev->platform_data;
-+	struct octeon_cf_port *cf_port = dev_get_platdata(dev);
- 
- 	if (cf_port->dma_base) {
- 		/* Stop and clear the dma engine.  */
-diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
-index 71e0937..0279488 100644
---- a/drivers/ata/pata_platform.c
-+++ b/drivers/ata/pata_platform.c
-@@ -180,7 +180,7 @@ static int pata_platform_probe(struct platform_device *pdev)
- 	struct resource *io_res;
- 	struct resource *ctl_res;
- 	struct resource *irq_res;
--	struct pata_platform_info *pp_info = pdev->dev.platform_data;
-+	struct pata_platform_info *pp_info = dev_get_platdata(&pdev->dev);
- 
- 	/*
- 	 * Simple resource validation ..
-diff --git a/drivers/ata/pata_pxa.c b/drivers/ata/pata_pxa.c
-index 942ef94..a6f05ac 100644
---- a/drivers/ata/pata_pxa.c
-+++ b/drivers/ata/pata_pxa.c
-@@ -238,7 +238,7 @@ static int pxa_ata_probe(struct platform_device *pdev)
- 	struct resource *ctl_res;
- 	struct resource *dma_res;
- 	struct resource *irq_res;
--	struct pata_pxa_pdata *pdata = pdev->dev.platform_data;
-+	struct pata_pxa_pdata *pdata = dev_get_platdata(&pdev->dev);
- 	int ret = 0;
- 
- 	/*
-diff --git a/drivers/ata/pata_samsung_cf.c b/drivers/ata/pata_samsung_cf.c
-index 6ef27e9..951aa95 100644
---- a/drivers/ata/pata_samsung_cf.c
-+++ b/drivers/ata/pata_samsung_cf.c
-@@ -475,7 +475,7 @@ static void pata_s3c_hwinit(struct s3c_ide_info *info,
- 
- static int __init pata_s3c_probe(struct platform_device *pdev)
- {
--	struct s3c_ide_platdata *pdata = pdev->dev.platform_data;
-+	struct s3c_ide_platdata *pdata = dev_get_platdata(&pdev->dev);
- 	struct device *dev = &pdev->dev;
- 	struct s3c_ide_info *info;
+@@ -132,7 +132,7 @@ static int __init tx4938ide_probe(struct platform_device *pdev)
+ 	struct ide_hw hw, *hws[] = { &hw };
+ 	struct ide_host *host;
  	struct resource *res;
-@@ -617,7 +617,7 @@ static int pata_s3c_resume(struct device *dev)
- {
- 	struct platform_device *pdev = to_platform_device(dev);
- 	struct ata_host *host = platform_get_drvdata(pdev);
--	struct s3c_ide_platdata *pdata = pdev->dev.platform_data;
-+	struct s3c_ide_platdata *pdata = dev_get_platdata(&pdev->dev);
- 	struct s3c_ide_info *info = host->private_data;
- 
- 	pata_s3c_hwinit(info, pdata);
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index 10ea99a..88e0851 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -4058,7 +4058,7 @@ static int mv_platform_probe(struct platform_device *pdev)
- 		of_property_read_u32(pdev->dev.of_node, "nr-ports", &n_ports);
- 		irq = irq_of_parse_and_map(pdev->dev.of_node, 0);
- 	} else {
--		mv_platform_data = pdev->dev.platform_data;
-+		mv_platform_data = dev_get_platdata(&pdev->dev);
- 		n_ports = mv_platform_data->n_ports;
- 		irq = platform_get_irq(pdev, 0);
- 	}
+-	struct tx4938ide_platform_info *pdata = pdev->dev.platform_data;
++	struct tx4938ide_platform_info *pdata = dev_get_platdata(&pdev->dev);
+ 	int irq, ret, i;
+ 	unsigned long mapbase, mapctl;
+ 	struct ide_port_info d = tx4938ide_port_info;
 -- 
 1.7.10.4
 
