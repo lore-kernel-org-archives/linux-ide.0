@@ -1,112 +1,56 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH 1/3] ACPI / PM: Only set power states of devices that are power manageable
-Date: Wed, 31 Jul 2013 12:29:02 +0200
-Message-ID: <5221650.Ris8idu00z@vostro.rjw.lan>
-References: <10433383.dueoNg39qi@vostro.rjw.lan> <1738639.5UcWLydKxR@vostro.rjw.lan> <51F8B35A.6000804@intel.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
+Date: Wed, 31 Jul 2013 06:23:03 -0400
+Message-ID: <20130731102303.GC2810@htj.dyndns.org>
+References: <20130722150359.GA16564@dhcp-26-207.brq.redhat.com>
+ <1374527436.7397.1145.camel@haakon3.risingtidesystems.com>
+ <20130725101641.GB31994@dhcp-26-207.brq.redhat.com>
+ <1374790082.7397.1411.camel@haakon3.risingtidesystems.com>
+ <20130726020928.GL29296@kernel.dk>
+ <1374873276.7397.1512.camel@haakon3.risingtidesystems.com>
+ <1374885793.7397.1537.camel@haakon3.risingtidesystems.com>
+ <20130729111827.GA14283@dhcp-26-207.brq.redhat.com>
+ <1375125571.5171.16.camel@haakon3.risingtidesystems.com>
+ <CAO1A-8AW-aQJ0hjX38U_q8Ovcpb58fP9Skfyi59xihXTQHECNQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hydra.sisk.pl ([212.160.235.94]:48692 "EHLO hydra.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754181Ab3GaKSy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 31 Jul 2013 06:18:54 -0400
-In-Reply-To: <51F8B35A.6000804@intel.com>
+Received: from mail-qa0-f41.google.com ([209.85.216.41]:44567 "EHLO
+	mail-qa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754397Ab3GaKXH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Jul 2013 06:23:07 -0400
+Content-Disposition: inline
+In-Reply-To: <CAO1A-8AW-aQJ0hjX38U_q8Ovcpb58fP9Skfyi59xihXTQHECNQ@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linux PM list <linux-pm@vger.kernel.org>, Yinghai Lu <yinghai@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+To: Marc C <marc.ceeeee@gmail.com>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Alexander Gordeev <agordeev@redhat.com>, Jens Axboe <axboe@kernel.dk>, James Bottomley <James.Bottomley@hansenpartnership.com>, Mike Christie <michaelc@cs.wisc.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wednesday, July 31, 2013 02:48:58 PM Aaron Lu wrote:
-> On 07/30/2013 10:04 PM, Rafael J. Wysocki wrote:
-> > On Tuesday, July 30, 2013 07:43:48 AM Aaron Lu wrote:
-> >> On 07/30/2013 06:21 AM, Rafael J. Wysocki wrote:
-> >>> On Monday, July 29, 2013 10:09:53 PM Aaron Lu wrote:
-> >>>> On 07/27/2013 09:10 PM, Rafael J. Wysocki wrote:
-> >>>>> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> >>>>>
-> >>>>> Make acpi_device_set_power() check if the given device is power
-> >>>>> manageable before checking if the given power state is valid for that
-> >>>>> device.  Otherwise it will print that "Device does not support" that
-> >>>>> power state into the kernel log, which may not make sense for some
-> >>>>> power states (D0 and D3cold are supported by all devices by
-> >>>>> definition).
-> >>>>
-> >>>> It will not print "Device does not support" that power state if that
-> >>>> power state is D0 or D3cold since we have unconditionally set those two
-> >>>> power state's valid flag.
-> >>>
-> >>> So you didn't actually looked at acpi_bus_get_power_flags() that set the
-> >>> power.states[].flags.valid flag, because If you had looked at it, you would
-> >>> have seen that that's not the case.
-> >>>
-> >>> No, we don't set the valid flag for devices that aren't power manageable
-> >>> (i.e. have flags.power_manageable unset), which is the *whole* *point* of
-> >>> this change.
-> >>
-> >> Right, I missed this. Sorry for the noise.
-> >>
-> >>>
-> >>>> OTOH, what value should we return for a device node that is not power
-> >>>> manageable in acpi_device_set_power when the target state is D0 or D3
-> >>>> cold? The old behavior is to return 0, meanning success without taking
-> >>>> any actual action.
-> >>>>
-> >>>> In acpi_bus_set_power, if the device is not power manageable, we will
-> >>>> return -ENODEV; in acpi_dev_pm_full/low_power, we will return 0 as in
-> >>>> the original acpi_device_set_power. So return -EINVAL here is correct?
-> >>>
-> >>> No, the original acpi_device_set_power() will return -ENODEV then, but
-> >>> in my opinion returning -EINVAL is more accurate, because "power
-> >>> manageable" means "you can change power state of it".
-> >>
-> >> Shall I prepare a patch to update the errno in acpi_bus_set_power?
-> > 
-> > In fact, it doesn't need to check flags.power_manageable after this patch
-> > and the debug message won't be missed I think, so please just remove
-> > the whole if () from there, if that's not a problem.
-> 
-> Patch to remove the redundant check, apply on top of this one.
-> 
-> From: Aaron Lu <aaron.lu@intel.com>
-> Subject: [PATCH 1/3] ACPI / PM: Remove redundant check for power manageable in
->  acpi_bus_set_power
-> 
-> Now that we will check if a device is power manageable in
-> acpi_device_set_power, it is no longer necessary to do this check in
-> acpi_bus_set_power, so remove it.
-> 
-> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+Hello,
 
-Looks good, I'll queue it up for 3.12.
-
-Thanks,
-Rafael
-
-
-> ---
->  drivers/acpi/device_pm.c | 7 -------
->  1 file changed, 7 deletions(-)
+On Tue, Jul 30, 2013 at 09:16:02PM -0700, Marc C wrote:
+> >> One thing which would probably be worthwhile tho is getting rid of the
+> >> bitmap based qc tag allocator in libata.  That one is just borderline
+> >> stupid to keep around on any setup which is supposed to be scalable.
+> > Your border might be wider than mine :-). Yes, the bitmap should
+> > definitely go.
+>
+> A naive implementation is obviously less-than-efficient. However, what
+> other problems exist with the libata QC tag allocator? I highly doubt
+> SATA will change to beyond 32 queue tags, primarily because it would
+> be a pain to change SDB FIS (it's likely to break the dozens of AHCI
+> controller implementations out there). Further, it seems like the
+> industry stopped caring about SATA and is pushing NVMe for future
+> offerings.
 > 
-> diff --git a/drivers/acpi/device_pm.c b/drivers/acpi/device_pm.c
-> index 63324b8..8270711 100644
-> --- a/drivers/acpi/device_pm.c
-> +++ b/drivers/acpi/device_pm.c
-> @@ -245,13 +245,6 @@ int acpi_bus_set_power(acpi_handle handle, int state)
->  	if (result)
->  		return result;
->  
-> -	if (!device->flags.power_manageable) {
-> -		ACPI_DEBUG_PRINT((ACPI_DB_INFO,
-> -				"Device [%s] is not power manageable\n",
-> -				dev_name(&device->dev)));
-> -		return -ENODEV;
-> -	}
-> -
->  	return acpi_device_set_power(device, state);
->  }
->  EXPORT_SYMBOL(acpi_bus_set_power);
-> 
+> In any event, most modern systems should have instructions to count
+> leading zeroes and modify bits atomically.
+
+It's inefficient not because scanning is expensive but because it
+makes all CPUs in the system to hit on the exact same cacheline over
+and over and over again.
+
+Thanks.
+
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+tejun
