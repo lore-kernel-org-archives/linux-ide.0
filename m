@@ -1,107 +1,99 @@
-From: Marc C <marc.ceeeee@gmail.com>
-Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
-Date: Tue, 30 Jul 2013 21:16:02 -0700
-Message-ID: <CAO1A-8AW-aQJ0hjX38U_q8Ovcpb58fP9Skfyi59xihXTQHECNQ@mail.gmail.com>
-References: <1374248000.2266.20.camel@dabdike>
-	<1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
-	<1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
-	<20130722150359.GA16564@dhcp-26-207.brq.redhat.com>
-	<1374527436.7397.1145.camel@haakon3.risingtidesystems.com>
-	<20130725101641.GB31994@dhcp-26-207.brq.redhat.com>
-	<1374790082.7397.1411.camel@haakon3.risingtidesystems.com>
-	<20130726020928.GL29296@kernel.dk>
-	<1374873276.7397.1512.camel@haakon3.risingtidesystems.com>
-	<1374885793.7397.1537.camel@haakon3.risingtidesystems.com>
-	<20130729111827.GA14283@dhcp-26-207.brq.redhat.com>
-	<1375125571.5171.16.camel@haakon3.risingtidesystems.com>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH 1/3] ACPI / PM: Only set power states of devices that
+ are power manageable
+Date: Wed, 31 Jul 2013 14:48:58 +0800
+Message-ID: <51F8B35A.6000804@intel.com>
+References: <10433383.dueoNg39qi@vostro.rjw.lan> <3386345.rYEkrXssx8@vostro.rjw.lan> <51F6FE34.2020703@intel.com> <1738639.5UcWLydKxR@vostro.rjw.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1375125571.5171.16.camel@haakon3.risingtidesystems.com>
+In-Reply-To: <1738639.5UcWLydKxR@vostro.rjw.lan>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Alexander Gordeev <agordeev@redhat.com>, Jens Axboe <axboe@kernel.dk>, James Bottomley <James.Bottomley@hansenpartnership.com>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linux PM list <linux-pm@vger.kernel.org>, Yinghai Lu <yinghai@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
->> One thing which would probably be worthwhile tho is getting rid of the
->> bitmap based qc tag allocator in libata.  That one is just borderline
->> stupid to keep around on any setup which is supposed to be scalable.
-> Your border might be wider than mine :-). Yes, the bitmap should
-> definitely go.
-A naive implementation is obviously less-than-efficient. However, what
-other problems exist with the libata QC tag allocator? I highly doubt
-SATA will change to beyond 32 queue tags, primarily because it would
-be a pain to change SDB FIS (it's likely to break the dozens of AHCI
-controller implementations out there). Further, it seems like the
-industry stopped caring about SATA and is pushing NVMe for future
-offerings.
+On 07/30/2013 10:04 PM, Rafael J. Wysocki wrote:
+> On Tuesday, July 30, 2013 07:43:48 AM Aaron Lu wrote:
+>> On 07/30/2013 06:21 AM, Rafael J. Wysocki wrote:
+>>> On Monday, July 29, 2013 10:09:53 PM Aaron Lu wrote:
+>>>> On 07/27/2013 09:10 PM, Rafael J. Wysocki wrote:
+>>>>> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>>>>>
+>>>>> Make acpi_device_set_power() check if the given device is power
+>>>>> manageable before checking if the given power state is valid for that
+>>>>> device.  Otherwise it will print that "Device does not support" that
+>>>>> power state into the kernel log, which may not make sense for some
+>>>>> power states (D0 and D3cold are supported by all devices by
+>>>>> definition).
+>>>>
+>>>> It will not print "Device does not support" that power state if that
+>>>> power state is D0 or D3cold since we have unconditionally set those two
+>>>> power state's valid flag.
+>>>
+>>> So you didn't actually looked at acpi_bus_get_power_flags() that set the
+>>> power.states[].flags.valid flag, because If you had looked at it, you would
+>>> have seen that that's not the case.
+>>>
+>>> No, we don't set the valid flag for devices that aren't power manageable
+>>> (i.e. have flags.power_manageable unset), which is the *whole* *point* of
+>>> this change.
+>>
+>> Right, I missed this. Sorry for the noise.
+>>
+>>>
+>>>> OTOH, what value should we return for a device node that is not power
+>>>> manageable in acpi_device_set_power when the target state is D0 or D3
+>>>> cold? The old behavior is to return 0, meanning success without taking
+>>>> any actual action.
+>>>>
+>>>> In acpi_bus_set_power, if the device is not power manageable, we will
+>>>> return -ENODEV; in acpi_dev_pm_full/low_power, we will return 0 as in
+>>>> the original acpi_device_set_power. So return -EINVAL here is correct?
+>>>
+>>> No, the original acpi_device_set_power() will return -ENODEV then, but
+>>> in my opinion returning -EINVAL is more accurate, because "power
+>>> manageable" means "you can change power state of it".
+>>
+>> Shall I prepare a patch to update the errno in acpi_bus_set_power?
+> 
+> In fact, it doesn't need to check flags.power_manageable after this patch
+> and the debug message won't be missed I think, so please just remove
+> the whole if () from there, if that's not a problem.
 
-In any event, most modern systems should have instructions to count
-leading zeroes and modify bits atomically.
+Patch to remove the redundant check, apply on top of this one.
 
--MC
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: [PATCH 1/3] ACPI / PM: Remove redundant check for power manageable in
+ acpi_bus_set_power
 
-On Mon, Jul 29, 2013 at 12:19 PM, Nicholas A. Bellinger
-<nab@linux-iscsi.org> wrote:
-> On Mon, 2013-07-29 at 13:18 +0200, Alexander Gordeev wrote:
->> On Fri, Jul 26, 2013 at 05:43:13PM -0700, Nicholas A. Bellinger wrote:
->> > On Fri, 2013-07-26 at 14:14 -0700, Nicholas A. Bellinger wrote:
->
-> <SNIP>
->
->> I also tried to make a "quick" conversion and hit the same issue(s) as you.
->> Generally, I am concerned with these assumptions in such approach:
->>
->> 1. While libata concept of tags matches nicely with blk-mq (blk_mq_hw_ctx::
->> rqs[] vs ata_port::qcmd[]) right now, it is too exposed to changes in blk-mq
->> in the long run. I.e. ata_link::sactive limits tags to indices, while tags
->> might become hashes. Easily fixable, but still.
->>
->> 2. Unallocated requests in blk-mq are accessed/analized from libata-eh.c as
->> result of such iterations:
->>
->>         for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
->>                 qc = __ata_qc_from_tag(ap, tag);
->>
->>                 if (!(qc->flags & ATA_QCFLAG_FAILED))
->>                         continue;
->>
->>               ...
->>       }
->>
->> While it is probably okay right now, it is still based on a premise that
->> blk-mq will not change the contents/concept of "payload", i.e. from embedded
->> to (re-)allocated memory.
->>
->> > The thing that I'm hung up on now for existing __ata_qc_from_tag() usage
->> > outside of the main blk_mq_ops->queue_rq -> SHT->queuecommand_mq()
->> > dispatch path, is how to actually locate the underlying scsi_device ->
->> > request_queue -> blk_mq_ctx -> blk_mq_hw_hctx from the passed
->> > ata_port..?
->>
->> I am actually in favor of getting rid of ata_queued_cmd::tag. Converting
->> ata_link::sactive to a list, making ata_link::active_tag as struct
->> ata_queued_cmd *ata_link::active_qc and converting ata_port::qc_allocated to a
->> list seems solves it all, including [2]. Have not checked it though.
->>
->> Anyway, if we need a blk-mq tag (why?), we have qc->scsicmd->request->tag.
->>
->
-> Hi Alexander,
->
-> So given the feedback from Tejun, I'm going to setup back for the moment
-> from a larger conversion, and keep the SHT->cmd_size=0 setting for
-> libata in the scsi-mq WIP branch.
->
-> I'm happy to accept patches to drop the bitmap piece that Tejun
-> mentioned if your interested, but at least on my end right now there are
-> bigger fish to fry for scsi-mq.  ;)
->
-> Thanks,
->
-> --nab
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Now that we will check if a device is power manageable in
+acpi_device_set_power, it is no longer necessary to do this check in
+acpi_bus_set_power, so remove it.
+
+Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+---
+ drivers/acpi/device_pm.c | 7 -------
+ 1 file changed, 7 deletions(-)
+
+diff --git a/drivers/acpi/device_pm.c b/drivers/acpi/device_pm.c
+index 63324b8..8270711 100644
+--- a/drivers/acpi/device_pm.c
++++ b/drivers/acpi/device_pm.c
+@@ -245,13 +245,6 @@ int acpi_bus_set_power(acpi_handle handle, int state)
+ 	if (result)
+ 		return result;
+ 
+-	if (!device->flags.power_manageable) {
+-		ACPI_DEBUG_PRINT((ACPI_DB_INFO,
+-				"Device [%s] is not power manageable\n",
+-				dev_name(&device->dev)));
+-		return -ENODEV;
+-	}
+-
+ 	return acpi_device_set_power(device, state);
+ }
+ EXPORT_SYMBOL(acpi_bus_set_power);
+-- 
+1.8.3.2.10.g43d11f4
