@@ -1,56 +1,56 @@
-From: Tejun Heo <tj@kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
 Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
-Date: Wed, 31 Jul 2013 06:23:03 -0400
-Message-ID: <20130731102303.GC2810@htj.dyndns.org>
-References: <20130722150359.GA16564@dhcp-26-207.brq.redhat.com>
+Date: Wed, 31 Jul 2013 19:11:07 +0200
+Message-ID: <20130731171106.GA12489@dhcp-26-207.brq.redhat.com>
+References: <1374193399.7397.973.camel@haakon3.risingtidesystems.com>
+ <20130719003034.GG28005@kernel.dk>
+ <1374195825.7397.997.camel@haakon3.risingtidesystems.com>
+ <1374215660.7397.1041.camel@haakon3.risingtidesystems.com>
+ <1374248000.2266.20.camel@dabdike>
+ <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
+ <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
+ <20130722150359.GA16564@dhcp-26-207.brq.redhat.com>
  <1374527436.7397.1145.camel@haakon3.risingtidesystems.com>
  <20130725101641.GB31994@dhcp-26-207.brq.redhat.com>
- <1374790082.7397.1411.camel@haakon3.risingtidesystems.com>
- <20130726020928.GL29296@kernel.dk>
- <1374873276.7397.1512.camel@haakon3.risingtidesystems.com>
- <1374885793.7397.1537.camel@haakon3.risingtidesystems.com>
- <20130729111827.GA14283@dhcp-26-207.brq.redhat.com>
- <1375125571.5171.16.camel@haakon3.risingtidesystems.com>
- <CAO1A-8AW-aQJ0hjX38U_q8Ovcpb58fP9Skfyi59xihXTQHECNQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f41.google.com ([209.85.216.41]:44567 "EHLO
-	mail-qa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754397Ab3GaKXH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 31 Jul 2013 06:23:07 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:49140 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754787Ab3GaRJv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 31 Jul 2013 13:09:51 -0400
 Content-Disposition: inline
-In-Reply-To: <CAO1A-8AW-aQJ0hjX38U_q8Ovcpb58fP9Skfyi59xihXTQHECNQ@mail.gmail.com>
+In-Reply-To: <20130725101641.GB31994@dhcp-26-207.brq.redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Marc C <marc.ceeeee@gmail.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Alexander Gordeev <agordeev@redhat.com>, Jens Axboe <axboe@kernel.dk>, James Bottomley <James.Bottomley@hansenpartnership.com>, Mike Christie <michaelc@cs.wisc.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Hello,
-
-On Tue, Jul 30, 2013 at 09:16:02PM -0700, Marc C wrote:
-> >> One thing which would probably be worthwhile tho is getting rid of the
-> >> bitmap based qc tag allocator in libata.  That one is just borderline
-> >> stupid to keep around on any setup which is supposed to be scalable.
-> > Your border might be wider than mine :-). Yes, the bitmap should
-> > definitely go.
->
-> A naive implementation is obviously less-than-efficient. However, what
-> other problems exist with the libata QC tag allocator? I highly doubt
-> SATA will change to beyond 32 queue tags, primarily because it would
-> be a pain to change SDB FIS (it's likely to break the dozens of AHCI
-> controller implementations out there). Further, it seems like the
-> industry stopped caring about SATA and is pushing NVMe for future
-> offerings.
+On Thu, Jul 25, 2013 at 12:16:41PM +0200, Alexander Gordeev wrote:
+> On Mon, Jul 22, 2013 at 02:10:36PM -0700, Nicholas A. Bellinger wrote:
+> > Np.  FYI, you'll want to use the latest commit e7827b351 HEAD from
+> > target-pending/scsi-mq, which now has functioning scsi-generic support.
 > 
-> In any event, most modern systems should have instructions to count
-> leading zeroes and modify bits atomically.
+> Survives a boot, a kernel build and the build's result :)
 
-It's inefficient not because scanning is expensive but because it
-makes all CPUs in the system to hit on the exact same cacheline over
-and over and over again.
+Not that rosy. Turned out the old code is called. Hangs with this hunk..
 
-Thanks.
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index ac05cd6..a75fd41 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -1103,6 +1103,8 @@ static struct device_attribute *piix_sidpr_shost_attrs[] = {
+ static struct scsi_host_template piix_sidpr_sht = {
+ 	ATA_BMDMA_SHT(DRV_NAME),
+ 	.shost_attrs		= piix_sidpr_shost_attrs,
++	.scsi_mq		= true,
++	.queuecommand_mq	= ata_scsi_queuecmd,
+ };
+ 
+ static struct ata_port_operations piix_sidpr_sata_ops = {
+
 
 -- 
-tejun
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
