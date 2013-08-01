@@ -1,56 +1,91 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
-Date: Wed, 31 Jul 2013 19:11:07 +0200
-Message-ID: <20130731171106.GA12489@dhcp-26-207.brq.redhat.com>
-References: <1374193399.7397.973.camel@haakon3.risingtidesystems.com>
- <20130719003034.GG28005@kernel.dk>
- <1374195825.7397.997.camel@haakon3.risingtidesystems.com>
- <1374215660.7397.1041.camel@haakon3.risingtidesystems.com>
- <1374248000.2266.20.camel@dabdike>
- <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
- <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
- <20130722150359.GA16564@dhcp-26-207.brq.redhat.com>
- <1374527436.7397.1145.camel@haakon3.risingtidesystems.com>
- <20130725101641.GB31994@dhcp-26-207.brq.redhat.com>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: [PATCH updated] ACPI / PM: Add state information in error message
+ for acpi_device_set_power
+Date: Thu, 01 Aug 2013 08:49:45 +0800
+Message-ID: <51F9B0A9.8000207@intel.com>
+References: <10433383.dueoNg39qi@vostro.rjw.lan> <4285597.UpTJrMA8Fu@vostro.rjw.lan> <51F8B445.1070000@intel.com> <1858303.iaJrUSpF87@vostro.rjw.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49140 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754787Ab3GaRJv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 31 Jul 2013 13:09:51 -0400
-Content-Disposition: inline
-In-Reply-To: <20130725101641.GB31994@dhcp-26-207.brq.redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <1858303.iaJrUSpF87@vostro.rjw.lan>
+Sender: linux-pm-owner@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linux PM list <linux-pm@vger.kernel.org>, Yinghai Lu <yinghai@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Mike Christie <michaelc@cs.wisc.edu>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, Jul 25, 2013 at 12:16:41PM +0200, Alexander Gordeev wrote:
-> On Mon, Jul 22, 2013 at 02:10:36PM -0700, Nicholas A. Bellinger wrote:
-> > Np.  FYI, you'll want to use the latest commit e7827b351 HEAD from
-> > target-pending/scsi-mq, which now has functioning scsi-generic support.
+On 07/31/2013 06:27 PM, Rafael J. Wysocki wrote:
+>> Patch to add state information in error message, apply on top of this
+>> > one.
+>> > 
+>> > From: Aaron Lu <aaron.lu@intel.com>
+>> > Subject: [PATCH] ACPI / PM: Add state information in error message for
+>> >  acpi_device_set_power
+>> > 
+>> > The state information can be useful to know what the problem is when it
+>> > appeared in an error message about a device can not being set to a higher
+>> > power state than its parent, so this patch adds such state information
+>> > for both the target state of the device failed to be set and the current
+>> > parent's state.
+>> > 
+>> > Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+>> > ---
+>> >  drivers/acpi/device_pm.c | 3 ++-
+>> >  1 file changed, 2 insertions(+), 1 deletion(-)
+>> > 
+>> > diff --git a/drivers/acpi/device_pm.c b/drivers/acpi/device_pm.c
+>> > index beb9625..707258b 100644
+>> > --- a/drivers/acpi/device_pm.c
+>> > +++ b/drivers/acpi/device_pm.c
+>> > @@ -179,7 +179,8 @@ int acpi_device_set_power(struct acpi_device *device, int state)
+>> >  	}
+>> >  	if (device->parent && (state < device->parent->power.state)) {
+>> >  		dev_warn(&device->dev,
+>> > -			 "Cannot transition to a higher-powered state than parent\n");
+>> > +			 "Cannot transition to a higher-powered state %d than parent's state %d\n",
+> This message will look a little odd I think ->
 > 
-> Survives a boot, a kernel build and the build's result :)
+>> > +			 state, device->parent->power.state);
+> -> and please don't use raw numbers in such messages.
+> 
+> What about
+> 
+> 	"Cannot transition to power state %s for parent in %s\n",
+> 	acpi_power_state_string(state),
+> 	acpi_power_state_string(device->parent->power.state)
 
-Not that rosy. Turned out the old code is called. Hangs with this hunk..
 
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index ac05cd6..a75fd41 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -1103,6 +1103,8 @@ static struct device_attribute *piix_sidpr_shost_attrs[] = {
- static struct scsi_host_template piix_sidpr_sht = {
- 	ATA_BMDMA_SHT(DRV_NAME),
- 	.shost_attrs		= piix_sidpr_shost_attrs,
-+	.scsi_mq		= true,
-+	.queuecommand_mq	= ata_scsi_queuecmd,
- };
+Thanks for the suggestion, updated patch here:
+
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: [PATCH] ACPI / PM: Add state information in error message for
+ acpi_device_set_power
+
+The state information can be useful to know what the problem is when an
+error message about a device can not being set to a higher power state
+than its parent appeared, so this patch adds such state information
+for both the target state of the device and the current state of its
+parent.
+
+Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+---
+ drivers/acpi/device_pm.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/acpi/device_pm.c b/drivers/acpi/device_pm.c
+index beb9625..59d3202 100644
+--- a/drivers/acpi/device_pm.c
++++ b/drivers/acpi/device_pm.c
+@@ -179,7 +179,9 @@ int acpi_device_set_power(struct acpi_device *device, int state)
+ 	}
+ 	if (device->parent && (state < device->parent->power.state)) {
+ 		dev_warn(&device->dev,
+-			 "Cannot transition to a higher-powered state than parent\n");
++			 "Cannot transition to power state %s for parent in %s\n",
++			 acpi_power_state_string(state),
++			 acpi_power_state_string(device->parent->power.state));
+ 		return -ENODEV;
+ 	}
  
- static struct ata_port_operations piix_sidpr_sata_ops = {
-
-
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+1.8.3.2.10.g43d11f4
