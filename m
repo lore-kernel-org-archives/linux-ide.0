@@ -1,91 +1,26 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH updated] ACPI / PM: Add state information in error message
- for acpi_device_set_power
-Date: Thu, 01 Aug 2013 08:49:45 +0800
-Message-ID: <51F9B0A9.8000207@intel.com>
-References: <10433383.dueoNg39qi@vostro.rjw.lan> <4285597.UpTJrMA8Fu@vostro.rjw.lan> <51F8B445.1070000@intel.com> <1858303.iaJrUSpF87@vostro.rjw.lan>
+From: Mrs Cecilia Koenig <viceacademico@utm.edu.ec>
+Subject: Business Proposal
+Date: Thu, 01 Aug 2013 02:02:10 -0500 (ECT)
+Message-ID: <62c66896-549a-4852-8e9a-646ae20e0238@mail.utm.edu.ec>
+Reply-To: Mrs Cecilia Koenig <ceciliadek9@yahoo.com.hk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <1858303.iaJrUSpF87@vostro.rjw.lan>
-Sender: linux-pm-owner@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linux PM list <linux-pm@vger.kernel.org>, Yinghai Lu <yinghai@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.utm.edu.ec ([186.46.160.198]:40651 "EHLO mail.utm.edu.ec"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752459Ab3HAHby (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 1 Aug 2013 03:31:54 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On 07/31/2013 06:27 PM, Rafael J. Wysocki wrote:
->> Patch to add state information in error message, apply on top of this
->> > one.
->> > 
->> > From: Aaron Lu <aaron.lu@intel.com>
->> > Subject: [PATCH] ACPI / PM: Add state information in error message for
->> >  acpi_device_set_power
->> > 
->> > The state information can be useful to know what the problem is when it
->> > appeared in an error message about a device can not being set to a higher
->> > power state than its parent, so this patch adds such state information
->> > for both the target state of the device failed to be set and the current
->> > parent's state.
->> > 
->> > Signed-off-by: Aaron Lu <aaron.lu@intel.com>
->> > ---
->> >  drivers/acpi/device_pm.c | 3 ++-
->> >  1 file changed, 2 insertions(+), 1 deletion(-)
->> > 
->> > diff --git a/drivers/acpi/device_pm.c b/drivers/acpi/device_pm.c
->> > index beb9625..707258b 100644
->> > --- a/drivers/acpi/device_pm.c
->> > +++ b/drivers/acpi/device_pm.c
->> > @@ -179,7 +179,8 @@ int acpi_device_set_power(struct acpi_device *device, int state)
->> >  	}
->> >  	if (device->parent && (state < device->parent->power.state)) {
->> >  		dev_warn(&device->dev,
->> > -			 "Cannot transition to a higher-powered state than parent\n");
->> > +			 "Cannot transition to a higher-powered state %d than parent's state %d\n",
-> This message will look a little odd I think ->
-> 
->> > +			 state, device->parent->power.state);
-> -> and please don't use raw numbers in such messages.
-> 
-> What about
-> 
-> 	"Cannot transition to power state %s for parent in %s\n",
-> 	acpi_power_state_string(state),
-> 	acpi_power_state_string(device->parent->power.state)
 
 
-Thanks for the suggestion, updated patch here:
+Good Day,
 
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH] ACPI / PM: Add state information in error message for
- acpi_device_set_power
+I have a secured business proposal for you. contact me  for more details of my Business Proposal.
 
-The state information can be useful to know what the problem is when an
-error message about a device can not being set to a higher power state
-than its parent appeared, so this patch adds such state information
-for both the target state of the device and the current state of its
-parent.
+Your earliest response to this letter will be appreciated.
 
-Signed-off-by: Aaron Lu <aaron.lu@intel.com>
----
- drivers/acpi/device_pm.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/acpi/device_pm.c b/drivers/acpi/device_pm.c
-index beb9625..59d3202 100644
---- a/drivers/acpi/device_pm.c
-+++ b/drivers/acpi/device_pm.c
-@@ -179,7 +179,9 @@ int acpi_device_set_power(struct acpi_device *device, int state)
- 	}
- 	if (device->parent && (state < device->parent->power.state)) {
- 		dev_warn(&device->dev,
--			 "Cannot transition to a higher-powered state than parent\n");
-+			 "Cannot transition to power state %s for parent in %s\n",
-+			 acpi_power_state_string(state),
-+			 acpi_power_state_string(device->parent->power.state));
- 		return -ENODEV;
- 	}
- 
--- 
-1.8.3.2.10.g43d11f4
+Yours Sincerely,
+Mrs.Cecilia
