@@ -1,26 +1,116 @@
-From: Oliver Neukum <oneukum@suse.de>
-Subject: Re: [PATCH] Hard disk S3 resume time optimization
-Date: Fri, 02 Aug 2013 14:42:36 +0200
-Message-ID: <1375447356.2138.13.camel@linux-fkkt.site>
-References: <11E08D716F0541429B7042699DD5C1A1706803A6@FMSMSX103.amr.corp.intel.com>
+From: Luis Henriques <luis.henriques@canonical.com>
+Subject: Re: [PATCH libata/for-3.11-fixes] libata: make it clear that sata_inic162x is experimental
+Date: Fri, 02 Aug 2013 15:44:37 +0100
+Message-ID: <87txj817ai.fsf@canonical.com>
+References: <20130627165114.GK4752@decadent.org.uk>
+	<1372353297.24346.4.camel@phoenix>
+	<20130627173142.GM4752@decadent.org.uk>
+	<1372375714.330.17.camel@phoenix>
+	<1372383087.23847.35.camel@deadeye.wl.decadent.org.uk>
+	<1372427725.23094.17.camel@phoenix>
+	<1372603764.5155.17.camel@deadeye.wl.decadent.org.uk>
+	<20130701061726.GA10717@mtj.dyndns.org>
+	<1372668742.17064.23.camel@phoenix>
+	<20130722211307.GA16776@mtj.dyndns.org>
+	<20130729165229.GF22605@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <11E08D716F0541429B7042699DD5C1A1706803A6@FMSMSX103.amr.corp.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: "Brandt, Todd E" <todd.e.brandt@intel.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from youngberry.canonical.com ([91.189.89.112]:47756 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751357Ab3HBOoj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Aug 2013 10:44:39 -0400
+In-Reply-To: <20130729165229.GF22605@mtj.dyndns.org> (Tejun Heo's message of
+	"Mon, 29 Jul 2013 12:52:29 -0400")
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Ben Hutchings <ben@decadent.org.uk>, 714295@bugs.debian.org, linux-ide@vger.kernel.org, risc4all@yahoo.com, Martin Braure de Calignon <braurede@free.fr>
 
-On Thu, 2013-08-01 at 23:40 +0000, Brandt, Todd E wrote:
-> This patch is a potential way to reduce the S3 resume time for SATA drives. Essentially this patch removes the hard disk resume time from the total system resume time, with the disks still taking as long to come back online but in the background.
-> 
-> The major bottleneck is in the ata port resume which sends out a wakeup command and then waits up to several seconds for the port to resume. This patch changes the ata_port_resume_common function to be non blocking. The other bottleneck is in the scsi disk resume code, which issues a a command to startup the disk with blk_execute_rq, which then waits for the command to finish (which also depends on the ata port being fully resumed). The patch switches the sd_resume function to use blk_execute_rq_nowait instead (the underlying code is identical to sd_resume, but is changed to non-blocking).
+Tejun Heo <tj@kernel.org> writes:
 
-But how do we know the command has succeeded?
+> Hello, Greg.
+>
+> I think the following commit should go into -stable but forgot to cc
+> stable.  It's now in Linus' tree.  Can you please include it in
+> -stable?
+>
+> Thanks!
+>
+> On Mon, Jul 22, 2013 at 05:13:07PM -0400, Tejun Heo wrote:
+>> From bb9696192826a7d9279caf872e95b41bc26c7eff Mon Sep 17 00:00:00 2001
+>> From: Tejun Heo <tj@kernel.org>
+>> Date: Mon, 22 Jul 2013 16:53:36 -0400
+>> 
+>> sata_inic162x never reached a state where it's reliable enough for
+>> production use and data corruption is a relatively common occurrence.
+>> Make the driver generate warning about the issues and mark the Kconfig
+>> option as experimental.
+>> 
+>> If the situation doesn't improve, we'd be better off making it depend
+>> on CONFIG_BROKEN.  Let's wait for several cycles and see if the kernel
+>> message draws any attention.
+>> 
+>> Signed-off-by: Tejun Heo <tj@kernel.org>
+>> Reported-by: Martin Braure de Calignon <braurede@free.fr>
+>> Reported-by: Ben Hutchings <ben@decadent.org.uk>
+>> Reported-by: risc4all@yahoo.com
+>> ---
+>>  drivers/ata/Kconfig         |  2 +-
+>>  drivers/ata/sata_inic162x.c | 14 ++++++++++++++
+>>  2 files changed, 15 insertions(+), 1 deletion(-)
+>> 
+>> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+>> index 80dc988..5cddaf8 100644
+>> --- a/drivers/ata/Kconfig
+>> +++ b/drivers/ata/Kconfig
+>> @@ -107,7 +107,7 @@ config SATA_FSL
+>>  	  If unsure, say N.
+>>  
+>>  config SATA_INIC162X
+>> -	tristate "Initio 162x SATA support"
+>> +	tristate "Initio 162x SATA support (Very Experimental)"
+>>  	depends on PCI
+>>  	help
+>>  	  This option enables support for Initio 162x Serial ATA.
+>> diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
+>> index e451317..5c54d95 100644
+>> --- a/drivers/ata/sata_inic162x.c
+>> +++ b/drivers/ata/sata_inic162x.c
+>> @@ -6,6 +6,18 @@
+>>   *
+>>   * This file is released under GPL v2.
+>>   *
+>> + * **** WARNING ****
+>> + *
+>> + * This driver never worked properly and unfortunately data corruption is
+>> + * relatively common.  There isn't anyone working on the driver and there's
+>> + * no support from the vendor.  Do not use this driver in any production
+>> + * environment.
+>> + *
+>> + * http://thread.gmane.org/gmane.linux.debian.devel.bugs.rc/378525/focus=54491
+>> + * https://bugzilla.kernel.org/show_bug.cgi?id=60565
+>> + *
+>> + * *****************
+>> + *
+>>   * This controller is eccentric and easily locks up if something isn't
+>>   * right.  Documentation is available at initio's website but it only
+>>   * documents registers (not programming model).
+>> @@ -807,6 +819,8 @@ static int inic_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>>  
+>>  	ata_print_version_once(&pdev->dev, DRV_VERSION);
+>>  
+>> +	dev_alert(&pdev->dev, "inic162x support is broken with common data corruption issues and will be disabled by default, contact linux-ide@vger.kernel.org if in production use\n");
+>> +
+>>  	/* alloc host */
+>>  	host = ata_host_alloc_pinfo(&pdev->dev, ppi, NR_PORTS);
+>>  	hpriv = devm_kzalloc(&pdev->dev, sizeof(*hpriv), GFP_KERNEL);
+>> -- 
+>> 1.8.3.1
+>> 
 
-	Regards
-		Oliver
+I'm queuing this for the 3.5 kernel as well.
 
-
+Cheers,
+-- 
+Luis
