@@ -1,100 +1,49 @@
-From: Mark Langsdorf <mark.langsdorf@calxeda.com>
-Subject: [PATCH v2 3/5] devicetree: create a separate binding description for sata_highbank
-Date: Fri,  2 Aug 2013 11:28:36 -0500
-Message-ID: <1375460918-4661-3-git-send-email-mark.langsdorf@calxeda.com>
-References: <1375460918-4661-1-git-send-email-mark.langsdorf@calxeda.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1375460918-4661-1-git-send-email-mark.langsdorf@calxeda.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, tj@kernel.org, devicetree@vger.kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, swarren@wwwdotorg.org, ian.campbell@citrix.com, rob.herring@calxeda.com
-Cc: Mark Langsdorf <mark.langsdorf@calxeda.com>
+From: "Brandt, Todd E" <todd.e.brandt@intel.com>
+Subject: RE: [PATCH] Hard disk S3 resume time optimization
+Date: Fri, 2 Aug 2013 16:41:18 +0000
+Message-ID: <11E08D716F0541429B7042699DD5C1A1706804B6@FMSMSX103.amr.corp.intel.com>
+References: <11E08D716F0541429B7042699DD5C1A1706803A6@FMSMSX103.amr.corp.intel.com>,<1375447356.2138.13.camel@linux-fkkt.site>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:8883 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752334Ab3HBQlU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Aug 2013 12:41:20 -0400
+In-Reply-To: <1375447356.2138.13.camel@linux-fkkt.site>
+Content-Language: en-US
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Oliver Neukum <oneukum@suse.de>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-The Calxeda sata_highbank driver has been adding its descriptions to the
-ahci driver. Separate them properly.
+Do you mean in terms of debug after a failure? I can resubmit the patch with the scsi_sense_hdr buffer still in place. I just wanted to keep the first draft simple to get the concept across. 
 
-Signed-off-by: Mark Langsdorf <mark.langsdorf@calxeda.com>
-Acked-by: Rob Herring <rob.herring@calxeda.com>
----
-Changes from v1
-	None.
+Todd Brandt
+Linux Kernel Developer OTC, Hillsboro OR
+https://opensource.intel.com/linux-wiki/ToddBrandt
 
- .../devicetree/bindings/ata/ahci-platform.txt      | 14 ++--------
- .../devicetree/bindings/ata/sata_highbank.txt      | 32 ++++++++++++++++++++++
- 2 files changed, 34 insertions(+), 12 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/ata/sata_highbank.txt
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-index 3ec0c5c..14d7b22 100644
---- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
-+++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-@@ -4,27 +4,17 @@ SATA nodes are defined to describe on-chip Serial ATA controllers.
- Each SATA controller should have its own node.
- 
- Required properties:
--- compatible        : compatible list, contains "calxeda,hb-ahci" or "snps,spear-ahci"
-+- compatible        : compatible list, contains "snps,spear-ahci"
- - interrupts        : <interrupt mapping for SATA IRQ>
- - reg               : <registers mapping>
- 
- Optional properties:
--- calxeda,port-phys: phandle-combophy and lane assignment, which maps each
--			SATA port to a combophy and a lane within that
--			combophy
--- calxeda,sgpio-gpio: phandle-gpio bank, bit offset, and default on or off,
--			which indicates that the driver supports SGPIO
--			indicator lights using the indicated GPIOs
--- calxeda,led-order : a u32 array that map port numbers to offsets within the
--			SGPIO bitstream.
- - dma-coherent      : Present if dma operations are coherent
- 
- Example:
-         sata@ffe08000 {
--		compatible = "calxeda,hb-ahci";
-+		compatible = "snps,spear-ahci";
-                 reg = <0xffe08000 0x1000>;
-                 interrupts = <115>;
--		calxeda,port-phys = <&combophy5 0 &combophy0 0 &combophy0 1
--					&combophy0 2 &combophy0 3>;
- 
-         };
-diff --git a/Documentation/devicetree/bindings/ata/sata_highbank.txt b/Documentation/devicetree/bindings/ata/sata_highbank.txt
-new file mode 100644
-index 0000000..aa1b798
---- /dev/null
-+++ b/Documentation/devicetree/bindings/ata/sata_highbank.txt
-@@ -0,0 +1,32 @@
-+* Calxeda AHCI SATA Controller
-+
-+SATA nodes are defined to describe on-chip Serial ATA controllers.
-+The Calxeda SATA controller mostly conforms to the AHCI interface
-+with some special extensions to add functionality.
-+Each SATA controller should have its own node.
-+
-+Required properties:
-+- compatible        : compatible list, contains "calxeda,hb-ahci"
-+- interrupts        : <interrupt mapping for SATA IRQ>
-+- reg               : <registers mapping>
-+
-+Optional properties:
-+- dma-coherent      : Present if dma operations are coherent
-+- calxeda,port-phys: phandle-combophy and lane assignment, which maps each
-+			SATA port to a combophy and a lane within that
-+			combophy
-+- calxeda,sgpio-gpio: phandle-gpio bank, bit offset, and default on or off,
-+			which indicates that the driver supports SGPIO
-+			indicator lights using the indicated GPIOs
-+- calxeda,led-order : a u32 array that map port numbers to offsets within the
-+			SGPIO bitstream.
-+
-+Example:
-+        sata@ffe08000 {
-+		compatible = "calxeda,hb-ahci";
-+                reg = <0xffe08000 0x1000>;
-+                interrupts = <115>;
-+		calxeda,port-phys = <&combophy5 0 &combophy0 0 &combophy0 1
-+					&combophy0 2 &combophy0 3>;
-+
-+        };
--- 
-1.8.1.2
+________________________________________
+From: linux-scsi-owner@vger.kernel.org [linux-scsi-owner@vger.kernel.org] on behalf of Oliver Neukum [oneukum@suse.de]
+Sent: Friday, August 02, 2013 5:42 AM
+To: Brandt, Todd E
+Cc: linux-ide@vger.kernel.org; linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] Hard disk S3 resume time optimization
+
+On Thu, 2013-08-01 at 23:40 +0000, Brandt, Todd E wrote:
+> This patch is a potential way to reduce the S3 resume time for SATA drives. Essentially this patch removes the hard disk resume time from the total system resume time, with the disks still taking as long to come back online but in the background.
+>
+> The major bottleneck is in the ata port resume which sends out a wakeup command and then waits up to several seconds for the port to resume. This patch changes the ata_port_resume_common function to be non blocking. The other bottleneck is in the scsi disk resume code, which issues a a command to startup the disk with blk_execute_rq, which then waits for the command to finish (which also depends on the ata port being fully resumed). The patch switches the sd_resume function to use blk_execute_rq_nowait instead (the underlying code is identical to sd_resume, but is changed to non-blocking).
+
+But how do we know the command has succeeded?
+
+        Regards
+                Oliver
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
