@@ -1,108 +1,139 @@
-From: Mark Langsdorf <mark.langsdorf@calxeda.com>
-Subject: Re: [PATCH v2 3/5] devicetree: create a separate binding description
- for sata_highbank
-Date: Fri, 02 Aug 2013 15:11:30 -0500
-Message-ID: <51FC1272.8010305@calxeda.com>
-References: <1375460918-4661-1-git-send-email-mark.langsdorf@calxeda.com> <1375460918-4661-3-git-send-email-mark.langsdorf@calxeda.com> <51FC1015.7010203@cogentembedded.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Lucas Magasweran <lucas.magasweran@wdc.com>
+Subject: [PATCH] Add HDIO_DRIVE_RESET ioctl to libata.
+Date: Fri,  2 Aug 2013 16:10:28 -0700
+Message-ID: <1375485028-11712-1-git-send-email-lucas.magasweran@wdc.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp65.ord1c.emailsrvr.com ([108.166.43.65]:57357 "EHLO
-	smtp65.ord1c.emailsrvr.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752218Ab3HBULV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Aug 2013 16:11:21 -0400
-In-Reply-To: <51FC1015.7010203@cogentembedded.com>
+Received: from mail-pd0-f176.google.com ([209.85.192.176]:40145 "EHLO
+	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754448Ab3HBXJ6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Aug 2013 19:09:58 -0400
+Received: by mail-pd0-f176.google.com with SMTP id q10so1153789pdj.21
+        for <linux-ide@vger.kernel.org>; Fri, 02 Aug 2013 16:09:58 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "tj@kernel.org" <tj@kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "pawel.moll@arm.com" <pawel.moll@arm.com>, "mark.rutland@arm.com" <mark.rutland@arm.com>, "swarren@wwwdotorg.org" <swarren@wwwdotorg.org>, "ian.campbell@citrix.com" <ian.campbell@citrix.com>, Rob Herring <rob.herring@calxeda.com>
+To: "David S. Miller" <davem@davemloft.net>
+Cc: linux-ide@vger.kernel.org
 
-On 08/02/2013 03:01 PM, Sergei Shtylyov wrote:
-> On 08/02/2013 08:28 PM, Mark Langsdorf wrote:
-> 
->> The Calxeda sata_highbank driver has been adding its descriptions to the
->> ahci driver. Separate them properly.
-> 
->> Signed-off-by: Mark Langsdorf <mark.langsdorf@calxeda.com>
->> Acked-by: Rob Herring <rob.herring@calxeda.com>
-> [...]
-> 
->> diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
->> index 3ec0c5c..14d7b22 100644
->> --- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
->> +++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
->> @@ -4,27 +4,17 @@ SATA nodes are defined to describe on-chip Serial ATA controllers.
-> [...]
->>   Example:
->>           sata@ffe08000 {
->> -		compatible = "calxeda,hb-ahci";
->> +		compatible = "snps,spear-ahci";
->>                   reg = <0xffe08000 0x1000>;
->>                   interrupts = <115>;
-> 
->     Indented these 2 props with spaces, would be good to fix...
+This mimics the IDE interface implementation except it is
+synchronous (i.e. the reset occurs in the same thread).
+You can now use hdparm -w /dev/sda to issue an ATA
+software reset after all pending commands are completed
+(can be more than 1 when NCQ is used).
 
-Thanks, I will fix.
+This ioctl has been of the list of things to do [1] so I
+would like to get feedback on my proposed solution. I have
+tested it using user-space tools to generate both queued
+and non-queued commands. My inspection of the SATA bus
+trace confirms that the SRST bit in the taskfile control
+word is set and that the AHCI error handler does not kick
+in causing a hard reset of the link when using hdparm
+to issue a software reset.
 
->> -		calxeda,port-phys = <&combophy5 0 &combophy0 0 &combophy0 1
->> -					&combophy0 2 &combophy0 3>;
->>
->>           };
->> diff --git a/Documentation/devicetree/bindings/ata/sata_highbank.txt b/Documentation/devicetree/bindings/ata/sata_highbank.txt
->> new file mode 100644
->> index 0000000..aa1b798
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/ata/sata_highbank.txt
->     Shouldn't the file be called calxeda,hb-ahci.txt?
+[1] http://article.gmane.org/gmane.linux.ide/32474
 
-# ls Documentation/devicetree/bindings/ata/
-ahci-platform.txt         exynos-sata.txt           pata-arasan.txt
-atmel-at91_cf.txt         fsl-sata.txt              sata_highbank.txt
-cavium-compact-flash.txt  imx-pata.txt
-exynos-sata-phy.txt       marvell.txt
+Signed-off-by: Lucas Magasweran <lucas.magasweran@wdc.com>
+---
+ drivers/ata/libata-scsi.c |   65 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/ata/libata.h      |    3 ++-
+ 2 files changed, 67 insertions(+), 1 deletion(-)
 
-By comparison with the other files in the directory, no. Using _ instead
-of - is slightly unorthodox but not unknown within the
-devicetree/bindings subdirectories.
-
->> @@ -0,0 +1,32 @@
->> +* Calxeda AHCI SATA Controller
->> +
->> +SATA nodes are defined to describe on-chip Serial ATA controllers.
->> +The Calxeda SATA controller mostly conforms to the AHCI interface
->> +with some special extensions to add functionality.
->> +Each SATA controller should have its own node.
->> +
->> +Required properties:
->> +- compatible        : compatible list, contains "calxeda,hb-ahci"
->> +- interrupts        : <interrupt mapping for SATA IRQ>
->> +- reg               : <registers mapping>
->> +
->> +Optional properties:
->> +- dma-coherent      : Present if dma operations are coherent
->> +- calxeda,port-phys: phandle-combophy and lane assignment, which maps each
->> +			SATA port to a combophy and a lane within that
->> +			combophy
->> +- calxeda,sgpio-gpio: phandle-gpio bank, bit offset, and default on or off,
->> +			which indicates that the driver supports SGPIO
->> +			indicator lights using the indicated GPIOs
->> +- calxeda,led-order : a u32 array that map port numbers to offsets within the
->> +			SGPIO bitstream.
->> +
->> +Example:
->> +        sata@ffe08000 {
->> +		compatible = "calxeda,hb-ahci";
->> +                reg = <0xffe08000 0x1000>;
->> +                interrupts = <115>;
->> +		calxeda,port-phys = <&combophy5 0 &combophy0 0 &combophy0 1
-> 
->     Could you indent props uniformly here, with tabs?
-
-Yes.
-
-Thanks for the review.
-
---Mark Langsdorf
-Calxeda, Inc.
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 83c0890..87640a9 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -649,6 +649,66 @@ int ata_task_ioctl(struct scsi_device *scsidev, void __user *arg)
+ 	return rc;
+ }
+ 
++/**
++ *  ata_drive_reset_ioctl - Handler for HDIO_DRIVE_RESET ioctl
++ *  @ap: Device to which we are issuing command
++ *
++ *  Execute a reset on the device as soon as the current IO
++ *  operation has completed. Multiple IO operations could be 
++ *  pending if NCQ is used.
++ *
++ *  TODO Executes an ATAPI soft reset if applicable, otherwise
++ *  executes an ATA soft reset on the controller.
++ *
++ *  LOCKING:
++ *  Defined by the SCSI layer.  We don't really care.
++ *
++ *  RETURNS:
++ *  Zero on success, negative errno on error.
++ */
++static int ata_drive_reset_ioctl(struct scsi_device *scsidev, struct ata_port *ap)
++{
++	unsigned long deadline = ata_deadline(jiffies, ATA_TMOUT_INTERNAL_QUICK);
++	unsigned int class;
++	int rc = 0;
++	unsigned long sleep_ms = ATA_TMOUT_INTERNAL_QUICK;
++	/* unsigned long flags; */
++
++	if (ap->ops->softreset) {
++		/* block further commands from being queued during reset */
++		rc = scsi_internal_device_block(scsidev);
++
++		/*
++		 * TODO Find the worst-case timeout value and sleep until it completes.
++		 * Alternatively, we can blk_abort_request in-flight commands as
++		 * done in ata_qc_schedule_eh() if the SRST should be immediate.
++		 */
++		while ( ap->qc_active && sleep_ms > 0 ) {
++			ata_msleep(ap, sleep_ms);
++			sleep_ms -= 1000;
++		}
++
++		/* should not need to acquire ap->lock since command queue is blocked */
++		/* spin_lock_irqsave(ap->lock, flags); */
++
++		/* send ATA Software Reset SRST */
++		rc = ap->ops->softreset(&ap->link, &class, deadline);
++
++		/* should not need to acquire ap->lock since command queue is blocked */
++		/* spin_unlock_irqrestore(ap->lock, flags); */
++
++		/* unblock command queue (restores RUNNING state) */
++		rc = scsi_internal_device_unblock(scsidev);
++	}
++	else
++	{
++		rc = -EOPNOTSUPP;
++		DPRINTK("ATA SOFTWARE RESET is not support by controller\n");
++	}
++
++	return rc;
++}
++
+ static int ata_ioc32(struct ata_port *ap)
+ {
+ 	if (ap->flags & ATA_FLAG_PIO_DMA)
+@@ -702,6 +762,11 @@ int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *scsidev,
+ 			return -EACCES;
+ 		return ata_task_ioctl(scsidev, arg);
+ 
++	case HDIO_DRIVE_RESET:
++		if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
++			return -EACCES;
++		return ata_drive_reset_ioctl(scsidev, ap);
++
+ 	default:
+ 		rc = -ENOTTY;
+ 		break;
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 577d902..d5bef15 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -150,7 +150,8 @@ extern void ata_scsi_dev_rescan(struct work_struct *work);
+ extern int ata_bus_probe(struct ata_port *ap);
+ extern int ata_scsi_user_scan(struct Scsi_Host *shost, unsigned int channel,
+ 			      unsigned int id, unsigned int lun);
+-
++extern int scsi_internal_device_block(struct scsi_device *sdev);
++extern int scsi_internal_device_unblock(struct scsi_device *sdev);
+ 
+ /* libata-eh.c */
+ extern unsigned long ata_internal_cmd_timeout(struct ata_device *dev, u8 cmd);
+-- 
+1.7.9.5
 
