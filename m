@@ -1,43 +1,51 @@
 From: Mark Langsdorf <mark.langsdorf@calxeda.com>
-Subject: Re: [PATCH 4/5] sata, highbank: set tx_atten override bits
-Date: Fri, 02 Aug 2013 10:24:17 -0500
-Message-ID: <51FBCF21.3050807@calxeda.com>
-References: <1374851518-4802-1-git-send-email-mark.langsdorf@calxeda.com> <1374851518-4802-4-git-send-email-mark.langsdorf@calxeda.com> <20130726162231.GD3528@e106331-lin.cambridge.arm.com> <51F2C220.5040407@gmail.com> <20130730164231.GH29859@e106331-lin.cambridge.arm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH v2 1/5] sata, highbank: fix ordering of SGPIO signals
+Date: Fri,  2 Aug 2013 11:28:34 -0500
+Message-ID: <1375460918-4661-1-git-send-email-mark.langsdorf@calxeda.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp131.dfw.emailsrvr.com ([67.192.241.131]:37017 "EHLO
-	smtp131.dfw.emailsrvr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753695Ab3HBPZS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Aug 2013 11:25:18 -0400
-In-Reply-To: <20130730164231.GH29859@e106331-lin.cambridge.arm.com>
+Received: from smtp65.ord1c.emailsrvr.com ([108.166.43.65]:39222 "EHLO
+	smtp65.ord1c.emailsrvr.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753030Ab3HBQ2d (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 Aug 2013 12:28:33 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Rutland <mark.rutland@arm.com>
-Cc: Rob Herring <robherring2@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "tj@kernel.org" <tj@kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Pawel Moll <Pawel.Moll@arm.com>, "swarren@wwwdotorg.org" <swarren@wwwdotorg.org>, "ian.campbell@citrix.com" <ian.campbell@citrix.com>
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, tj@kernel.org, devicetree@vger.kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, swarren@wwwdotorg.org, ian.campbell@citrix.com, rob.herring@calxeda.com
+Cc: Mark Langsdorf <mark.langsdorf@calxeda.com>
 
-On 07/30/2013 11:42 AM, Mark Rutland wrote:
-> On Fri, Jul 26, 2013 at 07:38:24PM +0100, Rob Herring wrote:
->> On 07/26/2013 11:22 AM, Mark Rutland wrote:
->>> On Fri, Jul 26, 2013 at 04:11:57PM +0100, Mark Langsdorf wrote:
->>>> Some board designs do not drive the SATA transmit lines within the
->>>> specification. The ECME can provide override settings, on a per board
->>>> basis, to bring the transmit lines within spec. Read those settings
->>>> from the DTB and program them in.
->>>
->>> How variable is the use of this property going to be? Would it instead
->>> be possible to decide that this was necessary, and choose the
->>> appropriate values based on a compatible property?
->>
->> It is based on compliance testing of the particular board design. Basing
->> on a compatible property would not work in this case.
-> 
-> Ok. Could you clarify the u8/cell usage in the binding and amend the
-> example please?
+The ACTIVITY and ERROR signals were reversed in the original commit.
+Fix that so that hard drive activity does not show up on the error
+light, and attempts to indicate that the hard drive is failing do
+not show up as hard drive activity. There is no other change to
+the driver other than sending the signals to the LED PIC in the
+correct order.
 
-Yes, I'll do that. Thanks for the review.
+Signed-off-by: Mark Langsdorf <mark.langsdorf@calxeda.com>
+---
+Changes from v1
+	Expanded commit message explaining the problems with the
+unpatched code.
 
---Mark Langsdorf
-Calxeda, Inc.
+ drivers/ata/sata_highbank.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
+index d047d92..e9a4f46 100644
+--- a/drivers/ata/sata_highbank.c
++++ b/drivers/ata/sata_highbank.c
+@@ -86,11 +86,11 @@ struct ecx_plat_data {
+ 
+ #define SGPIO_SIGNALS			3
+ #define ECX_ACTIVITY_BITS		0x300000
+-#define ECX_ACTIVITY_SHIFT		2
++#define ECX_ACTIVITY_SHIFT		0
+ #define ECX_LOCATE_BITS			0x80000
+ #define ECX_LOCATE_SHIFT		1
+ #define ECX_FAULT_BITS			0x400000
+-#define ECX_FAULT_SHIFT			0
++#define ECX_FAULT_SHIFT			2
+ static inline int sgpio_bit_shift(struct ecx_plat_data *pdata, u32 port,
+ 				u32 shift)
+ {
+-- 
+1.8.1.2
 
