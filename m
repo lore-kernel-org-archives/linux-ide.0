@@ -1,52 +1,49 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] libata fixes for 3.11-rc4
-Date: Sun, 4 Aug 2013 20:19:55 -0400
-Message-ID: <20130805001955.GD12029@htj.dyndns.org>
+From: Ian Pilcher <arequipeno@gmail.com>
+Subject: SATA backplane activity LEDs
+Date: Mon, 05 Aug 2013 15:40:47 -0500
+Message-ID: <ktp2k8$de0$1@ger.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qe0-f51.google.com ([209.85.128.51]:59188 "EHLO
-	mail-qe0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753984Ab3HEAT7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 4 Aug 2013 20:19:59 -0400
-Content-Disposition: inline
+Received: from plane.gmane.org ([80.91.229.3]:33746 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754569Ab3HEVGb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 5 Aug 2013 17:06:31 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <lnx-linux-ide@m.gmane.org>)
+	id 1V6Rxg-00019D-8p
+	for linux-ide@vger.kernel.org; Mon, 05 Aug 2013 23:05:04 +0200
+Received: from pool-71-252-209-206.dllstx.fios.verizon.net ([71.252.209.206])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Mon, 05 Aug 2013 23:05:04 +0200
+Received: from arequipeno by pool-71-252-209-206.dllstx.fios.verizon.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Mon, 05 Aug 2013 23:05:04 +0200
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello, again.
+I am trying to get the drive activity LEDs in my Thecus N5550 NAS
+working with a standard distribution kernel.  These LEDs are controlled
+by an NXP PCA9532 dimmer, rather than the SiI 3132 SATA controller.  I
+have been able to build the Thecus modules for a standard kernel, and I
+am able to control the LEDs manually (through their non-standard
+/proc/thecus_io interface).
 
-Just an addition of MODULE_DEVICE_TABLE() for a platform driver.
-Available in the follwing branch
+Thecus uses a modified libata-core.c and libahci.c to control the LEDs,
+replacing ata_qc_new and ata_qc_free with variants that turn the LEDs
+on and off.  If at all possible, I would prefer not to be this
+intrusive.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-3.11-fixes
+Is there any better way to do this?
 
-for you to fetch changes up to 71ab1d58c26eb7c30711caa95c173d5c39ab8855:
-
-  pata_imx: expose module alias for loading from device-tree (2013-07-29 12:13:08 -0400)
-
-Thanks.
-
-----------------------------------------------------------------
-Niels de Vos (1):
-      pata_imx: expose module alias for loading from device-tree
-
- drivers/ata/pata_imx.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/ata/pata_imx.c b/drivers/ata/pata_imx.c
-index 4ec7c04..26386f0 100644
---- a/drivers/ata/pata_imx.c
-+++ b/drivers/ata/pata_imx.c
-@@ -237,6 +237,7 @@ static const struct of_device_id imx_pata_dt_ids[] = {
- 		/* sentinel */
- 	}
- };
-+MODULE_DEVICE_TABLE(of, imx_pata_dt_ids);
- 
- static struct platform_driver pata_imx_driver = {
- 	.probe		= pata_imx_probe,
+Thanks!
 
 -- 
-tejun
+========================================================================
+Ian Pilcher                                         arequipeno@gmail.com
+Sometimes there's nothing left to do but crash and burn...or die trying.
+========================================================================
+
