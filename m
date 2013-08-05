@@ -1,62 +1,52 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] Add HDIO_DRIVE_RESET ioctl to libata.
-Date: Sun, 4 Aug 2013 10:06:17 -0400
-Message-ID: <20130804140617.GA2792@htj.dyndns.org>
-References: <1375485028-11712-1-git-send-email-lucas.magasweran@wdc.com>
+Subject: [GIT PULL] libata fixes for 3.11-rc4
+Date: Sun, 4 Aug 2013 20:19:55 -0400
+Message-ID: <20130805001955.GD12029@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f180.google.com ([209.85.216.180]:63347 "EHLO
-	mail-qc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752322Ab3HDOGU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 4 Aug 2013 10:06:20 -0400
-Received: by mail-qc0-f180.google.com with SMTP id j10so1218009qcx.11
-        for <linux-ide@vger.kernel.org>; Sun, 04 Aug 2013 07:06:19 -0700 (PDT)
+Received: from mail-qe0-f51.google.com ([209.85.128.51]:59188 "EHLO
+	mail-qe0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753984Ab3HEAT7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 4 Aug 2013 20:19:59 -0400
 Content-Disposition: inline
-In-Reply-To: <1375485028-11712-1-git-send-email-lucas.magasweran@wdc.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lucas Magasweran <lucas.magasweran@wdc.com>
-Cc: "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Fri, Aug 02, 2013 at 04:10:28PM -0700, Lucas Magasweran wrote:
-> +static int ata_drive_reset_ioctl(struct scsi_device *scsidev, struct ata_port *ap)
-> +{
-> +	unsigned long deadline = ata_deadline(jiffies, ATA_TMOUT_INTERNAL_QUICK);
-> +	unsigned int class;
-> +	int rc = 0;
-> +	unsigned long sleep_ms = ATA_TMOUT_INTERNAL_QUICK;
-> +	/* unsigned long flags; */
-> +
-> +	if (ap->ops->softreset) {
-> +		/* block further commands from being queued during reset */
-> +		rc = scsi_internal_device_block(scsidev);
-> +
-> +		/*
-> +		 * TODO Find the worst-case timeout value and sleep until it completes.
-> +		 * Alternatively, we can blk_abort_request in-flight commands as
-> +		 * done in ata_qc_schedule_eh() if the SRST should be immediate.
-> +		 */
-> +		while ( ap->qc_active && sleep_ms > 0 ) {
-> +			ata_msleep(ap, sleep_ms);
-> +			sleep_ms -= 1000;
-> +		}
+Hello, again.
 
-Whoa...
+Just an addition of MODULE_DEVICE_TABLE() for a platform driver.
+Available in the follwing branch
 
-> +		/* should not need to acquire ap->lock since command queue is blocked */
-> +		/* spin_lock_irqsave(ap->lock, flags); */
-> +
-> +		/* send ATA Software Reset SRST */
-> +		rc = ap->ops->softreset(&ap->link, &class, deadline);
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-3.11-fixes
 
-Nope nope nope.
+for you to fetch changes up to 71ab1d58c26eb7c30711caa95c173d5c39ab8855:
 
-It can actually be pretty trivially implemented by scheduling EH with
-SRST action.  That said, I don't konw what use this would be?  Why is
-the ioctl even necessary?
+  pata_imx: expose module alias for loading from device-tree (2013-07-29 12:13:08 -0400)
 
 Thanks.
+
+----------------------------------------------------------------
+Niels de Vos (1):
+      pata_imx: expose module alias for loading from device-tree
+
+ drivers/ata/pata_imx.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/ata/pata_imx.c b/drivers/ata/pata_imx.c
+index 4ec7c04..26386f0 100644
+--- a/drivers/ata/pata_imx.c
++++ b/drivers/ata/pata_imx.c
+@@ -237,6 +237,7 @@ static const struct of_device_id imx_pata_dt_ids[] = {
+ 		/* sentinel */
+ 	}
+ };
++MODULE_DEVICE_TABLE(of, imx_pata_dt_ids);
+ 
+ static struct platform_driver pata_imx_driver = {
+ 	.probe		= pata_imx_probe,
 
 -- 
 tejun
