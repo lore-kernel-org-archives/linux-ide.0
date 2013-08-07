@@ -1,51 +1,53 @@
-From: Jingoo Han <jg1.han@samsung.com>
-Subject: [PATCH 2/2] ide: sgiioc4: Staticize ioc4_ide_attach_one()
-Date: Wed, 07 Aug 2013 14:17:55 +0900
-Message-ID: <002c01ce932d$791b80a0$6b5281e0$@samsung.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: Mark Langsdorf <mark.langsdorf@calxeda.com>
+Subject: [PATCH v3 1/5] sata, highbank: fix ordering of SGPIO signals
+Date: Wed,  7 Aug 2013 10:52:34 -0500
+Message-ID: <1375890758-30265-1-git-send-email-mark.langsdorf@calxeda.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:41010 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754293Ab3HGFR5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Aug 2013 01:17:57 -0400
-Received: from epcpsbgr4.samsung.com
- (u144.gpu120.samsung.co.kr [203.254.230.144])
- by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MR50074PAPMM770@mailout4.samsung.com> for
- linux-ide@vger.kernel.org; Wed, 07 Aug 2013 14:17:55 +0900 (KST)
-Content-language: ko
+Received: from smtp161.dfw.emailsrvr.com ([67.192.241.161]:59699 "EHLO
+	smtp161.dfw.emailsrvr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753806Ab3HGPxz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Aug 2013 11:53:55 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "'David S. Miller'" <davem@davemloft.net>
-Cc: linux-ide@vger.kernel.org, Jingoo Han <jg1.han@samsung.com>
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, tj@kernel.org, devicetree@vger.kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, swarren@wwwdotorg.org, ian.campbell@citrix.com, rob.herring@calxeda.com, sergei.shtylyov@cogentembedded.com
+Cc: Mark Langsdorf <mark.langsdorf@calxeda.com>
 
-ioc4_ide_attach_one() is used only in this file.
-Fix the following sparse warnings:
+The ACTIVITY and ERROR signals were reversed in the original commit.
+Fix that so that hard drive activity does not show up on the error
+light, and attempts to indicate that the hard drive is failing do
+not show up as hard drive activity. This fixes a fairly serious
+functional bug in the driver, but failing to apply this patch will
+not cause any stability issues on the system.
 
-drivers/ide/sgiioc4.c:603:5: warning: symbol 'ioc4_ide_attach_one' was not declared. Should it be static?
-
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+Signed-off-by: Mark Langsdorf <mark.langsdorf@calxeda.com>
 ---
- drivers/ide/sgiioc4.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Changes from v2
+	Further rewords of the commit message.
+Changes from v1
+        Expanded commit message explaining the problems with the
+unpatched code.
 
-diff --git a/drivers/ide/sgiioc4.c b/drivers/ide/sgiioc4.c
-index a5ca179a..63761db 100644
---- a/drivers/ide/sgiioc4.c
-+++ b/drivers/ide/sgiioc4.c
-@@ -600,7 +600,7 @@ out:
- 	return ret;
- }
+ drivers/ata/sata_highbank.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
+index d047d92..e9a4f46 100644
+--- a/drivers/ata/sata_highbank.c
++++ b/drivers/ata/sata_highbank.c
+@@ -86,11 +86,11 @@ struct ecx_plat_data {
  
--int ioc4_ide_attach_one(struct ioc4_driver_data *idd)
-+static int ioc4_ide_attach_one(struct ioc4_driver_data *idd)
+ #define SGPIO_SIGNALS			3
+ #define ECX_ACTIVITY_BITS		0x300000
+-#define ECX_ACTIVITY_SHIFT		2
++#define ECX_ACTIVITY_SHIFT		0
+ #define ECX_LOCATE_BITS			0x80000
+ #define ECX_LOCATE_SHIFT		1
+ #define ECX_FAULT_BITS			0x400000
+-#define ECX_FAULT_SHIFT			0
++#define ECX_FAULT_SHIFT			2
+ static inline int sgpio_bit_shift(struct ecx_plat_data *pdata, u32 port,
+ 				u32 shift)
  {
- 	/*
- 	 * PCI-RT does not bring out IDE connection.
 -- 
-1.7.10.4
-
+1.8.1.2
 
