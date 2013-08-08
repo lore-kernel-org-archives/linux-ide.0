@@ -1,69 +1,117 @@
-From: Marc C <marc.ceeeee@gmail.com>
-Subject: [PATCH RESEND v2 2/2] libata: Add support for queued DSM TRIM
-Date: Thu,  8 Aug 2013 00:56:52 -0700
-Message-ID: <1375948612-14630-3-git-send-email-marc.ceeeee@gmail.com>
-References: <1375948612-14630-1-git-send-email-marc.ceeeee@gmail.com>
+From: Mark Rutland <mark.rutland@arm.com>
+Subject: Re: [PATCH v3 3/5] devicetree: create a separate binding
+ description for sata_highbank
+Date: Thu, 8 Aug 2013 10:46:08 +0100
+Message-ID: <20130808094608.GI14648@e106331-lin.cambridge.arm.com>
+References: <1375890758-30265-1-git-send-email-mark.langsdorf@calxeda.com>
+ <1375890758-30265-3-git-send-email-mark.langsdorf@calxeda.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:52148 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757642Ab3HHH5M (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Aug 2013 03:57:12 -0400
-Received: by mail-ob0-f172.google.com with SMTP id er7so4926996obc.17
-        for <linux-ide@vger.kernel.org>; Thu, 08 Aug 2013 00:57:11 -0700 (PDT)
-In-Reply-To: <1375948612-14630-1-git-send-email-marc.ceeeee@gmail.com>
+Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:60393 "EHLO
+	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S964841Ab3HHJqR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Aug 2013 05:46:17 -0400
+Content-Disposition: inline
+In-Reply-To: <1375890758-30265-3-git-send-email-mark.langsdorf@calxeda.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org, linux-ide@vger.kernel.org
-Cc: Marc Carino <marc.ceeeee@gmail.com>
+To: Mark Langsdorf <mark.langsdorf@calxeda.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "tj@kernel.org" <tj@kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Pawel Moll <Pawel.Moll@arm.com>, "swarren@wwwdotorg.org" <swarren@wwwdotorg.org>, "ian.campbell@citrix.com" <ian.campbell@citrix.com>, "rob.herring@calxeda.com" <rob.herring@calxeda.com>, "sergei.shtylyov@cogentembedded.com" <sergei.shtylyov@cogentembedded.com>
 
-From: Marc Carino <marc.ceeeee@gmail.com>
+On Wed, Aug 07, 2013 at 04:52:36PM +0100, Mark Langsdorf wrote:
+> The Calxeda sata_highbank driver has been adding its descriptions to the
+> ahci driver. Separate them properly.
+> 
+> Signed-off-by: Mark Langsdorf <mark.langsdorf@calxeda.com>
+> Acked-by: Rob Herring <rob.herring@calxeda.com>
+> ---
+> Changes from v2
+> 	Fixed some indenting.
+> Changes from v1
+> 	None.
+> 
+>  .../devicetree/bindings/ata/ahci-platform.txt      | 18 +++---------
+>  .../devicetree/bindings/ata/sata_highbank.txt      | 32 ++++++++++++++++++++++
+>  2 files changed, 36 insertions(+), 14 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/ata/sata_highbank.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+> index 3ec0c5c..89de156 100644
+> --- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
+> +++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+> @@ -4,27 +4,17 @@ SATA nodes are defined to describe on-chip Serial ATA controllers.
+>  Each SATA controller should have its own node.
+>  
+>  Required properties:
+> -- compatible        : compatible list, contains "calxeda,hb-ahci" or "snps,spear-ahci"
+> +- compatible        : compatible list, contains "snps,spear-ahci"
+>  - interrupts        : <interrupt mapping for SATA IRQ>
+>  - reg               : <registers mapping>
+>  
+>  Optional properties:
+> -- calxeda,port-phys: phandle-combophy and lane assignment, which maps each
+> -			SATA port to a combophy and a lane within that
+> -			combophy
+> -- calxeda,sgpio-gpio: phandle-gpio bank, bit offset, and default on or off,
+> -			which indicates that the driver supports SGPIO
+> -			indicator lights using the indicated GPIOs
+> -- calxeda,led-order : a u32 array that map port numbers to offsets within the
+> -			SGPIO bitstream.
+>  - dma-coherent      : Present if dma operations are coherent
+>  
+>  Example:
+>          sata@ffe08000 {
+> -		compatible = "calxeda,hb-ahci";
+> -                reg = <0xffe08000 0x1000>;
+> -                interrupts = <115>;
+> -		calxeda,port-phys = <&combophy5 0 &combophy0 0 &combophy0 1
+> -					&combophy0 2 &combophy0 3>;
+> +		compatible = "snps,spear-ahci";
+> +		reg = <0xffe08000 0x1000>;
+> +		interrupts = <115>;
+>  
+>          };
+> diff --git a/Documentation/devicetree/bindings/ata/sata_highbank.txt b/Documentation/devicetree/bindings/ata/sata_highbank.txt
+> new file mode 100644
+> index 0000000..1ac6d3d
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ata/sata_highbank.txt
+> @@ -0,0 +1,32 @@
+> +* Calxeda AHCI SATA Controller
+> +
+> +SATA nodes are defined to describe on-chip Serial ATA controllers.
+> +The Calxeda SATA controller mostly conforms to the AHCI interface
+> +with some special extensions to add functionality.
+> +Each SATA controller should have its own node.
+> +
+> +Required properties:
+> +- compatible        : compatible list, contains "calxeda,hb-ahci"
+> +- interrupts        : <interrupt mapping for SATA IRQ>
+> +- reg               : <registers mapping>
+> +
+> +Optional properties:
+> +- dma-coherent      : Present if dma operations are coherent
+> +- calxeda,port-phys: phandle-combophy and lane assignment, which maps each
+> +			SATA port to a combophy and a lane within that
+> +			combophy
+> +- calxeda,sgpio-gpio: phandle-gpio bank, bit offset, and default on or off,
+> +			which indicates that the driver supports SGPIO
+> +			indicator lights using the indicated GPIOs
+> +- calxeda,led-order : a u32 array that map port numbers to offsets within the
+> +			SGPIO bitstream.
+> +
+> +Example:
+> +        sata@ffe08000 {
+> +		compatible = "calxeda,hb-ahci";
+> +		reg = <0xffe08000 0x1000>;
+> +		interrupts = <115>;
+> +		calxeda,port-phys = <&combophy5 0 &combophy0 0 &combophy0 1
+> +					&combophy0 2 &combophy0 3>;
+> +
+> +        };
 
-Some new SSDs support the queued version of the DSM TRIM command.
-Let the driver use the new command if supported.
+It would be nice to have examples for the remaining optional properties,
+but otherwise:
 
-Signed-off-by: Marc Carino <marc.ceeeee@gmail.com>
----
- drivers/ata/libata-scsi.c | 27 +++++++++++++++++++++------
- 1 file changed, 21 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index b1e880a..94b0f5e 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3100,12 +3100,27 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
- 	buf = page_address(sg_page(scsi_sglist(scmd)));
- 	size = ata_set_lba_range_entries(buf, 512, block, n_block);
- 
--	tf->protocol = ATA_PROT_DMA;
--	tf->hob_feature = 0;
--	tf->feature = ATA_DSM_TRIM;
--	tf->hob_nsect = (size / 512) >> 8;
--	tf->nsect = size / 512;
--	tf->command = ATA_CMD_DSM;
-+	if (ata_ncq_enabled(dev) &&
-+	    (dev->ncq_send_recv_cmds[ATA_LOG_NCQ_SEND_RECV_DSM_OFFSET] &
-+	     ATA_LOG_NCQ_SEND_RECV_DSM_TRIM)) {
-+		/* Newer devices support queued TRIM commands */
-+		tf->protocol = ATA_PROT_NCQ;
-+		tf->command = ATA_CMD_FPDMA_SEND;
-+		tf->hob_nsect = ATA_SUBCMD_FPDMA_SEND_DSM & 0x1f;
-+		tf->nsect = qc->tag << 3;
-+		tf->hob_feature = (size / 512) >> 8;
-+		tf->feature = size / 512;
-+
-+		qc->auxiliary = 1;
-+	} else {
-+		tf->protocol = ATA_PROT_DMA;
-+		tf->hob_feature = 0;
-+		tf->feature = ATA_DSM_TRIM;
-+		tf->hob_nsect = (size / 512) >> 8;
-+		tf->nsect = size / 512;
-+		tf->command = ATA_CMD_DSM;
-+	}
-+
- 	tf->flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE | ATA_TFLAG_LBA48 |
- 		     ATA_TFLAG_WRITE;
- 
--- 
-1.8.1.2
-
+Acked-by: Mark Rutland <mark.rutland@arm.com>
