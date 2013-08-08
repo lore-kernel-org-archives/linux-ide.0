@@ -1,117 +1,32 @@
-From: Mark Rutland <mark.rutland@arm.com>
-Subject: Re: [PATCH v3 3/5] devicetree: create a separate binding
- description for sata_highbank
-Date: Thu, 8 Aug 2013 10:46:08 +0100
-Message-ID: <20130808094608.GI14648@e106331-lin.cambridge.arm.com>
-References: <1375890758-30265-1-git-send-email-mark.langsdorf@calxeda.com>
- <1375890758-30265-3-git-send-email-mark.langsdorf@calxeda.com>
+From: "Mr. Raymond Khumalo" <asmaind@dnet.net.id>
+Subject: Your  Attention Is Needed
+Date: Thu, 8 Aug 2013 23:51:23 +0700 (WIT)
+Message-ID: <9f4bad57a739916d9819962269d252bf.squirrel__37741.8391676203$1375982650$gmane$org@newwebmail.dnet.net.id>
+Reply-To: mrraymondkhumalo13@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:60393 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S964841Ab3HHJqR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Aug 2013 05:46:17 -0400
-Content-Disposition: inline
-In-Reply-To: <1375890758-30265-3-git-send-email-mark.langsdorf@calxeda.com>
+Received: from smtp3.dnet.net.id ([202.148.1.233]:53183 "EHLO
+	smtp3.dnet.net.id" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758060Ab3HHRXq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Aug 2013 13:23:46 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Langsdorf <mark.langsdorf@calxeda.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "tj@kernel.org" <tj@kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Pawel Moll <Pawel.Moll@arm.com>, "swarren@wwwdotorg.org" <swarren@wwwdotorg.org>, "ian.campbell@citrix.com" <ian.campbell@citrix.com>, "rob.herring@calxeda.com" <rob.herring@calxeda.com>, "sergei.shtylyov@cogentembedded.com" <sergei.shtylyov@cogentembedded.com>
 
-On Wed, Aug 07, 2013 at 04:52:36PM +0100, Mark Langsdorf wrote:
-> The Calxeda sata_highbank driver has been adding its descriptions to the
-> ahci driver. Separate them properly.
-> 
-> Signed-off-by: Mark Langsdorf <mark.langsdorf@calxeda.com>
-> Acked-by: Rob Herring <rob.herring@calxeda.com>
-> ---
-> Changes from v2
-> 	Fixed some indenting.
-> Changes from v1
-> 	None.
-> 
->  .../devicetree/bindings/ata/ahci-platform.txt      | 18 +++---------
->  .../devicetree/bindings/ata/sata_highbank.txt      | 32 ++++++++++++++++++++++
->  2 files changed, 36 insertions(+), 14 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/ata/sata_highbank.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-> index 3ec0c5c..89de156 100644
-> --- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
-> +++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-> @@ -4,27 +4,17 @@ SATA nodes are defined to describe on-chip Serial ATA controllers.
->  Each SATA controller should have its own node.
->  
->  Required properties:
-> -- compatible        : compatible list, contains "calxeda,hb-ahci" or "snps,spear-ahci"
-> +- compatible        : compatible list, contains "snps,spear-ahci"
->  - interrupts        : <interrupt mapping for SATA IRQ>
->  - reg               : <registers mapping>
->  
->  Optional properties:
-> -- calxeda,port-phys: phandle-combophy and lane assignment, which maps each
-> -			SATA port to a combophy and a lane within that
-> -			combophy
-> -- calxeda,sgpio-gpio: phandle-gpio bank, bit offset, and default on or off,
-> -			which indicates that the driver supports SGPIO
-> -			indicator lights using the indicated GPIOs
-> -- calxeda,led-order : a u32 array that map port numbers to offsets within the
-> -			SGPIO bitstream.
->  - dma-coherent      : Present if dma operations are coherent
->  
->  Example:
->          sata@ffe08000 {
-> -		compatible = "calxeda,hb-ahci";
-> -                reg = <0xffe08000 0x1000>;
-> -                interrupts = <115>;
-> -		calxeda,port-phys = <&combophy5 0 &combophy0 0 &combophy0 1
-> -					&combophy0 2 &combophy0 3>;
-> +		compatible = "snps,spear-ahci";
-> +		reg = <0xffe08000 0x1000>;
-> +		interrupts = <115>;
->  
->          };
-> diff --git a/Documentation/devicetree/bindings/ata/sata_highbank.txt b/Documentation/devicetree/bindings/ata/sata_highbank.txt
-> new file mode 100644
-> index 0000000..1ac6d3d
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ata/sata_highbank.txt
-> @@ -0,0 +1,32 @@
-> +* Calxeda AHCI SATA Controller
-> +
-> +SATA nodes are defined to describe on-chip Serial ATA controllers.
-> +The Calxeda SATA controller mostly conforms to the AHCI interface
-> +with some special extensions to add functionality.
-> +Each SATA controller should have its own node.
-> +
-> +Required properties:
-> +- compatible        : compatible list, contains "calxeda,hb-ahci"
-> +- interrupts        : <interrupt mapping for SATA IRQ>
-> +- reg               : <registers mapping>
-> +
-> +Optional properties:
-> +- dma-coherent      : Present if dma operations are coherent
-> +- calxeda,port-phys: phandle-combophy and lane assignment, which maps each
-> +			SATA port to a combophy and a lane within that
-> +			combophy
-> +- calxeda,sgpio-gpio: phandle-gpio bank, bit offset, and default on or off,
-> +			which indicates that the driver supports SGPIO
-> +			indicator lights using the indicated GPIOs
-> +- calxeda,led-order : a u32 array that map port numbers to offsets within the
-> +			SGPIO bitstream.
-> +
-> +Example:
-> +        sata@ffe08000 {
-> +		compatible = "calxeda,hb-ahci";
-> +		reg = <0xffe08000 0x1000>;
-> +		interrupts = <115>;
-> +		calxeda,port-phys = <&combophy5 0 &combophy0 0 &combophy0 1
-> +					&combophy0 2 &combophy0 3>;
-> +
-> +        };
 
-It would be nice to have examples for the remaining optional properties,
-but otherwise:
 
-Acked-by: Mark Rutland <mark.rutland@arm.com>
+
+I am.  Mr. Raymond Khumalo, Head
+
+Accounts Management Section, of a
+
+well-known
+Bank here in South Africa. Can i
+
+trust you on a transaction deal worth
+US$10,000,000.if interested contact
+
+me for details Email:
+mrraymondkhumalo13@gmail.com
+
