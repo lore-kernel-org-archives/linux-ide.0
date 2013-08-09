@@ -1,34 +1,42 @@
-From: Mark Langsdorf <mark.langsdorf@calxeda.com>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH v3 3/5] devicetree: create a separate binding description
  for sata_highbank
-Date: Fri, 09 Aug 2013 11:12:30 -0500
-Message-ID: <520514EE.1060708@calxeda.com>
-References: <1375890758-30265-1-git-send-email-mark.langsdorf@calxeda.com> <1375890758-30265-3-git-send-email-mark.langsdorf@calxeda.com> <20130809161015.GQ20515@mtj.dyndns.org>
+Date: Fri, 9 Aug 2013 12:15:45 -0400
+Message-ID: <CAOS58YM_1MbngkEvoVtLpJqj3z-fpiQNyog0YK9fdSD7epYYcQ@mail.gmail.com>
+References: <1375890758-30265-1-git-send-email-mark.langsdorf@calxeda.com>
+	<1375890758-30265-3-git-send-email-mark.langsdorf@calxeda.com>
+	<20130809161015.GQ20515@mtj.dyndns.org>
+	<520514EE.1060708@calxeda.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20130809161015.GQ20515@mtj.dyndns.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "pawel.moll@arm.com" <pawel.moll@arm.com>, "mark.rutland@arm.com" <mark.rutland@arm.com>, "swarren@wwwdotorg.org" <swarren@wwwdotorg.org>, "ian.campbell@citrix.com" <ian.campbell@citrix.com>, Rob Herring <rob.herring@calxeda.com>, "sergei.shtylyov@cogentembedded.com" <sergei.shtylyov@cogentembedded.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pb0-f53.google.com ([209.85.160.53]:62985 "EHLO
+	mail-pb0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933993Ab3HIQPq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Aug 2013 12:15:46 -0400
+In-Reply-To: <520514EE.1060708@calxeda.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mark Langsdorf <mark.langsdorf@calxeda.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "pawel.moll@arm.com" <pawel.moll@arm.com>, "mark.rutland@arm.com" <mark.rutland@arm.com>, "swarren@wwwdotorg.org" <swarren@wwwdotorg.org>, "ian.campbell@citrix.com" <ian.campbell@citrix.com>, Rob Herring <rob.herring@calxeda.com>, "sergei.shtylyov@cogentembedded.com" <sergei.shtylyov@cogentembedded.com>
 
-On 08/09/2013 11:10 AM, Tejun Heo wrote:
-> On Wed, Aug 07, 2013 at 10:52:36AM -0500, Mark Langsdorf wrote:
->> The Calxeda sata_highbank driver has been adding its descriptions to the
->> ahci driver. Separate them properly.
->>
->> Signed-off-by: Mark Langsdorf <mark.langsdorf@calxeda.com>
->> Acked-by: Rob Herring <rob.herring@calxeda.com>
->
-> Will wait for the update.  I suppose this doesn't need to go in to
-> for-3.11-fixes?  I'd really appreciate what impact each patch has.
+Hello, Mark.
 
-I'll update the description when I resubmit it to give you more detail 
-on the impact.
+On Fri, Aug 9, 2013 at 12:12 PM, Mark Langsdorf
+<mark.langsdorf@calxeda.com> wrote:
+> I'll update the description when I resubmit it to give you more detail on
+> the impact.
 
-Thanks for applying the others.
+Yes, please give me some hints on to which branch the patches are
+targeted and whether stable should be cc'd. I can't really tell just
+looking at the patches as I have no idea how widespread the device is
+in the wild and which kernels they'd be running or how critical being
+out-of-spec is (is it gonna burn phys on the receiving end in the long
+term? or is it just noisier and the link is gonna be more susceptible
+to errors from EM interferences and so on) and how risky the fixes
+are.
 
---Mark Langsdorf
-Calxeda, Inc.
+Thanks.
+
+-- 
+tejun
