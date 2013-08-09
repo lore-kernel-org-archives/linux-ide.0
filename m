@@ -1,55 +1,64 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v3 1/3] libata: Populate host-to-device FIS "auxiliary"
- field
-Date: Fri, 9 Aug 2013 10:53:11 -0400
-Message-ID: <20130809145311.GK20515@mtj.dyndns.org>
-References: <1376023752-3105-1-git-send-email-marc.ceeeee@gmail.com>
- <1376023752-3105-2-git-send-email-marc.ceeeee@gmail.com>
- <20130809140358.GA20515@mtj.dyndns.org>
- <5204FE63.4010903@cogentembedded.com>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
+Date: Fri, 9 Aug 2013 17:07:45 +0200
+Message-ID: <20130809150744.GB25306@dhcp-26-207.brq.redhat.com>
+References: <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
+ <20130722150359.GA16564@dhcp-26-207.brq.redhat.com>
+ <1374527436.7397.1145.camel@haakon3.risingtidesystems.com>
+ <20130725101641.GB31994@dhcp-26-207.brq.redhat.com>
+ <1374790082.7397.1411.camel@haakon3.risingtidesystems.com>
+ <20130726020928.GL29296@kernel.dk>
+ <1374873276.7397.1512.camel@haakon3.risingtidesystems.com>
+ <20130729114653.GB20951@mtj.dyndns.org>
+ <20130809082335.GA25306@dhcp-26-207.brq.redhat.com>
+ <5204FBA6.6040001@kernel.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f48.google.com ([209.85.216.48]:40275 "EHLO
-	mail-qa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757704Ab3HIOxR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Aug 2013 10:53:17 -0400
-Received: by mail-qa0-f48.google.com with SMTP id o19so940371qap.7
-        for <linux-ide@vger.kernel.org>; Fri, 09 Aug 2013 07:53:16 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:41674 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933972Ab3HIPMT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 9 Aug 2013 11:12:19 -0400
 Content-Disposition: inline
-In-Reply-To: <5204FE63.4010903@cogentembedded.com>
+In-Reply-To: <5204FBA6.6040001@kernel.dk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: Marc C <marc.ceeeee@gmail.com>, linux-ide@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Tejun Heo <tj@kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Christie <michaelc@cs.wisc.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, Aug 09, 2013 at 06:36:19PM +0400, Sergei Shtylyov wrote:
-> >Ummm... I'm sorry but I'm gonna do 180 from Sergei on this one.  The
+On Fri, Aug 09, 2013 at 08:24:38AM -0600, Jens Axboe wrote:
+> On 08/09/2013 02:23 AM, Alexander Gordeev wrote:
+> > +	ap->qc_tags = blk_mq_init_tags(ATA_MAX_QUEUE, 1, NUMA_NO_NODE);
+> > +	if (!ap->qc_tags) {
+> > +		kfree(ap);
+> > +		return NULL;
+> > +	}
 > 
->    That's very unfortunate for me. :-(
+> This should be blk_mq_init_tags(ATA_MAX_QUEUE - 1, 1, ...) since the
+> total depth is normal_tags + reserved_tags.
 
-Hehe, sorry. :)
+Aha.. If blk_mq_init_tags() should be like this then?
 
-> >So, please put the aux field into ata_taskfile.  That's where it
-> >belongs.
-> 
->    Can't agree to that. I was going to make 'struct ata_taskfile'
-> reflect the historical notion and remove from it all not belonging
-> to that notion. Alas, libata has a bad history of mistreating the
-> historical terms...
+diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
+index dcbc2a4..b131a48 100644
+--- a/block/blk-mq-tag.c
++++ b/block/blk-mq-tag.c
+@@ -468,10 +468,9 @@ struct blk_mq_tags *blk_mq_init_tags(unsigned int nr_tags,
+ 	 * Rest of the tags start at the queue list
+ 	 */
+ 	tags->nr_free = 0;
+-	while (nr_tags - tags->nr_reserved) {
++	while (nr_tags--) {
+ 		tags->freelist[tags->nr_free] = tags->nr_free +
+ 							tags->nr_reserved;
+-		nr_tags--;
+ 		tags->nr_free++;
+ 	}
 
-But what does sticking to the historical definition give us when the
-whole concept of TF is no longer maintained in new specs.  The
-distinction between "command proper" and "supporting / plumbing
-information" is still useful so I think it's natural to assign the
-former to ata_taskfile and the latter to ata_queuedcmd.  After all,
-there are cases where we want to describe command without all the
-plumbing stuff libata imposes and given that the aux field is part of
-FIS proper it might even get used for command results too in the
-future.  I mean, FIS is the new TF.  We can rename ata_taskfile to
-ata_fis and map things the other way but that'd just be extra churn.
-
-Thanks.
+> -- 
+> Jens Axboe
 
 -- 
-tejun
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
