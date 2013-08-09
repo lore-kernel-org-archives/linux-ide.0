@@ -1,34 +1,39 @@
-From: 'Tejun Heo' <tj@kernel.org>
-Subject: Re: [PATCH 1/2] ata: pata_arasan: Staticize local symbols
-Date: Fri, 9 Aug 2013 10:13:25 -0400
-Message-ID: <20130809141325.GE20515@mtj.dyndns.org>
-References: <000001ce94c2$30c95430$925bfc90$@samsung.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
+Date: Fri, 9 Aug 2013 10:15:00 -0400
+Message-ID: <20130809141500.GF20515@mtj.dyndns.org>
+References: <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
+ <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
+ <20130722150359.GA16564@dhcp-26-207.brq.redhat.com>
+ <1374527436.7397.1145.camel@haakon3.risingtidesystems.com>
+ <20130725101641.GB31994@dhcp-26-207.brq.redhat.com>
+ <1374790082.7397.1411.camel@haakon3.risingtidesystems.com>
+ <20130726020928.GL29296@kernel.dk>
+ <1374873276.7397.1512.camel@haakon3.risingtidesystems.com>
+ <20130729114653.GB20951@mtj.dyndns.org>
+ <20130809082335.GA25306@dhcp-26-207.brq.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f49.google.com ([209.85.216.49]:55289 "EHLO
-	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S967887Ab3HIONb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Aug 2013 10:13:31 -0400
-Received: by mail-qa0-f49.google.com with SMTP id cr7so925071qab.1
-        for <linux-ide@vger.kernel.org>; Fri, 09 Aug 2013 07:13:30 -0700 (PDT)
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <000001ce94c2$30c95430$925bfc90$@samsung.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <20130809082335.GA25306@dhcp-26-207.brq.redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Jens Axboe <axboe@kernel.dk>, James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Christie <michaelc@cs.wisc.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: linux-ide@vger.kernel.org, Viresh Kumar <viresh.linux@gmail.com>
 
-On Fri, Aug 09, 2013 at 02:35:00PM +0900, Jingoo Han wrote:
-> These local symbols are used only in this file.
-> Fix the following sparse warnings:
+On Fri, Aug 09, 2013 at 10:23:35AM +0200, Alexander Gordeev wrote:
+> On Mon, Jul 29, 2013 at 07:46:53AM -0400, Tejun Heo wrote:
+> > One thing which would probably be worthwhile tho is getting rid of the
+> > bitmap based qc tag allocator in libata.  That one is just borderline
+> > stupid to keep around on any setup which is supposed to be scalable.
 > 
-> drivers/ata/pata_arasan_cf.c:657:6: warning: symbol 'arasan_cf_error_handler' was not declared. Should it be static?
-> drivers/ata/pata_arasan_cf.c:686:14: warning: symbol 'arasan_cf_qc_issue' was not declared. Should it be static?
+> Hi Tejun,
 > 
-> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+> How about this approach?
 
-Applied to libata/for-3.12.
+Haven't looked at it thoroughly and I still don't know anything about
+blk-mq but it looks good on the first glance.
 
 Thanks.
 
