@@ -1,60 +1,65 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2 1/2] libata: Add support for SEND/RECEIVE FPDMA QUEUED
-Date: Fri, 9 Aug 2013 12:18:39 -0400
-Message-ID: <20130809161839.GS20515@mtj.dyndns.org>
-References: <1375946182-2831-1-git-send-email-marc.ceeeee@gmail.com>
- <1375946182-2831-2-git-send-email-marc.ceeeee@gmail.com>
- <5203DAD0.6040604@cogentembedded.com>
- <CAO1A-8DqjSAZ=GD6_BxxaBxvbsbYTUuPZSc-odr=bikUk3FtAg@mail.gmail.com>
- <5203EB9B.3050206@cogentembedded.com>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
+Date: Fri, 9 Aug 2013 18:46:32 +0200
+Message-ID: <20130809164632.GC25306@dhcp-26-207.brq.redhat.com>
+References: <1374527436.7397.1145.camel@haakon3.risingtidesystems.com>
+ <20130725101641.GB31994@dhcp-26-207.brq.redhat.com>
+ <1374790082.7397.1411.camel@haakon3.risingtidesystems.com>
+ <20130726020928.GL29296@kernel.dk>
+ <1374873276.7397.1512.camel@haakon3.risingtidesystems.com>
+ <20130729114653.GB20951@mtj.dyndns.org>
+ <20130809082335.GA25306@dhcp-26-207.brq.redhat.com>
+ <5204FBA6.6040001@kernel.dk>
+ <20130809150744.GB25306@dhcp-26-207.brq.redhat.com>
+ <52051033.8050605@kernel.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f47.google.com ([209.85.216.47]:54153 "EHLO
-	mail-qa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934227Ab3HIQSo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Aug 2013 12:18:44 -0400
-Received: by mail-qa0-f47.google.com with SMTP id o19so979958qap.20
-        for <linux-ide@vger.kernel.org>; Fri, 09 Aug 2013 09:18:43 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:38051 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S968137Ab3HIQrc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 9 Aug 2013 12:47:32 -0400
 Content-Disposition: inline
-In-Reply-To: <5203EB9B.3050206@cogentembedded.com>
+In-Reply-To: <52051033.8050605@kernel.dk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: Marc C <marc.ceeeee@gmail.com>, linux-ide@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Tejun Heo <tj@kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Christie <michaelc@cs.wisc.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, Aug 08, 2013 at 11:03:55PM +0400, Sergei Shtylyov wrote:
-> Hello.
+On Fri, Aug 09, 2013 at 09:52:19AM -0600, Jens Axboe wrote:
+> On 08/09/2013 09:07 AM, Alexander Gordeev wrote:
+> > diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
+> > index dcbc2a4..b131a48 100644
+> > --- a/block/blk-mq-tag.c
+> > +++ b/block/blk-mq-tag.c
+> > @@ -468,10 +468,9 @@ struct blk_mq_tags *blk_mq_init_tags(unsigned int nr_tags,
+> >  	 * Rest of the tags start at the queue list
+> >  	 */
+> >  	tags->nr_free = 0;
+> > -	while (nr_tags - tags->nr_reserved) {
+> > +	while (nr_tags--) {
+> >  		tags->freelist[tags->nr_free] = tags->nr_free +
+> >  							tags->nr_reserved;
+> > -		nr_tags--;
+> >  		tags->nr_free++;
+> >  	}
 > 
-> On 08/08/2013 10:58 PM, Marc C wrote:
-> 
-> >>    How about non-AHCI FIS-based controllers?
-> 
-> >Right. Since it's cost prohibitive for me to test exhaustively on
-> >non-AHCI FIS-based controllers, do you think it would be acceptable to
-> 
->    You can mark your patch as RFT (request for testing) in this case.
-> 
-> >add a new ATA host flag... something like, ATA_FLAG_AHCI, which would
-> >denote the controller as being AHCI-based? Then the flag could be used
-> >to gate processing of READ/WRITE/SEND/RECEIVE FPDMA commands that have
-> >the 'auxiliary' field set. Or, I could add a big fat warning print
-> >whenever an ata_queued_cmd is passed to the drivers with a non-zero
-> >'auxiliary' value.
-> 
->    I was rather thinking about a flag (ATA_FLAG_FIS_BASED, maybe)
-> marking a controller as FIS-based, so that libata would know whether
-> it can issue the new commands using the 'auxiliary' value.
+> I misremembered, just checked the code. I think I used to have it like I
+> described, but changed it since I thought it would be more logical to
+> pass in full depth, and then what part of that is reserved. Looking at
+> the current code, your patch looks correct as-is.
 
-I'm not sure whether checking whether a controller is FIS based would
-be enough.  sil24 is clearly FIS based but it snoops the command code
-and likely to choke on commands which it doesn't know about.  I think
-the best way to deal with it would be having a feature flag on the
-host / port and setting it on controllers known to work.  In practice,
-just enabling it on ahci's should cover most use cases from now on
-anyway.
+Ok, then a whole series "[PATCH 0/3] blk-mq: Avoid effects of a weird queue
+depth" (I posted earlier in a separate thread) should make sense. Besides
+the hunk above it limits the per-cpu cache size and sanity-checks total vs
+reserved length. I can resubmit if you want.
 
-Thanks.
+> 
+> -- 
+> Jens Axboe
+> 
 
 -- 
-tejun
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
