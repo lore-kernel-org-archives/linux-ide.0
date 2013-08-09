@@ -1,54 +1,70 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
-Date: Fri, 9 Aug 2013 21:15:42 +0200
-Message-ID: <20130809191542.GD25306@dhcp-26-207.brq.redhat.com>
-References: <1374173515.7397.948.camel@haakon3.risingtidesystems.com>
- <51E83E32.9050306@cs.wisc.edu>
- <1374193399.7397.973.camel@haakon3.risingtidesystems.com>
- <20130719003034.GG28005@kernel.dk>
- <1374195825.7397.997.camel@haakon3.risingtidesystems.com>
- <1374215660.7397.1041.camel@haakon3.risingtidesystems.com>
- <1374248000.2266.20.camel@dabdike>
- <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
- <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
- <51EAA33C.9010405@fusionio.com>
+From: DeadManMoving <sequel@neofreak.org>
+Subject: Re: SATA PMP issue
+Date: Fri, 09 Aug 2013 15:50:45 -0400
+Message-ID: <1376077845.3607.10.camel@lappy.neofreak.org>
+References: <1375891867.3607.8.camel@lappy.neofreak.org>
+	 <20130809143033.GI20515@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:22008 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030485Ab3HITNt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 9 Aug 2013 15:13:49 -0400
-Content-Disposition: inline
-In-Reply-To: <51EAA33C.9010405@fusionio.com>
+Received: from out.neofreak.org ([69.165.217.67]:59264 "EHLO
+	vortex.neofreak.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1030908Ab3HITvB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Aug 2013 15:51:01 -0400
+In-Reply-To: <20130809143033.GI20515@mtj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mike Christie <mchristie@fusionio.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
 
-On Sat, Jul 20, 2013 at 09:48:28AM -0500, Mike Christie wrote:
-> What about the attached only compile tested patch. The patch has the mq
-> block code work like the non mq code for bio cleanups.
+Hi Mister Heo,
 
-Not sure if it is related to the patch or not, but it never returns from
-wait_for_completion_io(&wait) in blkdev_issue_flush():
+first, thank you so much to have taken the time to answer.
 
-# ps axl | awk '$10 ~ /D\+/'
-4     0   938   879  20   0 111216   656 blkdev D+   pts/1      0:00 fdisk/dev/sda
-#
-# cat /proc/938/stack
-[<ffffffff812a8a5c>] blkdev_issue_flush+0xfc/0x160
-[<ffffffff811ac606>] blkdev_fsync+0x96/0xc0
-[<ffffffff811a2f4d>] do_fsync+0x5d/0x90
-[<ffffffff811a3330>] SyS_fsync+0x10/0x20
-[<ffffffff81611582>] system_call_fastpath+0x16/0x1b
-[<ffffffffffffffff>] 0xffffffffffffffff
+I sure can understand your point, i have spent some time too see what
+was supported and what was not and finally, i have equipments that looks
+like are not working together.
 
-Any ideas?
+But on the other hand, it is not easy to try to stick to known working
+configurations since, from what i have seen, the chip inside enclosures
+are rarely exposed to consumer.
 
-Thanks!
+It will probably changes nothing but, i am pretty sure now that this is
+not an hardware incompatibility since, i have spent some time yesterday,
+doing a FreeBSD install on a spare disk, in one of my computer with the
+Marvell 88SE9120 controller and, when i hooked up the Mediasonic
+enclosure (which, i finally found out is using a JMicron JMB393 chip
+(0x197b:0x0325)), i was able to see all four drives without any issue
+(with the FreeBSD ahci driver of course).
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+
+Best regards,
+
+Tony
+
+On Fri, 2013-08-09 at 10:30 -0400, Tejun Heo wrote:
+> Hello,
+> 
+> On Wed, Aug 07, 2013 at 12:11:07PM -0400, DeadManMoving wrote:
+> > i am unable to get SATA port multiplier to work between a Marvell SATA
+> > 88SE9120 CARD (HighPoint Rocket 622A) and four disks within a Mediasonic
+> > HF2-SU3S2 enclosure.
+> > 
+> > Howerver, the Mediasonic enclosure is working with a SiI 3132 controller
+> > (i can see all four disks) and also, i have a Thermaltake BlacX Duet
+> > which is working on the 88SE9120 (i can see both disks).
+> > 
+> > Here is what the kernel have to say when i try to get the 88SE9120 to
+> > work with the Mediasonic enclosure :
+> 
+> Unfortunately, I kinda gave up on PMP / controller compatibility
+> issues and it seems like most vendors have given up on PMPs too.
+> After the first gen chips, nobody is really working on it, and the
+> first gen chips of course are full of quirks and bugs.  At this point,
+> I'd generally recommend against using PMPs and if you really want to
+> stick to known working configurations.
+> 
+> Sorry.
+> 
+
