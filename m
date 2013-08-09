@@ -1,59 +1,46 @@
-From: Oliver Neukum <oneukum@suse.de>
-Subject: Re: [PATCH v2] Hard disk S3 resume time optimization
-Date: Fri, 09 Aug 2013 09:25:47 +0200
-Message-ID: <1376033147.1902.6.camel@linux-fkkt.site>
-References: <11E08D716F0541429B7042699DD5C1A170680F5C@FMSMSX103.amr.corp.intel.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v3 1/3] libata: Populate host-to-device FIS "auxiliary"
+ field
+Date: Fri, 9 Aug 2013 10:03:58 -0400
+Message-ID: <20130809140358.GA20515@mtj.dyndns.org>
+References: <1376023752-3105-1-git-send-email-marc.ceeeee@gmail.com>
+ <1376023752-3105-2-git-send-email-marc.ceeeee@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <11E08D716F0541429B7042699DD5C1A170680F5C@FMSMSX103.amr.corp.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: "Brandt, Todd E" <todd.e.brandt@intel.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alan Stern <stern@rowland.harvard.edu>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qc0-f172.google.com ([209.85.216.172]:55815 "EHLO
+	mail-qc0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758018Ab3HIOEE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Aug 2013 10:04:04 -0400
+Received: by mail-qc0-f172.google.com with SMTP id a1so2226484qcx.3
+        for <linux-ide@vger.kernel.org>; Fri, 09 Aug 2013 07:04:03 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <1376023752-3105-2-git-send-email-marc.ceeeee@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Marc C <marc.ceeeee@gmail.com>
+Cc: linux-ide@vger.kernel.org, sergei.shtylyov@cogentembedded.com
 
-On Fri, 2013-08-09 at 01:09 +0000, Brandt, Todd E wrote:
+On Thu, Aug 08, 2013 at 09:49:10PM -0700, Marc C wrote:
+> From: Marc Carino <marc.ceeeee@gmail.com>
+> 
+> SATA 3.1 added an "auxiliary" field to the host-to-device FIS.
+> 
+> Since there is no analog between the new field and the ATA
+> taskfile, a new element was added to 'struct ata_queued_cmd."
 
->  static struct ata_force_ent *ata_force_tbl;
->  static int ata_force_tbl_size;
-> +int ata_resume_status;
+Ummm... I'm sorry but I'm gonna do 180 from Sergei on this one.  The
+auxiliary field is part of ata taskfile for all intents and purposes.
+FIS is the new command structure anyway and struct ata_taskfile proper
+should be able to describe the command with ata_queuedcmd providing
+the surrounding context.  The argument that ata_taskfile shouldn't
+contain anything which wasn't in PATA taskfile is bogus as it already
+contains ATA_TFLAG_*.
 
-A single global variable for multiple ports?
- 
->  static char ata_force_param_buf[PAGE_SIZE] __initdata;
->  /* param_buf is thrown away after initialization, disallow read */
-> @@ -5415,6 +5416,22 @@ static int ata_port_resume(struct device *dev)
->  	return rc;
->  }
->  
-> +static int ata_port_resume_async(struct device *dev)
-> +{
-> +	struct ata_port *ap = to_ata_port(dev);
-> +
-> +	ata_resume_status = 0;
-> +	ata_port_request_pm(ap, PMSG_RESUME, ATA_EH_RESET,
-> +		ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET, &ata_resume_status);
+So, please put the aux field into ata_taskfile.  That's where it
+belongs.
 
-If this ever runs in paralell it is extremely racy.
+Thanks.
 
-> +	if (!ata_resume_status) {
-> +		pm_runtime_disable(dev);
-> +		pm_runtime_set_active(dev);
-> +		pm_runtime_enable(dev);
-> +	}
-> +
-> +	return ata_resume_status;
-> +}
-> +
-
-
-> +	req = blk_get_request(sdkp->device->request_queue, 0, __GFP_WAIT);
-
-What happens if commands go to the device before this has finished?
-Especially should it fail.
-
-	Regards
-		Oliver
-
-
+-- 
+tejun
