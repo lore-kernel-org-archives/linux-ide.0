@@ -1,56 +1,62 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 27/29] drivers/ata/sata_rcar.c: simplify use of
- devm_ioremap_resource
-Date: Wed, 14 Aug 2013 09:32:47 -0400
-Message-ID: <20130814133247.GD28628@htj.dyndns.org>
-References: <1376471493-22215-1-git-send-email-Julia.Lawall@lip6.fr>
- <1376471493-22215-28-git-send-email-Julia.Lawall@lip6.fr>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Mark Langsdorf <mark.langsdorf@calxeda.com>
+Subject: [PATCH v4 1/3] devicetree: create a separate binding description for sata_highbank
+Date: Wed, 14 Aug 2013 13:23:30 -0500
+Message-ID: <1376504612-17340-1-git-send-email-mark.langsdorf@calxeda.com>
+References: <1374851518-4802-1-git-send-email-mark.langsdorf@calxeda.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f176.google.com ([209.85.216.176]:61547 "EHLO
-	mail-qc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759854Ab3HNNcv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Aug 2013 09:32:51 -0400
-Content-Disposition: inline
-In-Reply-To: <1376471493-22215-28-git-send-email-Julia.Lawall@lip6.fr>
+Received: from smtp97.ord1c.emailsrvr.com ([108.166.43.97]:55785 "EHLO
+	smtp97.ord1c.emailsrvr.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753893Ab3HNSXf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Aug 2013 14:23:35 -0400
+In-Reply-To: <1374851518-4802-1-git-send-email-mark.langsdorf@calxeda.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Julia Lawall <Julia.Lawall@lip6.fr>
-Cc: kernel-janitors@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, tj@kernel.org, devicetree@vger.kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, swarren@wwwdotorg.org, ian.campbell@citrix.com, rob.herring@calxeda.com, sergei.shtylyov@cogentembedded.com
+Cc: Mark Langsdorf <mark.langsdorf@calxeda.com>
 
-On Wed, Aug 14, 2013 at 11:11:31AM +0200, Julia Lawall wrote:
-> From: Julia Lawall <Julia.Lawall@lip6.fr>
-> 
-> Remove unneeded error handling on the result of a call to
-> platform_get_resource when the value is passed to devm_ioremap_resource.
-> 
-> Move the call to platform_get_resource adjacent to the call to
-> devm_ioremap_resource to make the connection between them more clear.
-> 
-> A simplified version of the semantic patch that makes this change is as
-> follows: (http://coccinelle.lip6.fr/)
-> 
-> // <smpl>
-> @@
-> expression pdev,res,n,e,e1;
-> expression ret != 0;
-> identifier l;
-> @@
-> 
-> - res = platform_get_resource(pdev, IORESOURCE_MEM, n);
->   ... when != res
-> - if (res == NULL) { ... \(goto l;\|return ret;\) }
->   ... when != res
-> + res = platform_get_resource(pdev, IORESOURCE_MEM, n);
->   e = devm_ioremap_resource(e1, res);
-> // </smpl>
-> 
-> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+The Calxeda sata_highbank driver has been adding its descriptions to the
+ahci driver. Separate them properly. This patch only affects
+documentation and has no functional component.
 
-Applied to libata/for-3.12.
+Signed-off-by: Mark Langsdorf <mark.langsdorf@calxeda.com>
+Acked-by: Rob Herring <rob.herring@calxeda.com>
+---
+Changes from v3
+	Added all optional properties to the example.
+	Expanded the description.
+	Renumbered the patch series since the first two got accepted.
+Changes from v2
+	Fixed some indenting.
+Changes from v1
+	None.
 
-Thanks.
+ Documentation/devicetree/bindings/ata/sata_highbank.txt | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
+diff --git a/Documentation/devicetree/bindings/ata/sata_highbank.txt b/Documentation/devicetree/bindings/ata/sata_highbank.txt
+index 1ac6d3d..e7a6f28 100644
+--- a/Documentation/devicetree/bindings/ata/sata_highbank.txt
++++ b/Documentation/devicetree/bindings/ata/sata_highbank.txt
+@@ -12,7 +12,7 @@ Required properties:
+ 
+ Optional properties:
+ - dma-coherent      : Present if dma operations are coherent
+-- calxeda,port-phys: phandle-combophy and lane assignment, which maps each
++- calxeda,port-phys : phandle-combophy and lane assignment, which maps each
+ 			SATA port to a combophy and a lane within that
+ 			combophy
+ - calxeda,sgpio-gpio: phandle-gpio bank, bit offset, and default on or off,
+@@ -26,7 +26,9 @@ Example:
+ 		compatible = "calxeda,hb-ahci";
+ 		reg = <0xffe08000 0x1000>;
+ 		interrupts = <115>;
++		dma-coherent;
+ 		calxeda,port-phys = <&combophy5 0 &combophy0 0 &combophy0 1
+ 					&combophy0 2 &combophy0 3>;
+-
++		calxeda,sgpio-gpio =<&gpioh 5 1 &gpioh 6 1 &gpioh 7 1>;
++		calxeda,led-order = <4 0 1 2 3>;
+         };
 -- 
-tejun
+1.8.1.2
+
