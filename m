@@ -1,43 +1,34 @@
-From: Aaron Lu <aaron.lu@intel.com>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [RFC PATCH 2/2] ata: acpi: rework the ata acpi bind support
-Date: Thu, 15 Aug 2013 09:33:28 +0800
-Message-ID: <520C2FE8.90009@intel.com>
-References: <1374731223-28685-1-git-send-email-aaron.lu@intel.com> <1374731223-28685-3-git-send-email-aaron.lu@intel.com> <20130725145229.GB26107@mtj.dyndns.org>
+Date: Wed, 14 Aug 2013 23:19:54 -0400
+Message-ID: <20130815031954.GB4439@htj.dyndns.org>
+References: <1374731223-28685-1-git-send-email-aaron.lu@intel.com>
+ <1374731223-28685-3-git-send-email-aaron.lu@intel.com>
+ <20130725145229.GB26107@mtj.dyndns.org>
+ <520C2FE8.90009@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <20130725145229.GB26107@mtj.dyndns.org>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Aaron Lu <aaron.lwe@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Wu <jeff.wu@amd.com>, Shane Huang <shane.huang@amd.com>, Matthew Garrett <mjg@redhat.com>, Holger Macht <holger@homac.de>, Zhang Rui <rui.zhang@intel.com>, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qa0-f52.google.com ([209.85.216.52]:46034 "EHLO
+	mail-qa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751014Ab3HODT7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Aug 2013 23:19:59 -0400
+Content-Disposition: inline
+In-Reply-To: <520C2FE8.90009@intel.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Aaron Lu <aaron.lwe@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jeff Wu <jeff.wu@amd.com>, Shane Huang <shane.huang@amd.com>, Matthew Garrett <mjg@redhat.com>, Holger Macht <holger@homac.de>, Zhang Rui <rui.zhang@intel.com>, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 07/25/2013 10:52 PM, Tejun Heo wrote:
-> On Thu, Jul 25, 2013 at 01:47:03PM +0800, Aaron Lu wrote:
->> Binding ACPI handle to SCSI device has several drawbacks, namely:
->> 1 During ATA device initialization time, ACPI handle will be needed
->>   while SCSI devices are not created yet. So each time ACPI handle is
->>   needed, instead of retrieving the handle by ACPI_HANDLE macro,
->>   a namespace scan is performed to find the handle for the corresponding
->>   ATA device. This is inefficient, and also expose a restriction on
->>   calling path not holding any lock.
->> 2 The binding to SCSI device tree makes code complex, while at the same
->>   time doesn't bring us any benefit. All ACPI handlings are still done
->>   in ATA module, not in SCSI.
->>
->> Rework the ATA ACPI binding code to bind ACPI handle to ATA transport
->> devices(ATA port and ATA device). The binding needs to be done only once,
->> since the ATA transport devices do not go away with hotplug. And due to
->> this, the flush_work call in hotplug handler for ATA bay is no longer
->> needed.
-> 
-> I like it but am wondering why we weren't doing this before.  Was the
-> acpi support added before we made ata objects proper devices?
- 
-Hi Tejun,
+Hello, Aaron.
 
-This has been quiet for some time, may I know your opinion on this?
+On Thu, Aug 15, 2013 at 09:33:28AM +0800, Aaron Lu wrote:
+> This has been quiet for some time, may I know your opinion on this?
 
-Thanks,
-Aaron
+Ooh, I like it.  I was waiting for proper patch series w/o RFC tag and
+hopefully some test results.
+
+Thanks.
+
+-- 
+tejun
