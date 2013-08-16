@@ -1,45 +1,42 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
-Date: Fri, 16 Aug 2013 18:41:57 +0200
-Message-ID: <20130816164156.GA14582@dhcp-26-207.brq.redhat.com>
-References: <1374195825.7397.997.camel@haakon3.risingtidesystems.com>
- <1374215660.7397.1041.camel@haakon3.risingtidesystems.com>
- <1374248000.2266.20.camel@dabdike>
- <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
- <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
- <51EAA33C.9010405@fusionio.com>
- <20130809191542.GD25306@dhcp-26-207.brq.redhat.com>
- <1376079457.5171.172.camel@haakon3.risingtidesystems.com>
- <20130815162316.GA27882@dhcp-26-207.brq.redhat.com>
- <1376619569.5171.217.camel@haakon3.risingtidesystems.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [patch] sata, highbank: clear whole array in
+ highbank_initialize_phys()
+Date: Fri, 16 Aug 2013 12:53:50 -0400
+Message-ID: <20130816165350.GL2505@htj.dyndns.org>
+References: <20130816073336.GA9881@elgon.mountain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34103 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752409Ab3HPQkL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 16 Aug 2013 12:40:11 -0400
+Received: from mail-qe0-f49.google.com ([209.85.128.49]:34569 "EHLO
+	mail-qe0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754643Ab3HPQxy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Aug 2013 12:53:54 -0400
 Content-Disposition: inline
-In-Reply-To: <1376619569.5171.217.camel@haakon3.risingtidesystems.com>
+In-Reply-To: <20130816073336.GA9881@elgon.mountain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Mike Christie <mchristie@fusionio.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Grant Likely <grant.likely@linaro.org>, Rob Herring <rob.herring@calxeda.com>, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On Thu, Aug 15, 2013 at 07:19:29PM -0700, Nicholas A. Bellinger wrote:
-> I'm playing with a patch to do this, but am currently getting hung-up on
-> what appear to be some separate blk-mq reserved_tags > 0 bugs, the first
-> of which is passing queue_depth=1 + reserved_tags=1 is broken, and
-> results in tags->nr_free = 0.
+Hello, Dan.
 
-That is not a bug - please look at Jens replies in this thread some week ago.
-In short, queue_depth=1 means 1 tags in total and reserved_tags=1 results
-in zero normal tags. You need to request the depth=2 and reserved_tags=1.
+On Fri, Aug 16, 2013 at 10:33:36AM +0300, Dan Carpenter wrote:
+> @@ -347,9 +347,9 @@ static int highbank_initialize_phys(struct device *dev, void __iomem *addr)
+>  	struct device_node *phy_nodes[CPHY_PHY_COUNT];
+>  	u32 tx_atten[CPHY_PORT_COUNT];
+>  
+> -	memset(port_data, 0, sizeof(struct phy_lane_info) * CPHY_PORT_COUNT);
+> -	memset(phy_nodes, 0, sizeof(struct device_node*) * CPHY_PHY_COUNT);
+> -	memset(tx_atten, 0xff, CPHY_PORT_COUNT);
+> +	memset(port_data, 0, sizeof(port_data));
+> +	memset(phy_nodes, 0, sizeof(phy_nodes));
+> +	memset(tx_atten, 0xff, sizeof(tx_atten));
 
-But yes, this is a separate topic and I am looking forward to hear from Jens
-wrt flushes.
+Ugh... why would anybody name a global variable port_data[]?  So,
+port_data is global and the other two are local.  Wouldn't it be
+better to just do "= { }" on declaration for the local ones?
+
+Thanks.
 
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+tejun
