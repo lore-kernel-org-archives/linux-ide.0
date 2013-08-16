@@ -1,91 +1,81 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
-Date: Thu, 15 Aug 2013 19:19:29 -0700
-Message-ID: <1376619569.5171.217.camel@haakon3.risingtidesystems.com>
-References: <1374193399.7397.973.camel@haakon3.risingtidesystems.com>
-	 <20130719003034.GG28005@kernel.dk>
-	 <1374195825.7397.997.camel@haakon3.risingtidesystems.com>
-	 <1374215660.7397.1041.camel@haakon3.risingtidesystems.com>
-	 <1374248000.2266.20.camel@dabdike>
-	 <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
-	 <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
-	 <51EAA33C.9010405@fusionio.com>
-	 <20130809191542.GD25306@dhcp-26-207.brq.redhat.com>
-	 <1376079457.5171.172.camel@haakon3.risingtidesystems.com>
-	 <20130815162316.GA27882@dhcp-26-207.brq.redhat.com>
+From: Bruce Link <Bruce@1045.ca>
+Subject: Re: System fails to connect to iHOS-104 DVD drive with nvidia MCP61
+ chipset.
+Date: Thu, 15 Aug 2013 21:47:34 -0500
+Message-ID: <520D92C6.30009@1045.ca>
+References: <520AB4D8.1000208@1045.ca> <520B210B.5040700@gmail.com> <520C01E8.9040302@1045.ca> <CADLC3L1uR=+mSj5MtgK9hKPjz-wOaVsw3W6woALq6SX4vO6wJQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:37276 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752257Ab3HPCNH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Aug 2013 22:13:07 -0400
-In-Reply-To: <20130815162316.GA27882@dhcp-26-207.brq.redhat.com>
+Received: from smtp-out-05.shaw.ca ([64.59.134.13]:15054 "EHLO
+	smtp-out-05.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751146Ab3HPCr5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Aug 2013 22:47:57 -0400
+In-Reply-To: <CADLC3L1uR=+mSj5MtgK9hKPjz-wOaVsw3W6woALq6SX4vO6wJQ@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Mike Christie <mchristie@fusionio.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, 1063474@bugs.launchpad.net
 
-On Thu, 2013-08-15 at 18:23 +0200, Alexander Gordeev wrote:
-> On Fri, Aug 09, 2013 at 01:17:37PM -0700, Nicholas A. Bellinger wrote:
-> > On Fri, 2013-08-09 at 21:15 +0200, Alexander Gordeev wrote:
-> > Mmmm, I'm able to reproduce over here with ahci + scsi-mq, and it
-> > appears to be a bug related with using sdev->sdev_md_req.queue_depth=1,
-> > that ends up causing the blkdev_issue_flush() to wait forever because
-> > blk_mq_wait_for_tags() never ends up getting the single tag back for the
-> > WRITE_FLUSH bio -> SYNCHRONIZE_CACHE cdb.
-> 
-> It turns out this way - blkdev_issue_flush() claims the only tag, submits
-> the bio and waits for the completion. But because blk_mq_make_request()
-> does not mark any context in blk_mq_hw_ctx::ctx_map (nor enslists the request
-> into blk_mq_ctx::rq_list) it never gets processed from blk_mq_work_fn->
-> __blk_mq_run_hw_queue() and blkdev_issue_flush() waits endlessly. All other
-> requests are just waiting for the tag availability as result.
-> 
+On 8/15/2013 12:36 AM, Robert Hancock wrote:
+> On Wed, Aug 14, 2013 at 4:17 PM, Bruce Link <Bruce@1045.ca> wrote:
+>>> These NVIDIA SATA controllers are a pain as they all seem to have a
+>>> different set of bugs related to hardreset, etc. What happens if you boot up
+>>> without the drive connected and then plug in the cable after the system
+>>> boots up?
+>> Roughly the same error is returned. See below for the dmesg output.
+>>
+>> root@teevee:/sys/devices/pci0000:00/0000:00:06.0/ata1/host0/scsi_host/host0#
+>> echo "- - -" > /sys/class/scsi_host/host4/scan
+>> root@teevee:/sys/devices/pci0000:00/0000:00:06.0/ata1/host0/scsi_host/host0#
+>> dmesg|grep ata5
+>> [    1.030224] ata5: SATA max UDMA/133 cmd 0x9e0 ctl 0xbe0 bmdma 0xc400 irq
+>> 20
+>> [    1.354216] ata5: SATA link down (SStatus 0 SControl 300)
+>> [  944.773288] ata5: exception Emask 0x10 SAct 0x0 SErr 0x50000 action 0xf
+>> [  944.773304] ata5: SError: { PHYRdyChg CommWake }
+>> [  944.773322] ata5: hard resetting link
+>> [  945.652070] ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>> [  945.660176] ata5.00: ATAPI: ATAPI   iHOS104, WL0F, max UDMA/100
+>> [  945.676165] ata5.00: configured for UDMA/100
+>> [  950.676049] ata5.00: qc timeout (cmd 0xa0)
+>> [  950.676056] ata5.00: TEST_UNIT_READY failed (err_mask=0x5)
+>> [  950.676064] ata5: hard resetting link
+>> [  950.676066] ata5: nv: skipping hardreset on occupied port
+>> [  951.144073] ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>> [  951.168168] ata5.00: configured for UDMA/100
+>> [  956.168049] ata5.00: qc timeout (cmd 0xa0)
+>> [  956.168057] ata5.00: TEST_UNIT_READY failed (err_mask=0x4)
+>> [  956.168061] ata5: limiting SATA link speed to 1.5 Gbps
+>> [  956.168064] ata5.00: limiting speed to UDMA/100:PIO3
+>> [  956.168070] ata5: hard resetting link
+>> [  956.168072] ata5: nv: skipping hardreset on occupied port
+>> [  956.636056] ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>> [  956.660169] ata5.00: configured for UDMA/100
+>> [  961.660036] ata5.00: qc timeout (cmd 0xa0)
+>> [  961.660044] ata5.00: TEST_UNIT_READY failed (err_mask=0x4)
+>> [  961.660046] ata5.00: disabled
+>> [  961.660061] ata5: hard resetting link
+>> [  962.544045] ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+>> [  962.544061] ata5: EH complete
+>> root@teevee:/sys/devices/pci0000:00/0000:00:06.0/ata1/host0/scsi_host/host0#
+>>
+> Hmm, it did a hard reset on the hotplug with seemingly the same
+> effect. Can we narrow down the problem any more: does this drive work
+> on this machine under any Linux version, or in Windows? Can you try it
+> in another Linux machine with a different controller to see if it
+> works there?
+Well, this is embarrassing.
 
-Ok, here's a bit better idea of what is going on now..
+I've always assumed the problem was with the with the motherboard, as 
+the DVD will always successfully boot a windows installer, so I assumed 
+everything with the drive was OK. On further inspection, it appears that 
+the drive falls down when being accessed from the WinPE environment, 
+much the same as in linux. I've tested this on another PC and the result 
+looks to be the same. I'm going to do some more testing, and will send 
+another email if I find out otherwise. But I think we can consider this 
+closed.
 
-The problem is that blkdev_issue_flush() -> blk_mq_make_request() ->
-__blk_mq_alloc_request() allocates the first tag, which calls
-blk_insert_flush() -> blk_flush_complete_seq() -> blk_flush_kick() ->
-mq_flush_work() -> blk_mq_alloc_request() to allocate a second tag for
-the struct request that actually gets dispatched into scsi-mq as a
-SYCHRONIZE_CACHE command..
-
-I'm not exactly sure why this double tag usage of struct request is
-occurring, but AFAICT it does happen for every flush, and is not
-specific to the blkdev_issue_flush() codepath..  I'm sure that Jens can
-fill us in on that bit.  ;)
-
-So, assuming that this double tag usage is necessary and not a bug,
-perhaps using a reserved tag for the first tag (eg: the one that's not
-dispatched into scsi_mq_queue_rq) makes sense..?
-
-I'm playing with a patch to do this, but am currently getting hung-up on
-what appear to be some separate blk-mq reserved_tags > 0 bugs, the first
-of which is passing queue_depth=1 + reserved_tags=1 is broken, and
-results in tags->nr_free = 0.
-
-Here's the quick fix:
-
-diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
-index 6718007..ffdf686 100644
---- a/block/blk-mq-tag.c
-+++ b/block/blk-mq-tag.c
-@@ -470,7 +470,7 @@ struct blk_mq_tags *blk_mq_init_tags(unsigned int nr_tags,
- 	 * Rest of the tags start at the queue list
- 	 */
- 	tags->nr_free = 0;
--	while (nr_tags - tags->nr_reserved) {
-+	while (nr_tags) {
- 		tags->freelist[tags->nr_free] = tags->nr_free +
- 							tags->nr_reserved;
- 		nr_tags--;
-
-Anyways, before digging further into reserved tags logic, Jens, what are
-your thoughts for addressing this special queue_depth=1 case for libata
-+ the like..?
-
---nab
-
+Sorry to be a bother.
+Bruce
