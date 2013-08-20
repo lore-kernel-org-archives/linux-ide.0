@@ -1,112 +1,142 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: System fails to connect to iHOS-104 DVD drive with nvidia MCP61 chipset.
-Date: Sun, 18 Aug 2013 01:05:57 -0600
-Message-ID: <CADLC3L27QcScLgw4CBGkQ3tG5037CAgQJRdW5384=sL8cM8a3Q@mail.gmail.com>
-References: <520AB4D8.1000208@1045.ca>
-	<520B210B.5040700@gmail.com>
-	<520C01E8.9040302@1045.ca>
-	<CADLC3L1uR=+mSj5MtgK9hKPjz-wOaVsw3W6woALq6SX4vO6wJQ@mail.gmail.com>
-	<520D92C6.30009@1045.ca>
-	<520FB3BA.7050302@1045.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: Anthony Foiani <anthony.foiani@gmail.com>
+Subject: [PATCH] sata: fsl: save irqs while coalescing
+Date: Mon, 19 Aug 2013 19:20:30 -0600
+Message-ID: <1376961630-6255-1-git-send-email-anthony.foiani@gmail.com>
+References: <gsiy6olhp.fsf@dworkin.scrye.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qe0-f52.google.com ([209.85.128.52]:56995 "EHLO
-	mail-qe0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751603Ab3HRHF5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Aug 2013 03:05:57 -0400
-Received: by mail-qe0-f52.google.com with SMTP id a11so1077985qen.25
-        for <linux-ide@vger.kernel.org>; Sun, 18 Aug 2013 00:05:57 -0700 (PDT)
-In-Reply-To: <520FB3BA.7050302@1045.ca>
+Received: from mail-ie0-f176.google.com ([209.85.223.176]:45639 "EHLO
+	mail-ie0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751326Ab3HTBUt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Aug 2013 21:20:49 -0400
+Received: by mail-ie0-f176.google.com with SMTP id e13so770845iej.7
+        for <linux-ide@vger.kernel.org>; Mon, 19 Aug 2013 18:20:48 -0700 (PDT)
+In-Reply-To: <gsiy6olhp.fsf@dworkin.scrye.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bruce Link <Bruce@1045.ca>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, 1063474@bugs.launchpad.net
+To: linuxppc-dev@lists.ozlabs.org, linux-ide@vger.kernel.org
+Cc: Bhushan Bharat-R65777 <R65777@freescale.com>, Anthony Foiani <tkil@scrye.com>, Tejun Heo <tj@kernel.org>, Scott Wood <scottwood@freescale.com>, Anthony Foiani <anthony.foiani@gmail.com>
 
-On Sat, Aug 17, 2013 at 11:32 AM, Bruce Link <Bruce@1045.ca> wrote:
-> On 8/15/2013 9:47 PM, Bruce Link wrote:
->>
->> On 8/15/2013 12:36 AM, Robert Hancock wrote:
->>>
->>> On Wed, Aug 14, 2013 at 4:17 PM, Bruce Link <Bruce@1045.ca> wrote:
->>>>>
->>>>> These NVIDIA SATA controllers are a pain as they all seem to have a
->>>>> different set of bugs related to hardreset, etc. What happens if you
->>>>> boot up
->>>>> without the drive connected and then plug in the cable after the system
->>>>> boots up?
->>>>
->>>> Roughly the same error is returned. See below for the dmesg output.
->>>>
->>>>
->>>> root@teevee:/sys/devices/pci0000:00/0000:00:06.0/ata1/host0/scsi_host/host0#
->>>> echo "- - -" > /sys/class/scsi_host/host4/scan
->>>>
->>>> root@teevee:/sys/devices/pci0000:00/0000:00:06.0/ata1/host0/scsi_host/host0#
->>>> dmesg|grep ata5
->>>> [    1.030224] ata5: SATA max UDMA/133 cmd 0x9e0 ctl 0xbe0 bmdma 0xc400
->>>> irq
->>>> 20
->>>> [    1.354216] ata5: SATA link down (SStatus 0 SControl 300)
->>>> [  944.773288] ata5: exception Emask 0x10 SAct 0x0 SErr 0x50000 action
->>>> 0xf
->>>> [  944.773304] ata5: SError: { PHYRdyChg CommWake }
->>>> [  944.773322] ata5: hard resetting link
->>>> [  945.652070] ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->>>> [  945.660176] ata5.00: ATAPI: ATAPI   iHOS104, WL0F, max UDMA/100
->>>> [  945.676165] ata5.00: configured for UDMA/100
->>>> [  950.676049] ata5.00: qc timeout (cmd 0xa0)
->>>> [  950.676056] ata5.00: TEST_UNIT_READY failed (err_mask=0x5)
->>>> [  950.676064] ata5: hard resetting link
->>>> [  950.676066] ata5: nv: skipping hardreset on occupied port
->>>> [  951.144073] ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->>>> [  951.168168] ata5.00: configured for UDMA/100
->>>> [  956.168049] ata5.00: qc timeout (cmd 0xa0)
->>>> [  956.168057] ata5.00: TEST_UNIT_READY failed (err_mask=0x4)
->>>> [  956.168061] ata5: limiting SATA link speed to 1.5 Gbps
->>>> [  956.168064] ata5.00: limiting speed to UDMA/100:PIO3
->>>> [  956.168070] ata5: hard resetting link
->>>> [  956.168072] ata5: nv: skipping hardreset on occupied port
->>>> [  956.636056] ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->>>> [  956.660169] ata5.00: configured for UDMA/100
->>>> [  961.660036] ata5.00: qc timeout (cmd 0xa0)
->>>> [  961.660044] ata5.00: TEST_UNIT_READY failed (err_mask=0x4)
->>>> [  961.660046] ata5.00: disabled
->>>> [  961.660061] ata5: hard resetting link
->>>> [  962.544045] ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
->>>> [  962.544061] ata5: EH complete
->>>>
->>>> root@teevee:/sys/devices/pci0000:00/0000:00:06.0/ata1/host0/scsi_host/host0#
->>>>
->>> Hmm, it did a hard reset on the hotplug with seemingly the same
->>> effect. Can we narrow down the problem any more: does this drive work
->>> on this machine under any Linux version, or in Windows? Can you try it
->>> in another Linux machine with a different controller to see if it
->>> works there?
->>
->> Well, this is embarrassing.
->>
->> I've always assumed the problem was with the with the motherboard, as the
->> DVD will always successfully boot a windows installer, so I assumed
->> everything with the drive was OK. On further inspection, it appears that the
->> drive falls down when being accessed from the WinPE environment, much the
->> same as in linux. I've tested this on another PC and the result looks to be
->> the same. I'm going to do some more testing, and will send another email if
->> I find out otherwise. But I think we can consider this closed.
->>
->> Sorry to be a bother.
->> Bruce
->
-> I hooked up the DVD drive to a USB-SATA adapter to a PC and the DVD drive
-> works great (under both windows and linux). I was able to copy a large
-> number of files with no performance issues.
-> The PC that I did the second test on turns out to have a nVidia MCP51
-> chipset (It's a gateway GT4016 with a KTBC51G-LF motherboard). I should have
-> checked this beforehand.
->
-> So this problem looks to persist across different nVidia chipsets.
+Scott Wood indicated this should go to the SATA addresses as well as,
+or maybe even instead of, the PPC list.
 
-Given that it fails in Windows as well on those machines, it sounds
-like there's some kind of compatibility issue between this drive and
-the NV chipsets. I don't know why their SATA chipsets (at least the
-pre-AHCI ones) have some many issues, but they do seem to.
+-- 8< --
+
+Before this patch, I was seeing the following lockdep splat on my
+MPC8315 (PPC32) target:
+
+  [    9.086051] =================================
+  [    9.090393] [ INFO: inconsistent lock state ]
+  [    9.094744] 3.9.7-ajf-gc39503d #1 Not tainted
+  [    9.099087] ---------------------------------
+  [    9.103432] inconsistent {HARDIRQ-ON-W} -> {IN-HARDIRQ-W} usage.
+  [    9.109431] scsi_eh_1/39 [HC1[1]:SC0[0]:HE0:SE1] takes:
+  [    9.114642]  (&(&host->lock)->rlock){?.+...}, at: [<c02f4168>] sata_fsl_interrupt+0x50/0x250
+  [    9.123137] {HARDIRQ-ON-W} state was registered at:
+  [    9.128004]   [<c006cdb8>] lock_acquire+0x90/0xf4
+  [    9.132737]   [<c043ef04>] _raw_spin_lock+0x34/0x4c
+  [    9.137645]   [<c02f3560>] fsl_sata_set_irq_coalescing+0x68/0x100
+  [    9.143750]   [<c02f36a0>] sata_fsl_init_controller+0xa8/0xc0
+  [    9.149505]   [<c02f3f10>] sata_fsl_probe+0x17c/0x2e8
+  [    9.154568]   [<c02acc90>] driver_probe_device+0x90/0x248
+  [    9.159987]   [<c02acf0c>] __driver_attach+0xc4/0xc8
+  [    9.164964]   [<c02aae74>] bus_for_each_dev+0x5c/0xa8
+  [    9.170028]   [<c02ac218>] bus_add_driver+0x100/0x26c
+  [    9.175091]   [<c02ad638>] driver_register+0x88/0x198
+  [    9.180155]   [<c0003a24>] do_one_initcall+0x58/0x1b4
+  [    9.185226]   [<c05aeeac>] kernel_init_freeable+0x118/0x1c0
+  [    9.190823]   [<c0004110>] kernel_init+0x18/0x108
+  [    9.195542]   [<c000f6b8>] ret_from_kernel_thread+0x64/0x6c
+  [    9.201142] irq event stamp: 160
+  [    9.204366] hardirqs last  enabled at (159): [<c043f778>] _raw_spin_unlock_irq+0x30/0x50
+  [    9.212469] hardirqs last disabled at (160): [<c000f414>] reenable_mmu+0x30/0x88
+  [    9.219867] softirqs last  enabled at (144): [<c002ae5c>] __do_softirq+0x168/0x218
+  [    9.227435] softirqs last disabled at (137): [<c002b0d4>] irq_exit+0xa8/0xb4
+  [    9.234481]
+  [    9.234481] other info that might help us debug this:
+  [    9.240995]  Possible unsafe locking scenario:
+  [    9.240995]
+  [    9.246898]        CPU0
+  [    9.249337]        ----
+  [    9.251776]   lock(&(&host->lock)->rlock);
+  [    9.255878]   <Interrupt>
+  [    9.258492]     lock(&(&host->lock)->rlock);
+  [    9.262765]
+  [    9.262765]  *** DEADLOCK ***
+  [    9.262765]
+  [    9.268684] no locks held by scsi_eh_1/39.
+  [    9.272767]
+  [    9.272767] stack backtrace:
+  [    9.277117] Call Trace:
+  [    9.279589] [cfff9da0] [c0008504] show_stack+0x48/0x150 (unreliable)
+  [    9.285972] [cfff9de0] [c0447d5c] print_usage_bug.part.35+0x268/0x27c
+  [    9.292425] [cfff9e10] [c006ace4] mark_lock+0x2ac/0x658
+  [    9.297660] [cfff9e40] [c006b7e4] __lock_acquire+0x754/0x1840
+  [    9.303414] [cfff9ee0] [c006cdb8] lock_acquire+0x90/0xf4
+  [    9.308745] [cfff9f20] [c043ef04] _raw_spin_lock+0x34/0x4c
+  [    9.314250] [cfff9f30] [c02f4168] sata_fsl_interrupt+0x50/0x250
+  [    9.320187] [cfff9f70] [c0079ff0] handle_irq_event_percpu+0x90/0x254
+  [    9.326547] [cfff9fc0] [c007a1fc] handle_irq_event+0x48/0x78
+  [    9.332220] [cfff9fe0] [c007c95c] handle_level_irq+0x9c/0x104
+  [    9.337981] [cfff9ff0] [c000d978] call_handle_irq+0x18/0x28
+  [    9.343568] [cc7139f0] [c000608c] do_IRQ+0xf0/0x1a8
+  [    9.348464] [cc713a20] [c000fc8c] ret_from_except+0x0/0x14
+  [    9.353983] --- Exception: 501 at _raw_spin_unlock_irq+0x40/0x50
+  [    9.353983]     LR = _raw_spin_unlock_irq+0x30/0x50
+  [    9.364839] [cc713af0] [c043db10] wait_for_common+0xac/0x188
+  [    9.370513] [cc713b30] [c02ddee4] ata_exec_internal_sg+0x2b0/0x4f0
+  [    9.376699] [cc713be0] [c02de18c] ata_exec_internal+0x68/0xa8
+  [    9.382454] [cc713c20] [c02de4b8] ata_dev_read_id+0x158/0x594
+  [    9.388205] [cc713ca0] [c02ec244] ata_eh_recover+0xd88/0x13d0
+  [    9.393962] [cc713d20] [c02f2520] sata_pmp_error_handler+0xc0/0x8ac
+  [    9.400234] [cc713dd0] [c02ecdc8] ata_scsi_port_error_handler+0x464/0x5e8
+  [    9.407023] [cc713e10] [c02ecfd0] ata_scsi_error+0x84/0xb8
+  [    9.412528] [cc713e40] [c02c4974] scsi_error_handler+0xd8/0x47c
+  [    9.418457] [cc713eb0] [c004737c] kthread+0xa8/0xac
+  [    9.423355] [cc713f40] [c000f6b8] ret_from_kernel_thread+0x64/0x6c
+
+This fix was suggested by Bhushan Bharat <R65777@freescale.com>, and
+was discussed in email at:
+
+  http://linuxppc.10917.n7.nabble.com/MPC8315-reboot-failure-lockdep-splat-possibly-related-tp75162.html
+
+Same patch successfully tested with 3.9.7.  linux-next compiled but
+not tested on hardware.
+
+This patch is based off linux-next tag next-20130819
+(which is commit 66a01bae29d11916c09f9f5a937cafe7d402e4a5 )
+
+Signed-off-by: Anthony Foiani <anthony.foiani@gmail.com>
+---
+ drivers/ata/sata_fsl.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+index 19720a0..851bd3f 100644
+--- a/drivers/ata/sata_fsl.c
++++ b/drivers/ata/sata_fsl.c
+@@ -293,6 +293,7 @@ static void fsl_sata_set_irq_coalescing(struct ata_host *host,
+ {
+ 	struct sata_fsl_host_priv *host_priv = host->private_data;
+ 	void __iomem *hcr_base = host_priv->hcr_base;
++	unsigned long flags;
+ 
+ 	if (count > ICC_MAX_INT_COUNT_THRESHOLD)
+ 		count = ICC_MAX_INT_COUNT_THRESHOLD;
+@@ -305,12 +306,12 @@ static void fsl_sata_set_irq_coalescing(struct ata_host *host,
+ 			(count > ICC_MIN_INT_COUNT_THRESHOLD))
+ 		ticks = ICC_SAFE_INT_TICKS;
+ 
+-	spin_lock(&host->lock);
++	spin_lock_irqsave(&host->lock, flags);
+ 	iowrite32((count << 24 | ticks), hcr_base + ICC);
+ 
+ 	intr_coalescing_count = count;
+ 	intr_coalescing_ticks = ticks;
+-	spin_unlock(&host->lock);
++	spin_unlock_irqrestore(&host->lock, flags);
+ 
+ 	DPRINTK("interrupt coalescing, count = 0x%x, ticks = %x\n",
+ 			intr_coalescing_count, intr_coalescing_ticks);
+-- 
+1.8.1.4
+
