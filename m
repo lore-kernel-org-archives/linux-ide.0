@@ -1,32 +1,37 @@
-From: "The Weir Foundation" <info@mail.com>
-Subject: Dear Beneficiary
-Date: Thu, 22 Aug 2013 04:11:29 -0400
-Message-ID: <20130822080805.159872185FDE__18466.6284280413$1377190168$gmane$org@mail.kafkas.edu.tr>
-Reply-To: funds.christineweir.fundation@gmail.com
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [RFC PATCH 2/2] ata: acpi: rework the ata acpi bind support
+Date: Thu, 22 Aug 2013 14:36:18 -0400
+Message-ID: <20130822183618.GB3490@mtj.dyndns.org>
+References: <1374731223-28685-1-git-send-email-aaron.lu@intel.com>
+ <1374731223-28685-3-git-send-email-aaron.lu@intel.com>
+ <20130725145229.GB26107@mtj.dyndns.org>
+ <520C2FE8.90009@intel.com>
+ <20130815031954.GB4439@htj.dyndns.org>
+ <5215BA84.20000@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kafkas.edu.tr ([194.27.41.2]:51072 "EHLO
-	mail.kafkas.edu.tr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752368Ab3HVQs6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Aug 2013 12:48:58 -0400
-Content-Description: Mail message body
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <5215BA84.20000@intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Dirk Griesbach <spamthis@freenet.de>, Dimitris Damigos <damigos@freemail.gr>, Dan van der Ster <dan@vanderster.com>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@HansenPartnership.com>, Shane Huang <shane.huang@amd.com>, Matthew Garrett <mjg@redhat.com>, Holger Macht <holger@homac.de>, Zhang Rui <rui.zhang@intel.com>, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Recipients <info@mail.com>
 
-Dear Beneficiary
+Hello, Aaron.
 
-My Wife Christine and I are donating =C2=A3550,000 to you.Contact=20
+On Thu, Aug 22, 2013 at 03:15:16PM +0800, Aaron Lu wrote:
+> The patch series has two patches and the first has been taken, shall I
+> send the 2nd one again without the RFC tag in the patch subject? There
+> should be no other changes at the moment.
 
-us via my wife email at
+Yes, that was a request for you to send an updated patch.  I'm okay
+with taking some risk with ACPI support for PMPs.  It most likely
+won't matter as long as the code itself doesn't oops anyway, but can
+you please describe what's tested and what's not but should be okay in
+the patch description?
 
-(funds.christineweir.fundation@gmail.com) for further=20
+Thanks.
 
-details.
-
-Best Regards,=20
-Colin & Christine Weir=E2=80=A2=20
-Copyright =C2=A92013=E2=80=A2 The Weir Foundation=E2=80=A2 All Rights R=
-eserved=E2=80=A2
+-- 
+tejun
