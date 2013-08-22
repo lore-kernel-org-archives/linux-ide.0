@@ -1,58 +1,32 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [RFC PATCH 2/2] ata: acpi: rework the ata acpi bind support
-Date: Thu, 22 Aug 2013 15:15:16 +0800
-Message-ID: <5215BA84.20000@intel.com>
-References: <1374731223-28685-1-git-send-email-aaron.lu@intel.com> <1374731223-28685-3-git-send-email-aaron.lu@intel.com> <20130725145229.GB26107@mtj.dyndns.org> <520C2FE8.90009@intel.com> <20130815031954.GB4439@htj.dyndns.org>
+From: "The Weir Foundation" <info@mail.com>
+Subject: Dear Beneficiary
+Date: Thu, 22 Aug 2013 04:11:29 -0400
+Message-ID: <20130822080805.159872185FDE__18466.6284280413$1377190168$gmane$org@mail.kafkas.edu.tr>
+Reply-To: funds.christineweir.fundation@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:32166 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753683Ab3HVHOo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 22 Aug 2013 03:14:44 -0400
-In-Reply-To: <20130815031954.GB4439@htj.dyndns.org>
+Received: from mail.kafkas.edu.tr ([194.27.41.2]:51072 "EHLO
+	mail.kafkas.edu.tr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752368Ab3HVQs6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Aug 2013 12:48:58 -0400
+Content-Description: Mail message body
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Dirk Griesbach <spamthis@freenet.de>, Dimitris Damigos <damigos@freemail.gr>, Dan van der Ster <dan@vanderster.com>, Jeff Wu <jeff.wu@amd.com>
-Cc: Aaron Lu <aaron.lwe@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@HansenPartnership.com>, Shane Huang <shane.huang@amd.com>, Matthew Garrett <mjg@redhat.com>, Holger Macht <holger@homac.de>, Zhang Rui <rui.zhang@intel.com>, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Recipients <info@mail.com>
 
-On 08/15/2013 11:19 AM, Tejun Heo wrote:
-> Hello, Aaron.
-> 
-> On Thu, Aug 15, 2013 at 09:33:28AM +0800, Aaron Lu wrote:
->> This has been quiet for some time, may I know your opinion on this?
-> 
-> Ooh, I like it. I was waiting for proper patch series w/o RFC tag and
-> hopefully some test results.
+Dear Beneficiary
 
-The patch series has two patches and the first has been taken, shall I
-send the 2nd one again without the RFC tag in the patch subject? There
-should be no other changes at the moment.
+My Wife Christine and I are donating =C2=A3550,000 to you.Contact=20
 
-As for the test, I've tested runtime power management related code, but
-I don't have access to PMP and ATA bay, so I'll ask some people to help.
+us via my wife email at
 
-Hi Drik,
-Can you please test the two patches regarding your ATA bay? Thanks.
+(funds.christineweir.fundation@gmail.com) for further=20
 
-Hi Dimitris,
-Can you please test the two patches regarding ACPI per device disable
-functionality? Thanks.
+details.
 
-Hi Dan,
-Can you please test the two patches here regarding PMP? Thanks.
-
-Hi Jeff,
-It would be good if you can test AMD's ZPODD implementation with the
-patches here, thanks.
-
-You can either use the branch here:
-https://github.com/aaronlu/linux ata_acpi_rework
-
-Or apply the following two patches on top of Linus' tree or a stable tree:
-https://github.com/aaronlu/linux/commit/88ba5478837098b71573bb7d6002be33156ea7e4
-https://github.com/aaronlu/linux/commit/98b61e1f52fe5582eb7f18c6d27773bf1da70096
-
-Thanks,
-Aaron
+Best Regards,=20
+Colin & Christine Weir=E2=80=A2=20
+Copyright =C2=A92013=E2=80=A2 The Weir Foundation=E2=80=A2 All Rights R=
+eserved=E2=80=A2
