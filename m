@@ -1,35 +1,32 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v4 0/3] Introduce new SATA queued commands
-Date: Fri, 23 Aug 2013 12:08:40 -0400
-Message-ID: <20130823160840.GJ3277@htj.dyndns.org>
-References: <1377250847-24132-1-git-send-email-marc.ceeeee@gmail.com>
+Subject: Re: [PATCH 2/2] ata: acpi: rework the ata acpi bind support
+Date: Fri, 23 Aug 2013 12:11:02 -0400
+Message-ID: <20130823161102.GK3277@htj.dyndns.org>
+References: <1374731223-28685-1-git-send-email-aaron.lu@intel.com>
+ <1374731223-28685-3-git-send-email-aaron.lu@intel.com>
+ <20130725145229.GB26107@mtj.dyndns.org>
+ <520C2FE8.90009@intel.com>
+ <20130815031954.GB4439@htj.dyndns.org>
+ <5215BA84.20000@intel.com>
+ <20130822183618.GB3490@mtj.dyndns.org>
+ <5216C652.2070808@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f178.google.com ([209.85.216.178]:33859 "EHLO
-	mail-qc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754190Ab3HWQIo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Aug 2013 12:08:44 -0400
-Received: by mail-qc0-f178.google.com with SMTP id p19so429237qcv.37
-        for <linux-ide@vger.kernel.org>; Fri, 23 Aug 2013 09:08:43 -0700 (PDT)
+Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1377250847-24132-1-git-send-email-marc.ceeeee@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <5216C652.2070808@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Dirk Griesbach <spamthis@freenet.de>, Dimitris Damigos <damigos@freemail.gr>, Dan van der Ster <dan@vanderster.com>, Jeff Wu <jeff.wu@amd.com>, Aaron Lu <aaron.lwe@gmail.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@HansenPartnership.com>, Shane Huang <shane.huang@amd.com>, Matthew Garrett <mjg@redhat.com>, Holger Macht <holger@homac.de>, Zhang Rui <rui.zhang@intel.com>, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Marc C <marc.ceeeee@gmail.com>
-Cc: linux-ide@vger.kernel.org
 
 Hello,
 
-On Fri, Aug 23, 2013 at 02:40:44AM -0700, Marc C wrote:
-> From: Marc C <marc.ceeeee@gmail.com>
-> 
-> This patch series updates the libata driver with some additional
-> commands which are specified in the more recent versions of the
-> SATA and ATA specifications. These commands are:
+On Fri, Aug 23, 2013 at 10:17:54AM +0800, Aaron Lu wrote:
+> From: Aaron Lu <aaron.lu@intel.com>
+> Subject: [PATCH 2/2] ata: acpi: rework the ata acpi bind support
 
-Generally looks good to me other than the cosmetic points.  Can you
-please update the series to Sergei's and my comments?
+Applied to libata/for-3.12 w/ Dirk's tested-by added.
 
 Thanks!
 
