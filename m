@@ -1,15 +1,15 @@
 From: Marc C <marc.ceeeee@gmail.com>
-Subject: [PATCH v5 4/4] libata: Add support for queued DSM TRIM
-Date: Sat, 24 Aug 2013 23:22:51 -0700
-Message-ID: <1377411771-3733-5-git-send-email-marc.ceeeee@gmail.com>
+Subject: [PATCH v5 2/4] libata: Add H2D FIS "auxiliary" port flag
+Date: Sat, 24 Aug 2013 23:22:49 -0700
+Message-ID: <1377411771-3733-3-git-send-email-marc.ceeeee@gmail.com>
 References: <1377411771-3733-1-git-send-email-marc.ceeeee@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:49423 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756040Ab3HYGXV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Aug 2013 02:23:21 -0400
-Received: by mail-ob0-f175.google.com with SMTP id xn12so2169688obc.20
-        for <linux-ide@vger.kernel.org>; Sat, 24 Aug 2013 23:23:20 -0700 (PDT)
+Received: from mail-ob0-f177.google.com ([209.85.214.177]:44216 "EHLO
+	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755859Ab3HYGXS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Aug 2013 02:23:18 -0400
+Received: by mail-ob0-f177.google.com with SMTP id f8so2172252obp.36
+        for <linux-ide@vger.kernel.org>; Sat, 24 Aug 2013 23:23:18 -0700 (PDT)
 In-Reply-To: <1377411771-3733-1-git-send-email-marc.ceeeee@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -18,69 +18,46 @@ Cc: Marc Carino <marc.ceeeee@gmail.com>
 
 From: Marc Carino <marc.ceeeee@gmail.com>
 
-Some new SSDs support the queued version of the DSM TRIM command.
-Let the driver use the new command if supported.
+Add a new port flag, ATA_FLAG_FPDMA_AUX, used to indicate
+support for transmission of the H2D FIS 'auxiliary' field.
 
 Signed-off-by: Marc Carino <marc.ceeeee@gmail.com>
 ---
- drivers/ata/libata-scsi.c | 25 +++++++++++++++++++------
- include/linux/libata.h    |  7 +++++++
- 2 files changed, 26 insertions(+), 6 deletions(-)
+ drivers/ata/ahci.c     | 8 ++++++++
+ include/linux/libata.h | 1 +
+ 2 files changed, 9 insertions(+)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 83c0890..0c807a9 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3098,12 +3098,25 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
- 	buf = page_address(sg_page(scsi_sglist(scmd)));
- 	size = ata_set_lba_range_entries(buf, 512, block, n_block);
- 
--	tf->protocol = ATA_PROT_DMA;
--	tf->hob_feature = 0;
--	tf->feature = ATA_DSM_TRIM;
--	tf->hob_nsect = (size / 512) >> 8;
--	tf->nsect = size / 512;
--	tf->command = ATA_CMD_DSM;
-+	if (ata_ncq_enabled(dev) && ata_fpdma_dsm_supported(dev)) {
-+		/* Newer devices support queued TRIM commands */
-+		tf->protocol = ATA_PROT_NCQ;
-+		tf->command = ATA_CMD_FPDMA_SEND;
-+		tf->hob_nsect = ATA_SUBCMD_FPDMA_SEND_DSM & 0x1f;
-+		tf->nsect = qc->tag << 3;
-+		tf->hob_feature = (size / 512) >> 8;
-+		tf->feature = size / 512;
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 5064f3e..8d41c57 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1288,6 +1288,14 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		 */
+ 		if (!(hpriv->flags & AHCI_HFLAG_NO_FPDMA_AA))
+ 			pi.flags |= ATA_FLAG_FPDMA_AA;
 +
-+		tf->auxiliary = 1;
-+	} else {
-+		tf->protocol = ATA_PROT_DMA;
-+		tf->hob_feature = 0;
-+		tf->feature = ATA_DSM_TRIM;
-+		tf->hob_nsect = (size / 512) >> 8;
-+		tf->nsect = size / 512;
-+		tf->command = ATA_CMD_DSM;
-+	}
-+
- 	tf->flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE | ATA_TFLAG_LBA48 |
- 		     ATA_TFLAG_WRITE;
++		/*
++		 * All AHCI controllers should be forward-compatible
++		 * with the new auxiliary field. This code should be
++		 * conditionalized if any buggy AHCI controllers are
++		 * encountered.
++		 */
++		pi.flags |= ATA_FLAG_FPDMA_AUX;
+ 	}
  
+ 	if (hpriv->cap & HOST_CAP_PMP)
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index b925504..a6f53f0 100644
+index 47122f4..6539c50 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -1608,6 +1608,13 @@ static inline int ata_ncq_enabled(struct ata_device *dev)
- 			      ATA_DFLAG_NCQ)) == ATA_DFLAG_NCQ;
- }
- 
-+static inline bool ata_fpdma_dsm_supported(struct ata_device *dev)
-+{
-+	return (dev->flags & ATA_DFLAG_NCQ_SEND_RECV) &&
-+		(dev->ncq_send_recv_cmds[ATA_LOG_NCQ_SEND_RECV_DSM_OFFSET] &
-+		 ATA_LOG_NCQ_SEND_RECV_DSM_TRIM);
-+}
-+
- static inline void ata_qc_set_polling(struct ata_queued_cmd *qc)
- {
- 	qc->tf.ctl |= ATA_NIEN;
+@@ -223,6 +223,7 @@ enum {
+ 	ATA_FLAG_ACPI_SATA	= (1 << 17), /* need native SATA ACPI layout */
+ 	ATA_FLAG_AN		= (1 << 18), /* controller supports AN */
+ 	ATA_FLAG_PMP		= (1 << 19), /* controller supports PMP */
++	ATA_FLAG_FPDMA_AUX	= (1 << 20), /* controller supports H2DFIS aux field */
+ 	ATA_FLAG_EM		= (1 << 21), /* driver supports enclosure
+ 					      * management */
+ 	ATA_FLAG_SW_ACTIVITY	= (1 << 22), /* driver supports sw activity
 -- 
 1.8.1.2
 
