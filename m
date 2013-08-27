@@ -1,80 +1,130 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: linux-next: build failure after merge of the libata tree
-Date: Tue, 27 Aug 2013 13:52:09 +0800
-Message-ID: <521C3E89.3090905@intel.com>
-References: <20130827125049.62d12bba371fe8d9df85a227@canb.auug.org.au>
+From: "Brandt, Todd E" <todd.e.brandt@intel.com>
+Subject: [PATCH v3 1/2] Hard disk S3 resume time optimization
+Date: Tue, 27 Aug 2013 14:36:58 +0000
+Message-ID: <11E08D716F0541429B7042699DD5C1A1706A831E@FMSMSX103.amr.corp.intel.com>
+References: <20130823223245.GA11706@todd.e.brandt@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:19478 "EHLO mga09.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:33187 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752299Ab3H0Fvg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 27 Aug 2013 01:51:36 -0400
-In-Reply-To: <20130827125049.62d12bba371fe8d9df85a227@canb.auug.org.au>
+	id S1753027Ab3H0OhB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Aug 2013 10:37:01 -0400
+In-Reply-To: <20130823223245.GA11706@todd.e.brandt@intel.com>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: Tejun Heo <tj@kernel.org>, linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 08/27/2013 10:50 AM, Stephen Rothwell wrote:
-> Hi Tejun,
-> 
-> After merging the libata tree, today's linux-next build (powerpc
-> ppc64_defconfig) failed like this:
-> 
-> In file included from drivers/ata/libata-pmp.c:14:0:
-> drivers/ata/libata.h:136:1: error: unknown type name 'acpi_handle'
->  static inline acpi_handle ata_dev_acpi_handle(struct ata_device *dev) { return NULL; }
->  ^
-> 
-> And several others.
-> 
-> Caused by commit f1bc1e4c44b1 ("ata: acpi: rework the ata acpi bind
-> support").  All the world does not have the ACPI include files
-> included via some other path ... nor wants them, I suspect.
+This is v3 of the non-blocking S3 resume patch. It's been broken into 
+two pieces, this part is for the ata subsystem. I've addressed Oliver 
+Neukum's comments in particular by removing any potential race 
+conditions.
 
-Sorry for the trouble, my bad.
-Does the below patch fix the problem?
+In the previous version I used the ata_port_request_pm function to handle
+the call, but it really wasn't intended to be used this way. It's meant
+to be called by SAS drives so that the libsas code can handle the blocking
+instead of ata. In this version I created a separate function.
 
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: [PATCH] ata: acpi: Remove ata_dev_acpi_handle stub in libata.h
+I set the async call to ignore the return value of the ata port error
+handler since the function which actually creates that return
+value, ahci_port_resume, always returns 0. So I don't see any point in 
+collecting it.
 
-The ata_dev_acpi_handle is defined in libata-acpi.c and the only
-external user is libata-zpodd.c, which is built when CONFIG_ATA_ACPI
-is set, so there is no need to make an empty stub function for
-!CONFIG_ATA_ACPI case in libata.h. It also causes compile errors due to
-acpi_handle is not defined when !CONFIG_ACPI. This patch fixes this
-problem by removing the empty stub.
+I've been testing on systems with sata drives of differing sizes on every
+AHCI port and there appear to be no issues. One special case I tested
+heavily was the case where a 2nd system suspend is called again before
+the 1st ata_port resume is finished. The outcome is that the second suspend
+has to wait for the current disk resume to finish before it can continue.
+Thus in this particular case there is no benefit at all, but also
+no issues, and this case should be extremely rare. In that particular
+case the dmesg out looks like this (with a 3TB drive on ata5):
 
-Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
-Signed-off-by: Aaron Lu <aaron.lu@intel.com>
----
- drivers/ata/libata.h | 1 -
- 1 file changed, 1 deletion(-)
+[ 1233.424781] PM: Syncing filesystems ... done.
+...
+[ 1233.708990] calling  4:0:0:0+ @ 3269, parent: target4:0:0
+[ 1233.709000] sd 4:0:0:0: [sdd] Synchronizing SCSI cache
+... system suspend call for sd, still waiting on ata resume
+[ 1236.736079] ata5: link is slow to respond, please be patient (ready=0)
+[ 1242.376108] ata5: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[ 1242.422093] ata5.00: configured for UDMA/133
+... ata finished resuming, sync now completes and disk is stopped
+[ 1242.436274] sd 4:0:0:0: [sdd] Stopping disk
+[ 1242.446923] sd 4:0:0:0: [sdd] START SUCCESS
+[ 1243.058041] call 4:0:0:0+ returned 0 after 9129928 usecs
+[ 1243.058097] calling  target4:0:0+ @ 3288, parent: host4
+[ 1243.058101] call target4:0:0+ returned 0 after 1 usecs
+[ 1243.058155] calling  host4+ @ 3250, parent: ata5
+[ 1243.058159] call host4+ returned 0 after 0 usecs
+[ 1243.058213] calling  ata5+ @ 3257, parent: 0000:00:1f.2
+[ 1243.058344] call ata5+ returned 0 after 122 usecs
+[ 1243.058400] calling  0000:00:1f.2+ @ 3255, parent: pci0000:00
+[ 1243.072115] call 0000:00:1f.2+ returned 0 after 13386 usecs
+[ 1243.072199] PM: suspend of devices complete after 9363.556 msecs
 
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 3e9cc95..eeeb778 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -133,7 +133,6 @@ static inline void ata_acpi_set_state(struct ata_port *ap,
- 				      pm_message_t state) { }
- static inline void ata_acpi_bind_port(struct ata_port *ap) {}
- static inline void ata_acpi_bind_dev(struct ata_device *dev) {}
--static inline acpi_handle ata_dev_acpi_handle(struct ata_device *dev) { return NULL; }
- static inline void ata_scsi_acpi_bind(struct ata_device *dev) {}
- static inline void ata_scsi_acpi_unbind(struct ata_device *dev) {}
- #endif
--- 
-1.8.3.2.10.g43d11f4
+Note - the two patches will function separately but both are required 
+to achieve a performance improvement.
 
-Thanks,
-Aaron
 
-> 
-> I have used the libata tree from next-20130822 for today.
-> 
-> P.S. drivers/ata/libata.h seems to assume that a lot of other stuff is
-> included that it does not include explicitly ...
-> 
+Signed-off-by: Todd Brandt <todd.e.brandt@intel.com>
+
+ drivers/ata/libata-core.c | 36 +++++++++++++++++++++++++++++++++++-
+ 1 file changed, 35 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index c24354d..6cf0c15 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5415,6 +5415,40 @@ static int ata_port_resume(struct device *dev)
+ 	return rc;
+ }
+ 
++static int ata_port_resume_async(struct device *dev)
++{
++	struct ata_port *ap = to_ata_port(dev);
++	struct ata_link *link;
++	unsigned long flags;
++	int ret = 0;
++
++	if (ap->pflags & ATA_PFLAG_PM_PENDING) {
++		WARN_ON(ap->pflags & ATA_PFLAG_PM_PENDING);
++		ret = -EAGAIN;
++		goto out;
++	}
++
++	spin_lock_irqsave(ap->lock, flags);
++
++	ap->pm_mesg = PMSG_RESUME;
++	ap->pm_result = NULL;
++	ap->pflags |= ATA_PFLAG_PM_PENDING;
++	ata_for_each_link(link, ap, HOST_FIRST) {
++		link->eh_info.action |= ATA_EH_RESET;
++		link->eh_info.flags |= ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET;
++	}
++
++	ata_port_schedule_eh(ap);
++
++	spin_unlock_irqrestore(ap->lock, flags);
++
++ out:
++	pm_runtime_disable(dev);
++	pm_runtime_set_active(dev);
++	pm_runtime_enable(dev);
++	return ret;
++}
++
+ /*
+  * For ODDs, the upper layer will poll for media change every few seconds,
+  * which will make it enter and leave suspend state every few seconds. And
+@@ -5451,7 +5485,7 @@ static int ata_port_runtime_resume(struct device *dev)
+ 
+ static const struct dev_pm_ops ata_port_pm_ops = {
+ 	.suspend = ata_port_suspend,
+-	.resume = ata_port_resume,
++	.resume = ata_port_resume_async,
+ 	.freeze = ata_port_do_freeze,
+ 	.thaw = ata_port_resume,
+ 	.poweroff = ata_port_poweroff,
+
 
