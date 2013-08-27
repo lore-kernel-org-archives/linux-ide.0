@@ -1,37 +1,80 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v5 0/4] Introduce new SATA queued commands
-Date: Sun, 25 Aug 2013 09:40:01 -0400
-Message-ID: <20130825134001.GA3890@htj.dyndns.org>
-References: <1377411771-3733-1-git-send-email-marc.ceeeee@gmail.com>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: linux-next: build failure after merge of the libata tree
+Date: Tue, 27 Aug 2013 13:52:09 +0800
+Message-ID: <521C3E89.3090905@intel.com>
+References: <20130827125049.62d12bba371fe8d9df85a227@canb.auug.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f53.google.com ([209.85.216.53]:51356 "EHLO
-	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754263Ab3HYNkG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Aug 2013 09:40:06 -0400
-Received: by mail-qa0-f53.google.com with SMTP id i13so160966qae.5
-        for <linux-ide@vger.kernel.org>; Sun, 25 Aug 2013 06:40:04 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <1377411771-3733-1-git-send-email-marc.ceeeee@gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:19478 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752299Ab3H0Fvg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 27 Aug 2013 01:51:36 -0400
+In-Reply-To: <20130827125049.62d12bba371fe8d9df85a227@canb.auug.org.au>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Marc C <marc.ceeeee@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: Tejun Heo <tj@kernel.org>, linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Sat, Aug 24, 2013 at 11:22:47PM -0700, Marc C wrote:
-> From: Marc C <marc.ceeeee@gmail.com>
+On 08/27/2013 10:50 AM, Stephen Rothwell wrote:
+> Hi Tejun,
 > 
-> This patch series updates the libata driver with some additional
-> commands which are specified in the more recent versions of the
-> SATA and ATA specifications. These commands are:
+> After merging the libata tree, today's linux-next build (powerpc
+> ppc64_defconfig) failed like this:
 > 
->         SEND FPDMA QUEUED
->         RECEIVE FPDMA QUEUED.
+> In file included from drivers/ata/libata-pmp.c:14:0:
+> drivers/ata/libata.h:136:1: error: unknown type name 'acpi_handle'
+>  static inline acpi_handle ata_dev_acpi_handle(struct ata_device *dev) { return NULL; }
+>  ^
+> 
+> And several others.
+> 
+> Caused by commit f1bc1e4c44b1 ("ata: acpi: rework the ata acpi bind
+> support").  All the world does not have the ACPI include files
+> included via some other path ... nor wants them, I suspect.
 
-Applied to libata/for-3.12.
+Sorry for the trouble, my bad.
+Does the below patch fix the problem?
 
-Thank you very much!
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: [PATCH] ata: acpi: Remove ata_dev_acpi_handle stub in libata.h
 
+The ata_dev_acpi_handle is defined in libata-acpi.c and the only
+external user is libata-zpodd.c, which is built when CONFIG_ATA_ACPI
+is set, so there is no need to make an empty stub function for
+!CONFIG_ATA_ACPI case in libata.h. It also causes compile errors due to
+acpi_handle is not defined when !CONFIG_ACPI. This patch fixes this
+problem by removing the empty stub.
+
+Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
+Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+---
+ drivers/ata/libata.h | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 3e9cc95..eeeb778 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -133,7 +133,6 @@ static inline void ata_acpi_set_state(struct ata_port *ap,
+ 				      pm_message_t state) { }
+ static inline void ata_acpi_bind_port(struct ata_port *ap) {}
+ static inline void ata_acpi_bind_dev(struct ata_device *dev) {}
+-static inline acpi_handle ata_dev_acpi_handle(struct ata_device *dev) { return NULL; }
+ static inline void ata_scsi_acpi_bind(struct ata_device *dev) {}
+ static inline void ata_scsi_acpi_unbind(struct ata_device *dev) {}
+ #endif
 -- 
-tejun
+1.8.3.2.10.g43d11f4
+
+Thanks,
+Aaron
+
+> 
+> I have used the libata tree from next-20130822 for today.
+> 
+> P.S. drivers/ata/libata.h seems to assume that a lot of other stuff is
+> included that it does not include explicitly ...
+> 
+
