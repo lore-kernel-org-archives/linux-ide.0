@@ -1,37 +1,36 @@
-From: "Brandt, Todd E" <todd.e.brandt@intel.com>
-Subject: RE: [PATCH v3 2/2] Hard disk S3 resume time optimization
-Date: Tue, 27 Aug 2013 14:50:31 +0000
-Message-ID: <11E08D716F0541429B7042699DD5C1A1706A8371@FMSMSX103.amr.corp.intel.com>
-References: <20130823214340.GC11321@todd.e.brandt@intel.com>
- <1377332485.1790.3.camel@linux-fkkt.site>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: linux-next: build failure after merge of the libata tree
+Date: Tue, 27 Aug 2013 14:09:17 -0400
+Message-ID: <20130827180917.GA12212@mtj.dyndns.org>
+References: <20130827125049.62d12bba371fe8d9df85a227@canb.auug.org.au>
+ <521C3E89.3090905@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1377332485.1790.3.camel@linux-fkkt.site>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
-To: Oliver Neukum <oneukum@suse.de>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "tj@kernel.org" <tj@kernel.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "stern@rowland.harvard.edu" <stern@rowland.harvard.edu>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-next-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <521C3E89.3090905@intel.com>
+Sender: linux-next-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-QWxsIHRoZSBzYW1lIGNoZWNrcyBhcmUgcHJlc2VydmVkLCBpbmNsdWRpbmcgdGhlIG1hbmFnZV9z
-dGFydF9zdG9wIGNoZWNrOg0KDQorCWlmICghc2RrcC0+ZGV2aWNlLT5tYW5hZ2Vfc3RhcnRfc3Rv
-cCkNCisJCWdvdG8gZXJyb3I7DQoNClRoYXQgZnVuY3Rpb24gaXMganVzdCBhIHNpbXBsaWZpZWQg
-dmVyc2lvbiBvZiBzZF9zdGFydF9zdG9wX2RldmljZSBidXQgd2l0aCBvbmx5IHRoZSBzdGFydCBm
-dW5jdGlvbmFsaXR5IHVzZWQuDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBP
-bGl2ZXIgTmV1a3VtIFttYWlsdG86b25ldWt1bUBzdXNlLmRlXSANClNlbnQ6IFNhdHVyZGF5LCBB
-dWd1c3QgMjQsIDIwMTMgMToyMSBBTQ0KVG86IEJyYW5kdCwgVG9kZCBFDQpDYzogbGludXgtaWRl
-QHZnZXIua2VybmVsLm9yZzsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc7IHRqQGtlcm5lbC5v
-cmc7IGdyZWdraEBsaW51eGZvdW5kYXRpb24ub3JnOyBzdGVybkByb3dsYW5kLmhhcnZhcmQuZWR1
-DQpTdWJqZWN0OiBSZTogW1BBVENIIHYzIDIvMl0gSGFyZCBkaXNrIFMzIHJlc3VtZSB0aW1lIG9w
-dGltaXphdGlvbg0KDQpPbiBGcmksIDIwMTMtMDgtMjMgYXQgMTQ6NDMgLTA3MDAsIEJyYW5kdCwg
-VG9kZCBFIHdyb3RlOg0KPiBUaGlzIGlzIHYzIG9mIHRoZSBub24tYmxvY2tpbmcgUzMgcmVzdW1l
-IHBhdGNoLiBJdCdzIGJlZW4gYnJva2VuIGludG8NCj4gdHdvIHBpZWNlcywgdGhpcyBwYXJ0IGlz
-IGZvciB0aGUgc2NzaSBzdWJzeXN0ZW0uIEkndmUgYWRkcmVzc2VkIEFsYW4gDQo+IFN0ZXJuJ3Mg
-Y29tbWVudHMgaW4gcGFydGljdWxhciBieSByZWZvcm1hdHRpbmcgdGhlIGNhbGwgdG8gY29uZm9y
-bQ0KPiB0byB0aGUgcHJvcGVyIHN0eWxlIGd1aWRlbGluZXMuDQoNCkhpLA0KDQp5b3UgYXJlIGNo
-YW5naW5nIHRoZSBnZW5lcmljIHJlc3VtZSBmb3IgYWxsIHNkIGRpc2tzLg0KSW4gcGFydGljdWxh
-ciwgeW91IGFyZSBkcm9wcGluZyB0aGUgY2hlY2sgb2YNCnNka3AtPmRldmljZS0+bWFuYWdlX3N0
-YXJ0X3N0b3ANCldoYXQgaGFwcGVucyBpZiB5b3UgdXNlIHRoaXMgcGF0Y2ggb24gYSByZWFsIFND
-U0kgZGlzaz8NCg0KCVJlZ2FyZHMNCgkJT2xpdmVyDQoNCg0K
+On Tue, Aug 27, 2013 at 01:52:09PM +0800, Aaron Lu wrote:
+> From: Aaron Lu <aaron.lu@intel.com>
+> Subject: [PATCH] ata: acpi: Remove ata_dev_acpi_handle stub in libata.h
+> 
+> The ata_dev_acpi_handle is defined in libata-acpi.c and the only
+> external user is libata-zpodd.c, which is built when CONFIG_ATA_ACPI
+> is set, so there is no need to make an empty stub function for
+> !CONFIG_ATA_ACPI case in libata.h. It also causes compile errors due to
+> acpi_handle is not defined when !CONFIG_ACPI. This patch fixes this
+> problem by removing the empty stub.
+> 
+> Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
+> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+
+Yeap, tested and works.  Applied to libata/for-3.12.  Thanks.
+
+Stephen, sorry about the trouble.
+
+-- 
+tejun
