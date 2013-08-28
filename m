@@ -1,36 +1,36 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: linux-next: build failure after merge of the libata tree
-Date: Tue, 27 Aug 2013 14:09:17 -0400
-Message-ID: <20130827180917.GA12212@mtj.dyndns.org>
-References: <20130827125049.62d12bba371fe8d9df85a227@canb.auug.org.au>
- <521C3E89.3090905@intel.com>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
+Date: Wed, 28 Aug 2013 17:56:21 +0200
+Message-ID: <20130828155620.GA7026@dhcp-26-207.brq.redhat.com>
+References: <1374195825.7397.997.camel@haakon3.risingtidesystems.com>
+ <1374215660.7397.1041.camel@haakon3.risingtidesystems.com>
+ <1374248000.2266.20.camel@dabdike>
+ <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
+ <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
+ <51EAA33C.9010405@fusionio.com>
+ <20130809191542.GD25306@dhcp-26-207.brq.redhat.com>
+ <1376079457.5171.172.camel@haakon3.risingtidesystems.com>
+ <20130815162316.GA27882@dhcp-26-207.brq.redhat.com>
+ <1376619569.5171.217.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-next-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <521C3E89.3090905@intel.com>
-Sender: linux-next-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+In-Reply-To: <1376619569.5171.217.camel@haakon3.risingtidesystems.com>
+Sender: linux-kernel-owner@vger.kernel.org
+Cc: Mike Christie <mchristie@fusionio.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, Aug 27, 2013 at 01:52:09PM +0800, Aaron Lu wrote:
-> From: Aaron Lu <aaron.lu@intel.com>
-> Subject: [PATCH] ata: acpi: Remove ata_dev_acpi_handle stub in libata.h
-> 
-> The ata_dev_acpi_handle is defined in libata-acpi.c and the only
-> external user is libata-zpodd.c, which is built when CONFIG_ATA_ACPI
-> is set, so there is no need to make an empty stub function for
-> !CONFIG_ATA_ACPI case in libata.h. It also causes compile errors due to
-> acpi_handle is not defined when !CONFIG_ACPI. This patch fixes this
-> problem by removing the empty stub.
-> 
-> Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
-> Signed-off-by: Aaron Lu <aaron.lu@intel.com>
+On Thu, Aug 15, 2013 at 07:19:29PM -0700, Nicholas A. Bellinger wrote:
+> Anyways, before digging further into reserved tags logic, Jens, what are
+> your thoughts for addressing this special queue_depth=1 case for libata
+> + the like..?
 
-Yeap, tested and works.  Applied to libata/for-3.12.  Thanks.
+Hi Jens,
 
-Stephen, sorry about the trouble.
+Have some comments?
 
 -- 
-tejun
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
