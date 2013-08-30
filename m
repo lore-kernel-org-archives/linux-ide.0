@@ -1,48 +1,43 @@
-From: Guenter Roeck <linux@roeck-us.net>
-Subject: [PATCH 5/7] watchdog: Drop references to H8300 architecture
-Date: Fri, 30 Aug 2013 09:40:40 -0700
-Message-ID: <1377880842-6835-6-git-send-email-linux@roeck-us.net>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 0/7] Drop support for Renesys H8/300 architecture
+Date: Fri, 30 Aug 2013 09:55:50 -0700
+Message-ID: <20130830165550.GA8151@kroah.com>
 References: <1377880842-6835-1-git-send-email-linux@roeck-us.net>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:46852 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756457Ab3H3Qx0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 Aug 2013 12:53:26 -0400
+Content-Disposition: inline
 In-Reply-To: <1377880842-6835-1-git-send-email-linux@roeck-us.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-watchdog@vger.kernel.org, Wim Van Sebroeck <wim@iguana.be>, "David S. Miller" <davem@davemloft.net>, Al Viro <viro@zeniv.linux.org.uk>, Eric Paris <eparis@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiang Liu <jiang.liu@huawei.com>, David Howells <dhowells@redhat.com>, Thomas Gleixner <tglx@linutronix.de>, Stephen Rothwell <sfr@canb.auug.org.au>, Linus Torvalds <torvalds@linux-foundation.org>, Guenter Roeck <linux@roeck-us.net>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Guenter Roeck <linux@roeck-us.net>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-watchdog@vger.kernel.org, Wim Van Sebroeck <wim@iguana.be>, "David S. Miller" <davem@davemloft.net>, Al Viro <viro@zeniv.linux.org.uk>, Eric Paris <eparis@redhat.com>, Jiang Liu <jiang.liu@huawei.com>, David Howells <dhowells@redhat.com>, Thomas Gleixner <tglx@linutronix.de>, Stephen Rothwell <sfr@canb.auug.org.au>, Linus Torvalds <torvalds@linux-foundation.org>
 
-Architecture is gone.
+On Fri, Aug 30, 2013 at 09:40:35AM -0700, Guenter Roeck wrote:
+> H8/300 has been dead for several years, the kernel for it has
+> not compiled for ages, and recent versions of gcc for it are broken.
+> It is time to drop support for it.
+> 
+> Yes, I understand it is not that simple to drop an architecture,
+> and it may need some discussion, but someone has to put a stake
+> into the ground. Keeping a virtually dead architecture on life support
+> takes resources which are better spent elsewhere.
 
-Signed-off-by: Guenter Roeck <linux@roeck-us.net>
----
- drivers/watchdog/Kconfig  |    2 --
- drivers/watchdog/Makefile |    2 --
- 2 files changed, 4 deletions(-)
+If this doesn't build, and no one is using it anymore, I agree, it
+should be removed.  If someone wants to revive it, 'git revert' works
+just fine.
 
-diff --git a/drivers/watchdog/Kconfig b/drivers/watchdog/Kconfig
-index 362085d..08a8a4d 100644
---- a/drivers/watchdog/Kconfig
-+++ b/drivers/watchdog/Kconfig
-@@ -408,8 +408,6 @@ config BFIN_WDT
- 
- # FRV Architecture
- 
--# H8300 Architecture
--
- # X86 (i386 + ia64 + x86_64) Architecture
- 
- config ACQUIRE_WDT
-diff --git a/drivers/watchdog/Makefile b/drivers/watchdog/Makefile
-index 2f26a0b..3989d3e 100644
---- a/drivers/watchdog/Makefile
-+++ b/drivers/watchdog/Makefile
-@@ -65,8 +65,6 @@ obj-$(CONFIG_BFIN_WDT) += bfin_wdt.o
- 
- # FRV Architecture
- 
--# H8300 Architecture
--
- # X86 (i386 + ia64 + x86_64) Architecture
- obj-$(CONFIG_ACQUIRE_WDT) += acquirewdt.o
- obj-$(CONFIG_ADVANTECH_WDT) += advantechwdt.o
--- 
-1.7.9.7
+You can put my:
+
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
+on these patches, unless someone steps up to be the active maintainer of
+the arch and gets it building/working again.
+
+thanks,
+
+greg k-h
