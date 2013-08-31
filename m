@@ -1,48 +1,59 @@
-From: Guenter Roeck <linux@roeck-us.net>
-Subject: Re: [PATCH 0/7] Drop support for Renesys H8/300 architecture
-Date: Sat, 31 Aug 2013 06:56:45 -0700
-Message-ID: <5221F61D.60009@roeck-us.net>
-References: <1377880842-6835-1-git-send-email-linux@roeck-us.net> <20130830184611.GA27455@spo001.leaseweb.com> <20130830191146.GA12090@roeck-us.net> <CA+55aFyxHsKhtqqz9jTDYo89bCNqCWhjHGJ4HzFrHnJ0yxLXjQ@mail.gmail.com> <20130830193740.GA13101@roeck-us.net> <CAMuHMdW6KcHbpR_KzbTg9V_FJ8XvQAWQOB-2jXQxG5fo1wWg1A@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Marc C <marc.ceeeee@gmail.com>
+Subject: [PATCH] libata: Remove unneeded __le32 in ata_tf_to_fis
+Date: Sat, 31 Aug 2013 09:20:33 -0700
+Message-ID: <1377966033-12256-2-git-send-email-marc.ceeeee@gmail.com>
+References: <1377966033-12256-1-git-send-email-marc.ceeeee@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.active-venture.com ([67.228.131.205]:63173 "EHLO
-	mail.active-venture.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753487Ab3HaN4t (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 31 Aug 2013 09:56:49 -0400
-In-Reply-To: <CAMuHMdW6KcHbpR_KzbTg9V_FJ8XvQAWQOB-2jXQxG5fo1wWg1A@mail.gmail.com>
+Received: from mail-oa0-f50.google.com ([209.85.219.50]:48027 "EHLO
+	mail-oa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753674Ab3HaQVP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 31 Aug 2013 12:21:15 -0400
+Received: by mail-oa0-f50.google.com with SMTP id i4so3623034oah.37
+        for <linux-ide@vger.kernel.org>; Sat, 31 Aug 2013 09:21:14 -0700 (PDT)
+In-Reply-To: <1377966033-12256-1-git-send-email-marc.ceeeee@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Yoshinori Sato <ysato@users.sourceforge.jp>, Linus Torvalds <torvalds@linux-foundation.org>, Wim Van Sebroeck <wim@iguana.be>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE-ML <linux-ide@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux Watchdog Mailing List <linux-watchdog@vger.kernel.org>, "David S. Miller" <davem@davemloft.net>, Al Viro <viro@zeniv.linux.org.uk>, Eric Paris <eparis@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiang Liu <jiang.liu@huawei.com>, David Howells <dhowells@redhat.com>, Thomas Gleixner <tglx@linutronix.de>, Stephen Rothwell <sfr@canb.auug.org.au>
+To: tj@kernel.org, linux-ide@vger.kernel.org
+Cc: Marc Carino <marc.ceeeee@gmail.com>
 
-On 08/30/2013 11:44 PM, Geert Uytterhoeven wrote:
-> On Fri, Aug 30, 2013 at 9:37 PM, Guenter Roeck <linux@roeck-us.net> wrote:
->> On Fri, Aug 30, 2013 at 12:14:20PM -0700, Linus Torvalds wrote:
->>> On Fri, Aug 30, 2013 at 12:11 PM, Guenter Roeck <linux@roeck-us.net> wrote:
->>>>
->>>> I would not mind if Linus would agree to pull it right away for 3.12,
->>>> but that seems to be a bit on the fast side.
->>>
->>> I'm ok with code deletion patches, I don't think that would be a
->>> problem. I didn't check them, but I assume this is all literally just
->>> removing code that is conditional on h8/300 config options?
->>>
->> Yes.
->>
->> I found a couple more since I sent the series, but nothing significant.
->>
->> What is your preference - keep it until 3.13, or prepare it now and send you
->> a pull request for 3.12 ?
->
-> It would be nice to check with Sato-san, who wanted to attend Kernel
-> Summit as a hobbyist architecture maintainer, and see what are his plans
-> and opinions.
->
+From: Marc Carino <marc.ceeeee@gmail.com>
 
-Yes, of course. My bad that my send script dropped him of all people from the
-original e-mail :(. I fixed that in version 2.
+The endianness attribute on the 'aux' local variable wasn't
+necessary, so remove it.
 
-Guenter
+Signed-off-by: Marc Carino <marc.ceeeee@gmail.com>
+---
+ drivers/ata/libata-core.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index a044be9..83b1a9f 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -546,8 +546,6 @@ int atapi_cmd_type(u8 opcode)
+  */
+ void ata_tf_to_fis(const struct ata_taskfile *tf, u8 pmp, int is_cmd, u8 *fis)
+ {
+-	const __le32 aux = cpu_to_le32(tf->auxiliary);
+-
+ 	fis[0] = 0x27;			/* Register - Host to Device FIS */
+ 	fis[1] = pmp & 0xf;		/* Port multiplier number*/
+ 	if (is_cmd)
+@@ -571,10 +569,10 @@ void ata_tf_to_fis(const struct ata_taskfile *tf, u8 pmp, int is_cmd, u8 *fis)
+ 	fis[14] = 0;
+ 	fis[15] = tf->ctl;
+ 
+-	fis[16] = aux & 0xff;
+-	fis[17] = (aux >> 8) & 0xff;
+-	fis[18] = (aux >> 16) & 0xff;
+-	fis[19] = (aux >> 24) & 0xff;
++	fis[16] = tf->auxiliary & 0xff;
++	fis[17] = (tf->auxiliary >> 8) & 0xff;
++	fis[18] = (tf->auxiliary >> 16) & 0xff;
++	fis[19] = (tf->auxiliary >> 24) & 0xff;
+ }
+ 
+ /**
+-- 
+1.8.1.2
 
