@@ -1,28 +1,35 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/4] PCI/MSI: Introduce pci_enable_msi_block_part()
- interface
-Date: Tue, 3 Sep 2013 10:19:09 -0400
-Message-ID: <20130903141909.GE10522@htj.dyndns.org>
-References: <cover.1378111919.git.agordeev@redhat.com>
- <35d9a944d441e23fbbcb5dc3fb710cada0fa272c.1378111919.git.agordeev@redhat.com>
+Subject: Re: [PATCH] libata: bugfix: Remove __le32 in ata_tf_to_fis
+Date: Tue, 3 Sep 2013 10:39:53 -0400
+Message-ID: <20130903143953.GH10522@htj.dyndns.org>
+References: <1378051141-2652-1-git-send-email-marc.ceeeee@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ve0-f181.google.com ([209.85.128.181]:35853 "EHLO
-	mail-ve0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753542Ab3ICOTO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Sep 2013 10:19:14 -0400
+Received: from mail-ve0-f175.google.com ([209.85.128.175]:38884 "EHLO
+	mail-ve0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753192Ab3ICOj5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Sep 2013 10:39:57 -0400
+Received: by mail-ve0-f175.google.com with SMTP id oy10so3984129veb.20
+        for <linux-ide@vger.kernel.org>; Tue, 03 Sep 2013 07:39:57 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <35d9a944d441e23fbbcb5dc3fb710cada0fa272c.1378111919.git.agordeev@redhat.com>
+In-Reply-To: <1378051141-2652-1-git-send-email-marc.ceeeee@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, x86@kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>, Jan Beulich <JBeulich@suse.com>, Bjorn Helgaas <bhelgaas@google.com>
+To: Marc C <marc.ceeeee@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-On Mon, Sep 02, 2013 at 10:59:33AM +0200, Alexander Gordeev wrote:
-> +	if (__roundup_pow_of_two(nvec_mme) != nvec_mme)
+On Sun, Sep 01, 2013 at 08:59:01AM -0700, Marc C wrote:
+> From: Marc Carino <marc.ceeeee@gmail.com>
+> 
+> The endianness attribute on the 'aux' local variable is a wrong, and
+> can lead to issues on big-endian machines,
+> 
+> Signed-off-by: Marc Carino <marc.ceeeee@gmail.com>
 
-Why the __ prefixed version?
+Applied to libata/for-3.12.
+
+Thanks.
 
 -- 
 tejun
