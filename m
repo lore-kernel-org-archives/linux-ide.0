@@ -1,92 +1,78 @@
 From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH 0/4] AHCI: Conserve interrupts with
+Subject: Re: [PATCH 3/4] AHCI: Conserve interrupts with
  pci_enable_msi_block_part() interface
-Date: Tue, 3 Sep 2013 16:57:19 +0200
-Message-ID: <20130903145719.GB14221@dhcp-26-207.brq.redhat.com>
+Date: Tue, 3 Sep 2013 18:19:06 +0200
+Message-ID: <20130903161906.GC14221@dhcp-26-207.brq.redhat.com>
 References: <cover.1378111919.git.agordeev@redhat.com>
- <20130903135541.GB10522@htj.dyndns.org>
+ <3bb1b4375655ecfde5017cc70973d078f2434d5d.1378111919.git.agordeev@redhat.com>
+ <20130903141824.GD10522@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:26462 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754520Ab3ICOzY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 3 Sep 2013 10:55:24 -0400
+Return-path: <linux-pci-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20130903135541.GB10522@htj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+In-Reply-To: <20130903141824.GD10522@htj.dyndns.org>
+Sender: linux-pci-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
 Cc: linux-kernel@vger.kernel.org, x86@kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>, Jan Beulich <JBeulich@suse.com>, Bjorn Helgaas <bhelgaas@google.com>
+List-Id: linux-ide@vger.kernel.org
 
-On Tue, Sep 03, 2013 at 09:55:41AM -0400, Tejun Heo wrote:
-> Hello,
-> 
-> On Mon, Sep 02, 2013 at 10:59:07AM +0200, Alexander Gordeev wrote:
-> > This series is aimed to conserve on othewise wasted interrupt
-> > resources for 10 of 16 unused MSI vectors for AHCI devices on
-> > Intel chipsets.
-> 
-> Hmmm.... I've been looking at the code and and a curiosity.  Why does
-> multiple MSI support implicitly enabled threaded IRQ handling?  Why
-> are those two linked?  Also, do you have any numbers to show that this
-> actually is better?  Handling the processing off to a thread isn't a
-> light operation.
+On Tue, Sep 03, 2013 at 10:18:24AM -0400, Tejun Heo wrote:
+> On Mon, Sep 02, 2013 at 11:00:28AM +0200, Alexander Gordeev wrote:
+> > +	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
+> > +		goto intx;
+> > +
+> > +	rc = pci_enable_msi_block_part(pdev, n_ports, AHCI_MAX_PORTS);
 
-Just to emphasize the purpose of this series - it is aimed on configuring
-(allocating x86 vectors, irq_desc's etc.) 6/16 interrupts instead of current
-16/16 - while 10/16 are unused. Nothing more.
+We start with maximum possible number of ports AHCI_MAX_PORTS
 
-Multiple MSI support enables threaded IRQ handling, because at the time of
-posting I did not want to intrude into the existing single-MSI codebase while
-multiple MSI/multipe CPU approach gained good numbers (below).
+> > +	if (!rc)
+> > +		return AHCI_MAX_PORTS;
 
-Besides, the ports interrupt handling moved from the interrupt-disabled
-hardware context to the interrupt-enabled threaded context and also ports
-got per-port locks instead of the single host lock. AFAIR I did not post
-the numbers, but it was something close to no-contention.
+If we succeeded the device is indeed supports all AHCI_MAX_PORTS
+and we report it.
 
+> > +	if (rc < 0)
+> > +		goto intx;
 
-Host-wide lock statistics summary:
+If pci_enable_msi_block_part() failed we should not make further
+attempts and fallback to simple IRQ.
 
-  Taken using command 'if=/dev/sd{a,b,c} of=/dev/null' running in parallel
-  on three SATA HDDs:
-	ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-	ata2: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
-	ata3: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> > +	maxvec = rc;
 
-  ahci_interrupt()
-  Capabilities: [80] MSI: Enable+ Count=1/16 Maskable- 64bit-
+The device supports a lesser of AHCI_MAX_PORTS, because the previous
+pci_enable_msi_block_part() has not succeeded nor failed. Thus, rc
+contains number of supported MSIs. In case of ICH this will be 16
+rather than 32.
 
-Test	holdtime-total	waittime-total	acquis.	holdtime-avg	waittime-avg
-#
-01.	22565801.27	93056.41	6377094	3.538571216	0.014592291
-02.	20358324.12	60825.47	6411012	3.175524257	0.009487655
-03.	21190730.38	63610.38	6384508	3.319085884	0.009963239
-04.	22491064.54	80624.96	6398390	3.515113105	0.012600820
-05.	21986193.10	78034.38	6379092	3.446602291	0.012232835
-06.	20556437.70	62314.64	6287673	3.269323596	0.009910604
-07.	20477137.55	66190.92	6388507	3.205308776	0.010360937
-08.	21442240.03	69306.80	6402109	3.349246323	0.010825620
-						-----------	-----------
-avg						3.352346931	0.011246750
+Actually, while I was writing this I realized this could be a number
+of MSIs that could have been enabled this device, not the maximum
+number of supported MSIs - these two may differ. I think MRSM should
+be checked. But I will continue as if it always the same.
 
-  ahci_hw_interrupt()
-  Capabilities: [80] MSI: Enable+ Count=16/16 Maskable- 64bit-
+> > +	rc = pci_enable_msi_block_part(pdev, n_ports, maxvec);
 
-Test	holdtime-total	waittime-total	acquis.	holdtime-avg	waittime-avg
-#
-09.	8936643.32	54559.79	6505606	1.373683454	0.008386581
-10.	8579972.36	51496.56	6496233	1.320761180	0.007927142
-11.	8138708.47	54061.46	6494647	1.253141005	0.008324003
-12.	8322068.81	60427.51	6509975	1.278356493	0.009282295
-13.	8527745.18	65978.83	6515589	1.308821839	0.010126303
-14.	8662461.99	57291.39	6510702	1.330495850	0.008799572
-15.	8054911.26	69186.41	6514262	1.236504037	0.010620759
-16.	9618631.17	39726.37	6517385	1.475842101	0.006095446
-						-----------	-----------
-avg						1.322200745	0.008695263
+Try pci_enable_msi_block_part() with the maximum number of supported MSIs.
 
+> > +	if (!rc)
+> > +		return maxvec;
+
+If we succeeded report the number of enabled MSIs.
+
+> > +	if (rc < 0)
+> > +		goto intx;
+
+If pci_enable_msi_block_part() failed we should not make further
+attempts and fallback to simple IRQ.
+
+> Why is the above fallback necessary?  The only other number which
+> makes sense is roundup_pow_of_two(n_ports), right?  What does the
+> above fallback logic buy us?
+
+We must enable maximum possible number of MSIs - the one reported in
+Multiple Message Capable register. Otherwise ICH device will fallback
+to MRSM. IOW, if the result of roundup_pow_of_two(n_ports) is not what
+in Multiple Message Capable register (i.e. as roundup_pow_of_two(6) vs 16)
+ICH will enforce MRSM mode.
 
 > Thanks.
 > 
