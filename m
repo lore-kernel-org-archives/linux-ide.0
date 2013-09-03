@@ -1,16 +1,17 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 0/4] AHCI: Conserve interrupts with
+Subject: Re: [PATCH 3/4] AHCI: Conserve interrupts with
  pci_enable_msi_block_part() interface
-Date: Tue, 3 Sep 2013 12:24:11 -0400
-Message-ID: <20130903162411.GA25040@mtj.dyndns.org>
+Date: Tue, 3 Sep 2013 14:27:31 -0400
+Message-ID: <20130903182731.GA27092@mtj.dyndns.org>
 References: <cover.1378111919.git.agordeev@redhat.com>
- <20130903135541.GB10522@htj.dyndns.org>
- <20130903145719.GB14221@dhcp-26-207.brq.redhat.com>
+ <3bb1b4375655ecfde5017cc70973d078f2434d5d.1378111919.git.agordeev@redhat.com>
+ <20130903141824.GD10522@htj.dyndns.org>
+ <20130903161906.GC14221@dhcp-26-207.brq.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20130903145719.GB14221@dhcp-26-207.brq.redhat.com>
+In-Reply-To: <20130903161906.GC14221@dhcp-26-207.brq.redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Alexander Gordeev <agordeev@redhat.com>
 Cc: linux-kernel@vger.kernel.org, x86@kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>, Jan Beulich <JBeulich@suse.com>, Bjorn Helgaas <bhelgaas@google.com>
@@ -18,20 +19,16 @@ List-Id: linux-ide@vger.kernel.org
 
 Hello,
 
-On Tue, Sep 03, 2013 at 04:57:19PM +0200, Alexander Gordeev wrote:
-> Multiple MSI support enables threaded IRQ handling, because at the time of
-> posting I did not want to intrude into the existing single-MSI codebase while
-> multiple MSI/multipe CPU approach gained good numbers (below).
+On Tue, Sep 03, 2013 at 06:19:06PM +0200, Alexander Gordeev wrote:
+> We must enable maximum possible number of MSIs - the one reported in
+> Multiple Message Capable register. Otherwise ICH device will fallback
+> to MRSM. IOW, if the result of roundup_pow_of_two(n_ports) is not what
+> in Multiple Message Capable register (i.e. as roundup_pow_of_two(6) vs 16)
+> ICH will enforce MRSM mode.
 
-Please separate out threaded IRQ support from multiple MSI.
-
-> Besides, the ports interrupt handling moved from the interrupt-disabled
-> hardware context to the interrupt-enabled threaded context and also ports
-> got per-port locks instead of the single host lock. AFAIR I did not post
-> the numbers, but it was something close to no-contention.
-
-Which is a completely separate issue, right?  Let's please not mix the
-two.
+Hmmm... I think the interface in general is pretty messy.  Wouldn't it
+be much cleaner to have a separate function to query MSICAP and let
+the function just return success / failure?
 
 Thanks.
 
