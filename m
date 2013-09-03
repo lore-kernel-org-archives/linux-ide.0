@@ -1,72 +1,153 @@
-From: Chen Gang F T <chen.gang.flying.transformer@gmail.com>
-Subject: Re: [PATCH v2 0/8] Drop support for Renesas H8/300 architecture
-Date: Tue, 03 Sep 2013 11:52:17 +0800
-Message-ID: <52255CF1.6020700@gmail.com>
-References: <1377906694-9578-1-git-send-email-linux@roeck-us.net> <52254F11.8070601@gmail.com> <522556D8.803@roeck-us.net>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: [PATCH v2 4/4] PCI/MSI: Get rid of pci_enable_msi_block_auto()
+ interface
+Date: Tue, 3 Sep 2013 09:58:50 +0200
+Message-ID: <20130903075849.GA14221@dhcp-26-207.brq.redhat.com>
+References: <cover.1378111919.git.agordeev@redhat.com>
+ <22d32807482ab4a2131116c50fe217c111849ec0.1378111919.git.agordeev@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=GB2312
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <522556D8.803@roeck-us.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Guenter Roeck <linux@roeck-us.net>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, netdev@vger.kernel.org, linux-watchdog@vger.kernel.org, Wim Van Sebroeck <wim@iguana.be>, "David S. Miller" <davem@davemloft.net>, Yoshinori Sato <ysato@users.sourceforge.jp>, Geert Uytterhoeven <geert@linux-m68k.org>, Al Viro <viro@zeniv.linux.org.uk>, Eric Paris <eparis@redhat.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiang Liu <jiang.liu@huawei.com>, David Howells <dhowells@redhat.com>, Thomas Gleixner <tglx@linutronix.de>, Stephen Rothwell <sfr@canb.auug.org.au>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Rusty Russell <rusty@rustcorp.com.au>, Linus Walleij <linus.walleij@linaro.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:32387 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752039Ab3ICH4z (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 3 Sep 2013 03:56:55 -0400
+Content-Disposition: inline
+In-Reply-To: <22d32807482ab4a2131116c50fe217c111849ec0.1378111919.git.agordeev@redhat.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: x86@kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>, Jan Beulich <JBeulich@suse.com>, Bjorn Helgaas <bhelgaas@google.com>
 
-On 09/03/2013 11:26 AM, Guenter Roeck wrote:
-> On 09/02/2013 07:53 PM, Chen Gang F T wrote:
->> Hello Guenter Roeck:
->>
->>
->> I don't care about whether I am in cc mailing list, but at least,
->> please help confirm 2 things:
->>
->>    Is what I had done for h8300 just making wastes and noisy in kernel and related sub-system mailing list ?
->>
->>    and is the disccusion about h8300 between us also wastes and noisy in kernel mailing list ?
->>
-> 
-> It raised my awareness of the status of h8300 maintenance,
-> so I would not see it as noise or waste. I might have suggested
-> a different target for your efforts, but that is your choice to make,
-> not mine.
-> 
+There are no consumers of pci_enable_msi_block_auto()
+interface have left. Eliminate it for now.
 
-OK, thank you for your confirmation, I plan to scan all architectures
-one by one with allmodconfig.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ Documentation/PCI/MSI-HOWTO.txt |   40 ++++++--------------------------------
+ drivers/pci/msi.c               |   25 ------------------------
+ include/linux/pci.h             |    7 ------
+ 3 files changed, 7 insertions(+), 65 deletions(-)
 
-Hmm... if suitable, next, when I focus one of architectures, I also cc
-to you, if it can be removed, please let me know in time, so can avoid
-sending waste mails to mailing list.
-
-I plan to try one of architectures within arc, hexagon, and metag. I
-will begin at 2013-09-20 (or later), if some (or all) of them can be
-removed, please let me know, thanks.
-
-
-> On the code review side, I had suggested that you should not add new
-> ifdefs into code, much less unnecessary ones. Your counter-argument
-> was that you wanted to follow the existing coding style in the file
-> in question. To me, that argument is along the line of "the coding
-> style in this file is bad, let's do more of it".
-
-Hmm... in fact, I will not say whether the code style is good or bad. I
-mainly focus on to try to avoid multiple code styles within one file.
-
-  extreme sample: let 'kernel code style' and 'gcc code style' in one file, that will make the code very ugly.
-
-> That doesn't make much sense to me, so I did not bother to respond.
-> Setting that aside, it is not up to me to approve or reject your patches.
-> Whoever does that would be the one you have to convince.
-> 
-
-OK, I can understand, and now it seems it can be canceled, since h8300
-has been removed.
-
-> Guenter
-> 
-
-
-Thanks.
+diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
+index 32d7d15..0c318c8 100644
+--- a/Documentation/PCI/MSI-HOWTO.txt
++++ b/Documentation/PCI/MSI-HOWTO.txt
+@@ -167,42 +167,16 @@ constraints on the number of vectors that can be allocated;
+ pci_enable_msi_block_part() returns as soon as it finds any constraint
+ that doesn't allow the call to succeed.
+ 
+-4.2.4 pci_enable_msi_block_auto
+-
+-int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *count)
+-
+-This variation on pci_enable_msi() call allows a device driver to request
+-the maximum possible number of MSIs.  The MSI specification only allows
+-interrupts to be allocated in powers of two, up to a maximum of 2^5 (32).
+-
+-If this function returns a positive number, it indicates that it has
+-succeeded and the returned value is the number of allocated interrupts. In
+-this case, the function enables MSI on this device and updates dev->irq to
+-be the lowest of the new interrupts assigned to it.  The other interrupts
+-assigned to the device are in the range dev->irq to dev->irq + returned
+-value - 1.
+-
+-If this function returns a negative number, it indicates an error and
+-the driver should not attempt to request any more MSI interrupts for
+-this device.
+-
+-If the device driver needs to know the number of interrupts the device
+-supports it can pass the pointer count where that number is stored. The
+-device driver must decide what action to take if pci_enable_msi_block_auto()
+-succeeds, but returns a value less than the number of interrupts supported.
+-If the device driver does not need to know the number of interrupts
+-supported, it can set the pointer count to NULL.
+-
+-4.2.5 pci_disable_msi
++4.2.4 pci_disable_msi
+ 
+ void pci_disable_msi(struct pci_dev *dev)
+ 
+-This function should be used to undo the effect of pci_enable_msi_block(),
+-pci_enable_msi(), pci_enable_msi_block_auto() or pci_enable_msi_block_part().
+-Calling it restores dev->irq to the pin-based interrupt number and frees the
+-previously allocated message signaled interrupt(s). The interrupt may
+-subsequently be assigned to another device, so drivers should not cache the
+-value of dev->irq.
++This function should be used to undo the effect of pci_enable_msi() or
++pci_enable_msi_block() or pci_enable_msi_block_part().  Calling it restores
++dev->irq to the pin-based interrupt number and frees the previously
++allocated message signaled interrupt(s).  The interrupt may subsequently be
++assigned to another device, so drivers should not cache the value of
++dev->irq.
+ 
+ Before calling this function, a device driver must always call free_irq()
+ on any interrupt for which it previously called request_irq().
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index a5c958f..d99f022 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -866,31 +866,6 @@ int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
+ }
+ EXPORT_SYMBOL(pci_enable_msi_block);
+ 
+-int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
+-{
+-	int ret, nvec;
+-	u16 msgctl;
+-
+-	if (!dev->msi_cap)
+-		return -EINVAL;
+-
+-	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
+-	ret = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
+-
+-	if (maxvec)
+-		*maxvec = ret;
+-
+-	do {
+-		nvec = ret;
+-		ret = pci_enable_msi_block(dev, nvec);
+-	} while (ret > 0);
+-
+-	if (ret < 0)
+-		return ret;
+-	return nvec;
+-}
+-EXPORT_SYMBOL(pci_enable_msi_block_auto);
+-
+ void pci_msi_shutdown(struct pci_dev *dev)
+ {
+ 	struct msi_desc *desc;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 6552cee..89935b4 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1133,12 +1133,6 @@ static inline int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec)
+ 	return -1;
+ }
+ 
+-static inline int
+-pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
+-{
+-	return -1;
+-}
+-
+ static inline void pci_msi_shutdown(struct pci_dev *dev)
+ { }
+ static inline void pci_disable_msi(struct pci_dev *dev)
+@@ -1172,7 +1166,6 @@ static inline int pci_msi_enabled(void)
+ int pci_enable_msi_block_part(struct pci_dev *dev,
+ 			      unsigned int nvec, int nvec_mme);
+ int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec);
+-int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec);
+ void pci_msi_shutdown(struct pci_dev *dev);
+ void pci_disable_msi(struct pci_dev *dev);
+ int pci_msix_table_size(struct pci_dev *dev);
 -- 
-Chen Gang
+1.7.7.6
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
