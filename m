@@ -1,8 +1,8 @@
-From: Tejun Heo <tj@kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
 Subject: Re: [PATCH 3/4] AHCI: Conserve interrupts with
  pci_enable_msi_block_part() interface
-Date: Wed, 4 Sep 2013 14:06:07 -0400
-Message-ID: <20130904180607.GD26609@mtj.dyndns.org>
+Date: Wed, 4 Sep 2013 20:47:16 +0200
+Message-ID: <20130904184715.GA24341@dhcp-26-207.brq.redhat.com>
 References: <cover.1378111919.git.agordeev@redhat.com>
  <3bb1b4375655ecfde5017cc70973d078f2434d5d.1378111919.git.agordeev@redhat.com>
  <20130903141824.GD10522@htj.dyndns.org>
@@ -11,51 +11,35 @@ References: <cover.1378111919.git.agordeev@redhat.com>
  <20130904072256.GA8726@dhcp-26-207.brq.redhat.com>
  <20130904145559.GB25788@mtj.dyndns.org>
  <20130904161442.GE8726@dhcp-26-207.brq.redhat.com>
+ <20130904180607.GD26609@mtj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pci-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20130904161442.GE8726@dhcp-26-207.brq.redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
+In-Reply-To: <20130904180607.GD26609@mtj.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
 Cc: linux-kernel@vger.kernel.org, x86@kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>, Jan Beulich <JBeulich@suse.com>, Bjorn Helgaas <bhelgaas@google.com>
 List-Id: linux-ide@vger.kernel.org
 
-Hello,
+On Wed, Sep 04, 2013 at 02:06:07PM -0400, Tejun Heo wrote:
+> I don't think it's necessary / a good idea to try to support
+> everything.  Just following the spec would be fine.  If that doesn't
+> work for too many devices, maybe just do one fallback?
 
-On Wed, Sep 04, 2013 at 06:14:43PM +0200, Alexander Gordeev wrote:
-> 1. We do not support sharing MSI messages since there is no appropriate
-> interrupt handling for it. I am not sure if any hardware supports it at
-> all. This assumption is just for clarity here.
+Calling pci_enable_msi_block_part() in a loop may seem not that terrible
+if you think of the original interface - pci_enable_msi_block(). If we
+were to enable multiple MSIs using that one we still had to use it pretty
+much the same way ;)
 
-I don't think it even matters.  If we can configure all MSIs, good.
-If not, using single interrupt is good enough.  Being able to allocate
-only some of the interrupts is highly unlikely to begin with and
-there's no reason to meddle with extra complexity.
+Anyway. I will send a version which reads MMC out.
 
-> 2. We can not just read out MMC value and try to write it to MME, because
-> we are not sure the hardware honours the specification.  I.e. in case of 6
-> ports and MMC value of 16 the value of 8 in MME could enable multiple MSIs
-> while the value of 16 could enforce MRSM. Contradicts to the AHCI
-> specification, but look how weird ICH is [4].
+> Thanks.
 > 
-> 3. Enabling more MSIs than needed (MME == MMC instead of MME < MMC) could
-> lead to unnecessary allocation of internal device resources. Bit lame, but
-> still true.
-> 
-> 4. We can not derive the value of MME needed from the number of ports, at
-> least in case of ICH. I.e. with 6 ports and MMC value of 16 the value of 8
-> in MME is what would be expected according to the AHCI specification. But
-> the ICH reserves it and MRSMs in case 8 is written to MME.
-> 
-> So to cover all the above assumptions we need to scan from lowest possible
-> and watch the MRSM bit is unset.
-
-I don't think it's necessary / a good idea to try to support
-everything.  Just following the spec would be fine.  If that doesn't
-work for too many devices, maybe just do one fallback?
-
-Thanks.
+> -- 
+> tejun
 
 -- 
-tejun
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
