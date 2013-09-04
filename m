@@ -1,47 +1,73 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 0/4] AHCI: Conserve interrupts with
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH 3/4] AHCI: Conserve interrupts with
  pci_enable_msi_block_part() interface
-Date: Wed, 4 Sep 2013 11:02:33 -0400
-Message-ID: <20130904150233.GD25788@mtj.dyndns.org>
+Date: Wed, 4 Sep 2013 18:14:43 +0200
+Message-ID: <20130904161442.GE8726@dhcp-26-207.brq.redhat.com>
 References: <cover.1378111919.git.agordeev@redhat.com>
- <20130903135541.GB10522@htj.dyndns.org>
- <20130903145719.GB14221@dhcp-26-207.brq.redhat.com>
- <20130903162411.GA25040@mtj.dyndns.org>
- <20130904080623.GB8726@dhcp-26-207.brq.redhat.com>
+ <3bb1b4375655ecfde5017cc70973d078f2434d5d.1378111919.git.agordeev@redhat.com>
+ <20130903141824.GD10522@htj.dyndns.org>
+ <20130903161906.GC14221@dhcp-26-207.brq.redhat.com>
+ <20130903182731.GA27092@mtj.dyndns.org>
+ <20130904072256.GA8726@dhcp-26-207.brq.redhat.com>
+ <20130904145559.GB25788@mtj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f45.google.com ([209.85.216.45]:39951 "EHLO
-	mail-qa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934791Ab3IDPCl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Sep 2013 11:02:41 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:49836 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762995Ab3IDQMs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 Sep 2013 12:12:48 -0400
 Content-Disposition: inline
-In-Reply-To: <20130904080623.GB8726@dhcp-26-207.brq.redhat.com>
+In-Reply-To: <20130904145559.GB25788@mtj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
+To: Tejun Heo <tj@kernel.org>
 Cc: linux-kernel@vger.kernel.org, x86@kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>, Jan Beulich <JBeulich@suse.com>, Bjorn Helgaas <bhelgaas@google.com>
 
-Hello,
-
-On Wed, Sep 04, 2013 at 10:06:23AM +0200, Alexander Gordeev wrote:
-> > Please separate out threaded IRQ support from multiple MSI.
+On Wed, Sep 04, 2013 at 10:55:59AM -0400, Tejun Heo wrote:
+> Hello,
 > 
-> This series does not really bring any structural change to the AHCI code -
-> just tweaks the MSI initialization.
+> On Wed, Sep 04, 2013 at 09:22:57AM +0200, Alexander Gordeev wrote:
+> > I think a general approach that will cover it all (including ICH and undesired
+> > sharing of interrupt vectors) - start MME from roundup_pow_of_two(n_ports) and
+> > ensure MRSM bit is unset. If not - double MME and retry. If still not and the
+> > limit is reached - fall back to single MSI.
+> > 
+> > Makes sense?
 > 
-> As threaded IRQ support vs multiple MSI is a separate issue what about
-> addressing it in a separate effort? I would have to think on how to do it
-> eigher :)
+> Ugh... I really don't want this sort of retry loop.  I'm still a bit
+> lost on why this is necessary.  Can you please elaborate?
 
-Oh, I'm not saying that these all should be done together but it looks
-like you're interested in pushing things further in this respect and I
-wanna have an idea about the overall direction / future before acking
-further changes.  IOW, I'm happy that you're working on it but also
-wanna make sure you're gonna see things through and know where things
-are headed.
+Sure.
 
-Thanks!
+1. We do not support sharing MSI messages since there is no appropriate
+interrupt handling for it. I am not sure if any hardware supports it at
+all. This assumption is just for clarity here.
+
+2. We can not just read out MMC value and try to write it to MME, because
+we are not sure the hardware honours the specification.  I.e. in case of 6
+ports and MMC value of 16 the value of 8 in MME could enable multiple MSIs
+while the value of 16 could enforce MRSM. Contradicts to the AHCI
+specification, but look how weird ICH is [4].
+
+3. Enabling more MSIs than needed (MME == MMC instead of MME < MMC) could
+lead to unnecessary allocation of internal device resources. Bit lame, but
+still true.
+
+4. We can not derive the value of MME needed from the number of ports, at
+least in case of ICH. I.e. with 6 ports and MMC value of 16 the value of 8
+in MME is what would be expected according to the AHCI specification. But
+the ICH reserves it and MRSMs in case 8 is written to MME.
+
+So to cover all the above assumptions we need to scan from lowest possible
+and watch the MRSM bit is unset.
+
+> Thanks.
+> 
+> -- 
+> tejun
 
 -- 
-tejun
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
