@@ -1,32 +1,26 @@
 From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH v2 4/6] AHCI: Conserve interrupts with
- pci_enable_msi_block_part() interface
-Date: Thu, 5 Sep 2013 17:23:53 +0200
-Message-ID: <20130905152352.GB30984@dhcp-26-207.brq.redhat.com>
+Subject: Re: [PATCH v2 5/6] AHCI: Check MRSM bit when multiple MSIs enabled
+Date: Thu, 5 Sep 2013 17:25:39 +0200
+Message-ID: <20130905152539.GC30984@dhcp-26-207.brq.redhat.com>
 References: <cover.1378383792.git.agordeev@redhat.com>
- <cb77da9322a63c609dc5aa49aa57c9706bf37a24.1378383792.git.agordeev@redhat.com>
- <20130905131050.GB26314@htj.dyndns.org>
+ <4bc31d6ccf3f84399b977fe8ed4fe77aadfa1c79.1378383792.git.agordeev@redhat.com>
+ <20130905131149.GC26314@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35103 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753919Ab3IEPV4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 5 Sep 2013 11:21:56 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20130905131050.GB26314@htj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+In-Reply-To: <20130905131149.GC26314@htj.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
 Cc: linux-kernel@vger.kernel.org, x86@kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>, Jan Beulich <JBeulich@suse.com>, Bjorn Helgaas <bhelgaas@google.com>
+List-Id: linux-ide@vger.kernel.org
 
-On Thu, Sep 05, 2013 at 09:10:50AM -0400, Tejun Heo wrote:
-> One more question tho.  How much does saving some interrupt vectors
-> matter?  Are int vectors contrained resource on some configurations?
+On Thu, Sep 05, 2013 at 09:11:49AM -0400, Tejun Heo wrote:
+> On Thu, Sep 05, 2013 at 02:54:17PM +0200, Alexander Gordeev wrote:
+> The patch should probably be re-sequenced to the head of the series
+> and cc stable@vger.kernel.org.  Not checking MRSM is scary.
 
-Honestly, I am not aware of any configuration struggling with interrupt
-vectors. However, conserving on x86 interrupt vector space is always a
-good idea IMO. Also, PPC pSeries has a concept of MSI quota, so..
+Will resend v3.
 
 > Thanks.
 > 
