@@ -1,75 +1,104 @@
 From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH v2 3/6] MSI/x86: Support pci_enable_msi_block_part() interface
-Date: Thu, 5 Sep 2013 14:53:19 +0200
-Message-ID: <1519938bbcfd083c0e091e5ac69b573c39664e40.1378383792.git.agordeev@redhat.com>
+Subject: [PATCH v2 4/6] AHCI: Conserve interrupts with
+ pci_enable_msi_block_part() interface
+Date: Thu, 5 Sep 2013 14:53:47 +0200
+Message-ID: <cb77da9322a63c609dc5aa49aa57c9706bf37a24.1378383792.git.agordeev@redhat.com>
 References: <cover.1378383792.git.agordeev@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pci-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
 In-Reply-To: <cover.1378383792.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: x86@kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>, Jan Beulich <JBeulich@suse.com>, Bjorn Helgaas <bhelgaas@google.com>
 List-Id: linux-ide@vger.kernel.org
 
-This change is a prerequisite for the forthcoming update
-of the AHCI device driver to conserve 10/16 MSIs on Intel
-chipsets. The update makes use of 'nvec_mme' parameter
-for pci_enable_msi_block_part() interface.
+Make use of the new pci_enable_msi_block_part() interface
+and conserve on othewise wasted interrupt resources for 10
+of 16 unused MSI vectors on Intel chipsets.
 
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- drivers/iommu/irq_remapping.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/ata/ahci.c |   46 +++++++++++++++++++++++++++-------------------
+ 1 files changed, 27 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index 1a220a0..7671da3 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -49,9 +49,9 @@ static void irq_remapping_disable_io_apic(void)
- 		disconnect_bsp_APIC(0);
- }
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index db4380d..a6bb618 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1091,26 +1091,34 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
+ {}
+ #endif
  
--static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
-+static int do_setup_msi_irqs(struct pci_dev *dev, int nvec, int nvec_mme)
+-int ahci_init_interrupts(struct pci_dev *pdev, struct ahci_host_priv *hpriv)
++int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
++			 struct ahci_host_priv *hpriv)
  {
--	int node, ret, sub_handle, nvec_pow2, index = 0;
-+	int node, ret, sub_handle, index = 0;
- 	unsigned int irq;
- 	struct msi_desc *msidesc;
+ 	int rc;
+ 	unsigned int maxvec;
  
-@@ -60,18 +60,18 @@ static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
- 	WARN_ON(msidesc->irq);
- 	WARN_ON(msidesc->msi_attrib.multiple);
- 	WARN_ON(msidesc->nvec_used);
-+	BUG_ON(!is_power_of_2(nvec_mme));
+-	if (!(hpriv->flags & AHCI_HFLAG_NO_MSI)) {
+-		rc = pci_enable_msi_block_auto(pdev, &maxvec);
+-		if (rc > 0) {
+-			if ((rc == maxvec) || (rc == 1))
+-				return rc;
+-			/*
+-			 * Assume that advantage of multipe MSIs is negated,
+-			 * so fallback to single MSI mode to save resources
+-			 */
+-			pci_disable_msi(pdev);
+-			if (!pci_enable_msi(pdev))
+-				return 1;
+-		}
+-	}
++	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
++		goto intx;
++
++	maxvec = pci_get_msi_cap(pdev);
++	if (maxvec < 0)
++		goto intx;
++	if (maxvec < n_ports)
++		goto single_msi;
++
++	rc = pci_enable_msi_block_part(pdev, n_ports, maxvec);
++	if (rc < 0)
++		goto intx;
++	if (rc)
++		goto single_msi;
++
++	return maxvec;
  
- 	node = dev_to_node(&dev->dev);
- 	irq = __create_irqs(get_nr_irqs_gsi(), nvec, node);
- 	if (irq == 0)
- 		return -ENOSPC;
- 
--	nvec_pow2 = __roundup_pow_of_two(nvec);
- 	msidesc->nvec_used = nvec;
--	msidesc->msi_attrib.multiple = ilog2(nvec_pow2);
-+	msidesc->msi_attrib.multiple = ilog2(nvec_mme);
- 	for (sub_handle = 0; sub_handle < nvec; sub_handle++) {
- 		if (!sub_handle) {
--			index = msi_alloc_remapped_irq(dev, irq, nvec_pow2);
-+			index = msi_alloc_remapped_irq(dev, irq, nvec_mme);
- 			if (index < 0) {
- 				ret = index;
- 				goto error;
-@@ -145,7 +145,7 @@ static int irq_remapping_setup_msi_irqs(struct pci_dev *dev,
- 					int nvec, int nvec_mme, int type)
- {
- 	if (type == PCI_CAP_ID_MSI)
--		return do_setup_msi_irqs(dev, nvec);
-+		return do_setup_msi_irqs(dev, nvec, nvec_mme);
- 	else
- 		return do_setup_msix_irqs(dev, nvec);
++single_msi:
++	if (!pci_enable_msi(pdev))
++		return 1;
++
++intx:
+ 	pci_intx(pdev, 1);
+ 	return 0;
  }
+@@ -1277,10 +1285,6 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	hpriv->mmio = pcim_iomap_table(pdev)[ahci_pci_bar];
+ 
+-	n_msis = ahci_init_interrupts(pdev, hpriv);
+-	if (n_msis > 1)
+-		hpriv->flags |= AHCI_HFLAG_MULTI_MSI;
+-
+ 	/* save initial config */
+ 	ahci_pci_save_initial_config(pdev, hpriv);
+ 
+@@ -1327,6 +1331,10 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	 */
+ 	n_ports = max(ahci_nr_ports(hpriv->cap), fls(hpriv->port_map));
+ 
++	n_msis = ahci_init_interrupts(pdev, n_ports, hpriv);
++	if (n_msis > 1)
++		hpriv->flags |= AHCI_HFLAG_MULTI_MSI;
++
+ 	host = ata_host_alloc_pinfo(&pdev->dev, ppi, n_ports);
+ 	if (!host)
+ 		return -ENOMEM;
 -- 
 1.7.7.6
 
