@@ -1,70 +1,36 @@
-From: David Miller <davem@davemloft.net>
-Subject: [GIT] Sparc
-Date: Thu, 05 Sep 2013 16:44:40 -0400 (EDT)
-Message-ID: <20130905.164440.1477153216318239054.davem@davemloft.net>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [GIT] Sparc
+Date: Fri, 06 Sep 2013 02:32:51 +0400
+Message-ID: <52290693.2010004@cogentembedded.com>
+References: <20130905.164440.1477153216318239054.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-la0-f54.google.com ([209.85.215.54]:52769 "EHLO
+	mail-la0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753468Ab3IEWcw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Sep 2013 18:32:52 -0400
+Received: by mail-la0-f54.google.com with SMTP id ea20so2150698lab.13
+        for <linux-ide@vger.kernel.org>; Thu, 05 Sep 2013 15:32:51 -0700 (PDT)
+In-Reply-To: <20130905.164440.1477153216318239054.davem@davemloft.net>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: torvalds@linux-foundation.org, akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+
+Hello.
+
+On 09/06/2013 12:44 AM, David Miller wrote:
+
+> Several bug fixes (from Kirill Tkhai, Geery Uytterhoeven, and Alexey
+> Dobriyan) and some support for Fujitsu sparc64x chips (from Allen
+> Pais).
+
+> Please pull, thanks a lot!
+
+    You meant that for 'linux-sparc', not 'linux-ide', right? :-)
+
+WBR, Sergei
 
 
-Several bug fixes (from Kirill Tkhai, Geery Uytterhoeven, and Alexey
-Dobriyan) and some support for Fujitsu sparc64x chips (from Allen
-Pais).
-
-Please pull, thanks a lot!
-
-The following changes since commit 64ccccf8525fee499625b517c0faadf784c79e93:
-
-  Merge branch 'drm-fixes' of git://people.freedesktop.org/~airlied/linux (2013-07-31 17:55:12 -0700)
-
-are available in the git repository at:
-
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/davem/sparc.git master
-
-for you to fetch changes up to dc76f9ca71ea597dbb0e9c77d1072ddca651f4f3:
-
-  sparc64: Export flush_ptrace_access() (needed by lustre) (2013-09-05 12:12:51 -0700)
-
-----------------------------------------------------------------
-Alexey Dobriyan (1):
-      sparc: fix PCI device proc file mmap(2)
-
-Allen Pais (2):
-      cpu hw caps support for sparc64x
-      support sparc64x chip type in cpumap.c
-
-David S. Miller (2):
-      esp_scsi: Fix tag state corruption when autosensing.
-      sparc64: Fix off by one in trampoline TLB mapping installation loop.
-
-Geert Uytterhoeven (1):
-      sparc64: Export flush_ptrace_access() (needed by lustre)
-
-Kirill Tkhai (6):
-      sparc64: Fix wrong syscall return value passed to trace_sys_exit()
-      sparc32: Fix exit flag passed from traced sys_sigreturn
-      sparc64: cleanup: Rename ret_from_syscall to ret_from_fork
-      sparc64: Fix not SRA'ed %o5 in 32-bit traced syscall
-      sparc64: Fix ITLB handler of null page
-      sparc64: Remove RWSEM export leftovers
-
- arch/sparc/include/asm/switch_to_64.h |  4 ++--
- arch/sparc/kernel/cpumap.c            |  1 +
- arch/sparc/kernel/entry.S             |  2 +-
- arch/sparc/kernel/kgdb_64.c           |  4 ++--
- arch/sparc/kernel/ktlb.S              |  3 +--
- arch/sparc/kernel/ptrace_64.c         |  4 +++-
- arch/sparc/kernel/setup_64.c          | 12 ++++++++----
- arch/sparc/kernel/syscalls.S          | 12 ++++++------
- arch/sparc/kernel/trampoline_64.S     |  2 --
- arch/sparc/lib/ksyms.c                |  9 ---------
- drivers/scsi/esp_scsi.c               | 14 ++++++++------
- drivers/scsi/esp_scsi.h               |  1 +
- fs/proc/inode.c                       | 16 ++++++++++++++++
- 13 files changed, 49 insertions(+), 35 deletions(-)
