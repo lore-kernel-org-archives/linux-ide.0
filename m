@@ -1,60 +1,48 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH v2 0/6] AHCI: Conserve interrupts with
- pci_enable_msi_block_part() interface
-Date: Thu, 5 Sep 2013 14:51:39 +0200
-Message-ID: <cover.1378383792.git.agordeev@redhat.com>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH v2 5/6] AHCI: Check MRSM bit when multiple MSIs enabled
+Date: Thu, 05 Sep 2013 18:32:36 +0400
+Message-ID: <52289604.50202@cogentembedded.com>
+References: <cover.1378383792.git.agordeev@redhat.com> <4bc31d6ccf3f84399b977fe8ed4fe77aadfa1c79.1378383792.git.agordeev@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:30017 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752250Ab3IENmi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 5 Sep 2013 09:42:38 -0400
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <4bc31d6ccf3f84399b977fe8ed4fe77aadfa1c79.1378383792.git.agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, x86@kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>, Jan Beulich <JBeulich@suse.com>, Bjorn Helgaas <bhelgaas@google.com>
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: x86@kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>, Jan Beulich <JBeulich@suse.com>, Bjorn Helgaas <bhelgaas@google.com>
 
-This series is aimed to conserve on othewise wasted interrupt
-resources for 10 of 16 unused MSI vectors for AHCI devices on
-Intel chipsets.
+Hello.
 
-Changes from v1:
-	- roundup_pow_of_two() and is_power_of_2() functions used
-	- patch 2/6 generic pci_get_msi_cap() interface introduced
-	- patch 4/6 MMC reg. value used to initialize multiple MSIs;
-		    Fallback to single MSI mode is simplified
-	- patch 5/6 sanity check for MRSM bit added
+On 09/05/2013 04:54 PM, Alexander Gordeev wrote:
 
-Alexander Gordeev (6):
-  1/6 PCI/MSI: Introduce pci_enable_msi_block_part() interface
-  2/6 PCI/MSI: Factor out pci_get_msi_cap() interface
-  3/6 MSI/x86: Support pci_enable_msi_block_part() interface
-  4/6 AHCI: Conserve interrupts with pci_enable_msi_block_part() interface
-  5/6 AHCI: Check MRSM bit when multiple MSIs enabled
-  6/6 PCI/MSI: Get rid of pci_enable_msi_block_auto() interface
+> Do not trust the hardware and always check if MSI
+> Revert to Single Message mode was enforced. Fall
+> back to the single MSI mode in case it did. Not
+> doing so might screw up the interrupt handling.
 
- Documentation/PCI/MSI-HOWTO.txt |   68 ++++++++++++++++-------
- arch/mips/pci/msi-octeon.c      |    2 +-
- arch/powerpc/kernel/msi.c       |    4 +-
- arch/s390/pci/pci.c             |    2 +-
- arch/x86/include/asm/pci.h      |    8 ++-
- arch/x86/include/asm/x86_init.h |    3 +-
- arch/x86/kernel/apic/io_apic.c  |    3 +-
- drivers/ata/ahci.c              |   60 ++++++++++++++------
- drivers/ata/ahci.h              |    1 +
- drivers/iommu/irq_remapping.c   |   14 +++---
- drivers/pci/msi.c               |  115 ++++++++++++++++++++++-----------------
- include/linux/msi.h             |    5 +-
- include/linux/pci.h             |   13 ++++-
- 13 files changed, 188 insertions(+), 110 deletions(-)
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> ---
+>   drivers/ata/ahci.c |   16 ++++++++++++++++
+>   drivers/ata/ahci.h |    1 +
+>   2 files changed, 17 insertions(+), 0 deletions(-)
 
--- 
-1.7.7.6
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index a6bb618..af5d535 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -1091,6 +1091,14 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
+>   {}
+>   #endif
+>
+> +static int ahci_get_mrsm(struct ahci_host_priv *hpriv)
+> +{
+> +	void __iomem *mmio = hpriv->mmio;
+> +	u32 ctl = readl(mmio + HOST_CTL);
+> +
+> +	return (ctl & HOST_MRSM);
 
+    Parens not needed here, in case you'll respin this once more.
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+WBR, Sergei
