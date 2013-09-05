@@ -1,139 +1,75 @@
 From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
-Date: Thu, 5 Sep 2013 14:52:47 +0200
-Message-ID: <c5ff8fbf905a3df2b75369da725ab5ebf31544ff.1378383792.git.agordeev@redhat.com>
+Subject: [PATCH v2 3/6] MSI/x86: Support pci_enable_msi_block_part() interface
+Date: Thu, 5 Sep 2013 14:53:19 +0200
+Message-ID: <1519938bbcfd083c0e091e5ac69b573c39664e40.1378383792.git.agordeev@redhat.com>
 References: <cover.1378383792.git.agordeev@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:11747 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761785Ab3IEMuw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 5 Sep 2013 08:50:52 -0400
+Return-path: <linux-pci-owner@vger.kernel.org>
 Content-Disposition: inline
 In-Reply-To: <cover.1378383792.git.agordeev@redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: x86@kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>, Jan Beulich <JBeulich@suse.com>, Bjorn Helgaas <bhelgaas@google.com>
-
-Factor out the operation of retrieving the number of MSI
-vectors the device requested, that is a value encoded in
-the Multiple Message Capable register.
+List-Id: linux-ide@vger.kernel.org
 
 This change is a prerequisite for the forthcoming update
-of the AHCI device driver.
+of the AHCI device driver to conserve 10/16 MSIs on Intel
+chipsets. The update makes use of 'nvec_mme' parameter
+for pci_enable_msi_block_part() interface.
 
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- Documentation/PCI/MSI-HOWTO.txt |   12 ++++++++++++
- drivers/pci/msi.c               |   30 ++++++++++++++++++++----------
- include/linux/pci.h             |    6 ++++++
- 3 files changed, 38 insertions(+), 10 deletions(-)
+ drivers/iommu/irq_remapping.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
-index 32d7d15..205eb5d 100644
---- a/Documentation/PCI/MSI-HOWTO.txt
-+++ b/Documentation/PCI/MSI-HOWTO.txt
-@@ -209,6 +209,18 @@ on any interrupt for which it previously called request_irq().
- Failure to do so results in a BUG_ON(), leaving the device with
- MSI enabled and thus leaking its vector.
- 
-+4.2.6 pci_get_msi_cap
-+
-+int pci_get_msi_cap(struct pci_dev *dev)
-+
-+This function could be used to retrieve the number of MSI vectors the
-+device requested (via the Multiple Message Capable register). The MSI
-+specification only allows the returned value to be a power of two,
-+up to a maximum of 2^5 (32).
-+
-+If this function returns a negative number, it indicates the device is
-+not capable of sending MSIs.
-+
- 4.3 Using MSI-X
- 
- The MSI-X capability is much more flexible than the MSI capability.
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 647e9b1..c50d518 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -802,17 +802,30 @@ static int pci_msi_check_device(struct pci_dev *dev,
- 	return 0;
+diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
+index 1a220a0..7671da3 100644
+--- a/drivers/iommu/irq_remapping.c
++++ b/drivers/iommu/irq_remapping.c
+@@ -49,9 +49,9 @@ static void irq_remapping_disable_io_apic(void)
+ 		disconnect_bsp_APIC(0);
  }
  
--int pci_enable_msi_block_part(struct pci_dev *dev,
--			      unsigned int nvec, int nvec_mme)
-+int pci_get_msi_cap(struct pci_dev *dev)
+-static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
++static int do_setup_msi_irqs(struct pci_dev *dev, int nvec, int nvec_mme)
  {
--	int status, maxvec;
-+	int ret;
- 	u16 msgctl;
+-	int node, ret, sub_handle, nvec_pow2, index = 0;
++	int node, ret, sub_handle, index = 0;
+ 	unsigned int irq;
+ 	struct msi_desc *msidesc;
  
- 	if (!dev->msi_cap)
- 		return -EINVAL;
+@@ -60,18 +60,18 @@ static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
+ 	WARN_ON(msidesc->irq);
+ 	WARN_ON(msidesc->msi_attrib.multiple);
+ 	WARN_ON(msidesc->nvec_used);
++	BUG_ON(!is_power_of_2(nvec_mme));
  
- 	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
--	maxvec = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
-+	ret = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL(pci_get_msi_cap);
-+
-+int pci_enable_msi_block_part(struct pci_dev *dev,
-+			      unsigned int nvec, int nvec_mme)
-+{
-+	int status, maxvec;
-+	u16 msgctl;
-+
-+	maxvec = pci_get_msi_cap(dev);
-+	if (maxvec < 0)
-+		return maxvec;
+ 	node = dev_to_node(&dev->dev);
+ 	irq = __create_irqs(get_nr_irqs_gsi(), nvec, node);
+ 	if (irq == 0)
+ 		return -ENOSPC;
  
- 	if (nvec_mme < 0)
- 		nvec_mme = maxvec;
-@@ -869,13 +882,10 @@ EXPORT_SYMBOL(pci_enable_msi_block);
- int pci_enable_msi_block_auto(struct pci_dev *dev, unsigned int *maxvec)
+-	nvec_pow2 = __roundup_pow_of_two(nvec);
+ 	msidesc->nvec_used = nvec;
+-	msidesc->msi_attrib.multiple = ilog2(nvec_pow2);
++	msidesc->msi_attrib.multiple = ilog2(nvec_mme);
+ 	for (sub_handle = 0; sub_handle < nvec; sub_handle++) {
+ 		if (!sub_handle) {
+-			index = msi_alloc_remapped_irq(dev, irq, nvec_pow2);
++			index = msi_alloc_remapped_irq(dev, irq, nvec_mme);
+ 			if (index < 0) {
+ 				ret = index;
+ 				goto error;
+@@ -145,7 +145,7 @@ static int irq_remapping_setup_msi_irqs(struct pci_dev *dev,
+ 					int nvec, int nvec_mme, int type)
  {
- 	int ret, nvec;
--	u16 msgctl;
--
--	if (!dev->msi_cap)
--		return -EINVAL;
- 
--	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
--	ret = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
-+	ret = pci_get_msi_cap(dev);
-+	if (ret < 0)
-+		return ret;
- 
- 	if (maxvec)
- 		*maxvec = ret;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 6552cee..b866048 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1122,6 +1122,11 @@ struct msix_entry {
- 
- 
- #ifndef CONFIG_PCI_MSI
-+static inline int pci_get_msi_cap(struct pci_dev *dev)
-+{
-+	return -1;
-+}
-+
- static inline int
- pci_enable_msi_block_part(struct pci_dev *dev, unsigned int nvec, int nvec_mme)
- {
-@@ -1169,6 +1174,7 @@ static inline int pci_msi_enabled(void)
- 	return 0;
+ 	if (type == PCI_CAP_ID_MSI)
+-		return do_setup_msi_irqs(dev, nvec);
++		return do_setup_msi_irqs(dev, nvec, nvec_mme);
+ 	else
+ 		return do_setup_msix_irqs(dev, nvec);
  }
- #else
-+int pci_get_msi_cap(struct pci_dev *dev);
- int pci_enable_msi_block_part(struct pci_dev *dev,
- 			      unsigned int nvec, int nvec_mme);
- int pci_enable_msi_block(struct pci_dev *dev, unsigned int nvec);
 -- 
 1.7.7.6
 
