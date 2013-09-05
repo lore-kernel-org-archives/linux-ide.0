@@ -1,26 +1,30 @@
 From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH v2 5/6] AHCI: Check MRSM bit when multiple MSIs enabled
-Date: Thu, 5 Sep 2013 17:25:39 +0200
-Message-ID: <20130905152539.GC30984@dhcp-26-207.brq.redhat.com>
+Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
+Date: Thu, 5 Sep 2013 17:40:42 +0200
+Message-ID: <20130905154041.GD30984@dhcp-26-207.brq.redhat.com>
 References: <cover.1378383792.git.agordeev@redhat.com>
- <4bc31d6ccf3f84399b977fe8ed4fe77aadfa1c79.1378383792.git.agordeev@redhat.com>
- <20130905131149.GC26314@htj.dyndns.org>
+ <c5ff8fbf905a3df2b75369da725ab5ebf31544ff.1378383792.git.agordeev@redhat.com>
+ <20130905130902.GA26314@htj.dyndns.org>
+ <20130905150259.GA30984@dhcp-26-207.brq.redhat.com>
+ <20130905150442.GA24148@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-pci-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20130905131149.GC26314@htj.dyndns.org>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20130905150442.GA24148@htj.dyndns.org>
+Sender: linux-pci-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
 Cc: linux-kernel@vger.kernel.org, x86@kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>, Jan Beulich <JBeulich@suse.com>, Bjorn Helgaas <bhelgaas@google.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, Sep 05, 2013 at 09:11:49AM -0400, Tejun Heo wrote:
-> On Thu, Sep 05, 2013 at 02:54:17PM +0200, Alexander Gordeev wrote:
-> The patch should probably be re-sequenced to the head of the series
-> and cc stable@vger.kernel.org.  Not checking MRSM is scary.
+On Thu, Sep 05, 2013 at 11:04:42AM -0400, Tejun Heo wrote:
+> The thing is, do we even have cases where arch code returns positive
+> return to indicate possible partial allocation?  If not, the whole
+> interface is convoluted for no good reason and we can just make
+> everything return 0 or -errno, which is a lot simpler.  No?
 
-Will resend v3.
+As I mentioned in my other note, at least PPC has a concept of MSI quota,
+so exceeding it would be the very case, I believe.
 
 > Thanks.
 > 
