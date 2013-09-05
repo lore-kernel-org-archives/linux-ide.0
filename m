@@ -1,65 +1,50 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
-Date: Thu, 5 Sep 2013 16:06:08 -0400
-Message-ID: <20130905200608.GA3846@htj.dyndns.org>
-References: <cover.1378383792.git.agordeev@redhat.com>
- <c5ff8fbf905a3df2b75369da725ab5ebf31544ff.1378383792.git.agordeev@redhat.com>
- <20130905130902.GA26314@htj.dyndns.org>
- <20130905150259.GA30984@dhcp-26-207.brq.redhat.com>
- <20130905150442.GA24148@htj.dyndns.org>
- <20130905154041.GD30984@dhcp-26-207.brq.redhat.com>
- <20130905154436.GC24148@htj.dyndns.org>
- <20130905185440.GA13175@dhcp-26-207.brq.redhat.com>
+From: David Miller <davem@davemloft.net>
+Subject: [GIT] IDE
+Date: Thu, 05 Sep 2013 16:44:51 -0400 (EDT)
+Message-ID: <20130905.164451.670703104304287472.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qe0-f53.google.com ([209.85.128.53]:42824 "EHLO
-	mail-qe0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755199Ab3IEUGN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Sep 2013 16:06:13 -0400
-Content-Disposition: inline
-In-Reply-To: <20130905185440.GA13175@dhcp-26-207.brq.redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, x86@kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>, Jan Beulich <JBeulich@suse.com>, Bjorn Helgaas <bhelgaas@google.com>
 
-Hello, Alexander.
 
-On Thu, Sep 05, 2013 at 08:54:40PM +0200, Alexander Gordeev wrote:
-> I assume reasons for having this type of interface at the moment of
-> taking design decision about pci_enable_msi_block() still hold true.
-> I do not know what those reasons were, but I think the fact multiple
-> MSIs are rarely used and MSI-X exists does not invalidate them now.
+Mostly cleanups, and changes part of tree-wide adjustments, this code is
+in deep freeze so that's pretty much what we expect these days.
 
-Well, it does change the underlying assumptions to make trade-offs
-against.  If something is widely used, expected to continue to expand,
-additional complexity to achieve better outcome is likely to be more
-justifiable.  Nothing exists in vacuum.  That said, I'm not even sure
-whether we want this sort of interface even if multiple MSI were still
-the hot thing.
+Please pull, thanks a lot!
 
-> I did consider the other argument - since pci_enable_msi_block_part()
-> is explicitly provided with a value of MME the caller will not be
-> satisfied with any other value and hence a repeated call with a lesser
-> MME does not make sense for the caller. Therefore we could just fail
-> in case the architecture returned a positive value. Same result, but
-> different reasoning.
+The following changes since commit a09e9a7a4b907f2dfa9bdb2b98a1828ab4b340b2:
 
-Just making the whole thing including arch methods to return 0/-errno
-would probably be a lot cleaner.
+  Merge branch 'drm-next' of git://people.freedesktop.org/~airlied/linux (2013-09-05 10:17:26 -0700)
 
-> At the moment I still prefer pci_enable_msi_block_part() to be similar
-> to pci_enable_msi_block(). I do agree the fallback logic is error-prone,
-> but I would not dare to scrap it all right away.
+are available in the git repository at:
 
-Yeah, of course, pci_enable_msi_block() would need to be updated to
-match too.  I understand this is going a bit off the original scope of
-the patchset but I can't help but cringing at the interface and the
-resulting "fallback" logic it ends up creating in its users.  Bjorn,
-what do you think?
 
-Thanks.
+  git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide.git master
 
--- 
-tejun
+for you to fetch changes up to 64110c16e012547d5c9ab71f8afd3bab025f1103:
+
+  ide: sgiioc4: Staticize ioc4_ide_attach_one() (2013-09-05 15:21:30 -0400)
+
+----------------------------------------------------------------
+Jingoo Han (4):
+      ide: replace strict_strtol() with kstrtol()
+      ide: use dev_get_platdata()
+      ide: palm_bk3710: add missing __iomem annotation
+      ide: sgiioc4: Staticize ioc4_ide_attach_one()
+
+Xinghai Yu (1):
+      ide-disk_proc: use macro to replace magic number
+
+ drivers/ide/gayle.c        | 2 +-
+ drivers/ide/ide-ioctls.c   | 4 ++--
+ drivers/ide/ide-park.c     | 6 ++++--
+ drivers/ide/ide_platform.c | 2 +-
+ drivers/ide/palm_bk3710.c  | 4 ++--
+ drivers/ide/sgiioc4.c      | 2 +-
+ drivers/ide/tx4938ide.c    | 4 ++--
+ 7 files changed, 13 insertions(+), 11 deletions(-)
