@@ -1,48 +1,50 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH v2 5/6] AHCI: Check MRSM bit when multiple MSIs enabled
-Date: Thu, 05 Sep 2013 18:32:36 +0400
-Message-ID: <52289604.50202@cogentembedded.com>
-References: <cover.1378383792.git.agordeev@redhat.com> <4bc31d6ccf3f84399b977fe8ed4fe77aadfa1c79.1378383792.git.agordeev@redhat.com>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
+Date: Thu, 5 Sep 2013 17:03:00 +0200
+Message-ID: <20130905150259.GA30984@dhcp-26-207.brq.redhat.com>
+References: <cover.1378383792.git.agordeev@redhat.com>
+ <c5ff8fbf905a3df2b75369da725ab5ebf31544ff.1378383792.git.agordeev@redhat.com>
+ <20130905130902.GA26314@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <4bc31d6ccf3f84399b977fe8ed4fe77aadfa1c79.1378383792.git.agordeev@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, x86@kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>, Jan Beulich <JBeulich@suse.com>, Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:31224 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752221Ab3IEPBG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 5 Sep 2013 11:01:06 -0400
+Content-Disposition: inline
+In-Reply-To: <20130905130902.GA26314@htj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, x86@kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>, Jan Beulich <JBeulich@suse.com>, Bjorn Helgaas <bhelgaas@google.com>
 
-Hello.
+On Thu, Sep 05, 2013 at 09:09:02AM -0400, Tejun Heo wrote:
+> Hello, Alexander.
+> 
+> On Thu, Sep 05, 2013 at 02:52:47PM +0200, Alexander Gordeev wrote:
+> One curiosity - with the above factored out, is
+> pci_enable_msi_block_part() returning positive number still necessary?
+> I followed most of code paths in x86 and nothing seems to need it and
+> positive return seems to be just causing confusion - ie. returning 1
+> on multiple msi config failure from some functions, which is silly.
 
-On 09/05/2013 04:54 PM, Alexander Gordeev wrote:
+You mean we could treat positive numbers returned by architecture as
+failures and translate it into negative error codes?
+If so, I would prefer not to do this for two reasons:
+1. It will not be possible to call pci_enable_msi_block_part() in a loop.
+   Although there are no consumers right now I think the very possibility
+   is better to keep.
+2. The semantics of pci_enable_msi_block_part() is very close to
+   pci_enable_msi_block(). I believe having a consisting interface for
+   these two helps readability.
 
-> Do not trust the hardware and always check if MSI
-> Revert to Single Message mode was enforced. Fall
-> back to the single MSI mode in case it did. Not
-> doing so might screw up the interrupt handling.
+> Thanks.
+> 
+> -- 
+> tejun
 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> ---
->   drivers/ata/ahci.c |   16 ++++++++++++++++
->   drivers/ata/ahci.h |    1 +
->   2 files changed, 17 insertions(+), 0 deletions(-)
-
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index a6bb618..af5d535 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -1091,6 +1091,14 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
->   {}
->   #endif
->
-> +static int ahci_get_mrsm(struct ahci_host_priv *hpriv)
-> +{
-> +	void __iomem *mmio = hpriv->mmio;
-> +	u32 ctl = readl(mmio + HOST_CTL);
-> +
-> +	return (ctl & HOST_MRSM);
-
-    Parens not needed here, in case you'll respin this once more.
-
-WBR, Sergei
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
