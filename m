@@ -1,62 +1,43 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH/RESEND 2/2] Hard disk S3 resume time optimization
-Date: Fri, 06 Sep 2013 16:37:00 +0400
-Message-ID: <5229CC6C.5010705@cogentembedded.com>
-References: <20130906004425.GA31998@linux.intel.com>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
+Date: Fri, 6 Sep 2013 15:17:40 +0200
+Message-ID: <20130906131739.GA27922@dhcp-26-207.brq.redhat.com>
+References: <cover.1378383792.git.agordeev@redhat.com>
+ <c5ff8fbf905a3df2b75369da725ab5ebf31544ff.1378383792.git.agordeev@redhat.com>
+ <20130905130902.GA26314@htj.dyndns.org>
+ <20130905150259.GA30984@dhcp-26-207.brq.redhat.com>
+ <20130905150442.GA24148@htj.dyndns.org>
+ <20130905154041.GD30984@dhcp-26-207.brq.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20130906004425.GA31998@linux.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: todd.e.brandt@linux.intel.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, tj@kernel.org, JBottomley@parallels.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:35055 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750704Ab3IFNPp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 6 Sep 2013 09:15:45 -0400
+Content-Disposition: inline
+In-Reply-To: <20130905154041.GD30984@dhcp-26-207.brq.redhat.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, x86@kernel.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>, Jan Beulich <JBeulich@suse.com>, Bjorn Helgaas <bhelgaas@google.com>
 
-Hello.
+On Thu, Sep 05, 2013 at 05:40:41PM +0200, Alexander Gordeev wrote:
+> On Thu, Sep 05, 2013 at 11:04:42AM -0400, Tejun Heo wrote:
+> > The thing is, do we even have cases where arch code returns positive
+> > return to indicate possible partial allocation?  If not, the whole
+> > interface is convoluted for no good reason and we can just make
+> > everything return 0 or -errno, which is a lot simpler.  No?
+> 
+> As I mentioned in my other note, at least PPC has a concept of MSI quota,
+> so exceeding it would be the very case, I believe.
 
-On 06-09-2013 4:44, Todd E Brandt wrote:
+An update here. No other arch supports multiple MSIs besides Intel (+IOMMU).
+Yet, ironically, the concept of possible partial allocation was adopted from
+MSI-X. I briefly checked all archs and it seems none of them throws out a
+possible other number of MSIs > 1 (including PPC I mistakenly read).
 
-> Part 2 of the hard disk resume optimization patch, this one applies
-> to the scsi subsystem.
-
-    Don't give the same name to both patches. In this case, you could prefix 
-the patch name with e.g. "sd: ".
-
-> Signed-off-by: Todd Brandt <todd.e.brandt@intel.com>
-> Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
-
->   drivers/scsi/sd.c | 82 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
->   1 file changed, 81 insertions(+), 1 deletion(-)
-
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 86fcf2c..d4bf784 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-[...]
-> @@ -3137,6 +3138,85 @@ done:
->   	return ret;
->   }
->
-> +static void sd_resume_async_end(struct request *rq, int error)
-> +{
-> +	struct scsi_sense_hdr sshdr;
-> +	struct scsi_disk *sdkp = rq->end_io_data;
-> +	char *sense = rq->sense;
-> +
-> +	if (error) {
-> +		sd_printk(KERN_WARNING, sdkp, "START FAILED\n");
-> +		sd_print_result(sdkp, error);
-> +		if (sense && (driver_byte(error) & DRIVER_SENSE)) {
-> +			scsi_normalize_sense(sense,
-> +				SCSI_SENSE_BUFFERSIZE, &sshdr);
-> +			sd_print_sense_hdr(sdkp, &sshdr);
-> +		}
-> +	} else
-> +		sd_printk(KERN_NOTICE, sdkp, "START SUCCESS\n");
-
-    According to Documentation/CodingStyle, both arms of the *if* statement 
-should have {} when one arm has them.
-
-WBR, Sergei
-
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
