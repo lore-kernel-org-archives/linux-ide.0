@@ -1,132 +1,37 @@
-From: Todd E Brandt <todd.e.brandt@linux.intel.com>
-Subject: [PATCH/RESEND 2/2] Hard disk S3 resume time optimization
-Date: Thu, 5 Sep 2013 17:44:25 -0700
-Message-ID: <20130906004425.GA31998@linux.intel.com>
-Reply-To: todd.e.brandt@linux.intel.com
+From: David Miller <davem@davemloft.net>
+Subject: Re: [GIT] Sparc
+Date: Thu, 05 Sep 2013 22:54:58 -0400 (EDT)
+Message-ID: <20130905.225458.830525929159444371.davem@davemloft.net>
+References: <20130905.164440.1477153216318239054.davem@davemloft.net>
+	<52290693.2010004@cogentembedded.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: tj@kernel.org, JBottomley@parallels.com
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from shards.monkeyblade.net ([149.20.54.216]:55048 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753698Ab3IFCzC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Sep 2013 22:55:02 -0400
+In-Reply-To: <52290693.2010004@cogentembedded.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: sergei.shtylyov@cogentembedded.com
+Cc: torvalds@linux-foundation.org, akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Part 2 of the hard disk resume optimization patch, this one applies
-to the scsi subsystem.
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Date: Fri, 06 Sep 2013 02:32:51 +0400
 
+> Hello.
+> 
+> On 09/06/2013 12:44 AM, David Miller wrote:
+> 
+>> Several bug fixes (from Kirill Tkhai, Geery Uytterhoeven, and Alexey
+>> Dobriyan) and some support for Fujitsu sparc64x chips (from Allen
+>> Pais).
+> 
+>> Please pull, thanks a lot!
+> 
+>    You meant that for 'linux-sparc', not 'linux-ide', right? :-)
 
-Signed-off-by: Todd Brandt <todd.e.brandt@intel.com>
-Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
-
- drivers/scsi/sd.c | 82 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 81 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 86fcf2c..d4bf784 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -107,6 +107,7 @@ static int  sd_remove(struct device *);
- static void sd_shutdown(struct device *);
- static int sd_suspend(struct device *);
- static int sd_resume(struct device *);
-+static int sd_resume_async(struct device *);
- static void sd_rescan(struct device *);
- static int sd_done(struct scsi_cmnd *);
- static int sd_eh_action(struct scsi_cmnd *, unsigned char *, int, int);
-@@ -484,7 +485,7 @@ static struct class sd_disk_class = {
- 
- static const struct dev_pm_ops sd_pm_ops = {
- 	.suspend		= sd_suspend,
--	.resume			= sd_resume,
-+	.resume			= sd_resume_async,
- 	.poweroff		= sd_suspend,
- 	.restore		= sd_resume,
- 	.runtime_suspend	= sd_suspend,
-@@ -3137,6 +3138,85 @@ done:
- 	return ret;
- }
- 
-+static void sd_resume_async_end(struct request *rq, int error)
-+{
-+	struct scsi_sense_hdr sshdr;
-+	struct scsi_disk *sdkp = rq->end_io_data;
-+	char *sense = rq->sense;
-+
-+	if (error) {
-+		sd_printk(KERN_WARNING, sdkp, "START FAILED\n");
-+		sd_print_result(sdkp, error);
-+		if (sense && (driver_byte(error) & DRIVER_SENSE)) {
-+			scsi_normalize_sense(sense,
-+				SCSI_SENSE_BUFFERSIZE, &sshdr);
-+			sd_print_sense_hdr(sdkp, &sshdr);
-+		}
-+	} else
-+		sd_printk(KERN_NOTICE, sdkp, "START SUCCESS\n");
-+
-+	kfree(sense);
-+	rq->sense = NULL;
-+	rq->end_io_data = NULL;
-+	__blk_put_request(rq->q, rq);
-+	scsi_disk_put(sdkp);
-+}
-+
-+static int sd_resume_async(struct device *dev)
-+{
-+	unsigned char cmd[6] = { START_STOP };
-+	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
-+	struct request *req;
-+	char *sense = NULL;
-+	int ret = 0;
-+
-+	if (!sdkp->device->manage_start_stop)
-+		goto error;
-+
-+	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
-+
-+	cmd[4] |= 1;
-+
-+	if (sdkp->device->start_stop_pwr_cond)
-+		cmd[4] |= 1 << 4;	/* Active or Standby */
-+
-+	if (!scsi_device_online(sdkp->device)) {
-+		ret = -ENODEV;
-+		goto error;
-+	}
-+
-+	req = blk_get_request(sdkp->device->request_queue, 0, __GFP_WAIT);
-+	if (!req) {
-+		ret = -ENOMEM;
-+		goto error;
-+	}
-+
-+	sense = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_NOIO);
-+	if (!sense) {
-+		ret = -ENOMEM;
-+		goto error_sense;
-+	}
-+
-+	req->cmd_len = COMMAND_SIZE(cmd[0]);
-+	memcpy(req->cmd, cmd, req->cmd_len);
-+	req->sense = sense;
-+	req->sense_len = 0;
-+	req->retries = SD_MAX_RETRIES;
-+	req->timeout = SD_TIMEOUT;
-+	req->cmd_type = REQ_TYPE_BLOCK_PC;
-+	req->cmd_flags |= REQ_PM | REQ_QUIET | REQ_PREEMPT;
-+
-+	req->end_io_data = sdkp;
-+	blk_execute_rq_nowait(req->q, NULL, req, 1, sd_resume_async_end);
-+	return 0;
-+
-+ error_sense:
-+	__blk_put_request(req->q, req);
-+ error:
-+	scsi_disk_put(sdkp);
-+	return ret;
-+}
-+
- /**
-  *	init_sd - entry point for this driver (both when built in or when
-  *	a module).
-
+Yes, sparclinux is the intended destination, and I forwarded it there
+once I realized my mistake :-)
