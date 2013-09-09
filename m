@@ -1,8 +1,8 @@
 From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH 7/9] PCI/MSI/s390: Make return values only 0/-errno when MSIs
- allocated
-Date: Mon, 9 Sep 2013 17:28:21 +0200
-Message-ID: <20130909152820.GI24962@dhcp-26-207.brq.redhat.com>
+Subject: [PATCH 8/9] PCI/MSI: Fix return value when populate_msi_sysfs()
+ failed
+Date: Mon, 9 Sep 2013 17:29:08 +0200
+Message-ID: <20130909152907.GJ24962@dhcp-26-207.brq.redhat.com>
 References: <20130905150259.GA30984@dhcp-26-207.brq.redhat.com>
  <20130905150442.GA24148@htj.dyndns.org>
  <20130905154041.GD30984@dhcp-26-207.brq.redhat.com>
@@ -15,32 +15,62 @@ References: <20130905150259.GA30984@dhcp-26-207.brq.redhat.com>
  <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pci-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
 In-Reply-To: <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Tejun Heo <tj@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "x86@kernel.org" <x86@kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>, Jan Beulich <JBeulich@suse.com>
 List-Id: linux-ide@vger.kernel.org
 
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- arch/s390/pci/pci.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/pci/msi.c |   11 +++++------
+ 1 files changed, 5 insertions(+), 6 deletions(-)
 
-diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-index 61a3c2c..45a1875 100644
---- a/arch/s390/pci/pci.c
-+++ b/arch/s390/pci/pci.c
-@@ -426,7 +426,7 @@ int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index aca7578..21e6471 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -702,7 +702,7 @@ static int msix_capability_init(struct pci_dev *dev,
  
- 	pr_debug("%s: requesting %d MSI-X interrupts...", __func__, nvec);
- 	if (type == PCI_CAP_ID_MSI && nvec > 1)
--		return 1;
-+		return -EINVAL;
- 	msi_vecs = min(nvec, ZPCI_MSI_VEC_MAX);
- 	msi_vecs = min_t(unsigned int, msi_vecs, CONFIG_PCI_NR_MSI);
+ 	ret = arch_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
+ 	if (ret)
+-		goto error;
++		goto out_avail;
  
+ 	/*
+ 	 * Some devices require MSI-X to be enabled before we can touch the
+@@ -715,10 +715,8 @@ static int msix_capability_init(struct pci_dev *dev,
+ 	msix_program_entries(dev, entries);
+ 
+ 	ret = populate_msi_sysfs(dev);
+-	if (ret) {
+-		ret = 0;
+-		goto error;
+-	}
++	if (ret)
++		goto out_free;
+ 
+ 	/* Set MSI-X enabled bits and unmask the function */
+ 	pci_intx_for_msi(dev, 0);
+@@ -729,7 +727,7 @@ static int msix_capability_init(struct pci_dev *dev,
+ 
+ 	return 0;
+ 
+-error:
++out_avail:
+ 	if (ret < 0) {
+ 		/*
+ 		 * If we had some success, report the number of irqs
+@@ -746,6 +744,7 @@ error:
+ 			ret = avail;
+ 	}
+ 
++out_free:
+ 	free_msi_irqs(dev);
+ 
+ 	return ret;
 -- 
 1.7.7.6
 
