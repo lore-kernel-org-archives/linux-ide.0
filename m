@@ -1,9 +1,8 @@
 From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
-Date: Mon, 9 Sep 2013 17:20:44 +0200
-Message-ID: <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
-References: <20130905130902.GA26314@htj.dyndns.org>
- <20130905150259.GA30984@dhcp-26-207.brq.redhat.com>
+Subject: [PATCH 1/9] PCI/MSI/PPC: Fix wrong RTAS error code reporting
+Date: Mon, 9 Sep 2013 17:22:03 +0200
+Message-ID: <20130909152202.GB24962@dhcp-26-207.brq.redhat.com>
+References: <20130905150259.GA30984@dhcp-26-207.brq.redhat.com>
  <20130905150442.GA24148@htj.dyndns.org>
  <20130905154041.GD30984@dhcp-26-207.brq.redhat.com>
  <20130905154436.GC24148@htj.dyndns.org>
@@ -12,41 +11,37 @@ References: <20130905130902.GA26314@htj.dyndns.org>
  <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
  <20130906160621.GF22763@mtj.dyndns.org>
  <20130906233205.GF12956@google.com>
+ <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:10014 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752510Ab3IIPSw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 9 Sep 2013 11:18:52 -0400
+Return-path: <linux-pci-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20130906233205.GF12956@google.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+In-Reply-To: <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Tejun Heo <tj@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "x86@kernel.org" <x86@kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>, Jan Beulich <JBeulich@suse.com>
+List-Id: linux-ide@vger.kernel.org
 
-On Fri, Sep 06, 2013 at 05:32:05PM -0600, Bjorn Helgaas wrote:
-> I propose that you rework it that way, and at least find out what
-> (if anything) would break if we do that.  Or maybe we just give up
-> some optimization; it would be nice to quantify that, too.
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ arch/powerpc/platforms/pseries/msi.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Hi Bjorn,
-
-The series is what it seems a direction to take.
-
-Looks like we need PPC folks to agree on the quota check update
-for pSeries (yes, they do bail out with a positive return value
-from arch_msi_check_device()):
-
-	quota = msi_quota_for_device(pdev, nvec);
-
-	if (quota && quota < nvec)
-		return quota;
-
-	return 0;
-
-> Bjorn
+diff --git a/arch/powerpc/platforms/pseries/msi.c b/arch/powerpc/platforms/pseries/msi.c
+index 6d2f0ab..009ec73 100644
+--- a/arch/powerpc/platforms/pseries/msi.c
++++ b/arch/powerpc/platforms/pseries/msi.c
+@@ -467,7 +467,7 @@ again:
+ 	list_for_each_entry(entry, &pdev->msi_list, list) {
+ 		hwirq = rtas_query_irq_number(pdn, i++);
+ 		if (hwirq < 0) {
+-			pr_debug("rtas_msi: error (%d) getting hwirq\n", rc);
++			pr_debug("rtas_msi: error (%d) getting hwirq\n", hwirq);
+ 			return hwirq;
+ 		}
+ 
+-- 
+1.7.7.6
 
 -- 
 Regards,
