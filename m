@@ -1,9 +1,8 @@
 From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH 2/9] PCI/MSI/PPC: Make return values only 0/-errno when MSIs
- allocated[PATCH 5/9] PCI/MSI/s390: Make return values only 0/-errno when
- MSIs allocated
-Date: Mon, 9 Sep 2013 17:25:48 +0200
-Message-ID: <20130909152548.GF24962@dhcp-26-207.brq.redhat.com>
+Subject: [PATCH 5/9] PCI/MSI/s390: Make return values only 0/-errno when MSIs
+ allocated
+Date: Mon, 9 Sep 2013 17:26:59 +0200
+Message-ID: <20130909152658.GG24962@dhcp-26-207.brq.redhat.com>
 References: <20130905150259.GA30984@dhcp-26-207.brq.redhat.com>
  <20130905150442.GA24148@htj.dyndns.org>
  <20130905154041.GD30984@dhcp-26-207.brq.redhat.com>
@@ -16,10 +15,10 @@ References: <20130905150259.GA30984@dhcp-26-207.brq.redhat.com>
  <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pci-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
 In-Reply-To: <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Tejun Heo <tj@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "x86@kernel.org" <x86@kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>, Jan Beulich <JBeulich@suse.com>
 List-Id: linux-ide@vger.kernel.org
