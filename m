@@ -1,26 +1,35 @@
-From: <ROBERTMELDRUM@markdanton.onmicrosoft.com>
-Subject: Exclusive offer, feel it for real
-Date: Thu, 12 Sep 2013 12:13:14 +0000
-Message-ID: <64820813-1b67-45ac-8f60-d8601fb241d5@AMXPR04MB230.eurprd04.prod.outlook.com>
-Mime-Version: 1.1
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from emea01-db3-ndr.ptr.protection.outlook.com ([157.56.120.105]:62562
-	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753333Ab3ILMNQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Sep 2013 08:13:16 -0400
-Sender: linux-ide-owner@vger.kernel.org
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: [PATCH] pata_isapnp: Don't use invalid I/O ports
+Date: Thu, 12 Sep 2013 23:01:29 +0200
+Message-ID: <1379019689-21467-1-git-send-email-linux@rainbow-software.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
+The test for 2nd I/O port validity is broken (reversed):
+On devices with no control port, the driver attempts to use invalid port 0,
+resulting in logs full of bad_io_access errors.
+On devices with control port, the driver does not use it.
 
-		Dear Customer=20
+Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+---
+ drivers/ata/pata_isapnp.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Make your first deposit and we will triple your bonus money up to =C2=A3=
-600.
-
-http://onlinecasino25.webnode.com/casino/casino5
-
-Best Regards,=20
-	=09
+diff --git a/drivers/ata/pata_isapnp.c b/drivers/ata/pata_isapnp.c
+index 4bceb88..b33d1f9 100644
+--- a/drivers/ata/pata_isapnp.c
++++ b/drivers/ata/pata_isapnp.c
+@@ -78,7 +78,7 @@ static int isapnp_init_one(struct pnp_dev *idev, const struct pnp_device_id *dev
+ 
+ 	ap->ioaddr.cmd_addr = cmd_addr;
+ 
+-	if (pnp_port_valid(idev, 1) == 0) {
++	if (pnp_port_valid(idev, 1)) {
+ 		ctl_addr = devm_ioport_map(&idev->dev,
+ 					   pnp_port_start(idev, 1), 1);
+ 		ap->ioaddr.altstatus_addr = ctl_addr;
+-- 
+Ondrej Zary
