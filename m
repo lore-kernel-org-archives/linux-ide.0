@@ -1,56 +1,36 @@
-From: Michael Ellerman <michael@ellerman.id.au>
-Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
-Date: Wed, 18 Sep 2013 00:30:23 +1000
-Message-ID: <20130917143022.GA7707@concordia>
-References: <20130905150442.GA24148@htj.dyndns.org>
- <20130905154041.GD30984@dhcp-26-207.brq.redhat.com>
- <20130905154436.GC24148@htj.dyndns.org>
- <20130905185440.GA13175@dhcp-26-207.brq.redhat.com>
- <20130905200608.GA3846@htj.dyndns.org>
- <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
- <20130906160621.GF22763@mtj.dyndns.org>
- <20130906233205.GF12956@google.com>
- <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
- <20130916102210.GA14102@dhcp-26-207.brq.redhat.com>
+From: Joe Perches <joe@perches.com>
+Subject: Re: [PATCH] ahci: Changing two module params with static and
+ __read_mostly
+Date: Tue, 17 Sep 2013 09:24:24 -0700
+Message-ID: <1379435064.2012.8.camel@joe-AO722>
+References: <1379436518.26153.31.camel@cliu38-desktop-build>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20130916102210.GA14102@dhcp-26-207.brq.redhat.com>
+In-Reply-To: <1379436518.26153.31.camel@cliu38-desktop-build>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Tejun Heo <tj@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "x86@kernel.org" <x86@kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>, Jan Beulich <JBeulich@suse.com>, Bjorn Helgaas <bhelgaas@google.com>, linuxppc-dev@lists.ozlabs.org
+To: Chuansheng Liu <chuansheng.liu@intel.com>
+Cc: tj@kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Mon, Sep 16, 2013 at 12:22:11PM +0200, Alexander Gordeev wrote:
-> On Mon, Sep 09, 2013 at 05:20:44PM +0200, Alexander Gordeev wrote:
-> > On Fri, Sep 06, 2013 at 05:32:05PM -0600, Bjorn Helgaas wrote:
-> > > I propose that you rework it that way, and at least find out what
-> > > (if anything) would break if we do that.  Or maybe we just give up
-> > > some optimization; it would be nice to quantify that, too.
-> > 
-> > Hi Bjorn,
-> > 
-> > The series is what it seems a direction to take.
-> > 
-> > Looks like we need PPC folks to agree on the quota check update
-> > for pSeries (yes, they do bail out with a positive return value
-> > from arch_msi_check_device()):
+On Wed, 2013-09-18 at 00:48 +0800, Chuansheng Liu wrote:
+> Here module parameters ahci_em_messages and devslp_idle_timeout can
+> be set as static and __read_mostly.
 > 
-> Hi Ben,
+> Signed-off-by: Liu, Chuansheng <chuansheng.liu@intel.com>
+> ---
+>  drivers/ata/libahci.c |    5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
 > 
-> An initiative to simplify MSI/MSI-X allocation interface is brewing.
-> It seems pSeries quota thing is an obstacle. If it could be given up
-> (patch 2/9).
+> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+[]
+> @@ -189,14 +189,15 @@ struct ata_port_operations ahci_pmp_retry_srst_ops = {
+>  };
+>  EXPORT_SYMBOL_GPL(ahci_pmp_retry_srst_ops);
+>  
+> -int ahci_em_messages = 1;
+> +static int ahci_em_messages __read_mostly = 1;
 
-How about no?
-
-We have a small number of MSIs available, limited by hardware &
-firmware, if we don't impose a quota then the first device that probes
-will get most/all of the MSIs and other devices miss out.
-
-Anyway I don't see what problem you're trying to solve? I agree the
--ve/0/+ve return value pattern is ugly, but it's hardly the end of the
-world.
-
-cheers
+This one could also be converted to
+static bool ahci_em_messages __read_mostly = true;
