@@ -1,54 +1,54 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
-Date: Mon, 16 Sep 2013 12:22:11 +0200
-Message-ID: <20130916102210.GA14102@dhcp-26-207.brq.redhat.com>
-References: <20130905150259.GA30984@dhcp-26-207.brq.redhat.com>
- <20130905150442.GA24148@htj.dyndns.org>
- <20130905154041.GD30984@dhcp-26-207.brq.redhat.com>
- <20130905154436.GC24148@htj.dyndns.org>
- <20130905185440.GA13175@dhcp-26-207.brq.redhat.com>
- <20130905200608.GA3846@htj.dyndns.org>
- <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
- <20130906160621.GF22763@mtj.dyndns.org>
- <20130906233205.GF12956@google.com>
- <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
+From: Chuansheng Liu <chuansheng.liu@intel.com>
+Subject: [PATCH] ahci: Changing two module params with static and
+ __read_mostly
+Date: Wed, 18 Sep 2013 00:48:38 +0800
+Message-ID: <1379436518.26153.31.camel@cliu38-desktop-build>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:63002 "EHLO mx1.redhat.com"
+Received: from mga02.intel.com ([134.134.136.20]:32646 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755309Ab3IPLUQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 16 Sep 2013 07:20:16 -0400
-Content-Disposition: inline
-In-Reply-To: <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
+	id S1751763Ab3IQHZj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 17 Sep 2013 03:25:39 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Tejun Heo <tj@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "x86@kernel.org" <x86@kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>, Jan Beulich <JBeulich@suse.com>, Bjorn Helgaas <bhelgaas@google.com>, linuxppc-dev@lists.ozlabs.org
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, chuansheng.liu@intel.com
 
-On Mon, Sep 09, 2013 at 05:20:44PM +0200, Alexander Gordeev wrote:
-> On Fri, Sep 06, 2013 at 05:32:05PM -0600, Bjorn Helgaas wrote:
-> > I propose that you rework it that way, and at least find out what
-> > (if anything) would break if we do that.  Or maybe we just give up
-> > some optimization; it would be nice to quantify that, too.
-> 
-> Hi Bjorn,
-> 
-> The series is what it seems a direction to take.
-> 
-> Looks like we need PPC folks to agree on the quota check update
-> for pSeries (yes, they do bail out with a positive return value
-> from arch_msi_check_device()):
 
-Hi Ben,
+Here module parameters ahci_em_messages and devslp_idle_timeout can
+be set as static and __read_mostly.
 
-An initiative to simplify MSI/MSI-X allocation interface is brewing.
-It seems pSeries quota thing is an obstacle. If it could be given up
-(patch 2/9).
+Signed-off-by: Liu, Chuansheng <chuansheng.liu@intel.com>
+---
+ drivers/ata/libahci.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-Thanks!
-
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index acfd0f7..1757631 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -189,14 +189,15 @@ struct ata_port_operations ahci_pmp_retry_srst_ops = {
+ };
+ EXPORT_SYMBOL_GPL(ahci_pmp_retry_srst_ops);
+ 
+-int ahci_em_messages = 1;
++static int ahci_em_messages __read_mostly = 1;
+ EXPORT_SYMBOL_GPL(ahci_em_messages);
+ module_param(ahci_em_messages, int, 0444);
+ /* add other LED protocol types when they become supported */
+ MODULE_PARM_DESC(ahci_em_messages,
+ 	"AHCI Enclosure Management Message control (0 = off, 1 = on)");
+ 
+-int devslp_idle_timeout = 1000;	/* device sleep idle timeout in ms */
++/* device sleep idle timeout in ms */
++static int devslp_idle_timeout __read_mostly = 1000;
+ module_param(devslp_idle_timeout, int, 0644);
+ MODULE_PARM_DESC(devslp_idle_timeout, "device sleep idle timeout");
+ 
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+1.7.9.5
+
+
+
