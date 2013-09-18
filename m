@@ -1,57 +1,97 @@
-From: Chuansheng Liu <chuansheng.liu@intel.com>
-Subject: [PATCH V2] ahci: Changing two module params with static and
- __read_mostly
-Date: Wed, 18 Sep 2013 20:21:49 +0800
-Message-ID: <1379506909.26153.33.camel@cliu38-desktop-build>
-References: <1379436518.26153.31.camel@cliu38-desktop-build>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
+Date: Wed, 18 Sep 2013 11:48:00 +0200
+Message-ID: <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
+References: <20130905154041.GD30984@dhcp-26-207.brq.redhat.com>
+ <20130905154436.GC24148@htj.dyndns.org>
+ <20130905185440.GA13175@dhcp-26-207.brq.redhat.com>
+ <20130905200608.GA3846@htj.dyndns.org>
+ <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
+ <20130906160621.GF22763@mtj.dyndns.org>
+ <20130906233205.GF12956@google.com>
+ <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
+ <20130916102210.GA14102@dhcp-26-207.brq.redhat.com>
+ <20130917143022.GA7707@concordia>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:7951 "EHLO mga14.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:39804 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751136Ab3IRC7V (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 17 Sep 2013 22:59:21 -0400
-In-Reply-To: <1379436518.26153.31.camel@cliu38-desktop-build>
+	id S1751388Ab3IRJqL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 18 Sep 2013 05:46:11 -0400
+Content-Disposition: inline
+In-Reply-To: <20130917143022.GA7707@concordia>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org, joe@perches.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, chuansheng.liu@intel.com
+To: Michael Ellerman <michael@ellerman.id.au>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Tejun Heo <tj@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "x86@kernel.org" <x86@kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>, Jan Beulich <JBeulich@suse.com>, Bjorn Helgaas <bhelgaas@google.com>, linuxppc-dev@lists.ozlabs.org
 
+On Wed, Sep 18, 2013 at 12:30:23AM +1000, Michael Ellerman wrote:
+> How about no?
+> 
+> We have a small number of MSIs available, limited by hardware &
+> firmware, if we don't impose a quota then the first device that probes
+> will get most/all of the MSIs and other devices miss out.
 
-Here module parameters ahci_em_messages and devslp_idle_timeout can
-be set as static and __read_mostly.
+Out of curiosity - how pSeries has had done it without quotas before
+448e2ca ("powerpc/pseries: Implement a quota system for MSIs")?
 
-Signed-off-by: Liu, Chuansheng <chuansheng.liu@intel.com>
----
- drivers/ata/libahci.c |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+> Anyway I don't see what problem you're trying to solve? I agree the
+> -ve/0/+ve return value pattern is ugly, but it's hardly the end of the
+> world.
 
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index acfd0f7..b67086f 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -189,14 +189,15 @@ struct ata_port_operations ahci_pmp_retry_srst_ops = {
- };
- EXPORT_SYMBOL_GPL(ahci_pmp_retry_srst_ops);
- 
--int ahci_em_messages = 1;
-+static bool ahci_em_messages __read_mostly = true;
- EXPORT_SYMBOL_GPL(ahci_em_messages);
--module_param(ahci_em_messages, int, 0444);
-+module_param(ahci_em_messages, bool, 0444);
- /* add other LED protocol types when they become supported */
- MODULE_PARM_DESC(ahci_em_messages,
- 	"AHCI Enclosure Management Message control (0 = off, 1 = on)");
- 
--int devslp_idle_timeout = 1000;	/* device sleep idle timeout in ms */
-+/* device sleep idle timeout in ms */
-+static int devslp_idle_timeout __read_mostly = 1000;
- module_param(devslp_idle_timeout, int, 0644);
- MODULE_PARM_DESC(devslp_idle_timeout, "device sleep idle timeout");
- 
+Well, the interface recently has been re-classified from "ugly" to
+"unnecessarily complex and actively harmful" in Tejun's words ;)
+
+Indeed, I checked most of the drivers and it is incredible how people
+are creative in misusing the interface: from innocent pci_disable_msix()
+calls when if pci_enable_msix() failed to assuming MSI-Xs were enabled
+if pci_enable_msix() returned a positive value (apparently untested).
+
+Roughly third of the drivers just do not care and bail out once
+pci_enable_msix() has not succeeded. Not sure how many of these are
+mandated by the hardware.
+
+Another quite common pattern is a call to pci_enable_msix() to figure out
+the number of MSI-Xs available and a repeated call of pci_enable_msix()
+to enable those MSI-Xs, this time.
+
+The last pattern makes most of sense to me and could be updated with a more
+clear sequence - a call to (bit modified) pci_msix_table_size() followed
+by a call to pci_enable_msix(). I think this pattern can effectively
+supersede the currently recommended "loop" practice.
+
+But as pSeries quota is still required I propose to introduce a new interface
+pci_get_msix_limit() that combines pci_msix_table_size() and (also new)
+arch_get_msix_limit(). The latter would check the quota thing in case of
+pSeries and none in case of all other architectures.
+
+The recommended practice would be:
+
+	/*
+	 * Retrieving 'nvec' by means other than pci_msix_table_size()
+	 */
+
+	rc = pci_get_msix_limit(pdev);
+	if (rc < 0)
+		return rc;
+
+	/*
+	 * nvec = min(rc, nvec);
+	 */
+
+	for (i = 0; i < nvec; i++)
+		msix_entry[i].entry = i;
+
+	rc = pci_enable_msix(pdev, msix_entry, nvec);
+	if (rc)
+		return rc;
+
+Thoughts?
+
+> cheers
+
 -- 
-1.7.9.5
-
-
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
