@@ -1,119 +1,105 @@
 From: Roger Quadros <rogerq@ti.com>
-Subject: [RFC PATCH 10/15] ARM: omap5: hwmod: Add ocp2scp3 and sata hwmods
-Date: Thu, 19 Sep 2013 16:22:27 +0300
-Message-ID: <1379596947-15213-1-git-send-email-rogerq@ti.com>
+Subject: [RFC PATCH 11/15] arm: omap5: hwmod: add missing ocp2scp hwmod data
+Date: Thu, 19 Sep 2013 16:23:26 +0300
+Message-ID: <1379597006-15257-1-git-send-email-rogerq@ti.com>
 References: <1379595943-14622-1-git-send-email-rogerq@ti.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
 In-Reply-To: <1379595943-14622-1-git-send-email-rogerq@ti.com>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
 To: balbi@ti.com, bcousson@baylibre.com, tony@atomide.com
-Cc: balajitk@ti.com, kishon@ti.com, linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, Roger Quadros <rogerq@ti.com>
+Cc: devicetree@vger.kernel.org, balajitk@ti.com, linux-kernel@vger.kernel.org, kishon@ti.com, linux-ide@vger.kernel.org, linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-From: Keshava Munegowda <keshava_mgowda@ti.com>
+From: Benoit Cousson <bcousson@baylibre.com>
 
-Create hwmods for ocp2scp3 and sata modules.
+without that hwmod data, USB3 will not in OMAP5 boards.
 
-[Roger Q] Clean up.
-
-CC: Benoit Cousson <bcousson@baylibre.com>
-Signed-off-by: Balaji T K <balajitk@ti.com>
-Signed-off-by: Roger Quadros <rogerq@ti.com>
+Signed-off-by: Benoit Cousson <bcousson@baylibre.com>
+Signed-off-by: Felipe Balbi <balbi@ti.com>
 ---
- arch/arm/mach-omap2/omap_hwmod_54xx_data.c |   72 ++++++++++++++++++++++++++++
- 1 files changed, 72 insertions(+), 0 deletions(-)
+ arch/arm/mach-omap2/omap_hwmod_54xx_data.c |   45 ++++++++++++++++++++++++++++
+ 1 files changed, 45 insertions(+), 0 deletions(-)
 
 diff --git a/arch/arm/mach-omap2/omap_hwmod_54xx_data.c b/arch/arm/mach-omap2/omap_hwmod_54xx_data.c
-index 3dae6b9..2b698b8 100644
+index 2b698b8..e7d4fcb 100644
 --- a/arch/arm/mach-omap2/omap_hwmod_54xx_data.c
 +++ b/arch/arm/mach-omap2/omap_hwmod_54xx_data.c
-@@ -1545,6 +1545,76 @@ static struct omap_hwmod omap54xx_wd_timer2_hwmod = {
- 	},
+@@ -1146,6 +1146,42 @@ static struct omap_hwmod omap54xx_mpu_hwmod = {
  };
  
-+/*
+ /*
 + * 'ocp2scp' class
 + * bridge to transform ocp interface protocol to scp (serial control port)
 + * protocol
 + */
-+/* ocp2scp3 */
-+static struct omap_hwmod omap54xx_ocp2scp3_hwmod;
-+/* l4_cfg -> ocp2scp3 */
-+static struct omap_hwmod_ocp_if omap54xx_l4_cfg__ocp2scp3 = {
-+	.master		= &omap54xx_l4_cfg_hwmod,
-+	.slave		= &omap54xx_ocp2scp3_hwmod,
-+	.clk		= "l4_root_clk_div",
-+	.user		= OCP_USER_MPU | OCP_USER_SDMA,
++
++static struct omap_hwmod_class_sysconfig omap54xx_ocp2scp_sysc = {
++	.rev_offs	= 0x0000,
++	.sysc_offs	= 0x0010,
++	.syss_offs	= 0x0014,
++	.sysc_flags	= (SYSC_HAS_AUTOIDLE | SYSC_HAS_SIDLEMODE |
++			SYSC_HAS_SOFTRESET | SYSS_HAS_RESET_STATUS),
++	.idlemodes	= (SIDLE_FORCE | SIDLE_NO | SIDLE_SMART),
++	.sysc_fields	= &omap_hwmod_sysc_type1,
 +};
 +
-+static struct omap_hwmod omap54xx_ocp2scp3_hwmod = {
-+	.name		= "ocp2scp3",
++static struct omap_hwmod_class omap54xx_ocp2scp_hwmod_class = {
++	.name	= "ocp2scp",
++	.sysc	= &omap54xx_ocp2scp_sysc,
++};
++
++/* ocp2scp1 */
++static struct omap_hwmod omap54xx_ocp2scp1_hwmod = {
++	.name		= "ocp2scp1",
 +	.class		= &omap54xx_ocp2scp_hwmod_class,
 +	.clkdm_name	= "l3init_clkdm",
++	.main_clk	= "l4_root_clk_div",
 +	.prcm = {
 +		.omap4 = {
-+			.clkctrl_offs = OMAP54XX_CM_L3INIT_OCP2SCP3_CLKCTRL_OFFSET,
-+			.context_offs = OMAP54XX_RM_L3INIT_OCP2SCP3_CONTEXT_OFFSET,
++			.clkctrl_offs = OMAP54XX_CM_L3INIT_OCP2SCP1_CLKCTRL_OFFSET,
++			.context_offs = OMAP54XX_RM_L3INIT_OCP2SCP1_CONTEXT_OFFSET,
 +			.modulemode   = MODULEMODE_HWCTRL,
 +		},
 +	},
 +};
 +
 +/*
-+ * 'sata' class
-+ * sata:  serial ata interface  gen2 compliant   ( 1 rx/ 1 tx)
-+ */
-+
-+static struct omap_hwmod_class_sysconfig omap54xx_sata_sysc = {
-+	.sysc_offs	= 0x0000,
-+	.sysc_flags	= (SYSC_HAS_MIDLEMODE | SYSC_HAS_SIDLEMODE),
-+	.idlemodes	= (SIDLE_FORCE | SIDLE_NO | SIDLE_SMART |
-+			   SIDLE_SMART_WKUP | MSTANDBY_FORCE | MSTANDBY_NO |
-+			   MSTANDBY_SMART | MSTANDBY_SMART_WKUP),
-+	.sysc_fields	= &omap_hwmod_sysc_type2,
-+};
-+
-+static struct omap_hwmod_class omap54xx_sata_hwmod_class = {
-+	.name	= "sata",
-+	.sysc	= &omap54xx_sata_sysc,
-+};
-+
-+/* sata */
-+static struct omap_hwmod omap54xx_sata_hwmod = {
-+	.name		= "sata",
-+	.class		= &omap54xx_sata_hwmod_class,
-+	.clkdm_name	= "l3init_clkdm",
-+	.flags		= HWMOD_SWSUP_SIDLE | HWMOD_SWSUP_MSTANDBY,
-+	.main_clk	= "func_48m_fclk",
-+	.prcm = {
-+		.omap4 = {
-+			.clkctrl_offs = OMAP54XX_CM_L3INIT_SATA_CLKCTRL_OFFSET,
-+			.context_offs = OMAP54XX_RM_L3INIT_SATA_CONTEXT_OFFSET,
-+			.modulemode   = MODULEMODE_SWCTRL,
-+		},
-+	},
-+};
-+
-+/* l4_cfg -> sata */
-+static struct omap_hwmod_ocp_if omap54xx_l4_cfg__sata = {
-+	.master		= &omap54xx_l4_cfg_hwmod,
-+	.slave		= &omap54xx_sata_hwmod,
-+	.clk		= "l3_iclk_div",
-+	.user		= OCP_USER_MPU | OCP_USER_SDMA,
-+};
- 
- /*
-  * Interfaces
-@@ -2192,6 +2262,8 @@ static struct omap_hwmod_ocp_if *omap54xx_hwmod_ocp_ifs[] __initdata = {
- 	&omap54xx_l4_per__uart6,
- 	&omap54xx_l4_cfg__usb_otg_ss,
- 	&omap54xx_l4_wkup__wd_timer2,
-+	&omap54xx_l4_cfg__ocp2scp3,
-+	&omap54xx_l4_cfg__sata,
- 	NULL,
+  * 'timer' class
+  * general purpose timer module with accurate 1ms tick
+  * This class contains several variants: ['timer_1ms', 'timer']
+@@ -2040,6 +2076,14 @@ static struct omap_hwmod_ocp_if omap54xx_l4_cfg__mpu = {
+ 	.user		= OCP_USER_MPU | OCP_USER_SDMA,
  };
  
++/* l4_cfg -> ocp2scp1 */
++static struct omap_hwmod_ocp_if omap54xx_l4_cfg__ocp2scp1 = {
++	.master		= &omap54xx_l4_cfg_hwmod,
++	.slave		= &omap54xx_ocp2scp1_hwmod,
++	.clk		= "l4_root_clk_div",
++	.user		= OCP_USER_MPU | OCP_USER_SDMA,
++};
++
+ /* l4_wkup -> timer1 */
+ static struct omap_hwmod_ocp_if omap54xx_l4_wkup__timer1 = {
+ 	.master		= &omap54xx_l4_wkup_hwmod,
+@@ -2243,6 +2287,7 @@ static struct omap_hwmod_ocp_if *omap54xx_hwmod_ocp_ifs[] __initdata = {
+ 	&omap54xx_l4_per__mmc4,
+ 	&omap54xx_l4_per__mmc5,
+ 	&omap54xx_l4_cfg__mpu,
++	&omap54xx_l4_cfg__ocp2scp1,
+ 	&omap54xx_l4_wkup__timer1,
+ 	&omap54xx_l4_per__timer2,
+ 	&omap54xx_l4_per__timer3,
 -- 
 1.7.4.1
