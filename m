@@ -1,64 +1,58 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
-Date: Fri, 20 Sep 2013 07:26:03 -0500
-Message-ID: <20130920122603.GC7630@mtj.dyndns.org>
-References: <20130905200608.GA3846@htj.dyndns.org>
- <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
- <20130906160621.GF22763@mtj.dyndns.org>
- <20130906233205.GF12956@google.com>
- <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
- <20130916102210.GA14102@dhcp-26-207.brq.redhat.com>
- <20130917143022.GA7707@concordia>
- <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
- <20130918142231.GA21650@mtj.dyndns.org>
- <20130918165045.GB2353@dhcp-26-207.brq.redhat.com>
+From: Russell King <rmk+kernel@arm.linux.org.uk>
+Subject: [PATCH 14/51] DMA-API: net: b43: replace
+ dma_set_mask()+dma_set_coherent_mask() with new helper
+Date: Thu, 19 Sep 2013 22:39:00 +0100
+Message-ID: <E1VMlwC-0007gl-Ez@rmk-PC.arm.linux.org.uk>
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ye0-f178.google.com ([209.85.213.178]:45198 "EHLO
-	mail-ye0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754490Ab3ITM0K (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Sep 2013 08:26:10 -0400
-Content-Disposition: inline
-In-Reply-To: <20130918165045.GB2353@dhcp-26-207.brq.redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <alsa-devel-bounces@alsa-project.org>
+In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+List-Unsubscribe: <http://mailman.alsa-project.org/mailman/options/alsa-devel>,
+ <mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
+List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel/>
+List-Post: <mailto:alsa-devel@alsa-project.org>
+List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
+List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
+ <mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
+Errors-To: alsa-devel-bounces@alsa-project.org
+Sender: alsa-devel-bounces@alsa-project.org
+To: alsa-devel@alsa-project.org, b43-dev@lists.infradead.org, devel@driverdev.osuosl.org, devicetree@vger.kernel.org, dri-devel@lists.freedesktop.org, e1000-devel@lists.sourceforge.net, linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-ide@vger.kernel.org, linux-media@vger.kernel.org, linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org, linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org, netdev@vger.kernel.org, Solarflare linux maintainers <linux-net-drivers@solarflare.com>, uclinux-dist-devel@blackfin.uclinux.org
+Cc: "John W. Linville" <linville@tuxdriver.com>, Stefano Brivio <stefano.brivio@polimi.it>
 List-Id: linux-ide@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Michael Ellerman <michael@ellerman.id.au>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "x86@kernel.org" <x86@kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>, Jan Beulich <JBeulich@suse.com>, Bjorn Helgaas <bhelgaas@google.com>, linuxppc-dev@lists.ozlabs.org
 
-Hello,
+Replace the following sequence:
 
-On Wed, Sep 18, 2013 at 06:50:45PM +0200, Alexander Gordeev wrote:
-> Actually, I do not see much contradiction with what I proposed. The
-> key words here "determine the number of MSIs the controller wants".
-> 
-> In general case it is not what pci_msix_table_size() returns (or at
-> least we should not limit ourselves to it) - there could be non-
-> standard means to report number of MSIs: hardcoded, version-dependant,
-> device-specific registers etc.
-> 
-> Next, if we opt to determine the number of MSIs by non-MSI standard
-> means then there is no reason not to call pci_get_msix_limit() (or
-> whatever) at this step.
+	dma_set_mask(dev, mask);
+	dma_set_coherent_mask(dev, mask);
 
-Yeah, that's all fine.  My point is that we shouldn't try to use
-"degraded" multiple MSI mode where the number of MSIs allocated is
-smaller than performing full multiple MSI operation.  How that number
-is determined doesn't really matter but that number is a property
-which is solely decided by the device driver, right?  If a device
-needs full multiple MSI mode, given specific configuration, it needs
->= X number of MSIs and that's the number it should request.
+with a call to the new helper dma_set_mask_and_coherent().
 
-> Being Captain Obvious here, but it is up to the device driver to handle
-> a failure. There could be no such option as single MSI mode after all :)
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+---
+ drivers/net/wireless/b43/dma.c |    9 +++------
+ 1 files changed, 3 insertions(+), 6 deletions(-)
 
-I don't think there actually is a mainstream device which can't
-fallback to single interrupt.  Anyways, the point is the same, let's
-please not try to create an interface which encourages complex retry
-logic in its users which are likely to involve less traveled and
-tested paths in both the driver and firmware.
-
-Thanks.
-
+diff --git a/drivers/net/wireless/b43/dma.c b/drivers/net/wireless/b43/dma.c
+index c51d2dc..1d7982a 100644
+--- a/drivers/net/wireless/b43/dma.c
++++ b/drivers/net/wireless/b43/dma.c
+@@ -1065,12 +1065,9 @@ static int b43_dma_set_mask(struct b43_wldev *dev, u64 mask)
+ 	/* Try to set the DMA mask. If it fails, try falling back to a
+ 	 * lower mask, as we can always also support a lower one. */
+ 	while (1) {
+-		err = dma_set_mask(dev->dev->dma_dev, mask);
+-		if (!err) {
+-			err = dma_set_coherent_mask(dev->dev->dma_dev, mask);
+-			if (!err)
+-				break;
+-		}
++		err = dma_set_mask_and_coherent(dev->dev->dma_dev, mask);
++		if (!err)
++			break;
+ 		if (mask == DMA_BIT_MASK(64)) {
+ 			mask = DMA_BIT_MASK(32);
+ 			fallback = true;
 -- 
-tejun
+1.7.4.4
