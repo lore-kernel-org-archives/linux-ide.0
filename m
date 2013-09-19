@@ -1,7 +1,7 @@
 From: Roger Quadros <rogerq@ti.com>
-Subject: [RFC PATCH 05/15] phy: omap-pipe3: Add SATA DPLL support
-Date: Thu, 19 Sep 2013 16:05:33 +0300
-Message-ID: <1379595943-14622-6-git-send-email-rogerq@ti.com>
+Subject: [RFC PATCH 10/15] ARM: omap5: hwmod: Add ocp2scp3 and sata hwmods
+Date: Thu, 19 Sep 2013 16:22:27 +0300
+Message-ID: <1379596947-15213-1-git-send-email-rogerq@ti.com>
 References: <1379595943-14622-1-git-send-email-rogerq@ti.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,180 +12,108 @@ To: balbi@ti.com, bcousson@baylibre.com, tony@atomide.com
 Cc: balajitk@ti.com, kishon@ti.com, linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, Roger Quadros <rogerq@ti.com>
 List-Id: linux-ide@vger.kernel.org
 
-USB and SATA DPLLs need different settings. Provide
-the SATA DPLL settings and use the proper DPLL settings
-based on device tree compatible_id.
+From: Keshava Munegowda <keshava_mgowda@ti.com>
 
+Create hwmods for ocp2scp3 and sata modules.
+
+[Roger Q] Clean up.
+
+CC: Benoit Cousson <bcousson@baylibre.com>
+Signed-off-by: Balaji T K <balajitk@ti.com>
 Signed-off-by: Roger Quadros <rogerq@ti.com>
 ---
- drivers/phy/phy-omap-pipe3.c   |   82 ++++++++++++++++++++++++++--------------
- include/linux/phy/omap_pipe3.h |    6 +++
- 2 files changed, 60 insertions(+), 28 deletions(-)
+ arch/arm/mach-omap2/omap_hwmod_54xx_data.c |   72 ++++++++++++++++++++++++++++
+ 1 files changed, 72 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/phy/phy-omap-pipe3.c b/drivers/phy/phy-omap-pipe3.c
-index 807ab8a..19d1664 100644
---- a/drivers/phy/phy-omap-pipe3.c
-+++ b/drivers/phy/phy-omap-pipe3.c
-@@ -58,29 +58,41 @@
-  */
- # define PLL_IDLE_TIME  100;
+diff --git a/arch/arm/mach-omap2/omap_hwmod_54xx_data.c b/arch/arm/mach-omap2/omap_hwmod_54xx_data.c
+index 3dae6b9..2b698b8 100644
+--- a/arch/arm/mach-omap2/omap_hwmod_54xx_data.c
++++ b/arch/arm/mach-omap2/omap_hwmod_54xx_data.c
+@@ -1545,6 +1545,76 @@ static struct omap_hwmod omap54xx_wd_timer2_hwmod = {
+ 	},
+ };
  
--struct pipe3_dpll_map {
--	unsigned long rate;
--	struct pipe3_dpll_params params;
--};
--
--static struct pipe3_dpll_map dpll_map[] = {
-+static struct pipe3_dpll_map dpll_map_usb[] = {
- 	{12000000, {1250, 5, 4, 20, 0} },	/* 12 MHz */
- 	{16800000, {3125, 20, 4, 20, 0} },	/* 16.8 MHz */
- 	{19200000, {1172, 8, 4, 20, 65537} },	/* 19.2 MHz */
- 	{20000000, {1000, 7, 4, 10, 0} },	/* 20 MHz */
- 	{26000000, {1250, 12, 4, 20, 0} },	/* 26 MHz */
- 	{38400000, {3125, 47, 4, 20, 92843} },	/* 38.4 MHz */
-+	{ },					/* Terminator */
++/*
++ * 'ocp2scp' class
++ * bridge to transform ocp interface protocol to scp (serial control port)
++ * protocol
++ */
++/* ocp2scp3 */
++static struct omap_hwmod omap54xx_ocp2scp3_hwmod;
++/* l4_cfg -> ocp2scp3 */
++static struct omap_hwmod_ocp_if omap54xx_l4_cfg__ocp2scp3 = {
++	.master		= &omap54xx_l4_cfg_hwmod,
++	.slave		= &omap54xx_ocp2scp3_hwmod,
++	.clk		= "l4_root_clk_div",
++	.user		= OCP_USER_MPU | OCP_USER_SDMA,
 +};
 +
-+static struct pipe3_dpll_map dpll_map_sata[] = {
-+	{12000000, {1000, 7, 4, 6, 0} },	/* 12 MHz */
-+	{16800000, {714, 7, 4, 6, 0} },		/* 16.8 MHz */
-+	{19200000, {625, 7, 4, 6, 0} },		/* 19.2 MHz */
-+	{20000000, {600, 7, 4, 6, 0} },		/* 20 MHz */
-+	{26000000, {461, 7, 4, 6, 0} },		/* 26 MHz */
-+	{38400000, {312, 7, 4, 6, 0} },		/* 38.4 MHz */
-+	{ },					/* Terminator */
- };
- 
--static struct pipe3_dpll_params *omap_pipe3_get_dpll_params(unsigned long rate)
-+static struct pipe3_dpll_params *omap_pipe3_get_dpll_params(struct omap_pipe3
-+									*pipe3)
- {
--	int i;
-+	unsigned long rate;
-+	struct pipe3_dpll_map *dpll_map = pipe3->dpll_map;
- 
--	for (i = 0; i < ARRAY_SIZE(dpll_map); i++) {
--		if (rate == dpll_map[i].rate)
--			return &dpll_map[i].params;
-+	rate = clk_get_rate(pipe3->sys_clk);
-+
-+	for (; dpll_map->rate; dpll_map++) {
-+		if (rate == dpll_map->rate)
-+			return &dpll_map->params;
- 	}
- 
-+	dev_err(pipe3->dev,
-+		  "No DPLL configuration for %lu Hz SYS CLK\n", rate);
- 	return 0;
- }
- 
-@@ -148,10 +160,8 @@ static int omap_pipe3_dpll_lock(struct omap_pipe3 *phy)
- 	struct pipe3_dpll_params *dpll_params;
- 
- 	rate = clk_get_rate(phy->sys_clk);
--	dpll_params = omap_pipe3_get_dpll_params(rate);
-+	dpll_params = omap_pipe3_get_dpll_params(phy);
- 	if (!dpll_params) {
--		dev_err(phy->dev,
--			  "No DPLL configuration for %lu Hz SYS CLK\n", rate);
- 		return -EINVAL;
- 	}
- 
-@@ -206,6 +216,25 @@ static struct phy_ops ops = {
- 	.owner		= THIS_MODULE,
- };
- 
-+#ifdef CONFIG_OF
-+static const struct of_device_id omap_pipe3_id_table[] = {
-+	{
-+		.compatible = "ti,omap-pipe3",
-+		.data = dpll_map_usb,
++static struct omap_hwmod omap54xx_ocp2scp3_hwmod = {
++	.name		= "ocp2scp3",
++	.class		= &omap54xx_ocp2scp_hwmod_class,
++	.clkdm_name	= "l3init_clkdm",
++	.prcm = {
++		.omap4 = {
++			.clkctrl_offs = OMAP54XX_CM_L3INIT_OCP2SCP3_CLKCTRL_OFFSET,
++			.context_offs = OMAP54XX_RM_L3INIT_OCP2SCP3_CONTEXT_OFFSET,
++			.modulemode   = MODULEMODE_HWCTRL,
++		},
 +	},
-+	{
-+		.compatible = "ti,omap-sata",
-+		.data = dpll_map_sata,
-+	},
-+	{
-+		.compatible = "ti,omap-usb3",
-+		.data = dpll_map_usb,
-+	},
-+	{},
-+};
-+MODULE_DEVICE_TABLE(of, omap_pipe3_id_table);
-+#endif
-+
- static int omap_pipe3_probe(struct platform_device *pdev)
- {
- 	struct omap_pipe3 *phy;
-@@ -215,9 +244,7 @@ static int omap_pipe3_probe(struct platform_device *pdev)
- 	struct device_node *node = pdev->dev.of_node;
- 	struct device_node *control_node;
- 	struct platform_device *control_pdev;
--
--	if (!node)
--		return -EINVAL;
-+	const struct of_device_id *match;
- 
- 	phy = devm_kzalloc(&pdev->dev, sizeof(*phy), GFP_KERNEL);
- 	if (!phy) {
-@@ -225,6 +252,16 @@ static int omap_pipe3_probe(struct platform_device *pdev)
- 		return -ENOMEM;
- 	}
- 
-+	match = of_match_device(of_match_ptr(omap_pipe3_id_table), &pdev->dev);
-+	if (!match)
-+		return -EINVAL;
-+
-+	phy->dpll_map = (struct pipe3_dpll_map *)match->data;
-+	if (!phy->dpll_map) {
-+		dev_err(&pdev->dev, "no dpll data\n");
-+		return -EINVAL;
-+	}
-+
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "pll_ctrl");
- 	phy->pll_ctrl_base = devm_ioremap_resource(&pdev->dev, res);
- 	if (IS_ERR(phy->pll_ctrl_base))
-@@ -354,17 +391,6 @@ static const struct dev_pm_ops omap_pipe3_pm_ops = {
- #define DEV_PM_OPS     NULL
- #endif
- 
--#ifdef CONFIG_OF
--static const struct of_device_id omap_pipe3_id_table[] = {
--	{ .compatible = "ti,omap-pipe3" },
--	{ .compatible = "ti,omap-sata" },
--	{ .compatible = "ti,omap-pcie" },
--	{ .compatible = "ti,omap-usb3" },
--	{}
--};
--MODULE_DEVICE_TABLE(of, omap_pipe3_id_table);
--#endif
--
- static struct platform_driver omap_pipe3_driver = {
- 	.probe		= omap_pipe3_probe,
- 	.remove		= omap_pipe3_remove,
-diff --git a/include/linux/phy/omap_pipe3.h b/include/linux/phy/omap_pipe3.h
-index 7329056..86825ca 100644
---- a/include/linux/phy/omap_pipe3.h
-+++ b/include/linux/phy/omap_pipe3.h
-@@ -29,6 +29,11 @@ struct pipe3_dpll_params {
- 	u32	mf;
- };
- 
-+struct pipe3_dpll_map {
-+	unsigned long rate;
-+	struct pipe3_dpll_params params;
 +};
 +
- struct omap_pipe3 {
- 	void __iomem		*pll_ctrl_base;
- 	struct device		*dev;
-@@ -36,6 +41,7 @@ struct omap_pipe3 {
- 	struct clk		*wkupclk;
- 	struct clk		*sys_clk;
- 	struct clk		*optclk;
-+	struct pipe3_dpll_map	*dpll_map;
++/*
++ * 'sata' class
++ * sata:  serial ata interface  gen2 compliant   ( 1 rx/ 1 tx)
++ */
++
++static struct omap_hwmod_class_sysconfig omap54xx_sata_sysc = {
++	.sysc_offs	= 0x0000,
++	.sysc_flags	= (SYSC_HAS_MIDLEMODE | SYSC_HAS_SIDLEMODE),
++	.idlemodes	= (SIDLE_FORCE | SIDLE_NO | SIDLE_SMART |
++			   SIDLE_SMART_WKUP | MSTANDBY_FORCE | MSTANDBY_NO |
++			   MSTANDBY_SMART | MSTANDBY_SMART_WKUP),
++	.sysc_fields	= &omap_hwmod_sysc_type2,
++};
++
++static struct omap_hwmod_class omap54xx_sata_hwmod_class = {
++	.name	= "sata",
++	.sysc	= &omap54xx_sata_sysc,
++};
++
++/* sata */
++static struct omap_hwmod omap54xx_sata_hwmod = {
++	.name		= "sata",
++	.class		= &omap54xx_sata_hwmod_class,
++	.clkdm_name	= "l3init_clkdm",
++	.flags		= HWMOD_SWSUP_SIDLE | HWMOD_SWSUP_MSTANDBY,
++	.main_clk	= "func_48m_fclk",
++	.prcm = {
++		.omap4 = {
++			.clkctrl_offs = OMAP54XX_CM_L3INIT_SATA_CLKCTRL_OFFSET,
++			.context_offs = OMAP54XX_RM_L3INIT_SATA_CONTEXT_OFFSET,
++			.modulemode   = MODULEMODE_SWCTRL,
++		},
++	},
++};
++
++/* l4_cfg -> sata */
++static struct omap_hwmod_ocp_if omap54xx_l4_cfg__sata = {
++	.master		= &omap54xx_l4_cfg_hwmod,
++	.slave		= &omap54xx_sata_hwmod,
++	.clk		= "l3_iclk_div",
++	.user		= OCP_USER_MPU | OCP_USER_SDMA,
++};
+ 
+ /*
+  * Interfaces
+@@ -2192,6 +2262,8 @@ static struct omap_hwmod_ocp_if *omap54xx_hwmod_ocp_ifs[] __initdata = {
+ 	&omap54xx_l4_per__uart6,
+ 	&omap54xx_l4_cfg__usb_otg_ss,
+ 	&omap54xx_l4_wkup__wd_timer2,
++	&omap54xx_l4_cfg__ocp2scp3,
++	&omap54xx_l4_cfg__sata,
+ 	NULL,
  };
  
- static inline u32 omap_pipe3_readl(void __iomem *addr, unsigned offset)
 -- 
 1.7.4.1
