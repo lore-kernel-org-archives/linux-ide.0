@@ -1,90 +1,83 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
-Date: Fri, 20 Sep 2013 17:19:16 +0200
-Message-ID: <20130920151915.GC10507@dhcp-26-207.brq.redhat.com>
-References: <1374195825.7397.997.camel@haakon3.risingtidesystems.com>
- <1374215660.7397.1041.camel@haakon3.risingtidesystems.com>
- <1374248000.2266.20.camel@dabdike>
- <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
- <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
- <51EAA33C.9010405@fusionio.com>
- <20130809191542.GD25306@dhcp-26-207.brq.redhat.com>
- <1376079457.5171.172.camel@haakon3.risingtidesystems.com>
- <20130815162316.GA27882@dhcp-26-207.brq.redhat.com>
- <1376619569.5171.217.camel@haakon3.risingtidesystems.com>
+From: Mark Brown <broonie@kernel.org>
+Subject: Re: [PATCH 28/51] DMA-API: sound: fix dma mask handling in a lot of
+ drivers
+Date: Fri, 20 Sep 2013 17:36:54 +0100
+Message-ID: <20130920163654.GN21013@sirena.org.uk>
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+ <E1VMm9m-0007ij-ER@rmk-PC.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47826 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751652Ab3ITPRd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 20 Sep 2013 11:17:33 -0400
-Content-Disposition: inline
-In-Reply-To: <1376619569.5171.217.camel@haakon3.risingtidesystems.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: multipart/mixed; boundary="===============4406136581201344290=="
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <E1VMm9m-0007ij-ER@rmk-PC.arm.linux.org.uk>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Russell King <rmk+kernel@arm.linux.org.uk>
+Cc: alsa-devel@alsa-project.org, linux-doc@vger.kernel.org, Takashi Iwai <tiwai@suse.de>, linux-mmc@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-nvme@lists.infradead.org, Jaroslav Kysela <perex@perex.cz>, Peter Ujfalusi <peter.ujfalusi@ti.com>, linux-ide@vger.kernel.org, devel@driverdev.osuosl.org, linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, e1000-devel@lists.sourceforge.net, b43-dev@lists.infradead.org, linux-media@vger.kernel.org, devicetree@vger.kernel.org, Haojian Zhuang <haojian.zhuang@gmail.com>, Timur Tabi <timur@tabi.org>, Kukjin Kim <kgene.kim@samsung.com>, dri-devel@lists.freedesktop.org, Ben Dooks <ben-linux@fluff.org>, linux-tegra@vger.kernel.org, linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Solarflare linux maintainers <linux-net-drivers@solarflare.com>, Eric Miao <eric.y.miao@gmail.com>, Sangbeom Kim <sbkim73@samsu>
 List-Id: linux-ide@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Mike Christie <mchristie@fusionio.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Garzik <jgarzik@pobox.com>, linux-scsi <linux-scsi@vger.kernel.org>
-
-On Thu, Aug 15, 2013 at 07:19:29PM -0700, Nicholas A. Bellinger wrote:
-> Ok, here's a bit better idea of what is going on now..
-> 
-> The problem is that blkdev_issue_flush() -> blk_mq_make_request() ->
-> __blk_mq_alloc_request() allocates the first tag, which calls
-> blk_insert_flush() -> blk_flush_complete_seq() -> blk_flush_kick() ->
-> mq_flush_work() -> blk_mq_alloc_request() to allocate a second tag for
-> the struct request that actually gets dispatched into scsi-mq as a
-> SYCHRONIZE_CACHE command..
-> 
-> I'm not exactly sure why this double tag usage of struct request is
-> occurring, but AFAICT it does happen for every flush, and is not
-> specific to the blkdev_issue_flush() codepath..  I'm sure that Jens can
-> fill us in on that bit.  ;)
-
-I also played with the double tag using a reserved tag (below).
-
-While it fixes 'fdisk /dev/sda' issue when trying to 'mount /dev/sda1 /mnt'
-what appears to be a call to bio->bi_end_io() from the free'd bio hits in.
-
-Not sure if I should pursue the root cause until the whole double-tag
-thingy is confirmed.
-
-Jens?
 
 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 6fc1df3..81794dc 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -874,14 +874,14 @@ static void blk_mq_make_request(struct request_queue *q, struct bio *bio)
- 	hctx = q->mq_ops->map_queue(q, ctx->cpu);
- 
- 	trace_block_getrq(q, bio, rw);
--	rq = __blk_mq_alloc_request(hctx, GFP_ATOMIC, false);
-+	rq = __blk_mq_alloc_request(hctx, GFP_ATOMIC, is_flush_fua);
- 	if (likely(rq))
- 		blk_mq_rq_ctx_init(ctx, rq, rw);
- 	else {
- 		blk_mq_put_ctx(ctx);
- 		trace_block_sleeprq(q, bio, rw);
- 		rq = blk_mq_alloc_request_pinned(q, rw, __GFP_WAIT|GFP_ATOMIC,
--							false);
-+							is_flush_fua);
- 		ctx = rq->mq_ctx;
- 		hctx = q->mq_ops->map_queue(q, ctx->cpu);
- 	}
-@@ -1317,6 +1317,9 @@ struct request_queue *blk_mq_init_queue(struct blk_mq_reg *reg,
- 		reg->queue_depth = BLK_MQ_MAX_DEPTH;
- 	}
- 
-+	reg->queue_depth++;
-+	reg->reserved_tags++;
-+
- 	ctx = alloc_percpu(struct blk_mq_ctx);
- 	if (!ctx)
- 		return ERR_PTR(-ENOMEM);
+--===============4406136581201344290==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="NbUNL4d9A9kY58qh"
+Content-Disposition: inline
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+
+--NbUNL4d9A9kY58qh
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Thu, Sep 19, 2013 at 10:53:02PM +0100, Russell King wrote:
+> This code sequence is unsafe in modules:
+>=20
+> static u64 mask =3D DMA_BIT_MASK(something);
+> ...
+> 	if (!dev->dma_mask)
+> 		dev->dma_mask =3D &mask;
+
+Acked-by: Mark Brown <broonie@linaro.org>
+
+--NbUNL4d9A9kY58qh
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.21 (GNU/Linux)
+
+iQIcBAEBAgAGBQJSPHmjAAoJELSic+t+oim9WB4QAINsf282vDwWmQYHGXTeorHo
+q0pJ/9bTwBrSE0KzOK9H6UvL7oxCgzMPOT8RiSjWcdEXX/FavpH1TCf+ETkaYyEA
+NaPvO/uUV/99qWhM/PJQvtv4yxhIR7ENiZKywUuFnWQuc44yGUWBLK8ooA4xXtme
+WMcWyy7SMMcP/+9eBd9aNe1FPYFirsqSrrCpWSR/fD+TWFKMB6HG+OZGNYRFMrRm
+Xet5sWMGwzBiL453M0ujAEHKd/g4VOkweCydEq+2Rt2am6ph+SrMuoQvCDZ1bvbh
+71nyYA+j2xNy8jb7AA9PukWoeXyAI0xRY8zh939Uvdxf4SPUIVgw9wJE5rMRGoT5
+k4We/z2A4m1DGCtg1JQN86HAe7jv3YlGLoPOhsrOnOEV55VnXIz0Lm9x3HjTNfvG
+LcJXBGeHmU3Jvj3JEpA57YDbOhpwx0klK7RS5v6BjIJrJUSwjATqt1WQVr528HDp
+rXQpUqxUL3KObdlA5TYweR2I0KxWe47rw612XGqhRiI+equSdTDP770QsO1nXlsA
+qCfn3Gh7t+hyB3yFZUquWEXwKVv0YMh3Ds/bR2RtZluSl3SzM9n/Dp45w6SMu1LN
+oSpxUS7KNzTPXQp0kns7dDFnJJWXid7mUScjK4rc5pSyBF4NSEqJsmqHm0whd/qL
+uR8J7AFq8DkXx3g+/4gf
+=H53r
+-----END PGP SIGNATURE-----
+
+--NbUNL4d9A9kY58qh--
+
+
+--===============4406136581201344290==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+--===============4406136581201344290==--
