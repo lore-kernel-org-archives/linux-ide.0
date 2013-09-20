@@ -1,53 +1,87 @@
-From: Heiko =?utf-8?q?St=C3=BCbner?= <heiko-4mtYJXux2i+zQB+pC5nmwQ@public.gmane.org>
-Subject: Re: [PATCH 24/51] DMA-API: dma: pl330: add
- dma_set_mask_and_coherent() call
-Date: Fri, 20 Sep 2013 19:26:27 +0200
-Message-ID: <201309201926.29084.heiko@sntech.de>
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Subject: Re: [PATCH 12/51] DMA-API: net: intel/e1000: replace
+ dma_set_mask()+dma_set_coherent_mask() with new helper
+Date: Fri, 20 Sep 2013 12:45:55 -0700
+Message-ID: <1379706355.1972.8.camel@jtkirshe-mobl>
 References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
- <E1VMm5t-0007i5-V7@rmk-PC.arm.linux.org.uk>
+ <E1VMluG-0007gV-6y@rmk-PC.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <b43-dev-bounces+gldbd-bcm43xx-dev=gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-In-Reply-To: <E1VMm5t-0007i5-V7-eh5Bv4kxaXIANfyc6IWni62ZND6+EDdj@public.gmane.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/b43-dev>,
- <mailto:b43-dev-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/b43-dev/>
-List-Post: <mailto:b43-dev-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-List-Help: <mailto:b43-dev-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/b43-dev>,
- <mailto:b43-dev-request-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org?subject=subscribe>
-Sender: "b43-dev" <b43-dev-bounces-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
-Errors-To: b43-dev-bounces+gldbd-bcm43xx-dev=gmane.org-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-To: Russell King <rmk+kernel-lFZ/pmaqli7XmaaqVzeoHQ@public.gmane.org>
-Cc: alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fbdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, linux-samsung-soc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, e1000-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, b43-dev-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-omap-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Solarflare linux maintainers <linux-net-drivers-s/n/eUQHGBpZroRs9YW3xA@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Vinod Koul <vinod.koul-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, uclinux-dist-devel-ZG0+EudsQA8dtHy/vicBwGD2FQJk+8+b@public.gmane.org, linuxppc-dev-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org
+Content-Type: multipart/mixed; boundary="===============7923185765950412603=="
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <E1VMluG-0007gV-6y@rmk-PC.arm.linux.org.uk>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: Russell King <rmk+kernel@arm.linux.org.uk>
+Cc: alsa-devel@alsa-project.org, linux-doc@vger.kernel.org, linux-mmc@vger.kernel.org, Peter P Waskiewicz Jr <peter.p.waskiewicz.jr@intel.com>, linux-fbdev@vger.kernel.org, linux-nvme@lists.infradead.org, linux-ide@vger.kernel.org, Carolyn Wyborny <carolyn.wyborny@intel.com>, devel@driverdev.osuosl.org, linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, e1000-devel@lists.sourceforge.net, Don Skidmore <donald.c.skidmore@intel.com>, Jesse Brandeburg <jesse.brandeburg@intel.com>, b43-dev@lists.infradead.org, linux-media@vger.kernel.org, Alex Duyck <alexander.h.duyck@intel.com>, devicetree@vger.kernel.org, Greg Rose <gregory.v.rose@intel.com>, dri-devel@lists.freedesktop.org, linux-tegra@vger.kernel.org, linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Solarflare linux maintainers <linux-net-drivers@solarflare.com>, netdev@vger.kernel.org, linux-usb
 List-Id: linux-ide@vger.kernel.org
 
-Am Donnerstag, 19. September 2013, 23:49:01 schrieb Russell King:
-> The DMA API requires drivers to call the appropriate dma_set_mask()
-> functions before doing any DMA mapping.  Add this required call to
-> the AMBA PL08x driver.
-			^--- copy and paste error - should of course be PL330
+
+--===============7923185765950412603==
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-IwGSEViKnlGxN4Ur4LPe"
 
 
-> Signed-off-by: Russell King <rmk+kernel-lFZ/pmaqli7XmaaqVzeoHQ@public.gmane.org>
+--=-IwGSEViKnlGxN4Ur4LPe
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+On Thu, 2013-09-19 at 22:37 +0100, Russell King wrote:
+> Replace the following sequence:
+>=20
+>         dma_set_mask(dev, mask);
+>         dma_set_coherent_mask(dev, mask);
+>=20
+> with a call to the new helper dma_set_mask_and_coherent().
+>=20
+> Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
 > ---
->  drivers/dma/pl330.c |    4 ++++
->  1 files changed, 4 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/dma/pl330.c b/drivers/dma/pl330.c
-> index a562d24..df8b10f 100644
-> --- a/drivers/dma/pl330.c
-> +++ b/drivers/dma/pl330.c
-> @@ -2903,6 +2903,10 @@ pl330_probe(struct amba_device *adev, const struct
-> amba_id *id)
-> 
->  	pdat = dev_get_platdata(&adev->dev);
-> 
-> +	ret = dma_set_mask_and_coherent(&adev->dev, DMA_BIT_MASK(32));
-> +	if (ret)
-> +		return ret;
-> +
->  	/* Allocate a new DMAC and its Channels */
->  	pdmac = devm_kzalloc(&adev->dev, sizeof(*pdmac), GFP_KERNEL);
->  	if (!pdmac) {
+>  drivers/net/ethernet/intel/e1000/e1000_main.c |    9 ++-------
+>  1 files changed, 2 insertions(+), 7 deletions(-)
+
+Acked-by: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+
+--=-IwGSEViKnlGxN4Ur4LPe
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+
+iQIcBAABCgAGBQJSPKXzAAoJEOVv75VaS+3OXRMP/0inX8RE/LpymWBicNP8WD6j
+xJGDMRHzZ+Frac/Q0qSWiCNSvfBn/WZ9glR0uxnIz51/TjfFzITWZBzcsgeVJlAv
+BAQt/pIzXrw1Qwwcnm3ZGBJ6XhGFQ8rI+6Fv/1nQ7peb1PoVjpM+pkGszhgOD7AZ
+KU0EqTKIIGnRKxdVZwraXXEIrrwCwEnEJnHylot3scVYOEww+8UkQzp1ItDHeXuD
+FQurkbrCawaVB7bctDl45kmo66I+Pn6SLo22LFDI7m8Q92KePKR0pNHv4dLuRrh2
+5j6S2j1jeZca3DT0dFzyV1jgBjOzWmHfA38yHpk0FesH+3DAlTgkTxLc2PpARAww
+cKqu5d/i1rk0INt61H6tp3qYWH7HQ563PW9aIxX82PsRdXtedvTUjtxAZ/kIWAUQ
+uFX5Q0Y0u9XlfC8spRAcUvi9AxKATY/mDXcd1oBFO2yLYWcfo/2R4THAqz/yjhea
+KQQVh9gE2Uc06/fWbh2W+uGdluMNJJSEKTbkNxea2w9+MEGLV9+Cjdfb9x/w4oMf
+vT5rD9lIZh1k9xZGjB++HrOd6Gy6l9j+wYQqIiC0Ut9P5gOjrd2gyhg3xzvz894/
+eYO6FFFLJeQijLVHEU5nUVg+0IQQQaUc0Cq6WGr/USpjapQUq0xuQLLRCaph1uPM
+crlJOl4YrRaaUMl8RxDR
+=UEsD
+-----END PGP SIGNATURE-----
+
+--=-IwGSEViKnlGxN4Ur4LPe--
+
+
+--===============7923185765950412603==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+Linuxppc-dev mailing list
+Linuxppc-dev@lists.ozlabs.org
+https://lists.ozlabs.org/listinfo/linuxppc-dev
+--===============7923185765950412603==--
