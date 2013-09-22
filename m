@@ -1,35 +1,41 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Use-after-free in ata_qc_issue
-Date: Sun, 22 Sep 2013 17:47:33 -0400
-Message-ID: <20130922214733.GB27616@mtj.dyndns.org>
-References: <CACT4Y+anZ6Mt9T=Zx5OepmawzkLDSmXo5ZkkhX5riZ8XvNHEmQ@mail.gmail.com>
- <20130922163913.GE28571@htj.dyndns.org>
- <CACT4Y+aGOzEdGZ_rnJ_52hWCph-nyDhd1ukKW=8M0QNSyR0WpA@mail.gmail.com>
- <CACT4Y+bKPWkiLJEC2tk076TmPcYcXb_BuKiSG9H2BoWnOZJuiQ@mail.gmail.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFC PATCH 08/15] ata: ahci_platform: Manage SATA PHY
+Date: Sun, 22 Sep 2013 17:48:59 -0400
+Message-ID: <20130922214859.GC27616@mtj.dyndns.org>
+References: <1379595943-14622-1-git-send-email-rogerq@ti.com>
+ <1379595943-14622-9-git-send-email-rogerq@ti.com>
+ <523F3567.80303@cogentembedded.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f52.google.com ([209.85.216.52]:57438 "EHLO
-	mail-qa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752029Ab3IVVrg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Sep 2013 17:47:36 -0400
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <CACT4Y+bKPWkiLJEC2tk076TmPcYcXb_BuKiSG9H2BoWnOZJuiQ@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <523F3567.80303-M4DtvfQ/ZS1MRgGoP+s0PdBPR1lH4CV8@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Sergei Shtylyov <sergei.shtylyov-M4DtvfQ/ZS1MRgGoP+s0PdBPR1lH4CV8@public.gmane.org>
+Cc: Roger Quadros <rogerq-l0cyMroinI0@public.gmane.org>, balbi-l0cyMroinI0@public.gmane.org, bcousson-rdvid1DuHRBWk0Htik3J/w@public.gmane.org, tony-4v6yS6AI5VpBDgjK7y7TUQ@public.gmane.org, balajitk-l0cyMroinI0@public.gmane.org, kishon-l0cyMroinI0@public.gmane.org, linux-omap-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: Dmitry Vyukov <dvyukov@google.com>
-Cc: linux-ide@vger.kernel.org, Andrey Konovalov <andreyknvl@google.com>, Kostya Serebryany <kcc@google.com>, Marc C <marc.ceeeee@gmail.com>, aaron.lu@intel.com, linux-scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>
 
 Hello,
 
-On Sun, Sep 22, 2013 at 11:59:53AM -0700, Dmitry Vyukov wrote:
-> I've noticed that free happens in scsi_error_handler thread, so maybe
-> a timeout or some other error condition is involved here.
-> It is possible that timeout happens while the request is still being
-> in process of submitting (in ata_scsi_queuecmd)?
+On Sun, Sep 22, 2013 at 10:22:31PM +0400, Sergei Shtylyov wrote:
+> >@@ -37,6 +37,7 @@
+> >
+> >  #include <linux/clk.h>
+> >  #include <linux/libata.h>
+> >+#include <linux/phy/phy.h>
+> 
+> struct phy;
+> 
+> should suffice.
 
-Yeah, could be.  IIRC, there's still race condition in block / scsi
-timeout handling.  Hmmm...
+Unless it's actually likely to cause inclusion loop, I think it's
+better to include the header than adding explicit declarations.
+
+Thanks.
 
 -- 
 tejun
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
