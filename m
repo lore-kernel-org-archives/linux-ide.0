@@ -1,65 +1,132 @@
-From: Patrik Jakobsson <patrik.r.jakobsson@gmail.com>
-Subject: Re: Unexpected _GTF length (8)
-Date: Sun, 22 Sep 2013 19:09:37 +0200
-Message-ID: <CAMeQTsZ7STfS6ewWkLUak-jQ2KEKbydvMMai6F4QbtDdEPswdw@mail.gmail.com>
-References: <CAMeQTsby_CoGq1xAKUEVg_yWyqSSMjfSf6gWWzFRR+-znpPVbw@mail.gmail.com>
-	<20130922155957.GC28571@htj.dyndns.org>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [RFC PATCH 08/15] ata: ahci_platform: Manage SATA PHY
+Date: Sun, 22 Sep 2013 22:22:31 +0400
+Message-ID: <523F3567.80303@cogentembedded.com>
+References: <1379595943-14622-1-git-send-email-rogerq@ti.com> <1379595943-14622-9-git-send-email-rogerq@ti.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lb0-f177.google.com ([209.85.217.177]:43292 "EHLO
-	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752338Ab3IVRJj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Sep 2013 13:09:39 -0400
-Received: by mail-lb0-f177.google.com with SMTP id w7so1982061lbi.22
-        for <linux-ide@vger.kernel.org>; Sun, 22 Sep 2013 10:09:37 -0700 (PDT)
-In-Reply-To: <20130922155957.GC28571@htj.dyndns.org>
+Received: from mail-la0-f42.google.com ([209.85.215.42]:61393 "EHLO
+	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752391Ab3IVSWg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Sep 2013 14:22:36 -0400
+Received: by mail-la0-f42.google.com with SMTP id ep20so1904137lab.1
+        for <linux-ide@vger.kernel.org>; Sun, 22 Sep 2013 11:22:34 -0700 (PDT)
+In-Reply-To: <1379595943-14622-9-git-send-email-rogerq@ti.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org
+To: Roger Quadros <rogerq@ti.com>
+Cc: balbi@ti.com, bcousson@baylibre.com, tony@atomide.com, balajitk@ti.com, kishon@ti.com, linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-On Sun, Sep 22, 2013 at 5:59 PM, Tejun Heo <tj@kernel.org> wrote:
-> On Sun, Sep 22, 2013 at 03:56:35AM +0200, Patrik Jakobsson wrote:
->> Where REGS_PER_GTF is defined as 7 which is correct according to ACPI specs.
->> Since I'm getting a length of 8 I started digging in the ACPI code and found
->> that the length is rounded up to acpi_size (u32 or u64 depending on arch). I
->> cannot find any commits that recently touched this though I didn't really dig
->> through it all.
+Hello.
+
+On 09/19/2013 05:05 PM, Roger Quadros wrote:
+
+> From: Balaji T K <balajitk@ti.com>
+
+> Some platforms have a PHY hooked up to the
+> SATA controller. The PHY needs to be initialized
+> and powered up for SATA to work. We do that
+> using the PHY framework.
+
+> [Roger Q] Cleaned up.
+
+> CC: Tejun Heo <tj@kernel.org>
+> Signed-off-by: Balaji T K <balajitk@ti.com>
+> Signed-off-by: Roger Quadros <rogerq@ti.com>
+[...]
+
+> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+> index 1145637..94484cb 100644
+> --- a/drivers/ata/ahci.h
+> +++ b/drivers/ata/ahci.h
+> @@ -37,6 +37,7 @@
 >
-> It means your bios is buggy.
+>   #include <linux/clk.h>
+>   #include <linux/libata.h>
+> +#include <linux/phy/phy.h>
 
-I must be confusing the actual buffer length with the allocated buffer
-length. It is
-not entirely clear what is what in the ACPI-CA code. What I don't understand is
-how a simple "Return (GTF0)" where GTF0 is 56 bits gets padded to 64 bits by
-the firmware. Maybe the iasl disassembly is lying to me.
+struct phy;
 
->> I've disassembled the SSDT for the "SataAhci" and everything looks ok. That
->> code returns a 56 bit buffer. I also tried calling the _GTF method manually
->> which returned the following (padded to 8 bytes by the ACPI code ofc).
->>
->> {0x10, 0x03, 0x00, 0x00, 0x00, 0xa0, 0xef, 0x00}
->>
->> Doing a quick google search gives me a few of these _GTF length errors dating
->> back to at least 2011. What's going on here? Is this a known error?
+should suffice.
+
+> @@ -322,6 +323,7 @@ struct ahci_host_priv {
+>   	u32			em_buf_sz;	/* EM buffer size in byte */
+>   	u32			em_msg_type;	/* EM message type */
+>   	struct clk		*clk;		/* Only for platforms supporting clk */
+> +	struct phy		*phy;		/* If platforms use phy */
+>   	void			*plat_data;	/* Other platform data */
+>   };
 >
-> Failing to execute _GTF is usally fine to the point where I sometimes
-> wonder why we bother with it at all.  The above command is SET
-> FEATURES / Enable SATA Feature / DIPM, which enables device side link
-> powersaving and is a weird thing to do from _GTF anyway as host side
-> needs configuration too.  You can properly configure it using libata
-> link PM.
+> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+> index 2daaee0..f812ffa 100644
+> --- a/drivers/ata/ahci_platform.c
+> +++ b/drivers/ata/ahci_platform.c
+> @@ -23,6 +23,7 @@
+>   #include <linux/platform_device.h>
+>   #include <linux/libata.h>
+>   #include <linux/ahci_platform.h>
+> +#include <linux/phy/phy.h>
 
-Thanks for the info. I tested "fixing up" the code to let the _GTF slide through
-and I couldn't see it make any difference whatsoever. As you say, we can safely
-ignore this.
+    Why include it from both ahci.h and here?
 
-Cheers
-Patrik
-
+>   #include "ahci.h"
 >
-> Thanks.
+>   static void ahci_host_stop(struct ata_host *host);
+> @@ -141,16 +142,32 @@ static int ahci_probe(struct platform_device *pdev)
+>   		}
+>   	}
 >
-> --
-> tejun
+> +	hpriv->phy = devm_phy_get(dev, "sata-phy");
+> +	if (IS_ERR(hpriv->phy)) {
+> +		dev_err(dev, "can't get phy\n");
+
+    Don't think it's a good idea to complain about missing PHY when the driver 
+doesn't even use it.
+
+> +		/* return only if -EPROBE_DEFER */
+> +		if (PTR_ERR(hpriv->phy) == -EPROBE_DEFER) {
+> +			rc = -EPROBE_DEFER;
+> +			goto disable_unprepare_clk;
+> +		}
+> +	}
+> +
+>   	/*
+>   	 * Some platforms might need to prepare for mmio region access,
+>   	 * which could be done in the following init call. So, the mmio
+>   	 * region shouldn't be accessed before init (if provided) has
+>   	 * returned successfully.
+>   	 */
+> +
+> +	if (!(IS_ERR(hpriv->phy))) {
+
+    () not needed around IS_ERR() invocation.
+
+> +		phy_init(hpriv->phy);
+> +		phy_power_on(hpriv->phy);
+> +	}
+> +
+
+    I think this is misplaced, i.e. it should precede the comment.
+
+>   	if (pdata && pdata->init) {
+>   		rc = pdata->init(dev, hpriv->mmio);
+>   		if (rc)
+> -			goto disable_unprepare_clk;
+> +			goto disable_phy;
+>   	}
+>
+>   	ahci_save_initial_config(dev, hpriv,
+[...]
+> @@ -328,6 +356,7 @@ static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_suspend, ahci_resume);
+>   static const struct of_device_id ahci_of_match[] = {
+>   	{ .compatible = "snps,spear-ahci", },
+>   	{ .compatible = "snps,exynos5440-ahci", },
+> +	{ .compatible = "snps,dwc-ahci", },
+
+    Looks like the binding documentation is incomplete -- it doesn't list 
+"snps,exynos5440-ahci"...
+
+WBR, Sergei
+
