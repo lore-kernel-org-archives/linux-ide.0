@@ -1,33 +1,35 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] pata_isapnp: Don't use invalid I/O ports
-Date: Sun, 22 Sep 2013 17:42:50 -0400
-Message-ID: <20130922214250.GA27616@mtj.dyndns.org>
-References: <1379019689-21467-1-git-send-email-linux@rainbow-software.org>
+Subject: Re: Use-after-free in ata_qc_issue
+Date: Sun, 22 Sep 2013 17:47:33 -0400
+Message-ID: <20130922214733.GB27616@mtj.dyndns.org>
+References: <CACT4Y+anZ6Mt9T=Zx5OepmawzkLDSmXo5ZkkhX5riZ8XvNHEmQ@mail.gmail.com>
+ <20130922163913.GE28571@htj.dyndns.org>
+ <CACT4Y+aGOzEdGZ_rnJ_52hWCph-nyDhd1ukKW=8M0QNSyR0WpA@mail.gmail.com>
+ <CACT4Y+bKPWkiLJEC2tk076TmPcYcXb_BuKiSG9H2BoWnOZJuiQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qe0-f45.google.com ([209.85.128.45]:44543 "EHLO
-	mail-qe0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752391Ab3IVVmz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Sep 2013 17:42:55 -0400
+Received: from mail-qa0-f52.google.com ([209.85.216.52]:57438 "EHLO
+	mail-qa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752029Ab3IVVrg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Sep 2013 17:47:36 -0400
 Content-Disposition: inline
-In-Reply-To: <1379019689-21467-1-git-send-email-linux@rainbow-software.org>
+In-Reply-To: <CACT4Y+bKPWkiLJEC2tk076TmPcYcXb_BuKiSG9H2BoWnOZJuiQ@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ondrej Zary <linux@rainbow-software.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Dmitry Vyukov <dvyukov@google.com>
+Cc: linux-ide@vger.kernel.org, Andrey Konovalov <andreyknvl@google.com>, Kostya Serebryany <kcc@google.com>, Marc C <marc.ceeeee@gmail.com>, aaron.lu@intel.com, linux-scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>
 
-On Thu, Sep 12, 2013 at 11:01:29PM +0200, Ondrej Zary wrote:
-> The test for 2nd I/O port validity is broken (reversed):
-> On devices with no control port, the driver attempts to use invalid port 0,
-> resulting in logs full of bad_io_access errors.
-> On devices with control port, the driver does not use it.
-> 
-> Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+Hello,
 
-Applied to libata/for-3.13.
+On Sun, Sep 22, 2013 at 11:59:53AM -0700, Dmitry Vyukov wrote:
+> I've noticed that free happens in scsi_error_handler thread, so maybe
+> a timeout or some other error condition is involved here.
+> It is possible that timeout happens while the request is still being
+> in process of submitting (in ata_scsi_queuecmd)?
 
-Thanks.
+Yeah, could be.  IIRC, there's still race condition in block / scsi
+timeout handling.  Hmmm...
 
 -- 
 tejun
