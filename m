@@ -1,100 +1,99 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [RFC PATCH 15/15] arm: dts: dra7: add sata node
-Date: Sun, 22 Sep 2013 22:45:56 +0400
-Message-ID: <523F3AE4.5050709@cogentembedded.com>
-References: <1379595943-14622-1-git-send-email-rogerq@ti.com> <1379597059-15405-1-git-send-email-rogerq@ti.com> <523B05FD.7020200@cogentembedded.com> <523C214A.30406@ti.com>
+From: Dmitry Vyukov <dvyukov@google.com>
+Subject: Re: Use-after-free in ata_qc_issue
+Date: Sun, 22 Sep 2013 11:59:53 -0700
+Message-ID: <CACT4Y+bKPWkiLJEC2tk076TmPcYcXb_BuKiSG9H2BoWnOZJuiQ@mail.gmail.com>
+References: <CACT4Y+anZ6Mt9T=Zx5OepmawzkLDSmXo5ZkkhX5riZ8XvNHEmQ@mail.gmail.com>
+ <20130922163913.GE28571@htj.dyndns.org> <CACT4Y+aGOzEdGZ_rnJ_52hWCph-nyDhd1ukKW=8M0QNSyR0WpA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-omap-owner@vger.kernel.org>
-In-Reply-To: <523C214A.30406@ti.com>
-Sender: linux-omap-owner@vger.kernel.org
-To: Roger Quadros <rogerq@ti.com>
-Cc: balbi@ti.com, bcousson@baylibre.com, tony@atomide.com, balajitk@ti.com, kishon@ti.com, linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-lb0-f182.google.com ([209.85.217.182]:63200 "EHLO
+	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752353Ab3IVTAP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Sep 2013 15:00:15 -0400
+Received: by mail-lb0-f182.google.com with SMTP id c11so2141385lbj.27
+        for <linux-ide@vger.kernel.org>; Sun, 22 Sep 2013 12:00:13 -0700 (PDT)
+In-Reply-To: <CACT4Y+aGOzEdGZ_rnJ_52hWCph-nyDhd1ukKW=8M0QNSyR0WpA@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, Andrey Konovalov <andreyknvl@google.com>, Kostya Serebryany <kcc@google.com>, Marc C <marc.ceeeee@gmail.com>, aaron.lu@intel.com, linux-scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>
 
-On 09/20/2013 02:19 PM, Roger Quadros wrote:
+On Sun, Sep 22, 2013 at 11:24 AM, Dmitry Vyukov <dvyukov@google.com> wrote:
+> On Sun, Sep 22, 2013 at 9:39 AM, Tejun Heo <tj@kernel.org> wrote:
+>>
+>> (cc'ing SCSI people)
+>>
+>> On Wed, Sep 18, 2013 at 11:45:22AM -0700, Dmitry Vyukov wrote:
+>> > Hi!
+>> >
+>> > I am working on AddressSanitizer -- a tool that detects use-after-free
+>> > and out-of-bounds bugs
+>> > (https://code.google.com/p/address-sanitizer/wiki/AddressSanitizerForKernel).
+>> > Below is one of the bug reports that I got while running trinity
+>> > syscall fuzzer. Kernel is built on revision
+>> > d8efd82eece89f8a5790b0febf17522affe9e1f1.
+>> > The report was followed by a bunch of similar use-after-free reports,
+>> > and later the kernel crashed somewhere in ata subsystem. I've attached
+>> > the full log.
+>> >
+>> >
+>> > ERROR: AddressSanitizer: heap-use-after-free on address ffff880034fce000
+>> > ffff880034fce000 is located 0 bytes inside of 256-byte region
+>> > [ffff880034fce000, ffff880034fce100)
+>> > READ of size 8 at ffff880034fce000 by thread T3645:
+>> >   #0      inlined     (asan_report_error+0x3e7/0x500)
+>> > asan_describe_heap_address ./arch/x86/mm/asan/report.c:191
+>> >   #0 ffffffff810d9af7 (asan_report_error+0x3e7/0x500)
+>> > ./arch/x86/mm/asan/report.c:309
+>> >   #1 ffffffff810d8c12 (asan_check_region.part.1+0x1b2/0x230)
+>> > ./arch/x86/mm/asan/asan.c:263
+>> >   #2      inlined     (__tsan_read8+0x28/0x30) asan_check_region
+>> > ./arch/x86/mm/asan/asan.c:276
+>> >   #2 ffffffff810d8d48 (__tsan_read8+0x28/0x30) ./arch/x86/mm/asan/asan.c:276
+>> >   #3 ffffffff814cc0ef (sg_next+0xf/0x40) ??:0
+>> >   #4      inlined     (ata_qc_issue+0x2b4/0x740) dma_map_sg_attrs
+>> > ./include/asm-generic/dma-mapping-common.h:50
+>> >   #4      inlined     (ata_qc_issue+0x2b4/0x740) ata_sg_setup
+>> > ./drivers/ata/libata-core.c:4707
+>> >   #4 ffffffff816574b4 (ata_qc_issue+0x2b4/0x740)
+>> > ./drivers/ata/libata-core.c:5082
+>>
+>> So, if I'm reading this right, it means that the sg list is used after
+>> being freed?
+>
+> Yes, that's correct.
+> First thread 3645 allocated the list in scsi_setup_fs_cmnd().
+> Then thread 1095 freed it in scsi_io_completion().
+> Then thread 3645 accessed the list in ata_scsi_queuecmd().
+>
+>
+>>  The sglist is directly from scsi_cmnd and use-after-free
+>> there is likely to be quite noticeable.
+>
+> Note that we've seen this only once during several weeks of running
+> trinity syscall fuzzer. So it's not something that happens all that
+> frequently. This may explain why it was not noticed before. Also a
+> use-after-free bug has some chances to silently corrupt heap and/or
+> read garbage, but still survive.
+>
+>
+>> Any chance you guys aren't
+>> following mempool based allocations correctly?
+>
+> This is quite unlikely, I've looked at mempool code and I do not think
+> it can affect tool operation. We intercept kmalloc/kmem_cache_free,
+> poison the memory block and put it into a delay reuse queue. Then
+> watch for memory accesses that access poisoned memory ranges.
 
->>> From: Balaji T K <balajitk@ti.com>
 
->>> Add support for sata controller.
+I've noticed that free happens in scsi_error_handler thread, so maybe
+a timeout or some other error condition is involved here.
+It is possible that timeout happens while the request is still being
+in process of submitting (in ata_scsi_queuecmd)?
 
->>> [Roger Q] Clean up.
-
->>> CC: Benoit Cousson <bcousson@baylibre.com>
->>> Signed-off-by: Balaji T K <balajitk@ti.com>
->>> Signed-off-by: Roger Quadros <rogerq@ti.com>
->>> ---
->>>    arch/arm/boot/dts/dra7.dtsi |   49 +++++++++++++++++++++++++++++++++++++++++++
->>>    1 files changed, 49 insertions(+), 0 deletions(-)
-
->>> diff --git a/arch/arm/boot/dts/dra7.dtsi b/arch/arm/boot/dts/dra7.dtsi
->>> index ce9a0f0..545545d 100644
->>> --- a/arch/arm/boot/dts/dra7.dtsi
->>> +++ b/arch/arm/boot/dts/dra7.dtsi
->>> @@ -426,6 +426,55 @@
-[...]
-
->>> +        sata: sata@4a141100 {
->>> +            compatible = "ti,sata";
->>> +            ti,hwmods = "sata";
->>> +            reg = <0x4a141100 0x7>;
-
-    Not 0x8 BTW?
-
->>> +            #address-cells = <1>;
->>> +            #size-cells = <1>;
->>> +            ranges;
->>> +            dwc-ahci@4a140000 {
-
->>     Hm, ePAPR spec. [1] says that "the name of a node should be somewhat generic, reflecting the function of the device and not its precise programming model", so it looks like the name should be "sata" as well. I'm a bit at a loss here, not sure why you had to use the nested device nodes.
-
-> ok. will fix it to sata.
-> I've nested it because the wrapper registers are not part of the AHCI sata controller.
-> They are TI specific registers for power management.
-> Similar setup is on the USB controller. Please see omap_dwc3 node.
-
-> But if you have better idea, please let me know.
-
-     Don't know, it seems to me that you're over-complicating it by using the 
-nested nodes. You could just have AHCI regs as a first tuple of the "regs" 
-prop, and PM regs as a second tuple.
-
->>> +                  compatible = "snps,dwc-ahci";
->>> +                  reg = <0x4a140000 0x1100>;
->>> +                  interrupts = <0 54 0x4>;
->>> +                  phys = <&sata_phy>;
-
->>     Hm, it's the third PHY related generic property I'm encountering. First, there was "phy-handle", then "phy", now "phys"... Seems like a bit too much. :-)
-
-> I'm afraid but this is how the designers have made it.
-
-> 1) control-phy-pipe3 is that part of the PHY which sits in control module space and is different
-> from the sata-phy space and hence needs a different node. If it were to me, I would just put this
-> resource in sata-phy node, but there was a discussion about this earlier to do it otherwise [1].
-
-> 2) sata-phy (sataphy) is the actual SATA PHY device.
-
-> 3) phys is just a reference to the sata_phy and is used via the generic PHY framework.
-> It is upto the sata driver to power up/down the phy.
-
-    I understand that it's a reference but why have 3 variants of such phandle 
-containing prop? Is it really possible for a device to have multiple PHYs? 
-Well, remembering our customer's USB, it's indeed possible, however, there 2 
-PHYs out of 3 are not software controllable...
-
->>> +                  phy-names = "sata-phy";
->>> +                  clocks = <&sata_ref_clk>;
->>> +                  clock-names = "optclk";
->>> +            };
->>> +        };
-
->> [1] http://www.power.org/resources/downloads/Power_ePAPR_APPROVED_v1.0.pdf
-
-> cheers,
-> -roger
-
-> [1] - https://lkml.org/lkml/2012/9/10/399
-
-WBR, Sergei
-
+Also the use-after-free access happens in:
+for_each_sg(sg, s, nents, i)
+  kmemcheck_mark_initialized(sg_virt(s), s->length);
+Is it possible that the special code added for  kmemcheck touches
+memory that it is not supposed to touch?
