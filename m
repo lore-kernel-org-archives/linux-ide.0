@@ -1,132 +1,80 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [RFC PATCH 08/15] ata: ahci_platform: Manage SATA PHY
-Date: Sun, 22 Sep 2013 22:22:31 +0400
-Message-ID: <523F3567.80303@cogentembedded.com>
-References: <1379595943-14622-1-git-send-email-rogerq@ti.com> <1379595943-14622-9-git-send-email-rogerq@ti.com>
+From: Dmitry Vyukov <dvyukov@google.com>
+Subject: Re: Use-after-free in ata_qc_issue
+Date: Sun, 22 Sep 2013 11:24:15 -0700
+Message-ID: <CACT4Y+aGOzEdGZ_rnJ_52hWCph-nyDhd1ukKW=8M0QNSyR0WpA@mail.gmail.com>
+References: <CACT4Y+anZ6Mt9T=Zx5OepmawzkLDSmXo5ZkkhX5riZ8XvNHEmQ@mail.gmail.com>
+ <20130922163913.GE28571@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-la0-f42.google.com ([209.85.215.42]:61393 "EHLO
-	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752391Ab3IVSWg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Sep 2013 14:22:36 -0400
-Received: by mail-la0-f42.google.com with SMTP id ep20so1904137lab.1
-        for <linux-ide@vger.kernel.org>; Sun, 22 Sep 2013 11:22:34 -0700 (PDT)
-In-Reply-To: <1379595943-14622-9-git-send-email-rogerq@ti.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20130922163913.GE28571@htj.dyndns.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, Andrey Konovalov <andreyknvl@google.com>, Kostya Serebryany <kcc@google.com>, Marc C <marc.ceeeee@gmail.com>, aaron.lu@intel.com, linux-scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>
 List-Id: linux-ide@vger.kernel.org
-To: Roger Quadros <rogerq@ti.com>
-Cc: balbi@ti.com, bcousson@baylibre.com, tony@atomide.com, balajitk@ti.com, kishon@ti.com, linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-Hello.
-
-On 09/19/2013 05:05 PM, Roger Quadros wrote:
-
-> From: Balaji T K <balajitk@ti.com>
-
-> Some platforms have a PHY hooked up to the
-> SATA controller. The PHY needs to be initialized
-> and powered up for SATA to work. We do that
-> using the PHY framework.
-
-> [Roger Q] Cleaned up.
-
-> CC: Tejun Heo <tj@kernel.org>
-> Signed-off-by: Balaji T K <balajitk@ti.com>
-> Signed-off-by: Roger Quadros <rogerq@ti.com>
-[...]
-
-> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-> index 1145637..94484cb 100644
-> --- a/drivers/ata/ahci.h
-> +++ b/drivers/ata/ahci.h
-> @@ -37,6 +37,7 @@
+On Sun, Sep 22, 2013 at 9:39 AM, Tejun Heo <tj@kernel.org> wrote:
 >
->   #include <linux/clk.h>
->   #include <linux/libata.h>
-> +#include <linux/phy/phy.h>
-
-struct phy;
-
-should suffice.
-
-> @@ -322,6 +323,7 @@ struct ahci_host_priv {
->   	u32			em_buf_sz;	/* EM buffer size in byte */
->   	u32			em_msg_type;	/* EM message type */
->   	struct clk		*clk;		/* Only for platforms supporting clk */
-> +	struct phy		*phy;		/* If platforms use phy */
->   	void			*plat_data;	/* Other platform data */
->   };
+> (cc'ing SCSI people)
 >
-> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-> index 2daaee0..f812ffa 100644
-> --- a/drivers/ata/ahci_platform.c
-> +++ b/drivers/ata/ahci_platform.c
-> @@ -23,6 +23,7 @@
->   #include <linux/platform_device.h>
->   #include <linux/libata.h>
->   #include <linux/ahci_platform.h>
-> +#include <linux/phy/phy.h>
-
-    Why include it from both ahci.h and here?
-
->   #include "ahci.h"
+> On Wed, Sep 18, 2013 at 11:45:22AM -0700, Dmitry Vyukov wrote:
+> > Hi!
+> >
+> > I am working on AddressSanitizer -- a tool that detects use-after-free
+> > and out-of-bounds bugs
+> > (https://code.google.com/p/address-sanitizer/wiki/AddressSanitizerForKernel).
+> > Below is one of the bug reports that I got while running trinity
+> > syscall fuzzer. Kernel is built on revision
+> > d8efd82eece89f8a5790b0febf17522affe9e1f1.
+> > The report was followed by a bunch of similar use-after-free reports,
+> > and later the kernel crashed somewhere in ata subsystem. I've attached
+> > the full log.
+> >
+> >
+> > ERROR: AddressSanitizer: heap-use-after-free on address ffff880034fce000
+> > ffff880034fce000 is located 0 bytes inside of 256-byte region
+> > [ffff880034fce000, ffff880034fce100)
+> > READ of size 8 at ffff880034fce000 by thread T3645:
+> >   #0      inlined     (asan_report_error+0x3e7/0x500)
+> > asan_describe_heap_address ./arch/x86/mm/asan/report.c:191
+> >   #0 ffffffff810d9af7 (asan_report_error+0x3e7/0x500)
+> > ./arch/x86/mm/asan/report.c:309
+> >   #1 ffffffff810d8c12 (asan_check_region.part.1+0x1b2/0x230)
+> > ./arch/x86/mm/asan/asan.c:263
+> >   #2      inlined     (__tsan_read8+0x28/0x30) asan_check_region
+> > ./arch/x86/mm/asan/asan.c:276
+> >   #2 ffffffff810d8d48 (__tsan_read8+0x28/0x30) ./arch/x86/mm/asan/asan.c:276
+> >   #3 ffffffff814cc0ef (sg_next+0xf/0x40) ??:0
+> >   #4      inlined     (ata_qc_issue+0x2b4/0x740) dma_map_sg_attrs
+> > ./include/asm-generic/dma-mapping-common.h:50
+> >   #4      inlined     (ata_qc_issue+0x2b4/0x740) ata_sg_setup
+> > ./drivers/ata/libata-core.c:4707
+> >   #4 ffffffff816574b4 (ata_qc_issue+0x2b4/0x740)
+> > ./drivers/ata/libata-core.c:5082
 >
->   static void ahci_host_stop(struct ata_host *host);
-> @@ -141,16 +142,32 @@ static int ahci_probe(struct platform_device *pdev)
->   		}
->   	}
->
-> +	hpriv->phy = devm_phy_get(dev, "sata-phy");
-> +	if (IS_ERR(hpriv->phy)) {
-> +		dev_err(dev, "can't get phy\n");
+> So, if I'm reading this right, it means that the sg list is used after
+> being freed?
 
-    Don't think it's a good idea to complain about missing PHY when the driver 
-doesn't even use it.
+Yes, that's correct.
+First thread 3645 allocated the list in scsi_setup_fs_cmnd().
+Then thread 1095 freed it in scsi_io_completion().
+Then thread 3645 accessed the list in ata_scsi_queuecmd().
 
-> +		/* return only if -EPROBE_DEFER */
-> +		if (PTR_ERR(hpriv->phy) == -EPROBE_DEFER) {
-> +			rc = -EPROBE_DEFER;
-> +			goto disable_unprepare_clk;
-> +		}
-> +	}
-> +
->   	/*
->   	 * Some platforms might need to prepare for mmio region access,
->   	 * which could be done in the following init call. So, the mmio
->   	 * region shouldn't be accessed before init (if provided) has
->   	 * returned successfully.
->   	 */
-> +
-> +	if (!(IS_ERR(hpriv->phy))) {
 
-    () not needed around IS_ERR() invocation.
+>  The sglist is directly from scsi_cmnd and use-after-free
+> there is likely to be quite noticeable.
 
-> +		phy_init(hpriv->phy);
-> +		phy_power_on(hpriv->phy);
-> +	}
-> +
+Note that we've seen this only once during several weeks of running
+trinity syscall fuzzer. So it's not something that happens all that
+frequently. This may explain why it was not noticed before. Also a
+use-after-free bug has some chances to silently corrupt heap and/or
+read garbage, but still survive.
 
-    I think this is misplaced, i.e. it should precede the comment.
 
->   	if (pdata && pdata->init) {
->   		rc = pdata->init(dev, hpriv->mmio);
->   		if (rc)
-> -			goto disable_unprepare_clk;
-> +			goto disable_phy;
->   	}
->
->   	ahci_save_initial_config(dev, hpriv,
-[...]
-> @@ -328,6 +356,7 @@ static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_suspend, ahci_resume);
->   static const struct of_device_id ahci_of_match[] = {
->   	{ .compatible = "snps,spear-ahci", },
->   	{ .compatible = "snps,exynos5440-ahci", },
-> +	{ .compatible = "snps,dwc-ahci", },
+> Any chance you guys aren't
+> following mempool based allocations correctly?
 
-    Looks like the binding documentation is incomplete -- it doesn't list 
-"snps,exynos5440-ahci"...
-
-WBR, Sergei
-
+This is quite unlikely, I've looked at mempool code and I do not think
+it can affect tool operation. We intercept kmalloc/kmem_cache_free,
+poison the memory block and put it into a delay reuse queue. Then
+watch for memory accesses that access poisoned memory ranges.
