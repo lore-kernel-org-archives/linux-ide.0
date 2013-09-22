@@ -1,63 +1,71 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: Use-after-free in ata_qc_issue
-Date: Sun, 22 Sep 2013 12:39:13 -0400
-Message-ID: <20130922163913.GE28571@htj.dyndns.org>
-References: <CACT4Y+anZ6Mt9T=Zx5OepmawzkLDSmXo5ZkkhX5riZ8XvNHEmQ@mail.gmail.com>
+Subject: Re: [PATCH] pata_isapnp: Don't use invalid I/O ports
+Date: Sun, 22 Sep 2013 12:49:42 -0400
+Message-ID: <20130922164942.GA30946@htj.dyndns.org>
+References: <1379019689-21467-1-git-send-email-linux@rainbow-software.org>
+ <201309132054.38278.linux@rainbow-software.org>
+ <201309132344.27778.linux@rainbow-software.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qe0-f52.google.com ([209.85.128.52]:52012 "EHLO
-	mail-qe0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752190Ab3IVQjR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Sep 2013 12:39:17 -0400
+Received: from mail-qa0-f53.google.com ([209.85.216.53]:49752 "EHLO
+	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752188Ab3IVQtq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Sep 2013 12:49:46 -0400
 Content-Disposition: inline
-In-Reply-To: <CACT4Y+anZ6Mt9T=Zx5OepmawzkLDSmXo5ZkkhX5riZ8XvNHEmQ@mail.gmail.com>
+In-Reply-To: <201309132344.27778.linux@rainbow-software.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dmitry Vyukov <dvyukov@google.com>
-Cc: linux-ide@vger.kernel.org, Andrey Konovalov <andreyknvl@google.com>, Kostya Serebryany <kcc@google.com>, marc.ceeeee@gmail.com, aaron.lu@intel.com, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-(cc'ing SCSI people)
+Hello, Ondrej.
 
-On Wed, Sep 18, 2013 at 11:45:22AM -0700, Dmitry Vyukov wrote:
-> Hi!
+On Fri, Sep 13, 2013 at 11:44:27PM +0200, Ondrej Zary wrote:
+> This is caused by skipping ata_sff_softreset() when ap->ioaddr.ctl_addr is
+> unset so ata_devchk() is never called. This patch seems to fix the problem.
+> Is it OK or can it cause more problems?
 > 
-> I am working on AddressSanitizer -- a tool that detects use-after-free
-> and out-of-bounds bugs
-> (https://code.google.com/p/address-sanitizer/wiki/AddressSanitizerForKernel).
-> Below is one of the bug reports that I got while running trinity
-> syscall fuzzer. Kernel is built on revision
-> d8efd82eece89f8a5790b0febf17522affe9e1f1.
-> The report was followed by a bunch of similar use-after-free reports,
-> and later the kernel crashed somewhere in ata subsystem. I've attached
-> the full log.
-> 
-> 
-> ERROR: AddressSanitizer: heap-use-after-free on address ffff880034fce000
-> ffff880034fce000 is located 0 bytes inside of 256-byte region
-> [ffff880034fce000, ffff880034fce100)
-> READ of size 8 at ffff880034fce000 by thread T3645:
->   #0      inlined     (asan_report_error+0x3e7/0x500)
-> asan_describe_heap_address ./arch/x86/mm/asan/report.c:191
->   #0 ffffffff810d9af7 (asan_report_error+0x3e7/0x500)
-> ./arch/x86/mm/asan/report.c:309
->   #1 ffffffff810d8c12 (asan_check_region.part.1+0x1b2/0x230)
-> ./arch/x86/mm/asan/asan.c:263
->   #2      inlined     (__tsan_read8+0x28/0x30) asan_check_region
-> ./arch/x86/mm/asan/asan.c:276
->   #2 ffffffff810d8d48 (__tsan_read8+0x28/0x30) ./arch/x86/mm/asan/asan.c:276
->   #3 ffffffff814cc0ef (sg_next+0xf/0x40) ??:0
->   #4      inlined     (ata_qc_issue+0x2b4/0x740) dma_map_sg_attrs
-> ./include/asm-generic/dma-mapping-common.h:50
->   #4      inlined     (ata_qc_issue+0x2b4/0x740) ata_sg_setup
-> ./drivers/ata/libata-core.c:4707
->   #4 ffffffff816574b4 (ata_qc_issue+0x2b4/0x740)
-> ./drivers/ata/libata-core.c:5082
+> --- a/drivers/ata/libata-sff.c
+> +++ b/drivers/ata/libata-sff.c
+> @@ -2008,13 +2008,15 @@ static int ata_bus_softreset(struct ata_port *ap, unsigned int devmask,
+>  
+>  	DPRINTK("ata%u: bus reset via SRST\n", ap->print_id);
+>  
+> -	/* software reset.  causes dev0 to be selected */
+> -	iowrite8(ap->ctl, ioaddr->ctl_addr);
+> -	udelay(20);	/* FIXME: flush */
+> -	iowrite8(ap->ctl | ATA_SRST, ioaddr->ctl_addr);
+> -	udelay(20);	/* FIXME: flush */
+> -	iowrite8(ap->ctl, ioaddr->ctl_addr);
+> -	ap->last_ctl = ap->ctl;
+> +	if (ap->ioaddr.ctl_addr) {
+> +		/* software reset.  causes dev0 to be selected */
+> +		iowrite8(ap->ctl, ioaddr->ctl_addr);
+> +		udelay(20);	/* FIXME: flush */
+> +		iowrite8(ap->ctl | ATA_SRST, ioaddr->ctl_addr);
+> +		udelay(20);	/* FIXME: flush */
+> +		iowrite8(ap->ctl, ioaddr->ctl_addr);
+> +		ap->last_ctl = ap->ctl;
+> +	}
+>  
+>  	/* wait the port to become ready */
+>  	return ata_sff_wait_after_reset(&ap->link, devmask, deadline);
+> @@ -2215,10 +2217,6 @@ void ata_sff_error_handler(struct ata_port *ap)
+>  
+>  	spin_unlock_irqrestore(ap->lock, flags);
+>  
+> -	/* ignore ata_sff_softreset if ctl isn't accessible */
+> -	if (softreset == ata_sff_softreset && !ap->ioaddr.ctl_addr)
+> -		softreset = NULL;
+> -
+>  	/* ignore built-in hardresets if SCR access is not available */
+>  	if ((hardreset == sata_std_hardreset ||
+>  	     hardreset == sata_sff_hardreset) && !sata_scr_valid(&ap->link))
 
-So, if I'm reading this right, it means that the sg list is used after
-being freed?  The sglist is directly from scsi_cmnd and use-after-free
-there is likely to be quite noticeable.  Any chance you guys aren't
-following mempool based allocations correctly?
+Hmm... I'm unsure what to do with these patches.  It's a mostly dead
+driver, so I don't wanna mess with it too much unless it's an obvious
+fix.  What hardware are you playing with?
 
 Thanks.
 
