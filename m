@@ -1,33 +1,63 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ata_piix: minor typo fixes and threading fix
-Date: Sun, 22 Sep 2013 12:05:51 -0400
-Message-ID: <20130922160551.GD28571@htj.dyndns.org>
-References: <523EF645.7050808@linux.com>
- <20130922153959.GB28571@htj.dyndns.org>
- <523F10BB.8020503@gmail.com>
+Subject: Re: Use-after-free in ata_qc_issue
+Date: Sun, 22 Sep 2013 12:39:13 -0400
+Message-ID: <20130922163913.GE28571@htj.dyndns.org>
+References: <CACT4Y+anZ6Mt9T=Zx5OepmawzkLDSmXo5ZkkhX5riZ8XvNHEmQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f175.google.com ([209.85.216.175]:43950 "EHLO
-	mail-qc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752186Ab3IVQFz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Sep 2013 12:05:55 -0400
-Received: by mail-qc0-f175.google.com with SMTP id v2so1434979qcr.20
-        for <linux-ide@vger.kernel.org>; Sun, 22 Sep 2013 09:05:54 -0700 (PDT)
+Received: from mail-qe0-f52.google.com ([209.85.128.52]:52012 "EHLO
+	mail-qe0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752190Ab3IVQjR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Sep 2013 12:39:17 -0400
 Content-Disposition: inline
-In-Reply-To: <523F10BB.8020503@gmail.com>
+In-Reply-To: <CACT4Y+anZ6Mt9T=Zx5OepmawzkLDSmXo5ZkkhX5riZ8XvNHEmQ@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Levente Kurusa <ilevex.linux@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Dmitry Vyukov <dvyukov@google.com>
+Cc: linux-ide@vger.kernel.org, Andrey Konovalov <andreyknvl@google.com>, Kostya Serebryany <kcc@google.com>, marc.ceeeee@gmail.com, aaron.lu@intel.com, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <JBottomley@parallels.com>
 
-On Sun, Sep 22, 2013 at 05:46:03PM +0200, Levente Kurusa wrote:
-> As far as I know pr_cont is not thread-safe. Without this patch I
-> was only getting "... MAP [" and the rest would be scattered through
-> the dmesg.
+(cc'ing SCSI people)
 
-Continuations are now properly handled by printk.  Please see commits
-leading to eab072609e11a357181806ab5a5c309ef6eb76f5.
+On Wed, Sep 18, 2013 at 11:45:22AM -0700, Dmitry Vyukov wrote:
+> Hi!
+> 
+> I am working on AddressSanitizer -- a tool that detects use-after-free
+> and out-of-bounds bugs
+> (https://code.google.com/p/address-sanitizer/wiki/AddressSanitizerForKernel).
+> Below is one of the bug reports that I got while running trinity
+> syscall fuzzer. Kernel is built on revision
+> d8efd82eece89f8a5790b0febf17522affe9e1f1.
+> The report was followed by a bunch of similar use-after-free reports,
+> and later the kernel crashed somewhere in ata subsystem. I've attached
+> the full log.
+> 
+> 
+> ERROR: AddressSanitizer: heap-use-after-free on address ffff880034fce000
+> ffff880034fce000 is located 0 bytes inside of 256-byte region
+> [ffff880034fce000, ffff880034fce100)
+> READ of size 8 at ffff880034fce000 by thread T3645:
+>   #0      inlined     (asan_report_error+0x3e7/0x500)
+> asan_describe_heap_address ./arch/x86/mm/asan/report.c:191
+>   #0 ffffffff810d9af7 (asan_report_error+0x3e7/0x500)
+> ./arch/x86/mm/asan/report.c:309
+>   #1 ffffffff810d8c12 (asan_check_region.part.1+0x1b2/0x230)
+> ./arch/x86/mm/asan/asan.c:263
+>   #2      inlined     (__tsan_read8+0x28/0x30) asan_check_region
+> ./arch/x86/mm/asan/asan.c:276
+>   #2 ffffffff810d8d48 (__tsan_read8+0x28/0x30) ./arch/x86/mm/asan/asan.c:276
+>   #3 ffffffff814cc0ef (sg_next+0xf/0x40) ??:0
+>   #4      inlined     (ata_qc_issue+0x2b4/0x740) dma_map_sg_attrs
+> ./include/asm-generic/dma-mapping-common.h:50
+>   #4      inlined     (ata_qc_issue+0x2b4/0x740) ata_sg_setup
+> ./drivers/ata/libata-core.c:4707
+>   #4 ffffffff816574b4 (ata_qc_issue+0x2b4/0x740)
+> ./drivers/ata/libata-core.c:5082
+
+So, if I'm reading this right, it means that the sg list is used after
+being freed?  The sglist is directly from scsi_cmnd and use-after-free
+there is likely to be quite noticeable.  Any chance you guys aren't
+following mempool based allocations correctly?
 
 Thanks.
 
