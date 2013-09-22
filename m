@@ -1,35 +1,46 @@
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH 24/51] DMA-API: dma: pl330:
-	add	dma_set_mask_and_coherent() call
-Date: Sat, 21 Sep 2013 21:00:00 +0100
-Message-ID: <20130921200000.GS25647@n2100.arm.linux.org.uk>
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
- <E1VMm5t-0007i5-V7@rmk-PC.arm.linux.org.uk>
- <201309201926.29084.heiko@sntech.de>
+From: Patrik Jakobsson <patrik.r.jakobsson@gmail.com>
+Subject: Unexpected _GTF length (8)
+Date: Sun, 22 Sep 2013 03:56:35 +0200
+Message-ID: <CAMeQTsby_CoGq1xAKUEVg_yWyqSSMjfSf6gWWzFRR+-znpPVbw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <alsa-devel-bounces@alsa-project.org>
-Content-Disposition: inline
-In-Reply-To: <201309201926.29084.heiko@sntech.de>
-List-Unsubscribe: <http://mailman.alsa-project.org/mailman/options/alsa-devel>,
- <mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
-List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel/>
-List-Post: <mailto:alsa-devel@alsa-project.org>
-List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
-List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
- <mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
-Errors-To: alsa-devel-bounces@alsa-project.org
-Sender: alsa-devel-bounces@alsa-project.org
-To: Heiko =?iso-8859-1?Q?St=FCbner?= <heiko@sntech.de>
-Cc: alsa-devel@alsa-project.org, linux-doc@vger.kernel.org, linux-mmc@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-nvme@lists.infradead.org, linux-ide@vger.kernel.org, devel@driverdev.osuosl.org, linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, e1000-devel@lists.sourceforge.net, b43-dev@lists.infradead.org, linux-media@vger.kernel.org, devicetree@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-tegra@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Solarflare linux maintainers <linux-net-drivers@solarflare.com>, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org, Vinod Koul <vinod.koul@intel.com>, linux-crypto@vger.kernel.org, uclinux-dist-devel@blackfin.uclinux.org, linuxppc-dev@lists.ozlabs.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-lb0-f177.google.com ([209.85.217.177]:54938 "EHLO
+	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752173Ab3IVB4g (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 21 Sep 2013 21:56:36 -0400
+Received: by mail-lb0-f177.google.com with SMTP id w7so1652747lbi.8
+        for <linux-ide@vger.kernel.org>; Sat, 21 Sep 2013 18:56:35 -0700 (PDT)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: tj@kernel.org
 
-On Fri, Sep 20, 2013 at 07:26:27PM +0200, Heiko St=FCbner wrote:
-> Am Donnerstag, 19. September 2013, 23:49:01 schrieb Russell King:
-> > The DMA API requires drivers to call the appropriate dma_set_mask()
-> > functions before doing any DMA mapping.  Add this required call to
-> > the AMBA PL08x driver.
-> 			^--- copy and paste error - should of course be PL330
+Hi,
 
-Fixed, thanks.
+I've just got myself a MacBook Air 2013 and started looking at the dmesg output
+for 3.12-rc1 where I found this:
+
+ata1.00: unexpected _GTF length (8)
+
+The condition in libata-acpi.c that triggers this is:
+
+if (out_obj->buffer.length % REGS_PER_GTF)
+
+Where REGS_PER_GTF is defined as 7 which is correct according to ACPI specs.
+Since I'm getting a length of 8 I started digging in the ACPI code and found
+that the length is rounded up to acpi_size (u32 or u64 depending on arch). I
+cannot find any commits that recently touched this though I didn't really dig
+through it all.
+
+I've disassembled the SSDT for the "SataAhci" and everything looks ok. That
+code returns a 56 bit buffer. I also tried calling the _GTF method manually
+which returned the following (padded to 8 bytes by the ACPI code ofc).
+
+{0x10, 0x03, 0x00, 0x00, 0x00, 0xa0, 0xef, 0x00}
+
+Doing a quick google search gives me a few of these _GTF length errors dating
+back to at least 2011. What's going on here? Is this a known error?
+
+Thanks
+Patrik Jakobsson
