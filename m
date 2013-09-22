@@ -1,83 +1,33 @@
-From: Ondrej Zary <linux@rainbow-software.org>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH] pata_isapnp: Don't use invalid I/O ports
-Date: Sun, 22 Sep 2013 21:33:29 +0200
-Message-ID: <201309222133.29741.linux@rainbow-software.org>
-References: <1379019689-21467-1-git-send-email-linux@rainbow-software.org> <201309132344.27778.linux@rainbow-software.org> <20130922164942.GA30946@htj.dyndns.org>
+Date: Sun, 22 Sep 2013 17:42:50 -0400
+Message-ID: <20130922214250.GA27616@mtj.dyndns.org>
+References: <1379019689-21467-1-git-send-email-linux@rainbow-software.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-1.atlantis.sk ([80.94.52.57]:51431 "EHLO
-	mail-1.atlantis.sk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752713Ab3IVTeK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Sep 2013 15:34:10 -0400
-In-Reply-To: <20130922164942.GA30946@htj.dyndns.org>
+Received: from mail-qe0-f45.google.com ([209.85.128.45]:44543 "EHLO
+	mail-qe0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752391Ab3IVVmz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Sep 2013 17:42:55 -0400
 Content-Disposition: inline
+In-Reply-To: <1379019689-21467-1-git-send-email-linux@rainbow-software.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
+To: Ondrej Zary <linux@rainbow-software.org>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+On Thu, Sep 12, 2013 at 11:01:29PM +0200, Ondrej Zary wrote:
+> The test for 2nd I/O port validity is broken (reversed):
+> On devices with no control port, the driver attempts to use invalid port 0,
+> resulting in logs full of bad_io_access errors.
+> On devices with control port, the driver does not use it.
+> 
+> Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 
+Applied to libata/for-3.13.
 
-On Sunday 22 September 2013 18:49:42 Tejun Heo wrote:
-> Hello, Ondrej.
->
-> On Fri, Sep 13, 2013 at 11:44:27PM +0200, Ondrej Zary wrote:
-> > This is caused by skipping ata_sff_softreset() when ap->ioaddr.ctl_addr
-> > is unset so ata_devchk() is never called. This patch seems to fix the
-> > problem. Is it OK or can it cause more problems?
-> >
-> > --- a/drivers/ata/libata-sff.c
-> > +++ b/drivers/ata/libata-sff.c
-> > @@ -2008,13 +2008,15 @@ static int ata_bus_softreset(struct ata_port *ap,
-> > unsigned int devmask,
-> >
-> >  	DPRINTK("ata%u: bus reset via SRST\n", ap->print_id);
-> >
-> > -	/* software reset.  causes dev0 to be selected */
-> > -	iowrite8(ap->ctl, ioaddr->ctl_addr);
-> > -	udelay(20);	/* FIXME: flush */
-> > -	iowrite8(ap->ctl | ATA_SRST, ioaddr->ctl_addr);
-> > -	udelay(20);	/* FIXME: flush */
-> > -	iowrite8(ap->ctl, ioaddr->ctl_addr);
-> > -	ap->last_ctl = ap->ctl;
-> > +	if (ap->ioaddr.ctl_addr) {
-> > +		/* software reset.  causes dev0 to be selected */
-> > +		iowrite8(ap->ctl, ioaddr->ctl_addr);
-> > +		udelay(20);	/* FIXME: flush */
-> > +		iowrite8(ap->ctl | ATA_SRST, ioaddr->ctl_addr);
-> > +		udelay(20);	/* FIXME: flush */
-> > +		iowrite8(ap->ctl, ioaddr->ctl_addr);
-> > +		ap->last_ctl = ap->ctl;
-> > +	}
-> >
-> >  	/* wait the port to become ready */
-> >  	return ata_sff_wait_after_reset(&ap->link, devmask, deadline);
-> > @@ -2215,10 +2217,6 @@ void ata_sff_error_handler(struct ata_port *ap)
-> >
-> >  	spin_unlock_irqrestore(ap->lock, flags);
-> >
-> > -	/* ignore ata_sff_softreset if ctl isn't accessible */
-> > -	if (softreset == ata_sff_softreset && !ap->ioaddr.ctl_addr)
-> > -		softreset = NULL;
-> > -
-> >  	/* ignore built-in hardresets if SCR access is not available */
-> >  	if ((hardreset == sata_std_hardreset ||
-> >  	     hardreset == sata_sff_hardreset) && !sata_scr_valid(&ap->link))
->
-> Hmm... I'm unsure what to do with these patches.  It's a mostly dead
-> driver, so I don't wanna mess with it too much unless it's an obvious
-> fix.  What hardware are you playing with?
-
-IMHO, the first patch (invalid I/O ports) is an obvious fix. That bug causes 
-problems with ES968 sound cards.
-
-The second patch is not-so-obvious. Only few ATA controllers don't have 
-control register, but they're all broken now. I'm not sure if the patch is 
-100% correct but it seems to work fine and it does not affect most 
-controllers.
+Thanks.
 
 -- 
-Ondrej Zary
+tejun
