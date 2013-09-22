@@ -1,99 +1,83 @@
-From: Dmitry Vyukov <dvyukov@google.com>
-Subject: Re: Use-after-free in ata_qc_issue
-Date: Sun, 22 Sep 2013 11:59:53 -0700
-Message-ID: <CACT4Y+bKPWkiLJEC2tk076TmPcYcXb_BuKiSG9H2BoWnOZJuiQ@mail.gmail.com>
-References: <CACT4Y+anZ6Mt9T=Zx5OepmawzkLDSmXo5ZkkhX5riZ8XvNHEmQ@mail.gmail.com>
- <20130922163913.GE28571@htj.dyndns.org> <CACT4Y+aGOzEdGZ_rnJ_52hWCph-nyDhd1ukKW=8M0QNSyR0WpA@mail.gmail.com>
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: Re: [PATCH] pata_isapnp: Don't use invalid I/O ports
+Date: Sun, 22 Sep 2013 21:33:29 +0200
+Message-ID: <201309222133.29741.linux@rainbow-software.org>
+References: <1379019689-21467-1-git-send-email-linux@rainbow-software.org> <201309132344.27778.linux@rainbow-software.org> <20130922164942.GA30946@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lb0-f182.google.com ([209.85.217.182]:63200 "EHLO
-	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752353Ab3IVTAP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Sep 2013 15:00:15 -0400
-Received: by mail-lb0-f182.google.com with SMTP id c11so2141385lbj.27
-        for <linux-ide@vger.kernel.org>; Sun, 22 Sep 2013 12:00:13 -0700 (PDT)
-In-Reply-To: <CACT4Y+aGOzEdGZ_rnJ_52hWCph-nyDhd1ukKW=8M0QNSyR0WpA@mail.gmail.com>
+Received: from mail-1.atlantis.sk ([80.94.52.57]:51431 "EHLO
+	mail-1.atlantis.sk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752713Ab3IVTeK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Sep 2013 15:34:10 -0400
+In-Reply-To: <20130922164942.GA30946@htj.dyndns.org>
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, Andrey Konovalov <andreyknvl@google.com>, Kostya Serebryany <kcc@google.com>, Marc C <marc.ceeeee@gmail.com>, aaron.lu@intel.com, linux-scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>
-
-On Sun, Sep 22, 2013 at 11:24 AM, Dmitry Vyukov <dvyukov@google.com> wrote:
-> On Sun, Sep 22, 2013 at 9:39 AM, Tejun Heo <tj@kernel.org> wrote:
->>
->> (cc'ing SCSI people)
->>
->> On Wed, Sep 18, 2013 at 11:45:22AM -0700, Dmitry Vyukov wrote:
->> > Hi!
->> >
->> > I am working on AddressSanitizer -- a tool that detects use-after-free
->> > and out-of-bounds bugs
->> > (https://code.google.com/p/address-sanitizer/wiki/AddressSanitizerForKernel).
->> > Below is one of the bug reports that I got while running trinity
->> > syscall fuzzer. Kernel is built on revision
->> > d8efd82eece89f8a5790b0febf17522affe9e1f1.
->> > The report was followed by a bunch of similar use-after-free reports,
->> > and later the kernel crashed somewhere in ata subsystem. I've attached
->> > the full log.
->> >
->> >
->> > ERROR: AddressSanitizer: heap-use-after-free on address ffff880034fce000
->> > ffff880034fce000 is located 0 bytes inside of 256-byte region
->> > [ffff880034fce000, ffff880034fce100)
->> > READ of size 8 at ffff880034fce000 by thread T3645:
->> >   #0      inlined     (asan_report_error+0x3e7/0x500)
->> > asan_describe_heap_address ./arch/x86/mm/asan/report.c:191
->> >   #0 ffffffff810d9af7 (asan_report_error+0x3e7/0x500)
->> > ./arch/x86/mm/asan/report.c:309
->> >   #1 ffffffff810d8c12 (asan_check_region.part.1+0x1b2/0x230)
->> > ./arch/x86/mm/asan/asan.c:263
->> >   #2      inlined     (__tsan_read8+0x28/0x30) asan_check_region
->> > ./arch/x86/mm/asan/asan.c:276
->> >   #2 ffffffff810d8d48 (__tsan_read8+0x28/0x30) ./arch/x86/mm/asan/asan.c:276
->> >   #3 ffffffff814cc0ef (sg_next+0xf/0x40) ??:0
->> >   #4      inlined     (ata_qc_issue+0x2b4/0x740) dma_map_sg_attrs
->> > ./include/asm-generic/dma-mapping-common.h:50
->> >   #4      inlined     (ata_qc_issue+0x2b4/0x740) ata_sg_setup
->> > ./drivers/ata/libata-core.c:4707
->> >   #4 ffffffff816574b4 (ata_qc_issue+0x2b4/0x740)
->> > ./drivers/ata/libata-core.c:5082
->>
->> So, if I'm reading this right, it means that the sg list is used after
->> being freed?
->
-> Yes, that's correct.
-> First thread 3645 allocated the list in scsi_setup_fs_cmnd().
-> Then thread 1095 freed it in scsi_io_completion().
-> Then thread 3645 accessed the list in ata_scsi_queuecmd().
->
->
->>  The sglist is directly from scsi_cmnd and use-after-free
->> there is likely to be quite noticeable.
->
-> Note that we've seen this only once during several weeks of running
-> trinity syscall fuzzer. So it's not something that happens all that
-> frequently. This may explain why it was not noticed before. Also a
-> use-after-free bug has some chances to silently corrupt heap and/or
-> read garbage, but still survive.
->
->
->> Any chance you guys aren't
->> following mempool based allocations correctly?
->
-> This is quite unlikely, I've looked at mempool code and I do not think
-> it can affect tool operation. We intercept kmalloc/kmem_cache_free,
-> poison the memory block and put it into a delay reuse queue. Then
-> watch for memory accesses that access poisoned memory ranges.
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
-I've noticed that free happens in scsi_error_handler thread, so maybe
-a timeout or some other error condition is involved here.
-It is possible that timeout happens while the request is still being
-in process of submitting (in ata_scsi_queuecmd)?
 
-Also the use-after-free access happens in:
-for_each_sg(sg, s, nents, i)
-  kmemcheck_mark_initialized(sg_virt(s), s->length);
-Is it possible that the special code added for  kmemcheck touches
-memory that it is not supposed to touch?
+On Sunday 22 September 2013 18:49:42 Tejun Heo wrote:
+> Hello, Ondrej.
+>
+> On Fri, Sep 13, 2013 at 11:44:27PM +0200, Ondrej Zary wrote:
+> > This is caused by skipping ata_sff_softreset() when ap->ioaddr.ctl_addr
+> > is unset so ata_devchk() is never called. This patch seems to fix the
+> > problem. Is it OK or can it cause more problems?
+> >
+> > --- a/drivers/ata/libata-sff.c
+> > +++ b/drivers/ata/libata-sff.c
+> > @@ -2008,13 +2008,15 @@ static int ata_bus_softreset(struct ata_port *ap,
+> > unsigned int devmask,
+> >
+> >  	DPRINTK("ata%u: bus reset via SRST\n", ap->print_id);
+> >
+> > -	/* software reset.  causes dev0 to be selected */
+> > -	iowrite8(ap->ctl, ioaddr->ctl_addr);
+> > -	udelay(20);	/* FIXME: flush */
+> > -	iowrite8(ap->ctl | ATA_SRST, ioaddr->ctl_addr);
+> > -	udelay(20);	/* FIXME: flush */
+> > -	iowrite8(ap->ctl, ioaddr->ctl_addr);
+> > -	ap->last_ctl = ap->ctl;
+> > +	if (ap->ioaddr.ctl_addr) {
+> > +		/* software reset.  causes dev0 to be selected */
+> > +		iowrite8(ap->ctl, ioaddr->ctl_addr);
+> > +		udelay(20);	/* FIXME: flush */
+> > +		iowrite8(ap->ctl | ATA_SRST, ioaddr->ctl_addr);
+> > +		udelay(20);	/* FIXME: flush */
+> > +		iowrite8(ap->ctl, ioaddr->ctl_addr);
+> > +		ap->last_ctl = ap->ctl;
+> > +	}
+> >
+> >  	/* wait the port to become ready */
+> >  	return ata_sff_wait_after_reset(&ap->link, devmask, deadline);
+> > @@ -2215,10 +2217,6 @@ void ata_sff_error_handler(struct ata_port *ap)
+> >
+> >  	spin_unlock_irqrestore(ap->lock, flags);
+> >
+> > -	/* ignore ata_sff_softreset if ctl isn't accessible */
+> > -	if (softreset == ata_sff_softreset && !ap->ioaddr.ctl_addr)
+> > -		softreset = NULL;
+> > -
+> >  	/* ignore built-in hardresets if SCR access is not available */
+> >  	if ((hardreset == sata_std_hardreset ||
+> >  	     hardreset == sata_sff_hardreset) && !sata_scr_valid(&ap->link))
+>
+> Hmm... I'm unsure what to do with these patches.  It's a mostly dead
+> driver, so I don't wanna mess with it too much unless it's an obvious
+> fix.  What hardware are you playing with?
+
+IMHO, the first patch (invalid I/O ports) is an obvious fix. That bug causes 
+problems with ES968 sound cards.
+
+The second patch is not-so-obvious. Only few ATA controllers don't have 
+control register, but they're all broken now. I'm not sure if the patch is 
+100% correct but it seems to work fine and it does not affect most 
+controllers.
+
+-- 
+Ondrej Zary
