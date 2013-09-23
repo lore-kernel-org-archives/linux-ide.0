@@ -1,41 +1,37 @@
-From: Sergei Shtylyov <sergei.shtylyov-M4DtvfQ/ZS1MRgGoP+s0PdBPR1lH4CV8@public.gmane.org>
-Subject: Re: [RFC PATCH 08/15] ata: ahci_platform: Manage SATA PHY
-Date: Mon, 23 Sep 2013 16:59:59 +0400
-Message-ID: <52403B4F.3070406@cogentembedded.com>
-References: <1379595943-14622-1-git-send-email-rogerq@ti.com> <1379595943-14622-9-git-send-email-rogerq@ti.com> <20130922165817.GD30946@htj.dyndns.org> <523F35E4.6050707@cogentembedded.com> <20130922215107.GD27616@mtj.dyndns.org> <523FEFC2.801@ti.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] pata_isapnp: Don't use invalid I/O ports
+Date: Mon, 23 Sep 2013 09:00:42 -0400
+Message-ID: <20130923130042.GG30946@htj.dyndns.org>
+References: <1379019689-21467-1-git-send-email-linux@rainbow-software.org>
+ <20130922214250.GA27616@mtj.dyndns.org>
+ <52403944.7080401@cogentembedded.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <523FEFC2.801-l0cyMroinI0@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Roger Quadros <rogerq-l0cyMroinI0@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, balbi-l0cyMroinI0@public.gmane.org, bcousson-rdvid1DuHRBWk0Htik3J/w@public.gmane.org, tony-4v6yS6AI5VpBDgjK7y7TUQ@public.gmane.org, balajitk-l0cyMroinI0@public.gmane.org, kishon-l0cyMroinI0@public.gmane.org, linux-omap-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qc0-f182.google.com ([209.85.216.182]:65299 "EHLO
+	mail-qc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753505Ab3IWNAp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Sep 2013 09:00:45 -0400
+Content-Disposition: inline
+In-Reply-To: <52403944.7080401@cogentembedded.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: Ondrej Zary <linux@rainbow-software.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello.
+On Mon, Sep 23, 2013 at 04:51:16PM +0400, Sergei Shtylyov wrote:
+> >Applied to libata/for-3.13.
+> 
+>    Why only 3.13? Isn't it a simple fix?
 
-On 23-09-2013 11:37, Roger Quadros wrote:
+Hmmm, maybe, the driver is such low impact, I don't think it matters
+either way; otherwise, it should be marked -stable too.  It's a driver
+which shouldn't be enabled by default by distros and I didn't think
+it'd be worthwhile to create any traffic for it.  That said, if
+there's a reason this matters, I'd be happy to add -stable and push it
+through ASAP.
 
->>>     Not sure why you asked -- I'm not using this driver, neither I'm
+Thanks.
 
->> Well, you have better grip of what's going on in the embedded world
->> than me.  I'm mostly curious whether adding dependency on PHY is okay.
-
-> There is no hard dependency on presence of PHY. The driver will continue
-> as usual if devm_phy_get() fails.
-> I hope selecting GENERIC_PHY in Kconfig is not an issue.
-
-    Selecting in the AHCI_PLATFORM section? It seems I have overlooked it. No, 
-I don't think it's a good idea. The generic PHY functions seem to be stubbed 
-when GENERIC_PHY=n.
-
-> cheers,
-> -roger
-
-WBR, Sergei
-
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+tejun
