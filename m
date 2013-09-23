@@ -1,35 +1,38 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] pata_isapnp: Don't use invalid I/O ports
-Date: Mon, 23 Sep 2013 09:00:42 -0400
-Message-ID: <20130923130042.GG30946@htj.dyndns.org>
-References: <1379019689-21467-1-git-send-email-linux@rainbow-software.org>
- <20130922214250.GA27616@mtj.dyndns.org>
- <52403944.7080401@cogentembedded.com>
+Subject: Re: Use-after-free in ata_qc_issue
+Date: Mon, 23 Sep 2013 09:43:49 -0400
+Message-ID: <20130923134349.GJ30946@htj.dyndns.org>
+References: <CACT4Y+anZ6Mt9T=Zx5OepmawzkLDSmXo5ZkkhX5riZ8XvNHEmQ@mail.gmail.com>
+ <20130922163913.GE28571@htj.dyndns.org>
+ <CACT4Y+aGOzEdGZ_rnJ_52hWCph-nyDhd1ukKW=8M0QNSyR0WpA@mail.gmail.com>
+ <CACT4Y+bKPWkiLJEC2tk076TmPcYcXb_BuKiSG9H2BoWnOZJuiQ@mail.gmail.com>
+ <20130922214733.GB27616@mtj.dyndns.org>
+ <CACT4Y+ZBZ8fbGWtQpvdievrZ2-ecxCN-=8V6-rRm_+86eEd+XA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f182.google.com ([209.85.216.182]:65299 "EHLO
-	mail-qc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753505Ab3IWNAp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Sep 2013 09:00:45 -0400
+Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <52403944.7080401@cogentembedded.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <CACT4Y+ZBZ8fbGWtQpvdievrZ2-ecxCN-=8V6-rRm_+86eEd+XA@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Dmitry Vyukov <dvyukov@google.com>
+Cc: linux-ide@vger.kernel.org, Andrey Konovalov <andreyknvl@google.com>, Kostya Serebryany <kcc@google.com>, Marc C <marc.ceeeee@gmail.com>, aaron.lu@intel.com, linux-scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: Ondrej Zary <linux@rainbow-software.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Sep 23, 2013 at 04:51:16PM +0400, Sergei Shtylyov wrote:
-> >Applied to libata/for-3.13.
+Hello,
+
+On Sun, Sep 22, 2013 at 02:51:51PM -0700, Dmitry Vyukov wrote:
+> > Yeah, could be.  IIRC, there's still race condition in block / scsi
+> > timeout handling.  Hmmm...
 > 
->    Why only 3.13? Isn't it a simple fix?
+> Is there an open bug for this?
 
-Hmmm, maybe, the driver is such low impact, I don't think it matters
-either way; otherwise, it should be marked -stable too.  It's a driver
-which shouldn't be enabled by default by distros and I didn't think
-it'd be worthwhile to create any traffic for it.  That said, if
-there's a reason this matters, I'd be happy to add -stable and push it
-through ASAP.
+Not that I know of.  ISTR a couple threads about it.  My memory is
+quite hazy as usual but IIRC there's a race window between arming the
+timer and the command issue path actually becoming ready for timer
+going off and I wouldn't be suprised if there are other race
+conditions around timeout / exception handling path.  It kinda has
+grown over time and I don't think anybody audited how the whole thing
+fits and works together. :(
 
 Thanks.
 
