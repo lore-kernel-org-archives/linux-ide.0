@@ -1,40 +1,39 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Use-after-free in ata_qc_issue
-Date: Mon, 23 Sep 2013 09:43:49 -0400
-Message-ID: <20130923134349.GJ30946@htj.dyndns.org>
-References: <CACT4Y+anZ6Mt9T=Zx5OepmawzkLDSmXo5ZkkhX5riZ8XvNHEmQ@mail.gmail.com>
- <20130922163913.GE28571@htj.dyndns.org>
- <CACT4Y+aGOzEdGZ_rnJ_52hWCph-nyDhd1ukKW=8M0QNSyR0WpA@mail.gmail.com>
- <CACT4Y+bKPWkiLJEC2tk076TmPcYcXb_BuKiSG9H2BoWnOZJuiQ@mail.gmail.com>
- <20130922214733.GB27616@mtj.dyndns.org>
- <CACT4Y+ZBZ8fbGWtQpvdievrZ2-ecxCN-=8V6-rRm_+86eEd+XA@mail.gmail.com>
+From: Roger Quadros <rogerq@ti.com>
+Subject: Re: [RFC PATCH 08/15] ata: ahci_platform: Manage SATA PHY
+Date: Mon, 23 Sep 2013 16:59:09 +0300
+Message-ID: <5240492D.6060204@ti.com>
+References: <1379595943-14622-1-git-send-email-rogerq@ti.com> <1379595943-14622-9-git-send-email-rogerq@ti.com> <20130922165817.GD30946@htj.dyndns.org> <523F35E4.6050707@cogentembedded.com> <20130922215107.GD27616@mtj.dyndns.org> <523FEFC2.801@ti.com> <52403B4F.3070406@cogentembedded.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CACT4Y+ZBZ8fbGWtQpvdievrZ2-ecxCN-=8V6-rRm_+86eEd+XA@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Dmitry Vyukov <dvyukov@google.com>
-Cc: linux-ide@vger.kernel.org, Andrey Konovalov <andreyknvl@google.com>, Kostya Serebryany <kcc@google.com>, Marc C <marc.ceeeee@gmail.com>, aaron.lu@intel.com, linux-scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from comal.ext.ti.com ([198.47.26.152]:46580 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753493Ab3IWN7m (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 23 Sep 2013 09:59:42 -0400
+In-Reply-To: <52403B4F.3070406@cogentembedded.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: Tejun Heo <tj@kernel.org>, balbi@ti.com, bcousson@baylibre.com, tony@atomide.com, balajitk@ti.com, kishon@ti.com, linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
 
-Hello,
-
-On Sun, Sep 22, 2013 at 02:51:51PM -0700, Dmitry Vyukov wrote:
-> > Yeah, could be.  IIRC, there's still race condition in block / scsi
-> > timeout handling.  Hmmm...
+On 09/23/2013 03:59 PM, Sergei Shtylyov wrote:
+> Hello.
 > 
-> Is there an open bug for this?
+> On 23-09-2013 11:37, Roger Quadros wrote:
+> 
+>>>>     Not sure why you asked -- I'm not using this driver, neither I'm
+> 
+>>> Well, you have better grip of what's going on in the embedded world
+>>> than me.  I'm mostly curious whether adding dependency on PHY is okay.
+> 
+>> There is no hard dependency on presence of PHY. The driver will continue
+>> as usual if devm_phy_get() fails.
+>> I hope selecting GENERIC_PHY in Kconfig is not an issue.
+> 
+>    Selecting in the AHCI_PLATFORM section? It seems I have overlooked it. No, I don't think it's a good idea. The generic PHY functions seem to be stubbed when GENERIC_PHY=n.
+> 
+OK I will remove the select then.
 
-Not that I know of.  ISTR a couple threads about it.  My memory is
-quite hazy as usual but IIRC there's a race window between arming the
-timer and the command issue path actually becoming ready for timer
-going off and I wouldn't be suprised if there are other race
-conditions around timeout / exception handling path.  It kinda has
-grown over time and I don't think anybody audited how the whole thing
-fits and works together. :(
-
-Thanks.
-
--- 
-tejun
+cheers,
+-roger
