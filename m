@@ -1,52 +1,60 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+From: Roger Quadros <rogerq-l0cyMroinI0@public.gmane.org>
 Subject: Re: [RFC PATCH 09/15] ata: ti_sata: Add Texas Instruments SATA Wrapper
  driver
-Date: Wed, 25 Sep 2013 14:49:56 +0200
-Message-ID: <3930265.gHe05HETI5@amdc1032>
-References: <1379595943-14622-1-git-send-email-rogerq@ti.com>
- <1379595943-14622-10-git-send-email-rogerq@ti.com>
- <5608096.0pgFIteLqQ@amdc1032>
+Date: Wed, 25 Sep 2013 16:29:01 +0300
+Message-ID: <5242E51D.1020602@ti.com>
+References: <1379595943-14622-1-git-send-email-rogerq@ti.com> <1379595943-14622-10-git-send-email-rogerq@ti.com> <5608096.0pgFIteLqQ@amdc1032> <3930265.gHe05HETI5@amdc1032>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:53620 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755182Ab3IYMuD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Sep 2013 08:50:03 -0400
-In-reply-to: <5608096.0pgFIteLqQ@amdc1032>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <3930265.gHe05HETI5@amdc1032>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Cc: balbi-l0cyMroinI0@public.gmane.org, bcousson-rdvid1DuHRBWk0Htik3J/w@public.gmane.org, tony-4v6yS6AI5VpBDgjK7y7TUQ@public.gmane.org, balajitk-l0cyMroinI0@public.gmane.org, kishon-l0cyMroinI0@public.gmane.org, linux-omap-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: Roger Quadros <rogerq@ti.com>
-Cc: balbi@ti.com, bcousson@baylibre.com, tony@atomide.com, balajitk@ti.com, kishon@ti.com, linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-On Wednesday, September 25, 2013 02:37:19 PM Bartlomiej Zolnierkiewicz wrote:
+Hi,
 
-[...]
-
-> > +#ifdef CONFIG_PM
-> > +
-> > +static int ti_sata_resume(struct device *dev)
-> > +{
-> > +	pm_runtime_disable(dev);
-> > +	pm_runtime_set_active(dev);
-> > +	pm_runtime_enable(dev);
+On 09/25/2013 03:49 PM, Bartlomiej Zolnierkiewicz wrote:
+> On Wednesday, September 25, 2013 02:37:19 PM Bartlomiej Zolnierkiewicz wrote:
 > 
-> This doesn't look like a correct ->resume method:
-> * it shouldn't touch runtime PM at all
-> * for each ->resume method there should be a corresponding ->suspend method
+> [...]
 > 
-> Moreover this whole wrapper driver seems strange, why not just add a proper
-> runtime PM support to ahci_platform driver instead?
+>>> +#ifdef CONFIG_PM
+>>> +
+>>> +static int ti_sata_resume(struct device *dev)
+>>> +{
+>>> +	pm_runtime_disable(dev);
+>>> +	pm_runtime_set_active(dev);
+>>> +	pm_runtime_enable(dev);
+>>
+>> This doesn't look like a correct ->resume method:
+>> * it shouldn't touch runtime PM at all
+>> * for each ->resume method there should be a corresponding ->suspend method
+>>
+>> Moreover this whole wrapper driver seems strange, why not just add a proper
+>> runtime PM support to ahci_platform driver instead?
+> 
+> Hmm, even this shouldn't be needed as this wrapper driver doesn't have
+> ->runtime_suspend and ->runtime resume methods.
+> 
+> What exactly is the purpose of the existence of this wrapper driver?
 
-Hmm, even this shouldn't be needed as this wrapper driver doesn't have
-->runtime_suspend and ->runtime resume methods.
+This is the weirdness of OMAP hwmod framework :).
 
-What exactly is the purpose of the existence of this wrapper driver?
+The OMAP hwmod framework tries to manage the module clocks by itself and needs
+a runtime_resume to enable the relevant clocks.
 
-Best regards,
+hwmod framework will be deprecated in the near future and this is the place where
+we need to handle the resources.
+
+But since we are not yet there, I can get rid of this wrapper driver for now
+and add the necessary pm_runtime calls in the ahci_platform driver.
+
+cheers,
+-roger
 --
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
-
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
