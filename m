@@ -1,60 +1,49 @@
-From: Roger Quadros <rogerq-l0cyMroinI0@public.gmane.org>
-Subject: Re: [RFC PATCH 09/15] ata: ti_sata: Add Texas Instruments SATA Wrapper
- driver
-Date: Wed, 25 Sep 2013 16:29:01 +0300
-Message-ID: <5242E51D.1020602@ti.com>
-References: <1379595943-14622-1-git-send-email-rogerq@ti.com> <1379595943-14622-10-git-send-email-rogerq@ti.com> <5608096.0pgFIteLqQ@amdc1032> <3930265.gHe05HETI5@amdc1032>
+From: Levente Kurusa <levex@linux.com>
+Subject: Re: [PATCH] ata_piix: minor typo fixes and threading fix
+Date: Wed, 25 Sep 2013 16:40:30 +0200
+Message-ID: <CAAsK9AF_sJFcNTkCAR1vE5O80bJ0OoUL2AykqOoUvZt=5AYnxQ@mail.gmail.com>
+References: <523EF645.7050808@linux.com>
+	<20130922153959.GB28571@htj.dyndns.org>
+	<523F10BB.8020503@gmail.com>
+	<20130922160551.GD28571@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <3930265.gHe05HETI5@amdc1032>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-Cc: balbi-l0cyMroinI0@public.gmane.org, bcousson-rdvid1DuHRBWk0Htik3J/w@public.gmane.org, tony-4v6yS6AI5VpBDgjK7y7TUQ@public.gmane.org, balajitk-l0cyMroinI0@public.gmane.org, kishon-l0cyMroinI0@public.gmane.org, linux-omap-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-vc0-f174.google.com ([209.85.220.174]:51102 "EHLO
+	mail-vc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755897Ab3IYOkb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Sep 2013 10:40:31 -0400
+Received: by mail-vc0-f174.google.com with SMTP id gd11so4384278vcb.5
+        for <linux-ide@vger.kernel.org>; Wed, 25 Sep 2013 07:40:30 -0700 (PDT)
+In-Reply-To: <20130922160551.GD28571@htj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
 
-Hi,
+I am getting the following output:
+[    2.236379] ata_piix 0000:00:1f.2: MAP [
+[    2.236492]  P0 P2 -- -- ]
+Instead of the expected:
+[    2.236379] ata_piix 0000:00:1f.2: MAP [ P0 P2 -- -- ]
 
-On 09/25/2013 03:49 PM, Bartlomiej Zolnierkiewicz wrote:
-> On Wednesday, September 25, 2013 02:37:19 PM Bartlomiej Zolnierkiewicz wrote:
-> 
-> [...]
-> 
->>> +#ifdef CONFIG_PM
->>> +
->>> +static int ti_sata_resume(struct device *dev)
->>> +{
->>> +	pm_runtime_disable(dev);
->>> +	pm_runtime_set_active(dev);
->>> +	pm_runtime_enable(dev);
->>
->> This doesn't look like a correct ->resume method:
->> * it shouldn't touch runtime PM at all
->> * for each ->resume method there should be a corresponding ->suspend method
->>
->> Moreover this whole wrapper driver seems strange, why not just add a proper
->> runtime PM support to ahci_platform driver instead?
-> 
-> Hmm, even this shouldn't be needed as this wrapper driver doesn't have
-> ->runtime_suspend and ->runtime resume methods.
-> 
-> What exactly is the purpose of the existence of this wrapper driver?
+This might be a minor problem, but I think it is better the second way.
+Of course, now that I better understand the code, I see that my fix to this,
+is not the best. I will make a new patch, if you think this should be fixed.
 
-This is the weirdness of OMAP hwmod framework :).
+Regards,
+Levente Kurusa
 
-The OMAP hwmod framework tries to manage the module clocks by itself and needs
-a runtime_resume to enable the relevant clocks.
-
-hwmod framework will be deprecated in the near future and this is the place where
-we need to handle the resources.
-
-But since we are not yet there, I can get rid of this wrapper driver for now
-and add the necessary pm_runtime calls in the ahci_platform driver.
-
-cheers,
--roger
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+2013/9/22 Tejun Heo <tj@kernel.org>:
+> On Sun, Sep 22, 2013 at 05:46:03PM +0200, Levente Kurusa wrote:
+>> As far as I know pr_cont is not thread-safe. Without this patch I
+>> was only getting "... MAP [" and the rest would be scattered through
+>> the dmesg.
+>
+> Continuations are now properly handled by printk.  Please see commits
+> leading to eab072609e11a357181806ab5a5c309ef6eb76f5.
+>
+> Thanks.
+>
+> --
+> tejun
