@@ -1,57 +1,42 @@
-From: Kay Sievers <kay@vrfy.org>
-Subject: Re: [PATCH] ata_piix: minor typo fixes and threading fix
-Date: Thu, 26 Sep 2013 19:57:35 +0200
-Message-ID: <CAPXgP13UZYEgdm6er8HrsoCiajwAXEzg_jn4Q7OgY2zDMGv-9g@mail.gmail.com>
-References: <523EF645.7050808@linux.com> <20130922153959.GB28571@htj.dyndns.org>
- <523F10BB.8020503@gmail.com> <20130922160551.GD28571@htj.dyndns.org>
- <CAAsK9AF_sJFcNTkCAR1vE5O80bJ0OoUL2AykqOoUvZt=5AYnxQ@mail.gmail.com> <20130926140930.GA3482@htj.dyndns.org>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Subject: Re: [PATCH 00/51] DMA mask changes
+Date: Thu, 26 Sep 2013 22:23:08 +0200
+Message-ID: <CACna6rxkpYzdD8_Jfi22vA2suUa3k-JM65_gCySQpp4crVCoPg@mail.gmail.com>
+References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wi0-f175.google.com ([209.85.212.175]:41427 "EHLO
-	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752639Ab3IZR54 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Sep 2013 13:57:56 -0400
-Received: by mail-wi0-f175.google.com with SMTP id ez12so7476088wid.8
-        for <linux-ide@vger.kernel.org>; Thu, 26 Sep 2013 10:57:55 -0700 (PDT)
-In-Reply-To: <20130926140930.GA3482@htj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-omap-owner@vger.kernel.org>
+In-Reply-To: <20130919212235.GD12758@n2100.arm.linux.org.uk>
+Sender: linux-omap-owner@vger.kernel.org
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: alsa-devel@alsa-project.org, b43-dev <b43-dev@lists.infradead.org>, "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>, devicetree@vger.kernel.org, dri-devel <dri-devel@lists.freedesktop.org>, e1000-devel@lists.sourceforge.net, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, linux-crypto@vger.kernel.org, linux-doc@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-ide@vger.kernel.org, linux-media@vger.kernel.org, linux-mmc@vger.kernel.org, linux-nvme@lists.infradead.org, linux-omap@vger.kernel.org, linux ppc dev <linuxppc-dev@lists.ozlabs.org>, linux-samsung-soc@vger.kernel.org, Linux SCSI List <linux-scsi@vger.kernel.org>, linux-tegra@vger.kernel.org, linux-usb@vger.kernel.org, "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Solarflare linux maintainers <linux-ne>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Levente Kurusa <levex@linux.com>, linux-ide@vger.kernel.org
 
-On Thu, Sep 26, 2013 at 4:09 PM, Tejun Heo <tj@kernel.org> wrote:
-> (cc'ing Kay)
->
-> On Wed, Sep 25, 2013 at 04:40:30PM +0200, Levente Kurusa wrote:
->> I am getting the following output:
->> [    2.236379] ata_piix 0000:00:1f.2: MAP [
->> [    2.236492]  P0 P2 -- -- ]
->> Instead of the expected:
->> [    2.236379] ata_piix 0000:00:1f.2: MAP [ P0 P2 -- -- ]
->>
->> This might be a minor problem, but I think it is better the second way.
->> Of course, now that I better understand the code, I see that my fix to this,
->> is not the best. I will make a new patch, if you think this should be fixed.
->
-> Hmmm... so, you're saying pr_cont() is misbehaving after dev_info()?
-> If so, we don't want to paper over that from a low level driver like
-> ata_piix.  Let's find out what's going on with pr_cont().
->
-> Kay, Levente is seeing the above output from
-> drivers/ata/ata_piix.c::piix_init_sata_map().  Any ideas?
+2013/9/19 Russell King - ARM Linux <linux@arm.linux.org.uk>:
+> This email is only being sent to the mailing lists in question, not t=
+o
+> anyone personally.  The list of individuals is far to great to do tha=
+t.
+> I'm hoping no mailing lists reject the patches based on the number of
+> recipients.
 
-Yes, the dev_printk() versions are "atomic lines", cannot be
-concatenated with other invocations of printk() like the normal
-printks can. The reason is that the dev_* versions carry structured
-data to userspace, and there, the logs are indexed by device.
+Huh, I think it was enough to send only 3 patches to the b43-dev@. Like=
+:
+[PATCH 01/51] DMA-API: provide a helper to set both DMA and coherent DM=
+A masks
+[PATCH 14/51] DMA-API: net: b43: (...)
+[PATCH 15/51] DMA-API: net: b43legacy: (...)
+;)
 
-We don't want to allow the convenient but very racy and
-non-thread-safe concatenation lines for dev_* versions, they might
-pick up unrelated text fragments from other threads into the logged
-text line; userspace (non-human tools) can not really cope with that.
+I believe Joe has some nice script for doing it that way. When fixing
+some coding style / formatting, he sends only related patches to the
+given ML.
 
-So, the printk should not use the dev_* version, or print all in one
-call, if a single line is expected.
-
-Kay
+--=20
+Rafa=C5=82
+--
+To unsubscribe from this list: send the line "unsubscribe linux-omap" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
