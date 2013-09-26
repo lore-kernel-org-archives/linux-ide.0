@@ -1,29 +1,26 @@
-From: Levente Kurusa <levex@linux.com>
+From: Kay Sievers <kay@vrfy.org>
 Subject: Re: [PATCH] ata_piix: minor typo fixes and threading fix
-Date: Thu, 26 Sep 2013 19:14:49 +0200
-Message-ID: <CAAsK9AEUoXLTN=MoCJyr1UCtKPQZ+on5O2CeqshYQGTpNBVuFg@mail.gmail.com>
-References: <523EF645.7050808@linux.com>
-	<20130922153959.GB28571@htj.dyndns.org>
-	<523F10BB.8020503@gmail.com>
-	<20130922160551.GD28571@htj.dyndns.org>
-	<CAAsK9AF_sJFcNTkCAR1vE5O80bJ0OoUL2AykqOoUvZt=5AYnxQ@mail.gmail.com>
-	<20130926140930.GA3482@htj.dyndns.org>
+Date: Thu, 26 Sep 2013 19:57:35 +0200
+Message-ID: <CAPXgP13UZYEgdm6er8HrsoCiajwAXEzg_jn4Q7OgY2zDMGv-9g@mail.gmail.com>
+References: <523EF645.7050808@linux.com> <20130922153959.GB28571@htj.dyndns.org>
+ <523F10BB.8020503@gmail.com> <20130922160551.GD28571@htj.dyndns.org>
+ <CAAsK9AF_sJFcNTkCAR1vE5O80bJ0OoUL2AykqOoUvZt=5AYnxQ@mail.gmail.com> <20130926140930.GA3482@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vb0-f41.google.com ([209.85.212.41]:55609 "EHLO
-	mail-vb0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751453Ab3IZROu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Sep 2013 13:14:50 -0400
-Received: by mail-vb0-f41.google.com with SMTP id g17so1070807vbg.14
-        for <linux-ide@vger.kernel.org>; Thu, 26 Sep 2013 10:14:49 -0700 (PDT)
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:41427 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752639Ab3IZR54 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Sep 2013 13:57:56 -0400
+Received: by mail-wi0-f175.google.com with SMTP id ez12so7476088wid.8
+        for <linux-ide@vger.kernel.org>; Thu, 26 Sep 2013 10:57:55 -0700 (PDT)
 In-Reply-To: <20130926140930.GA3482@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, Kay Sievers <kay@vrfy.org>
+Cc: Levente Kurusa <levex@linux.com>, linux-ide@vger.kernel.org
 
-2013/9/26 Tejun Heo <tj@kernel.org>:
+On Thu, Sep 26, 2013 at 4:09 PM, Tejun Heo <tj@kernel.org> wrote:
 > (cc'ing Kay)
 >
 > On Wed, Sep 25, 2013 at 04:40:30PM +0200, Levente Kurusa wrote:
@@ -41,11 +38,20 @@ Cc: linux-ide@vger.kernel.org, Kay Sievers <kay@vrfy.org>
 > If so, we don't want to paper over that from a low level driver like
 > ata_piix.  Let's find out what's going on with pr_cont().
 >
-Yes, however I am not familiar with printk() and the likes (like _dev_info()),
-but it looks like either _dev_info() is putting a trailing '\n' or
-only KERN_CONT
-lines can be continued, which is probably not the way it is, because I think
-that sort of defeats the purpose.
+> Kay, Levente is seeing the above output from
+> drivers/ata/ata_piix.c::piix_init_sata_map().  Any ideas?
 
-Regards,
-Levente Kurusa
+Yes, the dev_printk() versions are "atomic lines", cannot be
+concatenated with other invocations of printk() like the normal
+printks can. The reason is that the dev_* versions carry structured
+data to userspace, and there, the logs are indexed by device.
+
+We don't want to allow the convenient but very racy and
+non-thread-safe concatenation lines for dev_* versions, they might
+pick up unrelated text fragments from other threads into the logged
+text line; userspace (non-human tools) can not really cope with that.
+
+So, the printk should not use the dev_* version, or print all in one
+call, if a single line is expected.
+
+Kay
