@@ -1,53 +1,108 @@
-From: "David Laight" <David.Laight@ACULAB.COM>
-Subject: RE: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
-Date: Thu, 26 Sep 2013 09:58:53 +0100
-Message-ID: <AE90C24D6B3A694183C094C60CF0A2F6026B735D@saturn3.aculab.com>
-References: <20130916102210.GA14102@dhcp-26-207.brq.redhat.com> <20130917143022.GA7707@concordia> <20130918094759.GA2353@dhcp-26-207.brq.redhat.com> <20130918142231.GA21650@mtj.dyndns.org> <20130918165045.GB2353@dhcp-26-207.brq.redhat.com> <20130920082458.GA10507@dhcp-26-207.brq.redhat.com> <20130920122736.GD7630@mtj.dyndns.org> <20130925180220.GB26273@google.com> <20130925205804.GA21737@dhcp-26-207.brq.redhat.com> <20130925210016.GA8926@htj.dyndns.org> <20130926074646.GA16774@dhcp-26-207.brq.redhat.com>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
+Date: Thu, 26 Sep 2013 12:45:48 +0200
+Message-ID: <20130926104548.GB16774@dhcp-26-207.brq.redhat.com>
+References: <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
+ <20130918142231.GA21650@mtj.dyndns.org>
+ <20130918165045.GB2353@dhcp-26-207.brq.redhat.com>
+ <20130920082458.GA10507@dhcp-26-207.brq.redhat.com>
+ <20130920122736.GD7630@mtj.dyndns.org>
+ <20130925180220.GB26273@google.com>
+ <20130925205804.GA21737@dhcp-26-207.brq.redhat.com>
+ <20130925210016.GA8926@htj.dyndns.org>
+ <20130926074646.GA16774@dhcp-26-207.brq.redhat.com>
+ <AE90C24D6B3A694183C094C60CF0A2F6026B735D@saturn3.aculab.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="Windows-1252"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx0.aculab.com ([213.249.233.131]:37588 "HELO mx0.aculab.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1755923Ab3IZJUv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Sep 2013 05:20:51 -0400
-Received: from mx0.aculab.com ([127.0.0.1])
- by localhost (mx0.aculab.com [127.0.0.1]) (amavisd-new, port 10024) with SMTP
- id 22263-05 for <linux-ide@vger.kernel.org>;
- Thu, 26 Sep 2013 10:20:48 +0100 (BST)
-Content-class: urn:content-classes:message
-In-Reply-To: <20130926074646.GA16774@dhcp-26-207.brq.redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:51773 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755999Ab3IZKnx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 26 Sep 2013 06:43:53 -0400
+Content-Disposition: inline
+In-Reply-To: <AE90C24D6B3A694183C094C60CF0A2F6026B735D@saturn3.aculab.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>, Tejun Heo <tj@kernel.org>
-Cc: linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>, x86@kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jan Beulich <JBeulich@suse.com>, Bjorn Helgaas <bhelgaas@google.com>, linuxppc-dev@lists.ozlabs.org, Ingo Molnar <mingo@kernel.org>
+To: David Laight <David.Laight@ACULAB.COM>
+Cc: Tejun Heo <tj@kernel.org>, linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>, x86@kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Jan Beulich <JBeulich@suse.com>, Bjorn Helgaas <bhelgaas@google.com>, linuxppc-dev@lists.ozlabs.org, Ingo Molnar <mingo@kernel.org>
 
-> Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
-> 
-> On Wed, Sep 25, 2013 at 05:00:16PM -0400, Tejun Heo wrote:
-> > Hello,
-> >
-> > On Wed, Sep 25, 2013 at 10:58:05PM +0200, Alexander Gordeev wrote:
-> > > Unfortunately, pSeries is a shows-topper here :( It seems we have to
-> > > introduce pci_get_msi{,x}_limit() interfaces to honour the quota
-> > > thing.  I just hope the hardware set for pSeries is limited and we
-> > > won't need to use it for all drivers.
-> >
-> > Can you please go into a bit of detail on that?  Why does it matter?
-> 
-> Because otherwise we will re-introduce a problem described by Michael:
-> "We have a small number of MSIs available, limited by hardware &
-> firmware, if we don't impose a quota then the first device that probes
-> will get most/all of the MSIs and other devices miss out."
+On Thu, Sep 26, 2013 at 09:58:53AM +0100, David Laight wrote:
+> Would it be possible to do some kind of 2-stage allocation.
+> In the first pass the driver would pass a minimum and desired
+> number of MSI-X interrupts, but not actually be given any.
 
-Would it be possible to do some kind of 2-stage allocation.
-In the first pass the driver would pass a minimum and desired
-number of MSI-X interrupts, but not actually be given any.
-Interrupts could then be allocated after it is known how many
-are required and how many are available.
+Repeated calls to msi_enable_msi/msix() is what we are trying to avoid.
 
-	David
+> Interrupts could then be allocated after it is known how many
+> are required and how many are available.
 
+Yep, that what we are heading to. So basic pattern I see would be like this:
 
+	int foo_driver_enable_msix(struct pci_dev *pdev, int nvec)
+	{
+		...
 
+		rc = pci_msix_table_size(pdev);
+		if (rc < 0)
+			return rc;
+
+		nvec = min(nvec, rc);
+		if (nvec < FOO_DRIVER_MINIMUM_NVEC)
+			goto single_msi;
+
+		for (i = 0; i < nvec; i++)
+			entries[i].entry = i;
+
+		rc = pci_enable_msix(pdev, entries, nvec);
+		if (rc)
+			goto single_msi;
+
+		return 0;
+
+	single_msi:
+		...
+
+	}
+
+But this will break pSeries and we might end up with something like this:
+
+	int foo_driver_enable_msix(struct pci_dev *pdev, int nvec)
+	{
+		...
+
+		rc = pci_msix_table_size(pdev);
+		if (rc < 0)
+			return rc;
+
+		nvec = min(nvec, rc);
+		if (nvec < FOO_DRIVER_MINIMUM_NVEC)
+			goto single_msi;
+
+		rc = pci_get_msix_limit(pdev, nvec);
+		if (rc < 0)
+			return rc;
+
+		nvec = min(nvec, rc);
+		if (nvec < FOO_DRIVER_MINIMUM_NVEC)
+			goto single_msi;
+
+		for (i = 0; i < nvec; i++)
+			entries[i].entry = i;
+
+		rc = pci_enable_msix(pdev, entries, nvec);
+		if (rc)
+			goto single_msi;
+
+		return 0;
+
+	single_msi:
+		...
+
+	}
+
+> 	David
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
