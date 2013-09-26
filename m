@@ -1,49 +1,53 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ata_piix: minor typo fixes and threading fix
-Date: Thu, 26 Sep 2013 10:09:30 -0400
-Message-ID: <20130926140930.GA3482@htj.dyndns.org>
-References: <523EF645.7050808@linux.com>
- <20130922153959.GB28571@htj.dyndns.org>
- <523F10BB.8020503@gmail.com>
- <20130922160551.GD28571@htj.dyndns.org>
- <CAAsK9AF_sJFcNTkCAR1vE5O80bJ0OoUL2AykqOoUvZt=5AYnxQ@mail.gmail.com>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
+Date: Thu, 26 Sep 2013 16:39:02 +0200
+Message-ID: <20130926143901.GE16774@dhcp-26-207.brq.redhat.com>
+References: <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
+ <20130918142231.GA21650@mtj.dyndns.org>
+ <20130918165045.GB2353@dhcp-26-207.brq.redhat.com>
+ <20130920082458.GA10507@dhcp-26-207.brq.redhat.com>
+ <20130920122736.GD7630@mtj.dyndns.org>
+ <20130925180220.GB26273@google.com>
+ <20130925205804.GA21737@dhcp-26-207.brq.redhat.com>
+ <20130925210016.GA8926@htj.dyndns.org>
+ <20130926074646.GA16774@dhcp-26-207.brq.redhat.com>
+ <20130926131147.GA31249@mtj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ye0-f179.google.com ([209.85.213.179]:49076 "EHLO
-	mail-ye0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750809Ab3IZORD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Sep 2013 10:17:03 -0400
-Received: by mail-ye0-f179.google.com with SMTP id r6so404448yen.10
-        for <linux-ide@vger.kernel.org>; Thu, 26 Sep 2013 07:17:01 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:28994 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752072Ab3IZOhK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 26 Sep 2013 10:37:10 -0400
 Content-Disposition: inline
-In-Reply-To: <CAAsK9AF_sJFcNTkCAR1vE5O80bJ0OoUL2AykqOoUvZt=5AYnxQ@mail.gmail.com>
+In-Reply-To: <20130926131147.GA31249@mtj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Levente Kurusa <levex@linux.com>
-Cc: linux-ide@vger.kernel.org, Kay Sievers <kay@vrfy.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Michael Ellerman <michael@ellerman.id.au>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "x86@kernel.org" <x86@kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>, Jan Beulich <JBeulich@suse.com>, linuxppc-dev@lists.ozlabs.org
 
-(cc'ing Kay)
-
-On Wed, Sep 25, 2013 at 04:40:30PM +0200, Levente Kurusa wrote:
-> I am getting the following output:
-> [    2.236379] ata_piix 0000:00:1f.2: MAP [
-> [    2.236492]  P0 P2 -- -- ]
-> Instead of the expected:
-> [    2.236379] ata_piix 0000:00:1f.2: MAP [ P0 P2 -- -- ]
+On Thu, Sep 26, 2013 at 09:11:47AM -0400, Tejun Heo wrote:
+> > Because otherwise we will re-introduce a problem described by Michael:
+> > "We have a small number of MSIs available, limited by hardware &
+> > firmware, if we don't impose a quota then the first device that probes
+> > will get most/all of the MSIs and other devices miss out."
 > 
-> This might be a minor problem, but I think it is better the second way.
-> Of course, now that I better understand the code, I see that my fix to this,
-> is not the best. I will make a new patch, if you think this should be fixed.
+> Still not following.  Why wouldn't just letting the drivers request
+> the optimal number they want and falling back to single interrupt mode
+> work?  ie. why can't we just have an all or nothing interface?
 
-Hmmm... so, you're saying pr_cont() is misbehaving after dev_info()?
-If so, we don't want to paper over that from a low level driver like
-ata_piix.  Let's find out what's going on with pr_cont().
+I can imagine a scenario where the first device probes in, requests its
+optimal number, acquires that number and exhausts MSIs in pSeries firmware.
+The next few devices possibly end up with single MSI, since no MSIs left
+to satisfy their optimal numbers. If one of those single-MSI'ed devices
+happened to be a high-performance HBA hitting a degraded performance that
+alone would force (IBM) to introduce the quotas. Now, if the same/another
+device happened does not support the legacy interrupt mode and no MSI
+resources have left in the platform firmware at all...
 
-Kay, Levente is seeing the above output from
-drivers/ata/ata_piix.c::piix_init_sata_map().  Any ideas?
-
-Thanks.
+> tejun
 
 -- 
-tejun
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
