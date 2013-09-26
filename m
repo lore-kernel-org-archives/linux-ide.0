@@ -1,63 +1,64 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
-Date: Thu, 26 Sep 2013 09:11:47 -0400
-Message-ID: <20130926131147.GA31249@mtj.dyndns.org>
-References: <20130917143022.GA7707@concordia>
- <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
- <20130918142231.GA21650@mtj.dyndns.org>
- <20130918165045.GB2353@dhcp-26-207.brq.redhat.com>
- <20130920082458.GA10507@dhcp-26-207.brq.redhat.com>
- <20130920122736.GD7630@mtj.dyndns.org>
- <20130925180220.GB26273@google.com>
- <20130925205804.GA21737@dhcp-26-207.brq.redhat.com>
- <20130925210016.GA8926@htj.dyndns.org>
- <20130926074646.GA16774@dhcp-26-207.brq.redhat.com>
+From: Kirill Tkhai <tkhai@yandex.ru>
+Subject: [PATCH] ata_port_wait_eh(): Change irqsave into unconditional closing of interrupts
+Date: Thu, 26 Sep 2013 17:21:19 +0400
+Message-ID: <1491380201679@web5j.yandex.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pci-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20130926074646.GA16774@dhcp-26-207.brq.redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Michael Ellerman <michael@ellerman.id.au>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "x86@kernel.org" <x86@kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>, Jan Beulich <JBeulich@suse.com>, linuxppc-dev@lists.ozlabs.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from forward12.mail.yandex.net ([95.108.130.94]:48666 "EHLO
+	forward12.mail.yandex.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750764Ab3IZN14 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Sep 2013 09:27:56 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
 
-Hello,
+Hi,
 
-On Thu, Sep 26, 2013 at 09:46:46AM +0200, Alexander Gordeev wrote:
-> > Can you please go into a bit of detail on that?  Why does it matter?
-> 
-> Because otherwise we will re-introduce a problem described by Michael:
-> "We have a small number of MSIs available, limited by hardware &
-> firmware, if we don't impose a quota then the first device that probes
-> will get most/all of the MSIs and other devices miss out."
+ata_port_wait_eh() uses spin_lock_irqsave() and this can confuse in fact
+that it is suitable to use in irqs_disabled() context. But we can't.
 
-Still not following.  Why wouldn't just letting the drivers request
-the optimal number they want and falling back to single interrupt mode
-work?  ie. why can't we just have an all or nothing interface?
+(schedule() returns with interrupts enabled so it's possible
+ata_port_wait_eh() enters with disabled interrupts but returns with enabled)
 
-> > Is it because you're worried you might cause performance regression by
-> > forcing prevoius partial multiple allocations to single interrupt
-> > operation?
-> 
-> Well, not really. I think it won't be possible to force people not to use
-> partial allocations anyway. Some controllers just do not care how many MSIs
-> they are configured with. Some drivers derive the number of MSIs desired
-> from the number of CPUs online - in such cases allocating more MSIs (i.e.
-> a number the controller advertised) could cause a performance degradation
-> even.
+So, replace irqsave to unconditional closing of interrupts.
 
-Yeah, sure thing but just let the *driver* decide that number without
-worrying about how many they can actually get.  Ultimately, what we
-want is removing this extra variable which can arbitrarily affect the
-number of allocated interrupts so that we only have to worry about
-either proper multiple MSI mode or single interrupt mode, not
-something random inbetween.  It is possible that there exists a driver
-which absolutely requires partial allocation on certain archs, but
-that should be a very special case and the interface should look
-accordingly ugly / special.  But do we actually have those?
+I propose to consider to add patch like this. (If you don't have a magic
+with flags which is not obvious for me :)
 
-Thanks.
-
--- 
-tejun
+Signed-off-by: Kirill Tkhai <tkhai@yandex.ru>
+---
+ drivers/ata/libata-eh.c |    9 ++++-----
+ 1 files changed, 4 insertions(+), 5 deletions(-)
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index c69fcce..502c1f9 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -841,21 +841,20 @@ EXPORT_SYMBOL_GPL(ata_scsi_port_error_handler);
+  */
+ void ata_port_wait_eh(struct ata_port *ap)
+ {
+-	unsigned long flags;
+ 	DEFINE_WAIT(wait);
+ 
+  retry:
+-	spin_lock_irqsave(ap->lock, flags);
++	spin_lock_irq(ap->lock);
+ 
+ 	while (ap->pflags & (ATA_PFLAG_EH_PENDING | ATA_PFLAG_EH_IN_PROGRESS)) {
+ 		prepare_to_wait(&ap->eh_wait_q, &wait, TASK_UNINTERRUPTIBLE);
+-		spin_unlock_irqrestore(ap->lock, flags);
++		spin_unlock_irq(ap->lock);
+ 		schedule();
+-		spin_lock_irqsave(ap->lock, flags);
++		spin_lock_irq(ap->lock);
+ 	}
+ 	finish_wait(&ap->eh_wait_q, &wait);
+ 
+-	spin_unlock_irqrestore(ap->lock, flags);
++	spin_unlock_irq(ap->lock);
+ 
+ 	/* make sure SCSI EH is complete */
+ 	if (scsi_host_in_recovery(ap->scsi_host)) {
