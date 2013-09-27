@@ -1,103 +1,38 @@
-From: Levente Kurusa <levex@linux.com>
-Subject: [PATCH v2] ata_piix: minor typo and a printk fix
-Date: Fri, 27 Sep 2013 16:15:36 +0200
-Message-ID: <52459308.1040905@linux.com>
-Reply-To: levex@linux.com
+From: Wakko Warner <wakko@animx.eu.org>
+Subject: ASM1061 freeze with DVDRW (3.11.1 amd64)
+Date: Fri, 27 Sep 2013 19:13:46 -0400
+Message-ID: <20130927231346.GA5662@animx.eu.org>
+Reply-To: Wakko Warner <wakko@animx.eu.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ee0-f50.google.com ([74.125.83.50]:56979 "EHLO
-	mail-ee0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753305Ab3I0OPj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 27 Sep 2013 10:15:39 -0400
-Received: by mail-ee0-f50.google.com with SMTP id d51so1261334eek.37
-        for <linux-ide@vger.kernel.org>; Fri, 27 Sep 2013 07:15:38 -0700 (PDT)
+Received: from tn-76-7-162-101.sta.embarqhsd.net ([76.7.162.101]:45818 "EHLO
+	animx.eu.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753162Ab3I0Xck (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 27 Sep 2013 19:32:40 -0400
+Received: from wakko by animx.eu.org with local
+	(Exim 4.69 #3 (Debian Bug?  What bug /\oo/\))
+	id 1VPhEI-0001Yz-Ql
+	for linux-ide@vger.kernel.org; Fri, 27 Sep 2013 19:13:46 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-The patch fixes a printk() being cut in half, some typos
-and a change in comments to better reflect the specs.
+I am not on this list, please keep me in CC.
 
-Signed-off-by: Levente Kurusa <levex@linux.com>
----
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index 93cb092..a535926 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -100,7 +100,7 @@
+I have a SuperMicro X10SAE with a 2 port ASM1061 controller.  When a DVDRW
+is plugged into the port and is accessed (ie udev rules), there will be some
+errors, an ata reset then the system hangs.  Keyboard is non-responsive
+(lock key lights won't change).  SYSRQ doesn't work.
 
-  enum {
-  	PIIX_IOCFG		= 0x54, /* IDE I/O configuration register */
--	ICH5_PMR		= 0x90, /* port mapping register */
-+	ICH5_PMR		= 0x90, /* address map register */
-  	ICH5_PCS		= 0x92,	/* port control and status */
-  	PIIX_SIDPR_BAR		= 5,
-  	PIIX_SIDPR_LEN		= 16,
-@@ -233,7 +233,7 @@ static const struct pci_device_id piix_pci_tbl[] = {
-  	  PCI_CLASS_STORAGE_IDE << 8, 0xffff00, ich6m_sata },
-  	/* 82801GB/GR/GH (ICH7, identical to ICH6) */
-  	{ 0x8086, 0x27c0, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata },
--	/* 2801GBM/GHM (ICH7M, identical to ICH6M) */
-+	/* 82801GBM/GHM (ICH7M, identical to ICH6M)  */
-  	{ 0x8086, 0x27c4, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6m_sata },
-  	/* Enterprise Southbridge 2 (631xESB/632xESB) */
-  	{ 0x8086, 0x2680, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata },
-@@ -515,7 +515,7 @@ static int ich_pata_cable_detect(struct ata_port *ap)
-  	const struct ich_laptop *lap = &ich_laptop[0];
-  	u8 mask;
+I tried both ports with the same result with 2 DVDRW drives (both same
+model).
 
--	/* Check for specials - Acer Aspire 5602WLMi */
-+	/* Check for specials */
-  	while (lap->device) {
-  		if (lap->device == pdev->device &&
-  		    lap->subvendor == pdev->subsystem_vendor &&
-@@ -1364,38 +1364,38 @@ static const int *piix_init_sata_map(struct 
-pci_dev *pdev,
-  	const int *map;
-  	int i, invalid_map = 0;
-  	u8 map_value;
-+	char buf[32];
-+	char *p = buf, *end = buf + sizeof(buf);
+I was able to use a hard disk attached to either port w/o problems.
 
-  	pci_read_config_byte(pdev, ICH5_PMR, &map_value);
+Kernel is vanilla 3.11.1 running on x86_64.
 
-  	map = map_db->map[map_value & map_db->mask];
-
--	dev_info(&pdev->dev, "MAP [");
-  	for (i = 0; i < 4; i++) {
-  		switch (map[i]) {
-  		case RV:
-  			invalid_map = 1;
--			pr_cont(" XX");
-+			p += scnprintf(p, end - p, " XX");
-  			break;
-
-  		case NA:
--			pr_cont(" --");
-+			p += scnprintf(p, end - p, " --");
-  			break;
-
-  		case IDE:
-  			WARN_ON((i & 1) || map[i + 1] != IDE);
-  			pinfo[i / 2] = piix_port_info[ich_pata_100];
-  			i++;
--			pr_cont(" IDE IDE");
-+			p += scnprintf(p, end - p, " IDE IDE");
-  			break;
--
-  		default:
--			pr_cont(" P%d", map[i]);
-+			p += scnprintf(p, end - p, " P%d", map[i]);
-  			if (i & 1)
-  				pinfo[i / 2].flags |= ATA_FLAG_SLAVE_POSS;
-  			break;
-  		}
-  	}
--	pr_cont(" ]\n");
-+	dev_info(&pdev->dev, "MAP [%s ]\n", buf);
-
-  	if (invalid_map)
-  		dev_err(&pdev->dev, "invalid MAP value %u\n", map_value);
+-- 
+ Microsoft has beaten Volkswagen's world record.  Volkswagen only created 22
+ million bugs.
