@@ -1,37 +1,74 @@
-From: Tejun Heo <tj@kernel.org>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 Subject: Re: [PATCH 1/1] AHCI: disabled FBS prior to issuing software reset
-Date: Sat, 28 Sep 2013 09:10:59 -0400
-Message-ID: <20130928131059.GA3945@htj.dyndns.org>
+Date: Sat, 28 Sep 2013 19:23:38 +0400
+Message-ID: <5246F47A.8030200@cogentembedded.com>
 References: <1380366816-16221-1-git-send-email-yxlraid@gmail.com>
- <20130928114950.GA2620@htj.dyndns.org>
- <CAP0P+NUvaLfXkOUGm8NX19AHvTHmU=Ya0NdFvyJc2gFjN-Cy0A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAP0P+NUvaLfXkOUGm8NX19AHvTHmU=Ya0NdFvyJc2gFjN-Cy0A@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: xiangliang yu <yxlraid@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-lb0-f178.google.com ([209.85.217.178]:43373 "EHLO
+	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754420Ab3I1PXg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Sep 2013 11:23:36 -0400
+Received: by mail-lb0-f178.google.com with SMTP id z5so3121605lbh.23
+        for <linux-ide@vger.kernel.org>; Sat, 28 Sep 2013 08:23:35 -0700 (PDT)
+In-Reply-To: <1380366816-16221-1-git-send-email-yxlraid@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Xiangliang Yu <yxlraid@gmail.com>
+Cc: tj@kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello,
+Hello.
 
-On Sat, Sep 28, 2013 at 09:04:15PM +0800, xiangliang yu wrote:
-> hi, Tejun
-> i had tested the patch with Marvell 88se9235. And driver can find disk
-> if FBS disabled, or can't find disk.
+On 28-09-2013 15:13, Xiangliang Yu wrote:
 
-So it can't find the disk if FBS stays enabled?  Can you please attach
-the boot log before & after?
+> If device is attached to port multiplier, the detection process
+> look like this:
+> 	ahci_hardreset(link, class, deadline)
+> 	if (class == ATA_DEV_PMP) {
+> 		sata_pmp_attach(dev)    /* will enable FBS */
+> 		sata_pmp_init_links(ap, nr_ports);
+> 		ata_for_each_link(link, ap, EDGE) {
+> 			sata_std_hardreset(link, class, deadline);
+> 			if (link_is_online)
+> 				ahci_softreset(link, class, deadline);
+> 		}
+> 	}
+> But, according to chapter 9.3.9 in AHCI spec: Prior to issuing software reset,
+> software shall clear PxCMD.ST to '0' and then clear PxFBS.EN to '0'.
 
-> Please see chapter 9.3.9 and 9.3.8 of AHCI spec. Thanks.
+> Signed-off-by: Xiangliang Yu <yxlraid@gmail.com>
+> ---
+>   drivers/ata/libahci.c |   10 ++++++++++
+>   1 files changed, 10 insertions(+), 0 deletions(-)
 
-Given how crappy and outdated PMP hardware are in general, I'm very
-unwilling to make changes just because the spec says so, so please
-stop repeating the spec and provide data.
+> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+> index acfd0f7..8d024a4 100644
+> --- a/drivers/ata/libahci.c
+> +++ b/drivers/ata/libahci.c
+> @@ -1267,9 +1267,11 @@ int ahci_do_softreset(struct ata_link *link, unsigned int *class,
+>   {
+>   	struct ata_port *ap = link->ap;
+>   	struct ahci_host_priv *hpriv = ap->host->private_data;
+> +	struct ahci_port_priv *pp = ap->private_data;
+>   	const char *reason = NULL;
+>   	unsigned long now, msecs;
+>   	struct ata_taskfile tf;
+> +	bool flag = FALSE;
 
-Thanks.
+    Why not lowercase 'false'? And this is not a good name for a variable (too 
+generic), it should better be called 'fbs' or something...
 
--- 
-tejun
+> @@ -1279,6 +1281,11 @@ int ahci_do_softreset(struct ata_link *link, unsigned int *class,
+>   	if (rc && rc != -EOPNOTSUPP)
+>   		ata_link_warn(link, "failed to reset engine (errno=%d)\n", rc);
+>
+> +	if (!ata_is_host_link(link) && pp->fbs_enabled) {
+> +		ahci_disable_fbs(ap);
+> +		flag = TRUE;
+
+    Why not lowercase 'true'?
+
+WBR, Sergei
+
