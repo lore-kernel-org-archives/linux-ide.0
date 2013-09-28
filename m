@@ -1,52 +1,37 @@
-From: xiangliang yu <yxlraid@gmail.com>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH 1/1] AHCI: disabled FBS prior to issuing software reset
-Date: Sat, 28 Sep 2013 21:04:15 +0800
-Message-ID: <CAP0P+NUvaLfXkOUGm8NX19AHvTHmU=Ya0NdFvyJc2gFjN-Cy0A@mail.gmail.com>
+Date: Sat, 28 Sep 2013 09:10:59 -0400
+Message-ID: <20130928131059.GA3945@htj.dyndns.org>
 References: <1380366816-16221-1-git-send-email-yxlraid@gmail.com>
-	<20130928114950.GA2620@htj.dyndns.org>
+ <20130928114950.GA2620@htj.dyndns.org>
+ <CAP0P+NUvaLfXkOUGm8NX19AHvTHmU=Ya0NdFvyJc2gFjN-Cy0A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bk0-f51.google.com ([209.85.214.51]:44128 "EHLO
-	mail-bk0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752835Ab3I1NER (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Sep 2013 09:04:17 -0400
-In-Reply-To: <20130928114950.GA2620@htj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAP0P+NUvaLfXkOUGm8NX19AHvTHmU=Ya0NdFvyJc2gFjN-Cy0A@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: xiangliang yu <yxlraid@gmail.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-hi, Tejun
-i had tested the patch with Marvell 88se9235. And driver can find disk
-if FBS disabled, or can't find disk.
-Please see chapter 9.3.9 and 9.3.8 of AHCI spec. Thanks.
+Hello,
 
+On Sat, Sep 28, 2013 at 09:04:15PM +0800, xiangliang yu wrote:
+> hi, Tejun
+> i had tested the patch with Marvell 88se9235. And driver can find disk
+> if FBS disabled, or can't find disk.
 
-2013/9/28 Tejun Heo <tj@kernel.org>:
-> Hello,
->
-> On Sat, Sep 28, 2013 at 07:13:36PM +0800, Xiangliang Yu wrote:
->> If device is attached to port multiplier, the detection process
->> look like this:
->>       ahci_hardreset(link, class, deadline)
->>       if (class == ATA_DEV_PMP) {
->>               sata_pmp_attach(dev)    /* will enable FBS */
->>               sata_pmp_init_links(ap, nr_ports);
->>               ata_for_each_link(link, ap, EDGE) {
->>                       sata_std_hardreset(link, class, deadline);
->>                       if (link_is_online)
->>                               ahci_softreset(link, class, deadline);
->>               }
->>       }
->> But, according to chapter 9.3.9 in AHCI spec: Prior to issuing software reset,
->> software shall clear PxCMD.ST to '0' and then clear PxFBS.EN to '0'.
->
-> How was this tested?  Do you observe any behavior difference?  At this
-> point, we are not using SRST on PMP ports anyway, so I can't see how
-> this would make any difference.
->
-> Thanks.
->
-> --
-> tejun
+So it can't find the disk if FBS stays enabled?  Can you please attach
+the boot log before & after?
+
+> Please see chapter 9.3.9 and 9.3.8 of AHCI spec. Thanks.
+
+Given how crappy and outdated PMP hardware are in general, I'm very
+unwilling to make changes just because the spec says so, so please
+stop repeating the spec and provide data.
+
+Thanks.
+
+-- 
+tejun
