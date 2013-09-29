@@ -1,369 +1,373 @@
-From: Dimitar Boyn <dimitarboyn@cyclone-trading.com>
-Subject: Re: AHCI driver does not discover PCIe Marvell based SSD device
-Date: Sat, 28 Sep 2013 15:57:37 -0700
-Message-ID: <CAH2BsKUWF-n6RYJJP35-6ojvpivXQE89DcjtkOzyga6DwO5kmg@mail.gmail.com>
-References: <CAH2BsKX7_qOE33ZZ27TgXpK74zQh6XUuFYgHjtsd5nURpwJ15w@mail.gmail.com>
-	<CAH2BsKWNo1X=W2917xfGWt4K64HuhKk9=-2jRxACBF7VavNOkA@mail.gmail.com>
-	<CA+res+QeFo_jOMOaf5WAcw_GO8CAdjr6vjZHXRGGzWRfhYRG6A@mail.gmail.com>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: [PATCH] BIOS SATA legacy mode failure
+Date: Sat, 28 Sep 2013 19:21:37 -0600
+Message-ID: <CADLC3L0nr3FmyEikG+Vev18mskR7XbfMAqPStLoj8BaEPNX3qA@mail.gmail.com>
+References: <522C1AC5.4080105@linux.com>
+	<522E9982.2060504@gmail.com>
+	<52347C24.8060102@linux.com>
+	<CADLC3L3tGG4yGZKir2pPzMYeddPjSFuD77u87C=YYEqtVn908Q@mail.gmail.com>
+	<523887BC.50704@linux.com>
+	<CADLC3L1LkeW-GT5A=dtT3JMfcTAoPjOCwKhusNOhQ+9FVz_-fQ@mail.gmail.com>
+	<523D4C4C.5070400@linux.com>
+	<CADLC3L3WCMWc4kuJ1-_GbFinEyCABuuh3Fonh641SptsfYDaeA@mail.gmail.com>
+	<523E989F.5040800@linux.com>
+	<CADLC3L2HO5R9jhBcz+L7d6kry6c+spJ+YMW7FW=o79VU2Xb=9A@mail.gmail.com>
+	<524586F9.6030406@linux.com>
+	<CADLC3L1HdD4xV64AWN0bO-2GizUMhwfwY5PZsLZN0eQ=4yFyXA@mail.gmail.com>
+	<52471600.4090908@linux.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vc0-f169.google.com ([209.85.220.169]:62534 "EHLO
-	mail-vc0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752626Ab3I1W5i convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Sep 2013 18:57:38 -0400
-Received: by mail-vc0-f169.google.com with SMTP id ib11so2906610vcb.0
-        for <linux-ide@vger.kernel.org>; Sat, 28 Sep 2013 15:57:37 -0700 (PDT)
-In-Reply-To: <CA+res+QeFo_jOMOaf5WAcw_GO8CAdjr6vjZHXRGGzWRfhYRG6A@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <52471600.4090908@linux.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: levex@linux.com
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Jack Wang <jack.wang.usish@gmail.com>
-Cc: linux-ide@vger.kernel.org
 
-Here is the output after installation of  Xen Server 6.2 - it seems to
-me there is no proper bind from the ahci driver:
-
-# lspci -vv -s 0a:00
-0a:00.0 SATA controller: Marvell Technology Group Ltd. Device 9183
-(rev 14) (prog-if 01 [AHCI 1.0])
-        Subsystem: Marvell Technology Group Ltd. Device 9183
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-ParErr- Stepping- SERR- FastB2B- DisINTx+
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=3Dfast >TAbort=
--
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 64 bytes
-        Interrupt: pin A routed to IRQ 1263
-        Region 0: I/O ports at 2028 [size=3D8]
-        Region 1: I/O ports at 2034 [size=3D4]
-        Region 2: I/O ports at 2020 [size=3D8]
-        Region 3: I/O ports at 2030 [size=3D4]
-        Region 4: I/O ports at 2000 [size=3D32]
-        Region 5: Memory at b9b00000 (32-bit, non-prefetchable) [size=3D=
-512]
-        Expansion ROM at ba200000 [disabled] [size=3D128K]
-        Capabilities: [40] Power Management version 3
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=3D0mA
-PME(D0-,D1-,D2-,D3hot+,D3cold-)
-                Status: D0 NoSoftRst- PME-Enable- DSel=3D0 DScale=3D0 P=
-ME-
-        Capabilities: [50] MSI: Enable+ Count=3D1/1 Maskable- 64bit-
-                Address: fee06000  Data: 4032
-        Capabilities: [70] Express (v2) Legacy Endpoint, MSI 00
-                DevCap: MaxPayload 512 bytes, PhantFunc 0, Latency L0s
-<1us, L1 <8us
-                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal-
-Unsupported-
-                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
-                        MaxPayload 256 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+
-AuxPwr- TransPend-
-                LnkCap: Port #0, Speed 5GT/s, Width x2, ASPM L0s L1,
-Latency L0 <512ns, L1 <64us
-                        ClockPM+ Surprise- LLActRep- BwNot-
-                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- =
-CommClk+
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 5GT/s, Width x2, TrErr- Train- SlotClk+
-DLActive- BWMgmt- ABWMgmt-
-                DevCap2: Completion Timeout: Not Supported, TimeoutDis+
-                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-
-                LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance-
-SpeedDis-, Selectable De-emphasis: -6dB
-                         Transmit Margin: Normal Operating Range,
-EnterModifiedCompliance- ComplianceSOS-
-                         Compliance De-emphasis: -6dB
-                LnkSta2: Current De-emphasis Level: -3.5dB
-        Capabilities: [e0] SATA HBA v0.0 BAR4 Offset=3D00000004
-        Capabilities: [100 v1] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
-UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
-UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt-
-UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonF=
-atalErr+
-                CEMsk:  RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonF=
-atalErr+
-                AERCap: First Error Pointer: 00, GenCap- CGenEn- ChkCap=
-- ChkEn-
-        Kernel driver in use: ahci
-        Kernel modules: ahci
-
-However:
-# lsmod | grep ahci
-Module                  Size  Used by
-ahci                   32926    0
-libata                153762  1 ahci
-
-And from dmesg:
-[   35.492941] ahci 0000:0a:00.0: PCI INT A -> GSI 30 (level, low) -> I=
-RQ 30
-[   35.492951] i801_smbus 0000:00:1f.3: PCI INT B -> GSI 18 (level,
-low) -> IRQ 18
-[   35.492997] ahci 0000:0a:00.0: get owner: 7ff0
-[   35.493016] ahci 0000:0a:00.0: irq 1263 (287) for MSI/MSI-X
-[   35.513899] ahci 0000:0a:00.0: AHCI 0001.0000 32 slots 1 ports 6
-Gbps 0x1 impl SATA mode
-[   35.513903] ahci 0000:0a:00.0: flags: 64bit ncq sntf led pio slum pa=
-rt
-[   35.513909] ahci 0000:0a:00.0: setting latency timer to 64
-[   35.514249] scsi7 : ahci
-[   35.514286] ata7: SATA max UDMA/133 abar m512@0xb9b00000 port
-0xb9b00100 irq 1263[   35.865058] ata7: SATA link up 6.0 Gbps (SStatus
-133 SControl 300)
-[   35.866952] ata7.00: failed to IDENTIFY (INIT_DEV_PARAMS failed,
-err_mask=3D0x80)
-[   41.213883] ata7: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-[   41.215777] ata7.00: failed to IDENTIFY (INIT_DEV_PARAMS failed,
-err_mask=3D0x80)
-[   41.215782] ata7: limiting SATA link speed to 3.0 Gbps
-[   46.563878] ata7: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
-[   46.565767] ata7.00: failed to IDENTIFY (INIT_DEV_PARAMS failed,
-err_mask=3D0x80)
-[   51.913876] ata7: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
-
-It seems initialization fails - same succeeds in RHEL 6.3
-
-Thanks!
-Dimitar
-
-On Sat, Sep 28, 2013 at 5:57 AM, Jack Wang <jack.wang.usish@gmail.com> =
+On Sat, Sep 28, 2013 at 11:46 AM, Levente Kurusa <levex@linux.com> wrot=
+e:
+> 2013-09-28 06:55 keltez=E9ssel, Robert Hancock =EDrta:
+>
+>> On Fri, Sep 27, 2013 at 7:24 AM, Levente Kurusa <levex@linux.com> wr=
+ote:
+>>>
+>>> 2013-09-25 08:31 keltez=E9ssel, Robert Hancock =EDrta:
+>>>
+>>>> On Sun, Sep 22, 2013 at 1:13 AM, Levente Kurusa <levex@linux.com> =
 wrote:
-> Hi=EF=BC=8C
+>>>>>
+>>>>>
+>>>>> 2013-09-21 19:04 keltez=E9ssel, Robert Hancock =EDrta:
+>>>>>
+>>>>>> On Sat, Sep 21, 2013 at 1:35 AM, Levente Kurusa <levex@linux.com=
 >
-> have you checked the device is proper bind to ahci driver on Xen Serv=
-er 6.2?
->
-> lspci -vv  -s 0a:00?
->
-> Jack
->
->
-> 2013/9/28 Dimitar Boyn <dimitarboyn@cyclone-trading.com>
->>
->> Hi, Jeff! (and Team)
->>
->> We still work with early engineering releases of M.2 SSD at this poi=
-nt
->> as PCIe compatible M.2 will not be available commercially for at lea=
-st
->> a few weeks.
->> Current implementations use AHCI controllers by Marvell.
->> We are able to natively install RHEL 6.3 on it as boot device where =
-it
->> is discovered as the device:
->>
->> 0a:00.0 SATA controller: Marvell Technology Group Ltd. Device 9183 (=
-rev
->> 14)
->>
->> You can see that in BIOS the PCIe device is correctly discovered too=
-:
->> <Missing picture>
->>
->> My question is related to other Linux related platforms which do not
->> identify the device as SSD SATA at boot time - and in particular
->> Oracle vServer, XenServer 6.2.
->>
->> I have gathered some information included bellow and noticed that
->> drivers included in the distributions were dependent on other module=
+>>>>>> wrote:
+>>>>>>>>>>>>>
+>>>>>>>>>>>>>
+>>>>>>>>>>>>>
+>>>>>>>>>>>>> The following dmesg is stuck in an infinite loop.
+>>>>>>>>>>>>> dmesg:
+>>>>>>>>>>>>> ata3: lost interrupt (Status 0x50)
+>>>>>>>>>>>>> ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6
+>>>>>>>>>>>>> frozen
+>>>>>>>>>>>>> ata3.00: failed command: READ DMA
+>>>>>>>>>>>>> ata3.00: cmd c8/00:08:00:00:00/00:00:00:00:00/e0 tag 0 dm=
+a 4096
+>>>>>>>>>>>>> in
+>>>>>>>>>>>>>                     res 40/00:00:00:00:00/00:00:00:00:00/=
+00
+>>>>>>>>>>>>> Emask
+>>>>>>>>>>>>> 0x4
+>>>>>>>>>>>>> (timeout)
+>>>>>>>>>>>>> ata3.00: status: { DRDY }
+>>>>>>>>>>>>> ata3: soft resetting link
+>>>>>>>>>>>>> ata3.00: configured for UDMA/33 (no error)
+>>>>>>>>>>>>> ata3.00: device reported invalid CHS sector 0
+>>>>>>>>>>>>> ata3: EH complete
+>>>>>>>>>>>>>
+>>>>>>>>>>>>> Patch that fixes the infinite loop:
+>>>>>>>>>>>>> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata=
+-eh.c
+>>>>>>>>>>>>> index f9476fb..eeedf80 100644
+>>>>>>>>>>>>> --- a/drivers/ata/libata-eh.c
+>>>>>>>>>>>>> +++ b/drivers/ata/libata-eh.c
+>>>>>>>>>>>>> @@ -2437,6 +2437,14 @@ static void ata_eh_link_report(str=
+uct
+>>>>>>>>>>>>> ata_link
+>>>>>>>>>>>>> *link)
+>>>>>>>>>>>>>                                   ehc->i.action, frozen,
+>>>>>>>>>>>>> tries_buf);
+>>>>>>>>>>>>>                       if (desc)
+>>>>>>>>>>>>>                               ata_dev_err(ehc->i.dev, "%s=
+\n",
+>>>>>>>>>>>>> desc);
+>>>>>>>>>>>>> +               ehc->i.dev->exce_cnt ++;
+>>>>>>>>>>>>> +               ata_dev_warn(ehc->i.dev, "Number of excep=
+tions:
+>>>>>>>>>>>>> %d\n",
+>>>>>>>>>>>>> ehc->i.dev->exce_cnt);
+>>>>>>>>>>>>> +               /**
+>>>>>>>>>>>>> +                  * The device is failing terribly,
+>>>>>>>>>>>>> +                 * disable it to prevent damage.
+>>>>>>>>>>>>> +                 */
+>>>>>>>>>>>>> +               if(ehc->i.dev->exce_cnt > 2)
+>>>>>>>>>>>>> +                       ata_dev_disable(ehc->i.dev);
+>>>>>>>>>>>>>               } else {
+>>>>>>>>>>>>>                       ata_link_err(link, "exception Emask=
+ 0x%x
+>>>>>>>>>>>>> "
+>>>>>>>>>>>>>                                    "SAct 0x%x SErr 0x%x a=
+ction
+>>>>>>>>>>>>> 0x%x%s%s\n",
+>>>>>>>>>>>>> diff --git a/include/linux/libata.h b/include/linux/libat=
+a.h
+>>>>>>>>>>>>> index eae7a05..fa52ee6 100644
+>>>>>>>>>>>>> --- a/include/linux/libata.h
+>>>>>>>>>>>>> +++ b/include/linux/libata.h
+>>>>>>>>>>>>> @@ -660,7 +660,8 @@ struct ata_device {
+>>>>>>>>>>>>>               u8
+>>>>>>>>>>>>> devslp_timing[ATA_LOG_DEVSLP_SIZE];
+>>>>>>>>>>>>>
+>>>>>>>>>>>>>               /* error history */
+>>>>>>>>>>>>> -       int                     spdn_cnt;
+>>>>>>>>>>>>> +       int                     spdn_cnt; /* Number of
+>>>>>>>>>>>>> speed_downs
+>>>>>>>>>>>>> */
+>>>>>>>>>>>>> +       int                     exce_cnt; /* Number of
+>>>>>>>>>>>>> exceptions
+>>>>>>>>>>>>> that
+>>>>>>>>>>>>> happenned */
+>>>>>>>>>>>>>               /* ering is CLEAR_END, read comment above
+>>>>>>>>>>>>> CLEAR_END
+>>>>>>>>>>>>> */
+>>>>>>>>>>>>>               struct ata_ering        ering;
+>>>>>>>>>>>>>        };
+>>>>>>>>>>>>>
+>>>>>>>>>>>>
+>>>>>>>>>>>> This doesn't seem like a very good fix. It may prevent the
+>>>>>>>>>>>> apparent
+>>>>>>>>>>>> infinite loop but will just prevent that device from funct=
+ioning
+>>>>>>>>>>>> at
+>>>>>>>>>>>> all.
+>>>>>>>>>>>> It would be better if we could figure out what was actuall=
+y
+>>>>>>>>>>>> going
+>>>>>>>>>>>> wrong.
+>>>>>>>>>>>>
+>>>>>>>>>>>>
+>>>>>>>>>>> I have tested the problem with three different computers, a=
+ll
+>>>>>>>>>>> switched
+>>>>>>>>>>> to legacy/IDE/compatibility mode, and they didn't have this
+>>>>>>>>>>> problem.
+>>>>>>>>>>> Of
+>>>>>>>>>>> course, they could have been set to AHCI mode, and there th=
+e
+>>>>>>>>>>> kernel
+>>>>>>>>>>> would
+>>>>>>>>>>> boot normally. Feels strange, but so far I was only able to
+>>>>>>>>>>> reproduce
+>>>>>>>>>>> the
+>>>>>>>>>>> problem with a Toshiba MK8052GSX. On the topic of my patch,=
+ I
+>>>>>>>>>>> still
+>>>>>>>>>>> don't
+>>>>>>>>>>> see why a device which fails so terribly that it reports 3
+>>>>>>>>>>> exceptions
+>>>>>>>>>>> shouldn't be disabled. Like in this case, it could cause in=
+finite
+>>>>>>>>>>> loops.
+>>>>>>>>>>
+>>>>>>>>>>
+>>>>>>>>>>
+>>>>>>>>>>
+>>>>>>>>>>
+>>>>>>>>>>
+>>>>>>>>>> The problem is that this could happen in some cases when you
+>>>>>>>>>> wouldn't
+>>>>>>>>>> want to disable the device, like an error that just happens
+>>>>>>>>>> sporadically and works on retry, or a device you're trying t=
+o
+>>>>>>>>>> recover
+>>>>>>>>>> data from.
+>>>>>>>>>>
+>>>>>>>>> What do you think if I edit the patch in a way, that when an
+>>>>>>>>> operation
+>>>>>>>>> successfully completes, it resets exce_cnt to zero. Might as =
+well
+>>>>>>>>> add
+>>>>>>>>> a
+>>>>>>>>> module_param, which can set the maximum value of exce_cnt, wh=
+ile
+>>>>>>>>> having
+>>>>>>>>> zero
+>>>>>>>>> as an option to never disable the device. Please don't think =
+me
+>>>>>>>>> wrong,
+>>>>>>>>> I
+>>>>>>>>> don't want to force this patch, I just want to learn how all =
+this
+>>>>>>>>> works,
+>>>>>>>>> and
+>>>>>>>>> in the process try to make it better. :-)
+>>>>>>>>
+>>>>>>>>
+>>>>>>>>
+>>>>>>>>
+>>>>>>>>
+>>>>>>>> That would be better, but I think you're still going to have a=
+n
+>>>>>>>> issue
+>>>>>>>> with what magic number to pick to avoid disabling devices
+>>>>>>>> inappropriately.
+>>>>>>>>
+>>>>>>>> Conceptually, disabling the device doesn't really make sense a=
+nyway.
+>>>>>>>> If someone in userspace wants to keep trying to read from that
+>>>>>>>> device,
+>>>>>>>> why would you stop them because of some arbitrary judgement? T=
+he
+>>>>>>>> kernel itself isn't "locked up" during this process, anything =
+not
+>>>>>>>> blocked on I/O to that device should be able to continue runni=
+ng, so
+>>>>>>>> that process is only hurting itself. If the system fails to bo=
+ot
+>>>>>>>> from
+>>>>>>>> another device due to this, this would likely point out some k=
+ind of
+>>>>>>>> problem in userspace or the distro boot process being overly
+>>>>>>>> serialized.
+>>>>>>>>
+>>>>>>>
+>>>>>>> I have been booting up with the initramfs from ubuntu 13.04,
+>>>>>>> and I have also tried to boot with the ubuntu install cd. They
+>>>>>>> couldn't
+>>>>>>> continue the boot process. I'm gonna spend the weekend trying t=
+o
+>>>>>>> figure
+>>>>>>> out where and why the interrupts don't happen. Whether it be a
+>>>>>>> routing
+>>>>>>> or a hardware issue, which I highly doubt due to the fact that
+>>>>>>> Windows
+>>>>>>> XP SP2 was able to boot up without errors.
+>>>>>>
+>>>>>>
+>>>>>>
+>>>>>>
+>>>>>> Are you able to get out full dmesg output from a boot attempt an=
+d the
+>>>>>> contents of /proc/interrupts?
+>>>>>>
+>>>>> As I said before, I am not able to get to the shell, without my
+>>>>> 'symptom
+>>>>> cure'. With my patch I get the following dmesg output, with
+>>>>> some of my debug messages turned off:
+>>>>> http://pastebin.com/5eb5G3Dx
+>>>>> /proc/interrupts is here:
+>>>>> http://pastebin.com/84CJey2D
+>>>>> After yesterday's research, I have come to ata_piix.c . That file=
+ looks
+>>>>> like
+>>>>> the real culprit, as my netbook's controller is an Intel ICH7M on=
+e,
+>>>>> The values I am getting from the device are very different than t=
+hose
+>>>>> that are expected.
+>>>>>
+>>>>> Things I have noticed, but ignored in dmesg:
+>>>>> There is a stack dump, because nobody cared about IRQ#20. I have
+>>>>> ignored
+>>>>> this because it is the EHCI IRQ, and I suppose it has nothing to =
+do
+>>>>> with
+>>>>> ata. The problem is with ata3 or /dev/sdc, while the IRQ happens
+>>>>> with /dev/sda, which works fine.
+>>>>
+>>>>
+>>>>
+>>>> I think it is likely related to the problem. The kernel thinks thi=
 s
->> before.
+>>>> controller is on IRQ 16, but apparently something is raising
+>>>> un-acknowledged interrupts on IRQ 20 and nothing is coming in on I=
+RQ
+>>>> 16. It seems quite likely that this is actually the ATA controller=
+=2E
+>>>>
+>>>> You mentioned that Windows XP was able to work in this mode. I won=
+der
+>>>> if it was using the IOAPIC, as if not then the IRQ routing is
+>>>> different which might mask the problem. Do you know what IRQ Devic=
+e
+>>>> Manager reported for this controller in Windows? And was it using =
+any
+>>>> IRQs over 15 (which would indicate the IOAPIC was in use)?
+>>>
+>>>
+>>>
+>>> Hmm, according to WinXP's Device manager for this controller,
+>>> it listens to IRQ# 20, and therefore it is using the I/O APIC.
+>>> Now, one question remains where is the error that mismaps
+>>> controller?
+>>> I have created a simple patch which seems to fix this:
+>>> ---
+>>> @@ -1704,6 +1767,8 @@ static int piix_init_one(struct pci_dev *pdev=
+,
+>>> const
+>>> struct pci_device_id *ent)
+>>>                  hpriv->map =3D piix_init_sata_map(pdev, port_info,
+>>>
+>>> piix_map_db_table[ent->driver_data]);
+>>>
+>>> +       if(pdev->vendor =3D=3D 0x8086 && pdev->device =3D=3D 0x27C4=
+)
+>>> +               pdev->irq =3D 20;
+>>>          rc =3D ata_pci_bmdma_prepare_host(pdev, ppi, &host);
+>>>          if (rc)
+>>>                  return rc;
+>>>
+>>> However, I am more than sure that this is not the way
+>>> to solve this problem. Do you have any idea on where
+>>> the ideal place would be to implement a fix?
+>>> According to specs of ICH7M, which is essentially the
+>>> same as ICH6M, we need to check on what interrupt pin
+>>> is the SATA controller, and after that check which IRQ line
+>>> is connected to the I/O APIC and decide the IRQ's number
+>>> on those findings.
+>>>
+>>> Specs of ICH7:
+>>>
+>>> http://www.intel.com/content/dam/doc/datasheet/i-o-controller-hub-7=
+-datasheet.pdf
+>>> Device 31 Interrupt Route Register: Chapter 7.1.46
+>>> Device 31 Interrupt Pin Register: Chapter 7.1.41
+>>>
+>>> The SATA controller is always Device 31.
+>>
+>>
+>> It would appear that something is messing up with the ACPI IRQ routi=
+ng
+>> on this machine that's causing us to think the controller is on the
+>> wrong IRQ. CCing the linux-acpi list to see if anyone has some
+>> additional debugging suggestions. I suspect that dumping the DSDT is
+>> likely the first step though. If you can get IASL installed, you can
+>> do something like:
+>>
+>> cat /sys/firmware/acpi/tables/DSDT > dsdt.aml
+>> iasl -d dsdt.aml
+>>
+>> That should spit out a dsdt.dsl file which would hopefully have the
+>> info needed to figure out what's going on.
 >>
->> Could you please explain the changes in the module included with RHE=
-L
->> 6.3 and advise how/what to modify in the other distributions to enab=
-le
->> correct recognition at install time?
->>
->>
->> --------------------------------------------------------------------=
--------------------
->>
->> RHEL 6.3
->>
->> #modinfo ahci
->>
->> filename:
->> /lib/modules/2.6.32-279.el6.x86_64/kernel/drivers/ata/ahci.ko
->>
->> version:        3.0
->>
->> license:        GPL
->>
->> description:    AHCI SATA low-level driver
->>
->> author:         Jeff Garzik
->>
->> srcversion:     C45EE190F3F2730DF6E95A0
->>
->> depends:
->>
->> vermagic:     2.6.32-279.el6.x86_64 SMP mod_unload modversions
->>
->> parm:           skip_host_reset:skip global host reset (0=3Ddon't sk=
-ip,
->> 1=3Dskip) (int)
->>
->> parm:           ignore_sss:Ignore staggered spinup flag (0=3Ddon't
->> ignore, 1=3Dignore) (int)
->>
->> parm:           ahci_em_messages:AHCI Enclosure Management Message
->> control (0 =3D off, 1 =3D on) (int)
->>
->> parm:           marvell_enable:Marvell SATA via AHCI (1 =3D enabled)=
- (int)
->>
->> #yum install smartmontools
->>
->> #uname -u
->>
->> 2.6.32-279.el6.x86_64 #1 SMP Wed Jun 13 18:24:36 EDT 2012 x86_64
->> x86_64 x86_64 GNU/Linux
->>
->> # lsmod | grep ahci
->>
->> Module              Size  Used by
->>
->> ahci                   40871  8
->>
->> #cat /sys/module/ahci/parameters/ahci_em_messages  1
->>
->> #cat /sys/module/ahci/parameters/ignore_sss 0
->>
->> #cat /sys/module/ahci/parameters/marvell_enable
->>
->> 0
->>
->> #cat /sys/module/ahci/parameters/skip_host_reset
->>
->> 0
->>
->> from /var/log/messg
->>
->> =E2=80=A6=E2=80=A6=E2=80=A6=E2=80=A6=E2=80=A6=E2=80=A6=E2=80=A6
->>
->> kernel: ahci 0000:0a:00.0: PCI INT A -> GSI 30 (level, low) -> IRQ 3=
-0
->>
->> kernel: ahci 0000:0a:00.0: AHCI 0001.0000 32 slots 1 ports 6 Gbps 0x=
-1
->> impl SATA mode
->>
->> kernel: ahci 0000:0a:00.0: flags: 64bit ncq sntf led pio slum part
->>
->> kernel: scsi7 : ahci
->>
->> kernel: ata7: SATA max UDMA/133 abar m512@0xb9b00000 port 0xb9b00100=
- irq
->> 65
->>
->> kernel: ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
->>
->> kernel: ata7: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
->>
->> kernel: ata7.00: ATA-8: LITEONIT LGT-128B1P, VG7RDTB, max UDMA/133
->>
->> kernel: ata7.00: 250069680 sectors, multi 1: LBA48 NCQ (depth 31/32)=
-, AA
->>
->> kernel: ata7.00: configured for UDMA/133
->> --------------------------------------
->> however:
->>
->> Xen Server 6.2
->>
->> #modinfo ahci
->>
->> filename:
->> /lib/modules/2.6.32.43-0.4.1.xs1.8.0.835.170778xen/kernel/drivers/at=
-a/ahci.ko
->>
->> version: 3.0
->>
->> description: AHCI SATA low-level driver
->>
->> author: Jeff Garzik
->>
->> srcversion: 2A18A052E06680917E65277
->>
->> depends: libata
->>
->> vermagic: 2.6.32.43-0.4.1.xs1.8.0.835.170778xen SMP mod_unload
->> modversions Xen 686
->>
->> parm: skip_host_reset: skip global host reset (0=3Ddon=E2=80=99t ski=
-p, 1=3Dskip) (int)
->>
->> parm: ignore_sss: Ignore staggered spinup flag (0=3Ddon=E2=80=99t ig=
-nore, 1=3Dignore)
->> (int)
->>
->> parm: ahci_em_messages: Set AHCI Enclosure Management Message type
->> (0=3Ddisabled, 1=3DLED) (int)
->>
->> parm: marvell_enable: Marvell SATA via AHCI (1=3Denabled) (int)
->>
->>
->> Oracle vServer (v37306-01.iso)
->>
->> #uname -u
->>
->> 2.6.39-300.29.1.el5uek #1 SMP THu Feb 14 03:32:54 PST 2013 x86_64
->> GNU/Linux
->>
->>
->> #lsmod | grep ahci
->>
->> ahci 22884 0
->>
->> libahci 24254 1 ahci
->>
->>
->> #lspci
->>
->> 0a:00.0 SATA Controller: Marvell Technology Group LTd. Device 9183 (=
-rev
->> 14)
->>
->>
->> #lspci -s 0a:00 -nn
->>
->> a:00.0 SATA Controller [0106]: Marvell Technology Group LTd. Device
->> 9183 [1b4b:9183] (rev 14)
->>
->>
->>
->> Many Thanks!
->> Dimitar Boyn
->>
->> --
->> -- LiveLoveDo
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-ide"=
- in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
+> Here is the disassembled DSDT table:
+> http://pastebin.com/LWNVht9H
+> The SATA controller is at line 5206.
+> I also disassembled the SSDT, but nothing interesting was there:
+> http://pastebin.com/fus5sxU8
 >
+> I disabled the usage of ACPI for IRQs with acpi=3Dnoirq,
+> and it successfully booted up setting itself to IRQ#3.
+> This makes me think that this is the BIOS's fault.
+> I think it would be possible to create a DMI check
+> and forcibly set the irq to 20 if the DMI matches.
+> Any comments on this?
 
+The BIOS may be doing something funky, but since Windows apparently
+can figure out it's on IRQ 20, Linux presumably should be able to as
+well. DMI checks should be the last resort - Windows almost certainly
+doesn't have any machine-specific logic here, and it's hard to tell
+what other machine models could be affected. With ACPI stuff, we
+generally just need to do the same thing Windows does for things to
+work reliably, and DMI checks are more of a hack workaround than a
+real fix.
 
-
---=20
-Dimitar Boyn
-CEO
-
-Cyclone Trading Company
-
-Email:
-dimitarboyn@cyclone-trading.com
-IM: dimitarboyn (Skype)
-Office 2 Mobile:
-(408) 430 5577
-
-http://www.linkedin.com/in/dimitarboyn
--- LiveLoveDo
+I'll try and have a look at the DSDT within the next few days and see
+if I can figure anything out, unless someone beats me to it.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-acpi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
