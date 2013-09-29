@@ -1,45 +1,42 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: =?utf-8?B?5Zue5aSN77yaUmU=?= =?utf-8?Q?=3A?= [v1] ahci: imx:
- setup power saving methods
-Date: Sun, 29 Sep 2013 08:51:28 -0400
-Message-ID: <20130929125128.GA7599@htj.dyndns.org>
-References: <1380269265-10821-1-git-send-email-Hong-Xing.Zhu@freescale.com>
- <1380269265-10821-2-git-send-email-Hong-Xing.Zhu@freescale.com>
- <20130927131441.GA3205@htj.dyndns.org>
- <20130929073528.GE26156@S2101-09.ap.freescale.net>
- <1vugbd691bjfibh5crdihlrh.1380440262216@email.android.com>
- <20130929074817.GG26156@S2101-09.ap.freescale.net>
+From: "Michael G." <michael.gajda@tu-dortmund.de>
+Subject: Initio Corporation INI-1623 PCI SATA-II Controller
+Date: Sun, 29 Sep 2013 20:49:07 +0200
+Message-ID: <52487623.3040102@tu-dortmund.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f50.google.com ([209.85.216.50]:46400 "EHLO
-	mail-qa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751227Ab3I2Mve (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Sep 2013 08:51:34 -0400
-Received: by mail-qa0-f50.google.com with SMTP id j7so1619582qaq.2
-        for <linux-ide@vger.kernel.org>; Sun, 29 Sep 2013 05:51:33 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20130929074817.GG26156@S2101-09.ap.freescale.net>
+Received: from mx1.HRZ.Uni-Dortmund.DE ([129.217.128.51]:39520 "EHLO
+	unimail.uni-dortmund.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756017Ab3I2Tj2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Sep 2013 15:39:28 -0400
+Received: from [192.168.22.101] (ip-95-222-25-101.unitymediagroup.de [95.222.25.101])
+	(authenticated bits=0)
+	by unimail.uni-dortmund.de (8.14.7/8.14.6) with ESMTP id r8TIn7Ld002972
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NOT)
+	for <linux-ide@vger.kernel.org>; Sun, 29 Sep 2013 20:49:07 +0200 (CEST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Shawn Guo <shawn.guo@linaro.org>
-Cc: Zhu Richard-R65037 <r65037@freescale.com>, Richard Zhu <richard.zhuhongxing@gmail.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-On Sun, Sep 29, 2013 at 03:48:18PM +0800, Shawn Guo wrote:
-> On Sun, Sep 29, 2013 at 07:40:57AM +0000, Zhu Richard-R65037 wrote:
-> > Hi Shawn:
-> > Thanks.
-> > The hot-plug can=E2=80=99t be supported, if we support this method =
-unconditionally.
->=20
-> Ah, okay.  Then you should make this clear in the help text of the
-> Kconfig option.
+Dear ata-subsystem maintainer,
 
-Yeah but it's still weird to require kernel build to flip this
-feature, isn't it?  Shouldn't it be a module param or something?
+I read that the ini162x driver is rather unsable and should not be used
+(found the kernel 3.11 commit). I have such a PCMCIA card and have been
+using it on a homeserver. I *did* have disk issues, but thought it was =
+due
+to heat=E2=80=A6 in only occured once or twice (on rather warm days) in=
+ the last 1,5
+years.
 
-Thanks.
+The homeserver will be updgraded next year anyways and is anything but
+'production use' - so do not take this eMail as a request to work on th=
+is
+driver :p
 
---=20
-tejun
+Unless you want to have the hardware - I'd be willing to donate it and =
+send
+it via mail somewhere if needed :D
+
+Best wishes,
+Michael
