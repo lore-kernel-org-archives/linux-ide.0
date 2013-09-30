@@ -1,38 +1,48 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2] ata_piix: minor typo and a printk fix
-Date: Mon, 30 Sep 2013 15:36:28 -0400
-Message-ID: <20130930193628.GA8091@htj.dyndns.org>
-References: <52459308.1040905@linux.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 62351] Marvell PCIe SSD controller 0x9183 suspend/resume
+ problem
+Date: Mon, 30 Sep 2013 21:38:20 +0000
+Message-ID: <bug-62351-11633-LYfPeg0KpM@https.bugzilla.kernel.org/>
+References: <bug-62351-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ye0-f176.google.com ([209.85.213.176]:43345 "EHLO
-	mail-ye0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756307Ab3I3Tgc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Sep 2013 15:36:32 -0400
-Received: by mail-ye0-f176.google.com with SMTP id m4so1900014yen.21
-        for <linux-ide@vger.kernel.org>; Mon, 30 Sep 2013 12:36:31 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <52459308.1040905@linux.com>
+Received: from mail.kernel.org ([198.145.19.201]:44407 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755415Ab3I3ViX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 30 Sep 2013 17:38:23 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id A54C72024F
+	for <linux-ide@vger.kernel.org>; Mon, 30 Sep 2013 21:38:22 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 4297520212
+	for <linux-ide@vger.kernel.org>; Mon, 30 Sep 2013 21:38:21 +0000 (UTC)
+In-Reply-To: <bug-62351-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Levente Kurusa <levex@linux.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-Hello,
+https://bugzilla.kernel.org/show_bug.cgi?id=62351
 
-Tried to apply it but patch seems whitespace damaged and doesn't
-apply.  Please resend.  Also, one comment.
+--- Comment #3 from Patrik Jakobsson <patrik.r.jakobsson@gmail.com> ---
+Hi Tejun
 
-On Fri, Sep 27, 2013 at 04:15:36PM +0200, Levente Kurusa wrote:
-> -	ICH5_PMR		= 0x90, /* port mapping register */
-> +	ICH5_PMR		= 0x90, /* address map register */
+Success!
 
-I don't know whether the name has changed but PMR at least did stand
-for Port Mapping Register.  I don't see much point in updating the
-comment here.
+Setting min_power before suspend makes the error go away. Sadly pm-utils sets
+max_performance so it needs to be configured and for some reason it doesn't
+take my /etc/pm/config.d/sata_alpm into account. I ended up copying
+/usr/lib/pm-utils/power.d/sata_alpm to /etc/pm/power.d and forcing it to
+min_power. Also added a link to it in /etc/pm/sleep.d/ so it sets min_power
+before suspend.
 
-Thanks.
+Strangely the SATA device randomly appears on /sys/class/scsi_host/host0 and
+../host1 but I just set them both (the other is USB) and that works fine.
+
+Thanks
+Patrik
 
 -- 
-tejun
+You are receiving this mail because:
+You are on the CC list for the bug.
