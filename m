@@ -1,42 +1,36 @@
-From: "Michael G." <michael.gajda@tu-dortmund.de>
-Subject: Initio Corporation INI-1623 PCI SATA-II Controller
-Date: Sun, 29 Sep 2013 20:49:07 +0200
-Message-ID: <52487623.3040102@tu-dortmund.de>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 62351] Marvell PCIe SSD controller 0x9183 suspend/resume
+ problem
+Date: Mon, 30 Sep 2013 10:33:37 +0000
+Message-ID: <bug-62351-11633-l2K0CMtXF2@https.bugzilla.kernel.org/>
+References: <bug-62351-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.HRZ.Uni-Dortmund.DE ([129.217.128.51]:39520 "EHLO
-	unimail.uni-dortmund.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756017Ab3I2Tj2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Sep 2013 15:39:28 -0400
-Received: from [192.168.22.101] (ip-95-222-25-101.unitymediagroup.de [95.222.25.101])
-	(authenticated bits=0)
-	by unimail.uni-dortmund.de (8.14.7/8.14.6) with ESMTP id r8TIn7Ld002972
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NOT)
-	for <linux-ide@vger.kernel.org>; Sun, 29 Sep 2013 20:49:07 +0200 (CEST)
+Received: from mail.kernel.org ([198.145.19.201]:47458 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751972Ab3I3Kds (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 30 Sep 2013 06:33:48 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id CFD25201FE
+	for <linux-ide@vger.kernel.org>; Mon, 30 Sep 2013 10:33:43 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id DD2562020E
+	for <linux-ide@vger.kernel.org>; Mon, 30 Sep 2013 10:33:37 +0000 (UTC)
+In-Reply-To: <bug-62351-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-Dear ata-subsystem maintainer,
+https://bugzilla.kernel.org/show_bug.cgi?id=62351
 
-I read that the ini162x driver is rather unsable and should not be used
-(found the kernel 3.11 commit). I have such a PCMCIA card and have been
-using it on a homeserver. I *did* have disk issues, but thought it was =
-due
-to heat=E2=80=A6 in only occured once or twice (on rather warm days) in=
- the last 1,5
-years.
+Patrik Jakobsson <patrik.r.jakobsson@gmail.com> changed:
 
-The homeserver will be updgraded next year anyways and is anything but
-'production use' - so do not take this eMail as a request to work on th=
-is
-driver :p
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |linux-ide@vger.kernel.org
 
-Unless you want to have the hardware - I'd be willing to donate it and =
-send
-it via mail somewhere if needed :D
-
-Best wishes,
-Michael
+-- 
+You are receiving this mail because:
+You are on the CC list for the bug.
