@@ -1,45 +1,66 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 62351] Marvell PCIe SSD controller 0x9183 suspend/resume
- problem
-Date: Mon, 30 Sep 2013 19:14:58 +0000
-Message-ID: <bug-62351-11633-0sp6Kd5wAV@https.bugzilla.kernel.org/>
-References: <bug-62351-11633@https.bugzilla.kernel.org/>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: ASM1061 freeze with DVDRW (3.11.1 amd64)
+Date: Mon, 30 Sep 2013 15:27:31 -0400
+Message-ID: <20130930192731.GA2703@htj.dyndns.org>
+References: <20130927231346.GA5662@animx.eu.org>
+ <CAPVzhpzqs4VM6v59+XD-eR4aeh0GskQgonXZXKMY2Wwq31CL7Q@mail.gmail.com>
+ <20130928122013.GA26951@animx.eu.org>
+ <CAPVzhpy-n9dS0Gogy5om60R5xcQ3Gf9Ws5Ba4GqLZRZ2bwv=cw@mail.gmail.com>
+ <20130929031101.GD11789@animx.eu.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:40270 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755919Ab3I3TPB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 30 Sep 2013 15:15:01 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 135CB20265
-	for <linux-ide@vger.kernel.org>; Mon, 30 Sep 2013 19:15:00 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 2384E20237
-	for <linux-ide@vger.kernel.org>; Mon, 30 Sep 2013 19:14:59 +0000 (UTC)
-In-Reply-To: <bug-62351-11633@https.bugzilla.kernel.org/>
+Received: from mail-yh0-f54.google.com ([209.85.213.54]:42374 "EHLO
+	mail-yh0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755633Ab3I3TfT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Sep 2013 15:35:19 -0400
+Received: by mail-yh0-f54.google.com with SMTP id z20so2117016yhz.41
+        for <linux-ide@vger.kernel.org>; Mon, 30 Sep 2013 12:35:18 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <20130929031101.GD11789@animx.eu.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Wakko Warner <wakko@animx.eu.org>
+Cc: Reartes Guillermo <rtguille@gmail.com>, linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=62351
+Hey, guys.
 
-Tejun Heo <tj@kernel.org> changed:
+On Sat, Sep 28, 2013 at 11:11:01PM -0400, Wakko Warner wrote:
+> [  493.612957] ata4.00: detaching (SCSI 3:0:0:0)
+> [  516.314095] ata7.00: exception Emask 0x52 SAct 0x0 SErr 0xffffffff action 0xe frozen
+> [  516.314699] ata7: SError: { RecovData RecovComm UnrecovData Persist Proto HostInt PHYRdyChg PHYInt CommWake 10B8B Dispar BadCRC Handshk LinkSeq TrStaTrns UnrecFIS DevExch }
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |tj@kernel.org
+That's the controller going bonkers - all SErr bits are set.  It's not
+functioning correctly anymore.
 
---- Comment #2 from Tejun Heo <tj@kernel.org> ---
-Hello, Patrik.
+> [  516.315939] ata7.00: failed command: IDENTIFY PACKET DEVICE
+> [  516.316567] ata7.00: cmd a1/00:01:00:00:00/00:00:00:00:00/00 tag 0 pio 512 in
+> [  516.316567]          res 40/00:03:00:00:00/00:00:00:00:00/a0 Emask 0x56 (ATA bus error)
+> [  516.317794] ata7.00: status: { DRDY }
+> [  516.318407] ata7: hard resetting link
 
-Can you please do "echo min_power >
-/sys/class/scsi_host/host0/link_power_management_policy" before suspend and see
-whether anything changes?
+On non other than IDENTIFY.
+
+> Once this last line was printed, pings stopped working.  Computer was
+> completely frozen.  Keyboard lock keys won't toggle either.  SYSRQ non
+> functional.
+
+Misbehaving controllers can hang machine without any software way to
+recover from it.  It could just hang in the middle of memory
+transaction.  Unless PCI bridge aborts it with timeout, the only way
+the system can get out of there is hard reset.  Unfortunately,
+controllers misbehaving this way weren't too uncommon way back with
+controllers with taskfile based interface.  Nowadays, it mostly
+disappeared but we apparently have one here.
+
+It could be a combination of bugs on the controller and the optical
+drive and there probably are some workarounds which can avoid it -
+avoid certain command sequence, take certain special steps during
+recovery, etc.  A good starting point would be finding out which
+command from udev makes it go bonkers and see whether we can avoid
+that.
 
 Thanks.
 
 -- 
-You are receiving this mail because:
-You are on the CC list for the bug.
+tejun
