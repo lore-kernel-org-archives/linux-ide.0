@@ -1,64 +1,36 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: ASM1061 freeze with DVDRW (3.11.1 amd64)
-Date: Mon, 30 Sep 2013 15:27:31 -0400
-Message-ID: <20130930192731.GA2703@htj.dyndns.org>
-References: <20130927231346.GA5662@animx.eu.org>
- <CAPVzhpzqs4VM6v59+XD-eR4aeh0GskQgonXZXKMY2Wwq31CL7Q@mail.gmail.com>
- <20130928122013.GA26951@animx.eu.org>
- <CAPVzhpy-n9dS0Gogy5om60R5xcQ3Gf9Ws5Ba4GqLZRZ2bwv=cw@mail.gmail.com>
- <20130929031101.GD11789@animx.eu.org>
+Subject: Re: [PATCH v2] ata_piix: minor typo and a printk fix
+Date: Mon, 30 Sep 2013 15:36:28 -0400
+Message-ID: <20130930193628.GA8091@htj.dyndns.org>
+References: <52459308.1040905@linux.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yh0-f54.google.com ([209.85.213.54]:42374 "EHLO
-	mail-yh0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755633Ab3I3TfT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Sep 2013 15:35:19 -0400
-Received: by mail-yh0-f54.google.com with SMTP id z20so2117016yhz.41
-        for <linux-ide@vger.kernel.org>; Mon, 30 Sep 2013 12:35:18 -0700 (PDT)
+Received: from mail-ye0-f176.google.com ([209.85.213.176]:43345 "EHLO
+	mail-ye0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756307Ab3I3Tgc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Sep 2013 15:36:32 -0400
+Received: by mail-ye0-f176.google.com with SMTP id m4so1900014yen.21
+        for <linux-ide@vger.kernel.org>; Mon, 30 Sep 2013 12:36:31 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <20130929031101.GD11789@animx.eu.org>
+In-Reply-To: <52459308.1040905@linux.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Wakko Warner <wakko@animx.eu.org>
-Cc: Reartes Guillermo <rtguille@gmail.com>, linux-ide@vger.kernel.org
+To: Levente Kurusa <levex@linux.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hey, guys.
+Hello,
 
-On Sat, Sep 28, 2013 at 11:11:01PM -0400, Wakko Warner wrote:
-> [  493.612957] ata4.00: detaching (SCSI 3:0:0:0)
-> [  516.314095] ata7.00: exception Emask 0x52 SAct 0x0 SErr 0xffffffff action 0xe frozen
-> [  516.314699] ata7: SError: { RecovData RecovComm UnrecovData Persist Proto HostInt PHYRdyChg PHYInt CommWake 10B8B Dispar BadCRC Handshk LinkSeq TrStaTrns UnrecFIS DevExch }
+Tried to apply it but patch seems whitespace damaged and doesn't
+apply.  Please resend.  Also, one comment.
 
-That's the controller going bonkers - all SErr bits are set.  It's not
-functioning correctly anymore.
+On Fri, Sep 27, 2013 at 04:15:36PM +0200, Levente Kurusa wrote:
+> -	ICH5_PMR		= 0x90, /* port mapping register */
+> +	ICH5_PMR		= 0x90, /* address map register */
 
-> [  516.315939] ata7.00: failed command: IDENTIFY PACKET DEVICE
-> [  516.316567] ata7.00: cmd a1/00:01:00:00:00/00:00:00:00:00/00 tag 0 pio 512 in
-> [  516.316567]          res 40/00:03:00:00:00/00:00:00:00:00/a0 Emask 0x56 (ATA bus error)
-> [  516.317794] ata7.00: status: { DRDY }
-> [  516.318407] ata7: hard resetting link
-
-On non other than IDENTIFY.
-
-> Once this last line was printed, pings stopped working.  Computer was
-> completely frozen.  Keyboard lock keys won't toggle either.  SYSRQ non
-> functional.
-
-Misbehaving controllers can hang machine without any software way to
-recover from it.  It could just hang in the middle of memory
-transaction.  Unless PCI bridge aborts it with timeout, the only way
-the system can get out of there is hard reset.  Unfortunately,
-controllers misbehaving this way weren't too uncommon way back with
-controllers with taskfile based interface.  Nowadays, it mostly
-disappeared but we apparently have one here.
-
-It could be a combination of bugs on the controller and the optical
-drive and there probably are some workarounds which can avoid it -
-avoid certain command sequence, take certain special steps during
-recovery, etc.  A good starting point would be finding out which
-command from udev makes it go bonkers and see whether we can avoid
-that.
+I don't know whether the name has changed but PMR at least did stand
+for Port Mapping Register.  I don't see much point in updating the
+comment here.
 
 Thanks.
 
