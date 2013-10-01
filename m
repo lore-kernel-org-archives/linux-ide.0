@@ -1,113 +1,50 @@
-From: Michael Ellerman <michael@ellerman.id.au>
-Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
-Date: Tue, 1 Oct 2013 17:51:33 +1000
-Message-ID: <20131001075133.GJ17966@concordia>
-References: <20130905154436.GC24148@htj.dyndns.org>
- <20130905185440.GA13175@dhcp-26-207.brq.redhat.com>
- <20130905200608.GA3846@htj.dyndns.org>
- <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
- <20130906160621.GF22763@mtj.dyndns.org>
- <20130906233205.GF12956@google.com>
- <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
- <20130916102210.GA14102@dhcp-26-207.brq.redhat.com>
- <20130917143022.GA7707@concordia>
- <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
+From: Sachin Kamat <sachin.kamat@linaro.org>
+Subject: Re: [PATCH 2/3] Phy: Exynos: Add Exynos5250 sata phy driver
+Date: Tue, 1 Oct 2013 13:45:04 +0530
+Message-ID: <CAK9yfHzpiU+ugak6escnn2ioAq8yvTjK7RzrQaUrL7cwwq_EMA@mail.gmail.com>
+References: <1380609183-21430-1-git-send-email-yuvaraj.cd@samsung.com>
+	<1380609183-21430-3-git-send-email-yuvaraj.cd@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:55641 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751174Ab3JAHvh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 1 Oct 2013 03:51:37 -0400
-Content-Disposition: inline
-In-Reply-To: <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-samsung-soc-owner@vger.kernel.org>
+In-Reply-To: <1380609183-21430-3-git-send-email-yuvaraj.cd@samsung.com>
+Sender: linux-samsung-soc-owner@vger.kernel.org
+To: Yuvaraj Kumar C D <yuvaraj.cd@gmail.com>
+Cc: tj@kernel.org, Kukjin Kim <kgene.kim@samsung.com>, Grant Likely <grant.likely@linaro.org>, Rob Herring <rob.herring@calxeda.com>, linux-ide@vger.kernel.org, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, linux-samsung-soc <linux-samsung-soc@vger.kernel.org>, devicetree@vger.kernel.org, "ABRAHAM, KISHON VIJAY" <kishon@ti.com>, Sylwester Nawrocki <s.nawrocki@samsung.com>, GIRISH K S <ks.giri@samsung.com>, "aditya.ps" <aditya.ps@samsung.com>, Yuvaraj Kumar C D <yuvaraj.cd@samsung.com>, Vasanth Ananthan <vasanth.a@samsung.com>
 List-Id: linux-ide@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Tejun Heo <tj@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "x86@kernel.org" <x86@kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>, Jan Beulich <JBeulich@suse.com>, Bjorn Helgaas <bhelgaas@google.com>, linuxppc-dev@lists.ozlabs.org
 
-On Wed, Sep 18, 2013 at 11:48:00AM +0200, Alexander Gordeev wrote:
-> On Wed, Sep 18, 2013 at 12:30:23AM +1000, Michael Ellerman wrote:
-> > How about no?
-> > 
-> > We have a small number of MSIs available, limited by hardware &
-> > firmware, if we don't impose a quota then the first device that probes
-> > will get most/all of the MSIs and other devices miss out.
-> 
-> Out of curiosity - how pSeries has had done it without quotas before
-> 448e2ca ("powerpc/pseries: Implement a quota system for MSIs")?
-> 
-> > Anyway I don't see what problem you're trying to solve? I agree the
-> > -ve/0/+ve return value pattern is ugly, but it's hardly the end of the
-> > world.
-> 
-> Well, the interface recently has been re-classified from "ugly" to
-> "unnecessarily complex and actively harmful" in Tejun's words ;)
-> 
-> Indeed, I checked most of the drivers and it is incredible how people
-> are creative in misusing the interface: from innocent pci_disable_msix()
-> calls when if pci_enable_msix() failed to assuming MSI-Xs were enabled
-> if pci_enable_msix() returned a positive value (apparently untested).
+Hi Yuvaraj,
 
-OK, but we have the source to the drivers, we could just fix them.
+On 1 October 2013 12:03, Yuvaraj Kumar C D <yuvaraj.cd@gmail.com> wrote:
 
-We could even add:
+> +static int exynos_sata_i2c_remove(struct i2c_client *client)
+> +{
+> +       dev_info(&client->adapter->dev,
+> +               "detached %s from i2c adapter successfully\n",
+> +               client->name);
+> +
+> +       return 0;
+> +}
+> +
 
-  pci_enable_msix_i_am_stupid()
+Since this function does not do anything, this could be removed.
 
-Which swallows the positive return and just gives back -ve/0.
+> +static const struct i2c_device_id phy_i2c_device_match[] = {
+> +       { "sata-phy-i2c", 0 },
+> +};
+> +MODULE_DEVICE_TABLE(of, phy_i2c_device_match);
+> +
+> +struct i2c_driver sataphy_i2c_driver = {
+> +       .probe    = exynos_sata_i2c_probe,
+> +       .id_table = phy_i2c_device_match,
+> +       .remove         = exynos_sata_i2c_remove,
+> +       .driver   = {
+> +               .name = "sata-phy-i2c",
+> +               .owner = THIS_MODULE,
+> +               .of_match_table = (void *)phy_i2c_device_match,
 
-> Roughly third of the drivers just do not care and bail out once
-> pci_enable_msix() has not succeeded. Not sure how many of these are
-> mandated by the hardware.
+type casting is not required.
 
-Sure, that's fine if those drivers do that, it's up to the drivers after
-all.
-
-> Another quite common pattern is a call to pci_enable_msix() to figure out
-> the number of MSI-Xs available and a repeated call of pci_enable_msix()
-> to enable those MSI-Xs, this time.
-
-Also fine, though as the documentation suggests a loop is the best
-construct rather than two explicit calls.
-
-> The recommended practice would be:
-> 
-> 	/*
-> 	 * Retrieving 'nvec' by means other than pci_msix_table_size()
-> 	 */
-> 
-> 	rc = pci_get_msix_limit(pdev);
-> 	if (rc < 0)
-> 		return rc;
-> 
-> 	/*
-> 	 * nvec = min(rc, nvec);
-> 	 */
-> 
-> 	for (i = 0; i < nvec; i++)
-> 		msix_entry[i].entry = i;
-> 
-> 	rc = pci_enable_msix(pdev, msix_entry, nvec);
-> 	if (rc)
-> 		return rc;
-> 
-> Thoughts?
-
-We could probably make that work.
-
-The disadvantage is that any restriction imposed on us above the quota
-can only be reported as an error from pci_enable_msix().
-
-The quota code, called from pci_get_msix_limit(), can only do so much to
-interogate firmware about the limitations. The ultimate way to check if
-firmware will give us enough MSIs is to try and allocate them. But we
-can't do that from pci_get_msix_limit() because the driver is not asking
-us to enable MSIs, just query them.
-
-You'll also need to add another arch hook, for the quota check, and
-we'll have to add it to our per-platform indirection as well.
-
-All a lot of bother for no real gain IMHO.
-
-cheers
+-- 
+With warm regards,
+Sachin
