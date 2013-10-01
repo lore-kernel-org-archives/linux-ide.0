@@ -1,8 +1,9 @@
 From: Michael Ellerman <michael@ellerman.id.au>
 Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
-Date: Tue, 1 Oct 2013 17:35:48 +1000
-Message-ID: <20131001073548.GI17966@concordia>
-References: <20130905185440.GA13175@dhcp-26-207.brq.redhat.com>
+Date: Tue, 1 Oct 2013 17:51:33 +1000
+Message-ID: <20131001075133.GJ17966@concordia>
+References: <20130905154436.GC24148@htj.dyndns.org>
+ <20130905185440.GA13175@dhcp-26-207.brq.redhat.com>
  <20130905200608.GA3846@htj.dyndns.org>
  <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
  <20130906160621.GF22763@mtj.dyndns.org>
@@ -11,99 +12,102 @@ References: <20130905185440.GA13175@dhcp-26-207.brq.redhat.com>
  <20130916102210.GA14102@dhcp-26-207.brq.redhat.com>
  <20130917143022.GA7707@concordia>
  <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
- <20130918142231.GA21650@mtj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:55183 "EHLO ozlabs.org"
+Received: from ozlabs.org ([203.10.76.45]:55641 "EHLO ozlabs.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751508Ab3JAHfv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 1 Oct 2013 03:35:51 -0400
+	id S1751174Ab3JAHvh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 1 Oct 2013 03:51:37 -0400
 Content-Disposition: inline
-In-Reply-To: <20130918142231.GA21650@mtj.dyndns.org>
+In-Reply-To: <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Alexander Gordeev <agordeev@redhat.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "x86@kernel.org" <x86@kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>, Jan Beulich <JBeulich@suse.com>, Bjorn Helgaas <bhelgaas@google.com>, linuxppc-dev@lists.ozlabs.org
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Tejun Heo <tj@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "x86@kernel.org" <x86@kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>, Jan Beulich <JBeulich@suse.com>, Bjorn Helgaas <bhelgaas@google.com>, linuxppc-dev@lists.ozlabs.org
 
-On Wed, Sep 18, 2013 at 09:22:31AM -0500, Tejun Heo wrote:
-> Hello,
-> 
-> On Wed, Sep 18, 2013 at 11:48:00AM +0200, Alexander Gordeev wrote:
-> > On Wed, Sep 18, 2013 at 12:30:23AM +1000, Michael Ellerman wrote:
-> > > How about no?
-> > > 
-> > > We have a small number of MSIs available, limited by hardware &
-> > > firmware, if we don't impose a quota then the first device that probes
-> > > will get most/all of the MSIs and other devices miss out.
+On Wed, Sep 18, 2013 at 11:48:00AM +0200, Alexander Gordeev wrote:
+> On Wed, Sep 18, 2013 at 12:30:23AM +1000, Michael Ellerman wrote:
+> > How about no?
 > > 
-> > Out of curiosity - how pSeries has had done it without quotas before
-> > 448e2ca ("powerpc/pseries: Implement a quota system for MSIs")?
+> > We have a small number of MSIs available, limited by hardware &
+> > firmware, if we don't impose a quota then the first device that probes
+> > will get most/all of the MSIs and other devices miss out.
 > 
-> Hmmm... do we need to treat this any differently?  If the platform
-> can't allocate full range of requested MSIs, just failing should be
-> enough regardless of why such allocation can't be met, no?
+> Out of curiosity - how pSeries has had done it without quotas before
+> 448e2ca ("powerpc/pseries: Implement a quota system for MSIs")?
 > 
-> > > Anyway I don't see what problem you're trying to solve? I agree the
-> > > -ve/0/+ve return value pattern is ugly, but it's hardly the end of the
-> > > world.
-> > 
-> > Well, the interface recently has been re-classified from "ugly" to
-> > "unnecessarily complex and actively harmful" in Tejun's words ;)
+> > Anyway I don't see what problem you're trying to solve? I agree the
+> > -ve/0/+ve return value pattern is ugly, but it's hardly the end of the
+> > world.
 > 
-> LOL. :)
+> Well, the interface recently has been re-classified from "ugly" to
+> "unnecessarily complex and actively harmful" in Tejun's words ;)
 > 
-> > Indeed, I checked most of the drivers and it is incredible how people
-> > are creative in misusing the interface: from innocent pci_disable_msix()
-> > calls when if pci_enable_msix() failed to assuming MSI-Xs were enabled
-> > if pci_enable_msix() returned a positive value (apparently untested).
-> > 
-> > Roughly third of the drivers just do not care and bail out once
-> > pci_enable_msix() has not succeeded. Not sure how many of these are
-> > mandated by the hardware.
-> 
-> Yeah, I mean, this type of interface is a trap.  People have to
-> actively resist to avoid doing silly stuff which is a lot to ask.
+> Indeed, I checked most of the drivers and it is incredible how people
+> are creative in misusing the interface: from innocent pci_disable_msix()
+> calls when if pci_enable_msix() failed to assuming MSI-Xs were enabled
+> if pci_enable_msix() returned a positive value (apparently untested).
 
-I really think you're overstating the complexity here.
+OK, but we have the source to the drivers, we could just fix them.
 
-Functions typically return a boolean   -> nothing to see here
-This function returns a tristate value -> brain explosion!
+We could even add:
 
+  pci_enable_msix_i_am_stupid()
 
-> > 	/*
-> > 	 * Retrieving 'nvec' by means other than pci_msix_table_size()
-> > 	 */
-> > 
-> > 	rc = pci_get_msix_limit(pdev);
-> > 	if (rc < 0)
-> > 		return rc;
-> > 
-> > 	/*
-> > 	 * nvec = min(rc, nvec);
-> > 	 */
-> > 
-> > 	for (i = 0; i < nvec; i++)
-> > 		msix_entry[i].entry = i;
-> > 
-> > 	rc = pci_enable_msix(pdev, msix_entry, nvec);
-> > 	if (rc)
-> > 		return rc;
+Which swallows the positive return and just gives back -ve/0.
+
+> Roughly third of the drivers just do not care and bail out once
+> pci_enable_msix() has not succeeded. Not sure how many of these are
+> mandated by the hardware.
+
+Sure, that's fine if those drivers do that, it's up to the drivers after
+all.
+
+> Another quite common pattern is a call to pci_enable_msix() to figure out
+> the number of MSI-Xs available and a repeated call of pci_enable_msix()
+> to enable those MSI-Xs, this time.
+
+Also fine, though as the documentation suggests a loop is the best
+construct rather than two explicit calls.
+
+> The recommended practice would be:
 > 
-> I really think what we should do is
+> 	/*
+> 	 * Retrieving 'nvec' by means other than pci_msix_table_size()
+> 	 */
 > 
-> * Determine the number of MSIs the controller wants.  Don't worry
->   about quotas or limits or anything.  Just determine the number
->   necessary to enable enhanced interrupt handling.
-> 	
-> * Try allocating that number of MSIs.  If it fails, then just revert
->   to single interrupt mode.  It's not the end of the world and mostly
->   guaranteed to work.  Let's please not even try to do partial
->   multiple interrupts.  I really don't think it's worth the risk or
->   complexity.
+> 	rc = pci_get_msix_limit(pdev);
+> 	if (rc < 0)
+> 		return rc;
+> 
+> 	/*
+> 	 * nvec = min(rc, nvec);
+> 	 */
+> 
+> 	for (i = 0; i < nvec; i++)
+> 		msix_entry[i].entry = i;
+> 
+> 	rc = pci_enable_msix(pdev, msix_entry, nvec);
+> 	if (rc)
+> 		return rc;
+> 
+> Thoughts?
 
-It will potentially break existing setups on our hardware.
+We could probably make that work.
 
-Can I make that any clearer?
+The disadvantage is that any restriction imposed on us above the quota
+can only be reported as an error from pci_enable_msix().
+
+The quota code, called from pci_get_msix_limit(), can only do so much to
+interogate firmware about the limitations. The ultimate way to check if
+firmware will give us enough MSIs is to try and allocate them. But we
+can't do that from pci_get_msix_limit() because the driver is not asking
+us to enable MSIs, just query them.
+
+You'll also need to add another arch hook, for the quota check, and
+we'll have to add it to our per-platform indirection as well.
+
+All a lot of bother for no real gain IMHO.
 
 cheers
