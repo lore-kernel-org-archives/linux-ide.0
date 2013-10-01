@@ -1,50 +1,69 @@
-From: Sachin Kamat <sachin.kamat@linaro.org>
-Subject: Re: [PATCH 2/3] Phy: Exynos: Add Exynos5250 sata phy driver
-Date: Tue, 1 Oct 2013 13:45:04 +0530
-Message-ID: <CAK9yfHzpiU+ugak6escnn2ioAq8yvTjK7RzrQaUrL7cwwq_EMA@mail.gmail.com>
-References: <1380609183-21430-1-git-send-email-yuvaraj.cd@samsung.com>
-	<1380609183-21430-3-git-send-email-yuvaraj.cd@samsung.com>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
+Date: Tue, 1 Oct 2013 12:35:27 +0200
+Message-ID: <20131001103526.GA5053@dhcp-26-207.brq.redhat.com>
+References: <20130905185440.GA13175@dhcp-26-207.brq.redhat.com>
+ <20130905200608.GA3846@htj.dyndns.org>
+ <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
+ <20130906160621.GF22763@mtj.dyndns.org>
+ <20130906233205.GF12956@google.com>
+ <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
+ <20130916102210.GA14102@dhcp-26-207.brq.redhat.com>
+ <20130917143022.GA7707@concordia>
+ <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
+ <20131001075133.GJ17966@concordia>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-samsung-soc-owner@vger.kernel.org>
-In-Reply-To: <1380609183-21430-3-git-send-email-yuvaraj.cd@samsung.com>
-Sender: linux-samsung-soc-owner@vger.kernel.org
-To: Yuvaraj Kumar C D <yuvaraj.cd@gmail.com>
-Cc: tj@kernel.org, Kukjin Kim <kgene.kim@samsung.com>, Grant Likely <grant.likely@linaro.org>, Rob Herring <rob.herring@calxeda.com>, linux-ide@vger.kernel.org, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, linux-samsung-soc <linux-samsung-soc@vger.kernel.org>, devicetree@vger.kernel.org, "ABRAHAM, KISHON VIJAY" <kishon@ti.com>, Sylwester Nawrocki <s.nawrocki@samsung.com>, GIRISH K S <ks.giri@samsung.com>, "aditya.ps" <aditya.ps@samsung.com>, Yuvaraj Kumar C D <yuvaraj.cd@samsung.com>, Vasanth Ananthan <vasanth.a@samsung.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:42355 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753098Ab3JAKdb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 1 Oct 2013 06:33:31 -0400
+Content-Disposition: inline
+In-Reply-To: <20131001075133.GJ17966@concordia>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Michael Ellerman <michael@ellerman.id.au>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Tejun Heo <tj@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "x86@kernel.org" <x86@kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>, Jan Beulich <JBeulich@suse.com>, Bjorn Helgaas <bhelgaas@google.com>, linuxppc-dev@lists.ozlabs.org
 
-Hi Yuvaraj,
+On Tue, Oct 01, 2013 at 05:51:33PM +1000, Michael Ellerman wrote:
+> The disadvantage is that any restriction imposed on us above the quota
+> can only be reported as an error from pci_enable_msix().
+> 
+> The quota code, called from pci_get_msix_limit(), can only do so much to
+> interogate firmware about the limitations. The ultimate way to check if
+> firmware will give us enough MSIs is to try and allocate them. But we
+> can't do that from pci_get_msix_limit() because the driver is not asking
+> us to enable MSIs, just query them.
 
-On 1 October 2013 12:03, Yuvaraj Kumar C D <yuvaraj.cd@gmail.com> wrote:
+If things are this way then pci_enable_msix() already exposed to this
+problem internally on pSeries.
 
-> +static int exynos_sata_i2c_remove(struct i2c_client *client)
-> +{
-> +       dev_info(&client->adapter->dev,
-> +               "detached %s from i2c adapter successfully\n",
-> +               client->name);
-> +
-> +       return 0;
-> +}
-> +
+I see that even successful quota checks in rtas_msi_check_device() and
+rtas_setup_msi_irqs() do not guarantee (as you say) that firmware will
+give enough MSIs. Hence, pci_enable_msix() might fail even though the
+its quota checks succeeded.
 
-Since this function does not do anything, this could be removed.
+Therefore, nothing will really change if we make pci_get_msix_limit() check
+quota and hope the follow-up call to pci_enable_msix() succeeded.
 
-> +static const struct i2c_device_id phy_i2c_device_match[] = {
-> +       { "sata-phy-i2c", 0 },
-> +};
-> +MODULE_DEVICE_TABLE(of, phy_i2c_device_match);
-> +
-> +struct i2c_driver sataphy_i2c_driver = {
-> +       .probe    = exynos_sata_i2c_probe,
-> +       .id_table = phy_i2c_device_match,
-> +       .remove         = exynos_sata_i2c_remove,
-> +       .driver   = {
-> +               .name = "sata-phy-i2c",
-> +               .owner = THIS_MODULE,
-> +               .of_match_table = (void *)phy_i2c_device_match,
+(Of course, we could allocate-deallocate MSIs at check time, but I think it
+is an overkill).
 
-type casting is not required.
+> You'll also need to add another arch hook, for the quota check, and
+> we'll have to add it to our per-platform indirection as well.
+
+Already, in a branch, hidden from Bjorn & Tejun eyes ;)
+
+> All a lot of bother for no real gain IMHO.
+
+Well, I do not have a strong opinion here. I leave it to the ones who have :)
+But few drivers have became clearer as result of this change (and messy ones
+are still messy).
+
+> cheers
 
 -- 
-With warm regards,
-Sachin
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
