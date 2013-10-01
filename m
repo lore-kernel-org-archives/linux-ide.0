@@ -1,101 +1,121 @@
-From: Levente Kurusa <levex@linux.com>
-Subject: [PATCH v2 RESEND] ata_piix: minor typo and a printk fix
-Date: Tue, 01 Oct 2013 19:56:48 +0200
-Message-ID: <524B0CE0.70202@linux.com>
-Reply-To: levex@linux.com
+From: Reartes Guillermo <rtguille@gmail.com>
+Subject: Re: ASM1061 freeze with DVDRW (3.11.1 amd64)
+Date: Tue, 1 Oct 2013 15:56:49 -0300
+Message-ID: <CAPVzhpxxxgzCaXpNNHAzq7oE+D=ci6S2CpjE6RJNp3nwL6iBrA@mail.gmail.com>
+References: <20130927231346.GA5662@animx.eu.org>
+	<CAPVzhpzqs4VM6v59+XD-eR4aeh0GskQgonXZXKMY2Wwq31CL7Q@mail.gmail.com>
+	<20130928122013.GA26951@animx.eu.org>
+	<CAPVzhpy-n9dS0Gogy5om60R5xcQ3Gf9Ws5Ba4GqLZRZ2bwv=cw@mail.gmail.com>
+	<20130929031101.GD11789@animx.eu.org>
+	<20130930192731.GA2703@htj.dyndns.org>
+	<20131001015559.GC18206@animx.eu.org>
+	<20131001143924.GC2736@htj.dyndns.org>
+	<CAPVzhpwbrRg4A65hD3=-7JL3X0d18F-Way_BTKUhsHR2LmzkZQ@mail.gmail.com>
+	<CAPVzhpxNezZq5JOCFzRCkyL_zxa+gKD1bT27Nqck4Di3XxrEvA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ee0-f49.google.com ([74.125.83.49]:59526 "EHLO
-	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750704Ab3JAR4w (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Oct 2013 13:56:52 -0400
-Received: by mail-ee0-f49.google.com with SMTP id d41so3575847eek.22
-        for <linux-ide@vger.kernel.org>; Tue, 01 Oct 2013 10:56:51 -0700 (PDT)
+Received: from mail-pd0-f171.google.com ([209.85.192.171]:54759 "EHLO
+	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751223Ab3JAS4t (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Oct 2013 14:56:49 -0400
+Received: by mail-pd0-f171.google.com with SMTP id g10so7617928pdj.30
+        for <linux-ide@vger.kernel.org>; Tue, 01 Oct 2013 11:56:49 -0700 (PDT)
+In-Reply-To: <CAPVzhpxNezZq5JOCFzRCkyL_zxa+gKD1bT27Nqck4Di3XxrEvA@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Wakko Warner <wakko@animx.eu.org>, linux-ide@vger.kernel.org, Kay Sievers <kay@vrfy.org>
 
-The patch fixes a printk() being cut in half, some typos
-and a change in comments to better reflect the specs.
+Hi, i uploaded a blkparse to my bugreport.
 
-Signed-off-by: Levente Kurusa <levex@linux.com>
----
-diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
-index 93cb092..1349189 100644
---- a/drivers/ata/ata_piix.c
-+++ b/drivers/ata/ata_piix.c
-@@ -100,7 +100,7 @@
+I don't get it, in addition to not knowing why the freeze happens, now
+i even don't know why it does NOT freeze.
+:-(
 
- enum {
- 	PIIX_IOCFG		= 0x54, /* IDE I/O configuration register */
--	ICH5_PMR		= 0x90, /* port mapping register */
-+	ICH5_PMR		= 0x90, /* address map register */
- 	ICH5_PCS		= 0x92,	/* port control and status */
- 	PIIX_SIDPR_BAR		= 5,
- 	PIIX_SIDPR_LEN		= 16,
-@@ -233,7 +233,7 @@ static const struct pci_device_id piix_pci_tbl[] = {
- 	  PCI_CLASS_STORAGE_IDE << 8, 0xffff00, ich6m_sata },
- 	/* 82801GB/GR/GH (ICH7, identical to ICH6) */
- 	{ 0x8086, 0x27c0, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata },
--	/* 2801GBM/GHM (ICH7M, identical to ICH6M) */
-+	/* 82801GBM/GHM (ICH7M, identical to ICH6M)  */
- 	{ 0x8086, 0x27c4, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6m_sata },
- 	/* Enterprise Southbridge 2 (631xESB/632xESB) */
- 	{ 0x8086, 0x2680, PCI_ANY_ID, PCI_ANY_ID, 0, 0, ich6_sata },
-@@ -515,7 +515,7 @@ static int ich_pata_cable_detect(struct ata_port *ap)
- 	const struct ich_laptop *lap = &ich_laptop[0];
- 	u8 mask;
+>From the uploaded blkparse:
 
--	/* Check for specials - Acer Aspire 5602WLMi */
-+	/* Check for specials */
- 	while (lap->device) {
- 		if (lap->device == pdev->device &&
- 		    lap->subvendor == pdev->subsystem_vendor &&
-@@ -1364,38 +1364,39 @@ static const int *piix_init_sata_map(struct pci_dev *pdev,
- 	const int *map;
- 	int i, invalid_map = 0;
- 	u8 map_value;
-+	char buf[32];
-+	char *p = buf, *end = buf + sizeof(buf);
+ 11,0    2       55    22.584124433  3501  G   N [ata_id]
+ 11,0    2       56    22.584128046  3501  I   R 512 (85 08 2e 00 00
+00 01 00 00 00 00 00 00 00 a1 00 ..) [ata_id]
+ 11,0    2       57    22.584128772  3501  D   R 512 (85 08 2e 00 00
+00 01 00 00 00 00 00 00 00 a1 00 ..) [ata_id]
+ 11,0    2       58    22.584140609    18  C   R (85 08 2e 00 00 00 01
+00 00 00 00 00 00 00 a1 00 ..) [0]
 
- 	pci_read_config_byte(pdev, ICH5_PMR, &map_value);
+  #0:   85h, COMMAND >>>>> ATA PASS-THROUGH(16) but Why ???
+        (libata.atapi_passthru16=0 was set, shout it have been '1Ah'
+ATA_PASS-THROUGH(12) instead? and why no freeze??)
 
- 	map = map_db->map[map_value & map_db->mask];
+  #1:   08, MULTIPLE_COUNT | PROTOCOL | EXTEND
+  #2:   2e, OFF_LINE | CK_COND | RESERVED | T_DIR | BYT_BLOK | T_LENGHT
+  #3:   00, FEATURES (8:15)
+  #4:   00, FEATURES (0:7)
+  #5:   00, RESERVED / SECTOR_COUNT (8:15)
+  #6:   01, SECTOR_COUNT (0:7)
+  #7:   00, RESERVED /LBA_LOW (8:15)
+  #8:   00, LBA_LOW (0:7)
+  #9:   00, RESERVED /LBA_MID (8:15)
+  #10:  00, LBA_MID (0:7)
+  #11:  00, RESERVED /LBA_HIGH (8:15)
+  #12:  00, LBA_HIGH (0:7)
+  #13:  00, DEVICE
 
--	dev_info(&pdev->dev, "MAP [");
- 	for (i = 0; i < 4; i++) {
- 		switch (map[i]) {
- 		case RV:
- 			invalid_map = 1;
--			pr_cont(" XX");
-+			p += scnprintf(p, end - p, " XX");
- 			break;
+  #14:  a1, COMMAND >>>>> A1h is IDENTIFY_PACKET_DEVICE
+        (i hope... should i?, ?? A1h is both IDENTIFY_PACKET_DEVICE
+and ATA PASS-THROUGH(12) ?? )
 
- 		case NA:
--			pr_cont(" --");
-+			p += scnprintf(p, end - p, " --");
- 			break;
+  #15:  00, CONTROL
 
- 		case IDE:
- 			WARN_ON((i & 1) || map[i + 1] != IDE);
- 			pinfo[i / 2] = piix_port_info[ich_pata_100];
- 			i++;
--			pr_cont(" IDE IDE");
-+			p += scnprintf(p, end - p, " IDE IDE");
- 			break;
 
- 		default:
--			pr_cont(" P%d", map[i]);
-+			p += scnprintf(p, end - p, " P%d", map[i]);
- 			if (i & 1)
- 				pinfo[i / 2].flags |= ATA_FLAG_SLAVE_POSS;
- 			break;
- 		}
- 	}
--	pr_cont(" ]\n");
-+	dev_info(&pdev->dev, "MAP [%s ]\n", buf);
+I also performed the test on System #2 (without
+'libata.atapi_passthru16=0' tand the blkparse output looks similar:
 
- 	if (invalid_map)
- 		dev_err(&pdev->dev, "invalid MAP value %u\n", map_value);
+ 11,0    1       86    27.195169571 10620  I   R 512 (85 08 2e 00 00
+00 01 00 00 00 00 00 00 00 a1 00 ..) [ata_id]
+ 11,0    1       87    27.195170554 10620  D   R 512 (85 08 2e 00 00
+00 01 00 00 00 00 00 00 00 a1 00 ..) [ata_id]
+ [...TRUNCATED...]
+ 11,0    1       88    27.196006926 10613  C   R (85 08 2e 00 00 00 01
+00 00 00 00 00 00 00 a1 00 ..) [2]
+
+With the execption of the "[2]" instedd of "[0]". And there was no
+logged error on System #2.
+
+Cheers.
+
+On Tue, Oct 1, 2013 at 1:08 PM, Reartes Guillermo <rtguille@gmail.com> wrote:
+> Additional Info:
+>
+> On System #1 (the affected one), when using the workaround
+> 'libata.atapi_passthru16=0'  the system dos NOT freeze or hang
+> (already known) but i am getting this:
+>
+> Oct 01 12:58:51 ulquiorra.espada udisksd[2132]: Error probing device:
+> Error sending ATA command IDENTIFY PACKET DEVICE to /dev/sr0:
+> Unexpected sense data returned:
+>
+> udisks output during the test:
+>
+> # udisksctl monitor
+> Monitoring the udisks daemon. Press Ctrl+C to exit.
+> 12:58:33.417: The udisks-daemon is running (name-owner :1.47).
+>
+> 12:58:51.765: /org/freedesktop/UDisks2/drives/ATAPI___iHBS112___2_2512014_216134501013:
+> org.freedesktop.UDisks2.Drive: Properties Changed
+>   TimeMediaDetected:            1380643131761935
+>   OpticalNumTracks:             1
+>   OpticalNumSessions:           1
+>   OpticalBlank:                 true
+>   Optical:                      true
+>   Media:                        optical_bd_r
+>   MediaAvailable:               true
+>   Size:                         2048
+> 12:58:51.766: /org/freedesktop/UDisks2/block_devices/sr0:
+> org.freedesktop.UDisks2.Block: Properties Changed
+>   Size:                 2048
+>
+> If i were to believe the clock (should i?) then the error in the
+> messages logfile happens after the udisks output...
+>
+> Cheers.
