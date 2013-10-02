@@ -1,47 +1,70 @@
-From: Gwendal Grignou <gwendal@google.com>
-Subject: Re: [PATCH] When a disk wakes up from sleep, ensure that the command =?utf-8?b?CWlz?= retried by SCSI EH.
-Date: Wed, 2 Oct 2013 18:22:22 +0000 (UTC)
-Message-ID: <loom.20131002T202103-937@post.gmane.org>
-References: <4A7CB4D6.7020902@kernel.org>	 <1249687069-31011-1-git-send-email-gwendal@google.com>	 <4A7CB769.4040309@kernel.org> <v2ne7510f761004221043y4b92ab7csa96b5b45fb07ea6b@mail.gmail.com> <4BD08BFF.7070702@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:47173 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753461Ab3JBSZE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 2 Oct 2013 14:25:04 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <lnx-linux-ide@m.gmane.org>)
-	id 1VRR6c-0005Rb-UN
-	for linux-ide@vger.kernel.org; Wed, 02 Oct 2013 20:25:02 +0200
-Received: from 216.239.45.93 ([216.239.45.93])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Wed, 02 Oct 2013 20:25:02 +0200
-Received: from gwendal by 216.239.45.93 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Wed, 02 Oct 2013 20:25:02 +0200
-Sender: linux-ide-owner@vger.kernel.org
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: [PATCH RFC 01/77] PCI/MSI: Fix return value when populate_msi_sysfs() failed
+Date: Wed,  2 Oct 2013 12:48:17 +0200
+Message-ID: <3ff5236944aae69f2cd934b5b6da7c1c269df7c1.1380703262.git.agordeev@redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+Return-path: <linux-mips-bounce@linux-mips.org>
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+List-help: <mailto:ecartis@linux-mips.org?Subject=help>
+List-unsubscribe: <mailto:ecartis@linux-mips.org?subject=unsubscribe%20linux-mips>
+List-software: Ecartis version 1.0.0
+List-subscribe: <mailto:ecartis@linux-mips.org?subject=subscribe%20linux-mips>
+List-owner: <mailto:ralf@linux-mips.org>
+List-post: <mailto:linux-mips@linux-mips.org>
+List-archive: <http://www.linux-mips.org/archives/linux-mips/>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, Bjorn Helgaas <bhelgaas@google.com>, Ralf Baechle <ralf@linux-mips.org>, Michael Ellerman <michael@ellerman.id.au>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>, Matt Porter <mporter@kernel.crashing.org>, stable@vger.kernel.org, linux-pci@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org, linux-ide@vger.kernel.org, iss_storagedev@hp.com, linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, e1000-de
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-Tejun Heo <tj <at> kernel.org> writes:
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/pci/msi.c |   11 +++++------
+ 1 files changed, 5 insertions(+), 6 deletions(-)
 
-> 
-> Hello,
-> 
-> On 04/22/2010 07:43 PM, Gwendal Grignou wrote:
-> > Just looking into 2.6.33 code, and I did not find this patch. Is there
-> > anything I should do to have it merge?
-> 
-> I think Jeff just hasn't come around yet.  Please wait a bit more for
-> Jeff's "applied" mail.  If it doesn't happen in a week or so, pinging
-> him again would be a good idea.
-> 
-
-
-Ping, years later! The patch still applies to 3.12.0-rc3.
-
-Gwendal.
-
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index d5f90d6..b43f391 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -719,7 +719,7 @@ static int msix_capability_init(struct pci_dev *dev,
+ 
+ 	ret = arch_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
+ 	if (ret)
+-		goto error;
++		goto out_avail;
+ 
+ 	/*
+ 	 * Some devices require MSI-X to be enabled before we can touch the
+@@ -732,10 +732,8 @@ static int msix_capability_init(struct pci_dev *dev,
+ 	msix_program_entries(dev, entries);
+ 
+ 	ret = populate_msi_sysfs(dev);
+-	if (ret) {
+-		ret = 0;
+-		goto error;
+-	}
++	if (ret)
++		goto out_free;
+ 
+ 	/* Set MSI-X enabled bits and unmask the function */
+ 	pci_intx_for_msi(dev, 0);
+@@ -746,7 +744,7 @@ static int msix_capability_init(struct pci_dev *dev,
+ 
+ 	return 0;
+ 
+-error:
++out_avail:
+ 	if (ret < 0) {
+ 		/*
+ 		 * If we had some success, report the number of irqs
+@@ -763,6 +761,7 @@ error:
+ 			ret = avail;
+ 	}
+ 
++out_free:
+ 	free_msi_irqs(dev);
+ 
+ 	return ret;
+-- 
+1.7.7.6
