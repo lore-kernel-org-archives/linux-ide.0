@@ -1,7 +1,7 @@
 From: Alexander Gordeev <agordeev@redhat.com>
 Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
-Date: Wed, 2 Oct 2013 09:10:00 +0200
-Message-ID: <20131002071000.GA29860@dhcp-26-207.brq.redhat.com>
+Date: Wed, 2 Oct 2013 09:26:30 +0200
+Message-ID: <20131002072629.GB29860@dhcp-26-207.brq.redhat.com>
 References: <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
  <20130906160621.GF22763@mtj.dyndns.org>
  <20130906233205.GF12956@google.com>
@@ -9,64 +9,43 @@ References: <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
  <20130916102210.GA14102@dhcp-26-207.brq.redhat.com>
  <20130917143022.GA7707@concordia>
  <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
- <20131001075133.GJ17966@concordia>
- <20131001103526.GA5053@dhcp-26-207.brq.redhat.com>
- <20131002024324.GC22748@concordia>
+ <52442975.9000603@start.ca>
+ <20130926130328.GD16774@dhcp-26-207.brq.redhat.com>
+ <524B8908.8080607@start.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pci-owner@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 Content-Disposition: inline
-In-Reply-To: <20131002024324.GC22748@concordia>
-Sender: linux-pci-owner@vger.kernel.org
-To: Michael Ellerman <michael@ellerman.id.au>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Tejun Heo <tj@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "x86@kernel.org" <x86@kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>, Jan Beulich <JBeulich@suse.com>, Bjorn Helgaas <bhelgaas@google.com>, linuxppc-dev@lists.ozlabs.org
+In-Reply-To: <524B8908.8080607@start.ca>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: Mark Lord <kernel@start.ca>
+Cc: linuxppc-dev@lists.ozlabs.org, Joerg Roedel <joro@8bytes.org>, "x86@kernel.org" <x86@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jan Beulich <JBeulich@suse.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Ingo Molnar <mingo@kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Wed, Oct 02, 2013 at 12:43:24PM +1000, Michael Ellerman wrote:
-> On Tue, Oct 01, 2013 at 12:35:27PM +0200, Alexander Gordeev wrote:
-> > On Tue, Oct 01, 2013 at 05:51:33PM +1000, Michael Ellerman wrote:
-> > > The disadvantage is that any restriction imposed on us above the quota
-> > > can only be reported as an error from pci_enable_msix().
-> > > 
-> > > The quota code, called from pci_get_msix_limit(), can only do so much to
-> > > interogate firmware about the limitations. The ultimate way to check if
-> > > firmware will give us enough MSIs is to try and allocate them. But we
-> > > can't do that from pci_get_msix_limit() because the driver is not asking
-> > > us to enable MSIs, just query them.
+On Tue, Oct 01, 2013 at 10:46:32PM -0400, Mark Lord wrote:
+> >>> The last pattern makes most of sense to me and could be updated with a more
+> >>> clear sequence - a call to (bit modified) pci_msix_table_size() followed
+> >>> by a call to pci_enable_msix(). I think this pattern can effectively
+> >>> supersede the currently recommended "loop" practice.
+> >>
+> >> The loop is still necessary, because there's a race between those two calls,
+> >> so that pci_enable_msix() can still fail due to lack of MSIX slots.
 > > 
-> > If things are this way then pci_enable_msix() already exposed to this
-> > problem internally on pSeries.
-> > 
-> > I see that even successful quota checks in rtas_msi_check_device() and
-> > rtas_setup_msi_irqs() do not guarantee (as you say) that firmware will
-> > give enough MSIs. Hence, pci_enable_msix() might fail even though the
-> > its quota checks succeeded.
+> > Moreover, the existing loop pattern is racy and could fail just as easily ;)
 > 
-> Yes, but it can report that failure to the caller, which can then retry.
+> Yes, but it then loops again to correct things.
 
-If a driver wants to retry after a failure it is up to the driver (but why?).
-The current guidlines state:
-
-"If this function returns a negative number, it indicates an error and
-the driver should not attempt to allocate any more MSI-X interrupts for
-this device."
-
-Anyway, what number could the driver retry with after it got a negative errno?
-
-> > Therefore, nothing will really change if we make pci_get_msix_limit() check
-> > quota and hope the follow-up call to pci_enable_msix() succeeded.
-> 
-> No that's not equivalent. Under your scheme if pci_enable_msix() fails
-> then the caller just bails, it will never try again with a lower number.
-
-Currently under the very same circumstances (the quota check within
-rtas_setup_msi_irqs() returned Q vectors while the firmware has only F
-vectors to allocate and Q > F) rtas_setup_msi_irqs() fails, pci_enable_msix()
-fails, the caller bails and never try again with a lower number.
-
-Am I missing something here?
-
-> cheers
+No. If it failed it should exit the loop.
 
 -- 
 Regards,
