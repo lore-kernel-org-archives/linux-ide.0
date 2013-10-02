@@ -1,106 +1,74 @@
-From: Tejun Heo <tj@kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
 Subject: Re: [PATCH v2 2/6] PCI/MSI: Factor out pci_get_msi_cap() interface
-Date: Tue, 1 Oct 2013 23:23:38 -0400
-Message-ID: <20131002032338.GA2417@htj.dyndns.org>
-References: <20130906160621.GF22763@mtj.dyndns.org>
+Date: Wed, 2 Oct 2013 09:10:00 +0200
+Message-ID: <20131002071000.GA29860@dhcp-26-207.brq.redhat.com>
+References: <CAErSpo4TU2geqzY3AYsL08KimBqtfwa4iUoFHgcFt0zMTBJkHw@mail.gmail.com>
+ <20130906160621.GF22763@mtj.dyndns.org>
  <20130906233205.GF12956@google.com>
  <20130909152044.GA24962@dhcp-26-207.brq.redhat.com>
  <20130916102210.GA14102@dhcp-26-207.brq.redhat.com>
  <20130917143022.GA7707@concordia>
  <20130918094759.GA2353@dhcp-26-207.brq.redhat.com>
- <20130918142231.GA21650@mtj.dyndns.org>
- <20131001073548.GI17966@concordia>
- <20131001115503.GA23722@mtj.dyndns.org>
- <20131002023337.GB22748@concordia>
+ <20131001075133.GJ17966@concordia>
+ <20131001103526.GA5053@dhcp-26-207.brq.redhat.com>
+ <20131002024324.GC22748@concordia>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-pci-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20131002023337.GB22748@concordia>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: "Linuxppc-dev"
- <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <20131002024324.GC22748@concordia>
+Sender: linux-pci-owner@vger.kernel.org
 To: Michael Ellerman <michael@ellerman.id.au>
-Cc: Joerg Roedel <joro@8bytes.org>, "x86@kernel.org" <x86@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Alexander Gordeev <agordeev@redhat.com>, Jan Beulich <JBeulich@suse.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, linuxppc-dev@lists.ozlabs.org, Ingo Molnar <mingo@kernel.org>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Tejun Heo <tj@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "x86@kernel.org" <x86@kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Ingo Molnar <mingo@kernel.org>, Joerg Roedel <joro@8bytes.org>, Jan Beulich <JBeulich@suse.com>, Bjorn Helgaas <bhelgaas@google.com>, linuxppc-dev@lists.ozlabs.org
 List-Id: linux-ide@vger.kernel.org
 
-On Wed, Oct 02, 2013 at 12:33:38PM +1000, Michael Ellerman wrote:
-> > It is an interface which forces the driver writers to write
-> > complicated fallback code which won't usually be excercised.  
+On Wed, Oct 02, 2013 at 12:43:24PM +1000, Michael Ellerman wrote:
+> On Tue, Oct 01, 2013 at 12:35:27PM +0200, Alexander Gordeev wrote:
+> > On Tue, Oct 01, 2013 at 05:51:33PM +1000, Michael Ellerman wrote:
+> > > The disadvantage is that any restriction imposed on us above the quota
+> > > can only be reported as an error from pci_enable_msix().
+> > > 
+> > > The quota code, called from pci_get_msix_limit(), can only do so much to
+> > > interogate firmware about the limitations. The ultimate way to check if
+> > > firmware will give us enough MSIs is to try and allocate them. But we
+> > > can't do that from pci_get_msix_limit() because the driver is not asking
+> > > us to enable MSIs, just query them.
+> > 
+> > If things are this way then pci_enable_msix() already exposed to this
+> > problem internally on pSeries.
+> > 
+> > I see that even successful quota checks in rtas_msi_check_device() and
+> > rtas_setup_msi_irqs() do not guarantee (as you say) that firmware will
+> > give enough MSIs. Hence, pci_enable_msix() might fail even though the
+> > its quota checks succeeded.
 > 
-> It does not force anyone to do anything. That's just bull.
+> Yes, but it can report that failure to the caller, which can then retry.
 
-Yeah, sure, we don't have shitty code in drivers which don't need any
-of that retry logic, right?  What the hell is up with the gratuituous
-escalation?  You really wanna go that way?
+If a driver wants to retry after a failure it is up to the driver (but why?).
+The current guidlines state:
 
-> Code which is unwilling or unable to cope with the extra complexity
-> can simply do:
+"If this function returns a negative number, it indicates an error and
+the driver should not attempt to allocate any more MSI-X interrupts for
+this device."
+
+Anyway, what number could the driver retry with after it got a negative errno?
+
+> > Therefore, nothing will really change if we make pci_get_msix_limit() check
+> > quota and hope the follow-up call to pci_enable_msix() succeeded.
 > 
-> if (pci_enable_msix(..))
-> 	goto fail;
-> 
-> It's as simple as that.
+> No that's not equivalent. Under your scheme if pci_enable_msix() fails
+> then the caller just bails, it will never try again with a lower number.
 
-You apparently have no clue how people behave.  You give a function
-which indicates complex failure mode, driver writers *will* try to
-handle that whether they actually understand the implication or not.
-That's a natural and correct behavior too because any half-competent
-software eng would design API so that it receives and returns
-information which is relevant to its users.  If there are special
-cases to handle, make the damn interface for it special too so that it
-doesn't confuse the common case.
+Currently under the very same circumstances (the quota check within
+rtas_setup_msi_irqs() returned Q vectors while the firmware has only F
+vectors to allocate and Q > F) rtas_setup_msi_irqs() fails, pci_enable_msix()
+fails, the caller bails and never try again with a lower number.
 
-Driver codes already have generally lower quality than core code, if
-for nothing else, due to the sheer volume, and there are many driver
-writers who aren't too privvy with various kernel subsystems.  They
-usually just copy whatever other similar driver is doing, and this one
-is a lot worse - this thing affects hardware directly.  If you expect
-all the shitty implementations of ahci to handle the different
-variations of multiple MSI config cases, you just don't have any
-experience dealing with cheap commodity hardware.
+Am I missing something here?
 
-Driver APIs should be intuitive, clear in its intentions, and don't
-tempt fate with hairy configs for vast majority of cases.
-
-> +int pci_enable_msix_or_fail(struct pci_dev *dev, struct msix_entry *entries,
-> +                           int nvec)
-> +{
-> +       int rc;
-> +
-> +       rc = pci_enable_msix(dev, entries, nvec);
-> +       if (rc > 0)
-> +               rc = -ENOSPC;
-> +
-> +       return rc;
-> +}
-
-Make the *default* case simple and give clearly special interface for
-the special cases.  What's so hard about that?
-
-> > Are we talking about some limited number of device drivers here?  
-> 
-> I don't have a list, but yeah there are certain drivers that folks care about.
-
-And here's another problem with the current interface.  Because the
-default interface is the unnecessrily complicated one, now we can't
-tell which ones actually need the complicated treatment.
-
-> > Also, is the quota still necessary for machines in production today?
-> 
-> As far as I know yes. The number of MSIs is growing on modern systems, but so
-> is the number of cpus and devices.
-
-That's a bummer, but let's please make the default interface simple.
-I really don't wanna see partial allocations for ahci.
+> cheers
 
 -- 
-tejun
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
