@@ -1,42 +1,68 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 62351] Marvell PCIe SSD controller 0x9183 suspend/resume
- problem
-Date: Thu, 03 Oct 2013 01:40:10 +0000
-Message-ID: <bug-62351-11633-X1S1gy6QWM@https.bugzilla.kernel.org/>
-References: <bug-62351-11633@https.bugzilla.kernel.org/>
+From: Eli Cohen <eli@dev.mellanox.co.il>
+Subject: Re: [PATCH RFC 50/77] mlx5: Update MSI/MSI-X interrupts enablement
+ code
+Date: Thu, 3 Oct 2013 10:14:33 +0300
+Message-ID: <20131003071433.GA7299@mtldesk30>
+References: <cover.1380703262.git.agordeev@redhat.com>
+ <9650a7dfbcfd5f1da21f7b093665abf4b1041071.1380703263.git.agordeev@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.19.201]:58602 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753034Ab3JCBkP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 2 Oct 2013 21:40:15 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 90350202C1
-	for <linux-ide@vger.kernel.org>; Thu,  3 Oct 2013 01:40:14 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id 55E19202EB
-	for <linux-ide@vger.kernel.org>; Thu,  3 Oct 2013 01:40:11 +0000 (UTC)
-In-Reply-To: <bug-62351-11633@https.bugzilla.kernel.org/>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <9650a7dfbcfd5f1da21f7b093665abf4b1041071.1380703263.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, Ralf Baechle <ralf@linux-mips.org>, Michael Ellerman <michael@ellerman.id.au>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>, Matt Porter <mporter@kernel.crashing.org>, linux-pci@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org, linux-ide@vger.kernel.org, iss_storagedev@hp.com, linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net, linux-driver@qlogic.com, Solarflare linux maintainers <linux-net-drivers@solarflare.com>, "VMware, Inc." <pv-dr>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=62351
+On Wed, Oct 02, 2013 at 12:49:06PM +0200, Alexander Gordeev wrote:
+>  
+> +	err = pci_msix_table_size(dev->pdev);
+> +	if (err < 0)
+> +		return err;
+> +
+>  	nvec = dev->caps.num_ports * num_online_cpus() + MLX5_EQ_VEC_COMP_BASE;
+>  	nvec = min_t(int, nvec, num_eqs);
+> +	nvec = min_t(int, nvec, err);
+>  	if (nvec <= MLX5_EQ_VEC_COMP_BASE)
+>  		return -ENOSPC;
 
---- Comment #7 from Patrik Jakobsson <patrik.r.jakobsson@gmail.com> ---
-> So, if you set "max_performance" explicitly, it works fine before suspending but after resuming it causes problems?
+Making sure we don't request more vectors then the device's is capable
+of -- looks good.
+>  
+> @@ -131,20 +136,15 @@ static int mlx5_enable_msix(struct mlx5_core_dev *dev)
+>  	for (i = 0; i < nvec; i++)
+>  		table->msix_arr[i].entry = i;
+>  
+> -retry:
+> -	table->num_comp_vectors = nvec - MLX5_EQ_VEC_COMP_BASE;
+>  	err = pci_enable_msix(dev->pdev, table->msix_arr, nvec);
+> -	if (err <= 0) {
+> +	if (err) {
+> +		kfree(table->msix_arr);
+>  		return err;
+> -	} else if (err > MLX5_EQ_VEC_COMP_BASE) {
+> -		nvec = err;
+> -		goto retry;
+>  	}
+>  
 
-Yes, the only time I can set max_performance without getting errors is before
-first suspend.
+According to latest sources, pci_enable_msix() may still fail so why
+do you want to remove this code?
 
-> What happens if you set "max_performance" explicitly instead of "min_power" after resume while the errors are happening? Does that resolve the issue too?
-
-Setting max_performance explicitly after resume doesn't help. And if I first
-set min_power after resume to stop the errors and then try max_performance
-again, it will start spitting out errors again.
-
--- 
-You are receiving this mail because:
-You are on the CC list for the bug.
+> -	mlx5_core_dbg(dev, "received %d MSI vectors out of %d requested\n", err, nvec);
+> -	kfree(table->msix_arr);
+> +	table->num_comp_vectors = nvec - MLX5_EQ_VEC_COMP_BASE;
+>  
+> -	return -ENOSPC;
+> +	return 0;
+>  }
+>  
+>  static void mlx5_disable_msix(struct mlx5_core_dev *dev)
+> -- 
+> 1.7.7.6
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe netdev" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
