@@ -1,111 +1,201 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
-Date: Thu, 3 Oct 2013 04:06:51 -0700
-Message-ID: <20131003110650.GA23454@infradead.org>
-References: <1374173515.7397.948.camel@haakon3.risingtidesystems.com>
- <51E83E32.9050306@cs.wisc.edu>
- <1374193399.7397.973.camel@haakon3.risingtidesystems.com>
- <20130719003034.GG28005@kernel.dk>
- <1374195825.7397.997.camel@haakon3.risingtidesystems.com>
- <1374215660.7397.1041.camel@haakon3.risingtidesystems.com>
- <1374248000.2266.20.camel@dabdike>
- <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
- <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
- <51EAA33C.9010405@fusionio.com>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: Re: [PATCH 1/3] ahci: exynos: add ahci sata support on Exynos platform
+Date: Thu, 03 Oct 2013 13:32:29 +0200
+Message-ID: <1534631.KrL0vInDuc@amdc1032>
+References: <1380609183-21430-1-git-send-email-yuvaraj.cd@samsung.com>
+ <1380609183-21430-2-git-send-email-yuvaraj.cd@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <51EAA33C.9010405@fusionio.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mike Christie <mchristie@fusionio.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Jens Axboe <axboe@kernel.dk>, Alexander Gordeev <agordeev@redhat.com>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-samsung-soc-owner@vger.kernel.org>
+In-reply-to: <1380609183-21430-2-git-send-email-yuvaraj.cd@samsung.com>
+Sender: linux-samsung-soc-owner@vger.kernel.org
+To: Yuvaraj Kumar C D <yuvaraj.cd@gmail.com>
+Cc: tj@kernel.org, kgene.kim@samsung.com, grant.likely@linaro.org, rob.herring@calxeda.com, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-samsung-soc@vger.kernel.org, devicetree@vger.kernel.org, kishon@ti.com, s.nawrocki@samsung.com, ks.giri@samsung.com, aditya.ps@samsung.com, Yuvaraj Kumar C D <yuvaraj.cd@samsung.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Sat, Jul 20, 2013 at 09:48:28AM -0500, Mike Christie wrote:
-> What about the attached only compile tested patch. The patch has the mq
-> block code work like the non mq code for bio cleanups.
-> 
-> 
 
-> blk-mq: blk-mq should free bios in pass through case
-> 
-> For non mq calls, the block layer will free the bios when
-> blk_finish_request is called.
-e 
-> For mq calls, the blk mq code wants the caller to do this.
-> 
-> This patch has the blk mq code work like the non mq code
-> and has the block layer free the bios.
-> 
-> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+Hi,
 
-This patch breaks booting for me in the current blk multiqueue tree,
-with an apparent double free of a bio when using virtio-blk in writeback
-mode (cache=writeback or cache=none in qemu):
+On Tuesday, October 01, 2013 12:03:01 PM Yuvaraj Kumar C D wrote:
+> Exynos5250 contains one Synopsys AHCI SATA controller.The avalaible
+> ahci_platform driver is not sufficient to handle the AHCI PHY and PHY
+> clock related initialization.
+> 
+> This patch adds exynos specific ahci sata driver,contained the exynos
+> specific initialized codes, re-use the generic ahci_platform driver, and
+> keep the generic ahci_platform driver clean as much as possible.
+> 
+> This patch depends on the below patch
+> 	[1].drivers: phy: add generic PHY framework
+> 		by Kishon Vijay Abraham I<kishon@ti.com>
+> 
+> Signed-off-by: Yuvaraj Kumar C D <yuvaraj.cd@samsung.com>
+> ---
+>  drivers/ata/Kconfig       |    9 ++
+>  drivers/ata/Makefile      |    1 +
+>  drivers/ata/ahci_exynos.c |  226 +++++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 236 insertions(+)
+>  create mode 100644 drivers/ata/ahci_exynos.c
+> 
+> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+> index 4e73772..99b2392 100644
+> --- a/drivers/ata/Kconfig
+> +++ b/drivers/ata/Kconfig
+> @@ -106,6 +106,15 @@ config AHCI_IMX
+>  
+>  	  If unsure, say N.
+>  
+> +config AHCI_EXYNOS
+> +	tristate "Samsung Exynos AHCI SATA support"
+> +	depends on SATA_AHCI_PLATFORM
 
-[   15.253608] ------------[ cut here ]------------
-[   15.256422] kernel BUG at /work/hch/linux/fs/bio.c:498!
-[   15.256879] invalid opcode: 0000 [#1] SMP 
-[   15.256879] Modules linked in:
-[   15.256879] CPU: 3 PID: 353 Comm: kblockd Not tainted 3.11.0+ #25
-[   15.256879] Hardware name: Bochs Bochs, BIOS Bochs 01/01/2007
-[   15.256879] task: ffff88007d75e0c0 ti: ffff88007d676000 task.ti: ffff88007d676000
-[   15.256879] RIP: 0010:[<ffffffff811b470a>]  [<ffffffff811b470a>] bio_put+0x8a/0x90
-[   15.256879] RSP: 0018:ffff88007fd83b50  EFLAGS: 00010046
-[   15.256879] RAX: 0000000000000000 RBX: ffff88007d713080 RCX: 0000000000000035
-[   15.256879] RDX: 0000000000000002 RSI: ffff88007ad50338 RDI: ffff88007d713080
-[   15.256879] RBP: ffff88007fd83b60 R08: 7010000000000000 R09: 007ad50338080000
-[   15.256879] R10: ff672b1b7d38ce02 R11: 000000000000028b R12: 0000000000000000
-[   15.256879] R13: 0000000000000000 R14: ffff88007b4c36c0 R15: ffff88007b40d608
-[   15.256879] FS:  0000000000000000(0000) GS:ffff88007fd80000(0000) knlGS:0000000000000000
-[   15.256879] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-[   15.256879] CR2: 0000000000000138 CR3: 0000000002124000 CR4: 00000000000006e0
-[   15.256879] Stack:
-[   15.256879]  ffff88007d713080 0000000000000000 ffff88007fd83b80 ffffffff811ae8a3
-[   15.256879]  ffff88007fd83bf0 0000000000001000 ffff88007fd83b90 ffffffff811b3268
-[   15.256879]  ffff88007fd83bc0 ffffffff816ac847 ffff88007b4c36c0 ffff88007fd99d00
-[   15.256879] Call Trace:
-[   15.256879]  <IRQ> 
-[   15.256879]  [<ffffffff811ae8a3>] end_bio_bh_io_sync+0x33/0x50
-[   15.256879]  [<ffffffff811b3268>] bio_endio+0x18/0x30
-[   15.256879]  [<ffffffff816ac847>] blk_mq_complete_request+0x47/0xd0
-[   15.256879]  [<ffffffff816ac8e9>] __blk_mq_end_io+0x19/0x20
-[   15.256879]  [<ffffffff816ac958>] blk_mq_end_io+0x68/0xd0
-[   15.256879]  [<ffffffff816a6162>] blk_flush_complete_seq+0xe2/0x370
-[   15.256879]  [<ffffffff816a653b>] flush_end_io+0x11b/0x200
-[   15.256879]  [<ffffffff816ac875>] blk_mq_complete_request+0x75/0xd0
-[   15.256879]  [<ffffffff816ac8e9>] __blk_mq_end_io+0x19/0x20
-[   15.256879]  [<ffffffff816ac958>] blk_mq_end_io+0x68/0xd0
-[   15.256879]  [<ffffffff81844c2f>] virtblk_done+0xef/0x260
-[   15.256879]  [<ffffffff81753cc0>] vring_interrupt+0x30/0x60
-[   15.256879]  [<ffffffff81103724>] handle_irq_event_percpu+0x54/0x1f0
-[   15.256879]  [<ffffffff81103903>] handle_irq_event+0x43/0x70
-[   15.256879]  [<ffffffff8110609f>] handle_edge_irq+0x6f/0x120
-[   15.256879]  [<ffffffff810445b8>] handle_irq+0x58/0x140
-[   15.256879]  [<ffffffff81094bbf>] ? irq_enter+0x4f/0x90
-[   15.256879]  [<ffffffff810440b5>] do_IRQ+0x55/0xd0
-[   15.256879]  [<ffffffff81bd3972>] common_interrupt+0x72/0x72
-[   15.256879]  [<ffffffff810c5135>] ? sched_clock_local+0x25/0xa0
-[   15.256879]  [<ffffffff81094960>] ? __do_softirq+0xb0/0x250
-[   15.256879]  [<ffffffff81094959>] ? __do_softirq+0xa9/0x250
-[   15.256879]  [<ffffffff81094cae>] irq_exit+0xae/0xd0
-[   15.256879]  [<ffffffff8106dcd5>] smp_apic_timer_interrupt+0x45/0x60
-[   15.256879]  [<ffffffff81bdc772>] apic_timer_interrupt+0x72/0x80
-[   15.256879]  <EOI> 
-[   15.256879]  [<ffffffff81bd3a33>] ? retint_restore_args+0x13/0x13
-[   15.256879]  [<ffffffff81bd3502>] ? _raw_spin_unlock_irq+0x32/0x40
-[   15.256879]  [<ffffffff81bd34fb>] ? _raw_spin_unlock_irq+0x2b/0x40
-[   15.256879]  [<ffffffff810ac0c4>] rescuer_thread+0xe4/0x2f0
-[   15.256879]  [<ffffffff810abfe0>] ? process_scheduled_works+0x40/0x40
-[   15.256879]  [<ffffffff810b3916>] kthread+0xd6/0xe0
-[   15.256879]  [<ffffffff81bd34fb>] ? _raw_spin_unlock_irq+0x2b/0x40
-[   15.256879]  [<ffffffff810b3840>] ? __init_kthread_worker+0x70/0x70
-[   15.256879]  [<ffffffff81bdbabc>] ret_from_fork+0x7c/0xb0
-[   15.256879]  [<ffffffff810b3840>] ? __init_kthread_worker+0x70/0x70
-[   15.256879] Code: ff 41 8b 44 24 08 48 89 df 49 8b 74 24 10 48 29 c7 e8 cb 88 f8 ff 48 8b 5d f0 4c 8b 65 f8 c9 c3 90 48 89 df e8 b8 5c fc ff eb 9b <0f> 0b 0f 1f 40 00 55 48 89 e5 41 57 45 31 ff 41 56 41 55 41 54 
-[   15.256879] RIP  [<ffffffff811b470a>] bio_put+0x8a/0x90
-[   15.256879]  RSP <ffff88007fd83b50>
-[   15.256879] ---[ end trace 1f201608bfddfca7 ]---
-[   15.256879] Kernel panic - not syncing: Fatal exception in interrupt
-[   15.256879] Shutting down cpus with NMI
+This should also depend on SOC_EXYNOS5250.
+
+> +	help
+> +	  This option enables support for the Samsung's Exynos SoC's
+> +	  onboard AHCI SATA.
+> +
+> +	  If unsure, say N.
+> +
+>  config SATA_FSL
+>  	tristate "Freescale 3.0Gbps SATA support"
+>  	depends on FSL_SOC
+> diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+> index 46518c6..0e1f420f 100644
+> --- a/drivers/ata/Makefile
+> +++ b/drivers/ata/Makefile
+> @@ -11,6 +11,7 @@ obj-$(CONFIG_SATA_SIL24)	+= sata_sil24.o
+>  obj-$(CONFIG_SATA_DWC)		+= sata_dwc_460ex.o
+>  obj-$(CONFIG_SATA_HIGHBANK)	+= sata_highbank.o libahci.o
+>  obj-$(CONFIG_AHCI_IMX)		+= ahci_imx.o
+> +obj-$(CONFIG_AHCI_EXYNOS)	+= ahci_exynos.o
+>  
+>  # SFF w/ custom DMA
+>  obj-$(CONFIG_PDC_ADMA)		+= pdc_adma.o
+> diff --git a/drivers/ata/ahci_exynos.c b/drivers/ata/ahci_exynos.c
+> new file mode 100644
+> index 0000000..7f0af00
+> --- /dev/null
+> +++ b/drivers/ata/ahci_exynos.c
+> @@ -0,0 +1,226 @@
+> +/*
+> + * Samsung AHCI SATA platform driver
+> + * Copyright 2013 Samsung Electronics Co., Ltd.
+> + *
+> + * based on the AHCI SATA platform driver by Jeff Garzik and Anton Vorontsov
+> + *
+> + * This program is free software; you can redistribute it and/or modify it
+> + * under the terms and conditions of the GNU General Public License,
+> + * version 2, as published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope it will be useful, but WITHOUT
+> + * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+> + * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+> + * more details.
+> + *
+> + * You should have received a copy of the GNU General Public License along with
+> + * this program. If not, see <http://www.gnu.org/licenses/>.
+> + */
+> +
+> +#include <linux/kernel.h>
+> +#include <linux/module.h>
+> +#include <linux/platform_device.h>
+> +#include <linux/i2c.h>
+
+This include doesn't seem to be needed.
+
+> +#include <linux/io.h>
+> +#include <linux/ahci_platform.h>
+> +#include <linux/of_device.h>
+> +#include <linux/phy/phy.h>
+> +#include "ahci.h"
+> +
+> +#define MHZ             (1000 * 1000)
+> +
+> +struct exynos_ahci_priv {
+> +	struct platform_device *ahci_pdev;
+> +	struct clk *sclk;
+> +	unsigned int freq;
+> +	struct phy *phy;
+> +};
+> +
+> +static int exynos_sata_init(struct device *dev, void __iomem *mmio)
+> +{
+> +	struct exynos_ahci_priv *priv = dev_get_drvdata(dev->parent);
+> +	int ret;
+> +
+> +	priv->phy = devm_phy_get(dev , "sata-phy");
+> +	if (IS_ERR(priv->phy))
+> +		return PTR_ERR(priv->phy);
+
+This should happen in ->probe (exynos_sata_init() is also called in
+exynos_sata_resume() so the above code will be executed on every
+resume operation which is incorrect).
+
+Also please take a look at the following patch:
+
+https://lkml.org/lkml/2013/9/19/173
+
+it adds PHY support to ahci_platform driver, maybe it can be used
+for your needs as well.
+
+> +	ret = phy_init(priv->phy);
+> +	if (ret < 0) {
+> +			dev_err(dev, "failed to init SATA PHY\n");
+> +			return ret;
+> +	}
+> +
+> +	ret = clk_prepare_enable(priv->sclk);
+> +	if (ret < 0) {
+> +		dev_err(dev, "failed to enable source clk\n");
+> +		return ret;
+> +	}
+> +
+> +	ret = clk_set_rate(priv->sclk, priv->freq * MHZ);
+> +	if (ret < 0) {
+> +		dev_err(dev, "failed to set clk frequency\n");
+> +		clk_disable_unprepare(priv->sclk);
+> +		return ret;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+> +static void exynos_sata_exit(struct device *dev)
+> +{
+> +	struct exynos_ahci_priv *priv = dev_get_drvdata(dev->parent);
+> +	if (!IS_ERR(priv->sclk))
+> +		clk_disable_unprepare(priv->sclk);
+> +}
+> +
+> +static int exynos_sata_suspend(struct device *dev)
+> +{
+> +	struct exynos_ahci_priv *priv = dev_get_drvdata(dev->parent);
+> +
+> +	if (!IS_ERR(priv->sclk))
+> +		clk_disable_unprepare(priv->sclk);
+> +	phy_power_off(priv->phy);
+> +	return 0;
+> +}
+> +
+> +static int exynos_sata_resume(struct device *dev)
+> +{
+> +	struct exynos_ahci_priv *priv = dev_get_drvdata(dev->parent);
+> +	phy_power_on(priv->phy);
+> +	exynos_sata_init(dev, NULL);
+> +	return 0;
+
+It should be:
+
+	return exynos_sata_init(dev, NULL);
+
+Also please fix exynos_sata_suspend() to call exynos_sata_exit().
+
+[...]
+
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
