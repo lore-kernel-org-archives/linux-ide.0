@@ -1,57 +1,48 @@
-From: Jingoo Han <jg1.han@samsung.com>
-Subject: [PATCH 2/2] ahci_platform: use dev_info() instead of printk()
-Date: Fri, 04 Oct 2013 14:20:30 +0900
-Message-ID: <000701cec0c1$7138ebe0$53aac3a0$%han@samsung.com>
-References: <000601cec0c1$58186d20$08494760$%han@samsung.com>
+From: Martin Schwidefsky <schwidefsky@de.ibm.com>
+Subject: Re: [PATCH RFC 03/77] PCI/MSI/s390: Fix single MSI only check
+Date: Fri, 4 Oct 2013 09:39:56 +0200
+Message-ID: <20131004093956.183f6901@mschwide>
+References: <cover.1380703262.git.agordeev@redhat.com>
+	<8c9811b13fd93e73641dab8e3bd1bd5b2dc37a61.1380703262.git.agordeev@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:20963 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750920Ab3JDFUb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Oct 2013 01:20:31 -0400
-Received: from epcpsbgr5.samsung.com
- (u145.gpu120.samsung.co.kr [203.254.230.145])
- by mailout3.samsung.com (Oracle Communications Messaging Server 7u4-24.01
- (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MU400HVTPI1ONI0@mailout3.samsung.com> for
- linux-ide@vger.kernel.org; Fri, 04 Oct 2013 14:20:30 +0900 (KST)
-In-reply-to: <000601cec0c1$58186d20$08494760$%han@samsung.com>
-Content-language: ko
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <8c9811b13fd93e73641dab8e3bd1bd5b2dc37a61.1380703262.git.agordeev@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, Ralf Baechle <ralf@linux-mips.org>, Michael Ellerman <michael@ellerman.id.au>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>, Matt Porter <mporter@kernel.crashing.org>, stable@vger.kernel.org, linux-pci@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org, linux-ide@vger.kernel.org, iss_storagedev@hp.com, linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net, linux-driver@qlogic.com, Solarflare linux maintainers <linux-net-drivers@solarflare.com>, "VMware, Inc." <pv-drivers@vmware.com>lin
 List-Id: linux-ide@vger.kernel.org
-To: 'Tejun Heo' <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
 
-Use the printk(KERN_INFO,...) call to to dev_info() instead,
-to tie into the dynamic debugging infrastructure.
+On Wed,  2 Oct 2013 12:48:19 +0200
+Alexander Gordeev <agordeev@redhat.com> wrote:
 
-Also change "raw" printk() call to dev_info() to provide a better
-error message to userspace so it can properly identify the device
-and not just have to guess.
+> Multiple MSIs have never been supported on s390 architecture,
+> but the platform code fails to report single MSI only.
+> 
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> ---
+>  arch/s390/pci/pci.c |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
+> 
+> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+> index f17a834..c79c6e4 100644
+> --- a/arch/s390/pci/pci.c
+> +++ b/arch/s390/pci/pci.c
+> @@ -427,6 +427,8 @@ int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+>  	pr_debug("%s: requesting %d MSI-X interrupts...", __func__, nvec);
+>  	if (type != PCI_CAP_ID_MSIX && type != PCI_CAP_ID_MSI)
+>  		return -EINVAL;
+> +	if (type == PCI_CAP_ID_MSI && nvec > 1)
+> +		return 1;
+>  	msi_vecs = min(nvec, ZPCI_MSI_VEC_MAX);
+>  	msi_vecs = min_t(unsigned int, msi_vecs, CONFIG_PCI_NR_MSI);
+> 
 
-Signed-off-by: Jingoo Han <jg1.han@samsung.com>
----
-Tested on Exynos5440.
+Acked-by: Martin Schwidefsky <schwidefsky@de.ibm.com>
 
- drivers/ata/ahci_platform.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index 2daaee0..7d3b853 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -184,7 +184,7 @@ static int ahci_probe(struct platform_device *pdev)
- 	if (!(hpriv->cap & HOST_CAP_SSS) || ahci_ignore_sss)
- 		host->flags |= ATA_HOST_PARALLEL_SCAN;
- 	else
--		printk(KERN_INFO "ahci: SSS flag set, parallel bus scan disabled\n");
-+		dev_info(dev, "SSS flag set, parallel bus scan disabled\n");
- 
- 	if (pi.flags & ATA_FLAG_EM)
- 		ahci_reset_em(host);
 -- 
-1.7.10.4
+blue skies,
+   Martin.
 
-
+"Reality continues to ruin my life." - Calvin.
