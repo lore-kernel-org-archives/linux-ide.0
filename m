@@ -1,47 +1,60 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
- pattern
-Date: Fri, 4 Oct 2013 11:21:09 +0200
-Message-ID: <20131004092108.GB4536@dhcp-26-207.brq.redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
- <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
- <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
- <AE90C24D6B3A694183C094C60CF0A2F6026B7371@saturn3.aculab.com>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: [PATCH] ARM: SPEAr1340: static-ize SATA functions
+Date: Fri, 04 Oct 2013 19:42:31 +0200
+Message-ID: <2240706.IfNdWNvgId@amdc1032>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-mips-bounce@linux-mips.org>
-Content-Disposition: inline
-In-Reply-To: <AE90C24D6B3A694183C094C60CF0A2F6026B7371@saturn3.aculab.com>
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-List-help: <mailto:ecartis@linux-mips.org?Subject=help>
-List-unsubscribe: <mailto:ecartis@linux-mips.org?subject=unsubscribe%20linux-mips>
-List-software: Ecartis version 1.0.0
-List-subscribe: <mailto:ecartis@linux-mips.org?subject=subscribe%20linux-mips>
-List-owner: <mailto:ralf@linux-mips.org>
-List-post: <mailto:linux-mips@linux-mips.org>
-List-archive: <http://www.linux-mips.org/archives/linux-mips/>
-To: David Laight <David.Laight@ACULAB.COM>
-Cc: Ben Hutchings <bhutchings@solarflare.com>, linux-mips@linux-mips.org, "VMware, Inc." <pv-drivers@vmware.com>, linux-nvme@lists.infradead.org, linux-ide@vger.kernel.org, linux-s390@vger.kernel.org, Andy King <acking@vmware.com>, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, x86@kernel.org, Ingo Molnar <mingo@redhat.com>, linux-pci@vger.kernel.org, iss_storagedev@hp.com, linux-driver@qlogic.com, Tejun Heo <tj@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Dan Williams <dan.j.williams@intel.com>, Jon Mason <jon.mason@intel.com>, Solarflare linux maintainers <linux-net-drivers@solarflare.com>, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>, e1000-devel@lists.sourceforge.net, Martin Schwidefsky <schwidefsky@de.ibm.co>
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mailout1.samsung.com ([203.254.224.24]:41401 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751161Ab3JDRmi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Oct 2013 13:42:38 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Viresh Kumar <viresh.linux@gmail.com>
+Cc: Shiraz Hashim <shiraz.hashim@st.com>, spear-devel@list.st.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Kyungmin Park <kyungmin.park@samsung.com>
 
-On Fri, Oct 04, 2013 at 09:31:49AM +0100, David Laight wrote:
-> > Mmmm.. I am not sure I am getting it. Could you please rephrase?
-> 
-> One possibility is for drivers than can use a lot of interrupts to
-> request a minimum number initially and then request the additional
-> ones much later on.
-> That would make it less likely that none will be available for
-> devices/drivers that need them but are initialised later.
+Make sata_miphy_exit(), sata_suspend() and sata_resume() static.
 
-It sounds as a whole new topic for me. Isn't it?
+Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Signed-off-by: Kyungmin Park <kyungmin.park@samsung.com>
+---
+ arch/arm/mach-spear/spear1340.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Anyway, what prevents the above from being done with pci_enable_msix(nvec1) -
-pci_disable_msix() - pci_enable_msix(nvec2) where nvec1 < nvec2?
-
-> 	David
-
+diff --git a/arch/arm/mach-spear/spear1340.c b/arch/arm/mach-spear/spear1340.c
+index 3fb6834..e0e4251 100644
+--- a/arch/arm/mach-spear/spear1340.c
++++ b/arch/arm/mach-spear/spear1340.c
+@@ -93,7 +93,7 @@ static int sata_miphy_init(struct device *dev, void __iomem *addr)
+ 	return 0;
+ }
+ 
+-void sata_miphy_exit(struct device *dev)
++static void sata_miphy_exit(struct device *dev)
+ {
+ 	writel(0, SPEAR1340_PCIE_SATA_CFG);
+ 	writel(0, SPEAR1340_PCIE_MIPHY_CFG);
+@@ -107,7 +107,7 @@ void sata_miphy_exit(struct device *dev)
+ 	msleep(20);
+ }
+ 
+-int sata_suspend(struct device *dev)
++static int sata_suspend(struct device *dev)
+ {
+ 	if (dev->power.power_state.event == PM_EVENT_FREEZE)
+ 		return 0;
+@@ -117,7 +117,7 @@ int sata_suspend(struct device *dev)
+ 	return 0;
+ }
+ 
+-int sata_resume(struct device *dev)
++static int sata_resume(struct device *dev)
+ {
+ 	if (dev->power.power_state.event == PM_EVENT_THAW)
+ 		return 0;
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+1.8.2.3
+
+
