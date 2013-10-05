@@ -1,45 +1,52 @@
 From: Jingoo Han <jg1.han@samsung.com>
-Subject: Re: [PATCH 1/2] ahci: use dev_info() instead of printk()
-Date: Sat, 05 Oct 2013 09:04:53 +0900
-Message-ID: <001401cec15e$84a9f320$8dfdd960$%han@samsung.com>
-References: <000601cec0c1$58186d20$08494760$%han@samsung.com>
- <524F2291.2060501@cogentembedded.com>
+Subject: [PATCH V2 1/2] ahci: use dev_info() instead of printk()
+Date: Sat, 05 Oct 2013 09:15:16 +0900
+Message-ID: <001501cec15f$f7bbffb0$e733ff10$%han@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:54724 "EHLO
+Received: from mailout1.samsung.com ([203.254.224.24]:55379 "EHLO
 	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751685Ab3JEAEz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Oct 2013 20:04:55 -0400
-Received: from epcpsbgr5.samsung.com
- (u145.gpu120.samsung.co.kr [203.254.230.145])
+	with ESMTP id S1751126Ab3JEAPR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Oct 2013 20:15:17 -0400
+Received: from epcpsbgr4.samsung.com
+ (u144.gpu120.samsung.co.kr [203.254.230.144])
  by mailout1.samsung.com (Oracle Communications Messaging Server 7u4-24.01
  (7.0.4.24.0) 64bit (built Nov 17 2011))
- with ESMTP id <0MU6000V45K5LT10@mailout1.samsung.com> for
- linux-ide@vger.kernel.org; Sat, 05 Oct 2013 09:04:53 +0900 (KST)
-In-reply-to: <524F2291.2060501@cogentembedded.com>
+ with ESMTP id <0MU600FKC61GCA30@mailout1.samsung.com> for
+ linux-ide@vger.kernel.org; Sat, 05 Oct 2013 09:15:16 +0900 (KST)
 Content-language: ko
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: 'Sergei Shtylyov' <sergei.shtylyov@cogentembedded.com>
-Cc: 'Tejun Heo' <tj@kernel.org>, linux-ide@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
+To: 'Tejun Heo' <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
 
-On Saturday, October 05, 2013 5:18 AM, Sergei Shtylyov wrote:
-> On 04-10-2013 7:19, Jingoo Han wrote:
-> 
-> > Use the printk(KERN_INFO,...) call to to dev_info() instead,
-> > to tie into the dynamic debugging infrastructure.
-> 
->     I can't even parse this sentence, not to mention dev_info() has no
-> relation to dynamic debugging.
+Change "raw" printk() call to dev_info() to provide a better
+message to userspace so it can properly identify the device
+and not just have to guess.
 
-Hi Sergei Shtylyov,
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+Tested on Exynos5440.
 
-Right, dev_info() is not related to the dynamic debugging.
-I will remove this comment from commit message.
-Thank you for your comment. :-)
+ drivers/ata/ahci.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Best regards,
-Jingoo Han
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 9d715ae..8e28f92 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1343,7 +1343,7 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (!(hpriv->cap & HOST_CAP_SSS) || ahci_ignore_sss)
+ 		host->flags |= ATA_HOST_PARALLEL_SCAN;
+ 	else
+-		printk(KERN_INFO "ahci: SSS flag set, parallel bus scan disabled\n");
++		dev_info(&pdev->dev, "SSS flag set, parallel bus scan disabled\n");
+ 
+ 	if (pi.flags & ATA_FLAG_EM)
+ 		ahci_reset_em(host);
+-- 
+1.7.10.4
+
 
