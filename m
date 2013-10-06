@@ -1,56 +1,65 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: kernel 3.6+  problem with Marvell 88SE9172 SATA Controller
-Date: Sat, 05 Oct 2013 19:00:30 -0600
-Message-ID: <5250B62E.4080407@gmail.com>
-References: <524E4C29.10506@gmail.com>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
+ pattern
+Date: Sun, 6 Oct 2013 08:02:44 +0200
+Message-ID: <20131006060243.GB28142@dhcp-26-207.brq.redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+ <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
+ <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
+ <1380922156.3214.49.camel@bwh-desktop.uk.level5networks.com>
+ <20131005142054.GA11270@dhcp-26-207.brq.redhat.com>
+ <1381009586.645.141.camel@pasglop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ie0-f172.google.com ([209.85.223.172]:45738 "EHLO
-	mail-ie0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752673Ab3JFBAe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 5 Oct 2013 21:00:34 -0400
-Received: by mail-ie0-f172.google.com with SMTP id x13so12832356ief.17
-        for <linux-ide@vger.kernel.org>; Sat, 05 Oct 2013 18:00:34 -0700 (PDT)
-In-Reply-To: <524E4C29.10506@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-mips-bounce@linux-mips.org>
+Content-Disposition: inline
+In-Reply-To: <1381009586.645.141.camel@pasglop>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+List-help: <mailto:ecartis@linux-mips.org?Subject=help>
+List-unsubscribe: <mailto:ecartis@linux-mips.org?subject=unsubscribe%20linux-mips>
+List-software: Ecartis version 1.0.0
+List-subscribe: <mailto:ecartis@linux-mips.org?subject=subscribe%20linux-mips>
+List-owner: <mailto:ralf@linux-mips.org>
+List-post: <mailto:linux-mips@linux-mips.org>
+List-archive: <http://www.linux-mips.org/archives/linux-mips/>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Ben Hutchings <bhutchings@solarflare.com>, linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, Ralf Baechle <ralf@linux-mips.org>, Michael Ellerman <michael@ellerman.id.au>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>, Matt Porter <mporter@kernel.crashing.org>, linux-pci@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org, linux-ide@vger.kernel.org, iss_storagedev@hp.com, linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net, linux-driver@qlo
 List-Id: linux-ide@vger.kernel.org
-To: Davidovac Zoran <davidovacz@gmail.com>
-Cc: Jeff Garzik <jgarzik@pobox.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 
-On 10/03/2013 11:03 PM, Davidovac Zoran wrote:
-> Dear All,
->
-> After I've upgraded from kernel 3.4.X to 3.10.14 and I noticed 2 drives
-> missing that
-> are connected on Marvell 88SE9172 SATA Controller.
->
-> The last version that worked properly was 3.5.7, but any kernel above
-> 3.6.0+ drives connected to Marvell are missing.
->
-> This was tested on Board GA-X79-UD5
-> http://www.gigabyte.com/products/product-page.aspx?pid=4049#sp
-> that have 3 x Marvell 88SE9172 chips.
->
-> tested kernels:
-> linux-3.10.1.tar.xz   linux-3.12-rc3.tar.xz  linux-3.6.11.tar.xz
-> linux-3.7.10.tar.xz
-> linux-3.10.14.tar.xz  linux-3.4.64.tar.xz    linux-3.6.5.tar.xz
-> linux-3.8.13.tar.xz
-> linux-3.11.3.tar.xz   linux-3.5.7.tar.xz     linux-3.6.tar.xz
-> linux-3.9.11.tar.xz
->
-> 3.6.0+ dmesg:
-> ata7.00: failed to IDENTIFY (INIT_DEV_PARAMS failed, err_mask=0x80)
-> dmar: DRHD: handling fault status reg 502
-> dmar: DMAR:[DMA Write] Request device [05:00.1] fault addr fffc0000
-> DMAR:[fault reason 02] Present bit in context entry is clear
+On Sun, Oct 06, 2013 at 08:46:26AM +1100, Benjamin Herrenschmidt wrote:
+> On Sat, 2013-10-05 at 16:20 +0200, Alexander Gordeev wrote:
+> > So my point is - drivers should first obtain a number of MSIs they *can*
+> > get, then *derive* a number of MSIs the device is fine with and only then
+> > request that number. Not terribly different from memory or any other type
+> > of resource allocation ;)
+> 
+> What if the limit is for a group of devices ? Your interface is racy in
+> that case, another driver could have eaten into the limit in between the
+> calls.
 
-This is likely a known problem with some Marvell SATA controllers in 
-combination with the Intel IOMMU being enabled. The controller is 
-issuing DMA requests from the wrong device address which get blocked by 
-the IOMMU because that device isn't supposed to be accessing the memory. 
-I thought there was some efforts to add a workaround for this, but 
-haven't heard anything about it recently.
+Well, the another driver has had a better karma ;) But seriously, the
+current scheme with a loop is not race-safe wrt to any other type of
+resource which might exhaust. What makes the quota so special so we
+should care about it and should not care i.e. about lack of msi_desc's?
 
+Yeah, I know the quota might hit more likely. But why it is not addressed
+right now then? Not a single function in chains...
+  rtas_msi_check_device() -> msi_quota_for_device() -> traverse_pci_devices()
+  rtas_setup_msi_irqs() -> msi_quota_for_device() -> traverse_pci_devices()
+...is race-safe. So if it has not been bothering anyone until now then
+no reason to start worrying now :)
+
+In fact, in the current design to address the quota race decently the
+drivers would have to protect the *loop* to prevent the quota change
+between a pci_enable_msix() returned a positive number and the the next
+call to pci_enable_msix() with that number. Is it doable?
+
+> Ben.
+> 
+> 
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
