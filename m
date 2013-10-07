@@ -1,39 +1,59 @@
-From: 'Tejun Heo' <tj@kernel.org>
-Subject: Re: [PATCH V2 2/2] ahci_platform: use dev_info() instead of printk()
-Date: Mon, 7 Oct 2013 15:25:02 -0400
-Message-ID: <20131007192502.GH27396@htj.dyndns.org>
-References: <001501cec15f$f7bbffb0$e733ff10$%han@samsung.com>
- <001601cec160$11b0e570$3512b050$%han@samsung.com>
- <20131007191310.GF27396@htj.dyndns.org>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
+ pattern
+Date: Tue, 08 Oct 2013 07:10:56 +1100
+Message-ID: <1381176656.645.171.camel@pasglop>
+References: <cover.1380703262.git.agordeev@redhat.com>
+         <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
+         <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
+         <1380922156.3214.49.camel@bwh-desktop.uk.level5networks.com>
+         <20131005142054.GA11270@dhcp-26-207.brq.redhat.com>
+         <1381009586.645.141.camel@pasglop>
+         <20131006060243.GB28142@dhcp-26-207.brq.redhat.com>
+         <1381040386.645.143.camel@pasglop>
+         <20131006071027.GA29143@dhcp-26-207.brq.redhat.com>
+         <20131007180111.GC2481@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f177.google.com ([209.85.216.177]:60398 "EHLO
-	mail-qc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750954Ab3JGTZG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Oct 2013 15:25:06 -0400
-Received: by mail-qc0-f177.google.com with SMTP id x12so5097316qcv.8
-        for <linux-ide@vger.kernel.org>; Mon, 07 Oct 2013 12:25:05 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20131007191310.GF27396@htj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-mips-bounce@linux-mips.org>
+In-Reply-To: <20131007180111.GC2481@htj.dyndns.org>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+List-help: <mailto:ecartis@linux-mips.org?Subject=help>
+List-unsubscribe: <mailto:ecartis@linux-mips.org?subject=unsubscribe%20linux-mips>
+List-software: Ecartis version 1.0.0
+List-subscribe: <mailto:ecartis@linux-mips.org?subject=subscribe%20linux-mips>
+List-owner: <mailto:ralf@linux-mips.org>
+List-post: <mailto:linux-mips@linux-mips.org>
+List-archive: <http://www.linux-mips.org/archives/linux-mips/>
+To: Tejun Heo <tj@kernel.org>
+Cc: Alexander Gordeev <agordeev@redhat.com>, Ben Hutchings <bhutchings@solarflare.com>, linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, Ralf Baechle <ralf@linux-mips.org>, Michael Ellerman <michael@ellerman.id.au>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Ingo Molnar <mingo@redhat.com>, Dan Williams <dan.j.williams@intel.com>, Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>, Matt Porter <mporter@kernel.crashing.org>, linux-pci@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org, linux-ide@vger.kernel.org, iss_storagedev@hp.com, linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net
 List-Id: linux-ide@vger.kernel.org
-To: Jingoo Han <jg1.han@samsung.com>
-Cc: linux-ide@vger.kernel.org
 
-On Mon, Oct 07, 2013 at 03:13:10PM -0400, 'Tejun Heo' wrote:
-> On Sat, Oct 05, 2013 at 09:15:59AM +0900, Jingoo Han wrote:
-> > Change "raw" printk() call to dev_info() to provide a better
-> > message to userspace so it can properly identify the device
-> > and not just have to guess.
-> > 
-> > Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+On Mon, 2013-10-07 at 14:01 -0400, Tejun Heo wrote:
+> I don't think the same race condition would happen with the loop.  The
+> problem case is where multiple msi(x) allocation fails completely
+> because the global limit went down before inquiry and allocation.  In
+> the loop based interface, it'd retry with the lower number.
 > 
-> Applied to libata/for-3.13.
+> As long as the number of drivers which need this sort of adaptive
+> allocation isn't too high and the common cases can be made simple, I
+> don't think the "complex" part of interface is all that important.
+> Maybe we can have reserve / cancel type interface or just keep the
+> loop with more explicit function names (ie. try_enable or something
+> like that).
 
-Strike that.  Applied to libata/for-3.12-fixes.
+I'm thinking a better API overall might just have been to request
+individual MSI-X one by one :-)
 
-Thanks.
+We want to be able to request an MSI-X at runtime anyway ... if I want
+to dynamically add a queue to my network interface, I want it to be able
+to pop a new arbitrary MSI-X.
 
--- 
-tejun
+And we don't want to lock drivers into contiguous MSI-X sets either.
+
+And for the cleanup ... well that's what the "pcim" functions are for,
+we can just make MSI-X variants.
+
+Ben.
