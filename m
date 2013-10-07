@@ -1,408 +1,129 @@
-From: Yuvaraj Cd <yuvaraj.lkml@gmail.com>
-Subject: Re: [PATCH 2/3] Phy: Exynos: Add Exynos5250 sata phy driver
-Date: Mon, 7 Oct 2013 19:35:04 +0530
-Message-ID: <CA+NduCAwnqz4_YNoVnpfV3O6fn=2QTdv4zgEdYRv4qjMRvWeag@mail.gmail.com>
-References: <1380609183-21430-1-git-send-email-yuvaraj.cd@samsung.com>
-	<1380609183-21430-3-git-send-email-yuvaraj.cd@samsung.com>
-	<524AC56C.1060501@ti.com>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
+Date: Mon, 7 Oct 2013 16:44:26 +0200
+Message-ID: <20131007144424.GA28054@dhcp-26-207.brq.redhat.com>
+References: <51E83E32.9050306@cs.wisc.edu>
+ <1374193399.7397.973.camel@haakon3.risingtidesystems.com>
+ <20130719003034.GG28005@kernel.dk>
+ <1374195825.7397.997.camel@haakon3.risingtidesystems.com>
+ <1374215660.7397.1041.camel@haakon3.risingtidesystems.com>
+ <1374248000.2266.20.camel@dabdike>
+ <1374267684.7397.1058.camel@haakon3.risingtidesystems.com>
+ <1374296162.7397.1098.camel@haakon3.risingtidesystems.com>
+ <51EAA33C.9010405@fusionio.com>
+ <20131003110650.GA23454@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wg0-f43.google.com ([74.125.82.43]:62903 "EHLO
-	mail-wg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755664Ab3JGOFH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Oct 2013 10:05:07 -0400
-In-Reply-To: <524AC56C.1060501@ti.com>
+Received: from mx1.redhat.com ([209.132.183.28]:38209 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753732Ab3JGOmr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 7 Oct 2013 10:42:47 -0400
+Content-Disposition: inline
+In-Reply-To: <20131003110650.GA23454@infradead.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Yuvaraj Kumar C D <yuvaraj.cd@gmail.com>, Yuvaraj Kumar C D <yuvaraj.cd@samsung.com>, devicetree@vger.kernel.org, Kukjin Kim <kgene.kim@samsung.com>, linux-ide@vger.kernel.org, ks.giri@samsung.com, Vasanth Ananthan <vasanth.a@samsung.com>, Rob Herring <rob.herring@calxeda.com>, aditya.ps@samsung.com, grant.likely@linaro.org, linux-samsung-soc <linux-samsung-soc@vger.kernel.org>, s.nawrocki@samsung.com, tj@kernel.org, linux-arm-kernel@lists.infradead.org
+To: Mike Christie <mchristie@fusionio.com>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
 
-On Tue, Oct 1, 2013 at 6:21 PM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
-> On Tuesday 01 October 2013 12:03 PM, Yuvaraj Kumar C D wrote:
->> This patch adds the sata phy driver for Exynos5250.Exynos5250 sata
->> phy comprises of CMU and TRSV blocks which are of I2C register Map.
->> So this patch also adds a i2c client driver, which is used configure
->> the CMU and TRSV block of exynos5250 SATA PHY.
->
-> Why not make the Exynos5250 sata phy as a i2c client driver instead?
->>
->> This patch incorporates the generic phy framework to deal with sata
->> phy.
->>
->> This patch depends on the below patch
->>       [1].drivers: phy: add generic PHY framework
->>               by Kishon Vijay Abraham I<kishon@ti.com>
->>
->> Signed-off-by: Yuvaraj Kumar C D <yuvaraj.cd@samsung.com>
->> Signed-off-by: Girish K S <ks.giri@samsung.com>
->> Signed-off-by: Vasanth Ananthan <vasanth.a@samsung.com>
->> ---
->>  drivers/phy/Kconfig                      |    6 +
->>  drivers/phy/Makefile                     |    1 +
->>  drivers/phy/exynos/Kconfig               |    5 +
->>  drivers/phy/exynos/Makefile              |    5 +
->>  drivers/phy/exynos/exynos5250_phy_i2c.c  |   53 +++++++
->>  drivers/phy/exynos/sata_phy_exynos5250.c |  248 ++++++++++++++++++++++++++++++
->>  drivers/phy/exynos/sata_phy_exynos5250.h |   33 ++++
->>  7 files changed, 351 insertions(+)
->>  create mode 100644 drivers/phy/exynos/Kconfig
->>  create mode 100644 drivers/phy/exynos/Makefile
->>  create mode 100644 drivers/phy/exynos/exynos5250_phy_i2c.c
->>  create mode 100644 drivers/phy/exynos/sata_phy_exynos5250.c
->>  create mode 100644 drivers/phy/exynos/sata_phy_exynos5250.h
->>
->> diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
->> index 5f85909..ab3d1c6 100644
->> --- a/drivers/phy/Kconfig
->> +++ b/drivers/phy/Kconfig
->> @@ -11,3 +11,9 @@ menuconfig GENERIC_PHY
->>         devices present in the kernel. This layer will have the generic
->>         API by which phy drivers can create PHY using the phy framework and
->>         phy users can obtain reference to the PHY.
->> +
->> +if GENERIC_PHY
->
-> NAK. Just select GENERIC_PHY from your driver Kconfig.
->> +
->> +source "drivers/phy/exynos/Kconfig"
->> +
->> +endif
->> diff --git a/drivers/phy/Makefile b/drivers/phy/Makefile
->> index 9e9560f..e0223d7 100644
->> --- a/drivers/phy/Makefile
->> +++ b/drivers/phy/Makefile
->> @@ -3,3 +3,4 @@
->>  #
->>
->>  obj-$(CONFIG_GENERIC_PHY)    += phy-core.o
->> +obj-$(CONFIG_PHY_SAMSUNG_SATA)       += exynos/
->
-> simply have phy-exynos5250 in drivers/phy.
-ok.
->> diff --git a/drivers/phy/exynos/Kconfig b/drivers/phy/exynos/Kconfig
->> new file mode 100644
->> index 0000000..fa125fb
->> --- /dev/null
->> +++ b/drivers/phy/exynos/Kconfig
->> @@ -0,0 +1,5 @@
->> +config PHY_SAMSUNG_SATA
->> +     tristate "Samsung Sata SerDes/PHY driver"
->> +     help
->> +       Support for Samsung sata SerDes/Phy found on Samsung
->> +       SoCs.
->> diff --git a/drivers/phy/exynos/Makefile b/drivers/phy/exynos/Makefile
->> new file mode 100644
->> index 0000000..50dc7eb
->> --- /dev/null
->> +++ b/drivers/phy/exynos/Makefile
->> @@ -0,0 +1,5 @@
->> +#
->> +# Makefile for the exynos phy drivers.
->> +#
->> +ccflags-y := -Idrivers/phy/exynos
->> +obj-$(CONFIG_PHY_SAMSUNG_SATA)       += sata_phy_exynos5250.o exynos5250_phy_i2c.o
->> diff --git a/drivers/phy/exynos/exynos5250_phy_i2c.c b/drivers/phy/exynos/exynos5250_phy_i2c.c
->> new file mode 100644
->> index 0000000..9c75d3b
->> --- /dev/null
->> +++ b/drivers/phy/exynos/exynos5250_phy_i2c.c
->> @@ -0,0 +1,53 @@
->> +/*
->> + * Copyright (C) 2013 Samsung Electronics Co.Ltd
->> + * Author:
->> + *   Yuvaraj C D <yuvaraj.cd@samsung.com>
->> + *
->> + * This program is free software; you can redistribute  it and/or modify it
->> + * under  the terms of  the GNU General  Public License as published by the
->> + * Free Software Foundation;  either version 2 of the  License, or (at your
->> + * option) any later version.
->> + *
->> + */
->> +
->> +#include <linux/kernel.h>
->> +#include <linux/i2c.h>
->> +#include <linux/module.h>
->> +#include "sata_phy_exynos5250.h"
->> +
->> +static int exynos_sata_i2c_probe(struct i2c_client *client,
->> +             const struct i2c_device_id *i2c_id)
->> +{
->> +     sataphy_attach_i2c_client(client);
->> +
->> +     dev_info(&client->adapter->dev,
->> +             "attached %s into i2c adapter successfully\n",
->> +             client->name);
->> +
->> +     return 0;
->> +}
->> +
->> +static int exynos_sata_i2c_remove(struct i2c_client *client)
->> +{
->> +     dev_info(&client->adapter->dev,
->> +             "detached %s from i2c adapter successfully\n",
->> +             client->name);
->> +
->> +     return 0;
->> +}
->> +
->> +static const struct i2c_device_id phy_i2c_device_match[] = {
->> +     { "sata-phy-i2c", 0 },
->> +};
->> +MODULE_DEVICE_TABLE(of, phy_i2c_device_match);
->> +
->> +struct i2c_driver sataphy_i2c_driver = {
->> +     .probe    = exynos_sata_i2c_probe,
->> +     .id_table = phy_i2c_device_match,
->> +     .remove         = exynos_sata_i2c_remove,
->> +     .driver   = {
->> +             .name = "sata-phy-i2c",
->> +             .owner = THIS_MODULE,
->> +             .of_match_table = (void *)phy_i2c_device_match,
->> +             },
->> +};
->
-> As I just mentioned above, we can merge this driver with the below one.
-True, Initially it was merged.But already existing drivers of which
-are of similar to this kind were done in this way.
-Please refer  /drivers/gpu/drm//exynos/exynos_hdmiphy.c
+On Thu, Oct 03, 2013 at 04:06:51AM -0700, Christoph Hellwig wrote:
+> On Sat, Jul 20, 2013 at 09:48:28AM -0500, Mike Christie wrote:
+> > What about the attached only compile tested patch. The patch has the mq
+> > block code work like the non mq code for bio cleanups.
+> > 
+> > 
+> 
+> > blk-mq: blk-mq should free bios in pass through case
+> > 
+> > For non mq calls, the block layer will free the bios when
+> > blk_finish_request is called.
+> e 
+> > For mq calls, the blk mq code wants the caller to do this.
+> > 
+> > This patch has the blk mq code work like the non mq code
+> > and has the block layer free the bios.
+> > 
+> > Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+> 
+> This patch breaks booting for me in the current blk multiqueue tree,
+> with an apparent double free of a bio when using virtio-blk in writeback
+> mode (cache=writeback or cache=none in qemu):
 
->> diff --git a/drivers/phy/exynos/sata_phy_exynos5250.c b/drivers/phy/exynos/sata_phy_exynos5250.c
->> new file mode 100644
->> index 0000000..726c10e
->> --- /dev/null
->> +++ b/drivers/phy/exynos/sata_phy_exynos5250.c
->> @@ -0,0 +1,248 @@
->> +/*
->> + * Samsung SATA SerDes(PHY) driver
->> + *
->> + * Copyright (C) 2013 Samsung Electronics Co., Ltd.
->> + * Authors: Girish K S <ks.giri@samsung.com>
->> + *         Yuvaraj Kumar C D <yuvaraj.cd@samsung.com>
->> + *
->> + * This program is free software; you can redistribute it and/or modify
->> + * it under the terms of the GNU General Public License version 2 as
->> + * published by the Free Software Foundation.
->> + */
->> +
->> +#include <linux/delay.h>
->> +#include <linux/io.h>
->> +#include <linux/kernel.h>
->> +#include <linux/module.h>
->> +#include <linux/of.h>
->> +#include <linux/of_address.h>
->> +#include <linux/phy/phy.h>
->> +#include <linux/i2c.h>
->> +#include <linux/platform_device.h>
->> +#include <linux/spinlock.h>
->> +#include <linux/clk.h>
->> +#include "sata_phy_exynos5250.h"
->> +
->> +static struct i2c_client *phy_i2c_client;
->> +
->> +struct exynos_sata_phy {
->> +     struct phy *phy;
->> +     struct clk *phyclk;
->> +     void __iomem *regs;
->> +     void __iomem *pmureg;
->> +};
->> +
->> +static bool wait_for_reg_status(void __iomem *base, u32 reg, u32 checkbit,
->> +                             u32 status)
->> +{
->> +     unsigned long timeout = jiffies + usecs_to_jiffies(1000);
->> +     while (time_before(jiffies, timeout)) {
->> +             if ((readl(base + reg) & checkbit) == status)
->> +                     return true;
->> +     }
->> +     return false;
->> +}
->> +
->> +void sataphy_attach_i2c_client(struct i2c_client *sata_phy)
->> +{
->> +     if (sata_phy)
->> +             phy_i2c_client = sata_phy;
->> +}
->> +
->> +static int __set_phy_state(struct exynos_sata_phy *state, unsigned int on)
->> +{
->> +     u32 reg;
->> +
->> +     reg = readl(state->pmureg);
->> +     if (on)
->> +             reg |= EXYNOS_SATA_PHY_EN;
->> +     else
->> +             reg &= ~EXYNOS_SATA_PHY_EN;
->> +     writel(reg, state->pmureg);
->> +
->> +     return 0;
->> +}
->> +
->> +static int exynos_sata_phy_power_on(struct phy *phy)
->> +{
->> +     struct exynos_sata_phy *state = phy_get_drvdata(phy);
->> +
->> +     return __set_phy_state(state, 1);
->> +}
->> +
->> +static int exynos_sata_phy_power_off(struct phy *phy)
->> +{
->> +     struct exynos_sata_phy *state = phy_get_drvdata(phy);
->> +
->> +     return __set_phy_state(state, 0);
->> +}
->> +
->> +static int exynos_sataphy_parse_dt(struct device *dev,
->> +                             struct exynos_sata_phy *sata)
->> +{
->> +     struct device_node *np = dev->of_node;
->> +     struct device_node *sataphy_pmu;
->> +
->> +     sataphy_pmu = of_get_child_by_name(np, "sataphy-pmu");
->> +     if (!sataphy_pmu) {
->> +             dev_err(dev, "No PMU interface for sata-phy\n");
->> +             return -ENODEV;
->> +     }
->> +
->> +     sata->pmureg = of_iomap(sataphy_pmu, 0);
->> +     if (!sata->pmureg) {
->> +             dev_err(dev, "Can't get sata-phy pmu control register\n");
->> +             of_node_put(sataphy_pmu);
->> +             return -ENXIO;
->> +     }
->> +
->> +     of_node_put(sataphy_pmu);
->> +     return 0;
->> +}
->> +
->> +static int exynos_sata_phy_init(struct phy *phy)
->> +{
->> +     u32 val;
->> +     int ret = 0;
->> +     u8 buf[] = { 0x3A, 0x0B };
->> +     struct exynos_sata_phy *sata_phy = phy_get_drvdata(phy);
->> +
->> +     if (!phy_i2c_client)
->> +             return -EPROBE_DEFER;
->> +
->> +     writel(EXYNOS_SATA_PHY_EN, sata_phy->pmureg);
->> +
->> +     val = 0;
->> +     writel(val, sata_phy->regs + EXYNOS5_SATA_RESET);
->> +
->> +     val = readl(sata_phy->regs + EXYNOS5_SATA_RESET);
->> +     val |= 0xFF;
->> +     writel(val, sata_phy->regs + EXYNOS5_SATA_RESET);
->> +
->> +     val = readl(sata_phy->regs + EXYNOS5_SATA_RESET);
->> +     val |= LINK_RESET;
->> +     writel(val, sata_phy->regs + EXYNOS5_SATA_RESET);
->> +
->> +     val = readl(sata_phy->regs + EXYNOS5_SATA_RESET);
->> +     val |= RESET_CMN_RST_N;
->> +     writel(val, sata_phy->regs + EXYNOS5_SATA_RESET);
->> +     val = readl(sata_phy->regs + EXYNOS5_SATA_PHSATA_CTRLM);
->> +     val &= ~PHCTRLM_REF_RATE;
->> +     writel(val, sata_phy->regs + EXYNOS5_SATA_PHSATA_CTRLM);
->> +
->> +     /* High speed enable for Gen3 */
->> +     val = readl(sata_phy->regs + EXYNOS5_SATA_PHSATA_CTRLM);
->> +     val |= PHCTRLM_HIGH_SPEED;
->> +     writel(val, sata_phy->regs + EXYNOS5_SATA_PHSATA_CTRLM);
->> +
->> +     val |= CTRL0_P0_PHY_CALIBRATED_SEL | CTRL0_P0_PHY_CALIBRATED;
->> +     writel(val, sata_phy->regs + EXYNOS5_SATA_CTRL0);
->> +
->> +     writel(0x2, sata_phy->regs + EXYNOS5_SATA_MODE0);
->> +
->> +     ret = i2c_master_send(phy_i2c_client, buf, sizeof(buf));
->> +     if (ret < 0)
->> +             return -ENXIO;
->> +
->> +     /* release cmu reset */
->> +     val = readl(sata_phy->regs + EXYNOS5_SATA_RESET);
->> +     val &= ~RESET_CMN_RST_N;
->> +     writel(val, sata_phy->regs + EXYNOS5_SATA_RESET);
->> +
->> +     val = readl(sata_phy->regs + EXYNOS5_SATA_RESET);
->> +     val |= RESET_CMN_RST_N;
->> +     writel(val, sata_phy->regs + EXYNOS5_SATA_RESET);
->> +
->> +     return (wait_for_reg_status(sata_phy->regs, EXYNOS5_SATA_PHSATA_STATM,
->> +             PHSTATM_PLL_LOCKED, 1)) ? 0 : -EINVAL;
->> +
->> +}
->> +
->> +static struct phy_ops exynos_sata_phy_ops = {
->> +     .init           = exynos_sata_phy_init,
->> +     .power_on       = exynos_sata_phy_power_on,
->> +     .power_off      = exynos_sata_phy_power_off,
->> +     .owner          = THIS_MODULE,
->> +};
->> +
->> +static int exynos_sata_phy_probe(struct platform_device *pdev)
->> +{
->> +     struct exynos_sata_phy *sata;
->> +     struct device *dev = &pdev->dev;
->> +     struct resource *res;
->> +     struct phy_provider *phy_provider;
->> +     char label[9];
->> +     int ret = 0;
->> +
->> +     sata = devm_kzalloc(dev, sizeof(*sata), GFP_KERNEL);
->> +     if (!sata)
->> +             return -ENOMEM;
->> +
->> +     res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
->> +
->> +     sata->regs = devm_ioremap_resource(dev, res);
->> +     if (IS_ERR(sata->regs))
->> +             return PTR_ERR(sata->regs);
->> +
->> +     dev_set_drvdata(dev, sata);
->> +
->> +     if (i2c_add_driver(&sataphy_i2c_driver)) {
->> +             dev_err(dev, "failed to register sataphy i2c driver\n");
->> +             return -ENOENT;
->> +     }
->> +
->> +     sata->phyclk = devm_clk_get(dev, "sata_phyctrl");
->> +     if (IS_ERR(sata->phyclk)) {
->> +             dev_err(dev, "failed to get clk for PHY\n");
->> +             return PTR_ERR(sata->phyclk);
->> +     }
->> +
->> +     ret = clk_prepare_enable(sata->phyclk);
->> +     if (ret < 0) {
->> +             dev_err(dev, "failed to enable source clk\n");
->> +             return ret;
->> +     }
->> +
->> +     if (dev->of_node) {
->> +             ret = exynos_sataphy_parse_dt(dev, sata);
->> +             if (ret)
->> +                     return ret;
->> +     }
->> +
->> +     phy_provider = devm_of_phy_provider_register(dev,
->> +                                     of_phy_simple_xlate);
->> +     if (IS_ERR(phy_provider))
->> +             return PTR_ERR(phy_provider);
->> +
->> +     snprintf(label, sizeof(label), "%s.%d", "sata-phy", pdev->id);
->> +
->> +     sata->phy = devm_phy_create(dev, pdev->id, &exynos_sata_phy_ops, label);
->
-> Alright. You are using a older version of PHY framework. I'll wait for you to
-> adapt to the latest version of PHY framework [1] before reviewing any further.
-Sure,I will adapt to the latest version of PHY framework and post soon.
->
-> [1] git://git.kernel.org/pub/scm/linux/kernel/git/kishon/linux-phy.git next
->
-> Thanks
-> Kishon
->
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+I am not sure if the root cause the same, but the panic I experience with
+mounting a ahci device (and those double-tag usage described in another
+thread) is somehow similar:
+
+
+[  181.184510] general protection fault: 0000 [#1] SMP 
+[  181.184546] Modules linked in: lockd sunrpc snd_hda_codec_realtek snd_hda_intel snd_hda_codec snd_hwdep snd_pcm mperf snd_page_alloc i5000_edac coretemp snd_timer edac_core iTCO_wdt snd kvm_intel iTCO_vendor_support lpc_ich mfd_core igb dca i5k_amb ppdev soundcore hp_wmi tg3 kvm sparse_keymap serio_raw ptp microcode pcspkr rfkill pps_core shpchp parport_pc parport mptsas scsi_transport_sas mptscsih mptbase floppy nouveau video mxm_wmi wmi i2c_algo_bit drm_kms_helper ttm drm i2c_core
+[  181.184550] CPU: 6 PID: 0 Comm: swapper/6 Tainted: G        W    3.10.0-rc5.debug+ #180
+[  181.184552] Hardware name: Hewlett-Packard HP xw6400 Workstation/0A04h, BIOS 786D4 v02.31 03/14/2008
+[  181.184554] task: ffff88007b1a8000 ti: ffff88007b19c000 task.ti: ffff88007b19c000
+[  181.184563] RIP: 0010:[<ffffffff811fa97b>]  [<ffffffff811fa97b>] bio_endio+0x1b/0x40
+[  181.184565] RSP: 0018:ffff88007d203a28  EFLAGS: 00010002
+[  181.184567] RAX: 6b6b6b6b6b6b6b6b RBX: 0000000000000000 RCX: dead000000200200
+[  181.184568] RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff880068e29200
+[  181.184570] RBP: ffff88007d203a28 R08: ffffe8ffff201240 R09: 0000000000000000
+[  181.184571] R10: 0000000000000000 R11: 0000000000000001 R12: ffff880074d86000
+[  181.184572] R13: 6b6b6b6b6b6b6b6b R14: 000000006b6b6b6b R15: 0000000000000001
+[  181.184575] FS:  0000000000000000(0000) GS:ffff88007d200000(0000) knlGS:0000000000000000
+[  181.184576] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[  181.184578] CR2: 00007f8afac8c45c CR3: 000000005f431000 CR4: 00000000000007e0
+[  181.184580] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[  181.184581] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+[  181.184582] Stack:
+[  181.184587]  ffff88007d203a78 ffffffff813202aa ffff88007d203a98 0000000000000046
+[  181.184591]  0000000000000046 ffff880072d08000 0000000000000000 ffff880074d860d8
+[  181.184594]  0000000000000000 0000000000000001 ffff88007d203a88 ffffffff81320445
+[  181.184595] Call Trace:
+[  181.184597]  <IRQ> 
+[  181.184603]  [<ffffffff813202aa>] blk_mq_complete_request+0x5a/0x1d0
+[  181.184607]  [<ffffffff81320445>] __blk_mq_end_io+0x25/0x30
+[  181.184609]  [<ffffffff81320535>] blk_mq_end_io+0xe5/0xf0
+[  181.184613]  [<ffffffff81319754>] blk_flush_complete_seq+0xf4/0x360
+[  181.184616]  [<ffffffff81319a4b>] ? flush_end_io+0x4b/0x210
+[  181.184619]  [<ffffffff81319b2a>] flush_end_io+0x12a/0x210
+[  181.184622]  [<ffffffff813202da>] blk_mq_complete_request+0x8a/0x1d0
+[  181.184626]  [<ffffffff8147b9fd>] ? scsi_device_unbusy+0x9d/0xd0
+[  181.184629]  [<ffffffff81320445>] __blk_mq_end_io+0x25/0x30
+[  181.184632]  [<ffffffff81320535>] blk_mq_end_io+0xe5/0xf0
+[  181.184635]  [<ffffffff8147cae5>] scsi_mq_end_request+0x15/0x20
+[  181.184638]  [<ffffffff8147bf20>] scsi_io_completion+0xa0/0x650
+[  181.184643]  [<ffffffff810bbc3d>] ? trace_hardirqs_off+0xd/0x10
+[  181.184648]  [<ffffffff814722f7>] scsi_finish_command+0x87/0xe0
+[  181.184650]  [<ffffffff8147bccf>] scsi_softirq_done+0x13f/0x160
+[  181.184653]  [<ffffffff8147cba5>] scsi_mq_done+0x15/0x20
+[  181.184658]  [<ffffffff81495a73>] ata_scsi_qc_complete+0x63/0x470
+[  181.184661]  [<ffffffff8148fad0>] __ata_qc_complete+0x90/0x140
+[  181.184664]  [<ffffffff8148fc1d>] ata_qc_complete+0x9d/0x230
+[  181.184667]  [<ffffffff8148fe51>] ata_qc_complete_multiple+0xa1/0xe0
+[  181.184673]  [<ffffffff814aa449>] ahci_handle_port_interrupt+0x109/0x560
+[  181.184676]  [<ffffffff814ab63f>] ahci_port_intr+0x2f/0x40
+[  181.184678]  [<ffffffff814ab6f1>] ahci_interrupt+0xa1/0x100
+[  181.184683]  [<ffffffff810ff7b5>] handle_irq_event_percpu+0x75/0x3d0
+[  181.184686]  [<ffffffff810ffb58>] handle_irq_event+0x48/0x70
+[  181.184689]  [<ffffffff81102d9e>] ? handle_fasteoi_irq+0x1e/0x100
+[  181.184692]  [<ffffffff81102dda>] handle_fasteoi_irq+0x5a/0x100
+[  181.184696]  [<ffffffff81004320>] handle_irq+0x60/0x150
+[  181.184702]  [<ffffffff816ff846>] ? atomic_notifier_call_chain+0x16/0x20
+[  181.184706]  [<ffffffff81705f7a>] do_IRQ+0x5a/0xe0
+[  181.184710]  [<ffffffff816fb52f>] common_interrupt+0x6f/0x6f
+[  181.184712]  <EOI> 
+[  181.184716]  [<ffffffff8100aa45>] ? default_idle+0x25/0x280
+[  181.184719]  [<ffffffff8100aa43>] ? default_idle+0x23/0x280
+[  181.184722]  [<ffffffff8100b4f6>] arch_cpu_idle+0x26/0x30
+[  181.184726]  [<ffffffff810afe66>] cpu_startup_entry+0x96/0x3e0
+[  181.184729]  [<ffffffff810b7ad5>] ? clockevents_register_device+0xb5/0x120
+[  181.184734]  [<ffffffff816e67ea>] start_secondary+0x27a/0x27c
+[  181.184767] Code: 47 c1 c1 ea 03 83 c2 01 39 d0 0f 47 c2 c3 66 90 66 66 66 66 90 55 85 f6 48 89 e5 74 1b f0 80 67 18 fe 48 8b 47 40 48 85 c0 74 02 <ff> d0 5d 66 90 c3 0f 1f 80 00 00 00 00 48 8b 47 18 a8 01 b8 fb 
+[  181.184770] RIP  [<ffffffff811fa97b>] bio_endio+0x1b/0x40
+[  181.184772]  RSP <ffff88007d203a28>
+[  181.184777] ---[ end trace 5e8fd083b8562c3c ]---
+[  181.184779] Kernel panic - not syncing: Fatal exception in interrupt
+[  181.185483] drm_kms_helper: panic occurred, switching back to text console
+
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
