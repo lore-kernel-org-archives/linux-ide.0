@@ -1,144 +1,65 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 1/8] ide: convert bus code to use dev_groups
-Date: Mon,  7 Oct 2013 18:27:35 -0700
-Message-ID: <1381195662-28009-2-git-send-email-gregkh@linuxfoundation.org>
-References: <1381195662-28009-1-git-send-email-gregkh@linuxfoundation.org>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: [BUG,REGRESSION] SATA regression on 12.0-rc4 kernel
+Date: Mon, 07 Oct 2013 20:38:13 -0600
+Message-ID: <52537015.6040200@gmail.com>
+References: <87vc1ahyft.fsf@natisbad.org> <20131007125943.GA1332@titan.lakedaemon.net> <87bo303nfe.fsf@natisbad.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:35854 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751854Ab3JHCPw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Oct 2013 22:15:52 -0400
-In-Reply-To: <1381195662-28009-1-git-send-email-gregkh@linuxfoundation.org>
+Received: from mail-ie0-f169.google.com ([209.85.223.169]:34084 "EHLO
+	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751854Ab3JHCiR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Oct 2013 22:38:17 -0400
+Received: by mail-ie0-f169.google.com with SMTP id tp5so18595972ieb.28
+        for <linux-ide@vger.kernel.org>; Mon, 07 Oct 2013 19:38:16 -0700 (PDT)
+In-Reply-To: <87bo303nfe.fsf@natisbad.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
+To: Arnaud Ebalard <arno@natisbad.org>
+Cc: Marc Carino <marc.ceeeee@gmail.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Andrew Lunn <andrew@lunn.ch>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, linux-arm-kernel@lists.infradead.org, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, willy tarreau <w@1wt.eu>, Jason Cooper <jason@lakedaemon.net>
 
-The dev_attrs field of struct bus_type is going away soon, dev_groups
-should be used instead.  This converts the ide bus code to use the
-correct field.
+On 10/07/2013 01:12 PM, Arnaud Ebalard wrote:
+> Hi guys,
+>
+> yesterday, I reported on arm kernel mailing list what looked like a sata
+> regression on my platform (Marvell Armada 370-based NETGEAR ReadyNAS
+> 102). I initially thought this was an ARM-related issue. My initial
+> email, provided below, contains various details on the platform and the
+> error encountered.
+>
+> Today, before starting a painful git bisect, I decided to git log
+> sata_mv.c code and then more generally drivers/ata to quickly end up on
+> commit ed36911c747c (libata: Add support for SEND/RECEIVE FPDMA QUEUED)
+> against which I got suspicious after looking again at the errors I had:
+>
+> [  417.288155] ata1.00: exception Emask 0x0 SAct 0x1fff6001 SErr 0x0 action 0x6 frozen
+> [  417.295838] ata1.00: failed command: WRITE FPDMA QUEUED
+> [  417.301097] ata1.00: cmd 61/48:00:80:ad:0b/00:00:0c:00:00/40 tag 0 ncq 36864 out
+> [  417.315896] ata1.00: status: { DRDY }
+> [  417.319570] ata1.00: failed command: WRITE FPDMA QUEUED
+> [  417.324814] ata1.00: cmd 61/08:68:70:a1:87/00:00:0d:00:00/40 tag 13 ncq 4096 out
+> [  417.339619] ata1.00: status: { DRDY }
+> [  417.343288] ata1.00: failed command: WRITE FPDMA QUEUED
+> [  417.348536] ata1.00: cmd 61/08:70:28:a2:87/00:00:0d:00:00/40 tag 14 ncq 4096 out
+> [  417.363341] ata1.00: status: { DRDY }
+> [  417.367010] ata1.00: failed command: WRITE FPDMA QUEUED
+> [  417.372257] ata1.00: cmd 61/08:80:80:a3:87/00:00:0d:00:00/40 tag 16 ncq 4096 out
+> [  417.387061] ata1.00: status: { DRDY }
+> [  417.390733] ata1.00: failed command: WRITE FPDMA QUEUED
+> [  417.395977] ata1.00: cmd 61/08:88:58:a1:c7/00:00:0d:00:00/40 tag 17 ncq 4096 out
+> [  417.410782] ata1.00: status: { DRDY }
+>
+> Reverting both 87fb6c31b9 (libata: Add support for queued DSM TRIM) and
+> ed36911c74 (libata: Add support for SEND/RECEIVE FPDMA QUEUED) makes the
+> problem disappear. Note: reverting 87fb6c31b9 is not enough and I cannot
+> compile the kernel with only the latter reverted.
+>
+> If you need more info on the platform or want me to test something some
+> fix, do not hesitate.
 
-Cc: David S. Miller <davem@davemloft.net>
-Cc: <linux-ide@vger.kernel.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
-
-David, I can take this through my driver-core tree if you don't want to
-take it through yours, just let me know what works best for you.
-
- drivers/ide/ide-sysfs.c | 35 ++++++++++++++++++++++++++---------
- drivers/ide/ide.c       |  2 +-
- include/linux/ide.h     |  2 +-
- 3 files changed, 28 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/ide/ide-sysfs.c b/drivers/ide/ide-sysfs.c
-index 883ffac..84a6a9e 100644
---- a/drivers/ide/ide-sysfs.c
-+++ b/drivers/ide/ide-sysfs.c
-@@ -25,6 +25,7 @@ static ssize_t media_show(struct device *dev, struct device_attribute *attr,
- 	ide_drive_t *drive = to_ide_device(dev);
- 	return sprintf(buf, "%s\n", ide_media_string(drive));
- }
-+static DEVICE_ATTR_RO(media);
- 
- static ssize_t drivename_show(struct device *dev, struct device_attribute *attr,
- 			      char *buf)
-@@ -32,6 +33,7 @@ static ssize_t drivename_show(struct device *dev, struct device_attribute *attr,
- 	ide_drive_t *drive = to_ide_device(dev);
- 	return sprintf(buf, "%s\n", drive->name);
- }
-+static DEVICE_ATTR_RO(drivename);
- 
- static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
- 			     char *buf)
-@@ -39,6 +41,7 @@ static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
- 	ide_drive_t *drive = to_ide_device(dev);
- 	return sprintf(buf, "ide:m-%s\n", ide_media_string(drive));
- }
-+static DEVICE_ATTR_RO(modalias);
- 
- static ssize_t model_show(struct device *dev, struct device_attribute *attr,
- 			  char *buf)
-@@ -46,6 +49,7 @@ static ssize_t model_show(struct device *dev, struct device_attribute *attr,
- 	ide_drive_t *drive = to_ide_device(dev);
- 	return sprintf(buf, "%s\n", (char *)&drive->id[ATA_ID_PROD]);
- }
-+static DEVICE_ATTR_RO(model);
- 
- static ssize_t firmware_show(struct device *dev, struct device_attribute *attr,
- 			     char *buf)
-@@ -53,6 +57,7 @@ static ssize_t firmware_show(struct device *dev, struct device_attribute *attr,
- 	ide_drive_t *drive = to_ide_device(dev);
- 	return sprintf(buf, "%s\n", (char *)&drive->id[ATA_ID_FW_REV]);
- }
-+static DEVICE_ATTR_RO(firmware);
- 
- static ssize_t serial_show(struct device *dev, struct device_attribute *attr,
- 			   char *buf)
-@@ -60,16 +65,28 @@ static ssize_t serial_show(struct device *dev, struct device_attribute *attr,
- 	ide_drive_t *drive = to_ide_device(dev);
- 	return sprintf(buf, "%s\n", (char *)&drive->id[ATA_ID_SERNO]);
- }
-+static DEVICE_ATTR(serial, 0400, serial_show, NULL);
-+
-+static DEVICE_ATTR(unload_heads, 0644, ide_park_show, ide_park_store);
-+
-+static struct attribute *ide_attrs[] = {
-+	&dev_attr_media.attr,
-+	&dev_attr_drivename.attr,
-+	&dev_attr_modalias.attr,
-+	&dev_attr_model.attr,
-+	&dev_attr_firmware.attr,
-+	&dev_attr_serial.attr,
-+	&dev_attr_unload_heads.attr,
-+	NULL,
-+};
-+
-+static const struct attribute_group ide_attr_group = {
-+	.attrs = ide_attrs,
-+};
- 
--struct device_attribute ide_dev_attrs[] = {
--	__ATTR_RO(media),
--	__ATTR_RO(drivename),
--	__ATTR_RO(modalias),
--	__ATTR_RO(model),
--	__ATTR_RO(firmware),
--	__ATTR(serial, 0400, serial_show, NULL),
--	__ATTR(unload_heads, 0644, ide_park_show, ide_park_store),
--	__ATTR_NULL
-+const struct attribute_group *ide_dev_groups[] = {
-+	&ide_attr_group,
-+	NULL,
- };
- 
- static ssize_t store_delete_devices(struct device *portdev,
-diff --git a/drivers/ide/ide.c b/drivers/ide/ide.c
-index fa89621..2ce6268 100644
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -158,7 +158,7 @@ struct bus_type ide_bus_type = {
- 	.probe		= generic_ide_probe,
- 	.remove		= generic_ide_remove,
- 	.shutdown	= generic_ide_shutdown,
--	.dev_attrs	= ide_dev_attrs,
-+	.dev_groups	= ide_dev_groups,
- 	.suspend	= generic_ide_suspend,
- 	.resume		= generic_ide_resume,
- };
-diff --git a/include/linux/ide.h b/include/linux/ide.h
-index b179749..46a1422 100644
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -1514,7 +1514,7 @@ static inline void ide_set_max_pio(ide_drive_t *drive)
- 
- char *ide_media_string(ide_drive_t *);
- 
--extern struct device_attribute ide_dev_attrs[];
-+extern const struct attribute_group *ide_dev_groups[];
- extern struct bus_type ide_bus_type;
- extern struct class *ide_port_class;
- 
--- 
-1.8.4.6.g82e253f.dirty
-
+I assume that it consistently fails on a non-working kernel and 
+consistently works with those patches reverted? Given that both of those 
+patches seem to only be touching SSDs with NCQ trim support, it seems 
+odd they would be breaking a normal hard drive, but maybe there is some 
+unexpected side effect..
