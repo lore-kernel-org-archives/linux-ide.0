@@ -1,44 +1,33 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
- pattern
-Date: Tue, 8 Oct 2013 11:07:16 +0200
-Message-ID: <20131008090716.GA10561@dhcp-26-207.brq.redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
- <20131007182117.GC27396@htj.dyndns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-mips-bounce@linux-mips.org>
-Content-Disposition: inline
-In-Reply-To: <20131007182117.GC27396@htj.dyndns.org>
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-List-help: <mailto:ecartis@linux-mips.org?Subject=help>
-List-unsubscribe: <mailto:ecartis@linux-mips.org?subject=unsubscribe%20linux-mips>
-List-software: Ecartis version 1.0.0
-List-subscribe: <mailto:ecartis@linux-mips.org?subject=subscribe%20linux-mips>
-List-owner: <mailto:ralf@linux-mips.org>
-List-post: <mailto:linux-mips@linux-mips.org>
-List-archive: <http://www.linux-mips.org/archives/linux-mips/>
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, Ralf Baechle <ralf@linux-mips.org>, Michael Ellerman <michael@ellerman.id.au>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Ingo Molnar <mingo@redhat.com>, Dan Williams <dan.j.williams@intel.com>, Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>, Matt Porter <mporter@kernel.crashing.org>, linux-pci@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org, linux-ide@vger.kernel.org, iss_storagedev@hp.com, linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net, linux-driver@qlogic.com, So
+From: Richard Zhu <richard.zhuhongxing@gmail.com>
+Subject: [PATCH v2 0/1] ahci: imx: setup power saving methods
+Date: Tue,  8 Oct 2013 17:29:21 +0800
+Message-ID: <1381224562-2378-1-git-send-email-Hong-Xing.Zhu@freescale.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pb0-f46.google.com ([209.85.160.46]:61265 "EHLO
+	mail-pb0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751958Ab3JHJZ3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Oct 2013 05:25:29 -0400
+Received: by mail-pb0-f46.google.com with SMTP id rq2so8322074pbb.5
+        for <linux-ide@vger.kernel.org>; Tue, 08 Oct 2013 02:25:28 -0700 (PDT)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: shawn.guo@linaro.org
+Cc: linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, tj@kernel.org, linux-ide@vger.kernel.org
 
-On Mon, Oct 07, 2013 at 02:21:17PM -0400, Tejun Heo wrote:
-> Whee.... that's a lot more than I expected.  I was just scanning
-> multiple msi users.  Maybe we can stage the work in more manageable
-> steps so that you don't have to go through massive conversion only to
-> do it all over again afterwards and likewise people don't get
-> bombarded on each iteration?  Maybe we can first update pci / msi code
-> proper, msi and then msix?
+v2: ahci: imx: setup power saving methods
+ - kernel build option is replaced by the module parameter(ahci-imx.hp) 
 
-Multipe MSIs is just a handful of drivers, really. MSI-X impact still
-will be huge. But if we opt a different name for the new pci_enable_msix()
-then we could first update pci/msi, then drivers (in few stages possibly)
-and finally remove the old implementation.
+v1: http://www.spinics.net/lists/linux-ide/msg46389.html
+ * Disable sata phy internal pll reference clock when
+ sysetem enter into suspend mode, enable it after resume.
+ * Enter into test power down mode when there is no sata disk
+ detected on the port and 'AHCI_IMX_PHY_POWER_DOWN_MODE' is
+ enabled.
 
-> tejun
+This patche is based on for-next branch of
+"http://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git"
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+
+[v2] ahci: imx: setup power saving methods
+drivers/ata/ahci_imx.c |   85 ++++++++++++++++++++++++++++++++++++++++++++++--
+1 files changed, 82 insertions(+), 3 deletions(-)
