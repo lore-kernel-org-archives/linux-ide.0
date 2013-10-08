@@ -1,65 +1,72 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: [BUG,REGRESSION] SATA regression on 12.0-rc4 kernel
-Date: Mon, 07 Oct 2013 20:38:13 -0600
-Message-ID: <52537015.6040200@gmail.com>
-References: <87vc1ahyft.fsf@natisbad.org> <20131007125943.GA1332@titan.lakedaemon.net> <87bo303nfe.fsf@natisbad.org>
+From: Michael Ellerman <michael@ellerman.id.au>
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
+ pattern
+Date: Tue, 8 Oct 2013 15:33:30 +1100
+Message-ID: <20131008043330.GF31666@concordia>
+References: <cover.1380703262.git.agordeev@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ie0-f169.google.com ([209.85.223.169]:34084 "EHLO
-	mail-ie0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751854Ab3JHCiR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Oct 2013 22:38:17 -0400
-Received: by mail-ie0-f169.google.com with SMTP id tp5so18595972ieb.28
-        for <linux-ide@vger.kernel.org>; Mon, 07 Oct 2013 19:38:16 -0700 (PDT)
-In-Reply-To: <87bo303nfe.fsf@natisbad.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+Content-Disposition: inline
+In-Reply-To: <cover.1380703262.git.agordeev@redhat.com>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-mips@linux-mips.org, VMware@dhcp-26-207.brq.redhat.com, "Inc." <pv-drivers@vmware.com>, linux-nvme@lists.infradead.org, linux-ide@vger.kernel.org, linux-s390@vger.kernel.org, Andy King <acking@vmware.com>, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, x86@kernel.org, Ingo Molnar <mingo@redhat.com>, linux-pci@vger.kernel.org, iss_storagedev@hp.com, linux-driver@qlogic.com, Tejun Heo <tj@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Dan Williams <dan.j.williams@intel.com>, Jon Mason <jon.mason@intel.com>, Solarflare linux maintainers <linux-net-drivers@solarflare.com>, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>, e1000-devel@lists.sourceforge.net, Martin Schwidefsky <schwidefsky@de.ibm.com>, linux390@de.ibm.com, linuxppc-dev@lists.ozlabs.org
 List-Id: linux-ide@vger.kernel.org
-To: Arnaud Ebalard <arno@natisbad.org>
-Cc: Marc Carino <marc.ceeeee@gmail.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Andrew Lunn <andrew@lunn.ch>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, linux-arm-kernel@lists.infradead.org, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, willy tarreau <w@1wt.eu>, Jason Cooper <jason@lakedaemon.net>
 
-On 10/07/2013 01:12 PM, Arnaud Ebalard wrote:
-> Hi guys,
->
-> yesterday, I reported on arm kernel mailing list what looked like a sata
-> regression on my platform (Marvell Armada 370-based NETGEAR ReadyNAS
-> 102). I initially thought this was an ARM-related issue. My initial
-> email, provided below, contains various details on the platform and the
-> error encountered.
->
-> Today, before starting a painful git bisect, I decided to git log
-> sata_mv.c code and then more generally drivers/ata to quickly end up on
-> commit ed36911c747c (libata: Add support for SEND/RECEIVE FPDMA QUEUED)
-> against which I got suspicious after looking again at the errors I had:
->
-> [  417.288155] ata1.00: exception Emask 0x0 SAct 0x1fff6001 SErr 0x0 action 0x6 frozen
-> [  417.295838] ata1.00: failed command: WRITE FPDMA QUEUED
-> [  417.301097] ata1.00: cmd 61/48:00:80:ad:0b/00:00:0c:00:00/40 tag 0 ncq 36864 out
-> [  417.315896] ata1.00: status: { DRDY }
-> [  417.319570] ata1.00: failed command: WRITE FPDMA QUEUED
-> [  417.324814] ata1.00: cmd 61/08:68:70:a1:87/00:00:0d:00:00/40 tag 13 ncq 4096 out
-> [  417.339619] ata1.00: status: { DRDY }
-> [  417.343288] ata1.00: failed command: WRITE FPDMA QUEUED
-> [  417.348536] ata1.00: cmd 61/08:70:28:a2:87/00:00:0d:00:00/40 tag 14 ncq 4096 out
-> [  417.363341] ata1.00: status: { DRDY }
-> [  417.367010] ata1.00: failed command: WRITE FPDMA QUEUED
-> [  417.372257] ata1.00: cmd 61/08:80:80:a3:87/00:00:0d:00:00/40 tag 16 ncq 4096 out
-> [  417.387061] ata1.00: status: { DRDY }
-> [  417.390733] ata1.00: failed command: WRITE FPDMA QUEUED
-> [  417.395977] ata1.00: cmd 61/08:88:58:a1:c7/00:00:0d:00:00/40 tag 17 ncq 4096 out
-> [  417.410782] ata1.00: status: { DRDY }
->
-> Reverting both 87fb6c31b9 (libata: Add support for queued DSM TRIM) and
-> ed36911c74 (libata: Add support for SEND/RECEIVE FPDMA QUEUED) makes the
-> problem disappear. Note: reverting 87fb6c31b9 is not enough and I cannot
-> compile the kernel with only the latter reverted.
->
-> If you need more info on the platform or want me to test something some
-> fix, do not hesitate.
+On Wed, Oct 02, 2013 at 12:29:04PM +0200, Alexander Gordeev wrote:
+> This series is against "next" branch in Bjorn's repo:
+> git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
+> 
+> Currently pci_enable_msi_block() and pci_enable_msix() interfaces
+> return a error code in case of failure, 0 in case of success and a
+> positive value which indicates the number of MSI-X/MSI interrupts
+> that could have been allocated. The latter value should be passed
+> to a repeated call to the interfaces until a failure or success:
+> 
+> 
+> 	for (i = 0; i < FOO_DRIVER_MAXIMUM_NVEC; i++)
+> 		adapter->msix_entries[i].entry = i;
+> 
+> 	while (nvec >= FOO_DRIVER_MINIMUM_NVEC) {
+> 		rc = pci_enable_msix(adapter->pdev,
+> 				     adapter->msix_entries, nvec);
+> 		if (rc > 0)
+> 			nvec = rc;
+> 		else
+> 			return rc;
+> 	}
+> 
+> 	return -ENOSPC;
+> 
+> 
+> This technique proved to be confusing and error-prone. Vast share
+> of device drivers simply fail to follow the described guidelines.
 
-I assume that it consistently fails on a non-working kernel and 
-consistently works with those patches reverted? Given that both of those 
-patches seem to only be touching SSDs with NCQ trim support, it seems 
-odd they would be breaking a normal hard drive, but maybe there is some 
-unexpected side effect..
+To clarify "Vast share of device drivers":
+
+ - 58 drivers call pci_enable_msix()
+ - 24 try a single allocation and then fallback to MSI/LSI
+ - 19 use the loop style allocation as above
+ - 14 try an allocation, and if it fails retry once
+ - 1  incorrectly continues when pci_enable_msix() returns > 0
+
+So 33 drivers (> 50%) successfully make use of the "confusing and
+error-prone" return value.
+
+Another 24 happily ignore it, which is also entirely fine.
+
+And yes, one is buggy, so obviously the interface is too complex. Thanks
+drivers/ntb/ntb_hw.c
+
+cheers
