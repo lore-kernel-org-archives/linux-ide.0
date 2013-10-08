@@ -1,38 +1,90 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 1/8] ide: convert bus code to use dev_groups
-Date: Tue, 08 Oct 2013 01:00:36 -0400 (EDT)
-Message-ID: <20131008.010036.748831303031980348.davem@davemloft.net>
-References: <1381195662-28009-1-git-send-email-gregkh@linuxfoundation.org>
-	<1381195662-28009-2-git-send-email-gregkh@linuxfoundation.org>
+From: arno@natisbad.org (Arnaud Ebalard)
+Subject: Re: [BUG,REGRESSION] SATA regression on 12.0-rc4 kernel
+Date: Tue, 08 Oct 2013 08:10:39 +0200
+Message-ID: <87y564waw0.fsf@natisbad.org>
+References: <87vc1ahyft.fsf@natisbad.org>
+ <20131007125943.GA1332@titan.lakedaemon.net>
+ <87bo303nfe.fsf@natisbad.org> <52537015.6040200@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:42220 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751529Ab3JHFAh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Oct 2013 01:00:37 -0400
-In-Reply-To: <1381195662-28009-2-git-send-email-gregkh@linuxfoundation.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Andrew Lunn <andrew@lunn.ch>, Jason Cooper <jason@lakedaemon.net>, linux-ide@vger.kernel.org, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Marc Carino <marc.ceeeee@gmail.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Tejun Heo <tj@kernel.org>, Gregory Clement <gregory.clement@free-electrons.com>, willy tarreau <w@1wt.eu>, linux-arm-kernel@lists.infradead.org, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
 List-Id: linux-ide@vger.kernel.org
-To: gregkh@linuxfoundation.org
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Date: Mon,  7 Oct 2013 18:27:35 -0700
+Hi Robert,
 
-> The dev_attrs field of struct bus_type is going away soon, dev_groups
-> should be used instead.  This converts the ide bus code to use the
-> correct field.
-> 
-> Cc: David S. Miller <davem@davemloft.net>
-> Cc: <linux-ide@vger.kernel.org>
-> Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> ---
-> 
-> David, I can take this through my driver-core tree if you don't want to
-> take it through yours, just let me know what works best for you.
+Robert Hancock <hancockrwd@gmail.com> writes:
 
-Yep, please take it, that works for me:
+> On 10/07/2013 01:12 PM, Arnaud Ebalard wrote:
+>> Hi guys,
+>>
+>> yesterday, I reported on arm kernel mailing list what looked like a sata
+>> regression on my platform (Marvell Armada 370-based NETGEAR ReadyNAS
+>> 102). I initially thought this was an ARM-related issue. My initial
+>> email, provided below, contains various details on the platform and the
+>> error encountered.
+>>
+>> Today, before starting a painful git bisect, I decided to git log
+>> sata_mv.c code and then more generally drivers/ata to quickly end up on
+>> commit ed36911c747c (libata: Add support for SEND/RECEIVE FPDMA QUEUED)
+>> against which I got suspicious after looking again at the errors I had:
+>>
+>> [  417.288155] ata1.00: exception Emask 0x0 SAct 0x1fff6001 SErr 0x0 action 0x6 frozen
+>> [  417.295838] ata1.00: failed command: WRITE FPDMA QUEUED
+>> [  417.301097] ata1.00: cmd 61/48:00:80:ad:0b/00:00:0c:00:00/40 tag 0 ncq 36864 out
+>> [  417.315896] ata1.00: status: { DRDY }
+>> [  417.319570] ata1.00: failed command: WRITE FPDMA QUEUED
+>> [  417.324814] ata1.00: cmd 61/08:68:70:a1:87/00:00:0d:00:00/40 tag 13 ncq 4096 out
+>> [  417.339619] ata1.00: status: { DRDY }
+>> [  417.343288] ata1.00: failed command: WRITE FPDMA QUEUED
+>> [  417.348536] ata1.00: cmd 61/08:70:28:a2:87/00:00:0d:00:00/40 tag 14 ncq 4096 out
+>> [  417.363341] ata1.00: status: { DRDY }
+>> [  417.367010] ata1.00: failed command: WRITE FPDMA QUEUED
+>> [  417.372257] ata1.00: cmd 61/08:80:80:a3:87/00:00:0d:00:00/40 tag 16 ncq 4096 out
+>> [  417.387061] ata1.00: status: { DRDY }
+>> [  417.390733] ata1.00: failed command: WRITE FPDMA QUEUED
+>> [  417.395977] ata1.00: cmd 61/08:88:58:a1:c7/00:00:0d:00:00/40 tag 17 ncq 4096 out
+>> [  417.410782] ata1.00: status: { DRDY }
+>>
+>> Reverting both 87fb6c31b9 (libata: Add support for queued DSM TRIM) and
+>> ed36911c74 (libata: Add support for SEND/RECEIVE FPDMA QUEUED) makes the
+>> problem disappear. Note: reverting 87fb6c31b9 is not enough and I cannot
+>> compile the kernel with only the latter reverted.
+>>
+>> If you need more info on the platform or want me to test something some
+>> fix, do not hesitate.
+>
+> I assume that it consistently fails on a non-working kernel and
+> consistently works with those patches reverted? Given that both of
+> those patches seem to only be touching SSDs with NCQ trim support, it
+> seems odd they would be breaking a normal hard drive, but maybe there
+> is some unexpected side effect..
 
-Acked-by: David S. Miller <davem@davemloft.net>
+With two different disks (same model though, i.e. 250GB 3.5" WD blue), it
+consistently works on a 3.11.4 and consistently fails on 3.12-rc3 and
+3.12-rc4 (not tested others 3.12-rc). The problem is easy to reproduce,
+i.e. I just need to perform some disk operations. With the two commits
+reverted from 3.12-rc4, I can consistently do a "find / -exec sha256sum
+'{}' \;" w/o anything happening.
+
+What I do not understand is why the log report failed FPDMA commands if
+the feature is supposed to be SSD-related (looking only at commit
+messages: 87fb6c31b9 seems SSD-related, ed36911c74 does not). Is it
+possible that the feature detection is what is causing the issue? Or
+that the hardware report support w/o having? I can test with a different
+disk if you think it would help.
+
+Cheers,
+
+a+
