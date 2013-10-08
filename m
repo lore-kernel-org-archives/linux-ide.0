@@ -1,62 +1,144 @@
-From: "Waskiewicz Jr, Peter P" <peter.p.waskiewicz.jr@intel.com>
-Subject: Re: [E1000-devel] [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts
- enablement pattern
-Date: Mon, 7 Oct 2013 22:21:49 +0000
-Message-ID: <1381184508.16853.20.camel@ppwaskie-mobl2>
-References: <cover.1380703262.git.agordeev@redhat.com>
-         <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
-         <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
-         <1380922156.3214.49.camel@bwh-desktop.uk.level5networks.com>
-         <20131005142054.GA11270@dhcp-26-207.brq.redhat.com>
-         <1381009586.645.141.camel@pasglop>
-         <20131006060243.GB28142@dhcp-26-207.brq.redhat.com>
-         <1381040386.645.143.camel@pasglop>
-         <20131006071027.GA29143@dhcp-26-207.brq.redhat.com>
-         <20131007180111.GC2481@htj.dyndns.org> <1381176656.645.171.camel@pasglop>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-mips-bounce@linux-mips.org>
-In-Reply-To: <1381176656.645.171.camel@pasglop>
-Content-Language: en-US
-Content-ID: <5266EE94AAF93F43AF6E5E9594A7A470@intel.com>
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-List-help: <mailto:ecartis@linux-mips.org?Subject=help>
-List-unsubscribe: <mailto:ecartis@linux-mips.org?subject=unsubscribe%20linux-mips>
-List-software: Ecartis version 1.0.0
-List-subscribe: <mailto:ecartis@linux-mips.org?subject=subscribe%20linux-mips>
-List-owner: <mailto:ralf@linux-mips.org>
-List-post: <mailto:linux-mips@linux-mips.org>
-List-archive: <http://www.linux-mips.org/archives/linux-mips/>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Tejun Heo <tj@kernel.org>, "linux-mips@linux-mips.org" <linux-mips@linux-mips.org>, "VMware, Inc." <pv-drivers@vmware.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>, King <acking@vmware.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "x86@kernel.org" <x86@kernel.org>, Ben Hutchings <bhutchings@solarflare.com>, Alexander Gordeev <agordeev@redhat.com>, Matt Porter <mporter@kernel.crashing.org>, "iss_storagedev@hp.com" <iss_storagedev@hp.com>, Michael Ellerman <michael@ellerman.id.au>lin
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 1/8] ide: convert bus code to use dev_groups
+Date: Mon,  7 Oct 2013 18:27:35 -0700
+Message-ID: <1381195662-28009-2-git-send-email-gregkh@linuxfoundation.org>
+References: <1381195662-28009-1-git-send-email-gregkh@linuxfoundation.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:35854 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751854Ab3JHCPw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Oct 2013 22:15:52 -0400
+In-Reply-To: <1381195662-28009-1-git-send-email-gregkh@linuxfoundation.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
 
-T24gVHVlLCAyMDEzLTEwLTA4IGF0IDA3OjEwICsxMTAwLCBCZW5qYW1pbiBIZXJyZW5zY2htaWR0
-IHdyb3RlOg0KPiBPbiBNb24sIDIwMTMtMTAtMDcgYXQgMTQ6MDEgLTA0MDAsIFRlanVuIEhlbyB3
-cm90ZToNCj4gPiBJIGRvbid0IHRoaW5rIHRoZSBzYW1lIHJhY2UgY29uZGl0aW9uIHdvdWxkIGhh
-cHBlbiB3aXRoIHRoZSBsb29wLiAgVGhlDQo+ID4gcHJvYmxlbSBjYXNlIGlzIHdoZXJlIG11bHRp
-cGxlIG1zaSh4KSBhbGxvY2F0aW9uIGZhaWxzIGNvbXBsZXRlbHkNCj4gPiBiZWNhdXNlIHRoZSBn
-bG9iYWwgbGltaXQgd2VudCBkb3duIGJlZm9yZSBpbnF1aXJ5IGFuZCBhbGxvY2F0aW9uLiAgSW4N
-Cj4gPiB0aGUgbG9vcCBiYXNlZCBpbnRlcmZhY2UsIGl0J2QgcmV0cnkgd2l0aCB0aGUgbG93ZXIg
-bnVtYmVyLg0KPiA+IA0KPiA+IEFzIGxvbmcgYXMgdGhlIG51bWJlciBvZiBkcml2ZXJzIHdoaWNo
-IG5lZWQgdGhpcyBzb3J0IG9mIGFkYXB0aXZlDQo+ID4gYWxsb2NhdGlvbiBpc24ndCB0b28gaGln
-aCBhbmQgdGhlIGNvbW1vbiBjYXNlcyBjYW4gYmUgbWFkZSBzaW1wbGUsIEkNCj4gPiBkb24ndCB0
-aGluayB0aGUgImNvbXBsZXgiIHBhcnQgb2YgaW50ZXJmYWNlIGlzIGFsbCB0aGF0IGltcG9ydGFu
-dC4NCj4gPiBNYXliZSB3ZSBjYW4gaGF2ZSByZXNlcnZlIC8gY2FuY2VsIHR5cGUgaW50ZXJmYWNl
-IG9yIGp1c3Qga2VlcCB0aGUNCj4gPiBsb29wIHdpdGggbW9yZSBleHBsaWNpdCBmdW5jdGlvbiBu
-YW1lcyAoaWUuIHRyeV9lbmFibGUgb3Igc29tZXRoaW5nDQo+ID4gbGlrZSB0aGF0KS4NCj4gDQo+
-IFdlIHdhbnQgdG8gYmUgYWJsZSB0byByZXF1ZXN0IGFuIE1TSS1YIGF0IHJ1bnRpbWUgYW55d2F5
-IC4uLiBpZiBJIHdhbnQNCj4gdG8gZHluYW1pY2FsbHkgYWRkIGEgcXVldWUgdG8gbXkgbmV0d29y
-ayBpbnRlcmZhY2UsIEkgd2FudCBpdCB0byBiZSBhYmxlDQo+IHRvIHBvcCBhIG5ldyBhcmJpdHJh
-cnkgTVNJLVguDQoNCklmIHlvdSB3YW50IHRvIGR5bmFtaWNhbGx5IGFsbG9jYXRlIGFub3RoZXIg
-cXVldWUsIHlvdSdkIGVpdGhlciBuZWVkIHRvDQpoYXZlIHRoZW0gYWxsIHByZS1hbGxvY2F0ZWQg
-YXQgYWxsb2NfZXRoZXJkZXZfbXFzKCksIG9yIGFkZCBhIG5ldyBBUEkgdG8NCm5ldGRldiB0aGF0
-IGFsbG93cyBhZGRpbmcgbmV3IHF1ZXVlcyBvbiB0aGUgZmx5Lg0KDQpIb3cgdGhpbmdzIGFyZSBk
-b25lIHRvZGF5LCB0aGUgVHggcXVldWVzIGFyZSBhbGwgdGFja2VkIG9udG8gdGhlIGVuZCBvZg0K
-dGhlIG5ldGRldiBzdHJ1Y3QuICBUaGF0IHdvdWxkIGhhdmUgdG8gY2hhbmdlIHRvIHByb2JhYmx5
-IGEgbGlua2VkIGxpc3QNCm9mIHF1ZXVlcyB0aGF0IGNvdWxkIGJlIGdyb3duIG9yIHNocnVuayBv
-biB0aGUgZmx5Lg0KbmV0aWZfYWxsb2NfbmV0ZGV2X3F1ZXVlcygpIHdvdWxkIG5lZWQgdG8gY2hh
-bmdlIHRoZSBremFsbG9jKCkgdG8gYSBsaXN0DQphbGxvY2F0aW9uLg0KDQpDaGVlcnMsDQotUEoN
-Cg==
+The dev_attrs field of struct bus_type is going away soon, dev_groups
+should be used instead.  This converts the ide bus code to use the
+correct field.
+
+Cc: David S. Miller <davem@davemloft.net>
+Cc: <linux-ide@vger.kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+
+David, I can take this through my driver-core tree if you don't want to
+take it through yours, just let me know what works best for you.
+
+ drivers/ide/ide-sysfs.c | 35 ++++++++++++++++++++++++++---------
+ drivers/ide/ide.c       |  2 +-
+ include/linux/ide.h     |  2 +-
+ 3 files changed, 28 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/ide/ide-sysfs.c b/drivers/ide/ide-sysfs.c
+index 883ffac..84a6a9e 100644
+--- a/drivers/ide/ide-sysfs.c
++++ b/drivers/ide/ide-sysfs.c
+@@ -25,6 +25,7 @@ static ssize_t media_show(struct device *dev, struct device_attribute *attr,
+ 	ide_drive_t *drive = to_ide_device(dev);
+ 	return sprintf(buf, "%s\n", ide_media_string(drive));
+ }
++static DEVICE_ATTR_RO(media);
+ 
+ static ssize_t drivename_show(struct device *dev, struct device_attribute *attr,
+ 			      char *buf)
+@@ -32,6 +33,7 @@ static ssize_t drivename_show(struct device *dev, struct device_attribute *attr,
+ 	ide_drive_t *drive = to_ide_device(dev);
+ 	return sprintf(buf, "%s\n", drive->name);
+ }
++static DEVICE_ATTR_RO(drivename);
+ 
+ static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
+ 			     char *buf)
+@@ -39,6 +41,7 @@ static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
+ 	ide_drive_t *drive = to_ide_device(dev);
+ 	return sprintf(buf, "ide:m-%s\n", ide_media_string(drive));
+ }
++static DEVICE_ATTR_RO(modalias);
+ 
+ static ssize_t model_show(struct device *dev, struct device_attribute *attr,
+ 			  char *buf)
+@@ -46,6 +49,7 @@ static ssize_t model_show(struct device *dev, struct device_attribute *attr,
+ 	ide_drive_t *drive = to_ide_device(dev);
+ 	return sprintf(buf, "%s\n", (char *)&drive->id[ATA_ID_PROD]);
+ }
++static DEVICE_ATTR_RO(model);
+ 
+ static ssize_t firmware_show(struct device *dev, struct device_attribute *attr,
+ 			     char *buf)
+@@ -53,6 +57,7 @@ static ssize_t firmware_show(struct device *dev, struct device_attribute *attr,
+ 	ide_drive_t *drive = to_ide_device(dev);
+ 	return sprintf(buf, "%s\n", (char *)&drive->id[ATA_ID_FW_REV]);
+ }
++static DEVICE_ATTR_RO(firmware);
+ 
+ static ssize_t serial_show(struct device *dev, struct device_attribute *attr,
+ 			   char *buf)
+@@ -60,16 +65,28 @@ static ssize_t serial_show(struct device *dev, struct device_attribute *attr,
+ 	ide_drive_t *drive = to_ide_device(dev);
+ 	return sprintf(buf, "%s\n", (char *)&drive->id[ATA_ID_SERNO]);
+ }
++static DEVICE_ATTR(serial, 0400, serial_show, NULL);
++
++static DEVICE_ATTR(unload_heads, 0644, ide_park_show, ide_park_store);
++
++static struct attribute *ide_attrs[] = {
++	&dev_attr_media.attr,
++	&dev_attr_drivename.attr,
++	&dev_attr_modalias.attr,
++	&dev_attr_model.attr,
++	&dev_attr_firmware.attr,
++	&dev_attr_serial.attr,
++	&dev_attr_unload_heads.attr,
++	NULL,
++};
++
++static const struct attribute_group ide_attr_group = {
++	.attrs = ide_attrs,
++};
+ 
+-struct device_attribute ide_dev_attrs[] = {
+-	__ATTR_RO(media),
+-	__ATTR_RO(drivename),
+-	__ATTR_RO(modalias),
+-	__ATTR_RO(model),
+-	__ATTR_RO(firmware),
+-	__ATTR(serial, 0400, serial_show, NULL),
+-	__ATTR(unload_heads, 0644, ide_park_show, ide_park_store),
+-	__ATTR_NULL
++const struct attribute_group *ide_dev_groups[] = {
++	&ide_attr_group,
++	NULL,
+ };
+ 
+ static ssize_t store_delete_devices(struct device *portdev,
+diff --git a/drivers/ide/ide.c b/drivers/ide/ide.c
+index fa89621..2ce6268 100644
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -158,7 +158,7 @@ struct bus_type ide_bus_type = {
+ 	.probe		= generic_ide_probe,
+ 	.remove		= generic_ide_remove,
+ 	.shutdown	= generic_ide_shutdown,
+-	.dev_attrs	= ide_dev_attrs,
++	.dev_groups	= ide_dev_groups,
+ 	.suspend	= generic_ide_suspend,
+ 	.resume		= generic_ide_resume,
+ };
+diff --git a/include/linux/ide.h b/include/linux/ide.h
+index b179749..46a1422 100644
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -1514,7 +1514,7 @@ static inline void ide_set_max_pio(ide_drive_t *drive)
+ 
+ char *ide_media_string(ide_drive_t *);
+ 
+-extern struct device_attribute ide_dev_attrs[];
++extern const struct attribute_group *ide_dev_groups[];
+ extern struct bus_type ide_bus_type;
+ extern struct class *ide_port_class;
+ 
+-- 
+1.8.4.6.g82e253f.dirty
+
