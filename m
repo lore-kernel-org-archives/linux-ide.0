@@ -1,47 +1,56 @@
-From: Zhu Richard-R65037 <r65037@freescale.com>
-Subject: =?utf-8?B?UkU6IOWbnuWkje+8mlJlOiBbdjFdIGFoY2k6IGlteDogc2V0dXAgcG93ZXIg?=
- =?utf-8?Q?saving_methods?=
-Date: Tue, 8 Oct 2013 07:02:40 +0000
-Message-ID: <0E83723C55F66F43A6041464FE31119D3FBC68@039-SN2MPN1-012.039d.mgd.msft.net>
-References: <1380269265-10821-1-git-send-email-Hong-Xing.Zhu@freescale.com>
- <1380269265-10821-2-git-send-email-Hong-Xing.Zhu@freescale.com>
- <20130927131441.GA3205@htj.dyndns.org>
- <20130929073528.GE26156@S2101-09.ap.freescale.net>
- <1vugbd691bjfibh5crdihlrh.1380440262216@email.android.com>
- <20130929074817.GG26156@S2101-09.ap.freescale.net>
- <20130929125128.GA7599@htj.dyndns.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
+ pattern
+Date: Tue, 8 Oct 2013 09:33:02 +0200
+Message-ID: <20131008073301.GC10669@dhcp-26-207.brq.redhat.com>
+References: <cover.1380703262.git.agordeev@redhat.com>
+ <20131008043330.GF31666@concordia>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-db8lp0189.outbound.messaging.microsoft.com ([213.199.154.189]:39667
-	"EHLO db8outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754095Ab3JHHC6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Oct 2013 03:02:58 -0400
-In-Reply-To: <20130929125128.GA7599@htj.dyndns.org>
-Content-Language: en-US
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-mips-bounce@linux-mips.org>
+Content-Disposition: inline
+In-Reply-To: <20131008043330.GF31666@concordia>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+List-help: <mailto:ecartis@linux-mips.org?Subject=help>
+List-unsubscribe: <mailto:ecartis@linux-mips.org?subject=unsubscribe%20linux-mips>
+List-software: Ecartis version 1.0.0
+List-subscribe: <mailto:ecartis@linux-mips.org?subject=subscribe%20linux-mips>
+List-owner: <mailto:ralf@linux-mips.org>
+List-post: <mailto:linux-mips@linux-mips.org>
+List-archive: <http://www.linux-mips.org/archives/linux-mips/>
+To: Michael Ellerman <michael@ellerman.id.au>
+Cc: linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, Ralf Baechle <ralf@linux-mips.org>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>, Matt Porter <mporter@kernel.crashing.org>, linux-pci@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org, linux-ide@vger.kernel.org, iss_storagedev@hp.com, linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net, linux-driver@qlogic.com, Solarflare
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Shawn Guo <shawn.guo@linaro.org>
-Cc: Richard Zhu <richard.zhuhongxing@gmail.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-SGkgVGVqdW46DQpJJ20gYmFjayBmcm9tIGhvbGlkYXksIFRoYW5rcyBmb3IgeW91ciByZXZpZXcg
-YW5kIHN1Z2dlc3Rpb25zLg0KVGhlIGtlcm5lbCBidWlsZCBvcHRpb24gd291bGQgYmUgcmVwbGFj
-ZWQgYnkgdGhlIHVzYWdlIG9mIHRoZSBtb2R1bGUgcGFyYW1ldGVycy4NCg0KQmVzdCBSZWdhcmRz
-DQpSaWNoYXJkIFpodQ0KDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBUZWp1
-biBIZW8gW21haWx0bzpodGVqdW5AZ21haWwuY29tXSBPbiBCZWhhbGYgT2YgVGVqdW4gSGVvDQpT
-ZW50OiBTdW5kYXksIFNlcHRlbWJlciAyOSwgMjAxMyA4OjUxIFBNDQpUbzogU2hhd24gR3VvDQpD
-YzogWmh1IFJpY2hhcmQtUjY1MDM3OyBSaWNoYXJkIFpodTsgbGludXgtYXJtLWtlcm5lbEBsaXN0
-cy5pbmZyYWRlYWQub3JnOyBqZ2FyemlrQHBvYm94LmNvbTsgbGludXgtaWRlQHZnZXIua2VybmVs
-Lm9yZw0KU3ViamVjdDogUmU6IOWbnuWkje+8mlJlOiBbdjFdIGFoY2k6IGlteDogc2V0dXAgcG93
-ZXIgc2F2aW5nIG1ldGhvZHMNCg0KT24gU3VuLCBTZXAgMjksIDIwMTMgYXQgMDM6NDg6MThQTSAr
-MDgwMCwgU2hhd24gR3VvIHdyb3RlOg0KPiBPbiBTdW4sIFNlcCAyOSwgMjAxMyBhdCAwNzo0MDo1
-N0FNICswMDAwLCBaaHUgUmljaGFyZC1SNjUwMzcgd3JvdGU6DQo+ID4gSGkgU2hhd246DQo+ID4g
-VGhhbmtzLg0KPiA+IFRoZSBob3QtcGx1ZyBjYW7igJl0IGJlIHN1cHBvcnRlZCwgaWYgd2Ugc3Vw
-cG9ydCB0aGlzIG1ldGhvZCB1bmNvbmRpdGlvbmFsbHkuDQo+IA0KPiBBaCwgb2theS4gIFRoZW4g
-eW91IHNob3VsZCBtYWtlIHRoaXMgY2xlYXIgaW4gdGhlIGhlbHAgdGV4dCBvZiB0aGUgDQo+IEtj
-b25maWcgb3B0aW9uLg0KDQpZZWFoIGJ1dCBpdCdzIHN0aWxsIHdlaXJkIHRvIHJlcXVpcmUga2Vy
-bmVsIGJ1aWxkIHRvIGZsaXAgdGhpcyBmZWF0dXJlLCBpc24ndCBpdD8gIFNob3VsZG4ndCBpdCBi
-ZSBhIG1vZHVsZSBwYXJhbSBvciBzb21ldGhpbmc/DQoNClRoYW5rcy4NCg0KLS0NCnRlanVuDQoN
-Cg==
+On Tue, Oct 08, 2013 at 03:33:30PM +1100, Michael Ellerman wrote:
+> On Wed, Oct 02, 2013 at 12:29:04PM +0200, Alexander Gordeev wrote:
+> > This technique proved to be confusing and error-prone. Vast share
+> > of device drivers simply fail to follow the described guidelines.
+> 
+> To clarify "Vast share of device drivers":
+> 
+>  - 58 drivers call pci_enable_msix()
+>  - 24 try a single allocation and then fallback to MSI/LSI
+>  - 19 use the loop style allocation as above
+>  - 14 try an allocation, and if it fails retry once
+>  - 1  incorrectly continues when pci_enable_msix() returns > 0
+> 
+> So 33 drivers (> 50%) successfully make use of the "confusing and
+> error-prone" return value.
 
+Ok, you caught me - 'vast share' is incorrect and is a subject to
+rewording. But out of 19/58 how many drivers tested fallbacks on the
+real hardware? IOW, which drivers are affected by the pSeries quota?
+
+> And yes, one is buggy, so obviously the interface is too complex. Thanks
+> drivers/ntb/ntb_hw.c
+
+vmxnet3 would be the best example.
+
+> cheers
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
