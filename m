@@ -1,90 +1,47 @@
-From: arno@natisbad.org (Arnaud Ebalard)
-Subject: Re: [BUG,REGRESSION] SATA regression on 12.0-rc4 kernel
-Date: Tue, 08 Oct 2013 08:10:39 +0200
-Message-ID: <87y564waw0.fsf@natisbad.org>
-References: <87vc1ahyft.fsf@natisbad.org>
- <20131007125943.GA1332@titan.lakedaemon.net>
- <87bo303nfe.fsf@natisbad.org> <52537015.6040200@gmail.com>
+From: Zhu Richard-R65037 <r65037@freescale.com>
+Subject: =?utf-8?B?UkU6IOWbnuWkje+8mlJlOiBbdjFdIGFoY2k6IGlteDogc2V0dXAgcG93ZXIg?=
+ =?utf-8?Q?saving_methods?=
+Date: Tue, 8 Oct 2013 07:02:40 +0000
+Message-ID: <0E83723C55F66F43A6041464FE31119D3FBC68@039-SN2MPN1-012.039d.mgd.msft.net>
+References: <1380269265-10821-1-git-send-email-Hong-Xing.Zhu@freescale.com>
+ <1380269265-10821-2-git-send-email-Hong-Xing.Zhu@freescale.com>
+ <20130927131441.GA3205@htj.dyndns.org>
+ <20130929073528.GE26156@S2101-09.ap.freescale.net>
+ <1vugbd691bjfibh5crdihlrh.1380440262216@email.android.com>
+ <20130929074817.GG26156@S2101-09.ap.freescale.net>
+ <20130929125128.GA7599@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Andrew Lunn <andrew@lunn.ch>, Jason Cooper <jason@lakedaemon.net>, linux-ide@vger.kernel.org, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Marc Carino <marc.ceeeee@gmail.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Tejun Heo <tj@kernel.org>, Gregory Clement <gregory.clement@free-electrons.com>, willy tarreau <w@1wt.eu>, linux-arm-kernel@lists.infradead.org, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-db8lp0189.outbound.messaging.microsoft.com ([213.199.154.189]:39667
+	"EHLO db8outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754095Ab3JHHC6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Oct 2013 03:02:58 -0400
+In-Reply-To: <20130929125128.GA7599@htj.dyndns.org>
+Content-Language: en-US
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Shawn Guo <shawn.guo@linaro.org>
+Cc: Richard Zhu <richard.zhuhongxing@gmail.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hi Robert,
+SGkgVGVqdW46DQpJJ20gYmFjayBmcm9tIGhvbGlkYXksIFRoYW5rcyBmb3IgeW91ciByZXZpZXcg
+YW5kIHN1Z2dlc3Rpb25zLg0KVGhlIGtlcm5lbCBidWlsZCBvcHRpb24gd291bGQgYmUgcmVwbGFj
+ZWQgYnkgdGhlIHVzYWdlIG9mIHRoZSBtb2R1bGUgcGFyYW1ldGVycy4NCg0KQmVzdCBSZWdhcmRz
+DQpSaWNoYXJkIFpodQ0KDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBUZWp1
+biBIZW8gW21haWx0bzpodGVqdW5AZ21haWwuY29tXSBPbiBCZWhhbGYgT2YgVGVqdW4gSGVvDQpT
+ZW50OiBTdW5kYXksIFNlcHRlbWJlciAyOSwgMjAxMyA4OjUxIFBNDQpUbzogU2hhd24gR3VvDQpD
+YzogWmh1IFJpY2hhcmQtUjY1MDM3OyBSaWNoYXJkIFpodTsgbGludXgtYXJtLWtlcm5lbEBsaXN0
+cy5pbmZyYWRlYWQub3JnOyBqZ2FyemlrQHBvYm94LmNvbTsgbGludXgtaWRlQHZnZXIua2VybmVs
+Lm9yZw0KU3ViamVjdDogUmU6IOWbnuWkje+8mlJlOiBbdjFdIGFoY2k6IGlteDogc2V0dXAgcG93
+ZXIgc2F2aW5nIG1ldGhvZHMNCg0KT24gU3VuLCBTZXAgMjksIDIwMTMgYXQgMDM6NDg6MThQTSAr
+MDgwMCwgU2hhd24gR3VvIHdyb3RlOg0KPiBPbiBTdW4sIFNlcCAyOSwgMjAxMyBhdCAwNzo0MDo1
+N0FNICswMDAwLCBaaHUgUmljaGFyZC1SNjUwMzcgd3JvdGU6DQo+ID4gSGkgU2hhd246DQo+ID4g
+VGhhbmtzLg0KPiA+IFRoZSBob3QtcGx1ZyBjYW7igJl0IGJlIHN1cHBvcnRlZCwgaWYgd2Ugc3Vw
+cG9ydCB0aGlzIG1ldGhvZCB1bmNvbmRpdGlvbmFsbHkuDQo+IA0KPiBBaCwgb2theS4gIFRoZW4g
+eW91IHNob3VsZCBtYWtlIHRoaXMgY2xlYXIgaW4gdGhlIGhlbHAgdGV4dCBvZiB0aGUgDQo+IEtj
+b25maWcgb3B0aW9uLg0KDQpZZWFoIGJ1dCBpdCdzIHN0aWxsIHdlaXJkIHRvIHJlcXVpcmUga2Vy
+bmVsIGJ1aWxkIHRvIGZsaXAgdGhpcyBmZWF0dXJlLCBpc24ndCBpdD8gIFNob3VsZG4ndCBpdCBi
+ZSBhIG1vZHVsZSBwYXJhbSBvciBzb21ldGhpbmc/DQoNClRoYW5rcy4NCg0KLS0NCnRlanVuDQoN
+Cg==
 
-Robert Hancock <hancockrwd@gmail.com> writes:
-
-> On 10/07/2013 01:12 PM, Arnaud Ebalard wrote:
->> Hi guys,
->>
->> yesterday, I reported on arm kernel mailing list what looked like a sata
->> regression on my platform (Marvell Armada 370-based NETGEAR ReadyNAS
->> 102). I initially thought this was an ARM-related issue. My initial
->> email, provided below, contains various details on the platform and the
->> error encountered.
->>
->> Today, before starting a painful git bisect, I decided to git log
->> sata_mv.c code and then more generally drivers/ata to quickly end up on
->> commit ed36911c747c (libata: Add support for SEND/RECEIVE FPDMA QUEUED)
->> against which I got suspicious after looking again at the errors I had:
->>
->> [  417.288155] ata1.00: exception Emask 0x0 SAct 0x1fff6001 SErr 0x0 action 0x6 frozen
->> [  417.295838] ata1.00: failed command: WRITE FPDMA QUEUED
->> [  417.301097] ata1.00: cmd 61/48:00:80:ad:0b/00:00:0c:00:00/40 tag 0 ncq 36864 out
->> [  417.315896] ata1.00: status: { DRDY }
->> [  417.319570] ata1.00: failed command: WRITE FPDMA QUEUED
->> [  417.324814] ata1.00: cmd 61/08:68:70:a1:87/00:00:0d:00:00/40 tag 13 ncq 4096 out
->> [  417.339619] ata1.00: status: { DRDY }
->> [  417.343288] ata1.00: failed command: WRITE FPDMA QUEUED
->> [  417.348536] ata1.00: cmd 61/08:70:28:a2:87/00:00:0d:00:00/40 tag 14 ncq 4096 out
->> [  417.363341] ata1.00: status: { DRDY }
->> [  417.367010] ata1.00: failed command: WRITE FPDMA QUEUED
->> [  417.372257] ata1.00: cmd 61/08:80:80:a3:87/00:00:0d:00:00/40 tag 16 ncq 4096 out
->> [  417.387061] ata1.00: status: { DRDY }
->> [  417.390733] ata1.00: failed command: WRITE FPDMA QUEUED
->> [  417.395977] ata1.00: cmd 61/08:88:58:a1:c7/00:00:0d:00:00/40 tag 17 ncq 4096 out
->> [  417.410782] ata1.00: status: { DRDY }
->>
->> Reverting both 87fb6c31b9 (libata: Add support for queued DSM TRIM) and
->> ed36911c74 (libata: Add support for SEND/RECEIVE FPDMA QUEUED) makes the
->> problem disappear. Note: reverting 87fb6c31b9 is not enough and I cannot
->> compile the kernel with only the latter reverted.
->>
->> If you need more info on the platform or want me to test something some
->> fix, do not hesitate.
->
-> I assume that it consistently fails on a non-working kernel and
-> consistently works with those patches reverted? Given that both of
-> those patches seem to only be touching SSDs with NCQ trim support, it
-> seems odd they would be breaking a normal hard drive, but maybe there
-> is some unexpected side effect..
-
-With two different disks (same model though, i.e. 250GB 3.5" WD blue), it
-consistently works on a 3.11.4 and consistently fails on 3.12-rc3 and
-3.12-rc4 (not tested others 3.12-rc). The problem is easy to reproduce,
-i.e. I just need to perform some disk operations. With the two commits
-reverted from 3.12-rc4, I can consistently do a "find / -exec sha256sum
-'{}' \;" w/o anything happening.
-
-What I do not understand is why the log report failed FPDMA commands if
-the feature is supposed to be SSD-related (looking only at commit
-messages: 87fb6c31b9 seems SSD-related, ed36911c74 does not). Is it
-possible that the feature detection is what is causing the issue? Or
-that the hardware report support w/o having? I can test with a different
-disk if you think it would help.
-
-Cheers,
-
-a+
