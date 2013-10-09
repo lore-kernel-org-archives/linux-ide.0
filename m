@@ -1,129 +1,62 @@
-From: "Marc (Marc-Angelo) Carino" <mcarino@broadcom.com>
-Subject: Re: [BUG,REGRESSION] SATA regression on 12.0-rc4 kernel
-Date: Wed, 9 Oct 2013 15:22:48 +0000
-Message-ID: <202B57C13565C241A5ED05E38B705C82012397EC@IRVEXCHMB08.corp.ad.broadcom.com>
-References: <87vc1ahyft.fsf@natisbad.org>
- <20131007125943.GA1332@titan.lakedaemon.net>
- <87bo303nfe.fsf@natisbad.org> <52537015.6040200@gmail.com>
- <87y564waw0.fsf@natisbad.org>
- <CADLC3L3EYU0VSfLMYjo013jSTWm4yZw24y+4HdvOOoEkOc6uhQ@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
+ pattern
+Date: Wed, 9 Oct 2013 11:41:17 -0400
+Message-ID: <20131009154117.GA22495@htj.dyndns.org>
+References: <1380840585.3419.50.camel@bwh-desktop.uk.level5networks.com>
+ <20131004082920.GA4536@dhcp-26-207.brq.redhat.com>
+ <1380922156.3214.49.camel@bwh-desktop.uk.level5networks.com>
+ <20131005142054.GA11270@dhcp-26-207.brq.redhat.com>
+ <1381009586.645.141.camel@pasglop>
+ <20131006060243.GB28142@dhcp-26-207.brq.redhat.com>
+ <1381040386.645.143.camel@pasglop>
+ <20131006071027.GA29143@dhcp-26-207.brq.redhat.com>
+ <20131007180111.GC2481@htj.dyndns.org>
+ <20131008122215.GA14389@dhcp-26-207.brq.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=us-ascii
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2294 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751269Ab3JIPXX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Oct 2013 11:23:23 -0400
-Content-Language: en-US
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-pci-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20131008122215.GA14389@dhcp-26-207.brq.redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Ben Hutchings <bhutchings@solarflare.com>, linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, Ralf Baechle <ralf@linux-mips.org>, Michael Ellerman <michael@ellerman.id.au>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Ingo Molnar <mingo@redhat.com>, Dan Williams <dan.j.williams@intel.com>, Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>, Matt Porter <mporter@kernel.crashing.org>, linux-pci@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org, linux-ide@vger.kernel.org, iss_storagedev@hp.com, linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net, linux-driver@qlogic.com, Solarflare linux maintainers <linux-net-drivers@solarflare.com>, VMw
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: Arnaud Ebalard <arno@natisbad.org>, Marc Carino <marc.ceeeee@gmail.com>, Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Andrew Lunn <andrew@lunn.ch>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, willy tarreau <w@1wt.eu>, Jason Cooper <jason@lakedaemon.net>
 
-Hello all,
+Hello,
 
->> What I do not understand is why the log report failed FPDMA commands if
->> the feature is supposed to be SSD-related (looking only at commit
->> messages: 87fb6c31b9 seems SSD-related, ed36911c74 does not). Is it
->> possible that the feature detection is what is causing the issue? Or
->> that the hardware report support w/o having? I can test with a different
->> disk if you think it would help.
+On Tue, Oct 08, 2013 at 02:22:16PM +0200, Alexander Gordeev wrote:
+> If we talk about pSeries quota, then the current pSeries pci_enable_msix()
+> implementation is racy internally and could fail if the quota went down
+> *while* pci_enable_msix() is executing. In this case the loop will have to
+> exit rather than retry with a lower number (what number?).
 
-Drive misreporting is likely to be the case. Oddly enough, even if the
-drive's firmware did misreport support for the new SEND/RECV commands, it
-appears that a discard/trim request is being made by the block layer.
+Ah, okay, so that one is already broken.
 
-In addition to the hdparm dump, could you also provide a full kernel boot
-log? The driver should complain if there were any issues retrieving the NCQ
-send/receive log page.
-
-Lastly, could you give another drive brand a try, if possible? I had tested
-the changes on an Intel SATA AHCI controller and a Micron M500 SSD. I should
-be able to scrounge up a Marvell PCIe AHCI controller.
-
-Thanks!
-Marc
-
-On 10/8/2013 10:51 PM, Robert Hancock wrote:
-> On Tue, Oct 8, 2013 at 12:10 AM, Arnaud Ebalard <arno@natisbad.org> wrote:
->> Hi Robert,
->>
->> Robert Hancock <hancockrwd@gmail.com> writes:
->>
->>> On 10/07/2013 01:12 PM, Arnaud Ebalard wrote:
->>>> Hi guys,
->>>>
->>>> yesterday, I reported on arm kernel mailing list what looked like a sata
->>>> regression on my platform (Marvell Armada 370-based NETGEAR ReadyNAS
->>>> 102). I initially thought this was an ARM-related issue. My initial
->>>> email, provided below, contains various details on the platform and the
->>>> error encountered.
->>>>
->>>> Today, before starting a painful git bisect, I decided to git log
->>>> sata_mv.c code and then more generally drivers/ata to quickly end up on
->>>> commit ed36911c747c (libata: Add support for SEND/RECEIVE FPDMA QUEUED)
->>>> against which I got suspicious after looking again at the errors I had:
->>>>
->>>> [  417.288155] ata1.00: exception Emask 0x0 SAct 0x1fff6001 SErr 0x0 action 0x6 frozen
->>>> [  417.295838] ata1.00: failed command: WRITE FPDMA QUEUED
->>>> [  417.301097] ata1.00: cmd 61/48:00:80:ad:0b/00:00:0c:00:00/40 tag 0 ncq 36864 out
->>>> [  417.315896] ata1.00: status: { DRDY }
->>>> [  417.319570] ata1.00: failed command: WRITE FPDMA QUEUED
->>>> [  417.324814] ata1.00: cmd 61/08:68:70:a1:87/00:00:0d:00:00/40 tag 13 ncq 4096 out
->>>> [  417.339619] ata1.00: status: { DRDY }
->>>> [  417.343288] ata1.00: failed command: WRITE FPDMA QUEUED
->>>> [  417.348536] ata1.00: cmd 61/08:70:28:a2:87/00:00:0d:00:00/40 tag 14 ncq 4096 out
->>>> [  417.363341] ata1.00: status: { DRDY }
->>>> [  417.367010] ata1.00: failed command: WRITE FPDMA QUEUED
->>>> [  417.372257] ata1.00: cmd 61/08:80:80:a3:87/00:00:0d:00:00/40 tag 16 ncq 4096 out
->>>> [  417.387061] ata1.00: status: { DRDY }
->>>> [  417.390733] ata1.00: failed command: WRITE FPDMA QUEUED
->>>> [  417.395977] ata1.00: cmd 61/08:88:58:a1:c7/00:00:0d:00:00/40 tag 17 ncq 4096 out
->>>> [  417.410782] ata1.00: status: { DRDY }
->>>>
->>>> Reverting both 87fb6c31b9 (libata: Add support for queued DSM TRIM) and
->>>> ed36911c74 (libata: Add support for SEND/RECEIVE FPDMA QUEUED) makes the
->>>> problem disappear. Note: reverting 87fb6c31b9 is not enough and I cannot
->>>> compile the kernel with only the latter reverted.
->>>>
->>>> If you need more info on the platform or want me to test something some
->>>> fix, do not hesitate.
->>>
->>> I assume that it consistently fails on a non-working kernel and
->>> consistently works with those patches reverted? Given that both of
->>> those patches seem to only be touching SSDs with NCQ trim support, it
->>> seems odd they would be breaking a normal hard drive, but maybe there
->>> is some unexpected side effect..
->>
->> With two different disks (same model though, i.e. 250GB 3.5" WD blue), it
->> consistently works on a 3.11.4 and consistently fails on 3.12-rc3 and
->> 3.12-rc4 (not tested others 3.12-rc). The problem is easy to reproduce,
->> i.e. I just need to perform some disk operations. With the two commits
->> reverted from 3.12-rc4, I can consistently do a "find / -exec sha256sum
->> '{}' \;" w/o anything happening.
->>
->> What I do not understand is why the log report failed FPDMA commands if
->> the feature is supposed to be SSD-related (looking only at commit
->> messages: 87fb6c31b9 seems SSD-related, ed36911c74 does not). Is it
->> possible that the feature detection is what is causing the issue? Or
->> that the hardware report support w/o having? I can test with a different
->> disk if you think it would help.
+> In this regard the new scheme does not bring anything new and relies on
+> the fact this race does not hit and therefore does not worry.
 > 
-> The commands that are failing are WRITE FPDMA QUEUED which is a
-> regular NCQ write command. The ones that these commits add support for
-> are FPDMA_SEND and FPDMA_RECV which are used for NCQ trim commands.
+> If we talk about quota as it has to be, then yes - the loop scheme seems
+> more preferable.
 > 
-> It's possible that the feature detection for this is picking up
-> support for FPDMA SEND/RECV on this drive when it shouldn't be. Can
-> you post the output of "hdparm --Istdout /dev/sdX" for one of these
-> drives (where X matches the drive in question)?
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+> Overall, looks like we just need to fix the pSeries implementation,
+> if the guys want it, he-he :)
 
+If we can't figure out a better interface for the retry case, I think
+what can really help is having a simple interface for the simpler
+cases.
 
+> > The problem case is where multiple msi(x) allocation fails completely
+> > because the global limit went down before inquiry and allocation.  In
+> > the loop based interface, it'd retry with the lower number.
+> 
+> I am probably missing something here. If the global limit went down before
+> inquiry then the inquiry will get what is available and try to allocate with
+> than number.
+
+Oh, I should have written between inquiry and allocation.  Sorry.
+
+Thanks.
+
+-- 
+tejun
