@@ -1,100 +1,53 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [v2] ahci: imx: setup power saving methods
-Date: Wed, 9 Oct 2013 16:35:40 -0400
-Message-ID: <20131009203540.GE5592@mtj.dyndns.org>
-References: <1381224562-2378-1-git-send-email-Hong-Xing.Zhu@freescale.com>
- <1381224562-2378-2-git-send-email-Hong-Xing.Zhu@freescale.com>
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: Re: block layer runtime pm and udisks
+Date: Wed, 09 Oct 2013 21:40:31 -0400
+Message-ID: <5256058F.3010802@ubuntu.com>
+References: <1364010148-8584-1-git-send-email-aaron.lu@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f175.google.com ([209.85.216.175]:51409 "EHLO
-	mail-qc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753965Ab3JIUfp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Oct 2013 16:35:45 -0400
-Received: by mail-qc0-f175.google.com with SMTP id v2so1003125qcr.6
-        for <linux-ide@vger.kernel.org>; Wed, 09 Oct 2013 13:35:44 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <1381224562-2378-2-git-send-email-Hong-Xing.Zhu@freescale.com>
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:62341 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751318Ab3JJBkf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Oct 2013 21:40:35 -0400
+In-Reply-To: <1364010148-8584-1-git-send-email-aaron.lu@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Richard Zhu <richard.zhuhongxing@gmail.com>
-Cc: shawn.guo@linaro.org, linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, Richard Zhu <r65037@freescale.com>
+To: Aaron Lu <aaron.lu@intel.com>, Alan Stern <stern@rowland.harvard.edu>, Jens Axboe <axboe@kernel.dk>, "Rafael J. Wysocki" <rjw@sisk.pl>, James Bottomley <James.Bottomley@hansenpartnership.com>, Tejun Heo <tj@kernel.org>
+Cc: linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Aaron Lu <aaron.lwe@gmail.com>, Shane Huang <shane.huang@amd.com>, Oliver Neukum <oneukum@suse.de>
 
-Hello,
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
 
-On Tue, Oct 08, 2013 at 05:29:22PM +0800, Richard Zhu wrote:
-> @@ -1,6 +1,6 @@
->  /*
-> + * copyright (c) 2013 Freescale Semiconductor, Inc.
->   * Freescale IMX AHCI SATA platform driver
-> - * Copyright 2013 Freescale Semiconductor, Inc.
+I have been trying out the new block layer runtime pm, and run into a
+problem: udisks keeps waking up the disk.  Every 10 minutes it tries
+to poll the SMART status of the drive, but it does first issue an ata
+CHECK POWER command to see if it is in standby, and skips the check to
+avoid waking the disk.  The problem with runtime pm is that *any*
+request brings the drive out of suspend, and the suspend wake path
+forces the drive to spin up by issuing a verify command on sector 0.
 
-I don't really mind making small changes along with other changes but
-would appreciate if you can at least mention the change in the
-changelog.  As it currently stands, I'm not even sure whether the
-above is an intended change or just something slipped.
+Is there a reason that the wakeup path forces the drive to spin up, or
+could this be removed and rely on the drive waking up automatically if
+the request requires it?
 
-> +module_param_named(hp, ahci_imx_hp, int, 0644);
+Or would it be possible to notice that the command being sent is a
+check power command, and fake the reply instead of resuming the device?
 
-Can you please spellout "hp" to "hotplug" especially for the name
-visible outside?  It isn't a common abbreviation and it's not like we
-despearately lose the extra three chars there.
+Or does udisks just need to check the runtime pm status before trying
+the check power command?
 
-> @@ -105,6 +114,39 @@ static int imx6q_sata_init(struct device *dev, void __iomem *mmio)
->  	reg_val = clk_get_rate(imxpriv->ahb_clk) / 1000;
->  	writel(reg_val, mmio + HOST_TIMER1MS);
->  
-> +	if (ahci_imx_hp == 0) {
-> +		/*
-> +		 * hot-plug is not supported.
-> +		 * In order to save power consumption, enter PDDQ mode
-> +		 * when there is no device detected on the port.
-> +		 * NOTE: hot-plug wouldn't supported when PDDQ mode is
-> +		 * ever entered.
-> +		 */
-> +		do {
-> +			sstatus = readl(mmio + 0x100 + PORT_SCR_STAT);
-> +			if ((sstatus & 0xF) == 0)
-> +				usleep_range(1000, 2000);
-> +			else
-> +				break;
-> +
-> +			if (iterations == 0) {
-> +				pr_info("No sata disk.\n");
-> +				reg_val = readl(mmio + PORT_PHY_CTL);
-> +				writel(reg_val | PORT_PHY_CTL_PDDQ_LOC,
-> +						mmio + PORT_PHY_CTL);
-> +				regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
-> +						IMX6Q_GPR13_SATA_MPLL_CLK_EN,
-> +						!IMX6Q_GPR13_SATA_MPLL_CLK_EN);
-> +				clk_disable_unprepare(imxpriv->sata_ref_clk);
-> +				imxpriv->no_device = 1;
-> +
-> +				return 0;
-> +			}
-> +		} while (iterations-- > 0);
 
-Hmm... I'm not a big fan of this approach as it essentially is an
-incomplete implementation of SATA device detection.  Wouldn't it be
-better to override error_handler?  ie. implement
-ahci_imx_error_handler() which wraps ahci_error_handler() and do
-something like the following,
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
 
-	static bool first_time = true;
-
-	ahci_error_handler(ap);
-
-	if (!first_time || ahci_imx_hotplug)
-		return;
-
-	first_time = false;
-
-	ata_for_each_dev(dev, link, ENABLED)
-		return;
-
-	DISABLE LINK;
-
-Thanks.
-
--- 
-tejun
+iQEcBAEBCgAGBQJSVgWPAAoJEJrBOlT6nu75k/cH+gMAb9YtMS21rEt94umJpBYj
+BcNoyGoK39tAKZHW7pXfP2hRIm1+kPTPi44Wp7kQHu7m6BSp4YetmDkqjNv+6yAy
+8SUvPcqRsJVbF1oBXN09phBEnk/JfxqID7n6hB1lT6NqYV72VVVUEUOlnSnpHtDJ
+gszV+TLH37uhd5/KiDFja3J2bJC0R/klzDF1x1clc53tGJd1NZ+h9tZZBLszIdnS
+EnjukLA02Q7ooq+445WyWth2cypTXKfRbigZW+FfCI3hfAKOShVevodlGmmrQb7Z
+0xzhSoO5JTpNqJPLaNL3+JZFdXwANd+7PuO9v2XVKKUkydQ9+Vl4CfydSFhqo5U=
+=iuSZ
+-----END PGP SIGNATURE-----
