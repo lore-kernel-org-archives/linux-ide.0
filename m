@@ -1,69 +1,113 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
- pattern
-Date: Thu, 10 Oct 2013 12:17:05 +0200
-Message-ID: <20131010101704.GC11874@dhcp-26-207.brq.redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
- <5254D397.9030307@zytor.com>
- <1381292648.645.259.camel@pasglop>
+From: Zhu Richard-R65037 <r65037@freescale.com>
+Subject: RE: [v2] ahci: imx: setup power saving methods
+Date: Thu, 10 Oct 2013 10:31:15 +0000
+Message-ID: <0E83723C55F66F43A6041464FE31119D408C24@039-SN2MPN1-011.039d.mgd.msft.net>
+References: <1381224562-2378-1-git-send-email-Hong-Xing.Zhu@freescale.com>
+ <1381224562-2378-2-git-send-email-Hong-Xing.Zhu@freescale.com>
+ <20131009203540.GE5592@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-mips-bounce@linux-mips.org>
-Content-Disposition: inline
-In-Reply-To: <1381292648.645.259.camel@pasglop>
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-List-help: <mailto:ecartis@linux-mips.org?Subject=help>
-List-unsubscribe: <mailto:ecartis@linux-mips.org?subject=unsubscribe%20linux-mips>
-List-software: Ecartis version 1.0.0
-List-subscribe: <mailto:ecartis@linux-mips.org?subject=subscribe%20linux-mips>
-List-owner: <mailto:ralf@linux-mips.org>
-List-post: <mailto:linux-mips@linux-mips.org>
-List-archive: <http://www.linux-mips.org/archives/linux-mips/>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: "H. Peter Anvin" <hpa@zytor.com>, linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, Ralf Baechle <ralf@linux-mips.org>, Michael Ellerman <michael@ellerman.id.au>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>, Matt Porter <mporter@kernel.crashing.org>, linux-pci@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org, linux-ide@vger.kernel.org, iss_storagedev@hp.com, linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, e1000-devel@lists.sourceforge.net, linux-driver@qlogic.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-db9lp0253.outbound.messaging.microsoft.com ([213.199.154.253]:14224
+	"EHLO db9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751269Ab3JJKbW convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 10 Oct 2013 06:31:22 -0400
+In-Reply-To: <20131009203540.GE5592@mtj.dyndns.org>
+Content-Language: en-US
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: "shawn.guo@linaro.org" <shawn.guo@linaro.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Wed, Oct 09, 2013 at 03:24:08PM +1100, Benjamin Herrenschmidt wrote:
-> On Tue, 2013-10-08 at 20:55 -0700, H. Peter Anvin wrote:
-> > Why not add a minimum number to pci_enable_msix(), i.e.:
-> > 
-> > pci_enable_msix(pdev, msix_entries, nvec, minvec)
-> > 
-> > ... which means "nvec" is the number of interrupts *requested*, and
-> > "minvec" is the minimum acceptable number (otherwise fail).
-> 
-> Which is exactly what Ben (the other Ben :-) suggested and that I
-> supports...
+Hi Tejun:
+Thanks for your review.
 
-Ok, this suggestion sounded in one or another form by several people.
-What about name it pcim_enable_msix_range() and wrap in couple more
-helpers to complete an API:
-
-int pcim_enable_msix_range(pdev, msix_entries, nvec, minvec);
-	<0 - error code
-	>0 - number of MSIs allocated, where minvec >= result <= nvec
-
-int pcim_enable_msix(pdev, msix_entries, nvec);
-	<0 - error code
-	>0 - number of MSIs allocated, where 1 >= result <= nvec 
-
-int pcim_enable_msix_exact(pdev, msix_entries, nvec);
-	<0 - error code
-	>0 - number of MSIs allocated, where result == nvec
-
-The latter's return value seems odd, but I can not help to make
-it consistent with the first two.
+Best Regards
+Richard Zhu
 
 
-(Sorry if you see this message twice - my MUA seems struggle with one of CC).
+-----Original Message-----
+From: Tejun Heo [mailto:htejun@gmail.com] On Behalf Of Tejun Heo
+Sent: Thursday, October 10, 2013 4:36 AM
+To: Richard Zhu
+Cc: shawn.guo@linaro.org; linux-arm-kernel@lists.infradead.org; jgarzik@pobox.com; linux-ide@vger.kernel.org; Zhu Richard-R65037
+Subject: Re: [v2] ahci: imx: setup power saving methods
 
-> Cheers,
-> Ben.
-> 
-> 
+Hello,
 
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+On Tue, Oct 08, 2013 at 05:29:22PM +0800, Richard Zhu wrote:
+> @@ -1,6 +1,6 @@
+>  /*
+> + * copyright (c) 2013 Freescale Semiconductor, Inc.
+>   * Freescale IMX AHCI SATA platform driver
+> - * Copyright 2013 Freescale Semiconductor, Inc.
+
+I don't really mind making small changes along with other changes but would appreciate if you can at least mention the change in the changelog.  As it currently stands, I'm not even sure whether the above is an intended change or just something slipped.
+[Richard] thanks, No problem, I would add the change-notice in the change-log in next version.
+
+> +module_param_named(hp, ahci_imx_hp, int, 0644);
+
+Can you please spellout "hp" to "hotplug" especially for the name visible outside?  It isn't a common abbreviation and it's not like we despearately lose the extra three chars there.
+[Richard] Accepted. "hp" would be replaced by "hotplug".
+
+> @@ -105,6 +114,39 @@ static int imx6q_sata_init(struct device *dev, void __iomem *mmio)
+>  	reg_val = clk_get_rate(imxpriv->ahb_clk) / 1000;
+>  	writel(reg_val, mmio + HOST_TIMER1MS);
+>  
+> +	if (ahci_imx_hp == 0) {
+> +		/*
+> +		 * hot-plug is not supported.
+> +		 * In order to save power consumption, enter PDDQ mode
+> +		 * when there is no device detected on the port.
+> +		 * NOTE: hot-plug wouldn't supported when PDDQ mode is
+> +		 * ever entered.
+> +		 */
+> +		do {
+> +			sstatus = readl(mmio + 0x100 + PORT_SCR_STAT);
+> +			if ((sstatus & 0xF) == 0)
+> +				usleep_range(1000, 2000);
+> +			else
+> +				break;
+> +
+> +			if (iterations == 0) {
+> +				pr_info("No sata disk.\n");
+> +				reg_val = readl(mmio + PORT_PHY_CTL);
+> +				writel(reg_val | PORT_PHY_CTL_PDDQ_LOC,
+> +						mmio + PORT_PHY_CTL);
+> +				regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
+> +						IMX6Q_GPR13_SATA_MPLL_CLK_EN,
+> +						!IMX6Q_GPR13_SATA_MPLL_CLK_EN);
+> +				clk_disable_unprepare(imxpriv->sata_ref_clk);
+> +				imxpriv->no_device = 1;
+> +
+> +				return 0;
+> +			}
+> +		} while (iterations-- > 0);
+
+Hmm... I'm not a big fan of this approach as it essentially is an incomplete implementation of SATA device detection.  Wouldn't it be better to override error_handler?  ie. implement
+ahci_imx_error_handler() which wraps ahci_error_handler() and do something like the following,
+
+	static bool first_time = true;
+
+	ahci_error_handler(ap);
+
+	if (!first_time || ahci_imx_hotplug)
+		return;
+
+	first_time = false;
+
+	ata_for_each_dev(dev, link, ENABLED)
+		return;
+
+	DISABLE LINK;
+[Richard] Do you means to override the .error_handler of ata_port_operations defined in libahci.c or ahci_platform.c driver?
+Ok, let me make a try on it. Thanks again for your review comments.
+
+Thanks.
+
+--
+tejun
+
+
