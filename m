@@ -1,138 +1,56 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH RFC 00/77] Re-design MSI/MSI-X interrupts enablement
- pattern
-Date: Fri, 11 Oct 2013 10:41:09 +0200
-Message-ID: <20131011084108.GA25702@dhcp-26-207.brq.redhat.com>
-References: <cover.1380703262.git.agordeev@redhat.com>
- <5254D397.9030307@zytor.com>
- <1381292648.645.259.camel@pasglop>
- <20131010101704.GC11874@dhcp-26-207.brq.redhat.com>
- <5256D5AB.4050105@zytor.com>
- <20131010180704.GA15719@dhcp-26-207.brq.redhat.com>
- <5257357E.8080506@start.ca>
+From: Mark Rutland <mark.rutland@arm.com>
+Subject: Re: [PATCH] ata: sata_rcar: Add RCAR Gen2 SATA PHY support
+Date: Fri, 11 Oct 2013 10:41:57 +0100
+Message-ID: <20131011094156.GF3910@e106331-lin.cambridge.arm.com>
+References: <1381432083-3684-1-git-send-email-valentine.barshak@cogentembedded.com>
+ <20131011010032.GA13809@verge.net.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-mips-bounce@linux-mips.org>
+Return-path: <linux-sh-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <5257357E.8080506@start.ca>
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-List-help: <mailto:ecartis@linux-mips.org?Subject=help>
-List-unsubscribe: <mailto:ecartis@linux-mips.org?subject=unsubscribe%20linux-mips>
-List-software: Ecartis version 1.0.0
-List-subscribe: <mailto:ecartis@linux-mips.org?subject=subscribe%20linux-mips>
-List-owner: <mailto:ralf@linux-mips.org>
-List-post: <mailto:linux-mips@linux-mips.org>
-List-archive: <http://www.linux-mips.org/archives/linux-mips/>
-To: Mark Lord <kernel@start.ca>
-Cc: "H. Peter Anvin" <hpa@zytor.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, Ralf Baechle <ralf@linux-mips.org>, Michael Ellerman <michael@ellerman.id.au>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Ingo Molnar <mingo@redhat.com>, Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Andy King <acking@vmware.com>, Jon Mason <jon.mason@intel.com>, Matt Porter <mporter@kernel.crashing.org>, linux-pci@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux390@de.ibm.com, linux-s390@vger.kernel.org, x86@kernel.org, linux-ide@vger.kernel.org, iss_storagedev@hp.com, linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, e1000-dev
+In-Reply-To: <20131011010032.GA13809@verge.net.au>
+Sender: linux-sh-owner@vger.kernel.org
+To: Simon Horman <horms@verge.net.au>
+Cc: Valentine Barshak <valentine.barshak@cogentembedded.com>, "linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Magnus Damm <magnus.damm@gmail.com>, Tejun Heo <tj@kernel.org>, Vladimir Barinov <vladimir.barinov@cogentembedded.com>, Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>, Laurent Pinchart <laurent.pinchart@ideasonboard.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, Oct 10, 2013 at 07:17:18PM -0400, Mark Lord wrote:
-> Just to help us all understand "the loop" issue..
+On Fri, Oct 11, 2013 at 02:00:35AM +0100, Simon Horman wrote:
+> [ CCed devicetree@vger.kernel.org as this involves DT compatibility strings ]
+
+Cheers!
+
 > 
-> Here's an example of driver code which uses the existing MSI-X interfaces,
-> for a device which can work with either 16, 8, 4, 2, or 1 MSI-X interrupt.
-> This is from a new driver I'm working on right now:
-> 
-> 
-> static int xx_alloc_msix_irqs (struct xx_dev *dev, int nvec)
-> {
->         xx_disable_all_irqs(dev);
->         do {
->                 if (nvec < 2)
->                         xx_prep_for_1_msix_vector(dev);
->                 else if (nvec < 4)
->                         xx_prep_for_2_msix_vectors(dev);
->                 else if (nvec < 8)
->                         xx_prep_for_4_msix_vectors(dev);
->                 else if (nvec < 16)
->                         xx_prep_for_8_msix_vectors(dev);
->                 else
->                         xx_prep_for_16_msix_vectors(dev);
->                 nvec = pci_enable_msix(dev->pdev, dev->irqs, dev->num_vectors);
->         } while (nvec > 0);
-> 
->         if (nvec) {
->                 kerr(dev->name, "pci_enable_msix() failed, err=%d", nvec);
->                 dev->num_vectors = 0;
->                 return nvec;
->         }
->         return 0;       /* success */
-> }
+> On Thu, Oct 10, 2013 at 11:08:03PM +0400, Valentine Barshak wrote:
+> > RCAR Gen2 SoC has a different phy which is not compatible with
+> > the older H1/M1 versions. This adds OF/platform device table
+> > and PHY initialization callbacks for H2/M2 (Gen2) SoC.
 
-Yeah, that is a very good example.
+Is the PHY combined with the rest of the controller, or are they
+logically separate components in the SoC? I note that the Calxeda
+Highbank SATA controller driver treats the phy and the controller as
+separate entities, and describes the way the two are attached (though
+the driver handles both). Would a similar approach work here?
 
-I would move all xx_prep_for_<pow2>_msix_vector() functions to a single
-helper i.e. xx_prep_msix_vectors(dev, ndev).
+[...]
 
-Considering also (a) we do not want to waste unused platform resources
-associated with MSI-Xs and pull more quota than needed and (b) fixing
-couple of bugs, this function could look like this:
+> > +static struct of_device_id sata_rcar_match[] = {
+> > +	{
+> > +		.compatible = "renesas,rcar-sata",
+> > +		.data = (void *)RCAR_SATA
+> > +	},
+> > +	{
+> > +		.compatible = "renesas,sata-r8a7790",
+> > +		.data = (void *)RCAR_GEN2_SATA
+> > +	},
+> > +	{
+> > +		.compatible = "renesas,sata-r8a7791",
+> > +		.data = (void *)RCAR_GEN2_SATA
+> > +	},
+> > +	{},
 
-static int xx_alloc_msix_irqs(struct xx_dev *dev, int nvec_in)
-{
-	int nvec = roundup_pow_of_two(nvec_in);	/* assume 0 > nvec_in <= 16 */
-	int rc;
+These bindings will need documentation. A grep of any of these in
+mainline's Documentation/devicetree shows up nothing (not even the
+existing "renesas,rcar-sata" string used by the driver.
 
-	xx_disable_all_irqs(dev);
-
-retry:
-       	xx_prep_for_msix_vectors(dev, nvec);
-
-	rc = pci_enable_msix(dev->pdev, dev->irqs, nvec);	/* (b) */
-	if (rc > 0) {
-		nvec = rounddown_pow_of_two(nvec);		/* (a) */
-		goto retry;
-	}
-
-	if (rc) {
-		kerr(dev->name, "pci_enable_msix() failed, err=%d", rc);
-		dev->num_vectors = 0;
-		return rc;
-	}
-
-	dev->num_vectors = nvec;				/* (b) */
-	return 0;       /* success */
-}
-
-Now, this is a loop-free alternative:
-
-static int xx_alloc_msix_irqs(struct xx_dev *dev, int nvec)
-{
-	nvec = roundup_pow_of_two(nvec);	/* assume 0 > nvec <= 16 */
-
-	xx_disable_all_irqs(dev);
-
-	pci_lock_msi(dev->pdev);
-
-	rc = pci_get_msix_limit(dev->pdev, nvec);
-	if (rc < 0)
-		goto err;
-
-	nvec = min(nvec, rc);		/* if limit is more than requested */
-	nvec = rounddown_pow_of_two(nvec);	/* (a) */
-
-	xx_prep_for_msix_vectors(dev, nvec);
-
-	rc = pci_enable_msix(dev->pdev, dev->irqs, nvec);	/* (b)	*/
-	if (rc < 0)
-		goto err;
-
-	pci_unlock_msi(dev->pdev);
-
-	dev->num_vectors = nvec;		/* (b) */
-	return 0;
-
-err:
-	pci_unlock_msi(dev->pdev);
-
-        kerr(dev->name, "pci_enable_msix() failed, err=%d", rc);
-        dev->num_vectors = 0;
-        return rc;
-}
-
--- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+Thanks,
+Mark.
