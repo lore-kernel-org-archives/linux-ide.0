@@ -1,153 +1,56 @@
-From: Zhu Richard-R65037 <r65037@freescale.com>
-Subject: RE: [v3] ahci: imx: setup power saving methods
-Date: Mon, 14 Oct 2013 02:39:01 +0000
-Message-ID: <0E83723C55F66F43A6041464FE31119D40E14F@039-SN2MPN1-011.039d.mgd.msft.net>
-References: <1381487831-30090-1-git-send-email-Hong-Xing.Zhu@freescale.com>
- <1381487831-30090-2-git-send-email-Hong-Xing.Zhu@freescale.com>
- <20131013201634.GF18075@htj.dyndns.org>
+From: Lukasz Dorau <lukasz.dorau@intel.com>
+Subject: [PATCH] libahci: fix turning on LEDs in ahci_start_port()
+Date: Mon, 14 Oct 2013 14:58:19 +0200
+Message-ID: <20131014125819.19262.32922.stgit@gklab-154-244.igk.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20131013201634.GF18075@htj.dyndns.org>
-Content-Language: en-US
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Tejun Heo <tj@kernel.org>, Richard Zhu <richard.zhuhongxing@gmail.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "shawn.guo@linaro.org" <shawn.guo@linaro.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Hi Tejun:
-Thanks for your review comments.
+If EM Transmit bit is busy during init ata_msleep() is called.
+It is wrong - msleep() should be used instead of ata_msleep(),
+because if EM Transmit bit is busy for one port, it will be busy
+for all other ports too, so using ata_msleep() causes wasting
+tries for another ports.
 
-Best Regards
-Richard Zhu
+The most common scenario looks like that now
+(six ports try to transmit a LED meaasege):
+- port #0 tries for the 1st time and succeeds
+- ports #1-5 try for the 1st time and sleeps
+- port #1 tries for the 2nd time and succeeds
+- ports #2-5 try for the 2nd time and sleeps
+- port #2 tries for the 3rd time and succeeds
+- ports #3-5 try for the 3rd time and sleeps
+- port #3 tries for the 4th time and succeeds
+- ports #4-5 try for the 4th time and sleeps
+- port #4 tries for the 5th time and succeeds
+- port #5 tries for the 5th time and sleeps
+At this moment port #5 wasted all its five tries and failed to initialize.
+Because there are only 5 (EM_MAX_RETRY) tries available usually only five ports
+succeed to initialize. The sixth port and next ones usually will fail.
 
+If msleep() is used instead of ata_msleep() the first port succeeds to initialize
+in the first try and next ones usually succeed to initialize in the second try.
 
------Original Message-----
-From: Tejun Heo [mailto:htejun@gmail.com] On Behalf Of Tejun Heo
-Sent: Monday, October 14, 2013 4:17 AM
-To: Richard Zhu
-Cc: shawn.guo@linaro.org; linux-arm-kernel@lists.infradead.org; jgarzik@pobox.com; linux-ide@vger.kernel.org; Zhu Richard-R65037
-Subject: Re: [v3] ahci: imx: setup power saving methods
+Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
+---
+ drivers/ata/libahci.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Hello,
-
-On Fri, Oct 11, 2013 at 06:37:11PM +0800, Richard Zhu wrote:
-> @@ -1,6 +1,6 @@
->  /*
-> + * copyright (c) 2013 Freescale Semiconductor, Inc.
->   * Freescale IMX AHCI SATA platform driver
-> - * Copyright 2013 Freescale Semiconductor, Inc.
-
-Forgot to mention the above in the commit message?
-[Richard] Ok, I would add change-note in the commit message.
-
-> +static void ahci_imx_error_handler(struct ata_port *ap); static void 
-> +ahci_host_stop(struct ata_host *host);
-
-Please put the ops definition below the function defs so that the above aren't necessary.
-[Richard] Accept.
-
-> +static void ahci_imx_error_handler(struct ata_port *ap) {
-> +	u32 reg_val;
-> +	struct ata_device *dev;
-> +	struct ata_host *host = dev_get_drvdata(ap->dev);
-> +	struct ahci_host_priv *hpriv = host->private_data;
-> +	void __iomem *mmio = hpriv->mmio;
-> +	struct imx_ahci_priv *imxpriv = dev_get_drvdata(ap->dev->parent);
-> +
-> +	/* wrapper of the ahci_error_handler */
-> +	if (!(ap->pflags & ATA_PFLAG_FROZEN)) {
-> +		/* restart engine */
-> +		ahci_stop_engine(ap);
-> +		ahci_start_engine(ap);
-> +	}
-
-Please export ahci_error_handler() and use that instead of duplicating this part.
-[Richard] Ok, accept.
-
-> +
-> +	sata_pmp_error_handler(ap);
-> +
-> +	if (!ata_dev_enabled(ap->link.device))
-> +		ahci_stop_engine(ap);
-> +	/* end of wrapper */
-> +
-> +	if (!(imxpriv->first_time) || ahci_imx_hotplug)
-> +		return;
-> +
-> +	imxpriv->first_time = false;
-> +
-> +	ata_for_each_dev(dev, &ap->link, ENABLED)
-> +		return;
-> +	/* DISABLE LINK to save power consumption */
-
-A bit more explanation would be nice.  ie. briefly explain why it can't be part of usual LPM.
-[Richard] no problem, I would add the explanation later. Thanks.
-
-> +	reg_val = readl(mmio + PORT_PHY_CTL);
-> +	writel(reg_val | PORT_PHY_CTL_PDDQ_LOC, mmio + PORT_PHY_CTL);
-> +	regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
-> +			IMX6Q_GPR13_SATA_MPLL_CLK_EN,
-> +			!IMX6Q_GPR13_SATA_MPLL_CLK_EN);
-> +	clk_disable_unprepare(imxpriv->sata_ref_clk);
-> +	imxpriv->no_device = true;
-> +}
-> +
-> +static void ahci_host_stop(struct ata_host *host) {
-> +	struct device *dev = host->dev;
-> +	struct ahci_platform_data *pdata = dev_get_platdata(dev);
-> +	struct ahci_host_priv *hpriv = host->private_data;
-> +
-> +	if (pdata && pdata->exit)
-> +		pdata->exit(dev);
-> +
-> +	if (!IS_ERR(hpriv->clk)) {
-> +		clk_disable_unprepare(hpriv->clk);
-> +		clk_put(hpriv->clk);
-> +	}
-> +}
-
-Please do not duplicate functions like this.  Why not export and inherit from ahci_platform_ops?
-[Richard] Ok, I would export and inherit from ahci_platform_ops.
-
->  static int imx6q_sata_init(struct device *dev, void __iomem *mmio)  {
->  	int ret = 0;
-> -	unsigned int reg_val;
-> +	u32 reg_val;
-
-Hah?  Why is this chunk in this patch?
-[Richard] Would be removed later. Thanks.
-
-> +static int imx_ahci_suspend(struct device *dev) {
-> +	struct imx_ahci_priv *imxpriv =  dev_get_drvdata(dev->parent);
-> +
-> +	if (!(imxpriv->no_device)) {
-
-Please lose the unnecessary parantheses.
-[Richard] Would be removed later. Thanks.
-
-> +		regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
-> +				IMX6Q_GPR13_SATA_MPLL_CLK_EN,
-> +				!IMX6Q_GPR13_SATA_MPLL_CLK_EN);
-> +		clk_disable_unprepare(imxpriv->sata_ref_clk);
-> +	}
-
-Some comment of what's going on would be nice.
-
-Other than the above, looks good to me.
-[Richard] Ok, no problem, comments would be added in next version.
-Thanks again. :).
-
-Thanks.
-
---
-tejun
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index acfd0f7..cf38692 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -779,7 +779,7 @@ static void ahci_start_port(struct ata_port *ap)
+ 							       emp->led_state,
+ 							       4);
+ 				if (rc == -EBUSY)
+-					ata_msleep(ap, 1);
++					msleep(1);
+ 				else
+ 					break;
+ 			}
