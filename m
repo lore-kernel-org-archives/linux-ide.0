@@ -1,70 +1,34 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libahci: fix turning on LEDs in ahci_start_port()
-Date: Mon, 14 Oct 2013 09:20:49 -0400
-Message-ID: <20131014132049.GB4722@htj.dyndns.org>
-References: <20131014125819.19262.32922.stgit@gklab-154-244.igk.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f179.google.com ([209.85.216.179]:47095 "EHLO
-	mail-qc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756228Ab3JNNUx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Oct 2013 09:20:53 -0400
-Content-Disposition: inline
-In-Reply-To: <20131014125819.19262.32922.stgit@gklab-154-244.igk.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Valentine Barshak <valentine.barshak@cogentembedded.com>
+Subject: [PATCH 0/2] sata_rcar: Adjust DT bindings and add R-Car Gen2 PHY support
+Date: Mon, 14 Oct 2013 19:42:32 +0400
+Message-ID: <1381765354-28440-1-git-send-email-valentine.barshak@cogentembedded.com>
+Return-path: <linux-sh-owner@vger.kernel.org>
+Sender: linux-sh-owner@vger.kernel.org
+To: linux-sh@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org
+Cc: Simon Horman <horms@verge.net.au>, Magnus Damm <magnus.damm@gmail.com>, Vladimir Barinov <vladimir.barinov@cogentembedded.com>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>, Laurent Pinchart <laurent.pinchart@ideasonboard.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Tejun Heo <tj@kernel.org>, Mark Rutland <mark.rutland@arm.com>
 List-Id: linux-ide@vger.kernel.org
-To: Lukasz Dorau <lukasz.dorau@intel.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Oct 14, 2013 at 02:58:19PM +0200, Lukasz Dorau wrote:
-> If EM Transmit bit is busy during init ata_msleep() is called.
-> It is wrong - msleep() should be used instead of ata_msleep(),
-> because if EM Transmit bit is busy for one port, it will be busy
-> for all other ports too, so using ata_msleep() causes wasting
-> tries for another ports.
-> 
-> The most common scenario looks like that now
-> (six ports try to transmit a LED meaasege):
-> - port #0 tries for the 1st time and succeeds
-> - ports #1-5 try for the 1st time and sleeps
-> - port #1 tries for the 2nd time and succeeds
-> - ports #2-5 try for the 2nd time and sleeps
-> - port #2 tries for the 3rd time and succeeds
-> - ports #3-5 try for the 3rd time and sleeps
-> - port #3 tries for the 4th time and succeeds
-> - ports #4-5 try for the 4th time and sleeps
-> - port #4 tries for the 5th time and succeeds
-> - port #5 tries for the 5th time and sleeps
-> At this moment port #5 wasted all its five tries and failed to initialize.
-> Because there are only 5 (EM_MAX_RETRY) tries available usually only five ports
-> succeed to initialize. The sixth port and next ones usually will fail.
-> 
-> If msleep() is used instead of ata_msleep() the first port succeeds to initialize
-> in the first try and next ones usually succeed to initialize in the second try.
+This modifies and documents R-Car SATA device tree (DT) bindings.
+The "sata-<SoC>" format is now used for the "compatible" property.
+Also, a platform device id table is introduced for non-DT support.
+The device id naming is consistent with the "compatible" DT
+property format.
 
-Ah, interesting.
+R-Car Gen2 SATA PHY support is added. PHY initialization method
+is chosen, based on the device id.
 
-> Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
-> ---
->  drivers/ata/libahci.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-> index acfd0f7..cf38692 100644
-> --- a/drivers/ata/libahci.c
-> +++ b/drivers/ata/libahci.c
-> @@ -779,7 +779,7 @@ static void ahci_start_port(struct ata_port *ap)
->  							       emp->led_state,
->  							       4);
->  				if (rc == -EBUSY)
-> -					ata_msleep(ap, 1);
-> +					msleep(1);
+Valentine Barshak (2):
+  sata_rcar: Adjust and document device tree bindings
+  sata_rcar: Add R-Car Gen2 SATA support
 
-This is so unobvious.  Can you please add a comment explaining what's
-going on?
-
-Thanks.
+ .../devicetree/bindings/ata/sata_rcar.txt          |  19 ++++
+ arch/arm/boot/dts/r8a7779.dtsi                     |   2 +-
+ arch/arm/mach-shmobile/clock-r8a7779.c             |   2 +-
+ arch/arm/mach-shmobile/setup-r8a7779.c             |   2 +-
+ drivers/ata/sata_rcar.c                            | 112 ++++++++++++++++++---
+ 5 files changed, 118 insertions(+), 19 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/sata_rcar.txt
 
 -- 
-tejun
+1.8.3.1
+
