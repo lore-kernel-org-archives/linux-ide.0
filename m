@@ -1,65 +1,99 @@
-From: Lukasz Dorau <lukasz.dorau@intel.com>
-Subject: [PATCH 2] libahci: fix turning on LEDs in ahci_start_port()
-Date: Mon, 14 Oct 2013 18:18:53 +0200
-Message-ID: <20131014161853.20775.1487.stgit@gklab-154-244.igk.intel.com>
+From: Mark Rutland <mark.rutland@arm.com>
+Subject: Re: [PATCH 2/2] sata_rcar: Add R-Car Gen2 SATA support
+Date: Mon, 14 Oct 2013 17:26:03 +0100
+Message-ID: <20131014162603.GB19196@e106331-lin.cambridge.arm.com>
+References: <1381765354-28440-1-git-send-email-valentine.barshak@cogentembedded.com>
+ <1381765354-28440-3-git-send-email-valentine.barshak@cogentembedded.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:41861 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751018Ab3JNQS4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 14 Oct 2013 12:18:56 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-sh-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1381765354-28440-3-git-send-email-valentine.barshak@cogentembedded.com>
+Sender: linux-sh-owner@vger.kernel.org
+To: Valentine Barshak <valentine.barshak@cogentembedded.com>
+Cc: "linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Simon Horman <horms@verge.net.au>, Magnus Damm <magnus.damm@gmail.com>, Vladimir Barinov <vladimir.barinov@cogentembedded.com>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>, Laurent Pinchart <laurent.pinchart@ideasonboard.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Tejun Heo <tj@kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-If EM Transmit bit is busy during init ata_msleep() is called.
-It is wrong - msleep() should be used instead of ata_msleep(),
-because if EM Transmit bit is busy for one port, it will be busy
-for all other ports too, so using ata_msleep() causes wasting
-tries for another ports.
+On Mon, Oct 14, 2013 at 04:42:34PM +0100, Valentine Barshak wrote:
+> R-Car Gen2 SoCs have a different PHY which is not compatible
+> with the older R-Car H1 (R8A7779) version.
+> This adds OF/platform device id tables and PHY initialization
+> callbacks for the following Gen2 SoCs:
+>   * R-Car H2: R8A7790;
+>   * R-Car M2: R8A7791.
+> 
+> PHY initialization method is chosen, based on the device id.
+> Default PHY settings are applied for Gen2 SoCs, which should
+> suit the Gen2 boards available.
+> 
+> The R8A7779 platform code is modified to use "sata-r8a7779"
+> device id.
+> 
+> Signed-off-by: Valentine Barshak <valentine.barshak@cogentembedded.com>
+> ---
+>  .../devicetree/bindings/ata/sata_rcar.txt          |   5 +-
+>  arch/arm/mach-shmobile/clock-r8a7779.c             |   2 +-
+>  arch/arm/mach-shmobile/setup-r8a7779.c             |   2 +-
+>  drivers/ata/sata_rcar.c                            | 112 ++++++++++++++++++---
+>  4 files changed, 102 insertions(+), 19 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/ata/sata_rcar.txt b/Documentation/devicetree/bindings/ata/sata_rcar.txt
+> index 2465183..b5a41bf 100644
+> --- a/Documentation/devicetree/bindings/ata/sata_rcar.txt
+> +++ b/Documentation/devicetree/bindings/ata/sata_rcar.txt
+> @@ -1,7 +1,10 @@
+>  * Renesas R-Car SATA
+>  
+>  Required properties:
+> -- compatible		: must be "renesas,sata-r8a7779"
+> +- compatible		: must be one of the following:
 
-The most common scenario looks like that now
-(six ports try to transmit a LED meaasege):
-- port #0 tries for the 1st time and succeeds
-- ports #1-5 try for the 1st time and sleeps
-- port #1 tries for the 2nd time and succeeds
-- ports #2-5 try for the 2nd time and sleeps
-- port #2 tries for the 3rd time and succeeds
-- ports #3-5 try for the 3rd time and sleeps
-- port #3 tries for the 4th time and succeeds
-- ports #4-5 try for the 4th time and sleeps
-- port #4 tries for the 5th time and succeeds
-- port #5 tries for the 5th time and sleeps
-At this moment port #5 wasted all its five tries and failed to initialize.
-Because there are only 5 (EM_MAX_RETRY) tries available usually only five ports
-succeed to initialize. The sixth port and next ones usually will fail.
+s/must be/should contain/
 
-If msleep() is used instead of ata_msleep() the first port succeeds to initialize
-in the first try and next ones usually succeed to initialize in the second try.
+> +			  - "renesas,sata-r8a7779" for R-Car H1
+> +			  - "renesas,sata-r8a7790" for R-Car H2
+> +			  - "renesas,sata-r8a7791" for R-Car M2
 
-Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
----
- drivers/ata/libahci.c |    6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+How do renesas,sata-r8a7790 and renesas,sata-r8a7791 differ?
 
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index acfd0f7..8fb7092 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -779,7 +779,11 @@ static void ahci_start_port(struct ata_port *ap)
- 							       emp->led_state,
- 							       4);
- 				if (rc == -EBUSY)
--					ata_msleep(ap, 1);
-+					/* Do not release ownership of @ap's EH,
-+					 * because EM Transmit bit is busy for
-+					 * all ports sharing the @ap->host.
-+					 */
-+					msleep(1);
- 				else
- 					break;
- 			}
+>  - reg			: address range of the SATA registers.
 
+It's a size too...
+
+>  - interrupt-parent	: interrupt parent controller phandle
+
+Not required.
+
+[...]
+
+> +static struct of_device_id sata_rcar_match[] = {
+> +	{
+> +		.compatible = "renesas,sata-r8a7779",
+> +		.data = (void *)RCAR_GEN1_SATA,
+> +	},
+> +	{
+> +		.compatible = "renesas,sata-r8a7790",
+> +		.data = (void *)RCAR_GEN2_SATA
+> +	},
+> +	{
+> +		.compatible = "renesas,sata-r8a7791",
+> +		.data = (void *)RCAR_GEN2_SATA
+> +	},
+> +	{},
+> +};
+> +MODULE_DEVICE_TABLE(of, sata_rcar_match);
+
+Are the renesas,sata-r8a779x variants identical?
+
+If so, why the two strings?
+
+Could we not require sata-r8a7791 devices to have "sata-r8a7790" in the
+compatible list:
+
+	compatible = "sata-r8a7791", "sata-r8a7790";
+
+That way we can match on "sata-r8a7791" if we want to later, but don't
+need code for it now.
+
+Thanks,
+Mark.
