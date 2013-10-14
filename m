@@ -1,267 +1,101 @@
-From: Valentine Barshak <valentine.barshak@cogentembedded.com>
-Subject: [PATCH 2/2] sata_rcar: Add R-Car Gen2 SATA support
-Date: Mon, 14 Oct 2013 19:42:34 +0400
-Message-ID: <1381765354-28440-3-git-send-email-valentine.barshak@cogentembedded.com>
+From: Mark Rutland <mark.rutland@arm.com>
+Subject: Re: [PATCH 1/2] sata_rcar: Adjust and document device tree bindings
+Date: Mon, 14 Oct 2013 17:13:54 +0100
+Message-ID: <20131014161353.GA19196@e106331-lin.cambridge.arm.com>
 References: <1381765354-28440-1-git-send-email-valentine.barshak@cogentembedded.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-la0-f51.google.com ([209.85.215.51]:64326 "EHLO
-	mail-la0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756671Ab3JNPmm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Oct 2013 11:42:42 -0400
-Received: by mail-la0-f51.google.com with SMTP id hp15so1714640lab.38
-        for <linux-ide@vger.kernel.org>; Mon, 14 Oct 2013 08:42:41 -0700 (PDT)
-In-Reply-To: <1381765354-28440-1-git-send-email-valentine.barshak@cogentembedded.com>
-Sender: linux-ide-owner@vger.kernel.org
+ <1381765354-28440-2-git-send-email-valentine.barshak@cogentembedded.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-sh-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1381765354-28440-2-git-send-email-valentine.barshak@cogentembedded.com>
+Sender: linux-sh-owner@vger.kernel.org
+To: Valentine Barshak <valentine.barshak@cogentembedded.com>
+Cc: "linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Simon Horman <horms@verge.net.au>, Magnus Damm <magnus.damm@gmail.com>, Vladimir Barinov <vladimir.barinov@cogentembedded.com>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>, Laurent Pinchart <laurent.pinchart@ideasonboard.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Tejun Heo <tj@kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-sh@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org
-Cc: Simon Horman <horms@verge.net.au>, Magnus Damm <magnus.damm@gmail.com>, Vladimir Barinov <vladimir.barinov@cogentembedded.com>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>, Laurent Pinchart <laurent.pinchart@ideasonboard.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Tejun Heo <tj@kernel.org>, Mark Rutland <mark.rutland@arm.com>
 
-R-Car Gen2 SoCs have a different PHY which is not compatible
-with the older R-Car H1 (R8A7779) version.
-This adds OF/platform device id tables and PHY initialization
-callbacks for the following Gen2 SoCs:
-  * R-Car H2: R8A7790;
-  * R-Car M2: R8A7791.
+On Mon, Oct 14, 2013 at 04:42:33PM +0100, Valentine Barshak wrote:
+> This converts the R-Car SATA DT compatibility string to
+> the <unit>-<soc> format which is the preferred one for
+> all SH-Mobile devices. The DT bindings are documented.
+> 
+> Signed-off-by: Valentine Barshak <valentine.barshak@cogentembedded.com>
+> ---
+>  Documentation/devicetree/bindings/ata/sata_rcar.txt | 16 ++++++++++++++++
+>  arch/arm/boot/dts/r8a7779.dtsi                      |  2 +-
+>  drivers/ata/sata_rcar.c                             |  2 +-
+>  3 files changed, 18 insertions(+), 2 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/ata/sata_rcar.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/ata/sata_rcar.txt b/Documentation/devicetree/bindings/ata/sata_rcar.txt
+> new file mode 100644
+> index 0000000..2465183
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ata/sata_rcar.txt
+> @@ -0,0 +1,16 @@
+> +* Renesas R-Car SATA
+> +
+> +Required properties:
+> +- compatible		: must be "renesas,sata-r8a7779"
 
-PHY initialization method is chosen, based on the device id.
-Default PHY settings are applied for Gen2 SoCs, which should
-suit the Gen2 boards available.
+s/must be/should include/
 
-The R8A7779 platform code is modified to use "sata-r8a7779"
-device id.
+> +- reg			: address range of the SATA registers.
 
-Signed-off-by: Valentine Barshak <valentine.barshak@cogentembedded.com>
----
- .../devicetree/bindings/ata/sata_rcar.txt          |   5 +-
- arch/arm/mach-shmobile/clock-r8a7779.c             |   2 +-
- arch/arm/mach-shmobile/setup-r8a7779.c             |   2 +-
- drivers/ata/sata_rcar.c                            | 112 ++++++++++++++++++---
- 4 files changed, 102 insertions(+), 19 deletions(-)
+Also their size...
 
-diff --git a/Documentation/devicetree/bindings/ata/sata_rcar.txt b/Documentation/devicetree/bindings/ata/sata_rcar.txt
-index 2465183..b5a41bf 100644
---- a/Documentation/devicetree/bindings/ata/sata_rcar.txt
-+++ b/Documentation/devicetree/bindings/ata/sata_rcar.txt
-@@ -1,7 +1,10 @@
- * Renesas R-Car SATA
- 
- Required properties:
--- compatible		: must be "renesas,sata-r8a7779"
-+- compatible		: must be one of the following:
-+			  - "renesas,sata-r8a7779" for R-Car H1
-+			  - "renesas,sata-r8a7790" for R-Car H2
-+			  - "renesas,sata-r8a7791" for R-Car M2
- - reg			: address range of the SATA registers.
- - interrupt-parent	: interrupt parent controller phandle
- - interrupts		: must consist of one interrupt specifier.
-diff --git a/arch/arm/mach-shmobile/clock-r8a7779.c b/arch/arm/mach-shmobile/clock-r8a7779.c
-index badb8b7..6593237 100644
---- a/arch/arm/mach-shmobile/clock-r8a7779.c
-+++ b/arch/arm/mach-shmobile/clock-r8a7779.c
-@@ -170,7 +170,7 @@ static struct clk_lookup lookups[] = {
- 	/* MSTP32 clocks */
- 	CLKDEV_DEV_ID("r8a7779-vin.3", &mstp_clks[MSTP120]), /* VIN3 */
- 	CLKDEV_DEV_ID("rcar-pcie", &mstp_clks[MSTP116]), /* PCIe */
--	CLKDEV_DEV_ID("sata_rcar", &mstp_clks[MSTP115]), /* SATA */
-+	CLKDEV_DEV_ID("sata-r8a7779", &mstp_clks[MSTP115]), /* SATA */
- 	CLKDEV_DEV_ID("fc600000.sata", &mstp_clks[MSTP115]), /* SATA w/DT */
- 	CLKDEV_DEV_ID("r8a777x-ether", &mstp_clks[MSTP114]), /* Ether */
- 	CLKDEV_DEV_ID("r8a7779-vin.0", &mstp_clks[MSTP110]), /* VIN0 */
-diff --git a/arch/arm/mach-shmobile/setup-r8a7779.c b/arch/arm/mach-shmobile/setup-r8a7779.c
-index 13049e9..6aac99e 100644
---- a/arch/arm/mach-shmobile/setup-r8a7779.c
-+++ b/arch/arm/mach-shmobile/setup-r8a7779.c
-@@ -438,7 +438,7 @@ static struct resource sata_resources[] = {
- };
- 
- static struct platform_device sata_device = {
--	.name		= "sata_rcar",
-+	.name		= "sata-r8a7779",
- 	.id		= -1,
- 	.resource	= sata_resources,
- 	.num_resources	= ARRAY_SIZE(sata_resources),
-diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
-index c4cd738..80fc2e1 100644
---- a/drivers/ata/sata_rcar.c
-+++ b/drivers/ata/sata_rcar.c
-@@ -15,6 +15,7 @@
- #include <linux/module.h>
- #include <linux/ata.h>
- #include <linux/libata.h>
-+#include <linux/of_device.h>
- #include <linux/platform_device.h>
- #include <linux/clk.h>
- #include <linux/err.h>
-@@ -123,12 +124,37 @@
- 
- #define SATA_RCAR_DMA_BOUNDARY		0x1FFFFFFEUL
- 
-+/* Gen2 Physical Layer Control Registers */
-+#define RCAR_GEN2_PHY_CTL1_REG		0x1704
-+#define RCAR_GEN2_PHY_CTL1		0x34180002
-+#define RCAR_GEN2_PHY_CTL1_SS		0xC180	/* Spread Spectrum */
-+
-+#define RCAR_GEN2_PHY_CTL2_REG		0x170C
-+#define RCAR_GEN2_PHY_CTL2		0x00002303
-+
-+#define RCAR_GEN2_PHY_CTL3_REG		0x171C
-+#define RCAR_GEN2_PHY_CTL3		0x000B0194
-+
-+#define RCAR_GEN2_PHY_CTL4_REG		0x1724
-+#define RCAR_GEN2_PHY_CTL4		0x00030994
-+
-+#define RCAR_GEN2_PHY_CTL5_REG		0x1740
-+#define RCAR_GEN2_PHY_CTL5		0x03004001
-+#define RCAR_GEN2_PHY_CTL5_DC		BIT(1)	/* DC connection */
-+#define RCAR_GEN2_PHY_CTL5_TR		BIT(2)	/* Termination Resistor */
-+
-+enum sata_rcar_type {
-+	RCAR_GEN1_SATA,
-+	RCAR_GEN2_SATA,
-+};
-+
- struct sata_rcar_priv {
- 	void __iomem *base;
- 	struct clk *clk;
-+	enum sata_rcar_type type;
- };
- 
--static void sata_rcar_phy_initialize(struct sata_rcar_priv *priv)
-+static void sata_rcar_gen1_phy_preinit(struct sata_rcar_priv *priv)
- {
- 	void __iomem *base = priv->base;
- 
-@@ -141,8 +167,8 @@ static void sata_rcar_phy_initialize(struct sata_rcar_priv *priv)
- 	iowrite32(0, base + SATAPHYRESET_REG);
- }
- 
--static void sata_rcar_phy_write(struct sata_rcar_priv *priv, u16 reg, u32 val,
--				int group)
-+static void sata_rcar_gen1_phy_write(struct sata_rcar_priv *priv, u16 reg,
-+				     u32 val, int group)
- {
- 	void __iomem *base = priv->base;
- 	int timeout;
-@@ -170,6 +196,29 @@ static void sata_rcar_phy_write(struct sata_rcar_priv *priv, u16 reg, u32 val,
- 	iowrite32(0, base + SATAPHYADDR_REG);
- }
- 
-+static void sata_rcar_gen1_phy_init(struct sata_rcar_priv *priv)
-+{
-+	sata_rcar_gen1_phy_preinit(priv);
-+	sata_rcar_gen1_phy_write(priv, SATAPCTLR1_REG, 0x00200188, 0);
-+	sata_rcar_gen1_phy_write(priv, SATAPCTLR1_REG, 0x00200188, 1);
-+	sata_rcar_gen1_phy_write(priv, SATAPCTLR3_REG, 0x0000A061, 0);
-+	sata_rcar_gen1_phy_write(priv, SATAPCTLR2_REG, 0x20000000, 0);
-+	sata_rcar_gen1_phy_write(priv, SATAPCTLR2_REG, 0x20000000, 1);
-+	sata_rcar_gen1_phy_write(priv, SATAPCTLR4_REG, 0x28E80000, 0);
-+}
-+
-+static void sata_rcar_gen2_phy_init(struct sata_rcar_priv *priv)
-+{
-+	void __iomem *base = priv->base;
-+
-+	iowrite32(RCAR_GEN2_PHY_CTL1, base + RCAR_GEN2_PHY_CTL1_REG);
-+	iowrite32(RCAR_GEN2_PHY_CTL2, base + RCAR_GEN2_PHY_CTL2_REG);
-+	iowrite32(RCAR_GEN2_PHY_CTL3, base + RCAR_GEN2_PHY_CTL3_REG);
-+	iowrite32(RCAR_GEN2_PHY_CTL4, base + RCAR_GEN2_PHY_CTL4_REG);
-+	iowrite32(RCAR_GEN2_PHY_CTL5 | RCAR_GEN2_PHY_CTL5_DC |
-+		  RCAR_GEN2_PHY_CTL5_TR, base + RCAR_GEN2_PHY_CTL5_REG);
-+}
-+
- static void sata_rcar_freeze(struct ata_port *ap)
- {
- 	struct sata_rcar_priv *priv = ap->host->private_data;
-@@ -738,13 +787,17 @@ static void sata_rcar_init_controller(struct ata_host *host)
- 	u32 val;
- 
- 	/* reset and setup phy */
--	sata_rcar_phy_initialize(priv);
--	sata_rcar_phy_write(priv, SATAPCTLR1_REG, 0x00200188, 0);
--	sata_rcar_phy_write(priv, SATAPCTLR1_REG, 0x00200188, 1);
--	sata_rcar_phy_write(priv, SATAPCTLR3_REG, 0x0000A061, 0);
--	sata_rcar_phy_write(priv, SATAPCTLR2_REG, 0x20000000, 0);
--	sata_rcar_phy_write(priv, SATAPCTLR2_REG, 0x20000000, 1);
--	sata_rcar_phy_write(priv, SATAPCTLR4_REG, 0x28E80000, 0);
-+	switch (priv->type) {
-+	case RCAR_GEN1_SATA:
-+		sata_rcar_gen1_phy_init(priv);
-+		break;
-+	case RCAR_GEN2_SATA:
-+		sata_rcar_gen2_phy_init(priv);
-+		break;
-+	default:
-+		dev_warn(host->dev, "SATA phy is not initialized\n");
-+		break;
-+	}
- 
- 	/* SATA-IP reset state */
- 	val = ioread32(base + ATAPI_CONTROL1_REG);
-@@ -770,8 +823,34 @@ static void sata_rcar_init_controller(struct ata_host *host)
- 	iowrite32(ATAPI_INT_ENABLE_SATAINT, base + ATAPI_INT_ENABLE_REG);
- }
- 
-+static struct of_device_id sata_rcar_match[] = {
-+	{
-+		.compatible = "renesas,sata-r8a7779",
-+		.data = (void *)RCAR_GEN1_SATA,
-+	},
-+	{
-+		.compatible = "renesas,sata-r8a7790",
-+		.data = (void *)RCAR_GEN2_SATA
-+	},
-+	{
-+		.compatible = "renesas,sata-r8a7791",
-+		.data = (void *)RCAR_GEN2_SATA
-+	},
-+	{},
-+};
-+MODULE_DEVICE_TABLE(of, sata_rcar_match);
-+
-+static const struct platform_device_id sata_rcar_id_table[] = {
-+	{ "sata-r8a7779", RCAR_GEN1_SATA },
-+	{ "sata-r8a7790", RCAR_GEN2_SATA },
-+	{ "sata-r8a7791", RCAR_GEN2_SATA },
-+	{ },
-+};
-+MODULE_DEVICE_TABLE(platform, sata_rcar_id_table);
-+
- static int sata_rcar_probe(struct platform_device *pdev)
- {
-+	const struct of_device_id *of_id;
- 	struct ata_host *host;
- 	struct sata_rcar_priv *priv;
- 	struct resource *mem;
-@@ -787,6 +866,12 @@ static int sata_rcar_probe(struct platform_device *pdev)
- 	if (!priv)
- 		return -ENOMEM;
- 
-+	of_id = of_match_device(sata_rcar_match, &pdev->dev);
-+	if (of_id)
-+		priv->type = (enum sata_rcar_type)of_id->data;
-+	else
-+		priv->type = platform_get_device_id(pdev)->driver_data;
-+
- 	priv->clk = devm_clk_get(&pdev->dev, NULL);
- 	if (IS_ERR(priv->clk)) {
- 		dev_err(&pdev->dev, "failed to get access to sata clock\n");
-@@ -892,15 +977,10 @@ static const struct dev_pm_ops sata_rcar_pm_ops = {
- };
- #endif
- 
--static struct of_device_id sata_rcar_match[] = {
--	{ .compatible = "renesas,sata-r8a7779", },
--	{},
--};
--MODULE_DEVICE_TABLE(of, sata_rcar_match);
--
- static struct platform_driver sata_rcar_driver = {
- 	.probe		= sata_rcar_probe,
- 	.remove		= sata_rcar_remove,
-+	.id_table	= sata_rcar_id_table,
- 	.driver = {
- 		.name		= DRV_NAME,
- 		.owner		= THIS_MODULE,
--- 
-1.8.3.1
+> +- interrupt-parent	: interrupt parent controller phandle
 
+This isn't required as such, as the interrupt-controller can be
+inherited from the parent. As it's a standard auxiliary property I don't
+think it needs to be documented here.
+
+> +- interrupts		: must consist of one interrupt specifier.
+
+Is there only one interrupt generated by the device?
+
+> +
+> +Example:
+> +
+> +sata: sata@fc600000 {
+> +	compatible = "renesas,sata-r8a7779";
+> +	reg = <0xfc600000 0x2000>;
+> +	interrupt-parent = <&gic>;
+> +	interrupts = <0 100 0x4>;
+> +};
+> diff --git a/arch/arm/boot/dts/r8a7779.dtsi b/arch/arm/boot/dts/r8a7779.dtsi
+> index da61d27..b1747f5 100644
+> --- a/arch/arm/boot/dts/r8a7779.dtsi
+> +++ b/arch/arm/boot/dts/r8a7779.dtsi
+> @@ -201,7 +201,7 @@
+>  	};
+>  
+>  	sata: sata@fc600000 {
+> -		compatible = "renesas,rcar-sata";
+> +		compatible = "renesas,sata-r8a7779";
+>  		reg = <0xfc600000 0x2000>;
+>  		interrupt-parent = <&gic>;
+>  		interrupts = <0 100 0x4>;
+> diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
+> index c2d95e9..c4cd738 100644
+> --- a/drivers/ata/sata_rcar.c
+> +++ b/drivers/ata/sata_rcar.c
+> @@ -893,7 +893,7 @@ static const struct dev_pm_ops sata_rcar_pm_ops = {
+>  #endif
+>  
+>  static struct of_device_id sata_rcar_match[] = {
+> -	{ .compatible = "renesas,rcar-sata", },
+> +	{ .compatible = "renesas,sata-r8a7779", },
+>  	{},
+>  };
+
+Why is an existing compatible string being removed?
+
+Please do not change existing strings, it will break any dts files that
+are already in use.
+
+While the new compatible string may be preferred, the old string should
+be kept for compatibility.
+
+Thanks,
+Mark.
