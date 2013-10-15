@@ -1,51 +1,58 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [v4] ahci: imx: setup power saving methods
-Date: Tue, 15 Oct 2013 08:47:50 -0400
-Message-ID: <20131015124750.GB3141@htj.dyndns.org>
-References: <1381805094-14723-1-git-send-email-Hong-Xing.Zhu@freescale.com>
- <1381805094-14723-2-git-send-email-Hong-Xing.Zhu@freescale.com>
+Subject: Re: [PATCH 1/1] AHCI: disabled FBS prior to issuing software reset
+Date: Tue, 15 Oct 2013 08:50:31 -0400
+Message-ID: <20131015125031.GC3141@htj.dyndns.org>
+References: <1380366816-16221-1-git-send-email-yxlraid@gmail.com>
+ <20130928114950.GA2620@htj.dyndns.org>
+ <CAP0P+NUvaLfXkOUGm8NX19AHvTHmU=Ya0NdFvyJc2gFjN-Cy0A@mail.gmail.com>
+ <20130928131059.GA3945@htj.dyndns.org>
+ <CAP0P+NXD7pdXQwBUZJdUwyCc=o_5iTzmKJ6FdN6LrqcgX3yK2A@mail.gmail.com>
+ <20131013195735.GD18075@htj.dyndns.org>
+ <CAP0P+NWw2goofPtk5v8qKqAkhGwVJ7Bwn+Pj6meNhyK3KE2CAQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f176.google.com ([209.85.216.176]:45425 "EHLO
-	mail-qc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758274Ab3JOMr5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Oct 2013 08:47:57 -0400
-Received: by mail-qc0-f176.google.com with SMTP id t7so5953462qcv.35
-        for <linux-ide@vger.kernel.org>; Tue, 15 Oct 2013 05:47:56 -0700 (PDT)
+Received: from mail-qe0-f50.google.com ([209.85.128.50]:45960 "EHLO
+	mail-qe0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758116Ab3JOMuf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Oct 2013 08:50:35 -0400
 Content-Disposition: inline
-In-Reply-To: <1381805094-14723-2-git-send-email-Hong-Xing.Zhu@freescale.com>
+In-Reply-To: <CAP0P+NWw2goofPtk5v8qKqAkhGwVJ7Bwn+Pj6meNhyK3KE2CAQ@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Richard Zhu <richard.zhuhongxing@gmail.com>
-Cc: shawn.guo@linaro.org, linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, Richard Zhu <r65037@freescale.com>
+To: xiangliang yu <yxlraid@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Oct 15, 2013 at 10:44:54AM +0800, Richard Zhu wrote:
-> From: Richard Zhu <r65037@freescale.com>
-> 
-> In order to save power consumption amap.
-> * Disable sata phy internal pll reference clock when
-> sysetem enter into suspend mode, enable it after resume.
-> * Setup module parameter used to enable imx ahci test power down
-> mode(PDDQ) or not, when there is no device detected on the port
-> * minor modifications:
->   - The format of the copyright is changed, because that the
->   original one can't pass fsl internal patch reivew without
->   the character '(c)'.
->   - exports ahci_platform_ops and ahci_error_handler
-> 
-> NOTE:
-> - The hot-plug can't be supported when PDDQ mode is
-> ever enabled.
-> - module parameter usage how-to:
->   * default: enable PDDQ mode when no device detected.
->   * add "ahci-imx.hotplug=1" into kernel command line if
->   your don't want to enable PDDQ mode when no device
->   detected on the port.
-> 
-> Signed-off-by: Richard Zhu <r65037@freescale.com>
+Hello,
 
-Applied to libata/for-3.13 with minor modifications.
+On Tue, Oct 15, 2013 at 11:40:27AM +0800, xiangliang yu wrote:
+> @@ -1278,6 +1280,11 @@ int ahci_do_softreset(struct ata_link *link,
+> unsigned int *class,
+>   if (rc && rc != -EOPNOTSUPP)
+>   ata_link_warn(link, "failed to reset engine (errno=%d)\n", rc);
+> 
+
+Please add a comment here.
+
+> + if (!ata_is_host_link(link) && pp->fbs_enabled) {
+> + ahci_disable_fbs(ap);
+> + fbs_flag = true;
+> + }
+
+White space damaged?
+
+> +
+>   ata_tf_init(link->device, &tf);
+> 
+>   /* issue the first D2H Register FIS */
+> @@ -1318,6 +1325,9 @@ int ahci_do_softreset(struct ata_link *link,
+> unsigned int *class,
+>   } else
+>   *class = ahci_dev_classify(ap);
+> 
+> + if (fbs_flag)
+> + ahci_enable_fbs(ap);
+> +
 
 Thanks.
 
