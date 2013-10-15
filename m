@@ -1,58 +1,47 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/1] AHCI: disabled FBS prior to issuing software reset
-Date: Tue, 15 Oct 2013 08:50:31 -0400
-Message-ID: <20131015125031.GC3141@htj.dyndns.org>
-References: <1380366816-16221-1-git-send-email-yxlraid@gmail.com>
- <20130928114950.GA2620@htj.dyndns.org>
- <CAP0P+NUvaLfXkOUGm8NX19AHvTHmU=Ya0NdFvyJc2gFjN-Cy0A@mail.gmail.com>
- <20130928131059.GA3945@htj.dyndns.org>
- <CAP0P+NXD7pdXQwBUZJdUwyCc=o_5iTzmKJ6FdN6LrqcgX3yK2A@mail.gmail.com>
- <20131013195735.GD18075@htj.dyndns.org>
- <CAP0P+NWw2goofPtk5v8qKqAkhGwVJ7Bwn+Pj6meNhyK3KE2CAQ@mail.gmail.com>
+Subject: Re: [PATCH 2] libahci: fix turning on LEDs in ahci_start_port()
+Date: Tue, 15 Oct 2013 09:40:58 -0400
+Message-ID: <20131015134058.GF3141@htj.dyndns.org>
+References: <20131014161853.20775.1487.stgit@gklab-154-244.igk.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qe0-f50.google.com ([209.85.128.50]:45960 "EHLO
-	mail-qe0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758116Ab3JOMuf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Oct 2013 08:50:35 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CAP0P+NWw2goofPtk5v8qKqAkhGwVJ7Bwn+Pj6meNhyK3KE2CAQ@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: xiangliang yu <yxlraid@gmail.com>
+In-Reply-To: <20131014161853.20775.1487.stgit@gklab-154-244.igk.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Lukasz Dorau <lukasz.dorau@intel.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-Hello,
-
-On Tue, Oct 15, 2013 at 11:40:27AM +0800, xiangliang yu wrote:
-> @@ -1278,6 +1280,11 @@ int ahci_do_softreset(struct ata_link *link,
-> unsigned int *class,
->   if (rc && rc != -EOPNOTSUPP)
->   ata_link_warn(link, "failed to reset engine (errno=%d)\n", rc);
+On Mon, Oct 14, 2013 at 06:18:53PM +0200, Lukasz Dorau wrote:
+> If EM Transmit bit is busy during init ata_msleep() is called.
+> It is wrong - msleep() should be used instead of ata_msleep(),
+> because if EM Transmit bit is busy for one port, it will be busy
+> for all other ports too, so using ata_msleep() causes wasting
+> tries for another ports.
 > 
-
-Please add a comment here.
-
-> + if (!ata_is_host_link(link) && pp->fbs_enabled) {
-> + ahci_disable_fbs(ap);
-> + fbs_flag = true;
-> + }
-
-White space damaged?
-
-> +
->   ata_tf_init(link->device, &tf);
+> The most common scenario looks like that now
+> (six ports try to transmit a LED meaasege):
+> - port #0 tries for the 1st time and succeeds
+> - ports #1-5 try for the 1st time and sleeps
+> - port #1 tries for the 2nd time and succeeds
+> - ports #2-5 try for the 2nd time and sleeps
+> - port #2 tries for the 3rd time and succeeds
+> - ports #3-5 try for the 3rd time and sleeps
+> - port #3 tries for the 4th time and succeeds
+> - ports #4-5 try for the 4th time and sleeps
+> - port #4 tries for the 5th time and succeeds
+> - port #5 tries for the 5th time and sleeps
+> At this moment port #5 wasted all its five tries and failed to initialize.
+> Because there are only 5 (EM_MAX_RETRY) tries available usually only five ports
+> succeed to initialize. The sixth port and next ones usually will fail.
 > 
->   /* issue the first D2H Register FIS */
-> @@ -1318,6 +1325,9 @@ int ahci_do_softreset(struct ata_link *link,
-> unsigned int *class,
->   } else
->   *class = ahci_dev_classify(ap);
+> If msleep() is used instead of ata_msleep() the first port succeeds to initialize
+> in the first try and next ones usually succeed to initialize in the second try.
 > 
-> + if (fbs_flag)
-> + ahci_enable_fbs(ap);
-> +
+> Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
+
+Applied to libata/for-3.12-fixes with minor updates.
 
 Thanks.
 
