@@ -1,144 +1,135 @@
 From: Simon Horman <horms@verge.net.au>
-Subject: Re: [PATCH 2/2] sata_rcar: Add R-Car Gen2 SATA support
-Date: Tue, 15 Oct 2013 09:23:19 +0900
-Message-ID: <20131015002319.GG22321@verge.net.au>
+Subject: Re: [PATCH 1/2] sata_rcar: Adjust and document device tree bindings
+Date: Tue, 15 Oct 2013 09:25:10 +0900
+Message-ID: <20131015002510.GH22321@verge.net.au>
 References: <1381765354-28440-1-git-send-email-valentine.barshak@cogentembedded.com>
- <20131014162603.GB19196@e106331-lin.cambridge.arm.com>
- <525C30DA.5060406@cogentembedded.com>
- <21950975.Xyu9tdlx3R@avalon>
- <525C608F.5010303@cogentembedded.com>
+ <1381765354-28440-2-git-send-email-valentine.barshak@cogentembedded.com>
+ <20131014161353.GA19196@e106331-lin.cambridge.arm.com>
+ <525C27A9.5010402@cogentembedded.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-sh-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <525C608F.5010303@cogentembedded.com>
+In-Reply-To: <525C27A9.5010402@cogentembedded.com>
 Sender: linux-sh-owner@vger.kernel.org
 To: Valentine <valentine.barshak@cogentembedded.com>
-Cc: Laurent Pinchart <laurent.pinchart@ideasonboard.com>, Mark Rutland <mark.rutland@arm.com>, "linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Magnus Damm <magnus.damm@gmail.com>, Vladimir Barinov <vladimir.barinov@cogentembedded.com>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Tejun Heo <tj@kernel.org>
+Cc: Mark Rutland <mark.rutland@arm.com>, "linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Magnus Damm <magnus.damm@gmail.com>, Vladimir Barinov <vladimir.barinov@cogentembedded.com>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>, Laurent Pinchart <laurent.pinchart@ideasonboard.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Tejun Heo <tj@kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, Oct 15, 2013 at 01:22:23AM +0400, Valentine wrote:
-> On 10/14/2013 10:15 PM, Laurent Pinchart wrote:
-> >Hi Valentine,
+On Mon, Oct 14, 2013 at 09:19:37PM +0400, Valentine wrote:
+> Hi Mark,
+> thanks for looking at this.
+> 
+> On 10/14/2013 08:13 PM, Mark Rutland wrote:
+> >On Mon, Oct 14, 2013 at 04:42:33PM +0100, Valentine Barshak wrote:
+> >>This converts the R-Car SATA DT compatibility string to
+> >>the <unit>-<soc> format which is the preferred one for
+> >>all SH-Mobile devices. The DT bindings are documented.
+> >>
+> >>Signed-off-by: Valentine Barshak <valentine.barshak@cogentembedded.com>
+> >>---
+> >>  Documentation/devicetree/bindings/ata/sata_rcar.txt | 16 ++++++++++++++++
+> >>  arch/arm/boot/dts/r8a7779.dtsi                      |  2 +-
+> >>  drivers/ata/sata_rcar.c                             |  2 +-
+> >>  3 files changed, 18 insertions(+), 2 deletions(-)
+> >>  create mode 100644 Documentation/devicetree/bindings/ata/sata_rcar.txt
+> >>
+> >>diff --git a/Documentation/devicetree/bindings/ata/sata_rcar.txt b/Documentation/devicetree/bindings/ata/sata_rcar.txt
+> >>new file mode 100644
+> >>index 0000000..2465183
+> >>--- /dev/null
+> >>+++ b/Documentation/devicetree/bindings/ata/sata_rcar.txt
+> >>@@ -0,0 +1,16 @@
+> >>+* Renesas R-Car SATA
+> >>+
+> >>+Required properties:
+> >>+- compatible		: must be "renesas,sata-r8a7779"
+> >
+> >s/must be/should include/
 > >
 > 
-> Hi Laurent,
+> OK, thanks.
 > 
-> >On Monday 14 October 2013 21:58:50 Valentine wrote:
-> >>On 10/14/2013 08:26 PM, Mark Rutland wrote:
-> >>>On Mon, Oct 14, 2013 at 04:42:34PM +0100, Valentine Barshak wrote:
-> >>>>R-Car Gen2 SoCs have a different PHY which is not compatible
-> >>>>with the older R-Car H1 (R8A7779) version.
-> >>>>This adds OF/platform device id tables and PHY initialization
-> >>>>
-> >>>>callbacks for the following Gen2 SoCs:
-> >>>>    * R-Car H2: R8A7790;
-> >>>>    * R-Car M2: R8A7791.
-> >>>>
-> >>>>PHY initialization method is chosen, based on the device id.
-> >>>>Default PHY settings are applied for Gen2 SoCs, which should
-> >>>>suit the Gen2 boards available.
-> >>>>
-> >>>>The R8A7779 platform code is modified to use "sata-r8a7779"
-> >>>>device id.
-> >>>>
-> >>>>Signed-off-by: Valentine Barshak <valentine.barshak@cogentembedded.com>
-> >>>>---
-> >>>>
-> >>>>   .../devicetree/bindings/ata/sata_rcar.txt          |   5 +-
-> >>>>   arch/arm/mach-shmobile/clock-r8a7779.c             |   2 +-
-> >>>>   arch/arm/mach-shmobile/setup-r8a7779.c             |   2 +-
-> >>>>   drivers/ata/sata_rcar.c                            | 112 +++++++++++---
-> >>>>   4 files changed, 102 insertions(+), 19 deletions(-)
-> >>>>
-> >>>>diff --git a/Documentation/devicetree/bindings/ata/sata_rcar.txt
-> >>>>b/Documentation/devicetree/bindings/ata/sata_rcar.txt index
-> >>>>2465183..b5a41bf 100644
-> >>>>--- a/Documentation/devicetree/bindings/ata/sata_rcar.txt
-> >>>>+++ b/Documentation/devicetree/bindings/ata/sata_rcar.txt
-> >>>>@@ -1,7 +1,10 @@
-> >>>>
-> >>>>   * Renesas R-Car SATA
-> >>>>
-> >>>>   Required properties:
-> >>>>-- compatible		: must be "renesas,sata-r8a7779"
-> >>>
-> >>>>+- compatible		: must be one of the following:
-> >>>s/must be/should contain/
-> >>>
-> >>>>+			  - "renesas,sata-r8a7779" for R-Car H1
-> >>>>+			  - "renesas,sata-r8a7790" for R-Car H2
-> >>>>+			  - "renesas,sata-r8a7791" for R-Car M2
-> >>>
-> >>>How do renesas,sata-r8a7790 and renesas,sata-r8a7791 differ?
-> >>>
-> >>>>   - reg			: address range of the SATA registers.
-> >>>
-> >>>It's a size too...
-> >>>
-> >>>>   - interrupt-parent	: interrupt parent controller phandle
-> >>>
-> >>>Not required.
-> >>>
-> >>>[...]
-> >>>
-> >>>>+static struct of_device_id sata_rcar_match[] = {
-> >>>>+	{
-> >>>>+		.compatible = "renesas,sata-r8a7779",
-> >>>>+		.data = (void *)RCAR_GEN1_SATA,
-> >>>>+	},
-> >>>>+	{
-> >>>>+		.compatible = "renesas,sata-r8a7790",
-> >>>>+		.data = (void *)RCAR_GEN2_SATA
-> >>>>+	},
-> >>>>+	{
-> >>>>+		.compatible = "renesas,sata-r8a7791",
-> >>>>+		.data = (void *)RCAR_GEN2_SATA
-> >>>>+	},
-> >>>>+	{},
-> >>>>+};
-> >>>>+MODULE_DEVICE_TABLE(of, sata_rcar_match);
-> >>>
-> >>>Are the renesas,sata-r8a779x variants identical?
-> >>
-> >>Yes.
-> >>
-> >>>If so, why the two strings?
-> >>
-> >>Just thought the driver should support "renesas,sata-r8a7791"
-> >>compatibility as well since it should support both SoCs.
-> >>Didn't want to force sata-r8a7790 compatibility for the r8a7791 SoC DTS.
+> >>+- reg			: address range of the SATA registers.
 > >
-> >One reason for two compatibility strings is not to be stuck if we later find
-> >out the the 7791 SATA controller differs from the 7790.
-> >
+> >Also their size...
 > 
-> Thanks!
-> Yeah, anyways, I'd prefer to keep both strings in the device id table.
+> Do you want me to rephrase it to "base address and size of the SATA
+> registers"?
+> 
+> Looks like a lot of other bindings examples available in
+> Documentation/devicetree/bindings describe regs property
+> as the "address range" which implies the address and size
+> of the registers.
+> 
+> >
+> >>+- interrupt-parent	: interrupt parent controller phandle
+> >
+> >This isn't required as such, as the interrupt-controller can be
+> >inherited from the parent. As it's a standard auxiliary property I don't
+> >think it needs to be documented here.
+> 
+> OK, will drop it, thanks.
+> 
+> >
+> >>+- interrupts		: must consist of one interrupt specifier.
+> >
+> >Is there only one interrupt generated by the device?
+> 
+> Yes, there's just one IRQ.
+> 
+> >
+> >>+
+> >>+Example:
+> >>+
+> >>+sata: sata@fc600000 {
+> >>+	compatible = "renesas,sata-r8a7779";
+> >>+	reg = <0xfc600000 0x2000>;
+> >>+	interrupt-parent = <&gic>;
+> >>+	interrupts = <0 100 0x4>;
+> >>+};
+> >>diff --git a/arch/arm/boot/dts/r8a7779.dtsi b/arch/arm/boot/dts/r8a7779.dtsi
+> >>index da61d27..b1747f5 100644
+> >>--- a/arch/arm/boot/dts/r8a7779.dtsi
+> >>+++ b/arch/arm/boot/dts/r8a7779.dtsi
+> >>@@ -201,7 +201,7 @@
+> >>  	};
+> >>
+> >>  	sata: sata@fc600000 {
+> >>-		compatible = "renesas,rcar-sata";
+> >>+		compatible = "renesas,sata-r8a7779";
+> >>  		reg = <0xfc600000 0x2000>;
+> >>  		interrupt-parent = <&gic>;
+> >>  		interrupts = <0 100 0x4>;
+> >>diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
+> >>index c2d95e9..c4cd738 100644
+> >>--- a/drivers/ata/sata_rcar.c
+> >>+++ b/drivers/ata/sata_rcar.c
+> >>@@ -893,7 +893,7 @@ static const struct dev_pm_ops sata_rcar_pm_ops = {
+> >>  #endif
+> >>
+> >>  static struct of_device_id sata_rcar_match[] = {
+> >>-	{ .compatible = "renesas,rcar-sata", },
+> >>+	{ .compatible = "renesas,sata-r8a7779", },
+> >>  	{},
+> >>  };
+> >
+> >Why is an existing compatible string being removed?
+> >
+> >Please do not change existing strings, it will break any dts files that
+> >are already in use.
+> 
+> It won't break the dts files, since I'm changing the only dtsi file
+> that uses the SATA node as well. It will only break binary
+> compatibility with the older dtb files.
 
-Yes, I do too, mostly for the reason that Laurent gave.
-But also because this is consistent with compatibility strings
-for other Renesas IP.
+I believe that compatibility with older dtb files is the key issue.
 
-> >>>Could we not require sata-r8a7791 devices to have "sata-r8a7790" in the
-> >>>
-> >>>compatible list:
-> >>>	compatible = "sata-r8a7791", "sata-r8a7790";
-> >>>
-> >>>That way we can match on "sata-r8a7791" if we want to later, but don't
-> >>>need code for it now.
-> >>
-> >>We could. In this case having compatible = "renesas,sata-r8a7791" would not
-> >>be enough, though it looks like a valid compatible list to me.
-> >
-> >I'm fine with both solution, as long as the "sata-r8a7791" compatibility
-> >string is present and has precedence over "sata-r8a7790".
-> >
+> >While the new compatible string may be preferred, the old string should
+> >be kept for compatibility.
 > 
-> Thanks,
-> Val.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-sh" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> OK, I can keep the old string if it's needed.
+
+FWIW I am doubtful that it is much of an issue in practice.
+However, just to be safe, I think it would be bes tto leave
+renesas,rcar-sata.
