@@ -1,39 +1,51 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 0/2] sata_rcar: Adjust DT bindings and add R-Car Gen2 PHY
- support (take 2)
-Date: Tue, 15 Oct 2013 08:40:11 -0400
-Message-ID: <20131015124011.GA3141@htj.dyndns.org>
-References: <1381832407-22541-1-git-send-email-valentine.barshak@cogentembedded.com>
+Subject: Re: [v4] ahci: imx: setup power saving methods
+Date: Tue, 15 Oct 2013 08:47:50 -0400
+Message-ID: <20131015124750.GB3141@htj.dyndns.org>
+References: <1381805094-14723-1-git-send-email-Hong-Xing.Zhu@freescale.com>
+ <1381805094-14723-2-git-send-email-Hong-Xing.Zhu@freescale.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-sh-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qc0-f176.google.com ([209.85.216.176]:45425 "EHLO
+	mail-qc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758274Ab3JOMr5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Oct 2013 08:47:57 -0400
+Received: by mail-qc0-f176.google.com with SMTP id t7so5953462qcv.35
+        for <linux-ide@vger.kernel.org>; Tue, 15 Oct 2013 05:47:56 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <1381832407-22541-1-git-send-email-valentine.barshak@cogentembedded.com>
-Sender: linux-sh-owner@vger.kernel.org
-To: Valentine Barshak <valentine.barshak@cogentembedded.com>
-Cc: linux-sh@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, Simon Horman <horms@verge.net.au>, Magnus Damm <magnus.damm@gmail.com>, Vladimir Barinov <vladimir.barinov@cogentembedded.com>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>, Laurent Pinchart <laurent.pinchart@ideasonboard.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Mark Rutland <mark.rutland@arm.com>
+In-Reply-To: <1381805094-14723-2-git-send-email-Hong-Xing.Zhu@freescale.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Richard Zhu <richard.zhuhongxing@gmail.com>
+Cc: shawn.guo@linaro.org, linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, linux-ide@vger.kernel.org, Richard Zhu <r65037@freescale.com>
 
-On Tue, Oct 15, 2013 at 02:20:05PM +0400, Valentine Barshak wrote:
-> This modifies and documents R-Car SATA device tree (DT) bindings.
-> The "sata-<SoC>" format is now used for the "compatible" property.
-> Also, a platform device id table is introduced for non-DT support.
-> The device id naming is consistent with the "compatible" DT
-> property format.
+On Tue, Oct 15, 2013 at 10:44:54AM +0800, Richard Zhu wrote:
+> From: Richard Zhu <r65037@freescale.com>
 > 
-> R-Car Gen2 SATA PHY support is added. PHY initialization method
-> is chosen, based on the device id.
+> In order to save power consumption amap.
+> * Disable sata phy internal pll reference clock when
+> sysetem enter into suspend mode, enable it after resume.
+> * Setup module parameter used to enable imx ahci test power down
+> mode(PDDQ) or not, when there is no device detected on the port
+> * minor modifications:
+>   - The format of the copyright is changed, because that the
+>   original one can't pass fsl internal patch reivew without
+>   the character '(c)'.
+>   - exports ahci_platform_ops and ahci_error_handler
 > 
-> Changes from the previous version:
-> * Kept old DT bindings for compatibility
-> * Amended DT bindings documentation
+> NOTE:
+> - The hot-plug can't be supported when PDDQ mode is
+> ever enabled.
+> - module parameter usage how-to:
+>   * default: enable PDDQ mode when no device detected.
+>   * add "ahci-imx.hotplug=1" into kernel command line if
+>   your don't want to enable PDDQ mode when no device
+>   detected on the port.
 > 
-> Valentine Barshak (2):
->   sata_rcar: Adjust and document device tree bindings
->   sata_rcar: Add R-Car Gen2 SATA support
+> Signed-off-by: Richard Zhu <r65037@freescale.com>
 
-Is this about ready yet?  I'll wait for acks before applying these
-patches.
+Applied to libata/for-3.13 with minor modifications.
 
 Thanks.
 
