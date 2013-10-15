@@ -1,262 +1,155 @@
-From: Richard Zhu <richard.zhuhongxing@gmail.com>
-Subject: [v4] ahci: imx: setup power saving methods
-Date: Tue, 15 Oct 2013 10:44:54 +0800
-Message-ID: <1381805094-14723-2-git-send-email-Hong-Xing.Zhu@freescale.com>
-References: <1381805094-14723-1-git-send-email-Hong-Xing.Zhu@freescale.com>
+From: xiangliang yu <yxlraid@gmail.com>
+Subject: Re: [PATCH 1/1] AHCI: disabled FBS prior to issuing software reset
+Date: Tue, 15 Oct 2013 11:40:27 +0800
+Message-ID: <CAP0P+NWw2goofPtk5v8qKqAkhGwVJ7Bwn+Pj6meNhyK3KE2CAQ@mail.gmail.com>
+References: <1380366816-16221-1-git-send-email-yxlraid@gmail.com>
+	<20130928114950.GA2620@htj.dyndns.org>
+	<CAP0P+NUvaLfXkOUGm8NX19AHvTHmU=Ya0NdFvyJc2gFjN-Cy0A@mail.gmail.com>
+	<20130928131059.GA3945@htj.dyndns.org>
+	<CAP0P+NXD7pdXQwBUZJdUwyCc=o_5iTzmKJ6FdN6LrqcgX3yK2A@mail.gmail.com>
+	<20131013195735.GD18075@htj.dyndns.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:46115 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752529Ab3JOCk5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Oct 2013 22:40:57 -0400
-Received: by mail-pa0-f41.google.com with SMTP id bj1so8389351pad.14
-        for <linux-ide@vger.kernel.org>; Mon, 14 Oct 2013 19:40:56 -0700 (PDT)
-In-Reply-To: <1381805094-14723-1-git-send-email-Hong-Xing.Zhu@freescale.com>
+Received: from mail-bk0-f52.google.com ([209.85.214.52]:57188 "EHLO
+	mail-bk0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752519Ab3JODkc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Oct 2013 23:40:32 -0400
+In-Reply-To: <20131013195735.GD18075@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: shawn.guo@linaro.org
-Cc: linux-arm-kernel@lists.infradead.org, jgarzik@pobox.com, tj@kernel.org, linux-ide@vger.kernel.org, Richard Zhu <r65037@freescale.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Richard Zhu <r65037@freescale.com>
+Hi,
 
-In order to save power consumption amap.
-* Disable sata phy internal pll reference clock when
-sysetem enter into suspend mode, enable it after resume.
-* Setup module parameter used to enable imx ahci test power down
-mode(PDDQ) or not, when there is no device detected on the port
-* minor modifications:
-  - The format of the copyright is changed, because that the
-  original one can't pass fsl internal patch reivew without
-  the character '(c)'.
-  - exports ahci_platform_ops and ahci_error_handler
+> On Sat, Oct 12, 2013 at 02:56:34PM +0800, xiangliang yu wrote:
+>> > So it can't find the disk if FBS stays enabled?  Can you please attach
+>> > the boot log before & after?
+>>
+>> Below is boot log:
+>
+> And it works after the patch, right?  Can you please update the patch
+> description so that it includes what was failing before and how it was
+> tested?
 
-NOTE:
-- The hot-plug can't be supported when PDDQ mode is
-ever enabled.
-- module parameter usage how-to:
-  * default: enable PDDQ mode when no device detected.
-  * add "ahci-imx.hotplug=1" into kernel command line if
-  your don't want to enable PDDQ mode when no device
-  detected on the port.
+How about this update:
 
-Signed-off-by: Richard Zhu <r65037@freescale.com>
+Subject: [PATCH 1/1] AHCI: disabled FBS prior to issuing software reset
+
+Tested with Marvell 88se9125, attached with one port mulitplier(5 ports)
+and one disk, we will get following boot log messages if using current
+code:
+
+  ata8: SATA link up 6.0 Gbps (SStatus 133 SControl 330)
+  ata8.15: Port Multiplier 1.2, 0x1b4b:0x9715 r160, 5 ports, feat 0x1/0x1f
+  ahci 0000:03:00.0: FBS is enabled
+  ata8.00: hard resetting link
+  ata8.00: SATA link down (SStatus 0 SControl 330)
+  ata8.01: hard resetting link
+  ata8.01: SATA link down (SStatus 0 SControl 330)
+  ata8.02: hard resetting link
+  ata8.02: SATA link down (SStatus 0 SControl 330)
+  ata8.03: hard resetting link
+  ata8.03: SATA link up 6.0 Gbps (SStatus 133 SControl 133)
+  ata8.04: hard resetting link
+  ata8.04: failed to resume link (SControl 133)
+  ata8.04: failed to read SCR 0 (Emask=0x40)
+  ata8.04: failed to read SCR 0 (Emask=0x40)
+  ata8.04: failed to read SCR 1 (Emask=0x40)
+  ata8.04: failed to read SCR 0 (Emask=0x40)
+  ata8.03: native sectors (2) is smaller than sectors (976773168)
+  ata8.03: ATA-8: ST3500413AS, JC4B, max UDMA/133
+  ata8.03: 976773168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+  ata8.03: configured for UDMA/133
+  ata8.04: failed to IDENTIFY (I/O error, err_mask=0x100)
+  ata8.15: hard resetting link
+  ata8.15: SATA link up 6.0 Gbps (SStatus 133 SControl 330)
+  ata8.15: Port Multiplier vendor mismatch '0x1b4b' != '0x133'
+  ata8.15: PMP revalidation failed (errno=-19)
+  ata8.15: hard resetting link
+  ata8.15: SATA link up 6.0 Gbps (SStatus 133 SControl 330)
+  ata8.15: Port Multiplier vendor mismatch '0x1b4b' != '0x133'
+  ata8.15: PMP revalidation failed (errno=-19)
+  ata8.15: limiting SATA link speed to 3.0 Gbps
+  ata8.15: hard resetting link
+  ata8.15: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+  ata8.15: Port Multiplier vendor mismatch '0x1b4b' != '0x133'
+  ata8.15: PMP revalidation failed (errno=-19)
+  ata8.15: failed to recover PMP after 5 tries, giving up
+  ata8.15: Port Multiplier detaching
+  ata8.03: disabled
+  ata8.00: disabled
+  ata8: EH complete
+
+The reason is that current detection code doesn't follow AHCI spec:
+
+First,the port multiplier detection process look like this:
+
+ahci_hardreset(link, class, deadline)
+if (class == ATA_DEV_PMP) {
+sata_pmp_attach(dev) /* will enable FBS */
+sata_pmp_init_links(ap, nr_ports);
+ata_for_each_link(link, ap, EDGE) {
+sata_std_hardreset(link, class, deadline);
+if (link_is_online) /* do soft reset */
+ahci_softreset(link, class, deadline);
+}
+}
+But, according to chapter 9.3.9 in AHCI spec: Prior to issuing software
+reset, software shall clear PxCMD.ST to '0' and then clear PxFBS.EN to
+'0'.
+
+The patch test ok with kernel 3.11.1.
+
+Signed-off-by: Xiangliang Yu <yxlraid@gmail.com>
 ---
- drivers/ata/ahci.h          |    2 +
- drivers/ata/ahci_imx.c      |  101 ++++++++++++++++++++++++++++++++++++++++++-
- drivers/ata/ahci_platform.c |    3 +-
- drivers/ata/libahci.c       |    4 +-
- 4 files changed, 105 insertions(+), 5 deletions(-)
+ drivers/ata/libahci.c |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 1145637..2289efd 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -339,6 +339,7 @@ extern struct device_attribute *ahci_sdev_attrs[];
- 	.sdev_attrs		= ahci_sdev_attrs
- 
- extern struct ata_port_operations ahci_ops;
-+extern struct ata_port_operations ahci_platform_ops;
- extern struct ata_port_operations ahci_pmp_retry_srst_ops;
- 
- unsigned int ahci_dev_classify(struct ata_port *ap);
-@@ -368,6 +369,7 @@ irqreturn_t ahci_hw_interrupt(int irq, void *dev_instance);
- irqreturn_t ahci_thread_fn(int irq, void *dev_instance);
- void ahci_print_info(struct ata_host *host, const char *scc_s);
- int ahci_host_activate(struct ata_host *host, int irq, unsigned int n_msis);
-+void ahci_error_handler(struct ata_port *ap);
- 
- static inline void __iomem *__ahci_port_base(struct ata_host *host,
- 					     unsigned int port_no)
-diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
-index 58debb0..733d097 100644
---- a/drivers/ata/ahci_imx.c
-+++ b/drivers/ata/ahci_imx.c
-@@ -1,6 +1,6 @@
- /*
-+ * copyright (c) 2013 Freescale Semiconductor, Inc.
-  * Freescale IMX AHCI SATA platform driver
-- * Copyright 2013 Freescale Semiconductor, Inc.
-  *
-  * based on the AHCI SATA platform driver by Jeff Garzik and Anton Vorontsov
-  *
-@@ -25,10 +25,13 @@
- #include <linux/of_device.h>
- #include <linux/mfd/syscon.h>
- #include <linux/mfd/syscon/imx6q-iomuxc-gpr.h>
-+#include <linux/libata.h>
- #include "ahci.h"
- 
- enum {
--	HOST_TIMER1MS = 0xe0, /* Timer 1-ms */
-+	PORT_PHY_CTL = 0x178,			/* Port0 PHY Control */
-+	PORT_PHY_CTL_PDDQ_LOC = 0x100000,	/* PORT_PHY_CTL bits */
-+	HOST_TIMER1MS = 0xe0,			/* Timer 1-ms */
- };
- 
- struct imx_ahci_priv {
-@@ -36,6 +39,56 @@ struct imx_ahci_priv {
- 	struct clk *sata_ref_clk;
- 	struct clk *ahb_clk;
- 	struct regmap *gpr;
-+	bool no_device;
-+	bool first_time;
-+};
-+
-+static int ahci_imx_hotplug;
-+module_param_named(hotplug, ahci_imx_hotplug, int, 0644);
-+MODULE_PARM_DESC(hotplug, "AHCI IMX hot-plug support (0=Don't support, 1=support)");
-+
-+static void ahci_imx_error_handler(struct ata_port *ap)
-+{
-+	u32 reg_val;
-+	struct ata_device *dev;
-+	struct ata_host *host = dev_get_drvdata(ap->dev);
-+	struct ahci_host_priv *hpriv = host->private_data;
-+	void __iomem *mmio = hpriv->mmio;
-+	struct imx_ahci_priv *imxpriv = dev_get_drvdata(ap->dev->parent);
-+
-+	ahci_error_handler(ap);
-+
-+	if (!(imxpriv->first_time) || ahci_imx_hotplug)
-+		return;
-+
-+	imxpriv->first_time = false;
-+
-+	ata_for_each_dev(dev, &ap->link, ENABLED)
-+		return;
-+	/*
-+	 * DISABLE LINK to save power consumption
-+	 * imx ahci can't be recovered and work well anymore when the
-+	 * pddq mode is enabled once. It's can't be a part of usual LPM.
-+	 */
-+	reg_val = readl(mmio + PORT_PHY_CTL);
-+	writel(reg_val | PORT_PHY_CTL_PDDQ_LOC, mmio + PORT_PHY_CTL);
-+	regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
-+			IMX6Q_GPR13_SATA_MPLL_CLK_EN,
-+			!IMX6Q_GPR13_SATA_MPLL_CLK_EN);
-+	clk_disable_unprepare(imxpriv->sata_ref_clk);
-+	imxpriv->no_device = true;
-+}
-+
-+static struct ata_port_operations ahci_imx_ops = {
-+	.inherits	= &ahci_platform_ops,
-+	.error_handler	= ahci_imx_error_handler,
-+};
-+
-+static const struct ata_port_info ahci_imx_port_info = {
-+	.flags		= AHCI_FLAG_COMMON,
-+	.pio_mask	= ATA_PIO4,
-+	.udma_mask	= ATA_UDMA6,
-+	.port_ops	= &ahci_imx_ops,
- };
- 
- static int imx6q_sata_init(struct device *dev, void __iomem *mmio)
-@@ -117,9 +170,51 @@ static void imx6q_sata_exit(struct device *dev)
- 	clk_disable_unprepare(imxpriv->sata_ref_clk);
- }
- 
-+static int imx_ahci_suspend(struct device *dev)
-+{
-+	struct imx_ahci_priv *imxpriv =  dev_get_drvdata(dev->parent);
-+
-+	/*
-+	 * If no_device is set, The CLKs had been gated off in
-+	 * the initialization and don't do it again here.
-+	 */
-+	if (!imxpriv->no_device) {
-+		regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
-+				IMX6Q_GPR13_SATA_MPLL_CLK_EN,
-+				!IMX6Q_GPR13_SATA_MPLL_CLK_EN);
-+		clk_disable_unprepare(imxpriv->sata_ref_clk);
-+	}
-+
-+	return 0;
-+}
-+
-+static int imx_ahci_resume(struct device *dev)
-+{
-+	struct imx_ahci_priv *imxpriv =  dev_get_drvdata(dev->parent);
-+	int ret;
-+
-+	if (!imxpriv->no_device) {
-+		ret = clk_prepare_enable(imxpriv->sata_ref_clk);
-+		if (ret < 0) {
-+			dev_err(dev, "pre-enable sata_ref clock err:%d\n", ret);
-+			return ret;
-+		}
-+
-+		regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
-+				IMX6Q_GPR13_SATA_MPLL_CLK_EN,
-+				IMX6Q_GPR13_SATA_MPLL_CLK_EN);
-+		usleep_range(1000, 2000);
-+	}
-+
-+	return 0;
-+}
-+
- static struct ahci_platform_data imx6q_sata_pdata = {
- 	.init = imx6q_sata_init,
- 	.exit = imx6q_sata_exit,
-+	.ata_port_info = &ahci_imx_port_info,
-+	.suspend = imx_ahci_suspend,
-+	.resume = imx_ahci_resume,
- };
- 
- static const struct of_device_id imx_ahci_of_match[] = {
-@@ -152,6 +247,8 @@ static int imx_ahci_probe(struct platform_device *pdev)
- 	ahci_dev = &ahci_pdev->dev;
- 	ahci_dev->parent = dev;
- 
-+	imxpriv->no_device = false;
-+	imxpriv->first_time = true;
- 	imxpriv->ahb_clk = devm_clk_get(dev, "ahb");
- 	if (IS_ERR(imxpriv->ahb_clk)) {
- 		dev_err(dev, "can't get ahb clock.\n");
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index 7d3b853..f955431 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -49,10 +49,11 @@ static struct platform_device_id ahci_devtype[] = {
- };
- MODULE_DEVICE_TABLE(platform, ahci_devtype);
- 
--static struct ata_port_operations ahci_platform_ops = {
-+struct ata_port_operations ahci_platform_ops = {
- 	.inherits	= &ahci_ops,
- 	.host_stop	= ahci_host_stop,
- };
-+EXPORT_SYMBOL_GPL(ahci_platform_ops);
- 
- static struct ata_port_operations ahci_platform_retry_srst_ops = {
- 	.inherits	= &ahci_pmp_retry_srst_ops,
 diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index b67086f..7e2a1b3 100644
+index 34c8216..c2a29bf 100644
 --- a/drivers/ata/libahci.c
 +++ b/drivers/ata/libahci.c
-@@ -89,7 +89,6 @@ static int ahci_pmp_retry_softreset(struct ata_link *link, unsigned int *class,
- static int ahci_hardreset(struct ata_link *link, unsigned int *class,
- 			  unsigned long deadline);
- static void ahci_postreset(struct ata_link *link, unsigned int *class);
--static void ahci_error_handler(struct ata_port *ap);
- static void ahci_post_internal_cmd(struct ata_queued_cmd *qc);
- static void ahci_dev_config(struct ata_device *dev);
- #ifdef CONFIG_PM
-@@ -1982,7 +1981,7 @@ static void ahci_thaw(struct ata_port *ap)
- 	writel(pp->intr_mask, port_mmio + PORT_IRQ_MASK);
- }
- 
--static void ahci_error_handler(struct ata_port *ap)
-+void ahci_error_handler(struct ata_port *ap)
+@@ -1266,9 +1266,11 @@ int ahci_do_softreset(struct ata_link *link,
+unsigned int *class,
  {
- 	if (!(ap->pflags & ATA_PFLAG_FROZEN)) {
- 		/* restart engine */
-@@ -1995,6 +1994,7 @@ static void ahci_error_handler(struct ata_port *ap)
- 	if (!ata_dev_enabled(ap->link.device))
- 		ahci_stop_engine(ap);
- }
-+EXPORT_SYMBOL_GPL(ahci_error_handler);
- 
- static void ahci_post_internal_cmd(struct ata_queued_cmd *qc)
- {
--- 
-1.7.5.4
+  struct ata_port *ap = link->ap;
+  struct ahci_host_priv *hpriv = ap->host->private_data;
++ struct ahci_port_priv *pp = ap->private_data;
+  const char *reason = NULL;
+  unsigned long now, msecs;
+  struct ata_taskfile tf;
++ bool fbs_flag = false;
+  int rc;
 
+  DPRINTK("ENTER\n");
+@@ -1278,6 +1280,11 @@ int ahci_do_softreset(struct ata_link *link,
+unsigned int *class,
+  if (rc && rc != -EOPNOTSUPP)
+  ata_link_warn(link, "failed to reset engine (errno=%d)\n", rc);
+
++ if (!ata_is_host_link(link) && pp->fbs_enabled) {
++ ahci_disable_fbs(ap);
++ fbs_flag = true;
++ }
++
+  ata_tf_init(link->device, &tf);
+
+  /* issue the first D2H Register FIS */
+@@ -1318,6 +1325,9 @@ int ahci_do_softreset(struct ata_link *link,
+unsigned int *class,
+  } else
+  *class = ahci_dev_classify(ap);
+
++ if (fbs_flag)
++ ahci_enable_fbs(ap);
++
+  DPRINTK("EXIT, class=%u\n", *class);
+  return 0;
+
+-- 
+1.7.1
+
+
+Thanks!
