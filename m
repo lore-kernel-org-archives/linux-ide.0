@@ -1,105 +1,59 @@
-From: Simon Horman <horms@verge.net.au>
-Subject: Re: [PATCH 2/2] sata_rcar: Add R-Car Gen2 SATA support
-Date: Wed, 16 Oct 2013 15:10:14 +0900
-Message-ID: <20131016061013.GE15425@verge.net.au>
-References: <1381765354-28440-1-git-send-email-valentine.barshak@cogentembedded.com>
- <525C608F.5010303@cogentembedded.com>
- <20131015002319.GG22321@verge.net.au>
- <1902318.RuT4p9kbZ7@avalon>
+From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
+Subject: RE: [PATCH 2] libahci: fix turning on LEDs in ahci_start_port()
+Date: Wed, 16 Oct 2013 07:10:03 +0000
+Message-ID: <D9FFE20C522965449E182ACE73889AEB1A664B58@IRSMSX105.ger.corp.intel.com>
+References: <20131014161853.20775.1487.stgit@gklab-154-244.igk.intel.com>
+ <20131015134058.GF3141@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-sh-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1902318.RuT4p9kbZ7@avalon>
-Sender: linux-sh-owner@vger.kernel.org
-To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-Cc: Valentine <valentine.barshak@cogentembedded.com>, Mark Rutland <mark.rutland@arm.com>, "linux-sh@vger.kernel.org" <linux-sh@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Magnus Damm <magnus.damm@gmail.com>, Vladimir Barinov <vladimir.barinov@cogentembedded.com>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Tejun Heo <tj@kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga14.intel.com ([143.182.124.37]:23802 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751094Ab3JPHKH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Oct 2013 03:10:07 -0400
+In-Reply-To: <20131015134058.GF3141@htj.dyndns.org>
+Content-Language: en-US
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Tue, Oct 15, 2013 at 02:32:28AM +0200, Laurent Pinchart wrote:
-> Hi Simon,
+On Tuesday, October 15, 2013 3:41 PM Tejun Heo <tj@kernel.org> wrote:
+> On Mon, Oct 14, 2013 at 06:18:53PM +0200, Lukasz Dorau wrote:
+> > If EM Transmit bit is busy during init ata_msleep() is called.
+> > It is wrong - msleep() should be used instead of ata_msleep(), because
+> > if EM Transmit bit is busy for one port, it will be busy for all other
+> > ports too, so using ata_msleep() causes wasting tries for another
+> > ports.
+> >
+> > The most common scenario looks like that now (six ports try to
+> > transmit a LED meaasege):
+> > - port #0 tries for the 1st time and succeeds
+> > - ports #1-5 try for the 1st time and sleeps
+> > - port #1 tries for the 2nd time and succeeds
+> > - ports #2-5 try for the 2nd time and sleeps
+> > - port #2 tries for the 3rd time and succeeds
+> > - ports #3-5 try for the 3rd time and sleeps
+> > - port #3 tries for the 4th time and succeeds
+> > - ports #4-5 try for the 4th time and sleeps
+> > - port #4 tries for the 5th time and succeeds
+> > - port #5 tries for the 5th time and sleeps At this moment port #5
+> > wasted all its five tries and failed to initialize.
+> > Because there are only 5 (EM_MAX_RETRY) tries available usually only
+> > five ports succeed to initialize. The sixth port and next ones usually will fail.
+> >
+> > If msleep() is used instead of ata_msleep() the first port succeeds to
+> > initialize in the first try and next ones usually succeed to initialize in the second
+> try.
+> >
+> > Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
 > 
-> On Tuesday 15 October 2013 09:23:19 Simon Horman wrote:
-> > On Tue, Oct 15, 2013 at 01:22:23AM +0400, Valentine wrote:
-> > > On 10/14/2013 10:15 PM, Laurent Pinchart wrote:
-> > > >On Monday 14 October 2013 21:58:50 Valentine wrote:
-> > > >>On 10/14/2013 08:26 PM, Mark Rutland wrote:
-> > > >>>On Mon, Oct 14, 2013 at 04:42:34PM +0100, Valentine Barshak wrote:
-> > > >>>>R-Car Gen2 SoCs have a different PHY which is not compatible
-> > > >>>>with the older R-Car H1 (R8A7779) version.
-> > > >>>>This adds OF/platform device id tables and PHY initialization
-> > > >>>>
-> > > >>>>callbacks for the following Gen2 SoCs:
-> > > >>>>    * R-Car H2: R8A7790;
-> > > >>>>    * R-Car M2: R8A7791.
-> > > >>>>
-> > > >>>>PHY initialization method is chosen, based on the device id.
-> > > >>>>Default PHY settings are applied for Gen2 SoCs, which should
-> > > >>>>suit the Gen2 boards available.
-> > > >>>>
-> > > >>>>The R8A7779 platform code is modified to use "sata-r8a7779"
-> > > >>>>device id.
-> > > >>>>
-> > > >>>>Signed-off-by: Valentine Barshak
-> > > >>>><valentine.barshak@cogentembedded.com>
-> > > >>>>---
-> > > >>>>
-> > > >>>>   .../devicetree/bindings/ata/sata_rcar.txt          |   5 +-
-> > > >>>>   arch/arm/mach-shmobile/clock-r8a7779.c             |   2 +-
-> > > >>>>   arch/arm/mach-shmobile/setup-r8a7779.c             |   2 +-
-> > > >>>>   drivers/ata/sata_rcar.c                            | 112
-> > > >>>>   +++++++++++---
-> > > >>>>   4 files changed, 102 insertions(+), 19 deletions(-)
-> > > >>>>
-> > > >>>>diff --git a/Documentation/devicetree/bindings/ata/sata_rcar.txt
-> > > >>>>b/Documentation/devicetree/bindings/ata/sata_rcar.txt index
-> > > >>>>2465183..b5a41bf 100644
-> > > >>>>--- a/Documentation/devicetree/bindings/ata/sata_rcar.txt
-> > > >>>>+++ b/Documentation/devicetree/bindings/ata/sata_rcar.txt
+> Applied to libata/for-3.12-fixes with minor updates.
 > 
-> [snip]
+> Thanks.
 > 
-> > > >>>>+static struct of_device_id sata_rcar_match[] = {
-> > > >>>>+	{
-> > > >>>>+		.compatible = "renesas,sata-r8a7779",
-> > > >>>>+		.data = (void *)RCAR_GEN1_SATA,
-> > > >>>>+	},
-> > > >>>>+	{
-> > > >>>>+		.compatible = "renesas,sata-r8a7790",
-> > > >>>>+		.data = (void *)RCAR_GEN2_SATA
-> > > >>>>+	},
-> > > >>>>+	{
-> > > >>>>+		.compatible = "renesas,sata-r8a7791",
-> > > >>>>+		.data = (void *)RCAR_GEN2_SATA
-> > > >>>>+	},
-> > > >>>>+	{},
-> > > >>>>+};
-> > > >>>>+MODULE_DEVICE_TABLE(of, sata_rcar_match);
-> > > >>>
-> > > >>>Are the renesas,sata-r8a779x variants identical?
-> > > >>
-> > > >>Yes.
-> > > >>
-> > > >>>If so, why the two strings?
-> > > >>
-> > > >>Just thought the driver should support "renesas,sata-r8a7791"
-> > > >>compatibility as well since it should support both SoCs.
-> > > >>Didn't want to force sata-r8a7790 compatibility for the r8a7791 SoC DTS.
-> > > >
-> > > >One reason for two compatibility strings is not to be stuck if we later
-> > > >find out the the 7791 SATA controller differs from the 7790.
-> > > 
-> > > Thanks!
-> > > Yeah, anyways, I'd prefer to keep both strings in the device id table.
-> > 
-> > Yes, I do too, mostly for the reason that Laurent gave.
-> > But also because this is consistent with compatibility strings
-> > for other Renesas IP.
-> 
-> We need to use the 7791 compatibility string in DT, but if we specify both, 
-> the driver could have a single entry for both SoCs in its device ID table. As 
-> stated before, I have no strong preference, both would work.
+Thanks.
 
-Thanks, I understand.
+Lukasz
 
-At this stage I don't have a strong preference either.
