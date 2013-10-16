@@ -1,59 +1,52 @@
-From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
-Subject: RE: [PATCH 2] libahci: fix turning on LEDs in ahci_start_port()
-Date: Wed, 16 Oct 2013 07:10:03 +0000
-Message-ID: <D9FFE20C522965449E182ACE73889AEB1A664B58@IRSMSX105.ger.corp.intel.com>
-References: <20131014161853.20775.1487.stgit@gklab-154-244.igk.intel.com>
- <20131015134058.GF3141@htj.dyndns.org>
+From: Roger Quadros <rogerq@ti.com>
+Subject: [PATCH v2 0/2]  ata: ahci_platform: Add PHY support and OMAP support
+Date: Wed, 16 Oct 2013 14:42:51 +0300
+Message-ID: <1381923773-10596-1-git-send-email-rogerq@ti.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:23802 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751094Ab3JPHKH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Oct 2013 03:10:07 -0400
-In-Reply-To: <20131015134058.GF3141@htj.dyndns.org>
-Content-Language: en-US
+Received: from devils.ext.ti.com ([198.47.26.153]:52871 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932406Ab3JPLnD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Oct 2013 07:43:03 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: tj@kernel.org
+Cc: sergei.shtylyov@cogentembedded.com, kishon@ti.com, b.zolnierkie@samsung.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Roger Quadros <rogerq@ti.com>
 
-On Tuesday, October 15, 2013 3:41 PM Tejun Heo <tj@kernel.org> wrote:
-> On Mon, Oct 14, 2013 at 06:18:53PM +0200, Lukasz Dorau wrote:
-> > If EM Transmit bit is busy during init ata_msleep() is called.
-> > It is wrong - msleep() should be used instead of ata_msleep(), because
-> > if EM Transmit bit is busy for one port, it will be busy for all other
-> > ports too, so using ata_msleep() causes wasting tries for another
-> > ports.
-> >
-> > The most common scenario looks like that now (six ports try to
-> > transmit a LED meaasege):
-> > - port #0 tries for the 1st time and succeeds
-> > - ports #1-5 try for the 1st time and sleeps
-> > - port #1 tries for the 2nd time and succeeds
-> > - ports #2-5 try for the 2nd time and sleeps
-> > - port #2 tries for the 3rd time and succeeds
-> > - ports #3-5 try for the 3rd time and sleeps
-> > - port #3 tries for the 4th time and succeeds
-> > - ports #4-5 try for the 4th time and sleeps
-> > - port #4 tries for the 5th time and succeeds
-> > - port #5 tries for the 5th time and sleeps At this moment port #5
-> > wasted all its five tries and failed to initialize.
-> > Because there are only 5 (EM_MAX_RETRY) tries available usually only
-> > five ports succeed to initialize. The sixth port and next ones usually will fail.
-> >
-> > If msleep() is used instead of ata_msleep() the first port succeeds to
-> > initialize in the first try and next ones usually succeed to initialize in the second
-> try.
-> >
-> > Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
-> 
-> Applied to libata/for-3.12-fixes with minor updates.
-> 
-> Thanks.
-> 
-Thanks.
+Hi,
 
-Lukasz
+Some platforms have a PHY hooked up to the SATA controller.
+The PHY needs to be initialized and powered up for SATA to work.
+We do that using the Generic PHY framework. [1]. This is done
+in PATCH 1
+
+In order to support SATA on the OMAP platforms we need to runtime
+resume the device before use. PATCH 2 takes care of that.
+
+Changelog:
+v2:
+- got rid of Texas Instruments SATA wrapper driver
+- adressed review comments
+
+cheers,
+-roger
+
+[1] - The Generic PHY framework is available in Greg KH's usb-next branch.
+  git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/usb.git  usb-next
+
+---
+Balaji T K (1):
+  ata: ahci_platform: Manage SATA PHY
+
+Roger Quadros (1):
+  ata: ahci_platform: runtime resume the device before use
+
+ .../devicetree/bindings/ata/ahci-platform.txt      |    3 +-
+ drivers/ata/ahci.h                                 |    2 +
+ drivers/ata/ahci_platform.c                        |   41 +++++++++++++++++++-
+ 3 files changed, 44 insertions(+), 2 deletions(-)
+
+-- 
+1.7.9.5
 
