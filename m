@@ -1,141 +1,68 @@
-From: Roger Quadros <rogerq@ti.com>
-Subject: [PATCH v2 1/2] ata: ahci_platform: Manage SATA PHY
-Date: Wed, 16 Oct 2013 14:42:52 +0300
-Message-ID: <1381923773-10596-2-git-send-email-rogerq@ti.com>
-References: <1381923773-10596-1-git-send-email-rogerq@ti.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Valentine Barshak <valentine.barshak@cogentembedded.com>
+Subject: [PATCH 1/2] sata_rcar: Adjust and document device tree bindings
+Date: Wed, 16 Oct 2013 16:06:00 +0400
+Message-ID: <1381925161-16729-2-git-send-email-valentine.barshak@cogentembedded.com>
+References: <1381925161-16729-1-git-send-email-valentine.barshak@cogentembedded.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:50003 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760182Ab3JPLnF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 16 Oct 2013 07:43:05 -0400
-In-Reply-To: <1381923773-10596-1-git-send-email-rogerq@ti.com>
+Received: from mail-la0-f52.google.com ([209.85.215.52]:50324 "EHLO
+	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933974Ab3JPMGG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Oct 2013 08:06:06 -0400
+Received: by mail-la0-f52.google.com with SMTP id ev20so472726lab.39
+        for <linux-ide@vger.kernel.org>; Wed, 16 Oct 2013 05:06:05 -0700 (PDT)
+In-Reply-To: <1381925161-16729-1-git-send-email-valentine.barshak@cogentembedded.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org
-Cc: sergei.shtylyov@cogentembedded.com, kishon@ti.com, b.zolnierkie@samsung.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Balaji T K <balajitk@ti.com>, Roger Quadros <rogerq@ti.com>
+To: linux-sh@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org
+Cc: Simon Horman <horms@verge.net.au>, Magnus Damm <magnus.damm@gmail.com>, Vladimir Barinov <vladimir.barinov@cogentembedded.com>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>, Laurent Pinchart <laurent.pinchart@ideasonboard.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Tejun Heo <tj@kernel.org>, Mark Rutland <mark.rutland@arm.com>
 
-From: Balaji T K <balajitk@ti.com>
+This deprecates the "rcar-sata" compatibility string
+and adds the "sata-r8a7779" which complies to the
+preferred <unit>-<soc> format for SH-Mobile devices.
+The DT bindings are documented.
 
-Some platforms have a PHY hooked up to the
-SATA controller. The PHY needs to be initialized
-and powered up for SATA to work. We do that
-using the PHY framework.
-
-[Roger Q] Cleaned up.
-
-CC: Tejun Heo <tj@kernel.org>
-Signed-off-by: Balaji T K <balajitk@ti.com>
-Signed-off-by: Roger Quadros <rogerq@ti.com>
+Signed-off-by: Valentine Barshak <valentine.barshak@cogentembedded.com>
 ---
- .../devicetree/bindings/ata/ahci-platform.txt      |    3 +-
- drivers/ata/ahci.h                                 |    2 ++
- drivers/ata/ahci_platform.c                        |   29 +++++++++++++++++++-
- 3 files changed, 32 insertions(+), 2 deletions(-)
+ Documentation/devicetree/bindings/ata/sata_rcar.txt | 15 +++++++++++++++
+ drivers/ata/sata_rcar.c                             |  3 ++-
+ 2 files changed, 17 insertions(+), 1 deletion(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/sata_rcar.txt
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-index 89de156..c8a6cea 100644
---- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
-+++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-@@ -4,7 +4,8 @@ SATA nodes are defined to describe on-chip Serial ATA controllers.
- Each SATA controller should have its own node.
- 
- Required properties:
--- compatible        : compatible list, contains "snps,spear-ahci"
-+- compatible        : compatible list, contains "snps,spear-ahci",
-+			snps,exynos5440-ahci or "snps,dwc-ahci"
- - interrupts        : <interrupt mapping for SATA IRQ>
- - reg               : <registers mapping>
- 
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 1145637..94484cb 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -37,6 +37,7 @@
- 
- #include <linux/clk.h>
- #include <linux/libata.h>
-+#include <linux/phy/phy.h>
- 
- /* Enclosure Management Control */
- #define EM_CTRL_MSG_TYPE              0x000f0000
-@@ -322,6 +323,7 @@ struct ahci_host_priv {
- 	u32			em_buf_sz;	/* EM buffer size in byte */
- 	u32			em_msg_type;	/* EM message type */
- 	struct clk		*clk;		/* Only for platforms supporting clk */
-+	struct phy		*phy;		/* If platforms use phy */
- 	void			*plat_data;	/* Other platform data */
- };
- 
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index 2daaee0..5a0f1418 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -141,6 +141,21 @@ static int ahci_probe(struct platform_device *pdev)
- 		}
- 	}
- 
-+	hpriv->phy = devm_phy_get(dev, "sata-phy");
-+	if (IS_ERR(hpriv->phy)) {
-+		dev_dbg(dev, "can't get sata-phy\n");
-+		/* return only if -EPROBE_DEFER */
-+		if (PTR_ERR(hpriv->phy) == -EPROBE_DEFER) {
-+			rc = -EPROBE_DEFER;
-+			goto disable_unprepare_clk;
-+		}
-+	}
+diff --git a/Documentation/devicetree/bindings/ata/sata_rcar.txt b/Documentation/devicetree/bindings/ata/sata_rcar.txt
+new file mode 100644
+index 0000000..0719115
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ata/sata_rcar.txt
+@@ -0,0 +1,15 @@
++* Renesas R-Car SATA
 +
-+	if (!IS_ERR(hpriv->phy)) {
-+		phy_init(hpriv->phy);
-+		phy_power_on(hpriv->phy);
-+	}
++Required properties:
++- compatible		: should contain "renesas,sata-r8a7779";
++- reg			: offset and length of the SATA registers;
++- interrupts		: must consist of one interrupt specifier.
 +
- 	/*
- 	 * Some platforms might need to prepare for mmio region access,
- 	 * which could be done in the following init call. So, the mmio
-@@ -150,7 +165,7 @@ static int ahci_probe(struct platform_device *pdev)
- 	if (pdata && pdata->init) {
- 		rc = pdata->init(dev, hpriv->mmio);
- 		if (rc)
--			goto disable_unprepare_clk;
-+			goto disable_phy;
- 	}
++Example:
++
++sata: sata@fc600000 {
++	compatible = "renesas,sata-r8a7779";
++	reg = <0xfc600000 0x2000>;
++	interrupt-parent = <&gic>;
++	interrupts = <0 100 0x4>;
++};
+diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
+index c2d95e9..a625cc5 100644
+--- a/drivers/ata/sata_rcar.c
++++ b/drivers/ata/sata_rcar.c
+@@ -893,7 +893,8 @@ static const struct dev_pm_ops sata_rcar_pm_ops = {
+ #endif
  
- 	ahci_save_initial_config(dev, hpriv,
-@@ -220,6 +235,12 @@ static int ahci_probe(struct platform_device *pdev)
- pdata_exit:
- 	if (pdata && pdata->exit)
- 		pdata->exit(dev);
-+disable_phy:
-+	if (!IS_ERR(hpriv->phy)) {
-+		phy_power_off(hpriv->phy);
-+		phy_exit(hpriv->phy);
-+	}
-+
- disable_unprepare_clk:
- 	if (!IS_ERR(hpriv->clk))
- 		clk_disable_unprepare(hpriv->clk);
-@@ -238,6 +259,11 @@ static void ahci_host_stop(struct ata_host *host)
- 	if (pdata && pdata->exit)
- 		pdata->exit(dev);
- 
-+	if (!IS_ERR(hpriv->phy)) {
-+		phy_power_off(hpriv->phy);
-+		phy_exit(hpriv->phy);
-+	}
-+
- 	if (!IS_ERR(hpriv->clk)) {
- 		clk_disable_unprepare(hpriv->clk);
- 		clk_put(hpriv->clk);
-@@ -328,6 +354,7 @@ static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_suspend, ahci_resume);
- static const struct of_device_id ahci_of_match[] = {
- 	{ .compatible = "snps,spear-ahci", },
- 	{ .compatible = "snps,exynos5440-ahci", },
-+	{ .compatible = "snps,dwc-ahci", },
+ static struct of_device_id sata_rcar_match[] = {
+-	{ .compatible = "renesas,rcar-sata", },
++	{ .compatible = "renesas,rcar-sata", },	/* Deprecated */
++	{ .compatible = "renesas,sata-r8a7779", },
  	{},
  };
- MODULE_DEVICE_TABLE(of, ahci_of_match);
+ MODULE_DEVICE_TABLE(of, sata_rcar_match);
 -- 
-1.7.9.5
+1.8.3.1
 
