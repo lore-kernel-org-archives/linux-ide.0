@@ -1,164 +1,165 @@
-From: <gregkh@linuxfoundation.org>
-Subject: patch "ide: convert bus code to use dev_groups" added to driver-core tree
-Date: Wed, 16 Oct 2013 18:41:18 -0700
-Message-ID: <13819740783467@kroah.com>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: Re: [PATCH v2 1/2] ata: ahci_platform: Manage SATA PHY
+Date: Thu, 17 Oct 2013 15:57:12 +0200
+Message-ID: <1896416.QtZRH9T0D7@amdc1032>
+References: <1381923773-10596-1-git-send-email-rogerq@ti.com>
+ <1381923773-10596-2-git-send-email-rogerq@ti.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ASCII
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:38677 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760887Ab3JQBlT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Oct 2013 21:41:19 -0400
+Received: from mailout2.samsung.com ([203.254.224.25]:59186 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755335Ab3JQN5S (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Oct 2013 09:57:18 -0400
+In-reply-to: <1381923773-10596-2-git-send-email-rogerq@ti.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: gregkh@linuxfoundation.org, davem@davemloft.net, linux-ide@vger.kernel.org
+To: Roger Quadros <rogerq@ti.com>
+Cc: tj@kernel.org, sergei.shtylyov@cogentembedded.com, kishon@ti.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Balaji T K <balajitk@ti.com>
 
 
-This is a note to let you know that I've just added the patch titled
+Hi,
 
-    ide: convert bus code to use dev_groups
+On Wednesday, October 16, 2013 02:42:52 PM Roger Quadros wrote:
+> From: Balaji T K <balajitk@ti.com>
+> 
+> Some platforms have a PHY hooked up to the
+> SATA controller. The PHY needs to be initialized
+> and powered up for SATA to work. We do that
+> using the PHY framework.
+> 
+> [Roger Q] Cleaned up.
+> 
+> CC: Tejun Heo <tj@kernel.org>
+> Signed-off-by: Balaji T K <balajitk@ti.com>
+> Signed-off-by: Roger Quadros <rogerq@ti.com>
+> ---
+>  .../devicetree/bindings/ata/ahci-platform.txt      |    3 +-
+>  drivers/ata/ahci.h                                 |    2 ++
+>  drivers/ata/ahci_platform.c                        |   29 +++++++++++++++++++-
+>  3 files changed, 32 insertions(+), 2 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+> index 89de156..c8a6cea 100644
+> --- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
+> +++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+> @@ -4,7 +4,8 @@ SATA nodes are defined to describe on-chip Serial ATA controllers.
+>  Each SATA controller should have its own node.
+>  
+>  Required properties:
+> -- compatible        : compatible list, contains "snps,spear-ahci"
+> +- compatible        : compatible list, contains "snps,spear-ahci",
+> +			snps,exynos5440-ahci or "snps,dwc-ahci"
 
-to my driver-core git tree which can be found at
-    git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/driver-core.git
-in the driver-core-next branch.
+minor nit:
+s/snps,exynos5440-ahci/"snps,exynos5440-ahci"/
 
-The patch will show up in the next release of the linux-next tree
-(usually sometime within the next 24 hours during the week.)
+>  - interrupts        : <interrupt mapping for SATA IRQ>
+>  - reg               : <registers mapping>
+>  
+> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+> index 1145637..94484cb 100644
+> --- a/drivers/ata/ahci.h
+> +++ b/drivers/ata/ahci.h
+> @@ -37,6 +37,7 @@
+>  
+>  #include <linux/clk.h>
+>  #include <linux/libata.h>
+> +#include <linux/phy/phy.h>
+>  
+>  /* Enclosure Management Control */
+>  #define EM_CTRL_MSG_TYPE              0x000f0000
+> @@ -322,6 +323,7 @@ struct ahci_host_priv {
+>  	u32			em_buf_sz;	/* EM buffer size in byte */
+>  	u32			em_msg_type;	/* EM message type */
+>  	struct clk		*clk;		/* Only for platforms supporting clk */
+> +	struct phy		*phy;		/* If platforms use phy */
 
-The patch will also be merged in the next major kernel release
-during the merge window.
+minor nit:
+s/If platforms use phy/If platform uses PHY/
 
-If you have any questions about this process, please let me know.
+>  	void			*plat_data;	/* Other platform data */
+>  };
+>  
+> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+> index 2daaee0..5a0f1418 100644
+> --- a/drivers/ata/ahci_platform.c
+> +++ b/drivers/ata/ahci_platform.c
+> @@ -141,6 +141,21 @@ static int ahci_probe(struct platform_device *pdev)
+>  		}
+>  	}
+>  
+> +	hpriv->phy = devm_phy_get(dev, "sata-phy");
+> +	if (IS_ERR(hpriv->phy)) {
+> +		dev_dbg(dev, "can't get sata-phy\n");
+> +		/* return only if -EPROBE_DEFER */
+> +		if (PTR_ERR(hpriv->phy) == -EPROBE_DEFER) {
+> +			rc = -EPROBE_DEFER;
+> +			goto disable_unprepare_clk;
+> +		}
+> +	}
+> +
+> +	if (!IS_ERR(hpriv->phy)) {
+> +		phy_init(hpriv->phy);
+> +		phy_power_on(hpriv->phy);
+> +	}
+> +
+>  	/*
+>  	 * Some platforms might need to prepare for mmio region access,
+>  	 * which could be done in the following init call. So, the mmio
+> @@ -150,7 +165,7 @@ static int ahci_probe(struct platform_device *pdev)
+>  	if (pdata && pdata->init) {
+>  		rc = pdata->init(dev, hpriv->mmio);
+>  		if (rc)
+> -			goto disable_unprepare_clk;
+> +			goto disable_phy;
+>  	}
+>  
+>  	ahci_save_initial_config(dev, hpriv,
+> @@ -220,6 +235,12 @@ static int ahci_probe(struct platform_device *pdev)
+>  pdata_exit:
+>  	if (pdata && pdata->exit)
+>  		pdata->exit(dev);
+> +disable_phy:
+> +	if (!IS_ERR(hpriv->phy)) {
+> +		phy_power_off(hpriv->phy);
+> +		phy_exit(hpriv->phy);
+> +	}
+> +
+>  disable_unprepare_clk:
+>  	if (!IS_ERR(hpriv->clk))
+>  		clk_disable_unprepare(hpriv->clk);
+> @@ -238,6 +259,11 @@ static void ahci_host_stop(struct ata_host *host)
+>  	if (pdata && pdata->exit)
+>  		pdata->exit(dev);
+>  
+> +	if (!IS_ERR(hpriv->phy)) {
+> +		phy_power_off(hpriv->phy);
+> +		phy_exit(hpriv->phy);
+> +	}
+> +
+>  	if (!IS_ERR(hpriv->clk)) {
+>  		clk_disable_unprepare(hpriv->clk);
+>  		clk_put(hpriv->clk);
+> @@ -328,6 +354,7 @@ static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_suspend, ahci_resume);
 
+Shouldn't phy_power_off/on also be used in ahci_suspend() and ahci_resume()?
 
->From fb3fed7926545e44ce36574e1b1c5cdeb018db5c Mon Sep 17 00:00:00 2001
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Date: Mon, 7 Oct 2013 18:27:35 -0700
-Subject: ide: convert bus code to use dev_groups
+>  static const struct of_device_id ahci_of_match[] = {
+>  	{ .compatible = "snps,spear-ahci", },
+>  	{ .compatible = "snps,exynos5440-ahci", },
+> +	{ .compatible = "snps,dwc-ahci", },
 
-The dev_attrs field of struct bus_type is going away soon, dev_groups
-should be used instead.  This converts the ide bus code to use the
-correct field.
+This change together with ahci-platform.txt one should be in a separate patch.
 
-Acked-by: David S. Miller <davem@davemloft.net>
-Cc: <linux-ide@vger.kernel.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
- drivers/ide/ide-sysfs.c | 35 ++++++++++++++++++++++++++---------
- drivers/ide/ide.c       |  2 +-
- include/linux/ide.h     |  2 +-
- 3 files changed, 28 insertions(+), 11 deletions(-)
+>  	{},
+>  };
+>  MODULE_DEVICE_TABLE(of, ahci_of_match);
 
-diff --git a/drivers/ide/ide-sysfs.c b/drivers/ide/ide-sysfs.c
-index 883ffaca..84a6a9e0 100644
---- a/drivers/ide/ide-sysfs.c
-+++ b/drivers/ide/ide-sysfs.c
-@@ -25,6 +25,7 @@ static ssize_t media_show(struct device *dev, struct device_attribute *attr,
- 	ide_drive_t *drive = to_ide_device(dev);
- 	return sprintf(buf, "%s\n", ide_media_string(drive));
- }
-+static DEVICE_ATTR_RO(media);
- 
- static ssize_t drivename_show(struct device *dev, struct device_attribute *attr,
- 			      char *buf)
-@@ -32,6 +33,7 @@ static ssize_t drivename_show(struct device *dev, struct device_attribute *attr,
- 	ide_drive_t *drive = to_ide_device(dev);
- 	return sprintf(buf, "%s\n", drive->name);
- }
-+static DEVICE_ATTR_RO(drivename);
- 
- static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
- 			     char *buf)
-@@ -39,6 +41,7 @@ static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
- 	ide_drive_t *drive = to_ide_device(dev);
- 	return sprintf(buf, "ide:m-%s\n", ide_media_string(drive));
- }
-+static DEVICE_ATTR_RO(modalias);
- 
- static ssize_t model_show(struct device *dev, struct device_attribute *attr,
- 			  char *buf)
-@@ -46,6 +49,7 @@ static ssize_t model_show(struct device *dev, struct device_attribute *attr,
- 	ide_drive_t *drive = to_ide_device(dev);
- 	return sprintf(buf, "%s\n", (char *)&drive->id[ATA_ID_PROD]);
- }
-+static DEVICE_ATTR_RO(model);
- 
- static ssize_t firmware_show(struct device *dev, struct device_attribute *attr,
- 			     char *buf)
-@@ -53,6 +57,7 @@ static ssize_t firmware_show(struct device *dev, struct device_attribute *attr,
- 	ide_drive_t *drive = to_ide_device(dev);
- 	return sprintf(buf, "%s\n", (char *)&drive->id[ATA_ID_FW_REV]);
- }
-+static DEVICE_ATTR_RO(firmware);
- 
- static ssize_t serial_show(struct device *dev, struct device_attribute *attr,
- 			   char *buf)
-@@ -60,16 +65,28 @@ static ssize_t serial_show(struct device *dev, struct device_attribute *attr,
- 	ide_drive_t *drive = to_ide_device(dev);
- 	return sprintf(buf, "%s\n", (char *)&drive->id[ATA_ID_SERNO]);
- }
-+static DEVICE_ATTR(serial, 0400, serial_show, NULL);
-+
-+static DEVICE_ATTR(unload_heads, 0644, ide_park_show, ide_park_store);
-+
-+static struct attribute *ide_attrs[] = {
-+	&dev_attr_media.attr,
-+	&dev_attr_drivename.attr,
-+	&dev_attr_modalias.attr,
-+	&dev_attr_model.attr,
-+	&dev_attr_firmware.attr,
-+	&dev_attr_serial.attr,
-+	&dev_attr_unload_heads.attr,
-+	NULL,
-+};
-+
-+static const struct attribute_group ide_attr_group = {
-+	.attrs = ide_attrs,
-+};
- 
--struct device_attribute ide_dev_attrs[] = {
--	__ATTR_RO(media),
--	__ATTR_RO(drivename),
--	__ATTR_RO(modalias),
--	__ATTR_RO(model),
--	__ATTR_RO(firmware),
--	__ATTR(serial, 0400, serial_show, NULL),
--	__ATTR(unload_heads, 0644, ide_park_show, ide_park_store),
--	__ATTR_NULL
-+const struct attribute_group *ide_dev_groups[] = {
-+	&ide_attr_group,
-+	NULL,
- };
- 
- static ssize_t store_delete_devices(struct device *portdev,
-diff --git a/drivers/ide/ide.c b/drivers/ide/ide.c
-index fa896210..2ce6268a 100644
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -158,7 +158,7 @@ struct bus_type ide_bus_type = {
- 	.probe		= generic_ide_probe,
- 	.remove		= generic_ide_remove,
- 	.shutdown	= generic_ide_shutdown,
--	.dev_attrs	= ide_dev_attrs,
-+	.dev_groups	= ide_dev_groups,
- 	.suspend	= generic_ide_suspend,
- 	.resume		= generic_ide_resume,
- };
-diff --git a/include/linux/ide.h b/include/linux/ide.h
-index b1797491..46a14229 100644
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -1514,7 +1514,7 @@ static inline void ide_set_max_pio(ide_drive_t *drive)
- 
- char *ide_media_string(ide_drive_t *);
- 
--extern struct device_attribute ide_dev_attrs[];
-+extern const struct attribute_group *ide_dev_groups[];
- extern struct bus_type ide_bus_type;
- extern struct class *ide_port_class;
- 
--- 
-1.8.4.3.gca3854a
-
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
 
