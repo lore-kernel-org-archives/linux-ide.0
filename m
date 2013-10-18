@@ -1,118 +1,172 @@
-From: Todd E Brandt <todd.e.brandt@linux.intel.com>
-Subject: [PATCH/RESEND v2 2/2] SATA disk resume time optimization,
- asynchronous sd_resume
-Date: Thu, 17 Oct 2013 12:38:51 -0700
-Message-ID: <20131017193851.GC11747@linux.intel.com>
-Reply-To: todd.e.brandt@linux.intel.com
+From: Roger Quadros <rogerq@ti.com>
+Subject: Re: [PATCH v2 1/2] ata: ahci_platform: Manage SATA PHY
+Date: Fri, 18 Oct 2013 10:31:01 +0300
+Message-ID: <5260E3B5.2010900@ti.com>
+References: <1381923773-10596-1-git-send-email-rogerq@ti.com> <1381923773-10596-2-git-send-email-rogerq@ti.com> <1896416.QtZRH9T0D7@amdc1032>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: tj@kernel.org, JBottomley@parallels.com
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from comal.ext.ti.com ([198.47.26.152]:56618 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751188Ab3JRHbK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 18 Oct 2013 03:31:10 -0400
+In-Reply-To: <1896416.QtZRH9T0D7@amdc1032>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: tj@kernel.org, sergei.shtylyov@cogentembedded.com, kishon@ti.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Balaji T K <balajitk@ti.com>
 
-On resume, the SD driver currently waits until the block driver finishes executing a disk start command with blk_execute_rq. This patch changes the sd_resume callback to use blk_execute_rq_nowait instead, which allows it to return immediately, thus allowing the next device in the pm queue to resume. The return value of blk_execute_rq_nowait is handled in the background by sd_resume_complete. Any commands issued to the scsi disk during the startup will be queued up and executed once the disk is online. Thus no information is lost, and although the wait time itself isn't removed, it doesn't hold up the rest of the system.
+On 10/17/2013 04:57 PM, Bartlomiej Zolnierkiewicz wrote:
+> 
+> Hi,
+> 
+> On Wednesday, October 16, 2013 02:42:52 PM Roger Quadros wrote:
+>> From: Balaji T K <balajitk@ti.com>
+>>
+>> Some platforms have a PHY hooked up to the
+>> SATA controller. The PHY needs to be initialized
+>> and powered up for SATA to work. We do that
+>> using the PHY framework.
+>>
+>> [Roger Q] Cleaned up.
+>>
+>> CC: Tejun Heo <tj@kernel.org>
+>> Signed-off-by: Balaji T K <balajitk@ti.com>
+>> Signed-off-by: Roger Quadros <rogerq@ti.com>
+>> ---
+>>  .../devicetree/bindings/ata/ahci-platform.txt      |    3 +-
+>>  drivers/ata/ahci.h                                 |    2 ++
+>>  drivers/ata/ahci_platform.c                        |   29 +++++++++++++++++++-
+>>  3 files changed, 32 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+>> index 89de156..c8a6cea 100644
+>> --- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
+>> +++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+>> @@ -4,7 +4,8 @@ SATA nodes are defined to describe on-chip Serial ATA controllers.
+>>  Each SATA controller should have its own node.
+>>  
+>>  Required properties:
+>> -- compatible        : compatible list, contains "snps,spear-ahci"
+>> +- compatible        : compatible list, contains "snps,spear-ahci",
+>> +			snps,exynos5440-ahci or "snps,dwc-ahci"
+> 
+> minor nit:
+> s/snps,exynos5440-ahci/"snps,exynos5440-ahci"/
 
-In combination with the ata_port_resume patch, this patch greatly reduces S3 system resume time on systems with SATA drives. This is accomplished by removing the drive spinup time from the system resume delay. Applying these two patches allows SATA disks to resume asynchronously without holding up system resume; thus allowing the UI to come online sooner. There may be a short period after resume where the disks are still spinning up in the background, but the user shouldn't notice since the OS can function with the data left in RAM.
+OK.
+> 
+>>  - interrupts        : <interrupt mapping for SATA IRQ>
+>>  - reg               : <registers mapping>
+>>  
+>> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+>> index 1145637..94484cb 100644
+>> --- a/drivers/ata/ahci.h
+>> +++ b/drivers/ata/ahci.h
+>> @@ -37,6 +37,7 @@
+>>  
+>>  #include <linux/clk.h>
+>>  #include <linux/libata.h>
+>> +#include <linux/phy/phy.h>
+>>  
+>>  /* Enclosure Management Control */
+>>  #define EM_CTRL_MSG_TYPE              0x000f0000
+>> @@ -322,6 +323,7 @@ struct ahci_host_priv {
+>>  	u32			em_buf_sz;	/* EM buffer size in byte */
+>>  	u32			em_msg_type;	/* EM message type */
+>>  	struct clk		*clk;		/* Only for platforms supporting clk */
+>> +	struct phy		*phy;		/* If platforms use phy */
+> 
+> minor nit:
+> s/If platforms use phy/If platform uses PHY/
 
-This patch applies to all three resume callbacks: resume, restore, and runtime-resume. There is only a performance benefit for resume, but for simplicity both restore and runtime-resume use the same code path.
+Right.
 
-Signed-off-by: Todd Brandt <todd.e.brandt@intel.com>
-Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
+> 
+>>  	void			*plat_data;	/* Other platform data */
+>>  };
+>>  
+>> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+>> index 2daaee0..5a0f1418 100644
+>> --- a/drivers/ata/ahci_platform.c
+>> +++ b/drivers/ata/ahci_platform.c
+>> @@ -141,6 +141,21 @@ static int ahci_probe(struct platform_device *pdev)
+>>  		}
+>>  	}
+>>  
+>> +	hpriv->phy = devm_phy_get(dev, "sata-phy");
+>> +	if (IS_ERR(hpriv->phy)) {
+>> +		dev_dbg(dev, "can't get sata-phy\n");
+>> +		/* return only if -EPROBE_DEFER */
+>> +		if (PTR_ERR(hpriv->phy) == -EPROBE_DEFER) {
+>> +			rc = -EPROBE_DEFER;
+>> +			goto disable_unprepare_clk;
+>> +		}
+>> +	}
+>> +
+>> +	if (!IS_ERR(hpriv->phy)) {
+>> +		phy_init(hpriv->phy);
+>> +		phy_power_on(hpriv->phy);
+>> +	}
+>> +
+>>  	/*
+>>  	 * Some platforms might need to prepare for mmio region access,
+>>  	 * which could be done in the following init call. So, the mmio
+>> @@ -150,7 +165,7 @@ static int ahci_probe(struct platform_device *pdev)
+>>  	if (pdata && pdata->init) {
+>>  		rc = pdata->init(dev, hpriv->mmio);
+>>  		if (rc)
+>> -			goto disable_unprepare_clk;
+>> +			goto disable_phy;
+>>  	}
+>>  
+>>  	ahci_save_initial_config(dev, hpriv,
+>> @@ -220,6 +235,12 @@ static int ahci_probe(struct platform_device *pdev)
+>>  pdata_exit:
+>>  	if (pdata && pdata->exit)
+>>  		pdata->exit(dev);
+>> +disable_phy:
+>> +	if (!IS_ERR(hpriv->phy)) {
+>> +		phy_power_off(hpriv->phy);
+>> +		phy_exit(hpriv->phy);
+>> +	}
+>> +
+>>  disable_unprepare_clk:
+>>  	if (!IS_ERR(hpriv->clk))
+>>  		clk_disable_unprepare(hpriv->clk);
+>> @@ -238,6 +259,11 @@ static void ahci_host_stop(struct ata_host *host)
+>>  	if (pdata && pdata->exit)
+>>  		pdata->exit(dev);
+>>  
+>> +	if (!IS_ERR(hpriv->phy)) {
+>> +		phy_power_off(hpriv->phy);
+>> +		phy_exit(hpriv->phy);
+>> +	}
+>> +
+>>  	if (!IS_ERR(hpriv->clk)) {
+>>  		clk_disable_unprepare(hpriv->clk);
+>>  		clk_put(hpriv->clk);
+>> @@ -328,6 +354,7 @@ static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_suspend, ahci_resume);
+> 
+> Shouldn't phy_power_off/on also be used in ahci_suspend() and ahci_resume()?
 
- drivers/scsi/sd.c | 70 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 67 insertions(+), 3 deletions(-)
+I think so. Maybe even phy_exit and phy_init?
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index e62d17d..bd8411f 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3117,18 +3117,82 @@ done:
- 	return ret;
- }
- 
-+static void sd_resume_complete(struct request *rq, int error)
-+{
-+	struct scsi_sense_hdr sshdr;
-+	struct scsi_disk *sdkp = rq->end_io_data;
-+	char *sense = rq->sense;
-+
-+	if (error) {
-+		sd_printk(KERN_WARNING, sdkp, "START FAILED\n");
-+		sd_print_result(sdkp, error);
-+		if (sense && (driver_byte(error) & DRIVER_SENSE)) {
-+			scsi_normalize_sense(sense,
-+				SCSI_SENSE_BUFFERSIZE, &sshdr);
-+			sd_print_sense_hdr(sdkp, &sshdr);
-+		}
-+	} else {
-+		sd_printk(KERN_NOTICE, sdkp, "START SUCCESS\n");
-+	}
-+
-+	kfree(sense);
-+	rq->sense = NULL;
-+	rq->end_io_data = NULL;
-+	__blk_put_request(rq->q, rq);
-+	scsi_disk_put(sdkp);
-+}
-+
- static int sd_resume(struct device *dev)
- {
-+	unsigned char cmd[6] = { START_STOP };
- 	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
-+	struct request *req;
-+	char *sense = NULL;
- 	int ret = 0;
- 
- 	if (!sdkp->device->manage_start_stop)
--		goto done;
-+		goto error;
- 
- 	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
--	ret = sd_start_stop_device(sdkp, 1);
- 
--done:
-+	cmd[4] |= 1;
-+
-+	if (sdkp->device->start_stop_pwr_cond)
-+		cmd[4] |= 1 << 4;	/* Active or Standby */
-+
-+	if (!scsi_device_online(sdkp->device)) {
-+		ret = -ENODEV;
-+		goto error;
-+	}
-+
-+	req = blk_get_request(sdkp->device->request_queue, 0, __GFP_WAIT);
-+	if (!req) {
-+		ret = -ENOMEM;
-+		goto error;
-+	}
-+
-+	sense = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_NOIO);
-+	if (!sense) {
-+		ret = -ENOMEM;
-+		goto error_sense;
-+	}
-+
-+	req->cmd_len = COMMAND_SIZE(cmd[0]);
-+	memcpy(req->cmd, cmd, req->cmd_len);
-+	req->sense = sense;
-+	req->sense_len = 0;
-+	req->retries = SD_MAX_RETRIES;
-+	req->timeout = SD_TIMEOUT;
-+	req->cmd_type = REQ_TYPE_BLOCK_PC;
-+	req->cmd_flags |= REQ_PM | REQ_QUIET | REQ_PREEMPT;
-+
-+	req->end_io_data = sdkp;
-+	blk_execute_rq_nowait(req->q, NULL, req, 1, sd_resume_complete);
-+	return 0;
-+
-+ error_sense:
-+	__blk_put_request(req->q, req);
-+ error:
- 	scsi_disk_put(sdkp);
- 	return ret;
- }
+> 
+>>  static const struct of_device_id ahci_of_match[] = {
+>>  	{ .compatible = "snps,spear-ahci", },
+>>  	{ .compatible = "snps,exynos5440-ahci", },
+>> +	{ .compatible = "snps,dwc-ahci", },
+> 
+> This change together with ahci-platform.txt one should be in a separate patch.
 
+Agreed.
+
+> 
+>>  	{},
+>>  };
+>>  MODULE_DEVICE_TABLE(of, ahci_of_match);
+
+cheers,
+-roger
