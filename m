@@ -1,78 +1,30 @@
-From: Gwendal Grignou <gwendal@google.com>
-Subject: [PATCH] libata: Fix display of sata speed
-Date: Fri, 25 Oct 2013 16:28:57 -0700
-Message-ID: <1382743737-3516-2-git-send-email-gwendal@google.com>
-References: <1382743737-3516-1-git-send-email-gwendal@google.com>
+From: mrs maria <msmaria040@gmail.com>
+Subject: Dear Friend.
+Date: Sat, 26 Oct 2013 12:05:47 -0700 (PDT)
+Message-ID: <1382814347.10415.YahooMailBasic@web163003.mail.bf1.yahoo.com>
+Reply-To: msmaria040@gmail.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f202.google.com ([209.85.216.202]:36079 "EHLO
-	mail-qc0-f202.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751683Ab3JYX3D (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 Oct 2013 19:29:03 -0400
-Received: by mail-qc0-f202.google.com with SMTP id m20so415202qcx.3
-        for <linux-ide@vger.kernel.org>; Fri, 25 Oct 2013 16:29:02 -0700 (PDT)
-In-Reply-To: <1382743737-3516-1-git-send-email-gwendal@google.com>
+Received: from nm49.bullet.mail.ne1.yahoo.com ([98.138.120.56]:42881 "EHLO
+	nm49.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752331Ab3JZTGF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 26 Oct 2013 15:06:05 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org
-Cc: linux-ide@vger.kernel.org, Gwendal Grignou <gwendal@google.com>
 
-6.0 Gbps link speed was not decoded properly:
-speed was reported at 3.0 Gbps only.
 
-Tested: On a machine where libata reports 6.0 Gbps in
-        /var/log/messages:
-    ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+Dear Friend.
 
-    Before:
-    	cat /sys/class/ata_link/link1/sata_spd
-    	3.0 Gbps
-    After:
-    	cat /sys/class/ata_link/link1/sata_spd
-    	6.0 Gbps
+I am Mrs Maria ,The Head of file Department in Bank Of Africa.I seek your a
+ssistance and i assured of your capability to champion this business opport
+unity to remit $15 million U.S.A dollars. Into your account if you are inte
+rested let me know so that i can send you the details of this transaction. 
+I agree that 40% of this money will be for you 10% will be set aside for ex
+penses incurred during the business and 50% would be for me. this is the we
+bsit http://news.bbc.co.uk/1/hi/world/europe/859479.stm my private email ID
+:msmaria040@gmail.com
 
-Signed-off-by: Gwendal Grignou <gwendal@google.com>
----
- drivers/ata/libata-transport.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
-index 150a917..e37413228 100644
---- a/drivers/ata/libata-transport.c
-+++ b/drivers/ata/libata-transport.c
-@@ -321,25 +321,25 @@ int ata_tport_add(struct device *parent,
- /*
-  * ATA link attributes
-  */
-+static int noop(int x) { return x; }
- 
--
--#define ata_link_show_linkspeed(field)					\
-+#define ata_link_show_linkspeed(field, format)			        \
- static ssize_t								\
- show_ata_link_##field(struct device *dev,				\
- 		      struct device_attribute *attr, char *buf)		\
- {									\
- 	struct ata_link *link = transport_class_to_link(dev);		\
- 									\
--	return sprintf(buf,"%s\n", sata_spd_string(fls(link->field)));	\
-+	return sprintf(buf, "%s\n", sata_spd_string(format(link->field))); \
- }
- 
--#define ata_link_linkspeed_attr(field)					\
--	ata_link_show_linkspeed(field)					\
-+#define ata_link_linkspeed_attr(field, format)				\
-+	ata_link_show_linkspeed(field, format)				\
- static DEVICE_ATTR(field, S_IRUGO, show_ata_link_##field, NULL)
- 
--ata_link_linkspeed_attr(hw_sata_spd_limit);
--ata_link_linkspeed_attr(sata_spd_limit);
--ata_link_linkspeed_attr(sata_spd);
-+ata_link_linkspeed_attr(hw_sata_spd_limit, fls);
-+ata_link_linkspeed_attr(sata_spd_limit, fls);
-+ata_link_linkspeed_attr(sata_spd, noop);
- 
- 
- static DECLARE_TRANSPORT_CLASS(ata_link_class,
--- 
-1.8.4.1
-
+Regards,
+Mrs Maria
+call  me +226 65 36 97 57
