@@ -1,43 +1,32 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata: Fix display of sata speed
-Date: Sun, 27 Oct 2013 07:44:12 -0400
-Message-ID: <20131027114412.GG14934@mtj.dyndns.org>
-References: <1382743737-3516-1-git-send-email-gwendal@google.com>
- <1382743737-3516-2-git-send-email-gwendal@google.com>
+Subject: Re: [PATCH 1/1] AHCI: disabled FBS prior to issuing software reset
+Date: Sun, 27 Oct 2013 07:57:03 -0400
+Message-ID: <20131027115703.GH14934@mtj.dyndns.org>
+References: <CAP0P+NUQSByVNquY-zP3S-6GKhSvQXgq_4dDCTd2R8FM=YC_Gg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f43.google.com ([209.85.216.43]:37853 "EHLO
-	mail-qa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751696Ab3J0LoQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 27 Oct 2013 07:44:16 -0400
-Received: by mail-qa0-f43.google.com with SMTP id i13so1520548qae.2
-        for <linux-ide@vger.kernel.org>; Sun, 27 Oct 2013 04:44:15 -0700 (PDT)
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1382743737-3516-2-git-send-email-gwendal@google.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <CAP0P+NUQSByVNquY-zP3S-6GKhSvQXgq_4dDCTd2R8FM=YC_Gg@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: xiangliang yu <yxlraid@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, yuxiangl@marvell.com
 List-Id: linux-ide@vger.kernel.org
-To: Gwendal Grignou <gwendal@google.com>
-Cc: linux-ide@vger.kernel.org
 
-On Fri, Oct 25, 2013 at 04:28:57PM -0700, Gwendal Grignou wrote:
-> 6.0 Gbps link speed was not decoded properly:
-> speed was reported at 3.0 Gbps only.
-> 
-> Tested: On a machine where libata reports 6.0 Gbps in
->         /var/log/messages:
->     ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-> 
->     Before:
->     	cat /sys/class/ata_link/link1/sata_spd
->     	3.0 Gbps
->     After:
->     	cat /sys/class/ata_link/link1/sata_spd
->     	6.0 Gbps
-> 
-> Signed-off-by: Gwendal Grignou <gwendal@google.com>
+Hello,
 
-Applied to libata/for-3.13 with stable cc'd.
+On Wed, Oct 16, 2013 at 11:36:20AM +0800, xiangliang yu wrote:
+> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+> index 34c8216..fbe592f 100644
+> --- a/drivers/ata/libahci.c
+> +++ b/drivers/ata/libahci.c
+> @@ -1266,9 +1266,11 @@ int ahci_do_softreset(struct ata_link *link,
+> unsigned int *class,
+
+Your patch is still completely white space corrupted.  Please check
+your mail settings.  Using git-send-email is usually a good idea.  I'm
+applying the patch manually this time but *please* make sure your mail
+setup is working before posting things next time.
 
 Thanks.
 
