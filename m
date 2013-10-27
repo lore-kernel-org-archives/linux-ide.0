@@ -1,30 +1,45 @@
-From: mrs maria <msmaria040@gmail.com>
-Subject: Dear Friend.
-Date: Sat, 26 Oct 2013 12:05:47 -0700 (PDT)
-Message-ID: <1382814347.10415.YahooMailBasic@web163003.mail.bf1.yahoo.com>
-Reply-To: msmaria040@gmail.com
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] libata: Fix display of sata speed
+Date: Sun, 27 Oct 2013 07:44:12 -0400
+Message-ID: <20131027114412.GG14934@mtj.dyndns.org>
+References: <1382743737-3516-1-git-send-email-gwendal@google.com>
+ <1382743737-3516-2-git-send-email-gwendal@google.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nm49.bullet.mail.ne1.yahoo.com ([98.138.120.56]:42881 "EHLO
-	nm49.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752331Ab3JZTGF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 26 Oct 2013 15:06:05 -0400
+Received: from mail-qa0-f43.google.com ([209.85.216.43]:37853 "EHLO
+	mail-qa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751696Ab3J0LoQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 27 Oct 2013 07:44:16 -0400
+Received: by mail-qa0-f43.google.com with SMTP id i13so1520548qae.2
+        for <linux-ide@vger.kernel.org>; Sun, 27 Oct 2013 04:44:15 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <1382743737-3516-2-git-send-email-gwendal@google.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Gwendal Grignou <gwendal@google.com>
+Cc: linux-ide@vger.kernel.org
 
+On Fri, Oct 25, 2013 at 04:28:57PM -0700, Gwendal Grignou wrote:
+> 6.0 Gbps link speed was not decoded properly:
+> speed was reported at 3.0 Gbps only.
+> 
+> Tested: On a machine where libata reports 6.0 Gbps in
+>         /var/log/messages:
+>     ata1: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+> 
+>     Before:
+>     	cat /sys/class/ata_link/link1/sata_spd
+>     	3.0 Gbps
+>     After:
+>     	cat /sys/class/ata_link/link1/sata_spd
+>     	6.0 Gbps
+> 
+> Signed-off-by: Gwendal Grignou <gwendal@google.com>
 
-Dear Friend.
+Applied to libata/for-3.13 with stable cc'd.
 
-I am Mrs Maria ,The Head of file Department in Bank Of Africa.I seek your a
-ssistance and i assured of your capability to champion this business opport
-unity to remit $15 million U.S.A dollars. Into your account if you are inte
-rested let me know so that i can send you the details of this transaction. 
-I agree that 40% of this money will be for you 10% will be set aside for ex
-penses incurred during the business and 50% would be for me. this is the we
-bsit http://news.bbc.co.uk/1/hi/world/europe/859479.stm my private email ID
-:msmaria040@gmail.com
+Thanks.
 
-Regards,
-Mrs Maria
-call  me +226 65 36 97 57
+-- 
+tejun
