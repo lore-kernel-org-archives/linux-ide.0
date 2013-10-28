@@ -1,32 +1,24 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata: Add some missing command descriptions
-Date: Sun, 27 Oct 2013 08:41:17 -0400
-Message-ID: <20131027124117.GM14934@mtj.dyndns.org>
-References: <5265D446.8020002@gmail.com>
+From: xiangliang yu <yxlraid@gmail.com>
+Subject: Re: [PATCH 1/1] AHCI: disabled FBS prior to issuing software reset
+Date: Mon, 28 Oct 2013 09:48:05 +0800
+Message-ID: <CAP0P+NXWLBVCve7KXmAyJ9qJiNq_t+ocBvBCYQOO+pESk3hpaw@mail.gmail.com>
+References: <CAP0P+NUQSByVNquY-zP3S-6GKhSvQXgq_4dDCTd2R8FM=YC_Gg@mail.gmail.com>
+	<20131027115703.GH14934@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f45.google.com ([209.85.216.45]:48003 "EHLO
-	mail-qa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753161Ab3J0Mlm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 27 Oct 2013 08:41:42 -0400
-Received: by mail-qa0-f45.google.com with SMTP id ii20so1535659qab.18
-        for <linux-ide@vger.kernel.org>; Sun, 27 Oct 2013 05:41:42 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <5265D446.8020002@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20131027115703.GH14934@mtj.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, yuxiangl@marvell.com
 List-Id: linux-ide@vger.kernel.org
-To: Robert Hancock <hancockrwd@gmail.com>
-Cc: ide <linux-ide@vger.kernel.org>
 
-On Mon, Oct 21, 2013 at 07:26:30PM -0600, Robert Hancock wrote:
-> Add some missing command enumerations from the ATA-8 ACS-3 spec into 
-> include/linux/ata.h, and add the corresponding human-readable command
-> descriptions in libata-eh.c.
-> 
-> Signed-off-by: Robert Hancock <hancockrwd@gmail.com>
+Hi,
 
-Applied to libata/for-3.13.  Thanks.
+> Your patch is still completely white space corrupted.  Please check
+> your mail settings.  Using git-send-email is usually a good idea.  I'm
+> applying the patch manually this time but *please* make sure your mail
+> setup is working before posting things next time.
 
--- 
-tejun
+Sorry, my gmail maybe has setting issue. I'll use git to send mail
+next time, thank very much.
