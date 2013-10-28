@@ -1,85 +1,75 @@
 From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
-Subject: [PATCH 00/12] Prepare various SH/R Mobile/Car drivers for CCF migration
-Date: Mon, 28 Oct 2013 23:49:17 +0100
-Message-ID: <1383000569-8916-1-git-send-email-laurent.pinchart+renesas@ideasonboard.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [PATCH 04/12] sata_rcar: Convert to clk_prepare/unprepare
+Date: Mon, 28 Oct 2013 23:49:21 +0100
+Message-ID: <1383000569-8916-5-git-send-email-laurent.pinchart+renesas@ideasonboard.com>
+References: <1383000569-8916-1-git-send-email-laurent.pinchart+renesas@ideasonboard.com>
+Return-path: <linux-sh-owner@vger.kernel.org>
+In-Reply-To: <1383000569-8916-1-git-send-email-laurent.pinchart+renesas@ideasonboard.com>
+Sender: linux-sh-owner@vger.kernel.org
 To: linux-arm-kernel@lists.infradead.org
-Cc: linux-sh@vger.kernel.org, Mike Turquette <mturquette@linaro.org>, Daniel Lezcano <daniel.lezcano@linaro.org>, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, David Airlie <airlied@linux.ie>, dri-devel@lists.freedesktop.org, Wolfram Sang <wsa@the-dreams.de>, linux-i2c@vger.kernel.org, Chris Ball <cjb@laptop.org>, Guennadi Liakhovetski <g.liakhovetski+renesas@gmail.com>, linux-mmc@vger.kernel.org, Felipe Balbi <balbi@ti.com>, linux-usb@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, Tomi Valkeinen <tomi.valkeinen@ti.com>, linux-fbdev@vger.kernel.org
+Cc: linux-sh@vger.kernel.org, Mike Turquette <mturquette@linaro.org>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Hello,
+Turn clk_enable() and clk_disable() calls into clk_prepare_enable() and
+clk_disable_unprepare() to get ready for the migration to the common
+clock framework.
 
-This patch series, based on v3.12-rc7, prepares various Renesas SH-Mobile,
-R-Mobile and R-Car drivers for migration to CCF by adding clock prepare and
-unprepare support.
-
-The patches are pretty straightforward. Most of the drivers called
-clk_enable and clk_disable in sleepable context, I've thus just converted them
-to clk_prepare_enable and clk_disable_unprepare.
-
-The clocksource drivers were slightly more complex to handle as clk_enable and
-clk_disable were called in non-sleepable context. As the clocksource framework
-architecture doesn't provide any sleepable callback in which clocks could be
-prepared and unprepared, I've added clk_prepare and clk_unprepare calls in the
-probe and suspend/resume handlers (clocksources can't be removed so the remove
-handler doesn't need a clk_unprepare call).
-
-I'd like to get all these patches merged in v3.14. As they will need to go
-through their respective subsystems' trees, I would appreciate if all
-maintainers involved could notify me when they merge patches from this series
-in their tree to help me tracking the merge status. I don't plan to send pull
-requests individually for these patches, and I will repost patches
-individually if changes are requested during review.
-
-Cc: Daniel Lezcano <daniel.lezcano@linaro.org>
-Cc: linux-kernel@vger.kernel.org
 Cc: Tejun Heo <tj@kernel.org>
 Cc: linux-ide@vger.kernel.org
-Cc: David Airlie <airlied@linux.ie>
-Cc: dri-devel@lists.freedesktop.org
-Cc: Wolfram Sang <wsa@the-dreams.de>
-Cc: linux-i2c@vger.kernel.org
-Cc: Chris Ball <cjb@laptop.org>
-Cc: Guennadi Liakhovetski <g.liakhovetski+renesas@gmail.com>
-Cc: linux-mmc@vger.kernel.org
-Cc: Felipe Balbi <balbi@ti.com>
-Cc: linux-usb@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
-Cc: Tomi Valkeinen <tomi.valkeinen@ti.com>
-Cc: linux-fbdev@vger.kernel.org
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+---
+ drivers/ata/sata_rcar.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-Laurent Pinchart (12):
-  clocksource: sh_cmt: Add clk_prepare/unprepare support
-  clocksource: sh_mtu2: Add clk_prepare/unprepare support
-  clocksource: sh_tmu: Add clk_prepare/unprepare support
-  sata_rcar: Convert to clk_prepare/unprepare
-  drm: shmob_drm: Convert to clk_prepare/unprepare
-  i2c: sh_mobile: Convert to clk_prepare/unprepare
-  mmc: sh_mmcif: Convert to clk_prepare/unprepare
-  mmc: sh_mobile_sdhi: Convert to clk_prepare/unprepare
-  usb: gadget: r8a66597-udc: Convert to clk_prepare/unprepare
-  usb: r8a66597-hcd: Convert to clk_prepare/unprepare
-  fbdev: shmobile-hdmi: Convert to clk_prepare/unprepare
-  fbdev: shmobile-lcdcfb: Convert to clk_prepare/unprepare
-
- drivers/ata/sata_rcar.c                   | 10 +++++-----
- drivers/clocksource/sh_cmt.c              | 20 ++++++++++++++++----
- drivers/clocksource/sh_mtu2.c             | 16 ++++++++++++++--
- drivers/clocksource/sh_tmu.c              | 20 +++++++++++++++++---
- drivers/gpu/drm/shmobile/shmob_drm_crtc.c |  4 ++--
- drivers/i2c/busses/i2c-sh_mobile.c        |  8 ++++----
- drivers/mmc/host/sh_mmcif.c               | 12 ++++++------
- drivers/mmc/host/sh_mobile_sdhi.c         |  4 ++--
- drivers/usb/gadget/r8a66597-udc.c         |  6 +++---
- drivers/usb/host/r8a66597-hcd.c           |  4 ++--
- drivers/video/sh_mobile_hdmi.c            |  6 +++---
- drivers/video/sh_mobile_lcdcfb.c          |  4 ++--
- 12 files changed, 76 insertions(+), 38 deletions(-)
-
+diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
+index c2d95e9..1dae9a9 100644
+--- a/drivers/ata/sata_rcar.c
++++ b/drivers/ata/sata_rcar.c
+@@ -792,7 +792,7 @@ static int sata_rcar_probe(struct platform_device *pdev)
+ 		dev_err(&pdev->dev, "failed to get access to sata clock\n");
+ 		return PTR_ERR(priv->clk);
+ 	}
+-	clk_enable(priv->clk);
++	clk_prepare_enable(priv->clk);
+ 
+ 	host = ata_host_alloc(&pdev->dev, 1);
+ 	if (!host) {
+@@ -822,7 +822,7 @@ static int sata_rcar_probe(struct platform_device *pdev)
+ 		return 0;
+ 
+ cleanup:
+-	clk_disable(priv->clk);
++	clk_disable_unprepare(priv->clk);
+ 
+ 	return ret;
+ }
+@@ -841,7 +841,7 @@ static int sata_rcar_remove(struct platform_device *pdev)
+ 	iowrite32(0, base + SATAINTSTAT_REG);
+ 	iowrite32(0x7ff, base + SATAINTMASK_REG);
+ 
+-	clk_disable(priv->clk);
++	clk_disable_unprepare(priv->clk);
+ 
+ 	return 0;
+ }
+@@ -861,7 +861,7 @@ static int sata_rcar_suspend(struct device *dev)
+ 		/* mask */
+ 		iowrite32(0x7ff, base + SATAINTMASK_REG);
+ 
+-		clk_disable(priv->clk);
++		clk_disable_unprepare(priv->clk);
+ 	}
+ 
+ 	return ret;
+@@ -873,7 +873,7 @@ static int sata_rcar_resume(struct device *dev)
+ 	struct sata_rcar_priv *priv = host->private_data;
+ 	void __iomem *base = priv->base;
+ 
+-	clk_enable(priv->clk);
++	clk_prepare_enable(priv->clk);
+ 
+ 	/* ack and mask */
+ 	iowrite32(0, base + SATAINTSTAT_REG);
 -- 
-Regards,
+1.8.1.5
 
-Laurent Pinchart
