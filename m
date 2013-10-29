@@ -1,63 +1,34 @@
-From: Kumar Gala <galak@codeaurora.org>
-Subject: Re: [PATCH 2/2] sata_rcar: Add R-Car Gen2 SATA PHY support
-Date: Tue, 29 Oct 2013 12:19:08 -0500
-Message-ID: <82E941A8-D062-4E90-B661-511881F51F9B@codeaurora.org>
-References: <1381925161-16729-1-git-send-email-valentine.barshak@cogentembedded.com> <1381925161-16729-3-git-send-email-valentine.barshak@cogentembedded.com> <20131029045943.GE20432@verge.net.au> <B6798662-4DEC-499A-A96E-EB995A482C1B@codeaurora.org> <20131029084444.GC15731@verge.net.au>
-Mime-Version: 1.0 (Apple Message framework v1283)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-sh-owner@vger.kernel.org>
-In-Reply-To: <20131029084444.GC15731@verge.net.au>
-Sender: linux-sh-owner@vger.kernel.org
-To: Simon Horman <horms@verge.net.au>
-Cc: Valentine Barshak <valentine.barshak@cogentembedded.com>, linux-sh@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, Magnus Damm <magnus.damm@gmail.com>, Vladimir Barinov <vladimir.barinov@cogentembedded.com>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>, Laurent Pinchart <laurent.pinchart@ideasonboard.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Tejun Heo <tj@kernel.org>, Mark Rutland <mark.rutland@arm.com>
+From: Levente Kurusa <levex@linux.com>
+Subject: [PATCH trivial] ata: libata-eh: Remove unnecessary snprintf arithmetic
+Date: Tue, 29 Oct 2013 19:38:38 +0100
+Message-ID: <527000AE.8060506@linux.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ee0-f46.google.com ([74.125.83.46]:44288 "EHLO
+	mail-ee0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751333Ab3J2Sik (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Oct 2013 14:38:40 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Linux IDE/ATA Dev <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
+Remove an unnecessary arithmetic operation from a call to snprintf, because
+the size parameter of snprintf includes the trailing null byte.
 
-On Oct 29, 2013, at 3:44 AM, Simon Horman wrote:
+Signed-off-by: Levente Kurusa <levex@linux.com>
+---
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index f9476fb..b7c4146 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -2427,7 +2434,7 @@ static void ata_eh_link_report(struct ata_link *link)
 
-> On Tue, Oct 29, 2013 at 03:24:16AM -0500, Kumar Gala wrote:
->> 
->> On Oct 28, 2013, at 11:59 PM, Simon Horman wrote:
->> 
->>> On Wed, Oct 16, 2013 at 04:06:01PM +0400, Valentine Barshak wrote:
->>>> R-Car Gen2 SoCs have a different PHY which is not compatible
->>>> with the older R-Car H1 (R8A7779) version.
->>>> This adds OF/platform device id tables and PHY initialization
->>>> callbacks for the following Gen2 SoCs:
->>>> * R-Car H2: R8A7790;
->>>> * R-Car M2: R8A7791.
->>>> 
->>>> PHY initialization method is chosen based on the device id.
->>>> Default PHY settings are applied for Gen2 SoCs, which should
->>>> suit the Gen2 boards available.
->>>> 
->>>> The R8A7779 platform code is modified to use "sata-r8a7779"
->>>> device name.
->>>> 
->>>> Signed-off-by: Valentine Barshak <valentine.barshak@cogentembedded.com>
->>>> ---
->>>> .../devicetree/bindings/ata/sata_rcar.txt          |   5 +-
->>>> arch/arm/mach-shmobile/clock-r8a7779.c             |   2 +-
->>>> arch/arm/mach-shmobile/setup-r8a7779.c             |   2 +-
->>>> drivers/ata/sata_rcar.c                            | 118 ++++++++++++++++++---
->>> 
->>> Hi Mark, Hi Device-Tree Folks,
->>> 
->>> I'm wondering if you have had a chance to look over the bindings
->>> aspect of this and the other patch in the series. I believe that
->>> this series addresses all previous review in that regards.
->> 
->> What tree is this binding in?
-> 
-> sata_car.txt is added by the previous patch in this series
-> "[PATCH 1/2] sata_rcar: Adjust and document device tree bindings"
+ 	memset(tries_buf, 0, sizeof(tries_buf));
+ 	if (ap->eh_tries < ATA_EH_MAX_TRIES)
+-		snprintf(tries_buf, sizeof(tries_buf) - 1, " t%d",
++		snprintf(tries_buf, sizeof(tries_buf), " t%d",
+ 			 ap->eh_tries);
 
-Why not just have all the binding in one patch.  There isn't a reason this should be split.
-
-- k
-
--- 
-Employee of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
-
+ 	if (ehc->i.dev) {
