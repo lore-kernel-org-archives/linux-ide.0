@@ -1,33 +1,41 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 04/12] sata_rcar: Convert to clk_prepare/unprepare
-Date: Tue, 29 Oct 2013 14:41:20 -0400
-Message-ID: <20131029184120.GA21990@mtj.dyndns.org>
-References: <1383000569-8916-1-git-send-email-laurent.pinchart+renesas@ideasonboard.com>
- <1383000569-8916-5-git-send-email-laurent.pinchart+renesas@ideasonboard.com>
+Subject: Re: [PATCH trivial] ata: libata-eh: Remove unnecessary snprintf
+ arithmetic
+Date: Tue, 29 Oct 2013 14:53:02 -0400
+Message-ID: <20131029185302.GA22261@mtj.dyndns.org>
+References: <527000AE.8060506@linux.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f182.google.com ([209.85.216.182]:50186 "EHLO
-	mail-qc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753330Ab3J2SlZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Oct 2013 14:41:25 -0400
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:62026 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751337Ab3J2SxH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Oct 2013 14:53:07 -0400
 Content-Disposition: inline
-In-Reply-To: <1383000569-8916-5-git-send-email-laurent.pinchart+renesas@ideasonboard.com>
+In-Reply-To: <527000AE.8060506@linux.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
-Cc: linux-arm-kernel@lists.infradead.org, linux-sh@vger.kernel.org, Mike Turquette <mturquette@linaro.org>, linux-ide@vger.kernel.org
+To: Levente Kurusa <levex@linux.com>
+Cc: Linux IDE/ATA Dev <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-On Mon, Oct 28, 2013 at 11:49:21PM +0100, Laurent Pinchart wrote:
-> Turn clk_enable() and clk_disable() calls into clk_prepare_enable() and
-> clk_disable_unprepare() to get ready for the migration to the common
-> clock framework.
+Hello,
+
+On Tue, Oct 29, 2013 at 07:38:38PM +0100, Levente Kurusa wrote:
+> Remove an unnecessary arithmetic operation from a call to snprintf, because
+> the size parameter of snprintf includes the trailing null byte.
 > 
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: linux-ide@vger.kernel.org
-> Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+> Signed-off-by: Levente Kurusa <levex@linux.com>
+> ---
+> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+> index f9476fb..b7c4146 100644
+> --- a/drivers/ata/libata-eh.c
+> +++ b/drivers/ata/libata-eh.c
+> @@ -2427,7 +2434,7 @@ static void ata_eh_link_report(struct ata_link *link)
+> 
+>  	memset(tries_buf, 0, sizeof(tries_buf));
 
-Applied to libata/for-3.13.
+While at it, can you please remove the above and just initialize the
+buffer to "" on definition?
 
 Thanks.
 
