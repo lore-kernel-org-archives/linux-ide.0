@@ -1,83 +1,63 @@
-From: Mauro Carvalho Chehab <m.chehab-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-Subject: Re: [PATCH 19/51] DMA-API: media: dt3155v4l: replace
- dma_set_mask()+dma_set_coherent_mask() with new helper
-Date: Thu, 31 Oct 2013 09:46:40 -0200
-Message-ID: <20131031094640.205840a2@samsung.com>
-References: <20130919212235.GD12758@n2100.arm.linux.org.uk>
- <E1VMm13-0007hO-9l@rmk-PC.arm.linux.org.uk> <5249673B.5020705@xs4all.nl>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-reply-to: <5249673B.5020705-qWit8jRvyhVmR6Xm/wNWPw@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Hans Verkuil <hverkuil-qWit8jRvyhVmR6Xm/wNWPw@public.gmane.org>
-Cc: Russell King <rmk+kernel-lFZ/pmaqli7XmaaqVzeoHQ@public.gmane.org>, alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org, b43-dev-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, e1000-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fbdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mmc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-omap-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linuxppc-dev-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org, linux-samsung-soc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Solarflare linux maintainers <linux-net-drivers-s/n/eUQHGBpZroRs9YW3xA@public.gmane.org>, uclinux-dist-devel-ZG0+EudsQA8dtHy/vicBwGD2FQJk+8+b@public.gmane.org, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Russell King <rmk+kernel@ar>
+From: Kumar Gala <galak@codeaurora.org>
+Subject: Re: [PATCH 2/2] dt: Document sata_rcar bindings
+Date: Thu, 31 Oct 2013 09:27:50 -0500
+Message-ID: <597E950F-A53D-4BBD-9E78-8901D50E3FD7@codeaurora.org>
+References: <1383217394-18582-1-git-send-email-valentine.barshak@cogentembedded.com> <1383217394-18582-3-git-send-email-valentine.barshak@cogentembedded.com>
+Mime-Version: 1.0 (Apple Message framework v1283)
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-sh-owner@vger.kernel.org>
+In-Reply-To: <1383217394-18582-3-git-send-email-valentine.barshak@cogentembedded.com>
+Sender: linux-sh-owner@vger.kernel.org
+To: Valentine Barshak <valentine.barshak@cogentembedded.com>
+Cc: linux-sh@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, Simon Horman <horms@verge.net.au>, Magnus Damm <magnus.damm@gmail.com>, Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>, Laurent Pinchart <laurent.pinchart@ideasonboard.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Tejun Heo <tj@kernel.org>, Vladimir Barinov <vladimir.barinov@cogentembedded.com>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Mark Rutland <mark.rutland@arm.com>
 List-Id: linux-ide@vger.kernel.org
 
-Hi Russell,
 
-Em Mon, 30 Sep 2013 13:57:47 +0200
-Hans Verkuil <hverkuil-qWit8jRvyhVmR6Xm/wNWPw@public.gmane.org> escreveu:
+On Oct 31, 2013, at 6:03 AM, Valentine Barshak wrote:
 
-> On 09/19/2013 11:44 PM, Russell King wrote:
-> > Replace the following sequence:
-> > 
-> > 	dma_set_mask(dev, mask);
-> > 	dma_set_coherent_mask(dev, mask);
-> > 
-> > with a call to the new helper dma_set_mask_and_coherent().
-> > 
-> > Signed-off-by: Russell King <rmk+kernel-lFZ/pmaqli7XmaaqVzeoHQ@public.gmane.org>
+> These bindings can be used to register SATA devices found on R-Car SoC.
 > 
-> Acked-by: Hans Verkuil <hans.verkuil-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>
+> Signed-off-by: Valentine Barshak <valentine.barshak@cogentembedded.com>
+> ---
+> Documentation/devicetree/bindings/ata/sata_rcar.txt | 18 ++++++++++++++++++
+> 1 file changed, 18 insertions(+)
+> create mode 100644 Documentation/devicetree/bindings/ata/sata_rcar.txt
 
-Somehow, I lost your original post (I got unsubscribed on a few days 
-from all vger mailing lists at the end of september).
+Acked-by: Kumar Gala <galak@codeaurora.org>
 
-I suspect that you want to sent this via your tree, right?
-If so:
-
-Acked-by: Mauro Carvalho Chehab <m.chehab-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+- k
 
 > 
-> Regards,
+> diff --git a/Documentation/devicetree/bindings/ata/sata_rcar.txt b/Documentation/devicetree/bindings/ata/sata_rcar.txt
+> new file mode 100644
+> index 0000000..d6b20a6
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ata/sata_rcar.txt
+> @@ -0,0 +1,18 @@
+> +* Renesas R-Car SATA
+> +
+> +Required properties:
+> +- compatible		: should contain one of the following:
+> +			  - "renesas,sata-r8a7779" for R-Car H1
+> +			  - "renesas,sata-r8a7790" for R-Car H2
+> +			  - "renesas,sata-r8a7791" for R-Car M2
+> +- reg			: offset and length of the SATA registers;
+> +- interrupts		: must consist of one interrupt specifier.
+> +
+> +Example:
+> +
+> +sata: sata@fc600000 {
+> +	compatible = "renesas,sata-r8a7779";
+> +	reg = <0xfc600000 0x2000>;
+> +	interrupt-parent = <&gic>;
+> +	interrupts = <0 100 0x4>;
+> +};
+> -- 
+> 1.8.3.1
 > 
-> 	Hans
-> 
-> > ---
-> >  drivers/staging/media/dt3155v4l/dt3155v4l.c |    5 +----
-> >  1 files changed, 1 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/drivers/staging/media/dt3155v4l/dt3155v4l.c b/drivers/staging/media/dt3155v4l/dt3155v4l.c
-> > index 90d6ac4..081407b 100644
-> > --- a/drivers/staging/media/dt3155v4l/dt3155v4l.c
-> > +++ b/drivers/staging/media/dt3155v4l/dt3155v4l.c
-> > @@ -901,10 +901,7 @@ dt3155_probe(struct pci_dev *pdev, const struct pci_device_id *id)
-> >  	int err;
-> >  	struct dt3155_priv *pd;
-> >  
-> > -	err = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
-> > -	if (err)
-> > -		return -ENODEV;
-> > -	err = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(32));
-> > +	err = dma_set_mask_and_coherent(&pdev->dev, DMA_BIT_MASK(32));
-> >  	if (err)
-> >  		return -ENODEV;
-> >  	pd = kzalloc(sizeof(*pd), GFP_KERNEL);
-> > 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-media" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
 
 -- 
+Employee of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
 
-Cheers,
-Mauro
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
