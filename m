@@ -1,50 +1,39 @@
-From: Simon Horman <horms@verge.net.au>
-Subject: Re: [PATCH V4] sata_rcar: Add R-Car Gen2 SATA PHY support
-Date: Fri, 1 Nov 2013 09:13:40 +0900
-Message-ID: <20131101001340.GB6818@verge.net.au>
-References: <1383153261-17383-1-git-send-email-valentine.barshak@cogentembedded.com>
- <20131031060141.GT1603@verge.net.au>
- <5272326B.3050500@cogentembedded.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-sh-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <5272326B.3050500@cogentembedded.com>
-Sender: linux-sh-owner@vger.kernel.org
-To: Valentine <valentine.barshak@cogentembedded.com>
-Cc: linux-sh@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, Magnus Damm <magnus.damm@gmail.com>, Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>, Laurent Pinchart <laurent.pinchart@ideasonboard.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Kumar Gala <galak@codeaurora.org>, Tejun Heo <tj@kernel.org>, Vladimir Barinov <vladimir.barinov@cogentembedded.com>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Mark Rutland <mark.rutland@arm.com>
+From: James Ralston <james.d.ralston@intel.com>
+Subject: [PATCH 1/4] ahci: Add Device IDs for Intel Wildcat Point-LP
+Date: Mon,  4 Nov 2013 09:24:58 -0800
+Message-ID: <1383585898-4587-1-git-send-email-james.d.ralston@intel.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:63019 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750819Ab3KDRZa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 4 Nov 2013 12:25:30 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Seth Heasley <seth.heasley@intel.com>, James Ralston <james.d.ralston@intel.com>
 
-On Thu, Oct 31, 2013 at 02:35:23PM +0400, Valentine wrote:
-> On 10/31/2013 10:01 AM, Simon Horman wrote:
-> >On Wed, Oct 30, 2013 at 09:14:21PM +0400, Valentine Barshak wrote:
-> >>R-Car Gen2 SoCs have a different PHY which is not compatible
-> >>with the older R-Car H1 (R8A7779) version.
-> >>This adds OF/platform device id tables and PHY initialization
-> >>callbacks for the following Gen2 SoCs:
-> >>   * R-Car H2: R8A7790;
-> >>   * R-Car M2: R8A7791.
-> >>
-> >>PHY initialization method is chosen based on the device id.
-> >>Default PHY settings are applied for Gen2 SoCs, which should
-> >>suit the Gen2 boards available.
-> >>
-> >>While at it, this also adds "sata-r8a7779" compatibility string
-> >>for R-Car H1 SATA, while keeping the old one for compatibility.
-> >>
-> >>Signed-off-by: Valentine Barshak <valentine.barshak@cogentembedded.com>
-> >
-> >I know we are going around and around in circles regarding the bindings.
-> >But I think you need to submit that patch which documents the bindings
-> >that exist after this patch in order for the bindings, as they are
-> >used here, to be reviewed by the device tree people.
-> 
-> OK, I'll resend.
-> 
-> >
-> >Also, I think I found a typo which I have noted below.
-> 
-> There's no typo. I'm using "sata_rcar" device name for compatibility with the current r8a7779 code
-> that uses the driver and registers "sata_rcar" device.
+This patch adds the AHCI-mode SATA Device IDs for the Intel Wildcat Point-LP PCH.
 
-Thanks, sorry for the noise.
+Signed-off-by: James Ralston <james.d.ralston@intel.com>
+---
+ drivers/ata/ahci.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 8e28f92..e2903d0 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -292,6 +292,10 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x8d66), board_ahci }, /* Wellsburg RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x8d6e), board_ahci }, /* Wellsburg RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x23a3), board_ahci }, /* Coleto Creek AHCI */
++	{ PCI_VDEVICE(INTEL, 0x9c83), board_ahci }, /* Wildcat Point-LP AHCI */
++	{ PCI_VDEVICE(INTEL, 0x9c85), board_ahci }, /* Wildcat Point-LP RAID */
++	{ PCI_VDEVICE(INTEL, 0x9c87), board_ahci }, /* Wildcat Point-LP RAID */
++	{ PCI_VDEVICE(INTEL, 0x9c8f), board_ahci }, /* Wildcat Point-LP RAID */
+ 
+ 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
+ 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+-- 
+1.8.3.1
+
