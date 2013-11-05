@@ -1,34 +1,43 @@
-From: "Mrs. Mary Saleh Saville" <pattersonjwilliam@yahoo.com>
-Subject: Donation Project
-Date: Wed, 6 Nov 2013 01:42:15 +0800
-Message-ID: <201311050334.rA53YJuP021289__43903.6754113205$1383673630$gmane$org@tx.cpta.com.cn>
-Reply-To: <mary_saleh@europemail.com>
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: Re: Disk wakeup on resume
+Date: Tue, 05 Nov 2013 16:32:41 -0500
+Message-ID: <527963F9.5030006@ubuntu.com>
+References: <527859D9.3030607@ubuntu.com> <5278B4DB.7080302@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="Windows-1251"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [114.255.29.133] ([114.255.29.133]:53428 "EHLO tx.cpta.com.cn"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754482Ab3KERqw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 5 Nov 2013 12:46:52 -0500
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <5278B4DB.7080302@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>, linux-scsi@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: linuxdicas@yahoogroups.com.br, linxlunx@yahoogroups.com, linuxvadapav@yahoogroups.com, linuxtechbiz@yahoogroups.com, linuxindo@yahoogroups.com, linuxhubli@yahoogroups.com, lioc_farrerab@yahoo.es, linux-sparse@vger.kernel.org, linux-securitymodule@vger.kernel.org, linux-scsi@vger.kernel.org, linux-rtusers@vger.kernel.org, linux-raid@vger.kernel.org, linuxnewbie@vger.kernel.org, linux-net@vger.kernel.org, linux-msdos@vger.kernel.org, linux-m68k@vger.kernel.org, linuxkernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-ia64@vger.kernel.org, linuxhams@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linuxcrypto@vger.kernel.org, linux-btrace@vger.kernel.org, linux-fai-devel@rrz.unikoeln.de, linux-fai@rrz.uni-koeln.de, lio@pd.jaring.my, linuxppc-embedded@ozlabs.org, linux-streams@openss7.org, linuxutf8@nl.linux.org, linuxers@mm.glug-bom.org, linuxwacom-discuss@lists.sourceforge.net, linux-usbusers@lists.sourceforge.net, linux-usb-devel@lists.sourceforge.net, linux-karma-devel@lists.sourceforge.net, linux-india-help@lists.sourceforge.net, linux-indiageneral@lists.sourceforge.net, linuxr3000@lists.pcxperience.com, linux-ha-dev@lists.linux-ha.org, linux-pcmcia@lists.infradead.org, linux-uvc-devel@lists.berlios.de, linux-nantes@listes.univ-nantes.fr, linuxchix@linuxchix.org.br, linux-plug@linux.org.pe, linux-programming@linux.or.id, lio@kecegroup.com, linux-users@it.canterbury.ac.nz, linux-il@cs.huji.ac.il, linviawin@bellpac.po.my, linviani@aneka-infokom.co.id
 
-Hello,
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-I am Mrs. Mary Saleh Saville an ageing widow suffering from long time illness. I have some funds I inherited from my late husband, the sum of US$3,500,000.00 and I am in need of a very honest and God fearing person that will use the fund for God's work to help the less privileged out there.
+On 11/5/2013 4:05 AM, Aaron Lu wrote:
+> Are you using an ATA drive? Last time I checked, the spin up
+> actually happened while the ata port is resumed(when it will be
+> reset): https://lkml.org/lkml/2013/2/4/361
 
-I have mapped out$1,200.000.00 for your personal use in this work. While the rest will be for the work.Please if you would be able to use the funds for the Lord's work kindly reply for further details.
+Is there a reason these patches weren't applied?  It looks like it
+should be pretty simple to have ata_port_resume return without
+blocking on the reset, but I wonder if that would cause a problem?
 
-Your full name:
-Your full address:
-Your telephone/mobile number:
-Your fax Number:
-Your full company name:
-Your age:
+Doesn't the pm core sequence the resume of the various devices, so
+that the ata device is resumed after the ata port has been resumed, so
+wouldn't returning before the reset has finished mess up the ata
+device resume, which expects that the port is already online?
 
-Thanks and God bless.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
 
-Mrs. Mary Saleh Saville
+iQEcBAEBAgAGBQJSeWP5AAoJEJrBOlT6nu757vUIALEW810IW5FMyCQp6qx80U1w
+QnEcY212ZdBCLqCiF/u8BaoVECM7VsdwjfVeI3CKUYvemNAXPJBCTpB/5KUMWL43
+KbpK3A0EkrdEsNjescmP+i0mYEIWXhB9Kj8IDMKR3HypNESua8X8YUaiNzkxNNGz
+aK11EsNn1Ut5FC0jzWInBfUq8E9WwYmPItxddb8ISIxr8vSbI5AME8HuupH+tT8f
+6VVmCFQwxj5zbiGOJEUZPmwTvE0GgzY+rSYVKvRLRoi+Cv8C2AI/nAMEpYlzuGYT
+Ku8RzUxV3nO8AAlX4yrnvplgWV2HDX0FvW7jl38fDJsxW1306j4BECJ8Rs8tbCQ=
+=Ylq6
+-----END PGP SIGNATURE-----
