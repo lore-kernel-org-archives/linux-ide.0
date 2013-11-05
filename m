@@ -1,30 +1,50 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/4] ahci: Add Device IDs for Intel Wildcat Point-LP
-Date: Tue, 5 Nov 2013 06:04:29 +0900
-Message-ID: <20131104210429.GA24165@mtj.dyndns.org>
-References: <1383585898-4587-1-git-send-email-james.d.ralston@intel.com>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH 1/2] libata: use sleep instead of standby command
+Date: Tue, 05 Nov 2013 10:23:50 +0800
+Message-ID: <527856B6.8030901@intel.com>
+References: <1383612780-6591-1-git-send-email-psusi@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:35983 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751558Ab3KDVMr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Nov 2013 16:12:47 -0500
-Content-Disposition: inline
-In-Reply-To: <1383585898-4587-1-git-send-email-james.d.ralston@intel.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1383612780-6591-1-git-send-email-psusi@ubuntu.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Phillip Susi <psusi@ubuntu.com>, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Robert Hancock <hancockr@shaw.ca>
 List-Id: linux-ide@vger.kernel.org
-To: James Ralston <james.d.ralston@intel.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Seth Heasley <seth.heasley@intel.com>
 
-On Mon, Nov 04, 2013 at 09:24:58AM -0800, James Ralston wrote:
-> This patch adds the AHCI-mode SATA Device IDs for the Intel Wildcat Point-LP PCH.
++linux-ide
+
+On 11/05/2013 08:52 AM, Phillip Susi wrote:
+> The ATA SLEEP mode saves some more power than SUSPEND, and
+> has basically the same recovery time, so use it instead.
+
+I suppose this is mainly for runtime PM? Since for system
+suspend/hibernation, the disk and its controller will be powered off
+anyway.
+
+Best regards,
+Aaron
+
 > 
-> Signed-off-by: James Ralston <james.d.ralston@intel.com>
-
-Applied to for-3.13 w/ stable cc'd.
-
-Thanks.
-
--- 
-tejun
+> Signed-off-by: Phillip Susi <psusi@ubuntu.com>
+> ---
+>  drivers/ata/libata-scsi.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index 97a0cef..79b75fd 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -1362,8 +1362,8 @@ static unsigned int ata_scsi_start_stop_xlat(struct ata_queued_cmd *qc)
+>  		     system_entering_hibernation())
+>  			goto skip;
+>  
+> -		/* Issue ATA STANDBY IMMEDIATE command */
+> -		tf->command = ATA_CMD_STANDBYNOW1;
+> +		/* Issue ATA SLEEP command */
+> +		tf->command = ATA_CMD_SLEEP;
+>  	}
+>  
+>  	/*
+> 
