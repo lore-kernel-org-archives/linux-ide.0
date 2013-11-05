@@ -1,42 +1,42 @@
 From: Phillip Susi <psusi@ubuntu.com>
 Subject: Re: Disk wakeup on resume
-Date: Tue, 05 Nov 2013 09:07:03 -0500
-Message-ID: <5278FB87.3020908@ubuntu.com>
-References: <527859D9.3030607@ubuntu.com> <5278B4DB.7080302@intel.com>
+Date: Tue, 05 Nov 2013 11:23:33 -0500
+Message-ID: <52791B85.1090805@ubuntu.com>
+References: <527859D9.3030607@ubuntu.com> <52791518.5070705@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:60902 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754635Ab3KEOHG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Nov 2013 09:07:06 -0500
-In-Reply-To: <5278B4DB.7080302@intel.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <52791518.5070705@interlog.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: dgilbert@interlog.com, linux-scsi@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>, linux-scsi@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA1
 
-On 11/5/2013 4:05 AM, Aaron Lu wrote:
->> Are you using an ATA drive? Last time I checked, the spin up
->> actually happened while the ata port is resumed(when it will be
->> reset): https://lkml.org/lkml/2013/2/4/361
+On 11/5/2013 10:56 AM, Douglas Gilbert wrote:
+> I think that you might find that almost any SCSI command
+> (translated to its ATA equivalent command) will wake up a SATA
+> disk. Perhaps just this sequence: fd = open(<ata_bloc_device>) ;
+> close(fd) ; is sufficient.
 
-Why does resetting the port spin up the drive?  And I'm pretty sure I
-still saw the port reset messages after unbinding sd, yet the drive
-remained spun down.
+No, otherwise hdparm, udisks, etc would not be able to issue the CHECK
+POWER command without waking the disk.  Most commands do wake the
+drive, but as far as I can see, nobody is sending down any, and more
+importantly, the wake is happening within the kernel pm resume path,
+not by userspace after resume.
+
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2.0.17 (MingW32)
 Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
 
-iQEcBAEBAgAGBQJSePuHAAoJEJrBOlT6nu75NYMIAL41IBonf1CAP/OVEXBwpBIa
-HXQoo7Icz5ZQ+Tu/Tj2orumu0m0Cm3O7aUt30Gye+Vca8UpWDUjcqQ0br+dymdXq
-PFkPS7Dr2zF3mSULDBUn6mHXUuUgS5Vmdf2+FLSldfa8SyTsT2Nwzz8hnUCAZQEO
-C7aA2fZCQ1yZYCXrXKSh/TZg2RGT+eg57kNLQ2hwBrDwHKL+p7UbWESuqEFeR5U9
-bj3JCO6/erG19/tibVHP7tuJokxSWrbQZbHrjO8a74ms5esiEAHpnka7q8wp/FbS
-gPklZJJjk+C0akaHDbj1dslEXgozoam42GhYeq7Lgo0O3Wx1N1/Fy5ZBxW3KTu0=
-=Ci32
+iQEcBAEBAgAGBQJSeRuFAAoJEJrBOlT6nu75zOcH/1eKDZW73qiWN5x1mHnkZCx2
++khrRybBM+d6iwsfKODdMPkfXe89QxNxZArPMP60OtCTzfnUuzpK9SfNuzB2CB3p
+zKX1H5tOQEowUd9A2DpzJmN89UGi/+ZVDEQBlo6byqXKhd/Gj10TuD8vyaHSSadN
+XYYvWIlreayELaI70uQLdntfHufProdoZQ+kB9pQhvvq8IhtcuARjUeaGbnHxznc
+UT2SvYeGritndPLzBOAeWw6/WZ/Rvzo5Q9s2nZAWyWnNlrdt95cmLl+56vCP2AJW
+b4Tf4TrPGbhB0EPFU+vWy6mT4DFReqDbkMvgsWoOrFF8OPgrUx3l+9gWifejLw8=
+=77FK
 -----END PGP SIGNATURE-----
