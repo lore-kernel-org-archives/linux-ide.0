@@ -1,48 +1,39 @@
-From: Phillip Susi <psusi@ubuntu.com>
-Subject: Re: [PATCH 2/2] libata: avoid waking disk to check power
-Date: Mon, 04 Nov 2013 21:45:25 -0500
-Message-ID: <52785BC5.9020205@ubuntu.com>
-References: <1383612780-6591-1-git-send-email-psusi@ubuntu.com> <1383612780-6591-2-git-send-email-psusi@ubuntu.com> <52785A5F.4060001@intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: Alistair Popple <alistair@popple.id.au>
+Subject: [PATCH 1/7] IBM Akebono: Add support to AHCI platform driver
+Date: Tue,  5 Nov 2013 16:31:05 +1100
+Message-ID: <1383629471-16979-1-git-send-email-alistair@popple.id.au>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:45883 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753447Ab3KECp0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Nov 2013 21:45:26 -0500
-In-Reply-To: <52785A5F.4060001@intel.com>
+Received: from ipmail04.adl6.internode.on.net ([150.101.137.141]:36205 "EHLO
+	ipmail04.adl6.internode.on.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751006Ab3KEFb3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Nov 2013 00:31:29 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: Alistair Popple <alistair@popple.id.au>, linux-ide@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
+The new IBM Akebono board has an AHCI compliant SATA controller. This
+patch adds a compatible property for the new board to the AHCI
+platform driver.
 
-On 11/04/2013 09:39 PM, Aaron Lu wrote:
-> If the disk entered sleep mode due to runtime PM, then udisks can
-> easily tell by checking the device's runtime status and not send
-> out the query.
-> 
-> But if the disk entered sleep mode due to other reason, the patch
-> may be necessary. So what's your scenario?
+Signed-off-by: Alistair Popple <alistair@popple.id.au>
+Cc: linux-ide@vger.kernel.org
+---
+ drivers/ata/ahci_platform.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-I am planning on patching udisks to do that as well, but if you have a
-current udsisk or manually run hdparm -C, or some other program is
-doing something similar, then this patch takes care of that.
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index 7d3b853..b20b130 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -328,6 +328,7 @@ static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_suspend, ahci_resume);
+ static const struct of_device_id ahci_of_match[] = {
+ 	{ .compatible = "snps,spear-ahci", },
+ 	{ .compatible = "snps,exynos5440-ahci", },
++	{ .compatible = "ibm,akebono-ahci", },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, ahci_of_match);
+-- 
+1.7.10.4
 
-
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQEcBAEBCgAGBQJSeFvFAAoJEJrBOlT6nu75hcYH/0YsYcs3u9Dmuqq9z5kFXL3k
-C4xYQtvOxw2z+B/vEFzdym5J3ZfVyT4+ZdcHMvRgbbPH+R8/rzNC+F3OjdGtDIRA
-5EUo0BUT2IfY0Yp2SzP44+8aRC4iF5jLLcH9XJKQx7WHedJQ7puCgJXXHAgUhpwW
-52gJ0UEHnjlBgjwxY9RKqppnJs57x2VwgwR2BeFns6Hcry0S0HN0U4gwROmb1GZR
-kjpOUUYHb3MH/gfzCaY97t0duAAp7jzZeOIuu+XHfkyV3APwsnbasLOOoRYtpbvQ
-M++xmYQdNAh2DcZLEmAo6H6HLB/Z5d9K0+SKUFnsKHFaUCH0GPHm8SZ7E/NN7ig=
-=7c7v
------END PGP SIGNATURE-----
