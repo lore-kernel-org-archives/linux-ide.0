@@ -1,68 +1,49 @@
-From: Aaron Lu <aaron.lu@intel.com>
+From: Phillip Susi <psusi@ubuntu.com>
 Subject: Re: Disk wakeup on resume
-Date: Wed, 06 Nov 2013 13:49:43 +0800
-Message-ID: <5279D877.2010200@intel.com>
-References: <527859D9.3030607@ubuntu.com> <5278B4DB.7080302@intel.com> <527963F9.5030006@ubuntu.com>
+Date: Wed, 06 Nov 2013 09:40:28 -0500
+Message-ID: <527A54DC.3050702@ubuntu.com>
+References: <527859D9.3030607@ubuntu.com> <5278B4DB.7080302@intel.com> <527963F9.5030006@ubuntu.com> <5279D877.2010200@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:50953 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750803Ab3KFFs7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 6 Nov 2013 00:48:59 -0500
-In-Reply-To: <527963F9.5030006@ubuntu.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Phillip Susi <psusi@ubuntu.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <5279D877.2010200@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
 Cc: linux-scsi@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "Brandt, Todd E" <todd.e.brandt@intel.com>
+List-Id: linux-ide@vger.kernel.org
 
-On 11/06/2013 05:32 AM, Phillip Susi wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA1
-> 
-> On 11/5/2013 4:05 AM, Aaron Lu wrote:
->> Are you using an ATA drive? Last time I checked, the spin up
->> actually happened while the ata port is resumed(when it will be
->> reset): https://lkml.org/lkml/2013/2/4/361
-> 
-> Is there a reason these patches weren't applied?  It looks like it
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-The problem is system PM and runtime PM are independently
-configurable... some system may have CONFIG_SUSPEND enabled but not
-CONFIG_PM_RUNTIME, that would make this not usable.
+On 11/6/2013 12:49 AM, Aaron Lu wrote:
+> Todd has been optimising system resume for SATA drives without
+> touching runtime PM: 
+> http://www.spinics.net/lists/linux-scsi/msg69532.html You may want
+> to take a look.
 
-> should be pretty simple to have ata_port_resume return without
-> blocking on the reset, but I wonder if that would cause a problem?
+Thanks for the pointer, but is there somewhere you can download the
+bloody full original message with headers so I can generate a proper
+reply?
 
-Todd has been optimising system resume for SATA drives without touching
-runtime PM:
-http://www.spinics.net/lists/linux-scsi/msg69532.html
-You may want to take a look.
+Also, last night I noticed that ata_port_resume() ( which is called
+both for runtime and system resume ) was explicitly calling into the
+pm core to set the runtime status to active.  I thought that was the
+problem so I disabled that code and made it work the other related
+functions and just return success without resetting the link if it is
+runtime suspended, but it seems that the runtime suspend state is
+being cleared already by the time the system resume is called and I
+haven't figured out where yet.
 
--Aaron
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
 
-> 
-> Doesn't the pm core sequence the resume of the various devices, so
-> that the ata device is resumed after the ata port has been resumed, so
-> wouldn't returning before the reset has finished mess up the ata
-> device resume, which expects that the port is already online?
-> 
-> -----BEGIN PGP SIGNATURE-----
-> Version: GnuPG v2.0.17 (MingW32)
-> Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-> 
-> iQEcBAEBAgAGBQJSeWP5AAoJEJrBOlT6nu757vUIALEW810IW5FMyCQp6qx80U1w
-> QnEcY212ZdBCLqCiF/u8BaoVECM7VsdwjfVeI3CKUYvemNAXPJBCTpB/5KUMWL43
-> KbpK3A0EkrdEsNjescmP+i0mYEIWXhB9Kj8IDMKR3HypNESua8X8YUaiNzkxNNGz
-> aK11EsNn1Ut5FC0jzWInBfUq8E9WwYmPItxddb8ISIxr8vSbI5AME8HuupH+tT8f
-> 6VVmCFQwxj5zbiGOJEUZPmwTvE0GgzY+rSYVKvRLRoi+Cv8C2AI/nAMEpYlzuGYT
-> Ku8RzUxV3nO8AAlX4yrnvplgWV2HDX0FvW7jl38fDJsxW1306j4BECJ8Rs8tbCQ=
-> =Ylq6
-> -----END PGP SIGNATURE-----
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
+iQEcBAEBAgAGBQJSelTcAAoJEJrBOlT6nu75L3cH/0/cRtaW2n8viQvIJgwM2N5P
+t2WnQMEgYse9zOrkuDNWQyTXOib0ccYR3aQZuu9XXWVXG+w3KvT+D8yyWlyFkvz2
+pQZErEF0vZeWVNlJPzQZqWlQQfpIocF6Ebleo5j6i0xzgNFxwVMC+ICqCLPYbjZa
+lxGTP3bX1TMEdA4D9rTkIfi3naVSbITY9pm0oe+aKzknFjDKmx5Zj6SIjdUFfm9B
+CUJxvYCcj4NKhLqcBJRTiNnIK/Wtg1twbXWbGSWvIGe01aShD7FXRDxmCL4FgYG1
+YZ/MSlb4R4IQxtetgxaqC/ujOkf6FNvCUV3Y8qvlvSKdeVSzoz0wDgjgK4VWDmg=
+=GpAA
+-----END PGP SIGNATURE-----
