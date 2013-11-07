@@ -1,49 +1,44 @@
 From: Phillip Susi <psusi@ubuntu.com>
-Subject: Re: Disk wakeup on resume
-Date: Wed, 06 Nov 2013 09:40:28 -0500
-Message-ID: <527A54DC.3050702@ubuntu.com>
-References: <527859D9.3030607@ubuntu.com> <5278B4DB.7080302@intel.com> <527963F9.5030006@ubuntu.com> <5279D877.2010200@intel.com>
+Subject: Re: [PATCH/RESEND v2 0/2] SATA disk resume time optimization
+Date: Wed, 06 Nov 2013 20:53:11 -0500
+Message-ID: <527AF287.7020700@ubuntu.com>
+References: <20131017193331.GA11747@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <5279D877.2010200@intel.com>
+In-Reply-To: <20131017193331.GA11747@linux.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: linux-scsi@vger.kernel.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "Brandt, Todd E" <todd.e.brandt@intel.com>
+To: todd.e.brandt@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: tj@kernel.org, JBottomley@parallels.com
 List-Id: linux-ide@vger.kernel.org
 
 -----BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Hash: SHA512
 
-On 11/6/2013 12:49 AM, Aaron Lu wrote:
-> Todd has been optimising system resume for SATA drives without
-> touching runtime PM: 
-> http://www.spinics.net/lists/linux-scsi/msg69532.html You may want
-> to take a look.
+On 10/17/2013 03:33 PM, Todd E Brandt wrote:
+> The essential issue behind hard disks' lengthy resume time is the
+> ata port driver blocking until the ATA port hardware is finished
+> coming online. So the kernel isn't really doing anything during all
+> those seconds that the disks are resuming, it's just blocking until
+> the hardware says it's ready to accept commands. Applying this
+> patch set
 
-Thanks for the pointer, but is there somewhere you can download the
-bloody full original message with headers so I can generate a proper
-reply?
+I have been working in a similar direction and have patches to follow.
+ Instead of backgrounding the start in sd_resume, I have removed it
+entirely, and background the resume at the ata port layer, as well as
+avoid resuming Power on in Standby disks entirely.
 
-Also, last night I noticed that ata_port_resume() ( which is called
-both for runtime and system resume ) was explicitly calling into the
-pm core to set the runtime status to active.  I thought that was the
-problem so I disabled that code and made it work the other related
-functions and just return success without resetting the link if it is
-runtime suspended, but it seems that the runtime suspend state is
-being cleared already by the time the system resume is called and I
-haven't figured out where yet.
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (MingW32)
+Version: GnuPG v1.4.14 (GNU/Linux)
 Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
 
-iQEcBAEBAgAGBQJSelTcAAoJEJrBOlT6nu75L3cH/0/cRtaW2n8viQvIJgwM2N5P
-t2WnQMEgYse9zOrkuDNWQyTXOib0ccYR3aQZuu9XXWVXG+w3KvT+D8yyWlyFkvz2
-pQZErEF0vZeWVNlJPzQZqWlQQfpIocF6Ebleo5j6i0xzgNFxwVMC+ICqCLPYbjZa
-lxGTP3bX1TMEdA4D9rTkIfi3naVSbITY9pm0oe+aKzknFjDKmx5Zj6SIjdUFfm9B
-CUJxvYCcj4NKhLqcBJRTiNnIK/Wtg1twbXWbGSWvIGe01aShD7FXRDxmCL4FgYG1
-YZ/MSlb4R4IQxtetgxaqC/ujOkf6FNvCUV3Y8qvlvSKdeVSzoz0wDgjgK4VWDmg=
-=GpAA
+iQEcBAEBCgAGBQJSevKEAAoJEJrBOlT6nu75FFkIAL8mwXOuuNvY5GoppHVMcweC
+EOBz6t2Xmc/TsGYr9u4kRVXbf3G0trSM9dj/XSJ6p+Dj/su/vJ69yKxp7sUPidgz
+zqjfKlG+myMQIaAO+tPGXvMcmT74BXjgjobZw2lUyLyRPLD9elDGmrDA5ZXZ+hiz
+hzSx4gOC57j+sK/pmoZ7U/CWeWYEYQ+J9xBXm0hzbBbSTjpzVsR0T+7xU+WVkeX0
+Ox++FFBZp2b1xJgaREurRv1mORx/GJ+PfSETb49P5BWaWW+QVwOEhWOX/JQNc/Pp
+ANJmttP4WPvlRV0X3hD6FvAYSnu1qbwwGOiP/j5g7mklyfm5alA0jcuahc1w5tI=
+=9KhA
 -----END PGP SIGNATURE-----
