@@ -1,54 +1,68 @@
-From: Phillip Susi <psusi@ubuntu.com>
-Subject: Re: [PATCH 1/3] sd: don't bother spinning up disks on resume
-Date: Thu, 07 Nov 2013 16:16:57 -0500
-Message-ID: <527C0349.5010301@ubuntu.com>
-References: <527AF287.7020700@ubuntu.com> <927e15641f27b46f206f8ae8110201c8fd77b7e1.1383789225.git.psusi@ubuntu.com> <527BDA11.6060603@interlog.com>
+From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Subject: Re: [PATCH V2 2/2] dt: Document sata_rcar bindings
+Date: Fri, 08 Nov 2013 02:02:11 +0100
+Message-ID: <7820946.JfD46VSKC7@avalon>
+References: <1383854642-21660-1-git-send-email-valentine.barshak@cogentembedded.com> <1383854642-21660-3-git-send-email-valentine.barshak@cogentembedded.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <527BDA11.6060603@interlog.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: dgilbert@interlog.com, todd.e.brandt@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: tj@kernel.org, JBottomley@parallels.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from perceval.ideasonboard.com ([95.142.166.194]:50455 "EHLO
+	perceval.ideasonboard.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754005Ab3KHBBk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Nov 2013 20:01:40 -0500
+In-Reply-To: <1383854642-21660-3-git-send-email-valentine.barshak@cogentembedded.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Valentine Barshak <valentine.barshak@cogentembedded.com>
+Cc: linux-sh@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, Simon Horman <horms@verge.net.au>, Magnus Damm <magnus.damm@gmail.com>, Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Kumar Gala <galak@codeaurora.org>, Tejun Heo <tj@kernel.org>, Vladimir Barinov <vladimir.barinov@cogentembedded.com>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Mark Rutland <mark.rutland@arm.com>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Hi Valentine,
 
-On 11/7/2013 1:21 PM, Douglas Gilbert wrote:
-> On 13-11-06 08:57 PM, Phillip Susi wrote:
->> Don't bother forcing disks to spin up on resume, as they will do
->> so automatically when accessed, and forcing them to spin up slows
->> down the resume.  Add a second bit to the manage_start_stop flag
->> to restore the previous behavior.
+Thank you for the patch. Two small comments below.
+
+On Friday 08 November 2013 00:04:02 Valentine Barshak wrote:
+> These bindings can be used to register SATA devices found on R-Car SoC.
 > 
-> SCSI disks when in STOP state do not spin up "automatically when
-> accessed".
+> Signed-off-by: Valentine Barshak <valentine.barshak@cogentembedded.com>
+> Acked-by: Kumar Gala <galak@codeaurora.org>
+> ---
+>  Documentation/devicetree/bindings/ata/sata_rcar.txt | 18 ++++++++++++++++++
+> 1 file changed, 18 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/ata/sata_rcar.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/ata/sata_rcar.txt
+> b/Documentation/devicetree/bindings/ata/sata_rcar.txt new file mode 100644
+> index 0000000..d6b20a6
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ata/sata_rcar.txt
+> @@ -0,0 +1,18 @@
+> +* Renesas R-Car SATA
+> +
+> +Required properties:
+> +- compatible		: should contain one of the following:
+> +			  - "renesas,sata-r8a7779" for R-Car H1
+> +			  - "renesas,sata-r8a7790" for R-Car H2
+> +			  - "renesas,sata-r8a7791" for R-Car M2
+> +- reg			: offset and length of the SATA registers;
 
-The drive does not, but the scsi error handling notices when a command
-fails because the drive needs started, starts it, and retries the command.
+Maybe address instead of offset ?
 
-> And your choice of bits looks like it will favour fixing broken
-> SATA behaviour but as a by-product break working SCSI disk
-> behaviour.
+> +- interrupts		: must consist of one interrupt specifier.
+> +
+> +Example:
+> +
+> +sata: sata@fc600000 {
+> +	compatible = "renesas,sata-r8a7779";
+> +	reg = <0xfc600000 0x2000>;
+> +	interrupt-parent = <&gic>;
+> +	interrupts = <0 100 0x4>;
 
-No, it has nothing to do with sata behavior; it has to do with whether
-or not all disk drives should be restarted immediately after a resume,
-or only when they are accessed.  I happen to have a few older drives
-that I very rarely access and would rather they not start up every
-time I resume.
+Please use IRQ_TYPE_LEVEL_HIGH instead of 0x4.
 
+> +};
+-- 
+Regards,
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+Laurent Pinchart
 
-iQEcBAEBAgAGBQJSfANJAAoJEJrBOlT6nu75BIAIALHveooj3EuVQ9DmzsCKezT2
-ILHsGKAecgojAbxNFp4JXTwmlnNMUQzGaaxfXgoTES4WBiDnba0sedVW+aPqI8Ul
-cA8FXeIPtk1U5/xA6iW9XFInOTkvpXSnl9yeX7zldtcjxBm0bQ49JUk4zI68jQwF
-YPxEb0bxPpJvUcoYbM6eo+I6GnBqpCU9FDVoy0wnb1Zp6qQEY59kOvQc51Pl10KR
-Vwmayc7B9dncfk9+46knt4ocBUdSdX1rzRqN0EfGIZtkWysP6w5HmA0ejocEIyHT
-YErI94JvAEOZkzGHZgaMykxTE5SGYX8Fz3w3LVc9uAc40oIf3qFHb5Bob6Ecy6Q=
-=SkP3
------END PGP SIGNATURE-----
