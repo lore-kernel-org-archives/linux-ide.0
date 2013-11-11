@@ -1,131 +1,121 @@
-From: Phillip Susi <psusi@ubuntu.com>
-Subject: [PATCH 5/6] libata: don't start disks on resume
-Date: Sat,  9 Nov 2013 16:03:27 -0500
-Message-ID: <dc2064badb71348df5709d4e08a416da53c3ba8d.1384030893.git.psusi@ubuntu.com>
-References: <cover.1384030893.git.psusi@ubuntu.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <cover.1384030893.git.psusi@ubuntu.com>
-In-Reply-To: <cover.1384030893.git.psusi@ubuntu.com>
-References: <527EA218.6010604@ubuntu.com> <cover.1384030893.git.psusi@ubuntu.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: todd.e.brandt@linux.intel.com
-Cc: tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Rob Herring <robherring2@gmail.com>
+Subject: [PATCH] powerpc: add explicit OF includes for ppc4xx
+Date: Sun, 10 Nov 2013 23:35:43 -0600
+Message-ID: <1384148143-14335-1-git-send-email-robherring2@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Rob Herring <rob.herring@calxeda.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Tejun Heo <tj@kernel.org>, Matt Mackall <mpm@selenic.com>, Herbert Xu <herbert@gondor.apana.org.au>, "David S. Miller" <davem@davemloft.net>, Vinod Koul <vinod.koul@intel.com>, Dan Williams <dan.j.williams@intel.com>, linuxppc-dev@lists.ozlabs.org, linux-ide@vger.kernel.org, linux-crypto@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Disks with Power Up In Standby enabled that required the
-SET FEATURES command to start up were being issued the
-command during resume.  Suppress this until the disk
-is actually accessed.
+From: Rob Herring <rob.herring@calxeda.com>
+
+Commit b5b4bb3f6a11f9 (of: only include prom.h on sparc) removed implicit
+includes of of_*.h headers by powerpc's prom.h. Some PPC4xx components
+were missed in initial clean-up patch, so add the necessary includes
+to fix ppc4xx builds.
+
+Signed-off-by: Rob Herring <rob.herring@calxeda.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Paul Mackerras <paulus@samba.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Matt Mackall <mpm@selenic.com>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Vinod Koul <vinod.koul@intel.com>
+Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: linuxppc-dev@lists.ozlabs.org
+Cc: linux-ide@vger.kernel.org
+Cc: linux-crypto@vger.kernel.org
 ---
- drivers/ata/libata-core.c | 12 ++++++++++--
- drivers/ata/libata-eh.c   | 10 ++++++++--
- drivers/ata/libata.h      |  1 +
- include/linux/libata.h    |  1 +
- 4 files changed, 20 insertions(+), 4 deletions(-)
+I intend to send this patch to Linus with the rest of the DT clean-up
+series.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 128ce0d..c53c210 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -1993,7 +1993,13 @@ retry:
- 			goto err_out;
- 	}
+Rob
+
+ arch/powerpc/sysdev/ppc4xx_ocm.c     | 1 +
+ arch/powerpc/sysdev/xilinx_intc.c    | 1 +
+ drivers/ata/sata_dwc_460ex.c         | 2 ++
+ drivers/char/hw_random/ppc4xx-rng.c  | 1 +
+ drivers/crypto/amcc/crypto4xx_core.c | 3 +++
+ drivers/dma/ppc4xx/adma.c            | 2 ++
+ 6 files changed, 10 insertions(+)
+
+diff --git a/arch/powerpc/sysdev/ppc4xx_ocm.c b/arch/powerpc/sysdev/ppc4xx_ocm.c
+index 1b15f93..b7c4345 100644
+--- a/arch/powerpc/sysdev/ppc4xx_ocm.c
++++ b/arch/powerpc/sysdev/ppc4xx_ocm.c
+@@ -26,6 +26,7 @@
+ #include <linux/kernel.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/of.h>
++#include <linux/of_address.h>
+ #include <asm/rheap.h>
+ #include <asm/ppc4xx_ocm.h>
+ #include <linux/slab.h>
+diff --git a/arch/powerpc/sysdev/xilinx_intc.c b/arch/powerpc/sysdev/xilinx_intc.c
+index f4fdc94..83f943a 100644
+--- a/arch/powerpc/sysdev/xilinx_intc.c
++++ b/arch/powerpc/sysdev/xilinx_intc.c
+@@ -24,6 +24,7 @@
+ #include <linux/irq.h>
+ #include <linux/of.h>
+ #include <linux/of_address.h>
++#include <linux/of_irq.h>
+ #include <asm/io.h>
+ #include <asm/processor.h>
+ #include <asm/i8259.h>
+diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+index 2e39173..523524b 100644
+--- a/drivers/ata/sata_dwc_460ex.c
++++ b/drivers/ata/sata_dwc_460ex.c
+@@ -31,6 +31,8 @@
+ #include <linux/module.h>
+ #include <linux/init.h>
+ #include <linux/device.h>
++#include <linux/of_address.h>
++#include <linux/of_irq.h>
+ #include <linux/of_platform.h>
+ #include <linux/platform_device.h>
+ #include <linux/libata.h>
+diff --git a/drivers/char/hw_random/ppc4xx-rng.c b/drivers/char/hw_random/ppc4xx-rng.c
+index 732c330..521f76b 100644
+--- a/drivers/char/hw_random/ppc4xx-rng.c
++++ b/drivers/char/hw_random/ppc4xx-rng.c
+@@ -13,6 +13,7 @@
+ #include <linux/platform_device.h>
+ #include <linux/hw_random.h>
+ #include <linux/delay.h>
++#include <linux/of_address.h>
+ #include <linux/of_platform.h>
+ #include <asm/io.h>
  
--	if (!tried_spinup && (id[2] == 0x37c8 || id[2] == 0x738c)) {
-+	if (flags & ATA_READID_NOSTART && id[2] == 0x37c8)
-+	{
-+		dev->flags |= ATA_DFLAG_SLEEPING;
-+		return -EAGAIN;
-+	}
-+	if (!(flags & ATA_READID_NOSTART) &&
-+	    !tried_spinup && (id[2] == 0x37c8 || id[2] == 0x738c)) {
- 		tried_spinup = 1;
- 		/*
- 		 * Drive powered-up in standby mode, and requires a specific
-@@ -4024,6 +4030,8 @@ int ata_dev_revalidate(struct ata_device *dev, unsigned int new_class,
- 
- 	/* re-read ID */
- 	rc = ata_dev_reread_id(dev, readid_flags);
-+	if (rc == -EAGAIN)
-+		return rc;
- 	if (rc)
- 		goto fail;
- 
-@@ -5414,7 +5422,7 @@ static int __ata_port_resume_common(struct ata_port *ap, pm_message_t mesg,
- 	int rc;
- 
- 	rc = ata_port_request_pm(ap, mesg, ATA_EH_RESET,
--		ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET, async);
-+		ATA_EHI_NO_AUTOPSY | ATA_EHI_QUIET | ATA_EHI_NOSTART, async);
- 	return rc;
- }
- 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index c69fcce..4c2e6e8 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -3086,6 +3086,8 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
- 
- 		if (ehc->i.flags & ATA_EHI_DID_RESET)
- 			readid_flags |= ATA_READID_POSTRESET;
-+		if (ehc->i.flags & ATA_EHI_NOSTART)
-+			readid_flags |= ATA_READID_NOSTART;
- 
- 		if ((action & ATA_EH_REVALIDATE) && ata_dev_enabled(dev)) {
- 			WARN_ON(dev->class == ATA_DEV_PMP);
-@@ -3098,6 +3100,10 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
- 			ata_eh_about_to_do(link, dev, ATA_EH_REVALIDATE);
- 			rc = ata_dev_revalidate(dev, ehc->classes[dev->devno],
- 						readid_flags);
-+			if (rc == -EAGAIN) {
-+				rc = 0; /* start required but suppressed, handle later */
-+				continue;
-+			}
- 			if (rc)
- 				goto err;
- 
-@@ -3424,7 +3430,7 @@ static int ata_eh_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
- 			hints &= ~ATA_LPM_HIPM;
- 
- 		/* disable DIPM before changing link config */
--		if (policy != ATA_LPM_MIN_POWER && dipm) {
-+		if (policy != ATA_LPM_MIN_POWER && dipm && !(dev->flags & ATA_DFLAG_SLEEPING)) {
- 			err_mask = ata_dev_set_feature(dev,
- 					SETFEATURES_SATA_DISABLE, SATA_DIPM);
- 			if (err_mask && err_mask != AC_ERR_DEV) {
-@@ -3468,7 +3474,7 @@ static int ata_eh_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
- 	/* host config updated, enable DIPM if transitioning to MIN_POWER */
- 	ata_for_each_dev(dev, link, ENABLED) {
- 		if (policy == ATA_LPM_MIN_POWER && !no_dipm &&
--		    ata_id_has_dipm(dev->id)) {
-+		    ata_id_has_dipm(dev->id) && !(dev->flags & ATA_DFLAG_SLEEPING)) {
- 			err_mask = ata_dev_set_feature(dev,
- 					SETFEATURES_SATA_ENABLE, SATA_DIPM);
- 			if (err_mask && err_mask != AC_ERR_DEV) {
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index eeeb778..146d62d 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -42,6 +42,7 @@ struct ata_scsi_args {
- enum {
- 	/* flags for ata_dev_read_id() */
- 	ATA_READID_POSTRESET	= (1 << 0), /* reading ID after reset */
-+	ATA_READID_NOSTART	= (1 << 1), /* do not start drive */
- 
- 	/* selector for ata_down_xfermask_limit() */
- 	ATA_DNXFER_PIO		= 0,	/* speed down PIO */
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 0e23c26..3929bb8 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -362,6 +362,7 @@ enum {
- 
- 	/* ata_eh_info->flags */
- 	ATA_EHI_HOTPLUGGED	= (1 << 0),  /* could have been hotplugged */
-+	ATA_EHI_NOSTART		= (1 << 1),  /* don't start the disk */
- 	ATA_EHI_NO_AUTOPSY	= (1 << 2),  /* no autopsy */
- 	ATA_EHI_QUIET		= (1 << 3),  /* be quiet */
- 	ATA_EHI_NO_RECOVERY	= (1 << 4),  /* no recovery */
+diff --git a/drivers/crypto/amcc/crypto4xx_core.c b/drivers/crypto/amcc/crypto4xx_core.c
+index f88e3d8..efaf630 100644
+--- a/drivers/crypto/amcc/crypto4xx_core.c
++++ b/drivers/crypto/amcc/crypto4xx_core.c
+@@ -27,6 +27,9 @@
+ #include <linux/dma-mapping.h>
+ #include <linux/platform_device.h>
+ #include <linux/init.h>
++#include <linux/module.h>
++#include <linux/of_address.h>
++#include <linux/of_irq.h>
+ #include <linux/of_platform.h>
+ #include <linux/slab.h>
+ #include <asm/dcr.h>
+diff --git a/drivers/dma/ppc4xx/adma.c b/drivers/dma/ppc4xx/adma.c
+index 370ff82..e24b5ef 100644
+--- a/drivers/dma/ppc4xx/adma.c
++++ b/drivers/dma/ppc4xx/adma.c
+@@ -42,6 +42,8 @@
+ #include <linux/uaccess.h>
+ #include <linux/proc_fs.h>
+ #include <linux/of.h>
++#include <linux/of_address.h>
++#include <linux/of_irq.h>
+ #include <linux/of_platform.h>
+ #include <asm/dcr.h>
+ #include <asm/dcr-regs.h>
 -- 
-1.8.3.2
-
+1.8.1.2
