@@ -1,44 +1,88 @@
-From: Phillip Susi <psusi@ubuntu.com>
-Subject: Re: [PATCH 3/6] sd: don't bother spinning up disks on resume
-Date: Mon, 11 Nov 2013 09:28:51 -0500
-Message-ID: <5280E9A3.1070407@ubuntu.com>
-References: <cover.1384030893.git.psusi@ubuntu.com> <ece4db4b486db3594ad3b97aa00f7eb5fef93c4b.1384030893.git.psusi@ubuntu.com> <5280D6E4.6010804@cogentembedded.com>
+From: Todd E Brandt <todd.e.brandt@linux.intel.com>
+Subject: Re: [PATCH/RESEND v2 0/2] SATA disk resume time optimization
+Date: Mon, 11 Nov 2013 08:59:20 -0800
+Message-ID: <20131111165920.GA25366@linux.intel.com>
+References: <20131017193331.GA11747@linux.intel.com>
+ <527AF287.7020700@ubuntu.com>
+ <20131109012023.GA8978@linux.intel.com>
+ <527EA218.6010604@ubuntu.com>
+Reply-To: todd.e.brandt@linux.intel.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <5280D6E4.6010804@cogentembedded.com>
+Content-Disposition: inline
+In-Reply-To: <527EA218.6010604@ubuntu.com>
 Sender: linux-scsi-owner@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, todd.e.brandt@linux.intel.com
-Cc: tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Phillip Susi <psusi@ubuntu.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, tj@kernel.org, JBottomley@parallels.com
 List-Id: linux-ide@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+500ms is actually quite alot when you compare it with android or iOS,
+or even with other subsystems like USB. USB is the second worst offender 
+after SATA disks and it tends to take around 600ms for most standard 
+systems with an onboard webcam, and with other devices plugged in ever 
+longer. I think we should optimize out every millisecond we can.
 
-On 11/11/2013 8:08 AM, Sergei Shtylyov wrote:
->> -    unsigned manage_start_stop:1;    /* Let HLD (sd) manage 
->> start/stop */ +    unsigned manage_start_stop:2;    /* Let HLD
->> (sd) manage start/stop */
+You mentioned that you tuned your system to remove all cases that trigger
+non-essential disk wakeups, and that works great for you, but it won't 
+help anyone using fedora or OpenSUSE or Yocto, etc. And even if you
+could formallize your changes to Ubuntu to create a fully optimized 
+user space, you're still at the mercy of the user's install choices, which
+can quickly throw a wrench in the works.
+
+On Sat, Nov 09, 2013 at 03:59:04PM -0500, Phillip Susi wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA512
 > 
-> I think you should better document this 2-bit field, or better
-> still, make it 2 1-bit fields.
-
-Not a bad idea, though I'm really not sure that it shouldn't just be
-removed entirely.  It is a bad idea to not stop the disk on
-suspend/shutdown since it leaves the disk to take an emergency head
-retract, which isn't good for it.  At the very least it should park
-the heads, though currently libata does not handle the scsi cmd for that.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQEcBAEBAgAGBQJSgOmiAAoJEJrBOlT6nu755CcH/2ckSBdvCtMHFe1ech1XFOdJ
-PUZc5VEHk/rzPqXqxS26H9eR5FIbgu437yVizJ/w5Fy4MAX0rVKyz61FK/HavGL7
-aqNYgKWIjucg7panlWZsPIraDl/bVPYVS2PnthVItabC+GskYRR0g92xcDqDPSeX
-kmFIG0JOx2bU6JYWtFWxECpdjsBJBQxAnoLtzI+SONmlhp2GxH9Bc9Msa5hqwBoW
-vmUJmggBaPoL3ZTQUFGZyYWU8/7n2d5lhXpJdcsvcrd+PJyrsfv9GGKqgQW/kLmL
-sYAFwO83/5YJUK03l68S9xHt48NW2rdFm2ph035/CpbsNib2fKTaOsyfIgf/Idg=
-=y73A
------END PGP SIGNATURE-----
+> On 11/08/2013 08:20 PM, Todd E Brandt wrote:
+> > I tested your patches and they do function. We tried a similar
+> > approach a few months back where instead of waking the scsi disks
+> > we just set them all to runtime_suspended and skipped the resume.
+> > Then we let them be awakened later by read/write access just as you
+> > have. It's a really tempting approach, in theory, since you're
+> > saving both time and power by only waking those disks you know you
+> > need. But in practice I've found that userspace doesn't play nice.
+> 
+> I've just about gotten rid of all instances of user space waking the
+> disks on my system.  The one I have left to do is to fake the IDENTIFY
+> DEVICE command using the cached identity info to satisfy a script that
+> tries to set the APM mode of the disk after resume.  If I disable that
+> script, my extra disks stay asleep and Xwindows fires up nice and fast.
+> 
+> > In my experience the user layer almost always manages to wake up
+> > every mounted disk after resume, even if you didn't deliberately
+> > use them prior to suspend. The accesses can come from the file
+> > manager doing a scan after resume, or from any number of apps
+> > running on the system that decide they need to get even the
+> > smallest piece of information from the disks. A simple space check
+> > will wake them up.
+> 
+> By simple space check I assume you mean df?  The superblocks easily
+> fit in the cache so that shouldn't generate any IO.
+> 
+> > Thus when you leave all the disks stopped, user space ends up
+> > triggering a traffic jam when the OS wakes back up, which makes
+> > disk access take even longer.
+> > 
+> > My patch works very similarly to yours but just triggers an
+> > asynchronous wakeup to all the disks in anticipation of userspace's
+> > needs. We've tested it pretty heavily on ubuntu machines of all
+> > types and it's done well.
+> 
+> I don't think the wakeup is needed since ( ata ) disks normally wake
+> up on their own unless you enable power up in standby and pro-actively
+> initiating the wakeup only buys you maybe 500ms or less?  What is that
+> compared to a typical 10 second startup time?
+> 
+> -----BEGIN PGP SIGNATURE-----
+> Version: GnuPG v1.4.14 (GNU/Linux)
+> Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+> 
+> iQEcBAEBCgAGBQJSfqIUAAoJEJrBOlT6nu75v3sH/R374d/Sgx3DB0DVGgDch3jA
+> ZlR4eb5x5umw2CApGE0jbbj91/330Z5uxgr76tn6/nSRftDJ5ZgLc6dBTF1VwX4q
+> fqxKgNY1euIARiCL4jLxiK9JfX7hB0GtknJaMRvG4JHaSP4d0Cvhr0sbd5mpmJp7
+> P0TMVslJJHyIFVk0QjvisDBcFgo1onBkbVnX6B5Z6mPZXhAd+WCA3CJfiHnAK7t+
+> mINmlTBXnZQFXLXY2rDrmZEUCLFfTqtlprkAuGdlfXsMVYBTD31notuZ74Xbv7C7
+> vBJLiQ6b7dyF8eqcHoc49qqNO1n38nhRmYhIOSYgsyRFhECjVms5/mfEj9UBkiY=
+> =iDTY
+> -----END PGP SIGNATURE-----
