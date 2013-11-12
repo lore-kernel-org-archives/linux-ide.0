@@ -1,140 +1,102 @@
-From: Vinod Koul <vinod.koul@intel.com>
-Subject: Re: [PATCH] powerpc: add explicit OF includes for ppc4xx
-Date: Tue, 12 Nov 2013 10:22:33 +0530
-Message-ID: <20131112045233.GH8834@intel.com>
-References: <1384148143-14335-1-git-send-email-robherring2@gmail.com>
+From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Subject: Re: [PATCH V2 2/2] dt: Document sata_rcar bindings
+Date: Tue, 12 Nov 2013 14:46:27 +0100
+Message-ID: <3011649.85RRC0MaMA@avalon>
+References: <1383854642-21660-1-git-send-email-valentine.barshak@cogentembedded.com> <1485806.0A3W2702o2@avalon> <20131112034257.GJ9863@verge.net.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:21468 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751658Ab3KLFs0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 12 Nov 2013 00:48:26 -0500
-Content-Disposition: inline
-In-Reply-To: <1384148143-14335-1-git-send-email-robherring2@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-sh-owner@vger.kernel.org>
+In-Reply-To: <20131112034257.GJ9863@verge.net.au>
+Sender: linux-sh-owner@vger.kernel.org
+To: Simon Horman <horms@verge.net.au>
+Cc: Valentine <valentine.barshak@cogentembedded.com>, linux-sh@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, Magnus Damm <magnus.damm@gmail.com>, Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Kumar Gala <galak@codeaurora.org>, Tejun Heo <tj@kernel.org>, Vladimir Barinov <vladimir.barinov@cogentembedded.com>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Mark Rutland <mark.rutland@arm.com>
 List-Id: linux-ide@vger.kernel.org
-To: Rob Herring <robherring2@gmail.com>
-Cc: linux-kernel@vger.kernel.org, Rob Herring <rob.herring@calxeda.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Tejun Heo <tj@kernel.org>, Matt Mackall <mpm@selenic.com>, Herbert Xu <herbert@gondor.hengli.com.au>, "David S. Miller" <davem@davemloft.net>, Dan Williams <dan.j.williams@intel.com>, linuxppc-dev@lists.ozlabs.org, linux-ide@vger.kernel.org, linux-crypto@vger.kernel.org
 
-On Sun, Nov 10, 2013 at 11:35:43PM -0600, Rob Herring wrote:
-> From: Rob Herring <rob.herring@calxeda.com>
-> 
-> Commit b5b4bb3f6a11f9 (of: only include prom.h on sparc) removed implicit
-> includes of of_*.h headers by powerpc's prom.h. Some PPC4xx components
-> were missed in initial clean-up patch, so add the necessary includes
-> to fix ppc4xx builds.
-> 
-> Signed-off-by: Rob Herring <rob.herring@calxeda.com>
-> Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> Cc: Paul Mackerras <paulus@samba.org>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: Matt Mackall <mpm@selenic.com>
-> Cc: Herbert Xu <herbert@gondor.apana.org.au>
-> Cc: "David S. Miller" <davem@davemloft.net>
-> Cc: Vinod Koul <vinod.koul@intel.com>
-> Cc: Dan Williams <dan.j.williams@intel.com>
-> Cc: linuxppc-dev@lists.ozlabs.org
-> Cc: linux-ide@vger.kernel.org
-> Cc: linux-crypto@vger.kernel.org
-> ---
-> I intend to send this patch to Linus with the rest of the DT clean-up
-> series.
-> 
-> Rob
-> 
->  arch/powerpc/sysdev/ppc4xx_ocm.c     | 1 +
->  arch/powerpc/sysdev/xilinx_intc.c    | 1 +
->  drivers/ata/sata_dwc_460ex.c         | 2 ++
->  drivers/char/hw_random/ppc4xx-rng.c  | 1 +
->  drivers/crypto/amcc/crypto4xx_core.c | 3 +++
->  drivers/dma/ppc4xx/adma.c            | 2 ++
-For this:
+Hi Simon,
 
-Acked-by Vinod Koul <vinod.koul@intel.com>
+On Tuesday 12 November 2013 12:42:58 Simon Horman wrote:
+> On Fri, Nov 08, 2013 at 04:31:03PM +0100, Laurent Pinchart wrote:
+> > On Friday 08 November 2013 15:52:45 Valentine wrote:
+> > > On 11/08/2013 03:26 PM, Valentine wrote:
+> > > > On 11/08/2013 05:02 AM, Laurent Pinchart wrote:
+> > > >> On Friday 08 November 2013 00:04:02 Valentine Barshak wrote:
+> > > >>> These bindings can be used to register SATA devices found on R-Car
+> > > >>> SoC.
+> > > >>> 
+> > > >>> Signed-off-by: Valentine Barshak
+> > > >>> <valentine.barshak@cogentembedded.com>
+> > > >>> Acked-by: Kumar Gala <galak@codeaurora.org>
+> > > >>> ---
+> > > >>> 
+> > > >>> Documentation/devicetree/bindings/ata/sata_rcar.txt | 18 +++++++++++
+> > > >>> 1 file changed, 18 insertions(+)
+> > > >>> 
+> > > >>>   create mode 100644
+> > > >>>   Documentation/devicetree/bindings/ata/sata_rcar.txt
+> > > >>> 
+> > > >>> diff --git a/Documentation/devicetree/bindings/ata/sata_rcar.txt
+> > > >>> b/Documentation/devicetree/bindings/ata/sata_rcar.txt new file mode
+> > > >>> 100644
+> > > >>> index 0000000..d6b20a6
+> > > >>> --- /dev/null
+> > > >>> +++ b/Documentation/devicetree/bindings/ata/sata_rcar.txt
+> > > >>> @@ -0,0 +1,18 @@
+> > > >>> +* Renesas R-Car SATA
+> > > >>> +
+> > > >>> +Required properties:
+> > > >>> +- compatible        : should contain one of the following:
+> > > >>> +              - "renesas,sata-r8a7779" for R-Car H1
+> > > >>> +              - "renesas,sata-r8a7790" for R-Car H2
+> > > >>> +              - "renesas,sata-r8a7791" for R-Car M2
+> > > >>> +- reg            : offset and length of the SATA registers;
+> > > >> 
+> > > >> Maybe address instead of offset ?
+> > > > 
+> > > > OK.
+> > > > 
+> > > >>> +- interrupts        : must consist of one interrupt specifier.
+> > > >>> +
+> > > >>> +Example:
+> > > >>> +
+> > > >>> +sata: sata@fc600000 {
+> > > >>> +    compatible = "renesas,sata-r8a7779";
+> > > >>> +    reg = <0xfc600000 0x2000>;
+> > > >>> +    interrupt-parent = <&gic>;
+> > > >>> +    interrupts = <0 100 0x4>;
+> > > >> 
+> > > >> Please use IRQ_TYPE_LEVEL_HIGH instead of 0x4.
+> > > > 
+> > > > OK, I'll do that.
+> > > > 
+> > > > Please, note that all the Renesas dts[i] files do not include
+> > > > <dt-bindings/interrupt-controller/irq.h> Thus, blindly following this
+> > > > bindings documentation when adding new SATA nodes to the existing
+> > > > r8a7790.dtsi, for example, will cause DT compilation error.
+> > > 
+> > > BTW, we'll also have to switch to #include instead of /include/ to make
+> > > it work.
+> > 
+> > Sure, of course.
+> > 
+> > I was actually thinking about sending a patch to convert our DT sources to
+> > use the IRQ_* macros. Morimoto-san, are you working on that already ? If
+> > not I'll do it.
+> > 
+> > Simon, would you like one patch per SoC or would a single patch do ? Only
+> > .dts(i) files will be touched.
+> 
+> I would prefer one patch per SoC.
+> The reason is that in general that approach makes backporting easier.
 
---
-~Vinod
->  6 files changed, 10 insertions(+)
-> 
-> diff --git a/arch/powerpc/sysdev/ppc4xx_ocm.c b/arch/powerpc/sysdev/ppc4xx_ocm.c
-> index 1b15f93..b7c4345 100644
-> --- a/arch/powerpc/sysdev/ppc4xx_ocm.c
-> +++ b/arch/powerpc/sysdev/ppc4xx_ocm.c
-> @@ -26,6 +26,7 @@
->  #include <linux/kernel.h>
->  #include <linux/dma-mapping.h>
->  #include <linux/of.h>
-> +#include <linux/of_address.h>
->  #include <asm/rheap.h>
->  #include <asm/ppc4xx_ocm.h>
->  #include <linux/slab.h>
-> diff --git a/arch/powerpc/sysdev/xilinx_intc.c b/arch/powerpc/sysdev/xilinx_intc.c
-> index f4fdc94..83f943a 100644
-> --- a/arch/powerpc/sysdev/xilinx_intc.c
-> +++ b/arch/powerpc/sysdev/xilinx_intc.c
-> @@ -24,6 +24,7 @@
->  #include <linux/irq.h>
->  #include <linux/of.h>
->  #include <linux/of_address.h>
-> +#include <linux/of_irq.h>
->  #include <asm/io.h>
->  #include <asm/processor.h>
->  #include <asm/i8259.h>
-> diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-> index 2e39173..523524b 100644
-> --- a/drivers/ata/sata_dwc_460ex.c
-> +++ b/drivers/ata/sata_dwc_460ex.c
-> @@ -31,6 +31,8 @@
->  #include <linux/module.h>
->  #include <linux/init.h>
->  #include <linux/device.h>
-> +#include <linux/of_address.h>
-> +#include <linux/of_irq.h>
->  #include <linux/of_platform.h>
->  #include <linux/platform_device.h>
->  #include <linux/libata.h>
-> diff --git a/drivers/char/hw_random/ppc4xx-rng.c b/drivers/char/hw_random/ppc4xx-rng.c
-> index 732c330..521f76b 100644
-> --- a/drivers/char/hw_random/ppc4xx-rng.c
-> +++ b/drivers/char/hw_random/ppc4xx-rng.c
-> @@ -13,6 +13,7 @@
->  #include <linux/platform_device.h>
->  #include <linux/hw_random.h>
->  #include <linux/delay.h>
-> +#include <linux/of_address.h>
->  #include <linux/of_platform.h>
->  #include <asm/io.h>
->  
-> diff --git a/drivers/crypto/amcc/crypto4xx_core.c b/drivers/crypto/amcc/crypto4xx_core.c
-> index f88e3d8..efaf630 100644
-> --- a/drivers/crypto/amcc/crypto4xx_core.c
-> +++ b/drivers/crypto/amcc/crypto4xx_core.c
-> @@ -27,6 +27,9 @@
->  #include <linux/dma-mapping.h>
->  #include <linux/platform_device.h>
->  #include <linux/init.h>
-> +#include <linux/module.h>
-> +#include <linux/of_address.h>
-> +#include <linux/of_irq.h>
->  #include <linux/of_platform.h>
->  #include <linux/slab.h>
->  #include <asm/dcr.h>
-> diff --git a/drivers/dma/ppc4xx/adma.c b/drivers/dma/ppc4xx/adma.c
-> index 370ff82..e24b5ef 100644
-> --- a/drivers/dma/ppc4xx/adma.c
-> +++ b/drivers/dma/ppc4xx/adma.c
-> @@ -42,6 +42,8 @@
->  #include <linux/uaccess.h>
->  #include <linux/proc_fs.h>
->  #include <linux/of.h>
-> +#include <linux/of_address.h>
-> +#include <linux/of_irq.h>
->  #include <linux/of_platform.h>
->  #include <asm/dcr.h>
->  #include <asm/dcr-regs.h>
-> -- 
-> 1.8.1.2
-> 
+I've already posted the series on Saturday, it's called "[PATCH 0/7] ARM: 
+shmobile: Use interrupt macros in DT files". Could you please have a look ? I 
+can split patches 1/7 to 3/7 in 28 patches and repost if you would like me to, 
+but that sounds like a really high number of patches for something so simple, 
+especially for patch 1/7.
 
 -- 
+Regards,
+
+Laurent Pinchart
+
