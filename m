@@ -1,59 +1,94 @@
-From: Phillip Susi <psusi@ubuntu.com>
-Subject: Re: [PATCH/RESEND v2 0/2] SATA disk resume time optimization
-Date: Mon, 11 Nov 2013 12:08:49 -0500
-Message-ID: <52810F21.9070605@ubuntu.com>
-References: <20131017193331.GA11747@linux.intel.com> <527AF287.7020700@ubuntu.com> <20131109012023.GA8978@linux.intel.com> <527EA218.6010604@ubuntu.com> <20131111165920.GA25366@linux.intel.com>
+From: Simon Horman <horms@verge.net.au>
+Subject: Re: [PATCH V2 2/2] dt: Document sata_rcar bindings
+Date: Tue, 12 Nov 2013 12:42:58 +0900
+Message-ID: <20131112034257.GJ9863@verge.net.au>
+References: <1383854642-21660-1-git-send-email-valentine.barshak@cogentembedded.com>
+ <527CCA76.5060706@cogentembedded.com>
+ <527CD08D.80004@cogentembedded.com>
+ <1485806.0A3W2702o2@avalon>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:62738 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753784Ab3KKRIw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Nov 2013 12:08:52 -0500
-In-Reply-To: <20131111165920.GA25366@linux.intel.com>
+Received: from kirsty.vergenet.net ([202.4.237.240]:39889 "EHLO
+	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751427Ab3KLDnD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Nov 2013 22:43:03 -0500
+Content-Disposition: inline
+In-Reply-To: <1485806.0A3W2702o2@avalon>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: todd.e.brandt@linux.intel.com
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, tj@kernel.org, JBottomley@parallels.com
+To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Cc: Valentine <valentine.barshak@cogentembedded.com>, linux-sh@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, Magnus Damm <magnus.damm@gmail.com>, Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Kumar Gala <galak@codeaurora.org>, Tejun Heo <tj@kernel.org>, Vladimir Barinov <vladimir.barinov@cogentembedded.com>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Mark Rutland <mark.rutland@arm.com>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On Fri, Nov 08, 2013 at 04:31:03PM +0100, Laurent Pinchart wrote:
+> Hi Valentine,
+> 
+> On Friday 08 November 2013 15:52:45 Valentine wrote:
+> > On 11/08/2013 03:26 PM, Valentine wrote:
+> > > On 11/08/2013 05:02 AM, Laurent Pinchart wrote:
+> > >> On Friday 08 November 2013 00:04:02 Valentine Barshak wrote:
+> > >>> These bindings can be used to register SATA devices found on R-Car SoC.
+> > >>> 
+> > >>> Signed-off-by: Valentine Barshak <valentine.barshak@cogentembedded.com>
+> > >>> Acked-by: Kumar Gala <galak@codeaurora.org>
+> > >>> ---
+> > >>> 
+> > >>>   Documentation/devicetree/bindings/ata/sata_rcar.txt | 18 +++++++++++++
+> > >>> 
+> > >>> 1 file changed, 18 insertions(+)
+> > >>> 
+> > >>>   create mode 100644 Documentation/devicetree/bindings/ata/sata_rcar.txt
+> > >>> 
+> > >>> diff --git a/Documentation/devicetree/bindings/ata/sata_rcar.txt
+> > >>> b/Documentation/devicetree/bindings/ata/sata_rcar.txt new file mode
+> > >>> 100644
+> > >>> index 0000000..d6b20a6
+> > >>> --- /dev/null
+> > >>> +++ b/Documentation/devicetree/bindings/ata/sata_rcar.txt
+> > >>> @@ -0,0 +1,18 @@
+> > >>> +* Renesas R-Car SATA
+> > >>> +
+> > >>> +Required properties:
+> > >>> +- compatible        : should contain one of the following:
+> > >>> +              - "renesas,sata-r8a7779" for R-Car H1
+> > >>> +              - "renesas,sata-r8a7790" for R-Car H2
+> > >>> +              - "renesas,sata-r8a7791" for R-Car M2
+> > >>> +- reg            : offset and length of the SATA registers;
+> > >> 
+> > >> Maybe address instead of offset ?
+> > > 
+> > > OK.
+> > > 
+> > >>> +- interrupts        : must consist of one interrupt specifier.
+> > >>> +
+> > >>> +Example:
+> > >>> +
+> > >>> +sata: sata@fc600000 {
+> > >>> +    compatible = "renesas,sata-r8a7779";
+> > >>> +    reg = <0xfc600000 0x2000>;
+> > >>> +    interrupt-parent = <&gic>;
+> > >>> +    interrupts = <0 100 0x4>;
+> > >> 
+> > >> Please use IRQ_TYPE_LEVEL_HIGH instead of 0x4.
+> > > 
+> > > OK, I'll do that.
+> > > 
+> > > Please, note that all the Renesas dts[i] files do not include
+> > > <dt-bindings/interrupt-controller/irq.h> Thus, blindly following this
+> > > bindings documentation when adding new SATA nodes to the existing
+> > > r8a7790.dtsi, for example, will cause DT compilation error.
+> > 
+> > BTW, we'll also have to switch to #include instead of /include/ to make it
+> > work.
+> 
+> Sure, of course.
+> 
+> I was actually thinking about sending a patch to convert our DT sources to use 
+> the IRQ_* macros. Morimoto-san, are you working on that already ? If not I'll 
+> do it.
+> 
+> Simon, would you like one patch per SoC or would a single patch do ? Only 
+> .dts(i) files will be touched.
 
-On 11/11/2013 11:59 AM, Todd E Brandt wrote:
-> 500ms is actually quite alot when you compare it with android or
-> iOS, or even with other subsystems like USB. USB is the second
-> worst offender after SATA disks and it tends to take around 600ms
-> for most standard systems with an onboard webcam, and with other
-> devices plugged in ever longer. I think we should optimize out
-> every millisecond we can.
-
-I think you missed my point: if the disk is going to be started in
-9000ms vs 8500ms, it doesn't make much difference, and I think in
-practice the difference will be less than that.  I don't think it is
-worth requiring that all disks start up to save a few percent in the
-cases where the disk is required ( and I'm not clear that there even
-are any such cases ).
-
-> You mentioned that you tuned your system to remove all cases that
-> trigger non-essential disk wakeups, and that works great for you,
-> but it won't help anyone using fedora or OpenSUSE or Yocto, etc.
-> And even if you could formallize your changes to Ubuntu to create a
-> fully optimized user space, you're still at the mercy of the user's
-> install choices, which can quickly throw a wrench in the works.
-
-No, I did not tune my system; I fixed the kernel so that userspace's
-activities do not start those disks.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQEcBAEBAgAGBQJSgQ8hAAoJEJrBOlT6nu75c04H/2ej9NzdyrWkuPv2SLGgb51Y
-iBmeAkJEoFXwgu0UCZ2Ty3dpUkW7jcRiKKv5q8d1Anj4eGFIpx+CjUptCE3MCs1w
-PWQm7uB6+DgOhj3aqF9DulBx0Yp3+gISwOTXYLAIirIReE4Vk904ZuYHo4IvJmug
-vbk4p6n5iGLMqV/QFsymPoOFtUzKQPHj4YDL3Piu0fse8AOIHk5BJtmmtj1YbAck
-oAsMIYz6UQZ2tXpzxcy1ISgZYUO8k6CcrXg8WE2ws9gZLNJtBHniLC1t2VCE10KF
-BSzP+tgN+Glbk+HyJUuwjALa/CkFk9FKQJT8LJQfn0rRhjku/vZXsZoFgCQiIx0=
-=THLl
------END PGP SIGNATURE-----
+I would prefer one patch per SoC.
+The reason is that in general that approach makes backporting easier.
