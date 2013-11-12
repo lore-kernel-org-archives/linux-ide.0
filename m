@@ -1,102 +1,77 @@
-From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-Subject: Re: [PATCH V2 2/2] dt: Document sata_rcar bindings
-Date: Tue, 12 Nov 2013 14:46:27 +0100
-Message-ID: <3011649.85RRC0MaMA@avalon>
-References: <1383854642-21660-1-git-send-email-valentine.barshak@cogentembedded.com> <1485806.0A3W2702o2@avalon> <20131112034257.GJ9863@verge.net.au>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: Re: [PATCH v2 0/5] ata: Add APM X-Gene SATA controller support
+Date: Tue, 12 Nov 2013 16:40:12 +0100
+Message-ID: <3056580.hyyOnlSqg9@amdc1032>
+References: <1383980431-6572-1-git-send-email-lho@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7Bit
-Return-path: <linux-sh-owner@vger.kernel.org>
-In-Reply-To: <20131112034257.GJ9863@verge.net.au>
-Sender: linux-sh-owner@vger.kernel.org
-To: Simon Horman <horms@verge.net.au>
-Cc: Valentine <valentine.barshak@cogentembedded.com>, linux-sh@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, Magnus Damm <magnus.damm@gmail.com>, Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Kumar Gala <galak@codeaurora.org>, Tejun Heo <tj@kernel.org>, Vladimir Barinov <vladimir.barinov@cogentembedded.com>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Mark Rutland <mark.rutland@arm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-reply-to: <1383980431-6572-1-git-send-email-lho@apm.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: linux-arm-kernel@lists.infradead.org
+Cc: Loc Ho <lho@apm.com>, olof@lixom.net, tj@kernel.org, linux-scsi@vger.kernel.org, jcm@redhat.com, Suman Tripathi <stripathi@apm.com>, Tuan Phan <tphan@apm.com>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Hi Simon,
 
-On Tuesday 12 November 2013 12:42:58 Simon Horman wrote:
-> On Fri, Nov 08, 2013 at 04:31:03PM +0100, Laurent Pinchart wrote:
-> > On Friday 08 November 2013 15:52:45 Valentine wrote:
-> > > On 11/08/2013 03:26 PM, Valentine wrote:
-> > > > On 11/08/2013 05:02 AM, Laurent Pinchart wrote:
-> > > >> On Friday 08 November 2013 00:04:02 Valentine Barshak wrote:
-> > > >>> These bindings can be used to register SATA devices found on R-Car
-> > > >>> SoC.
-> > > >>> 
-> > > >>> Signed-off-by: Valentine Barshak
-> > > >>> <valentine.barshak@cogentembedded.com>
-> > > >>> Acked-by: Kumar Gala <galak@codeaurora.org>
-> > > >>> ---
-> > > >>> 
-> > > >>> Documentation/devicetree/bindings/ata/sata_rcar.txt | 18 +++++++++++
-> > > >>> 1 file changed, 18 insertions(+)
-> > > >>> 
-> > > >>>   create mode 100644
-> > > >>>   Documentation/devicetree/bindings/ata/sata_rcar.txt
-> > > >>> 
-> > > >>> diff --git a/Documentation/devicetree/bindings/ata/sata_rcar.txt
-> > > >>> b/Documentation/devicetree/bindings/ata/sata_rcar.txt new file mode
-> > > >>> 100644
-> > > >>> index 0000000..d6b20a6
-> > > >>> --- /dev/null
-> > > >>> +++ b/Documentation/devicetree/bindings/ata/sata_rcar.txt
-> > > >>> @@ -0,0 +1,18 @@
-> > > >>> +* Renesas R-Car SATA
-> > > >>> +
-> > > >>> +Required properties:
-> > > >>> +- compatible        : should contain one of the following:
-> > > >>> +              - "renesas,sata-r8a7779" for R-Car H1
-> > > >>> +              - "renesas,sata-r8a7790" for R-Car H2
-> > > >>> +              - "renesas,sata-r8a7791" for R-Car M2
-> > > >>> +- reg            : offset and length of the SATA registers;
-> > > >> 
-> > > >> Maybe address instead of offset ?
-> > > > 
-> > > > OK.
-> > > > 
-> > > >>> +- interrupts        : must consist of one interrupt specifier.
-> > > >>> +
-> > > >>> +Example:
-> > > >>> +
-> > > >>> +sata: sata@fc600000 {
-> > > >>> +    compatible = "renesas,sata-r8a7779";
-> > > >>> +    reg = <0xfc600000 0x2000>;
-> > > >>> +    interrupt-parent = <&gic>;
-> > > >>> +    interrupts = <0 100 0x4>;
-> > > >> 
-> > > >> Please use IRQ_TYPE_LEVEL_HIGH instead of 0x4.
-> > > > 
-> > > > OK, I'll do that.
-> > > > 
-> > > > Please, note that all the Renesas dts[i] files do not include
-> > > > <dt-bindings/interrupt-controller/irq.h> Thus, blindly following this
-> > > > bindings documentation when adding new SATA nodes to the existing
-> > > > r8a7790.dtsi, for example, will cause DT compilation error.
-> > > 
-> > > BTW, we'll also have to switch to #include instead of /include/ to make
-> > > it work.
-> > 
-> > Sure, of course.
-> > 
-> > I was actually thinking about sending a patch to convert our DT sources to
-> > use the IRQ_* macros. Morimoto-san, are you working on that already ? If
-> > not I'll do it.
-> > 
-> > Simon, would you like one patch per SoC or would a single patch do ? Only
-> > .dts(i) files will be touched.
+Hi,
+
+Please remember to include linux-ide@vger.kernel.org on CC: for ATA patches.
+
+Also from the quick look it seems that:
+- patch #4 ("ata: Add APM X-Gene SATA serdes functions") should come before
+  patch #3 ("ata: Add APM X-Gene SATA driver") as code in patch #3 depends
+  on the code in patch #4
+- patch #5 ("Documentation: Add documentation for APM X-Gene SATA DTS
+  binding") should come before patch #2 ("arm64: Add APM X-Gene DTS entry
+  for SATA controllers") or (even better) just be merged into patch #2
+
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
+
+On Saturday, November 09, 2013 12:00:26 AM Loc Ho wrote:
+> ata: Add APM X-Gene SATA controller support
 > 
-> I would prefer one patch per SoC.
-> The reason is that in general that approach makes backporting easier.
-
-I've already posted the series on Saturday, it's called "[PATCH 0/7] ARM: 
-shmobile: Use interrupt macros in DT files". Could you please have a look ? I 
-can split patches 1/7 to 3/7 in 28 patches and repost if you would like me to, 
-but that sounds like a really high number of patches for something so simple, 
-especially for patch 1/7.
-
--- 
-Regards,
-
-Laurent Pinchart
+> v2:
+>  * Clean up file sata_xgene.c with Lindent and etc
+>  * Clean up file sata_xgene_serdes.c with Lindent and etc
+>  * Add description to each patch
+> 
+> v1:
+>  * inital version
+> 
+> Signed-off-by: Loc Ho <lho@apm.com>
+> Signed-off-by: Tuan Phan <tphan@apm.com>
+> Signed-off-by: Suman Tripathi <stripathi@apm.com>
+> ---
+> Loc Ho (5):
+>   ata: Export AHCI library functions required by APM X-Gene SATA driver
+>   arm64: Add APM X-Gene DTS entry for SATA controllers
+>   ata: Add APM X-Gene SATA driver
+>   ata: Add APM X-Gene SATA serdes functions
+>   Documentation: Add documentation for APM X-Gene SATA DTS binding
+> 
+>  .../devicetree/bindings/ata/apm-xgene.txt          |   84 +
+>  arch/arm64/boot/dts/apm-storm.dtsi                 |   73 +
+>  drivers/ata/Kconfig                                |    7 +
+>  drivers/ata/Makefile                               |    2 +
+>  drivers/ata/ahci.h                                 |    6 +
+>  drivers/ata/libahci.c                              |   13 +-
+>  drivers/ata/sata_xgene.c                           | 1394 ++++++++++++++
+>  drivers/ata/sata_xgene.h                           |  112 ++
+>  drivers/ata/sata_xgene_serdes.c                    | 2004 ++++++++++++++++++++
+>  9 files changed, 3690 insertions(+), 5 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/ata/apm-xgene.txt
+>  create mode 100644 drivers/ata/sata_xgene.c
+>  create mode 100644 drivers/ata/sata_xgene.h
+>  create mode 100644 drivers/ata/sata_xgene_serdes.c
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
 
