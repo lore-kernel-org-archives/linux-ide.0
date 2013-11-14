@@ -1,46 +1,42 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: Re: [PATCH v2 0/5] ata: Add APM X-Gene SATA controller support
-Date: Tue, 12 Nov 2013 18:30:22 +0100
-Message-ID: <2501719.LnLBBqadQB@amdc1032>
-References: <1383980431-6572-1-git-send-email-lho@apm.com>
- <3056580.hyyOnlSqg9@amdc1032> <5282589C.2090606@cogentembedded.com>
+From: xiangliang yu <yxlraid@gmail.com>
+Subject: Re: [PATCH 1/1] AHCI: disabled FBS prior to issuing software reset
+Date: Thu, 14 Nov 2013 08:26:54 +0800
+Message-ID: <CAP0P+NU418LriZufDj2TdbvTT3_xBOLeX9nSdkswvowdx-AZMw@mail.gmail.com>
+References: <CAP0P+NUQSByVNquY-zP3S-6GKhSvQXgq_4dDCTd2R8FM=YC_Gg@mail.gmail.com>
+	<20131027115703.GH14934@mtj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-reply-to: <5282589C.2090606@cogentembedded.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: linux-arm-kernel@lists.infradead.org, Loc Ho <lho@apm.com>, olof@lixom.net, tj@kernel.org, linux-scsi@vger.kernel.org, jcm@redhat.com, Suman Tripathi <stripathi@apm.com>, Tuan Phan <tphan@apm.com>, linux-ide@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-bk0-f48.google.com ([209.85.214.48]:53897 "EHLO
+	mail-bk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751157Ab3KNA05 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Nov 2013 19:26:57 -0500
+In-Reply-To: <20131027115703.GH14934@mtj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, yuxiangl@marvell.com
+
+hi
+how about this patch? do you have any update? thanks!
 
 
-Hi Sergei,
-
-On Tuesday, November 12, 2013 08:34:36 PM Sergei Shtylyov wrote:
-> Hello.
-> 
-> On 12-11-2013 19:40, Bartlomiej Zolnierkiewicz wrote:
-> 
-> > Please remember to include linux-ide@vger.kernel.org on CC: for ATA patches.
-> 
-> > Also from the quick look it seems that:
-> > - patch #4 ("ata: Add APM X-Gene SATA serdes functions") should come before
-> >    patch #3 ("ata: Add APM X-Gene SATA driver") as code in patch #3 depends
-> >    on the code in patch #4
-> > - patch #5 ("Documentation: Add documentation for APM X-Gene SATA DTS
-> >    binding") should come before patch #2 ("arm64: Add APM X-Gene DTS entry
-> >    for SATA controllers") or (even better) just be merged into patch #2
-> 
->     No, if it has to be merged then to the driver patch, not .dts patch.
-
-Oh, yes.  Driver patch is where these bindings are actually introduced.
-
-Also .dts patch (adding actual users of bindings) should ideally come last.
-
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
-
+> On Wed, Oct 16, 2013 at 11:36:20AM2013/10/27 Tejun Heo <tj@kernel.org>:
+> Hello,
+> +0800, xiangliang yu wrote:
+>> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+>> index 34c8216..fbe592f 100644
+>> --- a/drivers/ata/libahci.c
+>> +++ b/drivers/ata/libahci.c
+>> @@ -1266,9 +1266,11 @@ int ahci_do_softreset(struct ata_link *link,
+>> unsigned int *class,
+>
+> Your patch is still completely white space corrupted.  Please check
+> your mail settings.  Using git-send-email is usually a good idea.  I'm
+> applying the patch manually this time but *please* make sure your mail
+> setup is working before posting things next time.
+>
+> Thanks.
+>
+> --
+> tejun
