@@ -1,60 +1,70 @@
 From: Loc Ho <lho@apm.com>
-Subject: [PATCH 3/3] arm64: Add APM X-Gene SoC 6.0Gbps SATA PHY DTS entries
-Date: Thu, 14 Nov 2013 12:31:59 -0700
-Message-ID: <1384457519-21335-4-git-send-email-lho@apm.com>
-References: <1384457519-21335-1-git-send-email-lho@apm.com>
- <1384457519-21335-2-git-send-email-lho@apm.com>
- <1384457519-21335-3-git-send-email-lho@apm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1384457519-21335-3-git-send-email-lho@apm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jcm@redhat.com, Loc Ho <lho@apm.com>
+Subject: [PATCH v3 0/4] ata: Add APM X-Gene SoC SATA host controller support
+Date: Thu, 14 Nov 2013 14:39:09 -0700
+Message-ID: <1384465153-29902-1-git-send-email-lho@apm.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from exprod5og103.obsmtp.com ([64.18.0.145]:43259 "HELO
+	exprod5og103.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757787Ab3KNVjW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Nov 2013 16:39:22 -0500
+Received: by mail-pa0-f50.google.com with SMTP id kp14so1053148pab.23
+        for <linux-ide@vger.kernel.org>; Thu, 14 Nov 2013 13:39:21 -0800 (PST)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jcm@redhat.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-arm64: Add APM X-Gene SoC 6.0Gbps SATA PHY DTS entries.
+ata: Add APM X-Gene SoC SATA host controller support
 
-This patch adds the DTS entries for the APM X-Gene SoC 6.0Gbps SATA PHY 
-driver. The PHY for controller 0 and 1 are enabled by default.
+This patch adds support for the APM X-Gene SoC SATA host controller. In 
+order for the host controller to work, the corresponding SATA PHY driver
+musts also be available.
+
+v3:
+ * Move out the SATA PHY to another driver
+ * Remove the clock-cells entry from DTS
+ * Remove debug wrapper
+ * Remove delay functions wrapper
+ * Clean up resource and IRQ query
+ * Remove query clock name
+ * Switch to use dma_set_mask/dma_coherent_mask
+ * Remove un-necessary devm_kfree
+ * Update GPL license header to v2
+ * Spilt up function xgene_ahci_hardreset
+ * Spilt up function xgene_ahci_probe
+ * Remove all reference of CONFIG_ARCH_MSLIM
+ * Clean up chip revision code
+
+v2:
+ * Clean up file sata_xgene.c with Lindent and etc
+ * Clean up file sata_xgene_serdes.c with Lindent and etc
+ * Add description to each patch
+
+v1:
+ * inital version
+
+Signed-off-by: Loc Ho <lho@apm.com>
+Signed-off-by: Tuan Phan <tphan@apm.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
+Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+Reviewed-by: Olof Johansson <olof@lixom.net>
 ---
- arch/arm64/boot/dts/apm-storm.dtsi |   25 +++++++++++++++++++++++++
- 1 files changed, 25 insertions(+), 0 deletions(-)
+Loc Ho (4):
+  ata: Export required functions by APM X-Gene SATA driver
+  Documentation: Add documentation for APM X-Gene SATA controllor DTS
+    binding
+  ata: Add APM X-Gene SoC SATA host controller driver
+  arm64: Add APM X-Gene SoC SATA host controller DTS entries
 
-diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
-index 359d7b6..b29b465 100644
---- a/arch/arm64/boot/dts/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm-storm.dtsi
-@@ -193,5 +193,30 @@
- 			reg = <0x0 0x17000014 0x0 0x100>;
- 			mask = <0x1>;
- 		};
-+
-+		sataphy0: sataphy@1f210000 {
-+			compatible = "apm,xgene-ahci-phy";
-+			id = <0>;
-+			reg = <0x0 0x1f210000 0x0 0x10000>;
-+			#phy-cells = <0>;
-+			status = "na";
-+		};
-+
-+		sataphy1: sataphy@1f220000 {
-+			compatible = "apm,xgene-ahci-phy";
-+			id = <1>;
-+			reg = <0x0 0x1f220000 0x0 0x10000>;
-+			#phy-cells = <0>;
-+			status = "ok";
-+		};
-+
-+		sataphy2: sataphy@1f230000 {
-+			compatible = "apm,xgene-ahci-phy";
-+			id = <2>;
-+			reg = <0x0 0x1f230000 0x0 0x10000
-+			       0x0 0x1f2d0000 0x0 0x10000 >;
-+			#phy-cells = <0>;
-+			status = "ok";
-+		};
- 	};
- };
--- 
-1.5.5
+ .../devicetree/bindings/ata/apm-xgene.txt          |   62 +-
+ arch/arm64/boot/dts/apm-storm.dtsi                 |   70 ++
+ drivers/ata/Kconfig                                |    8 +
+ drivers/ata/Makefile                               |    1 +
+ drivers/ata/ahci.h                                 |    6 +
+ drivers/ata/libahci.c                              |   13 +-
+ drivers/ata/sata_xgene.c                           | 1271 ++++++++++++++++++++
+ drivers/ata/sata_xgene.h                           |   96 ++
+ 8 files changed, 1521 insertions(+), 6 deletions(-)
+ create mode 100644 drivers/ata/sata_xgene.c
+ create mode 100644 drivers/ata/sata_xgene.h
 
