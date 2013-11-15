@@ -1,138 +1,96 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v3 3/4] ata: Add APM X-Gene SoC SATA host controller driver
-Date: Fri, 15 Nov 2013 14:48:15 +0100
-Message-ID: <201311151448.16279.arnd@arndb.de>
-References: <1384465153-29902-1-git-send-email-lho@apm.com>
- <1384465153-29902-3-git-send-email-lho@apm.com>
- <1384465153-29902-4-git-send-email-lho@apm.com>
+From: Loc Ho <lho@apm.com>
+Subject: Re: [PATCH 2/3] ata: Add APM X-Gene SoC 6.0Gbps SATA PHY driver
+Date: Fri, 15 Nov 2013 08:14:26 -0800
+Message-ID: <CAPw-ZT=77Fc4Nyc0au74EusoQe=n8fGrJLpavLOmTcswp+8SwA@mail.gmail.com>
+References: <1384457519-21335-1-git-send-email-lho@apm.com>
+	<1384457519-21335-2-git-send-email-lho@apm.com>
+	<1384457519-21335-3-git-send-email-lho@apm.com>
+	<201311151346.17231.arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <1384465153-29902-4-git-send-email-lho@apm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Loc Ho <lho@apm.com>
-Cc: devicetree@vger.kernel.org, Suman Tripathi <stripathi@apm.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jcm@redhat.com, tj@kernel.org, olof@lixom.net, Tuan Phan <tphan@apm.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from exprod5og111.obsmtp.com ([64.18.0.22]:46811 "HELO
+	exprod5og111.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752371Ab3KOQO2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Nov 2013 11:14:28 -0500
+Received: by mail-pb0-f45.google.com with SMTP id mc8so3772913pbc.18
+        for <linux-ide@vger.kernel.org>; Fri, 15 Nov 2013 08:14:27 -0800 (PST)
+In-Reply-To: <201311151346.17231.arnd@arndb.de>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Jon Masters <jcm@redhat.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-On Thursday 14 November 2013, Loc Ho wrote:
->  
-> +config SATA_XGENE
-> +	tristate "APM X-Gene 6.0Gbps SATA host controller support"
-> +	depends on SATA_AHCI_PLATFORM
-> +	default y if ARM64
-> +	select SATA_XGENE_PHY
+Hi,
 
-I don't think the "default y" is appropriate here, since there are going to
-be lots of ARM64 platforms in the long run that don't have this. Also,
-there is a trend towards using CONFIG_COMPILE_TEST to limit the
-visibility.
+>> +
+>> +/* SATA port 4 - 5 force power down VCO */
+>> +static void xgene_phy_sata45_macro_pdwn_force_vco(struct xgene_ahci_phy_ctx
+>> +                                                  *ctx)
+>> +{
+>> +     sds_pcie_toggle1to0(ctx->pcie_base, KC_CLKMACRO_CMU_REGS_CMU_REG0_ADDR,
+>> +                         CMU_REG0_PDOWN_MASK);
+>> +     sds_pcie_toggle1to0(ctx->pcie_base,
+>> +                         KC_CLKMACRO_CMU_REGS_CMU_REG32_ADDR,
+>> +                         CMU_REG32_FORCE_VCOCAL_START_MASK);
+>> +}
+>
+> I think it's bad to have knowledge of specific port numbers in the driver.
+> Can you change this so that the driver treats all PHYs the same way but
+> gets the differences between sata/eth/pcie mode from DT properties?
+[Loc Ho]
+Okay... I will get rip of the "sata45" and call this function if an
+base address is available.
 
-I'd suggest something like
+>
+>
+>> +void xgene_ahci_serdes_reset_rxa_rxd(struct xgene_ahci_phy_ctx *ctx, int chan)
+>
+> All functions in the driver should be 'static'. You are not calling these
+> directly from the SATA driver, are you?
+[Loc Ho]
+Okay... Not anymore.
 
-config SATA_XGENE
-	tristate "APM X-Gene 6.0Gbps SATA host controller support"
-	depends on ARM64 || COMPILE_TEST
-	...
+>
+>> +     /* Select SATA mux for SATA port 0 - 3 which shared with SGMII ETH */
+>> +     if (ctx->id < 2) {
+>> +             if (xgene_phy_host_sata_select(ctx) != 0) {
+>> +                     dev_err(ctx->dev, "SATA%d can not select SATA MUX\n",
+>> +                             ctx->id);
+>> +                     return -1;
+>> +             }
+>> +     }
+>
+> I think all checks for the "id" field are to find out what kind of PHY you
+> are talking to, the driver itself does not need to know the id, and the
+> field can be removed if you find that out in a different way.
+[Loc Ho]
+This is mainly used for debugging and detection of the 2nd resource. I
+will use another compatible type.
 
-> +/* Enable for dumping CSR read/write access */
-> +#undef XGENE_DBG_CSR
+>
+>> +     if (ctx->id == 2) {
+>> +             /* For 3rd controller, we must also program another resource */
+>> +             res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+>> +             if (!res) {
+>> +                     dev_err(&pdev->dev,
+>> +                             "no SATA/PCIE PHY resource address\n");
+>> +                     goto error;
+>> +             }
+>> +             ctx->pcie_base = devm_ioremap(&pdev->dev, res->start,
+>> +                                           resource_size(res));
+>> +             if (!ctx->pcie_base) {
+>> +                     dev_err(&pdev->dev,
+>> +                             "can't map SATA/PCIe PHY resource\n");
+>> +                     rc = -ENOMEM;
+>> +                     goto error;
+>> +             }
+>> +     }
+>
+> If you need a second memory resource, I take that as a hint that
+> the device is actually different from the others, so using a separate
+> "compatible" string in DT might be more appropriate.
+[Loc Ho]
+Okay..
 
-This should be removed now as well, along with the debug macro you already removed.
-
-> +
-> +/* Temporary function until the PHY parameter API */
-> +extern void xgene_ahci_phy_set_pq(struct phy *phy, int chan, int data);
-> +extern void xgene_ahci_phy_set_spd(struct phy *phy, int chan, int gen);
-
-Ah, that should have been mentioned in the changeset text. Do you think you
-can remove these for the final version?
-
-> +static void xgene_rd(void *addr, u32 *val)
-> +{
-> +	*val = readl(addr);
-> +#if defined(XGENE_DBG_CSR)
-> +	printk(KERN_DEBUG "SATAPHY CSR RD: 0x%p value: 0x%08x\n", addr, *val);
-> +#endif
-> +}
-
-The interface you are looking for is pr_debug() or dev_dbg(), which get
-built-in only if the DEBUG macro is set.
-
-In a lot of cases, it's actually best to remove debug output like this from
-the driver once you have it working  -- whoever is debugging problems in 
-the driver next might need completely different debugging information or
-can add them back easily if needed.
-
-It's your choice if you want to use pr_debug() or remove that output
-entirely. If you remove it, best remove the helper functions entirely
-and use readl/writel directly.
-
-> +/* Flush the IOB to ensure all SATA controller writes completed before
-> +   servicing the completed command. */
-> +static int xgene_ahci_iob_flush(struct xgene_ahci_context *ctx)
-> +{
-> +	if (ctx->ahbc_io_base == NULL) {
-> +		void *ahbc_base;
-> +		u32 val;
-> +
-> +		/* The AHBC address is fixed in X-Gene */
-> +		ahbc_base = devm_ioremap(ctx->dev, 0x1F2A0000, 0x80000);
-> +		if (!ahbc_base) {
-> +			dev_err(ctx->dev, "can't map AHBC resource\n");
-> +			return -ENODEV;
-> +		}
-
-I had an important comment about the misuse of hardcoded I/O addresses
-here. Please never just post a new version with the same issue. In general,
-your options are:
-
-* rewrite the code in a more appropriate way
-* reply to the comment, arguing why you think your code is correct
-* ask for clarification if you don't know how to improve the code
-* mark the code as TODO and mention in the patch description why you
-  are still working on this and that the current version should not
-  be seen as final.
-
-If you don't do any of these, reviewers will get annoyed because you
-are wasting their time.
-> +
-> +static int xgene_ahci_get_u32_param(struct platform_device *pdev,
-> +				    const char *of_name, char *acpi_name,
-> +				    u32 *param)
-> +{
-> +#ifdef CONFIG_ACPI
-> +	if (efi_enabled(EFI_BOOT)) {
-> +		unsigned long long value;
-> +		acpi_status status;
-> +		if (acpi_name == NULL)
-> +			return -ENODEV;
-> +		status = acpi_evaluate_integer(ACPI_HANDLE(&pdev->dev),
-> +					       acpi_name, NULL, &value);
-> +		if (ACPI_FAILURE(status))
-> +			return -ENODEV;
-> +		*param = value;
-> +		return 0;
-> +	}
-> +#endif
-
-There are more previous comments that you have not addressed yet.
-
-> diff --git a/drivers/ata/sata_xgene.h b/drivers/ata/sata_xgene.h
-> new file mode 100644
-> index 0000000..51e73f6
-> --- /dev/null
-> +++ b/drivers/ata/sata_xgene.h
-
-This file should probably just be folded into the driver, since it contains no
-interfaces between  modules, just internal definitions.
-
-	Arnd
+-Loc
