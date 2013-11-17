@@ -1,43 +1,50 @@
-From: Phillip Susi <psusi@ubuntu.com>
-Subject: Re: [PATCH 1/3] sd: don't bother spinning up disks on resume
-Date: Sun, 17 Nov 2013 11:15:34 -0500
-Message-ID: <5288EBA6.3070609@ubuntu.com>
-References: <527AF287.7020700@ubuntu.com>		 <927e15641f27b46f206f8ae8110201c8fd77b7e1.1383789225.git.psusi@ubuntu.com>		 <527BDA11.6060603@interlog.com> <527C0349.5010301@ubuntu.com>	 <1384626031.3614.7.camel@dabdike.int.hansenpartnership.com>	 <52883CE9.9040102@ubuntu.com> <1384670620.3614.24.camel@dabdike.int.hansenpartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Marek Vasut <marex@denx.de>
+Subject: [PATCH 4/5] ARM: dts: imx53: Add AHCI SATA binding
+Date: Sun, 17 Nov 2013 23:56:21 +0100
+Message-ID: <1384728982-19834-4-git-send-email-marex@denx.de>
+References: <1384728982-19834-1-git-send-email-marex@denx.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:52301 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751564Ab3KQQPg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Nov 2013 11:15:36 -0500
-In-Reply-To: <1384670620.3614.24.camel@dabdike.int.hansenpartnership.com>
+Received: from mail-out.m-online.net ([212.18.0.10]:57833 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752423Ab3KQW4i (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Nov 2013 17:56:38 -0500
+In-Reply-To: <1384728982-19834-1-git-send-email-marex@denx.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: dgilbert@interlog.com, todd.e.brandt@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, tj@kernel.org
+To: linux-arm-kernel@lists.infradead.org
+Cc: Marek Vasut <marex@denx.de>, Shawn Guo <shawn.guo@linaro.org>, Richard Zhu <r65037@freescale.com>, Tejun Heo <tj@kernel.org>, Linux-IDE <linux-ide@vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
+The AHCI-IMX driver now supports i.MX53 as well. Add DT binding.
 
-On 11/17/2013 01:43 AM, James Bottomley wrote:
-> OK, so three people have now told you that's not how the code
-> works. Why don't you just read it?  because there's not really much
-> point us reading your patches until you do.
+Signed-off-by: Marek Vasut <marex@denx.de>
+Cc: Shawn Guo <shawn.guo@linaro.org>
+Cc: Richard Zhu <r65037@freescale.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Linux-IDE <linux-ide@vger.kernel.org>
+---
+ arch/arm/boot/dts/imx53.dtsi | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-I have, which is why I said it handles it via scsi_eh_stu.  If I'm not
-understanding it correctly, then by all means, explain.
+diff --git a/arch/arm/boot/dts/imx53.dtsi b/arch/arm/boot/dts/imx53.dtsi
+index cffdda2..0e92af0 100644
+--- a/arch/arm/boot/dts/imx53.dtsi
++++ b/arch/arm/boot/dts/imx53.dtsi
+@@ -85,6 +85,15 @@
+ 		interrupt-parent = <&tzic>;
+ 		ranges;
+ 
++		sata: sata@10000000 {
++			compatible = "fsl,imx53-ahci";
++			reg = <0x10000000 0x1000>;
++			interrupts = <28>;
++			clocks =  <&clks 173>, <&clks 188>, <&clks 5>;
++			clock-names = "sata_gate", "sata_phy", "ahb";
++			status = "disabled";
++		};
++
+ 		ipu: ipu@18000000 {
+ 			#crtc-cells = <1>;
+ 			compatible = "fsl,imx53-ipu";
+-- 
+1.8.4.2
 
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQEcBAEBCgAGBQJSiOumAAoJEJrBOlT6nu75j6QH/3QURQwEXSjeQRaHdEo3dPUp
-eKSf7ix/6kOlWDzqzyNB0BWb0NDmCVc7v0GfKmcO0/7U2VoC4N5WqhvcXHU6X/PO
-ZjhcvKvuZEK9z8H9+Dx2CsB2nZ1p3hnQq6GXk1oa4tNx4id+sXioG8qX8Uw5AurA
-6O+ceHnb3hggvC8Oojo2YCwEMJiOYw+xhEjnleMcDAj+T5X3T4SMR/N6rM9NgX1L
-4ekrQMi3dNrizZaFKXjkf8/xult/nsnk1jKnhvJ/Sdl3EOSMTMypjdVo3W4VHpZ1
-0aDE8qIiLaU8x/xNjT4oQrVfseHexjzHVlQ7O5fc79+Tz+ej8PbjDLTtltPmn5M=
-=fnx7
------END PGP SIGNATURE-----
