@@ -1,43 +1,100 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/3] sd: don't bother spinning up disks on resume
-Date: Sat, 16 Nov 2013 22:43:40 -0800
-Message-ID: <1384670620.3614.24.camel@dabdike.int.hansenpartnership.com>
-References: <527AF287.7020700@ubuntu.com>
-		 <927e15641f27b46f206f8ae8110201c8fd77b7e1.1383789225.git.psusi@ubuntu.com>
-		 <527BDA11.6060603@interlog.com> <527C0349.5010301@ubuntu.com>
-	 <1384626031.3614.7.camel@dabdike.int.hansenpartnership.com>
-	 <52883CE9.9040102@ubuntu.com>
+From: Lothar =?UTF-8?B?V2HDn21hbm4=?= <LW@KARO-electronics.de>
+Subject: Re: [PATCH 1/5] ahci: imx: Pull out the clock enable/disable calls
+Date: Sun, 17 Nov 2013 09:15:58 +0100
+Message-ID: <20131117091558.556a46bd@ipc1.ka-ro>
+References: <1384651251-5548-1-git-send-email-marex@denx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:53564 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750721Ab3KQGnp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Nov 2013 01:43:45 -0500
-In-Reply-To: <52883CE9.9040102@ubuntu.com>
+Received: from mail.karo-electronics.de ([81.173.242.67]:58615 "EHLO
+	mail.karo-electronics.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751393Ab3KQIQ4 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Nov 2013 03:16:56 -0500
+In-Reply-To: <1384651251-5548-1-git-send-email-marex@denx.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Phillip Susi <psusi@ubuntu.com>
-Cc: dgilbert@interlog.com, todd.e.brandt@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, tj@kernel.org
+To: Marek Vasut <marex@denx.de>
+Cc: linux-arm-kernel@lists.infradead.org, Richard Zhu <r65037@freescale.com>, Tejun Heo <tj@kernel.org>, Shawn Guo <shawn.guo@linaro.org>, Linux-IDE <linux-ide@vger.kernel.org>
 
-On Sat, 2013-11-16 at 22:50 -0500, Phillip Susi wrote:
-> On 11/16/2013 01:20 PM, James Bottomley wrote:
-> > No disk does, neither SCSI nor ATA.  The error handler is not 
-> > automatically activated for a not ready/initializing command
-> > required because of multi-path.  We override the default behaviour
-> > via allow_restart only for IBM vfc/vscsi and ATA disks.  With this
-> > patch SCSI devices would no longer ever restart after suspend.
-> 
-> I don't follow.  A scsi disk returns a sense status saying it requires
-> a START UNIT command when issued a command before being started.  This
-> triggers the eh which notices that sense status and issues the
-> command.
+Hi,
 
-OK, so three people have now told you that's not how the code works.
-Why don't you just read it?  because there's not really much point us
-reading your patches until you do.
+Marek Vasut wrote:
+> The same code for enabling and disabling SATA clock was found in mult=
+iple
+> places in the driver. Implement functions that enable/disable the SAT=
+A clock
+> and use them in such places instead of duplicating the code.
+>=20
+> Signed-off-by: Marek Vasut <marex@denx.de>
+> Cc: Shawn Guo <shawn.guo@linaro.org>
+> Cc: Richard Zhu <r65037@freescale.com>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: Linux-IDE <linux-ide@vger.kernel.org>
+> ---
+>  drivers/ata/ahci_imx.c | 133 ++++++++++++++++++++++++++++-----------=
+----------
+>  1 file changed, 75 insertions(+), 58 deletions(-)
+>=20
+> diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+> index ae2d73f..c7ee505 100644
+> --- a/drivers/ata/ahci_imx.c
+> +++ b/drivers/ata/ahci_imx.c
+> @@ -47,6 +47,73 @@ static int ahci_imx_hotplug;
+>  module_param_named(hotplug, ahci_imx_hotplug, int, 0644);
+>  MODULE_PARM_DESC(hotplug, "AHCI IMX hot-plug support (0=3DDon't supp=
+ort, 1=3Dsupport)");
+> =20
+> +static int imx_sata_clock_enable(struct device *dev, bool config)
+> +{
+> +	struct imx_ahci_priv *imxpriv =3D dev_get_drvdata(dev->parent);
+> +	int ret;
+> +
+> +	imxpriv->gpr =3D
+> +		syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
+> +	if (IS_ERR(imxpriv->gpr)) {
+> +		dev_err(dev, "failed to find fsl,imx6q-iomux-gpr regmap\n");
+> +		return PTR_ERR(imxpriv->gpr);
+> +	}
+> +
+> +	ret =3D clk_prepare_enable(imxpriv->sata_ref_clk);
+> +	if (ret < 0) {
+> +		dev_err(dev, "prepare-enable sata_ref clock err:%d\n", ret);
+> +		return ret;
+> +	}
+> +
+> +	/*
+> +	 * set PHY Paremeters, two steps to configure the GPR13,
+> +	 * one write for rest of parameters, mask of first write
+> +	 * is 0x07fffffd, and the other one write for setting
+> +	 * the mpll_clk_en.
+> +	 */
+> +	if (config) {
+> +		regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
+> +				IMX6Q_GPR13_SATA_RX_EQ_VAL_MASK
+> +				| IMX6Q_GPR13_SATA_RX_LOS_LVL_MASK
+> +				| IMX6Q_GPR13_SATA_RX_DPLL_MODE_MASK
+> +				| IMX6Q_GPR13_SATA_SPD_MODE_MASK
+> +				| IMX6Q_GPR13_SATA_MPLL_SS_EN
+> +				| IMX6Q_GPR13_SATA_TX_ATTEN_MASK
+> +				| IMX6Q_GPR13_SATA_TX_BOOST_MASK
+> +				| IMX6Q_GPR13_SATA_TX_LVL_MASK
+> +				| IMX6Q_GPR13_SATA_TX_EDGE_RATE
+> +				, IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB
+>
+I would prefer the comma to be at the end of the line where one usually
+looks for it. Also '#define'ing constants for these bitmasks would make
+the code more readable.
 
-James
 
+Lothar Wa=C3=9Fmann
+--=20
+___________________________________________________________
 
+Ka-Ro electronics GmbH | Pascalstra=C3=9Fe 22 | D - 52076 Aachen
+Phone: +49 2408 1402-0 | Fax: +49 2408 1402-10
+Gesch=C3=A4ftsf=C3=BChrer: Matthias Kaussen
+Handelsregistereintrag: Amtsgericht Aachen, HRB 4996
+
+www.karo-electronics.de | info@karo-electronics.de
+___________________________________________________________
