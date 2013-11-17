@@ -1,321 +1,59 @@
-From: Marek Vasut <marex@denx.de>
-Subject: [PATCH 2/5] ahci: imx: Add i.MX53 support
-Date: Sun, 17 Nov 2013 02:20:48 +0100
-Message-ID: <1384651251-5548-2-git-send-email-marex@denx.de>
-References: <1384651251-5548-1-git-send-email-marex@denx.de>
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: Re: [PATCH 1/3] sd: don't bother spinning up disks on resume
+Date: Sat, 16 Nov 2013 22:50:01 -0500
+Message-ID: <52883CE9.9040102@ubuntu.com>
+References: <527AF287.7020700@ubuntu.com>	 <927e15641f27b46f206f8ae8110201c8fd77b7e1.1383789225.git.psusi@ubuntu.com>	 <527BDA11.6060603@interlog.com> <527C0349.5010301@ubuntu.com> <1384626031.3614.7.camel@dabdike.int.hansenpartnership.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:45792 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752984Ab3KQBVR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Nov 2013 20:21:17 -0500
-In-Reply-To: <1384651251-5548-1-git-send-email-marex@denx.de>
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:41479 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753031Ab3KQDuD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Nov 2013 22:50:03 -0500
+In-Reply-To: <1384626031.3614.7.camel@dabdike.int.hansenpartnership.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-arm-kernel@lists.infradead.org
-Cc: Marek Vasut <marex@denx.de>, Shawn Guo <shawn.guo@linaro.org>, Richard Zhu <r65037@freescale.com>, Tejun Heo <tj@kernel.org>, Linux-IDE <linux-ide@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: dgilbert@interlog.com, todd.e.brandt@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, tj@kernel.org
 
-Add minor adjustments to support i.MX53 SATA port as well as i.MX6Q one.
-The difference here is mostly the clock which need to be enabled and also
-the lack of need of programming IOMUXC registers on i.MX53. All of which
-is well handles in the clock enable/disable functions. Note that this patch
-also cleans up the names of the common functions, so they don't read imx6q_*
-but imx_* instead.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
 
-Signed-off-by: Marek Vasut <marex@denx.de>
-Cc: Shawn Guo <shawn.guo@linaro.org>
-Cc: Richard Zhu <r65037@freescale.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Linux-IDE <linux-ide@vger.kernel.org>
----
- drivers/ata/ahci_imx.c | 198 ++++++++++++++++++++++++++++++++-----------------
- 1 file changed, 128 insertions(+), 70 deletions(-)
+On 11/16/2013 01:20 PM, James Bottomley wrote:
+> No disk does, neither SCSI nor ATA.  The error handler is not 
+> automatically activated for a not ready/initializing command
+> required because of multi-path.  We override the default behaviour
+> via allow_restart only for IBM vfc/vscsi and ATA disks.  With this
+> patch SCSI devices would no longer ever restart after suspend.
 
-diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
-index c7ee505..e6854593 100644
---- a/drivers/ata/ahci_imx.c
-+++ b/drivers/ata/ahci_imx.c
-@@ -34,10 +34,23 @@ enum {
- 	HOST_TIMER1MS = 0xe0,			/* Timer 1-ms */
- };
- 
-+enum ahci_imx_type {
-+	AHCI_IMX53,
-+	AHCI_IMX6Q,
-+};
-+
- struct imx_ahci_priv {
- 	struct platform_device *ahci_pdev;
-+	enum ahci_imx_type type;
-+
-+	/* i.MX53 clock */
-+	struct clk *sata_gate_clk;
-+	struct clk *sata_phy_clk;
-+	/* i.MX6Q clock */
- 	struct clk *sata_ref_clk;
-+	/* Common clock */
- 	struct clk *ahb_clk;
-+
- 	struct regmap *gpr;
- 	bool no_device;
- 	bool first_time;
-@@ -52,53 +65,73 @@ static int imx_sata_clock_enable(struct device *dev, bool config)
- 	struct imx_ahci_priv *imxpriv = dev_get_drvdata(dev->parent);
- 	int ret;
- 
--	imxpriv->gpr =
--		syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
--	if (IS_ERR(imxpriv->gpr)) {
--		dev_err(dev, "failed to find fsl,imx6q-iomux-gpr regmap\n");
--		return PTR_ERR(imxpriv->gpr);
--	}
--
--	ret = clk_prepare_enable(imxpriv->sata_ref_clk);
--	if (ret < 0) {
--		dev_err(dev, "prepare-enable sata_ref clock err:%d\n", ret);
--		return ret;
--	}
-+	if (imxpriv->type == AHCI_IMX53) {
-+		ret = clk_prepare_enable(imxpriv->sata_gate_clk);
-+		if (ret < 0) {
-+			dev_err(dev, "prepare-enable sata_gate clock err:%d\n",
-+				ret);
-+			return ret;
-+		}
- 
--	/*
--	 * set PHY Paremeters, two steps to configure the GPR13,
--	 * one write for rest of parameters, mask of first write
--	 * is 0x07fffffd, and the other one write for setting
--	 * the mpll_clk_en.
--	 */
--	if (config) {
-+		ret = clk_prepare_enable(imxpriv->sata_phy_clk);
-+		if (ret < 0) {
-+			clk_disable_unprepare(imxpriv->sata_gate_clk);
-+			dev_err(dev, "prepare-enable sata_phy clock err:%d\n",
-+				ret);
-+			return ret;
-+		}
-+	} else if (imxpriv->type == AHCI_IMX6Q) {
-+		imxpriv->gpr = syscon_regmap_lookup_by_compatible(
-+							"fsl,imx6q-iomuxc-gpr");
-+		if (IS_ERR(imxpriv->gpr)) {
-+			dev_err(dev,
-+				"failed to find fsl,imx6q-iomux-gpr regmap\n");
-+			return PTR_ERR(imxpriv->gpr);
-+		}
-+
-+		ret = clk_prepare_enable(imxpriv->sata_ref_clk);
-+		if (ret < 0) {
-+			dev_err(dev, "prepare-enable sata_ref clock err:%d\n",
-+				ret);
-+			return ret;
-+		}
-+
-+		/*
-+		 * set PHY Paremeters, two steps to configure the GPR13,
-+		 * one write for rest of parameters, mask of first write
-+		 * is 0x07fffffd, and the other one write for setting
-+		 * the mpll_clk_en.
-+		 */
-+		if (config) {
-+			regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
-+					IMX6Q_GPR13_SATA_RX_EQ_VAL_MASK
-+					| IMX6Q_GPR13_SATA_RX_LOS_LVL_MASK
-+					| IMX6Q_GPR13_SATA_RX_DPLL_MODE_MASK
-+					| IMX6Q_GPR13_SATA_SPD_MODE_MASK
-+					| IMX6Q_GPR13_SATA_MPLL_SS_EN
-+					| IMX6Q_GPR13_SATA_TX_ATTEN_MASK
-+					| IMX6Q_GPR13_SATA_TX_BOOST_MASK
-+					| IMX6Q_GPR13_SATA_TX_LVL_MASK
-+					| IMX6Q_GPR13_SATA_TX_EDGE_RATE
-+					, IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB
-+					| IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M
-+					| IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_4F
-+					| IMX6Q_GPR13_SATA_SPD_MODE_3P0G
-+					| IMX6Q_GPR13_SATA_MPLL_SS_EN
-+					| IMX6Q_GPR13_SATA_TX_ATTEN_9_16
-+					| IMX6Q_GPR13_SATA_TX_BOOST_3_33_DB
-+					| IMX6Q_GPR13_SATA_TX_LVL_1_025_V);
-+		}
- 		regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
--				IMX6Q_GPR13_SATA_RX_EQ_VAL_MASK
--				| IMX6Q_GPR13_SATA_RX_LOS_LVL_MASK
--				| IMX6Q_GPR13_SATA_RX_DPLL_MODE_MASK
--				| IMX6Q_GPR13_SATA_SPD_MODE_MASK
--				| IMX6Q_GPR13_SATA_MPLL_SS_EN
--				| IMX6Q_GPR13_SATA_TX_ATTEN_MASK
--				| IMX6Q_GPR13_SATA_TX_BOOST_MASK
--				| IMX6Q_GPR13_SATA_TX_LVL_MASK
--				| IMX6Q_GPR13_SATA_TX_EDGE_RATE
--				, IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB
--				| IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M
--				| IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_4F
--				| IMX6Q_GPR13_SATA_SPD_MODE_3P0G
--				| IMX6Q_GPR13_SATA_MPLL_SS_EN
--				| IMX6Q_GPR13_SATA_TX_ATTEN_9_16
--				| IMX6Q_GPR13_SATA_TX_BOOST_3_33_DB
--				| IMX6Q_GPR13_SATA_TX_LVL_1_025_V);
--	}
--	regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
--			IMX6Q_GPR13_SATA_MPLL_CLK_EN,
--			IMX6Q_GPR13_SATA_MPLL_CLK_EN);
-+				IMX6Q_GPR13_SATA_MPLL_CLK_EN,
-+				IMX6Q_GPR13_SATA_MPLL_CLK_EN);
- 
--	ret = clk_prepare_enable(imxpriv->sata_ref_clk);
--	if (ret < 0) {
--		dev_err(dev, "prepare-enable sata_ref clock err:%d\n", ret);
--		return ret;
-+		ret = clk_prepare_enable(imxpriv->sata_ref_clk);
-+		if (ret < 0) {
-+			dev_err(dev, "prepare-enable sata_ref clock err:%d\n",
-+				ret);
-+			return ret;
-+		}
- 	}
- 
- 	return 0;
-@@ -108,10 +141,15 @@ static void imx_sata_clock_disable(struct device *dev)
- {
- 	struct imx_ahci_priv *imxpriv = dev_get_drvdata(dev->parent);
- 
--	regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
--			   IMX6Q_GPR13_SATA_MPLL_CLK_EN,
--			   !IMX6Q_GPR13_SATA_MPLL_CLK_EN);
--	clk_disable_unprepare(imxpriv->sata_ref_clk);
-+	if (imxpriv->type == AHCI_IMX53) {
-+		clk_disable_unprepare(imxpriv->sata_phy_clk);
-+		clk_disable_unprepare(imxpriv->sata_gate_clk);
-+	} else if (imxpriv->type == AHCI_IMX6Q) {
-+		regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
-+				   IMX6Q_GPR13_SATA_MPLL_CLK_EN,
-+				   !IMX6Q_GPR13_SATA_MPLL_CLK_EN);
-+		clk_disable_unprepare(imxpriv->sata_ref_clk);
-+	}
- }
- 
- static void ahci_imx_error_handler(struct ata_port *ap)
-@@ -155,7 +193,7 @@ static const struct ata_port_info ahci_imx_port_info = {
- 	.port_ops	= &ahci_imx_ops,
- };
- 
--static int imx6q_sata_init(struct device *dev, void __iomem *mmio)
-+static int imx_sata_init(struct device *dev, void __iomem *mmio)
- {
- 	int ret = 0;
- 	unsigned int reg_val;
-@@ -191,7 +229,7 @@ static int imx6q_sata_init(struct device *dev, void __iomem *mmio)
- 	return 0;
- }
- 
--static void imx6q_sata_exit(struct device *dev)
-+static void imx_sata_exit(struct device *dev)
- {
- 	imx_sata_clock_disable(dev);
- }
-@@ -226,16 +264,18 @@ static int imx_ahci_resume(struct device *dev)
- 	return 0;
- }
- 
--static struct ahci_platform_data imx6q_sata_pdata = {
--	.init = imx6q_sata_init,
--	.exit = imx6q_sata_exit,
--	.ata_port_info = &ahci_imx_port_info,
--	.suspend = imx_ahci_suspend,
--	.resume = imx_ahci_resume,
-+static struct ahci_platform_data imx_sata_pdata = {
-+	.init		= imx_sata_init,
-+	.exit		= imx_sata_exit,
-+	.ata_port_info	= &ahci_imx_port_info,
-+	.suspend	= imx_ahci_suspend,
-+	.resume		= imx_ahci_resume,
-+
- };
- 
- static const struct of_device_id imx_ahci_of_match[] = {
--	{ .compatible = "fsl,imx6q-ahci", .data = &imx6q_sata_pdata},
-+	{ .compatible = "fsl,imx53-ahci", .data = (void *)AHCI_IMX53 },
-+	{ .compatible = "fsl,imx6q-ahci", .data = (void *)AHCI_IMX6Q },
- 	{},
- };
- MODULE_DEVICE_TABLE(of, imx_ahci_of_match);
-@@ -245,12 +285,20 @@ static int imx_ahci_probe(struct platform_device *pdev)
- 	struct device *dev = &pdev->dev;
- 	struct resource *mem, *irq, res[2];
- 	const struct of_device_id *of_id;
-+	enum ahci_imx_type type;
- 	const struct ahci_platform_data *pdata = NULL;
- 	struct imx_ahci_priv *imxpriv;
- 	struct device *ahci_dev;
- 	struct platform_device *ahci_pdev;
- 	int ret;
- 
-+	of_id = of_match_device(imx_ahci_of_match, dev);
-+	if (!of_id)
-+		return -EINVAL;
-+
-+	type = (enum ahci_imx_type)of_id->data;
-+	pdata = &imx_sata_pdata;
-+
- 	imxpriv = devm_kzalloc(dev, sizeof(*imxpriv), GFP_KERNEL);
- 	if (!imxpriv) {
- 		dev_err(dev, "can't alloc ahci_host_priv\n");
-@@ -266,6 +314,8 @@ static int imx_ahci_probe(struct platform_device *pdev)
- 
- 	imxpriv->no_device = false;
- 	imxpriv->first_time = true;
-+	imxpriv->type = type;
-+
- 	imxpriv->ahb_clk = devm_clk_get(dev, "ahb");
- 	if (IS_ERR(imxpriv->ahb_clk)) {
- 		dev_err(dev, "can't get ahb clock.\n");
-@@ -273,24 +323,32 @@ static int imx_ahci_probe(struct platform_device *pdev)
- 		goto err_out;
- 	}
- 
--	imxpriv->sata_ref_clk = devm_clk_get(dev, "sata_ref");
--	if (IS_ERR(imxpriv->sata_ref_clk)) {
--		dev_err(dev, "can't get sata_ref clock.\n");
--		ret = PTR_ERR(imxpriv->sata_ref_clk);
--		goto err_out;
-+	if (type == AHCI_IMX53) {
-+		imxpriv->sata_gate_clk = devm_clk_get(dev, "sata_gate");
-+		if (IS_ERR(imxpriv->sata_gate_clk)) {
-+			dev_err(dev, "can't get sata_gate clock.\n");
-+			ret = PTR_ERR(imxpriv->sata_gate_clk);
-+			goto err_out;
-+		}
-+
-+		imxpriv->sata_phy_clk = devm_clk_get(dev, "sata_phy");
-+		if (IS_ERR(imxpriv->sata_phy_clk)) {
-+			dev_err(dev, "can't get sata_phy clock.\n");
-+			ret = PTR_ERR(imxpriv->sata_phy_clk);
-+			goto err_out;
-+		}
-+	} else if (type == AHCI_IMX6Q) {
-+		imxpriv->sata_ref_clk = devm_clk_get(dev, "sata_ref");
-+		if (IS_ERR(imxpriv->sata_ref_clk)) {
-+			dev_err(dev, "can't get sata_ref clock.\n");
-+			ret = PTR_ERR(imxpriv->sata_ref_clk);
-+			goto err_out;
-+		}
- 	}
- 
- 	imxpriv->ahci_pdev = ahci_pdev;
- 	platform_set_drvdata(pdev, imxpriv);
- 
--	of_id = of_match_device(imx_ahci_of_match, dev);
--	if (of_id) {
--		pdata = of_id->data;
--	} else {
--		ret = -EINVAL;
--		goto err_out;
--	}
--
- 	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
- 	irq = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
- 	if (!mem || !irq) {
--- 
-1.8.4.2
+I don't follow.  A scsi disk returns a sense status saying it requires
+a START UNIT command when issued a command before being started.  This
+triggers the eh which notices that sense status and issues the
+command.  My first version seemed to cause hdparm to fail on an ata
+drive that required SET FEATURES command to start up after power on,
+so the next version I set the DFLAG_SLEEPING bit which causes a
+preemptive start command on access even for SGIO, which otherwise
+seems to suppress eh.
 
+> As Doug said, if you don't restart a SCSI device after resume, it
+> will never get started.
+
+If something ( and I am still not clear on what ) is suppressing the
+error handling code for scsi disks, it should be able to be handled in
+a simiar way to ata: set a flag that causes preemptive startup even if
+eh is suppressed.
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQEcBAEBCgAGBQJSiDzoAAoJEJrBOlT6nu75kXIIAJ+7wO8jcnw4LzlBoB8ELY8m
+pZxsgvM0c4fQlqNvsCgXbhRYaNK5aHTk1RtguTuV4iJ8rQj+73jmuftar4kq5As2
+yZZ2LCYKNdHgBhCe0t2o+vVFKdh6Vaqawm0Gsaqy1D6WNUWXh8D0wicD9gLwJBxo
+R1nH2UNw337e6fnhTvF6uzA3OKUC9mJyJIrfrM7djCg46I/QkL0G2gDif8EQbTvo
+/XpHywFheFUz5LEz6Ctbxb7VvacE62Nj9kmnDNc2rE+bpP/GeQ72sxmKCtVcm515
+HqMRaU8efo8EIRIBNUqYRxZuIDr9vA9rsHq5XxtDAeWPXfjibcEaA/iwBZp6oyY=
+=vVEg
+-----END PGP SIGNATURE-----
