@@ -1,39 +1,51 @@
-From: Samir Benmendil <samir.benmendil@gmail.com>
-Subject: [PATCH] ahci: add Marvell 9230 to the AHCI PCI device list
-Date: Sun, 17 Nov 2013 23:56:17 +0100
-Message-ID: <1384728977-25654-1-git-send-email-samir.benmendil@gmail.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH 1/3] sd: don't bother spinning up disks on resume
+Date: Sun, 17 Nov 2013 18:54:34 -0500
+Message-ID: <5289573A.9070307@interlog.com>
+References: <527AF287.7020700@ubuntu.com>		 <927e15641f27b46f206f8ae8110201c8fd77b7e1.1383789225.git.psusi@ubuntu.com>		 <527BDA11.6060603@interlog.com> <527C0349.5010301@ubuntu.com>	 <1384626031.3614.7.camel@dabdike.int.hansenpartnership.com>	 <52883CE9.9040102@ubuntu.com> <1384670620.3614.24.camel@dabdike.int.hansenpartnership.com> <5288EBA6.3070609@ubuntu.com>
+Reply-To: dgilbert@interlog.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ea0-f174.google.com ([209.85.215.174]:56501 "EHLO
-	mail-ea0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752447Ab3KQW5A (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Nov 2013 17:57:00 -0500
-Received: by mail-ea0-f174.google.com with SMTP id j14so863564eak.19
-        for <linux-ide@vger.kernel.org>; Sun, 17 Nov 2013 14:56:59 -0800 (PST)
+Received: from smtp.infotech.no ([82.134.31.41]:54179 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751267Ab3KQXy7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 17 Nov 2013 18:54:59 -0500
+In-Reply-To: <5288EBA6.3070609@ubuntu.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: levex@linux.com, Samir Benmendil <samir.benmendil@gmail.com>
+To: Phillip Susi <psusi@ubuntu.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: todd.e.brandt@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, tj@kernel.org
 
-Tested with a DAWICONTROL DC-624e on 3.10.10
+On 13-11-17 11:15 AM, Phillip Susi wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA512
+>
+> On 11/17/2013 01:43 AM, James Bottomley wrote:
+>> OK, so three people have now told you that's not how the code
+>> works. Why don't you just read it?  because there's not really much
+>> point us reading your patches until you do.
+>
+> I have, which is why I said it handles it via scsi_eh_stu.  If I'm not
+> understanding it correctly, then by all means, explain.
 
-Signed-off-by: Samir Benmendil <samir.benmendil@gmail.com>
----
- drivers/ata/ahci.c | 2 ++
- 1 file changed, 2 insertions(+)
+Even if the SCSI EH code does spin-up the disk,
+it is inefficient and undesirable to send a device
+into EH for what is a normal, predictable situation
+(i.e. that a SCSI disk will need a START STOP UNIT
+(start) command as part of a resume operation).
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index e2903d0..14f1e95 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -435,6 +435,8 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	  .driver_data = board_ahci_yes_fbs },			/* 88se9172 on some Gigabyte */
- 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x91a3),
- 	  .driver_data = board_ahci_yes_fbs },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9230),
-+	  .driver_data = board_ahci_yes_fbs },
- 
- 	/* Promise */
- 	{ PCI_VDEVICE(PROMISE, 0x3f20), board_ahci },	/* PDC42819 */
--- 
-1.8.3.3
+A big server machine could have thousands of SCSI
+disks (many potentially virtual). Sending them all
+into EH during a resume would be a really good
+test for EH, but horrible for performance. If I was
+designing the SCSI EH I would probably assume not
+all disks would go into EH at roughly the same time.
+Also if that many devices went into EH on the same
+controller (HBA) it might be reasonable to assume
+that the controller they share needs resetting.
+
+Doug Gilbert
+
 
