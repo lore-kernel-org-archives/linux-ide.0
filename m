@@ -1,23 +1,25 @@
 From: Marek Vasut <marex@denx.de>
-Subject: [PATCH 3/5] ARM: imx: imx53: Add SATA PHY clock
-Date: Sun, 17 Nov 2013 02:20:49 +0100
-Message-ID: <1384651251-5548-3-git-send-email-marex@denx.de>
+Subject: [PATCH 2/5] ahci: imx: Add i.MX53 support
+Date: Sun, 17 Nov 2013 02:20:48 +0100
+Message-ID: <1384651251-5548-2-git-send-email-marex@denx.de>
 References: <1384651251-5548-1-git-send-email-marex@denx.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:40552 "EHLO
+Received: from mail-out.m-online.net ([212.18.0.10]:45792 "EHLO
 	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753352Ab3KQBVQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Nov 2013 20:21:16 -0500
+	with ESMTP id S1752984Ab3KQBVR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Nov 2013 20:21:17 -0500
 In-Reply-To: <1384651251-5548-1-git-send-email-marex@denx.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-arm-kernel@lists.infradead.org
 Cc: Marek Vasut <marex@denx.de>, Shawn Guo <shawn.guo@linaro.org>, Richard Zhu <r65037@freescale.com>, Tejun Heo <tj@kernel.org>, Linux-IDE <linux-ide@vger.kernel.org>
 
-Add SATA PHY clock which are derived from the USB PHY1 clock. Note that this
-patch derives the SATA PHY clock from USB PHY1 clock gate so that the SATA
-driver can ungate both the SATA PHY clock and USB PHY1 clock for the SATA to
-work correctly.
+Add minor adjustments to support i.MX53 SATA port as well as i.MX6Q one.
+The difference here is mostly the clock which need to be enabled and also
+the lack of need of programming IOMUXC registers on i.MX53. All of which
+is well handles in the clock enable/disable functions. Note that this patch
+also cleans up the names of the common functions, so they don't read imx6q_*
+but imx_* instead.
 
 Signed-off-by: Marek Vasut <marex@denx.de>
 Cc: Shawn Guo <shawn.guo@linaro.org>
@@ -25,43 +27,295 @@ Cc: Richard Zhu <r65037@freescale.com>
 Cc: Tejun Heo <tj@kernel.org>
 Cc: Linux-IDE <linux-ide@vger.kernel.org>
 ---
- Documentation/devicetree/bindings/clock/imx5-clock.txt | 1 +
- arch/arm/mach-imx/clk-imx51-imx53.c                    | 3 ++-
- 2 files changed, 3 insertions(+), 1 deletion(-)
+ drivers/ata/ahci_imx.c | 198 ++++++++++++++++++++++++++++++++-----------------
+ 1 file changed, 128 insertions(+), 70 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/clock/imx5-clock.txt b/Documentation/devicetree/bindings/clock/imx5-clock.txt
-index 3716b36..8904731 100644
---- a/Documentation/devicetree/bindings/clock/imx5-clock.txt
-+++ b/Documentation/devicetree/bindings/clock/imx5-clock.txt
-@@ -199,6 +199,7 @@ clocks and IDs.
- 	spdif_ipg_gate		185
- 	ocram			186
- 	sahara_ipg_gate		187
-+	sata_phy		188
- 
- Examples (for mx53):
- 
-diff --git a/arch/arm/mach-imx/clk-imx51-imx53.c b/arch/arm/mach-imx/clk-imx51-imx53.c
-index 3d91172..06bfb4c 100644
---- a/arch/arm/mach-imx/clk-imx51-imx53.c
-+++ b/arch/arm/mach-imx/clk-imx51-imx53.c
-@@ -122,7 +122,7 @@ enum imx5_clks {
- 	srtc_gate, pata_gate, sata_gate, spdif_xtal_sel, spdif0_sel,
- 	spdif1_sel, spdif0_pred, spdif0_podf, spdif1_pred, spdif1_podf,
- 	spdif0_com_s, spdif1_com_sel, spdif0_gate, spdif1_gate, spdif_ipg_gate,
--	ocram, sahara_ipg_gate, clk_max
-+	ocram, sahara_ipg_gate, sata_phy, clk_max
+diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+index c7ee505..e6854593 100644
+--- a/drivers/ata/ahci_imx.c
++++ b/drivers/ata/ahci_imx.c
+@@ -34,10 +34,23 @@ enum {
+ 	HOST_TIMER1MS = 0xe0,			/* Timer 1-ms */
  };
  
- static struct clk *clk[clk_max];
-@@ -588,6 +588,7 @@ static void __init mx53_clocks_init(struct device_node *np)
- 	clk[cko2] = imx_clk_gate2("cko2", "cko2_podf", MXC_CCM_CCOSR, 24);
- 	clk[spdif_xtal_sel] = imx_clk_mux("spdif_xtal_sel", MXC_CCM_CSCMR1, 2, 2,
- 				mx53_spdif_xtal_sel, ARRAY_SIZE(mx53_spdif_xtal_sel));
-+	clk[sata_phy] = imx_clk_fixed_factor("sata_phy", "usb_phy1_gate", 1, 1);
++enum ahci_imx_type {
++	AHCI_IMX53,
++	AHCI_IMX6Q,
++};
++
+ struct imx_ahci_priv {
+ 	struct platform_device *ahci_pdev;
++	enum ahci_imx_type type;
++
++	/* i.MX53 clock */
++	struct clk *sata_gate_clk;
++	struct clk *sata_phy_clk;
++	/* i.MX6Q clock */
+ 	struct clk *sata_ref_clk;
++	/* Common clock */
+ 	struct clk *ahb_clk;
++
+ 	struct regmap *gpr;
+ 	bool no_device;
+ 	bool first_time;
+@@ -52,53 +65,73 @@ static int imx_sata_clock_enable(struct device *dev, bool config)
+ 	struct imx_ahci_priv *imxpriv = dev_get_drvdata(dev->parent);
+ 	int ret;
  
- 	for (i = 0; i < ARRAY_SIZE(clk); i++)
- 		if (IS_ERR(clk[i]))
+-	imxpriv->gpr =
+-		syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
+-	if (IS_ERR(imxpriv->gpr)) {
+-		dev_err(dev, "failed to find fsl,imx6q-iomux-gpr regmap\n");
+-		return PTR_ERR(imxpriv->gpr);
+-	}
+-
+-	ret = clk_prepare_enable(imxpriv->sata_ref_clk);
+-	if (ret < 0) {
+-		dev_err(dev, "prepare-enable sata_ref clock err:%d\n", ret);
+-		return ret;
+-	}
++	if (imxpriv->type == AHCI_IMX53) {
++		ret = clk_prepare_enable(imxpriv->sata_gate_clk);
++		if (ret < 0) {
++			dev_err(dev, "prepare-enable sata_gate clock err:%d\n",
++				ret);
++			return ret;
++		}
+ 
+-	/*
+-	 * set PHY Paremeters, two steps to configure the GPR13,
+-	 * one write for rest of parameters, mask of first write
+-	 * is 0x07fffffd, and the other one write for setting
+-	 * the mpll_clk_en.
+-	 */
+-	if (config) {
++		ret = clk_prepare_enable(imxpriv->sata_phy_clk);
++		if (ret < 0) {
++			clk_disable_unprepare(imxpriv->sata_gate_clk);
++			dev_err(dev, "prepare-enable sata_phy clock err:%d\n",
++				ret);
++			return ret;
++		}
++	} else if (imxpriv->type == AHCI_IMX6Q) {
++		imxpriv->gpr = syscon_regmap_lookup_by_compatible(
++							"fsl,imx6q-iomuxc-gpr");
++		if (IS_ERR(imxpriv->gpr)) {
++			dev_err(dev,
++				"failed to find fsl,imx6q-iomux-gpr regmap\n");
++			return PTR_ERR(imxpriv->gpr);
++		}
++
++		ret = clk_prepare_enable(imxpriv->sata_ref_clk);
++		if (ret < 0) {
++			dev_err(dev, "prepare-enable sata_ref clock err:%d\n",
++				ret);
++			return ret;
++		}
++
++		/*
++		 * set PHY Paremeters, two steps to configure the GPR13,
++		 * one write for rest of parameters, mask of first write
++		 * is 0x07fffffd, and the other one write for setting
++		 * the mpll_clk_en.
++		 */
++		if (config) {
++			regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
++					IMX6Q_GPR13_SATA_RX_EQ_VAL_MASK
++					| IMX6Q_GPR13_SATA_RX_LOS_LVL_MASK
++					| IMX6Q_GPR13_SATA_RX_DPLL_MODE_MASK
++					| IMX6Q_GPR13_SATA_SPD_MODE_MASK
++					| IMX6Q_GPR13_SATA_MPLL_SS_EN
++					| IMX6Q_GPR13_SATA_TX_ATTEN_MASK
++					| IMX6Q_GPR13_SATA_TX_BOOST_MASK
++					| IMX6Q_GPR13_SATA_TX_LVL_MASK
++					| IMX6Q_GPR13_SATA_TX_EDGE_RATE
++					, IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB
++					| IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M
++					| IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_4F
++					| IMX6Q_GPR13_SATA_SPD_MODE_3P0G
++					| IMX6Q_GPR13_SATA_MPLL_SS_EN
++					| IMX6Q_GPR13_SATA_TX_ATTEN_9_16
++					| IMX6Q_GPR13_SATA_TX_BOOST_3_33_DB
++					| IMX6Q_GPR13_SATA_TX_LVL_1_025_V);
++		}
+ 		regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
+-				IMX6Q_GPR13_SATA_RX_EQ_VAL_MASK
+-				| IMX6Q_GPR13_SATA_RX_LOS_LVL_MASK
+-				| IMX6Q_GPR13_SATA_RX_DPLL_MODE_MASK
+-				| IMX6Q_GPR13_SATA_SPD_MODE_MASK
+-				| IMX6Q_GPR13_SATA_MPLL_SS_EN
+-				| IMX6Q_GPR13_SATA_TX_ATTEN_MASK
+-				| IMX6Q_GPR13_SATA_TX_BOOST_MASK
+-				| IMX6Q_GPR13_SATA_TX_LVL_MASK
+-				| IMX6Q_GPR13_SATA_TX_EDGE_RATE
+-				, IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB
+-				| IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M
+-				| IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_4F
+-				| IMX6Q_GPR13_SATA_SPD_MODE_3P0G
+-				| IMX6Q_GPR13_SATA_MPLL_SS_EN
+-				| IMX6Q_GPR13_SATA_TX_ATTEN_9_16
+-				| IMX6Q_GPR13_SATA_TX_BOOST_3_33_DB
+-				| IMX6Q_GPR13_SATA_TX_LVL_1_025_V);
+-	}
+-	regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
+-			IMX6Q_GPR13_SATA_MPLL_CLK_EN,
+-			IMX6Q_GPR13_SATA_MPLL_CLK_EN);
++				IMX6Q_GPR13_SATA_MPLL_CLK_EN,
++				IMX6Q_GPR13_SATA_MPLL_CLK_EN);
+ 
+-	ret = clk_prepare_enable(imxpriv->sata_ref_clk);
+-	if (ret < 0) {
+-		dev_err(dev, "prepare-enable sata_ref clock err:%d\n", ret);
+-		return ret;
++		ret = clk_prepare_enable(imxpriv->sata_ref_clk);
++		if (ret < 0) {
++			dev_err(dev, "prepare-enable sata_ref clock err:%d\n",
++				ret);
++			return ret;
++		}
+ 	}
+ 
+ 	return 0;
+@@ -108,10 +141,15 @@ static void imx_sata_clock_disable(struct device *dev)
+ {
+ 	struct imx_ahci_priv *imxpriv = dev_get_drvdata(dev->parent);
+ 
+-	regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
+-			   IMX6Q_GPR13_SATA_MPLL_CLK_EN,
+-			   !IMX6Q_GPR13_SATA_MPLL_CLK_EN);
+-	clk_disable_unprepare(imxpriv->sata_ref_clk);
++	if (imxpriv->type == AHCI_IMX53) {
++		clk_disable_unprepare(imxpriv->sata_phy_clk);
++		clk_disable_unprepare(imxpriv->sata_gate_clk);
++	} else if (imxpriv->type == AHCI_IMX6Q) {
++		regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
++				   IMX6Q_GPR13_SATA_MPLL_CLK_EN,
++				   !IMX6Q_GPR13_SATA_MPLL_CLK_EN);
++		clk_disable_unprepare(imxpriv->sata_ref_clk);
++	}
+ }
+ 
+ static void ahci_imx_error_handler(struct ata_port *ap)
+@@ -155,7 +193,7 @@ static const struct ata_port_info ahci_imx_port_info = {
+ 	.port_ops	= &ahci_imx_ops,
+ };
+ 
+-static int imx6q_sata_init(struct device *dev, void __iomem *mmio)
++static int imx_sata_init(struct device *dev, void __iomem *mmio)
+ {
+ 	int ret = 0;
+ 	unsigned int reg_val;
+@@ -191,7 +229,7 @@ static int imx6q_sata_init(struct device *dev, void __iomem *mmio)
+ 	return 0;
+ }
+ 
+-static void imx6q_sata_exit(struct device *dev)
++static void imx_sata_exit(struct device *dev)
+ {
+ 	imx_sata_clock_disable(dev);
+ }
+@@ -226,16 +264,18 @@ static int imx_ahci_resume(struct device *dev)
+ 	return 0;
+ }
+ 
+-static struct ahci_platform_data imx6q_sata_pdata = {
+-	.init = imx6q_sata_init,
+-	.exit = imx6q_sata_exit,
+-	.ata_port_info = &ahci_imx_port_info,
+-	.suspend = imx_ahci_suspend,
+-	.resume = imx_ahci_resume,
++static struct ahci_platform_data imx_sata_pdata = {
++	.init		= imx_sata_init,
++	.exit		= imx_sata_exit,
++	.ata_port_info	= &ahci_imx_port_info,
++	.suspend	= imx_ahci_suspend,
++	.resume		= imx_ahci_resume,
++
+ };
+ 
+ static const struct of_device_id imx_ahci_of_match[] = {
+-	{ .compatible = "fsl,imx6q-ahci", .data = &imx6q_sata_pdata},
++	{ .compatible = "fsl,imx53-ahci", .data = (void *)AHCI_IMX53 },
++	{ .compatible = "fsl,imx6q-ahci", .data = (void *)AHCI_IMX6Q },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, imx_ahci_of_match);
+@@ -245,12 +285,20 @@ static int imx_ahci_probe(struct platform_device *pdev)
+ 	struct device *dev = &pdev->dev;
+ 	struct resource *mem, *irq, res[2];
+ 	const struct of_device_id *of_id;
++	enum ahci_imx_type type;
+ 	const struct ahci_platform_data *pdata = NULL;
+ 	struct imx_ahci_priv *imxpriv;
+ 	struct device *ahci_dev;
+ 	struct platform_device *ahci_pdev;
+ 	int ret;
+ 
++	of_id = of_match_device(imx_ahci_of_match, dev);
++	if (!of_id)
++		return -EINVAL;
++
++	type = (enum ahci_imx_type)of_id->data;
++	pdata = &imx_sata_pdata;
++
+ 	imxpriv = devm_kzalloc(dev, sizeof(*imxpriv), GFP_KERNEL);
+ 	if (!imxpriv) {
+ 		dev_err(dev, "can't alloc ahci_host_priv\n");
+@@ -266,6 +314,8 @@ static int imx_ahci_probe(struct platform_device *pdev)
+ 
+ 	imxpriv->no_device = false;
+ 	imxpriv->first_time = true;
++	imxpriv->type = type;
++
+ 	imxpriv->ahb_clk = devm_clk_get(dev, "ahb");
+ 	if (IS_ERR(imxpriv->ahb_clk)) {
+ 		dev_err(dev, "can't get ahb clock.\n");
+@@ -273,24 +323,32 @@ static int imx_ahci_probe(struct platform_device *pdev)
+ 		goto err_out;
+ 	}
+ 
+-	imxpriv->sata_ref_clk = devm_clk_get(dev, "sata_ref");
+-	if (IS_ERR(imxpriv->sata_ref_clk)) {
+-		dev_err(dev, "can't get sata_ref clock.\n");
+-		ret = PTR_ERR(imxpriv->sata_ref_clk);
+-		goto err_out;
++	if (type == AHCI_IMX53) {
++		imxpriv->sata_gate_clk = devm_clk_get(dev, "sata_gate");
++		if (IS_ERR(imxpriv->sata_gate_clk)) {
++			dev_err(dev, "can't get sata_gate clock.\n");
++			ret = PTR_ERR(imxpriv->sata_gate_clk);
++			goto err_out;
++		}
++
++		imxpriv->sata_phy_clk = devm_clk_get(dev, "sata_phy");
++		if (IS_ERR(imxpriv->sata_phy_clk)) {
++			dev_err(dev, "can't get sata_phy clock.\n");
++			ret = PTR_ERR(imxpriv->sata_phy_clk);
++			goto err_out;
++		}
++	} else if (type == AHCI_IMX6Q) {
++		imxpriv->sata_ref_clk = devm_clk_get(dev, "sata_ref");
++		if (IS_ERR(imxpriv->sata_ref_clk)) {
++			dev_err(dev, "can't get sata_ref clock.\n");
++			ret = PTR_ERR(imxpriv->sata_ref_clk);
++			goto err_out;
++		}
+ 	}
+ 
+ 	imxpriv->ahci_pdev = ahci_pdev;
+ 	platform_set_drvdata(pdev, imxpriv);
+ 
+-	of_id = of_match_device(imx_ahci_of_match, dev);
+-	if (of_id) {
+-		pdata = of_id->data;
+-	} else {
+-		ret = -EINVAL;
+-		goto err_out;
+-	}
+-
+ 	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+ 	irq = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
+ 	if (!mem || !irq) {
 -- 
 1.8.4.2
 
