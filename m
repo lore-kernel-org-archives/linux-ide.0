@@ -1,52 +1,98 @@
-From: Phillip Susi <psusi@ubuntu.com>
-Subject: Re: [PATCH 1/3] sd: don't bother spinning up disks on resume
-Date: Mon, 18 Nov 2013 10:54:22 -0500
-Message-ID: <528A382E.10400@ubuntu.com>
-References: <527AF287.7020700@ubuntu.com>		 <927e15641f27b46f206f8ae8110201c8fd77b7e1.1383789225.git.psusi@ubuntu.com>		 <527BDA11.6060603@interlog.com> <527C0349.5010301@ubuntu.com>	 <1384626031.3614.7.camel@dabdike.int.hansenpartnership.com>	 <52883CE9.9040102@ubuntu.com> <1384670620.3614.24.camel@dabdike.int.hansenpartnership.com> <5288EBA6.3070609@ubuntu.com> <5289573A.9070307@interlog.com> <52896806.4040907@ubuntu.com>
+From: Eric Nelson <eric.nelson@boundarydevices.com>
+Subject: Re: [PATCH 1/5] ahci: imx: Pull out the clock enable/disable calls
+Date: Mon, 18 Nov 2013 11:47:23 -0700
+Message-ID: <528A60BB.4010802@boundarydevices.com>
+References: <1384651251-5548-1-git-send-email-marex@denx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:51584 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751030Ab3KRPyY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Nov 2013 10:54:24 -0500
-In-Reply-To: <52896806.4040907@ubuntu.com>
+Received: from mail-pd0-f173.google.com ([209.85.192.173]:41884 "EHLO
+	mail-pd0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752296Ab3KRSr2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Nov 2013 13:47:28 -0500
+Received: by mail-pd0-f173.google.com with SMTP id x10so6881401pdj.4
+        for <linux-ide@vger.kernel.org>; Mon, 18 Nov 2013 10:47:27 -0800 (PST)
+In-Reply-To: <1384651251-5548-1-git-send-email-marex@denx.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: dgilbert@interlog.com, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: todd.e.brandt@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, tj@kernel.org
+To: Marek Vasut <marex@denx.de>, linux-arm-kernel@lists.infradead.org
+Cc: Richard Zhu <r65037@freescale.com>, Tejun Heo <tj@kernel.org>, Shawn Guo <shawn.guo@linaro.org>, Linux-IDE <linux-ide@vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Hi Marek,
 
-On 11/17/2013 8:06 PM, Phillip Susi wrote:
-> I don't see anything particularly inefficient about issuing the
-> command in the eh path ( in fact, libata always uses the eh path to
-> handle power management ).  You can of course, use the
-> manage_start_stop flag to have the disk start on resume if you
-> really want.
+On 11/16/2013 06:20 PM, Marek Vasut wrote:
+> The same code for enabling and disabling SATA clock was found in multiple
+> places in the driver. Implement functions that enable/disable the SATA clock
+> and use them in such places instead of duplicating the code.
+>
+> Signed-off-by: Marek Vasut <marex@denx.de>
+> Cc: Shawn Guo <shawn.guo@linaro.org>
+> Cc: Richard Zhu <r65037@freescale.com>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: Linux-IDE <linux-ide@vger.kernel.org>
+> ---
+>   drivers/ata/ahci_imx.c | 133 ++++++++++++++++++++++++++++---------------------
+>   1 file changed, 75 insertions(+), 58 deletions(-)
+>
+> diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+> index ae2d73f..c7ee505 100644
+> --- a/drivers/ata/ahci_imx.c
+> +++ b/drivers/ata/ahci_imx.c
+> @@ -47,6 +47,73 @@ static int ahci_imx_hotplug;
+>   module_param_named(hotplug, ahci_imx_hotplug, int, 0644);
+>   MODULE_PARM_DESC(hotplug, "AHCI IMX hot-plug support (0=Don't support, 1=support)");
+>
+> <snip>
+ >
 
-Yikes, I think I see now why scsi eh is so bad: the entire host, not
-just the device is quiesced.
+I haven't traced through all of this, but if you're copying from
+the Freescale 3.0.35 kernel, note that there's a bug in it, and
+the 0x7FFFFFFD really wanted to be an 0x7FFFFFFF.
 
-I suppose now the question is how to issue the START STOP UNIT from
-sd_prep_fn()?  I gather you can't just call scsi_execute_req() from
-there?  Is there maybe a way to insert a START STOP UNIT request into
-the queue ahead of the current request being prepped?  Can
-sd_prep_fn() be called concurrently on multiple cpus?  Hrm.. what
-about TCQ?  Would it be bad if the original request were queued ( to
-the drive ) before the START STOP UNIT command completed?
+The way I read this comment, the writes need to happen in two
+steps:
+	- write everything with the PHY disabled
+	- enable the PHY
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+We had reports of stalls waiting for SATA drives to be enumerated
+that were solved with this commit...
 
-iQEcBAEBAgAGBQJSijguAAoJEJrBOlT6nu75AlIH/3n1XFrWWjU2D209hwaBlRCu
-OHdAI40OUW0dqRrF7hyhH62X6SmDFG9pkZcCeZUNmSOEBtvkVjxJRv2VvpXpQL50
-xXEiLCLukOYWG7krnVhD1BCrt9SfAjMsCpWmbC14m3epCWd9OQNFfU9vqU7mW18b
-2NJPBukq+l8nzZtCl+8UMIQxH4RSkceJs3X7y4PhM65nN4kDMmJUABjJhHBZX30/
-MQqu6pu2AW6Wf6SH0Sh1qIWfu45cIneuSDRP9qK5U/9902vhmGCLlt4zgbow8CQh
-muspp8A+bhcVQAJVdZvHz9gQMHS0dDRjLgBE23Yik0t+zBl0wvoFsaAG4BEi0lY=
-=6HCd
------END PGP SIGNATURE-----
+	https://github.com/boundarydevices/linux-imx6/commit/0186ea224ce6bd1cb4757a0f83b0090e26a021f4
+
+> +	/*
+> +	 * set PHY Paremeters, two steps to configure the GPR13,
+> +	 * one write for rest of parameters, mask of first write
+> +	 * is 0x07fffffd, and the other one write for setting
+> +	 * the mpll_clk_en.
+> +	 */
+> +	if (config) {
+> +		regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
+> +				IMX6Q_GPR13_SATA_RX_EQ_VAL_MASK
+> +				| IMX6Q_GPR13_SATA_RX_LOS_LVL_MASK
+> +				| IMX6Q_GPR13_SATA_RX_DPLL_MODE_MASK
+> +				| IMX6Q_GPR13_SATA_SPD_MODE_MASK
+> +				| IMX6Q_GPR13_SATA_MPLL_SS_EN
+> +				| IMX6Q_GPR13_SATA_TX_ATTEN_MASK
+> +				| IMX6Q_GPR13_SATA_TX_BOOST_MASK
+> +				| IMX6Q_GPR13_SATA_TX_LVL_MASK
+> +				| IMX6Q_GPR13_SATA_TX_EDGE_RATE
+> +				, IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB
+> +				| IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M
+> +				| IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_4F
+> +				| IMX6Q_GPR13_SATA_SPD_MODE_3P0G
+> +				| IMX6Q_GPR13_SATA_MPLL_SS_EN
+> +				| IMX6Q_GPR13_SATA_TX_ATTEN_9_16
+> +				| IMX6Q_GPR13_SATA_TX_BOOST_3_33_DB
+> +				| IMX6Q_GPR13_SATA_TX_LVL_1_025_V);
+> +	}
+> +	regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
+> +			IMX6Q_GPR13_SATA_MPLL_CLK_EN,
+> +			IMX6Q_GPR13_SATA_MPLL_CLK_EN);
+> +
+
+Regards,
+
+
+Eric
+
