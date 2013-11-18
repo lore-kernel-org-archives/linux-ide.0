@@ -1,45 +1,52 @@
-From: Marek Vasut <marex@denx.de>
-Subject: [PATCH V2 5/5] ARM: dts: imx53: Enable AHCI SATA for M53EVK
-Date: Mon, 18 Nov 2013 15:30:43 +0100
-Message-ID: <1384785043-5027-5-git-send-email-marex@denx.de>
-References: <1384785043-5027-1-git-send-email-marex@denx.de>
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: Re: [PATCH 1/3] sd: don't bother spinning up disks on resume
+Date: Mon, 18 Nov 2013 10:54:22 -0500
+Message-ID: <528A382E.10400@ubuntu.com>
+References: <527AF287.7020700@ubuntu.com>		 <927e15641f27b46f206f8ae8110201c8fd77b7e1.1383789225.git.psusi@ubuntu.com>		 <527BDA11.6060603@interlog.com> <527C0349.5010301@ubuntu.com>	 <1384626031.3614.7.camel@dabdike.int.hansenpartnership.com>	 <52883CE9.9040102@ubuntu.com> <1384670620.3614.24.camel@dabdike.int.hansenpartnership.com> <5288EBA6.3070609@ubuntu.com> <5289573A.9070307@interlog.com> <52896806.4040907@ubuntu.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:53920 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751236Ab3KRObC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Nov 2013 09:31:02 -0500
-In-Reply-To: <1384785043-5027-1-git-send-email-marex@denx.de>
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:51584 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751030Ab3KRPyY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Nov 2013 10:54:24 -0500
+In-Reply-To: <52896806.4040907@ubuntu.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-arm-kernel@lists.infradead.org
-Cc: Marek Vasut <marex@denx.de>, Shawn Guo <shawn.guo@linaro.org>, Richard Zhu <r65037@freescale.com>, Tejun Heo <tj@kernel.org>, Linux-IDE <linux-ide@vger.kernel.org>
+To: dgilbert@interlog.com, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: todd.e.brandt@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, tj@kernel.org
 
-Signed-off-by: Marek Vasut <marex@denx.de>
-Cc: Shawn Guo <shawn.guo@linaro.org>
-Cc: Richard Zhu <r65037@freescale.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Linux-IDE <linux-ide@vger.kernel.org>
----
- arch/arm/boot/dts/imx53-m53evk.dts | 4 ++++
- 1 file changed, 4 insertions(+)
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-V2: Reference sata like other devices.
+On 11/17/2013 8:06 PM, Phillip Susi wrote:
+> I don't see anything particularly inefficient about issuing the
+> command in the eh path ( in fact, libata always uses the eh path to
+> handle power management ).  You can of course, use the
+> manage_start_stop flag to have the disk start on resume if you
+> really want.
 
-diff --git a/arch/arm/boot/dts/imx53-m53evk.dts b/arch/arm/boot/dts/imx53-m53evk.dts
-index 7a006cb..c623774 100644
---- a/arch/arm/boot/dts/imx53-m53evk.dts
-+++ b/arch/arm/boot/dts/imx53-m53evk.dts
-@@ -315,6 +315,10 @@
- 	status = "okay";
- };
- 
-+&sata {
-+	status = "okay";
-+};
-+
- &ssi2 {
- 	fsl,mode = "i2s-slave";
- 	status = "okay";
--- 
-1.8.4.2
+Yikes, I think I see now why scsi eh is so bad: the entire host, not
+just the device is quiesced.
 
+I suppose now the question is how to issue the START STOP UNIT from
+sd_prep_fn()?  I gather you can't just call scsi_execute_req() from
+there?  Is there maybe a way to insert a START STOP UNIT request into
+the queue ahead of the current request being prepped?  Can
+sd_prep_fn() be called concurrently on multiple cpus?  Hrm.. what
+about TCQ?  Would it be bad if the original request were queued ( to
+the drive ) before the START STOP UNIT command completed?
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQEcBAEBAgAGBQJSijguAAoJEJrBOlT6nu75AlIH/3n1XFrWWjU2D209hwaBlRCu
+OHdAI40OUW0dqRrF7hyhH62X6SmDFG9pkZcCeZUNmSOEBtvkVjxJRv2VvpXpQL50
+xXEiLCLukOYWG7krnVhD1BCrt9SfAjMsCpWmbC14m3epCWd9OQNFfU9vqU7mW18b
+2NJPBukq+l8nzZtCl+8UMIQxH4RSkceJs3X7y4PhM65nN4kDMmJUABjJhHBZX30/
+MQqu6pu2AW6Wf6SH0Sh1qIWfu45cIneuSDRP9qK5U/9902vhmGCLlt4zgbow8CQh
+muspp8A+bhcVQAJVdZvHz9gQMHS0dDRjLgBE23Yik0t+zBl0wvoFsaAG4BEi0lY=
+=6HCd
+-----END PGP SIGNATURE-----
