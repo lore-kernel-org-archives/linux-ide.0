@@ -1,126 +1,135 @@
-From: Eric Nelson <eric.nelson@boundarydevices.com>
-Subject: Re: [PATCH 1/5] ahci: imx: Pull out the clock enable/disable calls
-Date: Mon, 18 Nov 2013 15:11:50 -0700
-Message-ID: <528A90A6.3030009@boundarydevices.com>
-References: <1384651251-5548-1-git-send-email-marex@denx.de> <528A60BB.4010802@boundarydevices.com> <201311182123.00169.marex@denx.de>
+From: James Laird <jhl@mafipulation.org>
+Subject: [PATCH] ahci: mcp89: enter AHCI mode under Apple BIOS emulation
+Date: Tue, 19 Nov 2013 11:06:38 +1100
+Message-ID: <20131119000637.GA6243@unibuddy.saluda.saludamedical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pd0-f174.google.com ([209.85.192.174]:38843 "EHLO
-	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751343Ab3KRWLz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Nov 2013 17:11:55 -0500
-Received: by mail-pd0-f174.google.com with SMTP id y13so1010973pdi.33
-        for <linux-ide@vger.kernel.org>; Mon, 18 Nov 2013 14:11:54 -0800 (PST)
-In-Reply-To: <201311182123.00169.marex@denx.de>
+Received: from neuropathy.axdf.net ([54.252.116.19]:59340 "EHLO
+	neuropathy.axdf.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751460Ab3KSAOM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Nov 2013 19:14:12 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Marek Vasut <marex@denx.de>
-Cc: "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Richard Zhu <r65037@freescale.com>, Tejun Heo <tj@kernel.org>, Shawn Guo <shawn.guo@linaro.org>, Linux-IDE <linux-ide@vger.kernel.org>
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org
 
-Hi Marek,
+Apple's BIOS emulation forcibly disables MCP89 AHCI, eg. on Macbook7,1.
+We can re-enable it, replacing the previous workaround of using
+ata_generic.
 
-On 11/18/2013 01:23 PM, Marek Vasut wrote:
-> Hi Eric,
->
->> Hi Marek,
->>
->> On 11/16/2013 06:20 PM, Marek Vasut wrote:
->>> The same code for enabling and disabling SATA clock was found in multiple
->>> places in the driver. Implement functions that enable/disable the SATA
->>> clock and use them in such places instead of duplicating the code.
->>>
->>> Signed-off-by: Marek Vasut <marex@denx.de>
->>> Cc: Shawn Guo <shawn.guo@linaro.org>
->>> Cc: Richard Zhu <r65037@freescale.com>
->>> Cc: Tejun Heo <tj@kernel.org>
->>> Cc: Linux-IDE <linux-ide@vger.kernel.org>
->>> ---
->>>
->>>    drivers/ata/ahci_imx.c | 133
->>>    ++++++++++++++++++++++++++++--------------------- 1 file changed, 75
->>>    insertions(+), 58 deletions(-)
->>>
->>> diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
->>> index ae2d73f..c7ee505 100644
->>> --- a/drivers/ata/ahci_imx.c
->>> +++ b/drivers/ata/ahci_imx.c
->>> @@ -47,6 +47,73 @@ static int ahci_imx_hotplug;
->>>
->>>    module_param_named(hotplug, ahci_imx_hotplug, int, 0644);
->>>    MODULE_PARM_DESC(hotplug, "AHCI IMX hot-plug support (0=Don't support,
->>>    1=support)");
->>>
->>> <snip>
->>
->> I haven't traced through all of this, but if you're copying from
->> the Freescale 3.0.35 kernel, note that there's a bug in it, and
->> the 0x7FFFFFFD really wanted to be an 0x7FFFFFFF.
->
-> I'm not taking this from FSL 3.0.35, no, but thanks for pointing this out!
->
->> The way I read this comment, the writes need to happen in two
->> steps:
->> 	- write everything with the PHY disabled
->> 	- enable the PHY
->>
->> We had reports of stalls waiting for SATA drives to be enumerated
->> that were solved with this commit...
->>
->> 	https://github.com/boundarydevices/linux-
-> imx6/commit/0186ea224ce6bd1cb4757
->> a0f83b0090e26a021f4
->
-> [...]
->
->>> +	regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
->>> +			IMX6Q_GPR13_SATA_MPLL_CLK_EN,
->>> +			IMX6Q_GPR13_SATA_MPLL_CLK_EN);
->
-> Isn't this snippet doing exactly what your patch does ?
->
-This part is doing the "set the bit" part:
-	https://github.com/boundarydevices/linux-imx6/blob/boundary-imx_3.0.35_4.1.0/arch/arm/mach-mx6/board-mx6_nitrogen6x.c#L728
+Signed-off-by: James Laird <jhl@mafipulation.org>
 
-The previous block isn't clearing the enable bit though:
+ drivers/ata/ahci.c        | 58 +++++++++++++++++++++++++++++++++++++++--------
+ drivers/ata/ata_generic.c |  7 ------
+ 2 files changed, 49 insertions(+), 16 deletions(-)
 
-+		regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
-+				IMX6Q_GPR13_SATA_RX_EQ_VAL_MASK
-+				| IMX6Q_GPR13_SATA_RX_LOS_LVL_MASK
-+				| IMX6Q_GPR13_SATA_RX_DPLL_MODE_MASK
-+				| IMX6Q_GPR13_SATA_SPD_MODE_MASK
-+				| IMX6Q_GPR13_SATA_MPLL_SS_EN
-+				| IMX6Q_GPR13_SATA_TX_ATTEN_MASK
-+				| IMX6Q_GPR13_SATA_TX_BOOST_MASK
-+				| IMX6Q_GPR13_SATA_TX_LVL_MASK
-+				| IMX6Q_GPR13_SATA_TX_EDGE_RATE
-+				, IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB
-+				| IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M
-+				| IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_4F
-+				| IMX6Q_GPR13_SATA_SPD_MODE_3P0G
-+				| IMX6Q_GPR13_SATA_MPLL_SS_EN
-+				| IMX6Q_GPR13_SATA_TX_ATTEN_9_16
-+				| IMX6Q_GPR13_SATA_TX_BOOST_3_33_DB
-+				| IMX6Q_GPR13_SATA_TX_LVL_1_025_V);
-
-The explicit clearing of bit 1 is what was necessary (and I think
-it's what the original author was after).
-
-This was a hard one to find, because it seems that it only shows
-up on some boards, and most of the time on those boards.
-
-Here are some references:
-	http://boundarydevices.com/freescale-ubuntu-image-with-4-0-0-kernel/#comment-60464
-	http://boundarydevices.com/debian-installer-on-i-mx6-boards/#comment-76203
-
-The symptom is (was) that U-Boot worked 100% of the time, but
-the kernel failed to find the drive.
-
-Using 'mm' in U-Boot to clear the bit before kernel launch also
-allowed things to function.
-
-Regards,
-
-
-Eric
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index e2903d0..e2a3249 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -83,6 +83,8 @@ enum board_ids {
+ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
+ static int ahci_vt8251_hardreset(struct ata_link *link, unsigned int *class,
+ 				 unsigned long deadline);
++static void ahci_mcp89_apple_enable(struct pci_dev *pdev);
++static inline bool is_mcp89_apple(struct pci_dev *pdev);
+ static int ahci_p5wdh_hardreset(struct ata_link *link, unsigned int *class,
+ 				unsigned long deadline);
+ #ifdef CONFIG_PM
+@@ -659,6 +661,10 @@ static int ahci_pci_device_resume(struct pci_dev *pdev)
+ 	if (rc)
+ 		return rc;
+ 
++	/* Apple BIOS helpfully mangles the registers on resume */
++	if (is_mcp89_apple(pdev))
++		ahci_mcp89_apple_enable(pdev);
++
+ 	if (pdev->dev.power.power_state.event == PM_EVENT_SUSPEND) {
+ 		rc = ahci_pci_reset_controller(host);
+ 		if (rc)
+@@ -775,6 +781,46 @@ static void ahci_p5wdh_workaround(struct ata_host *host)
+ 	}
+ }
+ 
++/*
++ * Macbook7,1 firmware forcibly disables MCP89 AHCI and changes PCI ID when
++ * booting in BIOS compatibility mode. We restore the registers but not ID.
++ */
++static void ahci_mcp89_apple_enable(struct pci_dev *pdev) {
++	u32 val;
++
++	printk(KERN_INFO "ahci: enabling MCP89 AHCI mode\n");
++
++	pci_read_config_dword(pdev, 0xf8, &val);
++	val |= 1<<0x1b;
++	/* the following changes the device ID, but appears not to affect function */
++	/* val = (val & ~0xf0000000) | 0x80000000; */
++	pci_write_config_dword(pdev, 0xf8, val);
++
++	pci_read_config_dword(pdev, 0x54c, &val);
++	val |= 1<<0xc;
++	pci_write_config_dword(pdev, 0x54c, val);
++
++	pci_read_config_dword(pdev, 0x4a4, &val);
++	val &= 0xff;
++	val |= 0x01060100;
++	pci_write_config_dword(pdev, 0x4a4, val);
++
++	pci_read_config_dword(pdev, 0x54c, &val);
++	val &= ~(1<<0xc);
++	pci_write_config_dword(pdev, 0x54c, val);
++
++	pci_read_config_dword(pdev, 0xf8, &val);
++	val &= ~(1<<0x1b);
++	pci_write_config_dword(pdev, 0xf8, val);
++}
++
++static inline bool is_mcp89_apple(struct pci_dev *pdev) {
++	return	pdev->vendor == PCI_VENDOR_ID_NVIDIA &&
++			pdev->device == PCI_DEVICE_ID_NVIDIA_NFORCE_MCP89_SATA &&
++			pdev->subsystem_vendor == PCI_VENDOR_ID_APPLE &&
++			pdev->subsystem_device == 0xcb89;
++}
++
+ /* only some SB600 ahci controllers can do 64bit DMA */
+ static bool ahci_sb600_enable_64bit(struct pci_dev *pdev)
+ {
+@@ -1207,15 +1253,9 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (pdev->vendor == PCI_VENDOR_ID_MARVELL && !marvell_enable)
+ 		return -ENODEV;
+ 
+-	/*
+-	 * For some reason, MCP89 on MacBook 7,1 doesn't work with
+-	 * ahci, use ata_generic instead.
+-	 */
+-	if (pdev->vendor == PCI_VENDOR_ID_NVIDIA &&
+-	    pdev->device == PCI_DEVICE_ID_NVIDIA_NFORCE_MCP89_SATA &&
+-	    pdev->subsystem_vendor == PCI_VENDOR_ID_APPLE &&
+-	    pdev->subsystem_device == 0xcb89)
+-		return -ENODEV;
++    /* Apple BIOS on MCP89 prevents us using AHCI */
++    if (is_mcp89_apple(pdev))
++		ahci_mcp89_apple_enable(pdev);
+ 
+ 	/* Promise's PDC42819 is a SAS/SATA controller that has an AHCI mode.
+ 	 * At the moment, we can only use the AHCI mode. Let the users know
+diff --git a/drivers/ata/ata_generic.c b/drivers/ata/ata_generic.c
+index f8f38a0..7d19665 100644
+--- a/drivers/ata/ata_generic.c
++++ b/drivers/ata/ata_generic.c
+@@ -221,13 +221,6 @@ static struct pci_device_id ata_generic[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_OPTI,   PCI_DEVICE_ID_OPTI_82C558), },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_CENATEK,PCI_DEVICE_ID_CENATEK_IDE),
+ 	  .driver_data = ATA_GEN_FORCE_DMA },
+-	/*
+-	 * For some reason, MCP89 on MacBook 7,1 doesn't work with
+-	 * ahci, use ata_generic instead.
+-	 */
+-	{ PCI_VENDOR_ID_NVIDIA, PCI_DEVICE_ID_NVIDIA_NFORCE_MCP89_SATA,
+-	  PCI_VENDOR_ID_APPLE, 0xcb89,
+-	  .driver_data = ATA_GEN_FORCE_DMA },
+ #if !defined(CONFIG_PATA_TOSHIBA) && !defined(CONFIG_PATA_TOSHIBA_MODULE)
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_1), },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TOSHIBA,PCI_DEVICE_ID_TOSHIBA_PICCOLO_2),  },
