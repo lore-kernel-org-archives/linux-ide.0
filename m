@@ -1,337 +1,195 @@
-From: Shawn Guo <shawn.guo@linaro.org>
-Subject: Re: [PATCH V3 2/5] ahci: imx: Add i.MX53 support
-Date: Tue, 19 Nov 2013 16:48:16 +0800
-Message-ID: <20131119084814.GB18481@S2101-09.ap.freescale.net>
-References: <1384785043-5027-1-git-send-email-marex@denx.de>
- <1384785043-5027-2-git-send-email-marex@denx.de>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCH 2/3] Phy: Exynos: Add Exynos5250 sata phy driver
+Date: Tue, 19 Nov 2013 15:22:47 +0530
+Message-ID: <528B34EF.3030108@ti.com>
+References: <1380609183-21430-1-git-send-email-yuvaraj.cd@samsung.com>	<1380609183-21430-3-git-send-email-yuvaraj.cd@samsung.com>	<524AC56C.1060501@ti.com>	<CA+NduCAwnqz4_YNoVnpfV3O6fn=2QTdv4zgEdYRv4qjMRvWeag@mail.gmail.com>	<52846442.2020307@ti.com> <CAKuRcOK8XDKGsY3w2fwnrqtyH2HN0LjrqE6AoE0dSkaVOy5ozA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ch1ehsobe004.messaging.microsoft.com ([216.32.181.184]:2507
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751358Ab3KSIqZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Nov 2013 03:46:25 -0500
-Content-Disposition: inline
-In-Reply-To: <1384785043-5027-2-git-send-email-marex@denx.de>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:42789 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751795Ab3KSJxY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 19 Nov 2013 04:53:24 -0500
+In-Reply-To: <CAKuRcOK8XDKGsY3w2fwnrqtyH2HN0LjrqE6AoE0dSkaVOy5ozA@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Marek Vasut <marex@denx.de>
-Cc: linux-arm-kernel@lists.infradead.org, Richard Zhu <r65037@freescale.com>, Tejun Heo <tj@kernel.org>, Linux-IDE <linux-ide@vger.kernel.org>
+To: Yuvaraj Kumar <yuvaraj.cd@gmail.com>
+Cc: Yuvaraj Cd <yuvaraj.lkml@gmail.com>, Yuvaraj Kumar C D <yuvaraj.cd@samsung.com>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Kukjin Kim <kgene.kim@samsung.com>, linux-ide@vger.kernel.org, "ks.giri@samsung.com" <ks.giri@samsung.com>, Vasanth Ananthan <vasanth.a@samsung.com>, Rob Herring <rob.herring@calxeda.com>, aditya.ps@samsung.com, Grant Likely <grant.likely@linaro.org>, linux-samsung-soc <linux-samsung-soc@vger.kernel.org>, s.nawrocki@samsung.com, tj@kernel.org, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
 
-On Mon, Nov 18, 2013 at 03:30:40PM +0100, Marek Vasut wrote:
-> Add minor adjustments to support i.MX53 SATA port as well as i.MX6Q one.
-> The difference here is mostly the clock which need to be enabled and also
-> the lack of need of programming IOMUXC registers on i.MX53. All of which
-> is well handles in the clock enable/disable functions. Note that this patch
-> also cleans up the names of the common functions, so they don't read imx6q_*
-> but imx_* instead.
+On Friday 15 November 2013 11:17 AM, Yuvaraj Kumar wrote:
+> On Thu, Nov 14, 2013 at 11:18 AM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
+>> Hi,
+>>
+>> On Monday 07 October 2013 07:35 PM, Yuvaraj Cd wrote:
+>>> On Tue, Oct 1, 2013 at 6:21 PM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
+>>>> On Tuesday 01 October 2013 12:03 PM, Yuvaraj Kumar C D wrote:
+>>>>> This patch adds the sata phy driver for Exynos5250.Exynos5250 sata
+>>>>> phy comprises of CMU and TRSV blocks which are of I2C register Map.
+>>>>> So this patch also adds a i2c client driver, which is used configure
+>>>>> the CMU and TRSV block of exynos5250 SATA PHY.
+>>>>
+>>>> Why not make the Exynos5250 sata phy as a i2c client driver instead?
+>>>>>
+>>>>> This patch incorporates the generic phy framework to deal with sata
+>>>>> phy.
+>>>>>
+>>>>> This patch depends on the below patch
+>>>>>       [1].drivers: phy: add generic PHY framework
+>>>>>               by Kishon Vijay Abraham I<kishon@ti.com>
+>>>>>
+>>>>> Signed-off-by: Yuvaraj Kumar C D <yuvaraj.cd@samsung.com>
+>>>>> Signed-off-by: Girish K S <ks.giri@samsung.com>
+>>>>> Signed-off-by: Vasanth Ananthan <vasanth.a@samsung.com>
+>>>>> ---
+>>>>>  drivers/phy/Kconfig                      |    6 +
+>>>>>  drivers/phy/Makefile                     |    1 +
+>>>>>  drivers/phy/exynos/Kconfig               |    5 +
+>>>>>  drivers/phy/exynos/Makefile              |    5 +
+>>>>>  drivers/phy/exynos/exynos5250_phy_i2c.c  |   53 +++++++
+>>>>>  drivers/phy/exynos/sata_phy_exynos5250.c |  248 ++++++++++++++++++++++++++++++
+>>>>>  drivers/phy/exynos/sata_phy_exynos5250.h |   33 ++++
+>>>>>  7 files changed, 351 insertions(+)
+>>>>>  create mode 100644 drivers/phy/exynos/Kconfig
+>>>>>  create mode 100644 drivers/phy/exynos/Makefile
+>>>>>  create mode 100644 drivers/phy/exynos/exynos5250_phy_i2c.c
+>>>>>  create mode 100644 drivers/phy/exynos/sata_phy_exynos5250.c
+>>>>>  create mode 100644 drivers/phy/exynos/sata_phy_exynos5250.h
+>>>>>
+>>>>> diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
+>>>>> index 5f85909..ab3d1c6 100644
+>>>>> --- a/drivers/phy/Kconfig
+>>>>> +++ b/drivers/phy/Kconfig
+>>>>> @@ -11,3 +11,9 @@ menuconfig GENERIC_PHY
+>>>>>         devices present in the kernel. This layer will have the generic
+>>>>>         API by which phy drivers can create PHY using the phy framework and
+>>>>>         phy users can obtain reference to the PHY.
+>>>>> +
+>>>>> +if GENERIC_PHY
+>>>>
+>>>> NAK. Just select GENERIC_PHY from your driver Kconfig.
+>>>>> +
+>>>>> +source "drivers/phy/exynos/Kconfig"
+>>>>> +
+>>>>> +endif
+>>>>> diff --git a/drivers/phy/Makefile b/drivers/phy/Makefile
+>>>>> index 9e9560f..e0223d7 100644
+>>>>> --- a/drivers/phy/Makefile
+>>>>> +++ b/drivers/phy/Makefile
+>>>>> @@ -3,3 +3,4 @@
+>>>>>  #
+>>>>>
+>>>>>  obj-$(CONFIG_GENERIC_PHY)    += phy-core.o
+>>>>> +obj-$(CONFIG_PHY_SAMSUNG_SATA)       += exynos/
+>>>>
+>>>> simply have phy-exynos5250 in drivers/phy.
+>>> ok.
+>>>>> diff --git a/drivers/phy/exynos/Kconfig b/drivers/phy/exynos/Kconfig
+>>>>> new file mode 100644
+>>>>> index 0000000..fa125fb
+>>>>> --- /dev/null
+>>>>> +++ b/drivers/phy/exynos/Kconfig
+>>>>> @@ -0,0 +1,5 @@
+>>>>> +config PHY_SAMSUNG_SATA
+>>>>> +     tristate "Samsung Sata SerDes/PHY driver"
+>>>>> +     help
+>>>>> +       Support for Samsung sata SerDes/Phy found on Samsung
+>>>>> +       SoCs.
+>>>>> diff --git a/drivers/phy/exynos/Makefile b/drivers/phy/exynos/Makefile
+>>>>> new file mode 100644
+>>>>> index 0000000..50dc7eb
+>>>>> --- /dev/null
+>>>>> +++ b/drivers/phy/exynos/Makefile
+>>>>> @@ -0,0 +1,5 @@
+>>>>> +#
+>>>>> +# Makefile for the exynos phy drivers.
+>>>>> +#
+>>>>> +ccflags-y := -Idrivers/phy/exynos
+>>>>> +obj-$(CONFIG_PHY_SAMSUNG_SATA)       += sata_phy_exynos5250.o exynos5250_phy_i2c.o
+>>>>> diff --git a/drivers/phy/exynos/exynos5250_phy_i2c.c b/drivers/phy/exynos/exynos5250_phy_i2c.c
+>>>>> new file mode 100644
+>>>>> index 0000000..9c75d3b
+>>>>> --- /dev/null
+>>>>> +++ b/drivers/phy/exynos/exynos5250_phy_i2c.c
+>>>>> @@ -0,0 +1,53 @@
+>>>>> +/*
+>>>>> + * Copyright (C) 2013 Samsung Electronics Co.Ltd
+>>>>> + * Author:
+>>>>> + *   Yuvaraj C D <yuvaraj.cd@samsung.com>
+>>>>> + *
+>>>>> + * This program is free software; you can redistribute  it and/or modify it
+>>>>> + * under  the terms of  the GNU General  Public License as published by the
+>>>>> + * Free Software Foundation;  either version 2 of the  License, or (at your
+>>>>> + * option) any later version.
+>>>>> + *
+>>>>> + */
+>>>>> +
+>>>>> +#include <linux/kernel.h>
+>>>>> +#include <linux/i2c.h>
+>>>>> +#include <linux/module.h>
+>>>>> +#include "sata_phy_exynos5250.h"
+>>>>> +
+>>>>> +static int exynos_sata_i2c_probe(struct i2c_client *client,
+>>>>> +             const struct i2c_device_id *i2c_id)
+>>>>> +{
+>>>>> +     sataphy_attach_i2c_client(client);
+>>>>> +
+>>>>> +     dev_info(&client->adapter->dev,
+>>>>> +             "attached %s into i2c adapter successfully\n",
+>>>>> +             client->name);
+>>>>> +
+>>>>> +     return 0;
+>>>>> +}
+>>>>> +
+>>>>> +static int exynos_sata_i2c_remove(struct i2c_client *client)
+>>>>> +{
+>>>>> +     dev_info(&client->adapter->dev,
+>>>>> +             "detached %s from i2c adapter successfully\n",
+>>>>> +             client->name);
+>>>>> +
+>>>>> +     return 0;
+>>>>> +}
+>>>>> +
+>>>>> +static const struct i2c_device_id phy_i2c_device_match[] = {
+>>>>> +     { "sata-phy-i2c", 0 },
+>>>>> +};
+>>>>> +MODULE_DEVICE_TABLE(of, phy_i2c_device_match);
+>>>>> +
+>>>>> +struct i2c_driver sataphy_i2c_driver = {
+>>>>> +     .probe    = exynos_sata_i2c_probe,
+>>>>> +     .id_table = phy_i2c_device_match,
+>>>>> +     .remove         = exynos_sata_i2c_remove,
+>>>>> +     .driver   = {
+>>>>> +             .name = "sata-phy-i2c",
+>>>>> +             .owner = THIS_MODULE,
+>>>>> +             .of_match_table = (void *)phy_i2c_device_match,
+>>>>> +             },
+>>>>> +};
+>>>>
+>>>> As I just mentioned above, we can merge this driver with the below one.
+>>> True, Initially it was merged.But already existing drivers of which
+>>> are of similar to this kind were done in this way.
+>>> Please refer  /drivers/gpu/drm//exynos/exynos_hdmiphy.c
+>>
+>> Can you point to any discussions where it was decided to go with this approach?
+> Sorry,what I meant is exynos_hdmiphy.c is already exist in the
+> mainline with this approach.
 > 
-> Signed-off-by: Marek Vasut <marex@denx.de>
-> Cc: Shawn Guo <shawn.guo@linaro.org>
-> Cc: Richard Zhu <r65037@freescale.com>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: Linux-IDE <linux-ide@vger.kernel.org>
-> ---
->  drivers/ata/ahci_imx.c | 191 +++++++++++++++++++++++++++++++------------------
->  1 file changed, 121 insertions(+), 70 deletions(-)
-> 
-> V2: Rebase this patch to be coherent with formating change in 1/5 .
-> V3: Rebase this patch to be coherent with change in 1/5 .
-> 
-> diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
-> index b36f96c..8e4b4a9 100644
-> --- a/drivers/ata/ahci_imx.c
-> +++ b/drivers/ata/ahci_imx.c
-> @@ -34,10 +34,23 @@ enum {
->  	HOST_TIMER1MS = 0xe0,			/* Timer 1-ms */
->  };
->  
-> +enum ahci_imx_type {
-> +	AHCI_IMX53,
-> +	AHCI_IMX6Q,
-> +};
-> +
->  struct imx_ahci_priv {
->  	struct platform_device *ahci_pdev;
-> +	enum ahci_imx_type type;
-> +
-> +	/* i.MX53 clock */
-> +	struct clk *sata_gate_clk;
-> +	struct clk *sata_phy_clk;
-> +	/* i.MX6Q clock */
->  	struct clk *sata_ref_clk;
+> Initially it was merged on my local patches(Not upstreamed).But after
+> referring to the
+> exynos_hdmiphy.c driver and with lot of internal discussions ,it was
+> decided to go with
 
-I think sata_ref_clk on imx6q and sata_phy_clk on imx53 are both the
-clock for SATA PHY, so they are the same clock?
+I don't have any idea about the internal discussions whatever you had. IMO
+Exynos5250 sata phy driver should be modelled as an i2c client driver if you
+don't have a good reason to do otherwise.
 
-Shawn
+Thanks
+Kishon
 
-> +	/* Common clock */
->  	struct clk *ahb_clk;
-> +
->  	struct regmap *gpr;
->  	bool no_device;
->  	bool first_time;
-> @@ -52,20 +65,32 @@ static int imx_sata_clock_enable(struct device *dev)
->  	struct imx_ahci_priv *imxpriv = dev_get_drvdata(dev->parent);
->  	int ret;
->  
-> -	ret = clk_prepare_enable(imxpriv->sata_ref_clk);
-> -	if (ret < 0) {
-> -		dev_err(dev, "prepare-enable sata_ref clock err:%d\n", ret);
-> -		return ret;
-> -	}
-> +	if (imxpriv->type == AHCI_IMX53) {
-> +		ret = clk_prepare_enable(imxpriv->sata_gate_clk);
-> +		if (ret < 0) {
-> +			dev_err(dev, "prepare-enable sata_gate clock err:%d\n",
-> +				ret);
-> +			return ret;
-> +		}
->  
-> -	regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
-> -			   IMX6Q_GPR13_SATA_MPLL_CLK_EN,
-> -			   IMX6Q_GPR13_SATA_MPLL_CLK_EN);
-> +		ret = clk_prepare_enable(imxpriv->sata_phy_clk);
-> +		if (ret < 0) {
-> +			clk_disable_unprepare(imxpriv->sata_gate_clk);
-> +			dev_err(dev, "prepare-enable sata_phy clock err:%d\n",
-> +				ret);
-> +			return ret;
-> +		}
-> +	} else if (imxpriv->type == AHCI_IMX6Q) {
-> +		ret = clk_prepare_enable(imxpriv->sata_ref_clk);
-> +		if (ret < 0) {
-> +			dev_err(dev, "prepare-enable sata_ref clock err:%d\n",
-> +				ret);
-> +			return ret;
-> +		}
->  
-> -	ret = clk_prepare_enable(imxpriv->sata_ref_clk);
-> -	if (ret < 0) {
-> -		dev_err(dev, "prepare-enable sata_ref clock err:%d\n", ret);
-> -		return ret;
-> +		regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
-> +				   IMX6Q_GPR13_SATA_MPLL_CLK_EN,
-> +				   IMX6Q_GPR13_SATA_MPLL_CLK_EN);
->  	}
->  
->  	return 0;
-> @@ -75,10 +100,15 @@ static void imx_sata_clock_disable(struct device *dev)
->  {
->  	struct imx_ahci_priv *imxpriv = dev_get_drvdata(dev->parent);
->  
-> -	regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
-> -			   IMX6Q_GPR13_SATA_MPLL_CLK_EN,
-> -			   !IMX6Q_GPR13_SATA_MPLL_CLK_EN);
-> -	clk_disable_unprepare(imxpriv->sata_ref_clk);
-> +	if (imxpriv->type == AHCI_IMX53) {
-> +		clk_disable_unprepare(imxpriv->sata_phy_clk);
-> +		clk_disable_unprepare(imxpriv->sata_gate_clk);
-> +	} else if (imxpriv->type == AHCI_IMX6Q) {
-> +		regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
-> +				   IMX6Q_GPR13_SATA_MPLL_CLK_EN,
-> +				   !IMX6Q_GPR13_SATA_MPLL_CLK_EN);
-> +		clk_disable_unprepare(imxpriv->sata_ref_clk);
-> +	}
->  }
->  
->  static void ahci_imx_error_handler(struct ata_port *ap)
-> @@ -122,7 +152,7 @@ static const struct ata_port_info ahci_imx_port_info = {
->  	.port_ops	= &ahci_imx_ops,
->  };
->  
-> -static int imx6q_sata_init(struct device *dev, void __iomem *mmio)
-> +static int imx_sata_init(struct device *dev, void __iomem *mmio)
->  {
->  	int ret = 0;
->  	unsigned int reg_val;
-> @@ -158,7 +188,7 @@ static int imx6q_sata_init(struct device *dev, void __iomem *mmio)
->  	return 0;
->  }
->  
-> -static void imx6q_sata_exit(struct device *dev)
-> +static void imx_sata_exit(struct device *dev)
->  {
->  	imx_sata_clock_disable(dev);
->  }
-> @@ -193,16 +223,18 @@ static int imx_ahci_resume(struct device *dev)
->  	return 0;
->  }
->  
-> -static struct ahci_platform_data imx6q_sata_pdata = {
-> -	.init = imx6q_sata_init,
-> -	.exit = imx6q_sata_exit,
-> -	.ata_port_info = &ahci_imx_port_info,
-> -	.suspend = imx_ahci_suspend,
-> -	.resume = imx_ahci_resume,
-> +static struct ahci_platform_data imx_sata_pdata = {
-> +	.init		= imx_sata_init,
-> +	.exit		= imx_sata_exit,
-> +	.ata_port_info	= &ahci_imx_port_info,
-> +	.suspend	= imx_ahci_suspend,
-> +	.resume		= imx_ahci_resume,
-> +
->  };
->  
->  static const struct of_device_id imx_ahci_of_match[] = {
-> -	{ .compatible = "fsl,imx6q-ahci", .data = &imx6q_sata_pdata},
-> +	{ .compatible = "fsl,imx53-ahci", .data = (void *)AHCI_IMX53 },
-> +	{ .compatible = "fsl,imx6q-ahci", .data = (void *)AHCI_IMX6Q },
->  	{},
->  };
->  MODULE_DEVICE_TABLE(of, imx_ahci_of_match);
-> @@ -212,12 +244,20 @@ static int imx_ahci_probe(struct platform_device *pdev)
->  	struct device *dev = &pdev->dev;
->  	struct resource *mem, *irq, res[2];
->  	const struct of_device_id *of_id;
-> +	enum ahci_imx_type type;
->  	const struct ahci_platform_data *pdata = NULL;
->  	struct imx_ahci_priv *imxpriv;
->  	struct device *ahci_dev;
->  	struct platform_device *ahci_pdev;
->  	int ret;
->  
-> +	of_id = of_match_device(imx_ahci_of_match, dev);
-> +	if (!of_id)
-> +		return -EINVAL;
-> +
-> +	type = (enum ahci_imx_type)of_id->data;
-> +	pdata = &imx_sata_pdata;
-> +
->  	imxpriv = devm_kzalloc(dev, sizeof(*imxpriv), GFP_KERNEL);
->  	if (!imxpriv) {
->  		dev_err(dev, "can't alloc ahci_host_priv\n");
-> @@ -233,6 +273,8 @@ static int imx_ahci_probe(struct platform_device *pdev)
->  
->  	imxpriv->no_device = false;
->  	imxpriv->first_time = true;
-> +	imxpriv->type = type;
-> +
->  	imxpriv->ahb_clk = devm_clk_get(dev, "ahb");
->  	if (IS_ERR(imxpriv->ahb_clk)) {
->  		dev_err(dev, "can't get ahb clock.\n");
-> @@ -240,24 +282,32 @@ static int imx_ahci_probe(struct platform_device *pdev)
->  		goto err_out;
->  	}
->  
-> -	imxpriv->sata_ref_clk = devm_clk_get(dev, "sata_ref");
-> -	if (IS_ERR(imxpriv->sata_ref_clk)) {
-> -		dev_err(dev, "can't get sata_ref clock.\n");
-> -		ret = PTR_ERR(imxpriv->sata_ref_clk);
-> -		goto err_out;
-> +	if (type == AHCI_IMX53) {
-> +		imxpriv->sata_gate_clk = devm_clk_get(dev, "sata_gate");
-> +		if (IS_ERR(imxpriv->sata_gate_clk)) {
-> +			dev_err(dev, "can't get sata_gate clock.\n");
-> +			ret = PTR_ERR(imxpriv->sata_gate_clk);
-> +			goto err_out;
-> +		}
-> +
-> +		imxpriv->sata_phy_clk = devm_clk_get(dev, "sata_phy");
-> +		if (IS_ERR(imxpriv->sata_phy_clk)) {
-> +			dev_err(dev, "can't get sata_phy clock.\n");
-> +			ret = PTR_ERR(imxpriv->sata_phy_clk);
-> +			goto err_out;
-> +		}
-> +	} else if (type == AHCI_IMX6Q) {
-> +		imxpriv->sata_ref_clk = devm_clk_get(dev, "sata_ref");
-> +		if (IS_ERR(imxpriv->sata_ref_clk)) {
-> +			dev_err(dev, "can't get sata_ref clock.\n");
-> +			ret = PTR_ERR(imxpriv->sata_ref_clk);
-> +			goto err_out;
-> +		}
->  	}
->  
->  	imxpriv->ahci_pdev = ahci_pdev;
->  	platform_set_drvdata(pdev, imxpriv);
->  
-> -	of_id = of_match_device(imx_ahci_of_match, dev);
-> -	if (of_id) {
-> -		pdata = of_id->data;
-> -	} else {
-> -		ret = -EINVAL;
-> -		goto err_out;
-> -	}
-> -
->  	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
->  	irq = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
->  	if (!mem || !irq) {
-> @@ -273,40 +323,41 @@ static int imx_ahci_probe(struct platform_device *pdev)
->  	ahci_dev->dma_mask = &ahci_dev->coherent_dma_mask;
->  	ahci_dev->of_node = dev->of_node;
->  
-> -	imxpriv->gpr =
-> -		syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
-> -
-> -	if (IS_ERR(imxpriv->gpr)) {
-> -		dev_err(dev, "failed to find fsl,imx6q-iomux-gpr regmap\n");
-> -		ret = PTR_ERR(imxpriv->gpr);
-> -		goto err_out;
-> +	if (type == AHCI_IMX6Q) {
-> +		imxpriv->gpr = syscon_regmap_lookup_by_compatible(
-> +							"fsl,imx6q-iomuxc-gpr");
-> +		if (IS_ERR(imxpriv->gpr)) {
-> +			dev_err(dev,
-> +				"failed to find fsl,imx6q-iomux-gpr regmap\n");
-> +			return PTR_ERR(imxpriv->gpr);
-> +		}
-> +
-> +		/*
-> +		 * Set PHY Paremeters, two steps to configure the GPR13,
-> +		 * one write for rest of parameters, mask of first write
-> +		 * is 0x07fffffd, and the other one write for setting
-> +		 * the mpll_clk_en happens in imx_sata_clock_enable().
-> +		 */
-> +		regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
-> +				   IMX6Q_GPR13_SATA_RX_EQ_VAL_MASK |
-> +				   IMX6Q_GPR13_SATA_RX_LOS_LVL_MASK |
-> +				   IMX6Q_GPR13_SATA_RX_DPLL_MODE_MASK |
-> +				   IMX6Q_GPR13_SATA_SPD_MODE_MASK |
-> +				   IMX6Q_GPR13_SATA_MPLL_SS_EN |
-> +				   IMX6Q_GPR13_SATA_TX_ATTEN_MASK |
-> +				   IMX6Q_GPR13_SATA_TX_BOOST_MASK |
-> +				   IMX6Q_GPR13_SATA_TX_LVL_MASK |
-> +				   IMX6Q_GPR13_SATA_TX_EDGE_RATE,
-> +				   IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB |
-> +				   IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M |
-> +				   IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_4F |
-> +				   IMX6Q_GPR13_SATA_SPD_MODE_3P0G |
-> +				   IMX6Q_GPR13_SATA_MPLL_SS_EN |
-> +				   IMX6Q_GPR13_SATA_TX_ATTEN_9_16 |
-> +				   IMX6Q_GPR13_SATA_TX_BOOST_3_33_DB |
-> +				   IMX6Q_GPR13_SATA_TX_LVL_1_025_V);
->  	}
->  
-> -	/*
-> -	 * Set PHY Paremeters, two steps to configure the GPR13,
-> -	 * one write for rest of parameters, mask of first write
-> -	 * is 0x07fffffd, and the other one write for setting
-> -	 * the mpll_clk_en happens in imx_sata_clock_enable().
-> -	 */
-> -	regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
-> -			   IMX6Q_GPR13_SATA_RX_EQ_VAL_MASK |
-> -			   IMX6Q_GPR13_SATA_RX_LOS_LVL_MASK |
-> -			   IMX6Q_GPR13_SATA_RX_DPLL_MODE_MASK |
-> -			   IMX6Q_GPR13_SATA_SPD_MODE_MASK |
-> -			   IMX6Q_GPR13_SATA_MPLL_SS_EN |
-> -			   IMX6Q_GPR13_SATA_TX_ATTEN_MASK |
-> -			   IMX6Q_GPR13_SATA_TX_BOOST_MASK |
-> -			   IMX6Q_GPR13_SATA_TX_LVL_MASK |
-> -			   IMX6Q_GPR13_SATA_TX_EDGE_RATE,
-> -			   IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB |
-> -			   IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M |
-> -			   IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_4F |
-> -			   IMX6Q_GPR13_SATA_SPD_MODE_3P0G |
-> -			   IMX6Q_GPR13_SATA_MPLL_SS_EN |
-> -			   IMX6Q_GPR13_SATA_TX_ATTEN_9_16 |
-> -			   IMX6Q_GPR13_SATA_TX_BOOST_3_33_DB |
-> -			   IMX6Q_GPR13_SATA_TX_LVL_1_025_V);
-> -
->  	ret = platform_device_add_resources(ahci_pdev, res, 2);
->  	if (ret)
->  		goto err_out;
-> -- 
-> 1.8.4.2
+> the already existing approach.
 > 
+>>
+>> Thanks
+>> Kishon
 
