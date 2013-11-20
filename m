@@ -1,49 +1,63 @@
-From: Phillip Susi <psusi@ubuntu.com>
-Subject: Re: [PATCH 1/3] sd: don't bother spinning up disks on resume
-Date: Wed, 20 Nov 2013 09:48:35 -0500
-Message-ID: <528CCBC3.3030002@ubuntu.com>
-References: <527AF287.7020700@ubuntu.com>		 <927e15641f27b46f206f8ae8110201c8fd77b7e1.1383789225.git.psusi@ubuntu.com>		 <527BDA11.6060603@interlog.com> <527C0349.5010301@ubuntu.com>	 <1384626031.3614.7.camel@dabdike.int.hansenpartnership.com>	 <52883CE9.9040102@ubuntu.com> <1384670620.3614.24.camel@dabdike.int.hansenpartnership.com> <5288EBA6.3070609@ubuntu.com> <5289573A.9070307@interlog.com> <52896806.4040907@ubuntu.com> <528A382E.10400@ubuntu.com> <528CC5C8.6080700@start.ca>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [RESEND PATCH 1/6] ahci: imx: Explicitly clear
+ IMX6Q_GPR13_SATA_MPLL_CLK_EN
+Date: Wed, 20 Nov 2013 09:59:07 -0500
+Message-ID: <20131120145907.GA28946@htj.dyndns.org>
+References: <1384942659-5362-1-git-send-email-marex@denx.de>
+ <1384943242-8201-1-git-send-email-marex@denx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:58463 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750976Ab3KTOsh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Nov 2013 09:48:37 -0500
-In-Reply-To: <528CC5C8.6080700@start.ca>
+Received: from mail-qe0-f41.google.com ([209.85.128.41]:59234 "EHLO
+	mail-qe0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751599Ab3KTO7L (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Nov 2013 09:59:11 -0500
+Received: by mail-qe0-f41.google.com with SMTP id x7so6318868qeu.28
+        for <linux-ide@vger.kernel.org>; Wed, 20 Nov 2013 06:59:10 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <1384943242-8201-1-git-send-email-marex@denx.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <kernel@start.ca>, dgilbert@interlog.com, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: todd.e.brandt@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, tj@kernel.org
+To: Marek Vasut <marex@denx.de>
+Cc: linux-arm-kernel@lists.infradead.org, Shawn Guo <shawn.guo@linaro.org>, Richard Zhu <r65037@freescale.com>, Linux-IDE <linux-ide@vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
-
-On 11/20/2013 9:23 AM, Mark Lord wrote:
-> Yeah, solve that, and you're golden. I totally understand the
-> motivation for this patch, and would love to have it working on my
-> machines here too.
+On Wed, Nov 20, 2013 at 11:27:22AM +0100, Marek Vasut wrote:
+> We must clear this IMX6Q_GPR13_SATA_MPLL_CLK_EN bit on i.MX6Q, otherwise
+> Linux will fail to find the attached drive on some boards.
 > 
-> But it may have to be some kind of sysfs optional setting, 
-> defaulting to current behaviour, to keep the server keepers happy.
+> This entire fix was:
+> Reported-by: Eric Nelson <eric.nelson@boundarydevices.com>
+> 
+> Signed-off-by: Marek Vasut <marex@denx.de>
+> Cc: Shawn Guo <shawn.guo@linaro.org>
+> Cc: Richard Zhu <r65037@freescale.com>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: Linux-IDE <linux-ide@vger.kernel.org>
+> ---
+>  drivers/ata/ahci_imx.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> RESEND: Fix the Cc here.
+> 
+> diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+> index ae2d73f..478921b 100644
+> --- a/drivers/ata/ahci_imx.c
+> +++ b/drivers/ata/ahci_imx.c
+> @@ -125,6 +125,7 @@ static int imx6q_sata_init(struct device *dev, void __iomem *mmio)
+>  			| IMX6Q_GPR13_SATA_TX_BOOST_MASK
+>  			| IMX6Q_GPR13_SATA_TX_LVL_MASK
+>  			| IMX6Q_GPR13_SATA_TX_EDGE_RATE
+> +			| IMX6Q_GPR13_SATA_MPLL_CLK_EN
+>  			, IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB
+>  			| IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M
+>  			| IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_4F
 
-My original idea was actually to just have the system resume force the
-runtime pm status to suspended, then it will take care of calling the
-runtime resume which can easily start the drive, but I was hoping to
-get it working whether or not runtime pm is configured.  I may just
-have to fall back to that.
+Not your fault but when things stretch over multiples lines, the
+convention is to put the operators and commas at the end of each line
+not the other way around.  I'd appreciate if you add a trivial patch
+to update that too.
 
+Thanks.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQEcBAEBAgAGBQJSjMvDAAoJEJrBOlT6nu75J5QH/2APABstv5HejNp5R4uvmAuL
-xTZyHHOFvcMBDpCFLtlWK6PhnKmN7C/eFlzc7xaadtd0wmgjOqZVLTgfYSWBON6X
-/kRz/QtDMhsppah7t1T/QzPPQ/z2j4j2/ffwDRRN4bCdM39B/QQCUeVCxVK0mEx3
-w5A2Xiro1gAknh1xb/0SfSb9M35H5bLBt4Pz5Ql/75to9jEeH0MlTthZmm+CJPC/
-RcBgCkOG6kEOeqCj4tehnTOrs4a8ghdeGNnR6W6UDaeRh3QjRwOvAmwIbZsxkXgs
-XSP52adzt5fnZi8uQAzV0bIGN+8Zttx0PHdl3AsVt56CMfdfAHVbL1RVo+Pl85E=
-=fnz3
------END PGP SIGNATURE-----
+-- 
+tejun
