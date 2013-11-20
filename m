@@ -1,15 +1,16 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v2 3/4] ata: add APM X-Gene SoC 6.0Gbps SATA PHY driver
-Date: Wed, 20 Nov 2013 13:06:56 +0100
-Message-ID: <40736575.jvgUcOHqUx@wuerfel>
-References: <1384905197-3566-1-git-send-email-lho@apm.com>
- <1384905197-3566-4-git-send-email-lho@apm.com>
- <20131120113704.GT5914@e106331-lin.cambridge.arm.com>
+From: Shawn Guo <shawn.guo@linaro.org>
+Subject: Re: [RESEND PATCH 1/6] ahci: imx: Explicitly clear
+ IMX6Q_GPR13_SATA_MPLL_CLK_EN
+Date: Wed, 20 Nov 2013 20:51:55 +0800
+Message-ID: <20131120125154.GD22308@S2101-09.ap.freescale.net>
+References: <1384942659-5362-1-git-send-email-marex@denx.de>
+ <1384943242-8201-1-git-send-email-marex@denx.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20131120113704.GT5914@e106331-lin.cambridge.arm.com>
+Content-Disposition: inline
+In-Reply-To: <1384943242-8201-1-git-send-email-marex@denx.de>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -19,24 +20,46 @@ List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Mark Rutland <mark.rutland@arm.com>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Suman Tripathi <stripathi@apm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "jcm@redhat.com" <jcm@redhat.com>, "tj@kernel.org" <tj@kernel.org>, Loc Ho <lho@apm.com>, "olof@lixom.net" <olof@lixom.net>, Tuan Phan <tphan@apm.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+To: Marek Vasut <marex@denx.de>
+Cc: Richard Zhu <r65037@freescale.com>, Tejun Heo <tj@kernel.org>, Eric Nelson <eric.nelson@boundarydevices.com>, linux-arm-kernel@lists.infradead.org, Linux-IDE <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Wednesday 20 November 2013 11:37:05 Mark Rutland wrote:
-> > +static void phy_rd(void *addr, u32 *val)
-> > +{
-> > +       *val = readl(addr);
-> > +#if defined(XGENE_DBG1_CSR)
-> > +       pr_debug("SATAPHY CSR RD: 0x%p value: 0x%08x\n", addr, *val);
+On Wed, Nov 20, 2013 at 11:27:22AM +0100, Marek Vasut wrote:
+> We must clear this IMX6Q_GPR13_SATA_MPLL_CLK_EN bit on i.MX6Q, otherwise
+> Linux will fail to find the attached drive on some boards.
 > 
-> Can you not use dev_dbg here as you do elsehere?
+> This entire fix was:
+> Reported-by: Eric Nelson <eric.nelson@boundarydevices.com>
 > 
-> Either that or make your own debug print function, with the ifdefs
-> hidden in its definition.
+> Signed-off-by: Marek Vasut <marex@denx.de>
+> Cc: Shawn Guo <shawn.guo@linaro.org>
+> Cc: Richard Zhu <r65037@freescale.com>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: Linux-IDE <linux-ide@vger.kernel.org>
+> ---
+>  drivers/ata/ahci_imx.c | 1 +
+>  1 file changed, 1 insertion(+)
 > 
+> RESEND: Fix the Cc here.
+> 
+> diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+> index ae2d73f..478921b 100644
+> --- a/drivers/ata/ahci_imx.c
+> +++ b/drivers/ata/ahci_imx.c
+> @@ -125,6 +125,7 @@ static int imx6q_sata_init(struct device *dev, void __iomem *mmio)
+>  			| IMX6Q_GPR13_SATA_TX_BOOST_MASK
+>  			| IMX6Q_GPR13_SATA_TX_LVL_MASK
+>  			| IMX6Q_GPR13_SATA_TX_EDGE_RATE
+> +			| IMX6Q_GPR13_SATA_MPLL_CLK_EN
 
-pr_debug() is already conditional on #ifdef DEBUG, the extra #if
-can just get removed here.
+So shouldn't number 0x07fffffd in the comment right above the code be
+updated to 0x07fffffe?
 
-	Arnd
+Shawn
+
+>  			, IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB
+>  			| IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M
+>  			| IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_4F
+> -- 
+> 1.8.4.2
+> 
