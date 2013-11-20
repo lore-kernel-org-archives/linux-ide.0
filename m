@@ -1,33 +1,105 @@
-From: Loc Ho <lho@apm.com>
-Subject: Re: [PATCH v2 4/4] arm64: Add APM X-Gene SoC 6.0Gbps SATA PHY DTS entries
-Date: Tue, 19 Nov 2013 16:08:42 -0800
-Message-ID: <CAPw-ZTm8a2jj1ggu0wBgEgaZFphTpAsSROXE0_BjQFqH12crYw@mail.gmail.com>
-References: <1384905197-3566-1-git-send-email-lho@apm.com>
-	<1384905197-3566-2-git-send-email-lho@apm.com>
-	<1384905197-3566-3-git-send-email-lho@apm.com>
-	<1384905197-3566-4-git-send-email-lho@apm.com>
-	<1384905197-3566-5-git-send-email-lho@apm.com>
+From: Richard Zhu <Hong-Xing.Zhu@freescale.com>
+Subject: RE: [PATCH 1/5] ahci: imx: Pull out the clock enable/disable calls
+Date: Wed, 20 Nov 2013 04:29:47 +0000
+Message-ID: <0E83723C55F66F43A6041464FE31119D4462D5@039-SN2MPN1-011.039d.mgd.msft.net>
+References: <1384651251-5548-1-git-send-email-marex@denx.de>
+ <528A60BB.4010802@boundarydevices.com> <201311182123.00169.marex@denx.de>
+ <528A90A6.3030009@boundarydevices.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from exprod5og105.obsmtp.com ([64.18.0.180]:40235 "HELO
-	exprod5og105.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753247Ab3KTAIn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Nov 2013 19:08:43 -0500
-Received: by mail-pd0-f179.google.com with SMTP id r10so5810559pdi.24
-        for <linux-ide@vger.kernel.org>; Tue, 19 Nov 2013 16:08:42 -0800 (PST)
-In-Reply-To: <1384905197-3566-5-git-send-email-lho@apm.com>
+Received: from co9ehsobe002.messaging.microsoft.com ([207.46.163.25]:23313
+	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751787Ab3KTE3v (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Nov 2013 23:29:51 -0500
+In-Reply-To: <528A90A6.3030009@boundarydevices.com>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Arnd Bergmann <arnd@arndb.de>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Jon Masters <jcm@redhat.com>, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+To: Eric Nelson <eric.nelson@boundarydevices.com>, Marek Vasut <marex@denx.de>
+Cc: "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Tejun Heo <tj@kernel.org>, Shawn Guo <shawn.guo@linaro.org>, Linux-IDE <linux-ide@vger.kernel.org>
 
- Hi,
+SGkgTmVsc29uOg0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IGxpbnV4
+LWlkZS1vd25lckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1pZGUtb3duZXJAdmdlci5r
+ZXJuZWwub3JnXQ0KPiBPbiBCZWhhbGYgT2YgRXJpYyBOZWxzb24NCj4gU2VudDogVHVlc2RheSwg
+Tm92ZW1iZXIgMTksIDIwMTMgNjoxMiBBTQ0KPiBUbzogTWFyZWsgVmFzdXQNCj4gQ2M6IGxpbnV4
+LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZzsgWmh1IFJpY2hhcmQtUjY1MDM3OyBUZWp1
+biBIZW87IFNoYXduDQo+IEd1bzsgTGludXgtSURFDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMS81
+XSBhaGNpOiBpbXg6IFB1bGwgb3V0IHRoZSBjbG9jayBlbmFibGUvZGlzYWJsZSBjYWxscw0KPiAN
+Cj4gSGkgTWFyZWssDQo+IA0KPiBPbiAxMS8xOC8yMDEzIDAxOjIzIFBNLCBNYXJlayBWYXN1dCB3
+cm90ZToNCj4gPiBIaSBFcmljLA0KPiA+DQo+ID4+IEhpIE1hcmVrLA0KPiA+Pg0KPiA+PiBPbiAx
+MS8xNi8yMDEzIDA2OjIwIFBNLCBNYXJlayBWYXN1dCB3cm90ZToNCj4gPj4+IFRoZSBzYW1lIGNv
+ZGUgZm9yIGVuYWJsaW5nIGFuZCBkaXNhYmxpbmcgU0FUQSBjbG9jayB3YXMgZm91bmQgaW4NCj4g
+Pj4+IG11bHRpcGxlIHBsYWNlcyBpbiB0aGUgZHJpdmVyLiBJbXBsZW1lbnQgZnVuY3Rpb25zIHRo
+YXQNCj4gPj4+IGVuYWJsZS9kaXNhYmxlIHRoZSBTQVRBIGNsb2NrIGFuZCB1c2UgdGhlbSBpbiBz
+dWNoIHBsYWNlcyBpbnN0ZWFkIG9mDQo+IGR1cGxpY2F0aW5nIHRoZSBjb2RlLg0KPiA+Pj4NCj4g
+Pj4+IFNpZ25lZC1vZmYtYnk6IE1hcmVrIFZhc3V0IDxtYXJleEBkZW54LmRlPg0KPiA+Pj4gQ2M6
+IFNoYXduIEd1byA8c2hhd24uZ3VvQGxpbmFyby5vcmc+DQo+ID4+PiBDYzogUmljaGFyZCBaaHUg
+PHI2NTAzN0BmcmVlc2NhbGUuY29tPg0KPiA+Pj4gQ2M6IFRlanVuIEhlbyA8dGpAa2VybmVsLm9y
+Zz4NCj4gPj4+IENjOiBMaW51eC1JREUgPGxpbnV4LWlkZUB2Z2VyLmtlcm5lbC5vcmc+DQo+ID4+
+PiAtLS0NCj4gPj4+DQo+ID4+PiAgICBkcml2ZXJzL2F0YS9haGNpX2lteC5jIHwgMTMzDQo+ID4+
+PiAgICArKysrKysrKysrKysrKysrKysrKysrKysrKysrLS0tLS0tLS0tLS0tLS0tLS0tLS0tIDEg
+ZmlsZSBjaGFuZ2VkLCA3NQ0KPiA+Pj4gICAgaW5zZXJ0aW9ucygrKSwgNTggZGVsZXRpb25zKC0p
+DQo+ID4+Pg0KPiA+Pj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvYXRhL2FoY2lfaW14LmMgYi9kcml2
+ZXJzL2F0YS9haGNpX2lteC5jIGluZGV4DQo+ID4+PiBhZTJkNzNmLi5jN2VlNTA1IDEwMDY0NA0K
+PiA+Pj4gLS0tIGEvZHJpdmVycy9hdGEvYWhjaV9pbXguYw0KPiA+Pj4gKysrIGIvZHJpdmVycy9h
+dGEvYWhjaV9pbXguYw0KPiA+Pj4gQEAgLTQ3LDYgKzQ3LDczIEBAIHN0YXRpYyBpbnQgYWhjaV9p
+bXhfaG90cGx1ZzsNCj4gPj4+DQo+ID4+PiAgICBtb2R1bGVfcGFyYW1fbmFtZWQoaG90cGx1Zywg
+YWhjaV9pbXhfaG90cGx1ZywgaW50LCAwNjQ0KTsNCj4gPj4+ICAgIE1PRFVMRV9QQVJNX0RFU0Mo
+aG90cGx1ZywgIkFIQ0kgSU1YIGhvdC1wbHVnIHN1cHBvcnQgKDA9RG9uJ3Qgc3VwcG9ydCwNCj4g
+Pj4+ICAgIDE9c3VwcG9ydCkiKTsNCj4gPj4+DQo+ID4+PiA8c25pcD4NCj4gPj4NCj4gPj4gSSBo
+YXZlbid0IHRyYWNlZCB0aHJvdWdoIGFsbCBvZiB0aGlzLCBidXQgaWYgeW91J3JlIGNvcHlpbmcg
+ZnJvbSB0aGUNCj4gPj4gRnJlZXNjYWxlIDMuMC4zNSBrZXJuZWwsIG5vdGUgdGhhdCB0aGVyZSdz
+IGEgYnVnIGluIGl0LCBhbmQgdGhlDQo+ID4+IDB4N0ZGRkZGRkQgcmVhbGx5IHdhbnRlZCB0byBi
+ZSBhbiAweDdGRkZGRkZGLg0KPiA+DQo+ID4gSSdtIG5vdCB0YWtpbmcgdGhpcyBmcm9tIEZTTCAz
+LjAuMzUsIG5vLCBidXQgdGhhbmtzIGZvciBwb2ludGluZyB0aGlzIG91dCENCj4gPg0KPiA+PiBU
+aGUgd2F5IEkgcmVhZCB0aGlzIGNvbW1lbnQsIHRoZSB3cml0ZXMgbmVlZCB0byBoYXBwZW4gaW4g
+dHdvDQo+ID4+IHN0ZXBzOg0KPiA+PiAJLSB3cml0ZSBldmVyeXRoaW5nIHdpdGggdGhlIFBIWSBk
+aXNhYmxlZA0KPiA+PiAJLSBlbmFibGUgdGhlIFBIWQ0KPiA+Pg0KPiA+PiBXZSBoYWQgcmVwb3J0
+cyBvZiBzdGFsbHMgd2FpdGluZyBmb3IgU0FUQSBkcml2ZXMgdG8gYmUgZW51bWVyYXRlZA0KPiA+
+PiB0aGF0IHdlcmUgc29sdmVkIHdpdGggdGhpcyBjb21taXQuLi4NCj4gPj4NCj4gPj4gCWh0dHBz
+Oi8vZ2l0aHViLmNvbS9ib3VuZGFyeWRldmljZXMvbGludXgtDQo+ID4gaW14Ni9jb21taXQvMDE4
+NmVhMjI0Y2U2YmQxY2I0NzU3DQo+ID4+IGEwZjgzYjAwOTBlMjZhMDIxZjQNCj4gPg0KPiA+IFsu
+Li5dDQo+ID4NCj4gPj4+ICsJcmVnbWFwX3VwZGF0ZV9iaXRzKGlteHByaXYtPmdwciwgSU9NVVhD
+X0dQUjEzLA0KPiA+Pj4gKwkJCUlNWDZRX0dQUjEzX1NBVEFfTVBMTF9DTEtfRU4sDQo+ID4+PiAr
+CQkJSU1YNlFfR1BSMTNfU0FUQV9NUExMX0NMS19FTik7DQo+ID4NCj4gPiBJc24ndCB0aGlzIHNu
+aXBwZXQgZG9pbmcgZXhhY3RseSB3aGF0IHlvdXIgcGF0Y2ggZG9lcyA/DQo+ID4NCj4gVGhpcyBw
+YXJ0IGlzIGRvaW5nIHRoZSAic2V0IHRoZSBiaXQiIHBhcnQ6DQo+IAlodHRwczovL2dpdGh1Yi5j
+b20vYm91bmRhcnlkZXZpY2VzL2xpbnV4LWlteDYvYmxvYi9ib3VuZGFyeS0NCj4gaW14XzMuMC4z
+NV80LjEuMC9hcmNoL2FybS9tYWNoLW14Ni9ib2FyZC1teDZfbml0cm9nZW42eC5jI0w3MjgNCj4g
+DQo+IFRoZSBwcmV2aW91cyBibG9jayBpc24ndCBjbGVhcmluZyB0aGUgZW5hYmxlIGJpdCB0aG91
+Z2g6DQo+IA0KPiArCQlyZWdtYXBfdXBkYXRlX2JpdHMoaW14cHJpdi0+Z3ByLCBJT01VWENfR1BS
+MTMsDQo+ICsJCQkJSU1YNlFfR1BSMTNfU0FUQV9SWF9FUV9WQUxfTUFTSw0KPiArCQkJCXwgSU1Y
+NlFfR1BSMTNfU0FUQV9SWF9MT1NfTFZMX01BU0sNCj4gKwkJCQl8IElNWDZRX0dQUjEzX1NBVEFf
+UlhfRFBMTF9NT0RFX01BU0sNCj4gKwkJCQl8IElNWDZRX0dQUjEzX1NBVEFfU1BEX01PREVfTUFT
+Sw0KPiArCQkJCXwgSU1YNlFfR1BSMTNfU0FUQV9NUExMX1NTX0VODQo+ICsJCQkJfCBJTVg2UV9H
+UFIxM19TQVRBX1RYX0FUVEVOX01BU0sNCj4gKwkJCQl8IElNWDZRX0dQUjEzX1NBVEFfVFhfQk9P
+U1RfTUFTSw0KPiArCQkJCXwgSU1YNlFfR1BSMTNfU0FUQV9UWF9MVkxfTUFTSw0KPiArCQkJCXwg
+SU1YNlFfR1BSMTNfU0FUQV9UWF9FREdFX1JBVEUNCj4gKwkJCQksIElNWDZRX0dQUjEzX1NBVEFf
+UlhfRVFfVkFMXzNfMF9EQg0KPiArCQkJCXwgSU1YNlFfR1BSMTNfU0FUQV9SWF9MT1NfTFZMX1NB
+VEEyTQ0KPiArCQkJCXwgSU1YNlFfR1BSMTNfU0FUQV9SWF9EUExMX01PREVfMlBfNEYNCj4gKwkJ
+CQl8IElNWDZRX0dQUjEzX1NBVEFfU1BEX01PREVfM1AwRw0KPiArCQkJCXwgSU1YNlFfR1BSMTNf
+U0FUQV9NUExMX1NTX0VODQo+ICsJCQkJfCBJTVg2UV9HUFIxM19TQVRBX1RYX0FUVEVOXzlfMTYN
+Cj4gKwkJCQl8IElNWDZRX0dQUjEzX1NBVEFfVFhfQk9PU1RfM18zM19EQg0KPiArCQkJCXwgSU1Y
+NlFfR1BSMTNfU0FUQV9UWF9MVkxfMV8wMjVfVik7DQo+IA0KPiBUaGUgZXhwbGljaXQgY2xlYXJp
+bmcgb2YgYml0IDEgaXMgd2hhdCB3YXMgbmVjZXNzYXJ5IChhbmQgSSB0aGluayBpdCdzIHdoYXQN
+Cj4gdGhlIG9yaWdpbmFsIGF1dGhvciB3YXMgYWZ0ZXIpLg0KPiANCj4gVGhpcyB3YXMgYSBoYXJk
+IG9uZSB0byBmaW5kLCBiZWNhdXNlIGl0IHNlZW1zIHRoYXQgaXQgb25seSBzaG93cyB1cCBvbiBz
+b21lDQo+IGJvYXJkcywgYW5kIG1vc3Qgb2YgdGhlIHRpbWUgb24gdGhvc2UgYm9hcmRzLg0KPiAN
+Cj4gSGVyZSBhcmUgc29tZSByZWZlcmVuY2VzOg0KPiAJaHR0cDovL2JvdW5kYXJ5ZGV2aWNlcy5j
+b20vZnJlZXNjYWxlLXVidW50dS1pbWFnZS13aXRoLTQtMC0wLQ0KPiBrZXJuZWwvI2NvbW1lbnQt
+NjA0NjQNCj4gCWh0dHA6Ly9ib3VuZGFyeWRldmljZXMuY29tL2RlYmlhbi1pbnN0YWxsZXItb24t
+aS1teDYtYm9hcmRzLyNjb21tZW50LQ0KPiA3NjIwMw0KPiANCj4gVGhlIHN5bXB0b20gaXMgKHdh
+cykgdGhhdCBVLUJvb3Qgd29ya2VkIDEwMCUgb2YgdGhlIHRpbWUsIGJ1dCB0aGUga2VybmVsDQo+
+IGZhaWxlZCB0byBmaW5kIHRoZSBkcml2ZS4NCj4gDQo+IFVzaW5nICdtbScgaW4gVS1Cb290IHRv
+IGNsZWFyIHRoZSBiaXQgYmVmb3JlIGtlcm5lbCBsYXVuY2ggYWxzbyBhbGxvd2VkIHRoaW5ncw0K
+PiB0byBmdW5jdGlvbi4NCj4gDQpbUmljaGFyZF0gQWdyZWUgdG8gZXhwbGljaXQgY2xlYXJpbmcg
+b2YgYml0MSwgcmVmZXIgdG8gdGhlIGNoYXB0ZXIgIlBvd2VyLVVwIFNlcXVlbmNlcyIgb2YgDQoi
+U2VyaWFsIEFkdmFuY2VkIFRlY2hub2xvZ3kgQXR0YWNobWVudCBQSFkgKFNBVEEgUEhZKSIgaW4g
+aU1YNiBSTSBkb2MuDQoNCj4gUmVnYXJkcywNCj4gDQo+IA0KPiBFcmljDQo+IC0tDQo+IFRvIHVu
+c3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51
+eC1pZGUiIGluIHRoZQ0KPiBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJu
+ZWwub3JnIE1vcmUgbWFqb3Jkb21vIGluZm8gYXQNCj4gaHR0cDovL3ZnZXIua2VybmVsLm9yZy9t
+YWpvcmRvbW8taW5mby5odG1sDQoNCkJlc3QgUmVnYXJkcw0KUmljaGFyZCBaaHUNCg0K
 
-> +                       txbooster = <0x2 0x2 0x2 0x2 0x2 0x2>;
-> +                       txskew = <0xa 0xa 0xa 0xa 0xa 0xa>;
-[Loc Ho]
-These isn't correct. They should be txboostgain and txeyetuning. I
-will fix these in the next version.
-
--Loc
