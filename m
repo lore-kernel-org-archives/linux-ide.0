@@ -1,133 +1,227 @@
 From: Marek Vasut <marex@denx.de>
-Subject: Re: [PATCH 1/5] ahci: imx: Pull out the clock enable/disable calls
-Date: Wed, 20 Nov 2013 10:55:53 +0100
-Message-ID: <201311201055.53953.marex@denx.de>
-References: <1384651251-5548-1-git-send-email-marex@denx.de> <201311182123.00169.marex@denx.de> <528A90A6.3030009@boundarydevices.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH V4 2/6] ahci: imx: Pull out the clock enable/disable calls
+Date: Wed, 20 Nov 2013 11:17:35 +0100
+Message-ID: <1384942659-5362-2-git-send-email-marex@denx.de>
+References: <1384942659-5362-1-git-send-email-marex@denx.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:58443 "EHLO
+Received: from mail-out.m-online.net ([212.18.0.10]:47143 "EHLO
 	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752727Ab3KTJ4A (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Nov 2013 04:56:00 -0500
-In-Reply-To: <528A90A6.3030009@boundarydevices.com>
+	with ESMTP id S1752179Ab3KTKRs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Nov 2013 05:17:48 -0500
+In-Reply-To: <1384942659-5362-1-git-send-email-marex@denx.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Eric Nelson <eric.nelson@boundarydevices.com>
-Cc: "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Richard Zhu <r65037@freescale.com>, Tejun Heo <tj@kernel.org>, Shawn Guo <shawn.guo@linaro.org>, Linux-IDE <linux-ide@vger.kernel.org>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Marek Vasut <marex@denx.de>, Shawn Guo <shawn.guo@linaro.org>, Richard Zhu <r65037@freescale.com>, Tejun Heo <tj@kernel.org>, Linux-IDE <linux-ide@vger.kernel.org>
 
-Dear Eric Nelson,
+The same code for enabling and disabling SATA clock was found in multiple
+places in the driver. Implement functions that enable/disable the SATA clock
+and use them in such places instead of duplicating the code.
 
-> Hi Marek,
-> 
-> On 11/18/2013 01:23 PM, Marek Vasut wrote:
-> > Hi Eric,
-> > 
-> >> Hi Marek,
-> >> 
-> >> On 11/16/2013 06:20 PM, Marek Vasut wrote:
-> >>> The same code for enabling and disabling SATA clock was found in
-> >>> multiple places in the driver. Implement functions that enable/disable
-> >>> the SATA clock and use them in such places instead of duplicating the
-> >>> code.
-> >>> 
-> >>> Signed-off-by: Marek Vasut <marex@denx.de>
-> >>> Cc: Shawn Guo <shawn.guo@linaro.org>
-> >>> Cc: Richard Zhu <r65037@freescale.com>
-> >>> Cc: Tejun Heo <tj@kernel.org>
-> >>> Cc: Linux-IDE <linux-ide@vger.kernel.org>
-> >>> ---
-> >>> 
-> >>>    drivers/ata/ahci_imx.c | 133
-> >>>    ++++++++++++++++++++++++++++--------------------- 1 file changed, 75
-> >>>    insertions(+), 58 deletions(-)
-> >>> 
-> >>> diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
-> >>> index ae2d73f..c7ee505 100644
-> >>> --- a/drivers/ata/ahci_imx.c
-> >>> +++ b/drivers/ata/ahci_imx.c
-> >>> @@ -47,6 +47,73 @@ static int ahci_imx_hotplug;
-> >>> 
-> >>>    module_param_named(hotplug, ahci_imx_hotplug, int, 0644);
-> >>>    MODULE_PARM_DESC(hotplug, "AHCI IMX hot-plug support (0=Don't
-> >>>    support, 1=support)");
-> >>> 
-> >>> <snip>
-> >> 
-> >> I haven't traced through all of this, but if you're copying from
-> >> the Freescale 3.0.35 kernel, note that there's a bug in it, and
-> >> the 0x7FFFFFFD really wanted to be an 0x7FFFFFFF.
-> > 
-> > I'm not taking this from FSL 3.0.35, no, but thanks for pointing this
-> > out!
-> > 
-> >> The way I read this comment, the writes need to happen in two
-> >> 
-> >> steps:
-> >> 	- write everything with the PHY disabled
-> >> 	- enable the PHY
-> >> 
-> >> We had reports of stalls waiting for SATA drives to be enumerated
-> >> that were solved with this commit...
-> >> 
-> >> 	https://github.com/boundarydevices/linux-
-> > 
-> > imx6/commit/0186ea224ce6bd1cb4757
-> > 
-> >> a0f83b0090e26a021f4
-> > 
-> > [...]
-> > 
-> >>> +	regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
-> >>> +			IMX6Q_GPR13_SATA_MPLL_CLK_EN,
-> >>> +			IMX6Q_GPR13_SATA_MPLL_CLK_EN);
-> > 
-> > Isn't this snippet doing exactly what your patch does ?
-> 
-> This part is doing the "set the bit" part:
-> 	https://github.com/boundarydevices/linux-imx6/blob/boundary-
-imx_3.0.35_4.1
-> .0/arch/arm/mach-mx6/board-mx6_nitrogen6x.c#L728
-> 
-> The previous block isn't clearing the enable bit though:
-> 
-> +		regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
-> +				IMX6Q_GPR13_SATA_RX_EQ_VAL_MASK
-> +				| IMX6Q_GPR13_SATA_RX_LOS_LVL_MASK
-> +				| IMX6Q_GPR13_SATA_RX_DPLL_MODE_MASK
-> +				| IMX6Q_GPR13_SATA_SPD_MODE_MASK
-> +				| IMX6Q_GPR13_SATA_MPLL_SS_EN
-> +				| IMX6Q_GPR13_SATA_TX_ATTEN_MASK
-> +				| IMX6Q_GPR13_SATA_TX_BOOST_MASK
-> +				| IMX6Q_GPR13_SATA_TX_LVL_MASK
-> +				| IMX6Q_GPR13_SATA_TX_EDGE_RATE
-> +				, IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB
-> +				| IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M
-> +				| IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_4F
-> +				| IMX6Q_GPR13_SATA_SPD_MODE_3P0G
-> +				| IMX6Q_GPR13_SATA_MPLL_SS_EN
-> +				| IMX6Q_GPR13_SATA_TX_ATTEN_9_16
-> +				| IMX6Q_GPR13_SATA_TX_BOOST_3_33_DB
-> +				| IMX6Q_GPR13_SATA_TX_LVL_1_025_V);
-> 
-> The explicit clearing of bit 1 is what was necessary (and I think
-> it's what the original author was after).
-> 
-> This was a hard one to find, because it seems that it only shows
-> up on some boards, and most of the time on those boards.
-> 
-> Here are some references:
-> 	http://boundarydevices.com/freescale-ubuntu-image-with-4-0-0-
-kernel/#comme
-> nt-60464
-> http://boundarydevices.com/debian-installer-on-i-mx6-boards/#comment-76203
-> 
-> The symptom is (was) that U-Boot worked 100% of the time, but
-> the kernel failed to find the drive.
-> 
-> Using 'mm' in U-Boot to clear the bit before kernel launch also
-> allowed things to function.
+Signed-off-by: Marek Vasut <marex@denx.de>
+Cc: Shawn Guo <shawn.guo@linaro.org>
+Cc: Richard Zhu <r65037@freescale.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Linux-IDE <linux-ide@vger.kernel.org>
+---
+ drivers/ata/ahci_imx.c | 130 +++++++++++++++++++++++++++----------------------
+ 1 file changed, 71 insertions(+), 59 deletions(-)
 
-Ah, now I see it. I will cook a patch, thanks!
+V2: Move the OR sign from the begining of the line to the end of the line in
+    the regmap_update_bits() call.
+V3: Move the PHY configuration programming out of the clock_enable function
+    and into the probe() function.
+V4: Rebase on top of new 1/6 patch.
+    Remove clk_prepare_enable() being called twice in imx_sata_clock_enable()
+    since it was a rebase artifact.
+
+diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+index 478921b..8e0dbd4 100644
+--- a/drivers/ata/ahci_imx.c
++++ b/drivers/ata/ahci_imx.c
+@@ -47,6 +47,34 @@ static int ahci_imx_hotplug;
+ module_param_named(hotplug, ahci_imx_hotplug, int, 0644);
+ MODULE_PARM_DESC(hotplug, "AHCI IMX hot-plug support (0=Don't support, 1=support)");
+ 
++static int imx_sata_clock_enable(struct device *dev)
++{
++	struct imx_ahci_priv *imxpriv = dev_get_drvdata(dev->parent);
++	int ret;
++
++	ret = clk_prepare_enable(imxpriv->sata_ref_clk);
++	if (ret < 0) {
++		dev_err(dev, "prepare-enable sata_ref clock err:%d\n", ret);
++		return ret;
++	}
++
++	regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
++			   IMX6Q_GPR13_SATA_MPLL_CLK_EN,
++			   IMX6Q_GPR13_SATA_MPLL_CLK_EN);
++
++	return 0;
++}
++
++static void imx_sata_clock_disable(struct device *dev)
++{
++	struct imx_ahci_priv *imxpriv = dev_get_drvdata(dev->parent);
++
++	regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
++			   IMX6Q_GPR13_SATA_MPLL_CLK_EN,
++			   !IMX6Q_GPR13_SATA_MPLL_CLK_EN);
++	clk_disable_unprepare(imxpriv->sata_ref_clk);
++}
++
+ static void ahci_imx_error_handler(struct ata_port *ap)
+ {
+ 	u32 reg_val;
+@@ -72,10 +100,7 @@ static void ahci_imx_error_handler(struct ata_port *ap)
+ 	 */
+ 	reg_val = readl(mmio + PORT_PHY_CTL);
+ 	writel(reg_val | PORT_PHY_CTL_PDDQ_LOC, mmio + PORT_PHY_CTL);
+-	regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
+-			IMX6Q_GPR13_SATA_MPLL_CLK_EN,
+-			!IMX6Q_GPR13_SATA_MPLL_CLK_EN);
+-	clk_disable_unprepare(imxpriv->sata_ref_clk);
++	imx_sata_clock_disable(ap->dev);
+ 	imxpriv->no_device = true;
+ }
+ 
+@@ -97,45 +122,10 @@ static int imx6q_sata_init(struct device *dev, void __iomem *mmio)
+ 	unsigned int reg_val;
+ 	struct imx_ahci_priv *imxpriv = dev_get_drvdata(dev->parent);
+ 
+-	imxpriv->gpr =
+-		syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
+-	if (IS_ERR(imxpriv->gpr)) {
+-		dev_err(dev, "failed to find fsl,imx6q-iomux-gpr regmap\n");
+-		return PTR_ERR(imxpriv->gpr);
+-	}
+-
+-	ret = clk_prepare_enable(imxpriv->sata_ref_clk);
+-	if (ret < 0) {
+-		dev_err(dev, "prepare-enable sata_ref clock err:%d\n", ret);
++	ret = imx_sata_clock_enable(dev);
++	if (ret < 0)
+ 		return ret;
+-	}
+ 
+-	/*
+-	 * set PHY Paremeters, two steps to configure the GPR13,
+-	 * one write for rest of parameters, mask of first write
+-	 * is 0x07fffffd, and the other one write for setting
+-	 * the mpll_clk_en.
+-	 */
+-	regmap_update_bits(imxpriv->gpr, 0x34, IMX6Q_GPR13_SATA_RX_EQ_VAL_MASK
+-			| IMX6Q_GPR13_SATA_RX_LOS_LVL_MASK
+-			| IMX6Q_GPR13_SATA_RX_DPLL_MODE_MASK
+-			| IMX6Q_GPR13_SATA_SPD_MODE_MASK
+-			| IMX6Q_GPR13_SATA_MPLL_SS_EN
+-			| IMX6Q_GPR13_SATA_TX_ATTEN_MASK
+-			| IMX6Q_GPR13_SATA_TX_BOOST_MASK
+-			| IMX6Q_GPR13_SATA_TX_LVL_MASK
+-			| IMX6Q_GPR13_SATA_TX_EDGE_RATE
+-			| IMX6Q_GPR13_SATA_MPLL_CLK_EN
+-			, IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB
+-			| IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M
+-			| IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_4F
+-			| IMX6Q_GPR13_SATA_SPD_MODE_3P0G
+-			| IMX6Q_GPR13_SATA_MPLL_SS_EN
+-			| IMX6Q_GPR13_SATA_TX_ATTEN_9_16
+-			| IMX6Q_GPR13_SATA_TX_BOOST_3_33_DB
+-			| IMX6Q_GPR13_SATA_TX_LVL_1_025_V);
+-	regmap_update_bits(imxpriv->gpr, 0x34, IMX6Q_GPR13_SATA_MPLL_CLK_EN,
+-			IMX6Q_GPR13_SATA_MPLL_CLK_EN);
+ 	usleep_range(100, 200);
+ 
+ 	/*
+@@ -164,11 +154,7 @@ static int imx6q_sata_init(struct device *dev, void __iomem *mmio)
+ 
+ static void imx6q_sata_exit(struct device *dev)
+ {
+-	struct imx_ahci_priv *imxpriv =  dev_get_drvdata(dev->parent);
+-
+-	regmap_update_bits(imxpriv->gpr, 0x34, IMX6Q_GPR13_SATA_MPLL_CLK_EN,
+-			!IMX6Q_GPR13_SATA_MPLL_CLK_EN);
+-	clk_disable_unprepare(imxpriv->sata_ref_clk);
++	imx_sata_clock_disable(dev);
+ }
+ 
+ static int imx_ahci_suspend(struct device *dev)
+@@ -179,12 +165,8 @@ static int imx_ahci_suspend(struct device *dev)
+ 	 * If no_device is set, The CLKs had been gated off in the
+ 	 * initialization so don't do it again here.
+ 	 */
+-	if (!imxpriv->no_device) {
+-		regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
+-				IMX6Q_GPR13_SATA_MPLL_CLK_EN,
+-				!IMX6Q_GPR13_SATA_MPLL_CLK_EN);
+-		clk_disable_unprepare(imxpriv->sata_ref_clk);
+-	}
++	if (!imxpriv->no_device)
++		imx_sata_clock_disable(dev);
+ 
+ 	return 0;
+ }
+@@ -195,15 +177,10 @@ static int imx_ahci_resume(struct device *dev)
+ 	int ret;
+ 
+ 	if (!imxpriv->no_device) {
+-		ret = clk_prepare_enable(imxpriv->sata_ref_clk);
+-		if (ret < 0) {
+-			dev_err(dev, "pre-enable sata_ref clock err:%d\n", ret);
++		ret = imx_sata_clock_enable(dev);
++		if (ret < 0)
+ 			return ret;
+-		}
+ 
+-		regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
+-				IMX6Q_GPR13_SATA_MPLL_CLK_EN,
+-				IMX6Q_GPR13_SATA_MPLL_CLK_EN);
+ 		usleep_range(1000, 2000);
+ 	}
+ 
+@@ -290,6 +267,41 @@ static int imx_ahci_probe(struct platform_device *pdev)
+ 	ahci_dev->dma_mask = &ahci_dev->coherent_dma_mask;
+ 	ahci_dev->of_node = dev->of_node;
+ 
++	imxpriv->gpr =
++		syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
++
++	if (IS_ERR(imxpriv->gpr)) {
++		dev_err(dev, "failed to find fsl,imx6q-iomux-gpr regmap\n");
++		ret = PTR_ERR(imxpriv->gpr);
++		goto err_out;
++	}
++
++	/*
++	 * Set PHY Paremeters, two steps to configure the GPR13,
++	 * one write for rest of parameters, mask of first write
++	 * is 0x07fffffd, and the other one write for setting
++	 * the mpll_clk_en happens in imx_sata_clock_enable().
++	 */
++	regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
++			   IMX6Q_GPR13_SATA_RX_EQ_VAL_MASK |
++			   IMX6Q_GPR13_SATA_RX_LOS_LVL_MASK |
++			   IMX6Q_GPR13_SATA_RX_DPLL_MODE_MASK |
++			   IMX6Q_GPR13_SATA_SPD_MODE_MASK |
++			   IMX6Q_GPR13_SATA_MPLL_SS_EN |
++			   IMX6Q_GPR13_SATA_TX_ATTEN_MASK |
++			   IMX6Q_GPR13_SATA_TX_BOOST_MASK |
++			   IMX6Q_GPR13_SATA_TX_LVL_MASK |
++			   IMX6Q_GPR13_SATA_TX_EDGE_RATE |
++			   IMX6Q_GPR13_SATA_MPLL_CLK_EN,
++			   IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB |
++			   IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M |
++			   IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_4F |
++			   IMX6Q_GPR13_SATA_SPD_MODE_3P0G |
++			   IMX6Q_GPR13_SATA_MPLL_SS_EN |
++			   IMX6Q_GPR13_SATA_TX_ATTEN_9_16 |
++			   IMX6Q_GPR13_SATA_TX_BOOST_3_33_DB |
++			   IMX6Q_GPR13_SATA_TX_LVL_1_025_V);
++
+ 	ret = platform_device_add_resources(ahci_pdev, res, 2);
+ 	if (ret)
+ 		goto err_out;
+-- 
+1.8.4.2
+
