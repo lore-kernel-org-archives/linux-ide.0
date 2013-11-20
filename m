@@ -1,37 +1,33 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RESEND PATCH 1/6] ahci: imx: Explicitly clear
- IMX6Q_GPR13_SATA_MPLL_CLK_EN
-Date: Wed, 20 Nov 2013 10:13:09 -0500
-Message-ID: <20131120151309.GC28946@htj.dyndns.org>
-References: <1384942659-5362-1-git-send-email-marex@denx.de>
- <1384943242-8201-1-git-send-email-marex@denx.de>
- <20131120145907.GA28946@htj.dyndns.org>
- <201311201611.44120.marex@denx.de>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v2 3/4] ata: add APM X-Gene SoC 6.0Gbps SATA PHY driver
+Date: Wed, 20 Nov 2013 16:41:19 +0100
+Message-ID: <201311201641.20230.arnd@arndb.de>
+References: <1384905197-3566-1-git-send-email-lho@apm.com> <1384905197-3566-4-git-send-email-lho@apm.com> <20131120150658.GB28946@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yh0-f47.google.com ([209.85.213.47]:61554 "EHLO
-	mail-yh0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751461Ab3KTPNO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Nov 2013 10:13:14 -0500
-Received: by mail-yh0-f47.google.com with SMTP id 29so2247473yhl.6
-        for <linux-ide@vger.kernel.org>; Wed, 20 Nov 2013 07:13:14 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <201311201611.44120.marex@denx.de>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20131120150658.GB28946@htj.dyndns.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: linux-arm-kernel@lists.infradead.org
+Cc: Tejun Heo <tj@kernel.org>, Loc Ho <lho@apm.com>, devicetree@vger.kernel.org, Suman Tripathi <stripathi@apm.com>, linux-scsi@vger.kernel.org, jcm@redhat.com, linux-ide@vger.kernel.org, olof@lixom.net, Tuan Phan <tphan@apm.com>
 List-Id: linux-ide@vger.kernel.org
-To: Marek Vasut <marex@denx.de>
-Cc: linux-arm-kernel@lists.infradead.org, Shawn Guo <shawn.guo@linaro.org>, Richard Zhu <r65037@freescale.com>, Linux-IDE <linux-ide@vger.kernel.org>
 
-On Wed, Nov 20, 2013 at 04:11:43PM +0100, Marek Vasut wrote:
-> It's already done in 2/6 of the series, I hope that is OK. Otherwise I can 
-> separate this formating change from the 2/6 patch and shove it in front of this 
-> one even. Which one do you prefer please?
+On Wednesday 20 November 2013, Tejun Heo wrote:
+> On Tue, Nov 19, 2013 at 04:53:16PM -0700, Loc Ho wrote:
+> > This patch adds support for APM X-Gene SoC 6.0Gbps SATA PHY. This is the
+> > physical layer interface for the corresponding SATA host controller. This
+> > driver uses the new PHY generic framework posted by Kishon Vijay Abrahm.
+> 
+> Hmm... this is related to ahci but isn't even a libata driver and is
+> the first such driver proposed.  Are we sure drivers/ata is the best
+> home for this?  Shouldn't we create a separate directory somewhere?
+> It's confusing, at least to me, to have non-libata driver under
+> drivers/ata.
 
-Oops, sorry about missing that.  As long as the end result is correct,
-I don't mind either way.
+It needs to be in drivers/phy, which is currently being prepared for
+the next merge window and which contains the generic interface used
+in this driver.
 
-Thanks!
-
--- 
-tejun
+	Arnd
