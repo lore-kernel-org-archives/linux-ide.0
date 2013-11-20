@@ -1,147 +1,133 @@
-From: Mark Rutland <mark.rutland@arm.com>
-Subject: Re: [PATCH v2 2/4] Documentation: Add APM X-Gene SoC 6.0Gbps SATA
- PHY driver binding documentation
-Date: Wed, 20 Nov 2013 09:43:28 +0000
-Message-ID: <20131120094328.GS5914@e106331-lin.cambridge.arm.com>
-References: <1384905197-3566-1-git-send-email-lho@apm.com>
- <1384905197-3566-2-git-send-email-lho@apm.com>
- <1384905197-3566-3-git-send-email-lho@apm.com>
+From: Marek Vasut <marex@denx.de>
+Subject: Re: [PATCH 1/5] ahci: imx: Pull out the clock enable/disable calls
+Date: Wed, 20 Nov 2013 10:55:53 +0100
+Message-ID: <201311201055.53953.marex@denx.de>
+References: <1384651251-5548-1-git-send-email-marex@denx.de> <201311182123.00169.marex@denx.de> <528A90A6.3030009@boundarydevices.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: Text/Plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-Content-Disposition: inline
-In-Reply-To: <1384905197-3566-3-git-send-email-lho@apm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Loc Ho <lho@apm.com>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Suman Tripathi <stripathi@apm.com>, "arnd@arndb.de" <arnd@arndb.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "jcm@redhat.com" <jcm@redhat.com>, "tj@kernel.org" <tj@kernel.org>, "olof@lixom.net" <olof@lixom.net>, Tuan Phan <tphan@apm.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-out.m-online.net ([212.18.0.10]:58443 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752727Ab3KTJ4A (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Nov 2013 04:56:00 -0500
+In-Reply-To: <528A90A6.3030009@boundarydevices.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Eric Nelson <eric.nelson@boundarydevices.com>
+Cc: "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Richard Zhu <r65037@freescale.com>, Tejun Heo <tj@kernel.org>, Shawn Guo <shawn.guo@linaro.org>, Linux-IDE <linux-ide@vger.kernel.org>
 
-On Tue, Nov 19, 2013 at 11:53:15PM +0000, Loc Ho wrote:
-> Documentation: Add APM X-Gene SoC 6.0Gbps SATA PHY driver binding documentation
+Dear Eric Nelson,
+
+> Hi Marek,
 > 
-> Document the DTS binding for the X-Gene SoC SATA PHY driver.
+> On 11/18/2013 01:23 PM, Marek Vasut wrote:
+> > Hi Eric,
+> > 
+> >> Hi Marek,
+> >> 
+> >> On 11/16/2013 06:20 PM, Marek Vasut wrote:
+> >>> The same code for enabling and disabling SATA clock was found in
+> >>> multiple places in the driver. Implement functions that enable/disable
+> >>> the SATA clock and use them in such places instead of duplicating the
+> >>> code.
+> >>> 
+> >>> Signed-off-by: Marek Vasut <marex@denx.de>
+> >>> Cc: Shawn Guo <shawn.guo@linaro.org>
+> >>> Cc: Richard Zhu <r65037@freescale.com>
+> >>> Cc: Tejun Heo <tj@kernel.org>
+> >>> Cc: Linux-IDE <linux-ide@vger.kernel.org>
+> >>> ---
+> >>> 
+> >>>    drivers/ata/ahci_imx.c | 133
+> >>>    ++++++++++++++++++++++++++++--------------------- 1 file changed, 75
+> >>>    insertions(+), 58 deletions(-)
+> >>> 
+> >>> diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+> >>> index ae2d73f..c7ee505 100644
+> >>> --- a/drivers/ata/ahci_imx.c
+> >>> +++ b/drivers/ata/ahci_imx.c
+> >>> @@ -47,6 +47,73 @@ static int ahci_imx_hotplug;
+> >>> 
+> >>>    module_param_named(hotplug, ahci_imx_hotplug, int, 0644);
+> >>>    MODULE_PARM_DESC(hotplug, "AHCI IMX hot-plug support (0=Don't
+> >>>    support, 1=support)");
+> >>> 
+> >>> <snip>
+> >> 
+> >> I haven't traced through all of this, but if you're copying from
+> >> the Freescale 3.0.35 kernel, note that there's a bug in it, and
+> >> the 0x7FFFFFFD really wanted to be an 0x7FFFFFFF.
+> > 
+> > I'm not taking this from FSL 3.0.35, no, but thanks for pointing this
+> > out!
+> > 
+> >> The way I read this comment, the writes need to happen in two
+> >> 
+> >> steps:
+> >> 	- write everything with the PHY disabled
+> >> 	- enable the PHY
+> >> 
+> >> We had reports of stalls waiting for SATA drives to be enumerated
+> >> that were solved with this commit...
+> >> 
+> >> 	https://github.com/boundarydevices/linux-
+> > 
+> > imx6/commit/0186ea224ce6bd1cb4757
+> > 
+> >> a0f83b0090e26a021f4
+> > 
+> > [...]
+> > 
+> >>> +	regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
+> >>> +			IMX6Q_GPR13_SATA_MPLL_CLK_EN,
+> >>> +			IMX6Q_GPR13_SATA_MPLL_CLK_EN);
+> > 
+> > Isn't this snippet doing exactly what your patch does ?
 > 
-> Signed-off-by: Loc Ho <lho@apm.com>
-> Signed-off-by: Tuan Phan <tphan@apm.com>
-> Signed-off-by: Suman Tripathi <stripathi@apm.com>
-> ---
->  .../devicetree/bindings/ata/apm-xgene-phy.txt      |   61 ++++++++++++++++++++
->  1 files changed, 61 insertions(+), 0 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/ata/apm-xgene-phy.txt
+> This part is doing the "set the bit" part:
+> 	https://github.com/boundarydevices/linux-imx6/blob/boundary-
+imx_3.0.35_4.1
+> .0/arch/arm/mach-mx6/board-mx6_nitrogen6x.c#L728
 > 
-> diff --git a/Documentation/devicetree/bindings/ata/apm-xgene-phy.txt b/Documentation/devicetree/bindings/ata/apm-xgene-phy.txt
-> new file mode 100644
-> index 0000000..bbae164
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ata/apm-xgene-phy.txt
-> @@ -0,0 +1,61 @@
-> +* APM X-Gene 6.0 Gb/s SATA PHY nodes
-> +
-> +SATA PHY nodes are defined to describe on-chip Serial ATA PHY. Each SATA PHY
-> +(pair of PHY) has its own node.
-> +
-> +Required properties:
-> +- compatible		: Shall be "apm,xgene-ahci-phy" or
-> +			  "apm,xgene-ahci-phy2". The "apm,xgene-ahci-phy"
-> +			  describes an port shared with SGMII Ethernet port.
-> +			  The "apm,xgene-ahci-phy2" describes an port not
-> +			  shared with SGMII and the PLL located at another
-> +			  memory resource region.
+> The previous block isn't clearing the enable bit though:
+> 
+> +		regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
+> +				IMX6Q_GPR13_SATA_RX_EQ_VAL_MASK
+> +				| IMX6Q_GPR13_SATA_RX_LOS_LVL_MASK
+> +				| IMX6Q_GPR13_SATA_RX_DPLL_MODE_MASK
+> +				| IMX6Q_GPR13_SATA_SPD_MODE_MASK
+> +				| IMX6Q_GPR13_SATA_MPLL_SS_EN
+> +				| IMX6Q_GPR13_SATA_TX_ATTEN_MASK
+> +				| IMX6Q_GPR13_SATA_TX_BOOST_MASK
+> +				| IMX6Q_GPR13_SATA_TX_LVL_MASK
+> +				| IMX6Q_GPR13_SATA_TX_EDGE_RATE
+> +				, IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB
+> +				| IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M
+> +				| IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_4F
+> +				| IMX6Q_GPR13_SATA_SPD_MODE_3P0G
+> +				| IMX6Q_GPR13_SATA_MPLL_SS_EN
+> +				| IMX6Q_GPR13_SATA_TX_ATTEN_9_16
+> +				| IMX6Q_GPR13_SATA_TX_BOOST_3_33_DB
+> +				| IMX6Q_GPR13_SATA_TX_LVL_1_025_V);
+> 
+> The explicit clearing of bit 1 is what was necessary (and I think
+> it's what the original author was after).
+> 
+> This was a hard one to find, because it seems that it only shows
+> up on some boards, and most of the time on those boards.
+> 
+> Here are some references:
+> 	http://boundarydevices.com/freescale-ubuntu-image-with-4-0-0-
+kernel/#comme
+> nt-60464
+> http://boundarydevices.com/debian-installer-on-i-mx6-boards/#comment-76203
+> 
+> The symptom is (was) that U-Boot worked 100% of the time, but
+> the kernel failed to find the drive.
+> 
+> Using 'mm' in U-Boot to clear the bit before kernel launch also
+> allowed things to function.
 
-Is there not a better name available than "apm,xgene-ahci-phy2"?
-
-> +- reg			: First PHY memory resource
-> +			  Second separate PHY PLL clock memory resource if
-> +			  type "apm,xgene-ahci-phy2"
-
-Is ths PLL actually part of the PHY, or does it just feed the PHY?
-
-> +- #phy-cells		: Shall be 0
-> +
-> +Optional properties:
-> +- status		: Shall be "ok" if enabled or "na" if disabled. Default
-> +			  is "ok".
-
-Do not use "na", use the standard "disabled".
-
-> +- txeyetuning		: Manual control to fine tune the capture of the serial
-> +			  bit lines from the automatic calibrated position.
-> +			  Two set of 3-tuple setting for Gen1, Gen2, and Gen3.
-> +			  Range from 0 to 0x7f. Default is 0xa.
-
-If you have a property for which the name consists of multiple words,
-split the words with '-'. 
-
-What does this actually mean?
-
-What units are these values in? 
-
-What effect do those values have?
-
-> +- txeyedirection	: Eye tuning manual control direction. 0 means sample
-> +			  data earlier than the nominal sampling point. 1 means
-> +			  sample data later than the nominal sampling point.
-> +			  Two set of 3-tuple setting for Gen1, Gen2, and Gen3.
-> +			  Default is 0x0.
-
-Likewise, use '-'.
-
-s/than/then/ ?
-
-> +- txboostgain		: Frequency boost and DC gain control. Two set of
-> +			  3-tuple setting for Gen1, Gen2, and Gen3. Range is
-> +			  between 0 to 0x1f. Default is 0x3.
-
-Use '-'.
-
-What units are these values in?
-
-> +- txspeed		: Tx operating speed. Two set of 3-tuple for
-> +			  Gen1 (0x1), Gen2 (0x3), and Gen3 (0x7). Default is
-> +			  0x7.
-
-
-Units?
-
-> +
-> +NOTE: PHY override parameters are board specific setting.
-> +
-> +Example:
-> +		sataphy0: sataphy@1f210000 {
-> +			compatible = "apm,xgene-ahci-phy";
-> +			reg = <0x0 0x1f210000 0x0 0x10000>;
-> +			#phy-cells = <0>;
-> +			status = "na";
-
-Please eradicate all instances of "na".
-
-> +		};
-> +
-> +		sataphy1: sataphy@1f220000 {
-> +			compatible = "apm,xgene-ahci-phy";
-> +			reg = <0x0 0x1f220000 0x0 0x10000>;
-> +			#phy-cells = <0>;
-> +			status = "ok";
-> +		};
-> +
-> +		sataphy2: sataphy@1f230000 {
-> +			compatible = "apm,xgene-ahci-phy2";
-> +			reg = <0x0 0x1f230000 0x0 0x10000
-> +			       0x0 0x1f2d0000 0x0 0x10000 >;
-
-Nit: bracket list entries individually, and don't apply random spacing:
-
-reg = <0x0 0x1f230000 0x0 0x10000>,
-      <0x0 0x1f2d0000 0x0 0x10000>;
-
-Thanks,
-Mark.
+Ah, now I see it. I will cook a patch, thanks!
