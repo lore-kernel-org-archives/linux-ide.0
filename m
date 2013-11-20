@@ -1,105 +1,358 @@
 From: Richard Zhu <Hong-Xing.Zhu@freescale.com>
-Subject: RE: [PATCH 1/5] ahci: imx: Pull out the clock enable/disable calls
-Date: Wed, 20 Nov 2013 04:29:47 +0000
-Message-ID: <0E83723C55F66F43A6041464FE31119D4462D5@039-SN2MPN1-011.039d.mgd.msft.net>
-References: <1384651251-5548-1-git-send-email-marex@denx.de>
- <528A60BB.4010802@boundarydevices.com> <201311182123.00169.marex@denx.de>
- <528A90A6.3030009@boundarydevices.com>
+Subject: RE: [PATCH V3 2/5] ahci: imx: Add i.MX53 support
+Date: Wed, 20 Nov 2013 07:34:49 +0000
+Message-ID: <0E83723C55F66F43A6041464FE31119D4464A7@039-SN2MPN1-011.039d.mgd.msft.net>
+References: <1384785043-5027-1-git-send-email-marex@denx.de>
+ <1384785043-5027-2-git-send-email-marex@denx.de>
+ <20131119084814.GB18481@S2101-09.ap.freescale.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from co9ehsobe002.messaging.microsoft.com ([207.46.163.25]:23313
-	"EHLO co9outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751787Ab3KTE3v (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Nov 2013 23:29:51 -0500
-In-Reply-To: <528A90A6.3030009@boundarydevices.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <20131119084814.GB18481@S2101-09.ap.freescale.net>
 Content-Language: en-US
-Sender: linux-ide-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Shawn Guo <shawn.guo@linaro.org>, Marek Vasut <marex@denx.de>
+Cc: Tejun Heo <tj@kernel.org>, Linux-IDE <linux-ide@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
 List-Id: linux-ide@vger.kernel.org
-To: Eric Nelson <eric.nelson@boundarydevices.com>, Marek Vasut <marex@denx.de>
-Cc: "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Tejun Heo <tj@kernel.org>, Shawn Guo <shawn.guo@linaro.org>, Linux-IDE <linux-ide@vger.kernel.org>
 
-SGkgTmVsc29uOg0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IGxpbnV4
-LWlkZS1vd25lckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC1pZGUtb3duZXJAdmdlci5r
-ZXJuZWwub3JnXQ0KPiBPbiBCZWhhbGYgT2YgRXJpYyBOZWxzb24NCj4gU2VudDogVHVlc2RheSwg
-Tm92ZW1iZXIgMTksIDIwMTMgNjoxMiBBTQ0KPiBUbzogTWFyZWsgVmFzdXQNCj4gQ2M6IGxpbnV4
-LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZzsgWmh1IFJpY2hhcmQtUjY1MDM3OyBUZWp1
-biBIZW87IFNoYXduDQo+IEd1bzsgTGludXgtSURFDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMS81
-XSBhaGNpOiBpbXg6IFB1bGwgb3V0IHRoZSBjbG9jayBlbmFibGUvZGlzYWJsZSBjYWxscw0KPiAN
-Cj4gSGkgTWFyZWssDQo+IA0KPiBPbiAxMS8xOC8yMDEzIDAxOjIzIFBNLCBNYXJlayBWYXN1dCB3
-cm90ZToNCj4gPiBIaSBFcmljLA0KPiA+DQo+ID4+IEhpIE1hcmVrLA0KPiA+Pg0KPiA+PiBPbiAx
-MS8xNi8yMDEzIDA2OjIwIFBNLCBNYXJlayBWYXN1dCB3cm90ZToNCj4gPj4+IFRoZSBzYW1lIGNv
-ZGUgZm9yIGVuYWJsaW5nIGFuZCBkaXNhYmxpbmcgU0FUQSBjbG9jayB3YXMgZm91bmQgaW4NCj4g
-Pj4+IG11bHRpcGxlIHBsYWNlcyBpbiB0aGUgZHJpdmVyLiBJbXBsZW1lbnQgZnVuY3Rpb25zIHRo
-YXQNCj4gPj4+IGVuYWJsZS9kaXNhYmxlIHRoZSBTQVRBIGNsb2NrIGFuZCB1c2UgdGhlbSBpbiBz
-dWNoIHBsYWNlcyBpbnN0ZWFkIG9mDQo+IGR1cGxpY2F0aW5nIHRoZSBjb2RlLg0KPiA+Pj4NCj4g
-Pj4+IFNpZ25lZC1vZmYtYnk6IE1hcmVrIFZhc3V0IDxtYXJleEBkZW54LmRlPg0KPiA+Pj4gQ2M6
-IFNoYXduIEd1byA8c2hhd24uZ3VvQGxpbmFyby5vcmc+DQo+ID4+PiBDYzogUmljaGFyZCBaaHUg
-PHI2NTAzN0BmcmVlc2NhbGUuY29tPg0KPiA+Pj4gQ2M6IFRlanVuIEhlbyA8dGpAa2VybmVsLm9y
-Zz4NCj4gPj4+IENjOiBMaW51eC1JREUgPGxpbnV4LWlkZUB2Z2VyLmtlcm5lbC5vcmc+DQo+ID4+
-PiAtLS0NCj4gPj4+DQo+ID4+PiAgICBkcml2ZXJzL2F0YS9haGNpX2lteC5jIHwgMTMzDQo+ID4+
-PiAgICArKysrKysrKysrKysrKysrKysrKysrKysrKysrLS0tLS0tLS0tLS0tLS0tLS0tLS0tIDEg
-ZmlsZSBjaGFuZ2VkLCA3NQ0KPiA+Pj4gICAgaW5zZXJ0aW9ucygrKSwgNTggZGVsZXRpb25zKC0p
-DQo+ID4+Pg0KPiA+Pj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvYXRhL2FoY2lfaW14LmMgYi9kcml2
-ZXJzL2F0YS9haGNpX2lteC5jIGluZGV4DQo+ID4+PiBhZTJkNzNmLi5jN2VlNTA1IDEwMDY0NA0K
-PiA+Pj4gLS0tIGEvZHJpdmVycy9hdGEvYWhjaV9pbXguYw0KPiA+Pj4gKysrIGIvZHJpdmVycy9h
-dGEvYWhjaV9pbXguYw0KPiA+Pj4gQEAgLTQ3LDYgKzQ3LDczIEBAIHN0YXRpYyBpbnQgYWhjaV9p
-bXhfaG90cGx1ZzsNCj4gPj4+DQo+ID4+PiAgICBtb2R1bGVfcGFyYW1fbmFtZWQoaG90cGx1Zywg
-YWhjaV9pbXhfaG90cGx1ZywgaW50LCAwNjQ0KTsNCj4gPj4+ICAgIE1PRFVMRV9QQVJNX0RFU0Mo
-aG90cGx1ZywgIkFIQ0kgSU1YIGhvdC1wbHVnIHN1cHBvcnQgKDA9RG9uJ3Qgc3VwcG9ydCwNCj4g
-Pj4+ICAgIDE9c3VwcG9ydCkiKTsNCj4gPj4+DQo+ID4+PiA8c25pcD4NCj4gPj4NCj4gPj4gSSBo
-YXZlbid0IHRyYWNlZCB0aHJvdWdoIGFsbCBvZiB0aGlzLCBidXQgaWYgeW91J3JlIGNvcHlpbmcg
-ZnJvbSB0aGUNCj4gPj4gRnJlZXNjYWxlIDMuMC4zNSBrZXJuZWwsIG5vdGUgdGhhdCB0aGVyZSdz
-IGEgYnVnIGluIGl0LCBhbmQgdGhlDQo+ID4+IDB4N0ZGRkZGRkQgcmVhbGx5IHdhbnRlZCB0byBi
-ZSBhbiAweDdGRkZGRkZGLg0KPiA+DQo+ID4gSSdtIG5vdCB0YWtpbmcgdGhpcyBmcm9tIEZTTCAz
-LjAuMzUsIG5vLCBidXQgdGhhbmtzIGZvciBwb2ludGluZyB0aGlzIG91dCENCj4gPg0KPiA+PiBU
-aGUgd2F5IEkgcmVhZCB0aGlzIGNvbW1lbnQsIHRoZSB3cml0ZXMgbmVlZCB0byBoYXBwZW4gaW4g
-dHdvDQo+ID4+IHN0ZXBzOg0KPiA+PiAJLSB3cml0ZSBldmVyeXRoaW5nIHdpdGggdGhlIFBIWSBk
-aXNhYmxlZA0KPiA+PiAJLSBlbmFibGUgdGhlIFBIWQ0KPiA+Pg0KPiA+PiBXZSBoYWQgcmVwb3J0
-cyBvZiBzdGFsbHMgd2FpdGluZyBmb3IgU0FUQSBkcml2ZXMgdG8gYmUgZW51bWVyYXRlZA0KPiA+
-PiB0aGF0IHdlcmUgc29sdmVkIHdpdGggdGhpcyBjb21taXQuLi4NCj4gPj4NCj4gPj4gCWh0dHBz
-Oi8vZ2l0aHViLmNvbS9ib3VuZGFyeWRldmljZXMvbGludXgtDQo+ID4gaW14Ni9jb21taXQvMDE4
-NmVhMjI0Y2U2YmQxY2I0NzU3DQo+ID4+IGEwZjgzYjAwOTBlMjZhMDIxZjQNCj4gPg0KPiA+IFsu
-Li5dDQo+ID4NCj4gPj4+ICsJcmVnbWFwX3VwZGF0ZV9iaXRzKGlteHByaXYtPmdwciwgSU9NVVhD
-X0dQUjEzLA0KPiA+Pj4gKwkJCUlNWDZRX0dQUjEzX1NBVEFfTVBMTF9DTEtfRU4sDQo+ID4+PiAr
-CQkJSU1YNlFfR1BSMTNfU0FUQV9NUExMX0NMS19FTik7DQo+ID4NCj4gPiBJc24ndCB0aGlzIHNu
-aXBwZXQgZG9pbmcgZXhhY3RseSB3aGF0IHlvdXIgcGF0Y2ggZG9lcyA/DQo+ID4NCj4gVGhpcyBw
-YXJ0IGlzIGRvaW5nIHRoZSAic2V0IHRoZSBiaXQiIHBhcnQ6DQo+IAlodHRwczovL2dpdGh1Yi5j
-b20vYm91bmRhcnlkZXZpY2VzL2xpbnV4LWlteDYvYmxvYi9ib3VuZGFyeS0NCj4gaW14XzMuMC4z
-NV80LjEuMC9hcmNoL2FybS9tYWNoLW14Ni9ib2FyZC1teDZfbml0cm9nZW42eC5jI0w3MjgNCj4g
-DQo+IFRoZSBwcmV2aW91cyBibG9jayBpc24ndCBjbGVhcmluZyB0aGUgZW5hYmxlIGJpdCB0aG91
-Z2g6DQo+IA0KPiArCQlyZWdtYXBfdXBkYXRlX2JpdHMoaW14cHJpdi0+Z3ByLCBJT01VWENfR1BS
-MTMsDQo+ICsJCQkJSU1YNlFfR1BSMTNfU0FUQV9SWF9FUV9WQUxfTUFTSw0KPiArCQkJCXwgSU1Y
-NlFfR1BSMTNfU0FUQV9SWF9MT1NfTFZMX01BU0sNCj4gKwkJCQl8IElNWDZRX0dQUjEzX1NBVEFf
-UlhfRFBMTF9NT0RFX01BU0sNCj4gKwkJCQl8IElNWDZRX0dQUjEzX1NBVEFfU1BEX01PREVfTUFT
-Sw0KPiArCQkJCXwgSU1YNlFfR1BSMTNfU0FUQV9NUExMX1NTX0VODQo+ICsJCQkJfCBJTVg2UV9H
-UFIxM19TQVRBX1RYX0FUVEVOX01BU0sNCj4gKwkJCQl8IElNWDZRX0dQUjEzX1NBVEFfVFhfQk9P
-U1RfTUFTSw0KPiArCQkJCXwgSU1YNlFfR1BSMTNfU0FUQV9UWF9MVkxfTUFTSw0KPiArCQkJCXwg
-SU1YNlFfR1BSMTNfU0FUQV9UWF9FREdFX1JBVEUNCj4gKwkJCQksIElNWDZRX0dQUjEzX1NBVEFf
-UlhfRVFfVkFMXzNfMF9EQg0KPiArCQkJCXwgSU1YNlFfR1BSMTNfU0FUQV9SWF9MT1NfTFZMX1NB
-VEEyTQ0KPiArCQkJCXwgSU1YNlFfR1BSMTNfU0FUQV9SWF9EUExMX01PREVfMlBfNEYNCj4gKwkJ
-CQl8IElNWDZRX0dQUjEzX1NBVEFfU1BEX01PREVfM1AwRw0KPiArCQkJCXwgSU1YNlFfR1BSMTNf
-U0FUQV9NUExMX1NTX0VODQo+ICsJCQkJfCBJTVg2UV9HUFIxM19TQVRBX1RYX0FUVEVOXzlfMTYN
-Cj4gKwkJCQl8IElNWDZRX0dQUjEzX1NBVEFfVFhfQk9PU1RfM18zM19EQg0KPiArCQkJCXwgSU1Y
-NlFfR1BSMTNfU0FUQV9UWF9MVkxfMV8wMjVfVik7DQo+IA0KPiBUaGUgZXhwbGljaXQgY2xlYXJp
-bmcgb2YgYml0IDEgaXMgd2hhdCB3YXMgbmVjZXNzYXJ5IChhbmQgSSB0aGluayBpdCdzIHdoYXQN
-Cj4gdGhlIG9yaWdpbmFsIGF1dGhvciB3YXMgYWZ0ZXIpLg0KPiANCj4gVGhpcyB3YXMgYSBoYXJk
-IG9uZSB0byBmaW5kLCBiZWNhdXNlIGl0IHNlZW1zIHRoYXQgaXQgb25seSBzaG93cyB1cCBvbiBz
-b21lDQo+IGJvYXJkcywgYW5kIG1vc3Qgb2YgdGhlIHRpbWUgb24gdGhvc2UgYm9hcmRzLg0KPiAN
-Cj4gSGVyZSBhcmUgc29tZSByZWZlcmVuY2VzOg0KPiAJaHR0cDovL2JvdW5kYXJ5ZGV2aWNlcy5j
-b20vZnJlZXNjYWxlLXVidW50dS1pbWFnZS13aXRoLTQtMC0wLQ0KPiBrZXJuZWwvI2NvbW1lbnQt
-NjA0NjQNCj4gCWh0dHA6Ly9ib3VuZGFyeWRldmljZXMuY29tL2RlYmlhbi1pbnN0YWxsZXItb24t
-aS1teDYtYm9hcmRzLyNjb21tZW50LQ0KPiA3NjIwMw0KPiANCj4gVGhlIHN5bXB0b20gaXMgKHdh
-cykgdGhhdCBVLUJvb3Qgd29ya2VkIDEwMCUgb2YgdGhlIHRpbWUsIGJ1dCB0aGUga2VybmVsDQo+
-IGZhaWxlZCB0byBmaW5kIHRoZSBkcml2ZS4NCj4gDQo+IFVzaW5nICdtbScgaW4gVS1Cb290IHRv
-IGNsZWFyIHRoZSBiaXQgYmVmb3JlIGtlcm5lbCBsYXVuY2ggYWxzbyBhbGxvd2VkIHRoaW5ncw0K
-PiB0byBmdW5jdGlvbi4NCj4gDQpbUmljaGFyZF0gQWdyZWUgdG8gZXhwbGljaXQgY2xlYXJpbmcg
-b2YgYml0MSwgcmVmZXIgdG8gdGhlIGNoYXB0ZXIgIlBvd2VyLVVwIFNlcXVlbmNlcyIgb2YgDQoi
-U2VyaWFsIEFkdmFuY2VkIFRlY2hub2xvZ3kgQXR0YWNobWVudCBQSFkgKFNBVEEgUEhZKSIgaW4g
-aU1YNiBSTSBkb2MuDQoNCj4gUmVnYXJkcywNCj4gDQo+IA0KPiBFcmljDQo+IC0tDQo+IFRvIHVu
-c3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51
-eC1pZGUiIGluIHRoZQ0KPiBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJu
-ZWwub3JnIE1vcmUgbWFqb3Jkb21vIGluZm8gYXQNCj4gaHR0cDovL3ZnZXIua2VybmVsLm9yZy9t
-YWpvcmRvbW8taW5mby5odG1sDQoNCkJlc3QgUmVnYXJkcw0KUmljaGFyZCBaaHUNCg0K
+Hi Marek:
 
+> -----Original Message-----
+> From: Shawn Guo [mailto:shawn.guo@linaro.org]
+> Sent: Tuesday, November 19, 2013 4:48 PM
+> To: Marek Vasut
+> Cc: linux-arm-kernel@lists.infradead.org; Zhu Richard-R65037; Tejun Heo;
+> Linux-IDE
+> Subject: Re: [PATCH V3 2/5] ahci: imx: Add i.MX53 support
+> 
+> On Mon, Nov 18, 2013 at 03:30:40PM +0100, Marek Vasut wrote:
+> > Add minor adjustments to support i.MX53 SATA port as well as i.MX6Q one.
+> > The difference here is mostly the clock which need to be enabled and
+> > also the lack of need of programming IOMUXC registers on i.MX53. All
+> > of which is well handles in the clock enable/disable functions. Note
+> > that this patch also cleans up the names of the common functions, so
+> > they don't read imx6q_* but imx_* instead.
+> >
+> > Signed-off-by: Marek Vasut <marex@denx.de>
+> > Cc: Shawn Guo <shawn.guo@linaro.org>
+> > Cc: Richard Zhu <r65037@freescale.com>
+> > Cc: Tejun Heo <tj@kernel.org>
+> > Cc: Linux-IDE <linux-ide@vger.kernel.org>
+> > ---
+> >  drivers/ata/ahci_imx.c | 191
+> > +++++++++++++++++++++++++++++++------------------
+> >  1 file changed, 121 insertions(+), 70 deletions(-)
+> >
+> > V2: Rebase this patch to be coherent with formating change in 1/5 .
+> > V3: Rebase this patch to be coherent with change in 1/5 .
+> >
+> > diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c index
+> > b36f96c..8e4b4a9 100644
+> > --- a/drivers/ata/ahci_imx.c
+> > +++ b/drivers/ata/ahci_imx.c
+> > @@ -34,10 +34,23 @@ enum {
+> >  	HOST_TIMER1MS = 0xe0,			/* Timer 1-ms */
+> >  };
+> >
+> > +enum ahci_imx_type {
+> > +	AHCI_IMX53,
+> > +	AHCI_IMX6Q,
+> > +};
+> > +
+> >  struct imx_ahci_priv {
+> >  	struct platform_device *ahci_pdev;
+> > +	enum ahci_imx_type type;
+> > +
+> > +	/* i.MX53 clock */
+> > +	struct clk *sata_gate_clk;
+> > +	struct clk *sata_phy_clk;
+> > +	/* i.MX6Q clock */
+> >  	struct clk *sata_ref_clk;
+> 
+> I think sata_ref_clk on imx6q and sata_phy_clk on imx53 are both the clock for
+> SATA PHY, so they are the same clock?
+> 
+> Shawn
+[Richard] They are the same clock used by sata phy.
+> 
+> > +	/* Common clock */
+> >  	struct clk *ahb_clk;
+> > +
+> >  	struct regmap *gpr;
+> >  	bool no_device;
+> >  	bool first_time;
+> > @@ -52,20 +65,32 @@ static int imx_sata_clock_enable(struct device *dev)
+> >  	struct imx_ahci_priv *imxpriv = dev_get_drvdata(dev->parent);
+> >  	int ret;
+> >
+> > -	ret = clk_prepare_enable(imxpriv->sata_ref_clk);
+> > -	if (ret < 0) {
+> > -		dev_err(dev, "prepare-enable sata_ref clock err:%d\n", ret);
+> > -		return ret;
+> > -	}
+> > +	if (imxpriv->type == AHCI_IMX53) {
+> > +		ret = clk_prepare_enable(imxpriv->sata_gate_clk);
+> > +		if (ret < 0) {
+> > +			dev_err(dev, "prepare-enable sata_gate clock err:%d\n",
+> > +				ret);
+> > +			return ret;
+> > +		}
+> >
+> > -	regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
+> > -			   IMX6Q_GPR13_SATA_MPLL_CLK_EN,
+> > -			   IMX6Q_GPR13_SATA_MPLL_CLK_EN);
+> > +		ret = clk_prepare_enable(imxpriv->sata_phy_clk);
+> > +		if (ret < 0) {
+> > +			clk_disable_unprepare(imxpriv->sata_gate_clk);
+> > +			dev_err(dev, "prepare-enable sata_phy clock err:%d\n",
+> > +				ret);
+> > +			return ret;
+> > +		}
+> > +	} else if (imxpriv->type == AHCI_IMX6Q) {
+> > +		ret = clk_prepare_enable(imxpriv->sata_ref_clk);
+> > +		if (ret < 0) {
+> > +			dev_err(dev, "prepare-enable sata_ref clock err:%d\n",
+> > +				ret);
+> > +			return ret;
+> > +		}
+> >
+> > -	ret = clk_prepare_enable(imxpriv->sata_ref_clk);
+> > -	if (ret < 0) {
+> > -		dev_err(dev, "prepare-enable sata_ref clock err:%d\n", ret);
+> > -		return ret;
+> > +		regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
+> > +				   IMX6Q_GPR13_SATA_MPLL_CLK_EN,
+> > +				   IMX6Q_GPR13_SATA_MPLL_CLK_EN);
+> >  	}
+> >
+> >  	return 0;
+> > @@ -75,10 +100,15 @@ static void imx_sata_clock_disable(struct device
+> > *dev)  {
+> >  	struct imx_ahci_priv *imxpriv = dev_get_drvdata(dev->parent);
+> >
+> > -	regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
+> > -			   IMX6Q_GPR13_SATA_MPLL_CLK_EN,
+> > -			   !IMX6Q_GPR13_SATA_MPLL_CLK_EN);
+> > -	clk_disable_unprepare(imxpriv->sata_ref_clk);
+> > +	if (imxpriv->type == AHCI_IMX53) {
+> > +		clk_disable_unprepare(imxpriv->sata_phy_clk);
+> > +		clk_disable_unprepare(imxpriv->sata_gate_clk);
+> > +	} else if (imxpriv->type == AHCI_IMX6Q) {
+> > +		regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
+> > +				   IMX6Q_GPR13_SATA_MPLL_CLK_EN,
+> > +				   !IMX6Q_GPR13_SATA_MPLL_CLK_EN);
+> > +		clk_disable_unprepare(imxpriv->sata_ref_clk);
+> > +	}
+> >  }
+> >
+> >  static void ahci_imx_error_handler(struct ata_port *ap) @@ -122,7
+> > +152,7 @@ static const struct ata_port_info ahci_imx_port_info = {
+> >  	.port_ops	= &ahci_imx_ops,
+> >  };
+> >
+> > -static int imx6q_sata_init(struct device *dev, void __iomem *mmio)
+> > +static int imx_sata_init(struct device *dev, void __iomem *mmio)
+> >  {
+> >  	int ret = 0;
+> >  	unsigned int reg_val;
+> > @@ -158,7 +188,7 @@ static int imx6q_sata_init(struct device *dev, void
+> __iomem *mmio)
+> >  	return 0;
+> >  }
+> >
+> > -static void imx6q_sata_exit(struct device *dev)
+> > +static void imx_sata_exit(struct device *dev)
+> >  {
+> >  	imx_sata_clock_disable(dev);
+> >  }
+> > @@ -193,16 +223,18 @@ static int imx_ahci_resume(struct device *dev)
+> >  	return 0;
+> >  }
+> >
+> > -static struct ahci_platform_data imx6q_sata_pdata = {
+> > -	.init = imx6q_sata_init,
+> > -	.exit = imx6q_sata_exit,
+> > -	.ata_port_info = &ahci_imx_port_info,
+> > -	.suspend = imx_ahci_suspend,
+> > -	.resume = imx_ahci_resume,
+> > +static struct ahci_platform_data imx_sata_pdata = {
+> > +	.init		= imx_sata_init,
+> > +	.exit		= imx_sata_exit,
+> > +	.ata_port_info	= &ahci_imx_port_info,
+> > +	.suspend	= imx_ahci_suspend,
+> > +	.resume		= imx_ahci_resume,
+> > +
+> >  };
+> >
+> >  static const struct of_device_id imx_ahci_of_match[] = {
+> > -	{ .compatible = "fsl,imx6q-ahci", .data = &imx6q_sata_pdata},
+> > +	{ .compatible = "fsl,imx53-ahci", .data = (void *)AHCI_IMX53 },
+> > +	{ .compatible = "fsl,imx6q-ahci", .data = (void *)AHCI_IMX6Q },
+> >  	{},
+> >  };
+> >  MODULE_DEVICE_TABLE(of, imx_ahci_of_match); @@ -212,12 +244,20 @@
+> > static int imx_ahci_probe(struct platform_device *pdev)
+> >  	struct device *dev = &pdev->dev;
+> >  	struct resource *mem, *irq, res[2];
+> >  	const struct of_device_id *of_id;
+> > +	enum ahci_imx_type type;
+> >  	const struct ahci_platform_data *pdata = NULL;
+> >  	struct imx_ahci_priv *imxpriv;
+> >  	struct device *ahci_dev;
+> >  	struct platform_device *ahci_pdev;
+> >  	int ret;
+> >
+> > +	of_id = of_match_device(imx_ahci_of_match, dev);
+> > +	if (!of_id)
+> > +		return -EINVAL;
+> > +
+> > +	type = (enum ahci_imx_type)of_id->data;
+> > +	pdata = &imx_sata_pdata;
+> > +
+> >  	imxpriv = devm_kzalloc(dev, sizeof(*imxpriv), GFP_KERNEL);
+> >  	if (!imxpriv) {
+> >  		dev_err(dev, "can't alloc ahci_host_priv\n"); @@ -233,6 +273,8 @@
+> > static int imx_ahci_probe(struct platform_device *pdev)
+> >
+> >  	imxpriv->no_device = false;
+> >  	imxpriv->first_time = true;
+> > +	imxpriv->type = type;
+> > +
+> >  	imxpriv->ahb_clk = devm_clk_get(dev, "ahb");
+> >  	if (IS_ERR(imxpriv->ahb_clk)) {
+> >  		dev_err(dev, "can't get ahb clock.\n"); @@ -240,24 +282,32 @@
+> > static int imx_ahci_probe(struct platform_device *pdev)
+> >  		goto err_out;
+> >  	}
+> >
+> > -	imxpriv->sata_ref_clk = devm_clk_get(dev, "sata_ref");
+> > -	if (IS_ERR(imxpriv->sata_ref_clk)) {
+> > -		dev_err(dev, "can't get sata_ref clock.\n");
+> > -		ret = PTR_ERR(imxpriv->sata_ref_clk);
+> > -		goto err_out;
+> > +	if (type == AHCI_IMX53) {
+> > +		imxpriv->sata_gate_clk = devm_clk_get(dev, "sata_gate");
+> > +		if (IS_ERR(imxpriv->sata_gate_clk)) {
+> > +			dev_err(dev, "can't get sata_gate clock.\n");
+> > +			ret = PTR_ERR(imxpriv->sata_gate_clk);
+> > +			goto err_out;
+> > +		}
+> > +
+> > +		imxpriv->sata_phy_clk = devm_clk_get(dev, "sata_phy");
+> > +		if (IS_ERR(imxpriv->sata_phy_clk)) {
+> > +			dev_err(dev, "can't get sata_phy clock.\n");
+> > +			ret = PTR_ERR(imxpriv->sata_phy_clk);
+> > +			goto err_out;
+> > +		}
+> > +	} else if (type == AHCI_IMX6Q) {
+> > +		imxpriv->sata_ref_clk = devm_clk_get(dev, "sata_ref");
+> > +		if (IS_ERR(imxpriv->sata_ref_clk)) {
+> > +			dev_err(dev, "can't get sata_ref clock.\n");
+> > +			ret = PTR_ERR(imxpriv->sata_ref_clk);
+> > +			goto err_out;
+> > +		}
+> >  	}
+> >
+> >  	imxpriv->ahci_pdev = ahci_pdev;
+> >  	platform_set_drvdata(pdev, imxpriv);
+> >
+> > -	of_id = of_match_device(imx_ahci_of_match, dev);
+> > -	if (of_id) {
+> > -		pdata = of_id->data;
+> > -	} else {
+> > -		ret = -EINVAL;
+> > -		goto err_out;
+> > -	}
+> > -
+> >  	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+> >  	irq = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
+> >  	if (!mem || !irq) {
+> > @@ -273,40 +323,41 @@ static int imx_ahci_probe(struct platform_device *pdev)
+> >  	ahci_dev->dma_mask = &ahci_dev->coherent_dma_mask;
+> >  	ahci_dev->of_node = dev->of_node;
+> >
+> > -	imxpriv->gpr =
+> > -		syscon_regmap_lookup_by_compatible("fsl,imx6q-iomuxc-gpr");
+> > -
+> > -	if (IS_ERR(imxpriv->gpr)) {
+> > -		dev_err(dev, "failed to find fsl,imx6q-iomux-gpr regmap\n");
+> > -		ret = PTR_ERR(imxpriv->gpr);
+> > -		goto err_out;
+> > +	if (type == AHCI_IMX6Q) {
+> > +		imxpriv->gpr = syscon_regmap_lookup_by_compatible(
+> > +							"fsl,imx6q-iomuxc-gpr");
+> > +		if (IS_ERR(imxpriv->gpr)) {
+> > +			dev_err(dev,
+> > +				"failed to find fsl,imx6q-iomux-gpr regmap\n");
+> > +			return PTR_ERR(imxpriv->gpr);
+> > +		}
+> > +
+> > +		/*
+> > +		 * Set PHY Paremeters, two steps to configure the GPR13,
+> > +		 * one write for rest of parameters, mask of first write
+> > +		 * is 0x07fffffd, and the other one write for setting
+> > +		 * the mpll_clk_en happens in imx_sata_clock_enable().
+> > +		 */
+> > +		regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
+> > +				   IMX6Q_GPR13_SATA_RX_EQ_VAL_MASK |
+> > +				   IMX6Q_GPR13_SATA_RX_LOS_LVL_MASK |
+> > +				   IMX6Q_GPR13_SATA_RX_DPLL_MODE_MASK |
+> > +				   IMX6Q_GPR13_SATA_SPD_MODE_MASK |
+> > +				   IMX6Q_GPR13_SATA_MPLL_SS_EN |
+> > +				   IMX6Q_GPR13_SATA_TX_ATTEN_MASK |
+> > +				   IMX6Q_GPR13_SATA_TX_BOOST_MASK |
+> > +				   IMX6Q_GPR13_SATA_TX_LVL_MASK |
+> > +				   IMX6Q_GPR13_SATA_TX_EDGE_RATE,
+> > +				   IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB |
+> > +				   IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M |
+> > +				   IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_4F |
+> > +				   IMX6Q_GPR13_SATA_SPD_MODE_3P0G |
+> > +				   IMX6Q_GPR13_SATA_MPLL_SS_EN |
+> > +				   IMX6Q_GPR13_SATA_TX_ATTEN_9_16 |
+> > +				   IMX6Q_GPR13_SATA_TX_BOOST_3_33_DB |
+> > +				   IMX6Q_GPR13_SATA_TX_LVL_1_025_V);
+> >  	}
+> >
+> > -	/*
+> > -	 * Set PHY Paremeters, two steps to configure the GPR13,
+> > -	 * one write for rest of parameters, mask of first write
+> > -	 * is 0x07fffffd, and the other one write for setting
+> > -	 * the mpll_clk_en happens in imx_sata_clock_enable().
+> > -	 */
+> > -	regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
+> > -			   IMX6Q_GPR13_SATA_RX_EQ_VAL_MASK |
+> > -			   IMX6Q_GPR13_SATA_RX_LOS_LVL_MASK |
+> > -			   IMX6Q_GPR13_SATA_RX_DPLL_MODE_MASK |
+> > -			   IMX6Q_GPR13_SATA_SPD_MODE_MASK |
+> > -			   IMX6Q_GPR13_SATA_MPLL_SS_EN |
+> > -			   IMX6Q_GPR13_SATA_TX_ATTEN_MASK |
+> > -			   IMX6Q_GPR13_SATA_TX_BOOST_MASK |
+> > -			   IMX6Q_GPR13_SATA_TX_LVL_MASK |
+> > -			   IMX6Q_GPR13_SATA_TX_EDGE_RATE,
+> > -			   IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB |
+> > -			   IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M |
+> > -			   IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_4F |
+> > -			   IMX6Q_GPR13_SATA_SPD_MODE_3P0G |
+> > -			   IMX6Q_GPR13_SATA_MPLL_SS_EN |
+> > -			   IMX6Q_GPR13_SATA_TX_ATTEN_9_16 |
+> > -			   IMX6Q_GPR13_SATA_TX_BOOST_3_33_DB |
+> > -			   IMX6Q_GPR13_SATA_TX_LVL_1_025_V);
+> > -
+> >  	ret = platform_device_add_resources(ahci_pdev, res, 2);
+> >  	if (ret)
+> >  		goto err_out;
+> > --
+> > 1.8.4.2
+> >
+
+Best Regards
+Richard Zhu
