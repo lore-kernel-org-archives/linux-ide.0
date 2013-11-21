@@ -1,55 +1,65 @@
-From: Aaron Lu <aaron.lwe@gmail.com>
-Subject: Re: [PATCH 3/4] ata: Fix acpi_bus_get_device() return value check
-Date: Thu, 21 Nov 2013 16:30:25 +0800
-Message-ID: <528DC4A1.9070702@gmail.com>
-References: <1384939706-6292-1-git-send-email-wangyijing@huawei.com> <1384939706-6292-4-git-send-email-wangyijing@huawei.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v4 2/4] Documentation:: Add documentation for APM X-Gene
+ SoC SATA host controller DTS binding
+Date: Thu, 21 Nov 2013 13:16:03 +0100
+Message-ID: <201311211316.03647.arnd@arndb.de>
+References: <1385014298-15700-1-git-send-email-lho@apm.com>
+ <1385014298-15700-2-git-send-email-lho@apm.com>
+ <1385014298-15700-3-git-send-email-lho@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:54225 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750902Ab3KUIan (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Nov 2013 03:30:43 -0500
-Received: by mail-pa0-f44.google.com with SMTP id fa1so2353288pad.17
-        for <linux-ide@vger.kernel.org>; Thu, 21 Nov 2013 00:30:43 -0800 (PST)
-In-Reply-To: <1384939706-6292-4-git-send-email-wangyijing@huawei.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <1385014298-15700-3-git-send-email-lho@apm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Loc Ho <lho@apm.com>
+Cc: devicetree@vger.kernel.org, Suman Tripathi <stripathi@apm.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jcm@redhat.com, tj@kernel.org, olof@lixom.net, Tuan Phan <tphan@apm.com>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
-To: Yijing Wang <wangyijing@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Jean Delvare <khali@linux-fr.org>, Guenter Roeck <linux@roeck-us.net>, Hanjun Guo <guohanjun@huawei.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 
-On 11/20/2013 05:28 PM, Yijing Wang wrote:
-> Since acpi_bus_get_device() returns plain int and not acpi_status,
-> ACPI_FAILURE() should not be used for checking its return value.  Fix
-> that.
-> 
-> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: linux-ide@vger.kernel.org
+On Thursday 21 November 2013, Loc Ho wrote:
+> +SATA host controller nodes are defined to describe on-chip Serial ATA
+> +controllers. Each SATA controller (pair of ports) have its own node.
+> +
+> +Required properties:
+> +- compatible		: Shall be "apm,xgene-ahci"
+> +- reg			: First memory resource shall be the AHCI memory
+> +			  resource.
+> +			  Second memory resource shall be the host controller
+> +			  memory resource.
+> +- interrupt-parent	: Interrupt controller
+> +- interrupts		: Interrupt mapping for SATA host controller IRQ
+> +- clocks		: Reference to the clock entry
+> +- phys			: PHY reference
+> +- phy-names		: Name of the PHY reference. The name should be
+> +			  formed by "sataphy" plus lower case hex for the
+> +			  lower 32-bit PHY CSR address (2nd memory resource)
 
-Acked-by: Aaron Lu <aaron.lu@intel.com>
+I've tried to explain this before, but apparently you missed the point:
 
-Thanks,
-Aaron
+Any "*-names" property is supposed to be the identifier inside the device you
+are describing, *not* an identifier for what it points to, as that already
+has a name. The idea is that the driver can ask for phy (or clock, irq,
+memory, etc) "foo" here, with foo identifying the functionality in the
+device. If you only have one phy, you probably don't want to name it at
+all. If you imagine a device that was connected to two different phys
+depending on the mode it's used in (e.g. SATA-II vs SATA-6G), you would
+list this as
 
-> ---
->  drivers/ata/libata-zpodd.c |    3 +--
->  1 files changed, 1 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-zpodd.c b/drivers/ata/libata-zpodd.c
-> index 68f9e32..3d9f82d 100644
-> --- a/drivers/ata/libata-zpodd.c
-> +++ b/drivers/ata/libata-zpodd.c
-> @@ -95,8 +95,7 @@ static bool odd_can_poweroff(struct ata_device *ata_dev)
->  	if (!handle)
->  		return false;
->  
-> -	status = acpi_bus_get_device(handle, &acpi_dev);
-> -	if (ACPI_FAILURE(status))
-> +	if (acpi_bus_get_device(handle, &acpi_dev))
->  		return false;
->  
->  	return acpi_device_can_poweroff(acpi_dev);
-> 
+ - phy-names		: one name per references in the "phys" property.
+			  valid names are "sata-ii" and "sata-6g".
 
+If the generic phy subsystem requires you to name this, I'd suggest either
+changing the phy subsystem to make the name optional, or to just call it
+"serdes", as that is the kind of phy you are connected to.
+
+Does this make more sense to you now?
+
+	Arnd
