@@ -1,39 +1,42 @@
-From: Loc Ho <lho@apm.com>
-Subject: Re: [PATCH v2 3/4] ata: add APM X-Gene SoC 6.0Gbps SATA PHY driver
-Date: Wed, 20 Nov 2013 14:23:07 -0800
-Message-ID: <CAPw-ZTmGvjyfgpiJy-9G26g5KDVmkYv85418H3RgCPCnq_0CTg@mail.gmail.com>
-References: <1384905197-3566-1-git-send-email-lho@apm.com>
-	<1384905197-3566-4-git-send-email-lho@apm.com>
-	<20131120150658.GB28946@htj.dyndns.org>
-	<201311201641.20230.arnd@arndb.de>
+From: Wei Yongjun <weiyj.lk@gmail.com>
+Subject: [PATCH -next] pata_arasan_cf: add missing clk_disable_unprepare() on
+ error path
+Date: Thu, 21 Nov 2013 11:07:09 +0800
+Message-ID: <CAPgLHd_C+KmJXd1oB4=tsGR66BGXgzFds5aicjxDjeKepxFLsg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <201311201641.20230.arnd@arndb.de>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Tejun Heo <tj@kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Suman Tripathi <stripathi@apm.com>, Linux SCSI List <linux-scsi@vger.kernel.org>, Jon Masters <jcm@redhat.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Olof Johansson <olof@lixom.net>, Tuan Phan <tphan@apm.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-bk0-f52.google.com ([209.85.214.52]:51283 "EHLO
+	mail-bk0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750860Ab3KUDHL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Nov 2013 22:07:11 -0500
+Received: by mail-bk0-f52.google.com with SMTP id u14so100508bkz.11
+        for <linux-ide@vger.kernel.org>; Wed, 20 Nov 2013 19:07:09 -0800 (PST)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: viresh.linux@gmail.com, tj@kernel.org, grant.likely@linaro.org, rob.herring@calxeda.com
+Cc: yongjun_wei@trendmicro.com.cn, linux-ide@vger.kernel.org
 
-Hi,
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-> On Wednesday 20 November 2013, Tejun Heo wrote:
->> On Tue, Nov 19, 2013 at 04:53:16PM -0700, Loc Ho wrote:
->> > This patch adds support for APM X-Gene SoC 6.0Gbps SATA PHY. This is the
->> > physical layer interface for the corresponding SATA host controller. This
->> > driver uses the new PHY generic framework posted by Kishon Vijay Abrahm.
->>
->> Hmm... this is related to ahci but isn't even a libata driver and is
->> the first such driver proposed.  Are we sure drivers/ata is the best
->> home for this?  Shouldn't we create a separate directory somewhere?
->> It's confusing, at least to me, to have non-libata driver under
->> drivers/ata.
->
-> It needs to be in drivers/phy, which is currently being prepared for
-> the next merge window and which contains the generic interface used
-> in this driver.
-[Loc Ho]
-I will move it to drivers/phy. The PHY framework did make it to the
-final release of 3.12.00.
+Add the missing clk_disable_unprepare() before return
+from cf_init() in the error handling case.
 
--Loc
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+---
+ drivers/ata/pata_arasan_cf.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/ata/pata_arasan_cf.c b/drivers/ata/pata_arasan_cf.c
+index e88690e..73492dd 100644
+--- a/drivers/ata/pata_arasan_cf.c
++++ b/drivers/ata/pata_arasan_cf.c
+@@ -319,6 +319,7 @@ static int cf_init(struct arasan_cf_dev *acdev)
+ 	ret = clk_set_rate(acdev->clk, 166000000);
+ 	if (ret) {
+ 		dev_warn(acdev->host->dev, "clock set rate failed");
++		clk_disable_unprepare(acdev->clk);
+ 		return ret;
+ 	}
+ 
+
