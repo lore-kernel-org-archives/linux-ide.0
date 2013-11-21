@@ -1,67 +1,43 @@
 From: Loc Ho <lho@apm.com>
-Subject: Re: [PATCH v4 2/4] Documentation:: Add documentation for APM X-Gene
- SoC SATA host controller DTS binding
-Date: Thu, 21 Nov 2013 09:49:42 -0800
-Message-ID: <CAPw-ZTmyUjqcHhcqpjvwY-+xOKSyJh1MwA=KgjdDzmWpPXE3GA@mail.gmail.com>
-References: <1385014298-15700-1-git-send-email-lho@apm.com>
-	<1385014298-15700-2-git-send-email-lho@apm.com>
-	<1385014298-15700-3-git-send-email-lho@apm.com>
-	<201311211316.03647.arnd@arndb.de>
+Subject: Re: [PATCH v3 3/4] ata: Add APM X-Gene SoC SATA host controller driver
+Date: Thu, 21 Nov 2013 11:01:04 -0800
+Message-ID: <CAPw-ZTnRbZid1Bzg6r62LjoEPRWpbDU7TAg=d=qVazEWVaUGjA@mail.gmail.com>
+References: <1384465153-29902-1-git-send-email-lho@apm.com>
+	<201311151448.16279.arnd@arndb.de>
+	<CAPw-ZTmaz3nnV3ThRgecT_RaYYW0bmfWvL8Kr-S3z1aKyUWc+w@mail.gmail.com>
+	<201311211420.28509.arnd@arndb.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from exprod5og115.obsmtp.com ([64.18.0.246]:43191 "HELO
-	exprod5og115.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754224Ab3KURtn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Nov 2013 12:49:43 -0500
-Received: by mail-pb0-f52.google.com with SMTP id uo5so70234pbc.39
-        for <linux-ide@vger.kernel.org>; Thu, 21 Nov 2013 09:49:42 -0800 (PST)
-In-Reply-To: <201311211316.03647.arnd@arndb.de>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <201311211420.28509.arnd@arndb.de>
+Sender: linux-scsi-owner@vger.kernel.org
 To: Arnd Bergmann <arnd@arndb.de>
-Cc: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Jon Masters <jcm@redhat.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>, Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Jon Masters <jcm@redhat.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+List-Id: linux-ide@vger.kernel.org
 
 Hi,
 
->> +SATA host controller nodes are defined to describe on-chip Serial ATA
->> +controllers. Each SATA controller (pair of ports) have its own node.
->> +
->> +Required properties:
->> +- compatible         : Shall be "apm,xgene-ahci"
->> +- reg                        : First memory resource shall be the AHCI memory
->> +                       resource.
->> +                       Second memory resource shall be the host controller
->> +                       memory resource.
->> +- interrupt-parent   : Interrupt controller
->> +- interrupts         : Interrupt mapping for SATA host controller IRQ
->> +- clocks             : Reference to the clock entry
->> +- phys                       : PHY reference
->> +- phy-names          : Name of the PHY reference. The name should be
->> +                       formed by "sataphy" plus lower case hex for the
->> +                       lower 32-bit PHY CSR address (2nd memory resource)
+>> >> diff --git a/drivers/ata/sata_xgene.h b/drivers/ata/sata_xgene.h
+>> >> new file mode 100644
+>> >> index 0000000..51e73f6
+>> >> --- /dev/null
+>> >> +++ b/drivers/ata/sata_xgene.h
+>> >
+>> > This file should probably just be folded into the driver, since it contains no
+>> > interfaces between  modules, just internal definitions.
+>> [Loc Ho]
+>> I can get rip this header file now. But in the future I may need to
+>> add this back as I intended this driver to also support running from
+>> our co-processor (ARMv7 32-bit). For that, I will need anothe file and
+>> other function that will need knowledge of the context structure and
+>> etc.
 >
-> I've tried to explain this before, but apparently you missed the point:
->
-> Any "*-names" property is supposed to be the identifier inside the device you
-> are describing, *not* an identifier for what it points to, as that already
-> has a name. The idea is that the driver can ask for phy (or clock, irq,
-> memory, etc) "foo" here, with foo identifying the functionality in the
-> device. If you only have one phy, you probably don't want to name it at
-> all. If you imagine a device that was connected to two different phys
-> depending on the mode it's used in (e.g. SATA-II vs SATA-6G), you would
-> list this as
->
->  - phy-names            : one name per references in the "phys" property.
->                           valid names are "sata-ii" and "sata-6g".
->
-> If the generic phy subsystem requires you to name this, I'd suggest either
-> changing the phy subsystem to make the name optional, or to just call it
-> "serdes", as that is the kind of phy you are connected to.
->
-> Does this make more sense to you now?
+> Hmm, is the code for that coprocessor compiled from the kernel source?
+> If not, it shouldn't really make a difference as it won't live in a shared
+> code repository.
 >
 [Loc Ho]
-Okay... Got it. I will name it as 'sata-6g'
+The co-processors are just ARM based core and the same kernel can be
+build to support it. Let's not worry about this yet.
 
 -Loc
