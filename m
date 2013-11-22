@@ -1,43 +1,48 @@
-From: Loc Ho <lho@apm.com>
-Subject: Re: [PATCH v3 3/4] ata: Add APM X-Gene SoC SATA host controller driver
-Date: Thu, 21 Nov 2013 11:01:04 -0800
-Message-ID: <CAPw-ZTnRbZid1Bzg6r62LjoEPRWpbDU7TAg=d=qVazEWVaUGjA@mail.gmail.com>
-References: <1384465153-29902-1-git-send-email-lho@apm.com>
-	<201311151448.16279.arnd@arndb.de>
-	<CAPw-ZTmaz3nnV3ThRgecT_RaYYW0bmfWvL8Kr-S3z1aKyUWc+w@mail.gmail.com>
-	<201311211420.28509.arnd@arndb.de>
+From: Alistair Popple <alistair@popple.id.au>
+Subject: [PATCH 1/8] IBM Akebono: Add support to AHCI platform driver
+Date: Fri, 22 Nov 2013 13:08:29 +1100
+Message-ID: <1385086116-10972-1-git-send-email-alistair@popple.id.au>
+References: <1385086057-10884-1-git-send-email-alistair@popple.id.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <201311211420.28509.arnd@arndb.de>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>, Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Jon Masters <jcm@redhat.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <1385086057-10884-1-git-send-email-alistair@popple.id.au>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: benh@kernel.crashing.org
+Cc: linux-ide@vger.kernel.org, linuxppc-dev@ozlabs.org, Alistair Popple <alistair@popple.id.au>
 List-Id: linux-ide@vger.kernel.org
 
-Hi,
+The new IBM Akebono board has a PPC476GTR SoC with an AHCI compliant
+SATA controller. This patch adds a compatible property for the new SoC
+to the AHCI platform driver.
 
->> >> diff --git a/drivers/ata/sata_xgene.h b/drivers/ata/sata_xgene.h
->> >> new file mode 100644
->> >> index 0000000..51e73f6
->> >> --- /dev/null
->> >> +++ b/drivers/ata/sata_xgene.h
->> >
->> > This file should probably just be folded into the driver, since it contains no
->> > interfaces between  modules, just internal definitions.
->> [Loc Ho]
->> I can get rip this header file now. But in the future I may need to
->> add this back as I intended this driver to also support running from
->> our co-processor (ARMv7 32-bit). For that, I will need anothe file and
->> other function that will need knowledge of the context structure and
->> etc.
->
-> Hmm, is the code for that coprocessor compiled from the kernel source?
-> If not, it shouldn't really make a difference as it won't live in a shared
-> code repository.
->
-[Loc Ho]
-The co-processors are just ARM based core and the same kernel can be
-build to support it. Let's not worry about this yet.
+Signed-off-by: Alistair Popple <alistair@popple.id.au>
+Cc: linux-ide@vger.kernel.org
+---
+ drivers/ata/ahci_platform.c |    1 +
+ 1 file changed, 1 insertion(+)
 
--Loc
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index 7d3b853..e247594 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -328,6 +328,7 @@ static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_suspend, ahci_resume);
+ static const struct of_device_id ahci_of_match[] = {
+ 	{ .compatible = "snps,spear-ahci", },
+ 	{ .compatible = "snps,exynos5440-ahci", },
++	{ .compatible = "ibm,476gtr-ahci", },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, ahci_of_match);
+-- 
+1.7.10.4
