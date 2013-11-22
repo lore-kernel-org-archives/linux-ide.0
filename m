@@ -1,32 +1,32 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH -next] pata_arasan_cf: add missing
- clk_disable_unprepare() on error path
-Date: Fri, 22 Nov 2013 17:27:03 -0500
-Message-ID: <20131122222703.GE8981@mtj.dyndns.org>
-References: <CAPgLHd_C+KmJXd1oB4=tsGR66BGXgzFds5aicjxDjeKepxFLsg@mail.gmail.com>
+Subject: Re: [PATCH 3/4] ata: Fix acpi_bus_get_device() return value check
+Date: Fri, 22 Nov 2013 17:39:31 -0500
+Message-ID: <CAOS58YNk9DLx-Ps7CYSrMjsbUf68tbHvqsyYbwjWg8c8KkajEw@mail.gmail.com>
+References: <1384939706-6292-1-git-send-email-wangyijing@huawei.com>
+	<1384939706-6292-4-git-send-email-wangyijing@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yh0-f41.google.com ([209.85.213.41]:34753 "EHLO
-	mail-yh0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755278Ab3KVW1L (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Nov 2013 17:27:11 -0500
-Received: by mail-yh0-f41.google.com with SMTP id f11so1282121yha.14
-        for <linux-ide@vger.kernel.org>; Fri, 22 Nov 2013 14:27:09 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <CAPgLHd_C+KmJXd1oB4=tsGR66BGXgzFds5aicjxDjeKepxFLsg@mail.gmail.com>
+Received: from mail-pd0-f174.google.com ([209.85.192.174]:63536 "EHLO
+	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755577Ab3KVWjb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Nov 2013 17:39:31 -0500
+Received: by mail-pd0-f174.google.com with SMTP id y13so1846681pdi.19
+        for <linux-ide@vger.kernel.org>; Fri, 22 Nov 2013 14:39:31 -0800 (PST)
+In-Reply-To: <1384939706-6292-4-git-send-email-wangyijing@huawei.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Wei Yongjun <weiyj.lk@gmail.com>
-Cc: viresh.linux@gmail.com, grant.likely@linaro.org, rob.herring@calxeda.com, yongjun_wei@trendmicro.com.cn, linux-ide@vger.kernel.org
+To: Yijing Wang <wangyijing@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Jean Delvare <khali@linux-fr.org>, Guenter Roeck <linux@roeck-us.net>, Hanjun Guo <guohanjun@huawei.com>, linux-ide <linux-ide@vger.kernel.org>
 
-On Thu, Nov 21, 2013 at 11:07:09AM +0800, Wei Yongjun wrote:
-> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-> 
-> Add the missing clk_disable_unprepare() before return
-> from cf_init() in the error handling case.
-> 
-> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+On Wed, Nov 20, 2013 at 4:28 AM, Yijing Wang <wangyijing@huawei.com> wrote:
+> Since acpi_bus_get_device() returns plain int and not acpi_status,
+> ACPI_FAILURE() should not be used for checking its return value.  Fix
+> that.
+>
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: linux-ide@vger.kernel.org
 
 Applied to libata/for-3.13-fixes.  Thanks.
 
