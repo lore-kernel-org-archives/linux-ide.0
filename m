@@ -1,23 +1,22 @@
 From: Marek Vasut <marex@denx.de>
-Subject: [PATCH V2 4/6] ARM: imx: imx53: Add SATA PHY clock
-Date: Fri, 22 Nov 2013 12:05:02 +0100
-Message-ID: <1385118304-27435-4-git-send-email-marex@denx.de>
-References: <1385118304-27435-1-git-send-email-marex@denx.de>
+Subject: [PATCH V2 1/6] ahci: imx: Explicitly clear IMX6Q_GPR13_SATA_MPLL_CLK_EN
+Date: Fri, 22 Nov 2013 12:04:59 +0100
+Message-ID: <1385118304-27435-1-git-send-email-marex@denx.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:55517 "EHLO
+Received: from mail-out.m-online.net ([212.18.0.10]:56305 "EHLO
 	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751956Ab3KVLFQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Nov 2013 06:05:16 -0500
-In-Reply-To: <1385118304-27435-1-git-send-email-marex@denx.de>
+	with ESMTP id S1751956Ab3KVLFS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Nov 2013 06:05:18 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-arm-kernel@lists.infradead.org
 Cc: Marek Vasut <marex@denx.de>, Shawn Guo <shawn.guo@linaro.org>, Richard Zhu <r65037@freescale.com>, Tejun Heo <tj@kernel.org>, Linux-IDE <linux-ide@vger.kernel.org>
 
-Add SATA PHY clock which are derived from the USB PHY1 clock. Note that this
-patch derives the SATA PHY clock from USB PHY1 clock gate so that the SATA
-driver can ungate both the SATA PHY clock and USB PHY1 clock for the SATA to
-work correctly.
+We must clear this IMX6Q_GPR13_SATA_MPLL_CLK_EN bit on i.MX6Q, otherwise
+Linux will fail to find the attached drive on some boards.
+
+This entire fix was:
+Reported-by: Eric Nelson <eric.nelson@boundarydevices.com>
 
 Signed-off-by: Marek Vasut <marex@denx.de>
 Cc: Shawn Guo <shawn.guo@linaro.org>
@@ -25,38 +24,32 @@ Cc: Richard Zhu <r65037@freescale.com>
 Cc: Tejun Heo <tj@kernel.org>
 Cc: Linux-IDE <linux-ide@vger.kernel.org>
 ---
- arch/arm/mach-imx/clk-imx51-imx53.c    | 1 +
- include/dt-bindings/clock/imx5-clock.h | 3 ++-
- 2 files changed, 3 insertions(+), 1 deletion(-)
+ drivers/ata/ahci_imx.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-V2: Rename 'IMX5_CLK_SATA_PHY' to 'IMX5_CLK_SATA_REF' as well as
-    'sata_phy' to 'sata_ref' .
+V2: Update the value in the comment from 0x7ffffffd to 0x7ffffffe
 
-diff --git a/arch/arm/mach-imx/clk-imx51-imx53.c b/arch/arm/mach-imx/clk-imx51-imx53.c
-index 07d275f..3f01df2 100644
---- a/arch/arm/mach-imx/clk-imx51-imx53.c
-+++ b/arch/arm/mach-imx/clk-imx51-imx53.c
-@@ -244,6 +244,7 @@ static void __init mx5_clocks_common_init(unsigned long rate_ckil,
- 	clk[IMX5_CLK_SPDIF0_GATE]	= imx_clk_gate2("spdif0_gate", "spdif0_com_sel", MXC_CCM_CCGR5, 26);
- 	clk[IMX5_CLK_SPDIF_IPG_GATE]	= imx_clk_gate2("spdif_ipg_gate", "ipg", MXC_CCM_CCGR5, 30);
- 	clk[IMX5_CLK_SAHARA_IPG_GATE]	= imx_clk_gate2("sahara_ipg_gate", "ipg", MXC_CCM_CCGR4, 14);
-+	clk[IMX5_CLK_SATA_REF]		= imx_clk_fixed_factor("sata_ref", "usb_phy1_gate", 1, 1);
- 
- 	for (i = 0; i < ARRAY_SIZE(clk); i++)
- 		if (IS_ERR(clk[i]))
-diff --git a/include/dt-bindings/clock/imx5-clock.h b/include/dt-bindings/clock/imx5-clock.h
-index 5c2f634..5f2667ec 100644
---- a/include/dt-bindings/clock/imx5-clock.h
-+++ b/include/dt-bindings/clock/imx5-clock.h
-@@ -197,6 +197,7 @@
- #define IMX5_CLK_SPDIF_IPG_GATE		185
- #define IMX5_CLK_OCRAM			186
- #define IMX5_CLK_SAHARA_IPG_GATE	187
--#define IMX5_CLK_END			188
-+#define IMX5_CLK_SATA_REF		188
-+#define IMX5_CLK_END			189
- 
- #endif /* __DT_BINDINGS_CLOCK_IMX5_H */
+diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+index ae2d73f..14227d1 100644
+--- a/drivers/ata/ahci_imx.c
++++ b/drivers/ata/ahci_imx.c
+@@ -113,7 +113,7 @@ static int imx6q_sata_init(struct device *dev, void __iomem *mmio)
+ 	/*
+ 	 * set PHY Paremeters, two steps to configure the GPR13,
+ 	 * one write for rest of parameters, mask of first write
+-	 * is 0x07fffffd, and the other one write for setting
++	 * is 0x07fffffe, and the other one write for setting
+ 	 * the mpll_clk_en.
+ 	 */
+ 	regmap_update_bits(imxpriv->gpr, 0x34, IMX6Q_GPR13_SATA_RX_EQ_VAL_MASK
+@@ -125,6 +125,7 @@ static int imx6q_sata_init(struct device *dev, void __iomem *mmio)
+ 			| IMX6Q_GPR13_SATA_TX_BOOST_MASK
+ 			| IMX6Q_GPR13_SATA_TX_LVL_MASK
+ 			| IMX6Q_GPR13_SATA_TX_EDGE_RATE
++			| IMX6Q_GPR13_SATA_MPLL_CLK_EN
+ 			, IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB
+ 			| IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M
+ 			| IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_4F
 -- 
 1.8.4.2
 
