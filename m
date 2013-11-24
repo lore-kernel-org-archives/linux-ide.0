@@ -1,34 +1,46 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ahci: mcp89: enter AHCI mode under Apple BIOS emulation
-Date: Fri, 22 Nov 2013 17:50:04 -0500
-Message-ID: <20131122225004.GF8981@mtj.dyndns.org>
-References: <20131119000637.GA6243@unibuddy.saluda.saludamedical.com>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [PATCH] sysfs: handle duplicate removal attempts in sysfs_remove_group()
+Date: Sun, 24 Nov 2013 02:09:09 +0100
+Message-ID: <3805095.rqdZNnA0Ng@vostro.rjw.lan>
+References: <1384866598-19716-1-git-send-email-mika.westerberg@linux.intel.com> <20131123230701.GA6183@kroah.com> <2196420.QNWb3mfseF@vostro.rjw.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f41.google.com ([209.85.216.41]:52041 "EHLO
-	mail-qa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755933Ab3KVWuI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Nov 2013 17:50:08 -0500
-Received: by mail-qa0-f41.google.com with SMTP id j5so930997qaq.14
-        for <linux-ide@vger.kernel.org>; Fri, 22 Nov 2013 14:50:07 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <20131119000637.GA6243@unibuddy.saluda.saludamedical.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:62592 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755609Ab3KXA40 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Nov 2013 19:56:26 -0500
+In-Reply-To: <2196420.QNWb3mfseF@vostro.rjw.lan>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Laird <jhl@mafipulation.org>
-Cc: linux-ide@vger.kernel.org
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tejun Heo <tj@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Mika Westerberg <mika.westerberg@linux.intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-ide@vger.kernel.org
 
-On Tue, Nov 19, 2013 at 11:06:38AM +1100, James Laird wrote:
-> Apple's BIOS emulation forcibly disables MCP89 AHCI, eg. on Macbook7,1.
-> We can re-enable it, replacing the previous workaround of using
-> ata_generic.
+On Sunday, November 24, 2013 12:36:03 AM Rafael J. Wysocki wrote:
+> On Saturday, November 23, 2013 03:07:01 PM Greg Kroah-Hartman wrote:
+> > On Sun, Nov 24, 2013 at 12:12:59AM +0100, Rafael J. Wysocki wrote:
+> > > On Saturday, November 23, 2013 02:53:58 PM Greg Kroah-Hartman wrote:
+
+[...]
+
+> > > > 
+> > > > I can revert Mika's patch, as it would be good to catch these kinds of
+> > > > errors.
+> > > 
+> > > Then we'll need to untangle the SATA/SCSI mess triggered by Bjorn in
+> > > https://bugzilla.kernel.org/show_bug.cgi?id=65281. ;-)
+> > 
+> > I have no objection to fixing that, the scsi sysfs handling is "odd" to
+> > say the least...
+> > 
+> > If someone can unwind it, that would be great to see happen...
 > 
-> Signed-off-by: James Laird <jhl@mafipulation.org>
+> Well, if I'm bored to death during the xmas holidays, I may look into that.
 
-Applied to libata/for-3.14 with whitespace adjusted.
+In fact, I'm not exactly sure why ata_port_detach() calls ata_tport_delete()
+before scsi_remove_host()?  Is there any particular reason?  Because that
+doesn't seem to be exactly right ...
 
-Thanks.
+Rafael
 
--- 
-tejun
