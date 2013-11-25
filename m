@@ -1,77 +1,114 @@
 From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: Re: [PATCH] sysfs: handle duplicate removal attempts in sysfs_remove_group()
-Date: Mon, 25 Nov 2013 11:41:33 +0100
-Message-ID: <14914400.in2y5Td8qp@vostro.rjw.lan>
+Subject: [PATCH] ATA: Fix port removal ordering
+Date: Mon, 25 Nov 2013 13:19:01 +0100
+Message-ID: <9509557.LMLHG8ie3T@vostro.rjw.lan>
 References: <1384866598-19716-1-git-send-email-mika.westerberg@linux.intel.com> <3805095.rqdZNnA0Ng@vostro.rjw.lan> <20131125101154.GS2281@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7Bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:64255 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750867Ab3KYK2s (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Nov 2013 05:28:48 -0500
+Return-path: <linux-pci-owner@vger.kernel.org>
 In-Reply-To: <20131125101154.GS2281@intel.com>
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Bjorn Helgaas <bhelgaas@google.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-ide@vger.kernel.org, Linux PCI <linux-pci@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-ide@vger.kernel.org
 
-On Monday, November 25, 2013 12:11:54 PM Mika Westerberg wrote:
-> On Sun, Nov 24, 2013 at 02:09:09AM +0100, Rafael J. Wysocki wrote:
-> > On Sunday, November 24, 2013 12:36:03 AM Rafael J. Wysocki wrote:
-> > > On Saturday, November 23, 2013 03:07:01 PM Greg Kroah-Hartman wrote:
-> > > > On Sun, Nov 24, 2013 at 12:12:59AM +0100, Rafael J. Wysocki wrote:
-> > > > > On Saturday, November 23, 2013 02:53:58 PM Greg Kroah-Hartman wrote:
-> > 
-> > [...]
-> > 
-> > > > > > 
-> > > > > > I can revert Mika's patch, as it would be good to catch these kinds of
-> > > > > > errors.
-> > > > > 
-> > > > > Then we'll need to untangle the SATA/SCSI mess triggered by Bjorn in
-> > > > > https://bugzilla.kernel.org/show_bug.cgi?id=65281. ;-)
-> > > > 
-> > > > I have no objection to fixing that, the scsi sysfs handling is "odd" to
-> > > > say the least...
-> > > > 
-> > > > If someone can unwind it, that would be great to see happen...
-> > > 
-> > > Well, if I'm bored to death during the xmas holidays, I may look into that.
-> > 
-> > In fact, I'm not exactly sure why ata_port_detach() calls ata_tport_delete()
-> > before scsi_remove_host()?  Is there any particular reason?  Because that
-> > doesn't seem to be exactly right ...
-> 
-> I tried so that I have your 'PCI: Move device_del() from pci_stop_dev() to
-> pci_destroy_dev()' applied and then I did following change as you
-> suggested.
-> 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 81a94a3919db..07a03f93d640 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -6304,10 +6304,10 @@ static void ata_port_detach(struct ata_port *ap)
->  		for (i = 0; i < SATA_PMP_MAX_PORTS; i++)
->  			ata_tlink_delete(&ap->pmp_link[i]);
->  	}
-> -	ata_tport_delete(ap);
-> -
->  	/* remove the associated SCSI host */
->  	scsi_remove_host(ap->scsi_host);
-> +
-> +	ata_tport_delete(ap);
->  }
->  
->  /**
-> 
-> After both patches are applied the warnings are gone :) However, looks like
-> both are needed since if I only apply one or another, I still get warnings.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Yes, they are both needed. :-)
+After commit bcdde7e221a8 (sysfs: make __sysfs_remove_dir() recursive)
+Mika Westerberg sees traces analogous to the one below in Thunderbolt
+hot-remove testing:
 
-OK, I'll submit the above upstream if you don't mind.
+ WARNING: CPU: 0 PID: 4 at fs/sysfs/group.c:214 sysfs_remove_group+0xc6/0xd0()
+ sysfs group ffffffff81c6f1e0 not found for kobject 'host7'
+ Modules linked in:
+ CPU: 0 PID: 4 Comm: kworker/0:0 Not tainted 3.12.0+ #13
+ Hardware name:                  /D33217CK, BIOS GKPPT10H.86A.0042.2013.0422.1439 04/22/2013
+ Workqueue: kacpi_hotplug acpi_hotplug_work_fn
+  0000000000000009 ffff8801002459b0 ffffffff817daab1 ffff8801002459f8
+  ffff8801002459e8 ffffffff810436b8 0000000000000000 ffffffff81c6f1e0
+  ffff88006d440358 ffff88006d440188 ffff88006e8b4c28 ffff880100245a48
+ Call Trace:
+  [<ffffffff817daab1>] dump_stack+0x45/0x56
+  [<ffffffff810436b8>] warn_slowpath_common+0x78/0xa0
+  [<ffffffff81043727>] warn_slowpath_fmt+0x47/0x50
+  [<ffffffff811ad319>] ? sysfs_get_dirent_ns+0x49/0x70
+  [<ffffffff811ae526>] sysfs_remove_group+0xc6/0xd0
+  [<ffffffff81432f7e>] dpm_sysfs_remove+0x3e/0x50
+  [<ffffffff8142a0d0>] device_del+0x40/0x1b0
+  [<ffffffff8142a24d>] device_unregister+0xd/0x20
+  [<ffffffff8144131a>] scsi_remove_host+0xba/0x110
+  [<ffffffff8145f526>] ata_host_detach+0xc6/0x100
+  [<ffffffff8145f578>] ata_pci_remove_one+0x18/0x20
+  [<ffffffff812e8f48>] pci_device_remove+0x28/0x60
+  [<ffffffff8142d854>] __device_release_driver+0x64/0xd0
+  [<ffffffff8142d8de>] device_release_driver+0x1e/0x30
+  [<ffffffff8142d257>] bus_remove_device+0xf7/0x140
+  [<ffffffff8142a1b1>] device_del+0x121/0x1b0
+  [<ffffffff812e43d4>] pci_stop_bus_device+0x94/0xa0
+  [<ffffffff812e437b>] pci_stop_bus_device+0x3b/0xa0
+  [<ffffffff812e437b>] pci_stop_bus_device+0x3b/0xa0
+  [<ffffffff812e44dd>] pci_stop_and_remove_bus_device+0xd/0x20
+  [<ffffffff812fc743>] trim_stale_devices+0x73/0xe0
+  [<ffffffff812fc78b>] trim_stale_devices+0xbb/0xe0
+  [<ffffffff812fc78b>] trim_stale_devices+0xbb/0xe0
+  [<ffffffff812fcb6e>] acpiphp_check_bridge+0x7e/0xd0
+  [<ffffffff812fd90d>] hotplug_event+0xcd/0x160
+  [<ffffffff812fd9c5>] hotplug_event_work+0x25/0x60
+  [<ffffffff81316749>] acpi_hotplug_work_fn+0x17/0x22
+  [<ffffffff8105cf3a>] process_one_work+0x17a/0x430
+  [<ffffffff8105db29>] worker_thread+0x119/0x390
+  [<ffffffff8105da10>] ? manage_workers.isra.25+0x2a0/0x2a0
+  [<ffffffff81063a5d>] kthread+0xcd/0xf0
+  [<ffffffff81063990>] ? kthread_create_on_node+0x180/0x180
+  [<ffffffff817eb33c>] ret_from_fork+0x7c/0xb0
+  [<ffffffff81063990>] ? kthread_create_on_node+0x180/0x180
 
-Cheers, R.
+The source of this problem is that SCSI hosts are removed from
+ATA ports after calling ata_tport_delete() which removes the
+port's sysfs directory, among other things.  Now, after commit
+bcdde7e221a8, the sysfs directory is removed along with all of
+its subdirectories that include the SCSI host's sysfs directory
+and its subdirectories at this point.  Consequently, when
+device_del() is finally called for any child device of the SCSI
+host and tries to remove its "power" group (which is already
+gone then), it triggers the above warning.
 
+To make the warnings go away, change the removal ordering in
+ata_port_detach() so that the SCSI host is removed from the
+port before ata_tport_delete() is called.
+
+References: https://bugzilla.kernel.org/show_bug.cgi?id=65281
+Reported-and-tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+
+Hi,
+
+This along with https://patchwork.kernel.org/patch/3226081/ makes
+all of the warnings observed by Mika go away without the patch at
+https://patchwork.kernel.org/patch/3201841/ applied.
+
+Thanks,
+Rafael
+
+---
+ drivers/ata/libata-core.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+Index: linux-pm/drivers/ata/libata-core.c
+===================================================================
+--- linux-pm.orig/drivers/ata/libata-core.c
++++ linux-pm/drivers/ata/libata-core.c
+@@ -6304,10 +6304,9 @@ static void ata_port_detach(struct ata_p
+ 		for (i = 0; i < SATA_PMP_MAX_PORTS; i++)
+ 			ata_tlink_delete(&ap->pmp_link[i]);
+ 	}
+-	ata_tport_delete(ap);
+-
+ 	/* remove the associated SCSI host */
+ 	scsi_remove_host(ap->scsi_host);
++	ata_tport_delete(ap);
+ }
+ 
+ /**
