@@ -1,106 +1,73 @@
-From: Loc Ho <lho@apm.com>
-Subject: Re: [PATCH v4 3/4] ata: Add APM X-Gene SoC SATA host controller driver
-Date: Sun, 24 Nov 2013 20:59:31 -0800
-Message-ID: <CAPw-ZTnxu1EFaQzSuq5XwC8m7SQUQz7SP8u0Zva2rvheFzTa-Q@mail.gmail.com>
-References: <1385014298-15700-1-git-send-email-lho@apm.com>
-	<201311211401.14836.arnd@arndb.de>
-	<CAPw-ZTnt0QnXxb_dkDpkXbz4xFOcMM2Z-oOVJdH9o9u3S+DuPg@mail.gmail.com>
-	<201311242035.11411.arnd@arndb.de>
-	<CAPw-ZTkBovLrQEk_CQzuw03t5P2N2ZecQhK8tkZQM0grGwPxSA@mail.gmail.com>
+From: Shawn Guo <shawn.guo@linaro.org>
+Subject: Re: [PATCH V2 1/6] ahci: imx: Explicitly clear
+ IMX6Q_GPR13_SATA_MPLL_CLK_EN
+Date: Mon, 25 Nov 2013 15:13:00 +0800
+Message-ID: <20131125071258.GE11613@S2101-09.ap.freescale.net>
+References: <1385118304-27435-1-git-send-email-marex@denx.de>
+ <528FAFF5.9040404@boundarydevices.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from exprod5og111.obsmtp.com ([64.18.0.22]:41551 "HELO
-	exprod5og111.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753398Ab3KYE7d (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 24 Nov 2013 23:59:33 -0500
-Received: by mail-pd0-f172.google.com with SMTP id g10so4713049pdj.31
-        for <linux-ide@vger.kernel.org>; Sun, 24 Nov 2013 20:59:32 -0800 (PST)
-In-Reply-To: <CAPw-ZTkBovLrQEk_CQzuw03t5P2N2ZecQhK8tkZQM0grGwPxSA@mail.gmail.com>
+Received: from mail-db8lp0185.outbound.messaging.microsoft.com ([213.199.154.185]:37086
+	"EHLO db8outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750972Ab3KYHKo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Nov 2013 02:10:44 -0500
+Content-Disposition: inline
+In-Reply-To: <528FAFF5.9040404@boundarydevices.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Jon Masters <jcm@redhat.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+To: Troy Kisky <troy.kisky@boundarydevices.com>
+Cc: Marek Vasut <marex@denx.de>, linux-arm-kernel@lists.infradead.org, Richard Zhu <r65037@freescale.com>, Tejun Heo <tj@kernel.org>, Linux-IDE <linux-ide@vger.kernel.org>
 
- Hi,
+On Fri, Nov 22, 2013 at 12:26:45PM -0700, Troy Kisky wrote:
+> On 11/22/2013 4:04 AM, Marek Vasut wrote:
+> >We must clear this IMX6Q_GPR13_SATA_MPLL_CLK_EN bit on i.MX6Q, otherwise
+> >Linux will fail to find the attached drive on some boards.
+> >
+> >This entire fix was:
+> >Reported-by: Eric Nelson <eric.nelson@boundarydevices.com>
+> >
+> >Signed-off-by: Marek Vasut <marex@denx.de>
+> >Cc: Shawn Guo <shawn.guo@linaro.org>
+> >Cc: Richard Zhu <r65037@freescale.com>
+> >Cc: Tejun Heo <tj@kernel.org>
+> >Cc: Linux-IDE <linux-ide@vger.kernel.org>
+> >---
+> >  drivers/ata/ahci_imx.c | 3 ++-
+> >  1 file changed, 2 insertions(+), 1 deletion(-)
+> >
+> >V2: Update the value in the comment from 0x7ffffffd to 0x7ffffffe
+> >
+> >diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+> >index ae2d73f..14227d1 100644
+> >--- a/drivers/ata/ahci_imx.c
+> >+++ b/drivers/ata/ahci_imx.c
+> >@@ -113,7 +113,7 @@ static int imx6q_sata_init(struct device *dev, void __iomem *mmio)
+> >  	/*
+> >  	 * set PHY Paremeters, two steps to configure the GPR13,
+> >  	 * one write for rest of parameters, mask of first write
+> >-	 * is 0x07fffffd, and the other one write for setting
+> >+	 * is 0x07fffffe, and the other one write for setting
+> 
+> 0x07ffffff, d+2 = f,
+> bit 1 is IMX6Q_GPR13_SATA_MPLL_CLK_EN, which you just added
+> bit 0 is IMX6Q_GPR13_SATA_TX_EDGE_RATE, which is also in your expression
 
-Resend in plain text as mailing list reject HTML format.
+Ah, sorry.  The mistake comes from my wrong bit math.
 
-> > > > +static int xgene_ahci_init_memram(struct xgene_ahci_context *ctx)
-> > > > +{
-> > > > +     void *diagcsr = ctx->csr_base + SATA_DIAG_OFFSET;
-> > > > +     int timeout;
-> > > > +     u32 val;
-> > > > +
-> > > > +     xgene_rd(diagcsr + REGSPEC_CFG_MEM_RAM_SHUTDOWN_ADDR, &val);
-> > > > +     if (val == 0) {
-> > > > +             dev_dbg(ctx->dev, "memory already released from
-> > > shutdown\n");
-> > > > +             return 0;
-> > > > +     }
-> > > > +     dev_dbg(ctx->dev, "Release memory from shutdown\n");
-> > > > +     /* SATA controller memory in shutdown. Remove from shutdown. */
-> > > > +     xgene_wr_flush(diagcsr + REGSPEC_CFG_MEM_RAM_SHUTDOWN_ADDR, 0x00);
-> > > > +     timeout = SATA_RESET_MEM_RAM_TO;
-> > > > +     do {
-> > > > +             xgene_rd(diagcsr + REGSPEC_BLOCK_MEM_RDY_ADDR, &val);
-> > > > +             if (val != 0xFFFFFFFF)
-> > > > +                     udelay(1);
-> > > > +     } while (val != 0xFFFFFFFF && timeout-- > 0);
-> > >
-> > > With SATA_RESET_MEM_RAM_TO == 100000, this is an awfully long busy-loop.
-> > > Can you replace the udelay with usleep_range() providing a reasonable
-> > > wide range, and the replace the retry count with a time_before(jiffies(),
-> > > timeout) comparision?
-> > >
-> > [Loc Ho]
-> > I reduce to 1000. It only takes about one or two reads.
->
-> It's still over two miliseconds for the (unlikely) timeout in that case,
-> plus the time it takes to do the 1000 reads. The important part of my
-> comment was about using usleep_range(), which lets another process run
-> in the meantime rather than blocking the CPU.
->
-> If you want to keep using a retry count rather than a timeout, don't
-> call it "timeout".
->
-[Loc Ho]
-I will give usleep_range a try.
+Shawn
 
->>
->> > > > +/* Flush the IOB to ensure all SATA controller writes completed before
->> > > > +   servicing the completed command. This is needed due to the
->> > > possibility
->> > > > +   that interrupt serviced before the data actually written to the
->> > > cache/DDR.
->> > > > +   Writes from the IP to the CPU domain is not synchronized with the IRQ
->> > > > +   line or the IP core toggled the CI bits before the data write
->> > > completed. */
->> > > > +static int xgene_ahci_iob_flush(struct xgene_ahci_context *ctx)
->> > > > +{
->> > > > +     if (ctx->ahbc_io_base)
->> > > > +             readl(ctx->ahbc_io_base);
->> > > > +     return 0;
->> > > > +}
->> > >
->> > > Normally the synchronization should be guaranteed by using MSI interrupts
->> > > rather than edge or level interrupt pins. Do you have MSI support in your
->> > > hardware? Using that would get rid of this ugly hack and likely improve
->> > > performance significantly.
->> > >
->> > [Loc Ho]
->> > The SATA IP is built into the chip and NOT on the PCIe bus. The need for
->> > this is already mentioned above.
->>
->> I don't understand the comment about PCIe. MSI should work regardless of
->> where the device resides in the system, unless you have the MSI controller
->> integrated into the PCIe host, which would be a bug because it causes the
->> same problem that you have on this device for any PCIe add-on device
->> (the MSI would no longer flush the a PCIe bus master DMA transfer
->> all the way to memory if the message is consumed by the PCIe host).
->
-[Loc Ho]
-The SATA IP does not support MSI as it is NOT an PCIe interface. The
-interrupt line is just a direct line into the GIC similar to the UART.
+> 
+> >  	 * the mpll_clk_en.
+> >  	 */
+> >  	regmap_update_bits(imxpriv->gpr, 0x34, IMX6Q_GPR13_SATA_RX_EQ_VAL_MASK
+> >@@ -125,6 +125,7 @@ static int imx6q_sata_init(struct device *dev, void __iomem *mmio)
+> >  			| IMX6Q_GPR13_SATA_TX_BOOST_MASK
+> >  			| IMX6Q_GPR13_SATA_TX_LVL_MASK
+> >  			| IMX6Q_GPR13_SATA_TX_EDGE_RATE
+> >+			| IMX6Q_GPR13_SATA_MPLL_CLK_EN
+> >  			, IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB
+> >  			| IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M
+> >  			| IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_4F
+> 
 
--Loc
