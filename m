@@ -1,48 +1,96 @@
-From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] Add ATA_HORKAGE_BROKEN_FPDMA_AA quirk for Seagate
- Momentus SpinPoint M8
-Date: Mon, 25 Nov 2013 21:08:42 +0000
-Message-ID: <20131125210842.0c68ee92@alan.etchedpixels.co.uk>
-References: <1385406014-4877-1-git-send-email-michele@acksyn.org>
+From: Gwendal Grignou <gwendal@google.com>
+Subject: Re: [PATCH] sysfs: handle duplicate removal attempts in sysfs_remove_group()
+Date: Mon, 25 Nov 2013 15:51:08 -0800
+Message-ID: <CAMHSBOW10+LC9bd5eyKYX+8931Myq4uxvot40Yc_pM6gy4eNGw@mail.gmail.com>
+References: <1384866598-19716-1-git-send-email-mika.westerberg@linux.intel.com>
+	<3805095.rqdZNnA0Ng@vostro.rjw.lan>
+	<20131125101154.GS2281@intel.com>
+	<14914400.in2y5Td8qp@vostro.rjw.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:43217 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751507Ab3KYVLQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Nov 2013 16:11:16 -0500
-In-Reply-To: <1385406014-4877-1-git-send-email-michele@acksyn.org>
+Received: from mail-vb0-f42.google.com ([209.85.212.42]:64918 "EHLO
+	mail-vb0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751081Ab3KYXvJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Nov 2013 18:51:09 -0500
+Received: by mail-vb0-f42.google.com with SMTP id w18so3475433vbj.1
+        for <linux-ide@vger.kernel.org>; Mon, 25 Nov 2013 15:51:08 -0800 (PST)
+In-Reply-To: <14914400.in2y5Td8qp@vostro.rjw.lan>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Michele Baldessari <michele@acksyn.org>
-Cc: linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-> Reported-by: Nicholas <arealityfarbetween@googlemail.com>
-> Signed-off-by: Michele Baldessari <michele@acksyn.org>
-> Tested-by: Nicholas <arealityfarbetween@googlemail.com>
+Rafael,
 
-Acked-by: Alan Cox <gnomes@lxorguk.ukuu.org.uk>
+As you pointed out, ata_tport_delete() should be after
+scsi_remove_host(), consistent with ata_tport_add() currently before
+ata_scsi_add_host().
+Thanks for fixing it,
 
-Going for a dig in google turns this up against multiple controllers,
-multiple kernels, multiple distros..
+Gwendal.
 
-
-> ---
->  drivers/ata/libata-core.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index 81a94a3..f6b0892 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -4156,6 +4156,9 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
->  	{ "ST3320[68]13AS",	"SD1[5-9]",	ATA_HORKAGE_NONCQ |
->  						ATA_HORKAGE_FIRMWARE_WARN },
->  
-> +	/* Seagate Momentus SpinPoint M8 seem to have FPMDA_AA issues */
-> +	{ "ST1000LM024 HN-M101MBB", "2AR10001",	ATA_HORKAGE_BROKEN_FPDMA_AA },
-> +
->  	/* Blacklist entries taken from Silicon Image 3124/3132
->  	   Windows driver .inf file - also several Linux problem reports */
->  	{ "HTS541060G9SA00",    "MB3OC60D",     ATA_HORKAGE_NONCQ, },
+On Mon, Nov 25, 2013 at 2:41 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+>
+> On Monday, November 25, 2013 12:11:54 PM Mika Westerberg wrote:
+> > On Sun, Nov 24, 2013 at 02:09:09AM +0100, Rafael J. Wysocki wrote:
+> > > On Sunday, November 24, 2013 12:36:03 AM Rafael J. Wysocki wrote:
+> > > > On Saturday, November 23, 2013 03:07:01 PM Greg Kroah-Hartman wrote:
+> > > > > On Sun, Nov 24, 2013 at 12:12:59AM +0100, Rafael J. Wysocki wrote:
+> > > > > > On Saturday, November 23, 2013 02:53:58 PM Greg Kroah-Hartman wrote:
+> > >
+> > > [...]
+> > >
+> > > > > > >
+> > > > > > > I can revert Mika's patch, as it would be good to catch these kinds of
+> > > > > > > errors.
+> > > > > >
+> > > > > > Then we'll need to untangle the SATA/SCSI mess triggered by Bjorn in
+> > > > > > https://bugzilla.kernel.org/show_bug.cgi?id=65281. ;-)
+> > > > >
+> > > > > I have no objection to fixing that, the scsi sysfs handling is "odd" to
+> > > > > say the least...
+> > > > >
+> > > > > If someone can unwind it, that would be great to see happen...
+> > > >
+> > > > Well, if I'm bored to death during the xmas holidays, I may look into that.
+> > >
+> > > In fact, I'm not exactly sure why ata_port_detach() calls ata_tport_delete()
+> > > before scsi_remove_host()?  Is there any particular reason?  Because that
+> > > doesn't seem to be exactly right ...
+> >
+> > I tried so that I have your 'PCI: Move device_del() from pci_stop_dev() to
+> > pci_destroy_dev()' applied and then I did following change as you
+> > suggested.
+> >
+> > diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> > index 81a94a3919db..07a03f93d640 100644
+> > --- a/drivers/ata/libata-core.c
+> > +++ b/drivers/ata/libata-core.c
+> > @@ -6304,10 +6304,10 @@ static void ata_port_detach(struct ata_port *ap)
+> >               for (i = 0; i < SATA_PMP_MAX_PORTS; i++)
+> >                       ata_tlink_delete(&ap->pmp_link[i]);
+> >       }
+> > -     ata_tport_delete(ap);
+> > -
+> >       /* remove the associated SCSI host */
+> >       scsi_remove_host(ap->scsi_host);
+> > +
+> > +     ata_tport_delete(ap);
+> >  }
+> >
+> >  /**
+> >
+> > After both patches are applied the warnings are gone :) However, looks like
+> > both are needed since if I only apply one or another, I still get warnings.
+>
+> Yes, they are both needed. :-)
+>
+> OK, I'll submit the above upstream if you don't mind.
+>
+> Cheers, R.
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
