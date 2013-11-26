@@ -1,65 +1,239 @@
-From: Loc Ho <lho@apm.com>
-Subject: Re: [PATCH v5 2/4] Documentation: Add documentation for APM X-Gene
- SoC SATA host controller DTS binding
-Date: Tue, 26 Nov 2013 14:04:18 -0800
-Message-ID: <CAPw-ZTm1wS0j2DphK9+Rmmu2UPJniobMUv6MTfMCG5wwKNvJCg@mail.gmail.com>
-References: <1385449285-30764-1-git-send-email-lho@apm.com>
-	<1385449285-30764-2-git-send-email-lho@apm.com>
-	<1385449285-30764-3-git-send-email-lho@apm.com>
-	<20131126145515.GD5402@e106331-lin.cambridge.arm.com>
+From: Valentine <valentine.barshak@cogentembedded.com>
+Subject: Re: [PATCH V3 1/2] sata_rcar: Add R-Car Gen2 SATA PHY support
+Date: Wed, 27 Nov 2013 02:06:05 +0400
+Message-ID: <52951B4D.3030205@cogentembedded.com>
+References: <1383912570-8393-1-git-send-email-valentine.barshak@cogentembedded.com> <1383912570-8393-2-git-send-email-valentine.barshak@cogentembedded.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20131126145515.GD5402@e106331-lin.cambridge.arm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Mark Rutland <mark.rutland@arm.com>
-Cc: "olof@lixom.net" <olof@lixom.net>, "tj@kernel.org" <tj@kernel.org>, "arnd@arndb.de" <arnd@arndb.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "jcm@redhat.com" <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-lb0-f173.google.com ([209.85.217.173]:58246 "EHLO
+	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757754Ab3KZWGL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Nov 2013 17:06:11 -0500
+Received: by mail-lb0-f173.google.com with SMTP id u14so4907854lbd.18
+        for <linux-ide@vger.kernel.org>; Tue, 26 Nov 2013 14:06:09 -0800 (PST)
+In-Reply-To: <1383912570-8393-2-git-send-email-valentine.barshak@cogentembedded.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-sh@vger.kernel.org, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>
+Cc: devicetree@vger.kernel.org, Simon Horman <horms@verge.net.au>, Magnus Damm <magnus.damm@gmail.com>, Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>, Laurent Pinchart <laurent.pinchart@ideasonboard.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Kumar Gala <galak@codeaurora.org>, Vladimir Barinov <vladimir.barinov@cogentembedded.com>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Mark Rutland <mark.rutland@arm.com>
 
-Hi,
+On 11/08/2013 04:09 PM, Valentine Barshak wrote:
 
->> +- interrupt-parent   : Interrupt controller.
+Tejun,
+are you OK with taking this?
+
+> R-Car Gen2 SoCs have a different PHY which is not compatible
+> with the older R-Car H1 (R8A7779) version.
+> This adds OF/platform device id tables and PHY initialization
+> callbacks for the following Gen2 SoCs:
+>    * R-Car H2: R8A7790;
+>    * R-Car M2: R8A7791.
 >
-> I don't think that's strictly required.
-
-Okay, got rip of it.
-
->> +Optional properties:
->> +- status             : Shall be "ok" if enabled or "na" if disabled.
->> +                       Default is "ok".
+> PHY initialization method is chosen based on the device id.
+> Default PHY settings are applied for Gen2 SoCs, which should
+> suit the Gen2 boards available.
 >
-> Why not use the more standard "disabled" string, as I asked you to
-> previously?
+> While at it, this also adds "sata-r8a7779" compatibility string
+> for R8A7779 SATA, while keeping the old one for compatibility.
 
-Missed this one. Fixed.
+Thanks,
+Val.
 
->> +             sata2: sata@1a400000 {
->> +                     compatible = "apm,xgene-ahci-sgmii";
->> +                     reg = <0x0 0x1a400000 0x0 0x1000>,
->> +                           <0x0 0x1f220000 0x0 0x10000>;
->> +                     interrupt-parent = <&gic>;
->> +                     interrupts = <0x0 0x87 0x4>;
->> +                     status = "ok";
->> +                     clocks = <&sata23clk 0>;
->> +                     phys = <&phy2 0>;
->> +                     phy-names = "sata-6g";
->> +             };
->> +
->> +             sata3: sata@1a800000 {
->> +                     compatible = "apm,xgene-ahci-pcie";
->> +                     reg = <0x0 0x1a800000 0x0 0x1000>,
->> +                           <0x0 0x1f230000 0x0 0x10000>;
->> +                     interrupt-parent = <&gic>;
->> +                     interrupts = <0x0 0x88 0x4>;
->> +                     status = "ok";
->> +                     clocks = <&sata45clk 0>;
->> +                     phys = <&phy3 0>;
->> +                     phy-names = "sata-6g";
->> +             };
 >
-> The example is pointlessly huge. You could trim it down two these last
-> two nodes (with a phy node and some fixed clocks).
+> Signed-off-by: Valentine Barshak <valentine.barshak@cogentembedded.com>
+> ---
+>   drivers/ata/sata_rcar.c | 118 +++++++++++++++++++++++++++++++++++++++++-------
+>   1 file changed, 102 insertions(+), 16 deletions(-)
+>
+> diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
+> index c2d95e9..231559f 100644
+> --- a/drivers/ata/sata_rcar.c
+> +++ b/drivers/ata/sata_rcar.c
+> @@ -15,6 +15,7 @@
+>   #include <linux/module.h>
+>   #include <linux/ata.h>
+>   #include <linux/libata.h>
+> +#include <linux/of_device.h>
+>   #include <linux/platform_device.h>
+>   #include <linux/clk.h>
+>   #include <linux/err.h>
+> @@ -123,12 +124,37 @@
+>
+>   #define SATA_RCAR_DMA_BOUNDARY		0x1FFFFFFEUL
+>
+> +/* Gen2 Physical Layer Control Registers */
+> +#define RCAR_GEN2_PHY_CTL1_REG		0x1704
+> +#define RCAR_GEN2_PHY_CTL1		0x34180002
+> +#define RCAR_GEN2_PHY_CTL1_SS		0xC180	/* Spread Spectrum */
+> +
+> +#define RCAR_GEN2_PHY_CTL2_REG		0x170C
+> +#define RCAR_GEN2_PHY_CTL2		0x00002303
+> +
+> +#define RCAR_GEN2_PHY_CTL3_REG		0x171C
+> +#define RCAR_GEN2_PHY_CTL3		0x000B0194
+> +
+> +#define RCAR_GEN2_PHY_CTL4_REG		0x1724
+> +#define RCAR_GEN2_PHY_CTL4		0x00030994
+> +
+> +#define RCAR_GEN2_PHY_CTL5_REG		0x1740
+> +#define RCAR_GEN2_PHY_CTL5		0x03004001
+> +#define RCAR_GEN2_PHY_CTL5_DC		BIT(1)	/* DC connection */
+> +#define RCAR_GEN2_PHY_CTL5_TR		BIT(2)	/* Termination Resistor */
+> +
+> +enum sata_rcar_type {
+> +	RCAR_GEN1_SATA,
+> +	RCAR_GEN2_SATA,
+> +};
+> +
+>   struct sata_rcar_priv {
+>   	void __iomem *base;
+>   	struct clk *clk;
+> +	enum sata_rcar_type type;
+>   };
+>
+> -static void sata_rcar_phy_initialize(struct sata_rcar_priv *priv)
+> +static void sata_rcar_gen1_phy_preinit(struct sata_rcar_priv *priv)
+>   {
+>   	void __iomem *base = priv->base;
+>
+> @@ -141,8 +167,8 @@ static void sata_rcar_phy_initialize(struct sata_rcar_priv *priv)
+>   	iowrite32(0, base + SATAPHYRESET_REG);
+>   }
+>
+> -static void sata_rcar_phy_write(struct sata_rcar_priv *priv, u16 reg, u32 val,
+> -				int group)
+> +static void sata_rcar_gen1_phy_write(struct sata_rcar_priv *priv, u16 reg,
+> +				     u32 val, int group)
+>   {
+>   	void __iomem *base = priv->base;
+>   	int timeout;
+> @@ -170,6 +196,29 @@ static void sata_rcar_phy_write(struct sata_rcar_priv *priv, u16 reg, u32 val,
+>   	iowrite32(0, base + SATAPHYADDR_REG);
+>   }
+>
+> +static void sata_rcar_gen1_phy_init(struct sata_rcar_priv *priv)
+> +{
+> +	sata_rcar_gen1_phy_preinit(priv);
+> +	sata_rcar_gen1_phy_write(priv, SATAPCTLR1_REG, 0x00200188, 0);
+> +	sata_rcar_gen1_phy_write(priv, SATAPCTLR1_REG, 0x00200188, 1);
+> +	sata_rcar_gen1_phy_write(priv, SATAPCTLR3_REG, 0x0000A061, 0);
+> +	sata_rcar_gen1_phy_write(priv, SATAPCTLR2_REG, 0x20000000, 0);
+> +	sata_rcar_gen1_phy_write(priv, SATAPCTLR2_REG, 0x20000000, 1);
+> +	sata_rcar_gen1_phy_write(priv, SATAPCTLR4_REG, 0x28E80000, 0);
+> +}
+> +
+> +static void sata_rcar_gen2_phy_init(struct sata_rcar_priv *priv)
+> +{
+> +	void __iomem *base = priv->base;
+> +
+> +	iowrite32(RCAR_GEN2_PHY_CTL1, base + RCAR_GEN2_PHY_CTL1_REG);
+> +	iowrite32(RCAR_GEN2_PHY_CTL2, base + RCAR_GEN2_PHY_CTL2_REG);
+> +	iowrite32(RCAR_GEN2_PHY_CTL3, base + RCAR_GEN2_PHY_CTL3_REG);
+> +	iowrite32(RCAR_GEN2_PHY_CTL4, base + RCAR_GEN2_PHY_CTL4_REG);
+> +	iowrite32(RCAR_GEN2_PHY_CTL5 | RCAR_GEN2_PHY_CTL5_DC |
+> +		  RCAR_GEN2_PHY_CTL5_TR, base + RCAR_GEN2_PHY_CTL5_REG);
+> +}
+> +
+>   static void sata_rcar_freeze(struct ata_port *ap)
+>   {
+>   	struct sata_rcar_priv *priv = ap->host->private_data;
+> @@ -738,13 +787,17 @@ static void sata_rcar_init_controller(struct ata_host *host)
+>   	u32 val;
+>
+>   	/* reset and setup phy */
+> -	sata_rcar_phy_initialize(priv);
+> -	sata_rcar_phy_write(priv, SATAPCTLR1_REG, 0x00200188, 0);
+> -	sata_rcar_phy_write(priv, SATAPCTLR1_REG, 0x00200188, 1);
+> -	sata_rcar_phy_write(priv, SATAPCTLR3_REG, 0x0000A061, 0);
+> -	sata_rcar_phy_write(priv, SATAPCTLR2_REG, 0x20000000, 0);
+> -	sata_rcar_phy_write(priv, SATAPCTLR2_REG, 0x20000000, 1);
+> -	sata_rcar_phy_write(priv, SATAPCTLR4_REG, 0x28E80000, 0);
+> +	switch (priv->type) {
+> +	case RCAR_GEN1_SATA:
+> +		sata_rcar_gen1_phy_init(priv);
+> +		break;
+> +	case RCAR_GEN2_SATA:
+> +		sata_rcar_gen2_phy_init(priv);
+> +		break;
+> +	default:
+> +		dev_warn(host->dev, "SATA phy is not initialized\n");
+> +		break;
+> +	}
+>
+>   	/* SATA-IP reset state */
+>   	val = ioread32(base + ATAPI_CONTROL1_REG);
+> @@ -770,8 +823,40 @@ static void sata_rcar_init_controller(struct ata_host *host)
+>   	iowrite32(ATAPI_INT_ENABLE_SATAINT, base + ATAPI_INT_ENABLE_REG);
+>   }
+>
+> +static struct of_device_id sata_rcar_match[] = {
+> +	{
+> +		/* Deprecated by "renesas,sata-r8a7779" */
+> +		.compatible = "renesas,rcar-sata",
+> +		.data = (void *)RCAR_GEN1_SATA,
+> +	},
+> +	{
+> +		.compatible = "renesas,sata-r8a7779",
+> +		.data = (void *)RCAR_GEN1_SATA,
+> +	},
+> +	{
+> +		.compatible = "renesas,sata-r8a7790",
+> +		.data = (void *)RCAR_GEN2_SATA
+> +	},
+> +	{
+> +		.compatible = "renesas,sata-r8a7791",
+> +		.data = (void *)RCAR_GEN2_SATA
+> +	},
+> +	{ },
+> +};
+> +MODULE_DEVICE_TABLE(of, sata_rcar_match);
+> +
+> +static const struct platform_device_id sata_rcar_id_table[] = {
+> +	{ "sata_rcar", RCAR_GEN1_SATA }, /* Deprecated by "sata-r8a7779" */
+> +	{ "sata-r8a7779", RCAR_GEN1_SATA },
+> +	{ "sata-r8a7790", RCAR_GEN2_SATA },
+> +	{ "sata-r8a7791", RCAR_GEN2_SATA },
+> +	{ },
+> +};
+> +MODULE_DEVICE_TABLE(platform, sata_rcar_id_table);
+> +
+>   static int sata_rcar_probe(struct platform_device *pdev)
+>   {
+> +	const struct of_device_id *of_id;
+>   	struct ata_host *host;
+>   	struct sata_rcar_priv *priv;
+>   	struct resource *mem;
+> @@ -787,6 +872,12 @@ static int sata_rcar_probe(struct platform_device *pdev)
+>   	if (!priv)
+>   		return -ENOMEM;
+>
+> +	of_id = of_match_device(sata_rcar_match, &pdev->dev);
+> +	if (of_id)
+> +		priv->type = (enum sata_rcar_type)of_id->data;
+> +	else
+> +		priv->type = platform_get_device_id(pdev)->driver_data;
+> +
+>   	priv->clk = devm_clk_get(&pdev->dev, NULL);
+>   	if (IS_ERR(priv->clk)) {
+>   		dev_err(&pdev->dev, "failed to get access to sata clock\n");
+> @@ -892,15 +983,10 @@ static const struct dev_pm_ops sata_rcar_pm_ops = {
+>   };
+>   #endif
+>
+> -static struct of_device_id sata_rcar_match[] = {
+> -	{ .compatible = "renesas,rcar-sata", },
+> -	{},
+> -};
+> -MODULE_DEVICE_TABLE(of, sata_rcar_match);
+> -
+>   static struct platform_driver sata_rcar_driver = {
+>   	.probe		= sata_rcar_probe,
+>   	.remove		= sata_rcar_remove,
+> +	.id_table	= sata_rcar_id_table,
+>   	.driver = {
+>   		.name		= DRV_NAME,
+>   		.owner		= THIS_MODULE,
+>
 
-I will use dummy fixed clock and added two PHY nodes.
-
--Loc
