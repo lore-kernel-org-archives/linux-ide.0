@@ -1,96 +1,58 @@
-From: Gwendal Grignou <gwendal@google.com>
-Subject: Re: [PATCH] sysfs: handle duplicate removal attempts in sysfs_remove_group()
-Date: Mon, 25 Nov 2013 15:51:08 -0800
-Message-ID: <CAMHSBOW10+LC9bd5eyKYX+8931Myq4uxvot40Yc_pM6gy4eNGw@mail.gmail.com>
-References: <1384866598-19716-1-git-send-email-mika.westerberg@linux.intel.com>
-	<3805095.rqdZNnA0Ng@vostro.rjw.lan>
-	<20131125101154.GS2281@intel.com>
-	<14914400.in2y5Td8qp@vostro.rjw.lan>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vb0-f42.google.com ([209.85.212.42]:64918 "EHLO
-	mail-vb0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751081Ab3KYXvJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Nov 2013 18:51:09 -0500
-Received: by mail-vb0-f42.google.com with SMTP id w18so3475433vbj.1
-        for <linux-ide@vger.kernel.org>; Mon, 25 Nov 2013 15:51:08 -0800 (PST)
-In-Reply-To: <14914400.in2y5Td8qp@vostro.rjw.lan>
-Sender: linux-ide-owner@vger.kernel.org
+From: Loc Ho <lho@apm.com>
+Subject: [PATCH v3 0/4] PHY: Add APM X-Gene SoC 15Gbps Multi-purpose PHY support
+Date: Mon, 25 Nov 2013 22:46:54 -0700
+Message-ID: <1385444818-29682-1-git-send-email-lho@apm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 List-Id: linux-ide@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-Rafael,
+PHY: Add APM X-Gene SoC 15Gbps Multi-purpose PHY support
 
-As you pointed out, ata_tport_delete() should be after
-scsi_remove_host(), consistent with ata_tport_add() currently before
-ata_scsi_add_host().
-Thanks for fixing it,
+This patch adds support for APM X-Gene SoC 15Gbps Multi-purpose PHY. This
+is the physical layer interface for the corresponding host controller. This
+driver uses the new PHY generic framework posted by Kishon Vijay Abrahm.
+In addition, the new PHY generic framework is patched to provide an
+function to set the speed of the PHY.
 
-Gwendal.
+v3
+* Major re-write of the code based on various review comments
+* Support external clock only at the moment
+* Support SATA mode only at the moment
+* No UEFI support at the moment
 
-On Mon, Nov 25, 2013 at 2:41 AM, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
->
-> On Monday, November 25, 2013 12:11:54 PM Mika Westerberg wrote:
-> > On Sun, Nov 24, 2013 at 02:09:09AM +0100, Rafael J. Wysocki wrote:
-> > > On Sunday, November 24, 2013 12:36:03 AM Rafael J. Wysocki wrote:
-> > > > On Saturday, November 23, 2013 03:07:01 PM Greg Kroah-Hartman wrote:
-> > > > > On Sun, Nov 24, 2013 at 12:12:59AM +0100, Rafael J. Wysocki wrote:
-> > > > > > On Saturday, November 23, 2013 02:53:58 PM Greg Kroah-Hartman wrote:
-> > >
-> > > [...]
-> > >
-> > > > > > >
-> > > > > > > I can revert Mika's patch, as it would be good to catch these kinds of
-> > > > > > > errors.
-> > > > > >
-> > > > > > Then we'll need to untangle the SATA/SCSI mess triggered by Bjorn in
-> > > > > > https://bugzilla.kernel.org/show_bug.cgi?id=65281. ;-)
-> > > > >
-> > > > > I have no objection to fixing that, the scsi sysfs handling is "odd" to
-> > > > > say the least...
-> > > > >
-> > > > > If someone can unwind it, that would be great to see happen...
-> > > >
-> > > > Well, if I'm bored to death during the xmas holidays, I may look into that.
-> > >
-> > > In fact, I'm not exactly sure why ata_port_detach() calls ata_tport_delete()
-> > > before scsi_remove_host()?  Is there any particular reason?  Because that
-> > > doesn't seem to be exactly right ...
-> >
-> > I tried so that I have your 'PCI: Move device_del() from pci_stop_dev() to
-> > pci_destroy_dev()' applied and then I did following change as you
-> > suggested.
-> >
-> > diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> > index 81a94a3919db..07a03f93d640 100644
-> > --- a/drivers/ata/libata-core.c
-> > +++ b/drivers/ata/libata-core.c
-> > @@ -6304,10 +6304,10 @@ static void ata_port_detach(struct ata_port *ap)
-> >               for (i = 0; i < SATA_PMP_MAX_PORTS; i++)
-> >                       ata_tlink_delete(&ap->pmp_link[i]);
-> >       }
-> > -     ata_tport_delete(ap);
-> > -
-> >       /* remove the associated SCSI host */
-> >       scsi_remove_host(ap->scsi_host);
-> > +
-> > +     ata_tport_delete(ap);
-> >  }
-> >
-> >  /**
-> >
-> > After both patches are applied the warnings are gone :) However, looks like
-> > both are needed since if I only apply one or another, I still get warnings.
->
-> Yes, they are both needed. :-)
->
-> OK, I'll submit the above upstream if you don't mind.
->
-> Cheers, R.
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+v2
+* Remove port knowledge from functions
+* Make all functions static
+* Remove ID completely
+* Make resource requirement based on compatible type
+* Rename override PHY parameters with more descriptive name
+* Add override PHY parameter for per controller, per port, and per speed
+* Patch the generic PHY frame to expose set_speed operation
+
+v1
+* Initial version
+
+Signed-off-by: Loc Ho <lho@apm.com>
+Signed-off-by: Tuan Phan <tphan@apm.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
+---
+Loc Ho (4):
+  PHY: Add function set_speed to generic PHY framework
+  Documentation: Add APM X-Gene SoC 15Gbps Multi-purpose PHY driver
+    binding documentation
+  PHY: add APM X-Gene SoC 15Gbps Multi-purpose PHY driver
+  arm64: Add APM X-Gene SoC 15Gbps Multi-purpose PHY DTS entries
+
+ .../devicetree/bindings/ata/apm-xgene-phy.txt      |   89 +
+ arch/arm64/boot/dts/apm-storm.dtsi                 |   31 +
+ drivers/phy/Kconfig                                |    6 +
+ drivers/phy/Makefile                               |    2 +
+ drivers/phy/phy-core.c                             |   21 +
+ drivers/phy/phy-xgene.c                            | 1838 ++++++++++++++++++++
+ include/linux/phy/phy.h                            |    8 +
+ 7 files changed, 1995 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/apm-xgene-phy.txt
+ create mode 100644 drivers/phy/phy-xgene.c
+
