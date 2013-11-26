@@ -1,95 +1,39 @@
-From: Mark Rutland <mark.rutland@arm.com>
-Subject: Re: [PATCH v5 2/4] Documentation: Add documentation for APM X-Gene
- SoC SATA host controller DTS binding
-Date: Tue, 26 Nov 2013 14:55:16 +0000
-Message-ID: <20131126145515.GD5402@e106331-lin.cambridge.arm.com>
-References: <1385449285-30764-1-git-send-email-lho@apm.com>
- <1385449285-30764-2-git-send-email-lho@apm.com>
- <1385449285-30764-3-git-send-email-lho@apm.com>
+From: Loc Ho <lho@apm.com>
+Subject: Re: [PATCH v3 3/4] ata: Add APM X-Gene SoC SATA host controller driver
+Date: Tue, 26 Nov 2013 08:41:00 -0800
+Message-ID: <CAPw-ZTmPgYA+saJPVvB17VOPouDGvR0rd0nrZWi0j3zE7cc2rg@mail.gmail.com>
+References: <1384465153-29902-1-git-send-email-lho@apm.com>
+	<1384465153-29902-3-git-send-email-lho@apm.com>
+	<1384465153-29902-4-git-send-email-lho@apm.com>
+	<201311151448.16279.arnd@arndb.de>
+	<CAPw-ZTmaz3nnV3ThRgecT_RaYYW0bmfWvL8Kr-S3z1aKyUWc+w@mail.gmail.com>
+	<CAPw-ZTn1N7+EFu9L6U+P9=9ii3k1BjycYXdNCdxCVPb8SaJWxA@mail.gmail.com>
+	<529473DD.1090804@ti.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1385449285-30764-3-git-send-email-lho@apm.com>
+In-Reply-To: <529473DD.1090804@ti.com>
 Sender: linux-scsi-owner@vger.kernel.org
-To: Loc Ho <lho@apm.com>
-Cc: "olof@lixom.net" <olof@lixom.net>, "tj@kernel.org" <tj@kernel.org>, "arnd@arndb.de" <arnd@arndb.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "jcm@redhat.com" <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Jon Masters <jcm@redhat.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, Nov 26, 2013 at 07:01:23AM +0000, Loc Ho wrote:
-> Documentation: Add documentation for APM X-Gene SoC SATA host controller DTS binding
-> 
-> Signed-off-by: Loc Ho <lho@apm.com>
-> Signed-off-by: Tuan Phan <tphan@apm.com>
-> Signed-off-by: Suman Tripathi <stripathi@apm.com>
-> ---
->  .../devicetree/bindings/ata/apm-xgene.txt          |  102 ++++++++++++++++++++
->  1 files changed, 102 insertions(+), 0 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/ata/apm-xgene.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/ata/apm-xgene.txt b/Documentation/devicetree/bindings/ata/apm-xgene.txt
-> new file mode 100644
-> index 0000000..879eee7
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ata/apm-xgene.txt
-> @@ -0,0 +1,102 @@
-> +* APM X-Gene 6.0 Gb/s SATA host controller and clock nodes
-> +
-> +SATA host controller nodes are defined to describe on-chip Serial ATA
-> +controllers. Each SATA controller (pair of ports) have its own node. Its
-> +corresponding clock nodes are shown below.
-> +
-> +Required properties:
-> +- compatible		: Shall be "apm,xgene-ahci-sgmii" if mux'ed with SGMII
-> +			  or "apm,xgene-ahci-pcie" if mux'ed with PCIe.
-> +- reg			: First memory resource shall be the AHCI memory
-> +			  resource.
-> +			  Second memory resource shall be the host controller
-> +			  memory resource.
-> +- interrupt-parent	: Interrupt controller.
+Hi,
 
-I don't think that's strictly required.
+>> int set_speed(struct *phy, int lane, u64 speed);
+>
+> it should be phy_set_speed.
+[Loc Ho]
+But your other functions don't repeat the prefix "phy"?
 
-> +- interrupts		: Interrupt mapping for SATA host controller IRQ.
-> +- clocks		: Reference to the clock entry.
-> +- phys			: PHY reference with parameter 0.
-> +- phy-names		: Name of the PHY. Shall be "sata-6g".
-> +
-> +Optional properties:
-> +- status		: Shall be "ok" if enabled or "na" if disabled.
-> +			  Default is "ok".
+>>
+>> where lane indicates the lane of the PHY and speed is the PHY speed in hertz.
+>
+> Does lane here means the number of lanes? Is the lane also obtained after the
+> training sequence?
+[Loc Ho]
+Lane here is the lane with you are changing the speed. If there are
+two lanes, then 0 parameter would change lane 0. 1 would change lane
+1.
 
-Why not use the more standard "disabled" string, as I asked you to
-previously?
-
-[...]
-
-> +		sata2: sata@1a400000 {
-> +			compatible = "apm,xgene-ahci-sgmii";
-> +			reg = <0x0 0x1a400000 0x0 0x1000>,
-> +			      <0x0 0x1f220000 0x0 0x10000>;
-> +			interrupt-parent = <&gic>;
-> +			interrupts = <0x0 0x87 0x4>;
-> +			status = "ok";
-> +			clocks = <&sata23clk 0>;
-> +			phys = <&phy2 0>;
-> +			phy-names = "sata-6g";
-> +		};
-> +
-> +		sata3: sata@1a800000 {
-> +			compatible = "apm,xgene-ahci-pcie";
-> +			reg = <0x0 0x1a800000 0x0 0x1000>,
-> +			      <0x0 0x1f230000 0x0 0x10000>;
-> +			interrupt-parent = <&gic>;
-> +			interrupts = <0x0 0x88 0x4>;
-> +			status = "ok";
-> +			clocks = <&sata45clk 0>;
-> +			phys = <&phy3 0>;
-> +			phy-names = "sata-6g";
-> +		};
-
-The example is pointlessly huge. You could trim it down two these last
-two nodes (with a phy node and some fixed clocks). 
-
-Thanks,
-Mark.
+-Loc
