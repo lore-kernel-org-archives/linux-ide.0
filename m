@@ -1,19 +1,27 @@
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+From: Jingoo Han <jg1.han@samsung.com>
 Subject: Re: [PATCH] ATA: Fix port removal ordering
-Date: Wed, 27 Nov 2013 02:58:03 +0100
-Message-ID: <3417322.uazj4NI2OU@vostro.rjw.lan>
-References: <1384866598-19716-1-git-send-email-mika.westerberg@linux.intel.com> <20131125101154.GS2281@intel.com> <9509557.LMLHG8ie3T@vostro.rjw.lan>
+Date: Wed, 27 Nov 2013 13:34:00 +0900
+Message-ID: <000001ceeb29$e4d27f70$ae777e50$%han@samsung.com>
+References: <1384866598-19716-1-git-send-email-mika.westerberg@linux.intel.com>
+ <3805095.rqdZNnA0Ng@vostro.rjw.lan> <20131125101154.GS2281@intel.com>
+ <9509557.LMLHG8ie3T@vostro.rjw.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <9509557.LMLHG8ie3T@vostro.rjw.lan>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Bjorn Helgaas <bhelgaas@google.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-ide@vger.kernel.org, Linux PCI <linux-pci@vger.kernel.org>, Gwendal Grignou <gwendal@google.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mailout2.samsung.com ([203.254.224.25]:43130 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751269Ab3K0EeE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Nov 2013 23:34:04 -0500
+In-reply-to: <9509557.LMLHG8ie3T@vostro.rjw.lan>
+Content-language: ko
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "'Rafael J. Wysocki'" <rjw@rjwysocki.net>, 'Tejun Heo' <tj@kernel.org>
+Cc: 'Mika Westerberg' <mika.westerberg@linux.intel.com>, 'Greg Kroah-Hartman' <gregkh@linuxfoundation.org>, 'Bjorn Helgaas' <bhelgaas@google.com>, linux-kernel@vger.kernel.org, "'James E.J. Bottomley'" <JBottomley@parallels.com>, linux-ide@vger.kernel.org, 'Linux PCI' <linux-pci@vger.kernel.org>, 'Jingoo Han' <jg1.han@samsung.com>
 
-On Monday, November 25, 2013 01:19:01 PM Rafael J. Wysocki wrote:
+On Monday, November 25, 2013 9:19 PM, Rafael J. Wysocki wrote:
+> 
 > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 > 
 > After commit bcdde7e221a8 (sysfs: make __sysfs_remove_dir() recursive)
@@ -82,6 +90,16 @@ On Monday, November 25, 2013 01:19:01 PM Rafael J. Wysocki wrote:
 > References: https://bugzilla.kernel.org/show_bug.cgi?id=65281
 > Reported-and-tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+
+Tested-by: Jingoo Han <jg1.han@samsung.com>
+
+I tested this patch on Exynos platform with PCI-SATA card.
+I checked that the kernel panic is resolved.
+Thank you.
+
+Best regards,
+Jingoo Han
+
 > ---
 > 
 > Hi,
@@ -89,15 +107,10 @@ On Monday, November 25, 2013 01:19:01 PM Rafael J. Wysocki wrote:
 > This along with https://patchwork.kernel.org/patch/3226081/ makes
 > all of the warnings observed by Mika go away without the patch at
 > https://patchwork.kernel.org/patch/3201841/ applied.
-
-Any news here?
-
-Gwendal has agreed with this patch. :-)
-
-Thanks,
-Rafael
-
-
+> 
+> Thanks,
+> Rafael
+> 
 > ---
 >  drivers/ata/libata-core.c |    3 +--
 >  1 file changed, 1 insertion(+), 2 deletions(-)
@@ -116,14 +129,8 @@ Rafael
 >  	scsi_remove_host(ap->scsi_host);
 > +	ata_tport_delete(ap);
 >  }
->  
+> 
 >  /**
 > 
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+
