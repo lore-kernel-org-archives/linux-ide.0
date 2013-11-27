@@ -1,239 +1,129 @@
-From: Valentine <valentine.barshak@cogentembedded.com>
-Subject: Re: [PATCH V3 1/2] sata_rcar: Add R-Car Gen2 SATA PHY support
-Date: Wed, 27 Nov 2013 02:06:05 +0400
-Message-ID: <52951B4D.3030205@cogentembedded.com>
-References: <1383912570-8393-1-git-send-email-valentine.barshak@cogentembedded.com> <1383912570-8393-2-git-send-email-valentine.barshak@cogentembedded.com>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [PATCH] ATA: Fix port removal ordering
+Date: Wed, 27 Nov 2013 02:58:03 +0100
+Message-ID: <3417322.uazj4NI2OU@vostro.rjw.lan>
+References: <1384866598-19716-1-git-send-email-mika.westerberg@linux.intel.com> <20131125101154.GS2281@intel.com> <9509557.LMLHG8ie3T@vostro.rjw.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lb0-f173.google.com ([209.85.217.173]:58246 "EHLO
-	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757754Ab3KZWGL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Nov 2013 17:06:11 -0500
-Received: by mail-lb0-f173.google.com with SMTP id u14so4907854lbd.18
-        for <linux-ide@vger.kernel.org>; Tue, 26 Nov 2013 14:06:09 -0800 (PST)
-In-Reply-To: <1383912570-8393-2-git-send-email-valentine.barshak@cogentembedded.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <9509557.LMLHG8ie3T@vostro.rjw.lan>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Bjorn Helgaas <bhelgaas@google.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-ide@vger.kernel.org, Linux PCI <linux-pci@vger.kernel.org>, Gwendal Grignou <gwendal@google.com>
 List-Id: linux-ide@vger.kernel.org
-To: linux-sh@vger.kernel.org, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>
-Cc: devicetree@vger.kernel.org, Simon Horman <horms@verge.net.au>, Magnus Damm <magnus.damm@gmail.com>, Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>, Laurent Pinchart <laurent.pinchart@ideasonboard.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Kumar Gala <galak@codeaurora.org>, Vladimir Barinov <vladimir.barinov@cogentembedded.com>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Mark Rutland <mark.rutland@arm.com>
 
-On 11/08/2013 04:09 PM, Valentine Barshak wrote:
+On Monday, November 25, 2013 01:19:01 PM Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> After commit bcdde7e221a8 (sysfs: make __sysfs_remove_dir() recursive)
+> Mika Westerberg sees traces analogous to the one below in Thunderbolt
+> hot-remove testing:
+> 
+>  WARNING: CPU: 0 PID: 4 at fs/sysfs/group.c:214 sysfs_remove_group+0xc6/0xd0()
+>  sysfs group ffffffff81c6f1e0 not found for kobject 'host7'
+>  Modules linked in:
+>  CPU: 0 PID: 4 Comm: kworker/0:0 Not tainted 3.12.0+ #13
+>  Hardware name:                  /D33217CK, BIOS GKPPT10H.86A.0042.2013.0422.1439 04/22/2013
+>  Workqueue: kacpi_hotplug acpi_hotplug_work_fn
+>   0000000000000009 ffff8801002459b0 ffffffff817daab1 ffff8801002459f8
+>   ffff8801002459e8 ffffffff810436b8 0000000000000000 ffffffff81c6f1e0
+>   ffff88006d440358 ffff88006d440188 ffff88006e8b4c28 ffff880100245a48
+>  Call Trace:
+>   [<ffffffff817daab1>] dump_stack+0x45/0x56
+>   [<ffffffff810436b8>] warn_slowpath_common+0x78/0xa0
+>   [<ffffffff81043727>] warn_slowpath_fmt+0x47/0x50
+>   [<ffffffff811ad319>] ? sysfs_get_dirent_ns+0x49/0x70
+>   [<ffffffff811ae526>] sysfs_remove_group+0xc6/0xd0
+>   [<ffffffff81432f7e>] dpm_sysfs_remove+0x3e/0x50
+>   [<ffffffff8142a0d0>] device_del+0x40/0x1b0
+>   [<ffffffff8142a24d>] device_unregister+0xd/0x20
+>   [<ffffffff8144131a>] scsi_remove_host+0xba/0x110
+>   [<ffffffff8145f526>] ata_host_detach+0xc6/0x100
+>   [<ffffffff8145f578>] ata_pci_remove_one+0x18/0x20
+>   [<ffffffff812e8f48>] pci_device_remove+0x28/0x60
+>   [<ffffffff8142d854>] __device_release_driver+0x64/0xd0
+>   [<ffffffff8142d8de>] device_release_driver+0x1e/0x30
+>   [<ffffffff8142d257>] bus_remove_device+0xf7/0x140
+>   [<ffffffff8142a1b1>] device_del+0x121/0x1b0
+>   [<ffffffff812e43d4>] pci_stop_bus_device+0x94/0xa0
+>   [<ffffffff812e437b>] pci_stop_bus_device+0x3b/0xa0
+>   [<ffffffff812e437b>] pci_stop_bus_device+0x3b/0xa0
+>   [<ffffffff812e44dd>] pci_stop_and_remove_bus_device+0xd/0x20
+>   [<ffffffff812fc743>] trim_stale_devices+0x73/0xe0
+>   [<ffffffff812fc78b>] trim_stale_devices+0xbb/0xe0
+>   [<ffffffff812fc78b>] trim_stale_devices+0xbb/0xe0
+>   [<ffffffff812fcb6e>] acpiphp_check_bridge+0x7e/0xd0
+>   [<ffffffff812fd90d>] hotplug_event+0xcd/0x160
+>   [<ffffffff812fd9c5>] hotplug_event_work+0x25/0x60
+>   [<ffffffff81316749>] acpi_hotplug_work_fn+0x17/0x22
+>   [<ffffffff8105cf3a>] process_one_work+0x17a/0x430
+>   [<ffffffff8105db29>] worker_thread+0x119/0x390
+>   [<ffffffff8105da10>] ? manage_workers.isra.25+0x2a0/0x2a0
+>   [<ffffffff81063a5d>] kthread+0xcd/0xf0
+>   [<ffffffff81063990>] ? kthread_create_on_node+0x180/0x180
+>   [<ffffffff817eb33c>] ret_from_fork+0x7c/0xb0
+>   [<ffffffff81063990>] ? kthread_create_on_node+0x180/0x180
+> 
+> The source of this problem is that SCSI hosts are removed from
+> ATA ports after calling ata_tport_delete() which removes the
+> port's sysfs directory, among other things.  Now, after commit
+> bcdde7e221a8, the sysfs directory is removed along with all of
+> its subdirectories that include the SCSI host's sysfs directory
+> and its subdirectories at this point.  Consequently, when
+> device_del() is finally called for any child device of the SCSI
+> host and tries to remove its "power" group (which is already
+> gone then), it triggers the above warning.
+> 
+> To make the warnings go away, change the removal ordering in
+> ata_port_detach() so that the SCSI host is removed from the
+> port before ata_tport_delete() is called.
+> 
+> References: https://bugzilla.kernel.org/show_bug.cgi?id=65281
+> Reported-and-tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> ---
+> 
+> Hi,
+> 
+> This along with https://patchwork.kernel.org/patch/3226081/ makes
+> all of the warnings observed by Mika go away without the patch at
+> https://patchwork.kernel.org/patch/3201841/ applied.
 
-Tejun,
-are you OK with taking this?
+Any news here?
 
-> R-Car Gen2 SoCs have a different PHY which is not compatible
-> with the older R-Car H1 (R8A7779) version.
-> This adds OF/platform device id tables and PHY initialization
-> callbacks for the following Gen2 SoCs:
->    * R-Car H2: R8A7790;
->    * R-Car M2: R8A7791.
->
-> PHY initialization method is chosen based on the device id.
-> Default PHY settings are applied for Gen2 SoCs, which should
-> suit the Gen2 boards available.
->
-> While at it, this also adds "sata-r8a7779" compatibility string
-> for R8A7779 SATA, while keeping the old one for compatibility.
+Gwendal has agreed with this patch. :-)
 
 Thanks,
-Val.
+Rafael
 
->
-> Signed-off-by: Valentine Barshak <valentine.barshak@cogentembedded.com>
+
 > ---
->   drivers/ata/sata_rcar.c | 118 +++++++++++++++++++++++++++++++++++++++++-------
->   1 file changed, 102 insertions(+), 16 deletions(-)
->
-> diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
-> index c2d95e9..231559f 100644
-> --- a/drivers/ata/sata_rcar.c
-> +++ b/drivers/ata/sata_rcar.c
-> @@ -15,6 +15,7 @@
->   #include <linux/module.h>
->   #include <linux/ata.h>
->   #include <linux/libata.h>
-> +#include <linux/of_device.h>
->   #include <linux/platform_device.h>
->   #include <linux/clk.h>
->   #include <linux/err.h>
-> @@ -123,12 +124,37 @@
->
->   #define SATA_RCAR_DMA_BOUNDARY		0x1FFFFFFEUL
->
-> +/* Gen2 Physical Layer Control Registers */
-> +#define RCAR_GEN2_PHY_CTL1_REG		0x1704
-> +#define RCAR_GEN2_PHY_CTL1		0x34180002
-> +#define RCAR_GEN2_PHY_CTL1_SS		0xC180	/* Spread Spectrum */
-> +
-> +#define RCAR_GEN2_PHY_CTL2_REG		0x170C
-> +#define RCAR_GEN2_PHY_CTL2		0x00002303
-> +
-> +#define RCAR_GEN2_PHY_CTL3_REG		0x171C
-> +#define RCAR_GEN2_PHY_CTL3		0x000B0194
-> +
-> +#define RCAR_GEN2_PHY_CTL4_REG		0x1724
-> +#define RCAR_GEN2_PHY_CTL4		0x00030994
-> +
-> +#define RCAR_GEN2_PHY_CTL5_REG		0x1740
-> +#define RCAR_GEN2_PHY_CTL5		0x03004001
-> +#define RCAR_GEN2_PHY_CTL5_DC		BIT(1)	/* DC connection */
-> +#define RCAR_GEN2_PHY_CTL5_TR		BIT(2)	/* Termination Resistor */
-> +
-> +enum sata_rcar_type {
-> +	RCAR_GEN1_SATA,
-> +	RCAR_GEN2_SATA,
-> +};
-> +
->   struct sata_rcar_priv {
->   	void __iomem *base;
->   	struct clk *clk;
-> +	enum sata_rcar_type type;
->   };
->
-> -static void sata_rcar_phy_initialize(struct sata_rcar_priv *priv)
-> +static void sata_rcar_gen1_phy_preinit(struct sata_rcar_priv *priv)
->   {
->   	void __iomem *base = priv->base;
->
-> @@ -141,8 +167,8 @@ static void sata_rcar_phy_initialize(struct sata_rcar_priv *priv)
->   	iowrite32(0, base + SATAPHYRESET_REG);
->   }
->
-> -static void sata_rcar_phy_write(struct sata_rcar_priv *priv, u16 reg, u32 val,
-> -				int group)
-> +static void sata_rcar_gen1_phy_write(struct sata_rcar_priv *priv, u16 reg,
-> +				     u32 val, int group)
->   {
->   	void __iomem *base = priv->base;
->   	int timeout;
-> @@ -170,6 +196,29 @@ static void sata_rcar_phy_write(struct sata_rcar_priv *priv, u16 reg, u32 val,
->   	iowrite32(0, base + SATAPHYADDR_REG);
->   }
->
-> +static void sata_rcar_gen1_phy_init(struct sata_rcar_priv *priv)
-> +{
-> +	sata_rcar_gen1_phy_preinit(priv);
-> +	sata_rcar_gen1_phy_write(priv, SATAPCTLR1_REG, 0x00200188, 0);
-> +	sata_rcar_gen1_phy_write(priv, SATAPCTLR1_REG, 0x00200188, 1);
-> +	sata_rcar_gen1_phy_write(priv, SATAPCTLR3_REG, 0x0000A061, 0);
-> +	sata_rcar_gen1_phy_write(priv, SATAPCTLR2_REG, 0x20000000, 0);
-> +	sata_rcar_gen1_phy_write(priv, SATAPCTLR2_REG, 0x20000000, 1);
-> +	sata_rcar_gen1_phy_write(priv, SATAPCTLR4_REG, 0x28E80000, 0);
-> +}
-> +
-> +static void sata_rcar_gen2_phy_init(struct sata_rcar_priv *priv)
-> +{
-> +	void __iomem *base = priv->base;
-> +
-> +	iowrite32(RCAR_GEN2_PHY_CTL1, base + RCAR_GEN2_PHY_CTL1_REG);
-> +	iowrite32(RCAR_GEN2_PHY_CTL2, base + RCAR_GEN2_PHY_CTL2_REG);
-> +	iowrite32(RCAR_GEN2_PHY_CTL3, base + RCAR_GEN2_PHY_CTL3_REG);
-> +	iowrite32(RCAR_GEN2_PHY_CTL4, base + RCAR_GEN2_PHY_CTL4_REG);
-> +	iowrite32(RCAR_GEN2_PHY_CTL5 | RCAR_GEN2_PHY_CTL5_DC |
-> +		  RCAR_GEN2_PHY_CTL5_TR, base + RCAR_GEN2_PHY_CTL5_REG);
-> +}
-> +
->   static void sata_rcar_freeze(struct ata_port *ap)
->   {
->   	struct sata_rcar_priv *priv = ap->host->private_data;
-> @@ -738,13 +787,17 @@ static void sata_rcar_init_controller(struct ata_host *host)
->   	u32 val;
->
->   	/* reset and setup phy */
-> -	sata_rcar_phy_initialize(priv);
-> -	sata_rcar_phy_write(priv, SATAPCTLR1_REG, 0x00200188, 0);
-> -	sata_rcar_phy_write(priv, SATAPCTLR1_REG, 0x00200188, 1);
-> -	sata_rcar_phy_write(priv, SATAPCTLR3_REG, 0x0000A061, 0);
-> -	sata_rcar_phy_write(priv, SATAPCTLR2_REG, 0x20000000, 0);
-> -	sata_rcar_phy_write(priv, SATAPCTLR2_REG, 0x20000000, 1);
-> -	sata_rcar_phy_write(priv, SATAPCTLR4_REG, 0x28E80000, 0);
-> +	switch (priv->type) {
-> +	case RCAR_GEN1_SATA:
-> +		sata_rcar_gen1_phy_init(priv);
-> +		break;
-> +	case RCAR_GEN2_SATA:
-> +		sata_rcar_gen2_phy_init(priv);
-> +		break;
-> +	default:
-> +		dev_warn(host->dev, "SATA phy is not initialized\n");
-> +		break;
-> +	}
->
->   	/* SATA-IP reset state */
->   	val = ioread32(base + ATAPI_CONTROL1_REG);
-> @@ -770,8 +823,40 @@ static void sata_rcar_init_controller(struct ata_host *host)
->   	iowrite32(ATAPI_INT_ENABLE_SATAINT, base + ATAPI_INT_ENABLE_REG);
->   }
->
-> +static struct of_device_id sata_rcar_match[] = {
-> +	{
-> +		/* Deprecated by "renesas,sata-r8a7779" */
-> +		.compatible = "renesas,rcar-sata",
-> +		.data = (void *)RCAR_GEN1_SATA,
-> +	},
-> +	{
-> +		.compatible = "renesas,sata-r8a7779",
-> +		.data = (void *)RCAR_GEN1_SATA,
-> +	},
-> +	{
-> +		.compatible = "renesas,sata-r8a7790",
-> +		.data = (void *)RCAR_GEN2_SATA
-> +	},
-> +	{
-> +		.compatible = "renesas,sata-r8a7791",
-> +		.data = (void *)RCAR_GEN2_SATA
-> +	},
-> +	{ },
-> +};
-> +MODULE_DEVICE_TABLE(of, sata_rcar_match);
-> +
-> +static const struct platform_device_id sata_rcar_id_table[] = {
-> +	{ "sata_rcar", RCAR_GEN1_SATA }, /* Deprecated by "sata-r8a7779" */
-> +	{ "sata-r8a7779", RCAR_GEN1_SATA },
-> +	{ "sata-r8a7790", RCAR_GEN2_SATA },
-> +	{ "sata-r8a7791", RCAR_GEN2_SATA },
-> +	{ },
-> +};
-> +MODULE_DEVICE_TABLE(platform, sata_rcar_id_table);
-> +
->   static int sata_rcar_probe(struct platform_device *pdev)
->   {
-> +	const struct of_device_id *of_id;
->   	struct ata_host *host;
->   	struct sata_rcar_priv *priv;
->   	struct resource *mem;
-> @@ -787,6 +872,12 @@ static int sata_rcar_probe(struct platform_device *pdev)
->   	if (!priv)
->   		return -ENOMEM;
->
-> +	of_id = of_match_device(sata_rcar_match, &pdev->dev);
-> +	if (of_id)
-> +		priv->type = (enum sata_rcar_type)of_id->data;
-> +	else
-> +		priv->type = platform_get_device_id(pdev)->driver_data;
-> +
->   	priv->clk = devm_clk_get(&pdev->dev, NULL);
->   	if (IS_ERR(priv->clk)) {
->   		dev_err(&pdev->dev, "failed to get access to sata clock\n");
-> @@ -892,15 +983,10 @@ static const struct dev_pm_ops sata_rcar_pm_ops = {
->   };
->   #endif
->
-> -static struct of_device_id sata_rcar_match[] = {
-> -	{ .compatible = "renesas,rcar-sata", },
-> -	{},
-> -};
-> -MODULE_DEVICE_TABLE(of, sata_rcar_match);
+>  drivers/ata/libata-core.c |    3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> Index: linux-pm/drivers/ata/libata-core.c
+> ===================================================================
+> --- linux-pm.orig/drivers/ata/libata-core.c
+> +++ linux-pm/drivers/ata/libata-core.c
+> @@ -6304,10 +6304,9 @@ static void ata_port_detach(struct ata_p
+>  		for (i = 0; i < SATA_PMP_MAX_PORTS; i++)
+>  			ata_tlink_delete(&ap->pmp_link[i]);
+>  	}
+> -	ata_tport_delete(ap);
 > -
->   static struct platform_driver sata_rcar_driver = {
->   	.probe		= sata_rcar_probe,
->   	.remove		= sata_rcar_remove,
-> +	.id_table	= sata_rcar_id_table,
->   	.driver = {
->   		.name		= DRV_NAME,
->   		.owner		= THIS_MODULE,
->
-
+>  	/* remove the associated SCSI host */
+>  	scsi_remove_host(ap->scsi_host);
+> +	ata_tport_delete(ap);
+>  }
+>  
+>  /**
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+-- 
+I speak only for myself.
+Rafael J. Wysocki, Intel Open Source Technology Center.
