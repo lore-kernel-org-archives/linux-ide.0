@@ -1,45 +1,53 @@
-From: Phillip Susi <psusi@ubuntu.com>
-Subject: Re: [PATCH/RESEND v2 0/2] SATA disk resume time optimization
-Date: Wed, 27 Nov 2013 11:18:54 -0500
-Message-ID: <52961B6E.9070505@ubuntu.com>
-References: <20131017193331.GA11747@linux.intel.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] ATA: Fix port removal ordering
+Date: Wed, 27 Nov 2013 13:56:34 -0500
+Message-ID: <20131127185634.GD13098@mtj.dyndns.org>
+References: <1384866598-19716-1-git-send-email-mika.westerberg@linux.intel.com>
+ <3805095.rqdZNnA0Ng@vostro.rjw.lan>
+ <20131125101154.GS2281@intel.com>
+ <9509557.LMLHG8ie3T@vostro.rjw.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:45796 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751980Ab3K0QS4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Nov 2013 11:18:56 -0500
-In-Reply-To: <20131017193331.GA11747@linux.intel.com>
+Received: from mail-yh0-f52.google.com ([209.85.213.52]:37961 "EHLO
+	mail-yh0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756837Ab3K0S4j (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Nov 2013 13:56:39 -0500
+Content-Disposition: inline
+In-Reply-To: <9509557.LMLHG8ie3T@vostro.rjw.lan>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: todd.e.brandt@linux.intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: tj@kernel.org, JBottomley@parallels.com
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Bjorn Helgaas <bhelgaas@google.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-ide@vger.kernel.org, Linux PCI <linux-pci@vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
-
-On 10/17/2013 3:33 PM, Todd E Brandt wrote:
-> sd_resume patch (2/2):
+On Mon, Nov 25, 2013 at 01:19:01PM +0100, Rafael J. Wysocki wrote:
+> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 > 
-> On resume, the SD driver currently waits until the block driver 
-> finishes executing a disk start command with blk_execute_rq. This 
-> patch changes the sd_resume callback to use blk_execute_rq_nowait 
-> instead, which allows it to return immediately, thus allowing the
+> After commit bcdde7e221a8 (sysfs: make __sysfs_remove_dir() recursive)
+> Mika Westerberg sees traces analogous to the one below in Thunderbolt
+> hot-remove testing:
+...
+> The source of this problem is that SCSI hosts are removed from
+> ATA ports after calling ata_tport_delete() which removes the
+> port's sysfs directory, among other things.  Now, after commit
+> bcdde7e221a8, the sysfs directory is removed along with all of
+> its subdirectories that include the SCSI host's sysfs directory
+> and its subdirectories at this point.  Consequently, when
+> device_del() is finally called for any child device of the SCSI
+> host and tries to remove its "power" group (which is already
+> gone then), it triggers the above warning.
+> 
+> To make the warnings go away, change the removal ordering in
+> ata_port_detach() so that the SCSI host is removed from the
+> port before ata_tport_delete() is called.
+> 
+> References: https://bugzilla.kernel.org/show_bug.cgi?id=65281
+> Reported-and-tested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Can another request in the queue race with the start/stop command and
-possibly beat it to dispatch?
+Applied to libata/for-3.13-fixes.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+Thanks!
 
-iQEcBAEBAgAGBQJSlhtuAAoJEI5FoCIzSKrwgJ0H/ioXLuLHh4aJ3ZNs9LZ3gloA
-hQb9bTbUOFpC2HM0GpWntNs9V1KXKha7zqiW7alqmmiaUor7mN8CoVILIrwgEe10
-9Fd8z0DNBjCM+BdhdSO1g2opjMYif9ID74E/nA4tP3cXV2TiPjax/lF861iirEAl
-xaK5WdI7Ua5qbpIc1Xr6t8EbH1DSwEbiFOkN5HGs2ldFWB+f3jTRMZiGwh2RhUzV
-OZt2UKIsCAhwO6opnUPJ3Vv4IHQR248uijGxcuy5KDERVbKtfz8If6CG43FVdSr/
-c59AEXgUFtvPm/J9DRO/rVO7Dp2e+DTwJ67Mx9TDqtcKwuRxzsdaxn1yJEXoZfk=
-=IOxx
------END PGP SIGNATURE-----
+-- 
+tejun
