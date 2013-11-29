@@ -1,58 +1,58 @@
-From: Lan Tianyu <tianyu.lan@intel.com>
-Subject: Re: [PATCH 0/3] ACPI / bind: Use struct acpi_device pointers instead
- of ACPI handles
-Date: Fri, 29 Nov 2013 10:11:21 +0800
-Message-ID: <5297F7C9.6090303@intel.com>
-References: <4501334.ovACrGogrl@vostro.rjw.lan>
+From: venkat <venkat.s@vortexindia.co.in>
+Subject: Re: SATA IDE Disk failure leasds to kernel freezing and DMESG looping
+Date: Fri, 29 Nov 2013 13:28:10 +0530
+Message-ID: <52984912.5070104@vortexindia.co.in>
+References: <1385634640.84101.YahooMailNeo@web2705.biz.mail.sg3.yahoo.com> <52971EE6.4030301@vortexindia.co.in> <52977B7F.1040602@linux.com> <529834AD.6040100@vortexindia.co.in> <52983871.9040209@linux.com> <1385708575.44913.YahooMailNeo@web2713.biz.mail.sg3.yahoo.com> <52983E85.60207@linux.com> <52984053.3000104@vortexindia.co.in> <529842FB.8020203@linux.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:29206 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752135Ab3K2CW7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 28 Nov 2013 21:22:59 -0500
-In-Reply-To: <4501334.ovACrGogrl@vostro.rjw.lan>
+Received: from smtp102.biz.mail.sg3.yahoo.com ([106.10.167.245]:44602 "HELO
+	smtp102.biz.mail.sg3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750871Ab3K2Hy3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Nov 2013 02:54:29 -0500
+In-Reply-To: <529842FB.8020203@linux.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>, Linux PCI <linux-pci@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Aaron Lu <aaron.lu@intel.com>, Toshi Kani <toshi.kani@hp.com>, Bjorn Helgaas <bhelgaas@google.com>, linux-ide@vger.kernel.org, linux-usb@vger.kernel.org
+To: Levente Kurusa <levex@linux.com>
+Cc: Reddy G <reddygb@vortexindia.co.in>, Robert Hancock <hancockrwd@gmail.com>, linux-ide@vger.kernel.org
 
-On 2013=E5=B9=B411=E6=9C=8829=E6=97=A5 08:36, Rafael J. Wysocki wrote:
-> Hi,
->=20
-> Now that we store a pointer to struct acpi_device as the ACPI compani=
-on in
-> struct device, the code making associations between "physical" device=
-s and
-> ACPI device objects can be modified to work with struct acpi_device p=
-ointers
-> instead of ACPI handles too.  The first two of the following patches =
-make these
-> changes and the third one is just a related cleanup.
->=20
-> [1/3] ACPI / bind: Replace .find_device in struct acpi_bus_type with =
-=2Efind_companion
-> [2/3] ACPI / bind: Modify acpi_bind_one() to take a struct acpi_devic=
-e pointer as
->       the second argument.
-> [3/3] ACPI / bind: Move acpi_get_child() to ide-acpi.c which is the o=
-nly remaining
->       user of that function.
->=20
+Hi,
 
-Test usb/ACPI bind part, it works normally.
+So the problem is that you connect a faulty HDD to the master drive and a
+normal one to the slave drive. When your master drive evolves faulty sectors
+or the SATA cable is messed up, your slave drive doesn't work. Well, that is strange.
 
-Tested-by: Lan Tianyu <tianyu.lan@intel.com>
-
-> The patches are on top of linux-pm.git/linux-next.  Please let me kno=
-w if you see
-> any problems in them.
->=20
-> Thanks!
->=20
+	Ans.	No.We connect faulty HDD in SLAVE(NO-OS) and MASTER(which holds the OS) in MASTER
 
 
---=20
-Best regards
-Tianyu Lan
+The ata_piix output says that the MAP register is P0 P2 IDE IDE,
+which means that it doesn't matter what you plug into port one, it will *not* get detected.
+
+		
+To solve this problem, check your firmware settings for any relevant SATA/AHCI settings.
+
+	Ans.	Unfortunately our board does not support AHCI. SO what is the best way to handle this.Is it possible to disable the Master/Slave(specific) port on HDD failure.
+
+
+PS: It is entirely possible to change the MAP register in software for the ICH* series,
+but it seems that you are in IDE mode. Better switch to AHCI mode.
+
+
+
+
+On 29-11-2013 13:02, Levente Kurusa wrote:
+> 2013-11-29 08:20, venkat:
+>> Another question: What do you mean by SATA 0 and SATA 1? Are they two different controllers or are they
+>> the master and slave pair for one controller? The lspci output lists exactly one SATA controller so I guess
+>> its the master/slave option.
+>>
+>>      Yes - They are master slave pair only.
+>
+>
+
+
+-- 
+Regards
+Venkat.S
+
