@@ -1,58 +1,444 @@
-From: venkat <venkat.s@vortexindia.co.in>
-Subject: Re: SATA IDE Disk failure leasds to kernel freezing and DMESG looping
-Date: Fri, 29 Nov 2013 13:28:10 +0530
-Message-ID: <52984912.5070104@vortexindia.co.in>
-References: <1385634640.84101.YahooMailNeo@web2705.biz.mail.sg3.yahoo.com> <52971EE6.4030301@vortexindia.co.in> <52977B7F.1040602@linux.com> <529834AD.6040100@vortexindia.co.in> <52983871.9040209@linux.com> <1385708575.44913.YahooMailNeo@web2713.biz.mail.sg3.yahoo.com> <52983E85.60207@linux.com> <52984053.3000104@vortexindia.co.in> <529842FB.8020203@linux.com>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [PATCH 1/3] ACPI / bind: Rework struct acpi_bus_type
+Date: Fri, 29 Nov 2013 13:19:24 +0100
+Message-ID: <1930953.ZacyFLFM6D@vostro.rjw.lan>
+References: <4501334.ovACrGogrl@vostro.rjw.lan> <2273591.1tQV675JFy@vostro.rjw.lan> <5297F3FB.6030808@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp102.biz.mail.sg3.yahoo.com ([106.10.167.245]:44602 "HELO
-	smtp102.biz.mail.sg3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750871Ab3K2Hy3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Nov 2013 02:54:29 -0500
-In-Reply-To: <529842FB.8020203@linux.com>
+Received: from v094114.home.net.pl ([79.96.170.134]:59368 "HELO
+	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752498Ab3K2MGd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Nov 2013 07:06:33 -0500
+In-Reply-To: <5297F3FB.6030808@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Levente Kurusa <levex@linux.com>
-Cc: Reddy G <reddygb@vortexindia.co.in>, Robert Hancock <hancockrwd@gmail.com>, linux-ide@vger.kernel.org
+To: Lan Tianyu <tianyu.lan@intel.com>
+Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>, Linux PCI <linux-pci@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Aaron Lu <aaron.lu@intel.com>, Toshi Kani <toshi.kani@hp.com>, Bjorn Helgaas <bhelgaas@google.com>, linux-ide@vger.kernel.org, linux-usb@vger.kernel.org
 
-Hi,
+On Friday, November 29, 2013 09:55:07 AM Lan Tianyu wrote:
+> On 2013=E5=B9=B411=E6=9C=8829=E6=97=A5 08:37, Rafael J. Wysocki wrote=
+:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >=20
+> > Replace the .find_device function pointer in struct acpi_bus_type
+> > with a new one, .find_copmanion, that is supposed to point to a
+> -------------------------^
+> A typo
 
-So the problem is that you connect a faulty HDD to the master drive and a
-normal one to the slave drive. When your master drive evolves faulty sectors
-or the SATA cable is messed up, your slave drive doesn't work. Well, that is strange.
+Yeah, thanks!
 
-	Ans.	No.We connect faulty HDD in SLAVE(NO-OS) and MASTER(which holds the OS) in MASTER
+> > function returning struct acpi_device pointer (instead of an int)
+> > and takes one argument (instead of two).  This way the role of
+> > this callback is more clear and the implementation of it can
+> > be more straightforward.
+> >=20
+> > Update all of the users of struct acpi_bus_type (PCI, PNP/ACPI and
+> > USB) to reflect the structure change.
+> >=20
+> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > ---
+> >  drivers/acpi/glue.c         |   12 +++++++-----
+> >  drivers/pci/pci-acpi.c      |   12 +++---------
+> >  drivers/pnp/pnpacpi/core.c  |   19 +++++--------------
+> >  drivers/usb/core/usb-acpi.c |   40 ++++++++++++++++++++-----------=
+---------
+> >  include/acpi/acpi_bus.h     |    2 +-
+> >  5 files changed, 36 insertions(+), 49 deletions(-)
+> >=20
+> > Index: linux-pm/include/acpi/acpi_bus.h
+> > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> > --- linux-pm.orig/include/acpi/acpi_bus.h
+> > +++ linux-pm/include/acpi/acpi_bus.h
+> > @@ -414,7 +414,7 @@ struct acpi_bus_type {
+> >  	struct list_head list;
+> >  	const char *name;
+> >  	bool (*match)(struct device *dev);
+> > -	int (*find_device) (struct device *, acpi_handle *);
+> > +	struct acpi_device * (*find_companion)(struct device *);
+> >  	void (*setup)(struct device *);
+> >  	void (*cleanup)(struct device *);
+> >  };
+> > Index: linux-pm/drivers/acpi/glue.c
+> > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> > --- linux-pm.orig/drivers/acpi/glue.c
+> > +++ linux-pm/drivers/acpi/glue.c
+> > @@ -37,7 +37,7 @@ int register_acpi_bus_type(struct acpi_b
+> >  {
+> >  	if (acpi_disabled)
+> >  		return -ENODEV;
+> > -	if (type && type->match && type->find_device) {
+> > +	if (type && type->match && type->find_companion) {
+> >  		down_write(&bus_type_sem);
+> >  		list_add_tail(&type->list, &bus_type_list);
+> >  		up_write(&bus_type_sem);
+> > @@ -302,17 +302,19 @@ EXPORT_SYMBOL_GPL(acpi_unbind_one);
+> >  static int acpi_platform_notify(struct device *dev)
+> >  {
+> >  	struct acpi_bus_type *type =3D acpi_get_bus_type(dev);
+> > -	acpi_handle handle;
+> >  	int ret;
+> > =20
+> >  	ret =3D acpi_bind_one(dev, NULL);
+> >  	if (ret && type) {
+> > -		ret =3D type->find_device(dev, &handle);
+> > -		if (ret) {
+> > +		struct acpi_device *adev;
+> > +
+> > +		adev =3D type->find_companion(dev);
+> > +		if (!adev) {
+> >  			DBG("Unable to get handle for %s\n", dev_name(dev));
+> > +			ret =3D -ENODEV;
+> >  			goto out;
+> >  		}
+> > -		ret =3D acpi_bind_one(dev, handle);
+> > +		ret =3D acpi_bind_one(dev, adev->handle);
+> >  		if (ret)
+> >  			goto out;
+> >  	}
+> > Index: linux-pm/drivers/pci/pci-acpi.c
+> > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> > --- linux-pm.orig/drivers/pci/pci-acpi.c
+> > +++ linux-pm/drivers/pci/pci-acpi.c
+> > @@ -306,10 +306,9 @@ void acpi_pci_remove_bus(struct pci_bus
+> >  }
+> > =20
+> >  /* ACPI bus type */
+> > -static int acpi_pci_find_device(struct device *dev, acpi_handle *h=
+andle)
+> > +static struct acpi_device *acpi_pci_find_companion(struct device *=
+dev)
+> >  {
+> >  	struct pci_dev *pci_dev =3D to_pci_dev(dev);
+> > -	struct acpi_device *adev;
+> >  	bool check_children;
+> >  	u64 addr;
+> > =20
+> > @@ -322,13 +321,8 @@ static int acpi_pci_find_device(struct d
+> >  			|| pci_dev->hdr_type =3D=3D PCI_HEADER_TYPE_CARDBUS;
+> >  	/* Please ref to ACPI spec for the syntax of _ADR */
+> >  	addr =3D (PCI_SLOT(pci_dev->devfn) << 16) | PCI_FUNC(pci_dev->dev=
+fn);
+> > -	adev =3D acpi_find_child_device(ACPI_COMPANION(dev->parent), addr=
+,
+> > +	return acpi_find_child_device(ACPI_COMPANION(dev->parent), addr,
+> >  				      check_children);
+> > -	if (adev) {
+> > -		*handle =3D adev->handle;
+> > -		return 0;
+> > -	}
+> > -	return -ENODEV;
+> >  }
+> > =20
+> >  static void pci_acpi_setup(struct device *dev)
+> > @@ -368,7 +362,7 @@ static bool pci_acpi_bus_match(struct de
+> >  static struct acpi_bus_type acpi_pci_bus =3D {
+> >  	.name =3D "PCI",
+> >  	.match =3D pci_acpi_bus_match,
+> > -	.find_device =3D acpi_pci_find_device,
+> > +	.find_companion =3D acpi_pci_find_companion,
+> >  	.setup =3D pci_acpi_setup,
+> >  	.cleanup =3D pci_acpi_cleanup,
+> >  };
+> > Index: linux-pm/drivers/pnp/pnpacpi/core.c
+> > =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> > --- linux-pm.orig/drivers/pnp/pnpacpi/core.c
+> > +++ linux-pm/drivers/pnp/pnpacpi/core.c
+> > @@ -329,20 +329,11 @@ static int __init acpi_pnp_match(struct
+> >  	    && compare_pnp_id(pnp->id, acpi_device_hid(acpi));
+> >  }
+> > =20
+> > -static int __init acpi_pnp_find_device(struct device *dev, acpi_ha=
+ndle * handle)
+> > +static struct acpi_device * __init acpi_pnp_find_companion(struct =
+device *dev)
+> >  {
+> > -	struct device *adev;
+> > -	struct acpi_device *acpi;
+> > -
+> > -	adev =3D bus_find_device(&acpi_bus_type, NULL,
+> > -			       to_pnp_dev(dev), acpi_pnp_match);
+> > -	if (!adev)
+> > -		return -ENODEV;
+> > -
+> > -	acpi =3D to_acpi_device(adev);
+> > -	*handle =3D acpi->handle;
+> > -	put_device(adev);
+> > -	return 0;
+> > +	dev =3D bus_find_device(&acpi_bus_type, NULL, to_pnp_dev(dev),
+> > +			      acpi_pnp_match);
+>=20
+> Why remove put_device here?
+> bus_find_device() increase dev's reference count when a dev is matche=
+d.
 
+By mistake.  Thanks for catching this!
 
-The ata_piix output says that the MAP register is P0 P2 IDE IDE,
-which means that it doesn't matter what you plug into port one, it will *not* get detected.
+Update patch follows.
 
-		
-To solve this problem, check your firmware settings for any relevant SATA/AHCI settings.
+Thanks,
+Rafael
 
-	Ans.	Unfortunately our board does not support AHCI. SO what is the best way to handle this.Is it possible to disable the Master/Slave(specific) port on HDD failure.
+---
+=46rom: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Subject: ACPI / bind: Rework struct acpi_bus_type
 
+Replace the .find_device function pointer in struct acpi_bus_type
+with a new one, .find_companion, that is supposed to point to a
+function returning struct acpi_device pointer (instead of an int)
+and takes one argument (instead of two).  This way the role of
+this callback is more clear and the implementation of it can
+be more straightforward.
 
-PS: It is entirely possible to change the MAP register in software for the ICH* series,
-but it seems that you are in IDE mode. Better switch to AHCI mode.
+Update all of the users of struct acpi_bus_type (PCI, PNP/ACPI and
+USB) to reflect the structure change.
 
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
+ drivers/acpi/glue.c         |   12 +++++++-----
+ drivers/pci/pci-acpi.c      |   12 +++---------
+ drivers/pnp/pnpacpi/core.c  |   21 ++++++++-------------
+ drivers/usb/core/usb-acpi.c |   40 ++++++++++++++++++++---------------=
+-----
+ include/acpi/acpi_bus.h     |    2 +-
+ 5 files changed, 39 insertions(+), 48 deletions(-)
 
-
-
-On 29-11-2013 13:02, Levente Kurusa wrote:
-> 2013-11-29 08:20, venkat:
->> Another question: What do you mean by SATA 0 and SATA 1? Are they two different controllers or are they
->> the master and slave pair for one controller? The lspci output lists exactly one SATA controller so I guess
->> its the master/slave option.
->>
->>      Yes - They are master slave pair only.
->
->
-
-
--- 
-Regards
-Venkat.S
+Index: linux-pm/include/acpi/acpi_bus.h
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- linux-pm.orig/include/acpi/acpi_bus.h
++++ linux-pm/include/acpi/acpi_bus.h
+@@ -414,7 +414,7 @@ struct acpi_bus_type {
+ 	struct list_head list;
+ 	const char *name;
+ 	bool (*match)(struct device *dev);
+-	int (*find_device) (struct device *, acpi_handle *);
++	struct acpi_device * (*find_companion)(struct device *);
+ 	void (*setup)(struct device *);
+ 	void (*cleanup)(struct device *);
+ };
+Index: linux-pm/drivers/acpi/glue.c
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- linux-pm.orig/drivers/acpi/glue.c
++++ linux-pm/drivers/acpi/glue.c
+@@ -37,7 +37,7 @@ int register_acpi_bus_type(struct acpi_b
+ {
+ 	if (acpi_disabled)
+ 		return -ENODEV;
+-	if (type && type->match && type->find_device) {
++	if (type && type->match && type->find_companion) {
+ 		down_write(&bus_type_sem);
+ 		list_add_tail(&type->list, &bus_type_list);
+ 		up_write(&bus_type_sem);
+@@ -302,17 +302,19 @@ EXPORT_SYMBOL_GPL(acpi_unbind_one);
+ static int acpi_platform_notify(struct device *dev)
+ {
+ 	struct acpi_bus_type *type =3D acpi_get_bus_type(dev);
+-	acpi_handle handle;
+ 	int ret;
+=20
+ 	ret =3D acpi_bind_one(dev, NULL);
+ 	if (ret && type) {
+-		ret =3D type->find_device(dev, &handle);
+-		if (ret) {
++		struct acpi_device *adev;
++
++		adev =3D type->find_companion(dev);
++		if (!adev) {
+ 			DBG("Unable to get handle for %s\n", dev_name(dev));
++			ret =3D -ENODEV;
+ 			goto out;
+ 		}
+-		ret =3D acpi_bind_one(dev, handle);
++		ret =3D acpi_bind_one(dev, adev->handle);
+ 		if (ret)
+ 			goto out;
+ 	}
+Index: linux-pm/drivers/pci/pci-acpi.c
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- linux-pm.orig/drivers/pci/pci-acpi.c
++++ linux-pm/drivers/pci/pci-acpi.c
+@@ -306,10 +306,9 @@ void acpi_pci_remove_bus(struct pci_bus
+ }
+=20
+ /* ACPI bus type */
+-static int acpi_pci_find_device(struct device *dev, acpi_handle *handl=
+e)
++static struct acpi_device *acpi_pci_find_companion(struct device *dev)
+ {
+ 	struct pci_dev *pci_dev =3D to_pci_dev(dev);
+-	struct acpi_device *adev;
+ 	bool check_children;
+ 	u64 addr;
+=20
+@@ -322,13 +321,8 @@ static int acpi_pci_find_device(struct d
+ 			|| pci_dev->hdr_type =3D=3D PCI_HEADER_TYPE_CARDBUS;
+ 	/* Please ref to ACPI spec for the syntax of _ADR */
+ 	addr =3D (PCI_SLOT(pci_dev->devfn) << 16) | PCI_FUNC(pci_dev->devfn);
+-	adev =3D acpi_find_child_device(ACPI_COMPANION(dev->parent), addr,
++	return acpi_find_child_device(ACPI_COMPANION(dev->parent), addr,
+ 				      check_children);
+-	if (adev) {
+-		*handle =3D adev->handle;
+-		return 0;
+-	}
+-	return -ENODEV;
+ }
+=20
+ static void pci_acpi_setup(struct device *dev)
+@@ -368,7 +362,7 @@ static bool pci_acpi_bus_match(struct de
+ static struct acpi_bus_type acpi_pci_bus =3D {
+ 	.name =3D "PCI",
+ 	.match =3D pci_acpi_bus_match,
+-	.find_device =3D acpi_pci_find_device,
++	.find_companion =3D acpi_pci_find_companion,
+ 	.setup =3D pci_acpi_setup,
+ 	.cleanup =3D pci_acpi_cleanup,
+ };
+Index: linux-pm/drivers/pnp/pnpacpi/core.c
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- linux-pm.orig/drivers/pnp/pnpacpi/core.c
++++ linux-pm/drivers/pnp/pnpacpi/core.c
+@@ -329,20 +329,15 @@ static int __init acpi_pnp_match(struct
+ 	    && compare_pnp_id(pnp->id, acpi_device_hid(acpi));
+ }
+=20
+-static int __init acpi_pnp_find_device(struct device *dev, acpi_handle=
+ * handle)
++static struct acpi_device * __init acpi_pnp_find_companion(struct devi=
+ce *dev)
+ {
+-	struct device *adev;
+-	struct acpi_device *acpi;
++	dev =3D bus_find_device(&acpi_bus_type, NULL, to_pnp_dev(dev),
++			      acpi_pnp_match);
++	if (!dev)
++		return NULL;
+=20
+-	adev =3D bus_find_device(&acpi_bus_type, NULL,
+-			       to_pnp_dev(dev), acpi_pnp_match);
+-	if (!adev)
+-		return -ENODEV;
+-
+-	acpi =3D to_acpi_device(adev);
+-	*handle =3D acpi->handle;
+-	put_device(adev);
+-	return 0;
++	put_device(dev);
++	return to_acpi_device(dev);
+ }
+=20
+ /* complete initialization of a PNPACPI device includes having
+@@ -356,7 +351,7 @@ static bool acpi_pnp_bus_match(struct de
+ static struct acpi_bus_type __initdata acpi_pnp_bus =3D {
+ 	.name	     =3D "PNP",
+ 	.match	     =3D acpi_pnp_bus_match,
+-	.find_device =3D acpi_pnp_find_device,
++	.find_companion =3D acpi_pnp_find_companion,
+ };
+=20
+ int pnpacpi_disabled __initdata;
+Index: linux-pm/drivers/usb/core/usb-acpi.c
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- linux-pm.orig/drivers/usb/core/usb-acpi.c
++++ linux-pm/drivers/usb/core/usb-acpi.c
+@@ -127,7 +127,7 @@ out:
+ 	return ret;
+ }
+=20
+-static int usb_acpi_find_device(struct device *dev, acpi_handle *handl=
+e)
++static struct acpi_device *usb_acpi_find_companion(struct device *dev)
+ {
+ 	struct usb_device *udev;
+ 	acpi_handle *parent_handle;
+@@ -169,16 +169,15 @@ static int usb_acpi_find_device(struct d
+ 				break;
+ 			}
+=20
+-			return -ENODEV;
++			return NULL;
+ 		}
+=20
+ 		/* root hub's parent is the usb hcd. */
+-		parent_handle =3D ACPI_HANDLE(dev->parent);
+-		*handle =3D acpi_get_child(parent_handle, udev->portnum);
+-		if (!*handle)
+-			return -ENODEV;
+-		return 0;
++		return acpi_find_child_device(ACPI_COMPANION(dev->parent),
++					      udev->portnum, false);
+ 	} else if (is_usb_port(dev)) {
++		struct acpi_device *adev =3D NULL;
++
+ 		sscanf(dev_name(dev), "port%d", &port_num);
+ 		/* Get the struct usb_device point of port's hub */
+ 		udev =3D to_usb_device(dev->parent->parent);
+@@ -194,26 +193,27 @@ static int usb_acpi_find_device(struct d
+=20
+ 			raw_port_num =3D usb_hcd_find_raw_port_number(hcd,
+ 				port_num);
+-			*handle =3D acpi_get_child(ACPI_HANDLE(&udev->dev),
+-				raw_port_num);
+-			if (!*handle)
+-				return -ENODEV;
++			adev =3D acpi_find_child_device(ACPI_COMPANION(&udev->dev),
++						      raw_port_num, false);
++			if (!adev)
++				return NULL;
+ 		} else {
+ 			parent_handle =3D
+ 				usb_get_hub_port_acpi_handle(udev->parent,
+ 				udev->portnum);
+ 			if (!parent_handle)
+-				return -ENODEV;
++				return NULL;
+=20
+-			*handle =3D acpi_get_child(parent_handle,	port_num);
+-			if (!*handle)
+-				return -ENODEV;
++			acpi_bus_get_device(parent_handle, &adev);
++			adev =3D acpi_find_child_device(adev, port_num, false);
++			if (!adev)
++				return NULL;
+ 		}
+-		usb_acpi_check_port_connect_type(udev, *handle, port_num);
+-	} else
+-		return -ENODEV;
++		usb_acpi_check_port_connect_type(udev, adev->handle, port_num);
++		return adev;
++	}
+=20
+-	return 0;
++	return NULL;
+ }
+=20
+ static bool usb_acpi_bus_match(struct device *dev)
+@@ -224,7 +224,7 @@ static bool usb_acpi_bus_match(struct de
+ static struct acpi_bus_type usb_acpi_bus =3D {
+ 	.name =3D "USB",
+ 	.match =3D usb_acpi_bus_match,
+-	.find_device =3D usb_acpi_find_device,
++	.find_companion =3D usb_acpi_find_companion,
+ };
+=20
+ int usb_acpi_register(void)
 
