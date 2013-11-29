@@ -1,38 +1,43 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] Add ATA_HORKAGE_BROKEN_FPDMA_AA quirk for Seagate
- Momentus SpinPoint M8
-Date: Fri, 29 Nov 2013 17:25:33 -0500
-Message-ID: <20131129222533.GL21755@mtj.dyndns.org>
-References: <1385406014-4877-1-git-send-email-michele@acksyn.org>
+Subject: Re: [PATCH V3 1/3] ahci: imx: Explicitly clear
+ IMX6Q_GPR13_SATA_MPLL_CLK_EN
+Date: Fri, 29 Nov 2013 17:28:18 -0500
+Message-ID: <20131129222818.GM21755@mtj.dyndns.org>
+References: <1385369222-5288-1-git-send-email-marex@denx.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f43.google.com ([209.85.216.43]:56644 "EHLO
-	mail-qa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753111Ab3K2WZh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Nov 2013 17:25:37 -0500
+Received: from mail-qa0-f42.google.com ([209.85.216.42]:53726 "EHLO
+	mail-qa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752054Ab3K2W2W (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Nov 2013 17:28:22 -0500
+Received: by mail-qa0-f42.google.com with SMTP id k4so2294623qaq.8
+        for <linux-ide@vger.kernel.org>; Fri, 29 Nov 2013 14:28:21 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <1385406014-4877-1-git-send-email-michele@acksyn.org>
+In-Reply-To: <1385369222-5288-1-git-send-email-marex@denx.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Michele Baldessari <michele@acksyn.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Marek Vasut <marex@denx.de>
+Cc: linux-arm-kernel@lists.infradead.org, Shawn Guo <shawn.guo@linaro.org>, Richard Zhu <r65037@freescale.com>, Linux-IDE <linux-ide@vger.kernel.org>
 
-On Mon, Nov 25, 2013 at 07:00:14PM +0000, Michele Baldessari wrote:
-> We've received multiple reports in Fedora via (BZ 907193)
-> that the Seagate Momentus SpinPoint M8 errors out when enabling AA:
-> [    2.555905] ata2.00: failed to enable AA (error_mask=0x1)
-> [    2.568482] ata2.00: failed to enable AA (error_mask=0x1)
+On Mon, Nov 25, 2013 at 09:47:00AM +0100, Marek Vasut wrote:
+> We must clear this IMX6Q_GPR13_SATA_MPLL_CLK_EN bit on i.MX6Q, otherwise
+> Linux will fail to find the attached drive on some boards.
 > 
-> Add the ATA_HORKAGE_BROKEN_FPDMA_AA for this specific harddisk.
+> This entire fix was:
+> Reported-by: Eric Nelson <eric.nelson@boundarydevices.com>
 > 
-> Reported-by: Nicholas <arealityfarbetween@googlemail.com>
-> Signed-off-by: Michele Baldessari <michele@acksyn.org>
-> Tested-by: Nicholas <arealityfarbetween@googlemail.com>
+> Signed-off-by: Marek Vasut <marex@denx.de>
+> Cc: Shawn Guo <shawn.guo@linaro.org>
+> Cc: Richard Zhu <r65037@freescale.com>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: Linux-IDE <linux-ide@vger.kernel.org>
 
-Applied to libata/for-3.13-fixes w/ stable cc'd.
+There have been a lot of review activities on this series.  If you
+guys more or less agree now, can you please reply with
+acked/reviewed-by's?
 
-Thanks!
+Thanks.
 
 -- 
 tejun
