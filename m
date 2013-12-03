@@ -1,41 +1,42 @@
-From: Marek Vasut <marex@denx.de>
-Subject: Re: [PATCH V3 1/3] ahci: imx: Explicitly clear IMX6Q_GPR13_SATA_MPLL_CLK_EN
-Date: Tue, 3 Dec 2013 14:41:35 +0100
-Message-ID: <201312031441.35741.marex@denx.de>
-References: <1385369222-5288-1-git-send-email-marex@denx.de> <20131203124140.GE8277@htj.dyndns.org>
-Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+From: Robert Nelson <robertcnelson@gmail.com>
+Subject: [PATCH] ARM: dts: imx53: Enable AHCI SATA for imx53-qsb
+Date: Tue,  3 Dec 2013 08:39:38 -0600
+Message-ID: <1386081578-3651-1-git-send-email-robertcnelson@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:49250 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752485Ab3LCNlu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Dec 2013 08:41:50 -0500
-In-Reply-To: <20131203124140.GE8277@htj.dyndns.org>
+Received: from mail-ie0-f174.google.com ([209.85.223.174]:34749 "EHLO
+	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754119Ab3LCOjp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Dec 2013 09:39:45 -0500
+Received: by mail-ie0-f174.google.com with SMTP id at1so23483221iec.5
+        for <linux-ide@vger.kernel.org>; Tue, 03 Dec 2013 06:39:44 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-arm-kernel@lists.infradead.org, Shawn Guo <shawn.guo@linaro.org>, Richard Zhu <r65037@freescale.com>, Linux-IDE <linux-ide@vger.kernel.org>
+Cc: linux-arm-kernel@lists.infradead.org, Robert Nelson <robertcnelson@gmail.com>, Shawn Guo <shawn.guo@linaro.org>, Richard Zhu <r65037@freescale.com>, Tejun Heo <tj@kernel.org>, Linux-IDE <linux-ide@vger.kernel.org>
 
-Dear Tejun Heo,
+Signed-off-by: Robert Nelson <robertcnelson@gmail.com>
+Cc: Shawn Guo <shawn.guo@linaro.org>
+Cc: Richard Zhu <r65037@freescale.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Linux-IDE <linux-ide@vger.kernel.org>
+---
+ arch/arm/boot/dts/imx53-qsb.dts | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-> On Mon, Nov 25, 2013 at 09:47:00AM +0100, Marek Vasut wrote:
-> > We must clear this IMX6Q_GPR13_SATA_MPLL_CLK_EN bit on i.MX6Q, otherwise
-> > Linux will fail to find the attached drive on some boards.
-> > 
-> > This entire fix was:
-> > Reported-by: Eric Nelson <eric.nelson@boundarydevices.com>
-> > 
-> > Signed-off-by: Marek Vasut <marex@denx.de>
-> > Cc: Shawn Guo <shawn.guo@linaro.org>
-> > Cc: Richard Zhu <r65037@freescale.com>
-> > Cc: Tejun Heo <tj@kernel.org>
-> > Cc: Linux-IDE <linux-ide@vger.kernel.org>
-> 
-> Applied to libata/for-3.13-fixes w/ stable cc'd.
+diff --git a/arch/arm/boot/dts/imx53-qsb.dts b/arch/arm/boot/dts/imx53-qsb.dts
+index 91a5935..ea927be 100644
+--- a/arch/arm/boot/dts/imx53-qsb.dts
++++ b/arch/arm/boot/dts/imx53-qsb.dts
+@@ -307,6 +307,10 @@
+ 	status = "okay";
+ };
+ 
++&sata {
++	status = "okay";
++};
++
+ &vpu {
+ 	status = "okay";
+ };
+-- 
+1.8.4.3
 
-Thank you!
-
-Best regards,
-Marek Vasut
