@@ -1,42 +1,48 @@
-From: Robert Nelson <robertcnelson@gmail.com>
-Subject: [PATCH] ARM: dts: imx53: Enable AHCI SATA for imx53-qsb
-Date: Tue,  3 Dec 2013 08:39:38 -0600
-Message-ID: <1386081578-3651-1-git-send-email-robertcnelson@gmail.com>
+From: venkat <venkat.s@vortexindia.co.in>
+Subject: AHCI patching guidance for ICH7-M chipset
+Date: Tue, 03 Dec 2013 21:07:10 +0530
+Message-ID: <529DFAA6.4040105@vortexindia.co.in>
+References: <529DF9F7.6000502@vortexindia.co.in>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ie0-f174.google.com ([209.85.223.174]:34749 "EHLO
-	mail-ie0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754119Ab3LCOjp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Dec 2013 09:39:45 -0500
-Received: by mail-ie0-f174.google.com with SMTP id at1so23483221iec.5
-        for <linux-ide@vger.kernel.org>; Tue, 03 Dec 2013 06:39:44 -0800 (PST)
+Received: from smtp102.biz.mail.sg3.yahoo.com ([106.10.167.245]:24984 "HELO
+	smtp102.biz.mail.sg3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752731Ab3LCPda (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Dec 2013 10:33:30 -0500
+In-Reply-To: <529DF9F7.6000502@vortexindia.co.in>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org, Robert Nelson <robertcnelson@gmail.com>, Shawn Guo <shawn.guo@linaro.org>, Richard Zhu <r65037@freescale.com>, Tejun Heo <tj@kernel.org>, Linux-IDE <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org
 
-Signed-off-by: Robert Nelson <robertcnelson@gmail.com>
-Cc: Shawn Guo <shawn.guo@linaro.org>
-Cc: Richard Zhu <r65037@freescale.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Linux-IDE <linux-ide@vger.kernel.org>
----
- arch/arm/boot/dts/imx53-qsb.dts | 4 ++++
- 1 file changed, 4 insertions(+)
 
-diff --git a/arch/arm/boot/dts/imx53-qsb.dts b/arch/arm/boot/dts/imx53-qsb.dts
-index 91a5935..ea927be 100644
---- a/arch/arm/boot/dts/imx53-qsb.dts
-+++ b/arch/arm/boot/dts/imx53-qsb.dts
-@@ -307,6 +307,10 @@
- 	status = "okay";
- };
- 
-+&sata {
-+	status = "okay";
-+};
-+
- &vpu {
- 	status = "okay";
- };
+All
+
+I am trying to make my chipset(ICH7 - M) to support AHCI in my debian 6 
+(linux-source-2.6.32).
+
+With mentioned link's ref 
+:http://tartarus.org/~ds/quirk-ich-force-ahci.patch 
+<http://tartarus.org/%7Eds/quirk-ich-force-ahci.patch> i cooked the 
+quirk.c in my work machine and compiled the KERNEL
+  make SUBDIRS=drivers/pci/ and  make module SUBDIRS=drivers/pci/
+
+After successful compilation
+
+i copied the "pci-stub.ko" from linux-source-2.6.32/drivers/pci to test  
+machine's :"/lib/modules/2.6.32-5-686/kernel/drivers/pci" path
+and then set quirks.ich_force_ahci=1 in /etc/grub/grub.conf
+
+and rebooted the system
+
+But after reboot my IDE is using ata_PIIX driver not AHCI driver.
+
+Don't know what is error.request some guidance on applying the patch
+
 -- 
-1.8.4.3
+Regards
+Venkat.S
+
+
 
