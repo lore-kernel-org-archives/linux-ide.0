@@ -1,31 +1,43 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH V3 2/2] dt: Document sata_rcar bindings
-Date: Mon, 2 Dec 2013 14:55:02 -0500
-Message-ID: <20131202195502.GD3626@htj.dyndns.org>
-References: <1383912570-8393-1-git-send-email-valentine.barshak@cogentembedded.com>
- <1383912570-8393-3-git-send-email-valentine.barshak@cogentembedded.com>
+From: Shawn Guo <shawn.guo@linaro.org>
+Subject: Re: [PATCH V3 1/3] ahci: imx: Explicitly clear
+ IMX6Q_GPR13_SATA_MPLL_CLK_EN
+Date: Tue, 3 Dec 2013 15:20:41 +0800
+Message-ID: <20131203072039.GD10840@S2101-09.ap.freescale.net>
+References: <1385369222-5288-1-git-send-email-marex@denx.de>
+ <20131129222818.GM21755@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f51.google.com ([209.85.216.51]:34012 "EHLO
-	mail-qa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752151Ab3LBTzH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Dec 2013 14:55:07 -0500
+Received: from ch1ehsobe004.messaging.microsoft.com ([216.32.181.184]:10443
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753009Ab3LCHRg (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Dec 2013 02:17:36 -0500
 Content-Disposition: inline
-In-Reply-To: <1383912570-8393-3-git-send-email-valentine.barshak@cogentembedded.com>
+In-Reply-To: <20131129222818.GM21755@mtj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Valentine Barshak <valentine.barshak@cogentembedded.com>
-Cc: linux-sh@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, Simon Horman <horms@verge.net.au>, Magnus Damm <magnus.damm@gmail.com>, Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>, Laurent Pinchart <laurent.pinchart@ideasonboard.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Kumar Gala <galak@codeaurora.org>, Vladimir Barinov <vladimir.barinov@cogentembedded.com>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Mark Rutland <mark.rutland@arm.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Marek Vasut <marex@denx.de>, linux-arm-kernel@lists.infradead.org, Richard Zhu <r65037@freescale.com>, Linux-IDE <linux-ide@vger.kernel.org>
 
-On Fri, Nov 08, 2013 at 04:09:30PM +0400, Valentine Barshak wrote:
-> These bindings can be used to register SATA devices found on R-Car SoC.
+On Fri, Nov 29, 2013 at 05:28:18PM -0500, Tejun Heo wrote:
+> On Mon, Nov 25, 2013 at 09:47:00AM +0100, Marek Vasut wrote:
+> > We must clear this IMX6Q_GPR13_SATA_MPLL_CLK_EN bit on i.MX6Q, otherwise
+> > Linux will fail to find the attached drive on some boards.
+> > 
+> > This entire fix was:
+> > Reported-by: Eric Nelson <eric.nelson@boundarydevices.com>
+> > 
+> > Signed-off-by: Marek Vasut <marex@denx.de>
+> > Cc: Shawn Guo <shawn.guo@linaro.org>
+> > Cc: Richard Zhu <r65037@freescale.com>
+> > Cc: Tejun Heo <tj@kernel.org>
+> > Cc: Linux-IDE <linux-ide@vger.kernel.org>
 > 
-> Signed-off-by: Valentine Barshak <valentine.barshak@cogentembedded.com>
+> There have been a lot of review activities on this series.  If you
+> guys more or less agree now, can you please reply with
+> acked/reviewed-by's?
 
-Applied to libata/for-3.14.
+For the series,
 
-Thanks.
+Reviewed-by: Shawn Guo <shawn.guo@linaro.org>
 
--- 
-tejun
