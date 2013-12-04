@@ -1,93 +1,100 @@
-From: Andrew Lunn <andrew@lunn.ch>
-Subject: [PATCH 3/5] SATA: MV: Add support for the optional PHYs
-Date: Wed,  4 Dec 2013 18:16:02 +0100
-Message-ID: <1386177364-10164-4-git-send-email-andrew@lunn.ch>
-References: <1386177364-10164-1-git-send-email-andrew@lunn.ch>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH 4/5] Phy: Add DT nodes on kirkwood and Dove for the SATA
+ PHY
+Date: Wed, 04 Dec 2013 23:01:20 +0300
+Message-ID: <529F8A10.7010500@cogentembedded.com>
+References: <1386177364-10164-1-git-send-email-andrew@lunn.ch> <1386177364-10164-5-git-send-email-andrew@lunn.ch>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vps0.lunn.ch ([178.209.37.122]:56820 "EHLO vps0.lunn.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753970Ab3LDRQX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 4 Dec 2013 12:16:23 -0500
-In-Reply-To: <1386177364-10164-1-git-send-email-andrew@lunn.ch>
+Received: from mail-la0-f53.google.com ([209.85.215.53]:58773 "EHLO
+	mail-la0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933015Ab3LDTBT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Dec 2013 14:01:19 -0500
+Received: by mail-la0-f53.google.com with SMTP id ea20so10088314lab.12
+        for <linux-ide@vger.kernel.org>; Wed, 04 Dec 2013 11:01:18 -0800 (PST)
+In-Reply-To: <1386177364-10164-5-git-send-email-andrew@lunn.ch>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jason Cooper <jason@lakedaemon.net>, kishon@ti.com
-Cc: devicetree@vger.kernel.org, linux-ide@vger.kernel.org, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>, Andrew Lunn <andrew@lunn.ch>
+To: Andrew Lunn <andrew@lunn.ch>, Jason Cooper <jason@lakedaemon.net>, kishon@ti.com
+Cc: devicetree@vger.kernel.org, linux-ide@vger.kernel.org, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>
 
-Some Marvell SoCs have a SATA PHY which can be powered off, in order
-to save power. Make use of the generic phy framework to control these
-phys.
+Hello.
 
-Signed-off-by: Andrew Lunn <andrew@lunn.ch>
----
- drivers/ata/sata_mv.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+On 12/04/2013 08:16 PM, Andrew Lunn wrote:
 
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index 56be31819897..9a728bcfbb9a 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -60,6 +60,7 @@
- #include <linux/dma-mapping.h>
- #include <linux/device.h>
- #include <linux/clk.h>
-+#include <linux/phy/phy.h>
- #include <linux/platform_device.h>
- #include <linux/ata_platform.h>
- #include <linux/mbus.h>
-@@ -563,6 +564,12 @@ struct mv_host_priv {
- 	struct clk		*clk;
- 	struct clk              **port_clks;
- 	/*
-+	 * Some devices have a SATA PHY which can be enabled/disabled
-+	 * in order to save power. These are optional: if the platform
-+	 * devices does not have any phy, they won't be used.
-+	 */
-+	struct phy		**port_phys;
-+	/*
- 	 * These consistent DMA memory pools give us guaranteed
- 	 * alignment for hardware-accessed data structures,
- 	 * and less memory waste in accomplishing the alignment.
-@@ -4076,6 +4083,11 @@ static int mv_platform_probe(struct platform_device *pdev)
- 					GFP_KERNEL);
- 	if (!hpriv->port_clks)
- 		return -ENOMEM;
-+	hpriv->port_phys = devm_kzalloc(&pdev->dev,
-+					sizeof(struct phy *) * n_ports,
-+					GFP_KERNEL);
-+	if (!hpriv->port_phys)
-+		return -ENOMEM;
- 	host->private_data = hpriv;
- 	hpriv->n_ports = n_ports;
- 	hpriv->board_idx = chip_soc;
-@@ -4097,6 +4109,9 @@ static int mv_platform_probe(struct platform_device *pdev)
- 		hpriv->port_clks[port] = clk_get(&pdev->dev, port_number);
- 		if (!IS_ERR(hpriv->port_clks[port]))
- 			clk_prepare_enable(hpriv->port_clks[port]);
-+		hpriv->port_phys[port] = devm_phy_get(&pdev->dev, port_number);
-+		if (!IS_ERR(hpriv->port_phys[port]))
-+			phy_power_on(hpriv->port_phys[port]);
- 	}
- 
- 	/*
-@@ -4132,6 +4147,8 @@ err:
- 			clk_disable_unprepare(hpriv->port_clks[port]);
- 			clk_put(hpriv->port_clks[port]);
- 		}
-+		if (!IS_ERR(hpriv->port_phys[port]))
-+			phy_power_off(hpriv->port_phys[port]);
- 	}
- 
- 	return rc;
-@@ -4161,6 +4178,8 @@ static int mv_platform_remove(struct platform_device *pdev)
- 			clk_disable_unprepare(hpriv->port_clks[port]);
- 			clk_put(hpriv->port_clks[port]);
- 		}
-+		if (!IS_ERR(hpriv->port_phys[port]))
-+			phy_power_off(hpriv->port_phys[port]);
- 	}
- 	return 0;
- }
--- 
-1.8.5
+> Add nodes for the two SATA PHYs on kirkewood.
+> Add node for the one SATA PHY on Dove.
+> Add pHandles to the PHYs in the sata nodes.
+
+    I don't think this patch should be pushed thru the libata tree. However, 
+you didn't Cc linux-arm-kernel...
+
+> Signed-off-by: Andrew Lunn <andrew@lunn.ch>
+[...]
+
+> diff --git a/arch/arm/boot/dts/dove.dtsi b/arch/arm/boot/dts/dove.dtsi
+> index 113a8bc7bee7..d56b3c675249 100644
+> --- a/arch/arm/boot/dts/dove.dtsi
+> +++ b/arch/arm/boot/dts/dove.dtsi
+> @@ -490,10 +490,21 @@
+[...]
+> +			sata_phy0: sata_phy@0 {
+
+    The node should rather be named "sata-phy@0" to be in line with 
+"ethernet-phy" found in the ePAPR spec. [1], hyphen is generally preferred to 
+underscore in the device trees.
+
+> +				compatible = "marvell,mvebu-sata-phy";
+> +				reg = <0xa2000 0x0334>;
+> +				clocks = <&gate_clk 3>;
+> +				clock-names = "sata";
+> +				#phy-cells = <0>;
+> +				status = "ok";
+> +			};
+> +
+>   			rtc: real-time-clock@d8500 {
+>   				compatible = "marvell,orion-rtc";
+>   				reg = <0xd8500 0x20>;
+[...]
+> diff --git a/arch/arm/boot/dts/kirkwood.dtsi b/arch/arm/boot/dts/kirkwood.dtsi
+> index 8b73c80f1dad..5558b89d48ce 100644
+> --- a/arch/arm/boot/dts/kirkwood.dtsi
+> +++ b/arch/arm/boot/dts/kirkwood.dtsi
+> @@ -282,5 +282,23 @@
+>   				/* set phy-handle property in board file */
+>   			};
+>   		};
+> +
+> +		sata_phy0: sata_phy@0 {
+
+    Same comment.
+
+> +			compatible = "marvell,mvebu-sata-phy";
+> +			reg = <0x82000 0x0334>;
+> +			clocks = <&gate_clk 14>;
+> +			clock-names = "sata";
+> +			#phy-cells = <0>;
+> +			status = "ok";
+> +		};
+> +
+> +		sata_phy1: sata_phy@1 {
+
+    ... and here.
+
+> +			compatible = "marvell,mvebu-sata-phy";
+> +			reg = <0x84000 0x0334>;
+> +			clocks = <&gate_clk 15>;
+> +			clock-names = "sata";
+> +			#phy-cells = <0>;
+> +			status = "ok";
+> +		};
+>   	};
+>   };
+
+[1] http://www.power.org/resources/downloads/Power_ePAPR_APPROVED_v1.0.pdf
+
+WBR, Sergei
+
 
