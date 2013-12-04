@@ -1,35 +1,50 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH 5/5] ARM: defconfig: Enable generic phy in dove and kirkwood.
-Date: Wed, 04 Dec 2013 23:03:46 +0300
-Message-ID: <529F8AA2.7080507@cogentembedded.com>
-References: <1386177364-10164-1-git-send-email-andrew@lunn.ch> <1386177364-10164-6-git-send-email-andrew@lunn.ch>
+From: Andrew Lunn <andrew@lunn.ch>
+Subject: Re: [PATCH 4/5] Phy: Add DT nodes on kirkwood and Dove for the SATA
+ PHY
+Date: Wed, 4 Dec 2013 20:18:26 +0100
+Message-ID: <20131204191826.GA10498@lunn.ch>
+References: <1386177364-10164-1-git-send-email-andrew@lunn.ch>
+ <1386177364-10164-5-git-send-email-andrew@lunn.ch>
+ <529F8A10.7010500@cogentembedded.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lb0-f169.google.com ([209.85.217.169]:47091 "EHLO
-	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933089Ab3LDTDp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Dec 2013 14:03:45 -0500
-Received: by mail-lb0-f169.google.com with SMTP id y6so9836967lbh.28
-        for <linux-ide@vger.kernel.org>; Wed, 04 Dec 2013 11:03:43 -0800 (PST)
-In-Reply-To: <1386177364-10164-6-git-send-email-andrew@lunn.ch>
+Received: from vps0.lunn.ch ([178.209.37.122]:56914 "EHLO vps0.lunn.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755824Ab3LDTSf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 Dec 2013 14:18:35 -0500
+Content-Disposition: inline
+In-Reply-To: <529F8A10.7010500@cogentembedded.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Lunn <andrew@lunn.ch>, Jason Cooper <jason@lakedaemon.net>, kishon@ti.com
-Cc: devicetree@vger.kernel.org, linux-ide@vger.kernel.org, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: Andrew Lunn <andrew@lunn.ch>, Jason Cooper <jason@lakedaemon.net>, kishon@ti.com, devicetree@vger.kernel.org, linux-ide@vger.kernel.org, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>
 
-Hello.
+On Wed, Dec 04, 2013 at 11:01:20PM +0300, Sergei Shtylyov wrote:
+> Hello.
+> 
+> On 12/04/2013 08:16 PM, Andrew Lunn wrote:
+> 
+> >Add nodes for the two SATA PHYs on kirkewood.
+> >Add node for the one SATA PHY on Dove.
+> >Add pHandles to the PHYs in the sata nodes.
+> 
+>    I don't think this patch should be pushed thru the libata tree.
+> However, you didn't Cc linux-arm-kernel...
 
-On 12/04/2013 08:16 PM, Andrew Lunn wrote:
+I've actually no idea how this will go upstream, since it is three
+different subsystems, generic phy, libata, and arm/mvebu. I will leave
+it up to the maintainers to decide that. I can add some more CC: for
+v2.
 
-> Now that there is a phy driver for sata, enable generic phy in the
-> kirkwood and dove defconfig.
+> >+			sata_phy0: sata_phy@0 {
+> 
+>    The node should rather be named "sata-phy@0" to be in line with
+> "ethernet-phy" found in the ePAPR spec. [1], hyphen is generally
+> preferred to underscore in the device trees.
 
-    Same comment about missing linux-arm-kernel in the CC -- this is not a 
-libata patch but ARM one.
+O.K, will do. kirkwood.dtsi and dove.dtsi already follow this pattern
+of - in the @ part.
 
-> Signed-off-by: Andrew Lunn <andrew@lunn.ch>
-
-WBR, Sergei
-
+Thanks
+	Andrew
