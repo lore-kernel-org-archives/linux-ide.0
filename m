@@ -1,72 +1,74 @@
-From: Olliver Schinagl <oliver+list-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
-Subject: Re: [PATCH 0/3] AHCI: sunxi: Add sunxi AHCI driver
-Date: Wed, 04 Dec 2013 13:14:00 +0100
-Message-ID: <529F1C88.5070701@schinagl.nl>
+From: Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>
+Subject: Re: [PATCH 2/3] ARM: sunxi: Add an ahci-platform compatible AHCI
+ driver for the Allwinner SUNXi series of SoCs
+Date: Wed, 4 Dec 2013 12:26:02 +0000
+Message-ID: <20131204122602.GN16025@e106331-lin.cambridge.arm.com>
 References: <1386159055-10264-1-git-send-email-oliver@schinagl.nl>
-Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+ <1386159055-10264-3-git-send-email-oliver@schinagl.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Return-path: <linux-sunxi+bncBDDZ7YMYRMGBBYFZ7SKAKGQECN5U4RY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <1386159055-10264-1-git-send-email-oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
-List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/linux-sunxi>
-Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, grant.likely-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, rob.herring-bsGFqQB8/DxBDgjK7y7TUQ@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dev-3kdeTeqwOZ9EV1b7eY7vFQ@public.gmane.org, maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, ijc-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1386159055-10264-3-git-send-email-oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org" <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
+Cc: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "grant.likely-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org" <grant.likely-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "ob.herring-bsGFqQB8/DxBDgjK7y7TUQ@public.gmane.org" <ob.herring-bsGFqQB8/DxBDgjK7y7TUQ@public.gmane.org>, "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "dev-3kdeTeqwOZ9EV1b7eY7vFQ@public.gmane.org" <dev-3kdeTeqwOZ9EV1b7eY7vFQ@public.gmane.org>, "maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org" <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, "ijc-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org" <ijc-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org>, "hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "oliver+list-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org" <oliver+list-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
-And I've spotted my first mistake (one of many I'm sure) I typo'ed Rob's 
-e-mail address. Sorry Rob.
+On Wed, Dec 04, 2013 at 12:10:54PM +0000, oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org wrote:
+> From: Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
+> 
+> This patch adds support for the sunxi series of SoC's by allwinner. It
+> plugs into the ahci-platform framework.
+> 
+> Note: Currently it uses a somewhat hackish approach that probably needs
+> a lot more work, but does the same as the IMX SoC's.
+> 
+> Signed-off-by: Olliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
+> ---
+>  .../devicetree/bindings/ata/ahci-sunxi.txt         |  24 ++
+>  drivers/ata/Kconfig                                |   9 +
+>  drivers/ata/Makefile                               |   1 +
+>  drivers/ata/ahci_platform.c                        |  12 +
+>  drivers/ata/ahci_sunxi.c                           | 305 +++++++++++++++++++++
+>  5 files changed, 351 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/ata/ahci-sunxi.txt
+>  create mode 100644 drivers/ata/ahci_sunxi.c
+> 
+> diff --git a/Documentation/devicetree/bindings/ata/ahci-sunxi.txt b/Documentation/devicetree/bindings/ata/ahci-sunxi.txt
+> new file mode 100644
+> index 0000000..0792fa5
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ata/ahci-sunxi.txt
+> @@ -0,0 +1,24 @@
+> +Allwinner SUNXI AHCI SATA Controller
+> +
+> +SATA nodes are defined to describe on-chip Serial ATA controllers.
+> +Each SATA controller should have its own node.
+> +
+> +Required properties:
+> +- compatible   : compatible list, contains "allwinner,sun4i-a10-ahci"
 
-Oliver
+- compatible: Should contain "allwinner,sun4i-a10-ahci"
 
-On 04-12-13 13:10, oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org wrote:
-> From: Olliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
->
-> This patch series adds Allwinner sunxi support to platform_ahci.
-> There are a few quirks here however that will need discussing.
->
-> Allwinner added something to setup the DMA engine prior to enabling DMA in
-> libahci.c. I'm not familiar at all with the AHCI spec and not sure what
-> the proper way to implement this would have been. Don't other platforms
-> optionally require the same thing?
->
-> Also the way ahci_platform works seems a little hack-ish, it seems like
-> something along the lines of ahci_platform_register(ahci-data) would be more
-> appropriate, but not sure yet on those details (I am just a beginner).
->
-> Furthermore this driver should, in theory, work on the A10 but on my
-> cubieboard 1 it does not work yet (just hangs somewhere in libahci or after,
-> but not the DMA call that was altered). I've also tested it the cubietruck,
-> cubieboard 2 and olinuxino and it worked fine there.
->
-> Thanks,
->
-> Oliver
->
-> Oliver Schinagl (3):
->    RFC: AHCI: libahci is missing DMA
->    ARM: sunxi: Add an ahci-platform compatible AHCI driver for the
->      Allwinner SUNXi series of SoCs
->    ARM: sunxi: dts: Add ahci support to a few A10 and A20 boards
->
->   .../devicetree/bindings/ata/ahci-sunxi.txt         |  24 ++
->   arch/arm/boot/dts/sun4i-a10-cubieboard.dts         |  26 ++
->   arch/arm/boot/dts/sun4i-a10.dtsi                   |   9 +
->   arch/arm/boot/dts/sun7i-a20-cubieboard2.dts        |  26 ++
->   arch/arm/boot/dts/sun7i-a20-cubietruck.dts         |  26 ++
->   arch/arm/boot/dts/sun7i-a20-olinuxino-micro.dts    |  26 ++
->   arch/arm/boot/dts/sun7i-a20.dtsi                   |   9 +
->   drivers/ata/Kconfig                                |   9 +
->   drivers/ata/Makefile                               |   1 +
->   drivers/ata/ahci.h                                 |   6 +
->   drivers/ata/ahci_platform.c                        |  12 +
->   drivers/ata/ahci_sunxi.c                           | 305 +++++++++++++++++++++
->   drivers/ata/libahci.c                              |   8 +
->   13 files changed, 487 insertions(+)
->   create mode 100644 Documentation/devicetree/bindings/ata/ahci-sunxi.txt
->   create mode 100644 drivers/ata/ahci_sunxi.c
->
+> +- reg          : <registers mapping>
+
+- reg: The offset and length of the MMIO registers.
+
+> +- interrupts   : <interrupt mapping for AHCI IRQ>
+
+- interrupts: An interrupt-specifier for the ACHI interrupt
+
+> +- clocks       : clocks for ACHI
+> +- clock-names  : clock names for AHCI
+
+Please _define_ the set of clock-names you expect. This binding is
+meaningless without it. If you require clock-names, define the clocks
+property in terms of it.
+
+Thanks,
+Mark.
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
