@@ -1,77 +1,81 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 2/3] ARM: sunxi: Add an ahci-platform
- compatible AHCI driver for the Allwinner SUNXi series of SoCs
-Date: Wed, 4 Dec 2013 08:23:12 -0500
-Message-ID: <20131204132312.GH3158@htj.dyndns.org>
-References: <1386159055-10264-1-git-send-email-oliver@schinagl.nl>
- <1386159055-10264-3-git-send-email-oliver@schinagl.nl>
- <20131204123708.GD3158@htj.dyndns.org>
- <529F2677.3070208@schinagl.nl>
- <20131204131402.GG3158@htj.dyndns.org>
- <529F2B41.8090009@schinagl.nl>
-Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-sunxi+bncBDQ2FCEAWYLRBS6Z7SKAKGQEW3W6EHY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <529F2B41.8090009-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
-List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/linux-sunxi>
-List-Subscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Content-Disposition: inline
-To: Olliver Schinagl <oliver+list-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
-Cc: Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, grant.likely-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, "rob.herring-bsGFqQB8/DxBDgjK7y7TUQ@public.gmane.org" <rob.herring-bsGFqQB8/DxBDgjK7y7TUQ@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dev-3kdeTeqwOZ9EV1b7eY7vFQ@public.gmane.org, maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, ijc-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Richard Zhu <r65037-KZfg59tc24xl57MIdRCFDg@public.gmane.org>, Shawn Guo <shawn.guo-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+From: Andrew Lunn <andrew@lunn.ch>
+Subject: [PATCH 1/5] Phy: DT binding documentation for Marvell MVEBU SATA phy.
+Date: Wed,  4 Dec 2013 18:16:00 +0100
+Message-ID: <1386177364-10164-2-git-send-email-andrew@lunn.ch>
+References: <1386177364-10164-1-git-send-email-andrew@lunn.ch>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from vps0.lunn.ch ([178.209.37.122]:56807 "EHLO vps0.lunn.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753970Ab3LDRQT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 4 Dec 2013 12:16:19 -0500
+In-Reply-To: <1386177364-10164-1-git-send-email-andrew@lunn.ch>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jason Cooper <jason@lakedaemon.net>, kishon@ti.com
+Cc: devicetree@vger.kernel.org, linux-ide@vger.kernel.org, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>, Andrew Lunn <andrew@lunn.ch>
 
-Hello,
+Describe the binding for the Marvell MVEBU SATA phy. This driver
+can be used at least with Kirkwood, Dove and maybe others.
+Additionally, update the SATA binding with the properties to link
+to the phy nodes.
 
-(cc'ing Richard and Shawn, hi!)
+Signed-off-by: Andrew Lunn <andrew@lunn.ch>
+---
+ Documentation/devicetree/bindings/ata/marvell.txt  |  6 ++++++
+ .../devicetree/bindings/phy/phy-mvebu-sata.txt     | 22 ++++++++++++++++++++++
+ 2 files changed, 28 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/phy/phy-mvebu-sata.txt
 
-On Wed, Dec 04, 2013 at 02:16:49PM +0100, Olliver Schinagl wrote:
-> On 04-12-13 14:14, Tejun Heo wrote:
-> >Hello,
-> >
-> >On Wed, Dec 04, 2013 at 01:56:23PM +0100, Oliver Schinagl wrote:
-> >>I took the imx driver as example, as I wasn't sure on where to
-> >>start. But I don't think it's possible yet without improving
-> >>ahci_platform as I suggested in the cover letter. So if
-> >>ahci_platform needs to be improved, I guess a separate patch series
-> >>would be more appropriate?
-> >>
-> >>So would it be acceptable to have this as the 2nd (and last?)
-> >>ahci_platform driver and go from there? Or do you want to block new
-> >>ahci_XXX drivers until ahci_platform has been improved?
-> >
-> >I don't want to block new drivers unconditionally but at least I want
-> >to know which direction we're headed in the longer term.  Right now it
-> >feels like we could be at the beginning of an uncoordinated explosion
-> >of these drivers which will take a hell lot mpore effort to clean up
-> >after the fact.  I could be wrong and these could actually be
-> >different enough to justify separate drivers and there isn't gonna be
-> >an avalanche of these but again I at least want to know the general
-> >direction things are headed before making any decisions.
-> I'd be happy to pour it in any form that's needed. I even do the
-> modification/rewrite of ahci_platform if I get enough help as it
-> might be a little over my head initially ;)
-> 
-> That said, I don't think it's much different at all and I do think
-> it could be much simpler. In my mind, the sunxi_ahci driver wouldn't
-> need to be much bigger then a few lines that are specific to the SoC
-> (hardware init) and registerd to the ahci_platform framework via
-> platform_ahci_register() instead of platform_device_register().
-> 
-> But again, point me (for dummies ;) in the right direction and I'll
-> work on it with some help.
-
-Richard and Shawn recently worked on ahci_imx.  Can you guys please
-talk with each other and figure out what can be done to share as much
-as possible among these new platform-specific drivers?  I'd really
-like to see the common things factored out as much as possible with
-only the actual hardware differences described for each device.
-
-Thanks a lot!
-
+diff --git a/Documentation/devicetree/bindings/ata/marvell.txt b/Documentation/devicetree/bindings/ata/marvell.txt
+index b5cdd20cde9c..e072fa105b49 100644
+--- a/Documentation/devicetree/bindings/ata/marvell.txt
++++ b/Documentation/devicetree/bindings/ata/marvell.txt
+@@ -6,11 +6,17 @@ Required Properties:
+ - interrupts    : Interrupt controller is using
+ - nr-ports      : Number of SATA ports in use.
+ 
++Optional Properties:
++- phys		: List of phandles to sata phys
++- phy-names	: Should be "0", "1", etc, one number per phandle
++
+ Example:
+ 
+ 	sata@80000 {
+ 		compatible = "marvell,orion-sata";
+ 		reg = <0x80000 0x5000>;
+ 		interrupts = <21>;
++		phys = <&sata_phy0>, <&sata_phy1>;
++		phy-names = "0", "1";
+ 		nr-ports = <2>;
+ 	}
+diff --git a/Documentation/devicetree/bindings/phy/phy-mvebu-sata.txt b/Documentation/devicetree/bindings/phy/phy-mvebu-sata.txt
+new file mode 100644
+index 000000000000..1cf9cef50b4b
+--- /dev/null
++++ b/Documentation/devicetree/bindings/phy/phy-mvebu-sata.txt
+@@ -0,0 +1,22 @@
++* Marvell MVEBU SATA PHY
++
++Power control for the SATA phy found on Marvell MVEBU SoCs.
++
++This document extends the binding described in phy-bindings.txt
++
++Required properties :
++
++ - reg		   : Offset and length of the register set for the SATA device
++ - compatible	   : Should be "marvell,mvebu-sata-phy"
++ - clocks	   : phandle of clock that supplies the SATA device
++ - clock-names	   : Should be "sata"
++
++Example:
++		sata-phy@1 {
++			compatible = "marvell,mvebu-sata-phy";
++			reg = <0x84000 0x0334>;
++			clocks = <&gate_clk 15>;
++			clock-names = "sata";
++			#phy-cells = <1>;
++			status = "ok";
++		};
 -- 
-tejun
+1.8.5
+
