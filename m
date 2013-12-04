@@ -1,81 +1,76 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH/RESEND v2 0/2] Hard disk resume time optimization
-Date: Tue, 03 Dec 2013 18:20:03 +0100
-Message-ID: <529E12C3.3070708@interlog.com>
-References: <20131203162537.GA12554@linux.intel.com>
-Reply-To: dgilbert@interlog.com
+From: oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org
+Subject: [PATCH 1/3] RFC: AHCI: libahci is missing DMA
+Date: Wed,  4 Dec 2013 13:10:53 +0100
+Message-ID: <1386159055-10264-2-git-send-email-oliver@schinagl.nl>
+References: <1386159055-10264-1-git-send-email-oliver@schinagl.nl>
+Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20131203162537.GA12554@linux.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: todd.e.brandt@linux.intel.com, JBottomley@parallels.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, tj@kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-sunxi+bncBDC2JNWXZAJBBZFX7SKAKGQE3BTPKII-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <1386159055-10264-1-git-send-email-oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
+List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/linux-sunxi>
+Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, grant.likely-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, ob.herring-bsGFqQB8/DxBDgjK7y7TUQ@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dev-3kdeTeqwOZ9EV1b7eY7vFQ@public.gmane.org
+Cc: maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, ijc-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, oliver+list-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org, Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
-On 13-12-03 05:25 PM, Todd E Brandt wrote:
-> Hi James, can you give me some feedback on this patch set? It includes
-> changes based on your feedback to v1.
->
-> The essential issue behind hard disks' lengthy resume time is the ata port
-> driver blocking until the ATA port hardware is finished coming online. So
-> the kernel isn't really doing anything during all those seconds that the
-> disks are resuming, it's just blocking until the hardware says it's ready
-> to accept commands. Applying this patch set allows SATA disks to resume
-> asynchronously without holding up system resume, thus allowing the UI to
-> come online much more quickly. There may be a short period after resume
-> where the disks are still spinning up in the background, but the user
-> shouldn't notice since the OS can function with the data left in RAM.
->
-> The patch set has two parts which apply to ata_port_resume and sd_resume
-> respectively. Both are required to achieve any real performance benefit,
-> but they will still function independantly without a performance hit.
->
-> ata_port_resume patch (1/2):
->
-> On resume, the ATA port driver currently waits until the AHCI controller
-> finishes executing the port wakeup command. This patch changes the
-> ata_port_resume callback to issue the wakeup and then return immediately,
-> thus allowing the next device in the pm queue to resume. Any commands
-> issued to the AHCI hardware during the wakeup will be queued up and
-> executed once the port is physically online. Thus no information is lost.
->
-> sd_resume patch (2/2):
->
-> On resume, the SD driver currently waits until the block driver finishes
-> executing a disk start command with blk_execute_rq. This patch changes
-> the sd_resume callback to use blk_execute_rq_nowait instead, which allows
-> it to return immediately, thus allowing the next device in the pm queue
-> to resume. The return value of blk_execute_rq_nowait is handled in the
-> background by sd_resume_complete. Any commands issued to the scsi disk
-> during the startup will be queued up and executed once the disk is online.
-> Thus no information is lost.
+From: Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
 
-There was some fuzziness in the SCSI drafts as to how a disk
-would react to medium access commands (e.g. READ) when it
-was transitioning from stopped state (plus other lower powered
-states) to active. There are two options:
-   a) hold the medium access command in the target until
-      it becomes active, then act on it, or
-   b) send back a NOT READY sense key with LOGICAL UNIT IS IN
-      PROCESS OF BECOMING READY immediately.
+The Allwinner sunxi platforms have patched in the following to enable
+DMA. This patch enables DMA controllers for the SUNXI Architecture.
 
-This has recently been resolved with the CFF STOPPED field in
-the Power condition mode page. "Recently" is the operative word
-so you should expect to see next to no support for the CFF
-STOPPED field now. Thus SCSI disks can take their pick between
-the above two options. Does your patch cope with that?
+Signed-off-by: Olliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
+---
+ drivers/ata/ahci.h    | 6 ++++++
+ drivers/ata/libahci.c | 8 ++++++++
+ 2 files changed, 14 insertions(+)
 
-
-Also the START STOP UNIT SCSI command has an IMMED bit. It
-makes more sense to send this command with the IMMED bit set
-and wait for it to complete since that should be fast. You
-may receive an unexpected UNIT ATTENTION or a transport error.
-Those two imply your command has not, or can not do what has
-been requested.
-
-Doug Gilbert
-
-
-
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index 2289efdf..2bf2423 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -138,6 +138,7 @@ enum {
+ 	PORT_SCR_NTF		= 0x3c, /* SATA phy register: SNotification */
+ 	PORT_FBS		= 0x40, /* FIS-based Switching */
+ 	PORT_DEVSLP		= 0x44, /* device sleep */
++	PORT_DMA		= 0x70, /* direct memory access */
+ 
+ 	/* PORT_IRQ_{STAT,MASK} bits */
+ 	PORT_IRQ_COLD_PRES	= (1 << 31), /* cold presence detect */
+@@ -209,6 +210,11 @@ enum {
+ 	PORT_DEVSLP_DSP		= (1 << 1),       /* DevSlp present */
+ 	PORT_DEVSLP_ADSE	= (1 << 0),       /* Aggressive DevSlp enable */
+ 
++	/* PORT_DMA bits */
++	PORT_DMA_SETUP_OFFSET	= 8, /* dma setup offset */
++	PORT_DMA_SETUP_MASK	= (0xff << PORT_DMA_SETUP_OFFSET),/* dma mask */
++	PORT_DMA_SETUP_INIT	= (0x44 << 0),
++
+ 	/* hpriv->flags bits */
+ 
+ #define AHCI_HFLAGS(flags)		.private_data	= (void *)(flags)
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index c482f8c..d697a74 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -570,6 +570,14 @@ void ahci_start_engine(struct ata_port *ap)
+ 	void __iomem *port_mmio = ahci_port_base(ap);
+ 	u32 tmp;
+ 
++#ifdef CONFIG_ARCH_SUNXI
++	/* Setup DMA before DMA start */
++	tmp = readl(port_mmio + PORT_DMA);
++	tmp &= ~PORT_DMA_SETUP_MASK;
++	tmp |= PORT_DMA_SETUP_INIT << PORT_DMA_SETUP_OFFSET;
++	writel(tmp, port_mmio + PORT_DMA);
++#endif
++
+ 	/* start DMA */
+ 	tmp = readl(port_mmio + PORT_CMD);
+ 	tmp |= PORT_CMD_START;
+-- 
+1.8.3.2
