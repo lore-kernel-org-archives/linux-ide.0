@@ -1,74 +1,82 @@
-From: Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>
-Subject: Re: [PATCH 2/3] ARM: sunxi: Add an ahci-platform compatible AHCI
- driver for the Allwinner SUNXi series of SoCs
-Date: Wed, 4 Dec 2013 12:26:02 +0000
-Message-ID: <20131204122602.GN16025@e106331-lin.cambridge.arm.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 1/3] RFC: AHCI: libahci is missing DMA
+Date: Wed, 4 Dec 2013 07:32:34 -0500
+Message-ID: <20131204123234.GC3158@htj.dyndns.org>
 References: <1386159055-10264-1-git-send-email-oliver@schinagl.nl>
- <1386159055-10264-3-git-send-email-oliver@schinagl.nl>
+ <1386159055-10264-2-git-send-email-oliver@schinagl.nl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qa0-f48.google.com ([209.85.216.48]:47359 "EHLO
+	mail-qa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753663Ab3LDMcn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 Dec 2013 07:32:43 -0500
 Content-Disposition: inline
-In-Reply-To: <1386159055-10264-3-git-send-email-oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org" <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
-Cc: "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "grant.likely-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org" <grant.likely-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "ob.herring-bsGFqQB8/DxBDgjK7y7TUQ@public.gmane.org" <ob.herring-bsGFqQB8/DxBDgjK7y7TUQ@public.gmane.org>, "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "dev-3kdeTeqwOZ9EV1b7eY7vFQ@public.gmane.org" <dev-3kdeTeqwOZ9EV1b7eY7vFQ@public.gmane.org>, "maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org" <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, "ijc-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org" <ijc-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org>, "hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "oliver+list-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org" <oliver+list-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
+In-Reply-To: <1386159055-10264-2-git-send-email-oliver@schinagl.nl>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: oliver@schinagl.nl
+Cc: grant.likely@linaro.org, ob.herring@calxeda.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, dev@linux-sunxi.org, maxime.ripard@free-electrons.com, ijc@hellion.org.uk, hdegoede@redhat.com, oliver+list@schinagl.nl
 
-On Wed, Dec 04, 2013 at 12:10:54PM +0000, oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org wrote:
-> From: Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
+On Wed, Dec 04, 2013 at 01:10:53PM +0100, oliver@schinagl.nl wrote:
+> From: Oliver Schinagl <oliver@schinagl.nl>
 > 
-> This patch adds support for the sunxi series of SoC's by allwinner. It
-> plugs into the ahci-platform framework.
+> The Allwinner sunxi platforms have patched in the following to enable
+> DMA. This patch enables DMA controllers for the SUNXI Architecture.
 > 
-> Note: Currently it uses a somewhat hackish approach that probably needs
-> a lot more work, but does the same as the IMX SoC's.
-> 
-> Signed-off-by: Olliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
+> Signed-off-by: Olliver Schinagl <oliver@schinagl.nl>
 > ---
->  .../devicetree/bindings/ata/ahci-sunxi.txt         |  24 ++
->  drivers/ata/Kconfig                                |   9 +
->  drivers/ata/Makefile                               |   1 +
->  drivers/ata/ahci_platform.c                        |  12 +
->  drivers/ata/ahci_sunxi.c                           | 305 +++++++++++++++++++++
->  5 files changed, 351 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/ata/ahci-sunxi.txt
->  create mode 100644 drivers/ata/ahci_sunxi.c
+>  drivers/ata/ahci.h    | 6 ++++++
+>  drivers/ata/libahci.c | 8 ++++++++
+>  2 files changed, 14 insertions(+)
 > 
-> diff --git a/Documentation/devicetree/bindings/ata/ahci-sunxi.txt b/Documentation/devicetree/bindings/ata/ahci-sunxi.txt
-> new file mode 100644
-> index 0000000..0792fa5
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ata/ahci-sunxi.txt
-> @@ -0,0 +1,24 @@
-> +Allwinner SUNXI AHCI SATA Controller
+> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+> index 2289efdf..2bf2423 100644
+> --- a/drivers/ata/ahci.h
+> +++ b/drivers/ata/ahci.h
+> @@ -138,6 +138,7 @@ enum {
+>  	PORT_SCR_NTF		= 0x3c, /* SATA phy register: SNotification */
+>  	PORT_FBS		= 0x40, /* FIS-based Switching */
+>  	PORT_DEVSLP		= 0x44, /* device sleep */
+> +	PORT_DMA		= 0x70, /* direct memory access */
+>  
+>  	/* PORT_IRQ_{STAT,MASK} bits */
+>  	PORT_IRQ_COLD_PRES	= (1 << 31), /* cold presence detect */
+> @@ -209,6 +210,11 @@ enum {
+>  	PORT_DEVSLP_DSP		= (1 << 1),       /* DevSlp present */
+>  	PORT_DEVSLP_ADSE	= (1 << 0),       /* Aggressive DevSlp enable */
+>  
+> +	/* PORT_DMA bits */
+> +	PORT_DMA_SETUP_OFFSET	= 8, /* dma setup offset */
+> +	PORT_DMA_SETUP_MASK	= (0xff << PORT_DMA_SETUP_OFFSET),/* dma mask */
+> +	PORT_DMA_SETUP_INIT	= (0x44 << 0),
+
+Ummm... this doesn't belong to ahci proper, right?
+
 > +
-> +SATA nodes are defined to describe on-chip Serial ATA controllers.
-> +Each SATA controller should have its own node.
-> +
-> +Required properties:
-> +- compatible   : compatible list, contains "allwinner,sun4i-a10-ahci"
+>  	/* hpriv->flags bits */
+>  
+>  #define AHCI_HFLAGS(flags)		.private_data	= (void *)(flags)
+> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+> index c482f8c..d697a74 100644
+> --- a/drivers/ata/libahci.c
+> +++ b/drivers/ata/libahci.c
+> @@ -570,6 +570,14 @@ void ahci_start_engine(struct ata_port *ap)
+>  	void __iomem *port_mmio = ahci_port_base(ap);
+>  	u32 tmp;
+>  
+> +#ifdef CONFIG_ARCH_SUNXI
+> +	/* Setup DMA before DMA start */
+> +	tmp = readl(port_mmio + PORT_DMA);
+> +	tmp &= ~PORT_DMA_SETUP_MASK;
+> +	tmp |= PORT_DMA_SETUP_INIT << PORT_DMA_SETUP_OFFSET;
+> +	writel(tmp, port_mmio + PORT_DMA);
+> +#endif
 
-- compatible: Should contain "allwinner,sun4i-a10-ahci"
+If this is something platform device specific, wouldn't overriding
+->port_start() which wraps around ahci_port_start() make more sense?
 
-> +- reg          : <registers mapping>
+Thanks.
 
-- reg: The offset and length of the MMIO registers.
-
-> +- interrupts   : <interrupt mapping for AHCI IRQ>
-
-- interrupts: An interrupt-specifier for the ACHI interrupt
-
-> +- clocks       : clocks for ACHI
-> +- clock-names  : clock names for AHCI
-
-Please _define_ the set of clock-names you expect. This binding is
-meaningless without it. If you require clock-names, define the clocks
-property in terms of it.
-
-Thanks,
-Mark.
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+tejun
