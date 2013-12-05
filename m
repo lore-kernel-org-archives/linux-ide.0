@@ -1,103 +1,62 @@
 From: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH 3/5] SATA: MV: Add support for the optional PHYs
-Date: Thu, 5 Dec 2013 11:45:32 +0530
-Message-ID: <52A01A04.7040306@ti.com>
-References: <1386177364-10164-1-git-send-email-andrew@lunn.ch> <1386177364-10164-4-git-send-email-andrew@lunn.ch>
+Subject: Re: [PATCH 4/5] Phy: Add DT nodes on kirkwood and Dove for the SATA
+ PHY
+Date: Thu, 5 Dec 2013 11:47:54 +0530
+Message-ID: <52A01A92.1000305@ti.com>
+References: <1386177364-10164-1-git-send-email-andrew@lunn.ch> <1386177364-10164-5-git-send-email-andrew@lunn.ch>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:43163 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751489Ab3LEGPm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Dec 2013 01:15:42 -0500
-In-Reply-To: <1386177364-10164-4-git-send-email-andrew@lunn.ch>
+Received: from bear.ext.ti.com ([192.94.94.41]:42945 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751313Ab3LEGSE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 5 Dec 2013 01:18:04 -0500
+In-Reply-To: <1386177364-10164-5-git-send-email-andrew@lunn.ch>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Andrew Lunn <andrew@lunn.ch>, Jason Cooper <jason@lakedaemon.net>
 Cc: devicetree@vger.kernel.org, linux-ide@vger.kernel.org, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>
 
 Hi,
-
 On Wednesday 04 December 2013 10:46 PM, Andrew Lunn wrote:
-> Some Marvell SoCs have a SATA PHY which can be powered off, in order
-> to save power. Make use of the generic phy framework to control these
-> phys.
+> Add nodes for the two SATA PHYs on kirkewood.
+> Add node for the one SATA PHY on Dove.
+> Add pHandles to the PHYs in the sata nodes.
 > 
 > Signed-off-by: Andrew Lunn <andrew@lunn.ch>
 > ---
->  drivers/ata/sata_mv.c | 19 +++++++++++++++++++
->  1 file changed, 19 insertions(+)
+>  arch/arm/boot/dts/dove.dtsi          | 11 +++++++++++
+>  arch/arm/boot/dts/kirkwood-6281.dtsi |  2 ++
+>  arch/arm/boot/dts/kirkwood-6282.dtsi |  2 ++
+>  arch/arm/boot/dts/kirkwood.dtsi      | 18 ++++++++++++++++++
+>  4 files changed, 33 insertions(+)
 > 
-> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-> index 56be31819897..9a728bcfbb9a 100644
-> --- a/drivers/ata/sata_mv.c
-> +++ b/drivers/ata/sata_mv.c
-> @@ -60,6 +60,7 @@
->  #include <linux/dma-mapping.h>
->  #include <linux/device.h>
->  #include <linux/clk.h>
-> +#include <linux/phy/phy.h>
->  #include <linux/platform_device.h>
->  #include <linux/ata_platform.h>
->  #include <linux/mbus.h>
-> @@ -563,6 +564,12 @@ struct mv_host_priv {
->  	struct clk		*clk;
->  	struct clk              **port_clks;
->  	/*
-> +	 * Some devices have a SATA PHY which can be enabled/disabled
-> +	 * in order to save power. These are optional: if the platform
-> +	 * devices does not have any phy, they won't be used.
-> +	 */
-> +	struct phy		**port_phys;
-> +	/*
->  	 * These consistent DMA memory pools give us guaranteed
->  	 * alignment for hardware-accessed data structures,
->  	 * and less memory waste in accomplishing the alignment.
-> @@ -4076,6 +4083,11 @@ static int mv_platform_probe(struct platform_device *pdev)
->  					GFP_KERNEL);
->  	if (!hpriv->port_clks)
->  		return -ENOMEM;
-> +	hpriv->port_phys = devm_kzalloc(&pdev->dev,
-> +					sizeof(struct phy *) * n_ports,
-> +					GFP_KERNEL);
-> +	if (!hpriv->port_phys)
-> +		return -ENOMEM;
->  	host->private_data = hpriv;
->  	hpriv->n_ports = n_ports;
->  	hpriv->board_idx = chip_soc;
-> @@ -4097,6 +4109,9 @@ static int mv_platform_probe(struct platform_device *pdev)
->  		hpriv->port_clks[port] = clk_get(&pdev->dev, port_number);
->  		if (!IS_ERR(hpriv->port_clks[port]))
->  			clk_prepare_enable(hpriv->port_clks[port]);
-> +		hpriv->port_phys[port] = devm_phy_get(&pdev->dev, port_number);
+> diff --git a/arch/arm/boot/dts/dove.dtsi b/arch/arm/boot/dts/dove.dtsi
+> index 113a8bc7bee7..d56b3c675249 100644
+> --- a/arch/arm/boot/dts/dove.dtsi
+> +++ b/arch/arm/boot/dts/dove.dtsi
+> @@ -490,10 +490,21 @@
+>  				reg = <0xa0000 0x2400>;
+>  				interrupts = <62>;
+>  				clocks = <&gate_clk 3>;
+> +				phys = <&sata_phy0>;
+> +				phy-names = "0";
 
-once you change the phy-names in dt data, corresponding change should be done
-here too.
-> +		if (!IS_ERR(hpriv->port_phys[port]))
-> +			phy_power_on(hpriv->port_phys[port]);
->  	}
+A more descriptive phy-names would be good here and below.
+>  				nr-ports = <1>;
+>  				status = "disabled";
+>  			};
 >  
->  	/*
-> @@ -4132,6 +4147,8 @@ err:
->  			clk_disable_unprepare(hpriv->port_clks[port]);
->  			clk_put(hpriv->port_clks[port]);
->  		}
-> +		if (!IS_ERR(hpriv->port_phys[port]))
-> +			phy_power_off(hpriv->port_phys[port]);
->  	}
->  
->  	return rc;
-> @@ -4161,6 +4178,8 @@ static int mv_platform_remove(struct platform_device *pdev)
->  			clk_disable_unprepare(hpriv->port_clks[port]);
->  			clk_put(hpriv->port_clks[port]);
->  		}
-> +		if (!IS_ERR(hpriv->port_phys[port]))
-> +			phy_power_off(hpriv->port_phys[port]);
->  	}
->  	return 0;
->  }
-> 
-Apart from that comment this patch looks good.
+> +			sata_phy0: sata_phy@0 {
+> +				compatible = "marvell,mvebu-sata-phy";
+> +				reg = <0xa2000 0x0334>;
+> +				clocks = <&gate_clk 3>;
+> +				clock-names = "sata";
+> +				#phy-cells = <0>;
 
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+Ah.. only you documentation was having this value as '1'. Only that needs to be
+fixed then.
+
+Thanks
+Kishon
