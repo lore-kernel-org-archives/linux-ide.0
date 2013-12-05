@@ -1,98 +1,120 @@
 From: Jason Cooper <jason@lakedaemon.net>
-Subject: Re: [PATCH v2 1/4] Phy: DT binding documentation for Marvell MVEBU
- SATA phy.
-Date: Thu, 5 Dec 2013 13:16:51 -0500
-Message-ID: <20131205181651.GR29282@titan.lakedaemon.net>
+Subject: Re: [PATCH v2 4/4] Phy: Add DT nodes on kirkwood and Dove for the
+ SATA PHY
+Date: Thu, 5 Dec 2013 13:18:48 -0500
+Message-ID: <20131205181848.GS29282@titan.lakedaemon.net>
 References: <1386262263-18956-1-git-send-email-andrew@lunn.ch>
- <1386262263-18956-2-git-send-email-andrew@lunn.ch>
+ <1386262263-18956-5-git-send-email-andrew@lunn.ch>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:60755 "EHLO
-	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757277Ab3LESRB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Dec 2013 13:17:01 -0500
+Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:10940 "EHLO
+	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932422Ab3LESS7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Dec 2013 13:18:59 -0500
 Content-Disposition: inline
-In-Reply-To: <1386262263-18956-2-git-send-email-andrew@lunn.ch>
+In-Reply-To: <1386262263-18956-5-git-send-email-andrew@lunn.ch>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Andrew Lunn <andrew@lunn.ch>
 Cc: kishon@ti.com, devicetree@vger.kernel.org, linux-ide@vger.kernel.org, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>, linux ARM <linux-arm-kernel@lists.infradead.org>
 
-On Thu, Dec 05, 2013 at 05:51:00PM +0100, Andrew Lunn wrote:
-> Describe the binding for the Marvell MVEBU SATA phy. This driver
-> can be used at least with Kirkwood, Dove and maybe others.
-> Additionally, update the SATA binding with the properties to link
-> to the phy nodes.
-> 
-> Signed-off-by: Andrew Lunn <andrew@lunn.ch>
-> ---
-> v1->v2:
-> Correct #phy-cells
-> Correct number after @ to match first reg address.
+On Thu, Dec 05, 2013 at 05:51:03PM +0100, Andrew Lunn wrote:
+> Add nodes for the two SATA PHYs on kirkewood.
 
-
-
-> Rename to mvebu-phy.txt
-
-Ok, this follows samsung-phy.txt.
-
-> ---
->  Documentation/devicetree/bindings/ata/marvell.txt  |  6 ++++++
->  .../devicetree/bindings/phy/phy-mvebu.txt          | 22 ++++++++++++++++++++++
-
-but this does not... ?
+s/kirkewood/kirkwood/ but only if you do a respin.  Otherwise, I can
+patch it up when I pull it in.
 
 thx,
 
 Jason.
 
->  2 files changed, 28 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/phy/phy-mvebu.txt
+> Add node for the one SATA PHY on Dove.
+> Add pHandles to the PHYs in the sata nodes.
 > 
-> diff --git a/Documentation/devicetree/bindings/ata/marvell.txt b/Documentation/devicetree/bindings/ata/marvell.txt
-> index b5cdd20cde9c..e072fa105b49 100644
-> --- a/Documentation/devicetree/bindings/ata/marvell.txt
-> +++ b/Documentation/devicetree/bindings/ata/marvell.txt
-> @@ -6,11 +6,17 @@ Required Properties:
->  - interrupts    : Interrupt controller is using
->  - nr-ports      : Number of SATA ports in use.
+> Signed-off-by: Andrew Lunn <andrew@lunn.ch>
+> ---
+> v1->v2:
+> sata_phy@... ->sata-phy@
+> value after '@' matching the first address in the reg.
+> ---
+>  arch/arm/boot/dts/dove.dtsi          | 11 +++++++++++
+>  arch/arm/boot/dts/kirkwood-6281.dtsi |  2 ++
+>  arch/arm/boot/dts/kirkwood-6282.dtsi |  2 ++
+>  arch/arm/boot/dts/kirkwood.dtsi      | 18 ++++++++++++++++++
+>  4 files changed, 33 insertions(+)
+> 
+> diff --git a/arch/arm/boot/dts/dove.dtsi b/arch/arm/boot/dts/dove.dtsi
+> index 113a8bc7bee7..0d786f868760 100644
+> --- a/arch/arm/boot/dts/dove.dtsi
+> +++ b/arch/arm/boot/dts/dove.dtsi
+> @@ -490,10 +490,21 @@
+>  				reg = <0xa0000 0x2400>;
+>  				interrupts = <62>;
+>  				clocks = <&gate_clk 3>;
+> +				phys = <&sata_phy0>;
+> +				phy-names = "0";
+>  				nr-ports = <1>;
+>  				status = "disabled";
+>  			};
 >  
-> +Optional Properties:
-> +- phys		: List of phandles to sata phys
-> +- phy-names	: Should be "0", "1", etc, one number per phandle
+> +			sata_phy0: sata-phy@a2000 {
+> +				compatible = "marvell,mvebu-sata-phy";
+> +				reg = <0xa2000 0x0334>;
+> +				clocks = <&gate_clk 3>;
+> +				clock-names = "sata";
+> +				#phy-cells = <0>;
+> +				status = "ok";
+> +			};
 > +
->  Example:
+>  			rtc: real-time-clock@d8500 {
+>  				compatible = "marvell,orion-rtc";
+>  				reg = <0xd8500 0x20>;
+> diff --git a/arch/arm/boot/dts/kirkwood-6281.dtsi b/arch/arm/boot/dts/kirkwood-6281.dtsi
+> index 650ef30e1856..92a1c747456a 100644
+> --- a/arch/arm/boot/dts/kirkwood-6281.dtsi
+> +++ b/arch/arm/boot/dts/kirkwood-6281.dtsi
+> @@ -89,6 +89,8 @@
+>  			interrupts = <21>;
+>  			clocks = <&gate_clk 14>, <&gate_clk 15>;
+>  			clock-names = "0", "1";
+> +			phys = <&sata_phy0>, <&sata_phy1>;
+> +			phy-names = "0", "1";
+>  			status = "disabled";
+>  		};
 >  
->  	sata@80000 {
->  		compatible = "marvell,orion-sata";
->  		reg = <0x80000 0x5000>;
->  		interrupts = <21>;
-> +		phys = <&sata_phy0>, <&sata_phy1>;
-> +		phy-names = "0", "1";
->  		nr-ports = <2>;
->  	}
-> diff --git a/Documentation/devicetree/bindings/phy/phy-mvebu.txt b/Documentation/devicetree/bindings/phy/phy-mvebu.txt
-> new file mode 100644
-> index 000000000000..6cb3364aeafb
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/phy/phy-mvebu.txt
-> @@ -0,0 +1,22 @@
-> +* Marvell MVEBU SATA PHY
+> diff --git a/arch/arm/boot/dts/kirkwood-6282.dtsi b/arch/arm/boot/dts/kirkwood-6282.dtsi
+> index 3933a331ddc2..dfa6b073cf00 100644
+> --- a/arch/arm/boot/dts/kirkwood-6282.dtsi
+> +++ b/arch/arm/boot/dts/kirkwood-6282.dtsi
+> @@ -117,6 +117,8 @@
+>  			interrupts = <21>;
+>  			clocks = <&gate_clk 14>, <&gate_clk 15>;
+>  			clock-names = "0", "1";
+> +			phys = <&sata_phy0>, <&sata_phy1>;
+> +			phy-names = "0", "1";
+>  			status = "disabled";
+>  		};
+>  
+> diff --git a/arch/arm/boot/dts/kirkwood.dtsi b/arch/arm/boot/dts/kirkwood.dtsi
+> index 8b73c80f1dad..ee06951721c4 100644
+> --- a/arch/arm/boot/dts/kirkwood.dtsi
+> +++ b/arch/arm/boot/dts/kirkwood.dtsi
+> @@ -282,5 +282,23 @@
+>  				/* set phy-handle property in board file */
+>  			};
+>  		};
 > +
-> +Power control for the SATA phy found on Marvell MVEBU SoCs.
+> +		sata_phy0: sata-phy@82000 {
+> +			compatible = "marvell,mvebu-sata-phy";
+> +			reg = <0x82000 0x0334>;
+> +			clocks = <&gate_clk 14>;
+> +			clock-names = "sata";
+> +			#phy-cells = <0>;
+> +			status = "ok";
+> +		};
 > +
-> +This document extends the binding described in phy-bindings.txt
-> +
-> +Required properties :
-> +
-> + - reg		   : Offset and length of the register set for the SATA device
-> + - compatible	   : Should be "marvell,mvebu-sata-phy"
-> + - clocks	   : phandle of clock and specifier that supplies the device
-> + - clock-names	   : Should be "sata"
-> +
-> +Example:
-> +		sata-phy@84000 {
+> +		sata_phy1: sata-phy@84000 {
 > +			compatible = "marvell,mvebu-sata-phy";
 > +			reg = <0x84000 0x0334>;
 > +			clocks = <&gate_clk 15>;
@@ -100,6 +122,8 @@ Jason.
 > +			#phy-cells = <0>;
 > +			status = "ok";
 > +		};
+>  	};
+>  };
 > -- 
 > 1.8.5
 > 
