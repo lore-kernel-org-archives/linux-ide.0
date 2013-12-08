@@ -1,65 +1,64 @@
-From: Olliver Schinagl <oliver@schinagl.nl>
-Subject: Re: [PATCH 2/3] ARM: sunxi: Add an ahci-platform compatible AHCI
- driver for the Allwinner SUNXi series of SoCs
-Date: Thu, 12 Dec 2013 09:47:28 +0100
-Message-ID: <52A97820.8020007@schinagl.nl>
-References: <1386159055-10264-1-git-send-email-oliver@schinagl.nl> <1386159055-10264-3-git-send-email-oliver@schinagl.nl> <20131204123708.GD3158@htj.dyndns.org> <529F2677.3070208@schinagl.nl> <20131204131402.GG3158@htj.dyndns.org> <529F2B41.8090009@schinagl.nl> <20131204132312.GH3158@htj.dyndns.org> <52A87C07.1020102@schinagl.nl> <20131212064025.GM18380@S2101-09.ap.freescale.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: "Robin H. Johnson" <robbat2@gentoo.org>
+Subject: [PATCH] libata: provide the ability to disable a disk via the params.
+Date: Sat,  7 Dec 2013 16:56:27 -0800
+Message-ID: <1386464187-6993-1-git-send-email-robbat2@gentoo.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 7of9.schinagl.nl ([88.159.158.68]:41688 "EHLO 7of9.schinagl.nl"
+Received: from smtp.gentoo.org ([140.211.166.183]:46746 "EHLO smtp.gentoo.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751064Ab3LLItY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 12 Dec 2013 03:49:24 -0500
-In-Reply-To: <20131212064025.GM18380@S2101-09.ap.freescale.net>
+	id S1751268Ab3LLI7F (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 12 Dec 2013 03:59:05 -0500
+Received: from grubbs.orbis-terrarum.net (localhost [127.0.0.1])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by smtp.gentoo.org (Postfix) with ESMTPS id E4C4733F432
+	for <linux-ide@vger.kernel.org>; Thu, 12 Dec 2013 08:59:03 +0000 (UTC)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Shawn Guo <shawn.guo@linaro.org>
-Cc: Tejun Heo <tj@kernel.org>, Olliver Schinagl <oliver+list@schinagl.nl>, grant.likely@linaro.org, "rob.herring@calxeda.com" <rob.herring@calxeda.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, dev@linux-sunxi.org, maxime.ripard@free-electrons.com, ijc@hellion.org.uk, hdegoede@redhat.com, Richard Zhu <r65037@freescale.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, "Robin H. Johnson" <robbat2@gentoo.org>
 
+This was posted by a user on StackExchange, who has a failing SSD that's
+soldered directly onto the motherboard of his system. The BIOS does not
+give any option to disable it at all, so he can't just hide it that way.
 
-On 12-12-13 07:40, Shawn Guo wrote:
-> On Wed, Dec 11, 2013 at 03:51:51PM +0100, Olliver Schinagl wrote:
->> Working on this and studying the existing
->> ahci_platform/shci_platform drivers the last few days and was
->> figuring out why ahci_platform only supports 1 clock. IMX handles
->> this by having 3 clocks defined in the DT, the first one gets
->> enabled by default via ahci_platform, the other 2 get enabled in
->> IMX's probe function.
->>
->> Is it an idea to extend this to support all clocks that would be
->> required (via a callback)?
-> Not really.  We did this for ahci_imx driver only because we do not want
-> to churn generic ahci_platform driver with those imx specific setup
-> code.  Note, beside the additional two clocks, we have some PHY
-> parameters to set up in IMX IOMUXC general purpose registers, and vendor
-> specific register HOST_TIMER1MS to be set up as well.
-Well many SoC's have these specific things so we need a place to provide 
-for this.
+The old IDE layer had hdX=noprobe override for situations like this, but
+that was never ported to the libata layer.
 
-The the question then becomes, what do we define as being the common 
-clocks? Only the clock for the SATA IP? Or also the clock to which it 
-connects to the bus? Where is the line drawn etc.
+Signed-off-by: Robin H. Johnson <robbat2@gentoo.org>
+X-URL: http://unix.stackexchange.com/questions/102648/how-to-tell-linux-kernel-3-0-to-completely-ignore-a-failing-disk
+X-URL: http://askubuntu.com/questions/352836/how-can-i-tell-linux-kernel-to-completely-ignore-a-disk-as-if-it-was-not-even-co
+X-URL: http://superuser.com/questions/599333/how-to-disable-kernel-probing-for-drive
+---
+ Documentation/kernel-parameters.txt | 2 ++
+ drivers/ata/libata-core.c           | 2 ++
+ 2 files changed, 4 insertions(+)
 
-E.g. a rewritten new ahci-pltfrm.c will support all clocks defined in 
-the DT for the ahci node.
->
->> Or do we prefer having the clocks
->> separated for other technical reasons? Or do we want to handle the
->> clocks via the ahci_platform framework and extend hpriv->clk to an
->> array of clocks?
-> The direction of the generic ahci platform driver will be having it be
-> a library providing helper functions, as discussed as below.
->
-> https://lkml.org/lkml/2013/12/6/153
-I know, I started this entire thread :p hence my question :)
-
-Oliver
->
-> We can ask the helper function to handle the common clocks and leave the
-> platform specific ones to platform driver.
->
-> Shawn
->
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index 50680a5..40bf5ff 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -1529,6 +1529,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 
+ 			* atapi_dmadir: Enable ATAPI DMADIR bridge support
+ 
++			* [no]disable: Enable or disable this device.
++
+ 			If there are multiple matching configurations changing
+ 			the same attribute, the last one is used.
+ 
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 75b9367..5069a96 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -6519,6 +6519,8 @@ static int __init ata_parse_force_one(char **cur,
+ 		{ "norst",	.lflags		= ATA_LFLAG_NO_HRST | ATA_LFLAG_NO_SRST },
+ 		{ "rstonce",	.lflags		= ATA_LFLAG_RST_ONCE },
+ 		{ "atapi_dmadir", .horkage_on	= ATA_HORKAGE_ATAPI_DMADIR },
++		{ "disable",	.horkage_on	= ATA_HORKAGE_DISABLE },
++		{ "nodisable",	.horkage_off	= ATA_HORKAGE_DISABLE },
+ 	};
+ 	char *start = *cur, *p = *cur;
+ 	char *id, *val, *endp;
+-- 
+1.8.4.3
 
