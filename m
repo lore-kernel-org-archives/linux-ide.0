@@ -1,121 +1,112 @@
-From: Marek Vasut <marex@denx.de>
-Subject: Re: [PATCH] pci: imx: enable pcie msi support
-Date: Mon, 9 Dec 2013 12:16:23 +0100
-Message-ID: <201312091216.23906.marex@denx.de>
-References: <1386581119-2962-1-git-send-email-richard.zhuhongxing@gmail.com> <1386581119-2962-2-git-send-email-richard.zhuhongxing@gmail.com>
+From: Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
+Subject: Re: [PATCH 3/3] ARM: sunxi: dts: Add ahci support to a
+ few A10 and A20 boards
+Date: Mon, 9 Dec 2013 20:16:20 +0100
+Message-ID: <20131209191620.GN24519@lukather>
+References: <1386159055-10264-1-git-send-email-oliver@schinagl.nl>
+ <1386159055-10264-4-git-send-email-oliver@schinagl.nl>
+ <20131206183339.GG24519@lukather>
+ <52A30ADB.7090106@schinagl.nl>
+Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:45349 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933235Ab3LIMhD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Dec 2013 07:37:03 -0500
-In-Reply-To: <1386581119-2962-2-git-send-email-richard.zhuhongxing@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="FhKpTYimqQF2+bfE"
+Return-path: <linux-sunxi+bncBD2ZNBF5VYJRB2FPTCKQKGQEQEBLYIY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <52A30ADB.7090106-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
+List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/linux-sunxi>
+Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: Olliver Schinagl <oliver+list-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
+Cc: oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, grant.likely-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, "rob.herring-bsGFqQB8/DxBDgjK7y7TUQ@public.gmane.org" <rob.herring-bsGFqQB8/DxBDgjK7y7TUQ@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dev-3kdeTeqwOZ9EV1b7eY7vFQ@public.gmane.org, ijc-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: Richard Zhu <richard.zhuhongxing@gmail.com>
-Cc: jbe@pengutronix.de, hrhaan@gmail.com, shawn.guo@linaro.org, jgarzik@pobox.com, tj@kernel.org, linux-ide@vger.kernel.org, Richard Zhu <r65037@freescale.com>
 
-On Monday, December 09, 2013 at 10:25:19 AM, Richard Zhu wrote:
-> From: Richard Zhu <r65037@freescale.com>
-> 
-> eanble pcie msi support on imx6 platforms
-> * add check_device api in the msi chip.
-> * add the quirks into pcie_port struct for the deviation
-> from standard routines.
-> 
-> Signed-off-by: Richard Zhu <richard.zhuhongxing@gmail.com>
-[...]
 
-> diff --git a/drivers/pci/host/pcie-designware.c
-> b/drivers/pci/host/pcie-designware.c index e33b68b..96d2b78 100644
-> --- a/drivers/pci/host/pcie-designware.c
-> +++ b/drivers/pci/host/pcie-designware.c
-> @@ -308,23 +308,28 @@ static int dw_msi_setup_irq(struct msi_chip *chip,
-> struct pci_dev *pdev, return -EINVAL;
->  	}
-> 
-> -	pci_read_config_word(pdev, desc->msi_attrib.pos+PCI_MSI_FLAGS,
-> -				&msg_ctr);
-> -	msgvec = (msg_ctr&PCI_MSI_FLAGS_QSIZE) >> 4;
-> -	if (msgvec == 0)
-> -		msgvec = (msg_ctr & PCI_MSI_FLAGS_QMASK) >> 1;
-> -	if (msgvec > 5)
-> -		msgvec = 0;
-> -
-> -	irq = assign_irq((1 << msgvec), desc, &pos);
-> -	if (irq < 0)
-> -		return irq;
-> -
-> -	msg_ctr &= ~PCI_MSI_FLAGS_QSIZE;
-> -	msg_ctr |= msgvec << 4;
-> -	pci_write_config_word(pdev, desc->msi_attrib.pos + PCI_MSI_FLAGS,
-> -				msg_ctr);
-> -	desc->msi_attrib.multiple = msgvec;
-> +	if (pp->quirks & DW_PCIE_QUIRK_NO_MSI_VEC) {
-> +		irq = assign_irq(1, desc, &pos);
-> +		set_irq_flags(irq, IRQF_VALID);
+--FhKpTYimqQF2+bfE
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-What does this do exactly please ? I don't quite understand how this code works. 
-A beefy comment how this works and why it's needed would really help.
+On Sat, Dec 07, 2013 at 12:47:39PM +0100, Olliver Schinagl wrote:
+> Hey maxime,
+> On 06-12-13 19:33, Maxime Ripard wrote:
+> >Hi Oliver,
+> >
+> >On Wed, Dec 04, 2013 at 01:10:55PM +0100, oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org wrote:
+> >>From: Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
+> >>
+> >>This patch adds sunxi sata support to A10 and A20 boards that have such
+> >>a connector. Some boards also feature a regulator via a GPIO and support
+> >>for this is also added.
+> >>
+> >>Signed-off-by: Olliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
+> >
+> >Your git setup seems to be pretty uncertain about how your first name is=
+ spelled :)
+> I should have formally mention it to confuse less people,
+>=20
+> This is how officially my name is spelled (I left out any 'middle'
+> letters. I never really used it as such, as it confuses people and
+> they always write it wrong anyway. After years I decided that at
+> least on these patches, I should write it down properly
+> (googleability etc in the future). So formally it's Olliver 'oliver'
+> M. Schinagl.
+>=20
+> And no, I won't share my middle name :p
+>=20
+> There! :)
 
-> +	} else {
-> +		pci_read_config_word(pdev, desc->msi_attrib.pos+PCI_MSI_FLAGS,
-> +					&msg_ctr);
-> +		msgvec = (msg_ctr&PCI_MSI_FLAGS_QSIZE) >> 4;
-> +		if (msgvec == 0)
-> +			msgvec = (msg_ctr & PCI_MSI_FLAGS_QMASK) >> 1;
-> +		if (msgvec > 5)
-> +			msgvec = 0;
-> +
-> +		irq = assign_irq((1 << msgvec), desc, &pos);
-> +		if (irq < 0)
-> +			return irq;
-> +
-> +		msg_ctr &= ~PCI_MSI_FLAGS_QSIZE;
-> +		msg_ctr |= msgvec << 4;
-> +		pci_write_config_word(pdev, desc->msi_attrib.pos + 
-PCI_MSI_FLAGS,
-> +					msg_ctr);
-> +		desc->msi_attrib.multiple = msgvec;
-> +	}
-> 
->  	msg.address_lo = virt_to_phys((void *)pp->msi_data);
->  	msg.address_hi = 0x0;
-> @@ -339,9 +344,30 @@ static void dw_msi_teardown_irq(struct msi_chip *chip,
-> unsigned int irq) clear_irq(irq);
->  }
-> 
-> +static int dw_msi_check_device(struct msi_chip *chip, struct pci_dev
-> *pdev, +		int nvec, int type)
-> +{
-> +	struct pcie_port *pp = sys_to_pcie(pdev->bus->sysdata);
-> +	u32 val;
+My point was more that the spelling in your From is different from the
+spelling in your SoB.
 
-Can we not have a callback here into the MX6 PCIe driver instead of having this 
-code here? Then we would likely not need these quirk flags at all.
+> >>diff --git a/arch/arm/boot/dts/sun7i-a20.dtsi b/arch/arm/boot/dts/sun7i=
+-a20.dtsi
+> >>index 0552a64..b72c69e 100644
+> >>--- a/arch/arm/boot/dts/sun7i-a20.dtsi
+> >>+++ b/arch/arm/boot/dts/sun7i-a20.dtsi
+> >>@@ -368,6 +368,15 @@
+> >>  			};
+> >>  		};
+> >>
+> >>+		sata: ahci@01c18000 {
+> >>+			compatible =3D "allwinner,sun4i-a10-ahci";
+> >>+			reg =3D <0x01c18000 0x1000>;
+> >>+			interrupts =3D <0 56 1>;
+> Will always fix this to <0 56 4> if i'm not mistaken.
 
-> +	if (pp->quirks & DW_PCIE_QUIRK_MSI_SELF_EN) {
-> +		if ((type == PCI_CAP_ID_MSI) || (type == PCI_CAP_ID_MSIX)) {
-> +			/* Set MSI enable of RC here */
-> +			val = readl(pp->dbi_base + 0x50);
-> +			if ((val & (PCI_MSI_FLAGS_ENABLE << 16)) == 0) {
-> +				val |= PCI_MSI_FLAGS_ENABLE << 16;
-> +				writel(val, pp->dbi_base + 0x50);
-> +			}
-> +		}
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  static struct msi_chip dw_pcie_msi_chip = {
->  	.setup_irq = dw_msi_setup_irq,
->  	.teardown_irq = dw_msi_teardown_irq,
-> +	.check_device = dw_msi_check_device,
->  };
-> 
->  int dw_pcie_link_up(struct pcie_port *pp)
-[...]
+Only the GIC has a three-cells interrupts. So only the A20 and A31 are
+supposed to have this value.
+
+Maxime
+
+--=20
+Maxime Ripard, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
+
+--FhKpTYimqQF2+bfE
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+
+iQIcBAEBAgAGBQJSphcEAAoJEBx+YmzsjxAggvkP/REzOU6lkQXL/DoVRWmei9hT
+P4GtbD5//V72PYEP75SM5QIXoUMJyQ9pQ602UecySO8hbljZIvus4po5D9RTX0Ex
+eovynNucLo1X7LJeNrg7Jj1aoLTLMTQtJgUJoTOwppA7M/JkBZFby7q4vUZTWZVt
+Gq2hk17apFhtB4icZFUTLme/Wb9JV5Rx10z6LZHMGLnV0aSzv/DWUSv9MChRrPjt
+k89W7AvL+/paa1bZ8lwlkIFfXwWCQkSbrNdRbbkfui+zFz2+wtmLJAmHq5Pg/GQW
+SUQieKyZL5AVttgvoibF8NvSZe7FLd0LR5sWtauZndDAW3cOmpnkBiDVsr/V+9Af
+vW1UHFMDYotPv2DR3ldzGAhuMlOudLaRrqtZ+5IjXup1PyO66twupB3Ea21QCsWI
+eZEs9wgc8bxeGg4gmPf8xWWytvEa43OF4hS4WlqE8rX6RXI4MSzEJC5lxPK+Y71s
+QR4SpVwRts6s1QijD8KwJiCamO0Rj+nXqt+wCMH7zdf9XgkwuUJMn0yktnSV7qNU
+kVgKGzWq0Yh91XfQHGfA3a5fvLSQ/c97mMQ8hyvUn+TQIHAOd6cVXUfgp9A9HZ/G
+z298cdTSHNDLikNQymeTNKqilh1B3qGY2CJ5u7ycOiC25KY3Dk28BW05ud/6En70
+o9v8slSKVNJ3pihspiJJ
+=h+M3
+-----END PGP SIGNATURE-----
+
+--FhKpTYimqQF2+bfE--
