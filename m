@@ -1,112 +1,79 @@
-From: Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
-Subject: Re: [PATCH 3/3] ARM: sunxi: dts: Add ahci support to a
- few A10 and A20 boards
-Date: Mon, 9 Dec 2013 20:16:20 +0100
-Message-ID: <20131209191620.GN24519@lukather>
-References: <1386159055-10264-1-git-send-email-oliver@schinagl.nl>
- <1386159055-10264-4-git-send-email-oliver@schinagl.nl>
- <20131206183339.GG24519@lukather>
- <52A30ADB.7090106@schinagl.nl>
-Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Sascha Hauer <s.hauer@pengutronix.de>
+Subject: Re: [PATCH V6 3/3] ahci: imx: Add i.MX53 support
+Date: Tue, 10 Dec 2013 12:47:38 +0100
+Message-ID: <20131210114738.GA4097@pengutronix.de>
+References: <1385369222-5288-1-git-send-email-marex@denx.de>
+ <1385369222-5288-3-git-send-email-marex@denx.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="FhKpTYimqQF2+bfE"
-Return-path: <linux-sunxi+bncBD2ZNBF5VYJRB2FPTCKQKGQEQEBLYIY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <52A30ADB.7090106-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
-List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/linux-sunxi>
-Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: Olliver Schinagl <oliver+list-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
-Cc: oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, grant.likely-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, "rob.herring-bsGFqQB8/DxBDgjK7y7TUQ@public.gmane.org" <rob.herring-bsGFqQB8/DxBDgjK7y7TUQ@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dev-3kdeTeqwOZ9EV1b7eY7vFQ@public.gmane.org, ijc-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-List-Id: linux-ide@vger.kernel.org
-
-
---FhKpTYimqQF2+bfE
 Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:51238 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751542Ab3LJLrs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Dec 2013 06:47:48 -0500
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <1385369222-5288-3-git-send-email-marex@denx.de>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
+To: Marek Vasut <marex@denx.de>
+Cc: linux-arm-kernel@lists.infradead.org, Richard Zhu <r65037@freescale.com>, Tejun Heo <tj@kernel.org>, Shawn Guo <shawn.guo@linaro.org>, Linux-IDE <linux-ide@vger.kernel.org>
 
-On Sat, Dec 07, 2013 at 12:47:39PM +0100, Olliver Schinagl wrote:
-> Hey maxime,
-> On 06-12-13 19:33, Maxime Ripard wrote:
-> >Hi Oliver,
-> >
-> >On Wed, Dec 04, 2013 at 01:10:55PM +0100, oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org wrote:
-> >>From: Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
-> >>
-> >>This patch adds sunxi sata support to A10 and A20 boards that have such
-> >>a connector. Some boards also feature a regulator via a GPIO and support
-> >>for this is also added.
-> >>
-> >>Signed-off-by: Olliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
-> >
-> >Your git setup seems to be pretty uncertain about how your first name is=
- spelled :)
-> I should have formally mention it to confuse less people,
->=20
-> This is how officially my name is spelled (I left out any 'middle'
-> letters. I never really used it as such, as it confuses people and
-> they always write it wrong anyway. After years I decided that at
-> least on these patches, I should write it down properly
-> (googleability etc in the future). So formally it's Olliver 'oliver'
-> M. Schinagl.
->=20
-> And no, I won't share my middle name :p
->=20
-> There! :)
+Marek,
 
-My point was more that the spelling in your From is different from the
-spelling in your SoB.
+On Mon, Nov 25, 2013 at 09:47:02AM +0100, Marek Vasut wrote:
+> Add minor adjustments to support i.MX53 SATA port as well as i.MX6Q one.
+> The difference here is mostly the clock which need to be enabled and also
+> the lack of need of programming IOMUXC registers on i.MX53. All of which
+> is well handles in the clock enable/disable functions. Note that this patch
+> also cleans up the names of the common functions, so they don't read imx6q_*
+> but imx_* instead.
+> 
+> Signed-off-by: Marek Vasut <marex@denx.de>
+> Cc: Shawn Guo <shawn.guo@linaro.org>
+> Cc: Richard Zhu <r65037@freescale.com>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: Linux-IDE <linux-ide@vger.kernel.org>
+> ---
+>  drivers/ata/ahci_imx.c | 180 +++++++++++++++++++++++++++++++++----------------
+>  1 file changed, 122 insertions(+), 58 deletions(-)
+> 
+> V2: Rebase this patch to be coherent with formating change in 1/5 .
+> V3: Rebase this patch to be coherent with change in 1/5 .
+> V4: Use sata_ref_clk for both MX53 and MX6 instead of separate sata_phy_clk
+>     for MX53.
+> V5: Rebase on top of changes in 1/6 and 2/6 . Note that I am keeping the small
+>     delay after enabling clock on MX53 as well.
+> V6: Rebase on top of changes in 1/3 and 2/3 . Also, this is important, add
+>     softreset hook for the i.MX53 implemented by the ahci_imx_softreset()
+>     function. For MX6, This function invokes the regular AHCI softreset
+>     function, but for MX53 a function which retries the softreset is invoked.
+>     The reset hook is needed, otherwise I observe some drives are not detected
+>     at all.
+> 
+> diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+> index 6214411..8cb8965 100644
+> --- a/drivers/ata/ahci_imx.c
+> +++ b/drivers/ata/ahci_imx.c
+> @@ -34,10 +34,21 @@ enum {
+>  	HOST_TIMER1MS = 0xe0,			/* Timer 1-ms */
+>  };
+>  
+> +enum ahci_imx_type {
+> +	AHCI_IMX53,
+> +	AHCI_IMX6Q,
+> +};
 
-> >>diff --git a/arch/arm/boot/dts/sun7i-a20.dtsi b/arch/arm/boot/dts/sun7i=
--a20.dtsi
-> >>index 0552a64..b72c69e 100644
-> >>--- a/arch/arm/boot/dts/sun7i-a20.dtsi
-> >>+++ b/arch/arm/boot/dts/sun7i-a20.dtsi
-> >>@@ -368,6 +368,15 @@
-> >>  			};
-> >>  		};
-> >>
-> >>+		sata: ahci@01c18000 {
-> >>+			compatible =3D "allwinner,sun4i-a10-ahci";
-> >>+			reg =3D <0x01c18000 0x1000>;
-> >>+			interrupts =3D <0 56 1>;
-> Will always fix this to <0 56 4> if i'm not mistaken.
+Please next time introduce a SoC specific struct to encode the
+differences between SoCs. This way you can abstract away the differences
+in flags and function callbacks and don't end up with functions which
+do completely different things for different SoCs like currently in
+imx_sata_clock_enable(). The if (type == SOC_XY) style doesn't scale in
+many drivers anymore.
 
-Only the GIC has a three-cells interrupts. So only the A20 and A31 are
-supposed to have this value.
+Sascha
 
-Maxime
-
---=20
-Maxime Ripard, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
-
---FhKpTYimqQF2+bfE
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-
-iQIcBAEBAgAGBQJSphcEAAoJEBx+YmzsjxAggvkP/REzOU6lkQXL/DoVRWmei9hT
-P4GtbD5//V72PYEP75SM5QIXoUMJyQ9pQ602UecySO8hbljZIvus4po5D9RTX0Ex
-eovynNucLo1X7LJeNrg7Jj1aoLTLMTQtJgUJoTOwppA7M/JkBZFby7q4vUZTWZVt
-Gq2hk17apFhtB4icZFUTLme/Wb9JV5Rx10z6LZHMGLnV0aSzv/DWUSv9MChRrPjt
-k89W7AvL+/paa1bZ8lwlkIFfXwWCQkSbrNdRbbkfui+zFz2+wtmLJAmHq5Pg/GQW
-SUQieKyZL5AVttgvoibF8NvSZe7FLd0LR5sWtauZndDAW3cOmpnkBiDVsr/V+9Af
-vW1UHFMDYotPv2DR3ldzGAhuMlOudLaRrqtZ+5IjXup1PyO66twupB3Ea21QCsWI
-eZEs9wgc8bxeGg4gmPf8xWWytvEa43OF4hS4WlqE8rX6RXI4MSzEJC5lxPK+Y71s
-QR4SpVwRts6s1QijD8KwJiCamO0Rj+nXqt+wCMH7zdf9XgkwuUJMn0yktnSV7qNU
-kVgKGzWq0Yh91XfQHGfA3a5fvLSQ/c97mMQ8hyvUn+TQIHAOd6cVXUfgp9A9HZ/G
-z298cdTSHNDLikNQymeTNKqilh1B3qGY2CJ5u7ycOiC25KY3Dk28BW05ud/6En70
-o9v8slSKVNJ3pihspiJJ
-=h+M3
------END PGP SIGNATURE-----
-
---FhKpTYimqQF2+bfE--
+-- 
+Pengutronix e.K.                           |                             |
+Industrial Linux Solutions                 | http://www.pengutronix.de/  |
+Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-0    |
+Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
