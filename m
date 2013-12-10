@@ -1,53 +1,61 @@
-From: Marek Vasut <marex@denx.de>
-Subject: Re: [PATCH V6 3/3] ahci: imx: Add i.MX53 support
-Date: Tue, 10 Dec 2013 14:51:16 +0100
-Message-ID: <201312101451.16910.marex@denx.de>
-References: <1385369222-5288-1-git-send-email-marex@denx.de> <20131210114738.GA4097@pengutronix.de> <20131210133723.GC26728@S2101-09.ap.freescale.net>
+From: Andrew Lunn <andrew@lunn.ch>
+Subject: Re: [PATCH 1/5] Phy: DT binding documentation for Marvell MVEBU SATA
+ phy.
+Date: Tue, 10 Dec 2013 23:59:00 +0100
+Message-ID: <20131210225900.GB17875@lunn.ch>
+References: <1386177364-10164-1-git-send-email-andrew@lunn.ch>
+ <1386177364-10164-2-git-send-email-andrew@lunn.ch>
+ <52A01742.2080405@ti.com>
+ <20131205094319.GD10498@lunn.ch>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:43403 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754159Ab3LJPNX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Dec 2013 10:13:23 -0500
-In-Reply-To: <20131210133723.GC26728@S2101-09.ap.freescale.net>
+Received: from vps0.lunn.ch ([178.209.37.122]:59645 "EHLO vps0.lunn.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750776Ab3LJW7V (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 10 Dec 2013 17:59:21 -0500
+Content-Disposition: inline
+In-Reply-To: <20131205094319.GD10498@lunn.ch>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Shawn Guo <shawn.guo@linaro.org>
-Cc: linux-arm-kernel@lists.infradead.org, Richard Zhu <r65037@freescale.com>, Tejun Heo <tj@kernel.org>, Linux-IDE <linux-ide@vger.kernel.org>
+To: Andrew Lunn <andrew@lunn.ch>, kishon@ti.com
+Cc: Jason Cooper <jason@lakedaemon.net>, devicetree@vger.kernel.org, linux-ide@vger.kernel.org, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>
 
-On Tuesday, December 10, 2013 at 02:37:27 PM, Shawn Guo wrote:
-> On Tue, Dec 10, 2013 at 12:47:38PM +0100, Sascha Hauer wrote:
-> > > @@ -34,10 +34,21 @@ enum {
-> > > 
-> > >  	HOST_TIMER1MS = 0xe0,			/* Timer 1-ms */
+On Thu, Dec 05, 2013 at 10:43:19AM +0100, Andrew Lunn wrote:
+> > >  Example:
 > > >  
-> > >  };
-> > > 
-> > > +enum ahci_imx_type {
-> > > +	AHCI_IMX53,
-> > > +	AHCI_IMX6Q,
-> > > +};
+> > >  	sata@80000 {
+> > >  		compatible = "marvell,orion-sata";
+> > >  		reg = <0x80000 0x5000>;
+> > >  		interrupts = <21>;
+> > > +		phys = <&sata_phy0>, <&sata_phy1>;
+> > > +		phy-names = "0", "1";
 > > 
-> > Please next time introduce a SoC specific struct to encode the
-> > differences between SoCs. This way you can abstract away the differences
-> > in flags and function callbacks and don't end up with functions which
-> > do completely different things for different SoCs like currently in
-> > imx_sata_clock_enable(). The if (type == SOC_XY) style doesn't scale in
-> > many drivers anymore.
+> > more descriptive phy-names? sata-phy0?
+> > >  		nr-ports = <2>;
 > 
-> Yea, I was thinking about the same thing when reviewing the patch in the
-> first time, but decided to not comment on that because currently the
-> added functions are doing the similar/related thing.  But I agree that
-> SoC specific structure should be some thing more scalable and we should
-> go for in the future.
+> I could do, but i was following how the clocks work. Unfortunately,
+> the binding documentation is out of date and does not contain
+> clocks. A real example is:
+> 
+>               sata@80000 {
+>                       compatible = "marvell,orion-sata";
+>                       reg = <0x80000 0x5000>;
+>                       interrupts = <21>;
+>                       clocks = <&gate_clk 14>, <&gate_clk 15>;
+>                       clock-names = "0", "1";
+>                       phys = <&sata_phy0>, <&sata_phy1>;
+>                       phy-names = "0", "1";
+>                       status = "disabled";
+>               };
+> 
+> So clocks and the phy are described nearly identically. I can however
+> handle phys differently if you wish.
 
-Full ACK on this one, yes. Thus far, the chips are similar so that the ID is 
-enough, once we get some more exotic chip, this should be changed to a 
-structure. I guess the IOMUX register layout might be different on the MX7 at 
-least for example ?
+Hi Kishon
 
-Best regards,
-Marek Vasut
+Please could you comment on this. Are you O.K. if i use the same
+naming scheme for phys as clocks?
+
+Thanks
+	Andrew
