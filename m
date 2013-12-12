@@ -1,59 +1,69 @@
-From: Shawn Guo <shawn.guo@linaro.org>
-Subject: Re: [PATCH 2/3] ARM: sunxi: Add an ahci-platform compatible AHCI
- driver for the Allwinner SUNXi series of SoCs
-Date: Thu, 12 Dec 2013 14:40:27 +0800
-Message-ID: <20131212064025.GM18380@S2101-09.ap.freescale.net>
-References: <1386159055-10264-1-git-send-email-oliver@schinagl.nl>
- <1386159055-10264-3-git-send-email-oliver@schinagl.nl>
- <20131204123708.GD3158@htj.dyndns.org>
- <529F2677.3070208@schinagl.nl>
- <20131204131402.GG3158@htj.dyndns.org>
- <529F2B41.8090009@schinagl.nl>
- <20131204132312.GH3158@htj.dyndns.org>
- <52A87C07.1020102@schinagl.nl>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from tx2ehsobe001.messaging.microsoft.com ([65.55.88.11]:33097 "EHLO
-	tx2outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751198Ab3LLGj7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Dec 2013 01:39:59 -0500
-Content-Disposition: inline
-In-Reply-To: <52A87C07.1020102@schinagl.nl>
-Sender: linux-ide-owner@vger.kernel.org
+From: Loc Ho <lho@apm.com>
+Subject: (unknown)
+Date: Thu, 12 Dec 2013 00:30:31 -0700
+Message-ID: <1386833435-30498-1-git-send-email-lho@apm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Subject: 
+Sender: linux-scsi-owner@vger.kernel.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 List-Id: linux-ide@vger.kernel.org
-To: Olliver Schinagl <oliver@schinagl.nl>
-Cc: Tejun Heo <tj@kernel.org>, Olliver Schinagl <oliver+list@schinagl.nl>, grant.likely@linaro.org, "rob.herring@calxeda.com" <rob.herring@calxeda.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, dev@linux-sunxi.org, maxime.ripard@free-electrons.com, ijc@hellion.org.uk, hdegoede@redhat.com, Richard Zhu <r65037@freescale.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 
-On Wed, Dec 11, 2013 at 03:51:51PM +0100, Olliver Schinagl wrote:
-> Working on this and studying the existing
-> ahci_platform/shci_platform drivers the last few days and was
-> figuring out why ahci_platform only supports 1 clock. IMX handles
-> this by having 3 clocks defined in the DT, the first one gets
-> enabled by default via ahci_platform, the other 2 get enabled in
-> IMX's probe function.
-> 
-> Is it an idea to extend this to support all clocks that would be
-> required (via a callback)?
+This patch adds support for APM X-Gene SoC 15Gbps Multi-purpose PHY. This
+is the physical layer interface for the corresponding host controller. This
+driver uses the new PHY generic framework posted by Kishon Vijay Abrahm.
+In addition, the new PHY generic framework is patched to provide an
+function to set the speed of the PHY.
 
-Not really.  We did this for ahci_imx driver only because we do not want
-to churn generic ahci_platform driver with those imx specific setup
-code.  Note, beside the additional two clocks, we have some PHY
-parameters to set up in IMX IOMUXC general purpose registers, and vendor
-specific register HOST_TIMER1MS to be set up as well.
+v4
+* Update documentation with 'apm,' instead 'apm-'
+* Change DTS override parameter to have 'apm,'
+* Add select GENERIC_PHY to Kconfig PHY_XGENE
+* Make override parameters to be pair of three values instead one
+* Some minor comment and indentation changes
+* Remove error register addition offset
+* Add ULL to constants
+* Use module_init instead subsys_initcall
+* Make DTS node based on first register address
+* Update override setting values
 
-> Or do we prefer having the clocks
-> separated for other technical reasons? Or do we want to handle the
-> clocks via the ahci_platform framework and extend hpriv->clk to an
-> array of clocks?
+v3
+* Major re-write of the code based on various review comments
+* Support external clock only at the moment
+* Support SATA mode only at the moment
+* No UEFI support at the moment
 
-The direction of the generic ahci platform driver will be having it be
-a library providing helper functions, as discussed as below.
+v2
+* Remove port knowledge from functions
+* Make all functions static
+* Remove ID completely
+* Make resource requirement based on compatible type
+* Rename override PHY parameters with more descriptive name
+* Add override PHY parameter for per controller, per port, and per speed
+* Patch the generic PHY frame to expose set_speed operation
 
-https://lkml.org/lkml/2013/12/6/153
+v1
+* Initial version
 
-We can ask the helper function to handle the common clocks and leave the
-platform specific ones to platform driver.
+Signed-off-by: Loc Ho <lho@apm.com>
+Signed-off-by: Tuan Phan <tphan@apm.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
+---
+Loc Ho (4):
+  PHY: Add function set_speed to generic PHY framework
+  Documentation: Add APM X-Gene SoC 15Gbps Multi-purpose PHY driver
+    binding documentation
+  PHY: add APM X-Gene SoC 15Gbps Multi-purpose PHY driver
+  arm64: Add APM X-Gene SoC 15Gbps Multi-purpose PHY DTS entries
 
-Shawn
+ .../devicetree/bindings/ata/apm-xgene-phy.txt      |   89 +
+ arch/arm64/boot/dts/apm-storm.dtsi                 |   31 +
+ drivers/phy/Kconfig                                |    7 +
+ drivers/phy/Makefile                               |    2 +
+ drivers/phy/phy-core.c                             |   21 +
+ drivers/phy/phy-xgene.c                            | 1854 ++++++++++++++++++++
+ include/linux/phy/phy.h                            |    8 +
+ 7 files changed, 2012 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/apm-xgene-phy.txt
+ create mode 100644 drivers/phy/phy-xgene.c
 
