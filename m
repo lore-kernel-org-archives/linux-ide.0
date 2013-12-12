@@ -1,132 +1,65 @@
-From: Loc Ho <lho@apm.com>
-Subject: [PATCH v6 4/4] arm64: Add APM X-Gene SoC SATA host controller DTS entries
-Date: Thu, 12 Dec 2013 00:55:40 -0700
-Message-ID: <1386834940-30875-5-git-send-email-lho@apm.com>
-References: <1386834940-30875-1-git-send-email-lho@apm.com>
- <1386834940-30875-2-git-send-email-lho@apm.com>
- <1386834940-30875-3-git-send-email-lho@apm.com>
- <1386834940-30875-4-git-send-email-lho@apm.com>
+From: Olliver Schinagl <oliver@schinagl.nl>
+Subject: Re: [PATCH 2/3] ARM: sunxi: Add an ahci-platform compatible AHCI
+ driver for the Allwinner SUNXi series of SoCs
+Date: Thu, 12 Dec 2013 09:47:28 +0100
+Message-ID: <52A97820.8020007@schinagl.nl>
+References: <1386159055-10264-1-git-send-email-oliver@schinagl.nl> <1386159055-10264-3-git-send-email-oliver@schinagl.nl> <20131204123708.GD3158@htj.dyndns.org> <529F2677.3070208@schinagl.nl> <20131204131402.GG3158@htj.dyndns.org> <529F2B41.8090009@schinagl.nl> <20131204132312.GH3158@htj.dyndns.org> <52A87C07.1020102@schinagl.nl> <20131212064025.GM18380@S2101-09.ap.freescale.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from exprod5og117.obsmtp.com ([64.18.0.149]:44229 "HELO
-	exprod5og117.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751926Ab3LLH4Y (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Dec 2013 02:56:24 -0500
-Received: by mail-pb0-f50.google.com with SMTP id rr13so64332pbb.9
-        for <linux-ide@vger.kernel.org>; Wed, 11 Dec 2013 23:56:22 -0800 (PST)
-In-Reply-To: <1386834940-30875-4-git-send-email-lho@apm.com>
+Received: from 7of9.schinagl.nl ([88.159.158.68]:41688 "EHLO 7of9.schinagl.nl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751064Ab3LLItY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 12 Dec 2013 03:49:24 -0500
+In-Reply-To: <20131212064025.GM18380@S2101-09.ap.freescale.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+To: Shawn Guo <shawn.guo@linaro.org>
+Cc: Tejun Heo <tj@kernel.org>, Olliver Schinagl <oliver+list@schinagl.nl>, grant.likely@linaro.org, "rob.herring@calxeda.com" <rob.herring@calxeda.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, dev@linux-sunxi.org, maxime.ripard@free-electrons.com, ijc@hellion.org.uk, hdegoede@redhat.com, Richard Zhu <r65037@freescale.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Tuan Phan <tphan@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
----
- arch/arm64/boot/dts/apm-storm.dtsi |   84 ++++++++++++++++++++++++++++++++++++
- 1 files changed, 84 insertions(+), 0 deletions(-)
 
-diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
-index e967676..4d7fe65 100644
---- a/arch/arm64/boot/dts/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm-storm.dtsi
-@@ -176,6 +176,51 @@
- 				reg-names = "csr-reg";
- 				clock-output-names = "eth8clk";
- 			};
-+
-+			sata01clk: sata01clk@1f21c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "sata01clk";
-+				reg = <0x0 0x1f21c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sata01clk";
-+				status = "disabled";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x3f>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x3f>;
-+			};
-+
-+			sata23clk: sata23clk@1f22c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "sata23clk";
-+				reg = <0x0 0x1f22c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sata23clk";
-+				status = "ok";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x3f>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x3f>;
-+			};
-+
-+			sata45clk: sata45clk@1f23c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "sata45clk";
-+				reg = <0x0 0x1f23c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sata45clk";
-+				status = "ok";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x3f>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x3f>;
-+			};
- 		};
+On 12-12-13 07:40, Shawn Guo wrote:
+> On Wed, Dec 11, 2013 at 03:51:51PM +0100, Olliver Schinagl wrote:
+>> Working on this and studying the existing
+>> ahci_platform/shci_platform drivers the last few days and was
+>> figuring out why ahci_platform only supports 1 clock. IMX handles
+>> this by having 3 clocks defined in the DT, the first one gets
+>> enabled by default via ahci_platform, the other 2 get enabled in
+>> IMX's probe function.
+>>
+>> Is it an idea to extend this to support all clocks that would be
+>> required (via a callback)?
+> Not really.  We did this for ahci_imx driver only because we do not want
+> to churn generic ahci_platform driver with those imx specific setup
+> code.  Note, beside the additional two clocks, we have some PHY
+> parameters to set up in IMX IOMUXC general purpose registers, and vendor
+> specific register HOST_TIMER1MS to be set up as well.
+Well many SoC's have these specific things so we need a place to provide 
+for this.
 
- 		serial0: serial@1c020000 {
-@@ -224,5 +269,44 @@
- 			apm,tx-boost-gain = <0x2 0x3 0x3 0x2 0x3 0x3>;
- 			apm,tx-eye-tuning = <0x2 0xa 0xa 0x2 0xa 0xc>;
- 		};
-+
-+		sata1: sata@1a000000 {
-+			compatible = "apm,xgene-ahci-sgmii";
-+			reg = <0x0 0x1a000000 0x0 0x1000>,
-+			      <0x0 0x1f210000 0x0 0x10000>,
-+			      <0x0 0x1f2a0000 0x0 0x10000>,
-+			      <0x0 0x1c000200 0x0 0x100>;
-+			interrupts = <0x0 0x86 0x4>;
-+			status = "disabled";
-+			clocks = <&sata01clk 0>;
-+			phys = <&phy1 0>;
-+			phy-names = "sata-6g";
-+		};
-+
-+		sata2: sata@1a400000 {
-+			compatible = "apm,xgene-ahci-sgmii";
-+			reg = <0x0 0x1a400000 0x0 0x1000>,
-+			      <0x0 0x1f220000 0x0 0x10000>,
-+			      <0x0 0x1f2a0000 0x0 0x10000>,
-+			      <0x0 0x1c000200 0x0 0x100>;
-+			interrupts = <0x0 0x87 0x4>;
-+			status = "ok";
-+			clocks = <&sata23clk 0>;
-+			phys = <&phy2 0>;
-+			phy-names = "sata-6g";
-+		};
-+
-+		sata3: sata@1a800000 {
-+			compatible = "apm,xgene-ahci-pcie";
-+			reg = <0x0 0x1a800000 0x0 0x1000>,
-+			      <0x0 0x1f230000 0x0 0x10000>,
-+			      <0x0 0x1f2a0000 0x0 0x10000>,
-+			      <0x0 0x1c000200 0x0 0x100>;
-+			interrupts = <0x0 0x88 0x4>;
-+			status = "ok";
-+			clocks = <&sata45clk 0>;
-+			phys = <&phy3 0>;
-+			phy-names = "sata-6g";
-+		};
- 	};
- };
---
-1.5.5
+The the question then becomes, what do we define as being the common 
+clocks? Only the clock for the SATA IP? Or also the clock to which it 
+connects to the bus? Where is the line drawn etc.
+
+E.g. a rewritten new ahci-pltfrm.c will support all clocks defined in 
+the DT for the ahci node.
+>
+>> Or do we prefer having the clocks
+>> separated for other technical reasons? Or do we want to handle the
+>> clocks via the ahci_platform framework and extend hpriv->clk to an
+>> array of clocks?
+> The direction of the generic ahci platform driver will be having it be
+> a library providing helper functions, as discussed as below.
+>
+> https://lkml.org/lkml/2013/12/6/153
+I know, I started this entire thread :p hence my question :)
+
+Oliver
+>
+> We can ask the helper function to handle the common clocks and leave the
+> platform specific ones to platform driver.
+>
+> Shawn
+>
 
