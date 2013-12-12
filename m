@@ -1,58 +1,44 @@
-From: "Robin H. Johnson" <robbat2@gentoo.org>
-Subject: Re: [PATCH] libata: provide the ability to disable a disk via the
- params.
-Date: Thu, 12 Dec 2013 20:47:39 +0000
-Message-ID: <robbat2-20131212T204111-907351030Z@orbis-terrarum.net>
-References: <1386464187-6993-1-git-send-email-robbat2@gentoo.org>
- <20131212133935.GA32683@htj.dyndns.org>
- <robbat2-20131212T200207-028507804Z@orbis-terrarum.net>
- <52AA1E67.6000801@linux.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v4 2/4] Documentation: Add APM X-Gene SoC 15Gbps Multi-purpose PHY driver binding documentation
+Date: Thu, 12 Dec 2013 22:09:22 +0100
+Message-ID: <201312122209.22742.arnd@arndb.de>
+References: <1386833435-30498-1-git-send-email-lho@apm.com> <52A9C8C5.8030809@interlog.com> <1386867353.5985.7.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.gentoo.org ([140.211.166.183]:57626 "EHLO smtp.gentoo.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751566Ab3LLUrk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 12 Dec 2013 15:47:40 -0500
-Received: from grubbs.orbis-terrarum.net (localhost [127.0.0.1])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by smtp.gentoo.org (Postfix) with ESMTPS id 740CC33F2D1
-	for <linux-ide@vger.kernel.org>; Thu, 12 Dec 2013 20:47:40 +0000 (UTC)
-Content-Disposition: inline
-In-Reply-To: <52AA1E67.6000801@linux.com>
+Received: from moutng.kundenserver.de ([212.227.126.171]:55360 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751860Ab3LLVJn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Dec 2013 16:09:43 -0500
+In-Reply-To: <1386867353.5985.7.camel@dabdike>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Levente Kurusa <levex@linux.com>
-Cc: "Robin H. Johnson" <robbat2@gentoo.org>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: dgilbert@interlog.com, Loc Ho <lho@apm.com>, olof@lixom.net, tj@kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jcm@redhat.com, patches@apm.com, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-On Thu, Dec 12, 2013 at 09:36:55PM +0100, Levente Kurusa wrote:
-> > 2. One of my friends wondered if it would be worthwhile to add force
-> > keywords for other HORKAGE bits, and if so, should the
-> > ata_lflag/ata_link force bits also be presented?
-> I don't think so. Most of the other HORKAGEs are automatically
-> recognized and applied by the code. I think the only ones
-> which can cause trouble if not detected at first are the ones that are
-> currently in the list.
-His logic was thinking that it will aid debugging/testing on new buggy
-devices if the options are available at boot.
+On Thursday 12 December 2013, James Bottomley wrote:
+> > > I'm completely confused by this description. Can you rephrase this?
+> > > It sounds like the only possible values are <1 3 7> for this property.
+> > 
+> > Most likely Gen1, Gen2 and Gen3 are SATA-speak corresponding to SAS's
+> > G1, G2 and G3:
+> > 
+> > G1   Gen1     1.5 Gbps
+> > G2   Gen2     3 Gbps
+> > G3   Gen3     6 Gbps
+> > G4   -        12 Gbps
+> > G5   -        24 Gbps
+>
+> Electrically, SAS phys and SATA phys are identical.  We already have a
+> SAS phy abstraction in libsas ... when looking at a separable phy
+> implementation, shouldn't we be doing something that works for both
+> instead of just SATA?
 
-I'd think of the following as candidates for that:
-ATA_HORKAGE_NODMA
-ATA_HORKAGE_MAX_SEC_128
-ATA_HORKAGE_DIAGNOSTIC
-ATA_HORKAGE_BROKEN_HPA
-ATA_HORKAGE_DISABLE
-ATA_HORKAGE_HPA_SIZE
-ATA_HORKAGE_IVB
-ATA_HORKAGE_STUCK_ERR (only set by code presently, not by blacklist)
-ATA_HORKAGE_BRIDGE_OK
-ATA_HORKAGE_ATAPI_MOD16_DMA
-ATA_HORKAGE_NOSETXFER
-ATA_HORKAGE_MAX_SEC_LBA48
+This PHY is also used for ethernet and for PCIe, even though the driver
+handles only the SATA case so far. Can the SAS abstraction deal with this?
 
--- 
-Robin Hugh Johnson
-Gentoo Linux: Developer, Infrastructure Lead
-E-Mail     : robbat2@gentoo.org
-GnuPG FP   : 11ACBA4F 4778E3F6 E4EDF38E B27B944E 34884E85
+How do you describe a SAS PHY in DT?
+
+	Arnd
