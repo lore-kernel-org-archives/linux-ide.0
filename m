@@ -1,50 +1,75 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata: provide the ability to disable a disk via the
- params.
-Date: Fri, 13 Dec 2013 16:15:43 -0500
-Message-ID: <20131213211543.GI27070@htj.dyndns.org>
-References: <1386464187-6993-1-git-send-email-robbat2@gentoo.org>
- <20131212133935.GA32683@htj.dyndns.org>
- <robbat2-20131212T200207-028507804Z@orbis-terrarum.net>
- <52AA1E67.6000801@linux.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f182.google.com ([209.85.216.182]:40510 "EHLO
-	mail-qc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751507Ab3LMVPr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Dec 2013 16:15:47 -0500
-Content-Disposition: inline
-In-Reply-To: <52AA1E67.6000801@linux.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Loc Ho <lho@apm.com>
+Subject: [PATCH v5 0/4] PHY: Add APM X-Gene SoC 15Gbps Multi-purpose PHY support
+Date: Sat, 14 Dec 2013 01:32:46 -0700
+Message-ID: <1387009970-737-1-git-send-email-lho@apm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 List-Id: linux-ide@vger.kernel.org
-To: Levente Kurusa <levex@linux.com>
-Cc: "Robin H. Johnson" <robbat2@gentoo.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Thu, Dec 12, 2013 at 09:36:55PM +0100, Levente Kurusa wrote:
-> >1.
-> >Countering your nodisable comment, would it be valid to do:
-> >libata.force=2:disable libata.force=2.02:nodisable
-> >To disable all of port 2 except device 2?
-> 
-> I think that makes sense and I support having 'nodisable'.
+This patch adds support for APM X-Gene SoC 15Gbps Multi-purpose PHY. This
+is the physical layer interface for the corresponding host controller. This
+driver uses the new PHY generic framework posted by Kishon Vijay Abrahm.
+In addition, the new PHY generic framework is patched to provide an
+function to set the speed of the PHY.
 
-I really don't want to.  Let's please add whatever is necessary for
-fringe use cases but no more.  It's not like this thing is generally
-useful.
+v5
+* Update DTS binding documentation
+* Remove direct clock access and use clock interface instead
+* Change override parameters to decimal instead hex values
+* Change apm,tx-amplitude, apm,tx-pre-cursor1, apm,tx-pre-cursor2,
+  apm,tx-post-cursor to be unit of uV
 
-> >2. One of my friends wondered if it would be worthwhile to add force
-> >keywords for other HORKAGE bits, and if so, should the
-> >ata_lflag/ata_link force bits also be presented?
-> 
-> I don't think so. Most of the other HORKAGEs are automatically
-> recognized and applied by the code. I think the only ones
-> which can cause trouble if not detected at first are the ones that are
-> currently in the list.
+v4
+* Update documentation with 'apm,' instead 'apm-'
+* Change DTS override parameter to have 'apm,'
+* Add select GENERIC_PHY to Kconfig PHY_XGENE
+* Make override parameters to be pair of three values instead one
+* Some minor comment and indentation changes
+* Remove error register addition offset
+* Add ULL to constants
+* Use module_init instead subsys_initcall
+* Make DTS node based on first register address
+* Update override setting values
 
-Again, just whatever is immediately necessary, please.
+v3
+* Major re-write of the code based on various review comments
+* Support external clock only at the moment
+* Support SATA mode only at the moment
+* No UEFI support at the moment
 
-Thanks.
+v2
+* Remove port knowledge from functions
+* Make all functions static
+* Remove ID completely
+* Make resource requirement based on compatible type
+* Rename override PHY parameters with more descriptive name
+* Add override PHY parameter for per controller, per port, and per speed
+* Patch the generic PHY frame to expose set_speed operation
 
--- 
-tejun
+v1
+* Initial version
+
+Signed-off-by: Loc Ho <lho@apm.com>
+Signed-off-by: Tuan Phan <tphan@apm.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
+---
+Loc Ho (4):
+  PHY: Add function set_speed to generic PHY framework
+  Documentation: Add APM X-Gene SoC 15Gbps Multi-purpose PHY driver
+    binding documentation
+  PHY: add APM X-Gene SoC 15Gbps Multi-purpose PHY driver
+  arm64: Add APM X-Gene SoC 15Gbps Multi-purpose PHY DTS entries
+
+ .../devicetree/bindings/ata/apm-xgene-phy.txt      |   94 +
+ arch/arm64/boot/dts/apm-storm.dtsi                 |   76 +
+ drivers/phy/Kconfig                                |    7 +
+ drivers/phy/Makefile                               |    2 +
+ drivers/phy/phy-core.c                             |   21 +
+ drivers/phy/phy-xgene.c                            | 1811 ++++++++++++++++++++
+ include/linux/phy/phy.h                            |    8 +
+ 7 files changed, 2019 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/apm-xgene-phy.txt
+ create mode 100644 drivers/phy/phy-xgene.c
+
