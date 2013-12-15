@@ -1,41 +1,40 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2/2] drivers: ata: Mark the function as static in
- libahci.c
-Date: Sat, 14 Dec 2013 16:23:11 -0500
-Message-ID: <20131214212311.GA13216@htj.dyndns.org>
-References: <81391ee13d565f1db31247dfda803cd7123bb8a9.1387029964.git.rashika.kheria@gmail.com>
- <a4302d91071258c77de3e4086845adf630a3f8d6.1387029964.git.rashika.kheria@gmail.com>
+From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 2/3] ARM: sunxi: Add an ahci-platform
+ compatible AHCI driver for the Allwinner SUNXi series of SoCs
+Date: Sun, 15 Dec 2013 20:00:20 +0100
+Message-ID: <52ADFC44.7040003@redhat.com>
+References: <1386159055-10264-1-git-send-email-oliver@schinagl.nl> <1386159055-10264-3-git-send-email-oliver@schinagl.nl> <20131204123708.GD3158@htj.dyndns.org> <529F2677.3070208@schinagl.nl> <20131204131402.GG3158@htj.dyndns.org> <529F2B41.8090009@schinagl.nl> <20131204132312.GH3158@htj.dyndns.org> <20131206100117.59609a8a@skate> <52A19502.1090409@schinagl.nl>
+Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qe0-f42.google.com ([209.85.128.42]:48202 "EHLO
-	mail-qe0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751554Ab3LNVXO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 14 Dec 2013 16:23:14 -0500
-Content-Disposition: inline
-In-Reply-To: <a4302d91071258c77de3e4086845adf630a3f8d6.1387029964.git.rashika.kheria@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Return-path: <linux-sunxi+bncBDL4X2GMZUKRBXPYW6KQKGQEYCFAOGY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <52A19502.1090409-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
+List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/linux-sunxi>
+Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, Thomas Petazzoni <thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Olliver Schinagl <oliver+list-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, grant.likely-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, "rob.herring-bsGFqQB8/DxBDgjK7y7TUQ@public.gmane.org" <rob.herring-bsGFqQB8/DxBDgjK7y7TUQ@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dev-3kdeTeqwOZ9EV1b7eY7vFQ@public.gmane.org, maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, ijc-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org, Richard Zhu <r65037-KZfg59tc24xl57MIdRCFDg@public.gmane.org>, Shawn Guo <shawn.guo-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: Rashika Kheria <rashika.kheria@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, josh@joshtriplett.org
 
-On Sat, Dec 14, 2013 at 07:40:21PM +0530, Rashika Kheria wrote:
-> This patch marks the function ahci_port_intr() and
-> ahci_hw_port_interrupt() as static in libahci.c because they are not
-> used outside this file.
->=20
-> Thus, it also eliminates the following warnings in libahci.c:
-> drivers/ata/libahci.c:1767:6: warning: no previous prototype for =E2=80=
-=98ahci_port_intr=E2=80=99 [-Wmissing-prototypes]
-> drivers/ata/libahci.c:1800:6: warning: no previous prototype for =E2=80=
-=98ahci_hw_port_interrupt=E2=80=99 [-Wmissing-prototypes]
->=20
-> Signed-off-by: Rashika Kheria <rashika.kheria@gmail.com>
+Hi Tejun,
 
-Applied 1-2 to libata/for-3.14.
+I think it would be a good idea to merge ahci upstream using the
+ahci_imx.c method for now. You already indicated that you were not against
+doing that for now.
 
-Thanks.
+Oliver is working on getting a cleaner solution for this, but doing this
+properly takes tinme, and we would like to move forward with getting
+sunxi ahci support upstream in the mean time.
 
---=20
-tejun
+So if it is ok with you we would like to move forward with the version
+initially posted. Therefor I would like to request you to review it
+(glossing over the platform device instantiating a platform device
+approach for now), and provide us with feedback so that we can do a v2
+and start moving this towards the mainline kernel.
+
+Regards,
+
+Hans
