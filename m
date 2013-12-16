@@ -1,7 +1,7 @@
 From: Paul Bolle <pebolle@tiscali.nl>
-Subject: [PATCH 1/2] ahci: bail out on ICH6 before using AHCI BAR
-Date: Mon, 16 Dec 2013 11:34:21 +0100
-Message-ID: <1387190061.9255.30.camel@x41.thuisdomein>
+Subject: [PATCH 2/2] ahci: only attach ICH6-M if it's in SATA mode
+Date: Mon, 16 Dec 2013 11:34:57 +0100
+Message-ID: <1387190097.9255.31.camel@x41.thuisdomein>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
@@ -11,62 +11,39 @@ To: Tejun Heo <tj@kernel.org>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-The check for "combined mode" (which disables ahci support) on ICH6 is
-done after the first use of AHCI BAR. But if ahci is not enabled AHCI
-BAR is initialized to 0x00000000. (At least it is on the ICH6-M I tested
-this on. If I understand the datasheet correctly it should also be on
-ICH6R.) This apparently makes the call of
-pcim_iomap_regions_request_all() return -EINVAL. And we end up with
-    ahci: probe of 0000:00:1f.2 failed with error -22
+Intel's ICH6-M can operate either in IDE mode or in SATA mode. Attaching
+in IDE mode is pointless (and should fail, as long as BIOS has configured
+it even remotely sane). So let's only attach in SATA mode.
 
-(at warning level) in the logs.
+Note that ata_piix does the opposite: only attach if ICH6-M is in IDE
+mode, so we end up with just one driver attaching in either mode.
 
-So check for "combined mode" before calling
-pcim_iomap_regions_request_all().
+(And since we're touching this table update a minor typo too.)
 
 Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
 ---
-Tested on a laptop that always uses ICH6-M in "combined mode" (so with
-ahci support disabled). I don't think I have any hardware with an ICH6R.
+Tested on an ICH6-M that always runs in IDE mode. So I'm not certain
+this does the right thing for a ICH6-M running in SATA mode. 
 
- drivers/ata/ahci.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ drivers/ata/ahci.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index b55c88d..4ba3bde 100644
+index 4ba3bde..12182fd 100644
 --- a/drivers/ata/ahci.c
 +++ b/drivers/ata/ahci.c
-@@ -1238,15 +1238,6 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	if (rc)
- 		return rc;
+@@ -191,8 +191,10 @@ static const struct ata_port_info ahci_port_info[] = {
  
--	/* AHCI controllers often implement SFF compatible interface.
--	 * Grab all PCI BARs just in case.
--	 */
--	rc = pcim_iomap_regions_request_all(pdev, 1 << ahci_pci_bar, DRV_NAME);
--	if (rc == -EBUSY)
--		pcim_pin_device(pdev);
--	if (rc)
--		return rc;
--
- 	if (pdev->vendor == PCI_VENDOR_ID_INTEL &&
- 	    (pdev->device == 0x2652 || pdev->device == 0x2653)) {
- 		u8 map;
-@@ -1264,6 +1255,15 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		}
- 	}
- 
-+	/* AHCI controllers often implement SFF compatible interface.
-+	 * Grab all PCI BARs just in case.
-+	 */
-+	rc = pcim_iomap_regions_request_all(pdev, 1 << ahci_pci_bar, DRV_NAME);
-+	if (rc == -EBUSY)
-+		pcim_pin_device(pdev);
-+	if (rc)
-+		return rc;
-+
- 	hpriv = devm_kzalloc(dev, sizeof(*hpriv), GFP_KERNEL);
- 	if (!hpriv)
- 		return -ENOMEM;
+ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	/* Intel */
+-	{ PCI_VDEVICE(INTEL, 0x2652), board_ahci }, /* ICH6 */
+-	{ PCI_VDEVICE(INTEL, 0x2653), board_ahci }, /* ICH6M */
++	{ PCI_VDEVICE(INTEL, 0x2652), board_ahci }, /* ICH6R */
++	/* ICH6M Attach iff the controller is in SATA mode. */
++	{ PCI_VENDOR_ID_INTEL, 0x2653, PCI_ANY_ID, PCI_ANY_ID,
++	  PCI_CLASS_STORAGE_SATA << 8, 0xffff00, board_ahci },
+ 	{ PCI_VDEVICE(INTEL, 0x27c1), board_ahci }, /* ICH7 */
+ 	{ PCI_VDEVICE(INTEL, 0x27c5), board_ahci }, /* ICH7M */
+ 	{ PCI_VDEVICE(INTEL, 0x27c3), board_ahci }, /* ICH7R */
 -- 
 1.8.1.4
