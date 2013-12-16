@@ -1,49 +1,41 @@
-From: Paul Bolle <pebolle@tiscali.nl>
-Subject: [PATCH 2/2] ahci: only attach ICH6-M if it's in SATA mode
-Date: Mon, 16 Dec 2013 11:34:57 +0100
-Message-ID: <1387190097.9255.31.camel@x41.thuisdomein>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 1/2] ahci: bail out on ICH6 before using AHCI BAR
+Date: Mon, 16 Dec 2013 10:46:11 -0500
+Message-ID: <20131216154611.GE32509@htj.dyndns.org>
+References: <1387190061.9255.30.camel@x41.thuisdomein>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-yh0-f46.google.com ([209.85.213.46]:55336 "EHLO
+	mail-yh0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754753Ab3LPPqX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Dec 2013 10:46:23 -0500
+Content-Disposition: inline
+In-Reply-To: <1387190061.9255.30.camel@x41.thuisdomein>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Paul Bolle <pebolle@tiscali.nl>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Intel's ICH6-M can operate either in IDE mode or in SATA mode. Attaching
-in IDE mode is pointless (and should fail, as long as BIOS has configured
-it even remotely sane). So let's only attach in SATA mode.
+On Mon, Dec 16, 2013 at 11:34:21AM +0100, Paul Bolle wrote:
+> The check for "combined mode" (which disables ahci support) on ICH6 is
+> done after the first use of AHCI BAR. But if ahci is not enabled AHCI
+> BAR is initialized to 0x00000000. (At least it is on the ICH6-M I tested
+> this on. If I understand the datasheet correctly it should also be on
+> ICH6R.) This apparently makes the call of
+> pcim_iomap_regions_request_all() return -EINVAL. And we end up with
+>     ahci: probe of 0000:00:1f.2 failed with error -22
+> 
+> (at warning level) in the logs.
+> 
+> So check for "combined mode" before calling
+> pcim_iomap_regions_request_all().
+> 
+> Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
 
-Note that ata_piix does the opposite: only attach if ICH6-M is in IDE
-mode, so we end up with just one driver attaching in either mode.
+Applied to libata/for-3.13-fixes.
 
-(And since we're touching this table update a minor typo too.)
+Thanks.
 
-Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
----
-Tested on an ICH6-M that always runs in IDE mode. So I'm not certain
-this does the right thing for a ICH6-M running in SATA mode. 
-
- drivers/ata/ahci.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 4ba3bde..12182fd 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -191,8 +191,10 @@ static const struct ata_port_info ahci_port_info[] = {
- 
- static const struct pci_device_id ahci_pci_tbl[] = {
- 	/* Intel */
--	{ PCI_VDEVICE(INTEL, 0x2652), board_ahci }, /* ICH6 */
--	{ PCI_VDEVICE(INTEL, 0x2653), board_ahci }, /* ICH6M */
-+	{ PCI_VDEVICE(INTEL, 0x2652), board_ahci }, /* ICH6R */
-+	/* ICH6M Attach iff the controller is in SATA mode. */
-+	{ PCI_VENDOR_ID_INTEL, 0x2653, PCI_ANY_ID, PCI_ANY_ID,
-+	  PCI_CLASS_STORAGE_SATA << 8, 0xffff00, board_ahci },
- 	{ PCI_VDEVICE(INTEL, 0x27c1), board_ahci }, /* ICH7 */
- 	{ PCI_VDEVICE(INTEL, 0x27c5), board_ahci }, /* ICH7M */
- 	{ PCI_VDEVICE(INTEL, 0x27c3), board_ahci }, /* ICH7R */
 -- 
-1.8.1.4
+tejun
