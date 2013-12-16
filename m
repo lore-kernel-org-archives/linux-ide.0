@@ -1,85 +1,56 @@
-From: "Hong-Xing.Zhu@freescale.com" <Hong-Xing.Zhu@freescale.com>
-Subject: RE: [PATCH] pci: imx: enable pcie msi support
-Date: Mon, 16 Dec 2013 05:44:12 +0000
-Message-ID: <4e5813d860164fcd8cca2c3d10a60272@BN1PR03MB138.namprd03.prod.outlook.com>
-References: <1386581119-2962-1-git-send-email-richard.zhuhongxing@gmail.com>
- <1386581119-2962-2-git-send-email-richard.zhuhongxing@gmail.com>
- <201312091200.53928.jbe@pengutronix.de>
+From: Oliver Schinagl <oliver@schinagl.nl>
+Subject: Re: [PATCH 2/3] ARM: sunxi: Add an ahci-platform compatible AHCI
+ driver for the Allwinner SUNXi series of SoCs
+Date: Mon, 16 Dec 2013 07:21:11 +0100
+Message-ID: <52AE9BD7.8070704@schinagl.nl>
+References: <1386159055-10264-1-git-send-email-oliver@schinagl.nl> <1386159055-10264-3-git-send-email-oliver@schinagl.nl> <20131204123708.GD3158@htj.dyndns.org> <529F2677.3070208@schinagl.nl> <20131204131402.GG3158@htj.dyndns.org> <529F2B41.8090009@schinagl.nl> <20131204132312.GH3158@htj.dyndns.org> <20131206100117.59609a8a@skate> <52A19502.1090409@schinagl.nl> <52ADFC44.7040003@redhat.com> <20131215190454.GA32509@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [207.46.163.244] ([207.46.163.244]:24130 "EHLO
-	na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750846Ab3LPGCq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Dec 2013 01:02:46 -0500
-In-Reply-To: <201312091200.53928.jbe@pengutronix.de>
-Content-Language: en-US
+Received: from 7of9.schinagl.nl ([88.159.158.68]:32991 "EHLO 7of9.schinagl.nl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750923Ab3LPGVP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 16 Dec 2013 01:21:15 -0500
+In-Reply-To: <20131215190454.GA32509@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?iso-8859-1?Q?J=FCrgen_Beisert?= <jbe@pengutronix.de>, Richard Zhu <richard.zhuhongxing@gmail.com>
-Cc: "marex@denx.de" <marex@denx.de>, "hrhaan@gmail.com" <hrhaan@gmail.com>, "shawn.guo@linaro.org" <shawn.guo@linaro.org>, "jgarzik@pobox.com" <jgarzik@pobox.com>, "tj@kernel.org" <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Olliver Schinagl <oliver+list@schinagl.nl>, grant.likely@linaro.org, "rob.herring@calxeda.com" <rob.herring@calxeda.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, dev@linux-sunxi.org, maxime.ripard@free-electrons.com, ijc@hellion.org.uk, Richard Zhu <r65037@freescale.com>, Shawn Guo <shawn.guo@linaro.org>
 
-Hi Juergen:
+On 15-12-13 20:04, Tejun Heo wrote:
+> Hello, Hans.
+>
+> On Sun, Dec 15, 2013 at 08:00:20PM +0100, Hans de Goede wrote:
+>> I think it would be a good idea to merge ahci upstream using the
+>> ahci_imx.c method for now. You already indicated that you were not against
+>> doing that for now.
+> Well, the thing is nothing actually happened since ahci_imx got
+> merged, so I'm wondering maybe there isn't enough pressure.
+I a slowly progressing on the improved platform driver, but still 
+waiting on an answer about my clock question that I asked a few days ago.
+>
+>> Oliver is working on getting a cleaner solution for this, but doing this
+>> properly takes tinme, and we would like to move forward with getting
+>> sunxi ahci support upstream in the mean time.
+>>
+>> So if it is ok with you we would like to move forward with the version
+>> initially posted. Therefor I would like to request you to review it
+>> (glossing over the platform device instantiating a platform device
+>> approach for now), and provide us with feedback so that we can do a v2
+>> and start moving this towards the mainline kernel.
+> We still have some time left before the next merge window and if it's
+> really necessary, I can submit drivers post -rc1 too, so I'd still
+> *much* prefer doing it properly rather than creating more drivers
+> which would need to be cleaned up later.
+Since I do this in my spare time and my technical skill isn't as 
+advanced as some, I don't think I have something reviewed and merge-able 
+before that time frame. I do enjoy the challenge and do like working on 
+the new ahci_platform framework. and do wish to continue to work on it 
+however.
 
-Thanks for your review.
-
-> -----Original Message-----
-> From: J=FCrgen Beisert [mailto:jbe@pengutronix.de]
-> Sent: Monday, December 09, 2013 7:01 PM
-> To: Richard Zhu
-> Cc: marex@denx.de; hrhaan@gmail.com; shawn.guo@linaro.org; jgarzik@po=
-box.com;
-> tj@kernel.org; linux-ide@vger.kernel.org; Zhu Richard-R65037
-> Subject: Re: [PATCH] pci: imx: enable pcie msi support
->=20
-> Hi Richard,
->=20
-> On Monday 09 December 2013 10:25:19 Richard Zhu wrote:
-> > [...]
-> > +static int dw_msi_check_device(struct msi_chip *chip, struct pci_d=
-ev *pdev,
-> > +		int nvec, int type)
-> > +{
-> > +	struct pcie_port *pp =3D sys_to_pcie(pdev->bus->sysdata);
-> > +	u32 val;
-> > +
-> > +	if (pp->quirks & DW_PCIE_QUIRK_MSI_SELF_EN) {
-> > +		if ((type =3D=3D PCI_CAP_ID_MSI) || (type =3D=3D PCI_CAP_ID_MSIX=
-)) {
-> > +			/* Set MSI enable of RC here */
-> > +			val =3D readl(pp->dbi_base + 0x50);
-> > +			if ((val & (PCI_MSI_FLAGS_ENABLE << 16)) =3D=3D 0) {
-> > +				val |=3D PCI_MSI_FLAGS_ENABLE << 16;
-> > +				writel(val, pp->dbi_base + 0x50);
-> > +			}
-> > +		}
-> > +	}
-> > +
-> > +	return 0;
-> > +}
->=20
-> Maybe I'm wrong: but does setting this bit not already happen in func=
-tion
-> msi_set_enable() in 'drivers/pci/msi.c' (just to a 16 bit register, s=
-o there's
-> no bit shift required)?
->=20
-[Richard] yes, this bit would be set in msi_set_enable invoked by msi_c=
-apability_init.
-But I can't monitor that this bit is set when e1000e is probed. :(.
-So I had to set this bit explicitly here.
-
-> Regards,
-> Juergen
->=20
-> --
-> Pengutronix e.K. =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
-=A0 =A0| Juergen Beisert =A0 =A0 =A0 =A0 =A0 =A0 |
-> Linux Solutions for Science and Industry =A0 =A0 =A0| http://www.peng=
-utronix.de/  |
->=20
-Best Regards
-Richard Zhu
+Oliver
+>
+> Thanks.
+>
 
