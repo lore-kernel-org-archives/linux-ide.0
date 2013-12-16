@@ -1,46 +1,41 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2] libata: disable a disk via libata.force params
-Date: Mon, 16 Dec 2013 12:43:30 -0500
-Message-ID: <20131216174330.GL32509@htj.dyndns.org>
-References: <1386464187-6993-1-git-send-email-robbat2@gentoo.org>
- <1387215079-29897-1-git-send-email-robbat2@gentoo.org>
+From: Paul Bolle <pebolle@tiscali.nl>
+Subject: Re: [PATCH 2/2] ahci: only attach ICH6-M if it's in SATA mode
+Date: Mon, 16 Dec 2013 21:28:12 +0100
+Message-ID: <1387225692.14970.13.camel@x41.thuisdomein>
+References: <1387190097.9255.31.camel@x41.thuisdomein>
+	 <20131216155136.GF32509@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yh0-f49.google.com ([209.85.213.49]:52280 "EHLO
-	mail-yh0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755122Ab3LPRnm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Dec 2013 12:43:42 -0500
-Content-Disposition: inline
-In-Reply-To: <1387215079-29897-1-git-send-email-robbat2@gentoo.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20131216155136.GF32509@htj.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Robin H. Johnson" <robbat2@gentoo.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Mon, Dec 16, 2013 at 09:31:19AM -0800, Robin H. Johnson wrote:
-> A user on StackExchange had a failing SSD that's soldered directly onto
-> the motherboard of his system. The BIOS does not give any option to
-> disable it at all, so he can't just hide it from the OS via the BIOS.
-> 
-> The old IDE layer had hdX=noprobe override for situations like this, but
-> that was never ported to the libata layer.
-> 
-> This patch implements a disable flag for libata.force.
-> Example use:
-> libata.force=2.0:disable
-> 
-> [v2 of the patch, removed the nodisable flag per Tejun Heo]
-> 
-> Signed-off-by: Robin H. Johnson <robbat2@gentoo.org>
-> X-URL: http://unix.stackexchange.com/questions/102648/how-to-tell-linux-kernel-3-0-to-completely-ignore-a-failing-disk
-> X-URL: http://askubuntu.com/questions/352836/how-can-i-tell-linux-kernel-to-completely-ignore-a-disk-as-if-it-was-not-even-co
-> X-URL: http://superuser.com/questions/599333/how-to-disable-kernel-probing-for-drive
+On Mon, 2013-12-16 at 10:51 -0500, Tejun Heo wrote:
+> I'm not quite sure about this one.  The patch seems correct on the
+> surface but given how old ich6 is at this point, the general
+> crappiness of BIOS on ahci front in that era, and that the existing
+> code has been working fine for all these years make me very reluctant
+> to change it.  e.g. I don't think CLASS_STORAGE_SATA was the only one.
+> They used different class for raid too.
 
-Applied to libata/for-3.13-fixes w/ stable cc'd and minor description
-edits.
+Well, raid should only be relevant for ICH6R (which has its own device
+ID). The datasheet I've been staring at suggests that ICH6-M is
+hardwired to either use PCI_CLASS_STORAGE_SATA or PCI_CLASS_STORAGE_IDE.
 
-Thanks.
+> It should be able to figure
+> out things given enough test cases but I don't think we have that
+> anymore and the benefit (avoding probe failure messages) doesn't seem
+> to justify the risk.
 
--- 
-tejun
+That's your call, obviously. And I don't think that hardware like this
+is used widely to run release candidates, if at all, so we can't even
+consider a see-who-screams-when-their-setup-breaks approach.
+
+Thanks,
+
+
+Paul Bolle
