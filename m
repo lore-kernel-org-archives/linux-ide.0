@@ -1,40 +1,45 @@
-From: Paul Bolle <pebolle@tiscali.nl>
-Subject: Re: [PATCH 2/2] ahci: only attach ICH6-M if it's in SATA mode
-Date: Mon, 16 Dec 2013 21:47:32 +0100
-Message-ID: <1387226852.14970.28.camel@x41.thuisdomein>
-References: <1387190097.9255.31.camel@x41.thuisdomein>
-	 <20131216155136.GF32509@htj.dyndns.org> <52AF384C.9020101@linux.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cpsmtpb-ews07.kpnxchange.com ([213.75.39.10]:53441 "EHLO
-	cpsmtpb-ews07.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751129Ab3LPUrf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Dec 2013 15:47:35 -0500
-In-Reply-To: <52AF384C.9020101@linux.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: [PATCH 0/6] Let sleeping disks lie
+Date: Mon, 16 Dec 2013 18:30:51 -0500
+Message-ID: <1387236657-4852-1-git-send-email-psusi@ubuntu.com>
+References: <cover.1384030893.git.psusi@ubuntu.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <cover.1384030893.git.psusi@ubuntu.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: todd.e.brandt@linux.intel.com
+Cc: tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Levente Kurusa <levex@linux.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, 2013-12-16 at 18:28 +0100, Levente Kurusa wrote:
-> Not only they use different class IDs, but IIRC they also change device ids.
-> For example, ICH7M was 0x27C4 in AHCI mode and 0x27DF in IDE mode. (obviously
-> Intel vendor ids)
+This is the set I currently have.  I fixed libata to implement the
+REQUEST SENSE scsi command, and set up sd to use blk_pre_runtime_suspend
+to force the queue to the RPM_SUSPENDING state while issuing the
+REQUEST SENSE command to make sure other requests are blocked, then
+if REQUEST SENSE indicates that the drive does not need started,
+then complete suspending the device, otherwise cancel the suspend
+by passing an error value to blk_post_runtime_suspend.
 
-Apparently ICH6-M always uses device ID 0x2653 for its SATA "function"
-(whether in SATA mode or in IDE mode).
+For some reason, the system hangs on resume if I issue the REQUEST SENSE
+command after blk_pre_runtime_suspend.  My understanding is that the
+REQ_PM flag should make the command process even though the queue is
+RPM_SUSPENDING, but it doesn't seem to work.  Anyone have any idea why?
 
-> Paul, did this patch change anything noticeable for you? I mean was there any
-> problem before that this patch fixes or not?
+Phillip Susi (6):
+  libata: use sleep instead of standby command
+  libata: avoid waking disk for several commands
+  libata: resume in the background
+  libata: don't start disks on resume
+  sd: don't start disks on system resume
+  libata: return power status in REQUEST SENSE command
 
-What triggered these two patches was the warning I quoted in patch 1/2
-(which Tejun already queued). Looking at the code involved raised the,
-obvious, question why ahci bothers to attach to ICH6-M in IDE mode.
-Anyhow, the only problem is that it unsuccessfully probes when ICH6-M is
-in IDE mode. The probe doesn't break things, as far as I can tell.
+ drivers/ata/libata-core.c | 38 +++++++++++++++----
+ drivers/ata/libata-eh.c   | 10 ++++-
+ drivers/ata/libata-scsi.c | 44 ++++++++++++++++++----
+ drivers/ata/libata.h      |  1 +
+ drivers/scsi/sd.c         | 94 ++++++++++++++++++++++++++++++++++++++++++-----
+ drivers/scsi/sd.h         |  1 +
+ include/linux/libata.h    |  1 +
+ 7 files changed, 162 insertions(+), 27 deletions(-)
 
-
-Paul Bolle
+-- 
+1.8.3.2
 
