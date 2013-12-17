@@ -1,101 +1,38 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH] libata: implement ATA_HORKAGE_NO_NCQ_TRIM and apply it to
- Micro M500 SSDs
-Date: Tue, 17 Dec 2013 07:06:19 -0500
-Message-ID: <20131217120619.GA29989@htj.dyndns.org>
-References: <1387246554-7311-1-git-send-email-marc.ceeeee@gmail.com>
+Subject: Re: [PATCH/RESEND v2 0/2] SATA disk resume time optimization
+Date: Tue, 17 Dec 2013 07:15:27 -0500
+Message-ID: <20131217121527.GB29989@htj.dyndns.org>
+References: <20131017193331.GA11747@linux.intel.com>
+ <527AF287.7020700@ubuntu.com>
+ <20131109012023.GA8978@linux.intel.com>
+ <527EA218.6010604@ubuntu.com>
+ <20131111165920.GA25366@linux.intel.com>
+ <52810F21.9070605@ubuntu.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qe0-f44.google.com ([209.85.128.44]:37870 "EHLO
-	mail-qe0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751090Ab3LQMGX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Dec 2013 07:06:23 -0500
-Received: by mail-qe0-f44.google.com with SMTP id nd7so5119736qeb.31
-        for <linux-ide@vger.kernel.org>; Tue, 17 Dec 2013 04:06:22 -0800 (PST)
+Received: from mail-gg0-f178.google.com ([209.85.161.178]:49809 "EHLO
+	mail-gg0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752778Ab3LQMVy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Dec 2013 07:21:54 -0500
 Content-Disposition: inline
-In-Reply-To: <1387246554-7311-1-git-send-email-marc.ceeeee@gmail.com>
+In-Reply-To: <52810F21.9070605@ubuntu.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Marc Carino <marc.ceeeee@gmail.com>
-Cc: linux-ide@vger.kernel.org, mykola.dvornik@gmail.com
+To: Phillip Susi <psusi@ubuntu.com>
+Cc: todd.e.brandt@linux.intel.com, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, JBottomley@parallels.com
 
-Hello,
+On Mon, Nov 11, 2013 at 12:08:49PM -0500, Phillip Susi wrote:
+> No, I did not tune my system; I fixed the kernel so that userspace's
+> activities do not start those disks.
 
-I merged the two patches and made some trivial changes, cc'd stable
-and applied to libata/for-3.13-fixes.
+So, umm, implementing things in kernel to facilitate userland is great
+but please don't try to work around userland from kernel.  It may be
+easy now but inevitably becomes a maintenance burden where we don't
+have much visibility into what userland is depending on.  If a certain
+feature needs cooperation from userland, update userland accordingly.
 
 Thanks.
-------- 8< -------
->From f78dea064c5f7de07de4912a6e5136dbc443d614 Mon Sep 17 00:00:00 2001
-From: Marc Carino <marc.ceeeee@gmail.com>
-Date: Mon, 16 Dec 2013 18:15:53 -0800
 
-Certain drives cannot handle queued TRIM commands properly, even
-though support is indicated in the IDENTIFY DEVICE buffer.  This patch
-allows for disabling the commands for the affected drives and apply it
-to the Micron/Crucial M500 SSDs which exhibit incorrect protocol
-behavior when issued queued TRIM commands, which could lead to silent
-data corruption.
-
-tj: Merged two unnecessarily split patches and made minor edits
-    including shortening horkage name.
-
-Signed-off-by: Marc Carino <marc.ceeeee@gmail.com>
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Link: http://lkml.kernel.org/g/1387246554-7311-1-git-send-email-marc.ceeeee@gmail.com
-Cc: stable@vger.kernel.org # 3.12+
----
- drivers/ata/libata-core.c | 15 +++++++++++++--
- include/linux/libata.h    |  1 +
- 2 files changed, 14 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index ff01584..1393a58 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -2149,9 +2149,16 @@ static int ata_dev_config_ncq(struct ata_device *dev,
- 				    "failed to get NCQ Send/Recv Log Emask 0x%x\n",
- 				    err_mask);
- 		} else {
-+			u8 *cmds = dev->ncq_send_recv_cmds;
-+
- 			dev->flags |= ATA_DFLAG_NCQ_SEND_RECV;
--			memcpy(dev->ncq_send_recv_cmds, ap->sector_buf,
--				ATA_LOG_NCQ_SEND_RECV_SIZE);
-+			memcpy(cmds, ap->sector_buf, ATA_LOG_NCQ_SEND_RECV_SIZE);
-+
-+			if (dev->horkage & ATA_HORKAGE_NO_NCQ_TRIM) {
-+				ata_dev_dbg(dev, "disabling queued TRIM support\n");
-+				cmds[ATA_LOG_NCQ_SEND_RECV_DSM_OFFSET] &=
-+					~ATA_LOG_NCQ_SEND_RECV_DSM_TRIM;
-+			}
- 		}
- 	}
- 
-@@ -4205,6 +4212,10 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	{ "PIONEER DVD-RW  DVR-212D",	NULL,	ATA_HORKAGE_NOSETXFER },
- 	{ "PIONEER DVD-RW  DVR-216D",	NULL,	ATA_HORKAGE_NOSETXFER },
- 
-+	/* devices that don't properly handle queued TRIM commands */
-+	{ "Micron_M500*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
-+	{ "Crucial_CT???M500SSD1",	NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
-+
- 	/* End Marker */
- 	{ }
- };
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 0e23c26..9b50337 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -418,6 +418,7 @@ enum {
- 	ATA_HORKAGE_DUMP_ID	= (1 << 16),	/* dump IDENTIFY data */
- 	ATA_HORKAGE_MAX_SEC_LBA48 = (1 << 17),	/* Set max sects to 65535 */
- 	ATA_HORKAGE_ATAPI_DMADIR = (1 << 18),	/* device requires dmadir */
-+	ATA_HORKAGE_NO_NCQ_TRIM	= (1 << 19),	/* don't use queued TRIM */
- 
- 	 /* DMA mask for user DMA control: User visible values; DO NOT
- 	    renumber */
 -- 
-1.8.4.2
-
+tejun
