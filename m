@@ -1,51 +1,40 @@
-From: Phillip Susi <psusi@ubuntu.com>
-Subject: [PATCH 3/6] libata: resume in the background
-Date: Mon, 16 Dec 2013 18:30:54 -0500
-Message-ID: <1387236657-4852-4-git-send-email-psusi@ubuntu.com>
-References: <cover.1384030893.git.psusi@ubuntu.com>
- <1387236657-4852-1-git-send-email-psusi@ubuntu.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1387236657-4852-1-git-send-email-psusi@ubuntu.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: todd.e.brandt@linux.intel.com
-Cc: tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Marc Carino <marc.ceeeee@gmail.com>
+Subject: [PATCH 0/2] libata: disable queued trim for Micron M500 SSDs
+Date: Mon, 16 Dec 2013 18:15:52 -0800
+Message-ID: <1387246554-7311-1-git-send-email-marc.ceeeee@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-oa0-f53.google.com ([209.85.219.53]:65143 "EHLO
+	mail-oa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752336Ab3LQCQK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Dec 2013 21:16:10 -0500
+Received: by mail-oa0-f53.google.com with SMTP id m1so5997349oag.12
+        for <linux-ide@vger.kernel.org>; Mon, 16 Dec 2013 18:16:09 -0800 (PST)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, tj@kernel.org
+Cc: marc.ceeeee@gmail.com, mykola.dvornik@gmail.com
 
-Don't block the resume path waiting for the disk to
-spin up.
----
- drivers/ata/libata-core.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+There was a report of silent data corruption on Fedora 20 w/ the v3.12
+kernel. After some analysis of SATA traces, it appears that in certain
+queued scenarios, the Micron M500 SSD will exhibit incorrect protocol
+behavior. A support request was sent to the vendor, and a firmware fix
+is in the works.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 8f856bb..4a28caf 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5430,20 +5430,18 @@ static int __ata_port_resume_common(struct ata_port *ap, pm_message_t mesg,
- static int ata_port_resume_common(struct device *dev, pm_message_t mesg)
- {
- 	struct ata_port *ap = to_ata_port(dev);
-+	static int dontcare;
- 
--	return __ata_port_resume_common(ap, mesg, NULL);
-+	return __ata_port_resume_common(ap, mesg, &dontcare);
- }
- 
- static int ata_port_resume(struct device *dev)
- {
- 	int rc;
- 
-+	if (pm_runtime_suspended(dev))
-+		return 0;
- 	rc = ata_port_resume_common(dev, PMSG_RESUME);
--	if (!rc) {
--		pm_runtime_disable(dev);
--		pm_runtime_set_active(dev);
--		pm_runtime_enable(dev);
--	}
- 
- 	return rc;
- }
+Until a firmware update is deployed for the Micron/Crucial M500 SSD,
+the ATA driver should avoid issuing the queued TRIM commands to the
+affected devices.
+
+This patchset adds a new horkage flag to let the queued trim commands
+be disabled, depending on the drive model string.
+
+Marc Carino (2):
+  libata: add horkage flag to disable issuance of queued TRIM commands
+  libata: disable queued TRIMs for Micron M500 SSDs
+
+ drivers/ata/libata-core.c | 11 +++++++++++
+ include/linux/libata.h    |  2 ++
+ 2 files changed, 13 insertions(+)
+
 -- 
-1.8.3.2
+1.8.1.3
 
