@@ -1,88 +1,97 @@
 From: Andrew Lunn <andrew@lunn.ch>
-Subject: [PATCH 1/4] Phy: DT binding documentation for Marvell MVEBU SATA phy.
-Date: Tue, 17 Dec 2013 21:21:49 +0100
-Message-ID: <1387311713-1926-1-git-send-email-andrew@lunn.ch>
+Subject: [PATCH 3/4] SATA: MV: Add support for the optional PHYs
+Date: Tue, 17 Dec 2013 21:21:51 +0100
+Message-ID: <1387311713-1926-3-git-send-email-andrew@lunn.ch>
+References: <1387311713-1926-1-git-send-email-andrew@lunn.ch>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vps0.lunn.ch ([178.209.37.122]:34860 "EHLO vps0.lunn.ch"
+Received: from vps0.lunn.ch ([178.209.37.122]:34866 "EHLO vps0.lunn.ch"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753046Ab3LQUWa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 17 Dec 2013 15:22:30 -0500
+	id S1753375Ab3LQUWb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 17 Dec 2013 15:22:31 -0500
+In-Reply-To: <1387311713-1926-1-git-send-email-andrew@lunn.ch>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jason Cooper <jason@lakedaemon.net>, kishon@ti.com
 Cc: devicetree@vger.kernel.org, linux-ide@vger.kernel.org, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>, linux ARM <linux-arm-kernel@lists.infradead.org>, Andrew Lunn <andrew@lunn.ch>
 
-Describe the binding for the Marvell MVEBU SATA phy. This driver
-can be used at least with Kirkwood, Dove and maybe others.
-Additionally, update the SATA binding with the properties to link
-to the phy nodes.
+Some Marvell SoCs have a SATA PHY which can be powered off, in order
+to save power. Make use of the generic phy framework to control these
+phys.
 
 Signed-off-by: Andrew Lunn <andrew@lunn.ch>
 ---
-v1->v2:
-Correct #phy-cells
-Correct number after @ to match first reg address.
-Rename to phy-mvebu.txt
-
-v2->v3:
-Renamed to mvebu-phy.txt
-Use "port0", "port1" instead of "0", "1"
+v2->v3
+Look for phys using name "port0", "port1", etc.
 ---
- Documentation/devicetree/bindings/ata/marvell.txt  |  6 ++++++
- .../devicetree/bindings/phy/mvebu-phy.txt          | 22 ++++++++++++++++++++++
- 2 files changed, 28 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/phy/mvebu-phy.txt
+ drivers/ata/sata_mv.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/ata/marvell.txt b/Documentation/devicetree/bindings/ata/marvell.txt
-index b5cdd20cde9c..4c5447f1068d 100644
---- a/Documentation/devicetree/bindings/ata/marvell.txt
-+++ b/Documentation/devicetree/bindings/ata/marvell.txt
-@@ -6,11 +6,17 @@ Required Properties:
- - interrupts    : Interrupt controller is using
- - nr-ports      : Number of SATA ports in use.
- 
-+Optional Properties:
-+- phys		: List of phandles to sata phys
-+- phy-names	: Should be "port0", "port1", etc, one per phandle
-+
- Example:
- 
- 	sata@80000 {
- 		compatible = "marvell,orion-sata";
- 		reg = <0x80000 0x5000>;
- 		interrupts = <21>;
-+		phys = <&sata_phy0>, <&sata_phy1>;
-+		phy-names = "port0", "port1";
- 		nr-ports = <2>;
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index 56be31819897..896725bb5e34 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -60,6 +60,7 @@
+ #include <linux/dma-mapping.h>
+ #include <linux/device.h>
+ #include <linux/clk.h>
++#include <linux/phy/phy.h>
+ #include <linux/platform_device.h>
+ #include <linux/ata_platform.h>
+ #include <linux/mbus.h>
+@@ -563,6 +564,12 @@ struct mv_host_priv {
+ 	struct clk		*clk;
+ 	struct clk              **port_clks;
+ 	/*
++	 * Some devices have a SATA PHY which can be enabled/disabled
++	 * in order to save power. These are optional: if the platform
++	 * devices does not have any phy, they won't be used.
++	 */
++	struct phy		**port_phys;
++	/*
+ 	 * These consistent DMA memory pools give us guaranteed
+ 	 * alignment for hardware-accessed data structures,
+ 	 * and less memory waste in accomplishing the alignment.
+@@ -4076,6 +4083,11 @@ static int mv_platform_probe(struct platform_device *pdev)
+ 					GFP_KERNEL);
+ 	if (!hpriv->port_clks)
+ 		return -ENOMEM;
++	hpriv->port_phys = devm_kzalloc(&pdev->dev,
++					sizeof(struct phy *) * n_ports,
++					GFP_KERNEL);
++	if (!hpriv->port_phys)
++		return -ENOMEM;
+ 	host->private_data = hpriv;
+ 	hpriv->n_ports = n_ports;
+ 	hpriv->board_idx = chip_soc;
+@@ -4097,6 +4109,10 @@ static int mv_platform_probe(struct platform_device *pdev)
+ 		hpriv->port_clks[port] = clk_get(&pdev->dev, port_number);
+ 		if (!IS_ERR(hpriv->port_clks[port]))
+ 			clk_prepare_enable(hpriv->port_clks[port]);
++		sprintf(port_number, "port%d", port);
++		hpriv->port_phys[port] = devm_phy_get(&pdev->dev, port_number);
++		if (!IS_ERR(hpriv->port_phys[port]))
++			phy_power_on(hpriv->port_phys[port]);
  	}
-diff --git a/Documentation/devicetree/bindings/phy/mvebu-phy.txt b/Documentation/devicetree/bindings/phy/mvebu-phy.txt
-new file mode 100644
-index 000000000000..6cb3364aeafb
---- /dev/null
-+++ b/Documentation/devicetree/bindings/phy/mvebu-phy.txt
-@@ -0,0 +1,22 @@
-+* Marvell MVEBU SATA PHY
-+
-+Power control for the SATA phy found on Marvell MVEBU SoCs.
-+
-+This document extends the binding described in phy-bindings.txt
-+
-+Required properties :
-+
-+ - reg		   : Offset and length of the register set for the SATA device
-+ - compatible	   : Should be "marvell,mvebu-sata-phy"
-+ - clocks	   : phandle of clock and specifier that supplies the device
-+ - clock-names	   : Should be "sata"
-+
-+Example:
-+		sata-phy@84000 {
-+			compatible = "marvell,mvebu-sata-phy";
-+			reg = <0x84000 0x0334>;
-+			clocks = <&gate_clk 15>;
-+			clock-names = "sata";
-+			#phy-cells = <0>;
-+			status = "ok";
-+		};
+ 
+ 	/*
+@@ -4132,6 +4148,8 @@ err:
+ 			clk_disable_unprepare(hpriv->port_clks[port]);
+ 			clk_put(hpriv->port_clks[port]);
+ 		}
++		if (!IS_ERR(hpriv->port_phys[port]))
++			phy_power_off(hpriv->port_phys[port]);
+ 	}
+ 
+ 	return rc;
+@@ -4161,6 +4179,8 @@ static int mv_platform_remove(struct platform_device *pdev)
+ 			clk_disable_unprepare(hpriv->port_clks[port]);
+ 			clk_put(hpriv->port_clks[port]);
+ 		}
++		if (!IS_ERR(hpriv->port_phys[port]))
++			phy_power_off(hpriv->port_phys[port]);
+ 	}
+ 	return 0;
+ }
 -- 
 1.8.5.1
 
