@@ -1,54 +1,77 @@
-From: Josh Triplett <josh@joshtriplett.org>
-Subject: Re: [PATCH 1/2] drivers: ide: Include appropriate header file in
- ide-cd_verbose.c
-Date: Tue, 17 Dec 2013 08:44:03 -0800
-Message-ID: <20131217164403.GD1062@leaf>
-References: <d24d7befadfbfb9501d0e873f13e39fd42ec893b.1387278225.git.rashika.kheria@gmail.com>
- <20131217111920.GA30592@pd.tnic>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH 6/6] libata: return power status in REQUEST SENSE command
+Date: Tue, 17 Dec 2013 21:02:46 +0300
+Message-ID: <52B091C6.4050106@cogentembedded.com>
+References: <cover.1384030893.git.psusi@ubuntu.com> <1387236657-4852-1-git-send-email-psusi@ubuntu.com> <1387236657-4852-7-git-send-email-psusi@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay4-d.mail.gandi.net ([217.70.183.196]:51780 "EHLO
-	relay4-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753270Ab3LQQoN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Dec 2013 11:44:13 -0500
-Content-Disposition: inline
-In-Reply-To: <20131217111920.GA30592@pd.tnic>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1387236657-4852-7-git-send-email-psusi@ubuntu.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Phillip Susi <psusi@ubuntu.com>, todd.e.brandt@linux.intel.com
+Cc: tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Borislav Petkov <bp@alien8.de>
-Cc: Rashika Kheria <rashika.kheria@gmail.com>, linux-kernel@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
 
-On Tue, Dec 17, 2013 at 12:19:21PM +0100, Borislav Petkov wrote:
-> On Tue, Dec 17, 2013 at 04:38:16PM +0530, Rashika Kheria wrote:
-> > Include appropriate header file ide-cd.h in ide-cd_verbose.c becaus=
-e
-> > function ide_cd_log_error() has its prototype declaration in ide-cd=
-=2Eh.
-> > Also, include linux/ide.h because it contains certain declarations
-> > necessary for including ide-cd.h.
-> >=20
-> > This eliminates the following warnings in ide-cd_verbose.c:
-> > drivers/ide/ide-cd_verbose.c:251:6: warning: no previous prototype =
-for =E2=80=98ide_cd_log_error=E2=80=99 [-Wmissing-prototypes]
->=20
-> drivers/ide/ is open only to fixes for serious, real bugs - nothing
-> else. I wouldn't waste my time with it if I were you.
+Hello.
 
-A quick check of "git log drivers/ide/" turns up a pile of fixes and
-cleanups; for instance:
+On 12/17/2013 02:30 AM, Phillip Susi wrote:
 
-c2f7d1e ide: pmac: remove unnecessary pci_set_drvdata()
-a6fd6063 ide: cs5536: use module_pci_driver()
-58e48be ide: pmac: Remove casting the return value which is a void poin=
-ter
-64110c1 ide: sgiioc4: Staticize ioc4_ide_attach_one()
-70ddce8 ide: palm_bk3710: add missing __iomem annotation
+> SAT-3 says REQUEST SENSE should issue CHECK POWER and return
+> a sense status indicating the drive's power status.
+> ---
+>   drivers/ata/libata-scsi.c | 40 ++++++++++++++++++++++++++++++++++------
+>   1 file changed, 34 insertions(+), 6 deletions(-)
 
-The two proposed patches here are extremely low risk, don't actually
-change the compiled code in any way like some of those did, and fix rea=
-l
-compiler warnings.
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index f92eb21..8b17352 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -3313,6 +3313,38 @@ static unsigned int ata_scsi_mode_select_xlat(struct ata_queued_cmd *qc)
+>   	return 1;
+>   }
+>
+> +static void ata_scsi_request_sense_complete(struct ata_queued_cmd *qc)
+> +{
+> +	struct scsi_cmnd *cmd = qc->scsicmd;
 
-- Josh Triplett
+    Please insert empty line here, after declaration.
+
+> +	cmd->result = (DRIVER_SENSE << 24);
+
+    () not needed.
+
+> +	if (qc->result_tf.nsect == 0)
+> +		/* POWER STATE CHANGE TO STANDBY */
+> +	{
+
+    Wrong *if* style, should be "*if* () {" on the same line.
+
+> +		scsi_build_sense_buffer(0, cmd->sense_buffer, 0, 0x5E, 0x43);
+> +	}
+> +	else scsi_build_sense_buffer(0, cmd->sense_buffer, 0, 0, 0);
+
+    Wrong style again, scsi_build_sense_buffer() should be on its own line, 
+and {} must be used in both branches of *if* if used in one.
+
+> +	qc->scsidone(cmd);
+> +	ata_qc_free(qc);
+> +}
+> +
+> +/**
+> + *	ata_scsi_request_sense_xlat - Simulate REQUEST SENSE command
+> + *	@qc: Storage for translated ATA taskfile
+> + *
+> + *	Converts a REQUEST SENSE command to an ATA CHECK POWER MODE taskfile.
+> + *
+> + *	LOCKING:
+> + *	spin_lock_irqsave(host lock)
+> + */
+> +static unsigned int ata_scsi_request_sense_xlat(struct ata_queued_cmd *qc)
+> +{
+> +	qc->tf.command = ATA_CMD_CHK_POWER;
+
+    Isn't it an optional command, belonging to the power management feature set?
+
+WBR, Sergei
+
