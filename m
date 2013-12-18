@@ -1,128 +1,50 @@
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH 4/4] Phy: Add DT nodes on kirkwood and Dove for the SATA
- PHY
-Date: Wed, 18 Dec 2013 12:02:27 +0530
-Message-ID: <52B1417B.6060909@ti.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 3/4] SATA: MV: Add support for the optional PHYs
+Date: Wed, 18 Dec 2013 07:13:13 -0500
+Message-ID: <20131218121313.GC4324@htj.dyndns.org>
 References: <1387311713-1926-1-git-send-email-andrew@lunn.ch>
- <1387311713-1926-4-git-send-email-andrew@lunn.ch>
+ <1387311713-1926-3-git-send-email-andrew@lunn.ch>
+ <52B140F2.8070900@ti.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <1387311713-1926-4-git-send-email-andrew@lunn.ch>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Andrew Lunn <andrew@lunn.ch>, Jason Cooper <jason@lakedaemon.net>
-Cc: Gregory Clement <gregory.clement@free-electrons.com>, devicetree@vger.kernel.org, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>, linux ARM <linux-arm-kernel@lists.infradead.org>, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qc0-f178.google.com ([209.85.216.178]:62999 "EHLO
+	mail-qc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753795Ab3LRMNR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Dec 2013 07:13:17 -0500
+Content-Disposition: inline
+In-Reply-To: <52B140F2.8070900@ti.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Andrew Lunn <andrew@lunn.ch>, Jason Cooper <jason@lakedaemon.net>, devicetree@vger.kernel.org, linux-ide@vger.kernel.org, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>, linux ARM <linux-arm-kernel@lists.infradead.org>
 
-On Wednesday 18 December 2013 01:51 AM, Andrew Lunn wrote:
-> Add nodes for the two SATA PHYs on kirkwood.
-> Add node for the one SATA PHY on Dove.
-> Add pHandles to the PHYs in the sata nodes.
-> 
-> Signed-off-by: Andrew Lunn <andrew@lunn.ch>
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
-> v1->v2:
-> sata_phy@... ->sata-phy@
-> value after '@' matching the first address in the reg.
-> 
-> v2->v3:
-> "0" -> "port0", etc.
-> kirkewood -> kirkwood
-> ---
->  arch/arm/boot/dts/dove.dtsi          | 11 +++++++++++
->  arch/arm/boot/dts/kirkwood-6281.dtsi |  2 ++
->  arch/arm/boot/dts/kirkwood-6282.dtsi |  2 ++
->  arch/arm/boot/dts/kirkwood.dtsi      | 18 ++++++++++++++++++
->  4 files changed, 33 insertions(+)
-> 
-> diff --git a/arch/arm/boot/dts/dove.dtsi b/arch/arm/boot/dts/dove.dtsi
-> index 113a8bc7bee7..198d03625832 100644
-> --- a/arch/arm/boot/dts/dove.dtsi
-> +++ b/arch/arm/boot/dts/dove.dtsi
-> @@ -490,10 +490,21 @@
->  				reg = <0xa0000 0x2400>;
->  				interrupts = <62>;
->  				clocks = <&gate_clk 3>;
-> +				phys = <&sata_phy0>;
-> +				phy-names = "port0";
->  				nr-ports = <1>;
->  				status = "disabled";
->  			};
->  
-> +			sata_phy0: sata-phy@a2000 {
-> +				compatible = "marvell,mvebu-sata-phy";
-> +				reg = <0xa2000 0x0334>;
-> +				clocks = <&gate_clk 3>;
-> +				clock-names = "sata";
-> +				#phy-cells = <0>;
-> +				status = "ok";
-> +			};
-> +
->  			rtc: real-time-clock@d8500 {
->  				compatible = "marvell,orion-rtc";
->  				reg = <0xd8500 0x20>;
-> diff --git a/arch/arm/boot/dts/kirkwood-6281.dtsi b/arch/arm/boot/dts/kirkwood-6281.dtsi
-> index 650ef30e1856..18400e74e0de 100644
-> --- a/arch/arm/boot/dts/kirkwood-6281.dtsi
-> +++ b/arch/arm/boot/dts/kirkwood-6281.dtsi
-> @@ -89,6 +89,8 @@
->  			interrupts = <21>;
->  			clocks = <&gate_clk 14>, <&gate_clk 15>;
->  			clock-names = "0", "1";
-> +			phys = <&sata_phy0>, <&sata_phy1>;
-> +			phy-names = "port0", "port1";
->  			status = "disabled";
->  		};
->  
-> diff --git a/arch/arm/boot/dts/kirkwood-6282.dtsi b/arch/arm/boot/dts/kirkwood-6282.dtsi
-> index 3933a331ddc2..69c622bbbfb5 100644
-> --- a/arch/arm/boot/dts/kirkwood-6282.dtsi
-> +++ b/arch/arm/boot/dts/kirkwood-6282.dtsi
-> @@ -117,6 +117,8 @@
->  			interrupts = <21>;
->  			clocks = <&gate_clk 14>, <&gate_clk 15>;
->  			clock-names = "0", "1";
-> +			phys = <&sata_phy0>, <&sata_phy1>;
-> +			phy-names = "port0", "port1";
->  			status = "disabled";
->  		};
->  
-> diff --git a/arch/arm/boot/dts/kirkwood.dtsi b/arch/arm/boot/dts/kirkwood.dtsi
-> index 8b73c80f1dad..ee06951721c4 100644
-> --- a/arch/arm/boot/dts/kirkwood.dtsi
-> +++ b/arch/arm/boot/dts/kirkwood.dtsi
-> @@ -282,5 +282,23 @@
->  				/* set phy-handle property in board file */
->  			};
->  		};
-> +
-> +		sata_phy0: sata-phy@82000 {
-> +			compatible = "marvell,mvebu-sata-phy";
-> +			reg = <0x82000 0x0334>;
-> +			clocks = <&gate_clk 14>;
-> +			clock-names = "sata";
-> +			#phy-cells = <0>;
-> +			status = "ok";
-> +		};
-> +
-> +		sata_phy1: sata-phy@84000 {
-> +			compatible = "marvell,mvebu-sata-phy";
-> +			reg = <0x84000 0x0334>;
-> +			clocks = <&gate_clk 15>;
-> +			clock-names = "sata";
-> +			#phy-cells = <0>;
-> +			status = "ok";
-> +		};
->  	};
->  };
-> 
+Hello,
+
+On Wed, Dec 18, 2013 at 12:00:10PM +0530, Kishon Vijay Abraham I wrote:
+> > @@ -4097,6 +4109,10 @@ static int mv_platform_probe(struct platform_device *pdev)
+> >  		hpriv->port_clks[port] = clk_get(&pdev->dev, port_number);
+> >  		if (!IS_ERR(hpriv->port_clks[port]))
+> >  			clk_prepare_enable(hpriv->port_clks[port]);
+> > +		sprintf(port_number, "port%d", port);
+> > +		hpriv->port_phys[port] = devm_phy_get(&pdev->dev, port_number);
+> > +		if (!IS_ERR(hpriv->port_phys[port]))
+> > +			phy_power_on(hpriv->port_phys[port]);
+
+Shouldn't it distinguish between failures and at least produce
+warning?  ie. phy not available and phy init failed due to memory
+pressure or whatnot shouldn't be handled the same.
+
+> > @@ -4132,6 +4148,8 @@ err:
+> >  			clk_disable_unprepare(hpriv->port_clks[port]);
+> >  			clk_put(hpriv->port_clks[port]);
+> >  		}
+> > +		if (!IS_ERR(hpriv->port_phys[port]))
+> > +			phy_power_off(hpriv->port_phys[port]);
+
+And I'd much prefer the array holds either NULL or valid pointer.
+
+Thanks.
+
+-- 
+tejun
