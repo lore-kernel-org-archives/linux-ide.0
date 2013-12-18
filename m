@@ -1,48 +1,36 @@
-From: Borislav Petkov <bp@alien8.de>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 Subject: Re: [PATCH 1/2] drivers: ide: Include appropriate header file in
  ide-cd_verbose.c
-Date: Wed, 18 Dec 2013 14:33:58 +0100
-Message-ID: <20131218133357.GB12222@pd.tnic>
-References: <d24d7befadfbfb9501d0e873f13e39fd42ec893b.1387278225.git.rashika.kheria@gmail.com>
- <52B0A93E.7090503@cogentembedded.com>
- <20131217190610.GJ30592@pd.tnic>
- <1930396.DGXdd6ZaUD@amdc1032>
+Date: Wed, 18 Dec 2013 21:35:34 +0300
+Message-ID: <52B1EAF6.6080905@cogentembedded.com>
+References: <d24d7befadfbfb9501d0e873f13e39fd42ec893b.1387278225.git.rashika.kheria@gmail.com> <20131217111920.GA30592@pd.tnic> <20131217164403.GD1062@leaf> <20131217175451.GI30592@pd.tnic> <52B0A93E.7090503@cogentembedded.com> <20131217190610.GJ30592@pd.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:35065 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750949Ab3LRNeF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 18 Dec 2013 08:34:05 -0500
-Content-Disposition: inline
-In-Reply-To: <1930396.DGXdd6ZaUD@amdc1032>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20131217190610.GJ30592@pd.tnic>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Borislav Petkov <bp@alien8.de>
+Cc: Josh Triplett <josh@joshtriplett.org>, Rashika Kheria <rashika.kheria@gmail.com>, linux-kernel@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Josh Triplett <josh@joshtriplett.org>, Rashika Kheria <rashika.kheria@gmail.com>, linux-kernel@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
 
-Hey Bart,
+On 12/17/2013 10:06 PM, Borislav Petkov wrote:
 
-long time no see! :-)
+>> You're right in your doubting: there are quite a lot of drivers used
+>> by embedded platforms that nobody has bothered to convert to libata
+>> thus far.
 
-On Wed, Dec 18, 2013 at 02:23:52PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> No, it means that there are legacy PATA chipsets (some used by embedded
-> platforms) that are only supported by IDE host drivers.
+> Hold on, what does that mean? IDE is back from the dead and used only
+> for embedded stuff?
 
-I know what it means - I was asking a provocative question. :)
+    Like jazz, IDE "is not dead, it just smells funny".
 
-> If there is a need I should be able to help in converting these
-> leftover drivers before we delete IDE. Once I find some time I will go
-> over all IDE host drivers, make a list of affected hardware and start
-> a discussion on IDE removal.
+> Or we force people to convert drivers to libata by *deleting* ide?
 
-While this is a generous offer, I'd leave it to the people who actually
-need that functionality to do the conversion themselves. But this is
-just me.
+    I hope not. To me, it would be a shame e.g. to delete more or less 
+well-designed IDE taskfile interface to the ad-hockery that libata has in its 
+place...
 
--- 
-Regards/Gruss,
-    Boris.
+> :-)
 
-Sent from a fat crate under my desk. Formatting is fine.
---
+WBR, Sergei
