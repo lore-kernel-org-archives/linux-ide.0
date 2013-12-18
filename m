@@ -1,50 +1,51 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 3/4] SATA: MV: Add support for the optional PHYs
-Date: Wed, 18 Dec 2013 07:13:13 -0500
-Message-ID: <20131218121313.GC4324@htj.dyndns.org>
-References: <1387311713-1926-1-git-send-email-andrew@lunn.ch>
- <1387311713-1926-3-git-send-email-andrew@lunn.ch>
- <52B140F2.8070900@ti.com>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: Re: [PATCH 1/2] drivers: ide: Include appropriate header file in
+ ide-cd_verbose.c
+Date: Wed, 18 Dec 2013 14:23:52 +0100
+Message-ID: <1930396.DGXdd6ZaUD@amdc1032>
+References: <d24d7befadfbfb9501d0e873f13e39fd42ec893b.1387278225.git.rashika.kheria@gmail.com>
+ <52B0A93E.7090503@cogentembedded.com> <20131217190610.GJ30592@pd.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f178.google.com ([209.85.216.178]:62999 "EHLO
-	mail-qc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753795Ab3LRMNR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Dec 2013 07:13:17 -0500
-Content-Disposition: inline
-In-Reply-To: <52B140F2.8070900@ti.com>
+Received: from mailout4.samsung.com ([203.254.224.34]:50744 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752165Ab3LRNYL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Dec 2013 08:24:11 -0500
+In-reply-to: <20131217190610.GJ30592@pd.tnic>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Andrew Lunn <andrew@lunn.ch>, Jason Cooper <jason@lakedaemon.net>, devicetree@vger.kernel.org, linux-ide@vger.kernel.org, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>, linux ARM <linux-arm-kernel@lists.infradead.org>
+To: Borislav Petkov <bp@alien8.de>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Josh Triplett <josh@joshtriplett.org>, Rashika Kheria <rashika.kheria@gmail.com>, linux-kernel@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
 
-Hello,
 
-On Wed, Dec 18, 2013 at 12:00:10PM +0530, Kishon Vijay Abraham I wrote:
-> > @@ -4097,6 +4109,10 @@ static int mv_platform_probe(struct platform_device *pdev)
-> >  		hpriv->port_clks[port] = clk_get(&pdev->dev, port_number);
-> >  		if (!IS_ERR(hpriv->port_clks[port]))
-> >  			clk_prepare_enable(hpriv->port_clks[port]);
-> > +		sprintf(port_number, "port%d", port);
-> > +		hpriv->port_phys[port] = devm_phy_get(&pdev->dev, port_number);
-> > +		if (!IS_ERR(hpriv->port_phys[port]))
-> > +			phy_power_on(hpriv->port_phys[port]);
+Hi,
 
-Shouldn't it distinguish between failures and at least produce
-warning?  ie. phy not available and phy init failed due to memory
-pressure or whatnot shouldn't be handled the same.
+On Tuesday, December 17, 2013 08:06:10 PM Borislav Petkov wrote:
+> On Tue, Dec 17, 2013 at 10:42:54PM +0300, Sergei Shtylyov wrote:
+> > You're right in your doubting: there are quite a lot of drivers used
+> > by embedded platforms that nobody has bothered to convert to libata
+> > thus far.
+> 
+> Hold on, what does that mean? IDE is back from the dead and used only
+> for embedded stuff?
 
-> > @@ -4132,6 +4148,8 @@ err:
-> >  			clk_disable_unprepare(hpriv->port_clks[port]);
-> >  			clk_put(hpriv->port_clks[port]);
-> >  		}
-> > +		if (!IS_ERR(hpriv->port_phys[port]))
-> > +			phy_power_off(hpriv->port_phys[port]);
+No, it means that there are legacy PATA chipsets (some used by embedded
+platforms) that are only supported by IDE host drivers.
 
-And I'd much prefer the array holds either NULL or valid pointer.
+> Or we force people to convert drivers to libata by *deleting* ide?
+> 
+> :-)
 
-Thanks.
+If there is a need I should be able to help in converting these leftover
+drivers before we delete IDE.  Once I find some time I will go over all
+IDE host drivers, make a list of affected hardware and start a discussion
+on IDE removal.
 
--- 
-tejun
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
+
