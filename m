@@ -1,56 +1,91 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 3/4] SATA: MV: Add support for the optional PHYs
-Date: Thu, 19 Dec 2013 14:42:37 -0500
-Message-ID: <20131219194237.GC22725@htj.dyndns.org>
-References: <1387311713-1926-1-git-send-email-andrew@lunn.ch>
- <1387311713-1926-3-git-send-email-andrew@lunn.ch>
- <52B140F2.8070900@ti.com>
- <20131218121313.GC4324@htj.dyndns.org>
- <20131219191027.GI4143@lunn.ch>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: Re: AHCI driver support for AER error handling?
+Date: Thu, 19 Dec 2013 21:00:20 +0100
+Message-ID: <3072611.gif6MGBUDL@amdc1032>
+References: <3E54258959B69E4282D79E01AB1F32B70465DB58@DFLE11.ent.ti.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:41535 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755882Ab3LSTml (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Dec 2013 14:42:41 -0500
-Content-Disposition: inline
-In-Reply-To: <20131219191027.GI4143@lunn.ch>
+Received: from mailout4.samsung.com ([203.254.224.34]:25533 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755230Ab3LSUAa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Dec 2013 15:00:30 -0500
+Received: from epcpsbgm2.samsung.com (epcpsbgm2 [203.254.230.27])
+ by mailout4.samsung.com
+ (Oracle Communications Messaging Server 7u4-24.01(7.0.4.24.0) 64bit (built Nov
+ 17 2011)) with ESMTP id <0MY200DUYKWTOG50@mailout4.samsung.com> for
+ linux-ide@vger.kernel.org; Fri, 20 Dec 2013 05:00:29 +0900 (KST)
+In-reply-to: <3E54258959B69E4282D79E01AB1F32B70465DB58@DFLE11.ent.ti.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Lunn <andrew@lunn.ch>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>, Jason Cooper <jason@lakedaemon.net>, devicetree@vger.kernel.org, linux-ide@vger.kernel.org, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>, linux ARM <linux-arm-kernel@lists.infradead.org>
+To: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hello,
 
-On Thu, Dec 19, 2013 at 08:10:27PM +0100, Andrew Lunn wrote:
-> > Shouldn't it distinguish between failures and at least produce
-> > warning?  ie. phy not available and phy init failed due to memory
-> > pressure or whatnot shouldn't be handled the same.
+Hi,
+
+On Thursday, December 19, 2013 06:03:21 PM Karicheri, Muralidharan wrote:
+> All,
 > 
-> Phy not available is not an error, since not all variants of the SATA
-                          ^
-			 always
+> I am new to this mailing list. I got AER driver working for my platform with
+> a pcie root complex driver. However one of my customer is using AHCI over
+> PCI and I find that the driver currently doesn't provide error handler and
+> ignore pci errors. Is this intentional? Could someone provide some input on
+> this? I had to add code to enable error bits (PCI_COMMAND) and call
+> pci_enable_pcie_error_reporting () to enable error reporting to the driver
+> to test the AER driver. But curious why this is currently not supported in
+> the driver. If there is any patch to address, please provide me a link.
 
-> IP block have the ability to control the phy. I can however add a
-> warning for real errors.
+Historically AHCI driver was added before AER support was available in
+the kernel so the reason for the lack of AER support in AHCI driver may
+just be that nobody ever bothered to add it (of course given that there
+are AHCI controllers that actually support AER capability).
 
-Yes, please.
+I'm not aware of any other patches addressing the issue so (once ready)
+please post the results of your work to the list.
 
-> > > > @@ -4132,6 +4148,8 @@ err:
-> > > >  			clk_disable_unprepare(hpriv->port_clks[port]);
-> > > >  			clk_put(hpriv->port_clks[port]);
-> > > >  		}
-> > > > +		if (!IS_ERR(hpriv->port_phys[port]))
-> > > > +			phy_power_off(hpriv->port_phys[port]);
-> > 
-> > And I'd much prefer the array holds either NULL or valid pointer.
+PS1 Documentation/PCI/pcieaer-howto.txt contains useful pointers on how
+to test AER support by injecting errors (you probably know this already).
+
+PS2 Please wrap your messages to 80 columns or less.  Thanks.
+
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
+
+> Thanks
 > 
-> I was trying to keep the code similar to the clk handling. However now
-> that it is diverging more and more from how clk is handled, i can add
-> yet more divergence and overwrite the error with a NULL.
+> static struct pci_driver ahci_pci_driver = {
+>         .name                   = DRV_NAME,
+>         .id_table               = ahci_pci_tbl,
+>         .probe                  = ahci_init_one,
+>         .remove                 = ata_pci_remove_one,
+> #ifdef CONFIG_PM
+>         .suspend                = ahci_pci_device_suspend,
+>         .resume                 = ahci_pci_device_resume,
+> #endif
+> };
+> 
+> struct pci_driver {             
+>         struct list_head node;  
+>         const char *name;
+>         const struct pci_device_id *id_table;   /* must be non-NULL for probe to be called */
+>         int  (*probe)  (struct pci_dev *dev, const struct pci_device_id *id);   /* New device inserted */
+>         void (*remove) (struct pci_dev *dev);   /* Device removed (NULL if not a hot-plug capable driver) */
+>         int  (*suspend) (struct pci_dev *dev, pm_message_t state);      /* Device suspended */
+>         int  (*suspend_late) (struct pci_dev *dev, pm_message_t state);
+>         int  (*resume_early) (struct pci_dev *dev);
+>         int  (*resume) (struct pci_dev *dev);                   /* Device woken up */
+>         void (*shutdown) (struct pci_dev *dev);
+>         int (*sriov_configure) (struct pci_dev *dev, int num_vfs); /* PF pdev */
+>         const struct pci_error_handlers *err_handler;
+>         struct device_driver    driver;
+>         struct pci_dynids dynids;
+> };
+> 
+> Murali Karicheri
+> Linux Kernel, Software Development
 
-Thanks.
-
--- 
-tejun
