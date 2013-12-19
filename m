@@ -1,216 +1,61 @@
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH 2/4] Phy: Add a PHY driver for Marvell MVEBU SATA PHY.
-Date: Thu, 19 Dec 2013 16:10:38 +0530
-Message-ID: <52B2CD26.3010209@ti.com>
-References: <1387311713-1926-1-git-send-email-andrew@lunn.ch> <1387311713-1926-2-git-send-email-andrew@lunn.ch>
+From: "Karicheri, Muralidharan" <m-karicheri2@ti.com>
+Subject: AHCI driver support for AER error handling?
+Date: Thu, 19 Dec 2013 18:03:21 +0000
+Message-ID: <3E54258959B69E4282D79E01AB1F32B70465DB58@DFLE11.ent.ti.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:37587 "EHLO
+Received: from devils.ext.ti.com ([198.47.26.153]:55219 "EHLO
 	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751063Ab3LSKlQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Dec 2013 05:41:16 -0500
-In-Reply-To: <1387311713-1926-2-git-send-email-andrew@lunn.ch>
+	with ESMTP id S1754438Ab3LSSDX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Dec 2013 13:03:23 -0500
+Received: from dflxv15.itg.ti.com ([128.247.5.124])
+	by devils.ext.ti.com (8.13.7/8.13.7) with ESMTP id rBJI3NWJ015455
+	for <linux-ide@vger.kernel.org>; Thu, 19 Dec 2013 12:03:23 -0600
+Received: from DLEE71.ent.ti.com (dlee71.ent.ti.com [157.170.170.114])
+	by dflxv15.itg.ti.com (8.14.3/8.13.8) with ESMTP id rBJI3Njl008378
+	for <linux-ide@vger.kernel.org>; Thu, 19 Dec 2013 12:03:23 -0600
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Lunn <andrew@lunn.ch>, Jason Cooper <jason@lakedaemon.net>
-Cc: devicetree@vger.kernel.org, linux-ide@vger.kernel.org, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>, linux ARM <linux-arm-kernel@lists.infradead.org>
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hi,
+All,
 
-On Wednesday 18 December 2013 01:51 AM, Andrew Lunn wrote:
-> Kirkwood and Dove can turn the SATA phy on and off. Add a PHY driver
-> to control this.
-> 
-> Signed-off-by: Andrew Lunn <andrew@lunn.ch>
-> ---
-> v1->v2:
-> Use #defines instead of magic values
-> select GENERIC_PHY in Kconfig.
-> ---
->  drivers/phy/Kconfig          |   6 ++
->  drivers/phy/Makefile         |   1 +
->  drivers/phy/phy-mvebu-sata.c | 137 +++++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 144 insertions(+)
->  create mode 100644 drivers/phy/phy-mvebu-sata.c
-> 
-> diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
-> index a344f3d52361..7464d31fcbd1 100644
-> --- a/drivers/phy/Kconfig
-> +++ b/drivers/phy/Kconfig
-> @@ -21,6 +21,12 @@ config PHY_EXYNOS_MIPI_VIDEO
->  	  Support for MIPI CSI-2 and MIPI DSI DPHY found on Samsung S5P
->  	  and EXYNOS SoCs.
->  
-> +config PHY_MVEBU_SATA
-> +	def_bool y
-> +	depends on ARCH_KIRKWOOD || ARCH_DOVE
-> +	depends on OF
-> +	select GENERIC_PHY
-> +
->  config OMAP_USB2
->  	tristate "OMAP USB2 PHY Driver"
->  	depends on ARCH_OMAP2PLUS
-> diff --git a/drivers/phy/Makefile b/drivers/phy/Makefile
-> index d0caae9cfb83..4e4adc96f753 100644
-> --- a/drivers/phy/Makefile
-> +++ b/drivers/phy/Makefile
-> @@ -5,5 +5,6 @@
->  obj-$(CONFIG_GENERIC_PHY)		+= phy-core.o
->  obj-$(CONFIG_PHY_EXYNOS_DP_VIDEO)	+= phy-exynos-dp-video.o
->  obj-$(CONFIG_PHY_EXYNOS_MIPI_VIDEO)	+= phy-exynos-mipi-video.o
-> +obj-$(CONFIG_PHY_MVEBU_SATA)		+= phy-mvebu-sata.o
->  obj-$(CONFIG_OMAP_USB2)			+= phy-omap-usb2.o
->  obj-$(CONFIG_TWL4030_USB)		+= phy-twl4030-usb.o
-> diff --git a/drivers/phy/phy-mvebu-sata.c b/drivers/phy/phy-mvebu-sata.c
-> new file mode 100644
-> index 000000000000..d43786f62437
-> --- /dev/null
-> +++ b/drivers/phy/phy-mvebu-sata.c
-> @@ -0,0 +1,137 @@
-> +/*
-> + *	phy-mvebu-sata.c: SATA Phy driver for the Marvell mvebu SoCs.
-> + *
-> + *	Copyright (C) 2013 Andrew Lunn <andrew@lunn.ch>
-> + *
-> + *	This program is free software; you can redistribute it and/or
-> + *	modify it under the terms of the GNU General Public License
-> + *	as published by the Free Software Foundation; either version
-> + *	2 of the License, or (at your option) any later version.
-> + */
-> +
-> +#include <linux/kernel.h>
-> +#include <linux/module.h>
-> +#include <linux/clk.h>
-> +#include <linux/phy/phy.h>
-> +#include <linux/io.h>
-> +#include <linux/platform_device.h>
-> +
-> +struct priv {
-> +	struct clk	*clk;
-> +	void __iomem	*base;
-> +};
-> +
-> +#define SATA_PHY_MODE_2	0x0330
-> +#define  MODE_2_FORCE_PU_TX	BIT(0)
-> +#define  MODE_2_FORCE_PU_RX	BIT(1)
-> +#define  MODE_2_PU_PLL		BIT(2)
-> +#define  MODE_2_PU_IVREF	BIT(3)
-> +#define SATA_IF_CTRL	0x0050
-> +#define  CTRL_PHY_SHUTDOWN	BIT(9)
-> +
-> +static int phy_mvebu_sata_power_on(struct phy *phy)
-> +{
-> +	struct priv *priv = phy_get_drvdata(phy);
-> +	u32 reg;
-> +
-> +	clk_prepare_enable(priv->clk);
-> +
-> +	/* Enable PLL and IVREF */
-> +	reg = readl(priv->base + SATA_PHY_MODE_2);
-> +	reg |= (MODE_2_FORCE_PU_TX | MODE_2_FORCE_PU_RX |
-> +		MODE_2_PU_PLL | MODE_2_PU_IVREF);
-> +	writel(reg , priv->base + SATA_PHY_MODE_2);
-> +
-> +	/* Enable PHY */
-> +	reg = readl(priv->base + SATA_IF_CTRL);
-> +	reg &= ~CTRL_PHY_SHUTDOWN;
-> +	writel(reg, priv->base + SATA_IF_CTRL);
-> +
-> +	clk_disable_unprepare(priv->clk);
-> +
-> +	return 0;
-> +}
-> +
-> +static int phy_mvebu_sata_power_off(struct phy *phy)
-> +{
-> +	struct priv *priv = phy_get_drvdata(phy);
-> +	u32 reg;
-> +
-> +	clk_prepare_enable(priv->clk);
-> +
-> +	/* Disable PLL and IVREF */
-> +	reg = readl(priv->base + SATA_PHY_MODE_2);
-> +	reg &= ~(MODE_2_FORCE_PU_TX | MODE_2_FORCE_PU_RX |
-> +		 MODE_2_PU_PLL | MODE_2_PU_IVREF);
-> +	writel(reg, priv->base + SATA_PHY_MODE_2);
-> +
-> +	/* Disable PHY */
-> +	reg = readl(priv->base + SATA_IF_CTRL);
-> +	reg |= CTRL_PHY_SHUTDOWN;
-> +	writel(reg, priv->base + SATA_IF_CTRL);
-> +
-> +	clk_disable_unprepare(priv->clk);
-> +
-> +	return 0;
-> +}
-> +
-> +static struct phy_ops phy_mvebu_sata_ops = {
-> +	.power_on	= phy_mvebu_sata_power_on,
-> +	.power_off	= phy_mvebu_sata_power_off,
-> +	.owner		= THIS_MODULE,
-> +};
-> +
-> +static int phy_mvebu_sata_probe(struct platform_device *pdev)
-> +{
-> +	struct phy_provider *phy_provider;
-> +	struct resource *res;
-> +	struct priv *priv;
-> +	struct phy *phy;
-> +
-> +	priv = devm_kzalloc(&pdev->dev, sizeof(*priv), GFP_KERNEL);
-> +
-> +	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-> +	priv->base = devm_ioremap_resource(&pdev->dev, res);
-> +	if (IS_ERR(priv->base))
-> +		return PTR_ERR(priv->base);
-> +
-> +	priv->clk = devm_clk_get(&pdev->dev, "sata");
-> +	if (IS_ERR(priv->clk))
-> +		return PTR_ERR(priv->clk);
-> +
-> +	phy_provider = devm_of_phy_provider_register(&pdev->dev,
-> +						     of_phy_simple_xlate);
-> +	if (IS_ERR(phy_provider))
-> +		return PTR_ERR(phy_provider);
-> +
-> +	phy = devm_phy_create(&pdev->dev, &phy_mvebu_sata_ops, NULL);
-> +	if (IS_ERR(phy))
-> +		return PTR_ERR(phy);
-> +
-> +	phy_set_drvdata(phy, priv);
-
-recently Felipe found a bug and phy_provider should be registered as the last
-step. If you can fix that up, I can queue it.
+I am new to this mailing list. I got AER driver working for my platform with a pcie root complex driver. However one of my customer is using AHCI over PCI and I find that the driver currently doesn't provide error handler and ignore pci errors. Is this intentional? Could someone provide some input on this? I had to add code to enable error bits (PCI_COMMAND) and call pci_enable_pcie_error_reporting () to enable error reporting to the driver to test the AER driver. But curious why this is currently not supported in the driver. If there is any patch to address, please provide me a link.
 
 Thanks
-Kishon
-> +
-> +	/* The boot loader may of left it on. Turn it off. */
-> +	phy_mvebu_sata_power_off(phy);
-> +
-> +	return 0;
-> +}
-> +
-> +static const struct of_device_id phy_mvebu_sata_of_match[] = {
-> +	{ .compatible = "marvell,mvebu-sata-phy" },
-> +	{ },
-> +};
-> +MODULE_DEVICE_TABLE(of, phy_mvebu_sata_of_match);
-> +
-> +static struct platform_driver phy_mvebu_sata_driver = {
-> +	.probe	= phy_mvebu_sata_probe,
-> +	.driver = {
-> +		.name	= "phy-mvebu-sata",
-> +		.owner	= THIS_MODULE,
-> +		.of_match_table	= phy_mvebu_sata_of_match,
-> +	}
-> +};
-> +module_platform_driver(phy_mvebu_sata_driver);
-> +
-> +MODULE_AUTHOR("Andrew Lunn <andrew@lunn.ch>");
-> +MODULE_DESCRIPTION("Marvell MVEBU SATA PHY driver");
-> +MODULE_LICENSE("GPL v2");
-> 
+
+static struct pci_driver ahci_pci_driver = {
+        .name                   = DRV_NAME,
+        .id_table               = ahci_pci_tbl,
+        .probe                  = ahci_init_one,
+        .remove                 = ata_pci_remove_one,
+#ifdef CONFIG_PM
+        .suspend                = ahci_pci_device_suspend,
+        .resume                 = ahci_pci_device_resume,
+#endif
+};
+
+struct pci_driver {             
+        struct list_head node;  
+        const char *name;
+        const struct pci_device_id *id_table;   /* must be non-NULL for probe to be called */
+        int  (*probe)  (struct pci_dev *dev, const struct pci_device_id *id);   /* New device inserted */
+        void (*remove) (struct pci_dev *dev);   /* Device removed (NULL if not a hot-plug capable driver) */
+        int  (*suspend) (struct pci_dev *dev, pm_message_t state);      /* Device suspended */
+        int  (*suspend_late) (struct pci_dev *dev, pm_message_t state);
+        int  (*resume_early) (struct pci_dev *dev);
+        int  (*resume) (struct pci_dev *dev);                   /* Device woken up */
+        void (*shutdown) (struct pci_dev *dev);
+        int (*sriov_configure) (struct pci_dev *dev, int num_vfs); /* PF pdev */
+        const struct pci_error_handlers *err_handler;
+        struct device_driver    driver;
+        struct pci_dynids dynids;
+};
+
+Murali Karicheri
+Linux Kernel, Software Development
+
 
