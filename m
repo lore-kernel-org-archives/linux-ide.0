@@ -1,46 +1,47 @@
 From: Jason Cooper <jason@lakedaemon.net>
-Subject: Re: [PATCH 1/4] Phy: DT binding documentation for Marvell MVEBU
- SATA phy.
-Date: Thu, 19 Dec 2013 22:21:15 -0500
-Message-ID: <20131220032115.GD2609@titan.lakedaemon.net>
+Subject: Re: [PATCH 3/4] SATA: MV: Add support for the optional PHYs
+Date: Thu, 19 Dec 2013 22:25:45 -0500
+Message-ID: <20131220032545.GE2609@titan.lakedaemon.net>
 References: <1387311713-1926-1-git-send-email-andrew@lunn.ch>
+ <1387311713-1926-3-git-send-email-andrew@lunn.ch>
+ <52B140F2.8070900@ti.com> <20131219190329.GH4143@lunn.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:27204 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751031Ab3LTDV0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Dec 2013 22:21:26 -0500
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
 Content-Disposition: inline
-In-Reply-To: <1387311713-1926-1-git-send-email-andrew@lunn.ch>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+In-Reply-To: <20131219190329.GH4143@lunn.ch>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
 To: Andrew Lunn <andrew@lunn.ch>
-Cc: kishon@ti.com, devicetree@vger.kernel.org, linux-ide@vger.kernel.org, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>, linux ARM <linux-arm-kernel@lists.infradead.org>
+Cc: devicetree@vger.kernel.org, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>, Kishon Vijay Abraham I <kishon@ti.com>, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, Gregory Clement <gregory.clement@free-electrons.com>, linux ARM <linux-arm-kernel@lists.infradead.org>
+List-Id: linux-ide@vger.kernel.org
 
-On Tue, Dec 17, 2013 at 09:21:49PM +0100, Andrew Lunn wrote:
-> Describe the binding for the Marvell MVEBU SATA phy. This driver
-> can be used at least with Kirkwood, Dove and maybe others.
-> Additionally, update the SATA binding with the properties to link
-> to the phy nodes.
+On Thu, Dec 19, 2013 at 08:03:29PM +0100, Andrew Lunn wrote:
+> On Wed, Dec 18, 2013 at 12:00:10PM +0530, Kishon Vijay Abraham I wrote:
+> > Hi Tejun,
+> > 
+> > On Wednesday 18 December 2013 01:51 AM, Andrew Lunn wrote:
+> > > Some Marvell SoCs have a SATA PHY which can be powered off, in order
+> > > to save power. Make use of the generic phy framework to control these
+> > > phys.
+> > 
+> > I can queue this patch along with the other patches in this series if you don't
+> > expect any merge issues.
 > 
-> Signed-off-by: Andrew Lunn <andrew@lunn.ch>
-> ---
-> v1->v2:
-> Correct #phy-cells
-> Correct number after @ to match first reg address.
-> Rename to phy-mvebu.txt
+> Hi Kishon
 > 
-> v2->v3:
-> Renamed to mvebu-phy.txt
-> Use "port0", "port1" instead of "0", "1"
-> ---
->  Documentation/devicetree/bindings/ata/marvell.txt  |  6 ++++++
->  .../devicetree/bindings/phy/mvebu-phy.txt          | 22 ++++++++++++++++++++++
->  2 files changed, 28 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/phy/mvebu-phy.txt
+> I expect merge issues with the DT and the DT binding documentation. It
+> would be best if Jason took those parts.
 
-Acked-by: Jason Cooper <jason@lakedaemon.net>
+I'd prefer to keep the DT binding docs with the driver patches.
 
 thx,
 
