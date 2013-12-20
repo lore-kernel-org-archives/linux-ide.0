@@ -1,48 +1,106 @@
-From: Jason Cooper <jason@lakedaemon.net>
-Subject: Re: [PATCH 3/4] SATA: MV: Add support for the optional PHYs
-Date: Thu, 19 Dec 2013 22:25:45 -0500
-Message-ID: <20131220032545.GE2609@titan.lakedaemon.net>
-References: <1387311713-1926-1-git-send-email-andrew@lunn.ch>
- <1387311713-1926-3-git-send-email-andrew@lunn.ch>
- <52B140F2.8070900@ti.com> <20131219190329.GH4143@lunn.ch>
+From: Mel Gorman <mgorman@suse.de>
+Subject: LSF/MM 2014 Call For Proposals
+Date: Fri, 20 Dec 2013 09:30:22 +0000
+Message-ID: <20131220093022.GV11295@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Content-Type: text/plain; charset=iso-8859-15
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20131219190329.GH4143@lunn.ch>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Andrew Lunn <andrew@lunn.ch>
-Cc: devicetree@vger.kernel.org, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>, Kishon Vijay Abraham I <kishon@ti.com>, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, Gregory Clement <gregory.clement@free-electrons.com>, linux ARM <linux-arm-kernel@lists.infradead.org>
+Sender: owner-linux-mm@kvack.org
+To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, lsf-pc@lists.linux-foundation.org
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, Dec 19, 2013 at 08:03:29PM +0100, Andrew Lunn wrote:
-> On Wed, Dec 18, 2013 at 12:00:10PM +0530, Kishon Vijay Abraham I wrote:
-> > Hi Tejun,
-> > 
-> > On Wednesday 18 December 2013 01:51 AM, Andrew Lunn wrote:
-> > > Some Marvell SoCs have a SATA PHY which can be powered off, in order
-> > > to save power. Make use of the generic phy framework to control these
-> > > phys.
-> > 
-> > I can queue this patch along with the other patches in this series if you don't
-> > expect any merge issues.
-> 
-> Hi Kishon
-> 
-> I expect merge issues with the DT and the DT binding documentation. It
-> would be best if Jason took those parts.
+The annual Linux Storage, Filesystem and Memory Management Summit for
+2014 will be held on March 24th and 25th before the Linux Foundation
+Collaboration summit at The Meritage Resort, Napa Valley, CA.
 
-I'd prefer to keep the DT binding docs with the driver patches.
+	http://events.linuxfoundation.org/events/linux-storage-filesystem-and-mm-summit
+	http://events.linuxfoundation.org/events/collaboration-summit
 
-thx,
+Note that we are running LSF/MM a little earlier in 2014 than in previous
+years.
 
-Jason.
+On behalf of the committee I would like to issue a call for agenda proposals
+that are suitable for cross-track discussion as well as more technical
+subjects for discussion in the breakout sessions.
+
+1) Suggestions for agenda topics should be sent before January 31st
+2014 to:
+
+	lsf-pc@lists.linux-foundation.org
+
+and cc the Linux list or lists that are most interested in it:
+
+	ATA: linux-ide@vger.kernel.org
+	FS: linux-fsdevel@vger.kernel.org
+	MM: linux-mm@kvack.org
+	SCSI: linux-scsi@vger.kernel.org
+
+People who need more time for visa applications should send proposals before
+January 15th. The committee will complete the first round of selections
+on that date to accommodate applications.
+
+Please remember to tag your subject with [LSF/MM TOPIC] to make it
+easier to track. Agenda topics and attendees will be selected by the
+program committee, but the final agenda will be formed by consensus of
+the attendees on the day.
+
+We will try to cap attendance at around 25-30 per track to facilitate
+discussions although the final numbers will depend on the room sizes at
+the venue.
+
+2) Requests to attend the summit should be sent to:
+
+	lsf-pc@lists.linux-foundation.org
+
+Please summarize what expertise you will bring to the meeting, and what
+you would like to discuss. Please also tag your email with [LSF/MM ATTEND]
+so there is less chance of it getting lost in the large mail pile.
+
+Presentations are allowed to guide discussion, but are strongly
+discouraged. There will be no recording or audio bridge. However, we expect
+that written minutes will be published as we did in previous years
+
+2013:
+	http://lwn.net/Articles/548089/
+
+2012:
+	http://lwn.net/Articles/490114/
+	http://lwn.net/Articles/490501/
+
+2011:
+	http://lwn.net/Articles/436871/
+	http://lwn.net/Articles/437066/
+
+3) If you have feedback on last year's meeting that we can use to
+improve this year's, please also send that to:
+
+	lsf-pc@lists.linux-foundation.org
+
+Thank you on behalf of the program committee:
+
+Storage:
+	James Bottomley
+	Martin K. Petersen
+
+Filesystems:
+	Trond Myklebust
+	Jeff Layton
+	Dave Chinner
+	Jan Kara
+	Ted Ts'o
+
+MM:
+	Rik van Riel
+	Michel Lespinasse
+
+-- 
+Mel Gorman
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
