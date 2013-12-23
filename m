@@ -1,43 +1,70 @@
-From: Loc Ho <lho@apm.com>
-Subject: Re: [PATCH v6 0/4] ata: Add APM X-Gene SoC SATA host controller support
-Date: Sun, 22 Dec 2013 21:50:45 -0800
-Message-ID: <CAPw-ZTn2n-HFa+1nExdEKZ6ETjODFjU4+ts5JxDhnn5dbG3xMw@mail.gmail.com>
-References: <1386834940-30875-1-git-send-email-lho@apm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from exprod5og115.obsmtp.com ([64.18.0.246]:54221 "HELO
-	exprod5og115.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751362Ab3LWFur (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Dec 2013 00:50:47 -0500
-Received: by mail-qc0-f170.google.com with SMTP id x13so4586654qcv.1
-        for <linux-ide@vger.kernel.org>; Sun, 22 Dec 2013 21:50:46 -0800 (PST)
-In-Reply-To: <1386834940-30875-1-git-send-email-lho@apm.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Simon Guinot <simon.guinot@sequanux.org>
+Subject: [PATCH] ata: sata_mv: setting PHY speed according to SControl speed
+Date: Mon, 23 Dec 2013 13:07:35 +0100
+Message-ID: <1387800455-30629-1-git-send-email-simon.guinot@sequanux.org>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@redhat.com>, Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Lior Amsalem <alior@marvell.com>, Simon Guinot <simon.guinot@sequanux.org>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, stable@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Arnd Bergmann <arnd@arndb.de>
-Cc: Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Jon Masters <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-Hi All,
+From: Lior Amsalem <alior@marvell.com>
 
-Any comment on v6 SATA host controller driver before I post v7 which
-fix the clock DTS entry and etc due to the clock change in v5 of the
-PHY driver?
+From: Lior Amsalem <alior@marvell.com>
 
--Loc
+This patch fixes a SATA hotplug issue on the Armada 370 and Armada XP
+SoCs. Without it, if a disk is unplugged from a SATA port, then further
+hotplug notification are now longer received on this port.
 
-On Wed, Dec 11, 2013 at 11:55 PM, Loc Ho <lho@apm.com> wrote:
-> This patch adds support for the APM X-Gene SoC SATA host controller. In
-> order for the host controller to work, the corresponding PHY driver
-> musts also be available.
->
-> v6:
->  * Update binding documentation
->  * Change select PHY_XGENE_SATA to PHY_XGENE
->  * Add ULL to constants
->  * Change indentation and comments
->  * Clean up the probe functions a bit more
->  * Remove xgene_ahci_remove function
->  * Add the flush register to DTS
->  * Remove the interrupt-parent from DTS
->
+This should be applied to every -stable kernel supporting Armada SoCs.
+
+Signed-off-by: Lior Amsalem <alior@marvell.com>
+Signed-off-by: Nadav Haklai <nadavh@marvell.com>
+Signed-off-by: Simon Guinot <simon.guinot@sequanux.org>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Jason Cooper <jason@lakedaemon.net>
+Cc: Andrew Lunn <andrew@lunn.ch>
+Cc: Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Cc: stable@vger.kernel.org
+---
+ drivers/ata/sata_mv.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index 56be318..89ca472 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -304,6 +304,7 @@ enum {
+ 	MV5_LTMODE		= 0x30,
+ 	MV5_PHY_CTL		= 0x0C,
+ 	SATA_IFCFG		= 0x050,
++	LP_PHY_CTL		= 0x058,
+ 
+ 	MV_M2_PREAMP_MASK	= 0x7e0,
+ 
+@@ -1358,6 +1359,7 @@ static int mv_scr_write(struct ata_link *link, unsigned int sc_reg_in, u32 val)
+ 
+ 	if (ofs != 0xffffffffU) {
+ 		void __iomem *addr = mv_ap_base(link->ap) + ofs;
++		void __iomem *lp_phy_addr = mv_ap_base(link->ap) + LP_PHY_CTL;
+ 		if (sc_reg_in == SCR_CONTROL) {
+ 			/*
+ 			 * Workaround for 88SX60x1 FEr SATA#26:
+@@ -1374,6 +1376,14 @@ static int mv_scr_write(struct ata_link *link, unsigned int sc_reg_in, u32 val)
+ 			 */
+ 			if ((val & 0xf) == 1 || (readl(addr) & 0xf) == 1)
+ 				val |= 0xf000;
++
++			/*
++			 * Setting PHY speed according to SControl speed
++			 */
++			if ((val & 0xf0) == 0x10)
++				writelfl(0x7, lp_phy_addr);
++			else
++				writelfl(0x227, lp_phy_addr);
+ 		}
+ 		writelfl(val, addr);
+ 		return 0;
+-- 
+1.8.5.1
