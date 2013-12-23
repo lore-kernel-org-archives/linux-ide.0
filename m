@@ -1,50 +1,43 @@
-From: Jason Cooper <jason@lakedaemon.net>
-Subject: Re: [PATCH 4/4] Phy: Add DT nodes on kirkwood and Dove for the
- SATA PHY
-Date: Sun, 22 Dec 2013 12:21:49 -0500
-Message-ID: <20131222172149.GJ2609@titan.lakedaemon.net>
-References: <1387311713-1926-1-git-send-email-andrew@lunn.ch>
- <1387311713-1926-4-git-send-email-andrew@lunn.ch>
+From: Loc Ho <lho@apm.com>
+Subject: Re: [PATCH v6 0/4] ata: Add APM X-Gene SoC SATA host controller support
+Date: Sun, 22 Dec 2013 21:50:45 -0800
+Message-ID: <CAPw-ZTn2n-HFa+1nExdEKZ6ETjODFjU4+ts5JxDhnn5dbG3xMw@mail.gmail.com>
+References: <1386834940-30875-1-git-send-email-lho@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:54458 "EHLO
-	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754018Ab3LVRWA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Dec 2013 12:22:00 -0500
-Content-Disposition: inline
-In-Reply-To: <1387311713-1926-4-git-send-email-andrew@lunn.ch>
+Received: from exprod5og115.obsmtp.com ([64.18.0.246]:54221 "HELO
+	exprod5og115.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751362Ab3LWFur (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Dec 2013 00:50:47 -0500
+Received: by mail-qc0-f170.google.com with SMTP id x13so4586654qcv.1
+        for <linux-ide@vger.kernel.org>; Sun, 22 Dec 2013 21:50:46 -0800 (PST)
+In-Reply-To: <1386834940-30875-1-git-send-email-lho@apm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Lunn <andrew@lunn.ch>
-Cc: kishon@ti.com, devicetree@vger.kernel.org, linux-ide@vger.kernel.org, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>, linux ARM <linux-arm-kernel@lists.infradead.org>
+To: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Arnd Bergmann <arnd@arndb.de>
+Cc: Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Jon Masters <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-On Tue, Dec 17, 2013 at 09:21:52PM +0100, Andrew Lunn wrote:
-> Add nodes for the two SATA PHYs on kirkwood.
-> Add node for the one SATA PHY on Dove.
-> Add pHandles to the PHYs in the sata nodes.
-> 
-> Signed-off-by: Andrew Lunn <andrew@lunn.ch>
-> ---
-> v1->v2:
-> sata_phy@... ->sata-phy@
-> value after '@' matching the first address in the reg.
-> 
-> v2->v3:
-> "0" -> "port0", etc.
-> kirkewood -> kirkwood
-> ---
->  arch/arm/boot/dts/dove.dtsi          | 11 +++++++++++
->  arch/arm/boot/dts/kirkwood-6281.dtsi |  2 ++
->  arch/arm/boot/dts/kirkwood-6282.dtsi |  2 ++
->  arch/arm/boot/dts/kirkwood.dtsi      | 18 ++++++++++++++++++
->  4 files changed, 33 insertions(+)
+Hi All,
 
-Applied to mvebu/dt with Kishon's Ack.
+Any comment on v6 SATA host controller driver before I post v7 which
+fix the clock DTS entry and etc due to the clock change in v5 of the
+PHY driver?
 
-Please double check me, I had to shuffle dove.dtsi since I recently
-sorted the nodes under the ocp bus.
+-Loc
 
-thx,
-
-Jason.
+On Wed, Dec 11, 2013 at 11:55 PM, Loc Ho <lho@apm.com> wrote:
+> This patch adds support for the APM X-Gene SoC SATA host controller. In
+> order for the host controller to work, the corresponding PHY driver
+> musts also be available.
+>
+> v6:
+>  * Update binding documentation
+>  * Change select PHY_XGENE_SATA to PHY_XGENE
+>  * Add ULL to constants
+>  * Change indentation and comments
+>  * Clean up the probe functions a bit more
+>  * Remove xgene_ahci_remove function
+>  * Add the flush register to DTS
+>  * Remove the interrupt-parent from DTS
+>
