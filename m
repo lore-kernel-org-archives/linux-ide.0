@@ -1,70 +1,41 @@
 From: Simon Guinot <simon.guinot@sequanux.org>
-Subject: [PATCH] ata: sata_mv: setting PHY speed according to SControl speed
-Date: Mon, 23 Dec 2013 13:07:35 +0100
-Message-ID: <1387800455-30629-1-git-send-email-simon.guinot@sequanux.org>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@redhat.com>, Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Lior Amsalem <alior@marvell.com>, Simon Guinot <simon.guinot@sequanux.org>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, stable@vger.kernel.org
+Subject: [PATCH] ahci: add PCI ID for Marvell 88SE9170 SATA controller
+Date: Mon, 23 Dec 2013 13:24:35 +0100
+Message-ID: <1387801475-32451-1-git-send-email-simon.guinot@sequanux.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from vm1.sequanux.org ([188.165.36.56]:52908 "EHLO vm1.sequanux.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751314Ab3LWMYq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 23 Dec 2013 07:24:46 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, Simon Guinot <sguinot@lacie.com>
 
-From: Lior Amsalem <alior@marvell.com>
+From: Simon Guinot <sguinot@lacie.com>
 
-From: Lior Amsalem <alior@marvell.com>
+This patch adds support for the PCI ID provided by the Marvell 88SE9170
+SATA controller.
 
-This patch fixes a SATA hotplug issue on the Armada 370 and Armada XP
-SoCs. Without it, if a disk is unplugged from a SATA port, then further
-hotplug notification are now longer received on this port.
-
-This should be applied to every -stable kernel supporting Armada SoCs.
-
-Signed-off-by: Lior Amsalem <alior@marvell.com>
-Signed-off-by: Nadav Haklai <nadavh@marvell.com>
-Signed-off-by: Simon Guinot <simon.guinot@sequanux.org>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Jason Cooper <jason@lakedaemon.net>
-Cc: Andrew Lunn <andrew@lunn.ch>
-Cc: Gregory Clement <gregory.clement@free-electrons.com>
-Cc: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Cc: stable@vger.kernel.org
+Signed-off-by: Simon Guinot <sguinot@lacie.com>
 ---
- drivers/ata/sata_mv.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/ata/ahci.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index 56be318..89ca472 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -304,6 +304,7 @@ enum {
- 	MV5_LTMODE		= 0x30,
- 	MV5_PHY_CTL		= 0x0C,
- 	SATA_IFCFG		= 0x050,
-+	LP_PHY_CTL		= 0x058,
- 
- 	MV_M2_PREAMP_MASK	= 0x7e0,
- 
-@@ -1358,6 +1359,7 @@ static int mv_scr_write(struct ata_link *link, unsigned int sc_reg_in, u32 val)
- 
- 	if (ofs != 0xffffffffU) {
- 		void __iomem *addr = mv_ap_base(link->ap) + ofs;
-+		void __iomem *lp_phy_addr = mv_ap_base(link->ap) + LP_PHY_CTL;
- 		if (sc_reg_in == SCR_CONTROL) {
- 			/*
- 			 * Workaround for 88SX60x1 FEr SATA#26:
-@@ -1374,6 +1376,14 @@ static int mv_scr_write(struct ata_link *link, unsigned int sc_reg_in, u32 val)
- 			 */
- 			if ((val & 0xf) == 1 || (readl(addr) & 0xf) == 1)
- 				val |= 0xf000;
-+
-+			/*
-+			 * Setting PHY speed according to SControl speed
-+			 */
-+			if ((val & 0xf0) == 0x10)
-+				writelfl(0x7, lp_phy_addr);
-+			else
-+				writelfl(0x227, lp_phy_addr);
- 		}
- 		writelfl(val, addr);
- 		return 0;
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 3d67f76..3f1794f 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -427,6 +427,9 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	  .driver_data = board_ahci_yes_fbs },			/* 88se9128 */
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9125),
+ 	  .driver_data = board_ahci_yes_fbs },			/* 88se9125 */
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_MARVELL_EXT, 0x9178,
++			 PCI_VENDOR_ID_MARVELL_EXT, 0x9170),
++	  .driver_data = board_ahci_yes_fbs },			/* 88se9170 */
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x917a),
+ 	  .driver_data = board_ahci_yes_fbs },			/* 88se9172 */
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9172),
 -- 
 1.8.5.1
+
