@@ -1,42 +1,52 @@
-From: Andrew Lunn <andrew@lunn.ch>
-Subject: Re: [PATCH] ata: sata_mv: setting PHY speed according to SControl
- speed
-Date: Wed, 25 Dec 2013 17:41:19 +0100
-Message-ID: <20131225164119.GC31584@lunn.ch>
-References: <1387800455-30629-1-git-send-email-simon.guinot@sequanux.org>
- <20131224194603.GE19878@titan.lakedaemon.net>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [GIT PULL] libata fixes for v3.13-rc5
+Date: Wed, 25 Dec 2013 23:12:42 +0100
+Message-ID: <1667032.A7Knz5cBng@vostro.rjw.lan>
+References: <Pine.LNX.4.44L0.1312250955470.9215-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20131224194603.GE19878@titan.lakedaemon.net>
-Sender: stable-owner@vger.kernel.org
-To: Jason Cooper <jason@lakedaemon.net>
-Cc: Simon Guinot <simon.guinot@sequanux.org>, Jeff Garzik <jgarzik@redhat.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Lior Amsalem <alior@marvell.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Andrew Lunn <andrew@lunn.ch>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, stable@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.1312250955470.9215-100000@netrider.rowland.org>
+Sender: linux-pm-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Tejun Heo <tj@kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-pm@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, Dec 24, 2013 at 02:46:03PM -0500, Jason Cooper wrote:
-> On Mon, Dec 23, 2013 at 01:07:35PM +0100, Simon Guinot wrote:
-> > From: Lior Amsalem <alior@marvell.com>
-> > 
-> > From: Lior Amsalem <alior@marvell.com>
-> > 
-> > This patch fixes a SATA hotplug issue on the Armada 370 and Armada XP
-> > SoCs. Without it, if a disk is unplugged from a SATA port, then further
-> > hotplug notification are now longer received on this port.
-> > 
-> > This should be applied to every -stable kernel supporting Armada SoCs.
+On Wednesday, December 25, 2013 09:57:09 AM Alan Stern wrote:
+> On Wed, 25 Dec 2013, Rafael J. Wysocki wrote:
 > 
-> Could we get a little more specific here?  Please determine which commit
-> introduced the regression and note it with 'Fixes: <commitish> "oneline"'
+> > On Tuesday, December 24, 2013 04:55:46 PM Alan Stern wrote:
+> > > On Tue, 24 Dec 2013, Tejun Heo wrote:
+> > > 
+> > > > Hello, Linus.
+> > > > 
+> > > > libata fixes for v3.13-rc5.  There's one interseting commit - "libata,
+> > > > freezer: avoid block device removal while system is frozen".  It's an
+> > > > ugly hack working around a deadlock condition between driver core
+> > > > resume and block layer device removal paths through freezer which was
+> > > > made more reproducible by writeback being converted to workqueue some
+> > > > releases ago.  The bug has nothing to do with libata but it's just an
+> > > > workaround which is easy to backport.  After discussion, Rafael and I
+> > > > seem to agree that we don't really need kernel freezables - both
+> > > > kthread and workqueue.  There are few specific workqueues which
+> > > > constitute PM operations and require freezing, which will be converted
+> > > > to use workqueue_set_max_active() instead.  All other kernel freezer
+> > > > uses are planned to be removed, followed by the removal of kthread and
+> > > > workqueue freezer support, hopefully.
+> > > 
+> > > Wait a minute.  I don't recall anybody mentioning this earlier.  What 
+> > > about khubd?  There isn't any plan to remove _it_.
+> > 
+> > No, but we are going to replace the freezing of kernel stuff with something
+> > more direct, like "suspend" routines called from the system suspend code path
+> > and causing things to stop (and corresponding "resume" starting them again).
 > 
-> It's really needed here since the sata_mv driver predates the Armada
-> SoCs introduction.  Is it possible Kirkwood et al also experience this
-> problem?
+> Is this discussed in more detail somewhere (an email thread, for
+> example)?
 
-Hi Jason
+This one, more or less: https://lkml.org/lkml/2013/12/13/402
 
-It is on my TODO list to try this out on Kirkwood and Dove. I'm pretty
-sure replug works on Dove without this, not tried Kirkwood yet.
+Thanks,
+Rafael
 
-     Andrew
