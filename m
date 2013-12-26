@@ -1,47 +1,39 @@
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH] ata: sata_mv: setting PHY speed according to SControl
- speed
-Date: Thu, 26 Dec 2013 14:34:07 +0100
-Message-ID: <20131226143407.5c187277@skate>
-References: <1387800455-30629-1-git-send-email-simon.guinot@sequanux.org>
-	<20131224194603.GE19878@titan.lakedaemon.net>
-	<20131225224034.GB5531@kw.sim.vm.gnt>
-	<20131226085355.2fd1969c@skate>
-	<20131226115428.GC5531@kw.sim.vm.gnt>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 62351] Marvell PCIe SSD controller 0x9183 suspend/resume
+ problem
+Date: Thu, 26 Dec 2013 14:29:09 +0000
+Message-ID: <bug-62351-11633-xQiNs9w0kO@https.bugzilla.kernel.org/>
+References: <bug-62351-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20131226115428.GC5531@kw.sim.vm.gnt>
-Sender: stable-owner@vger.kernel.org
-To: Simon Guinot <simon.guinot@sequanux.org>
-Cc: Jason Cooper <jason@lakedaemon.net>, Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>, stable@vger.kernel.org, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, Gregory Clement <gregory.clement@free-electrons.com>, Jeff Garzik <jgarzik@redhat.com>, linux-arm-kernel@lists.infradead.org, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.19.201]:50991 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753123Ab3LZO3N (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 26 Dec 2013 09:29:13 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 2BF522015E
+	for <linux-ide@vger.kernel.org>; Thu, 26 Dec 2013 14:29:12 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 05C5920158
+	for <linux-ide@vger.kernel.org>; Thu, 26 Dec 2013 14:29:10 +0000 (UTC)
+In-Reply-To: <bug-62351-11633@https.bugzilla.kernel.org/>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Dear Simon Guinot,
+https://bugzilla.kernel.org/show_bug.cgi?id=62351
 
-On Thu, 26 Dec 2013 12:54:28 +0100, Simon Guinot wrote:
+Lionel Landwerlin <llandwerlin@gmail.com> changed:
 
-> > In some sense, we could say that this is not a regression. According to
-> > what you mean, SATA hotplug has *never* been working on Armada 370/XP.
-> > So technically, it could be seen as a new feature for this platform,
-> > and is therefore not a regression (i.e something that used to work, and
-> > that no longer works). There has been no kernel release for which SATA
-> > hotplug was working for Armada 370/XP.
-> 
-> I agree with that. It is not correct to call this issue a regression.
-> But, it would also be nice to have this patch applied in the stable
-> branches 3.10 and onwards. Maybe, I could just add this information
-> while CC'ing Linux stable ?
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |llandwerlin@gmail.com
 
-Yes. Even though not a regression, I believe it qualifies for -stable,
-at least according to the rules in
-Documentation/stable_kernel_rules.txt.
+--- Comment #8 from Lionel Landwerlin <llandwerlin@gmail.com> ---
+*** Bug 67721 has been marked as a duplicate of this bug. ***
 
-Best regards,
-
-Thomas
 -- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+You are receiving this mail because:
+You are on the CC list for the bug.
