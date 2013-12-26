@@ -1,91 +1,210 @@
 From: Andrew Lunn <andrew@lunn.ch>
-Subject: [PATCH v4 1/4] Phy: DT binding documentation for Marvell MVEBU SATA phy.
-Date: Thu, 26 Dec 2013 18:25:39 +0100
-Message-ID: <1388078742-6726-2-git-send-email-andrew@lunn.ch>
+Subject: [PATCH v4 2/4] Phy: Add a PHY driver for Marvell MVEBU SATA PHY.
+Date: Thu, 26 Dec 2013 18:25:40 +0100
+Message-ID: <1388078742-6726-3-git-send-email-andrew@lunn.ch>
 References: <20131219194237.GC22725@htj.dyndns.org>
  <1388078742-6726-1-git-send-email-andrew@lunn.ch>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vps0.lunn.ch ([178.209.37.122]:42347 "EHLO vps0.lunn.ch"
+Received: from vps0.lunn.ch ([178.209.37.122]:42360 "EHLO vps0.lunn.ch"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753153Ab3LZR0u (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 26 Dec 2013 12:26:50 -0500
+	id S1753425Ab3LZR0x (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 26 Dec 2013 12:26:53 -0500
 In-Reply-To: <1388078742-6726-1-git-send-email-andrew@lunn.ch>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jason Cooper <jason@lakedaemon.net>, kishon@ti.com, tj@kernel.org
 Cc: devicetree@vger.kernel.org, linux-ide@vger.kernel.org, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>, Andrew Lunn <andrew@lunn.ch>
 
-Describe the binding for the Marvell MVEBU SATA phy. This driver
-can be used at least with Kirkwood, Dove and maybe others.
-Additionally, update the SATA binding with the properties to link
-to the phy nodes.
+Kirkwood and Dove can turn the SATA phy on and off. Add a PHY driver
+to control this.
 
 Signed-off-by: Andrew Lunn <andrew@lunn.ch>
 ---
 v1->v2:
-Correct #phy-cells
-Correct number after @ to match first reg address.
-Rename to phy-mvebu.txt
+Use #defines instead of magic values
+select GENERIC_PHY in Kconfig.
 
-v2->v3:
-Renamed to mvebu-phy.txt
-Use "port0", "port1" instead of "0", "1"
+v3->v4
+
+Register phy_provider as the last step.
 ---
- Documentation/devicetree/bindings/ata/marvell.txt  |    6 ++++++
- .../devicetree/bindings/phy/mvebu-phy.txt          |   22 ++++++++++++++++++++
- 2 files changed, 28 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/phy/mvebu-phy.txt
+ drivers/phy/Kconfig          |    6 ++
+ drivers/phy/Makefile         |    1 +
+ drivers/phy/phy-mvebu-sata.c |  137 ++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 144 insertions(+)
+ create mode 100644 drivers/phy/phy-mvebu-sata.c
 
-diff --git a/Documentation/devicetree/bindings/ata/marvell.txt b/Documentation/devicetree/bindings/ata/marvell.txt
-index b5cdd20..4c5447f 100644
---- a/Documentation/devicetree/bindings/ata/marvell.txt
-+++ b/Documentation/devicetree/bindings/ata/marvell.txt
-@@ -6,11 +6,17 @@ Required Properties:
- - interrupts    : Interrupt controller is using
- - nr-ports      : Number of SATA ports in use.
+diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
+index a344f3d..7464d31 100644
+--- a/drivers/phy/Kconfig
++++ b/drivers/phy/Kconfig
+@@ -21,6 +21,12 @@ config PHY_EXYNOS_MIPI_VIDEO
+ 	  Support for MIPI CSI-2 and MIPI DSI DPHY found on Samsung S5P
+ 	  and EXYNOS SoCs.
  
-+Optional Properties:
-+- phys		: List of phandles to sata phys
-+- phy-names	: Should be "port0", "port1", etc, one per phandle
++config PHY_MVEBU_SATA
++	def_bool y
++	depends on ARCH_KIRKWOOD || ARCH_DOVE
++	depends on OF
++	select GENERIC_PHY
 +
- Example:
- 
- 	sata@80000 {
- 		compatible = "marvell,orion-sata";
- 		reg = <0x80000 0x5000>;
- 		interrupts = <21>;
-+		phys = <&sata_phy0>, <&sata_phy1>;
-+		phy-names = "port0", "port1";
- 		nr-ports = <2>;
- 	}
-diff --git a/Documentation/devicetree/bindings/phy/mvebu-phy.txt b/Documentation/devicetree/bindings/phy/mvebu-phy.txt
+ config OMAP_USB2
+ 	tristate "OMAP USB2 PHY Driver"
+ 	depends on ARCH_OMAP2PLUS
+diff --git a/drivers/phy/Makefile b/drivers/phy/Makefile
+index d0caae9..4e4adc9 100644
+--- a/drivers/phy/Makefile
++++ b/drivers/phy/Makefile
+@@ -5,5 +5,6 @@
+ obj-$(CONFIG_GENERIC_PHY)		+= phy-core.o
+ obj-$(CONFIG_PHY_EXYNOS_DP_VIDEO)	+= phy-exynos-dp-video.o
+ obj-$(CONFIG_PHY_EXYNOS_MIPI_VIDEO)	+= phy-exynos-mipi-video.o
++obj-$(CONFIG_PHY_MVEBU_SATA)		+= phy-mvebu-sata.o
+ obj-$(CONFIG_OMAP_USB2)			+= phy-omap-usb2.o
+ obj-$(CONFIG_TWL4030_USB)		+= phy-twl4030-usb.o
+diff --git a/drivers/phy/phy-mvebu-sata.c b/drivers/phy/phy-mvebu-sata.c
 new file mode 100644
-index 0000000..6cb3364
+index 0000000..d70ecd6
 --- /dev/null
-+++ b/Documentation/devicetree/bindings/phy/mvebu-phy.txt
-@@ -0,0 +1,22 @@
-+* Marvell MVEBU SATA PHY
++++ b/drivers/phy/phy-mvebu-sata.c
+@@ -0,0 +1,137 @@
++/*
++ *	phy-mvebu-sata.c: SATA Phy driver for the Marvell mvebu SoCs.
++ *
++ *	Copyright (C) 2013 Andrew Lunn <andrew@lunn.ch>
++ *
++ *	This program is free software; you can redistribute it and/or
++ *	modify it under the terms of the GNU General Public License
++ *	as published by the Free Software Foundation; either version
++ *	2 of the License, or (at your option) any later version.
++ */
 +
-+Power control for the SATA phy found on Marvell MVEBU SoCs.
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/clk.h>
++#include <linux/phy/phy.h>
++#include <linux/io.h>
++#include <linux/platform_device.h>
 +
-+This document extends the binding described in phy-bindings.txt
++struct priv {
++	struct clk	*clk;
++	void __iomem	*base;
++};
 +
-+Required properties :
++#define SATA_PHY_MODE_2	0x0330
++#define  MODE_2_FORCE_PU_TX	BIT(0)
++#define  MODE_2_FORCE_PU_RX	BIT(1)
++#define  MODE_2_PU_PLL		BIT(2)
++#define  MODE_2_PU_IVREF	BIT(3)
++#define SATA_IF_CTRL	0x0050
++#define  CTRL_PHY_SHUTDOWN	BIT(9)
 +
-+ - reg		   : Offset and length of the register set for the SATA device
-+ - compatible	   : Should be "marvell,mvebu-sata-phy"
-+ - clocks	   : phandle of clock and specifier that supplies the device
-+ - clock-names	   : Should be "sata"
++static int phy_mvebu_sata_power_on(struct phy *phy)
++{
++	struct priv *priv = phy_get_drvdata(phy);
++	u32 reg;
 +
-+Example:
-+		sata-phy@84000 {
-+			compatible = "marvell,mvebu-sata-phy";
-+			reg = <0x84000 0x0334>;
-+			clocks = <&gate_clk 15>;
-+			clock-names = "sata";
-+			#phy-cells = <0>;
-+			status = "ok";
-+		};
++	clk_prepare_enable(priv->clk);
++
++	/* Enable PLL and IVREF */
++	reg = readl(priv->base + SATA_PHY_MODE_2);
++	reg |= (MODE_2_FORCE_PU_TX | MODE_2_FORCE_PU_RX |
++		MODE_2_PU_PLL | MODE_2_PU_IVREF);
++	writel(reg , priv->base + SATA_PHY_MODE_2);
++
++	/* Enable PHY */
++	reg = readl(priv->base + SATA_IF_CTRL);
++	reg &= ~CTRL_PHY_SHUTDOWN;
++	writel(reg, priv->base + SATA_IF_CTRL);
++
++	clk_disable_unprepare(priv->clk);
++
++	return 0;
++}
++
++static int phy_mvebu_sata_power_off(struct phy *phy)
++{
++	struct priv *priv = phy_get_drvdata(phy);
++	u32 reg;
++
++	clk_prepare_enable(priv->clk);
++
++	/* Disable PLL and IVREF */
++	reg = readl(priv->base + SATA_PHY_MODE_2);
++	reg &= ~(MODE_2_FORCE_PU_TX | MODE_2_FORCE_PU_RX |
++		 MODE_2_PU_PLL | MODE_2_PU_IVREF);
++	writel(reg, priv->base + SATA_PHY_MODE_2);
++
++	/* Disable PHY */
++	reg = readl(priv->base + SATA_IF_CTRL);
++	reg |= CTRL_PHY_SHUTDOWN;
++	writel(reg, priv->base + SATA_IF_CTRL);
++
++	clk_disable_unprepare(priv->clk);
++
++	return 0;
++}
++
++static struct phy_ops phy_mvebu_sata_ops = {
++	.power_on	= phy_mvebu_sata_power_on,
++	.power_off	= phy_mvebu_sata_power_off,
++	.owner		= THIS_MODULE,
++};
++
++static int phy_mvebu_sata_probe(struct platform_device *pdev)
++{
++	struct phy_provider *phy_provider;
++	struct resource *res;
++	struct priv *priv;
++	struct phy *phy;
++
++	priv = devm_kzalloc(&pdev->dev, sizeof(*priv), GFP_KERNEL);
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	priv->base = devm_ioremap_resource(&pdev->dev, res);
++	if (IS_ERR(priv->base))
++		return PTR_ERR(priv->base);
++
++	priv->clk = devm_clk_get(&pdev->dev, "sata");
++	if (IS_ERR(priv->clk))
++		return PTR_ERR(priv->clk);
++
++	phy = devm_phy_create(&pdev->dev, &phy_mvebu_sata_ops, NULL);
++	if (IS_ERR(phy))
++		return PTR_ERR(phy);
++
++	phy_set_drvdata(phy, priv);
++
++	phy_provider = devm_of_phy_provider_register(&pdev->dev,
++						     of_phy_simple_xlate);
++	if (IS_ERR(phy_provider))
++		return PTR_ERR(phy_provider);
++
++	/* The boot loader may of left it on. Turn it off. */
++	phy_mvebu_sata_power_off(phy);
++
++	return 0;
++}
++
++static const struct of_device_id phy_mvebu_sata_of_match[] = {
++	{ .compatible = "marvell,mvebu-sata-phy" },
++	{ },
++};
++MODULE_DEVICE_TABLE(of, phy_mvebu_sata_of_match);
++
++static struct platform_driver phy_mvebu_sata_driver = {
++	.probe	= phy_mvebu_sata_probe,
++	.driver = {
++		.name	= "phy-mvebu-sata",
++		.owner	= THIS_MODULE,
++		.of_match_table	= phy_mvebu_sata_of_match,
++	}
++};
++module_platform_driver(phy_mvebu_sata_driver);
++
++MODULE_AUTHOR("Andrew Lunn <andrew@lunn.ch>");
++MODULE_DESCRIPTION("Marvell MVEBU SATA PHY driver");
++MODULE_LICENSE("GPL v2");
 -- 
 1.7.10.4
 
