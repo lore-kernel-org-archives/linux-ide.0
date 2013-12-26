@@ -1,95 +1,96 @@
-From: Andrew Lunn <andrew@lunn.ch>
-Subject: Re: [PATCH] ata: sata_mv: setting PHY speed according to SControl
- speed
-Date: Thu, 26 Dec 2013 19:01:57 +0100
-Message-ID: <20131226180157.GA6919@lunn.ch>
-References: <1387800455-30629-1-git-send-email-simon.guinot@sequanux.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: No freezing of kernel threads (was: Re: [GIT PULL] libata fixes
+ for v3.13-rc5)
+Date: Thu, 26 Dec 2013 13:42:29 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1312261326540.24521-100000@netrider.rowland.org>
+References: <20131226160517.GB16483@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vps0.lunn.ch ([178.209.37.122]:42395 "EHLO vps0.lunn.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753594Ab3LZSC7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 26 Dec 2013 13:02:59 -0500
-Content-Disposition: inline
-In-Reply-To: <1387800455-30629-1-git-send-email-simon.guinot@sequanux.org>
+Received: from netrider.rowland.org ([192.131.102.5]:46326 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753688Ab3LZSma (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 Dec 2013 13:42:30 -0500
+In-Reply-To: <20131226160517.GB16483@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Simon Guinot <simon.guinot@sequanux.org>
-Cc: Jeff Garzik <jgarzik@redhat.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Lior Amsalem <alior@marvell.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, stable@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Linus Torvalds <torvalds@linux-foundation.org>, Kernel development list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Linux-pm mailing list <linux-pm@vger.kernel.org>
 
-On Mon, Dec 23, 2013 at 01:07:35PM +0100, Simon Guinot wrote:
-> From: Lior Amsalem <alior@marvell.com>
+On Thu, 26 Dec 2013, Tejun Heo wrote:
+
+> Hello, Rafael.
 > 
-> From: Lior Amsalem <alior@marvell.com>
+> On Thu, Dec 26, 2013 at 04:05:53PM +0100, Rafael J. Wysocki wrote:
+> > First, there is a removal-vs-resume deadlock which technically is related to
+> > the freezing, but it is not entirely clear to me that using a more fine grained
+> > mechanism instead of the freezing will actually help here.  It may turn out to
+> > be necessary to defer the removal until the resume is complete anyway.
+
+In fact, some places may be using the freezer as a convenient way to 
+implement just such a deferral.
+
+> > Second, there is the problem with the freezer being a huge sledgehammer which
+> > sometimes is used too eagerly and without enough understanding.  I agree that
+> > that is a problem and probably the best way to address it would be to make
+> > people use more specific things instead of the freezer for workqueues/kthreads.
 > 
-> This patch fixes a SATA hotplug issue on the Armada 370 and Armada XP
-> SoCs. Without it, if a disk is unplugged from a SATA port, then further
-> hotplug notification are now longer received on this port.
+> I don't think the two points are separate.  There's no reason for
+> anything above device drivers (themselves or whatever midlayer
+> implementing command queue) to be participating in the freezer and
+> this deadlock occurred only because writeback is freezable for no good
+> reason that I can see.
+
+I don't know why writeback was made freezable -- but that would be a
+reasonable way to avoid changing on-disk data during hibernation.
+
+>  If we make "freezing" specific to the places
+> where the actual PM operations are necessary, these lockups cannot
+> happen, or rather, if a deadlock happens, the blame would likely be
+> clearly on the device driver or its subsystem implementation.
+
+In the case of hibernation, it's not so simple.  We do need to perform 
+I/O, in order to save the memory image.  But we also need to avoid 
+unnecessary I/O, in order to keep the on-disk data consistent with the 
+data in the memory image.  You probably can't accomplish this at the 
+device driver or subsystem level.
+
+> > I actually think that khubd is somewhat analogous to the PM workqueue, so
+> > it needs to be stopped before we start calling suspend callbacks or we'd
+> > have to deal with a lot more complexity than really necessary.  There may
+> > be more things like that, but that's hard to tell without reviewing all
+> > users of freezable kthreads and workqueues and analysing them all.  So I
+> > guess that's the next step if we want to go into that direction.
 > 
-> This should be applied to every -stable kernel supporting Armada SoCs.
-> 
-> Signed-off-by: Lior Amsalem <alior@marvell.com>
-> Signed-off-by: Nadav Haklai <nadavh@marvell.com>
-> Signed-off-by: Simon Guinot <simon.guinot@sequanux.org>
-> Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> Cc: Jason Cooper <jason@lakedaemon.net>
-> Cc: Andrew Lunn <andrew@lunn.ch>
-> Cc: Gregory Clement <gregory.clement@free-electrons.com>
-> Cc: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-> Cc: stable@vger.kernel.org
+> I see.  I'm kinda curious how that jives with runtime PM.  One thing
 
-I tested this on Kirkwood, which does not have any issues to
-(re)hotplug. Still works O.K. with this patch.
+There are some very significant differences between system sleep and 
+runtime PM.  What is appropriate for one may not be appropriate for the 
+other.  In particular, the freezer is not appropriate for runtime PM.
 
-My only reservation is that neither the Kirkwood nor Dove datasheet
-list the LP_PHY_CTL register. Are we now poking something which does
-not exist on these SoCs? Is that safe?
+> which bothers me about the freezer is that it's essentially a separate
+> entry point for suspend/resume implementation, and not a particularly
+> well designed one at that.  Things which depend on freezer for PM ops
+> would need completely separate paths for runtime PM.  They probably
+> need some deviations anyway but freezer would push it unnecessarily.
 
-Tested-by: Andrew Lunn <andrew@lunn.ch>
+Maybe it's the other way around: The separate paths are necessary, and 
+the freezer _simplifies_ the system sleep ops.
 
-    Andrew
+> Well, converting kthreads to workqueues are pretty easy and usually
+> beneficial anyway, especially given that people often get things not
+> completely right when mixing kthread_should_stop() and freezing
+> condition checks (it can be surprisingly tricky and likely to work
+> most of the time even when slightly broken) and workqueue is a lot
+> easier to get right on that respect.
 
+Taking khubd as an example, I have to agree that converting it to a
+workqueue would be a big simplification overall.  And yet there are
+some things khubd does which are (as far as I know) rather difficult to
+accomplish with workqueues.  One example in drivers/usb/core/hub.c:  
+kick_khubd() calls usb_autopm_get_interface_no_resume() if and only if
+it added the hub to the event list (and it does so before releasing the
+list's lock).  How can you do that with a workqueue?
 
-> ---
->  drivers/ata/sata_mv.c | 10 ++++++++++
->  1 file changed, 10 insertions(+)
-> 
-> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-> index 56be318..89ca472 100644
-> --- a/drivers/ata/sata_mv.c
-> +++ b/drivers/ata/sata_mv.c
-> @@ -304,6 +304,7 @@ enum {
->  	MV5_LTMODE		= 0x30,
->  	MV5_PHY_CTL		= 0x0C,
->  	SATA_IFCFG		= 0x050,
-> +	LP_PHY_CTL		= 0x058,
->  
->  	MV_M2_PREAMP_MASK	= 0x7e0,
->  
-> @@ -1358,6 +1359,7 @@ static int mv_scr_write(struct ata_link *link, unsigned int sc_reg_in, u32 val)
->  
->  	if (ofs != 0xffffffffU) {
->  		void __iomem *addr = mv_ap_base(link->ap) + ofs;
-> +		void __iomem *lp_phy_addr = mv_ap_base(link->ap) + LP_PHY_CTL;
->  		if (sc_reg_in == SCR_CONTROL) {
->  			/*
->  			 * Workaround for 88SX60x1 FEr SATA#26:
-> @@ -1374,6 +1376,14 @@ static int mv_scr_write(struct ata_link *link, unsigned int sc_reg_in, u32 val)
->  			 */
->  			if ((val & 0xf) == 1 || (readl(addr) & 0xf) == 1)
->  				val |= 0xf000;
-> +
-> +			/*
-> +			 * Setting PHY speed according to SControl speed
-> +			 */
-> +			if ((val & 0xf0) == 0x10)
-> +				writelfl(0x7, lp_phy_addr);
-> +			else
-> +				writelfl(0x227, lp_phy_addr);
->  		}
->  		writelfl(val, addr);
->  		return 0;
-> -- 
-> 1.8.5.1
-> 
+Alan Stern
+
