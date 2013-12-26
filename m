@@ -1,95 +1,42 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: No freezing of kernel threads (was: Re: [GIT PULL] libata fixes
- for v3.13-rc5)
-Date: Thu, 26 Dec 2013 11:05:17 -0500
-Message-ID: <20131226160517.GB16483@htj.dyndns.org>
-References: <1667032.A7Knz5cBng@vostro.rjw.lan>
- <Pine.LNX.4.44L0.1312252211550.15064-100000@netrider.rowland.org>
- <20131226041856.GA16483@htj.dyndns.org>
- <1963765.T2MGFJrVrL@vostro.rjw.lan>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pm-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1963765.T2MGFJrVrL@vostro.rjw.lan>
-Sender: linux-pm-owner@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Linus Torvalds <torvalds@linux-foundation.org>, Kernel development list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Linux-pm mailing list <linux-pm@vger.kernel.org>
+From: Andrew Lunn <andrew@lunn.ch>
+Subject: [PATCH v4 0/4] PHY Driver for Marvell SATA
+Date: Thu, 26 Dec 2013 18:25:38 +0100
+Message-ID: <1388078742-6726-1-git-send-email-andrew@lunn.ch>
+References: <20131219194237.GC22725@htj.dyndns.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from vps0.lunn.ch ([178.209.37.122]:42348 "EHLO vps0.lunn.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753425Ab3LZR0u (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 26 Dec 2013 12:26:50 -0500
+In-Reply-To: <20131219194237.GC22725@htj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jason Cooper <jason@lakedaemon.net>, kishon@ti.com, tj@kernel.org
+Cc: devicetree@vger.kernel.org, linux-ide@vger.kernel.org, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>, Andrew Lunn <andrew@lunn.ch>
 
-Hello, Rafael.
+This version adds the requested checking of return values
+in sata_mv.c. The other patches are unchanged.
 
-On Thu, Dec 26, 2013 at 04:05:53PM +0100, Rafael J. Wysocki wrote:
-> First, there is a removal-vs-resume deadlock which technically is related to
-> the freezing, but it is not entirely clear to me that using a more fine grained
-> mechanism instead of the freezing will actually help here.  It may turn out to
-> be necessary to defer the removal until the resume is complete anyway.
-> 
-> Second, there is the problem with the freezer being a huge sledgehammer which
-> sometimes is used too eagerly and without enough understanding.  I agree that
-> that is a problem and probably the best way to address it would be to make
-> people use more specific things instead of the freezer for workqueues/kthreads.
+Andrew Lunn (4):
+  Phy: DT binding documentation for Marvell MVEBU SATA phy.
+  Phy: Add a PHY driver for Marvell MVEBU SATA PHY.
+  SATA: MV: Add support for the optional PHYs
+  Phy: Add DT nodes on kirkwood and Dove for the SATA PHY
 
-I don't think the two points are separate.  There's no reason for
-anything above device drivers (themselves or whatever midlayer
-implementing command queue) to be participating in the freezer and
-this deadlock occurred only because writeback is freezable for no good
-reason that I can see.  If we make "freezing" specific to the places
-where the actual PM operations are necessary, these lockups cannot
-happen, or rather, if a deadlock happens, the blame would likely be
-clearly on the device driver or its subsystem implementation.
-
-> Well, we agreed long ago that making the freezer any more "complete" (in
-> terms of stopping more things) would be harmful, but then we thought that
-> it was not necessary to rework the subsystems using it already.  Perhaps
-> that was a mistake.
-
-Hmmm... it doesn't look like we have too many freezable users in the
-kernel at this point.  Hopefully doing a sweep through what's
-remaining wouldn't be too hard?
-
-> I actually think that khubd is somewhat analogous to the PM workqueue, so
-> it needs to be stopped before we start calling suspend callbacks or we'd
-> have to deal with a lot more complexity than really necessary.  There may
-> be more things like that, but that's hard to tell without reviewing all
-> users of freezable kthreads and workqueues and analysing them all.  So I
-> guess that's the next step if we want to go into that direction.
-
-I see.  I'm kinda curious how that jives with runtime PM.  One thing
-which bothers me about the freezer is that it's essentially a separate
-entry point for suspend/resume implementation, and not a particularly
-well designed one at that.  Things which depend on freezer for PM ops
-would need completely separate paths for runtime PM.  They probably
-need some deviations anyway but freezer would push it unnecessarily.
-
-> Well, it looks like we don't really know why things are done the way they
-> are done at least in some cases, so in my personal view it would be good to
-> go through all of the kernel freezer users just for this reason alone.  We
-> can't really say which of them are legitimate without that and how difficult
-> it would be for them to switch over to using something more fine grained than
-> the freezer.
-
-I'm a bit worried about things which may not be explicit.
-ie. something which is broken but sorta working because things like
-writeback and jbd are frozen.  I think I worry about that because I
-remember one argument for kernel freezer from way way back, that it's
-too hard to implement proper suspend/resume for all drivers and by
-freezing most kthreads things should mostly work, which sounded pretty
-crazy to me even back then.  Hopefully, we don't have much left
-depending on such magic.
-
-> I'm not worried about workqueues, becuase I see no reason why they can't use
-> workqueue_set_max_active() the way we discussed (after the two patches of yours
-> that haven't been applied yet), but kthreads are a somewhat different matter.
-
-Well, converting kthreads to workqueues are pretty easy and usually
-beneficial anyway, especially given that people often get things not
-completely right when mixing kthread_should_stop() and freezing
-condition checks (it can be surprisingly tricky and likely to work
-most of the time even when slightly broken) and workqueue is a lot
-easier to get right on that respect.
-
-Thanks.
+ Documentation/devicetree/bindings/ata/marvell.txt  |    6 +
+ .../devicetree/bindings/phy/mvebu-phy.txt          |   22 ++++
+ arch/arm/boot/dts/dove.dtsi                        |   11 ++
+ arch/arm/boot/dts/kirkwood-6281.dtsi               |    2 +
+ arch/arm/boot/dts/kirkwood-6282.dtsi               |    2 +
+ arch/arm/boot/dts/kirkwood.dtsi                    |   18 +++
+ drivers/ata/sata_mv.c                              |   27 ++++
+ drivers/phy/Kconfig                                |    6 +
+ drivers/phy/Makefile                               |    1 +
+ drivers/phy/phy-mvebu-sata.c                       |  137 ++++++++++++++++++++
+ 10 files changed, 232 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/phy/mvebu-phy.txt
+ create mode 100644 drivers/phy/phy-mvebu-sata.c
 
 -- 
-tejun
+1.7.10.4
+
