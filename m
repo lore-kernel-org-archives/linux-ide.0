@@ -1,104 +1,52 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: No freezing of kernel threads (was: Re: [GIT PULL] libata fixes
- for v3.13-rc5)
-Date: Wed, 25 Dec 2013 23:18:56 -0500
-Message-ID: <20131226041856.GA16483@htj.dyndns.org>
-References: <1667032.A7Knz5cBng@vostro.rjw.lan>
- <Pine.LNX.4.44L0.1312252211550.15064-100000@netrider.rowland.org>
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH] ata: sata_mv: setting PHY speed according to SControl
+ speed
+Date: Thu, 26 Dec 2013 08:53:55 +0100
+Message-ID: <20131226085355.2fd1969c@skate>
+References: <1387800455-30629-1-git-send-email-simon.guinot@sequanux.org>
+	<20131224194603.GE19878@titan.lakedaemon.net>
+	<20131225224034.GB5531@kw.sim.vm.gnt>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pm-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1312252211550.15064-100000@netrider.rowland.org>
-Sender: linux-pm-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Linus Torvalds <torvalds@linux-foundation.org>, Kernel development list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Linux-pm mailing list <linux-pm@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20131225224034.GB5531@kw.sim.vm.gnt>
+Sender: stable-owner@vger.kernel.org
+To: Simon Guinot <simon.guinot@sequanux.org>
+Cc: Jason Cooper <jason@lakedaemon.net>, Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>, stable@vger.kernel.org, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, Gregory Clement <gregory.clement@free-electrons.com>, Jeff Garzik <jgarzik@redhat.com>, linux-arm-kernel@lists.infradead.org, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-Hello, Alan.
+Dear Simon Guinot,
 
-On Wed, Dec 25, 2013 at 10:29:30PM -0500, Alan Stern wrote:
-> Thanks.  As I understand it (correct me if this is wrong), the problem
-> is that some subsystems wait for a freezable work queue or kthread to
-> carry out some job, and they do this as part of their resume pathway.  
-> Obviously this leads to deadlock.
+On Wed, 25 Dec 2013 23:40:34 +0100, Simon Guinot wrote:
 
-It's not even that.  Freezer is too big and ends up causing deadlock
-which doesn't have much to do with resuming in itself.  The observed
-deadlock is between driver core resume and block layer removal paths.
-While the removal operation is kicked off by bus rescan during resume,
-it isn't an inherent part of libata resume.  ie. any block device
-removal can race against driver core freezer path.
+> > > This should be applied to every -stable kernel supporting Armada
+> > > SoCs.
+> > 
+> > Could we get a little more specific here?  Please determine which
+> > commit introduced the regression and note it with 'Fixes:
+> > <commitish> "oneline"'
+> 
+> Well, since the DT support for the sata_mv driver precedes SATA
+> support for Armada SoCs, I'd say that the bug has been introduced by:
+> 
+> a6a6de1a "arm: mvebu: SATA support: SoC-level DT data for Armada
+> 370/XP"
+> 
+> Let me know if you agree with that. I will update the commit message
+> accorgingly.
 
-> But I don't see how swinging to the other extreme (i.e., making no
-> kernel threads or work queues freezable) really solves anything.  
-> Those things are freezable for real reasons; they do stuff that must
-> not happen while the system is in the middle of a sleep transition.
+In some sense, we could say that this is not a regression. According to
+what you mean, SATA hotplug has *never* been working on Armada 370/XP.
+So technically, it could be seen as a new feature for this platform,
+and is therefore not a regression (i.e something that used to work, and
+that no longer works). There has been no kernel release for which SATA
+hotplug was working for Armada 370/XP.
 
-Kernel freezer has a lot of similarities with BKL.  I wouldn't call
-its eventual removal an extreme choice.
+Best regards,
 
-> Thus...  If a subsystem's resume pathway depends on something happening 
-> which must not happen during a sleep transition, then something is 
-> fundamentally broken.
-
-Again, the deadlock doesn't have much to do with "a subsystem's resume
-pathway".  It's just freezer behaving as too big a lock used by too
-many subsystems which don't even need them eventually leading to messy
-deadlock.
-
-> Perhaps the problem could be solved by a finer-grained approach.  For
-
-Yeah, we seem to agree on the fact that it needs to be finer grained
-
-> example, maybe some of these work queues or kthreads need to be frozen
-> only while the system is suspending, so they can safely be thawed when
-> the resume begins.  Would that fix the problem that began this 
-> discussion?
-
-but not how to achieve it.  Kernel freezer's problem is that it's too
-big a mechanism for the given problem.  What we need is a mechanism to
-plug a handful (from what I've seen, there aren't too many legit
-users) of kthreads / workqueues, but what we have is a mechanism which
-is integral part of the whole task and workqueue machineries.
-
->From the beginning and still, it's used as a voodoo mechanism which
-somehow makes the machine "mostly stopped" before performing PM
-operations.  That "mostly stopped" has never been well defined and
-always been a source of confusions causing people to just believe it's
-somehow all quiet and good without actually pondering what should
-happen - freezing of kthreads isn't atomic and doesn't have any
-inherent ordering among different kthreads / wqs && freezing kthread /
-wq doesn't mean the layer is actually empty or inactive.  irq / bh
-paths aren't blocked at all.
-
-A common misconception seems to be that by marking the workers in the
-upper layers freezable, somehow things are blocked from all the
-sources and thus the actual device, which needs to be plugged across
-suspend, is safe.  It's damaging because it'd work in many, if not
-most, cases but can never be made fully reliable.
-
-> I know that in the case of khubd, we really do want it to remain frozen 
-> throughout the entire sleep transition.
-
-I could be wrong but the only legitimate use cases of kernel freezer
-that I've seen are drivers using it as a fast way to implement
-suspend/resume callbacks and khubd seems to fall in that category.  I
-think it'd be actually healthier to implement it as a part of the
-usual PM notification / callback mechanism - a natural benefit would
-be helping consolidate system and runtime PM paths.  The conversion
-should be fairly simple and we definitely can add helpers and whatnot
-if we end up having to convert more than a handful.
-
-The danger is that because we've been plugging so many sources, we're
-likely to have lower level queues which aren't properly plugged.
-Those are broken but could have been working most of the time.
-Removing freezing from the upper layers could expose those issues, so
-the conversion as a whole may have some challanges in that department.
-It has been quite a while since I went through PM paths of many
-different drivers so I'd defer the judgement to Rafael.
-
-Thanks.
-
+Thomas
 -- 
-tejun
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
