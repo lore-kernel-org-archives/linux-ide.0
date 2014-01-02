@@ -1,30 +1,30 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/1] ata: pata_samsung_cf: Merge pata_samsung_cf.h into
- pata_samsung_cf.c
-Date: Thu, 2 Jan 2014 07:45:47 -0500
-Message-ID: <20140102124547.GD11501@htj.dyndns.org>
-References: <1388632171-17732-1-git-send-email-sachin.kamat@linaro.org>
+From: 'Tejun Heo' <tj@kernel.org>
+Subject: Re: [PATCH] ata: pata_samsung_cf: Use devm_ioremap_resource()
+Date: Thu, 2 Jan 2014 07:49:24 -0500
+Message-ID: <20140102124924.GE11501@htj.dyndns.org>
+References: <002901cf0793$fea8dc60$fbfa9520$%han@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f179.google.com ([209.85.216.179]:44560 "EHLO
-	mail-qc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750942AbaABMpv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Jan 2014 07:45:51 -0500
-Received: by mail-qc0-f179.google.com with SMTP id i8so13421292qcq.24
-        for <linux-ide@vger.kernel.org>; Thu, 02 Jan 2014 04:45:50 -0800 (PST)
+Received: from mail-qc0-f182.google.com ([209.85.216.182]:41074 "EHLO
+	mail-qc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750733AbaABMt1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Jan 2014 07:49:27 -0500
+Received: by mail-qc0-f182.google.com with SMTP id e16so13451919qcx.41
+        for <linux-ide@vger.kernel.org>; Thu, 02 Jan 2014 04:49:27 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <1388632171-17732-1-git-send-email-sachin.kamat@linaro.org>
+In-Reply-To: <002901cf0793$fea8dc60$fbfa9520$%han@samsung.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sachin Kamat <sachin.kamat@linaro.org>
-Cc: linux-ide@vger.kernel.org, patches@linaro.org
+To: Jingoo Han <jg1.han@samsung.com>
+Cc: linux-ide@vger.kernel.org
 
-On Thu, Jan 02, 2014 at 08:39:31AM +0530, Sachin Kamat wrote:
-> Since pata_samsung_cf.h is referenced only by pata_samsung_cf.c, merge
-> it into the .c file.
+On Thu, Jan 02, 2014 at 05:24:03PM +0900, Jingoo Han wrote:
+> Use devm_ioremap_resource() in order to make the code simpler,
+> and remove redundant return value check of platform_get_resource()
+> because the value is checked by devm_ioremap_resource().
 > 
-> Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
+> Signed-off-by: Jingoo Han <jg1.han@samsung.com>
 
 Applied to libata/for-3.14.
 
