@@ -1,56 +1,46 @@
-From: Felix Miata <mrmazda@earthlink.net>
-Subject: Re: HD filesystem integrity issues
-Date: Thu, 02 Jan 2014 22:34:50 -0500
-Message-ID: <52C62FDA.8080904@earthlink.net>
-References: <52C49A1C.1000104@earthlink.net> <52C628C7.6040407@gmail.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v7 4/4] arm64: Add APM X-Gene SoC SATA host controller DTS entries
+Date: Fri, 3 Jan 2014 16:33:17 +0100
+Message-ID: <201401031633.18110.arnd@arndb.de>
+References: <1388708539-333-1-git-send-email-lho@apm.com> <1388708539-333-4-git-send-email-lho@apm.com> <1388708539-333-5-git-send-email-lho@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from elasmtp-galgo.atl.sa.earthlink.net ([209.86.89.61]:44805 "EHLO
-	elasmtp-galgo.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753109AbaACDfG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 2 Jan 2014 22:35:06 -0500
-Received: from [24.144.107.66] (helo=[192.168.0.11])
-	by elasmtp-galgo.atl.sa.earthlink.net with esmtpsa (TLSv1:AES256-SHA:256)
-	(Exim 4.67)
-	(envelope-from <mrmazda@earthlink.net>)
-	id 1VyvX9-0001d4-MR
-	for linux-ide@vger.kernel.org; Thu, 02 Jan 2014 22:34:51 -0500
-In-Reply-To: <52C628C7.6040407@gmail.com>
+Received: from moutng.kundenserver.de ([212.227.17.8]:64296 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751529AbaACPdx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 3 Jan 2014 10:33:53 -0500
+In-Reply-To: <1388708539-333-5-git-send-email-lho@apm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Loc Ho <lho@apm.com>
+Cc: olof@lixom.net, tj@kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jcm@redhat.com, patches@apm.com, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-On 2014-01-02 21:04 (GMT-0600) Robert Hancock composed:
+On Friday 03 January 2014, Loc Ho wrote:
+> +                       sata23clk: sata23clk@1f22c000 {
+> +                               compatible = "apm,xgene-device-clock";
+> +                               #clock-cells = <1>;
+> +                               clocks = <&socplldiv2 0>;
+> +                               clock-names = "sata23clk";
 
-> Felix Miata wrote:
+> +                       };
+> +
+> +                       sata45clk: sata45clk@1f23c000 {
+> +                               compatible = "apm,xgene-device-clock";
+> +                               #clock-cells = <1>;
+> +                               clocks = <&socplldiv2 0>;
+> +                               clock-names = "sata45clk";
 
->> http://fm.no-ip.com/Tmp/Linux/dmsgAZBHD201401.txt is dmesg from a STB
+Something is wrong here: You have two devices with the same "compatible"
+string but using different "clock-names" strings. The binding document
+lists this as an optional property with the description  "shall be
+the name of the device clock. If missing, use the device name", which
+doesn't seem to make any sense.
 
-> Have you checked the dmesg output? There would likely be some indication
-> of what happened.
+Please fix the binding and the existing users of this, and don't introduce
+any more broken instances. Since each device clock is documented to
+have only one parent anyway, please just make it an anonymous clock.
 
-Checked for what exactly? That's why I gave it to the list to look at. The 
-only thing I recognized as a problem indication was "running e2fsck is 
-recommended".
-
-> Given that this thing only has 100MB or so of memory,
-> it seems quite likely that the out-of-memory killer kicked in.
-
-As another responder replied within minutes of my post, and you seem to have 
-confirmed. It's what I suspected, but I was able to find any way to confirm 
-other than to ask somewhere outside the device's so-called support forum.
-
-> This isn't really related to linux-ide, the main Linux kernel mailing
-> list would likely be more suitable.
-
-I was thinking a generic filesystem list, but don't know of one about 
-ext2/3/4, and thought this better than a high traffic generic list.
--- 
-"The wise are known for their understanding, and pleasant
-words are persuasive." Proverbs 16:21 (New Living Translation)
-
-  Team OS/2 ** Reg. Linux User #211409 ** a11y rocks!
-
-Felix Miata  ***  http://fm.no-ip.com/
+	Arnd
