@@ -1,192 +1,104 @@
-From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v2 4/4] ARM: sun7i: dts: Add ahci / sata support
-Date: Sat,  4 Jan 2014 10:14:38 +0100
-Message-ID: <1388826878-5602-5-git-send-email-hdegoede@redhat.com>
-References: <1388826878-5602-1-git-send-email-hdegoede@redhat.com>
+From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+Subject: Re: [PATCH v2 2/4] ARM: sunxi: Add ahci-sunxi driver
+ for the Allwinner SUNXi SoCs sata
+Date: Sat, 04 Jan 2014 22:39:50 +0100
+Message-ID: <4502242.kKUgLAVDcb@wuerfel>
+References: <1388826878-5602-1-git-send-email-hdegoede@redhat.com> <1388826878-5602-3-git-send-email-hdegoede@redhat.com>
 Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-sunxi+bncBDL4X2GMZUKRBFVCT6LAKGQECESCLCQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <1388826878-5602-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-sunxi+bncBDEKVJM7XAHRBMH7UGLAKGQECBXKLSQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <1388826878-5602-3-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Archive: <http://groups.google.com/group/linux-sunxi>
 Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 List-Subscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Unsubscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Oliver Schinagl <oliver+list-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Olliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
+To: linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+Cc: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Oliver Schinagl <oliver+list-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
-This patch adds sunxi sata support to A20 boards that have such a connector.
-Some boards also feature a regulator via a GPIO and support for this is also
-added.
+On Saturday 04 January 2014 10:14:36 Hans de Goede wrote:
+> diff --git a/Documentation/devicetree/bindings/ata/ahci-sunxi.txt b/Documentation/devicetree/bindings/ata/ahci-sunxi.txt
+> new file mode 100644
+> index 0000000..0792fa5
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ata/ahci-sunxi.txt
+> @@ -0,0 +1,24 @@
+> +Allwinner SUNXI AHCI SATA Controller
+> +
+> +SATA nodes are defined to describe on-chip Serial ATA controllers.
+> +Each SATA controller should have its own node.
+> +
+> +Required properties:
+> +- compatible	: compatible list, contains "allwinner,sun4i-a10-ahci"
+> +- reg		: <registers mapping>
+> +- interrupts	: <interrupt mapping for AHCI IRQ>
+> +- clocks	: clocks for ACHI
+> +- clock-names	: clock names for AHCI
 
-Signed-off-by: Olliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
-Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
- arch/arm/boot/dts/sun7i-a20-cubieboard2.dts     | 27 +++++++++++++++++++++++++
- arch/arm/boot/dts/sun7i-a20-cubietruck.dts      | 27 +++++++++++++++++++++++++
- arch/arm/boot/dts/sun7i-a20-olinuxino-micro.dts | 26 ++++++++++++++++++++++++
- arch/arm/boot/dts/sun7i-a20.dtsi                |  9 +++++++++
- 4 files changed, 89 insertions(+)
+The binding needs to specify the required names for the clocks.
 
-diff --git a/arch/arm/boot/dts/sun7i-a20-cubieboard2.dts b/arch/arm/boot/dts/sun7i-a20-cubieboard2.dts
-index 48777cd..a26711c 100644
---- a/arch/arm/boot/dts/sun7i-a20-cubieboard2.dts
-+++ b/arch/arm/boot/dts/sun7i-a20-cubieboard2.dts
-@@ -28,7 +28,19 @@
- 			status = "okay";
- 		};
- 
-+		sata: ahci@01c18000 {
-+			pwr-supply = <&reg_ahci_5v>;
-+			status = "okay";
-+		};
-+
- 		pinctrl@01c20800 {
-+			ahci_pwr_pin_cubieboard2: ahci_pwr_pin@0 {
-+				allwinner,pins = "PB8";
-+				allwinner,function = "gpio_out";
-+				allwinner,drive = <0>;
-+				allwinner,pull = <0>;
-+			};
-+
- 			mmc0_cd_pin_cubieboard2: mmc0_cd_pin@0 {
- 				allwinner,pins = "PH1";
- 				allwinner,function = "gpio_in";
-@@ -86,4 +98,19 @@
- 			gpios = <&pio 7 20 0>;
- 		};
- 	};
-+
-+	regulators {
-+		compatible = "simple-bus";
-+		pinctrl-names = "default";
-+
-+		reg_ahci_5v: ahci-5v {
-+			compatible = "regulator-fixed";
-+			regulator-name = "ahci-5v";
-+			regulator-min-microvolt = <5000000>;
-+			regulator-max-microvolt = <5000000>;
-+			pinctrl-0 = <&ahci_pwr_pin_cubieboard2>;
-+			gpio = <&pio 1 8 0>;
-+			enable-active-high;
-+		};
-+	};
- };
-diff --git a/arch/arm/boot/dts/sun7i-a20-cubietruck.dts b/arch/arm/boot/dts/sun7i-a20-cubietruck.dts
-index 2684f27..a5f3418 100644
---- a/arch/arm/boot/dts/sun7i-a20-cubietruck.dts
-+++ b/arch/arm/boot/dts/sun7i-a20-cubietruck.dts
-@@ -28,6 +28,11 @@
- 			status = "okay";
- 		};
- 
-+		sata: ahci@01c18000 {
-+			pwr-supply = <&reg_ahci_5v>;
-+			status = "okay";
-+		};
-+
- 		pinctrl@01c20800 {
- 			mmc0_cd_pin_cubietruck: mmc0_cd_pin@0 {
- 				allwinner,pins = "PH1";
-@@ -36,6 +41,13 @@
- 				allwinner,pull = <0>;
- 			};
- 
-+			ahci_pwr_pin_cubietruck: ahci_pwr_pin@0 {
-+				allwinner,pins = "PH12";
-+				allwinner,function = "gpio_out";
-+				allwinner,drive = <0>;
-+				allwinner,pull = <0>;
-+			};
-+
- 			led_pins_cubietruck: led_pins@0 {
- 				allwinner,pins = "PH7", "PH11", "PH20", "PH21";
- 				allwinner,function = "gpio_out";
-@@ -84,4 +96,19 @@
- 			gpios = <&pio 7 7 0>;
- 		};
- 	};
-+
-+	regulators {
-+		compatible = "simple-bus";
-+		pinctrl-names = "default";
-+
-+		reg_ahci_5v: ahci-5v {
-+			compatible = "regulator-fixed";
-+			regulator-name = "ahci-5v";
-+			regulator-min-microvolt = <5000000>;
-+			regulator-max-microvolt = <5000000>;
-+			pinctrl-0 = <&ahci_pwr_pin_cubietruck>;
-+			gpio = <&pio 7 12 0>;
-+			enable-active-high;
-+		};
-+	};
- };
-diff --git a/arch/arm/boot/dts/sun7i-a20-olinuxino-micro.dts b/arch/arm/boot/dts/sun7i-a20-olinuxino-micro.dts
-index bf6f6c8..20b1000 100644
---- a/arch/arm/boot/dts/sun7i-a20-olinuxino-micro.dts
-+++ b/arch/arm/boot/dts/sun7i-a20-olinuxino-micro.dts
-@@ -37,7 +37,19 @@
- 			status = "okay";
- 		};
- 
-+		sata: ahci@01c18000 {
-+			pwr-supply = <&reg_ahci_5v>;
-+			status = "okay";
-+		};
-+
- 		pinctrl@01c20800 {
-+			ahci_pwr_pin_olinuxinom: ahci_pwr_pin@0 {
-+				allwinner,pins = "PB8";
-+				allwinner,function = "gpio_out";
-+				allwinner,drive = <0>;
-+				allwinner,pull = <0>;
-+			};
-+
- 			mmc0_cd_pin_olinuxinom: mmc0_cd_pin@0 {
- 				allwinner,pins = "PH1";
- 				allwinner,function = "gpio_in";
-@@ -116,4 +128,18 @@
- 			default-state = "on";
- 		};
- 	};
-+
-+	regulators {
-+		compatible = "simple-bus";
-+
-+		reg_ahci_5v: ahci-5v {
-+			compatible = "regulator-fixed";
-+			regulator-name = "ahci-5v";
-+			regulator-min-microvolt = <5000000>;
-+			regulator-max-microvolt = <5000000>;
-+			pinctrl-0 = <&ahci_pwr_pin_olinuxinom>;
-+			gpio = <&pio 1 8 0>;
-+			enable-active-high;
-+		};
-+	};
- };
-diff --git a/arch/arm/boot/dts/sun7i-a20.dtsi b/arch/arm/boot/dts/sun7i-a20.dtsi
-index c9c123a..3242a29 100644
---- a/arch/arm/boot/dts/sun7i-a20.dtsi
-+++ b/arch/arm/boot/dts/sun7i-a20.dtsi
-@@ -448,6 +448,15 @@
- 			};
- 		};
- 
-+		sata: ahci@01c18000 {
-+			compatible = "allwinner,sun4i-a10-ahci";
-+			reg = <0x01c18000 0x1000>;
-+			interrupts = <0 56 1>;
-+			clocks = <&ahb_gates 25>, <&pll6 0>;
-+			clock-names = "ahb_sata", "pll6_sata";
-+			status = "disabled";
-+		};
-+
- 		timer@01c20c00 {
- 			compatible = "allwinner,sun4i-timer";
- 			reg = <0x01c20c00 0x90>;
--- 
-1.8.4.2
+> +Optional properties:
+> +- pwr-supply	: regulator to control the power supply GPIO
+> +
+> +Example:
+> +	ahci@01c18000 {
+> +		compatible = "allwinner,sun4i-a10-ahci";
+> +		reg = <0x01c18000 0x1000>;
+> +		interrupts = <0 56 1>;
+> +		clocks = <&ahb_gates 25>, <&pll6 0>;
+> +		clock-names = "ahb_sata", "pll6_sata";
+
+"pll6_sata" doesn't sound particularly generic. The name should
+reflect what the clock is used for, not what drives it.
+
+Also, please send the binding as a separate patch with Cc to
+the devicetree-discuss mailing list.
+
+> +
+> +static int sunxi_ahci_phy_init(struct device *dev, void __iomem *reg_base)
+> +{
+> +	u32 reg_val;
+> +	int timeout;
+> +
+> +	/* This magic is from the original code */
+> +	writel(0, reg_base + AHCI_RWCR);
+> +	mdelay(5);
+
+This function should probably be in a separate phy driver. I would
+very much hope that we can minimize the required code in an AHCI
+driver and move code from this new file into the ahci-platform
+driver. The clock, regulator and phy setup can all be optional
+properties of the generic driver, and then there shouldn't
+be much left that is sunxi specific.
+
+> +static int sunxi_ahci_susp(struct device *dev)
+> +{
+> +	struct ata_host *host = dev_get_drvdata(dev);
+> +	struct ahci_host_priv *hpriv = host->private_data;
+> +	struct sunxi_ahci *ahci = hpriv->plat_data;
+> +	int ret;
+> +
+> +	/*
+> +	 * AHCI spec rev1.1 section 8.3.3:
+> +	 * Software must disable interrupts prior to requesting a
+> +	 * transition of the HBA to D3 state.
+> +	 */
+> +	sunxi_clrbits(hpriv->mmio + HOST_CTL, HOST_IRQ_EN);
+> +
+> +	ret = ata_host_suspend(host, PMSG_SUSPEND);
+> +	if (ret)
+> +		return ret;
+> +
+> +	sunxi_ahci_disable_clks(ahci);
+> +
+> +	return 0;
+> +}
+
+The only thing in here that seems sunxi-specific is the irq disabling
+part. Can't you do this instead by calling disable_irq() and make
+the function completely generic?
+
+	Arnd
