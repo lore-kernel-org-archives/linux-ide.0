@@ -1,63 +1,81 @@
-From: Sachin Kamat <sachin.kamat@linaro.org>
-Subject: [PATCH 1/1] ata: pata_samsung_cf: Remove unused macros
-Date: Mon,  6 Jan 2014 10:05:15 +0530
-Message-ID: <1388982915-15623-1-git-send-email-sachin.kamat@linaro.org>
+From: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
+Date: Mon, 06 Jan 2014 13:06:20 +0530
+Message-ID: <52CA5CF4.2080708@codeaurora.org>
+References: <cover.1384030893.git.psusi@ubuntu.com> <1387236657-4852-1-git-send-email-psusi@ubuntu.com> <52CA1191.8060804@ubuntu.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pd0-f172.google.com ([209.85.192.172]:46536 "EHLO
-	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752113AbaAFEjH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 5 Jan 2014 23:39:07 -0500
-Received: by mail-pd0-f172.google.com with SMTP id g10so17614132pdj.31
-        for <linux-ide@vger.kernel.org>; Sun, 05 Jan 2014 20:39:06 -0800 (PST)
+Received: from smtp.codeaurora.org ([198.145.11.231]:48674 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751758AbaAFHg1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Jan 2014 02:36:27 -0500
+In-Reply-To: <52CA1191.8060804@ubuntu.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: tj@kernel.org, sachin.kamat@linaro.org, patches@linaro.org
+To: Phillip Susi <psusi@ubuntu.com>, Aaron Lu <aaron.lu@intel.com>
+Cc: todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-These macros are not used in the file. Remove them.
+On 1/6/2014 7:44 AM, Phillip Susi wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA512
+>
+> On 12/16/2013 06:30 PM, Phillip Susi wrote:
+>> For some reason, the system hangs on resume if I issue the REQUEST
+>> SENSE command after blk_pre_runtime_suspend.  My understanding is
+>> that the REQ_PM flag should make the command process even though
+>> the queue is RPM_SUSPENDING, but it doesn't seem to work.  Anyone
+>> have any idea why?
+>
+> So I found the problem but I'm confused by it.  I thought that the
+> REQ_PM flag was supposed to make sure the request was dispatched even
+> though the device was still suspended ( or suspending ).  It seems
+> that this is not the case, and only requests with the type set to
+> REQ_TYPE_PM_RESUME are dispatched during suspend/resume.  The
+> following patch fixes the hang, but I'm not sure why it is needed or
+> if it is generally appropriate:
+>
 
-Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
----
- drivers/ata/pata_samsung_cf.c |   13 -------------
- 1 file changed, 13 deletions(-)
+Adding Aaron Lu, author of block layer runtime PM.
+I have seen similar issue and fixed it by relaxing the rpm_status check
+to allow processing of requests while suspended -
 
-diff --git a/drivers/ata/pata_samsung_cf.c b/drivers/ata/pata_samsung_cf.c
-index cd2746b169a9..bdf8f3e155bc 100644
---- a/drivers/ata/pata_samsung_cf.c
-+++ b/drivers/ata/pata_samsung_cf.c
-@@ -31,24 +31,12 @@
- #define S3C_CFATA_REG(x)	(x)
- #define S3C_CFATA_MUX		S3C_CFATA_REG(0x0)
- #define S3C_ATA_CTRL		S3C_CFATA_REG(0x0)
--#define S3C_ATA_STATUS		S3C_CFATA_REG(0x4)
- #define S3C_ATA_CMD		S3C_CFATA_REG(0x8)
--#define S3C_ATA_SWRST		S3C_CFATA_REG(0xc)
- #define S3C_ATA_IRQ		S3C_CFATA_REG(0x10)
- #define S3C_ATA_IRQ_MSK		S3C_CFATA_REG(0x14)
- #define S3C_ATA_CFG		S3C_CFATA_REG(0x18)
- 
--#define S3C_ATA_MDMA_TIME	S3C_CFATA_REG(0x28)
- #define S3C_ATA_PIO_TIME	S3C_CFATA_REG(0x2c)
--#define S3C_ATA_UDMA_TIME	S3C_CFATA_REG(0x30)
--#define S3C_ATA_XFR_NUM		S3C_CFATA_REG(0x34)
--#define S3C_ATA_XFR_CNT		S3C_CFATA_REG(0x38)
--#define S3C_ATA_TBUF_START	S3C_CFATA_REG(0x3c)
--#define S3C_ATA_TBUF_SIZE	S3C_CFATA_REG(0x40)
--#define S3C_ATA_SBUF_START	S3C_CFATA_REG(0x44)
--#define S3C_ATA_SBUF_SIZE	S3C_CFATA_REG(0x48)
--#define S3C_ATA_CADR_TBUF	S3C_CFATA_REG(0x4c)
--#define S3C_ATA_CADR_SBUF	S3C_CFATA_REG(0x50)
- #define S3C_ATA_PIO_DTR		S3C_CFATA_REG(0x54)
- #define S3C_ATA_PIO_FED		S3C_CFATA_REG(0x58)
- #define S3C_ATA_PIO_SCR		S3C_CFATA_REG(0x5c)
-@@ -58,7 +46,6 @@
- #define S3C_ATA_PIO_DVR		S3C_CFATA_REG(0x6c)
- #define S3C_ATA_PIO_CSD		S3C_CFATA_REG(0x70)
- #define S3C_ATA_PIO_DAD		S3C_CFATA_REG(0x74)
--#define S3C_ATA_PIO_READY	S3C_CFATA_REG(0x78)
- #define S3C_ATA_PIO_RDATA	S3C_CFATA_REG(0x7c)
- 
- #define S3C_CFATA_MUX_TRUEIDE	0x01
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 6853ef6..f99165b 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -2140,8 +2140,7 @@ static void blk_account_io_done(struct request *req)
+  static struct request *blk_pm_peek_request(struct request_queue *q,
+  					   struct request *rq)
+  {
+-	if (q->dev && (q->rpm_status == RPM_SUSPENDED ||
+-	    (q->rpm_status != RPM_ACTIVE && !(rq->cmd_flags & REQ_PM))))
++	if (q->dev && q->rpm_status != RPM_ACTIVE && !(rq->cmd_flags & REQ_PM))
+  		return NULL;
+  	else
+  		return rq;
+
+
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 7bd7f0d..c5ce50d 100644
+> - --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -227,7 +227,9 @@ int scsi_execute(struct scsi_device *sdev, const
+> unsigned char *cmd,
+>          req->sense_len = 0;
+>          req->retries = retries;
+>          req->timeout = timeout;
+> - -       req->cmd_type = REQ_TYPE_BLOCK_PC;
+> +       if (flags & REQ_PM)
+> +               req->cmd_type = REQ_TYPE_PM_RESUME;
+> +       else req->cmd_type = REQ_TYPE_BLOCK_PC;
+>          req->cmd_flags |= flags | REQ_QUIET | REQ_PREEMPT;
+>
+>          /*
+>
+>
+
 -- 
-1.7.9.5
-
+Regards,
+Sujit
