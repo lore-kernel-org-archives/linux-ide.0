@@ -1,60 +1,58 @@
-From: "faibish, sorin" <faibish_sorin@emc.com>
-Subject: RE: [LSF/MM TOPIC] [ATTEND] persistent memory progress, management
- of storage & file systems
-Date: Mon, 6 Jan 2014 17:32:56 -0500
-Message-ID: <2512424DBC01FD48843E938C780FA97C02B002A583@MX23A.corp.emc.com>
-References: <20131220093022.GV11295@suse.de> <52CB2C3A.3010207@gmail.com>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 3.12 097/144] ahci: imx: Explicitly clear IMX6Q_GPR13_SATA_MPLL_CLK_EN
+Date: Mon,  6 Jan 2014 14:37:38 -0800
+Message-ID: <20140106223748.140256754@linuxfoundation.org>
+References: <20140106223745.326293132@linuxfoundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <52CB2C3A.3010207@gmail.com>
-Content-Language: en-US
-Sender: owner-linux-mm@kvack.org
-To: Ric Wheeler <ricwheeler@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140106223745.326293132@linuxfoundation.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Eric Nelson <eric.nelson@boundarydevices.com>, Marek Vasut <marex@denx.de>, Shawn Guo <shawn.guo@linaro.org>, Richard Zhu <r65037@freescale.com>, Linux-IDE <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-Speaking of persistent memory I would like to discuss the PMFS as well as R=
-DMA aspects of the persistent memory model. Also I would like to discuss KV=
- stores and object stores on persistent memory. I was involved in the PMFS =
-as a tester and I found several issues that I would like to discuss with th=
-e community. I assume that maybe others from Intel could join this discussi=
-on except for Andy and Matt which already asked for this topic. Thanks
+3.12-stable review patch.  If anyone has any objections, please let me know.
 
-./Sorin
+------------------
 
------Original Message-----
-From: linux-fsdevel-owner@vger.kernel.org [mailto:linux-fsdevel-owner@vger.=
-kernel.org] On Behalf Of Ric Wheeler
-Sent: Monday, January 06, 2014 5:21 PM
-To: linux-scsi@vger.kernel.org; linux-ide@vger.kernel.org; linux-mm@kvack.o=
-rg; linux-fsdevel@vger.kernel.org; lsf-pc@lists.linux-foundation.org
-Cc: linux-kernel@vger.kernel.org
-Subject: [LSF/MM TOPIC] [ATTEND] persistent memory progress, management of =
-storage & file systems
+From: Marek Vasut <marex@denx.de>
 
+commit 10becdb402af4fd4808a0491a726b96128c41076 upstream.
 
-I would like to attend this year and continue to talk about the work on ena=
-bling the new class of persistent memory devices. Specifically, very intere=
-sted in talking about both using a block driver under our existing stack an=
-d also progress at the file system layer (adding xip/mmap tweaks to existin=
-g file systems and looking at new file systems).
+We must clear this IMX6Q_GPR13_SATA_MPLL_CLK_EN bit on i.MX6Q, otherwise
+Linux will fail to find the attached drive on some boards.
 
-We also have a lot of work left to do on unifying management, it would be g=
-ood to resync on that.
+This entire fix was:
+Reported-by: Eric Nelson <eric.nelson@boundarydevices.com>
 
-Regards,
+Signed-off-by: Marek Vasut <marex@denx.de>
+Reviewed-by: Shawn Guo <shawn.guo@linaro.org>
+Cc: Richard Zhu <r65037@freescale.com>
+Cc: Linux-IDE <linux-ide@vger.kernel.org>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-Ric
+---
+ drivers/ata/ahci_imx.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in=
- the body of a message to majordomo@vger.kernel.org More majordomo info at =
- http://vger.kernel.org/majordomo-info.html
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+--- a/drivers/ata/ahci_imx.c
++++ b/drivers/ata/ahci_imx.c
+@@ -60,7 +60,7 @@ static int imx6q_sata_init(struct device
+ 	/*
+ 	 * set PHY Paremeters, two steps to configure the GPR13,
+ 	 * one write for rest of parameters, mask of first write
+-	 * is 0x07fffffd, and the other one write for setting
++	 * is 0x07ffffff, and the other one write for setting
+ 	 * the mpll_clk_en.
+ 	 */
+ 	regmap_update_bits(imxpriv->gpr, 0x34, IMX6Q_GPR13_SATA_RX_EQ_VAL_MASK
+@@ -71,6 +71,7 @@ static int imx6q_sata_init(struct device
+ 			| IMX6Q_GPR13_SATA_TX_ATTEN_MASK
+ 			| IMX6Q_GPR13_SATA_TX_BOOST_MASK
+ 			| IMX6Q_GPR13_SATA_TX_LVL_MASK
++			| IMX6Q_GPR13_SATA_MPLL_CLK_EN
+ 			| IMX6Q_GPR13_SATA_TX_EDGE_RATE
+ 			, IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB
+ 			| IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M
