@@ -1,129 +1,79 @@
-From: Loc Ho <lho@apm.com>
-Subject: [PATCH v8 4/4] arm64: Add APM X-Gene SoC SATA host controller DTS entries
-Date: Mon,  6 Jan 2014 11:12:02 -0700
-Message-ID: <1389031922-4309-5-git-send-email-lho@apm.com>
-References: <1389031922-4309-1-git-send-email-lho@apm.com>
- <1389031922-4309-2-git-send-email-lho@apm.com>
- <1389031922-4309-3-git-send-email-lho@apm.com>
- <1389031922-4309-4-git-send-email-lho@apm.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from exprod5og117.obsmtp.com ([64.18.0.149]:37838 "HELO
-	exprod5og117.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755962AbaAFSMn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Jan 2014 13:12:43 -0500
-Received: by mail-pa0-f50.google.com with SMTP id kp14so16918784pab.23
-        for <linux-ide@vger.kernel.org>; Mon, 06 Jan 2014 10:12:42 -0800 (PST)
-In-Reply-To: <1389031922-4309-4-git-send-email-lho@apm.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: <gregkh@linuxfoundation.org>
+Subject: Patch "ahci: imx: Explicitly clear IMX6Q_GPR13_SATA_MPLL_CLK_EN" has been added to the 3.12-stable tree
+Date: Mon, 06 Jan 2014 10:56:21 -0800
+Message-ID: <13890345811491@kroah.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ANSI_X3.4-1968
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: marex@denx.de, eric.nelson@boundarydevices.com, gregkh@linuxfoundation.org, linux-ide@vger.kernel.org, r65037@freescale.com, shawn.guo@linaro.org, tj@kernel.org
+Cc: stable@vger.kernel.org, stable-commits@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Tuan Phan <tphan@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
+
+This is a note to let you know that I've just added the patch titled
+
+    ahci: imx: Explicitly clear IMX6Q_GPR13_SATA_MPLL_CLK_EN
+
+to the 3.12-stable tree which can be found at:
+    http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
+
+The filename of the patch is:
+     ahci-imx-explicitly-clear-imx6q_gpr13_sata_mpll_clk_en.patch
+and it can be found in the queue-3.12 subdirectory.
+
+If you, or anyone else, feels it should not be added to the stable tree,
+please let <stable@vger.kernel.org> know about it.
+
+
+>From 10becdb402af4fd4808a0491a726b96128c41076 Mon Sep 17 00:00:00 2001
+From: Marek Vasut <marex@denx.de>
+Date: Mon, 25 Nov 2013 09:47:00 +0100
+Subject: ahci: imx: Explicitly clear IMX6Q_GPR13_SATA_MPLL_CLK_EN
+
+From: Marek Vasut <marex@denx.de>
+
+commit 10becdb402af4fd4808a0491a726b96128c41076 upstream.
+
+We must clear this IMX6Q_GPR13_SATA_MPLL_CLK_EN bit on i.MX6Q, otherwise
+Linux will fail to find the attached drive on some boards.
+
+This entire fix was:
+Reported-by: Eric Nelson <eric.nelson@boundarydevices.com>
+
+Signed-off-by: Marek Vasut <marex@denx.de>
+Reviewed-by: Shawn Guo <shawn.guo@linaro.org>
+Cc: Richard Zhu <r65037@freescale.com>
+Cc: Linux-IDE <linux-ide@vger.kernel.org>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
 ---
- arch/arm64/boot/dts/apm-storm.dtsi |   81 ++++++++++++++++++++++++++++++++++++
- 1 files changed, 81 insertions(+), 0 deletions(-)
+ drivers/ata/ahci_imx.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
-index 7e0466a..cd1e012 100644
---- a/arch/arm64/boot/dts/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm-storm.dtsi
-@@ -221,6 +221,48 @@
- 				enable-offset = <0x0>;
- 				enable-mask = <0x06>;
- 			};
-+
-+			sata01clk: sata01clk@1f21c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f21c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sata01clk";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x05>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x39>;
-+			};
-+
-+			sata23clk: sata23clk@1f22c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f22c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sata23clk";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x05>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x39>;
-+			};
-+
-+			sata45clk: sata45clk@1f23c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f23c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sata45clk";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x05>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x39>;
-+			};
- 		};
- 
- 		serial0: serial@1c020000 {
-@@ -269,5 +311,44 @@
- 			apm,tx-boost-gain = <2 3 3 2 3 3>;
- 			apm,tx-eye-tuning = <2 10 10 2 10 12>;
- 		};
-+
-+		sata1: sata@1a000000 {
-+			compatible = "apm,xgene-ahci-sgmii";
-+			reg = <0x0 0x1a000000 0x0 0x1000>,
-+			      <0x0 0x1f210000 0x0 0x10000>,
-+			      <0x0 0x1f2a0000 0x0 0x10000>,
-+			      <0x0 0x1c000200 0x0 0x100>;
-+			interrupts = <0x0 0x86 0x4>;
-+			status = "disabled";
-+			clocks = <&sata01clk 0>;
-+			phys = <&phy1 0>;
-+			phy-names = "sata-6g";
-+		};
-+
-+		sata2: sata@1a400000 {
-+			compatible = "apm,xgene-ahci-sgmii";
-+			reg = <0x0 0x1a400000 0x0 0x1000>,
-+			      <0x0 0x1f220000 0x0 0x10000>,
-+			      <0x0 0x1f2a0000 0x0 0x10000>,
-+			      <0x0 0x1c000200 0x0 0x100>;
-+			interrupts = <0x0 0x87 0x4>;
-+			status = "ok";
-+			clocks = <&sata23clk 0>;
-+			phys = <&phy2 0>;
-+			phy-names = "sata-6g";
-+		};
-+
-+		sata3: sata@1a800000 {
-+			compatible = "apm,xgene-ahci-pcie";
-+			reg = <0x0 0x1a800000 0x0 0x1000>,
-+			      <0x0 0x1f230000 0x0 0x10000>,
-+			      <0x0 0x1f2a0000 0x0 0x10000>,
-+			      <0x0 0x1c000200 0x0 0x100>;
-+			interrupts = <0x0 0x88 0x4>;
-+			status = "ok";
-+			clocks = <&sata45clk 0>;
-+			phys = <&phy3 0>;
-+			phy-names = "sata-6g";
-+		};
- 	};
- };
--- 
-1.5.5
+--- a/drivers/ata/ahci_imx.c
++++ b/drivers/ata/ahci_imx.c
+@@ -60,7 +60,7 @@ static int imx6q_sata_init(struct device
+ 	/*
+ 	 * set PHY Paremeters, two steps to configure the GPR13,
+ 	 * one write for rest of parameters, mask of first write
+-	 * is 0x07fffffd, and the other one write for setting
++	 * is 0x07ffffff, and the other one write for setting
+ 	 * the mpll_clk_en.
+ 	 */
+ 	regmap_update_bits(imxpriv->gpr, 0x34, IMX6Q_GPR13_SATA_RX_EQ_VAL_MASK
+@@ -71,6 +71,7 @@ static int imx6q_sata_init(struct device
+ 			| IMX6Q_GPR13_SATA_TX_ATTEN_MASK
+ 			| IMX6Q_GPR13_SATA_TX_BOOST_MASK
+ 			| IMX6Q_GPR13_SATA_TX_LVL_MASK
++			| IMX6Q_GPR13_SATA_MPLL_CLK_EN
+ 			| IMX6Q_GPR13_SATA_TX_EDGE_RATE
+ 			, IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB
+ 			| IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M
 
+
+Patches currently in stable-queue which might be from marex@denx.de are
+
+queue-3.12/ahci-imx-explicitly-clear-imx6q_gpr13_sata_mpll_clk_en.patch
