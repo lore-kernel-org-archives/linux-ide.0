@@ -1,50 +1,63 @@
-From: Olliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
-Subject: Re: [PATCH v2 2/4] ARM: sunxi: Add ahci-sunxi driver
- for the Allwinner SUNXi SoCs sata
-Date: Sun, 05 Jan 2014 15:00:25 +0100
-Message-ID: <52C96579.4030108@schinagl.nl>
-References: <1388826878-5602-1-git-send-email-hdegoede@redhat.com> <1388826878-5602-3-git-send-email-hdegoede@redhat.com> <4502242.kKUgLAVDcb@wuerfel> <3250214.yUrU0CPosZ@wuerfel> <52C9534E.4000701@schinagl.nl> <52C95ED0.5060207@redhat.com>
-Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
+Date: Sun, 05 Jan 2014 21:14:41 -0500
+Message-ID: <52CA1191.8060804@ubuntu.com>
+References: <cover.1384030893.git.psusi@ubuntu.com> <1387236657-4852-1-git-send-email-psusi@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Return-path: <linux-sunxi+bncBDC2JNWXZAJBB6WKUWLAKGQEZXFJCDI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <52C95ED0.5060207-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/linux-sunxi>
-Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Oliver Schinagl <oliver+list-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1387236657-4852-1-git-send-email-psusi@ubuntu.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: todd.e.brandt@linux.intel.com
+Cc: tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On 01/05/14 14:32, Hans de Goede wrote:
-> Hi,
->
-> On 01/05/2014 01:42 PM, Olliver Schinagl wrote:
->> On 01/04/14 22:47, Arnd Bergmann wrote:
->>> On Saturday 04 January 2014 22:39:50 Arnd Bergmann wrote:
->>>>> +Required properties:
->>>>> +- compatible : compatible list, contains "allwinner,sun4i-a10-ahci"
->>>>> +- reg                : <registers mapping>
->>>>> +- interrupts : <interrupt mapping for AHCI IRQ>
->>>>> +- clocks     : clocks for ACHI
->>>>> +- clock-names        : clock names for AHCI
->>>> The binding needs to specify the required names for the clocks.
->>> fwiw, the imx driver uses "ahb" and "sata_ref" as the clock names.
->>> I would strongly suggest using the same names here, and documenting
->>> them in the ahci binding as optional.
->> This is my fault, and you just reminded me I should have fixed that from the previous comments. It just slipped my mind and I'm sorry for that!
->>
->> Hans, I'll go over the original commit thread and pick up all changes and send them as a patch to you Monday.
-> As I just mentioned to Arnd I've a better idea to be able to re-use most of
-> the ahci_platform.c code without copy-pasting it. So I'm going to do a v3
-> soonish. Can you please just make a mail with summary of the requested
-> changes and send that to me, or do this after I've send v3 ?
-if memory serves, it was mostly about the dt documentation and binding 
-names, i'll work on it first thing tomorrow morning ;)
->
-> Thanks,
->
-> Hans
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+On 12/16/2013 06:30 PM, Phillip Susi wrote:
+> For some reason, the system hangs on resume if I issue the REQUEST
+> SENSE command after blk_pre_runtime_suspend.  My understanding is
+> that the REQ_PM flag should make the command process even though
+> the queue is RPM_SUSPENDING, but it doesn't seem to work.  Anyone
+> have any idea why?
+
+So I found the problem but I'm confused by it.  I thought that the
+REQ_PM flag was supposed to make sure the request was dispatched even
+though the device was still suspended ( or suspending ).  It seems
+that this is not the case, and only requests with the type set to
+REQ_TYPE_PM_RESUME are dispatched during suspend/resume.  The
+following patch fixes the hang, but I'm not sure why it is needed or
+if it is generally appropriate:
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 7bd7f0d..c5ce50d 100644
+- --- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -227,7 +227,9 @@ int scsi_execute(struct scsi_device *sdev, const
+unsigned char *cmd,
+        req->sense_len = 0;
+        req->retries = retries;
+        req->timeout = timeout;
+- -       req->cmd_type = REQ_TYPE_BLOCK_PC;
++       if (flags & REQ_PM)
++               req->cmd_type = REQ_TYPE_PM_RESUME;
++       else req->cmd_type = REQ_TYPE_BLOCK_PC;
+        req->cmd_flags |= flags | REQ_QUIET | REQ_PREEMPT;
+
+        /*
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQEcBAEBCgAGBQJSyhGRAAoJEI5FoCIzSKrwbB4IAJqrtJuw92+rJQqkC7W5qRe8
+psqgHiplkb9HCb3po95kM3c+05xjukoYNOk4+1s2iS0Adu288pSch2D20qPsT9Pc
+DOHdU4iyaZ85gLxOIxdpCa+YYBYAzB8LEkqSMMvuhRkMqa008kclvVfqYtGhmw2g
+DJcvuyowXLHQrpx+AA+CqY7aWxMK46uiNIwE3v8GA17augRzfltijMDZU/9SjG/7
+lIe4V4lVf9SeWphVh0BSWULT84QOVQhcYGO/zK+I7xei2igPAHpBzHuUfXqs44PB
+Z37eHf1JENZkuyekBDth+PsrnuiVZG20ECvymipoEQGv1iQ6R/QZsviNv/XUDgo=
+=nAGL
+-----END PGP SIGNATURE-----
