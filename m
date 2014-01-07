@@ -1,58 +1,49 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 3.12 097/144] ahci: imx: Explicitly clear IMX6Q_GPR13_SATA_MPLL_CLK_EN
-Date: Mon,  6 Jan 2014 14:37:38 -0800
-Message-ID: <20140106223748.140256754@linuxfoundation.org>
-References: <20140106223745.326293132@linuxfoundation.org>
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
+Date: Mon, 06 Jan 2014 21:44:50 -0500
+Message-ID: <52CB6A22.2000203@ubuntu.com>
+References: <Pine.LNX.4.44L0.1401061025410.1282-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140106223745.326293132@linuxfoundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Eric Nelson <eric.nelson@boundarydevices.com>, Marek Vasut <marex@denx.de>, Shawn Guo <shawn.guo@linaro.org>, Richard Zhu <r65037@freescale.com>, Linux-IDE <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:47229 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754551AbaAGCox (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Jan 2014 21:44:53 -0500
+In-Reply-To: <Pine.LNX.4.44L0.1401061025410.1282-100000@iolanthe.rowland.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Aaron Lu <aaron.lu@intel.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>, todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-3.12-stable review patch.  If anyone has any objections, please let me know.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
 
-------------------
+On 01/06/2014 10:38 AM, Alan Stern wrote:
+> Indeed.  I can't see any place where the SCSI or block layers
+> would stop the queue of a device when it gets runtime suspended.
+> Maybe some other layer is doing this.
 
-From: Marek Vasut <marex@denx.de>
+So I've stepped through it in qemu a good bit, and found some strange
+things.  At the time that sd_resume_system is called, the host is
+still in the recovery state as a result of ata_port_resume, so this is
+why scsi_request_fn doesn't dispatch the request.  It requeues it for
+after the eh finishes, but when the eh finishes and sets the state
+back to running, scsi_request_fn calls blk_peek_request, and it
+returns NULL rather than the requeued REQUEST SENSE.  It's like the
+request is lost rather than having been requeued.
 
-commit 10becdb402af4fd4808a0491a726b96128c41076 upstream.
 
-We must clear this IMX6Q_GPR13_SATA_MPLL_CLK_EN bit on i.MX6Q, otherwise
-Linux will fail to find the attached drive on some boards.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
 
-This entire fix was:
-Reported-by: Eric Nelson <eric.nelson@boundarydevices.com>
-
-Signed-off-by: Marek Vasut <marex@denx.de>
-Reviewed-by: Shawn Guo <shawn.guo@linaro.org>
-Cc: Richard Zhu <r65037@freescale.com>
-Cc: Linux-IDE <linux-ide@vger.kernel.org>
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
----
- drivers/ata/ahci_imx.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
---- a/drivers/ata/ahci_imx.c
-+++ b/drivers/ata/ahci_imx.c
-@@ -60,7 +60,7 @@ static int imx6q_sata_init(struct device
- 	/*
- 	 * set PHY Paremeters, two steps to configure the GPR13,
- 	 * one write for rest of parameters, mask of first write
--	 * is 0x07fffffd, and the other one write for setting
-+	 * is 0x07ffffff, and the other one write for setting
- 	 * the mpll_clk_en.
- 	 */
- 	regmap_update_bits(imxpriv->gpr, 0x34, IMX6Q_GPR13_SATA_RX_EQ_VAL_MASK
-@@ -71,6 +71,7 @@ static int imx6q_sata_init(struct device
- 			| IMX6Q_GPR13_SATA_TX_ATTEN_MASK
- 			| IMX6Q_GPR13_SATA_TX_BOOST_MASK
- 			| IMX6Q_GPR13_SATA_TX_LVL_MASK
-+			| IMX6Q_GPR13_SATA_MPLL_CLK_EN
- 			| IMX6Q_GPR13_SATA_TX_EDGE_RATE
- 			, IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB
- 			| IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M
+iQEcBAEBCgAGBQJSy2oiAAoJEI5FoCIzSKrwTu4H/RONbp4lsY5jfSCwRCB23W5q
+dn8ZmGDzUbjzEeq/DJzARlWdxYadepIDDUKLNVYW1eUrN0+sPLV8jIlDZZgg3dbm
+kh0MMPjB2sMbz1zgTQ0/7rZw7WQZfE/vwAo95QQD42FK+SsRMwMoLaN6GsZrikrT
+MXzDMXCRLqaow4kSPj7uonN5wlw+1Y5Sn5LJ/SdzPyz2JX/x0lk8zMekNC0i6/tF
+ooQymcRFdiDFhr9E6VKj3+TEpVH708zA9vVSjzIZ6KIUD8mA+r2d8pPUWSrjuSzC
+U9EVNmawGJMsq70Ql2I8+0J9csz8I3ijQjpfxhw7+V89Fx+t+AH901hYnNY8Qeo=
+=hCxT
+-----END PGP SIGNATURE-----
