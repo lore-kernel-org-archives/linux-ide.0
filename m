@@ -1,107 +1,53 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: Re: [PATCH V4 1/2] Phy: Exynos: Add Exynos5250 sata phy driver
-Date: Tue, 07 Jan 2014 15:22:58 +0100
-Message-ID: <2078358.4WniMksEuS@amdc1032>
-References: <1388408823-4963-1-git-send-email-yuvaraj.cd@samsung.com>
- <11600750.UKZ7EpemHS@amdc1032>
- <CAKuRcOJVQ9U_4rpUf-6+=nbO=UoNkkTU5ttmRqfWxi4_nh7fag@mail.gmail.com>
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
+Date: Tue, 07 Jan 2014 09:50:10 -0500
+Message-ID: <52CC1422.1020101@ubuntu.com>
+References: <cover.1384030893.git.psusi@ubuntu.com> <1387236657-4852-1-git-send-email-psusi@ubuntu.com> <52CA1191.8060804@ubuntu.com> <52CA5CF4.2080708@codeaurora.org> <52CA744F.2080609@intel.com> <52CAC067.20601@ubuntu.com> <52CBB188.2080707@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-doc-owner@vger.kernel.org>
-In-reply-to: <CAKuRcOJVQ9U_4rpUf-6+=nbO=UoNkkTU5ttmRqfWxi4_nh7fag@mail.gmail.com>
-Sender: linux-doc-owner@vger.kernel.org
-To: Yuvaraj Kumar <yuvaraj.cd@gmail.com>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>, "kgene.kim@samsung.com" <kgene.kim@samsung.com>, linux-kernel@vger.kernel.org, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-doc@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>, Jingoo Han <jg1.han@samsung.com>, sunil joshi <joshi@samsung.com>, Tomasz Figa <t.figa@samsung.com>, Stephen Warren <swarren@wwwdotorg.org>, Rob Herring <rob.herring@calxeda.com>, Grant Likely <grant.likely@linaro.org>, Christoffer Dall <christoffer.dall@linaro.org>, Yuvaraj Kumar C D <yuvaraj.cd@samsung.com>, Girish K S <ks.giri@samsung.com>, Vasanth Ananthan <vasanth.a@samsung.com>, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:43772 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750933AbaAGOuP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Jan 2014 09:50:15 -0500
+In-Reply-To: <52CBB188.2080707@intel.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>
+Cc: todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Linux-pm mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+On 1/7/2014 2:49 AM, Aaron Lu wrote:
+> We can modify the device's system resume callback. To better
+> illustrate the idea, I just made two patches to do this and I did
+> some quick tests and didn't find anything wrong.
+
+That misses one key aspect I was trying to capture: it always leaves
+the disk runtime suspended after a resume.  If the disk spins up on
+its own, as most ata disks do, then the runtime status doesn't
+correctly reflect the actual state of the disk.  This means that
+applications that delay activities due to the runtime pm status to
+avoid waking a disk won't run, and any runtime autosuspend won't kick
+in to actually put the disk back to sleep.
+
+To do that, you need to be able to issue a REQUEST SENSE and
+conditionally resume the device.  Of course, you can't do that unless
+you first get it into a transitional state, but you can't just request
+a resume and then conditionally fail it.
 
 
-Hi,
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
 
-On Thursday, January 02, 2014 07:03:23 PM Yuvaraj Kumar wrote:
-> On Tue, Dec 31, 2013 at 9:00 PM, Bartlomiej Zolnierkiewicz
-> <b.zolnierkie@samsung.com> wrote:
-
-> >> @@ -8,3 +8,4 @@ obj-$(CONFIG_PHY_EXYNOS_MIPI_VIDEO)   += phy-exynos-mipi-video.o
-> >>  obj-$(CONFIG_PHY_MVEBU_SATA)         += phy-mvebu-sata.o
-> >>  obj-$(CONFIG_OMAP_USB2)                      += phy-omap-usb2.o
-> >>  obj-$(CONFIG_TWL4030_USB)            += phy-twl4030-usb.o
-> >> +obj-$(CONFIG_EXYNOS5250_SATA_PHY)    += sata_phy_exynos5250.o exynos5250_phy_i2c.o
-> >
-> > Will this compile/work without I2C support?
-> No.I missed this.It will not compile without I2C support.
-> How about  below change in drivers/phy/Kconfig ?
-> config EXYNOS5250_SATA_PHY
-> select I2C
-> select I2C_S3C2410
-
-Fine with me.
-
-> > CONFIG_EXYNOS5250_SATA_PHY doesn't require it currently.
-> I didnt get this. what it doesn't require?
-
-It doesn't require I2C.  If you add above I2C selects it will be OK.
-
-> >> +struct i2c_driver sataphy_i2c_driver = {
-> >
-> > Keeping it global together with sataphy_attach_i2c_client() is not very
-> > nice.  I've talked with our local device tree guru (a.k.a. Tomasz Figa)
-> > about this and it may be that this i2c driver is not even necessary.
-> Can you elaborate more on this?
-
-The usage of the global i2c driver is not a proper solution.
-
-i2c driver should register itself in the driver init function
-(which is not present currently) instead of being registered by
-the SATA PHY driver.
-
-The SATA PHY driver should find i2c client device using DT.
-
-sataphy_attach_i2c_client() should then be removed.
-
-> > If you manage to extract i2c adapter and address data from the device
-> > tree (using proper of_* methods) they can be used instead of i2c client
-> > data in the SATA PHY driver.
-> I think the above is true, if the complete SATA PHY controller sits on
-> the i2c adapter.
-> But in Exynos5250 case,only the few configurations ( CMU and TRSV
-> blocks ) SATA PHY
-> are done through I2C(channel 9). Correct me if i am wrong.
-
-Well, it shouldn't matter if all or only some of the configuration of
-the SATA PHY controller is done through i2c.
-
-Anyway, how about another idea -> adding a new phandle of i2c client
-device to SATA PHY DT entry and using DT in the SATA PHY driver to
-find i2c client device?
-
-i.e. "samsung,exynos-sataphy-i2c-phandle" property in SATA PHY
-controller DT entry can point at existing "sata-phy@38" sataphy i2c
-client DT entry (by adding new label to it, i.e. "sata_phy_i2c").
-
-Such new phandle can be used first to find the DT device node of i2c
-device (by using of_parse_phandle(), if it returns NULL the error
-should be returned) and then later to find proper i2c client device
-(by using of_find_i2c_device_by_node(), if it returns NULL deferred
-probing should be requested by returning -EPROBE_DEFER).
-
-i2c@121D0000 {
-	...
-	sata_phy_i2c: sata-phy@38 {
-		...
-	};
-	...
-};
-
-sata_phy: sata-phy@12170000 {
-	...
-	samsung,exynos-sataphy-i2c-phandle = <&sata_phy_i2c>;
-	...
-};
-
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
-
+iQEcBAEBAgAGBQJSzBQiAAoJEI5FoCIzSKrwH9UH/3Z3TfKKKYhNsjr26YsKOge2
+EQzbcFCg4H5irnKL/olR5fnRKpZYi1Er2ydV6zsHdcCJLFQoqvzVE4ZInl42STI0
+IWQ65n5q+U1OaZY+ttGkOBjixi5VIlkb9izZVbzBTi4n5cLEDwyQsE4Rgd9STwjm
+gPkNrmGNGPUoY+4O6bLHu0/WvwTX3L/OgxcSsQd1gsdCX3qZzB+UIzfM31W9/4Yl
+3sP/tN8mBYcpqR9jIpw2u7m0XEe9Wc71Nepdv2+6sT5uZJ5knTY6epH5Of4FJsyp
+CxslFXf6Jb2FZaey8EJB1ocABnePYluQNHrpdRO4gjY+Au/mtzk15tJjoYx3WXg=
+=VlKV
+-----END PGP SIGNATURE-----
