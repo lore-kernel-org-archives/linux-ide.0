@@ -1,53 +1,47 @@
-From: Phillip Susi <psusi@ubuntu.com>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
-Date: Tue, 07 Jan 2014 09:50:10 -0500
-Message-ID: <52CC1422.1020101@ubuntu.com>
-References: <cover.1384030893.git.psusi@ubuntu.com> <1387236657-4852-1-git-send-email-psusi@ubuntu.com> <52CA1191.8060804@ubuntu.com> <52CA5CF4.2080708@codeaurora.org> <52CA744F.2080609@intel.com> <52CAC067.20601@ubuntu.com> <52CBB188.2080707@intel.com>
+Date: Tue, 7 Jan 2014 10:20:29 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1401071015120.1296-100000@iolanthe.rowland.org>
+References: <52CB6A22.2000203@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:43772 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750933AbaAGOuP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Jan 2014 09:50:15 -0500
-In-Reply-To: <52CBB188.2080707@intel.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:54926 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752061AbaAGPUa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Jan 2014 10:20:30 -0500
+In-Reply-To: <52CB6A22.2000203@ubuntu.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>
-Cc: todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Linux-pm mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Phillip Susi <psusi@ubuntu.com>
+Cc: Aaron Lu <aaron.lu@intel.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>, todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On Mon, 6 Jan 2014, Phillip Susi wrote:
 
-On 1/7/2014 2:49 AM, Aaron Lu wrote:
-> We can modify the device's system resume callback. To better
-> illustrate the idea, I just made two patches to do this and I did
-> some quick tests and didn't find anything wrong.
+> On 01/06/2014 10:38 AM, Alan Stern wrote:
+> > Indeed.  I can't see any place where the SCSI or block layers
+> > would stop the queue of a device when it gets runtime suspended.
+> > Maybe some other layer is doing this.
+> 
+> So I've stepped through it in qemu a good bit, and found some strange
+> things.  At the time that sd_resume_system is called, the host is
+> still in the recovery state as a result of ata_port_resume, so this is
+> why scsi_request_fn doesn't dispatch the request.  It requeues it for
+> after the eh finishes, but when the eh finishes and sets the state
+> back to running, scsi_request_fn calls blk_peek_request, and it
+> returns NULL rather than the requeued REQUEST SENSE.  It's like the
+> request is lost rather than having been requeued.
 
-That misses one key aspect I was trying to capture: it always leaves
-the disk runtime suspended after a resume.  If the disk spins up on
-its own, as most ata disks do, then the runtime status doesn't
-correctly reflect the actual state of the disk.  This means that
-applications that delay activities due to the runtime pm status to
-avoid waking a disk won't run, and any runtime autosuspend won't kick
-in to actually put the disk back to sleep.
+This raises two questions:
 
-To do that, you need to be able to issue a REQUEST SENSE and
-conditionally resume the device.  Of course, you can't do that unless
-you first get it into a transitional state, but you can't just request
-a resume and then conditionally fail it.
+	Should the host's resume be allowed to complete while the
+	host is still in error recovery?  Wouldn't it be better to
+	wait until the recovery is finished?
 
+	How does the queue end up in a stopped state?  (The stopped
+	queue explains why blk_peek_request returns NULL.)
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+You're in a better position than I am to answer these questions.
 
-iQEcBAEBAgAGBQJSzBQiAAoJEI5FoCIzSKrwH9UH/3Z3TfKKKYhNsjr26YsKOge2
-EQzbcFCg4H5irnKL/olR5fnRKpZYi1Er2ydV6zsHdcCJLFQoqvzVE4ZInl42STI0
-IWQ65n5q+U1OaZY+ttGkOBjixi5VIlkb9izZVbzBTi4n5cLEDwyQsE4Rgd9STwjm
-gPkNrmGNGPUoY+4O6bLHu0/WvwTX3L/OgxcSsQd1gsdCX3qZzB+UIzfM31W9/4Yl
-3sP/tN8mBYcpqR9jIpw2u7m0XEe9Wc71Nepdv2+6sT5uZJ5knTY6epH5Of4FJsyp
-CxslFXf6Jb2FZaey8EJB1ocABnePYluQNHrpdRO4gjY+Au/mtzk15tJjoYx3WXg=
-=VlKV
------END PGP SIGNATURE-----
+Alan Stern
+
