@@ -1,67 +1,45 @@
-From: Joel Becker <jlbec@evilplan.org>
-Subject: Re: [LSF/MM TOPIC] [ATTEND] persistent memory progress, management
- of storage & file systems
-Date: Tue, 7 Jan 2014 11:44:25 -0800
-Message-ID: <20140107194424.GN5272@localhost>
-References: <20131220093022.GV11295@suse.de>
- <52CB2C3A.3010207@gmail.com>
- <2512424DBC01FD48843E938C780FA97C02B002A583@MX23A.corp.emc.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <2512424DBC01FD48843E938C780FA97C02B002A583@MX23A.corp.emc.com>
-Sender: owner-linux-mm@kvack.org
-To: "faibish, sorin" <faibish_sorin@emc.com>
-Cc: Ric Wheeler <ricwheeler@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: [PATCH 0/7] Phase out pci_enable_msi_block()
+Date: Tue,  7 Jan 2014 19:05:35 +0100
+Message-ID: <cover.1389103215.git.agordeev@redhat.com>
+Return-path: <kvm-owner@vger.kernel.org>
+Sender: kvm-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, Brian King <brking@us.ibm.com>, Tejun Heo <tj@kernel.org>, Matthew Wilcox <willy@linux.intel.com>, Alex Williamson <alex.williamson@redhat.com>, Kalle Valo <kvalo@qca.qualcomm.com>, Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>, linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com, ath10k@lists.infradead.org, linux-nvme@lists.infradead.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, kvm@vger.kernel.org, linux-pci@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Mon, Jan 06, 2014 at 05:32:56PM -0500, faibish, sorin wrote:
-> Speaking of persistent memory I would like to discuss the PMFS as well as RDMA aspects of the persistent memory model. Also I would like to discuss KV stores and object stores on persistent memory. I was involved in the PMFS as a tester and I found several issues that I would like to discuss with the community. I assume that maybe others from Intel could join this discussion except for Andy and Matt which already asked for this topic. Thanks
+As result of recent deprecation of MSI-X/MSI enablement
+interfaces pci_enable_msi_block(), pci_enable_msi() and
+pci_enable_msix() all drivers need to be updated to use
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-Ooh, and the cluster/remote filesystem stories there (eg, RDMA etc) are
-probably pretty cool.
+This is the first in a series of updates, to phase out
+pci_enable_msi_block() function.
 
-Joel
+This series is against pci/msi branch in Bjorn Helgaas's repo:
+git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
 
-> 
-> ./Sorin
-> 
-> -----Original Message-----
-> From: linux-fsdevel-owner@vger.kernel.org [mailto:linux-fsdevel-owner@vger.kernel.org] On Behalf Of Ric Wheeler
-> Sent: Monday, January 06, 2014 5:21 PM
-> To: linux-scsi@vger.kernel.org; linux-ide@vger.kernel.org; linux-mm@kvack.org; linux-fsdevel@vger.kernel.org; lsf-pc@lists.linux-foundation.org
-> Cc: linux-kernel@vger.kernel.org
-> Subject: [LSF/MM TOPIC] [ATTEND] persistent memory progress, management of storage & file systems
-> 
-> 
-> I would like to attend this year and continue to talk about the work on enabling the new class of persistent memory devices. Specifically, very interested in talking about both using a block driver under our existing stack and also progress at the file system layer (adding xip/mmap tweaks to existing file systems and looking at new file systems).
-> 
-> We also have a lot of work left to do on unifying management, it would be good to resync on that.
-> 
-> Regards,
-> 
-> Ric
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+Thanks!
+
+Alexander Gordeev (7):
+  ipr: Do not call pci_disable_msi/msix() if pci_enable_msi/msix()
+    failed
+  ipr: Use new interfaces for MSI/MSI-X enablement
+  ahci: Use new interfaces for MSI/MSI-X enablement
+  nvme: Use new interfaces for MSI/MSI-X enablement
+  vfio: Use new interfaces for MSI/MSI-X enablement
+  ath10k: Use new interfaces for MSI enablement
+  wil6210: Use new interfaces for MSI enablement
+
+ drivers/ata/ahci.c                          |   15 +++-----
+ drivers/block/nvme-core.c                   |   33 ++++-------------
+ drivers/net/wireless/ath/ath10k/pci.c       |   22 ++++++------
+ drivers/net/wireless/ath/wil6210/pcie_bus.c |   36 ++++++++++---------
+ drivers/scsi/ipr.c                          |   51 +++++++++-----------------
+ drivers/vfio/pci/vfio_pci_intrs.c           |    8 ++--
+ 6 files changed, 66 insertions(+), 99 deletions(-)
 
 -- 
+1.7.7.6
 
- The herd instinct among economists makes sheep look like
- independant thinkers.
-
-			http://www.jlbec.org/
-			jlbec@evilplan.org
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
