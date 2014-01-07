@@ -1,56 +1,65 @@
 From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
-Date: Tue, 7 Jan 2014 10:56:44 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1401071054250.1296-100000@iolanthe.rowland.org>
-References: <52CC1FF2.1020301@ubuntu.com>
+Date: Tue, 7 Jan 2014 11:08:22 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1401071057130.1296-100000@iolanthe.rowland.org>
+References: <52CC20A0.7060606@ubuntu.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <52CC1FF2.1020301@ubuntu.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <52CC20A0.7060606@ubuntu.com>
+Sender: linux-pm-owner@vger.kernel.org
 To: Phillip Susi <psusi@ubuntu.com>
-Cc: Aaron Lu <aaron.lu@intel.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>, todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Aaron Lu <aaron.lu@intel.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>, todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Linux-pm mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>
 List-Id: linux-ide@vger.kernel.org
 
 On Tue, 7 Jan 2014, Phillip Susi wrote:
 
-> On 1/7/2014 10:20 AM, Alan Stern wrote:
-> > This raises two questions:
-> > 
-> > Should the host's resume be allowed to complete while the host is
-> > still in error recovery?  Wouldn't it be better to wait until the
-> > recovery is finished?
+> On 1/7/2014 10:25 AM, Alan Stern wrote:
+> > This doesn't seem like a good idea.  The way to speed up resumes is
+> > to allow sd's resume routine to return while the disk is still
+> > spinning up (i.e., make the spin-up asynchronous).  There already
+> > have been patches submitted to do this; I don't know what happened
+> > to them.
 > 
-> Ahh, right, my other patch changed the ata_port stuff to schedule the
-> eh, and return  from resume, so that IT doesn't block the system
-> resume path for a long period of time while IT tries to spin up the
-> disk.  Both the libata and sd layers were spinning up the disk.
-> 
-> Still, the sd request should just wait in the queue until after the
-> recovery completes shouldn't it?
+> Sure, if that is your *only* goal.  I also want the disk to not spin
+> up *at all* if possible.  There's no sense spinning up all of your
+> disks every time you resume when you very rarely access some of them.
 
-Yes.
+Okay, that's a different matter.  There's a much simpler way to 
+accomplish this.  The patch below will avoid spinning up drives that 
+were already in runtime suspend when the system sleep started.  
+(If a drive wasn't in runtime suspend then presumably it was used 
+recently; therefore it's likely to be used again in the near future and 
+so it _should_ be spun up.)
 
-> > How does the queue end up in a stopped state?  (The stopped queue
-> > explains why blk_peek_request returns NULL.)
-> 
-> I was guessing that was the cause from reading the code, after
-> stepping through it with gdb and qemu, it turned out it was in
-> SHOST_RECOVERY rather that stopped.  I suppose it may be stopped as
-> well, so I guess I'll have to go do another debug session and make
-> sure, but I think that was a red herring.
-> 
-> The flow seems to simply be:
-> 
-> host is in recovery
-> sd_resume queues REQUEST SENSE
-> scsi_request_fn notices host is in recovery and requeus REQUEST SENSE
-> recovery completes
-> REQUEST SENSE seems to be lost...
-
-If the earlier patch did fix the problem, then the REQUEST SENSE req
-was in the queue but wasn't being returned by blk_peek_request because
-the queue was stopped.
+Warning: This patch is completely untested.  I didn't even try to
+compile it.  Still, it should give you a good idea as to what is really
+needed here.
 
 Alan Stern
+
+
+
+Index: usb-3.13/drivers/scsi/scsi_pm.c
+===================================================================
+--- usb-3.13.orig/drivers/scsi/scsi_pm.c
++++ usb-3.13/drivers/scsi/scsi_pm.c
+@@ -71,14 +71,11 @@ scsi_bus_resume_common(struct device *de
+ {
+ 	int err = 0;
+ 
++	if (pm_runtime_status_suspended(dev))
++		return err;
++
+ 	if (scsi_is_sdev_device(dev))
+ 		err = scsi_dev_type_resume(dev, cb);
+-
+-	if (err == 0) {
+-		pm_runtime_disable(dev);
+-		pm_runtime_set_active(dev);
+-		pm_runtime_enable(dev);
+-	}
+ 	return err;
+ }
+ 
 
