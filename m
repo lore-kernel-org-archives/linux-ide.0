@@ -1,76 +1,85 @@
-From: Roger Quadros <rogerq@ti.com>
-Subject: [PATCH v3 3/3] ata: ahci_platform: runtime resume the device before use
-Date: Wed, 8 Jan 2014 15:17:08 +0530
-Message-ID: <1389174428-31414-4-git-send-email-rogerq@ti.com>
-References: <1389174428-31414-1-git-send-email-rogerq@ti.com>
+From: Kishon Vijay Abraham I <kishon-l0cyMroinI0@public.gmane.org>
+Subject: Re: [PATCH v3 2/3] ata: ahci_platform: Manage SATA PHY
+Date: Wed, 8 Jan 2014 15:29:18 +0530
+Message-ID: <52CD2176.6050102@ti.com>
+References: <1389174428-31414-1-git-send-email-rogerq@ti.com> <1389174428-31414-3-git-send-email-rogerq@ti.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1389174428-31414-1-git-send-email-rogerq@ti.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: tj@kernel.org
-Cc: sergei.shtylyov@cogentembedded.com, kishon@ti.com, b.zolnierkie@samsung.com, hdegoede@redhat.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, Roger Quadros <rogerq@ti.com>, Balaji T K <balajitk@ti.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1389174428-31414-3-git-send-email-rogerq-l0cyMroinI0@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Roger Quadros <rogerq-l0cyMroinI0@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
+Cc: sergei.shtylyov-M4DtvfQ/ZS1MRgGoP+s0PdBPR1lH4CV8@public.gmane.org, b.zolnierkie-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org, hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Balaji T K <balajitk-l0cyMroinI0@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
-On OMAP platforms the device needs to be runtime resumed before
-it can be accessed. The OMAP HWMOD framework takes care of
-enabling the module and its resources based on the
-device's runtime PM state.
+Hi Roger,
 
-In this patch we runtime resume during .probe() and runtime suspend
-during .remove() (i.e. ahci_host_stop()).
+On Wednesday 08 January 2014 03:17 PM, Roger Quadros wrote:
+> From: Balaji T K <balajitk-l0cyMroinI0@public.gmane.org>
+> 
+> Some platforms have a PHY hooked up to the
+> SATA controller. The PHY needs to be initialized
+> and powered up for SATA to work. We do that
+> using the PHY framework.
+> 
+> [Roger Q] Cleaned up.
+> 
+> CC: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+> Signed-off-by: Balaji T K <balajitk-l0cyMroinI0@public.gmane.org>
+> Signed-off-by: Roger Quadros <rogerq-l0cyMroinI0@public.gmane.org>
+> ---
+>  drivers/ata/ahci.h          |  2 ++
+>  drivers/ata/ahci_platform.c | 28 +++++++++++++++++++++++++++-
+>  2 files changed, 29 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+> index 2289efd..f9bbada 100644
+> --- a/drivers/ata/ahci.h
+> +++ b/drivers/ata/ahci.h
+> @@ -37,6 +37,7 @@
+>  
+>  #include <linux/clk.h>
+>  #include <linux/libata.h>
+> +#include <linux/phy/phy.h>
+>  
+>  /* Enclosure Management Control */
+>  #define EM_CTRL_MSG_TYPE              0x000f0000
+> @@ -322,6 +323,7 @@ struct ahci_host_priv {
+>  	u32			em_buf_sz;	/* EM buffer size in byte */
+>  	u32			em_msg_type;	/* EM message type */
+>  	struct clk		*clk;		/* Only for platforms supporting clk */
+> +	struct phy		*phy;		/* If platform uses phy */
+>  	void			*plat_data;	/* Other platform data */
+>  };
+>  
+> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+> index d5ced13..f61093b 100644
+> --- a/drivers/ata/ahci_platform.c
+> +++ b/drivers/ata/ahci_platform.c
+> @@ -142,6 +142,21 @@ static int ahci_probe(struct platform_device *pdev)
+>  		}
+>  	}
+>  
+> +	hpriv->phy = devm_phy_get(dev, "sata-phy");
+> +	if (IS_ERR(hpriv->phy)) {
+> +		dev_dbg(dev, "can't get sata-phy\n");
+> +		/* return only if -EPROBE_DEFER */
+> +		if (PTR_ERR(hpriv->phy) == -EPROBE_DEFER) {
+> +			rc = -EPROBE_DEFER;
+> +			goto disable_unprepare_clk;
+> +		}
+> +	}
+> +
+> +	if (!IS_ERR(hpriv->phy)) {
+> +		phy_init(hpriv->phy);
 
-We also update the runtime PM state during .resume().
+Don't we have to check the return values of phy_init and phy_power_on? Is it
+not needed because it is an optional phy?
 
-Signed-off-by: Roger Quadros <rogerq@ti.com>
-Signed-off-by: Balaji T K <balajitk@ti.com>
----
- drivers/ata/ahci_platform.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
-
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index f61093b..04c4ac2 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -23,6 +23,7 @@
- #include <linux/platform_device.h>
- #include <linux/libata.h>
- #include <linux/ahci_platform.h>
-+#include <linux/pm_runtime.h>
- #include "ahci.h"
- 
- static void ahci_host_stop(struct ata_host *host);
-@@ -142,6 +143,9 @@ static int ahci_probe(struct platform_device *pdev)
- 		}
- 	}
- 
-+	pm_runtime_enable(dev);
-+	pm_runtime_get_sync(dev);
-+
- 	hpriv->phy = devm_phy_get(dev, "sata-phy");
- 	if (IS_ERR(hpriv->phy)) {
- 		dev_dbg(dev, "can't get sata-phy\n");
-@@ -269,6 +273,9 @@ static void ahci_host_stop(struct ata_host *host)
- 		clk_disable_unprepare(hpriv->clk);
- 		clk_put(hpriv->clk);
- 	}
-+
-+	pm_runtime_put_sync(dev);
-+	pm_runtime_disable(dev);
- }
- 
- #ifdef CONFIG_PM_SLEEP
-@@ -340,6 +347,11 @@ static int ahci_resume(struct device *dev)
- 
- 	ata_host_resume(host);
- 
-+	/* We resumed so update PM runtime state */
-+	pm_runtime_disable(dev);
-+	pm_runtime_set_active(dev);
-+	pm_runtime_enable(dev);
-+
- 	return 0;
- 
- disable_unprepare_clk:
--- 
-1.8.3.2
+Thanks
+Kishon
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
