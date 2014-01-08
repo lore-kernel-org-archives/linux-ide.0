@@ -1,59 +1,60 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
-Date: Wed, 08 Jan 2014 15:00:05 +0800
-Message-ID: <52CCF775.3010303@intel.com>
-References: <cover.1384030893.git.psusi@ubuntu.com> <1387236657-4852-1-git-send-email-psusi@ubuntu.com> <52CA1191.8060804@ubuntu.com> <52CA5CF4.2080708@codeaurora.org> <52CA744F.2080609@intel.com> <52CAC067.20601@ubuntu.com> <52CBB188.2080707@intel.com> <52CC1422.1020101@ubuntu.com> <52CCA3CF.5050308@intel.com> <52CCA6E3.2090400@ubuntu.com> <52CCAAA7.4070104@intel.com> <52CCAF8C.7040407@ubuntu.com> <52CCB3E8.5010101@intel.com> <52CCB5C4.7020206@ubuntu.com> <52CCB99A.4090201@intel.com> <52CCE11A.3040609@ubuntu.com>
+From: Roger Quadros <rogerq@ti.com>
+Subject: [PATCH v3 1/3] ata: ahci_platform: Update DT compatible list
+Date: Wed, 8 Jan 2014 15:17:06 +0530
+Message-ID: <1389174428-31414-2-git-send-email-rogerq@ti.com>
+References: <1389174428-31414-1-git-send-email-rogerq@ti.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <52CCE11A.3040609@ubuntu.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Phillip Susi <psusi@ubuntu.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>
-Cc: todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Linux-pm mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Content-Type: text/plain
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from bear.ext.ti.com ([192.94.94.41]:32884 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755969AbaAHJr2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 8 Jan 2014 04:47:28 -0500
+In-Reply-To: <1389174428-31414-1-git-send-email-rogerq@ti.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: tj@kernel.org
+Cc: sergei.shtylyov@cogentembedded.com, kishon@ti.com, b.zolnierkie@samsung.com, hdegoede@redhat.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, Roger Quadros <rogerq@ti.com>
 
-On 01/08/2014 01:24 PM, Phillip Susi wrote:
-> On 01/07/2014 09:36 PM, Aaron Lu wrote:
->> Oh, of course, my stupid :-) Then I suddenly think my patches can
->> kind of work - let's say we have done the hdparm setting thing
->> before suspend and the disk will be spun up in standby mode next
->> time it is powered. Then during system resume phase, remove the
->> pm_request_resume call in both SCSI and ATA's system resume
->> callback, - if the disk is powered, it will be in standby mode and
->> its runtime status is RPM_SUSPENDED, match its real status(sort
->> of); - if the disk is not powered due to some host feature or
->> whatever, it will be in unpowered mode and its runtime status is
->> RPM_SUSPENDED, still match its real status.
-> 
-> Right, but if the disk is a run of the mill ATA disk not configured
-> for power up in standby, then you end up with runtime pm saying that
-> it is suspended, when in fact, it spun up on its own and is sitting
-> there waiting for commands.
-> 
-> The PuiS setting isn't something we can or want to twiggle on our own
-> during suspend, that's an admin decision that they set more or less
-> permanently either with hdparm or the hardware jumper.  We just need
+The ahci_platform driver supports "snps,exynos5440-ahci" and
+"ibm,476gtr-ahci". Add this to the DT binding information.
 
-OK, I see.
+Also add compatible string "snps,dwc-ahci", which should be used
+for Synopsis Designware SATA cores. e.g. on TI OMAP5 and DRA7 platforms.
 
-> to detect what the drive has done and update the runtime pm status to
-> match.
+Signed-off-by: Roger Quadros <rogerq@ti.com>
+---
+ Documentation/devicetree/bindings/ata/ahci-platform.txt | 4 +++-
+ drivers/ata/ahci_platform.c                             | 1 +
+ 2 files changed, 4 insertions(+), 1 deletion(-)
 
-Then I would say we just keep the pm_request_resume call in their system
-resume callback. For drives that have that cool feature turned on, it
-will be in runtime active state while it's actually in standby mode, not
-a big deal since it should go to runtime suspended state once the
-autosuspend timer is due(the runtime PM core will schedule an idle call
-for newly resumed device); For drives that don't have that feature turned
-on, it will be in runtime active state while it's actually spun up, no
-problem here.
+diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+index 89de156..08ba647 100644
+--- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
++++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+@@ -4,7 +4,9 @@ SATA nodes are defined to describe on-chip Serial ATA controllers.
+ Each SATA controller should have its own node.
+ 
+ Required properties:
+-- compatible        : compatible list, contains "snps,spear-ahci"
++- compatible        : compatible list, contains "snps,spear-ahci",
++		      "snps,exynos5440-ahci", "ibm,476gtr-ahci",
++		      or "snps,dwc-ahci"
+ - interrupts        : <interrupt mapping for SATA IRQ>
+ - reg               : <registers mapping>
+ 
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index 4b231ba..d5ced13 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -330,6 +330,7 @@ static const struct of_device_id ahci_of_match[] = {
+ 	{ .compatible = "snps,spear-ahci", },
+ 	{ .compatible = "snps,exynos5440-ahci", },
+ 	{ .compatible = "ibm,476gtr-ahci", },
++	{ .compatible = "snps,dwc-ahci", },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, ahci_of_match);
+-- 
+1.8.3.2
 
-For the PuiS set drive, there is a time window the drive's power mode
-doesn't agree with its runtime status, the window is the length of the
-autosuspend time interval. Not a big deal I suppose, considering that
-time interval isn't eternal? And I wouldn't say the runtime status for
-the drive is wrong even in this case, since the runtime status is a
-reflection of whether the device is in use or not from kernel's view,
-instead of whether it is in a low power mode. But I agree we better
-align them.
