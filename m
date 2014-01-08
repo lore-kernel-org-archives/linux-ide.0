@@ -1,105 +1,79 @@
-From: Phillip Susi <psusi@ubuntu.com>
-Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
-Date: Tue, 07 Jan 2014 18:47:57 -0500
-Message-ID: <52CC922D.9070208@ubuntu.com>
-References: <Pine.LNX.4.44L0.1401071352080.1296-100000@iolanthe.rowland.org>
+From: Todd E Brandt <todd.e.brandt@linux.intel.com>
+Subject: [PATCH/RESEND v2 0/2] Hard disk S3 resume time optimization
+Date: Tue, 7 Jan 2014 16:55:00 -0800
+Message-ID: <20140108005500.GA29556@linux.intel.com>
+Reply-To: todd.e.brandt@linux.intel.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1401071352080.1296-100000@iolanthe.rowland.org>
-Sender: linux-pm-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Aaron Lu <aaron.lu@intel.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>, todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Linux-pm mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:9230 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753627AbaAHAzk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 7 Jan 2014 19:55:40 -0500
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: tj@kernel.org, James.Bottomley@HansenPartnership.com
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
+This patch reduces S3 resume time from 10+ seconds to less than a second
+on systems with SATA drives. It does this by making ata port and scsi disk
+resume non-blocking.
 
-On 01/07/2014 02:18 PM, Alan Stern wrote:
-> I don't know how you manually spin down your disk, but one
-> reasonable way to do it is to set the autosuspend timeout to 0.  If
-> you use this approach and apply my patch, the disk should remain
-> spun down when the system resumes.
+This is another resend of the patch I send out in early December. I've
+addressed all the feedback I received from list members, so all I really
+need is a yay or nay from Tejun Huo and James Bottomley (since it touches
+both subsystems).
 
-The traditional method before the recently added block pm feature was
-with hdparm -y.
+The notes below include the performance results and patch description.
 
-> Right.  If you hadn't put the whole system to sleep, the disk
-> would have gone into runtime suspend 2 minutes later (assuming you
-> didn't use it in the meantime).  Whereas since you did put the
-> whole system to sleep, the disk will go into runtime suspend 5
-> minutes after the system wakes up -- not 2 minutes later.  I.e.,
-> the timer has been reset from 2 minutes back to 5.
+[Computer One Test - 10.5X speedup on S3 resume]
+Platform: Ubuntu Raring Ringtail (13.04) kernel 3.11.0-rc7
+Cpu: Intel(R) Core(TM) i7-3960X CPU @ 3.30GHz
+Ahci: Intel C600/X79 series chipset 6-Port SATA AHCI (r5)
+Disk config (using all 6 ahci ports): 
+240 GB SSD, 3 TB HD, 500 GB HD, DVD-ROM (with cd inserted), 2 TB HD, 1 TB HD
+Resume time: [unpatched 11656ms] [patched 1110ms]
 
-What resets the timer?  It should only be reset when IO is done.  And
-yes, it is exactly that wakeup and turn around and suspend again that
-I'm trying to avoid; it puts unnecessary wear and tear on the disk.
+[Computer Two Test - 12X speedup on S3 resume]
+Platform: Ubuntu Raring Ringtail (13.04) kernel 3.11.0-rc7
+Cpu: Intel(R) Core(TM) i7-3770 CPU @ 3.40GHz
+Ahci: Intel 7 Series/C210 Series Chipset Family 6-port SATA [AHCI mode] (r4)
+Disk config (using 1 ahci port): 320 GB Hard Disk
+Resume time: [unpatched 5416 ms] [patched 448 ms]
 
-> How is the kernel supposed to know that you finished using the
-> disk before suspending the system?  After all, by setting the
-> autosuspend timeout to 5 minutes, you have already told the kernel
-> to keep the disk spun up if it has been used any time in the last 5
-> minutes, and you used it only 3 minutes ago.  As far as the kernel
-> can tell, you still want the disk to be spun up and ready for use.
-> That remains true at the time of the system resume.
+[Computer Three Test - 7.8X speedup on S3 resume]
+Platform: Ubuntu Raring Ringtail (13.04) kernel 3.11.0-rc7
+Cpu: Intel(R) Core(TM) i7-4770S CPU @ 3.10GHz
+Ahci: Intel Lynx Point 6-port SATA Controller 1 [AHCI mode] (r2)
+Disk config (using 2 ahci ports): DVD-ROM (empty), 500 GB Hard Disk
+Resume time: [unpatched 5385ms] [patched 688ms]
 
-That's the whole point: it doesn't know.  What it does know is that
-the disk is spun down on resume, and it has no reason to believe that
-you will need it again soon.  This is especially true given that your
-typical single ATA disk system will spin up the drive on its own
-anyhow, so on systems with multiple scsi or ATA disks that explicitly
-have been set to power up in standby, it is at least an even bet that
-you won't be touching them all soon.
+The essential issue behind hard disks' lengthy resume time is the ata port
+driver blocking until the ATA port hardware is finished coming online. So
+the kernel isn't really doing anything during all those seconds that the
+disks are resuming, it's just blocking until the hardware says it's ready
+to accept commands. Applying this patch set allows SATA disks to resume
+asynchronously without holding up system resume, thus allowing the UI to
+come online much more quickly. There may be a short period after resume
+where the disks are still spinning up in the background, but it will only
+momentarily affect applications using that disk.
 
-> You're forgetting that the same sd driver manages other types of 
-> devices than disk drives.  Card readers and USB flash drives have
-> no heads to retract and no spinning platters.  They don't need
-> START STOP commands (in fact, some of them probably would crash if
-> they received such a command).
+The patch set has two parts which apply to ata_port_resume and sd_resume
+respectively. Both are required to achieve any real performance benefit,
+but they will still function independantly without a performance hit.
 
-They are irrelevant since they ignore the command anyhow.
+ata_port_resume patch (1/2):
+sd_resume patch (2/2):
 
-> Irrelevant, unless you are also claiming that all ATA disks always
-> get powered on whenever the system resumes, something which is not
-> at all evident to me.  Particularly if the disk was in runtime
-> suspend before the system went to sleep.
+v2:
+ [in response to Oliver Neukum]
+ - Added scsi cmd error reporting through the scsi_sense_hdr
+ [in response to James Bottomley]
+ - unified the sd_resume code path by just making sd_resume async. Thus all
+   three resume callbacks: resume, restore, and runtime-resume will use it,
+   but there is a performance benefit for resume only.
+ [in response to Bartlomiej Zolnierkiewicz]
+ - unified the __ata_port_resume_common code path to include an async
+   parameter. This way there's no need to re-implement ata_port_request_pm.
 
-I'm saying that most do.  It doesn't require 100% to be relevant.
-There will also be plenty of disks at least for some time that are
-still using the internal standby timer rather than runtime pm.
-
-> Now I'm really getting confused.  Here, you are saying that ATA
-> disks will always spin up, all by themselves, whenever the system
-> resumes, and there's nothing the kernel can do to prevent it.  But
-> earlier you wrote:
-
-No, I'm saying some ( most in fact ) do, and some do not.  Both cases
-need to be handled.  Runtime pm must not indicate the disk is
-suspended when it spins up on its own after power on, which ATA disks
-do by default.  Oddly, the SCSI standard says that SCSI disks can be
-configured behave this way as well rather than requiring an explicit
-start command, though it doesn't say how and I've not heard of a way
-to do this.  I suppose this also applies to the USB flash drives and
-SD card readers you mentioned that are managed by sd.
-
-> Isn't this a contradiction?  Or are you making a distinction
-> between ATA and non-ATA disks?
-
-What?  I have some disk drives that I rarely access.  I simply don't
-want them starting up and spinning back down every time I resume.  In
-my case they are ATA with PuiS enabled, but it applies to SCSI the
-same way.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQEcBAEBCgAGBQJSzJItAAoJEI5FoCIzSKrwhCQIAIclA7u+FJ1PSZRYWcvFQg0B
-n/WIupSCAXfiSo4uVZpC9m4W8TR9CawEorIPZGE+G/Hv+zRz3YKqA3OOuOQc1S5i
-5IK019yY4EsOHsUK8RlBsgKu1bW0SdFsa73COzqT65bxNqUb5PUK5ed/Z1Kg7cTn
-QM7jCMYz0wE7cqAQQ8eV56Y1Nolb6T3WmqKqoGl+qJj+IvebCuJ9vsYXf7MhSd9b
-yb2Iq/ThR81vm68c6+KOFQkOkL3zPZ6QWCh5Xj4mRkvXtsd7htNKpxTkM7OC6azF
-Z0I5xreArN9SQ8GLHtzB2Lrs+SzlMSvIE1HKQdieBcy//LImk8DajbddupJy7Bk=
-=dYPC
------END PGP SIGNATURE-----
