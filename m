@@ -1,167 +1,96 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: Re: [PATCH V4 1/2] Phy: Exynos: Add Exynos5250 sata phy driver
-Date: Wed, 08 Jan 2014 16:46:52 +0100
-Message-ID: <2147414.aVD9xOxI7n@amdc1032>
-References: <1388408823-4963-1-git-send-email-yuvaraj.cd@samsung.com>
- <2078358.4WniMksEuS@amdc1032>
- <CAKuRcOK73rpH_qJu-tNRjsBNA20B0_w7EiA-Xw6vVTc-arygkA@mail.gmail.com>
+From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v3 2/3] ata: ahci_platform: Manage SATA PHY
+Date: Wed, 08 Jan 2014 16:55:04 +0100
+Message-ID: <52CD74D8.4080808@redhat.com>
+References: <1389174428-31414-1-git-send-email-rogerq@ti.com> <1389174428-31414-3-git-send-email-rogerq@ti.com> <52CD2176.6050102@ti.com> <6214646.nAF6lzWV79@wuerfel> <52CD364F.4060104@ti.com> <52CD4F2A.9080301@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:25678 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755224AbaAHPrO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Jan 2014 10:47:14 -0500
-In-reply-to: <CAKuRcOK73rpH_qJu-tNRjsBNA20B0_w7EiA-Xw6vVTc-arygkA@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <52CD4F2A.9080301-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Roger Quadros <rogerq-l0cyMroinI0@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Kishon Vijay Abraham I <kishon-l0cyMroinI0@public.gmane.org>
+Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, sergei.shtylyov-M4DtvfQ/ZS1MRgGoP+s0PdBPR1lH4CV8@public.gmane.org, b.zolnierkie-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Balaji T K <balajitk-l0cyMroinI0@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: Yuvaraj Kumar <yuvaraj.cd@gmail.com>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>, "kgene.kim@samsung.com" <kgene.kim@samsung.com>, linux-kernel@vger.kernel.org, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-doc@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>, Jingoo Han <jg1.han@samsung.com>, sunil joshi <joshi@samsung.com>, Tomasz Figa <t.figa@samsung.com>, Stephen Warren <swarren@wwwdotorg.org>, Rob Herring <rob.herring@calxeda.com>, Grant Likely <grant.likely@linaro.org>, Christoffer Dall <christoffer.dall@linaro.org>, Yuvaraj Kumar C D <yuvaraj.cd@samsung.com>, Girish K S <ks.giri@samsung.com>, Vasanth Ananthan <vasanth.a@samsung.com>, linux-ide@vger.kernel.org
 
-On Wednesday, January 08, 2014 06:39:52 PM Yuvaraj Kumar wrote:
-> On Tue, Jan 7, 2014 at 7:52 PM, Bartlomiej Zolnierkiewicz
-> <b.zolnierkie@samsung.com> wrote:
-> >
-> > Hi,
-> >
-> > On Thursday, January 02, 2014 07:03:23 PM Yuvaraj Kumar wrote:
-> >> On Tue, Dec 31, 2013 at 9:00 PM, Bartlomiej Zolnierkiewicz
-> >> <b.zolnierkie@samsung.com> wrote:
-> >
-> >> >> @@ -8,3 +8,4 @@ obj-$(CONFIG_PHY_EXYNOS_MIPI_VIDEO)   += phy-exynos-mipi-video.o
-> >> >>  obj-$(CONFIG_PHY_MVEBU_SATA)         += phy-mvebu-sata.o
-> >> >>  obj-$(CONFIG_OMAP_USB2)                      += phy-omap-usb2.o
-> >> >>  obj-$(CONFIG_TWL4030_USB)            += phy-twl4030-usb.o
-> >> >> +obj-$(CONFIG_EXYNOS5250_SATA_PHY)    += sata_phy_exynos5250.o exynos5250_phy_i2c.o
-> >> >
-> >> > Will this compile/work without I2C support?
-> >> No.I missed this.It will not compile without I2C support.
-> >> How about  below change in drivers/phy/Kconfig ?
-> >> config EXYNOS5250_SATA_PHY
-> >> select I2C
-> >> select I2C_S3C2410
-> >
-> > Fine with me.
-> >
-> >> > CONFIG_EXYNOS5250_SATA_PHY doesn't require it currently.
-> >> I didnt get this. what it doesn't require?
-> >
-> > It doesn't require I2C.  If you add above I2C selects it will be OK.
-> >
-> >> >> +struct i2c_driver sataphy_i2c_driver = {
-> >> >
-> >> > Keeping it global together with sataphy_attach_i2c_client() is not very
-> >> > nice.  I've talked with our local device tree guru (a.k.a. Tomasz Figa)
-> >> > about this and it may be that this i2c driver is not even necessary.
-> >> Can you elaborate more on this?
-> >
-> > The usage of the global i2c driver is not a proper solution.
-> >
-> > i2c driver should register itself in the driver init function
-> do you mean i2c-s3c2410.c driver?
+Hi,
 
-No, I mean that drivers/phy/exynos5250_phy_i2c.c should do
+On 01/08/2014 02:14 PM, Hans de Goede wrote:
+> Hi,
+>
+> On 01/08/2014 12:28 PM, Roger Quadros wrote:
+>> On 01/08/2014 03:35 PM, Arnd Bergmann wrote:
+>>> On Wednesday 08 January 2014 15:29:18 Kishon Vijay Abraham I wrote:
+>>>>> +     hpriv->phy = devm_phy_get(dev, "sata-phy");
+>>>>> +     if (IS_ERR(hpriv->phy)) {
+>>>>> +             dev_dbg(dev, "can't get sata-phy\n");
+>>>>> +             /* return only if -EPROBE_DEFER */
+>>>>> +             if (PTR_ERR(hpriv->phy) == -EPROBE_DEFER) {
+>>>>> +                     rc = -EPROBE_DEFER;
+>>>>> +                     goto disable_unprepare_clk;
+>>>>> +             }
+>>>>> +     }
+>>>
+>>> This should probably check for all errors except "not present"
+>>> rather than checking for -EPROBE_DEFER. We want to abort the
+>>> probe function for deferred probe as well as the case where we
+>>> a PHY was listed but isn't working properly.
+>>
+>> OK.
+>>
+>>>
+>>>>> +     if (!IS_ERR(hpriv->phy)) {
+>>>>> +             phy_init(hpriv->phy);
+>>>>
+>>>> Don't we have to check the return values of phy_init and phy_power_on? Is it
+>>>> not needed because it is an optional phy?
+>>>
+>>> Right. I think we should set hpriv->phy to NULL if it's not there and
+>>> then call the functions only if it's actually present but bail out on
+>>> an error.
+>>
+>> OK. How does this look?
+>>
+>> hpriv->phy = devm_phy_get(dev, "sata-phy");
+>> if (IS_ERR(hpriv->phy)) {
+>>     if (PTR_ERR(hpriv->phy) == -ENODEV)
+>>         goto continue;
+>
+> -ENODEV is not the right errno to check for,
+> if there is no phy specified in the dt then
+> you will get -EINVAL (no phy-names property) or
+> -ENODATA (phy-names property is there but name
+> not found).
+>
+> Also you don't want to log an error on
+> PROBE_DEFERRAL.
+>
+> Here is what I've for similar code I'm working on
+> for ehci-platform.c and ohci-platform.c :
+>
+>                  priv->phy = devm_phy_get(&dev->dev, "phy0");
+>                  if (IS_ERR(priv->phy)) {
+>                          err = PTR_ERR(priv->phy);
+>                          if (err != -EINVAL && err != -ENODATA) {
+>                                  if (err != -EPROBE_DEFER)
+>                                          dev_err(&dev->dev,
+>                                                  "Error getting phy\n");
+>                                  goto err_put_hcd;
+>                          }
+>                          priv->phy = NULL;
+>                  }
 
-	i2c_add_driver(&sataphy_i2c_driver)
+Scrap that I was reading the code wrong. Indeed if there is no
+devicetree phy info it will return -ENODEV. Actually it will only ever
+return one of -ENOPROBE or -ENODEV, so only checking for -ENOPROBE and
+then fail silently be enough. This also has the advantage of being
+future proof, if the error code for no phy found ever changes,
+things won't break.
 
-instead of drivers/phy/sata_phy_exynos5250.c.
+Regards,
 
-i.e.:
-
-...
-static int exynos_sata_i2c_probe(struct i2c_client *client,
-				const struct i2c_device_id *i2c_id)
-{
-	return 0;
-}
-...
-static struct i2c_driver sataphy_i2c_driver = {
-...
-};
-...
-static int __init exynos5250_phy_i2c_init(void)
-{
-	return i2c_add_driver(&sataphy_i2c_driver);
-}
-...
-module_init(exynos5250_phy_i2c_init);
-...
-
-BTW For consistency with the new naming it would be good to rename
-exynos5250_phy_i2c.c to phy-exynos5250-sata-i2c.c.
-
-> > (which is not present currently) instead of being registered by
-> > the SATA PHY driver.
-> >
-> > The SATA PHY driver should find i2c client device using DT.
-> >
-> > sataphy_attach_i2c_client() should then be removed.
-> >
-> >> > If you manage to extract i2c adapter and address data from the device
-> >> > tree (using proper of_* methods) they can be used instead of i2c client
-> >> > data in the SATA PHY driver.
-> >> I think the above is true, if the complete SATA PHY controller sits on
-> >> the i2c adapter.
-> >> But in Exynos5250 case,only the few configurations ( CMU and TRSV
-> >> blocks ) SATA PHY
-> >> are done through I2C(channel 9). Correct me if i am wrong.
-> >
-> > Well, it shouldn't matter if all or only some of the configuration of
-> > the SATA PHY controller is done through i2c.
-> >
-> > Anyway, how about another idea -> adding a new phandle of i2c client
-> > device to SATA PHY DT entry and using DT in the SATA PHY driver to
-> > find i2c client device?
-> >
-> > i.e. "samsung,exynos-sataphy-i2c-phandle" property in SATA PHY
-> > controller DT entry can point at existing "sata-phy@38" sataphy i2c
-> > client DT entry (by adding new label to it, i.e. "sata_phy_i2c").
-> >
-> > Such new phandle can be used first to find the DT device node of i2c
-> > device (by using of_parse_phandle(), if it returns NULL the error
-> > should be returned) and then later to find proper i2c client device
-> > (by using of_find_i2c_device_by_node(), if it returns NULL deferred
-> > probing should be requested by returning -EPROBE_DEFER).
-> I can get the i2c_client structure,but how the client driver binding
-> happens to registered device?
-> Currently with this approach i2c client device is being registered but
-> cleint driver could not able to bind with the device.
-
-Could you please explain more what the problem is?  What is the new
-code exacly and what is the difference in the kernel logs?
-
-Best regards,
+Hans
 --
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
-
-> [    0.082680] i2c i2c-9: adapter [s3c2410-i2c] registered
-> [    0.082691] i2c i2c-9: of_i2c: walking child nodes
-> [    0.082696] i2c i2c-9: of_i2c: register /i2c@121D0000/sata-phy@38
-> [    0.082794] i2c 9-0038: uevent
-> [    0.082845] i2c i2c-9: client [exynos-sataphy-i2c] registered with
-> bus id 9-0038
-> [    0.082851] s3c-i2c 121d0000.i2c: i2c-9: S3C I2C adapter
-> >
-> > i2c@121D0000 {
-> >         ...
-> >         sata_phy_i2c: sata-phy@38 {
-> >                 ...
-> >         };
-> >         ...
-> > };
-> >
-> > sata_phy: sata-phy@12170000 {
-> >         ...
-> >         samsung,exynos-sataphy-i2c-phandle = <&sata_phy_i2c>;
-> >         ...
-> > };
-> >
-> > Best regards,
-> > --
-> > Bartlomiej Zolnierkiewicz
-> > Samsung R&D Institute Poland
-> > Samsung Electronics
-
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
