@@ -1,83 +1,167 @@
-From: Lior Amsalem <alior@marvell.com>
-Subject: RE: [PATCH] ata: sata_mv: setting PHY speed according to SControl
- speed
-Date: Wed, 8 Jan 2014 15:45:31 +0200
-Message-ID: <EE71107DF0D1F24FA2D95041E64AB9E801C034BF2AD1@IL-MB01.marvell.com>
-References: <1387800455-30629-1-git-send-email-simon.guinot@sequanux.org>
- <20131231121214.GB3985@htj.dyndns.org> <20131231170515.GG32537@lunn.ch>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: Re: [PATCH V4 1/2] Phy: Exynos: Add Exynos5250 sata phy driver
+Date: Wed, 08 Jan 2014 16:46:52 +0100
+Message-ID: <2147414.aVD9xOxI7n@amdc1032>
+References: <1388408823-4963-1-git-send-email-yuvaraj.cd@samsung.com>
+ <2078358.4WniMksEuS@amdc1032>
+ <CAKuRcOK73rpH_qJu-tNRjsBNA20B0_w7EiA-Xw6vVTc-arygkA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:40553 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756464AbaAHNqL convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 8 Jan 2014 08:46:11 -0500
-In-Reply-To: <20131231170515.GG32537@lunn.ch>
-Content-Language: en-US
+Received: from mailout2.samsung.com ([203.254.224.25]:25678 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755224AbaAHPrO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Jan 2014 10:47:14 -0500
+In-reply-to: <CAKuRcOK73rpH_qJu-tNRjsBNA20B0_w7EiA-Xw6vVTc-arygkA@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Lunn <andrew@lunn.ch>, Tejun Heo <tj@kernel.org>
-Cc: Simon Guinot <simon.guinot@sequanux.org>, Jeff Garzik <jgarzik@redhat.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Jason Cooper <jason@lakedaemon.net>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>
+To: Yuvaraj Kumar <yuvaraj.cd@gmail.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>, "kgene.kim@samsung.com" <kgene.kim@samsung.com>, linux-kernel@vger.kernel.org, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-doc@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>, Jingoo Han <jg1.han@samsung.com>, sunil joshi <joshi@samsung.com>, Tomasz Figa <t.figa@samsung.com>, Stephen Warren <swarren@wwwdotorg.org>, Rob Herring <rob.herring@calxeda.com>, Grant Likely <grant.likely@linaro.org>, Christoffer Dall <christoffer.dall@linaro.org>, Yuvaraj Kumar C D <yuvaraj.cd@samsung.com>, Girish K S <ks.giri@samsung.com>, Vasanth Ananthan <vasanth.a@samsung.com>, linux-ide@vger.kernel.org
 
-Hi Andrew,
-
-> From: Andrew Lunn [mailto:andrew@lunn.ch]
-> Sent: Tuesday, December 31, 2013 7:05 PM
-> 
-> On Tue, Dec 31, 2013 at 07:12:14AM -0500, Tejun Heo wrote:
-> > On Mon, Dec 23, 2013 at 01:07:35PM +0100, Simon Guinot wrote:
-> > > @@ -1358,6 +1359,7 @@ static int mv_scr_write(struct ata_link *link,
-> > > unsigned int sc_reg_in, u32 val)
-> > >
-> > >  	if (ofs != 0xffffffffU) {
-> > >  		void __iomem *addr = mv_ap_base(link->ap) + ofs;
-> > > +		void __iomem *lp_phy_addr = mv_ap_base(link->ap) +
-> LP_PHY_CTL;
-> > >  		if (sc_reg_in == SCR_CONTROL) {
-> > >  			/*
-> > >  			 * Workaround for 88SX60x1 FEr SATA#26:
-> > > @@ -1374,6 +1376,14 @@ static int mv_scr_write(struct ata_link *link,
-> unsigned int sc_reg_in, u32 val)
-> > >  			 */
-> > >  			if ((val & 0xf) == 1 || (readl(addr) & 0xf) == 1)
-> > >  				val |= 0xf000;
-> > > +
-> > > +			/*
-> > > +			 * Setting PHY speed according to SControl speed
-> > > +			 */
-> > > +			if ((val & 0xf0) == 0x10)
-> > > +				writelfl(0x7, lp_phy_addr);
-> > > +			else
-> > > +				writelfl(0x227, lp_phy_addr);
+On Wednesday, January 08, 2014 06:39:52 PM Yuvaraj Kumar wrote:
+> On Tue, Jan 7, 2014 at 7:52 PM, Bartlomiej Zolnierkiewicz
+> <b.zolnierkie@samsung.com> wrote:
 > >
-> > Do we know that this is safe for all sata_mvs?  If other sata_mvs
-> > haven't had the described issue, maybe this should be applied
-> > selectively to the said soc?  I'd actually prefer to avoid such
-> > conditionals but we need to confirm this is okay for other
-> > implementations.
-> 
-> Hi Tejun
-> 
-> I've tested on Kirkwood, and not had problems. But i agree with you. We
-> need somebody in Marvell to say this is safe with all sata_mv variants.
-> 
-> Lior, can you comment?
+> > Hi,
+> >
+> > On Thursday, January 02, 2014 07:03:23 PM Yuvaraj Kumar wrote:
+> >> On Tue, Dec 31, 2013 at 9:00 PM, Bartlomiej Zolnierkiewicz
+> >> <b.zolnierkie@samsung.com> wrote:
+> >
+> >> >> @@ -8,3 +8,4 @@ obj-$(CONFIG_PHY_EXYNOS_MIPI_VIDEO)   += phy-exynos-mipi-video.o
+> >> >>  obj-$(CONFIG_PHY_MVEBU_SATA)         += phy-mvebu-sata.o
+> >> >>  obj-$(CONFIG_OMAP_USB2)                      += phy-omap-usb2.o
+> >> >>  obj-$(CONFIG_TWL4030_USB)            += phy-twl4030-usb.o
+> >> >> +obj-$(CONFIG_EXYNOS5250_SATA_PHY)    += sata_phy_exynos5250.o exynos5250_phy_i2c.o
+> >> >
+> >> > Will this compile/work without I2C support?
+> >> No.I missed this.It will not compile without I2C support.
+> >> How about  below change in drivers/phy/Kconfig ?
+> >> config EXYNOS5250_SATA_PHY
+> >> select I2C
+> >> select I2C_S3C2410
+> >
+> > Fine with me.
+> >
+> >> > CONFIG_EXYNOS5250_SATA_PHY doesn't require it currently.
+> >> I didnt get this. what it doesn't require?
+> >
+> > It doesn't require I2C.  If you add above I2C selects it will be OK.
+> >
+> >> >> +struct i2c_driver sataphy_i2c_driver = {
+> >> >
+> >> > Keeping it global together with sataphy_attach_i2c_client() is not very
+> >> > nice.  I've talked with our local device tree guru (a.k.a. Tomasz Figa)
+> >> > about this and it may be that this i2c driver is not even necessary.
+> >> Can you elaborate more on this?
+> >
+> > The usage of the global i2c driver is not a proper solution.
+> >
+> > i2c driver should register itself in the driver init function
+> do you mean i2c-s3c2410.c driver?
 
-This register (0x58) was introduced in a370/axp (with a new SATA PHY version).
-In other SoCs the register does not exist.
+No, I mean that drivers/phy/exynos5250_phy_i2c.c should do
 
-Writing/reading the registers on A300/A310 will not cause any harm (I haven't
-tried A510).
-But, I think it's better to check if we're running on A370/AXP. (maybe with a new
-compatibility string in DT?)
+	i2c_add_driver(&sataphy_i2c_driver)
 
-> 
-> Thanks
-> 	Andrew
+instead of drivers/phy/sata_phy_exynos5250.c.
 
+i.e.:
 
-Regards,
-Lior Amsalem
+...
+static int exynos_sata_i2c_probe(struct i2c_client *client,
+				const struct i2c_device_id *i2c_id)
+{
+	return 0;
+}
+...
+static struct i2c_driver sataphy_i2c_driver = {
+...
+};
+...
+static int __init exynos5250_phy_i2c_init(void)
+{
+	return i2c_add_driver(&sataphy_i2c_driver);
+}
+...
+module_init(exynos5250_phy_i2c_init);
+...
+
+BTW For consistency with the new naming it would be good to rename
+exynos5250_phy_i2c.c to phy-exynos5250-sata-i2c.c.
+
+> > (which is not present currently) instead of being registered by
+> > the SATA PHY driver.
+> >
+> > The SATA PHY driver should find i2c client device using DT.
+> >
+> > sataphy_attach_i2c_client() should then be removed.
+> >
+> >> > If you manage to extract i2c adapter and address data from the device
+> >> > tree (using proper of_* methods) they can be used instead of i2c client
+> >> > data in the SATA PHY driver.
+> >> I think the above is true, if the complete SATA PHY controller sits on
+> >> the i2c adapter.
+> >> But in Exynos5250 case,only the few configurations ( CMU and TRSV
+> >> blocks ) SATA PHY
+> >> are done through I2C(channel 9). Correct me if i am wrong.
+> >
+> > Well, it shouldn't matter if all or only some of the configuration of
+> > the SATA PHY controller is done through i2c.
+> >
+> > Anyway, how about another idea -> adding a new phandle of i2c client
+> > device to SATA PHY DT entry and using DT in the SATA PHY driver to
+> > find i2c client device?
+> >
+> > i.e. "samsung,exynos-sataphy-i2c-phandle" property in SATA PHY
+> > controller DT entry can point at existing "sata-phy@38" sataphy i2c
+> > client DT entry (by adding new label to it, i.e. "sata_phy_i2c").
+> >
+> > Such new phandle can be used first to find the DT device node of i2c
+> > device (by using of_parse_phandle(), if it returns NULL the error
+> > should be returned) and then later to find proper i2c client device
+> > (by using of_find_i2c_device_by_node(), if it returns NULL deferred
+> > probing should be requested by returning -EPROBE_DEFER).
+> I can get the i2c_client structure,but how the client driver binding
+> happens to registered device?
+> Currently with this approach i2c client device is being registered but
+> cleint driver could not able to bind with the device.
+
+Could you please explain more what the problem is?  What is the new
+code exacly and what is the difference in the kernel logs?
+
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
+
+> [    0.082680] i2c i2c-9: adapter [s3c2410-i2c] registered
+> [    0.082691] i2c i2c-9: of_i2c: walking child nodes
+> [    0.082696] i2c i2c-9: of_i2c: register /i2c@121D0000/sata-phy@38
+> [    0.082794] i2c 9-0038: uevent
+> [    0.082845] i2c i2c-9: client [exynos-sataphy-i2c] registered with
+> bus id 9-0038
+> [    0.082851] s3c-i2c 121d0000.i2c: i2c-9: S3C I2C adapter
+> >
+> > i2c@121D0000 {
+> >         ...
+> >         sata_phy_i2c: sata-phy@38 {
+> >                 ...
+> >         };
+> >         ...
+> > };
+> >
+> > sata_phy: sata-phy@12170000 {
+> >         ...
+> >         samsung,exynos-sataphy-i2c-phandle = <&sata_phy_i2c>;
+> >         ...
+> > };
+> >
+> > Best regards,
+> > --
+> > Bartlomiej Zolnierkiewicz
+> > Samsung R&D Institute Poland
+> > Samsung Electronics
 
