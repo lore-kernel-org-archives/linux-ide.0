@@ -1,71 +1,43 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] libata fixes for 3.13-rc7
-Date: Wed, 8 Jan 2014 19:11:18 -0500
-Message-ID: <20140109001118.GA11420@htj.dyndns.org>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
+Date: Thu, 09 Jan 2014 09:29:59 +0800
+Message-ID: <52CDFB97.9080303@intel.com>
+References: <Pine.LNX.4.44L0.1401081547490.1659-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f176.google.com ([209.85.216.176]:52292 "EHLO
-	mail-qc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757725AbaAIALW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Jan 2014 19:11:22 -0500
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.1401081547490.1659-100000@iolanthe.rowland.org>
+Sender: linux-pm-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>, Phillip Susi <psusi@ubuntu.com>
+Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>, todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Linux-pm mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hello, Linus.
+On 01/09/2014 05:21 AM, Alan Stern wrote:
+> On Wed, 8 Jan 2014, Phillip Susi wrote:
+>> You issue a REQUEST SENSE command and that returns status indicating
+>> whether the drive is stopped, or in standby.  See my patches.  One of
+> 
+> I never saw your patches.  Where were they posted?
+> 
+> If you issue the REQUEST SENSE command in the usual way (going through
+> the SCSI and block layers), and the disk is already in runtime suspend,
+> it won't do what you want.  The block layer won't deliver requests
+> until the device leaves the RPM_SUSPENDED state.  In addition, when it
+> receives the command the block layer will submit a deferred
+> runtime-resume request, which rather defeats the whole purpose.
+> 
+> (I guess you actually saw some of this happen, and that's what led to
+> this email thread in the first place.)
+> 
+> It's a knotty situation.  The only way to find out whether the disk is
+> spinning is to ask it, which requires doing I/O, which requires
+> spinning up the disk.  Maybe we need to add a mechanism to the block
+> layer's runtime PM implementation for addressing just this situation.
 
-Late fixes for libata.  Nothing too interesting.  Adding missing PM
-callbacks to satat_sis and an additional PCI ID for ahci.
-
-The commits are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-3.13-fixes
-
-for you to fetch changes up to 55c82a6c2a513de1d8a20c3b3a769129a1a14d50:
-
-  sata_sis: missing PM support (2014-01-01 15:14:40 -0500)
-
-Thanks.
-----------------------------------------------------------------
-Alan (1):
-      sata_sis: missing PM support
-
-Simon Guinot (1):
-      ahci: add PCI ID for Marvell 88SE9170 SATA controller
-
- drivers/ata/ahci.c     | 3 +++
- drivers/ata/sata_sis.c | 4 ++++
- 2 files changed, 7 insertions(+)
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index c0ed4f27..e3a92a6 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -427,6 +427,9 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	  .driver_data = board_ahci_yes_fbs },			/* 88se9128 */
- 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9125),
- 	  .driver_data = board_ahci_yes_fbs },			/* 88se9125 */
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_MARVELL_EXT, 0x9178,
-+			 PCI_VENDOR_ID_MARVELL_EXT, 0x9170),
-+	  .driver_data = board_ahci_yes_fbs },			/* 88se9170 */
- 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x917a),
- 	  .driver_data = board_ahci_yes_fbs },			/* 88se9172 */
- 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9172),
-diff --git a/drivers/ata/sata_sis.c b/drivers/ata/sata_sis.c
-index fe3ca09..1ad2f62 100644
---- a/drivers/ata/sata_sis.c
-+++ b/drivers/ata/sata_sis.c
-@@ -83,6 +83,10 @@ static struct pci_driver sis_pci_driver = {
- 	.id_table		= sis_pci_tbl,
- 	.probe			= sis_init_one,
- 	.remove			= ata_pci_remove_one,
-+#ifdef CONFIG_PM
-+	.suspend		= ata_pci_device_suspend,
-+	.resume			= ata_pci_device_resume,
-+#endif
- };
- 
- static struct scsi_host_template sis_sht = {
+I think it's knotty because the runtime PM status is a view from the
+kernel/host side, i.e. it is runtime suspended if it is not being used,
+no matter which power state it is in. The trigger for the PM state
+transition are all based on this, if we want to do it the other way
+around(update device's runtime PM status based on device's actual power
+state), we are in a knotty situation.
