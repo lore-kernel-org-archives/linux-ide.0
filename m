@@ -1,43 +1,61 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
-Date: Thu, 09 Jan 2014 09:29:59 +0800
-Message-ID: <52CDFB97.9080303@intel.com>
-References: <Pine.LNX.4.44L0.1401081547490.1659-100000@iolanthe.rowland.org>
+From: Roger Quadros <rogerq@ti.com>
+Subject: Re: [PATCH v3 2/3] ata: ahci_platform: Manage SATA PHY
+Date: Thu, 9 Jan 2014 11:56:02 +0530
+Message-ID: <52CE40FA.5070605@ti.com>
+References: <1389174428-31414-1-git-send-email-rogerq@ti.com> <6214646.nAF6lzWV79@wuerfel> <52CD364F.4060104@ti.com> <5878159.3LjUeZKdYB@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1401081547490.1659-100000@iolanthe.rowland.org>
-Sender: linux-pm-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>, Phillip Susi <psusi@ubuntu.com>
-Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>, todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Linux-pm mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from devils.ext.ti.com ([198.47.26.153]:49832 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751135AbaAIG0S (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Jan 2014 01:26:18 -0500
+In-Reply-To: <5878159.3LjUeZKdYB@wuerfel>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>, tj@kernel.org, sergei.shtylyov@cogentembedded.com, b.zolnierkie@samsung.com, hdegoede@redhat.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, Balaji T K <balajitk@ti.com>
 
-On 01/09/2014 05:21 AM, Alan Stern wrote:
-> On Wed, 8 Jan 2014, Phillip Susi wrote:
->> You issue a REQUEST SENSE command and that returns status indicating
->> whether the drive is stopped, or in standby.  See my patches.  One of
+On 01/08/2014 05:16 PM, Arnd Bergmann wrote:
+> On Wednesday 08 January 2014 16:58:15 Roger Quadros wrote:
+>> hpriv->phy = devm_phy_get(dev, "sata-phy");
+>> if (IS_ERR(hpriv->phy)) {
+>>         if (PTR_ERR(hpriv->phy) == -ENODEV)
+>>                 goto continue;
+>>
+>>         dev_err(dev, "couldn't get sata-phy\n");
+>>         rc = PTR_ERR(hpriv->phy);
+>>         goto disable_unprepare_clk;
+>> }
+>>
+>> continue:
+>>
+>> if (!IS_ERR(hpriv->phy)) {
+>>         rc = phy_init(hpriv->phy);
+>>         if (rc)
+>>                 goto disable_unprepare_clk;
+>>
+>>         rc = phy_power_on(hpriv->phy);
+>>         if (rc) {
+>>                 phy_exit(hpriv->phy);
+>>                 goto disable_unprepare_clk;
+>>         }
+>> }
 > 
-> I never saw your patches.  Where were they posted?
+> As I said, I'd prefer to set hpriv->phy to NULL in case of -ENODEV,
+> but functionally it seems right (with the fixup from your other mail).
 > 
-> If you issue the REQUEST SENSE command in the usual way (going through
-> the SCSI and block layers), and the disk is already in runtime suspend,
-> it won't do what you want.  The block layer won't deliver requests
-> until the device leaves the RPM_SUSPENDED state.  In addition, when it
-> receives the command the block layer will submit a deferred
-> runtime-resume request, which rather defeats the whole purpose.
-> 
-> (I guess you actually saw some of this happen, and that's what led to
-> this email thread in the first place.)
-> 
-> It's a knotty situation.  The only way to find out whether the disk is
-> spinning is to ask it, which requires doing I/O, which requires
-> spinning up the disk.  Maybe we need to add a mechanism to the block
-> layer's runtime PM implementation for addressing just this situation.
 
-I think it's knotty because the runtime PM status is a view from the
-kernel/host side, i.e. it is runtime suspended if it is not being used,
-no matter which power state it is in. The trigger for the PM state
-transition are all based on this, if we want to do it the other way
-around(update device's runtime PM status based on device's actual power
-state), we are in a knotty situation.
+Why do you prefer setting hpriv->phy to NULL instead of using IS_ERR() check
+before hpriv->phy is used?
+The latter seems to be the norm at least among clock framework users.
+
+> One more comment: you shouldn't print an error message before
+> returning -EPROBE_DEFER, so if you want to keep that message,
+> you have to check for that return value after all.
+>
+Right.
+
+cheers,
+-roger
