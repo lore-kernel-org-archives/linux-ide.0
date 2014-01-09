@@ -1,32 +1,39 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v4 2/3] ata: ahci_platform: Manage SATA PHY
-Date: Thu, 9 Jan 2014 10:00:16 -0500
-Message-ID: <20140109150016.GA18867@htj.dyndns.org>
-References: <1389264962-22858-1-git-send-email-rogerq@ti.com>
- <1389264962-22858-3-git-send-email-rogerq@ti.com>
- <52CE85E9.7040703@cogentembedded.com>
- <52CE89F9.4040908@ti.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
+Date: Thu, 9 Jan 2014 10:40:28 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1401091032430.1493-100000@iolanthe.rowland.org>
+References: <52CDFB97.9080303@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f54.google.com ([209.85.216.54]:64965 "EHLO
-	mail-qa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750990AbaAIPAV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Jan 2014 10:00:21 -0500
-Content-Disposition: inline
-In-Reply-To: <52CE89F9.4040908@ti.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <52CDFB97.9080303@intel.com>
+Sender: linux-pm-owner@vger.kernel.org
+To: Aaron Lu <aaron.lu@intel.com>
+Cc: Phillip Susi <psusi@ubuntu.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>, todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Linux-pm mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>
 List-Id: linux-ide@vger.kernel.org
-To: Roger Quadros <rogerq@ti.com>
-Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, kishon@ti.com, b.zolnierkie@samsung.com, hdegoede@redhat.com, arnd@arndb.de, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, Balaji T K <balajitk@ti.com>
 
-On Thu, Jan 09, 2014 at 05:07:29PM +0530, Roger Quadros wrote:
-> I know it is pointless functionally, but it is just my preference
-> aesthetically.
+On Thu, 9 Jan 2014, Aaron Lu wrote:
+
+> > It's a knotty situation.  The only way to find out whether the disk is
+> > spinning is to ask it, which requires doing I/O, which requires
+> > spinning up the disk.  Maybe we need to add a mechanism to the block
+> > layer's runtime PM implementation for addressing just this situation.
 > 
-> Is it much of an issue if left as is?
+> I think it's knotty because the runtime PM status is a view from the
+> kernel/host side, i.e. it is runtime suspended if it is not being used,
+> no matter which power state it is in. The trigger for the PM state
+> transition are all based on this, if we want to do it the other way
+> around(update device's runtime PM status based on device's actual power
+> state), we are in a knotty situation.
 
-Yes.
+No, that's not the problem.  The problem is that the block layer does
+not permit any requests to go through if the queue's rpm_status is
+RPM_SUSPENDED.
 
--- 
-tejun
+We should change the code in the block layer.  blk_pm_peek_request 
+should allow requests with REQ_PM set to go through, no matter what the 
+rpm_status is.  Then the disk driver could query the disk (to see 
+whether it is spinning) while the disk remains in runtime suspend.
+
+Alan Stern
+
