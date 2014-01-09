@@ -1,59 +1,71 @@
-From: Phillip Susi <psusi@ubuntu.com>
-Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
-Date: Wed, 08 Jan 2014 16:50:46 -0500
-Message-ID: <52CDC836.4000201@ubuntu.com>
-References: <Pine.LNX.4.44L0.1401081547490.1659-100000@iolanthe.rowland.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [GIT PULL] libata fixes for 3.13-rc7
+Date: Wed, 8 Jan 2014 19:11:18 -0500
+Message-ID: <20140109001118.GA11420@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:34928 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932223AbaAHVuv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Jan 2014 16:50:51 -0500
-In-Reply-To: <Pine.LNX.4.44L0.1401081547490.1659-100000@iolanthe.rowland.org>
+Received: from mail-qc0-f176.google.com ([209.85.216.176]:52292 "EHLO
+	mail-qc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757725AbaAIALW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Jan 2014 19:11:22 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Aaron Lu <aaron.lu@intel.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>, todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Linux-pm mailing list <linux-pm@vger.kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Hello, Linus.
 
-On 1/8/2014 4:21 PM, Alan Stern wrote:
-> I never saw your patches.  Where were they posted?
+Late fixes for libata.  Nothing too interesting.  Adding missing PM
+callbacks to satat_sis and an additional PCI ID for ahci.
 
-Higher up in this thread on linux-ide and linux-scsi.  Subject was Let
-sleeping disks lie.
+The commits are available in the git repository at:
 
-> If you issue the REQUEST SENSE command in the usual way (going
-> through the SCSI and block layers), and the disk is already in
-> runtime suspend, it won't do what you want.  The block layer won't
-> deliver requests until the device leaves the RPM_SUSPENDED state.
-> In addition, when it receives the command the block layer will
-> submit a deferred runtime-resume request, which rather defeats the
-> whole purpose.
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-3.13-fixes
 
-Right, which is why I left the device in the active state and used the
-pre/post_suspend functions to change the queue into the RPM_SUSPENDING
-state, then either complete the transition to RPM_SUSPENDED, or bail
-out and go back to RPM_ACTIVE.
+for you to fetch changes up to 55c82a6c2a513de1d8a20c3b3a769129a1a14d50:
 
-> What happens with non-ATA disks?
+  sata_sis: missing PM support (2014-01-01 15:14:40 -0500)
 
-Same thing: they return a sense status that either says they are
-suspended, stopped, or normal.
+Thanks.
+----------------------------------------------------------------
+Alan (1):
+      sata_sis: missing PM support
 
+Simon Guinot (1):
+      ahci: add PCI ID for Marvell 88SE9170 SATA controller
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (MingW32)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+ drivers/ata/ahci.c     | 3 +++
+ drivers/ata/sata_sis.c | 4 ++++
+ 2 files changed, 7 insertions(+)
 
-iQEcBAEBAgAGBQJSzcg2AAoJEI5FoCIzSKrw7wcIAJLiliMYnoHLm/dGWHhhfcnb
-ELJLLAhhWsOIQmHiV1svdy0F7EuKi3KF9qJ9JwCaAspO0w8q24UGhvQW20uSH9Md
-JliKhn6eBY/NFTctaVP2tnOcc4vevCndJfEScBlWxI82MWMC1TV3lA7xPtcJ5ocX
-LMBLPXpr0qypisgmu/tAnwTPQVyU4WUkgMmG9us4w3BgCkvI/oXf4oDKFkCNgUye
-FX16NTZPR6iaIK+YJMG3uKCSD4CQjTnKJNXGR89XKJG+Z9v04jyQgWs7kgvqCov9
-F5j+yueyMVlveGPHmNwhElHEPT2UWSoyQbonuOrYQZ+Db+xJBOxzoY8Jgq9lWVI=
-=+vwf
------END PGP SIGNATURE-----
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index c0ed4f27..e3a92a6 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -427,6 +427,9 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	  .driver_data = board_ahci_yes_fbs },			/* 88se9128 */
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9125),
+ 	  .driver_data = board_ahci_yes_fbs },			/* 88se9125 */
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_MARVELL_EXT, 0x9178,
++			 PCI_VENDOR_ID_MARVELL_EXT, 0x9170),
++	  .driver_data = board_ahci_yes_fbs },			/* 88se9170 */
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x917a),
+ 	  .driver_data = board_ahci_yes_fbs },			/* 88se9172 */
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9172),
+diff --git a/drivers/ata/sata_sis.c b/drivers/ata/sata_sis.c
+index fe3ca09..1ad2f62 100644
+--- a/drivers/ata/sata_sis.c
++++ b/drivers/ata/sata_sis.c
+@@ -83,6 +83,10 @@ static struct pci_driver sis_pci_driver = {
+ 	.id_table		= sis_pci_tbl,
+ 	.probe			= sis_init_one,
+ 	.remove			= ata_pci_remove_one,
++#ifdef CONFIG_PM
++	.suspend		= ata_pci_device_suspend,
++	.resume			= ata_pci_device_resume,
++#endif
+ };
+ 
+ static struct scsi_host_template sis_sht = {
