@@ -1,56 +1,68 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: Re: [PATCH v4 0/3] ata: ahci_platform: Add PHY support and OMAP support
-Date: Thu, 09 Jan 2014 12:33:54 +0100
-Message-ID: <1389284177.iKaZgY0Ov4@amdc1032>
-References: <1389264962-22858-1-git-send-email-rogerq@ti.com>
+From: Roger Quadros <rogerq@ti.com>
+Subject: Re: [PATCH v4 2/3] ata: ahci_platform: Manage SATA PHY
+Date: Thu, 9 Jan 2014 17:07:29 +0530
+Message-ID: <52CE89F9.4040908@ti.com>
+References: <1389264962-22858-1-git-send-email-rogerq@ti.com> <1389264962-22858-3-git-send-email-rogerq@ti.com> <52CE85E9.7040703@cogentembedded.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:27288 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750832AbaAILeP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Jan 2014 06:34:15 -0500
-In-reply-to: <1389264962-22858-1-git-send-email-rogerq@ti.com>
+Received: from arroyo.ext.ti.com ([192.94.94.40]:42714 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751201AbaAILhq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 9 Jan 2014 06:37:46 -0500
+In-Reply-To: <52CE85E9.7040703@cogentembedded.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Roger Quadros <rogerq@ti.com>
-Cc: tj@kernel.org, sergei.shtylyov@cogentembedded.com, kishon@ti.com, hdegoede@redhat.com, arnd@arndb.de, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, tj@kernel.org
+Cc: kishon@ti.com, b.zolnierkie@samsung.com, hdegoede@redhat.com, arnd@arndb.de, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, Balaji T K <balajitk@ti.com>
 
+On 01/09/2014 04:50 PM, Sergei Shtylyov wrote:
+> On 09-01-2014 14:56, Roger Quadros wrote:
+> 
+>> From: Balaji T K <balajitk@ti.com>
+> 
+>> Some platforms have a PHY hooked up to the
+>> SATA controller. The PHY needs to be initialized
+>> and powered up for SATA to work. We do that
+>> using the PHY framework.
+> 
+>> [Roger Q] Cleaned up.
+> 
+>> CC: Tejun Heo <tj@kernel.org>
+>> Signed-off-by: Balaji T K <balajitk@ti.com>
+>> Signed-off-by: Roger Quadros <rogerq@ti.com>
+> [...]
+> 
+>> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+>> index d5ced13..b476642 100644
+>> --- a/drivers/ata/ahci_platform.c
+>> +++ b/drivers/ata/ahci_platform.c
+>> @@ -142,6 +142,39 @@ static int ahci_probe(struct platform_device *pdev)
+>>           }
+>>       }
+>>
+>> +    hpriv->phy = devm_phy_get(dev, "sata-phy");
+>> +    if (IS_ERR(hpriv->phy)) {
+>> +        rc = PTR_ERR(hpriv->phy);
+>> +        switch (rc) {
+>> +        case -ENODEV:
+>> +        case -ENOSYS:
+>> +            /* continue normally */
+>> +            hpriv->phy = NULL;
+>> +            break;
+>> +
+>> +        case -EPROBE_DEFER:
+>> +            goto disable_unprepare_clk;
+>> +            break;
+> 
+>    Well, well, *break* after *goto*? :-)
+> 
+I know it is pointless functionally, but it is just my preference
+aesthetically.
 
-Hi,
+Is it much of an issue if left as is?
 
-On Thursday, January 09, 2014 04:25:59 PM Roger Quadros wrote:
-> Hi,
-> 
-> Some platforms have a PHY hooked up to the SATA controller.
-> The PHY needs to be initialized and powered up for SATA to work.
-> We do that using the Generic PHY framework in PATCH 2.
-> 
-> In order to support SATA on the OMAP platforms we need to runtime
-> resume the device before use. PATCH 3 takes care of that.
-> 
-> PATCH 1 just updates the compatible list in the DT binding document.
-> 
-> Changelog:
-> v4:
-> - Tackle error conditions while using PHY framework APIs.
-> 
-> v3:
-> - Addressed review comments and rebased on 3.13-rc7
-> - DT binding update moved to new patch.
-> 
-> v2:
-> - got rid of Texas Instruments SATA wrapper driver
-> - adressed review comments
-
-Thanks for fixing it.
-
-Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
+cheers,
+-roger
 
