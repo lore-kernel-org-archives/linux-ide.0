@@ -1,59 +1,32 @@
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
-Date: Thu, 09 Jan 2014 14:18:35 +0100
-Message-ID: <1516302.TLKdDXZteT@vostro.rjw.lan>
-References: <Pine.LNX.4.44L0.1401081547490.1659-100000@iolanthe.rowland.org> <52CDFB97.9080303@intel.com> <1800854.f96ZTXrYof@vostro.rjw.lan>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v4 2/3] ata: ahci_platform: Manage SATA PHY
+Date: Thu, 9 Jan 2014 10:00:16 -0500
+Message-ID: <20140109150016.GA18867@htj.dyndns.org>
+References: <1389264962-22858-1-git-send-email-rogerq@ti.com>
+ <1389264962-22858-3-git-send-email-rogerq@ti.com>
+ <52CE85E9.7040703@cogentembedded.com>
+ <52CE89F9.4040908@ti.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <1800854.f96ZTXrYof@vostro.rjw.lan>
-Sender: linux-pm-owner@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Phillip Susi <psusi@ubuntu.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>, todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Linux-pm mailing list <linux-pm@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qa0-f54.google.com ([209.85.216.54]:64965 "EHLO
+	mail-qa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750990AbaAIPAV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Jan 2014 10:00:21 -0500
+Content-Disposition: inline
+In-Reply-To: <52CE89F9.4040908@ti.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Roger Quadros <rogerq@ti.com>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, kishon@ti.com, b.zolnierkie@samsung.com, hdegoede@redhat.com, arnd@arndb.de, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, Balaji T K <balajitk@ti.com>
 
-On Thursday, January 09, 2014 01:17:12 PM Rafael J. Wysocki wrote:
-> On Thursday, January 09, 2014 09:29:59 AM Aaron Lu wrote:
-> > On 01/09/2014 05:21 AM, Alan Stern wrote:
-> > > On Wed, 8 Jan 2014, Phillip Susi wrote:
-> > >> You issue a REQUEST SENSE command and that returns status indicating
-> > >> whether the drive is stopped, or in standby.  See my patches.  One of
-> > > 
-> > > I never saw your patches.  Where were they posted?
-> > > 
-> > > If you issue the REQUEST SENSE command in the usual way (going through
-> > > the SCSI and block layers), and the disk is already in runtime suspend,
-> > > it won't do what you want.  The block layer won't deliver requests
-> > > until the device leaves the RPM_SUSPENDED state.  In addition, when it
-> > > receives the command the block layer will submit a deferred
-> > > runtime-resume request, which rather defeats the whole purpose.
-> > > 
-> > > (I guess you actually saw some of this happen, and that's what led to
-> > > this email thread in the first place.)
-> > > 
-> > > It's a knotty situation.  The only way to find out whether the disk is
-> > > spinning is to ask it, which requires doing I/O, which requires
-> > > spinning up the disk.  Maybe we need to add a mechanism to the block
-> > > layer's runtime PM implementation for addressing just this situation.
-> > 
-> > I think it's knotty because the runtime PM status is a view from the
-> > kernel/host side, i.e. it is runtime suspended if it is not being used,
-> > no matter which power state it is in. The trigger for the PM state
-> > transition are all based on this, if we want to do it the other way
-> > around(update device's runtime PM status based on device's actual power
-> > state), we are in a knotty situation.
+On Thu, Jan 09, 2014 at 05:07:29PM +0530, Roger Quadros wrote:
+> I know it is pointless functionally, but it is just my preference
+> aesthetically.
 > 
-> Agreed.
+> Is it much of an issue if left as is?
 
-That said during system resume, when we are trying to avoid resuming the
-device to save time/energy, it makes sense to check its physical state and
-do a pm_request_resume() if that is "on" to avoid a situation in which the
-device is physically "on", but its runtime PM status is "suspended" and it
-never gets powered down because of that.
-
-Thanks!
+Yes.
 
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+tejun
