@@ -1,21 +1,21 @@
 From: David Milburn <dmilburn@redhat.com>
 Subject: Re: [PATCH v8 3/4] ata: Add APM X-Gene SoC SATA host controller driver
-Date: Fri, 10 Jan 2014 13:45:46 -0600
-Message-ID: <52D04DEA.2060408@redhat.com>
+Date: Fri, 10 Jan 2014 14:07:21 -0600
+Message-ID: <52D052F9.8050703@redhat.com>
 References: <1389031922-4309-1-git-send-email-lho@apm.com> <1389031922-4309-2-git-send-email-lho@apm.com> <1389031922-4309-3-git-send-email-lho@apm.com> <1389031922-4309-4-git-send-email-lho@apm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:10490 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:63622 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751262AbaAJTqT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 10 Jan 2014 14:46:19 -0500
+	id S1751209AbaAJUHw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 10 Jan 2014 15:07:52 -0500
 In-Reply-To: <1389031922-4309-4-git-send-email-lho@apm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Loc Ho <lho@apm.com>, tj@kernel.org
-Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jcm@redhat.com, patches@apm.com, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+To: tj@kernel.org
+Cc: Loc Ho <lho@apm.com>, olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jcm@redhat.com, patches@apm.com, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
 Loc Ho wrote:
 > This patch adds support for the APM X-Gene SoC SATA host controller driver.
@@ -749,6 +749,26 @@ Loc Ho wrote:
 > +	/* Flush the IOB before servicing interrupt to ensure all data
 > +	   written by the controller appears in DDR */
 > +	xgene_ahci_iob_flush((struct xgene_ahci_context *) hpriv);
+
+Tejun, to avoid some of the interrupt handling code duplication, would
+it better to have a AHCI_HFLAG_FLUSH and then change
+
+this driver to set flush
+
+hpriv->hpriv.flush = (void *) xgene_ahci_iob_flush;
+
+and then standard code flush when necessary
+
+ahci_handle_port_interrupt
+
+        /* board-specific flush before servicing completed cmds */
+        if (hpriv-> flags & AHCI_HFLAG_FLUSH)
+                hpriv->flush(hpriv);
+
+Thanks,
+David
+
+
 > +
 > +	rc = ata_qc_complete_multiple(ap, qc_active);
 > +
@@ -820,317 +840,3 @@ Loc Ho wrote:
 > +	return IRQ_RETVAL(handled);
 > +}
 > +
-> +static int xgene_ahci_hw_init(struct xgene_ahci_context *hpriv)
-> +{
-> +	int i;
-> +	int rc;
-> +	u32 val;
-> +
-> +	/* Remove IP RAM out of shutdown */
-> +	rc = xgene_ahci_init_memram(hpriv);
-> +	if (rc)
-> +		return rc;
-> +
-> +	for (i = 0; i < MAX_AHCI_CHN_PERCTR; i++)
-> +		xgene_ahci_set_phy_cfg(hpriv, i);
-> +
-> +	/* AXI disable Mask */
-> +	xgene_wr_flush(hpriv->mmio_base + HOST_IRQ_STAT, 0xffffffff);
-> +	xgene_wr(hpriv->csr_base + INTSTATUSMASK, 0);
-> +	xgene_rd(hpriv->csr_base + INTSTATUSMASK, &val);
-> +	dev_dbg(hpriv->dev, "top level interrupt mask 0x%X value 0x%08X\n",
-> +		INTSTATUSMASK, val);
-> +
-> +	xgene_wr_flush(hpriv->csr_base + ERRINTSTATUSMASK, 0x0);
-> +	xgene_wr_flush(hpriv->csr_base + SATA_SHIM_OFFSET +
-> +		       INT_SLV_TMOMASK, 0x0);
-> +
-> +	/* Enable AXI Interrupt */
-> +	xgene_wr(hpriv->csr_base + SLVRDERRATTRIBUTES, 0xffffffff);
-> +	xgene_wr(hpriv->csr_base + SLVWRERRATTRIBUTES, 0xffffffff);
-> +	xgene_wr(hpriv->csr_base + MSTRDERRATTRIBUTES, 0xffffffff);
-> +	xgene_wr(hpriv->csr_base + MSTWRERRATTRIBUTES, 0xffffffff);
-> +
-> +	/* Enable coherency */
-> +	xgene_rd(hpriv->csr_base + BUSCTLREG, &val);
-> +	val &= ~0x00000002;	/* Enable write coherency */
-> +	val &= ~0x00000001;	/* Enable read coherency */
-> +	xgene_wr(hpriv->csr_base + BUSCTLREG, val);
-> +
-> +	xgene_rd(hpriv->csr_base + IOFMSTRWAUX, &val);
-> +	val |= (1 << 3);	/* Enable read coherency */
-> +	val |= (1 << 9);	/* Enable write coherency */
-> +	xgene_wr_flush(hpriv->csr_base + IOFMSTRWAUX, val);
-> +	xgene_rd(hpriv->csr_base + IOFMSTRWAUX, &val);
-> +	dev_dbg(hpriv->dev, "coherency 0x%X value 0x%08X\n",
-> +		IOFMSTRWAUX, val);
-> +
-> +	if (hpriv->ahbc_csr_base) {
-> +		/* Enable IOB flush feature */
-> +		val = readl(hpriv->ahbc_csr_base + CFG_AMA_MODE);
-> +		val |= CFG_RD2WR_EN;
-> +		writel(val, hpriv->ahbc_csr_base + CFG_AMA_MODE);
-> +		dev_dbg(hpriv->dev, "enable IOB flush\n");
-> +	}
-> +
-> +	return rc;
-> +}
-> +
-> +static int xgene_ahci_mux_select(struct xgene_ahci_context *ctx)
-> +{
-> +	void *mux_csr = ctx->csr_base + SATA_ENET_MUX_OFFSET;
-> +	u32 val;
-> +
-> +	dev_dbg(ctx->dev, "switch the MUX to SATA\n");
-> +	xgene_rd(mux_csr + SATA_ENET_CONFIG_REG, &val);
-> +	val &= ~CFG_SATA_ENET_SELECT_MASK;
-> +	xgene_wr(mux_csr + SATA_ENET_CONFIG_REG, val);
-> +	xgene_rd(mux_csr + SATA_ENET_CONFIG_REG, &val);
-> +	return val & CFG_SATA_ENET_SELECT_MASK ? -1 : 0;
-> +}
-> +
-> +static int xgene_ahci_probe(struct platform_device *pdev)
-> +{
-> +	struct device *dev = &pdev->dev;
-> +	struct xgene_ahci_context *hpriv;
-> +	struct ata_port_info pi = xgene_ahci_port_info[0];
-> +	const struct ata_port_info *ppi[] = { &pi, NULL };
-> +	struct ata_host *host;
-> +	struct resource *res;
-> +	int n_ports;
-> +	int rc = 0;
-> +	int i;
-> +
-> +	hpriv = devm_kzalloc(dev, sizeof(*hpriv), GFP_KERNEL);
-> +	if (!hpriv) {
-> +		dev_err(dev, "can't allocate host context\n");
-> +		return -ENOMEM;
-> +	}
-> +
-> +	hpriv->dev = dev;
-> +
-> +	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-> +	if (!res) {
-> +		dev_err(dev, "no MMIO space\n");
-> +		return -EINVAL;
-> +	}
-> +
-> +	hpriv->mmio_base = devm_ioremap_resource(dev, res);
-> +	if (!hpriv->mmio_base) {
-> +		dev_err(dev, "can't map %pR\n", res);
-> +		return -ENOMEM;
-> +	}
-> +
-> +	hpriv->hpriv.mmio = hpriv->mmio_base;
-> +
-> +	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-> +	if (!res) {
-> +		dev_err(dev, "no csr space\n");
-> +		return -EINVAL;
-> +	}
-> +
-> +	/* Can't use devm_ioremap_resource due to overlapping region */
-> +	hpriv->csr_base = devm_ioremap(dev, res->start, resource_size(res));
-> +	if (!hpriv->csr_base) {
-> +		dev_err(dev, "can't map %pR\n", res);
-> +		return -ENOMEM;
-> +	}
-> +
-> +	/*
-> +	 * Both the IOB CSR and IOB IO flush registers must be available
-> +	 * in order to enable the IOB flush feature.
-> +	 */
-> +	res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
-> +	if (res) {
-> +		/* Can't use devm_ioremap_resource due to overlapping region */
-> +		hpriv->ahbc_csr_base = devm_ioremap(dev, res->start,
-> +						    resource_size(res));
-> +		if (!hpriv->ahbc_csr_base) {
-> +			dev_err(dev, "can't map %pR\n", res);
-> +			return -ENOMEM;
-> +		}
-> +
-> +		res = platform_get_resource(pdev, IORESOURCE_MEM, 3);
-> +		if (!res) {
-> +			dev_err(dev, "no IOB IO CSR resource\n");
-> +			return -ENOMEM;
-> +		}
-> +
-> +		/* Can't use devm_ioremap_resource due to overlapping region */
-> +		hpriv->ahbc_io_base = devm_ioremap(dev, res->start,
-> +						   resource_size(res));
-> +		if (!hpriv->ahbc_io_base) {
-> +			dev_err(dev, "can't map %pR\n", res);
-> +			return -ENOMEM;
-> +		}
-> +	}
-> +
-> +	dev_dbg(dev, "VAddr 0x%p Mmio VAddr 0x%p\n",
-> +		hpriv->csr_base, hpriv->mmio_base);
-> +
-> +	hpriv->irq = platform_get_irq(pdev, 0);
-> +	if (hpriv->irq <= 0) {
-> +		dev_err(dev, "no IRQ\n");
-> +		return -EINVAL;
-> +	}
-> +
-> +	/* Select ATA */
-> +	if (of_device_is_compatible(pdev->dev.of_node,
-> +		XGENE_AHCI_SGMII_DTS)) {
-> +		if (xgene_ahci_mux_select(hpriv)) {
-> +			dev_err(dev, "SATA mux selection failed\n");
-> +			return -ENODEV;
-> +		}
-> +	}
-> +
-> +	hpriv->hpriv.clk = clk_get(dev, NULL);
-> +	if (IS_ERR(hpriv->hpriv.clk)) {
-> +		dev_err(dev, "no clock\n");
-> +	} else {
-> +		/* HW requires toggle of the clock */
-> +		clk_prepare_enable(hpriv->hpriv.clk);
-> +		clk_disable_unprepare(hpriv->hpriv.clk);
-> +		rc = clk_prepare_enable(hpriv->hpriv.clk);
-> +		if (rc) {
-> +			dev_err(dev, "clock prepare enable failed\n");
-> +			goto error;
-> +		}
-> +	}
-> +
-> +	/* Configure the PHY */
-> +	hpriv->phy = devm_phy_get(dev, "sata-6g");
-> +	if (!hpriv->phy) {
-> +		dev_err(dev, "no PHY available\n");
-> +		rc = -ENODEV;
-> +		goto error;
-> +	}
-> +
-> +	rc = phy_init(hpriv->phy);
-> +	if (rc) {
-> +		dev_err(dev, "PHY initialize failed %d\n", rc);
-> +		goto error;
-> +	}
-> +
-> +	/* Configure the host controller */
-> +	xgene_ahci_hw_init(hpriv);
-> +
-> +	/* Setup AHCI host priv structure */
-> +	ahci_save_initial_config(dev, &hpriv->hpriv, 0, 0);
-> +
-> +	/* prepare host */
-> +	if (hpriv->hpriv.cap & HOST_CAP_NCQ)
-> +		pi.flags |= ATA_FLAG_NCQ;
-> +	if (hpriv->hpriv.cap & HOST_CAP_PMP) {
-> +		pi.flags |= ATA_FLAG_PMP;
-> +		if (hpriv->hpriv.cap & HOST_CAP_FBS)
-> +			hpriv->hpriv.flags |= AHCI_HFLAG_YES_FBS;
-> +	}
-> +
-
-Hi Tejun,
-
-Should Loc turn off PMP support for now, avoiding some of the
-code duplication between this driver and what currently exists
-in libahci.c
-
-For instance, xgene_ahci_qc_issue, xgene_ahci_qc_prep, 
-xgene_ahci_qc_fill_rtf,
-and xgene_ahci_do_softreset are basically  the same as default, except
-work-arounds for PMP issues.
-
-Thanks,
-David
-
-
-
-
-> +	ahci_set_em_messages(&hpriv->hpriv, &pi);
-> +
-> +	/*
-> +	 * CAP.NP sometimes indicate the index of the last enabled
-> +	 * port, at other times, that of the last possible port, so
-> +	 * determining the maximum port number requires looking at
-> +	 * both CAP.NP and port_map.
-> +	 */
-> +	n_ports = max(ahci_nr_ports(hpriv->hpriv.cap),
-> +		      fls(hpriv->hpriv.port_map));
-> +
-> +	host = ata_host_alloc_pinfo(dev, ppi, n_ports);
-> +	if (!host) {
-> +		rc = -ENOMEM;
-> +		goto error;
-> +	}
-> +
-> +	host->private_data = hpriv;
-> +
-> +	if (!(hpriv->hpriv.cap & HOST_CAP_SSS) || ahci_ignore_sss)
-> +		host->flags |= ATA_HOST_PARALLEL_SCAN;
-> +	else
-> +		dev_warn(dev, "ahci: SSS flag set, parallel bus scan disabled\n");
-> +
-> +	if (pi.flags & ATA_FLAG_EM)
-> +		ahci_reset_em(host);
-> +
-> +	for (i = 0; i < host->n_ports; i++) {
-> +		struct ata_port *ap = host->ports[i];
-> +
-> +		ata_port_desc(ap, "port 0x%x", 0x100 + ap->port_no * 0x80);
-> +
-> +		/* set enclosure management message type */
-> +		if (ap->flags & ATA_FLAG_EM)
-> +			ap->em_message_type = hpriv->hpriv.em_msg_type;
-> +
-> +		/* disabled/not-implemented port */
-> +		if (!(hpriv->hpriv.port_map & (1 << i)))
-> +			ap->ops = &ata_dummy_port_ops;
-> +	}
-> +
-> +	rc = ahci_reset_controller(host);
-> +	if (rc)
-> +		goto error;
-> +
-> +	ahci_init_controller(host);
-> +	ahci_print_info(host, "XGene-AHCI\n");
-> +
-> +	/* Setup DMA mask */
-> +	rc = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(64));
-> +	if (rc) {
-> +		dev_err(dev, "Unable to set dma mask\n");
-> +		goto error;
-> +	}
-> +
-> +	rc = ata_host_activate(host, hpriv->irq, xgene_ahci_interrupt,
-> +			       IRQF_SHARED, &xgene_ahci_sht);
-> +	if (rc)
-> +		goto error;
-> +
-> +	dev_dbg(dev, "X-Gene SATA host controller initialized\n");
-> +
-> +	return 0;
-> +error:
-> +	return rc;
-> +}
-> +
-> +static const struct of_device_id xgene_ahci_of_match[] = {
-> +	{.compatible = XGENE_AHCI_SGMII_DTS,},
-> +	{.compatible = XGENE_AHCI_PCIE_DTS,},
-> +	{},
-> +};
-> +MODULE_DEVICE_TABLE(of, xgene_ahci_of_match);
-> +
-> +static struct platform_driver xgene_ahci_driver = {
-> +	.driver = {
-> +		   .name = "xgene-ahci",
-> +		   .owner = THIS_MODULE,
-> +		   .of_match_table = xgene_ahci_of_match,
-> +	},
-> +	.probe = xgene_ahci_probe,
-> +};
-> +
-> +module_platform_driver(xgene_ahci_driver);
-> +
-> +MODULE_DESCRIPTION("APM X-Gene AHCI SATA driver");
-> +MODULE_AUTHOR("Loc Ho <lho@apm.com>");
-> +MODULE_LICENSE("GPL");
-> +MODULE_VERSION("0.4");
-
