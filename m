@@ -1,76 +1,139 @@
-From: Yuvaraj Kumar C D <yuvaraj.cd@gmail.com>
-Subject: [PATCH V6 0/2] Exynos5250 SATA Support
-Date: Fri, 10 Jan 2014 12:30:05 +0530
-Message-ID: <1389337208-11325-1-git-send-email-yuvaraj.cd@samsung.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: kishon@ti.com, kgene.kim@samsung.com, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org, linux-doc@vger.kernel.org
-Cc: mark.rutland@arm.com, jg1.han@samsung.com, b.zolnierkie@samsung.com, joshi@samsung.com, t.figa@samsung.com, swarren@wwwdotorg.org, grant.likely@linaro.org, christoffer.dall@linaro.org, linux-ide@vger.kernel.org, Yuvaraj Kumar C D <yuvaraj.cd@samsung.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCH v4 2/3] ata: ahci_platform: Manage SATA PHY
+Date: Fri, 10 Jan 2014 19:55:03 +0530
+Message-ID: <52D002BF.7010807@ti.com>
+References: <1389264962-22858-1-git-send-email-rogerq@ti.com> <1389264962-22858-3-git-send-email-rogerq@ti.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from devils.ext.ti.com ([198.47.26.153]:33518 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750931AbaAJOZT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jan 2014 09:25:19 -0500
+In-Reply-To: <1389264962-22858-3-git-send-email-rogerq@ti.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Roger Quadros <rogerq@ti.com>, tj@kernel.org
+Cc: sergei.shtylyov@cogentembedded.com, b.zolnierkie@samsung.com, hdegoede@redhat.com, arnd@arndb.de, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, Balaji T K <balajitk@ti.com>
 
-This patch series enable the SATA support on Exynos5250 based boards.
-It incorporates the generic phy framework to deal with sata phy.
+On Thursday 09 January 2014 04:26 PM, Roger Quadros wrote:
+> From: Balaji T K <balajitk@ti.com>
+> 
+> Some platforms have a PHY hooked up to the
+> SATA controller. The PHY needs to be initialized
+> and powered up for SATA to work. We do that
+> using the PHY framework.
+> 
+> [Roger Q] Cleaned up.
+> 
+> CC: Tejun Heo <tj@kernel.org>
+> Signed-off-by: Balaji T K <balajitk@ti.com>
+> Signed-off-by: Roger Quadros <rogerq@ti.com>
 
-This patch depends on the below patches
-	[1]. drivers: phy: add generic PHY framework
-		by Kishon Vijay Abraham I<kishon@ti.com>
-	[2]. ata: ahci_platform: Manage SATA PHY
-		by Roger Quadros <rogerq@ti.com>
-	[3].ARM: dts: Add pmu sysreg node to exynos5250 and
-		exynos5420 dtsi files
-		by Leela Krishna Amudala <l.krishna@samsung.com>
-	[4]. i2c: s3c2410 : Add polling mode support
-		by Vasanth Ananthan <vasanth.a@samsung.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  drivers/ata/ahci.h          |  2 ++
+>  drivers/ata/ahci_platform.c | 46 ++++++++++++++++++++++++++++++++++++++++++++-
+>  2 files changed, 47 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+> index 2289efd..f9bbada 100644
+> --- a/drivers/ata/ahci.h
+> +++ b/drivers/ata/ahci.h
+> @@ -37,6 +37,7 @@
+>  
+>  #include <linux/clk.h>
+>  #include <linux/libata.h>
+> +#include <linux/phy/phy.h>
+>  
+>  /* Enclosure Management Control */
+>  #define EM_CTRL_MSG_TYPE              0x000f0000
+> @@ -322,6 +323,7 @@ struct ahci_host_priv {
+>  	u32			em_buf_sz;	/* EM buffer size in byte */
+>  	u32			em_msg_type;	/* EM message type */
+>  	struct clk		*clk;		/* Only for platforms supporting clk */
+> +	struct phy		*phy;		/* If platform uses phy */
+>  	void			*plat_data;	/* Other platform data */
+>  };
+>  
+> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+> index d5ced13..b476642 100644
+> --- a/drivers/ata/ahci_platform.c
+> +++ b/drivers/ata/ahci_platform.c
+> @@ -142,6 +142,39 @@ static int ahci_probe(struct platform_device *pdev)
+>  		}
+>  	}
+>  
+> +	hpriv->phy = devm_phy_get(dev, "sata-phy");
+> +	if (IS_ERR(hpriv->phy)) {
+> +		rc = PTR_ERR(hpriv->phy);
+> +		switch (rc) {
+> +		case -ENODEV:
+> +		case -ENOSYS:
+> +			/* continue normally */
+> +			hpriv->phy = NULL;
+> +			break;
+> +
+> +		case -EPROBE_DEFER:
+> +			goto disable_unprepare_clk;
+> +			break;
+> +
+> +		default:
+> +			dev_err(dev, "couldn't get sata-phy\n");
+> +			goto disable_unprepare_clk;
+> +			break;
+> +		}
+> +	}
+> +
+> +	if (hpriv->phy) {
+> +		rc = phy_init(hpriv->phy);
+> +		if (rc)
+> +			goto disable_unprepare_clk;
+> +
+> +		rc = phy_power_on(hpriv->phy);
+> +		if (rc) {
+> +			phy_exit(hpriv->phy);
+> +			goto disable_unprepare_clk;
+> +		}
+> +	}
+> +
+>  	/*
+>  	 * Some platforms might need to prepare for mmio region access,
+>  	 * which could be done in the following init call. So, the mmio
+> @@ -151,7 +184,7 @@ static int ahci_probe(struct platform_device *pdev)
+>  	if (pdata && pdata->init) {
+>  		rc = pdata->init(dev, hpriv->mmio);
+>  		if (rc)
+> -			goto disable_unprepare_clk;
+> +			goto disable_phy;
+>  	}
+>  
+>  	ahci_save_initial_config(dev, hpriv,
+> @@ -221,6 +254,12 @@ static int ahci_probe(struct platform_device *pdev)
+>  pdata_exit:
+>  	if (pdata && pdata->exit)
+>  		pdata->exit(dev);
+> +disable_phy:
+> +	if (hpriv->phy) {
+> +		phy_power_off(hpriv->phy);
+> +		phy_exit(hpriv->phy);
+> +	}
+> +
+>  disable_unprepare_clk:
+>  	if (!IS_ERR(hpriv->clk))
+>  		clk_disable_unprepare(hpriv->clk);
+> @@ -239,6 +278,11 @@ static void ahci_host_stop(struct ata_host *host)
+>  	if (pdata && pdata->exit)
+>  		pdata->exit(dev);
+>  
+> +	if (hpriv->phy) {
+> +		phy_power_off(hpriv->phy);
+> +		phy_exit(hpriv->phy);
+> +	}
+> +
+>  	if (!IS_ERR(hpriv->clk)) {
+>  		clk_disable_unprepare(hpriv->clk);
+>  		clk_put(hpriv->clk);
+> 
 
-Changes from V5:
-	1.Rebased on latest generic PHY framework for-next tree.
-	2.Minor nits such as indentations.
-
-Changes from V4:
-	1.Made Exynos5250 SATA PHY driver by default selects
-	CONFIG_I2C and CONFIG_I2C_S3C2410, as SATA PHY driver
-	depends on I2C.
-	2.Used the new phandle "sata_phy_i2c" in the DT entry. 
-	3.struct i2c_driver sataphy_i2c_driver made static which
-	was earlier global type. 
-
-Changes from V3:
-	1.Moved the devicetree binding documentation
-	from /bindings/ata/ to bindings/phy/ .
-	2.Moved devm_phy_create call before to 
-	the devm_phy_provider_register. 
-
-Changes from V2:
-	1.Removed of_match_table
-	2.Moved to syscon interface for PMU handling.
-
-Changes from V1:
-	1. Dropped the patch 
-	ahci: exynos: add ahci sata support on Exynos platform
-
-	2.Adapt to latest generic PHY framework available in 
-	git://git.kernel.org/pub/scm/linux/kernel/git/kishon/linux-phy.git next
-
-
-
-Yuvaraj Kumar C D (2):
-  PHY: Exynos: Add Exynos5250 SATA PHY driver
-  ARM: dts: Enable ahci sata and sata phy
-
- .../devicetree/bindings/ata/exynos-sata-phy.txt    |   14 --
- .../devicetree/bindings/ata/exynos-sata.txt        |   25 +-
- .../devicetree/bindings/phy/samsung-phy.txt        |   36 +++
- arch/arm/boot/dts/exynos5250-arndale.dts           |   11 +
- arch/arm/boot/dts/exynos5250-smdk5250.dts          |    8 +-
- arch/arm/boot/dts/exynos5250.dtsi                  |   17 +-
- drivers/phy/Kconfig                                |   13 ++
- drivers/phy/Makefile                               |    1 +
- drivers/phy/phy-exynos5250-sata-i2c.c              |   40 ++++
- drivers/phy/phy-exynos5250-sata.c                  |  238 ++++++++++++++++++++
- 10 files changed, 370 insertions(+), 33 deletions(-)
- delete mode 100644 Documentation/devicetree/bindings/ata/exynos-sata-phy.txt
- create mode 100644 drivers/phy/phy-exynos5250-sata-i2c.c
- create mode 100644 drivers/phy/phy-exynos5250-sata.c
-
--- 
-1.7.9.5
