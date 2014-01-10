@@ -1,73 +1,242 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: REQ_PM vs REQ_TYPE_PM_RESUME
-Date: Fri, 10 Jan 2014 00:23:03 -0500
-Message-ID: <52CF83B7.90409@interlog.com>
-References: <Pine.LNX.4.44L0.1401071015120.1296-100000@iolanthe.rowland.org> <52CC1FF2.1020301@ubuntu.com> <52CEEAA1.2010904@interlog.com> <52CEF68C.40703@ubuntu.com>
-Reply-To: dgilbert@interlog.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Yuvaraj Kumar C D <yuvaraj.cd@gmail.com>
+Subject: [PATCH V6 2/2] ARM: dts: Enable ahci sata and sata phy
+Date: Fri, 10 Jan 2014 12:30:07 +0530
+Message-ID: <1389337208-11325-3-git-send-email-yuvaraj.cd@samsung.com>
+References: <1389337208-11325-1-git-send-email-yuvaraj.cd@samsung.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:36223 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750800AbaAJFXa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 10 Jan 2014 00:23:30 -0500
-In-Reply-To: <52CEF68C.40703@ubuntu.com>
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:50050 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751601AbaAJHAj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jan 2014 02:00:39 -0500
+In-Reply-To: <1389337208-11325-1-git-send-email-yuvaraj.cd@samsung.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Phillip Susi <psusi@ubuntu.com>, Alan Stern <stern@rowland.harvard.edu>
-Cc: Aaron Lu <aaron.lu@intel.com>, Sujit Reddy Thumma <sthumma@codeaurora.org>, todd.e.brandt@linux.intel.com, tj@kernel.org, JBottomley@parallels.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: kishon@ti.com, kgene.kim@samsung.com, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org, linux-doc@vger.kernel.org
+Cc: mark.rutland@arm.com, jg1.han@samsung.com, b.zolnierkie@samsung.com, joshi@samsung.com, t.figa@samsung.com, swarren@wwwdotorg.org, grant.likely@linaro.org, christoffer.dall@linaro.org, linux-ide@vger.kernel.org, Yuvaraj Kumar C D <yuvaraj.cd@samsung.com>
 
-On 14-01-09 02:20 PM, Phillip Susi wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA1
->
-> On 1/9/2014 1:29 PM, Douglas Gilbert wrote:
->> When REQUEST SENSE had its original semantics, TEST UNIT READY was
->> the only game in town for monitoring power management. From my
->> reading of spc4r36n.pdf section  5.1.2 "Important commands for all
->> SCSI device servers" TEST UNIT READY should be called before
->> REQUEST SENSE during device initialization (including resume). If
->> the responses to TEST UNIT READY and REQUEST SENSE contradict then
->> the former is correct.
->
-> I don't see language there remotely like that.  How did you arrive at
-> this conclusion?
+This patch adds dt entry for ahci sata controller and its
+corresponding phy controller.phy node has been added w.r.t
+new generic phy framework.
 
-I'm wasting my time.
+Signed-off-by: Yuvaraj Kumar C D <yuvaraj.cd@samsung.com>
+---
+Changes since V4:
+	1.Used the new phandle "sata_phy_i2c" in the DT entry. 
+	2.Updated binding document.
 
->> There are SCSI devices out caught in that transition. For example
->> with sg_format I monitor progress with either TEST UNIT READY or
->> REQUEST SENSE, defaulting to the former. [Progress indication is
->> another new role for REQUEST SENSE.]
->>
->> Note that the billion or so USB keys out there that say that they
->> comply with SCSI-2 should respond to a REQUEST SENSE with its
->> original semantics.
->
-> Then they will return 0/0/0, so we will assume they are up and
-> running, which is correct.  SPC-2 is coming up on 13 years old and
-> listed this usage for REQUEST SENSE.  Are there any actual disk drives
-> out there ( and still in use ) that return 0/0/0 when in the stopped
-> state?  I can't imagine there would be.
->
->> The ATA REQUEST SENSE DATA EXT command refers to the SPC-4
->> "standard" (not yet it ain't) which is naturally the new SCSI
->> semantics of REQUEST SENSE. I believe the ATA REQUEST SENSE DATA
->> EXT command is a relatively new ATA command so it does not carry
->> the historical baggage of its SCSI counterpart.
->
-> It is also only for ATAPI devices.
+Changes since V3:
+	1.Moved the binding info to the /bindings/phy/
 
-It is a command in the "Sense Data Reporting feature set"
-which is optional for ATA devices and "P" as in
-"Prohibited" for ATAPI devices. See the Feature set summary
-table.
+Changes since V2:
+	1.Used syscon interface to PMU handling.
+	2.Changed "sata-phy-i2c" to "exynos-sataphy-i2c".
 
-You had me fooled: I thought you had some knowledge of
-the ATA command set. Thanks for proving me wrong.
+Changes since V1:
+	1.Minor changes to node name convention.
+	2.Updated binding document.
 
-EOF
-Doug Gilbert
+ .../devicetree/bindings/ata/exynos-sata-phy.txt    |   14 --------
+ .../devicetree/bindings/ata/exynos-sata.txt        |   25 +++++++++-----
+ .../devicetree/bindings/phy/samsung-phy.txt        |   36 ++++++++++++++++++++
+ arch/arm/boot/dts/exynos5250-arndale.dts           |   11 ++++++
+ arch/arm/boot/dts/exynos5250-smdk5250.dts          |    8 ++---
+ arch/arm/boot/dts/exynos5250.dtsi                  |   17 ++++++---
+ 6 files changed, 78 insertions(+), 33 deletions(-)
+ delete mode 100644 Documentation/devicetree/bindings/ata/exynos-sata-phy.txt
 
+diff --git a/Documentation/devicetree/bindings/ata/exynos-sata-phy.txt b/Documentation/devicetree/bindings/ata/exynos-sata-phy.txt
+deleted file mode 100644
+index 37824fa..0000000
+--- a/Documentation/devicetree/bindings/ata/exynos-sata-phy.txt
++++ /dev/null
+@@ -1,14 +0,0 @@
+-* Samsung SATA PHY Controller
+-
+-SATA PHY nodes are defined to describe on-chip SATA Physical layer controllers.
+-Each SATA PHY controller should have its own node.
+-
+-Required properties:
+-- compatible        : compatible list, contains "samsung,exynos5-sata-phy"
+-- reg               : <registers mapping>
+-
+-Example:
+-        sata@ffe07000 {
+-                compatible = "samsung,exynos5-sata-phy";
+-                reg = <0xffe07000 0x1000>;
+-        };
+diff --git a/Documentation/devicetree/bindings/ata/exynos-sata.txt b/Documentation/devicetree/bindings/ata/exynos-sata.txt
+index 0849f10..b2adb1f 100644
+--- a/Documentation/devicetree/bindings/ata/exynos-sata.txt
++++ b/Documentation/devicetree/bindings/ata/exynos-sata.txt
+@@ -4,14 +4,21 @@ SATA nodes are defined to describe on-chip Serial ATA controllers.
+ Each SATA controller should have its own node.
+ 
+ Required properties:
+-- compatible        : compatible list, contains "samsung,exynos5-sata"
+-- interrupts        : <interrupt mapping for SATA IRQ>
+-- reg               : <registers mapping>
+-- samsung,sata-freq : <frequency in MHz>
++- compatible		: compatible list, contains "samsung,exynos5-sata"
++- interrupts		: <interrupt mapping for SATA IRQ>
++- reg			: <registers mapping>
++- samsung,sata-freq	: <frequency in MHz>
++- phys			: as mentioned in phy-bindings.txt
++- phy-names		: as mentioned in phy-bindings.txt
+ 
+ Example:
+-        sata@ffe08000 {
+-                compatible = "samsung,exynos5-sata";
+-                reg = <0xffe08000 0x1000>;
+-                interrupts = <115>;
+-        };
++	sata@122f0000 {
++		compatible = "snps,dwc-ahci";
++		samsung,sata-freq = <66>;
++		reg = <0x122f0000 0x1ff>;
++		interrupts = <0 115 0>;
++		clocks = <&clock 277>, <&clock 143>;
++		clock-names = "sata", "sclk_sata";
++		phys = <&sata_phy>;
++		phy-names = "sata-phy";
++	};
+diff --git a/Documentation/devicetree/bindings/phy/samsung-phy.txt b/Documentation/devicetree/bindings/phy/samsung-phy.txt
+index c0fccaa..a937f75 100644
+--- a/Documentation/devicetree/bindings/phy/samsung-phy.txt
++++ b/Documentation/devicetree/bindings/phy/samsung-phy.txt
+@@ -20,3 +20,39 @@ Required properties:
+ - compatible : should be "samsung,exynos5250-dp-video-phy";
+ - reg : offset and length of the Display Port PHY register set;
+ - #phy-cells : from the generic PHY bindings, must be 0;
++
++Samsung SATA PHY Controller
++---------------------------
++
++SATA PHY nodes are defined to describe on-chip SATA Physical layer controllers.
++Each SATA PHY controller should have its own node.
++
++Required properties:
++- compatible        : compatible list, contains "samsung,exynos5250-sata-phy"
++- reg : offset and length of the SATA PHY register set;
++- #phy-cells : from the generic phy bindings;
++
++Example:
++	sata_phy: sata-phy@12170000 {
++		compatible = "samsung,exynos5250-sata-phy";
++		reg = <0x12170000 0x1ff>;
++		clocks = <&clock 287>;
++		clock-names = "sata_phyctrl";
++		#phy-cells = <0>;
++		samsung,exynos-sataphy-i2c-phandle = <&sata_phy_i2c>;
++		samsung,syscon-phandle = <&pmu_syscon>;
++	};
++
++Device-Tree bindings for sataphy i2c client driver
++--------------------------------------------------
++
++Required properties:
++compatible: Should be "samsung,exynos-sataphy-i2c"
++- reg: I2C address of the sataphy i2c device.
++
++Example:
++
++	sata_phy_i2c:sata-phy@38 {
++		compatible = "samsung,exynos-sataphy-i2c";
++		reg = <0x38>;
++	};
+diff --git a/arch/arm/boot/dts/exynos5250-arndale.dts b/arch/arm/boot/dts/exynos5250-arndale.dts
+index b42e658..d9c9eaf 100644
+--- a/arch/arm/boot/dts/exynos5250-arndale.dts
++++ b/arch/arm/boot/dts/exynos5250-arndale.dts
+@@ -370,6 +370,17 @@
+ 		};
+ 	};
+ 
++	i2c@121D0000 {
++		samsung,i2c-sda-delay = <100>;
++		samsung,i2c-max-bus-freq = <40000>;
++		samsung,i2c-slave-addr = <0x38>;
++
++		sata_phy_i2c:sata-phy@38 {
++			compatible = "samsung,exynos-sataphy-i2c";
++			reg = <0x38>;
++		};
++	};
++
+ 	mmc_0: mmc@12200000 {
+ 		status = "okay";
+ 		num-slots = <1>;
+diff --git a/arch/arm/boot/dts/exynos5250-smdk5250.dts b/arch/arm/boot/dts/exynos5250-smdk5250.dts
+index 3e69837..e52eed8 100644
+--- a/arch/arm/boot/dts/exynos5250-smdk5250.dts
++++ b/arch/arm/boot/dts/exynos5250-smdk5250.dts
+@@ -96,16 +96,12 @@
+ 		samsung,i2c-slave-addr = <0x38>;
+ 		status = "okay";
+ 
+-		sata-phy {
+-			compatible = "samsung,sata-phy";
++		sata_phy_i2c:sata-phy@38 {
++			compatible = "samsung,exynos-sataphy-i2c";
+ 			reg = <0x38>;
+ 		};
+ 	};
+ 
+-	sata@122F0000 {
+-		samsung,sata-freq = <66>;
+-	};
+-
+ 	i2c@12C80000 {
+ 		samsung,i2c-sda-delay = <100>;
+ 		samsung,i2c-max-bus-freq = <66000>;
+diff --git a/arch/arm/boot/dts/exynos5250.dtsi b/arch/arm/boot/dts/exynos5250.dtsi
+index dbb4a47..550d59e 100644
+--- a/arch/arm/boot/dts/exynos5250.dtsi
++++ b/arch/arm/boot/dts/exynos5250.dtsi
+@@ -46,6 +46,7 @@
+ 		i2c6 = &i2c_6;
+ 		i2c7 = &i2c_7;
+ 		i2c8 = &i2c_8;
++		i2c9 = &i2c_9;
+ 		pinctrl0 = &pinctrl_0;
+ 		pinctrl1 = &pinctrl_1;
+ 		pinctrl2 = &pinctrl_2;
+@@ -231,16 +232,24 @@
+ 	};
+ 
+ 	sata@122F0000 {
+-		compatible = "samsung,exynos5-sata-ahci";
++		compatible = "snps,dwc-ahci";
++		samsung,sata-freq = <66>;
+ 		reg = <0x122F0000 0x1ff>;
+ 		interrupts = <0 115 0>;
+ 		clocks = <&clock 277>, <&clock 143>;
+ 		clock-names = "sata", "sclk_sata";
++		phys = <&sata_phy>;
++		phy-names = "sata-phy";
+ 	};
+ 
+-	sata-phy@12170000 {
+-		compatible = "samsung,exynos5-sata-phy";
++	sata_phy: sata-phy@12170000 {
++		compatible = "samsung,exynos5250-sata-phy";
+ 		reg = <0x12170000 0x1ff>;
++		clocks = <&clock 287>;
++		clock-names = "sata_phyctrl";
++		#phy-cells = <0>;
++		samsung,exynos-sataphy-i2c-phandle = <&sata_phy_i2c>;
++		samsung,syscon-phandle = <&pmu_syscon>;
+ 	};
+ 
+ 	i2c_0: i2c@12C60000 {
+@@ -358,7 +367,7 @@
+ 		status = "disabled";
+ 	};
+ 
+-	i2c@121D0000 {
++	i2c_9: i2c@121D0000 {
+                 compatible = "samsung,exynos5-sata-phy-i2c";
+                 reg = <0x121D0000 0x100>;
+                 #address-cells = <1>;
+-- 
+1.7.9.5
 
