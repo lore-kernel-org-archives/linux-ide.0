@@ -1,361 +1,94 @@
-From: Tomasz Figa <t.figa@samsung.com>
-Subject: Re: [PATCH V6 1/2] PHY: Exynos: Add Exynos5250 SATA PHY driver
-Date: Fri, 10 Jan 2014 16:05:23 +0100
-Message-ID: <52D00C33.4060305@samsung.com>
-References: <1389337208-11325-1-git-send-email-yuvaraj.cd@samsung.com>
- <1389337208-11325-2-git-send-email-yuvaraj.cd@samsung.com>
+From: Jason Cooper <jason@lakedaemon.net>
+Subject: Re: [PATCH] ata: sata_mv: setting PHY speed according to SControl
+ speed
+Date: Fri, 10 Jan 2014 12:44:12 -0500
+Message-ID: <20140110174412.GJ19878@titan.lakedaemon.net>
+References: <1387800455-30629-1-git-send-email-simon.guinot@sequanux.org>
+ <20131231121214.GB3985@htj.dyndns.org>
+ <20131231170515.GG32537@lunn.ch>
+ <EE71107DF0D1F24FA2D95041E64AB9E801C034BF2AD1@IL-MB01.marvell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-doc-owner@vger.kernel.org>
-In-reply-to: <1389337208-11325-2-git-send-email-yuvaraj.cd@samsung.com>
-Sender: linux-doc-owner@vger.kernel.org
-To: Yuvaraj Kumar C D <yuvaraj.cd@gmail.com>, kishon@ti.com, kgene.kim@samsung.com, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org, linux-doc@vger.kernel.org, Wolfram Sang <wsa@the-dreams.de>
-Cc: mark.rutland@arm.com, jg1.han@samsung.com, b.zolnierkie@samsung.com, joshi@samsung.com, swarren@wwwdotorg.org, grant.likely@linaro.org, christoffer.dall@linaro.org, linux-ide@vger.kernel.org, Yuvaraj Kumar C D <yuvaraj.cd@samsung.com>, Girish K S <ks.giri@samsung.com>, Vasanth Ananthan <vasanth.a@samsung.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:22270 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751572AbaAJRoa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jan 2014 12:44:30 -0500
+Content-Disposition: inline
+In-Reply-To: <EE71107DF0D1F24FA2D95041E64AB9E801C034BF2AD1@IL-MB01.marvell.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Lior Amsalem <alior@marvell.com>
+Cc: Andrew Lunn <andrew@lunn.ch>, Tejun Heo <tj@kernel.org>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Jeff Garzik <jgarzik@redhat.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Simon Guinot <simon.guinot@sequanux.org>
 
-Hi Yuvaraj,
+Lior, Simon,
 
-In general this version looks pretty good, but I have some questions inline.
+On Wed, Jan 08, 2014 at 03:45:31PM +0200, Lior Amsalem wrote:
+> Hi Andrew,
+> 
+> > From: Andrew Lunn [mailto:andrew@lunn.ch]
+> > Sent: Tuesday, December 31, 2013 7:05 PM
+> > 
+> > On Tue, Dec 31, 2013 at 07:12:14AM -0500, Tejun Heo wrote:
+> > > On Mon, Dec 23, 2013 at 01:07:35PM +0100, Simon Guinot wrote:
+> > > > @@ -1358,6 +1359,7 @@ static int mv_scr_write(struct ata_link *link,
+> > > > unsigned int sc_reg_in, u32 val)
+> > > >
+> > > >  	if (ofs != 0xffffffffU) {
+> > > >  		void __iomem *addr = mv_ap_base(link->ap) + ofs;
+> > > > +		void __iomem *lp_phy_addr = mv_ap_base(link->ap) +
+> > LP_PHY_CTL;
+> > > >  		if (sc_reg_in == SCR_CONTROL) {
+> > > >  			/*
+> > > >  			 * Workaround for 88SX60x1 FEr SATA#26:
+> > > > @@ -1374,6 +1376,14 @@ static int mv_scr_write(struct ata_link *link,
+> > unsigned int sc_reg_in, u32 val)
+> > > >  			 */
+> > > >  			if ((val & 0xf) == 1 || (readl(addr) & 0xf) == 1)
+> > > >  				val |= 0xf000;
+> > > > +
+> > > > +			/*
+> > > > +			 * Setting PHY speed according to SControl speed
+> > > > +			 */
+> > > > +			if ((val & 0xf0) == 0x10)
+> > > > +				writelfl(0x7, lp_phy_addr);
+> > > > +			else
+> > > > +				writelfl(0x227, lp_phy_addr);
+> > >
+> > > Do we know that this is safe for all sata_mvs?  If other sata_mvs
+> > > haven't had the described issue, maybe this should be applied
+> > > selectively to the said soc?  I'd actually prefer to avoid such
+> > > conditionals but we need to confirm this is okay for other
+> > > implementations.
+> > 
+> > Hi Tejun
+> > 
+> > I've tested on Kirkwood, and not had problems. But i agree with you. We
+> > need somebody in Marvell to say this is safe with all sata_mv variants.
+> > 
+> > Lior, can you comment?
+> 
+> This register (0x58) was introduced in a370/axp (with a new SATA PHY version).
+> In other SoCs the register does not exist.
+> 
+> Writing/reading the registers on A300/A310 will not cause any harm (I haven't
+> tried A510).
+> But, I think it's better to check if we're running on A370/AXP. (maybe with a new
+> compatibility string in DT?)
 
-On 10.01.2014 08:00, Yuvaraj Kumar C D wrote:
-[snip]
-> diff --git a/drivers/phy/phy-exynos5250-sata-i2c.c b/drivers/phy/phy-exynos5250-sata-i2c.c
-> new file mode 100644
-> index 0000000..206e337
-> --- /dev/null
-> +++ b/drivers/phy/phy-exynos5250-sata-i2c.c
-> @@ -0,0 +1,40 @@
-> +/*
-> + * Copyright (C) 2013 Samsung Electronics Co.Ltd
-> + * Author:
-> + *	Yuvaraj C D <yuvaraj.cd@samsung.com>
-> + *
-> + * This program is free software; you can redistribute  it and/or modify it
-> + * under  the terms of  the GNU General  Public License as published by the
-> + * Free Software Foundation;  either version 2 of the  License, or (at your
-> + * option) any later version.
-> + *
-> + */
-> +
-> +#include <linux/i2c.h>
-> +#include <linux/kernel.h>
-> +#include <linux/module.h>
-> +
-> +static int exynos_sata_i2c_probe(struct i2c_client *client,
-> +		const struct i2c_device_id *i2c_id)
-> +{
-> +	return 0;
-> +}
-> +
-> +static const struct i2c_device_id sataphy_i2c_device_match[] = {
-> +	{ "exynos-sataphy-i2c", 0 },
-> +};
-> +
-> +static struct i2c_driver sataphy_i2c_driver = {
-> +	.probe		= exynos_sata_i2c_probe,
-> +	.id_table	= sataphy_i2c_device_match,
-> +	.driver   = {
-> +		.name = "exynos-sataphy-i2c",
-> +		.owner = THIS_MODULE,
-> +	},
-> +};
-> +
-> +static int __init exynos5250_phy_i2c_init(void)
-> +{
-> +	return i2c_add_driver(&sataphy_i2c_driver);
-> +}
-> +module_init(exynos5250_phy_i2c_init);
+Lior, thanks for the clarification.  Simon, care to respin this with a
+check for "marvell,armada-370-xp" root compatible string?  It should be
+safe to say that if there is no DT, don't write the register.
 
-Hmm, is this driver even necessary now?
+Alternatively, we could do as Lior suggests, and create a new sata
+compatible string.  But I think that is overkill.
 
-Wolfram, would it be possible to use an i2c_client without a driver 
-bound to it?
+Also, I'm growing more leery creating compatible strings for IP blocks
+which are tied to the SoC revision.  If the IP block doesn't get issued
+it's own version number/codename, we should just use the root compatible
+strings to determine which SoC we are on.  I'll expand on this though as
+I get caught up with Gregory's series's. 
 
-> diff --git a/drivers/phy/phy-exynos5250-sata.c b/drivers/phy/phy-exynos5250-sata.c
-> new file mode 100644
-> index 0000000..6e5ff8d
-> --- /dev/null
-> +++ b/drivers/phy/phy-exynos5250-sata.c
-> @@ -0,0 +1,238 @@
-> +/*
-> + * Samsung SATA SerDes(PHY) driver
-> + *
-> + * Copyright (C) 2013 Samsung Electronics Co., Ltd.
-> + * Authors: Girish K S <ks.giri@samsung.com>
-> + *         Yuvaraj Kumar C D <yuvaraj.cd@samsung.com>
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License version 2 as
-> + * published by the Free Software Foundation.
-> + */
-> +
-> +#include <linux/clk.h>
-> +#include <linux/delay.h>
-> +#include <linux/io.h>
-> +#include <linux/i2c.h>
-> +#include <linux/kernel.h>
-> +#include <linux/module.h>
-> +#include <linux/of.h>
-> +#include <linux/of_address.h>
-> +#include <linux/phy/phy.h>
-> +#include <linux/platform_device.h>
-> +#include <linux/regmap.h>
-> +#include <linux/spinlock.h>
-> +#include <linux/mfd/syscon.h>
-> +
-> +#define EXYNOS5_SATA_RESET		0x4
-> +#define RESET_CMN_RST_N			(1 << 1)
-> +#define LINK_RESET			0xF0000
+thx,
 
-nit: Lowercase is preferred in hexadecimal notation.
-+ all other occurrences in this file.
-
-> +#define EXYNOS5_SATA_MODE0		0x10
-> +#define EXYNOS5_SATAPHY_PMU_ENABLE	(1 << 0)
-> +#define SATA_SPD_GEN3			(2 << 0)
-> +#define EXYNOS5_SATA_CTRL0		0x14
-> +#define CTRL0_P0_PHY_CALIBRATED_SEL	(1 << 9)
-> +#define CTRL0_P0_PHY_CALIBRATED		(1 << 8)
-> +#define EXYNOS5_SATA_PHSATA_CTRLM	0xE0
-> +#define PHCTRLM_REF_RATE		(1 << 1)
-> +#define PHCTRLM_HIGH_SPEED		(1 << 0)
-> +#define EXYNOS5_SATA_PHSATA_STATM	0xF0
-> +#define PHSTATM_PLL_LOCKED		(1 << 0)
-> +#define EXYNOS_SATA_PHY_EN		(1 << 0)
-> +#define SATAPHY_CONTROL_OFFSET		0x0724
-> +
-> +struct exynos_sata_phy {
-> +	struct phy *phy;
-> +	struct clk *phyclk;
-> +	void __iomem *regs;
-> +	void __iomem *pmureg;
-> +	struct i2c_client *client;
-> +};
-> +
-> +static bool wait_for_reg_status(void __iomem *base, u32 reg, u32 checkbit,
-> +				u32 status)
-> +{
-> +	unsigned long timeout = jiffies + usecs_to_jiffies(1000);
-
-nit: It would be better to define the timeout using a macro to not use 
-magic numbers.
-
-> +
-> +	while (time_before(jiffies, timeout)) {
-> +		if ((readl(base + reg) & checkbit) == status)
-> +			return true;
-> +	}
-> +
-> +	return false;
-> +}
-> +
-> +static int exynos_sata_phy_power_on(struct phy *phy)
-> +{
-> +	struct exynos_sata_phy *sata_phy = phy_get_drvdata(phy);
-> +
-> +	regmap_update_bits(sata_phy->pmureg, SATAPHY_CONTROL_OFFSET,
-> +			EXYNOS5_SATAPHY_PMU_ENABLE, EXYNOS_SATA_PHY_EN);
-
-regmap_update_bits can return an error. Wouldn't it be better to return 
-it as return value of this function instead of returning 0 all the time? 
-As a side effect, this would make the function smaller by two lines.
-
-> +
-> +	return 0;
-> +}
-> +
-> +static int exynos_sata_phy_power_off(struct phy *phy)
-> +{
-> +	struct exynos_sata_phy *sata_phy = phy_get_drvdata(phy);
-> +
-> +	regmap_update_bits(sata_phy->pmureg, SATAPHY_CONTROL_OFFSET,
-> +			EXYNOS5_SATAPHY_PMU_ENABLE, ~EXYNOS_SATA_PHY_EN);
-
-Same here.
-
-> +
-> +	return 0;
-> +}
-> +
-> +static int exynos_sata_phy_init(struct phy *phy)
-> +{
-> +	u32 val = 0;
-> +	int ret = 0;
-> +	u8 buf[] = { 0x3A, 0x0B };
-> +	struct exynos_sata_phy *sata_phy = phy_get_drvdata(phy);
-> +
-> +	regmap_update_bits(sata_phy->pmureg, SATAPHY_CONTROL_OFFSET,
-> +			EXYNOS5_SATAPHY_PMU_ENABLE, EXYNOS_SATA_PHY_EN);
-
-regmap_update_bits returns an error code.
-
-> +
-> +	writel(val, sata_phy->regs + EXYNOS5_SATA_RESET);
-> +
-> +	val = readl(sata_phy->regs + EXYNOS5_SATA_RESET);
-> +	val |= 0xFF;
-> +	writel(val, sata_phy->regs + EXYNOS5_SATA_RESET);
-> +
-> +	val = readl(sata_phy->regs + EXYNOS5_SATA_RESET);
-> +	val |= LINK_RESET;
-> +	writel(val, sata_phy->regs + EXYNOS5_SATA_RESET);
-> +
-> +	val = readl(sata_phy->regs + EXYNOS5_SATA_RESET);
-> +	val |= RESET_CMN_RST_N;
-> +	writel(val, sata_phy->regs + EXYNOS5_SATA_RESET);
-> +
-> +	val = readl(sata_phy->regs + EXYNOS5_SATA_PHSATA_CTRLM);
-> +	val &= ~PHCTRLM_REF_RATE;
-> +	writel(val, sata_phy->regs + EXYNOS5_SATA_PHSATA_CTRLM);
-> +
-> +	/* High speed enable for Gen3 */
-> +	val = readl(sata_phy->regs + EXYNOS5_SATA_PHSATA_CTRLM);
-> +	val |= PHCTRLM_HIGH_SPEED;
-> +	writel(val, sata_phy->regs + EXYNOS5_SATA_PHSATA_CTRLM);
-> +
-> +	val = readl(sata_phy->regs + EXYNOS5_SATA_CTRL0);
-> +	val |= CTRL0_P0_PHY_CALIBRATED_SEL | CTRL0_P0_PHY_CALIBRATED;
-> +	writel(val, sata_phy->regs + EXYNOS5_SATA_CTRL0);
-> +
-> +	val = readl(sata_phy->regs + EXYNOS5_SATA_MODE0);
-> +	val |= SATA_SPD_GEN3;
-> +	writel(val, sata_phy->regs + EXYNOS5_SATA_MODE0);
-> +
-> +	ret = i2c_master_send(sata_phy->client, buf, sizeof(buf));
-> +	if (ret < 0)
-> +		return -ENXIO;
-
-Wouldn't it be better to return the same error code as i2c_master_send 
-returned?
-
-> +
-> +	/* release cmu reset */
-> +	val = readl(sata_phy->regs + EXYNOS5_SATA_RESET);
-> +	val &= ~RESET_CMN_RST_N;
-> +	writel(val, sata_phy->regs + EXYNOS5_SATA_RESET);
-> +
-> +	val = readl(sata_phy->regs + EXYNOS5_SATA_RESET);
-> +	val |= RESET_CMN_RST_N;
-> +	writel(val, sata_phy->regs + EXYNOS5_SATA_RESET);
-> +
-> +	return (wait_for_reg_status(sata_phy->regs, EXYNOS5_SATA_PHSATA_STATM,
-> +		PHSTATM_PLL_LOCKED, 1)) ? 0 : -EINVAL;
-> +
-
-nit: Stray blank line.
-
-Also it might be more readable after making wait_for_reg_status() return 
-an integer error code (0 and e.g. -EFAULT) and rewriting the last line to:
-
-	ret = wait_for_reg_status(sata_phy->regs, 		
-					EXYNOS5_SATA_PHSATA_STATM,
-					PHSTATM_PLL_LOCKED, 1);
-	if (ret < 0)
-		dev_err(&sata_phy->client->dev,
-			"PHY PLL locking failed\n");
-
-	return ret;
-
-By the way, isn't this initialization really needed whenever the PHY is 
-powered on?
-
-> +}
-> +
-> +static struct phy_ops exynos_sata_phy_ops = {
-> +	.init		= exynos_sata_phy_init,
-> +	.power_on	= exynos_sata_phy_power_on,
-> +	.power_off	= exynos_sata_phy_power_off,
-> +	.owner		= THIS_MODULE,
-> +};
-> +
-> +static int exynos_sata_phy_probe(struct platform_device *pdev)
-> +{
-> +	struct exynos_sata_phy *sata_phy;
-> +	struct device *dev = &pdev->dev;
-> +	struct resource *res;
-> +	struct phy_provider *phy_provider;
-> +	struct device_node *node;
-> +	int ret = 0;
-> +
-> +	sata_phy = devm_kzalloc(dev, sizeof(*sata_phy), GFP_KERNEL);
-> +	if (!sata_phy)
-> +		return -ENOMEM;
-> +
-> +	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-> +
-> +	sata_phy->regs = devm_ioremap_resource(dev, res);
-> +	if (IS_ERR(sata_phy->regs))
-> +		return PTR_ERR(sata_phy->regs);
-> +
-> +	sata_phy->pmureg = syscon_regmap_lookup_by_phandle(dev->of_node,
-> +					"samsung,syscon-phandle");
-
-pmureg is defined as (void __iomem *) in struct exynos_sata_phy, but 
-syscon_regmap_lookup_by_phandle() returns (struct regmap *). Moreover it 
-does not return NULL on error, but rather ERR_PTR(). Please correct this.
-
-> +	if (!sata_phy->pmureg) {
-> +		dev_err(dev, "syscon regmap lookup failed.\n");
-> +		return PTR_ERR(sata_phy->pmureg);
-> +	}
-> +
-> +	node = of_parse_phandle(dev->of_node,
-> +			"samsung,exynos-sataphy-i2c-phandle", 0);
-> +	if (!node)
-> +		return -ENODEV;
-
-An error here means that a required DT property was not specified or was 
-specified incorrectly. IMHO -EINVAL would be better here.
-
-> +
-> +	sata_phy->client = of_find_i2c_device_by_node(node);
-> +	if (!sata_phy->client)
-> +		return -EPROBE_DEFER;
-> +
-> +	dev_set_drvdata(dev, sata_phy);
-> +
-> +	sata_phy->phyclk = devm_clk_get(dev, "sata_phyctrl");
-> +	if (IS_ERR(sata_phy->phyclk)) {
-> +		dev_err(dev, "failed to get clk for PHY\n");
-> +		return PTR_ERR(sata_phy->phyclk);
-> +	}
-> +
-> +	ret = clk_prepare_enable(sata_phy->phyclk);
-> +	if (ret < 0) {
-> +		dev_err(dev, "failed to enable source clk\n");
-> +		return ret;
-> +	}
-> +
-> +	sata_phy->phy = devm_phy_create(dev, &exynos_sata_phy_ops, NULL);
-> +	if (IS_ERR(sata_phy->phy)) {
-> +		clk_disable_unprepare(sata_phy->phyclk);
-> +		dev_err(dev, "failed to create PHY\n");
-> +		return PTR_ERR(sata_phy->phy);
-> +	}
-> +
-> +	phy_set_drvdata(sata_phy->phy, sata_phy);
-> +
-> +	phy_provider = devm_of_phy_provider_register(dev,
-> +					of_phy_simple_xlate);
-> +	if (IS_ERR(phy_provider)) {
-> +		clk_disable_unprepare(sata_phy->phyclk);
-> +		return PTR_ERR(phy_provider);
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static const struct of_device_id exynos_sata_phy_of_match[] = {
-> +	{ .compatible = "samsung,exynos5250-sata-phy" },
-> +	{ },
-> +};
-> +MODULE_DEVICE_TABLE(of, exynos_sata_phy_of_match);
-> +
-> +static struct platform_driver exynos_sata_phy_driver = {
-> +	.probe	= exynos_sata_phy_probe,
-
-If this driver can be compiled as module, don't you also need remove?
-
-Best regards,
-Tomasz
+Jason.
