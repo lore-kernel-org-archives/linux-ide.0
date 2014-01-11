@@ -1,54 +1,82 @@
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH v4 2/4] Phy: Add a PHY driver for Marvell MVEBU SATA PHY.
-Date: Sat, 11 Jan 2014 16:42:43 +0530
-Message-ID: <52D1272B.7050601@ti.com>
-References: <20131219194237.GC22725@htj.dyndns.org> <1388078742-6726-1-git-send-email-andrew@lunn.ch> <1388078742-6726-3-git-send-email-andrew@lunn.ch> <52BDABD2.9080701@ti.com> <20140110193130.GS19878@titan.lakedaemon.net>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH/RESEND v2 1/2] Hard disk S3 resume time optimization
+Date: Sat, 11 Jan 2014 14:13:15 -0500
+Message-ID: <20140111191315.GC3257@mtj.dyndns.org>
+References: <20140108005607.GB29556@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:39492 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751195AbaAKLM7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Jan 2014 06:12:59 -0500
-In-Reply-To: <20140110193130.GS19878@titan.lakedaemon.net>
+Received: from mail-qc0-f179.google.com ([209.85.216.179]:39964 "EHLO
+	mail-qc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751466AbaAKTNU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Jan 2014 14:13:20 -0500
+Content-Disposition: inline
+In-Reply-To: <20140108005607.GB29556@linux.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jason Cooper <jason@lakedaemon.net>
-Cc: Andrew Lunn <andrew@lunn.ch>, tj@kernel.org, devicetree@vger.kernel.org, linux-ide@vger.kernel.org, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>
+To: Todd E Brandt <todd.e.brandt@linux.intel.com>
+Cc: James.Bottomley@HansenPartnership.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi Jason,
+Hello,
 
-On Saturday 11 January 2014 01:01 AM, Jason Cooper wrote:
-> On Fri, Dec 27, 2013 at 10:03:22PM +0530, Kishon Vijay Abraham I wrote:
->> Hi,
->>
->> On Thursday 26 December 2013 10:55 PM, Andrew Lunn wrote:
->>> Kirkwood and Dove can turn the SATA phy on and off. Add a PHY driver
->>> to control this.
->>>
->>> Signed-off-by: Andrew Lunn <andrew@lunn.ch>
->>> ---
->>> v1->v2:
->>> Use #defines instead of magic values
->>> select GENERIC_PHY in Kconfig.
->>>
->>> v3->v4
->>>
->>> Register phy_provider as the last step.
->>
->> The previous version is already sent to be merged. We can have the
->> new change merged in the rc cycle.
->
-> Kishon,
->
-> Looking at the patch dependencies, we'd like to keep the sata change in
-> the same branch as the phy changes.  Would you mind picking that one up
-> and placing it in the same branch as the ones you already took?  I have
+On Tue, Jan 07, 2014 at 04:56:07PM -0800, Todd E Brandt wrote:
+> On resume, the ATA port driver currently waits until the AHCI controller
+> finishes executing the port wakeup command. This patch changes the
 
-PHY changes go in Greg's tree and he generally closes it ~2 weeks before 
-the start of merge window. So it's too late to go in PHY tree for this 
-merge window. Sorry.
+Is there anything ahci specific about this?  There shouldn't be.
 
-Thanks
-Kishon
+> This patch only changes the behavior of the resume callback, not restore,
+> thaw, or runtime-resume. This is because thaw and restore are used after a
+> suspend-to-disk, which means that an image needs to be read from swap and
+> reloaded into RAM. The swap disk will always need to be fully restored/thawed
+> in order for resume to continue.
+
+If the system has multiple devices, wouldn't that still reduce the
+latency?  Do we really need to deviate behavior among different
+resume/unfreeze paths?
+
+> The return value from ata_resume_async is now an indicator of whether 
+> the resume was initiated, rather than if it was completed. I'm letting the ata
+> driver assume control over its own error reporting in this case (which it does
+> already). If you look at the ata_port resume code you'll see that the
+> ata_port_resume callback returns the status of the ahci_port_resume callback,
+> which is always 0. So I don't see any harm in ignoring it.
+
+I've been always kinda doubtful about the usefulness of resume return
+code.  It's not like there's anything resume path can do differently
+upon being notified that resume of a device failed.  Just reporting
+success and deal with error conditions as usual should work fine,
+right?
+
+Well, in fact, I don't think even the return code of suspend is
+useful.  Failing suspend is most likely wrong.  The only action PM
+core can take is aborting suspend and AFAICS none of the libata
+drivers has suspend failure conditions whose recoverability is made
+worse by just proceeding with suspend.  The hardware is recycled after
+all anyway.  The device is inoperational anyway, so aborting suspend
+doens't buy us anything other than failing suspend, which is almost
+always wrong.  So, I'd actually prefer just removing all returns from
+suspend/resume operations, but yeah this might be out of scope for
+this series.
+
+> +static int ata_port_resume_async(struct device *dev)
+> +{
+> +       int rc;
+> +
+> +       rc = ata_port_resume_common(dev, PMSG_RESUME, true);
+> +       if (!rc) {
+> +               pm_runtime_disable(dev);
+> +               pm_runtime_set_active(dev);
+> +               pm_runtime_enable(dev);
+> +       }
+> +
+> +       return rc;
+>  }
+
+So, can't just everything become async?  Are there cases where we
+*need* synchronous PM behaviors?
+
+Thanks.
+
+-- 
+tejun
