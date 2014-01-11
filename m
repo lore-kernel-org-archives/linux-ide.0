@@ -1,34 +1,54 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH/RESEND v2 1/2] Hard disk S3 resume time optimization
-Date: Fri, 10 Jan 2014 19:13:11 -0800
-Message-ID: <CAA9_cmdkNNfE8-b60x4ULw6OA+zxrVZoJhEX3a5XZOQKnsqfHg@mail.gmail.com>
-References: <20140108005607.GB29556@linux.intel.com>
-	<52CED67E.7080706@ubuntu.com>
-	<11E08D716F0541429B7042699DD5C1A17073C362@FMSMSX103.amr.corp.intel.com>
-	<52D0A8B4.90905@ubuntu.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCH v4 2/4] Phy: Add a PHY driver for Marvell MVEBU SATA PHY.
+Date: Sat, 11 Jan 2014 16:42:43 +0530
+Message-ID: <52D1272B.7050601@ti.com>
+References: <20131219194237.GC22725@htj.dyndns.org> <1388078742-6726-1-git-send-email-andrew@lunn.ch> <1388078742-6726-3-git-send-email-andrew@lunn.ch> <52BDABD2.9080701@ti.com> <20140110193130.GS19878@titan.lakedaemon.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <52D0A8B4.90905@ubuntu.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Phillip Susi <psusi@ubuntu.com>
-Cc: "Brandt, Todd E" <todd.e.brandt@intel.com>, "todd.e.brandt@linux.intel.com" <todd.e.brandt@linux.intel.com>, "tj@kernel.org" <tj@kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@hansenpartnership.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from devils.ext.ti.com ([198.47.26.153]:39492 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751195AbaAKLM7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Jan 2014 06:12:59 -0500
+In-Reply-To: <20140110193130.GS19878@titan.lakedaemon.net>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jason Cooper <jason@lakedaemon.net>
+Cc: Andrew Lunn <andrew@lunn.ch>, tj@kernel.org, devicetree@vger.kernel.org, linux-ide@vger.kernel.org, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>
 
-On Fri, Jan 10, 2014 at 6:13 PM, Phillip Susi <psusi@ubuntu.com> wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA512
->
-> On 01/10/2014 06:11 PM, Brandt, Todd E wrote:
->> Yes yours is simpler, but it also opens a potential memory issue
->> by passing a static int as the return location for the error value.
->> I think it's just safer to tell the callback to attempt no return
->> value at all, and for that you need to expand it into two
->> arguments, one for selection, the other for the output address.
->
-> What sort of memory issue?  Also isn't there a system NULL page
-> somewhere that could be used?
->
+Hi Jason,
 
-I think the static variable is ok.  We can be sure that all eh threads
-are torn down before libata.ko is unloaded.
+On Saturday 11 January 2014 01:01 AM, Jason Cooper wrote:
+> On Fri, Dec 27, 2013 at 10:03:22PM +0530, Kishon Vijay Abraham I wrote:
+>> Hi,
+>>
+>> On Thursday 26 December 2013 10:55 PM, Andrew Lunn wrote:
+>>> Kirkwood and Dove can turn the SATA phy on and off. Add a PHY driver
+>>> to control this.
+>>>
+>>> Signed-off-by: Andrew Lunn <andrew@lunn.ch>
+>>> ---
+>>> v1->v2:
+>>> Use #defines instead of magic values
+>>> select GENERIC_PHY in Kconfig.
+>>>
+>>> v3->v4
+>>>
+>>> Register phy_provider as the last step.
+>>
+>> The previous version is already sent to be merged. We can have the
+>> new change merged in the rc cycle.
+>
+> Kishon,
+>
+> Looking at the patch dependencies, we'd like to keep the sata change in
+> the same branch as the phy changes.  Would you mind picking that one up
+> and placing it in the same branch as the ones you already took?  I have
+
+PHY changes go in Greg's tree and he generally closes it ~2 weeks before 
+the start of merge window. So it's too late to go in PHY tree for this 
+merge window. Sorry.
+
+Thanks
+Kishon
