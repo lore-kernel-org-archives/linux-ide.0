@@ -1,60 +1,44 @@
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH] ata: sata_mv: setting PHY speed according to SControl
- speed
-Date: Sat, 11 Jan 2014 07:55:57 +0800
-Message-ID: <20140111075557.353478fa@skate>
-References: <1387800455-30629-1-git-send-email-simon.guinot@sequanux.org>
-	<20131231121214.GB3985@htj.dyndns.org>
-	<20131231170515.GG32537@lunn.ch>
-	<EE71107DF0D1F24FA2D95041E64AB9E801C034BF2AD1@IL-MB01.marvell.com>
-	<20140110174412.GJ19878@titan.lakedaemon.net>
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: Re: [PATCH/RESEND v2 1/2] Hard disk S3 resume time optimization
+Date: Fri, 10 Jan 2014 21:13:08 -0500
+Message-ID: <52D0A8B4.90905@ubuntu.com>
+References: <20140108005607.GB29556@linux.intel.com>,<52CED67E.7080706@ubuntu.com> <11E08D716F0541429B7042699DD5C1A17073C362@FMSMSX103.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20140110174412.GJ19878@titan.lakedaemon.net>
-Sender: stable-owner@vger.kernel.org
-To: Jason Cooper <jason@lakedaemon.net>
-Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>, Tejun Heo <tj@kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Jeff Garzik <jgarzik@redhat.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Simon Guinot <simon.guinot@sequanux.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:42450 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751303AbaAKCNK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jan 2014 21:13:10 -0500
+In-Reply-To: <11E08D716F0541429B7042699DD5C1A17073C362@FMSMSX103.amr.corp.intel.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "Brandt, Todd E" <todd.e.brandt@intel.com>, "todd.e.brandt@linux.intel.com" <todd.e.brandt@linux.intel.com>, "tj@kernel.org" <tj@kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Dear Jason Cooper,
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
 
-On Fri, 10 Jan 2014 12:44:12 -0500, Jason Cooper wrote:
+On 01/10/2014 06:11 PM, Brandt, Todd E wrote:
+> Yes yours is simpler, but it also opens a potential memory issue
+> by passing a static int as the return location for the error value.
+> I think it's just safer to tell the callback to attempt no return
+> value at all, and for that you need to expand it into two
+> arguments, one for selection, the other for the output address.
 
-> Lior, thanks for the clarification.  Simon, care to respin this with a
-> check for "marvell,armada-370-xp" root compatible string?  It should be
-> safe to say that if there is no DT, don't write the register.
+What sort of memory issue?  Also isn't there a system NULL page
+somewhere that could be used?
 
-Why check a root compatible string? If we do this, then we will have to
-change the SATA driver for each and every new Marvell SoC that has this
-PHY speed control register (and these new SOCs will not use the
-"marvell,armada-370-xp" root compatible string, since they are clearly
-not Armada 370/XP).
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
 
-Instead, we should introduce an additional compatible string for the
-SATA driver itself.
-
-> Alternatively, we could do as Lior suggests, and create a new sata
-> compatible string.  But I think that is overkill.
-
-No, this is the right thing to do, IMO.
-
-> Also, I'm growing more leery creating compatible strings for IP blocks
-> which are tied to the SoC revision.  If the IP block doesn't get issued
-> it's own version number/codename, we should just use the root compatible
-> strings to determine which SoC we are on.  I'll expand on this though as
-> I get caught up with Gregory's series's. 
-
-I really disagree. It means that whenever a new root compatible string
-is created for a new SOC, we will have to edit gazillions of drivers.
-It's not because two SOCs have the same SATA IP that they are globally
-compatible, and can therefore share the same root compatible strings.
-
-Best regards,
-
-Thomas
--- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+iQEcBAEBCgAGBQJS0Ki0AAoJEI5FoCIzSKrwzAUH/3PXkCbb1zW6ObzBVOS8I4vM
+SjeE9unHqTlFbFL8M/sTWV+LJTKnIpEBEfV7QXFENDKPi+o58Aq1PanvW0Pu/R5+
+/hOR08ry7HMRqK+Q/J+CynjoMQO3Qfw0elIVQUkSsayqdeA2QeLMDbWLxQhh9j85
+o5AD7VsW1X8M7l1yzCUvl5A68M/ZR9dapW3RlErRmTdECZE5qLTN2RKezfboM5lo
+i4y8IWadF7tou4vbqoGQd/JVgmgc4SRlal7HAqbVWuwmumslMGGBNpZTcgY7ffvT
+PLHnx8txmeK2ELVg/aRm34j2TdI8mAYzIQ2pJ7hKwRlBc5W8ho4XHEy9o1jDaLg=
+=MCaR
+-----END PGP SIGNATURE-----
