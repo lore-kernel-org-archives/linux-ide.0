@@ -1,41 +1,32 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v8 3/4] ata: Add APM X-Gene SoC SATA host controller
- driver
-Date: Sun, 12 Jan 2014 06:49:58 -0500
-Message-ID: <20140112114958.GA8509@mtj.dyndns.org>
-References: <1389031922-4309-1-git-send-email-lho@apm.com>
- <1389031922-4309-2-git-send-email-lho@apm.com>
- <1389031922-4309-3-git-send-email-lho@apm.com>
- <1389031922-4309-4-git-send-email-lho@apm.com>
- <52D052F9.8050703@redhat.com>
- <20140111193104.GD3257@mtj.dyndns.org>
- <6EB44142-06DA-4C9D-8999-CFA9EE30E03D@apm.com>
+Subject: Re: [PATCH 1/1] ata: pata_samsung_cf: Remove unused macros
+Date: Sun, 12 Jan 2014 06:57:16 -0500
+Message-ID: <20140112115716.GB8509@mtj.dyndns.org>
+References: <1388982915-15623-1-git-send-email-sachin.kamat@linaro.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qe0-f51.google.com ([209.85.128.51]:57764 "EHLO
-	mail-qe0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751206AbaALLuC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 12 Jan 2014 06:50:02 -0500
+Received: from mail-qc0-f169.google.com ([209.85.216.169]:65498 "EHLO
+	mail-qc0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751248AbaALL5T (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 12 Jan 2014 06:57:19 -0500
+Received: by mail-qc0-f169.google.com with SMTP id w7so105221qcr.14
+        for <linux-ide@vger.kernel.org>; Sun, 12 Jan 2014 03:57:19 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <6EB44142-06DA-4C9D-8999-CFA9EE30E03D@apm.com>
+In-Reply-To: <1388982915-15623-1-git-send-email-sachin.kamat@linaro.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Loc Ho <lho@apm.com>
-Cc: David Milburn <dmilburn@redhat.com>, "olof@lixom.net" <olof@lixom.net>, "arnd@arndb.de" <arnd@arndb.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "jcm@redhat.com" <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+To: Sachin Kamat <sachin.kamat@linaro.org>
+Cc: linux-ide@vger.kernel.org, patches@linaro.org
 
-Hello,
+On Mon, Jan 06, 2014 at 10:05:15AM +0530, Sachin Kamat wrote:
+> These macros are not used in the file. Remove them.
+> 
+> Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
 
-On Sat, Jan 11, 2014 at 07:58:04PM -0800, Loc Ho wrote:
-> The flush has to occurred immediately after reading the CI
-> register. It can not wrap around the isr routine and issue the flush
-> after or before the library ahci isr routine.
+Applied to libata/for-3.14.
 
-I see.  So, you're saying that if PMP support is disabled for the
-controller, the driver would need to reimplement only the interrupt
-handler?
-
-thanks.
+Thanks.
 
 -- 
 tejun
