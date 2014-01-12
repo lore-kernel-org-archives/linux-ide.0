@@ -1,54 +1,50 @@
-From: Pavel Machek <pavel@ucw.cz>
-Subject: Re: No freezing of kernel threads (was: Re: [GIT PULL] libata
- fixes for v3.13-rc5)
-Date: Sat, 11 Jan 2014 22:15:21 +0100
-Message-ID: <20140111211521.GA12064@amd.pavel.ucw.cz>
-References: <1667032.A7Knz5cBng@vostro.rjw.lan>
- <Pine.LNX.4.44L0.1312252211550.15064-100000@netrider.rowland.org>
- <20131226041856.GA16483@htj.dyndns.org>
- <1963765.T2MGFJrVrL@vostro.rjw.lan>
- <20131226160517.GB16483@htj.dyndns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Loc Ho <lho@apm.com>
+Subject: Re: [PATCH v8 3/4] ata: Add APM X-Gene SoC SATA host controller driver
+Date: Sat, 11 Jan 2014 19:58:04 -0800
+Message-ID: <6EB44142-06DA-4C9D-8999-CFA9EE30E03D@apm.com>
+References: <1389031922-4309-1-git-send-email-lho@apm.com> <1389031922-4309-2-git-send-email-lho@apm.com> <1389031922-4309-3-git-send-email-lho@apm.com> <1389031922-4309-4-git-send-email-lho@apm.com> <52D052F9.8050703@redhat.com> <20140111193104.GD3257@mtj.dyndns.org>
+Mime-Version: 1.0 (1.0)
+Content-Type: text/plain;
+	charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:58195 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750865AbaAKVPX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Jan 2014 16:15:23 -0500
-Content-Disposition: inline
-In-Reply-To: <20131226160517.GB16483@htj.dyndns.org>
+Received: from exprod5og108.obsmtp.com ([64.18.0.186]:60384 "HELO
+	exprod5og108.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751025AbaALD6I convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Jan 2014 22:58:08 -0500
+Received: by mail-pb0-f41.google.com with SMTP id jt11so6003053pbb.14
+        for <linux-ide@vger.kernel.org>; Sat, 11 Jan 2014 19:58:07 -0800 (PST)
+In-Reply-To: <20140111193104.GD3257@mtj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, Alan Stern <stern@rowland.harvard.edu>, Linus Torvalds <torvalds@linux-foundation.org>, Kernel development list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Linux-pm mailing list <linux-pm@vger.kernel.org>
+Cc: David Milburn <dmilburn@redhat.com>, "olof@lixom.net" <olof@lixom.net>, "arnd@arndb.de" <arnd@arndb.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "jcm@redhat.com" <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-Hi!
+Hi,
 
-> > Well, it looks like we don't really know why things are done the way they
-> > are done at least in some cases, so in my personal view it would be good to
-> > go through all of the kernel freezer users just for this reason alone.  We
-> > can't really say which of them are legitimate without that and how difficult
-> > it would be for them to switch over to using something more fine grained than
-> > the freezer.
+> On Jan 11, 2014, at 11:31 AM, Tejun Heo <tj@kernel.org> wrote:
 > 
-> I'm a bit worried about things which may not be explicit.
-> ie. something which is broken but sorta working because things like
-> writeback and jbd are frozen.  I think I worry about that because I
-> remember one argument for kernel freezer from way way back, that it's
-> too hard to implement proper suspend/resume for all drivers and by
-> freezing most kthreads things should mostly work, which sounded pretty
-> crazy to me even back then.  Hopefully, we don't have much left
-> depending on such magic.
+> Hello, David.
+> 
+>> On Fri, Jan 10, 2014 at 02:07:21PM -0600, David Milburn wrote:
+>> Tejun, to avoid some of the interrupt handling code duplication, would
+>> it better to have a AHCI_HFLAG_FLUSH and then change
+>> 
+>> this driver to set flush
+>> 
+>> hpriv->hpriv.flush = (void *) xgene_ahci_iob_flush;
+>> 
+>> and then standard code flush when necessary
+>> 
+>> ahci_handle_port_interrupt
+>> 
+>>       /* board-specific flush before servicing completed cmds */
+>>       if (hpriv-> flags & AHCI_HFLAG_FLUSH)
+>>               hpriv->flush(hpriv);
+> 
+> And this would be the only spot that this would be necessary?  If so,
+> why not just wrap the interrupt handler?
 
-Careful there. Hibernation depends on data on disk not changing after
-freeze.
+The flush has to occurred immediately after reading the CI register. It can not wrap around the isr routine and issue the flush after or before the library ahci isr routine.
 
-So you definitely do _not_ want writeback/jbd running while uswsusp
-does its image writing.
-
-(I wonder what happens if uswsusp needs to trigger writeback to free
-memory. But I'm too scared to check :-).
-									Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+-Loc
