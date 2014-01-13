@@ -1,88 +1,104 @@
-From: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 3/7] ahci: Use new interfaces for MSI/MSI-X enablement
-Date: Mon, 13 Jan 2014 12:12:20 -0700
-Message-ID: <20140113191220.GA6525@google.com>
-References: <cover.1389103215.git.agordeev@redhat.com>
- <7fe2a5563efac19c87213a48b58cae6b4d76c91d.1389103215.git.agordeev@redhat.com>
+From: Todd E Brandt <todd.e.brandt@linux.intel.com>
+Subject: Re: [PATCH/RESEND v2 1/2] Hard disk S3 resume time optimization
+Date: Mon, 13 Jan 2014 11:55:44 -0800
+Message-ID: <20140113195544.GA13900@linux.intel.com>
+References: <20140108005607.GB29556@linux.intel.com>
+ <20140111191315.GC3257@mtj.dyndns.org>
+Reply-To: todd.e.brandt@linux.intel.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:63859 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751543AbaAMTMY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Jan 2014 14:12:24 -0500
-Received: by mail-ie0-f178.google.com with SMTP id x13so1781455ief.23
-        for <linux-ide@vger.kernel.org>; Mon, 13 Jan 2014 11:12:23 -0800 (PST)
+Received: from mga09.intel.com ([134.134.136.24]:37124 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751368AbaAMT4Y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 13 Jan 2014 14:56:24 -0500
 Content-Disposition: inline
-In-Reply-To: <7fe2a5563efac19c87213a48b58cae6b4d76c91d.1389103215.git.agordeev@redhat.com>
+In-Reply-To: <20140111191315.GC3257@mtj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, rjw@rjwysocki.net
 
-On Tue, Jan 07, 2014 at 07:05:38PM +0100, Alexander Gordeev wrote:
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> ---
->  drivers/ata/ahci.c |   15 ++++++---------
->  1 files changed, 6 insertions(+), 9 deletions(-)
+On Sat, Jan 11, 2014 at 02:13:15PM -0500, Tejun Heo wrote:
+> Hello,
 > 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index 8516f4d..cfdb079 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -1098,13 +1098,13 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
->  int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
->  			 struct ahci_host_priv *hpriv)
->  {
-> -	int rc, nvec;
-> +	int nvec;
->  
->  	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
->  		goto intx;
->  
-> -	rc = pci_msi_vec_count(pdev);
-> -	if (rc < 0)
-> +	nvec = pci_msi_vec_count(pdev);
-> +	if (nvec < 0)
->  		goto intx;
->  
->  	/*
-> @@ -1112,19 +1112,16 @@ int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
->  	 * Message mode could be enforced. In this case assume that advantage
->  	 * of multipe MSIs is negated and use single MSI mode instead.
->  	 */
-> -	if (rc < n_ports)
-> +	if (nvec < n_ports)
->  		goto single_msi;
->  
-> -	nvec = rc;
-> -	rc = pci_enable_msi_block(pdev, nvec);
-> -	if (rc)
-> +	if (pci_enable_msi_range(pdev, nvec, nvec) < 0)
->  		goto intx;
->  
->  	return nvec;
->  
->  single_msi:
-> -	rc = pci_enable_msi(pdev);
-> -	if (rc)
-> +	if (pci_enable_msi_range(pdev, 1, 1) < 0)
+> On Tue, Jan 07, 2014 at 04:56:07PM -0800, Todd E Brandt wrote:
+> > On resume, the ATA port driver currently waits until the AHCI controller
+> > finishes executing the port wakeup command. This patch changes the
+> 
+> Is there anything ahci specific about this?  There shouldn't be.
+> 
+> > This patch only changes the behavior of the resume callback, not restore,
+> > thaw, or runtime-resume. This is because thaw and restore are used after a
+> > suspend-to-disk, which means that an image needs to be read from swap and
+> > reloaded into RAM. The swap disk will always need to be fully restored/thawed
+> > in order for resume to continue.
+> 
+> If the system has multiple devices, wouldn't that still reduce the
+> latency?  Do we really need to deviate behavior among different
+> resume/unfreeze paths?
 
-This part doesn't seem like an improvement.  There are a hundred or so
-callers of pci_enable_msi() that only want a single MSI.  Is there any
-benefit in changing them to use pci_enable_msi_range()?
+I see your point, why have two paths if one will do. The only thing that
+worries me is that the PM resume from hibernate function doesn't have
+an error handler. What happens when it tries to read the image from swap
+and the disk is still spinning up? The scsi layer has an error handler so
+it just keeps retrying every few seconds, but the PM core reads directly
+from the swap disk's block device.
 
-I guess I agreed (maybe even suggested) to deprecate pci_enable_msi(),
-but it doesn't suffer from the tri-state return value problem, and I'm
-having second thoughts.
+> 
+> > The return value from ata_resume_async is now an indicator of whether 
+> > the resume was initiated, rather than if it was completed. I'm letting the ata
+> > driver assume control over its own error reporting in this case (which it does
+> > already). If you look at the ata_port resume code you'll see that the
+> > ata_port_resume callback returns the status of the ahci_port_resume callback,
+> > which is always 0. So I don't see any harm in ignoring it.
+> 
+> I've been always kinda doubtful about the usefulness of resume return
+> code.  It's not like there's anything resume path can do differently
+> upon being notified that resume of a device failed.  Just reporting
+> success and deal with error conditions as usual should work fine,
+> right?
+> 
+> Well, in fact, I don't think even the return code of suspend is
+> useful.  Failing suspend is most likely wrong.  The only action PM
+> core can take is aborting suspend and AFAICS none of the libata
+> drivers has suspend failure conditions whose recoverability is made
+> worse by just proceeding with suspend.  The hardware is recycled after
+> all anyway.  The device is inoperational anyway, so aborting suspend
+> doens't buy us anything other than failing suspend, which is almost
+> always wrong.  So, I'd actually prefer just removing all returns from
+> suspend/resume operations, but yeah this might be out of scope for
+> this series.
 
->  		goto intx;
->  	return 1;
->  
+I think the only potential value of the return is to tell the PM core that a
+suspend or resume can't be initiated at all. But since that case never
+actually comes up in the ata code, it would appear to be essentially useless.
+
+> 
+> > +static int ata_port_resume_async(struct device *dev)
+> > +{
+> > +       int rc;
+> > +
+> > +       rc = ata_port_resume_common(dev, PMSG_RESUME, true);
+> > +       if (!rc) {
+> > +               pm_runtime_disable(dev);
+> > +               pm_runtime_set_active(dev);
+> > +               pm_runtime_enable(dev);
+> > +       }
+> > +
+> > +       return rc;
+> >  }
+> 
+> So, can't just everything become async?  Are there cases where we
+> *need* synchronous PM behaviors?
+
+I think suspend still needs to be synchronous, because the PM core needs
+to be sure that the disks are actually spun down before it can attempt
+to shut the system down. I'm adding Raphael to the thread. Raphael, is 
+this correct?
+
+> 
+> Thanks.
+> 
 > -- 
-> 1.7.7.6
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> tejun
