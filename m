@@ -1,39 +1,55 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v2 1/4] libahci: Add a pre ahci_start_engine hook
-Date: Sun, 12 Jan 2014 07:06:54 -0500
-Message-ID: <20140112120654.GC8509@mtj.dyndns.org>
-References: <1388826878-5602-1-git-send-email-hdegoede@redhat.com>
- <1388826878-5602-2-git-send-email-hdegoede@redhat.com>
-Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Loc Ho <lho@apm.com>
+Subject: Re: [PATCH v8 3/4] ata: Add APM X-Gene SoC SATA host controller driver
+Date: Sun, 12 Jan 2014 20:01:59 -0800
+Message-ID: <CAPw-ZTmfKfPY3DRfJT6FQP78ULwfcjGG76cNfr9yk7UMdrO4wg@mail.gmail.com>
+References: <1389031922-4309-1-git-send-email-lho@apm.com>
+	<1389031922-4309-2-git-send-email-lho@apm.com>
+	<1389031922-4309-3-git-send-email-lho@apm.com>
+	<1389031922-4309-4-git-send-email-lho@apm.com>
+	<52D052F9.8050703@redhat.com>
+	<20140111193104.GD3257@mtj.dyndns.org>
+	<6EB44142-06DA-4C9D-8999-CFA9EE30E03D@apm.com>
+	<20140112114958.GA8509@mtj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-sunxi+bncBDQ2FCEAWYLRBYMKZKLAKGQEME2LH3Y-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <1388826878-5602-2-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/linux-sunxi>
-List-Subscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Content-Disposition: inline
-To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Oliver Schinagl <oliver+list-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from exprod5og107.obsmtp.com ([64.18.0.184]:56477 "HELO
+	exprod5og107.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751131AbaAMECB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 12 Jan 2014 23:02:01 -0500
+Received: by mail-qe0-f52.google.com with SMTP id s1so2868275qeb.11
+        for <linux-ide@vger.kernel.org>; Sun, 12 Jan 2014 20:01:59 -0800 (PST)
+In-Reply-To: <20140112114958.GA8509@mtj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: David Milburn <dmilburn@redhat.com>, "olof@lixom.net" <olof@lixom.net>, "arnd@arndb.de" <arnd@arndb.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "jcm@redhat.com" <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-Hello,
+Hi,
 
-On Sat, Jan 04, 2014 at 10:14:35AM +0100, Hans de Goede wrote:
-> @@ -323,6 +323,8 @@ struct ahci_host_priv {
->  	u32			em_msg_type;	/* EM message type */
->  	struct clk		*clk;		/* Only for platforms supporting clk */
->  	void			*plat_data;	/* Other platform data */
-> +	/* Optional pre ahci_start_engine hook */
-> +	void			(*pre_start_engine)(struct ata_port *ap);
+> On Sat, Jan 11, 2014 at 07:58:04PM -0800, Loc Ho wrote:
+>> The flush has to occurred immediately after reading the CI
+>> register. It can not wrap around the isr routine and issue the flush
+>> after or before the library ahci isr routine.
+>
+> I see.  So, you're saying that if PMP support is disabled for the
+> controller, the driver would need to reimplement only the interrupt
+> handler?
+>
 
-I'd much prefer if the callback overrides start_engine itself rather
-than adding a hook inside start_engine.  This is a bit too specific.
+Yes but Let me summary what overrides are required for this X-Gene
+SATA controller driver:
 
-Thanks.
+1. For Query ID, these two functions - ahci_read_id and ahci_qc_issue
+requires override.
+2. For PMP support, these two functions - ahci_qc_prep and
+ahci_qc_fill_rtf requires override.
+3. For softreset, softreset requires override to add additional flags
+in call to ahci_exec_polled_cmd.
+4. For IRQ and ensure data consistent for read operation, function
+ahci_interrupt and ahci_port_intr requires override. But it only
+requires an flush call right after reading from the CI register.
+5. For hardreset, no need to explain this one as all SATA drivers
+require its only method.
 
--- 
-tejun
+-Loc
