@@ -1,53 +1,52 @@
-From: Todd E Brandt <todd.e.brandt@linux.intel.com>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH/RESEND v2 1/2] Hard disk S3 resume time optimization
-Date: Mon, 13 Jan 2014 12:06:48 -0800
-Message-ID: <20140113200648.GB13900@linux.intel.com>
+Date: Mon, 13 Jan 2014 15:30:07 -0500
+Message-ID: <20140113203007.GA3480@mtj.dyndns.org>
 References: <20140108005607.GB29556@linux.intel.com>
- <52CED67E.7080706@ubuntu.com>
- <11E08D716F0541429B7042699DD5C1A17073C362@FMSMSX103.amr.corp.intel.com>
- <52D0A8B4.90905@ubuntu.com>
- <CAA9_cmdkNNfE8-b60x4ULw6OA+zxrVZoJhEX3a5XZOQKnsqfHg@mail.gmail.com>
-Reply-To: todd.e.brandt@linux.intel.com
+ <20140111191315.GC3257@mtj.dyndns.org>
+ <20140113195544.GA13900@linux.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:26802 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751353AbaAMUH2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 13 Jan 2014 15:07:28 -0500
+Received: from mail-qc0-f170.google.com ([209.85.216.170]:47053 "EHLO
+	mail-qc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751395AbaAMUaN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Jan 2014 15:30:13 -0500
 Content-Disposition: inline
-In-Reply-To: <CAA9_cmdkNNfE8-b60x4ULw6OA+zxrVZoJhEX3a5XZOQKnsqfHg@mail.gmail.com>
+In-Reply-To: <20140113195544.GA13900@linux.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: tj@kernel.org, James.Bottomley@hansenpartnership.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, psusi@ubuntu.com
+To: Todd E Brandt <todd.e.brandt@linux.intel.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, rjw@rjwysocki.net
 
-On Fri, Jan 10, 2014 at 07:13:11PM -0800, Dan Williams wrote:
-> On Fri, Jan 10, 2014 at 6:13 PM, Phillip Susi <psusi@ubuntu.com> wrote:
-> > -----BEGIN PGP SIGNED MESSAGE-----
-> > Hash: SHA512
-> >
-> > On 01/10/2014 06:11 PM, Brandt, Todd E wrote:
-> >> Yes yours is simpler, but it also opens a potential memory issue
-> >> by passing a static int as the return location for the error value.
-> >> I think it's just safer to tell the callback to attempt no return
-> >> value at all, and for that you need to expand it into two
-> >> arguments, one for selection, the other for the output address.
-> >
-> > What sort of memory issue?  Also isn't there a system NULL page
-> > somewhere that could be used?
-> >
+Hello,
+
+On Mon, Jan 13, 2014 at 11:55:44AM -0800, Todd E Brandt wrote:
+> I see your point, why have two paths if one will do. The only thing that
+> worries me is that the PM resume from hibernate function doesn't have
+> an error handler. What happens when it tries to read the image from swap
+> and the disk is still spinning up? The scsi layer has an error handler so
+
+The request gets blocked on EH.
+
+> it just keeps retrying every few seconds, but the PM core reads directly
+> from the swap disk's block device.
+
+Why would that matter?  Resume is handled by EH.  While EH is in
+progress, all commands are blocked.  Am I missing something?
+
+> > So, can't just everything become async?  Are there cases where we
+> > *need* synchronous PM behaviors?
 > 
-> I think the static variable is ok.  We can be sure that all eh threads
-> are torn down before libata.ko is unloaded.
+> I think suspend still needs to be synchronous, because the PM core needs
+> to be sure that the disks are actually spun down before it can attempt
+> to shut the system down. I'm adding Raphael to the thread. Raphael, is 
+> this correct?
 
-Actually there's one other reason. In the ata_port_request_pm function it
-checks to see if there's a previous resume operation pending, and if so
-it calls ata_port_wait_eh in order to wait for it to complete before 
-issuing the new suspend. If you just use the (int*)async parameter it
-will return immediately and defer to the caller to try again, like is does
-with SAS. But in our case we *don't* try again, so it would result in the
-resume being skipped. There needs to be a new case where the caller wants 
-the call to be asynchronous, and it wants ata_port_request_pm to do its 
-own waiting, but doesn't care about the return value. Thus the additional
-parameter.
+Yeah, we definitely should wait for suspend to complete before
+entering suspend state.  I was referring to the resume path.
+
+Thanks.
+
+-- 
+tejun
