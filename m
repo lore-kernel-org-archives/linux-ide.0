@@ -1,71 +1,83 @@
-From: Luis Henriques <luis.henriques@canonical.com>
-Subject: [PATCH 3.11 025/208] ahci: imx: Explicitly clear
- IMX6Q_GPR13_SATA_MPLL_CLK_EN
-Date: Mon, 13 Jan 2014 15:57:46 +0000
-Message-ID: <1389628849-1614-26-git-send-email-luis.henriques@canonical.com>
-References: <1389628849-1614-1-git-send-email-luis.henriques@canonical.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v8 3/4] ata: Add APM X-Gene SoC SATA host controller
+ driver
+Date: Mon, 13 Jan 2014 11:08:43 -0500
+Message-ID: <20140113160843.GB29053@htj.dyndns.org>
+References: <1389031922-4309-1-git-send-email-lho@apm.com>
+ <1389031922-4309-2-git-send-email-lho@apm.com>
+ <1389031922-4309-3-git-send-email-lho@apm.com>
+ <1389031922-4309-4-git-send-email-lho@apm.com>
+ <52D052F9.8050703@redhat.com>
+ <20140111193104.GD3257@mtj.dyndns.org>
+ <6EB44142-06DA-4C9D-8999-CFA9EE30E03D@apm.com>
+ <20140112114958.GA8509@mtj.dyndns.org>
+ <CAPw-ZTmfKfPY3DRfJT6FQP78ULwfcjGG76cNfr9yk7UMdrO4wg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <kernel-team-bounces@lists.ubuntu.com>
-In-Reply-To: <1389628849-1614-1-git-send-email-luis.henriques@canonical.com>
-List-Unsubscribe: <https://lists.ubuntu.com/mailman/options/kernel-team>,
- <mailto:kernel-team-request@lists.ubuntu.com?subject=unsubscribe>
-List-Archive: <https://lists.ubuntu.com/archives/kernel-team>
-List-Post: <mailto:kernel-team@lists.ubuntu.com>
-List-Help: <mailto:kernel-team-request@lists.ubuntu.com?subject=help>
-List-Subscribe: <https://lists.ubuntu.com/mailman/listinfo/kernel-team>,
- <mailto:kernel-team-request@lists.ubuntu.com?subject=subscribe>
-Errors-To: kernel-team-bounces@lists.ubuntu.com
-Sender: kernel-team-bounces@lists.ubuntu.com
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org, kernel-team@lists.ubuntu.com
-Cc: Marek Vasut <marex@denx.de>, Richard Zhu <r65037@freescale.com>, Tejun Heo <tj@kernel.org>, Linux-IDE <linux-ide@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qe0-f52.google.com ([209.85.128.52]:43411 "EHLO
+	mail-qe0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754879AbaAMQIs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Jan 2014 11:08:48 -0500
+Content-Disposition: inline
+In-Reply-To: <CAPw-ZTmfKfPY3DRfJT6FQP78ULwfcjGG76cNfr9yk7UMdrO4wg@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Loc Ho <lho@apm.com>
+Cc: David Milburn <dmilburn@redhat.com>, "olof@lixom.net" <olof@lixom.net>, "arnd@arndb.de" <arnd@arndb.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "jcm@redhat.com" <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-3.11.10.3 -stable review patch.  If anyone has any objections, please let me know.
+Hello, Loc.
 
-------------------
+On Sun, Jan 12, 2014 at 08:01:59PM -0800, Loc Ho wrote:
+> Yes but Let me summary what overrides are required for this X-Gene
+> SATA controller driver:
+>
+> 1. For Query ID, these two functions - ahci_read_id and ahci_qc_issue
+> requires override.
 
-From: Marek Vasut <marex@denx.de>
+But the comment in ahci_qc_issue() says it's for PMP.
 
-commit 10becdb402af4fd4808a0491a726b96128c41076 upstream.
+> 2. For PMP support, these two functions - ahci_qc_prep and
+> ahci_qc_fill_rtf requires override.
 
-We must clear this IMX6Q_GPR13_SATA_MPLL_CLK_EN bit on i.MX6Q, otherwise
-Linux will fail to find the attached drive on some boards.
+But the only difference between xgene_ahci_do_softreset() and
+ahci_do_softreset() is that the former removes fbs handling from the
+latter.  Why not just turn off HOST_CAP_FBS?
 
-This entire fix was:
-Reported-by: Eric Nelson <eric.nelson@boundarydevices.com>
+> 3. For softreset, softreset requires override to add additional flags
+> in call to ahci_exec_polled_cmd.
 
-Signed-off-by: Marek Vasut <marex@denx.de>
-Reviewed-by: Shawn Guo <shawn.guo@linaro.org>
-Cc: Richard Zhu <r65037@freescale.com>
-Cc: Linux-IDE <linux-ide@vger.kernel.org>
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Signed-off-by: Luis Henriques <luis.henriques@canonical.com>
----
- drivers/ata/ahci_imx.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+which is what?  It's the same for the xgene and normal functions.
 
-diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
-index 58debb0..566cca4 100644
---- a/drivers/ata/ahci_imx.c
-+++ b/drivers/ata/ahci_imx.c
-@@ -60,7 +60,7 @@ static int imx6q_sata_init(struct device *dev, void __iomem *mmio)
- 	/*
- 	 * set PHY Paremeters, two steps to configure the GPR13,
- 	 * one write for rest of parameters, mask of first write
--	 * is 0x07fffffd, and the other one write for setting
-+	 * is 0x07ffffff, and the other one write for setting
- 	 * the mpll_clk_en.
- 	 */
- 	regmap_update_bits(imxpriv->gpr, 0x34, IMX6Q_GPR13_SATA_RX_EQ_VAL_MASK
-@@ -71,6 +71,7 @@ static int imx6q_sata_init(struct device *dev, void __iomem *mmio)
- 			| IMX6Q_GPR13_SATA_TX_ATTEN_MASK
- 			| IMX6Q_GPR13_SATA_TX_BOOST_MASK
- 			| IMX6Q_GPR13_SATA_TX_LVL_MASK
-+			| IMX6Q_GPR13_SATA_MPLL_CLK_EN
- 			| IMX6Q_GPR13_SATA_TX_EDGE_RATE
- 			, IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB
- 			| IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M
+> 4. For IRQ and ensure data consistent for read operation, function
+> ahci_interrupt and ahci_port_intr requires override. But it only
+> requires an flush call right after reading from the CI register.
+> 5. For hardreset, no need to explain this one as all SATA drivers
+> require its only method.
+
+No, they don't and the comments in your driver don't really explain
+what's going on.  Why are we having retry loops inside hardreset
+itself?  This can prolong recovery time significantly in corner cases.
+Why is this necessary?
+
+I'm having a lot of trouble understanding what you're trying to do
+with your driver.  Maybe it'd help to submit as multiple patches where
+the first one implements bare minimum to function and then later
+patches adding more workarounds to achieve more functionalities?  I
+can't apply the patch as it currently stands.
+
+Some general comments.
+
+* Let's use fully winged comments for multiline comments.
+
+* I really don't like wrapping basic functions like readl/writel() in
+  low level drivers.
+
+* If your driver needs to append or prepent something to the existing
+  one, export the existing one and then wrap that one with the extra
+  logic around it.  Do not copy function body unnecessarily.  Even for
+  the port_interrupt, it looks like you can just call the flush after
+  invoking the normal ahci_handle_port_interrupt(), no?
+
 -- 
-1.8.3.2
+tejun
