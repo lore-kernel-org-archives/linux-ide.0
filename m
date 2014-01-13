@@ -1,83 +1,88 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v8 3/4] ata: Add APM X-Gene SoC SATA host controller
- driver
-Date: Mon, 13 Jan 2014 11:08:43 -0500
-Message-ID: <20140113160843.GB29053@htj.dyndns.org>
-References: <1389031922-4309-1-git-send-email-lho@apm.com>
- <1389031922-4309-2-git-send-email-lho@apm.com>
- <1389031922-4309-3-git-send-email-lho@apm.com>
- <1389031922-4309-4-git-send-email-lho@apm.com>
- <52D052F9.8050703@redhat.com>
- <20140111193104.GD3257@mtj.dyndns.org>
- <6EB44142-06DA-4C9D-8999-CFA9EE30E03D@apm.com>
- <20140112114958.GA8509@mtj.dyndns.org>
- <CAPw-ZTmfKfPY3DRfJT6FQP78ULwfcjGG76cNfr9yk7UMdrO4wg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 3/7] ahci: Use new interfaces for MSI/MSI-X enablement
+Date: Mon, 13 Jan 2014 12:12:20 -0700
+Message-ID: <20140113191220.GA6525@google.com>
+References: <cover.1389103215.git.agordeev@redhat.com>
+ <7fe2a5563efac19c87213a48b58cae6b4d76c91d.1389103215.git.agordeev@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qe0-f52.google.com ([209.85.128.52]:43411 "EHLO
-	mail-qe0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754879AbaAMQIs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Jan 2014 11:08:48 -0500
+Received: from mail-ie0-f178.google.com ([209.85.223.178]:63859 "EHLO
+	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751543AbaAMTMY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Jan 2014 14:12:24 -0500
+Received: by mail-ie0-f178.google.com with SMTP id x13so1781455ief.23
+        for <linux-ide@vger.kernel.org>; Mon, 13 Jan 2014 11:12:23 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <CAPw-ZTmfKfPY3DRfJT6FQP78ULwfcjGG76cNfr9yk7UMdrO4wg@mail.gmail.com>
+In-Reply-To: <7fe2a5563efac19c87213a48b58cae6b4d76c91d.1389103215.git.agordeev@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Loc Ho <lho@apm.com>
-Cc: David Milburn <dmilburn@redhat.com>, "olof@lixom.net" <olof@lixom.net>, "arnd@arndb.de" <arnd@arndb.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "jcm@redhat.com" <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
 
-Hello, Loc.
+On Tue, Jan 07, 2014 at 07:05:38PM +0100, Alexander Gordeev wrote:
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> ---
+>  drivers/ata/ahci.c |   15 ++++++---------
+>  1 files changed, 6 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index 8516f4d..cfdb079 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -1098,13 +1098,13 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
+>  int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
+>  			 struct ahci_host_priv *hpriv)
+>  {
+> -	int rc, nvec;
+> +	int nvec;
+>  
+>  	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
+>  		goto intx;
+>  
+> -	rc = pci_msi_vec_count(pdev);
+> -	if (rc < 0)
+> +	nvec = pci_msi_vec_count(pdev);
+> +	if (nvec < 0)
+>  		goto intx;
+>  
+>  	/*
+> @@ -1112,19 +1112,16 @@ int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
+>  	 * Message mode could be enforced. In this case assume that advantage
+>  	 * of multipe MSIs is negated and use single MSI mode instead.
+>  	 */
+> -	if (rc < n_ports)
+> +	if (nvec < n_ports)
+>  		goto single_msi;
+>  
+> -	nvec = rc;
+> -	rc = pci_enable_msi_block(pdev, nvec);
+> -	if (rc)
+> +	if (pci_enable_msi_range(pdev, nvec, nvec) < 0)
+>  		goto intx;
+>  
+>  	return nvec;
+>  
+>  single_msi:
+> -	rc = pci_enable_msi(pdev);
+> -	if (rc)
+> +	if (pci_enable_msi_range(pdev, 1, 1) < 0)
 
-On Sun, Jan 12, 2014 at 08:01:59PM -0800, Loc Ho wrote:
-> Yes but Let me summary what overrides are required for this X-Gene
-> SATA controller driver:
->
-> 1. For Query ID, these two functions - ahci_read_id and ahci_qc_issue
-> requires override.
+This part doesn't seem like an improvement.  There are a hundred or so
+callers of pci_enable_msi() that only want a single MSI.  Is there any
+benefit in changing them to use pci_enable_msi_range()?
 
-But the comment in ahci_qc_issue() says it's for PMP.
+I guess I agreed (maybe even suggested) to deprecate pci_enable_msi(),
+but it doesn't suffer from the tri-state return value problem, and I'm
+having second thoughts.
 
-> 2. For PMP support, these two functions - ahci_qc_prep and
-> ahci_qc_fill_rtf requires override.
-
-But the only difference between xgene_ahci_do_softreset() and
-ahci_do_softreset() is that the former removes fbs handling from the
-latter.  Why not just turn off HOST_CAP_FBS?
-
-> 3. For softreset, softreset requires override to add additional flags
-> in call to ahci_exec_polled_cmd.
-
-which is what?  It's the same for the xgene and normal functions.
-
-> 4. For IRQ and ensure data consistent for read operation, function
-> ahci_interrupt and ahci_port_intr requires override. But it only
-> requires an flush call right after reading from the CI register.
-> 5. For hardreset, no need to explain this one as all SATA drivers
-> require its only method.
-
-No, they don't and the comments in your driver don't really explain
-what's going on.  Why are we having retry loops inside hardreset
-itself?  This can prolong recovery time significantly in corner cases.
-Why is this necessary?
-
-I'm having a lot of trouble understanding what you're trying to do
-with your driver.  Maybe it'd help to submit as multiple patches where
-the first one implements bare minimum to function and then later
-patches adding more workarounds to achieve more functionalities?  I
-can't apply the patch as it currently stands.
-
-Some general comments.
-
-* Let's use fully winged comments for multiline comments.
-
-* I really don't like wrapping basic functions like readl/writel() in
-  low level drivers.
-
-* If your driver needs to append or prepent something to the existing
-  one, export the existing one and then wrap that one with the extra
-  logic around it.  Do not copy function body unnecessarily.  Even for
-  the port_interrupt, it looks like you can just call the flush after
-  invoking the normal ahci_handle_port_interrupt(), no?
-
--- 
-tejun
+>  		goto intx;
+>  	return 1;
+>  
+> -- 
+> 1.7.7.6
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
