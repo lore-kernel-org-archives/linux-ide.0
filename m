@@ -1,55 +1,63 @@
-From: Loc Ho <lho@apm.com>
-Subject: Re: [PATCH v8 3/4] ata: Add APM X-Gene SoC SATA host controller driver
-Date: Sun, 12 Jan 2014 20:01:59 -0800
-Message-ID: <CAPw-ZTmfKfPY3DRfJT6FQP78ULwfcjGG76cNfr9yk7UMdrO4wg@mail.gmail.com>
-References: <1389031922-4309-1-git-send-email-lho@apm.com>
-	<1389031922-4309-2-git-send-email-lho@apm.com>
-	<1389031922-4309-3-git-send-email-lho@apm.com>
-	<1389031922-4309-4-git-send-email-lho@apm.com>
-	<52D052F9.8050703@redhat.com>
-	<20140111193104.GD3257@mtj.dyndns.org>
-	<6EB44142-06DA-4C9D-8999-CFA9EE30E03D@apm.com>
-	<20140112114958.GA8509@mtj.dyndns.org>
+From: Jason Cooper <jason@lakedaemon.net>
+Subject: Re: [PATCH] ata: sata_mv: setting PHY speed according to SControl
+ speed
+Date: Mon, 13 Jan 2014 09:36:51 -0500
+Message-ID: <20140113143651.GD19878@titan.lakedaemon.net>
+References: <1387800455-30629-1-git-send-email-simon.guinot@sequanux.org>
+ <20131231121214.GB3985@htj.dyndns.org>
+ <20131231170515.GG32537@lunn.ch>
+ <EE71107DF0D1F24FA2D95041E64AB9E801C034BF2AD1@IL-MB01.marvell.com>
+ <20140110174412.GJ19878@titan.lakedaemon.net>
+ <20140111075557.353478fa@skate>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from exprod5og107.obsmtp.com ([64.18.0.184]:56477 "HELO
-	exprod5og107.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751131AbaAMECB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 12 Jan 2014 23:02:01 -0500
-Received: by mail-qe0-f52.google.com with SMTP id s1so2868275qeb.11
-        for <linux-ide@vger.kernel.org>; Sun, 12 Jan 2014 20:01:59 -0800 (PST)
-In-Reply-To: <20140112114958.GA8509@mtj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <stable-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20140111075557.353478fa@skate>
+Sender: stable-owner@vger.kernel.org
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Lior Amsalem <alior@marvell.com>, Andrew Lunn <andrew@lunn.ch>, Tejun Heo <tj@kernel.org>, "stable@vger.kernel.org" <stable@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Jeff Garzik <jgarzik@redhat.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Simon Guinot <simon.guinot@sequanux.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: David Milburn <dmilburn@redhat.com>, "olof@lixom.net" <olof@lixom.net>, "arnd@arndb.de" <arnd@arndb.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "jcm@redhat.com" <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-Hi,
+On Sat, Jan 11, 2014 at 07:55:57AM +0800, Thomas Petazzoni wrote:
+> Dear Jason Cooper,
+> 
+> On Fri, 10 Jan 2014 12:44:12 -0500, Jason Cooper wrote:
+> 
+> > Lior, thanks for the clarification.  Simon, care to respin this with a
+> > check for "marvell,armada-370-xp" root compatible string?  It should be
+> > safe to say that if there is no DT, don't write the register.
+> 
+> Why check a root compatible string? If we do this, then we will have to
+> change the SATA driver for each and every new Marvell SoC that has this
+> PHY speed control register (and these new SOCs will not use the
+> "marvell,armada-370-xp" root compatible string, since they are clearly
+> not Armada 370/XP).
+> 
+> Instead, we should introduce an additional compatible string for the
+> SATA driver itself.
 
-> On Sat, Jan 11, 2014 at 07:58:04PM -0800, Loc Ho wrote:
->> The flush has to occurred immediately after reading the CI
->> register. It can not wrap around the isr routine and issue the flush
->> after or before the library ahci isr routine.
->
-> I see.  So, you're saying that if PMP support is disabled for the
-> controller, the driver would need to reimplement only the interrupt
-> handler?
->
+Agreed.  
 
-Yes but Let me summary what overrides are required for this X-Gene
-SATA controller driver:
+> > Alternatively, we could do as Lior suggests, and create a new sata
+> > compatible string.  But I think that is overkill.
+> 
+> No, this is the right thing to do, IMO.
+> 
+> > Also, I'm growing more leery creating compatible strings for IP blocks
+> > which are tied to the SoC revision.  If the IP block doesn't get issued
+> > it's own version number/codename, we should just use the root compatible
+> > strings to determine which SoC we are on.  I'll expand on this though as
+> > I get caught up with Gregory's series's. 
+> 
+> I really disagree. It means that whenever a new root compatible string
+> is created for a new SOC, we will have to edit gazillions of drivers.
+> It's not because two SOCs have the same SATA IP that they are globally
+> compatible, and can therefore share the same root compatible strings.
 
-1. For Query ID, these two functions - ahci_read_id and ahci_qc_issue
-requires override.
-2. For PMP support, these two functions - ahci_qc_prep and
-ahci_qc_fill_rtf requires override.
-3. For softreset, softreset requires override to add additional flags
-in call to ahci_exec_polled_cmd.
-4. For IRQ and ensure data consistent for read operation, function
-ahci_interrupt and ahci_port_intr requires override. But it only
-requires an flush call right after reading from the CI register.
-5. For hardreset, no need to explain this one as all SATA drivers
-require its only method.
+Yes, you're right.  I really went off the deep end on that one.  Simon,
+please do as Lior and Thomas suggested.
 
--Loc
+thx,
+
+Jason.
