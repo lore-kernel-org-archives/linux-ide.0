@@ -1,62 +1,64 @@
-From: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 3/7] ahci: Use new interfaces for MSI/MSI-X enablement
-Date: Tue, 14 Jan 2014 10:31:46 -0700
-Message-ID: <CAErSpo7QSLsbKL=rPj0Uavf1y8A+mxdXhdW-hK689xzGw7O=rw@mail.gmail.com>
-References: <cover.1389103215.git.agordeev@redhat.com> <7fe2a5563efac19c87213a48b58cae6b4d76c91d.1389103215.git.agordeev@redhat.com>
- <20140113191220.GA6525@google.com> <20140114085040.GA6873@dhcp-26-207.brq.redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Simon Guinot <simon.guinot@sequanux.org>
+Subject: [PATCH v3 0/3] Fix SATA disk hotplug for Armada 370/XP SoCs
+Date: Tue, 14 Jan 2014 20:04:38 +0100
+Message-ID: <1389726281-8731-1-git-send-email-simon.guinot@sequanux.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ig0-f178.google.com ([209.85.213.178]:49246 "EHLO
-	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751329AbaANRcH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Jan 2014 12:32:07 -0500
-Received: by mail-ig0-f178.google.com with SMTP id uq10so2153959igb.5
-        for <linux-ide@vger.kernel.org>; Tue, 14 Jan 2014 09:32:07 -0800 (PST)
-In-Reply-To: <20140114085040.GA6873@dhcp-26-207.brq.redhat.com>
+Received: from vm1.sequanux.org ([188.165.36.56]:50412 "EHLO vm1.sequanux.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751367AbaANTFF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 14 Jan 2014 14:05:05 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+To: Jeff Garzik <jgarzik@redhat.com>, Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Lior Amsalem <alior@marvell.com>, stable@vger.kernel.org
 
-On Tue, Jan 14, 2014 at 1:50 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
-> On Mon, Jan 13, 2014 at 12:12:20PM -0700, Bjorn Helgaas wrote:
->> > -   nvec = rc;
->> > -   rc = pci_enable_msi_block(pdev, nvec);
->> > -   if (rc)
->> > +   if (pci_enable_msi_range(pdev, nvec, nvec) < 0)
->> >             goto intx;
->> >
->> >     return nvec;
->> >
->> >  single_msi:
->> > -   rc = pci_enable_msi(pdev);
->> > -   if (rc)
->> > +   if (pci_enable_msi_range(pdev, 1, 1) < 0)
->>
->> This part doesn't seem like an improvement.  There are a hundred or so
->> callers of pci_enable_msi() that only want a single MSI.  Is there any
->> benefit in changing them to use pci_enable_msi_range()?
->
-> In this particular case it reads better to me as one sees on the screen
-> pci_enable_msi_range(pdev, nvec, nvec) and pci_enable_msi_range(pdev, 1, 1)
-> calls. That allows to avoid switching in mind between negative-or-positive
-> return in the former call and negative-or-zero return from pci_enable_msi()
-> if we had it.
->
-> But in most cases when single MSI is enabled we do cause complication
-> with the patterns below (which I expect I am going be hated for ;) ):
+Hello,
 
-I don't want to touch those hundred pci_enable_msi() callers at all.
-So I think we should have something like this:
+This patch series fixes a SATA disk hotplug issue for the Armada 370/XP
+SoCs: once a disk is removed from a SATA port, then the re-plug events
+are not detected by the sata_mv driver.
 
-    /* Return 0 for success (one MSI enabled) or negative errno */
-    static inline int pci_enable_msi(struct pci_dev *dev)
-    {
-        int rc;
+As this hotplug issue have been emphasized by 9ae6f740b49f
+"arm: mach-mvebu: add support for Armada 370 and Armada XP with DT",
+then this patches should be applied to the -stable kernels 3.6 and
+onwards.
 
-        rc = pci_enable_msi_range(pdev, 1, 1);
-        if (rc == 1)
-            return 0;
-        return rc;
-    }
+Changes since v1:
+- Introduces a new compatible string for the SATA IP found in Armada
+  370/XP SoCs.
+- Only fix the LP_PHY_CTL register (0x58) if the compatible string
+  "marvell,armada-370-xp-sata" is found in the SATA DT node.
+- Update compatible string in DT SATA node for Armada 370/XP SoCs. 
+
+Changes since v2:
+- Use compatible string "marvell,armada-370-sata" instead of
+  "marvell,armada-370-xp-sata".
+- Provide more informations for -stable.
+
+Thanks,
+
+Simon
+
+Lior Amsalem (1):
+  ata: sata_mv: fix disk hotplug for Armada 370/XP SoCs
+
+Simon Guinot (2):
+  ata: sata_mv: introduce compatible string "marvell,armada-370-sata"
+  ARM: mvebu: update the SATA compatible string for Armada 370/XP
+
+ Documentation/devicetree/bindings/ata/marvell.txt |  2 +-
+ arch/arm/boot/dts/armada-370-xp.dtsi              |  2 +-
+ drivers/ata/sata_mv.c                             | 25 +++++++++++++++++++++++
+ 3 files changed, 27 insertions(+), 2 deletions(-)
+
+-- 
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Jason Cooper <jason@lakedaemon.net>
+Cc: Andrew Lunn <andrew@lunn.ch>
+Cc: Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Cc: Lior Amsalem <alior@marvell.com>
+Cc: stable@vger.kernel.org
+-- 
+1.8.5.2
+
