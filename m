@@ -1,95 +1,101 @@
-From: Gwendal Grignou <gwendal@google.com>
-Subject: Re: [PATCH/RESEND v2 0/2] Hard disk S3 resume time optimization
-Date: Mon, 13 Jan 2014 16:36:52 -0800
-Message-ID: <CAMHSBOXzU3Y=oH1Nzxash0wJvuc6Y9hoOcbvdstyOaO77QQLkA@mail.gmail.com>
-References: <20140108005500.GA29556@linux.intel.com>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH 3/7] ahci: Use new interfaces for MSI/MSI-X enablement
+Date: Tue, 14 Jan 2014 09:50:40 +0100
+Message-ID: <20140114085040.GA6873@dhcp-26-207.brq.redhat.com>
+References: <cover.1389103215.git.agordeev@redhat.com>
+ <7fe2a5563efac19c87213a48b58cae6b4d76c91d.1389103215.git.agordeev@redhat.com>
+ <20140113191220.GA6525@google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f180.google.com ([209.85.216.180]:41733 "EHLO
-	mail-qc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752381AbaANAhN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Jan 2014 19:37:13 -0500
-Received: by mail-qc0-f180.google.com with SMTP id i17so2192921qcy.39
-        for <linux-ide@vger.kernel.org>; Mon, 13 Jan 2014 16:37:12 -0800 (PST)
-In-Reply-To: <20140108005500.GA29556@linux.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-pci-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20140113191220.GA6525@google.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: todd.e.brandt@linux.intel.com
-Cc: Tejun Heo <tj@kernel.org>, Jej B <James.Bottomley@hansenpartnership.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-On Tue, Jan 7, 2014 at 4:55 PM, Todd E Brandt
-<todd.e.brandt@linux.intel.com> wrote:
->
-> This patch reduces S3 resume time from 10+ seconds to less than a second
-> on systems with SATA drives. It does this by making ata port and scsi disk
-> resume non-blocking.
->
-> This is another resend of the patch I send out in early December. I've
-> addressed all the feedback I received from list members, so all I really
-> need is a yay or nay from Tejun Huo and James Bottomley (since it touches
-> both subsystems).
->
-> The notes below include the performance results and patch description.
->
-> [Computer One Test - 10.5X speedup on S3 resume]
-> Platform: Ubuntu Raring Ringtail (13.04) kernel 3.11.0-rc7
-> Cpu: Intel(R) Core(TM) i7-3960X CPU @ 3.30GHz
-> Ahci: Intel C600/X79 series chipset 6-Port SATA AHCI (r5)
-> Disk config (using all 6 ahci ports):
-> 240 GB SSD, 3 TB HD, 500 GB HD, DVD-ROM (with cd inserted), 2 TB HD, 1 TB HD
-> Resume time: [unpatched 11656ms] [patched 1110ms]
->
-> [Computer Two Test - 12X speedup on S3 resume]
-> Platform: Ubuntu Raring Ringtail (13.04) kernel 3.11.0-rc7
-> Cpu: Intel(R) Core(TM) i7-3770 CPU @ 3.40GHz
-> Ahci: Intel 7 Series/C210 Series Chipset Family 6-port SATA [AHCI mode] (r4)
-> Disk config (using 1 ahci port): 320 GB Hard Disk
-> Resume time: [unpatched 5416 ms] [patched 448 ms]
->
-> [Computer Three Test - 7.8X speedup on S3 resume]
-> Platform: Ubuntu Raring Ringtail (13.04) kernel 3.11.0-rc7
-> Cpu: Intel(R) Core(TM) i7-4770S CPU @ 3.10GHz
-> Ahci: Intel Lynx Point 6-port SATA Controller 1 [AHCI mode] (r2)
-> Disk config (using 2 ahci ports): DVD-ROM (empty), 500 GB Hard Disk
-> Resume time: [unpatched 5385ms] [patched 688ms]
->
-> The essential issue behind hard disks' lengthy resume time is the ata port
-> driver blocking until the ATA port hardware is finished coming online. So
-> the kernel isn't really doing anything during all those seconds that the
-> disks are resuming, it's just blocking until the hardware says it's ready
-> to accept commands. Applying this patch set allows SATA disks to resume
-> asynchronously without holding up system resume, thus allowing the UI to
-> come online much more quickly.
-Won't this patch defeat staggered spinup at resume? If you have a jbod
-with a smallish power supply, with a 12V rail designed for the steady
-state and 1 or 2 devices spinning up at once, you may be in trouble
-when all the disks will want to spinup in same second.
+On Mon, Jan 13, 2014 at 12:12:20PM -0700, Bjorn Helgaas wrote:
+> > -	nvec = rc;
+> > -	rc = pci_enable_msi_block(pdev, nvec);
+> > -	if (rc)
+> > +	if (pci_enable_msi_range(pdev, nvec, nvec) < 0)
+> >  		goto intx;
+> >  
+> >  	return nvec;
+> >  
+> >  single_msi:
+> > -	rc = pci_enable_msi(pdev);
+> > -	if (rc)
+> > +	if (pci_enable_msi_range(pdev, 1, 1) < 0)
+> 
+> This part doesn't seem like an improvement.  There are a hundred or so
+> callers of pci_enable_msi() that only want a single MSI.  Is there any
+> benefit in changing them to use pci_enable_msi_range()?
 
-Gwendal.
-> There may be a short period after resume
-> where the disks are still spinning up in the background, but it will only
-> momentarily affect applications using that disk.
->
-> The patch set has two parts which apply to ata_port_resume and sd_resume
-> respectively. Both are required to achieve any real performance benefit,
-> but they will still function independantly without a performance hit.
->
-> ata_port_resume patch (1/2):
-> sd_resume patch (2/2):
->
-> v2:
->  [in response to Oliver Neukum]
->  - Added scsi cmd error reporting through the scsi_sense_hdr
->  [in response to James Bottomley]
->  - unified the sd_resume code path by just making sd_resume async. Thus all
->    three resume callbacks: resume, restore, and runtime-resume will use it,
->    but there is a performance benefit for resume only.
->  [in response to Bartlomiej Zolnierkiewicz]
->  - unified the __ata_port_resume_common code path to include an async
->    parameter. This way there's no need to re-implement ata_port_request_pm.
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+In this particular case it reads better to me as one sees on the screen
+pci_enable_msi_range(pdev, nvec, nvec) and pci_enable_msi_range(pdev, 1, 1)
+calls. That allows to avoid switching in mind between negative-or-positive
+return in the former call and negative-or-zero return from pci_enable_msi()
+if we had it.
+
+But in most cases when single MSI is enabled we do cause complication
+with the patterns below (which I expect I am going be hated for ;) ):
+
+
+-	rc = pci_enable_msi(pdev);
+-	if (rc)
++	rc = pci_enable_msi_range(pdev, 1, 1);
++	if (rc < 0)
+		...
+
+
+-	rc = pci_enable_msi(pdev);
+-	if (!rc)
++	rc = pci_enable_msi_range(pdev, 1, 1);
++	if (rc > 0)
+		...
+
+ 
+I think we have a tradeoff between the interface simplicity and code clarity.
+What if we try to address both goals by making pci_enable_msi() a helper over
+pci_enable_msi_range(pdev, 1, 1)? In this case the return value will match
+negative-or-positive binary semantics while reads almost as good as it used to:
+
+
+-	rc = pci_enable_msi(pdev);
+-	if (rc)
++	rc = pci_enable_msi(pdev);
++	if (rc < 0)
+		...
+
+
+-	rc = pci_enable_msi(pdev);
+-	if (!rc)
++	rc = pci_enable_msi(pdev);
++	if (rc > 0)
+		...
+
+
+The whole interface would not be inflated as well, with just:
+
+diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
+index a8d0100..fa0b27d 100644
+--- a/Documentation/PCI/MSI-HOWTO.txt
++++ b/Documentation/PCI/MSI-HOWTO.txt
+@@ -158,6 +158,9 @@ static int foo_driver_enable_single_msi(struct pci_dev *pdev)
+ 	return pci_enable_msi_range(pdev, 1, 1);
+ }
+ 
++A helper function pci_enable_msi() could be used instead. Note, as just
++one MSI is requested it could return either a negative errno or 1.
++
+ 4.2.2 pci_disable_msi
+ 
+ void pci_disable_msi(struct pci_dev *dev)
+
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
