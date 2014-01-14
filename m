@@ -1,69 +1,58 @@
-From: Gregory CLEMENT <gregory.clement@free-electrons.com>
-Subject: Re: [PATCH v2 3/3] ARM: mvebu: update the SATA compatible string
- for Armada 370/XP
-Date: Tue, 14 Jan 2014 15:58:29 +0100
-Message-ID: <52D55095.3030305@free-electrons.com>
-References: <1389711007-7239-1-git-send-email-simon.guinot@sequanux.org> <1389711007-7239-4-git-send-email-simon.guinot@sequanux.org>
+From: Jason Cooper <jason@lakedaemon.net>
+Subject: Re: [PATCH v2 0/3] Fix SATA disk hotplug for Armada 370/XP SoCs
+Date: Tue, 14 Jan 2014 10:14:04 -0500
+Message-ID: <20140114151404.GN19878@titan.lakedaemon.net>
+References: <1389711007-7239-1-git-send-email-simon.guinot@sequanux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:39657 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751672AbaANO6c (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Jan 2014 09:58:32 -0500
-In-Reply-To: <1389711007-7239-4-git-send-email-simon.guinot@sequanux.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <stable-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1389711007-7239-1-git-send-email-simon.guinot@sequanux.org>
+Sender: stable-owner@vger.kernel.org
+To: Simon Guinot <simon.guinot@sequanux.org>
+Cc: Jeff Garzik <jgarzik@redhat.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Andrew Lunn <andrew@lunn.ch>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Lior Amsalem <alior@marvell.com>, stable@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Simon Guinot <simon.guinot@sequanux.org>, Jeff Garzik <jgarzik@redhat.com>, Tejun Heo <tj@kernel.org>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Andrew Lunn <andrew@lunn.ch>, Jason Cooper <jason@lakedaemon.net>, stable@vger.kernel.org, linux-ide@vger.kernel.org, Lior Amsalem <alior@marvell.com>, linux-arm-kernel@lists.infradead.org, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
 
-Hi Simon,
+Simon,
 
-On 14/01/2014 15:50, Simon Guinot wrote:
-> This patch updates the Armada 370/XP SATA node with the new compatible
-> string "marvell,armada-370-xp-sata".
-
-Usually we try to use the name of the first SoC instead of a family name.
-So here it should be "marvell,armada-370-sata"
-
-Thanks,
-
-Gregory
-
-
-
+On Tue, Jan 14, 2014 at 03:50:04PM +0100, Simon Guinot wrote:
+> Hello,
 > 
-> Signed-off-by: Simon Guinot <simon.guinot@sequanux.org>
-> Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> Cc: Jason Cooper <jason@lakedaemon.net>
-> Cc: Andrew Lunn <andrew@lunn.ch>
-> Cc: Gregory Clement <gregory.clement@free-electrons.com>
-> Cc: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-> Cc: Lior Amsalem <alior@marvell.com>
-> Cc: stable@vger.kernel.org
-> ---
->  arch/arm/boot/dts/armada-370-xp.dtsi | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> This patch series fixes a SATA disk hotplug issue for the Armada 370/XP
+> SoCs: once a disk is removed from a SATA port, then the re-plug events
+> are not detected by the sata_mv driver.
 > 
-> diff --git a/arch/arm/boot/dts/armada-370-xp.dtsi b/arch/arm/boot/dts/armada-370-xp.dtsi
-> index 7f10f627ae5b..b5def2416800 100644
-> --- a/arch/arm/boot/dts/armada-370-xp.dtsi
-> +++ b/arch/arm/boot/dts/armada-370-xp.dtsi
-> @@ -152,7 +152,7 @@
->  			};
->  
->  			sata@a0000 {
-> -				compatible = "marvell,orion-sata";
-> +				compatible = "marvell,armada-370-xp-sata";
->  				reg = <0xa0000 0x5000>;
->  				interrupts = <55>;
->  				clocks = <&gateclk 15>, <&gateclk 30>;
+> This should be applied to the -stable kernels 3.10 and onwards. 
+
+Please add a 'Fixes: <commit-hash> (oneline)' tag below the Cc: stable
+tags.  It looks like the sata_mv binding and the Armada 370 DT booting
+were both introduced in v3.6, so I would probably use:
+
+Fixes: 9ae6f740b49f (arm: mach-mvebu: add support for Armada 370 and Armada XP with DT)
+
+Is there a specific reason you say v3.10?
+
+Once you've incorporated Gregory's comments,
+
+Acked-by: Jason Cooper <jason@lakedaemon.net>
+
+> Lior Amsalem (1):
+>   ata: sata_mv: fix disk hotplug for Armada 370/XP SoCs
 > 
+> Simon Guinot (2):
+>   ata: sata_mv: introduce compatible string "marvell,armada-370-xp-sata"
+>   ARM: mvebu: update the SATA compatible string for Armada 370/XP
+> 
+>  Documentation/devicetree/bindings/ata/marvell.txt |  2 +-
+>  arch/arm/boot/dts/armada-370-xp.dtsi              |  2 +-
+>  drivers/ata/sata_mv.c                             | 25 +++++++++++++++++++++++
+>  3 files changed, 27 insertions(+), 2 deletions(-)
 
+Tejun,
 
--- 
-Gregory Clement, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+I see no point to breaking up this series only to have both pieces end
+up in stable.  Are you ok with taking the whole thing?
+
+thx,
+
+Jason.
