@@ -1,92 +1,48 @@
-From: Luis Henriques <luis.henriques@canonical.com>
-Subject: Re: [PATCH v2 0/3] Fix SATA disk hotplug for Armada 370/XP SoCs
-Date: Tue, 14 Jan 2014 16:20:07 +0000
-Message-ID: <20140114162007.GD4637@hercules>
-References: <1389711007-7239-1-git-send-email-simon.guinot@sequanux.org>
- <20140114151404.GN19878@titan.lakedaemon.net>
- <20140114154834.GD32507@kw.sim.vm.gnt>
- <20140114155945.GQ19878@titan.lakedaemon.net>
+From: Loc Ho <lho@apm.com>
+Subject: Re: [PATCH v8 3/4] ata: Add APM X-Gene SoC SATA host controller driver
+Date: Tue, 14 Jan 2014 08:21:28 -0800
+Message-ID: <CAPw-ZTmn6JiDku=vz=m9v5MNuFrK_-d0ehU_88drCYGHM8Wv=Q@mail.gmail.com>
+References: <1389031922-4309-3-git-send-email-lho@apm.com>
+	<1389031922-4309-4-git-send-email-lho@apm.com>
+	<52D052F9.8050703@redhat.com>
+	<20140111193104.GD3257@mtj.dyndns.org>
+	<6EB44142-06DA-4C9D-8999-CFA9EE30E03D@apm.com>
+	<20140112114958.GA8509@mtj.dyndns.org>
+	<CAPw-ZTmfKfPY3DRfJT6FQP78ULwfcjGG76cNfr9yk7UMdrO4wg@mail.gmail.com>
+	<20140113160843.GB29053@htj.dyndns.org>
+	<CAPw-ZT=A=c9-3BfP-LoDBXByQqfvATpAdS4NPPWB9+R1+GHfDA@mail.gmail.com>
+	<20140114160312.GH12131@htj.dyndns.org>
+	<20140114160419.GI12131@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140114155945.GQ19878@titan.lakedaemon.net>
-Sender: stable-owner@vger.kernel.org
-To: Jason Cooper <jason@lakedaemon.net>
-Cc: Simon Guinot <simon.guinot@sequanux.org>, Jeff Garzik <jgarzik@redhat.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Andrew Lunn <andrew@lunn.ch>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Lior Amsalem <alior@marvell.com>, stable@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20140114160419.GI12131@htj.dyndns.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: David Milburn <dmilburn@redhat.com>, "olof@lixom.net" <olof@lixom.net>, "arnd@arndb.de" <arnd@arndb.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "jcm@redhat.com" <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, Jan 14, 2014 at 10:59:45AM -0500, Jason Cooper wrote:
-> Simon,
-> 
-> On Tue, Jan 14, 2014 at 04:48:34PM +0100, Simon Guinot wrote:
-> > On Tue, Jan 14, 2014 at 10:14:04AM -0500, Jason Cooper wrote:
-> > > Simon,
-> > > 
-> > > On Tue, Jan 14, 2014 at 03:50:04PM +0100, Simon Guinot wrote:
-> > > > Hello,
-> > > > 
-> > > > This patch series fixes a SATA disk hotplug issue for the Armada 370/XP
-> > > > SoCs: once a disk is removed from a SATA port, then the re-plug events
-> > > > are not detected by the sata_mv driver.
-> > > > 
-> > > > This should be applied to the -stable kernels 3.10 and onwards. 
-> > > 
-> > > Please add a 'Fixes: <commit-hash> (oneline)' tag below the Cc: stable
-> > > tags.  It looks like the sata_mv binding and the Armada 370 DT booting
-> > > were both introduced in v3.6, so I would probably use:
-> > > 
-> > > Fixes: 9ae6f740b49f (arm: mach-mvebu: add support for Armada 370 and Armada XP with DT)
-> > 
-> > Hi Jason,
-> > 
-> > I am not comfortable with this "Fixes: commit_id" notation. It states
-> > that the patch fixes a regression introduced by a given commit. This
-> > hardly makes sense to me because obviously the hotplug issue has not
-> > been introduced by:
-> > 
-> > "arm: mach-mvebu: add support for Armada 370 and Armada XP with DT".
-> > 
-> > I know that the purpose is purely administrative, but it is kind of
-> > weird...
-> 
-> True, the wording may not be the best, but the goal is to make it easier
-> to do a 'tag --contains' search.  We could call it
-> 
-> Repair-Something-Broken-Since-Introduced-by:
-> 
-> in this case ;-)
-> 
-> > > Is there a specific reason you say v3.10?
-> > 
-> > I could have said nothing as well.
-> > 
-> > As stable kernel older than 3.10 are no longer maintained, I think
-> > we don't need to point out a specific commit as a -stable target.
-> > Simply Cc'ing -stable without any extra informations should be good
-> > enough.
-> 
-> The reason I ask is that I'd like to know if, in debugging this issue,
-> you discovered that the fix was not needed before v3.10 (hypothetically,
-> say because sata hotplug was added in v3.10).
-> 
-> The linux-stable team isn't the only people who find this information
-> useful.  Distros maintaining older kernels would find it very helpful
-> when going through -stable patches to know easily if a patch should be
-> backported further, say to v3.8.
+Hi,
 
-Obviously, I really appreciate when people add this sort of information
-into a commit.  This additional information is quite useful for me as a
-maintainer of extended (aka 'non-official') stable kernels.
 
-Cheers,
---
-Luis
+>> > As mentioned, the flush requires immediately after reading the CI.
+>> > Otherwise, there is still an chance that the command is completed and
+>> > the OS notified the upper layer while the data is still in flight. For
+>> > the initial version, I will remove the flush (IRQ wrapper) and submit
+>> > separate patch.
+>>
+>> The function is called with ap->lock held.  Nothing can happen
+>> inbetween.
+>
+> Oh, or do you mean that upper layer may get data which hasn't finish
+> transferring without the flush?
+>
 
-> thx,
-> 
-> Jason.
-> --
-> To unsubscribe from this list: send the line "unsubscribe stable" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+In the ISR, the AHCI library code reads the CI register and then
+performs XOR to determine which commands are completed. Then it goes
+and processes the completed command(s). I am worry that the process of
+processing the completed command(s), the upper layer may act on the
+data before the data arrived at the DDR/cache. In answering your
+question, yes.
+
+-Loc.
