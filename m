@@ -1,40 +1,40 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v8 3/4] ata: Add APM X-Gene SoC SATA host controller
- driver
-Date: Tue, 14 Jan 2014 11:04:19 -0500
-Message-ID: <20140114160419.GI12131@htj.dyndns.org>
-References: <1389031922-4309-3-git-send-email-lho@apm.com>
- <1389031922-4309-4-git-send-email-lho@apm.com>
- <52D052F9.8050703@redhat.com>
- <20140111193104.GD3257@mtj.dyndns.org>
- <6EB44142-06DA-4C9D-8999-CFA9EE30E03D@apm.com>
- <20140112114958.GA8509@mtj.dyndns.org>
- <CAPw-ZTmfKfPY3DRfJT6FQP78ULwfcjGG76cNfr9yk7UMdrO4wg@mail.gmail.com>
- <20140113160843.GB29053@htj.dyndns.org>
- <CAPw-ZT=A=c9-3BfP-LoDBXByQqfvATpAdS4NPPWB9+R1+GHfDA@mail.gmail.com>
- <20140114160312.GH12131@htj.dyndns.org>
+From: Jason Cooper <jason@lakedaemon.net>
+Subject: Re: [PATCH v2 0/3] Fix SATA disk hotplug for Armada 370/XP SoCs
+Date: Tue, 14 Jan 2014 11:08:00 -0500
+Message-ID: <20140114160800.GR19878@titan.lakedaemon.net>
+References: <1389711007-7239-1-git-send-email-simon.guinot@sequanux.org>
+ <20140114151404.GN19878@titan.lakedaemon.net>
+ <20140114154834.GD32507@kw.sim.vm.gnt>
+ <20140114155945.GQ19878@titan.lakedaemon.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:47756 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751984AbaANQIO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Jan 2014 11:08:14 -0500
 Content-Disposition: inline
-In-Reply-To: <20140114160312.GH12131@htj.dyndns.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Loc Ho <lho@apm.com>
-Cc: David Milburn <dmilburn@redhat.com>, "olof@lixom.net" <olof@lixom.net>, "arnd@arndb.de" <arnd@arndb.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "jcm@redhat.com" <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+In-Reply-To: <20140114155945.GQ19878@titan.lakedaemon.net>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Simon Guinot <simon.guinot@sequanux.org>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Andrew Lunn <andrew@lunn.ch>, stable@vger.kernel.org, linux-ide@vger.kernel.org, Lior Amsalem <alior@marvell.com>, Tejun Heo <tj@kernel.org>, Gregory Clement <gregory.clement@free-electrons.com>, Jeff Garzik <jgarzik@redhat.com>, linux-arm-kernel@lists.infradead.org, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
 
-On Tue, Jan 14, 2014 at 11:03:12AM -0500, Tejun Heo wrote:
-> > As mentioned, the flush requires immediately after reading the CI.
-> > Otherwise, there is still an chance that the command is completed and
-> > the OS notified the upper layer while the data is still in flight. For
-> > the initial version, I will remove the flush (IRQ wrapper) and submit
-> > separate patch.
-> 
-> The function is called with ap->lock held.  Nothing can happen
-> inbetween.
+On Tue, Jan 14, 2014 at 10:59:45AM -0500, Jason Cooper wrote:
+...
+> The linux-stable team isn't the only people who find this information
+> useful.  Distros maintaining older kernels would find it very helpful
+> when going through -stable patches to know easily if a patch should be
+> backported further, say to v3.8.
 
-Oh, or do you mean that upper layer may get data which hasn't finish
-transferring without the flush?
+And yes, I'm aware that -stable is actively supporting farther back than
+what we are discussing here.  I was refuting the specific argument as
+opposed to correcting wrong assumptions.
 
--- 
-tejun
+In general, it's better to be accurate regarding 'Fixes:' commits than
+assuming no one cares about anything older than the oldest -stable
+kernel.
+
+thx,
+
+Jason.
