@@ -1,32 +1,39 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH 3/7] ahci: Use new interfaces for MSI/MSI-X enablement
-Date: Tue, 14 Jan 2014 09:54:41 +0100
-Message-ID: <20140114085441.GB6873@dhcp-26-207.brq.redhat.com>
-References: <cover.1389103215.git.agordeev@redhat.com>
- <7fe2a5563efac19c87213a48b58cae6b4d76c91d.1389103215.git.agordeev@redhat.com>
- <20140113191220.GA6525@google.com>
- <20140114085040.GA6873@dhcp-26-207.brq.redhat.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH/RESEND v2 1/2] Hard disk S3 resume time optimization
+Date: Tue, 14 Jan 2014 09:31:08 -0500
+Message-ID: <20140114143108.GB12131@htj.dyndns.org>
+References: <20140108005607.GB29556@linux.intel.com>
+ <20140111191315.GC3257@mtj.dyndns.org>
+ <20140113195544.GA13900@linux.intel.com>
+ <20140113203007.GA3480@mtj.dyndns.org>
+ <20140113233026.GA3200@linux.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:12306 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750949AbaANIwl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 14 Jan 2014 03:52:41 -0500
+Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20140114085040.GA6873@dhcp-26-207.brq.redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <20140113233026.GA3200@linux.intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Todd E Brandt <todd.e.brandt@linux.intel.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, rjw@rjwysocki.net
 List-Id: linux-ide@vger.kernel.org
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
 
-On Tue, Jan 14, 2014 at 09:50:40AM +0100, Alexander Gordeev wrote:
-> What if we try to address both goals by making pci_enable_msi() a helper over
-> pci_enable_msi_range(pdev, 1, 1)?
+Hello, Todd.
 
-Or pci_enable_msi_single() to help reading and avoid drivers conversion mess.
+On Mon, Jan 13, 2014 at 03:30:26PM -0800, Todd E Brandt wrote:
+> Ahh, sorry, yea I think async should work for the entire resume pathway. Would
+> you be willing to accept this ata patch separately from the scsi one? It
+> wouldn't provide any performance benefit on its own, but would pave the way
+> for performance benefit by removing the ATA resume lag time (Which would then
+> put the ball in the scsi layer's court to finish the optimization). I've 
+> tested both patches separately and both work without issue. Also, this patch
+> appears to be a pre-requisite to both mine and Phillip Susi's solution, so 
+> it would really hope move things along regardless of which direction is
+> ultimately chosen in the SCSI layer.
+
+Let's do it together.  It's not like this involves huge number of
+patches which would be helped by staging things.
+
+Thanks.
 
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+tejun
