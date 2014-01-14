@@ -1,40 +1,62 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v8 3/4] ata: Add APM X-Gene SoC SATA host controller
- driver
-Date: Tue, 14 Jan 2014 11:46:14 -0500
-Message-ID: <20140114164540.GK12131@htj.dyndns.org>
-References: <6EB44142-06DA-4C9D-8999-CFA9EE30E03D@apm.com>
- <20140112114958.GA8509@mtj.dyndns.org>
- <CAPw-ZTmfKfPY3DRfJT6FQP78ULwfcjGG76cNfr9yk7UMdrO4wg@mail.gmail.com>
- <20140113160843.GB29053@htj.dyndns.org>
- <CAPw-ZT=A=c9-3BfP-LoDBXByQqfvATpAdS4NPPWB9+R1+GHfDA@mail.gmail.com>
- <20140114160312.GH12131@htj.dyndns.org>
- <20140114160419.GI12131@htj.dyndns.org>
- <CAPw-ZTmn6JiDku=vz=m9v5MNuFrK_-d0ehU_88drCYGHM8Wv=Q@mail.gmail.com>
- <20140114163008.GJ12131@htj.dyndns.org>
- <CAPw-ZTn7QZkPGLMYkd0m4uS_vC53bOfv-N7M=jUTnzMSVJkMrw@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 3/7] ahci: Use new interfaces for MSI/MSI-X enablement
+Date: Tue, 14 Jan 2014 10:31:46 -0700
+Message-ID: <CAErSpo7QSLsbKL=rPj0Uavf1y8A+mxdXhdW-hK689xzGw7O=rw@mail.gmail.com>
+References: <cover.1389103215.git.agordeev@redhat.com> <7fe2a5563efac19c87213a48b58cae6b4d76c91d.1389103215.git.agordeev@redhat.com>
+ <20140113191220.GA6525@google.com> <20140114085040.GA6873@dhcp-26-207.brq.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f53.google.com ([209.85.216.53]:45472 "EHLO
-	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752382AbaANQqT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Jan 2014 11:46:19 -0500
-Content-Disposition: inline
-In-Reply-To: <CAPw-ZTn7QZkPGLMYkd0m4uS_vC53bOfv-N7M=jUTnzMSVJkMrw@mail.gmail.com>
+Received: from mail-ig0-f178.google.com ([209.85.213.178]:49246 "EHLO
+	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751329AbaANRcH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Jan 2014 12:32:07 -0500
+Received: by mail-ig0-f178.google.com with SMTP id uq10so2153959igb.5
+        for <linux-ide@vger.kernel.org>; Tue, 14 Jan 2014 09:32:07 -0800 (PST)
+In-Reply-To: <20140114085040.GA6873@dhcp-26-207.brq.redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Loc Ho <lho@apm.com>
-Cc: David Milburn <dmilburn@redhat.com>, "olof@lixom.net" <olof@lixom.net>, "arnd@arndb.de" <arnd@arndb.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "jcm@redhat.com" <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 
-On Tue, Jan 14, 2014 at 08:37:18AM -0800, Loc Ho wrote:
-> This issue has NOT been observed but the design has this issue and
-> observed from verification. As a mean to ensure that this never occur
-> from design itself, this is the workaround and only apply to SATA and
-> SDIO. The SDIO don't need this special flush as discussed in earlier
-> email.
+On Tue, Jan 14, 2014 at 1:50 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
+> On Mon, Jan 13, 2014 at 12:12:20PM -0700, Bjorn Helgaas wrote:
+>> > -   nvec = rc;
+>> > -   rc = pci_enable_msi_block(pdev, nvec);
+>> > -   if (rc)
+>> > +   if (pci_enable_msi_range(pdev, nvec, nvec) < 0)
+>> >             goto intx;
+>> >
+>> >     return nvec;
+>> >
+>> >  single_msi:
+>> > -   rc = pci_enable_msi(pdev);
+>> > -   if (rc)
+>> > +   if (pci_enable_msi_range(pdev, 1, 1) < 0)
+>>
+>> This part doesn't seem like an improvement.  There are a hundred or so
+>> callers of pci_enable_msi() that only want a single MSI.  Is there any
+>> benefit in changing them to use pci_enable_msi_range()?
+>
+> In this particular case it reads better to me as one sees on the screen
+> pci_enable_msi_range(pdev, nvec, nvec) and pci_enable_msi_range(pdev, 1, 1)
+> calls. That allows to avoid switching in mind between negative-or-positive
+> return in the former call and negative-or-zero return from pci_enable_msi()
+> if we had it.
+>
+> But in most cases when single MSI is enabled we do cause complication
+> with the patterns below (which I expect I am going be hated for ;) ):
 
-Urgh... can't say I'm a big fan of this hardware. :(
+I don't want to touch those hundred pci_enable_msi() callers at all.
+So I think we should have something like this:
 
--- 
-tejun
+    /* Return 0 for success (one MSI enabled) or negative errno */
+    static inline int pci_enable_msi(struct pci_dev *dev)
+    {
+        int rc;
+
+        rc = pci_enable_msi_range(pdev, 1, 1);
+        if (rc == 1)
+            return 0;
+        return rc;
+    }
