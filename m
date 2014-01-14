@@ -1,117 +1,52 @@
 From: Simon Guinot <simon.guinot@sequanux.org>
-Subject: [PATCH v3 2/3] ata: sata_mv: fix disk hotplug for Armada 370/XP SoCs
-Date: Tue, 14 Jan 2014 20:09:57 +0100
-Message-ID: <1389726606-8866-1-git-send-email-simon.guinot@sequanux.org>
+Subject: [PATCH v3 3/3] ARM: mvebu: update the SATA compatible string for Armada 370/XP
+Date: Tue, 14 Jan 2014 20:10:27 +0100
+Message-ID: <1389726631-8905-1-git-send-email-simon.guinot@sequanux.org>
 References: <1389726281-8731-1-git-send-email-simon.guinot@sequanux.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vm1.sequanux.org ([188.165.36.56]:50556 "EHLO vm1.sequanux.org"
+Received: from vm1.sequanux.org ([188.165.36.56]:50606 "EHLO vm1.sequanux.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751832AbaANTKV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 14 Jan 2014 14:10:21 -0500
+	id S1751367AbaANTKx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 14 Jan 2014 14:10:53 -0500
 In-Reply-To: <1389726281-8731-1-git-send-email-simon.guinot@sequanux.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jeff Garzik <jgarzik@redhat.com>, Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Lior Amsalem <alior@marvell.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, stable@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Lior Amsalem <alior@marvell.com>, stable@vger.kernel.org
 
-From: Lior Amsalem <alior@marvell.com>
+This patch updates the Armada 370/XP SATA node with the new compatible
+string "marvell,armada-370-sata".
 
-On Armada 370/XP SoCs, once a disk is removed from a SATA port, then the
-re-plug events are not detected by the sata_mv driver. This patch fixes
-the issue by updating the PHY speed in the LP_PHY_CTL register (0x58)
-according to the SControl speed.
-
-Note that this fix is only applied if the compatible string
-"marvell,armada-370-sata" is found in the SATA DT node.
-
-Fixes: 9ae6f740b49f ("arm: mach-mvebu: add support for Armada 370 and Armada XP with DT")
-Signed-off-by: Lior Amsalem <alior@marvell.com>
-Signed-off-by: Nadav Haklai <nadavh@marvell.com>
 Signed-off-by: Simon Guinot <simon.guinot@sequanux.org>
 Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 Cc: Jason Cooper <jason@lakedaemon.net>
 Cc: Andrew Lunn <andrew@lunn.ch>
 Cc: Gregory Clement <gregory.clement@free-electrons.com>
 Cc: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Cc: Lior Amsalem <alior@marvell.com>
 Cc: stable@vger.kernel.org # v3.6+
 Acked-by: Jason Cooper <jason@lakedaemon.net>
 ---
-Changes since v1:
-- Only fix the LP_PHY_CTL register (0x58) if the compatible string
-  "marvell,armada-370-xp-sata" is found in the SATA DT node.
-- Update the commit message.
-
 Changes since v2:
 - Use compatible string "marvell,armada-370-sata" instead of
   "marvell,armada-370-xp-sata".
-- Provide more informations for -stable.
 
- drivers/ata/sata_mv.c | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+ arch/arm/boot/dts/armada-370-xp.dtsi | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index 4ec5368c10f7..dc9d4b1ea4ec 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -304,6 +304,7 @@ enum {
- 	MV5_LTMODE		= 0x30,
- 	MV5_PHY_CTL		= 0x0C,
- 	SATA_IFCFG		= 0x050,
-+	LP_PHY_CTL		= 0x058,
+diff --git a/arch/arm/boot/dts/armada-370-xp.dtsi b/arch/arm/boot/dts/armada-370-xp.dtsi
+index 7f10f627ae5b..80ffacd128f8 100644
+--- a/arch/arm/boot/dts/armada-370-xp.dtsi
++++ b/arch/arm/boot/dts/armada-370-xp.dtsi
+@@ -152,7 +152,7 @@
+ 			};
  
- 	MV_M2_PREAMP_MASK	= 0x7e0,
- 
-@@ -431,6 +432,7 @@ enum {
- 	MV_HP_CUT_THROUGH	= (1 << 10),	/* can use EDMA cut-through */
- 	MV_HP_FLAG_SOC		= (1 << 11),	/* SystemOnChip, no PCI */
- 	MV_HP_QUIRK_LED_BLINK_EN = (1 << 12),	/* is led blinking enabled? */
-+	MV_HP_FIX_LP_PHY_CTL	= (1 << 13),	/* fix speed in LP_PHY_CTL ? */
- 
- 	/* Port private flags (pp_flags) */
- 	MV_PP_FLAG_EDMA_EN	= (1 << 0),	/* is EDMA engine enabled? */
-@@ -1358,6 +1360,7 @@ static int mv_scr_write(struct ata_link *link, unsigned int sc_reg_in, u32 val)
- 
- 	if (ofs != 0xffffffffU) {
- 		void __iomem *addr = mv_ap_base(link->ap) + ofs;
-+		struct mv_host_priv *hpriv = link->ap->host->private_data;
- 		if (sc_reg_in == SCR_CONTROL) {
- 			/*
- 			 * Workaround for 88SX60x1 FEr SATA#26:
-@@ -1374,6 +1377,18 @@ static int mv_scr_write(struct ata_link *link, unsigned int sc_reg_in, u32 val)
- 			 */
- 			if ((val & 0xf) == 1 || (readl(addr) & 0xf) == 1)
- 				val |= 0xf000;
-+
-+			if (hpriv->hp_flags & MV_HP_FIX_LP_PHY_CTL) {
-+				void __iomem *lp_phy_addr =
-+					mv_ap_base(link->ap) + LP_PHY_CTL;
-+				/*
-+				 * Set PHY speed according to SControl speed.
-+				 */
-+				if ((val & 0xf0) == 0x10)
-+					writelfl(0x7, lp_phy_addr);
-+				else
-+					writelfl(0x227, lp_phy_addr);
-+			}
- 		}
- 		writelfl(val, addr);
- 		return 0;
-@@ -4110,6 +4125,15 @@ static int mv_platform_probe(struct platform_device *pdev)
- 	if (rc)
- 		goto err;
- 
-+	/*
-+	 * To allow disk hotplug on Armada 370/XP SoCs, the PHY speed must be
-+	 * updated in the LP_PHY_CTL register.
-+	 */
-+	if (pdev->dev.of_node &&
-+		of_device_is_compatible(pdev->dev.of_node,
-+					"marvell,armada-370-sata"))
-+		hpriv->hp_flags |= MV_HP_FIX_LP_PHY_CTL;
-+
- 	/* initialize adapter */
- 	rc = mv_init_host(host);
- 	if (rc)
+ 			sata@a0000 {
+-				compatible = "marvell,orion-sata";
++				compatible = "marvell,armada-370-sata";
+ 				reg = <0xa0000 0x5000>;
+ 				interrupts = <55>;
+ 				clocks = <&gateclk 15>, <&gateclk 30>;
 -- 
 1.8.5.2
 
