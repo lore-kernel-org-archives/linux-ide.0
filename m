@@ -1,147 +1,33 @@
-From: Todd E Brandt <todd.e.brandt@linux.intel.com>
-Subject: [PATCH v3 2/2] Hard disk S3 resume time optimization
-Date: Tue, 14 Jan 2014 16:32:26 -0800
-Message-ID: <20140115003226.GC15067@linux.intel.com>
-References: <20140108005607.GB29556@linux.intel.com>
- <20140111191315.GC3257@mtj.dyndns.org>
- <20140113195544.GA13900@linux.intel.com>
- <20140113203007.GA3480@mtj.dyndns.org>
-Reply-To: todd.e.brandt@linux.intel.com
+From: Felix Miata <mrmazda@earthlink.net>
+Subject: global fdisk colors disable
+Date: Tue, 14 Jan 2014 22:39:16 -0500
+Message-ID: <52D602E4.1040606@earthlink.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:41533 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751384AbaAOAcd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 14 Jan 2014 19:32:33 -0500
-Content-Disposition: inline
-In-Reply-To: <20140113203007.GA3480@mtj.dyndns.org>
+Received: from elasmtp-junco.atl.sa.earthlink.net ([209.86.89.63]:47324 "EHLO
+	elasmtp-junco.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750959AbaAODjS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Jan 2014 22:39:18 -0500
+Received: from [24.144.107.66] (helo=[192.168.0.11])
+	by elasmtp-junco.atl.sa.earthlink.net with esmtpsa (TLSv1:AES256-SHA:256)
+	(Exim 4.67)
+	(envelope-from <mrmazda@earthlink.net>)
+	id 1W3HK1-0002i6-DL
+	for linux-ide@vger.kernel.org; Tue, 14 Jan 2014 22:39:17 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, rjw@rjwysocki.net
+To: linux-ide@vger.kernel.org
 
-On resume, the SD driver currently waits until the block driver finishes
-executing a disk start command with blk_execute_rq. This patch changes
-the sd_resume callback to use blk_execute_rq_nowait instead, which allows
-it to return immediately, thus allowing the next device in the pm queue
-to resume. The return value of blk_execute_rq_nowait is handled in the
-background by sd_resume_complete. Any commands issued to the scsi disk
-during the startup will be queued up and executed once the disk is online.
-Thus no information is lost.
+Is there a way to do $SUBJECT? One really shouldn't have to resort to using 
+-L on every invocation to be able to see fdisk output. I see nothing in the 
+man page about any kind of config file. I don't think there's ever been a 
+reason to configure it before.
+-- 
+"The wise are known for their understanding, and pleasant
+words are persuasive." Proverbs 16:21 (New Living Translation)
 
-This patch applies to all three resume callbacks: resume, restore, and
-runtime-resume. There is only a performance benefit for resume, but for
-simplicity both restore and runtime-resume use the same code path.
+  Team OS/2 ** Reg. Linux User #211409 ** a11y rocks!
 
-The execution flow has changed from a single, synchronous call, to two
-calls: one called to start sd_resume asynchronously, the other called on
-completion. Thus the dmesg log will now show two prints for each drive
-resume, on resume start and complete. The scsi sense data is managed
-the same, but is now analyzed and freed in sd_resume_complete.
-
-This code copies a portion of sd_start_stop_device, scsi_execute_req_flags,
-and scsi_execute directly into sd_resume: effectively circumventing
-sd_start_stop_device to start disks. This is to enable only the START_STOP
-command to use blk_execute_rq_nowait instead of blk_execute_rq. So
-sd_start_stop_device is now only used to stop the device. The disk is
-started from within the sd_resume call itself. Another approach might be to
-create an async version of scsi_execute to better preserve the code path
-but I'm reticent to allow any other scsi commands to execute asynchronously.
-
-Signed-off-by: Todd Brandt <todd.e.brandt@intel.com>
-Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
-
- drivers/scsi/sd.c | 70 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 67 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 69725f7..c780f75 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3172,18 +3172,82 @@ static int sd_suspend_runtime(struct device *dev)
- 	return sd_suspend_common(dev, false);
- }
- 
-+static void sd_resume_complete(struct request *rq, int error)
-+{
-+	struct scsi_sense_hdr sshdr;
-+	struct scsi_disk *sdkp = rq->end_io_data;
-+	char *sense = rq->sense;
-+
-+	if (error) {
-+		sd_printk(KERN_WARNING, sdkp, "START FAILED\n");
-+		sd_print_result(sdkp, error);
-+		if (sense && (driver_byte(error) & DRIVER_SENSE)) {
-+			scsi_normalize_sense(sense,
-+				SCSI_SENSE_BUFFERSIZE, &sshdr);
-+			sd_print_sense_hdr(sdkp, &sshdr);
-+		}
-+	} else {
-+		sd_printk(KERN_NOTICE, sdkp, "START SUCCESS\n");
-+	}
-+
-+	kfree(sense);
-+	rq->sense = NULL;
-+	rq->end_io_data = NULL;
-+	__blk_put_request(rq->q, rq);
-+	scsi_disk_put(sdkp);
-+}
-+
- static int sd_resume(struct device *dev)
- {
-+	unsigned char cmd[6] = { START_STOP };
- 	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
-+	struct request *req;
-+	char *sense = NULL;
- 	int ret = 0;
- 
- 	if (!sdkp->device->manage_start_stop)
--		goto done;
-+		goto error;
- 
- 	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
--	ret = sd_start_stop_device(sdkp, 1);
- 
--done:
-+	cmd[4] |= 1;
-+
-+	if (sdkp->device->start_stop_pwr_cond)
-+		cmd[4] |= 1 << 4;	/* Active or Standby */
-+
-+	if (!scsi_device_online(sdkp->device)) {
-+		ret = -ENODEV;
-+		goto error;
-+	}
-+
-+	req = blk_get_request(sdkp->device->request_queue, 0, __GFP_WAIT);
-+	if (!req) {
-+		ret = -ENOMEM;
-+		goto error;
-+	}
-+
-+	sense = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_NOIO);
-+	if (!sense) {
-+		ret = -ENOMEM;
-+		goto error_sense;
-+	}
-+
-+	req->cmd_len = COMMAND_SIZE(cmd[0]);
-+	memcpy(req->cmd, cmd, req->cmd_len);
-+	req->sense = sense;
-+	req->sense_len = 0;
-+	req->retries = SD_MAX_RETRIES;
-+	req->timeout = SD_TIMEOUT;
-+	req->cmd_type = REQ_TYPE_BLOCK_PC;
-+	req->cmd_flags |= REQ_PM | REQ_QUIET | REQ_PREEMPT;
-+
-+	req->end_io_data = sdkp;
-+	blk_execute_rq_nowait(req->q, NULL, req, 1, sd_resume_complete);
-+	return 0;
-+
-+ error_sense:
-+	__blk_put_request(req->q, req);
-+ error:
- 	scsi_disk_put(sdkp);
- 	return ret;
- }
+Felix Miata  ***  http://fm.no-ip.com/
