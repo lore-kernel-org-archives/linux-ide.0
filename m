@@ -1,54 +1,37 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v3 1/2] Hard disk S3 resume time optimization
-Date: Wed, 15 Jan 2014 08:01:04 -0500
-Message-ID: <20140115130104.GC7950@htj.dyndns.org>
-References: <20140108005607.GB29556@linux.intel.com>
- <20140111191315.GC3257@mtj.dyndns.org>
- <20140113195544.GA13900@linux.intel.com>
- <20140113203007.GA3480@mtj.dyndns.org>
- <20140115003140.GB15067@linux.intel.com>
+From: Loc Ho <lho@apm.com>
+Subject: Re: [PATCH v9 2/4] Documentation: Add documentation for APM X-Gene
+ SoC SATA host controller DTS binding
+Date: Wed, 15 Jan 2014 12:04:02 -0800
+Message-ID: <CAPw-ZT=wJVQ2Qw47Ehgu6rJZ4HkpADrGuhZr8Yjf4XA6z+-xbA@mail.gmail.com>
+References: <1389769910-15505-1-git-send-email-lho@apm.com>
+	<1389769910-15505-2-git-send-email-lho@apm.com>
+	<1389769910-15505-3-git-send-email-lho@apm.com>
+	<20140115111839.GB25824@e106331-lin.cambridge.arm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f175.google.com ([209.85.216.175]:45722 "EHLO
-	mail-qc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751499AbaAONBI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Jan 2014 08:01:08 -0500
-Content-Disposition: inline
-In-Reply-To: <20140115003140.GB15067@linux.intel.com>
+Received: from exprod5og113.obsmtp.com ([64.18.0.26]:39503 "HELO
+	exprod5og113.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751473AbaAOUEE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Jan 2014 15:04:04 -0500
+Received: by mail-qe0-f45.google.com with SMTP id t9so1609642qeq.18
+        for <linux-ide@vger.kernel.org>; Wed, 15 Jan 2014 12:04:02 -0800 (PST)
+In-Reply-To: <20140115111839.GB25824@e106331-lin.cambridge.arm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Todd E Brandt <todd.e.brandt@linux.intel.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, rjw@rjwysocki.net
+To: Mark Rutland <mark.rutland@arm.com>
+Cc: "olof@lixom.net" <olof@lixom.net>, "tj@kernel.org" <tj@kernel.org>, "arnd@arndb.de" <arnd@arndb.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "dmilburn@redhat.com" <dmilburn@redhat.com>, "jcm@redhat.com" <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-Hello,
+Hi,
 
-On Tue, Jan 14, 2014 at 04:31:40PM -0800, Todd E Brandt wrote:
-....
-> Signed-off-by: Todd Brandt <todd.e.brandt@intel.com>
-> Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
-> 
->  drivers/ata/libata-core.c | 32 +++++++++++++++++---------------
->  1 file changed, 17 insertions(+), 15 deletions(-)
-> 
-> Signed-off-by: Todd Brandt <todd.e.brandt@intel.com>
-> Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
+>> +- clocks             : Reference to the clock entry.
+>> +- phys                       : PHY reference with parameter 0.
+>
+> The specific value of the phy-specifier shouldn't matter to this
+> binding. What should matter is what it logically corresponds to.
 
-Hmmm?  Duplicate SOBs and there's supposed to be "---" separator
-between patch description and the rest.
+I not quite following this. Are you suggest that I drop the value 0.
+In the binding, one needs to specify the mode of operation - 0 is for
+SATA. Can you explain more?
 
-> @@ -5326,7 +5326,7 @@ bool ata_link_offline(struct ata_link *link)
->  #ifdef CONFIG_PM
->  static int ata_port_request_pm(struct ata_port *ap, pm_message_t mesg,
->  			       unsigned int action, unsigned int ehi_flags,
-> -			       int *async)
-> +			       bool async, int *async_result)
-
-Do we still need @async_result?  Only resume is async and resume
-doesn't care about the result.  Suspend is always synchronous and thus
-can just return the result, no?
-
-Thanks.
-
--- 
-tejun
+-Loc
