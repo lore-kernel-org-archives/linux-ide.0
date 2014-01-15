@@ -1,105 +1,37 @@
-From: Mark Rutland <mark.rutland@arm.com>
-Subject: Re: [PATCH v7 3/4] PHY: add APM X-Gene SoC 15Gbps Multi-purpose
- PHY driver
-Date: Wed, 15 Jan 2014 12:09:46 +0000
-Message-ID: <20140115120946.GD25824@e106331-lin.cambridge.arm.com>
-References: <1389769840-15469-1-git-send-email-lho@apm.com>
- <1389769840-15469-2-git-send-email-lho@apm.com>
- <1389769840-15469-3-git-send-email-lho@apm.com>
- <1389769840-15469-4-git-send-email-lho@apm.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v3 0/3] Fix SATA disk hotplug for Armada 370/XP SoCs
+Date: Wed, 15 Jan 2014 07:44:40 -0500
+Message-ID: <20140115124440.GA7950@htj.dyndns.org>
+References: <1389726281-8731-1-git-send-email-simon.guinot@sequanux.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cam-admin0.cambridge.arm.com ([217.140.96.50]:60933 "EHLO
-	cam-admin0.cambridge.arm.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751838AbaAOMKY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Jan 2014 07:10:24 -0500
+Received: from mail-qc0-f176.google.com ([209.85.216.176]:37491 "EHLO
+	mail-qc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751253AbaAOMor (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Jan 2014 07:44:47 -0500
 Content-Disposition: inline
-In-Reply-To: <1389769840-15469-4-git-send-email-lho@apm.com>
-Content-Language: en-US
+In-Reply-To: <1389726281-8731-1-git-send-email-simon.guinot@sequanux.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Loc Ho <lho@apm.com>
-Cc: "olof@lixom.net" <olof@lixom.net>, "tj@kernel.org" <tj@kernel.org>, "arnd@arndb.de" <arnd@arndb.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "dmilburn@redhat.com" <dmilburn@redhat.com>, "jcm@redhat.com" <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+To: Simon Guinot <simon.guinot@sequanux.org>
+Cc: Jeff Garzik <jgarzik@redhat.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Lior Amsalem <alior@marvell.com>, stable@vger.kernel.org
 
-On Wed, Jan 15, 2014 at 07:10:39AM +0000, Loc Ho wrote:
+On Tue, Jan 14, 2014 at 08:04:38PM +0100, Simon Guinot wrote:
+> Hello,
+> 
+> This patch series fixes a SATA disk hotplug issue for the Armada 370/XP
+> SoCs: once a disk is removed from a SATA port, then the re-plug events
+> are not detected by the sata_mv driver.
+> 
+> As this hotplug issue have been emphasized by 9ae6f740b49f
+> "arm: mach-mvebu: add support for Armada 370 and Armada XP with DT",
+> then this patches should be applied to the -stable kernels 3.6 and
+> onwards.
 
-[...]
+Applied to libata/for-3.14.
 
-> + * The APM X-Gene PHY consists of two PLL clock macro's (CMU) and lanes.
-> + * The first PLL clock macro is used for internal reference clock. The second
-> + * PLL clock macro is used to generate the clock for the PHY. This driver
-> + * configures the first PLL CMU, the second PLL CMU, and programs the PHY to
-> + * operate according to the mode of operation. The first PLL CMU is only
-> + * required if internal clock is enabled.
-> + *
-> + * Logical Layer Out Of HW module units:
-> + *
-> + * -----------------
-> + * | Internal      |    |------|
-> + * | Ref PLL CMU   |----|      |     -------------    ---------
-> + * ------------ ----    | MUX  |-----|PHY PLL CMU|----| Serdes|
-> + *                      |      |     |           |    ---------
-> + * External Clock ------|      |     -------------
-> + *                      |------|
-> + *
-> + * The Ref PLL CMU CSR (Configureation System Registers) is accessed
-> + * indirectly from the SDS offset at 0x2000. It is only required for
-> + * internal reference clock.
-> + * The PHY PLL CMU CSR is accessed indirectly from the SDS offset at 0x0000.
-> + * The Serdes CSR is accessed indirectly from the SDS offset at 0x0400.
-> + *
-> + * The Ref PLL CMU can be located within the same PHY IP or outside the PHY IP
-> + * due to shared Ref PLL CMU. For PHY with Ref PLL CMU shared with another IP,
-> + * it is located outside the PHY IP. This is the case for the PHY located
-> + * at 0x1f23a000 (SATA Port 4/5). For such PHY, another resource is required
-> + * to located the SDS/Ref PLL CMU module and its clock for that IP enabled.
-> + *
-> + * Currently, this driver only supports SATA mode with external clock.
-> + */
+Thanks.
 
-Having looked at this and the binding, I'm confused as to why we need an
-additional reg entry when we're using the external clock.
-
-Surely the second resource (the external CMU base) is a property of the
-shared ref PLL clock, rather than the PHY itself. How do you handle two
-units trying to use the shared PLL?
-
-I think makes sense to model the ref PLL CMU as a separate clock, and
-use clock-names to differentiate between the two inputs to the mux:
-
-external: external_clock {
-        compatible = "fixed-clock";
-        clock-frequency = < ... >;
-	#clock-cells = <0>;
-};
-
-ref_pll: reference_clock {
-        compatible = "apm,xgene-ref-pll";
-        reg = < .... >;
-        #clock-cells = <0>;
-};
-
-phy {
-        compatible = "apm,xgene-phy";
-        reg = < ... >;
-        clocks = <&ref_pll>, <&external>;
-        clock-names = "ref-pll", "external";
-	...
-};
-
-
-That also means the phy only needs a single compatible string -- you can
-figure out what to do by probing the set of clocks.
-
-Does that make sense? Is there something I'm missing?
-
-[...]
-
-> +       /* Retrieve optional clock */
-> +       ctx->clk = clk_get(&pdev->dev, NULL);
-
-There's no clocks proeprty in the binding. Please add one.
-
-Cheers,
-Mark.
+-- 
+tejun
