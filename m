@@ -1,35 +1,25 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v3 0/3] Fix SATA disk hotplug for Armada 370/XP SoCs
-Date: Wed, 15 Jan 2014 07:44:40 -0500
-Message-ID: <20140115124440.GA7950@htj.dyndns.org>
-References: <1389726281-8731-1-git-send-email-simon.guinot@sequanux.org>
+Subject: Re: [PATCH v3 0/2] Hard disk S3 resume time optimization
+Date: Wed, 15 Jan 2014 07:55:04 -0500
+Message-ID: <20140115125504.GB7950@htj.dyndns.org>
+References: <20140108005607.GB29556@linux.intel.com>
+ <20140111191315.GC3257@mtj.dyndns.org>
+ <20140113195544.GA13900@linux.intel.com>
+ <20140113203007.GA3480@mtj.dyndns.org>
+ <20140115003100.GA15067@linux.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f176.google.com ([209.85.216.176]:37491 "EHLO
-	mail-qc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751253AbaAOMor (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Jan 2014 07:44:47 -0500
+Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1389726281-8731-1-git-send-email-simon.guinot@sequanux.org>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <20140115003100.GA15067@linux.intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Todd E Brandt <todd.e.brandt@linux.intel.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, rjw@rjwysocki.net
 List-Id: linux-ide@vger.kernel.org
-To: Simon Guinot <simon.guinot@sequanux.org>
-Cc: Jeff Garzik <jgarzik@redhat.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Lior Amsalem <alior@marvell.com>, stable@vger.kernel.org
 
-On Tue, Jan 14, 2014 at 08:04:38PM +0100, Simon Guinot wrote:
-> Hello,
-> 
-> This patch series fixes a SATA disk hotplug issue for the Armada 370/XP
-> SoCs: once a disk is removed from a SATA port, then the re-plug events
-> are not detected by the sata_mv driver.
-> 
-> As this hotplug issue have been emphasized by 9ae6f740b49f
-> "arm: mach-mvebu: add support for Armada 370 and Armada XP with DT",
-> then this patches should be applied to the -stable kernels 3.6 and
-> onwards.
-
-Applied to libata/for-3.14.
+Please start a new thread when you're posting a new version of the
+whole series && don't use the same patch title for the patches.  They
+do different things.  They need different names.
 
 Thanks.
 
