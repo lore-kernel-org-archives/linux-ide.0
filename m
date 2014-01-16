@@ -1,76 +1,89 @@
-From: Loc Ho <lho@apm.com>
-Subject: Re: [PATCH v9 2/4] Documentation: Add documentation for APM X-Gene
- SoC SATA host controller DTS binding
-Date: Wed, 15 Jan 2014 15:59:27 -0800
-Message-ID: <CAPw-ZT=QXwOVvpgJSL5qU8J2eEuAt3nnXJDfDwPXTTo7z4Fe-A@mail.gmail.com>
-References: <1389769910-15505-1-git-send-email-lho@apm.com>
-	<5905127.tqJ3nFt5cj@wuerfel>
-	<CAPw-ZTmVYfPLUVmtes3Gn8Z=+gyFtLoZxc-QUdHH7-ePjKAG9A@mail.gmail.com>
-	<4632602.a1zUZOeMuh@wuerfel>
-	<CAPw-ZTmn-aNJcLd1mZPRtog_ncq=GC94ULCJb-400oYqERYK5g@mail.gmail.com>
+From: Todd E Brandt <todd.e.brandt@linux.intel.com>
+Subject: [PATCH v4 0/2] Hard disk S3 resume time optimization
+Date: Wed, 15 Jan 2014 20:36:23 -0800
+Message-ID: <20140116043623.GA27413@linux.intel.com>
+Reply-To: todd.e.brandt@linux.intel.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <CAPw-ZTmn-aNJcLd1mZPRtog_ncq=GC94ULCJb-400oYqERYK5g@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Mark Rutland <mark.rutland@arm.com>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Suman Tripathi <stripathi@apm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "jcm@redhat.com" <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, "tj@kernel.org" <tj@kernel.org>, "dmilburn@redhat.com" <dmilburn@redhat.com>, "olof@lixom.net" <olof@lixom.net>, Tuan Phan <tphan@apm.com>
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
 List-Id: linux-ide@vger.kernel.org
 
-Hi,
+This patch reduces S3 resume time from 10+ seconds to less than a second
+on systems with SATA drives. It does this by making ata port and scsi disk
+resume non-blocking.
 
->>> >> >> +- clocks             : Reference to the clock entry.
->>> >> >> +- phys                       : PHY reference with parameter 0.
->>> >> >
->>> >> > The specific value of the phy-specifier shouldn't matter to this
->>> >> > binding. What should matter is what it logically corresponds to.
->>> >>
->>> >> I not quite following this. Are you suggest that I drop the value 0.
->>> >> In the binding, one needs to specify the mode of operation - 0 is for
->>> >> SATA. Can you explain more?
->>> >
->>> > The SATA device should not care what the argument for the PHY
->>> > device is. You could connect the same device to another PHY
->>> > that has a different set of arguments, which is the whole point
->>> > of abstracting it.
->>> >
->>>
->>> I understand what you wrote here. We should not have an argument from
->>> the host controller. Then my question is how should the PHY node
->>> indicates that it needs to be configured itself as an SATA PHY?
->>
->> The "phys" property should specify whatever the configuration of
->> the phy device is supposed to be. It's just not the business of
->> the sata driver or the sata binding to know what that configuration
->> is.
->>
->
-> Here is what I have and I am trying to piece this together:
->
-> phy1 {
->    #phy-cells = <0>;  /* No parameter as suggest by Mark */
-> };
->
-> sata1 {
->     :::
->     phys = <&phy1>;
-> };
->
-> What I don't get is how does one specify the mode
-> (SATA/USB/SGMII/etc)? As another parameter in the phy1 node?
->
+This is v4, sent in response to Tejun Huo's comments and with some small
+fixes made after testing.
 
-May be I misread what Mark mentioned. The binding documentation should
-not specify the requirement of 0. And the binding of the dts should be
-as is:
+OVERVIEW
 
-phy1 {
-   #phy-cells = <1>;
-};
+The essential issue behind hard disks' lengthy resume time is the ata port
+driver blocking until the ATA port hardware is finished coming online. So
+the kernel isn't really doing anything during all those seconds that the
+disks are resuming, it's just blocking until the hardware says it's ready
+to accept commands. Applying this patch set allows SATA disks to resume
+asynchronously without holding up system resume, thus allowing the UI to
+come online much more quickly. There may be a short period after resume
+where the disks are still spinning up in the background, but it will only
+momentarily affect applications using that disk.
 
-sata1 {
-   :::
-   phys = <&phy1 0>;     where 0 indicates the mode of operation?
-};
+The patch set has two parts which apply to ata_port_resume and sd_resume
+respectively. Both are required to achieve any real performance benefit,
+but they will still function independantly without a performance hit.
 
--Loc
+PERFORMANCE DATA
+
+[Computer One Test - 10.5X speedup on S3 resume]
+Platform: Ubuntu Raring Ringtail (13.04) kernel 3.11.0-rc7
+Cpu: Intel(R) Core(TM) i7-3960X CPU @ 3.30GHz
+Ahci: Intel C600/X79 series chipset 6-Port SATA AHCI (r5)
+Disk config (using all 6 ahci ports): 
+240 GB SSD, 3 TB HD, 500 GB HD, DVD-ROM (with cd inserted), 2 TB HD, 1 TB HD
+Resume time: [unpatched 11656ms] [patched 1110ms]
+
+[Computer Two Test - 12X speedup on S3 resume]
+Platform: Ubuntu Raring Ringtail (13.04) kernel 3.11.0-rc7
+Cpu: Intel(R) Core(TM) i7-3770 CPU @ 3.40GHz
+Ahci: Intel 7 Series/C210 Series Chipset Family 6-port SATA [AHCI mode] (r4)
+Disk config (using 1 ahci port): 320 GB Hard Disk
+Resume time: [unpatched 5416 ms] [patched 448 ms]
+
+[Computer Three Test - 7.8X speedup on S3 resume]
+Platform: Ubuntu Raring Ringtail (13.04) kernel 3.11.0-rc7
+Cpu: Intel(R) Core(TM) i7-4770S CPU @ 3.10GHz
+Ahci: Intel Lynx Point 6-port SATA Controller 1 [AHCI mode] (r2)
+Disk config (using 2 ahci ports): DVD-ROM (empty), 500 GB Hard Disk
+Resume time: [unpatched 5385ms] [patched 688ms]
+
+CHANGELOG
+
+v4: Jan 15, 2014
+ [in response to Tejun Huo]
+ - completely removed the pm_result member of the ata_port struct
+ - result from ata_port_suspend/resume is now returned from the function
+   instead of into a pointer location
+ - ata_port_request_pm now only returns 0/-EAGAIN for pass/fail
+ [fixes]
+ - moved the scsi_disk_put call from sd_resume_complete into sd_resume
+   since it needs to be called from the same context
+v3: Jan 14, 2014
+ [in response to Tejun Huo]
+ - respun the ata patch to merge the entire code path into async resume
+   i.e. resume, restore, and thaw.
+ - re-tested the changes in hibernate to verify there are no issues
+ - respun the sd patch to apply clean over 3.13 rc8, no other changes
+v2: Oct 17, 2013
+ [in response to Oliver Neukum]
+ - Added scsi cmd error reporting through the scsi_sense_hdr
+ [in response to James Bottomley]
+ - unified the sd_resume code path by just making sd_resume async. Thus all
+   three resume callbacks: resume, restore, and runtime-resume will use it,
+   but there is a performance benefit for resume only.
+ [in response to Bartlomiej Zolnierkiewicz]
+ - unified the __ata_port_resume_common code path to include an async
+   parameter. This way there's no need to re-implement ata_port_request_pm.
+v1: Sept 6, 2013
