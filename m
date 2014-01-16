@@ -1,123 +1,49 @@
-From: Loc Ho <lho@apm.com>
-Subject: [PATCH v10 4/4] arm64: Add APM X-Gene SoC SATA host controller DTS entries
-Date: Thu, 16 Jan 2014 09:11:27 -0700
-Message-ID: <1389888687-29741-5-git-send-email-lho@apm.com>
-References: <1389888687-29741-1-git-send-email-lho@apm.com>
- <1389888687-29741-2-git-send-email-lho@apm.com>
- <1389888687-29741-3-git-send-email-lho@apm.com>
- <1389888687-29741-4-git-send-email-lho@apm.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from exprod5og106.obsmtp.com ([64.18.0.182]:38994 "HELO
-	exprod5og106.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752191AbaAPQMI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Jan 2014 11:12:08 -0500
-Received: by mail-pd0-f174.google.com with SMTP id w10so2766063pde.19
-        for <linux-ide@vger.kernel.org>; Thu, 16 Jan 2014 08:12:05 -0800 (PST)
-In-Reply-To: <1389888687-29741-4-git-send-email-lho@apm.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Valentine Barshak <valentine.barshak@cogentembedded.com>
+Subject: [PATCH] libata, dt: Add clocks to sata_rcar bindings
+Date: Fri, 17 Jan 2014 02:07:42 +0400
+Message-ID: <1389910062-17777-1-git-send-email-valentine.barshak@cogentembedded.com>
+Return-path: <linux-sh-owner@vger.kernel.org>
+Sender: linux-sh-owner@vger.kernel.org
+To: linux-sh@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Simon Horman <horms@verge.net.au>, Magnus Damm <magnus.damm@gmail.com>, Kuninori Morimoto <kuninori.morimoto.gx@renesas.com>, Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 List-Id: linux-ide@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, dmilburn@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Tuan Phan <tphan@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
+
+Now that the clocks are available in the R-Car Gen2 DT,
+add clocks property description to the sata_rcar bindings.
+The clocks have been tested on r8a7791 so we use that
+as an example of the R-Car SATA node.
+
+The patch is against for-next branch of the libata git repo.
+
+Signed-off-by: Valentine Barshak <valentine.barshak@cogentembedded.com>
 ---
- arch/arm64/boot/dts/apm-storm.dtsi |   75 ++++++++++++++++++++++++++++++++++++
- 1 files changed, 75 insertions(+), 0 deletions(-)
+ Documentation/devicetree/bindings/ata/sata_rcar.txt | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
-index b1e9cc9..ae9d145 100644
---- a/arch/arm64/boot/dts/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm-storm.dtsi
-@@ -221,6 +221,48 @@
- 				enable-offset = <0x0>;
- 				enable-mask = <0x06>;
- 			};
-+
-+			sata01clk: sata01clk@1f21c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f21c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sata01clk";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x05>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x39>;
-+			};
-+
-+			sata23clk: sata23clk@1f22c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f22c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sata23clk";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x05>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x39>;
-+			};
-+
-+			sata45clk: sata45clk@1f23c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f23c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sata45clk";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x05>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x39>;
-+			};
- 		};
+diff --git a/Documentation/devicetree/bindings/ata/sata_rcar.txt b/Documentation/devicetree/bindings/ata/sata_rcar.txt
+index 1e61113..6da60c0 100644
+--- a/Documentation/devicetree/bindings/ata/sata_rcar.txt
++++ b/Documentation/devicetree/bindings/ata/sata_rcar.txt
+@@ -7,12 +7,14 @@ Required properties:
+ 			  - "renesas,sata-r8a7791" for R-Car M2
+ - reg			: address and length of the SATA registers;
+ - interrupts		: must consist of one interrupt specifier.
++- clocks		: must contain a phandle and clock-specifier pair.
  
- 		serial0: serial@1c020000 {
-@@ -268,5 +310,38 @@
- 			apm,tx-boost-gain = <31 31 31 31 31 31>;
- 			apm,tx-eye-tuning = <2 10 10 2 10 10>;
- 		};
-+
-+		sata1: sata@1a000000 {
-+			compatible = "apm,xgene-ahci-sgmii";
-+			reg = <0x0 0x1a000000 0x0 0x1000>,
-+			      <0x0 0x1f210000 0x0 0x10000>;
-+			interrupts = <0x0 0x86 0x4>;
-+			status = "disabled";
-+			clocks = <&sata01clk 0>;
-+			phys = <&phy1 0>;
-+			phy-names = "sata-6g";
-+		};
-+
-+		sata2: sata@1a400000 {
-+			compatible = "apm,xgene-ahci-sgmii";
-+			reg = <0x0 0x1a400000 0x0 0x1000>,
-+			      <0x0 0x1f220000 0x0 0x10000>;
-+			interrupts = <0x0 0x87 0x4>;
-+			status = "ok";
-+			clocks = <&sata23clk 0>;
-+			phys = <&phy2 0>;
-+			phy-names = "sata-6g";
-+		};
-+
-+		sata3: sata@1a800000 {
-+			compatible = "apm,xgene-ahci-pcie";
-+			reg = <0x0 0x1a800000 0x0 0x1000>,
-+			      <0x0 0x1f230000 0x0 0x10000>;
-+			interrupts = <0x0 0x88 0x4>;
-+			status = "ok";
-+			clocks = <&sata45clk 0>;
-+			phys = <&phy3 0>;
-+			phy-names = "sata-6g";
-+		};
- 	};
+ Example:
+ 
+-sata: sata@fc600000 {
+-	compatible = "renesas,sata-r8a7779";
+-	reg = <0xfc600000 0x2000>;
++sata0: sata@ee300000 {
++	compatible = "renesas,sata-r8a7791";
++	reg = <0 0xee300000 0 0x2000>;
+ 	interrupt-parent = <&gic>;
+-	interrupts = <0 100 IRQ_TYPE_LEVEL_HIGH>;
++	interrupts = <0 105 IRQ_TYPE_LEVEL_HIGH>;
++	clocks = <&mstp8_clks R8A7791_CLK_SATA0>;
  };
 -- 
-1.5.5
+1.8.3.1
 
