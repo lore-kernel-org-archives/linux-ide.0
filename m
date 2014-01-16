@@ -1,142 +1,47 @@
-From: Todd E Brandt <todd.e.brandt@linux.intel.com>
-Subject: [PATCH v4 2/2] asynchronous scsi disk resume
-Date: Wed, 15 Jan 2014 20:40:22 -0800
-Message-ID: <20140116044022.GC27413@linux.intel.com>
-Reply-To: todd.e.brandt@linux.intel.com
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v9 2/4] Documentation: Add documentation for APM X-Gene
+ SoC SATA host controller DTS binding
+Date: Thu, 16 Jan 2014 11:38:28 +0100
+Message-ID: <3162202.3lfb3jYxiv@wuerfel>
+References: <1389769910-15505-1-git-send-email-lho@apm.com>
+ <CAPw-ZTmn-aNJcLd1mZPRtog_ncq=GC94ULCJb-400oYqERYK5g@mail.gmail.com>
+ <CAPw-ZT=QXwOVvpgJSL5qU8J2eEuAt3nnXJDfDwPXTTo7z4Fe-A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-To: tj@kernel.org
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <CAPw-ZT=QXwOVvpgJSL5qU8J2eEuAt3nnXJDfDwPXTTo7z4Fe-A@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Loc Ho <lho@apm.com>
+Cc: Mark Rutland <mark.rutland@arm.com>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Suman Tripathi <stripathi@apm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dmilburn@redhat.com" <dmilburn@redhat.com>, "jcm@redhat.com" <jcm@redhat.com>, "olof@lixom.net" <olof@lixom.net>, "patches@apm.com" <patches@apm.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "tj@kernel.org" <tj@kernel.org>, Tuan Phan <tphan@apm.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
 List-Id: linux-ide@vger.kernel.org
 
-On resume, the SD driver currently waits until the block driver finishes
-executing a disk start command with blk_execute_rq. This patch changes
-the sd_resume callback to use blk_execute_rq_nowait instead, which allows
-it to return immediately, thus allowing the next device in the pm queue
-to resume. The return value of blk_execute_rq_nowait is handled in the
-background by sd_resume_complete. Any commands issued to the scsi disk
-during the startup will be queued up and executed once the disk is online.
-Thus no information is lost.
+On Wednesday 15 January 2014 15:59:27 Loc Ho wrote:
+> 
+> May be I misread what Mark mentioned. The binding documentation should
+> not specify the requirement of 0. And the binding of the dts should be
+> as is:
+> 
+> phy1 {
+>    #phy-cells = <1>;
+> };
+> 
+> sata1 {
+>    :::
+>    phys = <&phy1 0>;     where 0 indicates the mode of operation?
+> };
+> 
+> 
 
-This patch applies to all three resume callbacks: resume, restore, and
-runtime-resume. There is only a performance benefit for resume, but for
-simplicity both restore and runtime-resume use the same code path.
+Yes, that is right. You can keep the zero in the example, but the
+binding text must not require a specific phy to be used.
 
-The execution flow has changed from a single, synchronous call, to two
-calls: one called to start sd_resume asynchronously, the other called on
-completion. Thus the dmesg log will now show two prints for each drive
-resume, on resume start and complete. The scsi sense data is managed
-the same, but is now analyzed and freed in sd_resume_complete.
-
-This code copies a portion of sd_start_stop_device, scsi_execute_req_flags,
-and scsi_execute directly into sd_resume: effectively circumventing
-sd_start_stop_device to start disks. This is to enable the START_STOP
-command to use blk_execute_rq_nowait instead of blk_execute_rq. So
-sd_start_stop_device is now only used to stop the device. The disk is
-started from within the sd_resume call itself.
-
-v4: Jan 15, 2014
- [fixes]
- - moved the scsi_disk_put call from sd_resume_complete into sd_resume
-   since it needs to be called from the same context
-
-Signed-off-by: Todd Brandt <todd.e.brandt@intel.com>
-Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
----
- drivers/scsi/sd.c | 70 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 67 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 69725f7..7c02e46 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3172,18 +3172,82 @@ static int sd_suspend_runtime(struct device *dev)
- 	return sd_suspend_common(dev, false);
- }
- 
-+static void sd_resume_complete(struct request *rq, int error)
-+{
-+	struct scsi_sense_hdr sshdr;
-+	struct scsi_disk *sdkp = rq->end_io_data;
-+	char *sense = rq->sense;
-+
-+	if (error) {
-+		sd_printk(KERN_WARNING, sdkp, "START FAILED\n");
-+		sd_print_result(sdkp, error);
-+		if (sense && (driver_byte(error) & DRIVER_SENSE)) {
-+			scsi_normalize_sense(sense,
-+				SCSI_SENSE_BUFFERSIZE, &sshdr);
-+			sd_print_sense_hdr(sdkp, &sshdr);
-+		}
-+	} else {
-+		sd_printk(KERN_NOTICE, sdkp, "START SUCCESS\n");
-+	}
-+
-+	kfree(sense);
-+	rq->sense = NULL;
-+	rq->end_io_data = NULL;
-+	__blk_put_request(rq->q, rq);
-+}
-+
- static int sd_resume(struct device *dev)
- {
-+	unsigned char cmd[6] = { START_STOP };
- 	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
-+	struct request *req;
-+	char *sense = NULL;
- 	int ret = 0;
- 
- 	if (!sdkp->device->manage_start_stop)
--		goto done;
-+		goto error;
- 
- 	sd_printk(KERN_NOTICE, sdkp, "Starting disk\n");
--	ret = sd_start_stop_device(sdkp, 1);
- 
--done:
-+	cmd[4] |= 1;
-+
-+	if (sdkp->device->start_stop_pwr_cond)
-+		cmd[4] |= 1 << 4;	/* Active or Standby */
-+
-+	if (!scsi_device_online(sdkp->device)) {
-+		ret = -ENODEV;
-+		goto error;
-+	}
-+
-+	req = blk_get_request(sdkp->device->request_queue, 0, __GFP_WAIT);
-+	if (!req) {
-+		ret = -ENOMEM;
-+		goto error;
-+	}
-+
-+	sense = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_NOIO);
-+	if (!sense) {
-+		ret = -ENOMEM;
-+		goto error_sense;
-+	}
-+
-+	req->cmd_len = COMMAND_SIZE(cmd[0]);
-+	memcpy(req->cmd, cmd, req->cmd_len);
-+	req->sense = sense;
-+	req->sense_len = 0;
-+	req->retries = SD_MAX_RETRIES;
-+	req->timeout = SD_TIMEOUT;
-+	req->cmd_type = REQ_TYPE_BLOCK_PC;
-+	req->cmd_flags |= REQ_PM | REQ_QUIET | REQ_PREEMPT;
-+
-+	req->end_io_data = sdkp;
-+	blk_execute_rq_nowait(req->q, NULL, req, 1, sd_resume_complete);
-+	scsi_disk_put(sdkp);
-+	return 0;
-+
-+ error_sense:
-+	__blk_put_request(req->q, req);
-+ error:
- 	scsi_disk_put(sdkp);
- 	return ret;
- }
-
+	Arnd
