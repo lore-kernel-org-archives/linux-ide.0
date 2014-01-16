@@ -1,160 +1,103 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH] libata: disable LPM for some WD SATA-I devices
-Date: Thu, 16 Jan 2014 09:51:36 -0500
-Message-ID: <20140116145136.GA23732@htj.dyndns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Loc Ho <lho@apm.com>
+Subject: [PATCH v8 1/4] PHY: Add function set_speed to generic PHY framework
+Date: Thu, 16 Jan 2014 09:09:55 -0700
+Message-ID: <1389888598-29690-2-git-send-email-lho@apm.com>
+References: <1389888598-29690-1-git-send-email-lho@apm.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f178.google.com ([209.85.216.178]:46041 "EHLO
-	mail-qc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751389AbaAPOvl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Jan 2014 09:51:41 -0500
-Received: by mail-qc0-f178.google.com with SMTP id m20so2335957qcx.23
-        for <linux-ide@vger.kernel.org>; Thu, 16 Jan 2014 06:51:39 -0800 (PST)
-Content-Disposition: inline
+Received: from exprod5og107.obsmtp.com ([64.18.0.184]:57095 "HELO
+	exprod5og107.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752426AbaAPQKQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Jan 2014 11:10:16 -0500
+Received: by mail-pa0-f53.google.com with SMTP id lj1so2844745pab.40
+        for <linux-ide@vger.kernel.org>; Thu, 16 Jan 2014 08:10:15 -0800 (PST)
+In-Reply-To: <1389888598-29690-1-git-send-email-lho@apm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Nikos Barkas <levelwol@gmail.com>, Ioannis Barkas <risc4all@yahoo.com>
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, dmilburn@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>
 
-Applied to libata/for-3.14.
+This patch adds function set_speed to the generic PHY framework operation
+structure. This function can be called to instruct the PHY underlying layer
+at specified lane to configure for specified speed in hertz.
 
-------- 8< -------
->From ecd75ad514d73efc1bbcc5f10a13566c3ace5f53 Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj@kernel.org>
-Date: Thu, 16 Jan 2014 09:47:17 -0500
-
-For some reason, some early WD drives spin up and down drives
-erratically when the link is put into slumber mode which can reduce
-the life expectancy of the device significantly.  Unfortunately, we
-don't have full list of devices and given the nature of the issue it'd
-be better to err on the side of false positives than the other way
-around.  Let's disable LPM on all WD devices which match one of the
-known problematic model prefixes and are SATA-I.
-
-As horkage list doesn't support matching SATA capabilities, this is
-implemented as two horkages - WD_BROKEN_LPM and NOLPM.  The former is
-set for the known prefixes and sets the latter if the matched device
-is SATA-I.
-
-Note that this isn't optimal as this disables all LPM operations and
-partial link power state reportedly works fine on these; however, the
-way LPM is implemented in libata makes it difficult to precisely map
-libata LPM setting to specific link power state.  Well, these devices
-are already fairly outdated.  Let's just disable whole LPM for now.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-and-tested-by: Nikos Barkas <levelwol@gmail.com>
-Reported-and-tested-by: Ioannis Barkas <risc4all@yahoo.com>
-References: https://bugzilla.kernel.org/show_bug.cgi?id=57211
-Cc: stable@vger.kernel.org
+Signed-off-by: Loc Ho <lho@apm.com>
 ---
- drivers/ata/libata-core.c | 27 +++++++++++++++++++++++++++
- drivers/ata/libata-scsi.c | 18 +++++++++++++++---
- include/linux/libata.h    |  2 ++
- 3 files changed, 44 insertions(+), 3 deletions(-)
+ drivers/phy/phy-core.c  |   21 +++++++++++++++++++++
+ include/linux/phy/phy.h |    8 ++++++++
+ 2 files changed, 29 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 1393a58..1a3dbd1 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -2222,6 +2222,16 @@ int ata_dev_configure(struct ata_device *dev)
- 	if (rc)
- 		return rc;
+diff --git a/drivers/phy/phy-core.c b/drivers/phy/phy-core.c
+index 03cf8fb..b525e72 100644
+--- a/drivers/phy/phy-core.c
++++ b/drivers/phy/phy-core.c
+@@ -239,6 +239,27 @@ out:
+ }
+ EXPORT_SYMBOL_GPL(phy_power_off);
  
-+	/* some WD SATA-1 drives have issues with LPM, turn on NOLPM for them */
-+	if ((dev->horkage & ATA_HORKAGE_WD_BROKEN_LPM) &&
-+	    (id[ATA_ID_SATA_CAPABILITY] & 0xe) == 0x2)
-+		dev->horkage |= ATA_HORKAGE_NOLPM;
++int phy_set_speed(struct phy *phy, int lane, u64 speed)
++{
++        int ret = -ENOTSUPP;
 +
-+	if (dev->horkage & ATA_HORKAGE_NOLPM) {
-+		ata_dev_warn(dev, "LPM support broken, forcing max_power\n");
-+		dev->link->ap->target_lpm_policy = ATA_LPM_MAX_POWER;
-+	}
++        mutex_lock(&phy->mutex);
++        if (phy->ops->set_speed) {
++                ret =  phy->ops->set_speed(phy, lane, speed);
++                if (ret < 0) {
++                        dev_err(&phy->dev, "phy set speed failed --> %d\n",
++                                ret);
++                        goto out;
++                }
++        }
 +
- 	/* let ACPI work its magic */
- 	rc = ata_acpi_on_devcfg(dev);
- 	if (rc)
-@@ -4216,6 +4226,23 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	{ "Micron_M500*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
- 	{ "Crucial_CT???M500SSD1",	NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
- 
-+	/*
-+	 * Some WD SATA-I drives spin up and down erratically when the link
-+	 * is put into the slumber mode.  We don't have full list of the
-+	 * affected devices.  Disable LPM if the device matches one of the
-+	 * known prefixes and is SATA-1.  As a side effect LPM partial is
-+	 * lost too.
-+	 *
-+	 * https://bugzilla.kernel.org/show_bug.cgi?id=57211
-+	 */
-+	{ "WDC WD800JD-*",		NULL,	ATA_HORKAGE_WD_BROKEN_LPM },
-+	{ "WDC WD1200JD-*",		NULL,	ATA_HORKAGE_WD_BROKEN_LPM },
-+	{ "WDC WD1600JD-*",		NULL,	ATA_HORKAGE_WD_BROKEN_LPM },
-+	{ "WDC WD2000JD-*",		NULL,	ATA_HORKAGE_WD_BROKEN_LPM },
-+	{ "WDC WD2500JD-*",		NULL,	ATA_HORKAGE_WD_BROKEN_LPM },
-+	{ "WDC WD3000JD-*",		NULL,	ATA_HORKAGE_WD_BROKEN_LPM },
-+	{ "WDC WD3200JD-*",		NULL,	ATA_HORKAGE_WD_BROKEN_LPM },
++out:
++        mutex_unlock(&phy->mutex);
 +
- 	/* End Marker */
- 	{ }
++        return ret;
++}
++EXPORT_SYMBOL_GPL(phy_set_speed);
++
+ /**
+  * of_phy_get() - lookup and obtain a reference to a phy by phandle
+  * @dev: device that requests this phy
+diff --git a/include/linux/phy/phy.h b/include/linux/phy/phy.h
+index 6d72269..ed2b897 100644
+--- a/include/linux/phy/phy.h
++++ b/include/linux/phy/phy.h
+@@ -27,6 +27,7 @@ struct phy;
+  * @exit: operation to be performed while exiting
+  * @power_on: powering on the phy
+  * @power_off: powering off the phy
++ * @set_speed: set operation speed in hz
+  * @owner: the module owner containing the ops
+  */
+ struct phy_ops {
+@@ -34,6 +35,7 @@ struct phy_ops {
+ 	int	(*exit)(struct phy *phy);
+ 	int	(*power_on)(struct phy *phy);
+ 	int	(*power_off)(struct phy *phy);
++	int	(*set_speed)(struct phy *phy, int lane, u64 speed);
+ 	struct module *owner;
  };
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 176f629..75ef952 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -111,12 +111,14 @@ static const char *ata_lpm_policy_names[] = {
- 	[ATA_LPM_MIN_POWER]	= "min_power",
- };
  
--static ssize_t ata_scsi_lpm_store(struct device *dev,
-+static ssize_t ata_scsi_lpm_store(struct device *device,
- 				  struct device_attribute *attr,
- 				  const char *buf, size_t count)
- {
--	struct Scsi_Host *shost = class_to_shost(dev);
-+	struct Scsi_Host *shost = class_to_shost(device);
- 	struct ata_port *ap = ata_shost_to_port(shost);
-+	struct ata_link *link;
-+	struct ata_device *dev;
- 	enum ata_lpm_policy policy;
- 	unsigned long flags;
- 
-@@ -132,10 +134,20 @@ static ssize_t ata_scsi_lpm_store(struct device *dev,
- 		return -EINVAL;
- 
- 	spin_lock_irqsave(ap->lock, flags);
-+
-+	ata_for_each_link(link, ap, EDGE) {
-+		ata_for_each_dev(dev, &ap->link, ENABLED) {
-+			if (dev->horkage & ATA_HORKAGE_NOLPM) {
-+				count = -EOPNOTSUPP;
-+				goto out_unlock;
-+			}
-+		}
-+	}
-+
- 	ap->target_lpm_policy = policy;
- 	ata_port_schedule_eh(ap);
-+out_unlock:
- 	spin_unlock_irqrestore(ap->lock, flags);
--
- 	return count;
+@@ -127,6 +129,7 @@ int phy_init(struct phy *phy);
+ int phy_exit(struct phy *phy);
+ int phy_power_on(struct phy *phy);
+ int phy_power_off(struct phy *phy);
++int phy_set_speed(struct phy *phy, int lane, u64 speed);
+ struct phy *phy_get(struct device *dev, const char *string);
+ struct phy *devm_phy_get(struct device *dev, const char *string);
+ void phy_put(struct phy *phy);
+@@ -199,6 +202,11 @@ static inline int phy_power_off(struct phy *phy)
+ 	return -ENOSYS;
  }
  
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 9b50337..bec6dbe 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -419,6 +419,8 @@ enum {
- 	ATA_HORKAGE_MAX_SEC_LBA48 = (1 << 17),	/* Set max sects to 65535 */
- 	ATA_HORKAGE_ATAPI_DMADIR = (1 << 18),	/* device requires dmadir */
- 	ATA_HORKAGE_NO_NCQ_TRIM	= (1 << 19),	/* don't use queued TRIM */
-+	ATA_HORKAGE_NOLPM	= (1 << 20),	/* don't use LPM */
-+	ATA_HORKAGE_WD_BROKEN_LPM = (1 << 21),	/* some WDs have broken LPM */
- 
- 	 /* DMA mask for user DMA control: User visible values; DO NOT
- 	    renumber */
++static inline int phy_set_speed(struct phy *phy, int lane, u64 speed)
++{
++	return -ENOSYS;
++}
++
+ static inline struct phy *phy_get(struct device *dev, const char *string)
+ {
+ 	return ERR_PTR(-ENOSYS);
 -- 
-1.8.4.2
+1.5.5
 
