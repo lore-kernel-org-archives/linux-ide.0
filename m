@@ -1,61 +1,79 @@
-From: "Dorau, Lukasz" <lukasz.dorau@intel.com>
-Subject: RE: [PATCH] libahci: correct a misleading comment
-Date: Fri, 17 Jan 2014 12:10:46 +0000
-Message-ID: <D9FFE20C522965449E182ACE73889AEB1A6A3344@IRSMSX105.ger.corp.intel.com>
-References: <20140117114319.2784.3961.stgit@gklab-154-244.igk.intel.com>
- <20140117120016.GB8598@htj.dyndns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: [PATCH v2 2/9] ahci: Use pci_enable_msi_range()
+Date: Fri, 17 Jan 2014 17:02:16 +0100
+Message-ID: <761bec2771db60ca5cd86dfbf63ff0f2dbc43031.1389904166.git.agordeev@redhat.com>
+References: <cover.1389904166.git.agordeev@redhat.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:22925 "EHLO mga11.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:52628 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751450AbaAQMKt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Jan 2014 07:10:49 -0500
-In-Reply-To: <20140117120016.GB8598@htj.dyndns.org>
-Content-Language: en-US
+	id S1751354AbaAQQAi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 17 Jan 2014 11:00:38 -0500
+In-Reply-To: <cover.1389904166.git.agordeev@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
 
-On Friday, January 17, 2014 1:00 PM Tejun Heo <tj@kernel.org> wrote:
-> On Fri, Jan 17, 2014 at 12:43:20PM +0100, Lukasz Dorau wrote:
-> > There is an error in a comment introduced by:
-> > 	commit fa070ee6dc70bcc19737a2406d741b089b3149d5
-> > 	libahci: fix turning on LEDs in ahci_start_port()
-> >
-> > Correct it.
-> >
-> > Signed-off-by: Lukasz Dorau <lukasz.dorau@intel.com>
-> > ---
-> >  drivers/ata/libahci.c |    4 ++--
-> >  1 file changed, 2 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-> > index c482f8c..1f526e6 100644
-> > --- a/drivers/ata/libahci.c
-> > +++ b/drivers/ata/libahci.c
-> > @@ -780,8 +780,8 @@ static void ahci_start_port(struct ata_port *ap)
-> >  							       4);
-> >  				/*
-> >  				 * If busy, give a breather but do not
-> > -				 * release EH ownership by using msleep()
-> > -				 * instead of ata_msleep().  EM Transmit
-> > +				 * release EH ownership by using ata_msleep()
-> > +				 * instead of msleep().  EM Transmit
-> 
-> Can't the sentence be parsed to mean the same thing either way?  "(do
-> not release EH ownership) by using msleep..." or "do not (release EH
-> ownership by using ata_msleep)..."
-> 
-> With the context, I don't think which way to group things is
-> ambiguous.  In fact, saying "instead of msleep()" is kinda confusing
-> because using ata_msleep() should be the default.
-> 
+As result deprecation of MSI-X/MSI enablement functions
+pci_enable_msix() and pci_enable_msi_block() all drivers
+using these two interfaces need to be updated to use the
+new pci_enable_msi_range() and pci_enable_msix_range()
+interfaces.
 
-You are right. I give up ;-)
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/ata/ahci.c |   20 +++++++++-----------
+ 1 files changed, 9 insertions(+), 11 deletions(-)
 
-Thanks,
-Lukasz
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index df24eef4..73ffd39 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1098,13 +1098,13 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
+ int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
+ 			 struct ahci_host_priv *hpriv)
+ {
+-	int rc, nvec;
++	int nvec;
+ 
+ 	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
+ 		goto intx;
+ 
+-	rc = pci_msi_vec_count(pdev);
+-	if (rc < 0)
++	nvec = pci_msi_vec_count(pdev);
++	if (nvec < 0)
+ 		goto intx;
+ 
+ 	/*
+@@ -1112,21 +1112,19 @@ int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
+ 	 * Message mode could be enforced. In this case assume that advantage
+ 	 * of multipe MSIs is negated and use single MSI mode instead.
+ 	 */
+-	if (rc < n_ports)
++	if (nvec < n_ports)
+ 		goto single_msi;
+ 
+-	nvec = rc;
+-	rc = pci_enable_msi_block(pdev, nvec);
+-	if (rc < 0)
+-		goto intx;
+-	else if (rc > 0)
++	nvec = pci_enable_msi_range(pdev, nvec, nvec);
++	if (nvec == -ENOSPC)
+ 		goto single_msi;
++	else if (nvec < 0)
++		goto intx;
+ 
+ 	return nvec;
+ 
+ single_msi:
+-	rc = pci_enable_msi(pdev);
+-	if (rc)
++	if (pci_enable_msi(pdev))
+ 		goto intx;
+ 	return 1;
+ 
+-- 
+1.7.7.6
 
