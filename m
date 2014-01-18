@@ -1,55 +1,42 @@
-From: Dan Williams <dan.j.williams@gmail.com>
-Subject: Re: [PATCH v4 1/2] asynchronous ata port resume
-Date: Fri, 17 Jan 2014 18:11:21 -0800
-Message-ID: <CAA9_cmcf24-WT-DhGUy3SweXF=ZvtFD_pR5dNJkAMafceJkaPg@mail.gmail.com>
-References: <20140116043853.GB27413@linux.intel.com>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH v2 0/9] Phase out pci_enable_msi_block()
+Date: Sat, 18 Jan 2014 08:15:38 +0100
+Message-ID: <20140118071538.GA32535@dhcp-26-207.brq.redhat.com>
+References: <cover.1389904166.git.agordeev@redhat.com>
+ <CAErSpo5ztnyyceeN38XzLasLV6eJqdbqEV0viPp3Af8U=ts23w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20140116043853.GB27413@linux.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: "todd.e.brandt@linux.intel.com" <todd.e.brandt@linux.intel.com>
-Cc: Tejun Heo <tj@kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Jej B <James.Bottomley@hansenpartnership.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAErSpo5ztnyyceeN38XzLasLV6eJqdbqEV0viPp3Af8U=ts23w@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Brian King <brking@us.ibm.com>, Tejun Heo <tj@kernel.org>, Matthew Wilcox <willy@linux.intel.com>, Alex Williamson <alex.williamson@redhat.com>, Kalle Valo <kvalo@qca.qualcomm.com>, Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>, linux-wireless <linux-wireless@vger.kernel.org>, wil6210@qca.qualcomm.com, ath10k@lists.infradead.org, linux-nvme@lists.infradead.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kvm@vger.kernel.org" <kvm@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Wed, Jan 15, 2014 at 8:38 PM, Todd E Brandt
-<todd.e.brandt@linux.intel.com> wrote:
-> On resume, the ATA port driver currently waits until the AHCI controller
-> finishes executing the port wakeup command. This patch changes the
-> ata_port_resume callback to issue the wakeup and then return immediately,
-> thus allowing the next device in the pm queue to resume. Any commands
-> issued to the AHCI hardware during the wakeup will be queued up and
-> executed once the port is physically online. Thus no information is lost.
->
-> This patch applies to all ata resume callbacks: resume, restore, and thaw for
-> code simplicity. The primary benefit is to S3 resume.
->
-> The return value from ata_resume_async is now an indicator of whether
-> the resume was initiated, rather than if it was completed. I'm letting the ata
-> driver assume control over its own error reporting in this case (which it does
-> already). If you look at the ata_port resume code you'll see that the
-> ata_port_resume callback returns the status of the ahci_port_resume callback,
-> which is always 0. So I don't see any harm in ignoring it.
->
-> If somebody requests suspend while ATA port resume is still running, the
-> request is queued until the resume has completed. I've tested
-> that case very heavily. Basically if you do two suspends in a row (within
-> seconds of each other) you lose any performance benefit, but that's a use
-> case that should happen only very rarerly (and wouldn't be expected to
-> be of any power benefit since too many sequential suspends actually
-> takes more power than just letting the machine stay in run mode).
->
-> v4: Jan 15, 2014
->  [in response to Tejun Huo]
->  - completely removed the pm_result member of the ata_port struct
->  - result from ata_port_suspend/resume is now returned from the function
->    instead of into a pointer location
->  - ata_port_request_pm now only returns 0/-EAGAIN for pass/fail
->
-> Signed-off-by: Todd Brandt <todd.e.brandt@intel.com>
-> Signed-off-by: Arjan van de Ven <arjan@linux.intel.com>
+On Fri, Jan 17, 2014 at 02:00:32PM -0700, Bjorn Helgaas wrote:
+> > As the release is supposedly this weekend, do you prefer
+> > the patches to go to your tree or to individual trees after
+> > the release?
+> 
+> I'd be happy to merge them, except for the fact that they probably
+> wouldn't have any time in -next before I ask Linus to pull them.  So
+> how about if we wait until after the release, ask the area maintainers
+> to take them, and if they don't take them, I'll put them in my tree
+> for v3.15?
 
-You may want to split out the pure "do resume async" changes from the
-return code and api cleanup.  Doubtful that anything depends on the
-return code but at least gives a bisection point for each conceptual
-change.
+Patch 11 depends on patches 1-10, so I am not sure how to better handle it.
+Whatever works for you ;)
+
+I am only concerned with a regression fix "ahci: Fix broken fallback to
+single MSI mode" which would be nice to have in 3.14. But it seems pretty
+much too late.
+
+> Bjorn
+
+Thanks!
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
