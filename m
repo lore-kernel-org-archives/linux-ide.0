@@ -1,12 +1,13 @@
 From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [RFC v3 01/13] libahci: Allow drivers to override start_engine
-Date: Sun, 19 Jan 2014 00:48:43 +0100
-Message-ID: <1390088935-7193-2-git-send-email-hdegoede@redhat.com>
+Subject: [RFC v3 03/13] ahci-platform: Fix clk enable/disable
+ unbalance on suspend/resume
+Date: Sun, 19 Jan 2014 00:48:45 +0100
+Message-ID: <1390088935-7193-4-git-send-email-hdegoede@redhat.com>
 References: <1390088935-7193-1-git-send-email-hdegoede@redhat.com>
 Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-sunxi+bncBDL4X2GMZUKRB4NF5SLAKGQE5F5MOZQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Return-path: <linux-sunxi+bncBDL4X2GMZUKRB5VF5SLAKGQE7PMJXXY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 In-Reply-To: <1390088935-7193-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
@@ -18,54 +19,102 @@ To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Richard Zhu <Hong-Xing.Zhu-KZfg59tc24xl57MIdRCFDg@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, devicetree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
-From: Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
+For devices where ahci_platform_data provides suspend() there is an unbalance
+in clk enable/disable calls. The suspend path does not disable the clk, but
+the resume path enables it. This commit fixes it by always disabling the clk
+in the suspend path independent of there being an ahci_platform_data suspend
+method.
 
-Allwinner A10 and A20 ARM SoCs have an AHCI sata controller which needs a
-special register to be poked before starting the DMA engine.
+On all drivers currently using a suspend method, the suspend method always
+succeeds, so change its return type to void, to avoid having the introduce
+somewhat complex error handling paths.
 
-This register gets reset on an ahci_stop_engine call, so there is no other
-place then ahci_start_engine where this poking can be done.
+The disabling of the clock on suspend is a functional change, to ensure this
+is ok I've audited all drivers using ahci_platform_data:
 
-This commit allows drivers to override ahci_start_engine behavior for use by
-the Allwinner AHCI driver (and potentially other drivers in the future).
+arch/arm/mach-davinci/devices-da8xx.c: Does not use a suspend method
+arch/arm/mach-spear/spear1340.c: Does not use the clock framework
+drivers/ata/ahci_imx.c: Does have suspend and resume pdata methods, these
+disable / enable another clock, so likely it is ok to disable / enable the
+clock at of-node index 0 as well, I've ordered a wandboard to be able to
+test these changes.
 
 Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- drivers/ata/ahci.h    | 2 ++
- drivers/ata/libahci.c | 6 ++++++
- 2 files changed, 8 insertions(+)
+ arch/arm/mach-spear/spear1340.c | 6 ++----
+ drivers/ata/ahci_imx.c          | 4 +---
+ drivers/ata/ahci_platform.c     | 2 +-
+ include/linux/ahci_platform.h   | 2 +-
+ 4 files changed, 5 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 2289efd..8f60f33 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -323,6 +323,8 @@ struct ahci_host_priv {
- 	u32			em_msg_type;	/* EM message type */
- 	struct clk		*clk;		/* Only for platforms supporting clk */
- 	void			*plat_data;	/* Other platform data */
-+	/* Optional ahci_start_engine override */
-+	void			(*start_engine)(struct ata_port *ap);
- };
+diff --git a/arch/arm/mach-spear/spear1340.c b/arch/arm/mach-spear/spear1340.c
+index 3fb6834..c4cbbd2 100644
+--- a/arch/arm/mach-spear/spear1340.c
++++ b/arch/arm/mach-spear/spear1340.c
+@@ -107,14 +107,12 @@ void sata_miphy_exit(struct device *dev)
+ 	msleep(20);
+ }
  
- extern int ahci_ignore_sss;
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index c482f8c..f6eabbc 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -568,8 +568,14 @@ static int ahci_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val)
- void ahci_start_engine(struct ata_port *ap)
+-int sata_suspend(struct device *dev)
++void sata_suspend(struct device *dev)
  {
- 	void __iomem *port_mmio = ahci_port_base(ap);
-+	struct ahci_host_priv *hpriv = ap->host->private_data;
- 	u32 tmp;
- 
-+	if (hpriv->start_engine) {
-+		hpriv->start_engine(ap);
+ 	if (dev->power.power_state.event == PM_EVENT_FREEZE)
+-		return 0;
 +		return;
-+	}
-+
- 	/* start DMA */
- 	tmp = readl(port_mmio + PORT_CMD);
- 	tmp |= PORT_CMD_START;
+ 
+ 	sata_miphy_exit(dev);
+-
+-	return 0;
+ }
+ 
+ int sata_resume(struct device *dev)
+diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+index 3e23e99..30568d3 100644
+--- a/drivers/ata/ahci_imx.c
++++ b/drivers/ata/ahci_imx.c
+@@ -171,7 +171,7 @@ static void imx6q_sata_exit(struct device *dev)
+ 	clk_disable_unprepare(imxpriv->sata_ref_clk);
+ }
+ 
+-static int imx_ahci_suspend(struct device *dev)
++static void imx_ahci_suspend(struct device *dev)
+ {
+ 	struct imx_ahci_priv *imxpriv =  dev_get_drvdata(dev->parent);
+ 
+@@ -185,8 +185,6 @@ static int imx_ahci_suspend(struct device *dev)
+ 				!IMX6Q_GPR13_SATA_MPLL_CLK_EN);
+ 		clk_disable_unprepare(imxpriv->sata_ref_clk);
+ 	}
+-
+-	return 0;
+ }
+ 
+ static int imx_ahci_resume(struct device *dev)
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index 4b231ba..dc1ef73 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -275,7 +275,7 @@ static int ahci_suspend(struct device *dev)
+ 		return rc;
+ 
+ 	if (pdata && pdata->suspend)
+-		return pdata->suspend(dev);
++		pdata->suspend(dev);
+ 
+ 	if (!IS_ERR(hpriv->clk))
+ 		clk_disable_unprepare(hpriv->clk);
+diff --git a/include/linux/ahci_platform.h b/include/linux/ahci_platform.h
+index 73a2500..a641cb6 100644
+--- a/include/linux/ahci_platform.h
++++ b/include/linux/ahci_platform.h
+@@ -23,7 +23,7 @@ struct ata_port_info;
+ struct ahci_platform_data {
+ 	int (*init)(struct device *dev, void __iomem *addr);
+ 	void (*exit)(struct device *dev);
+-	int (*suspend)(struct device *dev);
++	void (*suspend)(struct device *dev);
+ 	int (*resume)(struct device *dev);
+ 	const struct ata_port_info *ata_port_info;
+ 	unsigned int force_port_map;
 -- 
 1.8.4.2
