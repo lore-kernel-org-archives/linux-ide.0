@@ -1,54 +1,74 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2 0/9] Phase out pci_enable_msi_block()
-Date: Sat, 18 Jan 2014 09:59:40 -0500
-Message-ID: <20140118145940.GE3640@htj.dyndns.org>
-References: <cover.1389904166.git.agordeev@redhat.com>
- <CAErSpo5ztnyyceeN38XzLasLV6eJqdbqEV0viPp3Af8U=ts23w@mail.gmail.com>
- <20140118071538.GA32535@dhcp-26-207.brq.redhat.com>
- <CAErSpo4nBdnn3YYaLj6QZ8iyY2pzV8Y7msd5UxJXm1T2AYnqfg@mail.gmail.com>
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: imx6 eSATA
+Date: Sat, 18 Jan 2014 19:03:37 +0000
+Message-ID: <20140118190337.GK15937@n2100.arm.linux.org.uk>
+References: <20140118184427.GJ15937@n2100.arm.linux.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qe0-f53.google.com ([209.85.128.53]:34465 "EHLO
-	mail-qe0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752499AbaARO7p (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Jan 2014 09:59:45 -0500
+Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:41403 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751352AbaARTDu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Jan 2014 14:03:50 -0500
 Content-Disposition: inline
-In-Reply-To: <CAErSpo4nBdnn3YYaLj6QZ8iyY2pzV8Y7msd5UxJXm1T2AYnqfg@mail.gmail.com>
+In-Reply-To: <20140118184427.GJ15937@n2100.arm.linux.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alexander Gordeev <agordeev@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Brian King <brking@us.ibm.com>, Matthew Wilcox <willy@linux.intel.com>, Alex Williamson <alex.williamson@redhat.com>, Kalle Valo <kvalo@qca.qualcomm.com>, Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>, linux-wireless <linux-wireless@vger.kernel.org>, wil6210@qca.qualcomm.com, ath10k@lists.infradead.org, linux-nvme@lists.infradead.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kvm@vger.kernel.org" <kvm@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+To: Shawn Guo <shawn.guo@linaro.org>, Sascha Hauer <s.hauer@pengutronix.de>, linux-arm-kernel@lists.infradead.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 
-On Sat, Jan 18, 2014 at 07:38:55AM -0700, Bjorn Helgaas wrote:
-> On Sat, Jan 18, 2014 at 12:15 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
-> > On Fri, Jan 17, 2014 at 02:00:32PM -0700, Bjorn Helgaas wrote:
-> >> > As the release is supposedly this weekend, do you prefer
-> >> > the patches to go to your tree or to individual trees after
-> >> > the release?
-> >>
-> >> I'd be happy to merge them, except for the fact that they probably
-> >> wouldn't have any time in -next before I ask Linus to pull them.  So
-> >> how about if we wait until after the release, ask the area maintainers
-> >> to take them, and if they don't take them, I'll put them in my tree
-> >> for v3.15?
-> >
-> > Patch 11 depends on patches 1-10, so I am not sure how to better handle it.
-> > Whatever works for you ;)
-> >
-> > I am only concerned with a regression fix "ahci: Fix broken fallback to
-> > single MSI mode" which would be nice to have in 3.14. But it seems pretty
-> > much too late.
-> 
-> Tejun, if you want to ack that one, I can put it in either the first
-> 3.14 pull request or a subsequent one.  Either way, since it's a
-> regression fix, we should be able to get it in 3.14.
+On Sat, Jan 18, 2014 at 06:44:27PM +0000, Russell King - ARM Linux wrote:
+> So, I see we have AHCI support for SATA on the iMX6.  Great... but it
+> doesn't work on the cubox-i, because the phy settings are wrong.
 
-Acked-by: Tejun Heo <tj@kernel.org>
+And another thing.  This is wonderful... really wonderful.
 
-Please feel free to route it any way you see fit.
+static int imx_ahci_probe(struct platform_device *pdev)
+{  
+        struct device *dev = &pdev->dev;
+...
+        ahci_pdev = platform_device_alloc("ahci", -1);
+...
+        ahci_dev = &ahci_pdev->dev; 
+...
+        ahci_dev->of_node = dev->of_node;
 
-Thanks!
+This is a hanging offence.
+
+Here's a lesson in how DT matching works:
+
+- A device gets declared into the device model.
+- The device is offered to each driver in turn via the bus specific
+  code to see whether the driver should be bound to the device.
+- If there's an of_node present, the DT IDs for the driver are walked
+  to compare the device with the driver's DT IDs.  If a match is found,
+  the device is passed to the driver probe function.
+- If there is no of_node present, and it's a platform device, the bare
+  device name is compared the driver name(s) and if it matches the
+  probe function is called.
+
+Now, what does this mean for the above monstrosity?  If the driver
+model happens to find the ahci_imx driver _before_ the ahci driver
+while trying to bind the ahci_dev, it will find that the ahci_dev
+has an of_node with a compatible string which matches this driver.
+So, imx_ahci_probe() _can_ be called with the ahci_pdev that it
+just created.
+
+It doesn't take much to understand what the result will be of that.
+It will try to create another ahci device... hopefully this time
+erroring out.
+
+This is utterly disgusting.  You must *never* *ever* assign an of_node
+from one device to another of the same bus type.  If you need to pass
+the of_node to another device, then it _must_ be done outside of the
+child device's of_node pointer - in other words, it must be done using
+platform data.
+
+Alternatively, turn ahci into a library that both the original ahci
+and ahci_imx drivers can use without jumping through these kinds of
+games - or in this case, just get rid of that assignment - I can't
+see anything in ahci.c which needs the of_node.
 
 -- 
-tejun
+FTTC broadband for 0.8mile line: 5.8Mbps down 500kbps up.  Estimation
+in database were 13.1 to 19Mbit for a good line, about 7.5+ for a bad.
+Estimate before purchase was "up to 13.2Mbit".
