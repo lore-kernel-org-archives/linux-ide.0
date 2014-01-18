@@ -1,13 +1,13 @@
 From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [RFC v3 08/13] ahci-platform: Allow specifying
- platform_data through of_device_id
-Date: Sun, 19 Jan 2014 00:48:50 +0100
-Message-ID: <1390088935-7193-9-git-send-email-hdegoede@redhat.com>
+Subject: [RFC v3 09/13] ARM: sunxi: Add support for Allwinner
+ SUNXi SoCs sata to ahci_platform
+Date: Sun, 19 Jan 2014 00:48:51 +0100
+Message-ID: <1390088935-7193-10-git-send-email-hdegoede@redhat.com>
 References: <1390088935-7193-1-git-send-email-hdegoede@redhat.com>
 Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-sunxi+bncBDL4X2GMZUKRBAVG5SLAKGQEZN72PAA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Return-path: <linux-sunxi+bncBDL4X2GMZUKRBBFG5SLAKGQEETTEFMI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 In-Reply-To: <1390088935-7193-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
@@ -19,104 +19,324 @@ To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Richard Zhu <Hong-Xing.Zhu-KZfg59tc24xl57MIdRCFDg@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, devicetree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
+From: Olliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
+
+This patch adds support for the ahci sata controler found on Allwinner A10
+and A20 SoCs to the ahci_platform driver.
+
+Orignally written by Olliver Schinagl using the approach of having a platform
+device which probe method creates a new child platform device which gets
+driven by ahci_platform.c, as done by ahci_imx.c .
+
+Refactored by Hans de Goede to add most of the non sunxi specific functionality
+to ahci_platform.c and use a platform_data pointer from of_device_id for the
+sunxi specific bits.
+
+Signed-off-by: Olliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
 Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- drivers/ata/ahci_platform.c | 41 +++++++++++++++++++++++++++++------------
- 1 file changed, 29 insertions(+), 12 deletions(-)
+ .../devicetree/bindings/ata/ahci-platform.txt      |  18 +-
+ drivers/ata/Kconfig                                |   9 +
+ drivers/ata/Makefile                               |   4 +-
+ drivers/ata/ahci_platform.c                        |   4 +
+ drivers/ata/ahci_sunxi.c                           | 182 +++++++++++++++++++++
+ include/linux/ahci_platform.h                      |   2 +
+ 6 files changed, 215 insertions(+), 4 deletions(-)
+ create mode 100644 drivers/ata/ahci_sunxi.c
 
+diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+index 1ac807f..f036e786 100644
+--- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
++++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+@@ -4,7 +4,9 @@ SATA nodes are defined to describe on-chip Serial ATA controllers.
+ Each SATA controller should have its own node.
+ 
+ Required properties:
+-- compatible        : compatible list, contains "snps,spear-ahci"
++- compatible        : compatible list, one of "snps,spear-ahci",
++                      "snps,exynos5440-ahci", "ibm,476gtr-ahci", or
++                      "allwinner,sun4i-a10-ahci"
+ - interrupts        : <interrupt mapping for SATA IRQ>
+ - reg               : <registers mapping>
+ 
+@@ -13,10 +15,20 @@ Optional properties:
+ - clocks            : a list of phandle + clock specifier pairs
+ - target-supply     : regulator for SATA target power
+ 
+-Example:
++allwinner,sun4i-a10-ahci required properties:
++- clocks            : index 0 must point to the sata_ref clk, 1 to the ahb clk
++
++Examples:
+         sata@ffe08000 {
+ 		compatible = "snps,spear-ahci";
+ 		reg = <0xffe08000 0x1000>;
+ 		interrupts = <115>;
+-
+         };
++
++	sata: ahci@01c18000 {
++		compatible = "allwinner,sun4i-a10-ahci";
++		reg = <0x01c18000 0x1000>;
++		interrupts = <56>;
++		clocks = <&pll6 0>, <&ahb_gates 25>;
++		target-supply = <&reg_ahci_5v>;
++	};
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 4e73772..5f6c11a 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -106,6 +106,15 @@ config AHCI_IMX
+ 
+ 	  If unsure, say N.
+ 
++config AHCI_SUNXI
++	bool "Allwinner sunxi AHCI SATA support"
++	depends on ARCH_SUNXI && SATA_AHCI_PLATFORM
++	help
++	  This option enables support for the Allwinner sunxi SoC's
++	  onboard AHCI SATA in the ahci_platform driver.
++
++	  If unsure, say N.
++
+ config SATA_FSL
+ 	tristate "Freescale 3.0Gbps SATA support"
+ 	depends on FSL_SOC
+diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+index 46518c6..4d8778c 100644
+--- a/drivers/ata/Makefile
++++ b/drivers/ata/Makefile
+@@ -4,7 +4,7 @@ obj-$(CONFIG_ATA)		+= libata.o
+ # non-SFF interface
+ obj-$(CONFIG_SATA_AHCI)		+= ahci.o libahci.o
+ obj-$(CONFIG_SATA_ACARD_AHCI)	+= acard-ahci.o libahci.o
+-obj-$(CONFIG_SATA_AHCI_PLATFORM) += ahci_platform.o libahci.o
++obj-$(CONFIG_SATA_AHCI_PLATFORM) += ahci_plat.o libahci.o
+ obj-$(CONFIG_SATA_FSL)		+= sata_fsl.o
+ obj-$(CONFIG_SATA_INIC162X)	+= sata_inic162x.o
+ obj-$(CONFIG_SATA_SIL24)	+= sata_sil24.o
+@@ -12,6 +12,8 @@ obj-$(CONFIG_SATA_DWC)		+= sata_dwc_460ex.o
+ obj-$(CONFIG_SATA_HIGHBANK)	+= sata_highbank.o libahci.o
+ obj-$(CONFIG_AHCI_IMX)		+= ahci_imx.o
+ 
++ahci_plat-objs := ahci_platform.o ahci_sunxi.o
++
+ # SFF w/ custom DMA
+ obj-$(CONFIG_PDC_ADMA)		+= pdc_adma.o
+ obj-$(CONFIG_PATA_ARASAN_CF)	+= pata_arasan_cf.o
 diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index 3bc2dab..0676d72 100644
+index 0676d72..324d066 100644
 --- a/drivers/ata/ahci_platform.c
 +++ b/drivers/ata/ahci_platform.c
-@@ -20,6 +20,7 @@
- #include <linux/init.h>
- #include <linux/interrupt.h>
- #include <linux/device.h>
-+#include <linux/of_device.h>
- #include <linux/platform_device.h>
- #include <linux/libata.h>
- #include <linux/ahci_platform.h>
-@@ -87,6 +88,30 @@ static struct scsi_host_template ahci_platform_sht = {
- 	AHCI_SHT("ahci_platform"),
+@@ -92,6 +92,10 @@ static const struct of_device_id ahci_of_match[] = {
+ 	{ .compatible = "snps,spear-ahci", },
+ 	{ .compatible = "snps,exynos5440-ahci", },
+ 	{ .compatible = "ibm,476gtr-ahci", },
++#ifdef CONFIG_AHCI_SUNXI
++	{ .compatible = "allwinner,sun4i-a10-ahci",
++	  .data = &ahci_sunxi_pdata, },
++#endif
+ 	{},
  };
- 
-+static const struct of_device_id ahci_of_match[] = {
-+	{ .compatible = "snps,spear-ahci", },
-+	{ .compatible = "snps,exynos5440-ahci", },
-+	{ .compatible = "ibm,476gtr-ahci", },
-+	{},
-+};
-+MODULE_DEVICE_TABLE(of, ahci_of_match);
+ MODULE_DEVICE_TABLE(of, ahci_of_match);
+diff --git a/drivers/ata/ahci_sunxi.c b/drivers/ata/ahci_sunxi.c
+new file mode 100644
+index 0000000..cf357bf
+--- /dev/null
++++ b/drivers/ata/ahci_sunxi.c
+@@ -0,0 +1,182 @@
++/*
++ * Allwinner sunxi AHCI SATA platform driver
++ * Copyright 2013 Olliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
++ * Copyright 2014 Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
++ *
++ * based on the AHCI SATA platform driver by Jeff Garzik and Anton Vorontsov
++ * Based on code from Allwinner Technology Co., Ltd. <www.allwinnertech.com>,
++ * Daniel Wang <danielwang-0TFLnhJekD6UEPyfVivIlAC/G2K4zDHf@public.gmane.org>
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
++ * more details.
++ */
 +
-+static const struct ahci_platform_data *ahci_get_pdata(struct device *dev)
++#include <linux/ahci_platform.h>
++#include <linux/clk.h>
++#include <linux/errno.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/of_device.h>
++#include <linux/platform_device.h>
++#include <linux/regulator/consumer.h>
++#include "ahci.h"
++
++#define AHCI_BISTAFR 0x00a0
++#define AHCI_BISTCR 0x00a4
++#define AHCI_BISTFCTR 0x00a8
++#define AHCI_BISTSR 0x00ac
++#define AHCI_BISTDECR 0x00b0
++#define AHCI_DIAGNR0 0x00b4
++#define AHCI_DIAGNR1 0x00b8
++#define AHCI_OOBR 0x00bc
++#define AHCI_PHYCS0R 0x00c0
++#define AHCI_PHYCS1R 0x00c4
++#define AHCI_PHYCS2R 0x00c8
++#define AHCI_TIMER1MS 0x00e0
++#define AHCI_GPARAM1R 0x00e8
++#define AHCI_GPARAM2R 0x00ec
++#define AHCI_PPARAMR 0x00f0
++#define AHCI_TESTR 0x00f4
++#define AHCI_VERSIONR 0x00f8
++#define AHCI_IDR 0x00fc
++#define AHCI_RWCR 0x00fc
++#define AHCI_P0DMACR 0x0170
++#define AHCI_P0PHYCR 0x0178
++#define AHCI_P0PHYSR 0x017c
++
++#ifdef CONFIG_AHCI_SUNXI
++
++static void sunxi_clrbits(void __iomem *reg, u32 clr_val)
 +{
-+	struct ahci_platform_data *pdata;
-+	const struct of_device_id *of_id;
++	u32 reg_val;
 +
-+	pdata = dev_get_platdata(dev);
-+	if (pdata)
-+		return pdata;
-+
-+	of_id = of_match_device(ahci_of_match, dev);
-+	if (of_id)
-+		return of_id->data;
-+
-+	return NULL;
++	reg_val = readl(reg);
++	reg_val &= ~(clr_val);
++	writel(reg_val, reg);
 +}
 +
- static int ahci_enable_clks(struct device *dev, struct ahci_host_priv *hpriv)
- {
- 	int c, rc;
-@@ -126,7 +151,7 @@ static void ahci_put_clks(struct ahci_host_priv *hpriv)
- static int ahci_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
--	struct ahci_platform_data *pdata = dev_get_platdata(dev);
-+	const struct ahci_platform_data *pdata = ahci_get_pdata(dev);
- 	const struct platform_device_id *id = platform_get_device_id(pdev);
- 	struct ata_port_info pi = ahci_port_info[id ? id->driver_data : 0];
- 	const struct ata_port_info *ppi[] = { &pi, NULL };
-@@ -290,7 +315,7 @@ free_clk:
- static void ahci_host_stop(struct ata_host *host)
- {
- 	struct device *dev = host->dev;
--	struct ahci_platform_data *pdata = dev_get_platdata(dev);
-+	const struct ahci_platform_data *pdata = ahci_get_pdata(dev);
- 	struct ahci_host_priv *hpriv = host->private_data;
++static void sunxi_setbits(void __iomem *reg, u32 set_val)
++{
++	u32 reg_val;
++
++	reg_val = readl(reg);
++	reg_val |= set_val;
++	writel(reg_val, reg);
++}
++
++static void sunxi_clrsetbits(void __iomem *reg, u32 clr_val, u32 set_val)
++{
++	u32 reg_val;
++
++	reg_val = readl(reg);
++	reg_val &= ~(clr_val);
++	reg_val |= set_val;
++	writel(reg_val, reg);
++}
++
++static u32 sunxi_getbits(void __iomem *reg, u8 mask, u8 shift)
++{
++	return (readl(reg) >> shift) & mask;
++}
++
++static int ahci_sunxi_phy_init(struct device *dev, void __iomem *reg_base)
++{
++	u32 reg_val;
++	int timeout;
++
++	/* This magic is from the original code */
++	writel(0, reg_base + AHCI_RWCR);
++	mdelay(5);
++
++	sunxi_setbits(reg_base + AHCI_PHYCS1R, BIT(19));
++	sunxi_clrsetbits(reg_base + AHCI_PHYCS0R,
++			 (0x7 << 24),
++			 (0x5 << 24) | BIT(23) | BIT(18));
++	sunxi_clrsetbits(reg_base + AHCI_PHYCS1R,
++			 (0x3 << 16) | (0x1f << 8) | (0x3 << 6),
++			 (0x2 << 16) | (0x6 << 8) | (0x2 << 6));
++	sunxi_setbits(reg_base + AHCI_PHYCS1R, BIT(28) | BIT(15));
++	sunxi_clrbits(reg_base + AHCI_PHYCS1R, BIT(19));
++	sunxi_clrsetbits(reg_base + AHCI_PHYCS0R,
++			 (0x7 << 20), (0x3 << 20));
++	sunxi_clrsetbits(reg_base + AHCI_PHYCS2R,
++			 (0x1f << 5), (0x19 << 5));
++	mdelay(5);
++
++	sunxi_setbits(reg_base + AHCI_PHYCS0R, (0x1 << 19));
++
++	timeout = 0x100000;
++	do {
++		reg_val = sunxi_getbits(reg_base + AHCI_PHYCS0R, 0x7, 28);
++	} while (--timeout && (reg_val != 0x2));
++	if (!timeout) {
++		dev_err(dev, "PHY power up failed.\n");
++		return -EIO;
++	}
++
++	sunxi_setbits(reg_base + AHCI_PHYCS2R, (0x1 << 24));
++
++	timeout = 0x100000;
++	do {
++		reg_val = sunxi_getbits(reg_base + AHCI_PHYCS2R, 0x1, 24);
++	} while (--timeout && reg_val);
++	if (!timeout) {
++		dev_err(dev, "PHY calibration failed.\n");
++		return -EIO;
++	}
++	mdelay(15);
++
++	writel(0x7, reg_base + AHCI_RWCR);
++
++	return 0;
++}
++
++static void ahci_sunxi_start_engine(struct ata_port *ap)
++{
++	void __iomem *port_mmio = ahci_port_base(ap);
++	struct ahci_host_priv *hpriv = ap->host->private_data;
++
++	/* Setup DMA before DMA start */
++	sunxi_clrsetbits(hpriv->mmio + AHCI_P0DMACR, 0x0000ff00, 0x00004400);
++
++	/* Start DMA */
++	sunxi_setbits(port_mmio + PORT_CMD, PORT_CMD_START);
++}
++
++static int ahci_sunxi_init(struct device *dev, struct ahci_host_priv *hpriv,
++			   void __iomem *reg_base)
++{
++	hpriv->start_engine = ahci_sunxi_start_engine;
++	return ahci_sunxi_phy_init(dev, reg_base);
++}
++
++int ahci_sunxi_resume(struct device *dev)
++{
++	struct ata_host *host = dev_get_drvdata(dev);
++	struct ahci_host_priv *hpriv = host->private_data;
++
++	return ahci_sunxi_phy_init(dev, hpriv->mmio);
++}
++
++static const struct ata_port_info ahci_sunxi_port_info = {
++	AHCI_HFLAGS(AHCI_HFLAG_32BIT_ONLY | AHCI_HFLAG_NO_MSI |
++			  AHCI_HFLAG_NO_PMP | AHCI_HFLAG_YES_NCQ),
++	.flags		= AHCI_FLAG_COMMON | ATA_FLAG_NCQ,
++	.pio_mask	= ATA_PIO4,
++	.udma_mask	= ATA_UDMA6,
++	.port_ops	= &ahci_platform_ops,
++};
++
++struct ahci_platform_data ahci_sunxi_pdata = {
++	.init = ahci_sunxi_init,
++	.resume = ahci_sunxi_resume,
++	.ata_port_info = &ahci_sunxi_port_info,
++};
++
++#endif
+diff --git a/include/linux/ahci_platform.h b/include/linux/ahci_platform.h
+index 796dfb4..4e6cbe0 100644
+--- a/include/linux/ahci_platform.h
++++ b/include/linux/ahci_platform.h
+@@ -32,4 +32,6 @@ struct ahci_platform_data {
+ 	unsigned int mask_port_map;
+ };
  
- 	if (hpriv->target_pwr)
-@@ -306,7 +331,7 @@ static void ahci_host_stop(struct ata_host *host)
- #ifdef CONFIG_PM_SLEEP
- static int ahci_suspend(struct device *dev)
- {
--	struct ahci_platform_data *pdata = dev_get_platdata(dev);
-+	const struct ahci_platform_data *pdata = ahci_get_pdata(dev);
- 	struct ata_host *host = dev_get_drvdata(dev);
- 	struct ahci_host_priv *hpriv = host->private_data;
- 	void __iomem *mmio = hpriv->mmio;
-@@ -345,7 +370,7 @@ static int ahci_suspend(struct device *dev)
- 
- static int ahci_resume(struct device *dev)
- {
--	struct ahci_platform_data *pdata = dev_get_platdata(dev);
-+	const struct ahci_platform_data *pdata = ahci_get_pdata(dev);
- 	struct ata_host *host = dev_get_drvdata(dev);
- 	struct ahci_host_priv *hpriv = host->private_data;
- 	int rc;
-@@ -393,14 +418,6 @@ disable_unprepare_clk:
- 
- static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_suspend, ahci_resume);
- 
--static const struct of_device_id ahci_of_match[] = {
--	{ .compatible = "snps,spear-ahci", },
--	{ .compatible = "snps,exynos5440-ahci", },
--	{ .compatible = "ibm,476gtr-ahci", },
--	{},
--};
--MODULE_DEVICE_TABLE(of, ahci_of_match);
--
- static struct platform_driver ahci_driver = {
- 	.probe = ahci_probe,
- 	.remove = ata_platform_remove_one,
++extern struct ahci_platform_data ahci_sunxi_pdata;
++
+ #endif /* _AHCI_PLATFORM_H */
 -- 
 1.8.4.2
