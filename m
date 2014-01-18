@@ -1,80 +1,65 @@
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: imx6 eSATA
-Date: Sat, 18 Jan 2014 21:11:19 +0000
-Message-ID: <20140118211119.GA6618@n2100.arm.linux.org.uk>
-References: <20140118184427.GJ15937@n2100.arm.linux.org.uk> <20140118190337.GK15937@n2100.arm.linux.org.uk>
+From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [RFC v3 00/13] ahci: add sunxi driver and cleanup imx driver
+Date: Sun, 19 Jan 2014 00:48:42 +0100
+Message-ID: <1390088935-7193-1-git-send-email-hdegoede@redhat.com>
+Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:41435 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751403AbaARVL1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Jan 2014 16:11:27 -0500
-Content-Disposition: inline
-In-Reply-To: <20140118190337.GK15937@n2100.arm.linux.org.uk>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-sunxi+bncBDL4X2GMZUKRB4FF5SLAKGQEMB5CLXY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/linux-sunxi>
+Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Richard Zhu <Hong-Xing.Zhu-KZfg59tc24xl57MIdRCFDg@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, devicetree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: Shawn Guo <shawn.guo@linaro.org>, Sascha Hauer <s.hauer@pengutronix.de>, linux-arm-kernel@lists.infradead.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 
-On Sat, Jan 18, 2014 at 07:03:37PM +0000, Russell King - ARM Linux wrote:
-> On Sat, Jan 18, 2014 at 06:44:27PM +0000, Russell King - ARM Linux wrote:
-> > So, I see we have AHCI support for SATA on the iMX6.  Great... but it
-> > doesn't work on the cubox-i, because the phy settings are wrong.
-> 
-> And another thing.  This is wonderful... really wonderful.
-> 
-> static int imx_ahci_probe(struct platform_device *pdev)
-> {  
->         struct device *dev = &pdev->dev;
-> ...
->         ahci_pdev = platform_device_alloc("ahci", -1);
-> ...
->         ahci_dev = &ahci_pdev->dev; 
-> ...
->         ahci_dev->of_node = dev->of_node;
-> 
-> This is a hanging offence.
-> 
-> Here's a lesson in how DT matching works:
-> 
-> - A device gets declared into the device model.
-> - The device is offered to each driver in turn via the bus specific
->   code to see whether the driver should be bound to the device.
-> - If there's an of_node present, the DT IDs for the driver are walked
->   to compare the device with the driver's DT IDs.  If a match is found,
->   the device is passed to the driver probe function.
-> - If there is no of_node present, and it's a platform device, the bare
->   device name is compared the driver name(s) and if it matches the
->   probe function is called.
-> 
-> Now, what does this mean for the above monstrosity?  If the driver
-> model happens to find the ahci_imx driver _before_ the ahci driver
-> while trying to bind the ahci_dev, it will find that the ahci_dev
-> has an of_node with a compatible string which matches this driver.
-> So, imx_ahci_probe() _can_ be called with the ahci_pdev that it
-> just created.
-> 
-> It doesn't take much to understand what the result will be of that.
-> It will try to create another ahci device... hopefully this time
-> erroring out.
-> 
-> This is utterly disgusting.  You must *never* *ever* assign an of_node
-> from one device to another of the same bus type.  If you need to pass
-> the of_node to another device, then it _must_ be done outside of the
-> child device's of_node pointer - in other words, it must be done using
-> platform data.
-> 
-> Alternatively, turn ahci into a library that both the original ahci
-> and ahci_imx drivers can use without jumping through these kinds of
-> games - or in this case, just get rid of that assignment - I can't
-> see anything in ahci.c which needs the of_node.
+Hi All,
 
-Sigh.  You can't get rid of the of_node there because it's needed
-for clk_get() inside ahci_platform.c.  So, I think ahci_platform needs
-to become yet another library, and thereby avoid creating a child
-platform device.
+Here is v3 of my patchset for adding ahci-sunxi support. It has grown quite
+a bit since I've been going for a more generic approach this time and I've
+also cleaned up the ahci-imx driver to use the same generic approach.
 
--- 
-FTTC broadband for 0.8mile line: 5.8Mbps down 500kbps up.  Estimation
-in database were 13.1 to 19Mbit for a good line, about 7.5+ for a bad.
-Estimate before purchase was "up to 13.2Mbit".
+History:
+
+v1, by Olliver Schinagl:
+This was using the approach of having a platform device which probe method
+creates a new child platform device which gets driven by ahci_platform.c,
+as done by ahci_imx.c .
+
+v2, by Hans de Goede:
+Stand-alone platform driver based on Olliver's work
+
+v3, by Hans de Goede:
+patch-series, with 4 different parts
+a) Make ahci_platform.c more generic, handle more then 1 clk, target pwr
+   regulator
+b) New ahci-sunxi code only populating ahci_platform_data, passed to
+   ahci_platform.c to of_device_id matching.
+c) Refactor ahci-imx code to work the same as the new ahci-sunxi code, this
+   is the reason why v3 is an RFC, I'm waiting for the wandboard I ordered to
+   arrive so that I can actually test this.
+d) dts bindings for the sunxi ahci parts
+
+Parts a-c are intended for merging through the ata tree, the dts bindings
+will be merged to Maxime Ripard's sunxi-dts tree.
+
+I hope people like the new approach for dealing with of drivers which need
+to provide ahci_platform_data. An alternate approach would be to export
+ahci_probe (renamed to ahci_platform_probe) from ahci_platform.c, then
+ahci_sunxi.c could have a probe function like this:
+
+int ahci_sunxi_probe(struct platform_device *pdev) {
+    pdev->dev.platform_data = &ahci_sunxi_pdata;
+    return ahci_platform_probe(pdev);
+}
+
+And then each of ahci_platform, ahci_sunxi and ahci_imx could be its own
+module (if build as module) rather then all of them being build into one
+module.
+
+Regards,
+
+Hans
