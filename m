@@ -1,14 +1,14 @@
 From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC v3 04/13] ahci-platform: Undo pdata->resume on
- resume failure
-Date: Sun, 19 Jan 2014 19:40:21 +0100
-Message-ID: <52DC1C15.1030107@redhat.com>
-References: <1390088935-7193-1-git-send-email-hdegoede@redhat.com> <1390088935-7193-5-git-send-email-hdegoede@redhat.com> <20140119112737.GC11123@htj.dyndns.org>
+Subject: Re: [RFC v3 03/13] ahci-platform: Fix clk
+ enable/disable unbalance on suspend/resume
+Date: Sun, 19 Jan 2014 19:47:06 +0100
+Message-ID: <52DC1DAA.3010403@redhat.com>
+References: <1390088935-7193-1-git-send-email-hdegoede@redhat.com> <1390088935-7193-4-git-send-email-hdegoede@redhat.com> <20140119111412.GA11123@htj.dyndns.org>
 Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Return-path: <linux-sunxi+bncBDL4X2GMZUKRBHFY6CLAKGQE5NIXV4I-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <20140119112737.GC11123-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+Return-path: <linux-sunxi+bncBDL4X2GMZUKRBMV36CLAKGQEPD6O3JI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <20140119111412.GA11123-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
 List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Archive: <http://groups.google.com/group/linux-sunxi>
@@ -21,57 +21,55 @@ List-Id: linux-ide@vger.kernel.org
 
 Hi,
 
-On 01/19/2014 12:27 PM, Tejun Heo wrote:
-> Hello,
+On 01/19/2014 12:14 PM, Tejun Heo wrote:
+> On Sun, Jan 19, 2014 at 12:48:45AM +0100, Hans de Goede wrote:
+>> For devices where ahci_platform_data provides suspend() there is an unbalance
+>> in clk enable/disable calls. The suspend path does not disable the clk, but
+>> the resume path enables it. This commit fixes it by always disabling the clk
+>> in the suspend path independent of there being an ahci_platform_data suspend
+>> method.
+>>
+>> On all drivers currently using a suspend method, the suspend method always
+>> succeeds, so change its return type to void, to avoid having the introduce
+>> somewhat complex error handling paths.
+>>
+>> The disabling of the clock on suspend is a functional change, to ensure this
+>> is ok I've audited all drivers using ahci_platform_data:
+>>
+>> arch/arm/mach-davinci/devices-da8xx.c: Does not use a suspend method
+>> arch/arm/mach-spear/spear1340.c: Does not use the clock framework
+>> drivers/ata/ahci_imx.c: Does have suspend and resume pdata methods, these
+>> disable / enable another clock, so likely it is ok to disable / enable the
+>> clock at of-node index 0 as well, I've ordered a wandboard to be able to
+>> test these changes.
 >
-> On Sun, Jan 19, 2014 at 12:48:46AM +0100, Hans de Goede wrote:
->> When the ahci_resume fails the error handling code tries to undo all changes
->> made, but it was not undoing the results of pdata->resume.
->>
->> Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->> ---
->>   drivers/ata/ahci_platform.c | 5 ++++-
->>   1 file changed, 4 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
->> index dc1ef73..41720cb 100644
->> --- a/drivers/ata/ahci_platform.c
->> +++ b/drivers/ata/ahci_platform.c
->> @@ -307,7 +307,7 @@ static int ahci_resume(struct device *dev)
->>   	if (dev->power.power_state.event == PM_EVENT_SUSPEND) {
->>   		rc = ahci_reset_controller(host);
->>   		if (rc)
->> -			goto disable_unprepare_clk;
->> +			goto pdata_suspend;
->>
->>   		ahci_init_controller(host);
->>   	}
->> @@ -316,6 +316,9 @@ static int ahci_resume(struct device *dev)
->>
->>   	return 0;
->>
->> +pdata_suspend:
->> +	if (pdata && pdata->suspend)
->> +		pdata->suspend(dev);
->>   disable_unprepare_clk:
->>   	if (!IS_ERR(hpriv->clk))
->>   		clk_disable_unprepare(hpriv->clk);
->
-> Hmmmm... resume isn't an operation you can revert without side-effect
-> when the whole system is waking up from sleep.  e.g. think about what
-> should happen the driver is removed and loaded again - it should be
-> able to reinitialized the device, which is unlikely to work if the
-> device is suspended at the platform level.  If resume fails, the right
-> state to be in is "failed with as much as resumed" instead of
-> "suspended".
+> This isn't your fault but similarly to the previous patch, I'd much
+> prefer if drivers which need custom ops just override the whole
+> operation and are allowed to use the default platform from their
+> custom implementations as they see fit.  Allowing partial overrides
+> seems like an efficient thing to do at the beginning but if you
+> continue to stack them, you eventually end up with giant pile of
+> methods where figuring out which code paths are actually executed
+> takes quite a bit of effort.  I'd really like to avoid that.
 
-That sounds like your advocating for just returning from resume on the
-first error without undoing any of the previous steps, have I gotten that
-right?
+I disagree, if we were to follow this reasoning then the init and exit
+overrides would have to logically also be all or nothing propositions,
+currently ahci_probe and ahci_stop do all the clks, regulator and sata-core
+setup / teardown needed with the init / exit pdata callbacks doing any
+implementation specific register frobbing needed.
 
-That sounds as sensible as any other approach on resume errors
-(there are IMHO no good answers), if that is what you mean, shall I do a
-patch in the next versions of my patch-set doing that ?
+As I see it either doing clks, regulator and sata-core things in a common
+place makes sense, and then it goes for suspend and resume too, or we
+opt for always following the complete override model, and which point
+it becomes more sensible to just do a separate platform driver per
+ahci implementation.
+
+After this patch, suspend / resume exactly follow init / stop in that
+the ahci_platform.c bits take care of the common stuff, while calling
+into a platform_data callback for implementation specific setup.
+
+Also if you look at both the imx and sunxi implementations doing things
+this way works well in practice.
 
 Regards,
 
