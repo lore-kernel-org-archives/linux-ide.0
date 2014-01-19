@@ -1,33 +1,45 @@
-From: Shawn Guo <shawn.guo@linaro.org>
-Subject: Re: imx6 eSATA
-Date: Sun, 19 Jan 2014 12:27:50 +0800
-Message-ID: <20140119042746.GA22423@S2101-09.ap.freescale.net>
-References: <20140118184427.GJ15937@n2100.arm.linux.org.uk>
- <20140118190337.GK15937@n2100.arm.linux.org.uk>
- <20140118211119.GA6618@n2100.arm.linux.org.uk>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [RFC v3 01/13] libahci: Allow drivers to override start_engine
+Date: Sat, 18 Jan 2014 23:46:43 -0500
+Message-ID: <20140119044643.GH3640@htj.dyndns.org>
+References: <1390088935-7193-1-git-send-email-hdegoede@redhat.com>
+ <1390088935-7193-2-git-send-email-hdegoede@redhat.com>
+Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from va3ehsobe003.messaging.microsoft.com ([216.32.180.13]:30516
-	"EHLO va3outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751860AbaASE1x (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Jan 2014 23:27:53 -0500
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-sunxi+bncBDQ2FCEAWYLRBN5R5WLAKGQETSN3SPY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+In-Reply-To: <1390088935-7193-2-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/linux-sunxi>
+List-Subscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20140118211119.GA6618@n2100.arm.linux.org.uk>
-Sender: linux-ide-owner@vger.kernel.org
+To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Richard Zhu <Hong-Xing.Zhu-KZfg59tc24xl57MIdRCFDg@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, devicetree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: Sascha Hauer <s.hauer@pengutronix.de>, linux-arm-kernel@lists.infradead.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 
-On Sat, Jan 18, 2014 at 09:11:19PM +0000, Russell King - ARM Linux wrote:
-> Sigh.  You can't get rid of the of_node there because it's needed
-> for clk_get() inside ahci_platform.c.  So, I think ahci_platform needs
-> to become yet another library, and thereby avoid creating a child
-> platform device.
+Hello, Hans.
 
-Yes, you're right.  This has been discussed for a while [1].
+On Sun, Jan 19, 2014 at 12:48:43AM +0100, Hans de Goede wrote:
+>  void ahci_start_engine(struct ata_port *ap)
+>  {
+>  	void __iomem *port_mmio = ahci_port_base(ap);
+> +	struct ahci_host_priv *hpriv = ap->host->private_data;
+>  	u32 tmp;
+>  
+> +	if (hpriv->start_engine) {
+> +		hpriv->start_engine(ap);
+> +		return;
+> +	}
+> +
 
-Shawn
+I'd much prefer if the driver always calls hpriv->start_engine() which
+is initialized to the default callback during common init and then
+overridden if necessary.
 
-[1] http://thread.gmane.org/gmane.comp.hardware.netbook.arm.sunxi/4835/focus=4909
+Thanks.
 
+-- 
+tejun
