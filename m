@@ -1,14 +1,14 @@
 From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC v3 04/13] ahci-platform: Undo pdata->resume on
- resume failure
-Date: Sun, 19 Jan 2014 20:53:15 +0100
-Message-ID: <52DC2D2B.3060709@redhat.com>
-References: <1390088935-7193-1-git-send-email-hdegoede@redhat.com> <1390088935-7193-5-git-send-email-hdegoede@redhat.com> <20140119112737.GC11123@htj.dyndns.org> <52DC1C15.1030107@redhat.com> <20140119191349.GA32165@mtj.dyndns.org> <52DC28DB.7070804@redhat.com> <20140119194226.GE32165@mtj.dyndns.org>
+Subject: Re: [RFC v3 05/13] ahci-platform: Pass ahci_host_priv
+ ptr to ahci_platform_data init method
+Date: Sun, 19 Jan 2014 20:56:09 +0100
+Message-ID: <52DC2DD9.7070403@redhat.com>
+References: <1390088935-7193-1-git-send-email-hdegoede@redhat.com> <1390088935-7193-6-git-send-email-hdegoede@redhat.com> <20140119113051.GD11123@htj.dyndns.org> <52DC1EC4.3090807@redhat.com> <20140119191706.GC32165@mtj.dyndns.org>
 Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Return-path: <linux-sunxi+bncBDL4X2GMZUKRBMO26CLAKGQE7BZNQ4A-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <20140119194226.GE32165-9pTldWuhBndy/B6EtB590w@public.gmane.org>
+Return-path: <linux-sunxi+bncBDL4X2GMZUKRBYG36CLAKGQEFCR7GPY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <20140119191706.GC32165-9pTldWuhBndy/B6EtB590w@public.gmane.org>
 List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Archive: <http://groups.google.com/group/linux-sunxi>
@@ -21,15 +21,20 @@ List-Id: linux-ide@vger.kernel.org
 
 Hi,
 
-On 01/19/2014 08:42 PM, Tejun Heo wrote:
-> On Sun, Jan 19, 2014 at 08:34:51PM +0100, Hans de Goede wrote:
->> Well the current error handling still re-disables the clks on resume failure,
->> if you want to proceed with resume as far as possible, rather then return to
+On 01/19/2014 08:17 PM, Tejun Heo wrote:
+> On Sun, Jan 19, 2014 at 07:51:48PM +0100, Hans de Goede wrote:
+>> Yes, but they are part of arch/arm/mach-foo, so moving them is non trivial, and
+>> I don't want to go make these kinda changes without hardware to test. Please keep
+>> in mind that I'm partially cleaning up other peoples mess here (the imx bits
+>> specifically). I'm willing to do that to some extend (*). But buying an imx6q board
+>> and fixing that is about as far as I'm willing to go.
 >
-> Let's put it as "put it in a state where it can be reinitialized
-> afterwards".
+> If they can't be moved, the right thing to do is moving the header out
+> to include/linux so that they can be included from those directories.
+> Let's please not contort the API to fit the organizational issues.
 
-Ok, I'll drop the patch then.
+Ok, asking the obvious here I guess, but you would accept a patch moving drivers/ata/ahci.h
+to include/linux as part of this patch-set ?
 
 Regards,
 
