@@ -1,14 +1,14 @@
 From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC v3 05/13] ahci-platform: Pass ahci_host_priv
- ptr to ahci_platform_data init method
-Date: Sun, 19 Jan 2014 19:51:48 +0100
-Message-ID: <52DC1EC4.3090807@redhat.com>
-References: <1390088935-7193-1-git-send-email-hdegoede@redhat.com> <1390088935-7193-6-git-send-email-hdegoede@redhat.com> <20140119113051.GD11123@htj.dyndns.org>
+Subject: Re: [RFC v3 08/13] ahci-platform: Allow specifying
+ platform_data through of_device_id
+Date: Sun, 19 Jan 2014 19:56:53 +0100
+Message-ID: <52DC1FF5.80101@redhat.com>
+References: <1390088935-7193-1-git-send-email-hdegoede@redhat.com> <1390088935-7193-9-git-send-email-hdegoede@redhat.com> <20140119113838.GE11123@htj.dyndns.org>
 Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Return-path: <linux-sunxi+bncBDL4X2GMZUKRBTF56CLAKGQEXI7Z3ZA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <20140119113051.GD11123-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+Return-path: <linux-sunxi+bncBDL4X2GMZUKRB7F76CLAKGQEAP3VGPI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <20140119113838.GE11123-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
 List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Archive: <http://groups.google.com/group/linux-sunxi>
@@ -21,31 +21,36 @@ List-Id: linux-ide@vger.kernel.org
 
 Hi,
 
-On 01/19/2014 12:30 PM, Tejun Heo wrote:
-> On Sun, Jan 19, 2014 at 12:48:47AM +0100, Hans de Goede wrote:
->> Some ahci_platform_data->init methods need access to the ahci_host_priv data.
->>
->> Note:
->>
->> When calling ahci_platform_data->init the ata_host has not been allocated yet,
->> so access to ahci_host_priv through the dev argument is not possible.
->>
->> The hpriv->mmio argument may seem redundant, but it is useful for drivers
->> which live outside of drivers/ata and thus don't know the contents of the
->> ahci_platform_data data type.
+On 01/19/2014 12:38 PM, Tejun Heo wrote:
+> On Sun, Jan 19, 2014 at 12:48:50AM +0100, Hans de Goede wrote:
+>> @@ -126,7 +151,7 @@ static void ahci_put_clks(struct ahci_host_priv *hpriv)
+>>   static int ahci_probe(struct platform_device *pdev)
+>>   {
+>>   	struct device *dev = &pdev->dev;
+>> -	struct ahci_platform_data *pdata = dev_get_platdata(dev);
+>> +	const struct ahci_platform_data *pdata = ahci_get_pdata(dev);
 >
-> Wouldn't the right thing to do be moving them under drivers/ata?
+> Let's please not add const.  For data types which are known to be
+> terminal, const more or less works, I suppose but for anything even
+> mildly complicated it ends up being more of a headache.  C just
+> doesn't have enough language support to make const actually useful.
+> e.g. now if somebody wants to add an accessor to ahci_platform_data()
+> which is applicable to both readers and writers, we either need two
+> separate accessors for const and !const paths or have to cast away
+> const.
 
-Yes, but they are part of arch/arm/mach-foo, so moving them is non trivial, and
-I don't want to go make these kinda changes without hardware to test. Please keep
-in mind that I'm partially cleaning up other peoples mess here (the imx bits
-specifically). I'm willing to do that to some extend (*). But buying an imx6q board
-and fixing that is about as far as I'm willing to go.
+The problem is that:
+
+1) of_match_device returns const, so without the const the code would need
+to cast that const away somewhere
+2) of_match_device is right to return const because
+2a) the data can actually be const
+2b) even if not const, it is shared between multiple instances of the same
+device-type and thus should never be written too
+
+So as Russell already said, the use of const is correct here, and the best
+thing to do is to simply keep it.
 
 Regards,
 
 Hans
-
-
-*) Keep in mind that this is a hobby project done in my spare time, with all
-hardware bought from personal budget.
