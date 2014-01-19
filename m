@@ -1,41 +1,69 @@
-From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC v3 05/13] ahci-platform: Pass ahci_host_priv
- ptr to ahci_platform_data init method
-Date: Sun, 19 Jan 2014 20:56:09 +0100
-Message-ID: <52DC2DD9.7070403@redhat.com>
-References: <1390088935-7193-1-git-send-email-hdegoede@redhat.com> <1390088935-7193-6-git-send-email-hdegoede@redhat.com> <20140119113051.GD11123@htj.dyndns.org> <52DC1EC4.3090807@redhat.com> <20140119191706.GC32165@mtj.dyndns.org>
-Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [RFC v3 09/13] ARM: sunxi: Add support for Allwinner SUNXi
+	SoCs sata to ahci_platform
+Date: Sun, 19 Jan 2014 19:56:42 +0000
+Message-ID: <20140119195642.GU15937@n2100.arm.linux.org.uk>
+References: <1390088935-7193-1-git-send-email-hdegoede@redhat.com> <1390088935-7193-10-git-send-email-hdegoede@redhat.com> <20140119122216.GM15937@n2100.arm.linux.org.uk> <52DC2282.4040702@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Return-path: <linux-sunxi+bncBDL4X2GMZUKRBYG36CLAKGQEFCR7GPY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <20140119191706.GC32165-9pTldWuhBndy/B6EtB590w@public.gmane.org>
-List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/linux-sunxi>
-Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Richard Zhu <Hong-Xing.Zhu-KZfg59tc24xl57MIdRCFDg@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, devicetree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:41968 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751878AbaAST4w (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 19 Jan 2014 14:56:52 -0500
+Content-Disposition: inline
+In-Reply-To: <52DC2282.4040702@redhat.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, devicetree <devicetree@vger.kernel.org>, linux-ide@vger.kernel.org, Oliver Schinagl <oliver@schinagl.nl>, Richard Zhu <Hong-Xing.Zhu@freescale.com>, linux-sunxi@googlegroups.com, Maxime Ripard <maxime.ripard@free-electrons.com>, linux-arm-kernel@lists.infradead.org
 
-Hi,
-
-On 01/19/2014 08:17 PM, Tejun Heo wrote:
-> On Sun, Jan 19, 2014 at 07:51:48PM +0100, Hans de Goede wrote:
->> Yes, but they are part of arch/arm/mach-foo, so moving them is non trivial, and
->> I don't want to go make these kinda changes without hardware to test. Please keep
->> in mind that I'm partially cleaning up other peoples mess here (the imx bits
->> specifically). I'm willing to do that to some extend (*). But buying an imx6q board
->> and fixing that is about as far as I'm willing to go.
+On Sun, Jan 19, 2014 at 08:07:46PM +0100, Hans de Goede wrote:
+> Hi,
 >
-> If they can't be moved, the right thing to do is moving the header out
-> to include/linux so that they can be included from those directories.
-> Let's please not contort the API to fit the organizational issues.
+> On 01/19/2014 01:22 PM, Russell King - ARM Linux wrote:
+>> On Sun, Jan 19, 2014 at 12:48:51AM +0100, Hans de Goede wrote:
+>>> +	timeout = 0x100000;
+>>> +	do {
+>>> +		reg_val = sunxi_getbits(reg_base + AHCI_PHYCS0R, 0x7, 28);
+>>> +	} while (--timeout && (reg_val != 0x2));
+>>> +	if (!timeout) {
+>>> +		dev_err(dev, "PHY power up failed.\n");
+>>> +		return -EIO;
+>>> +	}
+>>
+>> This is not a good way to detect failure - there's several things wrong
+>> here.
+>>
+>> First, how long does sunxi_getbits() take?  What does that depend on?
+>> Therefore, how long does it take to time out?
+>
+> You're interpreting the timeout in the above code as an actual timeout, but
+> that is not what it is, it is a means to avoid looping forever if something
+> is seriously amiss. The only time I've ever seen the timeout trigger is when
+> I forgot to enable some clks iirc.
+>
+> I can rename the variable from timeout to max_tries to make this more clear.
+>
+>> Secondly, what if the success condition becomes true at the same time that
+>> a timeout occurs?
+>
+> We should never get anywhere near timeout becoming 0, so if both happen at
+> the same time, then something is pretty seriously broken and the returning of
+> an error as the code does now is the right thing to do.
 
-Ok, asking the obvious here I guess, but you would accept a patch moving drivers/ata/ahci.h
-to include/linux as part of this patch-set ?
+Yes... and if we look back in history, there's been lots of stuff just
+like this where the loop has had to have the number of iterations
+increased as CPUs have become faster and compilers become better?
 
-Regards,
+So... my question stands: but let me put it a different way in two parts:
 
-Hans
+1. What is the maximum expected time for the success condition to be
+   satisfied?
+2. How long does it actually take for the loop to time out in existing
+   CPUs/compilers?
+
+-- 
+FTTC broadband for 0.8mile line: 5.8Mbps down 500kbps up.  Estimation
+in database were 13.1 to 19Mbit for a good line, about 7.5+ for a bad.
+Estimate before purchase was "up to 13.2Mbit".
