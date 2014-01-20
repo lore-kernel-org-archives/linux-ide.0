@@ -1,13 +1,13 @@
 From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH RFC v4 03/10] ahci-platform: Pass ahci_host_priv
- ptr to ahci_platform_data init method
-Date: Mon, 20 Jan 2014 17:44:56 +0100
-Message-ID: <1390236303-22538-4-git-send-email-hdegoede@redhat.com>
+Subject: [PATCH RFC v4 04/10] ahci-platform: Add support for
+ devices with more then 1 clock
+Date: Mon, 20 Jan 2014 17:44:57 +0100
+Message-ID: <1390236303-22538-5-git-send-email-hdegoede@redhat.com>
 References: <1390236303-22538-1-git-send-email-hdegoede@redhat.com>
 Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-sunxi+bncBDL4X2GMZUKRBH5F6WLAKGQEKMNJ33Q-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Return-path: <linux-sunxi+bncBDL4X2GMZUKRBI5F6WLAKGQE5FDPXOI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 In-Reply-To: <1390236303-22538-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
@@ -19,129 +19,223 @@ To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Richard Zhu <Hong-Xing.Zhu-KZfg59tc24xl57MIdRCFDg@public.gmane.org>, Roger Quadros <rogerq-l0cyMroinI0@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, devicetree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
-Some ahci_platform_data->init methods need access to the ahci_host_priv data.
-
-When calling ahci_platform_data->init the ata_host has not been allocated yet,
-so access to ahci_host_priv through the dev argument is not possible.
+The allwinner-sun4i AHCI controller needs 2 clocks to be enabled and the
+imx AHCI controller needs 3 clocks to be enabled.
 
 Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- arch/arm/mach-davinci/devices-da8xx.c |  5 +++--
- arch/arm/mach-spear/spear1340.c       |  2 +-
- drivers/ata/ahci_imx.c                | 12 ++++++------
- drivers/ata/ahci_platform.c           |  2 +-
- include/linux/ahci_platform.h         |  3 ++-
- 5 files changed, 13 insertions(+), 11 deletions(-)
+ .../devicetree/bindings/ata/ahci-platform.txt      |  1 +
+ drivers/ata/ahci_platform.c                        | 97 +++++++++++++++-------
+ include/linux/ahci.h                               |  4 +-
+ include/linux/ahci_platform.h                      |  3 +
+ 4 files changed, 73 insertions(+), 32 deletions(-)
 
-diff --git a/arch/arm/mach-davinci/devices-da8xx.c b/arch/arm/mach-davinci/devices-da8xx.c
-index 78829c5..28e7c4c 100644
---- a/arch/arm/mach-davinci/devices-da8xx.c
-+++ b/arch/arm/mach-davinci/devices-da8xx.c
-@@ -14,6 +14,7 @@
- #include <linux/platform_device.h>
- #include <linux/dma-contiguous.h>
- #include <linux/serial_8250.h>
-+#include <linux/ahci.h>
- #include <linux/ahci_platform.h>
- #include <linux/clk.h>
- #include <linux/reboot.h>
-@@ -1061,7 +1062,7 @@ static unsigned long da850_sata_xtal[] = {
- 	KHZ_TO_HZ(60000),
+diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+index 89de156..3ced07d 100644
+--- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
++++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+@@ -10,6 +10,7 @@ Required properties:
+ 
+ Optional properties:
+ - dma-coherent      : Present if dma operations are coherent
++- clocks            : a list of phandle + clock specifier pairs
+ 
+ Example:
+         sata@ffe08000 {
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index 434ab89..aaa0c08 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -87,6 +87,44 @@ static struct scsi_host_template ahci_platform_sht = {
+ 	AHCI_SHT("ahci_platform"),
  };
  
--static int da850_sata_init(struct device *dev, void __iomem *addr)
-+static int da850_sata_init(struct device *dev, struct ahci_host_priv *hpriv)
++
++int ahci_platform_enable_clks(struct ahci_host_priv *hpriv)
++{
++	int c, rc;
++
++	for (c = 0; c < AHCI_MAX_CLKS && hpriv->clks[c]; c++) {
++		rc = clk_prepare_enable(hpriv->clks[c]);
++		if (rc)
++			goto disable_unprepare_clk;
++	}
++	return 0;
++
++disable_unprepare_clk:
++	while (--c >= 0)
++		clk_disable_unprepare(hpriv->clks[c]);
++	return rc;
++}
++EXPORT_SYMBOL_GPL(ahci_platform_enable_clks);
++
++void ahci_platform_disable_clks(struct ahci_host_priv *hpriv)
++{
++	int c;
++
++	for (c = AHCI_MAX_CLKS - 1; c >= 0; c--)
++		if (hpriv->clks[c])
++			clk_disable_unprepare(hpriv->clks[c]);
++}
++EXPORT_SYMBOL_GPL(ahci_platform_disable_clks);
++
++
++static void ahci_put_clks(struct ahci_host_priv *hpriv)
++{
++	int c;
++
++	for (c = 0; c < AHCI_MAX_CLKS && hpriv->clks[c]; c++)
++		clk_put(hpriv->clks[c]);
++}
++
+ static int ahci_probe(struct platform_device *pdev)
  {
- 	int i, ret;
- 	unsigned int val;
-@@ -1096,7 +1097,7 @@ static int da850_sata_init(struct device *dev, void __iomem *addr)
- 		SATA_PHY_TXSWING(3) |
- 		SATA_PHY_ENPLL(1);
+ 	struct device *dev = &pdev->dev;
+@@ -97,10 +135,8 @@ static int ahci_probe(struct platform_device *pdev)
+ 	struct ahci_host_priv *hpriv;
+ 	struct ata_host *host;
+ 	struct resource *mem;
+-	int irq;
+-	int n_ports;
+-	int i;
+-	int rc;
++	struct clk *clk;
++	int i, irq, max_clk, n_ports, rc;
  
--	__raw_writel(val, addr + SATA_P0PHYCR_REG);
-+	__raw_writel(val, hpriv->mmio + SATA_P0PHYCR_REG);
- 
- 	return 0;
- 
-diff --git a/arch/arm/mach-spear/spear1340.c b/arch/arm/mach-spear/spear1340.c
-index 3fb6834..9e2f3ac 100644
---- a/arch/arm/mach-spear/spear1340.c
-+++ b/arch/arm/mach-spear/spear1340.c
-@@ -77,7 +77,7 @@
- 			SPEAR1340_MIPHY_PLL_RATIO_TOP(25))
- 
- /* SATA device registration */
--static int sata_miphy_init(struct device *dev, void __iomem *addr)
-+static int sata_miphy_init(struct device *dev, struct ahci_host_priv *hpriv)
- {
- 	writel(SPEAR1340_SATA_CFG_VAL, SPEAR1340_PCIE_SATA_CFG);
- 	writel(SPEAR1340_PCIE_SATA_MIPHY_CFG_SATA_25M_CRYSTAL_CLK,
-diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
-index 3e23e99..49fa0ca 100644
---- a/drivers/ata/ahci_imx.c
-+++ b/drivers/ata/ahci_imx.c
-@@ -91,7 +91,7 @@ static const struct ata_port_info ahci_imx_port_info = {
- 	.port_ops	= &ahci_imx_ops,
- };
- 
--static int imx6q_sata_init(struct device *dev, void __iomem *mmio)
-+static int imx6q_sata_init(struct device *dev, struct ahci_host_priv *hpriv)
- {
- 	int ret = 0;
- 	unsigned int reg_val;
-@@ -145,19 +145,19 @@ static int imx6q_sata_init(struct device *dev, void __iomem *mmio)
- 	 * Implement the port0.
- 	 * Get the ahb clock rate, and configure the TIMER1MS register.
- 	 */
--	reg_val = readl(mmio + HOST_CAP);
-+	reg_val = readl(hpriv->mmio + HOST_CAP);
- 	if (!(reg_val & HOST_CAP_SSS)) {
- 		reg_val |= HOST_CAP_SSS;
--		writel(reg_val, mmio + HOST_CAP);
-+		writel(reg_val, hpriv->mmio + HOST_CAP);
+ 	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+ 	if (!mem) {
+@@ -131,17 +167,26 @@ static int ahci_probe(struct platform_device *pdev)
+ 		return -ENOMEM;
  	}
--	reg_val = readl(mmio + HOST_PORTS_IMPL);
-+	reg_val = readl(hpriv->mmio + HOST_PORTS_IMPL);
- 	if (!(reg_val & 0x1)) {
- 		reg_val |= 0x1;
--		writel(reg_val, mmio + HOST_PORTS_IMPL);
-+		writel(reg_val, hpriv->mmio + HOST_PORTS_IMPL);
+ 
+-	hpriv->clk = clk_get(dev, NULL);
+-	if (IS_ERR(hpriv->clk)) {
+-		dev_err(dev, "can't get clock\n");
+-	} else {
+-		rc = clk_prepare_enable(hpriv->clk);
+-		if (rc) {
+-			dev_err(dev, "clock prepare enable failed");
+-			goto free_clk;
++	max_clk = dev->of_node ? AHCI_MAX_CLKS : 1;
++	for (i = 0; i < max_clk; i++) {
++		if (i == 0)
++			clk = clk_get(dev, NULL); /* For old platform init */
++		else
++			clk = of_clk_get(dev->of_node, i);
++
++		if (IS_ERR(clk)) {
++			rc = PTR_ERR(clk);
++			if (rc == -EPROBE_DEFER)
++				goto free_clk;
++			break;
+ 		}
++		hpriv->clks[i] = clk;
  	}
  
- 	reg_val = clk_get_rate(imxpriv->ahb_clk) / 1000;
--	writel(reg_val, mmio + HOST_TIMER1MS);
-+	writel(reg_val, hpriv->mmio + HOST_TIMER1MS);
++	rc = ahci_enable_clks(dev, hpriv);
++	if (rc)
++		goto free_clk;
++
+ 	/*
+ 	 * Some platforms might need to prepare for mmio region access,
+ 	 * which could be done in the following init call. So, the mmio
+@@ -222,11 +267,9 @@ pdata_exit:
+ 	if (pdata && pdata->exit)
+ 		pdata->exit(dev);
+ disable_unprepare_clk:
+-	if (!IS_ERR(hpriv->clk))
+-		clk_disable_unprepare(hpriv->clk);
++	ahci_disable_clks(hpriv);
+ free_clk:
+-	if (!IS_ERR(hpriv->clk))
+-		clk_put(hpriv->clk);
++	ahci_put_clks(hpriv);
+ 	return rc;
+ }
+ 
+@@ -239,10 +282,8 @@ static void ahci_host_stop(struct ata_host *host)
+ 	if (pdata && pdata->exit)
+ 		pdata->exit(dev);
+ 
+-	if (!IS_ERR(hpriv->clk)) {
+-		clk_disable_unprepare(hpriv->clk);
+-		clk_put(hpriv->clk);
+-	}
++	ahci_disable_clks(hpriv);
++	ahci_put_clks(hpriv);
+ }
+ 
+ #ifdef CONFIG_PM_SLEEP
+@@ -277,8 +318,7 @@ static int ahci_suspend(struct device *dev)
+ 	if (pdata && pdata->suspend)
+ 		return pdata->suspend(dev);
+ 
+-	if (!IS_ERR(hpriv->clk))
+-		clk_disable_unprepare(hpriv->clk);
++	ahci_disable_clks(hpriv);
  
  	return 0;
  }
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index 4b231ba..434ab89 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -149,7 +149,7 @@ static int ahci_probe(struct platform_device *pdev)
- 	 * returned successfully.
- 	 */
- 	if (pdata && pdata->init) {
--		rc = pdata->init(dev, hpriv->mmio);
-+		rc = pdata->init(dev, hpriv);
- 		if (rc)
- 			goto disable_unprepare_clk;
- 	}
+@@ -290,13 +330,9 @@ static int ahci_resume(struct device *dev)
+ 	struct ahci_host_priv *hpriv = host->private_data;
+ 	int rc;
+ 
+-	if (!IS_ERR(hpriv->clk)) {
+-		rc = clk_prepare_enable(hpriv->clk);
+-		if (rc) {
+-			dev_err(dev, "clock prepare enable failed");
+-			return rc;
+-		}
+-	}
++	rc = ahci_enable_clks(dev, hpriv);
++	if (rc)
++		return rc;
+ 
+ 	if (pdata && pdata->resume) {
+ 		rc = pdata->resume(dev);
+@@ -317,8 +353,7 @@ static int ahci_resume(struct device *dev)
+ 	return 0;
+ 
+ disable_unprepare_clk:
+-	if (!IS_ERR(hpriv->clk))
+-		clk_disable_unprepare(hpriv->clk);
++	ahci_disable_clks(hpriv);
+ 
+ 	return rc;
+ }
+diff --git a/include/linux/ahci.h b/include/linux/ahci.h
+index 3499d44..19970b0 100644
+--- a/include/linux/ahci.h
++++ b/include/linux/ahci.h
+@@ -23,6 +23,8 @@
+ 
+ #include <linux/clk.h>
+ 
++#define AHCI_MAX_CLKS		3
++
+ struct ata_port;
+ 
+ struct ahci_host_priv {
+@@ -37,7 +39,7 @@ struct ahci_host_priv {
+ 	u32			em_loc; /* enclosure management location */
+ 	u32			em_buf_sz;	/* EM buffer size in byte */
+ 	u32			em_msg_type;	/* EM message type */
+-	struct clk		*clk;		/* Optional */
++	struct clk		*clks[AHCI_MAX_CLKS]; /* Optional */
+ 	void			*plat_data;	/* Other platform data */
+ 	/* Optional ahci_start_engine override */
+ 	void			(*start_engine)(struct ata_port *ap);
 diff --git a/include/linux/ahci_platform.h b/include/linux/ahci_platform.h
-index 73a2500..737fe38 100644
+index 737fe38..0071d0b 100644
 --- a/include/linux/ahci_platform.h
 +++ b/include/linux/ahci_platform.h
-@@ -19,9 +19,10 @@
+@@ -31,4 +31,7 @@ struct ahci_platform_data {
+ 	unsigned int mask_port_map;
+ };
  
- struct device;
- struct ata_port_info;
-+struct ahci_host_priv;
- 
- struct ahci_platform_data {
--	int (*init)(struct device *dev, void __iomem *addr);
-+	int (*init)(struct device *dev, struct ahci_host_priv *hpriv);
- 	void (*exit)(struct device *dev);
- 	int (*suspend)(struct device *dev);
- 	int (*resume)(struct device *dev);
++int ahci_platform_enable_clks(struct ahci_host_priv *hpriv);
++void ahci_platform_disable_clks(struct ahci_host_priv *hpriv);
++
+ #endif /* _AHCI_PLATFORM_H */
 -- 
 1.8.5.3
