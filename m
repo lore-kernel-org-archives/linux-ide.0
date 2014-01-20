@@ -1,36 +1,33 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC v3 05/13] ahci-platform: Pass ahci_host_priv
- ptr to ahci_platform_data init method
-Date: Mon, 20 Jan 2014 07:28:47 -0500
-Message-ID: <20140120122847.GC17155@htj.dyndns.org>
-References: <1390088935-7193-1-git-send-email-hdegoede@redhat.com>
- <1390088935-7193-6-git-send-email-hdegoede@redhat.com>
- <20140119113051.GD11123@htj.dyndns.org>
- <52DC1EC4.3090807@redhat.com>
- <20140119191706.GC32165@mtj.dyndns.org>
- <52DC2DD9.7070403@redhat.com>
-Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v4 3/4] SATA: MV: Add support for the optional PHYs
+Date: Mon, 20 Jan 2014 07:47:24 -0500
+Message-ID: <20140120124724.GD17155@htj.dyndns.org>
+References: <20131219194237.GC22725@htj.dyndns.org>
+ <1388078742-6726-1-git-send-email-andrew@lunn.ch>
+ <1388078742-6726-4-git-send-email-andrew@lunn.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-sunxi+bncBDQ2FCEAWYLRBAVN6SLAKGQE2BXG3QI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <52DC2DD9.7070403-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/linux-sunxi>
-List-Subscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qe0-f41.google.com ([209.85.128.41]:60447 "EHLO
+	mail-qe0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753303AbaATMr2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Jan 2014 07:47:28 -0500
 Content-Disposition: inline
-To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Richard Zhu <Hong-Xing.Zhu-KZfg59tc24xl57MIdRCFDg@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, devicetree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+In-Reply-To: <1388078742-6726-4-git-send-email-andrew@lunn.ch>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Andrew Lunn <andrew@lunn.ch>
+Cc: Jason Cooper <jason@lakedaemon.net>, kishon@ti.com, devicetree@vger.kernel.org, linux-ide@vger.kernel.org, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>
 
-On Sun, Jan 19, 2014 at 08:56:09PM +0100, Hans de Goede wrote:
-> Ok, asking the obvious here I guess, but you would accept a patch moving drivers/ata/ahci.h
-> to include/linux as part of this patch-set ?
+On Thu, Dec 26, 2013 at 06:25:41PM +0100, Andrew Lunn wrote:
+> Some Marvell SoCs have a SATA PHY which can be powered off, in order
+> to save power. Make use of the generic phy framework to control these
+> phys.
+> 
+> Signed-off-by: Andrew Lunn <andrew@lunn.ch>
 
-Wouldn't creating a minimal file which only contains the necessary
-bits make more sense?
+Applied to libata/for-3.14.  It's late but not applying this patch
+would reportedly lead to boot failures in certain configurations.
 
 Thanks.
 
