@@ -1,13 +1,13 @@
 From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH RFC v4 02/10] libahci: Move ahci_host_priv
- declaration to include/linux/ahci.h
-Date: Mon, 20 Jan 2014 17:44:55 +0100
-Message-ID: <1390236303-22538-3-git-send-email-hdegoede@redhat.com>
+Subject: [PATCH RFC v4 03/10] ahci-platform: Pass ahci_host_priv
+ ptr to ahci_platform_data init method
+Date: Mon, 20 Jan 2014 17:44:56 +0100
+Message-ID: <1390236303-22538-4-git-send-email-hdegoede@redhat.com>
 References: <1390236303-22538-1-git-send-email-hdegoede@redhat.com>
 Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-sunxi+bncBDL4X2GMZUKRBHVF6WLAKGQET6PVIQI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Return-path: <linux-sunxi+bncBDL4X2GMZUKRBH5F6WLAKGQEKMNJ33Q-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 In-Reply-To: <1390236303-22538-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
@@ -19,106 +19,129 @@ To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Cc: Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Richard Zhu <Hong-Xing.Zhu-KZfg59tc24xl57MIdRCFDg@public.gmane.org>, Roger Quadros <rogerq-l0cyMroinI0@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, devicetree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
-With the ahci-platform.c changes later in this patch-set, some
-arch/arm/mach-foo/*.c sata drivers need access to ahci_host_priv, so move
-its declaration outside of drivers/ata.
+Some ahci_platform_data->init methods need access to the ahci_host_priv data.
+
+When calling ahci_platform_data->init the ata_host has not been allocated yet,
+so access to ahci_host_priv through the dev argument is not possible.
 
 Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- drivers/ata/ahci.h   | 20 +-------------------
- include/linux/ahci.h | 46 ++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 47 insertions(+), 19 deletions(-)
- create mode 100644 include/linux/ahci.h
+ arch/arm/mach-davinci/devices-da8xx.c |  5 +++--
+ arch/arm/mach-spear/spear1340.c       |  2 +-
+ drivers/ata/ahci_imx.c                | 12 ++++++------
+ drivers/ata/ahci_platform.c           |  2 +-
+ include/linux/ahci_platform.h         |  3 ++-
+ 5 files changed, 13 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 2c04211..0f80129 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -35,7 +35,7 @@
- #ifndef _AHCI_H
- #define _AHCI_H
- 
--#include <linux/clk.h>
+diff --git a/arch/arm/mach-davinci/devices-da8xx.c b/arch/arm/mach-davinci/devices-da8xx.c
+index 78829c5..28e7c4c 100644
+--- a/arch/arm/mach-davinci/devices-da8xx.c
++++ b/arch/arm/mach-davinci/devices-da8xx.c
+@@ -14,6 +14,7 @@
+ #include <linux/platform_device.h>
+ #include <linux/dma-contiguous.h>
+ #include <linux/serial_8250.h>
 +#include <linux/ahci.h>
- #include <linux/libata.h>
- 
- /* Enclosure Management Control */
-@@ -309,24 +309,6 @@ struct ahci_port_priv {
- 	char			*irq_desc;	/* desc in /proc/interrupts */
+ #include <linux/ahci_platform.h>
+ #include <linux/clk.h>
+ #include <linux/reboot.h>
+@@ -1061,7 +1062,7 @@ static unsigned long da850_sata_xtal[] = {
+ 	KHZ_TO_HZ(60000),
  };
  
--struct ahci_host_priv {
--	void __iomem *		mmio;		/* bus-independent mem map */
--	unsigned int		flags;		/* AHCI_HFLAG_* */
--	u32			cap;		/* cap to use */
--	u32			cap2;		/* cap2 to use */
--	u32			port_map;	/* port map to use */
--	u32			saved_cap;	/* saved initial cap */
--	u32			saved_cap2;	/* saved initial cap2 */
--	u32			saved_port_map;	/* saved initial port_map */
--	u32 			em_loc; /* enclosure management location */
--	u32			em_buf_sz;	/* EM buffer size in byte */
--	u32			em_msg_type;	/* EM message type */
--	struct clk		*clk;		/* Only for platforms supporting clk */
--	void			*plat_data;	/* Other platform data */
--	/* Optional ahci_start_engine override */
--	void			(*start_engine)(struct ata_port *ap);
--};
--
- extern int ahci_ignore_sss;
+-static int da850_sata_init(struct device *dev, void __iomem *addr)
++static int da850_sata_init(struct device *dev, struct ahci_host_priv *hpriv)
+ {
+ 	int i, ret;
+ 	unsigned int val;
+@@ -1096,7 +1097,7 @@ static int da850_sata_init(struct device *dev, void __iomem *addr)
+ 		SATA_PHY_TXSWING(3) |
+ 		SATA_PHY_ENPLL(1);
  
- extern struct device_attribute *ahci_shost_attrs[];
-diff --git a/include/linux/ahci.h b/include/linux/ahci.h
-new file mode 100644
-index 0000000..3499d44
---- /dev/null
-+++ b/include/linux/ahci.h
-@@ -0,0 +1,46 @@
-+/*
-+ *  ahci.h - Common AHCI SATA definitions and declarations
-+ *
-+ *  Maintained by:  Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-+ *                  Please ALWAYS copy linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-+ *                  on emails.
-+ *
-+ *  Copyright 2004-2005 Red Hat, Inc.
-+ *
-+ *  This program is free software; you can redistribute it and/or modify
-+ *  it under the terms of the GNU General Public License as published by
-+ *  the Free Software Foundation; either version 2, or (at your option)
-+ *  any later version.
-+ *
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ *  GNU General Public License for more details.
-+ */
-+
-+#ifndef __LINUX_AHCI_H__
-+#define __LINUX_AHCI_H__
-+
-+#include <linux/clk.h>
-+
-+struct ata_port;
-+
-+struct ahci_host_priv {
-+	void __iomem		*mmio;		/* bus-independent mem map */
-+	unsigned int		flags;		/* AHCI_HFLAG_* */
-+	u32			cap;		/* cap to use */
-+	u32			cap2;		/* cap2 to use */
-+	u32			port_map;	/* port map to use */
-+	u32			saved_cap;	/* saved initial cap */
-+	u32			saved_cap2;	/* saved initial cap2 */
-+	u32			saved_port_map;	/* saved initial port_map */
-+	u32			em_loc; /* enclosure management location */
-+	u32			em_buf_sz;	/* EM buffer size in byte */
-+	u32			em_msg_type;	/* EM message type */
-+	struct clk		*clk;		/* Optional */
-+	void			*plat_data;	/* Other platform data */
-+	/* Optional ahci_start_engine override */
-+	void			(*start_engine)(struct ata_port *ap);
-+};
-+
-+#endif
+-	__raw_writel(val, addr + SATA_P0PHYCR_REG);
++	__raw_writel(val, hpriv->mmio + SATA_P0PHYCR_REG);
+ 
+ 	return 0;
+ 
+diff --git a/arch/arm/mach-spear/spear1340.c b/arch/arm/mach-spear/spear1340.c
+index 3fb6834..9e2f3ac 100644
+--- a/arch/arm/mach-spear/spear1340.c
++++ b/arch/arm/mach-spear/spear1340.c
+@@ -77,7 +77,7 @@
+ 			SPEAR1340_MIPHY_PLL_RATIO_TOP(25))
+ 
+ /* SATA device registration */
+-static int sata_miphy_init(struct device *dev, void __iomem *addr)
++static int sata_miphy_init(struct device *dev, struct ahci_host_priv *hpriv)
+ {
+ 	writel(SPEAR1340_SATA_CFG_VAL, SPEAR1340_PCIE_SATA_CFG);
+ 	writel(SPEAR1340_PCIE_SATA_MIPHY_CFG_SATA_25M_CRYSTAL_CLK,
+diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+index 3e23e99..49fa0ca 100644
+--- a/drivers/ata/ahci_imx.c
++++ b/drivers/ata/ahci_imx.c
+@@ -91,7 +91,7 @@ static const struct ata_port_info ahci_imx_port_info = {
+ 	.port_ops	= &ahci_imx_ops,
+ };
+ 
+-static int imx6q_sata_init(struct device *dev, void __iomem *mmio)
++static int imx6q_sata_init(struct device *dev, struct ahci_host_priv *hpriv)
+ {
+ 	int ret = 0;
+ 	unsigned int reg_val;
+@@ -145,19 +145,19 @@ static int imx6q_sata_init(struct device *dev, void __iomem *mmio)
+ 	 * Implement the port0.
+ 	 * Get the ahb clock rate, and configure the TIMER1MS register.
+ 	 */
+-	reg_val = readl(mmio + HOST_CAP);
++	reg_val = readl(hpriv->mmio + HOST_CAP);
+ 	if (!(reg_val & HOST_CAP_SSS)) {
+ 		reg_val |= HOST_CAP_SSS;
+-		writel(reg_val, mmio + HOST_CAP);
++		writel(reg_val, hpriv->mmio + HOST_CAP);
+ 	}
+-	reg_val = readl(mmio + HOST_PORTS_IMPL);
++	reg_val = readl(hpriv->mmio + HOST_PORTS_IMPL);
+ 	if (!(reg_val & 0x1)) {
+ 		reg_val |= 0x1;
+-		writel(reg_val, mmio + HOST_PORTS_IMPL);
++		writel(reg_val, hpriv->mmio + HOST_PORTS_IMPL);
+ 	}
+ 
+ 	reg_val = clk_get_rate(imxpriv->ahb_clk) / 1000;
+-	writel(reg_val, mmio + HOST_TIMER1MS);
++	writel(reg_val, hpriv->mmio + HOST_TIMER1MS);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index 4b231ba..434ab89 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -149,7 +149,7 @@ static int ahci_probe(struct platform_device *pdev)
+ 	 * returned successfully.
+ 	 */
+ 	if (pdata && pdata->init) {
+-		rc = pdata->init(dev, hpriv->mmio);
++		rc = pdata->init(dev, hpriv);
+ 		if (rc)
+ 			goto disable_unprepare_clk;
+ 	}
+diff --git a/include/linux/ahci_platform.h b/include/linux/ahci_platform.h
+index 73a2500..737fe38 100644
+--- a/include/linux/ahci_platform.h
++++ b/include/linux/ahci_platform.h
+@@ -19,9 +19,10 @@
+ 
+ struct device;
+ struct ata_port_info;
++struct ahci_host_priv;
+ 
+ struct ahci_platform_data {
+-	int (*init)(struct device *dev, void __iomem *addr);
++	int (*init)(struct device *dev, struct ahci_host_priv *hpriv);
+ 	void (*exit)(struct device *dev);
+ 	int (*suspend)(struct device *dev);
+ 	int (*resume)(struct device *dev);
 -- 
 1.8.5.3
