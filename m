@@ -1,49 +1,72 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [PATCH v5 0/4] ata: ahci_platform: Add PHY support and OMAP support
-Date: Mon, 20 Jan 2014 17:48:40 +0100
-Message-ID: <52DD5368.5020301@redhat.com>
-References: <1390228888-5537-1-git-send-email-rogerq@ti.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: "George Spelvin" <linux@horizon.com>
+Subject: Re: [PATCH] Quirk for buggy dma source tags with Intel IOMMU.
+Date: 20 Jan 2014 14:01:02 -0500
+Message-ID: <20140120190102.13636.qmail@science.horizon.com>
+References: <CAJtEV7ZsM2YHHETRGNwXnGi7uq0mJen73i-Yp3EXoDrnni=o=g@mail.gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50424 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751857AbaATQsx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 20 Jan 2014 11:48:53 -0500
-In-Reply-To: <1390228888-5537-1-git-send-email-rogerq@ti.com>
+Received: from science.horizon.com ([71.41.210.146]:31885 "HELO
+	science.horizon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753455AbaATTBE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Jan 2014 14:01:04 -0500
+In-Reply-To: <CAJtEV7ZsM2YHHETRGNwXnGi7uq0mJen73i-Yp3EXoDrnni=o=g@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Roger Quadros <rogerq@ti.com>, tj@kernel.org
-Cc: sergei.shtylyov@cogentembedded.com, kishon@ti.com, b.zolnierkie@samsung.com, arnd@arndb.de, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
+To: acooks@gmail.com, linux@horizon.com
+Cc: iommu@lists.linux-foundation.org, linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
 
-Hi,
+>> I massaged it a bit to fit my personal idea of "cleaner".
+>> The biggest logic change is the elimination of the fn_mapped
+>> variable from quirk_map_multi_requester_ids.
 
-On 01/20/2014 03:41 PM, Roger Quadros wrote:
-> Hi,
->
-> Some platforms have a PHY hooked up to the SATA controller.
-> The PHY needs to be initialized and powered up for SATA to work.
-> We do that using the Generic PHY framework in PATCH 3.
->
-> In order to support SATA on the OMAP platforms we need to runtime
-> resume the device before use. PATCH 4 takes care of that.
+> Thanks, that was detritus left over from debugging.
 
-Thanks for keeping me in the loop on this. I'm afraid this conflicts
-quite a bit with my recent ahci_platform.c work, not a big problem
-really, the series can go in either way.
+The code still does the exact same thing; I just derive the value from
+(fn_map & ((1<<fn)-1)) if it's required.
 
-Your phy support will slot nicely into the new ahci_platform_get_resources
-and ahci_platform_enable_resources functions my refactoring introduces,
-looking at it from this pov it might be better / easier to rebase your series
-on top of the v4 of my series I've just send.
+>> I also got rid of the "fn_map << fn" logic (which is never false).
 
-Which brings me to one comment about your series why are you not doing phy_exit
-and phy_init on suspend resp. resume ? The phy can use quite a bit of power,
-if the phy init / exit end up in ahci_platform_enable_resources /
-ahci_platform_disable_resources, this will happen automatically for better or
-worse. So it would be good to test if this would work or not ...
+> What if function 0 is not present? There were cases where the Marvell
+> 9172 only used function 1 (when only one port is in use). I don't
+> think it's safe to assume that function 0 is present when you're
+> trying to compensate for broken devices.
 
-Thanks & Regards,
+Er... can you explain?  I did not change what the code *does* in the
+slightest, only the was it figures out what to do.
 
-Hans
+I took this it out because it does nothing; it can be statically proved
+that the expression is always non-zero.
+
+Because "fn_map" is a non-zero 8-bit value and "fn" is an integer in
+the range 0-7, the value "fn_map << fn" is a non-zero 15-bit value.
+15 bits can't overflow (even on a PDP-11 with 16-bit ints), so this is
+a non-zero value, and the loop will never terminate because of it.
+
+It sure looked like a bug to me, but I couldn't figure out what it
+was supposed to do.  Can you enlighten me?  "fn_map >> fn" (shifting
+right rather than left) achieves early termination of the loop, but
+isn't essential.
+
+>> +       fn_map &= ~(1<<PCI_FUNC(pdev->devfn));  /* Skip the normal case */
+
+> Do you really find this "cleaner", as in more readable?
+
+I find it easier to think about fn_map as the bitmap of functions to
+be operated on.  Rather than have two conditions in the following loop.
+
+The confusing thing is "why are we skipping that function?"  (Because this
+is a quirk and the "normal case" has already been handled.)  It would be
+nicer if all the domain_context_mapping_one calls were grouped together.
+
+I would like to see if there's a clean way to combine this with phantom
+function support (which I haven't find the code for yet).
+
+>> +       for (i = pci_dev_dma_source_map; i->devfn; i++) {
+
+> The bug that Martin Oehrling pointed out in the ticket is still there.
+
+Ah, thank you; I had missed that that.  Yes, it should be testing
+i->vendor.  You really get devices using the wrong slot as well as
+function?  Wow!
+
+Using multiple functions is at least anticipated in the PCI spec,
+even if they do it wrong.
