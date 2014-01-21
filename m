@@ -1,56 +1,112 @@
-From: Roger Quadros <rogerq-l0cyMroinI0@public.gmane.org>
-Subject: Re: [PATCH v5 0/4] ata: ahci_platform: Add PHY support and OMAP support
-Date: Tue, 21 Jan 2014 10:34:58 +0200
-Message-ID: <52DE3132.3000007@ti.com>
-References: <1390228888-5537-1-git-send-email-rogerq@ti.com> <52DD5368.5020301@redhat.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [GIT PULL] libata changes for v3.14-rc1
+Date: Tue, 21 Jan 2014 05:16:43 -0500
+Message-ID: <20140121101643.GD6928@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <52DD5368.5020301-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, kishon-l0cyMroinI0@public.gmane.org
-Cc: sergei.shtylyov-M4DtvfQ/ZS1MRgGoP+s0PdBPR1lH4CV8@public.gmane.org, b.zolnierkie-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qa0-f53.google.com ([209.85.216.53]:54204 "EHLO
+	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754122AbaAUKQt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Jan 2014 05:16:49 -0500
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On 01/20/2014 06:48 PM, Hans de Goede wrote:
-> Hi,
-> 
-> On 01/20/2014 03:41 PM, Roger Quadros wrote:
->> Hi,
->>
->> Some platforms have a PHY hooked up to the SATA controller.
->> The PHY needs to be initialized and powered up for SATA to work.
->> We do that using the Generic PHY framework in PATCH 3.
->>
->> In order to support SATA on the OMAP platforms we need to runtime
->> resume the device before use. PATCH 4 takes care of that.
-> 
-> Thanks for keeping me in the loop on this. I'm afraid this conflicts
-> quite a bit with my recent ahci_platform.c work, not a big problem
-> really, the series can go in either way.
-> 
-> Your phy support will slot nicely into the new ahci_platform_get_resources
-> and ahci_platform_enable_resources functions my refactoring introduces,
-> looking at it from this pov it might be better / easier to rebase your series
-> on top of the v4 of my series I've just send.
-> 
-> Which brings me to one comment about your series why are you not doing phy_exit
-> and phy_init on suspend resp. resume ? The phy can use quite a bit of power,
-> if the phy init / exit end up in ahci_platform_enable_resources /
-> ahci_platform_disable_resources, this will happen automatically for better or
-> worse. So it would be good to test if this would work or not ...
+Hello, Linus.
 
-Right. Bartlomiej had pointed this out earlier, but I just wasn't very sure about it.
+Support for some new embedded controllers.  A couple late (<= a week)
+fixes have stable cc'd and one patch ("SATA: MV: Add support for the
+optional PHYs") got committed yesterday because otherwise the
+resulting kernel would fail boot on an embedded board due to
+interdependent changes in its platform tree.  Other than that, nothing
+too noteworthy.
 
-Is it sufficient to just call phy_power_off() in suspend and phy_power_on() in resume?
-Or do we call phy_exit() and phy_init() respectively as well.
+The following changes since commit 55c82a6c2a513de1d8a20c3b3a769129a1a14d50:
 
-Kishon, any suggestions?
+  sata_sis: missing PM support (2014-01-01 15:14:40 -0500)
 
-cheers,
--roger
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-3.14
+
+for you to fetch changes up to b7db4f2e15603c394da56a0536a33669f4c87c4f:
+
+  SATA: MV: Add support for the optional PHYs (2014-01-20 07:46:15 -0500)
+
+Thanks.
+----------------------------------------------------------------
+Andrew Lunn (1):
+      SATA: MV: Add support for the optional PHYs
+
+Fengguang Wu (1):
+      ahci: imx: ahci_imx_softreset() can be static
+
+Hans de Goede (1):
+      sata-highbank: Remove unnecessary ahci_platform.h include
+
+James Laird (1):
+      ahci: mcp89: enter AHCI mode under Apple BIOS emulation
+
+Jingoo Han (1):
+      ata: pata_samsung_cf: Use devm_ioremap_resource()
+
+Levente Kurusa (1):
+      ata: libata-eh: Remove unnecessary snprintf arithmetic
+
+Lior Amsalem (1):
+      ata: sata_mv: fix disk hotplug for Armada 370/XP SoCs
+
+Marek Vasut (2):
+      ahci: imx: Pull out the clock enable/disable calls
+      ahci: imx: Add i.MX53 support
+
+Rashika Kheria (2):
+      drivers: ata: Mark the function ahci_init_interrupts() as static in ahci.c
+      drivers: ata: Mark the function as static in libahci.c
+
+Sachin Kamat (3):
+      ata: pata_samsung_cf: Move plat/regs-ata.h to drivers/ata
+      ata: pata_samsung_cf: Merge pata_samsung_cf.h into pata_samsung_cf.c
+      ata: pata_samsung_cf: Remove unused macros
+
+Simon Guinot (2):
+      ata: sata_mv: introduce compatible string "marvell, armada-370-sata"
+      ARM: mvebu: update the SATA compatible string for Armada 370/XP
+
+Tejun Heo (3):
+      libata: Merge branch 'for-3.13-fixes' into for-3.14
+      Merge branch 'for-3.13-fixes' into for-3.14
+      libata: disable LPM for some WD SATA-I devices
+
+Valentine Barshak (2):
+      sata_rcar: Add R-Car Gen2 SATA PHY support
+      libata, dt: Document sata_rcar bindings
+
+Wei Yongjun (1):
+      ahci: imx: fix the error handling in imx_ahci_probe()
+
+ Documentation/devicetree/bindings/ata/marvell.txt  |   2 +-
+ .../devicetree/bindings/ata/sata_rcar.txt          |  18 ++
+ arch/arm/boot/dts/armada-370-xp.dtsi               |   2 +-
+ arch/arm/plat-samsung/include/plat/regs-ata.h      |  56 -----
+ drivers/ata/ahci.c                                 |  62 +++++-
+ drivers/ata/ahci_imx.c                             | 242 +++++++++++++--------
+ drivers/ata/ata_generic.c                          |   7 -
+ drivers/ata/libahci.c                              |   4 +-
+ drivers/ata/libata-core.c                          |  27 +++
+ drivers/ata/libata-eh.c                            |   5 +-
+ drivers/ata/libata-scsi.c                          |  18 +-
+ drivers/ata/pata_samsung_cf.c                      |  43 ++--
+ drivers/ata/sata_highbank.c                        |   1 -
+ drivers/ata/sata_mv.c                              |  52 +++++
+ drivers/ata/sata_rcar.c                            | 118 ++++++++--
+ include/linux/libata.h                             |   2 +
+ 16 files changed, 458 insertions(+), 201 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/sata_rcar.txt
+ delete mode 100644 arch/arm/plat-samsung/include/plat/regs-ata.h
+
 --
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+tejun
