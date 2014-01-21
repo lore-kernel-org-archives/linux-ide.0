@@ -1,205 +1,58 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH 1/1] libata: Get rid of ata_port::qc_allocated bitmask
-Date: Tue, 21 Jan 2014 16:02:26 +0100
-Message-ID: <b6f797f22591ef592bf17aefa0b359bd03953a2e.1390315528.git.agordeev@redhat.com>
-References: <cover.1390315528.git.agordeev@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1390315528.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Alexander Gordeev <agordeev@redhat.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+From: "matson" <lists-matsonpa@luxsci.me>
+Subject: additional model for sata_sil Mod15Write list
+Date: Tue, 21 Jan 2014 19:12:46 +0000
+Message-ID: <201401211912.s0LJCk7F015058@rs103.luxsci.com>
+Reply-To: lists-matsonpa@luxsci.me
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+	format=flowed
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from rs103.luxsci.com ([72.32.40.101]:33305 "EHLO rs103.luxsci.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750773AbaAUTSM convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Jan 2014 14:18:12 -0500
+Received: from rs103.luxsci.com (localhost.localdomain [127.0.0.1])
+	by rs103.luxsci.com (8.13.8/8.13.8) with ESMTP id s0LJCkcK015061
+	for <linux-ide@vger.kernel.org>; Tue, 21 Jan 2014 13:12:46 -0600
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Scanning ata_port::qc_allocated bitmask for free tags has
-been a performance bottleneck due to the cache line bouncing.
-This update replaces ata_port::qc_allocated bitmask with
-optimized for parallel access percpu_ida tags allocator.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
----
- drivers/ata/libata-core.c |   82 +++++++++++++++++++++++++++++++-------------
- include/linux/libata.h    |    6 ++-
- 2 files changed, 62 insertions(+), 26 deletions(-)
+I have a SiI3112 rev 2 and a Toshiba MK2561GSYN HDD.  I think it 
+belongs in the list of buggy drives which require Mod15Write.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 75b9367..88af198 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -68,6 +68,7 @@
- #include <linux/ratelimit.h>
- #include <linux/pm_runtime.h>
- #include <linux/platform_device.h>
-+#include <linux/percpu_ida.h>
- 
- #include "libata.h"
- #include "libata-transport.h"
-@@ -1519,6 +1520,34 @@ static void ata_qc_complete_internal(struct ata_queued_cmd *qc)
- 	complete(waiting);
- }
- 
-+static unsigned int __ata_get_internal_tag(struct ata_port *ap)
-+{
-+	int tag = percpu_ida_alloc(&ap->qc_internal, GFP_NOWAIT);
-+
-+	if (unlikely(tag < 0))
-+		return -1;
-+
-+	return ATA_TAG_INTERNAL;
-+}
-+
-+static unsigned int __ata_get_tag(struct ata_port *ap)
-+{
-+	int tag = percpu_ida_alloc(&ap->qc_tags, GFP_NOWAIT);
-+
-+	if (unlikely(tag < 0))
-+		return -1;
-+
-+	return (unsigned int)tag + (ATA_TAG_INTERNAL + 1);
-+}
-+
-+static void __ata_put_tag(struct ata_port *ap, unsigned int tag)
-+{
-+	if (unlikely(tag == ATA_TAG_INTERNAL))
-+		percpu_ida_free(&ap->qc_internal, 0);
-+	else
-+		percpu_ida_free(&ap->qc_tags, tag - (ATA_TAG_INTERNAL + 1));
-+}
-+
- /**
-  *	ata_exec_internal_sg - execute libata internal command
-  *	@dev: Device to which the command is sent
-@@ -1569,18 +1598,8 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
- 
- 	/* initialize internal qc */
- 
--	/* XXX: Tag 0 is used for drivers with legacy EH as some
--	 * drivers choke if any other tag is given.  This breaks
--	 * ata_tag_internal() test for those drivers.  Don't use new
--	 * EH stuff without converting to it.
--	 */
--	if (ap->ops->error_handler)
--		tag = ATA_TAG_INTERNAL;
--	else
--		tag = 0;
--
--	if (test_and_set_bit(tag, &ap->qc_allocated))
--		BUG();
-+	tag = __ata_get_internal_tag(ap);
-+	BUG_ON(!ata_tag_internal(tag));
- 	qc = __ata_qc_from_tag(ap, tag);
- 
- 	qc->tag = tag;
-@@ -4750,21 +4769,17 @@ void swap_buf_le16(u16 *buf, unsigned int buf_words)
- static struct ata_queued_cmd *ata_qc_new(struct ata_port *ap)
- {
- 	struct ata_queued_cmd *qc = NULL;
--	unsigned int i;
-+	unsigned int tag;
- 
- 	/* no command while frozen */
- 	if (unlikely(ap->pflags & ATA_PFLAG_FROZEN))
- 		return NULL;
- 
--	/* the last tag is reserved for internal command. */
--	for (i = 0; i < ATA_MAX_QUEUE - 1; i++)
--		if (!test_and_set_bit(i, &ap->qc_allocated)) {
--			qc = __ata_qc_from_tag(ap, i);
--			break;
--		}
-+	tag = __ata_get_tag(ap);
-+	qc = __ata_qc_from_tag(ap, tag);
- 
- 	if (qc)
--		qc->tag = i;
-+		qc->tag = tag;
- 
- 	return qc;
- }
-@@ -4816,7 +4831,7 @@ void ata_qc_free(struct ata_queued_cmd *qc)
- 	tag = qc->tag;
- 	if (likely(ata_tag_valid(tag))) {
- 		qc->tag = ATA_TAG_POISON;
--		clear_bit(tag, &ap->qc_allocated);
-+		__ata_put_tag(ap, tag);
- 	}
- }
- 
-@@ -5656,6 +5671,18 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
- 	if (!ap)
- 		return NULL;
- 
-+	if (__percpu_ida_init(&ap->qc_tags,
-+			      ATA_MAX_QUEUE - 1, 4, 2) < 0) {
-+		kfree(ap);
-+		return NULL;
-+	}
-+
-+	if (__percpu_ida_init(&ap->qc_internal, 1, 1, 1) < 0) {
-+		percpu_ida_destroy(&ap->qc_tags);
-+		kfree(ap);
-+		return NULL;
-+	}
-+
- 	ap->pflags |= ATA_PFLAG_INITIALIZING | ATA_PFLAG_FROZEN;
- 	ap->lock = &host->lock;
- 	ap->print_id = -1;
-@@ -5695,6 +5722,15 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
- 	return ap;
- }
- 
-+static void ata_port_free(struct ata_port *ap)
-+{
-+	kfree(ap->pmp_link);
-+	kfree(ap->slave_link);
-+	percpu_ida_destroy(&ap->qc_tags);
-+	percpu_ida_destroy(&ap->qc_internal);
-+	kfree(ap);
-+}
-+
- static void ata_host_release(struct device *gendev, void *res)
- {
- 	struct ata_host *host = dev_get_drvdata(gendev);
-@@ -5709,9 +5745,7 @@ static void ata_host_release(struct device *gendev, void *res)
- 		if (ap->scsi_host)
- 			scsi_host_put(ap->scsi_host);
- 
--		kfree(ap->pmp_link);
--		kfree(ap->slave_link);
--		kfree(ap);
-+		ata_port_free(ap);
- 		host->ports[i] = NULL;
- 	}
- 
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 0e23c26..d673e91 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -38,6 +38,7 @@
- #include <linux/acpi.h>
- #include <linux/cdrom.h>
- #include <linux/sched.h>
-+#include <linux/percpu_ida.h>
- 
- /*
-  * Define if arch has non-standard setup.  This is a _PCI_ standard
-@@ -126,7 +127,7 @@ enum {
- 	ATA_DEF_QUEUE		= 1,
- 	/* tag ATA_MAX_QUEUE - 1 is reserved for internal commands */
- 	ATA_MAX_QUEUE		= 32,
--	ATA_TAG_INTERNAL	= ATA_MAX_QUEUE - 1,
-+	ATA_TAG_INTERNAL	= 0,
- 	ATA_SHORT_PAUSE		= 16,
- 
- 	ATAPI_MAX_DRAIN		= 16 << 10,
-@@ -816,7 +817,8 @@ struct ata_port {
- 	unsigned int		cbl;	/* cable type; ATA_CBL_xxx */
- 
- 	struct ata_queued_cmd	qcmd[ATA_MAX_QUEUE];
--	unsigned long		qc_allocated;
-+	struct percpu_ida	qc_internal;
-+	struct percpu_ida	qc_tags;
- 	unsigned int		qc_active;
- 	int			nr_active_links; /* #links with active qcs */
- 
--- 
-1.7.7.6
+To test, I perform:
+dd if=/dev/zero of=/dev/sdb oflag=direct bs=8192
+Without enabling slow_down, after moment of pause, this shows up in dmesg:
+
+ata7.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+ata7.00: failed command: WRITE DMA
+ata7.00: cmd ca/00:10:80:01:00/00:00:00:00:00/e0 tag 0 dma 8192 out
+           res 40/00:01:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+ata7.00: status: { DRDY }
+ata7: hard resetting link
+ata7: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata7.00: configured for UDMA/100
+ata7.00: device reported invalid CHS sector 0
+ata7: EH complete
+
+If I use slow_down, these timeouts are gone completely.  If I write 
+7680 (15 sector), repeated 100000 times, it is okay.  Reading any size 
+is okay.  All of my other drives behave with this card.
+
+My HDD is HP part 625239, firmware is MH000C.  I do know whether other 
+models (in the series) or firmwares have this problem.
+
+The following drives are in series TOSHIBA MKxx61GSYN:
+MK1661GSYN MK2561GSYN MK3261GSYN MK5061GSYN MK6461GSYN
+
+I searched for pictures on the Web, and found that these models used by 
+Dell have firmware MH000D, and some others have firmware MH000A (maybe 
+these are retail).
+
+MKxx61GSYN listed as current, not discontinued, at Toshiba's Web site.
+
+http://storage.toshiba.com/storagesolutions/pc-notebook/mkxx61gsyn-series
+
