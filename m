@@ -1,51 +1,39 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [LSF/MM TOPIC] really large storage sectors - going beyond 4096
- bytes
-Date: Wed, 22 Jan 2014 08:14:47 +0100
-Message-ID: <52DF6FE7.2080901@suse.de>
-References: <20131220093022.GV11295@suse.de> <52DF353D.6050300@redhat.com> <20140122052052.GM10565@ZenIV.linux.org.uk>
+From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH RFC v4 10/10] ahci_imx: Port to library-ised ahci_platform
+Date: Wed, 22 Jan 2014 08:25:42 +0100
+Message-ID: <52DF7276.5050705@redhat.com>
+References: <1390236303-22538-1-git-send-email-hdegoede@redhat.com> <1390236303-22538-11-git-send-email-hdegoede@redhat.com> <20140122065151.GC16215@pengutronix.de>
+Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20140122052052.GM10565@ZenIV.linux.org.uk>
-Sender: owner-linux-mm@kvack.org
-To: Ric Wheeler <rwheeler@redhat.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Return-path: <linux-sunxi+bncBDL4X2GMZUKRB7XE7WLAKGQEGND5IYI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <20140122065151.GC16215-bIcnvbaLZ9MEGnE8C9+IrQ@public.gmane.org>
+List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/linux-sunxi>
+Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: Sascha Hauer <s.hauer-bIcnvbaLZ9MEGnE8C9+IrQ@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Richard Zhu <Hong-Xing.Zhu-KZfg59tc24xl57MIdRCFDg@public.gmane.org>, Roger Quadros <rogerq-l0cyMroinI0@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, devicetree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
-On 01/22/2014 06:20 AM, Joel Becker wrote:
-> On Tue, Jan 21, 2014 at 10:04:29PM -0500, Ric Wheeler wrote:
->> One topic that has been lurking forever at the edges is the current
->> 4k limitation for file system block sizes. Some devices in
->> production today and others coming soon have larger sectors and it
->> would be interesting to see if it is time to poke at this topic
->> again.
+Hi,
+
+On 01/22/2014 07:51 AM, Sascha Hauer wrote:
+> Hi Hans,
+>
+> On Mon, Jan 20, 2014 at 05:45:03PM +0100, Hans de Goede wrote:
+>> This avoids the ugliness of creating a nested platform device from probe.
 >>
->> LSF/MM seems to be pretty much the only event of the year that most
->> of the key people will be present, so should be a great topic for a
->> joint session.
->=20
-> Oh yes, I want in on this.  We handle 4k/16k/64k pages "seamlessly," an=
-d
-> we would want to do the same for larger sectors.  In theory, our code
-> should handle it with the appropriate defines updated.
->=20
-+1
+>> Note untested, I've ordered a wandboard to be able to test these changes.
+>
+> Looks much better now, thanks. I could test this patch aswell, no need
+> to buy new hardware for this.
 
-The shingled drive folks would really love us for this.
-Plus it would make live really easy for those type of devices.
+Thanks for the offer, but the wandboard arrived yesterday. Having a bit more
+variety in the arm hardware I've to test with is good to have anyways.
 
-Cheers,
+Regards,
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=3Dmailto:"dont@kvack.org"> email@kvack.org </a>
+Hans
