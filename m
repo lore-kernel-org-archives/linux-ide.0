@@ -1,32 +1,39 @@
-From: Ric Wheeler <rwheeler@redhat.com>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] really large storage sectors - going
- beyond 4096 bytes
-Date: Wed, 22 Jan 2014 13:40:47 -0500
-Message-ID: <52E010AF.8040308@redhat.com>
-References: <20131220093022.GV11295@suse.de> <52DF353D.6050300@redhat.com>	 <20140122093435.GS4963@suse.de> <52DFD168.8080001@redhat.com>	 <20140122143452.GW4963@suse.de> <52DFDCA6.1050204@redhat.com>	 <20140122151913.GY4963@suse.de>	 <1390410233.1198.7.camel@ret.masoncoding.com>	 <1390411300.2372.33.camel@dabdike.int.hansenpartnership.com>	 <1390413819.1198.20.camel@ret.masoncoding.com>	 <1390414439.2372.53.camel@dabdike.int.hansenpartnership.com> <1390415924.1198.36.camel@ret.masoncoding.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-7
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1390415924.1198.36.camel@ret.masoncoding.com>
-Sender: owner-linux-mm@kvack.org
-To: Chris Mason <clm@fb.com>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "mgorman@suse.de" <mgorman@suse.de>
+From: Andrew Lunn <andrew@lunn.ch>
+Subject: [PATCH] ATA: SATA_MV: Add missing Kconfig select statememnt
+Date: Wed, 22 Jan 2014 20:56:33 +0100
+Message-ID: <1390420593-27697-1-git-send-email-andrew@lunn.ch>
+References: <52e00d45.5gijwyKGLiVLcCNX%fengguang.wu@intel.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from vps0.lunn.ch ([178.209.37.122]:55805 "EHLO vps0.lunn.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755865AbaAVT6W (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 22 Jan 2014 14:58:22 -0500
+In-Reply-To: <52e00d45.5gijwyKGLiVLcCNX%fengguang.wu@intel.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, Andrew Lunn <andrew@lunn.ch>
 
-On 01/22/2014 01:37 PM, Chris Mason wrote:
-> Circling back to what we might talk about at the conference, Ric do you
-> have any ideas on when these drives might hit the wild?
->
-> -chris
+SATA_MV depends on GENERIC_PHY. So if SATA_MV is built in, GENERIC_PHY
+cannot be modular. Fixes build error found by kbuild test robot.
 
-I will poke at vendors to see if we can get someone to make a public statement,
-but I cannot do that for them.
+Signed-off-by: Andrew Lunn <andrew@lunn.ch>
+---
+ drivers/ata/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
-Ric
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 4e737728aee2..868429a47be4 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -247,6 +247,7 @@ config SATA_HIGHBANK
+ 
+ config SATA_MV
+ 	tristate "Marvell SATA support"
++	select GENERIC_PHY
+ 	help
+ 	  This option enables support for the Marvell Serial ATA family.
+ 	  Currently supports 88SX[56]0[48][01] PCI(-X) chips,
+-- 
+1.8.5.2
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
