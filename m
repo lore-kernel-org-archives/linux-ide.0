@@ -1,39 +1,89 @@
-From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH RFC v4 10/10] ahci_imx: Port to library-ised ahci_platform
-Date: Wed, 22 Jan 2014 08:25:42 +0100
-Message-ID: <52DF7276.5050705@redhat.com>
-References: <1390236303-22538-1-git-send-email-hdegoede@redhat.com> <1390236303-22538-11-git-send-email-hdegoede@redhat.com> <20140122065151.GC16215@pengutronix.de>
-Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Roger Quadros <rogerq@ti.com>
+Subject: Re: [PATCH v5 0/4] ata: ahci_platform: Add PHY support and OMAP support
+Date: Wed, 22 Jan 2014 10:11:24 +0200
+Message-ID: <52DF7D2C.1080802@ti.com>
+References: <1390228888-5537-1-git-send-email-rogerq@ti.com> <52DD5368.5020301@redhat.com> <52DE3132.3000007@ti.com> <52DE6114.20601@ti.com> <52DE7D5D.8070307@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Return-path: <linux-sunxi+bncBDL4X2GMZUKRB7XE7WLAKGQEGND5IYI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <20140122065151.GC16215-bIcnvbaLZ9MEGnE8C9+IrQ@public.gmane.org>
-List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/linux-sunxi>
-Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: Sascha Hauer <s.hauer-bIcnvbaLZ9MEGnE8C9+IrQ@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Richard Zhu <Hong-Xing.Zhu-KZfg59tc24xl57MIdRCFDg@public.gmane.org>, Roger Quadros <rogerq-l0cyMroinI0@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, devicetree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from comal.ext.ti.com ([198.47.26.152]:59974 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750853AbaAVILl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 22 Jan 2014 03:11:41 -0500
+In-Reply-To: <52DE7D5D.8070307@redhat.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Hans de Goede <hdegoede@redhat.com>, tj@kernel.org, kishon@ti.com
+Cc: sergei.shtylyov@cogentembedded.com, b.zolnierkie@samsung.com, arnd@arndb.de, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
 
 Hi,
 
-On 01/22/2014 07:51 AM, Sascha Hauer wrote:
-> Hi Hans,
->
-> On Mon, Jan 20, 2014 at 05:45:03PM +0100, Hans de Goede wrote:
->> This avoids the ugliness of creating a nested platform device from probe.
+On 01/21/2014 03:59 PM, Hans de Goede wrote:
+> Hi,
+> 
+> On 01/21/2014 12:59 PM, Roger Quadros wrote:
+>> On 01/21/2014 10:34 AM, Roger Quadros wrote:
+>>> On 01/20/2014 06:48 PM, Hans de Goede wrote:
+>>>> Hi,
+>>>>
+>>>> On 01/20/2014 03:41 PM, Roger Quadros wrote:
+>>>>> Hi,
+>>>>>
+>>>>> Some platforms have a PHY hooked up to the SATA controller.
+>>>>> The PHY needs to be initialized and powered up for SATA to work.
+>>>>> We do that using the Generic PHY framework in PATCH 3.
+>>>>>
+>>>>> In order to support SATA on the OMAP platforms we need to runtime
+>>>>> resume the device before use. PATCH 4 takes care of that.
+>>>>
+>>>> Thanks for keeping me in the loop on this. I'm afraid this conflicts
+>>>> quite a bit with my recent ahci_platform.c work, not a big problem
+>>>> really, the series can go in either way.
+>>>>
+>>>> Your phy support will slot nicely into the new ahci_platform_get_resources
+>>>> and ahci_platform_enable_resources functions my refactoring introduces,
+>>>> looking at it from this pov it might be better / easier to rebase your series
+>>>> on top of the v4 of my series I've just send.
+>>>>
+>>>> Which brings me to one comment about your series why are you not doing phy_exit
+>>>> and phy_init on suspend resp. resume ? The phy can use quite a bit of power,
+>>>> if the phy init / exit end up in ahci_platform_enable_resources /
+>>>> ahci_platform_disable_resources, this will happen automatically for better or
+>>>> worse. So it would be good to test if this would work or not ...
+>>>
+>>> Right. Bartlomiej had pointed this out earlier, but I just wasn't very sure about it.
+>>>
+>>> Is it sufficient to just call phy_power_off() in suspend and phy_power_on() in resume?
+>>> Or do we call phy_exit() and phy_init() respectively as well.
+>>>
+>>> Kishon, any suggestions?
 >>
->> Note untested, I've ordered a wandboard to be able to test these changes.
->
-> Looks much better now, thanks. I could test this patch aswell, no need
-> to buy new hardware for this.
+>> OK. Answering my own question.
+>>
+>> On OMAP platform we power down the phy in phy_power_off() and idle the DPLL in phy_exit(),
+>> so my guess is both should be called in suspend() to save the most power.
+> 
+> Right, this would also match nicely with putting both the phy_init and the phy_power_on call
+> in ahci_platform_enable_resources in ahci_platform.c as it looks after v4 of my ahci_platform
+> rework patch-set, see:
+> https://github.com/jwrdegoede/linux-sunxi/blob/sunxi-devel/drivers/ata/ahci_platform.c
+> 
+> If this goes there it will be automatically called on both probe and resume (and the counterparts
+> should go to ahci_platform_disable_resources, which will be called on suspend and remove).
+> 
+> As said before I don't really have a preference for in which order these patches go upstream,
+> but can you please check that calling phy_poweroff + phy_exit on suspend and undo on resume
+> does not cause issues ?  If it does I need to rethink how things will work after my refactoring,
+> because currently all the clks / optional regulator and now also optional phy get en/disabled in
+> one go through ahci_platform_en/disable_resources.
 
-Thanks for the offer, but the wandboard arrived yesterday. Having a bit more
-variety in the arm hardware I've to test with is good to have anyways.
+I too don't have any preference of the upstream path. Maybe i'll repost this series based on your v4 an then you can include them in your series if you like. BTW why is your series still RFC at v4?
 
-Regards,
+As far as OMAP platform is concerned, calling phy_power_off() + phy_exit() shouldn't be a problem for suspend.
+Not sure about other platforms as we can't really know for sure what they do in phy_exit().
 
-Hans
+If phy_power_on/off() and phy_init()/phy_exit() are always meant to be called together then what is the point of having 2 functions each for power up/down.
+
+cheers,
+-roger
