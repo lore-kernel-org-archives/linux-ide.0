@@ -1,104 +1,46 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [PATCH v5 0/4] ata: ahci_platform: Add PHY support and OMAP support
-Date: Wed, 22 Jan 2014 09:28:44 +0100
-Message-ID: <52DF813C.6080807@redhat.com>
-References: <1390228888-5537-1-git-send-email-rogerq@ti.com> <52DD5368.5020301@redhat.com> <52DE3132.3000007@ti.com> <52DE6114.20601@ti.com> <52DE7D5D.8070307@redhat.com> <52DF7D2C.1080802@ti.com>
+From: Mel Gorman <mgorman@suse.de>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] really large storage sectors - going
+ beyond 4096 bytes
+Date: Wed, 22 Jan 2014 09:34:36 +0000
+Message-ID: <20140122093435.GS4963@suse.de>
+References: <20131220093022.GV11295@suse.de>
+ <52DF353D.6050300@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:20580 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751217AbaAVI26 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 22 Jan 2014 03:28:58 -0500
-In-Reply-To: <52DF7D2C.1080802@ti.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-15
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <52DF353D.6050300@redhat.com>
+Sender: owner-linux-mm@kvack.org
+To: Ric Wheeler <rwheeler@redhat.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Roger Quadros <rogerq@ti.com>, tj@kernel.org, kishon@ti.com
-Cc: sergei.shtylyov@cogentembedded.com, b.zolnierkie@samsung.com, arnd@arndb.de, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
 
-Hi,
+On Tue, Jan 21, 2014 at 10:04:29PM -0500, Ric Wheeler wrote:
+> One topic that has been lurking forever at the edges is the current
+> 4k limitation for file system block sizes. Some devices in
+> production today and others coming soon have larger sectors and it
+> would be interesting to see if it is time to poke at this topic
+> again.
+> 
 
-On 01/22/2014 09:11 AM, Roger Quadros wrote:
-> Hi,
->
-> On 01/21/2014 03:59 PM, Hans de Goede wrote:
->> Hi,
->>
->> On 01/21/2014 12:59 PM, Roger Quadros wrote:
->>> On 01/21/2014 10:34 AM, Roger Quadros wrote:
->>>> On 01/20/2014 06:48 PM, Hans de Goede wrote:
->>>>> Hi,
->>>>>
->>>>> On 01/20/2014 03:41 PM, Roger Quadros wrote:
->>>>>> Hi,
->>>>>>
->>>>>> Some platforms have a PHY hooked up to the SATA controller.
->>>>>> The PHY needs to be initialized and powered up for SATA to work.
->>>>>> We do that using the Generic PHY framework in PATCH 3.
->>>>>>
->>>>>> In order to support SATA on the OMAP platforms we need to runtime
->>>>>> resume the device before use. PATCH 4 takes care of that.
->>>>>
->>>>> Thanks for keeping me in the loop on this. I'm afraid this conflicts
->>>>> quite a bit with my recent ahci_platform.c work, not a big problem
->>>>> really, the series can go in either way.
->>>>>
->>>>> Your phy support will slot nicely into the new ahci_platform_get_resources
->>>>> and ahci_platform_enable_resources functions my refactoring introduces,
->>>>> looking at it from this pov it might be better / easier to rebase your series
->>>>> on top of the v4 of my series I've just send.
->>>>>
->>>>> Which brings me to one comment about your series why are you not doing phy_exit
->>>>> and phy_init on suspend resp. resume ? The phy can use quite a bit of power,
->>>>> if the phy init / exit end up in ahci_platform_enable_resources /
->>>>> ahci_platform_disable_resources, this will happen automatically for better or
->>>>> worse. So it would be good to test if this would work or not ...
->>>>
->>>> Right. Bartlomiej had pointed this out earlier, but I just wasn't very sure about it.
->>>>
->>>> Is it sufficient to just call phy_power_off() in suspend and phy_power_on() in resume?
->>>> Or do we call phy_exit() and phy_init() respectively as well.
->>>>
->>>> Kishon, any suggestions?
->>>
->>> OK. Answering my own question.
->>>
->>> On OMAP platform we power down the phy in phy_power_off() and idle the DPLL in phy_exit(),
->>> so my guess is both should be called in suspend() to save the most power.
->>
->> Right, this would also match nicely with putting both the phy_init and the phy_power_on call
->> in ahci_platform_enable_resources in ahci_platform.c as it looks after v4 of my ahci_platform
->> rework patch-set, see:
->> https://github.com/jwrdegoede/linux-sunxi/blob/sunxi-devel/drivers/ata/ahci_platform.c
->>
->> If this goes there it will be automatically called on both probe and resume (and the counterparts
->> should go to ahci_platform_disable_resources, which will be called on suspend and remove).
->>
->> As said before I don't really have a preference for in which order these patches go upstream,
->> but can you please check that calling phy_poweroff + phy_exit on suspend and undo on resume
->> does not cause issues ?  If it does I need to rethink how things will work after my refactoring,
->> because currently all the clks / optional regulator and now also optional phy get en/disabled in
->> one go through ahci_platform_en/disable_resources.
->
-> I too don't have any preference of the upstream path. Maybe i'll repost this series based on your v4 an then you can include them in your series if you like.
+Large block support was proposed years ago by Christoph Lameter
+(http://lwn.net/Articles/232757/). I think I was just getting started
+in the community at the time so I do not recall any of the details. I do
+believe it motivated an alternative by Nick Piggin called fsblock though
+(http://lwn.net/Articles/321390/). At the very least it would be nice to
+know why neither were never merged for those of us that were not around
+at the time and who may not have the chance to dive through mailing list
+archives between now and March.
 
-As indicated doing things in that order has my preference as rebase-conflict resolution should be a lot
-easier that way then the other way around. So if you could do that, that would be great.
+FWIW, I would expect that a show-stopper for any proposal is requiring
+high-order allocations to succeed for the system to behave correctly.
 
-> BTW why is your series still RFC at v4?
+-- 
+Mel Gorman
+SUSE Labs
 
-It was not RFC at v1 and v2, it became RFC at v3 because at that point it included changes which would
-also impact ahci_imx, and I did not have hardware to verify those changes. The wandboard I ordered
-for this has arrived yesterday, so my next version should not be RFC anymore :)
-
-> As far as OMAP platform is concerned, calling phy_power_off() + phy_exit() shouldn't be a problem for suspend.
-> Not sure about other platforms as we can't really know for sure what they do in phy_exit().
-
-Good, after the rework my patch-series does, platforms which need something else can always override
-the ahci_platform_disable_resources behavior (by doing that part themselves) while still using other parts
-of ahci_platform.c as is, that is the whole idea of the rework.
-
-Thanks & Regards,
-
-Hans
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
