@@ -1,41 +1,37 @@
-From: Joel Becker <jlbec@evilplan.org>
-Subject: Re: [LSF/MM TOPIC] really large storage sectors - going beyond 4096
- bytes
-Date: Wed, 22 Jan 2014 05:20:53 +0000
-Message-ID: <20140122052052.GM10565@ZenIV.linux.org.uk>
-References: <20131220093022.GV11295@suse.de>
- <52DF353D.6050300@redhat.com>
+From: Sascha Hauer <s.hauer@pengutronix.de>
+Subject: Re: [PATCH RFC v4 10/10] ahci_imx: Port to library-ised ahci_platform
+Date: Wed, 22 Jan 2014 07:51:51 +0100
+Message-ID: <20140122065151.GC16215@pengutronix.de>
+References: <1390236303-22538-1-git-send-email-hdegoede@redhat.com>
+ <1390236303-22538-11-git-send-email-hdegoede@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from metis.ext.pengutronix.de ([92.198.50.35]:38709 "EHLO
+	metis.ext.pengutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750964AbaAVGwC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Jan 2014 01:52:02 -0500
 Content-Disposition: inline
-In-Reply-To: <52DF353D.6050300@redhat.com>
-Sender: owner-linux-mm@kvack.org
-To: Ric Wheeler <rwheeler@redhat.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, linux-kernel@vger.kernel.org
+In-Reply-To: <1390236303-22538-11-git-send-email-hdegoede@redhat.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Oliver Schinagl <oliver@schinagl.nl>, Maxime Ripard <maxime.ripard@free-electrons.com>, Richard Zhu <Hong-Xing.Zhu@freescale.com>, Roger Quadros <rogerq@ti.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, devicetree <devicetree@vger.kernel.org>, linux-sunxi@googlegroups.com
 
-On Tue, Jan 21, 2014 at 10:04:29PM -0500, Ric Wheeler wrote:
-> One topic that has been lurking forever at the edges is the current
-> 4k limitation for file system block sizes. Some devices in
-> production today and others coming soon have larger sectors and it
-> would be interesting to see if it is time to poke at this topic
-> again.
+Hi Hans,
+
+On Mon, Jan 20, 2014 at 05:45:03PM +0100, Hans de Goede wrote:
+> This avoids the ugliness of creating a nested platform device from probe.
 > 
-> LSF/MM seems to be pretty much the only event of the year that most
-> of the key people will be present, so should be a great topic for a
-> joint session.
+> Note untested, I've ordered a wandboard to be able to test these changes.
 
-Oh yes, I want in on this.  We handle 4k/16k/64k pages "seamlessly," and
-we would want to do the same for larger sectors.  In theory, our code
-should handle it with the appropriate defines updated.
+Looks much better now, thanks. I could test this patch aswell, no need
+to buy new hardware for this.
 
-Joel
+Sascha
 
 -- 
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Pengutronix e.K.                           |                             |
+Industrial Linux Solutions                 | http://www.pengutronix.de/  |
+Peiner Str. 6-8, 31137 Hildesheim, Germany | Phone: +49-5121-206917-0    |
+Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
