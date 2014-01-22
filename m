@@ -1,39 +1,61 @@
-From: Andrew Lunn <andrew@lunn.ch>
-Subject: [PATCH] ATA: SATA_MV: Add missing Kconfig select statememnt
-Date: Wed, 22 Jan 2014 20:56:33 +0100
-Message-ID: <1390420593-27697-1-git-send-email-andrew@lunn.ch>
-References: <52e00d45.5gijwyKGLiVLcCNX%fengguang.wu@intel.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vps0.lunn.ch ([178.209.37.122]:55805 "EHLO vps0.lunn.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755865AbaAVT6W (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 22 Jan 2014 14:58:22 -0500
-In-Reply-To: <52e00d45.5gijwyKGLiVLcCNX%fengguang.wu@intel.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Chris Mason <clm@fb.com>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] really large storage sectors - going
+ beyond 4096 bytes
+Date: Wed, 22 Jan 2014 20:13:20 +0000
+Message-ID: <1390421691.1198.43.camel@ret.masoncoding.com>
+References: <20131220093022.GV11295@suse.de> <52DF353D.6050300@redhat.com>
+	 <20140122093435.GS4963@suse.de> <52DFD168.8080001@redhat.com>
+	 <20140122143452.GW4963@suse.de> <52DFDCA6.1050204@redhat.com>
+	 <20140122151913.GY4963@suse.de>
+	 <1390410233.1198.7.camel@ret.masoncoding.com>
+	 <1390411300.2372.33.camel@dabdike.int.hansenpartnership.com>
+	 <1390413819.1198.20.camel@ret.masoncoding.com>
+	 <1390414439.2372.53.camel@dabdike.int.hansenpartnership.com>
+	 <52E00B28.3060609@redhat.com>
+	 <1390415703.2372.62.camel@dabdike.int.hansenpartnership.com>
+	 <52E0106B.5010604@redhat.com>
+	 <1390419019.2372.89.camel@dabdike.int.hansenpartnership.com>
+	 <20140122115002.bb5d01dee836b567a7aad157@linux-foundation.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-7"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20140122115002.bb5d01dee836b567a7aad157@linux-foundation.org>
+Content-Language: en-US
+Content-ID: <4377FC09DDDAD244BD307A4929AD8592@fb.com>
+Sender: owner-linux-mm@kvack.org
+To: "akpm@linux-foundation.org" <akpm@linux-foundation.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "rwheeler@redhat.com" <rwheeler@redhat.com>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "mgorman@suse.de" <mgorman@suse.de>
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org
-Cc: linux-ide@vger.kernel.org, Andrew Lunn <andrew@lunn.ch>
 
-SATA_MV depends on GENERIC_PHY. So if SATA_MV is built in, GENERIC_PHY
-cannot be modular. Fixes build error found by kbuild test robot.
+On Wed, 2014-01-22 at 11:50 -0800, Andrew Morton wrote:
++AD4- On Wed, 22 Jan 2014 11:30:19 -0800 James Bottomley +ADw-James.Bottoml=
+ey+AEA-hansenpartnership.com+AD4- wrote:
++AD4-=20
++AD4- +AD4- But this, I think, is the fundamental point for debate.  If we =
+can pull
++AD4- +AD4- alignment and other tricks to solve 99+ACU- of the problem is t=
+here a need
++AD4- +AD4- for radical VM surgery?  Is there anything coming down the pipe=
+ in the
++AD4- +AD4- future that may move the devices ahead of the tricks?
++AD4-=20
++AD4- I expect it would be relatively simple to get large blocksizes workin=
+g
++AD4- on powerpc with 64k PAGE+AF8-SIZE.  So before diving in and doing hug=
+e
++AD4- amounts of work, perhaps someone can do a proof-of-concept on powerpc
++AD4- (or ia64) with 64k blocksize.
 
-Signed-off-by: Andrew Lunn <andrew@lunn.ch>
----
- drivers/ata/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 4e737728aee2..868429a47be4 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -247,6 +247,7 @@ config SATA_HIGHBANK
- 
- config SATA_MV
- 	tristate "Marvell SATA support"
-+	select GENERIC_PHY
- 	help
- 	  This option enables support for the Marvell Serial ATA family.
- 	  Currently supports 88SX[56]0[48][01] PCI(-X) chips,
--- 
-1.8.5.2
+Maybe 5 drives in raid5 on MD, with 4K coming from each drive.  Well
+aligned 16K IO will work, everything else will about the same as a rmw
+from a single drive.
 
+-chris
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
