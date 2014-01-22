@@ -1,58 +1,37 @@
-From: Chris Mason <clm@fb.com>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] really large storage sectors - going
- beyond 4096 bytes
-Date: Wed, 22 Jan 2014 20:13:20 +0000
-Message-ID: <1390421691.1198.43.camel@ret.masoncoding.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] really large storage sectors - going beyond 4096 bytes
+Date: Wed, 22 Jan 2014 15:47:12 -0500
+Message-ID: <yq138kfbv73.fsf@sermon.lab.mkp.net>
 References: <20131220093022.GV11295@suse.de> <52DF353D.6050300@redhat.com>
-	 <20140122093435.GS4963@suse.de> <52DFD168.8080001@redhat.com>
-	 <20140122143452.GW4963@suse.de> <52DFDCA6.1050204@redhat.com>
-	 <20140122151913.GY4963@suse.de>
-	 <1390410233.1198.7.camel@ret.masoncoding.com>
-	 <1390411300.2372.33.camel@dabdike.int.hansenpartnership.com>
-	 <1390413819.1198.20.camel@ret.masoncoding.com>
-	 <1390414439.2372.53.camel@dabdike.int.hansenpartnership.com>
-	 <52E00B28.3060609@redhat.com>
-	 <1390415703.2372.62.camel@dabdike.int.hansenpartnership.com>
-	 <52E0106B.5010604@redhat.com>
-	 <1390419019.2372.89.camel@dabdike.int.hansenpartnership.com>
-	 <20140122115002.bb5d01dee836b567a7aad157@linux-foundation.org>
+	<20140122093435.GS4963@suse.de> <52DFD168.8080001@redhat.com>
+	<20140122143452.GW4963@suse.de> <52DFDCA6.1050204@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-7"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
 Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20140122115002.bb5d01dee836b567a7aad157@linux-foundation.org>
-Content-Language: en-US
-Content-ID: <4377FC09DDDAD244BD307A4929AD8592@fb.com>
+In-Reply-To: <52DFDCA6.1050204@redhat.com> (Ric Wheeler's message of "Wed, 22
+	Jan 2014 09:58:46 -0500")
 Sender: owner-linux-mm@kvack.org
-To: "akpm@linux-foundation.org" <akpm@linux-foundation.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "rwheeler@redhat.com" <rwheeler@redhat.com>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "mgorman@suse.de" <mgorman@suse.de>
+To: Ric Wheeler <rwheeler@redhat.com>
+Cc: Mel Gorman <mgorman@suse.de>, linux-scsi@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, lsf-pc@lists.linux-foundation.org
 List-Id: linux-ide@vger.kernel.org
 
-On Wed, 2014-01-22 at 11:50 -0800, Andrew Morton wrote:
-+AD4- On Wed, 22 Jan 2014 11:30:19 -0800 James Bottomley +ADw-James.Bottoml=
-ey+AEA-hansenpartnership.com+AD4- wrote:
-+AD4-=20
-+AD4- +AD4- But this, I think, is the fundamental point for debate.  If we =
-can pull
-+AD4- +AD4- alignment and other tricks to solve 99+ACU- of the problem is t=
-here a need
-+AD4- +AD4- for radical VM surgery?  Is there anything coming down the pipe=
- in the
-+AD4- +AD4- future that may move the devices ahead of the tricks?
-+AD4-=20
-+AD4- I expect it would be relatively simple to get large blocksizes workin=
-g
-+AD4- on powerpc with 64k PAGE+AF8-SIZE.  So before diving in and doing hug=
-e
-+AD4- amounts of work, perhaps someone can do a proof-of-concept on powerpc
-+AD4- (or ia64) with 64k blocksize.
+>>>>> "Ric" == Ric Wheeler <rwheeler@redhat.com> writes:
 
+Ric> I will have to see if I can get a storage vendor to make a public
+Ric> statement, but there are vendors hoping to see this land in Linux
+Ric> in the next few years. I assume that anyone with a shipping device
+Ric> will have to at least emulate the 4KB sector size for years to
+Ric> come, but that there might be a significant performance win for
+Ric> platforms that can do a larger block.
 
-Maybe 5 drives in raid5 on MD, with 4K coming from each drive.  Well
-aligned 16K IO will work, everything else will about the same as a rmw
-from a single drive.
+I am aware of two companies that already created devices with 8KB
+logical blocks and expected Linux to work. I had to do some explaining.
 
--chris
+I agree with Ric that this is something we'll need to address sooner
+rather than later.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
 
 --
 To unsubscribe, send a message with 'unsubscribe linux-mm' in
