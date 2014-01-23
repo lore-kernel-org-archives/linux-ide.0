@@ -1,103 +1,164 @@
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] really large storage sectors - going
- beyond 4096 bytes
-Date: Thu, 23 Jan 2014 19:27:34 +1100
-Message-ID: <20140123082734.GP13997@dastard>
-References: <52DF353D.6050300@redhat.com>
- <20140122093435.GS4963@suse.de>
- <52DFD168.8080001@redhat.com>
- <20140122143452.GW4963@suse.de>
- <52DFDCA6.1050204@redhat.com>
- <20140122151913.GY4963@suse.de>
- <1390410233.1198.7.camel@ret.masoncoding.com>
- <1390411300.2372.33.camel@dabdike.int.hansenpartnership.com>
- <1390413819.1198.20.camel@ret.masoncoding.com>
- <1390414439.2372.53.camel@dabdike.int.hansenpartnership.com>
+From: Chen-Yu Tsai <wens-jdAy2FN1RRM@public.gmane.org>
+Subject: Re: [PATCH v5 13/14] ARM: sun4i: dts: Add ahci / sata support
+Date: Thu, 23 Jan 2014 16:34:54 +0800
+Message-ID: <CAGb2v65mYK7Lo_KC+sGvYG7P2kDOy7CZgGane2eY8+-pMvH1mw@mail.gmail.com>
+References: <1390417489-5354-1-git-send-email-hdegoede@redhat.com> <1390417489-5354-14-git-send-email-hdegoede@redhat.com>
+Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <1390414439.2372.53.camel@dabdike.int.hansenpartnership.com>
-Sender: owner-linux-mm@kvack.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Chris Mason <clm@fb.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "mgorman@suse.de" <mgorman@suse.de>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "rwheeler@redhat.com" <rwheeler@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-sunxi+bncBCMILY6JWQBBBRFIQOLQKGQEYSKDSGY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+In-Reply-To: <1390417489-5354-14-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/linux-sunxi>
+List-Subscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: linux-sunxi <linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Richard Zhu <Hong-Xing.Zhu-KZfg59tc24xl57MIdRCFDg@public.gmane.org>, Roger Quadros <rogerq-l0cyMroinI0@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, devicetree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Wed, Jan 22, 2014 at 10:13:59AM -0800, James Bottomley wrote:
-> On Wed, 2014-01-22 at 18:02 +0000, Chris Mason wrote:
-> > On Wed, 2014-01-22 at 09:21 -0800, James Bottomley wrote:
-> > > On Wed, 2014-01-22 at 17:02 +0000, Chris Mason wrote:
-> > 
-> > [ I like big sectors and I cannot lie ]
-> 
-> I think I might be sceptical, but I don't think that's showing in my
-> concerns ...
-> 
-> > > > I really think that if we want to make progress on this one, we need
-> > > > code and someone that owns it.  Nick's work was impressive, but it was
-> > > > mostly there for getting rid of buffer heads.  If we have a device that
-> > > > needs it and someone working to enable that device, we'll go forward
-> > > > much faster.
-> > > 
-> > > Do we even need to do that (eliminate buffer heads)?  We cope with 4k
-> > > sector only devices just fine today because the bh mechanisms now
-> > > operate on top of the page cache and can do the RMW necessary to update
-> > > a bh in the page cache itself which allows us to do only 4k chunked
-> > > writes, so we could keep the bh system and just alter the granularity of
-> > > the page cache.
-> > > 
-> > 
-> > We're likely to have people mixing 4K drives and <fill in some other
-> > size here> on the same box.  We could just go with the biggest size and
-> > use the existing bh code for the sub-pagesized blocks, but I really
-> > hesitate to change VM fundamentals for this.
-> 
-> If the page cache had a variable granularity per device, that would cope
-> with this.  It's the variable granularity that's the VM problem.
-> 
-> > From a pure code point of view, it may be less work to change it once in
-> > the VM.  But from an overall system impact point of view, it's a big
-> > change in how the system behaves just for filesystem metadata.
-> 
-> Agreed, but only if we don't do RMW in the buffer cache ... which may be
-> a good reason to keep it.
-> 
-> > > The other question is if the drive does RMW between 4k and whatever its
-> > > physical sector size, do we need to do anything to take advantage of
-> > > it ... as in what would altering the granularity of the page cache buy
-> > > us?
-> > 
-> > The real benefit is when and how the reads get scheduled.  We're able to
-> > do a much better job pipelining the reads, controlling our caches and
-> > reducing write latency by having the reads done up in the OS instead of
-> > the drive.
-> 
-> I agree with all of that, but my question is still can we do this by
-> propagating alignment and chunk size information (i.e. the physical
-> sector size) like we do today.  If the FS knows the optimal I/O patterns
-> and tries to follow them, the odd cockup won't impact performance
-> dramatically.  The real question is can the FS make use of this layout
-> information *without* changing the page cache granularity?  Only if you
-> answer me "no" to this do I think we need to worry about changing page
-> cache granularity.
+Hi,
 
-We already do this today.
+On Thu, Jan 23, 2014 at 3:04 AM, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+> From: Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
+>
+> This patch adds sunxi sata support to A10 boards that have such a connector.
+> Some boards also feature a regulator via a GPIO and support for this is also
+> added.
+>
+> Signed-off-by: Olliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
+> Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> ---
+>  arch/arm/boot/dts/sun4i-a10-a1000.dts      |  4 ++++
+>  arch/arm/boot/dts/sun4i-a10-cubieboard.dts |  6 +++++
+>  arch/arm/boot/dts/sun4i-a10.dtsi           |  8 +++++++
+>  arch/arm/boot/dts/sunxi-ahci-reg.dtsi      | 38 ++++++++++++++++++++++++++++++
+>  4 files changed, 56 insertions(+)
+>  create mode 100644 arch/arm/boot/dts/sunxi-ahci-reg.dtsi
+>
+> diff --git a/arch/arm/boot/dts/sun4i-a10-a1000.dts b/arch/arm/boot/dts/sun4i-a10-a1000.dts
+> index aef8207..3fb7305 100644
+> --- a/arch/arm/boot/dts/sun4i-a10-a1000.dts
+> +++ b/arch/arm/boot/dts/sun4i-a10-a1000.dts
+> @@ -48,6 +48,10 @@
+>                         status = "okay";
+>                 };
+>
+> +               ahci: sata@01c18000 {
+> +                       status = "okay";
+> +               };
+> +
+>                 pinctrl@01c20800 {
+>                         mmc0_cd_pin_a1000: mmc0_cd_pin@0 {
+>                                 allwinner,pins = "PH1";
+> diff --git a/arch/arm/boot/dts/sun4i-a10-cubieboard.dts b/arch/arm/boot/dts/sun4i-a10-cubieboard.dts
+> index f50fb2b..6ae1110 100644
+> --- a/arch/arm/boot/dts/sun4i-a10-cubieboard.dts
+> +++ b/arch/arm/boot/dts/sun4i-a10-cubieboard.dts
+> @@ -12,6 +12,7 @@
+>
+>  /dts-v1/;
+>  /include/ "sun4i-a10.dtsi"
+> +/include/ "sunxi-ahci-reg.dtsi"
+>
+>  / {
+>         model = "Cubietech Cubieboard";
+> @@ -51,6 +52,11 @@
+>                         status = "okay";
+>                 };
+>
+> +               ahci: sata@01c18000 {
+> +                       target-supply = <&reg_ahci_5v>;
+> +                       status = "okay";
+> +               };
+> +
+>                 pinctrl@01c20800 {
+>                         mmc0_cd_pin_cubieboard: mmc0_cd_pin@0 {
+>                                 allwinner,pins = "PH1";
+> diff --git a/arch/arm/boot/dts/sun4i-a10.dtsi b/arch/arm/boot/dts/sun4i-a10.dtsi
+> index 4736dd2..198dcda 100644
+> --- a/arch/arm/boot/dts/sun4i-a10.dtsi
+> +++ b/arch/arm/boot/dts/sun4i-a10.dtsi
+> @@ -331,6 +331,14 @@
+>                         status = "disabled";
+>                 };
+>
+> +               ahci: sata@01c18000 {
+> +                       compatible = "allwinner,sun4i-a10-ahci";
+> +                       reg = <0x01c18000 0x1000>;
+> +                       interrupts = <56>;
+> +                       clocks = <&pll6 0>, <&ahb_gates 25>;
+> +                       status = "disabled";
+> +               };
+> +
 
-The problem is that we are limited by the page cache assumption that
-the block device/filesystem never need to manage multiple pages as
-an atomic unit of change. Hence we can't use the generic
-infrastructure as it stands to handle block/sector sizes larger than
-a page size...
+Consider adding
 
-Cheers,
+    pinctrl-names = "default";
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+in the ahci node to suppress "default pin state not found" warnings.
+Same goes for sun7i-a20.dtsi.
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+>                 intc: interrupt-controller@01c20400 {
+>                         compatible = "allwinner,sun4i-ic";
+>                         reg = <0x01c20400 0x400>;
+> diff --git a/arch/arm/boot/dts/sunxi-ahci-reg.dtsi b/arch/arm/boot/dts/sunxi-ahci-reg.dtsi
+> new file mode 100644
+> index 0000000..955b197
+> --- /dev/null
+> +++ b/arch/arm/boot/dts/sunxi-ahci-reg.dtsi
+> @@ -0,0 +1,38 @@
+> +/*
+> + * sunxi boards sata target power supply common code
+> + *
+> + * Copyright 2014 - Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> + *
+> + * The code contained herein is licensed under the GNU General Public
+> + * License. You may obtain a copy of the GNU General Public License
+> + * Version 2 or later at the following locations:
+> + *
+> + * http://www.opensource.org/licenses/gpl-license.html
+> + * http://www.gnu.org/copyleft/gpl.html
+> + */
+> +
+> +/ {
+> +       soc@01c00000 {
+
+This block needs to be under
+
+    pinctrl@01c20800 {
+
+> +               ahci_pwr_pin_a: ahci_pwr_pin@0 {
+> +                       allwinner,pins = "PB8";
+> +                       allwinner,function = "gpio_out";
+> +                       allwinner,drive = <0>;
+> +                       allwinner,pull = <0>;
+> +               };
+
+    };
+
+> +       };
+> +
+> +       regulators {
+> +               compatible = "simple-bus";
+> +               pinctrl-names = "default";
+> +
+> +               reg_ahci_5v: ahci-5v {
+> +                       compatible = "regulator-fixed";
+> +                       regulator-name = "ahci-5v";
+> +                       regulator-min-microvolt = <5000000>;
+> +                       regulator-max-microvolt = <5000000>;
+> +                       pinctrl-0 = <&ahci_pwr_pin_a>;
+> +                       gpio = <&pio 1 8 0>;
+> +                       enable-active-high;
+> +               };
+> +       };
+> +};
+> --
+> 1.8.5.3
+>
+
+Great work! Thanks!
+
+ChenYu
