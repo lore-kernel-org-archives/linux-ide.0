@@ -1,59 +1,152 @@
-From: Theodore Ts'o <tytso@mit.edu>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] really large storage sectors - going
- beyond 4096 bytes
-Date: Thu, 23 Jan 2014 07:55:50 -0500
-Message-ID: <20140123125550.GB6853@thunk.org>
-References: <1390410233.1198.7.camel@ret.masoncoding.com>
- <1390411300.2372.33.camel@dabdike.int.hansenpartnership.com>
- <1390413819.1198.20.camel@ret.masoncoding.com>
- <1390414439.2372.53.camel@dabdike.int.hansenpartnership.com>
- <52E00B28.3060609@redhat.com>
- <1390415703.2372.62.camel@dabdike.int.hansenpartnership.com>
- <52E0106B.5010604@redhat.com>
- <1390419019.2372.89.camel@dabdike.int.hansenpartnership.com>
- <20140122115002.bb5d01dee836b567a7aad157@linux-foundation.org>
- <20140123083558.GQ13997@dastard>
+From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v5 13/14] ARM: sun4i: dts: Add ahci / sata support
+Date: Thu, 23 Jan 2014 15:48:00 +0100
+Message-ID: <52E12BA0.4050003@redhat.com>
+References: <1390417489-5354-1-git-send-email-hdegoede@redhat.com> <1390417489-5354-14-git-send-email-hdegoede@redhat.com> <CAGb2v65mYK7Lo_KC+sGvYG7P2kDOy7CZgGane2eY8+-pMvH1mw@mail.gmail.com>
+Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20140123083558.GQ13997@dastard>
-Sender: owner-linux-mm@kvack.org
-To: Dave Chinner <david@fromorbit.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, Chris Mason <clm@fb.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "mgorman@suse.de" <mgorman@suse.de>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, Ric Wheeler <rwheeler@redhat.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Return-path: <linux-sunxi+bncBDL4X2GMZUKRBK6XQSLQKGQEHHRPPFI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <CAGb2v65mYK7Lo_KC+sGvYG7P2kDOy7CZgGane2eY8+-pMvH1mw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/linux-sunxi>
+Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: Chen-Yu Tsai <wens-jdAy2FN1RRM@public.gmane.org>, linux-sunxi <linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Richard Zhu <Hong-Xing.Zhu-KZfg59tc24xl57MIdRCFDg@public.gmane.org>, Roger Quadros <rogerq-l0cyMroinI0@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, devicetree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, Jan 23, 2014 at 07:35:58PM +1100, Dave Chinner wrote:
-> > 
-> > I expect it would be relatively simple to get large blocksizes working
-> > on powerpc with 64k PAGE_SIZE.  So before diving in and doing huge
-> > amounts of work, perhaps someone can do a proof-of-concept on powerpc
-> > (or ia64) with 64k blocksize.
-> 
-> Reality check: 64k block sizes on 64k page Linux machines has been
-> used in production on XFS for at least 10 years. It's exactly the
-> same case as 4k block size on 4k page size - one page, one buffer
-> head, one filesystem block.
+Hi,
 
-This is true for ext4 as well.  Block size == page size support is
-pretty easy; the hard part is when block size > page size, due to
-assumptions in the VM layer that requires that FS system needs to do a
-lot of extra work to fudge around.  So the real problem comes with
-trying to support 64k block sizes on a 4k page architecture, and can
-we do it in a way where every single file system doesn't have to do
-their own specific hacks to work around assumptions made in the VM
-layer.
+On 01/23/2014 09:34 AM, Chen-Yu Tsai wrote:
+> Hi,
+>
+> On Thu, Jan 23, 2014 at 3:04 AM, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
+>> From: Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
+>>
+>> This patch adds sunxi sata support to A10 boards that have such a connector.
+>> Some boards also feature a regulator via a GPIO and support for this is also
+>> added.
+>>
+>> Signed-off-by: Olliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
+>> Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+>> ---
+>>   arch/arm/boot/dts/sun4i-a10-a1000.dts      |  4 ++++
+>>   arch/arm/boot/dts/sun4i-a10-cubieboard.dts |  6 +++++
+>>   arch/arm/boot/dts/sun4i-a10.dtsi           |  8 +++++++
+>>   arch/arm/boot/dts/sunxi-ahci-reg.dtsi      | 38 ++++++++++++++++++++++++++++++
+>>   4 files changed, 56 insertions(+)
+>>   create mode 100644 arch/arm/boot/dts/sunxi-ahci-reg.dtsi
+>>
+>> diff --git a/arch/arm/boot/dts/sun4i-a10-a1000.dts b/arch/arm/boot/dts/sun4i-a10-a1000.dts
+>> index aef8207..3fb7305 100644
+>> --- a/arch/arm/boot/dts/sun4i-a10-a1000.dts
+>> +++ b/arch/arm/boot/dts/sun4i-a10-a1000.dts
+>> @@ -48,6 +48,10 @@
+>>                          status = "okay";
+>>                  };
+>>
+>> +               ahci: sata@01c18000 {
+>> +                       status = "okay";
+>> +               };
+>> +
+>>                  pinctrl@01c20800 {
+>>                          mmc0_cd_pin_a1000: mmc0_cd_pin@0 {
+>>                                  allwinner,pins = "PH1";
+>> diff --git a/arch/arm/boot/dts/sun4i-a10-cubieboard.dts b/arch/arm/boot/dts/sun4i-a10-cubieboard.dts
+>> index f50fb2b..6ae1110 100644
+>> --- a/arch/arm/boot/dts/sun4i-a10-cubieboard.dts
+>> +++ b/arch/arm/boot/dts/sun4i-a10-cubieboard.dts
+>> @@ -12,6 +12,7 @@
+>>
+>>   /dts-v1/;
+>>   /include/ "sun4i-a10.dtsi"
+>> +/include/ "sunxi-ahci-reg.dtsi"
+>>
+>>   / {
+>>          model = "Cubietech Cubieboard";
+>> @@ -51,6 +52,11 @@
+>>                          status = "okay";
+>>                  };
+>>
+>> +               ahci: sata@01c18000 {
+>> +                       target-supply = <&reg_ahci_5v>;
+>> +                       status = "okay";
+>> +               };
+>> +
+>>                  pinctrl@01c20800 {
+>>                          mmc0_cd_pin_cubieboard: mmc0_cd_pin@0 {
+>>                                  allwinner,pins = "PH1";
+>> diff --git a/arch/arm/boot/dts/sun4i-a10.dtsi b/arch/arm/boot/dts/sun4i-a10.dtsi
+>> index 4736dd2..198dcda 100644
+>> --- a/arch/arm/boot/dts/sun4i-a10.dtsi
+>> +++ b/arch/arm/boot/dts/sun4i-a10.dtsi
+>> @@ -331,6 +331,14 @@
+>>                          status = "disabled";
+>>                  };
+>>
+>> +               ahci: sata@01c18000 {
+>> +                       compatible = "allwinner,sun4i-a10-ahci";
+>> +                       reg = <0x01c18000 0x1000>;
+>> +                       interrupts = <56>;
+>> +                       clocks = <&pll6 0>, <&ahb_gates 25>;
+>> +                       status = "disabled";
+>> +               };
+>> +
+>
+> Consider adding
+>
+>      pinctrl-names = "default";
+>
+> in the ahci node to suppress "default pin state not found" warnings.
+> Same goes for sun7i-a20.dtsi.
 
-Some of the problems include handling the case where you get someone
-dirties a single block in a sparse page, and the FS needs to manually
-fault in the other 56k pages around that single page.  Or the VM not
-understanding that page eviction needs to be done in chunks of 64k so
-we don't have part of the block evicted but not all of it, etc.
+ahci does not use pinctrl, the ahci (and usb) phys have dedicated pins,
+since they don't use pinctrl at all no such warnings are issued.
 
-					- Ted
+>
+>>                  intc: interrupt-controller@01c20400 {
+>>                          compatible = "allwinner,sun4i-ic";
+>>                          reg = <0x01c20400 0x400>;
+>> diff --git a/arch/arm/boot/dts/sunxi-ahci-reg.dtsi b/arch/arm/boot/dts/sunxi-ahci-reg.dtsi
+>> new file mode 100644
+>> index 0000000..955b197
+>> --- /dev/null
+>> +++ b/arch/arm/boot/dts/sunxi-ahci-reg.dtsi
+>> @@ -0,0 +1,38 @@
+>> +/*
+>> + * sunxi boards sata target power supply common code
+>> + *
+>> + * Copyright 2014 - Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+>> + *
+>> + * The code contained herein is licensed under the GNU General Public
+>> + * License. You may obtain a copy of the GNU General Public License
+>> + * Version 2 or later at the following locations:
+>> + *
+>> + * http://www.opensource.org/licenses/gpl-license.html
+>> + * http://www.gnu.org/copyleft/gpl.html
+>> + */
+>> +
+>> +/ {
+>> +       soc@01c00000 {
+>
+> This block needs to be under
+>
+>      pinctrl@01c20800 {
+>
+>> +               ahci_pwr_pin_a: ahci_pwr_pin@0 {
+>> +                       allwinner,pins = "PB8";
+>> +                       allwinner,function = "gpio_out";
+>> +                       allwinner,drive = <0>;
+>> +                       allwinner,pull = <0>;
+>> +               };
+>
+>      };
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+You're completely right, fixed in my local tree.
+
+Regards,
+
+Hans
