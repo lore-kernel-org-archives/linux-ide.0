@@ -1,188 +1,180 @@
-From: Pratyush Anand <pratyush.anand@st.com>
-Subject: Re: [PATCH V2 4/8] SPEAr13xx: Fixup: Move SPEAr1340 SATA platform
- code to system cfg driver
-Date: Fri, 24 Jan 2014 09:59:59 +0530
-Message-ID: <20140124042959.GC2369@pratyush-vbox>
-References: <cover.1390471111.git.mohit.kumar@st.com>
- <0c4bf78f2a843625f3175cdf259fad653bd2e86d.1390471111.git.mohit.kumar@st.com>
- <201401231322.54914.arnd@arndb.de>
+From: Mel Gorman <mgorman@suse.de>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] really large storage sectors - going
+ beyond 4096 bytes
+Date: Fri, 24 Jan 2014 10:57:48 +0000
+Message-ID: <20140124105748.GQ4963@suse.de>
+References: <52DFDCA6.1050204@redhat.com>
+ <20140122151913.GY4963@suse.de>
+ <1390410233.1198.7.camel@ret.masoncoding.com>
+ <1390411300.2372.33.camel@dabdike.int.hansenpartnership.com>
+ <1390413819.1198.20.camel@ret.masoncoding.com>
+ <1390414439.2372.53.camel@dabdike.int.hansenpartnership.com>
+ <20140123082734.GP13997@dastard>
+ <1390492073.2372.118.camel@dabdike.int.hansenpartnership.com>
+ <20140123164438.GL4963@suse.de>
+ <1390506935.2402.8.camel@dabdike>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from eu1sys200aog115.obsmtp.com ([207.126.144.139]:57634 "EHLO
-	eu1sys200aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750814AbaAXEaf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 Jan 2014 23:30:35 -0500
+Content-Type: text/plain; charset=iso-8859-15
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <201401231322.54914.arnd@arndb.de>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <1390506935.2402.8.camel@dabdike>
+Sender: owner-linux-mm@kvack.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Chris Mason <clm@fb.com>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "rwheeler@redhat.com" <rwheeler@redhat.com>
 List-Id: linux-ide@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Mohit KUMAR DCG <Mohit.KUMAR@st.com>, Viresh Kumar <viresh.linux@gmail.com>, spear-devel <spear-devel@list.st.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
 
-Hi Arnd,
-
-Thanks for your valuable comments.
-
-On Thu, Jan 23, 2014 at 08:22:54PM +0800, Arnd Bergmann wrote:
-> On Thursday 23 January 2014, Mohit Kumar wrote:
-> > diff --git a/arch/arm/boot/dts/spear13xx.dtsi b/arch/arm/boot/dts/spear13xx.dtsi
-> > index 3518803..2b4e58e 100644
-> > --- a/arch/arm/boot/dts/spear13xx.dtsi
-> > +++ b/arch/arm/boot/dts/spear13xx.dtsi
-> > @@ -78,6 +78,10 @@
-> >  		status = "disabled";
-> >  	};
-> >  
-> > +	cfg {
-> > +		compatible = "st,spear13xx-cfg";
-> > +	};
-> > +
-> >  	ahb {
-> >  		#address-cells = <1>;
-> >  		#size-cells = <1>;
+On Thu, Jan 23, 2014 at 11:55:35AM -0800, James Bottomley wrote:
+> > > > > > <SNIP>
+> > > > > > The real benefit is when and how the reads get scheduled.  We're able to
+> > > > > > do a much better job pipelining the reads, controlling our caches and
+> > > > > > reducing write latency by having the reads done up in the OS instead of
+> > > > > > the drive.
+> > > > > 
+> > > > > I agree with all of that, but my question is still can we do this by
+> > > > > propagating alignment and chunk size information (i.e. the physical
+> > > > > sector size) like we do today.  If the FS knows the optimal I/O patterns
+> > > > > and tries to follow them, the odd cockup won't impact performance
+> > > > > dramatically.  The real question is can the FS make use of this layout
+> > > > > information *without* changing the page cache granularity?  Only if you
+> > > > > answer me "no" to this do I think we need to worry about changing page
+> > > > > cache granularity.
+> > > > 
+> > > > We already do this today.
+> > > > 
+> > > > The problem is that we are limited by the page cache assumption that
+> > > > the block device/filesystem never need to manage multiple pages as
+> > > > an atomic unit of change. Hence we can't use the generic
+> > > > infrastructure as it stands to handle block/sector sizes larger than
+> > > > a page size...
+> > > 
+> > > If the compound page infrastructure exists today and is usable for this,
+> > > what else do we need to do? ... because if it's a couple of trivial
+> > > changes and a few minor patches to filesystems to take advantage of it,
+> > > we might as well do it anyway. 
+> > 
+> > Do not do this as there is no guarantee that a compound allocation will
+> > succeed.
 > 
-> I only saw some of the patches, and did not get a patch with the binding
-> description for this device. Please forward that patch to me, or add it
-> to the series if you didn't have one.
+> I presume this is because in the current implementation compound pages
+> have to be physically contiguous.
 
-It was not there.
-Will add a patch for the same in v3.
+Well.... yes. In VM terms, a compound page is a high-order physically
+contiguous page that has additional metadata and a destructor. A potentially
+discontiguous buffer would need a different structure and always be accessed
+with base-page-sized iterators.
 
+> For increasing granularity in the
+> page cache, we don't necessarily need this ... however, getting write
+> out to work properly without physically contiguous pages would be a bit
+> more challenging (but not impossible) to solve.
 > 
-> I assume you'd want a phandle pointing to the syscon device in here
-> as well?
 
-Since there is only one syscon device in the whole DT, so do I really
-need to add phandle? Currently I am using
-syscon_regmap_lookup_by_compatible to find  syscon device.
+Every filesystem would have to be aware of this potentially discontiguous
+buffer. I do not know what the mechanics of fsblock were but I bet it
+had to handle some sort of multiple page read/write when block size was
+bigger than PAGE_SIZE.
 
+> >  If the allocation fails then it is potentially unrecoverable
+> > because we can no longer write to storage then you're hosed. If you are
+> > now thinking mempool then the problem becomes that the system will be
+> > in a state of degraded performance for an unknowable length of time and
+> > may never recover fully. 64K MMU page size systems get away with this
+> > because the blocksize is still <= PAGE_SIZE and no core VM changes are
+> > necessary. Critically, pages like the page table pages are the same size as
+> > the basic unit of allocation used by the kernel so external fragmentation
+> > simply is not a severe problem.
 > 
-> Regarding the naming, please do not use 'xx' wildcards in DT compatible
-> strings. Instead, use the exact model name of the first supported
-> version of the hardware (e.g. spear1300 or spear600) that remains
-> compatible. If there are minor variations between the versions,
-> use a list with the most specific version as well as the older ones
-> it's compatible with.
+> Right, I understand this ... but we still need to wonder about what it
+> would take.
 
-Ok..ll take care.
+So far on the table is
 
-> 
-> > @@ -221,6 +225,11 @@
-> >  				  0xd8000000 0xd8000000 0x01000000
-> >  				  0xe0000000 0xe0000000 0x10000000>;
-> >  
-> > +			misc: misc@e0700000 {
-> > +				compatible = "st,spear13xx-misc", "syscon";
-> > +				reg = <0xe0700000 0x1000>;
-> > +			};
-> > +
-> 
-> Same here. Also, I would make this 'misc: syscon@e0700000', since 'misc'
-> does not seem like an appropriate device name.
+1. major filesystem overhawl
+2. major vm overhawl
+3. use compound pages as they are today and hope it does not go
+   completely to hell, reboot when it does
 
-Ok.
+>  Even the simple fail a compound page allocation gets
+> treated in the kernel the same way as failing a single page allocation
+> in the page cache.
+> 
 
-> 
-> 
-> > +/* SPEAr1340 Registers */
-> > +/* Power Management Registers */
-> > +#define SPEAR1340_PCM_CFG			0x100
-> > +	#define SPEAR1340_PCM_CFG_SATA_POWER_EN	0x800
-> > +#define SPEAR1340_PCM_WKUP_CFG			0x104
-> > +#define SPEAR1340_SWITCH_CTR			0x108
-> > +
-> > +#define SPEAR1340_PERIP1_SW_RST			0x318
-> > +	#define SPEAR1340_PERIP1_SW_RST_SATA	0x1000
-> > +#define SPEAR1340_PERIP2_SW_RST			0x31C
-> > +#define SPEAR1340_PERIP3_SW_RST			0x320
-> > +
-> > +/* PCIE - SATA configuration registers */
-> > +#define SPEAR1340_PCIE_SATA_CFG			0x424
-> > +	/* PCIE CFG MASks */
-> > +	#define SPEAR1340_PCIE_CFG_DEVICE_PRESENT	(1 << 11)
-> > +	#define SPEAR1340_PCIE_CFG_POWERUP_RESET	(1 << 10)
-> > +	#define SPEAR1340_PCIE_CFG_CORE_CLK_EN		(1 << 9)
-> > +	#define SPEAR1340_PCIE_CFG_AUX_CLK_EN		(1 << 8)
-> > +	#define SPEAR1340_SATA_CFG_TX_CLK_EN		(1 << 4)
-> > +	#define SPEAR1340_SATA_CFG_RX_CLK_EN		(1 << 3)
-> > +	#define SPEAR1340_SATA_CFG_POWERUP_RESET	(1 << 2)
-> > +	#define SPEAR1340_SATA_CFG_PM_CLK_EN		(1 << 1)
-> > +	#define SPEAR1340_PCIE_SATA_SEL_PCIE		(0)
-> > +	#define SPEAR1340_PCIE_SATA_SEL_SATA		(1)
-> > +	#define SPEAR1340_PCIE_SATA_CFG_MASK		0xF1F
-> > +	#define SPEAR1340_PCIE_CFG_VAL	(SPEAR1340_PCIE_SATA_SEL_PCIE | \
-> > +			SPEAR1340_PCIE_CFG_AUX_CLK_EN | \
-> > +			SPEAR1340_PCIE_CFG_CORE_CLK_EN | \
-> > +			SPEAR1340_PCIE_CFG_POWERUP_RESET | \
-> > +			SPEAR1340_PCIE_CFG_DEVICE_PRESENT)
-> > +	#define SPEAR1340_SATA_CFG_VAL	(SPEAR1340_PCIE_SATA_SEL_SATA | \
-> > +			SPEAR1340_SATA_CFG_PM_CLK_EN | \
-> > +			SPEAR1340_SATA_CFG_POWERUP_RESET | \
-> > +			SPEAR1340_SATA_CFG_RX_CLK_EN | \
-> > +			SPEAR1340_SATA_CFG_TX_CLK_EN)
-> > +
-> > +#define SPEAR1340_PCIE_MIPHY_CFG		0x428
-> > +	#define SPEAR1340_MIPHY_OSC_BYPASS_EXT		(1 << 31)
-> > +	#define SPEAR1340_MIPHY_CLK_REF_DIV2		(1 << 27)
-> > +	#define SPEAR1340_MIPHY_CLK_REF_DIV4		(2 << 27)
-> > +	#define SPEAR1340_MIPHY_CLK_REF_DIV8		(3 << 27)
-> > +	#define SPEAR1340_MIPHY_PLL_RATIO_TOP(x)	(x << 0)
-> > +	#define SPEAR1340_PCIE_MIPHY_CFG_MASK		0xF80000FF
-> > +	#define SPEAR1340_PCIE_SATA_MIPHY_CFG_SATA \
-> > +			(SPEAR1340_MIPHY_OSC_BYPASS_EXT | \
-> > +			SPEAR1340_MIPHY_CLK_REF_DIV2 | \
-> > +			SPEAR1340_MIPHY_PLL_RATIO_TOP(60))
-> > +	#define SPEAR1340_PCIE_SATA_MIPHY_CFG_SATA_25M_CRYSTAL_CLK \
-> > +			(SPEAR1340_MIPHY_PLL_RATIO_TOP(120))
-> > +	#define SPEAR1340_PCIE_SATA_MIPHY_CFG_PCIE \
-> > +			(SPEAR1340_MIPHY_OSC_BYPASS_EXT | \
-> > +			SPEAR1340_MIPHY_PLL_RATIO_TOP(25))
-> > +
-> > +struct spear13xx_cfg_priv {
-> > +	struct regmap		*misc;
-> > +};
-> > +
-> > +/* SATA device registration */
-> > +static void spear1340_sata_miphy_init(struct spear13xx_cfg_priv *cfgpriv)
-> > +{
-> > +	regmap_update_bits(cfgpriv->misc, SPEAR1340_PCIE_SATA_CFG,
-> > +			SPEAR1340_PCIE_SATA_CFG_MASK, SPEAR1340_SATA_CFG_VAL);
-> > +	regmap_update_bits(cfgpriv->misc, SPEAR1340_PCIE_MIPHY_CFG,
-> > +			SPEAR1340_PCIE_MIPHY_CFG_MASK,
-> > +			SPEAR1340_PCIE_SATA_MIPHY_CFG_SATA_25M_CRYSTAL_CLK);
-> > +	/* Switch on sata power domain */
-> > +	regmap_update_bits(cfgpriv->misc, SPEAR1340_PCM_CFG,
-> > +			SPEAR1340_PCM_CFG_SATA_POWER_EN,
-> > +			SPEAR1340_PCM_CFG_SATA_POWER_EN);
-> > +	msleep(20);
-> > +	/* Disable PCIE SATA Controller reset */
-> > +	regmap_update_bits(cfgpriv->misc, SPEAR1340_PERIP1_SW_RST,
-> > +			SPEAR1340_PERIP1_SW_RST_SATA, 0);
-> > +	msleep(20);
-> > +}
-> 
-> Looking at the actual code now, this very much looks like it ought to
-> be a "phy" driver and get put in drivers/phy/.
+The percentages of failures are the problem here. If an order-0 allocation
+fails then any number of actions the kernel takes will result in a free
+page that can be used to satisfy the allocation. At worst, OOM killing a
+process is guaranteed to free up order-0 pages but the same is not true
+for compaction. Anti-fragmentation and compaction make this very difficult
+and they go a long way here but it is not a 100% guarantee a compound
+allocation will succeed in the future or be a cheap allocation.
 
-Actually these registers are part of common system configurations
-register space (called as misc space) for SPEAr SOC. So we opted for
-syscon framework.
-
-PHY registers space starts from 0xEB800000, which can be
-programmed for various phy specific functions like power management,
-tx/rx settings, comparator settings etc. In most of the cases phy
-works with default settings, however there are few exceptions for
-which we will be adding a phy driver for further improvement of SPEAr
-drivers.
-
-Regards
-Pratyush
+> > > I was only objecting on the grounds that
+> > > the last time we looked at it, it was major VM surgery.  Can someone
+> > > give a summary of how far we are away from being able to do this with
+> > > the VM system today and what extra work is needed (and how big is this
+> > > piece of work)?
+> > > 
+> > 
+> > Offhand no idea. For fsblock, probably a similar amount of work than
+> > had to be done in 2007 and I'd expect it would still require filesystem
+> > awareness problems that Dave Chinner pointer out earlier. For large block,
+> > it'd hit into the same wall that allocations must always succeed.
 > 
-> Please see the recent mailing list discussions about making the ahci
-> driver more generic. Once you put this code in a proper phy driver,
-> you should be able to avoid a lot of your workaround and just use
-> the regular ahci-platform driver without any hand-crafted platform
-> data callbacks.
+> I don't understand this.  Why must they succeed?  4k page allocations
+> don't have to succeed today in the page cache, so why would compound
+> page allocations have to succeed?
 > 
-> 	Arnd
+
+4K page allocations can temporarily fail but almost any reclaim action
+with the exception of slab reclaim will result in 4K allocation requests
+succeeding again. The same is not true of compound pages. An adverse workload
+could potentially use page table pages (unreclaimable other than OOM kill)
+to prevent compound allocations ever succeeding.
+
+That's why I suggested that it may be necessary to change the basic unit of
+allocation the kernel uses to be larger than the MMU page size and restrict
+how the sub pages are used. The requirement is to preserve the property that
+"with the exception of slab reclaim that any reclaim action will result
+in K-sized allocation succeeding" where K is the largest blocksize used by
+any underlying storage device. From an FS perspective then certain things
+would look similar to what they do today. Block data would be on physically
+contiguous pages, buffer_heads would still manage the case where block_size
+<= PAGEALLOC_PAGE_SIZE (as opposed to MMU_PAGE_SIZE), particularly for
+dirty tracking and so on. The VM perspective is different because now it
+has to handle MMU_PAGE_SIZE in a very different way, page reclaim of a page
+becomes multiple unmap events and so on. There would also be anomalies such
+as mlock of a range smaller than PAGEALLOC_PAGE_SIZE becomes difficult if
+not impossible to sensibly manage because mlock of a 4K page effectively
+pins the rest and it's not obvious how we would deal with the VMAs in that
+case. It would get more than just the storage gains though. Some of the
+scalability problems that deal with massive amount of struct pages may
+magically go away if the base unit of allocation and management changes.
+
+> >  If we
+> > want to break the connection between the basic unit of memory managed
+> > by the kernel and the MMU page size then I don't know but it would be a
+> > fairly large amount of surgery and need a lot of design work. Minimally,
+> > anything dealing with an MMU-sized amount of memory would now need to
+> > deal with sub-pages and there would need to be some restrictions on how
+> > sub-pages were used to mitigate the risk of external fragmentation -- do not
+> > mix page table page allocations with pages mapped into the address space,
+> > do not allow sub pages to be used by different processes etc. At the very
+> > least there would be a performance impact because PAGE_SIZE is no longer a
+> > compile-time constant. However, it would potentially allow the block size
+> > to be at least the same size as this new basic allocation unit.
+> 
+> Hm, OK, so less appealing then.
+> 
+
+Yes. On the plus side, you get the type of compound pages you want. On the
+negative side this would be a massive overhawl of a large chunk of the VM
+with lots of nasty details.
+
+-- 
+Mel Gorman
+SUSE Labs
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
