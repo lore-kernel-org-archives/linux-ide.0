@@ -1,94 +1,55 @@
-From: Pratyush Anand <pratyush.anand@gmail.com>
-Subject: Re: [PATCH V2 4/8] SPEAr13xx: Fixup: Move SPEAr1340 SATA platform
- code to system cfg driver
-Date: Sat, 25 Jan 2014 11:06:51 +0530
-Message-ID: <CAHM4w1=We03RGnUdq5_tzTaLaMRK+a8MiAss6SRaDK=fWoqF_w@mail.gmail.com>
-References: <cover.1390471111.git.mohit.kumar@st.com>
-	<201401231322.54914.arnd@arndb.de>
-	<20140124042959.GC2369@pratyush-vbox>
-	<201401242153.00848.arnd@arndb.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: Fabio Estevam <festevam@gmail.com>
+Subject: [PATCH] ata: pata_imx: Check the return value from clk_prepare_enable()
+Date: Sat, 25 Jan 2014 19:46:23 -0200
+Message-ID: <1390686383-13790-1-git-send-email-festevam@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-oa0-f46.google.com ([209.85.219.46]:47207 "EHLO
-	mail-oa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750763AbaAYFgw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Jan 2014 00:36:52 -0500
-In-Reply-To: <201401242153.00848.arnd@arndb.de>
+Received: from mail-gg0-f175.google.com ([209.85.161.175]:47553 "EHLO
+	mail-gg0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753580AbaAYVqp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Jan 2014 16:46:45 -0500
+Received: by mail-gg0-f175.google.com with SMTP id c2so1699061ggn.34
+        for <linux-ide@vger.kernel.org>; Sat, 25 Jan 2014 13:46:44 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Pratyush Anand <pratyush.anand@st.com>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Mohit KUMAR DCG <Mohit.KUMAR@st.com>, spear-devel <spear-devel@list.st.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Viresh Kumar <viresh.linux@gmail.com>, Tejun Heo <tj@kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, Fabio Estevam <fabio.estevam@freescale.com>
 
-Hi Arnd,
+From: Fabio Estevam <fabio.estevam@freescale.com>
 
+clk_prepare_enable() may fail, so let's check its return value and propagate it
+in the case of error.
 
-On Sat, Jan 25, 2014 at 2:23 AM, Arnd Bergmann <arnd@arndb.de> wrote:
->
-> On Friday 24 January 2014, Pratyush Anand wrote:
-> > On Thu, Jan 23, 2014 at 08:22:54PM +0800, Arnd Bergmann wrote:
-> > > On Thursday 23 January 2014, Mohit Kumar wrote:
-> > >
-> > > I assume you'd want a phandle pointing to the syscon device in here
-> > > as well?
-> >
-> > Since there is only one syscon device in the whole DT, so do I really
-> > need to add phandle? Currently I am using
-> > syscon_regmap_lookup_by_compatible to find  syscon device.
->
-> I'd much rather use syscon_regmap_lookup_by_phandle than
-> syscon_regmap_lookup_by_compatible, all the time, since this makes
-> the relationship between the devices explicit.
->
-> The phandle method also allows you to pass regmap indexes in the
-> same property, which can be handy if two variants of the chip have
-> the same registers at a different offset.
->
-> > > > +/* SPEAr1340 Registers */
-> > > > +/* Power Management Registers */
+Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+---
+ drivers/ata/pata_imx.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-[...]
+diff --git a/drivers/ata/pata_imx.c b/drivers/ata/pata_imx.c
+index 97417d5..7e69797 100644
+--- a/drivers/ata/pata_imx.c
++++ b/drivers/ata/pata_imx.c
+@@ -118,7 +118,9 @@ static int pata_imx_probe(struct platform_device *pdev)
+ 		return PTR_ERR(priv->clk);
+ 	}
+ 
+-	clk_prepare_enable(priv->clk);
++	ret = clk_prepare_enable(priv->clk);
++	if (ret)
++		return ret;
+ 
+ 	host = ata_host_alloc(&pdev->dev, 1);
+ 	if (!host) {
+@@ -211,7 +213,9 @@ static int pata_imx_resume(struct device *dev)
+ 	struct ata_host *host = dev_get_drvdata(dev);
+ 	struct pata_imx_priv *priv = host->private_data;
+ 
+-	clk_prepare_enable(priv->clk);
++	int ret = clk_prepare_enable(priv->clk);
++	if (ret)
++		return ret;
+ 
+ 	__raw_writel(priv->ata_ctl, priv->host_regs + PATA_IMX_ATA_CONTROL);
+ 
+-- 
+1.8.1.2
 
-> > > Looking at the actual code now, this very much looks like it ought to
-> > > be a "phy" driver and get put in drivers/phy/.
-> >
-> > Actually these registers are part of common system configurations
-> > register space (called as misc space) for SPEAr SOC. So we opted for
-> > syscon framework.
->
-> The use of syscon for this is good, I have no objection to that, and
-> was suggesting that you create a logical "phy" device that uses the
-> misc syscon device as a backend.
->
-> > PHY registers space starts from 0xEB800000, which can be
-> > programmed for various phy specific functions like power management,
-> > tx/rx settings, comparator settings etc. In most of the cases phy
-> > works with default settings, however there are few exceptions for
-> > which we will be adding a phy driver for further improvement of SPEAr
-> > drivers.
->
-> I see. So while the code you have here could be expressed as a phy driver
-> by itself, there is another part of the SoC that controls the actual
-> phy. How about if you add the phy device node to DT, and write a driver
-> that doesn't actually program the phy registers for now, but does contain
-> the code that you have posted here. That would give you flexibility for
-> future extensions and at the same time let you remove all SPEAr specific
-> code from the actual AHCI driver by using the generic ahci-platform
-> driver.
-
-OK..
---  will move all these code to a phy driver.
--- so, no need of a new cfg node as of now.
--- will pass syscon phandle to phy driver.
--- currently will keep ahci platform plugin (as it is here) in phy driver.
-will remove when generic ahci driver is in place.
-
-Regards
-Pratyush
->
->         Arnd
->
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
