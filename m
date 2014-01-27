@@ -1,350 +1,168 @@
-From: Yuvaraj Kumar C D <yuvaraj.cd@gmail.com>
-Subject: [PATCH V7 1/2] PHY: Exynos: Add Exynos5250 SATA PHY driver
-Date: Mon, 27 Jan 2014 19:49:25 +0530
-Message-ID: <1390832366-23454-2-git-send-email-yuvaraj.cd@samsung.com>
-References: <1390832366-23454-1-git-send-email-yuvaraj.cd@samsung.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1390832366-23454-1-git-send-email-yuvaraj.cd@samsung.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: kishon@ti.com, kgene.kim@samsung.com, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org, linux-doc@vger.kernel.org, sander@humilis.net
-Cc: mark.rutland@arm.com, jg1.han@samsung.com, b.zolnierkie@samsung.com, joshi@samsung.com, t.figa@samsung.com, swarren@wwwdotorg.org, grant.likely@linaro.org, christoffer.dall@linaro.org, linux-ide@vger.kernel.org, Yuvaraj Kumar C D <yuvaraj.cd@samsung.com>, Girish K S <ks.giri@samsung.com>, Vasanth Ananthan <vasanth.a@samsung.com>
+From: Roger Quadros <rogerq-l0cyMroinI0@public.gmane.org>
+Subject: Re: [PATCH v5 07/14] ahci-platform: "Library-ise"
+ ahci_probe functionality
+Date: Mon, 27 Jan 2014 16:27:12 +0200
+Message-ID: <52E66CC0.3080205@ti.com>
+References: <1390417489-5354-1-git-send-email-hdegoede@redhat.com> <1390417489-5354-8-git-send-email-hdegoede@redhat.com> <52E63778.5000509@ti.com> <52E63A1F.6080301@redhat.com> <52E63D08.6080704@ti.com> <52E642F7.3000308@redhat.com>
+Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-sunxi+bncBD45J6OZZMOBBSGZTGLQKGQENUG2Q7Q-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <52E642F7.3000308-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/linux-sunxi>
+Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Richard Zhu <Hong-Xing.Zhu-KZfg59tc24xl57MIdRCFDg@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, devicetree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
-This patch adds the SATA PHY driver for Exynos5250.Exynos5250 SATA
-PHY comprises of CMU and TRSV blocks which are of I2C register Map.
-So this patch also adds a i2c client driver, which is used configure
-the CMU and TRSV block of exynos5250 SATA PHY.
+On 01/27/2014 01:28 PM, Hans de Goede wrote:
+> Hi,
+> 
+> On 01/27/2014 12:03 PM, Roger Quadros wrote:
+>> On 01/27/2014 12:51 PM, Hans de Goede wrote:
+>>> Hi,
+>>>
+>>> On 01/27/2014 11:39 AM, Roger Quadros wrote:
+>>>> Hi,
+>>>>
+>>>> On 01/22/2014 09:04 PM, Hans de Goede wrote:
+>>>
+>>> <snip>
+>>>
+>>>>> --- a/include/linux/ahci_platform.h
+>>>>> +++ b/include/linux/ahci_platform.h
+>>>>> @@ -20,7 +20,13 @@
+>>>>>    struct device;
+>>>>>    struct ata_port_info;
+>>>>>    struct ahci_host_priv;
+>>>>> +struct platform_device;
+>>>>>
+>>>>> +/*
+>>>>> + * Note ahci_platform_data is deprecated. New drivers which need to override
+>>>>> + * any of these, should instead declare there own platform_driver struct, and
+>>>>> + * use ahci_platform* functions in their own probe, suspend and resume methods.
+>>>>> + */
+>>>>>    struct ahci_platform_data {
+>>>>>        int (*init)(struct device *dev, struct ahci_host_priv *hpriv);
+>>>>>        void (*exit)(struct device *dev);
+>>>>> @@ -35,5 +41,13 @@ int ahci_platform_enable_clks(struct ahci_host_priv *hpriv);
+>>>>>    void ahci_platform_disable_clks(struct ahci_host_priv *hpriv);
+>>>>>    int ahci_platform_enable_resources(struct ahci_host_priv *hpriv);
+>>>>>    void ahci_platform_disable_resources(struct ahci_host_priv *hpriv);
+>>>>> +struct ahci_host_priv *ahci_platform_get_resources(
+>>>>> +    struct platform_device *pdev);
+>>>>
+>>>> Why not use 'struct device' as the argument?
+>>>
+>>> Because of calls to platform_get_resource inside the function.
+>>>
+>>>>> +void ahci_platform_put_resources(struct ahci_host_priv *hpriv);
+>>>>
+>>>> Can we have 'struct device' as the argument? Else it becomes
+>>>> impossible to get 'struct device' from 'hpriv' if we need to call e.g.
+>>>> pm_runtime_*() APIs.
+>>>
+>>> The plan for is for this function to go away once we have a
+>>> devm version of of_clk_get, so if you need to put pm_runtime_calls
+>>> somewhere, please don't put them here. This sounds like something which
+>>> should go in enable / disable resources instead ?
+>>
+>> OK. I need to add pm_runtime_enable() + pm_runtime_get_sync() during
+>> initialization and pm_runtime_put_sync() + pm_runtime_disable() during cleanup.
+> 
+> Note that enable / disable resources will get called by (the default implementations
+> of) suspend / resume too.
+> 
+> If that is undesirable then I take back what I said before and
+> ahci_platform_put_resources' prototype should be changed to:
+> 
+> void ahci_platform_put_resources(struct device *dev, struct ahci_host_priv *hpriv);
+> 
+> And we will need to keep it around even after we get devm_of_clk_get.
+> 
+>> If ahci_platform_enable/disable_resources is the right place then we must be
+>> able to access struct device from there.
+> 
+> Right, and if not we need to access it from ahci_platform_put_resources(),
+> which is in essence the same problem.
+> 
+>> Is it a good to add 'struct device *dev' into the 'struct ahci_host_priv'?
+>> Then you can leave this series as is and i'll add a new patch for that.
+> 
+> Normally we get a device * as argument, and get to hpriv like this:
+> 
+>         struct ata_host *host = dev_get_drvdata(dev);
+>         struct ahci_host_priv *hpriv = host->private_data;
+> 
+> So having a dev * in hpriv is normally not useful.
+> 
+> But the ata_host gets allocated after the first ahci_platform_enable_resources
+> call, so we cannot use this there. Likewise disable_resources / put_resources
+> is used in error handling paths in probe where we don't have an ata_host yet,
+> so my vote goes to adding a "struct device *dev" as first argument, like I
+> suggested above for ahci_platform_put_resources.
+> 
+> This can be done as an add-on patch (if you do don't forget to also fix
+> ahci_sunxi.c and ahci_imx.c), or I can respin my series to have this from
+> day one.
+> 
+> If you want me to do a respin, please let me know which fix you'll need
+> (the put_resources or the enable/disable one).
+> 
 
-This patch incorporates the generic PHY framework to deal with SATA
-PHY.
+For now I'm using get/put_resources to enable runtime PM and enable the device
+like in the below patch.
 
-This patch depends on the below patches
-	[1].drivers: phy: add generic PHY framework
-		by Kishon Vijay Abraham I<kishon@ti.com>
-	[2].ata: ahci_platform: Manage SATA PHY
-		by Roger Quadros <rogerq@ti.com>
+I'll make the necessary changes to ahci_platform_put_resources();
 
-Signed-off-by: Yuvaraj Kumar C D <yuvaraj.cd@samsung.com>
-Signed-off-by: Girish K S <ks.giri@samsung.com>
-Signed-off-by: Vasanth Ananthan <vasanth.a@samsung.com>
----
-Changes from V6:
-	1.Removed phy-exynos5250-sata-i2c.c,as it is not required
-	  after moving to of_find_i2c_device_by_node().
-	2.Changed struct __iomem *pmureg tp struct regmap *pmureg.
-	3.Changed the wait_for_reg_status() to return 0 or -EFAULT.
+cheers,
+-roger
 
-Changes from V5:
-	1.Rebased on latest generic PHY framework for-next tree.
-	2.Minor nits such as indentations.
-
-Changes from V4:
-	1.Made Exynos5250 SATA PHY driver by default selects
-	CONFIG_I2C and CONFIG_I2C_S3C2410, as SATA PHY driver
-	depends on I2C.
-	2.struct i2c_driver sataphy_i2c_driver made static which
-	was earlier global type.
-	3.Renamed the files to phy-exynos5250-sata.c and 
-	phy-exynos5250-sata-i2c.c and CONFIG_EXYNOS5250_SATA_PHY
-	to CONFIG_PHY_EXYNOS5250_SATA. 
-
-Changes from V3:
-	1.Moved devm_phy_create before to devm_phy_provider_register.
-
-Changes from V2:
-	1.Removed of_match_table
-	2.Moved to syscon interface for PMU handling.
-
-Changes from V1:
-	1.Adapted to latest version of Generic PHY framework
-	2.Removed exynos_sata_i2c_remove function.
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index 5ec6fe6..965f4b4 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -23,6 +23,7 @@
+ #include <linux/platform_device.h>
+ #include <linux/libata.h>
+ #include <linux/ahci_platform.h>
++#include <linux/pm_runtime.h>
+ #include "ahci.h"
  
- drivers/phy/Kconfig               |   13 ++
- drivers/phy/Makefile              |    1 +
- drivers/phy/phy-exynos5250-sata.c |  244 +++++++++++++++++++++++++++++++++++++
- 3 files changed, 258 insertions(+)
- create mode 100644 drivers/phy/phy-exynos5250-sata.c
-
-diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
-index d0611b8..df79150 100644
---- a/drivers/phy/Kconfig
-+++ b/drivers/phy/Kconfig
-@@ -57,4 +57,17 @@ config PHY_EXYNOS_DP_VIDEO
- 	help
- 	  Support for Display Port PHY found on Samsung EXYNOS SoCs.
+ static void ahci_host_stop(struct ata_host *host);
+@@ -233,6 +234,9 @@ struct ahci_host_priv *ahci_platform_get_resources(
+                }
+        }
  
-+config PHY_EXYNOS5250_SATA
-+	tristate "Exynos5250 Sata SerDes/PHY driver"
-+	depends on SOC_EXYNOS5250
-+	select GENERIC_PHY
-+	select I2C
-+	select I2C_S3C2410
-+	select MFD_SYSCON
-+	help
-+	  Enable this to support SATA SerDes/Phy found on Samsung's
-+	  Exynos5250 based SoCs.This SerDes/Phy supports SATA 1.5 Gb/s,
-+	  SATA 3.0 Gb/s, SATA 6.0 Gb/s speeds. It supports one SATA host
-+	  port to accept one SATA device.
++       pm_runtime_enable(dev);
++       pm_runtime_get_sync(dev);
 +
- endmenu
-diff --git a/drivers/phy/Makefile b/drivers/phy/Makefile
-index 4e4adc9..5d93dc9 100644
---- a/drivers/phy/Makefile
-+++ b/drivers/phy/Makefile
-@@ -8,3 +8,4 @@ obj-$(CONFIG_PHY_EXYNOS_MIPI_VIDEO)	+= phy-exynos-mipi-video.o
- obj-$(CONFIG_PHY_MVEBU_SATA)		+= phy-mvebu-sata.o
- obj-$(CONFIG_OMAP_USB2)			+= phy-omap-usb2.o
- obj-$(CONFIG_TWL4030_USB)		+= phy-twl4030-usb.o
-+obj-$(CONFIG_PHY_EXYNOS5250_SATA)	+= phy-exynos5250-sata.o
-diff --git a/drivers/phy/phy-exynos5250-sata.c b/drivers/phy/phy-exynos5250-sata.c
-new file mode 100644
-index 0000000..b35168d
---- /dev/null
-+++ b/drivers/phy/phy-exynos5250-sata.c
-@@ -0,0 +1,244 @@
-+/*
-+ * Samsung SATA SerDes(PHY) driver
-+ *
-+ * Copyright (C) 2013 Samsung Electronics Co., Ltd.
-+ * Authors: Girish K S <ks.giri@samsung.com>
-+ *         Yuvaraj Kumar C D <yuvaraj.cd@samsung.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
+        return hpriv;
+ 
+ free_clk:
+@@ -246,6 +250,9 @@ void ahci_platform_put_resources(struct ahci_host_priv *hpriv)
+ {
+        int c;
+ 
++       pm_runtime_put_sync(dev);
++       pm_runtime_disable(dev);
 +
-+#include <linux/clk.h>
-+#include <linux/delay.h>
-+#include <linux/io.h>
-+#include <linux/i2c.h>
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/of.h>
-+#include <linux/of_address.h>
-+#include <linux/phy/phy.h>
-+#include <linux/platform_device.h>
-+#include <linux/regmap.h>
-+#include <linux/spinlock.h>
-+#include <linux/mfd/syscon.h>
+        for (c = 0; c < AHCI_MAX_CLKS && hpriv->clks[c]; c++)
+                clk_put(hpriv->clks[c]);
+ }
+@@ -478,6 +485,11 @@ int ahci_platform_resume(struct device *dev)
+        if (rc)
+                goto disable_resources;
+ 
++       /* We resumed so update PM runtime state */
++       pm_runtime_disable(dev);
++       pm_runtime_set_active(dev);
++       pm_runtime_enable(dev);
 +
-+#define EXYNOS5_SATA_RESET		0x4
-+#define RESET_CMN_RST_N			(1 << 1)
-+#define LINK_RESET			0xf0000
-+#define EXYNOS5_SATA_MODE0		0x10
-+#define EXYNOS5_SATAPHY_PMU_ENABLE	(1 << 0)
-+#define SATA_SPD_GEN3			(2 << 0)
-+#define EXYNOS5_SATA_CTRL0		0x14
-+#define CTRL0_P0_PHY_CALIBRATED_SEL	(1 << 9)
-+#define CTRL0_P0_PHY_CALIBRATED		(1 << 8)
-+#define EXYNOS5_SATA_PHSATA_CTRLM	0xe0
-+#define PHCTRLM_REF_RATE		(1 << 1)
-+#define PHCTRLM_HIGH_SPEED		(1 << 0)
-+#define EXYNOS5_SATA_PHSATA_STATM	0xf0
-+#define PHSTATM_PLL_LOCKED		(1 << 0)
-+#define EXYNOS_SATA_PHY_EN		(1 << 0)
-+#define SATAPHY_CONTROL_OFFSET		0x0724
-+
-+#define PHY_PLL_TIMEOUT (usecs_to_jiffies(1000))
-+
-+struct exynos_sata_phy {
-+	struct phy *phy;
-+	struct clk *phyclk;
-+	void __iomem *regs;
-+	struct regmap *pmureg;
-+	struct i2c_client *client;
-+};
-+
-+static int wait_for_reg_status(void __iomem *base, u32 reg, u32 checkbit,
-+				u32 status)
-+{
-+	unsigned long timeout = jiffies + PHY_PLL_TIMEOUT;
-+
-+	while (time_before(jiffies, timeout)) {
-+		if ((readl(base + reg) & checkbit) == status)
-+			return 0;
-+	}
-+
-+	return -EFAULT;
-+}
-+
-+static int exynos_sata_phy_power_on(struct phy *phy)
-+{
-+	struct exynos_sata_phy *sata_phy = phy_get_drvdata(phy);
-+
-+	return regmap_update_bits(sata_phy->pmureg, SATAPHY_CONTROL_OFFSET,
-+			EXYNOS5_SATAPHY_PMU_ENABLE, EXYNOS_SATA_PHY_EN);
-+
-+}
-+
-+static int exynos_sata_phy_power_off(struct phy *phy)
-+{
-+	struct exynos_sata_phy *sata_phy = phy_get_drvdata(phy);
-+
-+	return regmap_update_bits(sata_phy->pmureg, SATAPHY_CONTROL_OFFSET,
-+			EXYNOS5_SATAPHY_PMU_ENABLE, ~EXYNOS_SATA_PHY_EN);
-+
-+}
-+
-+static int exynos_sata_phy_init(struct phy *phy)
-+{
-+	u32 val = 0;
-+	int ret = 0;
-+	u8 buf[] = { 0x3a, 0x0b };
-+	struct exynos_sata_phy *sata_phy = phy_get_drvdata(phy);
-+
-+	ret = regmap_update_bits(sata_phy->pmureg, SATAPHY_CONTROL_OFFSET,
-+			EXYNOS5_SATAPHY_PMU_ENABLE, EXYNOS_SATA_PHY_EN);
-+	if (ret != 0)
-+		dev_err(&sata_phy->phy->dev, "phy init failed\n");
-+
-+	writel(val, sata_phy->regs + EXYNOS5_SATA_RESET);
-+
-+	val = readl(sata_phy->regs + EXYNOS5_SATA_RESET);
-+	val |= 0xff;
-+	writel(val, sata_phy->regs + EXYNOS5_SATA_RESET);
-+
-+	val = readl(sata_phy->regs + EXYNOS5_SATA_RESET);
-+	val |= LINK_RESET;
-+	writel(val, sata_phy->regs + EXYNOS5_SATA_RESET);
-+
-+	val = readl(sata_phy->regs + EXYNOS5_SATA_RESET);
-+	val |= RESET_CMN_RST_N;
-+	writel(val, sata_phy->regs + EXYNOS5_SATA_RESET);
-+
-+	val = readl(sata_phy->regs + EXYNOS5_SATA_PHSATA_CTRLM);
-+	val &= ~PHCTRLM_REF_RATE;
-+	writel(val, sata_phy->regs + EXYNOS5_SATA_PHSATA_CTRLM);
-+
-+	/* High speed enable for Gen3 */
-+	val = readl(sata_phy->regs + EXYNOS5_SATA_PHSATA_CTRLM);
-+	val |= PHCTRLM_HIGH_SPEED;
-+	writel(val, sata_phy->regs + EXYNOS5_SATA_PHSATA_CTRLM);
-+
-+	val = readl(sata_phy->regs + EXYNOS5_SATA_CTRL0);
-+	val |= CTRL0_P0_PHY_CALIBRATED_SEL | CTRL0_P0_PHY_CALIBRATED;
-+	writel(val, sata_phy->regs + EXYNOS5_SATA_CTRL0);
-+
-+	val = readl(sata_phy->regs + EXYNOS5_SATA_MODE0);
-+	val |= SATA_SPD_GEN3;
-+	writel(val, sata_phy->regs + EXYNOS5_SATA_MODE0);
-+
-+	ret = i2c_master_send(sata_phy->client, buf, sizeof(buf));
-+	if (ret < 0)
-+		return ret;
-+
-+	/* release cmu reset */
-+	val = readl(sata_phy->regs + EXYNOS5_SATA_RESET);
-+	val &= ~RESET_CMN_RST_N;
-+	writel(val, sata_phy->regs + EXYNOS5_SATA_RESET);
-+
-+	val = readl(sata_phy->regs + EXYNOS5_SATA_RESET);
-+	val |= RESET_CMN_RST_N;
-+	writel(val, sata_phy->regs + EXYNOS5_SATA_RESET);
-+
-+	ret = wait_for_reg_status(sata_phy->regs,
-+				EXYNOS5_SATA_PHSATA_STATM,
-+				PHSTATM_PLL_LOCKED, 1);
-+	if (ret < 0)
-+		dev_err(&sata_phy->phy->dev,
-+			"PHY PLL locking failed\n");
-+	return ret;
-+}
-+
-+static struct phy_ops exynos_sata_phy_ops = {
-+	.init		= exynos_sata_phy_init,
-+	.power_on	= exynos_sata_phy_power_on,
-+	.power_off	= exynos_sata_phy_power_off,
-+	.owner		= THIS_MODULE,
-+};
-+
-+static int exynos_sata_phy_probe(struct platform_device *pdev)
-+{
-+	struct exynos_sata_phy *sata_phy;
-+	struct device *dev = &pdev->dev;
-+	struct resource *res;
-+	struct phy_provider *phy_provider;
-+	struct device_node *node;
-+	int ret = 0;
-+
-+	sata_phy = devm_kzalloc(dev, sizeof(*sata_phy), GFP_KERNEL);
-+	if (!sata_phy)
-+		return -ENOMEM;
-+
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+
-+	sata_phy->regs = devm_ioremap_resource(dev, res);
-+	if (IS_ERR(sata_phy->regs))
-+		return PTR_ERR(sata_phy->regs);
-+
-+	sata_phy->pmureg = syscon_regmap_lookup_by_phandle(dev->of_node,
-+					"samsung,syscon-phandle");
-+	if (IS_ERR(sata_phy->pmureg)) {
-+			dev_err(dev, "syscon regmap lookup failed.\n");
-+			return PTR_ERR(sata_phy->pmureg);
-+		}
-+
-+	node = of_parse_phandle(dev->of_node,
-+			"samsung,exynos-sataphy-i2c-phandle", 0);
-+	if (!node)
-+		return -EINVAL;
-+
-+	sata_phy->client = of_find_i2c_device_by_node(node);
-+	if (!sata_phy->client)
-+		return -EPROBE_DEFER;
-+
-+	dev_set_drvdata(dev, sata_phy);
-+
-+	sata_phy->phyclk = devm_clk_get(dev, "sata_phyctrl");
-+	if (IS_ERR(sata_phy->phyclk)) {
-+		dev_err(dev, "failed to get clk for PHY\n");
-+		return PTR_ERR(sata_phy->phyclk);
-+	}
-+
-+	ret = clk_prepare_enable(sata_phy->phyclk);
-+	if (ret < 0) {
-+		dev_err(dev, "failed to enable source clk\n");
-+		return ret;
-+	}
-+
-+	sata_phy->phy = devm_phy_create(dev, &exynos_sata_phy_ops, NULL);
-+	if (IS_ERR(sata_phy->phy)) {
-+		clk_disable_unprepare(sata_phy->phyclk);
-+		dev_err(dev, "failed to create PHY\n");
-+		return PTR_ERR(sata_phy->phy);
-+	}
-+
-+	phy_set_drvdata(sata_phy->phy, sata_phy);
-+
-+	phy_provider = devm_of_phy_provider_register(dev,
-+					of_phy_simple_xlate);
-+	if (IS_ERR(phy_provider)) {
-+		clk_disable_unprepare(sata_phy->phyclk);
-+		return PTR_ERR(phy_provider);
-+	}
-+
-+	return 0;
-+}
-+
-+static const struct of_device_id exynos_sata_phy_of_match[] = {
-+	{ .compatible = "samsung,exynos5250-sata-phy" },
-+	{ },
-+};
-+MODULE_DEVICE_TABLE(of, exynos_sata_phy_of_match);
-+
-+static struct platform_driver exynos_sata_phy_driver = {
-+	.probe	= exynos_sata_phy_probe,
-+	.driver = {
-+		.of_match_table	= exynos_sata_phy_of_match,
-+		.name  = "samsung,sata-phy",
-+		.owner = THIS_MODULE,
-+	}
-+};
-+module_platform_driver(exynos_sata_phy_driver);
-+
-+MODULE_DESCRIPTION("Samsung SerDes PHY driver");
-+MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Girish K S <ks.giri@samsung.com>");
-+MODULE_AUTHOR("Yuvaraj C D <yuvaraj.cd@samsung.com>");
--- 
-1.7.9.5
+        return 0;
+ 
+ disable_resources:
