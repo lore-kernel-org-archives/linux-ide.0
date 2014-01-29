@@ -1,43 +1,36 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH v2 0/9] Phase out pci_enable_msi_block()
-Date: Wed, 29 Jan 2014 14:59:06 +0100
-Message-ID: <20140129135906.GA3495@dhcp-26-207.brq.redhat.com>
-References: <cover.1389904166.git.agordeev@redhat.com>
- <CAErSpo5ztnyyceeN38XzLasLV6eJqdbqEV0viPp3Af8U=ts23w@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] ata: pata_imx: Check the return value from
+ clk_prepare_enable()
+Date: Wed, 29 Jan 2014 13:16:11 -0500
+Message-ID: <20140129181611.GK30842@htj.dyndns.org>
+References: <1390686383-13790-1-git-send-email-festevam@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pci-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qc0-f176.google.com ([209.85.216.176]:38191 "EHLO
+	mail-qc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751116AbaA2SQP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Jan 2014 13:16:15 -0500
+Received: by mail-qc0-f176.google.com with SMTP id e16so3330712qcx.35
+        for <linux-ide@vger.kernel.org>; Wed, 29 Jan 2014 10:16:14 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <CAErSpo5ztnyyceeN38XzLasLV6eJqdbqEV0viPp3Af8U=ts23w@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Alex Williamson <alex.williamson@redhat.com>, Kalle Valo <kvalo@qca.qualcomm.com>, Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Brian King <brking@us.ibm.com>, Tejun Heo <tj@kernel.org>, Matthew Wilcox <willy@linux.intel.com>, linux-wireless <linux-wireless@vger.kernel.org>, wil6210@qca.qualcomm.com, ath10k@lists.infradead.org, linux-nvme@lists.infradead.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kvm@vger.kernel.org" <kvm@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+In-Reply-To: <1390686383-13790-1-git-send-email-festevam@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Fabio Estevam <festevam@gmail.com>
+Cc: linux-ide@vger.kernel.org, Fabio Estevam <fabio.estevam@freescale.com>
 
-On Fri, Jan 17, 2014 at 02:00:32PM -0700, Bjorn Helgaas wrote:
-> > Bjorn,
-> >
-> > As the release is supposedly this weekend, do you prefer
-> > the patches to go to your tree or to individual trees after
-> > the release?
+On Sat, Jan 25, 2014 at 07:46:23PM -0200, Fabio Estevam wrote:
+> From: Fabio Estevam <fabio.estevam@freescale.com>
 > 
-> I'd be happy to merge them, except for the fact that they probably
-> wouldn't have any time in -next before I ask Linus to pull them.  So
-> how about if we wait until after the release, ask the area maintainers
-> to take them, and if they don't take them, I'll put them in my tree
-> for v3.15?
+> clk_prepare_enable() may fail, so let's check its return value and propagate it
+> in the case of error.
+> 
+> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
 
-Hi Gentleman,
+Applied to libata/for-3.14-fixes.
 
-As the prerequisite commit 302a252 ("PCI/MSI: Add pci_enable_msi_range()
-and pci_enable_msix_range()") is in mainline now, could you please take
-the ACKed patches to your trees?
-
-Thanks!
-
-> Bjorn
+Thanks.
 
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+tejun
