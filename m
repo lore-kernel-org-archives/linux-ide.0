@@ -1,43 +1,43 @@
-From: David Miller <davem@davemloft.net>
-Subject: [GIT] IDE
-Date: Wed, 29 Jan 2014 00:50:53 -0800 (PST)
-Message-ID: <20140129.005053.2082541589188028703.davem@davemloft.net>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH v2 0/9] Phase out pci_enable_msi_block()
+Date: Wed, 29 Jan 2014 14:59:06 +0100
+Message-ID: <20140129135906.GA3495@dhcp-26-207.brq.redhat.com>
+References: <cover.1389904166.git.agordeev@redhat.com>
+ <CAErSpo5ztnyyceeN38XzLasLV6eJqdbqEV0viPp3Af8U=ts23w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:49631 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750936AbaA2Iux (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Jan 2014 03:50:53 -0500
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-pci-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAErSpo5ztnyyceeN38XzLasLV6eJqdbqEV0viPp3Af8U=ts23w@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Alex Williamson <alex.williamson@redhat.com>, Kalle Valo <kvalo@qca.qualcomm.com>, Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Brian King <brking@us.ibm.com>, Tejun Heo <tj@kernel.org>, Matthew Wilcox <willy@linux.intel.com>, linux-wireless <linux-wireless@vger.kernel.org>, wil6210@qca.qualcomm.com, ath10k@lists.infradead.org, linux-nvme@lists.infradead.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kvm@vger.kernel.org" <kvm@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
 List-Id: linux-ide@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+On Fri, Jan 17, 2014 at 02:00:32PM -0700, Bjorn Helgaas wrote:
+> > Bjorn,
+> >
+> > As the release is supposedly this weekend, do you prefer
+> > the patches to go to your tree or to individual trees after
+> > the release?
+> 
+> I'd be happy to merge them, except for the fact that they probably
+> wouldn't have any time in -next before I ask Linus to pull them.  So
+> how about if we wait until after the release, ask the area maintainers
+> to take them, and if they don't take them, I'll put them in my tree
+> for v3.15?
 
-Two header file inclusion fixes from Rashika Kheria.
+Hi Gentleman,
 
-Please pull, thanks a lot!
+As the prerequisite commit 302a252 ("PCI/MSI: Add pci_enable_msi_range()
+and pci_enable_msix_range()") is in mainline now, could you please take
+the ACKed patches to your trees?
 
-The following changes since commit 0e47c969c65e213421450c31043353ebe3c67e0c:
+Thanks!
 
-  Merge tag 'for-linus-20140127' of git://git.infradead.org/linux-mtd (2014-01-28 18:56:37 -0800)
+> Bjorn
 
-are available in the git repository at:
-
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide.git master
-
-for you to fetch changes up to 61eae5bb06496a6633ba000a1d7546b494e00081:
-
-  drivers: ide: Include appropriate header file in ide-pio-blacklist.c (2014-01-28 23:35:09 -0800)
-
-----------------------------------------------------------------
-Rashika Kheria (2):
-      drivers: ide: Include appropriate header file in ide-cd_verbose.c
-      drivers: ide: Include appropriate header file in ide-pio-blacklist.c
-
- drivers/ide/ide-cd_verbose.c    | 2 ++
- drivers/ide/ide-pio-blacklist.c | 1 +
- 2 files changed, 3 insertions(+)
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
