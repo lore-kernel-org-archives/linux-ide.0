@@ -1,79 +1,84 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: additional model for sata_sil Mod15Write list
-Date: Wed, 29 Jan 2014 13:32:42 -0500
-Message-ID: <20140129183242.GO30842@htj.dyndns.org>
-References: <201401211912.s0LJCk7F015058@rs103.luxsci.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v2 0/9] Phase out pci_enable_msi_block()
+Date: Wed, 29 Jan 2014 14:48:01 -0700
+Message-ID: <20140129214801.GE16825@google.com>
+References: <cover.1389904166.git.agordeev@redhat.com>
+ <CAErSpo5ztnyyceeN38XzLasLV6eJqdbqEV0viPp3Af8U=ts23w@mail.gmail.com>
+ <20140118071538.GA32535@dhcp-26-207.brq.redhat.com>
+ <CAErSpo4nBdnn3YYaLj6QZ8iyY2pzV8Y7msd5UxJXm1T2AYnqfg@mail.gmail.com>
+ <20140118145940.GE3640@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f177.google.com ([209.85.216.177]:37823 "EHLO
-	mail-qc0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753084AbaA2Scq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Jan 2014 13:32:46 -0500
-Received: by mail-qc0-f177.google.com with SMTP id i8so3303593qcq.22
-        for <linux-ide@vger.kernel.org>; Wed, 29 Jan 2014 10:32:45 -0800 (PST)
+Received: from mail-ig0-f177.google.com ([209.85.213.177]:60146 "EHLO
+	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751166AbaA2VsH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Jan 2014 16:48:07 -0500
+Received: by mail-ig0-f177.google.com with SMTP id k19so5655097igc.4
+        for <linux-ide@vger.kernel.org>; Wed, 29 Jan 2014 13:48:06 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <201401211912.s0LJCk7F015058@rs103.luxsci.com>
+In-Reply-To: <20140118145940.GE3640@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: matson <lists-matsonpa@luxsci.me>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Alexander Gordeev <agordeev@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Brian King <brking@us.ibm.com>, Matthew Wilcox <willy@linux.intel.com>, Alex Williamson <alex.williamson@redhat.com>, Kalle Valo <kvalo@qca.qualcomm.com>, Vladimir Kondratiev <qca_vkondrat@qca.qualcomm.com>, linux-wireless <linux-wireless@vger.kernel.org>, wil6210@qca.qualcomm.com, ath10k@lists.infradead.org, linux-nvme@lists.infradead.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kvm@vger.kernel.org" <kvm@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 
-Hello,
-
-Sorry about the delay.
-
-So, this has been reported to me privately a while ago and the
-behavioral pattern seems to strongly suggest that it actually is the
-same Mod15Write issue.  Matson, can you please post the results of
-dd tries with varying io sizes from your previous email?
-
-On Tue, Jan 21, 2014 at 07:12:46PM +0000, matson wrote:
-> I have a SiI3112 rev 2 and a Toshiba MK2561GSYN HDD.  I think it
-> belongs in the list of buggy drives which require Mod15Write.
+On Sat, Jan 18, 2014 at 09:59:40AM -0500, Tejun Heo wrote:
+> On Sat, Jan 18, 2014 at 07:38:55AM -0700, Bjorn Helgaas wrote:
+> > On Sat, Jan 18, 2014 at 12:15 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
+> > > On Fri, Jan 17, 2014 at 02:00:32PM -0700, Bjorn Helgaas wrote:
+> > >> > As the release is supposedly this weekend, do you prefer
+> > >> > the patches to go to your tree or to individual trees after
+> > >> > the release?
+> > >>
+> > >> I'd be happy to merge them, except for the fact that they probably
+> > >> wouldn't have any time in -next before I ask Linus to pull them.  So
+> > >> how about if we wait until after the release, ask the area maintainers
+> > >> to take them, and if they don't take them, I'll put them in my tree
+> > >> for v3.15?
+> > >
+> > > Patch 11 depends on patches 1-10, so I am not sure how to better handle it.
+> > > Whatever works for you ;)
+> > >
+> > > I am only concerned with a regression fix "ahci: Fix broken fallback to
+> > > single MSI mode" which would be nice to have in 3.14. But it seems pretty
+> > > much too late.
+> > 
+> > Tejun, if you want to ack that one, I can put it in either the first
+> > 3.14 pull request or a subsequent one.  Either way, since it's a
+> > regression fix, we should be able to get it in 3.14.
 > 
-> To test, I perform:
-> dd if=/dev/zero of=/dev/sdb oflag=direct bs=8192
-> Without enabling slow_down, after moment of pause, this shows up in dmesg:
+> Acked-by: Tejun Heo <tj@kernel.org>
 > 
-> ata7.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-> ata7.00: failed command: WRITE DMA
-> ata7.00: cmd ca/00:10:80:01:00/00:00:00:00:00/e0 tag 0 dma 8192 out
->           res 40/00:01:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-> ata7.00: status: { DRDY }
-> ata7: hard resetting link
-> ata7: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> ata7.00: configured for UDMA/100
-> ata7.00: device reported invalid CHS sector 0
-> ata7: EH complete
-> 
-> If I use slow_down, these timeouts are gone completely.  If I write
-> 7680 (15 sector), repeated 100000 times, it is okay.  Reading any
-> size is okay.  All of my other drives behave with this card.
-> 
-> My HDD is HP part 625239, firmware is MH000C.  I do know whether
+> Please feel free to route it any way you see fit.
 
-I suppose you meant to write "do not know"?
+I applied the following to my pci/msi branch, since they had acks from
+maintainers (Tejun, I assumed your ack applies to both ahci patches):
 
-> other models (in the series) or firmwares have this problem.
-> 
-> The following drives are in series TOSHIBA MKxx61GSYN:
-> MK1661GSYN MK2561GSYN MK3261GSYN MK5061GSYN MK6461GSYN
+    ahci: Fix broken fallback to single MSI mode
+    ahci: Use pci_enable_msi_range()
+    vfio: Use pci_enable_msi_range() and pci_enable_msix_range()
+    wil6210: Use pci_enable_msi_range()
 
-Can you please post the output "hdparm -I" on your device?
+I didn't do anything with these:
 
-> I searched for pictures on the Web, and found that these models used
-> by Dell have firmware MH000D, and some others have firmware MH000A
-> (maybe these are retail).
-> 
-> MKxx61GSYN listed as current, not discontinued, at Toshiba's Web site.
-> 
-> http://storage.toshiba.com/storagesolutions/pc-notebook/mkxx61gsyn-series
+    ipr: Get rid of superfluous call to pci_disable_msi/msix()
+    ipr: Use pci_enable_msi_range() and pci_enable_msix_range()
 
-I'm a bit hesitant to mark all drives in the series with Mod15Write
-without testing.  Hmmm...
+	The conflict with "ipr: Handle early EEH" needs to get resolved
+	first.  Either Alexander's patches need to go via the same tree as
+	the EEH change, or the EEH change needs to be in some published
+	tree so I can cherry-pick it.
 
-Thanks!
+    nvme: Fix invalid call to irq_set_affinity_hint()
+    nvme: Use pci_enable_msi_range() and pci_enable_msix_range()
 
--- 
-tejun
+	These don't seem fully baked yet.  If/when Keith acks them, I (or
+	he) can merge them.
+
+    ath10k: Use pci_enable_msi_range()
+
+	This has been acked, but no longer applies to mainline (I'm
+	currently at 0e47c969c65e).
+
+Bjorn
