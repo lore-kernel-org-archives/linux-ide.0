@@ -1,36 +1,32 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ata: pata_imx: Check the return value from
- clk_prepare_enable()
-Date: Wed, 29 Jan 2014 13:16:11 -0500
-Message-ID: <20140129181611.GK30842@htj.dyndns.org>
-References: <1390686383-13790-1-git-send-email-festevam@gmail.com>
+Subject: Re: [PATCH] ATA: SATA_MV: Add missing Kconfig select statememnt
+Date: Wed, 29 Jan 2014 13:20:35 -0500
+Message-ID: <20140129182035.GM30842@htj.dyndns.org>
+References: <52e00d45.5gijwyKGLiVLcCNX%fengguang.wu@intel.com>
+ <1390420593-27697-1-git-send-email-andrew@lunn.ch>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f176.google.com ([209.85.216.176]:38191 "EHLO
-	mail-qc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751116AbaA2SQP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Jan 2014 13:16:15 -0500
-Received: by mail-qc0-f176.google.com with SMTP id e16so3330712qcx.35
-        for <linux-ide@vger.kernel.org>; Wed, 29 Jan 2014 10:16:14 -0800 (PST)
+Received: from mail-qc0-f175.google.com ([209.85.216.175]:34185 "EHLO
+	mail-qc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752578AbaA2SUj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Jan 2014 13:20:39 -0500
+Received: by mail-qc0-f175.google.com with SMTP id x13so3349437qcv.34
+        for <linux-ide@vger.kernel.org>; Wed, 29 Jan 2014 10:20:38 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <1390686383-13790-1-git-send-email-festevam@gmail.com>
+In-Reply-To: <1390420593-27697-1-git-send-email-andrew@lunn.ch>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Fabio Estevam <festevam@gmail.com>
-Cc: linux-ide@vger.kernel.org, Fabio Estevam <fabio.estevam@freescale.com>
+To: Andrew Lunn <andrew@lunn.ch>
+Cc: linux-ide@vger.kernel.org
 
-On Sat, Jan 25, 2014 at 07:46:23PM -0200, Fabio Estevam wrote:
-> From: Fabio Estevam <fabio.estevam@freescale.com>
+On Wed, Jan 22, 2014 at 08:56:33PM +0100, Andrew Lunn wrote:
+> SATA_MV depends on GENERIC_PHY. So if SATA_MV is built in, GENERIC_PHY
+> cannot be modular. Fixes build error found by kbuild test robot.
 > 
-> clk_prepare_enable() may fail, so let's check its return value and propagate it
-> in the case of error.
-> 
-> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+> Signed-off-by: Andrew Lunn <andrew@lunn.ch>
 
-Applied to libata/for-3.14-fixes.
-
-Thanks.
+Applied to libata/for-3.14-fixes.  Thanks.
 
 -- 
 tejun
