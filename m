@@ -1,27 +1,43 @@
 From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH 2/2] drivers: ide: Include appropriate header file in
- ide-pio-blacklist.c
-Date: Tue, 28 Jan 2014 23:37:03 -0800 (PST)
-Message-ID: <20140128.233703.360671975054752022.davem@davemloft.net>
-References: <d24d7befadfbfb9501d0e873f13e39fd42ec893b.1387278225.git.rashika.kheria@gmail.com>
-	<2ec755ae03ae9f912f40a12a241f997909f380a1.1387278225.git.rashika.kheria@gmail.com>
+Subject: [GIT] IDE
+Date: Wed, 29 Jan 2014 00:50:53 -0800 (PST)
+Message-ID: <20140129.005053.2082541589188028703.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-7
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <2ec755ae03ae9f912f40a12a241f997909f380a1.1387278225.git.rashika.kheria@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: rashika.kheria@gmail.com
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, josh@joshtriplett.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from shards.monkeyblade.net ([149.20.54.216]:49631 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750936AbaA2Iux (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Jan 2014 03:50:53 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-RnJvbTogUmFzaGlrYSBLaGVyaWEgPHJhc2hpa2Eua2hlcmlhQGdtYWlsLmNvbT4NCkRhdGU6IFR1
-ZSwgMTcgRGVjIDIwMTMgMTY6NDE6MTEgKzA1MzANCg0KPiBJbmNsdWRlIGFwcHJvcHJpYXRlIGhl
-YWRlciBmaWxlIGluY2x1ZGUvbGludXgvaWRlLmggaW4gZmlsZQ0KPiBpZGUtcGlvLWJsYWNrbGlz
-dC5jIGJlY2F1c2UgZnVuY3Rpb24gaWRlX3NjYW5fcGlvX2JsYWNrbGlzdCgpIGhhcyBpdCdzDQo+
-IHByb3RvdHlwZSBkZWNsYXJhdGlvbiBpbiBpbmNsdWRlL2xpbnV4L2lkZS5oLg0KPiANCj4gVGhp
-cyBlbGltaW5hdGVzIHRoZSBmb2xsb3dpbmcgd2FybmluZyBpbiBpZGUtcGlvLWJsYWNrbGlzdC5j
-Og0KPiBkcml2ZXJzL2lkZS9pZGUtcGlvLWJsYWNrbGlzdC5jOjg1OjU6IHdhcm5pbmc6IG5vIHBy
-ZXZpb3VzIHByb3RvdHlwZSBmb3IgoWlkZV9zY2FuX3Bpb19ibGFja2xpc3SiIFstV21pc3Npbmct
-cHJvdG90eXBlc10NCj4gDQo+IFNpZ25lZC1vZmYtYnk6IFJhc2hpa2EgS2hlcmlhIDxyYXNoaWth
-LmtoZXJpYUBnbWFpbC5jb20+DQoNCkFwcGxpZWQuDQo=
+
+Two header file inclusion fixes from Rashika Kheria.
+
+Please pull, thanks a lot!
+
+The following changes since commit 0e47c969c65e213421450c31043353ebe3c67e0c:
+
+  Merge tag 'for-linus-20140127' of git://git.infradead.org/linux-mtd (2014-01-28 18:56:37 -0800)
+
+are available in the git repository at:
+
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide.git master
+
+for you to fetch changes up to 61eae5bb06496a6633ba000a1d7546b494e00081:
+
+  drivers: ide: Include appropriate header file in ide-pio-blacklist.c (2014-01-28 23:35:09 -0800)
+
+----------------------------------------------------------------
+Rashika Kheria (2):
+      drivers: ide: Include appropriate header file in ide-cd_verbose.c
+      drivers: ide: Include appropriate header file in ide-pio-blacklist.c
+
+ drivers/ide/ide-cd_verbose.c    | 2 ++
+ drivers/ide/ide-pio-blacklist.c | 1 +
+ 2 files changed, 3 insertions(+)
