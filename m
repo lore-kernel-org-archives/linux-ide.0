@@ -1,71 +1,58 @@
-From: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
-Subject: Re: [PATCH] ATA: SATA_MV: Fix probe failure when no phy exists
-Date: Thu, 30 Jan 2014 19:12:28 -0300
-Message-ID: <20140130221228.GB1063@localhost>
-References: <1391115035-25960-1-git-send-email-andrew@lunn.ch>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] block devices: validate block device capacity
+Date: Thu, 30 Jan 2014 14:49:23 -0800
+Message-ID: <1391122163.2181.103.camel@dabdike.int.hansenpartnership.com>
+References: <alpine.LRH.2.02.1401301531040.29912@file01.intranet.prod.int.rdu2.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="ISO-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:38938 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752945AbaA3WMV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Jan 2014 17:12:21 -0500
-Content-Disposition: inline
-In-Reply-To: <1391115035-25960-1-git-send-email-andrew@lunn.ch>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:38630 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752968AbaA3Wt1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Jan 2014 17:49:27 -0500
+In-Reply-To: <alpine.LRH.2.02.1401301531040.29912@file01.intranet.prod.int.rdu2.redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Lunn <andrew@lunn.ch>
-Cc: tj@kernel.org, linux-ide@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Jason Cooper <jason@lakedaemon.net>
+To: Mikulas Patocka <mpatocka@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, "Alasdair G. Kergon" <agk@redhat.com>, Mike Snitzer <msnitzer@redhat.com>, dm-devel@redhat.com, Nick Piggin <npiggin@kernel.dk>, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org
 
-On Thu, Jan 30, 2014 at 09:50:35PM +0100, Andrew Lunn wrote:
-> Armada 370 and XP do not have a SATA phy driver.  The generic phy
-> layer does not cleanly support optional phys. It is not possible to
-> determine from the error code if there is expected to be a phy
-> according to DT, but it cannot be found, or no phy is listed in
-> DT. All that can be determined is that a phy is expected, but the
-> driver has not been loaded yet, in which case -EPROBE_DEFER is
-> returned. Thus for 370 and XP the driver failed to probe.  Play safe,
-> consider all errors except -EPROBE_DEFER to be none fatal and keep
-> going, and in the case of -EPROBE_DEFER exit the probe function with
-> that error code.
->=20
-> Tested on Kirkwood with a sata phy driver and on 370 without a sata
-> phy driver.
->=20
-> Reported-by: Jean Pihet <jean.pihet@linaro.org>
-> Signed-off-by: Andrew Lunn <andrew@lunn.ch>
-> Tested-by: Gregory Clement <gregory.clement@free-electrons.com>
-> ---
->  drivers/ata/sata_mv.c | 5 ++---
->  1 file changed, 2 insertions(+), 3 deletions(-)
->=20
-> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-> index eaa21eddbe70..148ff5a82c8b 100644
-> --- a/drivers/ata/sata_mv.c
-> +++ b/drivers/ata/sata_mv.c
-> @@ -4115,9 +4115,8 @@ static int mv_platform_probe(struct platform_de=
-vice *pdev)
->  		if (IS_ERR(hpriv->port_phys[port])) {
->  			rc =3D PTR_ERR(hpriv->port_phys[port]);
->  			hpriv->port_phys[port] =3D NULL;
-> -			if ((rc !=3D -EPROBE_DEFER) && (rc !=3D -ENODEV))
-> -				dev_warn(&pdev->dev, "error getting phy");
-> -			goto err;
-> +			if (rc =3D=3D -EPROBE_DEFER)
-> +				goto err;
+On Thu, 2014-01-30 at 15:40 -0500, Mikulas Patocka wrote:
+> When running the LVM2 testsuite on 32-bit kernel, there are unkillable
+> processes stuck in the kernel consuming 100% CPU:
+> blkid           R running      0  2005   1409 0x00000004
+> ce009d00 00000082 ffffffcf c11280ba 00000060 560b5dfd 00003111 00fe41cb
+> 00000000 ce009d00 00000000 d51cfeb0 00000000 0000001e 00000002 ffffffff
+> 00000002 c10748c1 00000002 c106cca4 00000000 00000000 ffffffff 00000000
+> Call Trace:
+> [<c11280ba>] ? radix_tree_next_chunk+0xda/0x2c0
+> [<c10748c1>] ? release_pages+0x61/0x160
+> [<c106cca4>] ? find_get_pages+0x84/0x100
+> [<c1251fbe>] ? _cond_resched+0x1e/0x40
+> [<c10758cb>] ? truncate_inode_pages_range+0x12b/0x440
+> [<c1075cb7>] ? truncate_inode_pages+0x17/0x20
+> [<c10cf2ba>] ? __blkdev_put+0x3a/0x140
+> [<c10d02db>] ? blkdev_close+0x1b/0x40
+> [<c10a60b2>] ? __fput+0x72/0x1c0
+> [<c1039461>] ? task_work_run+0x61/0xa0
+> [<c1253b6f>] ? work_notifysig+0x24/0x35
+> 
+> This is caused by the fact that the LVM2 testsuite creates 64TB device.
+> The kernel uses "unsigned long" to index pages in files and block devices,
+> on 64TB device "unsigned long" overflows (it can address up to 16TB with
+> 4k pages), causing the infinite loop.
 
-It feels a bit fishy to check for a specific errno.
+Why is this?  the whole reason for CONFIG_LBDAF is supposed to be to
+allow 64 bit offsets for block devices on 32 bit.  It sounds like
+there's somewhere not using sector_t ... or using it wrongly which needs
+fixing.
 
-How about not considering the lack of phy an error in all cases? In
-other words, remove the check completely.
+> On 32-bit architectures, we must limit block device size to
+> PAGE_SIZE*(2^32-1).
 
-Isn't the phy used only for power saving purposes? Or do we want this
-for another purpose?
+So you're saying CONFIG_LBDAF can never work, why?
 
-Or as a different solution, can't we check for the compatible-string
-and only try to get a phy for orion-sata?
---=20
-Ezequiel Garc=C3=ADa, Free Electrons
-Embedded Linux, Kernel and Android Engineering
-http://free-electrons.com
+James
+
+
+
