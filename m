@@ -1,77 +1,98 @@
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] really large storage sectors - going
- beyond 4096 bytes
-Date: Thu, 30 Jan 2014 17:01:03 +1100
-Message-ID: <20140130060103.GF13997@dastard>
-References: <1390410233.1198.7.camel@ret.masoncoding.com>
- <1390411300.2372.33.camel@dabdike.int.hansenpartnership.com>
- <1390413819.1198.20.camel@ret.masoncoding.com>
- <1390414439.2372.53.camel@dabdike.int.hansenpartnership.com>
- <20140123082734.GP13997@dastard>
- <1390492073.2372.118.camel@dabdike.int.hansenpartnership.com>
- <20140123164438.GL4963@suse.de>
- <1390506935.2402.8.camel@dabdike>
- <20140124105748.GQ4963@suse.de>
- <20140130045245.GH20939@parisc-linux.org>
+From: Mohit Kumar <mohit.kumar@st.com>
+Subject: [PATCH V3 0/8] PCI:Add SPEAr13xx PCie support
+Date: Thu, 30 Jan 2014 16:18:42 +0530
+Message-ID: <cover.1391077731.git.mohit.kumar@st.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20140130045245.GH20939@parisc-linux.org>
-Sender: owner-linux-mm@kvack.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Mel Gorman <mgorman@suse.de>, James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Chris Mason <clm@fb.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "rwheeler@redhat.com" <rwheeler@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-pci-owner@vger.kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
+To: arnd@arndb.de
+Cc: Mohit Kumar <mohit.kumar@st.com>, linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org, linux-ide@vger.kernel.org, linux-pci@vger.kernel.org, spear-devel@list.st.com, Tejun Heo <tj@kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Wed, Jan 29, 2014 at 09:52:46PM -0700, Matthew Wilcox wrote:
-> On Fri, Jan 24, 2014 at 10:57:48AM +0000, Mel Gorman wrote:
-> > So far on the table is
-> > 
-> > 1. major filesystem overhawl
-> > 2. major vm overhawl
-> > 3. use compound pages as they are today and hope it does not go
-> >    completely to hell, reboot when it does
-> 
-> Is the below paragraph an exposition of option 2, or is it an option 4,
-> change the VM unit of allocation?  Other than the names you're using,
-> this is basically what I said to Kirill in an earlier thread; either
-> scrap the difference between PAGE_SIZE and PAGE_CACHE_SIZE, or start
-> making use of it.
+First three patches are improvement and fixes for SPEAr13xx support.
+Next patch modify phy-core driver for its initialization during
+subsys_initcall(). Platform ahci driver is modified for phy hooks.
+Patch#6 and 7 modify/add support for SPEAr13xx SATA and PCIe.
 
-Christoph Lamater's compound page patch set scrapped PAGE_CACHE_SIZE
-and made it a variable that was set on the struct address_space when
-it was instantiated by the filesystem. In effect, it allowed
-filesystems to specify the unit of page cache allocation on a
-per-inode basis.
+These patches are tested with SPEAr1310 evaluation board:
+	- INTEL PRO 100/100 EP card
+	- USB xhci gen2 card
+ 	- Above cards connected through LeCROY PTC switch
 
-> The fact that EVERYBODY in this thread has been using PAGE_SIZE when they
-> should have been using PAGE_CACHE_SIZE makes me wonder if part of the
-> problem is that the split in naming went the wrong way.  ie use PTE_SIZE
-> for 'the amount of memory pointed to by a pte_t' and use PAGE_SIZE for
-> 'the amount of memory described by a struct page'.
+Modifications for SATA are tested with SPEAr1340-evb board
 
-PAGE_CACHE_SIZE was never distributed sufficiently to be used, and
-if you #define it to something other than PAGE_SIZE stuff will
-simply break.
+Changes since v2:
+- Incorporated comments to move SPEAr13xx PCIe and SATA phy specific routines to
+  the phy framework
+- Modify ahci driver to include phy hooks
+- phy-core driver modifications for subsys_initcall() 
+ 
+Changes since v1:
+- Few patches of the series are already accepted and applied to mainline e.g.
+ pcie designware driver improvements,fixes for IO translation bug, PCIe dw
+ driver maintainer. So dropped these from v2.
+- Incorporated comment to move the common/reset PCIe code to the seperate driver
+- PCIe and SATA share common PHY configuration registers, so move SATA
+ platform code to the system config driver
+Fourth patch is improves pcie designware driver and fixes the IO
+translation bug. IO translation bug fix leads to the working of PCIe EP devices
+connected to RC through switch.
 
-> (we need to remove the current users of PTE_SIZE; sparc32 and powerpc32,
-> but that's just a detail)
-> 
-> And we need to fix all the places that are currently getting the
-> distinction wrong.  SMOP ... ;-)  What would help is correct typing of
-> variables, possibly with sparse support to help us out.  Big Job.
+PCIe driver support for SPEAr1310/40 platform board is added.
 
-Yes, that's what the Christoph's patchset did.
+These patches are tested with SPEAr1310 evaluation board:
+	- INTEL PRO 100/100 EP card
+	- USB xhci gen2 card
+ 	- Above cards connected through LeCROY PTC switch
 
-Cheers,
+Mohit Kumar (2):
+  SPEAr13xx: defconfig: Update
+  MAINTAINERS: Add ST SPEAr13xx PCIe driver maintainer
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Pratyush Anand (6):
+  clk: SPEAr13xx: Fix pcie clock name
+  SPEAr13xx: Fix static mapping table
+  phy: Initialize phy core with subsys_initcall
+  ata: ahci platform: Add phy hooks to make it more generic
+  SPEAr13xx: Fixup: Move SPEAr1340 SATA platform code to phy driver
+  pcie: SPEAr13xx: Add designware pcie support
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: devicetree@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: spear-devel@list.st.com
+Cc: Tejun Heo <tj@kernel.org>
+
+ .../devicetree/bindings/ata/ahci-platform.txt      |    2 +
+ .../devicetree/bindings/pci/spear13xx-pcie.txt     |    7 +
+ .../devicetree/bindings/phy/spear13xx-miphy.txt    |    8 +
+ MAINTAINERS                                        |    6 +
+ arch/arm/boot/dts/spear1310-evb.dts                |    4 +
+ arch/arm/boot/dts/spear1310.dtsi                   |   87 ++++-
+ arch/arm/boot/dts/spear1340-evb.dts                |    4 +
+ arch/arm/boot/dts/spear1340.dtsi                   |   29 ++-
+ arch/arm/boot/dts/spear13xx.dtsi                   |   10 +-
+ arch/arm/configs/spear13xx_defconfig               |   16 +
+ arch/arm/mach-spear/Kconfig                        |    3 +
+ arch/arm/mach-spear/include/mach/spear.h           |    4 +-
+ arch/arm/mach-spear/spear1340.c                    |  127 +-----
+ arch/arm/mach-spear/spear13xx.c                    |    2 +-
+ drivers/ata/ahci.h                                 |    2 +
+ drivers/ata/ahci_platform.c                        |   20 +
+ drivers/clk/spear/spear1310_clock.c                |    6 +-
+ drivers/clk/spear/spear1340_clock.c                |    2 +-
+ drivers/pci/host/Kconfig                           |    5 +
+ drivers/pci/host/Makefile                          |    1 +
+ drivers/pci/host/pcie-spear13xx.c                  |  407 +++++++++++++++++
+ drivers/phy/Kconfig                                |    6 +
+ drivers/phy/Makefile                               |    1 +
+ drivers/phy/phy-core.c                             |    2 +-
+ drivers/phy/phy-spear13xx-sata-pcie.c              |  481 ++++++++++++++++++++
+ 25 files changed, 1102 insertions(+), 140 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/spear13xx-pcie.txt
+ create mode 100644 Documentation/devicetree/bindings/phy/spear13xx-miphy.txt
+ create mode 100644 drivers/pci/host/pcie-spear13xx.c
+ create mode 100644 drivers/phy/phy-spear13xx-sata-pcie.c
