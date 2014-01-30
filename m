@@ -1,82 +1,145 @@
-From: Mel Gorman <mgorman@suse.de>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] really large storage sectors - going
- beyond 4096 bytes
-Date: Thu, 30 Jan 2014 10:50:52 +0000
-Message-ID: <20140130105052.GP6732@suse.de>
-References: <1390410233.1198.7.camel@ret.masoncoding.com>
- <1390411300.2372.33.camel@dabdike.int.hansenpartnership.com>
- <1390413819.1198.20.camel@ret.masoncoding.com>
- <1390414439.2372.53.camel@dabdike.int.hansenpartnership.com>
- <20140123082734.GP13997@dastard>
- <1390492073.2372.118.camel@dabdike.int.hansenpartnership.com>
- <20140123164438.GL4963@suse.de>
- <1390506935.2402.8.camel@dabdike>
- <20140124105748.GQ4963@suse.de>
- <20140130045245.GH20939@parisc-linux.org>
+From: Mohit Kumar <mohit.kumar@st.com>
+Subject: [PATCH V3 5/8] ata: ahci platform: Add phy hooks to make it more generic
+Date: Thu, 30 Jan 2014 16:18:47 +0530
+Message-ID: <f82b7b246b8bedb153de5d360638ce79f13d61f0.1391077731.git.mohit.kumar@st.com>
+References: <cover.1391077731.git.mohit.kumar@st.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20140130045245.GH20939@parisc-linux.org>
-Sender: owner-linux-mm@kvack.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Chris Mason <clm@fb.com>, Dave Chinner <david@fromorbit.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "rwheeler@redhat.com" <rwheeler@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from eu1sys200aog123.obsmtp.com ([207.126.144.155]:33422 "EHLO
+	eu1sys200aog123.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753049AbaA3Kth (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Jan 2014 05:49:37 -0500
+In-Reply-To: <cover.1391077731.git.mohit.kumar@st.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: arnd@arndb.de
+Cc: Pratyush Anand <pratyush.anand@st.com>, Mohit Kumar <mohit.kumar@st.com>, Tejun Heo <tj@kernel.org>, spear-devel@list.st.com, linux-ide@vger.kernel.org
 
-On Wed, Jan 29, 2014 at 09:52:46PM -0700, Matthew Wilcox wrote:
-> On Fri, Jan 24, 2014 at 10:57:48AM +0000, Mel Gorman wrote:
-> > So far on the table is
-> > 
-> > 1. major filesystem overhawl
-> > 2. major vm overhawl
-> > 3. use compound pages as they are today and hope it does not go
-> >    completely to hell, reboot when it does
-> 
-> Is the below paragraph an exposition of option 2, or is it an option 4,
-> change the VM unit of allocation?
+From: Pratyush Anand <pratyush.anand@st.com>
 
-Changing the VM unit of allocation is a major VM overhawl
+Few platform does only phy specific work in platform callbacks. It is
+better to use standard phy callbacks for such platform in stead of
+platform callbacks.
 
-> Other than the names you're using,
-> this is basically what I said to Kirill in an earlier thread; either
-> scrap the difference between PAGE_SIZE and PAGE_CACHE_SIZE, or start
-> making use of it.
-> 
+This patch does not break any platform callbacks. It adds phy plugins
+on top of that.
 
-No. The PAGE_CACHE_SIZE would depend on the underlying address space and
-vary. The large block patchset would have to have done this but I did not
-go back and review the patches due to lack of time. With that it starts
-hitting into fragmentation problems that have to be addressed somehow and
-cannot just be waved away.
+It has been assumed that no platform will need both phy plugins as well
+as platform callbacks.
 
-> The fact that EVERYBODY in this thread has been using PAGE_SIZE when they
-> should have been using PAGE_CACHE_SIZE makes me wonder if part of the
-> problem is that the split in naming went the wrong way.  ie use PTE_SIZE
-> for 'the amount of memory pointed to by a pte_t' and use PAGE_SIZE for
-> 'the amount of memory described by a struct page'.
-> 
-> (we need to remove the current users of PTE_SIZE; sparc32 and powerpc32,
-> but that's just a detail)
-> 
-> And we need to fix all the places that are currently getting the
-> distinction wrong.  SMOP ... ;-)  What would help is correct typing of
-> variables, possibly with sparse support to help us out.  Big Job.
-> 
+Signed-off-by: Pratyush Anand <pratyush.anand@st.com>
+Cc: Mohit Kumar <mohit.kumar@st.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: spear-devel@list.st.com
+Cc: linux-ide@vger.kernel.org
+---
+ .../devicetree/bindings/ata/ahci-platform.txt      |    2 ++
+ drivers/ata/ahci.h                                 |    2 ++
+ drivers/ata/ahci_platform.c                        |   20 ++++++++++++++++++++
+ 3 files changed, 24 insertions(+), 0 deletions(-)
 
-That's taking the approach of the large block patchset (as I understand
-it, not reviewed, not working on this etc) without dealing with potential
-fragmentation problems. Of course they could be remapped virtually if
-necessary but that will be very constrained on 32-bit, the final transfer
-to hardware will require scatter/gather and there is a setup/teardown
-cost with virtual mappings such as faulting (setup) and IPIs to flush TLBs
-(teardown) that would add overhead.
-
+diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+index 89de156..73dff5a 100644
+--- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
++++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+@@ -10,6 +10,8 @@ Required properties:
+ 
+ Optional properties:
+ - dma-coherent      : Present if dma operations are coherent
++- phys		    : phandle to phy node associated with ahci controller
++- phy-names	    : must be "ahci-phy"
+ 
+ Example:
+         sata@ffe08000 {
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index 2289efd..77d1412 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -37,6 +37,7 @@
+ 
+ #include <linux/clk.h>
+ #include <linux/libata.h>
++#include <linux/phy/phy.h>
+ 
+ /* Enclosure Management Control */
+ #define EM_CTRL_MSG_TYPE              0x000f0000
+@@ -322,6 +323,7 @@ struct ahci_host_priv {
+ 	u32			em_buf_sz;	/* EM buffer size in byte */
+ 	u32			em_msg_type;	/* EM message type */
+ 	struct clk		*clk;		/* Only for platforms supporting clk */
++	struct phy		*phy;		/* associated phy struct */
+ 	void			*plat_data;	/* Other platform data */
+ };
+ 
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index f955431..4253c03 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -123,6 +123,12 @@ static int ahci_probe(struct platform_device *pdev)
+ 		return -ENOMEM;
+ 	}
+ 
++	/*
++	 * all ahci platform may not have phy node. So no need to
++	 * check return value of devm_phy_get.
++	 */
++	hpriv->phy = devm_phy_get(dev, "ahci-phy");
++
+ 	hpriv->flags |= (unsigned long)pi.private_data;
+ 
+ 	hpriv->mmio = devm_ioremap(dev, mem->start, resource_size(mem));
+@@ -152,6 +158,10 @@ static int ahci_probe(struct platform_device *pdev)
+ 		rc = pdata->init(dev, hpriv->mmio);
+ 		if (rc)
+ 			goto disable_unprepare_clk;
++	} else if (hpriv->phy && hpriv->phy->ops->init) {
++		rc = hpriv->phy->ops->init(hpriv->phy);
++		if (rc)
++			goto disable_unprepare_clk;
+ 	}
+ 
+ 	ahci_save_initial_config(dev, hpriv,
+@@ -221,6 +231,8 @@ static int ahci_probe(struct platform_device *pdev)
+ pdata_exit:
+ 	if (pdata && pdata->exit)
+ 		pdata->exit(dev);
++	else if (hpriv->phy && hpriv->phy->ops->exit)
++		hpriv->phy->ops->exit(hpriv->phy);
+ disable_unprepare_clk:
+ 	if (!IS_ERR(hpriv->clk))
+ 		clk_disable_unprepare(hpriv->clk);
+@@ -238,6 +250,8 @@ static void ahci_host_stop(struct ata_host *host)
+ 
+ 	if (pdata && pdata->exit)
+ 		pdata->exit(dev);
++	else if (hpriv->phy && hpriv->phy->ops->exit)
++		hpriv->phy->ops->exit(hpriv->phy);
+ 
+ 	if (!IS_ERR(hpriv->clk)) {
+ 		clk_disable_unprepare(hpriv->clk);
+@@ -276,6 +290,8 @@ static int ahci_suspend(struct device *dev)
+ 
+ 	if (pdata && pdata->suspend)
+ 		return pdata->suspend(dev);
++	else if (hpriv->phy && hpriv->phy->ops->power_off)
++		return hpriv->phy->ops->power_off(hpriv->phy);
+ 
+ 	if (!IS_ERR(hpriv->clk))
+ 		clk_disable_unprepare(hpriv->clk);
+@@ -302,6 +318,10 @@ static int ahci_resume(struct device *dev)
+ 		rc = pdata->resume(dev);
+ 		if (rc)
+ 			goto disable_unprepare_clk;
++	} else if (hpriv->phy && hpriv->phy->ops->power_on) {
++		rc = hpriv->phy->ops->power_on(hpriv->phy);
++		if (rc)
++			goto disable_unprepare_clk;
+ 	}
+ 
+ 	if (dev->power.power_state.event == PM_EVENT_SUSPEND) {
 -- 
-Mel Gorman
-SUSE Labs
+1.7.0.1
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
