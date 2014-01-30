@@ -1,122 +1,124 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH V3 6/8] SPEAr13xx: Fixup: Move SPEAr1340 SATA platform code to phy driver
-Date: Thu, 30 Jan 2014 14:21:00 +0100
-Message-ID: <201401301421.00990.arnd@arndb.de>
-References: <cover.1391077731.git.mohit.kumar@st.com> <7b9e0a98a6873f66e519791dfba20418e2a68c5a.1391077731.git.mohit.kumar@st.com>
+From: Loc Ho <lho@apm.com>
+Subject: Re: [PATCH v10 0/4] ata: Add APM X-Gene SoC SATA host controller support
+Date: Thu, 30 Jan 2014 11:56:01 -0800
+Message-ID: <CAPw-ZTkbpOEHowGvp-_3DcW1qW0AK_ZbpdS1LESJfhFU-n_Mtw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:53176 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752921AbaA3NVJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Jan 2014 08:21:09 -0500
-In-Reply-To: <7b9e0a98a6873f66e519791dfba20418e2a68c5a.1391077731.git.mohit.kumar@st.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Arnd Bergmann <arnd@arndb.de>
+Cc: Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, David Milburn <dmilburn@redhat.com>, Jon Masters <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 List-Id: linux-ide@vger.kernel.org
-To: Mohit Kumar <mohit.kumar@st.com>
-Cc: Pratyush Anand <pratyush.anand@st.com>, Viresh Kumar <viresh.linux@gmail.com>, Tejun Heo <tj@kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>, spear-devel@list.st.com, linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Thursday 30 January 2014, Mohit Kumar wrote:
-> 
-> diff --git a/Documentation/devicetree/bindings/phy/spear13xx-miphy.txt b/Documentation/devicetree/bindings/phy/spear13xx-miphy.txt
-> new file mode 100644
-> index 0000000..208b37d
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/phy/spear13xx-miphy.txt
-> @@ -0,0 +1,8 @@
-> +Required properties:
-> +- compatible : should be "st,spear1340-sata-pcie-phy".
+Hi Tejun,
 
-Just for confirmation: This phy is by design only capable of driving
-sata or pcie, but nothing else if reused in a different SoC, right?
+As it had being awhile, any issue with this version of the SATA
+drivers before I post the follow on errata patches?
 
-If the phy is actually more generic than that, I'd suggest changing
-the name, otherwise it's ok.
+-Loc
 
-> +- reg : offset and length of the PHY register set.
-> +- misc: phandle for the syscon node to access misc registers
-> +- #phy-cells : from the generic PHY bindings, must be 2.
-> +	- 1st arg: phandle to the phy node.
-> +	- 2nd arg: 0 if phy (in 1st arg) is to be used for sata else 1.
-> +	- 3rd arg: Instance id of the phy (in 1st arg).
-
-I would count "arg" differently: There are three cells, and the first
-cell is the phandle, while the second and third cells contain the first
-and second argument.
-
-The third cell seems redundant, more on that below.
-
-> +		ahci0: ahci@b1000000 {
->  			compatible = "snps,spear-ahci";
->  			reg = <0xb1000000 0x10000>;
->  			interrupts = <0 68 0x4>;
-> +			phys = <&miphy0 0 0>;
-> +			phy-names = "ahci-phy";
->  			status = "disabled";
->  		};
->  
-> -		ahci@b1800000 {
-> +		ahci1: ahci@b1800000 {
->  			compatible = "snps,spear-ahci";
->  			reg = <0xb1800000 0x10000>;
->  			interrupts = <0 69 0x4>;
-> +			phys = <&miphy1 0 1>;
-> +			phy-names = "ahci-phy";
->  			status = "disabled";
->  		};
->  
-> -		ahci@b4000000 {
-> +		ahci2: ahci@b4000000 {
->  			compatible = "snps,spear-ahci";
->  			reg = <0xb4000000 0x10000>;
->  			interrupts = <0 70 0x4>;
-> +			phys = <&miphy2 0 2>;
-> +			phy-names = "ahci-phy";
->  			status = "disabled";
->  		};
-
-In each case, the number of the phy 'miphyX' is identical to the
-third cell, and I suspect this is by design. In the driver, the
-'id' field is set in the xlate function, but I could not find any
-place where it actually gets used, so unless you know that it's
-needed, I'd suggest simply removing it.
-
-Even if you need it, it may be better to have the instance encoded
-in the phy node itself, since it's a property of the phy hardware
-(e.g. if you have to pass the number into a generic register that
-is global to all phys.
-
-Alternatively, you could have a different representation, where you
-have a single DT device node representing all three PHYs, with
-"reg = <0xeb800000 0xc000>;" In that case, all sata devices would
-point to the same phy node and pass the instance id so the phy
-driver can operated the correct register set.
-
-> +static int spear1340_sata_miphy_init(struct spear13xx_phy_priv *phypriv)
-> +{
-> +	regmap_update_bits(phypriv->misc, SPEAR1340_PCIE_SATA_CFG,
-> +			SPEAR1340_PCIE_SATA_CFG_MASK, SPEAR1340_SATA_CFG_VAL);
-> +	regmap_update_bits(phypriv->misc, SPEAR1340_PCIE_MIPHY_CFG,
-> +			SPEAR1340_PCIE_MIPHY_CFG_MASK,
-> +			SPEAR1340_PCIE_SATA_MIPHY_CFG_SATA_25M_CRYSTAL_CLK);
-> +	/* Switch on sata power domain */
-> +	regmap_update_bits(phypriv->misc, SPEAR1340_PCM_CFG,
-> +			SPEAR1340_PCM_CFG_SATA_POWER_EN,
-> +			SPEAR1340_PCM_CFG_SATA_POWER_EN);
-> +	msleep(20);
-> +	/* Disable PCIE SATA Controller reset */
-> +	regmap_update_bits(phypriv->misc, SPEAR1340_PERIP1_SW_RST,
-> +			SPEAR1340_PERIP1_SW_RST_SATA, 0);
-> +	msleep(20);
-> +
-> +	return 0;
-> +}
-
-I guess some of the parts above can eventually get moved into other
-drivers (reset controller, power domains) that get called directly
-by the SATA driver (e.g. though reset_device()). Since that won't
-impact the PHY binding, it seems fine to leave it here for now.
-
-	Arnd
+On Thu, Jan 16, 2014 at 8:11 AM, Loc Ho <lho@apm.com> wrote:
+> This patch adds support for the APM X-Gene SoC SATA host controller. In
+> order for the host controller to work, the corresponding PHY driver
+> musts also be available.
+>
+> v10:
+>  * Update binding documentation
+>
+> v9:
+>  * Remove ACPI/EFI include files
+>  * Remove the IO flush support, interrupt routine, and DTS resources
+>  * Remove function xgene_rd, xgene_wr, and xgene_wr_flush
+>  * Remove PMP support (function xgene_ahci_qc_issue, xgene_ahci_qc_prep,
+>    xgene_ahci_qc_fill_rtf, xgene_ahci_softreset, and xgene_ahci_do_softreset)
+>  * Rename function xgene_ahci_enable_phy to xgene_ahci_force_phy_rdy
+>  * Clean up hardreset functions
+>  * Require v7 of the PHY driver
+>
+> v8:
+>  * Remove _ADDR from defines
+>  * Remove define MSTAWAUX_COHERENT_BYPASS_SET and
+>    STARAUX_COHERENT_BYPASS_SET and use direct coding
+>  * Remove the un-necessary check for DTS boot with built in ACPI table
+>  * Switch to use dma_set_mask_and_coherent for setting DMA mask
+>  * Remove ACPI table matching code
+>  * Update clock-names for sata01clk, sata23clk, and sata45clk
+>
+> v7:
+>  * Update the clock code by toggle the clock
+>  * Update the DTS clock mask values due to the clock spilt between host and
+>    v5 of the PHY drivers
+>
+> v6:
+>  * Update binding documentation
+>  * Change select PHY_XGENE_SATA to PHY_XGENE
+>  * Add ULL to constants
+>  * Change indentation and comments
+>  * Clean up the probe functions a bit more
+>  * Remove xgene_ahci_remove function
+>  * Add the flush register to DTS
+>  * Remove the interrupt-parent from DTS
+>
+> v5:
+>  * Sync up to v3 of the PHY driver
+>  * Remove MSLIM wrapper functions
+>  * Change the memory shutdown loop to use usleep_range
+>  * Use devm_ioremap_resource instead devm_ioremap
+>  * Remove suspend/resume functions as not needed
+>
+> v4:
+>  * Remove the ID property in DT
+>  * Remove the temporary PHY direct function call and use PHY function
+>  * Change printk to pr_debug
+>  * Move the IOB flush addresses into the DT
+>  * Remove the parameters retrieval function as no longer needed
+>  * Remove the header file as no longer needed
+>  * Require v2 patch of the SATA PHY driver. Require slightly modification
+>    in the Kconfig as it is moved to folder driver/phy and use Kconfig
+>    PHY_XGENE_SATA instead SATA_XGENE_PHY.
+>
+> v3:
+>  * Move out the SATA PHY to another driver
+>  * Remove the clock-cells entry from DTS
+>  * Remove debug wrapper
+>  * Remove delay functions wrapper
+>  * Clean up resource and IRQ query
+>  * Remove query clock name
+>  * Switch to use dma_set_mask/dma_coherent_mask
+>  * Remove un-necessary devm_kfree
+>  * Update GPL license header to v2
+>  * Spilt up function xgene_ahci_hardreset
+>  * Spilt up function xgene_ahci_probe
+>  * Remove all reference of CONFIG_ARCH_MSLIM
+>  * Clean up chip revision code
+>
+> v2:
+>  * Clean up file sata_xgene.c with Lindent and etc
+>  * Clean up file sata_xgene_serdes.c with Lindent and etc
+>  * Add description to each patch
+>
+> v1:
+>  * inital version
+>
+> Signed-off-by: Loc Ho <lho@apm.com>
+> Signed-off-by: Tuan Phan <tphan@apm.com>
+> Signed-off-by: Suman Tripathi <stripathi@apm.com>
+> ---
+> Loc Ho (4):
+>   ata: Export required functions by APM X-Gene SATA driver
+>   Documentation: Add documentation for APM X-Gene SoC SATA host
+>     controller DTS binding
+>   ata: Add APM X-Gene SoC SATA host controller driver
+>   arm64: Add APM X-Gene SoC SATA host controller DTS entries
+>
+>  .../devicetree/bindings/ata/apm-xgene.txt          |   70 +++
+>  arch/arm64/boot/dts/apm-storm.dtsi                 |   75 +++
+>  drivers/ata/Kconfig                                |    8 +
+>  drivers/ata/Makefile                               |    1 +
+>  drivers/ata/ahci.h                                 |    9 +
+>  drivers/ata/libahci.c                              |   16 +-
+>  drivers/ata/sata_xgene.c                           |  630 ++++++++++++++++++++
+>  7 files changed, 803 insertions(+), 6 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/ata/apm-xgene.txt
+>  create mode 100644 drivers/ata/sata_xgene.c
+>
