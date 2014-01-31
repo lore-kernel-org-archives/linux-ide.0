@@ -1,50 +1,53 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH V3 6/8] SPEAr13xx: Fixup: Move SPEAr1340 SATA platform code to phy driver
-Date: Fri, 31 Jan 2014 16:27:50 +0100
-Message-ID: <201401311627.50482.arnd@arndb.de>
-References: <cover.1391077731.git.mohit.kumar@st.com> <201401301421.00990.arnd@arndb.de> <20140131041204.GC2618@pratyush-vbox>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [LSF/MM TOPIC][ATTEND] Plumbing I/O Cache / Tiered Storage Hints
+Date: Fri, 31 Jan 2014 10:18:44 -0800
+Message-ID: <CAA9_cmcCAOwFE7j8-80zMmgvgP02XVmLjepFJPpEn_ZANHn1zA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:56065 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754309AbaAaP2X (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 31 Jan 2014 10:28:23 -0500
-In-Reply-To: <20140131041204.GC2618@pratyush-vbox>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-bcache-owner@vger.kernel.org>
+Sender: linux-bcache-owner@vger.kernel.org
+To: lsf-pc@lists.linux-foundation.org
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Jason B Akers <jason.b.akers@intel.com>
 List-Id: linux-ide@vger.kernel.org
-To: Pratyush Anand <pratyush.anand@st.com>
-Cc: Mohit KUMAR DCG <Mohit.KUMAR@st.com>, Viresh Kumar <viresh.linux@gmail.com>, Tejun Heo <tj@kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>, spear-devel <spear-devel@list.st.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Friday 31 January 2014, Pratyush Anand wrote:
-> On Thu, Jan 30, 2014 at 09:21:00PM +0800, Arnd Bergmann wrote:
-> > On Thursday 30 January 2014, Mohit Kumar wrote:
-> > > 
-> > > diff --git a/Documentation/devicetree/bindings/phy/spear13xx-miphy.txt b/Documentation/devicetree/bindings/phy/spear13xx-miphy.txt
-> > > new file mode 100644
-> > > index 0000000..208b37d
-> > > --- /dev/null
-> > > +++ b/Documentation/devicetree/bindings/phy/spear13xx-miphy.txt
-> > > @@ -0,0 +1,8 @@
-> > > +Required properties:
-> > > +- compatible : should be "st,spear1340-sata-pcie-phy".
-> > 
-> > Just for confirmation: This phy is by design only capable of driving
-> > sata or pcie, but nothing else if reused in a different SoC, right?
-> > 
-> > If the phy is actually more generic than that, I'd suggest changing
-> > the name, otherwise it's ok.
-> 
-> OK, we will give a generic name as it can be used for sata/pcie/usb3.0.
-> Although, phy register definition may vary from version to version,
-> but that can be managed,as and when support of new soc is added. 
+On Tue, Jan 28, 2014 at 2:57 PM, Dan Williams <dan.j.williams@intel.com> wrote:
+> In addition to disk drives with internally tiered-storage (solid-state
+> + magnetic media) the kernel has also grown native I/O-caching /
+> tiered-storage implementations in bcache and dm-cache.
+>
+> Currently, all these solutions depend on heuristics to determine what
+> tier the data referenced in an I/O belongs.  However, the presence of
+> hinting proposals from SCSI [1], ATA [2], and bcache [3] indicate that
+> these devices (hardware or virtual) want to consume explicit hints
+> indicating the value of caching data in a higher performing tier.
+>
+> At LSF I want to discuss options and opportunities for plumbing cache
+> hints from userspace, through the I/O stack to devices.  My colleague,
+> Jason Akers, is also interested in this discussion as he is
+> investigating how to exploit these hints from userspace.  I
+> participated in the LSF 2012 discussion of this topic, see that it was
+> raised again at LSF 2013, and note that we have not settled on an
+> enabling path.  What's new for this year is an effort to set aside,
+> for now, the deeper complexities of the device specification proposals
+> and focus on a minimal set of hints that can be specified per-process
+> (ionice) and maybe per-file (fadvise).
+>
+> My suspicion is that AIO attributes is useful for applications that
+> want access to the full range of access hints exposed by a device.
+> However, for the general buffered-I/O / tiered-storage case, a small
+> set of hints achieves the bulk of the value.
+>
+> I am also interested in:
+> Volatile ranges
+> SMR Enabling
+> Integrity passthrough
+>
+> --
+> Dan
+>
+> [1] T10 LBA Access Hints
+> [2] T13 Hybrid Information Feature
 
-It probably doesn't hurt to already define a list of possible
-modes in the binding that you already know about. That way, you
-don't have to update the binding in sync with the driver if you
-add another mode, such as USB.
+Correction, the hinting scheme is defined by SATA-IO in SATA 3.2
 
-	Arnd
-
+> [3] AIO Attributes: http://marc.info/?l=linux-aio&m=136580574523674&w=2
