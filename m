@@ -1,43 +1,50 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/1] ata: enable quirk from jmicron JMB350 for JMB394
-Date: Fri, 31 Jan 2014 07:06:29 -0500
-Message-ID: <20140131120629.GF26148@htj.dyndns.org>
-References: <1391080830-2802-1-git-send-email-den@openvz.org>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH V3 6/8] SPEAr13xx: Fixup: Move SPEAr1340 SATA platform code to phy driver
+Date: Fri, 31 Jan 2014 16:27:50 +0100
+Message-ID: <201401311627.50482.arnd@arndb.de>
+References: <cover.1391077731.git.mohit.kumar@st.com> <201401301421.00990.arnd@arndb.de> <20140131041204.GC2618@pratyush-vbox>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f48.google.com ([209.85.216.48]:37308 "EHLO
-	mail-qa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752623AbaAaMGf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 31 Jan 2014 07:06:35 -0500
-Received: by mail-qa0-f48.google.com with SMTP id f11so6123345qae.35
-        for <linux-ide@vger.kernel.org>; Fri, 31 Jan 2014 04:06:34 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <1391080830-2802-1-git-send-email-den@openvz.org>
+Received: from moutng.kundenserver.de ([212.227.17.10]:56065 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754309AbaAaP2X (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 31 Jan 2014 10:28:23 -0500
+In-Reply-To: <20140131041204.GC2618@pratyush-vbox>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Denis V. Lunev" <den@openvz.org>
-Cc: den@parallels.com, linux-ide@vger.kernel.org
+To: Pratyush Anand <pratyush.anand@st.com>
+Cc: Mohit KUMAR DCG <Mohit.KUMAR@st.com>, Viresh Kumar <viresh.linux@gmail.com>, Tejun Heo <tj@kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>, spear-devel <spear-devel@list.st.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Thu, Jan 30, 2014 at 03:20:30PM +0400, Denis V. Lunev wrote:
-> From: "Denis V. Lunev" <den@openvz.org>
+On Friday 31 January 2014, Pratyush Anand wrote:
+> On Thu, Jan 30, 2014 at 09:21:00PM +0800, Arnd Bergmann wrote:
+> > On Thursday 30 January 2014, Mohit Kumar wrote:
+> > > 
+> > > diff --git a/Documentation/devicetree/bindings/phy/spear13xx-miphy.txt b/Documentation/devicetree/bindings/phy/spear13xx-miphy.txt
+> > > new file mode 100644
+> > > index 0000000..208b37d
+> > > --- /dev/null
+> > > +++ b/Documentation/devicetree/bindings/phy/spear13xx-miphy.txt
+> > > @@ -0,0 +1,8 @@
+> > > +Required properties:
+> > > +- compatible : should be "st,spear1340-sata-pcie-phy".
+> > 
+> > Just for confirmation: This phy is by design only capable of driving
+> > sata or pcie, but nothing else if reused in a different SoC, right?
+> > 
+> > If the phy is actually more generic than that, I'd suggest changing
+> > the name, otherwise it's ok.
 > 
-> Without the patch the kernel blames about
->  ata11.15: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
->  ata11.15: Port Multiplier vendor mismatch '0x197b' != '0x123'
->  ata11.15: PMP revalidation failed (errno=-19)
->  ata11.15: failed to recover PMP after 5 tries, giving up
-> This patch helps to bypass this error and the device becomes
-> functional.
-> 
-> Signed-off-by: Denis V. Lunev <den@openvz.org>
-> CC: Tejun Heo <tj@kernel.org>
-> CC: <linux-ide@vger.kernel.org>
+> OK, we will give a generic name as it can be used for sata/pcie/usb3.0.
+> Although, phy register definition may vary from version to version,
+> but that can be managed,as and when support of new soc is added. 
 
-Aplied to libata/for-3.14-fixes w/ minor description and comment
-updates.
+It probably doesn't hurt to already define a list of possible
+modes in the binding that you already know about. That way, you
+don't have to update the binding in sync with the driver if you
+add another mode, such as USB.
 
-Thanks.
+	Arnd
 
--- 
-tejun
