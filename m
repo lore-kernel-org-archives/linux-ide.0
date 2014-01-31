@@ -1,16 +1,16 @@
 From: Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
-Subject: Re: [PATCH v5 14/14] ARM: sun7i: dts: Add ahci / sata support
-Date: Fri, 31 Jan 2014 14:46:38 +0100
-Message-ID: <20140131134638.GH2950@lukather>
+Subject: Re: [PATCH v5 13/14] ARM: sun4i: dts: Add ahci / sata support
+Date: Fri, 31 Jan 2014 14:45:05 +0100
+Message-ID: <20140131134505.GG2950@lukather>
 References: <1390417489-5354-1-git-send-email-hdegoede@redhat.com>
- <1390417489-5354-15-git-send-email-hdegoede@redhat.com>
+ <1390417489-5354-14-git-send-email-hdegoede@redhat.com>
 Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="p1Od3smaOkJqivj4"
+	protocol="application/pgp-signature"; boundary="x38akuY2VS0PywU3"
 Return-path: <linux-sunxi+bncBD2ZNBF5VYJRBQ6MWCLQKGQEY6E3VCA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1390417489-5354-15-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <1390417489-5354-14-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Archive: <http://groups.google.com/group/linux-sunxi>
@@ -22,13 +22,17 @@ Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Oliver Schinagl <oli
 List-Id: linux-ide@vger.kernel.org
 
 
---p1Od3smaOkJqivj4
+--x38akuY2VS0PywU3
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, Jan 22, 2014 at 08:04:49PM +0100, Hans de Goede wrote:
-> This patch adds sunxi sata support to A20 boards that have such a connect=
+Hi Hans,
+
+On Wed, Jan 22, 2014 at 08:04:48PM +0100, Hans de Goede wrote:
+> From: Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
+>=20
+> This patch adds sunxi sata support to A10 boards that have such a connect=
 or.
 > Some boards also feature a regulator via a GPIO and support for this is a=
 lso
@@ -37,26 +41,49 @@ lso
 > Signed-off-by: Olliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
 > Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 > ---
->  arch/arm/boot/dts/sun7i-a20-cubieboard2.dts     |  6 ++++++
->  arch/arm/boot/dts/sun7i-a20-cubietruck.dts      | 20 ++++++++++++++++++++
->  arch/arm/boot/dts/sun7i-a20-olinuxino-micro.dts |  6 ++++++
->  arch/arm/boot/dts/sun7i-a20.dtsi                |  8 ++++++++
->  4 files changed, 40 insertions(+)
+>  arch/arm/boot/dts/sun4i-a10-a1000.dts      |  4 ++++
+>  arch/arm/boot/dts/sun4i-a10-cubieboard.dts |  6 +++++
+>  arch/arm/boot/dts/sun4i-a10.dtsi           |  8 +++++++
+>  arch/arm/boot/dts/sunxi-ahci-reg.dtsi      | 38 ++++++++++++++++++++++++=
+++++++
+
+I'm still half convinced about this at the moment, given the number of
+platforms we support, we can always change it back if things become too mes=
+sy.
+
+>  4 files changed, 56 insertions(+)
+>  create mode 100644 arch/arm/boot/dts/sunxi-ahci-reg.dtsi
 >=20
-> diff --git a/arch/arm/boot/dts/sun7i-a20-cubieboard2.dts b/arch/arm/boot/=
-dts/sun7i-a20-cubieboard2.dts
-> index 48777cd..1cab521 100644
-> --- a/arch/arm/boot/dts/sun7i-a20-cubieboard2.dts
-> +++ b/arch/arm/boot/dts/sun7i-a20-cubieboard2.dts
-> @@ -13,6 +13,7 @@
+> diff --git a/arch/arm/boot/dts/sun4i-a10-a1000.dts b/arch/arm/boot/dts/su=
+n4i-a10-a1000.dts
+> index aef8207..3fb7305 100644
+> --- a/arch/arm/boot/dts/sun4i-a10-a1000.dts
+> +++ b/arch/arm/boot/dts/sun4i-a10-a1000.dts
+> @@ -48,6 +48,10 @@
+>  			status =3D "okay";
+>  		};
+> =20
+> +		ahci: sata@01c18000 {
+> +			status =3D "okay";
+> +		};
+> +
+>  		pinctrl@01c20800 {
+>  			mmc0_cd_pin_a1000: mmc0_cd_pin@0 {
+>  				allwinner,pins =3D "PH1";
+> diff --git a/arch/arm/boot/dts/sun4i-a10-cubieboard.dts b/arch/arm/boot/d=
+ts/sun4i-a10-cubieboard.dts
+> index f50fb2b..6ae1110 100644
+> --- a/arch/arm/boot/dts/sun4i-a10-cubieboard.dts
+> +++ b/arch/arm/boot/dts/sun4i-a10-cubieboard.dts
+> @@ -12,6 +12,7 @@
 > =20
 >  /dts-v1/;
->  /include/ "sun7i-a20.dtsi"
+>  /include/ "sun4i-a10.dtsi"
 > +/include/ "sunxi-ahci-reg.dtsi"
 > =20
 >  / {
->  	model =3D "Cubietech Cubieboard2";
-> @@ -28,6 +29,11 @@
+>  	model =3D "Cubietech Cubieboard";
+> @@ -51,6 +52,11 @@
 >  			status =3D "okay";
 >  		};
 > =20
@@ -66,102 +93,71 @@ dts/sun7i-a20-cubieboard2.dts
 > +		};
 > +
 >  		pinctrl@01c20800 {
->  			mmc0_cd_pin_cubieboard2: mmc0_cd_pin@0 {
+>  			mmc0_cd_pin_cubieboard: mmc0_cd_pin@0 {
 >  				allwinner,pins =3D "PH1";
-> diff --git a/arch/arm/boot/dts/sun7i-a20-cubietruck.dts b/arch/arm/boot/d=
-ts/sun7i-a20-cubietruck.dts
-> index 2684f27..1247ea1 100644
-> --- a/arch/arm/boot/dts/sun7i-a20-cubietruck.dts
-> +++ b/arch/arm/boot/dts/sun7i-a20-cubietruck.dts
-> @@ -13,6 +13,7 @@
-> =20
->  /dts-v1/;
->  /include/ "sun7i-a20.dtsi"
-> +/include/ "sunxi-ahci-reg.dtsi"
-> =20
->  / {
->  	model =3D "Cubietech Cubietruck";
-> @@ -28,6 +29,11 @@
->  			status =3D "okay";
->  		};
-> =20
-> +		ahci: sata@01c18000 {
-> +			target-supply =3D <&reg_ahci_5v>;
-> +			status =3D "okay";
-> +		};
-> +
->  		pinctrl@01c20800 {
->  			mmc0_cd_pin_cubietruck: mmc0_cd_pin@0 {
->  				allwinner,pins =3D "PH1";
-> @@ -36,6 +42,13 @@
->  				allwinner,pull =3D <0>;
->  			};
-> =20
-> +			ahci_pwr_pin_cubietruck: ahci_pwr_pin@1 {
-> +				allwinner,pins =3D "PH12";
-> +				allwinner,function =3D "gpio_out";
-> +				allwinner,drive =3D <0>;
-> +				allwinner,pull =3D <0>;
-> +			};
-> +
->  			led_pins_cubietruck: led_pins@0 {
->  				allwinner,pins =3D "PH7", "PH11", "PH20", "PH21";
->  				allwinner,function =3D "gpio_out";
-> @@ -84,4 +97,11 @@
->  			gpios =3D <&pio 7 7 0>;
->  		};
->  	};
-> +
-> +	regulators {
-> +		reg_ahci_5v: ahci-5v {
-> +			pinctrl-0 =3D <&ahci_pwr_pin_cubietruck>;
-> +			gpio =3D <&pio 7 12 0>;
-> +		};
-> +	};
->  };
-> diff --git a/arch/arm/boot/dts/sun7i-a20-olinuxino-micro.dts b/arch/arm/b=
-oot/dts/sun7i-a20-olinuxino-micro.dts
-> index bf6f6c8..f135886 100644
-> --- a/arch/arm/boot/dts/sun7i-a20-olinuxino-micro.dts
-> +++ b/arch/arm/boot/dts/sun7i-a20-olinuxino-micro.dts
-> @@ -13,6 +13,7 @@
-> =20
->  /dts-v1/;
->  /include/ "sun7i-a20.dtsi"
-> +/include/ "sunxi-ahci-reg.dtsi"
-> =20
->  / {
->  	model =3D "Olimex A20-Olinuxino Micro";
-> @@ -37,6 +38,11 @@
->  			status =3D "okay";
->  		};
-> =20
-> +		ahci: sata@01c18000 {
-> +			target-supply =3D <&reg_ahci_5v>;
-> +			status =3D "okay";
-> +		};
-> +
->  		pinctrl@01c20800 {
->  			mmc0_cd_pin_olinuxinom: mmc0_cd_pin@0 {
->  				allwinner,pins =3D "PH1";
-> diff --git a/arch/arm/boot/dts/sun7i-a20.dtsi b/arch/arm/boot/dts/sun7i-a=
-20.dtsi
-> index c9c123a..0657bad 100644
-> --- a/arch/arm/boot/dts/sun7i-a20.dtsi
-> +++ b/arch/arm/boot/dts/sun7i-a20.dtsi
-> @@ -347,6 +347,14 @@
+> diff --git a/arch/arm/boot/dts/sun4i-a10.dtsi b/arch/arm/boot/dts/sun4i-a=
+10.dtsi
+> index 4736dd2..198dcda 100644
+> --- a/arch/arm/boot/dts/sun4i-a10.dtsi
+> +++ b/arch/arm/boot/dts/sun4i-a10.dtsi
+> @@ -331,6 +331,14 @@
 >  			status =3D "disabled";
 >  		};
 > =20
 > +		ahci: sata@01c18000 {
 > +			compatible =3D "allwinner,sun4i-a10-ahci";
+
+To be consistent with the rest of the sun4i devices compatible, It
+should be sun4i-ahci.
+
+However, since these devices don't use the same compatible pattern as
+their own machine compatible, and are consisent with the rest of the
+compatibles for the other SoCs, we can probably make this a go to
+transition progressively to this pattern.
+
+I'll cook up some patches for the other devices.
+
 > +			reg =3D <0x01c18000 0x1000>;
-> +			interrupts =3D <0 56 1>;
+> +			interrupts =3D <56>;
+> +			clocks =3D <&pll6 0>, <&ahb_gates 25>;
+> +			status =3D "disabled";
+> +		};
+> +
+>  		intc: interrupt-controller@01c20400 {
+>  			compatible =3D "allwinner,sun4i-ic";
+>  			reg =3D <0x01c20400 0x400>;
+> diff --git a/arch/arm/boot/dts/sunxi-ahci-reg.dtsi b/arch/arm/boot/dts/su=
+nxi-ahci-reg.dtsi
+> new file mode 100644
+> index 0000000..955b197
+> --- /dev/null
+> +++ b/arch/arm/boot/dts/sunxi-ahci-reg.dtsi
+> @@ -0,0 +1,38 @@
+> +/*
+> + * sunxi boards sata target power supply common code
+> + *
+> + * Copyright 2014 - Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> + *
+> + * The code contained herein is licensed under the GNU General Public
+> + * License. You may obtain a copy of the GNU General Public License
+> + * Version 2 or later at the following locations:
+> + *
+> + * http://www.opensource.org/licenses/gpl-license.html
+> + * http://www.gnu.org/copyleft/gpl.html
+> + */
+> +
+> +/ {
+> +	soc@01c00000 {
+> +		ahci_pwr_pin_a: ahci_pwr_pin@0 {
+> +			allwinner,pins =3D "PB8";
+> +			allwinner,function =3D "gpio_out";
+> +			allwinner,drive =3D <0>;
+> +			allwinner,pull =3D <0>;
+> +		};
 
-This is supposed to be a level triggered interrupt, not an edge
-triggered one.
+This should be under the pinctrl node.
 
-Thanks for your work!
+Thanks!
 Maxime
 
 --=20
@@ -169,26 +165,26 @@ Maxime Ripard, Free Electrons
 Embedded Linux, Kernel and Android engineering
 http://free-electrons.com
 
---p1Od3smaOkJqivj4
+--x38akuY2VS0PywU3
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: Digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.14 (GNU/Linux)
 
-iQIcBAEBAgAGBQJS66k+AAoJEBx+YmzsjxAg3GkP/j0Gxm5adLFgTyetGtvwsyWn
-y8uHZwUcRPdY3up1Ip11NJC5FJjC36FWbXaFfrA8vVrZ/0GIyedqaxuMWHFuXXY4
-CrAWtzIOI6zf6dZ3UtVdNe056iy0GJk3pamFZvqiakcePKTpNs55tQHY7jm1hhKo
-VH+IgQismkQl3fOSGnGMp5FUxLP3q+gSCksVsLbjJQAvQfwelfg9FWFz7TI1uX2b
-pEusjUImjXyAswI8tJAhjHyl3nE1ZJKVec0mdKM2TjWQwXoZ7xunKBz9Z68EWgkL
-gN2xC0a+qoZ28cGhVl6pbibyB12QvOdD7ATRmnI9u6Drqt+BESnHlAWjFFc+RlYy
-c9r/y0QCHt303bsFd0Ito4smz62V1F0n2SLgshGOfAMVXFyjdCR6z1HnmREeS5K7
-Bwz/En+hvqzznhOK8Tke39qWublk4FJzgdxF866LlgYnrVM1SrVeBr0+jtrVX80a
-OGyzHIHGd/J2kZB4Am+ZZpioKKhQ3soI1Cc5BFm985nF2mv/VPBCiy0XZjfos43o
-2NnklGE85s4k+vjipRiyCJFOTRXZN0OxHVtsRPXmTTW+dQKxjmpa++s9UTiqRm+j
-zXb1J7ov+pXEB0ZAr3jp44BdHoxo6fYO0T8pqjWG9/OXgj2DnqCYcf6k7BusCb2k
-WbvvLV/L+K6gaQePU6Wl
-=0K1a
+iQIcBAEBAgAGBQJS66jhAAoJEBx+YmzsjxAgnNEQAK5tzBQ5AzZSGaHwoFTjTQnF
+Gjw2QspnW3cZDZ/WLRxN7fRBBC+AgyF+g0QPOC1Oe85/dq8nB3j3dOJ3wtt1sOIB
+aRCL6ha1T0wario4KvzYBwhG9e9bZ07CuWdYxtzo8Weh4coAG6EiOu0M2ilYkK9f
+D1qmwHWVHfB0JC1aBs24yFdvKUV+CPIodslYaSZwOM2FjsE8hnx/Xpqd6ef/VbQl
+tGPgMGp0Kz5clo+j7BuVrs8uRnBvSloCG06LNGEHKpiQkKQbtGAKSu9tGUeq2DqE
+0Z5q+sbdQZTLy0geUyhBqFZkXGKAGIxy4JRwe1YaY7u6u3Xw7DYrw+UjHqHWoGOJ
+cYPvPYDfpqftaKyL4KF+40SZP+NCUoUpbhl6oqqBFqAfNvk99aqxcR5DfyyDm1xz
+shSb9Ut9gll1VoI7PEyBvSe2uX3nXv46M54nLGlmkjF79RNtarb5EvTKSpaoEska
+dki2k0K5INZQjoLf/d7slMm9CzBQnOn9oftjX46UWj2qayDrzlLItnucp5UJYNnm
+U+f7WHlsW05Aj6bV0p1RBNMMmPbXtLrGrRjetKHdluQJQEt6Jf2ElkLStr92bXvL
+6JLnWfS7S6PEp3dhGrsWEdv62fGTfefg3SMoeWkOQREkAdmtl52Br/1SX4DKBwVU
+ScRtLoCr3xUFDz7MME2K
+=aA+g
 -----END PGP SIGNATURE-----
 
---p1Od3smaOkJqivj4--
+--x38akuY2VS0PywU3--
