@@ -1,157 +1,117 @@
-From: Pratyush Anand <pratyush.anand@st.com>
-Subject: Re: [PATCH V3 6/8] SPEAr13xx: Fixup: Move SPEAr1340 SATA platform
- code to phy driver
-Date: Fri, 31 Jan 2014 09:42:04 +0530
-Message-ID: <20140131041204.GC2618@pratyush-vbox>
-References: <cover.1391077731.git.mohit.kumar@st.com>
- <7b9e0a98a6873f66e519791dfba20418e2a68c5a.1391077731.git.mohit.kumar@st.com>
- <201401301421.00990.arnd@arndb.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] block devices: validate block device capacity
+Date: Thu, 30 Jan 2014 21:45:27 -0800
+Message-ID: <1391147127.2181.159.camel@dabdike.int.hansenpartnership.com>
+References: <alpine.LRH.2.02.1401301531040.29912@file01.intranet.prod.int.rdu2.redhat.com>
+	   <1391122163.2181.103.camel@dabdike.int.hansenpartnership.com>
+	   <alpine.LRH.2.02.1401301805590.19506@file01.intranet.prod.int.rdu2.redhat.com>
+	  <1391125027.2181.114.camel@dabdike.int.hansenpartnership.com>
+	  <alpine.LRH.2.02.1401301905520.25766@file01.intranet.prod.int.rdu2.redhat.com>
+	 <1391132609.2181.131.camel@dabdike.int.hansenpartnership.com>
+	 <alpine.LRH.2.02.1401302116180.9767@file01.intranet.prod.int.rdu2.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="ISO-8859-15"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-Content-Disposition: inline
-In-Reply-To: <201401301421.00990.arnd@arndb.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Mohit KUMAR DCG <Mohit.KUMAR@st.com>, spear-devel <spear-devel@list.st.com>, Kishon Vijay Abraham I <kishon@ti.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Viresh Kumar <viresh.linux@gmail.com>, Tejun Heo <tj@kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <alpine.LRH.2.02.1401302116180.9767@file01.intranet.prod.int.rdu2.redhat.com>
+Sender: owner-linux-mm@kvack.org
+To: Mikulas Patocka <mpatocka@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, "Alasdair G. Kergon" <agk@redhat.com>, Mike Snitzer <msnitzer@redhat.com>, dm-devel@redhat.com, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-mm@kvack.org
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, Jan 30, 2014 at 09:21:00PM +0800, Arnd Bergmann wrote:
-> On Thursday 30 January 2014, Mohit Kumar wrote:
+On Thu, 2014-01-30 at 21:43 -0500, Mikulas Patocka wrote:
+> 
+> On Thu, 30 Jan 2014, James Bottomley wrote:
+> 
+> > > A device may be accessed direcly (by opening /dev/sdX) and it creates a 
+> > > mapping too - thus, the size of a mapping limits the size of a block 
+> > > device.
 > > 
-> > diff --git a/Documentation/devicetree/bindings/phy/spear13xx-miphy.txt b/Documentation/devicetree/bindings/phy/spear13xx-miphy.txt
-> > new file mode 100644
-> > index 0000000..208b37d
-> > --- /dev/null
-> > +++ b/Documentation/devicetree/bindings/phy/spear13xx-miphy.txt
-> > @@ -0,0 +1,8 @@
-> > +Required properties:
-> > +- compatible : should be "st,spear1340-sata-pcie-phy".
+> > Right, that's what I suspected below.  We can't damage large block
+> > support on filesystems just because of this corner case.
 > 
-> Just for confirmation: This phy is by design only capable of driving
-> sata or pcie, but nothing else if reused in a different SoC, right?
+> Devices larger than 16TiB never worked on 32-bit kernel, so this patch 
+> isn't damaging anything.
+
+expectations: 32 bit with CONFIG_LBDAF is supposed to be able to do
+almost everything 64 bits can
+
+> Note that if you attach a 16TiB block device, don't open it and mount it, 
+> it still won't work, because the buffer cache uses the page cache (see the 
+> function __find_get_block_slow and the variable "pgoff_t index" - that 
+> variable would overflow if the filesystem accessed a buffer beyond 16TiB).
+
+That depends on the layout of the fs metadata.
+
+> > > The main problem is that pgoff_t has 4 bytes - chaning it to 8 bytes may 
+> > > fix it - but there may be some hidden places where pgoff is converted to 
+> > > unsigned long - who knows, if they exist or not?
+> > 
+> > I don't think we want to do that ... it will make struct page fatter and
+> > have knock on impacts in the radix tree code.  To fix this, we need to
+> > make the corner case (i.e. opening large block devices without a
+> > filesystem) bear the pain.  It sort of looks like we want to do a linear
+> > array of mappings of 64TB for the device so the page cache calculations
+> > don't overflow.
 > 
-> If the phy is actually more generic than that, I'd suggest changing
-> the name, otherwise it's ok.
+> The code that reads and writes data to block devices and files is shared - 
+> the functions in mm/filemap.c work for both files and block devices.
 
-OK, we will give a generic name as it can be used for sata/pcie/usb3.0.
-Although, phy register definition may vary from version to version,
-but that can be managed,as and when support of new soc is added. 
+Yes.
 
+> So, if you want 64-bit page offsets, you need to increase pgoff_t size, 
+> and that will increase the limit for both files and block devices.
+
+No.  The point is the page cache mapping of the device uses a
+manufactured inode saved in the backing device. It looks fixable in the
+buffer code before the page cache gets involved.
+
+> You shouldn't have separate functions for managing pages on files and 
+> separate functions for managing pages on block devices - that would 
+> increase code size and cause maintenance problems.
+
+It wouldn't it would add structure to the buffer cache for large
+devices.
+
+> > > Though, we need to know if the people who designed memory management agree 
+> > > with changing pgoff_t to 64 bits.
+> > 
+> > I don't think we can change the size of pgoff_t ... because it won't
+> > just be that, it will be other problems like the radix tree.
 > 
-> > +- reg : offset and length of the PHY register set.
-> > +- misc: phandle for the syscon node to access misc registers
-> > +- #phy-cells : from the generic PHY bindings, must be 2.
-> > +	- 1st arg: phandle to the phy node.
-> > +	- 2nd arg: 0 if phy (in 1st arg) is to be used for sata else 1.
-> > +	- 3rd arg: Instance id of the phy (in 1st arg).
+> If we can't change it, then we must stay with the current 16TiB limit. 
+> There's no other way.
 > 
-> I would count "arg" differently: There are three cells, and the first
-> cell is the phandle, while the second and third cells contain the first
-> and second argument.
-
-Ok..will modify accordingly.
-
+> > However, you also have to bear in mind that truncating large block
+> > device support to 64TB on 32 bits is a technical ABI break.  Hopefully
+> > it is only technical because I don't know of any current consumer block
+> > device that is 64TB yet, but anyone who'd created a filesystem >64TB
+> > would find it no-longer mounted on 32 bits.
+> > James
 > 
-> The third cell seems redundant, more on that below.
-> 
-> > +		ahci0: ahci@b1000000 {
-> >  			compatible = "snps,spear-ahci";
-> >  			reg = <0xb1000000 0x10000>;
-> >  			interrupts = <0 68 0x4>;
-> > +			phys = <&miphy0 0 0>;
-> > +			phy-names = "ahci-phy";
-> >  			status = "disabled";
-> >  		};
-> >  
-> > -		ahci@b1800000 {
-> > +		ahci1: ahci@b1800000 {
-> >  			compatible = "snps,spear-ahci";
-> >  			reg = <0xb1800000 0x10000>;
-> >  			interrupts = <0 69 0x4>;
-> > +			phys = <&miphy1 0 1>;
-> > +			phy-names = "ahci-phy";
-> >  			status = "disabled";
-> >  		};
-> >  
-> > -		ahci@b4000000 {
-> > +		ahci2: ahci@b4000000 {
-> >  			compatible = "snps,spear-ahci";
-> >  			reg = <0xb4000000 0x10000>;
-> >  			interrupts = <0 70 0x4>;
-> > +			phys = <&miphy2 0 2>;
-> > +			phy-names = "ahci-phy";
-> >  			status = "disabled";
-> >  		};
-> 
-> In each case, the number of the phy 'miphyX' is identical to the
-> third cell, and I suspect this is by design. In the driver, the
-> 'id' field is set in the xlate function, but I could not find any
-> place where it actually gets used, so unless you know that it's
-> needed, I'd suggest simply removing it.
+> It is not ABI break, because block devices larger than 16TiB never worked 
+> on 32-bit architectures. So it's better to refuse them outright, than to 
+> cause subtle lockups or data corruption.
 
-It has not been used in this patch, as SATA support is currently only
-for SPEAr1340, where we have only one instance.
+An ABI is a contract between the userspace and the kernel.  Saying we
+can remove a clause in the contract because no-one ever exercised it and
+not call it changing the contract is sophistry.  The correct thing to do
+would be to call it a bug and fix it.
 
-Will be using it in PCIe for SPEAr1310 where 3 instances are present.
+In a couple of short years we'll be over 16TB for hard drives.  I don't
+really want to be the one explaining to the personal storage people that
+the only way to install a 16+TB drive in their arm (or quark) based
+Linux systems is a processor upgrade.
 
-> 
-> Even if you need it, it may be better to have the instance encoded
-> in the phy node itself, since it's a property of the phy hardware
-> (e.g. if you have to pass the number into a generic register that
-> is global to all phys.
+I suppose there are a couple of possibilities: pgoff_t + radix tree
+expansion or double radix tree in the buffer code.  This should probably
+be taken to fsdevel where they might have better ideas.
 
-Ok..ll do that.
+James
 
-> 
-> Alternatively, you could have a different representation, where you
-> have a single DT device node representing all three PHYs, with
-> "reg = <0xeb800000 0xc000>;" In that case, all sata devices would
-> point to the same phy node and pass the instance id so the phy
-> driver can operated the correct register set.
 
-Instance ID is mainly needed to manipulate wrapper register present
-within SPEAr13xx misc space. We have a single register in misc space
-having bit fields controlling all 3 phys, and there we need this id.
-
-> 
-> > +static int spear1340_sata_miphy_init(struct spear13xx_phy_priv *phypriv)
-> > +{
-> > +	regmap_update_bits(phypriv->misc, SPEAR1340_PCIE_SATA_CFG,
-> > +			SPEAR1340_PCIE_SATA_CFG_MASK, SPEAR1340_SATA_CFG_VAL);
-> > +	regmap_update_bits(phypriv->misc, SPEAR1340_PCIE_MIPHY_CFG,
-> > +			SPEAR1340_PCIE_MIPHY_CFG_MASK,
-> > +			SPEAR1340_PCIE_SATA_MIPHY_CFG_SATA_25M_CRYSTAL_CLK);
-> > +	/* Switch on sata power domain */
-> > +	regmap_update_bits(phypriv->misc, SPEAR1340_PCM_CFG,
-> > +			SPEAR1340_PCM_CFG_SATA_POWER_EN,
-> > +			SPEAR1340_PCM_CFG_SATA_POWER_EN);
-> > +	msleep(20);
-> > +	/* Disable PCIE SATA Controller reset */
-> > +	regmap_update_bits(phypriv->misc, SPEAR1340_PERIP1_SW_RST,
-> > +			SPEAR1340_PERIP1_SW_RST_SATA, 0);
-> > +	msleep(20);
-> > +
-> > +	return 0;
-> > +}
-> 
-> I guess some of the parts above can eventually get moved into other
-> drivers (reset controller, power domains) that get called directly
-> by the SATA driver (e.g. though reset_device()). Since that won't
-> impact the PHY binding, it seems fine to leave it here for now.
-
-thanks :)
-
-Regards
-Pratyush
-> 
-> 	Arnd
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
