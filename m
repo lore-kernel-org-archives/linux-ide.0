@@ -1,59 +1,29 @@
-From: Michael Schmitz <schmitzmic@gmail.com>
-Subject: [PATCH] m68k/atari - ide: do not register interrupt if host->get_lock is set
-Date: Sat,  1 Feb 2014 13:48:13 +1300
-Message-ID: <1391215693-2880-2-git-send-email-schmitz@debian.org>
-References: <1391215693-2880-1-git-send-email-schmitz@debian.org>
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <1391215693-2880-1-git-send-email-schmitz@debian.org>
-Sender: linux-m68k-owner@vger.kernel.org
-To: linux-m68k@vger.kernel.org
-Cc: geert@linux-m68k.org, davem@davemloft.net, linux-ide@vger.kernel.org, Michael Schmitz <schmitz@debian.org>
+From: Albert Chen <Albert.Chen@wdc.com>
+Subject: [LSF/MM TOPIC] SMR: Disrupting recording technology meriting a new
+ class of storage device
+Date: Sat, 1 Feb 2014 02:24:33 +0000
+Message-ID: <DDA2008BD25F9046BFFC83788E83AF7E8167D4D0@wdscexmb03>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Language: en-US
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, James Borden <James.Borden@wdc.com>, Jim Malina <Jim.Malina@wdc.com>, Curtis Stevens <curtis.stevens@wdc.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-On m68k, host->get_lock is used to both lock and register the interrupt
-that the IDE host shares with other device drivers. Registering the
-IDE interrupt handler in ide-probe.c results in duplicating the
-interrupt registered (once via host->get lock, and also via init_irq()),
-and may result in IDE accepting interrupts even when another driver has
-locked the interrupt hardware. This opens the whole locking scheme up
-to races.
+[LSF/MM TOPIC] SMR: Disrupting recording technology meriting a new class of storage device
 
-host->get_lock is set on m68k only, so other drivers' behaviour is not
-changed.
+Shingle Magnetic Recording is a disruptive technology that delivers the next areal density gain for the HDD industry by partially overlapping tracks. Shingling requires physical writes to be sequential, and opens the question of how to address this behavior at a system level. Two general approaches contemplated are to either to do the block management in the device or in the host storage stack/file system through Zone Block Commands (ZBC).
 
-Signed-off-by: Michael Schmitz <schmitz@debian.org>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: David S. Miller <davem@davemloft.net>
-Cc: linux-ide@vger.kernel.org
----
- drivers/ide/ide-probe.c |    8 +++++---
- 1 files changed, 5 insertions(+), 3 deletions(-)
+The use of ZBC to handle SMR block management yields several benefits such as:
+- Predictable performance and latency
+- Faster development time
+- Access to application and system level semantic information
+- Scalability / Fewer Drive Resources
+- Higher reliability
 
-diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
-index 2a744a9..a3d3b17 100644
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -853,8 +853,9 @@ static int init_irq (ide_hwif_t *hwif)
- 	if (irq_handler == NULL)
- 		irq_handler = ide_intr;
- 
--	if (request_irq(hwif->irq, irq_handler, sa, hwif->name, hwif))
--		goto out_up;
-+	if (!host->get_lock)
-+		if (request_irq(hwif->irq, irq_handler, sa, hwif->name, hwif))
-+			goto out_up;
- 
- #if !defined(__mc68000__)
- 	printk(KERN_INFO "%s at 0x%03lx-0x%03lx,0x%03lx on irq %d", hwif->name,
-@@ -1533,7 +1534,8 @@ static void ide_unregister(ide_hwif_t *hwif)
- 
- 	ide_proc_unregister_port(hwif);
- 
--	free_irq(hwif->irq, hwif);
-+	if (!hwif->host->get_lock)
-+		free_irq(hwif->irq, hwif);
- 
- 	device_unregister(hwif->portdev);
- 	device_unregister(&hwif->gendev);
--- 
-1.7.0.4
+Essential to a host managed approach (ZBC) is the openness of Linux and its community is a good place for WD to validate and seek feedback for our thinking - where in the Linux system stack is the best place to add ZBC handling? at the Device Mapper layer? or somewhere else in the storage stack? New ideas and comments are appreciated.
+
+For more information about ZBC, please refer to Ted's <tytso@MIT.EDU> email to linux-fsdevel@vger.kernel.org with the subject " [RFC] Draft Linux kernel interfaces for ZBC drives".
