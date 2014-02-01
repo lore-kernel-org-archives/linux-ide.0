@@ -1,32 +1,28 @@
-From: Dave Hansen <dave.hansen@intel.com>
-Subject: Re: [LSF/MM TOPIC] Fixing large block devices on 32 bit
-Date: Fri, 31 Jan 2014 16:32:03 -0800
-Message-ID: <52EC4083.8010309@intel.com>
-References: <1391194978.2172.20.camel@dabdike.int.hansenpartnership.com> <52EC19E6.9010509@intel.com> <1391210864.2172.61.camel@dabdike.int.hansenpartnership.com> <52EC3D9F.8040702@intel.com> <20140201002547.GA3551@node.dhcp.inet.fi>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20140201002547.GA3551@node.dhcp.inet.fi>
-Sender: owner-linux-mm@kvack.org
-To: "Kirill A. Shutemov" <kirill@shutemov.name>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, lsf-pc@lists.linux-foundation.org
+From: Michael Schmitz <schmitzmic@gmail.com>
+Subject: [PATCH] Do not register the IDE interrupt handler if host->get_lock is set.
+Date: Sat,  1 Feb 2014 13:48:12 +1300
+Message-ID: <1391215693-2880-1-git-send-email-schmitz@debian.org>
+Return-path: <linux-m68k-owner@vger.kernel.org>
+Sender: linux-m68k-owner@vger.kernel.org
+To: linux-m68k@vger.kernel.org
+Cc: geert@linux-m68k.org, davem@davemloft.net, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On 01/31/2014 04:25 PM, Kirill A. Shutemov wrote:
->> > I think all we have to do is set a low bit in page->mapping
-> It's already in use to say page->mapping is anon_vma. ;)
+The m68k Atari Falcon IDE driver shares the IDE interrupt with DMA completion,
+SCSI and floppy controller. The DMA controller does not provide a way to check
+whether it had generated an interrupt, so the shared interrupt has to be
+reserved for exclusive use by the respective driver.
+To this end, host->get_lock was added to allow both locking the interrupt
+and passing the relevant interrupt handler to the machine specific interrupt
+code. This feature is used exclusively by the Falcon IDE driver.
+Unconditionally registering the IDE interrupt handler in init_irq() when
+host->get_lock is set does result in two calls being dispatched to the IDE
+handler on each IDE interrupt, and one spurious call on each SCSI, DMA or 
+floppy interrupt.
 
-I weasel-worded that by not saying *THE* low bit. ;)
+The following patch changes init_irq() to request the IDE interrupt only if
+host->get_lock is not set.
 
-We find *some* discriminator whether it be a page flag or an actual bit
-in page->mapping, or a magic value that doesn't collide with the
-existing PAGE_MAPPING_* flags.
+Regards,
 
-Poor 'struct page'.  It's the doormat of data structures.
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+	Michael Schmitz
