@@ -1,52 +1,65 @@
-From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: Re: [PATCH] block devices: validate block device capacity
-Date: Mon, 3 Feb 2014 15:22:01 -0500 (EST)
-Message-ID: <alpine.LRH.2.02.1402031513070.18926@file01.intranet.prod.int.rdu2.redhat.com>
-References: <alpine.LRH.2.02.1401301531040.29912@file01.intranet.prod.int.rdu2.redhat.com> <1391122163.2181.103.camel@dabdike.int.hansenpartnership.com> <alpine.LRH.2.02.1401301805590.19506@file01.intranet.prod.int.rdu2.redhat.com>
- <1391125027.2181.114.camel@dabdike.int.hansenpartnership.com> <alpine.LRH.2.02.1401301905520.25766@file01.intranet.prod.int.rdu2.redhat.com> <1391132609.2181.131.camel@dabdike.int.hansenpartnership.com> <alpine.LRH.2.02.1401302116180.9767@file01.intranet.prod.int.rdu2.redhat.com>
- <1391147127.2181.159.camel@dabdike.int.hansenpartnership.com> <alpine.LRH.2.02.1401310316560.21451@file01.intranet.prod.int.rdu2.redhat.com> <20140203081506.GA10961@infradead.org>
+From: Michael Marley <michael@michaelmarley.com>
+Subject: [PATCH] ACHI: Attempt to enable a single MSI if block enable fails
+Date: Mon, 03 Feb 2014 15:39:27 -0500
+Message-ID: <52EFFE7F.6050807@michaelmarley.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20140203081506.GA10961@infradead.org>
-Sender: owner-linux-mm@kvack.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <axboe@kernel.dk>, "Alasdair G. Kergon" <agk@redhat.com>, Mike Snitzer <msnitzer@redhat.com>, dm-devel@redhat.com, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Neil Brown <neilb@suse.de>, linux-raid@vger.kernel.org, linux-mm@kvack.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from cdptpa-outbound-snat.email.rr.com ([107.14.166.226]:61913 "EHLO
+	cdptpa-oedge-vip.email.rr.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751114AbaBCUj3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Feb 2014 15:39:29 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org
 
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
+From: Michael Marley <michael@michaelmarley.com>
 
-On Mon, 3 Feb 2014, Christoph Hellwig wrote:
+Commit 7b92b4f61ec49cb1a5813298f35258bd7ecd3667 ("PCI/MSI: Remove
+pci_enable_msi_block_auto()") causes the AHCI driver to immediately
+switch to INTx mode if the pci_enable_msi_block() call fails to
+allocate the requested number of MSIs. This behavior causes some
+systems (for example, the Lenovo ThinkCentre m57p) to begin using
+INTx when they worked fine in single MSI mode before.  This patch
+makes the driver try to enable a single MSI if the
+pci_enable_msi_block() call fails instead of switching directly
+to INTx.
 
-> On Fri, Jan 31, 2014 at 03:20:17AM -0500, Mikulas Patocka wrote:
-> > So if you think you can support 16TiB devices and leave pgoff_t 32-bit, 
-> > send a patch that does it.
-> > 
-> > Until you make it, you should apply the patch that I sent, that prevents 
-> > kernel lockups or data corruption when the user uses 16TiB device on 
-> > 32-bit kernel.
-> 
-> Exactly.  I had actually looked into support for > 16TiB devices for
-> a NAS use case a while ago, but when explaining the effort involves
-> the idea was dropped quickly.  The Linux block device is too deeply
-> tied to the pagecache to make it easily feasible.
+Signed-off-by: Michael Marley <michael@michaelmarley.com>
 
-The memory management routines use pgoff_t, so we could define pgoff_t to 
-be 64-bit type. But there is lib/radix_tree.c that uses unsigned long as 
-an index into the radix tree - and pgoff_t is cast to unsigned long when 
-calling the radix_tree routines - so we'd need to change lib/radix_tree to 
-use pgoff_t.
+- ---
 
-Then, there may be other places where pgoff_t is cast to unsigned long and 
-they are not trivial to find (one could enable some extra compiler 
-warnings about truncating values when casting them, but I suppose, this 
-would trigger a lot of false positives). This needs some deep review by 
-people who designed the memory management code.
+- --- drivers/ata/ahci.c.orig	2014-02-03 20:00:04.834008843 +0000
++++ drivers/ata/ahci.c	2014-02-03 19:34:53.737257483 +0000
+@@ -1171,7 +1171,7 @@ static int ahci_init_interrupts(struct p
+ 	nvec = rc;
+ 	rc = pci_enable_msi_block(pdev, nvec);
+ 	if (rc)
+- -		goto intx;
++		goto single_msi;
 
-Mikulas
+ 	return nvec;
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQIcBAEBAgAGBQJS7/5/AAoJEANTUn3blhEaLo8P/31AEbD9b61h2zFAcGlqZmN/
+OEp69smHl9DbciaL0nQGIY4TRUpjA2XVxT/ZC3Fdz0huqX226g2D2G7/LLk299r3
+m/GC89640FBRaVqNTASNKvIANlq0t2vgdOXGsgLXCD3EAigMdCVLiKNvdDYpUdXo
+uaUg7WTVM12U+bWCrTB0RVgU7kKqkPSWb59kUPFaInjrTWzZ4jf4SZEzOr1b6mB0
+Ihn/BsMf76q9rzGEwTaKPV+BrS/QZY5oz23r8+Pqw+lNVgtnmCQ7UkRJ40MI3roS
+lU68syoG/CjI6imO/TQcr54eHMTBRl55Ut4VO/iLYaJKhXGGsuP43oPrJM0LZzpi
+jjwzgz4Bij0Hi5Wx7AS0sDNEERi+w4At/+eKQmUkjA6qUblzIKCpMMCmp0CvodXH
+8J9TU9CqcnQs2hgGy990nFxdmiLh+Ee5NFBfKxpTGxv4eAjuK6RbxMLfndF6rRXO
+MpMoFMK3BdFnQoi6We5er7HKPcbqOpR2hrw8mALhWDxgv+N2pq1J5uG69mc5vwxJ
+YV7N0tnCtVTyxGavtMP669YCNH0KvRzXJvzJRE1TuuTvNu+oudMWJinilyhPnYJk
+U5DYzLWj4t42qEsGr3QjFBEv90DG/LNc5YavI9XOfepjGFbdlcGQPAe3HnaE86KD
+s9JiFcvAixL295414PRN
+=f6LE
+-----END PGP SIGNATURE-----
