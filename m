@@ -1,20 +1,19 @@
 From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [patch v2 3/3] ata: sata_mv: Fix probe failures with optional
- phys
-Date: Mon, 03 Feb 2014 22:04:03 +0300
-Message-ID: <52EFE823.6060200@cogentembedded.com>
-References: <52EF6D38.4060200@ti.com> <1391450446-15580-1-git-send-email-andrew@lunn.ch> <1391450446-15580-3-git-send-email-andrew@lunn.ch>
+Subject: Re: [patch v2 1/3] drivers: phy: Make NULL a valid phy reference
+Date: Mon, 03 Feb 2014 22:06:09 +0300
+Message-ID: <52EFE8A1.8010206@cogentembedded.com>
+References: <52EF6D38.4060200@ti.com> <1391450446-15580-1-git-send-email-andrew@lunn.ch>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-la0-f52.google.com ([209.85.215.52]:33996 "EHLO
-	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752350AbaBCSDt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Feb 2014 13:03:49 -0500
-Received: by mail-la0-f52.google.com with SMTP id c6so5735723lan.11
-        for <linux-ide@vger.kernel.org>; Mon, 03 Feb 2014 10:03:48 -0800 (PST)
-In-Reply-To: <1391450446-15580-3-git-send-email-andrew@lunn.ch>
+Received: from mail-lb0-f172.google.com ([209.85.217.172]:56991 "EHLO
+	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752559AbaBCSFv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Feb 2014 13:05:51 -0500
+Received: by mail-lb0-f172.google.com with SMTP id c11so5632768lbj.17
+        for <linux-ide@vger.kernel.org>; Mon, 03 Feb 2014 10:05:49 -0800 (PST)
+In-Reply-To: <1391450446-15580-1-git-send-email-andrew@lunn.ch>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Andrew Lunn <andrew@lunn.ch>, tj@kernel.org, kishon@ti.com
@@ -24,32 +23,35 @@ Hello.
 
 On 02/03/2014 09:00 PM, Andrew Lunn wrote:
 
-> Make use of devm_phy_optional() in order to fix probe failures on
+> The common clock framework considers NULL a valid clock
+> reference. This makes handling optional clocks simple, in that if the
+> optional clock is not available, a NULL reference can be used in the
+> place of a real clock, simplifying the clock consumer.
 
-    devm_phy_optional_get() instead.
-
-> Armada 370, XP and others, when there is no phy driver available.
+> Extend this concept to the phy consumer API. A NULL can be passed to
+> the release calls, the phy_init() and phy_exit() calls, and
+> phy_power_on() and phy_power_off() and a NOP is performed.
 
 > Signed-off-by: Andrew Lunn <andrew@lunn.ch>
-> ---
-> v2
-> No change
-> ---
->   drivers/ata/sata_mv.c | 8 +++++---
->   1 file changed, 5 insertions(+), 3 deletions(-)
+[...]
 
-> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-> index 20a7517bd339..52b8181ddafd 100644
-> --- a/drivers/ata/sata_mv.c
-> +++ b/drivers/ata/sata_mv.c
-> @@ -4126,12 +4126,14 @@ static int mv_platform_probe(struct platform_device *pdev)
->   			clk_prepare_enable(hpriv->port_clks[port]);
->
->   		sprintf(port_number, "port%d", port);
-> -		hpriv->port_phys[port] = devm_phy_get(&pdev->dev, port_number);
-> +		hpriv->port_phys[port] = devm_phy_optional_get(&pdev->dev,
-> +							       port_number);
+>   When the controller no longer needs the PHY, it has to release the reference
+> diff --git a/drivers/phy/phy-core.c b/drivers/phy/phy-core.c
+> index 645c867c1257..56535253e50c 100644
+> --- a/drivers/phy/phy-core.c
+> +++ b/drivers/phy/phy-core.c
+[...]
+> @@ -308,6 +320,9 @@ err0:
+>    */
+>   void phy_put(struct phy *phy)
+>   {
+> +	if (!phy)
+> +		return;
+> +
+>   	if (IS_ERR(phy))
+>   		return;
+
+    Why not merge these two?
 
 WBR, Sergei
-
 
