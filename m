@@ -1,143 +1,131 @@
-From: Jason Cooper <jason@lakedaemon.net>
-Subject: Re: [PATCH] ATA: SATA_MV: Fix probe failure when no phy exists
-Date: Mon, 3 Feb 2014 11:50:12 -0500
-Message-ID: <20140203165012.GE8533@titan.lakedaemon.net>
-References: <1391115035-25960-1-git-send-email-andrew@lunn.ch>
- <20140130221228.GB1063@localhost>
- <20140131105411.GC26003@lunn.ch>
- <52EFB69E.2000800@free-electrons.com>
+From: Gregory CLEMENT <gregory.clement@free-electrons.com>
+Subject: Re: [PATCH 3/3] ata: sata_mv: Fix probe failures with optional phys
+Date: Mon, 03 Feb 2014 18:17:43 +0100
+Message-ID: <52EFCF37.3090704@free-electrons.com>
+References: <0140131114857.GC26148@htj.dyndns.org> <1391264157-2112-1-git-send-email-andrew@lunn.ch> <1391264157-2112-3-git-send-email-andrew@lunn.ch> <20140203160315.GB30250@htj.dyndns.org> <52EFC21E.7030902@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:58650 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753320AbaBCQuT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Feb 2014 11:50:19 -0500
-Content-Disposition: inline
-In-Reply-To: <52EFB69E.2000800@free-electrons.com>
+Received: from top.free-electrons.com ([176.31.233.9]:52087 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751134AbaBCRRt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Feb 2014 12:17:49 -0500
+In-Reply-To: <52EFC21E.7030902@free-electrons.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gregory CLEMENT <gregory.clement@free-electrons.com>, Kevin Hilman <khilman@linaro.org>, Tejun Heo <tj@kernel.org>
-Cc: Andrew Lunn <andrew@lunn.ch>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, linux-ide@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+To: Tejun Heo <tj@kernel.org>, Andrew Lunn <andrew@lunn.ch>
+Cc: kishon@ti.com, linux-ide@vger.kernel.org
+
+On 03/02/2014 17:21, Gregory CLEMENT wrote:
+> On 03/02/2014 17:03, Tejun Heo wrote:
+>> On Sat, Feb 01, 2014 at 03:15:57PM +0100, Andrew Lunn wrote:
+>>> Make use of devm_phy_optional() in order to fix probe failures on
+>>> Armada 370, XP and others, when there is no phy driver available.
+>>>
+>>> Signed-off-by: Andrew Lunn <andrew@lunn.ch>
+>>
+>> Looks good to me from the ata side.  How should these be routed?  I
+>> can take them through libata/for-3.14-fixes once phy people ack the
+>> changes or the other way around is fine too.
+>>
+>> Thanks.
+>>
+> 
+> Hi Tejun, Andrew,
+> 
+> I have just tested it on both Armada 370 and Armada XP and it failed
+> at the end of the mv_platform_probe function while trying to do a
+> clk_put on the clocks on the second port.
+> 
+> Indeed the devm_phy_optional_get failed on the 1st port, so the clock
+> of the second port was not allocated. What I don't get is why the
+> IS_ERR check don't work here.
 
 
-+ Kevin Hilman (context kept for Kevin)
+I found the root of my issue!
 
-Tejun, a request below.
+Actually devm_phy_optional_get failed but by returning -ENOSYS.
+The phy lib was not selected because I have just applied the 3 patches of the series
+and not the other one "ATA: SATA_MV: Add missing Kconfig select statememnt"
 
-On Mon, Feb 03, 2014 at 04:32:46PM +0100, Gregory CLEMENT wrote:
-> Hi Andrew, Ezequiel,
-> 
-> On 31/01/2014 11:54, Andrew Lunn wrote:
-> > On Thu, Jan 30, 2014 at 07:12:28PM -0300, Ezequiel Garcia wrote:
-> >> On Thu, Jan 30, 2014 at 09:50:35PM +0100, Andrew Lunn wrote:
-> >>> Armada 370 and XP do not have a SATA phy driver.  The generic phy
-> >>> layer does not cleanly support optional phys. It is not possible to
-> >>> determine from the error code if there is expected to be a phy
-> >>> according to DT, but it cannot be found, or no phy is listed in
-> >>> DT. All that can be determined is that a phy is expected, but the
-> >>> driver has not been loaded yet, in which case -EPROBE_DEFER is
-> >>> returned. Thus for 370 and XP the driver failed to probe.  Play safe,
-> >>> consider all errors except -EPROBE_DEFER to be none fatal and keep
-> >>> going, and in the case of -EPROBE_DEFER exit the probe function with
-> >>> that error code.
-> >>>
-> >>> Tested on Kirkwood with a sata phy driver and on 370 without a sata
-> >>> phy driver.
-> 
-> As expected kernel fails booting on Armada 370 and Armada XP when SATA
-> is selected (so by default with mvebu_defconfig and multi_v7_defconfig)
-> on 3.14-rc1. I would realy like to see this issue fixed for 3.14-rc2.
-> 
-> >>>
-> >>> Reported-by: Jean Pihet <jean.pihet@linaro.org>
-> >>> Signed-off-by: Andrew Lunn <andrew@lunn.ch>
-> >>> Tested-by: Gregory Clement <gregory.clement@free-electrons.com>
-> >>> ---
-> >>>  drivers/ata/sata_mv.c | 5 ++---
-> >>>  1 file changed, 2 insertions(+), 3 deletions(-)
-> >>>
-> >>> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-> >>> index eaa21eddbe70..148ff5a82c8b 100644
-> >>> --- a/drivers/ata/sata_mv.c
-> >>> +++ b/drivers/ata/sata_mv.c
-> >>> @@ -4115,9 +4115,8 @@ static int mv_platform_probe(struct platform_device *pdev)
-> >>>  		if (IS_ERR(hpriv->port_phys[port])) {
-> >>>  			rc = PTR_ERR(hpriv->port_phys[port]);
-> >>>  			hpriv->port_phys[port] = NULL;
-> >>> -			if ((rc != -EPROBE_DEFER) && (rc != -ENODEV))
-> >>> -				dev_warn(&pdev->dev, "error getting phy");
-> >>> -			goto err;
-> >>> +			if (rc == -EPROBE_DEFER)
-> >>> +				goto err;
-> >>
-> >> It feels a bit fishy to check for a specific errno.
-> 
-> EPROBE_DEFER is a very special errno so from my point of view it is
-> not so surprising to have a specific treatment for this case.
-> 
-> >>
-> >> How about not considering the lack of phy an error in all cases? In
-> >> other words, remove the check completely.
-> > 
-> > Bad things would happen. EPROBE_DEFER means there is a phy driver, but
-> > because of the non-deterministic ordering of loading drivers, it has
-> > not been loaded yet. The sata_mv driver needs to fail its probe with
-> > EPROBE_DEFER, giving the phy driver chance to load, and then when
-> > sata_mv loads for a second time it will find the phy driver. If we
-> > ignored the EPROBE_DEFER and sata_mv loaded, it would be out of sync
-> > with the phy driver, resulting in the phy being turned off, and the
-> > discs would never be found.
-> > 
-> > So
-> > 
-> > EPROBE_DEFER: We need to fail the probe, but it is not fatal.
-> > ENOSYS: No generic PHY framework, sata_mv can load.
-> > ENODEV: No phy, probably because it is optional and not there, sata_mv can load.
-> > ENOMEM, EINVAL, etc are real errors and should probably be fatal and
-> > returned by the probe function.
-> > 
-> > So i could reverse the comparison, look for ENOSYS and ENODEV and
-> > allow the probe to succeed and return the error in all other cases.
-> 
-> This looks more unusual for me, but I understand the logic. Indeed this
-> solution seems better.
-> 
-> Andrew, could you post a new version?
-> if you add the explanation you gave inside a comment just before the check,
-> I am sure it will be perfectly acceptable.
+Could you confirm that it will be part of the 3.14-rc2 too?
 
-Tejun,
 
-This patch is needed for our arm-soc bootfarms to continue testing.  It
-would be helpful if, once you're ok with the patch, we took it through
-arm-soc.  Would you mind Ack'ing it once you're happy with it?
+Thanks,
 
-thx,
+Gregory
 
-Jason.
 
-> >> Isn't the phy used only for power saving purposes? Or do we want this
-> >> for another purpose?
-> > 
-> > Yes. On Dove it can save around 10% of the idle power. I don't have
-> > kirkwood numbers at the moment, but it is probably similar.
-> >  
-> >> Or as a different solution, can't we check for the compatible-string
-> >> and only try to get a phy for orion-sata?
-> > 
-> > Orion5x cannot control its phy. Nor can PCI cards using the same IP
-> > core in discreet chips. I also hope that at some point 370 and XP gain
-> > phy support. I would really like this to work just like clocks do,
-> > where the clocks are optional and if they are in the DT node they are
-> > used, otherwise they are not.
-> > 
-> >       Andrew
-> > 
+> 
+> Here the log of the crash:
+> 
+> Serial: 8250/16550 driver, 4 ports, IRQ sharing disabled
+> d0012000.serial: ttyS0 at MMIO 0xd0012000 (irq = 20, base_baud = 15625000) is a 16550A
+> console [ttyS0] enabled
+> d0012100.serial: ttyS1 at MMIO 0xd0012100 (irq = 21, base_baud = 15625000) is a 16550A
+> sata_mv d00a0000.sata: error getting phy -38
+> Unable to handle kernel NULL pointer dereference at virtual address 00000054
+> pgd = c0004000
+> [00000054] *pgd=00000000
+> Internal error: Oops: 5 [#1] SMP ARM
+> Modules linked in:
+> CPU: 0 PID: 1 Comm: swapper/0 Not tainted 3.14.0-rc1-00007-g5787958c945a #989
+> task: ed82bb80 ti: ed83e000 task.ti: ed83e000
+> PC is at __clk_put+0x1c/0x8c
+> LR is at clk_prepare_lock+0xc/0xd8
+> pc : [<c02c02e4>]    lr : [<c02bdac8>]    psr: 60000113
+> sp : ed83fe18  ip : 00000000  fp : ed807b80
+> r10: ed908200  r9 : ed234290  r8 : ffffffda
+> r7 : ed908210  r6 : 00000000  r5 : eda5ced0  r4 : 00000000
+> r3 : ed82bb80  r2 : 00000001  r1 : ed83fe08  r0 : 00000054
+> Flags: nZCv  IRQs on  FIQs on  Mode SVC_32  ISA ARM  Segment kernel
+> Control: 10c53c7d  Table: 0000406a  DAC: 00000015
+> Process swapper/0 (pid: 1, stack limit = 0xed83e240)
+> Stack: (0xed83fe18 to 0xed840000)
+> fe00:                                                       00000001 c01f7390
+> fe20: ed90ee10 00000001 c04d658c 0000001f ed90ee10 00000002 c03b4e20 00000000
+> fe40: 74726f70 ed900030 00000001 ed232ca8 ed83e000 ed908210 c07d11c8 00000000
+> fe60: c07d11c8 c04d658c ed83e000 c04c2510 00000000 c01c2f38 c01c2f20 ed908210
+> fe80: c0809d88 c01c1ba8 00000000 ed908210 c07d11c8 ed908244 00000000 c01c1d50
+> fea0: 00000000 c07d11c8 c01c1cc4 c01c03b8 ed85b7dc ed85f1b4 c07d11c8 ed234300
+> fec0: c07cff90 c01c1380 c045e658 c04e4bf8 c07d11c8 c07d11c8 00000006 c04e4bf8
+> fee0: c07e6d80 c01c2390 00000000 00000000 00000006 c04d65b4 c04eb3c4 c0008874
+> ff00: 00000086 ef7fcd48 c04459a8 00000066 00000000 c049fd4c 00000063 ed83ff30
+> ff20: c0034d48 c0034d4c 00000113 ffffffff ef7fcd55 c03ae82c 00000086 c0034f34
+> ff40: c049f6ec 00000006 ef7fcd60 00000006 c07bfb70 c04eb3c4 00000006 c04e4bf8
+> ff60: c07e6d80 00000086 c04e4c04 c04c2510 00000000 c04c2bec 00000006 00000006
+> ff80: c04c2510 4c011108 00000000 c0393808 00000000 00000000 00000000 00000000
+> ffa0: 00000000 c0393810 00000000 c000e378 00000000 00000000 00000000 00000000
+> ffc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+> ffe0: 00000000 00000000 00000000 00000000 00000013 00000000 8041106c 11928242
+> [<c02c02e4>] (__clk_put) from [<c01f7390>] (mv_platform_probe+0x29c/0x410)
+> [<c01f7390>] (mv_platform_probe) from [<c01c2f38>] (platform_drv_probe+0x18/0x48)
+> [<c01c2f38>] (platform_drv_probe) from [<c01c1ba8>] (driver_probe_device+0x104/0x220)
+> [<c01c1ba8>] (driver_probe_device) from [<c01c1d50>] (__driver_attach+0x8c/0x90)
+> [<c01c1d50>] (__driver_attach) from [<c01c03b8>] (bus_for_each_dev+0x54/0x88)
+> [<c01c03b8>] (bus_for_each_dev) from [<c01c1380>] (bus_add_driver+0xd4/0x1d0)
+> [<c01c1380>] (bus_add_driver) from [<c01c2390>] (driver_register+0x78/0xf4)
+> [<c01c2390>] (driver_register) from [<c04d65b4>] (mv_init+0x28/0x4c)
+> [<c04d65b4>] (mv_init) from [<c0008874>] (do_one_initcall+0xe4/0x140)
+> [<c0008874>] (do_one_initcall) from [<c04c2bec>] (kernel_init_freeable+0xfc/0x1c8)
+> [<c04c2bec>] (kernel_init_freeable) from [<c0393810>] (kernel_init+0x8/0x118)
+> [<c0393810>] (kernel_init) from [<c000e378>] (ret_from_fork+0x14/0x3c)
+> Code: 8a000012 ebfff5f7 e2840054 f57ff05b (e1903f9f)
+> ---[ end trace 31531e36499d4923 ]---
+> Kernel panic - not syncing: Attempted to kill init! exitcode=0x0000000b
 > 
 > 
-> -- 
-> Gregory Clement, Free Electrons
-> Kernel, drivers, real-time and embedded Linux
-> development, consulting, training and support.
-> http://free-electrons.com
+> 
+> Thanks,
+> 
+> Gregory
+> 
+> 
+
+
+-- 
+Gregory Clement, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
