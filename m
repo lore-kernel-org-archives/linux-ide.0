@@ -1,53 +1,38 @@
-From: Andrew Lunn <andrew@lunn.ch>
-Subject: [patch v2 3/3] ata: sata_mv: Fix probe failures with optional phys
-Date: Mon,  3 Feb 2014 19:00:46 +0100
-Message-ID: <1391450446-15580-3-git-send-email-andrew@lunn.ch>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [patch v2 3/3] ata: sata_mv: Fix probe failures with optional
+ phys
+Date: Mon, 3 Feb 2014 13:02:46 -0500
+Message-ID: <20140203180246.GG30250@htj.dyndns.org>
 References: <52EF6D38.4060200@ti.com>
  <1391450446-15580-1-git-send-email-andrew@lunn.ch>
+ <1391450446-15580-3-git-send-email-andrew@lunn.ch>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vps0.lunn.ch ([178.209.37.122]:50435 "EHLO vps0.lunn.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752558AbaBCSBV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 3 Feb 2014 13:01:21 -0500
-In-Reply-To: <1391450446-15580-1-git-send-email-andrew@lunn.ch>
+Received: from mail-qc0-f175.google.com ([209.85.216.175]:43359 "EHLO
+	mail-qc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752160AbaBCSCu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Feb 2014 13:02:50 -0500
+Received: by mail-qc0-f175.google.com with SMTP id x13so11828343qcv.34
+        for <linux-ide@vger.kernel.org>; Mon, 03 Feb 2014 10:02:50 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <1391450446-15580-3-git-send-email-andrew@lunn.ch>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org, kishon@ti.com
-Cc: Jason Cooper <jason@lakedaemon.net>, Gregory Clement <gregory.clement@free-electrons.com>, linux-ide@vger.kernel.org, Andrew Lunn <andrew@lunn.ch>
+To: Andrew Lunn <andrew@lunn.ch>
+Cc: kishon@ti.com, Jason Cooper <jason@lakedaemon.net>, Gregory Clement <gregory.clement@free-electrons.com>, linux-ide@vger.kernel.org
 
-Make use of devm_phy_optional() in order to fix probe failures on
-Armada 370, XP and others, when there is no phy driver available.
+On Mon, Feb 03, 2014 at 07:00:46PM +0100, Andrew Lunn wrote:
+> Make use of devm_phy_optional() in order to fix probe failures on
+> Armada 370, XP and others, when there is no phy driver available.
+> 
+> Signed-off-by: Andrew Lunn <andrew@lunn.ch>
 
-Signed-off-by: Andrew Lunn <andrew@lunn.ch>
----
-v2
-No change
----
- drivers/ata/sata_mv.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ Acked-by: Tejun Heo <tj@kernel.org>
 
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index 20a7517bd339..52b8181ddafd 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -4126,12 +4126,14 @@ static int mv_platform_probe(struct platform_device *pdev)
- 			clk_prepare_enable(hpriv->port_clks[port]);
- 
- 		sprintf(port_number, "port%d", port);
--		hpriv->port_phys[port] = devm_phy_get(&pdev->dev, port_number);
-+		hpriv->port_phys[port] = devm_phy_optional_get(&pdev->dev,
-+							       port_number);
- 		if (IS_ERR(hpriv->port_phys[port])) {
- 			rc = PTR_ERR(hpriv->port_phys[port]);
- 			hpriv->port_phys[port] = NULL;
--			if ((rc != -EPROBE_DEFER) && (rc != -ENODEV))
--				dev_warn(&pdev->dev, "error getting phy");
-+			if (rc != -EPROBE_DEFER)
-+				dev_warn(&pdev->dev, "error getting phy %d",
-+					rc);
- 			goto err;
- 		} else
- 			phy_power_on(hpriv->port_phys[port]);
+Please feel free to route any way you see fit.
+
+Thanks!
+
 -- 
-1.8.5.2
-
+tejun
