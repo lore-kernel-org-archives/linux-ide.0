@@ -1,78 +1,155 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ACHI: Attempt to enable a single MSI if block enable
- fails
-Date: Mon, 3 Feb 2014 15:46:08 -0500
-Message-ID: <20140203204608.GK30250@htj.dyndns.org>
-References: <52EFFE7F.6050807@michaelmarley.com>
+From: Gregory CLEMENT <gregory.clement@free-electrons.com>
+Subject: Re: [patch v2 1/3] drivers: phy: Make NULL a valid phy reference
+Date: Mon, 03 Feb 2014 22:15:12 +0100
+Message-ID: <52F006E0.5080903@free-electrons.com>
+References: <52EF6D38.4060200@ti.com> <1391450446-15580-1-git-send-email-andrew@lunn.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f171.google.com ([209.85.216.171]:38390 "EHLO
-	mail-qc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750750AbaBCUqM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Feb 2014 15:46:12 -0500
-Received: by mail-qc0-f171.google.com with SMTP id n7so12096428qcx.16
-        for <linux-ide@vger.kernel.org>; Mon, 03 Feb 2014 12:46:12 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <52EFFE7F.6050807@michaelmarley.com>
+Received: from top.free-electrons.com ([176.31.233.9]:53079 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750789AbaBCVPR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Feb 2014 16:15:17 -0500
+In-Reply-To: <1391450446-15580-1-git-send-email-andrew@lunn.ch>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Michael Marley <michael@michaelmarley.com>
-Cc: linux-ide@vger.kernel.org, Alexander Gordeev <agordeev@redhat.com>
+To: Andrew Lunn <andrew@lunn.ch>
+Cc: tj@kernel.org, kishon@ti.com, Jason Cooper <jason@lakedaemon.net>, linux-ide@vger.kernel.org
 
-cc'ing Alexander.  Alexander, can you please reply with Reviewed-by?
+On 03/02/2014 19:00, Andrew Lunn wrote:
+> The common clock framework considers NULL a valid clock
+> reference. This makes handling optional clocks simple, in that if the
+> optional clock is not available, a NULL reference can be used in the
+> place of a real clock, simplifying the clock consumer.
+> 
+> Extend this concept to the phy consumer API. A NULL can be passed to
+> the release calls, the phy_init() and phy_exit() calls, and
+> phy_power_on() and phy_power_off() and a NOP is performed.
+> 
+Hi Andrew,
 
-Thanks.
+I have tested these 3 patches on severals Armada 370/XP boards:
+ - Mirabox
+ - Armada 370 DB
+ - OpenBlocks AX3
+ - Armada XP GP
 
-On Mon, Feb 03, 2014 at 03:39:27PM -0500, Michael Marley wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA1
+For all this boards without these series the kernel crash
+during boot on v3.14-rc1.
+With this series (and "ATA: SATA_MV: Add missing Kconfig
+select statememnt" patch), the kernel boot fine on all
+these boards.
+
+You can add my
+
+Tested-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
+
+for the whole series.
+
+
+Thanks,
+
+Gregory
+
+
+
+
+> Signed-off-by: Andrew Lunn <andrew@lunn.ch>
+> ---
+> v2
+> No change.
+> ---
+>  Documentation/phy.txt  |  6 ++++++
+>  drivers/phy/phy-core.c | 18 ++++++++++++++++++
+>  2 files changed, 24 insertions(+)
 > 
-> From: Michael Marley <michael@michaelmarley.com>
+> diff --git a/Documentation/phy.txt b/Documentation/phy.txt
+> index 0103e4b15b0e..2e24b993e95f 100644
+> --- a/Documentation/phy.txt
+> +++ b/Documentation/phy.txt
+> @@ -84,6 +84,12 @@ The only difference between the two APIs is that devm_phy_get associates the
+>  device with the PHY using devres on successful PHY get. On driver detach,
+>  release function is invoked on the the devres data and devres data is freed.
+>  
+> +It should be noted that NULL is a valid phy reference. All phy
+> +consumer calls on the NULL phy become NOPs. That is the release calls,
+> +the phy_init() and phy_exit() calls, and phy_power_on() and
+> +phy_power_off() calls are all NOP when applied to a NULL phy. The NULL
+> +phy is useful in devices for handling optional phy devices.
+> +
+>  5. Releasing a reference to the PHY
+>  
+>  When the controller no longer needs the PHY, it has to release the reference
+> diff --git a/drivers/phy/phy-core.c b/drivers/phy/phy-core.c
+> index 645c867c1257..56535253e50c 100644
+> --- a/drivers/phy/phy-core.c
+> +++ b/drivers/phy/phy-core.c
+> @@ -162,6 +162,9 @@ int phy_init(struct phy *phy)
+>  {
+>  	int ret;
+>  
+> +	if (!phy)
+> +		return 0;
+> +
+>  	ret = phy_pm_runtime_get_sync(phy);
+>  	if (ret < 0 && ret != -ENOTSUPP)
+>  		return ret;
+> @@ -187,6 +190,9 @@ int phy_exit(struct phy *phy)
+>  {
+>  	int ret;
+>  
+> +	if (!phy)
+> +		return 0;
+> +
+>  	ret = phy_pm_runtime_get_sync(phy);
+>  	if (ret < 0 && ret != -ENOTSUPP)
+>  		return ret;
+> @@ -212,6 +218,9 @@ int phy_power_on(struct phy *phy)
+>  {
+>  	int ret;
+>  
+> +	if (!phy)
+> +		return 0;
+> +
+>  	ret = phy_pm_runtime_get_sync(phy);
+>  	if (ret < 0 && ret != -ENOTSUPP)
+>  		return ret;
+> @@ -240,6 +249,9 @@ int phy_power_off(struct phy *phy)
+>  {
+>  	int ret;
+>  
+> +	if (!phy)
+> +		return 0;
+> +
+>  	mutex_lock(&phy->mutex);
+>  	if (phy->power_count == 1 && phy->ops->power_off) {
+>  		ret =  phy->ops->power_off(phy);
+> @@ -308,6 +320,9 @@ err0:
+>   */
+>  void phy_put(struct phy *phy)
+>  {
+> +	if (!phy)
+> +		return;
+> +
+>  	if (IS_ERR(phy))
+>  		return;
+>  
+> @@ -328,6 +343,9 @@ void devm_phy_put(struct device *dev, struct phy *phy)
+>  {
+>  	int r;
+>  
+> +	if (!phy)
+> +		return;
+> +
+>  	r = devres_destroy(dev, devm_phy_release, devm_phy_match, phy);
+>  	dev_WARN_ONCE(dev, r, "couldn't find PHY resource\n");
+>  }
 > 
-> Commit 7b92b4f61ec49cb1a5813298f35258bd7ecd3667 ("PCI/MSI: Remove
-> pci_enable_msi_block_auto()") causes the AHCI driver to immediately
-> switch to INTx mode if the pci_enable_msi_block() call fails to
-> allocate the requested number of MSIs. This behavior causes some
-> systems (for example, the Lenovo ThinkCentre m57p) to begin using
-> INTx when they worked fine in single MSI mode before.  This patch
-> makes the driver try to enable a single MSI if the
-> pci_enable_msi_block() call fails instead of switching directly
-> to INTx.
-> 
-> Signed-off-by: Michael Marley <michael@michaelmarley.com>
-> 
-> - ---
-> 
-> - --- drivers/ata/ahci.c.orig	2014-02-03 20:00:04.834008843 +0000
-> +++ drivers/ata/ahci.c	2014-02-03 19:34:53.737257483 +0000
-> @@ -1171,7 +1171,7 @@ static int ahci_init_interrupts(struct p
->  	nvec = rc;
->  	rc = pci_enable_msi_block(pdev, nvec);
->  	if (rc)
-> - -		goto intx;
-> +		goto single_msi;
-> 
->  	return nvec;
-> 
-> -----BEGIN PGP SIGNATURE-----
-> Version: GnuPG v1
-> Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-> 
-> iQIcBAEBAgAGBQJS7/5/AAoJEANTUn3blhEaLo8P/31AEbD9b61h2zFAcGlqZmN/
-> OEp69smHl9DbciaL0nQGIY4TRUpjA2XVxT/ZC3Fdz0huqX226g2D2G7/LLk299r3
-> m/GC89640FBRaVqNTASNKvIANlq0t2vgdOXGsgLXCD3EAigMdCVLiKNvdDYpUdXo
-> uaUg7WTVM12U+bWCrTB0RVgU7kKqkPSWb59kUPFaInjrTWzZ4jf4SZEzOr1b6mB0
-> Ihn/BsMf76q9rzGEwTaKPV+BrS/QZY5oz23r8+Pqw+lNVgtnmCQ7UkRJ40MI3roS
-> lU68syoG/CjI6imO/TQcr54eHMTBRl55Ut4VO/iLYaJKhXGGsuP43oPrJM0LZzpi
-> jjwzgz4Bij0Hi5Wx7AS0sDNEERi+w4At/+eKQmUkjA6qUblzIKCpMMCmp0CvodXH
-> 8J9TU9CqcnQs2hgGy990nFxdmiLh+Ee5NFBfKxpTGxv4eAjuK6RbxMLfndF6rRXO
-> MpMoFMK3BdFnQoi6We5er7HKPcbqOpR2hrw8mALhWDxgv+N2pq1J5uG69mc5vwxJ
-> YV7N0tnCtVTyxGavtMP669YCNH0KvRzXJvzJRE1TuuTvNu+oudMWJinilyhPnYJk
-> U5DYzLWj4t42qEsGr3QjFBEv90DG/LNc5YavI9XOfepjGFbdlcGQPAe3HnaE86KD
-> s9JiFcvAixL295414PRN
-> =f6LE
-> -----END PGP SIGNATURE-----
+
 
 -- 
-tejun
+Gregory Clement, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
