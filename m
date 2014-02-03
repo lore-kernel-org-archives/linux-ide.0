@@ -1,45 +1,170 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ATA: SATA_MV: Fix probe failure when no phy exists
-Date: Mon, 3 Feb 2014 12:32:40 -0500
-Message-ID: <20140203173240.GF30250@htj.dyndns.org>
-References: <1391115035-25960-1-git-send-email-andrew@lunn.ch>
- <20140130221228.GB1063@localhost>
- <20140131105411.GC26003@lunn.ch>
- <52EFB69E.2000800@free-electrons.com>
- <20140203165012.GE8533@titan.lakedaemon.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Andrew Lunn <andrew@lunn.ch>
+Subject: [patch v2 2/3] drivers: phy: Add support for optional phys
+Date: Mon,  3 Feb 2014 19:00:45 +0100
+Message-ID: <1391450446-15580-2-git-send-email-andrew@lunn.ch>
+References: <52EF6D38.4060200@ti.com>
+ <1391450446-15580-1-git-send-email-andrew@lunn.ch>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f182.google.com ([209.85.216.182]:54197 "EHLO
-	mail-qc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752819AbaBCRco (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Feb 2014 12:32:44 -0500
-Received: by mail-qc0-f182.google.com with SMTP id c9so11714051qcz.13
-        for <linux-ide@vger.kernel.org>; Mon, 03 Feb 2014 09:32:43 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <20140203165012.GE8533@titan.lakedaemon.net>
+Received: from vps0.lunn.ch ([178.209.37.122]:50423 "EHLO vps0.lunn.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752350AbaBCSBP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 3 Feb 2014 13:01:15 -0500
+In-Reply-To: <1391450446-15580-1-git-send-email-andrew@lunn.ch>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jason Cooper <jason@lakedaemon.net>
-Cc: Gregory CLEMENT <gregory.clement@free-electrons.com>, Kevin Hilman <khilman@linaro.org>, Andrew Lunn <andrew@lunn.ch>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, linux-ide@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+To: tj@kernel.org, kishon@ti.com
+Cc: Jason Cooper <jason@lakedaemon.net>, Gregory Clement <gregory.clement@free-electrons.com>, linux-ide@vger.kernel.org, Andrew Lunn <andrew@lunn.ch>
 
-Hello,
+Add devm_phy_optional_get and phy_optioanl_get, which should be used
+when the phy is optional. They does not return an error when the phy
+does not exist, rather they returns NULL, which is considered as a valid
+phy, but results in NOPs when used with the consumer API.
 
-On Mon, Feb 03, 2014 at 11:50:12AM -0500, Jason Cooper wrote:
-> > Andrew, could you post a new version?
-> > if you add the explanation you gave inside a comment just before the check,
-> > I am sure it will be perfectly acceptable.
-> 
-> Tejun,
-> 
-> This patch is needed for our arm-soc bootfarms to continue testing.  It
-> would be helpful if, once you're ok with the patch, we took it through
-> arm-soc.  Would you mind Ack'ing it once you're happy with it?
+Signed-off-by: Andrew Lunn <andrew@lunn.ch>
+---
+v2
+Add phy_optional_get()
+Improve the comments about the optional functions.
+Drop the dev_err()->dev_dbg() changes.
+---
+ Documentation/phy.txt   | 20 +++++++++++++-------
+ drivers/phy/phy-core.c  | 45 +++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/phy/phy.h | 14 ++++++++++++++
+ 3 files changed, 72 insertions(+), 7 deletions(-)
 
-The other patches fix the same issue and should be good for -rc2,
-right?
-
-Thanks.
-
+diff --git a/Documentation/phy.txt b/Documentation/phy.txt
+index 2e24b993e95f..ebff6ee52441 100644
+--- a/Documentation/phy.txt
++++ b/Documentation/phy.txt
+@@ -75,14 +75,20 @@ Before the controller can make use of the PHY, it has to get a reference to
+ it. This framework provides the following APIs to get a reference to the PHY.
+ 
+ struct phy *phy_get(struct device *dev, const char *string);
++struct phy *phy_optional_get(struct device *dev, const char *string);
+ struct phy *devm_phy_get(struct device *dev, const char *string);
+-
+-phy_get and devm_phy_get can be used to get the PHY. In the case of dt boot,
+-the string arguments should contain the phy name as given in the dt data and
+-in the case of non-dt boot, it should contain the label of the PHY.
+-The only difference between the two APIs is that devm_phy_get associates the
+-device with the PHY using devres on successful PHY get. On driver detach,
+-release function is invoked on the the devres data and devres data is freed.
++struct phy *devm_phy_optional_get(struct device *dev, const char *string);
++
++phy_get, phy_optional_get, devm_phy_get and devm_phy_optional_get can
++be used to get the PHY. In the case of dt boot, the string arguments
++should contain the phy name as given in the dt data and in the case of
++non-dt boot, it should contain the label of the PHY.  The two
++devm_phy_get associates the device with the PHY using devres on
++successful PHY get. On driver detach, release function is invoked on
++the the devres data and devres data is freed. phy_optional_get and
++devm_phy_optional_get should be used when the phy is optional. These
++two functions will never return -ENODEV, but instead returns NULL when
++the phy cannot be found.
+ 
+ It should be noted that NULL is a valid phy reference. All phy
+ consumer calls on the NULL phy become NOPs. That is the release calls,
+diff --git a/drivers/phy/phy-core.c b/drivers/phy/phy-core.c
+index 56535253e50c..5fedc606f5c0 100644
+--- a/drivers/phy/phy-core.c
++++ b/drivers/phy/phy-core.c
+@@ -429,6 +429,27 @@ struct phy *phy_get(struct device *dev, const char *string)
+ EXPORT_SYMBOL_GPL(phy_get);
+ 
+ /**
++ * phy_optional_get() - lookup and obtain a reference to an optional phy.
++ * @dev: device that requests this phy
++ * @string: the phy name as given in the dt data or the name of the controller
++ * port for non-dt case
++ *
++ * Returns the phy driver, after getting a refcount to it; or
++ * NULL if there is no such phy.  The caller is responsible for
++ * calling phy_put() to release that count.
++ */
++struct phy *phy_optional_get(struct device *dev, const char *string)
++{
++	struct phy *phy = phy_get(dev, string);
++
++	if (PTR_ERR(phy) == -ENODEV)
++		phy = NULL;
++
++	return phy;
++}
++EXPORT_SYMBOL_GPL(phy_optional_get);
++
++/**
+  * devm_phy_get() - lookup and obtain a reference to a phy.
+  * @dev: device that requests this phy
+  * @string: the phy name as given in the dt data or phy device name
+@@ -459,6 +480,30 @@ struct phy *devm_phy_get(struct device *dev, const char *string)
+ EXPORT_SYMBOL_GPL(devm_phy_get);
+ 
+ /**
++ * devm_phy_optional_get() - lookup and obtain a reference to an optional phy.
++ * @dev: device that requests this phy
++ * @string: the phy name as given in the dt data or phy device name
++ * for non-dt case
++ *
++ * Gets the phy using phy_get(), and associates a device with it using
++ * devres. On driver detach, release function is invoked on the devres
++ * data, then, devres data is freed. This differs to devm_phy_get() in
++ * that if the phy does not exist, it is not considered an error and
++ * -ENODEV will not be returned. Instead the NULL phy is returned,
++ * which can be passed to all other phy consumer calls.
++ */
++struct phy *devm_phy_optional_get(struct device *dev, const char *string)
++{
++	struct phy *phy = devm_phy_get(dev, string);
++
++	if (PTR_ERR(phy) == -ENODEV)
++		phy = NULL;
++
++	return phy;
++}
++EXPORT_SYMBOL_GPL(devm_phy_optional_get);
++
++/**
+  * phy_create() - create a new phy
+  * @dev: device that is creating the new phy
+  * @ops: function pointers for performing phy operations
+diff --git a/include/linux/phy/phy.h b/include/linux/phy/phy.h
+index e273e5ac19c9..3f83459dbb20 100644
+--- a/include/linux/phy/phy.h
++++ b/include/linux/phy/phy.h
+@@ -146,7 +146,9 @@ static inline void phy_set_bus_width(struct phy *phy, int bus_width)
+ 	phy->attrs.bus_width = bus_width;
+ }
+ struct phy *phy_get(struct device *dev, const char *string);
++struct phy *phy_optional_get(struct device *dev, const char *string);
+ struct phy *devm_phy_get(struct device *dev, const char *string);
++struct phy *devm_phy_optional_get(struct device *dev, const char *string);
+ void phy_put(struct phy *phy);
+ void devm_phy_put(struct device *dev, struct phy *phy);
+ struct phy *of_phy_simple_xlate(struct device *dev,
+@@ -232,11 +234,23 @@ static inline struct phy *phy_get(struct device *dev, const char *string)
+ 	return ERR_PTR(-ENOSYS);
+ }
+ 
++static inline struct phy *phy_optional_get(struct device *dev,
++					   const char *string)
++{
++	return ERR_PTR(-ENOSYS);
++}
++
+ static inline struct phy *devm_phy_get(struct device *dev, const char *string)
+ {
+ 	return ERR_PTR(-ENOSYS);
+ }
+ 
++static inline struct phy *devm_phy_optional_get(struct device *dev,
++						const char *string)
++{
++	return ERR_PTR(-ENOSYS);
++}
++
+ static inline void phy_put(struct phy *phy)
+ {
+ }
 -- 
-tejun
+1.8.5.2
+
