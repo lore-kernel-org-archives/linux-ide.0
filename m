@@ -1,76 +1,119 @@
-From: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] ACHI: Attempt to enable a single MSI if block enable fails
-Date: Tue, 4 Feb 2014 09:40:51 -0700
-Message-ID: <CAErSpo5J=dEZjAc8TtS7LgAEa9cxEpzYOC_4Qpe2EhLg_wDX0w@mail.gmail.com>
-References: <52EFFE7F.6050807@michaelmarley.com> <20140203204608.GK30250@htj.dyndns.org>
- <20140204060139.GA16513@dhcp-26-207.brq.redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Andrew Lunn <andrew@lunn.ch>
+Subject: [Patch v4 1/3] drivers: phy: Make NULL a valid phy reference
+Date: Tue,  4 Feb 2014 18:33:11 +0100
+Message-ID: <1391535193-24165-1-git-send-email-andrew@lunn.ch>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-oa0-f45.google.com ([209.85.219.45]:42371 "EHLO
-	mail-oa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754466AbaBDQlM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Feb 2014 11:41:12 -0500
-Received: by mail-oa0-f45.google.com with SMTP id i11so10033193oag.4
-        for <linux-ide@vger.kernel.org>; Tue, 04 Feb 2014 08:41:11 -0800 (PST)
-In-Reply-To: <20140204060139.GA16513@dhcp-26-207.brq.redhat.com>
+Received: from vps0.lunn.ch ([178.209.37.122]:50980 "EHLO vps0.lunn.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751234AbaBDRdi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 4 Feb 2014 12:33:38 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>, Michael Marley <michael@michaelmarley.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: tj@kernel.org, kishon@ti.com
+Cc: Jason Cooper <jason@lakedaemon.net>, Gregory Clement <gregory.clement@free-electrons.com>, linux-ide@vger.kernel.org, Andrew Lunn <andrew@lunn.ch>
 
-On Mon, Feb 3, 2014 at 11:01 PM, Alexander Gordeev <agordeev@redhat.com> wrote:
-> On Mon, Feb 03, 2014 at 03:46:08PM -0500, Tejun Heo wrote:
->> cc'ing Alexander.  Alexander, can you please reply with Reviewed-by?
->
-> [...]
->
->> >
->> > - --- drivers/ata/ahci.c.orig       2014-02-03 20:00:04.834008843 +0000
->> > +++ drivers/ata/ahci.c      2014-02-03 19:34:53.737257483 +0000
->> > @@ -1171,7 +1171,7 @@ static int ahci_init_interrupts(struct p
->> >     nvec = rc;
->> >     rc = pci_enable_msi_block(pdev, nvec);
->> >     if (rc)
->> > - -         goto intx;
->> > +           goto single_msi;
->> >
->> >     return nvec;
->
-> Single MSI should not be tried in case pci_enable_msi_block() returned a
-> negative errno. The correct fix is below. Bjorn already has pulled it to
-> his pci.git tree, into pci/msi branch.
->
-> @Bjorn,
->
-> Mind pushing the branch to the remote?
+The common clock framework considers NULL a valid clock
+reference. This makes handling optional clocks simple, in that if the
+optional clock is not available, a NULL reference can be used in the
+place of a real clock, simplifying the clock consumer.
 
-Done; it's now here:
-http://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/log/?h=pci/msi
+Extend this concept to the phy consumer API. A NULL can be passed to
+the release calls, the phy_init() and phy_exit() calls, and
+phy_power_on() and phy_power_off() and a NOP is performed.
 
-I'll probably wait to merge it into -next until I pull in some more of
-your MSI patches.
+Signed-off-by: Andrew Lunn <andrew@lunn.ch>
+Tested-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
+---
+v2
+ No change.
+v4
+ combine !phy and IS_ERR().
+ Add Tested-by
+---
+ Documentation/phy.txt  |  6 ++++++
+ drivers/phy/phy-core.c | 17 ++++++++++++++++-
+ 2 files changed, 22 insertions(+), 1 deletion(-)
 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index 8516f4d..df24eef4 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -1117,8 +1117,10 @@ int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
->
->         nvec = rc;
->         rc = pci_enable_msi_block(pdev, nvec);
-> -       if (rc)
-> +       if (rc < 0)
->                 goto intx;
-> +       else if (rc > 0)
-> +               goto single_msi;
->
->         return nvec;
->
-> --
-> 1.7.7.6
->
-> --
-> Regards,
-> Alexander Gordeev
-> agordeev@redhat.com
+diff --git a/Documentation/phy.txt b/Documentation/phy.txt
+index 0103e4b15b0e..2e24b993e95f 100644
+--- a/Documentation/phy.txt
++++ b/Documentation/phy.txt
+@@ -84,6 +84,12 @@ The only difference between the two APIs is that devm_phy_get associates the
+ device with the PHY using devres on successful PHY get. On driver detach,
+ release function is invoked on the the devres data and devres data is freed.
+ 
++It should be noted that NULL is a valid phy reference. All phy
++consumer calls on the NULL phy become NOPs. That is the release calls,
++the phy_init() and phy_exit() calls, and phy_power_on() and
++phy_power_off() calls are all NOP when applied to a NULL phy. The NULL
++phy is useful in devices for handling optional phy devices.
++
+ 5. Releasing a reference to the PHY
+ 
+ When the controller no longer needs the PHY, it has to release the reference
+diff --git a/drivers/phy/phy-core.c b/drivers/phy/phy-core.c
+index 645c867c1257..a9cdeee20d91 100644
+--- a/drivers/phy/phy-core.c
++++ b/drivers/phy/phy-core.c
+@@ -162,6 +162,9 @@ int phy_init(struct phy *phy)
+ {
+ 	int ret;
+ 
++	if (!phy)
++		return 0;
++
+ 	ret = phy_pm_runtime_get_sync(phy);
+ 	if (ret < 0 && ret != -ENOTSUPP)
+ 		return ret;
+@@ -187,6 +190,9 @@ int phy_exit(struct phy *phy)
+ {
+ 	int ret;
+ 
++	if (!phy)
++		return 0;
++
+ 	ret = phy_pm_runtime_get_sync(phy);
+ 	if (ret < 0 && ret != -ENOTSUPP)
+ 		return ret;
+@@ -212,6 +218,9 @@ int phy_power_on(struct phy *phy)
+ {
+ 	int ret;
+ 
++	if (!phy)
++		return 0;
++
+ 	ret = phy_pm_runtime_get_sync(phy);
+ 	if (ret < 0 && ret != -ENOTSUPP)
+ 		return ret;
+@@ -240,6 +249,9 @@ int phy_power_off(struct phy *phy)
+ {
+ 	int ret;
+ 
++	if (!phy)
++		return 0;
++
+ 	mutex_lock(&phy->mutex);
+ 	if (phy->power_count == 1 && phy->ops->power_off) {
+ 		ret =  phy->ops->power_off(phy);
+@@ -308,7 +320,7 @@ err0:
+  */
+ void phy_put(struct phy *phy)
+ {
+-	if (IS_ERR(phy))
++	if (!phy || IS_ERR(phy))
+ 		return;
+ 
+ 	module_put(phy->ops->owner);
+@@ -328,6 +340,9 @@ void devm_phy_put(struct device *dev, struct phy *phy)
+ {
+ 	int r;
+ 
++	if (!phy)
++		return;
++
+ 	r = devres_destroy(dev, devm_phy_release, devm_phy_match, phy);
+ 	dev_WARN_ONCE(dev, r, "couldn't find PHY resource\n");
+ }
+-- 
+1.8.5.2
+
