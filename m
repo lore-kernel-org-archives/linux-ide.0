@@ -1,63 +1,64 @@
-From: Jason Cooper <jason@lakedaemon.net>
-Subject: Re: [Patch v4 1/3] drivers: phy: Make NULL a valid phy reference
-Date: Wed, 5 Feb 2014 00:22:59 -0500
-Message-ID: <20140205052259.GQ8533@titan.lakedaemon.net>
-References: <1391535193-24165-1-git-send-email-andrew@lunn.ch>
- <20140205051440.GP8533@titan.lakedaemon.net>
- <52F1C9FB.4070300@ti.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [Patch v4 3/3] ata: sata_mv: Fix probe failures with optional
+ phys
+Date: Wed, 5 Feb 2014 11:00:24 +0530
+Message-ID: <52F1CC70.4080605@ti.com>
+References: <1391535193-24165-1-git-send-email-andrew@lunn.ch> <1391535193-24165-3-git-send-email-andrew@lunn.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:20056 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750720AbaBEFXF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Feb 2014 00:23:05 -0500
-Content-Disposition: inline
-In-Reply-To: <52F1C9FB.4070300@ti.com>
+Received: from comal.ext.ti.com ([198.47.26.152]:51964 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751461AbaBEFag (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 5 Feb 2014 00:30:36 -0500
+In-Reply-To: <1391535193-24165-3-git-send-email-andrew@lunn.ch>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Andrew Lunn <andrew@lunn.ch>, tj@kernel.org, Gregory Clement <gregory.clement@free-electrons.com>, linux-ide@vger.kernel.org
+To: Andrew Lunn <andrew@lunn.ch>, tj@kernel.org
+Cc: Jason Cooper <jason@lakedaemon.net>, Gregory Clement <gregory.clement@free-electrons.com>, linux-ide@vger.kernel.org
 
-On Wed, Feb 05, 2014 at 10:49:55AM +0530, Kishon Vijay Abraham I wrote:
-> On Wednesday 05 February 2014 10:44 AM, Jason Cooper wrote:
-> > Kishon,
-> > 
-> > On Tue, Feb 04, 2014 at 06:33:11PM +0100, Andrew Lunn wrote:
-> >> The common clock framework considers NULL a valid clock
-> >> reference. This makes handling optional clocks simple, in that if the
-> >> optional clock is not available, a NULL reference can be used in the
-> >> place of a real clock, simplifying the clock consumer.
-> >>
-> >> Extend this concept to the phy consumer API. A NULL can be passed to
-> >> the release calls, the phy_init() and phy_exit() calls, and
-> >> phy_power_on() and phy_power_off() and a NOP is performed.
-> >>
-> >> Signed-off-by: Andrew Lunn <andrew@lunn.ch>
-> >> Tested-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
-> >> ---
-> >> v2
-> >>  No change.
-> >> v4
-> >>  combine !phy and IS_ERR().
-> >>  Add Tested-by
-> >> ---
-> >>  Documentation/phy.txt  |  6 ++++++
-> >>  drivers/phy/phy-core.c | 17 ++++++++++++++++-
-> >>  2 files changed, 22 insertions(+), 1 deletion(-)
-> > 
-> > Looking over the overall diffstat (there isn't one, Andrew, please don't
-> > forget the coverletter in the future), this series is predominately
-> > changing the phy subsystem.  However, since it's fixing a boot failure
-> > in the arm-soc bootfarm, we'd like to get it into our tree without
-> > pulling in a bunch of unnecessary changes (eg by pulling in -rc2 or
-> > -rc3).
-> > 
-> > Could you create a topic branch with this series in it we could base off
-> > of?  Or, could you Ack it so we could take it through arm-soc?
+On Tuesday 04 February 2014 11:03 PM, Andrew Lunn wrote:
+> Make use of devm_phy_optional_get() in order to fix probe failures on
+> Armada 370, XP and others, when there is no phy driver available.
 > 
-> I can just ACK it so you can take it through your tree.
+> Signed-off-by: Andrew Lunn <andrew@lunn.ch>
+> Tested-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
+> Acked-by: Tejun Heo <tj@kernel.org>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+> v2
+>  No change
+> v3
+>  Fix commit log devm_get_optional->devm_option_get.
+> v4
+>  Add Tested-by: & Acked-by:
+>  Fix comment again.
+> ---
+>  drivers/ata/sata_mv.c | 8 +++++---
+>  1 file changed, 5 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+> index 20a7517bd339..52b8181ddafd 100644
+> --- a/drivers/ata/sata_mv.c
+> +++ b/drivers/ata/sata_mv.c
+> @@ -4126,12 +4126,14 @@ static int mv_platform_probe(struct platform_device *pdev)
+>  			clk_prepare_enable(hpriv->port_clks[port]);
+>  
+>  		sprintf(port_number, "port%d", port);
+> -		hpriv->port_phys[port] = devm_phy_get(&pdev->dev, port_number);
+> +		hpriv->port_phys[port] = devm_phy_optional_get(&pdev->dev,
+> +							       port_number);
+>  		if (IS_ERR(hpriv->port_phys[port])) {
+>  			rc = PTR_ERR(hpriv->port_phys[port]);
+>  			hpriv->port_phys[port] = NULL;
+> -			if ((rc != -EPROBE_DEFER) && (rc != -ENODEV))
+> -				dev_warn(&pdev->dev, "error getting phy");
+> +			if (rc != -EPROBE_DEFER)
+> +				dev_warn(&pdev->dev, "error getting phy %d",
+> +					rc);
+>  			goto err;
+>  		} else
+>  			phy_power_on(hpriv->port_phys[port]);
+> 
 
-Thanks!
-
-Jason.
