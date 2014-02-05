@@ -1,172 +1,141 @@
-From: Andrew Lunn <andrew@lunn.ch>
-Subject: [Patch v4 2/3] drivers: phy: Add support for optional phys
-Date: Tue,  4 Feb 2014 18:33:12 +0100
-Message-ID: <1391535193-24165-2-git-send-email-andrew@lunn.ch>
+From: Jason Cooper <jason@lakedaemon.net>
+Subject: Re: [Patch v4 1/3] drivers: phy: Make NULL a valid phy reference
+Date: Wed, 5 Feb 2014 00:14:40 -0500
+Message-ID: <20140205051440.GP8533@titan.lakedaemon.net>
 References: <1391535193-24165-1-git-send-email-andrew@lunn.ch>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vps0.lunn.ch ([178.209.37.122]:50989 "EHLO vps0.lunn.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754464AbaBDRdq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 4 Feb 2014 12:33:46 -0500
+Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:63038 "EHLO
+	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751396AbaBEFOr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Feb 2014 00:14:47 -0500
+Content-Disposition: inline
 In-Reply-To: <1391535193-24165-1-git-send-email-andrew@lunn.ch>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org, kishon@ti.com
-Cc: Jason Cooper <jason@lakedaemon.net>, Gregory Clement <gregory.clement@free-electrons.com>, linux-ide@vger.kernel.org, Andrew Lunn <andrew@lunn.ch>
+To: Andrew Lunn <andrew@lunn.ch>
+Cc: tj@kernel.org, kishon@ti.com, Gregory Clement <gregory.clement@free-electrons.com>, linux-ide@vger.kernel.org
 
-Add devm_phy_optional_get and phy_optioanl_get, which should be used
-when the phy is optional. They does not return an error when the phy
-does not exist, rather they returns NULL, which is considered as a valid
-phy, but results in NOPs when used with the consumer API.
+Kishon,
 
-Signed-off-by: Andrew Lunn <andrew@lunn.ch>
-Tested-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
----
-v2
- Add phy_optional_get()
- Improve the comments about the optional functions.
- Drop the dev_err()->dev_dbg() changes.
-v4
- Add Tested-by
----
- Documentation/phy.txt   | 20 +++++++++++++-------
- drivers/phy/phy-core.c  | 45 +++++++++++++++++++++++++++++++++++++++++++++
- include/linux/phy/phy.h | 14 ++++++++++++++
- 3 files changed, 72 insertions(+), 7 deletions(-)
+On Tue, Feb 04, 2014 at 06:33:11PM +0100, Andrew Lunn wrote:
+> The common clock framework considers NULL a valid clock
+> reference. This makes handling optional clocks simple, in that if the
+> optional clock is not available, a NULL reference can be used in the
+> place of a real clock, simplifying the clock consumer.
+> 
+> Extend this concept to the phy consumer API. A NULL can be passed to
+> the release calls, the phy_init() and phy_exit() calls, and
+> phy_power_on() and phy_power_off() and a NOP is performed.
+> 
+> Signed-off-by: Andrew Lunn <andrew@lunn.ch>
+> Tested-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
+> ---
+> v2
+>  No change.
+> v4
+>  combine !phy and IS_ERR().
+>  Add Tested-by
+> ---
+>  Documentation/phy.txt  |  6 ++++++
+>  drivers/phy/phy-core.c | 17 ++++++++++++++++-
+>  2 files changed, 22 insertions(+), 1 deletion(-)
 
-diff --git a/Documentation/phy.txt b/Documentation/phy.txt
-index 2e24b993e95f..ebff6ee52441 100644
---- a/Documentation/phy.txt
-+++ b/Documentation/phy.txt
-@@ -75,14 +75,20 @@ Before the controller can make use of the PHY, it has to get a reference to
- it. This framework provides the following APIs to get a reference to the PHY.
- 
- struct phy *phy_get(struct device *dev, const char *string);
-+struct phy *phy_optional_get(struct device *dev, const char *string);
- struct phy *devm_phy_get(struct device *dev, const char *string);
--
--phy_get and devm_phy_get can be used to get the PHY. In the case of dt boot,
--the string arguments should contain the phy name as given in the dt data and
--in the case of non-dt boot, it should contain the label of the PHY.
--The only difference between the two APIs is that devm_phy_get associates the
--device with the PHY using devres on successful PHY get. On driver detach,
--release function is invoked on the the devres data and devres data is freed.
-+struct phy *devm_phy_optional_get(struct device *dev, const char *string);
-+
-+phy_get, phy_optional_get, devm_phy_get and devm_phy_optional_get can
-+be used to get the PHY. In the case of dt boot, the string arguments
-+should contain the phy name as given in the dt data and in the case of
-+non-dt boot, it should contain the label of the PHY.  The two
-+devm_phy_get associates the device with the PHY using devres on
-+successful PHY get. On driver detach, release function is invoked on
-+the the devres data and devres data is freed. phy_optional_get and
-+devm_phy_optional_get should be used when the phy is optional. These
-+two functions will never return -ENODEV, but instead returns NULL when
-+the phy cannot be found.
- 
- It should be noted that NULL is a valid phy reference. All phy
- consumer calls on the NULL phy become NOPs. That is the release calls,
-diff --git a/drivers/phy/phy-core.c b/drivers/phy/phy-core.c
-index a9cdeee20d91..5f5b0f4be5be 100644
---- a/drivers/phy/phy-core.c
-+++ b/drivers/phy/phy-core.c
-@@ -426,6 +426,27 @@ struct phy *phy_get(struct device *dev, const char *string)
- EXPORT_SYMBOL_GPL(phy_get);
- 
- /**
-+ * phy_optional_get() - lookup and obtain a reference to an optional phy.
-+ * @dev: device that requests this phy
-+ * @string: the phy name as given in the dt data or the name of the controller
-+ * port for non-dt case
-+ *
-+ * Returns the phy driver, after getting a refcount to it; or
-+ * NULL if there is no such phy.  The caller is responsible for
-+ * calling phy_put() to release that count.
-+ */
-+struct phy *phy_optional_get(struct device *dev, const char *string)
-+{
-+	struct phy *phy = phy_get(dev, string);
-+
-+	if (PTR_ERR(phy) == -ENODEV)
-+		phy = NULL;
-+
-+	return phy;
-+}
-+EXPORT_SYMBOL_GPL(phy_optional_get);
-+
-+/**
-  * devm_phy_get() - lookup and obtain a reference to a phy.
-  * @dev: device that requests this phy
-  * @string: the phy name as given in the dt data or phy device name
-@@ -456,6 +477,30 @@ struct phy *devm_phy_get(struct device *dev, const char *string)
- EXPORT_SYMBOL_GPL(devm_phy_get);
- 
- /**
-+ * devm_phy_optional_get() - lookup and obtain a reference to an optional phy.
-+ * @dev: device that requests this phy
-+ * @string: the phy name as given in the dt data or phy device name
-+ * for non-dt case
-+ *
-+ * Gets the phy using phy_get(), and associates a device with it using
-+ * devres. On driver detach, release function is invoked on the devres
-+ * data, then, devres data is freed. This differs to devm_phy_get() in
-+ * that if the phy does not exist, it is not considered an error and
-+ * -ENODEV will not be returned. Instead the NULL phy is returned,
-+ * which can be passed to all other phy consumer calls.
-+ */
-+struct phy *devm_phy_optional_get(struct device *dev, const char *string)
-+{
-+	struct phy *phy = devm_phy_get(dev, string);
-+
-+	if (PTR_ERR(phy) == -ENODEV)
-+		phy = NULL;
-+
-+	return phy;
-+}
-+EXPORT_SYMBOL_GPL(devm_phy_optional_get);
-+
-+/**
-  * phy_create() - create a new phy
-  * @dev: device that is creating the new phy
-  * @ops: function pointers for performing phy operations
-diff --git a/include/linux/phy/phy.h b/include/linux/phy/phy.h
-index e273e5ac19c9..3f83459dbb20 100644
---- a/include/linux/phy/phy.h
-+++ b/include/linux/phy/phy.h
-@@ -146,7 +146,9 @@ static inline void phy_set_bus_width(struct phy *phy, int bus_width)
- 	phy->attrs.bus_width = bus_width;
- }
- struct phy *phy_get(struct device *dev, const char *string);
-+struct phy *phy_optional_get(struct device *dev, const char *string);
- struct phy *devm_phy_get(struct device *dev, const char *string);
-+struct phy *devm_phy_optional_get(struct device *dev, const char *string);
- void phy_put(struct phy *phy);
- void devm_phy_put(struct device *dev, struct phy *phy);
- struct phy *of_phy_simple_xlate(struct device *dev,
-@@ -232,11 +234,23 @@ static inline struct phy *phy_get(struct device *dev, const char *string)
- 	return ERR_PTR(-ENOSYS);
- }
- 
-+static inline struct phy *phy_optional_get(struct device *dev,
-+					   const char *string)
-+{
-+	return ERR_PTR(-ENOSYS);
-+}
-+
- static inline struct phy *devm_phy_get(struct device *dev, const char *string)
- {
- 	return ERR_PTR(-ENOSYS);
- }
- 
-+static inline struct phy *devm_phy_optional_get(struct device *dev,
-+						const char *string)
-+{
-+	return ERR_PTR(-ENOSYS);
-+}
-+
- static inline void phy_put(struct phy *phy)
- {
- }
--- 
-1.8.5.2
+Looking over the overall diffstat (there isn't one, Andrew, please don't
+forget the coverletter in the future), this series is predominately
+changing the phy subsystem.  However, since it's fixing a boot failure
+in the arm-soc bootfarm, we'd like to get it into our tree without
+pulling in a bunch of unnecessary changes (eg by pulling in -rc2 or
+-rc3).
 
+Could you create a topic branch with this series in it we could base off
+of?  Or, could you Ack it so we could take it through arm-soc?
+
+thx,
+
+Jason.
+
+> diff --git a/Documentation/phy.txt b/Documentation/phy.txt
+> index 0103e4b15b0e..2e24b993e95f 100644
+> --- a/Documentation/phy.txt
+> +++ b/Documentation/phy.txt
+> @@ -84,6 +84,12 @@ The only difference between the two APIs is that devm_phy_get associates the
+>  device with the PHY using devres on successful PHY get. On driver detach,
+>  release function is invoked on the the devres data and devres data is freed.
+>  
+> +It should be noted that NULL is a valid phy reference. All phy
+> +consumer calls on the NULL phy become NOPs. That is the release calls,
+> +the phy_init() and phy_exit() calls, and phy_power_on() and
+> +phy_power_off() calls are all NOP when applied to a NULL phy. The NULL
+> +phy is useful in devices for handling optional phy devices.
+> +
+>  5. Releasing a reference to the PHY
+>  
+>  When the controller no longer needs the PHY, it has to release the reference
+> diff --git a/drivers/phy/phy-core.c b/drivers/phy/phy-core.c
+> index 645c867c1257..a9cdeee20d91 100644
+> --- a/drivers/phy/phy-core.c
+> +++ b/drivers/phy/phy-core.c
+> @@ -162,6 +162,9 @@ int phy_init(struct phy *phy)
+>  {
+>  	int ret;
+>  
+> +	if (!phy)
+> +		return 0;
+> +
+>  	ret = phy_pm_runtime_get_sync(phy);
+>  	if (ret < 0 && ret != -ENOTSUPP)
+>  		return ret;
+> @@ -187,6 +190,9 @@ int phy_exit(struct phy *phy)
+>  {
+>  	int ret;
+>  
+> +	if (!phy)
+> +		return 0;
+> +
+>  	ret = phy_pm_runtime_get_sync(phy);
+>  	if (ret < 0 && ret != -ENOTSUPP)
+>  		return ret;
+> @@ -212,6 +218,9 @@ int phy_power_on(struct phy *phy)
+>  {
+>  	int ret;
+>  
+> +	if (!phy)
+> +		return 0;
+> +
+>  	ret = phy_pm_runtime_get_sync(phy);
+>  	if (ret < 0 && ret != -ENOTSUPP)
+>  		return ret;
+> @@ -240,6 +249,9 @@ int phy_power_off(struct phy *phy)
+>  {
+>  	int ret;
+>  
+> +	if (!phy)
+> +		return 0;
+> +
+>  	mutex_lock(&phy->mutex);
+>  	if (phy->power_count == 1 && phy->ops->power_off) {
+>  		ret =  phy->ops->power_off(phy);
+> @@ -308,7 +320,7 @@ err0:
+>   */
+>  void phy_put(struct phy *phy)
+>  {
+> -	if (IS_ERR(phy))
+> +	if (!phy || IS_ERR(phy))
+>  		return;
+>  
+>  	module_put(phy->ops->owner);
+> @@ -328,6 +340,9 @@ void devm_phy_put(struct device *dev, struct phy *phy)
+>  {
+>  	int r;
+>  
+> +	if (!phy)
+> +		return;
+> +
+>  	r = devres_destroy(dev, devm_phy_release, devm_phy_match, phy);
+>  	dev_WARN_ONCE(dev, r, "couldn't find PHY resource\n");
+>  }
+> -- 
+> 1.8.5.2
+> 
