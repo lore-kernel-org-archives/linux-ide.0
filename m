@@ -1,129 +1,156 @@
-From: Jim Malina <Jim.Malina@wdc.com>
-Subject: RE: [LSF/MM TOPIC] SMR: Disrupting recording technology meriting a
- new class of storage device
-Date: Fri, 7 Feb 2014 17:32:44 +0000
-Message-ID: <7DD506441A4CF644AAC1628B9A9C5EBC647EAC9E@wdscexmb06.sc.wdc.com>
-References: <DDA2008BD25F9046BFFC83788E83AF7E8167D4D0@wdscexmb03>
- <20140207130014.GA5078@localhost.localdomain> <52F4E3AC.9060309@suse.de>
+From: poma <pomidorabelisima-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: WARNING: CPU: 0 PID: 9502 at lib/dma-debug.c:554
+	debug_dma_assert_idle+0xc4/0x140()
+Date: Sun, 09 Feb 2014 19:41:24 +0100
+Message-ID: <52F7CBD4.70900@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from wdmail01.wdc.com ([129.253.55.43]:56290 "EHLO wdmail01.wdc.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752929AbaBGRmQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Feb 2014 12:42:16 -0500
-In-Reply-To: <52F4E3AC.9060309@suse.de>
-Content-Language: en-US
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <kernel-bounces-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org>
+List-Unsubscribe: <https://admin.fedoraproject.org/mailman/options/kernel>,
+	<mailto:kernel-request-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.fedoraproject.org/pipermail/kernel/>
+List-Post: <mailto:kernel-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org>
+List-Help: <mailto:kernel-request-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org?subject=help>
+List-Subscribe: <https://admin.fedoraproject.org/mailman/listinfo/kernel>,
+	<mailto:kernel-request-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org?subject=subscribe>
+Sender: kernel-bounces-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org
+Errors-To: kernel-bounces-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Josh Boyer <jwboyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Justin M. Forbes" <jforbes-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Dave Jones <davej-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mailing-List fedora-kernel <kernel-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Carlos Maiolino <cmaiolino@redhat.com>, Albert Chen <Albert.Chen@wdc.com>
-Cc: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, James Borden <James.Borden@wdc.com>, Curtis Stevens <curtis.stevens@wdc.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-
-
-> -----Original Message-----
-> From: Hannes Reinecke [mailto:hare@suse.de]
-> Sent: Friday, February 07, 2014 5:46 AM
-> To: Carlos Maiolino; Albert Chen
-> Cc: lsf-pc@lists.linux-foundation.org; James Borden; Jim Malina; Curt=
-is
-> Stevens; linux-ide@vger.kernel.org; linux-fsdevel@vger.kernel.org; li=
-nux-
-> scsi@vger.kernel.org
-> Subject: Re: [LSF/MM TOPIC] SMR: Disrupting recording technology meri=
-ting
-> a new class of storage device
->=20
-> On 02/07/2014 02:00 PM, Carlos Maiolino wrote:
-> > Hi,
-> >
-> > On Sat, Feb 01, 2014 at 02:24:33AM +0000, Albert Chen wrote:
-> >> [LSF/MM TOPIC] SMR: Disrupting recording technology meriting a new
-> >> class of storage device
-> >>
-> >> Shingle Magnetic Recording is a disruptive technology that deliver=
-s
-> >> the next areal density gain for the HDD industry by partially
-> >> overlapping tracks. Shingling requires physical writes to be
-> >> sequential, and opens the question of how to address this behavior=
- at
-> >> a system level. Two general approaches contemplated are to either =
-to
-> >> do the block management in the device or in the host storage
-> >> stack/file system through Zone Block Commands (ZBC).
-> >>
-> >> The use of ZBC to handle SMR block management yields several benef=
-its
-> >> such as:
-> >> - Predictable performance and latency
-> >> - Faster development time
-> >> - Access to application and system level semantic information
-> >> - Scalability / Fewer Drive Resources
-> >> - Higher reliability
-> >>
-> >> Essential to a host managed approach (ZBC) is the openness of Linu=
-x
-> >> and its community is a good place for WD to validate and seek
-> >> feedback for our thinking - where in the Linux system stack is the
-> >> best place to add ZBC handling? at the Device Mapper layer?
-> >> or somewhere else in the storage stack? New ideas and comments are
-> >> appreciated.
-> >
-> > If you add ZBC handling into the device-mapper layer, aren't you
-> > supposing that all SMR devices will be managed by device-mapper? Th=
-is
-> doesn't look right IMHO.
-> > These devices should be able to be managed via DM or either directl=
-y
-> > via de storage layer. And any other layers making use of these devi=
-ces
-> > (like DM for
-> > example) should be able to communicate with them and send ZBC
-> commands
-> > as needed.
-> >
-
- Clarification:  ZBC is an interface protocol.  A new device and comman=
-d set.   SMR is a recording technology.  You may have ZBC without SMR o=
-r SMR without ZBC.  For examples.  SSD may benefit from ZBC protocol to=
- improve performance and reduce wear.   SMR may be 100% device managed =
-and not provide information required of a ZBC device, like write pointe=
-rs or zone boundaries.
-
-> Precisely. Adding a new device type (and a new ULD to the SCSI
-> midlayer) seems to be the right idea here.
-> Then we could think of how to integrate this into the block layer; eg=
- we could
-> identify the zones with partitions, or mirror the zones via block_lim=
-its.
->=20
-> There is actually a good chance that we can tweak btrfs to run unmodi=
-fied on
-> such a disk; after all, sequential writes are not a big deal for btrf=
-s. The only
-> issue we might have is that we might need to re-allocate blocks to fr=
-ee up
-> zones.
-> But some btrfs developers have assured me this shouldn't be too hard.
->=20
-> Personally I don't like the idea of _having_ to use a device-mapper m=
-odule
-> for these things. What I would like is giving the user a choice; if t=
-here are
-> specialized fs around which can deal with such a disk (hello, ltfs :-=
-) then fine.
-> If not of course we should be having a device-mapper module to hide t=
-he
-> grubby details for unsuspecting filesystems.
->=20
-> Cheers,
->=20
-> Hannes
-> --
-> Dr. Hannes Reinecke		      zSeries & Storage
-> hare@suse.de			      +49 911 74053 688
-> SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-> GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
-
-jim
+ClRoZXNlIHR3byBjYXNlcyBhcmUgYXNzb2NpYXRlZCB3aXRoIHRoZSB1c2Ugb2YgU0FUQSBjb250
+cm9sbGVycywgU0FUQV9BSENJLgpJIGhvcGUgdGhhdCBJIHNlbnQgdG8gdGhlIHJpZ2h0IHBlb3Bs
+ZS4gOikKCkRvbWFpbjsKL2V0Yy9saWJ2aXJ0L3FlbXUvPGRvbWFpbj4ueG1sOgo8ZG9tYWluIHR5
+cGU9J2t2bSc+CiAgPG9zPgogICAgPHR5cGUgYXJjaD0neDg2XzY0JyBtYWNoaW5lPSdwYy1pNDQw
+ZngtMS42Jz5odm08L3R5cGU+CiAgPC9vcz4KICA8ZGV2aWNlcz4KICAgIDxlbXVsYXRvcj4vdXNy
+L2Jpbi9xZW11LWt2bTwvZW11bGF0b3I+CiAgICA8ZGlzayB0eXBlPSdmaWxlJyBkZXZpY2U9J2Rp
+c2snPgogICAgICA8ZHJpdmVyIG5hbWU9J3FlbXUnIHR5cGU9J3Fjb3cyJy8+CiAgICAgIDxzb3Vy
+Y2UgZmlsZT0nL3Zhci9saWIvbGlidmlydC9pbWFnZXMvcmF3aGlkZTIwOS5pbWcnLz4KICAgICAg
+PHRhcmdldCBkZXY9J3NkYScgYnVzPSdzYXRhJy8+CiAgICAgIDxhZGRyZXNzIHR5cGU9J2RyaXZl
+JyBjb250cm9sbGVyPScwJyBidXM9JzAnIHRhcmdldD0nMCcgdW5pdD0nMCcvPgogICAgPC9kaXNr
+PgogICAgPGNvbnRyb2xsZXIgdHlwZT0nc2F0YScgaW5kZXg9JzAnPgogICAgICA8YWRkcmVzcyB0
+eXBlPSdwY2knIGRvbWFpbj0nMHgwMDAwJyBidXM9JzB4MDAnIHNsb3Q9JzB4MDknCmZ1bmN0aW9u
+PScweDAnLz4KICAgIDwvY29udHJvbGxlcj4KICA8L2RldmljZXM+CjwvZG9tYWluPgoKbHNwY2k6
+CjAwOjA5LjAgU0FUQSBjb250cm9sbGVyIFswMTA2XTogSW50ZWwgQ29ycG9yYXRpb24gODI4MDFJ
+Ui9JTy9JSAooSUNIOVIvRE8vREgpIDYgcG9ydCBTQVRBIENvbnRyb2xsZXIgW0FIQ0kgbW9kZV0g
+WzgwODY6MjkyMl0gKHJldiAwMikKClsgIDQ1Ni40NjI5MTNdIC0tLS0tLS0tLS0tLVsgY3V0IGhl
+cmUgXS0tLS0tLS0tLS0tLQpbICA0NTYuNDYyOTI2XSBXQVJOSU5HOiBDUFU6IDEgUElEOiAzNzcy
+IGF0IGxpYi9kbWEtZGVidWcuYzo0OTEKYWRkX2RtYV9lbnRyeSsweDEyNy8weDEzMCgpClsgIDQ1
+Ni40NjI5MjhdIERNQS1BUEk6IGV4Y2VlZGVkIDcgb3ZlcmxhcHBpbmcgbWFwcGluZ3Mgb2YgcGZu
+IDIxMzcKWyAgNDU2LjQ2MjkzMF0gTW9kdWxlcyBsaW5rZWQgaW46IHhmcyBsaWJjcmMzMmMgYnRy
+ZnMgZmNvZSBsaWJmY29lIGxpYmZjCnNjc2lfdHJhbnNwb3J0X2ZjIHNjc2lfdGd0IGlzY3NpX2li
+ZnQgaXNjc2lfYm9vdF9zeXNmcyBpc2NzaV90Y3AKbGliaXNjc2lfdGNwIGxpYmlzY3NpIHNjc2lf
+dHJhbnNwb3J0X2lzY3NpIGRtX2NyeXB0IHZmYXQgZmF0CmRtX3JvdW5kX3JvYmluIGRtX211bHRp
+cGF0aCByYWlkMTAgcmFpZDQ1NiBhc3luY19yYWlkNl9yZWNvdgphc3luY19tZW1jcHkgYXN5bmNf
+cHEgcmFpZDZfcHEgYXN5bmNfeG9yIHhvciBhc3luY190eCByYWlkMSByYWlkMCB1aW5wdXQKaXA2
+dF9ycGZpbHRlciBpcDZ0X1JFSkVDVCB4dF9jb25udHJhY2sgY2ZnODAyMTEgcmZraWxsIGVidGFi
+bGVfbmF0CmVidGFibGVfYnJvdXRlIGJyaWRnZSBzdHAgbGxjIGVidGFibGVfZmlsdGVyIGVidGFi
+bGVzIGlwNnRhYmxlX25hdApuZl9jb25udHJhY2tfaXB2NiBuZl9kZWZyYWdfaXB2NiBuZl9uYXRf
+aXB2NiBpcDZ0YWJsZV9tYW5nbGUKaXA2dGFibGVfc2VjdXJpdHkgaXA2dGFibGVfcmF3IGlwNnRh
+YmxlX2ZpbHRlciBpcDZfdGFibGVzIGlwdGFibGVfbmF0Cm5mX2Nvbm50cmFja19pcHY0IG5mX2Rl
+ZnJhZ19pcHY0IG5mX25hdF9pcHY0IG5mX25hdCBuZl9jb25udHJhY2sKaXB0YWJsZV9tYW5nbGUg
+aXB0YWJsZV9zZWN1cml0eSBpcHRhYmxlX3JhdyBwcGRldiBrdm0gam95ZGV2IHNlcmlvX3Jhdwpz
+bmRfaGRhX2ludGVsIHZpcnRpb19jb25zb2xlIHNuZF9oZGFfY29kZWMgc25kX2h3ZGVwIHNuZF9z
+ZXEgc25kX3NlcV9kZXZpY2UKWyAgNDU2LjQ2Mjk5N10gIHNuZF9wY20gcGFycG9ydF9wYyBwdnBh
+bmljIHNuZF90aW1lciBwYXJwb3J0IHNuZApzb3VuZGNvcmUgaTJjX3BpaXg0IG5mc2QgYXV0aF9y
+cGNnc3MgbmZzX2FjbCBsb2NrZCBpc29mcyBzcXVhc2hmcwp2aXJ0aW9fYmFsbG9vbiB2aXJ0aW9f
+bmV0IHF4bCBzeW01M2M4eHggZHJtX2ttc19oZWxwZXIKc2NzaV90cmFuc3BvcnRfc3BpIHR0bSBk
+cm0gdmlydGlvX3BjaSB2aXJ0aW9fcmluZyBhdGFfZ2VuZXJpYyBpMmNfY29yZQp2aXJ0aW8gcGF0
+YV9hY3BpIHN1bnJwYyBsb29wClsgIDQ1Ni40NjMwMzldIENQVTogMSBQSUQ6IDM3NzIgQ29tbTog
+ZXh0NGxhenlpbml0IE5vdCB0YWludGVkCjMuMTQuMC0wLnJjMS5naXQzLjEuZmMyMS54ODZfNjQg
+IzEKWyAgNDU2LjQ2MzA0Ml0gSGFyZHdhcmUgbmFtZTogQm9jaHMgQm9jaHMsIEJJT1MgQm9jaHMg
+MDEvMDEvMjAxMQpbICA0NTYuNDYzMDQ0XSAgMDAwMDAwMDAwMDAwMDAwMCAwMDAwMDAwMDg0ZmVl
+YzFiIGZmZmY4ODAwMWM4NjE4OTgKZmZmZmZmZmY4MTdjZWU5ZApbICA0NTYuNDYzMDQ5XSAgZmZm
+Zjg4MDAxYzg2MThlMCBmZmZmODgwMDFjODYxOGQwIGZmZmZmZmZmODEwOTY3Y2QKMDAwMDAwMDAw
+MDAwMjEzNwpbICA0NTYuNDYzMDUzXSAgZmZmZjg4MDA3Mjg4ZDU0MCAwMDAwMDAwMDAwMDAwMDk2
+IGZmZmZmZmZmODJkNjQ1YzAKMDAwMDAwMDAwMDAwMDA5NgpbICA0NTYuNDYzMDU2XSBDYWxsIFRy
+YWNlOgpbICA0NTYuNDYzMDYzXSAgWzxmZmZmZmZmZjgxN2NlZTlkPl0gZHVtcF9zdGFjaysweDRk
+LzB4NjYKWyAgNDU2LjQ2MzA2OF0gIFs8ZmZmZmZmZmY4MTA5NjdjZD5dIHdhcm5fc2xvd3BhdGhf
+Y29tbW9uKzB4N2QvMHhhMApbICA0NTYuNDYzMDcxXSAgWzxmZmZmZmZmZjgxMDk2ODRjPl0gd2Fy
+bl9zbG93cGF0aF9mbXQrMHg1Yy8weDgwClsgIDQ1Ni40NjMwNzVdICBbPGZmZmZmZmZmODEzZjM3
+M2Q+XSA/IGFjdGl2ZV9wZm5fcmVhZF9vdmVybGFwKzB4MmQvMHg1MApbICA0NTYuNDYzMDc5XSAg
+WzxmZmZmZmZmZjgxM2YzZDA3Pl0gYWRkX2RtYV9lbnRyeSsweDEyNy8weDEzMApbICA0NTYuNDYz
+MDgyXSAgWzxmZmZmZmZmZjgxM2Y0M2RkPl0gZGVidWdfZG1hX21hcF9zZysweDEzZC8weDE4MApb
+ICA0NTYuNDYzMDg2XSAgWzxmZmZmZmZmZjgxNTNmMGMxPl0gYXRhX3FjX2lzc3VlKzB4MjgxLzB4
+M2UwClsgIDQ1Ni40NjMwOTBdICBbPGZmZmZmZmZmODE1NDgzOTU+XSBhdGFfc2NzaV9xdWV1ZWNt
+ZCsweDEzNS8weDQyMApbICA0NTYuNDYzMDk0XSAgWzxmZmZmZmZmZjgxNTQ1MTUwPl0gPyBhdGFf
+c2NzaV9pbnZhbGlkX2ZpZWxkKzB4NDAvMHg0MApbICA0NTYuNDYzMDk4XSAgWzxmZmZmZmZmZjgx
+NTFiNzc3Pl0gc2NzaV9kaXNwYXRjaF9jbWQrMHhiNy8weDRlMApbICA0NTYuNDYzMTAxXSAgWzxm
+ZmZmZmZmZjgxNTIzYmNjPl0gc2NzaV9yZXF1ZXN0X2ZuKzB4MzNjLzB4NTQwClsgIDQ1Ni40NjMx
+MDZdICBbPGZmZmZmZmZmODEzOTU2ZjM+XSBfX2Jsa19ydW5fcXVldWUrMHgzMy8weDQwClsgIDQ1
+Ni40NjMxMDldICBbPGZmZmZmZmZmODEzOWI5MTM+XSBibGtfcXVldWVfYmlvKzB4MzQzLzB4NGQw
+ClsgIDQ1Ni40NjMxMTNdICBbPGZmZmZmZmZmODEzOTU1MTA+XSBnZW5lcmljX21ha2VfcmVxdWVz
+dCsweGUwLzB4MTMwClsgIDQ1Ni40NjMxMTZdICBbPGZmZmZmZmZmODEzOTU1ZDg+XSBzdWJtaXRf
+YmlvKzB4NzgvMHgxNjAKWyAgNDU2LjQ2MzEyMV0gIFs8ZmZmZmZmZmY4MTI3MzYyOD5dID8gYmlv
+X2FsbG9jX2Jpb3NldCsweDFmOC8weDJmMApbICA0NTYuNDYzMTI1XSAgWzxmZmZmZmZmZjgxM2Ez
+MTFmPl0gX19ibGtkZXZfaXNzdWVfemVyb291dCsweDFmZi8weDI2MApbICA0NTYuNDYzMTI5XSAg
+WzxmZmZmZmZmZjgxM2EzMjY5Pl0gYmxrZGV2X2lzc3VlX3plcm9vdXQrMHhlOS8weGYwClsgIDQ1
+Ni40NjMxMzNdICBbPGZmZmZmZmZmODEzMDNkOWU+XSA/Cl9fZXh0NF9qb3VybmFsX2dldF93cml0
+ZV9hY2Nlc3MrMHg0ZS8weDkwClsgIDQ1Ni40NjMxMzddICBbPGZmZmZmZmZmODEyY2NjMWM+XSBl
+eHQ0X2luaXRfaW5vZGVfdGFibGUrMHgxN2MvMHgzYzAKWyAgNDU2LjQ2MzE0Ml0gIFs8ZmZmZmZm
+ZmY4MTJlMjAzOT5dID8gZXh0NF9sYXp5aW5pdF90aHJlYWQrMHhiOS8weDMyMApbICA0NTYuNDYz
+MTQ1XSAgWzxmZmZmZmZmZjgxMmUyMjJkPl0gZXh0NF9sYXp5aW5pdF90aHJlYWQrMHgyYWQvMHgz
+MjAKWyAgNDU2LjQ2MzE0OV0gIFs8ZmZmZmZmZmY4MTJlMWY4MD5dID8gZXh0NF91bnJlZ2lzdGVy
+X2xpX3JlcXVlc3QrMHg3MC8weDcwClsgIDQ1Ni40NjMxNTNdICBbPGZmZmZmZmZmODEwYzQzZWY+
+XSBrdGhyZWFkKzB4ZmYvMHgxMjAKWyAgNDU2LjQ2MzE1Nl0gIFs8ZmZmZmZmZmY4MTBjNDJmMD5d
+ID8gaW5zZXJ0X2t0aHJlYWRfd29yaysweDgwLzB4ODAKWyAgNDU2LjQ2MzE2MF0gIFs8ZmZmZmZm
+ZmY4MTdlMmMzYz5dIHJldF9mcm9tX2ZvcmsrMHg3Yy8weGIwClsgIDQ1Ni40NjMxNjNdICBbPGZm
+ZmZmZmZmODEwYzQyZjA+XSA/IGluc2VydF9rdGhyZWFkX3dvcmsrMHg4MC8weDgwClsgIDQ1Ni40
+NjMxNjVdIC0tLVsgZW5kIHRyYWNlIGQxZTQxYjQyYTVmNTFmYTggXS0tLQoKaHR0cHM6Ly9idWd6
+aWxsYS5yZWRoYXQuY29tL2F0dGFjaG1lbnQuY2dpP2lkPTg2MTEyMgoKfn5+fn5+fn5+fn5+fn5+
+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fgoKQmFyZSBtZXRhbDsKCmxzcGNp
+OgowMDowOS4wIFNBVEEgY29udHJvbGxlciBbMDEwNl06IE5WSURJQSBDb3Jwb3JhdGlvbiBNQ1A3
+OFMgW0dlRm9yY2UgODIwMF0KQUhDSSBDb250cm9sbGVyIFsxMGRlOjBhZDRdIChyZXYgYTIpCgpb
+ICAgNzIuMDEyNDA4XSAtLS0tLS0tLS0tLS1bIGN1dCBoZXJlIF0tLS0tLS0tLS0tLS0KWyAgIDcy
+LjAxMjQxOF0gV0FSTklORzogQ1BVOiAwIFBJRDogOTUwMiBhdCBsaWIvZG1hLWRlYnVnLmM6NTU0
+CmRlYnVnX2RtYV9hc3NlcnRfaWRsZSsweGM0LzB4MTQwKCkKWyAgIDcyLjAxMjQyMF0gYWhjaSAw
+MDAwOjAwOjA5LjA6IERNQS1BUEk6IGNwdSB0b3VjaGluZyBhbiBhY3RpdmUgZG1hCm1hcHBlZCBw
+YWdlIFtwZm49MHg5NDNiYV0KWyAgIDcyLjAxMjQyMV0gTW9kdWxlcyBsaW5rZWQgaW46IGlwdF9N
+QVNRVUVSQURFIGlwdGFibGVfbmF0IG5mX25hdF9pcHY0Cm5mX25hdCBuZl9jb25udHJhY2tfaXB2
+NCBuZl9kZWZyYWdfaXB2NCB4dF9jb25udHJhY2sgbmZfY29ubnRyYWNrCnh0X0NIRUNLU1VNIGlw
+dGFibGVfbWFuZ2xlIGZ1c2UgaXA2dGFibGVfZmlsdGVyIGlwNl90YWJsZXMgZWJ0YWJsZV9uYXQK
+ZWJ0YWJsZXMga3ZtX2FtZCBrdm0gcHBkZXYgbWljcm9jb2RlIHNlcmlvX3JhdyBub3V2ZWF1IG14
+bV93bWkgdmlkZW8KaTJjX2FsZ29fYml0IHR0bSBlZGFjX2NvcmUgZWRhY19tY2VfYW1kIGRybV9r
+bXNfaGVscGVyIGsxMHRlbXAgZHJtCnBhcnBvcnRfc2VyaWFsIHBhcnBvcnRfcGMgcGFycG9ydCB3
+bWkgc2hwY2hwIGkyY19uZm9yY2UyIGkyY19jb3JlCmFjcGlfY3B1ZnJlcSBuZnNkIGF1dGhfcnBj
+Z3NzIG5mc19hY2wgbG9ja2Qgc3VucnBjIGJpbmZtdF9taXNjCmF0YV9nZW5lcmljIHBhdGFfYWNw
+aSBwYXRhX2FtZCA4MDIxcSBnYXJwIG1ycCB0dW4gYnJpZGdlIHN0cCBsbGMgYm9uZGluZwpbICAg
+NzIuMDEyNTQyXSBDUFU6IDAgUElEOiA5NTAyIENvbW06IGxkLWxpbnV4LXg4Ni02NCBOb3QgdGFp
+bnRlZAozLjE0LjAtMC5yYzEuZ2l0NS4xLmZjMjEuMS54ODZfNjQgIzEKWyAgIDcyLjAxMjU0NF0g
+SGFyZHdhcmUgbmFtZTogR2lnYWJ5dGUgVGVjaG5vbG9neSBDby4sIEx0ZC4KTTcyMC1VUzMvTTcy
+MC1VUzMsIEJJT1MgRjduIDA5LzA3LzIwMTAKWyAgIDcyLjAxMjU0Nl0gIDAwMDAwMDAwMDAwMDAw
+MDAgMDAwMDAwMDBmZjc1YzEwZSBmZmZmODgwMDk3MGYzYzQ4CmZmZmZmZmZmODE3Y2YwNWQKWyAg
+IDcyLjAxMjU1MF0gIGZmZmY4ODAwOTcwZjNjOTAgZmZmZjg4MDA5NzBmM2M4MCBmZmZmZmZmZjgx
+MDk2NmNkCmZmZmY4ODAwYzhkZDc2MDAKWyAgIDcyLjAxMjU1M10gIGZmZmY4ODAxMjg2YzJmNDAg
+MDAwMDAwMDAwMDA5NDNiYSBmZmZmZWEwMDAyNTVjYzAwCmZmZmY4ODAwYjA3NTYwNTgKWyAgIDcy
+LjAxMjU1Nl0gQ2FsbCBUcmFjZToKWyAgIDcyLjAxMjU2MV0gIFs8ZmZmZmZmZmY4MTdjZjA1ZD5d
+IGR1bXBfc3RhY2srMHg0ZC8weDY2ClsgICA3Mi4wMTI1NjVdICBbPGZmZmZmZmZmODEwOTY2Y2Q+
+XSB3YXJuX3Nsb3dwYXRoX2NvbW1vbisweDdkLzB4YTAKWyAgIDcyLjAxMjU2N10gIFs8ZmZmZmZm
+ZmY4MTA5Njc0Yz5dIHdhcm5fc2xvd3BhdGhfZm10KzB4NWMvMHg4MApbICAgNzIuMDEyNTcxXSAg
+WzxmZmZmZmZmZjgxMGY4OTlkPl0gPyB0cmFjZV9oYXJkaXJxc19vbisweGQvMHgxMApbICAgNzIu
+MDEyNTczXSAgWzxmZmZmZmZmZjgxM2Y1YjI0Pl0gZGVidWdfZG1hX2Fzc2VydF9pZGxlKzB4YzQv
+MHgxNDAKWyAgIDcyLjAxMjU3Nl0gIFs8ZmZmZmZmZmY4MTFkZThiND5dIGRvX3dwX3BhZ2UrMHhm
+NC8weDdmMApbICAgNzIuMDEyNTc4XSAgWzxmZmZmZmZmZjgxMWUxMzBjPl0gaGFuZGxlX21tX2Zh
+dWx0KzB4NjZjLzB4ZTkwClsgICA3Mi4wMTI1ODJdICBbPGZmZmZmZmZmODE3ZGNlNTM+XSBfX2Rv
+X3BhZ2VfZmF1bHQrMHgxODMvMHg2MDAKWyAgIDcyLjAxMjU4NV0gIFs8ZmZmZmZmZmY4MTAyNDZj
+NT5dID8gbmF0aXZlX3NjaGVkX2Nsb2NrKzB4MzUvMHhhMApbICAgNzIuMDEyNTg4XSAgWzxmZmZm
+ZmZmZjgxMDI0NzM5Pl0gPyBzY2hlZF9jbG9jaysweDkvMHgxMApbICAgNzIuMDEyNTkwXSAgWzxm
+ZmZmZmZmZjgxMGRkNDY1Pl0gPyBsb2NhbF9jbG9jaysweDI1LzB4MzAKWyAgIDcyLjAxMjU5M10g
+IFs8ZmZmZmZmZmY4MTBmNWM2Zj5dID8KbG9ja19yZWxlYXNlX2hvbGR0aW1lLnBhcnQuMjkrMHhm
+LzB4MTkwClsgICA3Mi4wMTI1OTVdICBbPGZmZmZmZmZmODE3ZDkwMTg+XSA/IHJldGludF9zd2Fw
+Z3MrMHgxMy8weDFiClsgICA3Mi4wMTI1OThdICBbPGZmZmZmZmZmODEzZDU1ZGE+XSA/IHRyYWNl
+X2hhcmRpcnFzX29mZl90aHVuaysweDNhLzB4M2MKWyAgIDcyLjAxMjYwMV0gIFs8ZmZmZmZmZmY4
+MTdkZDJkZT5dIGRvX3BhZ2VfZmF1bHQrMHhlLzB4MTAKWyAgIDcyLjAxMjYwM10gIFs8ZmZmZmZm
+ZmY4MTdkOTMzOD5dIHBhZ2VfZmF1bHQrMHgyOC8weDMwClsgICA3Mi4wMTI2MDVdIC0tLVsgZW5k
+IHRyYWNlIDQ4YmI3NTc2NWUzNWQ5ZGUgXS0tLQpbICAgNzIuMDEyNjA2XSBNYXBwZWQgYXQ6Clsg
+ICA3Mi4wMTI2MDddICBbPGZmZmZmZmZmODEzZjQyZjk+XSBkZWJ1Z19kbWFfbWFwX3NnKzB4MTU5
+LzB4MTgwClsgICA3Mi4wMTI2MDldICBbPGZmZmZmZmZmODE1M2YxNTE+XSBhdGFfcWNfaXNzdWUr
+MHgyODEvMHgzZTAKWyAgIDcyLjAxMjYxM10gIFs8ZmZmZmZmZmY4MTU0ODQyNT5dIGF0YV9zY3Np
+X3F1ZXVlY21kKzB4MTM1LzB4NDIwClsgICA3Mi4wMTI2MTZdICBbPGZmZmZmZmZmODE1MWI4MDc+
+XSBzY3NpX2Rpc3BhdGNoX2NtZCsweGI3LzB4NGUwClsgICA3Mi4wMTI2MTldICBbPGZmZmZmZmZm
+ODE1MjNjNWM+XSBzY3NpX3JlcXVlc3RfZm4rMHgzM2MvMHg1NDAKCmh0dHBzOi8vYnVnemlsbGEu
+cmVkaGF0LmNvbS9zaG93X2J1Zy5jZ2k/aWQ9MTA2MzA1OQoKCnBvbWEKCl9fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmtlcm5lbCBtYWlsaW5nIGxpc3QKa2Vy
+bmVsQGxpc3RzLmZlZG9yYXByb2plY3Qub3JnCmh0dHBzOi8vYWRtaW4uZmVkb3JhcHJvamVjdC5v
+cmcvbWFpbG1hbi9saXN0aW5mby9rZXJuZWw=
