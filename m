@@ -1,37 +1,53 @@
-From: Stanislaw Gruszka <sgruszka-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [dma-debug.c - DMA-API] =?utf-8?Q?exce?=
-	=?utf-8?Q?eded_overlapping_=E2=80=A6_&_sym53c8xx_=E2=80=A6_tries_to_free_?=
-	=?utf-8?B?RE1BIOKApg==?=
-Date: Fri, 14 Feb 2014 10:16:39 +0100
-Message-ID: <20140214091639.GB1782@redhat.com>
-References: <52FDD955.4000701@gmail.com>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH 1/1] ata: ata-samsung_cf: Trivial cleanup in header file
+Date: Fri, 14 Feb 2014 17:28:28 +0400
+Message-ID: <52FE19FC.7010905@cogentembedded.com>
+References: <1392359102-6997-1-git-send-email-sachin.kamat@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <kernel-bounces-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <52FDD955.4000701-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-List-Unsubscribe: <https://admin.fedoraproject.org/mailman/options/kernel>,
-	<mailto:kernel-request-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.fedoraproject.org/pipermail/kernel/>
-List-Post: <mailto:kernel-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org>
-List-Help: <mailto:kernel-request-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org?subject=help>
-List-Subscribe: <https://admin.fedoraproject.org/mailman/listinfo/kernel>,
-	<mailto:kernel-request-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org?subject=subscribe>
-Sender: kernel-bounces-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org
-Errors-To: kernel-bounces-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org
-To: poma <pomidorabelisima-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Mailing-List fedora-kernel <kernel-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org>, Josh Boyer <jwboyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Chris Murphy <lists-zXQU9YWDTqjmlV4oE/1sFAC/G2K4zDHf@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Linux Kernel list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, "Justin M. Forbes" <jforbes-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Gerard Roudier <groudier-fBIn7JHAfCbUKx/7vDf7Bw@public.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-la0-f52.google.com ([209.85.215.52]:46802 "EHLO
+	mail-la0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751792AbaBNN2Z (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Feb 2014 08:28:25 -0500
+Received: by mail-la0-f52.google.com with SMTP id c6so9393905lan.11
+        for <linux-ide@vger.kernel.org>; Fri, 14 Feb 2014 05:28:24 -0800 (PST)
+In-Reply-To: <1392359102-6997-1-git-send-email-sachin.kamat@linaro.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sachin Kamat <sachin.kamat@linaro.org>, linux-ide@vger.kernel.org
+Cc: trivial@kernel.org, tj@kernel.org
 
-T24gRnJpLCBGZWIgMTQsIDIwMTQgYXQgMDk6NTI6MzdBTSArMDEwMCwgcG9tYSB3cm90ZToKPiAK
-PiBBaG95IQo+IAo+IFBlcmhhcHMgdGhpcyBpcyBhbHJlYWR5IHNvbHZlZCwgYnV0IEkgbWFkZSDi
-gIvigIt0aGUgZWZmb3J0IHRvIHRlc3QgJiByZWNvcmQKPiBhbGwgb2YgdGhpcywgdGhlcmVmb3Jl
-IGhlcmUgeW91IGFyZS4gOikKPiAKPiBodHRwczovL2J1Z3ppbGxhLnJlZGhhdC5jb20vc2hvd19i
-dWcuY2dpP2lkPTEwNjI4MzMKClRoZXJlIGlzIHBhdGNoIHBvc3RlZCBmb3IgdGhpcyBwcm9ibGVt
-Cmh0dHA6Ly9tYXJjLmluZm8vP2w9bGludXgta2VybmVsJm09MTM5MjMzNTQ2MjIzMzM4Jnc9MgpJ
-dCBpcyB1bmRlciByZXZpZXcgY3VycmVudGx5LCBpZiB0aGVyZSB3aWxsIGJlIG5vIGNvbXBsYWlu
-cyBpdCB3aWxsIGJlCmFwcGxpZWQuCgpTdGFuaXNsYXcKX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX18Ka2VybmVsIG1haWxpbmcgbGlzdAprZXJuZWxAbGlzdHMu
-ZmVkb3JhcHJvamVjdC5vcmcKaHR0cHM6Ly9hZG1pbi5mZWRvcmFwcm9qZWN0Lm9yZy9tYWlsbWFu
-L2xpc3RpbmZvL2tlcm5lbA==
+Hello.
+
+On 14-02-2014 10:25, Sachin Kamat wrote:
+
+> Commit 436d42c61c3e ("ARM: samsung: move platform_data definitions")
+> moved the files to the current location but forgot to remove the pointer
+> to its previous location. Clean it up. While at it also change the header
+> file protection macros appropriately.
+> Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
+
+> ---
+>   include/linux/platform_data/ata-samsung_cf.h |    9 ++++-----
+>   1 file changed, 4 insertions(+), 5 deletions(-)
+
+> diff --git a/include/linux/platform_data/ata-samsung_cf.h b/include/linux/platform_data/ata-samsung_cf.h
+> index 2a3855a8372a..064f86329219 100644
+> --- a/include/linux/platform_data/ata-samsung_cf.h
+> +++ b/include/linux/platform_data/ata-samsung_cf.h
+[...]
+> @@ -10,8 +9,8 @@
+>    * published by the Free Software Foundation.
+>   */
+>
+> -#ifndef __ASM_PLAT_ATA_H
+> -#define __ASM_PLAT_ATA_H __FILE__
+> +#ifndef __ATA_SAMSUNG_CF_ATA_H
+> +#define __ATA_SAMSUNG_CF_ATA_H __FILE__
+
+    Why not just __ATA_SAMSUNG_CF_H?
+
+WBR, Sergei
+
