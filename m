@@ -1,49 +1,55 @@
-From: poma <pomidorabelisima@gmail.com>
-Subject: =?UTF-8?B?UmU6IFtkbWEtZGVidWcuYyAtIERNQS1BUEldIGV4Y2VlZGVkIG92ZXI=?=
- =?UTF-8?B?bGFwcGluZyDigKYgJiBzeW01M2M4eHgg4oCmIHRyaWVzIHRvIGZyZWUgRE1BIOKApg==?=
-Date: Fri, 14 Feb 2014 19:20:36 +0100
-Message-ID: <52FE5E74.6000509@gmail.com>
-References: <52FDD955.4000701@gmail.com> <20140214091639.GB1782@redhat.com>
+From: Loc Ho <lho@apm.com>
+Subject: Re: [PATCH v10 0/4] ata: Add APM X-Gene SoC SATA host controller support
+Date: Fri, 14 Feb 2014 13:44:08 -0800
+Message-ID: <CAPw-ZT=DGKfshpKb2K7+=gXyzbi8r51MeURJDv9d5YgHfE8prw@mail.gmail.com>
+References: <CAPw-ZTkbpOEHowGvp-_3DcW1qW0AK_ZbpdS1LESJfhFU-n_Mtw@mail.gmail.com>
+	<CAPw-ZTn5c=v+7pbetEjXWpw9i=cG+zdeHPxO1QD0e42uFrKnCg@mail.gmail.com>
+	<20140214150322.GB29516@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ee0-f48.google.com ([74.125.83.48]:35583 "EHLO
-	mail-ee0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751277AbaBNSUo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Feb 2014 13:20:44 -0500
-In-Reply-To: <20140214091639.GB1782@redhat.com>
+Received: from exprod5og116.obsmtp.com ([64.18.0.147]:42447 "HELO
+	exprod5og116.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752071AbaBNVoK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Feb 2014 16:44:10 -0500
+Received: by mail-qc0-f170.google.com with SMTP id e9so21400472qcy.29
+        for <linux-ide@vger.kernel.org>; Fri, 14 Feb 2014 13:44:08 -0800 (PST)
+In-Reply-To: <20140214150322.GB29516@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Linux Kernel list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Mailing-List fedora-kernel <kernel@lists.fedoraproject.org>, Joerg Roedel <joro@8bytes.org>, Dan Williams <dan.j.williams@intel.com>, Tejun Heo <tj@kernel.org>, Gerard Roudier <groudier@club-internet.fr>, Alan Stern <stern@rowland.harvard.edu>, Josh Boyer <jwboyer@redhat.com>, "Justin M. Forbes" <jforbes@redhat.com>, Chris Murphy <lists@colorremedies.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, David Milburn <dmilburn@redhat.com>, Jon Masters <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-On 14.02.2014 10:16, Stanislaw Gruszka wrote:
-> On Fri, Feb 14, 2014 at 09:52:37AM +0100, poma wrote:
->>
->> Ahoy!
->>
->> Perhaps this is already solved, but I made =E2=80=8B=E2=80=8Bthe eff=
-ort to test & record
->> all of this, therefore here you are. :)
->>
->> https://bugzilla.redhat.com/show_bug.cgi?id=3D1062833
->=20
-> There is patch posted for this problem
-> http://marc.info/?l=3Dlinux-kernel&m=3D139233546223338&w=3D2
-> It is under review currently, if there will be no complains it will b=
-e
-> applied.
->=20
-> Stanislaw
->=20
+Hi Tejun,
 
-Thanks!
-I have a few questions but the weekend begins, so we'll leave it for
-later. :)
-See ya!
+>
+> On Thu, Feb 13, 2014 at 03:28:01PM -0800, Loc Ho wrote:
+>> 1. There are a number of errata that require workaround. Some can be
+>> fixed by adding broken flags while others are better to just wrap
+>> around the existent libahci library routines and not overly polluting
+>> the libahci routines.
+>> 2. There are additional controller programming sequences to configure.
+>> 2a. By default, RAM are powered down and require brought out of shutdown.
+>> 2b. The controller has an additional corresponding PHY part that needs
+>> to be programmed after PHY configuration.
+>
+> Have you looked at the latest patchset Hans posted?  He added multiple
+> PHY support and split up init to three steps so that each platform
+> driver can mix and match as they see fit.  Looking at xgene driver,
+> sure there are things specific to the driver but there also are
+> non-insignificant amount of boilerplate code and that's what I'm
+> primarily concerned about.  It may be okay when you have two or three
+> drivers duplicating some code but it looks like we could have many
+> more and I *really* want to avoid the situation where the same piece
+> of code is copied over N times.  In addition, frankly, not many people
+> except yourself would care about these drivers once they're merged and
+> many of these are gonna be painful to test making later refactoring a
+> lot harder.
+>
 
+Ok... I will look into Hans' patch again. To be sure that I am looking
+at the correct patch, are you referring to this one:
 
-poma
+http://www.spinics.net/lists/linux-ide/msg47628.html
 
-
+-Loc
