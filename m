@@ -1,35 +1,48 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v10 0/4] ata: Add APM X-Gene SoC SATA host controller
- support
-Date: Fri, 14 Feb 2014 17:05:10 -0500
-Message-ID: <20140214220510.GB4634@mtj.dyndns.org>
-References: <CAPw-ZTkbpOEHowGvp-_3DcW1qW0AK_ZbpdS1LESJfhFU-n_Mtw@mail.gmail.com>
- <CAPw-ZTn5c=v+7pbetEjXWpw9i=cG+zdeHPxO1QD0e42uFrKnCg@mail.gmail.com>
- <20140214150322.GB29516@htj.dyndns.org>
- <CAPw-ZT=DGKfshpKb2K7+=gXyzbi8r51MeURJDv9d5YgHfE8prw@mail.gmail.com>
+From: Randy Dunlap <rdunlap@infradead.org>
+Subject: [PATCH] ata: CONFIG_ATA is libata
+Date: Fri, 14 Feb 2014 18:29:34 -0800
+Message-ID: <52FED10E.3070808@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f44.google.com ([209.85.216.44]:50726 "EHLO
-	mail-qa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752826AbaBNWFP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Feb 2014 17:05:15 -0500
-Content-Disposition: inline
-In-Reply-To: <CAPw-ZT=DGKfshpKb2K7+=gXyzbi8r51MeURJDv9d5YgHfE8prw@mail.gmail.com>
+Received: from merlin.infradead.org ([205.233.59.134]:58937 "EHLO
+	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751661AbaBOC3h (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Feb 2014 21:29:37 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Loc Ho <lho@apm.com>
-Cc: Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, David Milburn <dmilburn@redhat.com>, Jon Masters <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+To: linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>
+Cc: Gene Heskett <gheskett@wdtv.com>
 
-On Fri, Feb 14, 2014 at 01:44:08PM -0800, Loc Ho wrote:
-> Ok... I will look into Hans' patch again. To be sure that I am looking
-> at the correct patch, are you referring to this one:
-> 
-> http://www.spinics.net/lists/linux-ide/msg47628.html
+From: Randy Dunlap <rdunlap@infradead.org>
 
-Yeah, v5 is the latest.
+Let users know that CONFIG_ATA is the kconfig symbol for libata,
+since libata is mentioned in documentation and messages several
+times.
 
-Thanks!
+Also correct a grammar typo.
 
--- 
-tejun
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+---
+ drivers/ata/Kconfig |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+--- lnx-314-rc2.orig/drivers/ata/Kconfig
++++ lnx-314-rc2/drivers/ata/Kconfig
+@@ -11,13 +11,13 @@ config HAVE_PATA_PLATFORM
+ 	  to update the PATA_PLATFORM entry.
+ 
+ menuconfig ATA
+-	tristate "Serial ATA and Parallel ATA drivers"
++	tristate "Serial ATA and Parallel ATA drivers (libata)"
+ 	depends on HAS_IOMEM
+ 	depends on BLOCK
+ 	depends on !(M32R || M68K || S390) || BROKEN
+ 	select SCSI
+ 	---help---
+-	  If you want to use a ATA hard disk, ATA tape drive, ATA CD-ROM or
++	  If you want to use an ATA hard disk, ATA tape drive, ATA CD-ROM or
+ 	  any other ATA device under Linux, say Y and make sure that you know
+ 	  the name of your ATA host adapter (the card inside your computer
+ 	  that "speaks" the ATA protocol, also called ATA controller),
