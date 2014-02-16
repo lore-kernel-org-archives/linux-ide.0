@@ -1,53 +1,116 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH 2/3] pata_imx: Propagate the real error code on platform_get_irq()
- failure
-Date: Sun, 16 Feb 2014 00:38:42 +0400
-Message-ID: <52FFD052.6060306@cogentembedded.com>
-References: <1392468635-13373-1-git-send-email-festevam@gmail.com> <1392468635-13373-2-git-send-email-festevam@gmail.com>
+From: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
+Subject: Re: [REGRESSION] 3.14-rc2 boot failure on Kirkwood (qnap ts-119p+)
+Date: Sun, 16 Feb 2014 11:45:20 -0300
+Message-ID: <20140216143735.GA8680@localhost>
+References: <21248.39509.418884.931848@gargle.gargle.HOWL>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lb0-f180.google.com ([209.85.217.180]:37500 "EHLO
-	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753798AbaBOUik (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 15 Feb 2014 15:38:40 -0500
-Received: by mail-lb0-f180.google.com with SMTP id n15so10001173lbi.25
-        for <linux-ide@vger.kernel.org>; Sat, 15 Feb 2014 12:38:38 -0800 (PST)
-In-Reply-To: <1392468635-13373-2-git-send-email-festevam@gmail.com>
+Received: from top.free-electrons.com ([176.31.233.9]:34823 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752280AbaBPOpZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 16 Feb 2014 09:45:25 -0500
+Content-Disposition: inline
+In-Reply-To: <21248.39509.418884.931848@gargle.gargle.HOWL>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Fabio Estevam <festevam@gmail.com>, tj@kernel.org
-Cc: linux-ide@vger.kernel.org, Fabio Estevam <fabio.estevam@freescale.com>
+To: Mikael Pettersson <mikpelinux@gmail.com>
+Cc: linux-arm-kernel@lists.infradead.org, Andrew Lunn <andrew@lunn.ch>, linux-ide@vger.kernel.org
 
-Hello.
+Hi Mikael,
 
-On 15-02-2014 16:50, Fabio Estevam wrote:
+On Sun, Feb 16, 2014 at 12:00:37PM +0100, Mikael Pettersson wrote:
+> My Kirkwood box worked fine with the 3.13 kernel, but with 3.14-rc2
+> boot always fails due to a kernel NULL dereference in __clk_put.
+>=20
+> This is a non-DT kernel, with:
+>=20
+> CONFIG_ARCH_KIRKWOOD=3Dy
+> CONFIG_KIRKWOOD_LEGACY=3Dy
+> CONFIG_MACH_TS219=3Dy
+> # CONFIG_ARCH_KIRKWOOD_DT is not set
+>=20
 
-> From: Fabio Estevam <fabio.estevam@freescale.com>
+Thanks for the report. I thought this issue was already fixed, but I
+cannot find it on either the mailing lists or linux-next.
 
-> No need to return a 'fake' return value on platform_get_irq() failure.
+So, in case it hasn't been fixed here's an untested fix for you to test=
+=2E
+Please try this patch and let us know.
 
-> Just return the error code itself instead.
+Your SATA won't work but if the patch is OK the kernel wont't blow away=
+=2E
 
-> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
-> ---
->   drivers/ata/pata_imx.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+Andrew? Do we support the new phy requirement in non-DT platforms?
 
-> diff --git a/drivers/ata/pata_imx.c b/drivers/ata/pata_imx.c
-> index 50e2cf2..1af71b7 100644
-> --- a/drivers/ata/pata_imx.c
-> +++ b/drivers/ata/pata_imx.c
-> @@ -101,7 +101,7 @@ static int pata_imx_probe(struct platform_device *pdev)
->
->   	irq = platform_get_irq(pdev, 0);
->   	if (irq <= 0)
-> -		return -EINVAL;
-> +		return irq;
+=46rom 5d4010ba3c485e7e22887408663fb260f628b9b2 Mon Sep 17 00:00:00 200=
+1
+=46rom: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
+Date: Sun, 16 Feb 2014 11:21:50 -0300
+Subject: [PATCH] ata: sata_mv: Cleanup only the initialized ports
 
-    If returned IRQ is 0 (unused), you'll return 0, indicating probe success 
-while actually it failed. We need somewhat more complicated code here.
+When an error occurs in the port initialization loop, currently the
+driver tries to cleanup all the ports. This results in a NULL pointer
+dereference if the ports were only partially initialized.
 
-WBR, Sergei
+=46ix this by updating only the number of initialized ports (either
+with failure or successfully), before jumping to the error path
+and looping over that number in the cleanup loop.
 
+Cc: Andrew Lunn <andrew@lunn.ch>
+Reported-by: Mikael Pettersson <mikpelinux@gmail.com>
+Signed-off-by: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
+---
+ drivers/ata/sata_mv.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index 20a7517..9c1a11d 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -4104,7 +4104,6 @@ static int mv_platform_probe(struct platform_devi=
+ce *pdev)
+ 	if (!hpriv->port_phys)
+ 		return -ENOMEM;
+ 	host->private_data =3D hpriv;
+-	hpriv->n_ports =3D n_ports;
+ 	hpriv->board_idx =3D chip_soc;
+=20
+ 	host->iomap =3D NULL;
+@@ -4132,11 +4131,17 @@ static int mv_platform_probe(struct platform_de=
+vice *pdev)
+ 			hpriv->port_phys[port] =3D NULL;
+ 			if ((rc !=3D -EPROBE_DEFER) && (rc !=3D -ENODEV))
+ 				dev_warn(&pdev->dev, "error getting phy");
++
++			/* Cleanup only the initialized ports */
++			hpriv->n_ports =3D port;
+ 			goto err;
+ 		} else
+ 			phy_power_on(hpriv->port_phys[port]);
+ 	}
+=20
++	/* All the ports have been initialized */
++	hpriv->n_ports =3D n_ports;
++
+ 	/*
+ 	 * (Re-)program MBUS remapping windows if we are asked to.
+ 	 */
+@@ -4174,7 +4179,7 @@ err:
+ 		clk_disable_unprepare(hpriv->clk);
+ 		clk_put(hpriv->clk);
+ 	}
+-	for (port =3D 0; port < n_ports; port++) {
++	for (port =3D 0; port < hpriv->n_ports; port++) {
+ 		if (!IS_ERR(hpriv->port_clks[port])) {
+ 			clk_disable_unprepare(hpriv->port_clks[port]);
+ 			clk_put(hpriv->port_clks[port]);
+--=20
+1.8.1.5
+
+
+--=20
+Ezequiel Garc=C3=ADa, Free Electrons
+Embedded Linux, Kernel and Android Engineering
+http://free-electrons.com
