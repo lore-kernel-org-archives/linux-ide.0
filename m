@@ -1,344 +1,61 @@
-From: Lee Jones <lee.jones@linaro.org>
-Subject: [PATCH 3/3] ahci: st: Add support for ST's SATA IP
-Date: Mon, 17 Feb 2014 12:56:58 +0000
-Message-ID: <1392641818-23419-3-git-send-email-lee.jones@linaro.org>
-References: <1392641818-23419-1-git-send-email-lee.jones@linaro.org>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-we0-f169.google.com ([74.125.82.169]:53319 "EHLO
-	mail-we0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753161AbaBQM5S (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Feb 2014 07:57:18 -0500
-Received: by mail-we0-f169.google.com with SMTP id t61so10742398wes.14
-        for <linux-ide@vger.kernel.org>; Mon, 17 Feb 2014 04:57:17 -0800 (PST)
-In-Reply-To: <1392641818-23419-1-git-send-email-lee.jones@linaro.org>
-Sender: linux-ide-owner@vger.kernel.org
+From: poma <pomidorabelisima-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: =?UTF-8?B?UmU6IFtkbWEtZGVidWcuYyAtIERNQS1BUEldIGV4Y2VlZGVkIG92ZXI=?=
+	=?UTF-8?B?bGFwcGluZyDigKYgJiBzeW01M2M4eHgg4oCmIHRyaWVzIHRvIGZyZWUgRE1BIOKApg==?=
+Date: Mon, 17 Feb 2014 15:40:07 +0100
+Message-ID: <53021F47.5050702@gmail.com>
+References: <52FDD955.4000701@gmail.com> <20140214091639.GB1782@redhat.com>
+	<52FE5E74.6000509@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <kernel-bounces-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org>
+In-Reply-To: <52FE5E74.6000509-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+List-Unsubscribe: <https://admin.fedoraproject.org/mailman/options/kernel>,
+	<mailto:kernel-request-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.fedoraproject.org/pipermail/kernel/>
+List-Post: <mailto:kernel-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org>
+List-Help: <mailto:kernel-request-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org?subject=help>
+List-Subscribe: <https://admin.fedoraproject.org/mailman/listinfo/kernel>,
+	<mailto:kernel-request-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org?subject=subscribe>
+Sender: kernel-bounces-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org
+Errors-To: kernel-bounces-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org
+To: Stanislaw Gruszka <sgruszka-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Mailing-List fedora-kernel <kernel-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org>, Josh Boyer <jwboyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Chris Murphy <lists-zXQU9YWDTqjmlV4oE/1sFAC/G2K4zDHf@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Linux Kernel list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, "Justin M. Forbes" <jforbes-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Gerard Roudier <groudier-fBIn7JHAfCbUKx/7vDf7Bw@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Cc: alexandre.torgue@st.com, Lee Jones <lee.jones@linaro.org>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 
-Cc: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org
-Signed-off-by: Lee Jones <lee.jones@linaro.org>
----
- drivers/ata/Kconfig   |   9 ++
- drivers/ata/Makefile  |   1 +
- drivers/ata/ahci_st.c | 275 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 285 insertions(+)
- create mode 100644 drivers/ata/ahci_st.c
-
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 4e73772..a0798f3 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -97,6 +97,15 @@ config SATA_AHCI_PLATFORM
- 
- 	  If unsure, say N.
- 
-+config SATA_AHCI_ST
-+	tristate "ST SATA support"
-+	depends on SATA_AHCI_PLATFORM
-+	select GENERIC_PHY
-+	help
-+	  This option enables support for ST SATA controller.
-+
-+	  If unsure, say N.
-+
- config AHCI_IMX
- 	tristate "Freescale i.MX AHCI SATA support"
- 	depends on SATA_AHCI_PLATFORM && MFD_SYSCON
-diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
-index 46518c6..3379a7d 100644
---- a/drivers/ata/Makefile
-+++ b/drivers/ata/Makefile
-@@ -5,6 +5,7 @@ obj-$(CONFIG_ATA)		+= libata.o
- obj-$(CONFIG_SATA_AHCI)		+= ahci.o libahci.o
- obj-$(CONFIG_SATA_ACARD_AHCI)	+= acard-ahci.o libahci.o
- obj-$(CONFIG_SATA_AHCI_PLATFORM) += ahci_platform.o libahci.o
-+obj-$(CONFIG_SATA_AHCI_ST)      += ahci_st.o
- obj-$(CONFIG_SATA_FSL)		+= sata_fsl.o
- obj-$(CONFIG_SATA_INIC162X)	+= sata_inic162x.o
- obj-$(CONFIG_SATA_SIL24)	+= sata_sil24.o
-diff --git a/drivers/ata/ahci_st.c b/drivers/ata/ahci_st.c
-new file mode 100644
-index 0000000..23342bf
---- /dev/null
-+++ b/drivers/ata/ahci_st.c
-@@ -0,0 +1,275 @@
-+/*
-+ * Copyright (C) 2012 STMicroelectronics Limited
-+ *
-+ * Authors: Francesco Virlinzi <francesco.virlinzi@st.com>
-+ *	    Alexandre Torgue <alexandre.torgue@st.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#include <linux/init.h>
-+#include <linux/module.h>
-+#include <linux/export.h>
-+#include <linux/platform_device.h>
-+#include <linux/clk.h>
-+#include <linux/of.h>
-+#include <linux/ahci_platform.h>
-+#include <linux/phy/phy.h>
-+#include <linux/reset.h>
-+#include <linux/io.h>
-+#include <linux/dma-mapping.h>
-+
-+#define AHCI_OOBR		0xbc
-+#define AHCI_OOBR_WE		BIT(31)
-+#define AHCI_OOBR_CWMIN_SHIFT	24
-+#define AHCI_OOBR_CWMAX_SHIFT	16
-+#define AHCI_OOBR_CIMIN_SHIFT	8
-+#define AHCI_OOBR_CIMAX_SHIFT	0
-+
-+struct ahci_st_drv_data {
-+	struct platform_device *ahci;
-+	struct phy *phy;
-+	struct reset_control *pwr;
-+	struct reset_control *sw_rst;
-+	struct reset_control *pwr_rst;
-+	void __iomem *mmio;
-+	struct clk *clk;
-+};
-+
-+static void ahci_st_configure_oob(void __iomem *mmio)
-+{
-+	unsigned long old_val, new_val;
-+
-+	new_val = (0x02 << AHCI_OOBR_CWMIN_SHIFT) |
-+		  (0x04 << AHCI_OOBR_CWMAX_SHIFT) |
-+		  (0x08 << AHCI_OOBR_CIMIN_SHIFT) |
-+		  (0x0C << AHCI_OOBR_CIMAX_SHIFT);
-+
-+	old_val = readl(mmio + AHCI_OOBR);
-+	writel(old_val | AHCI_OOBR_WE, mmio + AHCI_OOBR);
-+	writel(new_val | AHCI_OOBR_WE, mmio + AHCI_OOBR);
-+	writel(new_val, mmio + AHCI_OOBR);
-+}
-+
-+static int ahci_st_probe_resets(struct platform_device *pdev,
-+				struct ahci_st_drv_data *ahci_dev)
-+{
-+	int err;
-+
-+	ahci_dev->pwr = devm_reset_control_get(&pdev->dev, "pwr-dwn");
-+	if (IS_ERR(ahci_dev->pwr)) {
-+		dev_info(&pdev->dev, "power reset control not defined\n");
-+	} else {
-+		err = reset_control_deassert(ahci_dev->pwr);
-+		if (err) {
-+			dev_err(&pdev->dev, "unable to bring out of pwrdwn\n");
-+			return err;
-+		}
-+	}
-+
-+	ahci_dev->sw_rst = devm_reset_control_get(&pdev->dev, "sw-rst");
-+	if (IS_ERR(ahci_dev->sw_rst)) {
-+		dev_info(&pdev->dev, "soft reset control not defined\n");
-+	} else {
-+		err = reset_control_deassert(ahci_dev->sw_rst);
-+		if (err) {
-+			dev_err(&pdev->dev, "unable to bring out of reset\n");
-+			return err;
-+		}
-+	}
-+
-+	ahci_dev->pwr_rst = devm_reset_control_get(&pdev->dev, "pwr-rst");
-+	if (IS_ERR(ahci_dev->pwr_rst))
-+		dev_dbg(&pdev->dev, "power soft reset control not defined\n");
-+	else {
-+		err = reset_control_deassert(ahci_dev->pwr_rst);
-+		if (err) {
-+			dev_err(&pdev->dev, "unable to bring out of reset\n");
-+			return err;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+static int ahci_st_init(struct device *ahci_dev, void __iomem *mmio)
-+{
-+	struct platform_device *pdev = to_platform_device(ahci_dev->parent);
-+	struct ahci_st_drv_data *drv_data = platform_get_drvdata(pdev);
-+	int ret;
-+
-+	ret = clk_prepare_enable(drv_data->clk);
-+	if (ret)
-+		return ret;
-+
-+	ret = phy_init(drv_data->phy);
-+	if (ret) {
-+		clk_disable_unprepare(drv_data->clk);
-+		return ret;
-+	}
-+
-+	drv_data->mmio = mmio;
-+	ahci_st_configure_oob(mmio);
-+
-+	return 0;
-+}
-+
-+static void ahci_st_exit(struct device *ahci_dev)
-+{
-+	struct platform_device *pdev = to_platform_device(ahci_dev->parent);
-+	struct ahci_st_drv_data *drv_data = platform_get_drvdata(pdev);
-+	int ret;
-+
-+	if (drv_data->pwr) {
-+		ret = reset_control_assert(drv_data->pwr);
-+		if (ret)
-+			dev_err(&pdev->dev, "unable to bring out of pwrdwn\n");
-+	}
-+
-+	clk_disable_unprepare(drv_data->clk);
-+}
-+
-+#ifdef CONFIG_PM_SLEEP
-+static int ahci_st_suspend(struct device *ahci_dev)
-+{
-+	struct platform_device *pdev = to_platform_device(ahci_dev->parent);
-+	struct ahci_st_drv_data *drv_data = platform_get_drvdata(pdev);
-+	int ret;
-+
-+	if (drv_data->pwr) {
-+		ret = reset_control_assert(drv_data->pwr);
-+		if (ret) {
-+			dev_err(&pdev->dev, "unable to pwrdwn");
-+			return ret;
-+		}
-+	}
-+
-+	clk_disable_unprepare(drv_data->clk);
-+
-+	return 0;
-+}
-+
-+static int ahci_st_resume(struct device *ahci_dev)
-+{
-+	struct platform_device *pdev = to_platform_device(ahci_dev->parent);
-+	struct ahci_st_drv_data *drv_data = platform_get_drvdata(pdev);
-+	int ret;
-+
-+	clk_prepare_enable(drv_data->clk);
-+
-+	if (drv_data->pwr) {
-+		ret = reset_control_deassert(drv_data->pwr);
-+		if (ret) {
-+			dev_err(&pdev->dev, "unable to bring out of pwrdwn\n");
-+			return ret;
-+		}
-+	}
-+
-+	ahci_st_configure_oob(drv_data->mmio);
-+
-+	ret = phy_init(drv_data->phy);
-+	if (ret)
-+		return ret;
-+
-+	if (drv_data->sw_rst) {
-+		ret = reset_control_deassert(drv_data->sw_rst);
-+		if (ret) {
-+			dev_err(&pdev->dev, "unable to bring out of sw-rst\n");
-+			return ret;
-+		}
-+	}
-+
-+	if (drv_data->pwr_rst) {
-+		ret = reset_control_deassert(drv_data->pwr_rst);
-+		if (ret) {
-+			dev_err(&pdev->dev, "unable to bring out of pwr-rst\n");
-+			return ret;
-+		}
-+	}
-+
-+	return 0;
-+}
-+#endif
-+
-+static struct ahci_platform_data ahci_st_platform_data = {
-+	.init = ahci_st_init,
-+	.exit = ahci_st_exit,
-+#ifdef CONFIG_PM_SLEEP
-+	.suspend = ahci_st_suspend,
-+	.resume = ahci_st_resume,
-+#endif
-+};
-+
-+static int ahci_st_driver_probe(struct platform_device *pdev)
-+{
-+	int err, id;
-+	struct ahci_st_drv_data *drv_data;
-+	struct device *dev = &pdev->dev;
-+	struct device_node *np = dev->of_node;
-+	struct platform_device_info ahci_info = {
-+		.parent    = dev,
-+		.name      = "ahci",
-+		.id        = pdev->id,
-+		.res       = pdev->resource,
-+		.num_res   = pdev->num_resources,
-+		.data      = &ahci_st_platform_data,
-+		.size_data = sizeof(ahci_st_platform_data),
-+	};
-+
-+	if (np) {
-+		id = of_alias_get_id(dev->of_node, "sata");
-+		if (id > 0)
-+			ahci_info.id = id;
-+
-+		ahci_info.dma_mask = DMA_BIT_MASK(32);
-+	}
-+
-+	drv_data = devm_kzalloc(dev, sizeof(*drv_data), GFP_KERNEL);
-+	if (!drv_data)
-+		return -ENOMEM;
-+
-+	err = ahci_st_probe_resets(pdev, drv_data);
-+	if (err)
-+		return err;
-+
-+	drv_data->clk = devm_clk_get(&pdev->dev, "ahci_clk");
-+	if (IS_ERR(drv_data->clk)) {
-+		dev_err(&pdev->dev, "ahci_clk clk not found\n");
-+		return PTR_ERR(drv_data->clk);
-+	}
-+
-+	drv_data->phy = devm_phy_get(&pdev->dev, "ahci_phy");
-+	if (IS_ERR(drv_data->phy)) {
-+		dev_err(&pdev->dev, "no PHY configured\n");
-+		return PTR_ERR(drv_data->phy);
-+	}
-+
-+	platform_set_drvdata(pdev, drv_data);
-+
-+	drv_data->ahci = platform_device_register_full(&ahci_info);
-+
-+	return PTR_ERR_OR_ZERO(drv_data->ahci);
-+}
-+
-+static struct of_device_id st_ahci_match[] = {
-+	{ .compatible = "st,ahci", },
-+	{},
-+};
-+MODULE_DEVICE_TABLE(of, st_ahci_match);
-+
-+static struct platform_driver ahci_st_driver = {
-+	.driver = {
-+		.name = "ahci_st",
-+		.owner = THIS_MODULE,
-+		.of_match_table = of_match_ptr(st_ahci_match),
-+	},
-+	.probe = ahci_st_driver_probe,
-+};
-+module_platform_driver(ahci_st_driver);
-+
-+MODULE_AUTHOR("Alexandre Torgue <alexandre.torgue@st.com>");
-+MODULE_AUTHOR("Francesco Virlinzi <francesco.virlinzi@st.com>");
-+MODULE_DESCRIPTION("STMicroelectronics Sata Ahci driver");
-+MODULE_LICENSE("GPL v2");
--- 
-1.8.3.2
-
+T24gMTQuMDIuMjAxNCAxOToyMCwgcG9tYSB3cm90ZToKPiBPbiAxNC4wMi4yMDE0IDEwOjE2LCBT
+dGFuaXNsYXcgR3J1c3prYSB3cm90ZToKPj4gT24gRnJpLCBGZWIgMTQsIDIwMTQgYXQgMDk6NTI6
+MzdBTSArMDEwMCwgcG9tYSB3cm90ZToKPj4+Cj4+PiBBaG95IQo+Pj4KPj4+IFBlcmhhcHMgdGhp
+cyBpcyBhbHJlYWR5IHNvbHZlZCwgYnV0IEkgbWFkZSDigIvigIt0aGUgZWZmb3J0IHRvIHRlc3Qg
+JiByZWNvcmQKPj4+IGFsbCBvZiB0aGlzLCB0aGVyZWZvcmUgaGVyZSB5b3UgYXJlLiA6KQo+Pj4K
+Pj4+IGh0dHBzOi8vYnVnemlsbGEucmVkaGF0LmNvbS9zaG93X2J1Zy5jZ2k/aWQ9MTA2MjgzMwo+
+Pgo+PiBUaGVyZSBpcyBwYXRjaCBwb3N0ZWQgZm9yIHRoaXMgcHJvYmxlbQo+PiBodHRwOi8vbWFy
+Yy5pbmZvLz9sPWxpbnV4LWtlcm5lbCZtPTEzOTIzMzU0NjIyMzMzOCZ3PTIKPj4gSXQgaXMgdW5k
+ZXIgcmV2aWV3IGN1cnJlbnRseSwgaWYgdGhlcmUgd2lsbCBiZSBubyBjb21wbGFpbnMgaXQgd2ls
+bCBiZQo+PiBhcHBsaWVkLgo+Pgo+PiBTdGFuaXNsYXcKPj4KPiAKPiBUaGFua3MhCj4gSSBoYXZl
+IGEgZmV3IHF1ZXN0aW9ucyBidXQgdGhlIHdlZWtlbmQgYmVnaW5zLCBzbyB3ZSdsbCBsZWF2ZSBp
+dCBmb3IKPiBsYXRlci4gOikKPiBTZWUgeWEhCgpodHRwczovL2J1Z3ppbGxhLnJlZGhhdC5jb20v
+c2hvd19idWcuY2dpP2lkPTEwNjI4MzMKCklERSBkaXNrIC0gYXRhX3BpaXggLSBkbWVzZyAtIE9L
+Cmh0dHBzOi8vYnVnemlsbGEucmVkaGF0LmNvbS9hdHRhY2htZW50LmNnaT9pZD04NjQwODUKClNB
+VEEgZGlzayAtIGFoY2kgLSBkbWVzZyAtIE9LCmh0dHBzOi8vYnVnemlsbGEucmVkaGF0LmNvbS9h
+dHRhY2htZW50LmNnaT9pZD04NjQwODYKClNDU0kgZGlzayAtIHN5bTUzYzh4eCAtIGRtZXNnIC0g
+T0sKaHR0cHM6Ly9idWd6aWxsYS5yZWRoYXQuY29tL2F0dGFjaG1lbnQuY2dpP2lkPTg2NDA4NwoK
+VmlydElPIFNDU0kgZGlzayAtIHZpcnRpb19zY3NpIC0gZG1lc2cgLSBPSwpodHRwczovL2J1Z3pp
+bGxhLnJlZGhhdC5jb20vYXR0YWNobWVudC5jZ2k/aWQ9ODY0MDg4CgpVU0IgZGlzayAtIHVzYl9z
+dG9yYWdlIC0gZG1lc2cgLSBPSwpodHRwczovL2J1Z3ppbGxhLnJlZGhhdC5jb20vYXR0YWNobWVu
+dC5jZ2k/aWQ9ODY0MDg5CgpUZXN0IG1lZGlhIC0gJ2Jvb3QtZml4LWRtYS1kZWJ1Zy1vdmVybGFw
+LXYyLmlzbycsCmh0dHA6Ly9nb28uZ2wvVUpTZlZuCnNoYTI1NnN1bToKNmQ2YjM2ZmRjYjBhMGZm
+NjYyZmY2YTI3MDQ4ZDZkNWYzNWFjMjExYzM0NDM5Zjc1YmJhMWQ1MjRiMzUwN2U4Mgpib290LWZp
+eC1kbWEtZGVidWctb3ZlcmxhcC12Mi5pc28KCkNvbnRhaW5zICdrZXJuZWwtMy4xNC4wLTAucmMy
+LmdpdDQuMS5mYzIxLng4Nl82NCcKYmFzZWQgb24gUmF3aGlkZSAna2VybmVsLTMuMTQuMC0wLnJj
+Mi5naXQ0LjEuZmMyMScKaHR0cDovL2tvamkuZmVkb3JhcHJvamVjdC5vcmcva29qaS9idWlsZGlu
+Zm8/YnVpbGRJRD00OTg0MDQKd2l0aCB0aGUgYWRkaXRpb24gb2YgRGFuJ3MgJ2ZpeC1kbWEtZGVi
+dWctb3ZlcmxhcC12Mi5wYXRjaCcKIkZpeCBkbWEgZGVidWcgdjI6IGFjY291bnQgZm9yIGNhY2hl
+bGluZXMgYW5kIHJlYWQtb25seSBtYXBwaW5ncyBpbgpvdmVybGFwIHRyYWNraW5nIgpodHRwOi8v
+bWFyYy5pbmZvLz9sPWxpbnV4LW5ldGRldiZtPTEzOTIzMzU0NjcyMzM0MiZxPXJhdwoKCkFsbCB0
+ZXN0cyBhcmUgUEFTU0VELgoKICAgICAgIF8KICAgICAgKCBcCiAgICAgICBcIFwKICAgX19fXykg
+IFwKICAoX19fKSAgICDigJXigJXigJUKIChfX18pCiAoX19fKQogIChfXynigJXigJXigJXigJXi
+gJXigJXigJXigJUKCgoKcG9tYQoKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fCmtlcm5lbCBtYWlsaW5nIGxpc3QKa2VybmVsQGxpc3RzLmZlZG9yYXByb2pl
+Y3Qub3JnCmh0dHBzOi8vYWRtaW4uZmVkb3JhcHJvamVjdC5vcmcvbWFpbG1hbi9saXN0aW5mby9r
+ZXJuZWw=
