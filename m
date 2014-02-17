@@ -1,75 +1,66 @@
-From: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
-Subject: Re: [REGRESSION] 3.14-rc2 boot failure on Kirkwood (qnap ts-119p+)
-Date: Sun, 16 Feb 2014 18:17:24 -0300
-Message-ID: <20140216211723.GA8291@localhost>
-References: <21248.39509.418884.931848@gargle.gargle.HOWL>
- <20140216143735.GA8680@localhost>
- <20140216202957.GC26583@lunn.ch>
+From: Sachin Kamat <sachin.kamat@linaro.org>
+Subject: Re: [PATCH 1/1] ata: ata-samsung_cf: Trivial cleanup in header file
+Date: Mon, 17 Feb 2014 09:08:06 +0530
+Message-ID: <CAK9yfHx+fg2vgvtd1YGdKk6iZtrROxMgQ2TBBYNOjgXidw22yw@mail.gmail.com>
+References: <1392359102-6997-1-git-send-email-sachin.kamat@linaro.org>
+	<52FE19FC.7010905@cogentembedded.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:35462 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753396AbaBPVVk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 16 Feb 2014 16:21:40 -0500
-Content-Disposition: inline
-In-Reply-To: <20140216202957.GC26583@lunn.ch>
+Received: from mail-ob0-f177.google.com ([209.85.214.177]:51674 "EHLO
+	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751105AbaBQDiH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 16 Feb 2014 22:38:07 -0500
+Received: by mail-ob0-f177.google.com with SMTP id wp18so16419114obc.36
+        for <linux-ide@vger.kernel.org>; Sun, 16 Feb 2014 19:38:06 -0800 (PST)
+In-Reply-To: <52FE19FC.7010905@cogentembedded.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Lunn <andrew@lunn.ch>
-Cc: Mikael Pettersson <mikpelinux@gmail.com>, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: linux-ide@vger.kernel.org, Jiri Kosina <trivial@kernel.org>, tj@kernel.org
 
-On Sun, Feb 16, 2014 at 09:29:57PM +0100, Andrew Lunn wrote:
-> On Sun, Feb 16, 2014 at 11:45:20AM -0300, Ezequiel Garcia wrote:
-> > Hi Mikael,
-> >=20
-> > On Sun, Feb 16, 2014 at 12:00:37PM +0100, Mikael Pettersson wrote:
-> > > My Kirkwood box worked fine with the 3.13 kernel, but with 3.14-r=
-c2
-> > > boot always fails due to a kernel NULL dereference in __clk_put.
-> > >=20
-> > > This is a non-DT kernel, with:
-> > >=20
-> > > CONFIG_ARCH_KIRKWOOD=3Dy
-> > > CONFIG_KIRKWOOD_LEGACY=3Dy
-> > > CONFIG_MACH_TS219=3Dy
-> > > # CONFIG_ARCH_KIRKWOOD_DT is not set
-> > >=20
-> >=20
-> > Thanks for the report. I thought this issue was already fixed, but =
-I
-> > cannot find it on either the mailing lists or linux-next.
-> >=20
-> > So, in case it hasn't been fixed here's an untested fix for you to =
-test.
-> > Please try this patch and let us know.
-> >=20
-> > Your SATA won't work but if the patch is OK the kernel wont't blow =
-away.
-> >=20
-> > Andrew? Do we support the new phy requirement in non-DT platforms?
-[..]
->=20
-> I consider Non-DT kirkwood now pretty much near death. Probably with
-> 3.16 it will of gone altogether. So i did not plan for Non-DT to
-> support SATA phy. I did however want it to at least boot, so i broke
-> something here :-(
->=20
+On 14 February 2014 18:58, Sergei Shtylyov
+<sergei.shtylyov@cogentembedded.com> wrote:
+> Hello.
+>
+>
+> On 14-02-2014 10:25, Sachin Kamat wrote:
+>
+>> Commit 436d42c61c3e ("ARM: samsung: move platform_data definitions")
+>> moved the files to the current location but forgot to remove the pointer
+>> to its previous location. Clean it up. While at it also change the header
+>> file protection macros appropriately.
+>> Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
+>
+>
+>> ---
+>>   include/linux/platform_data/ata-samsung_cf.h |    9 ++++-----
+>>   1 file changed, 4 insertions(+), 5 deletions(-)
+>
+>
+>> diff --git a/include/linux/platform_data/ata-samsung_cf.h
+>> b/include/linux/platform_data/ata-samsung_cf.h
+>> index 2a3855a8372a..064f86329219 100644
+>> --- a/include/linux/platform_data/ata-samsung_cf.h
+>> +++ b/include/linux/platform_data/ata-samsung_cf.h
+>
+> [...]
+>
+>> @@ -10,8 +9,8 @@
+>>    * published by the Free Software Foundation.
+>>   */
+>>
+>> -#ifndef __ASM_PLAT_ATA_H
+>> -#define __ASM_PLAT_ATA_H __FILE__
+>> +#ifndef __ATA_SAMSUNG_CF_ATA_H
+>> +#define __ATA_SAMSUNG_CF_ATA_H __FILE__
+>
+>
+>    Why not just __ATA_SAMSUNG_CF_H?
 
-I'm pretty sure v3.14-rc{3,4} will be fine for DT and non-DT plaforms,
-as Mikael already reported linux-next works. Non-DT Kirkwood would
-behave just as Armada 370/XP platforms, where a SATA phy is not
-registered.
+Yes that should have been it. Not sure why I added one more ATA.
+Thanks for pointing out.
 
-> I will take a look at your fix and what we can expect in the next -rc=
-=2E
->=20
-
-AFAICS, the patch is a fix on its own, and should be merged (after we'r=
-e
-happy with it) for v3.14.
---=20
-Ezequiel Garc=C3=ADa, Free Electrons
-Embedded Linux, Kernel and Android Engineering
-http://free-electrons.com
+-- 
+With warm regards,
+Sachin
