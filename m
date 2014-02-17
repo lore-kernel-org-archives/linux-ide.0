@@ -1,61 +1,59 @@
-From: poma <pomidorabelisima-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: =?UTF-8?B?UmU6IFtkbWEtZGVidWcuYyAtIERNQS1BUEldIGV4Y2VlZGVkIG92ZXI=?=
-	=?UTF-8?B?bGFwcGluZyDigKYgJiBzeW01M2M4eHgg4oCmIHRyaWVzIHRvIGZyZWUgRE1BIOKApg==?=
-Date: Mon, 17 Feb 2014 15:40:07 +0100
-Message-ID: <53021F47.5050702@gmail.com>
-References: <52FDD955.4000701@gmail.com> <20140214091639.GB1782@redhat.com>
-	<52FE5E74.6000509@gmail.com>
+From: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>
+Subject: [v3.14-rc3 BUG] 1) panic and 2) SATA not working (Was Re: [PATCH]
+ ATA: SATA_MV: Add missing Kconfig select statememnt)
+Date: Mon, 17 Feb 2014 12:13:16 -0300
+Message-ID: <20140217151315.GB2765@localhost>
+References: <52e00d45.5gijwyKGLiVLcCNX%fengguang.wu@intel.com>
+ <1390420593-27697-1-git-send-email-andrew@lunn.ch>
+ <20140129182035.GM30842@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <kernel-bounces-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org>
-In-Reply-To: <52FE5E74.6000509-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-List-Unsubscribe: <https://admin.fedoraproject.org/mailman/options/kernel>,
-	<mailto:kernel-request-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.fedoraproject.org/pipermail/kernel/>
-List-Post: <mailto:kernel-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org>
-List-Help: <mailto:kernel-request-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org?subject=help>
-List-Subscribe: <https://admin.fedoraproject.org/mailman/listinfo/kernel>,
-	<mailto:kernel-request-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org?subject=subscribe>
-Sender: kernel-bounces-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org
-Errors-To: kernel-bounces-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org
-To: Stanislaw Gruszka <sgruszka-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Mailing-List fedora-kernel <kernel-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org>, Josh Boyer <jwboyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Chris Murphy <lists-zXQU9YWDTqjmlV4oE/1sFAC/G2K4zDHf@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Linux Kernel list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, "Justin M. Forbes" <jforbes-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Gerard Roudier <groudier-fBIn7JHAfCbUKx/7vDf7Bw@public.gmane.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from top.free-electrons.com ([176.31.233.9]:39648 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752842AbaBQPNY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Feb 2014 10:13:24 -0500
+Content-Disposition: inline
+In-Reply-To: <20140129182035.GM30842@htj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Andrew Lunn <andrew@lunn.ch>, linux-ide@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Gregory Clement <gregory.clement@free-electrons.com>, Jason Cooper <jason@lakedaemon.net>, Kevin Hilman <khilman@linaro.org>, linux-arm-kernel@lists.infradead.org
 
-T24gMTQuMDIuMjAxNCAxOToyMCwgcG9tYSB3cm90ZToKPiBPbiAxNC4wMi4yMDE0IDEwOjE2LCBT
-dGFuaXNsYXcgR3J1c3prYSB3cm90ZToKPj4gT24gRnJpLCBGZWIgMTQsIDIwMTQgYXQgMDk6NTI6
-MzdBTSArMDEwMCwgcG9tYSB3cm90ZToKPj4+Cj4+PiBBaG95IQo+Pj4KPj4+IFBlcmhhcHMgdGhp
-cyBpcyBhbHJlYWR5IHNvbHZlZCwgYnV0IEkgbWFkZSDigIvigIt0aGUgZWZmb3J0IHRvIHRlc3Qg
-JiByZWNvcmQKPj4+IGFsbCBvZiB0aGlzLCB0aGVyZWZvcmUgaGVyZSB5b3UgYXJlLiA6KQo+Pj4K
-Pj4+IGh0dHBzOi8vYnVnemlsbGEucmVkaGF0LmNvbS9zaG93X2J1Zy5jZ2k/aWQ9MTA2MjgzMwo+
-Pgo+PiBUaGVyZSBpcyBwYXRjaCBwb3N0ZWQgZm9yIHRoaXMgcHJvYmxlbQo+PiBodHRwOi8vbWFy
-Yy5pbmZvLz9sPWxpbnV4LWtlcm5lbCZtPTEzOTIzMzU0NjIyMzMzOCZ3PTIKPj4gSXQgaXMgdW5k
-ZXIgcmV2aWV3IGN1cnJlbnRseSwgaWYgdGhlcmUgd2lsbCBiZSBubyBjb21wbGFpbnMgaXQgd2ls
-bCBiZQo+PiBhcHBsaWVkLgo+Pgo+PiBTdGFuaXNsYXcKPj4KPiAKPiBUaGFua3MhCj4gSSBoYXZl
-IGEgZmV3IHF1ZXN0aW9ucyBidXQgdGhlIHdlZWtlbmQgYmVnaW5zLCBzbyB3ZSdsbCBsZWF2ZSBp
-dCBmb3IKPiBsYXRlci4gOikKPiBTZWUgeWEhCgpodHRwczovL2J1Z3ppbGxhLnJlZGhhdC5jb20v
-c2hvd19idWcuY2dpP2lkPTEwNjI4MzMKCklERSBkaXNrIC0gYXRhX3BpaXggLSBkbWVzZyAtIE9L
-Cmh0dHBzOi8vYnVnemlsbGEucmVkaGF0LmNvbS9hdHRhY2htZW50LmNnaT9pZD04NjQwODUKClNB
-VEEgZGlzayAtIGFoY2kgLSBkbWVzZyAtIE9LCmh0dHBzOi8vYnVnemlsbGEucmVkaGF0LmNvbS9h
-dHRhY2htZW50LmNnaT9pZD04NjQwODYKClNDU0kgZGlzayAtIHN5bTUzYzh4eCAtIGRtZXNnIC0g
-T0sKaHR0cHM6Ly9idWd6aWxsYS5yZWRoYXQuY29tL2F0dGFjaG1lbnQuY2dpP2lkPTg2NDA4NwoK
-VmlydElPIFNDU0kgZGlzayAtIHZpcnRpb19zY3NpIC0gZG1lc2cgLSBPSwpodHRwczovL2J1Z3pp
-bGxhLnJlZGhhdC5jb20vYXR0YWNobWVudC5jZ2k/aWQ9ODY0MDg4CgpVU0IgZGlzayAtIHVzYl9z
-dG9yYWdlIC0gZG1lc2cgLSBPSwpodHRwczovL2J1Z3ppbGxhLnJlZGhhdC5jb20vYXR0YWNobWVu
-dC5jZ2k/aWQ9ODY0MDg5CgpUZXN0IG1lZGlhIC0gJ2Jvb3QtZml4LWRtYS1kZWJ1Zy1vdmVybGFw
-LXYyLmlzbycsCmh0dHA6Ly9nb28uZ2wvVUpTZlZuCnNoYTI1NnN1bToKNmQ2YjM2ZmRjYjBhMGZm
-NjYyZmY2YTI3MDQ4ZDZkNWYzNWFjMjExYzM0NDM5Zjc1YmJhMWQ1MjRiMzUwN2U4Mgpib290LWZp
-eC1kbWEtZGVidWctb3ZlcmxhcC12Mi5pc28KCkNvbnRhaW5zICdrZXJuZWwtMy4xNC4wLTAucmMy
-LmdpdDQuMS5mYzIxLng4Nl82NCcKYmFzZWQgb24gUmF3aGlkZSAna2VybmVsLTMuMTQuMC0wLnJj
-Mi5naXQ0LjEuZmMyMScKaHR0cDovL2tvamkuZmVkb3JhcHJvamVjdC5vcmcva29qaS9idWlsZGlu
-Zm8/YnVpbGRJRD00OTg0MDQKd2l0aCB0aGUgYWRkaXRpb24gb2YgRGFuJ3MgJ2ZpeC1kbWEtZGVi
-dWctb3ZlcmxhcC12Mi5wYXRjaCcKIkZpeCBkbWEgZGVidWcgdjI6IGFjY291bnQgZm9yIGNhY2hl
-bGluZXMgYW5kIHJlYWQtb25seSBtYXBwaW5ncyBpbgpvdmVybGFwIHRyYWNraW5nIgpodHRwOi8v
-bWFyYy5pbmZvLz9sPWxpbnV4LW5ldGRldiZtPTEzOTIzMzU0NjcyMzM0MiZxPXJhdwoKCkFsbCB0
-ZXN0cyBhcmUgUEFTU0VELgoKICAgICAgIF8KICAgICAgKCBcCiAgICAgICBcIFwKICAgX19fXykg
-IFwKICAoX19fKSAgICDigJXigJXigJUKIChfX18pCiAoX19fKQogIChfXynigJXigJXigJXigJXi
-gJXigJXigJXigJUKCgoKcG9tYQoKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fCmtlcm5lbCBtYWlsaW5nIGxpc3QKa2VybmVsQGxpc3RzLmZlZG9yYXByb2pl
-Y3Qub3JnCmh0dHBzOi8vYWRtaW4uZmVkb3JhcHJvamVjdC5vcmcvbWFpbG1hbi9saXN0aW5mby9r
-ZXJuZWw=
+On Wed, Jan 29, 2014 at 01:20:35PM -0500, Tejun Heo wrote:
+> On Wed, Jan 22, 2014 at 08:56:33PM +0100, Andrew Lunn wrote:
+> > SATA_MV depends on GENERIC_PHY. So if SATA_MV is built in, GENERIC_=
+PHY
+> > cannot be modular. Fixes build error found by kbuild test robot.
+> >=20
+> > Signed-off-by: Andrew Lunn <andrew@lunn.ch>
+>=20
+> Applied to libata/for-3.14-fixes.  Thanks.
+>=20
+
+Tejun, Jason:
+
+The lack of this patch in -rc3, just made my Armada XP GP board panic.
+
+The panic is the same as this one (reported on Kirkwood):
+http://www.spinics.net/lists/arm-kernel/msg308080.html
+
+Which is fixed in linux-next (and should be in -rc4, right?) by:
+https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git/commit=
+/?id=3D8ad116e649b21a42e3cccfb3c1b8d5ea52ba19e5
+
+The SATA won't get probed unless this commit from linux-next is also ap=
+plied:
+
+commit 49c8f1ffe26ffddfb7244a24db21c0b4a79e1c52
+Author: Andrew Lunn <andrew@lunn.ch>
+Date:   Wed Jan 22 20:56:33 2014 +0100
+
+    ATA: SATA_MV: Add missing Kconfig select statememnt
+
+I guess it felt through someone cracks...
+--=20
+Ezequiel Garc=C3=ADa, Free Electrons
+Embedded Linux, Kernel and Android Engineering
+http://free-electrons.com
