@@ -1,38 +1,37 @@
-From: Jiri Kosina <jkosina@suse.cz>
-Subject: Re: [PATCH v2] ata: ata-samsung_cf: Trivial cleanup in header file
-Date: Wed, 19 Feb 2014 14:53:12 +0100 (CET)
-Message-ID: <alpine.LNX.2.00.1402191453020.1192@pobox.suse.cz>
-References: <1392608513-24294-1-git-send-email-sachin.kamat@linaro.org> <20140218231430.GK31892@mtj.dyndns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 3/3] ahci: st: Add support for ST's SATA IP
+Date: Wed, 19 Feb 2014 09:04:58 -0500
+Message-ID: <20140219140458.GA10134@htj.dyndns.org>
+References: <1392641818-23419-1-git-send-email-lee.jones@linaro.org>
+ <1392641818-23419-3-git-send-email-lee.jones@linaro.org>
+ <20140218233645.GP31892@mtj.dyndns.org>
+ <20140219083025.GB10504@lee--X1>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:58566 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753423AbaBSNxR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 19 Feb 2014 08:53:17 -0500
-In-Reply-To: <20140218231430.GK31892@mtj.dyndns.org>
+Received: from mail-qa0-f43.google.com ([209.85.216.43]:33999 "EHLO
+	mail-qa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752823AbaBSOFC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Feb 2014 09:05:02 -0500
+Content-Disposition: inline
+In-Reply-To: <20140219083025.GB10504@lee--X1>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Sachin Kamat <sachin.kamat@linaro.org>, linux-ide@vger.kernel.org, sergei.shtylyov@cogentembedded.com
+To: Lee Jones <lee.jones@linaro.org>
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, alexandre.torgue@st.com, linux-ide@vger.kernel.org, hdegoede@redhat.com
 
-On Tue, 18 Feb 2014, Tejun Heo wrote:
+Hello, Lee.
 
-> > Commit 436d42c61c3e ("ARM: samsung: move platform_data definitions")
-> > moved the files to the current location but forgot to remove the pointer
-> > to its previous location. Clean it up. While at it also change the header
-> > file protection macros appropriately.
-> > 
-> > Signed-off-by: Sachin Kamat <sachin.kamat@linaro.org>
-> 
-> FWIW,
-> 
->  Reviewed-by: Tejun Heo <tj@kernel.org>
-> 
-> Jiri, can you please route this one?
+On Wed, Feb 19, 2014 at 08:30:25AM +0000, Lee Jones wrote:
+> Can I do this as a subsequent patch though? The current patch fits
+> neatly onto our internal stable kernel (currently v3.10). The added
+> work will require back-porting Hans' patch-set, which has not yet
+> reached Mainline.
 
-Absolutely, I am queuing it. Thanks.
+Hmm.... I'll apply Hans' patchset pretty soon and we still have some
+time in this devel cycle so I'd much prefer applying the final patch.
+
+Thanks.
 
 -- 
-Jiri Kosina
-SUSE Labs
+tejun
