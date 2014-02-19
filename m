@@ -1,60 +1,66 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v6 00/18] ahci: library-ise ahci_platform, add sunxi
- driver and cleanup imx driver
-Date: Wed, 19 Feb 2014 12:42:03 -0500
-Message-ID: <20140219174203.GM10134@htj.dyndns.org>
-References: <1392811320-3132-1-git-send-email-hdegoede@redhat.com>
- <20140219150249.GG10134@htj.dyndns.org>
- <5304CD33.1080704@redhat.com>
- <20140219162511.GJ10134@htj.dyndns.org>
- <5304E751.5040608@redhat.com>
+Subject: Re: [PATCH 3/3] ahci: st: Add support for ST's SATA IP
+Date: Wed, 19 Feb 2014 13:06:30 -0500
+Message-ID: <20140219180630.GN10134@htj.dyndns.org>
+References: <20140218233645.GP31892@mtj.dyndns.org>
+ <20140219083025.GB10504@lee--X1>
+ <20140219140458.GA10134@htj.dyndns.org>
+ <20140219150121.GG10504@lee--X1>
+ <20140219150654.GH10134@htj.dyndns.org>
+ <20140219152336.GH10504@lee--X1>
+ <20140219153624.GI10134@htj.dyndns.org>
+ <20140219163937.GI10504@lee--X1>
+ <20140219172602.GL10134@htj.dyndns.org>
+ <20140219174041.GK10504@lee--X1>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f51.google.com ([209.85.192.51]:44400 "EHLO
-	mail-qg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754111AbaBSRmI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Feb 2014 12:42:08 -0500
+Received: from mail-qc0-f182.google.com ([209.85.216.182]:43681 "EHLO
+	mail-qc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753977AbaBSSGe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Feb 2014 13:06:34 -0500
 Content-Disposition: inline
-In-Reply-To: <5304E751.5040608@redhat.com>
+In-Reply-To: <20140219174041.GK10504@lee--X1>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: Maxime Ripard <maxime.ripard@free-electrons.com>, Oliver Schinagl <oliver@schinagl.nl>, Richard Zhu <Hong-Xing.Zhu@freescale.com>, Roger Quadros <rogerq@ti.com>, Lee Jones <lee.jones@linaro.org>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, devicetree <devicetree@vger.kernel.org>, linux-sunxi@googlegroups.com
+To: Lee Jones <lee.jones@linaro.org>
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, alexandre.torgue@st.com, linux-ide@vger.kernel.org, hdegoede@redhat.com
 
-On Wed, Feb 19, 2014 at 06:18:09PM +0100, Hans de Goede wrote:
-> Most of the resources are already devres managed (I use devm functions
-> to get them), the problem is not in freeing our reference to the resources,
-> the problem is that we've sequences like this:
-> 
-> devm_get_foo
-> enable_foo
-> disable_foo
-> (automatic release foo)
-> 
-> Where enable / disable can be done repeatedly (ie each suspend / resume).
-> 
-> From your review comments, I take it that you want the final disable_foo
-> on driver release to happen automatically.
-> 
-> My preference for this would be to extend the devres tracking already present
-> in the relevant subsystems to keep track of the enable count done through a
-> specific reference, to allow automatic disable (if needed) on release.
-> 
-> But thinking more about this, I think that doing this automatically is a bad
-> idea, because then we fixate the shutdown sequence to a certain order (the
-> order in which we did the _get_foo for the resources) and the correct order may
-> be device specific.
-> 
-> So TL;DR: Yes to making things so that ahci_platform_put_resources gets done
-> automatically, no to automating the disable calls.
-> 
-> If I don't hear back from you, then I'll respin the patch-set assuming that
-> you agree to the above.
+On Wed, Feb 19, 2014 at 05:40:41PM +0000, Lee Jones wrote:
+> Have you listened to a word I've said? Or have you managed to get your
+> self all tangled up in what you _assumed_ was meant by the 3 words I
+> mentioned about fairness at the very start of this conversation? Me
+> thinks the latter might be true.
 
-Yeah, sounds good enough to me.
+It wasn't only that.  Your mention of API compability later in the
+thread or the notion of separate core and leaf developers were pretty
+weird.  Things like
 
-Thanks.
+ "I was pertaining to the fact that requesting that a driver is
+  converted to a non-existing API was wrong."
+
+just don't make much sense.  That is a patchset which is pretty close
+to completion and I'm asking people to converge on that.  That happens
+regularly during development in the different layers.
+
+I think what's fundamentally disturbing is this distinction between
+what you're doing and what people working on the API are doing.  It's
+not like the roles are bound by contracts and one party owes to the
+other.  It seems that that's what leads you to think that asking your
+driver updated for a pending patchset is unfair and the rest.
+
+> Just because I don't contribute to your subsystem, it doesn't mean I
+> don't contribute elsewhere.
+
+Again, it's not about you being good and generously contributing.
+It's about sharing of basic responsibility.  You say I'm not reading
+what you're saying but what you're saying hasn't really changed since
+the first post except for some weaseling.
+
+> Here... let me help you down from that big horse! ;)
+
+I'm surely doing some of that and thanks for helping me down but I do
+hope you understand some of the points.
 
 -- 
 tejun
