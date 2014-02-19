@@ -1,70 +1,117 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 3/3] ahci: st: Add support for ST's SATA IP
-Date: Wed, 19 Feb 2014 12:00:37 -0500
-Message-ID: <20140219170037.GK10134@htj.dyndns.org>
-References: <1392641818-23419-1-git-send-email-lee.jones@linaro.org>
- <1392641818-23419-3-git-send-email-lee.jones@linaro.org>
- <20140218233645.GP31892@mtj.dyndns.org>
- <20140219083025.GB10504@lee--X1>
- <20140219140458.GA10134@htj.dyndns.org>
- <20140219150121.GG10504@lee--X1>
- <20140219150654.GH10134@htj.dyndns.org>
- <20140219152336.GH10504@lee--X1>
- <20140219153624.GI10134@htj.dyndns.org>
- <20140219163937.GI10504@lee--X1>
+From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH v6 00/18] ahci: library-ise ahci_platform,
+ add sunxi driver and cleanup imx driver
+Date: Wed, 19 Feb 2014 18:18:09 +0100
+Message-ID: <5304E751.5040608@redhat.com>
+References: <1392811320-3132-1-git-send-email-hdegoede@redhat.com> <20140219150249.GG10134@htj.dyndns.org> <5304CD33.1080704@redhat.com> <20140219162511.GJ10134@htj.dyndns.org>
+Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f50.google.com ([209.85.192.50]:45300 "EHLO
-	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754362AbaBSRAl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Feb 2014 12:00:41 -0500
-Content-Disposition: inline
-In-Reply-To: <20140219163937.GI10504@lee--X1>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-sunxi+bncBDL4X2GMZUKRBWWOSOMAKGQE7GRIVXQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <20140219162511.GJ10134-Gd/HAXX7CRxy/B6EtB590w@public.gmane.org>
+List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/linux-sunxi>
+Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, Richard Zhu <Hong-Xing.Zhu-KZfg59tc24xl57MIdRCFDg@public.gmane.org>, Roger Quadros <rogerq-l0cyMroinI0@public.gmane.org>, Lee Jones <lee.jones-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, devicetree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: Lee Jones <lee.jones@linaro.org>
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, alexandre.torgue@st.com, linux-ide@vger.kernel.org, hdegoede@redhat.com
 
-On Wed, Feb 19, 2014 at 04:39:37PM +0000, Lee Jones wrote:
-> Again, that's not what I said. It's great that your subsystem is being
-> improved, but insisting that anyone who submits new code to rebase
-> on top of some development patches which only exist in mail form, and
-> refusing to take patches until they do so doesn't seem right to me.
+Hi,
 
-No policy is perfect and nothing can be decided solely on single
-policy.  There of course are trade-offs to make depending on the
-specific circumstances.  The problem, here, is that what has been
-going on is skewed towards one extreme and has potential to develop
-into a fairly large mess if left uncorrected.
+On 02/19/2014 05:25 PM, Tejun Heo wrote:
+> Hello, Hans.
+> 
+> On Wed, Feb 19, 2014 at 04:26:43PM +0100, Hans de Goede wrote:
+>> The devres usage are really 2 different issues:
+>>
+>> 1) There is the issue that we're getting clocks by index (this is by design as
+>> clk-names are not generic), but there is no devm_get_clk_by_index (or some
+>> such), this is a shortcoming of the clk-core, which needs a separate patch
+>> to fix. I would rather not delay this patch-set based on getting a patch
+>> into another subsys.
+> 
+> Yes, that'd be my usual preference too.  The only reason I'm hesitant
+> is because nobody seems to be too interested in long term aspect of
+> the code base and the only leverage I have seems to be rejecting
+> drivers until things become right.
+> 
+>> Note that even with devm_get_clk_by_index we can unfortunately not get rid of
+>> ahci_platform_put_resources() as in Roger's follow-up patches it gets used for
+>> putting some runtime pm related resources too.
+>>
+>> I guess this argues for simply turning ahci_platform_get_resources into a
+>> devm_ahci_platform_get_resources doing its own devm handling, and then
+>> making ahci_platform_put_resources a private function called by the devm
+>> framework. If you agree I can do that for the next patch-set.
+> 
+> Note that libata core already does something similar.  Please take a
+> look at ata_host_alloc() for details.  You don't really need to create
+> a separate devm_ prefixed variant.  Just making the function register
+> devres automatically should be enough.  If this is too much work, I'm
+> okay with deferring it until later if you promise to do it soonish.
+> 
 
-The message I've been sending out has been pretty clear.  There are
-multiple people duplicating about the same thing in their drivers.
-Fortunately, Hans' refactoring is pretty close to completion and
-should help simplifying most of them.  I'm not even asking you to do
-the bulk of work.  Just take a look at it and help / push if you can.
-It may be unfortunate that the circumstances haven't been completely
-aligned for your convenience but that's what needs to be done to keep
-things sustainable.
+Ok, I'll try to do this for the next revision.
 
-This is a collaborative work and what I asked you isn't some
-insurmountable amount of extra work.  It's just beyond me that your
-response is "it's not fair".  No wonder the whole thing has been
-drifting towards mess.  That's not how this works.  Judging from your
-linaro address, I assume you have been involved with some upstream
-work, how can this possibly be your response?  Such attitude is
-actively harmful and has no place in upstream development.
+>> 2) In some comments you also seem to want devm variants of enable / disable
+>> resources, or at least have ahci_platform_put_resources do the disable
+>> automatically. The problem is that most of the functions called here need to
+>> be balanced, they increment / decrement usage counters in the clk / regulator
+>> subsystems, so we cannot simply unconditional do an ahci_platform_disable_resources
+>> in ahci_platform_put_resources
+>>
+>> Doing the disable automatically requires tracking the enable state, and doing this
+>> per resource, since the whole idea of having a separate ahci_platform_enable_resources
+>> is that some drivers may want to override its behavior doing things in a different
+>> order.
+>>
+>> To ensure proper tracking we would then need to offer ahci_platform_enable_regulator,
+>> etc. functions, and ensure that all drivers using the ahci_platform framework
+>> always go through these, rather then calling directly into the relevant framework.
+>>
+>> This is all doable, and I'm not against doing this but before spending a couple of
+>> hours coding this all up, I would like to hear back from you whether you would like
+>> to see this, or would rather keep things as is.
+> 
+> Yes, in principle, I want every resource used by ahci_platform to be
+> devres managed.  I *think* devres should be flexible enough to handle
+> what you're describing (each devres resource can have data for state
+> tracking and devres resources can be looked up and modified, so the
+> different orders should be okay) but if not I'd be happy to help
+> extend it so that it can.
 
-Again, of course, there can be trade-offs.  We sometimes do need to
-take termporal hits in maintainability for faster hardware enablement
-or whatnot; however, we can't do that without trust that the people
-dumping stuff which needs later cleanups would actually help.
-Unfortnately, I have close to zero trust given the recent developments
-and your "it's not fair, that's not my responsibility" attitude
-clearly confirms the conclusion.
+Most of the resources are already devres managed (I use devm functions
+to get them), the problem is not in freeing our reference to the resources,
+the problem is that we've sequences like this:
 
-So, please take long look at how you perceive upstream development.
-It's a collaborative process.  Other people don't owe you by default.
+devm_get_foo
+enable_foo
+disable_foo
+(automatic release foo)
 
--- 
-tejun
+Where enable / disable can be done repeatedly (ie each suspend / resume).
+
+>From your review comments, I take it that you want the final disable_foo
+on driver release to happen automatically.
+
+My preference for this would be to extend the devres tracking already present
+in the relevant subsystems to keep track of the enable count done through a
+specific reference, to allow automatic disable (if needed) on release.
+
+But thinking more about this, I think that doing this automatically is a bad
+idea, because then we fixate the shutdown sequence to a certain order (the
+order in which we did the _get_foo for the resources) and the correct order may
+be device specific.
+
+So TL;DR: Yes to making things so that ahci_platform_put_resources gets done
+automatically, no to automating the disable calls.
+
+If I don't hear back from you, then I'll respin the patch-set assuming that
+you agree to the above.
+
+Regards,
+
+Hans
