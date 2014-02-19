@@ -1,69 +1,140 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 3/3] ahci: st: Add support for ST's SATA IP
-Date: Wed, 19 Feb 2014 12:26:02 -0500
-Message-ID: <20140219172602.GL10134@htj.dyndns.org>
-References: <1392641818-23419-1-git-send-email-lee.jones@linaro.org>
- <1392641818-23419-3-git-send-email-lee.jones@linaro.org>
- <20140218233645.GP31892@mtj.dyndns.org>
- <20140219083025.GB10504@lee--X1>
- <20140219140458.GA10134@htj.dyndns.org>
- <20140219150121.GG10504@lee--X1>
- <20140219150654.GH10134@htj.dyndns.org>
- <20140219152336.GH10504@lee--X1>
- <20140219153624.GI10134@htj.dyndns.org>
- <20140219163937.GI10504@lee--X1>
+From: Robert Nelson <robertcnelson-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v6 00/18] ahci: library-ise ahci_platform,
+ add sunxi driver and cleanup imx driver
+Date: Wed, 19 Feb 2014 11:20:36 -0600
+Message-ID: <CAOCHtYgOZ_L+XeZnT0Sed7oLv=65meFSr15zJ8odqr0F+xPTxg@mail.gmail.com>
+References: <1392811320-3132-1-git-send-email-hdegoede@redhat.com>
+Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f52.google.com ([209.85.216.52]:50118 "EHLO
-	mail-qa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752090AbaBSR0I (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Feb 2014 12:26:08 -0500
-Content-Disposition: inline
-In-Reply-To: <20140219163937.GI10504@lee--X1>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: multipart/alternative; boundary=bcaec50b513c68feac04f2c59b2e
+Return-path: <linux-sunxi+bncBDCZ7T7K3YORBDOUSOMAKGQEJ3DVZHI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <1392811320-3132-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/linux-sunxi>
+Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, devicetree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-IDE <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, Richard Zhu <Hong-Xing.Zhu-KZfg59tc24xl57MIdRCFDg@public.gmane.org>, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Lee Jones <lee.jones-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, "linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, Roger Quadros <rogerq-l0cyMroinI0@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: Lee Jones <lee.jones@linaro.org>
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, alexandre.torgue@st.com, linux-ide@vger.kernel.org, hdegoede@redhat.com
 
-A few more things just in case.
+--bcaec50b513c68feac04f2c59b2e
+Content-Type: text/plain; charset=ISO-8859-1
 
-On Wed, Feb 19, 2014 at 04:39:37PM +0000, Lee Jones wrote:
-> It tells me that Hans has more spare time than I do.
+On Wed, Feb 19, 2014 at 6:01 AM, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
 
-This is the crux of the problem, isn't it?  The party who is creating
-load should also partake in and invest resource into making the
-infrastructure for it.  What I can't understand is how one can claim
-"unfairness" at having to contribute to such effort when that is
-clearly the party which is the primary beneficiary of the added load.
-If you have *any* mature sense of fairness, not this childish "it's
-not going my way", the irony should be clear to you.
+> Hi all,
+>
+> Here is v6 of my patchset for adding ahci-sunxi support. This has been
+> tested with Allwinner A10, Allwinner A20 and Freeware imx6x SoCs, including
+> suspend / resume. Note that since my last revision the ahci_imx driver has
+> also grown imx53 sata support, it would be good if some-one could test that
+> with this series.
+>
 
-> This work would even be something I'd be interested in helping out
-> with - even in my own time, but the way you speak to people doesn't
-> exactly inspire them to go out of my way to work with you does it?
+basic file system tests on an imx53-qsb look fine with sata changes..
 
-Given the circumstances, I don't think depending on good wills of the
-involved parties is a viable strategy and wanted to make it clear that
-the responsibility of chipping in for long term maintainability is on
-everyone who wants to make use of the code base.  This is beyond good
-will.  It's the fundamental sharing of responsibility for
-sustainability.  I'd love to have good will but I can't build that on
-top of a notion as rotten as "it's not fair, it's not my
-responsibility".
+Using v3.14-rc3 + 20140219 (next) + shawn.guo's imx for-next branch which
+wasn't in today next tree..
 
-> Again, that's not what I said. It's great that your subsystem is being
-> improved, but insisting that anyone who submits new code to rebase
-> on top of some development patches which only exist in mail form, and
-> refusing to take patches until they do so doesn't seem right to me.
+debian@arm:~$ dmesg | grep ata
+[    0.000000] CPU: PIPT / VIPT nonaliasing data cache, VIPT aliasing
+instruction cache
+[    0.000000] Memory policy: Data cache writeback
+[    0.000000] Memory: 1010076K/1048576K available (7008K kernel code, 527K
+rwdata, 2280K rodata, 416K init, 373K bss, 38500K reserved, 524288K highmem)
+[    0.000000]       .data : 0xc0984000 - 0xc0a07d60   ( 528 kB)
+[    1.796587] libata version 3.00 loaded.
+[    2.777037] ahci-imx 10000000.sata: unable to find phy
+[    2.784385] ahci-imx 10000000.sata: SSS flag set, parallel bus scan
+disabled
+[    2.791495] ahci-imx 10000000.sata: AHCI 0001.0100 32 slots 1 ports 3
+Gbps 0x1 impl platform mode
+[    2.800394] ahci-imx 10000000.sata: flags: ncq sntf stag pm led clo only
+pmp pio slum part ccc
+[    2.814178] ata1: SATA max UDMA/133 mmio [mem 0x10000000-0x10000fff]
+port 0x100 irq 44
+[    3.400107] ata1: softreset failed (device not ready)
+[    3.405174] ata1: applying PMP SRST workaround and retrying
+[    3.610105] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    3.663654] ata1.00: ATA-8: ST9120315AS, 0001SDM1, max UDMA/133
+[    3.669583] ata1.00: 234441648 sectors, multi 16: LBA48 NCQ (depth 31/32)
+[    3.678553] ata1.00: configured for UDMA/133
+[    5.680633] EXT4-fs (mmcblk0p2): mounted filesystem with ordered data
+mode. Opts: (null)
 
-If I apply your patch now, Hans has one more driver to worry about in
-doing the work that he himself isn't directly benefiting from but
-everybody needs.  In what world is that fair?
-
-So, sorry about going f bomb on you, but you shouldn't be thinking
-what you're thinking.  There's some serious misguidance going on
-there.
+Regards,
 
 -- 
-tejun
+Robert Nelson
+http://www.rcn-ee.com/
+
+-- 
+You received this message because you are subscribed to the Google Groups "linux-sunxi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to linux-sunxi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+For more options, visit https://groups.google.com/groups/opt_out.
+
+--bcaec50b513c68feac04f2c59b2e
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+<div dir=3D"ltr"><br><div class=3D"gmail_extra"><br><br><div class=3D"gmail=
+_quote">On Wed, Feb 19, 2014 at 6:01 AM, Hans de Goede <span dir=3D"ltr">&l=
+t;<a href=3D"mailto:hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org" target=3D"_blank">hdegoede@redhat.=
+com</a>&gt;</span> wrote:<br>
+<blockquote class=3D"gmail_quote" style=3D"margin:0px 0px 0px 0.8ex;border-=
+left-width:1px;border-left-color:rgb(204,204,204);border-left-style:solid;p=
+adding-left:1ex">Hi all,<br>
+<br>
+Here is v6 of my patchset for adding ahci-sunxi support. This has been<br>
+tested with Allwinner A10, Allwinner A20 and Freeware imx6x SoCs, including=
+<br>
+suspend / resume. Note that since my last revision the ahci_imx driver has<=
+br>
+also grown imx53 sata support, it would be good if some-one could test that=
+<br>
+with this series.<br></blockquote><div><br></div><div>basic file system tes=
+ts on an imx53-qsb look fine with sata changes..</div><div><br></div><div>U=
+sing v3.14-rc3 +=A020140219 (next) + shawn.guo&#39;s imx=A0for-next branch =
+which wasn&#39;t in today next tree..</div>
+<div><br></div><div><div>debian@arm:~$ dmesg | grep ata</div><div>[ =A0 =A0=
+0.000000] CPU: PIPT / VIPT nonaliasing data cache, VIPT aliasing instructio=
+n cache</div><div>[ =A0 =A00.000000] Memory policy: Data cache writeback</d=
+iv><div>
+[ =A0 =A00.000000] Memory: 1010076K/1048576K available (7008K kernel code, =
+527K rwdata, 2280K rodata, 416K init, 373K bss, 38500K reserved, 524288K hi=
+ghmem)</div><div>[ =A0 =A00.000000] =A0 =A0 =A0 .data : 0xc0984000 - 0xc0a0=
+7d60 =A0 ( 528 kB)</div>
+<div>[ =A0 =A01.796587] libata version 3.00 loaded.</div><div>[ =A0 =A02.77=
+7037] ahci-imx 10000000.sata: unable to find phy</div><div>[ =A0 =A02.78438=
+5] ahci-imx 10000000.sata: SSS flag set, parallel bus scan disabled</div><d=
+iv>[ =A0 =A02.791495] ahci-imx 10000000.sata: AHCI 0001.0100 32 slots 1 por=
+ts 3 Gbps 0x1 impl platform mode</div>
+<div>[ =A0 =A02.800394] ahci-imx 10000000.sata: flags: ncq sntf stag pm led=
+ clo only pmp pio slum part ccc=A0</div><div>[ =A0 =A02.814178] ata1: SATA =
+max UDMA/133 mmio [mem 0x10000000-0x10000fff] port 0x100 irq 44</div><div>[=
+ =A0 =A03.400107] ata1: softreset failed (device not ready)</div>
+<div>[ =A0 =A03.405174] ata1: applying PMP SRST workaround and retrying</di=
+v><div>[ =A0 =A03.610105] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl=
+ 300)</div><div>[ =A0 =A03.663654] ata1.00: ATA-8: ST9120315AS, 0001SDM1, m=
+ax UDMA/133</div>
+<div>[ =A0 =A03.669583] ata1.00: 234441648 sectors, multi 16: LBA48 NCQ (de=
+pth 31/32)</div><div>[ =A0 =A03.678553] ata1.00: configured for UDMA/133</d=
+iv><div>[ =A0 =A05.680633] EXT4-fs (mmcblk0p2): mounted filesystem with ord=
+ered data mode. Opts: (null)</div>
+</div><div><br></div><div>Regards,</div></div><div><br></div>-- <br>Robert =
+Nelson<br><a href=3D"http://www.rcn-ee.com/">http://www.rcn-ee.com/</a>
+</div></div>
+
+<p></p>
+
+-- <br />
+You received this message because you are subscribed to the Google Groups &=
+quot;linux-sunxi&quot; group.<br />
+To unsubscribe from this group and stop receiving emails from it, send an e=
+mail to linux-sunxi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org<br />
+For more options, visit <a href=3D"https://groups.google.com/groups/opt_out=
+">https://groups.google.com/groups/opt_out</a>.<br />
+
+--bcaec50b513c68feac04f2c59b2e--
