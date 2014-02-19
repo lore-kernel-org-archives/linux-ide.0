@@ -1,66 +1,52 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 3/3] ahci: st: Add support for ST's SATA IP
-Date: Wed, 19 Feb 2014 13:06:30 -0500
-Message-ID: <20140219180630.GN10134@htj.dyndns.org>
-References: <20140218233645.GP31892@mtj.dyndns.org>
- <20140219083025.GB10504@lee--X1>
- <20140219140458.GA10134@htj.dyndns.org>
- <20140219150121.GG10504@lee--X1>
- <20140219150654.GH10134@htj.dyndns.org>
- <20140219152336.GH10504@lee--X1>
- <20140219153624.GI10134@htj.dyndns.org>
- <20140219163937.GI10504@lee--X1>
- <20140219172602.GL10134@htj.dyndns.org>
- <20140219174041.GK10504@lee--X1>
+From: Daeseok Youn <daeseok.youn@gmail.com>
+Subject: [PATCH v2] ata: libahci: replace obsolete simple_strtoul() with kstrtouint()
+Date: Thu, 20 Feb 2014 08:28:45 +0900
+Message-ID: <3360211.AJuXnUkblU@daeseok-laptop.cloud.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f182.google.com ([209.85.216.182]:43681 "EHLO
-	mail-qc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753977AbaBSSGe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Feb 2014 13:06:34 -0500
-Content-Disposition: inline
-In-Reply-To: <20140219174041.GK10504@lee--X1>
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:64633 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751239AbaBSX2y (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Feb 2014 18:28:54 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Lee Jones <lee.jones@linaro.org>
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, alexandre.torgue@st.com, linux-ide@vger.kernel.org, hdegoede@redhat.com
+To: davem@davemloft.net
+Cc: tj@kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, sergei.shtylyov@cogentembedded.com
 
-On Wed, Feb 19, 2014 at 05:40:41PM +0000, Lee Jones wrote:
-> Have you listened to a word I've said? Or have you managed to get your
-> self all tangled up in what you _assumed_ was meant by the 3 words I
-> mentioned about fairness at the very start of this conversation? Me
-> thinks the latter might be true.
+>From 4a31953389769f685db08f93473fcbe732baaefc Mon Sep 17 00:00:00 2001
+From: Daeseok Youn <daeseok.youn@gmail.com>
+Date: Wed, 19 Feb 2014 13:44:24 +0900
+Subject: [PATCH] ata: libahci: replace obsolete simple_strtoul() with
+ kstrtouint()
 
-It wasn't only that.  Your mention of API compability later in the
-thread or the notion of separate core and leaf developers were pretty
-weird.  Things like
+Signed-off-by: Daeseok Youn <daeseok.youn@gmail.com>
+---
+ drivers/ata/libahci.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
- "I was pertaining to the fact that requesting that a driver is
-  converted to a non-existing API was wrong."
-
-just don't make much sense.  That is a patchset which is pretty close
-to completion and I'm asking people to converge on that.  That happens
-regularly during development in the different layers.
-
-I think what's fundamentally disturbing is this distinction between
-what you're doing and what people working on the API are doing.  It's
-not like the roles are bound by contracts and one party owes to the
-other.  It seems that that's what leads you to think that asking your
-driver updated for a pending patchset is unfair and the rest.
-
-> Just because I don't contribute to your subsystem, it doesn't mean I
-> don't contribute elsewhere.
-
-Again, it's not about you being good and generously contributing.
-It's about sharing of basic responsibility.  You say I'm not reading
-what you're saying but what you're saying hasn't really changed since
-the first post except for some weaseling.
-
-> Here... let me help you down from that big horse! ;)
-
-I'm surely doing some of that and thanks for helping me down but I do
-hope you understand some of the points.
-
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 36605ab..417946b 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -1032,12 +1032,13 @@ static ssize_t ahci_led_show(struct ata_port *ap, char *buf)
+ static ssize_t ahci_led_store(struct ata_port *ap, const char *buf,
+ 				size_t size)
+ {
+-	int state;
++	unsigned int state;
+ 	int pmp;
+ 	struct ahci_port_priv *pp = ap->private_data;
+ 	struct ahci_em_priv *emp;
+ 
+-	state = simple_strtoul(buf, NULL, 0);
++	if (kstrtouint(buf, 0, &state) < 0)
++		return -EINVAL;
+ 
+ 	/* get the slot number from the message */
+ 	pmp = (state & EM_MSG_LED_PMP_SLOT) >> 8;
 -- 
-tejun
+1.7.9.5
+
+---
