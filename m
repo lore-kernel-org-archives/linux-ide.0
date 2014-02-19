@@ -1,13 +1,13 @@
 From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v6 11/18] ata: ahci_platform: Add DT compatible
- for Synopsis DWC AHCI controller
-Date: Wed, 19 Feb 2014 13:01:53 +0100
-Message-ID: <1392811320-3132-12-git-send-email-hdegoede@redhat.com>
+Subject: [PATCH v6 12/18] ata: ahci_platform: Update DT
+ compatible list
+Date: Wed, 19 Feb 2014 13:01:54 +0100
+Message-ID: <1392811320-3132-13-git-send-email-hdegoede@redhat.com>
 References: <1392811320-3132-1-git-send-email-hdegoede@redhat.com>
 Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-sunxi+bncBDL4X2GMZUKRB6F2SKMAKGQEIYHRLEA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Return-path: <linux-sunxi+bncBDL4X2GMZUKRB752SKMAKGQE3SRFLOA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 In-Reply-To: <1392811320-3132-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
@@ -21,27 +21,30 @@ List-Id: linux-ide@vger.kernel.org
 
 From: Roger Quadros <rogerq-l0cyMroinI0@public.gmane.org>
 
-Add compatible string "snps,dwc-ahci", which should be used
-for Synopsis Designware SATA cores. e.g. on TI OMAP5 and DRA7 platforms.
+The ahci_platform driver supports "snps,dwc-ahci".
+Add this to the DT binding information.
 
 Signed-off-by: Roger Quadros <rogerq-l0cyMroinI0@public.gmane.org>
 Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
 Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- drivers/ata/ahci_platform.c | 1 +
- 1 file changed, 1 insertion(+)
+ Documentation/devicetree/bindings/ata/ahci-platform.txt | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index ba93930..962ec25 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -456,6 +456,7 @@ static const struct of_device_id ahci_of_match[] = {
- 	{ .compatible = "snps,spear-ahci", },
- 	{ .compatible = "snps,exynos5440-ahci", },
- 	{ .compatible = "ibm,476gtr-ahci", },
-+	{ .compatible = "snps,dwc-ahci", },
- 	{},
- };
- MODULE_DEVICE_TABLE(of, ahci_of_match);
+diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+index d86e854..48b285f 100644
+--- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
++++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+@@ -6,8 +6,8 @@ Each SATA controller should have its own node.
+ Required properties:
+ - compatible        : compatible list, one of "snps,spear-ahci",
+                       "snps,exynos5440-ahci", "ibm,476gtr-ahci",
+-                      "allwinner,sun4i-a10-ahci", "fsl,imx53-ahci" or
+-                      "fsl,imx6q-ahci"
++                      "allwinner,sun4i-a10-ahci", "fsl,imx53-ahci"
++                      "fsl,imx6q-ahci" or "snps,dwc-ahci"
+ - interrupts        : <interrupt mapping for SATA IRQ>
+ - reg               : <registers mapping>
+ 
 -- 
 1.8.5.3
