@@ -1,52 +1,40 @@
 From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH] ata: libahci: make ahci_pmp_retry_softreset() as static
-Date: Wed, 19 Feb 2014 16:38:55 +0400
-Message-ID: <5304A5DF.8070302@cogentembedded.com>
-References: <3035873.ZkIlzycZBr@daeseok-laptop.cloud.net>
+Subject: Re: [PATCH] atm: libahci: replace obselete simple_strtoul() with
+ kstrtouint()
+Date: Wed, 19 Feb 2014 16:40:49 +0400
+Message-ID: <5304A651.6080701@cogentembedded.com>
+References: <1983660.RVkLooTtjT@daeseok-laptop.cloud.net> <20140219.010509.484470671732800480.davem@davemloft.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <3035873.ZkIlzycZBr@daeseok-laptop.cloud.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Daeseok Youn <daeseok.youn@gmail.com>, tj@kernel.org
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-lb0-f175.google.com ([209.85.217.175]:53536 "EHLO
+	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751321AbaBSMkp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Feb 2014 07:40:45 -0500
+Received: by mail-lb0-f175.google.com with SMTP id p9so244118lbv.20
+        for <linux-ide@vger.kernel.org>; Wed, 19 Feb 2014 04:40:44 -0800 (PST)
+In-Reply-To: <20140219.010509.484470671732800480.davem@davemloft.net>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: David Miller <davem@davemloft.net>, daeseok.youn@gmail.com
+Cc: tj@kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 Hello.
 
-On 19-0202014 9:07, Daeseok Youn wrote:
+On 19-02-2014 10:05, David Miller wrote:
 
->  From 2a428e5e45bca3fc38fad17b9e2e14c5e6514ca0 Mon Sep 17 00:00:00 2001
-> From: Daeseok Youn <daeseok.youn@gmail.com>
-> Date: Wed, 19 Feb 2014 10:56:37 +0900
-> Subject: [PATCH] ata: libahci: make ahci_pmp_retry_softreset() as static
+>>  From 18bd7236f36a248a0871f810cec3c1e98f098a91 Mon Sep 17 00:00:00 2001
+>> From: Daeseok Youn <daeseok.youn@gmail.com>
+>> Date: Wed, 19 Feb 2014 13:44:24 +0900
+>> Subject: [PATCH] atm: libahci: replace obselete simple_strtoul() with
+>>   kstrtouint()
 
-    This header is not needed.
+>> Signed-off-by: Daeseok Youn <daeseok.youn@gmail.com>
 
-> sparse says:
+> Please fix your Subject line, you meant "ata: " not "atm: "
 
-> drivers/ata/libahci.c:1390:5: warning:
->   symbol 'ahci_pmp_retry_softreset' was not declared. Should it be static?
-
-> Signed-off-by: Daeseok Youn <daeseok.youn@gmail.com>
-> ---
->   drivers/ata/libahci.c |    2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-
-> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-> index 36605ab..f9600fe 100644
-> --- a/drivers/ata/libahci.c
-> +++ b/drivers/ata/libahci.c
-> @@ -1387,7 +1387,7 @@ static int ahci_bad_pmp_check_ready(struct ata_link *link)
->   	return ata_check_ready(status);
->   }
->
-> -int ahci_pmp_retry_softreset(struct ata_link *link, unsigned int *class,
-> +static int ahci_pmp_retry_softreset(struct ata_link *link, unsigned int *class,
->   				unsigned long deadline)
-
-     Realign this continuation line too, for it to start under *struct* on the 
-first line.
+    And "obsolete". :-)
 
 WBR, Sergei
+
