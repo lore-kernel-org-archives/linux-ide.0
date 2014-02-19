@@ -1,68 +1,48 @@
-From: poma <pomidorabelisima-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [dma-debug.c - DMA-API] exceeded overlapping ... & sym53c8xx
-	... tries to free DMA ...
-Date: Wed, 19 Feb 2014 05:44:38 +0100
-Message-ID: <530436B6.70009@gmail.com>
-References: <52FDD955.4000701@gmail.com>	<20140214091639.GB1782@redhat.com>	<52FE5E74.6000509@gmail.com>	<53021F47.5050702@gmail.com>
-	<CAA9_cmd_AcHRUqqPziyd4bbLGcDWGJdneWd_Wk+KEQynhuHj+w@mail.gmail.com>
+From: Daeseok Youn <daeseok.youn@gmail.com>
+Subject: [PATCH] ata: libahci: make ahci_pmp_retry_softreset() as static
+Date: Wed, 19 Feb 2014 14:07:39 +0900
+Message-ID: <3035873.ZkIlzycZBr@daeseok-laptop.cloud.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <kernel-bounces-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org>
-In-Reply-To: <CAA9_cmd_AcHRUqqPziyd4bbLGcDWGJdneWd_Wk+KEQynhuHj+w-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Unsubscribe: <https://admin.fedoraproject.org/mailman/options/kernel>,
-	<mailto:kernel-request-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.fedoraproject.org/pipermail/kernel/>
-List-Post: <mailto:kernel-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org>
-List-Help: <mailto:kernel-request-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org?subject=help>
-List-Subscribe: <https://admin.fedoraproject.org/mailman/listinfo/kernel>,
-	<mailto:kernel-request-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org?subject=subscribe>
-Sender: kernel-bounces-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org
-Errors-To: kernel-bounces-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org
-To: Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Stanislaw Gruszka <sgruszka-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mailing-List fedora-kernel <kernel-TuqUDEhatI4ANWPb/1PvSmm0pvjS0E/A@public.gmane.org>, Josh Boyer <jwboyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Chris Murphy <lists-zXQU9YWDTqjmlV4oE/1sFAC/G2K4zDHf@public.gmane.org>, Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org>, Linux Kernel list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, IDE/ATA development list <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, "Justin M. Forbes" <jforbes-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Gerard Roudier <groudier-fBIn7JHAfCbUKx/7vDf7Bw@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ob0-f170.google.com ([209.85.214.170]:43603 "EHLO
+	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750761AbaBSFHu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Feb 2014 00:07:50 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-T24gMTguMDIuMjAxNCAyMDozNiwgRGFuIFdpbGxpYW1zIHdyb3RlOgo+IE9uIE1vbiwgRmViIDE3
-LCAyMDE0IGF0IDY6NDAgQU0sIHBvbWEgPHBvbWlkb3JhYmVsaXNpbWFAZ21haWwuY29tPiB3cm90
-ZToKPj4gT24gMTQuMDIuMjAxNCAxOToyMCwgcG9tYSB3cm90ZToKPj4+IE9uIDE0LjAyLjIwMTQg
-MTA6MTYsIFN0YW5pc2xhdyBHcnVzemthIHdyb3RlOgo+Pj4+IE9uIEZyaSwgRmViIDE0LCAyMDE0
-IGF0IDA5OjUyOjM3QU0gKzAxMDAsIHBvbWEgd3JvdGU6Cj4+Pj4+Cj4+Pj4+IEFob3khCj4+Pj4+
-Cj4+Pj4+IFBlcmhhcHMgdGhpcyBpcyBhbHJlYWR5IHNvbHZlZCwgYnV0IEkgbWFkZSB0aGUgZWZm
-b3J0IHRvIHRlc3QgJiByZWNvcmQKPj4+Pj4gYWxsIG9mIHRoaXMsIHRoZXJlZm9yZSBoZXJlIHlv
-dSBhcmUuIDopCj4+Pj4+Cj4+Pj4+IGh0dHBzOi8vYnVnemlsbGEucmVkaGF0LmNvbS9zaG93X2J1
-Zy5jZ2k/aWQ9MTA2MjgzMwo+Pj4+Cj4+Pj4gVGhlcmUgaXMgcGF0Y2ggcG9zdGVkIGZvciB0aGlz
-IHByb2JsZW0KPj4+PiBodHRwOi8vbWFyYy5pbmZvLz9sPWxpbnV4LWtlcm5lbCZtPTEzOTIzMzU0
-NjIyMzMzOCZ3PTIKPj4+PiBJdCBpcyB1bmRlciByZXZpZXcgY3VycmVudGx5LCBpZiB0aGVyZSB3
-aWxsIGJlIG5vIGNvbXBsYWlucyBpdCB3aWxsIGJlCj4+Pj4gYXBwbGllZC4KPj4+Pgo+Pj4+IFN0
-YW5pc2xhdwo+Pj4+Cj4+Pgo+Pj4gVGhhbmtzIQo+Pj4gSSBoYXZlIGEgZmV3IHF1ZXN0aW9ucyBi
-dXQgdGhlIHdlZWtlbmQgYmVnaW5zLCBzbyB3ZSdsbCBsZWF2ZSBpdCBmb3IKPj4+IGxhdGVyLiA6
-KQo+Pj4gU2VlIHlhIQo+Pgo+PiBodHRwczovL2J1Z3ppbGxhLnJlZGhhdC5jb20vc2hvd19idWcu
-Y2dpP2lkPTEwNjI4MzMKPj4KPj4gSURFIGRpc2sgLSBhdGFfcGlpeCAtIGRtZXNnIC0gT0sKPj4g
-aHR0cHM6Ly9idWd6aWxsYS5yZWRoYXQuY29tL2F0dGFjaG1lbnQuY2dpP2lkPTg2NDA4NQo+Pgo+
-PiBTQVRBIGRpc2sgLSBhaGNpIC0gZG1lc2cgLSBPSwo+PiBodHRwczovL2J1Z3ppbGxhLnJlZGhh
-dC5jb20vYXR0YWNobWVudC5jZ2k/aWQ9ODY0MDg2Cj4+Cj4+IFNDU0kgZGlzayAtIHN5bTUzYzh4
-eCAtIGRtZXNnIC0gT0sKPj4gaHR0cHM6Ly9idWd6aWxsYS5yZWRoYXQuY29tL2F0dGFjaG1lbnQu
-Y2dpP2lkPTg2NDA4Nwo+Pgo+PiBWaXJ0SU8gU0NTSSBkaXNrIC0gdmlydGlvX3Njc2kgLSBkbWVz
-ZyAtIE9LCj4+IGh0dHBzOi8vYnVnemlsbGEucmVkaGF0LmNvbS9hdHRhY2htZW50LmNnaT9pZD04
-NjQwODgKPj4KPj4gVVNCIGRpc2sgLSB1c2Jfc3RvcmFnZSAtIGRtZXNnIC0gT0sKPj4gaHR0cHM6
-Ly9idWd6aWxsYS5yZWRoYXQuY29tL2F0dGFjaG1lbnQuY2dpP2lkPTg2NDA4OQo+Pgo+PiBUZXN0
-IG1lZGlhIC0gJ2Jvb3QtZml4LWRtYS1kZWJ1Zy1vdmVybGFwLXYyLmlzbycsCj4+IGh0dHA6Ly9n
-b28uZ2wvVUpTZlZuCj4+IHNoYTI1NnN1bToKPj4gNmQ2YjM2ZmRjYjBhMGZmNjYyZmY2YTI3MDQ4
-ZDZkNWYzNWFjMjExYzM0NDM5Zjc1YmJhMWQ1MjRiMzUwN2U4Mgo+PiBib290LWZpeC1kbWEtZGVi
-dWctb3ZlcmxhcC12Mi5pc28KPj4KPj4gQ29udGFpbnMgJ2tlcm5lbC0zLjE0LjAtMC5yYzIuZ2l0
-NC4xLmZjMjEueDg2XzY0Jwo+PiBiYXNlZCBvbiBSYXdoaWRlICdrZXJuZWwtMy4xNC4wLTAucmMy
-LmdpdDQuMS5mYzIxJwo+PiBodHRwOi8va29qaS5mZWRvcmFwcm9qZWN0Lm9yZy9rb2ppL2J1aWxk
-aW5mbz9idWlsZElEPTQ5ODQwNAo+PiB3aXRoIHRoZSBhZGRpdGlvbiBvZiBEYW4ncyAnZml4LWRt
-YS1kZWJ1Zy1vdmVybGFwLXYyLnBhdGNoJwo+PiAiRml4IGRtYSBkZWJ1ZyB2MjogYWNjb3VudCBm
-b3IgY2FjaGVsaW5lcyBhbmQgcmVhZC1vbmx5IG1hcHBpbmdzIGluCj4+IG92ZXJsYXAgdHJhY2tp
-bmciCj4+IGh0dHA6Ly9tYXJjLmluZm8vP2w9bGludXgtbmV0ZGV2Jm09MTM5MjMzNTQ2NzIzMzQy
-JnE9cmF3Cj4+Cj4+Cj4+IEFsbCB0ZXN0cyBhcmUgUEFTU0VELgo+Pgo+PiAgICAgICAgXwo+PiAg
-ICAgICAoIFwKPj4gICAgICAgIFwgXAo+PiAgICBfX19fKSAgXAo+PiAgIChfX18pICAgIC0tLS0t
-LQo+PiAgKF9fXykKPj4gIChfX18pCj4+ICAgKF9fKS0tLS0tLS0tLS0tLS0tLS0KPj4KPj4KPj4K
-Pj4gcG9tYQo+IAo+IFRoYW5rcyBmb3IgdGhlIGluLWRlcHRoIHJlZ3Jlc3Npb24gdGVzdCBhbmQg
-cmVwb3J0LiAgTXVjaCBhcHByZWNpYXRlZCEKPiAKPiAtLQo+IERhbgo+IAoKWW91J3JlIHdlbGNv
-bWUuIDspClRoYW5rcyBmb3IgdGhlIHBhdGNoLgoKCnBvbWEKCgpfX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fXwprZXJuZWwgbWFpbGluZyBsaXN0Cmtlcm5lbEBs
-aXN0cy5mZWRvcmFwcm9qZWN0Lm9yZwpodHRwczovL2FkbWluLmZlZG9yYXByb2plY3Qub3JnL21h
-aWxtYW4vbGlzdGluZm8va2VybmVs
+>From 2a428e5e45bca3fc38fad17b9e2e14c5e6514ca0 Mon Sep 17 00:00:00 2001
+From: Daeseok Youn <daeseok.youn@gmail.com>
+Date: Wed, 19 Feb 2014 10:56:37 +0900
+Subject: [PATCH] ata: libahci: make ahci_pmp_retry_softreset() as static
+
+sparse says:
+
+drivers/ata/libahci.c:1390:5: warning:
+ symbol 'ahci_pmp_retry_softreset' was not declared. Should it be static?
+
+Signed-off-by: Daeseok Youn <daeseok.youn@gmail.com>
+---
+ drivers/ata/libahci.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 36605ab..f9600fe 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -1387,7 +1387,7 @@ static int ahci_bad_pmp_check_ready(struct ata_link *link)
+ 	return ata_check_ready(status);
+ }
+ 
+-int ahci_pmp_retry_softreset(struct ata_link *link, unsigned int *class,
++static int ahci_pmp_retry_softreset(struct ata_link *link, unsigned int *class,
+ 				unsigned long deadline)
+ {
+ 	struct ata_port *ap = link->ap;
+-- 
+1.7.9.5
+---
