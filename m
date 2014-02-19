@@ -1,37 +1,38 @@
-From: DaeSeok Youn <daeseok.youn@gmail.com>
-Subject: Re: [PATCH] atm: libahci: replace obselete simple_strtoul() with kstrtouint()
-Date: Wed, 19 Feb 2014 15:14:02 +0900
-Message-ID: <CAHb8M2C_eS586FgopsXNhHd9kRmfJ95v3aHRWwHTm5--DCZtNw@mail.gmail.com>
-References: <1983660.RVkLooTtjT@daeseok-laptop.cloud.net>
-	<20140219.010509.484470671732800480.davem@davemloft.net>
+From: Lee Jones <lee.jones@linaro.org>
+Subject: Re: [PATCH 3/3] ahci: st: Add support for ST's SATA IP
+Date: Wed, 19 Feb 2014 08:30:25 +0000
+Message-ID: <20140219083025.GB10504@lee--X1>
+References: <1392641818-23419-1-git-send-email-lee.jones@linaro.org>
+ <1392641818-23419-3-git-send-email-lee.jones@linaro.org>
+ <20140218233645.GP31892@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f49.google.com ([209.85.216.49]:61972 "EHLO
-	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751243AbaBSGT4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Feb 2014 01:19:56 -0500
-In-Reply-To: <20140219.010509.484470671732800480.davem@davemloft.net>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20140218233645.GP31892@mtj.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, alexandre.torgue@st.com, linux-ide@vger.kernel.org, hdegoede@redhat.com
 List-Id: linux-ide@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: tj <tj@kernel.org>, linux-ide <linux-ide@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-I re-send this patch after fixing subject.
-Thanks.
+> > Cc: Tejun Heo <tj@kernel.org>
+> > Cc: linux-ide@vger.kernel.org
+> > Signed-off-by: Lee Jones <lee.jones@linaro.org>
+>=20
+> Please consider basing it on top of Hans' refactored ahci_platform.
+>=20
+>  http://www.spinics.net/lists/linux-ide/msg47628.html
 
-Daeseok Youn
+Okay, looks reasonable. I'm happy to do the extra work.
 
-2014-02-19 15:05 GMT+09:00 David Miller <davem@davemloft.net>:
-> From: Daeseok Youn <daeseok.youn@gmail.com>
-> Date: Wed, 19 Feb 2014 14:09:49 +0900
->
->> From 18bd7236f36a248a0871f810cec3c1e98f098a91 Mon Sep 17 00:00:00 2001
->> From: Daeseok Youn <daeseok.youn@gmail.com>
->> Date: Wed, 19 Feb 2014 13:44:24 +0900
->> Subject: [PATCH] atm: libahci: replace obselete simple_strtoul() with
->>  kstrtouint()
->>
->> Signed-off-by: Daeseok Youn <daeseok.youn@gmail.com>
->
-> Please fix your Subject line, you meant "ata: " not "atm: "
+Can I do this as a subsequent patch though? The current patch fits
+neatly onto our internal stable kernel (currently v3.10). The added
+work will require back-porting Hans' patch-set, which has not yet
+reached Mainline.
+
+--=20
+Lee Jones
+Linaro STMicroelectronics Landing Team Lead
+Linaro.org =E2=94=82 Open source software for ARM SoCs
+=46ollow Linaro: Facebook | Twitter | Blog
