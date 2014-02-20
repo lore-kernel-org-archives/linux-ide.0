@@ -1,33 +1,29 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2] ata: libahci: make ahci_pmp_retry_softreset() as
- static
-Date: Wed, 19 Feb 2014 19:09:05 -0500
-Message-ID: <20140220000905.GT10134@htj.dyndns.org>
-References: <1784085.43ZIZYgGND@daeseok-laptop.cloud.net>
+Subject: Re: [PATCH v2] ata: libahci: replace obsolete simple_strtoul() with
+ kstrtouint()
+Date: Wed, 19 Feb 2014 19:09:23 -0500
+Message-ID: <20140220000923.GU10134@htj.dyndns.org>
+References: <3360211.AJuXnUkblU@daeseok-laptop.cloud.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f175.google.com ([209.85.216.175]:48186 "EHLO
-	mail-qc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751813AbaBTAJJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Feb 2014 19:09:09 -0500
+Received: from mail-qg0-f49.google.com ([209.85.192.49]:64161 "EHLO
+	mail-qg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752478AbaBTAJ1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Feb 2014 19:09:27 -0500
 Content-Disposition: inline
-In-Reply-To: <1784085.43ZIZYgGND@daeseok-laptop.cloud.net>
+In-Reply-To: <3360211.AJuXnUkblU@daeseok-laptop.cloud.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Daeseok Youn <daeseok.youn@gmail.com>
-Cc: davem@davemloft.net, sergei.shtylyov@cogentembedded.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: davem@davemloft.net, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, sergei.shtylyov@cogentembedded.com
 
-On Thu, Feb 20, 2014 at 08:34:27AM +0900, Daeseok Youn wrote:
-> From 6f865fde2e48ddc09f940ec30ebfc144cf074fd1 Mon Sep 17 00:00:00 2001
+On Thu, Feb 20, 2014 at 08:28:45AM +0900, Daeseok Youn wrote:
+> From 4a31953389769f685db08f93473fcbe732baaefc Mon Sep 17 00:00:00 2001
 > From: Daeseok Youn <daeseok.youn@gmail.com>
-> Date: Wed, 19 Feb 2014 10:56:37 +0900
-> Subject: [PATCH] ata: libahci: make ahci_pmp_retry_softreset() as static
-> 
-> sparse says:
-> 
-> drivers/ata/libahci.c:1390:5: warning:
->  symbol 'ahci_pmp_retry_softreset' was not declared. Should it be static?
+> Date: Wed, 19 Feb 2014 13:44:24 +0900
+> Subject: [PATCH] ata: libahci: replace obsolete simple_strtoul() with
+>  kstrtouint()
 > 
 > Signed-off-by: Daeseok Youn <daeseok.youn@gmail.com>
 
