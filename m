@@ -1,116 +1,92 @@
-From: Loc Ho <lho@apm.com>
-Subject: [PATCH v12 3/3] arm64: Add APM X-Gene SoC AHCI SATA host controller DTS entries
-Date: Fri, 21 Feb 2014 10:47:33 -0700
-Message-ID: <1393004853-25994-4-git-send-email-lho@apm.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v12 2/3] ata: Add APM X-Gene SoC AHCI SATA host
+ controller driver
+Date: Fri, 21 Feb 2014 12:55:42 -0500
+Message-ID: <20140221175542.GA12830@htj.dyndns.org>
 References: <1393004853-25994-1-git-send-email-lho@apm.com>
  <1393004853-25994-2-git-send-email-lho@apm.com>
  <1393004853-25994-3-git-send-email-lho@apm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qa0-f44.google.com ([209.85.216.44]:57999 "EHLO
+	mail-qa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755352AbaBURzq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Feb 2014 12:55:46 -0500
+Content-Disposition: inline
 In-Reply-To: <1393004853-25994-3-git-send-email-lho@apm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Loc Ho <lho@apm.com>
+Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Tuan Phan <tphan@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
----
- arch/arm64/boot/dts/apm-storm.dtsi |   75 ++++++++++++++++++++++++++++++++++++
- 1 files changed, 75 insertions(+), 0 deletions(-)
+Hello, Loc.
 
-diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
-index c78ddcf..57b0770 100644
---- a/arch/arm64/boot/dts/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm-storm.dtsi
-@@ -221,6 +221,48 @@
- 				enable-offset = <0x0>;
- 				enable-mask = <0x06>;
- 			};
-+
-+			sata01clk: sata01clk@1f21c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f21c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sata01clk";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x05>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x39>;
-+			};
-+
-+			sata23clk: sata23clk@1f22c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f22c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sata23clk";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x05>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x39>;
-+			};
-+
-+			sata45clk: sata45clk@1f23c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f23c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sata45clk";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x05>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x39>;
-+			};
- 		};
- 
- 		serial0: serial@1c020000 {
-@@ -262,5 +304,38 @@
- 			apm,tx-boost-gain = <31 31 31 31 31 31>;
- 			apm,tx-eye-tuning = <2 10 10 2 10 10>;
- 		};
-+
-+		sata1: sata@1a000000 {
-+			compatible = "apm,xgene-ahci-sgmii";
-+			reg = <0x0 0x1a000000 0x0 0x1000>,
-+			      <0x0 0x1f210000 0x0 0x10000>;
-+			interrupts = <0x0 0x86 0x4>;
-+			status = "disabled";
-+			clocks = <&sata01clk 0>;
-+			phys = <&phy1 0>;
-+			phy-names = "sata-6g";
-+		};
-+
-+		sata2: sata@1a400000 {
-+			compatible = "apm,xgene-ahci-sgmii";
-+			reg = <0x0 0x1a400000 0x0 0x1000>,
-+			      <0x0 0x1f220000 0x0 0x10000>;
-+			interrupts = <0x0 0x87 0x4>;
-+			status = "ok";
-+			clocks = <&sata23clk 0>;
-+			phys = <&phy2 0>;
-+			phy-names = "sata-6g";
-+		};
-+
-+		sata3: sata@1a800000 {
-+			compatible = "apm,xgene-ahci-pcie";
-+			reg = <0x0 0x1a800000 0x0 0x1000>,
-+			      <0x0 0x1f230000 0x0 0x10000>;
-+			interrupts = <0x0 0x88 0x4>;
-+			status = "ok";
-+			clocks = <&sata45clk 0>;
-+			phys = <&phy3 0>;
-+			phy-names = "sata-6g";
-+		};
- 	};
- };
+On Fri, Feb 21, 2014 at 10:47:32AM -0700, Loc Ho wrote:
+> +/**
+> + * Custom Query ID command
+> + *
+> + * Due to HW errata, we must stop and re-start the port state machine after
+> + * read ID command. Also disable support for DEVSLP as hardware don't support
+> + * it.
+> + */
+
+Sorry about not being clear before but /** function comment means
+something like
+
+/**
+ * ata_scsi_port_error_handler - recover the port after the commands
+ * @host: SCSI host containing the port
+ * @ap: the ATA port
+ *
+ * Handle the recovery of the port @ap after all the commands have
+ * been recovered.
+ */
+
+> +static int xgene_ahci_do_hardreset(struct ata_link *link,
+> +				   unsigned long deadline, bool *online)
+> +{
+> +	const unsigned long *timing = sata_ehc_deb_timing(&link->eh_context);
+> +	struct ata_port *ap = link->ap;
+> +	struct ahci_host_priv *hpriv = ap->host->private_data;
+> +	struct xgene_ahci_context *ctx = pdata_to_ctx(hpriv->plat_data);
+> +	struct ahci_port_priv *pp = ap->private_data;
+> +	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
+> +	void __iomem *port_mmio = ahci_port_base(ap);
+> +	struct ata_taskfile tf;
+> +	int first_time = 1;
+> +	int rc;
+> +	u32 val;
+> +	int i;
+> +
+> +hardreset_retry:
+> +	/* clear D2H reception area to properly wait for D2H FIS */
+> +	ata_tf_init(link->device, &tf);
+> +	tf.command = ATA_BUSY;
+> +	ata_tf_to_fis(&tf, 0, 0, d2h_fis);
+> +	rc = sata_link_hardreset(link, timing, deadline, online,
+> +				 ahci_check_ready);
+> +
+> +	if (*online) {
+> +		/* Check to ensure that the disk comes up in matching speed */
+> +		if (first_time) {
+> +			u32 gen_speed;
+> +
+> +			first_time = 0;
+> +			sata_scr_read(link, SCR_STATUS, &gen_speed);
+> +			gen_speed = (gen_speed >> 4) & 0xf;
+> +			if (gen_speed == 1 || gen_speed == 2) {
+> +				/*
+> +				 * For Gen2/1 and first time, let's check again
+> +				 * with Gen2/1 PHY to ensure actual Gen2/1 disk.
+> +				 */
+
+Can you please go back two reviews and re-read what I requested?
+Also, if you're unsure, please don't hesitate to ask back.  It's
+usually a lot easier for both parties than iterating through patchsets
+without properly understanding each other.
+
+Thanks.
+
 -- 
-1.5.5
-
+tejun
