@@ -1,119 +1,132 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v11 2/3] ata: Add APM X-Gene SoC AHCI SATA host
- controller driver
-Date: Fri, 21 Feb 2014 11:06:19 -0500
-Message-ID: <20140221160619.GC460@htj.dyndns.org>
-References: <1392621433-5566-1-git-send-email-lho@apm.com>
- <1392621433-5566-2-git-send-email-lho@apm.com>
- <1392621433-5566-3-git-send-email-lho@apm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Loc Ho <lho@apm.com>
+Subject: [PATCH v10 0/4] PHY: Add APM X-Gene SoC 15Gbps Multi-purpose PHY support
+Date: Fri, 21 Feb 2014 10:46:37 -0700
+Message-ID: <1393004801-25970-1-git-send-email-lho@apm.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f169.google.com ([209.85.216.169]:51806 "EHLO
-	mail-qc0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932264AbaBUQGX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Feb 2014 11:06:23 -0500
-Content-Disposition: inline
-In-Reply-To: <1392621433-5566-3-git-send-email-lho@apm.com>
+Received: from exprod5og116.obsmtp.com ([64.18.0.147]:56633 "HELO
+	exprod5og116.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753687AbaBURqw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Feb 2014 12:46:52 -0500
+Received: by mail-pb0-f47.google.com with SMTP id rp16so3726976pbb.6
+        for <linux-ide@vger.kernel.org>; Fri, 21 Feb 2014 09:46:49 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Loc Ho <lho@apm.com>
-Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-Hello, Loc.
+This patch adds support for APM X-Gene SoC 15Gbps Multi-purpose PHY. This
+is the physical layer interface for the corresponding host controller. This
+driver uses the PHY generic framework. In addition, the PHY generic
+framework is patched to provide an function to set the speed of the PHY.
 
-On Mon, Feb 17, 2014 at 12:17:12AM -0700, Loc Ho wrote:
-...
-> +static int xgene_ahci_get_channel(struct ata_host *host, struct ata_port *port)
-> +{
-> +	int i;
-> +	for (i = 0; i < host->n_ports; i++)
-> +		if (host->ports[i] == port)
-> +			return i;
-> +	return -1;
-> +}
+v10
+* Update comment for function xgene_phy_force_lat_summer_cal and
+  xgene_phy_sata_force_gen with function style fully-winged style
 
-Didn't I ask you why you weren't using ap->port_no?
+v9
+* Update CMU parameter setting for register 13
+* Add required delay when configure CMU PLL, Manual Calibration PLL, and VCO
+  PLL
+* Add comment for CMU PLL calibration loop delay of 10us
+* Add required delay for stopping and starting summer calibrations
+* Update comment for summer and latch calibration delays
+* Update comment for PHY reset Rx delay and decrease max sleep time from 500
+  to 150us
+* Always program the DFE (equalizer) setting to 0x7e00 as with original version
+* Fix Tx speed selection to always using Gen3 setting when force to an
+  specified generation speed
 
-> +/*
-> + * Custom Query ID command
-> + *
-> + * Due to HW errata, we must stop and re-start the port state machine after
-> + * read ID command. Also disable support for DEVSLP as hardware don't support
-> + * it.
-> + */
+v8
+* Update binding documentation
+* Remove XGENE_PHY_DTS and XGENE_PHY_EXT_DTS defines
+* Remove support for internal clock
+* Remove support for external reference CMU
+* Remove the need for external reference resource DTS entry and its related
+  code
 
-Please use /** function comment style.
+v7
+* Add/Update PHY CMU/lane parameters and its default values
+* Rename variable enable_manual_cal to preA3Chip
+* Remove function phy_rd, phy_wr, and phy_wr_flush
+* Change function cmu_wr, cmu_rd, cmu_toggle1to0, cmu_clrbits, cmu_setbits,
+  serdes_wr, serdes_rd, serdes_clrbits, and serdes_setbits to take context
+  instead void *
+* Remove function serdes_toggle1to0
+* Decrease the polling time from 10ms to 1ms on CMU calibration complete
+  detection
+* Move all SATA specify code in function xgene_phy_hw_initialize into
+  function xgene_phy_hw_init_sata
+* Add usleep_range after starting summer/latch calibrations
+* Add usleep_range between receiver reset (function xgene_phy_reset_rxd)
+* Save and restore PHY register 31 instead writing 0 in function
+  xgene_phy_gen_avg_val
+* Update function xgene_phy_sata_force_gen programming sequences
+* Add support to reset the receiver lane in function xgene_phy_set_speed
+  if speed is 0
+* Update PHY parameters in DTS per controller
+* Some minor code clean up
 
-> +static unsigned int xgene_ahci_read_id(struct ata_device *dev,
-> +				       struct ata_taskfile *tf, u16 *id)
-> +{
-> +	u32 err_mask;
-> +	void __iomem *port_mmio = ahci_port_base(dev->link->ap);
-> +
-> +	err_mask = ata_do_dev_read_id(dev, tf, id);
-> +	if (err_mask)
-> +		return err_mask;
-> +
-> +	/* Mask reserved area. Bit78 spec of Link Power Management
+v6
+* Move PHY document to Documentation/devicetree/binding/phy
+* Remove _ADDR from all register defines
+* Update clock-names property for sataphy1clk, sataphy2clk, and sataphy3clk
 
-Another review point which hasn't been addressed.  Please use
-fully-winged comments for multiline comments.
+v5
+* Update DTS binding documentation
+* Remove direct clock access and use clock interface instead
+* Change override parameters to decimal instead hex values
+* Change apm,tx-amplitude, apm,tx-pre-cursor1, apm,tx-pre-cursor2,
+  apm,tx-post-cursor to be unit of uV
 
-> +	 * bit15-8: reserved
-> +	 * bit7: NCQ autosence
-> +	 * bit6: Software settings preservation supported
-> +	 * bit5: reserved
-> +	 * bit4: In-order sata delivery supported
-> +	 * bit3: DIPM requests supported
-> +	 * bit2: DMA Setup FIS Auto-Activate optimization supported
-> +	 * bit1: DMA Setup FIX non-Zero buffer offsets supported
-> +	 * bit0: Reserved
-> +	 *
-> +	 * Clear reserved bit (DEVSLP bit) as we don't support DEVSLP
-> +	 */
-> +	id[78] &= 0x00FF;
-> +
-> +	/* Restart the port if required due to HW errata */
-> +	if (!readl(port_mmio + PORT_CMD_ISSUE)) {
-> +		writel(PORT_CMD_FIS_RX, port_mmio + PORT_CMD);
-> +		readl(port_mmio + PORT_CMD);	/* Force a barrier */
-> +		writel(PORT_CMD_FIS_RX | PORT_CMD_START, port_mmio + PORT_CMD);
-> +		readl(port_mmio + PORT_CMD);	/* Force a barrier */
-> +	}
-> +	return 0;
-> +}
-...
-> +static int xgene_ahci_do_hardreset(struct ata_link *link,
-> +				   unsigned long deadline, bool *online)
-> +{
-...
-> +hardreset_retry:
-> +	/* clear D2H reception area to properly wait for D2H FIS */
-> +	ata_tf_init(link->device, &tf);
-> +	tf.command = ATA_BUSY;
-> +	ata_tf_to_fis(&tf, 0, 0, d2h_fis);
-> +	rc = sata_link_hardreset(link, timing, deadline, online,
-> +				 ahci_check_ready);
-> +
-> +	if (*online) {
-> +		int chan = xgene_ahci_get_channel(ap->host, ap);
-> +
-> +		/* Check to ensure that the disk comes up in matching speed */
-> +		if (first_time) {
-> +			u32 gen_speed;
-> +
-> +			first_time = 0;
-> +			sata_scr_read(link, SCR_STATUS, &gen_speed);
-> +			gen_speed = (gen_speed >> 4) & 0xf;
-> +			if (gen_speed == 1 || gen_speed == 2) {
-> +				/* For Gen2/1 and first time, let's check again
-> +				 * with Gen2/1 PHY to ensure actual Gen2/1 disk.
-> +				 */
+v4
+* Update documentation with 'apm,' instead 'apm-'
+* Change DTS override parameter to have 'apm,'
+* Add select GENERIC_PHY to Kconfig PHY_XGENE
+* Make override parameters to be pair of three values instead one
+* Some minor comment and indentation changes
+* Remove error register addition offset
+* Add ULL to constants
+* Use module_init instead subsys_initcall
+* Make DTS node based on first register address
+* Update override setting values
 
-Another review point not addressed.
+v3
+* Major re-write of the code based on various review comments
+* Support external clock only at the moment
+* Support SATA mode only at the moment
+* No UEFI support at the moment
 
-Thanks.
+v2
+* Remove port knowledge from functions
+* Make all functions static
+* Remove ID completely
+* Make resource requirement based on compatible type
+* Rename override PHY parameters with more descriptive name
+* Add override PHY parameter for per controller, per port, and per speed
+* Patch the generic PHY frame to expose set_speed operation
 
--- 
-tejun
+v1
+* Initial version
+
+Signed-off-by: Loc Ho <lho@apm.com>
+Signed-off-by: Tuan Phan <tphan@apm.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
+---
+Loc Ho (4):
+  PHY: Add function set_speed to generic PHY framework
+  Documentation: Add APM X-Gene SoC 15Gbps Multi-purpose PHY driver
+    binding documentation
+  PHY: add APM X-Gene SoC 15Gbps Multi-purpose PHY driver
+  arm64: Add APM X-Gene SoC 15Gbps Multi-purpose PHY DTS entries
+
+ .../devicetree/bindings/phy/apm-xgene-phy.txt      |   79 +
+ arch/arm64/boot/dts/apm-storm.dtsi                 |   75 +
+ drivers/phy/Kconfig                                |    7 +
+ drivers/phy/Makefile                               |    2 +
+ drivers/phy/phy-core.c                             |   21 +
+ drivers/phy/phy-xgene.c                            | 1826 ++++++++++++++++++++
+ include/linux/phy/phy.h                            |    8 +
+ 7 files changed, 2018 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/phy/apm-xgene-phy.txt
+ create mode 100644 drivers/phy/phy-xgene.c
+
