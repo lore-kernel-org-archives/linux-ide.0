@@ -1,13 +1,13 @@
 From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v7 03/15] ahci-platform: Add support for an
- optional regulator for sata-target power
-Date: Sat, 22 Feb 2014 16:53:32 +0100
-Message-ID: <1393084424-31099-4-git-send-email-hdegoede@redhat.com>
+Subject: [PATCH v7 04/15] ahci-platform: Add enable_ /
+ disable_resources helper functions
+Date: Sat, 22 Feb 2014 16:53:33 +0100
+Message-ID: <1393084424-31099-5-git-send-email-hdegoede@redhat.com>
 References: <1393084424-31099-1-git-send-email-hdegoede@redhat.com>
 Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-sunxi+bncBDL4X2GMZUKRBGEQUOMAKGQEALODJCI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Return-path: <linux-sunxi+bncBDL4X2GMZUKRBHEQUOMAKGQETAZO3EY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 In-Reply-To: <1393084424-31099-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
@@ -21,135 +21,205 @@ List-Id: linux-ide@vger.kernel.org
 
 Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- .../devicetree/bindings/ata/ahci-platform.txt      |  1 +
- drivers/ata/ahci.h                                 |  2 ++
- drivers/ata/ahci_platform.c                        | 36 ++++++++++++++++++++--
- 3 files changed, 37 insertions(+), 2 deletions(-)
+ drivers/ata/ahci_platform.c   | 112 ++++++++++++++++++++++++++++--------------
+ include/linux/ahci_platform.h |   2 +
+ 2 files changed, 77 insertions(+), 37 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-index 3ced07d..1ac807f 100644
---- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
-+++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-@@ -11,6 +11,7 @@ Required properties:
- Optional properties:
- - dma-coherent      : Present if dma operations are coherent
- - clocks            : a list of phandle + clock specifier pairs
-+- target-supply     : regulator for SATA target power
- 
- Example:
-         sata@ffe08000 {
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index c12862b..bf8100c 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -37,6 +37,7 @@
- 
- #include <linux/clk.h>
- #include <linux/libata.h>
-+#include <linux/regulator/consumer.h>
- 
- /* Enclosure Management Control */
- #define EM_CTRL_MSG_TYPE              0x000f0000
-@@ -323,6 +324,7 @@ struct ahci_host_priv {
- 	u32			em_buf_sz;	/* EM buffer size in byte */
- 	u32			em_msg_type;	/* EM message type */
- 	struct clk		*clks[AHCI_MAX_CLKS]; /* Optional */
-+	struct regulator	*target_pwr;	/* Optional */
- 	void			*plat_data;	/* Other platform data */
- 	/*
- 	 * Optional ahci_start_engine override, if not set this gets set to the
 diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index 609975d..907c076 100644
+index 907c076..6ebbc17 100644
 --- a/drivers/ata/ahci_platform.c
 +++ b/drivers/ata/ahci_platform.c
-@@ -192,6 +192,14 @@ static int ahci_probe(struct platform_device *pdev)
- 		return -ENOMEM;
- 	}
- 
-+	hpriv->target_pwr = devm_regulator_get_optional(dev, "target");
-+	if (IS_ERR(hpriv->target_pwr)) {
-+		rc = PTR_ERR(hpriv->target_pwr);
-+		if (rc == -EPROBE_DEFER)
-+			return -EPROBE_DEFER;
-+		hpriv->target_pwr = NULL;
-+	}
-+
- 	for (i = 0; i < AHCI_MAX_CLKS; i++) {
- 		/*
- 		 * For now we must use clk_get(dev, NULL) for the first clock,
-@@ -213,9 +221,15 @@ static int ahci_probe(struct platform_device *pdev)
- 		hpriv->clks[i] = clk;
- 	}
- 
-+	if (hpriv->target_pwr) {
-+		rc = regulator_enable(hpriv->target_pwr);
-+		if (rc)
-+			goto free_clk;
-+	}
-+
- 	rc = ahci_enable_clks(dev, hpriv);
- 	if (rc)
--		goto free_clk;
-+		goto disable_regulator;
- 
- 	/*
- 	 * Some platforms might need to prepare for mmio region access,
-@@ -298,6 +312,9 @@ pdata_exit:
- 		pdata->exit(dev);
- disable_unprepare_clk:
- 	ahci_disable_clks(hpriv);
-+disable_regulator:
-+	if (hpriv->target_pwr)
-+		regulator_disable(hpriv->target_pwr);
- free_clk:
- 	ahci_put_clks(hpriv);
- 	return rc;
-@@ -314,6 +331,9 @@ static void ahci_host_stop(struct ata_host *host)
- 
- 	ahci_disable_clks(hpriv);
- 	ahci_put_clks(hpriv);
-+
-+	if (hpriv->target_pwr)
-+		regulator_disable(hpriv->target_pwr);
+@@ -139,6 +139,68 @@ void ahci_platform_disable_clks(struct ahci_host_priv *hpriv)
  }
+ EXPORT_SYMBOL_GPL(ahci_platform_disable_clks);
  
- #ifdef CONFIG_PM_SLEEP
-@@ -350,6 +370,9 @@ static int ahci_suspend(struct device *dev)
- 
- 	ahci_disable_clks(hpriv);
- 
-+	if (hpriv->target_pwr)
-+		regulator_disable(hpriv->target_pwr);
++/**
++ *	ahci_platform_enable_resources - Enable platform resources
++ *	@hpriv: host private area to store config values
++ *
++ *	This function enables all ahci_platform managed resources in
++ *	the following order:
++ *	1) Regulator
++ *	2) Clocks (through ahci_platform_enable_clks)
++ *
++ *	If resource enabling fails at any point the previous enabled
++ *	resources are disabled in reverse order.
++ *
++ *	LOCKING:
++ *	None.
++ *
++ *	RETURNS:
++ *	0 on success otherwise a negative error code
++ */
++int ahci_platform_enable_resources(struct ahci_host_priv *hpriv)
++{
++	int rc;
 +
- 	return 0;
- }
- 
-@@ -360,9 +383,15 @@ static int ahci_resume(struct device *dev)
- 	struct ahci_host_priv *hpriv = host->private_data;
- 	int rc;
- 
 +	if (hpriv->target_pwr) {
 +		rc = regulator_enable(hpriv->target_pwr);
 +		if (rc)
 +			return rc;
 +	}
 +
- 	rc = ahci_enable_clks(dev, hpriv);
- 	if (rc)
--		return rc;
++	rc = ahci_platform_enable_clks(hpriv);
++	if (rc)
 +		goto disable_regulator;
- 
- 	if (pdata && pdata->resume) {
- 		rc = pdata->resume(dev);
-@@ -384,6 +413,9 @@ static int ahci_resume(struct device *dev)
- 
- disable_unprepare_clk:
- 	ahci_disable_clks(hpriv);
++
++	return 0;
++
 +disable_regulator:
 +	if (hpriv->target_pwr)
 +		regulator_disable(hpriv->target_pwr);
++	return rc;
++}
++EXPORT_SYMBOL_GPL(ahci_platform_enable_resources);
++
++/**
++ *	ahci_platform_disable_resources - Disable platform resources
++ *	@hpriv: host private area to store config values
++ *
++ *	This function disables all ahci_platform managed resources in
++ *	the following order:
++ *	1) Clocks (through ahci_platform_disable_clks)
++ *	2) Regulator
++ *
++ *	LOCKING:
++ *	None.
++ */
++void ahci_platform_disable_resources(struct ahci_host_priv *hpriv)
++{
++	ahci_platform_disable_clks(hpriv);
++
++	if (hpriv->target_pwr)
++		regulator_disable(hpriv->target_pwr);
++}
++EXPORT_SYMBOL_GPL(ahci_platform_disable_resources);
++
+ static void ahci_put_clks(struct ahci_host_priv *hpriv)
+ {
+ 	int c;
+@@ -221,15 +283,9 @@ static int ahci_probe(struct platform_device *pdev)
+ 		hpriv->clks[i] = clk;
+ 	}
+ 
+-	if (hpriv->target_pwr) {
+-		rc = regulator_enable(hpriv->target_pwr);
+-		if (rc)
+-			goto free_clk;
+-	}
+-
+-	rc = ahci_enable_clks(dev, hpriv);
++	rc = ahci_platform_enable_resources(hpriv);
+ 	if (rc)
+-		goto disable_regulator;
++		goto free_clk;
+ 
+ 	/*
+ 	 * Some platforms might need to prepare for mmio region access,
+@@ -240,7 +296,7 @@ static int ahci_probe(struct platform_device *pdev)
+ 	if (pdata && pdata->init) {
+ 		rc = pdata->init(dev, hpriv->mmio);
+ 		if (rc)
+-			goto disable_unprepare_clk;
++			goto disable_resources;
+ 	}
+ 
+ 	ahci_save_initial_config(dev, hpriv,
+@@ -310,11 +366,8 @@ static int ahci_probe(struct platform_device *pdev)
+ pdata_exit:
+ 	if (pdata && pdata->exit)
+ 		pdata->exit(dev);
+-disable_unprepare_clk:
+-	ahci_disable_clks(hpriv);
+-disable_regulator:
+-	if (hpriv->target_pwr)
+-		regulator_disable(hpriv->target_pwr);
++disable_resources:
++	ahci_platform_disable_resources(hpriv);
+ free_clk:
+ 	ahci_put_clks(hpriv);
+ 	return rc;
+@@ -329,11 +382,8 @@ static void ahci_host_stop(struct ata_host *host)
+ 	if (pdata && pdata->exit)
+ 		pdata->exit(dev);
+ 
+-	ahci_disable_clks(hpriv);
++	ahci_platform_disable_resources(hpriv);
+ 	ahci_put_clks(hpriv);
+-
+-	if (hpriv->target_pwr)
+-		regulator_disable(hpriv->target_pwr);
+ }
+ 
+ #ifdef CONFIG_PM_SLEEP
+@@ -368,10 +418,7 @@ static int ahci_suspend(struct device *dev)
+ 	if (pdata && pdata->suspend)
+ 		return pdata->suspend(dev);
+ 
+-	ahci_disable_clks(hpriv);
+-
+-	if (hpriv->target_pwr)
+-		regulator_disable(hpriv->target_pwr);
++	ahci_platform_disable_resources(hpriv);
+ 
+ 	return 0;
+ }
+@@ -383,26 +430,20 @@ static int ahci_resume(struct device *dev)
+ 	struct ahci_host_priv *hpriv = host->private_data;
+ 	int rc;
+ 
+-	if (hpriv->target_pwr) {
+-		rc = regulator_enable(hpriv->target_pwr);
+-		if (rc)
+-			return rc;
+-	}
+-
+-	rc = ahci_enable_clks(dev, hpriv);
++	rc = ahci_platform_enable_resources(hpriv);
+ 	if (rc)
+-		goto disable_regulator;
++		return rc;
+ 
+ 	if (pdata && pdata->resume) {
+ 		rc = pdata->resume(dev);
+ 		if (rc)
+-			goto disable_unprepare_clk;
++			goto disable_resources;
+ 	}
+ 
+ 	if (dev->power.power_state.event == PM_EVENT_SUSPEND) {
+ 		rc = ahci_reset_controller(host);
+ 		if (rc)
+-			goto disable_unprepare_clk;
++			goto disable_resources;
+ 
+ 		ahci_init_controller(host);
+ 	}
+@@ -411,11 +452,8 @@ static int ahci_resume(struct device *dev)
+ 
+ 	return 0;
+ 
+-disable_unprepare_clk:
+-	ahci_disable_clks(hpriv);
+-disable_regulator:
+-	if (hpriv->target_pwr)
+-		regulator_disable(hpriv->target_pwr);
++disable_resources:
++	ahci_platform_disable_resources(hpriv);
  
  	return rc;
  }
+diff --git a/include/linux/ahci_platform.h b/include/linux/ahci_platform.h
+index 769d065..b674b01 100644
+--- a/include/linux/ahci_platform.h
++++ b/include/linux/ahci_platform.h
+@@ -33,5 +33,7 @@ struct ahci_platform_data {
+ 
+ int ahci_platform_enable_clks(struct ahci_host_priv *hpriv);
+ void ahci_platform_disable_clks(struct ahci_host_priv *hpriv);
++int ahci_platform_enable_resources(struct ahci_host_priv *hpriv);
++void ahci_platform_disable_resources(struct ahci_host_priv *hpriv);
+ 
+ #endif /* _AHCI_PLATFORM_H */
 -- 
 1.9.0
