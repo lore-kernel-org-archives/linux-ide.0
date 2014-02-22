@@ -1,13 +1,13 @@
 From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v7 04/15] ahci-platform: Add enable_ /
- disable_resources helper functions
-Date: Sat, 22 Feb 2014 16:53:33 +0100
-Message-ID: <1393084424-31099-5-git-send-email-hdegoede@redhat.com>
+Subject: [PATCH v7 06/15] ahci-platform: "Library-ise" suspend /
+ resume functionality
+Date: Sat, 22 Feb 2014 16:53:35 +0100
+Message-ID: <1393084424-31099-7-git-send-email-hdegoede@redhat.com>
 References: <1393084424-31099-1-git-send-email-hdegoede@redhat.com>
 Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-sunxi+bncBDL4X2GMZUKRBHEQUOMAKGQETAZO3EY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Return-path: <linux-sunxi+bncBDL4X2GMZUKRBIEQUOMAKGQE52JOXMQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 In-Reply-To: <1393084424-31099-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
@@ -19,31 +19,32 @@ To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Maxime Ripard <maxim
 Cc: Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, Richard Zhu <Hong-Xing.Zhu-KZfg59tc24xl57MIdRCFDg@public.gmane.org>, Roger Quadros <rogerq-l0cyMroinI0@public.gmane.org>, Lee Jones <lee.jones-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, devicetree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
+Split suspend / resume code into host suspend / resume functionality and
+resource enable / disabling phases, and export the new suspend_ / resume_host
+functions.
+
 Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- drivers/ata/ahci_platform.c   | 112 ++++++++++++++++++++++++++++--------------
- include/linux/ahci_platform.h |   2 +
- 2 files changed, 77 insertions(+), 37 deletions(-)
+ drivers/ata/ahci_platform.c   | 109 ++++++++++++++++++++++++++++++++++++------
+ include/linux/ahci_platform.h |   5 ++
+ 2 files changed, 99 insertions(+), 15 deletions(-)
 
 diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index 907c076..6ebbc17 100644
+index 7f3f2ac..bdadec1 100644
 --- a/drivers/ata/ahci_platform.c
 +++ b/drivers/ata/ahci_platform.c
-@@ -139,6 +139,68 @@ void ahci_platform_disable_clks(struct ahci_host_priv *hpriv)
+@@ -452,14 +452,26 @@ static void ahci_host_stop(struct ata_host *host)
  }
- EXPORT_SYMBOL_GPL(ahci_platform_disable_clks);
  
+ #ifdef CONFIG_PM_SLEEP
+-static int ahci_suspend(struct device *dev)
 +/**
-+ *	ahci_platform_enable_resources - Enable platform resources
-+ *	@hpriv: host private area to store config values
++ *	ahci_platform_suspend_host - Suspend an ahci-platform host
++ *	@dev: device pointer for the host
 + *
-+ *	This function enables all ahci_platform managed resources in
-+ *	the following order:
-+ *	1) Regulator
-+ *	2) Clocks (through ahci_platform_enable_clks)
-+ *
-+ *	If resource enabling fails at any point the previous enabled
-+ *	resources are disabled in reverse order.
++ *	This function does all the usual steps needed to suspend an
++ *	ahci-platform host, note any necessary resources (ie clks, phy, etc.)
++ *	must be disabled after calling this.
 + *
 + *	LOCKING:
 + *	None.
@@ -51,175 +52,152 @@ index 907c076..6ebbc17 100644
 + *	RETURNS:
 + *	0 on success otherwise a negative error code
 + */
-+int ahci_platform_enable_resources(struct ahci_host_priv *hpriv)
-+{
-+	int rc;
-+
-+	if (hpriv->target_pwr) {
-+		rc = regulator_enable(hpriv->target_pwr);
-+		if (rc)
-+			return rc;
-+	}
-+
-+	rc = ahci_platform_enable_clks(hpriv);
-+	if (rc)
-+		goto disable_regulator;
-+
-+	return 0;
-+
-+disable_regulator:
-+	if (hpriv->target_pwr)
-+		regulator_disable(hpriv->target_pwr);
-+	return rc;
++int ahci_platform_suspend_host(struct device *dev)
+ {
+-	struct ahci_platform_data *pdata = dev_get_platdata(dev);
+ 	struct ata_host *host = dev_get_drvdata(dev);
+ 	struct ahci_host_priv *hpriv = host->private_data;
+ 	void __iomem *mmio = hpriv->mmio;
+ 	u32 ctl;
+-	int rc;
+ 
+ 	if (hpriv->flags & AHCI_HFLAG_NO_SUSPEND) {
+ 		dev_err(dev, "firmware update required for suspend/resume\n");
+@@ -476,7 +488,64 @@ static int ahci_suspend(struct device *dev)
+ 	writel(ctl, mmio + HOST_CTL);
+ 	readl(mmio + HOST_CTL); /* flush */
+ 
+-	rc = ata_host_suspend(host, PMSG_SUSPEND);
++	return ata_host_suspend(host, PMSG_SUSPEND);
 +}
-+EXPORT_SYMBOL_GPL(ahci_platform_enable_resources);
++EXPORT_SYMBOL_GPL(ahci_platform_suspend_host);
 +
 +/**
-+ *	ahci_platform_disable_resources - Disable platform resources
-+ *	@hpriv: host private area to store config values
++ *	ahci_platform_resume_host - Resume an ahci-platform host
++ *	@dev: device pointer for the host
 + *
-+ *	This function disables all ahci_platform managed resources in
-+ *	the following order:
-+ *	1) Clocks (through ahci_platform_disable_clks)
-+ *	2) Regulator
++ *	This function does all the usual steps needed to resume an
++ *	ahci-platform host, note any necessary resources (ie clks, phy, etc.)
++ *	must be initialized / enabled before calling this.
 + *
 + *	LOCKING:
 + *	None.
++ *
++ *	RETURNS:
++ *	0 on success otherwise a negative error code
 + */
-+void ahci_platform_disable_resources(struct ahci_host_priv *hpriv)
++int ahci_platform_resume_host(struct device *dev)
 +{
-+	ahci_platform_disable_clks(hpriv);
++	struct ata_host *host = dev_get_drvdata(dev);
++	int rc;
 +
-+	if (hpriv->target_pwr)
-+		regulator_disable(hpriv->target_pwr);
++	if (dev->power.power_state.event == PM_EVENT_SUSPEND) {
++		rc = ahci_reset_controller(host);
++		if (rc)
++			return rc;
++
++		ahci_init_controller(host);
++	}
++
++	ata_host_resume(host);
++
++	return 0;
 +}
-+EXPORT_SYMBOL_GPL(ahci_platform_disable_resources);
++EXPORT_SYMBOL_GPL(ahci_platform_resume_host);
 +
- static void ahci_put_clks(struct ahci_host_priv *hpriv)
++/**
++ *	ahci_platform_suspend - Suspend an ahci-platform device
++ *	@dev: the platform device to suspend
++ *
++ *	This function suspends the host associated with the device, followed
++ *	by disabling all the resources of the device.
++ *
++ *	LOCKING:
++ *	None.
++ *
++ *	RETURNS:
++ *	0 on success otherwise a negative error code
++ */
++int ahci_platform_suspend(struct device *dev)
++{
++	struct ahci_platform_data *pdata = dev_get_platdata(dev);
++	struct ata_host *host = dev_get_drvdata(dev);
++	struct ahci_host_priv *hpriv = host->private_data;
++	int rc;
++
++	rc = ahci_platform_suspend_host(dev);
+ 	if (rc)
+ 		return rc;
+ 
+@@ -487,8 +556,22 @@ static int ahci_suspend(struct device *dev)
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(ahci_platform_suspend);
+ 
+-static int ahci_resume(struct device *dev)
++/**
++ *	ahci_platform_resume - Resume an ahci-platform device
++ *	@dev: the platform device to resume
++ *
++ *	This function enables all the resources of the device followed by
++ *	resuming the host associated with the device.
++ *
++ *	LOCKING:
++ *	None.
++ *
++ *	RETURNS:
++ *	0 on success otherwise a negative error code
++ */
++int ahci_platform_resume(struct device *dev)
  {
- 	int c;
-@@ -221,15 +283,9 @@ static int ahci_probe(struct platform_device *pdev)
- 		hpriv->clks[i] = clk;
+ 	struct ahci_platform_data *pdata = dev_get_platdata(dev);
+ 	struct ata_host *host = dev_get_drvdata(dev);
+@@ -505,15 +588,9 @@ static int ahci_resume(struct device *dev)
+ 			goto disable_resources;
  	}
  
--	if (hpriv->target_pwr) {
--		rc = regulator_enable(hpriv->target_pwr);
+-	if (dev->power.power_state.event == PM_EVENT_SUSPEND) {
+-		rc = ahci_reset_controller(host);
 -		if (rc)
--			goto free_clk;
+-			goto disable_resources;
+-
+-		ahci_init_controller(host);
 -	}
 -
--	rc = ahci_enable_clks(dev, hpriv);
-+	rc = ahci_platform_enable_resources(hpriv);
- 	if (rc)
--		goto disable_regulator;
-+		goto free_clk;
- 
- 	/*
- 	 * Some platforms might need to prepare for mmio region access,
-@@ -240,7 +296,7 @@ static int ahci_probe(struct platform_device *pdev)
- 	if (pdata && pdata->init) {
- 		rc = pdata->init(dev, hpriv->mmio);
- 		if (rc)
--			goto disable_unprepare_clk;
-+			goto disable_resources;
- 	}
- 
- 	ahci_save_initial_config(dev, hpriv,
-@@ -310,11 +366,8 @@ static int ahci_probe(struct platform_device *pdev)
- pdata_exit:
- 	if (pdata && pdata->exit)
- 		pdata->exit(dev);
--disable_unprepare_clk:
--	ahci_disable_clks(hpriv);
--disable_regulator:
--	if (hpriv->target_pwr)
--		regulator_disable(hpriv->target_pwr);
-+disable_resources:
-+	ahci_platform_disable_resources(hpriv);
- free_clk:
- 	ahci_put_clks(hpriv);
- 	return rc;
-@@ -329,11 +382,8 @@ static void ahci_host_stop(struct ata_host *host)
- 	if (pdata && pdata->exit)
- 		pdata->exit(dev);
- 
--	ahci_disable_clks(hpriv);
-+	ahci_platform_disable_resources(hpriv);
- 	ahci_put_clks(hpriv);
--
--	if (hpriv->target_pwr)
--		regulator_disable(hpriv->target_pwr);
- }
- 
- #ifdef CONFIG_PM_SLEEP
-@@ -368,10 +418,7 @@ static int ahci_suspend(struct device *dev)
- 	if (pdata && pdata->suspend)
- 		return pdata->suspend(dev);
- 
--	ahci_disable_clks(hpriv);
--
--	if (hpriv->target_pwr)
--		regulator_disable(hpriv->target_pwr);
-+	ahci_platform_disable_resources(hpriv);
- 
- 	return 0;
- }
-@@ -383,26 +430,20 @@ static int ahci_resume(struct device *dev)
- 	struct ahci_host_priv *hpriv = host->private_data;
- 	int rc;
- 
--	if (hpriv->target_pwr) {
--		rc = regulator_enable(hpriv->target_pwr);
--		if (rc)
--			return rc;
--	}
--
--	rc = ahci_enable_clks(dev, hpriv);
-+	rc = ahci_platform_enable_resources(hpriv);
- 	if (rc)
--		goto disable_regulator;
-+		return rc;
- 
- 	if (pdata && pdata->resume) {
- 		rc = pdata->resume(dev);
- 		if (rc)
--			goto disable_unprepare_clk;
-+			goto disable_resources;
- 	}
- 
- 	if (dev->power.power_state.event == PM_EVENT_SUSPEND) {
- 		rc = ahci_reset_controller(host);
- 		if (rc)
--			goto disable_unprepare_clk;
-+			goto disable_resources;
- 
- 		ahci_init_controller(host);
- 	}
-@@ -411,11 +452,8 @@ static int ahci_resume(struct device *dev)
+-	ata_host_resume(host);
++	rc = ahci_platform_resume_host(dev);
++	if (rc)
++		goto disable_resources;
  
  	return 0;
  
--disable_unprepare_clk:
--	ahci_disable_clks(hpriv);
--disable_regulator:
--	if (hpriv->target_pwr)
--		regulator_disable(hpriv->target_pwr);
-+disable_resources:
-+	ahci_platform_disable_resources(hpriv);
+@@ -522,9 +599,11 @@ disable_resources:
  
  	return rc;
  }
++EXPORT_SYMBOL_GPL(ahci_platform_resume);
+ #endif
+ 
+-static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_suspend, ahci_resume);
++static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_platform_suspend,
++			 ahci_platform_resume);
+ 
+ static const struct of_device_id ahci_of_match[] = {
+ 	{ .compatible = "snps,spear-ahci", },
 diff --git a/include/linux/ahci_platform.h b/include/linux/ahci_platform.h
-index 769d065..b674b01 100644
+index b80c51c..542f268 100644
 --- a/include/linux/ahci_platform.h
 +++ b/include/linux/ahci_platform.h
-@@ -33,5 +33,7 @@ struct ahci_platform_data {
+@@ -50,4 +50,9 @@ int ahci_platform_init_host(struct platform_device *pdev,
+ 			    unsigned int force_port_map,
+ 			    unsigned int mask_port_map);
  
- int ahci_platform_enable_clks(struct ahci_host_priv *hpriv);
- void ahci_platform_disable_clks(struct ahci_host_priv *hpriv);
-+int ahci_platform_enable_resources(struct ahci_host_priv *hpriv);
-+void ahci_platform_disable_resources(struct ahci_host_priv *hpriv);
- 
++int ahci_platform_suspend_host(struct device *dev);
++int ahci_platform_resume_host(struct device *dev);
++int ahci_platform_suspend(struct device *dev);
++int ahci_platform_resume(struct device *dev);
++
  #endif /* _AHCI_PLATFORM_H */
 -- 
 1.9.0
