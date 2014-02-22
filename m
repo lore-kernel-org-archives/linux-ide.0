@@ -1,13 +1,12 @@
 From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v7 05/15] ahci-platform: "Library-ise"
- ahci_probe functionality
-Date: Sat, 22 Feb 2014 16:53:34 +0100
-Message-ID: <1393084424-31099-6-git-send-email-hdegoede@redhat.com>
+Subject: [PATCH v7 08/15] ahci-imx: Port to library-ised ahci_platform
+Date: Sat, 22 Feb 2014 16:53:37 +0100
+Message-ID: <1393084424-31099-9-git-send-email-hdegoede@redhat.com>
 References: <1393084424-31099-1-git-send-email-hdegoede@redhat.com>
 Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-sunxi+bncBDL4X2GMZUKRBHUQUOMAKGQEEDXLVPY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Return-path: <linux-sunxi+bncBDL4X2GMZUKRBJUQUOMAKGQEBAEQT2Y-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 In-Reply-To: <1393084424-31099-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
@@ -19,341 +18,511 @@ To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Maxime Ripard <maxim
 Cc: Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, Richard Zhu <Hong-Xing.Zhu-KZfg59tc24xl57MIdRCFDg@public.gmane.org>, Roger Quadros <rogerq-l0cyMroinI0@public.gmane.org>, Lee Jones <lee.jones-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, devicetree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
-ahci_probe consists of 3 steps:
-1) Get resources (get mmio, clks, regulator)
-2) Enable resources, handled by ahci_platform_enable_resouces
-3) The more or less standard ahci-host controller init sequence
+This avoids the ugliness of creating a nested platform device from probe.
 
-This commit refactors step 1 and 3 into separate functions, so the platform
-drivers for AHCI implementations which need a specific order in step 2,
-and / or need to do some custom register poking at some time, can re-use
-ahci-platform.c code without needing to copy and paste it.
+While moving it around anyways, move the mk6q phy init code from probe
+to imx_sata_enable, as the phy needs to be re-initialized on resume too,
+otherwise the drive won't be recognized after resume.
 
-Note that ahci_platform_init_host's prototype takes the 3 non function
-members of ahci_platform_data as arguments, the idea is that drivers using
-the new exported utility functions will not use ahci_platform_data at all,
-and hopefully in the future ahci_platform_data can go away entirely.
+Tested on a wandboard i.mx6 quad.
 
 Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- drivers/ata/ahci_platform.c   | 195 ++++++++++++++++++++++++++++--------------
- include/linux/ahci_platform.h |  14 +++
- 2 files changed, 144 insertions(+), 65 deletions(-)
+ .../devicetree/bindings/ata/ahci-platform.txt      |   9 +-
+ drivers/ata/ahci_imx.c                             | 331 ++++++++-------------
+ 2 files changed, 134 insertions(+), 206 deletions(-)
 
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index 6ebbc17..7f3f2ac 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -201,64 +201,64 @@ void ahci_platform_disable_resources(struct ahci_host_priv *hpriv)
- }
- EXPORT_SYMBOL_GPL(ahci_platform_disable_resources);
+diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+index 499bfed..d86e854 100644
+--- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
++++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+@@ -5,8 +5,9 @@ Each SATA controller should have its own node.
  
--static void ahci_put_clks(struct ahci_host_priv *hpriv)
-+static void ahci_platform_put_resources(struct device *dev, void *res)
+ Required properties:
+ - compatible        : compatible list, one of "snps,spear-ahci",
+-                      "snps,exynos5440-ahci", "ibm,476gtr-ahci", or
+-                      "allwinner,sun4i-a10-ahci"
++                      "snps,exynos5440-ahci", "ibm,476gtr-ahci",
++                      "allwinner,sun4i-a10-ahci", "fsl,imx53-ahci" or
++                      "fsl,imx6q-ahci"
+ - interrupts        : <interrupt mapping for SATA IRQ>
+ - reg               : <registers mapping>
+ 
+@@ -15,6 +16,10 @@ Optional properties:
+ - clocks            : a list of phandle + clock specifier pairs
+ - target-supply     : regulator for SATA target power
+ 
++"fsl,imx53-ahci", "fsl,imx6q-ahci" required properties:
++- clocks            : must contain the sata, sata_ref and ahb clocks
++- clock-names       : must contain "ahb" for the ahb clock
++
+ Examples:
+         sata@ffe08000 {
+ 		compatible = "snps,spear-ahci";
+diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+index dd4d6f7..3cb5d69 100644
+--- a/drivers/ata/ahci_imx.c
++++ b/drivers/ata/ahci_imx.c
+@@ -42,13 +42,7 @@ enum ahci_imx_type {
+ struct imx_ahci_priv {
+ 	struct platform_device *ahci_pdev;
+ 	enum ahci_imx_type type;
+-
+-	/* i.MX53 clock */
+-	struct clk *sata_gate_clk;
+-	/* Common clock */
+-	struct clk *sata_ref_clk;
+ 	struct clk *ahb_clk;
+-
+ 	struct regmap *gpr;
+ 	bool no_device;
+ 	bool first_time;
+@@ -58,28 +52,52 @@ static int ahci_imx_hotplug;
+ module_param_named(hotplug, ahci_imx_hotplug, int, 0644);
+ MODULE_PARM_DESC(hotplug, "AHCI IMX hot-plug support (0=Don't support, 1=support)");
+ 
+-static int imx_sata_clock_enable(struct device *dev)
++static void ahci_imx_host_stop(struct ata_host *host);
++
++static int imx_sata_enable(struct ahci_host_priv *hpriv)
  {
-+	struct ahci_host_priv *hpriv = res;
- 	int c;
+-	struct imx_ahci_priv *imxpriv = dev_get_drvdata(dev->parent);
++	struct imx_ahci_priv *imxpriv = hpriv->plat_data;
+ 	int ret;
  
- 	for (c = 0; c < AHCI_MAX_CLKS && hpriv->clks[c]; c++)
- 		clk_put(hpriv->clks[c]);
+-	if (imxpriv->type == AHCI_IMX53) {
+-		ret = clk_prepare_enable(imxpriv->sata_gate_clk);
+-		if (ret < 0) {
+-			dev_err(dev, "prepare-enable sata_gate clock err:%d\n",
+-				ret);
++	if (imxpriv->no_device)
++		return 0;
++
++	if (hpriv->target_pwr) {
++		ret = regulator_enable(hpriv->target_pwr);
++		if (ret)
+ 			return ret;
+-		}
+ 	}
+ 
+-	ret = clk_prepare_enable(imxpriv->sata_ref_clk);
+-	if (ret < 0) {
+-		dev_err(dev, "prepare-enable sata_ref clock err:%d\n",
+-			ret);
+-		goto clk_err;
+-	}
++	ret = ahci_platform_enable_clks(hpriv);
++	if (ret < 0)
++		goto disable_regulator;
+ 
+ 	if (imxpriv->type == AHCI_IMX6Q) {
++		/*
++		 * set PHY Paremeters, two steps to configure the GPR13,
++		 * one write for rest of parameters, mask of first write
++		 * is 0x07ffffff, and the other one write for setting
++		 * the mpll_clk_en.
++		 */
++		regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
++				   IMX6Q_GPR13_SATA_RX_EQ_VAL_MASK |
++				   IMX6Q_GPR13_SATA_RX_LOS_LVL_MASK |
++				   IMX6Q_GPR13_SATA_RX_DPLL_MODE_MASK |
++				   IMX6Q_GPR13_SATA_SPD_MODE_MASK |
++				   IMX6Q_GPR13_SATA_MPLL_SS_EN |
++				   IMX6Q_GPR13_SATA_TX_ATTEN_MASK |
++				   IMX6Q_GPR13_SATA_TX_BOOST_MASK |
++				   IMX6Q_GPR13_SATA_TX_LVL_MASK |
++				   IMX6Q_GPR13_SATA_MPLL_CLK_EN |
++				   IMX6Q_GPR13_SATA_TX_EDGE_RATE,
++				   IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB |
++				   IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M |
++				   IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_4F |
++				   IMX6Q_GPR13_SATA_SPD_MODE_3P0G |
++				   IMX6Q_GPR13_SATA_MPLL_SS_EN |
++				   IMX6Q_GPR13_SATA_TX_ATTEN_9_16 |
++				   IMX6Q_GPR13_SATA_TX_BOOST_3_33_DB |
++				   IMX6Q_GPR13_SATA_TX_LVL_1_025_V);
+ 		regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
+ 				   IMX6Q_GPR13_SATA_MPLL_CLK_EN,
+ 				   IMX6Q_GPR13_SATA_MPLL_CLK_EN);
+@@ -89,15 +107,19 @@ static int imx_sata_clock_enable(struct device *dev)
+ 
+ 	return 0;
+ 
+-clk_err:
+-	if (imxpriv->type == AHCI_IMX53)
+-		clk_disable_unprepare(imxpriv->sata_gate_clk);
++disable_regulator:
++	if (hpriv->target_pwr)
++		regulator_disable(hpriv->target_pwr);
++
+ 	return ret;
  }
  
--static int ahci_probe(struct platform_device *pdev)
-+/**
-+ *	ahci_platform_get_resources - Get platform resources
-+ *	@pdev: platform device to get resources for
-+ *
-+ *	This function allocates an ahci_host_priv struct, and gets the
-+ *	following resources, storing a reference to them inside the returned
-+ *	struct:
-+ *
-+ *	1) mmio registers (IORESOURCE_MEM 0, mandatory)
-+ *	2) regulator for controlling the targets power (optional)
-+ *	3) 0 - AHCI_MAX_CLKS clocks, as specified in the devs devicetree node,
-+ *	   or for non devicetree enabled platforms a single clock
-+ *
-+ *	LOCKING:
-+ *	None.
-+ *
-+ *	RETURNS:
-+ *	The allocated ahci_host_priv on success, otherwise an ERR_PTR value
-+ */
-+struct ahci_host_priv *ahci_platform_get_resources(
-+	struct platform_device *pdev)
+-static void imx_sata_clock_disable(struct device *dev)
++static void imx_sata_disable(struct ahci_host_priv *hpriv)
+ {
+-	struct imx_ahci_priv *imxpriv = dev_get_drvdata(dev->parent);
++	struct imx_ahci_priv *imxpriv = hpriv->plat_data;
++
++	if (imxpriv->no_device)
++		return;
+ 
+ 	if (imxpriv->type == AHCI_IMX6Q) {
+ 		regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
+@@ -105,10 +127,10 @@ static void imx_sata_clock_disable(struct device *dev)
+ 				   !IMX6Q_GPR13_SATA_MPLL_CLK_EN);
+ 	}
+ 
+-	clk_disable_unprepare(imxpriv->sata_ref_clk);
++	ahci_platform_disable_clks(hpriv);
+ 
+-	if (imxpriv->type == AHCI_IMX53)
+-		clk_disable_unprepare(imxpriv->sata_gate_clk);
++	if (hpriv->target_pwr)
++		regulator_disable(hpriv->target_pwr);
+ }
+ 
+ static void ahci_imx_error_handler(struct ata_port *ap)
+@@ -118,7 +140,7 @@ static void ahci_imx_error_handler(struct ata_port *ap)
+ 	struct ata_host *host = dev_get_drvdata(ap->dev);
+ 	struct ahci_host_priv *hpriv = host->private_data;
+ 	void __iomem *mmio = hpriv->mmio;
+-	struct imx_ahci_priv *imxpriv = dev_get_drvdata(ap->dev->parent);
++	struct imx_ahci_priv *imxpriv = hpriv->plat_data;
+ 
+ 	ahci_error_handler(ap);
+ 
+@@ -136,7 +158,7 @@ static void ahci_imx_error_handler(struct ata_port *ap)
+ 	 */
+ 	reg_val = readl(mmio + PORT_PHY_CTL);
+ 	writel(reg_val | PORT_PHY_CTL_PDDQ_LOC, mmio + PORT_PHY_CTL);
+-	imx_sata_clock_disable(ap->dev);
++	imx_sata_disable(hpriv);
+ 	imxpriv->no_device = true;
+ }
+ 
+@@ -144,7 +166,9 @@ static int ahci_imx_softreset(struct ata_link *link, unsigned int *class,
+ 		       unsigned long deadline)
+ {
+ 	struct ata_port *ap = link->ap;
+-	struct imx_ahci_priv *imxpriv = dev_get_drvdata(ap->dev->parent);
++	struct ata_host *host = dev_get_drvdata(ap->dev);
++	struct ahci_host_priv *hpriv = host->private_data;
++	struct imx_ahci_priv *imxpriv = hpriv->plat_data;
+ 	int ret = -EIO;
+ 
+ 	if (imxpriv->type == AHCI_IMX53)
+@@ -156,7 +180,8 @@ static int ahci_imx_softreset(struct ata_link *link, unsigned int *class,
+ }
+ 
+ static struct ata_port_operations ahci_imx_ops = {
+-	.inherits	= &ahci_platform_ops,
++	.inherits	= &ahci_ops,
++	.host_stop	= ahci_imx_host_stop,
+ 	.error_handler	= ahci_imx_error_handler,
+ 	.softreset	= ahci_imx_softreset,
+ };
+@@ -168,79 +193,6 @@ static const struct ata_port_info ahci_imx_port_info = {
+ 	.port_ops	= &ahci_imx_ops,
+ };
+ 
+-static int imx_sata_init(struct device *dev, void __iomem *mmio)
+-{
+-	int ret = 0;
+-	unsigned int reg_val;
+-	struct imx_ahci_priv *imxpriv = dev_get_drvdata(dev->parent);
+-
+-	ret = imx_sata_clock_enable(dev);
+-	if (ret < 0)
+-		return ret;
+-
+-	/*
+-	 * Configure the HWINIT bits of the HOST_CAP and HOST_PORTS_IMPL,
+-	 * and IP vendor specific register HOST_TIMER1MS.
+-	 * Configure CAP_SSS (support stagered spin up).
+-	 * Implement the port0.
+-	 * Get the ahb clock rate, and configure the TIMER1MS register.
+-	 */
+-	reg_val = readl(mmio + HOST_CAP);
+-	if (!(reg_val & HOST_CAP_SSS)) {
+-		reg_val |= HOST_CAP_SSS;
+-		writel(reg_val, mmio + HOST_CAP);
+-	}
+-	reg_val = readl(mmio + HOST_PORTS_IMPL);
+-	if (!(reg_val & 0x1)) {
+-		reg_val |= 0x1;
+-		writel(reg_val, mmio + HOST_PORTS_IMPL);
+-	}
+-
+-	reg_val = clk_get_rate(imxpriv->ahb_clk) / 1000;
+-	writel(reg_val, mmio + HOST_TIMER1MS);
+-
+-	return 0;
+-}
+-
+-static void imx_sata_exit(struct device *dev)
+-{
+-	imx_sata_clock_disable(dev);
+-}
+-
+-static int imx_ahci_suspend(struct device *dev)
+-{
+-	struct imx_ahci_priv *imxpriv =  dev_get_drvdata(dev->parent);
+-
+-	/*
+-	 * If no_device is set, The CLKs had been gated off in the
+-	 * initialization so don't do it again here.
+-	 */
+-	if (!imxpriv->no_device)
+-		imx_sata_clock_disable(dev);
+-
+-	return 0;
+-}
+-
+-static int imx_ahci_resume(struct device *dev)
+-{
+-	struct imx_ahci_priv *imxpriv =  dev_get_drvdata(dev->parent);
+-	int ret = 0;
+-
+-	if (!imxpriv->no_device)
+-		ret = imx_sata_clock_enable(dev);
+-
+-	return ret;
+-}
+-
+-static struct ahci_platform_data imx_sata_pdata = {
+-	.init		= imx_sata_init,
+-	.exit		= imx_sata_exit,
+-	.ata_port_info	= &ahci_imx_port_info,
+-	.suspend	= imx_ahci_suspend,
+-	.resume		= imx_ahci_resume,
+-
+-};
+-
+ static const struct of_device_id imx_ahci_of_match[] = {
+ 	{ .compatible = "fsl,imx53-ahci", .data = (void *)AHCI_IMX53 },
+ 	{ .compatible = "fsl,imx6q-ahci", .data = (void *)AHCI_IMX6Q },
+@@ -251,151 +203,122 @@ MODULE_DEVICE_TABLE(of, imx_ahci_of_match);
+ static int imx_ahci_probe(struct platform_device *pdev)
  {
  	struct device *dev = &pdev->dev;
--	struct ahci_platform_data *pdata = dev_get_platdata(dev);
--	const struct platform_device_id *id = platform_get_device_id(pdev);
--	struct ata_port_info pi = ahci_port_info[id ? id->driver_data : 0];
--	const struct ata_port_info *ppi[] = { &pi, NULL };
- 	struct ahci_host_priv *hpriv;
--	struct ata_host *host;
--	struct resource *mem;
- 	struct clk *clk;
--	int irq;
--	int n_ports;
--	int i;
--	int rc;
-+	int i, rc = -ENOMEM;
- 
--	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
--	if (!mem) {
--		dev_err(dev, "no mmio space\n");
--		return -EINVAL;
--	}
-+	if (!devres_open_group(dev, NULL, GFP_KERNEL))
-+		return ERR_PTR(-ENOMEM);
- 
--	irq = platform_get_irq(pdev, 0);
--	if (irq <= 0) {
--		dev_err(dev, "no irq\n");
--		return -EINVAL;
--	}
-+	hpriv = devres_alloc(ahci_platform_put_resources, sizeof(*hpriv),
-+			     GFP_KERNEL);
-+	if (!hpriv)
-+		goto err_out;
- 
--	if (pdata && pdata->ata_port_info)
--		pi = *pdata->ata_port_info;
-+	devres_add(dev, hpriv);
- 
--	hpriv = devm_kzalloc(dev, sizeof(*hpriv), GFP_KERNEL);
--	if (!hpriv) {
--		dev_err(dev, "can't alloc ahci_host_priv\n");
--		return -ENOMEM;
--	}
--
--	hpriv->flags |= (unsigned long)pi.private_data;
--
--	hpriv->mmio = devm_ioremap(dev, mem->start, resource_size(mem));
-+	hpriv->mmio = devm_ioremap_resource(dev,
-+			      platform_get_resource(pdev, IORESOURCE_MEM, 0));
- 	if (!hpriv->mmio) {
--		dev_err(dev, "can't map %pR\n", mem);
--		return -ENOMEM;
-+		dev_err(dev, "no mmio space\n");
-+		goto err_out;
- 	}
- 
- 	hpriv->target_pwr = devm_regulator_get_optional(dev, "target");
- 	if (IS_ERR(hpriv->target_pwr)) {
- 		rc = PTR_ERR(hpriv->target_pwr);
- 		if (rc == -EPROBE_DEFER)
--			return -EPROBE_DEFER;
-+			goto err_out;
- 		hpriv->target_pwr = NULL;
- 	}
- 
-@@ -277,33 +277,62 @@ static int ahci_probe(struct platform_device *pdev)
- 		if (IS_ERR(clk)) {
- 			rc = PTR_ERR(clk);
- 			if (rc == -EPROBE_DEFER)
--				goto free_clk;
-+				goto err_out;
- 			break;
- 		}
- 		hpriv->clks[i] = clk;
- 	}
- 
--	rc = ahci_platform_enable_resources(hpriv);
--	if (rc)
--		goto free_clk;
-+	devres_remove_group(dev, NULL);
-+	return hpriv;
- 
--	/*
--	 * Some platforms might need to prepare for mmio region access,
--	 * which could be done in the following init call. So, the mmio
--	 * region shouldn't be accessed before init (if provided) has
--	 * returned successfully.
--	 */
--	if (pdata && pdata->init) {
--		rc = pdata->init(dev, hpriv->mmio);
--		if (rc)
--			goto disable_resources;
--	}
-+err_out:
-+	devres_release_group(dev, NULL);
-+	return ERR_PTR(rc);
-+}
-+EXPORT_SYMBOL_GPL(ahci_platform_get_resources);
-+
-+/**
-+ *	ahci_platform_init_host - Bring up an ahci-platform host
-+ *	@pdev: platform device pointer for the host
-+ *	@hpriv: ahci-host private data for the host
-+ *	@pi_template: template for the ata_port_info to use
-+ *	@force_port_map: param passed to ahci_save_initial_config
-+ *	@mask_port_map: param passed to ahci_save_initial_config
-+ *
-+ *	This function does all the usual steps needed to bring up an
-+ *	ahci-platform host, note any necessary resources (ie clks, phy, etc.)
-+ *	must be initialized / enabled before calling this.
-+ *
-+ *	LOCKING:
-+ *	None.
-+ *
-+ *	RETURNS:
-+ *	0 on success otherwise a negative error code
-+ */
-+int ahci_platform_init_host(struct platform_device *pdev,
-+			    struct ahci_host_priv *hpriv,
-+			    const struct ata_port_info *pi_template,
-+			    unsigned int force_port_map,
-+			    unsigned int mask_port_map)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct ata_port_info pi = *pi_template;
-+	const struct ata_port_info *ppi[] = { &pi, NULL };
-+	struct ata_host *host;
-+	int i, irq, n_ports, rc;
- 
--	ahci_save_initial_config(dev, hpriv,
--		pdata ? pdata->force_port_map : 0,
--		pdata ? pdata->mask_port_map  : 0);
-+	irq = platform_get_irq(pdev, 0);
-+	if (irq <= 0) {
-+		dev_err(dev, "no irq\n");
-+		return -EINVAL;
-+	}
- 
- 	/* prepare host */
-+	hpriv->flags |= (unsigned long)pi.private_data;
-+
-+	ahci_save_initial_config(dev, hpriv, force_port_map, mask_port_map);
-+
- 	if (hpriv->cap & HOST_CAP_NCQ)
- 		pi.flags |= ATA_FLAG_NCQ;
- 
-@@ -320,10 +349,8 @@ static int ahci_probe(struct platform_device *pdev)
- 	n_ports = max(ahci_nr_ports(hpriv->cap), fls(hpriv->port_map));
- 
- 	host = ata_host_alloc_pinfo(dev, ppi, n_ports);
--	if (!host) {
--		rc = -ENOMEM;
--		goto pdata_exit;
--	}
-+	if (!host)
-+		return -ENOMEM;
- 
- 	host->private_data = hpriv;
- 
-@@ -338,7 +365,8 @@ static int ahci_probe(struct platform_device *pdev)
- 	for (i = 0; i < host->n_ports; i++) {
- 		struct ata_port *ap = host->ports[i];
- 
--		ata_port_desc(ap, "mmio %pR", mem);
-+		ata_port_desc(ap, "mmio %pR",
-+			      platform_get_resource(pdev, IORESOURCE_MEM, 0));
- 		ata_port_desc(ap, "port 0x%x", 0x100 + ap->port_no * 0x80);
- 
- 		/* set enclosure management message type */
-@@ -352,13 +380,53 @@ static int ahci_probe(struct platform_device *pdev)
- 
- 	rc = ahci_reset_controller(host);
- 	if (rc)
--		goto pdata_exit;
-+		return rc;
- 
- 	ahci_init_controller(host);
- 	ahci_print_info(host, "platform");
- 
--	rc = ata_host_activate(host, irq, ahci_interrupt, IRQF_SHARED,
--			       &ahci_platform_sht);
-+	return ata_host_activate(host, irq, ahci_interrupt, IRQF_SHARED,
-+				 &ahci_platform_sht);
-+}
-+EXPORT_SYMBOL_GPL(ahci_platform_init_host);
-+
-+static int ahci_probe(struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct ahci_platform_data *pdata = dev_get_platdata(dev);
-+	const struct platform_device_id *id = platform_get_device_id(pdev);
-+	const struct ata_port_info *pi_template;
+-	struct resource *mem, *irq, res[2];
+ 	const struct of_device_id *of_id;
+-	enum ahci_imx_type type;
+-	const struct ahci_platform_data *pdata = NULL;
 +	struct ahci_host_priv *hpriv;
-+	int rc;
-+
+ 	struct imx_ahci_priv *imxpriv;
+-	struct device *ahci_dev;
+-	struct platform_device *ahci_pdev;
++	unsigned int reg_val;
+ 	int ret;
+ 
+ 	of_id = of_match_device(imx_ahci_of_match, dev);
+ 	if (!of_id)
+ 		return -EINVAL;
+ 
+-	type = (enum ahci_imx_type)of_id->data;
+-	pdata = &imx_sata_pdata;
+-
+ 	imxpriv = devm_kzalloc(dev, sizeof(*imxpriv), GFP_KERNEL);
+-	if (!imxpriv) {
+-		dev_err(dev, "can't alloc ahci_host_priv\n");
++	if (!imxpriv)
+ 		return -ENOMEM;
+-	}
+-
+-	ahci_pdev = platform_device_alloc("ahci", -1);
+-	if (!ahci_pdev)
+-		return -ENODEV;
+-
+-	ahci_dev = &ahci_pdev->dev;
+-	ahci_dev->parent = dev;
+ 
+ 	imxpriv->no_device = false;
+ 	imxpriv->first_time = true;
+-	imxpriv->type = type;
+-
++	imxpriv->type = (enum ahci_imx_type)of_id->data;
+ 	imxpriv->ahb_clk = devm_clk_get(dev, "ahb");
+ 	if (IS_ERR(imxpriv->ahb_clk)) {
+ 		dev_err(dev, "can't get ahb clock.\n");
+-		ret = PTR_ERR(imxpriv->ahb_clk);
+-		goto err_out;
++		return PTR_ERR(imxpriv->ahb_clk);
+ 	}
+ 
+-	if (type == AHCI_IMX53) {
+-		imxpriv->sata_gate_clk = devm_clk_get(dev, "sata_gate");
+-		if (IS_ERR(imxpriv->sata_gate_clk)) {
+-			dev_err(dev, "can't get sata_gate clock.\n");
+-			ret = PTR_ERR(imxpriv->sata_gate_clk);
+-			goto err_out;
++	if (imxpriv->type == AHCI_IMX6Q) {
++		imxpriv->gpr = syscon_regmap_lookup_by_compatible(
++							"fsl,imx6q-iomuxc-gpr");
++		if (IS_ERR(imxpriv->gpr)) {
++			dev_err(dev,
++				"failed to find fsl,imx6q-iomux-gpr regmap\n");
++			return PTR_ERR(imxpriv->gpr);
+ 		}
+ 	}
+ 
+-	imxpriv->sata_ref_clk = devm_clk_get(dev, "sata_ref");
+-	if (IS_ERR(imxpriv->sata_ref_clk)) {
+-		dev_err(dev, "can't get sata_ref clock.\n");
+-		ret = PTR_ERR(imxpriv->sata_ref_clk);
+-		goto err_out;
+-	}
 +	hpriv = ahci_platform_get_resources(pdev);
 +	if (IS_ERR(hpriv))
 +		return PTR_ERR(hpriv);
 +
-+	rc = ahci_platform_enable_resources(hpriv);
-+	if (rc)
-+		return rc;
-+
++	hpriv->plat_data = imxpriv;
+ 
+-	imxpriv->ahci_pdev = ahci_pdev;
+-	platform_set_drvdata(pdev, imxpriv);
++	ret = imx_sata_enable(hpriv);
++	if (ret)
++		return ret;
+ 
+-	mem = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+-	irq = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
+-	if (!mem || !irq) {
+-		dev_err(dev, "no mmio/irq resource\n");
+-		ret = -ENOMEM;
+-		goto err_out;
 +	/*
-+	 * Some platforms might need to prepare for mmio region access,
-+	 * which could be done in the following init call. So, the mmio
-+	 * region shouldn't be accessed before init (if provided) has
-+	 * returned successfully.
++	 * Configure the HWINIT bits of the HOST_CAP and HOST_PORTS_IMPL,
++	 * and IP vendor specific register HOST_TIMER1MS.
++	 * Configure CAP_SSS (support stagered spin up).
++	 * Implement the port0.
++	 * Get the ahb clock rate, and configure the TIMER1MS register.
 +	 */
-+	if (pdata && pdata->init) {
-+		rc = pdata->init(dev, hpriv->mmio);
-+		if (rc)
-+			goto disable_resources;
++	reg_val = readl(hpriv->mmio + HOST_CAP);
++	if (!(reg_val & HOST_CAP_SSS)) {
++		reg_val |= HOST_CAP_SSS;
++		writel(reg_val, hpriv->mmio + HOST_CAP);
 +	}
-+
-+	if (pdata && pdata->ata_port_info)
-+		pi_template = pdata->ata_port_info;
-+	else
-+		pi_template = &ahci_port_info[id ? id->driver_data : 0];
-+
-+	rc = ahci_platform_init_host(pdev, hpriv, pi_template,
-+				     pdata ? pdata->force_port_map : 0,
-+				     pdata ? pdata->mask_port_map  : 0);
- 	if (rc)
- 		goto pdata_exit;
++	reg_val = readl(hpriv->mmio + HOST_PORTS_IMPL);
++	if (!(reg_val & 0x1)) {
++		reg_val |= 0x1;
++		writel(reg_val, hpriv->mmio + HOST_PORTS_IMPL);
+ 	}
  
-@@ -368,8 +436,6 @@ pdata_exit:
- 		pdata->exit(dev);
- disable_resources:
- 	ahci_platform_disable_resources(hpriv);
--free_clk:
--	ahci_put_clks(hpriv);
- 	return rc;
+-	res[0] = *mem;
+-	res[1] = *irq;
++	reg_val = clk_get_rate(imxpriv->ahb_clk) / 1000;
++	writel(reg_val, hpriv->mmio + HOST_TIMER1MS);
+ 
+-	ahci_dev->coherent_dma_mask = DMA_BIT_MASK(32);
+-	ahci_dev->dma_mask = &ahci_dev->coherent_dma_mask;
+-	ahci_dev->of_node = dev->of_node;
++	ret = ahci_platform_init_host(pdev, hpriv, &ahci_imx_port_info, 0, 0);
++	if (ret)
++		imx_sata_disable(hpriv);
+ 
+-	if (type == AHCI_IMX6Q) {
+-		imxpriv->gpr = syscon_regmap_lookup_by_compatible(
+-							"fsl,imx6q-iomuxc-gpr");
+-		if (IS_ERR(imxpriv->gpr)) {
+-			dev_err(dev,
+-				"failed to find fsl,imx6q-iomux-gpr regmap\n");
+-			ret = PTR_ERR(imxpriv->gpr);
+-			goto err_out;
+-		}
++	return ret;
++}
+ 
+-		/*
+-		 * Set PHY Paremeters, two steps to configure the GPR13,
+-		 * one write for rest of parameters, mask of first write
+-		 * is 0x07fffffe, and the other one write for setting
+-		 * the mpll_clk_en happens in imx_sata_clock_enable().
+-		 */
+-		regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
+-				   IMX6Q_GPR13_SATA_RX_EQ_VAL_MASK |
+-				   IMX6Q_GPR13_SATA_RX_LOS_LVL_MASK |
+-				   IMX6Q_GPR13_SATA_RX_DPLL_MODE_MASK |
+-				   IMX6Q_GPR13_SATA_SPD_MODE_MASK |
+-				   IMX6Q_GPR13_SATA_MPLL_SS_EN |
+-				   IMX6Q_GPR13_SATA_TX_ATTEN_MASK |
+-				   IMX6Q_GPR13_SATA_TX_BOOST_MASK |
+-				   IMX6Q_GPR13_SATA_TX_LVL_MASK |
+-				   IMX6Q_GPR13_SATA_MPLL_CLK_EN |
+-				   IMX6Q_GPR13_SATA_TX_EDGE_RATE,
+-				   IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB |
+-				   IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M |
+-				   IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_4F |
+-				   IMX6Q_GPR13_SATA_SPD_MODE_3P0G |
+-				   IMX6Q_GPR13_SATA_MPLL_SS_EN |
+-				   IMX6Q_GPR13_SATA_TX_ATTEN_9_16 |
+-				   IMX6Q_GPR13_SATA_TX_BOOST_3_33_DB |
+-				   IMX6Q_GPR13_SATA_TX_LVL_1_025_V);
+-	}
++static void ahci_imx_host_stop(struct ata_host *host)
++{
++	struct ahci_host_priv *hpriv = host->private_data;
+ 
+-	ret = platform_device_add_resources(ahci_pdev, res, 2);
+-	if (ret)
+-		goto err_out;
++	imx_sata_disable(hpriv);
++}
+ 
+-	ret = platform_device_add_data(ahci_pdev, pdata, sizeof(*pdata));
+-	if (ret)
+-		goto err_out;
++static int imx_ahci_suspend(struct device *dev)
++{
++	struct ata_host *host = dev_get_drvdata(dev);
++	struct ahci_host_priv *hpriv = host->private_data;
++	int ret;
+ 
+-	ret = platform_device_add(ahci_pdev);
+-	if (ret) {
+-err_out:
+-		platform_device_put(ahci_pdev);
++	ret = ahci_platform_suspend_host(dev);
++	if (ret)
+ 		return ret;
+-	}
++
++	imx_sata_disable(hpriv);
+ 
+ 	return 0;
  }
  
-@@ -383,7 +449,6 @@ static void ahci_host_stop(struct ata_host *host)
- 		pdata->exit(dev);
+-static int imx_ahci_remove(struct platform_device *pdev)
++static int imx_ahci_resume(struct device *dev)
+ {
+-	struct imx_ahci_priv *imxpriv = platform_get_drvdata(pdev);
+-	struct platform_device *ahci_pdev = imxpriv->ahci_pdev;
++	struct ata_host *host = dev_get_drvdata(dev);
++	struct ahci_host_priv *hpriv = host->private_data;
++	int ret;
  
- 	ahci_platform_disable_resources(hpriv);
--	ahci_put_clks(hpriv);
+-	platform_device_unregister(ahci_pdev);
+-	return 0;
++	ret = imx_sata_enable(hpriv);
++	if (ret)
++		return ret;
++
++	return ahci_platform_resume_host(dev);
  }
  
- #ifdef CONFIG_PM_SLEEP
-diff --git a/include/linux/ahci_platform.h b/include/linux/ahci_platform.h
-index b674b01..b80c51c 100644
---- a/include/linux/ahci_platform.h
-+++ b/include/linux/ahci_platform.h
-@@ -20,7 +20,14 @@
- struct device;
- struct ata_port_info;
- struct ahci_host_priv;
-+struct platform_device;
- 
-+/*
-+ * Note ahci_platform_data is deprecated, it is only kept around for use
-+ * by the old da850 and spear13xx ahci code.
-+ * New drivers should instead declare their own platform_driver struct, and
-+ * use ahci_platform* functions in their own probe, suspend and resume methods.
-+ */
- struct ahci_platform_data {
- 	int (*init)(struct device *dev, void __iomem *addr);
- 	void (*exit)(struct device *dev);
-@@ -35,5 +42,12 @@ int ahci_platform_enable_clks(struct ahci_host_priv *hpriv);
- void ahci_platform_disable_clks(struct ahci_host_priv *hpriv);
- int ahci_platform_enable_resources(struct ahci_host_priv *hpriv);
- void ahci_platform_disable_resources(struct ahci_host_priv *hpriv);
-+struct ahci_host_priv *ahci_platform_get_resources(
-+	struct platform_device *pdev);
-+int ahci_platform_init_host(struct platform_device *pdev,
-+			    struct ahci_host_priv *hpriv,
-+			    const struct ata_port_info *pi_template,
-+			    unsigned int force_port_map,
-+			    unsigned int mask_port_map);
- 
- #endif /* _AHCI_PLATFORM_H */
++static SIMPLE_DEV_PM_OPS(ahci_imx_pm_ops, imx_ahci_suspend, imx_ahci_resume);
++
+ static struct platform_driver imx_ahci_driver = {
+ 	.probe = imx_ahci_probe,
+-	.remove = imx_ahci_remove,
++	.remove = ata_platform_remove_one,
+ 	.driver = {
+ 		.name = "ahci-imx",
+ 		.owner = THIS_MODULE,
+ 		.of_match_table = imx_ahci_of_match,
++		.pm = &ahci_imx_pm_ops,
+ 	},
+ };
+ module_platform_driver(imx_ahci_driver);
 -- 
 1.9.0
