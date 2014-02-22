@@ -1,12 +1,13 @@
 From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: (unknown)
-Date: Sat, 22 Feb 2014 16:53:29 +0100
-Message-ID: <1393084424-31099-1-git-send-email-hdegoede@redhat.com>
+Subject: [PATCH v7 01/15] libahci: Allow drivers to override start_engine
+Date: Sat, 22 Feb 2014 16:53:30 +0100
+Message-ID: <1393084424-31099-2-git-send-email-hdegoede@redhat.com>
+References: <1393084424-31099-1-git-send-email-hdegoede@redhat.com>
 Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-sunxi+bncBDL4X2GMZUKRBE4QUOMAKGQEHTVYHEY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Subject: 
+Return-path: <linux-sunxi+bncBDL4X2GMZUKRBFEQUOMAKGQE6QH6HQQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <1393084424-31099-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Archive: <http://groups.google.com/group/linux-sunxi>
@@ -14,90 +15,222 @@ Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 List-Subscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Unsubscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
-Cc: Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, Richard Zhu <Hong-Xing.Zhu-KZfg59tc24xl57MIdRCFDg@public.gmane.org>, Roger Quadros <rogerq-l0cyMroinI0@public.gmane.org>, Lee Jones <lee.jones-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, devicetree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Cc: Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, Richard Zhu <Hong-Xing.Zhu-KZfg59tc24xl57MIdRCFDg@public.gmane.org>, Roger Quadros <rogerq-l0cyMroinI0@public.gmane.org>, Lee Jones <lee.jones-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, devicetree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
-Hi all,
+Allwinner A10 and A20 ARM SoCs have an AHCI sata controller which needs a
+special register to be poked before starting the DMA engine.
 
-Here is v7 of my patchset for adding ahci-sunxi support. This is hopefully
-the final final version of this set :)
+This register gets reset on an ahci_stop_engine call, so there is no other
+place then ahci_start_engine where this poking can be done.
 
-Note I'm going on vacation for a week starting Monday, so if I'm not responding
-that is why. Tejun if you feel some small cleanups are still necessary and
-you don't want to wait for me to get back feel free to squash in any cleanups
-you deem necessary.
+This commit allows drivers to override ahci_start_engine behavior for use by
+the Allwinner AHCI driver (and potentially other drivers in the future).
 
-This has been tested with Allwinner A10, Allwinner A20 and Freeware imx6x SoCs,
-including suspend / resume. Note that the ahci_imx driver now also has imx53
-sata support, it would be good if someone could test that with this series.
+Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+ drivers/ata/ahci.c          |  6 ++++--
+ drivers/ata/ahci.h          |  6 ++++++
+ drivers/ata/libahci.c       | 26 +++++++++++++++++++-------
+ drivers/ata/sata_highbank.c |  3 ++-
+ 4 files changed, 31 insertions(+), 10 deletions(-)
 
-
-History:
-
-v1, by Olliver Schinagl:
-This was using the approach of having a platform device which probe method
-creates a new child platform device which gets driven by ahci_platform.c,
-as done by ahci_imx.c .
-
-v2, by Hans de Goede:
-Stand-alone platform driver based on Olliver's work
-
-v3, by Hans de Goede:
-patch-series, with 4 different parts
-a) Make ahci_platform.c more generic, handle more then 1 clk, target pwr
-   regulator
-b) New ahci-sunxi code only populating ahci_platform_data, passed to
-   ahci_platform.c to of_device_id matching.
-c) Refactor ahci-imx code to work the same as the new ahci-sunxi code, this
-   is the reason why v3 is an RFC, I'm waiting for the wandboard I ordered to
-   arrive so that I can actually test this.
-d) dts bindings for the sunxi ahci parts
-
-v4, by Hans de Goede:
-patch-series, with 5 different parts:
-a) Make ahci_platform.c more generic, handle more then 1 clk, target pwr
-   regulator
-b) Turn parts of ahci_platform.c into a library for use by other drivers
-c) New ahci-sunxi driver using the ahci_platform.c library functionality
-d) Refactor ahci-imx code to work the same as the new ahci-sunxi code
-e) dts bindings for the sunxi ahci parts
-
-v5:
-v4 + the following changes:
-1) fsl,imx6q driver is now tested
-2) fixed suspend / resume on fsl,imx6q
-3) Modifed devicetree node naming to match dt spec
-4) Reworked the busy waiting code in the sunxi-phy handling as suggested by
-   Russell King
-
-v6:
-v5 rebased on top of 3.14-rc3 + the following changes
-1) Added Roger Quadros' generic phy support series
-2) Added a "ARM: sun4i: dt: Remove grouping + simple-bus for regulators" dts
-   patch
-
-v7:
-v6 + the following changes:
-1) Addressed all Tejun's review remarks:
-  * Added function header comments to all exported ahci_platform functions
-  * Added comments in some other places
-  * Removed use of 2 empty lines to separate functions in some cases
-  * Use devres to automatically call ahci_platform_put_resources on
-    get_resource failure, probe failure and regular device remove
-2) Dropped patches to move ahci_host_priv struct declaration to include/linux,
-  this was a left-over from v3 and is no longer necessary
-3) Updated Roger's "ata: ahci_platform: Manage SATA PHY" patch:
-  * Update function header comments for the changes this makes
-  * Drop the Kconfig PHY requires hack, my patch for the phy-core to always be
-    built-in has been queued in Greg KH's tree, so this is no longer necessary.
-4) Dropped Roger's "ata: ahci_platform: Add 'struct device' argument to ahci_platform_put_resources()"
-  patch, ahci_platform_put_resources already has a device argument as result
-  of it being changed into a devres release function
-
-Tejun, can you please add patches 1-12 to your ata tree for 3.15 ?
-
-Maxime, can you please add patch 13-15 to your dts tree for 3.15 ?
-
-Thanks & Regards,
-
-Hans
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index dc2756f..eda68b4 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -564,6 +564,7 @@ static int ahci_vt8251_hardreset(struct ata_link *link, unsigned int *class,
+ 				 unsigned long deadline)
+ {
+ 	struct ata_port *ap = link->ap;
++	struct ahci_host_priv *hpriv = ap->host->private_data;
+ 	bool online;
+ 	int rc;
+ 
+@@ -574,7 +575,7 @@ static int ahci_vt8251_hardreset(struct ata_link *link, unsigned int *class,
+ 	rc = sata_link_hardreset(link, sata_ehc_deb_timing(&link->eh_context),
+ 				 deadline, &online, NULL);
+ 
+-	ahci_start_engine(ap);
++	hpriv->start_engine(ap);
+ 
+ 	DPRINTK("EXIT, rc=%d, class=%u\n", rc, *class);
+ 
+@@ -589,6 +590,7 @@ static int ahci_p5wdh_hardreset(struct ata_link *link, unsigned int *class,
+ {
+ 	struct ata_port *ap = link->ap;
+ 	struct ahci_port_priv *pp = ap->private_data;
++	struct ahci_host_priv *hpriv = ap->host->private_data;
+ 	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
+ 	struct ata_taskfile tf;
+ 	bool online;
+@@ -604,7 +606,7 @@ static int ahci_p5wdh_hardreset(struct ata_link *link, unsigned int *class,
+ 	rc = sata_link_hardreset(link, sata_ehc_deb_timing(&link->eh_context),
+ 				 deadline, &online, NULL);
+ 
+-	ahci_start_engine(ap);
++	hpriv->start_engine(ap);
+ 
+ 	/* The pseudo configuration device on SIMG4726 attached to
+ 	 * ASUS P5W-DH Deluxe doesn't send signature FIS after
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index 2289efd..64d1a99 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -323,6 +323,12 @@ struct ahci_host_priv {
+ 	u32			em_msg_type;	/* EM message type */
+ 	struct clk		*clk;		/* Only for platforms supporting clk */
+ 	void			*plat_data;	/* Other platform data */
++	/*
++	 * Optional ahci_start_engine override, if not set this gets set to the
++	 * default ahci_start_engine during ahci_save_initial_config, this can
++	 * be overridden anytime before the host is activated.
++	 */
++	void			(*start_engine)(struct ata_port *ap);
+ };
+ 
+ extern int ahci_ignore_sss;
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 36605ab..f839bb3 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -394,6 +394,9 @@ static ssize_t ahci_show_em_supported(struct device *dev,
+  *
+  *	If inconsistent, config values are fixed up by this function.
+  *
++ *	If it is not set already this function sets hpriv->start_engine to
++ *	ahci_start_engine.
++ *
+  *	LOCKING:
+  *	None.
+  */
+@@ -500,6 +503,9 @@ void ahci_save_initial_config(struct device *dev,
+ 	hpriv->cap = cap;
+ 	hpriv->cap2 = cap2;
+ 	hpriv->port_map = port_map;
++
++	if (!hpriv->start_engine)
++		hpriv->start_engine = ahci_start_engine;
+ }
+ EXPORT_SYMBOL_GPL(ahci_save_initial_config);
+ 
+@@ -766,7 +772,7 @@ static void ahci_start_port(struct ata_port *ap)
+ 
+ 	/* enable DMA */
+ 	if (!(hpriv->flags & AHCI_HFLAG_DELAY_ENGINE))
+-		ahci_start_engine(ap);
++		hpriv->start_engine(ap);
+ 
+ 	/* turn on LEDs */
+ 	if (ap->flags & ATA_FLAG_EM) {
+@@ -1234,7 +1240,7 @@ int ahci_kick_engine(struct ata_port *ap)
+ 
+ 	/* restart engine */
+  out_restart:
+-	ahci_start_engine(ap);
++	hpriv->start_engine(ap);
+ 	return rc;
+ }
+ EXPORT_SYMBOL_GPL(ahci_kick_engine);
+@@ -1426,6 +1432,7 @@ static int ahci_hardreset(struct ata_link *link, unsigned int *class,
+ 	const unsigned long *timing = sata_ehc_deb_timing(&link->eh_context);
+ 	struct ata_port *ap = link->ap;
+ 	struct ahci_port_priv *pp = ap->private_data;
++	struct ahci_host_priv *hpriv = ap->host->private_data;
+ 	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
+ 	struct ata_taskfile tf;
+ 	bool online;
+@@ -1443,7 +1450,7 @@ static int ahci_hardreset(struct ata_link *link, unsigned int *class,
+ 	rc = sata_link_hardreset(link, timing, deadline, &online,
+ 				 ahci_check_ready);
+ 
+-	ahci_start_engine(ap);
++	hpriv->start_engine(ap);
+ 
+ 	if (online)
+ 		*class = ahci_dev_classify(ap);
+@@ -2007,10 +2014,12 @@ static void ahci_thaw(struct ata_port *ap)
+ 
+ void ahci_error_handler(struct ata_port *ap)
+ {
++	struct ahci_host_priv *hpriv = ap->host->private_data;
++
+ 	if (!(ap->pflags & ATA_PFLAG_FROZEN)) {
+ 		/* restart engine */
+ 		ahci_stop_engine(ap);
+-		ahci_start_engine(ap);
++		hpriv->start_engine(ap);
+ 	}
+ 
+ 	sata_pmp_error_handler(ap);
+@@ -2031,6 +2040,7 @@ static void ahci_post_internal_cmd(struct ata_queued_cmd *qc)
+ 
+ static void ahci_set_aggressive_devslp(struct ata_port *ap, bool sleep)
+ {
++	struct ahci_host_priv *hpriv = ap->host->private_data;
+ 	void __iomem *port_mmio = ahci_port_base(ap);
+ 	struct ata_device *dev = ap->link.device;
+ 	u32 devslp, dm, dito, mdat, deto;
+@@ -2094,7 +2104,7 @@ static void ahci_set_aggressive_devslp(struct ata_port *ap, bool sleep)
+ 		   PORT_DEVSLP_ADSE);
+ 	writel(devslp, port_mmio + PORT_DEVSLP);
+ 
+-	ahci_start_engine(ap);
++	hpriv->start_engine(ap);
+ 
+ 	/* enable device sleep feature for the drive */
+ 	err_mask = ata_dev_set_feature(dev,
+@@ -2106,6 +2116,7 @@ static void ahci_set_aggressive_devslp(struct ata_port *ap, bool sleep)
+ 
+ static void ahci_enable_fbs(struct ata_port *ap)
+ {
++	struct ahci_host_priv *hpriv = ap->host->private_data;
+ 	struct ahci_port_priv *pp = ap->private_data;
+ 	void __iomem *port_mmio = ahci_port_base(ap);
+ 	u32 fbs;
+@@ -2134,11 +2145,12 @@ static void ahci_enable_fbs(struct ata_port *ap)
+ 	} else
+ 		dev_err(ap->host->dev, "Failed to enable FBS\n");
+ 
+-	ahci_start_engine(ap);
++	hpriv->start_engine(ap);
+ }
+ 
+ static void ahci_disable_fbs(struct ata_port *ap)
+ {
++	struct ahci_host_priv *hpriv = ap->host->private_data;
+ 	struct ahci_port_priv *pp = ap->private_data;
+ 	void __iomem *port_mmio = ahci_port_base(ap);
+ 	u32 fbs;
+@@ -2166,7 +2178,7 @@ static void ahci_disable_fbs(struct ata_port *ap)
+ 		pp->fbs_enabled = false;
+ 	}
+ 
+-	ahci_start_engine(ap);
++	hpriv->start_engine(ap);
+ }
+ 
+ static void ahci_pmp_attach(struct ata_port *ap)
+diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
+index 870b11e..b3b18d1 100644
+--- a/drivers/ata/sata_highbank.c
++++ b/drivers/ata/sata_highbank.c
+@@ -403,6 +403,7 @@ static int ahci_highbank_hardreset(struct ata_link *link, unsigned int *class,
+ 	static const unsigned long timing[] = { 5, 100, 500};
+ 	struct ata_port *ap = link->ap;
+ 	struct ahci_port_priv *pp = ap->private_data;
++	struct ahci_host_priv *hpriv = ap->host->private_data;
+ 	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
+ 	struct ata_taskfile tf;
+ 	bool online;
+@@ -431,7 +432,7 @@ static int ahci_highbank_hardreset(struct ata_link *link, unsigned int *class,
+ 			break;
+ 	} while (!online && retry--);
+ 
+-	ahci_start_engine(ap);
++	hpriv->start_engine(ap);
+ 
+ 	if (online)
+ 		*class = ahci_dev_classify(ap);
+-- 
+1.9.0
