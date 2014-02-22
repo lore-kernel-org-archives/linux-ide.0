@@ -1,13 +1,13 @@
 From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v7 06/15] ahci-platform: "Library-ise" suspend /
- resume functionality
-Date: Sat, 22 Feb 2014 16:53:35 +0100
-Message-ID: <1393084424-31099-7-git-send-email-hdegoede@redhat.com>
+Subject: [PATCH v7 07/15] ARM: sunxi: Add support for Allwinner
+ SUNXi SoCs sata to ahci_platform
+Date: Sat, 22 Feb 2014 16:53:36 +0100
+Message-ID: <1393084424-31099-8-git-send-email-hdegoede@redhat.com>
 References: <1393084424-31099-1-git-send-email-hdegoede@redhat.com>
 Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-sunxi+bncBDL4X2GMZUKRBIEQUOMAKGQE52JOXMQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Return-path: <linux-sunxi+bncBDL4X2GMZUKRBI4QUOMAKGQEH5M36ZQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 In-Reply-To: <1393084424-31099-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
@@ -19,185 +19,350 @@ To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Maxime Ripard <maxim
 Cc: Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, Richard Zhu <Hong-Xing.Zhu-KZfg59tc24xl57MIdRCFDg@public.gmane.org>, Roger Quadros <rogerq-l0cyMroinI0@public.gmane.org>, Lee Jones <lee.jones-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, devicetree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
-Split suspend / resume code into host suspend / resume functionality and
-resource enable / disabling phases, and export the new suspend_ / resume_host
-functions.
+From: Olliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
 
+This patch adds support for the ahci sata controler found on Allwinner A10
+and A20 SoCs to the ahci_platform driver.
+
+Orignally written by Olliver Schinagl using the approach of having a platform
+device which probe method creates a new child platform device which gets
+driven by ahci_platform.c, as done by ahci_imx.c .
+
+Refactored by Hans de Goede to add most of the non sunxi specific functionality
+to ahci_platform.c and use a platform_data pointer from of_device_id for the
+sunxi specific bits.
+
+Signed-off-by: Olliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
 Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- drivers/ata/ahci_platform.c   | 109 ++++++++++++++++++++++++++++++++++++------
- include/linux/ahci_platform.h |   5 ++
- 2 files changed, 99 insertions(+), 15 deletions(-)
+ .../devicetree/bindings/ata/ahci-platform.txt      |  15 +-
+ drivers/ata/Kconfig                                |   9 +
+ drivers/ata/Makefile                               |   1 +
+ drivers/ata/ahci_sunxi.c                           | 249 +++++++++++++++++++++
+ 4 files changed, 271 insertions(+), 3 deletions(-)
+ create mode 100644 drivers/ata/ahci_sunxi.c
 
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index 7f3f2ac..bdadec1 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -452,14 +452,26 @@ static void ahci_host_stop(struct ata_host *host)
- }
+diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+index 1ac807f..499bfed 100644
+--- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
++++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+@@ -4,7 +4,9 @@ SATA nodes are defined to describe on-chip Serial ATA controllers.
+ Each SATA controller should have its own node.
  
- #ifdef CONFIG_PM_SLEEP
--static int ahci_suspend(struct device *dev)
-+/**
-+ *	ahci_platform_suspend_host - Suspend an ahci-platform host
-+ *	@dev: device pointer for the host
-+ *
-+ *	This function does all the usual steps needed to suspend an
-+ *	ahci-platform host, note any necessary resources (ie clks, phy, etc.)
-+ *	must be disabled after calling this.
-+ *
-+ *	LOCKING:
-+ *	None.
-+ *
-+ *	RETURNS:
-+ *	0 on success otherwise a negative error code
-+ */
-+int ahci_platform_suspend_host(struct device *dev)
- {
--	struct ahci_platform_data *pdata = dev_get_platdata(dev);
- 	struct ata_host *host = dev_get_drvdata(dev);
- 	struct ahci_host_priv *hpriv = host->private_data;
- 	void __iomem *mmio = hpriv->mmio;
- 	u32 ctl;
--	int rc;
+ Required properties:
+-- compatible        : compatible list, contains "snps,spear-ahci"
++- compatible        : compatible list, one of "snps,spear-ahci",
++                      "snps,exynos5440-ahci", "ibm,476gtr-ahci", or
++                      "allwinner,sun4i-a10-ahci"
+ - interrupts        : <interrupt mapping for SATA IRQ>
+ - reg               : <registers mapping>
  
- 	if (hpriv->flags & AHCI_HFLAG_NO_SUSPEND) {
- 		dev_err(dev, "firmware update required for suspend/resume\n");
-@@ -476,7 +488,64 @@ static int ahci_suspend(struct device *dev)
- 	writel(ctl, mmio + HOST_CTL);
- 	readl(mmio + HOST_CTL); /* flush */
+@@ -13,10 +15,17 @@ Optional properties:
+ - clocks            : a list of phandle + clock specifier pairs
+ - target-supply     : regulator for SATA target power
  
--	rc = ata_host_suspend(host, PMSG_SUSPEND);
-+	return ata_host_suspend(host, PMSG_SUSPEND);
-+}
-+EXPORT_SYMBOL_GPL(ahci_platform_suspend_host);
+-Example:
++Examples:
+         sata@ffe08000 {
+ 		compatible = "snps,spear-ahci";
+ 		reg = <0xffe08000 0x1000>;
+ 		interrupts = <115>;
+-
+         };
 +
-+/**
-+ *	ahci_platform_resume_host - Resume an ahci-platform host
-+ *	@dev: device pointer for the host
++	ahci: sata@01c18000 {
++		compatible = "allwinner,sun4i-a10-ahci";
++		reg = <0x01c18000 0x1000>;
++		interrupts = <56>;
++		clocks = <&pll6 0>, <&ahb_gates 25>;
++		target-supply = <&reg_ahci_5v>;
++	};
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 4e73772..cc67cc0 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -106,6 +106,15 @@ config AHCI_IMX
+ 
+ 	  If unsure, say N.
+ 
++config AHCI_SUNXI
++	tristate "Allwinner sunxi AHCI SATA support"
++	depends on ARCH_SUNXI && SATA_AHCI_PLATFORM
++	help
++	  This option enables support for the Allwinner sunxi SoC's
++	  onboard AHCI SATA.
++
++	  If unsure, say N.
++
+ config SATA_FSL
+ 	tristate "Freescale 3.0Gbps SATA support"
+ 	depends on FSL_SOC
+diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+index 46518c6..246050b 100644
+--- a/drivers/ata/Makefile
++++ b/drivers/ata/Makefile
+@@ -11,6 +11,7 @@ obj-$(CONFIG_SATA_SIL24)	+= sata_sil24.o
+ obj-$(CONFIG_SATA_DWC)		+= sata_dwc_460ex.o
+ obj-$(CONFIG_SATA_HIGHBANK)	+= sata_highbank.o libahci.o
+ obj-$(CONFIG_AHCI_IMX)		+= ahci_imx.o
++obj-$(CONFIG_AHCI_SUNXI)	+= ahci_sunxi.o
+ 
+ # SFF w/ custom DMA
+ obj-$(CONFIG_PDC_ADMA)		+= pdc_adma.o
+diff --git a/drivers/ata/ahci_sunxi.c b/drivers/ata/ahci_sunxi.c
+new file mode 100644
+index 0000000..001f7dfc
+--- /dev/null
++++ b/drivers/ata/ahci_sunxi.c
+@@ -0,0 +1,249 @@
++/*
++ * Allwinner sunxi AHCI SATA platform driver
++ * Copyright 2013 Olliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
++ * Copyright 2014 Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 + *
-+ *	This function does all the usual steps needed to resume an
-+ *	ahci-platform host, note any necessary resources (ie clks, phy, etc.)
-+ *	must be initialized / enabled before calling this.
++ * based on the AHCI SATA platform driver by Jeff Garzik and Anton Vorontsov
++ * Based on code from Allwinner Technology Co., Ltd. <www.allwinnertech.com>,
++ * Daniel Wang <danielwang-0TFLnhJekD6UEPyfVivIlAC/G2K4zDHf@public.gmane.org>
 + *
-+ *	LOCKING:
-+ *	None.
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
 + *
-+ *	RETURNS:
-+ *	0 on success otherwise a negative error code
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
++ * more details.
 + */
-+int ahci_platform_resume_host(struct device *dev)
++
++#include <linux/ahci_platform.h>
++#include <linux/clk.h>
++#include <linux/errno.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/of_device.h>
++#include <linux/platform_device.h>
++#include <linux/regulator/consumer.h>
++#include "ahci.h"
++
++#define AHCI_BISTAFR 0x00a0
++#define AHCI_BISTCR 0x00a4
++#define AHCI_BISTFCTR 0x00a8
++#define AHCI_BISTSR 0x00ac
++#define AHCI_BISTDECR 0x00b0
++#define AHCI_DIAGNR0 0x00b4
++#define AHCI_DIAGNR1 0x00b8
++#define AHCI_OOBR 0x00bc
++#define AHCI_PHYCS0R 0x00c0
++#define AHCI_PHYCS1R 0x00c4
++#define AHCI_PHYCS2R 0x00c8
++#define AHCI_TIMER1MS 0x00e0
++#define AHCI_GPARAM1R 0x00e8
++#define AHCI_GPARAM2R 0x00ec
++#define AHCI_PPARAMR 0x00f0
++#define AHCI_TESTR 0x00f4
++#define AHCI_VERSIONR 0x00f8
++#define AHCI_IDR 0x00fc
++#define AHCI_RWCR 0x00fc
++#define AHCI_P0DMACR 0x0170
++#define AHCI_P0PHYCR 0x0178
++#define AHCI_P0PHYSR 0x017c
++
++static void sunxi_clrbits(void __iomem *reg, u32 clr_val)
 +{
-+	struct ata_host *host = dev_get_drvdata(dev);
-+	int rc;
++	u32 reg_val;
 +
-+	if (dev->power.power_state.event == PM_EVENT_SUSPEND) {
-+		rc = ahci_reset_controller(host);
-+		if (rc)
-+			return rc;
++	reg_val = readl(reg);
++	reg_val &= ~(clr_val);
++	writel(reg_val, reg);
++}
 +
-+		ahci_init_controller(host);
-+	}
++static void sunxi_setbits(void __iomem *reg, u32 set_val)
++{
++	u32 reg_val;
 +
-+	ata_host_resume(host);
++	reg_val = readl(reg);
++	reg_val |= set_val;
++	writel(reg_val, reg);
++}
++
++static void sunxi_clrsetbits(void __iomem *reg, u32 clr_val, u32 set_val)
++{
++	u32 reg_val;
++
++	reg_val = readl(reg);
++	reg_val &= ~(clr_val);
++	reg_val |= set_val;
++	writel(reg_val, reg);
++}
++
++static u32 sunxi_getbits(void __iomem *reg, u8 mask, u8 shift)
++{
++	return (readl(reg) >> shift) & mask;
++}
++
++static int ahci_sunxi_phy_init(struct device *dev, void __iomem *reg_base)
++{
++	u32 reg_val;
++	int timeout;
++
++	/* This magic is from the original code */
++	writel(0, reg_base + AHCI_RWCR);
++	mdelay(5);
++
++	sunxi_setbits(reg_base + AHCI_PHYCS1R, BIT(19));
++	sunxi_clrsetbits(reg_base + AHCI_PHYCS0R,
++			 (0x7 << 24),
++			 (0x5 << 24) | BIT(23) | BIT(18));
++	sunxi_clrsetbits(reg_base + AHCI_PHYCS1R,
++			 (0x3 << 16) | (0x1f << 8) | (0x3 << 6),
++			 (0x2 << 16) | (0x6 << 8) | (0x2 << 6));
++	sunxi_setbits(reg_base + AHCI_PHYCS1R, BIT(28) | BIT(15));
++	sunxi_clrbits(reg_base + AHCI_PHYCS1R, BIT(19));
++	sunxi_clrsetbits(reg_base + AHCI_PHYCS0R,
++			 (0x7 << 20), (0x3 << 20));
++	sunxi_clrsetbits(reg_base + AHCI_PHYCS2R,
++			 (0x1f << 5), (0x19 << 5));
++	mdelay(5);
++
++	sunxi_setbits(reg_base + AHCI_PHYCS0R, (0x1 << 19));
++
++	timeout = 250; /* Power up takes aprox 50 us */
++	do {
++		reg_val = sunxi_getbits(reg_base + AHCI_PHYCS0R, 0x7, 28);
++		if (reg_val == 0x02)
++			break;
++
++		if (--timeout == 0) {
++			dev_err(dev, "PHY power up failed.\n");
++			return -EIO;
++		}
++		udelay(1);
++	} while (1);
++
++	sunxi_setbits(reg_base + AHCI_PHYCS2R, (0x1 << 24));
++
++	timeout = 100; /* Calibration takes aprox 10 us */
++	do {
++		reg_val = sunxi_getbits(reg_base + AHCI_PHYCS2R, 0x1, 24);
++		if (reg_val == 0x00)
++			break;
++
++		if (--timeout == 0) {
++			dev_err(dev, "PHY calibration failed.\n");
++			return -EIO;
++		}
++		udelay(1);
++	} while (1);
++
++	mdelay(15);
++
++	writel(0x7, reg_base + AHCI_RWCR);
 +
 +	return 0;
 +}
-+EXPORT_SYMBOL_GPL(ahci_platform_resume_host);
 +
-+/**
-+ *	ahci_platform_suspend - Suspend an ahci-platform device
-+ *	@dev: the platform device to suspend
-+ *
-+ *	This function suspends the host associated with the device, followed
-+ *	by disabling all the resources of the device.
-+ *
-+ *	LOCKING:
-+ *	None.
-+ *
-+ *	RETURNS:
-+ *	0 on success otherwise a negative error code
-+ */
-+int ahci_platform_suspend(struct device *dev)
++static void ahci_sunxi_start_engine(struct ata_port *ap)
 +{
-+	struct ahci_platform_data *pdata = dev_get_platdata(dev);
++	void __iomem *port_mmio = ahci_port_base(ap);
++	struct ahci_host_priv *hpriv = ap->host->private_data;
++
++	/* Setup DMA before DMA start */
++	sunxi_clrsetbits(hpriv->mmio + AHCI_P0DMACR, 0x0000ff00, 0x00004400);
++
++	/* Start DMA */
++	sunxi_setbits(port_mmio + PORT_CMD, PORT_CMD_START);
++}
++
++static const struct ata_port_info ahci_sunxi_port_info = {
++	AHCI_HFLAGS(AHCI_HFLAG_32BIT_ONLY | AHCI_HFLAG_NO_MSI |
++			  AHCI_HFLAG_NO_PMP | AHCI_HFLAG_YES_NCQ),
++	.flags		= AHCI_FLAG_COMMON | ATA_FLAG_NCQ,
++	.pio_mask	= ATA_PIO4,
++	.udma_mask	= ATA_UDMA6,
++	.port_ops	= &ahci_platform_ops,
++};
++
++static int ahci_sunxi_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct ahci_host_priv *hpriv;
++	int rc;
++
++	hpriv = ahci_platform_get_resources(pdev);
++	if (IS_ERR(hpriv))
++		return PTR_ERR(hpriv);
++
++	hpriv->start_engine = ahci_sunxi_start_engine;
++
++	rc = ahci_platform_enable_resources(hpriv);
++	if (rc)
++		return rc;
++
++	rc = ahci_sunxi_phy_init(dev, hpriv->mmio);
++	if (rc)
++		goto disable_resources;
++
++	rc = ahci_platform_init_host(pdev, hpriv, &ahci_sunxi_port_info, 0, 0);
++	if (rc)
++		goto disable_resources;
++
++	return 0;
++
++disable_resources:
++	ahci_platform_disable_resources(hpriv);
++	return rc;
++}
++
++#ifdef CONFIG_PM_SLEEP
++int ahci_sunxi_resume(struct device *dev)
++{
 +	struct ata_host *host = dev_get_drvdata(dev);
 +	struct ahci_host_priv *hpriv = host->private_data;
 +	int rc;
 +
-+	rc = ahci_platform_suspend_host(dev);
- 	if (rc)
- 		return rc;
- 
-@@ -487,8 +556,22 @@ static int ahci_suspend(struct device *dev)
- 
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(ahci_platform_suspend);
- 
--static int ahci_resume(struct device *dev)
-+/**
-+ *	ahci_platform_resume - Resume an ahci-platform device
-+ *	@dev: the platform device to resume
-+ *
-+ *	This function enables all the resources of the device followed by
-+ *	resuming the host associated with the device.
-+ *
-+ *	LOCKING:
-+ *	None.
-+ *
-+ *	RETURNS:
-+ *	0 on success otherwise a negative error code
-+ */
-+int ahci_platform_resume(struct device *dev)
- {
- 	struct ahci_platform_data *pdata = dev_get_platdata(dev);
- 	struct ata_host *host = dev_get_drvdata(dev);
-@@ -505,15 +588,9 @@ static int ahci_resume(struct device *dev)
- 			goto disable_resources;
- 	}
- 
--	if (dev->power.power_state.event == PM_EVENT_SUSPEND) {
--		rc = ahci_reset_controller(host);
--		if (rc)
--			goto disable_resources;
--
--		ahci_init_controller(host);
--	}
--
--	ata_host_resume(host);
++	rc = ahci_platform_enable_resources(hpriv);
++	if (rc)
++		return rc;
++
++	rc = ahci_sunxi_phy_init(dev, hpriv->mmio);
++	if (rc)
++		goto disable_resources;
++
 +	rc = ahci_platform_resume_host(dev);
 +	if (rc)
 +		goto disable_resources;
- 
- 	return 0;
- 
-@@ -522,9 +599,11 @@ disable_resources:
- 
- 	return rc;
- }
-+EXPORT_SYMBOL_GPL(ahci_platform_resume);
- #endif
- 
--static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_suspend, ahci_resume);
-+static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_platform_suspend,
-+			 ahci_platform_resume);
- 
- static const struct of_device_id ahci_of_match[] = {
- 	{ .compatible = "snps,spear-ahci", },
-diff --git a/include/linux/ahci_platform.h b/include/linux/ahci_platform.h
-index b80c51c..542f268 100644
---- a/include/linux/ahci_platform.h
-+++ b/include/linux/ahci_platform.h
-@@ -50,4 +50,9 @@ int ahci_platform_init_host(struct platform_device *pdev,
- 			    unsigned int force_port_map,
- 			    unsigned int mask_port_map);
- 
-+int ahci_platform_suspend_host(struct device *dev);
-+int ahci_platform_resume_host(struct device *dev);
-+int ahci_platform_suspend(struct device *dev);
-+int ahci_platform_resume(struct device *dev);
 +
- #endif /* _AHCI_PLATFORM_H */
++	return 0;
++
++disable_resources:
++	ahci_platform_disable_resources(hpriv);
++	return rc;
++}
++#endif
++
++static SIMPLE_DEV_PM_OPS(ahci_sunxi_pm_ops, ahci_platform_suspend,
++			 ahci_sunxi_resume);
++
++static const struct of_device_id ahci_sunxi_of_match[] = {
++	{ .compatible = "allwinner,sun4i-a10-ahci", },
++	{ },
++};
++MODULE_DEVICE_TABLE(of, ahci_sunxi_of_match);
++
++static struct platform_driver ahci_sunxi_driver = {
++	.probe = ahci_sunxi_probe,
++	.remove = ata_platform_remove_one,
++	.driver = {
++		.name = "ahci-sunxi",
++		.owner = THIS_MODULE,
++		.of_match_table = ahci_sunxi_of_match,
++		.pm = &ahci_sunxi_pm_ops,
++	},
++};
++module_platform_driver(ahci_sunxi_driver);
++
++MODULE_DESCRIPTION("Allwinner sunxi AHCI SATA driver");
++MODULE_AUTHOR("Olliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>");
++MODULE_LICENSE("GPL");
 -- 
 1.9.0
