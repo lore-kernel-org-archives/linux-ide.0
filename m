@@ -1,8 +1,7 @@
 From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [RFC 2/3] ahci_platform: Drop support for imx53-ahci
- platform device type
-Date: Sat, 22 Feb 2014 17:22:54 +0100
-Message-ID: <1393086175-6383-3-git-send-email-hdegoede@redhat.com>
+Subject: [RFC 3/3] ahci_platform: Drop unused ahci_platform_data members
+Date: Sat, 22 Feb 2014 17:22:55 +0100
+Message-ID: <1393086175-6383-4-git-send-email-hdegoede@redhat.com>
 References: <1393086175-6383-1-git-send-email-hdegoede@redhat.com>
 Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
@@ -19,105 +18,57 @@ To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Marek Vasut <marex-y
 Cc: Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, Richard Zhu <Hong-Xing.Zhu-KZfg59tc24xl57MIdRCFDg@public.gmane.org>, Roger Quadros <rogerq-l0cyMroinI0@public.gmane.org>, Lee Jones <lee.jones-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, devicetree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
-Since the 3.13 release the ahci_imx driver has proper devicetree enabled
-support for ahci on imx53 and that is used instead of the old board file
-created imx53-ahci platform device.
+These members are not used anywhere, and in the future we want
+ahci_platform_data to go away entirely so there is no reason to keep these
+around.
 
-Note this patch also complete drops the id-table, an id-table is not needed
-for a single id platform driver, the name field in the driver struct suffices.
-
-And the code already has an explicit "MODULE_ALIAS("platform:ahci");" so the
-id-table is not needed for that either.
-
-Cc: Marek Vasut <marex-ynQEQJNshbs@public.gmane.org>
 Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- drivers/ata/ahci_platform.c | 46 ++++++---------------------------------------
- 1 file changed, 6 insertions(+), 40 deletions(-)
+ drivers/ata/ahci_platform.c   | 10 +---------
+ include/linux/ahci_platform.h |  3 ---
+ 2 files changed, 1 insertion(+), 12 deletions(-)
 
 diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index 9fb99cf..d48ca8a 100644
+index d48ca8a..c04e1a9 100644
 --- a/drivers/ata/ahci_platform.c
 +++ b/drivers/ata/ahci_platform.c
-@@ -29,49 +29,17 @@
- 
- static void ahci_host_stop(struct ata_host *host);
- 
--enum ahci_type {
--	AHCI,		/* standard platform ahci */
--	IMX53_AHCI,	/* ahci on i.mx53 */
--};
--
--static struct platform_device_id ahci_devtype[] = {
--	{
--		.name = "ahci",
--		.driver_data = AHCI,
--	}, {
--		.name = "imx53-ahci",
--		.driver_data = IMX53_AHCI,
--	}, {
--		/* sentinel */
--	}
--};
--MODULE_DEVICE_TABLE(platform, ahci_devtype);
--
- struct ata_port_operations ahci_platform_ops = {
- 	.inherits	= &ahci_ops,
- 	.host_stop	= ahci_host_stop,
- };
- EXPORT_SYMBOL_GPL(ahci_platform_ops);
- 
--static struct ata_port_operations ahci_platform_retry_srst_ops = {
--	.inherits	= &ahci_pmp_retry_srst_ops,
--	.host_stop	= ahci_host_stop,
--};
--
--static const struct ata_port_info ahci_port_info[] = {
--	/* by features */
--	[AHCI] = {
--		.flags		= AHCI_FLAG_COMMON,
--		.pio_mask	= ATA_PIO4,
--		.udma_mask	= ATA_UDMA6,
--		.port_ops	= &ahci_platform_ops,
--	},
--	[IMX53_AHCI] = {
--		.flags		= AHCI_FLAG_COMMON,
--		.pio_mask	= ATA_PIO4,
--		.udma_mask	= ATA_UDMA6,
--		.port_ops	= &ahci_platform_retry_srst_ops,
--	},
-+static const struct ata_port_info ahci_port_info = {
-+	.flags		= AHCI_FLAG_COMMON,
-+	.pio_mask	= ATA_PIO4,
-+	.udma_mask	= ATA_UDMA6,
-+	.port_ops	= &ahci_platform_ops,
- };
- 
- static struct scsi_host_template ahci_platform_sht = {
-@@ -436,7 +404,6 @@ static int ahci_probe(struct platform_device *pdev)
+@@ -404,7 +404,6 @@ static int ahci_probe(struct platform_device *pdev)
  {
  	struct device *dev = &pdev->dev;
  	struct ahci_platform_data *pdata = dev_get_platdata(dev);
--	const struct platform_device_id *id = platform_get_device_id(pdev);
- 	const struct ata_port_info *pi_template;
+-	const struct ata_port_info *pi_template;
  	struct ahci_host_priv *hpriv;
  	int rc;
-@@ -464,7 +431,7 @@ static int ahci_probe(struct platform_device *pdev)
- 	if (pdata && pdata->ata_port_info)
- 		pi_template = pdata->ata_port_info;
- 	else
--		pi_template = &ahci_port_info[id ? id->driver_data : 0];
-+		pi_template = &ahci_port_info;
  
- 	rc = ahci_platform_init_host(pdev, hpriv, pi_template,
- 				     pdata ? pdata->force_port_map : 0,
-@@ -670,7 +637,6 @@ static struct platform_driver ahci_driver = {
- 		.of_match_table = ahci_of_match,
- 		.pm = &ahci_pm_ops,
- 	},
--	.id_table	= ahci_devtype,
+@@ -428,14 +427,7 @@ static int ahci_probe(struct platform_device *pdev)
+ 			goto disable_resources;
+ 	}
+ 
+-	if (pdata && pdata->ata_port_info)
+-		pi_template = pdata->ata_port_info;
+-	else
+-		pi_template = &ahci_port_info;
+-
+-	rc = ahci_platform_init_host(pdev, hpriv, pi_template,
+-				     pdata ? pdata->force_port_map : 0,
+-				     pdata ? pdata->mask_port_map  : 0);
++	rc = ahci_platform_init_host(pdev, hpriv, &ahci_port_info, 0, 0);
+ 	if (rc)
+ 		goto pdata_exit;
+ 
+diff --git a/include/linux/ahci_platform.h b/include/linux/ahci_platform.h
+index 542f268..1f16d50 100644
+--- a/include/linux/ahci_platform.h
++++ b/include/linux/ahci_platform.h
+@@ -33,9 +33,6 @@ struct ahci_platform_data {
+ 	void (*exit)(struct device *dev);
+ 	int (*suspend)(struct device *dev);
+ 	int (*resume)(struct device *dev);
+-	const struct ata_port_info *ata_port_info;
+-	unsigned int force_port_map;
+-	unsigned int mask_port_map;
  };
- module_platform_driver(ahci_driver);
  
+ int ahci_platform_enable_clks(struct ahci_host_priv *hpriv);
 -- 
 1.9.0
