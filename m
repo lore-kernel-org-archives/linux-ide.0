@@ -1,141 +1,67 @@
 From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v7 15/15] ARM: sun7i: dt: Add ahci / sata support
-Date: Sat, 22 Feb 2014 16:53:44 +0100
-Message-ID: <1393084424-31099-16-git-send-email-hdegoede@redhat.com>
-References: <1393084424-31099-1-git-send-email-hdegoede@redhat.com>
+Subject: [RFC 1/3] ahci_platform: Drop support for ahci-strict
+ platform device type
+Date: Sat, 22 Feb 2014 17:22:53 +0100
+Message-ID: <1393086175-6383-2-git-send-email-hdegoede@redhat.com>
+References: <1393086175-6383-1-git-send-email-hdegoede@redhat.com>
 Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-sunxi+bncBDL4X2GMZUKRBN4QUOMAKGQE5DK7TLQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <1393084424-31099-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-sunxi+bncBDL4X2GMZUKRB4E5UOMAKGQE3SWUZHQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <1393086175-6383-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Archive: <http://groups.google.com/group/linux-sunxi>
 Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 List-Subscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Unsubscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
-Cc: Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, Richard Zhu <Hong-Xing.Zhu-KZfg59tc24xl57MIdRCFDg@public.gmane.org>, Roger Quadros <rogerq-l0cyMroinI0@public.gmane.org>, Lee Jones <lee.jones-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, devicetree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Marek Vasut <marex-ynQEQJNshbs@public.gmane.org>
+Cc: Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, Richard Zhu <Hong-Xing.Zhu-KZfg59tc24xl57MIdRCFDg@public.gmane.org>, Roger Quadros <rogerq-l0cyMroinI0@public.gmane.org>, Lee Jones <lee.jones-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, devicetree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
-This patch adds sunxi sata support to A20 boards that have such a connector.
-Some boards also feature a regulator via a GPIO and support for this is also
-added.
+I've done a grep over the entire kernel tree and nothing is using this
+(anymore?).
 
-Signed-off-by: Olliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>
 Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 ---
- arch/arm/boot/dts/sun7i-a20-cubieboard2.dts     |  6 ++++++
- arch/arm/boot/dts/sun7i-a20-cubietruck.dts      | 18 ++++++++++++++++++
- arch/arm/boot/dts/sun7i-a20-olinuxino-micro.dts |  6 ++++++
- arch/arm/boot/dts/sun7i-a20.dtsi                |  8 ++++++++
- 4 files changed, 38 insertions(+)
+ drivers/ata/ahci_platform.c | 11 -----------
+ 1 file changed, 11 deletions(-)
 
-diff --git a/arch/arm/boot/dts/sun7i-a20-cubieboard2.dts b/arch/arm/boot/dts/sun7i-a20-cubieboard2.dts
-index 7bf4935..07823c2 100644
---- a/arch/arm/boot/dts/sun7i-a20-cubieboard2.dts
-+++ b/arch/arm/boot/dts/sun7i-a20-cubieboard2.dts
-@@ -13,12 +13,18 @@
- 
- /dts-v1/;
- /include/ "sun7i-a20.dtsi"
-+/include/ "sunxi-ahci-reg.dtsi"
- 
- / {
- 	model = "Cubietech Cubieboard2";
- 	compatible = "cubietech,cubieboard2", "allwinner,sun7i-a20";
- 
- 	soc@01c00000 {
-+		ahci: sata@01c18000 {
-+			target-supply = <&reg_ahci_5v>;
-+			status = "okay";
-+		};
-+
- 		pinctrl@01c20800 {
- 			led_pins_cubieboard2: led_pins@0 {
- 				allwinner,pins = "PH20", "PH21";
-diff --git a/arch/arm/boot/dts/sun7i-a20-cubietruck.dts b/arch/arm/boot/dts/sun7i-a20-cubietruck.dts
-index 025ce52..403bd2e 100644
---- a/arch/arm/boot/dts/sun7i-a20-cubietruck.dts
-+++ b/arch/arm/boot/dts/sun7i-a20-cubietruck.dts
-@@ -13,13 +13,26 @@
- 
- /dts-v1/;
- /include/ "sun7i-a20.dtsi"
-+/include/ "sunxi-ahci-reg.dtsi"
- 
- / {
- 	model = "Cubietech Cubietruck";
- 	compatible = "cubietech,cubietruck", "allwinner,sun7i-a20";
- 
- 	soc@01c00000 {
-+		ahci: sata@01c18000 {
-+			target-supply = <&reg_ahci_5v>;
-+			status = "okay";
-+		};
-+
- 		pinctrl@01c20800 {
-+			ahci_pwr_pin_cubietruck: ahci_pwr_pin@1 {
-+				allwinner,pins = "PH12";
-+				allwinner,function = "gpio_out";
-+				allwinner,drive = <0>;
-+				allwinner,pull = <0>;
-+			};
-+
- 			led_pins_cubietruck: led_pins@0 {
- 				allwinner,pins = "PH7", "PH11", "PH20", "PH21";
- 				allwinner,function = "gpio_out";
-@@ -90,4 +103,9 @@
- 			gpios = <&pio 7 7 0>;
- 		};
- 	};
-+
-+	reg_ahci_5v: ahci-5v {
-+		pinctrl-0 = <&ahci_pwr_pin_cubietruck>;
-+		gpio = <&pio 7 12 0>;
-+	};
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index 75698a4..9fb99cf 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -32,7 +32,6 @@ static void ahci_host_stop(struct ata_host *host);
+ enum ahci_type {
+ 	AHCI,		/* standard platform ahci */
+ 	IMX53_AHCI,	/* ahci on i.mx53 */
+-	STRICT_AHCI,	/* delayed DMA engine start */
  };
-diff --git a/arch/arm/boot/dts/sun7i-a20-olinuxino-micro.dts b/arch/arm/boot/dts/sun7i-a20-olinuxino-micro.dts
-index b02a796..d5c6799 100644
---- a/arch/arm/boot/dts/sun7i-a20-olinuxino-micro.dts
-+++ b/arch/arm/boot/dts/sun7i-a20-olinuxino-micro.dts
-@@ -13,12 +13,18 @@
  
- /dts-v1/;
- /include/ "sun7i-a20.dtsi"
-+/include/ "sunxi-ahci-reg.dtsi"
+ static struct platform_device_id ahci_devtype[] = {
+@@ -43,9 +42,6 @@ static struct platform_device_id ahci_devtype[] = {
+ 		.name = "imx53-ahci",
+ 		.driver_data = IMX53_AHCI,
+ 	}, {
+-		.name = "strict-ahci",
+-		.driver_data = STRICT_AHCI,
+-	}, {
+ 		/* sentinel */
+ 	}
+ };
+@@ -76,13 +72,6 @@ static const struct ata_port_info ahci_port_info[] = {
+ 		.udma_mask	= ATA_UDMA6,
+ 		.port_ops	= &ahci_platform_retry_srst_ops,
+ 	},
+-	[STRICT_AHCI] = {
+-		AHCI_HFLAGS	(AHCI_HFLAG_DELAY_ENGINE),
+-		.flags		= AHCI_FLAG_COMMON,
+-		.pio_mask	= ATA_PIO4,
+-		.udma_mask	= ATA_UDMA6,
+-		.port_ops	= &ahci_platform_ops,
+-	},
+ };
  
- / {
- 	model = "Olimex A20-Olinuxino Micro";
- 	compatible = "olimex,a20-olinuxino-micro", "allwinner,sun7i-a20";
- 
- 	soc@01c00000 {
-+		ahci: sata@01c18000 {
-+			target-supply = <&reg_ahci_5v>;
-+			status = "okay";
-+		};
-+
- 		pinctrl@01c20800 {
- 			led_pins_olinuxino: led_pins@0 {
- 				allwinner,pins = "PH2";
-diff --git a/arch/arm/boot/dts/sun7i-a20.dtsi b/arch/arm/boot/dts/sun7i-a20.dtsi
-index daaafd0..3385994 100644
---- a/arch/arm/boot/dts/sun7i-a20.dtsi
-+++ b/arch/arm/boot/dts/sun7i-a20.dtsi
-@@ -392,6 +392,14 @@
- 			#size-cells = <0>;
- 		};
- 
-+		ahci: sata@01c18000 {
-+			compatible = "allwinner,sun4i-a10-ahci";
-+			reg = <0x01c18000 0x1000>;
-+			interrupts = <0 56 4>;
-+			clocks = <&pll6 0>, <&ahb_gates 25>;
-+			status = "disabled";
-+		};
-+
- 		pio: pinctrl@01c20800 {
- 			compatible = "allwinner,sun7i-a20-pinctrl";
- 			reg = <0x01c20800 0x400>;
+ static struct scsi_host_template ahci_platform_sht = {
 -- 
 1.9.0
