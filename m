@@ -1,31 +1,99 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] ahci_sunxi: Use msleep instead of mdelay
-Date: Sun, 23 Feb 2014 11:10:54 -0500
-Message-ID: <20140223161054.GA12149@htj.dyndns.org>
-References: <1393156361-18414-1-git-send-email-hdegoede@redhat.com>
-Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-sunxi+bncBDQ2FCEAWYLRBFN3VCMAKGQEDBXS7SA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <1393156361-18414-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/linux-sunxi>
-List-Subscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Content-Disposition: inline
-To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, devicetree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Loc Ho <lho@apm.com>
+Subject: [PATCH v13 1/3] Documentation: Add documentation for APM X-Gene SoC SATA host controller DTS binding
+Date: Sun, 23 Feb 2014 22:54:23 -0700
+Message-ID: <1393221265-13057-2-git-send-email-lho@apm.com>
+References: <1393221265-13057-1-git-send-email-lho@apm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1393221265-13057-1-git-send-email-lho@apm.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Sun, Feb 23, 2014 at 12:52:41PM +0100, Hans de Goede wrote:
-> ahci_sunxi_phy_init is called from the probe and resume code paths, and
-> sleeping is safe in both, so use msleep instead of mdelay.
-> 
-> Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Loc Ho <lho@apm.com>
+Signed-off-by: Tuan Phan <tphan@apm.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
+---
+ .../devicetree/bindings/ata/apm-xgene.txt          |   70 ++++++++++++++++++++
+ 1 files changed, 70 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/apm-xgene.txt
 
-Applied to libata/for-3.15.  Thanks.
-
+diff --git a/Documentation/devicetree/bindings/ata/apm-xgene.txt b/Documentation/devicetree/bindings/ata/apm-xgene.txt
+new file mode 100644
+index 0000000..633eb3b
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ata/apm-xgene.txt
+@@ -0,0 +1,70 @@
++* APM X-Gene 6.0 Gb/s SATA host controller nodes
++
++SATA host controller nodes are defined to describe on-chip Serial ATA
++controllers. Each SATA controller (pair of ports) have its own node.
++
++Required properties:
++- compatible		: Shall contain:
++  * "apm,xgene-ahci-sgmii" if mux'ed with SGMII
++  * "apm,xgene-ahci-pcie" if mux'ed with PCIe
++- reg			: First memory resource shall be the AHCI memory
++			  resource.
++			  Second memory resource shall be the host controller
++			  memory resource.
++- interrupts		: Interrupt-specifier for SATA host controller IRQ.
++- clocks		: Reference to the clock entry.
++- phys			: A list of phandles + phy-specifiers, one for each
++			  entry in phy-names.
++- phy-names		: Should contain:
++  * "sata-6g" for the SATA 6.0Gbps PHY
++
++Optional properties:
++- status		: Shall be "ok" if enabled or "disabled" if disabled.
++			  Default is "ok".
++- interrupt-parent	: Interrupt controller.
++
++Example:
++		sataclk: sataclk {
++			compatible = "fixed-clock";
++			#clock-cells = <1>;
++			clock-frequency = <100000000>;
++			clock-output-names = "sataclk";
++		};
++
++		phy2: phy@1f22a000 {
++			compatible = "apm,xgene-phy";
++			reg = <0x0 0x1f22a000 0x0 0x100>,
++			      <0x0 0x1f22c000 0x0 0x100>;
++			#phy-cells = <1>;
++		};
++
++		phy3: phy@1f23a000 {
++			compatible = "apm,xgene-phy";
++			reg = <0x0 0x1f23a000 0x0 0x100>,
++			      <0x0 0x1f23c000 0x0 0x100>;
++			#phy-cells = <1>;
++		};
++
++		sata2: sata@1a400000 {
++			compatible = "apm,xgene-ahci-sgmii";
++			reg = <0x0 0x1a400000 0x0 0x1000>,
++			      <0x0 0x1f220000 0x0 0x10000>;
++			interrupt-parent = <&gic>;
++			interrupts = <0x0 0x87 0x4>;
++			status = "ok";
++			clocks = <&sataclk 0>;
++			phys = <&phy2 0>;
++			phy-names = "sata-6g";
++		};
++
++		sata3: sata@1a800000 {
++			compatible = "apm,xgene-ahci-pcie";
++			reg = <0x0 0x1a800000 0x0 0x1000>,
++			      <0x0 0x1f230000 0x0 0x10000>;
++			interrupt-parent = <&gic>;
++			interrupts = <0x0 0x88 0x4>;
++			status = "ok";
++			clocks = <&sataclk 0>;
++			phys = <&phy3 0>;
++			phy-names = "sata-6g";
++		};
 -- 
-tejun
+1.5.5
+
