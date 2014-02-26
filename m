@@ -1,12 +1,12 @@
 From: Luis Henriques <luis.henriques@canonical.com>
-Subject: [3.11.y.z extended stable] Patch "ata: enable quirk from jmicron JMB350 for JMB394" has been added to staging queue
-Date: Wed, 26 Feb 2014 12:21:42 +0000
-Message-ID: <1393417302-28304-1-git-send-email-luis.henriques@canonical.com>
+Subject: [3.5.y.z extended stable] Patch "ata: enable quirk from jmicron JMB350 for JMB394" has been added to staging queue
+Date: Wed, 26 Feb 2014 13:24:44 +0000
+Message-ID: <1393421084-5908-1-git-send-email-luis.henriques@canonical.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:50334 "EHLO
+Received: from youngberry.canonical.com ([91.189.89.112]:50997 "EHLO
 	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751287AbaBZMVt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Feb 2014 07:21:49 -0500
+	with ESMTP id S1750814AbaBZNYu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Feb 2014 08:24:50 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: "Denis V. Lunev" <den@openvz.org>
@@ -16,15 +16,15 @@ This is a note to let you know that I have just added a patch titled
 
     ata: enable quirk from jmicron JMB350 for JMB394
 
-to the linux-3.11.y-queue branch of the 3.11.y.z extended stable tree 
+to the linux-3.5.y-queue branch of the 3.5.y.z extended stable tree 
 which can be found at:
 
- http://kernel.ubuntu.com/git?p=ubuntu/linux.git;a=shortlog;h=refs/heads/linux-3.11.y-queue
+ http://kernel.ubuntu.com/git?p=ubuntu/linux.git;a=shortlog;h=refs/heads/linux-3.5.y-queue
 
 If you, or anyone else, feels it should not be added to this tree, please 
 reply to this email.
 
-For more information about the 3.11.y.z tree, see
+For more information about the 3.5.y.z tree, see
 https://wiki.ubuntu.com/Kernel/Dev/ExtendedStable
 
 Thanks.
@@ -32,7 +32,7 @@ Thanks.
 
 ------
 
->From e8d8dbd7d88602b38411aa309a8ffcbcef850dab Mon Sep 17 00:00:00 2001
+>From 02b23ea2f61557d850f62ce959e23f230459a61a Mon Sep 17 00:00:00 2001
 From: "Denis V. Lunev" <den@openvz.org>
 Date: Thu, 30 Jan 2014 15:20:30 +0400
 Subject: ata: enable quirk from jmicron JMB350 for JMB394
@@ -58,7 +58,7 @@ Signed-off-by: Luis Henriques <luis.henriques@canonical.com>
  1 file changed, 5 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
-index 20fd337..7ccc084 100644
+index f5c35be..0ba32fe 100644
 --- a/drivers/ata/libata-pmp.c
 +++ b/drivers/ata/libata-pmp.c
 @@ -447,8 +447,11 @@ static void sata_pmp_quirks(struct ata_port *ap)
