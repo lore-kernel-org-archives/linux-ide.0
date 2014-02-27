@@ -1,45 +1,79 @@
-From: Loc Ho <lho@apm.com>
-Subject: Re: [PATCH v12 3/4] PHY: add APM X-Gene SoC 15Gbps Multi-purpose PHY driver
-Date: Thu, 27 Feb 2014 12:02:32 -0800
-Message-ID: <CAPw-ZTkB9LhWmw3+WMTF-0tAwGibugxmCAu2VgNkmGaa6ojJUA@mail.gmail.com>
+From: Felipe Balbi <balbi@ti.com>
+Subject: Re: [PATCH v12 1/4] PHY: Add function set_speed to generic PHY
+ framework
+Date: Thu, 27 Feb 2014 14:50:39 -0600
+Message-ID: <20140227205039.GE5375@saruman.home>
 References: <1393524848-8207-1-git-send-email-lho@apm.com>
-	<1393524848-8207-2-git-send-email-lho@apm.com>
-	<1393524848-8207-3-git-send-email-lho@apm.com>
-	<1393524848-8207-4-git-send-email-lho@apm.com>
-	<20140227190259.GC4862@saruman.home>
+ <1393524848-8207-2-git-send-email-lho@apm.com>
+ <20140227190102.GB4862@saruman.home>
+ <CAPw-ZT=F07=T0=z=iT=hxJ0+609RBDYRL=MXF5dQoEowLjsRjQ@mail.gmail.com>
+Reply-To: <balbi@ti.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from exprod5og115.obsmtp.com ([64.18.0.246]:48844 "HELO
-	exprod5og115.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750952AbaB0UCd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Feb 2014 15:02:33 -0500
-Received: by mail-qg0-f46.google.com with SMTP id e89so7109027qgf.5
-        for <linux-ide@vger.kernel.org>; Thu, 27 Feb 2014 12:02:32 -0800 (PST)
-In-Reply-To: <20140227190259.GC4862@saruman.home>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="lteA1dqeVaWQ9QQl"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAPw-ZT=F07=T0=z=iT=hxJ0+609RBDYRL=MXF5dQoEowLjsRjQ@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Loc Ho <lho@apm.com>
+Cc: balbi@ti.com, Kishon Vijay Abraham I <kishon@ti.com>, Tejun Heo <tj@kernel.org>, Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Don Dutile <ddutile@redhat.com>, Jon Masters <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>
 List-Id: linux-ide@vger.kernel.org
-To: balbi@ti.com
-Cc: Kishon Vijay Abraham I <kishon@ti.com>, Tejun Heo <tj@kernel.org>, Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Don Dutile <ddutile@redhat.com>, Jon Masters <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-Hi Balbi,
+--lteA1dqeVaWQ9QQl
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
->> +/*
->> + * This function is used to configure the PHY to operation as either SATA Gen1
->> + * or Gen2 speed.
->> + */
->> +static void xgene_phy_sata_force_gen(struct xgene_phy_ctx *ctx,
->> +                                  int lane, int gen)
->
-> why do you need to *force* the generation ? Is this because of some
-> silicon errata ? It almost seems like this should be done through link
-> negotiation between both link partners.
+Hi,
 
-You can call this as an errata or limitation of the underlying PHY IP.
-As start, the PHY is configured with auto neg up to 6Gbps (or Gen3
-speed). After link up, we will know whether it is Gen1 (1.5Gbps), Gen2
-(3.0Gbps), or Gen3 (6.0Gbps). In order to ensure reliability, the PHY
-needs to be configured at specified speed. For this reason and after
-link up, the PHY is re-trained for the linked up speed.
+On Thu, Feb 27, 2014 at 11:57:44AM -0800, Loc Ho wrote:
+> > On Thu, Feb 27, 2014 at 11:14:05AM -0700, Loc Ho wrote:
+> >> This patch adds function set_speed to the generic PHY framework operat=
+ion
+> >> structure. This function can be called to instruct the PHY underlying =
+layer
+> >> at specified lane to configure for specified speed in hertz.
+> >
+> > why ? looks like clk_set_rate() is your friend here. Can you be more
+> > descriptive of the use case ? When will this be used ?
+> >
+>=20
+> The phy_set_speed is used to configure the operation speed of the PHY
+> at run-time. The clock interface in general is used to configure the
+> clock input to the IP. I don't believe they are the same thing. Maybe
+> it will be clear in my response to your second email
 
--Loc
+The problem with this is that you end up adding SATA-specific details to
+something which is supposed to be generic. After negoatiation, don't you
+get any interrupt from your PHY indicating that link speed negotiation
+is done ? Or is that IRQ only on AHCI IP ?
+
+
+cheers
+
+--=20
+balbi
+
+--lteA1dqeVaWQ9QQl
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJTD6UfAAoJEIaOsuA1yqRERr8P/iDeKDJi1ZMvKmvSImZ0pI/Q
+lrufRgik17xRfpmkp/qfyWJZxVsBy8I995h13ZapXWaW/HpyrBsEASsXFEC1d+r7
+aZpmcVJgGcSIqzUZiSS2nZEqRjch2P+NVLy7IO4aJAYcQoX1GqTHXXDq3an7iY0G
+2BX7ycz1ApTaiOaMxYSNdr9t6j5KytDCFXvKdwzC9Q0AjAeWAZUefA6nIuoRzA3t
+qc7Yi6U9IW2RYkzuY3RkkHko1DoQReAKajQ6hpmxMX5tG8oqjkP67ZUt0HYDuwJt
+K3DfduE1MeQPygnyrX+IfGt7lEkgpqHxcC+9i5FmsqA738kPWMa5yY0olNxtgjkE
+wDDpmKcXDQX8tGF7ku6z5hhaOuLMHpiwh4eMLf0nbbSejWmrYu4AcwYj3zlayFvx
+djzJxXTDVYauiYNv4HLENb/ZpqKVfdi9fx+pJtYB1yiIWrtCNl/5ikumUSoIPdj+
+6z0XnY6hCah7rZDsFCTclNFP48zNy3znUR701lyf1ApraDKfH4qmAtY0ifwB474v
++2vXwOD598uPRF4urjF6bj3AgOQAlZ6ThAIsrbo46MBjTWbWYJstO+RzA3T3FDa6
+7ghCqLbHi0fDeUEOZ/o6ScPD5bXvpMwvQoCQ1OXbeoLzKja6BPljaUUKlxCuYlRP
+PeQ5ZAkBoaIVwd+jDb46
+=qKot
+-----END PGP SIGNATURE-----
+
+--lteA1dqeVaWQ9QQl--
