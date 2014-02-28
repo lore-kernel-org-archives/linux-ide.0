@@ -1,97 +1,70 @@
-From: Loc Ho <lho-qTEPVZfXA3Y@public.gmane.org>
-Subject: Re: [PATCH v12 1/4] PHY: Add function set_speed to generic PHY framework
-Date: Thu, 27 Feb 2014 14:03:21 -0800
-Message-ID: <CAPw-ZT=6cF77FjVZhXkR4thvkoxDH=aEikoDQjcpskMXE+F8OA@mail.gmail.com>
-References: <1393524848-8207-1-git-send-email-lho@apm.com>
-	<1393524848-8207-2-git-send-email-lho@apm.com>
-	<20140227190102.GB4862@saruman.home>
-	<CAPw-ZT=F07=T0=z=iT=hxJ0+609RBDYRL=MXF5dQoEowLjsRjQ@mail.gmail.com>
-	<20140227205039.GE5375@saruman.home>
-	<CAPw-ZT=7cu1NoxrBL48RUJV04ofrnNkF=p=23VFfu8ZZWmkQWQ@mail.gmail.com>
-	<20140227213427.GG5375@saruman.home>
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH v7 08/15] ahci-imx: Port to library-ised ahci_platform
+Date: Fri, 28 Feb 2014 21:08:20 +0000
+Message-ID: <20140228210820.GZ21483@n2100.arm.linux.org.uk>
+References: <1393084424-31099-1-git-send-email-hdegoede@redhat.com> <1393084424-31099-9-git-send-email-hdegoede@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20140227213427.GG5375-HgARHv6XitL9zxVx7UNMDg@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: balbi-l0cyMroinI0@public.gmane.org
-Cc: Kishon Vijay Abraham I <kishon-l0cyMroinI0@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Olof Johansson <olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, Don Dutile <ddutile-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jon Masters <jcm-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "patches-qTEPVZfXA3Y@public.gmane.org" <patches-qTEPVZfXA3Y@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:60053 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751712AbaB1VIi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Feb 2014 16:08:38 -0500
+Content-Disposition: inline
+In-Reply-To: <1393084424-31099-9-git-send-email-hdegoede@redhat.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, Maxime Ripard <maxime.ripard@free-electrons.com>, devicetree <devicetree@vger.kernel.org>, linux-ide@vger.kernel.org, Oliver Schinagl <oliver@schinagl.nl>, Richard Zhu <Hong-Xing.Zhu@freescale.com>, linux-sunxi@googlegroups.com, Lee Jones <lee.jones@linaro.org>, linux-arm-kernel@lists.infradead.org, Roger Quadros <rogerq@ti.com>
 
-HI,
+On Sat, Feb 22, 2014 at 04:53:37PM +0100, Hans de Goede wrote:
+> +		/*
+> +		 * set PHY Paremeters, two steps to configure the GPR13,
+> +		 * one write for rest of parameters, mask of first write
+> +		 * is 0x07ffffff, and the other one write for setting
+> +		 * the mpll_clk_en.
+> +		 */
+> +		regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
+> +				   IMX6Q_GPR13_SATA_RX_EQ_VAL_MASK |
+> +				   IMX6Q_GPR13_SATA_RX_LOS_LVL_MASK |
+> +				   IMX6Q_GPR13_SATA_RX_DPLL_MODE_MASK |
+> +				   IMX6Q_GPR13_SATA_SPD_MODE_MASK |
+> +				   IMX6Q_GPR13_SATA_MPLL_SS_EN |
+> +				   IMX6Q_GPR13_SATA_TX_ATTEN_MASK |
+> +				   IMX6Q_GPR13_SATA_TX_BOOST_MASK |
+> +				   IMX6Q_GPR13_SATA_TX_LVL_MASK |
+> +				   IMX6Q_GPR13_SATA_MPLL_CLK_EN |
+> +				   IMX6Q_GPR13_SATA_TX_EDGE_RATE,
+> +				   IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB |
+> +				   IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M |
+> +				   IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_4F |
+> +				   IMX6Q_GPR13_SATA_SPD_MODE_3P0G |
+> +				   IMX6Q_GPR13_SATA_MPLL_SS_EN |
+> +				   IMX6Q_GPR13_SATA_TX_ATTEN_9_16 |
+> +				   IMX6Q_GPR13_SATA_TX_BOOST_3_33_DB |
+> +				   IMX6Q_GPR13_SATA_TX_LVL_1_025_V);
 
->> >> >> This patch adds function set_speed to the generic PHY framework operation
->> >> >> structure. This function can be called to instruct the PHY underlying layer
->> >> >> at specified lane to configure for specified speed in hertz.
->> >> >
->> >> > why ? looks like clk_set_rate() is your friend here. Can you be more
->> >> > descriptive of the use case ? When will this be used ?
->> >> >
->> >>
->> >> The phy_set_speed is used to configure the operation speed of the PHY
->> >> at run-time. The clock interface in general is used to configure the
->> >> clock input to the IP. I don't believe they are the same thing. Maybe
->> >> it will be clear in my response to your second email
->> >
->> > The problem with this is that you end up adding SATA-specific details to
->> > something which is supposed to be generic.
->>
->> Setting the operation speed is pretty generic from an interface point
->> of view. An generic multi-purpose PHY can support multiple speed. If
->
-> no it's not. Specially when you consider that your "speed" argument can
-> be just about anything and depending on the underlying bus, it *will* be
-> treated differently. Note that e.g. in OMAP devices the exact *same* PHY
-> IP is used for PCIe, SATA and USB... now, let's assume for the sake of
-> argument that we were to implement ->set_speed() in that environment,
-> how do you plan to do that ? a 6MHz arguments isn't valid from USB stand
-> point and could mean different things in PCIe or SATA.
->
+While I see this, I'll stick an oar in.
 
-Correct me if I am wrong here. If the same PHY is used for PCIe, SATA,
-and USB, would you not need to indicate what speed the PHY should be
-operated at - unless the underlying IP magically negotiate and
-configured automatically? If so, what about PHY isn't so intelligent?
-How should you suggest that we handle these?
+It is totally wrong for this to be hard-coded into the driver - many
+of these should be specified via DT, since they're board specific.
+These are already different from the reset default in this register.
 
->> the upper layer wish to operate at an specified speed (say for testing
->> purpose and etc), it can be allowed.
->
-> anything for testing purposes, should be limited to test scenarios.
+The side effect of this hard coding is that eSATA just doesn't work
+at all on some boards - the board I have requires TX_LVL_1_104V and
+TX_BOOST_0_00_DB.
 
-Testing purpose is only one use case. Another use case is to limit the
-speed so that I can confirm the driver actually works with various
-speed of the device and handle correctly.
+Hence, I'd ask that while you move stuff like this around, you bear
+in mind that we do need to add additional properties.
 
->
->> > After negoatiation, don't you
->> > get any interrupt from your PHY indicating that link speed negotiation
->> > is done ? Or is that IRQ only on AHCI IP ?
->>
->> There is NO interrupt from the PHY. The IRQ is assoicated with the
->> AHCI IP. With SATA host flow, it starts off with an COMRESET to start
->> the link negotiation. At that point, it will poll for completion.
->>
->> Any other concerns?
->
-> hey, calm down... just trying to prevent us from applying something
-> which isn't truly generic and I don't think "->set_speed" is generic
-> enough. The semantics of the "speed" argument won't be valid for all use
-> cases.
->
-> I can already see people using that to pass
-> USB_SPEED_{LOW,FULL,HIGH,SUPER}, instead of actual speed numbers. We wil
-> end up with a mess to handle from a PHY driver, specially in cases such
-> as OMAP where, as mentioned above, the same IP is used for SATA, PCIe
-> and USB3.
->
+I'm in two minds about this - whether to make the existing binding
+with its compatible string always use these settings, and invent a
+new compatible string for one which is fully configurable (as it
+_should_ have been from the very start) or whether to make this
+the default if the various properties aren't specified.
 
-This PHY isn't as "intelligent" as other PHY's. What would you suggest
-as I need an method to indicate to the underlying PHY that I want to
-operate at an specified speed?
+Either way, this driver is electrically unusable as it stands here.
 
--Loc
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+FTTC broadband for 0.8mile line: now at 9.7Mbps down 460kbps up... slowly
+improving, and getting towards what was expected from it.
