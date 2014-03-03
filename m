@@ -1,71 +1,36 @@
-From: Tony Lindgren <tony@atomide.com>
-Subject: Re: [PATCH 02/12] phy: omap-control: Update DT binding information
-Date: Mon, 3 Mar 2014 11:02:49 -0800
-Message-ID: <20140303190247.GD25804@atomide.com>
-References: <1393859254-10937-1-git-send-email-rogerq@ti.com>
- <1393859254-10937-3-git-send-email-rogerq@ti.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] libata: disable queued TRIM for Crucial M500 mSATA SSDs
+Date: Mon, 3 Mar 2014 17:51:59 -0500
+Message-ID: <20140303225159.GG26523@mtj.dyndns.org>
+References: <9306023.Q3rnH2c0bQ@miles>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qa0-f54.google.com ([209.85.216.54]:44614 "EHLO
+	mail-qa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753236AbaCCWwD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Mar 2014 17:52:03 -0500
+Received: by mail-qa0-f54.google.com with SMTP id w8so4187877qac.27
+        for <linux-ide@vger.kernel.org>; Mon, 03 Mar 2014 14:52:02 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <1393859254-10937-3-git-send-email-rogerq@ti.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Roger Quadros <rogerq@ti.com>
-Cc: kishon@ti.com, balbi@ti.com, george.cherian@ti.com, balajitk@ti.com, hdegoede@redhat.com, linux-omap@vger.kernel.org, linux-usb@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+In-Reply-To: <9306023.Q3rnH2c0bQ@miles>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Marios Andreopoulos <opensource@andmarios.com>
+Cc: linux-ide@vger.kernel.org
 
-* Roger Quadros <rogerq@ti.com> [140303 07:10]:
-> Move omap-control binding information to the right location.
+On Mon, Mar 03, 2014 at 06:19:59PM +0200, Marios Andreopoulos wrote:
+> From: Marios Andreopoulos <opensource@andmarios.com>
 > 
-> Signed-off-by: Roger Quadros <rogerq@ti.com>
-> ---
->  Documentation/devicetree/bindings/phy/ti-phy.txt   | 25 ++++++++++++++++++++++
->  Documentation/devicetree/bindings/usb/omap-usb.txt | 24 ---------------------
->  2 files changed, 25 insertions(+), 24 deletions(-)
+> Queued TRIM commands cause problems and silent file system corruption
+> on Crucial M500 SSDs. This patch disables them for the mSATA model of
+> the drive.
 > 
-> diff --git a/Documentation/devicetree/bindings/phy/ti-phy.txt b/Documentation/devicetree/bindings/phy/ti-phy.txt
-> index 207e14c..41dc132 100644
-> --- a/Documentation/devicetree/bindings/phy/ti-phy.txt
-> +++ b/Documentation/devicetree/bindings/phy/ti-phy.txt
-> @@ -1,5 +1,30 @@
->  TI PHY: DT DOCUMENTATION FOR PHYs in TI PLATFORMs
->  
-> +OMAP CONTROL PHY
-> +
-> +Required properties:
-> + - compatible: Should be one of
-> + "ti,control-phy-otghs" - if it has otghs_control mailbox register as on OMAP4.
-> + "ti,control-phy-usb2" - if it has Power down bit in control_dev_conf register
-> +                        e.g. USB2_PHY on OMAP5.
-> + "ti,control-phy-pipe3" - if it has DPLL and individual Rx & Tx power control
-> +                        e.g. USB3 PHY and SATA PHY on OMAP5.
-> + "ti,control-phy-dra7usb2" - if it has power down register like USB2 PHY on
-> +                        DRA7 platform.
-> + "ti,control-phy-am437usb2" - if it has power down register like USB2 PHY on
-> +                        AM437 platform.
+> Signed-off-by: Marios Andreopoulos <opensource@andmarios.com>
 
-To me it seems that you can leave out all the above. You can set these falgs
-flags directly in the driver based on the compatible flag. Then just initialize
-the .data in the driver based on the compatible flag.
+Applied to libata/for-3.14-fixes w/ stable cc'd.
 
-> + - reg : Address and length of the register set for the device. It contains
-> +   the address of "otghs_control" for control-phy-otghs or "power" register
-> +   for other types.
-> + - reg-names: should be "otghs_control" control-phy-otghs and "power" for
-> +   other types.
-> +
-> +omap_control_usb: omap-control-usb@4a002300 {
-> +        compatible = "ti,control-phy-otghs";
-> +        reg = <0x4a00233c 0x4>;
-> +        reg-names = "otghs_control";
-> +};
+Thanks.
 
-Then you would instead have something like this:
-
-	compatible = "ti,am347-control-phy-otghs";
-
-That way you can initialize things without a need for custom bindings.
-
-Regards,
-
-Tony
+-- 
+tejun
