@@ -1,153 +1,83 @@
-From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH v6 17/18] ARM: sun4i: dt: Add ahci / sata support
-Date: Mon, 03 Mar 2014 11:07:59 +0100
-Message-ID: <5314547F.4020703@redhat.com>
-References: <1392811320-3132-1-git-send-email-hdegoede@redhat.com> <1392811320-3132-18-git-send-email-hdegoede@redhat.com> <20140221181519.GC3931@lukather> <53087755.3090608@redhat.com> <20140222171516.GA3610@lukather> <5308F63E.3070300@redhat.com> <20140303093315.GS607@lukather>
-Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Roger Quadros <rogerq-l0cyMroinI0@public.gmane.org>
+Subject: [PATCH 00/12] ARM: OMAP: SATA support for OMAP5 & DRA7
+Date: Mon, 3 Mar 2014 17:07:22 +0200
+Message-ID: <1393859254-10937-1-git-send-email-rogerq@ti.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-sunxi+bncBDL4X2GMZUKRBE5J2GMAKGQETHV2MGA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <20140303093315.GS607@lukather>
-List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/linux-sunxi>
-Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, Richard Zhu <Hong-Xing.Zhu-KZfg59tc24xl57MIdRCFDg@public.gmane.org>, Roger Quadros <rogerq-l0cyMroinI0@public.gmane.org>, Lee Jones <lee.jones-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, devicetree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: kishon-l0cyMroinI0@public.gmane.org, balbi-l0cyMroinI0@public.gmane.org, tony-4v6yS6AI5VpBDgjK7y7TUQ@public.gmane.org
+Cc: george.cherian-l0cyMroinI0@public.gmane.org, balajitk-l0cyMroinI0@public.gmane.org, hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-omap-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rogerq-l0cyMroinI0@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
 
 Hi,
 
-On 03/03/2014 10:33 AM, Maxime Ripard wrote:
-> Hi Hans,
->=20
-> On Sat, Feb 22, 2014 at 08:10:54PM +0100, Hans de Goede wrote:
->>>>> Since IIRC we have pretty much the same needs for the USB, can't we j=
-ust drop the SATA specific mention and use it as the common DTSI for the us=
-ual regulators?
->>>>=20
->>>> On most boards with sata, there will also be 1 or 2 usb regulators, so=
- we need differently named regulator nodes for all 3 of ahci, usb1 and usb2=
- vbus. On some boards how ever we may only need the usb regulators.
->>>=20
->>> Yes, obviously...
->>>=20
->>>> So if you look in my current personal sunxi-devel tree you will see se=
-parate dtsi files for both ahci and usb regulators,
->>>=20
->>> And this is precisely what I don't understand. Why do you *need* differ=
-ent DTSI files. If there's common regulators, that are used on most boards,=
- fine, create a common regulators files. But why do you have to create a DT=
-SI to define only one regulator.
->>>=20
->>>> another advantage of having these separate is that the gpio controllin=
-g the regulator can be pre-populated with the reference design gpio which i=
-s used in most boards, so that the ahci specific code in the dts becomes on=
-ly the ahci: sata@... node.
->>>=20
->>> I understand very well the advantages of what having a reference regula=
-tors bring. What I don't understand is the benefits of having "topics" regu=
-lators DTSI.
->>=20
->> Ok, so let me try to explain:
->>=20
->> With topics regulator files, the ahci bits look something like this for =
-a board using the reference design gpio:
->>=20
->> /include/ "sunxi-ahci-reg.dtsi"
->>=20
->> ...
->>=20
->> ahci: sata@01c18000 { target-supply =3D <&reg_ahci_5v>; status =3D "okay=
-"; };
->>=20
->> If we put all regulators in one file, then the ahci regulator cannot be =
-enabled (so it will have status =3D "disabled) by default since most boards=
- don't have it, so things would change into:
->>=20
->> /include/ "sunxi-common-regulators.dtsi"
->>=20
->> ...
->>=20
->> ahci: sata@01c18000 { target-supply =3D <&reg_ahci_5v>; status =3D "okay=
-"; };
->>=20
->> ...
->>=20
->> reg_ahci_5v: ahci-5v { status =3D "okay"; };
->>=20
->> Notice the addition of the 2nd node. This is why I ended up doing 2 sepa=
-rate dtsi files for the ahci and for the usb regulators.
->>=20
->> To me saying:
->>=20
->> /include/ "sunxi-ahci-reg.dtsi"
->>=20
->> Makes it clear to the reader that the board has a ahci target-supply reg=
-ulator, so enabling it separately seems being overly verbose.
->>=20
->> Of course of we change it to:
->>=20
->> /include/ "sunxi-common-regulators.dtsi"
->>=20
->> Then the verbosity / explicit enabling of various regulators becomes a g=
-ood thing, as it is not directly clear what the include does.
->>=20
->> But if we do this, then for many boards we end up replacing:
->>=20
->> /include/ "sunxi-ahci-reg.dtsi" /include/ "sun4i-a10-usb-vbus-reg.dtsi"
->>=20
->> With:
->>=20
->> /include/ "sunxi-common-regulators.dtsi"
->>=20
->> reg_ahci_5v: ahci-5v { status =3D "okay"; };
->>=20
->> reg_usb1_vbus: usb1-vbus { status =3D "okay"; };
->>=20
->> reg_usb2_vbus: usb2-vbus { status =3D "okay"; };
->>=20
->> I prefer the shorter version, but I can completely understand if you pre=
-fer the slightly more verbose version, this would also get rid of having di=
-fferent usb regulator dtsi files for sun4i / sun5i (as sun5i only has 1 usb=
- host).
->>=20
->> I hope this helps explain my reasoning, as said I'm fine with either way=
-, if you want to change over to a single file + explicit enabling, let me k=
-now and I'll respin the ahci dts patches.  Note I'm going on vacation for a=
- week starting Monday, so you likely won't get a new version until next wee=
-kend.
->=20
-> Yes, I strongly prefer the second case. That allows to have a good-enough=
- degree of factorisation, while not having anything happening behind the sc=
-enes.
+This series adds SATA support for OMAP5 uevm and DRA7-evm boards.
 
-Good, note I've already assumed as much and send a new series
-which already has moved over to 1 common regulators dtsi,
-with all regulators disabled by default + explicit enabling
-in the board dts files.
+- Cleans up the ti-pipe3 PHY driver
+- Adds SATA DPLL support to ti-pipe3 PHY driver
+- Adds SATA nodes to hwmod and SoC DT data
 
-Regards,
+Patches are based on [1].
+To test SATA you will also need [2].
 
-Hans
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+[1] - http://article.gmane.org/gmane.linux.kernel/1658825
+[2] - http://article.gmane.org/gmane.comp.hardware.netbook.arm.sunxi/7285
 
-iEYEARECAAYFAlMUVHEACgkQF3VEtJrzE/vIyQCfVgZNpu7YEk/pf7QiE90C6Cuj
-Dv8AoJq8fAEwTURGg5WF2FwMqZBPD1iS
-=3DVtd+
------END PGP SIGNATURE-----
+cheers,
+-roger
 
---=20
-You received this message because you are subscribed to the Google Groups "=
-linux-sunxi" group.
-To unsubscribe from this group and stop receiving emails from it, send an e=
-mail to linux-sunxi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-For more options, visit https://groups.google.com/groups/opt_out.
+---
+Balaji T K (2):
+  ARM: dts: omap5: add sata node
+  ARM: dts: dra7: add OCP2SCP3 and SATA nodes
+
+Keshava Munegowda (1):
+  ARM: OMAP5: hwmod: Add ocp2scp3 and sata hwmods
+
+Kishon Vijay Abraham I (1):
+  phy: rename struct omap_control_usb to struct omap_control_phy
+
+Nikhil Devshatwar (1):
+  ARM: DRA7: hwmod: Add ocp2scp3 and sata hwmods
+
+Roger Quadros (7):
+  phy: omap-control: Update DT binding information
+  phy: ti-pipe3: cleanup clock handling
+  ARM: dts: omap5: Add clocks to usb3_phy node
+  phy: ti-pipe3: Add SATA DPLL support
+  phy: omap: Select OMAP_OCP2SCP bus driver
+  phy: ti-pipe3: streamline PHY operations
+  phy: ti-pipe3: Fix suspend/resume and module reload
+
+ Documentation/devicetree/bindings/phy/ti-phy.txt   |  28 +-
+ Documentation/devicetree/bindings/usb/omap-usb.txt |  24 --
+ arch/arm/boot/dts/dra7.dtsi                        |  39 +++
+ arch/arm/boot/dts/omap5.dtsi                       |  42 +++
+ arch/arm/mach-omap2/omap_hwmod_54xx_data.c         |  73 +++++
+ arch/arm/mach-omap2/omap_hwmod_7xx_data.c          |  41 ++-
+ drivers/phy/Kconfig                                |  16 +-
+ drivers/phy/Makefile                               |   1 +
+ drivers/phy/phy-omap-control.c                     | 320 +++++++++++++++++++++
+ drivers/phy/phy-omap-usb2.c                        |   8 +-
+ drivers/phy/phy-ti-pipe3.c                         | 257 ++++++++++-------
+ drivers/usb/musb/omap2430.c                        |   2 +-
+ drivers/usb/phy/Kconfig                            |  10 -
+ drivers/usb/phy/Makefile                           |   1 -
+ drivers/usb/phy/phy-omap-control.c                 | 319 --------------------
+ include/linux/phy/omap_control_phy.h               |  89 ++++++
+ include/linux/usb/omap_control_usb.h               |  89 ------
+ 17 files changed, 798 insertions(+), 561 deletions(-)
+ create mode 100644 drivers/phy/phy-omap-control.c
+ delete mode 100644 drivers/usb/phy/phy-omap-control.c
+ create mode 100644 include/linux/phy/omap_control_phy.h
+ delete mode 100644 include/linux/usb/omap_control_usb.h
+
+-- 
+1.8.3.2
+
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
