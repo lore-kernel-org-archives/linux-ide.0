@@ -1,36 +1,57 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] m68k/atari - ide: do not register interrupt if
- host->get_lock is set
-Date: Tue, 04 Mar 2014 15:59:06 -0500 (EST)
-Message-ID: <20140304.155906.221185723445733090.davem@davemloft.net>
-References: <1391215693-2880-1-git-send-email-schmitz@debian.org>
-	<1391215693-2880-2-git-send-email-schmitz@debian.org>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 3.13 108/172] ata: enable quirk from jmicron JMB350 for JMB394
+Date: Tue,  4 Mar 2014 12:03:12 -0800
+Message-ID: <20140304200303.163907148@linuxfoundation.org>
+References: <20140304200259.626667112@linuxfoundation.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <1391215693-2880-2-git-send-email-schmitz@debian.org>
-Sender: linux-m68k-owner@vger.kernel.org
-To: schmitzmic@gmail.com
-Cc: linux-m68k@vger.kernel.org, geert@linux-m68k.org, linux-ide@vger.kernel.org, schmitz@debian.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140304200259.626667112@linuxfoundation.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, "Denis V. Lunev" <den@openvz.org>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-From: Michael Schmitz <schmitzmic@gmail.com>
-Date: Sat,  1 Feb 2014 13:48:13 +1300
+3.13-stable review patch.  If anyone has any objections, please let me know.
 
-> On m68k, host->get_lock is used to both lock and register the interrupt
-> that the IDE host shares with other device drivers. Registering the
-> IDE interrupt handler in ide-probe.c results in duplicating the
-> interrupt registered (once via host->get lock, and also via init_irq()),
-> and may result in IDE accepting interrupts even when another driver has
-> locked the interrupt hardware. This opens the whole locking scheme up
-> to races.
-> 
-> host->get_lock is set on m68k only, so other drivers' behaviour is not
-> changed.
-> 
-> Signed-off-by: Michael Schmitz <schmitz@debian.org>
+------------------
 
-It's a bit kludgy, but minimal and correct.
+From: "Denis V. Lunev" <den@openvz.org>
 
-Applied, thank you.
+commit efb9e0f4f43780f0ae0c6428d66bd03e805c7539 upstream.
+
+Without the patch the kernel generates the following error.
+
+ ata11.15: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ ata11.15: Port Multiplier vendor mismatch '0x197b' != '0x123'
+ ata11.15: PMP revalidation failed (errno=-19)
+ ata11.15: failed to recover PMP after 5 tries, giving up
+
+This patch helps to bypass this error and the device becomes
+functional.
+
+Signed-off-by: Denis V. Lunev <den@openvz.org>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: <linux-ide@vger.kernel.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
+---
+ drivers/ata/libata-pmp.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+--- a/drivers/ata/libata-pmp.c
++++ b/drivers/ata/libata-pmp.c
+@@ -447,8 +447,11 @@ static void sata_pmp_quirks(struct ata_p
+ 		 * otherwise.  Don't try hard to recover it.
+ 		 */
+ 		ap->pmp_link[ap->nr_pmp_links - 1].flags |= ATA_LFLAG_NO_RETRY;
+-	} else if (vendor == 0x197b && devid == 0x2352) {
+-		/* chip found in Thermaltake BlackX Duet, jmicron JMB350? */
++	} else if (vendor == 0x197b && (devid == 0x2352 || devid == 0x0325)) {
++		/*
++		 * 0x2352: found in Thermaltake BlackX Duet, jmicron JMB350?
++		 * 0x0325: jmicron JMB394.
++		 */
+ 		ata_for_each_link(link, ap, EDGE) {
+ 			/* SRST breaks detection and disks get misclassified
+ 			 * LPM disabled to avoid potential problems
