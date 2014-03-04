@@ -1,67 +1,61 @@
-From: Roger Quadros <rogerq@ti.com>
-Subject: Re: [PATCH 06/12] phy: omap: Select OMAP_OCP2SCP bus driver
-Date: Tue, 4 Mar 2014 11:21:37 +0200
-Message-ID: <53159B21.6030102@ti.com>
-References: <1393859254-10937-1-git-send-email-rogerq@ti.com> <1393859254-10937-7-git-send-email-rogerq@ti.com> <20140303185235.GC25804@atomide.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCH 01/12] phy: rename struct omap_control_usb to struct
+ omap_control_phy
+Date: Tue, 4 Mar 2014 14:56:54 +0530
+Message-ID: <53159C5E.2040701@ti.com>
+References: <1393859254-10937-1-git-send-email-rogerq@ti.com>
+ <1393859254-10937-2-git-send-email-rogerq@ti.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:58084 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752195AbaCDJWR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Mar 2014 04:22:17 -0500
-In-Reply-To: <20140303185235.GC25804@atomide.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <1393859254-10937-2-git-send-email-rogerq@ti.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Roger Quadros <rogerq@ti.com>
+Cc: devicetree@vger.kernel.org, george.cherian@ti.com, balajitk@ti.com, linux-ide@vger.kernel.org, tony@atomide.com, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, balbi@ti.com, hdegoede@redhat.com, linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
-To: Tony Lindgren <tony@atomide.com>
-Cc: kishon@ti.com, balbi@ti.com, george.cherian@ti.com, balajitk@ti.com, hdegoede@redhat.com, linux-omap@vger.kernel.org, linux-usb@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On 03/03/2014 08:52 PM, Tony Lindgren wrote:
-> * Roger Quadros <rogerq@ti.com> [140303 07:11]:
->> The OMAP_USB2 and OMAP_PIP3 phy devices will not be
->> detected if the OMAP_OCP2SCP driver is not present.
->> So select it.
-> 
-> Selecting drivers like this will easily lead into missing
-> dependencies. Especially it's bad for tristate driver
-> options that people may want to have as loadable modules.
-> 
-> How about instead depends on OMAP_OCP2SCP?
+Roger,
 
-OK, 'depends' seems fine.
+On Monday 03 March 2014 08:37 PM, Roger Quadros wrote:
+> From: Kishon Vijay Abraham I <kishon@ti.com>
+>
+> Rename struct omap_control_usb to struct omap_control_phy since it can
+> be used to control PHY of USB, SATA and PCIE. Also move the driver and
+> include files under *phy* and made the corresponding changes in the users
+> of phy-omap-control.
+>
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> Signed-off-by: Roger Quadros <rogerq@ti.com>
+> ---
+>   drivers/phy/Kconfig                  |  14 +-
+>   drivers/phy/Makefile                 |   1 +
+>   drivers/phy/phy-omap-control.c       | 320 +++++++++++++++++++++++++++++++++++
+>   drivers/phy/phy-omap-usb2.c          |   8 +-
+>   drivers/phy/phy-ti-pipe3.c           |   8 +-
+>   drivers/usb/musb/omap2430.c          |   2 +-
+>   drivers/usb/phy/Kconfig              |  10 --
+>   drivers/usb/phy/Makefile             |   1 -
+>   drivers/usb/phy/phy-omap-control.c   | 319 ----------------------------------
+>   include/linux/phy/omap_control_phy.h |  89 ++++++++++
+>   include/linux/usb/omap_control_usb.h |  89 ----------
+>   11 files changed, 431 insertions(+), 430 deletions(-)
+>   create mode 100644 drivers/phy/phy-omap-control.c
+>   delete mode 100644 drivers/usb/phy/phy-omap-control.c
+>   create mode 100644 include/linux/phy/omap_control_phy.h
+>   delete mode 100644 include/linux/usb/omap_control_usb.h
 
-cheers,
--roger
+you can use git format-patch -M if a file is moved from one place to 
+another. The diff count will be less in that case and reviewing will be 
+easier ;-)
 
-> 
->  
->> Signed-off-by: Roger Quadros <rogerq@ti.com>
->> ---
->>  drivers/phy/Kconfig | 2 ++
->>  1 file changed, 2 insertions(+)
->>
->> diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
->> index 2f02ec8..afdab3e 100644
->> --- a/drivers/phy/Kconfig
->> +++ b/drivers/phy/Kconfig
->> @@ -44,6 +44,7 @@ config OMAP_USB2
->>  	depends on USB_PHY
->>  	select GENERIC_PHY
->>  	select OMAP_CONTROL_PHY
->> +	select OMAP_OCP2SCP
->>  	help
->>  	  Enable this to support the transceiver that is part of SOC. This
->>  	  driver takes care of all the PHY functionality apart from comparator.
->> @@ -55,6 +56,7 @@ config TI_PIPE3
->>  	depends on ARCH_OMAP2PLUS || COMPILE_TEST
->>  	select GENERIC_PHY
->>  	select OMAP_CONTROL_PHY
->> +	select OMAP_OCP2SCP
->>  	help
->>  	  Enable this to support the PIPE3 PHY that is part of TI SOCs. This
->>  	  driver takes care of all the PHY functionality apart from comparator.
->> -- 
->> 1.8.3.2
->>
-
+Cheers
+Kishon
