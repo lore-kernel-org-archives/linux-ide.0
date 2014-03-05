@@ -1,57 +1,106 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 3.13 108/172] ata: enable quirk from jmicron JMB350 for JMB394
-Date: Tue,  4 Mar 2014 12:03:12 -0800
-Message-ID: <20140304200303.163907148@linuxfoundation.org>
-References: <20140304200259.626667112@linuxfoundation.org>
+From: Roger Quadros <rogerq@ti.com>
+Subject: Re: [PATCH 02/12] phy: omap-control: Update DT binding information
+Date: Wed, 5 Mar 2014 12:37:05 +0200
+Message-ID: <5316FE51.5090705@ti.com>
+References: <1393859254-10937-1-git-send-email-rogerq@ti.com>
+ <1393859254-10937-3-git-send-email-rogerq@ti.com>
+ <20140303190247.GD25804@atomide.com> <5315995F.5050206@ti.com>
+ <20140304162855.GB3376@atomide.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140304200259.626667112@linuxfoundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, "Denis V. Lunev" <den@openvz.org>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <20140304162855.GB3376@atomide.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Tony Lindgren <tony@atomide.com>
+Cc: devicetree@vger.kernel.org, george.cherian@ti.com, balajitk@ti.com, linux-ide@vger.kernel.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, balbi@ti.com, kishon@ti.com, hdegoede@redhat.com, linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-3.13-stable review patch.  If anyone has any objections, please let me know.
+On 03/04/2014 06:28 PM, Tony Lindgren wrote:
+> * Roger Quadros <rogerq@ti.com> [140304 01:17]:
+>> Hi Tony,
+>>
+>> On 03/03/2014 09:02 PM, Tony Lindgren wrote:
+>>> * Roger Quadros <rogerq@ti.com> [140303 07:10]:
+>>>> Move omap-control binding information to the right location.
+>>>>
+>>>> Signed-off-by: Roger Quadros <rogerq@ti.com>
+>>>> ---
+>>>>  Documentation/devicetree/bindings/phy/ti-phy.txt   | 25 ++++++++++++++++++++++
+>>>>  Documentation/devicetree/bindings/usb/omap-usb.txt | 24 ---------------------
+>>>>  2 files changed, 25 insertions(+), 24 deletions(-)
+>>>>
+>>>> diff --git a/Documentation/devicetree/bindings/phy/ti-phy.txt b/Documentation/devicetree/bindings/phy/ti-phy.txt
+>>>> index 207e14c..41dc132 100644
+>>>> --- a/Documentation/devicetree/bindings/phy/ti-phy.txt
+>>>> +++ b/Documentation/devicetree/bindings/phy/ti-phy.txt
+>>>> @@ -1,5 +1,30 @@
+>>>>  TI PHY: DT DOCUMENTATION FOR PHYs in TI PLATFORMs
+>>>>  
+>>>> +OMAP CONTROL PHY
+>>>> +
+>>>> +Required properties:
+>>>> + - compatible: Should be one of
+>>>> + "ti,control-phy-otghs" - if it has otghs_control mailbox register as on OMAP4.
+>>>> + "ti,control-phy-usb2" - if it has Power down bit in control_dev_conf register
+>>>> +                        e.g. USB2_PHY on OMAP5.
+>>>> + "ti,control-phy-pipe3" - if it has DPLL and individual Rx & Tx power control
+>>>> +                        e.g. USB3 PHY and SATA PHY on OMAP5.
+>>>> + "ti,control-phy-dra7usb2" - if it has power down register like USB2 PHY on
+>>>> +                        DRA7 platform.
+>>>> + "ti,control-phy-am437usb2" - if it has power down register like USB2 PHY on
+>>>> +                        AM437 platform.
+>>>
+>>> To me it seems that you can leave out all the above. You can set these falgs
+>>> flags directly in the driver based on the compatible flag. Then just initialize
+>>> the .data in the driver based on the compatible flag.
+>>
+>> I'm not sure if I got you. A single platform can have different type of phys.
+>>
+>> e.g. OMAP5 has both usb2 and pipe3 PHYs,
+>> DRA7 has both pipe3 and usb2 PHYs, but this usb2 PHY is not compatible with OMAP5 one
+>> so we need a new compatible id for that.
+>>
+>> To add to the woes, the designers were creative enough to make another mutation to
+>> the USB2 PHY for AM437x, :(
+> 
+> Oh OK, in that case the compatible flag may not be enough for configuring the
+> various instances.
+>  
+>> What do you suggest the compatible ids should look like for these 5 types of PHY control?
+>> OTGHS	(OMAP4 & 5)
+>> USB2	(OMAP5)
+>> PIPE3	(OMAP5 & DRA7)
+>> USB2x	(DRA7)
+>> USB2y	(AM437)
+> 
+> I think in that case having the various instances fully configurable from
+> device tree is OK if you prefer that. But if you wanted to use the
+> compatible flag, then you could do something like this:
 
-------------------
+I'll stick to the compatible flag.
 
-From: "Denis V. Lunev" <den@openvz.org>
+> 
+> ti,control-phy-omap4-otghs	(assuming same on omap4 & 5)
+> ti,control-phy-omap5-usb2
+> ti,control-phy-omap5-pipe3	(assuming same on omap5 & dra7)
+> ti,control-phy-dra7-usb2x
+> ti,control-phy-am437-usb2y
 
-commit efb9e0f4f43780f0ae0c6428d66bd03e805c7539 upstream.
+OK.
 
-Without the patch the kernel generates the following error.
+The last 2 can just be 
 
- ata11.15: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
- ata11.15: Port Multiplier vendor mismatch '0x197b' != '0x123'
- ata11.15: PMP revalidation failed (errno=-19)
- ata11.15: failed to recover PMP after 5 tries, giving up
+ti,control-phy-dra7-usb2
+ti,control-phy-am437-usb2
 
-This patch helps to bypass this error and the device becomes
-functional.
-
-Signed-off-by: Denis V. Lunev <den@openvz.org>
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: <linux-ide@vger.kernel.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
----
- drivers/ata/libata-pmp.c |    7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
-
---- a/drivers/ata/libata-pmp.c
-+++ b/drivers/ata/libata-pmp.c
-@@ -447,8 +447,11 @@ static void sata_pmp_quirks(struct ata_p
- 		 * otherwise.  Don't try hard to recover it.
- 		 */
- 		ap->pmp_link[ap->nr_pmp_links - 1].flags |= ATA_LFLAG_NO_RETRY;
--	} else if (vendor == 0x197b && devid == 0x2352) {
--		/* chip found in Thermaltake BlackX Duet, jmicron JMB350? */
-+	} else if (vendor == 0x197b && (devid == 0x2352 || devid == 0x0325)) {
-+		/*
-+		 * 0x2352: found in Thermaltake BlackX Duet, jmicron JMB350?
-+		 * 0x0325: jmicron JMB394.
-+		 */
- 		ata_for_each_link(link, ap, EDGE) {
- 			/* SRST breaks detection and disks get misclassified
- 			 * LPM disabled to avoid potential problems
+cheers,
+-roger
