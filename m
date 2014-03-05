@@ -1,48 +1,43 @@
-From: Marek Vasut <marex-ynQEQJNshbs@public.gmane.org>
-Subject: Re: [PATCH] ahci_imx: Put #ifdef CONFIG_PM_SLEEP around
- suspend / resume functions
-Date: Wed, 5 Mar 2014 20:23:40 +0100
-Message-ID: <201403052023.40492.marex@denx.de>
+From: =?UTF-8?B?QWxleGFuZGVyIFNoaXlhbg==?= <shc_work@mail.ru>
+Subject: =?UTF-8?B?UmU6IFtQQVRDSF0gYWhjaV9pbXg6IFB1dCAjaWZkZWYgQ09ORklHX1BNX1NM?=
+ =?UTF-8?B?RUVQIGFyb3VuZCBzdXNwZW5kIC8gcmVzdW1lIGZ1bmN0aW9ucw==?=
+Date: Wed, 05 Mar 2014 23:27:45 +0400
+Message-ID: <1394047665.191935701@f319.i.mail.ru>
 References: <1394047069-29902-1-git-send-email-hdegoede@redhat.com>
-Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+ <201403052023.40492.marex@denx.de>
+Reply-To: =?UTF-8?B?QWxleGFuZGVyIFNoaXlhbg==?= <shc_work@mail.ru>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-sunxi+bncBDIOBYPK6QDRBP7T3WMAKGQET7LU4SQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <1394047069-29902-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/linux-sunxi>
-Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, Richard Zhu <Hong-Xing.Zhu-KZfg59tc24xl57MIdRCFDg@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, devicetree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Bartlomiej Zolnierkiewicz <b.zolnierkie-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <201403052023.40492.marex@denx.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: =?UTF-8?B?TWFyZWsgVmFzdXQ=?= <marex@denx.de>
+Cc: =?UTF-8?B?ZGV2aWNldHJlZQ==?= <devicetree@vger.kernel.org>, =?UTF-8?B?SGFucyBkZSBHb2VkZQ==?= <hdegoede@redhat.com>, =?UTF-8?B?UmljaGFyZCBaaHU=?= <Hong-Xing.Zhu@freescale.com>, =?UTF-8?B?QmFydGxvbWllaiBab2xuaWVya2lld2ljeg==?= <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org, linux-sunxi@googlegroups.com, =?UTF-8?B?VGVqdW4gSGVv?= <tj@kernel.org>, =?UTF-8?B?TWF4aW1lIFJpcGFyZA==?= <maxime.ripard@free-electrons.com>, =?UTF-8?B?T2xpdmVyIFNjaGluYWds?= <oliver@schinagl.nl>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-On Wednesday, March 05, 2014 at 08:17:49 PM, Hans de Goede wrote:
-> This fixes the following warnings when CONFIG_PM_SLEEP is not set:
->=20
-> drivers/ata/ahci_imx.c:284:12: warning: =E2=80=98imx_ahci_suspend=E2=80=
-=99 defined but not
-> used [-Wunused-function] drivers/ata/ahci_imx.c:299:12: warning:
-> =E2=80=98imx_ahci_resume=E2=80=99 defined but not used [-Wunused-function=
-]
->=20
-> Reported-by: Bartlomiej Zolnierkiewicz <b.zolnierkie-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-> Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-> Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-
-Obviously makes sense.
-
-Acked-by: Marek Vasut <marex-ynQEQJNshbs@public.gmane.org>
-
-Best regards,
-Marek Vasut
-
---=20
-You received this message because you are subscribed to the Google Groups "=
-linux-sunxi" group.
-To unsubscribe from this group and stop receiving emails from it, send an e=
-mail to linux-sunxi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-For more options, visit https://groups.google.com/groups/opt_out.
+0KHRgNC10LTQsCwgIDUg0LzQsNGA0YLQsCAyMDE0LCAyMDoyMyArMDE6MDAg0L7RgiBNYXJlayBW
+YXN1dCA8bWFyZXhAZGVueC5kZT46Cj4gT24gV2VkbmVzZGF5LCBNYXJjaCAwNSwgMjAxNCBhdCAw
+ODoxNzo0OSBQTSwgSGFucyBkZSBHb2VkZSB3cm90ZToKPiA+IFRoaXMgZml4ZXMgdGhlIGZvbGxv
+d2luZyB3YXJuaW5ncyB3aGVuIENPTkZJR19QTV9TTEVFUCBpcyBub3Qgc2V0Ogo+ID4gCj4gPiBk
+cml2ZXJzL2F0YS9haGNpX2lteC5jOjI4NDoxMjogd2FybmluZzog4oCYaW14X2FoY2lfc3VzcGVu
+ZOKAmSBkZWZpbmVkIGJ1dCBub3QKPiA+IHVzZWQgWy1XdW51c2VkLWZ1bmN0aW9uXSBkcml2ZXJz
+L2F0YS9haGNpX2lteC5jOjI5OToxMjogd2FybmluZzoKPiA+IOKAmGlteF9haGNpX3Jlc3VtZeKA
+mSBkZWZpbmVkIGJ1dCBub3QgdXNlZCBbLVd1bnVzZWQtZnVuY3Rpb25dCj4gPiAKPiA+IFJlcG9y
+dGVkLWJ5OiBCYXJ0bG9taWVqIFpvbG5pZXJraWV3aWN6IDxiLnpvbG5pZXJraWVAc2Ftc3VuZy5j
+b20+Cj4gPiBDYzogQmFydGxvbWllaiBab2xuaWVya2lld2ljeiA8Yi56b2xuaWVya2llQHNhbXN1
+bmcuY29tPgo+ID4gU2lnbmVkLW9mZi1ieTogSGFucyBkZSBHb2VkZSA8aGRlZ29lZGVAcmVkaGF0
+LmNvbT4KPiAKPiBPYnZpb3VzbHkgbWFrZXMgc2Vuc2UuCj4gCj4gQWNrZWQtYnk6IE1hcmVrIFZh
+c3V0IDxtYXJleEBkZW54LmRlPgoKQnV0IGEgYmV0dGVyIHdheSBpcyB0byB1c2UgdGhlICJfX21h
+eWJlX3VudXNlZCIgYXR0cmlidXRlIGZvciBzdWNoIGNhc2VzLgoKLS0tCl9fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmxpbnV4LWFybS1rZXJuZWwgbWFpbGlu
+ZyBsaXN0CmxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZwpodHRwOi8vbGlzdHMu
+aW5mcmFkZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LWFybS1rZXJuZWwK
