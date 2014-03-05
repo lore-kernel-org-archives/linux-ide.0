@@ -1,13 +1,13 @@
 From: Luis Henriques <luis.henriques@canonical.com>
-Subject: [PATCH 3.11 001/131] ata: enable quirk from jmicron JMB350 for JMB394
-Date: Wed,  5 Mar 2014 14:22:05 +0000
-Message-ID: <1394029455-23128-2-git-send-email-luis.henriques@canonical.com>
-References: <1394029455-23128-1-git-send-email-luis.henriques@canonical.com>
+Subject: [PATCH 3.5 01/62] ata: enable quirk from jmicron JMB350 for JMB394
+Date: Wed,  5 Mar 2014 14:36:05 +0000
+Message-ID: <1394030226-26652-2-git-send-email-luis.henriques@canonical.com>
+References: <1394030226-26652-1-git-send-email-luis.henriques@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <kernel-team-bounces@lists.ubuntu.com>
-In-Reply-To: <1394029455-23128-1-git-send-email-luis.henriques@canonical.com>
+In-Reply-To: <1394030226-26652-1-git-send-email-luis.henriques@canonical.com>
 List-Unsubscribe: <https://lists.ubuntu.com/mailman/options/kernel-team>,
  <mailto:kernel-team-request@lists.ubuntu.com?subject=unsubscribe>
 List-Archive: <https://lists.ubuntu.com/archives/kernel-team>
@@ -21,7 +21,7 @@ To: linux-kernel@vger.kernel.org, stable@vger.kernel.org, kernel-team@lists.ubun
 Cc: Tejun Heo <tj@kernel.org>, "Denis V. Lunev" <den@openvz.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-3.11.10.6 -stable review patch.  If anyone has any objections, please let me know.
+3.5.7.32 -stable review patch.  If anyone has any objections, please let me know.
 
 ------------------
 
@@ -48,7 +48,7 @@ Signed-off-by: Luis Henriques <luis.henriques@canonical.com>
  1 file changed, 5 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
-index 20fd337..7ccc084 100644
+index f5c35be..0ba32fe 100644
 --- a/drivers/ata/libata-pmp.c
 +++ b/drivers/ata/libata-pmp.c
 @@ -447,8 +447,11 @@ static void sata_pmp_quirks(struct ata_port *ap)
