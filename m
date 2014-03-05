@@ -1,43 +1,75 @@
-From: =?UTF-8?B?QWxleGFuZGVyIFNoaXlhbg==?= <shc_work@mail.ru>
-Subject: =?UTF-8?B?UmU6IFtQQVRDSF0gYWhjaV9pbXg6IFB1dCAjaWZkZWYgQ09ORklHX1BNX1NM?=
- =?UTF-8?B?RUVQIGFyb3VuZCBzdXNwZW5kIC8gcmVzdW1lIGZ1bmN0aW9ucw==?=
-Date: Wed, 05 Mar 2014 23:27:45 +0400
-Message-ID: <1394047665.191935701@f319.i.mail.ru>
-References: <1394047069-29902-1-git-send-email-hdegoede@redhat.com>
- <201403052023.40492.marex@denx.de>
-Reply-To: =?UTF-8?B?QWxleGFuZGVyIFNoaXlhbg==?= <shc_work@mail.ru>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH v5 0/3] Accelerate Storage Resume (2x or more)
+Date: Wed, 05 Mar 2014 12:17:24 -0800
+Message-ID: <20140305201443.20088.85361.stgit@viggo.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <201403052023.40492.marex@denx.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: =?UTF-8?B?TWFyZWsgVmFzdXQ=?= <marex@denx.de>
-Cc: =?UTF-8?B?ZGV2aWNldHJlZQ==?= <devicetree@vger.kernel.org>, =?UTF-8?B?SGFucyBkZSBHb2VkZQ==?= <hdegoede@redhat.com>, =?UTF-8?B?UmljaGFyZCBaaHU=?= <Hong-Xing.Zhu@freescale.com>, =?UTF-8?B?QmFydGxvbWllaiBab2xuaWVya2lld2ljeg==?= <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org, linux-sunxi@googlegroups.com, =?UTF-8?B?VGVqdW4gSGVv?= <tj@kernel.org>, =?UTF-8?B?TWF4aW1lIFJpcGFyZA==?= <maxime.ripard@free-electrons.com>, =?UTF-8?B?T2xpdmVyIFNjaGluYWds?= <oliver@schinagl.nl>, linux-arm-kernel@lists.infradead.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:39248 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753783AbaCEURg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 5 Mar 2014 15:17:36 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: tj@kernel.org, JBottomley@Parallels.com
+Cc: Len Brown <len.brown@intel.com>, linux-scsi@vger.kernel.org, Phillip Susi <psusi@ubuntu.com>, linux-ide@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Todd Brandt <todd.e.brandt@linux.intel.com>, Todd Brandt <todd.e.brandt@intel.com>
 
-0KHRgNC10LTQsCwgIDUg0LzQsNGA0YLQsCAyMDE0LCAyMDoyMyArMDE6MDAg0L7RgiBNYXJlayBW
-YXN1dCA8bWFyZXhAZGVueC5kZT46Cj4gT24gV2VkbmVzZGF5LCBNYXJjaCAwNSwgMjAxNCBhdCAw
-ODoxNzo0OSBQTSwgSGFucyBkZSBHb2VkZSB3cm90ZToKPiA+IFRoaXMgZml4ZXMgdGhlIGZvbGxv
-d2luZyB3YXJuaW5ncyB3aGVuIENPTkZJR19QTV9TTEVFUCBpcyBub3Qgc2V0Ogo+ID4gCj4gPiBk
-cml2ZXJzL2F0YS9haGNpX2lteC5jOjI4NDoxMjogd2FybmluZzog4oCYaW14X2FoY2lfc3VzcGVu
-ZOKAmSBkZWZpbmVkIGJ1dCBub3QKPiA+IHVzZWQgWy1XdW51c2VkLWZ1bmN0aW9uXSBkcml2ZXJz
-L2F0YS9haGNpX2lteC5jOjI5OToxMjogd2FybmluZzoKPiA+IOKAmGlteF9haGNpX3Jlc3VtZeKA
-mSBkZWZpbmVkIGJ1dCBub3QgdXNlZCBbLVd1bnVzZWQtZnVuY3Rpb25dCj4gPiAKPiA+IFJlcG9y
-dGVkLWJ5OiBCYXJ0bG9taWVqIFpvbG5pZXJraWV3aWN6IDxiLnpvbG5pZXJraWVAc2Ftc3VuZy5j
-b20+Cj4gPiBDYzogQmFydGxvbWllaiBab2xuaWVya2lld2ljeiA8Yi56b2xuaWVya2llQHNhbXN1
-bmcuY29tPgo+ID4gU2lnbmVkLW9mZi1ieTogSGFucyBkZSBHb2VkZSA8aGRlZ29lZGVAcmVkaGF0
-LmNvbT4KPiAKPiBPYnZpb3VzbHkgbWFrZXMgc2Vuc2UuCj4gCj4gQWNrZWQtYnk6IE1hcmVrIFZh
-c3V0IDxtYXJleEBkZW54LmRlPgoKQnV0IGEgYmV0dGVyIHdheSBpcyB0byB1c2UgdGhlICJfX21h
-eWJlX3VudXNlZCIgYXR0cmlidXRlIGZvciBzdWNoIGNhc2VzLgoKLS0tCl9fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmxpbnV4LWFybS1rZXJuZWwgbWFpbGlu
-ZyBsaXN0CmxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZwpodHRwOi8vbGlzdHMu
-aW5mcmFkZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LWFybS1rZXJuZWwK
+It is not everyday that a kernel operation gets 2x faster.  Nice find
+by Todd and his AnalyzeSuspend tool [1].
+
+Todd is on vacation so I am taking care of these patches to make sure
+they get in the queue for 3.15.
+
+The significant changes from Todd's last submission [2]:
+
+1/ Split out the pure cleanup into its own patch, and expand it to clean
+   up libsas as well
+
+2/ Move the entirety of scsi_device resume to an async context.  As
+   written, v4 of the patchset overlapped the scsi-start-stop command
+   with the scsi_device_resume().  Now in v5 the queue restart is
+   properly ordered with the completion of the scsi-start-stop command.
+
+Resume completion time as reported by:
+
+"echo devices > /sys/power/pm_test && echo mem > /sys/power/state"
+
+BEFORE: PM: resume of devices complete after 2271.097 msecs
+AFTER:  PM: resume of devices complete after 1057.404 msecs
+
+On a system with two SSDs attached via AHCI.
+
+--
+Dan
+
+
+[1]: Todd's testing showing up to 12x resume latency improvement in some
+cases:
+https://01.org/suspendresume/blogs/tebrandt/2013/hard-disk-resume-optimization-simpler-approach
+
+[2]: Todd's v4 patchset:
+[PATCH v4 0/2] http://marc.info/?l=linux-ide&m=138984698103487&w=2
+[PATCH v4 1/2] http://marc.info/?l=linux-ide&m=138984713203515&w=2
+[PATCH v4 2/2] http://marc.info/?l=linux-ide&m=138984722003539&w=2
+
+---
+
+Dan Williams (2):
+      libata, libsas: kill pm_result and related cleanup
+      scsi: async sd resume
+
+Todd Brandt (1):
+      libata: async resume
+
+
+ drivers/ata/libata-core.c     |   75 ++++++++++-----------------
+ drivers/ata/libata-eh.c       |   13 +----
+ drivers/scsi/libsas/sas_ata.c |   35 ++----------
+ drivers/scsi/scsi.c           |    3 +
+ drivers/scsi/scsi_pm.c        |  115 ++++++++++++++++++++++++++++++++---------
+ drivers/scsi/scsi_priv.h      |    1 
+ drivers/scsi/sd.c             |    1 
+ include/linux/libata.h        |    9 +--
+ include/scsi/libsas.h         |    1 
+ 9 files changed, 134 insertions(+), 119 deletions(-)
