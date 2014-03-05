@@ -1,111 +1,144 @@
-From: Loc Ho <lho-qTEPVZfXA3Y@public.gmane.org>
-Subject: Re: [PATCH v12 1/4] PHY: Add function set_speed to generic PHY framework
-Date: Wed, 5 Mar 2014 13:27:01 -0800
-Message-ID: <CAPw-ZTnHo17YcTWBygSO2EmagV-kt+TAqo5ryPTePz_b41_8RQ@mail.gmail.com>
-References: <1393524848-8207-1-git-send-email-lho@apm.com>
-	<1393524848-8207-2-git-send-email-lho@apm.com>
-	<20140227190102.GB4862@saruman.home>
-	<CAPw-ZT=F07=T0=z=iT=hxJ0+609RBDYRL=MXF5dQoEowLjsRjQ@mail.gmail.com>
-	<20140227205039.GE5375@saruman.home>
-	<CAPw-ZT=7cu1NoxrBL48RUJV04ofrnNkF=p=23VFfu8ZZWmkQWQ@mail.gmail.com>
-	<20140227213427.GG5375@saruman.home>
-	<CAPw-ZT=6cF77FjVZhXkR4thvkoxDH=aEikoDQjcpskMXE+F8OA@mail.gmail.com>
-	<CAPw-ZTmPqfkm=kkN6tY3N3mAWoC0MosJLrHOw=at_tir7rV3sw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CAPw-ZTmPqfkm=kkN6tY3N3mAWoC0MosJLrHOw=at_tir7rV3sw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: balbi-l0cyMroinI0@public.gmane.org
-Cc: Kishon Vijay Abraham I <kishon-l0cyMroinI0@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Olof Johansson <olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, Don Dutile <ddutile-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jon Masters <jcm-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "patches-qTEPVZfXA3Y@public.gmane.org" <patches-qTEPVZfXA3Y@public.gmane.org>
+From: Loc Ho <lho@apm.com>
+Subject: [PATCH v13 0/3] PHY: Add APM X-Gene SoC 15Gbps Multi-purpose PHY support
+Date: Wed,  5 Mar 2014 15:43:16 -0700
+Message-ID: <1394059399-30671-1-git-send-email-lho@apm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: kishon@ti.com, tj@kernel.org
+Cc: olof@lixom.net, arnd@arndb.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 List-Id: linux-ide@vger.kernel.org
 
-Hi,
+This patch adds support for APM X-Gene SoC 15Gbps Multi-purpose PHY. This
+is the physical layer interface for the corresponding host controller. This
+driver uses the PHY generic framework.
 
->>>> >> >> This patch adds function set_speed to the generic PHY framework operation
->>>> >> >> structure. This function can be called to instruct the PHY underlying layer
->>>> >> >> at specified lane to configure for specified speed in hertz.
->>>> >> >
->>>> >> > why ? looks like clk_set_rate() is your friend here. Can you be more
->>>> >> > descriptive of the use case ? When will this be used ?
->>>> >> >
->>>> >>
->>>> >> The phy_set_speed is used to configure the operation speed of the PHY
->>>> >> at run-time. The clock interface in general is used to configure the
->>>> >> clock input to the IP. I don't believe they are the same thing. Maybe
->>>> >> it will be clear in my response to your second email
->>>> >
->>>> > The problem with this is that you end up adding SATA-specific details to
->>>> > something which is supposed to be generic.
->>>>
->>>> Setting the operation speed is pretty generic from an interface point
->>>> of view. An generic multi-purpose PHY can support multiple speed. If
->>>
->>> no it's not. Specially when you consider that your "speed" argument can
->>> be just about anything and depending on the underlying bus, it *will* be
->>> treated differently. Note that e.g. in OMAP devices the exact *same* PHY
->>> IP is used for PCIe, SATA and USB... now, let's assume for the sake of
->>> argument that we were to implement ->set_speed() in that environment,
->>> how do you plan to do that ? a 6MHz arguments isn't valid from USB stand
->>> point and could mean different things in PCIe or SATA.
->>>
->>
->> Correct me if I am wrong here. If the same PHY is used for PCIe, SATA,
->> and USB, would you not need to indicate what speed the PHY should be
->> operated at - unless the underlying IP magically negotiate and
->> configured automatically? If so, what about PHY isn't so intelligent?
->> How should you suggest that we handle these?
->>
->>>> the upper layer wish to operate at an specified speed (say for testing
->>>> purpose and etc), it can be allowed.
->>>
->>> anything for testing purposes, should be limited to test scenarios.
->>
->> Testing purpose is only one use case. Another use case is to limit the
->> speed so that I can confirm the driver actually works with various
->> speed of the device and handle correctly.
->>
->>>
->>>> > After negoatiation, don't you
->>>> > get any interrupt from your PHY indicating that link speed negotiation
->>>> > is done ? Or is that IRQ only on AHCI IP ?
->>>>
->>>> There is NO interrupt from the PHY. The IRQ is assoicated with the
->>>> AHCI IP. With SATA host flow, it starts off with an COMRESET to start
->>>> the link negotiation. At that point, it will poll for completion.
->>>>
->>>> Any other concerns?
->>>
->>> hey, calm down... just trying to prevent us from applying something
->>> which isn't truly generic and I don't think "->set_speed" is generic
->>> enough. The semantics of the "speed" argument won't be valid for all use
->>> cases.
->>>
->>> I can already see people using that to pass
->>> USB_SPEED_{LOW,FULL,HIGH,SUPER}, instead of actual speed numbers. We wil
->>> end up with a mess to handle from a PHY driver, specially in cases such
->>> as OMAP where, as mentioned above, the same IP is used for SATA, PCIe
->>> and USB3.
->>>
->>
->> This PHY isn't as "intelligent" as other PHY's. What would you suggest
->> as I need an method to indicate to the underlying PHY that I want to
->> operate at an specified speed?
->
-> Sorry if I am pinging you guys too fast here. I am look from an
-> solution and open to any solution in which it is acceptable for your
-> original intent of the generic PHY framework. I understand that you
-> don't believe set_speed is generic enough and may not apply to omap.
-> Or if you prefer we can try changing the init function to take an
-> initial MAX speed?
->
+v13:
+* Remove PHY patch for initial version as only Gen3 speed is supported
+* Remove function xgene_phy_sata_force_gen and xgene_phy_set_speed
+* Minor comment update to header and function xgene_phy_hw_init
 
-For the initial version, I will remove support for Gen1/Gen2 until we
-come up with an solution. Then post patches that will address
-individual errata's.
+v12:
+* Add driver depend on HAS_IOMEM and OF
+* Fix comment typo in header file phy-xgene.
+* Change all macro shift value in hex to decimal
+* Add time out for while loop to function sds_wr and sds_rd
+* Set proper return value if failed to get IO resource 0
+* Move devm_of_phy_provider_register to last operation in probe function
+* Remove driver registration print statement
+* Replace module init/exit with module_platform_driver
+* Change license to GPL v2
 
--Loc
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+v11:
+* Add comment to function phy_set_speed
+* Add commit log for documentation patch file
+* Minor comment update to function xgene_phy_force_lat_summer_cal and
+  xgene_phy_sata_force_gen
+
+v10
+* Update comment for function xgene_phy_force_lat_summer_cal and
+  xgene_phy_sata_force_gen with function style fully-winged style
+
+v9
+* Update CMU parameter setting for register 13
+* Add required delay when configure CMU PLL, Manual Calibration PLL, and VCO
+  PLL
+* Add comment for CMU PLL calibration loop delay of 10us
+* Add required delay for stopping and starting summer calibrations
+* Update comment for summer and latch calibration delays
+* Update comment for PHY reset Rx delay and decrease max sleep time from 500
+  to 150us
+* Always program the DFE (equalizer) setting to 0x7e00 as with original version
+* Fix Tx speed selection to always using Gen3 setting when force to an
+  specified generation speed
+
+v8
+* Update binding documentation
+* Remove XGENE_PHY_DTS and XGENE_PHY_EXT_DTS defines
+* Remove support for internal clock
+* Remove support for external reference CMU
+* Remove the need for external reference resource DTS entry and its related
+  code
+
+v7
+* Add/Update PHY CMU/lane parameters and its default values
+* Rename variable enable_manual_cal to preA3Chip
+* Remove function phy_rd, phy_wr, and phy_wr_flush
+* Change function cmu_wr, cmu_rd, cmu_toggle1to0, cmu_clrbits, cmu_setbits,
+  serdes_wr, serdes_rd, serdes_clrbits, and serdes_setbits to take context
+  instead void *
+* Remove function serdes_toggle1to0
+* Decrease the polling time from 10ms to 1ms on CMU calibration complete
+  detection
+* Move all SATA specify code in function xgene_phy_hw_initialize into
+  function xgene_phy_hw_init_sata
+* Add usleep_range after starting summer/latch calibrations
+* Add usleep_range between receiver reset (function xgene_phy_reset_rxd)
+* Save and restore PHY register 31 instead writing 0 in function
+  xgene_phy_gen_avg_val
+* Update function xgene_phy_sata_force_gen programming sequences
+* Add support to reset the receiver lane in function xgene_phy_set_speed
+  if speed is 0
+* Update PHY parameters in DTS per controller
+* Some minor code clean up
+
+v6
+* Move PHY document to Documentation/devicetree/binding/phy
+* Remove _ADDR from all register defines
+* Update clock-names property for sataphy1clk, sataphy2clk, and sataphy3clk
+
+v5
+* Update DTS binding documentation
+* Remove direct clock access and use clock interface instead
+* Change override parameters to decimal instead hex values
+* Change apm,tx-amplitude, apm,tx-pre-cursor1, apm,tx-pre-cursor2,
+  apm,tx-post-cursor to be unit of uV
+
+v4
+* Update documentation with 'apm,' instead 'apm-'
+* Change DTS override parameter to have 'apm,'
+* Add select GENERIC_PHY to Kconfig PHY_XGENE
+* Make override parameters to be pair of three values instead one
+* Some minor comment and indentation changes
+* Remove error register addition offset
+* Add ULL to constants
+* Use module_init instead subsys_initcall
+* Make DTS node based on first register address
+* Update override setting values
+
+v3
+* Major re-write of the code based on various review comments
+* Support external clock only at the moment
+* Support SATA mode only at the moment
+* No UEFI support at the moment
+
+v2
+* Remove port knowledge from functions
+* Make all functions static
+* Remove ID completely
+* Make resource requirement based on compatible type
+* Rename override PHY parameters with more descriptive name
+* Add override PHY parameter for per controller, per port, and per speed
+* Patch the generic PHY frame to expose set_speed operation
+
+v1
+* Initial version
+
+Signed-off-by: Loc Ho <lho@apm.com>
+Signed-off-by: Tuan Phan <tphan@apm.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
+---
+Loc Ho (3):
+  Documentation: Add APM X-Gene SoC 15Gbps Multi-purpose PHY driver
+    binding documentation
+  PHY: add APM X-Gene SoC 15Gbps Multi-purpose PHY driver
+  arm64: Add APM X-Gene SoC 15Gbps Multi-purpose PHY DTS entries
+
+ .../devicetree/bindings/phy/apm-xgene-phy.txt      |   79 +
+ arch/arm64/boot/dts/apm-storm.dtsi                 |   75 +
+ drivers/phy/Kconfig                                |    7 +
+ drivers/phy/Makefile                               |    2 +
+ drivers/phy/phy-xgene.c                            | 1756 ++++++++++++++++++++
+ 5 files changed, 1919 insertions(+), 0 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/phy/apm-xgene-phy.txt
+ create mode 100644 drivers/phy/phy-xgene.c
+
