@@ -1,124 +1,61 @@
-From: Loc Ho <lho@apm.com>
-Subject: [PATCH v15 3/3] arm64: Add APM X-Gene SoC AHCI SATA host controller DTS entries
-Date: Wed,  5 Mar 2014 15:44:49 -0700
-Message-ID: <1394059489-30706-4-git-send-email-lho@apm.com>
-References: <1394059489-30706-1-git-send-email-lho@apm.com>
- <1394059489-30706-2-git-send-email-lho@apm.com>
- <1394059489-30706-3-git-send-email-lho@apm.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH] libata: end the r-word
+Date: Wed, 05 Mar 2014 19:33:04 -0800
+Message-ID: <20140306032706.9641.99151.stgit@viggo.jf.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from exprod5og119.obsmtp.com ([64.18.0.189]:54376 "HELO
-	exprod5og119.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755769AbaCEWpd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Mar 2014 17:45:33 -0500
-Received: by mail-pd0-f170.google.com with SMTP id v10so1650652pde.29
-        for <linux-ide@vger.kernel.org>; Wed, 05 Mar 2014 14:45:32 -0800 (PST)
-In-Reply-To: <1394059489-30706-3-git-send-email-lho@apm.com>
+Received: from mga09.intel.com ([134.134.136.24]:62129 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751457AbaCFDdF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 5 Mar 2014 22:33:05 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org
 
-This patch adds APM X-Gene SoC AHCI SATA host controller DTS entries.
+We want our contributors to spend their anger, resentment, and
+frustration emotional resources on finding and fixing broken code.  We
+do not want those valuable resources wasted on unfortunately worded
+comments.
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Tuan Phan <tphan@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- arch/arm64/boot/dts/apm-storm.dtsi |   75 ++++++++++++++++++++++++++++++++++++
- 1 files changed, 75 insertions(+), 0 deletions(-)
+Hi Tejun,
 
-diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
-index c78ddcf..2a03e96 100644
---- a/arch/arm64/boot/dts/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm-storm.dtsi
-@@ -221,6 +221,48 @@
- 				enable-offset = <0x0>;
- 				enable-mask = <0x06>;
- 			};
-+
-+			sata01clk: sata01clk@1f21c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f21c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sata01clk";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x05>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x39>;
-+			};
-+
-+			sata23clk: sata23clk@1f22c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f22c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sata23clk";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x05>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x39>;
-+			};
-+
-+			sata45clk: sata45clk@1f23c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f23c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sata45clk";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x05>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x39>;
-+			};
- 		};
- 
- 		serial0: serial@1c020000 {
-@@ -262,5 +304,38 @@
- 			apm,tx-boost-gain = <31 31 31 31 31 31>;
- 			apm,tx-eye-tuning = <2 10 10 2 10 10>;
- 		};
-+
-+		sata1: sata@1a000000 {
-+			compatible = "apm,xgene-ahci-sgmii";
-+			reg = <0x0 0x1a000000 0x0 0x1000>,
-+			      <0x0 0x1f210000 0x0 0x10000>;
-+			interrupts = <0x0 0x86 0x4>;
-+			status = "disabled";
-+			clocks = <&sata01clk 0>;
-+			phys = <&phy1 0>;
-+			phy-names = "sata-phy";
-+		};
-+
-+		sata2: sata@1a400000 {
-+			compatible = "apm,xgene-ahci-sgmii";
-+			reg = <0x0 0x1a400000 0x0 0x1000>,
-+			      <0x0 0x1f220000 0x0 0x10000>;
-+			interrupts = <0x0 0x87 0x4>;
-+			status = "ok";
-+			clocks = <&sata23clk 0>;
-+			phys = <&phy2 0>;
-+			phy-names = "sata-phy";
-+		};
-+
-+		sata3: sata@1a800000 {
-+			compatible = "apm,xgene-ahci-pcie";
-+			reg = <0x0 0x1a800000 0x0 0x1000>,
-+			      <0x0 0x1f230000 0x0 0x10000>;
-+			interrupts = <0x0 0x88 0x4>;
-+			status = "ok";
-+			clocks = <&sata45clk 0>;
-+			phys = <&phy3 0>;
-+			phy-names = "sata-phy";
-+		};
- 	};
+Today is "Spread the Word to End the Word" day, so I thought it would be
+an interesting exercise to see how often the r-word is used in kernel
+code comments.  Suprisingly, to me at least, it's rare.  In fact it
+seems only libata uses it in code commentary.
+
+Please consider applying this patch to call slow-to-reset devices
+outliers.
+
+Regards,
+Dan
+
+ drivers/ata/libata-eh.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index b4d0596f30a8..6760fc4e85b8 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -95,12 +95,13 @@ enum {
+  * represents timeout for that try.  The first try can be soft or
+  * hardreset.  All others are hardreset if available.  In most cases
+  * the first reset w/ 10sec timeout should succeed.  Following entries
+- * are mostly for error handling, hotplug and retarded devices.
++ * are mostly for error handling, hotplug and those outlier devices that
++ * take an exceptionally long time to recover from reset.
+  */
+ static const unsigned long ata_eh_reset_timeouts[] = {
+ 	10000,	/* most drives spin up by 10sec */
+ 	10000,	/* > 99% working drives spin up before 20sec */
+-	35000,	/* give > 30 secs of idleness for retarded devices */
++	35000,	/* give > 30 secs of idleness for outlier devices */
+ 	 5000,	/* and sweet one last chance */
+ 	ULONG_MAX, /* > 1 min has elapsed, give up */
  };
--- 
-1.5.5
 
