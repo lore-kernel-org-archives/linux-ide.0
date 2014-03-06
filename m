@@ -1,118 +1,48 @@
-From: Loc Ho <lho@apm.com>
-Subject: [PATCH v14 3/3] arm64: Add APM X-Gene SoC 15Gbps Multi-purpose PHY DTS entries
-Date: Thu,  6 Mar 2014 10:54:58 -0700
-Message-ID: <1394128498-28420-4-git-send-email-lho@apm.com>
-References: <1394128498-28420-1-git-send-email-lho@apm.com>
- <1394128498-28420-2-git-send-email-lho@apm.com>
- <1394128498-28420-3-git-send-email-lho@apm.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1394128498-28420-3-git-send-email-lho@apm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: kishon@ti.com, tj@kernel.org
-Cc: olof@lixom.net, arnd@arndb.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] ahci_imx: Put #ifdef CONFIG_PM_SLEEP around
+ suspend / resume functions
+Date: Thu, 6 Mar 2014 14:31:54 -0500
+Message-ID: <20140306193154.GC14033@htj.dyndns.org>
+References: <1394047069-29902-1-git-send-email-hdegoede@redhat.com>
+Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-sunxi+bncBDQ2FCEAWYLRBLM24OMAKGQEQQDA3BA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+In-Reply-To: <1394047069-29902-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/linux-sunxi>
+List-Subscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Content-Disposition: inline
+To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Marek Vasut <marex-ynQEQJNshbs@public.gmane.org>, Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Oliver Schinagl <oliver-dxLnbx3+1qmEVqv0pETR8A@public.gmane.org>, Richard Zhu <Hong-Xing.Zhu-KZfg59tc24xl57MIdRCFDg@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, devicetree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Bartlomiej Zolnierkiewicz <b.zolnierkie-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
-This patch adds the DTS entries for the APM X-Gene SoC 15Gbps Multi-purpose
-PHY driver. The PHY for SATA controller 2 and 3 are enabled by default.
+On Wed, Mar 05, 2014 at 08:17:49PM +0100, Hans de Goede wrote:
+> This fixes the following warnings when CONFIG_PM_SLEEP is not set:
+>=20
+> drivers/ata/ahci_imx.c:284:12: warning: =E2=80=98imx_ahci_suspend=E2=80=
+=99 defined but not used [-Wunused-function]
+> drivers/ata/ahci_imx.c:299:12: warning: =E2=80=98imx_ahci_resume=E2=80=99=
+ defined but not used [-Wunused-function]
+>=20
+> Reported-by: Bartlomiej Zolnierkiewicz <b.zolnierkie-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+> Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+> Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Tuan Phan <tphan@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
----
- arch/arm64/boot/dts/apm-storm.dtsi |   75 ++++++++++++++++++++++++++++++++++++
- 1 files changed, 75 insertions(+), 0 deletions(-)
+Applied to libata/for-3.15.
 
-diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
-index d37d736..c78ddcf 100644
---- a/arch/arm64/boot/dts/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm-storm.dtsi
-@@ -176,6 +176,51 @@
- 				reg-names = "csr-reg";
- 				clock-output-names = "eth8clk";
- 			};
-+
-+			sataphy1clk: sataphy1clk@1f21c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f21c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sataphy1clk";
-+				status = "disabled";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x00>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x06>;
-+			};
-+
-+			sataphy2clk: sataphy1clk@1f22c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f22c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sataphy2clk";
-+				status = "ok";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x3a>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x06>;
-+			};
-+
-+			sataphy3clk: sataphy1clk@1f23c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f23c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sataphy3clk";
-+				status = "ok";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x3a>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x06>;
-+			};
- 		};
- 
- 		serial0: serial@1c020000 {
-@@ -187,5 +232,35 @@
- 			interrupt-parent = <&gic>;
- 			interrupts = <0x0 0x4c 0x4>;
- 		};
-+
-+		phy1: phy@1f21a000 {
-+			compatible = "apm,xgene-phy";
-+			reg = <0x0 0x1f21a000 0x0 0x100>;
-+			#phy-cells = <1>;
-+			clocks = <&sataphy1clk 0>;
-+			status = "disabled";
-+			apm,tx-boost-gain = <30 30 30 30 30 30>;
-+			apm,tx-eye-tuning = <2 10 10 2 10 10>;
-+		};
-+
-+		phy2: phy@1f22a000 {
-+			compatible = "apm,xgene-phy";
-+			reg = <0x0 0x1f22a000 0x0 0x100>;
-+			#phy-cells = <1>;
-+			clocks = <&sataphy2clk 0>;
-+			status = "ok";
-+			apm,tx-boost-gain = <30 30 30 30 30 30>;
-+			apm,tx-eye-tuning = <1 10 10 2 10 10>;
-+		};
-+
-+		phy3: phy@1f23a000 {
-+			compatible = "apm,xgene-phy";
-+			reg = <0x0 0x1f23a000 0x0 0x100>;
-+			#phy-cells = <1>;
-+			clocks = <&sataphy3clk 0>;
-+			status = "ok";
-+			apm,tx-boost-gain = <31 31 31 31 31 31>;
-+			apm,tx-eye-tuning = <2 10 10 2 10 10>;
-+		};
- 	};
- };
--- 
-1.5.5
+Thanks.
+
+--=20
+tejun
+
+--=20
+You received this message because you are subscribed to the Google Groups "=
+linux-sunxi" group.
+To unsubscribe from this group and stop receiving emails from it, send an e=
+mail to linux-sunxi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+For more options, visit https://groups.google.com/groups/opt_out.
