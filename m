@@ -1,61 +1,42 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH] libata: end the r-word
-Date: Wed, 05 Mar 2014 19:33:04 -0800
-Message-ID: <20140306032706.9641.99151.stgit@viggo.jf.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+From: Michael Schmitz <schmitzmic@gmail.com>
+Subject: Re: [PATCH] m68k/atari - ide: do not register interrupt if host->get_lock is set
+Date: Thu, 6 Mar 2014 19:47:06 +1300
+Message-ID: <540db7ba6339cc907a63fb7a615aaa7e@gmail.com>
+References: <1391215693-2880-1-git-send-email-schmitz@debian.org> <1391215693-2880-2-git-send-email-schmitz@debian.org> <20140304.155906.221185723445733090.davem@davemloft.net>
+Mime-Version: 1.0 (Apple Message framework v624)
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:62129 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751457AbaCFDdF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 5 Mar 2014 22:33:05 -0500
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <20140304.155906.221185723445733090.davem@davemloft.net>
+Sender: linux-m68k-owner@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: linux-m68k@vger.kernel.org, schmitz@debian.org, linux-ide@vger.kernel.org, geert@linux-m68k.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org
-Cc: linux-ide@vger.kernel.org
 
-We want our contributors to spend their anger, resentment, and
-frustration emotional resources on finding and fixing broken code.  We
-do not want those valuable resources wasted on unfortunately worded
-comments.
+Thanks Dave,
 
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
-Hi Tejun,
+>> On m68k, host->get_lock is used to both lock and register the 
+>> interrupt
+>> that the IDE host shares with other device drivers. Registering the
+>> IDE interrupt handler in ide-probe.c results in duplicating the
+>> interrupt registered (once via host->get lock, and also via 
+>> init_irq()),
+>> and may result in IDE accepting interrupts even when another driver 
+>> has
+>> locked the interrupt hardware. This opens the whole locking scheme up
+>> to races.
+>>
+>> host->get_lock is set on m68k only, so other drivers' behaviour is not
+>> changed.
+>>
+>> Signed-off-by: Michael Schmitz <schmitz@debian.org>
+>
+> It's a bit kludgy, but minimal and correct.
 
-Today is "Spread the Word to End the Word" day, so I thought it would be
-an interesting exercise to see how often the r-word is used in kernel
-code comments.  Suprisingly, to me at least, it's rare.  In fact it
-seems only libata uses it in code commentary.
+Would you have preferred to use a host flag instead?
 
-Please consider applying this patch to call slow-to-reset devices
-outliers.
+> Applied, thank you.
 
-Regards,
-Dan
+Thanks again,
 
- drivers/ata/libata-eh.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index b4d0596f30a8..6760fc4e85b8 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -95,12 +95,13 @@ enum {
-  * represents timeout for that try.  The first try can be soft or
-  * hardreset.  All others are hardreset if available.  In most cases
-  * the first reset w/ 10sec timeout should succeed.  Following entries
-- * are mostly for error handling, hotplug and retarded devices.
-+ * are mostly for error handling, hotplug and those outlier devices that
-+ * take an exceptionally long time to recover from reset.
-  */
- static const unsigned long ata_eh_reset_timeouts[] = {
- 	10000,	/* most drives spin up by 10sec */
- 	10000,	/* > 99% working drives spin up before 20sec */
--	35000,	/* give > 30 secs of idleness for retarded devices */
-+	35000,	/* give > 30 secs of idleness for outlier devices */
- 	 5000,	/* and sweet one last chance */
- 	ULONG_MAX, /* > 1 min has elapsed, give up */
- };
-
+	Michael
