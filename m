@@ -1,178 +1,94 @@
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH v13 2/3] PHY: add APM X-Gene SoC 15Gbps Multi-purpose
- PHY driver
-Date: Thu, 6 Mar 2014 14:23:05 +0530
-Message-ID: <53183771.9070501@ti.com>
-References: <1394059399-30671-1-git-send-email-lho@apm.com> <1394059399-30671-2-git-send-email-lho@apm.com> <1394059399-30671-3-git-send-email-lho@apm.com>
+From: Roger Quadros <rogerq@ti.com>
+Subject: [PATCH v2 00/13] ARM: OMAP: SATA support for OMAP5 & DRA7
+Date: Thu, 6 Mar 2014 16:22:52 +0200
+Message-ID: <1394115785-28301-1-git-send-email-rogerq@ti.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:44887 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750829AbaCFIxx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 6 Mar 2014 03:53:53 -0500
-In-Reply-To: <1394059399-30671-3-git-send-email-lho@apm.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: kishon@ti.comg, tony@atomide.com, balbi@ti.com
+Cc: devicetree@vger.kernel.org, george.cherian@ti.com, balajitk@ti.com, linux-ide@vger.kernel.org, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, hdegoede@redhat.com, linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org, rogerq@ti.com
 List-Id: linux-ide@vger.kernel.org
-To: Loc Ho <lho@apm.com>, tj@kernel.org
-Cc: olof@lixom.net, arnd@arndb.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
 Hi,
 
-On Thursday 06 March 2014 04:13 AM, Loc Ho wrote:
-> This patch adds support for the APM X-Gene SoC 15Gbps Multi-purpose PHY.
-> This is the physical layer interface for the corresponding host
-> controller. Currently, only external clock and Gen3 SATA mode
-> are supported.
->
-> Signed-off-by: Loc Ho <lho@apm.com>
-> Signed-off-by: Tuan Phan <tphan@apm.com>
-> Signed-off-by: Suman Tripathi <stripathi@apm.com>
-> ---
->   drivers/phy/Kconfig     |    7 +
->   drivers/phy/Makefile    |    2 +
->   drivers/phy/phy-xgene.c | 1756 +++++++++++++++++++++++++++++++++++++++++++++++
->   3 files changed, 1765 insertions(+), 0 deletions(-)
->   create mode 100644 drivers/phy/phy-xgene.c
->
-> diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
-> index afa2354..221a1b7 100644
-> --- a/drivers/phy/Kconfig
-> +++ b/drivers/phy/Kconfig
-> @@ -64,4 +64,11 @@ config BCM_KONA_USB2_PHY
->   	help
->   	  Enable this to support the Broadcom Kona USB 2.0 PHY.
->
-> +config PHY_XGENE
-> +	tristate "APM X-Gene 15Gbps PHY support"
-> +	depends on HAS_IOMEM && OF && (ARM64 || COMPILE_TEST)
-> +	select GENERIC_PHY
-> +	help
-> +	  This option enables support for APM X-Gene SoC multi-purpose PHY.
-> +
->   endmenu
-> diff --git a/drivers/phy/Makefile b/drivers/phy/Makefile
-> index b57c253..dee70f4 100644
-> --- a/drivers/phy/Makefile
-> +++ b/drivers/phy/Makefile
-> @@ -9,3 +9,5 @@ obj-$(CONFIG_PHY_EXYNOS_MIPI_VIDEO)	+= phy-exynos-mipi-video.o
->   obj-$(CONFIG_PHY_MVEBU_SATA)		+= phy-mvebu-sata.o
->   obj-$(CONFIG_OMAP_USB2)			+= phy-omap-usb2.o
->   obj-$(CONFIG_TWL4030_USB)		+= phy-twl4030-usb.o
-> +obj-$(CONFIG_PHY_XGENE)			+= phy-xgene.o
-> +
-.
-.
-<snip>
-.
-.
+This series adds SATA support for OMAP5 uevm and DRA7-evm boards.
 
-> +	int i;
-> +
-> +	rc = xgene_phy_hw_initialize(ctx, CLK_EXT_DIFF, SSC_DISABLE);
-> +	if (rc) {
-> +		dev_err(ctx->dev, "PHY initialize failed %d\n", rc);
-> +		return rc;
-> +	}
-> +
-> +	/* Setup clock properly after PHY configuration */
-> +	if (!IS_ERR(ctx->clk)) {
-> +		/* HW requires an toggle of the clock */
-> +		clk_prepare_enable(ctx->clk);
-> +		clk_disable_unprepare(ctx->clk);
-> +		clk_prepare_enable(ctx->clk);
-> +	}
-> +
-> +	/* Compute average value */
-> +	for (i = 0; i < MAX_LANE; i++)
-> +		xgene_phy_gen_avg_val(ctx, i);
-> +
-> +	dev_dbg(ctx->dev, "PHY initialized\n");
-> +	return 0;
-> +}
-> +
-> +static const struct phy_ops xgene_phy_ops = {
-> +	.init		= xgene_phy_hw_init,
-> +	.owner		= THIS_MODULE,
-> +};
-> +
-> +static struct phy *xgene_phy_xlate(struct device *dev,
-> +				   struct of_phandle_args *args)
-> +{
-> +	struct xgene_phy_ctx *ctx = dev_get_drvdata(dev);
-> +
-> +	if (args->args_count > 0) {
-> +		if (args->args[0] >= MODE_MAX)
-> +			return NULL;
+- Cleans up the ti-pipe3 PHY driver
+- Adds SATA DPLL support to ti-pipe3 PHY driver
+- Adds SATA nodes to hwmod and SoC DT data
 
-Are you sure you want to return NULL instead of error? NULL is 
-considered a valid value for optional PHYs.
-> +		ctx->mode = args->args[0];
-> +	}
+Patches are based on 3.14-rc4 with balbi/next, linux-phy/next and
+omap-for-v3.15/dt merged on top..
 
-I think it doesn't make sense to return the phy without the 'mode'. So 
-we should report error here too.
+To test SATA you will also need [1].
 
-> +	return ctx->phy;
-> +}
-> +
-> +static void xgene_phy_get_param(struct platform_device *pdev,
-> +				const char *name, u32 *buffer,
-> +				int count, u32 *default_val,
-> +				u32 conv_factor)
-> +{
-> +	int i;
-> +
-> +	if (!of_property_read_u32_array(pdev->dev.of_node, name, buffer,
-> +					count)) {
-> +		for (i = 0; i < count; i++)
-> +			buffer[i] /= conv_factor;
-> +		return;
-> +	}
-> +	/* Does not exist, load default */
-> +	for (i = 0; i < count; i++)
-> +		buffer[i] = default_val[i % 3];
-> +}
-> +
-> +static int xgene_phy_probe(struct platform_device *pdev)
-> +{
-> +	struct phy_provider *phy_provider;
-> +	struct xgene_phy_ctx *ctx;
-> +	struct resource *res;
-> +	int rc = 0;
-> +	u32 default_spd[] = DEFAULT_SATA_SPD_SEL;
-> +	u32 default_txboost_gain[] = DEFAULT_SATA_TXBOOST_GAIN;
-> +	u32 default_txeye_direction[] = DEFAULT_SATA_TXEYEDIRECTION;
-> +	u32 default_txeye_tuning[] = DEFAULT_SATA_TXEYETUNING;
-> +	u32 default_txamp[] = DEFAULT_SATA_TXAMP;
-> +	u32 default_txcn1[] = DEFAULT_SATA_TXCN1;
-> +	u32 default_txcn2[] = DEFAULT_SATA_TXCN2;
-> +	u32 default_txcp1[] = DEFAULT_SATA_TXCP1;
-> +	int i;
-> +
-> +	ctx = devm_kzalloc(&pdev->dev, sizeof(*ctx), GFP_KERNEL);
-> +	if (!ctx) {
-> +		dev_err(&pdev->dev, "can't allocate PHY context\n");
-remove dev_err here.. kzalloc will do that for you..
-> +		return -ENOMEM;
-> +	}
-> +	ctx->dev = &pdev->dev;
-> +
-> +	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-> +	if (!res) {
-> +		dev_err(&pdev->dev, "no PHY resource address\n");
+[1] - http://article.gmane.org/gmane.comp.hardware.netbook.arm.sunxi/7285
 
-same here.. you don't have to even check for return value of res. 
-ioremap_resource will take care of that.
-> +		rc = -EINVAL;
-> +		goto error;
-> +	}
-> +	ctx->sds_base = devm_ioremap_resource(&pdev->dev, res);
-> +	if (!ctx->sds_base) {
-> +		dev_err(&pdev->dev, "can't map PHY resource\n");
+Changelog:
 
-same here..
+v2
+- use 'depends on' instead of 'select' OCP2SCP bus driver.
+- Changed DT bindings for dra7-usb2 and am437-usb2 phy.
 
-Thanks
-Kishon
+cheers,
+-roger
+
+---
+Balaji T K (2):
+  ARM: dts: omap5: add sata node
+  ARM: dts: dra7: add OCP2SCP3 and SATA nodes
+
+Keshava Munegowda (1):
+  ARM: OMAP5: hwmod: Add ocp2scp3 and sata hwmods
+
+Kishon Vijay Abraham I (1):
+  phy: rename struct omap_control_usb to struct omap_control_phy
+
+Nikhil Devshatwar (1):
+  ARM: DRA7: hwmod: Add ocp2scp3 and sata hwmods
+
+Roger Quadros (8):
+  phy: omap-control: Update DT binding information
+  phy: omap-control: update dra7 and am437 usb2 bindings
+  phy: ti-pipe3: cleanup clock handling
+  phy: ti-pipe3: Add SATA DPLL support
+  phy: ti-pipe3: Don't get 'wkupclk' and 'refclk' for SATA PHY
+  phy: ti-pipe3: streamline PHY operations
+  phy: ti-pipe3: Fix suspend/resume and module reload
+  phy: omap: Depend on OMAP_OCP2SCP bus driver
+
+ Documentation/devicetree/bindings/phy/ti-phy.txt   |  40 ++-
+ Documentation/devicetree/bindings/usb/omap-usb.txt |  24 --
+ arch/arm/boot/dts/dra7.dtsi                        |  39 +++
+ arch/arm/boot/dts/omap5.dtsi                       |  47 ++-
+ arch/arm/mach-omap2/omap_hwmod_54xx_data.c         |  73 +++++
+ arch/arm/mach-omap2/omap_hwmod_7xx_data.c          |  31 +-
+ drivers/phy/Kconfig                                |  16 +-
+ drivers/phy/Makefile                               |   1 +
+ drivers/phy/phy-omap-control.c                     | 320 +++++++++++++++++++++
+ drivers/phy/phy-omap-usb2.c                        |   8 +-
+ drivers/phy/phy-ti-pipe3.c                         | 269 ++++++++++-------
+ drivers/usb/musb/omap2430.c                        |   2 +-
+ drivers/usb/phy/Kconfig                            |  10 -
+ drivers/usb/phy/Makefile                           |   1 -
+ drivers/usb/phy/phy-omap-control.c                 | 319 --------------------
+ include/linux/phy/omap_control_phy.h               |  89 ++++++
+ include/linux/usb/omap_control_usb.h               |  89 ------
+ 17 files changed, 815 insertions(+), 563 deletions(-)
+ create mode 100644 drivers/phy/phy-omap-control.c
+ delete mode 100644 drivers/usb/phy/phy-omap-control.c
+ create mode 100644 include/linux/phy/omap_control_phy.h
+ delete mode 100644 include/linux/usb/omap_control_usb.h
+
+-- 
+1.8.3.2
