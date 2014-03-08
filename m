@@ -1,65 +1,38 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] libata fixes for v3.14-rc5
-Date: Sat, 8 Mar 2014 10:28:54 -0500
-Message-ID: <20140308152854.GB25021@htj.dyndns.org>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [GIT PULL] libata fixes for v3.14-rc5
+Date: Sat, 8 Mar 2014 11:57:18 -0800
+Message-ID: <CA+55aFzgg4hicXQ-cwHZdDrGRPSoeUVeMzPRAmoEYrujLjt1_A@mail.gmail.com>
+References: <20140308152854.GB25021@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f44.google.com ([209.85.192.44]:61572 "EHLO
-	mail-qg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751899AbaCHP25 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 8 Mar 2014 10:28:57 -0500
-Content-Disposition: inline
+Received: from mail-vc0-f182.google.com ([209.85.220.182]:45966 "EHLO
+	mail-vc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751577AbaCHT5T (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 8 Mar 2014 14:57:19 -0500
+In-Reply-To: <20140308152854.GB25021@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE-ML <linux-ide@vger.kernel.org>
 
-Hello, Linus.
+On Sat, Mar 8, 2014 at 7:28 AM, Tejun Heo <tj@kernel.org> wrote:
+>
+> Just a couple patches blacklisting more broken devices.
 
-Just a couple patches blacklisting more broken devices.
+Pulled. However:
 
-The following changes since commit 67809f85d31eac600f6b28defa5386c9d2a13b1d:
+>         /* devices that don't properly handle queued TRIM commands */
+>         { "Micron_M500*",               NULL,   ATA_HORKAGE_NO_NCQ_TRIM, },
+>         { "Crucial_CT???M500SSD1",      NULL,   ATA_HORKAGE_NO_NCQ_TRIM, },
+> +       { "Crucial_CT???M500SSD3",      NULL,   ATA_HORKAGE_NO_NCQ_TRIM, },
 
-  ahci: disable NCQ on Samsung pci-e SSDs on macbooks (2014-02-18 10:22:17 -0500)
+If we know M500SSD1 and M500SSD3 are both broken the same way, and the
+Micron_M500* is too (which is, as far as I know, the same device), why
+the heck do we make the test that specific?
 
-are available in the git repository at:
+Why not just use Crucial_CT???M500* or something? The likelihood of
+some new version of the same broken device coming up is small, and if
+it does, we don't even care. Why would we risk it?
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-3.14-fixes
-
-for you to fetch changes up to b28a613e9138e4b3a64649bd60b13436f4b4b49b:
-
-  libata: add ATA_HORKAGE_BROKEN_FPDMA_AA quirk for Seagate Momentus SpinPoint M8 (2BA30001) (2014-03-07 13:47:34 -0500)
-
-Thanks.
-
-----------------------------------------------------------------
-Marios Andreopoulos (1):
-      libata: disable queued TRIM for Crucial M500 mSATA SSDs
-
-Michele Baldessari (1):
-      libata: add ATA_HORKAGE_BROKEN_FPDMA_AA quirk for Seagate Momentus SpinPoint M8 (2BA30001)
-
- drivers/ata/libata-core.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 1a3dbd1..65d3f1b 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4175,6 +4175,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 
- 	/* Seagate Momentus SpinPoint M8 seem to have FPMDA_AA issues */
- 	{ "ST1000LM024 HN-M101MBB", "2AR10001",	ATA_HORKAGE_BROKEN_FPDMA_AA },
-+	{ "ST1000LM024 HN-M101MBB", "2BA30001",	ATA_HORKAGE_BROKEN_FPDMA_AA },
- 
- 	/* Blacklist entries taken from Silicon Image 3124/3132
- 	   Windows driver .inf file - also several Linux problem reports */
-@@ -4225,6 +4226,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	/* devices that don't properly handle queued TRIM commands */
- 	{ "Micron_M500*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
- 	{ "Crucial_CT???M500SSD1",	NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
-+	{ "Crucial_CT???M500SSD3",	NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
- 
- 	/*
- 	 * Some WD SATA-I drives spin up and down erratically when the link
+            Linus
