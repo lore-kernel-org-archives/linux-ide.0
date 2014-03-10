@@ -1,49 +1,62 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v15 3/3] arm64: Add APM X-Gene SoC 15Gbps Multi-purpose
- PHY DTS entries
-Date: Mon, 10 Mar 2014 16:45:49 -0400
-Message-ID: <20140310204549.GJ25290@htj.dyndns.org>
-References: <1394213289-29565-1-git-send-email-lho@apm.com>
- <1394213289-29565-2-git-send-email-lho@apm.com>
- <1394213289-29565-3-git-send-email-lho@apm.com>
- <1394213289-29565-4-git-send-email-lho@apm.com>
- <CAPw-ZTmwFZjKT2+CUUp73TDXJcXy-bEY_sTNg-TtH-COzDnCfw@mail.gmail.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH v5 3/3] scsi: async sd resume
+Date: Mon, 10 Mar 2014 13:56:59 -0700
+Message-ID: <CAPcyv4ik5GhaqZsBCA+LJ5WN=bCBPqjHgWwud1PrrKB4LarBOA@mail.gmail.com>
+References: <Pine.LNX.4.44L0.1403071028440.1246-100000@iolanthe.rowland.org>
+	<1394247126.10864.3.camel@dwillia2-mobl2.amr.corp.intel.com>
+	<20140310204314.GH25290@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAPw-ZTmwFZjKT2+CUUp73TDXJcXy-bEY_sTNg-TtH-COzDnCfw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Loc Ho <lho@apm.com>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>, Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, linux-kernel@vger.kernel.org, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Don Dutile <ddutile@redhat.com>, Jon Masters <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ve0-f182.google.com ([209.85.128.182]:45247 "EHLO
+	mail-ve0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755211AbaCJU5A (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Mar 2014 16:57:00 -0400
+Received: by mail-ve0-f182.google.com with SMTP id jw12so7791642veb.13
+        for <linux-ide@vger.kernel.org>; Mon, 10 Mar 2014 13:56:59 -0700 (PDT)
+In-Reply-To: <20140310204314.GH25290@htj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <JBottomley@parallels.com>, Len Brown <len.brown@intel.com>, linux-scsi <linux-scsi@vger.kernel.org>, Phillip Susi <psusi@ubuntu.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Todd Brandt <todd.e.brandt@linux.intel.com>
 
-On Sun, Mar 09, 2014 at 10:23:33PM -0700, Loc Ho wrote:
-> Hi Tejun,
-> 
-> On Fri, Mar 7, 2014 at 9:28 AM, Loc Ho <lho@apm.com> wrote:
-> 
-> > This patch adds the DTS entries for the APM X-Gene SoC 15Gbps Multi-purpose
-> > PHY driver. The PHY for SATA controller 2 and 3 are enabled by default.
-> >
-> > Signed-off-by: Loc Ho <lho@apm.com>
-> > Signed-off-by: Tuan Phan <tphan@apm.com>
-> > Signed-off-by: Suman Tripathi <stripathi@apm.com>
-> > ---
-> >  arch/arm64/boot/dts/apm-storm.dtsi |   75
-> > ++++++++++++++++++++++++++++++++++++
-> >  1 files changed, 75 insertions(+), 0 deletions(-)
-> >
-> >
-> Kishon had pulled in the PHY doc/driver patches. Will you pulling in the
-> PHY DTS and the SATA host driver patches soon?
+On Mon, Mar 10, 2014 at 1:43 PM, Tejun Heo <tj@kernel.org> wrote:
+> On Fri, Mar 07, 2014 at 06:52:06PM -0800, Dan Williams wrote:
+>> From: Dan Williams <dan.j.williams@intel.com>
+>>
+>> async_schedule() sd resume work to allow disks and other devices to
+>> resume in parallel.
+>>
+>> This moves the entirety of scsi_device resume to an async context to
+>> ensure that scsi_device_resume() remains ordered with respect to the
+>> completion of the start/stop command.  For the duration of the resume,
+>> new command submissions (that do not originate from the scsi-core) will
+>> be deferred (BLKPREP_DEFER).
+>>
+>> It adds a new ASYNC_DOMAIN_EXCLUSIVE(scsi_sd_pm_domain) as a container
+>> of these operations.  Like scsi_sd_probe_domain it is flushed at
+>> sd_remove() time to ensure async ops do not continue past the
+>> end-of-life of the sdev.  The implementation explicitly refrains from
+>> reusing scsi_sd_probe_domain directly for this purpose as it is flushed
+>> at the end of dpm_resume(), potentially defeating some of the benefit.
+>> Given sdevs are quiesced it is permissible for these resume operations
+>> to bleed past the async_synchronize_full() calls made by the driver
+>> core.
+>>
+>> We defer the resolution of which pm callback to call until
+>> scsi_dev_type_{suspend|resume} time and guarantee that the callback
+>> parameter is never NULL.  With this in place the type of resume
+>> operation is encoded in the async function identifier.
+>>
+>> Inspired by Todd's analysis and initial proposal [2]:
+>> https://01.org/suspendresume/blogs/tebrandt/2013/hard-disk-resume-optimization-simpler-approach
+>
+> The only thing which is a bit concerning is that this doesn't have any
+> throttling mechanism for simultaneous wakeups.  Would this be able to
+> blow up the PSU if used on a machine with a lot of spindles?
 
-Kishon, is the following branch the right one to pull into
-libata/for-3.15?
-
- git://git.kernel.org/pub/scm/linux/kernel/git/kishon/linux-phy.git next
-
-Thanks.
-
--- 
-tejun
+Good point.  The primary benefit is completing userspace resume
+without needlessly waiting for the disk.  For now I think it would be
+enough to have a mutex to maintain one disk at a time.  We can follow
+on later with something more complex to enable a max simultaneous
+spin-up tunable.
