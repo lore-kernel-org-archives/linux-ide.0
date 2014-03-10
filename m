@@ -1,43 +1,37 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v5 3/3] scsi: async sd resume
-Date: Mon, 10 Mar 2014 14:06:10 -0700
-Message-ID: <CAPcyv4gpxxPMHJo7+iH-e+S1KVaJJH62bEBdq8_NQbeU7jTS4A@mail.gmail.com>
-References: <CAPcyv4ik5GhaqZsBCA+LJ5WN=bCBPqjHgWwud1PrrKB4LarBOA@mail.gmail.com>
-	<Pine.LNX.4.44L0.1403101658490.5966-100000@netrider.rowland.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: Silvan Jegen <s.jegen@gmail.com>
+Subject: [PATCH] pata_legacy: Remove dead code
+Date: Mon, 10 Mar 2014 22:33:50 +0100
+Message-ID: <531e3c9a.085e0e0a.4316.ffffe91d@mx.google.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vc0-f180.google.com ([209.85.220.180]:57886 "EHLO
-	mail-vc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753242AbaCJVGL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Mar 2014 17:06:11 -0400
-Received: by mail-vc0-f180.google.com with SMTP id lf12so1940944vcb.11
-        for <linux-ide@vger.kernel.org>; Mon, 10 Mar 2014 14:06:10 -0700 (PDT)
-In-Reply-To: <Pine.LNX.4.44L0.1403101658490.5966-100000@netrider.rowland.org>
+Received: from mail-ee0-f53.google.com ([74.125.83.53]:45212 "EHLO
+	mail-ee0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751816AbaCJW2o (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Mar 2014 18:28:44 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Tejun Heo <tj@kernel.org>, James Bottomley <JBottomley@parallels.com>, Len Brown <len.brown@intel.com>, linux-scsi <linux-scsi@vger.kernel.org>, Phillip Susi <psusi@ubuntu.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Todd Brandt <todd.e.brandt@linux.intel.com>
+To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On Mon, Mar 10, 2014 at 1:59 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
-> On Mon, 10 Mar 2014, Dan Williams wrote:
->
->> > The only thing which is a bit concerning is that this doesn't have any
->> > throttling mechanism for simultaneous wakeups.  Would this be able to
->> > blow up the PSU if used on a machine with a lot of spindles?
->>
->> Good point.  The primary benefit is completing userspace resume
->> without needlessly waiting for the disk.  For now I think it would be
->> enough to have a mutex to maintain one disk at a time.  We can follow
->> on later with something more complex to enable a max simultaneous
->> spin-up tunable.
->
-> Why?  The existing code doesn't have anything like that.
->
+The current flow of control prevents this function from being
+called. Let's remove the call.
 
-Why follow up later, or why maintain one disk at a time?
+Signed-off-by: Silvan Jegen <s.jegen@gmail.com>
+---
+ drivers/ata/pata_legacy.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-I know at least the SCSI driver I maintained had this as a
-per-low-level driver tunable.  Seems to be a good candidate for
-attempting a unified platform-level tunable.  Mind you I would not be
-looking to implement it anytime soon.
+diff --git a/drivers/ata/pata_legacy.c b/drivers/ata/pata_legacy.c
+index be81642..bce2a8c 100644
+--- a/drivers/ata/pata_legacy.c
++++ b/drivers/ata/pata_legacy.c
+@@ -916,7 +916,6 @@ static __init int probe_chip_type(struct legacy_probe *probe)
+ 			local_irq_restore(flags);
+ 			return BIOS;
+ 		}
+-		local_irq_restore(flags);
+ 	}
+ 
+ 	if (ht6560a & mask)
+-- 
+1.9.0
+
