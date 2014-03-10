@@ -1,37 +1,45 @@
-From: Silvan Jegen <s.jegen@gmail.com>
-Subject: [PATCH] pata_legacy: Remove dead code
-Date: Mon, 10 Mar 2014 22:33:50 +0100
-Message-ID: <531e3c9a.085e0e0a.4316.ffffe91d@mx.google.com>
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: Re: [PATCH v5 3/3] scsi: async sd resume
+Date: Mon, 10 Mar 2014 18:41:09 -0400
+Message-ID: <531E3F85.9010304@ubuntu.com>
+References: <Pine.LNX.4.44L0.1403101658490.5966-100000@netrider.rowland.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ee0-f53.google.com ([74.125.83.53]:45212 "EHLO
-	mail-ee0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751816AbaCJW2o (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Mar 2014 18:28:44 -0400
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:58550 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753127AbaCJWlM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Mar 2014 18:41:12 -0400
+In-Reply-To: <Pine.LNX.4.44L0.1403101658490.5966-100000@netrider.rowland.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>, Dan Williams <dan.j.williams@intel.com>
+Cc: Tejun Heo <tj@kernel.org>, James Bottomley <JBottomley@parallels.com>, Len Brown <len.brown@intel.com>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Todd Brandt <todd.e.brandt@linux.intel.com>
 
-The current flow of control prevents this function from being
-called. Let's remove the call.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
 
-Signed-off-by: Silvan Jegen <s.jegen@gmail.com>
----
- drivers/ata/pata_legacy.c | 1 -
- 1 file changed, 1 deletion(-)
+On 03/10/2014 04:59 PM, Alan Stern wrote:
+> Why?  The existing code doesn't have anything like that.
 
-diff --git a/drivers/ata/pata_legacy.c b/drivers/ata/pata_legacy.c
-index be81642..bce2a8c 100644
---- a/drivers/ata/pata_legacy.c
-+++ b/drivers/ata/pata_legacy.c
-@@ -916,7 +916,6 @@ static __init int probe_chip_type(struct legacy_probe *probe)
- 			local_irq_restore(flags);
- 			return BIOS;
- 		}
--		local_irq_restore(flags);
- 	}
- 
- 	if (ht6560a & mask)
--- 
-1.9.0
+The current sd code doesn't, but the libata code does use the AHCI
+staggered spinup feature flag as a hint to only spin up one drive at a
+time, so these patches together may defeat that behavior when resuming
+from suspend.  That could be a problem on some systems.  Then again,
+it may still follow the same code path in libata; I haven't looked at
+it closely enough lately to be sure.
 
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.14 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQEcBAEBCgAGBQJTHj+FAAoJEI5FoCIzSKrwYm0IAKZlralrzs8+5s7F4xouYrz8
+samOep5+XxO8eVa6Cl6kqQvl02jYJNLUnabeBBTe8L5qws+ZFXnSkhFvAC5zd3LF
+a68hns996l9wum+XWDAeMb7K7/dKYJiDB+6w3foquA4fgoZsc2tYLEjvUUA9h9U6
++bfZpelLnqqRgFwKwBazqVRB4ZIBGcq1+DLnDTldOH6e4gJSnzoJU1MbLYiCa6KU
+tvg2XWDnp1ifhHcCGVIsdEdB1hxKKs3J+3CiXeg1Uc6LoWOfOpsfkvReNfIk4Ju9
+zr2KEXGsIZwcmyx9i2Jni/I90oG3jNtVWlOT9Gvey2RW2fiMREesuHTt5KONc/U=
+=wrih
+-----END PGP SIGNATURE-----
