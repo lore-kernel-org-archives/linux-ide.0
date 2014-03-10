@@ -1,38 +1,60 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [GIT PULL] libata fixes for v3.14-rc5
-Date: Sat, 8 Mar 2014 11:57:18 -0800
-Message-ID: <CA+55aFzgg4hicXQ-cwHZdDrGRPSoeUVeMzPRAmoEYrujLjt1_A@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [GIT PULL] libata fixes for v3.14-rc5
+Date: Mon, 10 Mar 2014 11:47:09 -0400
+Message-ID: <20140310154709.GE25290@htj.dyndns.org>
 References: <20140308152854.GB25021@htj.dyndns.org>
+ <CA+55aFzgg4hicXQ-cwHZdDrGRPSoeUVeMzPRAmoEYrujLjt1_A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vc0-f182.google.com ([209.85.220.182]:45966 "EHLO
-	mail-vc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751577AbaCHT5T (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 8 Mar 2014 14:57:19 -0500
-In-Reply-To: <20140308152854.GB25021@htj.dyndns.org>
+Received: from mail-qa0-f49.google.com ([209.85.216.49]:47840 "EHLO
+	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753712AbaCJPrM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Mar 2014 11:47:12 -0400
+Content-Disposition: inline
+In-Reply-To: <CA+55aFzgg4hicXQ-cwHZdDrGRPSoeUVeMzPRAmoEYrujLjt1_A@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
 Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE-ML <linux-ide@vger.kernel.org>
 
-On Sat, Mar 8, 2014 at 7:28 AM, Tejun Heo <tj@kernel.org> wrote:
->
-> Just a couple patches blacklisting more broken devices.
+Hello, Linus.
 
-Pulled. However:
+Yeah, that makes sense.  I merged the two entries into
+"Crucial_CT???M500SSD*".
 
->         /* devices that don't properly handle queued TRIM commands */
->         { "Micron_M500*",               NULL,   ATA_HORKAGE_NO_NCQ_TRIM, },
->         { "Crucial_CT???M500SSD1",      NULL,   ATA_HORKAGE_NO_NCQ_TRIM, },
-> +       { "Crucial_CT???M500SSD3",      NULL,   ATA_HORKAGE_NO_NCQ_TRIM, },
+The following changes since commit b28a613e9138e4b3a64649bd60b13436f4b4b49b:
 
-If we know M500SSD1 and M500SSD3 are both broken the same way, and the
-Micron_M500* is too (which is, as far as I know, the same device), why
-the heck do we make the test that specific?
+  libata: add ATA_HORKAGE_BROKEN_FPDMA_AA quirk for Seagate Momentus SpinPoint M8 (2BA30001) (2014-03-07 13:47:34 -0500)
 
-Why not just use Crucial_CT???M500* or something? The likelihood of
-some new version of the same broken device coming up is small, and if
-it does, we don't even care. Why would we risk it?
+are available in the git repository at:
 
-            Linus
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-3.14-fixes
+
+for you to fetch changes up to 83493d7e782d2630f1a55def14a79f0e7c4faac3:
+
+  libata: use wider match for blacklisting Crucial M500 (2014-03-10 11:17:55 -0400)
+
+Thanks.
+
+----------------------------------------------------------------
+Tejun Heo (1):
+      libata: use wider match for blacklisting Crucial M500
+
+ drivers/ata/libata-core.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 65d3f1b..8cb2522 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4225,8 +4225,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 
+ 	/* devices that don't properly handle queued TRIM commands */
+ 	{ "Micron_M500*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
+-	{ "Crucial_CT???M500SSD1",	NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
+-	{ "Crucial_CT???M500SSD3",	NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
++	{ "Crucial_CT???M500SSD*",	NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
+ 
+ 	/*
+ 	 * Some WD SATA-I drives spin up and down erratically when the link
