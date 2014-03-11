@@ -1,29 +1,32 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] pata_legacy: Remove dead code
-Date: Tue, 11 Mar 2014 08:32:02 -0400
-Message-ID: <20140311123202.GC11477@htj.dyndns.org>
-References: <531e3c9a.085e0e0a.4316.ffffe91d@mx.google.com>
+Subject: Re: [PATCH v15 3/3] arm64: Add APM X-Gene SoC AHCI SATA host
+ controller DTS entries
+Date: Tue, 11 Mar 2014 08:49:43 -0400
+Message-ID: <20140311124943.GD11477@htj.dyndns.org>
+References: <1394059489-30706-1-git-send-email-lho@apm.com>
+ <1394059489-30706-2-git-send-email-lho@apm.com>
+ <1394059489-30706-3-git-send-email-lho@apm.com>
+ <1394059489-30706-4-git-send-email-lho@apm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f48.google.com ([209.85.216.48]:59877 "EHLO
-	mail-qa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754835AbaCKMcG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Mar 2014 08:32:06 -0400
+Received: from mail-qc0-f173.google.com ([209.85.216.173]:39679 "EHLO
+	mail-qc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752117AbaCKMtr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Mar 2014 08:49:47 -0400
 Content-Disposition: inline
-In-Reply-To: <531e3c9a.085e0e0a.4316.ffffe91d@mx.google.com>
+In-Reply-To: <1394059489-30706-4-git-send-email-lho@apm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Silvan Jegen <s.jegen@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: Loc Ho <lho@apm.com>
+Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-On Mon, Mar 10, 2014 at 10:33:50PM +0100, Silvan Jegen wrote:
-> The current flow of control prevents this function from being
-> called. Let's remove the call.
-> 
-> Signed-off-by: Silvan Jegen <s.jegen@gmail.com>
+On Wed, Mar 05, 2014 at 03:44:49PM -0700, Loc Ho wrote:
+> This patch adds APM X-Gene SoC AHCI SATA host controller DTS entries.
 
-Applied to libata/for-3.15.
+I pulled the phy branch into libata/for-3.15 but this patch fails to
+apply.  Can you please regenerate the patches which need to be applied
+on top of libata/for-3.15.
 
 Thanks.
 
