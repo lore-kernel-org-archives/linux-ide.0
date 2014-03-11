@@ -1,45 +1,43 @@
-From: Phillip Susi <psusi@ubuntu.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [PATCH v5 3/3] scsi: async sd resume
-Date: Mon, 10 Mar 2014 18:41:09 -0400
-Message-ID: <531E3F85.9010304@ubuntu.com>
+Date: Tue, 11 Mar 2014 08:19:49 +0400
+Message-ID: <1394511589.2142.5.camel@dabdike.int.hansenpartnership.com>
 References: <Pine.LNX.4.44L0.1403101658490.5966-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="ISO-8859-15"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:58550 "EHLO
-	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753127AbaCJWlM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Mar 2014 18:41:12 -0400
+Return-path: <linux-scsi-owner@vger.kernel.org>
 In-Reply-To: <Pine.LNX.4.44L0.1403101658490.5966-100000@netrider.rowland.org>
-Sender: linux-ide-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Dan Williams <dan.j.williams@intel.com>, Tejun Heo <tj@kernel.org>, Len Brown <len.brown@intel.com>, linux-scsi <linux-scsi@vger.kernel.org>, Phillip Susi <psusi@ubuntu.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Todd Brandt <todd.e.brandt@linux.intel.com>
 List-Id: linux-ide@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>, Dan Williams <dan.j.williams@intel.com>
-Cc: Tejun Heo <tj@kernel.org>, James Bottomley <JBottomley@parallels.com>, Len Brown <len.brown@intel.com>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Todd Brandt <todd.e.brandt@linux.intel.com>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
-
-On 03/10/2014 04:59 PM, Alan Stern wrote:
+On Mon, 2014-03-10 at 16:59 -0400, Alan Stern wrote:
+> On Mon, 10 Mar 2014, Dan Williams wrote:
+> 
+> > > The only thing which is a bit concerning is that this doesn't have any
+> > > throttling mechanism for simultaneous wakeups.  Would this be able to
+> > > blow up the PSU if used on a machine with a lot of spindles?
+> > 
+> > Good point.  The primary benefit is completing userspace resume
+> > without needlessly waiting for the disk.  For now I think it would be
+> > enough to have a mutex to maintain one disk at a time.  We can follow
+> > on later with something more complex to enable a max simultaneous
+> > spin-up tunable.
+> 
 > Why?  The existing code doesn't have anything like that.
 
-The current sd code doesn't, but the libata code does use the AHCI
-staggered spinup feature flag as a hint to only spin up one drive at a
-time, so these patches together may defeat that behavior when resuming
-from suspend.  That could be a problem on some systems.  Then again,
-it may still follow the same code path in libata; I haven't looked at
-it closely enough lately to be sure.
+This only becomes a problem if enterprise class systems want to suspend
+and resume.  Last I heard, this wasn't on the cards.
+
+We also don't usually need to bother with in-kernel staggered spin ups
+because if the device can blow the PSU by doing simultaneous spinups,
+staggering is usually hard jumpered in the system.  The main reason for
+this is that there's no way for us to work out the PSU topology to do
+the stagger in kernel, so the enterprise likes to be sure.
+
+James
 
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
 
-iQEcBAEBCgAGBQJTHj+FAAoJEI5FoCIzSKrwYm0IAKZlralrzs8+5s7F4xouYrz8
-samOep5+XxO8eVa6Cl6kqQvl02jYJNLUnabeBBTe8L5qws+ZFXnSkhFvAC5zd3LF
-a68hns996l9wum+XWDAeMb7K7/dKYJiDB+6w3foquA4fgoZsc2tYLEjvUUA9h9U6
-+bfZpelLnqqRgFwKwBazqVRB4ZIBGcq1+DLnDTldOH6e4gJSnzoJU1MbLYiCa6KU
-tvg2XWDnp1ifhHcCGVIsdEdB1hxKKs3J+3CiXeg1Uc6LoWOfOpsfkvReNfIk4Ju9
-zr2KEXGsIZwcmyx9i2Jni/I90oG3jNtVWlOT9Gvey2RW2fiMREesuHTt5KONc/U=
-=wrih
------END PGP SIGNATURE-----
