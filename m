@@ -1,63 +1,29 @@
-From: Lee Jones <lee.jones@linaro.org>
-Subject: [PATCH 1/5] ahci: st: Standardise naming conventions
-Date: Wed, 12 Mar 2014 12:39:38 +0000
-Message-ID: <1394627982-23726-2-git-send-email-lee.jones@linaro.org>
-References: <1394627982-23726-1-git-send-email-lee.jones@linaro.org>
+From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
+Subject: Re: Bug (?) in ata (ahci) driver can lead to panic with ZPODD and
+ unbind
+Date: Wed, 12 Mar 2014 13:45:00 +0000
+Message-ID: <20140312134500.0751752e@alan.etchedpixels.co.uk>
+References: <235852D532FB204FB039DAF645E587C7B506036AFA@dc-ex1.power.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:49328 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752975AbaCLMkI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Mar 2014 08:40:08 -0400
-Received: by mail-wi0-f180.google.com with SMTP id hm4so2300893wib.13
-        for <linux-ide@vger.kernel.org>; Wed, 12 Mar 2014 05:40:06 -0700 (PDT)
-In-Reply-To: <1394627982-23726-1-git-send-email-lee.jones@linaro.org>
+Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:33324 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753684AbaCLNpW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Mar 2014 09:45:22 -0400
+In-Reply-To: <235852D532FB204FB039DAF645E587C7B506036AFA@dc-ex1.power.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, tj@kernel.org
-Cc: lee.jones@linaro.org, kernel@stlinux.com, b.zolnierkie@samsung.com, linux-ide@vger.kernel.org
+To: Joe Thomas <Joe.Thomas@dothill.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Other devices have adopted similar naming conventions which have been
-accepted as the standard. This patch brings any mention of the the ST
-AHCI driver into line with them.
+>                 Is this really a bug? i.e. 'unbind' should cause zpodd_exit() (or ata_scsi_remove_dev()) to be called...
+> or
+>                 Are we missing a step before the 'unbind' where we need to cause the attached devices to be removed first (thus ensuring ata_scsi_remove_dev() be called)?
 
-Suggested-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Signed-off-by: Lee Jones <lee.jones@linaro.org>
----
- drivers/ata/Kconfig   | 6 +++---
- drivers/ata/ahci_st.c | 2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+unbind is equivalent to a hot unplug of the controller so yes this
+shouldn't crash in the ZPODD case (not that in the real world you are
+likely to have a hotpluggable ZPODD controller).
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index ee7a3dc..ffc5d9d 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -97,12 +97,12 @@ config SATA_AHCI_PLATFORM
- 
- 	  If unsure, say N.
- 
--config SATA_AHCI_ST
--	tristate "ST SATA support"
-+config AHCI_ST
-+	tristate "ST AHCI SATA support"
- 	depends on SATA_AHCI_PLATFORM
- 	select GENERIC_PHY
- 	help
--	  This option enables support for ST SATA controller.
-+	  This option enables support for ST AHCI SATA controller.
- 
- 	  If unsure, say N.
- 
-diff --git a/drivers/ata/ahci_st.c b/drivers/ata/ahci_st.c
-index 2f95133..f5af660 100644
---- a/drivers/ata/ahci_st.c
-+++ b/drivers/ata/ahci_st.c
-@@ -235,5 +235,5 @@ module_platform_driver(st_ahci_driver);
- 
- MODULE_AUTHOR("Alexandre Torgue <alexandre.torgue@st.com>");
- MODULE_AUTHOR("Francesco Virlinzi <francesco.virlinzi@st.com>");
--MODULE_DESCRIPTION("STMicroelectronics Sata Ahci driver");
-+MODULE_DESCRIPTION("STMicroelectronics SATA AHCI Driver");
- MODULE_LICENSE("GPL v2");
--- 
-1.8.3.2
-
+Alan
