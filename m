@@ -1,43 +1,42 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH] libata: end the r-word
-Date: Wed, 12 Mar 2014 07:00:35 -0700
-Message-ID: <CAA9_cmddZHViSBAOQL58k6s7k3h0vGGT-M7BKEUWvNk-5gh_TQ@mail.gmail.com>
-References: <20140306032706.9641.99151.stgit@viggo.jf.intel.com>
-	<20140307214049.78931def@alan.etchedpixels.co.uk>
-	<CAA9_cmfbS1kZyLampjva8sh=ynqLYY3HLDRDy0oM6teeihAjmg@mail.gmail.com>
-	<532034A6.8070705@mrc-lmb.cam.ac.uk>
-	<20140312134926.0e1bc9b9@alan.etchedpixels.co.uk>
+From: Loc Ho <lho@apm.com>
+Subject: Re: [PATCH v15 3/3] arm64: Add APM X-Gene SoC AHCI SATA host
+ controller DTS entries
+Date: Wed, 12 Mar 2014 09:32:13 -0700
+Message-ID: <CAPw-ZT=xX9fi6zV8QFmCDAB7dvoLXSh+s1y_k9G0c44ONRbBOg@mail.gmail.com>
+References: <1394059489-30706-1-git-send-email-lho@apm.com>
+	<1394059489-30706-2-git-send-email-lho@apm.com>
+	<1394059489-30706-3-git-send-email-lho@apm.com>
+	<1394059489-30706-4-git-send-email-lho@apm.com>
+	<20140311124943.GD11477@htj.dyndns.org>
+	<CAPw-ZTmBSeOXv5ExVAiSkcU=qH3zHp52eVuGBfYYD=7=sjhVgw@mail.gmail.com>
+	<20140311165548.GA20776@mtj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f175.google.com ([209.85.216.175]:43278 "EHLO
-	mail-qc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753520AbaCLOAg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Mar 2014 10:00:36 -0400
-Received: by mail-qc0-f175.google.com with SMTP id e16so11101342qcx.20
-        for <linux-ide@vger.kernel.org>; Wed, 12 Mar 2014 07:00:36 -0700 (PDT)
-In-Reply-To: <20140312134926.0e1bc9b9@alan.etchedpixels.co.uk>
+Received: from exprod5og105.obsmtp.com ([64.18.0.180]:34085 "HELO
+	exprod5og105.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755444AbaCLQcO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Mar 2014 12:32:14 -0400
+Received: by mail-qc0-f170.google.com with SMTP id e9so11577426qcy.15
+        for <linux-ide@vger.kernel.org>; Wed, 12 Mar 2014 09:32:13 -0700 (PDT)
+In-Reply-To: <20140311165548.GA20776@mtj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-Cc: Dave Howorth <dhoworth@mrc-lmb.cam.ac.uk>, Tejun Heo <tj@kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>, Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Don Dutile <ddutile@redhat.com>, Jon Masters <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-On Wed, Mar 12, 2014 at 6:49 AM, One Thousand Gnomes
-<gnomes@lxorguk.ukuu.org.uk> wrote:
->> > Actually, no, int this case I'm specifically concerned with adjective
->> > usage "retarded devices".  Where the implication is there is something
->> > wrong with the device.  Unfortunately in the US it has become a slur
->> > and slang term to classify the "worst of things".  I suspect that
->> > usage has not made it to the UK?
->>
->> I think what hasn't made it to the UK is an undue emphasis on political
->> correctness.
+Hi,
+
+>> Kishon didn't applied the PHY DTS patch. Did you first apply the PHY
+>> DTS patch? We agreed that you will first pull in the PHY DTS as well
+>> as the host controller patches. I don't see any reason why it wouldn't
+>> apply if both DTS is applied. I will pull libata/for-3.15 and check
+>> out.
 >
-> And also that in British English we simply reclaimed the word rather than
-> giving it away to those who misused it. Trying to use it as an insult
-> just makes someone in the UK sound like they've been watching too much
-> 1970-80s television.
+> Can you please repost patches to apply on top of the current
+> libata/for-3.15?
+>
 
-:-)
+I posted v16 yetersday with the PHY DTS merged into the SATA host patches.
 
-Here's hoping it meets a similar fate in the US.
+-Loc
