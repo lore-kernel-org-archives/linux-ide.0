@@ -1,119 +1,54 @@
-From: Loc Ho <lho@apm.com>
-Subject: [PATCH v16 4/4] arm64: Add APM X-Gene SoC AHCI SATA host controller DTS entries
-Date: Tue, 11 Mar 2014 16:11:35 -0600
-Message-ID: <1394575895-7039-5-git-send-email-lho@apm.com>
-References: <1394575895-7039-1-git-send-email-lho@apm.com>
- <1394575895-7039-2-git-send-email-lho@apm.com>
- <1394575895-7039-3-git-send-email-lho@apm.com>
- <1394575895-7039-4-git-send-email-lho@apm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1394575895-7039-4-git-send-email-lho@apm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+From: Dave Howorth <dhoworth@mrc-lmb.cam.ac.uk>
+Subject: Re: [PATCH] libata: end the r-word
+Date: Wed, 12 Mar 2014 10:19:18 +0000
+Message-ID: <532034A6.8070705@mrc-lmb.cam.ac.uk>
+References: <20140306032706.9641.99151.stgit@viggo.jf.intel.com>	<20140307214049.78931def@alan.etchedpixels.co.uk> <CAA9_cmfbS1kZyLampjva8sh=ynqLYY3HLDRDy0oM6teeihAjmg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ppsw-41.csi.cam.ac.uk ([131.111.8.141]:46312 "EHLO
+	ppsw-41.csi.cam.ac.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753528AbaCLKs0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 12 Mar 2014 06:48:26 -0400
+In-Reply-To: <CAA9_cmfbS1kZyLampjva8sh=ynqLYY3HLDRDy0oM6teeihAjmg@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Tejun Heo <tj@kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-This patch adds APM X-Gene SoC AHCI SATA host controller DTS entries.
+Dan Williams wrote:
+> On Fri, Mar 7, 2014 at 1:40 PM, One Thousand Gnomes
+> <gnomes@lxorguk.ukuu.org.uk> wrote:
+>> On Wed, 05 Mar 2014 19:33:04 -0800
+>> Dan Williams <dan.j.williams@intel.com> wrote:
+>>
+>>> We want our contributors to spend their anger, resentment, and
+>>> frustration emotional resources on finding and fixing broken code.  We
+>>> do not want those valuable resources wasted on unfortunately worded
+>>> comments.
+>> The comment appears to be very accurately worded in this case. To retard
+>> is to slow down. We allow 30 seconds of idleness for very slow devices.
+> 
+> Right, as a verb, if the comment had said "some devices retard the
+> reset recovery process" that would be pedantic word choice but more in
+> line with a specific technical meaning of the word.
+> 
+>> Now I can see why you might want to remove the word in some other context
+>> such as if we had /* Linus is such a retard */ but this context appears
+>> to be correct, and in fact a rather clever bit of wordplay (intended or
+>> otherwise)
+> 
+> Actually, no, int this case I'm specifically concerned with adjective
+> usage "retarded devices".  Where the implication is there is something
+> wrong with the device.  Unfortunately in the US it has become a slur
+> and slang term to classify the "worst of things".  I suspect that
+> usage has not made it to the UK?
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Tuan Phan <tphan@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
----
- arch/arm64/boot/dts/apm-storm.dtsi |   75 ++++++++++++++++++++++++++++++++++++
- 1 files changed, 75 insertions(+), 0 deletions(-)
-
-diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
-index c78ddcf..2a03e96 100644
---- a/arch/arm64/boot/dts/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm-storm.dtsi
-@@ -221,6 +221,48 @@
- 				enable-offset = <0x0>;
- 				enable-mask = <0x06>;
- 			};
-+
-+			sata01clk: sata01clk@1f21c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f21c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sata01clk";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x05>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x39>;
-+			};
-+
-+			sata23clk: sata23clk@1f22c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f22c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sata23clk";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x05>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x39>;
-+			};
-+
-+			sata45clk: sata45clk@1f23c000 {
-+				compatible = "apm,xgene-device-clock";
-+				#clock-cells = <1>;
-+				clocks = <&socplldiv2 0>;
-+				clock-names = "socplldiv2";
-+				reg = <0x0 0x1f23c000 0x0 0x1000>;
-+				reg-names = "csr-reg";
-+				clock-output-names = "sata45clk";
-+				csr-offset = <0x4>;
-+				csr-mask = <0x05>;
-+				enable-offset = <0x0>;
-+				enable-mask = <0x39>;
-+			};
- 		};
- 
- 		serial0: serial@1c020000 {
-@@ -262,5 +304,38 @@
- 			apm,tx-boost-gain = <31 31 31 31 31 31>;
- 			apm,tx-eye-tuning = <2 10 10 2 10 10>;
- 		};
-+
-+		sata1: sata@1a000000 {
-+			compatible = "apm,xgene-ahci-sgmii";
-+			reg = <0x0 0x1a000000 0x0 0x1000>,
-+			      <0x0 0x1f210000 0x0 0x10000>;
-+			interrupts = <0x0 0x86 0x4>;
-+			status = "disabled";
-+			clocks = <&sata01clk 0>;
-+			phys = <&phy1 0>;
-+			phy-names = "sata-phy";
-+		};
-+
-+		sata2: sata@1a400000 {
-+			compatible = "apm,xgene-ahci-sgmii";
-+			reg = <0x0 0x1a400000 0x0 0x1000>,
-+			      <0x0 0x1f220000 0x0 0x10000>;
-+			interrupts = <0x0 0x87 0x4>;
-+			status = "ok";
-+			clocks = <&sata23clk 0>;
-+			phys = <&phy2 0>;
-+			phy-names = "sata-phy";
-+		};
-+
-+		sata3: sata@1a800000 {
-+			compatible = "apm,xgene-ahci-pcie";
-+			reg = <0x0 0x1a800000 0x0 0x1000>,
-+			      <0x0 0x1f230000 0x0 0x10000>;
-+			interrupts = <0x0 0x88 0x4>;
-+			status = "ok";
-+			clocks = <&sata45clk 0>;
-+			phys = <&phy3 0>;
-+			phy-names = "sata-phy";
-+		};
- 	};
- };
--- 
-1.5.5
-
+I think what hasn't made it to the UK is an undue emphasis on political
+correctness. 'Retarded' at least implies slowness whereas 'outlier' is a
+meaningless noise word. Furthermore, it's actually a noun rather than an
+adjective, so the proposed change makes the comment ungrammatical. The
+word you're looking for is 'outlying' though I would prefer a meaningful
+description such as 'extremely slow devices' if obsequiousness to
+political correctness is deemed necessary.
