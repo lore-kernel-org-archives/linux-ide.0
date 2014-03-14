@@ -1,35 +1,46 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ata: Fix SC1200 dependencies
-Date: Fri, 14 Mar 2014 10:43:30 -0400
-Message-ID: <20140314144330.GK12613@htj.dyndns.org>
-References: <20140314154131.75f5a2a0@endymion.delvare>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH 2/3] libata: acpi: avoid passing NULL to ACPI evaluation
+ method
+Date: Fri, 14 Mar 2014 23:18:04 +0800
+Message-ID: <53231DAC.3000005@intel.com>
+References: <1394775970-6022-1-git-send-email-aaron.lu@intel.com> <1394775970-6022-3-git-send-email-aaron.lu@intel.com> <20140314125847.GA12613@htj.dyndns.org> <5323115A.7050200@intel.com> <532312E8.4020001@intel.com> <20140314143332.GJ12613@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f180.google.com ([209.85.216.180]:37237 "EHLO
-	mail-qc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754614AbaCNOnd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Mar 2014 10:43:33 -0400
-Received: by mail-qc0-f180.google.com with SMTP id x3so2904876qcv.25
-        for <linux-ide@vger.kernel.org>; Fri, 14 Mar 2014 07:43:33 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20140314154131.75f5a2a0@endymion.delvare>
+Received: from mga01.intel.com ([192.55.52.88]:22488 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754301AbaCNPUd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 14 Mar 2014 11:20:33 -0400
+In-Reply-To: <20140314143332.GJ12613@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jean Delvare <jdelvare@suse.de>
+To: Tejun Heo <tj@kernel.org>
 Cc: linux-ide@vger.kernel.org
 
-On Fri, Mar 14, 2014 at 03:41:31PM +0100, Jean Delvare wrote:
-> The SC1200 is a SoC based on the Geode GX1 32-bit x86 processor, so
-> its drivers are only needed on this architecture, except for build
-> testing purpose.
-> 
-> Signed-off-by: Jean Delvare <jdelvare@suse.de>
-> Cc: Tejun Heo <tj@kernel.org>
+On 03/14/2014 10:33 PM, Tejun Heo wrote:
+> On Fri, Mar 14, 2014 at 10:32:08PM +0800, Aaron Lu wrote:
+>> On 03/14/2014 10:25 PM, Aaron Lu wrote:
+>>> On 03/14/2014 08:58 PM, Tejun Heo wrote:
+>>>> On Fri, Mar 14, 2014 at 01:46:09PM +0800, Aaron Lu wrote:
+>>>>> If ACPI handle for an ATA device is NULL, we shouldn't call
+>>>>> ata_dev_get_GTF as that function will use handle to do some ACPI
+>>>>> evaluation.
+>>>>
+>>>> This caused a crash, right?  Can you please include what can trigger
+>>>> such oops and how it looks like and reference to the original bug
+>>>> report.  In general, when you're cc'ing stable, please try to provide
+>>>> as much information about the bug as possible so that downstreams have
+>>>> easier time evaluating the importance and risk of the change.  The
+>>>> same goes for the previous patch.
+>>>
+>>> For the 1/3 patch, no crash either. It's just that if CONFIG_PM_RUNTIME
+>>> is not set, ZPODD will not function so building it doesn't make sense.
+>>
+>> No bug report for this either, I realized this when I'm preparing a test
+>> build for !CONFIG_PM_RUNTIME and found that I can still select ZPODD.
+>
+> Both aren't really -stable material then, right?
 
-Applied to libata/for-3.15.
+Yes.
 
-Thanks.
-
--- 
-tejun
