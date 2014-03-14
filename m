@@ -1,41 +1,30 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: Re: [PATCH v17 3/4] ata: Add APM X-Gene SoC AHCI SATA host controller
- driver
-Date: Thu, 13 Mar 2014 18:01:52 +0100
-Message-ID: <2321534.cVUPvrOVDn@amdc1032>
-References: <1394655573-32645-1-git-send-email-lho@apm.com>
- <1394655573-32645-3-git-send-email-lho@apm.com>
- <1394655573-32645-4-git-send-email-lho@apm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7Bit
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: [PATCH 0/3] ata: acpi/zpodd: some small fixes
+Date: Fri, 14 Mar 2014 13:46:07 +0800
+Message-ID: <1394775970-6022-1-git-send-email-aaron.lu@intel.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:19872 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753830AbaCMRCI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Mar 2014 13:02:08 -0400
-In-reply-to: <1394655573-32645-4-git-send-email-lho@apm.com>
+Received: from mga02.intel.com ([134.134.136.20]:37840 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752065AbaCNFpk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 14 Mar 2014 01:45:40 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Loc Ho <lho@apm.com>
-Cc: olof@lixom.net, tj@kernel.org, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
 
-On Wednesday, March 12, 2014 02:19:32 PM Loc Ho wrote:
-> This patch adds support for the APM X-Gene SoC AHCI SATA host controller
-> driver. It requires the corresponding APM X-Gene SoC PHY driver. This
-> initial version only supports Gen3 speed.
-> 
-> Signed-off-by: Loc Ho <lho@apm.com>
-> Signed-off-by: Tuan Phan <tphan@apm.com>
-> Signed-off-by: Suman Tripathi <stripathi@apm.com>
+Two small fix for libata-acpi and libata-zpodd and one simplification
+for libata-zpodd.
 
-Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Aaron Lu (3):
+  libata: zpodd: should depend on PM_RUNTIME
+  libata: acpi: avoid passing NULL to ACPI evaluation method
+  libata: zpodd: eliminate odd_can_poweroff
 
-Thanks for fixing all the remaining issues.
+ drivers/ata/Kconfig        |  2 +-
+ drivers/ata/libata-acpi.c  |  1 +
+ drivers/ata/libata-zpodd.c | 21 ++-------------------
+ 3 files changed, 4 insertions(+), 20 deletions(-)
 
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
+-- 
+1.8.5.3
 
