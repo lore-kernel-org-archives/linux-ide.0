@@ -1,37 +1,35 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2/3] libata: acpi: avoid passing NULL to ACPI evaluation
- method
-Date: Fri, 14 Mar 2014 08:58:47 -0400
-Message-ID: <20140314125847.GA12613@htj.dyndns.org>
-References: <1394775970-6022-1-git-send-email-aaron.lu@intel.com>
- <1394775970-6022-3-git-send-email-aaron.lu@intel.com>
+Subject: Re: [PATCH 0/5] ahci: st: Apply Bartlomiej's suggestions
+Date: Fri, 14 Mar 2014 09:22:02 -0400
+Message-ID: <20140314132202.GE12613@htj.dyndns.org>
+References: <1394627982-23726-1-git-send-email-lee.jones@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f170.google.com ([209.85.216.170]:46376 "EHLO
-	mail-qc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754328AbaCNM6u (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Mar 2014 08:58:50 -0400
-Received: by mail-qc0-f170.google.com with SMTP id e9so2788495qcy.15
-        for <linux-ide@vger.kernel.org>; Fri, 14 Mar 2014 05:58:50 -0700 (PDT)
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
 Content-Disposition: inline
-In-Reply-To: <1394775970-6022-3-git-send-email-aaron.lu@intel.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <1394627982-23726-1-git-send-email-lee.jones@linaro.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Lee Jones <lee.jones@linaro.org>
+Cc: linux-ide@vger.kernel.org, b.zolnierkie@samsung.com, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, kernel@stlinux.com
 List-Id: linux-ide@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: linux-ide@vger.kernel.org
 
-On Fri, Mar 14, 2014 at 01:46:09PM +0800, Aaron Lu wrote:
-> If ACPI handle for an ATA device is NULL, we shouldn't call
-> ata_dev_get_GTF as that function will use handle to do some ACPI
-> evaluation.
+On Wed, Mar 12, 2014 at 12:39:37PM +0000, Lee Jones wrote:
+> Hi Tejun,
+> 
+> Sorry for the delay, I was in Asia for 9 days last week.
+> 
+> Here are the suggestions from Bartlomiej's review.
 
-This caused a crash, right?  Can you please include what can trigger
-such oops and how it looks like and reference to the original bug
-report.  In general, when you're cc'ing stable, please try to provide
-as much information about the bug as possible so that downstreams have
-easier time evaluating the importance and risk of the change.  The
-same goes for the previous patch.
+Applied 1-5 to libata/for-3.15.
 
 Thanks.
 
