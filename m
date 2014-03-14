@@ -1,36 +1,42 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 0/3] ata: acpi/zpodd: some small fixes
-Date: Fri, 14 Mar 2014 11:24:24 -0400
-Message-ID: <20140314152424.GM12613@htj.dyndns.org>
-References: <1394775970-6022-1-git-send-email-aaron.lu@intel.com>
+From: Jean Delvare <jdelvare@suse.de>
+Subject: [PATCH] ide: Fix SC1200 dependencies
+Date: Fri, 14 Mar 2014 17:54:31 +0100
+Message-ID: <20140314175431.60e30b07@endymion.delvare>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f180.google.com ([209.85.216.180]:34080 "EHLO
-	mail-qc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755198AbaCNPY3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Mar 2014 11:24:29 -0400
-Received: by mail-qc0-f180.google.com with SMTP id x3so3010438qcv.39
-        for <linux-ide@vger.kernel.org>; Fri, 14 Mar 2014 08:24:28 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <1394775970-6022-1-git-send-email-aaron.lu@intel.com>
+Received: from cantor2.suse.de ([195.135.220.15]:35876 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756066AbaCNQye (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 14 Mar 2014 12:54:34 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Aaron Lu <aaron.lu@intel.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>
 
-On Fri, Mar 14, 2014 at 01:46:07PM +0800, Aaron Lu wrote:
-> Two small fix for libata-acpi and libata-zpodd and one simplification
-> for libata-zpodd.
-> 
-> Aaron Lu (3):
->   libata: zpodd: should depend on PM_RUNTIME
->   libata: acpi: avoid passing NULL to ACPI evaluation method
->   libata: zpodd: eliminate odd_can_poweroff
+The SC1200 is a SoC based on the Geode GX1 32-bit x86 processor, so
+its drivers are only needed on this architecture, except for build
+testing purpose.
 
-Applied 1-3 to libata/for-3.15 w/ stable cc dropped.
+Signed-off-by: Jean Delvare <jdelvare@suse.de>
+Cc: "David S. Miller" <davem@davemloft.net>
+---
+ drivers/ide/Kconfig |    1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks.
+--- linux-3.14-rc6.orig/drivers/ide/Kconfig	2014-03-11 12:14:40.576766722 +0100
++++ linux-3.14-rc6/drivers/ide/Kconfig	2014-03-14 17:51:31.224490902 +0100
+@@ -488,6 +488,7 @@ config BLK_DEV_JMICRON
+ 
+ config BLK_DEV_SC1200
+ 	tristate "National SCx200 chipset support"
++	depends on X86_32 || COMPILE_TEST
+ 	select BLK_DEV_IDEDMA_PCI
+ 	help
+ 	  This driver adds support for the on-board IDE controller on the
+
 
 -- 
-tejun
+Jean Delvare
+SUSE L3 Support
