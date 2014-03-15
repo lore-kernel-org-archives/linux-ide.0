@@ -1,49 +1,50 @@
-From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
-Subject: Re: [PATCH v18 3/4] ata: Add APM X-Gene SoC AHCI SATA host controller driver
-Date: Sat, 15 Mar 2014 10:19:48 +0100
-Message-ID: <201403151019.49316.arnd@arndb.de>
-References: <1394841201-29495-1-git-send-email-lho@apm.com> <1394841201-29495-3-git-send-email-lho@apm.com> <1394841201-29495-4-git-send-email-lho@apm.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH v5 3/3] scsi: async sd resume
+Date: Sat, 15 Mar 2014 14:47:52 -0700
+Message-ID: <1394920072.2166.29.camel@dabdike.int.hansenpartnership.com>
+References: <Pine.LNX.4.44L0.1403101658490.5966-100000@netrider.rowland.org>
+	 <1394511589.2142.5.camel@dabdike.int.hansenpartnership.com>
+	 <CAPcyv4gJssEE7hADEDXmi4ao031uSVjMenKk9AFcbTukm1MKNg@mail.gmail.com>
+	 <1394515014.2142.11.camel@dabdike.int.hansenpartnership.com>
+	 <CAPcyv4gLEQ9-e2GJpfbQQ+DN+nsv-90oFwXxh-_K_hU0z4U5YQ@mail.gmail.com>
+	 <1394519379.2142.13.camel@dabdike.int.hansenpartnership.com>
+	 <CAPcyv4iVMss=Vj8O9RR2GGCw-4uesw1MKj-qFuaXZqtTz1Cqdg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
+Content-Type: text/plain; charset="ISO-8859-15"
 Content-Transfer-Encoding: 7bit
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1394841201-29495-4-git-send-email-lho-qTEPVZfXA3Y@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Loc Ho <lho-qTEPVZfXA3Y@public.gmane.org>
-Cc: olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, ddutile-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, jcm-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, patches-qTEPVZfXA3Y@public.gmane.org, Tuan Phan <tphan-qTEPVZfXA3Y@public.gmane.org>, Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <CAPcyv4iVMss=Vj8O9RR2GGCw-4uesw1MKj-qFuaXZqtTz1Cqdg@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <tj@kernel.org>, Len Brown <len.brown@intel.com>, linux-scsi <linux-scsi@vger.kernel.org>, Phillip Susi <psusi@ubuntu.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Todd Brandt <todd.e.brandt@linux.intel.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Saturday 15 March 2014, Loc Ho wrote:
-> This patch adds support for the APM X-Gene SoC AHCI SATA host controller
-> driver. It requires the corresponding APM X-Gene SoC PHY driver. This
-> initial version only supports Gen3 speed.
+On Fri, 2014-03-14 at 13:11 -0700, Dan Williams wrote:
+> On Mon, Mar 10, 2014 at 11:29 PM, James Bottomley
+> <James.Bottomley@hansenpartnership.com> wrote:
+> >> > In the long game, though this whole debate is moot: setups with hard
+> >> > wired start times adhere to them regardless of what the system does, so
+> >> > they ignore start unit commands.  Systems without hard wired start times
+> >> > can usually be started at once, so us introducing a delay is unnecessary
+> >> > in either case.
+> >>
+> >> Ok, then I'll let the patch stand as is.
+> >
+> > Sounds good.
+> >
+> > James
+> >
+> >
+> 
+> Well, one more chirp about this.  If the user has disabled async
+> scanning by CONFIG_SCSI_SCAN_ASYNC=n or scsi_mod.scan != "async" then
+> resume should follow suit.  I'll include this in the next rev.
 
-This version seems workable, thanks for the quick follow-up.
+Hm, OK, if this is tied at the hip to async scanning, why do you need
+another async domain for it?  Why not just use the current async
+scanning domain ... it will actually probably resolve a few nasty (but
+wholly manufactured) races where scanning races with suspend.
 
-The comment about Gen3 speed above reminds me that you took some
-shortcuts to get here and you removed support for some features
-as well as some bug workarounds in the process. I'm guessing some
-of them won't be necessary because they are only for prototype
-hardware or for early boot loader versions that don't yet set up
-the hardware right, but others actually need to come back.
+James
 
-That is usually a good approach, but I'd also like to make sure we can
-deal with them nicely when you have to add them back later, and don't
-have to add ugly extensions to the DT binding to support the old dtb
-files.
 
-Can you list (also in the changelog) the parts of the driver that you
-have taken out for now and that you expect to add back at later
-stage? I think that would be helpful for perspective.
-
-Regarding the support for multiple link speeds, how do you think
-it will be done? Can you have a driver-side link speed autoconfiguration,
-or do you have to add DT properties and let the driver know about
-the attached device?
-
-	Arnd
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
