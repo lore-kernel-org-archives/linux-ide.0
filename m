@@ -1,98 +1,87 @@
-From: Loc Ho <lho@apm.com>
-Subject: Re: [PATCH v18 3/4] ata: Add APM X-Gene SoC AHCI SATA host controller driver
-Date: Sat, 15 Mar 2014 23:17:59 -0700
-Message-ID: <CAPw-ZTksg3z8GY55jb7-yP1wfq2BF6apB9KBgbokpshKbiiAaw@mail.gmail.com>
-References: <1394841201-29495-1-git-send-email-lho@apm.com>
-	<1394841201-29495-3-git-send-email-lho@apm.com>
-	<1394841201-29495-4-git-send-email-lho@apm.com>
-	<201403151019.49316.arnd@arndb.de>
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: Re: linux-next: ahci_platform broken build
+Date: Sun, 16 Mar 2014 15:13:55 +0100
+Message-ID: <5325B1A3.9070102@redhat.com>
+References: <5325AFB2.4050505@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from exprod5og119.obsmtp.com ([64.18.0.189]:44026 "HELO
-	exprod5og119.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750811AbaCPGSA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 16 Mar 2014 02:18:00 -0400
-Received: by mail-qa0-f51.google.com with SMTP id j7so4200235qaq.10
-        for <linux-ide@vger.kernel.org>; Sat, 15 Mar 2014 23:17:59 -0700 (PDT)
-In-Reply-To: <201403151019.49316.arnd@arndb.de>
+Received: from mx1.redhat.com ([209.132.183.28]:35493 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751809AbaCPOOC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 16 Mar 2014 10:14:02 -0400
+In-Reply-To: <5325AFB2.4050505@canonical.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Don Dutile <ddutile@redhat.com>, Jon Masters <jcm@redhat.com>, "patches@apm.com" <patches@apm.com>, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+To: Tim Gardner <tim.gardner@canonical.com>, Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, dann frazier <dann.frazier@canonical.com>
 
 Hi,
 
->> This patch adds support for the APM X-Gene SoC AHCI SATA host controller
->> driver. It requires the corresponding APM X-Gene SoC PHY driver. This
->> initial version only supports Gen3 speed.
->
-> This version seems workable, thanks for the quick follow-up.
->
-> The comment about Gen3 speed above reminds me that you took some
-> shortcuts to get here and you removed support for some features
-> as well as some bug workarounds in the process. I'm guessing some
-> of them won't be necessary because they are only for prototype
-> hardware or for early boot loader versions that don't yet set up
-> the hardware right, but others actually need to come back.
->
-> That is usually a good approach, but I'd also like to make sure we can
-> deal with them nicely when you have to add them back later, and don't
-> have to add ugly extensions to the DT binding to support the old dtb
-> files.
->
-> Can you list (also in the changelog) the parts of the driver that you
-> have taken out for now and that you expect to add back at later
-> stage? I think that would be helpful for perspective.
->
+On 03/16/2014 03:05 PM, Tim Gardner wrote:
+> Gents  - while reviewing some patches for arm64 in Ubuntu I noticed t=
+hat there is at least one patch sequence in linux-next that breaks the =
+build.
+>=20
+> 156c5887948cd191417f18026aab9ce26e5a95da ahci-platform: Add support f=
+or devices with more then 1 clock
+> 039ece38da45f5e6a94be3aa7611cf3634bc2461 libahci: Allow drivers to ov=
+erride start_engine
+>=20
+> For example:
+>=20
+> git reset --hard 156c5887948cd191417f18026aab9ce26e5a95da
+> echo "CONFIG_SATA_AHCI_PLATFORM=3Dy" >> .config
+> make oldconfig scripts prepare
+> make M=3Ddrivers/ata
+>=20
+>   WARNING: Symbol version dump /home/rtg/linux/linux-next/Module.symv=
+ers
+>            is missing; modules will have no dependencies and modversi=
+ons.
+>=20
+>   CC      drivers/ata/libata-core.o
+>   CC      drivers/ata/libata-scsi.o
+>   CC      drivers/ata/libata-eh.o
+>   CC      drivers/ata/libata-transport.o
+>   CC      drivers/ata/libata-sff.o
+>   CC      drivers/ata/libata-pmp.o
+>   CC      drivers/ata/libata-acpi.o
+>   LD      drivers/ata/libata.o
+>   CC      drivers/ata/ahci.o
+>   CC      drivers/ata/libahci.o
+>   CC      drivers/ata/ahci_platform.o
+> drivers/ata/ahci_platform.c: In function =91ahci_probe=92:
+> drivers/ata/ahci_platform.c:209:2: error: implicit declaration of fun=
+ction =91ahci_enable_clks=92 [-Werror=3Dimplicit-function-declaration]
+> drivers/ata/ahci_platform.c:293:2: error: implicit declaration of fun=
+ction =91ahci_disable_clks=92 [-Werror=3Dimplicit-function-declaration]
+> cc1: some warnings being treated as errors
+> make[1]: *** [drivers/ata/ahci_platform.o] Error 1
+> make: *** [_module_drivers/ata] Error 2
+>=20
+> The compile problem is then fixed in 96a01ba52c60fdd74dd6e8cf06645d06=
+515b1396 (ahci-platform: Add enable_ / disable_resources helper functio=
+ns) which is not really kosher.
 
-Here is an list of patches that we will be preparing for once the
-basic driver is completed. Do you want me to re-generate the patch
-change log with this info?
+Ah good catch, at some point I decided to prefix all the ahci_* functio=
+ns defined in ahci_platform.c
+with ahci_platform_ instead of just ahci_. Somehow the functions got ad=
+ded with their new names
+directly in the "ahci-platform: Add support for devices with more then =
+1 clock" patch (this is
+intentional), but the calls added in that patch kept using the old name=
+s. Then in the
+"ahci-platform: Add enable_ / disable_resources helper functions" patch
+the calls get moved to another place and now show up with the proper ah=
+ci_platform_*
+names. My bad.
 
-1. Support for Gen1/Gen2/Gen3
-Solution: The simplest solution is to have the PHY framework support
-setting the desire speed. I had argued with the TI folks but they are
-reluctant to add this function to the framework. They argued that this
-is still not generic enough. I will start the discussion again later
-on. The other possibility (but not sure if this is doable) is to have
-the PHY init function to be smarter and do the necessary operation
-assuming the underlying PHY is capable in detecting the link up speed.
-I will need to check the spec of this.
+Tejun it is probably easiest if you fix this up directly in your tree, =
+let me know if you
+want a fixed up resend of the 2 patches in question instead.
 
-2. Retry COMRESET (hardreset) if failed first time
-Solution: This code is purely in the host driver hardreset function.
-It isn't for sure that we will need this. Given our current initial
-board design, this seems to required 1 out of many, many power cycle
-boot.
+Regards,
 
-3. Cleaning the receiver line when SER_DISPARITY/SER_10B_8B error
-during COMRESET (hardreset function call)
-Solution: It is observed that during COMRESET, the receiver line can
-report these errors and an clean up is required. For this, the code
-will be with in the host driver and an call into the PHY layer. The
-solution is the similar to #1 above.
-
-4. IO flush before servicing completed operations (mostly read operations)
-Solution: The read IO operations require an flush from the host
-controller hardware side. For this, we will need to change the libahci
-to call an function that is provided by the host driver if non-NULL.
-
-5. PM (power management) support
-Solution: Due to an errata in the host controller, stopping the
-controller requires an slightly modified version in the way it detects
-the host port completed the requested operation. For this we will have
-to introduce an AHCI_HFLAG_XXX to detect the completion of FIS_RX
-stopped by the CI register instead the PORT_CMD register or just delay
-for 500ms.
-
-> Regarding the support for multiple link speeds, how do you think
-> it will be done?
-> Can you have a driver-side link speed autoconfiguration,
-> or do you have to add DT properties and let the driver know about
-> the attached device?
->
-
-See above #1.
-
--Loc
+Hans
