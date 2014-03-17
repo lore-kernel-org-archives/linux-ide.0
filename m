@@ -1,32 +1,31 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v18 0/4] ata: Add APM X-Gene SoC AHCI SATA host
- controller support
-Date: Mon, 17 Mar 2014 15:55:52 -0400
-Message-ID: <20140317195552.GC17373@mtj.dyndns.org>
-References: <1394841201-29495-1-git-send-email-lho@apm.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH] ide: Fix CS5520 and CS5530 dependencies
+Date: Mon, 17 Mar 2014 15:58:33 -0400 (EDT)
+Message-ID: <20140317.155833.2250421879915712965.davem@davemloft.net>
+References: <20140311124454.1238167f@endymion.delvare>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f179.google.com ([209.85.216.179]:51240 "EHLO
-	mail-qc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750728AbaCQTz6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Mar 2014 15:55:58 -0400
-Content-Disposition: inline
-In-Reply-To: <1394841201-29495-1-git-send-email-lho@apm.com>
+Received: from shards.monkeyblade.net ([149.20.54.216]:42257 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750728AbaCQT6f (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Mar 2014 15:58:35 -0400
+In-Reply-To: <20140311124454.1238167f@endymion.delvare>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Loc Ho <lho@apm.com>
-Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Tuan Phan <tphan@apm.com>, Suman Tripathi <stripathi@apm.com>
+To: jdelvare@suse.de
+Cc: linux-ide@vger.kernel.org, gnomes@lxorguk.ukuu.org.uk
 
-On Fri, Mar 14, 2014 at 05:53:17PM -0600, Loc Ho wrote:
-> This patch adds support for the APM X-Gene SoC AHCI SATA host controller. In
-> order for the host controller to work, the corresponding PHY driver
-> musts also be available. Currently, only Gen3 disk is supported with this
-> initial version.
+From: Jean Delvare <jdelvare@suse.de>
+Date: Tue, 11 Mar 2014 12:44:54 +0100
 
-Applied 1-4 to libata/for-3.15.
+> As far as I know, the CS5520 and CS5530 chipsets were only used with
+> 32-bit x86 Geode processors, so I think their drivers are only needed
+> on this architecture, except for build testing purpose.
+> 
+> While we're here, simplify the dependencies for the CS5535 driver.
+> 
+> Signed-off-by: Jean Delvare <jdelvare@suse.de>
 
-Thanks.
-
--- 
-tejun
+Applied.
