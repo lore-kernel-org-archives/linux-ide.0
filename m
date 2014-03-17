@@ -1,52 +1,37 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [PATCH 1/4] ata: ahci_platform: fix ahci_platform_data->suspend method
- handling
-Date: Mon, 17 Mar 2014 19:31:55 +0100
-Message-ID: <1395081118-15248-2-git-send-email-b.zolnierkie@samsung.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 0/4] ata: add remaining new-style AHCI platform drivers
+Date: Mon, 17 Mar 2014 14:57:55 -0400
+Message-ID: <20140317185755.GA17373@mtj.dyndns.org>
 References: <1395081118-15248-1-git-send-email-b.zolnierkie@samsung.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-reply-to: <1395081118-15248-1-git-send-email-b.zolnierkie@samsung.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Sekhar Nori <nsekhar@ti.com>, Kevin Hilman <khilman@deeprootsystems.com>, Viresh Kumar <viresh.linux@gmail.com>, Shiraz Hashim <shiraz.hashim@st.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, davinci-linux-open-source@linux.davincidsp.com, spear-devel@list.st.com, b.zolnierkie@samsung.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qc0-f176.google.com ([209.85.216.176]:64088 "EHLO
+	mail-qc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750716AbaCQS6A (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Mar 2014 14:58:00 -0400
+Content-Disposition: inline
+In-Reply-To: <1395081118-15248-1-git-send-email-b.zolnierkie@samsung.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: Sekhar Nori <nsekhar@ti.com>, Kevin Hilman <khilman@deeprootsystems.com>, Viresh Kumar <viresh.linux@gmail.com>, Shiraz Hashim <shiraz.hashim@st.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, davinci-linux-open-source@linux.davincidsp.com, spear-devel@list.st.com
 
-Looking at ST SPEAr1340 AHCI code (the only user of the deprecated
-pdata->suspend and pdata->resume) it is obvious the we should return
-after calling pdata->suspend() only if the function have returned
-non-zero return value.  The code has been broken since commit 1e70c2
-("ata/ahci_platform: Add clock framework support").  Fix it.
+On Mon, Mar 17, 2014 at 07:31:54PM +0100, Bartlomiej Zolnierkiewicz wrote:
+> Hi,
+> 
+> This patch series adds new-style AHCI platform drivers for DaVinci DA850
+> AHCI controller and ST SPEAr1340 AHCI controller.  As a preparation for
+> adding these drivers it also fixes ahci_platform_data->suspend() handling
+> (patch #1) and moves library AHCI platform code to its own file (patch #2).
+> The new AHCI platform drivers are only compile tested (they are marked as
+> experimental because of this) and I would ask somebody with the hardware
+> to verify them (thanks!).
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
----
- drivers/ata/ahci_platform.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+Nice cleanups.  I'll apply the patches once the drivers are verified
+to work.
 
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index 70fbf66..7bd6adf 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -521,12 +521,19 @@ int ahci_platform_suspend(struct device *dev)
- 	if (rc)
- 		return rc;
- 
--	if (pdata && pdata->suspend)
--		return pdata->suspend(dev);
-+	if (pdata && pdata->suspend) {
-+		rc = pdata->suspend(dev);
-+		if (rc)
-+			goto resume_host;
-+	}
- 
- 	ahci_platform_disable_resources(hpriv);
- 
- 	return 0;
-+
-+resume_host:
-+	ahci_platform_resume_host(dev);
-+	return rc;
- }
- EXPORT_SYMBOL_GPL(ahci_platform_suspend);
- 
+Thanks!
+
 -- 
-1.8.2.3
+tejun
