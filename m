@@ -1,33 +1,51 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: Re: [PATCH] ata: ahci_sunxi: disable resources on driver removal
-Date: Mon, 17 Mar 2014 14:16:16 +0100
-Message-ID: <1541332.S2AMpmTS9V@amdc1032>
-References: <4639408.hubNkUp5Oa@amdc1032>
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: Re: [PATCH] ata: ahci_sunxi: make ahci_sunxi_resume() static
+Date: Mon, 17 Mar 2014 14:23:07 +0100
+Message-ID: <5326F73B.6080501@redhat.com>
+References: <1725454.bVvdm9zQru@amdc1032>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:23614 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932338AbaCQNQd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Mar 2014 09:16:33 -0400
-In-reply-to: <4639408.hubNkUp5Oa@amdc1032>
+Received: from mx1.redhat.com ([209.132.183.28]:22262 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932805AbaCQNXm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 17 Mar 2014 09:23:42 -0400
+In-Reply-To: <1725454.bVvdm9zQru@amdc1032>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Hans de Goede <hdegoede@redhat.com>, Maxime Ripard <maxime.ripard@free-electrons.com>, Oliver Schinagl <oliver@schinagl.nl>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>
+Cc: Maxime Ripard <maxime.ripard@free-electrons.com>, Oliver Schinagl <oliver@schinagl.nl>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
 
-On Monday, March 17, 2014 02:05:15 PM Bartlomiej Zolnierkiewicz wrote:
-> Add custom ->host_stop method to disable resources on driver removal.
-> 
+Hi,
+
+On 03/17/2014 02:06 PM, Bartlomiej Zolnierkiewicz wrote:
 > Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
-After looking some more into ahci_platform.c it seems that this patch
-is not needed, sorry for the noise.
+Thanks for doing these clean-ups.
 
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
+Acked-by: Hans de Goede <hdegoede@redhat.com>
 
+Regards,
+
+Hans
+
+
+> ---
+>  drivers/ata/ahci_sunxi.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> Index: b/drivers/ata/ahci_sunxi.c
+> ===================================================================
+> --- a/drivers/ata/ahci_sunxi.c	2014-03-17 13:59:05.556474489 +0100
+> +++ b/drivers/ata/ahci_sunxi.c	2014-03-17 13:59:06.220474478 +0100
+> @@ -209,7 +209,7 @@ disable_resources:
+>  }
+>  
+>  #ifdef CONFIG_PM_SLEEP
+> -int ahci_sunxi_resume(struct device *dev)
+> +static int ahci_sunxi_resume(struct device *dev)
+>  {
+>  	struct ata_host *host = dev_get_drvdata(dev);
+>  	struct ahci_host_priv *hpriv = host->private_data;
+> 
