@@ -1,34 +1,32 @@
-From: Loc Ho <lho@apm.com>
-Subject: [PATCH] ata: Fix compiler warning with APM X-Gene host controller driver
-Date: Tue, 18 Mar 2014 12:14:37 -0600
-Message-ID: <1395166477-26408-1-git-send-email-lho@apm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] ata: Fix compiler warning with APM X-Gene host
+ controller driver
+Date: Tue, 18 Mar 2014 16:06:52 -0400
+Message-ID: <20140318200652.GA32357@mtj.dyndns.org>
+References: <1395166477-26408-1-git-send-email-lho@apm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qa0-f45.google.com ([209.85.216.45]:41356 "EHLO
+	mail-qa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755994AbaCRUG5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 18 Mar 2014 16:06:57 -0400
+Content-Disposition: inline
+In-Reply-To: <1395166477-26408-1-git-send-email-lho@apm.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Loc Ho <lho@apm.com>
+Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com
 
-This patch fixes an compiler warning with APM X-Gene host controller
-driver when compiled with DEBUG enabled.
+On Tue, Mar 18, 2014 at 12:14:37PM -0600, Loc Ho wrote:
+> This patch fixes an compiler warning with APM X-Gene host controller
+> driver when compiled with DEBUG enabled.
+> 
+> Signed-off-by: Loc Ho <lho@apm.com>
 
-Signed-off-by: Loc Ho <lho@apm.com>
----
- drivers/ata/ahci_xgene.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Applied to libata/for-3.15.
 
-diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-index fcf21f1..77c89bf 100644
---- a/drivers/ata/ahci_xgene.c
-+++ b/drivers/ata/ahci_xgene.c
-@@ -329,7 +329,7 @@ static int xgene_ahci_hw_init(struct ahci_host_priv *hpriv)
- 	writel(0xffffffff, hpriv->mmio + HOST_IRQ_STAT);
- 	readl(hpriv->mmio + HOST_IRQ_STAT); /* Force a barrier */
- 	writel(0, ctx->csr_core + INTSTATUSMASK);
--	readl(ctx->csr_core + INTSTATUSMASK); /* Force a barrier */
-+	val = readl(ctx->csr_core + INTSTATUSMASK); /* Force a barrier */
- 	dev_dbg(ctx->dev, "top level interrupt mask 0x%X value 0x%08X\n",
- 		INTSTATUSMASK, val);
- 
+Thanks.
+
 -- 
-1.5.5
-
+tejun
