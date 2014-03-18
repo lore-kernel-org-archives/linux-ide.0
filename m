@@ -1,69 +1,34 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v6 1/3] libata, libsas: kill pm_result and related cleanup
-Date: Tue, 18 Mar 2014 09:48:12 -0700
-Message-ID: <CAPcyv4j=rndWzuA2M7Ctnj8BO-Z62n9KuJtay0yJBTTzF=k5KA@mail.gmail.com>
-References: <20140314205204.1269.44402.stgit@viggo.jf.intel.com>
-	<20140314205248.1269.33730.stgit@viggo.jf.intel.com>
-	<20140318160356.GC3642@htj.dyndns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+From: Loc Ho <lho@apm.com>
+Subject: [PATCH] ata: Fix compiler warning with APM X-Gene host controller driver
+Date: Tue, 18 Mar 2014 12:14:37 -0600
+Message-ID: <1395166477-26408-1-git-send-email-lho@apm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20140318160356.GC3642@htj.dyndns.org>
 Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: James Bottomley <JBottomley@parallels.com>, Phillip Susi <psusi@ubuntu.com>, Todd Brandt <todd.e.brandt@intel.com>, Alan Stern <stern@rowland.harvard.edu>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, Mar 18, 2014 at 9:03 AM, Tejun Heo <tj@kernel.org> wrote:
-> On Fri, Mar 14, 2014 at 01:52:48PM -0700, Dan Williams wrote:
->> Tejun says:
->>   "At least for libata, worrying about suspend/resume failures don't make
->>    whole lot of sense.  If suspend failed, just proceed with suspend.  If
->>    the device can't be woken up afterwards, that's that.  There isn't
->>    anything we could have done differently anyway.  The same for resume, if
->>    spinup fails, the device is dud and the following commands will invoke
->>    EH actions and will eventually fail.  Again, there really isn't any
->>    *choice* to make.  Just making sure the errors are handled gracefully
->>    (ie. don't crash) and the following commands are handled correctly
->>    should be enough."
->>
->> The only libata user that actually cares about the result from a suspend
->> operation is libsas.  However, it only cares about whether queuing a new
->> operation collides with an in-flight one.  All libsas does with the
->> error is retry, but we can just let libata wait for the previous
->> operation before continuing.
->>
->> Other cleanups include:
->> 1/ Unifying all ata port pm operations on an ata_port_pm_ prefix
->> 2/ Marking all ata port pm helper routines as returning void, only
->>    ata_port_pm_ entry points need to fake a 0 return value.
->> 3/ Killing ata_port_{suspend|resume}_common() in favor of calling
->>    ata_port_request_pm() directly
->> 4/ Killing the wrappers that just do a to_ata_port() conversion
->> 5/ Clearly marking the entry points that do async operations with an
->>   _async suffix.
->>
->> Reference: http://marc.info/?l=linux-scsi&m=138995409532286&w=2
->>
->> Cc: Phillip Susi <psusi@ubuntu.com>
->> Cc: Alan Stern <stern@rowland.harvard.edu>
->> Suggested-by: Tejun Heo <tj@kernel.org>
->> Signed-off-by: Todd Brandt <todd.e.brandt@intel.com>
->> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
->
-> Can somebody ack the sas part?
->
+This patch fixes an compiler warning with APM X-Gene host controller
+driver when compiled with DEBUG enabled.
 
-Hmm I'd just as soon self-ack at this point.  I'm cleaning up code I
-wrote a couple years ago, and libsas bugs at this point are
-self-inflicted.
+Signed-off-by: Loc Ho <lho@apm.com>
+---
+ drivers/ata/ahci_xgene.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Top-5 in drivers/scsi/libsas by changeset in the past 5 years:
-    75  Dan Williams
-    12  James Bottomley
-     9  Linus Torvalds
-     7  Tejun Heo
-     4  Sergei Shtylyov
+diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
+index fcf21f1..77c89bf 100644
+--- a/drivers/ata/ahci_xgene.c
++++ b/drivers/ata/ahci_xgene.c
+@@ -329,7 +329,7 @@ static int xgene_ahci_hw_init(struct ahci_host_priv *hpriv)
+ 	writel(0xffffffff, hpriv->mmio + HOST_IRQ_STAT);
+ 	readl(hpriv->mmio + HOST_IRQ_STAT); /* Force a barrier */
+ 	writel(0, ctx->csr_core + INTSTATUSMASK);
+-	readl(ctx->csr_core + INTSTATUSMASK); /* Force a barrier */
++	val = readl(ctx->csr_core + INTSTATUSMASK); /* Force a barrier */
+ 	dev_dbg(ctx->dev, "top level interrupt mask 0x%X value 0x%08X\n",
+ 		INTSTATUSMASK, val);
+ 
+-- 
+1.5.5
 
---
-Dan
