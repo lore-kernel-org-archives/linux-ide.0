@@ -1,82 +1,61 @@
-From: Kamal Mostafa <kamal@canonical.com>
-Subject: [3.8.y.z extended stable] Patch "ata: enable quirk from jmicron JMB350 for JMB394" has been added to staging queue
-Date: Thu, 20 Mar 2014 08:54:33 -0700
-Message-ID: <1395330873-4676-1-git-send-email-kamal@canonical.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:52954 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932091AbaCTPyj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Mar 2014 11:54:39 -0400
-Sender: linux-ide-owner@vger.kernel.org
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Subject: [PATCH v2 0/3] ata: ahci_platform related cleanups
+Date: Thu, 20 Mar 2014 19:27:03 +0100
+Message-ID: <1395340026-3969-1-git-send-email-b.zolnierkie@samsung.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <davinci-linux-open-source-bounces-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org>
+List-Unsubscribe: <http://linux.davincidsp.com/mailman/options/davinci-linux-open-source>,
+	<mailto:davinci-linux-open-source-request-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://linux.davincidsp.com/pipermail/davinci-linux-open-source>
+List-Post: <mailto:davinci-linux-open-source-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org>
+List-Help: <mailto:davinci-linux-open-source-request-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org?subject=help>
+List-Subscribe: <http://linux.davincidsp.com/mailman/listinfo/davinci-linux-open-source>,
+	<mailto:davinci-linux-open-source-request-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org?subject=subscribe>
+Sender: <davinci-linux-open-source-bounces-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org>
+Errors-To: davinci-linux-open-source-bounces-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: davinci-linux-open-source-VycZQUHpC/PFrsHnngEfi1aTQe2KTcn/@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Kevin Hilman <khilman-1D3HCaltpLuhEniVeURVKkEOCMrvLtNR@public.gmane.org>, Shiraz Hashim <shiraz.hashim-qxv4g6HH51o@public.gmane.org>, spear-devel-nkJGhpqTU55BDgjK7y7TUQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, b.zolnierkie-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org, Viresh Kumar <viresh.linux-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: "Denis V. Lunev" <den@openvz.org>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Kamal Mostafa <kamal@canonical.com>, kernel-team@lists.ubuntu.com
 
-This is a note to let you know that I have just added a patch titled
+[ v1 was named "ata: add remaining new-style AHCI platform drivers"
+  but we are down from 2 drivers to 1 driver so the title of the patch
+  series no longer was valid :) ]
 
-    ata: enable quirk from jmicron JMB350 for JMB394
+Hi,
 
-to the linux-3.8.y-queue branch of the 3.8.y.z extended stable tree 
-which can be found at:
+This patch series:
+- fixes ahci_platform_data->suspend() handling
+- moves library AHCI platform code to its own file
+- adds a new-style AHCI platform driver for DaVinci DA850 AHCI controller
 
- http://kernel.ubuntu.com/git?p=ubuntu/linux.git;a=shortlog;h=refs/heads/linux-3.8.y-queue
+Changes since v1:
+- dropped no longer needed patch #4 (ST SPEAr1340 AHCI controller driver)
+- adressed review comments for patch #3 from Sekhar Nori
+- updated patch descriptions
 
-This patch is scheduled to be released in version 3.8.13.20.
-
-If you, or anyone else, feels it should not be added to this tree, please 
-reply to this email.
-
-For more information about the 3.8.y.z tree, see
-https://wiki.ubuntu.com/Kernel/Dev/ExtendedStable
-
-Thanks.
--Kamal
-
-------
-
->From 7a13c7b3abf9293a77dac0e1b08b620c2a97f1cc Mon Sep 17 00:00:00 2001
-From: "Denis V. Lunev" <den@openvz.org>
-Date: Thu, 30 Jan 2014 15:20:30 +0400
-Subject: ata: enable quirk from jmicron JMB350 for JMB394
-
-commit efb9e0f4f43780f0ae0c6428d66bd03e805c7539 upstream.
-
-Without the patch the kernel generates the following error.
-
- ata11.15: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
- ata11.15: Port Multiplier vendor mismatch '0x197b' != '0x123'
- ata11.15: PMP revalidation failed (errno=-19)
- ata11.15: failed to recover PMP after 5 tries, giving up
-
-This patch helps to bypass this error and the device becomes
-functional.
-
-Signed-off-by: Denis V. Lunev <den@openvz.org>
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: <linux-ide@vger.kernel.org>
-Signed-off-by: Kamal Mostafa <kamal@canonical.com>
----
- drivers/ata/libata-pmp.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
-index 20fd337..7ccc084 100644
---- a/drivers/ata/libata-pmp.c
-+++ b/drivers/ata/libata-pmp.c
-@@ -447,8 +447,11 @@ static void sata_pmp_quirks(struct ata_port *ap)
- 		 * otherwise.  Don't try hard to recover it.
- 		 */
- 		ap->pmp_link[ap->nr_pmp_links - 1].flags |= ATA_LFLAG_NO_RETRY;
--	} else if (vendor == 0x197b && devid == 0x2352) {
--		/* chip found in Thermaltake BlackX Duet, jmicron JMB350? */
-+	} else if (vendor == 0x197b && (devid == 0x2352 || devid == 0x0325)) {
-+		/*
-+		 * 0x2352: found in Thermaltake BlackX Duet, jmicron JMB350?
-+		 * 0x0325: jmicron JMB394.
-+		 */
- 		ata_for_each_link(link, ap, EDGE) {
- 			/* SRST breaks detection and disks get misclassified
- 			 * LPM disabled to avoid potential problems
+Best regards,
 --
-1.8.3.2
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
 
+Bartlomiej Zolnierkiewicz (3):
+  ata: ahci_platform: fix ahci_platform_data->suspend method handling
+  ata: move library code from ahci_platform.c to libahci_platform.c
+  ata: add new-style AHCI platform driver for DaVinci DA850 AHCI
+    controller
+
+ arch/arm/mach-davinci/devices-da8xx.c |  99 +------
+ drivers/ata/Kconfig                   |  14 +-
+ drivers/ata/Makefile                  |   9 +-
+ drivers/ata/ahci_da850.c              | 116 ++++++++
+ drivers/ata/ahci_platform.c           | 508 -------------------------------
+ drivers/ata/libahci_platform.c        | 541 ++++++++++++++++++++++++++++++++++
+ 6 files changed, 681 insertions(+), 606 deletions(-)
+ create mode 100644 drivers/ata/ahci_da850.c
+ create mode 100644 drivers/ata/libahci_platform.c
+
+-- 
+1.8.2.3
