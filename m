@@ -1,86 +1,46 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 Subject: Re: [PATCH 3/4] ata: add new-style AHCI platform driver for DaVinci
  DA850 AHCI controller
-Date: Thu, 20 Mar 2014 15:24:41 +0100
-Message-ID: <4579887.D6KcuxH2bm@amdc1032>
+Date: Thu, 20 Mar 2014 16:07:04 +0100
+Message-ID: <348852006.YgTlFegqas@amdc1032>
 References: <1395081118-15248-1-git-send-email-b.zolnierkie@samsung.com>
- <2662651.GJX9HVKij5@amdc1032> <532AEBBD.80707@ti.com>
+ <532AA2B0.1060103@ti.com> <2662651.GJX9HVKij5@amdc1032>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:27299 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757984AbaCTOZA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Mar 2014 10:25:00 -0400
-In-reply-to: <532AEBBD.80707@ti.com>
+Received: from mailout1.samsung.com ([203.254.224.24]:20227 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758109AbaCTPHX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Mar 2014 11:07:23 -0400
+In-reply-to: <2662651.GJX9HVKij5@amdc1032>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Sekhar Nori <nsekhar@ti.com>
 Cc: Tejun Heo <tj@kernel.org>, Kevin Hilman <khilman@deeprootsystems.com>, Viresh Kumar <viresh.linux@gmail.com>, Shiraz Hashim <shiraz.hashim@st.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, davinci-linux-open-source@linux.davincidsp.com, spear-devel@list.st.com
 
-On Thursday, March 20, 2014 06:53:09 PM Sekhar Nori wrote:
-> On Thursday 20 March 2014 06:27 PM, Bartlomiej Zolnierkiewicz wrote:
-> 
-> >>> diff --git a/drivers/ata/ahci_da850.c b/drivers/ata/ahci_da850.c
-> 
-> >>> +extern void __iomem *da8xx_syscfg1_base;
-> >>
-> >> This platform specific extern symbol should not be used in drivers and
-> >> in fact checkpatch complains about it too. Can you instead get the
-> >> addresses you need as part of the device resources?
+On Thursday, March 20, 2014 01:57:10 PM Bartlomiej Zolnierkiewicz wrote:
+
+> > > +#define DA8XX_SYSCFG1_VIRT(x)	(da8xx_syscfg1_base + (x))
+> > > +#define DA8XX_PWRDN_REG		0x18
+> > > +
+> > > +/* SATA PHY Control Register offset from AHCI base */
+> > > +#define SATA_P0PHYCR_REG	0x178
+> > > +
+> > > +#define SATA_PHY_MPY(x)		((x) << 0)
+> > > +#define SATA_PHY_LOS(x)		((x) << 6)
+> > > +#define SATA_PHY_RXCDR(x)	((x) << 10)
+> > > +#define SATA_PHY_RXEQ(x)	((x) << 13)
+> > > +#define SATA_PHY_TXSWING(x)	((x) << 19)
+> > > +#define SATA_PHY_ENPLL(x)	((x) << 31)
 > > 
-> > This is problematic because it is system resource not particular device
-> > resource.  I would prefer to wait with fixing it until the conversion to
-> > the device tree.
+> > These can be replaced with BIT(N)
 > 
-> The way you have it now, module build will fail because the symbol isn't
-> exported from platform code (and it should not be). The register is
-> "system level" but it is SATA specific and I see no problem in passing
-> it to the driver.
+> OK, I'll fix it.
 
-OK, I'll try to fix it.
+Uh, no, we can't use BIT() here.
 
-> Conversion to device tree will not change anything until we throw out
-> the platform device code. That may or may not ever happen.
-> 
-> >>> +static int da850_sata_init(struct device *dev, void __iomem *addr)
-> >>> +{
-> >>> +	int i, ret;
-> >>> +	unsigned int val;
-> >>> +
-> >>> +	da850_sata_clk = clk_get(dev, NULL);
-> >>> +	if (IS_ERR(da850_sata_clk))
-> >>> +		return PTR_ERR(da850_sata_clk);
-> >>> +
-> >>> +	ret = clk_prepare_enable(da850_sata_clk);
-> >>> +	if (ret)
-> >>> +		goto err0;
-> >>
-> >> Please switch to pm_runtime instead of using the clock APIs directly.
-> > 
-> > Could you please elaborate a bit more on this?
-> 
-> I meant using pm_runtime_get_sync() to enable the clocks. There are many
-> examples in the kernel. drivers/watchdog/omap_wdt.c is one.
-> Documentation is available in Documentation/power/runtime_pm.txt
-
-What would be benefit of adding runtime PM methods (->runtime_suspend
-and ->runtime_resume) just for enabling/disabling this clock on driver
-->probe and ->remove methods?  Wouldn't it add complexity and additonal
-dependency (on runtime PM) just for no gain?
-
-Is the driver specific clock control even needed given the resource
-handling in the generic AHCI platform library code (please see
-ahci_platform_get_resources(),  ahci_platform_enable_resources() and
-ahci_platform_disable_resources())?
-
-[ Please also take a look at commit f1e70c2 ("ata/ahci_platform: Add
-  clock framework support") which on Aug 27 2012 added generic clock
-  control to ahci_platform driver but forgot to cleanup DA850 AHCI
-  platform code.  The DA850 AHCI support was added much earlier by
-  commit cbb2c961 ("davinci: da850: add support for SATA interface")
-  on Jul 6 2011. ]
+BIT(N) does (1UL << (N)) and here we have ((N) << offset).
 
 Best regards,
 --
