@@ -1,40 +1,69 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: Re: patch fix for intel sdd s3500 series on Sil3512 controller
-Date: Mon, 24 Mar 2014 16:27:54 +0100
-Message-ID: <2140283.ClKsmfFTvU@amdc1032>
-References: <CAGRSmLtifL=hFBP1AUHB_va6ZvNfqXo8Bu=6XciH--jOEYVJjQ@mail.gmail.com>
- <20140324141558.31c169cf@alan.etchedpixels.co.uk>
+From: Kamal Mostafa <kamal@canonical.com>
+Subject: [PATCH 3.8 03/81] ata: enable quirk from jmicron JMB350 for JMB394
+Date: Tue, 25 Mar 2014 10:15:16 -0700
+Message-ID: <1395767794-5012-4-git-send-email-kamal@canonical.com>
+References: <1395767794-5012-1-git-send-email-kamal@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:30567 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752754AbaCXP2O (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 24 Mar 2014 11:28:14 -0400
-In-reply-to: <20140324141558.31c169cf@alan.etchedpixels.co.uk>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <kernel-team-bounces@lists.ubuntu.com>
+In-Reply-To: <1395767794-5012-1-git-send-email-kamal@canonical.com>
+List-Unsubscribe: <https://lists.ubuntu.com/mailman/options/kernel-team>,
+ <mailto:kernel-team-request@lists.ubuntu.com?subject=unsubscribe>
+List-Archive: <https://lists.ubuntu.com/archives/kernel-team>
+List-Post: <mailto:kernel-team@lists.ubuntu.com>
+List-Help: <mailto:kernel-team-request@lists.ubuntu.com?subject=help>
+List-Subscribe: <https://lists.ubuntu.com/mailman/listinfo/kernel-team>,
+ <mailto:kernel-team-request@lists.ubuntu.com?subject=subscribe>
+Errors-To: kernel-team-bounces@lists.ubuntu.com
+Sender: kernel-team-bounces@lists.ubuntu.com
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org, kernel-team@lists.ubuntu.com
+Cc: Tejun Heo <tj@kernel.org>, "Denis V. Lunev" <den@openvz.org>, Kamal Mostafa <kamal@canonical.com>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-Cc: "David F." <df7729@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
+3.8.13.20 -stable review patch.  If anyone has any objections, please let me know.
 
-+ linux-ide mailing list on Cc:
+------------------
 
-On Monday, March 24, 2014 02:15:58 PM One Thousand Gnomes wrote:
-> On Sat, 22 Mar 2014 16:32:54 -0700
-> "David F." <df7729@gmail.com> wrote:
-> 
-> > Hi,
-> > 
-> > It appears if nIEN is set all polling type IO fails.   After an
-> > attempt, future non-polled communications also fails.  This patch
-> > allows it to work.  Not sure if any spin lock protection would be
-> > needed or the system already handles the device existence for the
-> > generated irq with polling enabled.  handler already ignored irq if
-> > queued command was polling type.
-> 
-> Does it behave plugged into a different controller without the hacks ?
-> 
-> Alan
+From: "Denis V. Lunev" <den@openvz.org>
 
+commit efb9e0f4f43780f0ae0c6428d66bd03e805c7539 upstream.
+
+Without the patch the kernel generates the following error.
+
+ ata11.15: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ ata11.15: Port Multiplier vendor mismatch '0x197b' != '0x123'
+ ata11.15: PMP revalidation failed (errno=-19)
+ ata11.15: failed to recover PMP after 5 tries, giving up
+
+This patch helps to bypass this error and the device becomes
+functional.
+
+Signed-off-by: Denis V. Lunev <den@openvz.org>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: <linux-ide@vger.kernel.org>
+Signed-off-by: Kamal Mostafa <kamal@canonical.com>
+---
+ drivers/ata/libata-pmp.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
+index 20fd337..7ccc084 100644
+--- a/drivers/ata/libata-pmp.c
++++ b/drivers/ata/libata-pmp.c
+@@ -447,8 +447,11 @@ static void sata_pmp_quirks(struct ata_port *ap)
+ 		 * otherwise.  Don't try hard to recover it.
+ 		 */
+ 		ap->pmp_link[ap->nr_pmp_links - 1].flags |= ATA_LFLAG_NO_RETRY;
+-	} else if (vendor == 0x197b && devid == 0x2352) {
+-		/* chip found in Thermaltake BlackX Duet, jmicron JMB350? */
++	} else if (vendor == 0x197b && (devid == 0x2352 || devid == 0x0325)) {
++		/*
++		 * 0x2352: found in Thermaltake BlackX Duet, jmicron JMB350?
++		 * 0x0325: jmicron JMB394.
++		 */
+ 		ata_for_each_link(link, ap, EDGE) {
+ 			/* SRST breaks detection and disks get misclassified
+ 			 * LPM disabled to avoid potential problems
+-- 
+1.8.3.2
