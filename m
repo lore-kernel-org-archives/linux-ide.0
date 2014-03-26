@@ -1,56 +1,32 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
 Subject: Re: [PATCH] ata: fix Marvell SATA driver dependencies
-Date: Wed, 26 Mar 2014 18:12:31 +0100
-Message-ID: <4852939.9jMb8Bv2x2@amdc1032>
-References: <5138028.BSQbEP7RRB@amdc1032> <20140326162302.GG25349@lunn.ch>
- <20140326165904.70de238d@alan.etchedpixels.co.uk>
+Date: Wed, 26 Mar 2014 17:36:03 +0000
+Message-ID: <20140326173603.50e50e34@alan.etchedpixels.co.uk>
+References: <5138028.BSQbEP7RRB@amdc1032>
+	<20140326162302.GG25349@lunn.ch>
+	<20140326165904.70de238d@alan.etchedpixels.co.uk>
+	<4852939.9jMb8Bv2x2@amdc1032>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7Bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:36703 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753085AbaCZRN5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Mar 2014 13:13:57 -0400
-In-reply-to: <20140326165904.70de238d@alan.etchedpixels.co.uk>
+Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:50639 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751906AbaCZRgq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Mar 2014 13:36:46 -0400
+In-Reply-To: <4852939.9jMb8Bv2x2@amdc1032>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 Cc: Andrew Lunn <andrew@lunn.ch>, Tejun Heo <tj@kernel.org>, Jason Cooper <jason@lakedaemon.net>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
 
+> shows up it is not enough to enable driver for it to make it work as
+> you also need to add a node describing your SATA MV variant to your SoC
+> device tree file (which requires updating kernel source anyway).
 
-Hi,
+You still have to recompile your kernel to update your device tree..
+how... quaint ;-). It's not a generic limitation but I'm not that fussed.
+It seems a fair argument that there would be other changes made when this
+was being done for a system, and probably new board stuff.
 
-On Wednesday, March 26, 2014 04:59:04 PM One Thousand Gnomes wrote:
-> On Wed, 26 Mar 2014 17:23:02 +0100
-> Andrew Lunn <andrew@lunn.ch> wrote:
-> 
-> > On Wed, Mar 26, 2014 at 05:19:02PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> > > Make sata_mv host driver depend on PCI || ARCH_KIRKWOOD || ARCH_MVEBU ||
-> > > ARCH_ORION5X config options as Marvell SATA support covers both Marvell
-> > > PCI devices and Marvell Kirkwood, Armada 370/XP and Orion5x SoCs (for
-> > > non-PCI devices the driver to work requires suitable device tree node to
-> > > be defined).  Additionally allow the driver build if COMPILE_TEST config
-> > > option is set.
-> > 
-> > Hi Bartlomiej
-> > 
-> > I _think_ there are a few powerpc platforms which can also make use of
-> > this driver
-> 
-> The hardware can show up in just about anything so I think this patch
-> should be dropped
-
-In theory maybe but in practice it for sure won't show up if the vendor
-has its own SATA solution and at least in the ARM world it seems frequent
-to have its own AHCI variant nowadays.  Moreover even if the new usage
-shows up it is not enough to enable driver for it to make it work as
-you also need to add a node describing your SATA MV variant to your SoC
-device tree file (which requires updating kernel source anyway).
-
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
-
+Alan
