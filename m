@@ -1,21 +1,21 @@
-From: Andrew Lunn <andrew@lunn.ch>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH] ata: fix Marvell SATA driver dependencies
-Date: Wed, 26 Mar 2014 17:23:02 +0100
-Message-ID: <20140326162302.GG25349@lunn.ch>
+Date: Wed, 26 Mar 2014 12:29:41 -0400
+Message-ID: <20140326162941.GH7171@htj.dyndns.org>
 References: <5138028.BSQbEP7RRB@amdc1032>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vps0.lunn.ch ([178.209.37.122]:48037 "EHLO vps0.lunn.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754490AbaCZQY5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 26 Mar 2014 12:24:57 -0400
+Received: from mail-qc0-f171.google.com ([209.85.216.171]:56994 "EHLO
+	mail-qc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754076AbaCZQ3p (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Mar 2014 12:29:45 -0400
 Content-Disposition: inline
 In-Reply-To: <5138028.BSQbEP7RRB@amdc1032>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: Tejun Heo <tj@kernel.org>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
 
 On Wed, Mar 26, 2014 at 05:19:02PM +0100, Bartlomiej Zolnierkiewicz wrote:
 > Make sata_mv host driver depend on PCI || ARCH_KIRKWOOD || ARCH_MVEBU ||
@@ -24,10 +24,16 @@ On Wed, Mar 26, 2014 at 05:19:02PM +0100, Bartlomiej Zolnierkiewicz wrote:
 > non-PCI devices the driver to work requires suitable device tree node to
 > be defined).  Additionally allow the driver build if COMPILE_TEST config
 > option is set.
+> 
+> Cc: Jason Cooper <jason@lakedaemon.net>
+> Cc: Andrew Lunn <andrew@lunn.ch>
+> Cc: Gregory Clement <gregory.clement@free-electrons.com>
+> Cc: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
-Hi Bartlomiej
+Patch doesn't apply to libata/for-3.15.
 
-I _think_ there are a few powerpc platforms which can also make use of
-this driver.
+Thanks.
 
-     Andrew
+-- 
+tejun
