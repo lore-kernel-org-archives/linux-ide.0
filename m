@@ -1,34 +1,43 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ata: fix ARASAN CompactFlash PATA driver dependencies
-Date: Wed, 26 Mar 2014 10:35:08 -0400
-Message-ID: <20140326143508.GE7171@htj.dyndns.org>
-References: <1565826.7Ejj6LS6x7@amdc1032>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: [PATCH] ata: fix Calxeda Highbank SATA driver dependencies
+Date: Wed, 26 Mar 2014 16:39:50 +0100
+Message-ID: <2920312.TnoQcCR5HX@amdc1032>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f176.google.com ([209.85.216.176]:46508 "EHLO
-	mail-qc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751580AbaCZOfM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Mar 2014 10:35:12 -0400
-Content-Disposition: inline
-In-Reply-To: <1565826.7Ejj6LS6x7@amdc1032>
+Received: from mailout2.samsung.com ([203.254.224.25]:15725 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751580AbaCZPkM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Mar 2014 11:40:12 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: Viresh Kumar <viresh.linux@gmail.com>, Shiraz Hashim <shiraz.hashim@st.com>, linux-ide@vger.kernel.org, spear-devel@list.st.com, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Mark Langsdorf <mark.langsdorf@calxeda.com>, Rob Herring <robh@kernel.org>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
 
-On Wed, Mar 26, 2014 at 03:33:37PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> Make pata_arasan_cf host driver depend on ARCH_SPEAR13XX config
-> option as ARASAN CompactFlash PATA support is specific to ST
-> SPEAr13xx SoCs and the driver to work requires suitable device
-> tree node (or platform device) to be defined.  Additionally
-> allow the driver build if COMPILE_TEST config option is set.
-> 
-> Cc: Viresh Kumar <viresh.linux@gmail.com>
-> Cc: Shiraz Hashim <shiraz.hashim@st.com>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Make sata_highbank host driver depend on ARCH_HIGHBANK config option
+as Calxeda Highbank SATA support is specific to Calxeda Highbank
+SoCs and the driver to work requires suitable device tree node to
+be defined.  Additionally allow the driver build if COMPILE_TEST
+config option is set.
 
-Applied to libata/for-3.15.  Thanks.
+Cc: Mark Langsdorf <mark.langsdorf@calxeda.com>
+Cc: Rob Herring <robh@kernel.org>
+Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+---
+ drivers/ata/Kconfig |    1 +
+ 1 file changed, 1 insertion(+)
 
--- 
-tejun
+Index: b/drivers/ata/Kconfig
+===================================================================
+--- a/drivers/ata/Kconfig	2014-03-26 15:32:57.455119357 +0100
++++ b/drivers/ata/Kconfig	2014-03-26 15:49:59.919101924 +0100
+@@ -264,6 +264,7 @@ config SATA_DWC_VDEBUG
+ 
+ config SATA_HIGHBANK
+ 	tristate "Calxeda Highbank SATA support"
++	depends on ARCH_HIGHBANK || COMPILE_TEST
+ 	help
+ 	  This option enables support for the Calxeda Highbank SoC's
+ 	  onboard SATA.
+
