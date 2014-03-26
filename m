@@ -1,103 +1,32 @@
-From: Joe Perches <joe@perches.com>
-Subject: [PATCH] ata: remove superfluous casts
-Date: Wed, 26 Mar 2014 09:34:49 -0700
-Message-ID: <1395851689.3726.23.camel@joe-AO722>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] ata: remove superfluous casts
+Date: Wed, 26 Mar 2014 12:38:14 -0400
+Message-ID: <20140326163814.GI7171@htj.dyndns.org>
 References: <11638294.fp3ZK6zVlg@amdc1032>
-	 <20140326154230.GG7171@htj.dyndns.org>
+ <20140326154230.GG7171@htj.dyndns.org>
+ <1395851689.3726.23.camel@joe-AO722>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140326154230.GG7171@htj.dyndns.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qa0-f42.google.com ([209.85.216.42]:47510 "EHLO
+	mail-qa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755093AbaCZQiR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Mar 2014 12:38:17 -0400
+Content-Disposition: inline
+In-Reply-To: <1395851689.3726.23.camel@joe-AO722>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
-Unreferenced casts of void * types are unnecessary so remove them.
+On Wed, Mar 26, 2014 at 09:34:49AM -0700, Joe Perches wrote:
+> Unreferenced casts of void * types are unnecessary so remove them.
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
+Applied to libata/for-3.15.
 
-Done with coccinelle
+Thanks.
 
- drivers/ata/libahci.c        | 2 +-
- drivers/ata/pata_arasan_cf.c | 2 +-
- drivers/ata/sata_dwc_460ex.c | 3 +--
- drivers/ata/sata_sx4.c       | 9 +++------
- 4 files changed, 6 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 7985ae7..6bd4f66 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -1636,7 +1636,7 @@ static void ahci_error_intr(struct ata_port *ap, u32 irq_stat)
- 	}
- 
- 	if (irq_stat & PORT_IRQ_UNK_FIS) {
--		u32 *unk = (u32 *)(pp->rx_fis + RX_FIS_UNK);
-+		u32 *unk = pp->rx_fis + RX_FIS_UNK;
- 
- 		active_ehi->err_mask |= AC_ERR_HSM;
- 		active_ehi->action |= ATA_EH_RESET;
-diff --git a/drivers/ata/pata_arasan_cf.c b/drivers/ata/pata_arasan_cf.c
-index 73492dd..6fac524 100644
---- a/drivers/ata/pata_arasan_cf.c
-+++ b/drivers/ata/pata_arasan_cf.c
-@@ -356,7 +356,7 @@ static void cf_exit(struct arasan_cf_dev *acdev)
- 
- static void dma_callback(void *dev)
- {
--	struct arasan_cf_dev *acdev = (struct arasan_cf_dev *) dev;
-+	struct arasan_cf_dev *acdev = dev;
- 
- 	complete(&acdev->dma_completion);
- }
-diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index 73510d0..0bb2cab 100644
---- a/drivers/ata/sata_dwc_460ex.c
-+++ b/drivers/ata/sata_dwc_460ex.c
-@@ -461,8 +461,7 @@ static irqreturn_t dma_dwc_interrupt(int irq, void *hsdev_instance)
- 	int chan;
- 	u32 tfr_reg, err_reg;
- 	unsigned long flags;
--	struct sata_dwc_device *hsdev =
--		(struct sata_dwc_device *)hsdev_instance;
-+	struct sata_dwc_device *hsdev = hsdev_instance;
- 	struct ata_host *host = (struct ata_host *)hsdev->host;
- 	struct ata_port *ap;
- 	struct sata_dwc_device_port *hsdevp;
-diff --git a/drivers/ata/sata_sx4.c b/drivers/ata/sata_sx4.c
-index 6cd0312..39b5de6 100644
---- a/drivers/ata/sata_sx4.c
-+++ b/drivers/ata/sata_sx4.c
-@@ -1020,8 +1020,7 @@ static void pdc20621_get_from_dimm(struct ata_host *host, void *psource,
- 	idx++;
- 	dist = ((long) (window_size - (offset + size))) >= 0 ? size :
- 		(long) (window_size - offset);
--	memcpy_fromio((char *) psource, (char *) (dimm_mmio + offset / 4),
--		      dist);
-+	memcpy_fromio(psource, dimm_mmio + offset / 4, dist);
- 
- 	psource += dist;
- 	size -= dist;
-@@ -1030,8 +1029,7 @@ static void pdc20621_get_from_dimm(struct ata_host *host, void *psource,
- 		readl(mmio + PDC_GENERAL_CTLR);
- 		writel(((idx) << page_mask), mmio + PDC_DIMM_WINDOW_CTLR);
- 		readl(mmio + PDC_DIMM_WINDOW_CTLR);
--		memcpy_fromio((char *) psource, (char *) (dimm_mmio),
--			      window_size / 4);
-+		memcpy_fromio(psource, dimm_mmio, window_size / 4);
- 		psource += window_size;
- 		size -= window_size;
- 		idx++;
-@@ -1042,8 +1040,7 @@ static void pdc20621_get_from_dimm(struct ata_host *host, void *psource,
- 		readl(mmio + PDC_GENERAL_CTLR);
- 		writel(((idx) << page_mask), mmio + PDC_DIMM_WINDOW_CTLR);
- 		readl(mmio + PDC_DIMM_WINDOW_CTLR);
--		memcpy_fromio((char *) psource, (char *) (dimm_mmio),
--			      size / 4);
-+		memcpy_fromio(psource, dimm_mmio, size / 4);
- 	}
- }
- #endif
+-- 
+tejun
