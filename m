@@ -1,31 +1,47 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ata: sata_highbank: remove superfluous cast
-Date: Wed, 26 Mar 2014 11:42:30 -0400
-Message-ID: <20140326154230.GG7171@htj.dyndns.org>
-References: <11638294.fp3ZK6zVlg@amdc1032>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: [PATCH] ata: fix Marvell SATA driver dependencies
+Date: Wed, 26 Mar 2014 17:19:02 +0100
+Message-ID: <5138028.BSQbEP7RRB@amdc1032>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f48.google.com ([209.85.192.48]:35082 "EHLO
-	mail-qg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753759AbaCZPmd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Mar 2014 11:42:33 -0400
-Content-Disposition: inline
-In-Reply-To: <11638294.fp3ZK6zVlg@amdc1032>
+Received: from mailout1.samsung.com ([203.254.224.24]:40604 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755149AbaCZQTa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Mar 2014 12:19:30 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: Mark Langsdorf <mark.langsdorf@calxeda.com>, Rob Herring <robh@kernel.org>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
 
-On Wed, Mar 26, 2014 at 04:41:00PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> hpriv->plat_data is 'void *' so there is no need to cast it to
-> 'struct ecx_plat_data *'.
-> 
-> Cc: Mark Langsdorf <mark.langsdorf@calxeda.com>
-> Cc: Rob Herring <robh@kernel.org>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Make sata_mv host driver depend on PCI || ARCH_KIRKWOOD || ARCH_MVEBU ||
+ARCH_ORION5X config options as Marvell SATA support covers both Marvell
+PCI devices and Marvell Kirkwood, Armada 370/XP and Orion5x SoCs (for
+non-PCI devices the driver to work requires suitable device tree node to
+be defined).  Additionally allow the driver build if COMPILE_TEST config
+option is set.
 
-Applied to libata/for-3.15.  Thanks.
+Cc: Jason Cooper <jason@lakedaemon.net>
+Cc: Andrew Lunn <andrew@lunn.ch>
+Cc: Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+---
+ drivers/ata/Kconfig |    2 ++
+ 1 file changed, 2 insertions(+)
 
--- 
-tejun
+Index: b/drivers/ata/Kconfig
+===================================================================
+--- a/drivers/ata/Kconfig	2014-03-26 15:49:59.919101924 +0100
++++ b/drivers/ata/Kconfig	2014-03-26 17:02:08.187028122 +0100
+@@ -273,6 +273,8 @@ config SATA_HIGHBANK
+ 
+ config SATA_MV
+ 	tristate "Marvell SATA support"
++	depends on PCI || ARCH_KIRKWOOD || ARCH_MVEBU || ARCH_ORION5X || \
++		   COMPILE_TEST
+ 	select GENERIC_PHY
+ 	help
+ 	  This option enables support for the Marvell Serial ATA family.
+
