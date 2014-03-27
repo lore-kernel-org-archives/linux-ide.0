@@ -1,82 +1,53 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Bad DMA from Marvell 9230
-Date: Thu, 27 Mar 2014 17:57:37 +1100
-Message-ID: <1395903457.5569.89.camel@pasglop>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: [PATCH v3] ata: fix Marvell SATA driver dependencies
+Date: Thu, 27 Mar 2014 13:23:39 +0100
+Message-ID: <1668037.2oe7J2B7N4@amdc1032>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:47416 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752403AbaC0G5s (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 27 Mar 2014 02:57:48 -0400
+Received: from mailout4.samsung.com ([203.254.224.34]:42804 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753263AbaC0MYB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Mar 2014 08:24:01 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
 
-Hi Folks !
+Make sata_mv host driver depend on PCI || ARCH_DOVE || ARCH_KIRKWOOD ||
+ARCH_MV78XX0 || ARCH_MVEBU || ARCH_ORION5X config options as Marvell
+SATA support covers both Marvell PCI devices and Marvell Dove, Kirkwood,
+MV78xx0, Armada 370/XP and Orion5x SoCs (for non-PCI devices the driver
+to work requires suitable device tree node to be defined).  Additionally
+allow the driver build if COMPILE_TEST config option is set.
 
-Do that ring any bell ?
+Cc: Jason Cooper <jason@lakedaemon.net>
+Cc: Andrew Lunn <andrew@lunn.ch>
+Cc: Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+---
+v3:
+- added dependencies for Marvel Dove and MV78xx0 
+v2:
+- resynced patch with libata/for-3.15 branch (previous patch was against
+  libata/for-next branch and SATA_MV selects GENERIC_PHY in that branch)
 
-I've been trying a 9230 on a power box here (a 9235 on the same machine
-works fine) and it blows up with an IOMMU violation early during init.
+ drivers/ata/Kconfig |    2 ++
+ 1 file changed, 2 insertions(+)
 
->From what I can tell the scenario is:
-
-- So we still haven't issued any command per-se, all our DMA command
-buffers etc... are all 0's at the point of the error.
-
- - The core libata calls the AHCI driver's ahci_hardreset() for each
-port in a separate thread. They all call sata_link_hardreset().
-
- - This in turns calls sata_link_resume() which write to the SCR_CONTROL
-register as follow:
-
-                scontrol = (scontrol & 0x0f0) | 0x300;
-                if ((rc = sata_scr_write(link, SCR_CONTROL, scontrol)))
-{
-                        printk(" -> sata_link_resume FAIL 2\n");
-                        return rc;
-                }
-
-                /*
-                 * Some PHYs react badly if SStatus is pounded
-                 * immediately after resuming.  Delay 200ms before
-                 * debouncing.
-                 */
-                ata_msleep(link->ap, 200);
-
-I get the interrupt from the IOMMU about 2ms after the write to
-SCR_CONTROL.
-
-Now, pending misinterpretation of some bits on my side, it looks like
-the bad DMA is a DMA *read* from address 0 (which we never map,
-typically to catch driver bugs).
-
-I went through a few theories with this one but so far none held. I
-don't think it's a D2H FIS issue since the DMA pointers for that appear
-to be setup properly, the memory mapped, etc...
-
-I though the chip might incorrectly/inadvertently try to (pre)fetch a
-command. At that point all 32 command slots are all 0's, so if it
-ignored the size it might try to fetch from command address 0.
-
-So I added a loop to fill all 32 slots with a valid command address
-in ahci_hardreset:
-
-+	for (i = 0; i < 32; i++)
-+		ahci_fill_cmd_slot(pp, i, 0);
- 	rc = sata_link_hardreset(link, timing, deadline, &online,
- 				 ahci_check_ready);
-
-But that had basically no effect.
-
-I've contacted Marvell, but I was wondering if anybody here had already
-experienced something similar or has an idea of what else the chip
-might be doing wrong so we can try to find a workaround ?
-
-Cheers,
-Ben.
-
+Index: b/drivers/ata/Kconfig
+===================================================================
+--- a/drivers/ata/Kconfig	2014-03-26 17:59:35.000000000 +0100
++++ b/drivers/ata/Kconfig	2014-03-27 13:14:24.097787880 +0100
+@@ -281,6 +281,8 @@ config SATA_HIGHBANK
+ 
+ config SATA_MV
+ 	tristate "Marvell SATA support"
++	depends on PCI || ARCH_DOVE || ARCH_KIRKWOOD || ARCH_MV78XX0 || \
++		   ARCH_MVEBU || ARCH_ORION5X || COMPILE_TEST
+ 	help
+ 	  This option enables support for the Marvell Serial ATA family.
+ 	  Currently supports 88SX[56]0[48][01] PCI(-X) chips,
 
