@@ -1,37 +1,56 @@
-From: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Subject: Re: [PATCH v3] ata: fix Marvell SATA driver dependencies
-Date: Thu, 27 Mar 2014 13:46:17 +0100
-Message-ID: <53341D99.6070703@gmail.com>
-References: <1668037.2oe7J2B7N4@amdc1032> <20140327123823.GM25349@lunn.ch>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140327123823.GM25349@lunn.ch>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Lunn <andrew@lunn.ch>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: Tejun Heo <tj@kernel.org>, Jason Cooper <jason@lakedaemon.net>, Gregory Clement <gregory.clement@free-electrons.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: [PATCH v4] ata: fix Marvell SATA driver dependencies
+Date: Thu, 27 Mar 2014 14:24:39 +0100
+Message-ID: <13175343.U1fiIXSeHv@amdc1032>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mailout2.samsung.com ([203.254.224.25]:43973 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753904AbaC0NZJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 27 Mar 2014 09:25:09 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
 
-On 03/27/2014 01:38 PM, Andrew Lunn wrote:
-> On Thu, Mar 27, 2014 at 01:23:39PM +0100, Bartlomiej Zolnierkiewicz wrote:
->> Make sata_mv host driver depend on PCI || ARCH_DOVE || ARCH_KIRKWOOD ||
->> ARCH_MV78XX0 || ARCH_MVEBU || ARCH_ORION5X config options as Marvell
->> SATA support covers both Marvell PCI devices and Marvell Dove, Kirkwood,
->> MV78xx0, Armada 370/XP and Orion5x SoCs (for non-PCI devices the driver
->> to work requires suitable device tree node to be defined).
->
-> Good old fashioned platform driver will also work. In fact, 95% of Orion5x
-> and mv78xx0 devices don't have DT yet.
->
-> You might also be able to simplify it to
->
-> PCI || PLAT_ORION || COMPILE_TEST
->
-> But i suggest you build test to make sure.
+Make sata_mv host driver depend on PCI || ARCH_DOVE || ARCH_KIRKWOOD ||
+ARCH_MV78XX0 || ARCH_MVEBU || ARCH_ORION5X config options as Marvell
+SATA support covers both Marvell PCI devices and Marvell Dove, Kirkwood,
+MV78xx0, Armada 370/XP and Orion5x SoCs (for non-PCI devices the driver
+to work requires suitable device tree node or platform device to be
+defined).  Additionally allow the driver build if COMPILE_TEST config
+option is set.
 
-Please, don't do it. We are in the progress of getting rid of
-PLAT_ORION. v3 is just fine, or keep at least ARCH_MVEBU:
+Cc: Jason Cooper <jason@lakedaemon.net>
+Cc: Andrew Lunn <andrew@lunn.ch>
+Cc: Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+---
+v4:
+- updated patch description
+v3:
+- added dependencies for Marvel Dove and MV78xx0 
+v2:
+- resynced patch with libata/for-3.15 branch (previous patch was against
+  libata/for-next branch and SATA_MV selects GENERIC_PHY in that branch)
 
-PCI || PLAT_ORION || ARCH_MVEBU || COMPILE_TEST
+ drivers/ata/Kconfig |    2 ++
+ 1 file changed, 2 insertions(+)
 
-Sebastian
+Index: b/drivers/ata/Kconfig
+===================================================================
+--- a/drivers/ata/Kconfig	2014-03-26 17:59:35.000000000 +0100
++++ b/drivers/ata/Kconfig	2014-03-27 13:14:24.097787880 +0100
+@@ -281,6 +281,8 @@ config SATA_HIGHBANK
+ 
+ config SATA_MV
+ 	tristate "Marvell SATA support"
++	depends on PCI || ARCH_DOVE || ARCH_KIRKWOOD || ARCH_MV78XX0 || \
++		   ARCH_MVEBU || ARCH_ORION5X || COMPILE_TEST
+ 	help
+ 	  This option enables support for the Marvell Serial ATA family.
+ 	  Currently supports 88SX[56]0[48][01] PCI(-X) chips,
+
