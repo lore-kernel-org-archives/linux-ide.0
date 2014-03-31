@@ -1,101 +1,273 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH] libata/ahci: accommodate tag ordered controllers
-Date: Mon, 31 Mar 2014 11:35:14 -0700
-Message-ID: <20140331183458.32378.97892.stgit@viggo.jf.intel.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [GIT PULL] libata changes for v3.15-rc1
+Date: Mon, 31 Mar 2014 15:53:42 -0400
+Message-ID: <20140331195342.GC28901@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: tj@kernel.org
-Cc: linux-ide@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>, Ed Ciechanowski <ed.ciechanowski@intel.com>, stable@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qg0-f47.google.com ([209.85.192.47]:52858 "EHLO
+	mail-qg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750966AbaCaTxr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 31 Mar 2014 15:53:47 -0400
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-The AHCI spec allows implementations to issue commands in tag order
-rather than FIFO order:
+Hello, Linus.
 
-	5.3.2.12 P:SelectCmd
-	HBA sets pSlotLoc = (pSlotLoc + 1) mod (CAP.NCS + 1)
-	or HBA selects the command to issue that has had the
-	PxCI bit set to '1' longer than any other command
-	pending to be issued.
+A lot of activities on libata side this time.
 
-The result is that commands posted sequentially (time-wise) may play out
-of sequence when issued by hardware.
+* A lot of changes around ahci.  Various embedded platforms are
+  implementing ahci controllers.  Some were built atop ahci_platform,
+  others were doing their own things.  Hans made some structural
+  changes to libahci and librarized ahci_platform so that ahci
+  platform drivers can share more common code.  A couple platform
+  drivers are added on top of that and several are added to replace
+  older drivers which were doing their own things (older ones are
+  scheduled to be removed).
 
-This behavior has likely been hidden by drives that arrange for commands
-to complete in issue order.  However, it appears recent drives (two from
-different vendors that we have found so far) inflict out-of-order
-completions as a matter of course.  So, we need to take care to maintain
-ordered submission, otherwise we risk triggering a drive to fall out of
-sequential-io automation and back to random-io processing, which incurs
-large latency and degrades throughput.
+* Dan finishes the patchset to make libata PM operations asynchronous.
+  Combined with one patch being routed through scsi, this should speed
+  resume measurably.
 
-This issue was found in simple benchmarks where QD=2 seq-write
-performance was 30-50% *greater* than QD=32 seq-write performance.
+* Various fixes and cleanups from Bartlomiej and others.
 
-Tagging for -stable and making the change globally since it has a low
-risk-to-reward ratio.  Also, word is that recent versions of an unnamed
-OS also does it this way now.  So, drives in the field are already
-experienced with this tag ordering scheme.
+Pulling causes the following conflict in drivers/ata/Kconfig
 
-Cc: <stable@vger.kernel.org>
-Cc: Dave Jiang <dave.jiang@intel.com>
-Cc: Ed Ciechanowski <ed.ciechanowski@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- drivers/ata/libata-core.c |   21 +++++++++++++--------
- include/linux/libata.h    |    1 +
- 2 files changed, 14 insertions(+), 8 deletions(-)
+  config SATA_MV
+	  tristate "Marvell SATA support"
+  <<<<<<< HEAD
+	  select GENERIC_PHY
+  =======
+	  depends on PCI || ARCH_DOVE || ARCH_KIRKWOOD || ARCH_MV78XX0 || \
+		     ARCH_MVEBU || ARCH_ORION5X || COMPILE_TEST
+  >>>>>>> 03803ef66d22702af124d21552f90ac32da9fef5
+	  help
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 65d3f1b5966c..705376e42513 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4793,21 +4793,26 @@ void swap_buf_le16(u16 *buf, unsigned int buf_words)
- static struct ata_queued_cmd *ata_qc_new(struct ata_port *ap)
- {
- 	struct ata_queued_cmd *qc = NULL;
--	unsigned int i;
-+	unsigned int i, tag;
- 
- 	/* no command while frozen */
- 	if (unlikely(ap->pflags & ATA_PFLAG_FROZEN))
- 		return NULL;
- 
--	/* the last tag is reserved for internal command. */
--	for (i = 0; i < ATA_MAX_QUEUE - 1; i++)
--		if (!test_and_set_bit(i, &ap->qc_allocated)) {
--			qc = __ata_qc_from_tag(ap, i);
-+	for (i = 0; i < ATA_MAX_QUEUE; i++) {
-+		tag = (i + ap->tag_order) & (ATA_MAX_QUEUE - 1);
-+
-+		/* the last tag is reserved for internal command. */
-+		if (tag == ATA_TAG_INTERNAL)
-+			continue;
-+
-+		if (!test_and_set_bit(tag, &ap->qc_allocated)) {
-+			qc = __ata_qc_from_tag(ap, tag);
-+			qc->tag = tag;
-+			ap->tag_order = (tag + 1) & (ATA_MAX_QUEUE - 1);
- 			break;
- 		}
--
--	if (qc)
--		qc->tag = i;
-+	}
- 
- 	return qc;
- }
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index bec6dbe939a0..ed303fa685e5 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -822,6 +822,7 @@ struct ata_port {
- 	unsigned long		qc_allocated;
- 	unsigned int		qc_active;
- 	int			nr_active_links; /* #links with active qcs */
-+	unsigned int		tag_order;	/* next tag hw expects */
- 
- 	struct ata_link		link;		/* host default link */
- 	struct ata_link		*slave_link;	/* see ata_slave_link_init() */
+It's a trivial context conflict between 03803ef66d22 ("ata: fix
+Marvell SATA driver dependencies") and 49c8f1ffe26f ("ATA: SATA_MV:
+Add missing Kconfig select statememnt") which can be resolved like the
+following.
+
+  config SATA_MV
+	  tristate "Marvell SATA support"
+	  depends on PCI || ARCH_DOVE || ARCH_KIRKWOOD || ARCH_MV78XX0 || \
+		     ARCH_MVEBU || ARCH_ORION5X || COMPILE_TEST
+	  select GENERIC_PHY
+	  help
+
+Just in case, the merged result is available in test-merge-3.15
+branch.
+
+The following changes since commit 38dbfb59d1175ef458d006556061adeaa8751b72:
+
+  Linus 3.14-rc1 (2014-02-02 16:42:13 -0800)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-3.15
+
+for you to fetch changes up to 03803ef66d22702af124d21552f90ac32da9fef5:
+
+  ata: fix Marvell SATA driver dependencies (2014-03-27 10:50:33 -0400)
+
+Thanks.
+
+----------------------------------------------------------------
+Aaron Lu (3):
+      libata: zpodd: should depend on PM_RUNTIME
+      libata: acpi: avoid passing NULL to ACPI evaluation method
+      libata: zpodd: eliminate odd_can_poweroff
+
+Bartlomiej Zolnierkiewicz (15):
+      ata: ahci_st: build fixes
+      ata: ahci_st: remove deprecated struct ahci_platform_data usage
+      ata: pata_imx: fix devm_ioremap_resource() return value checking
+      ata: ahci_platform: fix devm_ioremap_resource() return value checking
+      ata: ahci_sunxi: make ahci_sunxi_resume() static
+      ata: ahci_sunxi: fix code formatting
+      ata: ahci_platform: fix ahci_platform_data->suspend method handling
+      ata: move library code from ahci_platform.c to libahci_platform.c
+      ata: add new-style AHCI platform driver for DaVinci DA850 AHCI controller
+      ARM: davinci: da850: update SATA AHCI support
+      ata: fix R-Car SATA driver dependencies
+      ata: fix Calxeda Highbank SATA driver dependencies
+      ata: sata_highbank: remove superfluous cast
+      ata: fix ARASAN CompactFlash PATA driver dependencies
+      ata: fix Marvell SATA driver dependencies
+
+Daeseok Youn (2):
+      ata: libahci: make ahci_pmp_retry_softreset() as static
+      ata: libahci: replace obsolete simple_strtoul() with kstrtouint()
+
+Dan Williams (3):
+      libata: end the r-word
+      libata, libsas: kill pm_result and related cleanup
+      libata: remove unused ata_sas_port_async_resume() stub
+
+Fabio Estevam (2):
+      pata_imx: Use devm_ioremap_resource() to simplify code
+      pata_imx: Propagate the real error code on platform_get_irq() failure
+
+Hans de Goede (12):
+      libahci: Allow drivers to override start_engine
+      ahci-platform: Add support for devices with more then 1 clock
+      ahci-platform: Add support for an optional regulator for sata-target power
+      ahci-platform: Add enable_ / disable_resources helper functions
+      ahci-platform: "Library-ise" ahci_probe functionality
+      ahci-platform: "Library-ise" suspend / resume functionality
+      ahci-imx: Port to library-ised ahci_platform
+      ahci_platform: Drop support for ahci-strict platform device type
+      ahci_platform: Drop support for imx53-ahci platform device type
+      ahci_platform: Drop unused ahci_platform_data members
+      ahci_sunxi: Use msleep instead of mdelay
+      ahci_imx: Put #ifdef CONFIG_PM_SLEEP around suspend / resume functions
+
+Jean Delvare (2):
+      ata: Fix CS55xx dependencies
+      ata: Fix SC1200 dependencies
+
+Joe Perches (1):
+      ata: remove superfluous casts
+
+Lee Jones (6):
+      ahci: st: Add support for ST's SATA IP
+      ahci: st: Standardise naming conventions
+      ahci: st: Remove legacy dependencies on PHY
+      ahci: st: Utilise ata_platform_remove_one() call
+      ahci: st: Only build for ST-Micro h/w
+      ahci: st: Invoke AHCI Platform Suspend/Resume
+
+Loc Ho (5):
+      arm64: Add APM X-Gene SoC 15Gbps Multi-purpose PHY DTS entries
+      Documentation: Add documentation for the APM X-Gene SoC SATA host controller DTS binding
+      ata: Add APM X-Gene SoC AHCI SATA host controller driver
+      arm64: Add APM X-Gene SoC AHCI SATA host controller DTS entries
+      ata: Fix compiler warning with APM X-Gene host controller driver
+
+Olliver Schinagl (1):
+      ARM: sunxi: Add support for Allwinner SUNXi SoCs sata to ahci_platform
+
+Paul Gortmaker (1):
+      ata: delete non-required instances of include <linux/init.h>
+
+Randy Dunlap (2):
+      ata: CONFIG_ATA is libata
+      libata.h: add stub for ata_sas_port_resume
+
+Roger Quadros (4):
+      ata: ahci_platform: Add DT compatible for Synopsis DWC AHCI controller
+      ata: ahci_platform: Update DT compatible list
+      ata: ahci_platform: Manage SATA PHY
+      ata: ahci_platform: runtime resume the device before use
+
+Silvan Jegen (1):
+      pata_legacy: Remove dead code
+
+Todd Brandt (1):
+      libata: async resume
+
+ .../devicetree/bindings/ata/ahci-platform.txt      |  22 +-
+ .../devicetree/bindings/ata/apm-xgene.txt          |  76 +++
+ arch/arm/mach-davinci/da850.c                      |   2 +-
+ arch/arm/mach-davinci/devices-da8xx.c              |  99 +---
+ arch/arm64/boot/dts/apm-storm.dtsi                 | 152 ++++++
+ drivers/ata/Kconfig                                |  56 ++-
+ drivers/ata/Makefile                               |   8 +-
+ drivers/ata/acard-ahci.c                           |   1 -
+ drivers/ata/ahci.c                                 |   7 +-
+ drivers/ata/ahci.h                                 |  14 +-
+ drivers/ata/ahci_da850.c                           | 114 +++++
+ drivers/ata/ahci_imx.c                             | 333 +++++--------
+ drivers/ata/ahci_platform.c                        | 291 +----------
+ drivers/ata/ahci_st.c                              | 245 ++++++++++
+ drivers/ata/ahci_sunxi.c                           | 249 ++++++++++
+ drivers/ata/ahci_xgene.c                           | 486 ++++++++++++++++++
+ drivers/ata/ata_generic.c                          |   1 -
+ drivers/ata/libahci.c                              |  38 +-
+ drivers/ata/libahci_platform.c                     | 541 +++++++++++++++++++++
+ drivers/ata/libata-acpi.c                          |   1 +
+ drivers/ata/libata-core.c                          | 135 +++--
+ drivers/ata/libata-eh.c                            |  18 +-
+ drivers/ata/libata-zpodd.c                         |  21 +-
+ drivers/ata/pata_acpi.c                            |   1 -
+ drivers/ata/pata_amd.c                             |   1 -
+ drivers/ata/pata_arasan_cf.c                       |   2 +-
+ drivers/ata/pata_artop.c                           |   1 -
+ drivers/ata/pata_at91.c                            |   1 -
+ drivers/ata/pata_atiixp.c                          |   1 -
+ drivers/ata/pata_atp867x.c                         |   1 -
+ drivers/ata/pata_cmd640.c                          |   1 -
+ drivers/ata/pata_cmd64x.c                          |   1 -
+ drivers/ata/pata_cs5520.c                          |   1 -
+ drivers/ata/pata_cs5530.c                          |   1 -
+ drivers/ata/pata_cs5535.c                          |   1 -
+ drivers/ata/pata_cs5536.c                          |   1 -
+ drivers/ata/pata_cypress.c                         |   1 -
+ drivers/ata/pata_efar.c                            |   1 -
+ drivers/ata/pata_ep93xx.c                          |   1 -
+ drivers/ata/pata_hpt366.c                          |   1 -
+ drivers/ata/pata_hpt37x.c                          |   1 -
+ drivers/ata/pata_hpt3x2n.c                         |   1 -
+ drivers/ata/pata_hpt3x3.c                          |   1 -
+ drivers/ata/pata_imx.c                             |  18 +-
+ drivers/ata/pata_it8213.c                          |   1 -
+ drivers/ata/pata_it821x.c                          |   1 -
+ drivers/ata/pata_jmicron.c                         |   1 -
+ drivers/ata/pata_legacy.c                          |   1 -
+ drivers/ata/pata_marvell.c                         |   1 -
+ drivers/ata/pata_mpiix.c                           |   1 -
+ drivers/ata/pata_netcell.c                         |   1 -
+ drivers/ata/pata_ninja32.c                         |   1 -
+ drivers/ata/pata_ns87410.c                         |   1 -
+ drivers/ata/pata_ns87415.c                         |   1 -
+ drivers/ata/pata_oldpiix.c                         |   1 -
+ drivers/ata/pata_opti.c                            |   1 -
+ drivers/ata/pata_optidma.c                         |   1 -
+ drivers/ata/pata_pcmcia.c                          |   1 -
+ drivers/ata/pata_pdc2027x.c                        |   1 -
+ drivers/ata/pata_pdc202xx_old.c                    |   1 -
+ drivers/ata/pata_piccolo.c                         |   1 -
+ drivers/ata/pata_platform.c                        |   1 -
+ drivers/ata/pata_pxa.c                             |   1 -
+ drivers/ata/pata_radisys.c                         |   1 -
+ drivers/ata/pata_rdc.c                             |   1 -
+ drivers/ata/pata_rz1000.c                          |   1 -
+ drivers/ata/pata_sc1200.c                          |   1 -
+ drivers/ata/pata_scc.c                             |   1 -
+ drivers/ata/pata_sch.c                             |   1 -
+ drivers/ata/pata_serverworks.c                     |   1 -
+ drivers/ata/pata_sil680.c                          |   1 -
+ drivers/ata/pata_sis.c                             |   1 -
+ drivers/ata/pata_sl82c105.c                        |   1 -
+ drivers/ata/pata_triflex.c                         |   1 -
+ drivers/ata/pata_via.c                             |   1 -
+ drivers/ata/pdc_adma.c                             |   1 -
+ drivers/ata/sata_dwc_460ex.c                       |   4 +-
+ drivers/ata/sata_highbank.c                        |   6 +-
+ drivers/ata/sata_nv.c                              |   1 -
+ drivers/ata/sata_promise.c                         |   1 -
+ drivers/ata/sata_qstor.c                           |   1 -
+ drivers/ata/sata_sil.c                             |   1 -
+ drivers/ata/sata_sis.c                             |   1 -
+ drivers/ata/sata_svw.c                             |   1 -
+ drivers/ata/sata_sx4.c                             |  10 +-
+ drivers/ata/sata_uli.c                             |   1 -
+ drivers/ata/sata_via.c                             |   1 -
+ drivers/ata/sata_vsc.c                             |   1 -
+ drivers/scsi/libsas/sas_ata.c                      |  35 +-
+ include/linux/ahci_platform.h                      |  28 +-
+ include/linux/libata.h                             |  11 +-
+ include/scsi/libsas.h                              |   1 -
+ 92 files changed, 2249 insertions(+), 836 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/apm-xgene.txt
+ create mode 100644 drivers/ata/ahci_da850.c
+ create mode 100644 drivers/ata/ahci_st.c
+ create mode 100644 drivers/ata/ahci_sunxi.c
+ create mode 100644 drivers/ata/ahci_xgene.c
+ create mode 100644 drivers/ata/libahci_platform.c
+
+-- 
+tejun
