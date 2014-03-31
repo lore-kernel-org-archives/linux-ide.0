@@ -1,77 +1,101 @@
-From: David Daney <ddaney.cavm@gmail.com>
-Subject: Re: [PATCH] pata_octeon_cf: fix ata_host_activate() failure handling
-Date: Mon, 31 Mar 2014 11:14:05 -0700
-Message-ID: <5339B06D.5010905@gmail.com>
-References: <5439252.0G82yiBcdS@amdc1032>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH] libata/ahci: accommodate tag ordered controllers
+Date: Mon, 31 Mar 2014 11:35:14 -0700
+Message-ID: <20140331183458.32378.97892.stgit@viggo.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ig0-f177.google.com ([209.85.213.177]:52341 "EHLO
-	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752328AbaCaSOI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 31 Mar 2014 14:14:08 -0400
-In-Reply-To: <5439252.0G82yiBcdS@amdc1032>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>, Ed Ciechanowski <ed.ciechanowski@intel.com>, stable@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: Tejun Heo <tj@kernel.org>, Ralf Baechle <ralf@linux-mips.org>, linux-ide@vger.kernel.org, linux-mips@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 03/31/2014 10:53 AM, Bartlomiej Zolnierkiewicz wrote:
-> Add missing kfree() call to ata_host_activate() failure path.
->
+The AHCI spec allows implementations to issue commands in tag order
+rather than FIFO order:
 
-Are you seeing failures in real systems, or is this just a change to fix 
-a theoretical memory leak?
+	5.3.2.12 P:SelectCmd
+	HBA sets pSlotLoc = (pSlotLoc + 1) mod (CAP.NCS + 1)
+	or HBA selects the command to issue that has had the
+	PxCI bit set to '1' longer than any other command
+	pending to be issued.
 
+The result is that commands posted sequentially (time-wise) may play out
+of sequence when issued by hardware.
 
-> Cc: Ralf Baechle <ralf@linux-mips.org>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+This behavior has likely been hidden by drives that arrange for commands
+to complete in issue order.  However, it appears recent drives (two from
+different vendors that we have found so far) inflict out-of-order
+completions as a matter of course.  So, we need to take care to maintain
+ordered submission, otherwise we risk triggering a drive to fall out of
+sequential-io automation and back to random-io processing, which incurs
+large latency and degrades throughput.
 
-Did you test the patch on real hardware?  If so, you can add:
+This issue was found in simple benchmarks where QD=2 seq-write
+performance was 30-50% *greater* than QD=32 seq-write performance.
 
-Acked-By: David Daney <david.daney@cavium.com>
+Tagging for -stable and making the change globally since it has a low
+risk-to-reward ratio.  Also, word is that recent versions of an unnamed
+OS also does it this way now.  So, drives in the field are already
+experienced with this tag ordering scheme.
 
-Otherwise, somebody will have to go and test it.
+Cc: <stable@vger.kernel.org>
+Cc: Dave Jiang <dave.jiang@intel.com>
+Cc: Ed Ciechanowski <ed.ciechanowski@intel.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ drivers/ata/libata-core.c |   21 +++++++++++++--------
+ include/linux/libata.h    |    1 +
+ 2 files changed, 14 insertions(+), 8 deletions(-)
 
-Thanks,
-David Daney
-
-
-> ---
->   drivers/ata/pata_octeon_cf.c |    9 ++++++---
->   1 file changed, 6 insertions(+), 3 deletions(-)
->
-> Index: b/drivers/ata/pata_octeon_cf.c
-> ===================================================================
-> --- a/drivers/ata/pata_octeon_cf.c	2014-03-14 16:45:04.320724377 +0100
-> +++ b/drivers/ata/pata_octeon_cf.c	2014-03-31 18:58:44.367604046 +0200
-> @@ -1020,13 +1020,16 @@ static int octeon_cf_probe(struct platfo
->
->   	ata_port_desc(ap, "cmd %p ctl %p", base, ap->ioaddr.ctl_addr);
->
-> -
->   	dev_info(&pdev->dev, "version " DRV_VERSION" %d bit%s.\n",
->   		 is_16bit ? 16 : 8,
->   		 cf_port->is_true_ide ? ", True IDE" : "");
->
-> -	return ata_host_activate(host, irq, irq_handler,
-> -				 IRQF_SHARED, &octeon_cf_sht);
-> +	rv = ata_host_activate(host, irq, irq_handler,
-> +			       IRQF_SHARED, &octeon_cf_sht);
-> +	if (rv)
-> +		goto free_cf_port;
-> +
-> +	return 0;
->
->   free_cf_port:
->   	kfree(cf_port);
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
->
->
-
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 65d3f1b5966c..705376e42513 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4793,21 +4793,26 @@ void swap_buf_le16(u16 *buf, unsigned int buf_words)
+ static struct ata_queued_cmd *ata_qc_new(struct ata_port *ap)
+ {
+ 	struct ata_queued_cmd *qc = NULL;
+-	unsigned int i;
++	unsigned int i, tag;
+ 
+ 	/* no command while frozen */
+ 	if (unlikely(ap->pflags & ATA_PFLAG_FROZEN))
+ 		return NULL;
+ 
+-	/* the last tag is reserved for internal command. */
+-	for (i = 0; i < ATA_MAX_QUEUE - 1; i++)
+-		if (!test_and_set_bit(i, &ap->qc_allocated)) {
+-			qc = __ata_qc_from_tag(ap, i);
++	for (i = 0; i < ATA_MAX_QUEUE; i++) {
++		tag = (i + ap->tag_order) & (ATA_MAX_QUEUE - 1);
++
++		/* the last tag is reserved for internal command. */
++		if (tag == ATA_TAG_INTERNAL)
++			continue;
++
++		if (!test_and_set_bit(tag, &ap->qc_allocated)) {
++			qc = __ata_qc_from_tag(ap, tag);
++			qc->tag = tag;
++			ap->tag_order = (tag + 1) & (ATA_MAX_QUEUE - 1);
+ 			break;
+ 		}
+-
+-	if (qc)
+-		qc->tag = i;
++	}
+ 
+ 	return qc;
+ }
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index bec6dbe939a0..ed303fa685e5 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -822,6 +822,7 @@ struct ata_port {
+ 	unsigned long		qc_allocated;
+ 	unsigned int		qc_active;
+ 	int			nr_active_links; /* #links with active qcs */
++	unsigned int		tag_order;	/* next tag hw expects */
+ 
+ 	struct ata_link		link;		/* host default link */
+ 	struct ata_link		*slave_link;	/* see ata_slave_link_init() */
