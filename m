@@ -1,42 +1,50 @@
-From: Marek Vasut <marex@denx.de>
-Subject: Re: Warning at ahci_enable_ahci() during resume
-Date: Mon, 31 Mar 2014 07:25:26 +0200
-Message-ID: <201403310725.26460.marex@denx.de>
-References: <CAOMZO5BXMmtsqQAsfdPw5fkziNUABBYwab69gbdGDMM_9bmMFA@mail.gmail.com>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: [PATCH] pata_arasan_cf: fix ata_host_activate() failure handling
+Date: Mon, 31 Mar 2014 19:49 +0200
+Message-ID: <7093981.6c4k98qyGh@amdc1032>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.9]:42191 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753208AbaCaFZ3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 31 Mar 2014 01:25:29 -0400
-In-Reply-To: <CAOMZO5BXMmtsqQAsfdPw5fkziNUABBYwab69gbdGDMM_9bmMFA@mail.gmail.com>
+Received: from mailout2.samsung.com ([203.254.224.25]:25130 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752075AbaCaRtW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 31 Mar 2014 13:49:22 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Fabio Estevam <festevam@gmail.com>
-Cc: Shawn Guo <shawn.guo@freescale.com>, r65037@freescale.com, hdegoede@redhat.com, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Viresh Kumar <viresh.linux@gmail.com>, Shiraz Hashim <shiraz.hashim@st.com>, linux-ide@vger.kernel.org, spear-devel@list.st.com, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
 
-On Friday, March 28, 2014 at 03:38:53 PM, Fabio Estevam wrote:
-> Hi,
-> 
-> I am running linux-next 20140328 on a mx6qsabresd board and I am
-> getting the following warning at ahci_enable_ahci() during a
-> suspend/resume cycle:
-> 
-> /$ echo mem > /sys/power/state
-> PM: Syncing filesystems ... done.
-> Freezing user space processes ... (elapsed 0.001 seconds) done.
-> Freezing remaining freezable tasks ... (elapsed 0.001 seconds) done.
-> Suspending console(s) (use no_console_suspend to debug)
-> 
-> , and then I press the GPIO key to wake-up the system:
+Add missing cf_exit() and clk_put() calls to ata_host_activate()
+failure path.
 
-Looks like the AHCI link doesn't come up again. Can you check if the clock are 
-enabled? Are the correct bits programmed into the MX6's AHCI registers? Also see 
-imx_sata_enable() function for the bits which are programmed into the GPR 
-registers too and check if they are there.
+Cc: Viresh Kumar <viresh.linux@gmail.com>
+Cc: Shiraz Hashim <shiraz.hashim@st.com>
+Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+---
+ drivers/ata/pata_arasan_cf.c |   10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-Best regards,
-Marek Vasut
+Index: b/drivers/ata/pata_arasan_cf.c
+===================================================================
+--- a/drivers/ata/pata_arasan_cf.c	2014-03-31 16:57:47.443727785 +0200
++++ b/drivers/ata/pata_arasan_cf.c	2014-03-31 17:09:48.171715498 +0200
+@@ -898,9 +898,15 @@ static int arasan_cf_probe(struct platfo
+ 
+ 	cf_card_detect(acdev, 0);
+ 
+-	return ata_host_activate(host, acdev->irq, irq_handler, 0,
+-			&arasan_cf_sht);
++	ret = ata_host_activate(host, acdev->irq, irq_handler, 0,
++				&arasan_cf_sht);
++	if (ret)
++		goto exit_cf;
+ 
++	return 0;
++
++exit_cf:
++	cf_exit(acdev);
+ free_clk:
+ 	clk_put(acdev->clk);
+ 	return ret;
+
