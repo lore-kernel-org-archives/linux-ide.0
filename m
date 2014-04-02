@@ -1,74 +1,68 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH 1/2] ahci: Ensure "MSI Revert to Single Message" mode is not enforced
-Date: Wed,  2 Apr 2014 10:19:56 +0200
-Message-ID: <fe4097ff2b486092108663532c015a40984bc5f9.1396426390.git.agordeev@redhat.com>
-References: <cover.1396426390.git.agordeev@redhat.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH] pata_at91: fix ata_host_activate() failure handling
+Date: Wed, 2 Apr 2014 13:19:59 -0400
+Message-ID: <20140402171959.GK16631@htj.dyndns.org>
+References: <3354637.ASvWtLs5Rq@amdc1032>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1396426390.git.agordeev@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <3354637.ASvWtLs5Rq@amdc1032>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: Andrew Victor <linux@maxim.org.za>, Nicolas Ferre <nicolas.ferre@atmel.com>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 List-Id: linux-ide@vger.kernel.org
 
-Do not rely on successful initialization of multiple MSIs mode
-alone and always check if "MSI Revert to Single Message" mode
-was enforced by the controller. Fall back to the single MSI
-mode in case it did. Not doing so might screw up the interrupt
-handling.
+Applied to libata/for-3.15-fixes.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-ide@vger.kernel.org
+Thanks.
+------- 8< -------
+>From 27aa64b9d1bd0d23fd692c91763a48309b694311 Mon Sep 17 00:00:00 2001
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Date: Mon, 31 Mar 2014 19:51:14 +0200
+
+Add missing clk_put() call to ata_host_activate() failure path.
+
+Sergei says,
+
+  "Hm, I have once fixed that (see that *if* (!ret)) but looks like a
+   later commit 477c87e90853d136b188c50c0e4a93d01cad872e (ARM:
+   at91/pata: use gpio_is_valid to check the gpio) broke it again. :-(
+   Would be good if the changelog did mention that..."
+
+Cc: Andrew Victor <linux@maxim.org.za>
+Cc: Nicolas Ferre <nicolas.ferre@atmel.com>
+Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: stable@vger.kernel.org
 ---
- drivers/ata/ahci.c |   17 +++++++++++++++++
- drivers/ata/ahci.h |    1 +
- 2 files changed, 18 insertions(+), 0 deletions(-)
+ drivers/ata/pata_at91.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 5a0bf8e..838d97e 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1163,6 +1163,14 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
- {}
- #endif
+diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
+index e9c8727..8a66f23 100644
+--- a/drivers/ata/pata_at91.c
++++ b/drivers/ata/pata_at91.c
+@@ -407,12 +407,13 @@ static int pata_at91_probe(struct platform_device *pdev)
  
-+static int ahci_is_mrsm(struct ahci_host_priv *hpriv)
-+{
-+	void __iomem *mmio = hpriv->mmio;
-+	u32 ctl = readl(mmio + HOST_CTL);
-+
-+	return ctl & HOST_MRSM;
-+}
-+
- static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
- 			 struct ahci_host_priv *hpriv)
- {
-@@ -1189,6 +1197,15 @@ static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
- 	else if (nvec < 0)
- 		goto intx;
+ 	host->private_data = info;
  
-+	/*
-+	 * Fallback to single MSI mode if the controller enforced MRSM mode 
-+	 */
-+	if (ahci_is_mrsm(hpriv)) {
-+		pci_disable_msi(pdev);
-+		printk(KERN_INFO "ahci: MRSM is on, fallback to single MSI\n");
-+		goto single_msi;
-+	}
-+
- 	return nvec;
+-	return ata_host_activate(host, gpio_is_valid(irq) ? gpio_to_irq(irq) : 0,
+-			gpio_is_valid(irq) ? ata_sff_interrupt : NULL,
+-			irq_flags, &pata_at91_sht);
++	ret = ata_host_activate(host, gpio_is_valid(irq) ? gpio_to_irq(irq) : 0,
++				gpio_is_valid(irq) ? ata_sff_interrupt : NULL,
++				irq_flags, &pata_at91_sht);
++	if (ret)
++		goto err_put;
  
- single_msi:
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 51af275..b5eb886 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -94,6 +94,7 @@ enum {
- 	/* HOST_CTL bits */
- 	HOST_RESET		= (1 << 0),  /* reset controller; self-clear */
- 	HOST_IRQ_EN		= (1 << 1),  /* global IRQ enable */
-+	HOST_MRSM		= (1 << 2),  /* MSI Revert to Single Message */
- 	HOST_AHCI_EN		= (1 << 31), /* AHCI enabled */
+-	if (!ret)
+-		return 0;
++	return 0;
  
- 	/* HOST_CAP bits */
+ err_put:
+ 	clk_put(info->mck);
 -- 
-1.7.7.6
+1.9.0
