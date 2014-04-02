@@ -1,68 +1,37 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH] pata_at91: fix ata_host_activate() failure handling
-Date: Wed, 2 Apr 2014 13:19:59 -0400
-Message-ID: <20140402171959.GK16631@htj.dyndns.org>
-References: <3354637.ASvWtLs5Rq@amdc1032>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 1/2] libata: Expose trim capability in sysfs
+Date: Wed, 02 Apr 2014 13:26:16 -0400
+Message-ID: <yq1zjk3wslj.fsf@sermon.lab.mkp.net>
+References: <1396399357-28388-1-git-send-email-martin.petersen@oracle.com>
+	<20140402170916.GH16631@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <3354637.ASvWtLs5Rq@amdc1032>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: Andrew Victor <linux@maxim.org.za>, Nicolas Ferre <nicolas.ferre@atmel.com>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Content-Type: text/plain
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:18745 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758860AbaDBR0c (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Apr 2014 13:26:32 -0400
+In-Reply-To: <20140402170916.GH16631@htj.dyndns.org> (Tejun Heo's message of
+	"Wed, 2 Apr 2014 13:09:16 -0400")
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, Chris Samuel <chris@csamuel.org>, Marc MERLIN <marc@merlins.org>
 
-Applied to libata/for-3.15-fixes.
+>>>>> "Tejun" == Tejun Heo <tj@kernel.org> writes:
 
-Thanks.
-------- 8< -------
->From 27aa64b9d1bd0d23fd692c91763a48309b694311 Mon Sep 17 00:00:00 2001
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Date: Mon, 31 Mar 2014 19:51:14 +0200
+>> Now that drives with support for queued trim are starting to appear,
+>> it would be helpful to expose the chosen trim mode to
+>> userland. Create a
 
-Add missing clk_put() call to ata_host_activate() failure path.
+Tejun> Can you please be a bit more elaborate with how it'd be helpful?
+Tejun> Do we have actual use cases for it?
 
-Sergei says,
+There have been several threads on linux-btrfs and elsewhere where
+people have asked whether queued trim is supported by their drive or
+not. This information currently isn't reported anywhere. I thought it
+would be convenient to have a sysfs attribute that people could inspect
+to find out.
 
-  "Hm, I have once fixed that (see that *if* (!ret)) but looks like a
-   later commit 477c87e90853d136b188c50c0e4a93d01cad872e (ARM:
-   at91/pata: use gpio_is_valid to check the gpio) broke it again. :-(
-   Would be good if the changelog did mention that..."
-
-Cc: Andrew Victor <linux@maxim.org.za>
-Cc: Nicolas Ferre <nicolas.ferre@atmel.com>
-Cc: Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>
-Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: stable@vger.kernel.org
----
- drivers/ata/pata_at91.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
-index e9c8727..8a66f23 100644
---- a/drivers/ata/pata_at91.c
-+++ b/drivers/ata/pata_at91.c
-@@ -407,12 +407,13 @@ static int pata_at91_probe(struct platform_device *pdev)
- 
- 	host->private_data = info;
- 
--	return ata_host_activate(host, gpio_is_valid(irq) ? gpio_to_irq(irq) : 0,
--			gpio_is_valid(irq) ? ata_sff_interrupt : NULL,
--			irq_flags, &pata_at91_sht);
-+	ret = ata_host_activate(host, gpio_is_valid(irq) ? gpio_to_irq(irq) : 0,
-+				gpio_is_valid(irq) ? ata_sff_interrupt : NULL,
-+				irq_flags, &pata_at91_sht);
-+	if (ret)
-+		goto err_put;
- 
--	if (!ret)
--		return 0;
-+	return 0;
- 
- err_put:
- 	clk_put(info->mck);
 -- 
-1.9.0
+Martin K. Petersen	Oracle Linux Engineering
