@@ -1,56 +1,34 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH 2/2] ahci: Use pci_enable_msi_exact() instead of pci_enable_msi_range()
-Date: Wed,  2 Apr 2014 10:19:57 +0200
-Message-ID: <aabd5aabbbbc79e5534a9922240c341c153d2156.1396426390.git.agordeev@redhat.com>
-References: <cover.1396426390.git.agordeev@redhat.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 1/2] libata: Expose trim capability in sysfs
+Date: Wed, 2 Apr 2014 13:09:16 -0400
+Message-ID: <20140402170916.GH16631@htj.dyndns.org>
+References: <1396399357-28388-1-git-send-email-martin.petersen@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58618 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756574AbaDBISP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 2 Apr 2014 04:18:15 -0400
-In-Reply-To: <cover.1396426390.git.agordeev@redhat.com>
+Received: from mail-qg0-f50.google.com ([209.85.192.50]:37744 "EHLO
+	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932456AbaDBRJT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Apr 2014 13:09:19 -0400
+Received: by mail-qg0-f50.google.com with SMTP id q108so494493qgd.23
+        for <linux-ide@vger.kernel.org>; Wed, 02 Apr 2014 10:09:19 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <1396399357-28388-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, linux-ide@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-ide@vger.kernel.org, Chris Samuel <chris@csamuel.org>, Marc MERLIN <marc@merlins.org>
 
-The driver calls pci_enable_msi_range() function with the
-range of [nvec..nvec] which what pci_enable_msi_exact()
-function is for.
+On Tue, Apr 01, 2014 at 08:42:36PM -0400, Martin K. Petersen wrote:
+> From: "Martin K. Petersen" <martin.petersen@oracle.com>
+> 
+> Now that drives with support for queued trim are starting to appear, it
+> would be helpful to expose the chosen trim mode to userland. Create a
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-ide@vger.kernel.org
----
- drivers/ata/ahci.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+Can you please be a bit more elaborate with how it'd be helpful?  Do
+we have actual use cases for it?
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 838d97e..01c5541 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1174,7 +1174,7 @@ static int ahci_is_mrsm(struct ahci_host_priv *hpriv)
- static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
- 			 struct ahci_host_priv *hpriv)
- {
--	int nvec;
-+	int rc, nvec;
- 
- 	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
- 		goto intx;
-@@ -1191,10 +1191,10 @@ static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
- 	if (nvec < n_ports)
- 		goto single_msi;
- 
--	nvec = pci_enable_msi_range(pdev, nvec, nvec);
--	if (nvec == -ENOSPC)
-+	rc = pci_enable_msi_exact(pdev, nvec);
-+	if (rc == -ENOSPC)
- 		goto single_msi;
--	else if (nvec < 0)
-+	else if (rc < 0)
- 		goto intx;
- 
- 	/*
+Thanks.
+
 -- 
-1.7.7.6
-
+tejun
