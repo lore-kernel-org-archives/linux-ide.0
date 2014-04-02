@@ -1,49 +1,81 @@
-From: "tj@kernel.org" <tj@kernel.org>
-Subject: Re: SATA link issue with Marvell 9170
-Date: Wed, 2 Apr 2014 13:16:37 -0400
-Message-ID: <20140402171637.GJ16631@htj.dyndns.org>
-References: <26AEAD365CFA784DA33319947CEB5DF86201255F@USCAEXCH1.tad.internal.tilera.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH 1/2] libata: Expose trim capability in sysfs
+Date: Tue,  1 Apr 2014 20:42:36 -0400
+Message-ID: <1396399357-28388-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f52.google.com ([209.85.216.52]:53611 "EHLO
-	mail-qa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932320AbaDBRQk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Apr 2014 13:16:40 -0400
-Received: by mail-qa0-f52.google.com with SMTP id m5so476801qaj.11
-        for <linux-ide@vger.kernel.org>; Wed, 02 Apr 2014 10:16:40 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <26AEAD365CFA784DA33319947CEB5DF86201255F@USCAEXCH1.tad.internal.tilera.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:32820 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751627AbaDBAm7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Apr 2014 20:42:59 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Biji John <bjohn@tilera.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Chris Samuel <chris@csamuel.org>, Marc MERLIN <marc@merlins.org>
 
-Hello,
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On Tue, Apr 01, 2014 at 09:17:35PM +0000, Biji John wrote:
-> I'm running into an intermittent issue while trying to run one of
-> our boards. It has the Marvell 9170 SATA controller connected to one
-> of our PCIe buses. On the other side is an MSATA device. I'm running
-> kernel 3.4.76. Intermittently, the link will not come up, it looks
-> like the driver tries to bring the link up at 3Gbps, and then
-> eventually fails, and the kernel will hang waiting for the root
-> device. From doing a Google search, I noticed that this version of
-> the ahci driver does not have the entries for 9170 (and 9178) in
-> ahci_pci_tbl. Is this expected behavior? After adding the following
-> patch, I'm seeing improvement, and am wondering how the patch might
-> be helping in this regard.
-> 
->         { PCI_DEVICE(0x1b4b, 0x9170),
->           .driver_data = board_ahci_yes_fbs },                  /* 88se9170 */
+Now that drives with support for queued trim are starting to appear, it
+would be helpful to expose the chosen trim mode to userland. Create a
+sysfs "trim" attribute for each ata_device that displays whether trim is
+"unsupported", "unqueued" or "queued".
 
-So, if the device doesn't have a specific entry, it'd use the default
-board_ahci entry.  The only difference is whether FBS is turned on for
-port multipliers.  The change that you made above is highly unlikely
-to make any difference for initialing link init and probing.  Does it
-work reliably with libata.force=1.5Gbps?
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: Chris Samuel <chris@csamuel.org>
+Cc: Marc MERLIN <marc@merlins.org>
+---
+ drivers/ata/libata-transport.c | 32 ++++++++++++++++++++++++++++++++
+ 1 file changed, 32 insertions(+)
 
-Thanks.
-
+diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
+index e37413228228..a9a1a9055a3a 100644
+--- a/drivers/ata/libata-transport.c
++++ b/drivers/ata/libata-transport.c
+@@ -559,6 +559,37 @@ show_ata_dev_gscr(struct device *dev,
+ 
+ static DEVICE_ATTR(gscr, S_IRUGO, show_ata_dev_gscr, NULL);
+ 
++enum {
++	ATA_TRIM_UNSUPPORTED = 0,
++	ATA_TRIM_UNQUEUED = 1,
++	ATA_TRIM_QUEUED = 2,
++};
++
++static const char *trim_mode[] = {
++	[ATA_TRIM_UNSUPPORTED] = "unsupported",
++	[ATA_TRIM_UNQUEUED] = "unqueued",
++	[ATA_TRIM_QUEUED] = "queued",
++};
++
++static ssize_t
++show_ata_dev_trim(struct device *dev,
++		  struct device_attribute *attr, char *buf)
++{
++	struct ata_device *ata_dev = transport_class_to_dev(dev);
++	unsigned int mode;
++
++	if (!ata_id_has_trim(ata_dev->id))
++		mode = ATA_TRIM_UNSUPPORTED;
++	else if (ata_fpdma_dsm_supported(ata_dev))
++		mode = ATA_TRIM_QUEUED;
++	else
++		mode = ATA_TRIM_UNQUEUED;
++
++	return snprintf(buf, 20, "%s\n", trim_mode[mode]);
++}
++
++static DEVICE_ATTR(trim, S_IRUGO, show_ata_dev_trim, NULL);
++
+ static DECLARE_TRANSPORT_CLASS(ata_dev_class,
+ 			       "ata_device", NULL, NULL, NULL);
+ 
+@@ -732,6 +763,7 @@ struct scsi_transport_template *ata_attach_transport(void)
+ 	SETUP_DEV_ATTRIBUTE(ering);
+ 	SETUP_DEV_ATTRIBUTE(id);
+ 	SETUP_DEV_ATTRIBUTE(gscr);
++	SETUP_DEV_ATTRIBUTE(trim);
+ 	BUG_ON(count > ATA_DEV_ATTRS);
+ 	i->dev_attrs[count] = NULL;
+ 
 -- 
-tejun
+1.8.3.1
+
