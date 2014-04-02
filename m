@@ -1,34 +1,26 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/2] libata: Expose trim capability in sysfs
-Date: Wed, 2 Apr 2014 13:09:16 -0400
-Message-ID: <20140402170916.GH16631@htj.dyndns.org>
-References: <1396399357-28388-1-git-send-email-martin.petersen@oracle.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f50.google.com ([209.85.192.50]:37744 "EHLO
-	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932456AbaDBRJT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Apr 2014 13:09:19 -0400
-Received: by mail-qg0-f50.google.com with SMTP id q108so494493qgd.23
-        for <linux-ide@vger.kernel.org>; Wed, 02 Apr 2014 10:09:19 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <1396399357-28388-1-git-send-email-martin.petersen@oracle.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: [PATCH 0/2] ahci: Tweaks to the driver's PCI function
+Date: Wed,  2 Apr 2014 10:19:55 +0200
+Message-ID: <cover.1396426390.git.agordeev@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-ide@vger.kernel.org, Chris Samuel <chris@csamuel.org>, Marc MERLIN <marc@merlins.org>
 
-On Tue, Apr 01, 2014 at 08:42:36PM -0400, Martin K. Petersen wrote:
-> From: "Martin K. Petersen" <martin.petersen@oracle.com>
-> 
-> Now that drives with support for queued trim are starting to appear, it
-> would be helpful to expose the chosen trim mode to userland. Create a
+Hello,
 
-Can you please be a bit more elaborate with how it'd be helpful?  Do
-we have actual use cases for it?
+The changes are against the latest Linus tree.
 
-Thanks.
+Cc: linux-ide@vger.kernel.org
+
+Alexander Gordeev (2):
+  ahci: Ensure "MSI Revert to Single Message" mode is not enforced
+  ahci: Use pci_enable_msi_exact() instead of pci_enable_msi_range()
+
+ drivers/ata/ahci.c |   25 +++++++++++++++++++++----
+ drivers/ata/ahci.h |    1 +
+ 2 files changed, 22 insertions(+), 4 deletions(-)
 
 -- 
-tejun
+1.7.7.6
