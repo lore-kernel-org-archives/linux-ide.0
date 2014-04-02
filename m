@@ -1,35 +1,53 @@
-From: Robert Hancock <hancockrwd@gmail.com>
-Subject: Re: SATA link issue with Marvell 9170
-Date: Wed, 02 Apr 2014 23:10:10 -0600
-Message-ID: <533CED32.8060906@gmail.com>
-References: <26AEAD365CFA784DA33319947CEB5DF86201255F@USCAEXCH1.tad.internal.tilera.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH 2/2] libata: Update queued trim blacklist for M5x0 drives
+Date: Tue,  1 Apr 2014 20:42:37 -0400
+Message-ID: <1396399357-28388-2-git-send-email-martin.petersen@oracle.com>
+References: <1396399357-28388-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ig0-f179.google.com ([209.85.213.179]:55979 "EHLO
-	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932616AbaDCFKN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Apr 2014 01:10:13 -0400
-Received: by mail-ig0-f179.google.com with SMTP id hl10so1328360igb.0
-        for <linux-ide@vger.kernel.org>; Wed, 02 Apr 2014 22:10:12 -0700 (PDT)
-In-Reply-To: <26AEAD365CFA784DA33319947CEB5DF86201255F@USCAEXCH1.tad.internal.tilera.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:37244 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751632AbaDBAnA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Apr 2014 20:43:00 -0400
+In-Reply-To: <1396399357-28388-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Biji John <bjohn@tilera.com>, "tj@kernel.org" <tj@kernel.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Chris Samuel <chris@csamuel.org>, Marc MERLIN <marc@merlins.org>
 
-On 01/04/14 03:17 PM, Biji John wrote:
-> Tejun,
->
-> I'm running into an intermittent issue while trying to run one of our boards. It has the Marvell 9170 SATA controller connected to one of our PCIe buses. On the other side is an MSATA device. I'm running kernel 3.4.76. Intermittently, the link will not come up, it looks like the driver tries to bring the link up at 3Gbps, and then eventually fails, and the kernel will hang waiting for the root device. From doing a Google search, I noticed that this version of the ahci driver does not have the entries for 9170 (and 9178) in ahci_pci_tbl. Is this expected behavior? After adding the following patch, I'm seeing improvement, and am wondering how the patch might be helping in this regard.
->
->          { PCI_DEVICE(0x1b4b, 0x9170),
->            .driver_data = board_ahci_yes_fbs },                  /* 88se9170 */
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 
-Are you sure this is actually having a consistent effect? Relative to 
-the default AHCI behavior that you'd be getting without out it, all this 
-does is enable FIS-based switching, which should only make any 
-difference if you had a port multiplier connected. That does result in 
-the FBS enable bit being set for the port, but it seems odd that this 
-would be fixing something.
+Crucial/Micron M500 drives properly support queued DSM TRIM starting
+with firmware MU05. Update the blacklist so we only disable queued trim
+for older firmware releases.
+
+Early M550 series drives suffer from the same issue as M500. A bugfix
+firmware is in the pipeline but not ready yet. Until then, blacklist
+queued trim for M550.
+
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: Chris Samuel <chris@csamuel.org>
+Cc: Marc MERLIN <marc@merlins.org>
+---
+ drivers/ata/libata-core.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 34406f7fdd7a..f2a6020366e1 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4224,8 +4224,10 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 	{ "PIONEER DVD-RW  DVR-216D",	NULL,	ATA_HORKAGE_NOSETXFER },
+ 
+ 	/* devices that don't properly handle queued TRIM commands */
+-	{ "Micron_M500*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
+-	{ "Crucial_CT???M500SSD*",	NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
++	{ "Micron_M500*",		"MU0[1-4]*",	ATA_HORKAGE_NO_NCQ_TRIM, },
++	{ "Crucial_CT???M500SSD*",	"MU0[1-4]*",	ATA_HORKAGE_NO_NCQ_TRIM, },
++	{ "Micron_M550*",		NULL,		ATA_HORKAGE_NO_NCQ_TRIM, },
++	{ "Crucial_CT???M550SSD*",	NULL,		ATA_HORKAGE_NO_NCQ_TRIM, },
+ 
+ 	/*
+ 	 * Some WD SATA-I drives spin up and down erratically when the link
+-- 
+1.8.3.1
+
