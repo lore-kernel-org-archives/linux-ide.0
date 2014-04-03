@@ -1,81 +1,35 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 1/2] libata: Expose trim capability in sysfs
-Date: Tue,  1 Apr 2014 20:42:36 -0400
-Message-ID: <1396399357-28388-1-git-send-email-martin.petersen@oracle.com>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: SATA link issue with Marvell 9170
+Date: Wed, 02 Apr 2014 23:10:10 -0600
+Message-ID: <533CED32.8060906@gmail.com>
+References: <26AEAD365CFA784DA33319947CEB5DF86201255F@USCAEXCH1.tad.internal.tilera.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:32820 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751627AbaDBAm7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Apr 2014 20:42:59 -0400
+Received: from mail-ig0-f179.google.com ([209.85.213.179]:55979 "EHLO
+	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932616AbaDCFKN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Apr 2014 01:10:13 -0400
+Received: by mail-ig0-f179.google.com with SMTP id hl10so1328360igb.0
+        for <linux-ide@vger.kernel.org>; Wed, 02 Apr 2014 22:10:12 -0700 (PDT)
+In-Reply-To: <26AEAD365CFA784DA33319947CEB5DF86201255F@USCAEXCH1.tad.internal.tilera.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org
-Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Chris Samuel <chris@csamuel.org>, Marc MERLIN <marc@merlins.org>
+To: Biji John <bjohn@tilera.com>, "tj@kernel.org" <tj@kernel.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
+On 01/04/14 03:17 PM, Biji John wrote:
+> Tejun,
+>
+> I'm running into an intermittent issue while trying to run one of our boards. It has the Marvell 9170 SATA controller connected to one of our PCIe buses. On the other side is an MSATA device. I'm running kernel 3.4.76. Intermittently, the link will not come up, it looks like the driver tries to bring the link up at 3Gbps, and then eventually fails, and the kernel will hang waiting for the root device. From doing a Google search, I noticed that this version of the ahci driver does not have the entries for 9170 (and 9178) in ahci_pci_tbl. Is this expected behavior? After adding the following patch, I'm seeing improvement, and am wondering how the patch might be helping in this regard.
+>
+>          { PCI_DEVICE(0x1b4b, 0x9170),
+>            .driver_data = board_ahci_yes_fbs },                  /* 88se9170 */
 
-Now that drives with support for queued trim are starting to appear, it
-would be helpful to expose the chosen trim mode to userland. Create a
-sysfs "trim" attribute for each ata_device that displays whether trim is
-"unsupported", "unqueued" or "queued".
-
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: Chris Samuel <chris@csamuel.org>
-Cc: Marc MERLIN <marc@merlins.org>
----
- drivers/ata/libata-transport.c | 32 ++++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
-
-diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
-index e37413228228..a9a1a9055a3a 100644
---- a/drivers/ata/libata-transport.c
-+++ b/drivers/ata/libata-transport.c
-@@ -559,6 +559,37 @@ show_ata_dev_gscr(struct device *dev,
- 
- static DEVICE_ATTR(gscr, S_IRUGO, show_ata_dev_gscr, NULL);
- 
-+enum {
-+	ATA_TRIM_UNSUPPORTED = 0,
-+	ATA_TRIM_UNQUEUED = 1,
-+	ATA_TRIM_QUEUED = 2,
-+};
-+
-+static const char *trim_mode[] = {
-+	[ATA_TRIM_UNSUPPORTED] = "unsupported",
-+	[ATA_TRIM_UNQUEUED] = "unqueued",
-+	[ATA_TRIM_QUEUED] = "queued",
-+};
-+
-+static ssize_t
-+show_ata_dev_trim(struct device *dev,
-+		  struct device_attribute *attr, char *buf)
-+{
-+	struct ata_device *ata_dev = transport_class_to_dev(dev);
-+	unsigned int mode;
-+
-+	if (!ata_id_has_trim(ata_dev->id))
-+		mode = ATA_TRIM_UNSUPPORTED;
-+	else if (ata_fpdma_dsm_supported(ata_dev))
-+		mode = ATA_TRIM_QUEUED;
-+	else
-+		mode = ATA_TRIM_UNQUEUED;
-+
-+	return snprintf(buf, 20, "%s\n", trim_mode[mode]);
-+}
-+
-+static DEVICE_ATTR(trim, S_IRUGO, show_ata_dev_trim, NULL);
-+
- static DECLARE_TRANSPORT_CLASS(ata_dev_class,
- 			       "ata_device", NULL, NULL, NULL);
- 
-@@ -732,6 +763,7 @@ struct scsi_transport_template *ata_attach_transport(void)
- 	SETUP_DEV_ATTRIBUTE(ering);
- 	SETUP_DEV_ATTRIBUTE(id);
- 	SETUP_DEV_ATTRIBUTE(gscr);
-+	SETUP_DEV_ATTRIBUTE(trim);
- 	BUG_ON(count > ATA_DEV_ATTRS);
- 	i->dev_attrs[count] = NULL;
- 
--- 
-1.8.3.1
-
+Are you sure this is actually having a consistent effect? Relative to 
+the default AHCI behavior that you'd be getting without out it, all this 
+does is enable FIS-based switching, which should only make any 
+difference if you had a port multiplier connected. That does result in 
+the FBS enable bit being set for the port, but it seems odd that this 
+would be fixing something.
