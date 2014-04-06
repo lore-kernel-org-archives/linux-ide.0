@@ -1,98 +1,71 @@
 From: Marc MERLIN <marc@merlins.org>
 Subject: Re: [PATCH 1/2] libata: Expose trim capability in sysfs
-Date: Sat, 5 Apr 2014 21:03:12 -0700
-Message-ID: <20140406040312.GA5006@merlins.org>
+Date: Sat, 5 Apr 2014 23:19:58 -0700
+Message-ID: <20140406061958.GC5006@merlins.org>
 References: <1396399357-28388-1-git-send-email-martin.petersen@oracle.com>
+ <20140406040312.GA5006@merlins.org>
+ <1403024.0HLhjfholh@quad>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from magic.merlins.org ([209.81.13.136]:59519 "EHLO
+Received: from magic.merlins.org ([209.81.13.136]:60279 "EHLO
 	mail1.merlins.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750703AbaDFEDc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Apr 2014 00:03:32 -0400
+	with ESMTP id S1751292AbaDFGUL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Apr 2014 02:20:11 -0400
 Content-Disposition: inline
-In-Reply-To: <1396399357-28388-1-git-send-email-martin.petersen@oracle.com>
+In-Reply-To: <1403024.0HLhjfholh@quad>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: tj@kernel.org, linux-ide@vger.kernel.org, Chris Samuel <chris@csamuel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, tj@kernel.org, linux-ide@vger.kernel.org, Chris Samuel <chris@csamuel.org>
 
-On Tue, Apr 01, 2014 at 08:42:36PM -0400, Martin K. Petersen wrote:
-> From: "Martin K. Petersen" <martin.petersen@oracle.com>
+On Sun, Apr 06, 2014 at 03:05:51PM +1000, Chris Samuel wrote:
+> On Sat, 5 Apr 2014 09:03:12 PM you wrote:
 > 
-> Now that drives with support for queued trim are starting to appear, it
-> would be helpful to expose the chosen trim mode to userland. Create a
-> sysfs "trim" attribute for each ata_device that displays whether trim is
-> "unsupported", "unqueued" or "queued".
- 
-Ok, I'm going to sound stupid, but which sysfs property is this in?
-Or more simply what file do I have to cat see this?
+> > Ok, I'm going to sound stupid, but which sysfs property is this in?
+> > Or more simply what file do I have to cat see this?
+> 
+> I found them with a simple:
+> 
+> find /sys -name trim
+> 
+> I looked at my dmesg info from boot to correlate with devices.
 
-Thanks,
+Ah, that helps, thanks.
+
+So here's another
+Tested-By: Chris Samuel <marc@merlins.org>
+
+legolas [mc]# cat /sys/devices/pci0000:00/0000:00:1f.2/ata1/link1/dev1.0/ata_device/dev1.0/trim
+unqueued
+
+:(
+
+So much for the Samsung 840 EVO then.
+Then again, it does confirm why deleting a kernel tree takes 1.5
+seconds.
+
+legolas [mc]# smartctl -i /dev/sda
+smartctl 6.2 2013-07-26 r3841 [x86_64-linux-3.14.0-amd64-i915-preempt-20140216] (local build)
+Copyright (C) 2002-13, Bruce Allen, Christian Franke, www.smartmontools.org
+
+=== START OF INFORMATION SECTION ===
+Device Model:     Samsung SSD 840 EVO 1TB
+Serial Number:    S1D9NEAD934600N
+LU WWN Device Id: 5 002538 85009a8ff
+Firmware Version: EXT0BB0Q
+User Capacity:    1,000,204,886,016 bytes [1.00 TB]
+Sector Size:      512 bytes logical/physical
+Rotation Rate:    Solid State Device
+Device is:        Not in smartctl database [for details use: -P showall]
+ATA Version is:   ACS-2, ATA8-ACS T13/1699-D revision 4c
+SATA Version is:  SATA 3.1, 6.0 Gb/s (current: 6.0 Gb/s)
+Local Time is:    Sat Apr  5 23:18:08 2014 PDT
+SMART support is: Available - device has SMART capability.
+SMART support is: Enabled
+
+Thanks for the new code.
+
 Marc
-
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> Cc: Chris Samuel <chris@csamuel.org>
-> Cc: Marc MERLIN <marc@merlins.org>
-> ---
->  drivers/ata/libata-transport.c | 32 ++++++++++++++++++++++++++++++++
->  1 file changed, 32 insertions(+)
-> 
-> diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
-> index e37413228228..a9a1a9055a3a 100644
-> --- a/drivers/ata/libata-transport.c
-> +++ b/drivers/ata/libata-transport.c
-> @@ -559,6 +559,37 @@ show_ata_dev_gscr(struct device *dev,
->  
->  static DEVICE_ATTR(gscr, S_IRUGO, show_ata_dev_gscr, NULL);
->  
-> +enum {
-> +	ATA_TRIM_UNSUPPORTED = 0,
-> +	ATA_TRIM_UNQUEUED = 1,
-> +	ATA_TRIM_QUEUED = 2,
-> +};
-> +
-> +static const char *trim_mode[] = {
-> +	[ATA_TRIM_UNSUPPORTED] = "unsupported",
-> +	[ATA_TRIM_UNQUEUED] = "unqueued",
-> +	[ATA_TRIM_QUEUED] = "queued",
-> +};
-> +
-> +static ssize_t
-> +show_ata_dev_trim(struct device *dev,
-> +		  struct device_attribute *attr, char *buf)
-> +{
-> +	struct ata_device *ata_dev = transport_class_to_dev(dev);
-> +	unsigned int mode;
-> +
-> +	if (!ata_id_has_trim(ata_dev->id))
-> +		mode = ATA_TRIM_UNSUPPORTED;
-> +	else if (ata_fpdma_dsm_supported(ata_dev))
-> +		mode = ATA_TRIM_QUEUED;
-> +	else
-> +		mode = ATA_TRIM_UNQUEUED;
-> +
-> +	return snprintf(buf, 20, "%s\n", trim_mode[mode]);
-> +}
-> +
-> +static DEVICE_ATTR(trim, S_IRUGO, show_ata_dev_trim, NULL);
-> +
->  static DECLARE_TRANSPORT_CLASS(ata_dev_class,
->  			       "ata_device", NULL, NULL, NULL);
->  
-> @@ -732,6 +763,7 @@ struct scsi_transport_template *ata_attach_transport(void)
->  	SETUP_DEV_ATTRIBUTE(ering);
->  	SETUP_DEV_ATTRIBUTE(id);
->  	SETUP_DEV_ATTRIBUTE(gscr);
-> +	SETUP_DEV_ATTRIBUTE(trim);
->  	BUG_ON(count > ATA_DEV_ATTRS);
->  	i->dev_attrs[count] = NULL;
->  
-> -- 
-> 1.8.3.1
-> 
-> 
-
 -- 
 "A mouse is a device used to point at the xterm you want to type in" - A.S.R.
 Microsoft is to operating systems ....
