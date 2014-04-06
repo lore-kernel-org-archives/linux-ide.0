@@ -1,66 +1,100 @@
-From: Chris Samuel <chris@csamuel.org>
+From: Marc MERLIN <marc@merlins.org>
 Subject: Re: [PATCH 1/2] libata: Expose trim capability in sysfs
-Date: Sat, 05 Apr 2014 19:12:05 +1100
-Message-ID: <1452108.oyGVeRVWlF@quad>
+Date: Sat, 5 Apr 2014 21:03:12 -0700
+Message-ID: <20140406040312.GA5006@merlins.org>
 References: <1396399357-28388-1-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart1774220.pSiIysxDFc"; micalg="pgp-sha1"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from csamuel.org ([74.50.50.137]:45268 "EHLO csamuel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754001AbaDEIMh (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 5 Apr 2014 04:12:37 -0400
+Received: from magic.merlins.org ([209.81.13.136]:59519 "EHLO
+	mail1.merlins.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750703AbaDFEDc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Apr 2014 00:03:32 -0400
+Content-Disposition: inline
 In-Reply-To: <1396399357-28388-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: tj@kernel.org, linux-ide@vger.kernel.org, Marc MERLIN <marc@merlins.org>
+Cc: tj@kernel.org, linux-ide@vger.kernel.org, Chris Samuel <chris@csamuel.org>
 
-
---nextPart1774220.pSiIysxDFc
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="us-ascii"
-
-On Tue, 1 Apr 2014 08:42:36 PM Martin K. Petersen wrote:
-
-> Now that drives with support for queued trim are starting to appear, =
-it
-> would be helpful to expose the chosen trim mode to userland. Create a=
-
-> sysfs "trim" attribute for each ata_device that displays whether trim=
- is
+On Tue, Apr 01, 2014 at 08:42:36PM -0400, Martin K. Petersen wrote:
+> From: "Martin K. Petersen" <martin.petersen@oracle.com>
+> 
+> Now that drives with support for queued trim are starting to appear, it
+> would be helpful to expose the chosen trim mode to userland. Create a
+> sysfs "trim" attribute for each ata_device that displays whether trim is
 > "unsupported", "unqueued" or "queued".
+ 
+Ok, I'm going to sound stupid, but which sysfs property is this in?
+Or more simply what file do I have to cat see this?
 
-Both patches applied cleanly to 3.14, kernel now reports "unsupported" =
-for=20
-everything other than the SSD in my ZaReason laptop (Crucial M4 mSATA S=
-SD)=20
-which reports "unqueued" (which is expected).
+Thanks,
+Marc
 
-Tested-By: Chris Samuel <chris@csamuel.org>
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: Chris Samuel <chris@csamuel.org>
+> Cc: Marc MERLIN <marc@merlins.org>
+> ---
+>  drivers/ata/libata-transport.c | 32 ++++++++++++++++++++++++++++++++
+>  1 file changed, 32 insertions(+)
+> 
+> diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-transport.c
+> index e37413228228..a9a1a9055a3a 100644
+> --- a/drivers/ata/libata-transport.c
+> +++ b/drivers/ata/libata-transport.c
+> @@ -559,6 +559,37 @@ show_ata_dev_gscr(struct device *dev,
+>  
+>  static DEVICE_ATTR(gscr, S_IRUGO, show_ata_dev_gscr, NULL);
+>  
+> +enum {
+> +	ATA_TRIM_UNSUPPORTED = 0,
+> +	ATA_TRIM_UNQUEUED = 1,
+> +	ATA_TRIM_QUEUED = 2,
+> +};
+> +
+> +static const char *trim_mode[] = {
+> +	[ATA_TRIM_UNSUPPORTED] = "unsupported",
+> +	[ATA_TRIM_UNQUEUED] = "unqueued",
+> +	[ATA_TRIM_QUEUED] = "queued",
+> +};
+> +
+> +static ssize_t
+> +show_ata_dev_trim(struct device *dev,
+> +		  struct device_attribute *attr, char *buf)
+> +{
+> +	struct ata_device *ata_dev = transport_class_to_dev(dev);
+> +	unsigned int mode;
+> +
+> +	if (!ata_id_has_trim(ata_dev->id))
+> +		mode = ATA_TRIM_UNSUPPORTED;
+> +	else if (ata_fpdma_dsm_supported(ata_dev))
+> +		mode = ATA_TRIM_QUEUED;
+> +	else
+> +		mode = ATA_TRIM_UNQUEUED;
+> +
+> +	return snprintf(buf, 20, "%s\n", trim_mode[mode]);
+> +}
+> +
+> +static DEVICE_ATTR(trim, S_IRUGO, show_ata_dev_trim, NULL);
+> +
+>  static DECLARE_TRANSPORT_CLASS(ata_dev_class,
+>  			       "ata_device", NULL, NULL, NULL);
+>  
+> @@ -732,6 +763,7 @@ struct scsi_transport_template *ata_attach_transport(void)
+>  	SETUP_DEV_ATTRIBUTE(ering);
+>  	SETUP_DEV_ATTRIBUTE(id);
+>  	SETUP_DEV_ATTRIBUTE(gscr);
+> +	SETUP_DEV_ATTRIBUTE(trim);
+>  	BUG_ON(count > ATA_DEV_ATTRS);
+>  	i->dev_attrs[count] = NULL;
+>  
+> -- 
+> 1.8.3.1
+> 
+> 
 
-Thanks!
-Chris
-=2D-=20
- Chris Samuel  :  http://www.csamuel.org/  :  Melbourne, VIC
-
-
---nextPart1774220.pSiIysxDFc
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.14 (GNU/Linux)
-
-iQEVAwUAUz+61Y1yjaOTJg85AQIONAf+N/dARUxV3tcXgK5KccfTxcCFvwTs8R0Z
-b3rNw5yhojP8vS1UX9HDXWnqK21TVX1k2pTS0ViDcWxIkhaNxX/rH/He40ce0Yy6
-1qa/3I1P/ChNf3K2oUqwRmsyiUHn1YVBQJ3fe8dIaS+TlORKjyxmqFpo5kyND7af
-d6RAPhegfu00RkJ0t9PzBgkBtCgMfUfylWP5ggY4LJ9VbJfx109wwAMKZ70MGIvg
-2vTPAR5yF1xUB/Kt88coYqZmtX7r3mlCurzK8CcW3Gk1il1sKJLWVdIkePt6Z+55
-WXn1kW3Taq8vyT3qJ3bfwdoxgNplT5lC5BvmZSDDGucu5RWX5FA8cw==
-=W2pJ
------END PGP SIGNATURE-----
-
---nextPart1774220.pSiIysxDFc--
-
+-- 
+"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
+Microsoft is to operating systems ....
+                                      .... what McDonalds is to gourmet cooking
+Home page: http://marc.merlins.org/                         | PGP 1024R/763BE901
