@@ -1,73 +1,60 @@
-From: Marc MERLIN <marc@merlins.org>
-Subject: Re: [PATCH 1/2] libata: Expose trim capability in sysfs
-Date: Sat, 5 Apr 2014 23:19:58 -0700
-Message-ID: <20140406061958.GC5006@merlins.org>
-References: <1396399357-28388-1-git-send-email-martin.petersen@oracle.com>
- <20140406040312.GA5006@merlins.org>
- <1403024.0HLhjfholh@quad>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: [PATCH 0/4] Support for Marvell AHCI interface on Armada 38x
+Date: Mon,  7 Apr 2014 16:57:40 +0200
+Message-ID: <1396882664-19297-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from magic.merlins.org ([209.81.13.136]:60279 "EHLO
-	mail1.merlins.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751292AbaDFGUL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Apr 2014 02:20:11 -0400
-Content-Disposition: inline
-In-Reply-To: <1403024.0HLhjfholh@quad>
+Received: from top.free-electrons.com ([176.31.233.9]:48375 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755472AbaDGO5r (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Apr 2014 10:57:47 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, tj@kernel.org, linux-ide@vger.kernel.org, Chris Samuel <chris@csamuel.org>
+To: Tejun Heo <tj@kernel.org>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Cc: Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Lior Amsalem <alior@marvell.com>, Tawfik Bayouk <tawfik@marvell.com>, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org
 
-On Sun, Apr 06, 2014 at 03:05:51PM +1000, Chris Samuel wrote:
-> On Sat, 5 Apr 2014 09:03:12 PM you wrote:
-> 
-> > Ok, I'm going to sound stupid, but which sysfs property is this in?
-> > Or more simply what file do I have to cat see this?
-> 
-> I found them with a simple:
-> 
-> find /sys -name trim
-> 
-> I looked at my dmesg info from boot to correlate with devices.
+Hello,
 
-Ah, that helps, thanks.
+The Marvell Armada 38x ARM processors use an AHCI compatible interface
+for SATA (in replacement of the Marvell-specific SATA interface,
+handled by the sata_mv driver). However, like all DMA-capable Marvell
+interfaces, some specific MBus window configuration must be done, so a
+small specific glue layer is needed, which relies on the recently
+introduced libahci_platform.c.
 
-So here's another
-Tested-By: Chris Samuel <marc@merlins.org>
+The first patch of this series contains the driver itself, which is
+fairly straight-forward. It should be taken by Tejun Heo as the ATA
+maintainer.
 
-legolas [mc]# cat /sys/devices/pci0000:00/0000:00:1f.2/ata1/link1/dev1.0/ata_device/dev1.0/trim
-unqueued
+The last three patches add the Device Tree and defconfig changes. They
+should be taken by the respective ARM maintainers (mvebu maintainers
+for the DT and mvebu_v7_defconfig, and arm-soc maintainers for the
+multi_v7_defconfig change).
 
-:(
+This series is currently based on linux-next. If this is a problem for
+merging, I'll resend a new version once 3.15-rc1 lands.
 
-So much for the Samsung 840 EVO then.
-Then again, it does confirm why deleting a kernel tree takes 1.5
-seconds.
+Thanks!
 
-legolas [mc]# smartctl -i /dev/sda
-smartctl 6.2 2013-07-26 r3841 [x86_64-linux-3.14.0-amd64-i915-preempt-20140216] (local build)
-Copyright (C) 2002-13, Bruce Allen, Christian Franke, www.smartmontools.org
+Thomas
 
-=== START OF INFORMATION SECTION ===
-Device Model:     Samsung SSD 840 EVO 1TB
-Serial Number:    S1D9NEAD934600N
-LU WWN Device Id: 5 002538 85009a8ff
-Firmware Version: EXT0BB0Q
-User Capacity:    1,000,204,886,016 bytes [1.00 TB]
-Sector Size:      512 bytes logical/physical
-Rotation Rate:    Solid State Device
-Device is:        Not in smartctl database [for details use: -P showall]
-ATA Version is:   ACS-2, ATA8-ACS T13/1699-D revision 4c
-SATA Version is:  SATA 3.1, 6.0 Gb/s (current: 6.0 Gb/s)
-Local Time is:    Sat Apr  5 23:18:08 2014 PDT
-SMART support is: Available - device has SMART capability.
-SMART support is: Enabled
+Thomas Petazzoni (4):
+  ata: ahci_mvebu: new driver for Marvell Armada 380 AHCI interfaces
+  ARM: mvebu: add Device Tree description of AHCI interfaces on Armada
+    38x
+  ARM: configs: add ahci_mvebu to mvebu_v7_defconfig
+  ARM: configs: add ahci_mvebu to multi_v7_defconfig
 
-Thanks for the new code.
+ .../devicetree/bindings/ata/ahci-platform.txt      |   3 +-
+ arch/arm/boot/dts/armada-385-db.dts                |   8 ++
+ arch/arm/boot/dts/armada-38x.dtsi                  |  16 ++++
+ arch/arm/configs/multi_v7_defconfig                |   1 +
+ arch/arm/configs/mvebu_v7_defconfig                |   1 +
+ drivers/ata/Kconfig                                |   9 ++
+ drivers/ata/Makefile                               |   1 +
+ drivers/ata/ahci_mvebu.c                           | 105 +++++++++++++++++++++
+ 8 files changed, 143 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/ata/ahci_mvebu.c
 
-Marc
 -- 
-"A mouse is a device used to point at the xterm you want to type in" - A.S.R.
-Microsoft is to operating systems ....
-                                      .... what McDonalds is to gourmet cooking
-Home page: http://marc.merlins.org/                         | PGP 1024R/763BE901
+1.8.3.2
+
