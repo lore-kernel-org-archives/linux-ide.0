@@ -1,62 +1,44 @@
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH 1/4] ata: ahci_mvebu: new driver for Marvell Armada 380
- AHCI interfaces
-Date: Mon, 7 Apr 2014 23:43:36 +0200
-Message-ID: <20140407234336.6305681b@skate>
-References: <1396882664-19297-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1396882664-19297-2-git-send-email-thomas.petazzoni@free-electrons.com>
-	<2819007.7Vym3v6BRo@amdc1032>
+From: Jean Delvare <jdelvare@suse.de>
+Subject: [PATCH] ata: fix i.MX AHCI driver dependencies
+Date: Tue, 8 Apr 2014 11:06:26 +0200
+Message-ID: <20140408110626.0eebbbf2@endymion.delvare>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:50222 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753119AbaDGVnl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Apr 2014 17:43:41 -0400
-In-Reply-To: <2819007.7Vym3v6BRo@amdc1032>
+Received: from cantor2.suse.de ([195.135.220.15]:55143 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750800AbaDHJGa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 8 Apr 2014 05:06:30 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: Tejun Heo <tj@kernel.org>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Lior Amsalem <alior@marvell.com>, Tawfik Bayouk <tawfik@marvell.com>, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Richard Zhu <r65037@freescale.com>
 
-Dear Bartlomiej Zolnierkiewicz,
+The ahci_imx driver is only needed on Freescale i.MX platforms so
+don't let it be built on other platforms, except for build test
+purpose.
 
-On Mon, 07 Apr 2014 19:50:06 +0200, Bartlomiej Zolnierkiewicz wrote:
+Signed-off-by: Jean Delvare <jdelvare@suse.de>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Richard Zhu <r65037@freescale.com>
+---
+ drivers/ata/Kconfig |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> > +static struct platform_driver ahci_mvebu_driver = {
-> > +	.probe = ahci_mvebu_probe,
-> > +	.remove = ata_platform_remove_one,
-> > +	.driver = {
-> > +		.name = "ahci-mvebu",
-> > +		.owner = THIS_MODULE,
-> > +		.of_match_table = ahci_mvebu_of_match,
-> 
-> Why is the Power Management support missing from this driver?
+--- linux-3.15-rc0.orig/drivers/ata/Kconfig	2014-04-07 10:23:04.083158535 +0200
++++ linux-3.15-rc0/drivers/ata/Kconfig	2014-04-08 10:57:25.301066036 +0200
+@@ -116,7 +116,7 @@ config AHCI_ST
+ 
+ config AHCI_IMX
+ 	tristate "Freescale i.MX AHCI SATA support"
+-	depends on MFD_SYSCON
++	depends on MFD_SYSCON && (ARCH_MXC || COMPILE_TEST)
+ 	help
+ 	  This option enables support for the Freescale i.MX SoC's
+ 	  onboard AHCI SATA.
 
-Because as of today, the only platform that can use this driver is the
-Armada 38x, and we don't yet have suspend/resume support for this
-platform: we haven't written yet the suspend to RAM code for it. And I
-wanted to avoid adding suspend/resume code that I'm not able to test.
 
-So my plan is to get back to PM support once we have working suspend to
-RAM support on Armada 38x.
-
-> > +MODULE_DESCRIPTION("Marvell EBU AHCI SATA driver");
-> > +MODULE_AUTHOR("Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Marcin Wojtas <mw@semihalf.com>");
-> > +MODULE_LICENSE("GPL");
-> > +MODULE_ALIAS("platform:ahci_mv");
-> 
-> platform:ahci_mvebu ?
-
-Indeed, thanks for spotting.
-
-> Otherwise it looks good.
-
-Thanks for the review!
-
-Thomas
 -- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+Jean Delvare
+SUSE L3 Support
