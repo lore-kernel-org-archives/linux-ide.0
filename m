@@ -1,53 +1,179 @@
-From: Kefeng Wang <wangkefeng.wang@huawei.com>
-Subject: [PATCH 1/2] ata: ahci: append new hflag AHCI_HFLAG_NO_FBS
-Date: Wed, 9 Apr 2014 18:30:18 +0800
-Message-ID: <1397039419-9716-1-git-send-email-wangkefeng.wang@huawei.com>
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: Re: [PATCH 2/2] ahci: add support for Hisilicon sata
+Date: Wed, 09 Apr 2014 12:46:44 +0200
+Message-ID: <53452514.5030701@redhat.com>
+References: <1397039419-9716-1-git-send-email-wangkefeng.wang@huawei.com> <1397039419-9716-2-git-send-email-wangkefeng.wang@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, wangkefeng.wang@huawei.com, guohanjun@huawei.com
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:27870 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932685AbaDIKrE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 9 Apr 2014 06:47:04 -0400
+In-Reply-To: <1397039419-9716-2-git-send-email-wangkefeng.wang@huawei.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Kefeng Wang <wangkefeng.wang@huawei.com>, Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, guohanjun@huawei.com
 
-From: Kefeng Wang <kefeng.wang@linaro.org>
+Hi,
 
-Append AHCI_HFLAG_NO_FBS to force turning off FBS flag.
+On 04/09/2014 12:30 PM, Kefeng Wang wrote:
+> From: Kefeng Wang <kefeng.wang@linaro.org>
+> 
+> The hip04 SoC of hisilicon has an AHCI compliant SATA controller,
+> and it is compliant with the ahci 1.3 and sata 3.0 specification.
+> 
+> There is a wrong bit in HOST_CAP of hip04 sata controller, which
+> enable unsupported feature of FBS, use AHCI_HFLAG_NO_FBS hflag to
+> disable it.
+> 
+> Signed-off-by: Kefeng Wang <kefeng.wang@linaro.org>
+> ---
+>  .../devicetree/bindings/ata/ahci-platform.txt      |    3 +-
+>  drivers/ata/ahci_platform.c                        |   65 +++++++++++++++-----
+>  2 files changed, 52 insertions(+), 16 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+> index 48b285f..aab1d70 100644
+> --- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
+> +++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+> @@ -7,7 +7,8 @@ Required properties:
+>  - compatible        : compatible list, one of "snps,spear-ahci",
+>                        "snps,exynos5440-ahci", "ibm,476gtr-ahci",
+>                        "allwinner,sun4i-a10-ahci", "fsl,imx53-ahci"
+> -                      "fsl,imx6q-ahci" or "snps,dwc-ahci"
+> +                      "fsl,imx6q-ahci", "snps,dwc-ahci" or
+> +                      "hisilicon,hisi-ahci"
+>  - interrupts        : <interrupt mapping for SATA IRQ>
+>  - reg               : <registers mapping>
+>  
+> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+> index ef67e79..9581d51 100644
+> --- a/drivers/ata/ahci_platform.c
+> +++ b/drivers/ata/ahci_platform.c
+> @@ -17,22 +17,61 @@
+>  #include <linux/pm.h>
+>  #include <linux/device.h>
+>  #include <linux/platform_device.h>
+> +#include <linux/of.h>
+> +#include <linux/of_device.h>
+>  #include <linux/libata.h>
+>  #include <linux/ahci_platform.h>
+>  #include "ahci.h"
+>  
+> -static const struct ata_port_info ahci_port_info = {
+> -	.flags		= AHCI_FLAG_COMMON,
+> -	.pio_mask	= ATA_PIO4,
+> -	.udma_mask	= ATA_UDMA6,
+> -	.port_ops	= &ahci_platform_ops,
+> +enum ahci_type {
+> +	AHCI,		/* standard platform ahci */
+> +	HIP04_AHCI,	/* ahci on HiP04 */
+>  };
+>  
+> +static const struct ata_port_info ahci_port_info[] = {
+> +	[AHCI] = {
+> +		.flags		= AHCI_FLAG_COMMON,
+> +		.pio_mask	= ATA_PIO4,
+> +		.udma_mask	= ATA_UDMA6,
+> +		.port_ops	= &ahci_platform_ops,
+> +	},
+> +	[HIP04_AHCI] = {
+> +		AHCI_HFLAGS	(AHCI_HFLAG_NO_FBS),
+> +		.flags		= AHCI_FLAG_COMMON,
+> +		.pio_mask	= ATA_PIO4,
+> +		.udma_mask	= ATA_UDMA6,
+> +		.port_ops	= &ahci_platform_ops,
+> +	},
+> +};
+> +
+> +static const struct of_device_id ahci_of_match[] = {
+> +	{ .compatible = "snps,spear-ahci", },
+> +	{ .compatible = "snps,exynos5440-ahci", },
+> +	{ .compatible = "ibm,476gtr-ahci", },
+> +	{ .compatible = "snps,dwc-ahci", },
+> +	{ .compatible = "hisilicon,hisi-ahci", .data = (void *)HIP04_AHCI, },
+> +	{},
+> +};
+> +MODULE_DEVICE_TABLE(of, ahci_of_match);
+> +
+> +static int ahci_match_of_id(struct platform_device *pdev,
+> +			    enum ahci_type *ahci_type)
+> +{
+> +	const struct of_device_id *of_id = of_match_device(ahci_of_match,
+> +							   &pdev->dev);
+> +	if (!of_id)
+> +		return -ENODEV;
+> +	*ahci_type = (unsigned long)(of_id->data);
+> +	return 0;
+> +}
+> +
 
-Signed-off-by: Haojian Zhuang <haojian.zhuang@linaro.org>
-Signed-off-by: Kefeng Wang <kefeng.wang@linaro.org>
----
- drivers/ata/ahci.h    |    1 +
- drivers/ata/libahci.c |    5 +++++
- 2 files changed, 6 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 51af275..60db49b 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -235,6 +235,7 @@ enum {
- 						        port start (wait until
- 						        error-handling stage) */
- 	AHCI_HFLAG_MULTI_MSI		= (1 << 16), /* multiple PCI MSIs */
-+	AHCI_HFLAG_NO_FBS		= (1 << 17), /* no FBS */
- 
- 	/* ap->flags bits */
- 
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 6bd4f66..573edb3 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -452,6 +452,11 @@ void ahci_save_initial_config(struct device *dev,
- 		cap &= ~HOST_CAP_SNTF;
- 	}
- 
-+	if ((cap & HOST_CAP_FBS) && (hpriv->flags & AHCI_HFLAG_NO_FBS)) {
-+		dev_info(dev, "controller can't do FBS, turning off CAP_FBS\n");
-+		cap &= ~HOST_CAP_FBS;
-+	}
-+
- 	if (!(cap & HOST_CAP_FBS) && (hpriv->flags & AHCI_HFLAG_YES_FBS)) {
- 		dev_info(dev, "controller can do FBS, turning on CAP_FBS\n");
- 		cap |= HOST_CAP_FBS;
--- 
-1.7.1
+Hmm, it would be a lot cleaner to not do all of the above, and then
+... (continued below).
+
+>  static int ahci_probe(struct platform_device *pdev)
+>  {
+>  	struct device *dev = &pdev->dev;
+>  	struct ahci_platform_data *pdata = dev_get_platdata(dev);
+>  	struct ahci_host_priv *hpriv;
+> +	struct ata_port_info pi;
+> +	enum ahci_type ahci_type;
+>  	int rc;
+>  
+>  	hpriv = ahci_platform_get_resources(pdev);
+
+Replace the 2 new lines here with:
+	struct ata_port_info pi = ahci_port_info;
+and ...
+
+> @@ -55,7 +94,12 @@ static int ahci_probe(struct platform_device *pdev)
+>  			goto disable_resources;
+>  	}
+>  
+> -	rc = ahci_platform_init_host(pdev, hpriv, &ahci_port_info, 0, 0);
+> +	if (!ahci_match_of_id(pdev, &ahci_type))
+> +		pi = ahci_port_info[ahci_type];
+> +	else
+> +		pi = ahci_port_info[AHCI];
+> +
+> +	rc = ahci_platform_init_host(pdev, hpriv, &pi, 0, 0);
+>  	if (rc)
+>  		goto pdata_exit;
+>  
+
+Replace the above with:
+	if (of_device_is_compatible(pdev->dev.of_node, "hisilicon,hisi-ahci"))
+		pi.private_data = (void *)AHCI_HFLAG_NO_FBS;
+
+	rc = ahci_platform_init_host(pdev, hpriv, &pi, 0, 0);
+
+Note we should consider giving ahci_platform_init_host a hflags argument to avoid
+having struct ata_port_info on the stack twice, once in ahci_probe and once in
+ahci_platform_init_host.
+
+
+> @@ -71,15 +115,6 @@ disable_resources:
+>  static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_platform_suspend,
+>  			 ahci_platform_resume);
+>  
+> -static const struct of_device_id ahci_of_match[] = {
+> -	{ .compatible = "snps,spear-ahci", },
+> -	{ .compatible = "snps,exynos5440-ahci", },
+> -	{ .compatible = "ibm,476gtr-ahci", },
+> -	{ .compatible = "snps,dwc-ahci", },
+> -	{},
+> -};
+> -MODULE_DEVICE_TABLE(of, ahci_of_match);
+> -
+>  static struct platform_driver ahci_driver = {
+>  	.probe = ahci_probe,
+>  	.remove = ata_platform_remove_one,
+> 
+
+Regards,
+
+Hans
