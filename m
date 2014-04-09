@@ -1,69 +1,152 @@
-From: Christoph Jaeger <christophjaeger@linux.com>
-Subject: [PATCH] ide: use module_platform_driver()
-Date: Wed,  9 Apr 2014 09:28:01 +0200
-Message-ID: <1397028481-30757-1-git-send-email-christophjaeger@linux.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: davem@davemloft.net
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Jaeger <christophjaeger@linux.com>
+From: Kefeng Wang <wangkefeng.wang@huawei.com>
+Subject: [PATCH 2/2] ahci: add support for Hisilicon sata
+Date: Wed, 9 Apr 2014 18:30:19 +0800
+Message-ID: <1397039419-9716-2-git-send-email-wangkefeng.wang@huawei.com>
+References: <1397039419-9716-1-git-send-email-wangkefeng.wang@huawei.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:19687 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932690AbaDIKbZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Apr 2014 06:31:25 -0400
+In-Reply-To: <1397039419-9716-1-git-send-email-wangkefeng.wang@huawei.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, wangkefeng.wang@huawei.com, guohanjun@huawei.com
 
-Eliminate boilerplate code by using module_platform_driver().
+From: Kefeng Wang <kefeng.wang@linaro.org>
 
-Signed-off-by: Christoph Jaeger <christophjaeger@linux.com>
+The hip04 SoC of hisilicon has an AHCI compliant SATA controller,
+and it is compliant with the ahci 1.3 and sata 3.0 specification.
+
+There is a wrong bit in HOST_CAP of hip04 sata controller, which
+enable unsupported feature of FBS, use AHCI_HFLAG_NO_FBS hflag to
+disable it.
+
+Signed-off-by: Kefeng Wang <kefeng.wang@linaro.org>
 ---
- drivers/ide/au1xxx-ide.c   | 13 +------------
- drivers/ide/ide_platform.c | 13 +------------
- 2 files changed, 2 insertions(+), 24 deletions(-)
+ .../devicetree/bindings/ata/ahci-platform.txt      |    3 +-
+ drivers/ata/ahci_platform.c                        |   65 +++++++++++++++-----
+ 2 files changed, 52 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/ide/au1xxx-ide.c b/drivers/ide/au1xxx-ide.c
-index 259786c..07ea580 100644
---- a/drivers/ide/au1xxx-ide.c
-+++ b/drivers/ide/au1xxx-ide.c
-@@ -592,18 +592,7 @@ static struct platform_driver au1200_ide_driver = {
- 	.remove		= au_ide_remove,
+diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+index 48b285f..aab1d70 100644
+--- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
++++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+@@ -7,7 +7,8 @@ Required properties:
+ - compatible        : compatible list, one of "snps,spear-ahci",
+                       "snps,exynos5440-ahci", "ibm,476gtr-ahci",
+                       "allwinner,sun4i-a10-ahci", "fsl,imx53-ahci"
+-                      "fsl,imx6q-ahci" or "snps,dwc-ahci"
++                      "fsl,imx6q-ahci", "snps,dwc-ahci" or
++                      "hisilicon,hisi-ahci"
+ - interrupts        : <interrupt mapping for SATA IRQ>
+ - reg               : <registers mapping>
+ 
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index ef67e79..9581d51 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -17,22 +17,61 @@
+ #include <linux/pm.h>
+ #include <linux/device.h>
+ #include <linux/platform_device.h>
++#include <linux/of.h>
++#include <linux/of_device.h>
+ #include <linux/libata.h>
+ #include <linux/ahci_platform.h>
+ #include "ahci.h"
+ 
+-static const struct ata_port_info ahci_port_info = {
+-	.flags		= AHCI_FLAG_COMMON,
+-	.pio_mask	= ATA_PIO4,
+-	.udma_mask	= ATA_UDMA6,
+-	.port_ops	= &ahci_platform_ops,
++enum ahci_type {
++	AHCI,		/* standard platform ahci */
++	HIP04_AHCI,	/* ahci on HiP04 */
  };
  
--static int __init au_ide_init(void)
--{
--	return platform_driver_register(&au1200_ide_driver);
--}
--
--static void __exit au_ide_exit(void)
--{
--	platform_driver_unregister(&au1200_ide_driver);
--}
-+module_platform_driver(au1200_ide_driver);
++static const struct ata_port_info ahci_port_info[] = {
++	[AHCI] = {
++		.flags		= AHCI_FLAG_COMMON,
++		.pio_mask	= ATA_PIO4,
++		.udma_mask	= ATA_UDMA6,
++		.port_ops	= &ahci_platform_ops,
++	},
++	[HIP04_AHCI] = {
++		AHCI_HFLAGS	(AHCI_HFLAG_NO_FBS),
++		.flags		= AHCI_FLAG_COMMON,
++		.pio_mask	= ATA_PIO4,
++		.udma_mask	= ATA_UDMA6,
++		.port_ops	= &ahci_platform_ops,
++	},
++};
++
++static const struct of_device_id ahci_of_match[] = {
++	{ .compatible = "snps,spear-ahci", },
++	{ .compatible = "snps,exynos5440-ahci", },
++	{ .compatible = "ibm,476gtr-ahci", },
++	{ .compatible = "snps,dwc-ahci", },
++	{ .compatible = "hisilicon,hisi-ahci", .data = (void *)HIP04_AHCI, },
++	{},
++};
++MODULE_DEVICE_TABLE(of, ahci_of_match);
++
++static int ahci_match_of_id(struct platform_device *pdev,
++			    enum ahci_type *ahci_type)
++{
++	const struct of_device_id *of_id = of_match_device(ahci_of_match,
++							   &pdev->dev);
++	if (!of_id)
++		return -ENODEV;
++	*ahci_type = (unsigned long)(of_id->data);
++	return 0;
++}
++
+ static int ahci_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct ahci_platform_data *pdata = dev_get_platdata(dev);
+ 	struct ahci_host_priv *hpriv;
++	struct ata_port_info pi;
++	enum ahci_type ahci_type;
+ 	int rc;
  
- MODULE_LICENSE("GPL");
- MODULE_DESCRIPTION("AU1200 IDE driver");
--
--module_init(au_ide_init);
--module_exit(au_ide_exit);
-diff --git a/drivers/ide/ide_platform.c b/drivers/ide/ide_platform.c
-index a8b4b6a..d48de6d 100644
---- a/drivers/ide/ide_platform.c
-+++ b/drivers/ide/ide_platform.c
-@@ -131,19 +131,8 @@ static struct platform_driver platform_ide_driver = {
- 	.remove = plat_ide_remove,
- };
+ 	hpriv = ahci_platform_get_resources(pdev);
+@@ -55,7 +94,12 @@ static int ahci_probe(struct platform_device *pdev)
+ 			goto disable_resources;
+ 	}
  
--static int __init platform_ide_init(void)
--{
--	return platform_driver_register(&platform_ide_driver);
--}
--
--static void __exit platform_ide_exit(void)
--{
--	platform_driver_unregister(&platform_ide_driver);
--}
-+module_platform_driver(platform_ide_driver);
+-	rc = ahci_platform_init_host(pdev, hpriv, &ahci_port_info, 0, 0);
++	if (!ahci_match_of_id(pdev, &ahci_type))
++		pi = ahci_port_info[ahci_type];
++	else
++		pi = ahci_port_info[AHCI];
++
++	rc = ahci_platform_init_host(pdev, hpriv, &pi, 0, 0);
+ 	if (rc)
+ 		goto pdata_exit;
  
- MODULE_DESCRIPTION("Platform IDE driver");
- MODULE_LICENSE("GPL");
- MODULE_ALIAS("platform:pata_platform");
+@@ -71,15 +115,6 @@ disable_resources:
+ static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_platform_suspend,
+ 			 ahci_platform_resume);
+ 
+-static const struct of_device_id ahci_of_match[] = {
+-	{ .compatible = "snps,spear-ahci", },
+-	{ .compatible = "snps,exynos5440-ahci", },
+-	{ .compatible = "ibm,476gtr-ahci", },
+-	{ .compatible = "snps,dwc-ahci", },
+-	{},
+-};
+-MODULE_DEVICE_TABLE(of, ahci_of_match);
 -
--module_init(platform_ide_init);
--module_exit(platform_ide_exit);
+ static struct platform_driver ahci_driver = {
+ 	.probe = ahci_probe,
+ 	.remove = ata_platform_remove_one,
 -- 
-1.9.0
+1.7.1
+
+
