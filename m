@@ -1,36 +1,69 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ata: fix i.MX AHCI driver dependencies
-Date: Tue, 8 Apr 2014 08:37:35 -0400
-Message-ID: <20140408123735.GA21329@htj.dyndns.org>
-References: <20140408110626.0eebbbf2@endymion.delvare>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f41.google.com ([209.85.216.41]:40222 "EHLO
-	mail-qa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756601AbaDHMhi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Apr 2014 08:37:38 -0400
-Received: by mail-qa0-f41.google.com with SMTP id j5so784332qaq.28
-        for <linux-ide@vger.kernel.org>; Tue, 08 Apr 2014 05:37:38 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20140408110626.0eebbbf2@endymion.delvare>
-Sender: linux-ide-owner@vger.kernel.org
+From: Christoph Jaeger <christophjaeger@linux.com>
+Subject: [PATCH] ide: use module_platform_driver()
+Date: Wed,  9 Apr 2014 09:28:01 +0200
+Message-ID: <1397028481-30757-1-git-send-email-christophjaeger@linux.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: davem@davemloft.net
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Jaeger <christophjaeger@linux.com>
 List-Id: linux-ide@vger.kernel.org
-To: Jean Delvare <jdelvare@suse.de>
-Cc: linux-ide@vger.kernel.org, Richard Zhu <r65037@freescale.com>
 
-On Tue, Apr 08, 2014 at 11:06:26AM +0200, Jean Delvare wrote:
-> The ahci_imx driver is only needed on Freescale i.MX platforms so
-> don't let it be built on other platforms, except for build test
-> purpose.
-> 
-> Signed-off-by: Jean Delvare <jdelvare@suse.de>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: Richard Zhu <r65037@freescale.com>
+Eliminate boilerplate code by using module_platform_driver().
 
-Applied to libata/for-3.15-fixes.
+Signed-off-by: Christoph Jaeger <christophjaeger@linux.com>
+---
+ drivers/ide/au1xxx-ide.c   | 13 +------------
+ drivers/ide/ide_platform.c | 13 +------------
+ 2 files changed, 2 insertions(+), 24 deletions(-)
 
-Thanks.
-
+diff --git a/drivers/ide/au1xxx-ide.c b/drivers/ide/au1xxx-ide.c
+index 259786c..07ea580 100644
+--- a/drivers/ide/au1xxx-ide.c
++++ b/drivers/ide/au1xxx-ide.c
+@@ -592,18 +592,7 @@ static struct platform_driver au1200_ide_driver = {
+ 	.remove		= au_ide_remove,
+ };
+ 
+-static int __init au_ide_init(void)
+-{
+-	return platform_driver_register(&au1200_ide_driver);
+-}
+-
+-static void __exit au_ide_exit(void)
+-{
+-	platform_driver_unregister(&au1200_ide_driver);
+-}
++module_platform_driver(au1200_ide_driver);
+ 
+ MODULE_LICENSE("GPL");
+ MODULE_DESCRIPTION("AU1200 IDE driver");
+-
+-module_init(au_ide_init);
+-module_exit(au_ide_exit);
+diff --git a/drivers/ide/ide_platform.c b/drivers/ide/ide_platform.c
+index a8b4b6a..d48de6d 100644
+--- a/drivers/ide/ide_platform.c
++++ b/drivers/ide/ide_platform.c
+@@ -131,19 +131,8 @@ static struct platform_driver platform_ide_driver = {
+ 	.remove = plat_ide_remove,
+ };
+ 
+-static int __init platform_ide_init(void)
+-{
+-	return platform_driver_register(&platform_ide_driver);
+-}
+-
+-static void __exit platform_ide_exit(void)
+-{
+-	platform_driver_unregister(&platform_ide_driver);
+-}
++module_platform_driver(platform_ide_driver);
+ 
+ MODULE_DESCRIPTION("Platform IDE driver");
+ MODULE_LICENSE("GPL");
+ MODULE_ALIAS("platform:pata_platform");
+-
+-module_init(platform_ide_init);
+-module_exit(platform_ide_exit);
 -- 
-tejun
+1.9.0
