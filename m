@@ -1,78 +1,98 @@
-From: Kefeng Wang <wangkefeng.wang@huawei.com>
-Subject: [PATCH V2 2/2] ahci: add support for Hisilicon sata
-Date: Thu, 10 Apr 2014 13:24:28 +0800
-Message-ID: <1397107468-640-3-git-send-email-wangkefeng.wang@huawei.com>
-References: <1397107468-640-1-git-send-email-wangkefeng.wang@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1397107468-640-1-git-send-email-wangkefeng.wang@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, guohanjun@huawei.com, Kefeng Wang <kefeng.wang@linaro.org>
+From: Jacob Pan <jacob.jun.pan@linux.intel.com>
+Subject: [PATCH] ahci: disable DEVSLP for Intel Valleyview
+Date: Thu, 10 Apr 2014 02:58:54 -0700
+Message-ID: <1397123934-27114-1-git-send-email-jacob.jun.pan@linux.intel.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:2018 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030388AbaDJR6o (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 10 Apr 2014 13:58:44 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Cc: Tejun Heo <tj@kernel.org>, Alan Cox <alan@linux.intel.com>, Dan Williams <dan.j.williams@intel.com>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>, Jacob Pan <jacob.jun.pan@linux.intel.com>
 
-From: Kefeng Wang <kefeng.wang@linaro.org>
+On Intel Valleyview SoC, SATA device sleep is not reliable. When
+DEVSLP is attempted on certain SSDs, port_devslp write would fail
+and result in malfunction of AHCI controller. AHCI controller may
+be not shown in PCI enumeration after reset. Complete power source
+removal may be required to recver from this failure. So we blacklist
+this device and override host device reported capabilities such that
+device LPM will only attempt slumber but not devslp.
 
-The hip04 SoC of hisilicon has an AHCI compliant SATA controller,
-and it is compliant with the ahci 1.3 and sata 3.0 specification.
-
-There is a wrong bit in HOST_CAP of hip04 sata controller, which
-enable unsupported feature of FBS, use AHCI_HFLAG_NO_FBS hflag to
-disable it.
-
-Cc: Hans de Geode <hdegoede@redhat.com>
-Signed-off-by: Kefeng Wang <kefeng.wang@linaro.org>
+Signed-off-by: Jacob Pan <jacob.jun.pan@linux.intel.com>
+Acked-by: Dan Wiilliams <dan.j.williams@intel.com>
 ---
- .../devicetree/bindings/ata/ahci-platform.txt      |    3 ++-
- drivers/ata/ahci_platform.c                        |    6 +++++-
- 2 files changed, 7 insertions(+), 2 deletions(-)
+ drivers/ata/ahci.c    | 17 +++++++++++++++++
+ drivers/ata/ahci.h    |  1 +
+ drivers/ata/libahci.c |  7 +++++++
+ 3 files changed, 25 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-index 48b285f..aab1d70 100644
---- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
-+++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-@@ -7,7 +7,8 @@ Required properties:
- - compatible        : compatible list, one of "snps,spear-ahci",
-                       "snps,exynos5440-ahci", "ibm,476gtr-ahci",
-                       "allwinner,sun4i-a10-ahci", "fsl,imx53-ahci"
--                      "fsl,imx6q-ahci" or "snps,dwc-ahci"
-+                      "fsl,imx6q-ahci", "snps,dwc-ahci" or
-+                      "hisilicon,hisi-ahci"
- - interrupts        : <interrupt mapping for SATA IRQ>
- - reg               : <registers mapping>
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 5a0bf8e..24684a1 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1115,6 +1115,19 @@ static bool ahci_broken_online(struct pci_dev *pdev)
+ 	return pdev->bus->number == (val >> 8) && pdev->devfn == (val & 0xff);
+ }
  
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index ef67e79..2ee1923 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -32,6 +32,7 @@ static int ahci_probe(struct platform_device *pdev)
++#define PCI_DEVICE_ID_INTEL_VLV_SATA   0x0f23
++static bool ahci_broken_devslp(struct pci_dev *pdev)
++{
++	/* device with broken DEVSLP but still showing SDS capability */
++	static const struct pci_device_id ids[] = {
++		{ PCI_DEVICE(PCI_VENDOR_ID_INTEL,
++				PCI_DEVICE_ID_INTEL_VLV_SATA) },
++		{}
++	};
++
++	return pci_match_id(ids, pdev);
++}
++
+ #ifdef CONFIG_ATA_ACPI
+ static void ahci_gtf_filter_workaround(struct ata_host *host)
  {
- 	struct device *dev = &pdev->dev;
- 	struct ahci_platform_data *pdata = dev_get_platdata(dev);
-+	struct ata_port_info pi = ahci_port_info;
- 	struct ahci_host_priv *hpriv;
- 	int rc;
+@@ -1357,6 +1370,10 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
  
-@@ -54,8 +55,10 @@ static int ahci_probe(struct platform_device *pdev)
- 		if (rc)
- 			goto disable_resources;
+ 	hpriv->mmio = pcim_iomap_table(pdev)[ahci_pci_bar];
+ 
++	/* must set flag prior to save config in order to take effect */
++	if (ahci_broken_devslp(pdev))
++		hpriv->flags |= AHCI_HFLAG_NO_DEVSLP;
++
+ 	/* save initial config */
+ 	ahci_pci_save_initial_config(pdev, hpriv);
+ 
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index 0b670c0..630089a 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -235,6 +235,7 @@ enum {
+ 						        port start (wait until
+ 						        error-handling stage) */
+ 	AHCI_HFLAG_MULTI_MSI		= (1 << 16), /* multiple PCI MSIs */
++	AHCI_HFLAG_NO_DEVSLP		= (1 << 17), /* no device sleep */
+ 
+ 	/* ap->flags bits */
+ 
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 8cd0184..32fd860 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -653,6 +653,13 @@ void ahci_save_initial_config(struct device *dev,
+ 		cap &= ~HOST_CAP_SNTF;
  	}
-+	if (of_device_is_compatible(pdev->dev.of_node, "hisilicon,hisi-ahci"))
-+		pi.private_data = (void *)AHCI_HFLAG_NO_FBS;
  
--	rc = ahci_platform_init_host(pdev, hpriv, &ahci_port_info, 0, 0);
-+	rc = ahci_platform_init_host(pdev, hpriv, &pi, 0, 0);
- 	if (rc)
- 		goto pdata_exit;
- 
-@@ -76,6 +79,7 @@ static const struct of_device_id ahci_of_match[] = {
- 	{ .compatible = "snps,exynos5440-ahci", },
- 	{ .compatible = "ibm,476gtr-ahci", },
- 	{ .compatible = "snps,dwc-ahci", },
-+	{ .compatible = "hisilicon,hisi-ahci", },
- 	{},
- };
- MODULE_DEVICE_TABLE(of, ahci_of_match);
++	if ((cap2 & HOST_CAP2_SDS) && (hpriv->flags & AHCI_HFLAG_NO_DEVSLP)) {
++		dev_info(dev,
++			 "controller can't do DEVSLP, turning off\n");
++		cap2 &= ~HOST_CAP2_SDS;
++		cap2 &= ~HOST_CAP2_SADM;
++	}
++
+ 	if (!(cap & HOST_CAP_FBS) && (hpriv->flags & AHCI_HFLAG_YES_FBS)) {
+ 		dev_info(dev, "controller can do FBS, turning on CAP_FBS\n");
+ 		cap |= HOST_CAP_FBS;
 -- 
-1.7.1
+1.8.1.2
+
