@@ -1,63 +1,149 @@
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH v2 0/5] Support for Marvell AHCI interface on Armada 38x
-Date: Mon, 14 Apr 2014 20:44:55 +0200
-Message-ID: <20140414204455.5d83513d@skate>
-References: <1397486055-16303-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<16639486.i0jTGsaDYr@amdc1032>
-	<20140414180142.0dd63a1f@skate>
-	<10589751.qhi630WAFs@amdc1032>
-	<20140414181920.1e309019@skate>
-	<20140414174606.GB10416@htj.dyndns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: David Milburn <dmilburn@redhat.com>
+Subject: [PATCH] libahci: ahci interrupt check for disabled port since private_data may be NULL
+Date: Mon, 14 Apr 2014 16:47:18 -0500
+Message-ID: <1397512038-8419-1-git-send-email-dmilburn@redhat.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:34295 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754574AbaDNSo7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Apr 2014 14:44:59 -0400
-In-Reply-To: <20140414174606.GB10416@htj.dyndns.org>
+Received: from mx1.redhat.com ([209.132.183.28]:18586 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755620AbaDNVh5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 14 Apr 2014 17:37:57 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Gregory Clement <gregory.clement@free-electrons.com>, Tawfik Bayouk <tawfik@marvell.com>, Nadav Haklai <nadavh@marvell.com>, Lior Amsalem <alior@marvell.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org
 
-Dear Tejun Heo,
+System may crash in ahci_hw_interrupt() or ahci_thread_fn() when accessing
+the interrupt status in a port's private_data if the port is actually a
+DUMMY port.
 
-On Mon, 14 Apr 2014 13:46:06 -0400, Tejun Heo wrote:
+# lspci | grep ATA
+00:1f.2 SATA controller: Intel Corporation 82801JI (ICH10 Family) SATA AHCI Controller
 
-> > Well, I wasn't planning on re-spinning just to add Acked-by/Reviewed-by
-> > tags, as those are generally added by the subsystem maintainers when
-> > applying the patches. Though if Tejun says otherwise, I can definitely
-> > re-spin without any problem.
-> > 
-> > Tejun, just let me know what you prefer.
-> 
-> I can collect the -by's but better patch description is always nice.
-> Maybe just update the patch description and post that one as reply to
-> the patch posted in this thread?
+# systemctl status kdump (to ensure kdump service is running)
+# echo c > /proc/sysrq-trigger
 
-Actually, Bartlomiej wanted the comment about the power management
-features to be made in the code itself, rather than in the commit log,
-so I guess I'll just respin the patch series. Expect a v3 tomorrow with
-this change.
+<snip console output for linux-3.15-rc1>
+[    9.352080] ahci 0000:00:1f.2: AHCI 0001.0200 32 slots 6 ports 3 Gbps 0x1 impl SATA mode
+[    9.352084] ahci 0000:00:1f.2: flags: 64bit ncq sntf pm led clo pio slum part ccc 
+[    9.368155] Console: switching to colour frame buffer device 128x48
+[    9.439759] mgag200 0000:11:00.0: fb0: mgadrmfb frame buffer device
+[    9.446765] mgag200 0000:11:00.0: registered panic notifier
+[    9.470166] scsi1 : ahci
+[    9.479166] scsi2 : ahci
+[    9.488172] scsi3 : ahci
+[    9.497174] scsi4 : ahci
+[    9.506175] scsi5 : ahci
+[    9.515174] scsi6 : ahci
+[    9.518181] ata1: SATA max UDMA/133 abar m2048@0x95c00000 port 0x95c00100 irq 91
+[    9.526448] ata2: DUMMY
+[    9.529182] ata3: DUMMY
+[    9.531916] ata4: DUMMY
+[    9.534650] ata5: DUMMY
+[    9.537382] ata6: DUMMY
+[    9.576196] [drm] Initialized mgag200 1.0.0 20110418 for 0000:11:00.0 on minor 0
+[    9.845257] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+[    9.865161] ata1.00: ATAPI: Optiarc DVD RW AD-7580S, FX04, max UDMA/100
+[    9.891407] ata1.00: configured for UDMA/100
+[    9.900525] scsi 1:0:0:0: CD-ROM            Optiarc  DVD RW AD-7580S  FX04 PQ: 0 ANSI: 5
+[   10.247399] iTCO_vendor_support: vendor-support=0
+[   10.261572] iTCO_wdt: Intel TCO WatchDog Timer Driver v1.11
+[   10.269764] iTCO_wdt: unable to reset NO_REBOOT flag, device disabled by hardware/BIOS
+[   10.301932] sd 0:2:0:0: [sda] 570310656 512-byte logical blocks: (291 GB/271 GiB)
+[   10.317085] sd 0:2:0:0: [sda] Write Protect is off
+[   10.328326] sd 0:2:0:0: [sda] Write cache: disabled, read cache: disabled, supports DPO and FUA
+[   10.375452] BUG: unable to handle kernel NULL pointer dereference at 000000000000003c
+[   10.384217] IP: [<ffffffffa0133df0>] ahci_hw_interrupt+0x100/0x130 [libahci]
+[   10.392101] PGD 0 
+[   10.394353] Oops: 0000 [#1] SMP 
+[   10.397978] Modules linked in: sr_mod(+) cdrom sd_mod iTCO_wdt crc_t10dif iTCO_vendor_support crct10dif_common ahci libahci libata lpc_ich mfd_core mgag200 syscopyarea sysfillrect sysimgblt i2c_algo_bit drm_kms_helper ttm drm i2c_core megaraid_sas dm_mirror dm_region_hash 
+dm_log dm_mod
+[   10.426499] CPU: 0 PID: 0 Comm: swapper/0 Not tainted 3.15.0-rc1 #1
+[   10.433495] Hardware name: QCI QSSC-S4R/QSSC-S4R, BIOS QSSC-S4R.QCI.01.00.S013.032920111005 03/29/2011
+[   10.443886] task: ffffffff81906460 ti: ffffffff818f0000 task.ti: ffffffff818f0000
+[   10.452239] RIP: 0010:[<ffffffffa0133df0>]  [<ffffffffa0133df0>] ahci_hw_interrupt+0x100/0x130 [libahci]
+[   10.462838] RSP: 0018:ffff880033c03d98  EFLAGS: 00010046
+[   10.468767] RAX: 0000000000a400a4 RBX: ffff880029a6bc18 RCX: 00000000fffffffa
+[   10.476731] RDX: 00000000000000a4 RSI: ffff880029bb0000 RDI: ffff880029a6bc18
+[   10.484696] RBP: ffff880033c03dc8 R08: 0000000000000000 R09: ffff88002f800490
+[   10.492661] R10: 0000000000000000 R11: 0000000000000005 R12: 0000000000000000
+[   10.500625] R13: ffff880029a6bd98 R14: 0000000000000000 R15: ffffc90000194000
+[   10.508590] FS:  0000000000000000(0000) GS:ffff880033c00000(0000) knlGS:0000000000000000
+[   10.517623] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[   10.524035] CR2: 000000000000003c CR3: 00000000328ff000 CR4: 00000000000007b0
+[   10.531999] Stack:
+[   10.534241]  0000000000000017 ffff880031ba7d00 000000000000005c ffff880031ba7d00
+[   10.542535]  0000000000000000 000000000000005c ffff880033c03e10 ffffffff810c2a1e
+[   10.550827]  ffff880031ae2900 000000008108fb4f ffff880031ae2900 ffff880031ae2984
+[   10.559121] Call Trace:
+[   10.561849]  <IRQ> 
+[   10.563994]  [<ffffffff810c2a1e>] handle_irq_event_percpu+0x3e/0x1a0
+[   10.571309]  [<ffffffff810c2bbd>] handle_irq_event+0x3d/0x60
+[   10.577631]  [<ffffffff810c4fdd>] try_one_irq.isra.6+0x8d/0xf0
+[   10.584142]  [<ffffffff810c5313>] note_interrupt+0x173/0x1f0
+[   10.590460]  [<ffffffff810c2a8e>] handle_irq_event_percpu+0xae/0x1a0
+[   10.597554]  [<ffffffff810c2bbd>] handle_irq_event+0x3d/0x60
+[   10.603872]  [<ffffffff810c5727>] handle_edge_irq+0x77/0x130
+[   10.610199]  [<ffffffff81014b8f>] handle_irq+0xbf/0x150
+[   10.616040]  [<ffffffff8109ff4e>] ? vtime_account_idle+0xe/0x50
+[   10.622654]  [<ffffffff815fca1a>] ? atomic_notifier_call_chain+0x1a/0x20
+[   10.630140]  [<ffffffff816038cf>] do_IRQ+0x4f/0xf0
+[   10.635490]  [<ffffffff815f8aed>] common_interrupt+0x6d/0x6d
+[   10.641805]  <EOI> 
+[   10.643950]  [<ffffffff8149ca9f>] ? cpuidle_enter_state+0x4f/0xc0
+[   10.650972]  [<ffffffff8149ca98>] ? cpuidle_enter_state+0x48/0xc0
+[   10.657775]  [<ffffffff8149cb47>] cpuidle_enter+0x17/0x20
+[   10.663807]  [<ffffffff810b0070>] cpu_startup_entry+0x2c0/0x3d0
+[   10.670423]  [<ffffffff815dfcc7>] rest_init+0x77/0x80
+[   10.676065]  [<ffffffff81a60f47>] start_kernel+0x40f/0x41a
+[   10.682190]  [<ffffffff81a60941>] ? repair_env_string+0x5c/0x5c
+[   10.688799]  [<ffffffff81a60120>] ? early_idt_handlers+0x120/0x120
+[   10.695699]  [<ffffffff81a605ee>] x86_64_start_reservations+0x2a/0x2c
+[   10.702889]  [<ffffffff81a60733>] x86_64_start_kernel+0x143/0x152
+[   10.709689] Code: a0 fc ff 85 c0 8b 4d d4 74 c3 48 8b 7b 08 89 ca 48 c7 c6 60 66 13 a0 31 c0 e8 9d 70 28 e1 8b 4d d4 eb aa 0f 1f 84 00 00 00 00 00 <45> 8b 64 24 3c 48 89 df e8 23 47 4c e1 41 83 fc 01 19 c0 48 83 
+[   10.731470] RIP  [<ffffffffa0133df0>] ahci_hw_interrupt+0x100/0x130 [libahci]
+[   10.739441]  RSP <ffff880033c03d98>
+[   10.743333] CR2: 000000000000003c
+[   10.747032] ---[ end trace b6e82636970e2690 ]---
+[   10.760190] Kernel panic - not syncing: Fatal exception in interrupt
+[   10.767291] Kernel Offset: 0x0 from 0xffffffff81000000 (relocation range: 0xffffffff80000000-0xffffffff9fffffff)
 
-> Also, how do you want the patches to be routed?  Can all go through libata?
+Signed-off-by: David Milburn <dmilburn@redhat.com>
+---
+ drivers/ata/libahci.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
 
-As written in the cover letter, I'd expect patches 1 and 2 to go
-through libata, and then patches 3, 4 and 5 to go through arm-soc. The
-reason is that patches 3, 4 and 5 modifies the Device Tree files and
-the ARM defconfigs, which are likely to also be changed by other
-commits in the same cycle. However, the DT binding documentation change
-and the driver change are independent, so they can go through libata.
-
-I guess Jason Cooper, who handles the patch merging for mvebu
-platforms, can confirm (or not?) this proposal.
-
-Thanks a lot for the feedback!
-
-Thomas
--- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 6bd4f66..401924e 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -1791,9 +1791,14 @@ irqreturn_t ahci_thread_fn(int irq, void *dev_instance)
+ 	u32 status;
+ 
+ 	spin_lock_irqsave(&ap->host->lock, flags);
+-	status = pp->intr_status;
+-	if (status)
+-		pp->intr_status = 0;
++	if (!ata_port_is_dummy(ap)) {
++			status = pp->intr_status;
++			if (status)
++				pp->intr_status = 0;
++	} else {
++		spin_unlock_irqrestore(&ap->host->lock, flags);
++		return IRQ_HANDLED;
++	}
+ 	spin_unlock_irqrestore(&ap->host->lock, flags);
+ 
+ 	spin_lock_bh(ap->lock);
+@@ -1833,8 +1838,11 @@ irqreturn_t ahci_hw_interrupt(int irq, void *dev_instance)
+ 	irq_stat = readl(mmio + HOST_IRQ_STAT);
+ 
+ 	if (!irq_stat) {
+-		u32 status = pp->intr_status;
++		u32 status = 0;
+ 
++		if (!ata_port_is_dummy(ap_this))
++			status = pp->intr_status;
++
+ 		spin_unlock(&host->lock);
+ 
+ 		VPRINTK("EXIT\n");
