@@ -1,37 +1,79 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [GIT PULL] async scsi resume for 3.15
-Date: Fri, 11 Apr 2014 17:50:34 -0700
-Message-ID: <CA+55aFysUsOsK-dUYbWhMGcG2c9_nFjoJgBkb72hevh48TCABg@mail.gmail.com>
-References: <1397179458.4303.23.camel@dwillia2-mobl2.amr.corp.intel.com>
-	<1397240450.2626.37.camel@dabdike.int.hansenpartnership.com>
-	<CA+55aFxMhHbcXiG+=dQAMz4W1UarvnNkajBQJVhw8DH1ENwhig@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: [PATCH v2 0/5] Support for Marvell AHCI interface on Armada 38x
+Date: Mon, 14 Apr 2014 16:34:10 +0200
+Message-ID: <1397486055-16303-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ve0-f175.google.com ([209.85.128.175]:51044 "EHLO
-	mail-ve0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755839AbaDLAuf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Apr 2014 20:50:35 -0400
-In-Reply-To: <CA+55aFxMhHbcXiG+=dQAMz4W1UarvnNkajBQJVhw8DH1ENwhig@mail.gmail.com>
+Received: from top.free-electrons.com ([176.31.233.9]:60333 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754703AbaDNOeS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Apr 2014 10:34:18 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, Tejun Heo <tj@kernel.org>, Todd E Brandt <todd.e.brandt@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, "Brown, Len" <len.brown@intel.com>, Phillip Susi <psusi@ubuntu.com>
+To: Tejun Heo <tj@kernel.org>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Gregory Clement <gregory.clement@free-electrons.com>
+Cc: Tawfik Bayouk <tawfik@marvell.com>, Nadav Haklai <nadavh@marvell.com>, Lior Amsalem <alior@marvell.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
-On Fri, Apr 11, 2014 at 5:23 PM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
->
-> This has been the biggest (by far) merge window so far, afaik.
-> Might as well take this too.
+Hello,
 
-Actually, I take that "by far" back. In fact it's not even the biggest
-one (yet). It looks like 3.10-rc1 was worse in number of commits, and
-v3.7-rc1 was bigger in number of lines and files.
+The Marvell Armada 38x ARM processors use an AHCI compatible interface
+for SATA (in replacement of the Marvell-specific SATA interface,
+handled by the sata_mv driver). However, like all DMA-capable Marvell
+interfaces, some specific MBus window configuration must be done, so a
+small specific glue layer is needed, which relies on the recently
+introduced libahci_platform.c.
 
-That may still change by the time I tag rc1, but it looks like while
-the current merge window is big, it's not actually going to break any
-records.
+Changes since v1:
 
-Regardless, I pulled the async scsi resume patch.
+ * Rebased on top of v3.15-rc1
 
-          Linus
+ * Added a preliminary patch that orders alphabetically the list of
+   compatible strings in the DT binding document
+   ahci-platform.txt. Suggested by Andrew Lunn.
+
+ * Made the availability of MBus DRAM window informations
+   mandatory. Suggested by Andrew Lunn.
+
+ * Fixed the module alias name. Suggested by Bartlomiej
+   Zolnierkiewicz.
+
+Details of the patches:
+
+ * The first patch is a DT binding documentation cleanup. I believe it
+   should be taken by the ATA maintainer, because the second patch
+   (driver patch) depends on it.
+
+ * The second patch of this series contains the driver itself, which
+   is fairly straight-forward. It should be taken by Tejun Heo as the
+   ATA maintainer.
+
+ * The last three patches add the Device Tree and defconfig
+   changes. They should be taken by the respective ARM maintainers
+   (mvebu maintainers for the DT and mvebu_v7_defconfig, and arm-soc
+   maintainers for the multi_v7_defconfig change).
+
+Thanks!
+
+Thomas
+
+Thomas Petazzoni (5):
+  Documentation: dt-bindings: reformat and order list of ahci-platform
+    compatibles
+  ata: ahci_mvebu: new driver for Marvell Armada 380 AHCI interfaces
+  ARM: mvebu: add Device Tree description of AHCI interfaces on Armada
+    38x
+  ARM: configs: add ahci_mvebu to mvebu_v7_defconfig
+  ARM: configs: add ahci_mvebu to multi_v7_defconfig
+
+ .../devicetree/bindings/ata/ahci-platform.txt      |  13 ++-
+ arch/arm/boot/dts/armada-385-db.dts                |   8 ++
+ arch/arm/boot/dts/armada-38x.dtsi                  |  16 +++
+ arch/arm/configs/multi_v7_defconfig                |   1 +
+ arch/arm/configs/mvebu_v7_defconfig                |   1 +
+ drivers/ata/Kconfig                                |   9 ++
+ drivers/ata/Makefile                               |   1 +
+ drivers/ata/ahci_mvebu.c                           | 107 +++++++++++++++++++++
+ 8 files changed, 152 insertions(+), 4 deletions(-)
+ create mode 100644 drivers/ata/ahci_mvebu.c
+
+-- 
+1.8.3.2
+
