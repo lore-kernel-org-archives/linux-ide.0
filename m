@@ -1,99 +1,74 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: Re: [PATCH v2 0/5] Support for Marvell AHCI interface on Armada 38x
-Date: Mon, 14 Apr 2014 17:53:37 +0200
-Message-ID: <16639486.i0jTGsaDYr@amdc1032>
-References: <1397486055-16303-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH] pata_arasan_cf: fix ata_host_activate() failure handling
+Date: Mon, 14 Apr 2014 18:00:04 +0200
+Message-ID: <1861056.i4MLEJ6v1d@amdc1032>
+References: <7093981.6c4k98qyGh@amdc1032>
+ <CAOh2x=n8PGuykczfpi0T1-WwVmakURyX+RuuOQiFVhpYPmrS6A@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:22648 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754315AbaDNPxs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Apr 2014 11:53:48 -0400
-Received: from epcpsbgm2.samsung.com (epcpsbgm2 [203.254.230.27])
- by mailout2.samsung.com
- (Oracle Communications Messaging Server 7u4-24.01(7.0.4.24.0) 64bit (built Nov
- 17 2011)) with ESMTP id <0N4100C0S2TNDO50@mailout2.samsung.com> for
- linux-ide@vger.kernel.org; Tue, 15 Apr 2014 00:53:47 +0900 (KST)
-In-reply-to: <1397486055-16303-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mailout4.samsung.com ([203.254.224.34]:12366 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751445AbaDNQAP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Apr 2014 12:00:15 -0400
+In-reply-to: <CAOh2x=n8PGuykczfpi0T1-WwVmakURyX+RuuOQiFVhpYPmrS6A@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Tejun Heo <tj@kernel.org>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Gregory Clement <gregory.clement@free-electrons.com>, Tawfik Bayouk <tawfik@marvell.com>, Nadav Haklai <nadavh@marvell.com>, Lior Amsalem <alior@marvell.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+To: Viresh Kumar <viresh.kumar@linaro.org>
+Cc: Tejun Heo <tj@kernel.org>, Shiraz Hashim <shiraz.hashim@st.com>, "...)" <linux-ide@vger.kernel.org>, spear-devel <spear-devel@list.st.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
 
 Hi,
 
-On Monday, April 14, 2014 04:34:10 PM Thomas Petazzoni wrote:
-> Hello,
+On Tuesday, April 01, 2014 09:50:42 AM Viresh Kumar wrote:
+> On Mon, Mar 31, 2014 at 11:19 PM, Bartlomiej Zolnierkiewicz
+> <b.zolnierkie@samsung.com> wrote:
+> > Add missing cf_exit() and clk_put() calls to ata_host_activate()
+> > failure path.
+> >
+> > Cc: Viresh Kumar <viresh.linux@gmail.com>
+> > Cc: Shiraz Hashim <shiraz.hashim@st.com>
+> > Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+> > ---
+> >  drivers/ata/pata_arasan_cf.c |   10 ++++++++--
+> >  1 file changed, 8 insertions(+), 2 deletions(-)
+> >
+> > Index: b/drivers/ata/pata_arasan_cf.c
+> > ===================================================================
+> > --- a/drivers/ata/pata_arasan_cf.c      2014-03-31 16:57:47.443727785 +0200
+> > +++ b/drivers/ata/pata_arasan_cf.c      2014-03-31 17:09:48.171715498 +0200
+> > @@ -898,9 +898,15 @@ static int arasan_cf_probe(struct platfo
+> >
+> >         cf_card_detect(acdev, 0);
+> >
+> > -       return ata_host_activate(host, acdev->irq, irq_handler, 0,
+> > -                       &arasan_cf_sht);
+> > +       ret = ata_host_activate(host, acdev->irq, irq_handler, 0,
+> > +                               &arasan_cf_sht);
+> > +       if (ret)
+> > +               goto exit_cf;
+> >
+> > +       return 0;
 > 
-> The Marvell Armada 38x ARM processors use an AHCI compatible interface
-> for SATA (in replacement of the Marvell-specific SATA interface,
-> handled by the sata_mv driver). However, like all DMA-capable Marvell
-> interfaces, some specific MBus window configuration must be done, so a
-> small specific glue layer is needed, which relies on the recently
-> introduced libahci_platform.c.
+> Probably this would be better:
 > 
-> Changes since v1:
+> if (!ret)
+>     return 0
 > 
->  * Rebased on top of v3.15-rc1
-> 
->  * Added a preliminary patch that orders alphabetically the list of
->    compatible strings in the DT binding document
->    ahci-platform.txt. Suggested by Andrew Lunn.
-> 
->  * Made the availability of MBus DRAM window informations
->    mandatory. Suggested by Andrew Lunn.
-> 
->  * Fixed the module alias name. Suggested by Bartlomiej
->    Zolnierkiewicz.
+> and then no need of a goto..
 
-Well, you could have also added a comment explaining the lack of
-the Power Management support..
+I considered doing it this way initially but decided that code consistency
+with other host drivers is more important.  However if this is what you
+prefer I'll re-do the patch and post it as v2.
 
-> Details of the patches:
-> 
->  * The first patch is a DT binding documentation cleanup. I believe it
->    should be taken by the ATA maintainer, because the second patch
->    (driver patch) depends on it.
-> 
->  * The second patch of this series contains the driver itself, which
->    is fairly straight-forward. It should be taken by Tejun Heo as the
->    ATA maintainer.
-> 
->  * The last three patches add the Device Tree and defconfig
->    changes. They should be taken by the respective ARM maintainers
->    (mvebu maintainers for the DT and mvebu_v7_defconfig, and arm-soc
->    maintainers for the multi_v7_defconfig change).
-
-Anyway, all patches look OK to me.
-
-Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-
-> Thanks!
-> 
-> Thomas
-> 
-> Thomas Petazzoni (5):
->   Documentation: dt-bindings: reformat and order list of ahci-platform
->     compatibles
->   ata: ahci_mvebu: new driver for Marvell Armada 380 AHCI interfaces
->   ARM: mvebu: add Device Tree description of AHCI interfaces on Armada
->     38x
->   ARM: configs: add ahci_mvebu to mvebu_v7_defconfig
->   ARM: configs: add ahci_mvebu to multi_v7_defconfig
-> 
->  .../devicetree/bindings/ata/ahci-platform.txt      |  13 ++-
->  arch/arm/boot/dts/armada-385-db.dts                |   8 ++
->  arch/arm/boot/dts/armada-38x.dtsi                  |  16 +++
->  arch/arm/configs/multi_v7_defconfig                |   1 +
->  arch/arm/configs/mvebu_v7_defconfig                |   1 +
->  drivers/ata/Kconfig                                |   9 ++
->  drivers/ata/Makefile                               |   1 +
->  drivers/ata/ahci_mvebu.c                           | 107 +++++++++++++++++++++
->  8 files changed, 152 insertions(+), 4 deletions(-)
->  create mode 100644 drivers/ata/ahci_mvebu.c
+> > +
+> > +exit_cf:
+> > +       cf_exit(acdev);
+> >  free_clk:
+> >         clk_put(acdev->clk);
+> >         return ret;
+> >
 
 Best regards,
 --
