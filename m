@@ -1,23 +1,31 @@
-From: Andrew Lunn <andrew@lunn.ch>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 Subject: Re: [PATCH v2 0/5] Support for Marvell AHCI interface on Armada 38x
-Date: Mon, 14 Apr 2014 17:21:07 +0200
-Message-ID: <20140414152107.GD22546@lunn.ch>
+Date: Mon, 14 Apr 2014 17:53:37 +0200
+Message-ID: <16639486.i0jTGsaDYr@amdc1032>
 References: <1397486055-16303-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vps0.lunn.ch ([178.209.37.122]:55349 "EHLO vps0.lunn.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754822AbaDNPXZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 14 Apr 2014 11:23:25 -0400
-Content-Disposition: inline
-In-Reply-To: <1397486055-16303-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mailout2.samsung.com ([203.254.224.25]:22648 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754315AbaDNPxs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Apr 2014 11:53:48 -0400
+Received: from epcpsbgm2.samsung.com (epcpsbgm2 [203.254.230.27])
+ by mailout2.samsung.com
+ (Oracle Communications Messaging Server 7u4-24.01(7.0.4.24.0) 64bit (built Nov
+ 17 2011)) with ESMTP id <0N4100C0S2TNDO50@mailout2.samsung.com> for
+ linux-ide@vger.kernel.org; Tue, 15 Apr 2014 00:53:47 +0900 (KST)
+In-reply-to: <1397486055-16303-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Tejun Heo <tj@kernel.org>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Gregory Clement <gregory.clement@free-electrons.com>, Tawfik Bayouk <tawfik@marvell.com>, Nadav Haklai <nadavh@marvell.com>, Lior Amsalem <alior@marvell.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: Tejun Heo <tj@kernel.org>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Gregory Clement <gregory.clement@free-electrons.com>, Tawfik Bayouk <tawfik@marvell.com>, Nadav Haklai <nadavh@marvell.com>, Lior Amsalem <alior@marvell.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 
-On Mon, Apr 14, 2014 at 04:34:10PM +0200, Thomas Petazzoni wrote:
+
+Hi,
+
+On Monday, April 14, 2014 04:34:10 PM Thomas Petazzoni wrote:
 > Hello,
 > 
 > The Marvell Armada 38x ARM processors use an AHCI compatible interface
@@ -41,12 +49,9 @@ On Mon, Apr 14, 2014 at 04:34:10PM +0200, Thomas Petazzoni wrote:
 >  * Fixed the module alias name. Suggested by Bartlomiej
 >    Zolnierkiewicz.
 
-Acked-by: Andrew Lunn <andrew@lunn.ch>
+Well, you could have also added a comment explaining the lack of
+the Power Management support..
 
-	  Andrew
-
-
-> 
 > Details of the patches:
 > 
 >  * The first patch is a DT binding documentation cleanup. I believe it
@@ -61,7 +66,11 @@ Acked-by: Andrew Lunn <andrew@lunn.ch>
 >    changes. They should be taken by the respective ARM maintainers
 >    (mvebu maintainers for the DT and mvebu_v7_defconfig, and arm-soc
 >    maintainers for the multi_v7_defconfig change).
-> 
+
+Anyway, all patches look OK to me.
+
+Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+
 > Thanks!
 > 
 > Thomas
@@ -85,7 +94,10 @@ Acked-by: Andrew Lunn <andrew@lunn.ch>
 >  drivers/ata/ahci_mvebu.c                           | 107 +++++++++++++++++++++
 >  8 files changed, 152 insertions(+), 4 deletions(-)
 >  create mode 100644 drivers/ata/ahci_mvebu.c
-> 
-> -- 
-> 1.8.3.2
-> 
+
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
+
