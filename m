@@ -1,92 +1,77 @@
 From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: [PATCHv3 0/5] Support for Marvell AHCI interface on Armada 38x
-Date: Tue, 15 Apr 2014 17:00:01 +0200
-Message-ID: <1397574006-5868-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Subject: [PATCHv3 3/5] ARM: mvebu: add Device Tree description of AHCI interfaces on Armada 38x
+Date: Tue, 15 Apr 2014 17:00:04 +0200
+Message-ID: <1397574006-5868-4-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1397574006-5868-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:41239 "EHLO
+Received: from top.free-electrons.com ([176.31.233.9]:41268 "EHLO
 	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750999AbaDOPAJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Apr 2014 11:00:09 -0400
+	with ESMTP id S1750770AbaDOPAN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Apr 2014 11:00:13 -0400
+In-Reply-To: <1397574006-5868-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Gregory Clement <gregory.clement@free-electrons.com>
 Cc: Tawfik Bayouk <tawfik@marvell.com>, Nadav Haklai <nadavh@marvell.com>, Lior Amsalem <alior@marvell.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
-Hello,
+The Marvell Armada 38x processors contain two AHCI compatible
+interfaces. This commit adds the Device Tree description of those
+interfaces at the SoC level, and also enables them on the Armada 385
+DB platform, which allows access to both interfaces through SATA
+ports.
 
-The Marvell Armada 38x ARM processors use an AHCI compatible interface
-for SATA (in replacement of the Marvell-specific SATA interface,
-handled by the sata_mv driver). However, like all DMA-capable Marvell
-interfaces, some specific MBus window configuration must be done, so a
-small specific glue layer is needed, which relies on the recently
-introduced libahci_platform.c.
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ arch/arm/boot/dts/armada-385-db.dts |  8 ++++++++
+ arch/arm/boot/dts/armada-38x.dtsi   | 16 ++++++++++++++++
+ 2 files changed, 24 insertions(+)
 
-Changes since v2:
-
- * Added Acked-by from Andrew Lunn <andrew@lunn.ch> on the first
-   patch.
-
- * Added comment in the code to explain why we don't have
-   suspend/resume support for now. Suggested by Bartlomiej
-   Zolnierkiewicz.
-
- * Added a ahci_mvebu_regret_option() function which enables the
-   vendor-specific regret bit, which allows to solve a potential
-   deadlock situation in the AHCI interface.
-
-Changes since v1:
-
- * Rebased on top of v3.15-rc1
-
- * Added a preliminary patch that orders alphabetically the list of
-   compatible strings in the DT binding document
-   ahci-platform.txt. Suggested by Andrew Lunn.
-
- * Made the availability of MBus DRAM window informations
-   mandatory. Suggested by Andrew Lunn.
-
- * Fixed the module alias name. Suggested by Bartlomiej
-   Zolnierkiewicz.
-
-Details of the patches:
-
- * The first patch is a DT binding documentation cleanup. I believe it
-   should be taken by the ATA maintainer, because the second patch
-   (driver patch) depends on it.
-
- * The second patch of this series contains the driver itself, which
-   is fairly straight-forward. It should be taken by Tejun Heo as the
-   ATA maintainer.
-
- * The last three patches add the Device Tree and defconfig
-   changes. They should be taken by the respective ARM maintainers
-   (mvebu maintainers for the DT and mvebu_v7_defconfig, and arm-soc
-   maintainers for the multi_v7_defconfig change).
-
-Thanks!
-
-Thomas
-
-Thomas Petazzoni (5):
-  Documentation: dt-bindings: reformat and order list of ahci-platform
-    compatibles
-  ata: ahci_mvebu: new driver for Marvell Armada 380 AHCI interfaces
-  ARM: mvebu: add Device Tree description of AHCI interfaces on Armada
-    38x
-  ARM: configs: add ahci_mvebu to mvebu_v7_defconfig
-  ARM: configs: add ahci_mvebu to multi_v7_defconfig
-
- .../devicetree/bindings/ata/ahci-platform.txt      |  13 ++-
- arch/arm/boot/dts/armada-385-db.dts                |   8 ++
- arch/arm/boot/dts/armada-38x.dtsi                  |  16 +++
- arch/arm/configs/multi_v7_defconfig                |   1 +
- arch/arm/configs/mvebu_v7_defconfig                |   1 +
- drivers/ata/Kconfig                                |   9 ++
- drivers/ata/Makefile                               |   1 +
- drivers/ata/ahci_mvebu.c                           | 127 +++++++++++++++++++++
- 8 files changed, 172 insertions(+), 4 deletions(-)
- create mode 100644 drivers/ata/ahci_mvebu.c
-
+diff --git a/arch/arm/boot/dts/armada-385-db.dts b/arch/arm/boot/dts/armada-385-db.dts
+index 6828d77..bdde8ff 100644
+--- a/arch/arm/boot/dts/armada-385-db.dts
++++ b/arch/arm/boot/dts/armada-385-db.dts
+@@ -81,6 +81,14 @@
+ 				};
+ 			};
+ 
++			sata@a8000 {
++				status = "okay";
++			};
++
++			sata@e0000 {
++				status = "okay";
++			};
++
+ 			flash@d0000 {
+ 				status = "okay";
+ 				num-cs = <1>;
+diff --git a/arch/arm/boot/dts/armada-38x.dtsi b/arch/arm/boot/dts/armada-38x.dtsi
+index a064f59..634a020 100644
+--- a/arch/arm/boot/dts/armada-38x.dtsi
++++ b/arch/arm/boot/dts/armada-38x.dtsi
+@@ -338,6 +338,22 @@
+ 				reg = <0x72004 0x4>;
+ 			};
+ 
++			sata@a8000 {
++				compatible = "marvell,armada-380-ahci";
++				reg = <0xa8000 0x2000>;
++				interrupts = <GIC_SPI 26 IRQ_TYPE_LEVEL_HIGH>;
++				clocks = <&gateclk 15>;
++				status = "disabled";
++			};
++
++			sata@e0000 {
++				compatible = "marvell,armada-380-ahci";
++				reg = <0xe0000 0x2000>;
++				interrupts = <GIC_SPI 28 IRQ_TYPE_LEVEL_HIGH>;
++				clocks = <&gateclk 30>;
++				status = "disabled";
++			};
++
+ 			coredivclk: clock@e4250 {
+ 				compatible = "marvell,armada-380-corediv-clock";
+ 				reg = <0xe4250 0xc>;
 -- 
 1.9.2
 
