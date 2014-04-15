@@ -1,44 +1,145 @@
-From: Peter Foley <pefoley2@pefoley.com>
-Subject: [PATCH] ata: fix kconfig selection warning
-Date: Tue, 15 Apr 2014 13:50:55 -0400
-Message-ID: <1397584255-15038-1-git-send-email-pefoley2@pefoley.com>
+From: David Milburn <dmilburn@redhat.com>
+Subject: Re: [PATCH] libahci: ahci interrupt check for disabled port since private_data may be NULL
+Date: Tue, 15 Apr 2014 13:18:12 -0500
+Message-ID: <20140415181812.GA11614@dhcp-10-15-1-70.hsv.redhat.com>
+References: <1397512038-8419-1-git-send-email-dmilburn@redhat.com> <20140415163309.GB30990@htj.dyndns.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f173.google.com ([209.85.216.173]:33404 "EHLO
-	mail-qc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750993AbaDORvb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Apr 2014 13:51:31 -0400
-Received: by mail-qc0-f173.google.com with SMTP id r5so10617655qcx.4
-        for <linux-ide@vger.kernel.org>; Tue, 15 Apr 2014 10:51:30 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:38686 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754167AbaDOSIv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 15 Apr 2014 14:08:51 -0400
+Content-Disposition: inline
+In-Reply-To: <20140415163309.GB30990@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Peter Foley <pefoley2@pefoley.com>, tj@kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, agordeev@redhat.com
 
-When building with COMPILE_TEST, AHCI_XGENE is enabled even though
-PHY_XGENE (which it selects) requires OF to be enabled.
-Fix this by adding a dependency on OF to AHCI_XGENE.
+On Tue, Apr 15, 2014 at 12:33:09PM -0400, Tejun Heo wrote:
+> (cc'ing Alexander)
+> 
+> On Mon, Apr 14, 2014 at 04:47:18PM -0500, David Milburn wrote:
+> > System may crash in ahci_hw_interrupt() or ahci_thread_fn() when accessing
+> > the interrupt status in a port's private_data if the port is actually a
+> > DUMMY port.
+> > 
+> > # lspci | grep ATA
+> > 00:1f.2 SATA controller: Intel Corporation 82801JI (ICH10 Family) SATA AHCI Controller
+> > 
+> > # systemctl status kdump (to ensure kdump service is running)
+> > # echo c > /proc/sysrq-trigger
+> > 
+> > <snip console output for linux-3.15-rc1>
+> ...
+> > [   10.375452] BUG: unable to handle kernel NULL pointer dereference at 000000000000003c
+> > [   10.384217] IP: [<ffffffffa0133df0>] ahci_hw_interrupt+0x100/0x130 [libahci]
+> ...
+> > [   10.559121] Call Trace:
+> > [   10.561849]  <IRQ> 
+> > [   10.563994]  [<ffffffff810c2a1e>] handle_irq_event_percpu+0x3e/0x1a0
+> > [   10.571309]  [<ffffffff810c2bbd>] handle_irq_event+0x3d/0x60
+> > [   10.577631]  [<ffffffff810c4fdd>] try_one_irq.isra.6+0x8d/0xf0
+> > [   10.584142]  [<ffffffff810c5313>] note_interrupt+0x173/0x1f0
+> > [   10.590460]  [<ffffffff810c2a8e>] handle_irq_event_percpu+0xae/0x1a0
+> > [   10.597554]  [<ffffffff810c2bbd>] handle_irq_event+0x3d/0x60
+> > [   10.603872]  [<ffffffff810c5727>] handle_edge_irq+0x77/0x130
+> > [   10.610199]  [<ffffffff81014b8f>] handle_irq+0xbf/0x150
+> > [   10.616040]  [<ffffffff8109ff4e>] ? vtime_account_idle+0xe/0x50
+> > [   10.622654]  [<ffffffff815fca1a>] ? atomic_notifier_call_chain+0x1a/0x20
+> > [   10.630140]  [<ffffffff816038cf>] do_IRQ+0x4f/0xf0
+> > [   10.635490]  [<ffffffff815f8aed>] common_interrupt+0x6d/0x6d
+> > [   10.641805]  <EOI> 
+> > [   10.643950]  [<ffffffff8149ca9f>] ? cpuidle_enter_state+0x4f/0xc0
+> > [   10.650972]  [<ffffffff8149ca98>] ? cpuidle_enter_state+0x48/0xc0
+> > [   10.657775]  [<ffffffff8149cb47>] cpuidle_enter+0x17/0x20
+> > [   10.663807]  [<ffffffff810b0070>] cpu_startup_entry+0x2c0/0x3d0
+> > [   10.670423]  [<ffffffff815dfcc7>] rest_init+0x77/0x80
+> > [   10.676065]  [<ffffffff81a60f47>] start_kernel+0x40f/0x41a
+> > [   10.682190]  [<ffffffff81a60941>] ? repair_env_string+0x5c/0x5c
+> > [   10.688799]  [<ffffffff81a60120>] ? early_idt_handlers+0x120/0x120
+> > [   10.695699]  [<ffffffff81a605ee>] x86_64_start_reservations+0x2a/0x2c
+> > [   10.702889]  [<ffffffff81a60733>] x86_64_start_kernel+0x143/0x152
+> ...
+> > diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+> > index 6bd4f66..401924e 100644
+> > --- a/drivers/ata/libahci.c
+> > +++ b/drivers/ata/libahci.c
+> > @@ -1791,9 +1791,14 @@ irqreturn_t ahci_thread_fn(int irq, void *dev_instance)
+> >  	u32 status;
+> >  
+> >  	spin_lock_irqsave(&ap->host->lock, flags);
+> > -	status = pp->intr_status;
+> > -	if (status)
+> > -		pp->intr_status = 0;
+> > +	if (!ata_port_is_dummy(ap)) {
+> > +			status = pp->intr_status;
+> > +			if (status)
+> > +				pp->intr_status = 0;
+> > +	} else {
+> > +		spin_unlock_irqrestore(&ap->host->lock, flags);
+> > +		return IRQ_HANDLED;
+> > +	}
+> >  	spin_unlock_irqrestore(&ap->host->lock, flags);
+> >  
+> >  	spin_lock_bh(ap->lock);
+> > @@ -1833,8 +1838,11 @@ irqreturn_t ahci_hw_interrupt(int irq, void *dev_instance)
+> >  	irq_stat = readl(mmio + HOST_IRQ_STAT);
+> >  
+> >  	if (!irq_stat) {
+> > -		u32 status = pp->intr_status;
+> > +		u32 status = 0;
+> >  
+> > +		if (!ata_port_is_dummy(ap_this))
+> > +			status = pp->intr_status;
+> > +
+> >  		spin_unlock(&host->lock);
+> >  
+> >  		VPRINTK("EXIT\n");
+> 
+> I kinda really dislike that we're littering interrupt handling path
+> instead of ensuring that this doesn't happen for dummy ports.
+> Alexander, do we need to request irqs for dummy ports?  If so,
+> wouldn't it be better to use noop handlers than doing the above?
+> 
+> Thanks.
+> 
+> -- 
+> tejun
 
-warning: (AHCI_XGENE) selects PHY_XGENE which has unmet direct
-dependencies (HAS_IOMEM && OF && (ARM64 || COMPILE_TEST))
+Hi Tejun, Alexander,
 
-Signed-off-by: Peter Foley <pefoley2@pefoley.com>
----
- drivers/ata/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This patch also solves the problem, would this better?
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 20e03a7..071f399 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -134,7 +134,7 @@ config AHCI_SUNXI
+Thanks,
+David
+
+ drivers/ata/ahci.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 5a0bf8e..831b1b4 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1236,14 +1236,14 @@ int ahci_host_activate(struct ata_host *host, int irq, unsigned int n_msis)
+ 		struct ahci_port_priv *pp = host->ports[i]->private_data;
  
- config AHCI_XGENE
- 	tristate "APM X-Gene 6.0Gbps AHCI SATA host controller support"
--	depends on ARM64 || COMPILE_TEST
-+	depends on OF && (ARM64 || COMPILE_TEST)
- 	select PHY_XGENE
- 	help
- 	 This option enables support for APM X-Gene SoC SATA host controller.
--- 
-1.9.2
-
+ 		/* pp is NULL for dummy ports */
+-		if (pp)
++		if (pp) {
+ 			desc = pp->irq_desc;
+-		else
+-			desc = dev_driver_string(host->dev);
+ 
+-		rc = devm_request_threaded_irq(host->dev,
+-			irq + i, ahci_hw_interrupt, ahci_thread_fn, IRQF_SHARED,
+-			desc, host->ports[i]);
++			rc = devm_request_threaded_irq(host->dev,
++						       irq + i, ahci_hw_interrupt, ahci_thread_fn, IRQF_SHARED,
++						       desc, host->ports[i]);
++		}
++
+ 		if (rc)
+ 			goto out_free_irqs;
+ 	}
