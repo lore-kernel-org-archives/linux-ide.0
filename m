@@ -1,26 +1,49 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata/ahci: accommodate tag ordered controllers
-Date: Wed, 16 Apr 2014 16:29:06 -0400
-Message-ID: <20140416202906.GA26632@htj.dyndns.org>
-References: <20140331183458.32378.97892.stgit@viggo.jf.intel.com>
+Subject: Re: [PATCH V2 2/2] ahci: add support for Hisilicon sata
+Date: Wed, 16 Apr 2014 16:49:17 -0400
+Message-ID: <20140416204917.GB26632@htj.dyndns.org>
+References: <1397107468-640-1-git-send-email-wangkefeng.wang@huawei.com>
+ <1397107468-640-3-git-send-email-wangkefeng.wang@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qc0-f179.google.com ([209.85.216.179]:33134 "EHLO
+	mail-qc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754802AbaDPUtV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Apr 2014 16:49:21 -0400
 Content-Disposition: inline
-In-Reply-To: <20140331183458.32378.97892.stgit@viggo.jf.intel.com>
-Sender: stable-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-ide@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>, Ed Ciechanowski <ed.ciechanowski@intel.com>, stable@vger.kernel.org
+In-Reply-To: <1397107468-640-3-git-send-email-wangkefeng.wang@huawei.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Kefeng Wang <wangkefeng.wang@huawei.com>
+Cc: Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, guohanjun@huawei.com, Kefeng Wang <kefeng.wang@linaro.org>
 
-Hello, Dan.
+Hello,
 
-On Mon, Mar 31, 2014 at 11:35:14AM -0700, Dan Williams wrote:
-...
-> +	for (i = 0; i < ATA_MAX_QUEUE; i++) {
-> +		tag = (i + ap->tag_order) & (ATA_MAX_QUEUE - 1);
+On Thu, Apr 10, 2014 at 01:24:28PM +0800, Kefeng Wang wrote:
+> From: Kefeng Wang <kefeng.wang@linaro.org>
+> 
+> The hip04 SoC of hisilicon has an AHCI compliant SATA controller,
+> and it is compliant with the ahci 1.3 and sata 3.0 specification.
+> 
+> There is a wrong bit in HOST_CAP of hip04 sata controller, which
+> enable unsupported feature of FBS, use AHCI_HFLAG_NO_FBS hflag to
+> disable it.
+> 
+> Cc: Hans de Geode <hdegoede@redhat.com>
+> Signed-off-by: Kefeng Wang <kefeng.wang@linaro.org>
+> @@ -54,8 +55,10 @@ static int ahci_probe(struct platform_device *pdev)
+>  		if (rc)
+>  			goto disable_resources;
+>  	}
+> +	if (of_device_is_compatible(pdev->dev.of_node, "hisilicon,hisi-ahci"))
+> +		pi.private_data = (void *)AHCI_HFLAG_NO_FBS;
 
-Can you please change the last modular to % ATA_MAX_QUEUE?
+Hmmm.... this should work but looks a bit tedious and it could be
+better to have a better mechanism to match devices to their
+port_infos.  Hans, can you please comment?  If getting something more
+structured is too much work, I can go with this but wanna find out
+whether that's the case.
 
 Thanks.
 
