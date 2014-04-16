@@ -1,46 +1,39 @@
-From: Shawn Guo <shawn.guo@freescale.com>
-Subject: Re: [PATCH 1/2] ahci: imx: use macros to define registers and bits
-Date: Wed, 16 Apr 2014 16:08:50 +0800
-Message-ID: <20140416080849.GL2523@dragon>
-References: <1397529703-21165-1-git-send-email-shawn.guo@freescale.com>
- <20140416075957.GR5969@pengutronix.de>
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: [PATCH 0/5] imx ahci DT updates + cubox-i eSATA support
+Date: Wed, 16 Apr 2014 09:42:27 +0100
+Message-ID: <20140416084227.GD24070@n2100.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ch1ehsobe003.messaging.microsoft.com ([216.32.181.183]:22303
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754544AbaDPII7 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 16 Apr 2014 04:08:59 -0400
+Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:36117 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751107AbaDPInK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Apr 2014 04:43:10 -0400
 Content-Disposition: inline
-In-Reply-To: <20140416075957.GR5969@pengutronix.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@pengutronix.de>
-Cc: linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-arm-kernel@lists.infradead.org
+To: linux-arm-kernel@lists.infradead.org
+Cc: devicetree@vger.kernel.org, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, linux-ide@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>, Pawel Moll <pawel.moll@arm.com>, Rob Herring <robh+dt@kernel.org>, Sascha Hauer <kernel@pengutronix.de>, Shawn Guo <shawn.guo@freescale.com>, Tejun Heo <tj@kernel.org>
 
-On Wed, Apr 16, 2014 at 09:59:57AM +0200, Uwe Kleine-K=F6nig wrote:
-> On Tue, Apr 15, 2014 at 10:41:42AM +0800, Shawn Guo wrote:
-> > diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
-> > index 497c7ab..39629b4 100644
-> > --- a/drivers/ata/ahci_imx.c
-> > +++ b/drivers/ata/ahci_imx.c
-> > @@ -28,11 +28,9 @@
-> >  #include <linux/libata.h>
-> >  #include "ahci.h"
-> > =20
-> > -enum {
-> > -	PORT_PHY_CTL =3D 0x178,			/* Port0 PHY Control */
-> > -	PORT_PHY_CTL_PDDQ_LOC =3D 0x100000,	/* PORT_PHY_CTL bits */
-> > -	HOST_TIMER1MS =3D 0xe0,			/* Timer 1-ms */
-> > -};
-> > +#define IMX_SATA_TIMER1MS			0x00e0
-> > +#define IMX_SATA_P0PHYCR			0x0178
-> > +#define  P0PHYCR_TEST_PDDQ			(1 << 20)
-> Did you intentionally not namespace the bit mask?
+The following series adds several DT properties to the iMX ahci driver,
+which are necessary to configure the electrical characteristics of the
+SATA interface.
 
-Yes, with the intention to make the bit names a little shorter.
+The required electrical characteristics are board dependent, so the
+existing solution where the parameters are hard-coded for the first
+board(s) which came along is completely rediculous, and cause their
+own set of problems: we have to default to these parameters when no
+properties are given, and it means we have to use negative properties
+to turn stuff off rather than positive properties to enable features.
 
-Shawn
+Yes, I know that the required Documentation/devicetree file is missing,
+I couldn't find the existing file to update for this driver with the
+new properties. :)
 
+ arch/arm/boot/dts/imx6q-cubox-i.dts |   4 +
+ drivers/ata/ahci_imx.c              | 188 ++++++++++++++++++++++++++++++++++--
+ 2 files changed, 184 insertions(+), 8 deletions(-)
+
+-- 
+FTTC broadband for 0.8mile line: now at 9.7Mbps down 460kbps up... slowly
+improving, and getting towards what was expected from it.
