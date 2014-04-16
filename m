@@ -1,53 +1,46 @@
-From: Jason Cooper <jason@lakedaemon.net>
-Subject: Re: [PATCH v2 0/5] Support for Marvell AHCI interface on Armada 38x
-Date: Wed, 16 Apr 2014 13:07:05 -0400
-Message-ID: <20140416170705.GK28159@titan.lakedaemon.net>
-References: <1397486055-16303-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <16639486.i0jTGsaDYr@amdc1032>
- <20140414180142.0dd63a1f@skate>
- <10589751.qhi630WAFs@amdc1032>
- <20140414181920.1e309019@skate>
- <20140414174606.GB10416@htj.dyndns.org>
- <20140414204455.5d83513d@skate>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] ahci: do not request irq for dummy port
+Date: Wed, 16 Apr 2014 13:22:14 -0400
+Message-ID: <20140416172203.GL1257@htj.dyndns.org>
+References: <1397666626-15163-1-git-send-email-dmilburn@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mho-02-ewr.mailhop.org ([204.13.248.72]:60061 "EHLO
-	mho-02-ewr.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751529AbaDPRHZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Apr 2014 13:07:25 -0400
+Received: from mail-qa0-f48.google.com ([209.85.216.48]:48840 "EHLO
+	mail-qa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753801AbaDPRWS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Apr 2014 13:22:18 -0400
+Received: by mail-qa0-f48.google.com with SMTP id s7so10306651qap.21
+        for <linux-ide@vger.kernel.org>; Wed, 16 Apr 2014 10:22:17 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <20140414204455.5d83513d@skate>
+In-Reply-To: <1397666626-15163-1-git-send-email-dmilburn@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Tejun Heo <tj@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Gregory Clement <gregory.clement@free-electrons.com>, Tawfik Bayouk <tawfik@marvell.com>, Nadav Haklai <nadavh@marvell.com>, Lior Amsalem <alior@marvell.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+To: David Milburn <dmilburn@redhat.com>
+Cc: linux-ide@vger.kernel.org, agordeev@redhat.com
 
-On Mon, Apr 14, 2014 at 08:44:55PM +0200, Thomas Petazzoni wrote:
-> On Mon, 14 Apr 2014 13:46:06 -0400, Tejun Heo wrote:
-> > Also, how do you want the patches to be routed?  Can all go through libata?
+On Wed, Apr 16, 2014 at 11:43:46AM -0500, David Milburn wrote:
+> System may crash in ahci_hw_interrupt() or ahci_thread_fn() when accessing
+> the interrupt status in a port's private_data if the port is actually a
+> DUMMY port.
 > 
-> As written in the cover letter, I'd expect patches 1 and 2 to go
-> through libata, and then patches 3, 4 and 5 to go through arm-soc. The
-> reason is that patches 3, 4 and 5 modifies the Device Tree files and
-> the ARM defconfigs, which are likely to also be changed by other
-> commits in the same cycle. However, the DT binding documentation change
-> and the driver change are independent, so they can go through libata.
+> # lspci | grep ATA
+> 00:1f.2 SATA controller: Intel Corporation 82801JI (ICH10 Family) SATA AHCI Controller
 > 
-> I guess Jason Cooper, who handles the patch merging for mvebu
-> platforms, can confirm (or not?) this proposal.
+> # systemctl status kdump (to ensure kdump service is running)
+> # echo c > /proc/sysrq-trigger
+> 
+> <snip console output for linux-3.15-rc1>
+...
+> 
+> Cc: Alexander Gordeev <agordeev@redhat.com>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: <stable@vger.kernel.org>
+> Signed-of-by: David Milburn <dmilburn@redhat.com>
 
-Yep, this is how we do it.  The only caveat is if there are going to be
-changes during this window that depend on the driver changes in this
-series.  Then we would ask to set up a topic branch.
+Applied to libata/for-3.15-fixes.
 
-That happens a little more frequently now that we have boards in the
-boot farm testing linux-next and other trees.  It means we also care
-about boot-time dependencies as well as build deps.
+Thanks.
 
-I'll take a closer look at this series in the next few days and let you
-know.
-
-thx,
-
-Jason.
+-- 
+tejun
