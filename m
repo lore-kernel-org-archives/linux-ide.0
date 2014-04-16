@@ -1,39 +1,44 @@
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: [PATCH 0/5] imx ahci DT updates + cubox-i eSATA support
-Date: Wed, 16 Apr 2014 09:42:27 +0100
-Message-ID: <20140416084227.GD24070@n2100.arm.linux.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Russell King <rmk+kernel@arm.linux.org.uk>
+Subject: [PATCH RFC 1/5] ata: ahci_imx: warn when disabling ahci link
+Date: Wed, 16 Apr 2014 09:43:25 +0100
+Message-ID: <E1WaLRF-0002yF-Pj@rmk-PC.arm.linux.org.uk>
+References: <20140416084227.GD24070@n2100.arm.linux.org.uk>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:36117 "EHLO
+Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:36127 "EHLO
 	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751107AbaDPInK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Apr 2014 04:43:10 -0400
-Content-Disposition: inline
+	by vger.kernel.org with ESMTP id S1751107AbaDPIn1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Apr 2014 04:43:27 -0400
+In-Reply-To: <20140416084227.GD24070@n2100.arm.linux.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-arm-kernel@lists.infradead.org
-Cc: devicetree@vger.kernel.org, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, linux-ide@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>, Pawel Moll <pawel.moll@arm.com>, Rob Herring <robh+dt@kernel.org>, Sascha Hauer <kernel@pengutronix.de>, Shawn Guo <shawn.guo@freescale.com>, Tejun Heo <tj@kernel.org>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 
-The following series adds several DT properties to the iMX ahci driver,
-which are necessary to configure the electrical characteristics of the
-SATA interface.
+When the AHCI link is disabled, it can't be re-enabled except by
+resetting the entire SoC.  Rather than doing this silently print
+some kernel messages to inform the user, along with how to avoid
+this.
 
-The required electrical characteristics are board dependent, so the
-existing solution where the parameters are hard-coded for the first
-board(s) which came along is completely rediculous, and cause their
-own set of problems: we have to default to these parameters when no
-properties are given, and it means we have to use negative properties
-to turn stuff off rather than positive properties to enable features.
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+---
+ drivers/ata/ahci_imx.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-Yes, I know that the required Documentation/devicetree file is missing,
-I couldn't find the existing file to update for this driver with the
-new properties. :)
-
- arch/arm/boot/dts/imx6q-cubox-i.dts |   4 +
- drivers/ata/ahci_imx.c              | 188 ++++++++++++++++++++++++++++++++++--
- 2 files changed, 184 insertions(+), 8 deletions(-)
-
+diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+index 497c7abe1c7d..6a56a561a80b 100644
+--- a/drivers/ata/ahci_imx.c
++++ b/drivers/ata/ahci_imx.c
+@@ -160,6 +160,10 @@ static void ahci_imx_error_handler(struct ata_port *ap)
+ 	writel(reg_val | PORT_PHY_CTL_PDDQ_LOC, mmio + PORT_PHY_CTL);
+ 	imx_sata_disable(hpriv);
+ 	imxpriv->no_device = true;
++
++	dev_info(ap->dev, "no device found, disabling link.\n");
++	dev_info(ap->dev, "pass " MODULE_PARAM_PREFIX
++		 ".hotplug=1 to enable hotplug\n");
+ }
+ 
+ static int ahci_imx_softreset(struct ata_link *link, unsigned int *class,
 -- 
-FTTC broadband for 0.8mile line: now at 9.7Mbps down 460kbps up... slowly
-improving, and getting towards what was expected from it.
+1.8.3.1
+
