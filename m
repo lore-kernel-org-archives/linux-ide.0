@@ -1,57 +1,35 @@
-From: David Milburn <dmilburn@redhat.com>
-Subject: Re: [PATCH 1/1] ahci: Do not receive interrupts sent by dummy ports
-Date: Thu, 17 Apr 2014 12:50:50 -0500
-Message-ID: <5350147A.10403@redhat.com>
-References: <cover.1397750166.git.agordeev@redhat.com> <dbaed51ffe73dec1966eba256c3b42ed22ed58f3.1397750166.git.agordeev@redhat.com> <20140417170641.GR15326@htj.dyndns.org>
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH RFC 2/5] ata: ahci_imx: avoid reprobing ahci_imx driver
+	when using DT
+Date: Thu, 17 Apr 2014 19:37:59 +0100
+Message-ID: <20140417183759.GR24070@n2100.arm.linux.org.uk>
+References: <20140416084227.GD24070@n2100.arm.linux.org.uk> <E1WaLRK-0002yJ-T1@rmk-PC.arm.linux.org.uk> <20140417084543.GB22160@dragon>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:19475 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751001AbaDQRvM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 17 Apr 2014 13:51:12 -0400
-In-Reply-To: <20140417170641.GR15326@htj.dyndns.org>
+Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:38830 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751110AbaDQSiq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Apr 2014 14:38:46 -0400
+Content-Disposition: inline
+In-Reply-To: <20140417084543.GB22160@dragon>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Alexander Gordeev <agordeev@redhat.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Shawn Guo <shawn.guo@freescale.com>
+Cc: linux-arm-kernel@lists.infradead.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 
-On 04/17/2014 12:06 PM, Tejun Heo wrote:
-> On Thu, Apr 17, 2014 at 06:06:15PM +0200, Alexander Gordeev wrote:
->> In multiple MSI mode all AHCI ports (including dummy) get
->> assigned separate MSI vectors and (as result of execution
->> pci_enable_msi_exact() function) separate IRQ numbers,
->> (mapped to the MSI vectors).
->>
->> Therefore, although interrupts from dummy ports are not
->> desired they are still enabled. We do not request IRQs
->> for dummy ports, but that only means we do not assign
->> AHCI-specific ISRs to corresponding IRQ numbers.
->>
->> As result, dummy port interrupts still could come and
->> traverse all the way from the PCI device to the kernel,
->> causing unnecessary overhead.
->>
->> This update disables IRQs for dummy ports and prevents
->> the described issue.
->>
->> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
->> Cc: Tejun Heo <tj@kernel.org>
->> Cc: David Milburn <dmilburn@redhat.com>
->> Cc: linux-ide@vger.kernel.org
->
-> David, can you please test the patch?
->
+On Thu, Apr 17, 2014 at 04:45:44PM +0800, Shawn Guo wrote:
+> On Wed, Apr 16, 2014 at 09:43:30AM +0100, Russell King wrote:
+> > Avoid matching our child platform device, which can happen as we copy the
+> > DT node to the child device.  This allows the child platform device to be
+> > matched against the ahci-imx driver and should this happen, it will cause
+> > another platform device to be allocated, resulting in failure.
+> 
+> This is not the case anymore, since commit 90870d7 (ahci-imx: Port to
+> library-ised ahci_platform) is merged into v3.15-rc1.
 
+Thanks, I've moved this patch.
 
-Hi,
-
-I have re-tested successfully, this patch prevents the crash
-when using kdump, and I boot tested a system that boots off
-ahci and has dummy ports present, no problems seen.
-
-Thanks,
-David
-
-
+-- 
+FTTC broadband for 0.8mile line: now at 9.7Mbps down 460kbps up... slowly
+improving, and getting towards what was expected from it.
