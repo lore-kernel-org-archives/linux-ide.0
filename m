@@ -1,42 +1,47 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH V2 2/2] ahci: add support for Hisilicon sata
-Date: Thu, 17 Apr 2014 09:31:51 -0400
-Message-ID: <20140417133151.GC15326@htj.dyndns.org>
-References: <1397107468-640-1-git-send-email-wangkefeng.wang@huawei.com>
- <1397107468-640-3-git-send-email-wangkefeng.wang@huawei.com>
- <20140416204917.GB26632@htj.dyndns.org>
- <534F8733.1080009@redhat.com>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH v2 0/2] ahci: Tweaks to the driver's PCI function
+Date: Thu, 17 Apr 2014 14:36:18 +0200
+Message-ID: <20140417123618.GB2270@dhcp-26-207.brq.redhat.com>
+References: <cover.1397736364.git.agordeev@redhat.com>
+ <20140417132806.GA15326@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <534F8733.1080009@redhat.com>
+In-Reply-To: <20140417132806.GA15326@htj.dyndns.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: Kefeng Wang <wangkefeng.wang@huawei.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, guohanjun@huawei.com, Kefeng Wang <kefeng.wang@linaro.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, Apr 17, 2014 at 09:48:03AM +0200, Hans de Goede wrote:
-> > Hmmm.... this should work but looks a bit tedious and it could be
-> > better to have a better mechanism to match devices to their
-> > port_infos.  Hans, can you please comment?  If getting something more
-> > structured is too much work, I can go with this but wanna find out
-> > whether that's the case.
+On Thu, Apr 17, 2014 at 09:28:06AM -0400, Tejun Heo wrote:
+> On Thu, Apr 17, 2014 at 02:13:48PM +0200, Alexander Gordeev wrote:
+> > Changes since v1:
+> > 	- ahci_is_mrsm() open-coded inside ahci_init_interrupt()
+> > 	- changelog elaborated
+> > 
+> > Cc: linux-ide@vger.kernel.org
+> > 
+> > Alexander Gordeev (2):
+> >   ahci: Ensure "MSI Revert to Single Message" mode is not enforced
+> >   ahci: Use pci_enable_msi_exact() instead of pci_enable_msi_range()
+> > 
+> >  drivers/ata/ahci.c |   19 ++++++++++++++-----
+> >  drivers/ata/ahci.h |    1 +
+> >  2 files changed, 15 insertions(+), 5 deletions(-)
 > 
-> The more structured solution would be v1 of this patch, which I asked
-> Kefan to change since it seemed overkill. But if you prefer that version
-> that is fine with me.
+> Applied to libata/for-3.15-fixes.
 
-I don't care either way at this point but if this grows to a large
-list, having a matching mechanism will probably be more manageable.
+Oh-oh.
+It seems the changelog's demo patch portion applied to the source.
 
-> Note that as I've already mentioned earlier in the thread this could be
-> made somewhat cleaner by having an host_flags parameter to
-> ahci_platform_init_host().
 
-Kefeng, can you please update accordingly to Hans' comment and repost?
-
-Thanks.
+> Thanks.
+> 
+> -- 
+> tejun
 
 -- 
-tejun
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
