@@ -1,35 +1,106 @@
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH RFC 2/5] ata: ahci_imx: avoid reprobing ahci_imx driver
-	when using DT
-Date: Thu, 17 Apr 2014 19:37:59 +0100
-Message-ID: <20140417183759.GR24070@n2100.arm.linux.org.uk>
-References: <20140416084227.GD24070@n2100.arm.linux.org.uk> <E1WaLRK-0002yJ-T1@rmk-PC.arm.linux.org.uk> <20140417084543.GB22160@dragon>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH v2] libata/ahci: accommodate tag ordered controllers
+Date: Thu, 17 Apr 2014 11:48:21 -0700
+Message-ID: <20140417184442.29508.45735.stgit@viggo.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:38830 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751110AbaDQSiq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Apr 2014 14:38:46 -0400
-Content-Disposition: inline
-In-Reply-To: <20140417084543.GB22160@dragon>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>, Ed Ciechanowski <ed.ciechanowski@intel.com>, stable@vger.kernel.org, Matthew Wilcox <matthew.r.wilcox@intel.com>
 List-Id: linux-ide@vger.kernel.org
-To: Shawn Guo <shawn.guo@freescale.com>
-Cc: linux-arm-kernel@lists.infradead.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 
-On Thu, Apr 17, 2014 at 04:45:44PM +0800, Shawn Guo wrote:
-> On Wed, Apr 16, 2014 at 09:43:30AM +0100, Russell King wrote:
-> > Avoid matching our child platform device, which can happen as we copy the
-> > DT node to the child device.  This allows the child platform device to be
-> > matched against the ahci-imx driver and should this happen, it will cause
-> > another platform device to be allocated, resulting in failure.
-> 
-> This is not the case anymore, since commit 90870d7 (ahci-imx: Port to
-> library-ised ahci_platform) is merged into v3.15-rc1.
+The AHCI spec allows implementations to issue commands in tag order
+rather than FIFO order:
 
-Thanks, I've moved this patch.
+	5.3.2.12 P:SelectCmd
+	HBA sets pSlotLoc = (pSlotLoc + 1) mod (CAP.NCS + 1)
+	or HBA selects the command to issue that has had the
+	PxCI bit set to '1' longer than any other command
+	pending to be issued.
 
--- 
-FTTC broadband for 0.8mile line: now at 9.7Mbps down 460kbps up... slowly
-improving, and getting towards what was expected from it.
+The result is that commands posted sequentially (time-wise) may play out
+of sequence when issued by hardware.
+
+This behavior has likely been hidden by drives that arrange for commands
+to complete in issue order.  However, it appears recent drives (two from
+different vendors that we have found so far) inflict out-of-order
+completions as a matter of course.  So, we need to take care to maintain
+ordered submission, otherwise we risk triggering a drive to fall out of
+sequential-io automation and back to random-io processing, which incurs
+large latency and degrades throughput.
+
+This issue was found in simple benchmarks where QD=2 seq-write
+performance was 30-50% *greater* than QD=32 seq-write performance.
+
+Tagging for -stable and making the change globally since it has a low
+risk-to-reward ratio.  Also, word is that recent versions of an unnamed
+OS also does it this way now.  So, drives in the field are already
+experienced with this tag ordering scheme.
+
+Cc: <stable@vger.kernel.org>
+Cc: Dave Jiang <dave.jiang@intel.com>
+Cc: Ed Ciechanowski <ed.ciechanowski@intel.com>
+Reviewed-by: Matthew Wilcox <matthew.r.wilcox@intel.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+Changes since v1: http://marc.info/?l=linux-ide&m=139629092412053&w=2
+* willy: eliminate 1 modulo operation by tracking last tag
+* tj: use modulus operator rather than assuming power-of-two bitwise-AND
+
+ drivers/ata/libata-core.c |   21 +++++++++++++--------
+ include/linux/libata.h    |    1 +
+ 2 files changed, 14 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index c19734d96d7e..bee2fa20eb47 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4792,21 +4792,26 @@ void swap_buf_le16(u16 *buf, unsigned int buf_words)
+ static struct ata_queued_cmd *ata_qc_new(struct ata_port *ap)
+ {
+ 	struct ata_queued_cmd *qc = NULL;
+-	unsigned int i;
++	unsigned int i, tag;
+ 
+ 	/* no command while frozen */
+ 	if (unlikely(ap->pflags & ATA_PFLAG_FROZEN))
+ 		return NULL;
+ 
+-	/* the last tag is reserved for internal command. */
+-	for (i = 0; i < ATA_MAX_QUEUE - 1; i++)
+-		if (!test_and_set_bit(i, &ap->qc_allocated)) {
+-			qc = __ata_qc_from_tag(ap, i);
++	for (i = 0; i < ATA_MAX_QUEUE; i++) {
++		tag = (i + ap->last_tag + 1) % ATA_MAX_QUEUE;
++
++		/* the last tag is reserved for internal command. */
++		if (tag == ATA_TAG_INTERNAL)
++			continue;
++
++		if (!test_and_set_bit(tag, &ap->qc_allocated)) {
++			qc = __ata_qc_from_tag(ap, tag);
++			qc->tag = tag;
++			ap->last_tag = tag;
+ 			break;
+ 		}
+-
+-	if (qc)
+-		qc->tag = i;
++	}
+ 
+ 	return qc;
+ }
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 1de36be64df4..5ab4e3a76721 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -822,6 +822,7 @@ struct ata_port {
+ 	unsigned long		qc_allocated;
+ 	unsigned int		qc_active;
+ 	int			nr_active_links; /* #links with active qcs */
++	unsigned int		last_tag;	/* track next tag hw expects */
+ 
+ 	struct ata_link		link;		/* host default link */
+ 	struct ata_link		*slave_link;	/* see ata_slave_link_init() */
