@@ -1,47 +1,38 @@
-From: Kefeng Wang <wangkefeng.wang@huawei.com>
-Subject: Re: [PATCH V2 2/2] ahci: add support for Hisilicon sata
-Date: Fri, 18 Apr 2014 09:07:12 +0800
-Message-ID: <53507AC0.4020602@huawei.com>
-References: <1397107468-640-1-git-send-email-wangkefeng.wang@huawei.com> <1397107468-640-3-git-send-email-wangkefeng.wang@huawei.com> <20140416204917.GB26632@htj.dyndns.org> <534F8733.1080009@redhat.com> <20140417133151.GC15326@htj.dyndns.org>
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: How to cleanly detach port multiplier ( pmp )
+Date: Thu, 17 Apr 2014 21:19:15 -0400
+Message-ID: <53507D93.8020901@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([119.145.14.64]:51605 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750944AbaDRBHu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Apr 2014 21:07:50 -0400
-In-Reply-To: <20140417133151.GC15326@htj.dyndns.org>
+Received: from cdptpa-omtalb.mail.rr.com ([75.180.132.120]:40346 "EHLO
+	cdptpa-omtalb.mail.rr.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751242AbaDRBTR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Apr 2014 21:19:17 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, guohanjun@huawei.com, Kefeng Wang <kefeng.wang@linaro.org>
+To: linux-ide@vger.kernel.org
 
-On 04/17 21:31, Tejun Heo wrote:
-> On Thu, Apr 17, 2014 at 09:48:03AM +0200, Hans de Goede wrote:
->>> Hmmm.... this should work but looks a bit tedious and it could be
->>> better to have a better mechanism to match devices to their
->>> port_infos.  Hans, can you please comment?  If getting something more
->>> structured is too much work, I can go with this but wanna find out
->>> whether that's the case.
->>
->> The more structured solution would be v1 of this patch, which I asked
->> Kefan to change since it seemed overkill. But if you prefer that version
->> that is fine with me.
-> 
-> I don't care either way at this point but if this grows to a large
-> list, having a matching mechanism will probably be more manageable.
-> 
->> Note that as I've already mentioned earlier in the thread this could be
->> made somewhat cleaner by having an host_flags parameter to
->> ahci_platform_init_host().
-> 
-> Kefeng, can you please update accordingly to Hans' comment and repost?
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
 
-Sure, Thanks for the advice from you and Hans, will update.
+I can write to the delete file in the sysfs node for the scsi disk to
+cleanly stop the disk and detach the scsi disk driver, but I can find
+no similar way to delete the ata link, the pmp, the master link to the
+pmp, and disable the ata port.  How are you supposed to disconnect a
+port multiplier without causing the kernel to go into error recovery
+because the link went dead and the device vanished?
 
-> 
-> Thanks.
-> 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
 
-
+iQEcBAEBCgAGBQJTUH2TAAoJEI5FoCIzSKrwhksH/0whe5rWffNrj+aZY+u+o4tQ
+tvNhCNStgxAK6hKi2higHSVHQbO12Vk1JgfNkp0IRDineMkBdGnb3gGFGxgP00V2
+onKcPjIgmTL/0zlMx+MJHZRR3nh+6SkbJhdB2dqCDN1l5i4G9Je2lK2hIxs6DYZN
+zy7vFL2ftvSPIWC8Z/zVZIYhfiGHp7LoVxVAKSFJaPuU7MhHqdHihlUbaCBPMRJs
+YquXAg5euJ98WXSDfqG21hWJgT7L6UnQwV21MnsCuI3euAk83MKQFYClNhewu5kp
+C02WdWLrxNjc32bink/kPCHRgjgCC58YHG4zKxRNlOUFCYERVJk4IR9FeCTt3tw=
+=qvds
+-----END PGP SIGNATURE-----
