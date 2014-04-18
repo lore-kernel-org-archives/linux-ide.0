@@ -1,14 +1,16 @@
 From: Suman Tripathi <stripathi@apm.com>
 Subject: [PATCH 1/2] PHY: Add function set_rate to generic PHY framework
-Date: Fri, 18 Apr 2014 23:33:16 +0530
-Message-ID: <1397844197-13356-2-git-send-email-stripathi@apm.com>
-References: <1397844197-13356-1-git-send-email-stripathi@apm.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1397844197-13356-1-git-send-email-stripathi@apm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Date: Fri, 18 Apr 2014 23:35:54 +0530
+Message-ID: <1397844354-13412-1-git-send-email-stripathi@apm.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from denmail01-v4020.amcc.com ([192.195.68.30]:59609 "EHLO
+	denmail01.apm.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753531AbaDRTEb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Apr 2014 15:04:31 -0400
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: kishon@ti.com, tj@kernel.org
 Cc: olof@lixom.net, arnd@arndb.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
-List-Id: linux-ide@vger.kernel.org
 
 This patch adds function set_rate to the generic PHY framework operation
 structure. This function can be called to instruct the PHY underlying
@@ -101,3 +103,4 @@ index e273e5a..2dfcb34 100644
  	return -ENOSYS;
 --
 1.8.2.1
+
