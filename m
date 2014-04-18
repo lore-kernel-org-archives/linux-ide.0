@@ -1,106 +1,47 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v2] libata/ahci: accommodate tag ordered controllers
-Date: Thu, 17 Apr 2014 11:48:21 -0700
-Message-ID: <20140417184442.29508.45735.stgit@viggo.jf.intel.com>
+From: Kefeng Wang <wangkefeng.wang@huawei.com>
+Subject: Re: [PATCH V2 2/2] ahci: add support for Hisilicon sata
+Date: Fri, 18 Apr 2014 09:07:12 +0800
+Message-ID: <53507AC0.4020602@huawei.com>
+References: <1397107468-640-1-git-send-email-wangkefeng.wang@huawei.com> <1397107468-640-3-git-send-email-wangkefeng.wang@huawei.com> <20140416204917.GB26632@htj.dyndns.org> <534F8733.1080009@redhat.com> <20140417133151.GC15326@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: tj@kernel.org
-Cc: linux-ide@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>, Ed Ciechanowski <ed.ciechanowski@intel.com>, stable@vger.kernel.org, Matthew Wilcox <matthew.r.wilcox@intel.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([119.145.14.64]:51605 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750944AbaDRBHu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Apr 2014 21:07:50 -0400
+In-Reply-To: <20140417133151.GC15326@htj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, guohanjun@huawei.com, Kefeng Wang <kefeng.wang@linaro.org>
 
-The AHCI spec allows implementations to issue commands in tag order
-rather than FIFO order:
+On 04/17 21:31, Tejun Heo wrote:
+> On Thu, Apr 17, 2014 at 09:48:03AM +0200, Hans de Goede wrote:
+>>> Hmmm.... this should work but looks a bit tedious and it could be
+>>> better to have a better mechanism to match devices to their
+>>> port_infos.  Hans, can you please comment?  If getting something more
+>>> structured is too much work, I can go with this but wanna find out
+>>> whether that's the case.
+>>
+>> The more structured solution would be v1 of this patch, which I asked
+>> Kefan to change since it seemed overkill. But if you prefer that version
+>> that is fine with me.
+> 
+> I don't care either way at this point but if this grows to a large
+> list, having a matching mechanism will probably be more manageable.
+> 
+>> Note that as I've already mentioned earlier in the thread this could be
+>> made somewhat cleaner by having an host_flags parameter to
+>> ahci_platform_init_host().
+> 
+> Kefeng, can you please update accordingly to Hans' comment and repost?
 
-	5.3.2.12 P:SelectCmd
-	HBA sets pSlotLoc = (pSlotLoc + 1) mod (CAP.NCS + 1)
-	or HBA selects the command to issue that has had the
-	PxCI bit set to '1' longer than any other command
-	pending to be issued.
+Sure, Thanks for the advice from you and Hans, will update.
 
-The result is that commands posted sequentially (time-wise) may play out
-of sequence when issued by hardware.
+> 
+> Thanks.
+> 
 
-This behavior has likely been hidden by drives that arrange for commands
-to complete in issue order.  However, it appears recent drives (two from
-different vendors that we have found so far) inflict out-of-order
-completions as a matter of course.  So, we need to take care to maintain
-ordered submission, otherwise we risk triggering a drive to fall out of
-sequential-io automation and back to random-io processing, which incurs
-large latency and degrades throughput.
 
-This issue was found in simple benchmarks where QD=2 seq-write
-performance was 30-50% *greater* than QD=32 seq-write performance.
-
-Tagging for -stable and making the change globally since it has a low
-risk-to-reward ratio.  Also, word is that recent versions of an unnamed
-OS also does it this way now.  So, drives in the field are already
-experienced with this tag ordering scheme.
-
-Cc: <stable@vger.kernel.org>
-Cc: Dave Jiang <dave.jiang@intel.com>
-Cc: Ed Ciechanowski <ed.ciechanowski@intel.com>
-Reviewed-by: Matthew Wilcox <matthew.r.wilcox@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
-Changes since v1: http://marc.info/?l=linux-ide&m=139629092412053&w=2
-* willy: eliminate 1 modulo operation by tracking last tag
-* tj: use modulus operator rather than assuming power-of-two bitwise-AND
-
- drivers/ata/libata-core.c |   21 +++++++++++++--------
- include/linux/libata.h    |    1 +
- 2 files changed, 14 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index c19734d96d7e..bee2fa20eb47 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4792,21 +4792,26 @@ void swap_buf_le16(u16 *buf, unsigned int buf_words)
- static struct ata_queued_cmd *ata_qc_new(struct ata_port *ap)
- {
- 	struct ata_queued_cmd *qc = NULL;
--	unsigned int i;
-+	unsigned int i, tag;
- 
- 	/* no command while frozen */
- 	if (unlikely(ap->pflags & ATA_PFLAG_FROZEN))
- 		return NULL;
- 
--	/* the last tag is reserved for internal command. */
--	for (i = 0; i < ATA_MAX_QUEUE - 1; i++)
--		if (!test_and_set_bit(i, &ap->qc_allocated)) {
--			qc = __ata_qc_from_tag(ap, i);
-+	for (i = 0; i < ATA_MAX_QUEUE; i++) {
-+		tag = (i + ap->last_tag + 1) % ATA_MAX_QUEUE;
-+
-+		/* the last tag is reserved for internal command. */
-+		if (tag == ATA_TAG_INTERNAL)
-+			continue;
-+
-+		if (!test_and_set_bit(tag, &ap->qc_allocated)) {
-+			qc = __ata_qc_from_tag(ap, tag);
-+			qc->tag = tag;
-+			ap->last_tag = tag;
- 			break;
- 		}
--
--	if (qc)
--		qc->tag = i;
-+	}
- 
- 	return qc;
- }
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 1de36be64df4..5ab4e3a76721 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -822,6 +822,7 @@ struct ata_port {
- 	unsigned long		qc_allocated;
- 	unsigned int		qc_active;
- 	int			nr_active_links; /* #links with active qcs */
-+	unsigned int		last_tag;	/* track next tag hw expects */
- 
- 	struct ata_link		link;		/* host default link */
- 	struct ata_link		*slave_link;	/* see ata_slave_link_init() */
