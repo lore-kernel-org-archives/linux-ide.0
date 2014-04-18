@@ -1,106 +1,56 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH 1/2] PHY: Add function set_rate to generic PHY framework
-Date: Fri, 18 Apr 2014 23:35:54 +0530
-Message-ID: <1397844354-13412-1-git-send-email-stripathi@apm.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from denmail01-v4020.amcc.com ([192.195.68.30]:59609 "EHLO
-	denmail01.apm.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753531AbaDRTEb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Apr 2014 15:04:31 -0400
-Sender: linux-ide-owner@vger.kernel.org
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2] libata/ahci: accommodate tag ordered controllers
+Date: Fri, 18 Apr 2014 15:53:24 -0400
+Message-ID: <20140418195324.GI23576@htj.dyndns.org>
+References: <20140417184442.29508.45735.stgit@viggo.jf.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <stable-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20140417184442.29508.45735.stgit@viggo.jf.intel.com>
+Sender: stable-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-ide@vger.kernel.org, Dave Jiang <dave.jiang@intel.com>, Ed Ciechanowski <ed.ciechanowski@intel.com>, stable@vger.kernel.org, Matthew Wilcox <matthew.r.wilcox@intel.com>
 List-Id: linux-ide@vger.kernel.org
-To: kishon@ti.com, tj@kernel.org
-Cc: olof@lixom.net, arnd@arndb.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
 
-This patch adds function set_rate to the generic PHY framework operation
-structure. This function can be called to instruct the PHY underlying
-layer at specified lane to configure for specified rate.
+On Thu, Apr 17, 2014 at 11:48:21AM -0700, Dan Williams wrote:
+> The AHCI spec allows implementations to issue commands in tag order
+> rather than FIFO order:
+> 
+> 	5.3.2.12 P:SelectCmd
+> 	HBA sets pSlotLoc = (pSlotLoc + 1) mod (CAP.NCS + 1)
+> 	or HBA selects the command to issue that has had the
+> 	PxCI bit set to '1' longer than any other command
+> 	pending to be issued.
+> 
+> The result is that commands posted sequentially (time-wise) may play out
+> of sequence when issued by hardware.
+> 
+> This behavior has likely been hidden by drives that arrange for commands
+> to complete in issue order.  However, it appears recent drives (two from
+> different vendors that we have found so far) inflict out-of-order
+> completions as a matter of course.  So, we need to take care to maintain
+> ordered submission, otherwise we risk triggering a drive to fall out of
+> sequential-io automation and back to random-io processing, which incurs
+> large latency and degrades throughput.
+> 
+> This issue was found in simple benchmarks where QD=2 seq-write
+> performance was 30-50% *greater* than QD=32 seq-write performance.
+> 
+> Tagging for -stable and making the change globally since it has a low
+> risk-to-reward ratio.  Also, word is that recent versions of an unnamed
+> OS also does it this way now.  So, drives in the field are already
+> experienced with this tag ordering scheme.
+> 
+> Cc: <stable@vger.kernel.org>
+> Cc: Dave Jiang <dave.jiang@intel.com>
+> Cc: Ed Ciechanowski <ed.ciechanowski@intel.com>
+> Reviewed-by: Matthew Wilcox <matthew.r.wilcox@intel.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
----
- drivers/phy/phy-core.c  | 27 +++++++++++++++++++++++++++
- include/linux/phy/phy.h |  8 ++++++++
- 2 files changed, 35 insertions(+)
+Applied to libata/for-3.15-fixes.
 
-diff --git a/drivers/phy/phy-core.c b/drivers/phy/phy-core.c
-index 645c867..51f82e0 100644
---- a/drivers/phy/phy-core.c
-+++ b/drivers/phy/phy-core.c
-@@ -258,6 +258,33 @@ int phy_power_off(struct phy *phy)
- EXPORT_SYMBOL_GPL(phy_power_off);
+Thanks.
 
- /**
-+ * phy_set_rate - set an specified lane at an specified rate
-+ * @phy: phy instance to be set
-+ * @lane: zero-based lane index
-+ * @rate: operating rate in bps (bits per second)
-+ *
-+ * Returns 0 if successful, -ENOTSUPP if not supported
-+ * -EINVAL if parameter out of range.
-+ */
-+int phy_set_rate(struct phy *phy, int lane, u64 rate)
-+{
-+	int ret = 0;
-+
-+	mutex_lock(&phy->mutex);
-+ 	if (phy->ops->set_rate) {
-+		ret = phy->ops->set_rate(phy, lane, rate);
-+		if (ret < 0) {
-+			dev_err(&phy->dev, "phy set rate failed --> %d\n",
-+				ret);
-+		}
-+	}
-+	mutex_unlock(&phy->mutex);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(phy_set_rate);
-+
-+/**
-  * of_phy_get() - lookup and obtain a reference to a phy by phandle
-  * @dev: device that requests this phy
-  * @index: the index of the phy
-diff --git a/include/linux/phy/phy.h b/include/linux/phy/phy.h
-index e273e5a..2dfcb34 100644
---- a/include/linux/phy/phy.h
-+++ b/include/linux/phy/phy.h
-@@ -27,6 +27,7 @@ struct phy;
-  * @exit: operation to be performed while exiting
-  * @power_on: powering on the phy
-  * @power_off: powering off the phy
-+ * @set_rate: set the rate
-  * @owner: the module owner containing the ops
-  */
- struct phy_ops {
-@@ -34,6 +35,7 @@ struct phy_ops {
- 	int	(*exit)(struct phy *phy);
- 	int	(*power_on)(struct phy *phy);
- 	int	(*power_off)(struct phy *phy);
-+	int     (*set_rate)(struct phy *phy, int lane, u64 rate);
- 	struct module *owner;
- };
-
-@@ -137,6 +139,7 @@ int phy_init(struct phy *phy);
- int phy_exit(struct phy *phy);
- int phy_power_on(struct phy *phy);
- int phy_power_off(struct phy *phy);
-+int phy_set_rate(struct phy *phy, int lane, u64 rate);
- static inline int phy_get_bus_width(struct phy *phy)
- {
- 	return phy->attrs.bus_width;
-@@ -217,6 +220,11 @@ static inline int phy_power_off(struct phy *phy)
- 	return -ENOSYS;
- }
-
-+static inline int phy_set_rate(struct phy *phy, int lane, u64 rate)
-+{
-+	return -ENOSYS;
-+}
-+
- static inline int phy_get_bus_width(struct phy *phy)
- {
- 	return -ENOSYS;
---
-1.8.2.1
-
+-- 
+tejun
