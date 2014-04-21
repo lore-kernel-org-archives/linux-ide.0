@@ -1,39 +1,58 @@
 From: Kefeng Wang <kefeng.wang@linaro.org>
-Subject: [PATCH v3 0/2] ahci: add support for hisilicon sata
-Date: Mon, 21 Apr 2014 12:01:40 +0800
-Message-ID: <1398052903-10322-1-git-send-email-kefeng.wang@linaro.org>
+Subject: [PATCH v3 1/2] ata: ahci: append new hflag AHCI_HFLAG_NO_FBS
+Date: Mon, 21 Apr 2014 12:01:41 +0800
+Message-ID: <1398052903-10322-2-git-send-email-kefeng.wang@linaro.org>
+References: <1398052903-10322-1-git-send-email-kefeng.wang@linaro.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pd0-f178.google.com ([209.85.192.178]:51612 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750712AbaDUEBx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Apr 2014 00:01:53 -0400
-Received: by mail-pd0-f178.google.com with SMTP id x10so3255072pdj.37
-        for <linux-ide@vger.kernel.org>; Sun, 20 Apr 2014 21:01:53 -0700 (PDT)
+Received: from mail-pb0-f48.google.com ([209.85.160.48]:43030 "EHLO
+	mail-pb0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751165AbaDUEB6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Apr 2014 00:01:58 -0400
+Received: by mail-pb0-f48.google.com with SMTP id md12so3312116pbc.35
+        for <linux-ide@vger.kernel.org>; Sun, 20 Apr 2014 21:01:58 -0700 (PDT)
+In-Reply-To: <1398052903-10322-1-git-send-email-kefeng.wang@linaro.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, wangkefeng.wang@huawei.com
+Cc: Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, wangkefeng.wang@huawei.com, Haojian Zhuang <haojian.zhuang@linaro.org>
 
-changes in v3:
+Append AHCI_HFLAG_NO_FBS to force turning off FBS flag.
 
-1) move NO_FBS chunk after YES_FBS, Tejun's suggestion
-2) use ata_port_info pointer to avoid struct ata_port_info
-   on the stack twice
+Signed-off-by: Haojian Zhuang <haojian.zhuang@linaro.org>
+Signed-off-by: Kefeng Wang <kefeng.wang@linaro.org>
+---
+ drivers/ata/ahci.h    |    1 +
+ drivers/ata/libahci.c |    5 +++++
+ 2 files changed, 6 insertions(+)
 
-changes in v2:
-
-1) make code more concise according to Hans's advice
-
-Kefeng Wang (2):
-  ata: ahci: append new hflag AHCI_HFLAG_NO_FBS
-  ahci: add support for Hisilicon sata
-
- .../devicetree/bindings/ata/ahci-platform.txt      |    3 ++-
- drivers/ata/ahci.h                                 |    1 +
- drivers/ata/ahci_platform.c                        |   10 ++++++++--
- drivers/ata/libahci.c                              |    5 +++++
- 4 files changed, 16 insertions(+), 3 deletions(-)
-
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index 51af275..60db49b 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -235,6 +235,7 @@ enum {
+ 						        port start (wait until
+ 						        error-handling stage) */
+ 	AHCI_HFLAG_MULTI_MSI		= (1 << 16), /* multiple PCI MSIs */
++	AHCI_HFLAG_NO_FBS		= (1 << 17), /* no FBS */
+ 
+ 	/* ap->flags bits */
+ 
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 6bd4f66..e1cf859 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -457,6 +457,11 @@ void ahci_save_initial_config(struct device *dev,
+ 		cap |= HOST_CAP_FBS;
+ 	}
+ 
++	if ((cap & HOST_CAP_FBS) && (hpriv->flags & AHCI_HFLAG_NO_FBS)) {
++		dev_info(dev, "controller can't do FBS, turning off CAP_FBS\n");
++		cap &= ~HOST_CAP_FBS;
++	}
++
+ 	if (force_port_map && port_map != force_port_map) {
+ 		dev_info(dev, "forcing port_map 0x%x -> 0x%x\n",
+ 			 port_map, force_port_map);
 -- 
 1.7.9.5
 
