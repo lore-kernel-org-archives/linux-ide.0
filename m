@@ -1,45 +1,39 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/1] ahci: Do not receive interrupts sent by dummy ports
-Date: Fri, 18 Apr 2014 15:56:50 -0400
-Message-ID: <20140418195650.GJ23576@htj.dyndns.org>
-References: <cover.1397750166.git.agordeev@redhat.com>
- <dbaed51ffe73dec1966eba256c3b42ed22ed58f3.1397750166.git.agordeev@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <dbaed51ffe73dec1966eba256c3b42ed22ed58f3.1397750166.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, David Milburn <dmilburn@redhat.com>, linux-ide@vger.kernel.org
+From: Kefeng Wang <kefeng.wang@linaro.org>
+Subject: [PATCH v3 0/2] ahci: add support for hisilicon sata
+Date: Mon, 21 Apr 2014 12:01:40 +0800
+Message-ID: <1398052903-10322-1-git-send-email-kefeng.wang@linaro.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pd0-f178.google.com ([209.85.192.178]:51612 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750712AbaDUEBx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Apr 2014 00:01:53 -0400
+Received: by mail-pd0-f178.google.com with SMTP id x10so3255072pdj.37
+        for <linux-ide@vger.kernel.org>; Sun, 20 Apr 2014 21:01:53 -0700 (PDT)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, wangkefeng.wang@huawei.com
 
-On Thu, Apr 17, 2014 at 06:06:15PM +0200, Alexander Gordeev wrote:
-> In multiple MSI mode all AHCI ports (including dummy) get
-> assigned separate MSI vectors and (as result of execution
-> pci_enable_msi_exact() function) separate IRQ numbers,
-> (mapped to the MSI vectors).
-> 
-> Therefore, although interrupts from dummy ports are not
-> desired they are still enabled. We do not request IRQs
-> for dummy ports, but that only means we do not assign
-> AHCI-specific ISRs to corresponding IRQ numbers.
-> 
-> As result, dummy port interrupts still could come and
-> traverse all the way from the PCI device to the kernel,
-> causing unnecessary overhead.
-> 
-> This update disables IRQs for dummy ports and prevents
-> the described issue.
-> 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: David Milburn <dmilburn@redhat.com>
-> Cc: linux-ide@vger.kernel.org
+changes in v3:
 
-Applied to libata/for-3.15-fixes w/ David's tested-by added.
+1) move NO_FBS chunk after YES_FBS, Tejun's suggestion
+2) use ata_port_info pointer to avoid struct ata_port_info
+   on the stack twice
 
-Thanks.
+changes in v2:
+
+1) make code more concise according to Hans's advice
+
+Kefeng Wang (2):
+  ata: ahci: append new hflag AHCI_HFLAG_NO_FBS
+  ahci: add support for Hisilicon sata
+
+ .../devicetree/bindings/ata/ahci-platform.txt      |    3 ++-
+ drivers/ata/ahci.h                                 |    1 +
+ drivers/ata/ahci_platform.c                        |   10 ++++++++--
+ drivers/ata/libahci.c                              |    5 +++++
+ 4 files changed, 16 insertions(+), 3 deletions(-)
 
 -- 
-tejun
+1.7.9.5
+
