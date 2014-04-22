@@ -1,23 +1,19 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+From: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
 Subject: Re: [PATCH 1/6] ata: ahci: add AHCI support for Berlin SoCs
-Date: Tue, 22 Apr 2014 18:54:27 +0200
-Message-ID: <4239617.ieu9uluV2B@amdc1032>
-References: <1398181105-19714-1-git-send-email-antoine.tenart@free-electrons.com>
- <1398181105-19714-2-git-send-email-antoine.tenart@free-electrons.com>
+Date: Tue, 22 Apr 2014 19:20:52 +0200
+Message-ID: <5356A4F4.6090107@gmail.com>
+References: <1398181105-19714-1-git-send-email-antoine.tenart@free-electrons.com> <1398181105-19714-2-git-send-email-antoine.tenart@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-reply-to: <1398181105-19714-2-git-send-email-antoine.tenart@free-electrons.com>
+In-Reply-To: <1398181105-19714-2-git-send-email-antoine.tenart@free-electrons.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Antoine =?ISO-8859-1?Q?T=E9nart?= <antoine.tenart@free-electrons.com>
-Cc: sebastian.hesselbarth@gmail.com, tj@kernel.org, alexandre.belloni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: =?UTF-8?B?QW50b2luZSBUw6luYXJ0?= <antoine.tenart@free-electrons.com>, tj@kernel.org
+Cc: alexandre.belloni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-
-Hi,
-
-On Tuesday, April 22, 2014 05:38:20 PM Antoine T=C3=A9nart wrote:
+On 04/22/2014 05:38 PM, Antoine T=C3=A9nart wrote:
 > Add support for the Berlin SoCs AHCI SATA controller allowing to
 > interface with devices like external hard drives.
 >=20
@@ -110,7 +106,12 @@ l)
 > +{
 > +	writel(val, reg);
 > +}
-> +
+
+Antoine,
+
+if you really need to rename writel, the above function name should
+end with _write.
+
 > +static inline void ahci_berlin_reg_clear_set(void __iomem *reg, u32 =
 clear_val,
 > +					     u32 set_val)
@@ -122,13 +123,21 @@ clear_val,
 > +	regval |=3D set_val;
 > +	writel(regval, reg);
 > +}
-> +
+
+ahci_berlin_reg_setbits(reg, val) =3D=3D ahci_berlin_reg_clear_set(reg,=
+ 0, val);
+
+Maybe get rid of the latter?
+
 > +static void ahci_berlin_init(void __iomem *mmio)
 > +{
 > +	/* interface select */
 > +	ahci_berlin_reg_set(mmio + HOST_VSA_ADDR, BIT(2));
 > +	ahci_berlin_reg_set(mmio + HOST_VSA_ADDR,
 > +			    BIT(21) | BIT(18) | BIT(5) | BIT(4) | BIT(2));
+
+Any chance we get named #defines for the BIT()s above and below?
+
 > +
 > +}
 > +
@@ -212,6 +221,54 @@ orts)
 > +	of_property_read_u32(np, "marvell,force-port-map", &force_map);
 > +	if (force_map)
 > +		nports =3D force_map;
+
+marvell,force-port-map is undocumented and its name does not reflect
+what it is about. Before you just rename it to marvell,nr-ports or
+something, how about having one sub-node per port:
+
+sata_phy0: sata-phy@e90100 {
+	compatible =3D "marvell,berlin-sata-phy";
+	reg =3D <0xe90100 0x80>;
+	status =3D "disabled";
+};
+
+sata_phy1: sata-phy@e90180 {
+	compatible =3D "marvell,berlin-sata-phy";
+	reg =3D <0xe90180 0x80>;
+	status =3D "disabled";
+};
+
+ahci: sata@e90000 {
+	compatible =3D "marvell,berlin-ahci";
+	reg =3D <0xe90000 0x100>;
+	interrupts =3D <GIC_SPI 7 IRQ_TYPE_LEVEL_HIGH>;
+	#address-cells =3D <1>;
+	#size-cells =3D <0>;
+	status =3D "disabled";
+
+	sata-port@0 {
+		reg =3D <0>;
+		sata-phy =3D <&sata_phy0>;
+		status =3D "disabled";
+	};
+
+	sata-port@1 {
+		reg =3D <1>;
+		sata-phy =3D <&sata_phy1>;
+		status =3D "okay";
+	};
+};
+
+That way you can
+(a) separate a PHY driver that has little code but is able to power-dow=
+n
+    the PHY even if there is no AHCI driver loaded.
+(b) enable/disable each port individually.
+(c) enable port1 while port0 is disabled.
+(d) disable the PLL if there is no port enabled at all.
+
+Sebastian
+
 > +
 > +	ahci_berlin_init(hpriv->mmio);
 > +	ahci_berlin_port_init(hpriv->mmio, nports);
@@ -244,12 +301,6 @@ orts)
 > +		.name		=3D "ahci-berlin",
 > +		.owner		=3D THIS_MODULE,
 > +		.of_match_table =3D ahci_berlin_of_match,
-
-Please add a comment explaining lack of power management support
-(i.e. that your platform doesn't have PM support implemented yet).
-
-Otherwise the driver looks fine.
-
 > +	},
 > +};
 > +module_platform_driver(ahci_berlin_driver);
@@ -258,9 +309,4 @@ Otherwise the driver looks fine.
 > +MODULE_AUTHOR("Antoine T=C3=A9nart <antoine.tenart@free-electrons.co=
 m>");
 > +MODULE_LICENSE("GPL");
-
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
+>=20
