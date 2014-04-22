@@ -1,47 +1,50 @@
 From: =?UTF-8?q?Antoine=20T=C3=A9nart?=
 	<antoine.tenart@free-electrons.com>
-Subject: [PATCH 2/6] Documentation: bindings: add the berlin-achi compatible to the ahci platform
-Date: Tue, 22 Apr 2014 17:38:21 +0200
-Message-ID: <1398181105-19714-3-git-send-email-antoine.tenart@free-electrons.com>
+Subject: [PATCH 5/6] ARM: berlin: add the AHCI node for the BG2
+Date: Tue, 22 Apr 2014 17:38:24 +0200
+Message-ID: <1398181105-19714-6-git-send-email-antoine.tenart@free-electrons.com>
 References: <1398181105-19714-1-git-send-email-antoine.tenart@free-electrons.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:49874 "EHLO
+Received: from top.free-electrons.com ([176.31.233.9]:49891 "EHLO
 	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756389AbaDVPiw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Apr 2014 11:38:52 -0400
+	with ESMTP id S933056AbaDVPjC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Apr 2014 11:39:02 -0400
 In-Reply-To: <1398181105-19714-1-git-send-email-antoine.tenart@free-electrons.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: sebastian.hesselbarth@gmail.com, tj@kernel.org
 Cc: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, alexandre.belloni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The berlin-achi driver allows Berlin SoCs to support their AHCI SATA co=
-ntroller.
-Add the compatible to the device tree bindings documentation.
+The BG2 has an AHCI SATA controller. Add the corresponding node
+in its device tree.
 
 Signed-off-by: Antoine T=C3=A9nart <antoine.tenart@free-electrons.com>
 ---
- Documentation/devicetree/bindings/ata/ahci-platform.txt | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ arch/arm/boot/dts/berlin2.dtsi | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/=
-Documentation/devicetree/bindings/ata/ahci-platform.txt
-index 48b285ffa3a6..9987b63aaa10 100644
---- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
-+++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-@@ -7,7 +7,8 @@ Required properties:
- - compatible        : compatible list, one of "snps,spear-ahci",
-                       "snps,exynos5440-ahci", "ibm,476gtr-ahci",
-                       "allwinner,sun4i-a10-ahci", "fsl,imx53-ahci"
--                      "fsl,imx6q-ahci" or "snps,dwc-ahci"
-+                      "fsl,imx6q-ahci", "snps,dwc-ahci" or
-+		      "marvell,berlin-ahci"
- - interrupts        : <interrupt mapping for SATA IRQ>
- - reg               : <registers mapping>
+diff --git a/arch/arm/boot/dts/berlin2.dtsi b/arch/arm/boot/dts/berlin2=
+=2Edtsi
+index 56a1af2f1052..3e98d9fa9ec7 100644
+--- a/arch/arm/boot/dts/berlin2.dtsi
++++ b/arch/arm/boot/dts/berlin2.dtsi
+@@ -176,6 +176,13 @@
+ 			};
+ 		};
 =20
++		ahci: sata@e90000 {
++			compatible =3D "marvell,berlin-ahci";
++			reg =3D <0xe90000 0x10000>;
++			interrupts =3D <GIC_SPI 7 IRQ_TYPE_LEVEL_HIGH>;
++			status =3D "disable";
++		};
++
+ 		apb@fc0000 {
+ 			compatible =3D "simple-bus";
+ 			#address-cells =3D <1>;
 --=20
 1.8.3.2
 
