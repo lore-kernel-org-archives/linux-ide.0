@@ -1,52 +1,47 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH] [SCSI] esas2r: Fix comment
-Date: Tue, 22 Apr 2014 16:19:39 +0400
-Message-ID: <53565E5B.8070008@cogentembedded.com>
-References: <1398113749-7491-1-git-send-email-marex@denx.de>
+From: =?UTF-8?q?Antoine=20T=C3=A9nart?=
+	<antoine.tenart@free-electrons.com>
+Subject: [PATCH 2/6] Documentation: bindings: add the berlin-achi compatible to the ahci platform
+Date: Tue, 22 Apr 2014 17:38:21 +0200
+Message-ID: <1398181105-19714-3-git-send-email-antoine.tenart@free-electrons.com>
+References: <1398181105-19714-1-git-send-email-antoine.tenart@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-la0-f44.google.com ([209.85.215.44]:37150 "EHLO
-	mail-la0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755845AbaDVMTo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Apr 2014 08:19:44 -0400
-Received: by mail-la0-f44.google.com with SMTP id b8so662899lan.31
-        for <linux-ide@vger.kernel.org>; Tue, 22 Apr 2014 05:19:43 -0700 (PDT)
-In-Reply-To: <1398113749-7491-1-git-send-email-marex@denx.de>
+Received: from top.free-electrons.com ([176.31.233.9]:49874 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756389AbaDVPiw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Apr 2014 11:38:52 -0400
+In-Reply-To: <1398181105-19714-1-git-send-email-antoine.tenart@free-electrons.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Marek Vasut <marex@denx.de>, linux-ide@vger.kernel.org
-Cc: James Bottomley <JBottomley@Parallels.com>, Bradley Grove <bgrove@attotech.com>
+To: sebastian.hesselbarth@gmail.com, tj@kernel.org
+Cc: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, alexandre.belloni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello.
+The berlin-achi driver allows Berlin SoCs to support their AHCI SATA co=
+ntroller.
+Add the compatible to the device tree bindings documentation.
 
-On 22-04-2014 0:55, Marek Vasut wrote:
+Signed-off-by: Antoine T=C3=A9nart <antoine.tenart@free-electrons.com>
+---
+ Documentation/devicetree/bindings/ata/ahci-platform.txt | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-    Shouldn't this patch have been posted to linux-scsi instead of linux-ide?
-
-> Minor fix for a comment in the driver so that it matches the function name.
-
-    It's a message, not a comment.
-
-> Signed-off-by: Marek Vasut <marex@denx.de>
-> Cc: James Bottomley <JBottomley@Parallels.com>
-> Cc: Bradley Grove <bgrove@attotech.com>
-> ---
->   drivers/scsi/esas2r/esas2r_main.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-
-> diff --git a/drivers/scsi/esas2r/esas2r_main.c b/drivers/scsi/esas2r/esas2r_main.c
-> index f37f3e3..6504a19 100644
-> --- a/drivers/scsi/esas2r/esas2r_main.c
-> +++ b/drivers/scsi/esas2r/esas2r_main.c
-> @@ -390,7 +390,7 @@ static int esas2r_probe(struct pci_dev *pcid,
->   	esas2r_log_dev(ESAS2R_LOG_INFO, &(pcid->dev),
->   		       "pci_enable_device() OK");
->   	esas2r_log_dev(ESAS2R_LOG_INFO, &(pcid->dev),
-> -		       "after pci_device_enable() enable_cnt: %d",
-> +		       "after pci_enable_device() enable_cnt: %d",
->   		       pcid->enable_cnt.counter);
-
-WBR, Sergei
+diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/=
+Documentation/devicetree/bindings/ata/ahci-platform.txt
+index 48b285ffa3a6..9987b63aaa10 100644
+--- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
++++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+@@ -7,7 +7,8 @@ Required properties:
+ - compatible        : compatible list, one of "snps,spear-ahci",
+                       "snps,exynos5440-ahci", "ibm,476gtr-ahci",
+                       "allwinner,sun4i-a10-ahci", "fsl,imx53-ahci"
+-                      "fsl,imx6q-ahci" or "snps,dwc-ahci"
++                      "fsl,imx6q-ahci", "snps,dwc-ahci" or
++		      "marvell,berlin-ahci"
+ - interrupts        : <interrupt mapping for SATA IRQ>
+ - reg               : <registers mapping>
+=20
+--=20
+1.8.3.2
 
