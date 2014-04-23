@@ -1,40 +1,51 @@
-From: Antoine =?iso-8859-1?Q?T=E9nart?=
-	<antoine.tenart@free-electrons.com>
-Subject: Re: [PATCH 5/6] ARM: berlin: add the AHCI node for the BG2
-Date: Wed, 23 Apr 2014 10:58:02 +0200
-Message-ID: <20140423085802.GF24355@kwain>
-References: <1398181105-19714-1-git-send-email-antoine.tenart@free-electrons.com>
- <1398181105-19714-6-git-send-email-antoine.tenart@free-electrons.com>
- <20140423104539.37c9366f@xhacker>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Kefeng Wang <kefeng.wang@linaro.org>
+Subject: [PATCH v4 1/3] ata: ahci: append new hflag AHCI_HFLAG_NO_FBS
+Date: Wed, 23 Apr 2014 19:36:45 +0800
+Message-ID: <1398253008-17059-2-git-send-email-kefeng.wang@linaro.org>
+References: <1398253008-17059-1-git-send-email-kefeng.wang@linaro.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20140423104539.37c9366f@xhacker>
+In-Reply-To: <1398253008-17059-1-git-send-email-kefeng.wang@linaro.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jisheng Zhang <jszhang@marvell.com>
-Cc: "sebastian.hesselbarth@gmail.com" <sebastian.hesselbarth@gmail.com>, "tj@kernel.org" <tj@kernel.org>, "alexandre.belloni@free-electrons.com" <alexandre.belloni@free-electrons.com>, Jimmy Xu <zmxu@marvell.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Maxime Ripard <maxime.ripard@free-electrons.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: wangkefeng.wang@huawei.com, kefeng.wang@linaro.org, Haojian Zhuang <haojian.zhuang@linaro.org>
 List-Id: linux-ide@vger.kernel.org
 
-Jisheng,
+Append AHCI_HFLAG_NO_FBS to force turning off FBS flag.
 
-On Wed, Apr 23, 2014 at 10:45:39AM +0800, Jisheng Zhang wrote:
-> On Tue, 22 Apr 2014 08:38:24 -0700
-> Antoine T=E9nart <antoine.tenart@free-electrons.com> wrote:
->=20
-> > The BG2 has an AHCI SATA controller. Add the corresponding node
-> > in its device tree.
->=20
-> The AHCI IP of BG2 is different with BG2Q, so the driver in the serie=
-s of patch
-> doesn't work on BG2.
+Signed-off-by: Haojian Zhuang <haojian.zhuang@linaro.org>
+Signed-off-by: Kefeng Wang <kefeng.wang@linaro.org>
+---
+ drivers/ata/ahci.h    |    1 +
+ drivers/ata/libahci.c |    5 +++++
+ 2 files changed, 6 insertions(+)
 
-Thanks for the info! I'll drop BG2 and BG2CD nodes in the v2.
-
-Antoine
-
---=20
-Antoine T=E9nart, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index 51af275..60db49b 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -235,6 +235,7 @@ enum {
+ 						        port start (wait until
+ 						        error-handling stage) */
+ 	AHCI_HFLAG_MULTI_MSI		= (1 << 16), /* multiple PCI MSIs */
++	AHCI_HFLAG_NO_FBS		= (1 << 17), /* no FBS */
+ 
+ 	/* ap->flags bits */
+ 
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 6bd4f66..e1cf859 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -457,6 +457,11 @@ void ahci_save_initial_config(struct device *dev,
+ 		cap |= HOST_CAP_FBS;
+ 	}
+ 
++	if ((cap & HOST_CAP_FBS) && (hpriv->flags & AHCI_HFLAG_NO_FBS)) {
++		dev_info(dev, "controller can't do FBS, turning off CAP_FBS\n");
++		cap &= ~HOST_CAP_FBS;
++	}
++
+ 	if (force_port_map && port_map != force_port_map) {
+ 		dev_info(dev, "forcing port_map 0x%x -> 0x%x\n",
+ 			 port_map, force_port_map);
+-- 
+1.7.9.5
