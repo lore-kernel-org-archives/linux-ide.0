@@ -1,34 +1,55 @@
-From: Jisheng Zhang <jszhang@marvell.com>
-Subject: Re: [PATCH 5/6] ARM: berlin: add the AHCI node for the BG2
-Date: Wed, 23 Apr 2014 10:45:39 +0800
-Message-ID: <20140423104539.37c9366f@xhacker>
+From: Antoine =?iso-8859-1?Q?T=E9nart?=
+	<antoine.tenart@free-electrons.com>
+Subject: Re: [PATCH 1/6] ata: ahci: add AHCI support for Berlin SoCs
+Date: Wed, 23 Apr 2014 10:13:05 +0200
+Message-ID: <20140423081305.GA24355@kwain>
 References: <1398181105-19714-1-git-send-email-antoine.tenart@free-electrons.com>
-	<1398181105-19714-6-git-send-email-antoine.tenart@free-electrons.com>
+ <1398181105-19714-2-git-send-email-antoine.tenart@free-electrons.com>
+ <4239617.ieu9uluV2B@amdc1032>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:21773 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755845AbaDWCrr convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 22 Apr 2014 22:47:47 -0400
-In-Reply-To: <1398181105-19714-6-git-send-email-antoine.tenart@free-electrons.com>
+Received: from top.free-electrons.com ([176.31.233.9]:55057 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753426AbaDWINJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Apr 2014 04:13:09 -0400
+Content-Disposition: inline
+In-Reply-To: <4239617.ieu9uluV2B@amdc1032>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Antoine =?UTF-8?B?VMOpbmFydA==?= <antoine.tenart@free-electrons.com>
-Cc: "sebastian.hesselbarth@gmail.com" <sebastian.hesselbarth@gmail.com>, "tj@kernel.org" <tj@kernel.org>, "alexandre.belloni@free-electrons.com" <alexandre.belloni@free-electrons.com>, Jimmy Xu <zmxu@marvell.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: sebastian.hesselbarth@gmail.com, tj@kernel.org, alexandre.belloni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi Antoine
+Hi,
 
-On Tue, 22 Apr 2014 08:38:24 -0700
-Antoine T=C3=A9nart <antoine.tenart@free-electrons.com> wrote:
+On Tue, Apr 22, 2014 at 06:54:27PM +0200, Bartlomiej Zolnierkiewicz wro=
+te:
+>=20
+> Hi,
+>=20
+> On Tuesday, April 22, 2014 05:38:20 PM Antoine T=C3=A9nart wrote:
 
-> The BG2 has an AHCI SATA controller. Add the corresponding node
-> in its device tree.
+[=E2=80=A6]
 
-The AHCI IP of BG2 is different with BG2Q, so the driver in the series =
-of patch
-doesn't work on BG2.
+> > +static struct platform_driver ahci_berlin_driver =3D {
+> > +	.probe	=3D ahci_berlin_probe,
+> > +	.remove	=3D ata_platform_remove_one,
+> > +	.driver	=3D {
+> > +		.name		=3D "ahci-berlin",
+> > +		.owner		=3D THIS_MODULE,
+> > +		.of_match_table =3D ahci_berlin_of_match,
+>=20
+> Please add a comment explaining lack of power management support
+> (i.e. that your platform doesn't have PM support implemented yet).
 
-Thanks
+I can add the power management support in the v2.
+
+Thanks!
+
+Antoine
+
+--=20
+Antoine T=C3=A9nart, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
