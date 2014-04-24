@@ -1,28 +1,42 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v5 0/3] ahci: add support for hisilicon sata
-Date: Thu, 24 Apr 2014 08:28:08 -0400
-Message-ID: <20140424122808.GL4781@htj.dyndns.org>
-References: <1398256603-20160-1-git-send-email-kefeng.wang@linaro.org>
- <20140423142726.GC4781@htj.dyndns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f51.google.com ([209.85.192.51]:53780 "EHLO
-	mail-qg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753282AbaDXM2X (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Apr 2014 08:28:23 -0400
-Content-Disposition: inline
-In-Reply-To: <20140423142726.GC4781@htj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
+From: Xiangliang Yu <yxlraid@gmail.com>
+Subject: [PATCH 0/3] libsas: add support for port multiplier
+Date: Thu, 24 Apr 2014 21:27:03 +0800
+Message-ID: <1398346023-10225-1-git-send-email-yxlraid@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: tj@kernel.org, JBottomley@parallels.com
+Cc: dan.j.williams@intel.com, todd.e.brandt@intel.com, lukasz.dorau@intel.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kefeng Wang <kefeng.wang@linaro.org>
-Cc: Hans de Goede <hdegoede@redhat.com>, Maxime Ripard <maxime.ripard@free-electrons.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, wangkefeng.wang@huawei.com
 
-On Wed, Apr 23, 2014 at 10:27:26AM -0400, Tejun Heo wrote:
-> Applied to libata/for-3.16.
+This patch set will support SATA port multiplier(PM) in LIBSAS. 
 
-Reverted due to build failure.  I was apparently too dependent on
-build-bot but what the hell?  This isn't acceptable.
+LIBSAS is need to implement several key handling to support SATA PM:
+First,low level driver notify libsas that SATA PM is attached to HBA port.
+Then, LIBSAS will need to schedule SATA PMP error handler to scan SATA device
+that is attached to PM, so we must implemet port softreset and PMP reset 
+handling.
+If find SATA devices, we should add the devices into SAS transport layer.
+In order to find SAS domain device we must implemet device type transformation
+: scsi device -> (port number) -> ata device -> domain device. Then, we can
+execute IO operation.
 
--- 
-tejun
+In these patches, patch 1 is change SATA error handler.
+And patch 2 will add SATA device into SAS layer and implement device type
+transformation. Patch 3 implement SATA functional interface in mvsas.
+
+ drivers/ata/libata-scsi.c           |   48 +++-
+ drivers/scsi/libsas/sas_ata.c       |  584 ++++++++++++++++++++++++++++++++++-
+ drivers/scsi/libsas/sas_discover.c  |   25 ++-
+ drivers/scsi/libsas/sas_internal.h  |    7 +
+ drivers/scsi/libsas/sas_phy.c       |    1 +
+ drivers/scsi/libsas/sas_port.c      |   12 +
+ drivers/scsi/libsas/sas_scsi_host.c |   12 +-
+ drivers/scsi/mvsas/mv_64xx.c        |    2 +
+ drivers/scsi/mvsas/mv_94xx.c        |   19 ++
+ drivers/scsi/mvsas/mv_defs.h        |    1 +
+ drivers/scsi/mvsas/mv_init.c        |    7 +
+ drivers/scsi/mvsas/mv_sas.c         |  246 +++++++++++++++-
+ drivers/scsi/mvsas/mv_sas.h         |    9 +
+ include/scsi/libsas.h               |   19 +-
+ include/scsi/sas_ata.h              |    5 +
+ 15 files changed, 970 insertions(+), 27 deletions(-)
