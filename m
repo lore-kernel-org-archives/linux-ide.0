@@ -1,77 +1,49 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] libata fixes for v3.15-rc2
-Date: Wed, 23 Apr 2014 10:49:33 -0400
-Message-ID: <20140423144933.GE4781@htj.dyndns.org>
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: Performance issue with port multiplier
+Date: Wed, 23 Apr 2014 22:42:34 -0400
+Message-ID: <53587A1A.2060904@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f42.google.com ([209.85.192.42]:49404 "EHLO
-	mail-qg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755124AbaDWOtg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Apr 2014 10:49:36 -0400
-Content-Disposition: inline
+Received: from cdptpa-outbound-snat.email.rr.com ([107.14.166.226]:37841 "EHLO
+	cdptpa-oedge-vip.email.rr.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751269AbaDXCmf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Apr 2014 22:42:35 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hello, Linus.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
 
-libata fixes for v3.15-rc2.  Dan updated tag allocation to accomodate
-devices which choke when tags jump back and forth.  Quite a few ahci
-MSI related fixes.  A couple config dependency fixes and other misc
-fixes.
+I recently picked up a Thermaltake BlacX Duet dual drive esata dock
+and I am having some performance problems trying to use both drives
+concurrently.  The link is running at 3 Gbps both to the PMP and from
+there to each drive.  An individual drive pulls ~175 MB/s, but trying
+to use both drops to ~60 MB/s each.  This is with a simple sequential
+dd to /dev/null with a 1 MiB block size.  Oddly, disabling NCQ results
+in an increase to ~80 MB/s per drive.  I wouldn't think that NCQ would
+really help for a sequential read, but it certainly shouldn't hurt.
 
-The following changes since commit b33ce442993865180292df2a314ee5251ba38b50:
+Now it does seem that my intel ahci chipset does not support fis based
+switching, but it doesn't seem like that should make a whole lot of
+difference for sequential IO since while you are busy sending commands
+to one drive, the other should still be performing its own readahead
+into its cache and be ready to satisfy the request quickly once the
+first drive finishes.
 
-  Merge branch 'for-3.15/drivers' of git://git.kernel.dk/linux-block (2014-04-01 19:43:53 -0700)
+How can this behavior make sense?  Any ideas on other things I could try?
 
-are available in the git repository at:
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
 
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-3.15-fixes
-
-for you to fetch changes up to 8a4aeec8d2d6a3edeffbdfae451cdf05cbf0fefd:
-
-  libata/ahci: accommodate tag ordered controllers (2014-04-18 15:56:03 -0400)
-
-Thanks.
-
-----------------------------------------------------------------
-Alexander Gordeev (3):
-      ahci: Ensure "MSI Revert to Single Message" mode is not enforced
-      ahci: Use pci_enable_msi_exact() instead of pci_enable_msi_range()
-      ahci: Do not receive interrupts sent by dummy ports
-
-Bartlomiej Zolnierkiewicz (3):
-      pata_at91: fix ata_host_activate() failure handling
-      pata_arasan_cf: fix ata_host_activate() failure handling
-      pata_samsung_cf: fix ata_host_activate() failure handling
-
-Dan Williams (1):
-      libata/ahci: accommodate tag ordered controllers
-
-David Milburn (1):
-      ahci: do not request irq for dummy port
-
-Jean Delvare (1):
-      ata: fix i.MX AHCI driver dependencies
-
-Martin K. Petersen (1):
-      libata: Update queued trim blacklist for M5x0 drives
-
-Tejun Heo (1):
-      libata: make AHCI_XGENE depend on PHY_XGENE
-
- drivers/ata/Kconfig           |  5 ++---
- drivers/ata/ahci.c            | 35 +++++++++++++++++++++--------------
- drivers/ata/ahci.h            |  1 +
- drivers/ata/libata-core.c     | 27 +++++++++++++++++----------
- drivers/ata/pata_arasan_cf.c  |  7 +++++--
- drivers/ata/pata_at91.c       | 11 ++++++-----
- drivers/ata/pata_samsung_cf.c | 10 +++++++---
- include/linux/libata.h        |  1 +
- 8 files changed, 60 insertions(+), 37 deletions(-)
-
--- 
-tejun
+iQEcBAEBCgAGBQJTWHoaAAoJEI5FoCIzSKrwgY4H/jIJw7EC8Oh6eXqNma67tVfn
+eNYgjKOKv1qsn4QDAva1F6TyUdmTzeKVoym4yxOgu51hPzcnPCoeOyOg0ZNNbOSa
+QSUxWHfgeGVHQvn5j30AZDqbfyIXd062mAjwDndFl4QSYRmAsZmijRavR33bZ8LP
+S81myeHoRSSIJNJDkRAXtiJckUxjU8HdDkLzvowGCcvgn6MNi6uMtaNepdCOGD5V
+9u91uUB7HcsrfBCPutSW3Yv1GoSn4wEPL0/lIzqfP0q81qErsWjXkjqi8VEYXPys
+FcNT4lSGH0isjSCBtatDYMaWolLsOdkeZW4gwx07WyvsOP4H5fKFpVNrkFoAjoE=
+=X8IN
+-----END PGP SIGNATURE-----
