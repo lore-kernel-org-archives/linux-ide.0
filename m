@@ -1,36 +1,46 @@
-From: Jason Cooper <jason@lakedaemon.net>
-Subject: Re: [PATCHv3 4/5] ARM: configs: add ahci_mvebu to
- mvebu_v7_defconfig
-Date: Fri, 25 Apr 2014 20:28:30 -0400
-Message-ID: <20140426002830.GN28159@titan.lakedaemon.net>
-References: <1397574006-5868-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1397574006-5868-5-git-send-email-thomas.petazzoni@free-electrons.com>
+From: Mason <mpeg.blue@free.fr>
+Subject: Using ftrace to identify source of excessive latency of USB write
+Date: Sun, 27 Apr 2014 21:17:35 +0200
+Message-ID: <535D57CF.50402@free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:34035 "EHLO
-	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751934AbaDZA2p (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 Apr 2014 20:28:45 -0400
-Content-Disposition: inline
-In-Reply-To: <1397574006-5868-5-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-embedded-owner@vger.kernel.org>
+Sender: linux-embedded-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-embedded@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Tejun Heo <tj@kernel.org>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Gregory Clement <gregory.clement@free-electrons.com>, Lior Amsalem <alior@marvell.com>, Tawfik Bayouk <tawfik@marvell.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, linux-arm-kernel@lists.infradead.org
 
-On Tue, Apr 15, 2014 at 05:00:05PM +0200, Thomas Petazzoni wrote:
-> The Marvell Armada 38x platform needs the ahci_mvebu driver enabled
-> for the AHCI interfaces, so this commit enables the corresponding
-> Kconfig option in mvebu_v7_defconfig.
-> 
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> ---
->  arch/arm/configs/mvebu_v7_defconfig | 1 +
->  1 file changed, 1 insertion(+)
+Hello everyone,
 
-Applied to mvebu/defconfig
+I'm using Linux on a embedded system similar in spec to a desktop PC
+from 15 years ago (256 MB RAM, 800-MHz CPU, USB). The system's primary
+use is recording high-definition digital television programs.
 
-thx,
+Typically, the storage sub-system consists of a recent hard-disk drive
+connected over USB (Hi-Speed, effective throughput ~20-30 MB/s), using
+a single ext4 partition (journal disabled), mounted noexec+noatime
+(trying to minimize metadata interference).
 
-Jason.
+Typical bit-rate for this HD content ~1-3 MB/s
+
+Data is accumulated in two 800-kB buffers; when one buffer is full,
+it is written to file (using write(2)), which was opened O_SYNC.
+(Note to self: try O_DSYNC instead of O_SYNC)
+
+If I plot the latency of the write(2) operation, 99% of them complete
+in under 80 ms. However, in rare cases, there is a huge latency spike
+(up to 800 ms). If several of these rare outliers occur in a row,
+the recording is messed up.
+
+I am trying to figure out the source of these latency spikes.
+
+It could be the OS, the USB controller, the HDD controller... I was
+hoping I could use ftrace to determine whether the problem came from
+the OS itself. Is that the best tool for the job?
+
+Any recommendations on how to proceed?
+
+Regards.
+
+[I would be grateful if you could CC me in your replies. Thanks!]
