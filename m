@@ -1,46 +1,75 @@
-From: Mason <mpeg.blue@free.fr>
-Subject: Using ftrace to identify source of excessive latency of USB write
-Date: Sun, 27 Apr 2014 21:17:35 +0200
-Message-ID: <535D57CF.50402@free.fr>
+From: Loc Ho <lho-qTEPVZfXA3Y@public.gmane.org>
+Subject: Re: [PATCH v18 3/4] ata: Add APM X-Gene SoC AHCI SATA host controller driver
+Date: Mon, 28 Apr 2014 16:12:02 -0700
+Message-ID: <CAPw-ZTmGA5rtVmHx5jZedkey2iJD7L+3-905W=4G4rAJ=BeWgA@mail.gmail.com>
+References: <1394841201-29495-1-git-send-email-lho@apm.com>
+	<1394841201-29495-3-git-send-email-lho@apm.com>
+	<1394841201-29495-4-git-send-email-lho@apm.com>
+	<201403151019.49316.arnd@arndb.de>
+	<CAPw-ZTksg3z8GY55jb7-yP1wfq2BF6apB9KBgbokpshKbiiAaw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-embedded-owner@vger.kernel.org>
-Sender: linux-embedded-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-embedded@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAPw-ZTksg3z8GY55jb7-yP1wfq2BF6apB9KBgbokpshKbiiAaw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Kishon Vijay Abraham I <kishon-l0cyMroinI0@public.gmane.org>, balbi-l0cyMroinI0@public.gmane.org
+Cc: Olof Johansson <olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, Don Dutile <ddutile-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jon Masters <jcm-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "patches-qTEPVZfXA3Y@public.gmane.org" <patches-qTEPVZfXA3Y@public.gmane.org>, Tuan Phan <tphan-qTEPVZfXA3Y@public.gmane.org>, Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
-Hello everyone,
+Hi Kishon/Felipe,
 
-I'm using Linux on a embedded system similar in spec to a desktop PC
-from 15 years ago (256 MB RAM, 800-MHz CPU, USB). The system's primary
-use is recording high-definition digital television programs.
+> >> This patch adds support for the APM X-Gene SoC AHCI SATA host controller
+> >> driver. It requires the corresponding APM X-Gene SoC PHY driver. This
+> >> initial version only supports Gen3 speed.
+> >
+> > This version seems workable, thanks for the quick follow-up.
+> >
+> > The comment about Gen3 speed above reminds me that you took some
+> > shortcuts to get here and you removed support for some features
+> > as well as some bug workarounds in the process. I'm guessing some
+> > of them won't be necessary because they are only for prototype
+> > hardware or for early boot loader versions that don't yet set up
+> > the hardware right, but others actually need to come back.
+> >
+> > That is usually a good approach, but I'd also like to make sure we can
+> > deal with them nicely when you have to add them back later, and don't
+> > have to add ugly extensions to the DT binding to support the old dtb
+> > files.
+> >
+> > Can you list (also in the changelog) the parts of the driver that you
+> > have taken out for now and that you expect to add back at later
+> > stage? I think that would be helpful for perspective.
+> >
+>
+> Here is an list of patches that we will be preparing for once the
+> basic driver is completed. Do you want me to re-generate the patch
+> change log with this info?
+>
+> 1. Support for Gen1/Gen2/Gen3
+> Solution: The simplest solution is to have the PHY framework support
+> setting the desire speed. I had argued with the TI folks but they are
+> reluctant to add this function to the framework. They argued that this
+> is still not generic enough. I will start the discussion again later
+> on. The other possibility (but not sure if this is doable) is to have
+> the PHY init function to be smarter and do the necessary operation
+> assuming the underlying PHY is capable in detecting the link up speed.
+> I will need to check the spec of this.
 
-Typically, the storage sub-system consists of a recent hard-disk drive
-connected over USB (Hi-Speed, effective throughput ~20-30 MB/s), using
-a single ext4 partition (journal disabled), mounted noexec+noatime
-(trying to minimize metadata interference).
 
-Typical bit-rate for this HD content ~1-3 MB/s
+In order for the X-Gene SATA PHY to support SATA Gen1 and Gen2 speed,
+we need an method to instruct the underlying PHY driver to switch to
+an specified setting after link up. For this errata, Suman Tripathi
+had submitted the patch [1]. It is not possible to hide this within
+the PHY driver. Each instance of the PHY driver controls two ports. By
+calling the exit function and then init function, it will affect the
+other ports - which is not the correct behavior. At this point, we
+don't see any solution besides introduce an PHY framework function
+set_rate. Can you let us know if this solution is acceptable?
 
-Data is accumulated in two 800-kB buffers; when one buffer is full,
-it is written to file (using write(2)), which was opened O_SYNC.
-(Note to self: try O_DSYNC instead of O_SYNC)
+[1] https://lkml.org/lkml/2014/4/18/491
 
-If I plot the latency of the write(2) operation, 99% of them complete
-in under 80 ms. However, in rare cases, there is a huge latency spike
-(up to 800 ms). If several of these rare outliers occur in a row,
-the recording is messed up.
-
-I am trying to figure out the source of these latency spikes.
-
-It could be the OS, the USB controller, the HDD controller... I was
-hoping I could use ftrace to determine whether the problem came from
-the OS itself. Is that the best tool for the job?
-
-Any recommendations on how to proceed?
-
-Regards.
-
-[I would be grateful if you could CC me in your replies. Thanks!]
+-Loc
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
