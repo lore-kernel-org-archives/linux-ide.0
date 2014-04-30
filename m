@@ -1,97 +1,96 @@
-From: Luis Henriques <luis.henriques@canonical.com>
-Subject: [3.11.y.z extended stable] Patch "ahci: Do not receive interrupts sent by dummy ports" has been added to staging queue
-Date: Wed, 30 Apr 2014 13:55:17 +0100
-Message-ID: <1398862517-14718-1-git-send-email-luis.henriques@canonical.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:57129 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758836AbaD3MzW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Apr 2014 08:55:22 -0400
-Sender: linux-ide-owner@vger.kernel.org
+From: Levente Kurusa <levex@linux.com>
+Subject: [PATCH] ahci: unregister acpi notify handler when a ZPODD is unbound
+Date: Wed, 30 Apr 2014 18:04:47 +0200
+Message-ID: <1398873887-23920-1-git-send-email-levex@linux.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, Linux ATA/IDE <linux-ide@vger.kernel.org>, Joe Thomas <Joe.Thomas@dothill.com>, Levente Kurusa <levex@linux.com>
 List-Id: linux-ide@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Luis Henriques <luis.henriques@canonical.com>, kernel-team@lists.ubuntu.com
 
-This is a note to let you know that I have just added a patch titled
+When a ZPODD device is unbound via sysfs, the acpi notify handler
+is not removed. This causes panics as observed in Bug #74601. The
+panic only happens when the wake happens from outside the kernel
+(i.e. inserting media or pressing a button). Implement a new
+ahci_remove_one function which causes zpodd_exit to be called for all
+ZPODD devices on the unbound PCI device.
 
-    ahci: Do not receive interrupts sent by dummy ports
-
-to the linux-3.11.y-queue branch of the 3.11.y.z extended stable tree 
-which can be found at:
-
- http://kernel.ubuntu.com/git?p=ubuntu/linux.git;a=shortlog;h=refs/heads/linux-3.11.y-queue
-
-If you, or anyone else, feels it should not be added to this tree, please 
-reply to this email.
-
-For more information about the 3.11.y.z tree, see
-https://wiki.ubuntu.com/Kernel/Dev/ExtendedStable
-
-Thanks.
--Luis
-
-------
-
->From 5c6c722d230791ff0ddb9145874c7f168ba15c08 Mon Sep 17 00:00:00 2001
-From: Alexander Gordeev <agordeev@redhat.com>
-Date: Thu, 17 Apr 2014 18:06:15 +0200
-Subject: ahci: Do not receive interrupts sent by dummy ports
-
-commit 2cf532f5e67c0cfe38c8c100e49280cdadacd2be upstream.
-
-In multiple MSI mode all AHCI ports (including dummy) get assigned
-separate MSI vectors and (as result of execution
-pci_enable_msi_exact() function) separate IRQ numbers, (mapped to the
-MSI vectors).
-
-Therefore, although interrupts from dummy ports are not desired they
-are still enabled. We do not request IRQs for dummy ports, but that
-only means we do not assign AHCI-specific ISRs to corresponding IRQ
-numbers.
-
-As result, dummy port interrupts still could come and traverse all the
-way from the PCI device to the kernel, causing unnecessary overhead.
-
-This update disables IRQs for dummy ports and prevents the described
-issue.
-
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Tested-by: David Milburn <dmilburn@redhat.com>
-Cc: linux-ide@vger.kernel.org
-Fixes: 5ca72c4f7c41 ("AHCI: Support multiple MSIs")
-Signed-off-by: Luis Henriques <luis.henriques@canonical.com>
+Signed-off-by: Levente Kurusa <levex@linux.com>
 ---
- drivers/ata/ahci.c | 16 ++++++++++------
- 1 file changed, 10 insertions(+), 6 deletions(-)
+
+Hi,
+
+I am not sure if the loop below is correct. Maybe there is a better
+solution to loop through all the devices which might use ZPODD?
+
+Thanks, Lev.
+
+ drivers/ata/ahci.c         | 21 +++++++++++++++++++++
+ drivers/ata/ahci.h         |  4 ++++
+ drivers/ata/libata-zpodd.c |  1 +
+ 3 files changed, 26 insertions(+)
 
 diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index a5cf3ea..9d13ab1 100644
+index 5a0bf8e..6d92bc9 100644
 --- a/drivers/ata/ahci.c
 +++ b/drivers/ata/ahci.c
-@@ -1171,12 +1171,16 @@ int ahci_host_activate(struct ata_host *host, int irq, unsigned int n_msis)
- 	for (i = 0; i < host->n_ports; i++) {
- 		struct ahci_port_priv *pp = host->ports[i]->private_data;
-
--		/* pp is NULL for dummy ports */
--		if (pp)
--			rc = devm_request_threaded_irq(host->dev,
--						       irq + i, ahci_hw_interrupt,
--						       ahci_thread_fn, IRQF_SHARED,
--						       pp->irq_desc, host->ports[i]);
-+		/* Do not receive interrupts sent by dummy ports */
-+		if (!pp) {
-+			disable_irq(irq + i);
-+			continue;
-+		}
+@@ -475,12 +475,33 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ }	/* terminate list */
+ };
+ 
++#ifdef CONFIG_SATA_ZPODD
++void ahci_remove_one(struct pci_dev *pdev)
++{
++	struct ata_host *host = pci_get_drvdata(pdev);
++	struct ata_link *link;
++	struct ata_device *dev;
++	int i;
 +
-+		rc = devm_request_threaded_irq(host->dev, irq + i,
-+					       ahci_hw_interrupt,
-+					       ahci_thread_fn, IRQF_SHARED,
-+					       pp->irq_desc, host->ports[i]);
- 		if (rc)
- 			goto out_free_irqs;
- 	}
---
-1.9.1
-
++	for (i = 0; i < host->n_ports; i++)
++		ata_for_each_link(link, host->ports[i], HOST_FIRST)
++			ata_for_each_dev(dev, link, ALL)
++				if (dev->zpodd)
++					zpodd_exit(dev);
++
++	ata_pci_remove_one(pdev);
++}
++#endif
+ 
+ static struct pci_driver ahci_pci_driver = {
+ 	.name			= DRV_NAME,
+ 	.id_table		= ahci_pci_tbl,
+ 	.probe			= ahci_init_one,
++#ifdef CONFIG_SATA_ZPODD
++	.remove			= ahci_remove_one,
++#else
+ 	.remove			= ata_pci_remove_one,
++#endif
+ #ifdef CONFIG_PM
+ 	.suspend		= ahci_pci_device_suspend,
+ 	.resume			= ahci_pci_device_resume,
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index 51af275..87e4e6d 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -383,6 +383,10 @@ void ahci_print_info(struct ata_host *host, const char *scc_s);
+ int ahci_host_activate(struct ata_host *host, int irq, unsigned int n_msis);
+ void ahci_error_handler(struct ata_port *ap);
+ 
++#ifdef CONFIG_SATA_ZPODD
++extern void zpodd_exit(struct ata_device *dev);
++#endif /* CONFIG_SATA_ZPODD */
++
+ static inline void __iomem *__ahci_port_base(struct ata_host *host,
+ 					     unsigned int port_no)
+ {
+diff --git a/drivers/ata/libata-zpodd.c b/drivers/ata/libata-zpodd.c
+index f3a65a3..fe66949 100644
+--- a/drivers/ata/libata-zpodd.c
++++ b/drivers/ata/libata-zpodd.c
+@@ -281,3 +281,4 @@ void zpodd_exit(struct ata_device *dev)
+ 	kfree(dev->zpodd);
+ 	dev->zpodd = NULL;
+ }
++EXPORT_SYMBOL_GPL(zpodd_exit);
+-- 
+1.8.3.1
