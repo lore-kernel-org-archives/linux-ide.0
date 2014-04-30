@@ -1,43 +1,97 @@
-From: Keith Busch <keith.busch@intel.com>
-Subject: [PATCH] ata: SATL compliance for Inquiry Product Revision
-Date: Tue, 29 Apr 2014 13:25:24 -0600
-Message-ID: <1398799524-5625-1-git-send-email-keith.busch@intel.com>
+From: Luis Henriques <luis.henriques@canonical.com>
+Subject: [3.11.y.z extended stable] Patch "ahci: Do not receive interrupts sent by dummy ports" has been added to staging queue
+Date: Wed, 30 Apr 2014 13:55:17 +0100
+Message-ID: <1398862517-14718-1-git-send-email-luis.henriques@canonical.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:19691 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964915AbaD2TZ1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 29 Apr 2014 15:25:27 -0400
+Received: from youngberry.canonical.com ([91.189.89.112]:57129 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758836AbaD3MzW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Apr 2014 08:55:22 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Keith Busch <keith.busch@intel.com>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Luis Henriques <luis.henriques@canonical.com>, kernel-team@lists.ubuntu.com
 
-The SCSI/ATA Translation standard says to use data words 25 and 26 unless
-they are spaces. These words are generally more useful anway for devices
-that are not padding the firmware field with spaces.
+This is a note to let you know that I have just added a patch titled
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
-Reviewed-by: Matthew Wilcox <matthew.r.wilcox@intel.com>
+    ahci: Do not receive interrupts sent by dummy ports
+
+to the linux-3.11.y-queue branch of the 3.11.y.z extended stable tree 
+which can be found at:
+
+ http://kernel.ubuntu.com/git?p=ubuntu/linux.git;a=shortlog;h=refs/heads/linux-3.11.y-queue
+
+If you, or anyone else, feels it should not be added to this tree, please 
+reply to this email.
+
+For more information about the 3.11.y.z tree, see
+https://wiki.ubuntu.com/Kernel/Dev/ExtendedStable
+
+Thanks.
+-Luis
+
+------
+
+>From 5c6c722d230791ff0ddb9145874c7f168ba15c08 Mon Sep 17 00:00:00 2001
+From: Alexander Gordeev <agordeev@redhat.com>
+Date: Thu, 17 Apr 2014 18:06:15 +0200
+Subject: ahci: Do not receive interrupts sent by dummy ports
+
+commit 2cf532f5e67c0cfe38c8c100e49280cdadacd2be upstream.
+
+In multiple MSI mode all AHCI ports (including dummy) get assigned
+separate MSI vectors and (as result of execution
+pci_enable_msi_exact() function) separate IRQ numbers, (mapped to the
+MSI vectors).
+
+Therefore, although interrupts from dummy ports are not desired they
+are still enabled. We do not request IRQs for dummy ports, but that
+only means we do not assign AHCI-specific ISRs to corresponding IRQ
+numbers.
+
+As result, dummy port interrupts still could come and traverse all the
+way from the PCI device to the kernel, causing unnecessary overhead.
+
+This update disables IRQs for dummy ports and prevents the described
+issue.
+
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Tested-by: David Milburn <dmilburn@redhat.com>
+Cc: linux-ide@vger.kernel.org
+Fixes: 5ca72c4f7c41 ("AHCI: Support multiple MSIs")
+Signed-off-by: Luis Henriques <luis.henriques@canonical.com>
 ---
- drivers/ata/libata-scsi.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/ata/ahci.c | 16 ++++++++++------
+ 1 file changed, 10 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index ef8567d..8034a38 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1993,7 +1993,10 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
- 	memcpy(rbuf, hdr, sizeof(hdr));
- 	memcpy(&rbuf[8], "ATA     ", 8);
- 	ata_id_string(args->id, &rbuf[16], ATA_ID_PROD, 16);
--	ata_id_string(args->id, &rbuf[32], ATA_ID_FW_REV, 4);
-+	if (args->id[25] == 0x2020 && args->id[26] == 0x2020)
-+		ata_id_string(args->id, &rbuf[32], ATA_ID_FW_REV, 4);
-+	else
-+		ata_id_string(args->id, &rbuf[32], ATA_ID_FW_REV + 2, 4);
- 
- 	if (rbuf[32] == 0 || rbuf[32] == ' ')
- 		memcpy(&rbuf[32], "n/a ", 4);
--- 
-1.7.10.4
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index a5cf3ea..9d13ab1 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1171,12 +1171,16 @@ int ahci_host_activate(struct ata_host *host, int irq, unsigned int n_msis)
+ 	for (i = 0; i < host->n_ports; i++) {
+ 		struct ahci_port_priv *pp = host->ports[i]->private_data;
+
+-		/* pp is NULL for dummy ports */
+-		if (pp)
+-			rc = devm_request_threaded_irq(host->dev,
+-						       irq + i, ahci_hw_interrupt,
+-						       ahci_thread_fn, IRQF_SHARED,
+-						       pp->irq_desc, host->ports[i]);
++		/* Do not receive interrupts sent by dummy ports */
++		if (!pp) {
++			disable_irq(irq + i);
++			continue;
++		}
++
++		rc = devm_request_threaded_irq(host->dev, irq + i,
++					       ahci_hw_interrupt,
++					       ahci_thread_fn, IRQF_SHARED,
++					       pp->irq_desc, host->ports[i]);
+ 		if (rc)
+ 			goto out_free_irqs;
+ 	}
+--
+1.9.1
 
