@@ -1,124 +1,57 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: Re: [PATCH] ahci: unregister acpi notify handler when a ZPODD is
- unbound
-Date: Wed, 30 Apr 2014 20:22:31 +0200
-Message-ID: <1414277.0ei2d0Yjc1@amdc1032>
-References: <1398873887-23920-1-git-send-email-levex@linux.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] ata: SATL compliance for Inquiry Product Revision
+Date: Thu, 1 May 2014 11:15:10 -0400
+Message-ID: <20140501151510.GF31611@htj.dyndns.org>
+References: <1398799524-5625-1-git-send-email-keith.busch@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:46942 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759057AbaD3SXD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Apr 2014 14:23:03 -0400
-In-reply-to: <1398873887-23920-1-git-send-email-levex@linux.com>
+Received: from mail-qc0-f179.google.com ([209.85.216.179]:65271 "EHLO
+	mail-qc0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751833AbaEAPPO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 1 May 2014 11:15:14 -0400
+Received: by mail-qc0-f179.google.com with SMTP id x3so165985qcv.24
+        for <linux-ide@vger.kernel.org>; Thu, 01 May 2014 08:15:13 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <1398799524-5625-1-git-send-email-keith.busch@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Levente Kurusa <levex@linux.com>
-Cc: Tejun Heo <tj@kernel.org>, LKML <linux-kernel@vger.kernel.org>, Linux ATA/IDE <linux-ide@vger.kernel.org>, Joe Thomas <Joe.Thomas@dothill.com>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-ide@vger.kernel.org
 
-
-Hi,
-
-On Wednesday, April 30, 2014 06:04:47 PM Levente Kurusa wrote:
-> When a ZPODD device is unbound via sysfs, the acpi notify handler
-> is not removed. This causes panics as observed in Bug #74601. The
-> panic only happens when the wake happens from outside the kernel
-> (i.e. inserting media or pressing a button). Implement a new
-> ahci_remove_one function which causes zpodd_exit to be called for all
-> ZPODD devices on the unbound PCI device.
+On Tue, Apr 29, 2014 at 01:25:24PM -0600, Keith Busch wrote:
+> The SCSI/ATA Translation standard says to use data words 25 and 26 unless
+> they are spaces. These words are generally more useful anway for devices
+> that are not padding the firmware field with spaces.
 > 
-> Signed-off-by: Levente Kurusa <levex@linux.com>
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> Reviewed-by: Matthew Wilcox <matthew.r.wilcox@intel.com>
 > ---
+>  drivers/ata/libata-scsi.c |    5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
 > 
-> Hi,
-> 
-> I am not sure if the loop below is correct. Maybe there is a better
-> solution to loop through all the devices which might use ZPODD?
-> 
-> Thanks, Lev.
-> 
->  drivers/ata/ahci.c         | 21 +++++++++++++++++++++
->  drivers/ata/ahci.h         |  4 ++++
->  drivers/ata/libata-zpodd.c |  1 +
->  3 files changed, 26 insertions(+)
-> 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index 5a0bf8e..6d92bc9 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -475,12 +475,33 @@ static const struct pci_device_id ahci_pci_tbl[] = {
->  	{ }	/* terminate list */
->  };
->  
-> +#ifdef CONFIG_SATA_ZPODD
-> +void ahci_remove_one(struct pci_dev *pdev)
-> +{
-> +	struct ata_host *host = pci_get_drvdata(pdev);
-> +	struct ata_link *link;
-> +	struct ata_device *dev;
-> +	int i;
-> +
-> +	for (i = 0; i < host->n_ports; i++)
-> +		ata_for_each_link(link, host->ports[i], HOST_FIRST)
-> +			ata_for_each_dev(dev, link, ALL)
-> +				if (dev->zpodd)
-> +					zpodd_exit(dev);
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index ef8567d..8034a38 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -1993,7 +1993,10 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
+>  	memcpy(rbuf, hdr, sizeof(hdr));
+>  	memcpy(&rbuf[8], "ATA     ", 8);
+>  	ata_id_string(args->id, &rbuf[16], ATA_ID_PROD, 16);
+> -	ata_id_string(args->id, &rbuf[32], ATA_ID_FW_REV, 4);
+> +	if (args->id[25] == 0x2020 && args->id[26] == 0x2020)
 
-zpodd_init() is used in generic libata library code, same should be true
-for zpodd_exit().  Ideally, you should find some libata library function
-called from ata_pci_remove_one() suitable for this purpose.
+Maybe strncmp(" ") is more readable?  And can you please add some
+comment explaining what's going on?
 
-Hmm, actually zpodd_exit() is already used in ata_scsi_handle_link_detach()
-so this should also be taken into consideration..
+> +		ata_id_string(args->id, &rbuf[32], ATA_ID_FW_REV, 4);
+> +	else
+> +		ata_id_string(args->id, &rbuf[32], ATA_ID_FW_REV + 2, 4);
 
-> +	ata_pci_remove_one(pdev);
-> +}
-> +#endif
->  
->  static struct pci_driver ahci_pci_driver = {
->  	.name			= DRV_NAME,
->  	.id_table		= ahci_pci_tbl,
->  	.probe			= ahci_init_one,
-> +#ifdef CONFIG_SATA_ZPODD
-> +	.remove			= ahci_remove_one,
-> +#else
->  	.remove			= ata_pci_remove_one,
-> +#endif
->  #ifdef CONFIG_PM
->  	.suspend		= ahci_pci_device_suspend,
->  	.resume			= ahci_pci_device_resume,
-> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-> index 51af275..87e4e6d 100644
-> --- a/drivers/ata/ahci.h
-> +++ b/drivers/ata/ahci.h
-> @@ -383,6 +383,10 @@ void ahci_print_info(struct ata_host *host, const char *scc_s);
->  int ahci_host_activate(struct ata_host *host, int irq, unsigned int n_msis);
->  void ahci_error_handler(struct ata_port *ap);
->  
-> +#ifdef CONFIG_SATA_ZPODD
-> +extern void zpodd_exit(struct ata_device *dev);
-> +#endif /* CONFIG_SATA_ZPODD */
-> +
->  static inline void __iomem *__ahci_port_base(struct ata_host *host,
->  					     unsigned int port_no)
->  {
-> diff --git a/drivers/ata/libata-zpodd.c b/drivers/ata/libata-zpodd.c
-> index f3a65a3..fe66949 100644
-> --- a/drivers/ata/libata-zpodd.c
-> +++ b/drivers/ata/libata-zpodd.c
-> @@ -281,3 +281,4 @@ void zpodd_exit(struct ata_device *dev)
->  	kfree(dev->zpodd);
->  	dev->zpodd = NULL;
->  }
-> +EXPORT_SYMBOL_GPL(zpodd_exit);
+So, this would change the behavior for devices which were reporting
+stuff in ATA_ID_FW_REV.  Prolly no biggiee.
 
-Then you would also not need to export zpodd_exit()..
+Thanks.
 
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
-
+-- 
+tejun
