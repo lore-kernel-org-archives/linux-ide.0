@@ -1,49 +1,44 @@
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCHv3 2/5] ata: ahci_mvebu: new driver for Marvell Armada
- 380 AHCI interfaces
-Date: Fri, 2 May 2014 17:33:29 +0200
-Message-ID: <20140502173329.25287270@skate>
-References: <1397574006-5868-1-git-send-email-thomas.petazzoni@free-electrons.com>
-	<1397574006-5868-3-git-send-email-thomas.petazzoni@free-electrons.com>
-	<20140502152237.GE10204@htj.dyndns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 0/3] libsas: add support for port multiplier
+Date: Fri, 2 May 2014 11:36:17 -0400
+Message-ID: <20140502153617.GH10204@htj.dyndns.org>
+References: <1398346023-10225-1-git-send-email-yxlraid@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:57237 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751318AbaEBPdg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 May 2014 11:33:36 -0400
-In-Reply-To: <20140502152237.GE10204@htj.dyndns.org>
+Received: from mail-qa0-f46.google.com ([209.85.216.46]:37477 "EHLO
+	mail-qa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751636AbaEBPgV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 2 May 2014 11:36:21 -0400
+Content-Disposition: inline
+In-Reply-To: <1398346023-10225-1-git-send-email-yxlraid@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Gregory Clement <gregory.clement@free-electrons.com>, Tawfik Bayouk <tawfik@marvell.com>, Nadav Haklai <nadavh@marvell.com>, Lior Amsalem <alior@marvell.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+To: Xiangliang Yu <yxlraid@gmail.com>
+Cc: JBottomley@parallels.com, dan.j.williams@intel.com, todd.e.brandt@intel.com, lukasz.dorau@intel.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Dear Tejun Heo,
-
-On Fri, 2 May 2014 11:22:37 -0400, Tejun Heo wrote:
-> On Tue, Apr 15, 2014 at 05:00:03PM +0200, Thomas Petazzoni wrote:
-> > The Marvell Armada 380 SoC includes two AHCI compatible
-> > interfaces. However, like all DMA-capable Marvell interface, they
-> > require special handling to configure MBus windows. Therefore, this
-> > commit adds a new ahci_mvebu driver, which relies on the
-> > libahci_platform.c code recently introduced.
-> > 
-> > Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+On Thu, Apr 24, 2014 at 09:27:03PM +0800, Xiangliang Yu wrote:
+> This patch set will support SATA port multiplier(PM) in LIBSAS. 
 > 
-> How should this be routed?  Can I pick up just this one and apply it
-> to libata/for-3.16?
+> LIBSAS is need to implement several key handling to support SATA PM:
+> First,low level driver notify libsas that SATA PM is attached to HBA port.
+> Then, LIBSAS will need to schedule SATA PMP error handler to scan SATA device
+> that is attached to PM, so we must implemet port softreset and PMP reset 
+> handling.
+> If find SATA devices, we should add the devices into SAS transport layer.
+> In order to find SAS domain device we must implemet device type transformation
+> : scsi device -> (port number) -> ata device -> domain device. Then, we can
+> execute IO operation.
+> 
+> In these patches, patch 1 is change SATA error handler.
+> And patch 2 will add SATA device into SAS layer and implement device type
+> transformation. Patch 3 implement SATA functional interface in mvsas.
 
-Yes. And I believe you should also take PATCH 1 in the series, which
-updates the Device Tree binding documentation for the AHCI driver. Both
-patches have received a Acked-by from Jason Cooper, the maintainer of
-the mvebu platforms.
+Please properly thread the patchset from the next posting.
 
-Thanks!
+Dan, can you please take a look at this?
 
-Thomas
+Thanks.
+
 -- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+tejun
