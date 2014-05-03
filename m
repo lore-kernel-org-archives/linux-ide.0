@@ -1,59 +1,48 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2 1/2] ahci: imx: add namespace for register enums
-Date: Fri, 2 May 2014 11:42:32 -0400
-Message-ID: <20140502154232.GI10204@htj.dyndns.org>
-References: <1397803466-28411-1-git-send-email-shawn.guo@freescale.com>
- <1397803466-28411-2-git-send-email-shawn.guo@freescale.com>
+From: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
+Subject: Re: Disk shock protection interferes with standby timers, please
+	advise
+Date: Sat, 3 May 2014 23:21:15 +0200
+Message-ID: <20140503212115.GA29213@nomi.cz>
+References: <876214glvz.fsf@denkblock.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ackle.nomi.cz ([81.31.33.35]:42021 "EHLO ackle.nomi.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750972AbaECVqs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 3 May 2014 17:46:48 -0400
 Content-Disposition: inline
-In-Reply-To: <1397803466-28411-2-git-send-email-shawn.guo@freescale.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Shawn Guo <shawn.guo@freescale.com>
-Cc: linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+In-Reply-To: <876214glvz.fsf@denkblock.local>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Elias Oltmanns <eo@nebensachen.de>
+Cc: Tejun Heo <tj@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Aaron Lu <aaron.lu@intel.com>, linux-ide@vger.kernel.org
 
-On Fri, Apr 18, 2014 at 02:44:25PM +0800, Shawn Guo wrote:
-> Update register enums a little bit to add proper namespace prefix, and
-> have the names match i.MX reference manual.
-> 
-> Signed-off-by: Shawn Guo <shawn.guo@freescale.com>
-> ---
->  drivers/ata/ahci_imx.c | 14 +++++++-------
->  1 file changed, 7 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
-> index 497c7ab..009a074 100644
-> --- a/drivers/ata/ahci_imx.c
-> +++ b/drivers/ata/ahci_imx.c
-> @@ -29,9 +29,9 @@
->  #include "ahci.h"
->  
->  enum {
-> -	PORT_PHY_CTL = 0x178,			/* Port0 PHY Control */
-> -	PORT_PHY_CTL_PDDQ_LOC = 0x100000,	/* PORT_PHY_CTL bits */
-> -	HOST_TIMER1MS = 0xe0,			/* Timer 1-ms */
-> +	IMX_SATA_TIMER1MS			= 0x00e0,
-> +	IMX_SATA_P0PHYCR			= 0x0178,
+Hi,
 
-P0PHYCR isn't really readily dechipherable to "Port0 PHY Control".
-Probably keeping the comment is better?  Also, constant names don't
-necessarily have to be exactly the same as hardware manuals.  If
-easier to understand and map back (via comment or whatever), using
-more humanly-readable names is completely fine.  Also, maybe IMX_SATA_
-is a bit too long for prefix?
+On Thu, Mar 07, 2013 at 12:16:00AM +0100, Elias Oltmanns wrote:
+> On the other hand,
+>=20
+> # hdparm -I /dev/sda
+>=20
+> also reenables the standby timer yet leaves the heads alone. So my
+> question is this: Can anyone give some advice as to what command what=
+ be
+> suitable to be issued instead of Idle Immediate when the shock
+> protection timeout has elapsed? Basically, it should be cheap, cause =
+no
+> =E2=80=9Cmechanical action=E2=80=9D, and be anything *but* Check Powe=
+r Mode.
 
-Thanks.
+Well, it does not reenable the standby timer on my ST9500420AS drive, s=
+o that
+isn't a universal solution either.  And since so few people care about =
+this
+problem, this doesn't seem to be worth a quirk database or something li=
+ke
+that.  I'll just keep applying the patch, then.  :-)
 
--- 
-tejun
+Regards,
+--=20
+Tom=C3=A1=C5=A1 Janou=C5=A1ek, a.k.a. Liskni_si, http://work.lisk.in/
