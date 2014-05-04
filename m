@@ -1,48 +1,53 @@
-From: =?utf-8?B?VG9tw6HFoSBKYW5vdcWhZWs=?= <tomi@nomi.cz>
-Subject: Re: Disk shock protection interferes with standby timers, please
-	advise
-Date: Sat, 3 May 2014 23:21:15 +0200
-Message-ID: <20140503212115.GA29213@nomi.cz>
-References: <876214glvz.fsf@denkblock.local>
+From: Paul Bolle <pebolle@tiscali.nl>
+Subject: [PATCH] libata-sff: remove dead code
+Date: Sun, 04 May 2014 13:50:29 +0200
+Message-ID: <1399204229.8729.15.camel@x220>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ackle.nomi.cz ([81.31.33.35]:42021 "EHLO ackle.nomi.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750972AbaECVqs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 3 May 2014 17:46:48 -0400
-Content-Disposition: inline
-In-Reply-To: <876214glvz.fsf@denkblock.local>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Alan Cox <alan@linux.intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Elias Oltmanns <eo@nebensachen.de>
-Cc: Tejun Heo <tj@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Aaron Lu <aaron.lu@intel.com>, linux-ide@vger.kernel.org
 
-Hi,
+Ever since v2.6.19 the code contains a check for CONFIG_NO_ATA_LEGACY.
+But that macro has never been defined. Apparently no one ran into
+problems on platforms that do not support compatibility mode. So remove
+this code that has been dead for over seven years.
 
-On Thu, Mar 07, 2013 at 12:16:00AM +0100, Elias Oltmanns wrote:
-> On the other hand,
->=20
-> # hdparm -I /dev/sda
->=20
-> also reenables the standby timer yet leaves the heads alone. So my
-> question is this: Can anyone give some advice as to what command what=
- be
-> suitable to be issued instead of Idle Immediate when the shock
-> protection timeout has elapsed? Basically, it should be cheap, cause =
-no
-> =E2=80=9Cmechanical action=E2=80=9D, and be anything *but* Check Powe=
-r Mode.
+Signed-off-by: Paul Bolle <pebolle@tiscali.nl>
+---
+Untested!
 
-Well, it does not reenable the standby timer on my ST9500420AS drive, s=
-o that
-isn't a universal solution either.  And since so few people care about =
-this
-problem, this doesn't seem to be worth a quirk database or something li=
-ke
-that.  I'll just keep applying the patch, then.  :-)
+Perhaps the test should have been
+    #if !defined(CONFIG_PATA_LEGACY)
 
-Regards,
---=20
-Tom=C3=A1=C5=A1 Janou=C5=A1ek, a.k.a. Liskni_si, http://work.lisk.in/
+I wouldn't know if that's correct. But after seven years it doesn't
+matter anyhow, so I did not bother to research that.
+
+ drivers/ata/libata-sff.c | 9 ---------
+ 1 file changed, 9 deletions(-)
+
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index b603720b877d..1121153f1ecd 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -2433,15 +2433,6 @@ int ata_pci_sff_activate_host(struct ata_host *host,
+ 		mask = (1 << 2) | (1 << 0);
+ 		if ((tmp8 & mask) != mask)
+ 			legacy_mode = 1;
+-#if defined(CONFIG_NO_ATA_LEGACY)
+-		/* Some platforms with PCI limits cannot address compat
+-		   port space. In that case we punt if their firmware has
+-		   left a device in compatibility mode */
+-		if (legacy_mode) {
+-			printk(KERN_ERR "ata: Compatibility mode ATA is not supported on this platform, skipping.\n");
+-			return -EOPNOTSUPP;
+-		}
+-#endif
+ 	}
+ 
+ 	if (!devres_open_group(dev, NULL, GFP_KERNEL))
+-- 
+1.9.0
