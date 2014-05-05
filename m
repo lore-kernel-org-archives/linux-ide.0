@@ -1,38 +1,65 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHv3 2/5] ata: ahci_mvebu: new driver for Marvell Armada 380
- AHCI interfaces
-Date: Sun, 4 May 2014 15:29:43 -0400
-Message-ID: <20140504192943.GG26279@htj.dyndns.org>
-References: <1397574006-5868-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1397574006-5868-3-git-send-email-thomas.petazzoni@free-electrons.com>
+From: "kefeng.wang" <kefeng.wang@linaro.org>
+Subject: Re: [PATCH v6 0/3] ahci: add support for hisilicon sata
+Date: Mon, 05 May 2014 20:05:54 +0800
+Message-ID: <53677EA2.20004@linaro.org>
+References: <1398416351-30567-1-git-send-email-kefeng.wang@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f176.google.com ([209.85.216.176]:57786 "EHLO
-	mail-qc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751434AbaEDT3r (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 4 May 2014 15:29:47 -0400
-Received: by mail-qc0-f176.google.com with SMTP id r5so132581qcx.35
-        for <linux-ide@vger.kernel.org>; Sun, 04 May 2014 12:29:47 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <1397574006-5868-3-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:46100 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756587AbaEEMGD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 May 2014 08:06:03 -0400
+Received: by mail-pa0-f45.google.com with SMTP id ey11so4025604pad.18
+        for <linux-ide@vger.kernel.org>; Mon, 05 May 2014 05:06:02 -0700 (PDT)
+In-Reply-To: <1398416351-30567-1-git-send-email-kefeng.wang@linaro.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Gregory Clement <gregory.clement@free-electrons.com>, Tawfik Bayouk <tawfik@marvell.com>, Nadav Haklai <nadavh@marvell.com>, Lior Amsalem <alior@marvell.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+To: Tejun Heo <tj@kernel.org>, Maxime Ripard <maxime.ripard@free-electrons.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Kefeng Wang <kefeng.wang@linaro.org>, Hans de Goede <hdegoede@redhat.com>, xuwei5@hisilicon.com
 
-On Tue, Apr 15, 2014 at 05:00:03PM +0200, Thomas Petazzoni wrote:
-> The Marvell Armada 380 SoC includes two AHCI compatible
-> interfaces. However, like all DMA-capable Marvell interface, they
-> require special handling to configure MBus windows. Therefore, this
-> commit adds a new ahci_mvebu driver, which relies on the
-> libahci_platform.c code recently introduced.
+Hi Tejun, ping...
+
+On 2014-4-25 16:59, Kefeng Wang wrote:
+> change in v6:
+> 1) type of host_flags changed from unsigned int to unsigned long,
+>    fix the building warning and error. 
 > 
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> channge in v5:
+> 1) drop AHCI_HFLAGS(...) from ahci_xgene.c and do use host_flags
+>    in ahci_platform_init_host, it's my carelessness.
+> 
+> changes in v4:
+> 1) add a dynamic host_flags parameter in ahci_platform_init_host
+>    to make it more flexible, modify some driver to use new
+>    way to pass host flags, suggested by Hans
+> 
+> changes in v3:
+> 1) move NO_FBS chunk after YES_FBS, Tejun's suggestion
+> 2) use ata_port_info pointer to avoid struct ata_port_info
+>    on the stack twice
+> 
+> changes in v2:
+> 1) make code more concise according to Hans's advice
+> 
+> Kefeng Wang (3):
+>   ata: ahci: append new hflag AHCI_HFLAG_NO_FBS
+>   libahci_platform: add host_flags parameter in
+>     ahci_platform_init_host()
+>   ahci: add support for Hisilicon sata
+> 
+>  .../devicetree/bindings/ata/ahci-platform.txt      |    3 ++-
+>  drivers/ata/ahci.h                                 |    1 +
+>  drivers/ata/ahci_da850.c                           |    3 ++-
+>  drivers/ata/ahci_imx.c                             |    3 ++-
+>  drivers/ata/ahci_platform.c                        |    9 ++++++++-
+>  drivers/ata/ahci_st.c                              |    2 +-
+>  drivers/ata/ahci_sunxi.c                           |    9 ++++++---
+>  drivers/ata/ahci_xgene.c                           |    7 +++++--
+>  drivers/ata/libahci.c                              |    5 +++++
+>  drivers/ata/libahci_platform.c                     |    5 ++++-
+>  include/linux/ahci_platform.h                      |    1 +
+>  11 files changed, 37 insertions(+), 11 deletions(-)
+> 
 
-Applied to libata/for-3.16.
-
-Thanks.
-
--- 
-tejun
