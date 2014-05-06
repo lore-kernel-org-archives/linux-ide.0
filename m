@@ -1,54 +1,53 @@
-From: Jason Cooper <jason@lakedaemon.net>
-Subject: Re: [PATCHv3 5/5] ARM: configs: add ahci_mvebu to multi_v7_defconfig
-Date: Tue, 6 May 2014 09:32:17 -0400
-Message-ID: <20140506133217.GT28159@titan.lakedaemon.net>
-References: <1397574006-5868-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1397574006-5868-6-git-send-email-thomas.petazzoni@free-electrons.com>
- <20140426002518.GL28159@titan.lakedaemon.net>
- <20140505215121.GG29245@quad.lixom.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-Content-Disposition: inline
-In-Reply-To: <20140505215121.GG29245@quad.lixom.net>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Olof Johansson <olof@lixom.net>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Andrew Lunn <andrew@lunn.ch>, Kevin Hilman <khilman@linaro.org>, Tawfik Bayouk <tawfik@marvell.com>, Arnd Bergmann <arnd@arndb.de>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Nadav Haklai <nadavh@marvell.com>, Gregory Clement <gregory.clement@free-electrons.com>, Lior Amsalem <alior@marvell.com>, arm@kernel.org, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-arm-kernel@lists.infradead.org, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+From: Levente Kurusa <levex@linux.com>
+Subject: [PATCH] libata: clean up ZPODD when a port is detached
+Date: Tue,  6 May 2014 15:57:48 +0200
+Message-ID: <1399384668-20394-1-git-send-email-levex@linux.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, Linux ATA/IDE <linux-ide@vger.kernel.org>, Aaron Lu <aaron.lu@intel.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Joe Thomas <Joe.Thomas@dothill.com>, Levente Kurusa <levex@linux.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Mon, May 05, 2014 at 02:51:21PM -0700, Olof Johansson wrote:
-> On Fri, Apr 25, 2014 at 08:25:18PM -0400, Jason Cooper wrote:
-> > Arnd, Olof, Kevin,
-> > 
-> > On Tue, Apr 15, 2014 at 05:00:06PM +0200, Thomas Petazzoni wrote:
-> > > The Marvell Armada 38x platform needs the ahci_mvebu driver enabled
-> > > for the AHCI interfaces, so this commit enables the corresponding
-> > > Kconfig option in multi_v7_defconfig.
-> > > 
-> > > Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> > > ---
-> > >  arch/arm/configs/multi_v7_defconfig | 1 +
-> > >  1 file changed, 1 insertion(+)
-> > 
-> > Conflict-ridden file, please take directly.
-> > 
-> > Acked-by: Jason Cooper <jason@lakedaemon.net>
-> 
-> Just like many other maintainers, just getting added on cc on the ack doesn't
-> fit our work flows very well.
+When a ZPODD device is unbound via sysfs, the ACPI notify handler
+is not removed. This causes panics as observed in Bug #74601. The
+panic only happens when the wake happens from outside the kernel
+(i.e. inserting a media or pressing a button). Add a loop to
+ata_port_detach which loops through the port's devices and checks
+if zpodd is enabled, if so call zpodd_exit.
 
-gah, yes of course.  I was being lazy.  I'll bounce or resend in the
-future.
+Cc: stable@vger.kernel.org
+Reviewed-by: Aaron Lu <aaron.lu@intel.com>
+Signed-off-by: Levente Kurusa <levex@linux.com>
+---
+ drivers/ata/libata-core.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-thx,
-
-Jason.
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 943cc8b..ea83828 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -6314,6 +6314,8 @@ int ata_host_activate(struct ata_host *host, int irq,
+ static void ata_port_detach(struct ata_port *ap)
+ {
+ 	unsigned long flags;
++	struct ata_link *link;
++	struct ata_device *dev;
+ 
+ 	if (!ap->ops->error_handler)
+ 		goto skip_eh;
+@@ -6333,6 +6335,13 @@ static void ata_port_detach(struct ata_port *ap)
+ 	cancel_delayed_work_sync(&ap->hotplug_task);
+ 
+  skip_eh:
++	/* clean up zpodd on port removal */
++	ata_for_each_link(link, ap, HOST_FIRST) {
++		ata_for_each_dev(dev, link, ALL) {
++			if (zpodd_dev_enabled(dev))
++				zpodd_exit(dev);
++		}
++	}
+ 	if (ap->pmp_link) {
+ 		int i;
+ 		for (i = 0; i < SATA_PMP_MAX_PORTS; i++)
+-- 
+1.8.3.1
