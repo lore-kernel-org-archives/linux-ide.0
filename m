@@ -1,53 +1,67 @@
-From: Levente Kurusa <levex@linux.com>
-Subject: [PATCH] libata: clean up ZPODD when a port is detached
-Date: Tue,  6 May 2014 15:57:48 +0200
-Message-ID: <1399384668-20394-1-git-send-email-levex@linux.com>
+From: Aaron Lu <aaron.lu@intel.com>
+Subject: Re: [PATCH] ahci: unregister acpi notify handler when a ZPODD is
+ unbound
+Date: Tue, 06 May 2014 15:32:31 +0800
+Message-ID: <5368900F.6050504@intel.com>
+References: <1398873887-23920-1-git-send-email-levex@linux.com> <536853F5.7040107@intel.com> <53687AE9.4010604@linux.com> <53687C1E.2020001@intel.com> <53688BBF.5090406@linux.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <53688BBF.5090406@linux.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, Linux ATA/IDE <linux-ide@vger.kernel.org>, Aaron Lu <aaron.lu@intel.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Joe Thomas <Joe.Thomas@dothill.com>, Levente Kurusa <levex@linux.com>
+To: Levente Kurusa <levex@linux.com>, Tejun Heo <tj@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, Linux ATA/IDE <linux-ide@vger.kernel.org>, Joe Thomas <Joe.Thomas@dothill.com>
 List-Id: linux-ide@vger.kernel.org
 
-When a ZPODD device is unbound via sysfs, the ACPI notify handler
-is not removed. This causes panics as observed in Bug #74601. The
-panic only happens when the wake happens from outside the kernel
-(i.e. inserting a media or pressing a button). Add a loop to
-ata_port_detach which loops through the port's devices and checks
-if zpodd is enabled, if so call zpodd_exit.
+On 05/06/2014 03:14 PM, Levente Kurusa wrote:
+> Hi,
+> 
+> On 05/06/2014 08:07 AM, Aaron Lu wrote:
+>> On 05/06/2014 02:02 PM, Levente Kurusa wrote:
+>>> Hi,
+>>>
+>>> On 05/06/2014 05:16 AM, Aaron Lu wrote:
+>>>> On 05/01/2014 12:04 AM, Levente Kurusa wrote:
+>>>>> When a ZPODD device is unbound via sysfs, the acpi notify handler
+>>>>> is not removed. This causes panics as observed in Bug #74601. The
+>>>>
+>>>> Ah...too bad, I forgot to consider this situation, thanks for tracking
+>>>> this.
+>>>>
+>>>>> panic only happens when the wake happens from outside the kernel
+>>>>> (i.e. inserting media or pressing a button). Implement a new
+>>>>> ahci_remove_one function which causes zpodd_exit to be called for all
+>>>>> ZPODD devices on the unbound PCI device.
+>>>>>
+>>>>> Signed-off-by: Levente Kurusa <levex@linux.com>
+>>>>> ---
+>>>>>
+>>>>> Hi,
+>>>>>
+>>>>> I am not sure if the loop below is correct. Maybe there is a better
+>>>>> solution to loop through all the devices which might use ZPODD?
+>>>>
+>>>> I didn't find a proper place either. For hotplug, we did the zpodd_exit
+>>>> at ata_scsi_handle_link_detach. But for host controller pci device
+>>>> removal, we used scsi_remove_host in ata_port_detach and there is no
+>>>> place to add the zpodd_exit for a to-be-removed scsi device...
+>>>>
+>>>> Looks like we can only iterate the ata devices and call zpodd_exit
+>>>> explicitly for them if they are zpodd devices. Instead of adding a new
+>>>> remove callback, what about just embed that into the ata_port_detach
+>>>> like the following example?
+>>>
+>>> Yes, this makes more sense as this doesn't tinker with exports and such...
+>>> However this will throw unused variable compiler warnings if we add the
+>>> required #ifdefs... Maybe a new function? ata_zpodd_detach_port?
+>>
+>> I think we can omit the #ifdefs as the loop is not called frequently and
+>> thus doesn't cost much. We already have stubs for zpodd_dev_enabled and
+>> zpodd_exit.
+>>
+> 
+> Ah, I see. Shall I send V2? Any tags I should add for you?
 
-Cc: stable@vger.kernel.org
-Reviewed-by: Aaron Lu <aaron.lu@intel.com>
-Signed-off-by: Levente Kurusa <levex@linux.com>
----
- drivers/ata/libata-core.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 943cc8b..ea83828 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6314,6 +6314,8 @@ int ata_host_activate(struct ata_host *host, int irq,
- static void ata_port_detach(struct ata_port *ap)
- {
- 	unsigned long flags;
-+	struct ata_link *link;
-+	struct ata_device *dev;
- 
- 	if (!ap->ops->error_handler)
- 		goto skip_eh;
-@@ -6333,6 +6335,13 @@ static void ata_port_detach(struct ata_port *ap)
- 	cancel_delayed_work_sync(&ap->hotplug_task);
- 
-  skip_eh:
-+	/* clean up zpodd on port removal */
-+	ata_for_each_link(link, ap, HOST_FIRST) {
-+		ata_for_each_dev(dev, link, ALL) {
-+			if (zpodd_dev_enabled(dev))
-+				zpodd_exit(dev);
-+		}
-+	}
- 	if (ap->pmp_link) {
- 		int i;
- 		for (i = 0; i < SATA_PMP_MAX_PORTS; i++)
--- 
-1.8.3.1
+Yes please. Also, this seems to be stable candidate.
+You can add my reviewed-by tag, thanks.
