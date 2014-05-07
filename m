@@ -1,37 +1,75 @@
-From: Paul Bolle <pebolle@tiscali.nl>
-Subject: Re: [PATCH] libata-sff: remove dead code
-Date: Wed, 07 May 2014 12:00:06 +0200
-Message-ID: <1399456806.6659.20.camel@x220>
-References: <1399204229.8729.15.camel@x220>
-	 <1399411616.2458.45.camel@acox1-desk.ger.corp.intel.com>
-	 <1399454604.6659.13.camel@x220>
-	 <1399456196.2458.53.camel@acox1-desk.ger.corp.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cpsmtpb-ews03.kpnxchange.com ([213.75.39.6]:54875 "EHLO
-	cpsmtpb-ews03.kpnxchange.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754598AbaEGKAJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 May 2014 06:00:09 -0400
-In-Reply-To: <1399456196.2458.53.camel@acox1-desk.ger.corp.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Luis Henriques <luis.henriques@canonical.com>
+Subject: [PATCH 3.11 15/70] ahci: Do not receive interrupts sent by dummy ports
+Date: Wed,  7 May 2014 14:12:18 +0100
+Message-ID: <1399468393-10140-16-git-send-email-luis.henriques@canonical.com>
+References: <1399468393-10140-1-git-send-email-luis.henriques@canonical.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1399468393-10140-1-git-send-email-luis.henriques@canonical.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org, kernel-team@lists.ubuntu.com
+Cc: Alexander Gordeev <agordeev@redhat.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Luis Henriques <luis.henriques@canonical.com>
 List-Id: linux-ide@vger.kernel.org
-To: Alan Cox <alan@linux.intel.com>
-Cc: David Howells <dhowells@redhat.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, 2014-05-07 at 10:49 +0100, Alan Cox wrote:
-> Unless you are editing the config with out of tree changes. Which is
-> possible which is why I said ask Dave. It's probably fine but best to be
-> safe.
+3.11.10.10 -stable review patch.  If anyone has any objections, please let me know.
 
-If you mean adding a "config NO_ATA_LEGACY" entry to some Kconfig file,
-and setting that symbol during "make *config", that will obviously work.
+------------------
 
-But if you mean (hand) editing the .config, that wouldn't work, as the
-line for CONFIG_NO_ATA_LEGACY would be dropped during "make *config",
-wouldn't it?
+From: Alexander Gordeev <agordeev@redhat.com>
 
+commit 2cf532f5e67c0cfe38c8c100e49280cdadacd2be upstream.
 
-Paul Bolle
+In multiple MSI mode all AHCI ports (including dummy) get assigned
+separate MSI vectors and (as result of execution
+pci_enable_msi_exact() function) separate IRQ numbers, (mapped to the
+MSI vectors).
 
+Therefore, although interrupts from dummy ports are not desired they
+are still enabled. We do not request IRQs for dummy ports, but that
+only means we do not assign AHCI-specific ISRs to corresponding IRQ
+numbers.
+
+As result, dummy port interrupts still could come and traverse all the
+way from the PCI device to the kernel, causing unnecessary overhead.
+
+This update disables IRQs for dummy ports and prevents the described
+issue.
+
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Tested-by: David Milburn <dmilburn@redhat.com>
+Cc: linux-ide@vger.kernel.org
+Fixes: 5ca72c4f7c41 ("AHCI: Support multiple MSIs")
+Signed-off-by: Luis Henriques <luis.henriques@canonical.com>
+---
+ drivers/ata/ahci.c | 16 ++++++++++------
+ 1 file changed, 10 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index a5cf3ea..9d13ab1 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1171,12 +1171,16 @@ int ahci_host_activate(struct ata_host *host, int irq, unsigned int n_msis)
+ 	for (i = 0; i < host->n_ports; i++) {
+ 		struct ahci_port_priv *pp = host->ports[i]->private_data;
+ 
+-		/* pp is NULL for dummy ports */
+-		if (pp)
+-			rc = devm_request_threaded_irq(host->dev,
+-						       irq + i, ahci_hw_interrupt,
+-						       ahci_thread_fn, IRQF_SHARED,
+-						       pp->irq_desc, host->ports[i]);
++		/* Do not receive interrupts sent by dummy ports */
++		if (!pp) {
++			disable_irq(irq + i);
++			continue;
++		}
++
++		rc = devm_request_threaded_irq(host->dev, irq + i,
++					       ahci_hw_interrupt,
++					       ahci_thread_fn, IRQF_SHARED,
++					       pp->irq_desc, host->ports[i]);
+ 		if (rc)
+ 			goto out_free_irqs;
+ 	}
+-- 
+1.9.1
