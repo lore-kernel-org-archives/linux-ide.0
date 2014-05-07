@@ -1,75 +1,37 @@
-From: Luis Henriques <luis.henriques@canonical.com>
-Subject: [PATCH 3.11 15/70] ahci: Do not receive interrupts sent by dummy ports
-Date: Wed,  7 May 2014 14:12:18 +0100
-Message-ID: <1399468393-10140-16-git-send-email-luis.henriques@canonical.com>
-References: <1399468393-10140-1-git-send-email-luis.henriques@canonical.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1399468393-10140-1-git-send-email-luis.henriques@canonical.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org, kernel-team@lists.ubuntu.com
-Cc: Alexander Gordeev <agordeev@redhat.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Luis Henriques <luis.henriques@canonical.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] libata: clean up ZPODD when a port is detached
+Date: Wed, 7 May 2014 09:18:36 -0400
+Message-ID: <20140507131836.GD16702@htj.dyndns.org>
+References: <1399384668-20394-1-git-send-email-levex@linux.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qc0-f181.google.com ([209.85.216.181]:41315 "EHLO
+	mail-qc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933384AbaEGNSk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 May 2014 09:18:40 -0400
+Content-Disposition: inline
+In-Reply-To: <1399384668-20394-1-git-send-email-levex@linux.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Levente Kurusa <levex@linux.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, Linux ATA/IDE <linux-ide@vger.kernel.org>, Aaron Lu <aaron.lu@intel.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Joe Thomas <Joe.Thomas@dothill.com>
 
-3.11.10.10 -stable review patch.  If anyone has any objections, please let me know.
+On Tue, May 06, 2014 at 03:57:48PM +0200, Levente Kurusa wrote:
+> When a ZPODD device is unbound via sysfs, the ACPI notify handler
+> is not removed. This causes panics as observed in Bug #74601. The
+> panic only happens when the wake happens from outside the kernel
+> (i.e. inserting a media or pressing a button). Add a loop to
+> ata_port_detach which loops through the port's devices and checks
+> if zpodd is enabled, if so call zpodd_exit.
+> 
+> Cc: stable@vger.kernel.org
+> Reviewed-by: Aaron Lu <aaron.lu@intel.com>
+> Signed-off-by: Levente Kurusa <levex@linux.com>
 
-------------------
+Applied to libata/for-3.15-fixes.
 
-From: Alexander Gordeev <agordeev@redhat.com>
+Thanks.
 
-commit 2cf532f5e67c0cfe38c8c100e49280cdadacd2be upstream.
-
-In multiple MSI mode all AHCI ports (including dummy) get assigned
-separate MSI vectors and (as result of execution
-pci_enable_msi_exact() function) separate IRQ numbers, (mapped to the
-MSI vectors).
-
-Therefore, although interrupts from dummy ports are not desired they
-are still enabled. We do not request IRQs for dummy ports, but that
-only means we do not assign AHCI-specific ISRs to corresponding IRQ
-numbers.
-
-As result, dummy port interrupts still could come and traverse all the
-way from the PCI device to the kernel, causing unnecessary overhead.
-
-This update disables IRQs for dummy ports and prevents the described
-issue.
-
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Tested-by: David Milburn <dmilburn@redhat.com>
-Cc: linux-ide@vger.kernel.org
-Fixes: 5ca72c4f7c41 ("AHCI: Support multiple MSIs")
-Signed-off-by: Luis Henriques <luis.henriques@canonical.com>
----
- drivers/ata/ahci.c | 16 ++++++++++------
- 1 file changed, 10 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index a5cf3ea..9d13ab1 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1171,12 +1171,16 @@ int ahci_host_activate(struct ata_host *host, int irq, unsigned int n_msis)
- 	for (i = 0; i < host->n_ports; i++) {
- 		struct ahci_port_priv *pp = host->ports[i]->private_data;
- 
--		/* pp is NULL for dummy ports */
--		if (pp)
--			rc = devm_request_threaded_irq(host->dev,
--						       irq + i, ahci_hw_interrupt,
--						       ahci_thread_fn, IRQF_SHARED,
--						       pp->irq_desc, host->ports[i]);
-+		/* Do not receive interrupts sent by dummy ports */
-+		if (!pp) {
-+			disable_irq(irq + i);
-+			continue;
-+		}
-+
-+		rc = devm_request_threaded_irq(host->dev, irq + i,
-+					       ahci_hw_interrupt,
-+					       ahci_thread_fn, IRQF_SHARED,
-+					       pp->irq_desc, host->ports[i]);
- 		if (rc)
- 			goto out_free_irqs;
- 	}
 -- 
-1.9.1
+tejun
