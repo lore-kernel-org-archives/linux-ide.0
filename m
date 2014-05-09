@@ -1,52 +1,46 @@
-From: Elias Oltmanns <eo@nebensachen.de>
-Subject: Re: Disk shock protection interferes with standby timers, please advise
-Date: Fri, 09 May 2014 09:07:18 +0200
-Message-ID: <87oaz74ehl.fsf@denkblock.local>
-References: <876214glvz.fsf@denkblock.local> <20140503212115.GA29213@nomi.cz>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH 00/22] Random ARM randconfig fixes in drivers
+Date: Fri, 9 May 2014 13:48:49 +0200
+Message-ID: <201405091348.49713.arnd@arndb.de>
+References: <1399560433-1402630-1-git-send-email-arnd@arndb.de>
+ <20140508164157.GA22224@roeck-us.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.nebensachen.de ([5.45.99.250]:57002 "EHLO
-	mail.nebensachen.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751221AbaEIHPH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 May 2014 03:15:07 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <20140508164157.GA22224@roeck-us.net>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Guenter Roeck <linux@roeck-us.net>
+Cc: wsa@the-dreams.de, tony@atomide.com, linux-pci@vger.kernel.org, linus.walleij@linaro.org, nicolas.ferre@atmel.com, linux-ide@vger.kernel.org, wim@iguana.be, linux-mtd@lists.infradead.org, linux-i2c@vger.kernel.org, linux-samsung-soc@vger.kernel.org, mturquette@linaro.org, vinod.koul@intel.com, linux-sh@vger.kernel.org, kishon@ti.com, linux-iio@vger.kernel.org, linux-input@vger.kernel.org, plagnioj@jcrosoft.com, ohad@wizery.com, linux-watchdog@vger.kernel.org, broonie@kernel.org, bhelgaas@google.com, linux@arm.linux.org.uk, linux-arm-kernel@lists.infradead.org, gregkh@linuxfoundation.org, dmitry.torokhov@gmail.com, linux-kernel@vger.kernel.org, balbi@ti.com, josh.wu@atmel.com, netdev@vger.kernel.org, dmaengine@vger.kernel.org, dwmw2@infradead.org, jic23@kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?iso-8859-15?Q?Tom=E1=A8_Janou=A8ek?= <tomi@nomi.cz>
-Cc: Tejun Heo <tj@kernel.org>, Jeff Garzik <jgarzik@pobox.com>, Aaron Lu <aaron.lu@intel.com>, linux-ide@vger.kernel.org
 
-On 03 May 2014, Tom=C3=A1=C5=A1 Janou=C5=A1ek wrote:
-> Hi,
-> On Thu, Mar 07, 2013 at 12:16:00AM +0100, Elias Oltmanns wrote:
->> On the other hand,
->>=20
->> # hdparm -I /dev/sda
->>=20
->> also reenables the standby timer yet leaves the heads alone. So my
->> question is this: Can anyone give some advice as to what command wha=
-t be
->> suitable to be issued instead of Idle Immediate when the shock
->> protection timeout has elapsed? Basically, it should be cheap, cause=
- no
->> =E2=80=9Cmechanical action=E2=80=9D, and be anything *but* Check Pow=
-er Mode.
->=20
-> Well, it does not reenable the standby timer on my ST9500420AS drive,=
- so that
-> isn't a universal solution either.  And since so few people care abou=
-t this
-> problem, this doesn't seem to be worth a quirk database or something =
-like
-> that.  I'll just keep applying the patch, then.  :-)
+On Thursday 08 May 2014, Guenter Roeck wrote:
+> On Thu, May 08, 2014 at 04:46:51PM +0200, Arnd Bergmann wrote:
+> > These are a bunch of fixes I had to do to get all randconfig
+> > configurations on ARM working. Most of these are really old
+> > bugs, but there are also some new ones. I don't think any of
+> > them require a backport to linux-stable.
+> > 
+> > I have checked that they are all still required on yesterday's
+> > linux-next kernel. Please apply on the appropriate trees unless
+> > there are objections.
+> > 
+> Is this series of patches also going to fix arm:allmodconfig ?
 
-It might be an idea to raise this issue with Peter FP Zhang from Lenovo
-who is actively participating in discussions on the linux thinkpad
-mailing list. May be, he can ask the right people what command sequence
-is used by the Windows driver on those newer machines, but then, may be
-not. Unfortunately, I haven't got the resources to follow up on this
-right now.
+Possibly, I haven't checked in a while. I'm unfortunately sitting on
+about 200 other patches in the same branch, which together fix all
+build errors in any configuration I encountered.
 
-Regards,
+I should really do some allmodconfig/allnoconfig/allyesconfig
+builds without my series again, and prioritize sending out the
+ones required for that.
 
-Elias
+	Arnd
