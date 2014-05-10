@@ -1,46 +1,44 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 00/22] Random ARM randconfig fixes in drivers
-Date: Fri, 9 May 2014 13:48:49 +0200
-Message-ID: <201405091348.49713.arnd@arndb.de>
-References: <1399560433-1402630-1-git-send-email-arnd@arndb.de>
- <20140508164157.GA22224@roeck-us.net>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2] ata: use CONFIG_PM_SLEEP instead of CONFIG_PM where
+ applicable in host drivers
+Date: Fri, 9 May 2014 22:49:25 -0400
+Message-ID: <20140510024925.GB22539@mtj.dyndns.org>
+References: <3169813.4KfLVZEqs2@amdc1032>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20140508164157.GA22224@roeck-us.net>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Guenter Roeck <linux@roeck-us.net>
-Cc: wsa@the-dreams.de, tony@atomide.com, linux-pci@vger.kernel.org, linus.walleij@linaro.org, nicolas.ferre@atmel.com, linux-ide@vger.kernel.org, wim@iguana.be, linux-mtd@lists.infradead.org, linux-i2c@vger.kernel.org, linux-samsung-soc@vger.kernel.org, mturquette@linaro.org, vinod.koul@intel.com, linux-sh@vger.kernel.org, kishon@ti.com, linux-iio@vger.kernel.org, linux-input@vger.kernel.org, plagnioj@jcrosoft.com, ohad@wizery.com, linux-watchdog@vger.kernel.org, broonie@kernel.org, bhelgaas@google.com, linux@arm.linux.org.uk, linux-arm-kernel@lists.infradead.org, gregkh@linuxfoundation.org, dmitry.torokhov@gmail.com, linux-kernel@vger.kernel.org, balbi@ti.com, josh.wu@atmel.com, netdev@vger.kernel.org, dmaengine@vger.kernel.org, dwmw2@infradead.org, jic23@kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qg0-f54.google.com ([209.85.192.54]:64529 "EHLO
+	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752819AbaEJCt3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 May 2014 22:49:29 -0400
+Content-Disposition: inline
+In-Reply-To: <3169813.4KfLVZEqs2@amdc1032>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thursday 08 May 2014, Guenter Roeck wrote:
-> On Thu, May 08, 2014 at 04:46:51PM +0200, Arnd Bergmann wrote:
-> > These are a bunch of fixes I had to do to get all randconfig
-> > configurations on ARM working. Most of these are really old
-> > bugs, but there are also some new ones. I don't think any of
-> > them require a backport to linux-stable.
-> > 
-> > I have checked that they are all still required on yesterday's
-> > linux-next kernel. Please apply on the appropriate trees unless
-> > there are objections.
-> > 
-> Is this series of patches also going to fix arm:allmodconfig ?
+On Wed, May 07, 2014 at 05:17:44PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> This patch fixes host drivers to use CONFIG_PM_SLEEP instead of CONFIG_PM
+> where applicable.  Benefits of this change:
+> 
+> * unused code is not being compiled in for CONFIG_PM=y, CONFIG_PM_SLEEP=n
+>   and CONFIG_PM_RUNTIME=y configurations
+> 
+> * easier transition to use struct dev_pm_ops and SIMPLE_DEV_PM_OPS() in
+>   the future
+> 
+> * more consistent code (there are host drivers which are using the correct
+>   CONFIG_PM_SLEEP checks already)
+> 
+> The patch leaves the core libata code and ->port_[suspend,resume] support
+> in sata_[inic162x,nv,sil24].c alone for now.
+> 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
-Possibly, I haven't checked in a while. I'm unfortunately sitting on
-about 200 other patches in the same branch, which together fix all
-build errors in any configuration I encountered.
+Applied to libata/for-3.16.
 
-I should really do some allmodconfig/allnoconfig/allyesconfig
-builds without my series again, and prioritize sending out the
-ones required for that.
+Thanks.
 
-	Arnd
+-- 
+tejun
