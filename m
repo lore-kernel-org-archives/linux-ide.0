@@ -1,137 +1,133 @@
-From: "George Spelvin" <linux@horizon.com>
-Subject: [PATCH 2/2] libata: Use glob_match from lib/glob.c
-Date: 9 May 2014 23:14:57 -0400
-Message-ID: <20140510031457.23701.qmail@ns.horizon.com>
-References: <20140510031356.22726.qmail@ns.horizon.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 1/2] Add lib/glob.c
+Date: Sat, 10 May 2014 08:21:38 -0400
+Message-ID: <20140510122138.GA4721@mtj.dyndns.org>
+References: <20140313121032.GA9981@htj.dyndns.org>
+ <20140510031356.22726.qmail@ns.horizon.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qg0-f49.google.com ([209.85.192.49]:40634 "EHLO
+	mail-qg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755350AbaEJMVl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 May 2014 08:21:41 -0400
+Content-Disposition: inline
 In-Reply-To: <20140510031356.22726.qmail@ns.horizon.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux@horizon.com, tj@kernel.org
-Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, mingo@redhat.com, torvalds@linux-foundation.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: George Spelvin <linux@horizon.com>
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, mingo@redhat.com, torvalds@linux-foundation.org
 
-The function may be useful for other drivers, so export it.
-(Suggested by Tejun Heo.)
+Hello,
 
-Note that I inverted the return value of glob_match; returning
-true on match seemed to make more sense.
+On Fri, May 09, 2014 at 11:13:56PM -0400, George Spelvin wrote:
+> +config GLOB
+> +	tristate
+> +#	(Prompt disabled to reduce kbuild clutter until someone needs it.)
+> +#	prompt "glob_match() function"
+> +	help
+> +	  This option provides a glob_match function for performing simple
+> +	  text pattern matching.  It is primarily used by the ATA code
+> +	  to blacklist particular drive models, but other device drivers
+> +	  may need similar functionality.
+> +
+> +	  All in-kernel drivers that require this function automatically
+> +	  select this option.  Say N unless you are compiling an out-of
+> +	  tree driver which tells you it depend on it.
 
-Signed-off-by: George Spelvin <linux@horizon.com>
----
- drivers/ata/Kconfig       |  1 +
- drivers/ata/libata-core.c | 72 ++---------------------------------------------
- 2 files changed, 4 insertions(+), 69 deletions(-)
+Just adding glob.o to lib-y should be enough.  It will be excluded
+from linking if unused.
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 868429a..f121fa0 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -16,6 +16,7 @@ menuconfig ATA
- 	depends on BLOCK
- 	depends on !(M32R || M68K || S390) || BROKEN
- 	select SCSI
-+	select GLOB
- 	---help---
- 	  If you want to use a ATA hard disk, ATA tape drive, ATA CD-ROM or
- 	  any other ATA device under Linux, say Y and make sure that you know
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 8cb2522..e40ca97 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -59,6 +59,7 @@
- #include <linux/async.h>
- #include <linux/log2.h>
- #include <linux/slab.h>
-+#include <linux/glob.h>
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_host.h>
-@@ -4248,73 +4249,6 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	{ }
- };
- 
--/**
-- *	glob_match - match a text string against a glob-style pattern
-- *	@text: the string to be examined
-- *	@pattern: the glob-style pattern to be matched against
-- *
-- *	Either/both of text and pattern can be empty strings.
-- *
-- *	Match text against a glob-style pattern, with wildcards and simple sets:
-- *
-- *		?	matches any single character.
-- *		*	matches any run of characters.
-- *		[xyz]	matches a single character from the set: x, y, or z.
-- *		[a-d]	matches a single character from the range: a, b, c, or d.
-- *		[a-d0-9] matches a single character from either range.
-- *
-- *	The special characters ?, [, -, or *, can be matched using a set, eg. [*]
-- *	Behaviour with malformed patterns is undefined, though generally reasonable.
-- *
-- *	Sample patterns:  "SD1?",  "SD1[0-5]",  "*R0",  "SD*1?[012]*xx"
-- *
-- *	This function uses one level of recursion per '*' in pattern.
-- *	Since it calls _nothing_ else, and has _no_ explicit local variables,
-- *	this will not cause stack problems for any reasonable use here.
-- *
-- *	RETURNS:
-- *	0 on match, 1 otherwise.
-- */
--static int glob_match (const char *text, const char *pattern)
--{
--	do {
--		/* Match single character or a '?' wildcard */
--		if (*text == *pattern || *pattern == '?') {
--			if (!*pattern++)
--				return 0;  /* End of both strings: match */
--		} else {
--			/* Match single char against a '[' bracketed ']' pattern set */
--			if (!*text || *pattern != '[')
--				break;  /* Not a pattern set */
--			while (*++pattern && *pattern != ']' && *text != *pattern) {
--				if (*pattern == '-' && *(pattern - 1) != '[')
--					if (*text > *(pattern - 1) && *text < *(pattern + 1)) {
--						++pattern;
--						break;
--					}
--			}
--			if (!*pattern || *pattern == ']')
--				return 1;  /* No match */
--			while (*pattern && *pattern++ != ']');
--		}
--	} while (*++text && *pattern);
--
--	/* Match any run of chars against a '*' wildcard */
--	if (*pattern == '*') {
--		if (!*++pattern)
--			return 0;  /* Match: avoid recursion at end of pattern */
--		/* Loop to handle additional pattern chars after the wildcard */
--		while (*text) {
--			if (glob_match(text, pattern) == 0)
--				return 0;  /* Remainder matched */
--			++text;  /* Absorb (match) this char and try again */
--		}
--	}
--	if (!*text && !*pattern)
--		return 0;  /* End of both strings: match */
--	return 1;  /* No match */
--}
--
- static unsigned long ata_dev_blacklisted(const struct ata_device *dev)
- {
- 	unsigned char model_num[ATA_ID_PROD_LEN + 1];
-@@ -4325,10 +4259,10 @@ static unsigned long ata_dev_blacklisted(const struct ata_device *dev)
- 	ata_id_c_string(dev->id, model_rev, ATA_ID_FW_REV, sizeof(model_rev));
- 
- 	while (ad->model_num) {
--		if (!glob_match(model_num, ad->model_num)) {
-+		if (glob_match(model_num, ad->model_num)) {
- 			if (ad->model_rev == NULL)
- 				return ad->horkage;
--			if (!glob_match(model_rev, ad->model_rev))
-+			if (glob_match(model_rev, ad->model_rev))
- 				return ad->horkage;
- 		}
- 		ad++;
+> +#ifdef UNITTEST
+> +/* To do a basic sanity test, "cc -DUNITTEST glob.c" and run a.out. */
+> +
+> +#include <stdbool.h>
+> +#define __pure __attribute__((pure))
+> +#define NOP(x)
+> +#define EXPORT_SYMBOL NOP	/* Two stages to avoid checkpatch complaints */
+
+These things tend to bitrot.  Let's please keep testing harness out of
+tree.
+
+> +#else
+> +
+> +#include <linux/module.h>
+> +#include <linux/glob.h>
+> +
+> +MODULE_DESCRIPTION("glob(7) matching");
+> +MODULE_LICENSE("Dual MIT/GPL");
+
+Do we make library routines separate modules usually?
+
+...
+> +bool __pure
+> +glob_match(char const *pat, char const *str)
+
+The whole thing fits in a single 80 column line, right?
+
+bool __pure glob_match(char const *pat, char const *str)
+
+> +{
+> +	/*
+> +	 * Backtrack to previous * on mismatch and retry starting one
+> +	 * character later in the string.  Because * matches all characters
+> +	 * (no exception for /), it can be easily proved that there's
+> +	 * never a need to backtrack multiple levels.
+> +	 */
+> +	char const *back_pat = 0, *back_str = back_str;
+
+Blank line here.
+
+I haven't delved into the actual implementation.  Looks sane on the
+first glance.
+
+> +#ifdef UNITTEST
+> +
+> +/* Test code */
+> +#include <stdio.h>
+> +#include <stdlib.h>
+> +struct glob_test {
+> +	char const *pat, *str;
+> +	bool expected;
+> +};
+> +
+> +static void
+> +test(struct glob_test const *g)
+> +{
+> +	bool match = glob_match(g->pat, g->str);
+> +
+> +	printf("\"%s\" vs. \"%s\": %s %s\n", g->pat, g->str,
+> +		match ? "match" : "mismatch",
+> +		match == g->expected ? "OK" : "*** ERROR ***");
+> +	if (match != g->expected)
+> +		exit(1);
+> +}
+> +
+> +static struct glob_test const tests[] = {
+> +	{ "a", "a", true },
+...
+> +	{ "*ab*cd*", "abcabcabcabcefg", false }
+> +};
+> +
+> +int
+> +main(void)
+> +{
+> +	size_t i;
+> +
+> +	for (i = 0; i < sizeof(tests)/sizeof(*tests); i++)
+> +		test(tests + i);
+> +
+> +	return 0;
+> +}
+> +
+> +#endif	/* UNITTEST */
+
+Again, I don't really think the userland testing code belongs here.
+If you wanna keep them, please make it in-kernel selftesting.  We
+don't really wanna keep code which can't get built and tested in
+kernel tree proper.
+
+Thanks.
+
 -- 
-1.9.2
+tejun
