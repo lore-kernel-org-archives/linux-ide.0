@@ -1,34 +1,72 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/2] Add lib/glob.c
-Date: Sun, 11 May 2014 08:36:05 -0400
-Message-ID: <20140511123605.GB22945@htj.dyndns.org>
-References: <20140510031356.22726.qmail@ns.horizon.com>
- <536E61EE.3000705@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f169.google.com ([209.85.216.169]:52978 "EHLO
-	mail-qc0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757245AbaEKMgJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 May 2014 08:36:09 -0400
-Content-Disposition: inline
-In-Reply-To: <536E61EE.3000705@infradead.org>
-Sender: linux-ide-owner@vger.kernel.org
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 3.14 37/83] ahci: Do not receive interrupts sent by dummy ports
+Date: Sun, 11 May 2014 21:19:38 +0200
+Message-ID: <20140511191912.077347671@linuxfoundation.org>
+References: <20140511191907.024339448@linuxfoundation.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140511191907.024339448@linuxfoundation.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Alexander Gordeev <agordeev@redhat.com>, Tejun Heo <tj@kernel.org>, David Milburn <dmilburn@redhat.com>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: George Spelvin <linux@horizon.com>, akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, mingo@redhat.com, torvalds@linux-foundation.org
 
-On Sat, May 10, 2014 at 10:29:18AM -0700, Randy Dunlap wrote:
-> > +	  select this option.  Say N unless you are compiling an out-of
-> > +	  tree driver which tells you it depend on it.
-> 
-> 	To support out-of-tree drivers, I'm pretty sure that you will need
-> 	to use obj- instead of lib-.  lib- drops unused code, like Tejun said.
+3.14-stable review patch.  If anyone has any objections, please let me know.
 
-I don't think we need to worry about out-of-tree drivers from the
-beginning.
+------------------
 
-Thanks.
+From: Alexander Gordeev <agordeev@redhat.com>
 
--- 
-tejun
+commit 2cf532f5e67c0cfe38c8c100e49280cdadacd2be upstream.
+
+In multiple MSI mode all AHCI ports (including dummy) get assigned
+separate MSI vectors and (as result of execution
+pci_enable_msi_exact() function) separate IRQ numbers, (mapped to the
+MSI vectors).
+
+Therefore, although interrupts from dummy ports are not desired they
+are still enabled. We do not request IRQs for dummy ports, but that
+only means we do not assign AHCI-specific ISRs to corresponding IRQ
+numbers.
+
+As result, dummy port interrupts still could come and traverse all the
+way from the PCI device to the kernel, causing unnecessary overhead.
+
+This update disables IRQs for dummy ports and prevents the described
+issue.
+
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Tested-by: David Milburn <dmilburn@redhat.com>
+Cc: linux-ide@vger.kernel.org
+Fixes: 5ca72c4f7c41 ("AHCI: Support multiple MSIs")
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
+---
+ drivers/ata/ahci.c |   16 ++++++++++------
+ 1 file changed, 10 insertions(+), 6 deletions(-)
+
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1242,12 +1242,16 @@ int ahci_host_activate(struct ata_host *
+ 	for (i = 0; i < host->n_ports; i++) {
+ 		struct ahci_port_priv *pp = host->ports[i]->private_data;
+ 
+-		/* pp is NULL for dummy ports */
+-		if (pp)
+-			rc = devm_request_threaded_irq(host->dev,
+-						       irq + i, ahci_hw_interrupt,
+-						       ahci_thread_fn, IRQF_SHARED,
+-						       pp->irq_desc, host->ports[i]);
++		/* Do not receive interrupts sent by dummy ports */
++		if (!pp) {
++			disable_irq(irq + i);
++			continue;
++		}
++
++		rc = devm_request_threaded_irq(host->dev, irq + i,
++					       ahci_hw_interrupt,
++					       ahci_thread_fn, IRQF_SHARED,
++					       pp->irq_desc, host->ports[i]);
+ 		if (rc)
+ 			goto out_free_irqs;
+ 	}
