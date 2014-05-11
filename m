@@ -1,88 +1,63 @@
-From: Randy Dunlap <rdunlap@infradead.org>
+From: "George Spelvin" <linux@horizon.com>
 Subject: Re: [PATCH 1/2] Add lib/glob.c
-Date: Sat, 10 May 2014 10:29:18 -0700
-Message-ID: <536E61EE.3000705@infradead.org>
-References: <20140510031356.22726.qmail@ns.horizon.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Date: 11 May 2014 02:02:39 -0400
+Message-ID: <20140511060239.22063.qmail@ns.horizon.com>
+References: <20140510122138.GA4721@mtj.dyndns.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:55093 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751001AbaEJR3W (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 10 May 2014 13:29:22 -0400
-In-Reply-To: <20140510031356.22726.qmail@ns.horizon.com>
+Received: from ns.horizon.com ([71.41.210.147]:19638 "HELO ns.horizon.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1757909AbaEKGCp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 11 May 2014 02:02:45 -0400
+In-Reply-To: <20140510122138.GA4721@mtj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: George Spelvin <linux@horizon.com>, tj@kernel.org
+To: linux@horizon.com, tj@kernel.org
 Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, mingo@redhat.com, torvalds@linux-foundation.org
 
-On 05/09/2014 08:13 PM, George Spelvin wrote:
-> This is a helper function from drivers/ata/libata_core.c, where it is used
-> to blacklist particular device models.  It's being moved to lib/ so other
-> drivers may use it for the same purpose.
-> 
-> This implementation in non-recursive, so is safe for the kernel stack.
-> 
-> Signed-off-by: George Spelvin <linux@horizon.com>
-> ---
-> Finally rescued this from the back burner.  The code size will go back
-> down in the second patch which removes the old implementation, although
-> the number of source line reflects more comments and a test driver.
-> 
-> The infrastructure parts of this, such as the module name and Kconfig
-> declarations, are something I haven't done before, and comments are
-> appreciated.
-> 
-> Tejun Heo <htejun@gmail.com> wrote:
->> On Wed, Mar 12, 2014 at 06:52:44PM -0400, George Spelvin wrote:
->>> Sure; I'll prepare some patches.  May I feed it through you, or
->>> is there a lib/ maintainer I need to go through?
->>
->> Please keep me cc'd but you'd probably also want to cc Linus, Andrew
->> Morton and Ingo.
-> 
->  include/linux/glob.h |  10 +++
->  lib/Kconfig          |  14 ++++
->  lib/Makefile         |   2 +
->  lib/glob.c           | 225 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  4 files changed, 251 insertions(+)
->  create mode 100644 include/linux/glob.h
->  create mode 100644 lib/glob.c
+On Sat, 10 May 2014 08:21:38 -0400, Tejun Heo wrote:
+> On Fri, May 09, 2014 at 11:13:56PM -0400, George Spelvin wrote:
+>> +config GLOB
+>> +	tristate
+>> +#	(Prompt disabled to reduce kbuild clutter until someone needs it.)
+>> +#	prompt "glob_match() function"
+>> +	help
+>> +	  This option provides a glob_match function for performing simple
+>> +	  text pattern matching.  It is primarily used by the ATA code
+>> +	  to blacklist particular drive models, but other device drivers
+>> +	  may need similar functionality.
+>> +
+>> +	  All in-kernel drivers that require this function automatically
+>> +	  select this option.  Say N unless you are compiling an out-of
+>> +	  tree driver which tells you it depend on it.
 
-> diff --git a/lib/Kconfig b/lib/Kconfig
-> index 991c98b..5333d10 100644
-> --- a/lib/Kconfig
-> +++ b/lib/Kconfig
-> @@ -373,6 +373,20 @@ config CPU_RMAP
->  config DQL
->  	bool
->  
-> +config GLOB
-> +	tristate
-> +#	(Prompt disabled to reduce kbuild clutter until someone needs it.)
-> +#	prompt "glob_match() function"
-> +	help
-> +	  This option provides a glob_match function for performing simple
-> +	  text pattern matching.  It is primarily used by the ATA code
-> +	  to blacklist particular drive models, but other device drivers
-> +	  may need similar functionality.
-> +
-> +	  All in-kernel drivers that require this function automatically
+> Just adding glob.o to lib-y should be enough.  It will be excluded
+> from linking if unused.
 
-	I would drop "automatically". It has to be coded.
+But, I just confirmed, it will also be excluded from linking if
+CONFIG_ATA=m.  See for example commit b4d3ba3346f0 where some helpers
+had to be moved from lib-y to obj-y to fix module load errors.
+(Thanks to Randy Dunlap for this example.)
 
-> +	  select this option.  Say N unless you are compiling an out-of
-> +	  tree driver which tells you it depend on it.
+>> +#else
+>> +
+>> +#include <linux/module.h>
+>> +#include <linux/glob.h>
+>> +
+>> +MODULE_DESCRIPTION("glob(7) matching");
+>> +MODULE_LICENSE("Dual MIT/GPL");
 
-	To support out-of-tree drivers, I'm pretty sure that you will need
-	to use obj- instead of lib-.  lib- drops unused code, like Tejun said.
+> Do we make library routines separate modules usually?
 
-> +
->  #
->  # Netlink attribute parsing support is select'ed if needed
->  #
+There are basically three options I can see:
+1) Make it non-configurable and always include the code in the kernel
+   using oby-y, and just accept the wasted space if CONFIG_ATA=n
+2) Make it a boolean option, so CONFIG_ATA=m will force CONFIG_GLOB=y and
+   it will be included in the static kernel but unused until the module
+   is loaded.
+3) Make it a tristate option, which compiles into the kernel if
+   CONFIG_ATA=y (the common case), and is its own module if CONFIG_ATA=m.
+   An awful lot of the files in lib/ take this approach.
 
+Do you have a preference?  Option 3 is the current status.
 
--- 
-~Randy
+(Revised patch will come when I have the self-test converted.)
