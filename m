@@ -1,104 +1,66 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 3.14 36/83] ahci: Ensure "MSI Revert to Single Message" mode is not enforced
-Date: Sun, 11 May 2014 21:19:37 +0200
-Message-ID: <20140511191911.954666115@linuxfoundation.org>
-References: <20140511191907.024339448@linuxfoundation.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140511191907.024339448@linuxfoundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Alexander Gordeev <agordeev@redhat.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+From: =?UTF-8?q?Antoine=20T=C3=A9nart?=
+	<antoine.tenart@free-electrons.com>
+Subject: [PATCH v2 0/6] ARM: berlin: add AHCI support
+Date: Mon, 12 May 2014 11:16:51 +0200
+Message-ID: <1399886217-20474-1-git-send-email-antoine.tenart@free-electrons.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from top.free-electrons.com ([176.31.233.9]:56956 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751085AbaELJRA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 May 2014 05:17:00 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: sebastian.hesselbarth@gmail.com, tj@kernel.org, kishon@ti.com
+Cc: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-3.14-stable review patch.  If anyone has any objections, please let me know.
+This series adds the support for Berlin SoCs AHCI controllers. The
+controller allows to use the SATA host interface and, for example, the
+eSATA port on the BG2Q.
 
-------------------
+The series adds a PHY driver to control the two SATA ports available.
 
-From: Alexander Gordeev <agordeev@redhat.com>
+Also enable the eSATA interface on the BG2Q DMP.
 
-commit ab0f9e78b97f5193dd38b3757b42b6fbded05fb7 upstream.
+Changes since v1:
+	- added a PHY driver, allowing to enable each port
+	  individually and removed the 'force-port-map' property
+	- made the drivers a bit less magic :)
+	- wrote a function to select and configure registers in the
+	  AHCI driver
+	- removed BG2 / BG2CD nodes
 
-The AHCI specification allows hardware to choose to revert to
-single MSI mode when fewer messages are allocated than requested.
-Yet, at least ICH10 chipset reverts to single MSI mode even when
-enough messages are allocated in some cases (see below).
+Antoine T=C3=A9nart (6):
+  phy: add a driver for the Berlin SATA PHY
+  Documentation: bindings: add the Berlin SATA PHY
+  ata: ahci: add AHCI support for the Berlin BG2Q
+  Documentation: bindings: add the berlin-ahci compatible to the ahci
+    platform
+  ARM: berlin: add the AHCI node for the BG2Q
+  ARM: berlin: enable the eSATA interface on the BG2Q DMP
 
-This update forces the driver to not rely on initialization of
-multiple MSIs mode alone and always check if "MSI Revert to
-Single Message" (MRSM) mode was enforced by the controller and
-fallback to the single MSI mode in case it did.
+ .../devicetree/bindings/ata/ahci-berlin.txt        |  18 ++
+ .../devicetree/bindings/phy/berlin-sata-phy.txt    |  15 ++
+ arch/arm/boot/dts/berlin2q-marvell-dmp.dts         |  10 +
+ arch/arm/boot/dts/berlin2q.dtsi                    |  14 ++
+ drivers/ata/Kconfig                                |  10 +
+ drivers/ata/Makefile                               |   1 +
+ drivers/ata/ahci_berlin.c                          | 202 +++++++++++++=
+++++++++
+ drivers/phy/Kconfig                                |   5 +
+ drivers/phy/Makefile                               |   1 +
+ drivers/phy/phy-berlin-sata.c                      | 179 +++++++++++++=
++++++
+ 10 files changed, 455 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/ata/ahci-berlin.t=
+xt
+ create mode 100644 Documentation/devicetree/bindings/phy/berlin-sata-p=
+hy.txt
+ create mode 100644 drivers/ata/ahci_berlin.c
+ create mode 100644 drivers/phy/phy-berlin-sata.c
 
-That prevents a situation when the driver configured multiple
-per-port IRQ handlers, but the controller sends all port's
-interrupts to a single IRQ, which could easily screw up the
-interrupt handling and lead to delays and possibly crashes.
+--=20
+1.9.1
 
-The fix was tested on a 6-port controller that successfully
-reverted to the single MSI mode:
-
-00:1f.2 SATA controller: Intel Corporation 82801JI (ICH10 Family) SATA
-AHCI Controller (prog-if 01 [AHCI 1.0])
-	Subsystem: Super Micro Computer Inc Device 10a7
-	Flags: bus master, 66MHz, medium devsel, latency 0, IRQ 101
-	I/O ports at f110 [size=8]
-	I/O ports at f100 [size=4]
-	I/O ports at f0f0 [size=8]
-	I/O ports at f0e0 [size=4]
-	I/O ports at f020 [size=32]
-	Memory at fbf00000 (32-bit, non-prefetchable) [size=2K]
-	Capabilities: [80] MSI: Enable+ Count=1/16 Maskable- 64bit-
-	Capabilities: [70] Power Management version 3
-	Capabilities: [a8] SATA HBA v1.0
-	Capabilities: [b0] PCI Advanced Features
-	Kernel driver in use: ahci
-
-With 6 ports just 8 MSI vectors should be enough, but the adapter
-enforces the MRSM mode when less than 16 vectors are written to
-the Multiple Messages Enable PCI register. I instigated MRSM mode
-by forcing @nvec to 8 in ahci_init_interrupts().
-
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-ide@vger.kernel.org
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
----
- drivers/ata/ahci.c |    9 ++++++++-
- drivers/ata/ahci.h |    1 +
- 2 files changed, 9 insertions(+), 1 deletion(-)
-
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1163,7 +1163,7 @@ static inline void ahci_gtf_filter_worka
- #endif
- 
- static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
--			 struct ahci_host_priv *hpriv)
-+				struct ahci_host_priv *hpriv)
- {
- 	int rc, nvec;
- 
-@@ -1189,6 +1189,13 @@ static int ahci_init_interrupts(struct p
- 	else if (rc > 0)
- 		goto single_msi;
- 
-+	/* fallback to single MSI mode if the controller enforced MRSM mode */
-+	if (readl(hpriv->mmio + HOST_CTL) & HOST_MRSM) {
-+		pci_disable_msi(pdev);
-+		printk(KERN_INFO "ahci: MRSM is on, fallback to single MSI\n");
-+		goto single_msi;
-+	}
-+
- 	return nvec;
- 
- single_msi:
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -91,6 +91,7 @@ enum {
- 	/* HOST_CTL bits */
- 	HOST_RESET		= (1 << 0),  /* reset controller; self-clear */
- 	HOST_IRQ_EN		= (1 << 1),  /* global IRQ enable */
-+	HOST_MRSM		= (1 << 2),  /* MSI Revert to Single Message */
- 	HOST_AHCI_EN		= (1 << 31), /* AHCI enabled */
- 
- 	/* HOST_CAP bits */
