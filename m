@@ -1,134 +1,265 @@
-From: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>
-Subject: [PATCH v2 1/6] phy: add a driver for the Berlin SATA PHY
-Date: Mon, 12 May 2014 11:16:52 +0200
-Message-ID: <1399886217-20474-2-git-send-email-antoine.tenart@free-electrons.com>
-References: <1399886217-20474-1-git-send-email-antoine.tenart@free-electrons.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCH v2 1/6] phy: add a driver for the Berlin SATA PHY
+Date: Mon, 12 May 2014 18:16:46 +0530
+Message-ID: <5370C2B6.8030908@ti.com>
+References: <1399886217-20474-1-git-send-email-antoine.tenart@free-electrons.com> <1399886217-20474-2-git-send-email-antoine.tenart@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <1399886217-20474-1-git-send-email-antoine.tenart@free-electrons.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: sebastian.hesselbarth@gmail.com, tj@kernel.org, kishon@ti.com
-Cc: thomas.petazzoni@free-electrons.com, zmxu@marvell.com, =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, alexandre.belloni@free-electrons.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from bear.ext.ti.com ([192.94.94.41]:53999 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756202AbaELMr2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 12 May 2014 08:47:28 -0400
+In-Reply-To: <1399886217-20474-2-git-send-email-antoine.tenart@free-electrons.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: =?UTF-8?B?QW50b2luZSBUw6luYXJ0?= <antoine.tenart@free-electrons.com>, sebastian.hesselbarth@gmail.com, tj@kernel.org
+Cc: alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-VGhlIEJlcmxpbiBTb0MgaGFzIGEgdHdvIFNBVEEgcG9ydHMuIEFkZCBhIFBIWSBkcml2ZXIgdG8g
-aGFuZGxlIHRoZW0uCgpTaWduZWQtb2ZmLWJ5OiBBbnRvaW5lIFTDqW5hcnQgPGFudG9pbmUudGVu
-YXJ0QGZyZWUtZWxlY3Ryb25zLmNvbT4KLS0tCiBkcml2ZXJzL3BoeS9LY29uZmlnICAgICAgICAg
-ICB8ICAgNSArKwogZHJpdmVycy9waHkvTWFrZWZpbGUgICAgICAgICAgfCAgIDEgKwogZHJpdmVy
-cy9waHkvcGh5LWJlcmxpbi1zYXRhLmMgfCAxNzkgKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKysrCiAzIGZpbGVzIGNoYW5nZWQsIDE4NSBpbnNlcnRpb25zKCspCiBjcmVh
-dGUgbW9kZSAxMDA2NDQgZHJpdmVycy9waHkvcGh5LWJlcmxpbi1zYXRhLmMKCmRpZmYgLS1naXQg
-YS9kcml2ZXJzL3BoeS9LY29uZmlnIGIvZHJpdmVycy9waHkvS2NvbmZpZwppbmRleCA0OTA2YzI3
-ZmEzYmQuLmIzMWIxOTg2ZmRhNCAxMDA2NDQKLS0tIGEvZHJpdmVycy9waHkvS2NvbmZpZworKysg
-Yi9kcml2ZXJzL3BoeS9LY29uZmlnCkBAIC0xNSw2ICsxNSwxMSBAQCBjb25maWcgR0VORVJJQ19Q
-SFkKIAkgIHBoeSB1c2VycyBjYW4gb2J0YWluIHJlZmVyZW5jZSB0byB0aGUgUEhZLiBBbGwgdGhl
-IHVzZXJzIG9mIHRoaXMKIAkgIGZyYW1ld29yayBzaG91bGQgc2VsZWN0IHRoaXMgY29uZmlnLgog
-Citjb25maWcgUEhZX0JFUkxJTl9TQVRBCisJYm9vbAorCWRlcGVuZHMgb24gQVJDSF9CRVJMSU4g
-JiYgT0YKKwlzZWxlY3QgR0VORVJJQ19QSFkKKwogY29uZmlnIFBIWV9FWFlOT1NfTUlQSV9WSURF
-TwogCXRyaXN0YXRlICJTNVAvRVhZTk9TIFNvQyBzZXJpZXMgTUlQSSBDU0ktMi9EU0kgUEhZIGRy
-aXZlciIKIAlkZXBlbmRzIG9uIEhBU19JT01FTQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9waHkvTWFr
-ZWZpbGUgYi9kcml2ZXJzL3BoeS9NYWtlZmlsZQppbmRleCA3NzI4NTE4NTcyYTQuLjQwMjc4NzA2
-YWMxYiAxMDA2NDQKLS0tIGEvZHJpdmVycy9waHkvTWFrZWZpbGUKKysrIGIvZHJpdmVycy9waHkv
-TWFrZWZpbGUKQEAgLTMsNiArMyw3IEBACiAjCiAKIG9iai0kKENPTkZJR19HRU5FUklDX1BIWSkJ
-CSs9IHBoeS1jb3JlLm8KK29iai0kKENPTkZJR19QSFlfQkVSTElOX1NBVEEpCQkrPSBwaHktYmVy
-bGluLXNhdGEubwogb2JqLSQoQ09ORklHX0JDTV9LT05BX1VTQjJfUEhZKQkJKz0gcGh5LWJjbS1r
-b25hLXVzYjIubwogb2JqLSQoQ09ORklHX1BIWV9FWFlOT1NfRFBfVklERU8pCSs9IHBoeS1leHlu
-b3MtZHAtdmlkZW8ubwogb2JqLSQoQ09ORklHX1BIWV9FWFlOT1NfTUlQSV9WSURFTykJKz0gcGh5
-LWV4eW5vcy1taXBpLXZpZGVvLm8KZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGh5L3BoeS1iZXJsaW4t
-c2F0YS5jIGIvZHJpdmVycy9waHkvcGh5LWJlcmxpbi1zYXRhLmMKbmV3IGZpbGUgbW9kZSAxMDA2
-NDQKaW5kZXggMDAwMDAwMDAwMDAwLi5mMjBmNWVjZTFhN2YKLS0tIC9kZXYvbnVsbAorKysgYi9k
-cml2ZXJzL3BoeS9waHktYmVybGluLXNhdGEuYwpAQCAtMCwwICsxLDE3OSBAQAorLyoKKyAqIE1h
-cnZlbGwgQmVybGluIFNBVEEgUEhZIGRyaXZlcgorICoKKyAqIENvcHlyaWdodCAoQykgMjAxNCBN
-YXJ2ZWxsIFRlY2hub2xvZ3kgR3JvdXAgTHRkLgorICoKKyAqIEFudG9pbmUgVMOpbmFydCA8YW50
-b2luZS50ZW5hcnRAZnJlZS1lbGVjdHJvbnMuY29tPgorICoKKyAqIFRoaXMgZmlsZSBpcyBsaWNl
-bnNlZCB1bmRlciB0aGUgdGVybXMgb2YgdGhlIEdOVSBHZW5lcmFsIFB1YmxpYworICogTGljZW5z
-ZSB2ZXJzaW9uIDIuIFRoaXMgcHJvZ3JhbSBpcyBsaWNlbnNlZCAiYXMgaXMiIHdpdGhvdXQgYW55
-CisgKiB3YXJyYW50eSBvZiBhbnkga2luZCwgd2hldGhlciBleHByZXNzIG9yIGltcGxpZWQuCisg
-Ki8KKworI2luY2x1ZGUgPGxpbnV4L21vZHVsZS5oPgorI2luY2x1ZGUgPGxpbnV4L3BoeS9waHku
-aD4KKyNpbmNsdWRlIDxsaW51eC9pby5oPgorI2luY2x1ZGUgPGxpbnV4L3BsYXRmb3JtX2Rldmlj
-ZS5oPgorCisjZGVmaW5lIEhPU1RfVlNBX0FERFIJCTB4MAorI2RlZmluZSBIT1NUX1ZTQV9EQVRB
-CQkweDQKKworI2RlZmluZSBDT05UUk9MX1JFR0lTVEVSCTB4MAorI2RlZmluZSBNQlVTX1NJWkVf
-Q09OVFJPTAkweDQKKworI2RlZmluZSBQT1dFUl9ET1dOX1NBVEEwCQlCSVQoNikKKyNkZWZpbmUg
-UE9XRVJfRE9XTl9TQVRBMQkJQklUKDE0KQorI2RlZmluZSBNQlVTX1dSSVRFX1JFUVVFU1RfU0la
-RV8xMjgJKEJJVCgyKSA8PCAxNikKKyNkZWZpbmUgTUJVU19SRUFEX1JFUVVFU1RfU0laRV8xMjgJ
-KEJJVCgyKSA8PCAxOSkKKworI2RlZmluZSBCRVJMSU5fU0FUQV9QSFlfTkIJMgorCisjZGVmaW5l
-IHRvX2Jlcmxpbl9zYXRhX3BoeV9wcml2KGRlc2MpCVwKKwljb250YWluZXJfb2YoKGRlc2MpLCBz
-dHJ1Y3QgcHJpdiwgcGh5c1soZGVzYyktPmluZGV4XSkKKworc3RydWN0IHBoeV9kZXNjIHsKKwlz
-dHJ1Y3QgcGh5CSpwaHk7CisJdTMyCQl2YWw7CisJdW5zaWduZWQJaW5kZXg7Cit9OworCitzdHJ1
-Y3QgcHJpdiB7CisJdm9pZCBfX2lvbWVtCSpiYXNlOworCXNwaW5sb2NrX3QJbG9jazsKKwlzdHJ1
-Y3QgcGh5X2Rlc2MJcGh5c1tCRVJMSU5fU0FUQV9QSFlfTkJdOworfTsKKworc3RhdGljIGludCBw
-aHlfYmVybGluX3NhdGFfcG93ZXJfb24oc3RydWN0IHBoeSAqcGh5KQoreworCXN0cnVjdCBwaHlf
-ZGVzYyAqZGVzYyA9IHBoeV9nZXRfZHJ2ZGF0YShwaHkpOworCXN0cnVjdCBwcml2ICpwcml2ID0g
-dG9fYmVybGluX3NhdGFfcGh5X3ByaXYoZGVzYyk7CisJdTMyIHJlZ3ZhbDsKKworCXNwaW5fbG9j
-aygmcHJpdi0+bG9jayk7CisKKwkvKiBQb3dlciB1cCBQSFkgKi8KKwl3cml0ZWwoQ09OVFJPTF9S
-RUdJU1RFUiwgcHJpdi0+YmFzZSArIEhPU1RfVlNBX0FERFIpOworCXJlZ3ZhbCA9IHJlYWRsKHBy
-aXYtPmJhc2UgKyBIT1NUX1ZTQV9EQVRBKTsKKwlyZWd2YWwgJj0gfihkZXNjLT52YWwpOworCXdy
-aXRlbChyZWd2YWwsIHByaXYtPmJhc2UgKyBIT1NUX1ZTQV9EQVRBKTsKKworCS8qIENvbmZpZ3Vy
-ZSBNQnVzICovCisJd3JpdGVsKE1CVVNfU0laRV9DT05UUk9MLCBwcml2LT5iYXNlICsgSE9TVF9W
-U0FfQUREUik7CisJcmVndmFsID0gcmVhZGwocHJpdi0+YmFzZSArIEhPU1RfVlNBX0RBVEEpOwor
-CXJlZ3ZhbCB8PSBNQlVTX1dSSVRFX1JFUVVFU1RfU0laRV8xMjggfCBNQlVTX1JFQURfUkVRVUVT
-VF9TSVpFXzEyODsKKwl3cml0ZWwocmVndmFsLCBwcml2LT5iYXNlICsgSE9TVF9WU0FfREFUQSk7
-CisKKwlzcGluX3VubG9jaygmcHJpdi0+bG9jayk7CisKKwlyZXR1cm4gMDsKK30KKworc3RhdGlj
-IGludCBwaHlfYmVybGluX3NhdGFfcG93ZXJfb2ZmKHN0cnVjdCBwaHkgKnBoeSkKK3sKKwlzdHJ1
-Y3QgcGh5X2Rlc2MgKmRlc2MgPSBwaHlfZ2V0X2RydmRhdGEocGh5KTsKKwlzdHJ1Y3QgcHJpdiAq
-cHJpdiA9IHRvX2Jlcmxpbl9zYXRhX3BoeV9wcml2KGRlc2MpOworCXUzMiByZWd2YWw7CisKKwlz
-cGluX2xvY2soJnByaXYtPmxvY2spOworCisJLyogUG93ZXIgZG93biBQSFkgKi8KKwl3cml0ZWwo
-Q09OVFJPTF9SRUdJU1RFUiwgcHJpdi0+YmFzZSArIEhPU1RfVlNBX0FERFIpOworCXJlZ3ZhbCA9
-IHJlYWRsKHByaXYtPmJhc2UgKyBIT1NUX1ZTQV9EQVRBKTsKKwlyZWd2YWwgfD0gZGVzYy0+dmFs
-OworCXdyaXRlbChyZWd2YWwsIHByaXYtPmJhc2UgKyBIT1NUX1ZTQV9EQVRBKTsKKworCXNwaW5f
-dW5sb2NrKCZwcml2LT5sb2NrKTsKKworCXJldHVybiAwOworfQorCitzdGF0aWMgc3RydWN0IHBo
-eSAqYmVybGluX3NhdGFfcGh5X3hsYXRlKHN0cnVjdCBkZXZpY2UgKmRldiwKKwkJCQkJIHN0cnVj
-dCBvZl9waGFuZGxlX2FyZ3MgKmFyZ3MpCit7CisJc3RydWN0IHByaXYgKnByaXYgPSBkZXZfZ2V0
-X2RydmRhdGEoZGV2KTsKKworCWlmIChXQVJOX09OKGFyZ3MtPmFyZ3NbMF0gPj0gQkVSTElOX1NB
-VEFfUEhZX05CKSkKKwkJcmV0dXJuIEVSUl9QVFIoLUVOT0RFVik7CisKKwlyZXR1cm4gcHJpdi0+
-cGh5c1thcmdzLT5hcmdzWzBdXS5waHk7Cit9CisKK3N0YXRpYyBzdHJ1Y3QgcGh5X29wcyBwaHlf
-YmVybGluX3NhdGFfb3BzID0geworCS5wb3dlcl9vbgk9IHBoeV9iZXJsaW5fc2F0YV9wb3dlcl9v
-biwKKwkucG93ZXJfb2ZmCT0gcGh5X2Jlcmxpbl9zYXRhX3Bvd2VyX29mZiwKKwkub3duZXIJCT0g
-VEhJU19NT0RVTEUsCit9OworCitzdGF0aWMgc3RydWN0IHBoeV9kZXNjIGRlc2NbXSA9IHsKKwl7
-IC52YWwgPSBQT1dFUl9ET1dOX1NBVEEwIH0sCisJeyAudmFsID0gUE9XRVJfRE9XTl9TQVRBMSB9
-LAorCXsgfSwKK307CisKK3N0YXRpYyBpbnQgcGh5X2Jlcmxpbl9zYXRhX3Byb2JlKHN0cnVjdCBw
-bGF0Zm9ybV9kZXZpY2UgKnBkZXYpCit7CisJc3RydWN0IHBoeSAqcGh5OworCXN0cnVjdCBwaHlf
-cHJvdmlkZXIgKnBoeV9wcm92aWRlcjsKKwlzdHJ1Y3QgcHJpdiAqcHJpdjsKKwlzdHJ1Y3QgcmVz
-b3VyY2UgKnJlczsKKwlpbnQgaTsKKworCXByaXYgPSBkZXZtX2t6YWxsb2MoJnBkZXYtPmRldiwg
-c2l6ZW9mKCpwcml2KSwgR0ZQX0tFUk5FTCk7CisJaWYgKCFwcml2KQorCQlyZXR1cm4gLUVOT01F
-TTsKKworCXJlcyA9IHBsYXRmb3JtX2dldF9yZXNvdXJjZShwZGV2LCBJT1JFU09VUkNFX01FTSwg
-MCk7CisJcHJpdi0+YmFzZSA9IGRldm1faW9yZW1hcCgmcGRldi0+ZGV2LCByZXMtPnN0YXJ0LCBy
-ZXNvdXJjZV9zaXplKHJlcykpOworCWlmIChJU19FUlIocHJpdi0+YmFzZSkpCisJCXJldHVybiBQ
-VFJfRVJSKHByaXYtPmJhc2UpOworCisJcGh5ID0gZGV2bV9waHlfY3JlYXRlKCZwZGV2LT5kZXYs
-ICZwaHlfYmVybGluX3NhdGFfb3BzLCBOVUxMKTsKKwlpZiAoSVNfRVJSKHBoeSkpCisJCXJldHVy
-biBQVFJfRVJSKHBoeSk7CisKKwlkZXZfc2V0X2RydmRhdGEoJnBkZXYtPmRldiwgcHJpdik7CisJ
-c3Bpbl9sb2NrX2luaXQoJnByaXYtPmxvY2spOworCisJZm9yIChpID0gMDsgaSA8IEJFUkxJTl9T
-QVRBX1BIWV9OQjsgaSsrKSB7CisJCXN0cnVjdCBwaHkgKnBoeSA9IGRldm1fcGh5X2NyZWF0ZSgm
-cGRldi0+ZGV2LAorCQkJCQkJICAmcGh5X2Jlcmxpbl9zYXRhX29wcywgTlVMTCk7CisJCWlmIChJ
-U19FUlIocGh5KSkgeworCQkJZGV2X2VycigmcGRldi0+ZGV2LCAiZmFpbGVkIHRvIGNyZWF0ZSBQ
-SFkgJWRcbiIsIGkpOworCQkJcmV0dXJuIFBUUl9FUlIocGh5KTsKKwkJfQorCisJCXByaXYtPnBo
-eXNbaV0ucGh5ID0gcGh5OworCQlwcml2LT5waHlzW2ldLnZhbCA9IGRlc2NbaV0udmFsOworCQlw
-cml2LT5waHlzW2ldLmluZGV4ID0gaTsKKwkJcGh5X3NldF9kcnZkYXRhKHBoeSwgJnByaXYtPnBo
-eXNbaV0pOworCisJCS8qIE1ha2Ugc3VyZSB0aGUgUEhZIGlzIG9mZiAqLworCQlwaHlfYmVybGlu
-X3NhdGFfcG93ZXJfb2ZmKHBoeSk7CisJfQorCisJcGh5X3Byb3ZpZGVyID0gZGV2bV9vZl9waHlf
-cHJvdmlkZXJfcmVnaXN0ZXIoJnBkZXYtPmRldiwKKwkJCQkJCSAgICAgYmVybGluX3NhdGFfcGh5
-X3hsYXRlKTsKKwlpZiAoSVNfRVJSKHBoeV9wcm92aWRlcikpCisJCXJldHVybiBQVFJfRVJSKHBo
-eV9wcm92aWRlcik7CisKKwlyZXR1cm4gMDsKK30KKworc3RhdGljIGNvbnN0IHN0cnVjdCBvZl9k
-ZXZpY2VfaWQgcGh5X2Jlcmxpbl9zYXRhX29mX21hdGNoW10gPSB7CisJeyAuY29tcGF0aWJsZSA9
-ICJtYXJ2ZWxsLGJlcmxpbi1zYXRhLXBoeSIgfSwKKwl7IH0sCit9OworCitzdGF0aWMgc3RydWN0
-IHBsYXRmb3JtX2RyaXZlciBwaHlfYmVybGluX3NhdGFfZHJpdmVyID0geworCS5wcm9iZQk9IHBo
-eV9iZXJsaW5fc2F0YV9wcm9iZSwKKwkuZHJpdmVyCT0geworCQkubmFtZQkJPSAicGh5LWJlcmxp
-bi1zYXRhIiwKKwkJLm93bmVyCQk9IFRISVNfTU9EVUxFLAorCQkub2ZfbWF0Y2hfdGFibGUJPSBw
-aHlfYmVybGluX3NhdGFfb2ZfbWF0Y2gsCisJfSwKK307Cittb2R1bGVfcGxhdGZvcm1fZHJpdmVy
-KHBoeV9iZXJsaW5fc2F0YV9kcml2ZXIpOworCitNT0RVTEVfREVTQ1JJUFRJT04oIk1hcnZlbGwg
-QmVybGluIFNBVEEgUEhZIGRyaXZlciIpOworTU9EVUxFX0FVVEhPUigiQW50b2luZSBUw6luYXJ0
-IDxhbnRvaW5lLnRlbmFydEBmcmVlLWVsZWN0cm9ucy5jb20+Iik7CitNT0RVTEVfTElDRU5TRSgi
-R1BMIik7Ci0tIAoxLjkuMQoKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fCmxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBsaXN0CmxpbnV4LWFybS1rZXJuZWxA
-bGlzdHMuaW5mcmFkZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5mcmFkZWFkLm9yZy9tYWlsbWFuL2xp
-c3RpbmZvL2xpbnV4LWFybS1rZXJuZWwK
+Hi,
+
+On Monday 12 May 2014 02:46 PM, Antoine T=C3=A9nart wrote:
+> The Berlin SoC has a two SATA ports. Add a PHY driver to handle them.
+>=20
+> Signed-off-by: Antoine T=C3=A9nart <antoine.tenart@free-electrons.com=
+>
+> ---
+>  drivers/phy/Kconfig           |   5 ++
+>  drivers/phy/Makefile          |   1 +
+>  drivers/phy/phy-berlin-sata.c | 179 ++++++++++++++++++++++++++++++++=
+++++++++++
+>  3 files changed, 185 insertions(+)
+>  create mode 100644 drivers/phy/phy-berlin-sata.c
+>=20
+> diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
+> index 4906c27fa3bd..b31b1986fda4 100644
+> --- a/drivers/phy/Kconfig
+> +++ b/drivers/phy/Kconfig
+> @@ -15,6 +15,11 @@ config GENERIC_PHY
+>  	  phy users can obtain reference to the PHY. All the users of this
+>  	  framework should select this config.
+> =20
+> +config PHY_BERLIN_SATA
+> +	bool
+> +	depends on ARCH_BERLIN && OF
+> +	select GENERIC_PHY
+> +
+>  config PHY_EXYNOS_MIPI_VIDEO
+>  	tristate "S5P/EXYNOS SoC series MIPI CSI-2/DSI PHY driver"
+>  	depends on HAS_IOMEM
+> diff --git a/drivers/phy/Makefile b/drivers/phy/Makefile
+> index 7728518572a4..40278706ac1b 100644
+> --- a/drivers/phy/Makefile
+> +++ b/drivers/phy/Makefile
+> @@ -3,6 +3,7 @@
+>  #
+> =20
+>  obj-$(CONFIG_GENERIC_PHY)		+=3D phy-core.o
+> +obj-$(CONFIG_PHY_BERLIN_SATA)		+=3D phy-berlin-sata.o
+>  obj-$(CONFIG_BCM_KONA_USB2_PHY)		+=3D phy-bcm-kona-usb2.o
+>  obj-$(CONFIG_PHY_EXYNOS_DP_VIDEO)	+=3D phy-exynos-dp-video.o
+>  obj-$(CONFIG_PHY_EXYNOS_MIPI_VIDEO)	+=3D phy-exynos-mipi-video.o
+> diff --git a/drivers/phy/phy-berlin-sata.c b/drivers/phy/phy-berlin-s=
+ata.c
+> new file mode 100644
+> index 000000000000..f20f5ece1a7f
+> --- /dev/null
+> +++ b/drivers/phy/phy-berlin-sata.c
+> @@ -0,0 +1,179 @@
+> +/*
+> + * Marvell Berlin SATA PHY driver
+> + *
+> + * Copyright (C) 2014 Marvell Technology Group Ltd.
+> + *
+> + * Antoine T=C3=A9nart <antoine.tenart@free-electrons.com>
+> + *
+> + * This file is licensed under the terms of the GNU General Public
+> + * License version 2. This program is licensed "as is" without any
+> + * warranty of any kind, whether express or implied.
+> + */
+> +
+> +#include <linux/module.h>
+> +#include <linux/phy/phy.h>
+> +#include <linux/io.h>
+> +#include <linux/platform_device.h>
+> +
+> +#define HOST_VSA_ADDR		0x0
+> +#define HOST_VSA_DATA		0x4
+> +
+> +#define CONTROL_REGISTER	0x0
+> +#define MBUS_SIZE_CONTROL	0x4
+> +
+> +#define POWER_DOWN_SATA0		BIT(6)
+> +#define POWER_DOWN_SATA1		BIT(14)
+> +#define MBUS_WRITE_REQUEST_SIZE_128	(BIT(2) << 16)
+> +#define MBUS_READ_REQUEST_SIZE_128	(BIT(2) << 19)
+> +
+> +#define BERLIN_SATA_PHY_NB	2
+> +
+> +#define to_berlin_sata_phy_priv(desc)	\
+> +	container_of((desc), struct priv, phys[(desc)->index])
+> +
+> +struct phy_desc {
+
+to be consistent, lets name it phy_berlin_desc.
+> +	struct phy	*phy;
+> +	u32		val;
+> +	unsigned	index;
+> +};
+> +
+> +struct priv {
+> +	void __iomem	*base;
+> +	spinlock_t	lock;
+> +	struct phy_desc	phys[BERLIN_SATA_PHY_NB];
+> +};
+> +
+> +static int phy_berlin_sata_power_on(struct phy *phy)
+> +{
+> +	struct phy_desc *desc =3D phy_get_drvdata(phy);
+> +	struct priv *priv =3D to_berlin_sata_phy_priv(desc);
+> +	u32 regval;
+> +
+> +	spin_lock(&priv->lock);
+> +
+> +	/* Power up PHY */
+> +	writel(CONTROL_REGISTER, priv->base + HOST_VSA_ADDR);
+> +	regval =3D readl(priv->base + HOST_VSA_DATA);
+> +	regval &=3D ~(desc->val);
+> +	writel(regval, priv->base + HOST_VSA_DATA);
+> +
+> +	/* Configure MBus */
+> +	writel(MBUS_SIZE_CONTROL, priv->base + HOST_VSA_ADDR);
+> +	regval =3D readl(priv->base + HOST_VSA_DATA);
+> +	regval |=3D MBUS_WRITE_REQUEST_SIZE_128 | MBUS_READ_REQUEST_SIZE_12=
+8;
+> +	writel(regval, priv->base + HOST_VSA_DATA);
+> +
+> +	spin_unlock(&priv->lock);
+> +
+> +	return 0;
+> +}
+> +
+> +static int phy_berlin_sata_power_off(struct phy *phy)
+> +{
+> +	struct phy_desc *desc =3D phy_get_drvdata(phy);
+> +	struct priv *priv =3D to_berlin_sata_phy_priv(desc);
+> +	u32 regval;
+> +
+> +	spin_lock(&priv->lock);
+> +
+> +	/* Power down PHY */
+> +	writel(CONTROL_REGISTER, priv->base + HOST_VSA_ADDR);
+> +	regval =3D readl(priv->base + HOST_VSA_DATA);
+> +	regval |=3D desc->val;
+> +	writel(regval, priv->base + HOST_VSA_DATA);
+> +
+> +	spin_unlock(&priv->lock);
+> +
+> +	return 0;
+> +}
+> +
+> +static struct phy *berlin_sata_phy_xlate(struct device *dev,
+> +					 struct of_phandle_args *args)
+> +{
+> +	struct priv *priv =3D dev_get_drvdata(dev);
+> +
+> +	if (WARN_ON(args->args[0] >=3D BERLIN_SATA_PHY_NB))
+> +		return ERR_PTR(-ENODEV);
+> +
+> +	return priv->phys[args->args[0]].phy;
+> +}
+> +
+> +static struct phy_ops phy_berlin_sata_ops =3D {
+> +	.power_on	=3D phy_berlin_sata_power_on,
+> +	.power_off	=3D phy_berlin_sata_power_off,
+> +	.owner		=3D THIS_MODULE,
+> +};
+> +
+> +static struct phy_desc desc[] =3D {
+> +	{ .val =3D POWER_DOWN_SATA0 },
+> +	{ .val =3D POWER_DOWN_SATA1 },
+> +	{ },
+> +};
+> +
+> +static int phy_berlin_sata_probe(struct platform_device *pdev)
+> +{
+> +	struct phy *phy;
+> +	struct phy_provider *phy_provider;
+> +	struct priv *priv;
+> +	struct resource *res;
+> +	int i;
+> +
+> +	priv =3D devm_kzalloc(&pdev->dev, sizeof(*priv), GFP_KERNEL);
+> +	if (!priv)
+> +		return -ENOMEM;
+> +
+> +	res =3D platform_get_resource(pdev, IORESOURCE_MEM, 0);
+> +	priv->base =3D devm_ioremap(&pdev->dev, res->start, resource_size(r=
+es));
+> +	if (IS_ERR(priv->base))
+> +		return PTR_ERR(priv->base);
+> +
+> +	phy =3D devm_phy_create(&pdev->dev, &phy_berlin_sata_ops, NULL);
+> +	if (IS_ERR(phy))
+> +		return PTR_ERR(phy);
+> +
+> +	dev_set_drvdata(&pdev->dev, priv);
+> +	spin_lock_init(&priv->lock);
+> +
+> +	for (i =3D 0; i < BERLIN_SATA_PHY_NB; i++) {
+
+huh.. this should come from dt data. For devices which have multiple PH=
+Ys, each
+PHY should be modelled as the sub-node of the *PHY provider* device nod=
+e.
+
+
+> +		struct phy *phy =3D devm_phy_create(&pdev->dev,
+> +						  &phy_berlin_sata_ops, NULL);
+> +		if (IS_ERR(phy)) {
+> +			dev_err(&pdev->dev, "failed to create PHY %d\n", i);
+> +			return PTR_ERR(phy);
+> +		}
+> +
+> +		priv->phys[i].phy =3D phy;
+> +		priv->phys[i].val =3D desc[i].val;
+> +		priv->phys[i].index =3D i;
+> +		phy_set_drvdata(phy, &priv->phys[i]);
+> +
+> +		/* Make sure the PHY is off */
+> +		phy_berlin_sata_power_off(phy);
+> +	}
+> +
+> +	phy_provider =3D devm_of_phy_provider_register(&pdev->dev,
+> +						     berlin_sata_phy_xlate);
+> +	if (IS_ERR(phy_provider))
+> +		return PTR_ERR(phy_provider);
+> +
+> +	return 0;
+> +}
+> +
+> +static const struct of_device_id phy_berlin_sata_of_match[] =3D {
+> +	{ .compatible =3D "marvell,berlin-sata-phy" },
+> +	{ },
+> +};
+> +
+> +static struct platform_driver phy_berlin_sata_driver =3D {
+> +	.probe	=3D phy_berlin_sata_probe,
+> +	.driver	=3D {
+> +		.name		=3D "phy-berlin-sata",
+> +		.owner		=3D THIS_MODULE,
+> +		.of_match_table	=3D phy_berlin_sata_of_match,
+> +	},
+> +};
+> +module_platform_driver(phy_berlin_sata_driver);
+> +
+> +MODULE_DESCRIPTION("Marvell Berlin SATA PHY driver");
+> +MODULE_AUTHOR("Antoine T=C3=A9nart <antoine.tenart@free-electrons.co=
+m>");
+> +MODULE_LICENSE("GPL");
+
+GPL v2 as the file header states so?
+
+Thanks
+Kishon
