@@ -1,23 +1,20 @@
 From: Jiri Slaby <jslaby@suse.cz>
-Subject: [patch added to the 3.12 stable tree] ahci: Do not receive interrupts sent by dummy ports
-Date: Tue, 13 May 2014 11:16:20 +0200
-Message-ID: <1399972612-9510-21-git-send-email-jslaby@suse.cz>
-References: <1399972612-9510-1-git-send-email-jslaby@suse.cz>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ip4-83-240-18-248.cust.nbox.cz ([83.240.18.248]:60460 "EHLO
-	ip4-83-240-18-248.cust.nbox.cz" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759989AbaEMJQx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 May 2014 05:16:53 -0400
-In-Reply-To: <1399972612-9510-1-git-send-email-jslaby@suse.cz>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Subject: [PATCH 3.12 150/182] ahci: Do not receive interrupts sent by dummy ports
+Date: Tue, 13 May 2014 11:28:22 +0200
+Message-ID: <b0a1984d4612c164d429adec3150bf2e342fd13d.1399973152.git.jslaby@suse.cz>
+References: <7aa1bde8f6143b2db33e6567a8c3a4debaa246f4.1399973152.git.jslaby@suse.cz>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <7aa1bde8f6143b2db33e6567a8c3a4debaa246f4.1399973152.git.jslaby@suse.cz>
+In-Reply-To: <cover.1399973152.git.jslaby@suse.cz>
+References: <cover.1399973152.git.jslaby@suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
 To: stable@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Jiri Slaby <jslaby@suse.cz>
+Cc: linux-kernel@vger.kernel.org, Alexander Gordeev <agordeev@redhat.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Jiri Slaby <jslaby@suse.cz>
+List-Id: linux-ide@vger.kernel.org
 
 From: Alexander Gordeev <agordeev@redhat.com>
 
-This patch has been added to the 3.12 stable tree. If you have any
-objections, please let us know.
+3.12-stable review patch.  If anyone has any objections, please let me know.
 
 ===============
 
@@ -78,4 +75,3 @@ index 11d34d10f233..b4bdb8859485 100644
  	}
 -- 
 1.9.3
-
