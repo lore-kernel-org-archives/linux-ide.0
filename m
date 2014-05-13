@@ -1,77 +1,51 @@
-From: Jiri Slaby <jslaby@suse.cz>
-Subject: [PATCH 3.12 150/182] ahci: Do not receive interrupts sent by dummy ports
-Date: Tue, 13 May 2014 11:28:22 +0200
-Message-ID: <b0a1984d4612c164d429adec3150bf2e342fd13d.1399973152.git.jslaby@suse.cz>
-References: <7aa1bde8f6143b2db33e6567a8c3a4debaa246f4.1399973152.git.jslaby@suse.cz>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <7aa1bde8f6143b2db33e6567a8c3a4debaa246f4.1399973152.git.jslaby@suse.cz>
-In-Reply-To: <cover.1399973152.git.jslaby@suse.cz>
-References: <cover.1399973152.git.jslaby@suse.cz>
-Sender: linux-kernel-owner@vger.kernel.org
-To: stable@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Alexander Gordeev <agordeev@redhat.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Jiri Slaby <jslaby@suse.cz>
+From: Antoine =?iso-8859-1?Q?T=E9nart?=
+	<antoine.tenart@free-electrons.com>
+Subject: Re: [PATCH v2 3/6] ata: ahci: add AHCI support for the Berlin BG2Q
+Date: Tue, 13 May 2014 14:07:51 +0200
+Message-ID: <20140513120751.GA3213@kwain>
+References: <1399886217-20474-1-git-send-email-antoine.tenart@free-electrons.com>
+ <1399886217-20474-4-git-send-email-antoine.tenart@free-electrons.com>
+ <20140512141221.GE3378@lunn.ch>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from top.free-electrons.com ([176.31.233.9]:38478 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1759800AbaEMMHz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 May 2014 08:07:55 -0400
+Content-Disposition: inline
+In-Reply-To: <20140512141221.GE3378@lunn.ch>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Andrew Lunn <andrew@lunn.ch>
+Cc: Antoine =?iso-8859-1?Q?T=E9nart?= <antoine.tenart@free-electrons.com>, sebastian.hesselbarth@gmail.com, tj@kernel.org, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, alexandre.belloni@free-electrons.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org
 
-From: Alexander Gordeev <agordeev@redhat.com>
+Hi Andrew,
 
-3.12-stable review patch.  If anyone has any objections, please let me know.
+On Mon, May 12, 2014 at 04:12:21PM +0200, Andrew Lunn wrote:
+> On Mon, May 12, 2014 at 11:16:54AM +0200, Antoine T=C3=A9nart wrote:
 
-===============
+[=E2=80=A6]
 
-commit 2cf532f5e67c0cfe38c8c100e49280cdadacd2be upstream.
+> I've no idea is this is a good or bad idea, but could you put all the
+> above code in the phy driver? It does seem to be mostly phy
+> related. Then teach the core ahci code about optional phy nodes in DT=
+=2E
+> You can then probably do without a ahci berlin driver.
 
-In multiple MSI mode all AHCI ports (including dummy) get assigned
-separate MSI vectors and (as result of execution
-pci_enable_msi_exact() function) separate IRQ numbers, (mapped to the
-MSI vectors).
+The code is PHY related, but the setup done is SATA specific. I think i=
+t
+makes sense to keep it here. From what I saw lots of PHY drivers only
+power up / down the PHYs.
 
-Therefore, although interrupts from dummy ports are not desired they
-are still enabled. We do not request IRQs for dummy ports, but that
-only means we do not assign AHCI-specific ISRs to corresponding IRQ
-numbers.
+Lots of port setups are done in the SATA framework, so it would separat=
+e
+related code into two subsystems.
 
-As result, dummy port interrupts still could come and traverse all the
-way from the PCI device to the kernel, causing unnecessary overhead.
+Antoine
 
-This update disables IRQs for dummy ports and prevents the described
-issue.
-
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Tested-by: David Milburn <dmilburn@redhat.com>
-Cc: linux-ide@vger.kernel.org
-Fixes: 5ca72c4f7c41 ("AHCI: Support multiple MSIs")
-Signed-off-by: Jiri Slaby <jslaby@suse.cz>
----
- drivers/ata/ahci.c | 16 ++++++++++------
- 1 file changed, 10 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 11d34d10f233..b4bdb8859485 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1171,12 +1171,16 @@ int ahci_host_activate(struct ata_host *host, int irq, unsigned int n_msis)
- 	for (i = 0; i < host->n_ports; i++) {
- 		struct ahci_port_priv *pp = host->ports[i]->private_data;
- 
--		/* pp is NULL for dummy ports */
--		if (pp)
--			rc = devm_request_threaded_irq(host->dev,
--						       irq + i, ahci_hw_interrupt,
--						       ahci_thread_fn, IRQF_SHARED,
--						       pp->irq_desc, host->ports[i]);
-+		/* Do not receive interrupts sent by dummy ports */
-+		if (!pp) {
-+			disable_irq(irq + i);
-+			continue;
-+		}
-+
-+		rc = devm_request_threaded_irq(host->dev, irq + i,
-+					       ahci_hw_interrupt,
-+					       ahci_thread_fn, IRQF_SHARED,
-+					       pp->irq_desc, host->ports[i]);
- 		if (rc)
- 			goto out_free_irqs;
- 	}
--- 
-1.9.3
+--=20
+Antoine T=C3=A9nart, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
