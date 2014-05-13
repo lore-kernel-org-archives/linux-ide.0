@@ -1,108 +1,81 @@
 From: Jiri Slaby <jslaby@suse.cz>
-Subject: [patch NOT added to the 3.12 stable tree] ahci: Ensure "MSI Revert to Single Message" mode is not enforced
-Date: Tue, 13 May 2014 11:13:58 +0200
-Message-ID: <1399972438-9091-1-git-send-email-jslaby@suse.cz>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: stable@vger.kernel.org
-Cc: jslaby@suse.cz, Alexander Gordeev <agordeev@redhat.com>, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>
+Subject: [patch added to the 3.12 stable tree] ahci: Do not receive interrupts sent by dummy ports
+Date: Tue, 13 May 2014 11:16:20 +0200
+Message-ID: <1399972612-9510-21-git-send-email-jslaby@suse.cz>
+References: <1399972612-9510-1-git-send-email-jslaby@suse.cz>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ip4-83-240-18-248.cust.nbox.cz ([83.240.18.248]:60460 "EHLO
+	ip4-83-240-18-248.cust.nbox.cz" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759989AbaEMJQx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 May 2014 05:16:53 -0400
+In-Reply-To: <1399972612-9510-1-git-send-email-jslaby@suse.cz>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: stable@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Jiri Slaby <jslaby@suse.cz>
 
 From: Alexander Gordeev <agordeev@redhat.com>
 
-This patch does NOT apply to the 3.12 stable tree. If you still want
-it applied, please provide a backport.
+This patch has been added to the 3.12 stable tree. If you have any
+objections, please let us know.
 
 ===============
 
-commit ab0f9e78b97f5193dd38b3757b42b6fbded05fb7 upstream.
+commit 2cf532f5e67c0cfe38c8c100e49280cdadacd2be upstream.
 
-The AHCI specification allows hardware to choose to revert to
-single MSI mode when fewer messages are allocated than requested.
-Yet, at least ICH10 chipset reverts to single MSI mode even when
-enough messages are allocated in some cases (see below).
+In multiple MSI mode all AHCI ports (including dummy) get assigned
+separate MSI vectors and (as result of execution
+pci_enable_msi_exact() function) separate IRQ numbers, (mapped to the
+MSI vectors).
 
-This update forces the driver to not rely on initialization of
-multiple MSIs mode alone and always check if "MSI Revert to
-Single Message" (MRSM) mode was enforced by the controller and
-fallback to the single MSI mode in case it did.
+Therefore, although interrupts from dummy ports are not desired they
+are still enabled. We do not request IRQs for dummy ports, but that
+only means we do not assign AHCI-specific ISRs to corresponding IRQ
+numbers.
 
-That prevents a situation when the driver configured multiple
-per-port IRQ handlers, but the controller sends all port's
-interrupts to a single IRQ, which could easily screw up the
-interrupt handling and lead to delays and possibly crashes.
+As result, dummy port interrupts still could come and traverse all the
+way from the PCI device to the kernel, causing unnecessary overhead.
 
-The fix was tested on a 6-port controller that successfully
-reverted to the single MSI mode:
-
-00:1f.2 SATA controller: Intel Corporation 82801JI (ICH10 Family) SATA
-AHCI Controller (prog-if 01 [AHCI 1.0])
-	Subsystem: Super Micro Computer Inc Device 10a7
-	Flags: bus master, 66MHz, medium devsel, latency 0, IRQ 101
-	I/O ports at f110 [size=8]
-	I/O ports at f100 [size=4]
-	I/O ports at f0f0 [size=8]
-	I/O ports at f0e0 [size=4]
-	I/O ports at f020 [size=32]
-	Memory at fbf00000 (32-bit, non-prefetchable) [size=2K]
-	Capabilities: [80] MSI: Enable+ Count=1/16 Maskable- 64bit-
-	Capabilities: [70] Power Management version 3
-	Capabilities: [a8] SATA HBA v1.0
-	Capabilities: [b0] PCI Advanced Features
-	Kernel driver in use: ahci
-
-With 6 ports just 8 MSI vectors should be enough, but the adapter
-enforces the MRSM mode when less than 16 vectors are written to
-the Multiple Messages Enable PCI register. I instigated MRSM mode
-by forcing @nvec to 8 in ahci_init_interrupts().
+This update disables IRQs for dummy ports and prevents the described
+issue.
 
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-ide@vger.kernel.org
-Cc: stable@vger.kernel.org
 Signed-off-by: Tejun Heo <tj@kernel.org>
+Tested-by: David Milburn <dmilburn@redhat.com>
+Cc: linux-ide@vger.kernel.org
+Fixes: 5ca72c4f7c41 ("AHCI: Support multiple MSIs")
+Signed-off-by: Jiri Slaby <jslaby@suse.cz>
 ---
- drivers/ata/ahci.c | 9 ++++++++-
- drivers/ata/ahci.h | 1 +
- 2 files changed, 9 insertions(+), 1 deletion(-)
+ drivers/ata/ahci.c | 16 ++++++++++------
+ 1 file changed, 10 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index e45b18ee04c3..f6b3e31f63cd 100644
+index 11d34d10f233..b4bdb8859485 100644
 --- a/drivers/ata/ahci.c
 +++ b/drivers/ata/ahci.c
-@@ -1164,7 +1164,7 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
- #endif
+@@ -1171,12 +1171,16 @@ int ahci_host_activate(struct ata_host *host, int irq, unsigned int n_msis)
+ 	for (i = 0; i < host->n_ports; i++) {
+ 		struct ahci_port_priv *pp = host->ports[i]->private_data;
  
- static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
--			 struct ahci_host_priv *hpriv)
-+				struct ahci_host_priv *hpriv)
- {
- 	int nvec;
- 
-@@ -1189,6 +1189,13 @@ static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
- 	else if (nvec < 0)
- 		goto intx;
- 
-+	/* fallback to single MSI mode if the controller enforced MRSM mode */
-+	if (readl(hpriv->mmio + HOST_CTL) & HOST_MRSM) {
-+		pci_disable_msi(pdev);
-+		printk(KERN_INFO "ahci: MRSM is on, fallback to single MSI\n");
-+		goto single_msi;
-+	}
+-		/* pp is NULL for dummy ports */
+-		if (pp)
+-			rc = devm_request_threaded_irq(host->dev,
+-						       irq + i, ahci_hw_interrupt,
+-						       ahci_thread_fn, IRQF_SHARED,
+-						       pp->irq_desc, host->ports[i]);
++		/* Do not receive interrupts sent by dummy ports */
++		if (!pp) {
++			disable_irq(irq + i);
++			continue;
++		}
 +
- 	return nvec;
- 
- single_msi:
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 51af275b3388..b5eb886da226 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -94,6 +94,7 @@ enum {
- 	/* HOST_CTL bits */
- 	HOST_RESET		= (1 << 0),  /* reset controller; self-clear */
- 	HOST_IRQ_EN		= (1 << 1),  /* global IRQ enable */
-+	HOST_MRSM		= (1 << 2),  /* MSI Revert to Single Message */
- 	HOST_AHCI_EN		= (1 << 31), /* AHCI enabled */
- 
- 	/* HOST_CAP bits */
++		rc = devm_request_threaded_irq(host->dev, irq + i,
++					       ahci_hw_interrupt,
++					       ahci_thread_fn, IRQF_SHARED,
++					       pp->irq_desc, host->ports[i]);
+ 		if (rc)
+ 			goto out_free_irqs;
+ 	}
 -- 
 1.9.3
+
