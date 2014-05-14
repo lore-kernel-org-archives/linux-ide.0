@@ -1,61 +1,250 @@
 From: =?UTF-8?q?Antoine=20T=C3=A9nart?=
-	<antoine.tenart-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
-Subject: [PATCH v3 4/6] Documentation: bindings: add the berlin-ahci compatible to the ahci platform
-Date: Wed, 14 May 2014 11:49:00 +0200
-Message-ID: <1400060942-10588-5-git-send-email-antoine.tenart@free-electrons.com>
+	<antoine.tenart@free-electrons.com>
+Subject: [PATCH v3 1/6] phy: add a driver for the Berlin SATA PHY
+Date: Wed, 14 May 2014 11:48:57 +0200
+Message-ID: <1400060942-10588-2-git-send-email-antoine.tenart@free-electrons.com>
 References: <1400060942-10588-1-git-send-email-antoine.tenart@free-electrons.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1400060942-10588-1-git-send-email-antoine.tenart-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: sebastian.hesselbarth-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, kishon-l0cyMroinI0@public.gmane.org
-Cc: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, alexandre.belloni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, zmxu-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org, jszhang-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from top.free-electrons.com ([176.31.233.9]:45054 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752048AbaENJtJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 May 2014 05:49:09 -0400
+In-Reply-To: <1400060942-10588-1-git-send-email-antoine.tenart@free-electrons.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: sebastian.hesselbarth@gmail.com, tj@kernel.org, kishon@ti.com
+Cc: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The berlin-ahci driver allows Berlin SoCs to support their AHCI SATA co=
-ntroller.
-Add the compatible to the device tree bindings documentation.
+The Berlin SoC has a two SATA ports. Add a PHY driver to handle them.
 
-Signed-off-by: Antoine T=C3=A9nart <antoine.tenart-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
+Signed-off-by: Antoine T=C3=A9nart <antoine.tenart@free-electrons.com>
 ---
- Documentation/devicetree/bindings/ata/ahci-berlin.txt | 18 +++++++++++=
-+++++++
- 1 file changed, 18 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/ata/ahci-berlin.t=
-xt
+ drivers/phy/Kconfig           |   5 ++
+ drivers/phy/Makefile          |   1 +
+ drivers/phy/phy-berlin-sata.c | 180 ++++++++++++++++++++++++++++++++++=
+++++++++
+ 3 files changed, 186 insertions(+)
+ create mode 100644 drivers/phy/phy-berlin-sata.c
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-berlin.txt b/Do=
-cumentation/devicetree/bindings/ata/ahci-berlin.txt
+diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
+index 4906c27fa3bd..b31b1986fda4 100644
+--- a/drivers/phy/Kconfig
++++ b/drivers/phy/Kconfig
+@@ -15,6 +15,11 @@ config GENERIC_PHY
+ 	  phy users can obtain reference to the PHY. All the users of this
+ 	  framework should select this config.
+=20
++config PHY_BERLIN_SATA
++	bool
++	depends on ARCH_BERLIN && OF
++	select GENERIC_PHY
++
+ config PHY_EXYNOS_MIPI_VIDEO
+ 	tristate "S5P/EXYNOS SoC series MIPI CSI-2/DSI PHY driver"
+ 	depends on HAS_IOMEM
+diff --git a/drivers/phy/Makefile b/drivers/phy/Makefile
+index 7728518572a4..40278706ac1b 100644
+--- a/drivers/phy/Makefile
++++ b/drivers/phy/Makefile
+@@ -3,6 +3,7 @@
+ #
+=20
+ obj-$(CONFIG_GENERIC_PHY)		+=3D phy-core.o
++obj-$(CONFIG_PHY_BERLIN_SATA)		+=3D phy-berlin-sata.o
+ obj-$(CONFIG_BCM_KONA_USB2_PHY)		+=3D phy-bcm-kona-usb2.o
+ obj-$(CONFIG_PHY_EXYNOS_DP_VIDEO)	+=3D phy-exynos-dp-video.o
+ obj-$(CONFIG_PHY_EXYNOS_MIPI_VIDEO)	+=3D phy-exynos-mipi-video.o
+diff --git a/drivers/phy/phy-berlin-sata.c b/drivers/phy/phy-berlin-sat=
+a.c
 new file mode 100644
-index 000000000000..10362fdc5b8e
+index 000000000000..b08f76329a34
 --- /dev/null
-+++ b/Documentation/devicetree/bindings/ata/ahci-berlin.txt
-@@ -0,0 +1,18 @@
-+* Marvell Berlin SATA nodes
++++ b/drivers/phy/phy-berlin-sata.c
+@@ -0,0 +1,180 @@
++/*
++ * Marvell Berlin SATA PHY driver
++ *
++ * Copyright (C) 2014 Marvell Technology Group Ltd.
++ *
++ * Antoine T=C3=A9nart <antoine.tenart@free-electrons.com>
++ *
++ * This file is licensed under the terms of the GNU General Public
++ * License version 2. This program is licensed "as is" without any
++ * warranty of any kind, whether express or implied.
++ */
 +
-+Required properties:
-+- compatible: "marvell,berlin-ahci"
-+- interrupts: interrupt mapping for the SATA IRQ
-+- reg: address and length of the register
-+- phys: references to the SATA PHY nodes
-+- phy-names: should be "port0" or/and "port1"
++#include <linux/module.h>
++#include <linux/phy/phy.h>
++#include <linux/io.h>
++#include <linux/platform_device.h>
 +
-+Example:
-+	ahci: sata@f7e90000 {
-+		compatible =3D "marvell,berlin-ahci";
-+		reg =3D <0xf7e90000 0x1000>;
-+		interrupts =3D <GIC_SPI 7 IRQ_TYPE_LEVEL_HIGH>;
-+		phys =3D <&sata_phy0>, <&sata_phy1>;
-+		phy-names =3D "port0", "port1";
-+		status =3D "okay";
-+	};
++#define HOST_VSA_ADDR		0x0
++#define HOST_VSA_DATA		0x4
++
++#define CONTROL_REGISTER	0x0
++#define MBUS_SIZE_CONTROL	0x4
++
++#define POWER_DOWN_SATA0		BIT(6)
++#define POWER_DOWN_SATA1		BIT(14)
++#define MBUS_WRITE_REQUEST_SIZE_128	(BIT(2) << 16)
++#define MBUS_READ_REQUEST_SIZE_128	(BIT(2) << 19)
++
++#define BERLIN_SATA_PHY_NB	2
++
++#define to_berlin_sata_phy_priv(desc)	\
++	container_of((desc), struct phy_berlin_priv, phys[(desc)->index])
++
++struct phy_berlin_desc {
++	struct phy	*phy;
++	u32		val;
++	unsigned	index;
++};
++
++struct phy_berlin_priv {
++	void __iomem	*base;
++	spinlock_t	lock;
++	struct phy_berlin_desc	phys[BERLIN_SATA_PHY_NB];
++};
++
++static int phy_berlin_sata_power_on(struct phy *phy)
++{
++	struct phy_berlin_desc *desc =3D phy_get_drvdata(phy);
++	struct phy_berlin_priv *priv =3D to_berlin_sata_phy_priv(desc);
++	u32 regval;
++
++	spin_lock(&priv->lock);
++
++	/* Power up PHY */
++	writel(CONTROL_REGISTER, priv->base + HOST_VSA_ADDR);
++	regval =3D readl(priv->base + HOST_VSA_DATA);
++	regval &=3D ~(desc->val);
++	writel(regval, priv->base + HOST_VSA_DATA);
++
++	/* Configure MBus */
++	writel(MBUS_SIZE_CONTROL, priv->base + HOST_VSA_ADDR);
++	regval =3D readl(priv->base + HOST_VSA_DATA);
++	regval |=3D MBUS_WRITE_REQUEST_SIZE_128 | MBUS_READ_REQUEST_SIZE_128;
++	writel(regval, priv->base + HOST_VSA_DATA);
++
++	spin_unlock(&priv->lock);
++
++	return 0;
++}
++
++static int phy_berlin_sata_power_off(struct phy *phy)
++{
++	struct phy_berlin_desc *desc =3D phy_get_drvdata(phy);
++	struct phy_berlin_priv *priv =3D to_berlin_sata_phy_priv(desc);
++	u32 regval;
++
++	spin_lock(&priv->lock);
++
++	/* Power down PHY */
++	writel(CONTROL_REGISTER, priv->base + HOST_VSA_ADDR);
++	regval =3D readl(priv->base + HOST_VSA_DATA);
++	regval |=3D desc->val;
++	writel(regval, priv->base + HOST_VSA_DATA);
++
++	spin_unlock(&priv->lock);
++
++	return 0;
++}
++
++static struct phy_ops phy_berlin_sata_ops =3D {
++	.power_on	=3D phy_berlin_sata_power_on,
++	.power_off	=3D phy_berlin_sata_power_off,
++	.owner		=3D THIS_MODULE,
++};
++
++static struct phy_berlin_desc desc[] =3D {
++	{ .val =3D POWER_DOWN_SATA0 },
++	{ .val =3D POWER_DOWN_SATA1 },
++	{ },
++};
++
++static int phy_berlin_sata_probe(struct platform_device *pdev)
++{
++	struct device *dev =3D &pdev->dev;
++	struct phy *phy;
++	struct phy_provider *phy_provider;
++	struct phy_berlin_priv *priv;
++	struct resource *res;
++	struct device_node *child;
++	u8 phy_id;
++
++	priv =3D devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
++	if (!priv)
++		return -ENOMEM;
++
++	res =3D platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	priv->base =3D devm_ioremap(dev, res->start, resource_size(res));
++	if (IS_ERR(priv->base))
++		return PTR_ERR(priv->base);
++
++	dev_set_drvdata(dev, priv);
++	spin_lock_init(&priv->lock);
++
++	for_each_child_of_node(dev->of_node, child) {
++		if (of_property_read_u8(child, "reg", &phy_id))
++			return -EINVAL;
++
++		if (phy_id >=3D BERLIN_SATA_PHY_NB) {
++			dev_err(dev, "invalid reg in node %s\n", child->name);
++			return -EINVAL;
++		}
++
++		phy =3D devm_phy_create(dev, &phy_berlin_sata_ops, NULL);
++		if (IS_ERR(phy)) {
++			dev_err(dev, "failed to create PHY for node %s\n",
++				child->name);
++			return PTR_ERR(phy);
++		}
++
++		/*
++		 * By default the PHY node is used to request and match a PHY.
++		 * We describe one PHY per sub-node here. Use the right node.
++		 */
++		phy->dev.of_node =3D child;
++
++		priv->phys[phy_id].phy =3D phy;
++		priv->phys[phy_id].val =3D desc[phy_id].val;
++		priv->phys[phy_id].index =3D phy_id;
++		phy_set_drvdata(phy, &priv->phys[phy_id]);
++
++		/* Make sure the PHY is off */
++		phy_berlin_sata_power_off(phy);
++
++		phy_provider =3D devm_of_phy_provider_register(&phy->dev,
++							     of_phy_simple_xlate);
++		if (IS_ERR(phy_provider))
++			return PTR_ERR(phy_provider);
++	}
++
++	return 0;
++}
++
++static const struct of_device_id phy_berlin_sata_of_match[] =3D {
++	{ .compatible =3D "marvell,berlin-sata-phy" },
++	{ },
++};
++
++static struct platform_driver phy_berlin_sata_driver =3D {
++	.probe	=3D phy_berlin_sata_probe,
++	.driver	=3D {
++		.name		=3D "phy-berlin-sata",
++		.owner		=3D THIS_MODULE,
++		.of_match_table	=3D phy_berlin_sata_of_match,
++	},
++};
++module_platform_driver(phy_berlin_sata_driver);
++
++MODULE_DESCRIPTION("Marvell Berlin SATA PHY driver");
++MODULE_AUTHOR("Antoine T=C3=A9nart <antoine.tenart@free-electrons.com>=
+");
++MODULE_LICENSE("GPL v2");
 --=20
 1.9.1
 
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" i=
-n
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
