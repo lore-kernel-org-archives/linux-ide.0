@@ -1,54 +1,61 @@
-From: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>
-Subject: [PATCH v3 2/6] Documentation: bindings: add the Berlin SATA PHY
-Date: Wed, 14 May 2014 11:48:58 +0200
-Message-ID: <1400060942-10588-3-git-send-email-antoine.tenart@free-electrons.com>
+From: =?UTF-8?q?Antoine=20T=C3=A9nart?=
+	<antoine.tenart-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
+Subject: [PATCH v3 4/6] Documentation: bindings: add the berlin-ahci compatible to the ahci platform
+Date: Wed, 14 May 2014 11:49:00 +0200
+Message-ID: <1400060942-10588-5-git-send-email-antoine.tenart@free-electrons.com>
 References: <1400060942-10588-1-git-send-email-antoine.tenart@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <1400060942-10588-1-git-send-email-antoine.tenart@free-electrons.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: sebastian.hesselbarth@gmail.com, tj@kernel.org, kishon@ti.com
-Cc: thomas.petazzoni@free-electrons.com, zmxu@marvell.com, devicetree@vger.kernel.org, =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, alexandre.belloni@free-electrons.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1400060942-10588-1-git-send-email-antoine.tenart-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: sebastian.hesselbarth-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, kishon-l0cyMroinI0@public.gmane.org
+Cc: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, alexandre.belloni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, zmxu-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org, jszhang-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
-VGhlIEJlcmxpbiBTQVRBIFBIWSBkcml2ZXMgdGhlIFBIWSByZWxhdGVkIHRvIHRoZSBTQVRBIGlu
-dGVyZmFjZSBhbmQKYWxsb3dzIHRvIHBvd2VyIHVwL2Rvd24gZWFjaCBQSFkgaW5kZXBlbmRlbnRs
-eS4gQWRkIHRoZSBjb3JyZXNwb25kaW5nCmRvY3VtZW50YXRpb24uCgpTaWduZWQtb2ZmLWJ5OiBB
-bnRvaW5lIFTDqW5hcnQgPGFudG9pbmUudGVuYXJ0QGZyZWUtZWxlY3Ryb25zLmNvbT4KLS0tCiAu
-Li4vZGV2aWNldHJlZS9iaW5kaW5ncy9waHkvYmVybGluLXNhdGEtcGh5LnR4dCAgICB8IDM0ICsr
-KysrKysrKysrKysrKysrKysrKysKIDEgZmlsZSBjaGFuZ2VkLCAzNCBpbnNlcnRpb25zKCspCiBj
-cmVhdGUgbW9kZSAxMDA2NDQgRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BoeS9i
-ZXJsaW4tc2F0YS1waHkudHh0CgpkaWZmIC0tZ2l0IGEvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVl
-L2JpbmRpbmdzL3BoeS9iZXJsaW4tc2F0YS1waHkudHh0IGIvRG9jdW1lbnRhdGlvbi9kZXZpY2V0
-cmVlL2JpbmRpbmdzL3BoeS9iZXJsaW4tc2F0YS1waHkudHh0Cm5ldyBmaWxlIG1vZGUgMTAwNjQ0
-CmluZGV4IDAwMDAwMDAwMDAwMC4uYjFlMTFhMjU3NzVhCi0tLSAvZGV2L251bGwKKysrIGIvRG9j
-dW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BoeS9iZXJsaW4tc2F0YS1waHkudHh0CkBA
-IC0wLDAgKzEsMzQgQEAKK0JlcmxpbiBTQVRBIFBIWQorLS0tLS0tLS0tLS0tLS0tCisKK1JlcXVp
-cmVkIHByb3BlcnRpZXM6CistIGNvbXBhdGlibGU6ICJtYXJ2ZWxsLGJlcmxpbi1zYXRhLXBoeSIK
-Ky0gI2FkZHJlc3MtY2VsbHM6IG51bWJlciBvZiBjZWxscyB0byBlbmNvZGUgYW4gYWRkcmVzcywg
-bXVzdCBiZSAxCistICNzaXplLWNlbGxzOiBudW1iZXIgb2YgY2VsbHMgcmVwcmVzZW50aW5nIHRo
-ZSBzaXplIG9mIGFuIGFkZHJlc3MsIG11c3QgYmUgMAorLSByZWc6IGFkZHJlc3MgYW5kIGxlbmd0
-aCBvZiB0aGUgcmVnaXN0ZXIKKworVGhlIFNBVEEgUEhZIG5vZGUgaXMgYSBwcm92aWRlciBhbmQg
-c2hvdWxkIGNvbnRhaW4gc3ViLW5vZGVzIHJlcHJlc2VudGluZyB0aGUKK1BIWXMgaXQgaGFuZGxl
-cywgb25lIHBlciBQSFkuCisKK1JlcXVpcmVkIHN1Yi1ub2RlIHByb3BlcnRpZXM6CistIHJlZzog
-dGhlIFBIWSBkZXNjcmliZWQuIDAgb3IgMS4KKy0gI3BoeS1jZWxsczogZnJvbSB0aGUgZ2VuZXJp
-YyBQSFkgYmluZGluZ3MsIG11c3QgYmUgMAorCitFeGFtcGxlOgorCXNhdGFfcGh5OiBwaHlAZjdl
-OTAwYTAgeworCQljb21wYXRpYmxlID0gIm1hcnZlbGwsYmVybGluLXNhdGEtcGh5IjsKKwkJcmVn
-ID0gPDB4ZjdlOTAwYTAgMHgxMD47CisJCSNhZGRyZXNzLWNlbGxzID0gPDE+OworCQkjc2l6ZS1j
-ZWxscyA9IDwwPjsKKwkJc3RhdHVzID0gIm9rYXkiOworCisJCXNhdGFfcGh5MDogcGh5QDAgewor
-CQkJcmVnID0gPDA+OworCQkJI3BoeS1jZWxscyA9IDwwPjsKKwkJfTsKKworCQlzYXRhX3BoeTE6
-IHBoeUAxIHsKKwkJCXJlZyA9IDwxPjsKKwkJCSNwaHktY2VsbHMgPSA8MD47CisJCX07CisJfTsK
-LS0gCjEuOS4xCgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5p
-bmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8v
-bGludXgtYXJtLWtlcm5lbAo=
+The berlin-ahci driver allows Berlin SoCs to support their AHCI SATA co=
+ntroller.
+Add the compatible to the device tree bindings documentation.
+
+Signed-off-by: Antoine T=C3=A9nart <antoine.tenart-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
+---
+ Documentation/devicetree/bindings/ata/ahci-berlin.txt | 18 +++++++++++=
++++++++
+ 1 file changed, 18 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/ata/ahci-berlin.t=
+xt
+
+diff --git a/Documentation/devicetree/bindings/ata/ahci-berlin.txt b/Do=
+cumentation/devicetree/bindings/ata/ahci-berlin.txt
+new file mode 100644
+index 000000000000..10362fdc5b8e
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ata/ahci-berlin.txt
+@@ -0,0 +1,18 @@
++* Marvell Berlin SATA nodes
++
++Required properties:
++- compatible: "marvell,berlin-ahci"
++- interrupts: interrupt mapping for the SATA IRQ
++- reg: address and length of the register
++- phys: references to the SATA PHY nodes
++- phy-names: should be "port0" or/and "port1"
++
++Example:
++	ahci: sata@f7e90000 {
++		compatible =3D "marvell,berlin-ahci";
++		reg =3D <0xf7e90000 0x1000>;
++		interrupts =3D <GIC_SPI 7 IRQ_TYPE_LEVEL_HIGH>;
++		phys =3D <&sata_phy0>, <&sata_phy1>;
++		phy-names =3D "port0", "port1";
++		status =3D "okay";
++	};
+--=20
+1.9.1
+
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" i=
+n
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
