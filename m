@@ -1,57 +1,58 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v3 1/6] phy: add a driver for the Berlin SATA PHY
-Date: Wed, 14 May 2014 21:10:09 +0200
-Message-ID: <5701370.bQb4QoHk6c@wuerfel>
-References: <1400060942-10588-1-git-send-email-antoine.tenart@free-electrons.com> <17808571.N5ZGjXFEVP@wuerfel> <5373BC5D.7010300@gmail.com>
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: Re: understanding non fis based switching
+Date: Wed, 14 May 2014 15:59:46 -0400
+Message-ID: <5373CB32.2040501@ubuntu.com>
+References: <53587A1A.2060904@ubuntu.com> <5372E5AF.9020708@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5373BC5D.7010300@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Cc: linux-arm-kernel@lists.infradead.org, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, devicetree@vger.kernel.org, Antoine =?ISO-8859-1?Q?T=E9nart?= <antoine.tenart@free-electrons.com>, linux-kernel@vger.kernel.org, kishon@ti.com, linux-ide@vger.kernel.org, alexandre.belloni@free-electrons.com, jszhang@marvell.com, tj@kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from cdptpa-outbound-snat.email.rr.com ([107.14.166.228]:36177 "EHLO
+	cdptpa-oedge-vip.email.rr.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751052AbaENT7r (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 May 2014 15:59:47 -0400
+In-Reply-To: <5372E5AF.9020708@ubuntu.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Wednesday 14 May 2014 20:56:29 Sebastian Hesselbarth wrote:
-> On 05/14/2014 08:51 PM, Arnd Bergmann wrote:
-> > On Wednesday 14 May 2014 20:42:16 Sebastian Hesselbarth wrote:
-> >>>> For the driver, Antoine then would have to squeeze all PHY register
-> >>>> mangling in phy-berlin2.c and see how to make ahci-platform aware of
-> >>>> individual port nodes (I haven't looked up if it already exists, sorry)
-> >>>> and announce only enabled port child nodes, right?
-> >>>
-> >>> I've been thinking some more about this aspect. I don't actually have
-> >>> a strong opinion on whether it's better to use the generic ahci-platform
-> >>> driver, or to keep the multi-phy support as a special variant for
-> >>> berlin. If we do the latter, it would however be good to define the
-> >>> binding in a way that lets us later merge things into the generic phy
-> >>> driver in case we get more of the same.
-> >>
-> >> Hmm, IMHO multi-phy support is orthogonal to ahci-platform, isn't it?
-> >> ahci-platform needs to know about the phy property and calls some
-> >> helper that deals with the phy-specifier?
-> >>
-> >> About a generic _phy_ driver, I am not so sure if berlin is the best
-> >> template right now 
-> >>
-> >> So, my call would be:
-> >> - make ahci-platform aware of port sub-nodes and phy properties
-> >> - have a berlin specific PHY driver
-> > 
-> > I'm not sure if we need sub-nodes per port, it should be enough
-> > to have an array of phys, plus a way to match them up with the
-> > ports.
-> 
-> Actually, I'd love to see sub-nodes per port as it will allow to
-> disabled unused ports on a per-board basis.
-> 
-> I have this in mind for a long time for Kirkwood's SATA node already:
-> Consider a board where you have the one available SATA plug connected
-> to port 1. How would that work out with status = "disabled"/"okay" that
-> doesn't allow array of strings obviously?
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-A simple bit mask would work fine, but I see your point. Doing
-status="disabled" per port sounds nice.
+On 5/13/2014 11:40 PM, Phillip Susi wrote:
+> So I would have thought that if you asked a disk drive with 64 mb
+> of cache to read a few mb, then waited a second before issuing
+> more commands, it would continue to read the next several mb into
+> cache while waiting for new commands.  I wrote a simple benchmark
+> to test this by reading 16 256k blocks ( with O_DIRECT from a
+> random starting offset to start with cold cache ), sleeping for 1
+> second, then reading the next 16, and the results seem to show that
+> the drive stops reading ahead just after 1 MB.  Do drives really
+> have such terrible readahead algorithms in general?  If so, this
+> would seem to explain the terrible port multiplier performance in
+> the absence of FBS.  If this is really the norm, then perhaps
+> libata needs to do a better job of balancing requests between the
+> drives?
 
-	Arnd
+I have been trying to follow the code to see how it switches back and
+forth between the two drives, and what, if anything, is done to keep
+that switching smooth and fair.  It looks like the libata layer just
+returns an error to the scsi layer telling it to try the request again
+later whenever the other disk has outstanding commands and holds the
+port exclusively.  I can't find where in the scsi code it decides it
+is time to retry that command, or if it does anything to stop any more
+commands being issued to the first drive so it can free up the port so
+the second drive can get a crack at it.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQEcBAEBAgAGBQJTc8svAAoJEI5FoCIzSKrw9/EIAJSV6wvL/BFeOpuv7M8Q6dQz
+MExvhLe4dO/Nlc6bHr7I9bK6Pa1UL9vOmqpIbTDpmL2o8fQVri/0SVPrZ2fUw3BS
+rmkq7md/eM875/NQAdExnZ8EQYzpevAOTobUnJSRkdtNvLFSmqK1HhZAipHmI1Bu
+TW2Xy7pp7qj8qs/6Cc1Z+Ny60GY9yB6fVR6hlltL5M56wrBCT+q6vTeJatBvf8Ra
++E3Sxa/7X8Tv8/MQJ0oE1q5sMA3Vwz3Mrg+8cqr064SGD0JhDn7WwCOkxj3kQBIO
++K4wnQdkB3wUzQsm5CAnTztJTH2hrx6eR1RTac+9HncPqo0eMuXubupkhtb6KVU=
+=kQSu
+-----END PGP SIGNATURE-----
