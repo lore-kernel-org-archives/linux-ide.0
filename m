@@ -1,160 +1,78 @@
-From: Kishon Vijay Abraham I <kishon@ti.com>
+From: Sebastian Hesselbarth <sebastian.hesselbarth-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Subject: Re: [PATCH v3 1/6] phy: add a driver for the Berlin SATA PHY
-Date: Thu, 15 May 2014 14:16:59 +0530
-Message-ID: <53747F03.5030206@ti.com>
-References: <1400060942-10588-1-git-send-email-antoine.tenart@free-electrons.com> <20140514165722.GA18495@kwain> <5373AE9A.3050008@gmail.com> <5764751.ffUj9rhnMd@wuerfel> <5373B908.5090904@gmail.com> <537462A2.5020607@ti.com> <5374668F.4060109@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:36396 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751164AbaEOIrn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 15 May 2014 04:47:43 -0400
-In-Reply-To: <5374668F.4060109@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Date: Thu, 15 May 2014 11:17:35 +0200
+Message-ID: <5374862F.2020205@gmail.com>
+References: <1400060942-10588-1-git-send-email-antoine.tenart@free-electrons.com> <20140514165722.GA18495@kwain> <5373AE9A.3050008@gmail.com> <5764751.ffUj9rhnMd@wuerfel> <5373B908.5090904@gmail.com> <537462A2.5020607@ti.com> <5374668F.4060109@gmail.com> <53747F03.5030206@ti.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <53747F03.5030206-l0cyMroinI0@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Kishon Vijay Abraham I <kishon-l0cyMroinI0@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
+Cc: =?ISO-8859-1?Q?Antoine_T=E9nart?= <antoine.tenart-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, zmxu-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, alexandre.belloni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, jszhang-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Arnd Bergmann <arnd@arndb.de>
-Cc: =?ISO-8859-1?Q?Antoine_T=E9nart?= <antoine.tenart@free-electrons.com>, linux-arm-kernel@lists.infradead.org, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, alexandre.belloni@free-electrons.com, jszhang@marvell.com, tj@kernel.org
 
-Hi,
-
-On Thursday 15 May 2014 12:32 PM, Sebastian Hesselbarth wrote:
-> On 05/15/2014 08:45 AM, Kishon Vijay Abraham I wrote:
->> On Thursday 15 May 2014 12:12 AM, Sebastian Hesselbarth wrote:
->>> On 05/14/2014 08:12 PM, Arnd Bergmann wrote:
->>>> On Wednesday 14 May 2014 19:57:46 Sebastian Hesselbarth wrote:
->>>>> On 05/14/2014 06:57 PM, Antoine T=E9nart wrote:
->>>>>> On Wed, May 14, 2014 at 06:11:24PM +0200, Arnd Bergmann wrote:
->>>>>>> On Wednesday 14 May 2014 17:49:29 Antoine T=E9nart wrote:
->>>>>>>> On Wed, May 14, 2014 at 05:31:24PM +0200, Arnd Bergmann wrote:
-> [...]
->>>>> Now, thinking about the PHY binding and the (possible) multi-prot=
-ocol
->>>>> support, it can be possible that on BG2Q there is a generic 2-lan=
-e
->>>>> LVDS PHY that can be configured to support SATA or PCIe. Both are
->>>>> electrically and bit-level compatible, so they could be internall=
-y
->>>>> wired-up with AHCI and PCIe controller.
->>>>
->>>> Sounds like a reasonable guess. We have other PHY drivers doing th=
-e
->>>> same thing already.
-> [...]
->>>>> From a DT point-of-view, we need a way to (a) link each SATA or P=
-CIe
->>>>> port to the PHY, (b) specify the PHY lane to be used, and (c) spe=
-cify
->>>>> the protocol to be used on that lane. If I got it right, Arnd alr=
-eady
->>>>> mentioned to use the phy-specifier to deal with it:
->>>>>
->>>>> e.g. phy =3D <&genphy 0 MODE_SATA> or phy =3D <&genphy 1 MODE_PCI=
-E>
->>>>
->>>> Right.
->>>>
->>>>> Let's assume we have one dual-port SATA controller and one PCIe
->>>>> controller with either x1 or x2 support. The only sane DT binding=
-,
->>>>> I can think of then would be:
->>>>>
->>>>> berlin2q.dtsi:
->>>>>
->>>>> genphy: lvds@ea00ff {
->>>>> 	compatible =3D "marvell,berlin-lvds-phy";
->>>>> 	reg =3D <0xea00ff 0x100>;
->>>>> 	#phy-cells =3D <2>;
->>>>> };
->>>>>
->>>>> sata: sata@ab00ff {
->>>>> 	compatible =3D "ahci-platform";
->>>>> 	reg =3D <0xab00ff 0x100>;
->>>>> =09
->>>>> 	sata0: sata-port@0 {
->>>>> 		reg =3D <0>;
->>>>> 		phy =3D <&genphy 0 MODE_SATA>;
->>>>> 		status =3D "disabled";
->>>>> 	};
->>>>>
->>>>> 	sata1: sata-port@1 {
->>>>> 		reg =3D <1>;
->>>>> 		phy =3D <&genphy 1 MODE_SATA>;
->>>>> 		status =3D "disabled";
->>>>> 	};
->>>>> };
->>>>>
->>>>> pcie: pcie@ab01ff {
->>>>> 	compatible =3D "marvell,berlin-pcie";
->>>>> 	reg =3D <0xab01ff 0x100>;
->>>>>
->>>>> 	pcie0: pcie-port@0 {
->>>>> 		reg =3D <0>;
->>>>> 		/* set phy on a per-board basis */
->>>>> 		/* PCIe x1 on Lane 0 : phy =3D <&genphy 0 MODE_PCIE>; */
->>>>> 		/* PCIe x2 on Lane 0 and 1 : phy =3D <&genphy 0 MODE_PCIE>, <&g=
-enphy 1
->>>>> MODE_PCIE>; */
->>>>> 		status =3D "disabled";
->>>>> 	};
->>>>> };
->>>>>
->>>>> berlin2q-dmp.dts:
->>>>>
->>>>> &sata1 {
->>>>> 	status =3D "okay";
->>>>> };
->>>>>
->>>>> &pcie0 {
->>>>> 	phy =3D <&genphy 1 MODE_PCIE>;
->>>>> };
->>>>>
->>>>> berlin2q-foo.dts:
->>>>>
->>>>> &pcie0 {
->>>>> 	phy =3D <&genphy 0 MODE_PCIE>, <&genphy 1 MODE_PCIE>;
->>>>> };
->>>>
->>>> Exactly. I would also be fine with keeping the sub-nodes of the
->>>> phy device as in v3 and using #phy-cells=3D<1> instead of #phy-cel=
-ls.
->>>> The result would be pretty much the same, it just depends on how
->>>> closely connected the two logical phys are.
+On 05/15/2014 10:46 AM, Kishon Vijay Abraham I wrote:
+> On Thursday 15 May 2014 12:32 PM, Sebastian Hesselbarth wrote:
+>> On 05/15/2014 08:45 AM, Kishon Vijay Abraham I wrote:
+>>> On Thursday 15 May 2014 12:12 AM, Sebastian Hesselbarth wrote:
+>>>> On 05/14/2014 08:12 PM, Arnd Bergmann wrote:
+>>>>> On Wednesday 14 May 2014 19:57:46 Sebastian Hesselbarth wrote:
+>>>>>> Let's assume we have one dual-port SATA controller and one PCIe
+>>>>>> controller with either x1 or x2 support. The only sane DT binding,
+>>>>>> I can think of then would be:
+>>>>>>
+>>>>>> berlin2q.dtsi:
+>>>>>>
+>>>>>> genphy: lvds@ea00ff {
+>>>>>> 	compatible = "marvell,berlin-lvds-phy";
+>>>>>> 	reg = <0xea00ff 0x100>;
+>>>>>> 	#phy-cells = <2>;
+>>>>>> };
+[...]
 >>
->> huh.. even with sub-nodes you'll need #phy-cells=3D<2> if we use a s=
-ingle *PHY
->> PROVIDER*. Because with just PHYs node pointer we won't be able to g=
-et the PHY.
->> We'll need PHY providers node pointer.
+>> Depends on what you call PHY. In the example above the PHY is what
+>> allows you to control both lanes.
 >>
->> However I'd prefer to have sub-nodes for each individual PHYs and re=
-gister a
->> single PHY PROVIDER.
->=20
-> Depends on what you call PHY. In the example above the PHY is what
-> allows you to control both lanes.
->=20
-> So you want sub-nodes for each individual lane given the nomenclature
-> of the example?
->=20
-> Or like it is used in the example above, a single PHY node with an in=
-dex
-> in the phy-specifier to pick an individual lane.
->=20
-> IMHO, having both phy-specifier index _and_ PHY sub-node per lane
-> has no benefit at all. You cannot even use the PHY sub-nodes for any
-> setup properties, as they depend on the consumer claiming the lane.
+>> So you want sub-nodes for each individual lane given the nomenclature
+>> of the example?
+>>
+>> Or like it is used in the example above, a single PHY node with an index
+>> in the phy-specifier to pick an individual lane.
+>>
+>> IMHO, having both phy-specifier index _and_ PHY sub-node per lane
+>> has no benefit at all. You cannot even use the PHY sub-nodes for any
+>> setup properties, as they depend on the consumer claiming the lane.
+>
+> IMO the dt data should completely describe the HW. So just by looking at the
+> PHY node, we won't be able to tell the no of PHYs implemented in the IP if we
+> have a single PHY node (In this case the lanes in the IP).
+>
+> However if you think it's an overkill for having sub-nodes for each lane then
+> single PHY node is fine too.
 
-IMO the dt data should completely describe the HW. So just by looking a=
-t the
-PHY node, we won't be able to tell the no of PHYs implemented in the IP=
- if we
-have a single PHY node (In this case the lanes in the IP).
+Yeah, I see your point. I just wonder how many Marvell PHYs we may hit
+that require the _same_ magic setup inside but have _different_ number
+of lanes. And even if, we can deal with it using a different compatible
+string.
 
-However if you think it's an overkill for having sub-nodes for each lan=
-e then
-single PHY node is fine too.
+Currently, I feel a single PHY provider node and a set of compatibles
+will be most likely, i.e. no per-lane sub-nodes. OTOH, the per-lane
+sub-nodes is more generic as it allows us to deal PHYs that may
+suddenly skip one lane in the numbering scheme. The difference for the
+driver is marginal, i.e. some SoC-specific struct with a field for the
+number of lanes vs. of_count_child_nodes() and a reg = <n> property for
+the per-lane sub-nodes.
 
-Thanks
-Kishon
+I used to agree to "DT should descibe HW", but with no datasheet
+available, it quickly becomes fuzzy what it really looks like.
+
+Anyway, I'll have some discussion with Antoine and Alexandre to sort out
+the differences and the things in common for the PHY and SoCs in
+question.
+
+Sebastian
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
