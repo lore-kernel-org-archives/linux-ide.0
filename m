@@ -1,84 +1,41 @@
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH v3 1/6] phy: add a driver for the Berlin SATA PHY
-Date: Thu, 15 May 2014 14:55:36 +0530
-Message-ID: <53748810.1020705@ti.com>
-References: <1400060942-10588-1-git-send-email-antoine.tenart@free-electrons.com> <20140514165722.GA18495@kwain> <5373AE9A.3050008@gmail.com> <5764751.ffUj9rhnMd@wuerfel> <5373B908.5090904@gmail.com> <537462A2.5020607@ti.com> <5374668F.4060109@gmail.com> <53747F03.5030206@ti.com> <5374862F.2020205@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+From: Andrew Lunn <andrew@lunn.ch>
+Subject: [PATCH RFC 05/11] ata: Remove ARCH_KIRKWOOD dependency
+Date: Thu, 15 May 2014 16:23:50 +0200
+Message-ID: <1400163836-9831-10-git-send-email-andrew@lunn.ch>
+References: <1400163836-9831-1-git-send-email-andrew@lunn.ch>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:52451 "EHLO arroyo.ext.ti.com"
+Received: from vps0.lunn.ch ([178.209.37.122]:44728 "EHLO vps0.lunn.ch"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751000AbaEOJ0T (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 15 May 2014 05:26:19 -0400
-In-Reply-To: <5374862F.2020205@gmail.com>
+	id S1754226AbaEOO16 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 15 May 2014 10:27:58 -0400
+In-Reply-To: <1400163836-9831-1-git-send-email-andrew@lunn.ch>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Arnd Bergmann <arnd@arndb.de>
-Cc: =?ISO-8859-1?Q?Antoine_T=E9nart?= <antoine.tenart@free-electrons.com>, linux-arm-kernel@lists.infradead.org, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, alexandre.belloni@free-electrons.com, jszhang@marvell.com, tj@kernel.org
+To: linux ARM <linux-arm-kernel@lists.infradead.org>, Jason Cooper <jason@lakedaemon.net>
+Cc: Andrew Lunn <andrew@lunn.ch>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 
+mach-kirkwood has been removed, now that kirkwood lives in mach-mvebu.
 
+Signed-off-by: Andrew Lunn <andrew@lunn.ch>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
+---
+ drivers/ata/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-On Thursday 15 May 2014 02:47 PM, Sebastian Hesselbarth wrote:
-> On 05/15/2014 10:46 AM, Kishon Vijay Abraham I wrote:
->> On Thursday 15 May 2014 12:32 PM, Sebastian Hesselbarth wrote:
->>> On 05/15/2014 08:45 AM, Kishon Vijay Abraham I wrote:
->>>> On Thursday 15 May 2014 12:12 AM, Sebastian Hesselbarth wrote:
->>>>> On 05/14/2014 08:12 PM, Arnd Bergmann wrote:
->>>>>> On Wednesday 14 May 2014 19:57:46 Sebastian Hesselbarth wrote:
->>>>>>> Let's assume we have one dual-port SATA controller and one PCIe
->>>>>>> controller with either x1 or x2 support. The only sane DT binding,
->>>>>>> I can think of then would be:
->>>>>>>
->>>>>>> berlin2q.dtsi:
->>>>>>>
->>>>>>> genphy: lvds@ea00ff {
->>>>>>>     compatible = "marvell,berlin-lvds-phy";
->>>>>>>     reg = <0xea00ff 0x100>;
->>>>>>>     #phy-cells = <2>;
->>>>>>> };
-> [...]
->>>
->>> Depends on what you call PHY. In the example above the PHY is what
->>> allows you to control both lanes.
->>>
->>> So you want sub-nodes for each individual lane given the nomenclature
->>> of the example?
->>>
->>> Or like it is used in the example above, a single PHY node with an index
->>> in the phy-specifier to pick an individual lane.
->>>
->>> IMHO, having both phy-specifier index _and_ PHY sub-node per lane
->>> has no benefit at all. You cannot even use the PHY sub-nodes for any
->>> setup properties, as they depend on the consumer claiming the lane.
->>
->> IMO the dt data should completely describe the HW. So just by looking at the
->> PHY node, we won't be able to tell the no of PHYs implemented in the IP if we
->> have a single PHY node (In this case the lanes in the IP).
->>
->> However if you think it's an overkill for having sub-nodes for each lane then
->> single PHY node is fine too.
-> 
-> Yeah, I see your point. I just wonder how many Marvell PHYs we may hit
-> that require the _same_ magic setup inside but have _different_ number
-> of lanes. And even if, we can deal with it using a different compatible
-> string.
-> 
-> Currently, I feel a single PHY provider node and a set of compatibles
-> will be most likely, i.e. no per-lane sub-nodes. OTOH, the per-lane
-> sub-nodes is more generic as it allows us to deal PHYs that may
-> suddenly skip one lane in the numbering scheme. The difference for the
-> driver is marginal, i.e. some SoC-specific struct with a field for the
-> number of lanes vs. of_count_child_nodes() and a reg = <n> property for
-> the per-lane sub-nodes.
-> 
-> I used to agree to "DT should descibe HW", but with no datasheet
-> available, it quickly becomes fuzzy what it really looks like.
-> 
-> Anyway, I'll have some discussion with Antoine and Alexandre to sort out
-> the differences and the things in common for the PHY and SoCs in
-> question.
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 20e03a7eb8b4..771f226cf8f4 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -281,7 +281,7 @@ config SATA_HIGHBANK
+ 
+ config SATA_MV
+ 	tristate "Marvell SATA support"
+-	depends on PCI || ARCH_DOVE || ARCH_KIRKWOOD || ARCH_MV78XX0 || \
++	depends on PCI || ARCH_DOVE || ARCH_MV78XX0 || \
+ 		   ARCH_MVEBU || ARCH_ORION5X || COMPILE_TEST
+ 	select GENERIC_PHY
+ 	help
+-- 
+2.0.0.rc2
 
-cool, thanks.
-
--Kishon
