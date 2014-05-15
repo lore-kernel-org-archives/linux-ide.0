@@ -1,149 +1,135 @@
 From: Kishon Vijay Abraham I <kishon@ti.com>
 Subject: Re: [PATCH v3 1/6] phy: add a driver for the Berlin SATA PHY
-Date: Thu, 15 May 2014 11:45:16 +0530
-Message-ID: <53745B74.2040808@ti.com>
-References: <1400060942-10588-1-git-send-email-antoine.tenart@free-electrons.com> <1400060942-10588-2-git-send-email-antoine.tenart@free-electrons.com> <537341AF.5030105@ti.com> <20140514102122.GA11140@kwain>
+Date: Thu, 15 May 2014 12:15:54 +0530
+Message-ID: <537462A2.5020607@ti.com>
+References: <1400060942-10588-1-git-send-email-antoine.tenart@free-electrons.com> <20140514165722.GA18495@kwain> <5373AE9A.3050008@gmail.com> <5764751.ffUj9rhnMd@wuerfel> <5373B908.5090904@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:45205 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751403AbaEOGP5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 15 May 2014 02:15:57 -0400
-In-Reply-To: <20140514102122.GA11140@kwain>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5373B908.5090904@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Arnd Bergmann <arnd@arndb.de>
+Cc: =?ISO-8859-1?Q?Antoine_T=E9nart?= <antoine.tenart@free-electrons.com>, linux-arm-kernel@lists.infradead.org, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, alexandre.belloni@free-electrons.com, jszhang@marvell.com, tj@kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?UTF-8?B?QW50b2luZSBUw6luYXJ0?= <antoine.tenart@free-electrons.com>
-Cc: sebastian.hesselbarth@gmail.com, tj@kernel.org, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 
 Hi,
 
-On Wednesday 14 May 2014 03:51 PM, Antoine T=C3=A9nart wrote:
-> Hi,
->=20
-> On Wed, May 14, 2014 at 03:43:03PM +0530, Kishon Vijay Abraham I wrot=
-e:
->> Hi,
+On Thursday 15 May 2014 12:12 AM, Sebastian Hesselbarth wrote:
+> On 05/14/2014 08:12 PM, Arnd Bergmann wrote:
+>> On Wednesday 14 May 2014 19:57:46 Sebastian Hesselbarth wrote:
+>>> On 05/14/2014 06:57 PM, Antoine T=E9nart wrote:
+>>>> On Wed, May 14, 2014 at 06:11:24PM +0200, Arnd Bergmann wrote:
+>>>>> On Wednesday 14 May 2014 17:49:29 Antoine T=E9nart wrote:
+>>>>>> On Wed, May 14, 2014 at 05:31:24PM +0200, Arnd Bergmann wrote:
+>>>
+>>> From what I understand from the conversation, we have a single PHY
+>>> register set dealing with both SATA ports available on the SoC.
+>>> Also, from the name of the PHY bits we assume the PHY may be able
+>>> to work in different modes than just SATA. And we currently have
+>>> an AHCI-compatible SATA IP that supports up to two ports, with one
+>>> actually connected to a SATA plug on the DMP board.
+>>>
+>>> Now, thinking about the PHY binding and the (possible) multi-protoc=
+ol
+>>> support, it can be possible that on BG2Q there is a generic 2-lane
+>>> LVDS PHY that can be configured to support SATA or PCIe. Both are
+>>> electrically and bit-level compatible, so they could be internally
+>>> wired-up with AHCI and PCIe controller.
 >>
->> On Wednesday 14 May 2014 03:18 PM, Antoine T=C3=A9nart wrote:
+>> Sounds like a reasonable guess. We have other PHY drivers doing the
+>> same thing already.
 >=20
-> [=E2=80=A6]
+> Well, I based that on what I know about FPGA LVDS transceivers, so
+> I wasn't guessing out of the blue ;)
 >=20
->>> +#define to_berlin_sata_phy_priv(desc)	\
->>> +	container_of((desc), struct phy_berlin_priv, phys[(desc)->index])
->>> +
->>> +struct phy_berlin_desc {
->>> +	struct phy	*phy;
->>> +	u32		val;
->>> +	unsigned	index;
->>> +};
->>> +
->>> +struct phy_berlin_priv {
->>> +	void __iomem	*base;
->>> +	spinlock_t	lock;
->>> +	struct phy_berlin_desc	phys[BERLIN_SATA_PHY_NB];
->>
->> Can't we do away with hardcoding BERLIN_SATA_PHY_NB?
->=20
-> We can't if we want to be able to use the container_of macro in
-> to_berlin_sata_phy_priv(). And we want a common structure to store th=
+>>> From a DT point-of-view, we need a way to (a) link each SATA or PCI=
 e
-> common spinlock and base address.
-
-to get phy_berlin_priv, you can use dev_get_drvdata(phy->dev->parent).
-
->=20
-> [=E2=80=A6]
->=20
->>> +		/*
->>> +		 * By default the PHY node is used to request and match a PHY.
->>> +		 * We describe one PHY per sub-node here. Use the right node.
->>> +		 */
->>> +		phy->dev.of_node =3D child;
->>> +
->>> +		priv->phys[phy_id].phy =3D phy;
->>> +		priv->phys[phy_id].val =3D desc[phy_id].val;
->>> +		priv->phys[phy_id].index =3D phy_id;
->>> +		phy_set_drvdata(phy, &priv->phys[phy_id]);
->>> +
->>> +		/* Make sure the PHY is off */
->>> +		phy_berlin_sata_power_off(phy);
->>> +
->>> +		phy_provider =3D devm_of_phy_provider_register(&phy->dev,
->>> +							     of_phy_simple_xlate);
->>> +		if (IS_ERR(phy_provider))
->>> +			return PTR_ERR(phy_provider);
+>>> port to the PHY, (b) specify the PHY lane to be used, and (c) speci=
+fy
+>>> the protocol to be used on that lane. If I got it right, Arnd alrea=
+dy
+>>> mentioned to use the phy-specifier to deal with it:
+>>>
+>>> e.g. phy =3D <&genphy 0 MODE_SATA> or phy =3D <&genphy 1 MODE_PCIE>
 >>
->> was this intentional? registering multiple PHY providers?
->=20
-> Yes. Each sub-node describe a PHY and register as a PHY provider. Thi=
-s
-> allow to reference the PHY as <&sata_phy0> and not <&sata_phy 0>. It
-> would be confusing to have a sub-node sata_phy0 and to use its parent
-> to access it.
+>> Right.
+>>
+>>> Let's assume we have one dual-port SATA controller and one PCIe
+>>> controller with either x1 or x2 support. The only sane DT binding,
+>>> I can think of then would be:
+>>>
+>>> berlin2q.dtsi:
+>>>
+>>> genphy: lvds@ea00ff {
+>>> 	compatible =3D "marvell,berlin-lvds-phy";
+>>> 	reg =3D <0xea00ff 0x100>;
+>>> 	#phy-cells =3D <2>;
+>>> };
+>>>
+>>> sata: sata@ab00ff {
+>>> 	compatible =3D "ahci-platform";
+>>> 	reg =3D <0xab00ff 0x100>;
+>>> =09
+>>> 	sata0: sata-port@0 {
+>>> 		reg =3D <0>;
+>>> 		phy =3D <&genphy 0 MODE_SATA>;
+>>> 		status =3D "disabled";
+>>> 	};
+>>>
+>>> 	sata1: sata-port@1 {
+>>> 		reg =3D <1>;
+>>> 		phy =3D <&genphy 1 MODE_SATA>;
+>>> 		status =3D "disabled";
+>>> 	};
+>>> };
+>>>
+>>> pcie: pcie@ab01ff {
+>>> 	compatible =3D "marvell,berlin-pcie";
+>>> 	reg =3D <0xab01ff 0x100>;
+>>>
+>>> 	pcie0: pcie-port@0 {
+>>> 		reg =3D <0>;
+>>> 		/* set phy on a per-board basis */
+>>> 		/* PCIe x1 on Lane 0 : phy =3D <&genphy 0 MODE_PCIE>; */
+>>> 		/* PCIe x2 on Lane 0 and 1 : phy =3D <&genphy 0 MODE_PCIE>, <&gen=
+phy 1
+>>> MODE_PCIE>; */
+>>> 		status =3D "disabled";
+>>> 	};
+>>> };
+>>>
+>>> berlin2q-dmp.dts:
+>>>
+>>> &sata1 {
+>>> 	status =3D "okay";
+>>> };
+>>>
+>>> &pcie0 {
+>>> 	phy =3D <&genphy 1 MODE_PCIE>;
+>>> };
+>>>
+>>> berlin2q-foo.dts:
+>>>
+>>> &pcie0 {
+>>> 	phy =3D <&genphy 0 MODE_PCIE>, <&genphy 1 MODE_PCIE>;
+>>> };
+>>
+>> Exactly. I would also be fine with keeping the sub-nodes of the
+>> phy device as in v3 and using #phy-cells=3D<1> instead of #phy-cells=
+=2E
+>> The result would be pretty much the same, it just depends on how
+>> closely connected the two logical phys are.
 
-It is still a single PHY provider, so you can't register multiple PHY
-providers. So in this case <&sata_phy 0> is not that bad.
+huh.. even with sub-nodes you'll need #phy-cells=3D<2> if we use a sing=
+le *PHY
+PROVIDER*. Because with just PHYs node pointer we won't be able to get =
+the PHY.
+We'll need PHY providers node pointer.
 
-However phy-core.c should be patched with the following (only compile t=
-ested)
-
-=46rom 2517d4c0ad7f13abc2613516ef2b222a1fbcb550 Mon Sep 17 00:00:00 200=
-1
-=46rom: Kishon Vijay Abraham I <kishon@ti.com>
-Date: Thu, 15 May 2014 11:32:57 +0530
-Subject: [PATCH] phy: phy-core: Support modelling multi-PHY PHY nodes a=
-s
- subnodes of PHY PROVIDER
-
-When a single PHY provider implementing multiple PHYs is represented in=
- dt,
-the PHYs should be modelled as sub nodes of the PHY PROVIDER node.
-
-So the consumers using the PHY will have the phandle of the sub node ra=
-ther
-than the phandle of the PHY PROVIDER. Amended *of_phy_provider_lookup* =
-in
-PHY core to return the PHY PROVIDER even when the phandle of the PHY PR=
-OVIDERs
-sub node is provided.
-
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/phy/phy-core.c |   10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/phy/phy-core.c b/drivers/phy/phy-core.c
-index 03cf8fb..124c6ec 100644
---- a/drivers/phy/phy-core.c
-+++ b/drivers/phy/phy-core.c
-@@ -83,10 +83,18 @@ static struct phy *phy_lookup(struct device *device=
-, const
-char *port)
- static struct phy_provider *of_phy_provider_lookup(struct device_node =
-*node)
- {
-        struct phy_provider *phy_provider;
-+       struct device_node *child;
-
-        list_for_each_entry(phy_provider, &phy_provider_list, list) {
--               if (phy_provider->dev->of_node =3D=3D node)
-+               if (phy_provider->dev->of_node !=3D node) {
-+                       for_each_child_of_node(phy_provider->dev->of_no=
-de,
-+                               child) {
-+                               if (child =3D=3D node)
-+                                       return phy_provider;
-+                       }
-+               } else {
-                        return phy_provider;
-+               }
-        }
-
-        return ERR_PTR(-EPROBE_DEFER);
---=20
-1.7.9.5
+However I'd prefer to have sub-nodes for each individual PHYs and regis=
+ter a
+single PHY PROVIDER.
 
 Thanks
 Kishon
