@@ -1,37 +1,60 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH RFC 05/11] ata: Remove ARCH_KIRKWOOD dependency
-Date: Thu, 15 May 2014 13:46:43 -0400
-Message-ID: <20140515174643.GA20738@mtj.dyndns.org>
-References: <1400163836-9831-1-git-send-email-andrew@lunn.ch>
- <1400163836-9831-10-git-send-email-andrew@lunn.ch>
+From: Shawn Guo <shawn.guo@freescale.com>
+Subject: [PATCH] ahci: imx: PLL clock needs 100us to settle down
+Date: Sat, 17 May 2014 20:46:01 +0800
+Message-ID: <1400330761-2432-1-git-send-email-shawn.guo@freescale.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f43.google.com ([209.85.192.43]:41076 "EHLO
-	mail-qg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752514AbaEORqr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 May 2014 13:46:47 -0400
-Received: by mail-qg0-f43.google.com with SMTP id 63so2340284qgz.30
-        for <linux-ide@vger.kernel.org>; Thu, 15 May 2014 10:46:47 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <1400163836-9831-10-git-send-email-andrew@lunn.ch>
+Received: from mail-bn1blp0185.outbound.protection.outlook.com ([207.46.163.185]:45538
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753115AbaEQMqP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 17 May 2014 08:46:15 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Lunn <andrew@lunn.ch>
-Cc: linux ARM <linux-arm-kernel@lists.infradead.org>, Jason Cooper <jason@lakedaemon.net>, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Shawn Guo <shawn.guo@freescale.com>
 
-On Thu, May 15, 2014 at 04:23:50PM +0200, Andrew Lunn wrote:
-> mach-kirkwood has been removed, now that kirkwood lives in mach-mvebu.
-> 
-> Signed-off-by: Andrew Lunn <andrew@lunn.ch>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: linux-ide@vger.kernel.org
+The commit e783c51 (ahci: imx: software workaround for phy reset issue
+in resume) calls imx_sata_phy_reset() to reset phy immediately after
+SATA MPLL is enabled.  It seems working fine mostly, but fails in some
+case as below.
 
-Acked-by: Tejun Heo <tj@kernel.org>
+...
+ahci-imx 2200000.sata: failed to reset phy: -110
+ahci-imx: probe of 2200000.sata failed with error -110
 
-Please feel free to route the patch as you see fit.
+After talking to the designer, we learnt that when enabling i.MX6Q SATA
+MPLL, we need to wait 100us for it to settle down for safety.  Add this
+required delay to fix above failure.
 
-Thanks.
+Signed-off-by: Shawn Guo <shawn.guo@freescale.com>
+---
+Tejun,
 
+Sorry for that I did not catch it when I was working on the phy reset
+issue in the first place.  I used to test the driver with a 32GiB and
+64GiB SanDisk SSDs, and did not run into this issue.  But it gets
+exposed on a 8GiB SSD I got to play recently.
+
+Shawn
+
+ drivers/ata/ahci_imx.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+index 5824d99..8befeb6 100644
+--- a/drivers/ata/ahci_imx.c
++++ b/drivers/ata/ahci_imx.c
+@@ -258,6 +258,8 @@ static int imx_sata_enable(struct ahci_host_priv *hpriv)
+ 				   IMX6Q_GPR13_SATA_MPLL_CLK_EN,
+ 				   IMX6Q_GPR13_SATA_MPLL_CLK_EN);
+ 
++		usleep_range(100, 200);
++
+ 		ret = imx_sata_phy_reset(hpriv);
+ 		if (ret) {
+ 			dev_err(dev, "failed to reset phy: %d\n", ret);
 -- 
-tejun
+1.8.3.2
+
