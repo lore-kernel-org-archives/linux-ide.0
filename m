@@ -1,60 +1,42 @@
-From: Shawn Guo <shawn.guo@freescale.com>
-Subject: [PATCH] ahci: imx: PLL clock needs 100us to settle down
-Date: Sat, 17 May 2014 20:46:01 +0800
-Message-ID: <1400330761-2432-1-git-send-email-shawn.guo@freescale.com>
+From: Fabio Estevam <festevam@gmail.com>
+Subject: Re: [PATCH] ahci: imx: PLL clock needs 100us to settle down
+Date: Sat, 17 May 2014 10:58:20 -0300
+Message-ID: <CAOMZO5BDg1g=Gr6o8kW3X--ZajBsKZcKwSmse7374tC2e=ju1A@mail.gmail.com>
+References: <1400330761-2432-1-git-send-email-shawn.guo@freescale.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bn1blp0185.outbound.protection.outlook.com ([207.46.163.185]:45538
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753115AbaEQMqP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 17 May 2014 08:46:15 -0400
+Received: from mail-ve0-f174.google.com ([209.85.128.174]:40221 "EHLO
+	mail-ve0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756421AbaEQN6V (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 17 May 2014 09:58:21 -0400
+Received: by mail-ve0-f174.google.com with SMTP id jw12so4493770veb.19
+        for <linux-ide@vger.kernel.org>; Sat, 17 May 2014 06:58:20 -0700 (PDT)
+In-Reply-To: <1400330761-2432-1-git-send-email-shawn.guo@freescale.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Shawn Guo <shawn.guo@freescale.com>
+To: Shawn Guo <shawn.guo@freescale.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
 
-The commit e783c51 (ahci: imx: software workaround for phy reset issue
-in resume) calls imx_sata_phy_reset() to reset phy immediately after
-SATA MPLL is enabled.  It seems working fine mostly, but fails in some
-case as below.
+On Sat, May 17, 2014 at 9:46 AM, Shawn Guo <shawn.guo@freescale.com> wrote:
+> The commit e783c51 (ahci: imx: software workaround for phy reset issue
+> in resume) calls imx_sata_phy_reset() to reset phy immediately after
+> SATA MPLL is enabled.  It seems working fine mostly, but fails in some
+> case as below.
+>
+> ...
+> ahci-imx 2200000.sata: failed to reset phy: -110
+> ahci-imx: probe of 2200000.sata failed with error -110
+>
+> After talking to the designer, we learnt that when enabling i.MX6Q SATA
+> MPLL, we need to wait 100us for it to settle down for safety.  Add this
+> required delay to fix above failure.
+>
+> Signed-off-by: Shawn Guo <shawn.guo@freescale.com>
 
-...
-ahci-imx 2200000.sata: failed to reset phy: -110
-ahci-imx: probe of 2200000.sata failed with error -110
+On my sabresd board that was not connected to any sata disk I was
+always getting the 'failed to reset phy' error.
 
-After talking to the designer, we learnt that when enabling i.MX6Q SATA
-MPLL, we need to wait 100us for it to settle down for safety.  Add this
-required delay to fix above failure.
+With this patch the error goes away and the driver probes successfully.
 
-Signed-off-by: Shawn Guo <shawn.guo@freescale.com>
----
-Tejun,
-
-Sorry for that I did not catch it when I was working on the phy reset
-issue in the first place.  I used to test the driver with a 32GiB and
-64GiB SanDisk SSDs, and did not run into this issue.  But it gets
-exposed on a 8GiB SSD I got to play recently.
-
-Shawn
-
- drivers/ata/ahci_imx.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
-index 5824d99..8befeb6 100644
---- a/drivers/ata/ahci_imx.c
-+++ b/drivers/ata/ahci_imx.c
-@@ -258,6 +258,8 @@ static int imx_sata_enable(struct ahci_host_priv *hpriv)
- 				   IMX6Q_GPR13_SATA_MPLL_CLK_EN,
- 				   IMX6Q_GPR13_SATA_MPLL_CLK_EN);
- 
-+		usleep_range(100, 200);
-+
- 		ret = imx_sata_phy_reset(hpriv);
- 		if (ret) {
- 			dev_err(dev, "failed to reset phy: %d\n", ret);
--- 
-1.8.3.2
-
+Tested-by: Fabio Estevam <fabio.estevam@freescale.com>
