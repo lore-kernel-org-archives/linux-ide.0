@@ -1,301 +1,84 @@
-From: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+From: Antoine =?iso-8859-1?Q?T=E9nart?=
+	<antoine.tenart-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
 Subject: Re: [PATCH v4 1/7] phy: add a driver for the Berlin SATA PHY
-Date: Tue, 20 May 2014 11:11:17 +0200
-Message-ID: <537B1C35.20107@gmail.com>
-References: <1400576675-25265-1-git-send-email-antoine.tenart@free-electrons.com> <1400576675-25265-2-git-send-email-antoine.tenart@free-electrons.com>
+Date: Tue, 20 May 2014 11:15:10 +0200
+Message-ID: <20140520091510.GA25381@kwain>
+References: <1400576675-25265-1-git-send-email-antoine.tenart@free-electrons.com>
+ <1400576675-25265-2-git-send-email-antoine.tenart@free-electrons.com>
+ <537B1C35.20107@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ee0-f49.google.com ([74.125.83.49]:41761 "EHLO
-	mail-ee0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750945AbaETJLW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 May 2014 05:11:22 -0400
-In-Reply-To: <1400576675-25265-2-git-send-email-antoine.tenart@free-electrons.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <537B1C35.20107-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Sebastian Hesselbarth <sebastian.hesselbarth-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Antoine =?iso-8859-1?Q?T=E9nart?= <antoine.tenart-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, kishon-l0cyMroinI0@public.gmane.org, alexandre.belloni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, zmxu-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org, jszhang-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: =?UTF-8?B?QW50b2luZSBUw6luYXJ0?= <antoine.tenart@free-electrons.com>, tj@kernel.org, kishon@ti.com
-Cc: alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 05/20/2014 11:04 AM, Antoine T=C3=A9nart wrote:
-> The Berlin SoC has a two SATA ports. Add a PHY driver to handle them.
->
-> The mode selection can let us think this PHY can be configured to fit
-> other purposes. But there are reasons to think the SATA mode will be
-> the only one usable: the PHY registers are only accessible indirectly
-> through two registers in the SATA range, the PHY seems to be integrat=
-ed
-> and no information tells us the contrary. For these reasons, make the
-> driver a SATA PHY driver.
->
-> Signed-off-by: Antoine T=C3=A9nart <antoine.tenart@free-electrons.com=
->
-> ---
-[...]
-> diff --git a/drivers/phy/phy-berlin-sata.c b/drivers/phy/phy-berlin-s=
-ata.c
-> new file mode 100644
-> index 000000000000..597f008cae32
-> --- /dev/null
-> +++ b/drivers/phy/phy-berlin-sata.c
-> @@ -0,0 +1,230 @@
-> +/*
-> + * Marvell Berlin SATA PHY driver
-> + *
-> + * Copyright (C) 2014 Marvell Technology Group Ltd.
-> + *
-> + * Antoine T=C3=A9nart <antoine.tenart@free-electrons.com>
-> + *
-> + * This file is licensed under the terms of the GNU General Public
-> + * License version 2. This program is licensed "as is" without any
-> + * warranty of any kind, whether express or implied.
-> + */
-> +
-> +#include <linux/module.h>
-> +#include <linux/phy/phy.h>
-> +#include <linux/io.h>
-> +#include <linux/platform_device.h>
-> +
-> +#define HOST_VSA_ADDR		0x0
-> +#define HOST_VSA_DATA		0x4
-> +#define PORT_VSR_ADDR           0x78
-> +#define PORT_VSR_DATA           0x7c
+On Tue, May 20, 2014 at 11:11:17AM +0200, Sebastian Hesselbarth wrote:
+> On 05/20/2014 11:04 AM, Antoine T=E9nart wrote:
+> >+#define HOST_VSA_ADDR		0x0
+> >+#define HOST_VSA_DATA		0x4
+> >+#define PORT_VSR_ADDR           0x78
+> >+#define PORT_VSR_DATA           0x7c
+>=20
+> Above two lines are indented with spaces.
 
-Above two lines are indented with spaces.
+Indeed ... sorry for that.
 
-> +#define PORT_SCR_CTL		0x2c
-> +
-> +#define CONTROL_REGISTER	0x0
-> +#define MBUS_SIZE_CONTROL	0x4
-> +
-> +#define POWER_DOWN_PHY0			BIT(6)
-> +#define POWER_DOWN_PHY1			BIT(14)
-> +#define MBUS_WRITE_REQUEST_SIZE_128	(BIT(2) << 16)
-> +#define MBUS_READ_REQUEST_SIZE_128	(BIT(2) << 19)
-> +
-> +#define PHY_BASE                0x200
+> >+#define PORT_SCR_CTL		0x2c
+> >+
+> >+#define CONTROL_REGISTER	0x0
+> >+#define MBUS_SIZE_CONTROL	0x4
+> >+
+> >+#define POWER_DOWN_PHY0			BIT(6)
+> >+#define POWER_DOWN_PHY1			BIT(14)
+> >+#define MBUS_WRITE_REQUEST_SIZE_128	(BIT(2) << 16)
+> >+#define MBUS_READ_REQUEST_SIZE_128	(BIT(2) << 19)
+> >+
+> >+#define PHY_BASE                0x200
+>=20
+> ditto.
+>=20
+> >+
+> >+/* register 0x01 */
+> >+#define REF_FREF_SEL_25         BIT(0)
+> >+#define PHY_MODE_SATA           (0x0 << 5)
+>=20
+> ditto.
+>=20
+> >+
+> >+/* register 0x02 */
+> >+#define USE_MAX_PLL_RATE        BIT(12)
+>=20
+> ditto.
+>=20
+> >+
+> >+/* register 0x23 */
+> >+#define DATA_BIT_WIDTH_10       (0x0 << 10)
+> >+#define DATA_BIT_WIDTH_20       (0x1 << 10)
+> >+#define DATA_BIT_WIDTH_40       (0x2 << 10)
+>=20
+> ditto.
+>=20
+> >+
+> >+/* register 0x25 */
+> >+#define PHY_GEN_MAX_1_5         (0x0 << 10)
+> >+#define PHY_GEN_MAX_3_0         (0x1 << 10)
+> >+#define PHY_GEN_MAX_6_0         (0x2 << 10)
+>=20
+> ditto.
 
-ditto.
+Antoine
 
-> +
-> +/* register 0x01 */
-> +#define REF_FREF_SEL_25         BIT(0)
-> +#define PHY_MODE_SATA           (0x0 << 5)
-
-ditto.
-
-> +
-> +/* register 0x02 */
-> +#define USE_MAX_PLL_RATE        BIT(12)
-
-ditto.
-
-> +
-> +/* register 0x23 */
-> +#define DATA_BIT_WIDTH_10       (0x0 << 10)
-> +#define DATA_BIT_WIDTH_20       (0x1 << 10)
-> +#define DATA_BIT_WIDTH_40       (0x2 << 10)
-
-ditto.
-
-> +
-> +/* register 0x25 */
-> +#define PHY_GEN_MAX_1_5         (0x0 << 10)
-> +#define PHY_GEN_MAX_3_0         (0x1 << 10)
-> +#define PHY_GEN_MAX_6_0         (0x2 << 10)
-
-ditto.
-
-=46WIW,
-
-Acked-by: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-
-> +
-> +#define BERLIN_SATA_PHY_NB	2
-> +
-> +#define to_berlin_sata_phy_priv(desc)	\
-> +	container_of((desc), struct phy_berlin_priv, phys[(desc)->index])
-> +
-> +struct phy_berlin_desc {
-> +	struct phy	*phy;
-> +	u32		val;
-> +	unsigned	index;
-> +};
-> +
-> +struct phy_berlin_priv {
-> +	void __iomem		*base;
-> +	spinlock_t		lock;
-> +	struct phy_berlin_desc	phys[BERLIN_SATA_PHY_NB];
-> +};
-> +
-> +static inline void phy_berlin_sata_reg_setbits(void __iomem *ctrl_re=
-g, u32 reg,
-> +					       u32 mask, u32 val)
-> +{
-> +	u32 regval;
-> +
-> +	/* select register */
-> +	writel(PHY_BASE + reg, ctrl_reg + PORT_VSR_ADDR);
-> +
-> +	/* set bits */
-> +	regval =3D readl(ctrl_reg + PORT_VSR_DATA);
-> +	regval &=3D ~mask;
-> +	regval |=3D val;
-> +	writel(regval, ctrl_reg + PORT_VSR_DATA);
-> +}
-> +
-> +static int phy_berlin_sata_power_on(struct phy *phy)
-> +{
-> +	struct phy_berlin_desc *desc =3D phy_get_drvdata(phy);
-> +	struct phy_berlin_priv *priv =3D to_berlin_sata_phy_priv(desc);
-> +	void __iomem *ctrl_reg =3D priv->base + 0x60 + (desc->index * 0x80)=
-;
-> +	int ret =3D 0;
-> +	u32 regval;
-> +
-> +	spin_lock(&priv->lock);
-> +
-> +	/* Power on PHY */
-> +	writel(CONTROL_REGISTER, priv->base + HOST_VSA_ADDR);
-> +	regval =3D readl(priv->base + HOST_VSA_DATA);
-> +	regval &=3D ~(desc->val);
-> +	writel(regval, priv->base + HOST_VSA_DATA);
-> +
-> +	/* Configure MBus */
-> +	writel(MBUS_SIZE_CONTROL, priv->base + HOST_VSA_ADDR);
-> +	regval =3D readl(priv->base + HOST_VSA_DATA);
-> +	regval |=3D MBUS_WRITE_REQUEST_SIZE_128 | MBUS_READ_REQUEST_SIZE_12=
-8;
-> +	writel(regval, priv->base + HOST_VSA_DATA);
-> +
-> +	/* set PHY mode and ref freq to 25 MHz */
-> +	phy_berlin_sata_reg_setbits(ctrl_reg, 0x1, 0xff,
-> +				    REF_FREF_SEL_25 | PHY_MODE_SATA);
-> +
-> +	/* set PHY up to 6 Gbps */
-> +	phy_berlin_sata_reg_setbits(ctrl_reg, 0x25, 0xc00, PHY_GEN_MAX_6_0)=
-;
-> +
-> +	/* set 40 bits width */
-> +	phy_berlin_sata_reg_setbits(ctrl_reg, 0x23,  0xc00, DATA_BIT_WIDTH_=
-40);
-> +
-> +	/* use max pll rate */
-> +	phy_berlin_sata_reg_setbits(ctrl_reg, 0x2, 0x0, USE_MAX_PLL_RATE);
-> +
-> +	/* set the controller speed */
-> +	writel(0x31, ctrl_reg + PORT_SCR_CTL);
-> +
-> +	spin_unlock(&priv->lock);
-> +
-> +	return ret;
-> +}
-> +
-> +static int phy_berlin_sata_power_off(struct phy *phy)
-> +{
-> +	struct phy_berlin_desc *desc =3D phy_get_drvdata(phy);
-> +	struct phy_berlin_priv *priv =3D to_berlin_sata_phy_priv(desc);
-> +	u32 regval;
-> +
-> +	spin_lock(&priv->lock);
-> +
-> +	/* Power down PHY */
-> +	writel(CONTROL_REGISTER, priv->base + HOST_VSA_ADDR);
-> +	regval =3D readl(priv->base + HOST_VSA_DATA);
-> +	regval |=3D desc->val;
-> +	writel(regval, priv->base + HOST_VSA_DATA);
-> +
-> +	spin_unlock(&priv->lock);
-> +
-> +	return 0;
-> +}
-> +
-> +static struct phy *phy_berlin_sata_phy_xlate(struct device *dev,
-> +					     struct of_phandle_args *args)
-> +{
-> +	struct phy_berlin_priv *priv =3D dev_get_drvdata(dev);
-> +
-> +	if (WARN_ON(args->args[0] >=3D BERLIN_SATA_PHY_NB))
-> +		return ERR_PTR(-ENODEV);
-> +
-> +	return priv->phys[args->args[0]].phy;
-> +}
-> +
-> +static struct phy_ops phy_berlin_sata_ops =3D {
-> +	.power_on	=3D phy_berlin_sata_power_on,
-> +	.power_off	=3D phy_berlin_sata_power_off,
-> +	.owner		=3D THIS_MODULE,
-> +};
-> +
-> +static struct phy_berlin_desc desc[] =3D {
-> +	{ .val =3D POWER_DOWN_PHY0 },
-> +	{ .val =3D POWER_DOWN_PHY1 },
-> +	{ },
-> +};
-> +
-> +static int phy_berlin_sata_probe(struct platform_device *pdev)
-> +{
-> +	struct device *dev =3D &pdev->dev;
-> +	struct phy *phy;
-> +	struct phy_provider *phy_provider;
-> +	struct phy_berlin_priv *priv;
-> +	struct resource *res;
-> +	int i;
-> +
-> +	priv =3D devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
-> +	if (!priv)
-> +		return -ENOMEM;
-> +
-> +	res =3D platform_get_resource(pdev, IORESOURCE_MEM, 0);
-> +	priv->base =3D devm_ioremap(dev, res->start, resource_size(res));
-> +	if (IS_ERR(priv->base))
-> +		return PTR_ERR(priv->base);
-> +
-> +	dev_set_drvdata(dev, priv);
-> +	spin_lock_init(&priv->lock);
-> +
-> +	for (i =3D 0; i < BERLIN_SATA_PHY_NB; i++) {
-> +		phy =3D devm_phy_create(dev, &phy_berlin_sata_ops, NULL);
-> +		if (IS_ERR(phy)) {
-> +			dev_err(dev, "failed to create PHY %d\n", i);
-> +			return PTR_ERR(phy);
-> +		}
-> +
-> +		priv->phys[i].phy =3D phy;
-> +		priv->phys[i].val =3D desc[i].val;
-> +		priv->phys[i].index =3D i;
-> +		phy_set_drvdata(phy, &priv->phys[i]);
-> +
-> +		/* Make sure the PHY is off */
-> +		phy_berlin_sata_power_off(phy);
-> +	}
-> +
-> +	phy_provider =3D
-> +		devm_of_phy_provider_register(dev, phy_berlin_sata_phy_xlate);
-> +	if (IS_ERR(phy_provider))
-> +		return PTR_ERR(phy_provider);
-> +
-> +	return 0;
-> +}
-> +
-> +static const struct of_device_id phy_berlin_sata_of_match[] =3D {
-> +	{ .compatible =3D "marvell,berlin-sata-phy" },
-> +	{ },
-> +};
-> +
-> +static struct platform_driver phy_berlin_sata_driver =3D {
-> +	.probe	=3D phy_berlin_sata_probe,
-> +	.driver	=3D {
-> +		.name		=3D "phy-berlin-sata",
-> +		.owner		=3D THIS_MODULE,
-> +		.of_match_table	=3D phy_berlin_sata_of_match,
-> +	},
-> +};
-> +module_platform_driver(phy_berlin_sata_driver);
-> +
-> +MODULE_DESCRIPTION("Marvell Berlin SATA PHY driver");
-> +MODULE_AUTHOR("Antoine T=C3=A9nart <antoine.tenart@free-electrons.co=
-m>");
-> +MODULE_LICENSE("GPL v2");
->
-
+--=20
+Antoine T=E9nart, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" i=
+n
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
