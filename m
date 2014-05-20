@@ -1,42 +1,65 @@
-From: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>
-Subject: [PATCH v4 4/7] ata: ahci_platform: add the Marvell Berlin AHCI
- compatible
-Date: Tue, 20 May 2014 11:04:32 +0200
-Message-ID: <1400576675-25265-5-git-send-email-antoine.tenart@free-electrons.com>
+From: =?UTF-8?q?Antoine=20T=C3=A9nart?=
+	<antoine.tenart@free-electrons.com>
+Subject: [PATCH v4 6/7] ARM: berlin: add the AHCI node for the BG2Q
+Date: Tue, 20 May 2014 11:04:34 +0200
+Message-ID: <1400576675-25265-7-git-send-email-antoine.tenart@free-electrons.com>
 References: <1400576675-25265-1-git-send-email-antoine.tenart@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1400576675-25265-1-git-send-email-antoine.tenart@free-electrons.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: sebastian.hesselbarth@gmail.com, tj@kernel.org, kishon@ti.com
-Cc: thomas.petazzoni@free-electrons.com, zmxu@marvell.com, devicetree@vger.kernel.org, =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, alexandre.belloni@free-electrons.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org
+Cc: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-VGhlIE1hcnZlbGwgQmVybGluIEFIQ0kgaGFzIGFsbCBoaXMgc3BlY2lmaWMgaW4gdGhlIFBIWSBk
-cml2ZXIuIEl0IHRoZW4Kb25seSBuZWVkIHRvIHVzZSB0aGUgbGliYWhjaSBmdW5jdGlvbnMgdG8g
-d29yayBwcm9wZXJseS4KCkFkZCBpdHMgY29tcGF0aWJsZSBpbnRvIHRoZSBsaWJhaGNpX3BsYXRm
-b3JtIGRyaXZlci4KClNpZ25lZC1vZmYtYnk6IEFudG9pbmUgVMOpbmFydCA8YW50b2luZS50ZW5h
-cnRAZnJlZS1lbGVjdHJvbnMuY29tPgotLS0KIGRyaXZlcnMvYXRhL2FoY2lfcGxhdGZvcm0uYyB8
-IDEgKwogMSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0aW9uKCspCgpkaWZmIC0tZ2l0IGEvZHJpdmVy
-cy9hdGEvYWhjaV9wbGF0Zm9ybS5jIGIvZHJpdmVycy9hdGEvYWhjaV9wbGF0Zm9ybS5jCmluZGV4
-IGVmNjdlNzk5NDRmOS4uYmMwNTBhYWJmMjA2IDEwMDY0NAotLS0gYS9kcml2ZXJzL2F0YS9haGNp
-X3BsYXRmb3JtLmMKKysrIGIvZHJpdmVycy9hdGEvYWhjaV9wbGF0Zm9ybS5jCkBAIC03Niw2ICs3
-Niw3IEBAIHN0YXRpYyBjb25zdCBzdHJ1Y3Qgb2ZfZGV2aWNlX2lkIGFoY2lfb2ZfbWF0Y2hbXSA9
-IHsKIAl7IC5jb21wYXRpYmxlID0gInNucHMsZXh5bm9zNTQ0MC1haGNpIiwgfSwKIAl7IC5jb21w
-YXRpYmxlID0gImlibSw0NzZndHItYWhjaSIsIH0sCiAJeyAuY29tcGF0aWJsZSA9ICJzbnBzLGR3
-Yy1haGNpIiwgfSwKKwl7IC5jb21wYXRpYmxlID0gIm1hcnZlbGwsYmVybGluLWFoY2kiLCB9LAog
-CXt9LAogfTsKIE1PRFVMRV9ERVZJQ0VfVEFCTEUob2YsIGFoY2lfb2ZfbWF0Y2gpOwotLSAKMS45
-LjEKCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51
-eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVh
-ZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1h
-cm0ta2VybmVsCg==
+The BG2Q has an AHCI SATA controller. Add the corresponding nodes
+(AHCI, PHY) into its device tree.
+
+Signed-off-by: Antoine T=C3=A9nart <antoine.tenart@free-electrons.com>
+---
+ arch/arm/boot/dts/berlin2q.dtsi | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
+
+diff --git a/arch/arm/boot/dts/berlin2q.dtsi b/arch/arm/boot/dts/berlin=
+2q.dtsi
+index 07452a7483fa..18825b54b170 100644
+--- a/arch/arm/boot/dts/berlin2q.dtsi
++++ b/arch/arm/boot/dts/berlin2q.dtsi
+@@ -183,6 +183,33 @@
+ 			};
+ 		};
+=20
++		ahci: sata@e90000 {
++			compatible =3D "marvell,berlin-ahci";
++			reg =3D <0xe90000 0x1000>;
++			interrupts =3D <GIC_SPI 7 IRQ_TYPE_LEVEL_HIGH>;
++			#address-cells =3D <1>;
++			#size-cells =3D <0>;
++
++			sata0: sata-port@0 {
++				reg =3D <0>;
++				phys =3D <&sata_phy 0>;
++				status =3D "disabled";
++			};
++
++			sata1: sata-port@1 {
++				reg =3D <1>;
++				phys =3D <&sata_phy 1>;
++				status =3D "disabled";
++			};
++		};
++
++		sata_phy: phy@e900a0 {
++			compatible =3D "marvell,berlin-sata-phy";
++			reg =3D <0xe900a0 0x200>;
++			#phy-cells =3D <1>;
++			status =3D "disabled";
++		};
++
+ 		apb@fc0000 {
+ 			compatible =3D "simple-bus";
+ 			#address-cells =3D <1>;
+--=20
+1.9.1
