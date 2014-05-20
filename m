@@ -1,77 +1,50 @@
 From: =?UTF-8?q?Antoine=20T=C3=A9nart?=
 	<antoine.tenart@free-electrons.com>
-Subject: [PATCH v4 0/7] ARM: berlin: add AHCI support
-Date: Tue, 20 May 2014 11:04:28 +0200
-Message-ID: <1400576675-25265-1-git-send-email-antoine.tenart@free-electrons.com>
+Subject: [PATCH v4 7/7] ARM: berlin: enable the eSATA interface on the BG2Q DMP
+Date: Tue, 20 May 2014 11:04:35 +0200
+Message-ID: <1400576675-25265-8-git-send-email-antoine.tenart@free-electrons.com>
+References: <1400576675-25265-1-git-send-email-antoine.tenart@free-electrons.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:58304 "EHLO
+Received: from top.free-electrons.com ([176.31.233.9]:58355 "EHLO
 	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750699AbaETJEi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 May 2014 05:04:38 -0400
+	with ESMTP id S1750699AbaETJEn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 May 2014 05:04:43 -0400
+In-Reply-To: <1400576675-25265-1-git-send-email-antoine.tenart@free-electrons.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: sebastian.hesselbarth@gmail.com, tj@kernel.org, kishon@ti.com
 Cc: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This series adds the support for Berlin SoC AHCI controller. The
-controller allows to use the SATA host interface and, for example, the
-eSATA port on the BG2Q.
+The BG2Q has an AHCI SATA controller with an eSATA interface. Enable it=
+=2E
+Only enable the first port, the BG2Q DMP does not support the second on=
+e.
 
-The series adds a PHY driver to control the two SATA ports available,
-and uses the existing ahci_platform driver.
+Signed-off-by: Antoine T=C3=A9nart <antoine.tenart@free-electrons.com>
+---
+ arch/arm/boot/dts/berlin2q-marvell-dmp.dts | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-Also enable the eSATA interface on the BG2Q DMP.
-
-Changes since v3:
-        - moved all PHY operations to the PHY driver
-        - removed PHY sub-nodes
-        - removed the custom Berlin AHCI driver and switched to
-          ahci_platform
-        - added multiple PHYs support to the libahci_platform
-
-Changes since v2:
-        - modeled each PHY as a sub-node
-        - cosmetic fixups
-
-Changes since v1:
-        - added a PHY driver, allowing to enable each port
-          individually and removed the 'force-port-map' property
-        - made the drivers a bit less magic :)
-        - wrote a function to select and configure registers in the
-          AHCI driver
-        - removed BG2 / BG2CD nodes
-
-Antoine T=C3=A9nart (7):
-  phy: add a driver for the Berlin SATA PHY
-  Documentation: bindings: add the Berlin SATA PHY
-  ata: libahci: allow to use multiple PHYs
-  ata: ahci_platform: add the Marvell Berlin AHCI compatible
-  Documentation: bindings: document the sub-nodes AHCI bindings
-  ARM: berlin: add the AHCI node for the BG2Q
-  ARM: berlin: enable the eSATA interface on the BG2Q DMP
-
- .../devicetree/bindings/ata/ahci-platform.txt      |  38 +++-
- .../devicetree/bindings/phy/berlin-sata-phy.txt    |  14 ++
- arch/arm/boot/dts/berlin2q-marvell-dmp.dts         |   8 +
- arch/arm/boot/dts/berlin2q.dtsi                    |  27 +++
- drivers/ata/Kconfig                                |   1 +
- drivers/ata/ahci.h                                 |   3 +-
- drivers/ata/ahci_platform.c                        |   1 +
- drivers/ata/libahci.c                              |   7 +
- drivers/ata/libahci_platform.c                     | 165 +++++++++++--=
---
- drivers/phy/Kconfig                                |   5 +
- drivers/phy/Makefile                               |   1 +
- drivers/phy/phy-berlin-sata.c                      | 230 +++++++++++++=
-++++++++
- 12 files changed, 463 insertions(+), 37 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/phy/berlin-sata-p=
-hy.txt
- create mode 100644 drivers/phy/phy-berlin-sata.c
-
+diff --git a/arch/arm/boot/dts/berlin2q-marvell-dmp.dts b/arch/arm/boot=
+/dts/berlin2q-marvell-dmp.dts
+index 2da9c41e29d8..899b4e04fe12 100644
+--- a/arch/arm/boot/dts/berlin2q-marvell-dmp.dts
++++ b/arch/arm/boot/dts/berlin2q-marvell-dmp.dts
+@@ -26,3 +26,11 @@
+ &uart0 {
+ 	status =3D "okay";
+ };
++
++&sata0 {
++	status =3D "okay";
++};
++
++&sata_phy {
++	status =3D "okay";
++};
 --=20
 1.9.1
 
