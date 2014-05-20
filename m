@@ -1,51 +1,68 @@
 From: Antoine =?iso-8859-1?Q?T=E9nart?=
-	<antoine.tenart@free-electrons.com>
+	<antoine.tenart-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
 Subject: Re: [PATCH v4 1/7] phy: add a driver for the Berlin SATA PHY
-Date: Tue, 20 May 2014 16:40:03 +0200
-Message-ID: <20140520144003.GD21579@kwain>
+Date: Tue, 20 May 2014 16:40:58 +0200
+Message-ID: <20140520144058.GE21579@kwain>
 References: <1400576675-25265-1-git-send-email-antoine.tenart@free-electrons.com>
  <1400576675-25265-2-git-send-email-antoine.tenart@free-electrons.com>
  <1821771.zFvTDGF2Ae@amdc1032>
- <20140520134942.GC9873@lunn.ch>
- <20140520140325.GA21579@kwain>
- <20140520140631.GF9873@lunn.ch>
+ <20140520140652.GB21579@kwain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:32839 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753580AbaETOkI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 20 May 2014 10:40:08 -0400
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20140520140631.GF9873@lunn.ch>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <20140520140652.GB21579@kwain>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
+Cc: Antoine =?iso-8859-1?Q?T=E9nart?= <antoine.tenart-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, sebastian.hesselbarth-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, kishon-l0cyMroinI0@public.gmane.org, alexandre.belloni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, zmxu-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org, jszhang-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: Andrew Lunn <andrew@lunn.ch>
-Cc: Antoine =?iso-8859-1?Q?T=E9nart?= <antoine.tenart@free-electrons.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, kishon@ti.com, linux-ide@vger.kernel.org, alexandre.belloni@free-electrons.com, jszhang@marvell.com, tj@kernel.org, linux-arm-kernel@lists.infradead.org, sebastian.hesselbarth@gmail.com
 
-On Tue, May 20, 2014 at 04:06:31PM +0200, Andrew Lunn wrote:
-> > > > > +config PHY_BERLIN_SATA
-> > > > > +	bool
-> > > >=20
-> > > > Is there any real reason why this cannot be tristate?
-> > >=20
-> > > What we have seen with SATA drivers and phys, is there is link ti=
-me
-> > > breakage if the SATA driver is built in and the phy is modular.
-> > >=20
-> > > Maybe this has been fixed now?=20
-> >=20
-> > Using tristate shouldn't be a problem. I compiled without the PHY
-> > driver, no link issue.
+On Tue, May 20, 2014 at 04:06:52PM +0200, Antoine T=E9nart wrote:
+> Hi,
 >=20
-> The problem i think was when the PHY core and driver was a module and
-> SATA built in. Please give that configuration a go.
+> On Tue, May 20, 2014 at 02:34:20PM +0200, Bartlomiej Zolnierkiewicz w=
+rote:
+> > On Tuesday, May 20, 2014 11:04:29 AM Antoine T=E9nart wrote:
+> > > +
+> > > +static struct phy_berlin_desc desc[] =3D {
+> > > +	{ .val =3D POWER_DOWN_PHY0 },
+> > > +	{ .val =3D POWER_DOWN_PHY1 },
+> >=20
+> > Only .val entry of struct phy_berlin_desc is initialized and needed=
+,
+> > it seems that u32 vals[] should be used instead of desc[].
+>=20
+> Sure.
+>=20
+> > > +
+> > > +static int phy_berlin_sata_probe(struct platform_device *pdev)
+> > > +{
+> > > +	struct device *dev =3D &pdev->dev;
+> > > +	struct phy *phy;
+> > > +	struct phy_provider *phy_provider;
+> > > +	struct phy_berlin_priv *priv;
+> > > +	struct resource *res;
+> > > +	int i;
+> > > +
+> > > +	priv =3D devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
+> > > +	if (!priv)
+> > > +		return -ENOMEM;
+> > > +
+> > > +	res =3D platform_get_resource(pdev, IORESOURCE_MEM, 0);
 
-I tested, it went fine.
+We also need to check res isn't NULL here.
 
-This was actually fixed by:
-b51fbf9fb0c3 phy-core: Don't allow building phy-core as a module
+> > > +	priv->base =3D devm_ioremap(dev, res->start, resource_size(res)=
+);
+> > > +	if (IS_ERR(priv->base))
+> > > +		return PTR_ERR(priv->base);
+> >=20
+> > devm_ioremap() (contrary to devm_ioremap_resource()) returns a vali=
+d
+> > pointer or NULL so return value checking should be fixed.
+>=20
+> I'll fix this.
 
 Antoine
 
@@ -53,3 +70,8 @@ Antoine
 Antoine T=E9nart, Free Electrons
 Embedded Linux, Kernel and Android engineering
 http://free-electrons.com
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" i=
+n
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
