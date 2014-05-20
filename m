@@ -1,345 +1,168 @@
-From: =?UTF-8?q?Antoine=20T=C3=A9nart?=
-	<antoine.tenart@free-electrons.com>
-Subject: [PATCH v4 3/7] ata: libahci: allow to use multiple PHYs
-Date: Tue, 20 May 2014 11:04:31 +0200
-Message-ID: <1400576675-25265-4-git-send-email-antoine.tenart@free-electrons.com>
+From: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>
+Subject: [PATCH v4 1/7] phy: add a driver for the Berlin SATA PHY
+Date: Tue, 20 May 2014 11:04:29 +0200
+Message-ID: <1400576675-25265-2-git-send-email-antoine.tenart@free-electrons.com>
 References: <1400576675-25265-1-git-send-email-antoine.tenart@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
 In-Reply-To: <1400576675-25265-1-git-send-email-antoine.tenart@free-electrons.com>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
 To: sebastian.hesselbarth@gmail.com, tj@kernel.org, kishon@ti.com
-Cc: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: thomas.petazzoni@free-electrons.com, zmxu@marvell.com, devicetree@vger.kernel.org, =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, alexandre.belloni@free-electrons.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-The current implementation of the libahci does not allow to use multipl=
-e
-PHYs. This patch adds the support of multiple PHYs by the libahci while
-keeping the old bindings valid for device tree compatibility.
-
-This introduce a new way of defining SATA ports in the device tree, wit=
-h
-one port per sub-node. This as the advantage of allowing a per port
-configuration. Because some ports may be accessible but disabled in the
-device tree, the default port_map is computed automatically when using
-this.
-
-Signed-off-by: Antoine T=C3=A9nart <antoine.tenart@free-electrons.com>
----
- drivers/ata/Kconfig            |   1 +
- drivers/ata/ahci.h             |   3 +-
- drivers/ata/libahci.c          |   7 ++
- drivers/ata/libahci_platform.c | 165 ++++++++++++++++++++++++++++++++-=
---------
- 4 files changed, 140 insertions(+), 36 deletions(-)
-
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index c2706047337f..385c455e0aeb 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -91,6 +91,7 @@ config SATA_AHCI
-=20
- config SATA_AHCI_PLATFORM
- 	tristate "Platform AHCI SATA support"
-+	select PHY_BERLIN_SATA if ARCH_BERLIN
- 	help
- 	  This option enables support for Platform AHCI Serial ATA
- 	  controllers.
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index b5eb886da226..0c80feb84d17 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -328,7 +328,8 @@ struct ahci_host_priv {
- 	bool			got_runtime_pm; /* Did we do pm_runtime_get? */
- 	struct clk		*clks[AHCI_MAX_CLKS]; /* Optional */
- 	struct regulator	*target_pwr;	/* Optional */
--	struct phy		*phy;		/* If platform uses phy */
-+	struct phy		**phys;		/* If platform uses phys */
-+	unsigned		nphys;		/* Number of phys */
- 	void			*plat_data;	/* Other platform data */
- 	/*
- 	 * Optional ahci_start_engine override, if not set this gets set to t=
-he
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 6bd4f660b4e1..9a41fd16ecc7 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -470,6 +470,13 @@ void ahci_save_initial_config(struct device *dev,
- 		port_map &=3D mask_port_map;
- 	}
-=20
-+	/*
-+	 * If port_map was filled automatically when finding port sub-nodes,
-+	 * make sure we get the right set here.
-+	 */
-+	if (hpriv->port_map)
-+		port_map &=3D hpriv->port_map;
-+
- 	/* cross check port_map and cap.n_ports */
- 	if (port_map) {
- 		int map_ports =3D 0;
-diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platf=
-orm.c
-index 7cb3a85719c0..0651a902b889 100644
---- a/drivers/ata/libahci_platform.c
-+++ b/drivers/ata/libahci_platform.c
-@@ -39,6 +39,61 @@ static struct scsi_host_template ahci_platform_sht =3D=
- {
- };
-=20
- /**
-+ * ahci_platform_enable_phys - Enable PHYs
-+ * @hpriv: host private area to store config values
-+ *
-+ * This function enables all the PHYs found in hpriv->phys, if any.
-+ * If a PHY fails to be enabled, it disables all the PHYs already
-+ * enabled in reverse order and returns an error.
-+ *
-+ * RETURNS:
-+ * 0 on success otherwise a negative error code
-+ */
-+int ahci_platform_enable_phys(struct ahci_host_priv *hpriv)
-+{
-+	int i, rc =3D 0;
-+
-+	for (i =3D 0; i < hpriv->nphys; i++) {
-+		rc =3D phy_init(hpriv->phys[i]);
-+		if (rc)
-+			goto disable_phys;
-+
-+		rc =3D phy_power_on(hpriv->phys[i]);
-+		if (rc) {
-+			phy_exit(hpriv->phys[i]);
-+			goto disable_phys;
-+		}
-+	}
-+
-+	return 0;
-+
-+disable_phys:
-+	while (--i >=3D 0) {
-+		phy_power_off(hpriv->phys[i]);
-+		phy_exit(hpriv->phys[i]);
-+	}
-+	return rc;
-+}
-+EXPORT_SYMBOL_GPL(ahci_platform_enable_phys);
-+
-+/**
-+ * ahci_platform_disable_phys - Enable PHYs
-+ * @hpriv: host private area to store config values
-+ *
-+ * This function disables all PHYs found in hpriv->phys.
-+ */
-+void ahci_platform_disable_phys(struct ahci_host_priv *hpriv)
-+{
-+	int i;
-+
-+	for (i =3D 0; i < hpriv->nphys; i++) {
-+		phy_power_off(hpriv->phys[i]);
-+		phy_exit(hpriv->phys[i]);
-+	}
-+}
-+EXPORT_SYMBOL_GPL(ahci_platform_disable_phys);
-+
-+/**
-  * ahci_platform_enable_clks - Enable platform clocks
-  * @hpriv: host private area to store config values
-  *
-@@ -92,7 +147,7 @@ EXPORT_SYMBOL_GPL(ahci_platform_disable_clks);
-  * following order:
-  * 1) Regulator
-  * 2) Clocks (through ahci_platform_enable_clks)
-- * 3) Phy
-+ * 3) Phys
-  *
-  * If resource enabling fails at any point the previous enabled resour=
-ces
-  * are disabled in reverse order.
-@@ -114,17 +169,9 @@ int ahci_platform_enable_resources(struct ahci_hos=
-t_priv *hpriv)
- 	if (rc)
- 		goto disable_regulator;
-=20
--	if (hpriv->phy) {
--		rc =3D phy_init(hpriv->phy);
--		if (rc)
--			goto disable_clks;
--
--		rc =3D phy_power_on(hpriv->phy);
--		if (rc) {
--			phy_exit(hpriv->phy);
--			goto disable_clks;
--		}
--	}
-+	rc =3D ahci_platform_enable_phys(hpriv);
-+	if (rc)
-+		goto disable_clks;
-=20
- 	return 0;
-=20
-@@ -144,16 +191,13 @@ EXPORT_SYMBOL_GPL(ahci_platform_enable_resources)=
-;
-  *
-  * This function disables all ahci_platform managed resources in the
-  * following order:
-- * 1) Phy
-+ * 1) Phys
-  * 2) Clocks (through ahci_platform_disable_clks)
-  * 3) Regulator
-  */
- void ahci_platform_disable_resources(struct ahci_host_priv *hpriv)
- {
--	if (hpriv->phy) {
--		phy_power_off(hpriv->phy);
--		phy_exit(hpriv->phy);
--	}
-+	ahci_platform_disable_phys(hpriv);
-=20
- 	ahci_platform_disable_clks(hpriv);
-=20
-@@ -187,7 +231,7 @@ static void ahci_platform_put_resources(struct devi=
-ce *dev, void *res)
-  * 2) regulator for controlling the targets power (optional)
-  * 3) 0 - AHCI_MAX_CLKS clocks, as specified in the devs devicetree no=
-de,
-  *    or for non devicetree enabled platforms a single clock
-- *	4) phy (optional)
-+ *	4) phys (optional)
-  *
-  * RETURNS:
-  * The allocated ahci_host_priv on success, otherwise an ERR_PTR value
-@@ -197,7 +241,8 @@ struct ahci_host_priv *ahci_platform_get_resources(=
-struct platform_device *pdev)
- 	struct device *dev =3D &pdev->dev;
- 	struct ahci_host_priv *hpriv;
- 	struct clk *clk;
--	int i, rc =3D -ENOMEM;
-+	struct device_node *child;
-+	int i, nports, rc =3D -ENOMEM;
-=20
- 	if (!devres_open_group(dev, NULL, GFP_KERNEL))
- 		return ERR_PTR(-ENOMEM);
-@@ -246,22 +291,72 @@ struct ahci_host_priv *ahci_platform_get_resource=
-s(struct platform_device *pdev)
- 		hpriv->clks[i] =3D clk;
- 	}
-=20
--	hpriv->phy =3D devm_phy_get(dev, "sata-phy");
--	if (IS_ERR(hpriv->phy)) {
--		rc =3D PTR_ERR(hpriv->phy);
--		switch (rc) {
--		case -ENODEV:
--		case -ENOSYS:
--			/* continue normally */
--			hpriv->phy =3D NULL;
--			break;
-+	nports =3D of_get_child_count(dev->of_node);
-=20
--		case -EPROBE_DEFER:
-+	if (nports) {
-+		hpriv->phys =3D devm_kzalloc(dev, nports * sizeof(*hpriv->phys),
-+					   GFP_KERNEL);
-+		if (!hpriv->phys) {
-+			rc =3D -ENOMEM;
- 			goto err_out;
-+		}
-=20
--		default:
--			dev_err(dev, "couldn't get sata-phy\n");
--			goto err_out;
-+		for_each_child_of_node(dev->of_node, child) {
-+			u32 port;
-+
-+			if (!of_device_is_available(child))
-+				continue;
-+
-+			if (of_property_read_u32(child, "reg", &port)) {
-+				rc =3D -EINVAL;
-+				goto err_out;
-+			}
-+
-+			hpriv->port_map |=3D BIT(port);
-+
-+			hpriv->phys[hpriv->nphys] =3D devm_of_phy_get(dev, child,
-+								    NULL);
-+			if (IS_ERR(hpriv->phys[hpriv->nphys])) {
-+				rc =3D PTR_ERR(hpriv->phys[hpriv->nphys]);
-+				dev_err(dev,
-+					"couldn't get PHY in node %s: %d\n",
-+					child->name, rc);
-+				goto err_out;
-+			}
-+
-+			hpriv->nphys++;
-+		}
-+	} else {
-+		/*
-+		 * If no sub-node was found, keep this for device tree
-+		 * compatibility
-+		 */
-+		struct phy *phy =3D devm_phy_get(dev, "sata-phy");
-+		if (!IS_ERR(phy)) {
-+			hpriv->phys =3D devm_kzalloc(dev, sizeof(*hpriv->phys),
-+						   GFP_KERNEL);
-+			if (!hpriv->phys) {
-+				rc =3D -ENOMEM;
-+				goto err_out;
-+			}
-+
-+			hpriv->phys[0] =3D phy;
-+			hpriv->nphys =3D 1;
-+		} else {
-+			rc =3D PTR_ERR(phy);
-+			switch (rc) {
-+			case -ENODEV:
-+			case -ENOSYS:
-+				/* continue normally */
-+				break;
-+
-+			case -EPROBE_DEFER:
-+				goto err_out;
-+
-+			default:
-+				dev_err(dev, "couldn't get sata-phy\n");
-+				goto err_out;
-+			}
- 		}
- 	}
-=20
-@@ -287,7 +382,7 @@ EXPORT_SYMBOL_GPL(ahci_platform_get_resources);
-  * @mask_port_map: param passed to ahci_save_initial_config
-  *
-  * This function does all the usual steps needed to bring up an
-- * ahci-platform host, note any necessary resources (ie clks, phy, etc=
-=2E)
-+ * ahci-platform host, note any necessary resources (ie clks, phys, et=
-c.)
-  * must be initialized / enabled before calling this.
-  *
-  * RETURNS:
-@@ -391,7 +486,7 @@ static void ahci_host_stop(struct ata_host *host)
-  * @dev: device pointer for the host
-  *
-  * This function does all the usual steps needed to suspend an
-- * ahci-platform host, note any necessary resources (ie clks, phy, etc=
-=2E)
-+ * ahci-platform host, note any necessary resources (ie clks, phys, et=
-c.)
-  * must be disabled after calling this.
-  *
-  * RETURNS:
-@@ -428,7 +523,7 @@ EXPORT_SYMBOL_GPL(ahci_platform_suspend_host);
-  * @dev: device pointer for the host
-  *
-  * This function does all the usual steps needed to resume an ahci-pla=
-tform
-- * host, note any necessary resources (ie clks, phy, etc.)  must be
-+ * host, note any necessary resources (ie clks, phys, etc.)  must be
-  * initialized / enabled before calling this.
-  *
-  * RETURNS:
---=20
-1.9.1
+VGhlIEJlcmxpbiBTb0MgaGFzIGEgdHdvIFNBVEEgcG9ydHMuIEFkZCBhIFBIWSBkcml2ZXIgdG8g
+aGFuZGxlIHRoZW0uCgpUaGUgbW9kZSBzZWxlY3Rpb24gY2FuIGxldCB1cyB0aGluayB0aGlzIFBI
+WSBjYW4gYmUgY29uZmlndXJlZCB0byBmaXQKb3RoZXIgcHVycG9zZXMuIEJ1dCB0aGVyZSBhcmUg
+cmVhc29ucyB0byB0aGluayB0aGUgU0FUQSBtb2RlIHdpbGwgYmUKdGhlIG9ubHkgb25lIHVzYWJs
+ZTogdGhlIFBIWSByZWdpc3RlcnMgYXJlIG9ubHkgYWNjZXNzaWJsZSBpbmRpcmVjdGx5CnRocm91
+Z2ggdHdvIHJlZ2lzdGVycyBpbiB0aGUgU0FUQSByYW5nZSwgdGhlIFBIWSBzZWVtcyB0byBiZSBp
+bnRlZ3JhdGVkCmFuZCBubyBpbmZvcm1hdGlvbiB0ZWxscyB1cyB0aGUgY29udHJhcnkuIEZvciB0
+aGVzZSByZWFzb25zLCBtYWtlIHRoZQpkcml2ZXIgYSBTQVRBIFBIWSBkcml2ZXIuCgpTaWduZWQt
+b2ZmLWJ5OiBBbnRvaW5lIFTDqW5hcnQgPGFudG9pbmUudGVuYXJ0QGZyZWUtZWxlY3Ryb25zLmNv
+bT4KLS0tCiBkcml2ZXJzL3BoeS9LY29uZmlnICAgICAgICAgICB8ICAgNSArCiBkcml2ZXJzL3Bo
+eS9NYWtlZmlsZSAgICAgICAgICB8ICAgMSArCiBkcml2ZXJzL3BoeS9waHktYmVybGluLXNhdGEu
+YyB8IDIzMCArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysKIDMgZmls
+ZXMgY2hhbmdlZCwgMjM2IGluc2VydGlvbnMoKykKIGNyZWF0ZSBtb2RlIDEwMDY0NCBkcml2ZXJz
+L3BoeS9waHktYmVybGluLXNhdGEuYwoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGh5L0tjb25maWcg
+Yi9kcml2ZXJzL3BoeS9LY29uZmlnCmluZGV4IDQ5MDZjMjdmYTNiZC4uYjMxYjE5ODZmZGE0IDEw
+MDY0NAotLS0gYS9kcml2ZXJzL3BoeS9LY29uZmlnCisrKyBiL2RyaXZlcnMvcGh5L0tjb25maWcK
+QEAgLTE1LDYgKzE1LDExIEBAIGNvbmZpZyBHRU5FUklDX1BIWQogCSAgcGh5IHVzZXJzIGNhbiBv
+YnRhaW4gcmVmZXJlbmNlIHRvIHRoZSBQSFkuIEFsbCB0aGUgdXNlcnMgb2YgdGhpcwogCSAgZnJh
+bWV3b3JrIHNob3VsZCBzZWxlY3QgdGhpcyBjb25maWcuCiAKK2NvbmZpZyBQSFlfQkVSTElOX1NB
+VEEKKwlib29sCisJZGVwZW5kcyBvbiBBUkNIX0JFUkxJTiAmJiBPRgorCXNlbGVjdCBHRU5FUklD
+X1BIWQorCiBjb25maWcgUEhZX0VYWU5PU19NSVBJX1ZJREVPCiAJdHJpc3RhdGUgIlM1UC9FWFlO
+T1MgU29DIHNlcmllcyBNSVBJIENTSS0yL0RTSSBQSFkgZHJpdmVyIgogCWRlcGVuZHMgb24gSEFT
+X0lPTUVNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3BoeS9NYWtlZmlsZSBiL2RyaXZlcnMvcGh5L01h
+a2VmaWxlCmluZGV4IDc3Mjg1MTg1NzJhNC4uNDAyNzg3MDZhYzFiIDEwMDY0NAotLS0gYS9kcml2
+ZXJzL3BoeS9NYWtlZmlsZQorKysgYi9kcml2ZXJzL3BoeS9NYWtlZmlsZQpAQCAtMyw2ICszLDcg
+QEAKICMKIAogb2JqLSQoQ09ORklHX0dFTkVSSUNfUEhZKQkJKz0gcGh5LWNvcmUubworb2JqLSQo
+Q09ORklHX1BIWV9CRVJMSU5fU0FUQSkJCSs9IHBoeS1iZXJsaW4tc2F0YS5vCiBvYmotJChDT05G
+SUdfQkNNX0tPTkFfVVNCMl9QSFkpCQkrPSBwaHktYmNtLWtvbmEtdXNiMi5vCiBvYmotJChDT05G
+SUdfUEhZX0VYWU5PU19EUF9WSURFTykJKz0gcGh5LWV4eW5vcy1kcC12aWRlby5vCiBvYmotJChD
+T05GSUdfUEhZX0VYWU5PU19NSVBJX1ZJREVPKQkrPSBwaHktZXh5bm9zLW1pcGktdmlkZW8ubwpk
+aWZmIC0tZ2l0IGEvZHJpdmVycy9waHkvcGh5LWJlcmxpbi1zYXRhLmMgYi9kcml2ZXJzL3BoeS9w
+aHktYmVybGluLXNhdGEuYwpuZXcgZmlsZSBtb2RlIDEwMDY0NAppbmRleCAwMDAwMDAwMDAwMDAu
+LjU5N2YwMDhjYWUzMgotLS0gL2Rldi9udWxsCisrKyBiL2RyaXZlcnMvcGh5L3BoeS1iZXJsaW4t
+c2F0YS5jCkBAIC0wLDAgKzEsMjMwIEBACisvKgorICogTWFydmVsbCBCZXJsaW4gU0FUQSBQSFkg
+ZHJpdmVyCisgKgorICogQ29weXJpZ2h0IChDKSAyMDE0IE1hcnZlbGwgVGVjaG5vbG9neSBHcm91
+cCBMdGQuCisgKgorICogQW50b2luZSBUw6luYXJ0IDxhbnRvaW5lLnRlbmFydEBmcmVlLWVsZWN0
+cm9ucy5jb20+CisgKgorICogVGhpcyBmaWxlIGlzIGxpY2Vuc2VkIHVuZGVyIHRoZSB0ZXJtcyBv
+ZiB0aGUgR05VIEdlbmVyYWwgUHVibGljCisgKiBMaWNlbnNlIHZlcnNpb24gMi4gVGhpcyBwcm9n
+cmFtIGlzIGxpY2Vuc2VkICJhcyBpcyIgd2l0aG91dCBhbnkKKyAqIHdhcnJhbnR5IG9mIGFueSBr
+aW5kLCB3aGV0aGVyIGV4cHJlc3Mgb3IgaW1wbGllZC4KKyAqLworCisjaW5jbHVkZSA8bGludXgv
+bW9kdWxlLmg+CisjaW5jbHVkZSA8bGludXgvcGh5L3BoeS5oPgorI2luY2x1ZGUgPGxpbnV4L2lv
+Lmg+CisjaW5jbHVkZSA8bGludXgvcGxhdGZvcm1fZGV2aWNlLmg+CisKKyNkZWZpbmUgSE9TVF9W
+U0FfQUREUgkJMHgwCisjZGVmaW5lIEhPU1RfVlNBX0RBVEEJCTB4NAorI2RlZmluZSBQT1JUX1ZT
+Ul9BRERSICAgICAgICAgICAweDc4CisjZGVmaW5lIFBPUlRfVlNSX0RBVEEgICAgICAgICAgIDB4
+N2MKKyNkZWZpbmUgUE9SVF9TQ1JfQ1RMCQkweDJjCisKKyNkZWZpbmUgQ09OVFJPTF9SRUdJU1RF
+UgkweDAKKyNkZWZpbmUgTUJVU19TSVpFX0NPTlRST0wJMHg0CisKKyNkZWZpbmUgUE9XRVJfRE9X
+Tl9QSFkwCQkJQklUKDYpCisjZGVmaW5lIFBPV0VSX0RPV05fUEhZMQkJCUJJVCgxNCkKKyNkZWZp
+bmUgTUJVU19XUklURV9SRVFVRVNUX1NJWkVfMTI4CShCSVQoMikgPDwgMTYpCisjZGVmaW5lIE1C
+VVNfUkVBRF9SRVFVRVNUX1NJWkVfMTI4CShCSVQoMikgPDwgMTkpCisKKyNkZWZpbmUgUEhZX0JB
+U0UgICAgICAgICAgICAgICAgMHgyMDAKKworLyogcmVnaXN0ZXIgMHgwMSAqLworI2RlZmluZSBS
+RUZfRlJFRl9TRUxfMjUgICAgICAgICBCSVQoMCkKKyNkZWZpbmUgUEhZX01PREVfU0FUQSAgICAg
+ICAgICAgKDB4MCA8PCA1KQorCisvKiByZWdpc3RlciAweDAyICovCisjZGVmaW5lIFVTRV9NQVhf
+UExMX1JBVEUgICAgICAgIEJJVCgxMikKKworLyogcmVnaXN0ZXIgMHgyMyAqLworI2RlZmluZSBE
+QVRBX0JJVF9XSURUSF8xMCAgICAgICAoMHgwIDw8IDEwKQorI2RlZmluZSBEQVRBX0JJVF9XSURU
+SF8yMCAgICAgICAoMHgxIDw8IDEwKQorI2RlZmluZSBEQVRBX0JJVF9XSURUSF80MCAgICAgICAo
+MHgyIDw8IDEwKQorCisvKiByZWdpc3RlciAweDI1ICovCisjZGVmaW5lIFBIWV9HRU5fTUFYXzFf
+NSAgICAgICAgICgweDAgPDwgMTApCisjZGVmaW5lIFBIWV9HRU5fTUFYXzNfMCAgICAgICAgICgw
+eDEgPDwgMTApCisjZGVmaW5lIFBIWV9HRU5fTUFYXzZfMCAgICAgICAgICgweDIgPDwgMTApCisK
+KyNkZWZpbmUgQkVSTElOX1NBVEFfUEhZX05CCTIKKworI2RlZmluZSB0b19iZXJsaW5fc2F0YV9w
+aHlfcHJpdihkZXNjKQlcCisJY29udGFpbmVyX29mKChkZXNjKSwgc3RydWN0IHBoeV9iZXJsaW5f
+cHJpdiwgcGh5c1soZGVzYyktPmluZGV4XSkKKworc3RydWN0IHBoeV9iZXJsaW5fZGVzYyB7CisJ
+c3RydWN0IHBoeQkqcGh5OworCXUzMgkJdmFsOworCXVuc2lnbmVkCWluZGV4OworfTsKKworc3Ry
+dWN0IHBoeV9iZXJsaW5fcHJpdiB7CisJdm9pZCBfX2lvbWVtCQkqYmFzZTsKKwlzcGlubG9ja190
+CQlsb2NrOworCXN0cnVjdCBwaHlfYmVybGluX2Rlc2MJcGh5c1tCRVJMSU5fU0FUQV9QSFlfTkJd
+OworfTsKKworc3RhdGljIGlubGluZSB2b2lkIHBoeV9iZXJsaW5fc2F0YV9yZWdfc2V0Yml0cyh2
+b2lkIF9faW9tZW0gKmN0cmxfcmVnLCB1MzIgcmVnLAorCQkJCQkgICAgICAgdTMyIG1hc2ssIHUz
+MiB2YWwpCit7CisJdTMyIHJlZ3ZhbDsKKworCS8qIHNlbGVjdCByZWdpc3RlciAqLworCXdyaXRl
+bChQSFlfQkFTRSArIHJlZywgY3RybF9yZWcgKyBQT1JUX1ZTUl9BRERSKTsKKworCS8qIHNldCBi
+aXRzICovCisJcmVndmFsID0gcmVhZGwoY3RybF9yZWcgKyBQT1JUX1ZTUl9EQVRBKTsKKwlyZWd2
+YWwgJj0gfm1hc2s7CisJcmVndmFsIHw9IHZhbDsKKwl3cml0ZWwocmVndmFsLCBjdHJsX3JlZyAr
+IFBPUlRfVlNSX0RBVEEpOworfQorCitzdGF0aWMgaW50IHBoeV9iZXJsaW5fc2F0YV9wb3dlcl9v
+bihzdHJ1Y3QgcGh5ICpwaHkpCit7CisJc3RydWN0IHBoeV9iZXJsaW5fZGVzYyAqZGVzYyA9IHBo
+eV9nZXRfZHJ2ZGF0YShwaHkpOworCXN0cnVjdCBwaHlfYmVybGluX3ByaXYgKnByaXYgPSB0b19i
+ZXJsaW5fc2F0YV9waHlfcHJpdihkZXNjKTsKKwl2b2lkIF9faW9tZW0gKmN0cmxfcmVnID0gcHJp
+di0+YmFzZSArIDB4NjAgKyAoZGVzYy0+aW5kZXggKiAweDgwKTsKKwlpbnQgcmV0ID0gMDsKKwl1
+MzIgcmVndmFsOworCisJc3Bpbl9sb2NrKCZwcml2LT5sb2NrKTsKKworCS8qIFBvd2VyIG9uIFBI
+WSAqLworCXdyaXRlbChDT05UUk9MX1JFR0lTVEVSLCBwcml2LT5iYXNlICsgSE9TVF9WU0FfQURE
+Uik7CisJcmVndmFsID0gcmVhZGwocHJpdi0+YmFzZSArIEhPU1RfVlNBX0RBVEEpOworCXJlZ3Zh
+bCAmPSB+KGRlc2MtPnZhbCk7CisJd3JpdGVsKHJlZ3ZhbCwgcHJpdi0+YmFzZSArIEhPU1RfVlNB
+X0RBVEEpOworCisJLyogQ29uZmlndXJlIE1CdXMgKi8KKwl3cml0ZWwoTUJVU19TSVpFX0NPTlRS
+T0wsIHByaXYtPmJhc2UgKyBIT1NUX1ZTQV9BRERSKTsKKwlyZWd2YWwgPSByZWFkbChwcml2LT5i
+YXNlICsgSE9TVF9WU0FfREFUQSk7CisJcmVndmFsIHw9IE1CVVNfV1JJVEVfUkVRVUVTVF9TSVpF
+XzEyOCB8IE1CVVNfUkVBRF9SRVFVRVNUX1NJWkVfMTI4OworCXdyaXRlbChyZWd2YWwsIHByaXYt
+PmJhc2UgKyBIT1NUX1ZTQV9EQVRBKTsKKworCS8qIHNldCBQSFkgbW9kZSBhbmQgcmVmIGZyZXEg
+dG8gMjUgTUh6ICovCisJcGh5X2Jlcmxpbl9zYXRhX3JlZ19zZXRiaXRzKGN0cmxfcmVnLCAweDEs
+IDB4ZmYsCisJCQkJICAgIFJFRl9GUkVGX1NFTF8yNSB8IFBIWV9NT0RFX1NBVEEpOworCisJLyog
+c2V0IFBIWSB1cCB0byA2IEdicHMgKi8KKwlwaHlfYmVybGluX3NhdGFfcmVnX3NldGJpdHMoY3Ry
+bF9yZWcsIDB4MjUsIDB4YzAwLCBQSFlfR0VOX01BWF82XzApOworCisJLyogc2V0IDQwIGJpdHMg
+d2lkdGggKi8KKwlwaHlfYmVybGluX3NhdGFfcmVnX3NldGJpdHMoY3RybF9yZWcsIDB4MjMsICAw
+eGMwMCwgREFUQV9CSVRfV0lEVEhfNDApOworCisJLyogdXNlIG1heCBwbGwgcmF0ZSAqLworCXBo
+eV9iZXJsaW5fc2F0YV9yZWdfc2V0Yml0cyhjdHJsX3JlZywgMHgyLCAweDAsIFVTRV9NQVhfUExM
+X1JBVEUpOworCisJLyogc2V0IHRoZSBjb250cm9sbGVyIHNwZWVkICovCisJd3JpdGVsKDB4MzEs
+IGN0cmxfcmVnICsgUE9SVF9TQ1JfQ1RMKTsKKworCXNwaW5fdW5sb2NrKCZwcml2LT5sb2NrKTsK
+KworCXJldHVybiByZXQ7Cit9CisKK3N0YXRpYyBpbnQgcGh5X2Jlcmxpbl9zYXRhX3Bvd2VyX29m
+ZihzdHJ1Y3QgcGh5ICpwaHkpCit7CisJc3RydWN0IHBoeV9iZXJsaW5fZGVzYyAqZGVzYyA9IHBo
+eV9nZXRfZHJ2ZGF0YShwaHkpOworCXN0cnVjdCBwaHlfYmVybGluX3ByaXYgKnByaXYgPSB0b19i
+ZXJsaW5fc2F0YV9waHlfcHJpdihkZXNjKTsKKwl1MzIgcmVndmFsOworCisJc3Bpbl9sb2NrKCZw
+cml2LT5sb2NrKTsKKworCS8qIFBvd2VyIGRvd24gUEhZICovCisJd3JpdGVsKENPTlRST0xfUkVH
+SVNURVIsIHByaXYtPmJhc2UgKyBIT1NUX1ZTQV9BRERSKTsKKwlyZWd2YWwgPSByZWFkbChwcml2
+LT5iYXNlICsgSE9TVF9WU0FfREFUQSk7CisJcmVndmFsIHw9IGRlc2MtPnZhbDsKKwl3cml0ZWwo
+cmVndmFsLCBwcml2LT5iYXNlICsgSE9TVF9WU0FfREFUQSk7CisKKwlzcGluX3VubG9jaygmcHJp
+di0+bG9jayk7CisKKwlyZXR1cm4gMDsKK30KKworc3RhdGljIHN0cnVjdCBwaHkgKnBoeV9iZXJs
+aW5fc2F0YV9waHlfeGxhdGUoc3RydWN0IGRldmljZSAqZGV2LAorCQkJCQkgICAgIHN0cnVjdCBv
+Zl9waGFuZGxlX2FyZ3MgKmFyZ3MpCit7CisJc3RydWN0IHBoeV9iZXJsaW5fcHJpdiAqcHJpdiA9
+IGRldl9nZXRfZHJ2ZGF0YShkZXYpOworCisJaWYgKFdBUk5fT04oYXJncy0+YXJnc1swXSA+PSBC
+RVJMSU5fU0FUQV9QSFlfTkIpKQorCQlyZXR1cm4gRVJSX1BUUigtRU5PREVWKTsKKworCXJldHVy
+biBwcml2LT5waHlzW2FyZ3MtPmFyZ3NbMF1dLnBoeTsKK30KKworc3RhdGljIHN0cnVjdCBwaHlf
+b3BzIHBoeV9iZXJsaW5fc2F0YV9vcHMgPSB7CisJLnBvd2VyX29uCT0gcGh5X2Jlcmxpbl9zYXRh
+X3Bvd2VyX29uLAorCS5wb3dlcl9vZmYJPSBwaHlfYmVybGluX3NhdGFfcG93ZXJfb2ZmLAorCS5v
+d25lcgkJPSBUSElTX01PRFVMRSwKK307CisKK3N0YXRpYyBzdHJ1Y3QgcGh5X2Jlcmxpbl9kZXNj
+IGRlc2NbXSA9IHsKKwl7IC52YWwgPSBQT1dFUl9ET1dOX1BIWTAgfSwKKwl7IC52YWwgPSBQT1dF
+Ul9ET1dOX1BIWTEgfSwKKwl7IH0sCit9OworCitzdGF0aWMgaW50IHBoeV9iZXJsaW5fc2F0YV9w
+cm9iZShzdHJ1Y3QgcGxhdGZvcm1fZGV2aWNlICpwZGV2KQoreworCXN0cnVjdCBkZXZpY2UgKmRl
+diA9ICZwZGV2LT5kZXY7CisJc3RydWN0IHBoeSAqcGh5OworCXN0cnVjdCBwaHlfcHJvdmlkZXIg
+KnBoeV9wcm92aWRlcjsKKwlzdHJ1Y3QgcGh5X2Jlcmxpbl9wcml2ICpwcml2OworCXN0cnVjdCBy
+ZXNvdXJjZSAqcmVzOworCWludCBpOworCisJcHJpdiA9IGRldm1fa3phbGxvYyhkZXYsIHNpemVv
+ZigqcHJpdiksIEdGUF9LRVJORUwpOworCWlmICghcHJpdikKKwkJcmV0dXJuIC1FTk9NRU07CisK
+KwlyZXMgPSBwbGF0Zm9ybV9nZXRfcmVzb3VyY2UocGRldiwgSU9SRVNPVVJDRV9NRU0sIDApOwor
+CXByaXYtPmJhc2UgPSBkZXZtX2lvcmVtYXAoZGV2LCByZXMtPnN0YXJ0LCByZXNvdXJjZV9zaXpl
+KHJlcykpOworCWlmIChJU19FUlIocHJpdi0+YmFzZSkpCisJCXJldHVybiBQVFJfRVJSKHByaXYt
+PmJhc2UpOworCisJZGV2X3NldF9kcnZkYXRhKGRldiwgcHJpdik7CisJc3Bpbl9sb2NrX2luaXQo
+JnByaXYtPmxvY2spOworCisJZm9yIChpID0gMDsgaSA8IEJFUkxJTl9TQVRBX1BIWV9OQjsgaSsr
+KSB7CisJCXBoeSA9IGRldm1fcGh5X2NyZWF0ZShkZXYsICZwaHlfYmVybGluX3NhdGFfb3BzLCBO
+VUxMKTsKKwkJaWYgKElTX0VSUihwaHkpKSB7CisJCQlkZXZfZXJyKGRldiwgImZhaWxlZCB0byBj
+cmVhdGUgUEhZICVkXG4iLCBpKTsKKwkJCXJldHVybiBQVFJfRVJSKHBoeSk7CisJCX0KKworCQlw
+cml2LT5waHlzW2ldLnBoeSA9IHBoeTsKKwkJcHJpdi0+cGh5c1tpXS52YWwgPSBkZXNjW2ldLnZh
+bDsKKwkJcHJpdi0+cGh5c1tpXS5pbmRleCA9IGk7CisJCXBoeV9zZXRfZHJ2ZGF0YShwaHksICZw
+cml2LT5waHlzW2ldKTsKKworCQkvKiBNYWtlIHN1cmUgdGhlIFBIWSBpcyBvZmYgKi8KKwkJcGh5
+X2Jlcmxpbl9zYXRhX3Bvd2VyX29mZihwaHkpOworCX0KKworCXBoeV9wcm92aWRlciA9CisJCWRl
+dm1fb2ZfcGh5X3Byb3ZpZGVyX3JlZ2lzdGVyKGRldiwgcGh5X2Jlcmxpbl9zYXRhX3BoeV94bGF0
+ZSk7CisJaWYgKElTX0VSUihwaHlfcHJvdmlkZXIpKQorCQlyZXR1cm4gUFRSX0VSUihwaHlfcHJv
+dmlkZXIpOworCisJcmV0dXJuIDA7Cit9CisKK3N0YXRpYyBjb25zdCBzdHJ1Y3Qgb2ZfZGV2aWNl
+X2lkIHBoeV9iZXJsaW5fc2F0YV9vZl9tYXRjaFtdID0geworCXsgLmNvbXBhdGlibGUgPSAibWFy
+dmVsbCxiZXJsaW4tc2F0YS1waHkiIH0sCisJeyB9LAorfTsKKworc3RhdGljIHN0cnVjdCBwbGF0
+Zm9ybV9kcml2ZXIgcGh5X2Jlcmxpbl9zYXRhX2RyaXZlciA9IHsKKwkucHJvYmUJPSBwaHlfYmVy
+bGluX3NhdGFfcHJvYmUsCisJLmRyaXZlcgk9IHsKKwkJLm5hbWUJCT0gInBoeS1iZXJsaW4tc2F0
+YSIsCisJCS5vd25lcgkJPSBUSElTX01PRFVMRSwKKwkJLm9mX21hdGNoX3RhYmxlCT0gcGh5X2Jl
+cmxpbl9zYXRhX29mX21hdGNoLAorCX0sCit9OworbW9kdWxlX3BsYXRmb3JtX2RyaXZlcihwaHlf
+YmVybGluX3NhdGFfZHJpdmVyKTsKKworTU9EVUxFX0RFU0NSSVBUSU9OKCJNYXJ2ZWxsIEJlcmxp
+biBTQVRBIFBIWSBkcml2ZXIiKTsKK01PRFVMRV9BVVRIT1IoIkFudG9pbmUgVMOpbmFydCA8YW50
+b2luZS50ZW5hcnRAZnJlZS1lbGVjdHJvbnMuY29tPiIpOworTU9EVUxFX0xJQ0VOU0UoIkdQTCB2
+MiIpOwotLSAKMS45LjEKCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxp
+c3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0
+aW5mby9saW51eC1hcm0ta2VybmVsCg==
