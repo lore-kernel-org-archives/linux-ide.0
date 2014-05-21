@@ -1,77 +1,64 @@
-From: Antoine =?iso-8859-1?Q?T=E9nart?=
-	<antoine.tenart-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
-Subject: Re: [PATCH v4 1/7] phy: add a driver for the Berlin SATA PHY
-Date: Tue, 20 May 2014 16:40:58 +0200
-Message-ID: <20140520144058.GE21579@kwain>
-References: <1400576675-25265-1-git-send-email-antoine.tenart@free-electrons.com>
- <1400576675-25265-2-git-send-email-antoine.tenart@free-electrons.com>
- <1821771.zFvTDGF2Ae@amdc1032>
- <20140520140652.GB21579@kwain>
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: Re: ahci: host/target numbers change with detection order
+Date: Wed, 21 May 2014 11:16:42 -0400
+Message-ID: <537CC35A.6060505@ubuntu.com>
+References: <CAMFVOoU=nbVSzZPU0eJ6Gy=yFNdWQfctANjfQyVjAp0hJFzDrA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20140520140652.GB21579@kwain>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-Cc: Antoine =?iso-8859-1?Q?T=E9nart?= <antoine.tenart-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, sebastian.hesselbarth-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, kishon-l0cyMroinI0@public.gmane.org, alexandre.belloni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, zmxu-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org, jszhang-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from cdptpa-outbound-snat.email.rr.com ([107.14.166.229]:57143 "EHLO
+	cdptpa-oedge-vip.email.rr.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751878AbaEUPQn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 May 2014 11:16:43 -0400
+In-Reply-To: <CAMFVOoU=nbVSzZPU0eJ6Gy=yFNdWQfctANjfQyVjAp0hJFzDrA@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: AlanWEvans@gmail.com, linux-ide@vger.kernel.org
 
-On Tue, May 20, 2014 at 04:06:52PM +0200, Antoine T=E9nart wrote:
-> Hi,
->=20
-> On Tue, May 20, 2014 at 02:34:20PM +0200, Bartlomiej Zolnierkiewicz w=
-rote:
-> > On Tuesday, May 20, 2014 11:04:29 AM Antoine T=E9nart wrote:
-> > > +
-> > > +static struct phy_berlin_desc desc[] =3D {
-> > > +	{ .val =3D POWER_DOWN_PHY0 },
-> > > +	{ .val =3D POWER_DOWN_PHY1 },
-> >=20
-> > Only .val entry of struct phy_berlin_desc is initialized and needed=
-,
-> > it seems that u32 vals[] should be used instead of desc[].
->=20
-> Sure.
->=20
-> > > +
-> > > +static int phy_berlin_sata_probe(struct platform_device *pdev)
-> > > +{
-> > > +	struct device *dev =3D &pdev->dev;
-> > > +	struct phy *phy;
-> > > +	struct phy_provider *phy_provider;
-> > > +	struct phy_berlin_priv *priv;
-> > > +	struct resource *res;
-> > > +	int i;
-> > > +
-> > > +	priv =3D devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
-> > > +	if (!priv)
-> > > +		return -ENOMEM;
-> > > +
-> > > +	res =3D platform_get_resource(pdev, IORESOURCE_MEM, 0);
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-We also need to check res isn't NULL here.
+On 5/19/2014 4:46 PM, Alan Evans wrote:
+> I have a host that is used to process the data on removable
+> drives. It is essential to be able to indicate to an operator which
+> drives are done and can be removed.
+> 
+> When we were using a HighPoint card that uses sata_mv.ko we could 
+> count on the results of 'udevadm info -q path -n <dev>'
+> representing a single physical port on the card.
+> 
+> I have been testing a new card based on a Marvell 88SE9230
+> (ahci.ko) and I find that the scsi host number and corresponding
+> target are changing depending on the order drives are attached to
+> the system, not based on the port number.
 
-> > > +	priv->base =3D devm_ioremap(dev, res->start, resource_size(res)=
-);
-> > > +	if (IS_ERR(priv->base))
-> > > +		return PTR_ERR(priv->base);
-> >=20
-> > devm_ioremap() (contrary to devm_ioremap_resource()) returns a vali=
-d
-> > pointer or NULL so return value checking should be fixed.
->=20
-> I'll fix this.
+These numbers are assigned on a first come first serve basis, so if
+another device initializes first, then it jumps in front.  If you want
+to know the port number, look in the port_no file of the ata_port.
 
-Antoine
+> Further for some reason in /sys/class/scsi_host I am seeing 8
+> hosts created per card where I would expect 4.
 
---=20
-Antoine T=E9nart, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" i=
-n
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Apparently the controller supports 8 ports.
+
+> Does anyone have any thoughts on why the behaviour differs between 
+> ahci.ko and sata_mv.ko?  Is it the chip?  The module?
+
+It looks like sata_mv does not support parallel scanning of all ports,
+but ahci does.  In other words, sata_mv scanned one port at a time, in
+order, so they always registered in order, but ahci scans them all at
+the same time, so the order they finish in varies.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (MingW32)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQEcBAEBAgAGBQJTfMNaAAoJEI5FoCIzSKrwG0UH/Rrkh25BSA+3vqj6aQUDW0Ox
+Fyeklgj+inohLzed5ZmGur2vfr8GA5Xrs1vO6Sk6hvDVadRhcyt45qkxAlVT09YS
+vwXAQQQoIXzbiqetX7TJYJwo5TzCc3mIjUJjHrpfPrbUc43gs89yuqKpGubXurQp
+N+QUPI4X1U6HRORsbFO9WfzZT3hvj99Nv0KmoDQUaSkhOS7lOqEPep1v42HflJLF
+DlHmJmsuQmAy7fn4i2MpllnJx99EdpeFgPi2GdsPWi8gOBviuPMz0AWclUwY4K/q
+SD0mHDrj+w/kE9wqJNUs2etkCNYMZwyfin1jxLyVaioiK8OFXkcoYyObGI79TzI=
+=758u
+-----END PGP SIGNATURE-----
