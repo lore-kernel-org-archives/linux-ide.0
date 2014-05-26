@@ -1,65 +1,44 @@
-From: =?UTF-8?q?Antoine=20T=C3=A9nart?=
-	<antoine.tenart@free-electrons.com>
-Subject: [PATCH v5 6/7] ARM: berlin: add the AHCI node for the BG2Q
-Date: Mon, 26 May 2014 16:51:47 +0200
-Message-ID: <1401115908-2742-7-git-send-email-antoine.tenart@free-electrons.com>
+From: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>
+Subject: [PATCH v5 2/7] Documentation: bindings: add the Berlin SATA PHY
+Date: Mon, 26 May 2014 16:51:43 +0200
+Message-ID: <1401115908-2742-3-git-send-email-antoine.tenart@free-electrons.com>
 References: <1401115908-2742-1-git-send-email-antoine.tenart@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
 In-Reply-To: <1401115908-2742-1-git-send-email-antoine.tenart@free-electrons.com>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
 To: sebastian.hesselbarth@gmail.com, tj@kernel.org, kishon@ti.com
-Cc: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: thomas.petazzoni@free-electrons.com, zmxu@marvell.com, devicetree@vger.kernel.org, =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, alexandre.belloni@free-electrons.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-The BG2Q has an AHCI SATA controller. Add the corresponding nodes
-(AHCI, PHY) into its device tree.
-
-Signed-off-by: Antoine T=C3=A9nart <antoine.tenart@free-electrons.com>
----
- arch/arm/boot/dts/berlin2q.dtsi | 27 +++++++++++++++++++++++++++
- 1 file changed, 27 insertions(+)
-
-diff --git a/arch/arm/boot/dts/berlin2q.dtsi b/arch/arm/boot/dts/berlin=
-2q.dtsi
-index 07452a7483fa..3486a8c3054a 100644
---- a/arch/arm/boot/dts/berlin2q.dtsi
-+++ b/arch/arm/boot/dts/berlin2q.dtsi
-@@ -183,6 +183,33 @@
- 			};
- 		};
-=20
-+		ahci: sata@e90000 {
-+			compatible =3D "generic-ahci";
-+			reg =3D <0xe90000 0x1000>;
-+			interrupts =3D <GIC_SPI 7 IRQ_TYPE_LEVEL_HIGH>;
-+			#address-cells =3D <1>;
-+			#size-cells =3D <0>;
-+
-+			sata0: sata-port@0 {
-+				reg =3D <0>;
-+				phys =3D <&sata_phy 0>;
-+				status =3D "disabled";
-+			};
-+
-+			sata1: sata-port@1 {
-+				reg =3D <1>;
-+				phys =3D <&sata_phy 1>;
-+				status =3D "disabled";
-+			};
-+		};
-+
-+		sata_phy: phy@e900a0 {
-+			compatible =3D "marvell,berlin-sata-phy";
-+			reg =3D <0xe900a0 0x200>;
-+			#phy-cells =3D <1>;
-+			status =3D "disabled";
-+		};
-+
- 		apb@fc0000 {
- 			compatible =3D "simple-bus";
- 			#address-cells =3D <1>;
---=20
-1.9.1
+VGhlIEJlcmxpbiBTQVRBIFBIWSBkcml2ZXMgdGhlIFBIWSByZWxhdGVkIHRvIHRoZSBTQVRBIGlu
+dGVyZmFjZS4gQWRkCnRoZSBjb3JyZXNwb25kaW5nIGRvY3VtZW50YXRpb24uCgpTaWduZWQtb2Zm
+LWJ5OiBBbnRvaW5lIFTDqW5hcnQgPGFudG9pbmUudGVuYXJ0QGZyZWUtZWxlY3Ryb25zLmNvbT4K
+LS0tCiBEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGh5L2Jlcmxpbi1zYXRhLXBo
+eS50eHQgfCAxNCArKysrKysrKysrKysrKwogMSBmaWxlIGNoYW5nZWQsIDE0IGluc2VydGlvbnMo
+KykKIGNyZWF0ZSBtb2RlIDEwMDY0NCBEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3Mv
+cGh5L2Jlcmxpbi1zYXRhLXBoeS50eHQKCmRpZmYgLS1naXQgYS9Eb2N1bWVudGF0aW9uL2Rldmlj
+ZXRyZWUvYmluZGluZ3MvcGh5L2Jlcmxpbi1zYXRhLXBoeS50eHQgYi9Eb2N1bWVudGF0aW9uL2Rl
+dmljZXRyZWUvYmluZGluZ3MvcGh5L2Jlcmxpbi1zYXRhLXBoeS50eHQKbmV3IGZpbGUgbW9kZSAx
+MDA2NDQKaW5kZXggMDAwMDAwMDAwMDAwLi43MjY0NmRiMmY1ZmMKLS0tIC9kZXYvbnVsbAorKysg
+Yi9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGh5L2Jlcmxpbi1zYXRhLXBoeS50
+eHQKQEAgLTAsMCArMSwxNCBAQAorQmVybGluIFNBVEEgUEhZCistLS0tLS0tLS0tLS0tLS0KKwor
+UmVxdWlyZWQgcHJvcGVydGllczoKKy0gY29tcGF0aWJsZTogIm1hcnZlbGwsYmVybGluLXNhdGEt
+cGh5IgorLSBwaHktY2VsbHM6IGZyb20gdGhlIGdlbmVyaWMgUEhZIGJpbmRpbmdzLCBtdXN0IGJl
+IDEKKy0gcmVnOiBhZGRyZXNzIGFuZCBsZW5ndGggb2YgdGhlIHJlZ2lzdGVyCisKK0V4YW1wbGU6
+CisJc2F0YV9waHk6IHBoeUBmN2U5MDBhMCB7CisJCWNvbXBhdGlibGUgPSAibWFydmVsbCxiZXJs
+aW4tc2F0YS1waHkiOworCQlyZWcgPSA8MHhmN2U5MDBhMCAweDIwMD47CisJCSNwaHktY2VsbHMg
+PSA8MT47CisJfTsKLS0gCjEuOS4xCgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtl
+cm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxt
+YW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
