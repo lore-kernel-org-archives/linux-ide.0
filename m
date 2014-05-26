@@ -1,337 +1,51 @@
 From: =?UTF-8?q?Antoine=20T=C3=A9nart?=
-	<antoine.tenart@free-electrons.com>
-Subject: [PATCH v5 3/7] ata: libahci: allow to use multiple PHYs
-Date: Mon, 26 May 2014 16:51:44 +0200
-Message-ID: <1401115908-2742-4-git-send-email-antoine.tenart@free-electrons.com>
+	<antoine.tenart-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
+Subject: [PATCH v5 7/7] ARM: berlin: enable the eSATA interface on the BG2Q DMP
+Date: Mon, 26 May 2014 16:51:48 +0200
+Message-ID: <1401115908-2742-8-git-send-email-antoine.tenart@free-electrons.com>
 References: <1401115908-2742-1-git-send-email-antoine.tenart@free-electrons.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1401115908-2742-1-git-send-email-antoine.tenart@free-electrons.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: sebastian.hesselbarth@gmail.com, tj@kernel.org, kishon@ti.com
-Cc: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1401115908-2742-1-git-send-email-antoine.tenart-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: sebastian.hesselbarth-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, kishon-l0cyMroinI0@public.gmane.org
+Cc: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, alexandre.belloni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, zmxu-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org, jszhang-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
-The current implementation of the libahci does not allow to use multipl=
-e
-PHYs. This patch adds the support of multiple PHYs by the libahci while
-keeping the old bindings valid for device tree compatibility.
+The BG2Q has an AHCI SATA controller with an eSATA interface. Enable it=
+=2E
+Only enable the first port, the BG2Q DMP does not support the second on=
+e.
 
-This introduce a new way of defining SATA ports in the device tree, wit=
-h
-one port per sub-node. This as the advantage of allowing a per port
-configuration. Because some ports may be accessible but disabled in the
-device tree, the default port_map is computed automatically when using
-this.
-
-Signed-off-by: Antoine T=C3=A9nart <antoine.tenart@free-electrons.com>
+Signed-off-by: Antoine T=C3=A9nart <antoine.tenart-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
 ---
- drivers/ata/ahci.h             |   3 +-
- drivers/ata/libahci.c          |   7 ++
- drivers/ata/libahci_platform.c | 170 ++++++++++++++++++++++++++++++++-=
---------
- 3 files changed, 144 insertions(+), 36 deletions(-)
+ arch/arm/boot/dts/berlin2q-marvell-dmp.dts | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index af63c75c2001..1b01ffa579a3 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -329,7 +329,8 @@ struct ahci_host_priv {
- 	bool			got_runtime_pm; /* Did we do pm_runtime_get? */
- 	struct clk		*clks[AHCI_MAX_CLKS]; /* Optional */
- 	struct regulator	*target_pwr;	/* Optional */
--	struct phy		*phy;		/* If platform uses phy */
-+	struct phy		**phys;		/* If platform uses phys */
-+	unsigned		nphys;		/* Number of phys */
- 	void			*plat_data;	/* Other platform data */
- 	/*
- 	 * Optional ahci_start_engine override, if not set this gets set to t=
-he
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index b9861453fc81..1954f35e8f3c 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -477,6 +477,13 @@ void ahci_save_initial_config(struct device *dev,
- 		port_map &=3D mask_port_map;
- 	}
-=20
-+	/*
-+	 * If port_map was filled automatically when finding port sub-nodes,
-+	 * make sure we get the right set here.
-+	 */
-+	if (hpriv->port_map)
-+		port_map &=3D hpriv->port_map;
-+
- 	/* cross check port_map and cap.n_ports */
- 	if (port_map) {
- 		int map_ports =3D 0;
-diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platf=
-orm.c
-index 7cb3a85719c0..d34a6c1b50d2 100644
---- a/drivers/ata/libahci_platform.c
-+++ b/drivers/ata/libahci_platform.c
-@@ -39,6 +39,61 @@ static struct scsi_host_template ahci_platform_sht =3D=
- {
+diff --git a/arch/arm/boot/dts/berlin2q-marvell-dmp.dts b/arch/arm/boot=
+/dts/berlin2q-marvell-dmp.dts
+index 2da9c41e29d8..899b4e04fe12 100644
+--- a/arch/arm/boot/dts/berlin2q-marvell-dmp.dts
++++ b/arch/arm/boot/dts/berlin2q-marvell-dmp.dts
+@@ -26,3 +26,11 @@
+ &uart0 {
+ 	status =3D "okay";
  };
-=20
- /**
-+ * ahci_platform_enable_phys - Enable PHYs
-+ * @hpriv: host private area to store config values
-+ *
-+ * This function enables all the PHYs found in hpriv->phys, if any.
-+ * If a PHY fails to be enabled, it disables all the PHYs already
-+ * enabled in reverse order and returns an error.
-+ *
-+ * RETURNS:
-+ * 0 on success otherwise a negative error code
-+ */
-+int ahci_platform_enable_phys(struct ahci_host_priv *hpriv)
-+{
-+	int i, rc =3D 0;
 +
-+	for (i =3D 0; i < hpriv->nphys; i++) {
-+		rc =3D phy_init(hpriv->phys[i]);
-+		if (rc)
-+			goto disable_phys;
++&sata0 {
++	status =3D "okay";
++};
 +
-+		rc =3D phy_power_on(hpriv->phys[i]);
-+		if (rc) {
-+			phy_exit(hpriv->phys[i]);
-+			goto disable_phys;
-+		}
-+	}
-+
-+	return 0;
-+
-+disable_phys:
-+	while (--i >=3D 0) {
-+		phy_power_off(hpriv->phys[i]);
-+		phy_exit(hpriv->phys[i]);
-+	}
-+	return rc;
-+}
-+EXPORT_SYMBOL_GPL(ahci_platform_enable_phys);
-+
-+/**
-+ * ahci_platform_disable_phys - Enable PHYs
-+ * @hpriv: host private area to store config values
-+ *
-+ * This function disables all PHYs found in hpriv->phys.
-+ */
-+void ahci_platform_disable_phys(struct ahci_host_priv *hpriv)
-+{
-+	int i;
-+
-+	for (i =3D 0; i < hpriv->nphys; i++) {
-+		phy_power_off(hpriv->phys[i]);
-+		phy_exit(hpriv->phys[i]);
-+	}
-+}
-+EXPORT_SYMBOL_GPL(ahci_platform_disable_phys);
-+
-+/**
-  * ahci_platform_enable_clks - Enable platform clocks
-  * @hpriv: host private area to store config values
-  *
-@@ -92,7 +147,7 @@ EXPORT_SYMBOL_GPL(ahci_platform_disable_clks);
-  * following order:
-  * 1) Regulator
-  * 2) Clocks (through ahci_platform_enable_clks)
-- * 3) Phy
-+ * 3) Phys
-  *
-  * If resource enabling fails at any point the previous enabled resour=
-ces
-  * are disabled in reverse order.
-@@ -114,17 +169,9 @@ int ahci_platform_enable_resources(struct ahci_hos=
-t_priv *hpriv)
- 	if (rc)
- 		goto disable_regulator;
-=20
--	if (hpriv->phy) {
--		rc =3D phy_init(hpriv->phy);
--		if (rc)
--			goto disable_clks;
--
--		rc =3D phy_power_on(hpriv->phy);
--		if (rc) {
--			phy_exit(hpriv->phy);
--			goto disable_clks;
--		}
--	}
-+	rc =3D ahci_platform_enable_phys(hpriv);
-+	if (rc)
-+		goto disable_clks;
-=20
- 	return 0;
-=20
-@@ -144,16 +191,13 @@ EXPORT_SYMBOL_GPL(ahci_platform_enable_resources)=
-;
-  *
-  * This function disables all ahci_platform managed resources in the
-  * following order:
-- * 1) Phy
-+ * 1) Phys
-  * 2) Clocks (through ahci_platform_disable_clks)
-  * 3) Regulator
-  */
- void ahci_platform_disable_resources(struct ahci_host_priv *hpriv)
- {
--	if (hpriv->phy) {
--		phy_power_off(hpriv->phy);
--		phy_exit(hpriv->phy);
--	}
-+	ahci_platform_disable_phys(hpriv);
-=20
- 	ahci_platform_disable_clks(hpriv);
-=20
-@@ -187,7 +231,7 @@ static void ahci_platform_put_resources(struct devi=
-ce *dev, void *res)
-  * 2) regulator for controlling the targets power (optional)
-  * 3) 0 - AHCI_MAX_CLKS clocks, as specified in the devs devicetree no=
-de,
-  *    or for non devicetree enabled platforms a single clock
-- *	4) phy (optional)
-+ *	4) phys (optional)
-  *
-  * RETURNS:
-  * The allocated ahci_host_priv on success, otherwise an ERR_PTR value
-@@ -197,7 +241,8 @@ struct ahci_host_priv *ahci_platform_get_resources(=
-struct platform_device *pdev)
- 	struct device *dev =3D &pdev->dev;
- 	struct ahci_host_priv *hpriv;
- 	struct clk *clk;
--	int i, rc =3D -ENOMEM;
-+	struct device_node *child;
-+	int i, nports, rc =3D -ENOMEM;
-=20
- 	if (!devres_open_group(dev, NULL, GFP_KERNEL))
- 		return ERR_PTR(-ENOMEM);
-@@ -246,22 +291,77 @@ struct ahci_host_priv *ahci_platform_get_resource=
-s(struct platform_device *pdev)
- 		hpriv->clks[i] =3D clk;
- 	}
-=20
--	hpriv->phy =3D devm_phy_get(dev, "sata-phy");
--	if (IS_ERR(hpriv->phy)) {
--		rc =3D PTR_ERR(hpriv->phy);
--		switch (rc) {
--		case -ENODEV:
--		case -ENOSYS:
--			/* continue normally */
--			hpriv->phy =3D NULL;
--			break;
-+	nports =3D of_get_child_count(dev->of_node);
-=20
--		case -EPROBE_DEFER:
-+	if (nports) {
-+		hpriv->phys =3D devm_kzalloc(dev, nports * sizeof(*hpriv->phys),
-+					   GFP_KERNEL);
-+		if (!hpriv->phys) {
-+			rc =3D -ENOMEM;
- 			goto err_out;
-+		}
-=20
--		default:
--			dev_err(dev, "couldn't get sata-phy\n");
--			goto err_out;
-+		for_each_child_of_node(dev->of_node, child) {
-+			u32 port;
-+
-+			if (!of_device_is_available(child))
-+				continue;
-+
-+			if (of_property_read_u32(child, "reg", &port)) {
-+				rc =3D -EINVAL;
-+				goto err_out;
-+			}
-+
-+			hpriv->port_map |=3D BIT(port);
-+
-+			hpriv->phys[hpriv->nphys] =3D devm_of_phy_get(dev, child,
-+								    NULL);
-+			if (IS_ERR(hpriv->phys[hpriv->nphys])) {
-+				rc =3D PTR_ERR(hpriv->phys[hpriv->nphys]);
-+				dev_err(dev,
-+					"couldn't get PHY in node %s: %d\n",
-+					child->name, rc);
-+				goto err_out;
-+			}
-+
-+			hpriv->nphys++;
-+		}
-+
-+		if (!hpriv->nphys) {
-+			dev_warn(dev, "No port enabled\n");
-+			return ERR_PTR(-ENODEV);
-+		}
-+	} else {
-+		/*
-+		 * If no sub-node was found, keep this for device tree
-+		 * compatibility
-+		 */
-+		struct phy *phy =3D devm_phy_get(dev, "sata-phy");
-+		if (!IS_ERR(phy)) {
-+			hpriv->phys =3D devm_kzalloc(dev, sizeof(*hpriv->phys),
-+						   GFP_KERNEL);
-+			if (!hpriv->phys) {
-+				rc =3D -ENOMEM;
-+				goto err_out;
-+			}
-+
-+			hpriv->phys[0] =3D phy;
-+			hpriv->nphys =3D 1;
-+		} else {
-+			rc =3D PTR_ERR(phy);
-+			switch (rc) {
-+			case -ENODEV:
-+			case -ENOSYS:
-+				/* continue normally */
-+				break;
-+
-+			case -EPROBE_DEFER:
-+				goto err_out;
-+
-+			default:
-+				dev_err(dev, "couldn't get sata-phy\n");
-+				goto err_out;
-+			}
- 		}
- 	}
-=20
-@@ -287,7 +387,7 @@ EXPORT_SYMBOL_GPL(ahci_platform_get_resources);
-  * @mask_port_map: param passed to ahci_save_initial_config
-  *
-  * This function does all the usual steps needed to bring up an
-- * ahci-platform host, note any necessary resources (ie clks, phy, etc=
-=2E)
-+ * ahci-platform host, note any necessary resources (ie clks, phys, et=
-c.)
-  * must be initialized / enabled before calling this.
-  *
-  * RETURNS:
-@@ -391,7 +491,7 @@ static void ahci_host_stop(struct ata_host *host)
-  * @dev: device pointer for the host
-  *
-  * This function does all the usual steps needed to suspend an
-- * ahci-platform host, note any necessary resources (ie clks, phy, etc=
-=2E)
-+ * ahci-platform host, note any necessary resources (ie clks, phys, et=
-c.)
-  * must be disabled after calling this.
-  *
-  * RETURNS:
-@@ -428,7 +528,7 @@ EXPORT_SYMBOL_GPL(ahci_platform_suspend_host);
-  * @dev: device pointer for the host
-  *
-  * This function does all the usual steps needed to resume an ahci-pla=
-tform
-- * host, note any necessary resources (ie clks, phy, etc.)  must be
-+ * host, note any necessary resources (ie clks, phys, etc.)  must be
-  * initialized / enabled before calling this.
-  *
-  * RETURNS:
++&sata_phy {
++	status =3D "okay";
++};
 --=20
 1.9.1
+
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" i=
+n
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
