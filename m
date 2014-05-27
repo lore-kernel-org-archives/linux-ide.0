@@ -1,24 +1,31 @@
-From: Shawn Guo <shawn.guo@freescale.com>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 Subject: Re: [PATCH] ahci: imx: Fix imx_ahci_resume()
-Date: Tue, 27 May 2014 16:20:20 +0800
-Message-ID: <20140527082019.GB8860@dragon>
+Date: Tue, 27 May 2014 10:06:19 +0200
+Message-ID: <5865493.jxQGFSYlI5@amdc1032>
 References: <1401132577-24999-1-git-send-email-fabio.estevam@freescale.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bn1blp0185.outbound.protection.outlook.com ([207.46.163.185]:2336
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752681AbaE0IUd (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 27 May 2014 04:20:33 -0400
-Content-Disposition: inline
-In-Reply-To: <1401132577-24999-1-git-send-email-fabio.estevam@freescale.com>
+Received: from mailout4.samsung.com ([203.254.224.34]:36940 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751717AbaE0IGi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 May 2014 04:06:38 -0400
+Received: from epcpsbgm2.samsung.com (epcpsbgm2 [203.254.230.27])
+ by mailout4.samsung.com
+ (Oracle Communications Messaging Server 7u4-24.01(7.0.4.24.0) 64bit (built Nov
+ 17 2011)) with ESMTP id <0N680052K3V0NJD0@mailout4.samsung.com> for
+ linux-ide@vger.kernel.org; Tue, 27 May 2014 17:06:36 +0900 (KST)
+In-reply-to: <1401132577-24999-1-git-send-email-fabio.estevam@freescale.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Fabio Estevam <fabio.estevam@freescale.com>
-Cc: tj@kernel.org, linux-ide@vger.kernel.org, festevam@gmail.com
+Cc: tj@kernel.org, shawn.guo@freescale.com, linux-ide@vger.kernel.org, festevam@gmail.com
 
-On Mon, May 26, 2014 at 04:29:37PM -0300, Fabio Estevam wrote:
+
+Hi,
+
+On Monday, May 26, 2014 04:29:37 PM Fabio Estevam wrote:
 > The following warning is seen after suspend/resume sequence:
 > 
 > ------------[ cut here ]------------
@@ -46,24 +53,10 @@ On Mon, May 26, 2014 at 04:29:37PM -0300, Fabio Estevam wrote:
 > Add the missing ahci_platform_resume_host() call in order to fix the resume
 > of the driver.
 
-As Bartlomiej already pointed out, you must mean
-ahci_platform_enable_resources() here.  Even with it, I'm not sure this
-is correct.  Calling ahci_platform_enable_resources() in .resume hook
-only makes sense in case that ahci_platform_disable_resources() is being
-called in .suspend hook.
+Is this description correct?  ahci_platform_enable_resources() call seems to
+be missing in the original code, not ahci_platform_resume_host() one.
 
-All ahci_platform_enable[disable]_resources() do is handling resources
-phy, clock and regulator, which should have been managed by
-imx_sata_enable[disable]() in imx case.
-
-> 
 > Tested on imx6q-sabresd and imx53-qsb boards.
-
-I'm still wondering why I cannot reproduce the issue on my imx6q-sabresd
-board.
-
-Shawn
-
 > 
 > Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
 > ---
@@ -101,7 +94,10 @@ Shawn
 > +	return ret;
 >  }
 >  #endif
->  
-> -- 
-> 1.8.3.2
-> 
+
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
+
