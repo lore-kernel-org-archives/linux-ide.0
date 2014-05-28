@@ -1,19 +1,112 @@
-From: Shawn Guo <shawn.guo@freescale.com>
-Subject: [PATCH] ahci: imx: manage only sata_ref_clk in imx_sata_enable[disable]
-Date: Wed, 28 May 2014 23:05:39 +0800
-Message-ID: <1401289539-3485-1-git-send-email-shawn.guo@freescale.com>
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: Re: [PATCH] ahci: imx: manage only sata_ref_clk in imx_sata_enable[disable]
+Date: Wed, 28 May 2014 17:36:12 +0200
+Message-ID: <5386026C.1010603@redhat.com>
+References: <1401289539-3485-1-git-send-email-shawn.guo@freescale.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/mixed;
+ boundary="------------020603060902050409020604"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bn1blp0185.outbound.protection.outlook.com ([207.46.163.185]:10880
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752060AbaE1PF6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 28 May 2014 11:05:58 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:38001 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753218AbaE1Pgq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 28 May 2014 11:36:46 -0400
+In-Reply-To: <1401289539-3485-1-git-send-email-shawn.guo@freescale.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Fabio Estevam <fabio.estevam@freescale.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Shawn Guo <shawn.guo@freescale.com>
+To: Shawn Guo <shawn.guo@freescale.com>, Tejun Heo <tj@kernel.org>
+Cc: Fabio Estevam <fabio.estevam@freescale.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+
+This is a multi-part message in MIME format.
+--------------020603060902050409020604
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+
+Hi,
+
+On 05/28/2014 05:05 PM, Shawn Guo wrote:
+> Doing suspend/resume on imx6q and imx53 boards with no SATA disk
+> attached will trigger the following warning.
+> 
+> ------------[ cut here ]------------
+> WARNING: CPU: 0 PID: 661 at drivers/ata/libahci.c:224 ahci_enable_ahci+0x74/0x8)
+> Modules linked in:
+> CPU: 0 PID: 661 Comm: sh Tainted: G        W     3.15.0-rc5-next-20140521-000027
+> Backtrace:
+> [<80011c90>] (dump_backtrace) from [<80011e2c>] (show_stack+0x18/0x1c)
+>  r6:803a22f4 r5:00000000 r4:00000000 r3:00000000
+> [<80011e14>] (show_stack) from [<80661e60>] (dump_stack+0x88/0xa4)
+> [<80661dd8>] (dump_stack) from [<80028fdc>] (warn_slowpath_common+0x70/0x94)
+>  r5:00000009 r4:00000000
+> [<80028f6c>] (warn_slowpath_common) from [<80029024>] (warn_slowpath_null+0x24/)
+>  r8:808f68c4 r7:00000000 r6:00000000 r5:00000000 r4:e0810004
+> [<80029000>] (warn_slowpath_null) from [<803a22f4>] (ahci_enable_ahci+0x74/0x80)
+> [<803a2280>] (ahci_enable_ahci) from [<803a2324>] (ahci_reset_controller+0x24/0)
+>  r8:ddcd9410 r7:80351178 r6:ddcd9444 r5:dde8b850 r4:e0810000 r3:ddf35e90
+> [<803a2300>] (ahci_reset_controller) from [<803a2c68>] (ahci_platform_resume_ho)
+>  r7:80351178 r6:ddcd9444 r5:dde8b850 r4:ddcd9410
+> [<803a2c30>] (ahci_platform_resume_host) from [<803a38f0>] (imx_ahci_resume+0x2)
+>  r5:00000000 r4:ddcd9410
+> [<803a38c4>] (imx_ahci_resume) from [<803511ac>] (platform_pm_resume+0x34/0x54)
+> ....
+> 
+> The reason is that the SATA controller has no working clock at this
+> point, and thus ahci_enable_ahci() fails to enable the controller.  In
+> case that there is no SATA disk attached, the imx_sata_disable() gets
+> called in ahci_imx_error_handler(), and both sata_clk and sata_ref_clk
+> will be disabled there.  Because all the imx_sata_enable() calls
+> afterward will return immediately due to imxpriv->no_device check, the
+> SATA controller working clock sata_clk will never get any chance to be
+> enabled again.
+> 
+> This is a regression caused by commit 90870d79d4f2 (ahci-imx: Port to
+> library-ised ahci_platform).  Before the commit, only sata_ref_clk is
+> managed by the driver in enable/disable function.  But after the commit,
+> all the clocks are enabled/disabled in a row by ahci platform helpers
+> ahci_platform_enable[disable]_clks.  Since ahb_clk is a bus clock which
+> does not have gate at all, and i.MX low-power hardware module already
+> manages sata_clk across suspend/resume cycle, the only clock that needs
+> to be managed by software is sata_ref_clk.
+> 
+> So instead of using ahci_platform_enable[disable]_clks to manage all
+> the clocks in a row from imx_sata_enable[disable], we should manage
+> only sata_ref_clk in there.
+
+I disagree, the problem here is not the clk disable / enable, with
+your patch the sata_clk never gets disabled, unless the driver gets unloaded
+which clearly is the wrong thing to do.
+
+The real problem is the weird error handling which is unique to
+the ahci_imx code where if no disk is present it semi-permanently
+shuts down (breaking later hotplug of sata without a reboot).
+
+I assume that this weird error handling is done to save power in the
+case no disk is attached. But if that is the case the surely disabling
+the sata_clk in this scenario too is the right thing to do.
+
+As for the "ahb_clk is a bus clock which does not have gate at all" argument,
+if that were the case then the disabling of the sata_clk would not cause
+any issues at all, so I'm not buying that argument.
+
+The proper fix is obvious, if we've shutdown everything due to there
+not being a device present at the initial probe, don't call
+ahci_platform_resume_host on resume, as is done in the attached patch.
+
+Regards,
+
+Hans
+
+--------------020603060902050409020604
+Content-Type: text/x-patch;
+ name="0001-ahci_imx-Fix-oops-on-suspend-resume.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="0001-ahci_imx-Fix-oops-on-suspend-resume.patch"
+
+>From 2381bd7a615f74e3ada88d6462fbb298b7d0e279 Mon Sep 17 00:00:00 2001
+From: Hans de Goede <hdegoede@redhat.com>
+Date: Wed, 28 May 2014 17:33:05 +0200
+Subject: [PATCH resend] ahci_imx: Fix oops on suspend/resume
 
 Doing suspend/resume on imx6q and imx53 boards with no SATA disk
 attached will trigger the following warning.
@@ -40,128 +133,51 @@ Backtrace:
 [<803a38c4>] (imx_ahci_resume) from [<803511ac>] (platform_pm_resume+0x34/0x54)
 ....
 
-The reason is that the SATA controller has no working clock at this
-point, and thus ahci_enable_ahci() fails to enable the controller.  In
-case that there is no SATA disk attached, the imx_sata_disable() gets
-called in ahci_imx_error_handler(), and both sata_clk and sata_ref_clk
-will be disabled there.  Because all the imx_sata_enable() calls
-afterward will return immediately due to imxpriv->no_device check, the
-SATA controller working clock sata_clk will never get any chance to be
-enabled again.
+This is caused by the unique error handling in ahci_imx which permanently
+powers down the achi bits if there is no disk attached on probe. Add a check
+for this condition in the suspend / resume handlers to fix this warning.
 
-This is a regression caused by commit 90870d79d4f2 (ahci-imx: Port to
-library-ised ahci_platform).  Before the commit, only sata_ref_clk is
-managed by the driver in enable/disable function.  But after the commit,
-all the clocks are enabled/disabled in a row by ahci platform helpers
-ahci_platform_enable[disable]_clks.  Since ahb_clk is a bus clock which
-does not have gate at all, and i.MX low-power hardware module already
-manages sata_clk across suspend/resume cycle, the only clock that needs
-to be managed by software is sata_ref_clk.
-
-So instead of using ahci_platform_enable[disable]_clks to manage all
-the clocks in a row from imx_sata_enable[disable], we should manage
-only sata_ref_clk in there.
-
-Reported-by: Fabio Estevam <fabio.estevam@freescale.com>
-Fixes: 90870d79d4f2 (ahci-imx: Port to library-ised ahci_platform)
-Signed-off-by: Shawn Guo <shawn.guo@freescale.com>
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
 ---
- drivers/ata/ahci_imx.c | 35 +++++++++++++++++++++++++++++++----
- 1 file changed, 31 insertions(+), 4 deletions(-)
+ drivers/ata/ahci_imx.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
-index 3a901520c62b..4384a7d72133 100644
+index 8befeb6..00e6ed8 100644
 --- a/drivers/ata/ahci_imx.c
 +++ b/drivers/ata/ahci_imx.c
-@@ -58,6 +58,8 @@ enum ahci_imx_type {
- struct imx_ahci_priv {
- 	struct platform_device *ahci_pdev;
- 	enum ahci_imx_type type;
-+	struct clk *sata_clk;
-+	struct clk *sata_ref_clk;
- 	struct clk *ahb_clk;
- 	struct regmap *gpr;
- 	bool no_device;
-@@ -224,7 +226,7 @@ static int imx_sata_enable(struct ahci_host_priv *hpriv)
- 			return ret;
- 	}
+@@ -215,9 +215,6 @@ static int imx_sata_enable(struct ahci_host_priv *hpriv)
+ 	struct device *dev = &imxpriv->ahci_pdev->dev;
+ 	int ret;
  
--	ret = ahci_platform_enable_clks(hpriv);
-+	ret = clk_prepare_enable(imxpriv->sata_ref_clk);
- 	if (ret < 0)
- 		goto disable_regulator;
+-	if (imxpriv->no_device)
+-		return 0;
+-
+ 	if (hpriv->target_pwr) {
+ 		ret = regulator_enable(hpriv->target_pwr);
+ 		if (ret)
+@@ -453,6 +450,9 @@ static int imx_ahci_suspend(struct device *dev)
+ 	struct ahci_host_priv *hpriv = host->private_data;
+ 	int ret;
  
-@@ -291,7 +293,7 @@ static void imx_sata_disable(struct ahci_host_priv *hpriv)
- 				   !IMX6Q_GPR13_SATA_MPLL_CLK_EN);
- 	}
- 
--	ahci_platform_disable_clks(hpriv);
-+	clk_disable_unprepare(imxpriv->sata_ref_clk);
- 
- 	if (hpriv->target_pwr)
- 		regulator_disable(hpriv->target_pwr);
-@@ -385,6 +387,19 @@ static int imx_ahci_probe(struct platform_device *pdev)
- 	imxpriv->no_device = false;
- 	imxpriv->first_time = true;
- 	imxpriv->type = (enum ahci_imx_type)of_id->data;
++	if (imxpriv->no_device)
++		return 0;
 +
-+	imxpriv->sata_clk = devm_clk_get(dev, "sata");
-+	if (IS_ERR(imxpriv->sata_clk)) {
-+		dev_err(dev, "can't get sata clock.\n");
-+		return PTR_ERR(imxpriv->sata_clk);
-+	}
-+
-+	imxpriv->sata_ref_clk = devm_clk_get(dev, "sata_ref");
-+	if (IS_ERR(imxpriv->sata_ref_clk)) {
-+		dev_err(dev, "can't get sata_ref clock.\n");
-+		return PTR_ERR(imxpriv->sata_ref_clk);
-+	}
-+
- 	imxpriv->ahb_clk = devm_clk_get(dev, "ahb");
- 	if (IS_ERR(imxpriv->ahb_clk)) {
- 		dev_err(dev, "can't get ahb clock.\n");
-@@ -407,10 +422,14 @@ static int imx_ahci_probe(struct platform_device *pdev)
- 
- 	hpriv->plat_data = imxpriv;
- 
--	ret = imx_sata_enable(hpriv);
-+	ret = clk_prepare_enable(imxpriv->sata_clk);
+ 	ret = ahci_platform_suspend_host(dev);
  	if (ret)
  		return ret;
- 
-+	ret = imx_sata_enable(hpriv);
-+	if (ret)
-+		goto disable_clk;
-+
- 	/*
- 	 * Configure the HWINIT bits of the HOST_CAP and HOST_PORTS_IMPL,
- 	 * and IP vendor specific register IMX_TIMER1MS.
-@@ -435,16 +454,24 @@ static int imx_ahci_probe(struct platform_device *pdev)
- 	ret = ahci_platform_init_host(pdev, hpriv, &ahci_imx_port_info,
- 				      0, 0, 0);
- 	if (ret)
--		imx_sata_disable(hpriv);
-+		goto disable_sata;
-+
-+	return 0;
- 
-+disable_sata:
-+	imx_sata_disable(hpriv);
-+disable_clk:
-+	clk_disable_unprepare(imxpriv->sata_clk);
- 	return ret;
- }
- 
- static void ahci_imx_host_stop(struct ata_host *host)
- {
+@@ -468,6 +468,9 @@ static int imx_ahci_resume(struct device *dev)
  	struct ahci_host_priv *hpriv = host->private_data;
-+	struct imx_ahci_priv *imxpriv = hpriv->plat_data;
+ 	int ret;
  
- 	imx_sata_disable(hpriv);
-+	clk_disable_unprepare(imxpriv->sata_clk);
- }
- 
- #ifdef CONFIG_PM_SLEEP
++	if (imxpriv->no_device)
++		return 0;
++
+ 	ret = imx_sata_enable(hpriv);
+ 	if (ret)
+ 		return ret;
 -- 
-1.8.3.2
+1.9.3
 
+
+--------------020603060902050409020604--
