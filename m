@@ -1,48 +1,36 @@
-From: =?UTF-8?B?SsOpcsO0bWU=?= Carretero <cJ-ko@zougloub.eu>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 Subject: Re: Bad DMA from Marvell 9230
-Date: Fri, 30 May 2014 11:14:00 -0400
-Message-ID: <20140530111400.5d7292ab@Vantage>
+Date: Sat, 31 May 2014 06:59:10 +1000
+Message-ID: <1401483550.14938.37.camel@pasglop>
 References: <1395903457.5569.89.camel@pasglop>
-	<20140530030618.5ad4f447@Vantage>
-	<1401446278.14938.26.camel@pasglop>
-	<20140530095822.3588a6ff@Vantage>
-	<CAAMCDecAgn=FX4Lw4YK_z4OKZsKqaj3scXe2cg0HN9tSj_FokA@mail.gmail.com>
+	 <20140530030618.5ad4f447@Vantage> <1401446278.14938.26.camel@pasglop>
+	 <20140530095822.3588a6ff@Vantage>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAAMCDecAgn=FX4Lw4YK_z4OKZsKqaj3scXe2cg0HN9tSj_FokA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Roger Heflin <rogerheflin@gmail.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Tejun Heo <tj@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Alex Williamson <alex.williamson@redhat.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from gate.crashing.org ([63.228.1.57]:37117 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932699AbaE3U71 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 30 May 2014 16:59:27 -0400
+In-Reply-To: <20140530095822.3588a6ff@Vantage>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: =?ISO-8859-1?Q?J=E9r=F4me?= Carretero <cJ-ko@zougloub.eu>
+Cc: Tejun Heo <tj@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Alex Williamson <alex.williamson@redhat.com>
 
-On Fri, 30 May 2014 09:13:43 -0500
-Roger Heflin <rogerheflin@gmail.com> wrote:
+On Fri, 2014-05-30 at 09:58 -0400, J=C3=A9r=C3=B4me Carretero wrote:
+> Weird (I hadn't seen that you reported the 9235 working...), I have
+> IOMMU problems with a 9235...
+>=20
+> What system are you running it on (when you say "power box", is it a
+> beefy x86 computer or literally a PowerPC)?
+> For me, AMD 990FX chipset, latest master linux.
+> My board works fine* on another non-IOMMU system.
 
-> I had a 9230...
-> [...]
-> Supplier support "claimed" it to be a Linux AHCI bug as the "claim"
-> that their board correctly supports AHCI, even though all other AHCI
-> boards work right in this exact same use case in the exact same
-> machine.
+A PowerPC POWER8 prototype machine :-)
 
-Does somebody know about another supplier that provides equivalent
-SATA adapters that behave well, are robust and support FIS switching,
-and don't come with proprietary drivers/utilities but rather *support*
-their linux driver?
+Cheers,
+Ben.
 
-I'd bite the bullet and get a better, more expensive device, but it
-doesn't seem to come with appropriate software support either.
 
-There are some RAID adapters that don't expose the disks if we're
-not creating RAID volumes... with an ugly CLI, and where we don't know
-what's written where on the disk in case we are to create one volume
-per disk, and do software RAID later.
-Not tempted to use that.
-
-Or waste PCIe slots and use more el-cheapo ASMedia 1061 PCIe-1x
-devices... do these work well?
-
---=20
-J=C3=A9r=C3=B4me
