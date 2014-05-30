@@ -1,46 +1,40 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+From: =?UTF-8?B?SsOpcsO0bWU=?= Carretero <cJ-ko@zougloub.eu>
 Subject: Re: Bad DMA from Marvell 9230
-Date: Fri, 30 May 2014 20:37:58 +1000
-Message-ID: <1401446278.14938.26.camel@pasglop>
+Date: Fri, 30 May 2014 09:58:22 -0400
+Message-ID: <20140530095822.3588a6ff@Vantage>
 References: <1395903457.5569.89.camel@pasglop>
-	 <20140530030618.5ad4f447@Vantage>
+	<20140530030618.5ad4f447@Vantage>
+	<1401446278.14938.26.camel@pasglop>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:37774 "EHLO gate.crashing.org"
+Received: from zougloub.eu ([198.27.83.45]:55081 "EHLO zougloub.eu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751291AbaE3KiV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 30 May 2014 06:38:21 -0400
-In-Reply-To: <20140530030618.5ad4f447@Vantage>
+	id S1753137AbaE3N4p convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 May 2014 09:56:45 -0400
+In-Reply-To: <1401446278.14938.26.camel@pasglop>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-1?Q?J=E9r=F4me?= Carretero <cJ-ko@zougloub.eu>
-Cc: Tejun Heo <tj@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Tejun Heo <tj@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Alex Williamson <alex.williamson@redhat.com>
 
-On Fri, 2014-05-30 at 03:06 -0400, J=C3=A9r=C3=B4me Carretero wrote:
-> On Thu, 27 Mar 2014 17:57:37 +1100
-> Benjamin Herrenschmidt <benh@kernel.crashing.org> wrote:
->=20
-> > I've been trying a 9230 on a power box here (a 9235 on the same
-> > machine works fine) and it blows up with an IOMMU violation early
-> > during init.
->=20
-> Hi,
->=20
-> That's https://bugzilla.kernel.org/show_bug.cgi?id=3D42679
-> if you haven't already found it.
+On Fri, 30 May 2014 20:37:58 +1000
+Benjamin Herrenschmidt <benh@kernel.crashing.org> wrote:
 
-Somewhat... It's not the phantom function, the error I capture in my
-IOMMU shows that it's trying to read from address 0 which is unmapped
-but with the right initiator.
+> We've switched to a 9235 instead which seems to work fine.
 
-This device is a pile of crap. We've talked to Marvell support channel,
-sent driver traces etc... but they didn't admit anything.
+Weird (I hadn't seen that you reported the 9235 working...), I have
+IOMMU problems with a 9235...
 
-We've switched to a 9235 instead which seems to work fine.
+What system are you running it on (when you say "power box", is it a
+beefy x86 computer or literally a PowerPC)?
+=46or me, AMD 990FX chipset, latest master linux.
+My board works fine* on another non-IOMMU system.
 
-Cheers,
-Ben.
+--=20
+J=C3=A9r=C3=B4me
 
+* with issues with port multipliers
 
+Link to Benjamin's first message: https://lkml.org/lkml/2014/3/27/43
