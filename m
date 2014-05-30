@@ -1,40 +1,61 @@
-From: =?UTF-8?B?SsOpcsO0bWU=?= Carretero <cJ-ko@zougloub.eu>
+From: Roger Heflin <rogerheflin@gmail.com>
 Subject: Re: Bad DMA from Marvell 9230
-Date: Fri, 30 May 2014 09:58:22 -0400
-Message-ID: <20140530095822.3588a6ff@Vantage>
-References: <1395903457.5569.89.camel@pasglop>
-	<20140530030618.5ad4f447@Vantage>
-	<1401446278.14938.26.camel@pasglop>
+Date: Fri, 30 May 2014 09:13:43 -0500
+Message-ID: <CAAMCDecAgn=FX4Lw4YK_z4OKZsKqaj3scXe2cg0HN9tSj_FokA@mail.gmail.com>
+References: <1395903457.5569.89.camel@pasglop> <20140530030618.5ad4f447@Vantage>
+ <1401446278.14938.26.camel@pasglop> <20140530095822.3588a6ff@Vantage>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from zougloub.eu ([198.27.83.45]:55081 "EHLO zougloub.eu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753137AbaE3N4p convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 May 2014 09:56:45 -0400
-In-Reply-To: <1401446278.14938.26.camel@pasglop>
+Received: from mail-yh0-f53.google.com ([209.85.213.53]:43655 "EHLO
+	mail-yh0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751782AbaE3OOE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 May 2014 10:14:04 -0400
+In-Reply-To: <20140530095822.3588a6ff@Vantage>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Tejun Heo <tj@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Alex Williamson <alex.williamson@redhat.com>
+To: =?ISO-8859-1?Q?J=E9r=F4me_Carretero?= <cJ-ko@zougloub.eu>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Tejun Heo <tj@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Alex Williamson <alex.williamson@redhat.com>
 
-On Fri, 30 May 2014 20:37:58 +1000
-Benjamin Herrenschmidt <benh@kernel.crashing.org> wrote:
+I had a 9230...on older kernels it worked "ok" so long as you did not
+do any smart commands, I removed it and went to something that works.
+   Marvell appears to be hit and miss with some cards/chips working
+right and some not...
 
-> We've switched to a 9235 instead which seems to work fine.
+Do enough smartcmds and the entire board (all 4 ports) locked up and
+required a reboot, I quit doing smartcmds and stability went way up,
+but it was still not 100% stable.
 
-Weird (I hadn't seen that you reported the 9235 working...), I have
-IOMMU problems with a 9235...
+Supplier support "claimed" it to be a Linux AHCI bug as the "claim"
+that their board correctly supports AHCI, even though all other AHCI
+boards work right in this exact same use case in the exact same
+machine.
 
-What system are you running it on (when you say "power box", is it a
-beefy x86 computer or literally a PowerPC)?
-=46or me, AMD 990FX chipset, latest master linux.
-My board works fine* on another non-IOMMU system.
-
---=20
-J=C3=A9r=C3=B4me
-
-* with issues with port multipliers
-
-Link to Benjamin's first message: https://lkml.org/lkml/2014/3/27/43
+On Fri, May 30, 2014 at 8:58 AM, J=E9r=F4me Carretero <cJ-ko@zougloub.e=
+u> wrote:
+> On Fri, 30 May 2014 20:37:58 +1000
+> Benjamin Herrenschmidt <benh@kernel.crashing.org> wrote:
+>
+>> We've switched to a 9235 instead which seems to work fine.
+>
+> Weird (I hadn't seen that you reported the 9235 working...), I have
+> IOMMU problems with a 9235...
+>
+> What system are you running it on (when you say "power box", is it a
+> beefy x86 computer or literally a PowerPC)?
+> For me, AMD 990FX chipset, latest master linux.
+> My board works fine* on another non-IOMMU system.
+>
+> --
+> J=E9r=F4me
+>
+> * with issues with port multipliers
+>
+> Link to Benjamin's first message: https://lkml.org/lkml/2014/3/27/43
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-kerne=
+l" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
