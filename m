@@ -1,55 +1,62 @@
-From: Roger Heflin <rogerheflin@gmail.com>
-Subject: Re: Bad DMA from Marvell 9230
-Date: Fri, 30 May 2014 18:08:45 -0500
-Message-ID: <CAAMCDecCe6tcKcCCShz-TpwamucLhwp8s_a_KSc8OvQ3GLAFtg@mail.gmail.com>
-References: <1395903457.5569.89.camel@pasglop> <20140530030618.5ad4f447@Vantage>
- <1401446278.14938.26.camel@pasglop> <20140530095822.3588a6ff@Vantage>
- <CAAMCDecAgn=FX4Lw4YK_z4OKZsKqaj3scXe2cg0HN9tSj_FokA@mail.gmail.com> <1401483970.14938.38.camel@pasglop>
+From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
+Subject: Re: [PATCH 1/1] ata: Check and set 64-bit DMA mask for platform AHCI
+ driver
+Date: Sun, 1 Jun 2014 13:23:14 -0500
+Message-ID: <538B6F92.7010009@amd.com>
+References: <1400866510-3130-1-git-send-email-suravee.suthikulpanit@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ie0-f180.google.com ([209.85.223.180]:62213 "EHLO
-	mail-ie0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932699AbaE3XJG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 May 2014 19:09:06 -0400
-In-Reply-To: <1401483970.14938.38.camel@pasglop>
+Received: from mail-bn1blp0184.outbound.protection.outlook.com ([207.46.163.184]:26252
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750965AbaFASX1 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 1 Jun 2014 14:23:27 -0400
+In-Reply-To: <1400866510-3130-1-git-send-email-suravee.suthikulpanit@amd.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: =?ISO-8859-1?Q?J=E9r=F4me_Carretero?= <cJ-ko@zougloub.eu>, Tejun Heo <tj@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Alex Williamson <alex.williamson@redhat.com>
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-pretty much any smartcommands...I was running something that got all
-of the smart stats 1x per hour per disk...and this made it crash about
-1x per week, if you were pushing the disks hard it appear to make it
-even more likely to crash under the smart cmds, removing the commands
-took things up to 2-3 months between crashes.
+Hi Tejun,
 
-I suspect if you just put a simple smartcmd --all /dev/sdX and ran it
-a few times a minute if it had the issue it would almost certainly
-crash in less than a day, I did not figure out the smart cmds were
-crashing it, someone else's post indicate that they had determined
-that and I figured out what I had doing smartcmds and removed them and
-things got much betterr.
+I am following up on this patch.
 
-For finding good vendors, I know others on the md-raid list have given
-up on cheap and found decent but more expensive controllers.
+Thank you,
 
-I would expect LSI and Adaptec to care enough about their names to
-make a decent quality product.   There appears to be  4pt (1-8087
-pt-jbod/nonraid) adaptec that may be some variant of marvell that is
-about $130US on newegg, given it is adaptec they may have made the
-marvell actually work.   There are a number of 8pt non-raid cards up
-around $250-$300 that would probably work great if you wanted to pay
-that much, these cards have 2x8087 ports and need a 8087->4sata cable
-cable.   Given how nice it is to have a machine that just mostly works
-without messing around with it I would probably pay the extra for
-stability.
+Suravee
 
-Last time I looked at the 2pt/pciex1 cards I found significant
-indications of instability enough to expect that I would have to put
-several hours (or more) of testing/crashing/RMA  pain in to figure out
-which worked.    I went so far as crossing out any of the motherboards
-with non-AMD/non-intel sata ports as I have been burned before on
-large MB vendors doing a bad job of integrating others (possibly bad)
-sata ports in, it is a sad state, but it also has been this way for a
-long time.
+On 05/23/2014 12:35 PM, suravee.suthikulpanit@amd.com wrote:
+> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+>
+> The current platform AHCI drier does not set the dma_mask correctly
+> for 64-bit DMA capable AHCI controller.  This patch checks the AHCI
+> capability bit and set the dma_mask and coherent_dma_mask accordingly.
+>
+> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> ---
+>   drivers/ata/libahci_platform.c | 9 +++++++++
+>   1 file changed, 9 insertions(+)
+>
+> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+> index 7cb3a85..85049ef 100644
+> --- a/drivers/ata/libahci_platform.c
+> +++ b/drivers/ata/libahci_platform.c
+> @@ -368,6 +368,15 @@ int ahci_platform_init_host(struct platform_device *pdev,
+>   	ahci_init_controller(host);
+>   	ahci_print_info(host, "platform");
+>
+> +	if (hpriv->cap & HOST_CAP_64) {
+> +		if (!dev->dma_mask)
+> +			dev->dma_mask = &dev->coherent_dma_mask;
+> +
+> +		rc = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(64));
+> +		if (rc)
+> +			return rc;
+> +	}
+> +
+>   	return ata_host_activate(host, irq, ahci_interrupt, IRQF_SHARED,
+>   				 &ahci_platform_sht);
+>   }
+>
