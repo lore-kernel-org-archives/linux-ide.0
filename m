@@ -1,23 +1,66 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH 1/3] libsas: modify SATA error handler
-Date: Tue, 3 Jun 2014 09:05:03 -0700
-Message-ID: <CAPcyv4g7zMf4UGZPYFk30kh5J_-ot6kuesEjOZJTRbL_UkpQ9g@mail.gmail.com>
-References: <1398346047-10276-1-git-send-email-yxlraid@gmail.com>
-	<CAP0P+NWxxxnQH1e3tXcqwud7EaV4kRRMW46Ad-PWoMWFzgy1eg@mail.gmail.com>
-	<F766E4F80769BD478052FB6533FA745D57320C6287@SC-VEXCH4.marvell.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 1/1] ata: Check and set 64-bit DMA mask for platform AHCI
+ driver
+Date: Tue, 3 Jun 2014 13:58:27 -0400
+Message-ID: <20140603175827.GH26210@htj.dyndns.org>
+References: <1400866510-3130-1-git-send-email-suravee.suthikulpanit@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <F766E4F80769BD478052FB6533FA745D57320C6287@SC-VEXCH4.marvell.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Xiangliang Yu <yuxiangl@marvell.com>
-Cc: "tj@kernel.org" <tj@kernel.org>, "JBottomley@parallels.com" <JBottomley@parallels.com>, "todd.e.brandt@intel.com" <todd.e.brandt@intel.com>, "lukasz.dorau@intel.com" <lukasz.dorau@intel.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qa0-f53.google.com ([209.85.216.53]:62268 "EHLO
+	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751440AbaFCR6a (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jun 2014 13:58:30 -0400
+Content-Disposition: inline
+In-Reply-To: <1400866510-3130-1-git-send-email-suravee.suthikulpanit@amd.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: suravee.suthikulpanit@amd.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
-On Tue, Jun 3, 2014 at 12:13 AM, Xiangliang Yu <yuxiangl@marvell.com> wrote:
-> Hi,
->
-> How about the patch?
->
+Hans, Bartlomiej, can you guys please review this patch?
 
-I'll take a look today.  Sorry for the latency.
+Thanks.
+
+On Fri, May 23, 2014 at 12:35:10PM -0500, suravee.suthikulpanit@amd.com wrote:
+> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> 
+> The current platform AHCI drier does not set the dma_mask correctly
+> for 64-bit DMA capable AHCI controller.  This patch checks the AHCI
+> capability bit and set the dma_mask and coherent_dma_mask accordingly.
+> 
+> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> ---
+>  drivers/ata/libahci_platform.c | 9 +++++++++
+>  1 file changed, 9 insertions(+)
+> 
+> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+> index 7cb3a85..85049ef 100644
+> --- a/drivers/ata/libahci_platform.c
+> +++ b/drivers/ata/libahci_platform.c
+> @@ -368,6 +368,15 @@ int ahci_platform_init_host(struct platform_device *pdev,
+>  	ahci_init_controller(host);
+>  	ahci_print_info(host, "platform");
+>  
+> +	if (hpriv->cap & HOST_CAP_64) {
+> +		if (!dev->dma_mask)
+> +			dev->dma_mask = &dev->coherent_dma_mask;
+> +
+> +		rc = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(64));
+> +		if (rc)
+> +			return rc;
+> +	}
+> +
+>  	return ata_host_activate(host, irq, ahci_interrupt, IRQF_SHARED,
+>  				 &ahci_platform_sht);
+>  }
+> -- 
+> 1.9.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+tejun
