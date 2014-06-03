@@ -1,49 +1,41 @@
-From: AYAN KUMAR HALDER <ayankumarh@gmail.com>
-Subject: Re: Linux Hibernation with sata driver
-Date: Tue, 3 Jun 2014 10:44:50 +0530
-Message-ID: <CAGAs2Amc9YSHNrxAJYOJG0RoZOy7w=f9g9q_G_2jUbg8ZBcubw@mail.gmail.com>
-References: <CAGAs2AmTe5wip-B58fnM9i4We=f4SWYsQz8GiswYEvWTOMdu9w@mail.gmail.com>
-	<CAGAs2AnLtMfJ12ZWzgNYoufy9ia=ocCuf4_h9dWNb=fqhBV2vQ@mail.gmail.com>
+From: Xiangliang Yu <yuxiangl@marvell.com>
+Subject: RE: [PATCH 1/3] libsas: modify SATA error handler
+Date: Tue, 3 Jun 2014 00:13:59 -0700
+Message-ID: <F766E4F80769BD478052FB6533FA745D57320C6287@SC-VEXCH4.marvell.com>
+References: <1398346047-10276-1-git-send-email-yxlraid@gmail.com>
+ <CAP0P+NWxxxnQH1e3tXcqwud7EaV4kRRMW46Ad-PWoMWFzgy1eg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pd0-f174.google.com ([209.85.192.174]:54949 "EHLO
-	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751318AbaFCFOv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jun 2014 01:14:51 -0400
-Received: by mail-pd0-f174.google.com with SMTP id r10so4156913pdi.5
-        for <linux-ide@vger.kernel.org>; Mon, 02 Jun 2014 22:14:50 -0700 (PDT)
-In-Reply-To: <CAGAs2AnLtMfJ12ZWzgNYoufy9ia=ocCuf4_h9dWNb=fqhBV2vQ@mail.gmail.com>
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:50512 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753315AbaFCHQG convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 3 Jun 2014 03:16:06 -0400
+In-Reply-To: <CAP0P+NWxxxnQH1e3tXcqwud7EaV4kRRMW46Ad-PWoMWFzgy1eg@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: "tj@kernel.org" <tj@kernel.org>, "JBottomley@parallels.com" <JBottomley@parallels.com>
+Cc: "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "todd.e.brandt@intel.com" <todd.e.brandt@intel.com>, "lukasz.dorau@intel.com" <lukasz.dorau@intel.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-subscribe linux-ide
+Hi,
 
-On Tue, Jun 3, 2014 at 10:05 AM, AYAN KUMAR HALDER <ayankumarh@gmail.com> wrote:
-> Hi,
+How about the patch?
+
+
+>From: Xiangliang Yu <yxlraid@gmail.com>
+>Date: 2014-04-24 21:27 GMT+08:00
+>Subject: [PATCH 1/3] libsas: modify SATA error handler
+>To: tj@kernel.org, JBottomley@parallels.com
+>Cc: dan.j.williams@intel.com, todd.e.brandt@intel.com, >lukasz.dorau@i=
+ntel.com, linux-ide@vger.kernel.org, linux->kernel@vger.kernel.org, lin=
+ux-scsi@vger.kernel.org, Xiangliang Yu ><yxlraid@gmail.com>
 >
-> I am working with Linux hibernation framework on ARM based custom SOC
-> which has SATA controller on PCI bus.
+>Add support for SATA port softreset and port multiplier error
+>handling.
 >
-> I see that when the system resumes from hibernation, the SATA
-> controller(drivers/ata/ahci.c) on PCI bus fails to come up. My
-> understanding is that the hibernation calls 'freeze' of all devices.
-> The SATA controller receives the power state event as PM_EVENT_FREEZE
-> ( ie pdev->dev.power.power_state.event = PM_EVENT_FREEZE). Thus when
-> system restores the hibernation image, ahci_pci_device_resume gets
-> called in which ahci_pci_reset_controller/ahci_pci_init_controller
-> does not get called. So SATA controller fails to come up.
->
-> Please let me know if my understanding is correct or not. If so, then
-> in ahci_pci_device_resume() should we change the following
-> if (pdev->dev.power.power_state.event == PM_EVENT_SUSPEND)
-> to
-> if (pdev->dev.power.power_state.event == PM_EVENT_FREEZE)
->
-> In hibernation , as we power down the system, so I understand that the
-> sata controller need to be reset and re-initialized for proper
-> functioning.
->
-> Regards,
-> Ayan Kumar Halder
+>Signed-off-by: Xiangliang Yu <yxlraid@gmail.com>
+---
+=A0
