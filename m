@@ -1,33 +1,47 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ahci: Add Device ID for HighPoint RocketRaid 642L
-Date: Tue, 3 Jun 2014 14:47:08 -0400
-Message-ID: <20140603184708.GK26210@htj.dyndns.org>
-References: <20140530021833.746efa6b@Vantage.cJ>
- <20140603180236.GI26210@htj.dyndns.org>
- <20140603184140.GJ26210@htj.dyndns.org>
- <20140603144758.73a3acd7@Vantage>
+From: =?UTF-8?B?SsOpcsO0bWU=?= Carretero <cJ-ko@zougloub.eu>
+Subject: [PATCH] ahci: Add Device ID for HighPoint RocketRaid 642L
+Date: Tue, 3 Jun 2014 14:56:25 -0400
+Message-ID: <20140603145625.036687b6@Vantage>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f50.google.com ([209.85.216.50]:56567 "EHLO
-	mail-qa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751362AbaFCSrM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jun 2014 14:47:12 -0400
-Content-Disposition: inline
-In-Reply-To: <20140603144758.73a3acd7@Vantage>
+Received: from zougloub.eu ([198.27.83.45]:34633 "EHLO zougloub.eu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752885AbaFCSyl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jun 2014 14:54:41 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?iso-8859-1?B?Suly9G1l?= Carretero <cJ-ko@zougloub.eu>
+To: Tejun Heo <tj@kernel.org>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Alex Williamson <alex.williamson@redhat.com>
 
-On Tue, Jun 03, 2014 at 02:47:58PM -0400, J=E9r=F4me Carretero wrote:
-> Argh. Sorry, I hadn't used git send-mail and missed the copy/paste...
-> Shall I send a corrected version or you fixed it?
+This device normally comes with a proprietary driver, using a web GUI
+to configure RAID:
+ http://www.highpoint-tech.com/USA_new/series_rr600-download.htm
+But thankfully it also works out of the box with the AHCI driver,
+being just a Marvell 88SE9235.
 
-Yes, please.
+Devices 640L, 644L, 644LS should also be supported but not tested here.
 
-Thanks.
+Signed-off-by: J=C3=A9r=C3=B4me Carretero <cJ-ko@zougloub.eu>
+---
+ drivers/ata/ahci.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 6070781..ff5543f 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -449,6 +449,8 @@ static const struct pci_device_id ahci_pci_tbl[] =3D=
+ {
+ 	  .driver_data =3D board_ahci_yes_fbs },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9230),
+ 	  .driver_data =3D board_ahci_yes_fbs },
++	{ PCI_DEVICE(PCI_VENDOR_ID_TTI, 0x0642),
++	  .driver_data =3D board_ahci_yes_fbs },
+=20
+ 	/* Promise */
+ 	{ PCI_VDEVICE(PROMISE, 0x3f20), board_ahci },	/* PDC42819 */
 --=20
-tejun
+1.9.3
+
