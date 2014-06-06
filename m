@@ -1,53 +1,61 @@
-From: Mikko Perttunen <mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+From: Thierry Reding <thierry.reding@gmail.com>
 Subject: Re: [PATCH 0/9] Serial ATA support for NVIDIA Tegra124
-Date: Fri, 6 Jun 2014 09:27:07 +0300
-Message-ID: <53915F3B.6050806@nvidia.com>
-References: <1401881559-18469-1-git-send-email-mperttunen@nvidia.com> <5390A8F9.2090408@wwwdotorg.org>
+Date: Fri, 6 Jun 2014 09:11:49 +0200
+Message-ID: <20140606071148.GC31915@ulmo>
+References: <1401881559-18469-1-git-send-email-mperttunen@nvidia.com>
+ <5390A8F9.2090408@wwwdotorg.org>
+ <53915F3B.6050806@nvidia.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <5390A8F9.2090408-3lzwWm7+Weoh9ZMKESR00Q@public.gmane.org>
-Sender: linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Stephen Warren <swarren-3lzwWm7+Weoh9ZMKESR00Q@public.gmane.org>, "thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter De Schrijver <pdeschrijver-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Cc: "linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="JWEK1jqKZ6MHAcjA"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <53915F3B.6050806@nvidia.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mikko Perttunen <mperttunen@nvidia.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>, "tj@kernel.org" <tj@kernel.org>, Peter De Schrijver <pdeschrijver@nvidia.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-The only compile-time dependencies here should be that:
-- patch 8 of 9 which contains the actual driver depends on patch 6 of 9 
-(though only when building as a module) and the efuse series
-- patch 2 of 9 refers to the DT node called "padctl", so it requires the 
-xusb series. (in the submitted xusb series, the node isn't actually 
-named, though. I will fix this in v2)
 
-- Mikko
+--JWEK1jqKZ6MHAcjA
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-On 05/06/14 20:29, Stephen Warren wrote:
-> On 06/04/2014 05:32 AM, Mikko Perttunen wrote:
->> Hi,
->>
->> This series adds support for the onboard AHCI-compliant Serial ATA
->> controller found on Tegra124 systems-on-chip. The controller is
->> enabled on Jetson TK1. The series depends on Peter's efuse series
->> and Thierry's yet to be submitted XUSB pinctrl driver.
->
-> This series includes patches to a lot of different subsystems. That will
-> complicate applying it.
->
-> Can you write a summary of the *compile time* dependencies, since that
-> will influence how the patches get merged.
->
-> You mentioned that this series depends on efuse and XUSB padctl. Can you
-> point out which specific parts of this series depend on which of those
-> two other series, and whether this is a compile-time or run-time dependency.
->
-> I hope that the drivers/ata patches, drivers/clk patches, DT, and
-> defconfig patches can each be applied to their normal tree and don't
-> depend on each-other at compile-time at all.
->
-> At run-time, obviously all the patches are needed to make the code work,
-> but since this is a new feature, it's fine if this all only works once
-> everything is merged together in linux-next or Linus's tree.
->
-> Thanks.
->
+On Fri, Jun 06, 2014 at 09:27:07AM +0300, Mikko Perttunen wrote:
+> The only compile-time dependencies here should be that:
+> - patch 8 of 9 which contains the actual driver depends on patch 6 of 9
+> (though only when building as a module) and the efuse series
+> - patch 2 of 9 refers to the DT node called "padctl", so it requires the
+> xusb series. (in the submitted xusb series, the node isn't actually named,
+> though. I will fix this in v2)
+
+My intention was to add the label in the patch which first adds a
+reference to the device. In my tree that was the PCIe driver. Given that
+it's not clear yet in what order these will be merged, I'm thinking I
+should simply add that fragment in the patch that adds the node since we
+know that it will eventually be used.
+
+Thierry
+
+--JWEK1jqKZ6MHAcjA
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
+
+iQIcBAEBAgAGBQJTkWm0AAoJEN0jrNd/PrOhEq4QAKIkKsgZ33DM0zh4OOKmZee0
+KJtAmvoZTXIsGUVjHY6aG3yREEr5kqYEtoAOpTA86hkIo9BBQLSoKvm4ODTyC72Y
+gSc3X9GJZwBpKn3qq3a2xkLiR0e3+IrACYuYzH+4byFN+3NEQKgIbRLGNGsZ728E
+D9CXjr/502W/AhNHqm72NtBpLUPalhA+zjBxDV6zktn9S1Tf3lj8aq279SasosWU
+qZ443D6m+qhvwEDLuo9mmtegafkWZOpJFG7HBRUMW1/CJK4NmtJj9dnLCyzc+ETv
+xhBQy2HZpXGqI4ALzpGRZUi+L3z9FbmEny4YTOCruhr/d3lk2q59esgy8B83n90B
+DwqHXdJrWM3R8wXJKbasVfBjNoEVJnzj32Upwtv8n0qvssKO8wtq+9l9VQG5stlB
+A4L/kJYpcXqBeGDINGRFOTFs+06QdsLcBSEeRikR3YFSSStUjRJtvVypypoIxECE
+TbSI8QW6bbUPYeNtriQaQI8HqbsgqTYkCRSufyMzTJEUGsqrI0hd249lYbNj+3+E
++N4EclCiNlmnOdg/vhXCg1QGoxAek5vacOH6mw82gX1Mujux9/xwvLpmZs4+t0Qu
+B8yJnfG4H2/YK6Fi/sAFflvnuj9WyIXkLtBKcXVJ+XGE2cFWqKfifFGqtuZkY+4a
+tLQIFgbV1HuTmnHjn8Db
+=DhbR
+-----END PGP SIGNATURE-----
+
+--JWEK1jqKZ6MHAcjA--
