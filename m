@@ -1,77 +1,62 @@
-From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
-Subject: Re: [PATCH 1/1] ata: Check and set 64-bit DMA mask for platform AHCI
- driver
-Date: Fri, 6 Jun 2014 11:10:58 -0500
-Message-ID: <5391E812.1060009@amd.com>
-References: <1400866510-3130-1-git-send-email-suravee.suthikulpanit@amd.com>
- <20140603175827.GH26210@htj.dyndns.org>
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH RFC 5/5] ahci_imx: add disable for spread-spectrum
+Date: Fri, 6 Jun 2014 17:40:27 +0100
+Message-ID: <20140606164027.GA22986@n2100.arm.linux.org.uk>
+References: <20140416084227.GD24070@n2100.arm.linux.org.uk> <E1WaLRa-0002yX-7L@rmk-PC.arm.linux.org.uk> <CAL_JsqK_BbhXs0gcn=w=1KPKOD0HZzmYx5zAaS5_z=UvQDPNjw@mail.gmail.com> <20140416225721.GP24070@n2100.arm.linux.org.uk> <20140416230226.GQ24070@n2100.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bl2lp0212.outbound.protection.outlook.com ([207.46.163.212]:44308
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751693AbaFFQLc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 6 Jun 2014 12:11:32 -0400
-In-Reply-To: <20140603175827.GH26210@htj.dyndns.org>
+Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:49120 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751624AbaFFQmV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 6 Jun 2014 12:42:21 -0400
+Content-Disposition: inline
+In-Reply-To: <20140416230226.GQ24070@n2100.arm.linux.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Rob Herring <robherring2@gmail.com>
+Cc: Mark Rutland <mark.rutland@arm.com>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Pawel Moll <pawel.moll@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, linux-ide@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, Shawn Guo <shawn.guo@freescale.com>, Sascha Hauer <kernel@pengutronix.de>, Kumar Gala <galak@codeaurora.org>, Tejun Heo <tj@kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
 
-Hans/Bartlomiej,
+On Thu, Apr 17, 2014 at 12:02:26AM +0100, Russell King - ARM Linux wrote:
+> On Wed, Apr 16, 2014 at 11:57:21PM +0100, Russell King - ARM Linux wrote:
+> > On Wed, Apr 16, 2014 at 05:46:47PM -0500, Rob Herring wrote:
+> > > On Wed, Apr 16, 2014 at 3:43 AM, Russell King
+> > > <rmk+kernel@arm.linux.org.uk> wrote:
+> > > > Spread-spectrum doesn't work with Cubox-i hardware, so we have to
+> > > > disable this feature.  Add a DT property so that platforms can
+> > > > indicate that this feature should not be enabled.
+> > > 
+> > > This is for spread-spectrum tx or rx? Transmit SS is optional to
+> > > support, but the receiver must support SS. Otherwise random drives
+> > > won't work which makes for a good user experience. Is this really a
+> > > board quirk rather than a Si issue?
+> > 
+> > No idea.  This bit controls clock generation, and one reason given to
+> > disable it is if the reference clock being supplied is already spread
+> > spectrum.  I don't think that applies here.  It doesn't say which
+> > clock(s) this is applied to - I would guess it's the transmit clock.
+> > 
+> > All I know is that with SS enabled, the drive is not detected, and
+> > SolidRun's original port disables SS.  Disabling SS allows the external
+> > drive to be detected.
+> > 
+> > I have no capability to check the eye pattern, so I've no idea if
+> > there's a problem with the electrical setup which stops SS from
+> > working.  All I know is with the parameters I give here (which are
+> > those which SolidRun's original port uses) and with SS disabled,
+> > it works.
+> 
+> I'll correct that - it _is_ detected with SS enabled, but things go
+> awry very quickly with errors, which then result in corrupted IDENTIFY
+> responses, the link dropping back to 1.5Gbps, more errors and corruption
+> and eventually the SATA layer gives up and declares the port dead.
 
-Do you guys have any questions about this patch?
+Rob,
 
-Thank you,
+Can I take your lack of reply on this as meaning that you don't have
+any objections against these new DT properties for this driver - if
+so, can I have your ack for these properties please?
 
-Suravee
-
-On 6/3/2014 12:58 PM, Tejun Heo wrote:
-> Hans, Bartlomiej, can you guys please review this patch?
->
-> Thanks.
->
-> On Fri, May 23, 2014 at 12:35:10PM -0500, suravee.suthikulpanit@amd.com wrote:
->> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->>
->> The current platform AHCI drier does not set the dma_mask correctly
->> for 64-bit DMA capable AHCI controller.  This patch checks the AHCI
->> capability bit and set the dma_mask and coherent_dma_mask accordingly.
->>
->> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->> ---
->>   drivers/ata/libahci_platform.c | 9 +++++++++
->>   1 file changed, 9 insertions(+)
->>
->> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
->> index 7cb3a85..85049ef 100644
->> --- a/drivers/ata/libahci_platform.c
->> +++ b/drivers/ata/libahci_platform.c
->> @@ -368,6 +368,15 @@ int ahci_platform_init_host(struct platform_device *pdev,
->>   	ahci_init_controller(host);
->>   	ahci_print_info(host, "platform");
->>
->> +	if (hpriv->cap & HOST_CAP_64) {
->> +		if (!dev->dma_mask)
->> +			dev->dma_mask = &dev->coherent_dma_mask;
->> +
->> +		rc = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(64));
->> +		if (rc)
->> +			return rc;
->> +	}
->> +
->>   	return ata_host_activate(host, irq, ahci_interrupt, IRQF_SHARED,
->>   				 &ahci_platform_sht);
->>   }
->> --
->> 1.9.0
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
-
+-- 
+FTTC broadband for 0.8mile line: now at 9.7Mbps down 460kbps up... slowly
+improving, and getting towards what was expected from it.
