@@ -1,46 +1,23 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [boot regression PATCH] libata: allow xgene-ahci to opt-out of
- tag ordered submission
-Date: Fri, 6 Jun 2014 14:35:26 -0700
-Message-ID: <CAA9_cmc4oi6S2dzngiMy0TnX1QW_Xcf6nwU6AS_XH=8iaMtmBg@mail.gmail.com>
-References: <20140606155126.27059.76543.stgit@viggo.jf.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20140606155126.27059.76543.stgit@viggo.jf.intel.com>
-Sender: stable-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Dave Jiang <dave.jiang@intel.com>, Ming Lei <ming.lei@canonical.com>, Ed Ciechanowski <ed.ciechanowski@intel.com>, stable@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Loc Ho <lho@apm.com>, Suman Tripathi <stripathi@apm.com>, Tuan Phan <tphan@apm.com>, Matthew Wilcox <matthew.r.wilcox@intel.com>
+From: Suman Tripathi <stripathi@apm.com>
+Subject: [PATCH v0 0/2]ata: Fix the dma state machine lockup for APM X-Gene SoC
+Date: Sat,  7 Jun 2014 02:58:52 +0530
+Message-ID: <1402090134-23164-1-git-send-email-stripathi@apm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: tj@kernel.org, olof@lixom.net, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Fri, Jun 6, 2014 at 8:52 AM, Dan Williams <dan.j.williams@intel.com> wrote:
-> Ming Lei reports:
->   "Looks the commit 8a4aeec8d(libata/ahci: accommodate tag ordered
->    controllers) causes below sata failure on APM AHCI controller.
->
->    And the error does disappear after reverting the commit.
->
->      ata4.00: exception Emask 0x40 SAct 0xff00 SErr 0x800 action 0x6 frozen
->      ata4: SError: { HostInt }
->      ata4.00: failed command: READ FPDMA QUEUED
->      ata4.00: cmd 60/08:40:e0:a4:88/00:00:04:00:00/40 tag 8 ncq 4096 in
->               res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x44 (timeout)"
->
-> http://marc.info/?l=linux-kernel&m=140195842716315&w=2
->
-> Maintain tag ordered submission as the default, but allow xgene-ahci to
-> continue with the old behavior.
->
-> Cc: Loc Ho <lho@apm.com>
-> Cc: <stable@vger.kernel.org>
-> Cc: Tuan Phan <tphan@apm.com>
-> Cc: Dave Jiang <dave.jiang@intel.com>
-> Cc: Suman Tripathi <stripathi@apm.com>
-> Cc: Ed Ciechanowski <ed.ciechanowski@intel.com>
-> Cc: Matthew Wilcox <matthew.r.wilcox@intel.com>
-> Tested-by: Ming Lei <ming.lei@canonical.com>
-> Reported-by: Ming Lei <ming.lei@canonical.com>
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
+Suman Tripathi (2):
+  libahci: Implement the restart_engine to restart the port dma engine.
+  ata: Fix the dma state machine lockup for the PIO mode commands.
 
-Hold off on this as it appears an ahci_xgene fix is on its way.
+ drivers/ata/ahci_xgene.c  | 17 +++--------------
+ drivers/ata/libahci.c     | 13 +++++++++++++
+ drivers/ata/libata-core.c | 10 ++++++++++
+ include/linux/libata.h    |  3 +++
+ 4 files changed, 29 insertions(+), 14 deletions(-)
+
+--
+1.8.2.1
+
