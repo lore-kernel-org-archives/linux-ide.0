@@ -1,42 +1,55 @@
-From: Mikko Perttunen <mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 0/9] Serial ATA support for NVIDIA Tegra124
-Date: Fri, 6 Jun 2014 10:18:19 +0300
-Message-ID: <53916B3B.5030400@nvidia.com>
-References: <1401881559-18469-1-git-send-email-mperttunen@nvidia.com> <5390A8F9.2090408@wwwdotorg.org> <53915F3B.6050806@nvidia.com> <20140606071148.GC31915@ulmo>
+From: Mikko Perttunen <mperttunen@nvidia.com>
+Subject: [PATCH] libahci_platform: Fail when PHY required but PHY support disabled
+Date: Fri, 6 Jun 2014 10:45:49 +0300
+Message-ID: <1402040749-14464-1-git-send-email-mperttunen@nvidia.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20140606071148.GC31915@ulmo>
-Sender: linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Thierry Reding <thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Stephen Warren <swarren-3lzwWm7+Weoh9ZMKESR00Q@public.gmane.org>, "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter De Schrijver <pdeschrijver-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:16242 "EHLO
+	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751204AbaFFHqR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 6 Jun 2014 03:46:17 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, thierry.reding@gmail.com, swarren@wwwdotorg.org, Mikko Perttunen <mperttunen@nvidia.com>
 
-Yes, that might be the easiest. If you go that way, you should probably 
-also add an #include for the XUSB binding include file.
+ahci_platform_get_resources handles resource management for
+platform AHCI drivers, including getting a possible PHY
+from the device tree. Since not all drivers need a PHY, it
+ignores -ENODEV and -ENOSYS from devm_get_phy. However, when
+the PHY subsystem is mistakenly disabled, -ENOSYS can be
+returned even when a PHY is needed.
 
-- Mikko
+This patch modifies the -ENOSYS case to check if a "phys"
+device tree node exists. If it exists, then clearly the PHY
+subsystem is mistakenly disabled and the driver cannot work,
+ahci_platform_get_resources will fail and propagate the error.
 
-On 06/06/14 10:11, Thierry Reding wrote:
-> * PGP Signed by an unknown key
->
-> On Fri, Jun 06, 2014 at 09:27:07AM +0300, Mikko Perttunen wrote:
->> The only compile-time dependencies here should be that:
->> - patch 8 of 9 which contains the actual driver depends on patch 6 of 9
->> (though only when building as a module) and the efuse series
->> - patch 2 of 9 refers to the DT node called "padctl", so it requires the
->> xusb series. (in the submitted xusb series, the node isn't actually named,
->> though. I will fix this in v2)
->
-> My intention was to add the label in the patch which first adds a
-> reference to the device. In my tree that was the PCIe driver. Given that
-> it's not clear yet in what order these will be merged, I'm thinking I
-> should simply add that fragment in the patch that adds the node since we
-> know that it will eventually be used.
->
-> Thierry
->
-> * Unknown Key
-> * 0x7F3EB3A1
->
+Signed-off-by: Mikko Perttunen <mperttunen@nvidia.com>
+---
+ drivers/ata/libahci_platform.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+index 3a5b4ed..b007758 100644
+--- a/drivers/ata/libahci_platform.c
++++ b/drivers/ata/libahci_platform.c
+@@ -250,8 +250,13 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev)
+ 	if (IS_ERR(hpriv->phy)) {
+ 		rc = PTR_ERR(hpriv->phy);
+ 		switch (rc) {
+-		case -ENODEV:
+ 		case -ENOSYS:
++			/* No PHY support. Check if PHY is required. */
++			if (of_find_property(dev->of_node, "phys", NULL)) {
++				dev_err(dev, "couldn't get sata-phy: ENOSYS\n");
++				goto err_out;
++			}
++		case -ENODEV:
+ 			/* continue normally */
+ 			hpriv->phy = NULL;
+ 			break;
+-- 
+1.8.1.5
+
