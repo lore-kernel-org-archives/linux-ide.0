@@ -1,144 +1,187 @@
-From: "George Spelvin" <linux@horizon.com>
-Subject: [PATCH v2 3/3] libata: Use glob_match from lib/glob.c
-Date: 6 Jun 2014 22:50:36 -0400
-Message-ID: <20140607025036.14266.qmail@ns.horizon.com>
-References: <20140607024404.13786.qmail@ns.horizon.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [GIT PULL] libata changes for v3.16-rc1
+Date: Mon, 9 Jun 2014 12:14:41 -0400
+Message-ID: <20140609161441.GD22540@htj.dyndns.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.horizon.com ([71.41.210.147]:52492 "HELO ns.horizon.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752490AbaFGCug (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 6 Jun 2014 22:50:36 -0400
-In-Reply-To: <20140607024404.13786.qmail@ns.horizon.com>
+Received: from mail-qc0-f182.google.com ([209.85.216.182]:46749 "EHLO
+	mail-qc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932675AbaFIQOp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Jun 2014 12:14:45 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux@horizon.com, rdunlap@infradead.org, tj@kernel.org
-Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, mingo@redhat.com
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-The function may be useful for other drivers, so export it.
-(Suggested by Tejun Heo.)
+Hello, Linus.
 
-Note that I inverted the return value of glob_match; returning
-true on match seemed to make more sense.
+Nothing too interesting - another ahci platform driver variant,
+additional controller support, minor fixes and cleanups; however,
+pulling will generate the following conflict in drivers/ata/ahci.h.
 
-Signed-off-by: George Spelvin <linux@horizon.com>
----
-This is unchanged vrom v1.
+	AHCI_HFLAG_MULTI_MSI		=3D (1 << 16), /* multiple PCI MSIs */
+<<<<<<< HEAD
+	AHCI_HFLAG_NO_DEVSLP		=3D (1 << 17), /* no device sleep */
+=3D=3D=3D=3D=3D=3D=3D
+	AHCI_HFLAG_NO_FBS		=3D (1 << 17), /* no FBS */
+>>>>>>> d251836508fb26cd1a22b41381739835ee23728d
 
- drivers/ata/Kconfig       |  1 +
- drivers/ata/libata-core.c | 72 ++---------------------------------------------
- 2 files changed, 4 insertions(+), 69 deletions(-)
+The conflict is from the following two commits, the former in
+libata/for-3.15-fixes and the latter in libata/for-3.16.
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 0033fafc..0a5e4556 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -16,6 +16,7 @@ menuconfig ATA
- 	depends on BLOCK
- 	depends on !(M32R || M68K || S390) || BROKEN
- 	select SCSI
-+	select GLOB
- 	---help---
- 	  If you want to use an ATA hard disk, ATA tape drive, ATA CD-ROM or
- 	  any other ATA device under Linux, say Y and make sure that you know
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index ea83828b..b75695ff 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -59,6 +59,7 @@
- #include <linux/async.h>
- #include <linux/log2.h>
- #include <linux/slab.h>
-+#include <linux/glob.h>
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_host.h>
-@@ -4250,73 +4251,6 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	{ }
- };
- 
--/**
-- *	glob_match - match a text string against a glob-style pattern
-- *	@text: the string to be examined
-- *	@pattern: the glob-style pattern to be matched against
-- *
-- *	Either/both of text and pattern can be empty strings.
-- *
-- *	Match text against a glob-style pattern, with wildcards and simple sets:
-- *
-- *		?	matches any single character.
-- *		*	matches any run of characters.
-- *		[xyz]	matches a single character from the set: x, y, or z.
-- *		[a-d]	matches a single character from the range: a, b, c, or d.
-- *		[a-d0-9] matches a single character from either range.
-- *
-- *	The special characters ?, [, -, or *, can be matched using a set, eg. [*]
-- *	Behaviour with malformed patterns is undefined, though generally reasonable.
-- *
-- *	Sample patterns:  "SD1?",  "SD1[0-5]",  "*R0",  "SD*1?[012]*xx"
-- *
-- *	This function uses one level of recursion per '*' in pattern.
-- *	Since it calls _nothing_ else, and has _no_ explicit local variables,
-- *	this will not cause stack problems for any reasonable use here.
-- *
-- *	RETURNS:
-- *	0 on match, 1 otherwise.
-- */
--static int glob_match (const char *text, const char *pattern)
--{
--	do {
--		/* Match single character or a '?' wildcard */
--		if (*text == *pattern || *pattern == '?') {
--			if (!*pattern++)
--				return 0;  /* End of both strings: match */
--		} else {
--			/* Match single char against a '[' bracketed ']' pattern set */
--			if (!*text || *pattern != '[')
--				break;  /* Not a pattern set */
--			while (*++pattern && *pattern != ']' && *text != *pattern) {
--				if (*pattern == '-' && *(pattern - 1) != '[')
--					if (*text > *(pattern - 1) && *text < *(pattern + 1)) {
--						++pattern;
--						break;
--					}
--			}
--			if (!*pattern || *pattern == ']')
--				return 1;  /* No match */
--			while (*pattern && *pattern++ != ']');
--		}
--	} while (*++text && *pattern);
--
--	/* Match any run of chars against a '*' wildcard */
--	if (*pattern == '*') {
--		if (!*++pattern)
--			return 0;  /* Match: avoid recursion at end of pattern */
--		/* Loop to handle additional pattern chars after the wildcard */
--		while (*text) {
--			if (glob_match(text, pattern) == 0)
--				return 0;  /* Remainder matched */
--			++text;  /* Absorb (match) this char and try again */
--		}
--	}
--	if (!*text && !*pattern)
--		return 0;  /* End of both strings: match */
--	return 1;  /* No match */
--}
--
- static unsigned long ata_dev_blacklisted(const struct ata_device *dev)
- {
- 	unsigned char model_num[ATA_ID_PROD_LEN + 1];
-@@ -4327,10 +4261,10 @@ static unsigned long ata_dev_blacklisted(const struct ata_device *dev)
- 	ata_id_c_string(dev->id, model_rev, ATA_ID_FW_REV, sizeof(model_rev));
- 
- 	while (ad->model_num) {
--		if (!glob_match(model_num, ad->model_num)) {
-+		if (glob_match(model_num, ad->model_num)) {
- 			if (ad->model_rev == NULL)
- 				return ad->horkage;
--			if (!glob_match(model_rev, ad->model_rev))
-+			if (glob_match(model_rev, ad->model_rev))
- 				return ad->horkage;
- 		}
- 		ad++;
--- 
-2.0.0
+  0cf4a7d6cf237152 ("ahci: disable DEVSLP for Intel Valleyview")
+  888d91a08fa8e2be ("ata: ahci: append new hflag AHCI_HFLAG_NO_FBS")
 
+Both add new AHCI_HFLAG_* flags causing the trivial conflict.  It can
+be resolved by assigning consecutive flag bits to them like the
+following.
+
+	AHCI_HFLAG_MULTI_MSI		=3D (1 << 16), /* multiple PCI MSIs */
+	AHCI_HFLAG_NO_DEVSLP		=3D (1 << 17), /* no device sleep */
+	AHCI_HFLAG_NO_FBS		=3D (1 << 18), /* no FBS */
+
+Just in case, the merged result is available in the following branch.
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git test-merg=
+e-for-3.16
+
+Thanks.
+
+The following changes since commit c9eaa447e77efe77b7fa4c953bd62de8297f=
+d6c5:
+
+  Linux 3.15-rc1 (2014-04-13 14:18:35 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-3.16
+
+for you to fetch changes up to d251836508fb26cd1a22b41381739835ee23728d=
+:
+
+  ahci: Add Device ID for HighPoint RocketRaid 642L (2014-06-03 14:55:1=
+8 -0400)
+
+----------------------------------------------------------------
+Andreas Schr=E4gle (1):
+      ahci: add PCI ID for Marvell 88SE91A0 SATA Controller
+
+Barry Song (1):
+      ata: ep93xx: use dmaengine_prep_slave_sg api instead of internal =
+callback
+
+Bartlomiej Zolnierkiewicz (2):
+      pata_octeon_cf: use devm_kzalloc() to allocate cf_port
+      ata: use CONFIG_PM_SLEEP instead of CONFIG_PM where applicable in=
+ host drivers
+
+J=E9r=F4me Carretero (1):
+      ahci: Add Device ID for HighPoint RocketRaid 642L
+
+Kefeng Wang (3):
+      ata: ahci: append new hflag AHCI_HFLAG_NO_FBS
+      libahci_platform: add host_flags parameter in ahci_platform_init_=
+host()
+      ahci: add support for Hisilicon sata
+
+Keith Busch (1):
+      ata: SATL compliance for Inquiry Product Revision
+
+Paul Bolle (2):
+      libata-sff: remove dead code
+      sata_fsl: remove check for CONFIG_MPC8315_DS
+
+Thomas Petazzoni (2):
+      Documentation: dt-bindings: reformat and order list of ahci-platf=
+orm compatibles
+      ata: ahci_mvebu: new driver for Marvell Armada 380 AHCI interface=
+s
+
+ .../devicetree/bindings/ata/ahci-platform.txt      |  14 ++-
+ drivers/ata/Kconfig                                |   9 ++
+ drivers/ata/Makefile                               |   1 +
+ drivers/ata/acard-ahci.c                           |   6 +-
+ drivers/ata/ahci.c                                 |   4 +
+ drivers/ata/ahci.h                                 |   1 +
+ drivers/ata/ahci_da850.c                           |   3 +-
+ drivers/ata/ahci_imx.c                             |   3 +-
+ drivers/ata/ahci_mvebu.c                           | 128 +++++++++++++=
+++++++++
+ drivers/ata/ahci_platform.c                        |   9 +-
+ drivers/ata/ahci_st.c                              |   2 +-
+ drivers/ata/ahci_sunxi.c                           |   9 +-
+ drivers/ata/ahci_xgene.c                           |   7 +-
+ drivers/ata/ata_generic.c                          |   2 +-
+ drivers/ata/ata_piix.c                             |   4 +-
+ drivers/ata/libahci.c                              |   5 +
+ drivers/ata/libahci_platform.c                     |   5 +-
+ drivers/ata/libata-scsi.c                          |   6 +-
+ drivers/ata/libata-sff.c                           |   9 --
+ drivers/ata/pata_acpi.c                            |   2 +-
+ drivers/ata/pata_ali.c                             |   4 +-
+ drivers/ata/pata_amd.c                             |   4 +-
+ drivers/ata/pata_artop.c                           |   4 +-
+ drivers/ata/pata_atiixp.c                          |   2 +-
+ drivers/ata/pata_atp867x.c                         |   4 +-
+ drivers/ata/pata_bf54x.c                           |   2 +-
+ drivers/ata/pata_cmd640.c                          |   4 +-
+ drivers/ata/pata_cmd64x.c                          |   4 +-
+ drivers/ata/pata_cs5520.c                          |   6 +-
+ drivers/ata/pata_cs5530.c                          |   6 +-
+ drivers/ata/pata_cs5535.c                          |   2 +-
+ drivers/ata/pata_cs5536.c                          |   2 +-
+ drivers/ata/pata_cypress.c                         |   2 +-
+ drivers/ata/pata_efar.c                            |   2 +-
+ drivers/ata/pata_ep93xx.c                          |   4 +-
+ drivers/ata/pata_hpt366.c                          |   4 +-
+ drivers/ata/pata_hpt3x3.c                          |   4 +-
+ drivers/ata/pata_imx.c                             |   4 +-
+ drivers/ata/pata_it8213.c                          |   2 +-
+ drivers/ata/pata_it821x.c                          |   4 +-
+ drivers/ata/pata_jmicron.c                         |   2 +-
+ drivers/ata/pata_macio.c                           |  22 ++--
+ drivers/ata/pata_marvell.c                         |   2 +-
+ drivers/ata/pata_mpc52xx.c                         |   8 +-
+ drivers/ata/pata_mpiix.c                           |   2 +-
+ drivers/ata/pata_netcell.c                         |   2 +-
+ drivers/ata/pata_ninja32.c                         |   5 +-
+ drivers/ata/pata_ns87410.c                         |   2 +-
+ drivers/ata/pata_ns87415.c                         |   4 +-
+ drivers/ata/pata_octeon_cf.c                       |  50 +++-----
+ drivers/ata/pata_oldpiix.c                         |   2 +-
+ drivers/ata/pata_opti.c                            |   2 +-
+ drivers/ata/pata_optidma.c                         |   2 +-
+ drivers/ata/pata_pdc2027x.c                        |   6 +-
+ drivers/ata/pata_pdc202xx_old.c                    |   2 +-
+ drivers/ata/pata_piccolo.c                         |   2 +-
+ drivers/ata/pata_radisys.c                         |   2 +-
+ drivers/ata/pata_rdc.c                             |   2 +-
+ drivers/ata/pata_rz1000.c                          |   4 +-
+ drivers/ata/pata_samsung_cf.c                      |   4 +-
+ drivers/ata/pata_sc1200.c                          |   2 +-
+ drivers/ata/pata_scc.c                             |   2 +-
+ drivers/ata/pata_sch.c                             |   2 +-
+ drivers/ata/pata_serverworks.c                     |   4 +-
+ drivers/ata/pata_sil680.c                          |   4 +-
+ drivers/ata/pata_sis.c                             |   4 +-
+ drivers/ata/pata_sl82c105.c                        |   4 +-
+ drivers/ata/pata_triflex.c                         |   4 +-
+ drivers/ata/pata_via.c                             |   4 +-
+ drivers/ata/sata_fsl.c                             |  18 +--
+ drivers/ata/sata_inic162x.c                        |   4 +-
+ drivers/ata/sata_mv.c                              |   8 +-
+ drivers/ata/sata_nv.c                              |   6 +-
+ drivers/ata/sata_rcar.c                            |   4 +-
+ drivers/ata/sata_sil.c                             |   6 +-
+ drivers/ata/sata_sil24.c                           |  10 +-
+ drivers/ata/sata_sis.c                             |   2 +-
+ drivers/ata/sata_via.c                             |   2 +-
+ include/linux/ahci_platform.h                      |   1 +
+ 79 files changed, 324 insertions(+), 193 deletions(-)
+ create mode 100644 drivers/ata/ahci_mvebu.c
+
+--=20
+tejun
