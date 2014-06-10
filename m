@@ -1,87 +1,70 @@
-From: Kamal Mostafa <kamal@canonical.com>
-Subject: [PATCH 3.13 071/160] ahci: Do not receive interrupts sent by dummy
- ports
-Date: Tue, 10 Jun 2014 12:45:11 -0700
-Message-ID: <1402429600-20477-72-git-send-email-kamal@canonical.com>
-References: <1402429600-20477-1-git-send-email-kamal@canonical.com>
+From: David Milburn <dmilburn@redhat.com>
+Subject: Re: [PATCH 1/1] ata: Check and set 64-bit DMA mask for platform AHCI
+ driver
+Date: Tue, 10 Jun 2014 16:54:01 -0500
+Message-ID: <53977E79.2090000@redhat.com>
+References: <1400866510-3130-1-git-send-email-suravee.suthikulpanit@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <kernel-team-bounces@lists.ubuntu.com>
-In-Reply-To: <1402429600-20477-1-git-send-email-kamal@canonical.com>
-List-Unsubscribe: <https://lists.ubuntu.com/mailman/options/kernel-team>,
- <mailto:kernel-team-request@lists.ubuntu.com?subject=unsubscribe>
-List-Archive: <https://lists.ubuntu.com/archives/kernel-team>
-List-Post: <mailto:kernel-team@lists.ubuntu.com>
-List-Help: <mailto:kernel-team-request@lists.ubuntu.com?subject=help>
-List-Subscribe: <https://lists.ubuntu.com/mailman/listinfo/kernel-team>,
- <mailto:kernel-team-request@lists.ubuntu.com?subject=subscribe>
-Errors-To: kernel-team-bounces@lists.ubuntu.com
-Sender: kernel-team-bounces@lists.ubuntu.com
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org, kernel-team@lists.ubuntu.com
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Kamal Mostafa <kamal@canonical.com>, Alexander Gordeev <agordeev@redhat.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:50775 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753194AbaFJVxv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 10 Jun 2014 17:53:51 -0400
+In-Reply-To: <1400866510-3130-1-git-send-email-suravee.suthikulpanit@amd.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: suravee.suthikulpanit@amd.com
+Cc: tj@kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-3.13.11.3 -stable review patch.  If anyone has any objections, please let me know.
+On 05/23/2014 12:35 PM, suravee.suthikulpanit@amd.com wrote:
+> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+>
+> The current platform AHCI drier does not set the dma_mask correctly
+> for 64-bit DMA capable AHCI controller.  This patch checks the AHCI
+> capability bit and set the dma_mask and coherent_dma_mask accordingly.
+>
+> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> ---
+>   drivers/ata/libahci_platform.c | 9 +++++++++
+>   1 file changed, 9 insertions(+)
+>
+> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+> index 7cb3a85..85049ef 100644
+> --- a/drivers/ata/libahci_platform.c
+> +++ b/drivers/ata/libahci_platform.c
+> @@ -368,6 +368,15 @@ int ahci_platform_init_host(struct platform_device *pdev,
 
-------------------
+Hi Suravee,
 
-From: Alexander Gordeev <agordeev@redhat.com>
+Would it be better to do the following before ahci_reset_controller()?
 
-commit 2cf532f5e67c0cfe38c8c100e49280cdadacd2be upstream.
+         /* initialize adapter */
+         rc = ahci_configure_dma_masks(pdev, hpriv->cap & HOST_CAP_64);
+         if (rc)
+                	return rc;
 
-In multiple MSI mode all AHCI ports (including dummy) get assigned
-separate MSI vectors and (as result of execution
-pci_enable_msi_exact() function) separate IRQ numbers, (mapped to the
-MSI vectors).
 
-Therefore, although interrupts from dummy ports are not desired they
-are still enabled. We do not request IRQs for dummy ports, but that
-only means we do not assign AHCI-specific ISRs to corresponding IRQ
-numbers.
+Thanks,
+David
 
-As result, dummy port interrupts still could come and traverse all the
-way from the PCI device to the kernel, causing unnecessary overhead.
 
-This update disables IRQs for dummy ports and prevents the described
-issue.
 
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Tested-by: David Milburn <dmilburn@redhat.com>
-Cc: linux-ide@vger.kernel.org
-Fixes: 5ca72c4f7c41 ("AHCI: Support multiple MSIs")
-Signed-off-by: Kamal Mostafa <kamal@canonical.com>
----
- drivers/ata/ahci.c | 16 ++++++++++------
- 1 file changed, 10 insertions(+), 6 deletions(-)
+>   	ahci_init_controller(host);
+>   	ahci_print_info(host, "platform");
+>
+> +	if (hpriv->cap & HOST_CAP_64) {
+> +		if (!dev->dma_mask)
+> +			dev->dma_mask = &dev->coherent_dma_mask;
+> +
+> +		rc = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(64));
+> +		if (rc)
+> +			return rc;
+> +	}
+> +
+>   	return ata_host_activate(host, irq, ahci_interrupt, IRQF_SHARED,
+>   				 &ahci_platform_sht);
+>   }
+>
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 337d126..bc5579e 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1171,12 +1171,16 @@ int ahci_host_activate(struct ata_host *host, int irq, unsigned int n_msis)
- 	for (i = 0; i < host->n_ports; i++) {
- 		struct ahci_port_priv *pp = host->ports[i]->private_data;
- 
--		/* pp is NULL for dummy ports */
--		if (pp)
--			rc = devm_request_threaded_irq(host->dev,
--						       irq + i, ahci_hw_interrupt,
--						       ahci_thread_fn, IRQF_SHARED,
--						       pp->irq_desc, host->ports[i]);
-+		/* Do not receive interrupts sent by dummy ports */
-+		if (!pp) {
-+			disable_irq(irq + i);
-+			continue;
-+		}
-+
-+		rc = devm_request_threaded_irq(host->dev, irq + i,
-+					       ahci_hw_interrupt,
-+					       ahci_thread_fn, IRQF_SHARED,
-+					       pp->irq_desc, host->ports[i]);
- 		if (rc)
- 			goto out_free_irqs;
- 	}
--- 
-1.9.1
