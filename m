@@ -1,24 +1,55 @@
-From: Birgit Kruse <bojono@arcor.de>
-Subject: P/s Get back to me on this email: mrs.florenceevans3@gmail.com
-Date: Tue, 10 Jun 2014 13:10:13 +0200 (CEST)
-Message-ID: <1634700411.132626.1402398613629.JavaMail.ngmail__38598.4608125456$1402398629$gmane$org@webmail20.arcor-online.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: [PATCH 3/3] AHCI: Use pci_enable_msi_partial() to conserve on 10/16 MSIs
+Date: Tue, 10 Jun 2014 15:10:32 +0200
+Message-ID: <dba9f0f8e9cccd7625d0f3fab94457482e1a2bd7.1402405331.git.agordeev@redhat.com>
+References: <cover.1402405331.git.agordeev@redhat.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-in-10.arcor-online.net ([151.189.21.50]:41725 "EHLO
-	mail-in-10.arcor-online.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750886AbaFJLKQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Jun 2014 07:10:16 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:49403 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750937AbaFJNJb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 10 Jun 2014 09:09:31 -0400
+In-Reply-To: <cover.1402405331.git.agordeev@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: florenceevans@safrica.com
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, x86@kernel.org, xen-devel@lists.xenproject.org, iommu@lists.linux-foundation.org, linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
 
-Hello my beloved in the Lord.
+Make use of the new pci_enable_msi_partial() interface and
+conserve on othewise wasted interrupt resources for 10 out
+of 16 unused MSI vectors on Intel chipsets.
 
-I am MRS. FLORENCE EVANS, from republic of Ireland, I am legally married to MR. JOHN EVANS, a South Africa citizen born brought up in Switzerland, I live in Switzerland with my husband for 32 years before we move down to south Africa in 1985 after my husband retirement in 1974, I am 71 years old by the grace of god, I am a new Christian convert, suffering from long time cancer of the breast. All indication from my doctor that my condition is really deteriorating and it is quite obvious that i wouldn't live more than two months. My dear husband was involved with the January 2000 Kenya airways plane crashed as you can see on the news line web site.
-http://news.bbc.co.uk/2/hi/africa/6627485.stm
-I have confident in you because i have prayed. I am willing to donate the sum of $20.5m U.S dollars, to the less privileged. May the grace of our lord be with you, P/s Get back to me on this email: mrs.florenceevans3@gmail.com
+Cc: x86@kernel.org
+Cc: xen-devel@lists.xenproject.org
+Cc: iommu@lists.linux-foundation.org
+Cc: linux-ide@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+---
+ drivers/ata/ahci.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Remain blessed,
-MRS. FLORENCE EVANS
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 6070781..0c7a0f3 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1194,7 +1194,7 @@ static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
+ 	if (nvec < n_ports)
+ 		goto single_msi;
+ 
+-	rc = pci_enable_msi_exact(pdev, nvec);
++	rc = pci_enable_msi_partial(pdev, n_ports, nvec);
+ 	if (rc == -ENOSPC)
+ 		goto single_msi;
+ 	else if (rc < 0)
+@@ -1207,7 +1207,7 @@ static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
+ 		goto single_msi;
+ 	}
+ 
+-	return nvec;
++	return n_ports;
+ 
+ single_msi:
+ 	if (pci_enable_msi(pdev))
+-- 
+1.7.7.6
+
