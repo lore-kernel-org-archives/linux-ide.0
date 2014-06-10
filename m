@@ -1,36 +1,44 @@
-From: Mikko Perttunen <mikko.perttunen-/1wQRMveznE@public.gmane.org>
-Subject: Re: [PATCH 0/9] Serial ATA support for NVIDIA Tegra124
-Date: Mon, 09 Jun 2014 21:49:24 +0300
-Message-ID: <539601B4.1010707@kapsi.fi>
-References: <1401881559-18469-1-git-send-email-mperttunen@nvidia.com> <5390A8F9.2090408@wwwdotorg.org> <53915F3B.6050806@nvidia.com> <5395FE0E.80105@wwwdotorg.org>
+From: "kefeng.wang" <kefeng.wang@linaro.org>
+Subject: [PATCH] ahci: disable ncq feature for hisilicon sata
+Date: Tue, 10 Jun 2014 17:51:37 +0800
+Message-ID: <5396D529.308@linaro.org>
+References: <1398416351-30567-1-git-send-email-kefeng.wang@linaro.org> <20140514170757.GD15690@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <5395FE0E.80105-3lzwWm7+Weoh9ZMKESR00Q@public.gmane.org>
-Sender: linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Stephen Warren <swarren-3lzwWm7+Weoh9ZMKESR00Q@public.gmane.org>, Mikko Perttunen <mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Peter De Schrijver <pdeschrijver-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Cc: "linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pd0-f169.google.com ([209.85.192.169]:50975 "EHLO
+	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751866AbaFJJwj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Jun 2014 05:52:39 -0400
+Received: by mail-pd0-f169.google.com with SMTP id w10so5956217pde.0
+        for <linux-ide@vger.kernel.org>; Tue, 10 Jun 2014 02:52:39 -0700 (PDT)
+In-Reply-To: <20140514170757.GD15690@htj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Hans de Goede <hdegoede@redhat.com>, Zhangfei Gao <zhangfei.gao@linaro.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, wangkefeng.wang@huawei.com, xuwei5@hisilicon.com
 
-On 06/09/2014 09:33 PM, Stephen Warren wrote:
-> On 06/06/2014 12:27 AM, Mikko Perttunen wrote:
->> The only compile-time dependencies here should be that:
->> - patch 8 of 9 which contains the actual driver depends on patch 6 of 9
->> (though only when building as a module) and the efuse series
->
->> - patch 2 of 9 refers to the DT node called "padctl", so it requires the
->> xusb series. (in the submitted xusb series, the node isn't actually
->> named, though. I will fix this in v2)
->
-> Isn't that dependency a run-time dependency?
+NCQ feature is unsupported on hisilicon sata controller, so disable it.
+This version of IP is used by hip04 and hix5hd2 soc.
 
-Well, the kernel will compile but the DTC step will fail if building for 
-Tegra.
+Signed-off-by: Kefeng Wang <kefeng.wang@linaro.org>
+---
+ drivers/ata/ahci_platform.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-tegra" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index ebe505c..0cfda8b 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -58,7 +58,7 @@ static int ahci_probe(struct platform_device *pdev)
+        }
+
+        if (of_device_is_compatible(dev->of_node, "hisilicon,hisi-ahci"))
+-               hflags |= AHCI_HFLAG_NO_FBS;
++               hflags = AHCI_HFLAG_NO_FBS | AHCI_HFLAG_NO_NCQ;
+
+        rc = ahci_platform_init_host(pdev, hpriv, &ahci_port_info,
+                                     hflags, 0, 0);
+-- 
+1.7.9.5
