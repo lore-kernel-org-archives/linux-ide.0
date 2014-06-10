@@ -1,56 +1,24 @@
-From: "kefeng.wang" <kefeng.wang@linaro.org>
-Subject: Re: [PATCH] ahci: disable ncq feature for hisilicon sata
-Date: Tue, 10 Jun 2014 18:07:05 +0800
-Message-ID: <5396D8C9.6020607@linaro.org>
-References: <1398416351-30567-1-git-send-email-kefeng.wang@linaro.org> <20140514170757.GD15690@htj.dyndns.org> <5396D529.308@linaro.org>
+From: Birgit Kruse <bojono@arcor.de>
+Subject: P/s Get back to me on this email: mrs.florenceevans3@gmail.com
+Date: Tue, 10 Jun 2014 13:10:13 +0200 (CEST)
+Message-ID: <1634700411.132626.1402398613629.JavaMail.ngmail__38598.4608125456$1402398629$gmane$org@webmail20.arcor-online.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:38771 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750836AbaFJKHr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Jun 2014 06:07:47 -0400
-Received: by mail-pa0-f45.google.com with SMTP id hz1so539173pad.18
-        for <linux-ide@vger.kernel.org>; Tue, 10 Jun 2014 03:07:47 -0700 (PDT)
-In-Reply-To: <5396D529.308@linaro.org>
+Received: from mail-in-10.arcor-online.net ([151.189.21.50]:41725 "EHLO
+	mail-in-10.arcor-online.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750886AbaFJLKQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Jun 2014 07:10:16 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Hans de Goede <hdegoede@redhat.com>, Zhangfei Gao <zhangfei.gao@linaro.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, wangkefeng.wang@huawei.com, xuwei5@hisilicon.com
+To: florenceevans@safrica.com
 
-Hi Tejun,
+Hello my beloved in the Lord.
 
-I have a question, the hip04 and hix5hd2 soc use the old version of IP, but they
-also have a new version of IP which support FBS and NCQ, and now the new one is
-used by a new soc. How can I distinguish them, use "hisilicon,hisi-ahci-vX" or just
-add "generic-ahci" string for the IP which is conformant with spec and has
-no special customization and issue? Any advices, thanks.
+I am MRS. FLORENCE EVANS, from republic of Ireland, I am legally married to MR. JOHN EVANS, a South Africa citizen born brought up in Switzerland, I live in Switzerland with my husband for 32 years before we move down to south Africa in 1985 after my husband retirement in 1974, I am 71 years old by the grace of god, I am a new Christian convert, suffering from long time cancer of the breast. All indication from my doctor that my condition is really deteriorating and it is quite obvious that i wouldn't live more than two months. My dear husband was involved with the January 2000 Kenya airways plane crashed as you can see on the news line web site.
+http://news.bbc.co.uk/2/hi/africa/6627485.stm
+I have confident in you because i have prayed. I am willing to donate the sum of $20.5m U.S dollars, to the less privileged. May the grace of our lord be with you, P/s Get back to me on this email: mrs.florenceevans3@gmail.com
 
-Regards,
-Kefeng
-
-On 2014-6-10 17:51, kefeng.wang wrote:
-> NCQ feature is unsupported on hisilicon sata controller, so disable it.
-> This version of IP is used by hip04 and hix5hd2 soc.
-> 
-> Signed-off-by: Kefeng Wang <kefeng.wang@linaro.org>
-> ---
->  drivers/ata/ahci_platform.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-> index ebe505c..0cfda8b 100644
-> --- a/drivers/ata/ahci_platform.c
-> +++ b/drivers/ata/ahci_platform.c
-> @@ -58,7 +58,7 @@ static int ahci_probe(struct platform_device *pdev)
->         }
-> 
->         if (of_device_is_compatible(dev->of_node, "hisilicon,hisi-ahci"))
-> -               hflags |= AHCI_HFLAG_NO_FBS;
-> +               hflags = AHCI_HFLAG_NO_FBS | AHCI_HFLAG_NO_NCQ;
-> 
->         rc = ahci_platform_init_host(pdev, hpriv, &ahci_port_info,
->                                      hflags, 0, 0);
-> 
-
+Remain blessed,
+MRS. FLORENCE EVANS
