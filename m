@@ -1,20 +1,56 @@
 From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH 2/3] PCI/MSI/x86: Support pci_enable_msi_partial()
-Date: Tue, 10 Jun 2014 15:10:31 +0200
-Message-ID: <1f052377ed5a93922fe84beacb02b913c63b8293.1402405331.git.agordeev@redhat.com>
+Subject: [PATCH 1/3] PCI/MSI: Add pci_enable_msi_partial()
+Date: Tue, 10 Jun 2014 15:10:30 +0200
+Message-ID: <4fef62a2e647a7c38e9f2a1ea4244b3506a85e2b.1402405331.git.agordeev@redhat.com>
 References: <cover.1402405331.git.agordeev@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-mips-bounce@linux-mips.org>
 In-Reply-To: <cover.1402405331.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+List-help: <mailto:ecartis@linux-mips.org?Subject=help>
+List-unsubscribe: <mailto:ecartis@linux-mips.org?subject=unsubscribe%20linux-mips>
+List-software: Ecartis version 1.0.0
+List-subscribe: <mailto:ecartis@linux-mips.org?subject=subscribe%20linux-mips>
+List-owner: <mailto:ralf@linux-mips.org>
+List-post: <mailto:linux-mips@linux-mips.org>
+List-archive: <http://www.linux-mips.org/archives/linux-mips/>
 To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, x86@kernel.org, xen-devel@lists.xenproject.org, iommu@lists.linux-foundation.org, linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, linux-doc@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org, iommu@lists.linux-foundation.org, linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-This change is a prerequisite for the forthcoming update
-of the AHCI device driver to conserve 10/16 MSIs on Intel
-chipsets. The update makes use of 'nvec_mme' parameter of
-pci_enable_msi_partial() function.
+There are PCI devices that require a particular value written
+to the Multiple Message Enable (MME) register while aligned on
+power of 2 boundary value of actually used MSI vectors 'nvec'
+is a lesser of that MME value:
 
+	roundup_pow_of_two(nvec) < 'Multiple Message Enable'
+
+However the existing pci_enable_msi_block() interface is not
+able to configure such devices, since the value written to the
+MME register is calculated from the number of requested MSIs
+'nvec':
+
+	'Multiple Message Enable' = roundup_pow_of_two(nvec)
+
+In this case the result written to the MME register may not
+satisfy the aforementioned PCI devices requirement and therefore
+the PCI functions will not operate in a desired mode.
+
+This update introduces pci_enable_msi_partial() extension to
+pci_enable_msi_block() interface that accepts extra 'nvec_mme'
+argument which is then written to MME register while the value
+of 'nvec' is still used to setup as many interrupts as requested.
+
+As result of this change, architecture-specific callbacks
+arch_msi_check_device() and arch_setup_msi_irqs() get an extra
+'nvec_mme' parameter as well, but it is ignored for now.
+Therefore, this update is a placeholder for architectures that
+wish to support pci_enable_msi_partial() function in the future.
+
+Cc: linux-doc@vger.kernel.org
+Cc: linux-mips@linux-mips.org
+Cc: linuxppc-dev@lists.ozlabs.org
+Cc: linux-s390@vger.kernel.org
 Cc: x86@kernel.org
 Cc: xen-devel@lists.xenproject.org
 Cc: iommu@lists.linux-foundation.org
@@ -22,144 +58,341 @@ Cc: linux-ide@vger.kernel.org
 Cc: linux-pci@vger.kernel.org
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 ---
- arch/x86/include/asm/pci.h      |    3 ++-
- arch/x86/include/asm/x86_init.h |    3 ++-
- arch/x86/kernel/apic/io_apic.c  |    2 +-
+ Documentation/PCI/MSI-HOWTO.txt |   36 ++++++++++++++--
+ arch/mips/pci/msi-octeon.c      |    2 +-
+ arch/powerpc/kernel/msi.c       |    4 +-
+ arch/s390/pci/pci.c             |    2 +-
  arch/x86/kernel/x86_init.c      |    2 +-
- arch/x86/pci/xen.c              |    9 ++++++---
- drivers/iommu/irq_remapping.c   |   10 +++++-----
- 6 files changed, 17 insertions(+), 12 deletions(-)
+ drivers/pci/msi.c               |   83 ++++++++++++++++++++++++++++++++++-----
+ include/linux/msi.h             |    5 +-
+ include/linux/pci.h             |    3 +
+ 8 files changed, 115 insertions(+), 22 deletions(-)
 
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index 0892ea0..24c9b92 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -96,7 +96,8 @@ extern void pci_iommu_alloc(void);
- #ifdef CONFIG_PCI_MSI
- /* implemented in arch/x86/kernel/apic/io_apic. */
- struct msi_desc;
--int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
-+int native_setup_msi_irqs(struct pci_dev *dev,
-+			  int nvec, int nvec_mme, int type);
- void native_teardown_msi_irq(unsigned int irq);
- void native_restore_msi_irqs(struct pci_dev *dev);
- int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
-diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
-index e45e4da..0c3ecb6 100644
---- a/arch/x86/include/asm/x86_init.h
-+++ b/arch/x86/include/asm/x86_init.h
-@@ -175,7 +175,8 @@ struct msi_msg;
- struct msi_desc;
+diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
+index 10a9369..c8a8503 100644
+--- a/Documentation/PCI/MSI-HOWTO.txt
++++ b/Documentation/PCI/MSI-HOWTO.txt
+@@ -195,14 +195,40 @@ By contrast with pci_enable_msi_range() function, pci_enable_msi_exact()
+ returns zero in case of success, which indicates MSI interrupts have been
+ successfully allocated.
  
- struct x86_msi_ops {
--	int (*setup_msi_irqs)(struct pci_dev *dev, int nvec, int type);
-+	int (*setup_msi_irqs)(struct pci_dev *dev,
-+			      int nvec, int nvec_mme, int type);
- 	void (*compose_msi_msg)(struct pci_dev *dev, unsigned int irq,
- 				unsigned int dest, struct msi_msg *msg,
- 			       u8 hpet_id);
-diff --git a/arch/x86/kernel/apic/io_apic.c b/arch/x86/kernel/apic/io_apic.c
-index 9d0a979..0c0faa4 100644
---- a/arch/x86/kernel/apic/io_apic.c
-+++ b/arch/x86/kernel/apic/io_apic.c
-@@ -3060,7 +3060,7 @@ int setup_msi_irq(struct pci_dev *dev, struct msi_desc *msidesc,
+-4.2.4 pci_disable_msi
++4.2.4 pci_enable_msi_partial
++
++int pci_enable_msi_partial(struct pci_dev *dev, int nvec, int nvec_mme)
++
++This variation on pci_enable_msi_exact() call allows a device driver to
++setup 'nvec_mme' number of multiple MSIs with the PCI function, while
++setup only 'nvec' (which could be a lesser of 'nvec_mme') number of MSIs
++in operating system. The MSI specification only allows 'nvec_mme' to be
++allocated in powers of two, up to a maximum of 2^5 (32).
++
++This function could be used when a PCI function is known to send 'nvec'
++MSIs, but still requires a particular number of MSIs 'nvec_mme' to be
++initialized with. As result, 'nvec_mme' - 'nvec' number of unused MSIs
++do not waste system resources.
++
++If this function returns 0, it has succeeded in allocating 'nvec_mme'
++interrupts and setting up 'nvec' interrupts. In this case, the function
++enables MSI on this device and updates dev->irq to be the lowest of the
++new interrupts assigned to it.  The other interrupts assigned to the
++device are in the range dev->irq to dev->irq + nvec - 1.
++
++If this function returns a negative number, it indicates an error and
++the driver should not attempt to request any more MSI interrupts for
++this device.
++
++4.2.5 pci_disable_msi
+ 
+ void pci_disable_msi(struct pci_dev *dev)
+ 
+-This function should be used to undo the effect of pci_enable_msi_range().
+-Calling it restores dev->irq to the pin-based interrupt number and frees
+-the previously allocated MSIs.  The interrupts may subsequently be assigned
+-to another device, so drivers should not cache the value of dev->irq.
++This function should be used to undo the effect of pci_enable_msi_range()
++or pci_enable_msi_partial(). Calling it restores dev->irq to the pin-based
++interrupt number and frees the previously allocated MSIs.  The interrupts
++may subsequently be assigned to another device, so drivers should not cache
++the value of dev->irq.
+ 
+ Before calling this function, a device driver must always call free_irq()
+ on any interrupt for which it previously called request_irq().
+diff --git a/arch/mips/pci/msi-octeon.c b/arch/mips/pci/msi-octeon.c
+index 2b91b0e..2be7979 100644
+--- a/arch/mips/pci/msi-octeon.c
++++ b/arch/mips/pci/msi-octeon.c
+@@ -178,7 +178,7 @@ msi_irq_allocated:
  	return 0;
  }
  
--int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int nvec_mme, int type)
+-int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
++int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int nvec_mme, int type)
  {
- 	struct msi_desc *msidesc;
- 	unsigned int irq;
+ 	struct msi_desc *entry;
+ 	int ret;
+diff --git a/arch/powerpc/kernel/msi.c b/arch/powerpc/kernel/msi.c
+index 8bbc12d..c60aee3 100644
+--- a/arch/powerpc/kernel/msi.c
++++ b/arch/powerpc/kernel/msi.c
+@@ -13,7 +13,7 @@
+ 
+ #include <asm/machdep.h>
+ 
+-int arch_msi_check_device(struct pci_dev* dev, int nvec, int type)
++int arch_msi_check_device(struct pci_dev *dev, int nvec, int nvec_mme, int type)
+ {
+ 	if (!ppc_md.setup_msi_irqs || !ppc_md.teardown_msi_irqs) {
+ 		pr_debug("msi: Platform doesn't provide MSI callbacks.\n");
+@@ -32,7 +32,7 @@ int arch_msi_check_device(struct pci_dev* dev, int nvec, int type)
+         return 0;
+ }
+ 
+-int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
++int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int nvec_mme, int type)
+ {
+ 	return ppc_md.setup_msi_irqs(dev, nvec, type);
+ }
+diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+index 9ddc51e..3cf38a8 100644
+--- a/arch/s390/pci/pci.c
++++ b/arch/s390/pci/pci.c
+@@ -398,7 +398,7 @@ static void zpci_irq_handler(struct airq_struct *airq)
+ 	}
+ }
+ 
+-int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
++int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int nvec_mme, int type)
+ {
+ 	struct zpci_dev *zdev = get_zdev(pdev);
+ 	unsigned int hwirq, msi_vecs;
 diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
-index b65bf95..939171a 100644
+index e48b674..b65bf95 100644
 --- a/arch/x86/kernel/x86_init.c
 +++ b/arch/x86/kernel/x86_init.c
-@@ -123,7 +123,7 @@ struct x86_msi_ops x86_msi = {
+@@ -121,7 +121,7 @@ struct x86_msi_ops x86_msi = {
+ };
+ 
  /* MSI arch specific hooks */
- int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int nvec_mme, int type)
+-int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
++int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int nvec_mme, int type)
  {
--	return x86_msi.setup_msi_irqs(dev, nvec, type);
-+	return x86_msi.setup_msi_irqs(dev, nvec, nvec_mme, type);
+ 	return x86_msi.setup_msi_irqs(dev, nvec, type);
+ }
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 27a7e67..0410d9b 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -56,7 +56,8 @@ void __weak arch_teardown_msi_irq(unsigned int irq)
+ 	chip->teardown_irq(chip, irq);
  }
  
- void arch_teardown_msi_irqs(struct pci_dev *dev)
-diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
-index 905956f..72e4277 100644
---- a/arch/x86/pci/xen.c
-+++ b/arch/x86/pci/xen.c
-@@ -156,7 +156,8 @@ static int acpi_register_gsi_xen(struct device *dev, u32 gsi,
- struct xen_pci_frontend_ops *xen_pci_frontend;
- EXPORT_SYMBOL_GPL(xen_pci_frontend);
- 
--static int xen_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+static int xen_setup_msi_irqs(struct pci_dev *dev,
-+			      int nvec, int nvec_mme, int type)
+-int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
++int __weak arch_msi_check_device(struct pci_dev *dev,
++				 int nvec, int nvec_mme, int type)
  {
- 	int irq, ret, i;
- 	struct msi_desc *msidesc;
-@@ -218,7 +219,8 @@ static void xen_msi_compose_msg(struct pci_dev *pdev, unsigned int pirq,
- 	msg->data = XEN_PIRQ_MSI_DATA;
+ 	struct msi_chip *chip = dev->bus->msi;
+ 
+@@ -66,7 +67,8 @@ int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
+ 	return chip->check_device(chip, dev, nvec, type);
  }
  
--static int xen_hvm_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+static int xen_hvm_setup_msi_irqs(struct pci_dev *dev,
-+				  int nvec, int nvec_mme, int type)
+-int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
++int __weak arch_setup_msi_irqs(struct pci_dev *dev,
++			       int nvec, int nvec_mme, int type)
  {
- 	int irq, pirq;
- 	struct msi_desc *msidesc;
-@@ -266,7 +268,8 @@ error:
- #ifdef CONFIG_XEN_DOM0
- static bool __read_mostly pci_seg_supported = true;
+ 	struct msi_desc *entry;
+ 	int ret;
+@@ -598,6 +600,7 @@ error_attrs:
+  * msi_capability_init - configure device's MSI capability structure
+  * @dev: pointer to the pci_dev data structure of MSI device function
+  * @nvec: number of interrupts to allocate
++ * @nvec_mme: number of interrupts to write to Multiple Message Enable register
+  *
+  * Setup the MSI capability structure of the device with the requested
+  * number of interrupts.  A return value of zero indicates the successful
+@@ -605,7 +608,7 @@ error_attrs:
+  * an error, and a positive return value indicates the number of interrupts
+  * which could have been allocated.
+  */
+-static int msi_capability_init(struct pci_dev *dev, int nvec)
++static int msi_capability_init(struct pci_dev *dev, int nvec, int nvec_mme)
+ {
+ 	struct msi_desc *entry;
+ 	int ret;
+@@ -640,7 +643,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
+ 	list_add_tail(&entry->list, &dev->msi_list);
  
--static int xen_initdom_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
-+static int xen_initdom_setup_msi_irqs(struct pci_dev *dev,
-+				      int nvec, int nvec_mme, int type)
+ 	/* Configure MSI capability structure */
+-	ret = arch_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSI);
++	ret = arch_setup_msi_irqs(dev, nvec, nvec_mme, PCI_CAP_ID_MSI);
+ 	if (ret) {
+ 		msi_mask_irq(entry, mask, ~mask);
+ 		free_msi_irqs(dev);
+@@ -758,7 +761,8 @@ static int msix_capability_init(struct pci_dev *dev,
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = arch_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
++	/* Parameter 'nvec_mme' does not make sense in case of MSI-X */
++	ret = arch_setup_msi_irqs(dev, nvec, 0, PCI_CAP_ID_MSIX);
+ 	if (ret)
+ 		goto out_avail;
+ 
+@@ -812,13 +816,15 @@ out_free:
+  * pci_msi_check_device - check whether MSI may be enabled on a device
+  * @dev: pointer to the pci_dev data structure of MSI device function
+  * @nvec: how many MSIs have been requested ?
++ * @nvec_mme: how many MSIs write to Multiple Message Enable register ?
+  * @type: are we checking for MSI or MSI-X ?
+  *
+  * Look at global flags, the device itself, and its parent buses
+  * to determine if MSI/-X are supported for the device. If MSI/-X is
+  * supported return 0, else return an error code.
+  **/
+-static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
++static int pci_msi_check_device(struct pci_dev *dev,
++				int nvec, int nvec_mme, int type)
  {
- 	int ret = 0;
- 	struct msi_desc *msidesc;
-diff --git a/drivers/iommu/irq_remapping.c b/drivers/iommu/irq_remapping.c
-index 33c4395..6300bfd 100644
---- a/drivers/iommu/irq_remapping.c
-+++ b/drivers/iommu/irq_remapping.c
-@@ -49,9 +49,9 @@ static void irq_remapping_disable_io_apic(void)
- 		disconnect_bsp_APIC(0);
+ 	struct pci_bus *bus;
+ 	int ret;
+@@ -846,7 +852,7 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
+ 		if (bus->bus_flags & PCI_BUS_FLAGS_NO_MSI)
+ 			return -EINVAL;
+ 
+-	ret = arch_msi_check_device(dev, nvec, type);
++	ret = arch_msi_check_device(dev, nvec, nvec_mme, type);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -878,6 +884,62 @@ int pci_msi_vec_count(struct pci_dev *dev)
  }
+ EXPORT_SYMBOL(pci_msi_vec_count);
  
--static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
-+static int do_setup_msi_irqs(struct pci_dev *dev, int nvec, int nvec_pow2)
++/**
++ * pci_enable_msi_partial - configure device's MSI capability structure
++ * @dev: device to configure
++ * @nvec: number of interrupts to configure
++ * @nvec_mme: number of interrupts to write to Multiple Message Enable register
++ *
++ * This function tries to allocate @nvec number of interrupts while setup
++ * device's Multiple Message Enable register with @nvec_mme interrupts.
++ * It returns a negative errno if an error occurs. If it succeeds, it returns
++ * zero and updates the @dev's irq member to the lowest new interrupt number;
++ * the other interrupt numbers allocated to this device are consecutive.
++ */
++int pci_enable_msi_partial(struct pci_dev *dev, int nvec, int nvec_mme)
++{
++	int maxvec;
++	int rc;
++
++	if (dev->current_state != PCI_D0)
++		return -EINVAL;
++
++	WARN_ON(!!dev->msi_enabled);
++
++	/* Check whether driver already requested MSI-X irqs */
++	if (dev->msix_enabled) {
++		dev_info(&dev->dev, "can't enable MSI "
++			 "(MSI-X already enabled)\n");
++		return -EINVAL;
++	}
++
++	if (!is_power_of_2(nvec_mme))
++		return -EINVAL;
++	if (nvec > nvec_mme)
++		return -EINVAL;
++
++	maxvec = pci_msi_vec_count(dev);
++	if (maxvec < 0)
++		return maxvec;
++	else if (nvec_mme > maxvec)
++		return -EINVAL;
++
++	rc = pci_msi_check_device(dev, nvec, nvec_mme, PCI_CAP_ID_MSI);
++	if (rc < 0)
++		return rc;
++	else if (rc > 0)
++		return -ENOSPC;
++
++	rc = msi_capability_init(dev, nvec, nvec_mme);
++	if (rc < 0)
++		return rc;
++	else if (rc > 0)
++		return -ENOSPC;
++
++	return 0;
++}
++EXPORT_SYMBOL(pci_enable_msi_partial);
++
+ void pci_msi_shutdown(struct pci_dev *dev)
  {
--	int ret, sub_handle, nvec_pow2, index = 0;
-+	int ret, sub_handle, index = 0;
- 	unsigned int irq;
- 	struct msi_desc *msidesc;
+ 	struct msi_desc *desc;
+@@ -957,7 +1019,7 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
+ 	if (!entries || !dev->msix_cap || dev->current_state != PCI_D0)
+ 		return -EINVAL;
  
-@@ -60,12 +60,12 @@ static int do_setup_msi_irqs(struct pci_dev *dev, int nvec)
- 	WARN_ON(msidesc->irq);
- 	WARN_ON(msidesc->msi_attrib.multiple);
- 	WARN_ON(msidesc->nvec_used);
-+	BUG_ON(!is_power_of_2(nvec_pow2));
+-	status = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSIX);
++	status = pci_msi_check_device(dev, nvec, 0, PCI_CAP_ID_MSIX);
+ 	if (status)
+ 		return status;
  
- 	irq = irq_alloc_hwirqs(nvec, dev_to_node(&dev->dev));
- 	if (irq == 0)
- 		return -ENOSPC;
+@@ -1110,7 +1172,8 @@ int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
+ 		nvec = maxvec;
  
--	nvec_pow2 = __roundup_pow_of_two(nvec);
- 	msidesc->nvec_used = nvec;
- 	msidesc->msi_attrib.multiple = ilog2(nvec_pow2);
- 	for (sub_handle = 0; sub_handle < nvec; sub_handle++) {
-@@ -140,10 +140,10 @@ error:
- }
+ 	do {
+-		rc = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSI);
++		rc = pci_msi_check_device(dev, nvec, roundup_pow_of_two(nvec),
++					  PCI_CAP_ID_MSI);
+ 		if (rc < 0) {
+ 			return rc;
+ 		} else if (rc > 0) {
+@@ -1121,7 +1184,7 @@ int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
+ 	} while (rc);
  
- static int irq_remapping_setup_msi_irqs(struct pci_dev *dev,
--					int nvec, int type)
-+					int nvec, int nvec_mme, int type)
+ 	do {
+-		rc = msi_capability_init(dev, nvec);
++		rc = msi_capability_init(dev, nvec, roundup_pow_of_two(nvec));
+ 		if (rc < 0) {
+ 			return rc;
+ 		} else if (rc > 0) {
+diff --git a/include/linux/msi.h b/include/linux/msi.h
+index 92a2f99..b9f89ee 100644
+--- a/include/linux/msi.h
++++ b/include/linux/msi.h
+@@ -57,9 +57,10 @@ struct msi_desc {
+  */
+ int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc);
+ void arch_teardown_msi_irq(unsigned int irq);
+-int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
++int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int nvec_mme, int type);
+ void arch_teardown_msi_irqs(struct pci_dev *dev);
+-int arch_msi_check_device(struct pci_dev* dev, int nvec, int type);
++int arch_msi_check_device(struct pci_dev *dev,
++			  int nvec, int nvec_mme, int type);
+ void arch_restore_msi_irqs(struct pci_dev *dev);
+ 
+ void default_teardown_msi_irqs(struct pci_dev *dev);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 71d9673..7360bd2 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1184,6 +1184,7 @@ void pci_disable_msix(struct pci_dev *dev);
+ void msi_remove_pci_irq_vectors(struct pci_dev *dev);
+ void pci_restore_msi_state(struct pci_dev *dev);
+ int pci_msi_enabled(void);
++int pci_enable_msi_partial(struct pci_dev *dev, int nvec, int nvec_mme);
+ int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec);
+ static inline int pci_enable_msi_exact(struct pci_dev *dev, int nvec)
  {
- 	if (type == PCI_CAP_ID_MSI)
--		return do_setup_msi_irqs(dev, nvec);
-+		return do_setup_msi_irqs(dev, nvec, nvec_mme);
- 	else
- 		return do_setup_msix_irqs(dev, nvec);
- }
+@@ -1215,6 +1216,8 @@ static inline void pci_disable_msix(struct pci_dev *dev) { }
+ static inline void msi_remove_pci_irq_vectors(struct pci_dev *dev) { }
+ static inline void pci_restore_msi_state(struct pci_dev *dev) { }
+ static inline int pci_msi_enabled(void) { return 0; }
++static int pci_enable_msi_partial(struct pci_dev *dev, int nvec, int nvec_mme)
++{ return -ENOSYS; }
+ static inline int pci_enable_msi_range(struct pci_dev *dev, int minvec,
+ 				       int maxvec)
+ { return -ENOSYS; }
 -- 
 1.7.7.6
