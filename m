@@ -1,99 +1,44 @@
-From: Stephen Boyd <sboyd@codeaurora.org>
-Subject: Re: [PATCH 1/2] phy: qcom: Add driver for QCOM IPQ806x SATA PHY
-Date: Thu, 12 Jun 2014 13:16:54 -0700
-Message-ID: <539A0AB6.90200@codeaurora.org>
-References: <1402600724-20651-1-git-send-email-galak@codeaurora.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.11.231]:48952 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751634AbaFLUQ4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Jun 2014 16:16:56 -0400
-In-Reply-To: <1402600724-20651-1-git-send-email-galak@codeaurora.org>
-Sender: linux-ide-owner@vger.kernel.org
+From: Kumar Gala <galak@codeaurora.org>
+Subject: Re: [PATCH 2/3] ata: Add Qualcomm ARM SoC AHCI SATA host controller driver
+Date: Thu, 12 Jun 2014 16:23:06 -0500
+Message-ID: <8C69AEA0-877D-4198-BAD4-393695FBC94E@codeaurora.org>
+References: <1402600404-19214-1-git-send-email-galak@codeaurora.org> <1402600404-19214-2-git-send-email-galak@codeaurora.org> <539A047B.3010306@codeaurora.org>
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.2\))
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <539A047B.3010306@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Stephen Boyd <sboyd@codeaurora.org>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kumar Gala <galak@codeaurora.org>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>, linux-ide@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
 
-On 06/12/14 12:18, Kumar Gala wrote:
-> +
-> +struct qcom_ipq806x_sata_phy {
-> +	struct device *dev;
 
-Is this used?
+On Jun 12, 2014, at 2:50 PM, Stephen Boyd <sboyd@codeaurora.org> wrote:
 
-> +	void __iomem *mmio;
-> +	struct clk *cfg_clk;
-[...]
-> +
-> +static int qcom_ipq806x_sata_phy_init(struct phy *generic_phy)
-> +{
-> +	struct qcom_ipq806x_sata_phy *phy = phy_get_drvdata(generic_phy);
-> +	u32 reg = 0;
+> On 06/12/14 12:13, Kumar Gala wrote:
+>> +static int qcom_ahci_probe(struct platform_device *pdev)
+>> +{
+>> +	struct ahci_host_priv *hpriv;
+>> +	struct clk *rxoob_clk;
+>> +	int rc;
+>> +
+>> +	hpriv =3D ahci_platform_get_resources(pdev);
+>> +	if (IS_ERR(hpriv))
+>> +		return PTR_ERR(hpriv);
+>> +
+>> +	/* Try and set the rxoob clk to 100Mhz */
+>> +	rxoob_clk =3D of_clk_get_by_name(pdev->dev.of_node, "rxoob");
+>=20
+> Any reason we can't use devm_clk_get() here?
 
-unnecessary initialization
+Was trying to avoid the ref cnt of devm_clk_get() as the clk=92s are ac=
+tually handled in ahci_platform_get_resources/ahci_platform_enable_reso=
+urces
 
-> +
-> +static int qcom_ipq806x_sata_phy_exit(struct phy *generic_phy)
-> +{
-> +	struct qcom_ipq806x_sata_phy *phy = phy_get_drvdata(generic_phy);
-> +	u32 reg = 0;
+- k
 
-unnecessary initialization
-
->
-> +static int qcom_ipq806x_sata_phy_probe(struct platform_device *pdev)
-> +{
-> +	struct qcom_ipq806x_sata_phy *phy;
-> +	struct device *dev = &pdev->dev;
-> +	struct resource *res;
-> +	struct phy_provider *phy_provider;
-> +	struct phy *generic_phy;
-> +	int ret;
-> +
-> +	phy = devm_kzalloc(dev, sizeof(*phy), GFP_KERNEL);
-> +	if (!phy) {
-> +		dev_err(dev, "%s: failed to allocate phy\n", __func__);
-> +		return -ENOMEM;
-> +	}
-> +
-> +	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-> +	phy->mmio = devm_ioremap_resource(dev, res);
-> +	if (IS_ERR(phy->mmio)) {
-> +		dev_err(dev, "%s: phy mmio get resource failed\n", __func__);
-
-Unnecessary error message.
-
-> +		return PTR_ERR(phy->mmio);
-> +	}
-> +
-> +	phy_provider = devm_of_phy_provider_register(dev, of_phy_simple_xlate);
-> +	if (IS_ERR(phy_provider)) {
-> +		dev_err(dev, "%s: failed to register phy\n", __func__);
-> +		return PTR_ERR(phy_provider);
-> +	}
-> +
-> +	generic_phy = devm_phy_create(dev, &qcom_ipq806x_sata_phy_ops, NULL);
-> +	if (IS_ERR(generic_phy)) {
-> +		dev_err(dev, "%s: failed to create phy\n", __func__);
-> +		return PTR_ERR(generic_phy);
-> +	}
-> +
-> +	phy->cfg_clk = devm_clk_get(dev, "cfg");
-> +	if (IS_ERR(phy->cfg_clk)) {
-> +		dev_err(dev, "Failed to get sata cfg clock\n");
-> +		return PTR_ERR(phy->cfg_clk);
-> +	}
-> +
-> +	ret = clk_prepare_enable(phy->cfg_clk);
-> +	if (ret)
-> +		return ret;
-
-Shouldn't there be a remove that disables this clock?
-
--- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-hosted by The Linux Foundation
-
+--=20
+Employee of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, host=
+ed by The Linux Foundation
