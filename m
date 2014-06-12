@@ -1,51 +1,66 @@
-From: <suravee.suthikulpanit@amd.com>
-Subject: [PATCH 2/2] ahci/xgene: Remove logic to set 64-bit DMA mask
-Date: Thu, 12 Jun 2014 12:40:24 -0500
-Message-ID: <1402594824-4151-3-git-send-email-suravee.suthikulpanit@amd.com>
-References: <1402594824-4151-1-git-send-email-suravee.suthikulpanit@amd.com>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH 1/2] ahci: Check and set 64-bit DMA mask for platform
+ AHCI driver
+Date: Thu, 12 Jun 2014 21:47:25 +0400
+Message-ID: <5399E7AD.8030901@cogentembedded.com>
+References: <1402594824-4151-1-git-send-email-suravee.suthikulpanit@amd.com> <1402594824-4151-2-git-send-email-suravee.suthikulpanit@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1402594824-4151-1-git-send-email-suravee.suthikulpanit@amd.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: tj@kernel.org, b.zolnierkie@samsung.com
-Cc: hdegoede@redhat.com, lho@apm.com, tphan@apm.com, stripathi@apm.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-lb0-f170.google.com ([209.85.217.170]:43291 "EHLO
+	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750773AbaFLRrY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Jun 2014 13:47:24 -0400
+Received: by mail-lb0-f170.google.com with SMTP id w7so902405lbi.1
+        for <linux-ide@vger.kernel.org>; Thu, 12 Jun 2014 10:47:22 -0700 (PDT)
+In-Reply-To: <1402594824-4151-2-git-send-email-suravee.suthikulpanit@amd.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: suravee.suthikulpanit@amd.com, tj@kernel.org, b.zolnierkie@samsung.com
+Cc: hdegoede@redhat.com, lho@apm.com, tphan@apm.com, stripathi@apm.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Hello.
 
-Instead of doing the check here, this should be handled
-in the common AHCI platform code.
+On 06/12/2014 09:40 PM, suravee.suthikulpanit@amd.com wrote:
 
-Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Suggested-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: Loc Ho <lho@apm.com>
-Cc: Tuan Phan <tphan@apm.com>
-Cc: Suman Triphati <stripathi@apm.com>
----
- drivers/ata/ahci_xgene.c | 10 ----------
- 1 file changed, 10 deletions(-)
+> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-index 042a9bb..a9fc2ae 100644
---- a/drivers/ata/ahci_xgene.c
-+++ b/drivers/ata/ahci_xgene.c
-@@ -440,16 +440,6 @@ static int xgene_ahci_probe(struct platform_device *pdev)
- 	/* Configure the host controller */
- 	xgene_ahci_hw_init(hpriv);
- 
--	/*
--	 * Setup DMA mask. This is preliminary until the DMA range is sorted
--	 * out.
--	 */
--	rc = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(64));
--	if (rc) {
--		dev_err(dev, "Unable to set dma mask\n");
--		goto disable_resources;
--	}
--
- 	hflags = AHCI_HFLAG_NO_PMP | AHCI_HFLAG_YES_NCQ;
- 
- 	rc = ahci_platform_init_host(pdev, hpriv, &xgene_ahci_port_info,
--- 
-1.9.0
+> The current platform AHCI driver does not set the dma_mask correctly
+> for 64-bit DMA capable AHCI controller. This patch checks the AHCI
+> capability bit and set the dma_mask and coherent_dma_mask accordingly.
+
+> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+> Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+> Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+> ---
+>   drivers/ata/libahci_platform.c | 13 +++++++++++++
+>   1 file changed, 13 insertions(+)
+
+> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+> index 3a5b4ed..a958a2b 100644
+> --- a/drivers/ata/libahci_platform.c
+> +++ b/drivers/ata/libahci_platform.c
+> @@ -364,6 +364,19 @@ int ahci_platform_init_host(struct platform_device *pdev,
+>   			ap->ops = &ata_dummy_port_ops;
+>   	}
+>
+> +	if (hpriv->cap & HOST_CAP_64) {
+> +		rc = dma_coerce_mask_and_coherent(dev, DMA_BIT_MASK(64));
+> +		if (rc) {
+> +			rc = dma_coerce_mask_and_coherent(dev,
+> +							  DMA_BIT_MASK(32));
+> +			if (rc) {
+> +				dev_err(dev, "Failed to enable 64-bit DMA.\n");
+
+    Not 32-bit?
+
+> +				return rc;
+> +			}
+> +			dev_warn(dev, "Enable 32-bit DMA instead of 64-bit.\n");
+> +		}
+> +	}
+> +
+
+WBR, Sergei
+
