@@ -1,71 +1,59 @@
 From: Kumar Gala <galak@codeaurora.org>
-Subject: [PATCH 2/3] ata: Add Qualcomm ARM SoC AHCI SATA host controller driver
-Date: Thu, 12 Jun 2014 14:13:23 -0500
-Message-ID: <1402600404-19214-2-git-send-email-galak@codeaurora.org>
-References: <1402600404-19214-1-git-send-email-galak@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1402600404-19214-1-git-send-email-galak@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Kumar Gala <galak@codeaurora.org>, linux-ide@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 1/2] phy: qcom: Add driver for QCOM IPQ806x SATA PHY
+Date: Thu, 12 Jun 2014 14:18:43 -0500
+Message-ID: <1402600724-20651-1-git-send-email-galak@codeaurora.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.11.231]:44843 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750886AbaFLTSt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Jun 2014 15:18:49 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Kumar Gala <galak@codeaurora.org>, linux-ide@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
 
-Add support for the Qualcomm AHCI SATA controller that exists on several
-SoC and specifically the IPQ806x family of chips.  The IPQ806x SATA support
-requires the associated IPQ806x SATA PHY Driver to be enabled as well.
+Add a PHY driver for uses with AHCI based SATA controller driver on the
+IPQ806x family of SoCs.
 
 Signed-off-by: Kumar Gala <galak@codeaurora.org>
 ---
- drivers/ata/Kconfig     | 10 ++++++
- drivers/ata/Makefile    |  1 +
- drivers/ata/ahci_qcom.c | 86 +++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 97 insertions(+)
- create mode 100644 drivers/ata/ahci_qcom.c
+ drivers/phy/Kconfig                 |   6 ++
+ drivers/phy/Makefile                |   1 +
+ drivers/phy/phy-qcom-ipq806x-sata.c | 204 ++++++++++++++++++++++++++++++++++++
+ 3 files changed, 211 insertions(+)
+ create mode 100644 drivers/phy/phy-qcom-ipq806x-sata.c
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 7671dba..aa88648 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -132,6 +132,16 @@ config AHCI_MVEBU
+diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
+index 16a2f06..52bfb93 100644
+--- a/drivers/phy/Kconfig
++++ b/drivers/phy/Kconfig
+@@ -178,4 +178,10 @@ config PHY_XGENE
+ 	help
+ 	  This option enables support for APM X-Gene SoC multi-purpose PHY.
  
- 	  If unsure, say N.
- 
-+config AHCI_QCOM
-+	tristate "Qualcomm AHCI SATA support"
++config PHY_QCOM_IPQ806X_SATA
++	tristate "Qualcomm IPQ806x SATA SerDes/PHY driver"
 +	depends on ARCH_QCOM
-+	help
-+	  This option enables support for AHCI SATA controller
-+	  integrated into Qualcomm ARM SoC chipsets. For more
-+	  information please refer to http://www.qualcomm.com/chipsets.
++	depends on OF
++	select GENERIC_PHY
 +
-+	  If unsure, say N.
-+
- config AHCI_SUNXI
- 	tristate "Allwinner sunxi AHCI SATA support"
- 	depends on ARCH_SUNXI
-diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
-index 5a02aee..15401e9 100644
---- a/drivers/ata/Makefile
-+++ b/drivers/ata/Makefile
-@@ -13,6 +13,7 @@ obj-$(CONFIG_SATA_HIGHBANK)	+= sata_highbank.o libahci.o
- obj-$(CONFIG_AHCI_DA850)	+= ahci_da850.o libahci.o libahci_platform.o
- obj-$(CONFIG_AHCI_IMX)		+= ahci_imx.o libahci.o libahci_platform.o
- obj-$(CONFIG_AHCI_MVEBU)	+= ahci_mvebu.o libahci.o libahci_platform.o
-+obj-$(CONFIG_AHCI_QCOM)		+= ahci_qcom.o libahci.o libahci_platform.o
- obj-$(CONFIG_AHCI_SUNXI)	+= ahci_sunxi.o libahci.o libahci_platform.o
- obj-$(CONFIG_AHCI_ST)		+= ahci_st.o libahci.o libahci_platform.o
- obj-$(CONFIG_AHCI_XGENE)	+= ahci_xgene.o libahci.o libahci_platform.o
-diff --git a/drivers/ata/ahci_qcom.c b/drivers/ata/ahci_qcom.c
+ endmenu
+diff --git a/drivers/phy/Makefile b/drivers/phy/Makefile
+index b4f1d57..d950317 100644
+--- a/drivers/phy/Makefile
++++ b/drivers/phy/Makefile
+@@ -20,3 +20,4 @@ phy-exynos-usb2-$(CONFIG_PHY_EXYNOS4X12_USB2)	+= phy-exynos4x12-usb2.o
+ phy-exynos-usb2-$(CONFIG_PHY_EXYNOS5250_USB2)	+= phy-exynos5250-usb2.o
+ obj-$(CONFIG_PHY_EXYNOS5_USBDRD)	+= phy-exynos5-usbdrd.o
+ obj-$(CONFIG_PHY_XGENE)			+= phy-xgene.o
++obj-$(CONFIG_PHY_QCOM_IPQ806X_SATA)	+= phy-qcom-ipq806x-sata.o
+diff --git a/drivers/phy/phy-qcom-ipq806x-sata.c b/drivers/phy/phy-qcom-ipq806x-sata.c
 new file mode 100644
-index 0000000..7a4fd30
+index 0000000..fc57340
 --- /dev/null
-+++ b/drivers/ata/ahci_qcom.c
-@@ -0,0 +1,86 @@
++++ b/drivers/phy/phy-qcom-ipq806x-sata.c
+@@ -0,0 +1,204 @@
 +/*
-+ * Qualcomm ARM SoC AHCI SATA platform driver
-+ *
-+ * based on the AHCI SATA platform driver by Jeff Garzik and Anton Vorontsov
-+ *
 + * Copyright (c) 2014, The Linux Foundation. All rights reserved.
 + *
 + * This program is free software; you can redistribute it and/or modify
@@ -78,75 +66,198 @@ index 0000000..7a4fd30
 + * GNU General Public License for more details.
 + */
 +
++#include <linux/io.h>
 +#include <linux/kernel.h>
 +#include <linux/module.h>
-+#include <linux/pm.h>
-+#include <linux/device.h>
++#include <linux/of.h>
++#include <linux/of_address.h>
++#include <linux/time.h>
++#include <linux/delay.h>
++#include <linux/clk.h>
++#include <linux/slab.h>
 +#include <linux/platform_device.h>
-+#include <linux/libata.h>
-+#include <linux/ahci_platform.h>
-+#include "ahci.h"
++#include <linux/phy/phy.h>
 +
-+static const struct ata_port_info qcom_ahci_port_info = {
-+	.flags		= AHCI_FLAG_COMMON,
-+	.pio_mask	= ATA_PIO4,
-+	.udma_mask	= ATA_UDMA6,
-+	.port_ops	= &ahci_platform_ops,
++struct qcom_ipq806x_sata_phy {
++	struct device *dev;
++	void __iomem *mmio;
++	struct clk *cfg_clk;
 +};
 +
-+static int qcom_ahci_probe(struct platform_device *pdev)
++#define __set(v, a, b)	(((v) << (b)) & GENMASK(a, b))
++
++#define SATA_PHY_P0_PARAM0		0x200
++#define SATA_PHY_P0_PARAM0_P0_TX_PREEMPH_GEN3(x)	__set(x, 17, 12)
++#define SATA_PHY_P0_PARAM0_P0_TX_PREEMPH_GEN3_MASK	GENMASK(17, 12)
++#define SATA_PHY_P0_PARAM0_P0_TX_PREEMPH_GEN2(x)	__set(x, 11, 6)
++#define SATA_PHY_P0_PARAM0_P0_TX_PREEMPH_GEN2_MASK	GENMASK(11, 6)
++#define SATA_PHY_P0_PARAM0_P0_TX_PREEMPH_GEN1(x)	__set(x, 5, 0)
++#define SATA_PHY_P0_PARAM0_P0_TX_PREEMPH_GEN1_MASK	GENMASK(5, 0)
++
++#define SATA_PHY_P0_PARAM1		0x204
++#define SATA_PHY_P0_PARAM1_RESERVED_BITS31_21(x)	__set(x, 31, 21)
++#define SATA_PHY_P0_PARAM1_P0_TX_AMPLITUDE_GEN3(x)	__set(x, 20, 14)
++#define SATA_PHY_P0_PARAM1_P0_TX_AMPLITUDE_GEN3_MASK	GENMASK(20, 14)
++#define SATA_PHY_P0_PARAM1_P0_TX_AMPLITUDE_GEN2(x)	__set(x, 13, 7)
++#define SATA_PHY_P0_PARAM1_P0_TX_AMPLITUDE_GEN2_MASK	GENMASK(13, 7)
++#define SATA_PHY_P0_PARAM1_P0_TX_AMPLITUDE_GEN1(x)	__set(x, 6, 0)
++#define SATA_PHY_P0_PARAM1_P0_TX_AMPLITUDE_GEN1_MASK	GENMASK(6, 0)
++
++#define SATA_PHY_P0_PARAM2		0x208
++#define SATA_PHY_P0_PARAM2_RX_EQ(x)	__set(x, 20, 18)
++#define SATA_PHY_P0_PARAM2_RX_EQ_MASK	GENMASK(20, 18)
++
++#define SATA_PHY_P0_PARAM3		0x20C
++#define SATA_PHY_SSC_EN			0x8
++#define SATA_PHY_P0_PARAM4		0x210
++#define SATA_PHY_REF_SSP_EN		0x2
++#define SATA_PHY_RESET			0x1
++
++static inline void qcom_ipq806x_sata_delay_us(unsigned int delay)
 +{
-+	struct ahci_host_priv *hpriv;
-+	struct clk *rxoob_clk;
-+	int rc;
-+
-+	hpriv = ahci_platform_get_resources(pdev);
-+	if (IS_ERR(hpriv))
-+		return PTR_ERR(hpriv);
-+
-+	/* Try and set the rxoob clk to 100Mhz */
-+	rxoob_clk = of_clk_get_by_name(pdev->dev.of_node, "rxoob");
-+	if (IS_ERR(rxoob_clk))
-+		return PTR_ERR(rxoob_clk);
-+
-+	rc = clk_set_rate(rxoob_clk, 100000000);
-+	if (rc)
-+		return rc;
-+
-+	rc = ahci_platform_enable_resources(hpriv);
-+	if (rc)
-+		return rc;
-+
-+	rc = ahci_platform_init_host(pdev, hpriv, &qcom_ahci_port_info, 0, 0);
-+	if (rc)
-+		goto disable_resources;
-+
-+	return 0;
-+disable_resources:
-+	ahci_platform_disable_resources(hpriv);
-+	return rc;
++	/* sleep for max. 50us more to combine processor wakeups */
++	usleep_range(delay, delay + 50);
 +}
 +
-+static const struct of_device_id qcom_ahci_of_match[] = {
-+	{ .compatible = "qcom,msm-ahci", },
-+	{},
-+};
-+MODULE_DEVICE_TABLE(of, qcom_ahci_of_match);
++static int qcom_ipq806x_sata_phy_init(struct phy *generic_phy)
++{
++	struct qcom_ipq806x_sata_phy *phy = phy_get_drvdata(generic_phy);
++	u32 reg = 0;
 +
-+static struct platform_driver qcom_ahci_driver = {
-+	.probe = qcom_ahci_probe,
-+	.remove = ata_platform_remove_one,
++	/* Setting SSC_EN to 1 */
++	reg = readl_relaxed(phy->mmio + SATA_PHY_P0_PARAM3);
++	reg = reg | SATA_PHY_SSC_EN;
++	writel_relaxed(reg, phy->mmio + SATA_PHY_P0_PARAM3);
++
++	reg = readl_relaxed(phy->mmio + SATA_PHY_P0_PARAM0) &
++			~(SATA_PHY_P0_PARAM0_P0_TX_PREEMPH_GEN3_MASK |
++			  SATA_PHY_P0_PARAM0_P0_TX_PREEMPH_GEN2_MASK |
++			  SATA_PHY_P0_PARAM0_P0_TX_PREEMPH_GEN1_MASK);
++	reg |= SATA_PHY_P0_PARAM0_P0_TX_PREEMPH_GEN3(0xf);
++	writel_relaxed(reg, phy->mmio + SATA_PHY_P0_PARAM0);
++
++	reg = readl_relaxed(phy->mmio + SATA_PHY_P0_PARAM1) &
++			~(SATA_PHY_P0_PARAM1_P0_TX_AMPLITUDE_GEN3_MASK |
++			  SATA_PHY_P0_PARAM1_P0_TX_AMPLITUDE_GEN2_MASK |
++			  SATA_PHY_P0_PARAM1_P0_TX_AMPLITUDE_GEN1_MASK);
++	reg |= SATA_PHY_P0_PARAM1_P0_TX_AMPLITUDE_GEN3(0x55) |
++		SATA_PHY_P0_PARAM1_P0_TX_AMPLITUDE_GEN2(0x55) |
++		SATA_PHY_P0_PARAM1_P0_TX_AMPLITUDE_GEN1(0x55);
++	writel_relaxed(reg, phy->mmio + SATA_PHY_P0_PARAM1);
++
++	reg = readl_relaxed(phy->mmio + SATA_PHY_P0_PARAM2) &
++		~SATA_PHY_P0_PARAM2_RX_EQ_MASK;
++	reg |= SATA_PHY_P0_PARAM2_RX_EQ(0x3);
++	writel_relaxed(reg, phy->mmio + SATA_PHY_P0_PARAM2);
++
++	/* Setting PHY_RESET to 1 */
++	reg = readl_relaxed(phy->mmio + SATA_PHY_P0_PARAM4);
++	reg = reg | SATA_PHY_RESET;
++	writel_relaxed(reg, phy->mmio + SATA_PHY_P0_PARAM4);
++
++	/* Setting REF_SSP_EN to 1 */
++	reg = readl_relaxed(phy->mmio + SATA_PHY_P0_PARAM4);
++	reg = reg | SATA_PHY_REF_SSP_EN | SATA_PHY_RESET;
++	writel_relaxed(reg, phy->mmio + SATA_PHY_P0_PARAM4);
++	mb();
++	qcom_ipq806x_sata_delay_us(20);
++
++	/* Clearing PHY_RESET to 0 */
++	reg = readl_relaxed(phy->mmio + SATA_PHY_P0_PARAM4);
++	reg = reg & ~SATA_PHY_RESET;
++	writel_relaxed(reg, phy->mmio + SATA_PHY_P0_PARAM4);
++
++	return 0;
++}
++
++static int qcom_ipq806x_sata_phy_exit(struct phy *generic_phy)
++{
++	struct qcom_ipq806x_sata_phy *phy = phy_get_drvdata(generic_phy);
++	u32 reg = 0;
++
++	/* Setting PHY_RESET to 1 */
++	reg = readl_relaxed(phy->mmio + SATA_PHY_P0_PARAM4);
++	reg = reg | SATA_PHY_RESET;
++	writel_relaxed(reg, phy->mmio + SATA_PHY_P0_PARAM4);
++
++	return 0;
++}
++
++static struct phy_ops qcom_ipq806x_sata_phy_ops = {
++	.init		= qcom_ipq806x_sata_phy_init,
++	.exit		= qcom_ipq806x_sata_phy_exit,
++	.owner		= THIS_MODULE,
++};
++
++static int qcom_ipq806x_sata_phy_probe(struct platform_device *pdev)
++{
++	struct qcom_ipq806x_sata_phy *phy;
++	struct device *dev = &pdev->dev;
++	struct resource *res;
++	struct phy_provider *phy_provider;
++	struct phy *generic_phy;
++	int ret;
++
++	phy = devm_kzalloc(dev, sizeof(*phy), GFP_KERNEL);
++	if (!phy) {
++		dev_err(dev, "%s: failed to allocate phy\n", __func__);
++		return -ENOMEM;
++	}
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	phy->mmio = devm_ioremap_resource(dev, res);
++	if (IS_ERR(phy->mmio)) {
++		dev_err(dev, "%s: phy mmio get resource failed\n", __func__);
++		return PTR_ERR(phy->mmio);
++	}
++
++	phy_provider = devm_of_phy_provider_register(dev, of_phy_simple_xlate);
++	if (IS_ERR(phy_provider)) {
++		dev_err(dev, "%s: failed to register phy\n", __func__);
++		return PTR_ERR(phy_provider);
++	}
++
++	generic_phy = devm_phy_create(dev, &qcom_ipq806x_sata_phy_ops, NULL);
++	if (IS_ERR(generic_phy)) {
++		dev_err(dev, "%s: failed to create phy\n", __func__);
++		return PTR_ERR(generic_phy);
++	}
++
++	phy->cfg_clk = devm_clk_get(dev, "cfg");
++	if (IS_ERR(phy->cfg_clk)) {
++		dev_err(dev, "Failed to get sata cfg clock\n");
++		return PTR_ERR(phy->cfg_clk);
++	}
++
++	ret = clk_prepare_enable(phy->cfg_clk);
++	if (ret)
++		return ret;
++
++	phy->dev = dev;
++	phy_set_drvdata(generic_phy, phy);
++
++	return 0;
++}
++
++static const struct of_device_id qcom_ipq806x_sata_phy_of_match[] = {
++	{ .compatible = "qcom,ipq806x-sata-phy" },
++	{ },
++};
++MODULE_DEVICE_TABLE(of, qcom_ipq806x_sata_phy_of_match);
++
++static struct platform_driver qcom_ipq806x_sata_phy_driver = {
++	.probe	= qcom_ipq806x_sata_phy_probe,
 +	.driver = {
-+		.name = "qcom_ahci_qcom",
-+		.owner = THIS_MODULE,
-+		.of_match_table = qcom_ahci_of_match,
-+	},
++		.name	= "qcom-ipq806x-sata-phy",
++		.owner	= THIS_MODULE,
++		.of_match_table	= qcom_ipq806x_sata_phy_of_match,
++	}
 +};
-+module_platform_driver(qcom_ahci_driver);
++module_platform_driver(qcom_ipq806x_sata_phy_driver);
 +
-+MODULE_DESCRIPTION("Qualcomm AHCI SATA platform driver");
-+MODULE_LICENSE("GPL");
-+MODULE_ALIAS("ahci:qcom");
++MODULE_DESCRIPTION("QCOM IPQ806x SATA PHY driver");
++MODULE_LICENSE("GPL v2");
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 hosted by The Linux Foundation
+
