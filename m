@@ -1,68 +1,62 @@
-From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
-Subject: Re: [PATCH 1/1] ata: Check and set 64-bit DMA mask for platform AHCI
- driver
-Date: Thu, 12 Jun 2014 01:36:30 -0500
-Message-ID: <53994A6E.9070403@amd.com>
-References: <1400866510-3130-1-git-send-email-suravee.suthikulpanit@amd.com>
- <53977E79.2090000@redhat.com> <3571472.yt2eJCmG5L@amdc1032>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Suman Tripathi <stripathi@apm.com>
+Subject: [PATCH v1 1/2] libahci: Implement the function ahci_restart_engine to restart the port dma engine.
+Date: Thu, 12 Jun 2014 17:29:21 +0530
+Message-ID: <1402574362-24986-2-git-send-email-stripathi@apm.com>
+References: <1402574362-24986-1-git-send-email-stripathi@apm.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bn1blp0188.outbound.protection.outlook.com ([207.46.163.188]:53338
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750920AbaFLGgg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 12 Jun 2014 02:36:36 -0400
-In-Reply-To: <3571472.yt2eJCmG5L@amdc1032>
+Received: from denmail01-v4020.amcc.com ([192.195.68.30]:60004 "EHLO
+	denmail01.apm.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S933107AbaFLMAu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Jun 2014 08:00:50 -0400
+In-Reply-To: <1402574362-24986-1-git-send-email-stripathi@apm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, David Milburn <dmilburn@redhat.com>
-Cc: tj@kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
 
+This patch implements the function ahci_restart_engine function to
+restart the port dma engine.
 
+Signed-off-by: Loc Ho <lho@apm.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
+---
+ drivers/ata/ahci.h    |  1 +
+ drivers/ata/libahci.c | 10 ++++++++++
+ 2 files changed, 11 insertions(+)
 
-On 06/11/2014 04:30 AM, Bartlomiej Zolnierkiewicz wrote:
->
-> Hi,
->
-> On Tuesday, June 10, 2014 04:54:01 PM David Milburn wrote:
->> On 05/23/2014 12:35 PM, suravee.suthikulpanit@amd.com wrote:
->>> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->>>
->>> The current platform AHCI drier does not set the dma_mask correctly
->>> for 64-bit DMA capable AHCI controller.  This patch checks the AHCI
->>> capability bit and set the dma_mask and coherent_dma_mask accordingly.
->>>
->>> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->>> ---
->>>    drivers/ata/libahci_platform.c | 9 +++++++++
->>>    1 file changed, 9 insertions(+)
->>>
->>> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
->>> index 7cb3a85..85049ef 100644
->>> --- a/drivers/ata/libahci_platform.c
->>> +++ b/drivers/ata/libahci_platform.c
->>> @@ -368,6 +368,15 @@ int ahci_platform_init_host(struct platform_device *pdev,
->>
->> Hi Suravee,
->>
->> Would it be better to do the following before ahci_reset_controller()?
->>
->>           /* initialize adapter */
->>           rc = ahci_configure_dma_masks(pdev, hpriv->cap & HOST_CAP_64);
->>           if (rc)
->>                  	return rc;
->
-> ahci_configure_dma_masks() is currently for PCI controllers only
-> so it can't be used for libahci_platform.c.
->
-> When it comes to setting DMA masks before ahci_reset_controller()
-> I don't think that it matters but it will make platform code more
-> similar to PCI one which is a good thing.
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index af63c75..3c1760e 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -372,6 +372,7 @@ int ahci_do_softreset(struct ata_link *link, unsigned int *class,
 
-I can move this logic before ahci_reset_controller() in V2.
+ int ahci_stop_engine(struct ata_port *ap);
+ void ahci_start_engine(struct ata_port *ap);
++int ahci_restart_engine(struct ata_port *ap);
+ int ahci_check_ready(struct ata_link *link);
+ int ahci_kick_engine(struct ata_port *ap);
+ int ahci_port_resume(struct ata_port *ap);
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index b986145..3358ce9 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -742,6 +742,16 @@ static int ahci_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+ 	return 0;
+ }
 
-Suravee
-
++int ahci_restart_engine(struct ata_port *ap)
++{
++	ahci_stop_engine(ap);
++	ahci_start_fis_rx(ap);
++	ahci_start_engine(ap);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(ahci_restart_engine);
++
+ #ifdef CONFIG_PM
+ static void ahci_power_down(struct ata_port *ap)
+ {
+--
+1.8.2.1
 
