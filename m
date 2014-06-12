@@ -1,70 +1,152 @@
 From: Kumar Gala <galak@codeaurora.org>
-Subject: [PATCH 3/3] ata: qcom: Add device tree bindings information
-Date: Thu, 12 Jun 2014 14:13:24 -0500
-Message-ID: <1402600404-19214-3-git-send-email-galak@codeaurora.org>
+Subject: [PATCH 2/3] ata: Add Qualcomm ARM SoC AHCI SATA host controller driver
+Date: Thu, 12 Jun 2014 14:13:23 -0500
+Message-ID: <1402600404-19214-2-git-send-email-galak@codeaurora.org>
 References: <1402600404-19214-1-git-send-email-galak@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1402600404-19214-1-git-send-email-galak@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>
-Cc: Kumar Gala <galak@codeaurora.org>, linux-ide@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Kumar Gala <galak@codeaurora.org>, linux-ide@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Add device tree binding for Qualcomm AHCI SATA controller and specifically
-the sata controller on the IPQ806x family of SoCs.
+Add support for the Qualcomm AHCI SATA controller that exists on several
+SoC and specifically the IPQ806x family of chips.  The IPQ806x SATA support
+requires the associated IPQ806x SATA PHY Driver to be enabled as well.
 
 Signed-off-by: Kumar Gala <galak@codeaurora.org>
 ---
- .../devicetree/bindings/ata/qcom-sata.txt          | 40 ++++++++++++++++++++++
- 1 file changed, 40 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/ata/qcom-sata.txt
+ drivers/ata/Kconfig     | 10 ++++++
+ drivers/ata/Makefile    |  1 +
+ drivers/ata/ahci_qcom.c | 86 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 97 insertions(+)
+ create mode 100644 drivers/ata/ahci_qcom.c
 
-diff --git a/Documentation/devicetree/bindings/ata/qcom-sata.txt b/Documentation/devicetree/bindings/ata/qcom-sata.txt
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 7671dba..aa88648 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -132,6 +132,16 @@ config AHCI_MVEBU
+ 
+ 	  If unsure, say N.
+ 
++config AHCI_QCOM
++	tristate "Qualcomm AHCI SATA support"
++	depends on ARCH_QCOM
++	help
++	  This option enables support for AHCI SATA controller
++	  integrated into Qualcomm ARM SoC chipsets. For more
++	  information please refer to http://www.qualcomm.com/chipsets.
++
++	  If unsure, say N.
++
+ config AHCI_SUNXI
+ 	tristate "Allwinner sunxi AHCI SATA support"
+ 	depends on ARCH_SUNXI
+diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+index 5a02aee..15401e9 100644
+--- a/drivers/ata/Makefile
++++ b/drivers/ata/Makefile
+@@ -13,6 +13,7 @@ obj-$(CONFIG_SATA_HIGHBANK)	+= sata_highbank.o libahci.o
+ obj-$(CONFIG_AHCI_DA850)	+= ahci_da850.o libahci.o libahci_platform.o
+ obj-$(CONFIG_AHCI_IMX)		+= ahci_imx.o libahci.o libahci_platform.o
+ obj-$(CONFIG_AHCI_MVEBU)	+= ahci_mvebu.o libahci.o libahci_platform.o
++obj-$(CONFIG_AHCI_QCOM)		+= ahci_qcom.o libahci.o libahci_platform.o
+ obj-$(CONFIG_AHCI_SUNXI)	+= ahci_sunxi.o libahci.o libahci_platform.o
+ obj-$(CONFIG_AHCI_ST)		+= ahci_st.o libahci.o libahci_platform.o
+ obj-$(CONFIG_AHCI_XGENE)	+= ahci_xgene.o libahci.o libahci_platform.o
+diff --git a/drivers/ata/ahci_qcom.c b/drivers/ata/ahci_qcom.c
 new file mode 100644
-index 0000000..5e74e41
+index 0000000..7a4fd30
 --- /dev/null
-+++ b/Documentation/devicetree/bindings/ata/qcom-sata.txt
-@@ -0,0 +1,40 @@
-+* Qualcomm AHCI SATA Controller
++++ b/drivers/ata/ahci_qcom.c
+@@ -0,0 +1,86 @@
++/*
++ * Qualcomm ARM SoC AHCI SATA platform driver
++ *
++ * based on the AHCI SATA platform driver by Jeff Garzik and Anton Vorontsov
++ *
++ * Copyright (c) 2014, The Linux Foundation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 and
++ * only version 2 as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */
 +
-+SATA nodes are defined to describe on-chip Serial ATA controllers.
-+Each SATA controller should have its own node.
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/pm.h>
++#include <linux/device.h>
++#include <linux/platform_device.h>
++#include <linux/libata.h>
++#include <linux/ahci_platform.h>
++#include "ahci.h"
 +
-+Required properties:
-+- compatible		: compatible list, contains "qcom,msm-ahci"
-+- interrupts		: <interrupt mapping for SATA IRQ>
-+- reg			: <registers mapping>
-+- phys			: Must contain exactly one entry as specified
-+			  in phy-bindings.txt
-+- phy-names		: Must be "sata-phy"
++static const struct ata_port_info qcom_ahci_port_info = {
++	.flags		= AHCI_FLAG_COMMON,
++	.pio_mask	= ATA_PIO4,
++	.udma_mask	= ATA_UDMA6,
++	.port_ops	= &ahci_platform_ops,
++};
 +
-+Required properties for "qcom,ipq806x-ahci" compatible:
-+- clocks		: Must contain an entry for each entry in clock-names.
-+- clock-names		: Shall be:
-+				"slave_iface" - Fabric port AHB clock for SATA
-+				"iface" - AHB clock
-+				"core" - core clock
-+				"rxoob" - RX out-of-band clock
-+				"pmalive" - Power Module Alive clock
++static int qcom_ahci_probe(struct platform_device *pdev)
++{
++	struct ahci_host_priv *hpriv;
++	struct clk *rxoob_clk;
++	int rc;
 +
-+Example:
-+	sata@29000000 {
-+		compatible = "qcom,ipq806x-ahci", "qcom,msm-ahci";
-+		reg = <0x29000000 0x180>;
++	hpriv = ahci_platform_get_resources(pdev);
++	if (IS_ERR(hpriv))
++		return PTR_ERR(hpriv);
 +
-+		interrupts = <0 209 0x0>;
++	/* Try and set the rxoob clk to 100Mhz */
++	rxoob_clk = of_clk_get_by_name(pdev->dev.of_node, "rxoob");
++	if (IS_ERR(rxoob_clk))
++		return PTR_ERR(rxoob_clk);
 +
-+		clocks = <&gcc SFAB_SATA_S_H_CLK>,
-+			 <&gcc SATA_H_CLK>,
-+			 <&gcc SATA_A_CLK>,
-+			 <&gcc SATA_RXOOB_CLK>,
-+			 <&gcc SATA_PMALIVE_CLK>;
-+		clock-names = "slave_iface", "iface", "core",
-+				"rxoob", "pmalive";
++	rc = clk_set_rate(rxoob_clk, 100000000);
++	if (rc)
++		return rc;
 +
-+		phys = <&sata_phy>;
-+		phy-names = "sata-phy";
-+	};
++	rc = ahci_platform_enable_resources(hpriv);
++	if (rc)
++		return rc;
++
++	rc = ahci_platform_init_host(pdev, hpriv, &qcom_ahci_port_info, 0, 0);
++	if (rc)
++		goto disable_resources;
++
++	return 0;
++disable_resources:
++	ahci_platform_disable_resources(hpriv);
++	return rc;
++}
++
++static const struct of_device_id qcom_ahci_of_match[] = {
++	{ .compatible = "qcom,msm-ahci", },
++	{},
++};
++MODULE_DEVICE_TABLE(of, qcom_ahci_of_match);
++
++static struct platform_driver qcom_ahci_driver = {
++	.probe = qcom_ahci_probe,
++	.remove = ata_platform_remove_one,
++	.driver = {
++		.name = "qcom_ahci_qcom",
++		.owner = THIS_MODULE,
++		.of_match_table = qcom_ahci_of_match,
++	},
++};
++module_platform_driver(qcom_ahci_driver);
++
++MODULE_DESCRIPTION("Qualcomm AHCI SATA platform driver");
++MODULE_LICENSE("GPL");
++MODULE_ALIAS("ahci:qcom");
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 hosted by The Linux Foundation
