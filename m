@@ -1,44 +1,41 @@
-From: Kumar Gala <galak@codeaurora.org>
-Subject: Re: [PATCH 2/3] ata: Add Qualcomm ARM SoC AHCI SATA host controller driver
-Date: Thu, 12 Jun 2014 16:23:06 -0500
-Message-ID: <8C69AEA0-877D-4198-BAD4-393695FBC94E@codeaurora.org>
-References: <1402600404-19214-1-git-send-email-galak@codeaurora.org> <1402600404-19214-2-git-send-email-galak@codeaurora.org> <539A047B.3010306@codeaurora.org>
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.2\))
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <539A047B.3010306@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Stephen Boyd <sboyd@codeaurora.org>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+From: Ming Lei <ming.lei@canonical.com>
+Subject: Re: [PATCH v1 0/2]ata: Fix the dma state machine lockup for APM
+ X-Gene SoC
+Date: Fri, 13 Jun 2014 16:20:14 +0800
+Message-ID: <CACVXFVMTfNtBe3FXNuo-UqzY5fx+CpGhSCBOspM9G6By8Oi4RA@mail.gmail.com>
+References: <1402574362-24986-1-git-send-email-stripathi@apm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from youngberry.canonical.com ([91.189.89.112]:52563 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752036AbaFMIUR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Jun 2014 04:20:17 -0400
+In-Reply-To: <1402574362-24986-1-git-send-email-stripathi@apm.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Suman Tripathi <stripathi@apm.com>
+Cc: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, ddutile@redhat.com, jcm@redhat.com, patches@apm.com
+
+Hi Suman,
+
+On Thu, Jun 12, 2014 at 7:59 PM, Suman Tripathi <stripathi@apm.com> wrote:
+> Suman Tripathi (2):
+>   libahci: Implement the function ahci_restart_engine to restart the
+>     port dma engine.
+>   ata: Fix the dma state machine lockup for the PIO mode commands.
+>
+>  drivers/ata/ahci.h       |  3 +++
+>  drivers/ata/ahci_xgene.c | 17 +++--------------
+>  drivers/ata/libahci.c    | 43 +++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 49 insertions(+), 14 deletions(-)
+
+Looks the patch doesn't fix the issue of booting hang on my
+mustang board.
+
+And the ata failure message still can be seen.
 
 
-On Jun 12, 2014, at 2:50 PM, Stephen Boyd <sboyd@codeaurora.org> wrote:
-
-> On 06/12/14 12:13, Kumar Gala wrote:
->> +static int qcom_ahci_probe(struct platform_device *pdev)
->> +{
->> +	struct ahci_host_priv *hpriv;
->> +	struct clk *rxoob_clk;
->> +	int rc;
->> +
->> +	hpriv =3D ahci_platform_get_resources(pdev);
->> +	if (IS_ERR(hpriv))
->> +		return PTR_ERR(hpriv);
->> +
->> +	/* Try and set the rxoob clk to 100Mhz */
->> +	rxoob_clk =3D of_clk_get_by_name(pdev->dev.of_node, "rxoob");
->=20
-> Any reason we can't use devm_clk_get() here?
-
-Was trying to avoid the ref cnt of devm_clk_get() as the clk=92s are ac=
-tually handled in ahci_platform_get_resources/ahci_platform_enable_reso=
-urces
-
-- k
-
---=20
-Employee of Qualcomm Innovation Center, Inc.
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, host=
-ed by The Linux Foundation
+Thanks,
+--
+Ming Lei
