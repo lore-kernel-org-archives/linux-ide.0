@@ -1,48 +1,47 @@
-From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
-Subject: Re: [PATCH 1/2] ahci: Check and set 64-bit DMA mask for platform
- AHCI driver
-Date: Fri, 13 Jun 2014 07:45:12 -0500
-Message-ID: <539AF258.1080202@amd.com>
-References: <1402594824-4151-1-git-send-email-suravee.suthikulpanit@amd.com>
- <1402594824-4151-2-git-send-email-suravee.suthikulpanit@amd.com>
- <5399E7AD.8030901@cogentembedded.com>
+From: Stanimir Varbanov <svarbanov@mm-sol.com>
+Subject: Re: [PATCH 2/3] ata: Add Qualcomm ARM SoC AHCI SATA host controller
+ driver
+Date: Fri, 13 Jun 2014 17:38:05 +0300
+Message-ID: <539B0CCD.9060509@mm-sol.com>
+References: <1402600404-19214-1-git-send-email-galak@codeaurora.org> <1402600404-19214-2-git-send-email-galak@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bn1lp0144.outbound.protection.outlook.com ([207.46.163.144]:45335
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750784AbaFMMpc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 13 Jun 2014 08:45:32 -0400
-In-Reply-To: <5399E7AD.8030901@cogentembedded.com>
+Received: from ns.mm-sol.com ([37.157.136.199]:51048 "EHLO extserv.mm-sol.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751795AbaFMOiJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 13 Jun 2014 10:38:09 -0400
+In-Reply-To: <1402600404-19214-2-git-send-email-galak@codeaurora.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, tj@kernel.org, b.zolnierkie@samsung.com
-Cc: hdegoede@redhat.com, lho@apm.com, tphan@apm.com, stripathi@apm.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Kumar Gala <galak@codeaurora.org>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
 
-On 6/12/2014 12:47 PM, Sergei Shtylyov wrote:
->> diff --git a/drivers/ata/libahci_platform.c
->> b/drivers/ata/libahci_platform.c
->> index 3a5b4ed..a958a2b 100644
->> --- a/drivers/ata/libahci_platform.c
->> +++ b/drivers/ata/libahci_platform.c
->> @@ -364,6 +364,19 @@ int ahci_platform_init_host(struct
->> platform_device *pdev,
->>               ap->ops = &ata_dummy_port_ops;
->>       }
->>
->> +    if (hpriv->cap & HOST_CAP_64) {
->> +        rc = dma_coerce_mask_and_coherent(dev, DMA_BIT_MASK(64));
->> +        if (rc) {
->> +            rc = dma_coerce_mask_and_coherent(dev,
->> +                              DMA_BIT_MASK(32));
->> +            if (rc) {
->> +                dev_err(dev, "Failed to enable 64-bit DMA.\n");
->
->     Not 32-bit?
-Actually, I intended to say 64 since this is supposed to be setting up 
-64-bit DMA mask. Or we could just say failed to set up DMA mask.
+Hi Kumar,
 
-Suravee
+> +
+> +static struct platform_driver qcom_ahci_driver = {
+> +	.probe = qcom_ahci_probe,
+> +	.remove = ata_platform_remove_one,
+> +	.driver = {
+> +		.name = "qcom_ahci_qcom",
+> +		.owner = THIS_MODULE,
+> +		.of_match_table = qcom_ahci_of_match,
+> +	},
+> +};
+> +module_platform_driver(qcom_ahci_driver);
+> +
+> +MODULE_DESCRIPTION("Qualcomm AHCI SATA platform driver");
+> +MODULE_LICENSE("GPL");
 
+"GPL v2" ? Or only GPL is intentional?
+
+> +MODULE_ALIAS("ahci:qcom");
+> 
+
+missing MODULE_AUTHOR
+
+-- 
+regards,
+Stan
