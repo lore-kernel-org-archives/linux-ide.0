@@ -1,73 +1,34 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [PATCH 1/2] ahci: Check and set 64-bit DMA mask for platform
- AHCI driver
-Date: Fri, 13 Jun 2014 22:21:10 +0200
-Message-ID: <539B5D36.7010201@redhat.com>
-References: <1402594824-4151-1-git-send-email-suravee.suthikulpanit@amd.com> <1402594824-4151-2-git-send-email-suravee.suthikulpanit@amd.com>
+From: Ming Lei <ming.lei@canonical.com>
+Subject: Re: [PATCH v1 0/2]ata: Fix the dma state machine lockup for APM
+ X-Gene SoC
+Date: Sun, 15 Jun 2014 21:00:31 +0800
+Message-ID: <CACVXFVMCJ14KdKOTeidhE5_kMHNgbgz0axK+YB2i_c-iCNRruQ@mail.gmail.com>
+References: <1402574362-24986-1-git-send-email-stripathi@apm.com>
+	<CACVXFVMTfNtBe3FXNuo-UqzY5fx+CpGhSCBOspM9G6By8Oi4RA@mail.gmail.com>
+	<CAOHikRD+e2VLj8cN0B_D67bVosMmOf0rU-zuxFNeA8OgoypQGw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46732 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751074AbaFMUV2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 13 Jun 2014 16:21:28 -0400
-In-Reply-To: <1402594824-4151-2-git-send-email-suravee.suthikulpanit@amd.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:36785 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751278AbaFONAe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 15 Jun 2014 09:00:34 -0400
+In-Reply-To: <CAOHikRD+e2VLj8cN0B_D67bVosMmOf0rU-zuxFNeA8OgoypQGw@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: suravee.suthikulpanit@amd.com, tj@kernel.org, b.zolnierkie@samsung.com
-Cc: lho@apm.com, tphan@apm.com, stripathi@apm.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Suman Tripathi <stripathi@apm.com>
+Cc: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Don Dutile <ddutile@redhat.com>, Jon Masters <jcm@redhat.com>, patches@apm.com
 
-Hi,
+On Fri, Jun 13, 2014 at 7:03 PM, Suman Tripathi <stripathi@apm.com> wrote:
+> Hi Ming,
+>
+> I also tested in our mustang board. It is working fine. Without this patch ,
+> I was also facing issues. Can send me the entire log of failure ?
 
-On 06/12/2014 07:40 PM, suravee.suthikulpanit@amd.com wrote:
-> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> 
-> The current platform AHCI driver does not set the dma_mask correctly
-> for 64-bit DMA capable AHCI controller. This patch checks the AHCI
-> capability bit and set the dma_mask and coherent_dma_mask accordingly.
-> 
-> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-> Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+Please see the dmsg log from patched kernel in below link:
 
-I see no adverse effects from this on sunxi, please drop the
-Reviewed-by: Hans .... tag and replace it with:
+  http://pastebin.com/4XcnHyrV
 
-Tested-by: Hans de Goede <hdegoede@redhat.com>
-
-Regards,
-
-Hans
-
-
-
-> ---
->  drivers/ata/libahci_platform.c | 13 +++++++++++++
->  1 file changed, 13 insertions(+)
-> 
-> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-> index 3a5b4ed..a958a2b 100644
-> --- a/drivers/ata/libahci_platform.c
-> +++ b/drivers/ata/libahci_platform.c
-> @@ -364,6 +364,19 @@ int ahci_platform_init_host(struct platform_device *pdev,
->  			ap->ops = &ata_dummy_port_ops;
->  	}
->  
-> +	if (hpriv->cap & HOST_CAP_64) {
-> +		rc = dma_coerce_mask_and_coherent(dev, DMA_BIT_MASK(64));
-> +		if (rc) {
-> +			rc = dma_coerce_mask_and_coherent(dev,
-> +							  DMA_BIT_MASK(32));
-> +			if (rc) {
-> +				dev_err(dev, "Failed to enable 64-bit DMA.\n");
-> +				return rc;
-> +			}
-> +			dev_warn(dev, "Enable 32-bit DMA instead of 64-bit.\n");
-> +		}
-> +	}
-> +
->  	rc = ahci_reset_controller(host);
->  	if (rc)
->  		return rc;
-> 
+Thanks,
+--
+Ming Lei
