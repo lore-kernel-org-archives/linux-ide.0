@@ -1,83 +1,96 @@
-From: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Subject: Re: [PATCH v6 6/7] ARM: berlin: add the AHCI node for the BG2Q
-Date: Mon, 16 Jun 2014 12:44:28 +0200
-Message-ID: <539ECA8C.4010007@gmail.com>
-References: <1402914392-6028-1-git-send-email-antoine.tenart@free-electrons.com> <1402914392-6028-7-git-send-email-antoine.tenart@free-electrons.com>
+From: Sebastian Hesselbarth <sebastian.hesselbarth-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v6 0/7] ARM: berlin: add AHCI support
+Date: Mon, 16 Jun 2014 12:46:22 +0200
+Message-ID: <539ECAFE.3000508@gmail.com>
+References: <1402914392-6028-1-git-send-email-antoine.tenart@free-electrons.com>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:43400 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755104AbaFPKoe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jun 2014 06:44:34 -0400
-In-Reply-To: <1402914392-6028-7-git-send-email-antoine.tenart@free-electrons.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1402914392-6028-1-git-send-email-antoine.tenart-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: =?UTF-8?B?QW50b2luZSBUw6luYXJ0?= <antoine.tenart-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, kishon-l0cyMroinI0@public.gmane.org
+Cc: alexandre.belloni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, zmxu-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org, jszhang-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: =?UTF-8?B?QW50b2luZSBUw6luYXJ0?= <antoine.tenart@free-electrons.com>, tj@kernel.org, kishon@ti.com
-Cc: alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 
 On 06/16/2014 12:26 PM, Antoine T=C3=A9nart wrote:
-> The BG2Q has an AHCI SATA controller. Add the corresponding nodes
-> (AHCI, PHY) into its device tree.
+> This series adds the support for Berlin SoC AHCI controller. The
+> controller allows to use the SATA host interface and, for example, th=
+e
+> eSATA port on the BG2Q.
 >
-> Signed-off-by: Antoine T=C3=A9nart <antoine.tenart@free-electrons.com=
+> The series adds a PHY driver to control the two SATA ports available,
+> and adds a generic compatible to use the existing ahci_platform drive=
+r.
+
+Besides the comment about adding SATA clock to SATA PHY node and driver=
+,
+
+Acked-by: Sebastian Hesselbarth <sebastian.hesselbarth-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+
+for patches 1-5.
+
+> Also enable the eSATA interface on the BG2Q DMP.
 >
-> ---
->   arch/arm/boot/dts/berlin2q.dtsi | 28 ++++++++++++++++++++++++++++
->   1 file changed, 28 insertions(+)
+> Changes sinve v5:
+> 	- rebased on top of v3.16-rc1
+> 	- added the clocks property in the sata node
 >
-> diff --git a/arch/arm/boot/dts/berlin2q.dtsi b/arch/arm/boot/dts/berl=
-in2q.dtsi
-> index 635a16a64cb4..3fb0d3935aec 100644
-> --- a/arch/arm/boot/dts/berlin2q.dtsi
-> +++ b/arch/arm/boot/dts/berlin2q.dtsi
-> @@ -303,6 +303,34 @@
->   			clock-names =3D "refclk";
->   		};
+> Changes since v4:
+>          - updated PHY driver as tristate
+>          - handled the case were no SATA port is enabled
+>          - updated the compatible to a generic one
+>          - cosmetic fixups
 >
-> +		ahci: sata@e90000 {
-> +			compatible =3D "generic-ahci";
-> +			reg =3D <0xe90000 0x1000>;
-> +			interrupts =3D <GIC_SPI 7 IRQ_TYPE_LEVEL_HIGH>;
-> +			clocks =3D <&chip CLKID_SATA>;
-> +			#address-cells =3D <1>;
-> +			#size-cells =3D <0>;
-> +
-> +			sata0: sata-port@0 {
-> +				reg =3D <0>;
-> +				phys =3D <&sata_phy 0>;
-> +				status =3D "disabled";
-> +			};
-> +
-> +			sata1: sata-port@1 {
-> +				reg =3D <1>;
-> +				phys =3D <&sata_phy 1>;
-> +				status =3D "disabled";
-> +			};
-> +		};
-> +
-> +		sata_phy: phy@e900a0 {
-> +			compatible =3D "marvell,berlin-sata-phy";
-> +			reg =3D <0xe900a0 0x200>;
-
-Antoine,
-
-I guess you'll also need
-	clocks =3D <&chip CLKID_SATA>;
-here and corresponding code in the PHY driver.
-
-If SATA PHY is accessing SATA registers, disabling the clock will
-most likely lock-up the SoC.
-
-Sebastian
-
-> +			#phy-cells =3D <1>;
-> +			status =3D "disabled";
-> +		};
-> +
->   		apb@fc0000 {
->   			compatible =3D "simple-bus";
->   			#address-cells =3D <1>;
+> Changes since v3:
+>          - moved all PHY operations to the PHY driver
+>          - removed PHY sub-nodes
+>          - removed the custom Berlin AHCI driver and switched to
+>            ahci_platform
+>          - added multiple PHYs support to the libahci_platform
+>
+> Changes since v2:
+>          - modeled each PHY as a sub-node
+>          - cosmetic fixups
+>
+> Changes since v1:
+>          - added a PHY driver, allowing to enable each port
+>            individually and removed the 'force-port-map' property
+>          - made the drivers a bit less magic :)
+>          - wrote a function to select and configure registers in the
+>            AHCI driver
+>          - removed BG2 / BG2CD nodes
+>
+> Antoine T=C3=A9nart (7):
+>    phy: add a driver for the Berlin SATA PHY
+>    Documentation: bindings: add the Berlin SATA PHY
+>    ata: libahci: allow to use multiple PHYs
+>    ata: ahci_platform: add a generic AHCI compatible
+>    Documentation: bindings: document the sub-nodes AHCI bindings
+>    ARM: berlin: add the AHCI node for the BG2Q
+>    ARM: berlin: enable the eSATA interface on the BG2Q DMP
+>
+>   .../devicetree/bindings/ata/ahci-platform.txt      |  37 ++++
+>   .../devicetree/bindings/phy/berlin-sata-phy.txt    |  14 ++
+>   arch/arm/boot/dts/berlin2q-marvell-dmp.dts         |   8 +
+>   arch/arm/boot/dts/berlin2q.dtsi                    |  28 +++
+>   drivers/ata/ahci.h                                 |   3 +-
+>   drivers/ata/ahci_platform.c                        |   2 +
+>   drivers/ata/libahci.c                              |   7 +
+>   drivers/ata/libahci_platform.c                     | 170 ++++++++++=
++----
+>   drivers/phy/Kconfig                                |   7 +
+>   drivers/phy/Makefile                               |   1 +
+>   drivers/phy/phy-berlin-sata.c                      | 232 ++++++++++=
++++++++++++
+>   11 files changed, 473 insertions(+), 36 deletions(-)
+>   create mode 100644 Documentation/devicetree/bindings/phy/berlin-sat=
+a-phy.txt
+>   create mode 100644 drivers/phy/phy-berlin-sata.c
 >
 
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" i=
+n
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
