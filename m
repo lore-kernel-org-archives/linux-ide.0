@@ -1,32 +1,35 @@
 From: Stephen Warren <swarren-3lzwWm7+Weoh9ZMKESR00Q@public.gmane.org>
-Subject: Re: [PATCH 7/9] ahci: Increase AHCI_MAX_CLKS to 4
-Date: Mon, 16 Jun 2014 16:04:26 -0600
-Message-ID: <539F69EA.6000200@wwwdotorg.org>
-References: <1401881559-18469-1-git-send-email-mperttunen@nvidia.com> <1401881559-18469-8-git-send-email-mperttunen@nvidia.com>
+Subject: Re: [PATCH 8/9] ata: Add support for the Tegra124 SATA controller
+Date: Mon, 16 Jun 2014 16:14:34 -0600
+Message-ID: <539F6C4A.2030005@wwwdotorg.org>
+References: <1401881559-18469-1-git-send-email-mperttunen@nvidia.com> <1401881559-18469-9-git-send-email-mperttunen@nvidia.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1401881559-18469-8-git-send-email-mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <1401881559-18469-9-git-send-email-mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 Sender: linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: Mikko Perttunen <mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, pdeschrijver-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Mikko Perttunen <mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pdeschrijver-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org
+Cc: linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
 On 06/04/2014 05:32 AM, Mikko Perttunen wrote:
-> The Tegra AHCI device requires four clocks, so increase the maximum
-> amount of handled clocks from three to four.
+> This adds support for the integrated AHCI-compliant Serial ATA
+> controller present on the NVIDIA Tegra124 system-on-chip.
 
-Tejun,
+> diff --git a/drivers/ata/ahci_tegra.c b/drivers/ata/ahci_tegra.c
 
-The SATA driver in patch 8/9 in this series would usually be applied in
-your ATA tree. However, it has a lot of compile-time dependencies on
-things outside the ATA tree that I expect you don't want to deal with.
+> +static int tegra_ahci_controller_init(struct ahci_host_priv *hpriv)
 
-If you're OK with patches 7 and 8, could you ack them so that I can
-apply them to the Tegra tree?
+> +	/* Pad calibration */
+> +
+> +	ret = tegra_fuse_readl(0x224, &val);
+> +	if (ret) {
+> +		dev_err(&tegra->pdev->dev,
+> +			"failed to read sata calibration fuse: %d\n", ret);
+> +		return ret;
+> +	}
+> +
+> +	calib = tegra124_pad_calibration[val];
 
-I assume the patches won't cause any significant conflicts, but if you
-need, I can certainly give you a signed tag back to allow you to merge
-the driver patch (plus the compile-time dependencies) into your tree
-later if needed.
+Shouldn't val be range-checked before blindly using it?
