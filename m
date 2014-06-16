@@ -1,41 +1,56 @@
-From: Joe Perches <joe@perches.com>
-Subject: [PATCH -next 03/26] ata: Use dma_zalloc_coherent
-Date: Sun, 15 Jun 2014 13:37:32 -0700
-Message-ID: <2be5da39b914e5f9d845c0f789267e80c188d5b5.1402863905.git.joe@perches.com>
-References: <cover.1402863904.git.joe@perches.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1402863904.git.joe@perches.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+From: Thomas Schwinge <thomas@codesourcery.com>
+Subject: Re: Linux kernel crash (3.2.0-2-amd64) when trying to play audio CD
+Date: Mon, 16 Jun 2014 09:13:20 +0200
+Message-ID: <87sin5z5rj.fsf@schwinge.name>
+References: <87obojef7t.fsf@schwinge.name> <20120616181008.GB20623@liondog.tnic> <87ehpddw9k.fsf@schwinge.name> <20120618142900.GA9710@aftab.osrc.amd.com> <87sjdsd64r.fsf@schwinge.name> <20120618155141.GF8378@aftab.osrc.amd.com> <877gs69oue.fsf@schwinge.name> <20120913125825.GB19691@aftab.osrc.amd.com> <20120917172345.GH13879@aftab.osrc.amd.com> <87ehlu5l5b.fsf@schwinge.name>
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="=-=-="; micalg=pgp-sha1;
+	protocol="application/pgp-signature"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from relay1.mentorg.com ([192.94.38.131]:43496 "EHLO
+	relay1.mentorg.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751077AbaFPHN2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jun 2014 03:13:28 -0400
+In-Reply-To: <87ehlu5l5b.fsf@schwinge.name>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Borislav Petkov <bp@amd64.org>
+Cc: Borislav Petkov <bp@alien8.de>, debian-kernel@lists.debian.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Use the zeroing function instead of dma_alloc_coherent & memset(,0,)
+--=-=-=
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/ata/sata_fsl.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+Hi!
 
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index 616a6d2..07bc7e4 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -734,13 +734,12 @@ static int sata_fsl_port_start(struct ata_port *ap)
- 	if (!pp)
- 		return -ENOMEM;
- 
--	mem = dma_alloc_coherent(dev, SATA_FSL_PORT_PRIV_DMA_SZ, &mem_dma,
--				 GFP_KERNEL);
-+	mem = dma_zalloc_coherent(dev, SATA_FSL_PORT_PRIV_DMA_SZ, &mem_dma,
-+				  GFP_KERNEL);
- 	if (!mem) {
- 		kfree(pp);
- 		return -ENOMEM;
- 	}
--	memset(mem, 0, SATA_FSL_PORT_PRIV_DMA_SZ);
- 
- 	pp->cmdslot = mem;
- 	pp->cmdslot_paddr = mem_dma;
--- 
-1.8.1.2.459.gbcd45b4.dirty
+On Sat, 22 Sep 2012 13:53:20 +0200, I wrote:
+> On Mon, 17 Sep 2012 19:23:45 +0200, Borislav Petkov <bp@amd64.org> wrote:
+> > On Thu, Sep 13, 2012 at 02:58:25PM +0200, Borislav Petkov wrote:
+> > > Here's the script, let me know how it goes:
+> >=20
+> > Here's a more correct version. [...]
+
+> However, putting in that one audio CD still crashes the machine: [...]
+
+The problem "solved itself": the machine recently died of hardware
+failure.  ;-|
+
+
+Gr=C3=BC=C3=9Fe,
+ Thomas
+
+--=-=-=
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQEcBAEBAgAGBQJTnpkQAAoJENuKOtuXzphJkhAIAIHu7gDJt4JYUURhSlbXx7fj
+RStKgtmQwpavuWCVXgjhVyfFvMtRe35L4Ix12m7/W6rNZ+RTwDo+3vbotdxFUagE
+jb5hY985cojG0MAglg2tUzebbjAWvgJHAiopMeTnaWFsTyYzHzbbsdslA/SkEdQO
+4CVGAtMVLD9pnOoP6KHanN7NVD3Q4gxOSKVUDkOlvwLp7hUgNncdDjMM45/Fi7sU
+3dlcVIygLe6OvLH4LAcHAGJ7IlwkvhbqLtbCwLPJ2+Zu1TobndHNGW8MggY7Samy
+0NyPks0z3Ruf663VpIkhdTHpyAJLps6zbW94Aezl/o71RDjHRoBNsBNQQErd+vU=
+=oxc7
+-----END PGP SIGNATURE-----
+--=-=-=--
