@@ -1,51 +1,39 @@
-From: Borislav Petkov <bp@alien8.de>
-Subject: Re: Linux kernel crash (3.2.0-2-amd64) when trying to play audio CD
-Date: Mon, 16 Jun 2014 12:46:38 +0200
-Message-ID: <20140616104638.GC8170@pd.tnic>
-References: <20120618142900.GA9710@aftab.osrc.amd.com>
- <87sjdsd64r.fsf@schwinge.name>
- <20120618155141.GF8378@aftab.osrc.amd.com>
- <877gs69oue.fsf@schwinge.name>
- <20120913125825.GB19691@aftab.osrc.amd.com>
- <20120917172345.GH13879@aftab.osrc.amd.com>
- <87ehlu5l5b.fsf@schwinge.name>
- <87sin5z5rj.fsf@schwinge.name>
- <20140616094324.GA8170@pd.tnic>
- <87ppi9ywh8.fsf@schwinge.name>
+From: Ming Lei <ming.lei@canonical.com>
+Subject: Re: [PATCH v2 0/2]ata: Fix the dma state machine lockup for APM
+ X-Gene SoC
+Date: Mon, 16 Jun 2014 23:59:21 +0800
+Message-ID: <CACVXFVPQhwyMN0ynhXkmD+DipmPiSHH2YFN++iwE64o=nghCxA@mail.gmail.com>
+References: <1402911336-31788-1-git-send-email-stripathi@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.skyhub.de ([78.46.96.112]:58327 "EHLO mail.skyhub.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932070AbaFPKqt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 16 Jun 2014 06:46:49 -0400
-Content-Disposition: inline
-In-Reply-To: <87ppi9ywh8.fsf@schwinge.name>
+Received: from youngberry.canonical.com ([91.189.89.112]:43497 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755442AbaFPP7Y (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jun 2014 11:59:24 -0400
+In-Reply-To: <1402911336-31788-1-git-send-email-stripathi@apm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Thomas Schwinge <thomas@codesourcery.com>
-Cc: debian-kernel@lists.debian.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Suman Tripathi <stripathi@apm.com>
+Cc: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Don Dutile <ddutile@redhat.com>, Jon Masters <jcm@redhat.com>, patches@apm.com
 
-On Mon, Jun 16, 2014 at 12:33:55PM +0200, Thomas Schwinge wrote:
-> The power supply and/or mainboard didn't "wake up" after a recent power
-> cycle.  As both these aren't standard form factors (and the
-> machine/architecture had some issues, as discussed, and see also
-> <http://news.gmane.org/find-root.php?message_id=%3C87r45fajun.fsf%40schwinge.name%3E>
+On Mon, Jun 16, 2014 at 5:35 PM, Suman Tripathi <stripathi@apm.com> wrote:
+> Suman Tripathi (2):
+>   libahci: Implement the function ahci_restart_engine to restart the
+>     port dma engine.
+>   ata: Fix the dma state machine lockup for the IDENTIFY DEVICE PIO mode
+>     command.
+>
+>  drivers/ata/ahci.h       |  4 ++++
+>  drivers/ata/ahci_xgene.c | 17 +++--------------
+>  drivers/ata/libahci.c    | 44 ++++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 51 insertions(+), 14 deletions(-)
 
-Fun.
+V2 looks good and makes my mutang board bootable, thanks.
 
-> for another issue), I didn't bother looking for spare parts.  Want me to
-> ship it to you?  ;-)
+Reported-and-tested-by: Ming Lei <ming.lei@canonical.com>
 
-That's nice but I have enough broken hardware here as it is. :-)
 
-You could probably find a better use for it, say a flower pot? :-D
-
-Good luck.
-
--- 
-Regards/Gruss,
-    Boris.
-
-Sent from a fat crate under my desk. Formatting is fine.
+Thanks,
 --
+Ming Lei
