@@ -1,96 +1,51 @@
-From: Sebastian Hesselbarth <sebastian.hesselbarth-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v6 0/7] ARM: berlin: add AHCI support
-Date: Mon, 16 Jun 2014 12:46:22 +0200
-Message-ID: <539ECAFE.3000508@gmail.com>
-References: <1402914392-6028-1-git-send-email-antoine.tenart@free-electrons.com>
+From: Borislav Petkov <bp@alien8.de>
+Subject: Re: Linux kernel crash (3.2.0-2-amd64) when trying to play audio CD
+Date: Mon, 16 Jun 2014 12:46:38 +0200
+Message-ID: <20140616104638.GC8170@pd.tnic>
+References: <20120618142900.GA9710@aftab.osrc.amd.com>
+ <87sjdsd64r.fsf@schwinge.name>
+ <20120618155141.GF8378@aftab.osrc.amd.com>
+ <877gs69oue.fsf@schwinge.name>
+ <20120913125825.GB19691@aftab.osrc.amd.com>
+ <20120917172345.GH13879@aftab.osrc.amd.com>
+ <87ehlu5l5b.fsf@schwinge.name>
+ <87sin5z5rj.fsf@schwinge.name>
+ <20140616094324.GA8170@pd.tnic>
+ <87ppi9ywh8.fsf@schwinge.name>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1402914392-6028-1-git-send-email-antoine.tenart-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: =?UTF-8?B?QW50b2luZSBUw6luYXJ0?= <antoine.tenart-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, kishon-l0cyMroinI0@public.gmane.org
-Cc: alexandre.belloni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, zmxu-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org, jszhang-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.skyhub.de ([78.46.96.112]:58327 "EHLO mail.skyhub.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932070AbaFPKqt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 16 Jun 2014 06:46:49 -0400
+Content-Disposition: inline
+In-Reply-To: <87ppi9ywh8.fsf@schwinge.name>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Thomas Schwinge <thomas@codesourcery.com>
+Cc: debian-kernel@lists.debian.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 06/16/2014 12:26 PM, Antoine T=C3=A9nart wrote:
-> This series adds the support for Berlin SoC AHCI controller. The
-> controller allows to use the SATA host interface and, for example, th=
-e
-> eSATA port on the BG2Q.
->
-> The series adds a PHY driver to control the two SATA ports available,
-> and adds a generic compatible to use the existing ahci_platform drive=
-r.
+On Mon, Jun 16, 2014 at 12:33:55PM +0200, Thomas Schwinge wrote:
+> The power supply and/or mainboard didn't "wake up" after a recent power
+> cycle.  As both these aren't standard form factors (and the
+> machine/architecture had some issues, as discussed, and see also
+> <http://news.gmane.org/find-root.php?message_id=%3C87r45fajun.fsf%40schwinge.name%3E>
 
-Besides the comment about adding SATA clock to SATA PHY node and driver=
-,
+Fun.
 
-Acked-by: Sebastian Hesselbarth <sebastian.hesselbarth-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> for another issue), I didn't bother looking for spare parts.  Want me to
+> ship it to you?  ;-)
 
-for patches 1-5.
+That's nice but I have enough broken hardware here as it is. :-)
 
-> Also enable the eSATA interface on the BG2Q DMP.
->
-> Changes sinve v5:
-> 	- rebased on top of v3.16-rc1
-> 	- added the clocks property in the sata node
->
-> Changes since v4:
->          - updated PHY driver as tristate
->          - handled the case were no SATA port is enabled
->          - updated the compatible to a generic one
->          - cosmetic fixups
->
-> Changes since v3:
->          - moved all PHY operations to the PHY driver
->          - removed PHY sub-nodes
->          - removed the custom Berlin AHCI driver and switched to
->            ahci_platform
->          - added multiple PHYs support to the libahci_platform
->
-> Changes since v2:
->          - modeled each PHY as a sub-node
->          - cosmetic fixups
->
-> Changes since v1:
->          - added a PHY driver, allowing to enable each port
->            individually and removed the 'force-port-map' property
->          - made the drivers a bit less magic :)
->          - wrote a function to select and configure registers in the
->            AHCI driver
->          - removed BG2 / BG2CD nodes
->
-> Antoine T=C3=A9nart (7):
->    phy: add a driver for the Berlin SATA PHY
->    Documentation: bindings: add the Berlin SATA PHY
->    ata: libahci: allow to use multiple PHYs
->    ata: ahci_platform: add a generic AHCI compatible
->    Documentation: bindings: document the sub-nodes AHCI bindings
->    ARM: berlin: add the AHCI node for the BG2Q
->    ARM: berlin: enable the eSATA interface on the BG2Q DMP
->
->   .../devicetree/bindings/ata/ahci-platform.txt      |  37 ++++
->   .../devicetree/bindings/phy/berlin-sata-phy.txt    |  14 ++
->   arch/arm/boot/dts/berlin2q-marvell-dmp.dts         |   8 +
->   arch/arm/boot/dts/berlin2q.dtsi                    |  28 +++
->   drivers/ata/ahci.h                                 |   3 +-
->   drivers/ata/ahci_platform.c                        |   2 +
->   drivers/ata/libahci.c                              |   7 +
->   drivers/ata/libahci_platform.c                     | 170 ++++++++++=
-+----
->   drivers/phy/Kconfig                                |   7 +
->   drivers/phy/Makefile                               |   1 +
->   drivers/phy/phy-berlin-sata.c                      | 232 ++++++++++=
-+++++++++++
->   11 files changed, 473 insertions(+), 36 deletions(-)
->   create mode 100644 Documentation/devicetree/bindings/phy/berlin-sat=
-a-phy.txt
->   create mode 100644 drivers/phy/phy-berlin-sata.c
->
+You could probably find a better use for it, say a flower pot? :-D
 
+Good luck.
+
+-- 
+Regards/Gruss,
+    Boris.
+
+Sent from a fat crate under my desk. Formatting is fine.
 --
-To unsubscribe from this list: send the line "unsubscribe devicetree" i=
-n
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
