@@ -1,59 +1,83 @@
-From: Thomas Schwinge <thomas@codesourcery.com>
-Subject: Re: Linux kernel crash (3.2.0-2-amd64) when trying to play audio CD
-Date: Mon, 16 Jun 2014 12:33:55 +0200
-Message-ID: <87ppi9ywh8.fsf@schwinge.name>
-References: <20120616181008.GB20623@liondog.tnic> <87ehpddw9k.fsf@schwinge.name> <20120618142900.GA9710@aftab.osrc.amd.com> <87sjdsd64r.fsf@schwinge.name> <20120618155141.GF8378@aftab.osrc.amd.com> <877gs69oue.fsf@schwinge.name> <20120913125825.GB19691@aftab.osrc.amd.com> <20120917172345.GH13879@aftab.osrc.amd.com> <87ehlu5l5b.fsf@schwinge.name> <87sin5z5rj.fsf@schwinge.name> <20140616094324.GA8170@pd.tnic>
+From: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Subject: Re: [PATCH v6 6/7] ARM: berlin: add the AHCI node for the BG2Q
+Date: Mon, 16 Jun 2014 12:44:28 +0200
+Message-ID: <539ECA8C.4010007@gmail.com>
+References: <1402914392-6028-1-git-send-email-antoine.tenart@free-electrons.com> <1402914392-6028-7-git-send-email-antoine.tenart@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-="; micalg=pgp-sha1;
-	protocol="application/pgp-signature"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20140616094324.GA8170@pd.tnic>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Borislav Petkov <bp@alien8.de>
-Cc: debian-kernel@lists.debian.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:43400 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755104AbaFPKoe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jun 2014 06:44:34 -0400
+In-Reply-To: <1402914392-6028-7-git-send-email-antoine.tenart@free-electrons.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: =?UTF-8?B?QW50b2luZSBUw6luYXJ0?= <antoine.tenart@free-electrons.com>, tj@kernel.org, kishon@ti.com
+Cc: alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 
---=-=-=
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+On 06/16/2014 12:26 PM, Antoine T=C3=A9nart wrote:
+> The BG2Q has an AHCI SATA controller. Add the corresponding nodes
+> (AHCI, PHY) into its device tree.
+>
+> Signed-off-by: Antoine T=C3=A9nart <antoine.tenart@free-electrons.com=
+>
+> ---
+>   arch/arm/boot/dts/berlin2q.dtsi | 28 ++++++++++++++++++++++++++++
+>   1 file changed, 28 insertions(+)
+>
+> diff --git a/arch/arm/boot/dts/berlin2q.dtsi b/arch/arm/boot/dts/berl=
+in2q.dtsi
+> index 635a16a64cb4..3fb0d3935aec 100644
+> --- a/arch/arm/boot/dts/berlin2q.dtsi
+> +++ b/arch/arm/boot/dts/berlin2q.dtsi
+> @@ -303,6 +303,34 @@
+>   			clock-names =3D "refclk";
+>   		};
+>
+> +		ahci: sata@e90000 {
+> +			compatible =3D "generic-ahci";
+> +			reg =3D <0xe90000 0x1000>;
+> +			interrupts =3D <GIC_SPI 7 IRQ_TYPE_LEVEL_HIGH>;
+> +			clocks =3D <&chip CLKID_SATA>;
+> +			#address-cells =3D <1>;
+> +			#size-cells =3D <0>;
+> +
+> +			sata0: sata-port@0 {
+> +				reg =3D <0>;
+> +				phys =3D <&sata_phy 0>;
+> +				status =3D "disabled";
+> +			};
+> +
+> +			sata1: sata-port@1 {
+> +				reg =3D <1>;
+> +				phys =3D <&sata_phy 1>;
+> +				status =3D "disabled";
+> +			};
+> +		};
+> +
+> +		sata_phy: phy@e900a0 {
+> +			compatible =3D "marvell,berlin-sata-phy";
+> +			reg =3D <0xe900a0 0x200>;
 
-Hi Borislav!
+Antoine,
 
-On Mon, 16 Jun 2014 11:43:24 +0200, Borislav Petkov <bp@alien8.de> wrote:
-> On Mon, Jun 16, 2014 at 09:13:20AM +0200, Thomas Schwinge wrote:
-> > The problem "solved itself": the machine recently died of hardware
-> > failure. ;-|
->=20
-> How convenient. :-P
+I guess you'll also need
+	clocks =3D <&chip CLKID_SATA>;
+here and corresponding code in the PHY driver.
 
-;-P
+If SATA PHY is accessing SATA registers, disabling the clock will
+most likely lock-up the SoC.
 
-> What happened?
+Sebastian
 
-The power supply and/or mainboard didn't "wake up" after a recent power
-cycle.  As both these aren't standard form factors (and the
-machine/architecture had some issues, as discussed, and see also
-<http://news.gmane.org/find-root.php?message_id=3D%3C87r45fajun.fsf%40schwi=
-nge.name%3E>
-for another issue), I didn't bother looking for spare parts.  Want me to
-ship it to you?  ;-)
+> +			#phy-cells =3D <1>;
+> +			status =3D "disabled";
+> +		};
+> +
+>   		apb@fc0000 {
+>   			compatible =3D "simple-bus";
+>   			#address-cells =3D <1>;
+>
 
-
-Gr=C3=BC=C3=9Fe,
- Thomas
-
---=-=-=
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQEcBAEBAgAGBQJTnsgTAAoJENuKOtuXzphJ6xwH/i1EUl3MATXdeRFU3B+VBvep
-95JxE8HRl11pokrM5gGEI5m22O4wWrY8xF6E0fXbO/P10nSdyHQhUP4tmCzzwhdn
-s48n4HmQyOITM2djY2qq4AsEGk0RFjk2v6mcksTVrr34RsSfgmOCPrrmqY8qvMow
-40botWsQzy6h0QcFtG92lA3kqgLoTWW9ugAlStHG9qiumztOo+JZY8uWGxMXD8Ln
-oDpvwLMCUwLyRoy6inlDZ0oAicdhaFOwNcO0hXp16+yxxTRRCvpDSLy1VOf3FiQC
-ph1SwzQTDubMAsplaHjOSgaatSMBBTWoJPRRZVL7z9ErNSgZoB6jK+t+zt5zbeY=
-=HPye
------END PGP SIGNATURE-----
---=-=-=--
