@@ -1,55 +1,59 @@
-From: =?UTF-8?q?Antoine=20T=C3=A9nart?=
-	<antoine.tenart@free-electrons.com>
-Subject: [PATCH v6 2/7] Documentation: bindings: add the Berlin SATA PHY
-Date: Mon, 16 Jun 2014 12:26:27 +0200
-Message-ID: <1402914392-6028-3-git-send-email-antoine.tenart@free-electrons.com>
-References: <1402914392-6028-1-git-send-email-antoine.tenart@free-electrons.com>
+From: Thomas Schwinge <thomas@codesourcery.com>
+Subject: Re: Linux kernel crash (3.2.0-2-amd64) when trying to play audio CD
+Date: Mon, 16 Jun 2014 12:33:55 +0200
+Message-ID: <87ppi9ywh8.fsf@schwinge.name>
+References: <20120616181008.GB20623@liondog.tnic> <87ehpddw9k.fsf@schwinge.name> <20120618142900.GA9710@aftab.osrc.amd.com> <87sjdsd64r.fsf@schwinge.name> <20120618155141.GF8378@aftab.osrc.amd.com> <877gs69oue.fsf@schwinge.name> <20120913125825.GB19691@aftab.osrc.amd.com> <20120917172345.GH13879@aftab.osrc.amd.com> <87ehlu5l5b.fsf@schwinge.name> <87sin5z5rj.fsf@schwinge.name> <20140616094324.GA8170@pd.tnic>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:54090 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755205AbaFPK0h (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jun 2014 06:26:37 -0400
-In-Reply-To: <1402914392-6028-1-git-send-email-antoine.tenart@free-electrons.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: multipart/signed; boundary="=-=-="; micalg=pgp-sha1;
+	protocol="application/pgp-signature"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20140616094324.GA8170@pd.tnic>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Borislav Petkov <bp@alien8.de>
+Cc: debian-kernel@lists.debian.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: sebastian.hesselbarth@gmail.com, tj@kernel.org, kishon@ti.com
-Cc: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The Berlin SATA PHY drives the PHY related to the SATA interface. Add
-the corresponding documentation.
+--=-=-=
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Antoine T=C3=A9nart <antoine.tenart@free-electrons.com>
----
- Documentation/devicetree/bindings/phy/berlin-sata-phy.txt | 14 +++++++=
-+++++++
- 1 file changed, 14 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/phy/berlin-sata-p=
-hy.txt
+Hi Borislav!
 
-diff --git a/Documentation/devicetree/bindings/phy/berlin-sata-phy.txt =
-b/Documentation/devicetree/bindings/phy/berlin-sata-phy.txt
-new file mode 100644
-index 000000000000..72646db2f5fc
---- /dev/null
-+++ b/Documentation/devicetree/bindings/phy/berlin-sata-phy.txt
-@@ -0,0 +1,14 @@
-+Berlin SATA PHY
-+---------------
-+
-+Required properties:
-+- compatible: "marvell,berlin-sata-phy"
-+- phy-cells: from the generic PHY bindings, must be 1
-+- reg: address and length of the register
-+
-+Example:
-+	sata_phy: phy@f7e900a0 {
-+		compatible =3D "marvell,berlin-sata-phy";
-+		reg =3D <0xf7e900a0 0x200>;
-+		#phy-cells =3D <1>;
-+	};
---=20
-1.9.1
+On Mon, 16 Jun 2014 11:43:24 +0200, Borislav Petkov <bp@alien8.de> wrote:
+> On Mon, Jun 16, 2014 at 09:13:20AM +0200, Thomas Schwinge wrote:
+> > The problem "solved itself": the machine recently died of hardware
+> > failure. ;-|
+>=20
+> How convenient. :-P
 
+;-P
+
+> What happened?
+
+The power supply and/or mainboard didn't "wake up" after a recent power
+cycle.  As both these aren't standard form factors (and the
+machine/architecture had some issues, as discussed, and see also
+<http://news.gmane.org/find-root.php?message_id=3D%3C87r45fajun.fsf%40schwi=
+nge.name%3E>
+for another issue), I didn't bother looking for spare parts.  Want me to
+ship it to you?  ;-)
+
+
+Gr=C3=BC=C3=9Fe,
+ Thomas
+
+--=-=-=
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQEcBAEBAgAGBQJTnsgTAAoJENuKOtuXzphJ6xwH/i1EUl3MATXdeRFU3B+VBvep
+95JxE8HRl11pokrM5gGEI5m22O4wWrY8xF6E0fXbO/P10nSdyHQhUP4tmCzzwhdn
+s48n4HmQyOITM2djY2qq4AsEGk0RFjk2v6mcksTVrr34RsSfgmOCPrrmqY8qvMow
+40botWsQzy6h0QcFtG92lA3kqgLoTWW9ugAlStHG9qiumztOo+JZY8uWGxMXD8Ln
+oDpvwLMCUwLyRoy6inlDZ0oAicdhaFOwNcO0hXp16+yxxTRRCvpDSLy1VOf3FiQC
+ph1SwzQTDubMAsplaHjOSgaatSMBBTWoJPRRZVL7z9ErNSgZoB6jK+t+zt5zbeY=
+=HPye
+-----END PGP SIGNATURE-----
+--=-=-=--
