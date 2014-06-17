@@ -1,29 +1,39 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH -next 03/26] ata: Use dma_zalloc_coherent
-Date: Tue, 17 Jun 2014 10:23:59 -0400
-Message-ID: <20140617142359.GA31819@htj.dyndns.org>
-References: <cover.1402863904.git.joe@perches.com>
- <2be5da39b914e5f9d845c0f789267e80c188d5b5.1402863905.git.joe@perches.com>
+Subject: Re: [PATCH RESEND] libahci_platform: Fail when PHY required but PHY
+ support disabled
+Date: Tue, 17 Jun 2014 10:27:27 -0400
+Message-ID: <20140617142727.GB31819@htj.dyndns.org>
+References: <1403006875-22556-1-git-send-email-mperttunen@nvidia.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f173.google.com ([209.85.216.173]:53891 "EHLO
-	mail-qc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932585AbaFQOYD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jun 2014 10:24:03 -0400
+Received: from mail-qg0-f52.google.com ([209.85.192.52]:46498 "EHLO
+	mail-qg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932696AbaFQO1a (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jun 2014 10:27:30 -0400
 Content-Disposition: inline
-In-Reply-To: <2be5da39b914e5f9d845c0f789267e80c188d5b5.1402863905.git.joe@perches.com>
+In-Reply-To: <1403006875-22556-1-git-send-email-mperttunen@nvidia.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Mikko Perttunen <mperttunen@nvidia.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sun, Jun 15, 2014 at 01:37:32PM -0700, Joe Perches wrote:
-> Use the zeroing function instead of dma_alloc_coherent & memset(,0,)
+On Tue, Jun 17, 2014 at 03:07:55PM +0300, Mikko Perttunen wrote:
+> ahci_platform_get_resources handles resource management for
+> platform AHCI drivers, including getting a possible PHY
+> from the device tree. Since not all drivers need a PHY, it
+> ignores -ENODEV and -ENOSYS from devm_get_phy. However, when
+> the PHY subsystem is mistakenly disabled, -ENOSYS can be
+> returned even when a PHY is needed.
 > 
-> Signed-off-by: Joe Perches <joe@perches.com>
+> This patch modifies the -ENOSYS case to check if a "phys"
+> device tree node exists. If it exists, then clearly the PHY
+> subsystem is mistakenly disabled and the driver cannot work,
+> ahci_platform_get_resources will fail and propagate the error.
+> 
+> Signed-off-by: Mikko Perttunen <mperttunen@nvidia.com>
 
-Applied to cgroup/for-3.17.
+Applied to libata/for-3.17.
 
 Thanks.
 
