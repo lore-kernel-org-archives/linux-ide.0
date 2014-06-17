@@ -1,45 +1,67 @@
-From: Mikko Perttunen <mperttunen@nvidia.com>
-Subject: Re: [PATCH 6/9] ARM: tegra: Export tegra_powergate_power_on
-Date: Tue, 17 Jun 2014 15:28:29 +0300
-Message-ID: <53A0346D.8010005@nvidia.com>
-References: <1401881559-18469-1-git-send-email-mperttunen@nvidia.com> <1401881559-18469-7-git-send-email-mperttunen@nvidia.com> <539F691E.5030204@wwwdotorg.org> <20140617121313.GE18816@ulmo>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: Re: [PATCH RESEND] libahci_platform: Fail when PHY required but PHY
+ support disabled
+Date: Tue, 17 Jun 2014 14:33:58 +0200
+Message-ID: <1661226.KiZhVLZAOz@amdc1032>
+References: <1403006875-22556-1-git-send-email-mperttunen@nvidia.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:15772 "EHLO
-	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932209AbaFQM2c (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jun 2014 08:28:32 -0400
-In-Reply-To: <20140617121313.GE18816@ulmo>
+Received: from mailout3.samsung.com ([203.254.224.33]:54379 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754281AbaFQMfW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jun 2014 08:35:22 -0400
+In-reply-to: <1403006875-22556-1-git-send-email-mperttunen@nvidia.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Thierry Reding <thierry.reding@gmail.com>, Stephen Warren <swarren@wwwdotorg.org>
-Cc: "tj@kernel.org" <tj@kernel.org>, Peter De Schrijver <pdeschrijver@nvidia.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Mikko Perttunen <mperttunen@nvidia.com>
+Cc: tj@kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-I'll try removing use of all libahci_platform stuff except 
-ahci_platform_init_host for v2.
+On Tuesday, June 17, 2014 03:07:55 PM Mikko Perttunen wrote:
+> ahci_platform_get_resources handles resource management for
+> platform AHCI drivers, including getting a possible PHY
+> from the device tree. Since not all drivers need a PHY, it
+> ignores -ENODEV and -ENOSYS from devm_get_phy. However, when
+> the PHY subsystem is mistakenly disabled, -ENOSYS can be
+> returned even when a PHY is needed.
+> 
+> This patch modifies the -ENOSYS case to check if a "phys"
+> device tree node exists. If it exists, then clearly the PHY
+> subsystem is mistakenly disabled and the driver cannot work,
+> ahci_platform_get_resources will fail and propagate the error.
+> 
+> Signed-off-by: Mikko Perttunen <mperttunen@nvidia.com>
 
-On 17/06/14 15:13, Thierry Reding wrote:
-> * PGP Signed by an unknown key
->
-> On Mon, Jun 16, 2014 at 04:01:02PM -0600, Stephen Warren wrote:
->> On 06/04/2014 05:32 AM, Mikko Perttunen wrote:
->>> This symbol needs to be exported to power on rails without using
->>> tegra_powergate_sequence_power_up. tegra_powergate_sequence_power_up
->>> cannot be used in situations where the driver wants to handle clocking
->>> by itself.
->>
->> Thierry, are you OK with this change?
->
-> I would've preferred tegra_powergate_sequence_power_up() to be used
-> consistently in all drivers. I'm still not convinced that using the
-> platform AHCI driver this way is really the best option, since we're
-> bending over backwards to fit into what this driver dictates. There
-> shouldn't be a need for that.
->
-> Thierry
->
-> * Unknown Key
-> * 0x7F3EB3A1
->
+Acked-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+
+> ---
+>  drivers/ata/libahci_platform.c | 7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+> index 3a5b4ed..b007758 100644
+> --- a/drivers/ata/libahci_platform.c
+> +++ b/drivers/ata/libahci_platform.c
+> @@ -250,8 +250,13 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev)
+>  	if (IS_ERR(hpriv->phy)) {
+>  		rc = PTR_ERR(hpriv->phy);
+>  		switch (rc) {
+> -		case -ENODEV:
+>  		case -ENOSYS:
+> +			/* No PHY support. Check if PHY is required. */
+> +			if (of_find_property(dev->of_node, "phys", NULL)) {
+> +				dev_err(dev, "couldn't get sata-phy: ENOSYS\n");
+> +				goto err_out;
+> +			}
+> +		case -ENODEV:
+>  			/* continue normally */
+>  			hpriv->phy = NULL;
+>  			break;
+
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
+
