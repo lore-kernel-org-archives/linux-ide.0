@@ -1,117 +1,274 @@
-From: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Subject: Re: [PATCH v6 1/7] phy: add a driver for the Berlin SATA PHY
-Date: Tue, 17 Jun 2014 20:17:02 +0200
-Message-ID: <53A0861E.90400@gmail.com>
-References: <1402914392-6028-1-git-send-email-antoine.tenart@free-electrons.com> <1402914392-6028-2-git-send-email-antoine.tenart@free-electrons.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-we0-f175.google.com ([74.125.82.175]:64895 "EHLO
-	mail-we0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932762AbaFQSRF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jun 2014 14:17:05 -0400
-In-Reply-To: <1402914392-6028-2-git-send-email-antoine.tenart@free-electrons.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Kumar Gala <galak@codeaurora.org>
+Subject: [PATCH v4 1/2] phy: qcom: Add driver for QCOM IPQ806x SATA PHY
+Date: Tue, 17 Jun 2014 13:32:21 -0500
+Message-ID: <1403029941-20207-1-git-send-email-galak@codeaurora.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Kumar Gala <galak@codeaurora.org>, linux-ide@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, sboyd@codeaurora.org, b.zolnierkie@samsung.com
 List-Id: linux-ide@vger.kernel.org
-To: =?UTF-8?B?QW50b2luZSBUw6luYXJ0?= <antoine.tenart@free-electrons.com>, tj@kernel.org, kishon@ti.com
-Cc: alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 06/16/2014 12:26 PM, Antoine T=C3=A9nart wrote:
-> The Berlin SoC has a two SATA ports. Add a PHY driver to handle them.
->=20
-> The mode selection can let us think this PHY can be configured to fit
-> other purposes. But there are reasons to think the SATA mode will be
-> the only one usable: the PHY registers are only accessible indirectly
-> through two registers in the SATA range, the PHY seems to be integrat=
-ed
-> and no information tells us the contrary. For these reasons, make the
-> driver a SATA PHY driver.
->=20
-> Signed-off-by: Antoine T=C3=A9nart <antoine.tenart@free-electrons.com=
->
-> ---
-[...]
-> diff --git a/drivers/phy/phy-berlin-sata.c b/drivers/phy/phy-berlin-s=
-ata.c
-> new file mode 100644
-> index 000000000000..907897a02672
-> --- /dev/null
-> +++ b/drivers/phy/phy-berlin-sata.c
-> @@ -0,0 +1,232 @@
-> +/*
-> + * Marvell Berlin SATA PHY driver
-> + *
-> + * Copyright (C) 2014 Marvell Technology Group Ltd.
-> + *
-> + * Antoine T=C3=A9nart <antoine.tenart@free-electrons.com>
-> + *
-> + * This file is licensed under the terms of the GNU General Public
-> + * License version 2. This program is licensed "as is" without any
-> + * warranty of any kind, whether express or implied.
-> + */
-> +
-> +#include <linux/module.h>
-> +#include <linux/phy/phy.h>
-> +#include <linux/io.h>
-> +#include <linux/platform_device.h>
-> +
-> +#define HOST_VSA_ADDR		0x0
-> +#define HOST_VSA_DATA		0x4
-> +#define PORT_VSR_ADDR		0x78
-> +#define PORT_VSR_DATA		0x7c
-> +#define PORT_SCR_CTL		0x2c
-> +
-> +#define CONTROL_REGISTER	0x0
-> +#define MBUS_SIZE_CONTROL	0x4
-> +
-> +#define POWER_DOWN_PHY0			BIT(6)
-> +#define POWER_DOWN_PHY1			BIT(14)
-> +#define MBUS_WRITE_REQUEST_SIZE_128	(BIT(2) << 16)
-> +#define MBUS_READ_REQUEST_SIZE_128	(BIT(2) << 19)
-> +
-> +#define PHY_BASE		0x200
+Add a PHY driver for uses with AHCI based SATA controller driver on the
+IPQ806x family of SoCs.
 
-Antoine,
+Signed-off-by: Kumar Gala <galak@codeaurora.org>
+---
+v4:
+* removed qcom_ipq806x_sata_delay_us as it was only used one
 
-I gave your Berlin AHCI patches a try on BG2. I finally got it working
-but BG2 has a different PHY_BASE and need some register fixups.
+v3:
+* Added Kconfig HAS_IOMEM dep
+* re-ordered probe function so phy_provider_register is last
+ 
+v2:
+* dropped unused dev pointer in struct qcom_ipq806x_sata_phy
+* remove unnecessary reg initializaiton
+* Removed unneeded error message
+* Added remove function to disable the clock
 
-Please update this patch and the DT bindings to reflect the difference
-of BG2Q with respect to BG2 as below.
+ drivers/phy/Kconfig                 |   7 ++
+ drivers/phy/Makefile                |   1 +
+ drivers/phy/phy-qcom-ipq806x-sata.c | 206 ++++++++++++++++++++++++++++++++++++
+ 3 files changed, 214 insertions(+)
+ create mode 100644 drivers/phy/phy-qcom-ipq806x-sata.c
 
-[...]
-> +
-> +static const struct of_device_id phy_berlin_sata_of_match[] =3D {
-> +	{ .compatible =3D "marvell,berlin-sata-phy" },
-
-s/marvell,berlin-sata-phy/marvell,berlin2-sata-phy/
-
-and add
-
-marvell,berlin2q-sata-phy
-
-That way it can be applied now without proper support for BG2
-and I can send patches later.
-
-Sebastian
-
-> +	{ },
-> +};
-> +
-> +static struct platform_driver phy_berlin_sata_driver =3D {
-> +	.probe	=3D phy_berlin_sata_probe,
-> +	.driver	=3D {
-> +		.name		=3D "phy-berlin-sata",
-> +		.owner		=3D THIS_MODULE,
-> +		.of_match_table	=3D phy_berlin_sata_of_match,
-> +	},
-> +};
-> +module_platform_driver(phy_berlin_sata_driver);
-> +
-> +MODULE_DESCRIPTION("Marvell Berlin SATA PHY driver");
-> +MODULE_AUTHOR("Antoine T=C3=A9nart <antoine.tenart@free-electrons.co=
-m>");
-> +MODULE_LICENSE("GPL v2");
->=20
-
+diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
+index 16a2f06..b7b6bce 100644
+--- a/drivers/phy/Kconfig
++++ b/drivers/phy/Kconfig
+@@ -178,4 +178,11 @@ config PHY_XGENE
+ 	help
+ 	  This option enables support for APM X-Gene SoC multi-purpose PHY.
+ 
++config PHY_QCOM_IPQ806X_SATA
++	tristate "Qualcomm IPQ806x SATA SerDes/PHY driver"
++	depends on ARCH_QCOM
++	depends on HAS_IOMEM
++	depends on OF
++	select GENERIC_PHY
++
+ endmenu
+diff --git a/drivers/phy/Makefile b/drivers/phy/Makefile
+index b4f1d57..d950317 100644
+--- a/drivers/phy/Makefile
++++ b/drivers/phy/Makefile
+@@ -20,3 +20,4 @@ phy-exynos-usb2-$(CONFIG_PHY_EXYNOS4X12_USB2)	+= phy-exynos4x12-usb2.o
+ phy-exynos-usb2-$(CONFIG_PHY_EXYNOS5250_USB2)	+= phy-exynos5250-usb2.o
+ obj-$(CONFIG_PHY_EXYNOS5_USBDRD)	+= phy-exynos5-usbdrd.o
+ obj-$(CONFIG_PHY_XGENE)			+= phy-xgene.o
++obj-$(CONFIG_PHY_QCOM_IPQ806X_SATA)	+= phy-qcom-ipq806x-sata.o
+diff --git a/drivers/phy/phy-qcom-ipq806x-sata.c b/drivers/phy/phy-qcom-ipq806x-sata.c
+new file mode 100644
+index 0000000..f58ab6d
+--- /dev/null
++++ b/drivers/phy/phy-qcom-ipq806x-sata.c
+@@ -0,0 +1,206 @@
++/*
++ * Copyright (c) 2014, The Linux Foundation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 and
++ * only version 2 as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */
++
++#include <linux/io.h>
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/of.h>
++#include <linux/of_address.h>
++#include <linux/time.h>
++#include <linux/delay.h>
++#include <linux/clk.h>
++#include <linux/slab.h>
++#include <linux/platform_device.h>
++#include <linux/phy/phy.h>
++
++struct qcom_ipq806x_sata_phy {
++	void __iomem *mmio;
++	struct clk *cfg_clk;
++};
++
++#define __set(v, a, b)	(((v) << (b)) & GENMASK(a, b))
++
++#define SATA_PHY_P0_PARAM0		0x200
++#define SATA_PHY_P0_PARAM0_P0_TX_PREEMPH_GEN3(x)	__set(x, 17, 12)
++#define SATA_PHY_P0_PARAM0_P0_TX_PREEMPH_GEN3_MASK	GENMASK(17, 12)
++#define SATA_PHY_P0_PARAM0_P0_TX_PREEMPH_GEN2(x)	__set(x, 11, 6)
++#define SATA_PHY_P0_PARAM0_P0_TX_PREEMPH_GEN2_MASK	GENMASK(11, 6)
++#define SATA_PHY_P0_PARAM0_P0_TX_PREEMPH_GEN1(x)	__set(x, 5, 0)
++#define SATA_PHY_P0_PARAM0_P0_TX_PREEMPH_GEN1_MASK	GENMASK(5, 0)
++
++#define SATA_PHY_P0_PARAM1		0x204
++#define SATA_PHY_P0_PARAM1_RESERVED_BITS31_21(x)	__set(x, 31, 21)
++#define SATA_PHY_P0_PARAM1_P0_TX_AMPLITUDE_GEN3(x)	__set(x, 20, 14)
++#define SATA_PHY_P0_PARAM1_P0_TX_AMPLITUDE_GEN3_MASK	GENMASK(20, 14)
++#define SATA_PHY_P0_PARAM1_P0_TX_AMPLITUDE_GEN2(x)	__set(x, 13, 7)
++#define SATA_PHY_P0_PARAM1_P0_TX_AMPLITUDE_GEN2_MASK	GENMASK(13, 7)
++#define SATA_PHY_P0_PARAM1_P0_TX_AMPLITUDE_GEN1(x)	__set(x, 6, 0)
++#define SATA_PHY_P0_PARAM1_P0_TX_AMPLITUDE_GEN1_MASK	GENMASK(6, 0)
++
++#define SATA_PHY_P0_PARAM2		0x208
++#define SATA_PHY_P0_PARAM2_RX_EQ(x)	__set(x, 20, 18)
++#define SATA_PHY_P0_PARAM2_RX_EQ_MASK	GENMASK(20, 18)
++
++#define SATA_PHY_P0_PARAM3		0x20C
++#define SATA_PHY_SSC_EN			0x8
++#define SATA_PHY_P0_PARAM4		0x210
++#define SATA_PHY_REF_SSP_EN		0x2
++#define SATA_PHY_RESET			0x1
++
++static int qcom_ipq806x_sata_phy_init(struct phy *generic_phy)
++{
++	struct qcom_ipq806x_sata_phy *phy = phy_get_drvdata(generic_phy);
++	u32 reg;
++
++	/* Setting SSC_EN to 1 */
++	reg = readl_relaxed(phy->mmio + SATA_PHY_P0_PARAM3);
++	reg = reg | SATA_PHY_SSC_EN;
++	writel_relaxed(reg, phy->mmio + SATA_PHY_P0_PARAM3);
++
++	reg = readl_relaxed(phy->mmio + SATA_PHY_P0_PARAM0) &
++			~(SATA_PHY_P0_PARAM0_P0_TX_PREEMPH_GEN3_MASK |
++			  SATA_PHY_P0_PARAM0_P0_TX_PREEMPH_GEN2_MASK |
++			  SATA_PHY_P0_PARAM0_P0_TX_PREEMPH_GEN1_MASK);
++	reg |= SATA_PHY_P0_PARAM0_P0_TX_PREEMPH_GEN3(0xf);
++	writel_relaxed(reg, phy->mmio + SATA_PHY_P0_PARAM0);
++
++	reg = readl_relaxed(phy->mmio + SATA_PHY_P0_PARAM1) &
++			~(SATA_PHY_P0_PARAM1_P0_TX_AMPLITUDE_GEN3_MASK |
++			  SATA_PHY_P0_PARAM1_P0_TX_AMPLITUDE_GEN2_MASK |
++			  SATA_PHY_P0_PARAM1_P0_TX_AMPLITUDE_GEN1_MASK);
++	reg |= SATA_PHY_P0_PARAM1_P0_TX_AMPLITUDE_GEN3(0x55) |
++		SATA_PHY_P0_PARAM1_P0_TX_AMPLITUDE_GEN2(0x55) |
++		SATA_PHY_P0_PARAM1_P0_TX_AMPLITUDE_GEN1(0x55);
++	writel_relaxed(reg, phy->mmio + SATA_PHY_P0_PARAM1);
++
++	reg = readl_relaxed(phy->mmio + SATA_PHY_P0_PARAM2) &
++		~SATA_PHY_P0_PARAM2_RX_EQ_MASK;
++	reg |= SATA_PHY_P0_PARAM2_RX_EQ(0x3);
++	writel_relaxed(reg, phy->mmio + SATA_PHY_P0_PARAM2);
++
++	/* Setting PHY_RESET to 1 */
++	reg = readl_relaxed(phy->mmio + SATA_PHY_P0_PARAM4);
++	reg = reg | SATA_PHY_RESET;
++	writel_relaxed(reg, phy->mmio + SATA_PHY_P0_PARAM4);
++
++	/* Setting REF_SSP_EN to 1 */
++	reg = readl_relaxed(phy->mmio + SATA_PHY_P0_PARAM4);
++	reg = reg | SATA_PHY_REF_SSP_EN | SATA_PHY_RESET;
++	writel_relaxed(reg, phy->mmio + SATA_PHY_P0_PARAM4);
++	mb();
++	/* sleep for max. 50us more to combine processor wakeups */
++	usleep_range(delay, delay + 50);
++
++	/* Clearing PHY_RESET to 0 */
++	reg = readl_relaxed(phy->mmio + SATA_PHY_P0_PARAM4);
++	reg = reg & ~SATA_PHY_RESET;
++	writel_relaxed(reg, phy->mmio + SATA_PHY_P0_PARAM4);
++
++	return 0;
++}
++
++static int qcom_ipq806x_sata_phy_exit(struct phy *generic_phy)
++{
++	struct qcom_ipq806x_sata_phy *phy = phy_get_drvdata(generic_phy);
++	u32 reg;
++
++	/* Setting PHY_RESET to 1 */
++	reg = readl_relaxed(phy->mmio + SATA_PHY_P0_PARAM4);
++	reg = reg | SATA_PHY_RESET;
++	writel_relaxed(reg, phy->mmio + SATA_PHY_P0_PARAM4);
++
++	return 0;
++}
++
++static struct phy_ops qcom_ipq806x_sata_phy_ops = {
++	.init		= qcom_ipq806x_sata_phy_init,
++	.exit		= qcom_ipq806x_sata_phy_exit,
++	.owner		= THIS_MODULE,
++};
++
++static int qcom_ipq806x_sata_phy_probe(struct platform_device *pdev)
++{
++	struct qcom_ipq806x_sata_phy *phy;
++	struct device *dev = &pdev->dev;
++	struct resource *res;
++	struct phy_provider *phy_provider;
++	struct phy *generic_phy;
++	int ret;
++
++	phy = devm_kzalloc(dev, sizeof(*phy), GFP_KERNEL);
++	if (!phy) {
++		dev_err(dev, "%s: failed to allocate phy\n", __func__);
++		return -ENOMEM;
++	}
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	phy->mmio = devm_ioremap_resource(dev, res);
++	if (IS_ERR(phy->mmio))
++		return PTR_ERR(phy->mmio);
++
++	generic_phy = devm_phy_create(dev, &qcom_ipq806x_sata_phy_ops, NULL);
++	if (IS_ERR(generic_phy)) {
++		dev_err(dev, "%s: failed to create phy\n", __func__);
++		return PTR_ERR(generic_phy);
++	}
++
++	phy_set_drvdata(generic_phy, phy);
++
++	phy->cfg_clk = devm_clk_get(dev, "cfg");
++	if (IS_ERR(phy->cfg_clk)) {
++		dev_err(dev, "Failed to get sata cfg clock\n");
++		return PTR_ERR(phy->cfg_clk);
++	}
++
++	ret = clk_prepare_enable(phy->cfg_clk);
++	if (ret)
++		return ret;
++
++	phy_provider = devm_of_phy_provider_register(dev, of_phy_simple_xlate);
++	if (IS_ERR(phy_provider)) {
++		clk_disable_unprepare(phy->cfg_clk);
++		dev_err(dev, "%s: failed to register phy\n", __func__);
++		return PTR_ERR(phy_provider);
++	}
++
++	return 0;
++}
++
++static int qcom_ipq806x_sata_phy_remove(struct platform_device *pdev)
++{
++	struct qcom_ipq806x_sata_phy *phy = platform_get_drvdata(pdev);
++
++	clk_disable_unprepare(phy->cfg_clk);
++
++	return 0;
++}
++
++static const struct of_device_id qcom_ipq806x_sata_phy_of_match[] = {
++	{ .compatible = "qcom,ipq806x-sata-phy" },
++	{ },
++};
++MODULE_DEVICE_TABLE(of, qcom_ipq806x_sata_phy_of_match);
++
++static struct platform_driver qcom_ipq806x_sata_phy_driver = {
++	.probe	= qcom_ipq806x_sata_phy_probe,
++	.remove	= qcom_ipq806x_sata_phy_remove,
++	.driver = {
++		.name	= "qcom-ipq806x-sata-phy",
++		.owner	= THIS_MODULE,
++		.of_match_table	= qcom_ipq806x_sata_phy_of_match,
++	}
++};
++module_platform_driver(qcom_ipq806x_sata_phy_driver);
++
++MODULE_DESCRIPTION("QCOM IPQ806x SATA PHY driver");
++MODULE_LICENSE("GPL v2");
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+hosted by The Linux Foundation
