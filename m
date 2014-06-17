@@ -1,39 +1,31 @@
-From: Peter De Schrijver <pdeschrijver@nvidia.com>
-Subject: Re: [PATCH 6/9] ARM: tegra: Export tegra_powergate_power_on
-Date: Tue, 17 Jun 2014 17:01:46 +0300
-Message-ID: <20140617140146.GH3407@tbergstrom-lnx.Nvidia.com>
-References: <1401881559-18469-1-git-send-email-mperttunen@nvidia.com>
- <1401881559-18469-7-git-send-email-mperttunen@nvidia.com>
- <539F691E.5030204@wwwdotorg.org> <20140617121313.GE18816@ulmo>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH -next 03/26] ata: Use dma_zalloc_coherent
+Date: Tue, 17 Jun 2014 10:23:59 -0400
+Message-ID: <20140617142359.GA31819@htj.dyndns.org>
+References: <cover.1402863904.git.joe@perches.com>
+ <2be5da39b914e5f9d845c0f789267e80c188d5b5.1402863905.git.joe@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qc0-f173.google.com ([209.85.216.173]:53891 "EHLO
+	mail-qc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932585AbaFQOYD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jun 2014 10:24:03 -0400
 Content-Disposition: inline
-In-Reply-To: <20140617121313.GE18816@ulmo>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>, Mikko Perttunen <mperttunen@nvidia.com>, "tj@kernel.org" <tj@kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+In-Reply-To: <2be5da39b914e5f9d845c0f789267e80c188d5b5.1402863905.git.joe@perches.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Tue, Jun 17, 2014 at 02:13:15PM +0200, Thierry Reding wrote:
-> * PGP Signed by an unknown key
+On Sun, Jun 15, 2014 at 01:37:32PM -0700, Joe Perches wrote:
+> Use the zeroing function instead of dma_alloc_coherent & memset(,0,)
 > 
-> On Mon, Jun 16, 2014 at 04:01:02PM -0600, Stephen Warren wrote:
-> > On 06/04/2014 05:32 AM, Mikko Perttunen wrote:
-> > > This symbol needs to be exported to power on rails without using
-> > > tegra_powergate_sequence_power_up. tegra_powergate_sequence_power_up
-> > > cannot be used in situations where the driver wants to handle clocking
-> > > by itself.
-> > 
-> > Thierry, are you OK with this change?
-> 
-> I would've preferred tegra_powergate_sequence_power_up() to be used
+> Signed-off-by: Joe Perches <joe@perches.com>
 
-I don't think the current tegra_powergate_sequence_power_up() API is very well
-defined though. I don't think the clocks and resets required by the sequence
-should be provided by the driver. For one, there can be several clocks and
-resets that need to be controlled for a single domain.
+Applied to cgroup/for-3.17.
 
-Cheers,
+Thanks.
 
-Peter.
+-- 
+tejun
