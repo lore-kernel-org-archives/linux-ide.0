@@ -1,39 +1,47 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 8/9] ata: Add support for the Tegra124 SATA controller
-Date: Tue, 17 Jun 2014 12:32:42 -0400
-Message-ID: <20140617163242.GK31819@htj.dyndns.org>
-References: <1401881559-18469-1-git-send-email-mperttunen@nvidia.com>
- <1401881559-18469-9-git-send-email-mperttunen@nvidia.com>
- <1470404.13mIFv0Hnj@amdc1032>
- <53A0686F.4000303@wwwdotorg.org>
- <20140617161320.GG31819@htj.dyndns.org>
- <20140617161447.GH31819@htj.dyndns.org>
- <53A06B65.7030407@wwwdotorg.org>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: Re: [PATCH v2 2/3] ata: Add Qualcomm ARM SoC AHCI SATA host controller
+ driver
+Date: Tue, 17 Jun 2014 18:50:01 +0200
+Message-ID: <3066194.ZkIxk6z9u6@amdc1032>
+References: <1402676163-31574-1-git-send-email-galak@codeaurora.org>
+ <14174621.WL9ndpHQ2Q@amdc1032>
+ <419989CC-5106-4AF7-8911-617B51FD7395@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <53A06B65.7030407@wwwdotorg.org>
+In-reply-to: <419989CC-5106-4AF7-8911-617B51FD7395@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Mikko Perttunen <mperttunen@nvidia.com>, thierry.reding@gmail.com, pdeschrijver@nvidia.com, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org, linux-ide@vger.kernel.org
+To: Kumar Gala <galak@codeaurora.org>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-arm-msm <linux-arm-msm@vger.kernel.org>, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, Stephen Boyd <sboyd@codeaurora.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, Jun 17, 2014 at 10:23:01AM -0600, Stephen Warren wrote:
-> > Please also drop inline.  It isn't a difficult optimization to perform
-> > for the compiler.
+On Tuesday, June 17, 2014 10:42:36 AM Kumar Gala wrote:
 > 
-> There are probably hundreds of drivers marking those functions inline.
+> On Jun 17, 2014, at 7:25 AM, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com> wrote:
 
-We used to need them.  We no longer do.  We're in a very long
-transition phase.
+[...]
 
-> If they aren't marked inline, it'll just stick out as unusual when
-> people read them all, and then they'll send patches to fix it.
+> >> +static struct platform_driver qcom_ahci_driver = {
+> >> +	.probe = qcom_ahci_probe,
+> >> +	.remove = ata_platform_remove_one,
+> >> +	.driver = {
+> >> +		.name = "qcom_ahci_qcom",
+> >> +		.owner = THIS_MODULE,
+> >> +		.of_match_table = qcom_ahci_of_match,
+> >> +	},
+> > 
+> > This driver lacks PM suspend/resume support.  I assume that
+> > the IPQ806x platform also doesn't support suspend/resume yet
+> > (if so a comment in the driver code about this would be useful),
+> > otherwise the driver should be fixed.
+> 
+> Correct, do you want the comment in the commit message or the driver itself?
 
-Don't worry.  They won't be applied.
+I would prefer the comment in the driver itself.
 
-Thanks.
-
--- 
-tejun
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
