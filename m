@@ -1,183 +1,45 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: Re: [PATCH v2 2/3] ata: Add Qualcomm ARM SoC AHCI SATA host controller
- driver
-Date: Tue, 17 Jun 2014 14:25:21 +0200
-Message-ID: <14174621.WL9ndpHQ2Q@amdc1032>
-References: <1402676163-31574-1-git-send-email-galak@codeaurora.org>
+From: Mikko Perttunen <mperttunen@nvidia.com>
+Subject: Re: [PATCH 6/9] ARM: tegra: Export tegra_powergate_power_on
+Date: Tue, 17 Jun 2014 15:28:29 +0300
+Message-ID: <53A0346D.8010005@nvidia.com>
+References: <1401881559-18469-1-git-send-email-mperttunen@nvidia.com> <1401881559-18469-7-git-send-email-mperttunen@nvidia.com> <539F691E.5030204@wwwdotorg.org> <20140617121313.GE18816@ulmo>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:53548 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932209AbaFQM0N (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jun 2014 08:26:13 -0400
-In-reply-to: <1402676163-31574-1-git-send-email-galak@codeaurora.org>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:15772 "EHLO
+	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932209AbaFQM2c (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jun 2014 08:28:32 -0400
+In-Reply-To: <20140617121313.GE18816@ulmo>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kumar Gala <galak@codeaurora.org>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+To: Thierry Reding <thierry.reding@gmail.com>, Stephen Warren <swarren@wwwdotorg.org>
+Cc: "tj@kernel.org" <tj@kernel.org>, Peter De Schrijver <pdeschrijver@nvidia.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
+I'll try removing use of all libahci_platform stuff except 
+ahci_platform_init_host for v2.
 
-Hi,
-
-On Friday, June 13, 2014 11:16:03 AM Kumar Gala wrote:
-> Add support for the Qualcomm AHCI SATA controller that exists on several
-> SoC and specifically the IPQ806x family of chips.  The IPQ806x SATA support
-> requires the associated IPQ806x SATA PHY Driver to be enabled as well.
-> 
-> Signed-off-by: Kumar Gala <galak@codeaurora.org>
-> ---
-> v2:
-> * Fixed MODULE_LICENSE to be GPL v2
-> 
->  drivers/ata/Kconfig     | 10 ++++++
->  drivers/ata/Makefile    |  1 +
->  drivers/ata/ahci_qcom.c | 86 +++++++++++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 97 insertions(+)
->  create mode 100644 drivers/ata/ahci_qcom.c
-> 
-> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-> index 7671dba..aa88648 100644
-> --- a/drivers/ata/Kconfig
-> +++ b/drivers/ata/Kconfig
-> @@ -132,6 +132,16 @@ config AHCI_MVEBU
->  
->  	  If unsure, say N.
->  
-> +config AHCI_QCOM
-> +	tristate "Qualcomm AHCI SATA support"
-> +	depends on ARCH_QCOM
-> +	help
-> +	  This option enables support for AHCI SATA controller
-> +	  integrated into Qualcomm ARM SoC chipsets. For more
-> +	  information please refer to http://www.qualcomm.com/chipsets.
-> +
-> +	  If unsure, say N.
-> +
->  config AHCI_SUNXI
->  	tristate "Allwinner sunxi AHCI SATA support"
->  	depends on ARCH_SUNXI
-> diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
-> index 5a02aee..15401e9 100644
-> --- a/drivers/ata/Makefile
-> +++ b/drivers/ata/Makefile
-> @@ -13,6 +13,7 @@ obj-$(CONFIG_SATA_HIGHBANK)	+= sata_highbank.o libahci.o
->  obj-$(CONFIG_AHCI_DA850)	+= ahci_da850.o libahci.o libahci_platform.o
->  obj-$(CONFIG_AHCI_IMX)		+= ahci_imx.o libahci.o libahci_platform.o
->  obj-$(CONFIG_AHCI_MVEBU)	+= ahci_mvebu.o libahci.o libahci_platform.o
-> +obj-$(CONFIG_AHCI_QCOM)		+= ahci_qcom.o libahci.o libahci_platform.o
->  obj-$(CONFIG_AHCI_SUNXI)	+= ahci_sunxi.o libahci.o libahci_platform.o
->  obj-$(CONFIG_AHCI_ST)		+= ahci_st.o libahci.o libahci_platform.o
->  obj-$(CONFIG_AHCI_XGENE)	+= ahci_xgene.o libahci.o libahci_platform.o
-> diff --git a/drivers/ata/ahci_qcom.c b/drivers/ata/ahci_qcom.c
-> new file mode 100644
-> index 0000000..bfb7a77
-> --- /dev/null
-> +++ b/drivers/ata/ahci_qcom.c
-> @@ -0,0 +1,86 @@
-> +/*
-> + * Qualcomm ARM SoC AHCI SATA platform driver
-> + *
-> + * based on the AHCI SATA platform driver by Jeff Garzik and Anton Vorontsov
-> + *
-> + * Copyright (c) 2014, The Linux Foundation. All rights reserved.
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License version 2 and
-> + * only version 2 as published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope that it will be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + */
-> +
-> +#include <linux/kernel.h>
-> +#include <linux/module.h>
-> +#include <linux/pm.h>
-> +#include <linux/device.h>
-> +#include <linux/platform_device.h>
-> +#include <linux/libata.h>
-> +#include <linux/ahci_platform.h>
-> +#include "ahci.h"
-> +
-> +static const struct ata_port_info qcom_ahci_port_info = {
-> +	.flags		= AHCI_FLAG_COMMON,
-> +	.pio_mask	= ATA_PIO4,
-> +	.udma_mask	= ATA_UDMA6,
-> +	.port_ops	= &ahci_platform_ops,
-> +};
-> +
-> +static int qcom_ahci_probe(struct platform_device *pdev)
-> +{
-> +	struct ahci_host_priv *hpriv;
-> +	struct clk *rxoob_clk;
-> +	int rc;
-> +
-> +	hpriv = ahci_platform_get_resources(pdev);
-> +	if (IS_ERR(hpriv))
-> +		return PTR_ERR(hpriv);
-> +
-> +	/* Try and set the rxoob clk to 100Mhz */
-> +	rxoob_clk = of_clk_get_by_name(pdev->dev.of_node, "rxoob");
-> +	if (IS_ERR(rxoob_clk))
-> +		return PTR_ERR(rxoob_clk);
-> +
-> +	rc = clk_set_rate(rxoob_clk, 100000000);
-
-Shouldn't the clk_prepare_enable() be called first?
-
-> +	if (rc)
-> +		return rc;
-
-of_clk_get_by_name() gets an extra reference on the clock so clk_put()
-should be called on failure.
-
-> +	rc = ahci_platform_enable_resources(hpriv);
-> +	if (rc)
-> +		return rc;
-> +
-> +	rc = ahci_platform_init_host(pdev, hpriv, &qcom_ahci_port_info, 0, 0);
-> +	if (rc)
-> +		goto disable_resources;
-> +
-> +	return 0;
-> +disable_resources:
-> +	ahci_platform_disable_resources(hpriv);
-> +	return rc;
-> +}
-> +
-> +static const struct of_device_id qcom_ahci_of_match[] = {
-> +	{ .compatible = "qcom,msm-ahci", },
-> +	{},
-> +};
-> +MODULE_DEVICE_TABLE(of, qcom_ahci_of_match);
-> +
-> +static struct platform_driver qcom_ahci_driver = {
-> +	.probe = qcom_ahci_probe,
-> +	.remove = ata_platform_remove_one,
-> +	.driver = {
-> +		.name = "qcom_ahci_qcom",
-> +		.owner = THIS_MODULE,
-> +		.of_match_table = qcom_ahci_of_match,
-> +	},
-
-This driver lacks PM suspend/resume support.  I assume that
-the IPQ806x platform also doesn't support suspend/resume yet
-(if so a comment in the driver code about this would be useful),
-otherwise the driver should be fixed.
-
-> +};
-> +module_platform_driver(qcom_ahci_driver);
-> +
-> +MODULE_DESCRIPTION("Qualcomm AHCI SATA platform driver");
-> +MODULE_LICENSE("GPL v2");
-> +MODULE_ALIAS("ahci:qcom");
-
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
-
+On 17/06/14 15:13, Thierry Reding wrote:
+> * PGP Signed by an unknown key
+>
+> On Mon, Jun 16, 2014 at 04:01:02PM -0600, Stephen Warren wrote:
+>> On 06/04/2014 05:32 AM, Mikko Perttunen wrote:
+>>> This symbol needs to be exported to power on rails without using
+>>> tegra_powergate_sequence_power_up. tegra_powergate_sequence_power_up
+>>> cannot be used in situations where the driver wants to handle clocking
+>>> by itself.
+>>
+>> Thierry, are you OK with this change?
+>
+> I would've preferred tegra_powergate_sequence_power_up() to be used
+> consistently in all drivers. I'm still not convinced that using the
+> platform AHCI driver this way is really the best option, since we're
+> bending over backwards to fit into what this driver dictates. There
+> shouldn't be a need for that.
+>
+> Thierry
+>
+> * Unknown Key
+> * 0x7F3EB3A1
+>
