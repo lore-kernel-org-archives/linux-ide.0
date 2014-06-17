@@ -1,38 +1,55 @@
-From: Peter De Schrijver <pdeschrijver@nvidia.com>
-Subject: Re: [PATCH 4/9] clk: tegra: Enable hardware control of SATA PLL
-Date: Tue, 17 Jun 2014 12:59:13 +0300
-Message-ID: <20140617095913.GE3407@tbergstrom-lnx.Nvidia.com>
-References: <1401881559-18469-1-git-send-email-mperttunen@nvidia.com>
- <1401881559-18469-5-git-send-email-mperttunen@nvidia.com>
- <539F665E.3060007@wwwdotorg.org>
+From: Mikko Perttunen <mperttunen@nvidia.com>
+Subject: [PATCH RESEND] libahci_platform: Fail when PHY required but PHY support disabled
+Date: Tue, 17 Jun 2014 15:07:55 +0300
+Message-ID: <1403006875-22556-1-git-send-email-mperttunen@nvidia.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:8224 "EHLO
-	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751147AbaFQJ7S (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jun 2014 05:59:18 -0400
-Content-Disposition: inline
-In-Reply-To: <539F665E.3060007@wwwdotorg.org>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:15008 "EHLO
+	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932234AbaFQMIa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jun 2014 08:08:30 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stephen Warren <swarren@wwwdotorg.org>
-Cc: Mikko Perttunen <mperttunen@nvidia.com>, "thierry.reding@gmail.com" <thierry.reding@gmail.com>, "tj@kernel.org" <tj@kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Mikko Perttunen <mperttunen@nvidia.com>
 
-On Mon, Jun 16, 2014 at 11:49:18PM +0200, Stephen Warren wrote:
-> On 06/04/2014 05:32 AM, Mikko Perttunen wrote:
-> > This makes the SATA PLL be controlled by hardware instead of software.
-> > This is required for working SATA support.
-> 
-> Peter, could you please take patches 4 and 5 through the clock tree. As
-> far as I can tell, there's no compile-time dependency in the clock
-> patches, so they can go through a different tree to the rest of the
-> series without issue. These 2 patches look fine to me, so consider them:
-> 
-> Acked-by: Stephen Warren <swarren@nvidia.com>
+ahci_platform_get_resources handles resource management for
+platform AHCI drivers, including getting a possible PHY
+from the device tree. Since not all drivers need a PHY, it
+ignores -ENODEV and -ENOSYS from devm_get_phy. However, when
+the PHY subsystem is mistakenly disabled, -ENOSYS can be
+returned even when a PHY is needed.
 
-Ok. Will do.
+This patch modifies the -ENOSYS case to check if a "phys"
+device tree node exists. If it exists, then clearly the PHY
+subsystem is mistakenly disabled and the driver cannot work,
+ahci_platform_get_resources will fail and propagate the error.
 
-Cheers,
+Signed-off-by: Mikko Perttunen <mperttunen@nvidia.com>
+---
+ drivers/ata/libahci_platform.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-Peter.
+diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+index 3a5b4ed..b007758 100644
+--- a/drivers/ata/libahci_platform.c
++++ b/drivers/ata/libahci_platform.c
+@@ -250,8 +250,13 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev)
+ 	if (IS_ERR(hpriv->phy)) {
+ 		rc = PTR_ERR(hpriv->phy);
+ 		switch (rc) {
+-		case -ENODEV:
+ 		case -ENOSYS:
++			/* No PHY support. Check if PHY is required. */
++			if (of_find_property(dev->of_node, "phys", NULL)) {
++				dev_err(dev, "couldn't get sata-phy: ENOSYS\n");
++				goto err_out;
++			}
++		case -ENODEV:
+ 			/* continue normally */
+ 			hpriv->phy = NULL;
+ 			break;
+-- 
+1.8.1.5
+
