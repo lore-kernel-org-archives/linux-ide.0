@@ -1,48 +1,77 @@
-From: Stephen Warren <swarren@wwwdotorg.org>
-Subject: Re: [PATCH 8/9] ata: Add support for the Tegra124 SATA controller
-Date: Tue, 17 Jun 2014 10:23:01 -0600
-Message-ID: <53A06B65.7030407@wwwdotorg.org>
-References: <1401881559-18469-1-git-send-email-mperttunen@nvidia.com>
- <1401881559-18469-9-git-send-email-mperttunen@nvidia.com>
- <1470404.13mIFv0Hnj@amdc1032> <53A0686F.4000303@wwwdotorg.org>
- <20140617161320.GG31819@htj.dyndns.org>
- <20140617161447.GH31819@htj.dyndns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2 2/2] ata: Fix the dma state machine lockup for the
+ IDENTIFY DEVICE PIO mode command.
+Date: Tue, 17 Jun 2014 12:31:44 -0400
+Message-ID: <20140617163144.GJ31819@htj.dyndns.org>
+References: <1402911336-31788-1-git-send-email-stripathi@apm.com>
+ <1402911336-31788-3-git-send-email-stripathi@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20140617161447.GH31819@htj.dyndns.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, pdeschrijver@nvidia.com, linux-kernel@vger.kernel.org, Mikko Perttunen <mperttunen@nvidia.com>, linux-ide@vger.kernel.org, thierry.reding@gmail.com, linux-tegra@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1402911336-31788-3-git-send-email-stripathi@apm.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Suman Tripathi <stripathi@apm.com>
+Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com
 List-Id: linux-ide@vger.kernel.org
 
-On 06/17/2014 10:14 AM, Tejun Heo wrote:
-> On Tue, Jun 17, 2014 at 12:13:20PM -0400, Tejun Heo wrote:
->> On Tue, Jun 17, 2014 at 10:10:23AM -0600, Stephen Warren wrote:
->>>> sata_writel() and sata_read() static inlines don't seem to add any value.
->>>>
->>>> Can they be removed?
->>>
->>> Such functions are quite idiomatic in drivers, and serve to simplify all
->>> the call-sites by removing the need to write out the addition of the
->>> base address everywhere.
->>
->> I think it obfuscates more than helps.  If you absoluately have to
->> keep it, please at least name it so that it's clear that it's
->> something specific to this driver.
-> 
-> Please also drop inline.  It isn't a difficult optimization to perform
-> for the compiler.
+On Mon, Jun 16, 2014 at 03:05:36PM +0530, Suman Tripathi wrote:
+> This patch fixes the dma state machine lockup due to the IDENTIFY DEVICE PIO mode command. The controller is unable to clear the BSY bit after receiving the PIO setup FIS and results the dma state machine to go into the CMFatalErrorUpdate state resulting in the dma state machine lockup.
 
-There are probably hundreds of drivers marking those functions inline.
-If they aren't marked inline, it'll just stick out as unusual when
-people read them all, and then they'll send patches to fix it.
+Ditto on description formatting and SOB.  Also, please describe why
+this patch is removing the restart from read_id.
+
+> +int ahci_complete_pio_cmd(struct ata_port *ap, u32 cmd_done)
+> +{
+> +	struct ata_queued_cmd *qc;
+> +
+> +	while (cmd_done) {
+> +		unsigned int tag = __ffs(cmd_done);
+> +
+> +		qc = ata_qc_from_tag(ap, tag);
+> +		if (qc) {
+> +			/*
+> +			 * For the IDENTIFY DEVICE PIO command,
+> +			 * some controller's unable to clear the BSY bit after
+> +			 * receiving the PIO Setup FIS from device resulting
+> +			 * the DMA state to go into CMFatalErrorUpdate state.
+> +			 * So need to restart the dma engine to get the
+> +			 * controller out of this state.
+> +			 */
+> +			if (qc->tf.command == ATA_CMD_ID_ATA)
+> +				ahci_restart_engine(ap);
+> +		}
+> +		cmd_done &= ~(1 << tag);
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+>  static void ahci_error_intr(struct ata_port *ap, u32 irq_stat)
+>  {
+>  	struct ahci_host_priv *hpriv = ap->host->private_data;
+> @@ -1778,6 +1804,14 @@ static void ahci_handle_port_interrupt(struct ata_port *ap,
+>  	}
+> 
+> 
+> +	/* Due to HW errata, some controllers need special handling
+> +	 * of the completion of some PIO commands.
+> +	 */
+> +	if (hpriv->flags & AHCI_HFLAG_BROKEN_PIO_CMD) {
+> +		u32 cmd_done = ap->qc_active ^ qc_active;
+> +		ahci_complete_pio_cmd(ap, cmd_done);
+> +	}
+
+Heh, I feel this is a bit too specific to bury in libahci.c and don't
+really like adding this sort workaround in the hot path for everybody.
+Then again, ahci interrupt handler isn't exactly structured in a way
+which is easy to wrap and create a custom one.
+
+Does this have to happen from interrupt path tho?  Can't you just
+record the last protocol executed and restart the engine on the next
+qc_issue?
+
+Thanks.
+
+-- 
+tejun
