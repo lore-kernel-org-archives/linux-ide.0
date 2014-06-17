@@ -1,47 +1,59 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: Re: [PATCH v2 2/3] ata: Add Qualcomm ARM SoC AHCI SATA host controller
- driver
-Date: Tue, 17 Jun 2014 18:50:01 +0200
-Message-ID: <3066194.ZkIxk6z9u6@amdc1032>
-References: <1402676163-31574-1-git-send-email-galak@codeaurora.org>
- <14174621.WL9ndpHQ2Q@amdc1032>
- <419989CC-5106-4AF7-8911-617B51FD7395@codeaurora.org>
+Subject: Re: [PATCH 8/9] ata: Add support for the Tegra124 SATA controller
+Date: Tue, 17 Jun 2014 19:04:14 +0200
+Message-ID: <6652229.bPNq3Yp8If@amdc1032>
+References: <1401881559-18469-1-git-send-email-mperttunen@nvidia.com>
+ <1470404.13mIFv0Hnj@amdc1032> <53A0686F.4000303@wwwdotorg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-reply-to: <419989CC-5106-4AF7-8911-617B51FD7395@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kumar Gala <galak@codeaurora.org>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-arm-msm <linux-arm-msm@vger.kernel.org>, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, Stephen Boyd <sboyd@codeaurora.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mailout4.samsung.com ([203.254.224.34]:27904 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933364AbaFQRFD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jun 2014 13:05:03 -0400
+In-reply-to: <53A0686F.4000303@wwwdotorg.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Mikko Perttunen <mperttunen@nvidia.com>, thierry.reding@gmail.com, tj@kernel.org, pdeschrijver@nvidia.com, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Tuesday, June 17, 2014 10:42:36 AM Kumar Gala wrote:
-> 
-> On Jun 17, 2014, at 7:25 AM, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com> wrote:
+
+Hi,
+
+On Tuesday, June 17, 2014 10:10:23 AM Stephen Warren wrote:
+> On 06/17/2014 06:14 AM, Bartlomiej Zolnierkiewicz wrote:
 
 [...]
 
-> >> +static struct platform_driver qcom_ahci_driver = {
-> >> +	.probe = qcom_ahci_probe,
+> >> +static struct platform_driver tegra_ahci_driver = {
+> >> +	.probe = tegra_ahci_probe,
 > >> +	.remove = ata_platform_remove_one,
 > >> +	.driver = {
-> >> +		.name = "qcom_ahci_qcom",
+> >> +		.name = "tegra-ahci",
 > >> +		.owner = THIS_MODULE,
-> >> +		.of_match_table = qcom_ahci_of_match,
+> >> +		.of_match_table = tegra_ahci_of_match,
 > >> +	},
 > > 
 > > This driver lacks PM suspend/resume support.  I assume that
-> > the IPQ806x platform also doesn't support suspend/resume yet
+> > the Tegra124 platform also doesn't support suspend/resume yet
 > > (if so a comment in the driver code about this would be useful),
 > > otherwise the driver should be fixed.
 > 
-> Correct, do you want the comment in the commit message or the driver itself?
+> We do have basic system suspend/resume support. However, I don't think
+> missing suspend/resume in an individual driver should stop it from being
+> merged. It can certainly be added later.
 
-I would prefer the comment in the driver itself.
+There should be at least FIXME in the driver explaining the situation and
+I would really prefer to have PM support added when the driver is still
+"hot" (meaning there are people actively working on it) instead of possibly
+having to chase people months/years later when they have already moved on
+and are working on something else.  Please also note that adding PM support
+should be quite simple if the driver is designed correctly.
 
 Best regards,
 --
 Bartlomiej Zolnierkiewicz
 Samsung R&D Institute Poland
 Samsung Electronics
+
