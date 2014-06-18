@@ -1,60 +1,63 @@
-From: Mikko Perttunen <mperttunen@nvidia.com>
-Subject: [PATCH v2 4/7] clk: tegra: Enable hardware control of SATA PLL
-Date: Wed, 18 Jun 2014 17:23:23 +0300
-Message-ID: <1403101406-15439-5-git-send-email-mperttunen@nvidia.com>
-References: <1403101406-15439-1-git-send-email-mperttunen@nvidia.com>
+From: Stephen Warren <swarren@wwwdotorg.org>
+Subject: Re: [PATCH 6/9] ARM: tegra: Export tegra_powergate_power_on
+Date: Wed, 18 Jun 2014 09:37:54 -0600
+Message-ID: <53A1B252.1030204@wwwdotorg.org>
+References: <1401881559-18469-1-git-send-email-mperttunen@nvidia.com> <1401881559-18469-7-git-send-email-mperttunen@nvidia.com> <539F691E.5030204@wwwdotorg.org> <20140617121313.GE18816@ulmo> <20140617140146.GH3407@tbergstrom-lnx.Nvidia.com> <20140617215119.GC24743@mithrandir> <20140618121806.GJ3407@tbergstrom-lnx.Nvidia.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <1403101406-15439-1-git-send-email-mperttunen@nvidia.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: swarren@wwwdotorg.org, thierry.reding@gmail.com, tj@kernel.org, pdeschrijver@nvidia.com
-Cc: linux-tegra@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Mikko Perttunen <mperttunen@nvidia.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140618121806.GJ3407@tbergstrom-lnx.Nvidia.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Peter De Schrijver <pdeschrijver@nvidia.com>, Thierry Reding <thierry.reding@gmail.com>
+Cc: Mikko Perttunen <mperttunen@nvidia.com>, "tj@kernel.org" <tj@kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-This makes the SATA PLL be controlled by hardware instead of software.
-This is required for working SATA support.
+On 06/18/2014 06:18 AM, Peter De Schrijver wrote:
+> On Tue, Jun 17, 2014 at 11:51:20PM +0200, Thierry Reding wrote:
+>> * PGP Signed by an unknown key
+>>
+>> On Tue, Jun 17, 2014 at 05:01:46PM +0300, Peter De Schrijver wrote:
+>>> On Tue, Jun 17, 2014 at 02:13:15PM +0200, Thierry Reding wrote:
+>>>>> Old Signed by an unknown key
+>>>>
+>>>> On Mon, Jun 16, 2014 at 04:01:02PM -0600, Stephen Warren wrote:
+>>>>> On 06/04/2014 05:32 AM, Mikko Perttunen wrote:
+>>>>>> This symbol needs to be exported to power on rails without using
+>>>>>> tegra_powergate_sequence_power_up. tegra_powergate_sequence_power_up
+>>>>>> cannot be used in situations where the driver wants to handle clocking
+>>>>>> by itself.
+>>>>>
+>>>>> Thierry, are you OK with this change?
+>>>>
+>>>> I would've preferred tegra_powergate_sequence_power_up() to be used
+>>>
+>>> I don't think the current tegra_powergate_sequence_power_up() API is very well
+>>> defined though. I don't think the clocks and resets required by the sequence
+>>> should be provided by the driver. For one, there can be several clocks and
+>>> resets that need to be controlled for a single domain.
+>>
+>> Do you have any suggestions for what the API should look like? Even if
+>> we plan to move to some different API, I think there's some advantage in
+>> using it consistently if for no other reason than to make it easier to
+>> replace occurrences later on.
+>>
+> 
+> I think the API should only have the domain ID as input so:
+> 
+> int tegra_powerdomain_on(int id) 
+> 
+> /*
+>  * Prerequisites: domain is off
+>  * Result: domain is on, clocks of the modules in the domain are off, modules are in reset
+>  */
+> 
+> int tegra_powerdomain_off(int id)
+> 
+> /*
+>  * Prerequisites: all clocks of the modules in the domain are off
+>  * result: domain is off
+>  */
 
-Signed-off-by: Mikko Perttunen <mperttunen@nvidia.com>
-Acked-by: Stephen Warren <swarren@nvidia.com>
----
- drivers/clk/tegra/clk-pll.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
-
-diff --git a/drivers/clk/tegra/clk-pll.c b/drivers/clk/tegra/clk-pll.c
-index 637b62c..f070c36 100644
---- a/drivers/clk/tegra/clk-pll.c
-+++ b/drivers/clk/tegra/clk-pll.c
-@@ -110,6 +110,9 @@
- #define XUSBIO_PLL_CFG0_SEQ_ENABLE		BIT(24)
- #define XUSBIO_PLL_CFG0_SEQ_START_STATE		BIT(25)
- 
-+#define SATA_PLL_CFG0		0x490
-+#define SATA_PLL_CFG0_PADPLL_RESET_SWCTL	BIT(0)
-+
- #define PLLE_MISC_PLLE_PTS	BIT(8)
- #define PLLE_MISC_IDDQ_SW_VALUE	BIT(13)
- #define PLLE_MISC_IDDQ_SW_CTRL	BIT(14)
-@@ -1361,6 +1364,11 @@ static int clk_plle_tegra114_enable(struct clk_hw *hw)
- 	val |= XUSBIO_PLL_CFG0_SEQ_ENABLE;
- 	pll_writel(val, XUSBIO_PLL_CFG0, pll);
- 
-+	/* Enable hw control of SATA pll */
-+	val = pll_readl(SATA_PLL_CFG0, pll);
-+	val &= ~SATA_PLL_CFG0_PADPLL_RESET_SWCTL;
-+	pll_writel(val, SATA_PLL_CFG0, pll);
-+
- out:
- 	if (pll->lock)
- 		spin_unlock_irqrestore(pll->lock, flags);
--- 
-1.8.1.5
+That doesn't make sense; the PMC doesn't have access to the clock and
+reset IDs - that's why the API requires them to be passed in.
