@@ -1,103 +1,147 @@
-From: Thierry Reding <thierry.reding@gmail.com>
-Subject: Re: [PATCH 6/9] ARM: tegra: Export tegra_powergate_power_on
-Date: Tue, 17 Jun 2014 23:51:20 +0200
-Message-ID: <20140617215119.GC24743@mithrandir>
-References: <1401881559-18469-1-git-send-email-mperttunen@nvidia.com>
- <1401881559-18469-7-git-send-email-mperttunen@nvidia.com>
- <539F691E.5030204@wwwdotorg.org> <20140617121313.GE18816@ulmo>
- <20140617140146.GH3407@tbergstrom-lnx.Nvidia.com>
+From: Jingoo Han <jg1.han@samsung.com>
+Subject: [PATCH] ata: Make of_device_id array const
+Date: Wed, 18 Jun 2014 12:40:27 +0900
+Message-ID: <005001cf8aa7$0b871f50$22955df0$%han@samsung.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============3470522960643901969=="
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <20140617140146.GH3407@tbergstrom-lnx.Nvidia.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Peter De Schrijver <pdeschrijver@nvidia.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Stephen Warren <swarren@wwwdotorg.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Mikko Perttunen <mperttunen@nvidia.com>, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, "tj@kernel.org" <tj@kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-List-Id: linux-ide@vger.kernel.org
-
-
---===============3470522960643901969==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="1ccMZA6j1vT5UqiK"
-Content-Disposition: inline
-
-
---1ccMZA6j1vT5UqiK
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, Jun 17, 2014 at 05:01:46PM +0300, Peter De Schrijver wrote:
-> On Tue, Jun 17, 2014 at 02:13:15PM +0200, Thierry Reding wrote:
-> > * PGP Signed by an unknown key
-> >=20
-> > On Mon, Jun 16, 2014 at 04:01:02PM -0600, Stephen Warren wrote:
-> > > On 06/04/2014 05:32 AM, Mikko Perttunen wrote:
-> > > > This symbol needs to be exported to power on rails without using
-> > > > tegra_powergate_sequence_power_up. tegra_powergate_sequence_power_up
-> > > > cannot be used in situations where the driver wants to handle clock=
-ing
-> > > > by itself.
-> > >=20
-> > > Thierry, are you OK with this change?
-> >=20
-> > I would've preferred tegra_powergate_sequence_power_up() to be used
->=20
-> I don't think the current tegra_powergate_sequence_power_up() API is very=
- well
-> defined though. I don't think the clocks and resets required by the seque=
-nce
-> should be provided by the driver. For one, there can be several clocks and
-> resets that need to be controlled for a single domain.
-
-Do you have any suggestions for what the API should look like? Even if
-we plan to move to some different API, I think there's some advantage in
-using it consistently if for no other reason than to make it easier to
-replace occurrences later on.
-
-Thierry
-
---1ccMZA6j1vT5UqiK
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIcBAEBAgAGBQJToLhXAAoJEN0jrNd/PrOhTy0P/0+ybLkigRrxGtyi5IRqMQrO
-DQI9VEE9HuNjiO+IIxSKwVndS7JGLiNW1QwA475v934Y2ifx0ygDanOkbTp9KwtV
-kpSH1WMuaBUIrvaY11pRZjLzajD3Wddfl6WRcvG164FWV3EA05Fxpg4yxZt/lMR+
-mNzvGZ6CXkYwiOyzXDBAbE2hZGnf+64L9vhAQtfo4jrjQyLj5Pq5nDEMr7FHSZTt
-6Dc3yMf6o3uklgEojFOqzK0/MgbEiTZxV48nn5sD+0kaetQMxnx+iOnMM+qE1b6d
-oME1faH1p9sQNjCorjWdQfCx846bEIO5gPPmrIIAwM7XXB1UEbstytE4JzhhTTP9
-s3gD+MM04JZNqCweCD/sA+tsjKbIqIw3ACknWwbJXl+dvUS5wBn3/34i3YAR6Rrl
-ryetVKFMO4CUVGqV1/hiFzfx0qLA10uUC5F4BwwXu6s9VKawXumGFy5bC2v4nuC1
-IOgH9rZ3lgQ7o1j6naCT3InP24YoSk74EszPiALGu8pKGVoLUlB6blPNTRdLhmRj
-eX0LCaiKPuZnXWYxd0/FACXO+Xv3x3Yg0pxtz3boqv+YV+aQ2Egcq6KbVmlJR/Ec
-7RUJKnc+CQjccGEEzycqFNfAb5OjujVEkjl33/M8YcurjpTWGdJwSEO7EoZ/eHiG
-Uk8X0ZLc40pxwngSueEy
-=PfVZ
------END PGP SIGNATURE-----
-
---1ccMZA6j1vT5UqiK--
-
-
---===============3470522960643901969==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mailout4.samsung.com ([203.254.224.34]:49508 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932489AbaFRDke (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jun 2014 23:40:34 -0400
+Received: from epcpsbgr3.samsung.com
+ (u143.gpu120.samsung.co.kr [203.254.230.143])
+ by mailout4.samsung.com (Oracle Communications Messaging Server 7u4-24.01
+ (7.0.4.24.0) 64bit (built Nov 17 2011))
+ with ESMTP id <0N7C00GCCI7KJNC0@mailout4.samsung.com> for
+ linux-ide@vger.kernel.org; Wed, 18 Jun 2014 12:40:32 +0900 (KST)
+Content-language: ko
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
+To: 'Tejun Heo' <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, 'Jingoo Han' <jg1.han@samsung.com>
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Make of_device_id array const, because all OF functions handle
+it as const.
 
---===============3470522960643901969==--
+Signed-off-by: Jingoo Han <jg1.han@samsung.com>
+---
+ drivers/ata/ahci_st.c          |    2 +-
+ drivers/ata/pata_macio.c       |    2 +-
+ drivers/ata/pata_mpc52xx.c     |    2 +-
+ drivers/ata/pata_octeon_cf.c   |    2 +-
+ drivers/ata/pata_of_platform.c |    2 +-
+ drivers/ata/sata_fsl.c         |    2 +-
+ drivers/ata/sata_mv.c          |    2 +-
+ drivers/ata/sata_rcar.c        |    2 +-
+ 8 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/ata/ahci_st.c b/drivers/ata/ahci_st.c
+index 2595598..29821b9 100644
+--- a/drivers/ata/ahci_st.c
++++ b/drivers/ata/ahci_st.c
+@@ -221,7 +221,7 @@ static int st_ahci_resume(struct device *dev)
+ 
+ static SIMPLE_DEV_PM_OPS(st_ahci_pm_ops, st_ahci_suspend, st_ahci_resume);
+ 
+-static struct of_device_id st_ahci_match[] = {
++static const struct of_device_id st_ahci_match[] = {
+ 	{ .compatible = "st,ahci", },
+ 	{},
+ };
+diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
+index a02f76f..4022ef4 100644
+--- a/drivers/ata/pata_macio.c
++++ b/drivers/ata/pata_macio.c
+@@ -1328,7 +1328,7 @@ static int pata_macio_pci_resume(struct pci_dev *pdev)
+ }
+ #endif /* CONFIG_PM_SLEEP */
+ 
+-static struct of_device_id pata_macio_match[] =
++static const struct of_device_id pata_macio_match[] =
+ {
+ 	{
+ 	.name 		= "IDE",
+diff --git a/drivers/ata/pata_mpc52xx.c b/drivers/ata/pata_mpc52xx.c
+index ccd1c83..212a2f7 100644
+--- a/drivers/ata/pata_mpc52xx.c
++++ b/drivers/ata/pata_mpc52xx.c
+@@ -847,7 +847,7 @@ mpc52xx_ata_resume(struct platform_device *op)
+ }
+ #endif
+ 
+-static struct of_device_id mpc52xx_ata_of_match[] = {
++static const struct of_device_id mpc52xx_ata_of_match[] = {
+ 	{ .compatible = "fsl,mpc5200-ata", },
+ 	{ .compatible = "mpc5200-ata", },
+ 	{},
+diff --git a/drivers/ata/pata_octeon_cf.c b/drivers/ata/pata_octeon_cf.c
+index 2a97d3a..8bac55b 100644
+--- a/drivers/ata/pata_octeon_cf.c
++++ b/drivers/ata/pata_octeon_cf.c
+@@ -1047,7 +1047,7 @@ static void octeon_cf_shutdown(struct device *dev)
+ 	}
+ }
+ 
+-static struct of_device_id octeon_cf_match[] = {
++static const struct of_device_id octeon_cf_match[] = {
+ 	{
+ 		.compatible = "cavium,ebt3000-compact-flash",
+ 	},
+diff --git a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
+index a7e95a5..8b23a3e 100644
+--- a/drivers/ata/pata_of_platform.c
++++ b/drivers/ata/pata_of_platform.c
+@@ -77,7 +77,7 @@ static int pata_of_platform_probe(struct platform_device *ofdev)
+ 				     reg_shift, pio_mask);
+ }
+ 
+-static struct of_device_id pata_of_platform_match[] = {
++static const struct of_device_id pata_of_platform_match[] = {
+ 	{ .compatible = "ata-generic", },
+ 	{ .compatible = "electra-ide", },
+ 	{},
+diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+index 616a6d2..33b14a5 100644
+--- a/drivers/ata/sata_fsl.c
++++ b/drivers/ata/sata_fsl.c
+@@ -1610,7 +1610,7 @@ static int sata_fsl_resume(struct platform_device *op)
+ }
+ #endif
+ 
+-static struct of_device_id fsl_sata_match[] = {
++static const struct of_device_id fsl_sata_match[] = {
+ 	{
+ 		.compatible = "fsl,pq-sata",
+ 	},
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index 391cfda..072290a 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -4265,7 +4265,7 @@ static int mv_platform_resume(struct platform_device *pdev)
+ #endif
+ 
+ #ifdef CONFIG_OF
+-static struct of_device_id mv_sata_dt_ids[] = {
++static const struct of_device_id mv_sata_dt_ids[] = {
+ 	{ .compatible = "marvell,armada-370-sata", },
+ 	{ .compatible = "marvell,orion-sata", },
+ 	{},
+diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
+index 61eb6d7..d0792fc 100644
+--- a/drivers/ata/sata_rcar.c
++++ b/drivers/ata/sata_rcar.c
+@@ -823,7 +823,7 @@ static void sata_rcar_init_controller(struct ata_host *host)
+ 	iowrite32(ATAPI_INT_ENABLE_SATAINT, base + ATAPI_INT_ENABLE_REG);
+ }
+ 
+-static struct of_device_id sata_rcar_match[] = {
++static const struct of_device_id sata_rcar_match[] = {
+ 	{
+ 		/* Deprecated by "renesas,sata-r8a7779" */
+ 		.compatible = "renesas,rcar-sata",
+-- 
+1.7.10.4
+
+
