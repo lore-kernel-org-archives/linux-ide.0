@@ -1,7 +1,7 @@
 From: Mikko Perttunen <mperttunen@nvidia.com>
-Subject: [PATCH v2 2/7] ARM: tegra: Add SATA controller to Tegra124 device tree
-Date: Wed, 18 Jun 2014 17:23:21 +0300
-Message-ID: <1403101406-15439-3-git-send-email-mperttunen@nvidia.com>
+Subject: [PATCH v2 3/7] ARM: tegra: Add SATA and SATA power to Jetson TK1 device tree
+Date: Wed, 18 Jun 2014 17:23:22 +0300
+Message-ID: <1403101406-15439-4-git-send-email-mperttunen@nvidia.com>
 References: <1403101406-15439-1-git-send-email-mperttunen@nvidia.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,53 +12,72 @@ To: swarren@wwwdotorg.org, thierry.reding@gmail.com, tj@kernel.org, pdeschrijver
 Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org, linux-ide@vger.kernel.org, Mikko Perttunen <mperttunen@nvidia.com>
 List-Id: linux-ide@vger.kernel.org
 
-This adds the integrated AHCI-compliant Serial ATA controller present
-in Tegra124 systems-on-chip to the Tegra124 device tree.
+This enables the integrated SATA controller on the Tegra124 system-on-chip
+on the Jetson TK1 board and adds regulators for the onboard Molex connector
+commonly used to power SATA devices. The regulators are marked always-on
+since they can be used for other purposes than powering SATA devices.
 
 Signed-off-by: Mikko Perttunen <mperttunen@nvidia.com>
 ---
 v2:
-- added clock-names property
-- changed 0 -> GIC_SPI
+- added target-v5-supply and target-12v-supply
+- made sata power not always-on
 
- arch/arm/boot/dts/tegra124.dtsi | 25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
+ arch/arm/boot/dts/tegra124-jetson-tk1.dts | 35 +++++++++++++++++++++++++++++++
+ 1 file changed, 35 insertions(+)
 
-diff --git a/arch/arm/boot/dts/tegra124.dtsi b/arch/arm/boot/dts/tegra124.dtsi
-index 6fa06d2..63a2bfa 100644
---- a/arch/arm/boot/dts/tegra124.dtsi
-+++ b/arch/arm/boot/dts/tegra124.dtsi
-@@ -734,6 +734,31 @@
- 		status = "disabled";
+diff --git a/arch/arm/boot/dts/tegra124-jetson-tk1.dts b/arch/arm/boot/dts/tegra124-jetson-tk1.dts
+index 11c1650..00ba373 100644
+--- a/arch/arm/boot/dts/tegra124-jetson-tk1.dts
++++ b/arch/arm/boot/dts/tegra124-jetson-tk1.dts
+@@ -1687,6 +1687,18 @@
+ 		vbus-supply = <&vdd_usb3_vbus>;
  	};
  
++	/* Serial ATA */
 +	sata@0,70020000 {
-+		compatible = "nvidia,tegra124-ahci";
++		status = "okay";
 +
-+		reg = <0x0 0x70027000 0x0 0x2000>, /* AHCI */
-+			<0x0 0x70020000 0x0 0x7000>; /* SATA */
++		hvdd-supply = <&vdd_3v3_lp0>;
++		vddio-supply = <&vdd_1v05_run>;
++		avdd-supply = <&vdd_1v05_run>;
 +
-+		interrupts = <GIC_SPI 23 IRQ_TYPE_LEVEL_HIGH>;
-+
-+		clocks = <&tegra_car TEGRA124_CLK_SATA>,
-+			<&tegra_car TEGRA124_CLK_SATA_OOB>,
-+			<&tegra_car TEGRA124_CLK_CML1>,
-+			<&tegra_car TEGRA124_CLK_PLL_E>;
-+		clock-names = "sata", "sata-oob", "cml1", "pll_e";
-+
-+		resets = <&tegra_car 124>,
-+			<&tegra_car 123>,
-+			<&tegra_car 129>;
-+		reset-names = "sata", "sata-oob", "sata-cold";
-+
-+		phys = <&padctl TEGRA_XUSB_PADCTL_SATA>;
-+		phy-names = "sata-phy";
-+
-+		status = "disabled";
++		target-5v-supply = <&vdd_5v0_sata>;
++		target-12v-supply = <&vdd_12v0_sata>;
 +	};
 +
- 	cpus {
+ 	clocks {
+ 		compatible = "simple-bus";
  		#address-cells = <1>;
- 		#size-cells = <0>;
+@@ -1828,6 +1840,29 @@
+ 			enable-active-high;
+ 			vin-supply = <&vdd_5v0_sys>;
+ 		};
++
++		/* Molex power connector */
++		vdd_5v0_sata: regulator@13 {
++			compatible = "regulator-fixed";
++			reg = <13>;
++			regulator-name = "+5V_SATA";
++			regulator-min-microvolt = <5000000>;
++			regulator-max-microvolt = <5000000>;
++			gpio = <&gpio TEGRA_GPIO(EE, 2) GPIO_ACTIVE_HIGH>;
++			enable-active-high;
++			vin-supply = <&vdd_5v0_sys>;
++		};
++
++		vdd_12v0_sata: regulator@14 {
++			compatible = "regulator-fixed";
++			reg = <14>;
++			regulator-name = "+12V_SATA";
++			regulator-min-microvolt = <12000000>;
++			regulator-max-microvolt = <12000000>;
++			gpio = <&gpio TEGRA_GPIO(EE, 2) GPIO_ACTIVE_HIGH>;
++			enable-active-high;
++			vin-supply = <&vdd_mux>;
++		};
+ 	};
+ 
+ 	sound {
 -- 
 1.8.1.5
