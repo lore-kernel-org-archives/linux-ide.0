@@ -1,13 +1,13 @@
 From: Suman Tripathi <stripathi@apm.com>
 Subject: [PATCH v3 1/2] libahci: Implement the function ahci_restart_engine to restart the port dma engine.
-Date: Thu, 19 Jun 2014 12:18:55 +0530
-Message-ID: <1403160538-31565-3-git-send-email-stripathi@apm.com>
+Date: Thu, 19 Jun 2014 12:18:56 +0530
+Message-ID: <1403160538-31565-4-git-send-email-stripathi@apm.com>
 References: <1403160538-31565-1-git-send-email-stripathi@apm.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from denmail01-v4020.amcc.com ([192.195.68.30]:49569 "EHLO
+Received: from denmail01-v4020.amcc.com ([192.195.68.30]:49576 "EHLO
 	denmail01.apm.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757261AbaFSGt6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Jun 2014 02:49:58 -0400
+	with ESMTP id S1757394AbaFSGuE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Jun 2014 02:50:04 -0400
 In-Reply-To: <1403160538-31565-1-git-send-email-stripathi@apm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
