@@ -1,46 +1,85 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v3 2/2] ata: Fix the dma state machine lockup for the
- IDENTIFY DEVICE PIO mode command.
-Date: Thu, 19 Jun 2014 10:33:51 -0400
-Message-ID: <20140619143351.GE26904@htj.dyndns.org>
-References: <1403160654-31612-1-git-send-email-stripathi@apm.com>
- <20140619141047.GA26904@htj.dyndns.org>
- <CAOHikRAX1NfeCRWVJtv_FTHHheYxU5uKVk_hytdEmb_j-5_wnA@mail.gmail.com>
- <20140619142148.GD26904@htj.dyndns.org>
- <CAOHikRAaMaMc1zHU3B_Qqg8fRndCqHQTDR7wpCoaS_kafkgzdw@mail.gmail.com>
+From: Stephen Warren <swarren@wwwdotorg.org>
+Subject: Re: [PATCH 6/9] ARM: tegra: Export tegra_powergate_power_on
+Date: Thu, 19 Jun 2014 10:01:47 -0600
+Message-ID: <53A3096B.1040409@wwwdotorg.org>
+References: <1401881559-18469-1-git-send-email-mperttunen@nvidia.com> <1401881559-18469-7-git-send-email-mperttunen@nvidia.com> <539F691E.5030204@wwwdotorg.org> <20140617121313.GE18816@ulmo> <20140617140146.GH3407@tbergstrom-lnx.Nvidia.com> <20140617215119.GC24743@mithrandir> <20140618121806.GJ3407@tbergstrom-lnx.Nvidia.com> <53A1B252.1030204@wwwdotorg.org> <20140619080234.GK3407@tbergstrom-lnx.Nvidia.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAOHikRAaMaMc1zHU3B_Qqg8fRndCqHQTDR7wpCoaS_kafkgzdw@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Suman Tripathi <stripathi@apm.com>
-Cc: Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Don Dutile <ddutile@redhat.com>, Jon Masters <jcm@redhat.com>, patches@apm.com, Loc Ho <lho@apm.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20140619080234.GK3407@tbergstrom-lnx.Nvidia.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Peter De Schrijver <pdeschrijver@nvidia.com>
+Cc: Thierry Reding <thierry.reding@gmail.com>, Mikko Perttunen <mperttunen@nvidia.com>, "tj@kernel.org" <tj@kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-Hello,
-
-On Thu, Jun 19, 2014 at 07:57:33PM +0530, Suman Tripathi wrote:
-> [suman] : Are you ok if I make ahci_qc_issue in the ahci.h as not static
-> and make it as EXPORT_SYMBOL_GPL ? Currenty ahci_qc_issue is static.
-> If you take the current case , I only had to make  ahci_sw_activity as non
-> static and use it. So both the intention is same.
-
-Yeah, sure.  We end up having to export a function anyway.  Better to
-avoid duplicating the function body.
-
-> So, it's just ATA_CMD_ID_ATA and ATA_CMD_ID_ATAPI is okay?  That's
-> kinda weird.
+On 06/19/2014 02:02 AM, Peter De Schrijver wrote:
+> On Wed, Jun 18, 2014 at 05:37:54PM +0200, Stephen Warren wrote:
+>> On 06/18/2014 06:18 AM, Peter De Schrijver wrote:
+>>> On Tue, Jun 17, 2014 at 11:51:20PM +0200, Thierry Reding wrote:
+>>>> * PGP Signed by an unknown key
+>>>>
+>>>> On Tue, Jun 17, 2014 at 05:01:46PM +0300, Peter De Schrijver wrote:
+>>>>> On Tue, Jun 17, 2014 at 02:13:15PM +0200, Thierry Reding wrote:
+>>>>>>> Old Signed by an unknown key
+>>>>>>
+>>>>>> On Mon, Jun 16, 2014 at 04:01:02PM -0600, Stephen Warren wrote:
+>>>>>>> On 06/04/2014 05:32 AM, Mikko Perttunen wrote:
+>>>>>>>> This symbol needs to be exported to power on rails without using
+>>>>>>>> tegra_powergate_sequence_power_up. tegra_powergate_sequence_power_up
+>>>>>>>> cannot be used in situations where the driver wants to handle clocking
+>>>>>>>> by itself.
+>>>>>>>
+>>>>>>> Thierry, are you OK with this change?
+>>>>>>
+>>>>>> I would've preferred tegra_powergate_sequence_power_up() to be used
+>>>>>
+>>>>> I don't think the current tegra_powergate_sequence_power_up() API is very well
+>>>>> defined though. I don't think the clocks and resets required by the sequence
+>>>>> should be provided by the driver. For one, there can be several clocks and
+>>>>> resets that need to be controlled for a single domain.
+>>>>
+>>>> Do you have any suggestions for what the API should look like? Even if
+>>>> we plan to move to some different API, I think there's some advantage in
+>>>> using it consistently if for no other reason than to make it easier to
+>>>> replace occurrences later on.
+>>>>
+>>>
+>>> I think the API should only have the domain ID as input so:
+>>>
+>>> int tegra_powerdomain_on(int id) 
+>>>
+>>> /*
+>>>  * Prerequisites: domain is off
+>>>  * Result: domain is on, clocks of the modules in the domain are off, modules are in reset
+>>>  */
+>>>
+>>> int tegra_powerdomain_off(int id)
+>>>
+>>> /*
+>>>  * Prerequisites: all clocks of the modules in the domain are off
+>>>  * result: domain is off
+>>>  */
+>>
+>> That doesn't make sense; the PMC doesn't have access to the clock and
+>> reset IDs - that's why the API requires them to be passed in.
+>>
 > 
-> [suman] : Not tested for ATA_CMD_ID_ATAPI. It's just for ATA_CMD_ID_ATA for
-> now.
+> We should make driver look them up by name then. It doesn't make sense to
+> move this knowledge to the drivers as there can be several modules in 1
+> powerdomain. So every driver would then need to have access to all clock
+> and reset IDs of the modules of the domain?
 
-Can you give it a test?  The two commands are really similar, so it'd
-be surprising if the controller only chokes on one of them.  Another
-thing worthwhile testing is "libata.force=noncq,pio0" so that you can
-be sure other pio commands are okay.
+Having the drivers know the clocks, resets, and power domains that
+affect their HW module seems perfectly reasonable.
 
-Thanks.
+Do we actually have any case where unrelated modules are in the same
+power domain /and/ there's some need for those drivers to manipulate the
+power domain?
 
--- 
-tejun
+BTW, any objections here should have been raised when the initial API
+design for powergating was created. Now that we have the current API,
+which in turn has driven the DT bindings for at least some HW modules,
+we're stuck with it due to DT ABIness. Well, perhaps we can introduce
+something new, but we'll always have to support the old way, so there's
+little point.
