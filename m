@@ -1,49 +1,84 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [PATCH RFC 1/2] libahci_platform: add ahci_platform_get_of_property
-Date: Thu, 19 Jun 2014 09:39:55 +0200
-Message-ID: <53A293CB.3040704@redhat.com>
-References: <xuwei5@hisilicon.com,kefeng.wang@linaro.org,> <1403067249-8021-1-git-send-email-zhangfei.gao@linaro.org> <1403067249-8021-2-git-send-email-zhangfei.gao@linaro.org> <20140618140352.GD11895@leverpostej> <53A24950.2020300@linaro.org>
+From: Peter De Schrijver <pdeschrijver@nvidia.com>
+Subject: Re: [PATCH 6/9] ARM: tegra: Export tegra_powergate_power_on
+Date: Thu, 19 Jun 2014 11:02:35 +0300
+Message-ID: <20140619080234.GK3407@tbergstrom-lnx.Nvidia.com>
+References: <1401881559-18469-1-git-send-email-mperttunen@nvidia.com>
+ <1401881559-18469-7-git-send-email-mperttunen@nvidia.com>
+ <539F691E.5030204@wwwdotorg.org> <20140617121313.GE18816@ulmo>
+ <20140617140146.GH3407@tbergstrom-lnx.Nvidia.com>
+ <20140617215119.GC24743@mithrandir>
+ <20140618121806.GJ3407@tbergstrom-lnx.Nvidia.com>
+ <53A1B252.1030204@wwwdotorg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40632 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755362AbaFSHkg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 19 Jun 2014 03:40:36 -0400
-In-Reply-To: <53A24950.2020300@linaro.org>
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:18348 "EHLO
+	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757336AbaFSICn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Jun 2014 04:02:43 -0400
+Content-Disposition: inline
+In-Reply-To: <53A1B252.1030204@wwwdotorg.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: zhangfei <zhangfei.gao@linaro.org>, Mark Rutland <mark.rutland@arm.com>
-Cc: "tj@kernel.org" <tj@kernel.org>, "arnd@arndb.de" <arnd@arndb.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Thierry Reding <thierry.reding@gmail.com>, Mikko Perttunen <mperttunen@nvidia.com>, "tj@kernel.org" <tj@kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hi,
-
-On 06/19/2014 04:22 AM, zhangfei wrote:
-> Hi Mark,
+On Wed, Jun 18, 2014 at 05:37:54PM +0200, Stephen Warren wrote:
+> On 06/18/2014 06:18 AM, Peter De Schrijver wrote:
+> > On Tue, Jun 17, 2014 at 11:51:20PM +0200, Thierry Reding wrote:
+> >> * PGP Signed by an unknown key
+> >>
+> >> On Tue, Jun 17, 2014 at 05:01:46PM +0300, Peter De Schrijver wrote:
+> >>> On Tue, Jun 17, 2014 at 02:13:15PM +0200, Thierry Reding wrote:
+> >>>>> Old Signed by an unknown key
+> >>>>
+> >>>> On Mon, Jun 16, 2014 at 04:01:02PM -0600, Stephen Warren wrote:
+> >>>>> On 06/04/2014 05:32 AM, Mikko Perttunen wrote:
+> >>>>>> This symbol needs to be exported to power on rails without using
+> >>>>>> tegra_powergate_sequence_power_up. tegra_powergate_sequence_power_up
+> >>>>>> cannot be used in situations where the driver wants to handle clocking
+> >>>>>> by itself.
+> >>>>>
+> >>>>> Thierry, are you OK with this change?
+> >>>>
+> >>>> I would've preferred tegra_powergate_sequence_power_up() to be used
+> >>>
+> >>> I don't think the current tegra_powergate_sequence_power_up() API is very well
+> >>> defined though. I don't think the clocks and resets required by the sequence
+> >>> should be provided by the driver. For one, there can be several clocks and
+> >>> resets that need to be controlled for a single domain.
+> >>
+> >> Do you have any suggestions for what the API should look like? Even if
+> >> we plan to move to some different API, I think there's some advantage in
+> >> using it consistently if for no other reason than to make it easier to
+> >> replace occurrences later on.
+> >>
+> > 
+> > I think the API should only have the domain ID as input so:
+> > 
+> > int tegra_powerdomain_on(int id) 
+> > 
+> > /*
+> >  * Prerequisites: domain is off
+> >  * Result: domain is on, clocks of the modules in the domain are off, modules are in reset
+> >  */
+> > 
+> > int tegra_powerdomain_off(int id)
+> > 
+> > /*
+> >  * Prerequisites: all clocks of the modules in the domain are off
+> >  * result: domain is off
+> >  */
 > 
-> On 06/18/2014 10:03 PM, Mark Rutland wrote:
->> On Wed, Jun 18, 2014 at 05:54:08AM +0100, Zhangfei Gao wrote:
->>> Instead of setting hflags in different files,
->>> ahci_platform_get_of_property set hpriv->flags when ahci_platform_init_host
->>> according to property in dts.
->>
->> The AHCI_HFLAGS are a Linux implementation detail, so it would be nice
->> to have a good justification for each of these being turned into DT
->> properties.
+> That doesn't make sense; the PMC doesn't have access to the clock and
+> reset IDs - that's why the API requires them to be passed in.
 > 
-> Do you mean only add required property now?
 
-No you should not add any properties at all using properties to set SoC specific quirks
-is just wrong, if a device is not 100% ahci compatible you should use a SoC specific
-compatible string for it, and set quirks in the kernel driver based on that.
+We should make driver look them up by name then. It doesn't make sense to
+move this knowledge to the drivers as there can be several modules in 1
+powerdomain. So every driver would then need to have access to all clock
+and reset IDs of the modules of the domain?
 
-Devicetree is supposed to describe hardware, in this case the quirks are a property
-of the specific model of the hardware, so this should be expressed through the
-compatible string. Extra properties in devicetree are meant to be used for board
-specific things, like having a gpio to enable power to the sata target device.
-Extra properties should not be used in the way you are proposing to use them now.
+Cheers,
 
-Regards,
-
-Hans
+Peter.
