@@ -1,41 +1,46 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH v0 3/3] aram64: Fix the APM X-Gene SoC SATA PHY clock DTS node csr-mask of the SATA Host Controller 1.
-Date: Fri, 20 Jun 2014 14:02:27 +0530
-Message-ID: <1403253147-14341-4-git-send-email-stripathi@apm.com>
-References: <1403253147-14341-1-git-send-email-stripathi@apm.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from denmail01-v4020.amcc.com ([192.195.68.30]:46582 "EHLO
-	denmail01.apm.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S934695AbaFTId1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 20 Jun 2014 04:33:27 -0400
-In-Reply-To: <1403253147-14341-1-git-send-email-stripathi@apm.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH v0 1/3] ata: Fix the watermark threshold for the APM X-Gene
+ SATA host controller driver.
+Date: Fri, 20 Jun 2014 19:24:16 +0400
+Message-ID: <53A45220.1030406@cogentembedded.com>
+References: <1403253147-14341-1-git-send-email-stripathi@apm.com> <1403253147-14341-2-git-send-email-stripathi@apm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1403253147-14341-2-git-send-email-stripathi@apm.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Suman Tripathi <stripathi@apm.com>, olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>
 List-Id: linux-ide@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
 
-This patch fixes the SATA PHY clock DTS node csr-mask of the SATA
-Host controller 1.
+Hello.
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
----
- arch/arm64/boot/dts/apm-storm.dtsi | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On 06/20/2014 12:32 PM, Suman Tripathi wrote:
 
-diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
-index f8c40a6..df5896d 100644
---- a/arch/arm64/boot/dts/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm-storm.dtsi
-@@ -186,7 +186,7 @@
- 				clock-output-names = "sataphy1clk";
- 				status = "disabled";
- 				csr-offset = <0x4>;
--				csr-mask = <0x00>;
-+				csr-mask = <0x3a>;
- 				enable-offset = <0x0>;
- 				enable-mask = <0x06>;
- 			};
---
-1.8.2.1
+> This patch fixes the watermark threshold of the receive FIFO for the
+> APM X-Gene SATA host controller driver.
+
+> Signed-off-by: Loc Ho <lho@apm.com>
+> Signed-off-by: Suman Tripathi <stripathi@apm.com>
+> ---
+>   drivers/ata/ahci_xgene.c | 8 ++++++++
+>   1 file changed, 8 insertions(+)
+
+> diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
+> index 77c89bf..5f0f750 100644
+> --- a/drivers/ata/ahci_xgene.c
+> +++ b/drivers/ata/ahci_xgene.c
+> @@ -68,6 +68,10 @@
+>   #define PORTAXICFG_OUTTRANS_SET(dst, src) \
+>   		(((dst) & ~0x00f00000) | (((u32)(src) << 0x14) & 0x00f00000))
+>
+> +#define PORTRANSCFG				0xc8
+> +#define PORTRANSCFG_RXWM_SET(dst, src)		\
+> +		(((dst) & ~0x0000007f) | (((u32) (src) << 0) & 0x0000007f))
+
+    Please renmove space after (u32) for consistency with the above macro. And 
+why shift by 0 bits?
+
+WBR, Sergei
 
