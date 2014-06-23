@@ -1,57 +1,35 @@
-From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-Subject: Re: [PATCH] phy: qcom: Add driver for QCOM APQ8064 SATA PHY
-Date: Mon, 23 Jun 2014 19:38:51 +0100
-Message-ID: <53A8743B.8020404@linaro.org>
-References: <1403546409-10860-1-git-send-email-srinivas.kandagatla@linaro.org> <C77397FA-1247-4D99-A0AC-9EFE45F7036E@codeaurora.org>
+From: Alexander Gordeev <agordeev-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 1/3] PCI/MSI: Add pci_enable_msi_partial()
+Date: Mon, 23 Jun 2014 22:11:42 +0200
+Message-ID: <20140623201141.GA30956@dhcp-26-207.brq.redhat.com>
+References: <cover.1402405331.git.agordeev@redhat.com>
+	<4fef62a2e647a7c38e9f2a1ea4244b3506a85e2b.1402405331.git.agordeev@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-we0-f181.google.com ([74.125.82.181]:41121 "EHLO
-	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752850AbaFWSiy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jun 2014 14:38:54 -0400
-Received: by mail-we0-f181.google.com with SMTP id q59so7455180wes.40
-        for <linux-ide@vger.kernel.org>; Mon, 23 Jun 2014 11:38:53 -0700 (PDT)
-In-Reply-To: <C77397FA-1247-4D99-A0AC-9EFE45F7036E@codeaurora.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <4fef62a2e647a7c38e9f2a1ea4244b3506a85e2b.1402405331.git.agordeev-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Bjorn Helgaas <bhelgaas-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
+Cc: linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org, linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, xen-devel-GuqFBffKawtpuQazS67q72D2FQJk+8+b@public.gmane.org, linuxppc-dev-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: Kumar Gala <galak@codeaurora.org>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>, Grant Likely <grant.likely@linaro.org>, Rob Herring <robh+dt@kernel.org>, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-ide@vger.kernel.org, Sujit Reddy Thumma <sthumma@codeaurora.org>
 
+Hi Bjorn,
 
+Any feedback?
 
-On 23/06/14 19:12, Kumar Gala wrote:
->
-> On Jun 23, 2014, at 1:00 PM, Srinivas Kandagatla <srinivas.kandagatla@linaro.org> wrote:
->
->> Add a PHY driver for uses with AHCI based SATA controller driver on the
->> APQ8064 family of SoCs.
->>
->> This patch is a forward port plus separating PHY code of SATA driver
->> from Qualcomm's v3.4 andriod kernel.
->>
->> Tested on IFC6410 board.
->>
->> CC: Sujit Reddy Thumma <sthumma@codeaurora.org>
->> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
->> ---
->> drivers/phy/Kconfig                 |   7 +
->> drivers/phy/Makefile                |   1 +
->> drivers/phy/phy-qcom-apq8064-sata.c | 358 ++++++++++++++++++++++++++++++++++++
->> 3 files changed, 366 insertions(+)
->> create mode 100644 drivers/phy/phy-qcom-apq8064-sata.c
->
-> Did you look at the 3.10 Android kernel tree version of the phy driver?
->
-No, I did not get a chance to look at it. I will have a look at it today.
-> Also do you have a DT binding spec to go with this?
-yes, I did add it into the same binding spec qcom-phy.txt as ipq806x.
+Thanks!
 
-I will send this in a different patch.
-
-thanks,
-srini
->
-> - k
->
+-- 
+Regards,
+Alexander Gordeev
+agordeev-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
