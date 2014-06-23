@@ -1,166 +1,116 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH v4 2/2] ata: Fix the dma state machine lockup for the IDENTIFY DEVICE PIO mode command.
-Date: Mon, 23 Jun 2014 15:23:13 +0530
-Message-ID: <1403517193-29776-3-git-send-email-stripathi@apm.com>
-References: <1403517193-29776-1-git-send-email-stripathi@apm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1403517193-29776-1-git-send-email-stripathi@apm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
+From: Peter De Schrijver <pdeschrijver@nvidia.com>
+Subject: Re: [PATCH 6/9] ARM: tegra: Export tegra_powergate_power_on
+Date: Mon, 23 Jun 2014 13:14:42 +0300
+Message-ID: <20140623101441.GU3407@tbergstrom-lnx.Nvidia.com>
+References: <1401881559-18469-1-git-send-email-mperttunen@nvidia.com>
+ <1401881559-18469-7-git-send-email-mperttunen@nvidia.com>
+ <539F691E.5030204@wwwdotorg.org>
+ <20140617121313.GE18816@ulmo>
+ <20140617140146.GH3407@tbergstrom-lnx.Nvidia.com>
+ <20140617215119.GC24743@mithrandir>
+ <20140618121806.GJ3407@tbergstrom-lnx.Nvidia.com>
+ <53A1B252.1030204@wwwdotorg.org>
+ <20140619080234.GK3407@tbergstrom-lnx.Nvidia.com>
+ <53A3096B.1040409@wwwdotorg.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <53A3096B.1040409@wwwdotorg.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Stephen Warren <swarren@wwwdotorg.org>
+Cc: Thierry Reding <thierry.reding@gmail.com>, Mikko Perttunen <mperttunen@nvidia.com>, "tj@kernel.org" <tj@kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-This patch fixes the dma state machine lockup due to the processing
-of IDENTIFY DEVICE PIO mode command. The X-Gene AHCI controller
-has an errata in which it cannot clear the BSY bit after
-receiving the PIO setup FIS and results the dma state machine to go
-into the CMFatalErrorUpdate state resulting in the dma state
-machine lockup. This patch also removes the dma restart workaround
-from the read_id function as the read_id function is only called by
-libata layer for ATA_INTERNAL commands. But for somecases eg:
-PORT MULTIPLIER and udev, the framework will enumerate using SCSI
-commands and it will not call read_id function.
+On Thu, Jun 19, 2014 at 06:01:47PM +0200, Stephen Warren wrote:
+> On 06/19/2014 02:02 AM, Peter De Schrijver wrote:
+> > On Wed, Jun 18, 2014 at 05:37:54PM +0200, Stephen Warren wrote:
+> >> On 06/18/2014 06:18 AM, Peter De Schrijver wrote:
+> >>> On Tue, Jun 17, 2014 at 11:51:20PM +0200, Thierry Reding wrote:
+> >>>> * PGP Signed by an unknown key
+> >>>>
+> >>>> On Tue, Jun 17, 2014 at 05:01:46PM +0300, Peter De Schrijver wrote:
+> >>>>> On Tue, Jun 17, 2014 at 02:13:15PM +0200, Thierry Reding wrote:
+> >>>>>>> Old Signed by an unknown key
+> >>>>>>
+> >>>>>> On Mon, Jun 16, 2014 at 04:01:02PM -0600, Stephen Warren wrote:
+> >>>>>>> On 06/04/2014 05:32 AM, Mikko Perttunen wrote:
+> >>>>>>>> This symbol needs to be exported to power on rails without using
+> >>>>>>>> tegra_powergate_sequence_power_up. tegra_powergate_sequence_power_up
+> >>>>>>>> cannot be used in situations where the driver wants to handle clocking
+> >>>>>>>> by itself.
+> >>>>>>>
+> >>>>>>> Thierry, are you OK with this change?
+> >>>>>>
+> >>>>>> I would've preferred tegra_powergate_sequence_power_up() to be used
+> >>>>>
+> >>>>> I don't think the current tegra_powergate_sequence_power_up() API is very well
+> >>>>> defined though. I don't think the clocks and resets required by the sequence
+> >>>>> should be provided by the driver. For one, there can be several clocks and
+> >>>>> resets that need to be controlled for a single domain.
+> >>>>
+> >>>> Do you have any suggestions for what the API should look like? Even if
+> >>>> we plan to move to some different API, I think there's some advantage in
+> >>>> using it consistently if for no other reason than to make it easier to
+> >>>> replace occurrences later on.
+> >>>>
+> >>>
+> >>> I think the API should only have the domain ID as input so:
+> >>>
+> >>> int tegra_powerdomain_on(int id) 
+> >>>
+> >>> /*
+> >>>  * Prerequisites: domain is off
+> >>>  * Result: domain is on, clocks of the modules in the domain are off, modules are in reset
+> >>>  */
+> >>>
+> >>> int tegra_powerdomain_off(int id)
+> >>>
+> >>> /*
+> >>>  * Prerequisites: all clocks of the modules in the domain are off
+> >>>  * result: domain is off
+> >>>  */
+> >>
+> >> That doesn't make sense; the PMC doesn't have access to the clock and
+> >> reset IDs - that's why the API requires them to be passed in.
+> >>
+> > 
+> > We should make driver look them up by name then. It doesn't make sense to
+> > move this knowledge to the drivers as there can be several modules in 1
+> > powerdomain. So every driver would then need to have access to all clock
+> > and reset IDs of the modules of the domain?
+> 
+> Having the drivers know the clocks, resets, and power domains that
+> affect their HW module seems perfectly reasonable.
+> 
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
----
- drivers/ata/ahci.h       |  1 +
- drivers/ata/ahci_xgene.c | 48 +++++++++++++++++++++++++++++++++++-------------
- drivers/ata/libahci.c    |  4 ++--
- 3 files changed, 38 insertions(+), 15 deletions(-)
+Yes, but the problem is that you also need clocks and reset of other modules
+in the same domain to safely control the domain's status. Eg: the ISPs, VI and
+CSI share a domain. VI and CSI are useable without ISP and the ISP lacks
+public documentation. So it's not unlikely a VI and CSI driver will upstreamed
+someday which means we would need to control the domain and therefore would
+need to tell that driver about the ISPs clocks and resets even though the
+driver doesn't know anything about the ISP hw otherwise.
 
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 3c1760e..1ea804f 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -373,6 +373,7 @@ int ahci_do_softreset(struct ata_link *link, unsigned int *class,
- int ahci_stop_engine(struct ata_port *ap);
- void ahci_start_engine(struct ata_port *ap);
- int ahci_restart_engine(struct ata_port *ap);
-+unsigned int ahci_qc_issue(struct ata_queued_cmd *qc);
- int ahci_check_ready(struct ata_link *link);
- int ahci_kick_engine(struct ata_port *ap);
- int ahci_port_resume(struct ata_port *ap);
-diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-index 77c89bf..4a367c9 100644
---- a/drivers/ata/ahci_xgene.c
-+++ b/drivers/ata/ahci_xgene.c
-@@ -78,6 +78,7 @@
- struct xgene_ahci_context {
- 	struct ahci_host_priv *hpriv;
- 	struct device *dev;
-+	u8 last_cmd[MAX_AHCI_CHN_PERCTR]; /* tracking the last command */
- 	void __iomem *csr_core;		/* Core CSR address of IP */
- 	void __iomem *csr_diag;		/* Diag CSR address of IP */
- 	void __iomem *csr_axi;		/* AXI CSR address of IP */
-@@ -98,20 +99,50 @@ static int xgene_ahci_init_memram(struct xgene_ahci_context *ctx)
- }
+> Do we actually have any case where unrelated modules are in the same
+> power domain /and/ there's some need for those drivers to manipulate the
+> power domain?
+> 
 
- /**
-+ * xgene_ahci_qc_issue - Issue commands to the device
-+ * @qc: Command to issue
-+ *
-+ * Due to H/W errata, for the IDENTIFY DEVICE command controller is unable to
-+ * clear the BSY bit after receiving the PIO setup FIS and results the dma
-+ * state machine to go into the CMFatalErrorUpdate state resulting in the dma
-+ * state machine lockup. By restarting the dma engine to move it removes the
-+ * controller out of lock up state.
-+ */
-+static unsigned int xgene_ahci_qc_issue(struct ata_queued_cmd *qc)
-+{
-+	struct ata_port *ap = qc->ap;
-+	struct ahci_host_priv *hpriv = ap->host->private_data;
-+	struct xgene_ahci_context *ctx = hpriv->plat_data;
-+	int rc = 0;
-+
-+	/*
-+	 * Restart the dma engine if the last cmd issued
-+	 * is IDENTIFY DEVICE command
-+	 */
-+	if (unlikely(ctx->last_cmd[ap->port_no] == ATA_CMD_ID_ATA))
-+		ahci_restart_engine(ap);
-+
-+	rc = ahci_qc_issue(qc);
-+
-+	/* Save the last command issued */
-+	ctx->last_cmd[ap->port_no] = qc->tf.command;
-+
-+	return rc;
-+}
-+
-+/**
-  * xgene_ahci_read_id - Read ID data from the specified device
-  * @dev: device
-  * @tf: proposed taskfile
-  * @id: data buffer
-  *
-  * This custom read ID function is required due to the fact that the HW
-- * does not support DEVSLP and the controller state machine may get stuck
-- * after processing the ID query command.
-+ * does not support DEVSLP.
-  */
- static unsigned int xgene_ahci_read_id(struct ata_device *dev,
- 				       struct ata_taskfile *tf, u16 *id)
- {
- 	u32 err_mask;
--	void __iomem *port_mmio = ahci_port_base(dev->link->ap);
+According to the TRM, the reset state of the power domains is undefined. While
+that seems unlikely, I do think the kernel should not assume any domain is on
+apart from the obvious ones (like the CPU domain it is running on),
 
- 	err_mask = ata_do_dev_read_id(dev, tf, id);
- 	if (err_mask)
-@@ -133,16 +164,6 @@ static unsigned int xgene_ahci_read_id(struct ata_device *dev,
- 	 */
- 	id[ATA_ID_FEATURE_SUPP] &= ~(1 << 8);
+> BTW, any objections here should have been raised when the initial API
+> design for powergating was created. Now that we have the current API,
+> which in turn has driven the DT bindings for at least some HW modules,
+> we're stuck with it due to DT ABIness. Well, perhaps we can introduce
+> something new, but we'll always have to support the old way, so there's
+> little point.
 
--	/*
--	 * Due to HW errata, restart the port if no other command active.
--	 * Otherwise the controller may get stuck.
--	 */
--	if (!readl(port_mmio + PORT_CMD_ISSUE)) {
--		writel(PORT_CMD_FIS_RX, port_mmio + PORT_CMD);
--		readl(port_mmio + PORT_CMD);	/* Force a barrier */
--		writel(PORT_CMD_FIS_RX | PORT_CMD_START, port_mmio + PORT_CMD);
--		readl(port_mmio + PORT_CMD);	/* Force a barrier */
--	}
- 	return 0;
- }
+I don't think the bindings need to be changed at all as long as the PMC driver
+can parse the relevant DT nodes to get the clock and reset information.
 
-@@ -300,6 +321,7 @@ static struct ata_port_operations xgene_ahci_ops = {
- 	.host_stop = xgene_ahci_host_stop,
- 	.hardreset = xgene_ahci_hardreset,
- 	.read_id = xgene_ahci_read_id,
-+	.qc_issue = xgene_ahci_qc_issue,
- };
+Cheers,
 
- static const struct ata_port_info xgene_ahci_port_info = {
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index d1c9122..1b86cf4 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -68,7 +68,6 @@ static ssize_t ahci_transmit_led_message(struct ata_port *ap, u32 state,
-
- static int ahci_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val);
- static int ahci_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val);
--static unsigned int ahci_qc_issue(struct ata_queued_cmd *qc);
- static bool ahci_qc_fill_rtf(struct ata_queued_cmd *qc);
- static int ahci_port_start(struct ata_port *ap);
- static void ahci_port_stop(struct ata_port *ap);
-@@ -1952,7 +1951,7 @@ irqreturn_t ahci_interrupt(int irq, void *dev_instance)
- }
- EXPORT_SYMBOL_GPL(ahci_interrupt);
-
--static unsigned int ahci_qc_issue(struct ata_queued_cmd *qc)
-+unsigned int ahci_qc_issue(struct ata_queued_cmd *qc)
- {
- 	struct ata_port *ap = qc->ap;
- 	void __iomem *port_mmio = ahci_port_base(ap);
-@@ -1981,6 +1980,7 @@ static unsigned int ahci_qc_issue(struct ata_queued_cmd *qc)
-
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(ahci_qc_issue);
-
- static bool ahci_qc_fill_rtf(struct ata_queued_cmd *qc)
- {
---
-1.8.2.1
-
+Peter.
