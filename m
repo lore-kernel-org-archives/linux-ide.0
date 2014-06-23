@@ -1,52 +1,42 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH v1 3/3] arm64: Fix the APM X-Gene SoC SATA PHY clock DTS
- node csr-mask of the SATA Host Controller 1.
-Date: Mon, 23 Jun 2014 14:56:50 +0400
-Message-ID: <53A807F2.4000408@cogentembedded.com>
-References: <1403518538-30697-1-git-send-email-stripathi@apm.com> <1403518538-30697-4-git-send-email-stripathi@apm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Russell King <rmk+kernel@arm.linux.org.uk>
+Subject: [PATCH 1/5] ata: ahci_imx: warn when disabling ahci link
+Date: Mon, 23 Jun 2014 12:59:08 +0100
+Message-ID: <E1Wz2tw-0000eE-Ml@rmk-PC.arm.linux.org.uk>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lb0-f181.google.com ([209.85.217.181]:48414 "EHLO
-	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752535AbaFWK4x (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jun 2014 06:56:53 -0400
-Received: by mail-lb0-f181.google.com with SMTP id p9so4165193lbv.40
-        for <linux-ide@vger.kernel.org>; Mon, 23 Jun 2014 03:56:52 -0700 (PDT)
-In-Reply-To: <1403518538-30697-4-git-send-email-stripathi@apm.com>
+Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:38924 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752408AbaFWL7Q (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jun 2014 07:59:16 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Suman Tripathi <stripathi@apm.com>, olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>
+To: Sascha Hauer <kernel@pengutronix.de>, Shawn Guo <shawn.guo@freescale.com>, Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
 
-Hello.
+When the AHCI link is disabled, it can't be re-enabled except by
+resetting the entire SoC.  Rather than doing this silently print
+some kernel messages to inform the user, along with how to avoid
+this.
 
-On 06/23/2014 02:15 PM, Suman Tripathi wrote:
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+---
+ drivers/ata/ahci_imx.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-> This patch fixes the SATA PHY clock DTS node csr-mask of the SATA
-> Host controller 1. This patch also fixes the status of the PHY
-> clock node of SATA Host controller 1.
-
-> Signed-off-by: Loc Ho <lho@apm.com>
-> Signed-off-by: Suman Tripathi <stripathi@apm.com>
-> ---
->   arch/arm64/boot/dts/apm-storm.dtsi | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
-
-> diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
-> index f8c40a6..d14bcc4 100644
-> --- a/arch/arm64/boot/dts/apm-storm.dtsi
-> +++ b/arch/arm64/boot/dts/apm-storm.dtsi
-> @@ -184,9 +184,9 @@
->   				reg = <0x0 0x1f21c000 0x0 0x1000>;
->   				reg-names = "csr-reg";
->   				clock-output-names = "sataphy1clk";
-> -				status = "disabled";
-> +				status = "ok";
-
-    You don't need the specifically set "status to "ok" unless you're 
-overriding the "status" prop; "ok" is assumed AFAIK.
-
-WBR, Sergei
+diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+index 3a901520c62b..4eba1c5279ec 100644
+--- a/drivers/ata/ahci_imx.c
++++ b/drivers/ata/ahci_imx.c
+@@ -324,6 +324,10 @@ static void ahci_imx_error_handler(struct ata_port *ap)
+ 	writel(reg_val | IMX_P0PHYCR_TEST_PDDQ, mmio + IMX_P0PHYCR);
+ 	imx_sata_disable(hpriv);
+ 	imxpriv->no_device = true;
++
++	dev_info(ap->dev, "no device found, disabling link.\n");
++	dev_info(ap->dev, "pass " MODULE_PARAM_PREFIX
++		 ".hotplug=1 to enable hotplug\n");
+ }
+ 
+ static int ahci_imx_softreset(struct ata_link *link, unsigned int *class,
+-- 
+1.8.3.1
 
