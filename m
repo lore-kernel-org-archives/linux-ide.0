@@ -1,90 +1,41 @@
 From: =?UTF-8?q?Antoine=20T=C3=A9nart?=
 	<antoine.tenart@free-electrons.com>
-Subject: [PATCH v7 0/7] ARM: berlin: add AHCI support
-Date: Mon, 23 Jun 2014 15:39:36 +0200
-Message-ID: <1403530783-17180-1-git-send-email-antoine.tenart@free-electrons.com>
+Subject: [PATCH v7 4/7] ata: ahci_platform: add a generic AHCI compatible
+Date: Mon, 23 Jun 2014 15:39:40 +0200
+Message-ID: <1403530783-17180-5-git-send-email-antoine.tenart@free-electrons.com>
+References: <1403530783-17180-1-git-send-email-antoine.tenart@free-electrons.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:48821 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753842AbaFWNk1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jun 2014 09:40:27 -0400
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1403530783-17180-1-git-send-email-antoine.tenart@free-electrons.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: sebastian.hesselbarth@gmail.com, tj@kernel.org, kishon@ti.com
 Cc: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-This series adds the support for Berlin SoC AHCI controller. The
-controller allows to use the SATA host interface and, for example, the
-eSATA port on the BG2Q.
+The ahci_platform driver is a generic driver using the libahci_platform
+functions. Add a generic compatible to avoid having an endless list of
+compatibles with no differences for the same driver.
 
-The series adds a PHY driver to control the two SATA ports available,
-and adds a generic compatible to use the existing ahci_platform driver.
+Signed-off-by: Antoine T=C3=A9nart <antoine.tenart@free-electrons.com>
+---
+ drivers/ata/ahci_platform.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Also enable the eSATA interface on the BG2Q DMP.
-
-Changes since v6:
-        - added the 'clocks' property and support in the PHY driver
-        - updated the PHY compatible
-
-Changes since v5:
-        - rebased on top of v3.16-rc1
-        - added the 'clocks' property in the sata node
-
-Changes since v4:
-        - updated PHY driver as tristate
-        - handled the case were no SATA port is enabled
-        - updated the compatible to a generic one
-        - cosmetic fixups
-
-Changes since v3:
-        - moved all PHY operations to the PHY driver
-        - removed PHY sub-nodes
-        - removed the custom Berlin AHCI driver and switched to
-          ahci_platform
-        - added multiple PHYs support to the libahci_platform
-
-Changes since v2:
-        - modeled each PHY as a sub-node
-        - cosmetic fixups
-
-Changes since v1:
-        - added a PHY driver, allowing to enable each port
-          individually and removed the 'force-port-map' property
-	- made the drivers a bit less magic :)
-        - wrote a function to select and configure registers in the
-          AHCI driver
-        - removed BG2 / BG2CD nodes
-
-Antoine T=C3=A9nart (7):
-  phy: add a driver for the Berlin SATA PHY
-  Documentation: bindings: add the Berlin SATA PHY
-  ata: libahci: allow to use multiple PHYs
-  ata: ahci_platform: add a generic AHCI compatible
-  Documentation: bindings: document the sub-nodes AHCI bindings
-  ARM: berlin: add the AHCI node for the BG2Q
-  ARM: berlin: enable the eSATA interface on the BG2Q DMP
-
- .../devicetree/bindings/ata/ahci-platform.txt      |  37 ++++
- .../devicetree/bindings/phy/berlin-sata-phy.txt    |  16 ++
- arch/arm/boot/dts/berlin2q-marvell-dmp.dts         |   8 +
- arch/arm/boot/dts/berlin2q.dtsi                    |  29 +++
- drivers/ata/ahci.h                                 |   3 +-
- drivers/ata/ahci_platform.c                        |   2 +
- drivers/ata/libahci.c                              |   7 +
- drivers/ata/libahci_platform.c                     | 170 +++++++++++--=
--
- drivers/phy/Kconfig                                |   7 +
- drivers/phy/Makefile                               |   1 +
- drivers/phy/phy-berlin-sata.c                      | 246 +++++++++++++=
-++++++++
- 11 files changed, 490 insertions(+), 36 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/phy/berlin-sata-p=
-hy.txt
- create mode 100644 drivers/phy/phy-berlin-sata.c
-
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index ebe505c17763..a30cecd68609 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -78,6 +78,8 @@ static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_platform_s=
+uspend,
+ 			 ahci_platform_resume);
+=20
+ static const struct of_device_id ahci_of_match[] =3D {
++	{ .compatible =3D "generic-ahci", },
++	/* Keep the following compatibles for device tree compatibility */
+ 	{ .compatible =3D "snps,spear-ahci", },
+ 	{ .compatible =3D "snps,exynos5440-ahci", },
+ 	{ .compatible =3D "ibm,476gtr-ahci", },
 --=20
 1.9.1
-
