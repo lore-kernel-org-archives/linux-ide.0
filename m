@@ -1,179 +1,202 @@
-From: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>
-Subject: [PATCH v7 3/7] ata: libahci: allow to use multiple PHYs
-Date: Mon, 23 Jun 2014 15:39:39 +0200
-Message-ID: <1403530783-17180-4-git-send-email-antoine.tenart@free-electrons.com>
-References: <1403530783-17180-1-git-send-email-antoine.tenart@free-electrons.com>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: Re: [PATCH 2/5] ata: ahci_imx: allow hardware parameters to be
+ specified in DT
+Date: Mon, 23 Jun 2014 16:00:32 +0200
+Message-ID: <1509175.5R6xm4AK8g@amdc1032>
+References: <E1Wz2u1-0000eI-Py@rmk-PC.arm.linux.org.uk>
+ <4208650.s9DVDPrIZR@amdc1032> <20140623133207.GI32514@n2100.arm.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <1403530783-17180-1-git-send-email-antoine.tenart@free-electrons.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: sebastian.hesselbarth@gmail.com, tj@kernel.org, kishon@ti.com
-Cc: thomas.petazzoni@free-electrons.com, zmxu@marvell.com, devicetree@vger.kernel.org, =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, alexandre.belloni@free-electrons.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mailout1.samsung.com ([203.254.224.24]:57091 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752810AbaFWOAs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jun 2014 10:00:48 -0400
+Received: from epcpsbgm1.samsung.com (epcpsbgm1 [203.254.230.26])
+ by mailout1.samsung.com
+ (Oracle Communications Messaging Server 7u4-24.01(7.0.4.24.0) 64bit (built Nov
+ 17 2011)) with ESMTP id <0N7M00MO7K9A4UB0@mailout1.samsung.com> for
+ linux-ide@vger.kernel.org; Mon, 23 Jun 2014 23:00:46 +0900 (KST)
+In-reply-to: <20140623133207.GI32514@n2100.arm.linux.org.uk>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: Sascha Hauer <kernel@pengutronix.de>, Shawn Guo <shawn.guo@freescale.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 
-VGhlIGN1cnJlbnQgaW1wbGVtZW50YXRpb24gb2YgdGhlIGxpYmFoY2kgZG9lcyBub3QgYWxsb3cg
-dG8gdXNlIG11bHRpcGxlClBIWXMuIFRoaXMgcGF0Y2ggYWRkcyB0aGUgc3VwcG9ydCBvZiBtdWx0
-aXBsZSBQSFlzIGJ5IHRoZSBsaWJhaGNpIHdoaWxlCmtlZXBpbmcgdGhlIG9sZCBiaW5kaW5ncyB2
-YWxpZCBmb3IgZGV2aWNlIHRyZWUgY29tcGF0aWJpbGl0eS4KClRoaXMgaW50cm9kdWNlIGEgbmV3
-IHdheSBvZiBkZWZpbmluZyBTQVRBIHBvcnRzIGluIHRoZSBkZXZpY2UgdHJlZSwgd2l0aApvbmUg
-cG9ydCBwZXIgc3ViLW5vZGUuIFRoaXMgYXMgdGhlIGFkdmFudGFnZSBvZiBhbGxvd2luZyBhIHBl
-ciBwb3J0CmNvbmZpZ3VyYXRpb24uIEJlY2F1c2Ugc29tZSBwb3J0cyBtYXkgYmUgYWNjZXNzaWJs
-ZSBidXQgZGlzYWJsZWQgaW4gdGhlCmRldmljZSB0cmVlLCB0aGUgZGVmYXVsdCBwb3J0X21hcCBp
-cyBjb21wdXRlZCBhdXRvbWF0aWNhbGx5IHdoZW4gdXNpbmcKdGhpcy4KClNpZ25lZC1vZmYtYnk6
-IEFudG9pbmUgVMOpbmFydCA8YW50b2luZS50ZW5hcnRAZnJlZS1lbGVjdHJvbnMuY29tPgotLS0K
-IGRyaXZlcnMvYXRhL2FoY2kuaCAgICAgICAgICAgICB8ICAgMyArLQogZHJpdmVycy9hdGEvbGli
-YWhjaS5jICAgICAgICAgIHwgICA3ICsrCiBkcml2ZXJzL2F0YS9saWJhaGNpX3BsYXRmb3JtLmMg
-fCAxNzAgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKystLS0tLS0tLS0KIDMgZmlsZXMg
-Y2hhbmdlZCwgMTQ0IGluc2VydGlvbnMoKyksIDM2IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBh
-L2RyaXZlcnMvYXRhL2FoY2kuaCBiL2RyaXZlcnMvYXRhL2FoY2kuaAppbmRleCAwNTg4MmU0NDQ1
-YTYuLmU1YmRiZjgyN2NhOCAxMDA2NDQKLS0tIGEvZHJpdmVycy9hdGEvYWhjaS5oCisrKyBiL2Ry
-aXZlcnMvYXRhL2FoY2kuaApAQCAtMzMwLDcgKzMzMCw4IEBAIHN0cnVjdCBhaGNpX2hvc3RfcHJp
-diB7CiAJYm9vbAkJCWdvdF9ydW50aW1lX3BtOyAvKiBEaWQgd2UgZG8gcG1fcnVudGltZV9nZXQ/
-ICovCiAJc3RydWN0IGNsawkJKmNsa3NbQUhDSV9NQVhfQ0xLU107IC8qIE9wdGlvbmFsICovCiAJ
-c3RydWN0IHJlZ3VsYXRvcgkqdGFyZ2V0X3B3cjsJLyogT3B0aW9uYWwgKi8KLQlzdHJ1Y3QgcGh5
-CQkqcGh5OwkJLyogSWYgcGxhdGZvcm0gdXNlcyBwaHkgKi8KKwlzdHJ1Y3QgcGh5CQkqKnBoeXM7
-CQkvKiBJZiBwbGF0Zm9ybSB1c2VzIHBoeXMgKi8KKwl1bnNpZ25lZAkJbnBoeXM7CQkvKiBOdW1i
-ZXIgb2YgcGh5cyAqLwogCXZvaWQJCQkqcGxhdF9kYXRhOwkvKiBPdGhlciBwbGF0Zm9ybSBkYXRh
-ICovCiAJLyoKIAkgKiBPcHRpb25hbCBhaGNpX3N0YXJ0X2VuZ2luZSBvdmVycmlkZSwgaWYgbm90
-IHNldCB0aGlzIGdldHMgc2V0IHRvIHRoZQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9hdGEvbGliYWhj
-aS5jIGIvZHJpdmVycy9hdGEvbGliYWhjaS5jCmluZGV4IDQwZWE1ODNkMzYxMC4uMGJkZWU4MzMw
-ZGNmIDEwMDY0NAotLS0gYS9kcml2ZXJzL2F0YS9saWJhaGNpLmMKKysrIGIvZHJpdmVycy9hdGEv
-bGliYWhjaS5jCkBAIC00ODIsNiArNDgyLDEzIEBAIHZvaWQgYWhjaV9zYXZlX2luaXRpYWxfY29u
-ZmlnKHN0cnVjdCBkZXZpY2UgKmRldiwKIAkJcG9ydF9tYXAgJj0gbWFza19wb3J0X21hcDsKIAl9
-CiAKKwkvKgorCSAqIElmIHBvcnRfbWFwIHdhcyBmaWxsZWQgYXV0b21hdGljYWxseSB3aGVuIGZp
-bmRpbmcgcG9ydCBzdWItbm9kZXMsCisJICogbWFrZSBzdXJlIHdlIGdldCB0aGUgcmlnaHQgc2V0
-IGhlcmUuCisJICovCisJaWYgKGhwcml2LT5wb3J0X21hcCkKKwkJcG9ydF9tYXAgJj0gaHByaXYt
-PnBvcnRfbWFwOworCiAJLyogY3Jvc3MgY2hlY2sgcG9ydF9tYXAgYW5kIGNhcC5uX3BvcnRzICov
-CiAJaWYgKHBvcnRfbWFwKSB7CiAJCWludCBtYXBfcG9ydHMgPSAwOwpkaWZmIC0tZ2l0IGEvZHJp
-dmVycy9hdGEvbGliYWhjaV9wbGF0Zm9ybS5jIGIvZHJpdmVycy9hdGEvbGliYWhjaV9wbGF0Zm9y
-bS5jCmluZGV4IDNhNWI0ZWQyNWE0Zi4uY2QyYmM1MGJhOTEzIDEwMDY0NAotLS0gYS9kcml2ZXJz
-L2F0YS9saWJhaGNpX3BsYXRmb3JtLmMKKysrIGIvZHJpdmVycy9hdGEvbGliYWhjaV9wbGF0Zm9y
-bS5jCkBAIC0zOSw2ICszOSw2MSBAQCBzdGF0aWMgc3RydWN0IHNjc2lfaG9zdF90ZW1wbGF0ZSBh
-aGNpX3BsYXRmb3JtX3NodCA9IHsKIH07CiAKIC8qKgorICogYWhjaV9wbGF0Zm9ybV9lbmFibGVf
-cGh5cyAtIEVuYWJsZSBQSFlzCisgKiBAaHByaXY6IGhvc3QgcHJpdmF0ZSBhcmVhIHRvIHN0b3Jl
-IGNvbmZpZyB2YWx1ZXMKKyAqCisgKiBUaGlzIGZ1bmN0aW9uIGVuYWJsZXMgYWxsIHRoZSBQSFlz
-IGZvdW5kIGluIGhwcml2LT5waHlzLCBpZiBhbnkuCisgKiBJZiBhIFBIWSBmYWlscyB0byBiZSBl
-bmFibGVkLCBpdCBkaXNhYmxlcyBhbGwgdGhlIFBIWXMgYWxyZWFkeQorICogZW5hYmxlZCBpbiBy
-ZXZlcnNlIG9yZGVyIGFuZCByZXR1cm5zIGFuIGVycm9yLgorICoKKyAqIFJFVFVSTlM6CisgKiAw
-IG9uIHN1Y2Nlc3Mgb3RoZXJ3aXNlIGEgbmVnYXRpdmUgZXJyb3IgY29kZQorICovCitpbnQgYWhj
-aV9wbGF0Zm9ybV9lbmFibGVfcGh5cyhzdHJ1Y3QgYWhjaV9ob3N0X3ByaXYgKmhwcml2KQorewor
-CWludCBpLCByYyA9IDA7CisKKwlmb3IgKGkgPSAwOyBpIDwgaHByaXYtPm5waHlzOyBpKyspIHsK
-KwkJcmMgPSBwaHlfaW5pdChocHJpdi0+cGh5c1tpXSk7CisJCWlmIChyYykKKwkJCWdvdG8gZGlz
-YWJsZV9waHlzOworCisJCXJjID0gcGh5X3Bvd2VyX29uKGhwcml2LT5waHlzW2ldKTsKKwkJaWYg
-KHJjKSB7CisJCQlwaHlfZXhpdChocHJpdi0+cGh5c1tpXSk7CisJCQlnb3RvIGRpc2FibGVfcGh5
-czsKKwkJfQorCX0KKworCXJldHVybiAwOworCitkaXNhYmxlX3BoeXM6CisJd2hpbGUgKC0taSA+
-PSAwKSB7CisJCXBoeV9wb3dlcl9vZmYoaHByaXYtPnBoeXNbaV0pOworCQlwaHlfZXhpdChocHJp
-di0+cGh5c1tpXSk7CisJfQorCXJldHVybiByYzsKK30KK0VYUE9SVF9TWU1CT0xfR1BMKGFoY2lf
-cGxhdGZvcm1fZW5hYmxlX3BoeXMpOworCisvKioKKyAqIGFoY2lfcGxhdGZvcm1fZGlzYWJsZV9w
-aHlzIC0gRW5hYmxlIFBIWXMKKyAqIEBocHJpdjogaG9zdCBwcml2YXRlIGFyZWEgdG8gc3RvcmUg
-Y29uZmlnIHZhbHVlcworICoKKyAqIFRoaXMgZnVuY3Rpb24gZGlzYWJsZXMgYWxsIFBIWXMgZm91
-bmQgaW4gaHByaXYtPnBoeXMuCisgKi8KK3ZvaWQgYWhjaV9wbGF0Zm9ybV9kaXNhYmxlX3BoeXMo
-c3RydWN0IGFoY2lfaG9zdF9wcml2ICpocHJpdikKK3sKKwlpbnQgaTsKKworCWZvciAoaSA9IDA7
-IGkgPCBocHJpdi0+bnBoeXM7IGkrKykgeworCQlwaHlfcG93ZXJfb2ZmKGhwcml2LT5waHlzW2ld
-KTsKKwkJcGh5X2V4aXQoaHByaXYtPnBoeXNbaV0pOworCX0KK30KK0VYUE9SVF9TWU1CT0xfR1BM
-KGFoY2lfcGxhdGZvcm1fZGlzYWJsZV9waHlzKTsKKworLyoqCiAgKiBhaGNpX3BsYXRmb3JtX2Vu
-YWJsZV9jbGtzIC0gRW5hYmxlIHBsYXRmb3JtIGNsb2NrcwogICogQGhwcml2OiBob3N0IHByaXZh
-dGUgYXJlYSB0byBzdG9yZSBjb25maWcgdmFsdWVzCiAgKgpAQCAtOTIsNyArMTQ3LDcgQEAgRVhQ
-T1JUX1NZTUJPTF9HUEwoYWhjaV9wbGF0Zm9ybV9kaXNhYmxlX2Nsa3MpOwogICogZm9sbG93aW5n
-IG9yZGVyOgogICogMSkgUmVndWxhdG9yCiAgKiAyKSBDbG9ja3MgKHRocm91Z2ggYWhjaV9wbGF0
-Zm9ybV9lbmFibGVfY2xrcykKLSAqIDMpIFBoeQorICogMykgUGh5cwogICoKICAqIElmIHJlc291
-cmNlIGVuYWJsaW5nIGZhaWxzIGF0IGFueSBwb2ludCB0aGUgcHJldmlvdXMgZW5hYmxlZCByZXNv
-dXJjZXMKICAqIGFyZSBkaXNhYmxlZCBpbiByZXZlcnNlIG9yZGVyLgpAQCAtMTE0LDE3ICsxNjks
-OSBAQCBpbnQgYWhjaV9wbGF0Zm9ybV9lbmFibGVfcmVzb3VyY2VzKHN0cnVjdCBhaGNpX2hvc3Rf
-cHJpdiAqaHByaXYpCiAJaWYgKHJjKQogCQlnb3RvIGRpc2FibGVfcmVndWxhdG9yOwogCi0JaWYg
-KGhwcml2LT5waHkpIHsKLQkJcmMgPSBwaHlfaW5pdChocHJpdi0+cGh5KTsKLQkJaWYgKHJjKQot
-CQkJZ290byBkaXNhYmxlX2Nsa3M7Ci0KLQkJcmMgPSBwaHlfcG93ZXJfb24oaHByaXYtPnBoeSk7
-Ci0JCWlmIChyYykgewotCQkJcGh5X2V4aXQoaHByaXYtPnBoeSk7Ci0JCQlnb3RvIGRpc2FibGVf
-Y2xrczsKLQkJfQotCX0KKwlyYyA9IGFoY2lfcGxhdGZvcm1fZW5hYmxlX3BoeXMoaHByaXYpOwor
-CWlmIChyYykKKwkJZ290byBkaXNhYmxlX2Nsa3M7CiAKIAlyZXR1cm4gMDsKIApAQCAtMTQ0LDE2
-ICsxOTEsMTMgQEAgRVhQT1JUX1NZTUJPTF9HUEwoYWhjaV9wbGF0Zm9ybV9lbmFibGVfcmVzb3Vy
-Y2VzKTsKICAqCiAgKiBUaGlzIGZ1bmN0aW9uIGRpc2FibGVzIGFsbCBhaGNpX3BsYXRmb3JtIG1h
-bmFnZWQgcmVzb3VyY2VzIGluIHRoZQogICogZm9sbG93aW5nIG9yZGVyOgotICogMSkgUGh5Cisg
-KiAxKSBQaHlzCiAgKiAyKSBDbG9ja3MgKHRocm91Z2ggYWhjaV9wbGF0Zm9ybV9kaXNhYmxlX2Ns
-a3MpCiAgKiAzKSBSZWd1bGF0b3IKICAqLwogdm9pZCBhaGNpX3BsYXRmb3JtX2Rpc2FibGVfcmVz
-b3VyY2VzKHN0cnVjdCBhaGNpX2hvc3RfcHJpdiAqaHByaXYpCiB7Ci0JaWYgKGhwcml2LT5waHkp
-IHsKLQkJcGh5X3Bvd2VyX29mZihocHJpdi0+cGh5KTsKLQkJcGh5X2V4aXQoaHByaXYtPnBoeSk7
-Ci0JfQorCWFoY2lfcGxhdGZvcm1fZGlzYWJsZV9waHlzKGhwcml2KTsKIAogCWFoY2lfcGxhdGZv
-cm1fZGlzYWJsZV9jbGtzKGhwcml2KTsKIApAQCAtMTg3LDcgKzIzMSw3IEBAIHN0YXRpYyB2b2lk
-IGFoY2lfcGxhdGZvcm1fcHV0X3Jlc291cmNlcyhzdHJ1Y3QgZGV2aWNlICpkZXYsIHZvaWQgKnJl
-cykKICAqIDIpIHJlZ3VsYXRvciBmb3IgY29udHJvbGxpbmcgdGhlIHRhcmdldHMgcG93ZXIgKG9w
-dGlvbmFsKQogICogMykgMCAtIEFIQ0lfTUFYX0NMS1MgY2xvY2tzLCBhcyBzcGVjaWZpZWQgaW4g
-dGhlIGRldnMgZGV2aWNldHJlZSBub2RlLAogICogICAgb3IgZm9yIG5vbiBkZXZpY2V0cmVlIGVu
-YWJsZWQgcGxhdGZvcm1zIGEgc2luZ2xlIGNsb2NrCi0gKgk0KSBwaHkgKG9wdGlvbmFsKQorICoJ
-NCkgcGh5cyAob3B0aW9uYWwpCiAgKgogICogUkVUVVJOUzoKICAqIFRoZSBhbGxvY2F0ZWQgYWhj
-aV9ob3N0X3ByaXYgb24gc3VjY2Vzcywgb3RoZXJ3aXNlIGFuIEVSUl9QVFIgdmFsdWUKQEAgLTE5
-Nyw3ICsyNDEsOCBAQCBzdHJ1Y3QgYWhjaV9ob3N0X3ByaXYgKmFoY2lfcGxhdGZvcm1fZ2V0X3Jl
-c291cmNlcyhzdHJ1Y3QgcGxhdGZvcm1fZGV2aWNlICpwZGV2KQogCXN0cnVjdCBkZXZpY2UgKmRl
-diA9ICZwZGV2LT5kZXY7CiAJc3RydWN0IGFoY2lfaG9zdF9wcml2ICpocHJpdjsKIAlzdHJ1Y3Qg
-Y2xrICpjbGs7Ci0JaW50IGksIHJjID0gLUVOT01FTTsKKwlzdHJ1Y3QgZGV2aWNlX25vZGUgKmNo
-aWxkOworCWludCBpLCBucG9ydHMsIHJjID0gLUVOT01FTTsKIAogCWlmICghZGV2cmVzX29wZW5f
-Z3JvdXAoZGV2LCBOVUxMLCBHRlBfS0VSTkVMKSkKIAkJcmV0dXJuIEVSUl9QVFIoLUVOT01FTSk7
-CkBAIC0yNDYsMjIgKzI5MSw3NyBAQCBzdHJ1Y3QgYWhjaV9ob3N0X3ByaXYgKmFoY2lfcGxhdGZv
-cm1fZ2V0X3Jlc291cmNlcyhzdHJ1Y3QgcGxhdGZvcm1fZGV2aWNlICpwZGV2KQogCQlocHJpdi0+
-Y2xrc1tpXSA9IGNsazsKIAl9CiAKLQlocHJpdi0+cGh5ID0gZGV2bV9waHlfZ2V0KGRldiwgInNh
-dGEtcGh5Iik7Ci0JaWYgKElTX0VSUihocHJpdi0+cGh5KSkgewotCQlyYyA9IFBUUl9FUlIoaHBy
-aXYtPnBoeSk7Ci0JCXN3aXRjaCAocmMpIHsKLQkJY2FzZSAtRU5PREVWOgotCQljYXNlIC1FTk9T
-WVM6Ci0JCQkvKiBjb250aW51ZSBub3JtYWxseSAqLwotCQkJaHByaXYtPnBoeSA9IE5VTEw7Ci0J
-CQlicmVhazsKKwlucG9ydHMgPSBvZl9nZXRfY2hpbGRfY291bnQoZGV2LT5vZl9ub2RlKTsKIAot
-CQljYXNlIC1FUFJPQkVfREVGRVI6CisJaWYgKG5wb3J0cykgeworCQlocHJpdi0+cGh5cyA9IGRl
-dm1fa3phbGxvYyhkZXYsIG5wb3J0cyAqIHNpemVvZigqaHByaXYtPnBoeXMpLAorCQkJCQkgICBH
-RlBfS0VSTkVMKTsKKwkJaWYgKCFocHJpdi0+cGh5cykgeworCQkJcmMgPSAtRU5PTUVNOwogCQkJ
-Z290byBlcnJfb3V0OworCQl9CiAKLQkJZGVmYXVsdDoKLQkJCWRldl9lcnIoZGV2LCAiY291bGRu
-J3QgZ2V0IHNhdGEtcGh5XG4iKTsKLQkJCWdvdG8gZXJyX291dDsKKwkJZm9yX2VhY2hfY2hpbGRf
-b2Zfbm9kZShkZXYtPm9mX25vZGUsIGNoaWxkKSB7CisJCQl1MzIgcG9ydDsKKworCQkJaWYgKCFv
-Zl9kZXZpY2VfaXNfYXZhaWxhYmxlKGNoaWxkKSkKKwkJCQljb250aW51ZTsKKworCQkJaWYgKG9m
-X3Byb3BlcnR5X3JlYWRfdTMyKGNoaWxkLCAicmVnIiwgJnBvcnQpKSB7CisJCQkJcmMgPSAtRUlO
-VkFMOworCQkJCWdvdG8gZXJyX291dDsKKwkJCX0KKworCQkJaHByaXYtPnBvcnRfbWFwIHw9IEJJ
-VChwb3J0KTsKKworCQkJaHByaXYtPnBoeXNbaHByaXYtPm5waHlzXSA9IGRldm1fb2ZfcGh5X2dl
-dChkZXYsIGNoaWxkLAorCQkJCQkJCQkgICAgTlVMTCk7CisJCQlpZiAoSVNfRVJSKGhwcml2LT5w
-aHlzW2hwcml2LT5ucGh5c10pKSB7CisJCQkJcmMgPSBQVFJfRVJSKGhwcml2LT5waHlzW2hwcml2
-LT5ucGh5c10pOworCQkJCWRldl9lcnIoZGV2LAorCQkJCQkiY291bGRuJ3QgZ2V0IFBIWSBpbiBu
-b2RlICVzOiAlZFxuIiwKKwkJCQkJY2hpbGQtPm5hbWUsIHJjKTsKKwkJCQlnb3RvIGVycl9vdXQ7
-CisJCQl9CisKKwkJCWhwcml2LT5ucGh5cysrOworCQl9CisKKwkJaWYgKCFocHJpdi0+bnBoeXMp
-IHsKKwkJCWRldl93YXJuKGRldiwgIk5vIHBvcnQgZW5hYmxlZFxuIik7CisJCQlyZXR1cm4gRVJS
-X1BUUigtRU5PREVWKTsKKwkJfQorCX0gZWxzZSB7CisJCS8qCisJCSAqIElmIG5vIHN1Yi1ub2Rl
-IHdhcyBmb3VuZCwga2VlcCB0aGlzIGZvciBkZXZpY2UgdHJlZQorCQkgKiBjb21wYXRpYmlsaXR5
-CisJCSAqLworCQlzdHJ1Y3QgcGh5ICpwaHkgPSBkZXZtX3BoeV9nZXQoZGV2LCAic2F0YS1waHki
-KTsKKwkJaWYgKCFJU19FUlIocGh5KSkgeworCQkJaHByaXYtPnBoeXMgPSBkZXZtX2t6YWxsb2Mo
-ZGV2LCBzaXplb2YoKmhwcml2LT5waHlzKSwKKwkJCQkJCSAgIEdGUF9LRVJORUwpOworCQkJaWYg
-KCFocHJpdi0+cGh5cykgeworCQkJCXJjID0gLUVOT01FTTsKKwkJCQlnb3RvIGVycl9vdXQ7CisJ
-CQl9CisKKwkJCWhwcml2LT5waHlzWzBdID0gcGh5OworCQkJaHByaXYtPm5waHlzID0gMTsKKwkJ
-fSBlbHNlIHsKKwkJCXJjID0gUFRSX0VSUihwaHkpOworCQkJc3dpdGNoIChyYykgeworCQkJY2Fz
-ZSAtRU5PREVWOgorCQkJY2FzZSAtRU5PU1lTOgorCQkJCS8qIGNvbnRpbnVlIG5vcm1hbGx5ICov
-CisJCQkJYnJlYWs7CisKKwkJCWNhc2UgLUVQUk9CRV9ERUZFUjoKKwkJCQlnb3RvIGVycl9vdXQ7
-CisKKwkJCWRlZmF1bHQ6CisJCQkJZGV2X2VycihkZXYsICJjb3VsZG4ndCBnZXQgc2F0YS1waHlc
-biIpOworCQkJCWdvdG8gZXJyX291dDsKKwkJCX0KIAkJfQogCX0KIApAQCAtMjg4LDcgKzM4OCw3
-IEBAIEVYUE9SVF9TWU1CT0xfR1BMKGFoY2lfcGxhdGZvcm1fZ2V0X3Jlc291cmNlcyk7CiAgKiBA
-bWFza19wb3J0X21hcDogcGFyYW0gcGFzc2VkIHRvIGFoY2lfc2F2ZV9pbml0aWFsX2NvbmZpZwog
-ICoKICAqIFRoaXMgZnVuY3Rpb24gZG9lcyBhbGwgdGhlIHVzdWFsIHN0ZXBzIG5lZWRlZCB0byBi
-cmluZyB1cCBhbgotICogYWhjaS1wbGF0Zm9ybSBob3N0LCBub3RlIGFueSBuZWNlc3NhcnkgcmVz
-b3VyY2VzIChpZSBjbGtzLCBwaHksIGV0Yy4pCisgKiBhaGNpLXBsYXRmb3JtIGhvc3QsIG5vdGUg
-YW55IG5lY2Vzc2FyeSByZXNvdXJjZXMgKGllIGNsa3MsIHBoeXMsIGV0Yy4pCiAgKiBtdXN0IGJl
-IGluaXRpYWxpemVkIC8gZW5hYmxlZCBiZWZvcmUgY2FsbGluZyB0aGlzLgogICoKICAqIFJFVFVS
-TlM6CkBAIC0zOTQsNyArNDk0LDcgQEAgc3RhdGljIHZvaWQgYWhjaV9ob3N0X3N0b3Aoc3RydWN0
-IGF0YV9ob3N0ICpob3N0KQogICogQGRldjogZGV2aWNlIHBvaW50ZXIgZm9yIHRoZSBob3N0CiAg
-KgogICogVGhpcyBmdW5jdGlvbiBkb2VzIGFsbCB0aGUgdXN1YWwgc3RlcHMgbmVlZGVkIHRvIHN1
-c3BlbmQgYW4KLSAqIGFoY2ktcGxhdGZvcm0gaG9zdCwgbm90ZSBhbnkgbmVjZXNzYXJ5IHJlc291
-cmNlcyAoaWUgY2xrcywgcGh5LCBldGMuKQorICogYWhjaS1wbGF0Zm9ybSBob3N0LCBub3RlIGFu
-eSBuZWNlc3NhcnkgcmVzb3VyY2VzIChpZSBjbGtzLCBwaHlzLCBldGMuKQogICogbXVzdCBiZSBk
-aXNhYmxlZCBhZnRlciBjYWxsaW5nIHRoaXMuCiAgKgogICogUkVUVVJOUzoKQEAgLTQzMSw3ICs1
-MzEsNyBAQCBFWFBPUlRfU1lNQk9MX0dQTChhaGNpX3BsYXRmb3JtX3N1c3BlbmRfaG9zdCk7CiAg
-KiBAZGV2OiBkZXZpY2UgcG9pbnRlciBmb3IgdGhlIGhvc3QKICAqCiAgKiBUaGlzIGZ1bmN0aW9u
-IGRvZXMgYWxsIHRoZSB1c3VhbCBzdGVwcyBuZWVkZWQgdG8gcmVzdW1lIGFuIGFoY2ktcGxhdGZv
-cm0KLSAqIGhvc3QsIG5vdGUgYW55IG5lY2Vzc2FyeSByZXNvdXJjZXMgKGllIGNsa3MsIHBoeSwg
-ZXRjLikgIG11c3QgYmUKKyAqIGhvc3QsIG5vdGUgYW55IG5lY2Vzc2FyeSByZXNvdXJjZXMgKGll
-IGNsa3MsIHBoeXMsIGV0Yy4pICBtdXN0IGJlCiAgKiBpbml0aWFsaXplZCAvIGVuYWJsZWQgYmVm
-b3JlIGNhbGxpbmcgdGhpcy4KICAqCiAgKiBSRVRVUk5TOgotLSAKMS45LjEKCgpfX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1h
-aWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xp
-c3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
+On Monday, June 23, 2014 02:32:08 PM Russell King - ARM Linux wrote:
+> On Mon, Jun 23, 2014 at 03:26:11PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> > On Monday, June 23, 2014 12:59:13 PM Russell King wrote:
+> > > Various SATA phy parameters are board specific, and therefore need to
+> > > be configured.
+> > > 
+> > > Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
+> > > ---
+> > >  drivers/ata/ahci_imx.c | 168 ++++++++++++++++++++++++++++++++++++++++++++++---
+> > >  1 file changed, 160 insertions(+), 8 deletions(-)
+> > > 
+> > > diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+> > > index 4eba1c5279ec..3768f7e4e7dd 100644
+> > > --- a/drivers/ata/ahci_imx.c
+> > > +++ b/drivers/ata/ahci_imx.c
+> > > @@ -62,6 +62,7 @@ struct imx_ahci_priv {
+> > >  	struct regmap *gpr;
+> > >  	bool no_device;
+> > >  	bool first_time;
+> > > +	u32 phy_params;
+> > >  };
+> > >  
+> > >  static int ahci_imx_hotplug;
+> > > @@ -246,14 +247,7 @@ static int imx_sata_enable(struct ahci_host_priv *hpriv)
+> > >  				   IMX6Q_GPR13_SATA_TX_LVL_MASK |
+> > >  				   IMX6Q_GPR13_SATA_MPLL_CLK_EN |
+> > >  				   IMX6Q_GPR13_SATA_TX_EDGE_RATE,
+> > > -				   IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB |
+> > > -				   IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M |
+> > > -				   IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_4F |
+> > > -				   IMX6Q_GPR13_SATA_SPD_MODE_3P0G |
+> > > -				   IMX6Q_GPR13_SATA_MPLL_SS_EN |
+> > > -				   IMX6Q_GPR13_SATA_TX_ATTEN_9_16 |
+> > > -				   IMX6Q_GPR13_SATA_TX_BOOST_3_33_DB |
+> > > -				   IMX6Q_GPR13_SATA_TX_LVL_1_025_V);
+> > > +				   imxpriv->phy_params);
+> > >  		regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
+> > >  				   IMX6Q_GPR13_SATA_MPLL_CLK_EN,
+> > >  				   IMX6Q_GPR13_SATA_MPLL_CLK_EN);
+> > > @@ -368,6 +362,152 @@ static const struct of_device_id imx_ahci_of_match[] = {
+> > >  };
+> > >  MODULE_DEVICE_TABLE(of, imx_ahci_of_match);
+> > >  
+> > > +struct reg_value {
+> > > +	u32 of_value;
+> > > +	u32 reg_value;
+> > > +};
+> > > +
+> > > +struct reg_property {
+> > > +	const char *name;
+> > > +	const struct reg_value *values;
+> > > +	size_t num_values;
+> > > +	u32 def_value;
+> > > +};
+> > > +
+> > > +static const struct reg_value gpr13_tx_level[] = {
+> > > +	{  937, IMX6Q_GPR13_SATA_TX_LVL_0_937_V },
+> > > +	{  947, IMX6Q_GPR13_SATA_TX_LVL_0_947_V },
+> > > +	{  957, IMX6Q_GPR13_SATA_TX_LVL_0_957_V },
+> > > +	{  966, IMX6Q_GPR13_SATA_TX_LVL_0_966_V },
+> > > +	{  976, IMX6Q_GPR13_SATA_TX_LVL_0_976_V },
+> > > +	{  986, IMX6Q_GPR13_SATA_TX_LVL_0_986_V },
+> > > +	{  996, IMX6Q_GPR13_SATA_TX_LVL_0_996_V },
+> > > +	{ 1005, IMX6Q_GPR13_SATA_TX_LVL_1_005_V },
+> > > +	{ 1015, IMX6Q_GPR13_SATA_TX_LVL_1_015_V },
+> > > +	{ 1025, IMX6Q_GPR13_SATA_TX_LVL_1_025_V },
+> > > +	{ 1035, IMX6Q_GPR13_SATA_TX_LVL_1_035_V },
+> > > +	{ 1045, IMX6Q_GPR13_SATA_TX_LVL_1_045_V },
+> > > +	{ 1054, IMX6Q_GPR13_SATA_TX_LVL_1_054_V },
+> > > +	{ 1064, IMX6Q_GPR13_SATA_TX_LVL_1_064_V },
+> > > +	{ 1074, IMX6Q_GPR13_SATA_TX_LVL_1_074_V },
+> > > +	{ 1084, IMX6Q_GPR13_SATA_TX_LVL_1_084_V },
+> > > +	{ 1094, IMX6Q_GPR13_SATA_TX_LVL_1_094_V },
+> > > +	{ 1104, IMX6Q_GPR13_SATA_TX_LVL_1_104_V },
+> > > +	{ 1113, IMX6Q_GPR13_SATA_TX_LVL_1_113_V },
+> > > +	{ 1123, IMX6Q_GPR13_SATA_TX_LVL_1_123_V },
+> > > +	{ 1133, IMX6Q_GPR13_SATA_TX_LVL_1_133_V },
+> > > +	{ 1143, IMX6Q_GPR13_SATA_TX_LVL_1_143_V },
+> > > +	{ 1152, IMX6Q_GPR13_SATA_TX_LVL_1_152_V },
+> > > +	{ 1162, IMX6Q_GPR13_SATA_TX_LVL_1_162_V },
+> > > +	{ 1172, IMX6Q_GPR13_SATA_TX_LVL_1_172_V },
+> > > +	{ 1182, IMX6Q_GPR13_SATA_TX_LVL_1_182_V },
+> > > +	{ 1191, IMX6Q_GPR13_SATA_TX_LVL_1_191_V },
+> > > +	{ 1201, IMX6Q_GPR13_SATA_TX_LVL_1_201_V },
+> > > +	{ 1211, IMX6Q_GPR13_SATA_TX_LVL_1_211_V },
+> > > +	{ 1221, IMX6Q_GPR13_SATA_TX_LVL_1_221_V },
+> > > +	{ 1230, IMX6Q_GPR13_SATA_TX_LVL_1_230_V },
+> > > +	{ 1240, IMX6Q_GPR13_SATA_TX_LVL_1_240_V }
+> > > +};
+> > > +
+> > > +static const struct reg_value gpr13_tx_boost[] = {
+> > > +	{    0, IMX6Q_GPR13_SATA_TX_BOOST_0_00_DB },
+> > > +	{  370, IMX6Q_GPR13_SATA_TX_BOOST_0_37_DB },
+> > > +	{  740, IMX6Q_GPR13_SATA_TX_BOOST_0_74_DB },
+> > > +	{  111, IMX6Q_GPR13_SATA_TX_BOOST_1_11_DB },
+> > > +	{  148, IMX6Q_GPR13_SATA_TX_BOOST_1_48_DB },
+> > > +	{  185, IMX6Q_GPR13_SATA_TX_BOOST_1_85_DB },
+> > > +	{  222, IMX6Q_GPR13_SATA_TX_BOOST_2_22_DB },
+> > > +	{  259, IMX6Q_GPR13_SATA_TX_BOOST_2_59_DB },
+> > > +	{  296, IMX6Q_GPR13_SATA_TX_BOOST_2_96_DB },
+> > > +	{  333, IMX6Q_GPR13_SATA_TX_BOOST_3_33_DB },
+> > > +	{  370, IMX6Q_GPR13_SATA_TX_BOOST_3_70_DB },
+> > > +	{  407, IMX6Q_GPR13_SATA_TX_BOOST_4_07_DB },
+> > > +	{  444, IMX6Q_GPR13_SATA_TX_BOOST_4_44_DB },
+> > > +	{  481, IMX6Q_GPR13_SATA_TX_BOOST_4_81_DB },
+> > > +	{  528, IMX6Q_GPR13_SATA_TX_BOOST_5_28_DB },
+> > > +	{  575, IMX6Q_GPR13_SATA_TX_BOOST_5_75_DB }
+> > > +};
+> > > +
+> > > +static const struct reg_value gpr13_tx_atten[] = {
+> > > +	{  8, IMX6Q_GPR13_SATA_TX_ATTEN_8_16 },
+> > > +	{  9, IMX6Q_GPR13_SATA_TX_ATTEN_9_16 },
+> > > +	{ 10, IMX6Q_GPR13_SATA_TX_ATTEN_10_16 },
+> > > +	{ 12, IMX6Q_GPR13_SATA_TX_ATTEN_12_16 },
+> > > +	{ 14, IMX6Q_GPR13_SATA_TX_ATTEN_14_16 },
+> > > +	{ 16, IMX6Q_GPR13_SATA_TX_ATTEN_16_16 },
+> > > +};
+> > > +
+> > > +static const struct reg_value gpr13_rx_eq[] = {
+> > > +	{  500, IMX6Q_GPR13_SATA_RX_EQ_VAL_0_5_DB },
+> > > +	{ 1000, IMX6Q_GPR13_SATA_RX_EQ_VAL_1_0_DB },
+> > > +	{ 1500, IMX6Q_GPR13_SATA_RX_EQ_VAL_1_5_DB },
+> > > +	{ 2000, IMX6Q_GPR13_SATA_RX_EQ_VAL_2_0_DB },
+> > > +	{ 2500, IMX6Q_GPR13_SATA_RX_EQ_VAL_2_5_DB },
+> > > +	{ 3000, IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB },
+> > > +	{ 3500, IMX6Q_GPR13_SATA_RX_EQ_VAL_3_5_DB },
+> > > +	{ 4000, IMX6Q_GPR13_SATA_RX_EQ_VAL_4_0_DB },
+> > > +};
+> > > +
+> > > +static const struct reg_property gpr13_props[] = {
+> > > +	{
+> > > +		.name = "fsl,transmit-level-mV",
+> > > +		.values = gpr13_tx_level,
+> > > +		.num_values = ARRAY_SIZE(gpr13_tx_level),
+> > > +		.def_value = IMX6Q_GPR13_SATA_TX_LVL_1_025_V,
+> > > +	}, {
+> > > +		.name = "fsl,transmit-boost-mdB",
+> > > +		.values = gpr13_tx_boost,
+> > > +		.num_values = ARRAY_SIZE(gpr13_tx_boost),
+> > > +		.def_value = IMX6Q_GPR13_SATA_TX_BOOST_3_33_DB,
+> > > +	}, {
+> > > +		.name = "fsl,transmit-atten-16ths",
+> > > +		.values = gpr13_tx_atten,
+> > > +		.num_values = ARRAY_SIZE(gpr13_tx_atten),
+> > > +		.def_value = IMX6Q_GPR13_SATA_TX_ATTEN_9_16,
+> > > +	}, {
+> > > +		.name = "fsl,receive-eq-mdB",
+> > > +		.values = gpr13_rx_eq,
+> > > +		.num_values = ARRAY_SIZE(gpr13_rx_eq),
+> > > +		.def_value = IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB,
+> > > +	},
+> > > +};
+> > 
+> > Shouldn't all these new properties be documented somewhere in
+> > Documentation/devicetree/bindings/ ?
+> 
+> Shouldn't the existing binding be documented somewhere there?  If someone
+> documents the existing implementation, I will happily add to it.  What
+> I'm not going to do is to research what the existing bindings are for
+> this sucker and do the work that the original submitter should have done
+> in the first place.
+
+It seems that the bindings for the new AHCI "platform-like" host drivers
+are still listed in:
+
+	Documentation/devicetree/bindings/ata/ahci-platform.txt.
+
+Shawn, could you (or somebody else from Freescale) please add a proper
+ahci_imx.txt documentation file and cleanup ahci-platform.txt accordingly?
+
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
+
