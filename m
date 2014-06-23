@@ -1,58 +1,57 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v1 2/3] ata: Fix the link down in first attempt for the
- APM X-Gene SoC AHCI SATA host controller driver.
-Date: Mon, 23 Jun 2014 14:29:29 -0400
-Message-ID: <20140623182929.GB18451@mtj.dyndns.org>
-References: <1403518538-30697-1-git-send-email-stripathi@apm.com>
- <1403518538-30697-3-git-send-email-stripathi@apm.com>
+From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Subject: Re: [PATCH] phy: qcom: Add driver for QCOM APQ8064 SATA PHY
+Date: Mon, 23 Jun 2014 19:38:51 +0100
+Message-ID: <53A8743B.8020404@linaro.org>
+References: <1403546409-10860-1-git-send-email-srinivas.kandagatla@linaro.org> <C77397FA-1247-4D99-A0AC-9EFE45F7036E@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f171.google.com ([209.85.216.171]:46830 "EHLO
-	mail-qc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752683AbaFWS3f (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jun 2014 14:29:35 -0400
-Content-Disposition: inline
-In-Reply-To: <1403518538-30697-3-git-send-email-stripathi@apm.com>
+Received: from mail-we0-f181.google.com ([74.125.82.181]:41121 "EHLO
+	mail-we0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752850AbaFWSiy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jun 2014 14:38:54 -0400
+Received: by mail-we0-f181.google.com with SMTP id q59so7455180wes.40
+        for <linux-ide@vger.kernel.org>; Mon, 23 Jun 2014 11:38:53 -0700 (PDT)
+In-Reply-To: <C77397FA-1247-4D99-A0AC-9EFE45F7036E@codeaurora.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Suman Tripathi <stripathi@apm.com>
-Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>
+To: Kumar Gala <galak@codeaurora.org>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>, Grant Likely <grant.likely@linaro.org>, Rob Herring <robh+dt@kernel.org>, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-ide@vger.kernel.org, Sujit Reddy Thumma <sthumma@codeaurora.org>
 
-Hello,
 
-On Mon, Jun 23, 2014 at 03:45:37PM +0530, Suman Tripathi wrote:
-> @@ -234,15 +237,20 @@ static int xgene_ahci_do_hardreset(struct ata_link *link,
->  	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
->  	void __iomem *port_mmio = ahci_port_base(ap);
->  	struct ata_taskfile tf;
-> +	int link_down_retry = 0;
->  	int rc;
->  	u32 val;
-> 
-> -	/* clear D2H reception area to properly wait for D2H FIS */
-> -	ata_tf_init(link->device, &tf);
-> -	tf.command = ATA_BUSY;
-> -	ata_tf_to_fis(&tf, 0, 0, d2h_fis);
-> -	rc = sata_link_hardreset(link, timing, deadline, online,
-> +	do {
-> +		/* clear D2H reception area to properly wait for D2H FIS */
-> +		ata_tf_init(link->device, &tf);
-> +		tf.command = ATA_BUSY;
-> +		ata_tf_to_fis(&tf, 0, 0, d2h_fis);
-> +		rc = sata_link_hardreset(link, timing, deadline, online,
->  				 ahci_check_ready);
-> +		if (*online)
-> +			break;
-> +	} while (link_down_retry++ < MAX_LINK_DOWN_RETRY);
 
-Hmm... so it's retrying w/o extending deadline if the link is reported
-to be offline.  This definitely needs comment explaining what's going
-on.  Wouldn't it make more sense to change @timing instead rather than
-retrying resets?  sata_sil24 already does something similar.  Does,
-f.e., using sata_deb_timing_long for @timing make the problem go away?
+On 23/06/14 19:12, Kumar Gala wrote:
+>
+> On Jun 23, 2014, at 1:00 PM, Srinivas Kandagatla <srinivas.kandagatla@linaro.org> wrote:
+>
+>> Add a PHY driver for uses with AHCI based SATA controller driver on the
+>> APQ8064 family of SoCs.
+>>
+>> This patch is a forward port plus separating PHY code of SATA driver
+>> from Qualcomm's v3.4 andriod kernel.
+>>
+>> Tested on IFC6410 board.
+>>
+>> CC: Sujit Reddy Thumma <sthumma@codeaurora.org>
+>> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+>> ---
+>> drivers/phy/Kconfig                 |   7 +
+>> drivers/phy/Makefile                |   1 +
+>> drivers/phy/phy-qcom-apq8064-sata.c | 358 ++++++++++++++++++++++++++++++++++++
+>> 3 files changed, 366 insertions(+)
+>> create mode 100644 drivers/phy/phy-qcom-apq8064-sata.c
+>
+> Did you look at the 3.10 Android kernel tree version of the phy driver?
+>
+No, I did not get a chance to look at it. I will have a look at it today.
+> Also do you have a DT binding spec to go with this?
+yes, I did add it into the same binding spec qcom-phy.txt as ipq806x.
 
-Thanks.
+I will send this in a different patch.
 
--- 
-tejun
+thanks,
+srini
+>
+> - k
+>
