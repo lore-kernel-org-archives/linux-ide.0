@@ -1,74 +1,73 @@
-From: Russell King <rmk+kernel@arm.linux.org.uk>
-Subject: [PATCH 3/5] ata: ahci_imx: add disable for spread-spectrum
-Date: Mon, 23 Jun 2014 12:59:18 +0100
-Message-ID: <E1Wz2u6-0000eN-TV@rmk-PC.arm.linux.org.uk>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:38932 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752408AbaFWL7W (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jun 2014 07:59:22 -0400
-Sender: linux-ide-owner@vger.kernel.org
+From: Antoine =?iso-8859-1?Q?T=E9nart?= <antoine.tenart@free-electrons.com>
+Subject: Re: [PATCH v6 1/7] phy: add a driver for the Berlin SATA PHY
+Date: Mon, 23 Jun 2014 15:05:19 +0200
+Message-ID: <20140623130519.GA23540@kwain>
+References: <1402914392-6028-1-git-send-email-antoine.tenart@free-electrons.com>
+ <1402914392-6028-2-git-send-email-antoine.tenart@free-electrons.com>
+ <53A0861E.90400@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Content-Disposition: inline
+In-Reply-To: <53A0861E.90400@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Cc: thomas.petazzoni@free-electrons.com, zmxu@marvell.com, devicetree@vger.kernel.org, Antoine =?iso-8859-1?Q?T=E9nart?= <antoine.tenart@free-electrons.com>, linux-kernel@vger.kernel.org, kishon@ti.com, linux-ide@vger.kernel.org, alexandre.belloni@free-electrons.com, jszhang@marvell.com, tj@kernel.org, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
-To: Sascha Hauer <kernel@pengutronix.de>, Shawn Guo <shawn.guo@freescale.com>, Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org
 
-Spread-spectrum doesn't work with Cubox-i hardware, so we have to
-disable this feature.  Add a DT property so that platforms can
-indicate that this feature should not be enabled.
+Sebastian,
 
-Having it as a negative property keeps existing DT files working.
+On Tue, Jun 17, 2014 at 08:17:02PM +0200, Sebastian Hesselbarth wrote:
+> On 06/16/2014 12:26 PM, Antoine T=E9nart wrote:
+> > +
+> > +#define PHY_BASE		0x200
+> =
 
-Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
----
- drivers/ata/ahci_imx.c | 14 +++++++++++++-
- 1 file changed, 13 insertions(+), 1 deletion(-)
+> Antoine,
+> =
 
-diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
-index 3768f7e4e7dd..d675a44acf40 100644
---- a/drivers/ata/ahci_imx.c
-+++ b/drivers/ata/ahci_imx.c
-@@ -372,6 +372,7 @@ struct reg_property {
- 	const struct reg_value *values;
- 	size_t num_values;
- 	u32 def_value;
-+	u32 set_value;
- };
- 
- static const struct reg_value gpr13_tx_level[] = {
-@@ -469,6 +470,10 @@ static const struct reg_property gpr13_props[] = {
- 		.values = gpr13_rx_eq,
- 		.num_values = ARRAY_SIZE(gpr13_rx_eq),
- 		.def_value = IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB,
-+	}, {
-+		.name = "fsl,no-spread-spectrum",
-+		.def_value = IMX6Q_GPR13_SATA_MPLL_SS_EN,
-+		.set_value = 0,
- 	},
- };
- 
-@@ -482,6 +487,14 @@ static u32 imx_ahci_parse_props(struct device *dev,
- 	for (i = 0; i < num; i++, prop++) {
- 		u32 of_val;
- 
-+		if (prop->num_values == 0) {
-+			if (of_property_read_bool(np, prop->name))
-+				reg_value |= prop->set_value;
-+			else
-+				reg_value |= prop->def_value;
-+			continue;
-+		}
-+
- 		if (of_property_read_u32(np, prop->name, &of_val)) {
- 			dev_info(dev, "%s not specified, using %08x\n",
- 				prop->name, prop->def_value);
-@@ -553,7 +566,6 @@ static int imx_ahci_probe(struct platform_device *pdev)
- 				   IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M |
- 				   IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_4F |
- 				   IMX6Q_GPR13_SATA_SPD_MODE_3P0G |
--				   IMX6Q_GPR13_SATA_MPLL_SS_EN |
- 				   reg_value;
- 	}
- 
--- 
-1.8.3.1
+> I gave your Berlin AHCI patches a try on BG2. I finally got it working
+> but BG2 has a different PHY_BASE and need some register fixups.
+> =
 
+> Please update this patch and the DT bindings to reflect the difference
+> of BG2Q with respect to BG2 as below.
+> =
+
+> [...]
+> > +
+> > +static const struct of_device_id phy_berlin_sata_of_match[] =3D {
+> > +	{ .compatible =3D "marvell,berlin-sata-phy" },
+> =
+
+> s/marvell,berlin-sata-phy/marvell,berlin2-sata-phy/
+> =
+
+> and add
+> =
+
+> marvell,berlin2q-sata-phy
+> =
+
+> That way it can be applied now without proper support for BG2
+> and I can send patches later.
+
+Sure. I'll just s/marvell,berlin-sata-phy/marvell,berlin2q-sata-phy/ so
+we don't have a non working compatible.
+
+Antoine
+
+-- =
+
+Antoine T=E9nart, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
