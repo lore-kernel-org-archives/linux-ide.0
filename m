@@ -1,22 +1,57 @@
-From: Stephen Warren <swarren-3lzwWm7+Weoh9ZMKESR00Q@public.gmane.org>
-Subject: Re: [PATCH v2 6/7] ata: Add support for the Tegra124 SATA controller
-Date: Tue, 24 Jun 2014 13:35:54 -0600
-Message-ID: <53A9D31A.6030307@wwwdotorg.org>
-References: <1403101406-15439-1-git-send-email-mperttunen@nvidia.com> <1403101406-15439-7-git-send-email-mperttunen@nvidia.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH] ahci: disable ncq feature for hisilicon sata
+Date: Tue, 24 Jun 2014 16:56:44 -0400
+Message-ID: <20140624205644.GA14909@htj.dyndns.org>
+References: <1398416351-30567-1-git-send-email-kefeng.wang@linaro.org>
+ <20140514170757.GD15690@htj.dyndns.org>
+ <5396D529.308@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1403101406-15439-7-git-send-email-mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Sender: linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Mikko Perttunen <mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, pdeschrijver-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qc0-f181.google.com ([209.85.216.181]:54125 "EHLO
+	mail-qc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754206AbaFXU4s (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Jun 2014 16:56:48 -0400
+Content-Disposition: inline
+In-Reply-To: <5396D529.308@linaro.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "kefeng.wang" <kefeng.wang@linaro.org>
+Cc: Hans de Goede <hdegoede@redhat.com>, Zhangfei Gao <zhangfei.gao@linaro.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, wangkefeng.wang@huawei.com, xuwei5@hisilicon.com
 
-On 06/18/2014 08:23 AM, Mikko Perttunen wrote:
-> This adds support for the integrated AHCI-compliant Serial ATA
-> controller present on the NVIDIA Tegra124 system-on-chip.
+>From 72cbaa3d2f563d7b48c9f8aef47ec9aa3a31adf2 Mon Sep 17 00:00:00 2001
+From: Kefeng Wang <kefeng.wang@linaro.org>
+Date: Tue, 24 Jun 2014 16:54:23 -0400
 
-At a quick glance, this looks fine to me now. I'll wait for an ack to
-take this patch through the Tegra tree, for the reasons I mentioned in
-response to v1.
+NCQ feature is unsupported on hisilicon sata controller, so disable
+it.  This version of IP is used by hip04 and hix5hd2 soc.
+
+tj: "|=" was replaced with "=" for no reason.  Restored "|=".
+
+Signed-off-by: Kefeng Wang <kefeng.wang@linaro.org>
+Sigend-off-by: Tejun Heo <tj@kernel.org>
+---
+Patch didn't apply.  Applied to libata/for-3.16-fixes manually and
+dropped "|=" -> "=" conversion.  Why was this done?
+
+Thanks.
+
+ drivers/ata/ahci_platform.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index ebe505c..b10d81d 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -58,7 +58,7 @@ static int ahci_probe(struct platform_device *pdev)
+ 	}
+ 
+ 	if (of_device_is_compatible(dev->of_node, "hisilicon,hisi-ahci"))
+-		hflags |= AHCI_HFLAG_NO_FBS;
++		hflags |= AHCI_HFLAG_NO_FBS | AHCI_HFLAG_NO_NCQ;
+ 
+ 	rc = ahci_platform_init_host(pdev, hpriv, &ahci_port_info,
+ 				     hflags, 0, 0);
+-- 
+1.9.3
+
