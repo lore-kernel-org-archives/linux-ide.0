@@ -1,35 +1,49 @@
-From: Alexander Gordeev <agordeev-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 1/3] PCI/MSI: Add pci_enable_msi_partial()
-Date: Mon, 23 Jun 2014 22:11:42 +0200
-Message-ID: <20140623201141.GA30956@dhcp-26-207.brq.redhat.com>
-References: <cover.1402405331.git.agordeev@redhat.com>
-	<4fef62a2e647a7c38e9f2a1ea4244b3506a85e2b.1402405331.git.agordeev@redhat.com>
+From: "kefeng.wang" <kefeng.wang@linaro.org>
+Subject: Re: [PATCH] ahci: disable ncq feature for hisilicon sata
+Date: Tue, 24 Jun 2014 15:11:09 +0800
+Message-ID: <53A9248D.8020902@linaro.org>
+References: <1398416351-30567-1-git-send-email-kefeng.wang@linaro.org> <20140514170757.GD15690@htj.dyndns.org> <5396D529.308@linaro.org> <5396D8C9.6020607@linaro.org> <53970E81.1070608@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <4fef62a2e647a7c38e9f2a1ea4244b3506a85e2b.1402405331.git.agordeev-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Bjorn Helgaas <bhelgaas-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org, linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, xen-devel-GuqFBffKawtpuQazS67q72D2FQJk+8+b@public.gmane.org, linuxppc-dev-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pb0-f45.google.com ([209.85.160.45]:63734 "EHLO
+	mail-pb0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750806AbaFXHMH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Jun 2014 03:12:07 -0400
+Received: by mail-pb0-f45.google.com with SMTP id rr13so6868117pbb.32
+        for <linux-ide@vger.kernel.org>; Tue, 24 Jun 2014 00:12:07 -0700 (PDT)
+In-Reply-To: <53970E81.1070608@redhat.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Hans de Goede <hdegoede@redhat.com>, Zhangfei Gao <zhangfei.gao@linaro.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, wangkefeng.wang@huawei.com, xuwei5@hisilicon.com
 
-Hi Bjorn,
+On 2014-6-10 21:56, Hans de Goede wrote:
+> Hi Kefeng,
+> 
+> On 06/10/2014 12:07 PM, kefeng.wang wrote:
+>> Hi Tejun,
+>>
+>> I have a question, the hip04 and hix5hd2 soc use the old version of IP, but they
+>> also have a new version of IP which support FBS and NCQ, and now the new one is
+>> used by a new soc. How can I distinguish them, use "hisilicon,hisi-ahci-vX" or just
+>> add "generic-ahci" string for the IP which is conformant with spec and has
+>> no special customization and issue? Any advices, thanks.
+> 
+> Please use "hisilicon,hisi-ahci-vX", this way it will be easier to add any
+> special behavior in case this turns out to be necessary later.
 
-Any feedback?
+OK, thanks for your guidance. If necessary, we will use hisi-ahci-vX for hisi's IP.
 
-Thanks!
+Hi Tejun, could you merger this patch please? thanks.
 
--- 
 Regards,
-Alexander Gordeev
-agordeev-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Kefeng
+
+> 
+> Regards,
+> 
+> Hans
+> 
+
