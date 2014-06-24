@@ -1,48 +1,76 @@
-From: Russell King <rmk+kernel-lFZ/pmaqli7XmaaqVzeoHQ@public.gmane.org>
-Subject: [PATCH v3 4/8] dt-bindings: ata: add ahci_imx electrical properties
-Date: Tue, 24 Jun 2014 11:19:42 +0100
-Message-ID: <E1WzNpG-0005ds-P3@rmk-PC.arm.linux.org.uk>
+From: Russell King <rmk+kernel@arm.linux.org.uk>
+Subject: [PATCH v3 5/8] ata: ahci_imx: add disable for spread-spectrum
+Date: Tue, 24 Jun 2014 11:19:47 +0100
+Message-ID: <E1WzNpL-0005dx-TT@rmk-PC.arm.linux.org.uk>
 References: <20140624101901.GL32514@n2100.arm.linux.org.uk>
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20140624101901.GL32514-l+eeeJia6m9vn6HldHNs0ANdhmdF6hFW@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Sascha Hauer <kernel-bIcnvbaLZ9MEGnE8C9+IrQ@public.gmane.org>, Shawn Guo <shawn.guo-KZfg59tc24xl57MIdRCFDg@public.gmane.org>, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Pawel Moll <pawel.moll-5wv7dgnIgG8@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Ian Campbell <ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org>, Kumar Gala <galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Randy Dunlap <rdunlap-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:40016 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751713AbaFXKTu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Jun 2014 06:19:50 -0400
+In-Reply-To: <20140624101901.GL32514@n2100.arm.linux.org.uk>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org, Sascha Hauer <kernel@pengutronix.de>, Shawn Guo <shawn.guo@freescale.com>
 
-Add the documentation for the electrical properties for the iMX SATA
-controller.  There are many values for these, and listing them would
-be error prone.  Refer readers to the device documentation and driver
-source code for these details.
+Spread-spectrum doesn't work with Cubox-i hardware, so we have to
+disable this feature.  Add a DT property so that platforms can
+indicate that this feature should not be enabled.
 
-Signed-off-by: Russell King <rmk+kernel-lFZ/pmaqli7XmaaqVzeoHQ@public.gmane.org>
+Having it as a negative property keeps existing DT files working.
+
+Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
 ---
- Documentation/devicetree/bindings/ata/imx-sata.txt | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/ata/ahci_imx.c | 14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
 
-diff --git a/Documentation/devicetree/bindings/ata/imx-sata.txt b/Documentation/devicetree/bindings/ata/imx-sata.txt
-index aeb99dd986b0..a13f0f603776 100644
---- a/Documentation/devicetree/bindings/ata/imx-sata.txt
-+++ b/Documentation/devicetree/bindings/ata/imx-sata.txt
-@@ -13,6 +13,14 @@ with some special extensions at integration level.
-   required entry in clock-names
- - clock-names : should include "sata", "sata_ref" and "ahb" entries
+diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+index c19019008132..2a4adc939f4c 100644
+--- a/drivers/ata/ahci_imx.c
++++ b/drivers/ata/ahci_imx.c
+@@ -372,6 +372,7 @@ struct reg_property {
+ 	const struct reg_value *values;
+ 	size_t num_values;
+ 	u32 def_value;
++	u32 set_value;
+ };
  
-+Optional properties:
-+- fsl,transmit-level-mV : transmit voltage level, in millivolts.
-+- fsl,transmit-boost-mdB : transmit boost level, in milli-decibels
-+- fsl,transmit-atten-16ths : transmit attenuation, in 16ths
-+- fsl,receive-eq-mdB : receive equalisation, in milli-decibels
-+  Please refer to the technical documentation or the driver source code
-+  for the list of legal values for these options.
+ static const struct reg_value gpr13_tx_level[] = {
+@@ -469,6 +470,10 @@ static const struct reg_property gpr13_props[] = {
+ 		.values = gpr13_rx_eq,
+ 		.num_values = ARRAY_SIZE(gpr13_rx_eq),
+ 		.def_value = IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB,
++	}, {
++		.name = "fsl,no-spread-spectrum",
++		.def_value = IMX6Q_GPR13_SATA_MPLL_SS_EN,
++		.set_value = 0,
+ 	},
+ };
+ 
+@@ -482,6 +487,14 @@ static u32 imx_ahci_parse_props(struct device *dev,
+ 	for (i = 0; i < num; i++, prop++) {
+ 		u32 of_val;
+ 
++		if (prop->num_values == 0) {
++			if (of_property_read_bool(np, prop->name))
++				reg_value |= prop->set_value;
++			else
++				reg_value |= prop->def_value;
++			continue;
++		}
 +
- Examples:
+ 		if (of_property_read_u32(np, prop->name, &of_val)) {
+ 			dev_info(dev, "%s not specified, using %08x\n",
+ 				prop->name, prop->def_value);
+@@ -553,7 +566,6 @@ static int imx_ahci_probe(struct platform_device *pdev)
+ 				   IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M |
+ 				   IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_4F |
+ 				   IMX6Q_GPR13_SATA_SPD_MODE_3P0G |
+-				   IMX6Q_GPR13_SATA_MPLL_SS_EN |
+ 				   reg_value;
+ 	}
  
- sata@02200000 {
 -- 
 1.8.3.1
 
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
