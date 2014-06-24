@@ -1,235 +1,95 @@
 From: Russell King <rmk+kernel@arm.linux.org.uk>
-Subject: [PATCH v3 3/8] ata: ahci_imx: allow hardware parameters to be
- specified in DT
-Date: Tue, 24 Jun 2014 11:19:37 +0100
-Message-ID: <E1WzNpB-0005do-Lz@rmk-PC.arm.linux.org.uk>
+Subject: [PATCH v3 1/8] dt-bindings: ata: create bindings for imx sata
+ controller
+Date: Tue, 24 Jun 2014 11:19:27 +0100
+Message-ID: <E1WzNp1-0005dg-FQ@rmk-PC.arm.linux.org.uk>
 References: <20140624101901.GL32514@n2100.arm.linux.org.uk>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:40002 "EHLO
+Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:39996 "EHLO
 	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751713AbaFXKTl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Jun 2014 06:19:41 -0400
+	by vger.kernel.org with ESMTP id S1752957AbaFXKTf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 24 Jun 2014 06:19:35 -0400
 In-Reply-To: <20140624101901.GL32514@n2100.arm.linux.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org, Sascha Hauer <kernel@pengutronix.de>, Shawn Guo <shawn.guo@freescale.com>
+Cc: linux-arm-kernel@lists.infradead.org, Sascha Hauer <kernel@pengutronix.de>, Shawn Guo <shawn.guo@freescale.com>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Randy Dunlap <rdunlap@infradead.org>, devicetree@vger.kernel.org, linux-doc@vger.kernel.org
 
-Various SATA phy parameters are board specific, and therefore need to
-be configured.
+From: Shawn Guo <shawn.guo@freescale.com>
+To: Tejun Heo <tj@kernel.org>,linux-ide@vger.kernel.org
 
+The Freescale i.MX SATA controller mostly conforms to the AHCI
+interface, but there are some special extensions at integration level
+like clocks settings and hardware parameters.
+
+Let's create a separate bindings doc for imx sata controller, so that
+more imx specific properties can be added later without messing up the
+generic ahci-platform bindings.
+
+Signed-off-by: Shawn Guo <shawn.guo@freescale.com>
 Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
 ---
- drivers/ata/ahci_imx.c | 168 ++++++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 160 insertions(+), 8 deletions(-)
+ .../devicetree/bindings/ata/ahci-platform.txt      |  6 -----
+ Documentation/devicetree/bindings/ata/imx-sata.txt | 26 ++++++++++++++++++++++
+ 2 files changed, 26 insertions(+), 6 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/imx-sata.txt
 
-diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
-index 4eba1c5279ec..c19019008132 100644
---- a/drivers/ata/ahci_imx.c
-+++ b/drivers/ata/ahci_imx.c
-@@ -62,6 +62,7 @@ struct imx_ahci_priv {
- 	struct regmap *gpr;
- 	bool no_device;
- 	bool first_time;
-+	u32 phy_params;
- };
+diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+index c96d8dcf98fd..549ceb8cb93b 100644
+--- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
++++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+@@ -6,8 +6,6 @@ Each SATA controller should have its own node.
+ Required properties:
+ - compatible        : compatible string, one of:
+   - "allwinner,sun4i-a10-ahci"
+-  - "fsl,imx53-ahci"
+-  - "fsl,imx6q-ahci"
+   - "hisilicon,hisi-ahci"
+   - "ibm,476gtr-ahci"
+   - "marvell,armada-380-ahci"
+@@ -22,10 +20,6 @@ Each SATA controller should have its own node.
+ - clocks            : a list of phandle + clock specifier pairs
+ - target-supply     : regulator for SATA target power
  
- static int ahci_imx_hotplug;
-@@ -246,14 +247,7 @@ static int imx_sata_enable(struct ahci_host_priv *hpriv)
- 				   IMX6Q_GPR13_SATA_TX_LVL_MASK |
- 				   IMX6Q_GPR13_SATA_MPLL_CLK_EN |
- 				   IMX6Q_GPR13_SATA_TX_EDGE_RATE,
--				   IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB |
--				   IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M |
--				   IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_4F |
--				   IMX6Q_GPR13_SATA_SPD_MODE_3P0G |
--				   IMX6Q_GPR13_SATA_MPLL_SS_EN |
--				   IMX6Q_GPR13_SATA_TX_ATTEN_9_16 |
--				   IMX6Q_GPR13_SATA_TX_BOOST_3_33_DB |
--				   IMX6Q_GPR13_SATA_TX_LVL_1_025_V);
-+				   imxpriv->phy_params);
- 		regmap_update_bits(imxpriv->gpr, IOMUXC_GPR13,
- 				   IMX6Q_GPR13_SATA_MPLL_CLK_EN,
- 				   IMX6Q_GPR13_SATA_MPLL_CLK_EN);
-@@ -368,6 +362,152 @@ static const struct of_device_id imx_ahci_of_match[] = {
- };
- MODULE_DEVICE_TABLE(of, imx_ahci_of_match);
- 
-+struct reg_value {
-+	u32 of_value;
-+	u32 reg_value;
+-"fsl,imx53-ahci", "fsl,imx6q-ahci" required properties:
+-- clocks            : must contain the sata, sata_ref and ahb clocks
+-- clock-names       : must contain "ahb" for the ahb clock
+-
+ Examples:
+         sata@ffe08000 {
+ 		compatible = "snps,spear-ahci";
+diff --git a/Documentation/devicetree/bindings/ata/imx-sata.txt b/Documentation/devicetree/bindings/ata/imx-sata.txt
+new file mode 100644
+index 000000000000..aeb99dd986b0
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ata/imx-sata.txt
+@@ -0,0 +1,26 @@
++* Freescale i.MX AHCI SATA Controller
++
++The Freescale i.MX SATA controller mostly conforms to the AHCI interface
++with some special extensions at integration level.
++
++Required properties:
++- compatible : should be one of the following:
++   - "fsl,imx53-ahci" for i.MX53 SATA controller
++   - "fsl,imx6q-ahci" for i.MX6Q SATA controller
++- interrupts : interrupt mapping for SATA IRQ
++- reg : registers mapping
++- clocks : list of clock specifiers, must contain an entry for each
++  required entry in clock-names
++- clock-names : should include "sata", "sata_ref" and "ahb" entries
++
++Examples:
++
++sata@02200000 {
++	compatible = "fsl,imx6q-ahci";
++	reg = <0x02200000 0x4000>;
++	interrupts = <0 39 IRQ_TYPE_LEVEL_HIGH>;
++	clocks = <&clks IMX6QDL_CLK_SATA>,
++		 <&clks IMX6QDL_CLK_SATA_REF_100M>,
++		 <&clks IMX6QDL_CLK_AHB>;
++	clock-names = "sata", "sata_ref", "ahb";
 +};
-+
-+struct reg_property {
-+	const char *name;
-+	const struct reg_value *values;
-+	size_t num_values;
-+	u32 def_value;
-+};
-+
-+static const struct reg_value gpr13_tx_level[] = {
-+	{  937, IMX6Q_GPR13_SATA_TX_LVL_0_937_V },
-+	{  947, IMX6Q_GPR13_SATA_TX_LVL_0_947_V },
-+	{  957, IMX6Q_GPR13_SATA_TX_LVL_0_957_V },
-+	{  966, IMX6Q_GPR13_SATA_TX_LVL_0_966_V },
-+	{  976, IMX6Q_GPR13_SATA_TX_LVL_0_976_V },
-+	{  986, IMX6Q_GPR13_SATA_TX_LVL_0_986_V },
-+	{  996, IMX6Q_GPR13_SATA_TX_LVL_0_996_V },
-+	{ 1005, IMX6Q_GPR13_SATA_TX_LVL_1_005_V },
-+	{ 1015, IMX6Q_GPR13_SATA_TX_LVL_1_015_V },
-+	{ 1025, IMX6Q_GPR13_SATA_TX_LVL_1_025_V },
-+	{ 1035, IMX6Q_GPR13_SATA_TX_LVL_1_035_V },
-+	{ 1045, IMX6Q_GPR13_SATA_TX_LVL_1_045_V },
-+	{ 1054, IMX6Q_GPR13_SATA_TX_LVL_1_054_V },
-+	{ 1064, IMX6Q_GPR13_SATA_TX_LVL_1_064_V },
-+	{ 1074, IMX6Q_GPR13_SATA_TX_LVL_1_074_V },
-+	{ 1084, IMX6Q_GPR13_SATA_TX_LVL_1_084_V },
-+	{ 1094, IMX6Q_GPR13_SATA_TX_LVL_1_094_V },
-+	{ 1104, IMX6Q_GPR13_SATA_TX_LVL_1_104_V },
-+	{ 1113, IMX6Q_GPR13_SATA_TX_LVL_1_113_V },
-+	{ 1123, IMX6Q_GPR13_SATA_TX_LVL_1_123_V },
-+	{ 1133, IMX6Q_GPR13_SATA_TX_LVL_1_133_V },
-+	{ 1143, IMX6Q_GPR13_SATA_TX_LVL_1_143_V },
-+	{ 1152, IMX6Q_GPR13_SATA_TX_LVL_1_152_V },
-+	{ 1162, IMX6Q_GPR13_SATA_TX_LVL_1_162_V },
-+	{ 1172, IMX6Q_GPR13_SATA_TX_LVL_1_172_V },
-+	{ 1182, IMX6Q_GPR13_SATA_TX_LVL_1_182_V },
-+	{ 1191, IMX6Q_GPR13_SATA_TX_LVL_1_191_V },
-+	{ 1201, IMX6Q_GPR13_SATA_TX_LVL_1_201_V },
-+	{ 1211, IMX6Q_GPR13_SATA_TX_LVL_1_211_V },
-+	{ 1221, IMX6Q_GPR13_SATA_TX_LVL_1_221_V },
-+	{ 1230, IMX6Q_GPR13_SATA_TX_LVL_1_230_V },
-+	{ 1240, IMX6Q_GPR13_SATA_TX_LVL_1_240_V }
-+};
-+
-+static const struct reg_value gpr13_tx_boost[] = {
-+	{    0, IMX6Q_GPR13_SATA_TX_BOOST_0_00_DB },
-+	{  370, IMX6Q_GPR13_SATA_TX_BOOST_0_37_DB },
-+	{  740, IMX6Q_GPR13_SATA_TX_BOOST_0_74_DB },
-+	{ 1110, IMX6Q_GPR13_SATA_TX_BOOST_1_11_DB },
-+	{ 1480, IMX6Q_GPR13_SATA_TX_BOOST_1_48_DB },
-+	{ 1850, IMX6Q_GPR13_SATA_TX_BOOST_1_85_DB },
-+	{ 2220, IMX6Q_GPR13_SATA_TX_BOOST_2_22_DB },
-+	{ 2590, IMX6Q_GPR13_SATA_TX_BOOST_2_59_DB },
-+	{ 2960, IMX6Q_GPR13_SATA_TX_BOOST_2_96_DB },
-+	{ 3330, IMX6Q_GPR13_SATA_TX_BOOST_3_33_DB },
-+	{ 3700, IMX6Q_GPR13_SATA_TX_BOOST_3_70_DB },
-+	{ 4070, IMX6Q_GPR13_SATA_TX_BOOST_4_07_DB },
-+	{ 4440, IMX6Q_GPR13_SATA_TX_BOOST_4_44_DB },
-+	{ 4810, IMX6Q_GPR13_SATA_TX_BOOST_4_81_DB },
-+	{ 5280, IMX6Q_GPR13_SATA_TX_BOOST_5_28_DB },
-+	{ 5750, IMX6Q_GPR13_SATA_TX_BOOST_5_75_DB }
-+};
-+
-+static const struct reg_value gpr13_tx_atten[] = {
-+	{  8, IMX6Q_GPR13_SATA_TX_ATTEN_8_16 },
-+	{  9, IMX6Q_GPR13_SATA_TX_ATTEN_9_16 },
-+	{ 10, IMX6Q_GPR13_SATA_TX_ATTEN_10_16 },
-+	{ 12, IMX6Q_GPR13_SATA_TX_ATTEN_12_16 },
-+	{ 14, IMX6Q_GPR13_SATA_TX_ATTEN_14_16 },
-+	{ 16, IMX6Q_GPR13_SATA_TX_ATTEN_16_16 },
-+};
-+
-+static const struct reg_value gpr13_rx_eq[] = {
-+	{  500, IMX6Q_GPR13_SATA_RX_EQ_VAL_0_5_DB },
-+	{ 1000, IMX6Q_GPR13_SATA_RX_EQ_VAL_1_0_DB },
-+	{ 1500, IMX6Q_GPR13_SATA_RX_EQ_VAL_1_5_DB },
-+	{ 2000, IMX6Q_GPR13_SATA_RX_EQ_VAL_2_0_DB },
-+	{ 2500, IMX6Q_GPR13_SATA_RX_EQ_VAL_2_5_DB },
-+	{ 3000, IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB },
-+	{ 3500, IMX6Q_GPR13_SATA_RX_EQ_VAL_3_5_DB },
-+	{ 4000, IMX6Q_GPR13_SATA_RX_EQ_VAL_4_0_DB },
-+};
-+
-+static const struct reg_property gpr13_props[] = {
-+	{
-+		.name = "fsl,transmit-level-mV",
-+		.values = gpr13_tx_level,
-+		.num_values = ARRAY_SIZE(gpr13_tx_level),
-+		.def_value = IMX6Q_GPR13_SATA_TX_LVL_1_025_V,
-+	}, {
-+		.name = "fsl,transmit-boost-mdB",
-+		.values = gpr13_tx_boost,
-+		.num_values = ARRAY_SIZE(gpr13_tx_boost),
-+		.def_value = IMX6Q_GPR13_SATA_TX_BOOST_3_33_DB,
-+	}, {
-+		.name = "fsl,transmit-atten-16ths",
-+		.values = gpr13_tx_atten,
-+		.num_values = ARRAY_SIZE(gpr13_tx_atten),
-+		.def_value = IMX6Q_GPR13_SATA_TX_ATTEN_9_16,
-+	}, {
-+		.name = "fsl,receive-eq-mdB",
-+		.values = gpr13_rx_eq,
-+		.num_values = ARRAY_SIZE(gpr13_rx_eq),
-+		.def_value = IMX6Q_GPR13_SATA_RX_EQ_VAL_3_0_DB,
-+	},
-+};
-+
-+static u32 imx_ahci_parse_props(struct device *dev,
-+				const struct reg_property *prop, size_t num)
-+{
-+	struct device_node *np = dev->of_node;
-+	u32 reg_value = 0;
-+	int i, j;
-+
-+	for (i = 0; i < num; i++, prop++) {
-+		u32 of_val;
-+
-+		if (of_property_read_u32(np, prop->name, &of_val)) {
-+			dev_info(dev, "%s not specified, using %08x\n",
-+				prop->name, prop->def_value);
-+			reg_value |= prop->def_value;
-+			continue;
-+		}
-+
-+		for (j = 0; j < prop->num_values; j++) {
-+			if (prop->values[j].of_value == of_val) {
-+				dev_info(dev, "%s value %u, using %08x\n",
-+					prop->name, of_val, prop->values[j].reg_value);
-+				reg_value |= prop->values[j].reg_value;
-+				break;
-+			}
-+		}
-+
-+		if (j == prop->num_values) {
-+			dev_err(dev, "DT property %s is not a valid value\n",
-+				prop->name);
-+			reg_value |= prop->def_value;
-+		}
-+	}
-+
-+	return reg_value;
-+}
-+
- static int imx_ahci_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
-@@ -396,6 +536,8 @@ static int imx_ahci_probe(struct platform_device *pdev)
- 	}
- 
- 	if (imxpriv->type == AHCI_IMX6Q) {
-+		u32 reg_value;
-+
- 		imxpriv->gpr = syscon_regmap_lookup_by_compatible(
- 							"fsl,imx6q-iomuxc-gpr");
- 		if (IS_ERR(imxpriv->gpr)) {
-@@ -403,6 +545,16 @@ static int imx_ahci_probe(struct platform_device *pdev)
- 				"failed to find fsl,imx6q-iomux-gpr regmap\n");
- 			return PTR_ERR(imxpriv->gpr);
- 		}
-+
-+		reg_value = imx_ahci_parse_props(dev, gpr13_props,
-+						 ARRAY_SIZE(gpr13_props));
-+
-+		imxpriv->phy_params =
-+				   IMX6Q_GPR13_SATA_RX_LOS_LVL_SATA2M |
-+				   IMX6Q_GPR13_SATA_RX_DPLL_MODE_2P_4F |
-+				   IMX6Q_GPR13_SATA_SPD_MODE_3P0G |
-+				   IMX6Q_GPR13_SATA_MPLL_SS_EN |
-+				   reg_value;
- 	}
- 
- 	hpriv = ahci_platform_get_resources(pdev);
 -- 
 1.8.3.1
 
