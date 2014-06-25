@@ -1,43 +1,28 @@
 From: Shawn Guo <shawn.guo@freescale.com>
-Subject: Re: [PATCH 0/8] iMX6 SATA configuration
-Date: Wed, 25 Jun 2014 23:29:14 +0800
-Message-ID: <20140625152912.GI2224@dragon>
+Subject: Re: [PATCH v3 7/8] ARM: dts: cubox-i: add eSATA DT configuration
+Date: Wed, 25 Jun 2014 23:32:46 +0800
+Message-ID: <20140625153245.GJ2224@dragon>
 References: <20140624101901.GL32514@n2100.arm.linux.org.uk>
- <20140624220958.GI14909@htj.dyndns.org>
+ <E1WzNpW-0005e5-41@rmk-PC.arm.linux.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-doc-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-bn1blp0187.outbound.protection.outlook.com ([207.46.163.187]:50280
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757339AbaFYPdE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 25 Jun 2014 11:33:04 -0400
 Content-Disposition: inline
-In-Reply-To: <20140624220958.GI14909@htj.dyndns.org>
-Sender: linux-doc-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>, Pawel Moll <pawel.moll@arm.com>, Randy Dunlap <rdunlap@infradead.org>, Rob Herring <robh+dt@kernel.org>, Sascha Hauer <kernel@pengutronix.de>
+In-Reply-To: <E1WzNpW-0005e5-41@rmk-PC.arm.linux.org.uk>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Russell King <rmk+kernel@arm.linux.org.uk>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Sascha Hauer <kernel@pengutronix.de>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, devicetree@vger.kernel.org
 
-On Tue, Jun 24, 2014 at 06:09:58PM -0400, Tejun Heo wrote:
-> On Tue, Jun 24, 2014 at 11:19:01AM +0100, Russell King - ARM Linux wrote:
-> > Another round of these patches.  I've integrated Shawn's patch to split
-> > the documentation into this series so I can add the DT documentation
-> > on top of it.
-> > 
-> >  .../devicetree/bindings/ata/ahci-platform.txt      |   6 -
-> >  Documentation/devicetree/bindings/ata/imx-sata.txt |  36 ++++
-> >  arch/arm/boot/dts/imx6q-cubox-i.dts                |   4 +
-> >  drivers/ata/ahci_imx.c                             | 184 ++++++++++++++++++++-
-> >  4 files changed, 216 insertions(+), 14 deletions(-)
+On Tue, Jun 24, 2014 at 11:19:58AM +0100, Russell King wrote:
+> Add the transmit level, boost and attenuation parameters necessary for
+> the eSATA interface on Cubox-i to work.
 > 
-> Patches look good to me.  Shawn, can you please review the ahci_imx
-> portion?
+> Signed-off-by: Russell King <rmk+kernel@arm.linux.org.uk>
 
-Reviewed-by: Shawn Guo <shawn.guo@freescale.com>
-
-I also tested the series on imx6q-sabresd board and nothing breaks
-regarding SATA support on the board.
-
-> How should the patches be routed?  Should I pick only the
-> ata parts or apply the whole thing?
-
-I will apply the last two dts patches via IMX tree, and please apply
-the first 6 patches through your tree.
-
-Shawn
+Applied #7 and #8, thanks.
