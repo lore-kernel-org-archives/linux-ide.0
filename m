@@ -1,44 +1,47 @@
-From: Andrew Lunn <andrew@lunn.ch>
-Subject: [PATCH 06/13] ata: Remove ARCH_KIRKWOOD and ARCH_DOVE dependency
-Date: Sun, 29 Jun 2014 22:59:55 +0200
-Message-ID: <1404075603-31838-9-git-send-email-andrew@lunn.ch>
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+Subject: Re: [PATCH 00/13] Remove mach-kirkwood and mach-dove
+Date: Sun, 29 Jun 2014 22:35:11 +0100
+Message-ID: <20140629213510.GR32514@n2100.arm.linux.org.uk>
 References: <1404075603-31838-1-git-send-email-andrew@lunn.ch>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vps0.lunn.ch ([178.209.37.122]:38882 "EHLO vps0.lunn.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753658AbaF2VFm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 29 Jun 2014 17:05:42 -0400
+Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:46648 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753441AbaF2Vfe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 Jun 2014 17:35:34 -0400
+Content-Disposition: inline
 In-Reply-To: <1404075603-31838-1-git-send-email-andrew@lunn.ch>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jason Cooper <jason@lakedaemon.net>, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>
-Cc: Gregory Clement <gregory.clement@free-electrons.com>, rmk+kernel@arm.linux.org.uk, Andrew Lunn <andrew@lunn.ch>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+To: Andrew Lunn <andrew@lunn.ch>
+Cc: Jason Cooper <jason@lakedaemon.net>, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>, Gregory Clement <gregory.clement@free-electrons.com>, Mark Brown <broonie@kernel.org>, alsa-devel@alsa-project.org, Daniel Lezcano <daniel.lezcano@linaro.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Zhang Rui <rui.zhang@intel.com>, Bryan Wu <cooloney@gmail.com>, Richard Purdie <rpurdie@rpsys.net>, linux-leds@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, Kishon Vijay Abraham I <kishon@ti.com>, Alessandro Zummo <a.zummo@towertech.it>, rtc-linux@googlegroups.com, Wim Van Sebroeck <wim@iguana.be>, linux-watchdog@vger.kernel.org
 
-Both mach-kirkwood and mach-dove have been removed, now that both SoCs
-lives in mach-mvebu. ARCH_MVEBU is sufficient.
+On Sun, Jun 29, 2014 at 10:59:47PM +0200, Andrew Lunn wrote:
+> This patchset removes arch/arm/mach-kirkwood and arch/arm/mach-dove.
+> These SoCs are now supported in arch/arm/mach-mvebu using device tree.
+> 
+> Change the dependencies for a number of drivers, either to use
+> ARCH_MVEBU where the drivers are generic, or MACH_KIRKWOOD and
+> MACH_DOVE where the drivers are specific to a SoC.
+> 
+> 
+> Andrew Lunn (13):
+>   ARM: Kirkwood: Remove mach-kirkwood
+>   ARM: Dove: Remove mach-dove
 
-Signed-off-by: Andrew Lunn <andrew@lunn.ch>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org
----
- drivers/ata/Kconfig | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+There is actually a cubox regression which has yet to be tracked down.
+Running with my kernel (which is not-DT based) runs perfectly.  With
+DT, HDMI output can be unstable.
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 7671dbac6015..5991089492d0 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -289,8 +289,8 @@ config SATA_HIGHBANK
- 
- config SATA_MV
- 	tristate "Marvell SATA support"
--	depends on PCI || ARCH_DOVE || ARCH_KIRKWOOD || ARCH_MV78XX0 || \
--		   ARCH_MVEBU || ARCH_ORION5X || COMPILE_TEST
-+	depends on PCI || ARCH_MV78XX0 || ARCH_MVEBU || ARCH_ORION5X || \
-+		   COMPILE_TEST
- 	select GENERIC_PHY
- 	help
- 	  This option enables support for the Marvell Serial ATA family.
+One of the problems is that it's /very/ difficult to reproduce, but it
+is reproducable.  I've seen it on two days over many reboots, and I've
+proved it by switching back and forth.  DT sometimes suffers from the
+problem, whereas non-DT /never/ does.
+
+Sebastian is aware of this, and as yet we haven't found a solution,
+nor have we found a way to reliably reproduce it.
+
 -- 
-2.0.0
-
+FTTC broadband for 0.8mile line: now at 9.7Mbps down 460kbps up... slowly
+improving, and getting towards what was expected from it.
