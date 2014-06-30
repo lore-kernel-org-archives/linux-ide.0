@@ -1,8 +1,8 @@
 From: =?UTF-8?q?Antoine=20T=C3=A9nart?=
 	<antoine.tenart@free-electrons.com>
-Subject: [PATCH v8 7/7] ARM: berlin: enable the eSATA interface on the BG2Q DMP
-Date: Mon, 30 Jun 2014 15:09:32 +0200
-Message-ID: <1404133772-11741-8-git-send-email-antoine.tenart@free-electrons.com>
+Subject: [PATCH v8 4/7] ata: ahci_platform: add a generic AHCI compatible
+Date: Mon, 30 Jun 2014 15:09:29 +0200
+Message-ID: <1404133772-11741-5-git-send-email-antoine.tenart@free-electrons.com>
 References: <1404133772-11741-1-git-send-email-antoine.tenart@free-electrons.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -14,32 +14,28 @@ To: sebastian.hesselbarth@gmail.com, tj@kernel.org, kishon@ti.com
 Cc: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-The BG2Q has an AHCI SATA controller with an eSATA interface. Enable it=
-=2E
-Only enable the first port, the BG2Q DMP does not support the second on=
-e.
+The ahci_platform driver is a generic driver using the libahci_platform
+functions. Add a generic compatible to avoid having an endless list of
+compatibles with no differences for the same driver.
 
 Signed-off-by: Antoine T=C3=A9nart <antoine.tenart@free-electrons.com>
 ---
- arch/arm/boot/dts/berlin2q-marvell-dmp.dts | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/ata/ahci_platform.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/arch/arm/boot/dts/berlin2q-marvell-dmp.dts b/arch/arm/boot=
-/dts/berlin2q-marvell-dmp.dts
-index 995150f93795..385f6af64d0c 100644
---- a/arch/arm/boot/dts/berlin2q-marvell-dmp.dts
-+++ b/arch/arm/boot/dts/berlin2q-marvell-dmp.dts
-@@ -37,3 +37,11 @@
- &uart0 {
- 	status =3D "okay";
- };
-+
-+&sata0 {
-+	status =3D "okay";
-+};
-+
-+&sata_phy {
-+	status =3D "okay";
-+};
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index ebe505c17763..a30cecd68609 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -78,6 +78,8 @@ static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_platform_s=
+uspend,
+ 			 ahci_platform_resume);
+=20
+ static const struct of_device_id ahci_of_match[] =3D {
++	{ .compatible =3D "generic-ahci", },
++	/* Keep the following compatibles for device tree compatibility */
+ 	{ .compatible =3D "snps,spear-ahci", },
+ 	{ .compatible =3D "snps,exynos5440-ahci", },
+ 	{ .compatible =3D "ibm,476gtr-ahci", },
 --=20
 1.9.1
