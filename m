@@ -1,44 +1,58 @@
-From: Antoine =?iso-8859-1?Q?T=E9nart?=
-	<antoine.tenart@free-electrons.com>
-Subject: Re: [PATCH v6 1/7] phy: add a driver for the Berlin SATA PHY
-Date: Mon, 30 Jun 2014 12:20:14 +0200
-Message-ID: <20140630102014.GA5155@kwain>
-References: <1402914392-6028-1-git-send-email-antoine.tenart@free-electrons.com>
- <1402914392-6028-2-git-send-email-antoine.tenart@free-electrons.com>
- <53A9685E.9090501@ti.com>
- <53A96A1C.5030800@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <53A96A1C.5030800@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Varka Bhadram <varkabhadram@gmail.com>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>, Antoine =?iso-8859-1?Q?T=E9nart?= <antoine.tenart@free-electrons.com>, sebastian.hesselbarth@gmail.com, tj@kernel.org, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, Lee Jones <lee.jones@linaro.org>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+From: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Subject: Re: [PATCH 00/13] Remove mach-kirkwood and mach-dove
+Date: Mon, 30 Jun 2014 14:15:58 +0200
+Message-ID: <53B154FE.80804@gmail.com>
+References: <1404075603-31838-1-git-send-email-andrew@lunn.ch> <20140629213510.GR32514@n2100.arm.linux.org.uk>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-leds-owner@vger.kernel.org>
+In-Reply-To: <20140629213510.GR32514@n2100.arm.linux.org.uk>
+Sender: linux-leds-owner@vger.kernel.org
+To: Russell King - ARM Linux <linux@arm.linux.org.uk>, Andrew Lunn <andrew@lunn.ch>
+Cc: Jason Cooper <jason@lakedaemon.net>, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>, Gregory Clement <gregory.clement@free-electrons.com>, Mark Brown <broonie@kernel.org>, alsa-devel@alsa-project.org, Daniel Lezcano <daniel.lezcano@linaro.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Zhang Rui <rui.zhang@intel.com>, Bryan Wu <cooloney@gmail.com>, Richard Purdie <rpurdie@rpsys.net>, linux-leds@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, Kishon Vijay Abraham I <kishon@ti.com>, Alessandro Zummo <a.zummo@towertech.it>, rtc-linux@googlegroups.com, Wim Van Sebroeck <wim@iguana.be>, linux-watchdog@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Hello,
+On 06/29/2014 11:35 PM, Russell King - ARM Linux wrote:
+> On Sun, Jun 29, 2014 at 10:59:47PM +0200, Andrew Lunn wrote:
+>> This patchset removes arch/arm/mach-kirkwood and arch/arm/mach-dove.
+>> These SoCs are now supported in arch/arm/mach-mvebu using device tree.
+>>
+>> Change the dependencies for a number of drivers, either to use
+>> ARCH_MVEBU where the drivers are generic, or MACH_KIRKWOOD and
+>> MACH_DOVE where the drivers are specific to a SoC.
+>>
+>>
+>> Andrew Lunn (13):
+>>    ARM: Kirkwood: Remove mach-kirkwood
+>>    ARM: Dove: Remove mach-dove
+>
+> There is actually a cubox regression which has yet to be tracked down.
+> Running with my kernel (which is not-DT based) runs perfectly.  With
+> DT, HDMI output can be unstable.
+>
+> One of the problems is that it's /very/ difficult to reproduce, but it
+> is reproducable.  I've seen it on two days over many reboots, and I've
+> proved it by switching back and forth.  DT sometimes suffers from the
+> problem, whereas non-DT /never/ does.
+>
+> Sebastian is aware of this, and as yet we haven't found a solution,
+> nor have we found a way to reliably reproduce it.
 
-On Tue, Jun 24, 2014 at 05:37:56PM +0530, Varka Bhadram wrote:
-> On 06/24/2014 05:30 PM, Kishon Vijay Abraham I wrote:
-> >On Monday 16 June 2014 03:56 PM, Antoine T=E9nart wrote:
-> >>+
-> >>+static struct phy *phy_berlin_sata_phy_xlate(struct device *dev,
-> >>+					     struct of_phandle_args *args)
->=20
-> Indent the function properly like this:
-> static struct phy *phy_berlin_sata_phy_xlate(struct device *dev,
-> 					     struct of_phandle_args *args)
->=20
-> check with checkpatch.pl script
+I am aware of the issue but have not been able to reproduce it. Also,
+we have no /official/ non-DT CuBox support in mainline Linux at all.
+I understand that removing non-DT mach-dove currently is not your
+most preferred patch but from a mainline POV, mach-dove isn't actively
+used. The three officially supported boards have been converted to DT
+months ago and haven't received any TLC since then, so I doubt they are
+used by anyone.
 
-Already fixed in v7.
+My current impression of the issue is that it is more related with
+driver load order/missing delays for clocks/ignoring IP behavior on
+clock rate change or something like it.
 
+Can you give a /rough/ schedule for your plans to sort out your private
+branches? If we can all investigate the issue with the same code basis,
+I am sure we can make DT dove behave the same way non-DT dove seems to
+be.
 
-Antoine
-
---=20
-Antoine T=E9nart, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+Sebastian
