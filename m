@@ -1,68 +1,167 @@
-From: Jean-Francois Moine <moinejf@free.fr>
-Subject: Re: [alsa-devel] [PATCH 00/13] Remove mach-kirkwood and mach-dove
-Date: Mon, 30 Jun 2014 11:47:01 +0200
-Message-ID: <20140630114701.1368d49e@armhf>
-References: <1404075603-31838-1-git-send-email-andrew@lunn.ch>
-	<20140629213510.GR32514@n2100.arm.linux.org.uk>
-	<20140630091643.2df3b0fb@armhf>
-	<20140630084918.GS32514@n2100.arm.linux.org.uk>
+From: Antoine =?iso-8859-1?Q?T=E9nart?=
+	<antoine.tenart@free-electrons.com>
+Subject: Re: [PATCH v7 1/7] phy: add a driver for the Berlin SATA PHY
+Date: Mon, 30 Jun 2014 11:59:40 +0200
+Message-ID: <20140630095940.GB10058@kwain>
+References: <1403530783-17180-1-git-send-email-antoine.tenart@free-electrons.com>
+ <1403530783-17180-2-git-send-email-antoine.tenart@free-electrons.com>
+ <53AB1CFD.4040500@cogentembedded.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-leds-owner@vger.kernel.org>
-In-Reply-To: <20140630084918.GS32514@n2100.arm.linux.org.uk>
-Sender: linux-leds-owner@vger.kernel.org
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: Andrew Lunn <andrew@lunn.ch>, linux-ide@vger.kernel.org, Alessandro Zummo <a.zummo@towertech.it>, alsa-devel@alsa-project.org, Bryan Wu <cooloney@gmail.com>, Jason Cooper <jason@lakedaemon.net>, rtc-linux@googlegroups.com, linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Daniel Lezcano <daniel.lezcano@linaro.org>, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>, Kishon Vijay Abraham I <kishon@ti.com>, Tejun Heo <tj@kernel.org>, Wim Van Sebroeck <wim@iguana.be>, Mark Brown <broonie@kernel.org>, Richard Purdie <rpurdie@rpsys.net>, linux-pci@vger.kernel.org, Gregory Clement <gregory.clement@free-electrons.com>, Zhang Rui <rui.zhang@intel.com>, Bjorn Helgaas <bhelgaas@google.com>, linux-leds@vger.kernel.org, linux-watchdog@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from top.free-electrons.com ([176.31.233.9]:52755 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751590AbaF3J7z (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jun 2014 05:59:55 -0400
+Content-Disposition: inline
+In-Reply-To: <53AB1CFD.4040500@cogentembedded.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: Antoine =?iso-8859-1?Q?T=E9nart?= <antoine.tenart@free-electrons.com>, sebastian.hesselbarth@gmail.com, tj@kernel.org, kishon@ti.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, alexandre.belloni@free-electrons.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org
 
-On Mon, 30 Jun 2014 09:49:18 +0100
-Russell King - ARM Linux <linux@arm.linux.org.uk> wrote:
+Sergei,
 
-> The problem is that the picture appears for about a second, then goes=
- black
-> for maybe a couple of seconds, then reappears for about a second and =
-this
-> cycle repeats.  Rebooting into the DT kernel doesn't fix it.  Rebooti=
-ng
-> back into the non-DT kernel does fix it.  Then if you boot back into =
-the DT
-> kernel it's back again.  Boot back into the non-DT kernel and it's ag=
-ain
-> fixed.
+On Wed, Jun 25, 2014 at 11:03:25PM +0400, Sergei Shtylyov wrote:
+> On 06/23/2014 05:39 PM, Antoine T=E9nart wrote:
 >=20
-> I have compared register settings for the Si5351, LCD controllers and=
- the
-> TDA998x between the non-DT and DT versions, and can find no differenc=
-es
-> there.  Yet, DT kernels are the only kernels which exhibit this behav=
-iour.
-> Non-DT kernels (which I've run continuously including many reboots) f=
-or
-> the last two years have *never* shown this problem.
+> >The Berlin SoC has a two SATA ports. Add a PHY driver to handle them=
+=2E
 >=20
-> I have also verified that the HDMI clock is correct.  The problem occ=
-urs
-> at both 1080p and 720p resolutions (which are the two that are used d=
-uring
-> boot - I have the kernel using 720p, and Xorg uses 1080p.)
->=20
-> I should also point out that in both cases, it is the _same_ kernel b=
-inary
-> (3.15) that I'm running - the DT test case just has the DT blob attac=
-hed
-> whereas the non-DT case boots without (and therefore falls back to th=
+> >The mode selection can let us think this PHY can be configured to fi=
+t
+> >other purposes. But there are reasons to think the SATA mode will be
+> >the only one usable: the PHY registers are only accessible indirectl=
+y
+> >through two registers in the SATA range, the PHY seems to be integra=
+ted
+> >and no information tells us the contrary. For these reasons, make th=
 e
-> old platform stuff.)
+> >driver a SATA PHY driver.
+>=20
+>    I'm not even sure why you want to make it a separate driver if
+> the registers are mapped to SATA controller's range.
 
-Have you declared the LCD clock in dove.dtsi?
+We discussed this before and decided to move all the PHY related
+functions to a dedicated PHY driver. This allows to have a generic
+ahci_platform driver only using the common functions defined in the
+libahci. And the PHY subsystem is there to handle PHYs, so it's a good
+idea to use it, right?
 
- 	lcdclk: fixed-clock {
-		compatible =3D "fixed-clock";
- 		#clock-cells =3D <0>;
- 		clock-frequency =3D <400000000>;
- 	};
+> [...]
+>=20
+> >diff --git a/drivers/phy/phy-berlin-sata.c b/drivers/phy/phy-berlin-=
+sata.c
+> >new file mode 100644
+> >index 000000000000..317f62358165
+> >--- /dev/null
+> >+++ b/drivers/phy/phy-berlin-sata.c
+> >@@ -0,0 +1,246 @@
+> [...]
+> +#define HOST_VSA_ADDR		0x0
+> +#define HOST_VSA_DATA		0x4
+> +#define PORT_VSR_ADDR		0x78
+> +#define PORT_VSR_DATA		0x7c
+> +#define PORT_SCR_CTL		0x2c
+>=20
+>    Could you keep this list sorted?
+
+Sure.
+
+>=20
+> [...]
+>=20
+> +struct phy_berlin_desc {
+> +	struct phy	*phy;
+> +	u32		val;
+>=20
+>    Hm, aren't these power down bits? Why not call the field according=
+ly?
+
+Yes. I'll update.
+
+>=20
+> [...]
+>=20
+> >+static int phy_berlin_sata_power_on(struct phy *phy)
+> >+{
+> >+	struct phy_berlin_desc *desc =3D phy_get_drvdata(phy);
+> >+	struct phy_berlin_priv *priv =3D to_berlin_sata_phy_priv(desc);
+> >+	void __iomem *ctrl_reg =3D priv->base + 0x60 + (desc->index * 0x80=
+);
+> >+	int ret =3D 0;
+> >+	u32 regval;
+> >+
+> >+	clk_prepare_enable(priv->clk);
+> >+
+> >+	spin_lock(&priv->lock);
+> >+
+> >+	/* Power on PHY */
+> >+	writel(CONTROL_REGISTER, priv->base + HOST_VSA_ADDR);
+> >+	regval =3D readl(priv->base + HOST_VSA_DATA);
+> >+	regval &=3D ~(desc->val);
+>=20
+>    Parens not needed here.
+>=20
+> >+	writel(regval, priv->base + HOST_VSA_DATA);
+> >+
+> >+	/* Configure MBus */
+> >+	writel(MBUS_SIZE_CONTROL, priv->base + HOST_VSA_ADDR);
+> >+	regval =3D readl(priv->base + HOST_VSA_DATA);
+> >+	regval |=3D MBUS_WRITE_REQUEST_SIZE_128 | MBUS_READ_REQUEST_SIZE_1=
+28;
+> >+	writel(regval, priv->base + HOST_VSA_DATA);
+>=20
+>    It probably makes sense to factor these address/data register
+> writes into a separate function like phy_berlin_sata_reg_setbits().
+
+I'm not sure. phy_berlin_sata_reg_setbits() is there for common access,
+but the way to configure MBus and p[ower on the PHY is specific to them=
+=2E
+It would add functions only used once.
+
+>=20
+> [...]
+> >+	/* set the controller speed */
+> >+	writel(0x31, ctrl_reg + PORT_SCR_CTL);
+>=20
+>    Value undocumented? Or is this the SATA SControl register by chanc=
+e?
+
+Some magic is still there...
+
+>=20
+> [...]
+>=20
+> >+static int phy_berlin_sata_probe(struct platform_device *pdev)
+> >+{
+> >+	struct device *dev =3D &pdev->dev;
+> >+	struct phy *phy;
+> >+	struct phy_provider *phy_provider;
+> >+	struct phy_berlin_priv *priv;
+> >+	struct resource *res;
+> >+	int i;
+> >+
+> >+	priv =3D devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
+> >+	if (!priv)
+> >+		return -ENOMEM;
+> >+
+> >+	res =3D platform_get_resource(pdev, IORESOURCE_MEM, 0);
+> >+	if (!res)
+> >+		return -EINVAL;
+> >+
+> >+	priv->base =3D devm_ioremap(dev, res->start, resource_size(res));
+>=20
+>    Can't you use devm_ioremap_resource()?
+
+The SATA PHY registers are inside the SATA ones. We can't use
+devm_ioremap_resource() then.
+
+
+Antoine
 
 --=20
-Ken ar c'henta=C3=B1	|	      ** Breizh ha Linux atav! **
-Jef		|		http://moinejf.free.fr/
+Antoine T=E9nart, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
