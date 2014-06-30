@@ -1,129 +1,69 @@
-From: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Subject: Re: [PATCH 00/13] Remove mach-kirkwood and mach-dove
-Date: Mon, 30 Jun 2014 17:35:49 +0200
-Message-ID: <53B183D5.8020708@gmail.com>
-References: <1404075603-31838-1-git-send-email-andrew@lunn.ch> <20140629213510.GR32514@n2100.arm.linux.org.uk> <53B154FE.80804@gmail.com> <20140630124320.GZ32514@n2100.arm.linux.org.uk> <53B164B2.7090902@gmail.com> <20140630142516.GA32514@n2100.arm.linux.org.uk>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-leds-owner@vger.kernel.org>
-In-Reply-To: <20140630142516.GA32514@n2100.arm.linux.org.uk>
-Sender: linux-leds-owner@vger.kernel.org
-To: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: Andrew Lunn <andrew@lunn.ch>, Jason Cooper <jason@lakedaemon.net>, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>, Gregory Clement <gregory.clement@free-electrons.com>, Mark Brown <broonie@kernel.org>, alsa-devel@alsa-project.org, Daniel Lezcano <daniel.lezcano@linaro.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Zhang Rui <rui.zhang@intel.com>, Bryan Wu <cooloney@gmail.com>, Richard Purdie <rpurdie@rpsys.net>, linux-leds@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, Kishon Vijay Abraham I <kishon@ti.com>, Alessandro Zummo <a.zummo@towertech.it>, rtc-linux@googlegroups.com, Wim Van Sebroeck <wim@iguana.be>, linux-watchdog@vger.kernel.org
+From: Antoine =?iso-8859-1?Q?T=E9nart?=
+	<antoine.tenart@free-electrons.com>
+Subject: Re: [PATCH v7 1/7] phy: add a driver for the Berlin SATA PHY
+Date: Mon, 30 Jun 2014 17:44:09 +0200
+Message-ID: <20140630154409.GB29613@kwain>
+References: <1403530783-17180-1-git-send-email-antoine.tenart@free-electrons.com>
+ <1403530783-17180-2-git-send-email-antoine.tenart@free-electrons.com>
+ <53AB1CFD.4040500@cogentembedded.com>
+ <20140630095940.GB10058@kwain>
+ <53B176F1.5060308@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from top.free-electrons.com ([176.31.233.9]:56123 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750969AbaF3PoN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jun 2014 11:44:13 -0400
+Content-Disposition: inline
+In-Reply-To: <53B176F1.5060308@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Cc: Antoine =?iso-8859-1?Q?T=E9nart?= <antoine.tenart@free-electrons.com>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, tj@kernel.org, kishon@ti.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, alexandre.belloni@free-electrons.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org
 
-On 06/30/2014 04:25 PM, Russell King - ARM Linux wrote:
-> On Mon, Jun 30, 2014 at 03:22:58PM +0200, Sebastian Hesselbarth wrote:
->> Of course we thought about it. But as you are dealing with different
->> SoCs at a time, we also have to care about some more SoCs than just
->> Dove. And, of course, we also run out of spare time to prepare proper
->> patches over and over again. I really /know/ that if you send patches,
->> they are well thought and well tested, so I basically postpone work
->> on that if I know you are working on it.
->>
->> My current idea of PMU register space is to have a DT provided regmap
->> but again, there are patches floating around but currently that regmap
->> helpers are still WIP. FWIW, if you look at dove pinctrl, we did a
->> last-minute patch for the PMU regs - just because you mentioned a
->> concern, so we really care about your opinion. The fact that it is not
->> solved is pure lack of time.
->
-> Nothing has changed on the PMU patches since I posted them, because
-> they're based on 3.15 and there's been no changes there.
+Hi Sebastian,
 
-I offered to deal with mainlining them end of April, you never replied.
-I know that if you dislike something you answer, but it is hard to tell
-if silence means agreement.
+On Mon, Jun 30, 2014 at 04:40:49PM +0200, Sebastian Hesselbarth wrote:
+> On 06/30/2014 11:59 AM, Antoine T=E9nart wrote:
+> >On Wed, Jun 25, 2014 at 11:03:25PM +0400, Sergei Shtylyov wrote:
+> >>On 06/23/2014 05:39 PM, Antoine T=E9nart wrote:
+> >>>+	/* set the controller speed */
+> >>>+	writel(0x31, ctrl_reg + PORT_SCR_CTL);
+> >>
+> >>    Value undocumented? Or is this the SATA SControl register by ch=
+ance?
+> >
+> >Some magic is still there...
+>=20
+> I guess Sergei was referring to AHCI spec here. PORT_SCR bits are
+> documented in AHCI spec as:
+>=20
+> 7:4 =3D 0x3 Limit speed negotiation to a rate not greater than Gen3
+>           communication rate.
+>=20
+> 3:0 =3D 0x1 Perform interface communication sequence [...]. This is
+>           functionally equivalent to a hard reset [...].
+>=20
+> So, the question is: Should we really need to reset controller in the
+> PHY driver or is it already done in AHCI common code? At least we
+> should change the comment to something like
+> /* set Gen3 controller speed and perform hard reset */
 
-I am not going to waste any time preparing patches just to get a NAK.
+I just checked, the AHCI common code has a function to do the reset:
+ahci_reset_controller(). As of the max speed negociation rate, I did no=
+t
+see it in the common AHCI functions.
 
->> Exactly that increasing amount of (valuable) patches makes it more
->> and more difficult for you and us to reproduce any issues. All I am
->> asking for is: if you don't push that branch for good reason, try to
->> split off at least some patches. Hunting issues like the HDMI thing
->> with 250 patches off, really isn't going to work well.
->
-> Right, so what I have against mainline right now in my tree is:
->
-> * two SPI patches, which have been taken by Mark
-> * one long term core ARM patch adding optimised memset/memcpy IO operations
-> * the PMU stuff
-> * BMM (already published in git form)
-> * Vmeta (already published in git form)
-> * ASoC cleanup patches, which Mark took last week.
->
-> What isn't visible is the stuff which converts Armada DRM to component
-> support, along with the TDA998x driver (and it sounds like the TI LCDC
-> people may end up blocking that effort).  This is necessary to convert
-> it to DT support.  However, this depends on the component helper, and
-> that's where there's a blocking problem.
->
-> I sent out a bunch of patches last week, with a request for help from
-> the Exynos people.  So far, that has only attracted one relatively minor
-> comment from the iMX people.  I can't move forwards with the Armada
-> DRM until this is sorted.  Neither can I move forward with the TDA998x
-> driver.
->
-> As for the ASoC stuff which you avoided commenting on, let me repeat
-> that _that_ stuff is now totally dead and can /never/ be merged into
-> mainline without breaking the existing ASoC kirkwood support.  In
-> that case, it's not like I wasn't sending the patches out, because
-> I had been... so everyone was aware of what was going on there,
-> but I guess converting stuff to DT in ways that totally fuck over
-> other patches is what now happens in the kernel.
+The eSATA port on the Berlin2Q works without this line, but it may be a
+good idea to keep the max speed negociation rate.
 
-If you are talking about "Kirkwood ASoC updates", you got a Tested-by
-from Andrew even before I read your patches. And besides, just because
-I am interested in Dove does not mean I just swallowed the whole Linux
-API knowledge. I simply avoided commenting on it, because there is
-/nothing/ I can add to it.
+Anyway, we can remove the reset part. Nice catch!
 
-Really, I know you do dig down to the bottom of every subsystem you
-are working with but I simply cannot. Just because I don't have the
-time for it.
+Antoine
 
-> What I think you're missing is that for those of us who want to have
-> a platform fully supported, the choice has been non-DT until relatively
-> recently.  We're now at the point where the DT support on Dove has
-> matured to the point where it's relatively easy to end up with a fully
-> functional (but not necessarily bug free) setup with DT.  It's at the
-> sweet spot where you can switch between DT and non-DT and preserve
-> that functionality... but as soon as we get there we want to rip out
-> the old stuff.
-
-Oh, ok.. you think it is "me" and "us"? It is you who actually want to
-use Dove and me just wanting a DT representation for it?
-
-It is not my fault that your patches are blocked by others. I can offer
-help to track down the issue, but I am not going to be your scapegoat.
-
-> Let me put that another way: it's at the point where those of us who
-> have been using non-DT support can start moving the remaining drivers
-> over to a DT environment without any functional loss.
->
-> What I'm trying to get you to understand is that leaving the old stuff
-> behind for a little while longer is beneficial - while those who have
-> been running crippled DT based setups for the last year don't care
-> about having full support, there are those who do.
-
-Ok, let's have mach-dove for a little longer, fine with me.
-
-> Of course, there's another solution to this.  I stay with my present
-> 3.15 kernel for ever.  That basically bars me from sending any further
-> patches.  It also means that I stop maintaining TDA998x and Armada DRM,
-> and you will have to take those over, which means you get the additional
-> workload from those.  Is that what you really want?
-
-What I really want is to stop that blackmailing with giving up on
-sending patches. It will be a huge loss if you do and many have said
-that in the past.
-
-If it is really me who upsets you because you feel I am blocking your
-patches, just ignore my comments. Jason will happily pick them up
-just because you signed them off.
-
-Sebastian
-
-> The Cubox is the /only/ ARM platform I have which is a capable media
-> player, and I'm trying not to have it screwed by this kind of crap.
->
+--=20
+Antoine T=E9nart, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
