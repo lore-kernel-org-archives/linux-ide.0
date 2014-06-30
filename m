@@ -1,8 +1,8 @@
 From: =?UTF-8?q?Antoine=20T=C3=A9nart?=
 	<antoine.tenart@free-electrons.com>
-Subject: [PATCH v8 3/7] ata: libahci: allow to use multiple PHYs
-Date: Mon, 30 Jun 2014 15:09:28 +0200
-Message-ID: <1404133772-11741-4-git-send-email-antoine.tenart@free-electrons.com>
+Subject: [PATCH v8 1/7] phy: add a driver for the Berlin SATA PHY
+Date: Mon, 30 Jun 2014 15:09:26 +0200
+Message-ID: <1404133772-11741-2-git-send-email-antoine.tenart@free-electrons.com>
 References: <1404133772-11741-1-git-send-email-antoine.tenart@free-electrons.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -14,324 +14,325 @@ To: sebastian.hesselbarth@gmail.com, tj@kernel.org, kishon@ti.com
 Cc: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-The current implementation of the libahci does not allow to use multipl=
-e
-PHYs. This patch adds the support of multiple PHYs by the libahci while
-keeping the old bindings valid for device tree compatibility.
+The Berlin SoC has a two SATA ports. Add a PHY driver to handle them.
 
-This introduce a new way of defining SATA ports in the device tree, wit=
-h
-one port per sub-node. This as the advantage of allowing a per port
-configuration. Because some ports may be accessible but disabled in the
-device tree, the default port_map is computed automatically when using
-this.
+The mode selection can let us think this PHY can be configured to fit
+other purposes. But there are reasons to think the SATA mode will be
+the only one usable: the PHY registers are only accessible indirectly
+through two registers in the SATA range, the PHY seems to be integrated
+and no information tells us the contrary. For these reasons, make the
+driver a SATA PHY driver.
 
 Signed-off-by: Antoine T=C3=A9nart <antoine.tenart@free-electrons.com>
 ---
- drivers/ata/ahci.h             |   3 +-
- drivers/ata/libahci.c          |   7 ++
- drivers/ata/libahci_platform.c | 170 ++++++++++++++++++++++++++++++++-=
---------
- 3 files changed, 144 insertions(+), 36 deletions(-)
+ drivers/phy/Kconfig           |   7 ++
+ drivers/phy/Makefile          |   1 +
+ drivers/phy/phy-berlin-sata.c | 262 ++++++++++++++++++++++++++++++++++=
+++++++++
+ 3 files changed, 270 insertions(+)
+ create mode 100644 drivers/phy/phy-berlin-sata.c
 
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 05882e4445a6..e5bdbf827ca8 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -330,7 +330,8 @@ struct ahci_host_priv {
- 	bool			got_runtime_pm; /* Did we do pm_runtime_get? */
- 	struct clk		*clks[AHCI_MAX_CLKS]; /* Optional */
- 	struct regulator	*target_pwr;	/* Optional */
--	struct phy		*phy;		/* If platform uses phy */
-+	struct phy		**phys;		/* If platform uses phys */
-+	unsigned		nphys;		/* Number of phys */
- 	void			*plat_data;	/* Other platform data */
- 	/*
- 	 * Optional ahci_start_engine override, if not set this gets set to t=
-he
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 40ea583d3610..0bdee8330dcf 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -482,6 +482,13 @@ void ahci_save_initial_config(struct device *dev,
- 		port_map &=3D mask_port_map;
- 	}
+diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
+index 16a2f067c242..365ad3651e1c 100644
+--- a/drivers/phy/Kconfig
++++ b/drivers/phy/Kconfig
+@@ -15,6 +15,13 @@ config GENERIC_PHY
+ 	  phy users can obtain reference to the PHY. All the users of this
+ 	  framework should select this config.
 =20
-+	/*
-+	 * If port_map was filled automatically when finding port sub-nodes,
-+	 * make sure we get the right set here.
-+	 */
-+	if (hpriv->port_map)
-+		port_map &=3D hpriv->port_map;
++config PHY_BERLIN_SATA
++	tristate "Marvell Berlin SATA PHY driver"
++	depends on ARCH_BERLIN && OF
++	select GENERIC_PHY
++	help
++	  Enable this to support the SATA PHY on Marvell Berlin SoCs.
 +
- 	/* cross check port_map and cap.n_ports */
- 	if (port_map) {
- 		int map_ports =3D 0;
-diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platf=
-orm.c
-index 3a5b4ed25a4f..cd2bc50ba913 100644
---- a/drivers/ata/libahci_platform.c
-+++ b/drivers/ata/libahci_platform.c
-@@ -39,6 +39,61 @@ static struct scsi_host_template ahci_platform_sht =3D=
- {
- };
+ config PHY_EXYNOS_MIPI_VIDEO
+ 	tristate "S5P/EXYNOS SoC series MIPI CSI-2/DSI PHY driver"
+ 	depends on HAS_IOMEM
+diff --git a/drivers/phy/Makefile b/drivers/phy/Makefile
+index b4f1d5770601..a137a2e23218 100644
+--- a/drivers/phy/Makefile
++++ b/drivers/phy/Makefile
+@@ -3,6 +3,7 @@
+ #
 =20
- /**
-+ * ahci_platform_enable_phys - Enable PHYs
-+ * @hpriv: host private area to store config values
+ obj-$(CONFIG_GENERIC_PHY)		+=3D phy-core.o
++obj-$(CONFIG_PHY_BERLIN_SATA)		+=3D phy-berlin-sata.o
+ obj-$(CONFIG_BCM_KONA_USB2_PHY)		+=3D phy-bcm-kona-usb2.o
+ obj-$(CONFIG_PHY_EXYNOS_DP_VIDEO)	+=3D phy-exynos-dp-video.o
+ obj-$(CONFIG_PHY_EXYNOS_MIPI_VIDEO)	+=3D phy-exynos-mipi-video.o
+diff --git a/drivers/phy/phy-berlin-sata.c b/drivers/phy/phy-berlin-sat=
+a.c
+new file mode 100644
+index 000000000000..4446e93e6d82
+--- /dev/null
++++ b/drivers/phy/phy-berlin-sata.c
+@@ -0,0 +1,262 @@
++/*
++ * Marvell Berlin SATA PHY driver
 + *
-+ * This function enables all the PHYs found in hpriv->phys, if any.
-+ * If a PHY fails to be enabled, it disables all the PHYs already
-+ * enabled in reverse order and returns an error.
++ * Copyright (C) 2014 Marvell Technology Group Ltd.
 + *
-+ * RETURNS:
-+ * 0 on success otherwise a negative error code
++ * Antoine T=C3=A9nart <antoine.tenart@free-electrons.com>
++ *
++ * This file is licensed under the terms of the GNU General Public
++ * License version 2. This program is licensed "as is" without any
++ * warranty of any kind, whether express or implied.
 + */
-+int ahci_platform_enable_phys(struct ahci_host_priv *hpriv)
++
++#include <linux/clk.h>
++#include <linux/module.h>
++#include <linux/phy/phy.h>
++#include <linux/io.h>
++#include <linux/platform_device.h>
++
++#define HOST_VSA_ADDR		0x0
++#define HOST_VSA_DATA		0x4
++#define PORT_SCR_CTL		0x2c
++#define PORT_VSR_ADDR		0x78
++#define PORT_VSR_DATA		0x7c
++
++#define CONTROL_REGISTER	0x0
++#define MBUS_SIZE_CONTROL	0x4
++
++#define POWER_DOWN_PHY0			BIT(6)
++#define POWER_DOWN_PHY1			BIT(14)
++#define MBUS_WRITE_REQUEST_SIZE_128	(BIT(2) << 16)
++#define MBUS_READ_REQUEST_SIZE_128	(BIT(2) << 19)
++
++#define PHY_BASE		0x200
++
++/* register 0x01 */
++#define REF_FREF_SEL_25		BIT(0)
++#define PHY_MODE_SATA		(0x0 << 5)
++
++/* register 0x02 */
++#define USE_MAX_PLL_RATE	BIT(12)
++
++/* register 0x23 */
++#define DATA_BIT_WIDTH_10	(0x0 << 10)
++#define DATA_BIT_WIDTH_20	(0x1 << 10)
++#define DATA_BIT_WIDTH_40	(0x2 << 10)
++
++/* register 0x25 */
++#define PHY_GEN_MAX_1_5		(0x0 << 10)
++#define PHY_GEN_MAX_3_0		(0x1 << 10)
++#define PHY_GEN_MAX_6_0		(0x2 << 10)
++
++#define BERLIN_SATA_PHY_NB	2
++
++#define to_berlin_sata_phy_priv(desc)	\
++	container_of((desc), struct phy_berlin_priv, phys[(desc)->index])
++
++struct phy_berlin_desc {
++	struct phy	*phy;
++	u32		power_bit;
++	unsigned	index;
++};
++
++struct phy_berlin_priv {
++	void __iomem		*base;
++	spinlock_t		lock;
++	struct clk		*clk;
++	struct phy_berlin_desc	phys[BERLIN_SATA_PHY_NB];
++};
++
++static inline void phy_berlin_sata_reg_setbits(void __iomem *ctrl_reg,=
+ u32 reg,
++					       u32 mask, u32 val)
 +{
-+	int i, rc =3D 0;
++	u32 regval;
 +
-+	for (i =3D 0; i < hpriv->nphys; i++) {
-+		rc =3D phy_init(hpriv->phys[i]);
-+		if (rc)
-+			goto disable_phys;
++	/* select register */
++	writel(PHY_BASE + reg, ctrl_reg + PORT_VSR_ADDR);
 +
-+		rc =3D phy_power_on(hpriv->phys[i]);
-+		if (rc) {
-+			phy_exit(hpriv->phys[i]);
-+			goto disable_phys;
-+		}
-+	}
++	/* set bits */
++	regval =3D readl(ctrl_reg + PORT_VSR_DATA);
++	regval &=3D ~mask;
++	regval |=3D val;
++	writel(regval, ctrl_reg + PORT_VSR_DATA);
++}
++
++static int phy_berlin_sata_power_on(struct phy *phy)
++{
++	struct phy_berlin_desc *desc =3D phy_get_drvdata(phy);
++	struct phy_berlin_priv *priv =3D to_berlin_sata_phy_priv(desc);
++	void __iomem *ctrl_reg =3D priv->base + 0x60 + (desc->index * 0x80);
++	int ret =3D 0;
++	u32 regval;
++
++	clk_prepare_enable(priv->clk);
++
++	spin_lock(&priv->lock);
++
++	/* Power on PHY */
++	writel(CONTROL_REGISTER, priv->base + HOST_VSA_ADDR);
++	regval =3D readl(priv->base + HOST_VSA_DATA);
++	regval &=3D ~desc->power_bit;
++	writel(regval, priv->base + HOST_VSA_DATA);
++
++	/* Configure MBus */
++	writel(MBUS_SIZE_CONTROL, priv->base + HOST_VSA_ADDR);
++	regval =3D readl(priv->base + HOST_VSA_DATA);
++	regval |=3D MBUS_WRITE_REQUEST_SIZE_128 | MBUS_READ_REQUEST_SIZE_128;
++	writel(regval, priv->base + HOST_VSA_DATA);
++
++	/* set PHY mode and ref freq to 25 MHz */
++	phy_berlin_sata_reg_setbits(ctrl_reg, 0x1, 0xff,
++				    REF_FREF_SEL_25 | PHY_MODE_SATA);
++
++	/* set PHY up to 6 Gbps */
++	phy_berlin_sata_reg_setbits(ctrl_reg, 0x25, 0xc00, PHY_GEN_MAX_6_0);
++
++	/* set 40 bits width */
++	phy_berlin_sata_reg_setbits(ctrl_reg, 0x23,  0xc00, DATA_BIT_WIDTH_40=
+);
++
++	/* use max pll rate */
++	phy_berlin_sata_reg_setbits(ctrl_reg, 0x2, 0x0, USE_MAX_PLL_RATE);
++
++	/* set the controller speed */
++	writel(0x31, ctrl_reg + PORT_SCR_CTL);
++
++	spin_unlock(&priv->lock);
++
++	clk_disable_unprepare(priv->clk);
++
++	return ret;
++}
++
++static int phy_berlin_sata_power_off(struct phy *phy)
++{
++	struct phy_berlin_desc *desc =3D phy_get_drvdata(phy);
++	struct phy_berlin_priv *priv =3D to_berlin_sata_phy_priv(desc);
++	u32 regval;
++
++	clk_prepare_enable(priv->clk);
++
++	spin_lock(&priv->lock);
++
++	/* Power down PHY */
++	writel(CONTROL_REGISTER, priv->base + HOST_VSA_ADDR);
++	regval =3D readl(priv->base + HOST_VSA_DATA);
++	regval |=3D desc->power_bit;
++	writel(regval, priv->base + HOST_VSA_DATA);
++
++	spin_unlock(&priv->lock);
++
++	clk_disable_unprepare(priv->clk);
 +
 +	return 0;
-+
-+disable_phys:
-+	while (--i >=3D 0) {
-+		phy_power_off(hpriv->phys[i]);
-+		phy_exit(hpriv->phys[i]);
-+	}
-+	return rc;
 +}
-+EXPORT_SYMBOL_GPL(ahci_platform_enable_phys);
 +
-+/**
-+ * ahci_platform_disable_phys - Enable PHYs
-+ * @hpriv: host private area to store config values
-+ *
-+ * This function disables all PHYs found in hpriv->phys.
-+ */
-+void ahci_platform_disable_phys(struct ahci_host_priv *hpriv)
++static struct phy *phy_berlin_sata_phy_xlate(struct device *dev,
++					     struct of_phandle_args *args)
 +{
-+	int i;
++	struct phy_berlin_priv *priv =3D dev_get_drvdata(dev);
 +
-+	for (i =3D 0; i < hpriv->nphys; i++) {
-+		phy_power_off(hpriv->phys[i]);
-+		phy_exit(hpriv->phys[i]);
-+	}
++	if (WARN_ON(args->args[0] >=3D BERLIN_SATA_PHY_NB))
++		return ERR_PTR(-ENODEV);
++
++	if (!priv->phys[args->args[0]].phy)
++		return ERR_PTR(-ENODEV);
++
++	return priv->phys[args->args[0]].phy;
 +}
-+EXPORT_SYMBOL_GPL(ahci_platform_disable_phys);
 +
-+/**
-  * ahci_platform_enable_clks - Enable platform clocks
-  * @hpriv: host private area to store config values
-  *
-@@ -92,7 +147,7 @@ EXPORT_SYMBOL_GPL(ahci_platform_disable_clks);
-  * following order:
-  * 1) Regulator
-  * 2) Clocks (through ahci_platform_enable_clks)
-- * 3) Phy
-+ * 3) Phys
-  *
-  * If resource enabling fails at any point the previous enabled resour=
-ces
-  * are disabled in reverse order.
-@@ -114,17 +169,9 @@ int ahci_platform_enable_resources(struct ahci_hos=
-t_priv *hpriv)
- 	if (rc)
- 		goto disable_regulator;
-=20
--	if (hpriv->phy) {
--		rc =3D phy_init(hpriv->phy);
--		if (rc)
--			goto disable_clks;
--
--		rc =3D phy_power_on(hpriv->phy);
--		if (rc) {
--			phy_exit(hpriv->phy);
--			goto disable_clks;
--		}
--	}
-+	rc =3D ahci_platform_enable_phys(hpriv);
-+	if (rc)
-+		goto disable_clks;
-=20
- 	return 0;
-=20
-@@ -144,16 +191,13 @@ EXPORT_SYMBOL_GPL(ahci_platform_enable_resources)=
-;
-  *
-  * This function disables all ahci_platform managed resources in the
-  * following order:
-- * 1) Phy
-+ * 1) Phys
-  * 2) Clocks (through ahci_platform_disable_clks)
-  * 3) Regulator
-  */
- void ahci_platform_disable_resources(struct ahci_host_priv *hpriv)
- {
--	if (hpriv->phy) {
--		phy_power_off(hpriv->phy);
--		phy_exit(hpriv->phy);
--	}
-+	ahci_platform_disable_phys(hpriv);
-=20
- 	ahci_platform_disable_clks(hpriv);
-=20
-@@ -187,7 +231,7 @@ static void ahci_platform_put_resources(struct devi=
-ce *dev, void *res)
-  * 2) regulator for controlling the targets power (optional)
-  * 3) 0 - AHCI_MAX_CLKS clocks, as specified in the devs devicetree no=
-de,
-  *    or for non devicetree enabled platforms a single clock
-- *	4) phy (optional)
-+ *	4) phys (optional)
-  *
-  * RETURNS:
-  * The allocated ahci_host_priv on success, otherwise an ERR_PTR value
-@@ -197,7 +241,8 @@ struct ahci_host_priv *ahci_platform_get_resources(=
-struct platform_device *pdev)
- 	struct device *dev =3D &pdev->dev;
- 	struct ahci_host_priv *hpriv;
- 	struct clk *clk;
--	int i, rc =3D -ENOMEM;
++static struct phy_ops phy_berlin_sata_ops =3D {
++	.power_on	=3D phy_berlin_sata_power_on,
++	.power_off	=3D phy_berlin_sata_power_off,
++	.owner		=3D THIS_MODULE,
++};
++
++static u32 phy_berlin_power_down_bits[] =3D {
++	POWER_DOWN_PHY0,
++	POWER_DOWN_PHY1,
++};
++
++static int phy_berlin_sata_probe(struct platform_device *pdev)
++{
++	struct device *dev =3D &pdev->dev;
 +	struct device_node *child;
-+	int i, nports, rc =3D -ENOMEM;
-=20
- 	if (!devres_open_group(dev, NULL, GFP_KERNEL))
- 		return ERR_PTR(-ENOMEM);
-@@ -246,22 +291,77 @@ struct ahci_host_priv *ahci_platform_get_resource=
-s(struct platform_device *pdev)
- 		hpriv->clks[i] =3D clk;
- 	}
-=20
--	hpriv->phy =3D devm_phy_get(dev, "sata-phy");
--	if (IS_ERR(hpriv->phy)) {
--		rc =3D PTR_ERR(hpriv->phy);
--		switch (rc) {
--		case -ENODEV:
--		case -ENOSYS:
--			/* continue normally */
--			hpriv->phy =3D NULL;
--			break;
-+	nports =3D of_get_child_count(dev->of_node);
-=20
--		case -EPROBE_DEFER:
-+	if (nports) {
-+		hpriv->phys =3D devm_kzalloc(dev, nports * sizeof(*hpriv->phys),
-+					   GFP_KERNEL);
-+		if (!hpriv->phys) {
-+			rc =3D -ENOMEM;
- 			goto err_out;
-+		}
-=20
--		default:
--			dev_err(dev, "couldn't get sata-phy\n");
--			goto err_out;
-+		for_each_child_of_node(dev->of_node, child) {
-+			u32 port;
++	struct phy *phy;
++	struct phy_provider *phy_provider;
++	struct phy_berlin_priv *priv;
++	struct resource *res;
++	u32 phy_id;
 +
-+			if (!of_device_is_available(child))
-+				continue;
++	priv =3D devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
++	if (!priv)
++		return -ENOMEM;
 +
-+			if (of_property_read_u32(child, "reg", &port)) {
-+				rc =3D -EINVAL;
-+				goto err_out;
-+			}
++	res =3D platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!res)
++		return -EINVAL;
 +
-+			hpriv->port_map |=3D BIT(port);
++	priv->base =3D devm_ioremap(dev, res->start, resource_size(res));
++	if (!priv->base)
++		return -ENOMEM;
 +
-+			hpriv->phys[hpriv->nphys] =3D devm_of_phy_get(dev, child,
-+								    NULL);
-+			if (IS_ERR(hpriv->phys[hpriv->nphys])) {
-+				rc =3D PTR_ERR(hpriv->phys[hpriv->nphys]);
-+				dev_err(dev,
-+					"couldn't get PHY in node %s: %d\n",
-+					child->name, rc);
-+				goto err_out;
-+			}
++	priv->clk =3D devm_clk_get(dev, NULL);
++	if (IS_ERR(priv->clk))
++		return PTR_ERR(priv->clk);
 +
-+			hpriv->nphys++;
++	dev_set_drvdata(dev, priv);
++	spin_lock_init(&priv->lock);
++
++	for_each_available_child_of_node(dev->of_node, child) {
++		if (of_property_read_u32(child, "reg", &phy_id)) {
++			dev_err(dev, "missing reg property in node %s\n",
++				child->name);
++			return -EINVAL;
 +		}
 +
-+		if (!hpriv->nphys) {
-+			dev_warn(dev, "No port enabled\n");
-+			return ERR_PTR(-ENODEV);
++		if (phy_id >=3D BERLIN_SATA_PHY_NB) {
++			dev_err(dev, "invalid reg in node %s\n", child->name);
++			return -EINVAL;
 +		}
-+	} else {
-+		/*
-+		 * If no sub-node was found, keep this for device tree
-+		 * compatibility
-+		 */
-+		struct phy *phy =3D devm_phy_get(dev, "sata-phy");
-+		if (!IS_ERR(phy)) {
-+			hpriv->phys =3D devm_kzalloc(dev, sizeof(*hpriv->phys),
-+						   GFP_KERNEL);
-+			if (!hpriv->phys) {
-+				rc =3D -ENOMEM;
-+				goto err_out;
-+			}
 +
-+			hpriv->phys[0] =3D phy;
-+			hpriv->nphys =3D 1;
-+		} else {
-+			rc =3D PTR_ERR(phy);
-+			switch (rc) {
-+			case -ENODEV:
-+			case -ENOSYS:
-+				/* continue normally */
-+				break;
++		phy =3D devm_phy_create(dev, &phy_berlin_sata_ops, NULL);
++		if (IS_ERR(phy)) {
++			dev_err(dev, "failed to create PHY %d\n", phy_id);
++			return PTR_ERR(phy);
++		}
 +
-+			case -EPROBE_DEFER:
-+				goto err_out;
++		priv->phys[phy_id].phy =3D phy;
++		priv->phys[phy_id].power_bit =3D
++			phy_berlin_power_down_bits[phy_id];
++		priv->phys[phy_id].index =3D phy_id;
++		phy_set_drvdata(phy, &priv->phys[phy_id]);
 +
-+			default:
-+				dev_err(dev, "couldn't get sata-phy\n");
-+				goto err_out;
-+			}
- 		}
- 	}
-=20
-@@ -288,7 +388,7 @@ EXPORT_SYMBOL_GPL(ahci_platform_get_resources);
-  * @mask_port_map: param passed to ahci_save_initial_config
-  *
-  * This function does all the usual steps needed to bring up an
-- * ahci-platform host, note any necessary resources (ie clks, phy, etc=
-=2E)
-+ * ahci-platform host, note any necessary resources (ie clks, phys, et=
-c.)
-  * must be initialized / enabled before calling this.
-  *
-  * RETURNS:
-@@ -394,7 +494,7 @@ static void ahci_host_stop(struct ata_host *host)
-  * @dev: device pointer for the host
-  *
-  * This function does all the usual steps needed to suspend an
-- * ahci-platform host, note any necessary resources (ie clks, phy, etc=
-=2E)
-+ * ahci-platform host, note any necessary resources (ie clks, phys, et=
-c.)
-  * must be disabled after calling this.
-  *
-  * RETURNS:
-@@ -431,7 +531,7 @@ EXPORT_SYMBOL_GPL(ahci_platform_suspend_host);
-  * @dev: device pointer for the host
-  *
-  * This function does all the usual steps needed to resume an ahci-pla=
-tform
-- * host, note any necessary resources (ie clks, phy, etc.)  must be
-+ * host, note any necessary resources (ie clks, phys, etc.)  must be
-  * initialized / enabled before calling this.
-  *
-  * RETURNS:
++		/* Make sure the PHY is off */
++		phy_berlin_sata_power_off(phy);
++	}
++
++	phy_provider =3D
++		devm_of_phy_provider_register(dev, phy_berlin_sata_phy_xlate);
++	if (IS_ERR(phy_provider))
++		return PTR_ERR(phy_provider);
++
++	return 0;
++}
++
++static const struct of_device_id phy_berlin_sata_of_match[] =3D {
++	{ .compatible =3D "marvell,berlin2q-sata-phy" },
++	{ },
++};
++
++static struct platform_driver phy_berlin_sata_driver =3D {
++	.probe	=3D phy_berlin_sata_probe,
++	.driver	=3D {
++		.name		=3D "phy-berlin-sata",
++		.owner		=3D THIS_MODULE,
++		.of_match_table	=3D phy_berlin_sata_of_match,
++	},
++};
++module_platform_driver(phy_berlin_sata_driver);
++
++MODULE_DESCRIPTION("Marvell Berlin SATA PHY driver");
++MODULE_AUTHOR("Antoine T=C3=A9nart <antoine.tenart@free-electrons.com>=
+");
++MODULE_LICENSE("GPL v2");
 --=20
 1.9.1
