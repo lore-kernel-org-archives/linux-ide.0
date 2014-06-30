@@ -1,338 +1,51 @@
-From: =?UTF-8?q?Antoine=20T=C3=A9nart?=
-	<antoine.tenart@free-electrons.com>
-Subject: [PATCH v8 1/7] phy: add a driver for the Berlin SATA PHY
-Date: Mon, 30 Jun 2014 15:09:26 +0200
-Message-ID: <1404133772-11741-2-git-send-email-antoine.tenart@free-electrons.com>
+From: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>
+Subject: [PATCH v8 2/7] Documentation: bindings: add the Berlin SATA PHY
+Date: Mon, 30 Jun 2014 15:09:27 +0200
+Message-ID: <1404133772-11741-3-git-send-email-antoine.tenart@free-electrons.com>
 References: <1404133772-11741-1-git-send-email-antoine.tenart@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
 In-Reply-To: <1404133772-11741-1-git-send-email-antoine.tenart@free-electrons.com>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
 To: sebastian.hesselbarth@gmail.com, tj@kernel.org, kishon@ti.com
-Cc: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: thomas.petazzoni@free-electrons.com, zmxu@marvell.com, devicetree@vger.kernel.org, =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, alexandre.belloni@free-electrons.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-The Berlin SoC has a two SATA ports. Add a PHY driver to handle them.
-
-The mode selection can let us think this PHY can be configured to fit
-other purposes. But there are reasons to think the SATA mode will be
-the only one usable: the PHY registers are only accessible indirectly
-through two registers in the SATA range, the PHY seems to be integrated
-and no information tells us the contrary. For these reasons, make the
-driver a SATA PHY driver.
-
-Signed-off-by: Antoine T=C3=A9nart <antoine.tenart@free-electrons.com>
----
- drivers/phy/Kconfig           |   7 ++
- drivers/phy/Makefile          |   1 +
- drivers/phy/phy-berlin-sata.c | 262 ++++++++++++++++++++++++++++++++++=
-++++++++
- 3 files changed, 270 insertions(+)
- create mode 100644 drivers/phy/phy-berlin-sata.c
-
-diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
-index 16a2f067c242..365ad3651e1c 100644
---- a/drivers/phy/Kconfig
-+++ b/drivers/phy/Kconfig
-@@ -15,6 +15,13 @@ config GENERIC_PHY
- 	  phy users can obtain reference to the PHY. All the users of this
- 	  framework should select this config.
-=20
-+config PHY_BERLIN_SATA
-+	tristate "Marvell Berlin SATA PHY driver"
-+	depends on ARCH_BERLIN && OF
-+	select GENERIC_PHY
-+	help
-+	  Enable this to support the SATA PHY on Marvell Berlin SoCs.
-+
- config PHY_EXYNOS_MIPI_VIDEO
- 	tristate "S5P/EXYNOS SoC series MIPI CSI-2/DSI PHY driver"
- 	depends on HAS_IOMEM
-diff --git a/drivers/phy/Makefile b/drivers/phy/Makefile
-index b4f1d5770601..a137a2e23218 100644
---- a/drivers/phy/Makefile
-+++ b/drivers/phy/Makefile
-@@ -3,6 +3,7 @@
- #
-=20
- obj-$(CONFIG_GENERIC_PHY)		+=3D phy-core.o
-+obj-$(CONFIG_PHY_BERLIN_SATA)		+=3D phy-berlin-sata.o
- obj-$(CONFIG_BCM_KONA_USB2_PHY)		+=3D phy-bcm-kona-usb2.o
- obj-$(CONFIG_PHY_EXYNOS_DP_VIDEO)	+=3D phy-exynos-dp-video.o
- obj-$(CONFIG_PHY_EXYNOS_MIPI_VIDEO)	+=3D phy-exynos-mipi-video.o
-diff --git a/drivers/phy/phy-berlin-sata.c b/drivers/phy/phy-berlin-sat=
-a.c
-new file mode 100644
-index 000000000000..4446e93e6d82
---- /dev/null
-+++ b/drivers/phy/phy-berlin-sata.c
-@@ -0,0 +1,262 @@
-+/*
-+ * Marvell Berlin SATA PHY driver
-+ *
-+ * Copyright (C) 2014 Marvell Technology Group Ltd.
-+ *
-+ * Antoine T=C3=A9nart <antoine.tenart@free-electrons.com>
-+ *
-+ * This file is licensed under the terms of the GNU General Public
-+ * License version 2. This program is licensed "as is" without any
-+ * warranty of any kind, whether express or implied.
-+ */
-+
-+#include <linux/clk.h>
-+#include <linux/module.h>
-+#include <linux/phy/phy.h>
-+#include <linux/io.h>
-+#include <linux/platform_device.h>
-+
-+#define HOST_VSA_ADDR		0x0
-+#define HOST_VSA_DATA		0x4
-+#define PORT_SCR_CTL		0x2c
-+#define PORT_VSR_ADDR		0x78
-+#define PORT_VSR_DATA		0x7c
-+
-+#define CONTROL_REGISTER	0x0
-+#define MBUS_SIZE_CONTROL	0x4
-+
-+#define POWER_DOWN_PHY0			BIT(6)
-+#define POWER_DOWN_PHY1			BIT(14)
-+#define MBUS_WRITE_REQUEST_SIZE_128	(BIT(2) << 16)
-+#define MBUS_READ_REQUEST_SIZE_128	(BIT(2) << 19)
-+
-+#define PHY_BASE		0x200
-+
-+/* register 0x01 */
-+#define REF_FREF_SEL_25		BIT(0)
-+#define PHY_MODE_SATA		(0x0 << 5)
-+
-+/* register 0x02 */
-+#define USE_MAX_PLL_RATE	BIT(12)
-+
-+/* register 0x23 */
-+#define DATA_BIT_WIDTH_10	(0x0 << 10)
-+#define DATA_BIT_WIDTH_20	(0x1 << 10)
-+#define DATA_BIT_WIDTH_40	(0x2 << 10)
-+
-+/* register 0x25 */
-+#define PHY_GEN_MAX_1_5		(0x0 << 10)
-+#define PHY_GEN_MAX_3_0		(0x1 << 10)
-+#define PHY_GEN_MAX_6_0		(0x2 << 10)
-+
-+#define BERLIN_SATA_PHY_NB	2
-+
-+#define to_berlin_sata_phy_priv(desc)	\
-+	container_of((desc), struct phy_berlin_priv, phys[(desc)->index])
-+
-+struct phy_berlin_desc {
-+	struct phy	*phy;
-+	u32		power_bit;
-+	unsigned	index;
-+};
-+
-+struct phy_berlin_priv {
-+	void __iomem		*base;
-+	spinlock_t		lock;
-+	struct clk		*clk;
-+	struct phy_berlin_desc	phys[BERLIN_SATA_PHY_NB];
-+};
-+
-+static inline void phy_berlin_sata_reg_setbits(void __iomem *ctrl_reg,=
- u32 reg,
-+					       u32 mask, u32 val)
-+{
-+	u32 regval;
-+
-+	/* select register */
-+	writel(PHY_BASE + reg, ctrl_reg + PORT_VSR_ADDR);
-+
-+	/* set bits */
-+	regval =3D readl(ctrl_reg + PORT_VSR_DATA);
-+	regval &=3D ~mask;
-+	regval |=3D val;
-+	writel(regval, ctrl_reg + PORT_VSR_DATA);
-+}
-+
-+static int phy_berlin_sata_power_on(struct phy *phy)
-+{
-+	struct phy_berlin_desc *desc =3D phy_get_drvdata(phy);
-+	struct phy_berlin_priv *priv =3D to_berlin_sata_phy_priv(desc);
-+	void __iomem *ctrl_reg =3D priv->base + 0x60 + (desc->index * 0x80);
-+	int ret =3D 0;
-+	u32 regval;
-+
-+	clk_prepare_enable(priv->clk);
-+
-+	spin_lock(&priv->lock);
-+
-+	/* Power on PHY */
-+	writel(CONTROL_REGISTER, priv->base + HOST_VSA_ADDR);
-+	regval =3D readl(priv->base + HOST_VSA_DATA);
-+	regval &=3D ~desc->power_bit;
-+	writel(regval, priv->base + HOST_VSA_DATA);
-+
-+	/* Configure MBus */
-+	writel(MBUS_SIZE_CONTROL, priv->base + HOST_VSA_ADDR);
-+	regval =3D readl(priv->base + HOST_VSA_DATA);
-+	regval |=3D MBUS_WRITE_REQUEST_SIZE_128 | MBUS_READ_REQUEST_SIZE_128;
-+	writel(regval, priv->base + HOST_VSA_DATA);
-+
-+	/* set PHY mode and ref freq to 25 MHz */
-+	phy_berlin_sata_reg_setbits(ctrl_reg, 0x1, 0xff,
-+				    REF_FREF_SEL_25 | PHY_MODE_SATA);
-+
-+	/* set PHY up to 6 Gbps */
-+	phy_berlin_sata_reg_setbits(ctrl_reg, 0x25, 0xc00, PHY_GEN_MAX_6_0);
-+
-+	/* set 40 bits width */
-+	phy_berlin_sata_reg_setbits(ctrl_reg, 0x23,  0xc00, DATA_BIT_WIDTH_40=
-);
-+
-+	/* use max pll rate */
-+	phy_berlin_sata_reg_setbits(ctrl_reg, 0x2, 0x0, USE_MAX_PLL_RATE);
-+
-+	/* set the controller speed */
-+	writel(0x31, ctrl_reg + PORT_SCR_CTL);
-+
-+	spin_unlock(&priv->lock);
-+
-+	clk_disable_unprepare(priv->clk);
-+
-+	return ret;
-+}
-+
-+static int phy_berlin_sata_power_off(struct phy *phy)
-+{
-+	struct phy_berlin_desc *desc =3D phy_get_drvdata(phy);
-+	struct phy_berlin_priv *priv =3D to_berlin_sata_phy_priv(desc);
-+	u32 regval;
-+
-+	clk_prepare_enable(priv->clk);
-+
-+	spin_lock(&priv->lock);
-+
-+	/* Power down PHY */
-+	writel(CONTROL_REGISTER, priv->base + HOST_VSA_ADDR);
-+	regval =3D readl(priv->base + HOST_VSA_DATA);
-+	regval |=3D desc->power_bit;
-+	writel(regval, priv->base + HOST_VSA_DATA);
-+
-+	spin_unlock(&priv->lock);
-+
-+	clk_disable_unprepare(priv->clk);
-+
-+	return 0;
-+}
-+
-+static struct phy *phy_berlin_sata_phy_xlate(struct device *dev,
-+					     struct of_phandle_args *args)
-+{
-+	struct phy_berlin_priv *priv =3D dev_get_drvdata(dev);
-+
-+	if (WARN_ON(args->args[0] >=3D BERLIN_SATA_PHY_NB))
-+		return ERR_PTR(-ENODEV);
-+
-+	if (!priv->phys[args->args[0]].phy)
-+		return ERR_PTR(-ENODEV);
-+
-+	return priv->phys[args->args[0]].phy;
-+}
-+
-+static struct phy_ops phy_berlin_sata_ops =3D {
-+	.power_on	=3D phy_berlin_sata_power_on,
-+	.power_off	=3D phy_berlin_sata_power_off,
-+	.owner		=3D THIS_MODULE,
-+};
-+
-+static u32 phy_berlin_power_down_bits[] =3D {
-+	POWER_DOWN_PHY0,
-+	POWER_DOWN_PHY1,
-+};
-+
-+static int phy_berlin_sata_probe(struct platform_device *pdev)
-+{
-+	struct device *dev =3D &pdev->dev;
-+	struct device_node *child;
-+	struct phy *phy;
-+	struct phy_provider *phy_provider;
-+	struct phy_berlin_priv *priv;
-+	struct resource *res;
-+	u32 phy_id;
-+
-+	priv =3D devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
-+	if (!priv)
-+		return -ENOMEM;
-+
-+	res =3D platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+	if (!res)
-+		return -EINVAL;
-+
-+	priv->base =3D devm_ioremap(dev, res->start, resource_size(res));
-+	if (!priv->base)
-+		return -ENOMEM;
-+
-+	priv->clk =3D devm_clk_get(dev, NULL);
-+	if (IS_ERR(priv->clk))
-+		return PTR_ERR(priv->clk);
-+
-+	dev_set_drvdata(dev, priv);
-+	spin_lock_init(&priv->lock);
-+
-+	for_each_available_child_of_node(dev->of_node, child) {
-+		if (of_property_read_u32(child, "reg", &phy_id)) {
-+			dev_err(dev, "missing reg property in node %s\n",
-+				child->name);
-+			return -EINVAL;
-+		}
-+
-+		if (phy_id >=3D BERLIN_SATA_PHY_NB) {
-+			dev_err(dev, "invalid reg in node %s\n", child->name);
-+			return -EINVAL;
-+		}
-+
-+		phy =3D devm_phy_create(dev, &phy_berlin_sata_ops, NULL);
-+		if (IS_ERR(phy)) {
-+			dev_err(dev, "failed to create PHY %d\n", phy_id);
-+			return PTR_ERR(phy);
-+		}
-+
-+		priv->phys[phy_id].phy =3D phy;
-+		priv->phys[phy_id].power_bit =3D
-+			phy_berlin_power_down_bits[phy_id];
-+		priv->phys[phy_id].index =3D phy_id;
-+		phy_set_drvdata(phy, &priv->phys[phy_id]);
-+
-+		/* Make sure the PHY is off */
-+		phy_berlin_sata_power_off(phy);
-+	}
-+
-+	phy_provider =3D
-+		devm_of_phy_provider_register(dev, phy_berlin_sata_phy_xlate);
-+	if (IS_ERR(phy_provider))
-+		return PTR_ERR(phy_provider);
-+
-+	return 0;
-+}
-+
-+static const struct of_device_id phy_berlin_sata_of_match[] =3D {
-+	{ .compatible =3D "marvell,berlin2q-sata-phy" },
-+	{ },
-+};
-+
-+static struct platform_driver phy_berlin_sata_driver =3D {
-+	.probe	=3D phy_berlin_sata_probe,
-+	.driver	=3D {
-+		.name		=3D "phy-berlin-sata",
-+		.owner		=3D THIS_MODULE,
-+		.of_match_table	=3D phy_berlin_sata_of_match,
-+	},
-+};
-+module_platform_driver(phy_berlin_sata_driver);
-+
-+MODULE_DESCRIPTION("Marvell Berlin SATA PHY driver");
-+MODULE_AUTHOR("Antoine T=C3=A9nart <antoine.tenart@free-electrons.com>=
-");
-+MODULE_LICENSE("GPL v2");
---=20
-1.9.1
+VGhlIEJlcmxpbiBTQVRBIFBIWSBkcml2ZXMgdGhlIFBIWSByZWxhdGVkIHRvIHRoZSBTQVRBIGlu
+dGVyZmFjZS4gQWRkCnRoZSBjb3JyZXNwb25kaW5nIGRvY3VtZW50YXRpb24uCgpTaWduZWQtb2Zm
+LWJ5OiBBbnRvaW5lIFTDqW5hcnQgPGFudG9pbmUudGVuYXJ0QGZyZWUtZWxlY3Ryb25zLmNvbT4K
+LS0tCiAuLi4vZGV2aWNldHJlZS9iaW5kaW5ncy9waHkvYmVybGluLXNhdGEtcGh5LnR4dCAgICB8
+IDM0ICsrKysrKysrKysrKysrKysrKysrKysKIDEgZmlsZSBjaGFuZ2VkLCAzNCBpbnNlcnRpb25z
+KCspCiBjcmVhdGUgbW9kZSAxMDA2NDQgRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdz
+L3BoeS9iZXJsaW4tc2F0YS1waHkudHh0CgpkaWZmIC0tZ2l0IGEvRG9jdW1lbnRhdGlvbi9kZXZp
+Y2V0cmVlL2JpbmRpbmdzL3BoeS9iZXJsaW4tc2F0YS1waHkudHh0IGIvRG9jdW1lbnRhdGlvbi9k
+ZXZpY2V0cmVlL2JpbmRpbmdzL3BoeS9iZXJsaW4tc2F0YS1waHkudHh0Cm5ldyBmaWxlIG1vZGUg
+MTAwNjQ0CmluZGV4IDAwMDAwMDAwMDAwMC4uODhmOGMyMzM4NGMwCi0tLSAvZGV2L251bGwKKysr
+IGIvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BoeS9iZXJsaW4tc2F0YS1waHku
+dHh0CkBAIC0wLDAgKzEsMzQgQEAKK0JlcmxpbiBTQVRBIFBIWQorLS0tLS0tLS0tLS0tLS0tCisK
+K1JlcXVpcmVkIHByb3BlcnRpZXM6CistIGNvbXBhdGlibGU6IHNob3VsZCBiZSAibWFydmVsbCxi
+ZXJsaW4ycS1zYXRhLXBoeSIKKy0gYWRkcmVzcy1jZWxsczogc2hvdWxkIGJlIDEKKy0gc2l6ZS1j
+ZWxsczogc2hvdWxkIGJlIDAKKy0gcGh5LWNlbGxzOiBmcm9tIHRoZSBnZW5lcmljIFBIWSBiaW5k
+aW5ncywgbXVzdCBiZSAxCistIHJlZzogYWRkcmVzcyBhbmQgbGVuZ3RoIG9mIHRoZSByZWdpc3Rl
+cgorLSBjbG9ja3M6IHJlZmVyZW5jZSB0byB0aGUgY2xvY2sgZW50cnkKKworU3ViLW5vZGVzOgor
+RWFjaCBQSFkgc2hvdWxkIGJlIHJlcHJlc2VudGVkIGFzIGEgc3ViLW5vZGUuCisKK1N1Yi1ub2Rl
+cyByZXF1aXJlZCBwcm9wZXJ0aWVzOgorLSByZWc6IHRoZSBQSFkgbnVtYmVyCisKK0V4YW1wbGU6
+CisJc2F0YV9waHk6IHBoeUBmN2U5MDBhMCB7CisJCWNvbXBhdGlibGUgPSAibWFydmVsbCxiZXJs
+aW4ycS1zYXRhLXBoeSI7CisJCXJlZyA9IDwweGY3ZTkwMGEwIDB4MjAwPjsKKwkJY2xvY2tzID0g
+PCZjaGlwIENMS0lEX1NBVEE+OworCQkjYWRkcmVzcy1jZWxscyA9IDwxPjsKKwkJI3NpemUtY2Vs
+bHMgPSA8MD47CisJCSNwaHktY2VsbHMgPSA8MT47CisKKwkJc2F0YS1waHlAMCB7CisJCQlyZWcg
+PSA8MD47CisJCX07CisKKwkJc2F0YS1waHlAMSB7CisJCQlyZWcgPSA8MT47CisJCX07CisJfTsK
+LS0gCjEuOS4xCgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5p
+bmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8v
+bGludXgtYXJtLWtlcm5lbAo=
