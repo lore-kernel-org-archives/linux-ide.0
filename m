@@ -1,38 +1,44 @@
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [alsa-devel] [PATCH 00/13] Remove mach-kirkwood and mach-dove
-Date: Mon, 30 Jun 2014 11:00:49 +0100
-Message-ID: <20140630100048.GU32514@n2100.arm.linux.org.uk>
-References: <1404075603-31838-1-git-send-email-andrew@lunn.ch> <20140629213510.GR32514@n2100.arm.linux.org.uk> <20140630091643.2df3b0fb@armhf> <20140630084918.GS32514@n2100.arm.linux.org.uk> <20140630114701.1368d49e@armhf>
+From: Antoine =?iso-8859-1?Q?T=E9nart?=
+	<antoine.tenart@free-electrons.com>
+Subject: Re: [PATCH v6 1/7] phy: add a driver for the Berlin SATA PHY
+Date: Mon, 30 Jun 2014 12:20:14 +0200
+Message-ID: <20140630102014.GA5155@kwain>
+References: <1402914392-6028-1-git-send-email-antoine.tenart@free-electrons.com>
+ <1402914392-6028-2-git-send-email-antoine.tenart@free-electrons.com>
+ <53A9685E.9090501@ti.com>
+ <53A96A1C.5030800@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from gw-1.arm.linux.org.uk ([78.32.30.217]:46979 "EHLO
-	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754852AbaF3KBB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Jun 2014 06:01:01 -0400
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20140630114701.1368d49e@armhf>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <53A96A1C.5030800@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Varka Bhadram <varkabhadram@gmail.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>, Antoine =?iso-8859-1?Q?T=E9nart?= <antoine.tenart@free-electrons.com>, sebastian.hesselbarth@gmail.com, tj@kernel.org, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, Lee Jones <lee.jones@linaro.org>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 List-Id: linux-ide@vger.kernel.org
-To: Jean-Francois Moine <moinejf@free.fr>
-Cc: Andrew Lunn <andrew@lunn.ch>, linux-ide@vger.kernel.org, Alessandro Zummo <a.zummo@towertech.it>, alsa-devel@alsa-project.org, Bryan Wu <cooloney@gmail.com>, Jason Cooper <jason@lakedaemon.net>, rtc-linux@googlegroups.com, linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Daniel Lezcano <daniel.lezcano@linaro.org>, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>, Kishon Vijay Abraham I <kishon@ti.com>, Tejun Heo <tj@kernel.org>, Wim Van Sebroeck <wim@iguana.be>, Mark Brown <broonie@kernel.org>, Richard Purdie <rpurdie@rpsys.net>, linux-pci@vger.kernel.org, Gregory Clement <gregory.clement@free-electrons.com>, Zhang Rui <rui.zhang@intel.com>, Bjorn Helgaas <bhelgaas@google.com>, linux-leds@vger.kernel.org, linux-watchdog@vger.kernel.org
 
-On Mon, Jun 30, 2014 at 11:47:01AM +0200, Jean-Francois Moine wrote:
-> Have you declared the LCD clock in dove.dtsi?
-> 
->  	lcdclk: fixed-clock {
-> 		compatible = "fixed-clock";
->  		#clock-cells = <0>;
->  		clock-frequency = <400000000>;
->  	};
+Hello,
 
-And what difference would that make - this would not be used.
+On Tue, Jun 24, 2014 at 05:37:56PM +0530, Varka Bhadram wrote:
+> On 06/24/2014 05:30 PM, Kishon Vijay Abraham I wrote:
+> >On Monday 16 June 2014 03:56 PM, Antoine T=E9nart wrote:
+> >>+
+> >>+static struct phy *phy_berlin_sata_phy_xlate(struct device *dev,
+> >>+					     struct of_phandle_args *args)
+>=20
+> Indent the function properly like this:
+> static struct phy *phy_berlin_sata_phy_xlate(struct device *dev,
+> 					     struct of_phandle_args *args)
+>=20
+> check with checkpatch.pl script
 
-The clock used for the LCD controller somes from the Si5351.  The internal
-clocks are not used as they are unsuitable for generating the resolutions
-we require.  The other clocks used by the LCD controller (AXI clock and
-PLL clock) are both fundamental clocks in the SoC, neither are 400MHz.
+Already fixed in v7.
 
--- 
-FTTC broadband for 0.8mile line: now at 9.7Mbps down 460kbps up... slowly
-improving, and getting towards what was expected from it.
+
+Antoine
+
+--=20
+Antoine T=E9nart, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
