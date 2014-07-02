@@ -1,121 +1,157 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH v5 2/2] ata: Fix the dma state machine lockup for the IDENTIFY DEVICE PIO mode command.
-Date: Wed,  2 Jul 2014 15:45:08 +0530
-Message-ID: <1404296108-16233-3-git-send-email-stripathi@apm.com>
-References: <1404296108-16233-1-git-send-email-stripathi@apm.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCH v8 1/7] phy: add a driver for the Berlin SATA PHY
+Date: Wed, 2 Jul 2014 16:46:37 +0530
+Message-ID: <53B3EA15.4090400@ti.com>
+References: <1404133772-11741-1-git-send-email-antoine.tenart@free-electrons.com> <1404133772-11741-2-git-send-email-antoine.tenart@free-electrons.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from denmail01-v4020.amcc.com ([192.195.68.30]:46570 "EHLO
-	denmail01.apm.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752021AbaGBKQo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Jul 2014 06:16:44 -0400
-In-Reply-To: <1404296108-16233-1-git-send-email-stripathi@apm.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:45765 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752630AbaGBLR2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 2 Jul 2014 07:17:28 -0400
+In-Reply-To: <1404133772-11741-2-git-send-email-antoine.tenart@free-electrons.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
+To: =?UTF-8?B?QW50b2luZSBUw6luYXJ0?= <antoine.tenart@free-electrons.com>, sebastian.hesselbarth@gmail.com, tj@kernel.org
+Cc: alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This patch fixes the dma state machine lockup due to the processing
-of IDENTIFY DEVICE PIO mode command. The X-Gene AHCI controller
-has an errata in which it cannot clear the BSY bit after the PIO setup
-FIS. The dma state machine enters CMFatalErrorUpdate state and locks
-up. This patch also removes the dma restart workaround from the read_id
-function as the read_id function is only called by libata layer for
-ATA_INTERNAL commands. But for some cases eg: PORT MULTIPLIER
-and udev, the framework will enumerate using SCSI commands and it will
-not call read_id function.
+Hi,
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
----
- drivers/ata/ahci_xgene.c | 43 ++++++++++++++++++++++++++++++-------------
- 1 file changed, 30 insertions(+), 13 deletions(-)
+On Monday 30 June 2014 06:39 PM, Antoine T=C3=A9nart wrote:
+> The Berlin SoC has a two SATA ports. Add a PHY driver to handle them.
+>=20
+> The mode selection can let us think this PHY can be configured to fit
+> other purposes. But there are reasons to think the SATA mode will be
+> the only one usable: the PHY registers are only accessible indirectly
+> through two registers in the SATA range, the PHY seems to be integrat=
+ed
+> and no information tells us the contrary. For these reasons, make the
+> driver a SATA PHY driver.
+>=20
+> Signed-off-by: Antoine T=C3=A9nart <antoine.tenart@free-electrons.com=
+>
+> ---
+>  drivers/phy/Kconfig           |   7 ++
+>  drivers/phy/Makefile          |   1 +
+>  drivers/phy/phy-berlin-sata.c | 262 ++++++++++++++++++++++++++++++++=
+++++++++++
+>  3 files changed, 270 insertions(+)
+>  create mode 100644 drivers/phy/phy-berlin-sata.c
+>=20
+> diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
+> index 16a2f067c242..365ad3651e1c 100644
+> --- a/drivers/phy/Kconfig
+> +++ b/drivers/phy/Kconfig
+> @@ -15,6 +15,13 @@ config GENERIC_PHY
+>  	  phy users can obtain reference to the PHY. All the users of this
+>  	  framework should select this config.
+> =20
+> +config PHY_BERLIN_SATA
+> +	tristate "Marvell Berlin SATA PHY driver"
+> +	depends on ARCH_BERLIN && OF
 
-diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-index 77c89bf..5b9bddf 100644
---- a/drivers/ata/ahci_xgene.c
-+++ b/drivers/ata/ahci_xgene.c
-@@ -78,6 +78,7 @@
- struct xgene_ahci_context {
- 	struct ahci_host_priv *hpriv;
- 	struct device *dev;
-+	u8 last_cmd[MAX_AHCI_CHN_PERCTR]; /* tracking the last command issued*/
- 	void __iomem *csr_core;		/* Core CSR address of IP */
- 	void __iomem *csr_diag;		/* Diag CSR address of IP */
- 	void __iomem *csr_axi;		/* AXI CSR address of IP */
-@@ -98,20 +99,45 @@ static int xgene_ahci_init_memram(struct xgene_ahci_context *ctx)
- }
+depends on HAS_IOMEM?
+> +	select GENERIC_PHY
+> +	help
+> +	  Enable this to support the SATA PHY on Marvell Berlin SoCs.
+> +
+>  config PHY_EXYNOS_MIPI_VIDEO
+>  	tristate "S5P/EXYNOS SoC series MIPI CSI-2/DSI PHY driver"
+>  	depends on HAS_IOMEM
+> diff --git a/drivers/phy/Makefile b/drivers/phy/Makefile
+> index b4f1d5770601..a137a2e23218 100644
+> --- a/drivers/phy/Makefile
+> +++ b/drivers/phy/Makefile
+> @@ -3,6 +3,7 @@
+>  #
+> =20
+>  obj-$(CONFIG_GENERIC_PHY)		+=3D phy-core.o
+> +obj-$(CONFIG_PHY_BERLIN_SATA)		+=3D phy-berlin-sata.o
+>  obj-$(CONFIG_BCM_KONA_USB2_PHY)		+=3D phy-bcm-kona-usb2.o
+>  obj-$(CONFIG_PHY_EXYNOS_DP_VIDEO)	+=3D phy-exynos-dp-video.o
+>  obj-$(CONFIG_PHY_EXYNOS_MIPI_VIDEO)	+=3D phy-exynos-mipi-video.o
+> diff --git a/drivers/phy/phy-berlin-sata.c b/drivers/phy/phy-berlin-s=
+ata.c
+> new file mode 100644
+> index 000000000000..4446e93e6d82
+> --- /dev/null
+> +++ b/drivers/phy/phy-berlin-sata.c
+> @@ -0,0 +1,262 @@
+> +/*
+> + * Marvell Berlin SATA PHY driver
+> + *
+> + * Copyright (C) 2014 Marvell Technology Group Ltd.
+> + *
+> + * Antoine T=C3=A9nart <antoine.tenart@free-electrons.com>
+> + *
+> + * This file is licensed under the terms of the GNU General Public
+> + * License version 2. This program is licensed "as is" without any
+> + * warranty of any kind, whether express or implied.
+> + */
+> +
+> +#include <linux/clk.h>
+> +#include <linux/module.h>
+> +#include <linux/phy/phy.h>
+> +#include <linux/io.h>
+> +#include <linux/platform_device.h>
+> +
+> +#define HOST_VSA_ADDR		0x0
+> +#define HOST_VSA_DATA		0x4
+> +#define PORT_SCR_CTL		0x2c
+> +#define PORT_VSR_ADDR		0x78
+> +#define PORT_VSR_DATA		0x7c
+> +
+> +#define CONTROL_REGISTER	0x0
+> +#define MBUS_SIZE_CONTROL	0x4
+> +
+> +#define POWER_DOWN_PHY0			BIT(6)
+> +#define POWER_DOWN_PHY1			BIT(14)
+> +#define MBUS_WRITE_REQUEST_SIZE_128	(BIT(2) << 16)
+> +#define MBUS_READ_REQUEST_SIZE_128	(BIT(2) << 19)
+> +
+> +#define PHY_BASE		0x200
+> +
+> +/* register 0x01 */
+> +#define REF_FREF_SEL_25		BIT(0)
+> +#define PHY_MODE_SATA		(0x0 << 5)
+> +
+> +/* register 0x02 */
+> +#define USE_MAX_PLL_RATE	BIT(12)
+> +
+> +/* register 0x23 */
+> +#define DATA_BIT_WIDTH_10	(0x0 << 10)
+> +#define DATA_BIT_WIDTH_20	(0x1 << 10)
+> +#define DATA_BIT_WIDTH_40	(0x2 << 10)
+> +
+> +/* register 0x25 */
+> +#define PHY_GEN_MAX_1_5		(0x0 << 10)
+> +#define PHY_GEN_MAX_3_0		(0x1 << 10)
+> +#define PHY_GEN_MAX_6_0		(0x2 << 10)
+> +
+> +#define BERLIN_SATA_PHY_NB	2
+> +
+> +#define to_berlin_sata_phy_priv(desc)	\
+> +	container_of((desc), struct phy_berlin_priv, phys[(desc)->index])
 
- /**
-+ * xgene_ahci_qc_issue - Issue commands to the device
-+ * @qc: Command to issue
-+ *
-+ * Due to Hardware errata for IDENTIFY DEVICE command, the controller cannot
-+ * clear the BSY bit after receiving the PIO setup FIS. This results in the dma
-+ * state machine goes into the CMFatalErrorUpdate state and locks up. By
-+ * restarting the dma engine, it removes the controller out of lock up state.
-+ */
-+static unsigned int xgene_ahci_qc_issue(struct ata_queued_cmd *qc)
-+{
-+	struct ata_port *ap = qc->ap;
-+	struct ahci_host_priv *hpriv = ap->host->private_data;
-+	struct xgene_ahci_context *ctx = hpriv->plat_data;
-+	int rc = 0;
-+
-+	if (unlikely(ctx->last_cmd[ap->port_no] == ATA_CMD_ID_ATA))
-+		ahci_restart_engine(ap);
-+
-+	rc = ahci_qc_issue(qc);
-+
-+	/* Save the last command issued */
-+	ctx->last_cmd[ap->port_no] = qc->tf.command;
-+
-+	return rc;
-+}
-+
-+/**
-  * xgene_ahci_read_id - Read ID data from the specified device
-  * @dev: device
-  * @tf: proposed taskfile
-  * @id: data buffer
-  *
-  * This custom read ID function is required due to the fact that the HW
-- * does not support DEVSLP and the controller state machine may get stuck
-- * after processing the ID query command.
-+ * does not support DEVSLP.
-  */
- static unsigned int xgene_ahci_read_id(struct ata_device *dev,
- 				       struct ata_taskfile *tf, u16 *id)
- {
- 	u32 err_mask;
--	void __iomem *port_mmio = ahci_port_base(dev->link->ap);
+You can get rid of this and use dev_get_drvdata(phy->dev->parent);
+> +
+> +struct phy_berlin_desc {
+> +	struct phy	*phy;
+> +	u32		power_bit;
+> +	unsigned	index;
+> +};
+> +
+> +struct phy_berlin_priv {
+> +	void __iomem		*base;
+> +	spinlock_t		lock;
+> +	struct clk		*clk;
+> +	struct phy_berlin_desc	phys[BERLIN_SATA_PHY_NB];
 
- 	err_mask = ata_do_dev_read_id(dev, tf, id);
- 	if (err_mask)
-@@ -133,16 +159,6 @@ static unsigned int xgene_ahci_read_id(struct ata_device *dev,
- 	 */
- 	id[ATA_ID_FEATURE_SUPP] &= ~(1 << 8);
+Avoid using fixed array sizes for ports or channels. Refer [1].
 
--	/*
--	 * Due to HW errata, restart the port if no other command active.
--	 * Otherwise the controller may get stuck.
--	 */
--	if (!readl(port_mmio + PORT_CMD_ISSUE)) {
--		writel(PORT_CMD_FIS_RX, port_mmio + PORT_CMD);
--		readl(port_mmio + PORT_CMD);	/* Force a barrier */
--		writel(PORT_CMD_FIS_RX | PORT_CMD_START, port_mmio + PORT_CMD);
--		readl(port_mmio + PORT_CMD);	/* Force a barrier */
--	}
- 	return 0;
- }
+[1] -> http://www.spinics.net/lists/linux-sh/msg33350.html
 
-@@ -300,6 +316,7 @@ static struct ata_port_operations xgene_ahci_ops = {
- 	.host_stop = xgene_ahci_host_stop,
- 	.hardreset = xgene_ahci_hardreset,
- 	.read_id = xgene_ahci_read_id,
-+	.qc_issue = xgene_ahci_qc_issue,
- };
-
- static const struct ata_port_info xgene_ahci_port_info = {
---
-1.8.2.1
-
+Thanks
+Kishon
