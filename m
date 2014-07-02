@@ -1,157 +1,440 @@
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH v8 1/7] phy: add a driver for the Berlin SATA PHY
-Date: Wed, 2 Jul 2014 16:46:37 +0530
-Message-ID: <53B3EA15.4090400@ti.com>
-References: <1404133772-11741-1-git-send-email-antoine.tenart@free-electrons.com> <1404133772-11741-2-git-send-email-antoine.tenart@free-electrons.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 1/3] PCI/MSI: Add pci_enable_msi_partial()
+Date: Wed, 2 Jul 2014 14:22:01 -0600
+Message-ID: <20140702202201.GA28852@google.com>
+References: <cover.1402405331.git.agordeev@redhat.com>
+ <4fef62a2e647a7c38e9f2a1ea4244b3506a85e2b.1402405331.git.agordeev@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:45765 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752630AbaGBLR2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 2 Jul 2014 07:17:28 -0400
-In-Reply-To: <1404133772-11741-2-git-send-email-antoine.tenart@free-electrons.com>
+Received: from mail-ie0-f181.google.com ([209.85.223.181]:50551 "EHLO
+	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932251AbaGBUWG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Jul 2014 16:22:06 -0400
+Received: by mail-ie0-f181.google.com with SMTP id y20so1864728ier.40
+        for <linux-ide@vger.kernel.org>; Wed, 02 Jul 2014 13:22:05 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <4fef62a2e647a7c38e9f2a1ea4244b3506a85e2b.1402405331.git.agordeev@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?UTF-8?B?QW50b2luZSBUw6luYXJ0?= <antoine.tenart@free-electrons.com>, sebastian.hesselbarth@gmail.com, tj@kernel.org
-Cc: alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org, linux-mips@linux-mips.org, linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org, iommu@lists.linux-foundation.org, linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
 
-Hi,
+On Tue, Jun 10, 2014 at 03:10:30PM +0200, Alexander Gordeev wrote:
+> There are PCI devices that require a particular value written
+> to the Multiple Message Enable (MME) register while aligned on
+> power of 2 boundary value of actually used MSI vectors 'nvec'
+> is a lesser of that MME value:
+> 
+> 	roundup_pow_of_two(nvec) < 'Multiple Message Enable'
+> 
+> However the existing pci_enable_msi_block() interface is not
+> able to configure such devices, since the value written to the
+> MME register is calculated from the number of requested MSIs
+> 'nvec':
+> 
+> 	'Multiple Message Enable' = roundup_pow_of_two(nvec)
 
-On Monday 30 June 2014 06:39 PM, Antoine T=C3=A9nart wrote:
-> The Berlin SoC has a two SATA ports. Add a PHY driver to handle them.
->=20
-> The mode selection can let us think this PHY can be configured to fit
-> other purposes. But there are reasons to think the SATA mode will be
-> the only one usable: the PHY registers are only accessible indirectly
-> through two registers in the SATA range, the PHY seems to be integrat=
-ed
-> and no information tells us the contrary. For these reasons, make the
-> driver a SATA PHY driver.
->=20
-> Signed-off-by: Antoine T=C3=A9nart <antoine.tenart@free-electrons.com=
->
+For MSI, software learns how many vectors a device requests by reading
+the Multiple Message Capable (MMC) field.  This field is encoded, so a
+device can only request 1, 2, 4, 8, etc., vectors.  It's impossible
+for a device to request 3 vectors; it would have to round up that up
+to a power of two and request 4 vectors.
+
+Software writes similarly encoded values to MME to tell the device how
+many vectors have been allocated for its use.  For example, it's
+impossible to tell the device that it can use 3 vectors; the OS has to
+round that up and tell the device it can use 4 vectors.
+
+So if I understand correctly, the point of this series is to take
+advantage of device-specific knowledge, e.g., the device requests 4
+vectors via MMC, but we "know" the device is only capable of using 3.
+Moreover, we tell the device via MME that 4 vectors are available, but
+we've only actually set up 3 of them.
+
+This makes me uneasy because we're lying to the device, and the device
+is perfectly within spec to use all 4 of those vectors.  If anything
+changes the number of vectors the device uses (new device revision,
+firmware upgrade, etc.), this is liable to break.
+
+Can you quantify the benefit of this?  Can't a device already use
+MSI-X to request exactly the number of vectors it can use?  (I know
+not all devices support MSI-X, but maybe we should just accept MSI for
+what it is and encourage the HW guys to use MSI-X if MSI isn't good
+enough.)
+
+> In this case the result written to the MME register may not
+> satisfy the aforementioned PCI devices requirement and therefore
+> the PCI functions will not operate in a desired mode.
+
+I'm not sure what you mean by "will not operate in a desired mode."
+I thought this was an optimization to save vectors and that these
+changes would be completely invisible to the hardware.
+
+Bjorn
+
+> This update introduces pci_enable_msi_partial() extension to
+> pci_enable_msi_block() interface that accepts extra 'nvec_mme'
+> argument which is then written to MME register while the value
+> of 'nvec' is still used to setup as many interrupts as requested.
+> 
+> As result of this change, architecture-specific callbacks
+> arch_msi_check_device() and arch_setup_msi_irqs() get an extra
+> 'nvec_mme' parameter as well, but it is ignored for now.
+> Therefore, this update is a placeholder for architectures that
+> wish to support pci_enable_msi_partial() function in the future.
+> 
+> Cc: linux-doc@vger.kernel.org
+> Cc: linux-mips@linux-mips.org
+> Cc: linuxppc-dev@lists.ozlabs.org
+> Cc: linux-s390@vger.kernel.org
+> Cc: x86@kernel.org
+> Cc: xen-devel@lists.xenproject.org
+> Cc: iommu@lists.linux-foundation.org
+> Cc: linux-ide@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 > ---
->  drivers/phy/Kconfig           |   7 ++
->  drivers/phy/Makefile          |   1 +
->  drivers/phy/phy-berlin-sata.c | 262 ++++++++++++++++++++++++++++++++=
-++++++++++
->  3 files changed, 270 insertions(+)
->  create mode 100644 drivers/phy/phy-berlin-sata.c
->=20
-> diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
-> index 16a2f067c242..365ad3651e1c 100644
-> --- a/drivers/phy/Kconfig
-> +++ b/drivers/phy/Kconfig
-> @@ -15,6 +15,13 @@ config GENERIC_PHY
->  	  phy users can obtain reference to the PHY. All the users of this
->  	  framework should select this config.
-> =20
-> +config PHY_BERLIN_SATA
-> +	tristate "Marvell Berlin SATA PHY driver"
-> +	depends on ARCH_BERLIN && OF
-
-depends on HAS_IOMEM?
-> +	select GENERIC_PHY
-> +	help
-> +	  Enable this to support the SATA PHY on Marvell Berlin SoCs.
+>  Documentation/PCI/MSI-HOWTO.txt |   36 ++++++++++++++--
+>  arch/mips/pci/msi-octeon.c      |    2 +-
+>  arch/powerpc/kernel/msi.c       |    4 +-
+>  arch/s390/pci/pci.c             |    2 +-
+>  arch/x86/kernel/x86_init.c      |    2 +-
+>  drivers/pci/msi.c               |   83 ++++++++++++++++++++++++++++++++++-----
+>  include/linux/msi.h             |    5 +-
+>  include/linux/pci.h             |    3 +
+>  8 files changed, 115 insertions(+), 22 deletions(-)
+> 
+> diff --git a/Documentation/PCI/MSI-HOWTO.txt b/Documentation/PCI/MSI-HOWTO.txt
+> index 10a9369..c8a8503 100644
+> --- a/Documentation/PCI/MSI-HOWTO.txt
+> +++ b/Documentation/PCI/MSI-HOWTO.txt
+> @@ -195,14 +195,40 @@ By contrast with pci_enable_msi_range() function, pci_enable_msi_exact()
+>  returns zero in case of success, which indicates MSI interrupts have been
+>  successfully allocated.
+>  
+> -4.2.4 pci_disable_msi
+> +4.2.4 pci_enable_msi_partial
 > +
->  config PHY_EXYNOS_MIPI_VIDEO
->  	tristate "S5P/EXYNOS SoC series MIPI CSI-2/DSI PHY driver"
->  	depends on HAS_IOMEM
-> diff --git a/drivers/phy/Makefile b/drivers/phy/Makefile
-> index b4f1d5770601..a137a2e23218 100644
-> --- a/drivers/phy/Makefile
-> +++ b/drivers/phy/Makefile
-> @@ -3,6 +3,7 @@
->  #
-> =20
->  obj-$(CONFIG_GENERIC_PHY)		+=3D phy-core.o
-> +obj-$(CONFIG_PHY_BERLIN_SATA)		+=3D phy-berlin-sata.o
->  obj-$(CONFIG_BCM_KONA_USB2_PHY)		+=3D phy-bcm-kona-usb2.o
->  obj-$(CONFIG_PHY_EXYNOS_DP_VIDEO)	+=3D phy-exynos-dp-video.o
->  obj-$(CONFIG_PHY_EXYNOS_MIPI_VIDEO)	+=3D phy-exynos-mipi-video.o
-> diff --git a/drivers/phy/phy-berlin-sata.c b/drivers/phy/phy-berlin-s=
-ata.c
-> new file mode 100644
-> index 000000000000..4446e93e6d82
-> --- /dev/null
-> +++ b/drivers/phy/phy-berlin-sata.c
-> @@ -0,0 +1,262 @@
-> +/*
-> + * Marvell Berlin SATA PHY driver
+> +int pci_enable_msi_partial(struct pci_dev *dev, int nvec, int nvec_mme)
+> +
+> +This variation on pci_enable_msi_exact() call allows a device driver to
+> +setup 'nvec_mme' number of multiple MSIs with the PCI function, while
+> +setup only 'nvec' (which could be a lesser of 'nvec_mme') number of MSIs
+> +in operating system. The MSI specification only allows 'nvec_mme' to be
+> +allocated in powers of two, up to a maximum of 2^5 (32).
+> +
+> +This function could be used when a PCI function is known to send 'nvec'
+> +MSIs, but still requires a particular number of MSIs 'nvec_mme' to be
+> +initialized with. As result, 'nvec_mme' - 'nvec' number of unused MSIs
+> +do not waste system resources.
+> +
+> +If this function returns 0, it has succeeded in allocating 'nvec_mme'
+> +interrupts and setting up 'nvec' interrupts. In this case, the function
+> +enables MSI on this device and updates dev->irq to be the lowest of the
+> +new interrupts assigned to it.  The other interrupts assigned to the
+> +device are in the range dev->irq to dev->irq + nvec - 1.
+> +
+> +If this function returns a negative number, it indicates an error and
+> +the driver should not attempt to request any more MSI interrupts for
+> +this device.
+> +
+> +4.2.5 pci_disable_msi
+>  
+>  void pci_disable_msi(struct pci_dev *dev)
+>  
+> -This function should be used to undo the effect of pci_enable_msi_range().
+> -Calling it restores dev->irq to the pin-based interrupt number and frees
+> -the previously allocated MSIs.  The interrupts may subsequently be assigned
+> -to another device, so drivers should not cache the value of dev->irq.
+> +This function should be used to undo the effect of pci_enable_msi_range()
+> +or pci_enable_msi_partial(). Calling it restores dev->irq to the pin-based
+> +interrupt number and frees the previously allocated MSIs.  The interrupts
+> +may subsequently be assigned to another device, so drivers should not cache
+> +the value of dev->irq.
+>  
+>  Before calling this function, a device driver must always call free_irq()
+>  on any interrupt for which it previously called request_irq().
+> diff --git a/arch/mips/pci/msi-octeon.c b/arch/mips/pci/msi-octeon.c
+> index 2b91b0e..2be7979 100644
+> --- a/arch/mips/pci/msi-octeon.c
+> +++ b/arch/mips/pci/msi-octeon.c
+> @@ -178,7 +178,7 @@ msi_irq_allocated:
+>  	return 0;
+>  }
+>  
+> -int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+> +int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int nvec_mme, int type)
+>  {
+>  	struct msi_desc *entry;
+>  	int ret;
+> diff --git a/arch/powerpc/kernel/msi.c b/arch/powerpc/kernel/msi.c
+> index 8bbc12d..c60aee3 100644
+> --- a/arch/powerpc/kernel/msi.c
+> +++ b/arch/powerpc/kernel/msi.c
+> @@ -13,7 +13,7 @@
+>  
+>  #include <asm/machdep.h>
+>  
+> -int arch_msi_check_device(struct pci_dev* dev, int nvec, int type)
+> +int arch_msi_check_device(struct pci_dev *dev, int nvec, int nvec_mme, int type)
+>  {
+>  	if (!ppc_md.setup_msi_irqs || !ppc_md.teardown_msi_irqs) {
+>  		pr_debug("msi: Platform doesn't provide MSI callbacks.\n");
+> @@ -32,7 +32,7 @@ int arch_msi_check_device(struct pci_dev* dev, int nvec, int type)
+>          return 0;
+>  }
+>  
+> -int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+> +int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int nvec_mme, int type)
+>  {
+>  	return ppc_md.setup_msi_irqs(dev, nvec, type);
+>  }
+> diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
+> index 9ddc51e..3cf38a8 100644
+> --- a/arch/s390/pci/pci.c
+> +++ b/arch/s390/pci/pci.c
+> @@ -398,7 +398,7 @@ static void zpci_irq_handler(struct airq_struct *airq)
+>  	}
+>  }
+>  
+> -int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int type)
+> +int arch_setup_msi_irqs(struct pci_dev *pdev, int nvec, int nvec_mme, int type)
+>  {
+>  	struct zpci_dev *zdev = get_zdev(pdev);
+>  	unsigned int hwirq, msi_vecs;
+> diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
+> index e48b674..b65bf95 100644
+> --- a/arch/x86/kernel/x86_init.c
+> +++ b/arch/x86/kernel/x86_init.c
+> @@ -121,7 +121,7 @@ struct x86_msi_ops x86_msi = {
+>  };
+>  
+>  /* MSI arch specific hooks */
+> -int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+> +int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int nvec_mme, int type)
+>  {
+>  	return x86_msi.setup_msi_irqs(dev, nvec, type);
+>  }
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index 27a7e67..0410d9b 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -56,7 +56,8 @@ void __weak arch_teardown_msi_irq(unsigned int irq)
+>  	chip->teardown_irq(chip, irq);
+>  }
+>  
+> -int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
+> +int __weak arch_msi_check_device(struct pci_dev *dev,
+> +				 int nvec, int nvec_mme, int type)
+>  {
+>  	struct msi_chip *chip = dev->bus->msi;
+>  
+> @@ -66,7 +67,8 @@ int __weak arch_msi_check_device(struct pci_dev *dev, int nvec, int type)
+>  	return chip->check_device(chip, dev, nvec, type);
+>  }
+>  
+> -int __weak arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
+> +int __weak arch_setup_msi_irqs(struct pci_dev *dev,
+> +			       int nvec, int nvec_mme, int type)
+>  {
+>  	struct msi_desc *entry;
+>  	int ret;
+> @@ -598,6 +600,7 @@ error_attrs:
+>   * msi_capability_init - configure device's MSI capability structure
+>   * @dev: pointer to the pci_dev data structure of MSI device function
+>   * @nvec: number of interrupts to allocate
+> + * @nvec_mme: number of interrupts to write to Multiple Message Enable register
+>   *
+>   * Setup the MSI capability structure of the device with the requested
+>   * number of interrupts.  A return value of zero indicates the successful
+> @@ -605,7 +608,7 @@ error_attrs:
+>   * an error, and a positive return value indicates the number of interrupts
+>   * which could have been allocated.
+>   */
+> -static int msi_capability_init(struct pci_dev *dev, int nvec)
+> +static int msi_capability_init(struct pci_dev *dev, int nvec, int nvec_mme)
+>  {
+>  	struct msi_desc *entry;
+>  	int ret;
+> @@ -640,7 +643,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec)
+>  	list_add_tail(&entry->list, &dev->msi_list);
+>  
+>  	/* Configure MSI capability structure */
+> -	ret = arch_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSI);
+> +	ret = arch_setup_msi_irqs(dev, nvec, nvec_mme, PCI_CAP_ID_MSI);
+>  	if (ret) {
+>  		msi_mask_irq(entry, mask, ~mask);
+>  		free_msi_irqs(dev);
+> @@ -758,7 +761,8 @@ static int msix_capability_init(struct pci_dev *dev,
+>  	if (ret)
+>  		return ret;
+>  
+> -	ret = arch_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
+> +	/* Parameter 'nvec_mme' does not make sense in case of MSI-X */
+> +	ret = arch_setup_msi_irqs(dev, nvec, 0, PCI_CAP_ID_MSIX);
+>  	if (ret)
+>  		goto out_avail;
+>  
+> @@ -812,13 +816,15 @@ out_free:
+>   * pci_msi_check_device - check whether MSI may be enabled on a device
+>   * @dev: pointer to the pci_dev data structure of MSI device function
+>   * @nvec: how many MSIs have been requested ?
+> + * @nvec_mme: how many MSIs write to Multiple Message Enable register ?
+>   * @type: are we checking for MSI or MSI-X ?
+>   *
+>   * Look at global flags, the device itself, and its parent buses
+>   * to determine if MSI/-X are supported for the device. If MSI/-X is
+>   * supported return 0, else return an error code.
+>   **/
+> -static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
+> +static int pci_msi_check_device(struct pci_dev *dev,
+> +				int nvec, int nvec_mme, int type)
+>  {
+>  	struct pci_bus *bus;
+>  	int ret;
+> @@ -846,7 +852,7 @@ static int pci_msi_check_device(struct pci_dev *dev, int nvec, int type)
+>  		if (bus->bus_flags & PCI_BUS_FLAGS_NO_MSI)
+>  			return -EINVAL;
+>  
+> -	ret = arch_msi_check_device(dev, nvec, type);
+> +	ret = arch_msi_check_device(dev, nvec, nvec_mme, type);
+>  	if (ret)
+>  		return ret;
+>  
+> @@ -878,6 +884,62 @@ int pci_msi_vec_count(struct pci_dev *dev)
+>  }
+>  EXPORT_SYMBOL(pci_msi_vec_count);
+>  
+> +/**
+> + * pci_enable_msi_partial - configure device's MSI capability structure
+> + * @dev: device to configure
+> + * @nvec: number of interrupts to configure
+> + * @nvec_mme: number of interrupts to write to Multiple Message Enable register
 > + *
-> + * Copyright (C) 2014 Marvell Technology Group Ltd.
-> + *
-> + * Antoine T=C3=A9nart <antoine.tenart@free-electrons.com>
-> + *
-> + * This file is licensed under the terms of the GNU General Public
-> + * License version 2. This program is licensed "as is" without any
-> + * warranty of any kind, whether express or implied.
+> + * This function tries to allocate @nvec number of interrupts while setup
+> + * device's Multiple Message Enable register with @nvec_mme interrupts.
+> + * It returns a negative errno if an error occurs. If it succeeds, it returns
+> + * zero and updates the @dev's irq member to the lowest new interrupt number;
+> + * the other interrupt numbers allocated to this device are consecutive.
 > + */
+> +int pci_enable_msi_partial(struct pci_dev *dev, int nvec, int nvec_mme)
+> +{
+> +	int maxvec;
+> +	int rc;
 > +
-> +#include <linux/clk.h>
-> +#include <linux/module.h>
-> +#include <linux/phy/phy.h>
-> +#include <linux/io.h>
-> +#include <linux/platform_device.h>
+> +	if (dev->current_state != PCI_D0)
+> +		return -EINVAL;
 > +
-> +#define HOST_VSA_ADDR		0x0
-> +#define HOST_VSA_DATA		0x4
-> +#define PORT_SCR_CTL		0x2c
-> +#define PORT_VSR_ADDR		0x78
-> +#define PORT_VSR_DATA		0x7c
+> +	WARN_ON(!!dev->msi_enabled);
 > +
-> +#define CONTROL_REGISTER	0x0
-> +#define MBUS_SIZE_CONTROL	0x4
+> +	/* Check whether driver already requested MSI-X irqs */
+> +	if (dev->msix_enabled) {
+> +		dev_info(&dev->dev, "can't enable MSI "
+> +			 "(MSI-X already enabled)\n");
+> +		return -EINVAL;
+> +	}
 > +
-> +#define POWER_DOWN_PHY0			BIT(6)
-> +#define POWER_DOWN_PHY1			BIT(14)
-> +#define MBUS_WRITE_REQUEST_SIZE_128	(BIT(2) << 16)
-> +#define MBUS_READ_REQUEST_SIZE_128	(BIT(2) << 19)
+> +	if (!is_power_of_2(nvec_mme))
+> +		return -EINVAL;
+> +	if (nvec > nvec_mme)
+> +		return -EINVAL;
 > +
-> +#define PHY_BASE		0x200
+> +	maxvec = pci_msi_vec_count(dev);
+> +	if (maxvec < 0)
+> +		return maxvec;
+> +	else if (nvec_mme > maxvec)
+> +		return -EINVAL;
 > +
-> +/* register 0x01 */
-> +#define REF_FREF_SEL_25		BIT(0)
-> +#define PHY_MODE_SATA		(0x0 << 5)
+> +	rc = pci_msi_check_device(dev, nvec, nvec_mme, PCI_CAP_ID_MSI);
+> +	if (rc < 0)
+> +		return rc;
+> +	else if (rc > 0)
+> +		return -ENOSPC;
 > +
-> +/* register 0x02 */
-> +#define USE_MAX_PLL_RATE	BIT(12)
+> +	rc = msi_capability_init(dev, nvec, nvec_mme);
+> +	if (rc < 0)
+> +		return rc;
+> +	else if (rc > 0)
+> +		return -ENOSPC;
 > +
-> +/* register 0x23 */
-> +#define DATA_BIT_WIDTH_10	(0x0 << 10)
-> +#define DATA_BIT_WIDTH_20	(0x1 << 10)
-> +#define DATA_BIT_WIDTH_40	(0x2 << 10)
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL(pci_enable_msi_partial);
 > +
-> +/* register 0x25 */
-> +#define PHY_GEN_MAX_1_5		(0x0 << 10)
-> +#define PHY_GEN_MAX_3_0		(0x1 << 10)
-> +#define PHY_GEN_MAX_6_0		(0x2 << 10)
-> +
-> +#define BERLIN_SATA_PHY_NB	2
-> +
-> +#define to_berlin_sata_phy_priv(desc)	\
-> +	container_of((desc), struct phy_berlin_priv, phys[(desc)->index])
-
-You can get rid of this and use dev_get_drvdata(phy->dev->parent);
-> +
-> +struct phy_berlin_desc {
-> +	struct phy	*phy;
-> +	u32		power_bit;
-> +	unsigned	index;
-> +};
-> +
-> +struct phy_berlin_priv {
-> +	void __iomem		*base;
-> +	spinlock_t		lock;
-> +	struct clk		*clk;
-> +	struct phy_berlin_desc	phys[BERLIN_SATA_PHY_NB];
-
-Avoid using fixed array sizes for ports or channels. Refer [1].
-
-[1] -> http://www.spinics.net/lists/linux-sh/msg33350.html
-
-Thanks
-Kishon
+>  void pci_msi_shutdown(struct pci_dev *dev)
+>  {
+>  	struct msi_desc *desc;
+> @@ -957,7 +1019,7 @@ int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
+>  	if (!entries || !dev->msix_cap || dev->current_state != PCI_D0)
+>  		return -EINVAL;
+>  
+> -	status = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSIX);
+> +	status = pci_msi_check_device(dev, nvec, 0, PCI_CAP_ID_MSIX);
+>  	if (status)
+>  		return status;
+>  
+> @@ -1110,7 +1172,8 @@ int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
+>  		nvec = maxvec;
+>  
+>  	do {
+> -		rc = pci_msi_check_device(dev, nvec, PCI_CAP_ID_MSI);
+> +		rc = pci_msi_check_device(dev, nvec, roundup_pow_of_two(nvec),
+> +					  PCI_CAP_ID_MSI);
+>  		if (rc < 0) {
+>  			return rc;
+>  		} else if (rc > 0) {
+> @@ -1121,7 +1184,7 @@ int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec)
+>  	} while (rc);
+>  
+>  	do {
+> -		rc = msi_capability_init(dev, nvec);
+> +		rc = msi_capability_init(dev, nvec, roundup_pow_of_two(nvec));
+>  		if (rc < 0) {
+>  			return rc;
+>  		} else if (rc > 0) {
+> diff --git a/include/linux/msi.h b/include/linux/msi.h
+> index 92a2f99..b9f89ee 100644
+> --- a/include/linux/msi.h
+> +++ b/include/linux/msi.h
+> @@ -57,9 +57,10 @@ struct msi_desc {
+>   */
+>  int arch_setup_msi_irq(struct pci_dev *dev, struct msi_desc *desc);
+>  void arch_teardown_msi_irq(unsigned int irq);
+> -int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int type);
+> +int arch_setup_msi_irqs(struct pci_dev *dev, int nvec, int nvec_mme, int type);
+>  void arch_teardown_msi_irqs(struct pci_dev *dev);
+> -int arch_msi_check_device(struct pci_dev* dev, int nvec, int type);
+> +int arch_msi_check_device(struct pci_dev *dev,
+> +			  int nvec, int nvec_mme, int type);
+>  void arch_restore_msi_irqs(struct pci_dev *dev);
+>  
+>  void default_teardown_msi_irqs(struct pci_dev *dev);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 71d9673..7360bd2 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1184,6 +1184,7 @@ void pci_disable_msix(struct pci_dev *dev);
+>  void msi_remove_pci_irq_vectors(struct pci_dev *dev);
+>  void pci_restore_msi_state(struct pci_dev *dev);
+>  int pci_msi_enabled(void);
+> +int pci_enable_msi_partial(struct pci_dev *dev, int nvec, int nvec_mme);
+>  int pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec);
+>  static inline int pci_enable_msi_exact(struct pci_dev *dev, int nvec)
+>  {
+> @@ -1215,6 +1216,8 @@ static inline void pci_disable_msix(struct pci_dev *dev) { }
+>  static inline void msi_remove_pci_irq_vectors(struct pci_dev *dev) { }
+>  static inline void pci_restore_msi_state(struct pci_dev *dev) { }
+>  static inline int pci_msi_enabled(void) { return 0; }
+> +static int pci_enable_msi_partial(struct pci_dev *dev, int nvec, int nvec_mme)
+> +{ return -ENOSYS; }
+>  static inline int pci_enable_msi_range(struct pci_dev *dev, int minvec,
+>  				       int maxvec)
+>  { return -ENOSYS; }
+> -- 
+> 1.7.7.6
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
