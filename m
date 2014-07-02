@@ -1,31 +1,94 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 0/8] iMX6 SATA configuration
-Date: Tue, 1 Jul 2014 17:25:29 -0400
-Message-ID: <20140701212529.GI12459@htj.dyndns.org>
-References: <20140624101901.GL32514@n2100.arm.linux.org.uk>
- <20140624220958.GI14909@htj.dyndns.org>
- <20140625152912.GI2224@dragon>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Suman Tripathi <stripathi@apm.com>
+Subject: [PATCH v5 1/2] libahci: Implement the function ahci_restart_engine to restart the port dma engine.
+Date: Wed,  2 Jul 2014 15:45:07 +0530
+Message-ID: <1404296108-16233-2-git-send-email-stripathi@apm.com>
+References: <1404296108-16233-1-git-send-email-stripathi@apm.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f54.google.com ([209.85.192.54]:61645 "EHLO
-	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751695AbaGAVZe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 1 Jul 2014 17:25:34 -0400
-Content-Disposition: inline
-In-Reply-To: <20140625152912.GI2224@dragon>
+Received: from denmail01-v4020.amcc.com ([192.195.68.30]:46551 "EHLO
+	denmail01.apm.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751563AbaGBKQi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Jul 2014 06:16:38 -0400
+In-Reply-To: <1404296108-16233-1-git-send-email-stripathi@apm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Shawn Guo <shawn.guo@freescale.com>
-Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, linux-arm-kernel@lists.infradead.org, linux-doc@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>, Pawel Moll <pawel.moll@arm.com>, Randy Dunlap <rdunlap@infradead.org>, Rob Herring <robh+dt@kernel.org>, Sascha Hauer <kernel@pengutronix.de>
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
 
-On Wed, Jun 25, 2014 at 11:29:14PM +0800, Shawn Guo wrote:
-> I will apply the last two dts patches via IMX tree, and please apply
-> the first 6 patches through your tree.
+This patch adds an function to restart the port dma engine.
+This patch also exports the function ahci_qc_issue. The subsequent
+patches will make use of them.
 
-Alright, applied the rest to libata/for-3.17.
+Signed-off-by: Loc Ho <lho@apm.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
+---
+ drivers/ata/ahci.h    |  3 ++-
+ drivers/ata/libahci.c | 16 ++++++++++++++--
+ 2 files changed, 16 insertions(+), 3 deletions(-)
 
-Thanks.
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index af63c75..98e8839 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -369,9 +369,10 @@ int ahci_reset_controller(struct ata_host *host);
+ int ahci_do_softreset(struct ata_link *link, unsigned int *class,
+ 		      int pmp, unsigned long deadline,
+ 		      int (*check_ready)(struct ata_link *link));
+-
++unsigned int ahci_qc_issue(struct ata_queued_cmd *qc);
+ int ahci_stop_engine(struct ata_port *ap);
+ void ahci_start_engine(struct ata_port *ap);
++int ahci_restart_engine(struct ata_port *ap);
+ int ahci_check_ready(struct ata_link *link);
+ int ahci_kick_engine(struct ata_port *ap);
+ int ahci_port_resume(struct ata_port *ap);
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index b986145..1b86cf4 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -68,7 +68,6 @@ static ssize_t ahci_transmit_led_message(struct ata_port *ap, u32 state,
 
--- 
-tejun
+ static int ahci_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val);
+ static int ahci_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val);
+-static unsigned int ahci_qc_issue(struct ata_queued_cmd *qc);
+ static bool ahci_qc_fill_rtf(struct ata_queued_cmd *qc);
+ static int ahci_port_start(struct ata_port *ap);
+ static void ahci_port_stop(struct ata_port *ap);
+@@ -742,6 +741,18 @@ static int ahci_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+ 	return 0;
+ }
+
++int ahci_restart_engine(struct ata_port *ap)
++{
++	struct ahci_host_priv *hpriv = ap->host->private_data;
++
++	ahci_stop_engine(ap);
++	ahci_start_fis_rx(ap);
++	hpriv->start_engine(ap);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(ahci_restart_engine);
++
+ #ifdef CONFIG_PM
+ static void ahci_power_down(struct ata_port *ap)
+ {
+@@ -1940,7 +1951,7 @@ irqreturn_t ahci_interrupt(int irq, void *dev_instance)
+ }
+ EXPORT_SYMBOL_GPL(ahci_interrupt);
+
+-static unsigned int ahci_qc_issue(struct ata_queued_cmd *qc)
++unsigned int ahci_qc_issue(struct ata_queued_cmd *qc)
+ {
+ 	struct ata_port *ap = qc->ap;
+ 	void __iomem *port_mmio = ahci_port_base(ap);
+@@ -1969,6 +1980,7 @@ static unsigned int ahci_qc_issue(struct ata_queued_cmd *qc)
+
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(ahci_qc_issue);
+
+ static bool ahci_qc_fill_rtf(struct ata_queued_cmd *qc)
+ {
+--
+1.8.2.1
+
