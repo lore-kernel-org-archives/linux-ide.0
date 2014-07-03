@@ -1,321 +1,336 @@
 From: Kevin Hao <haokexin@gmail.com>
-Subject: [PATCH 3/5] libata: add a 'struct ata_port *' argument for the ata tag help functions
-Date: Thu,  3 Jul 2014 20:09:40 +0800
-Message-ID: <1404389382-27298-4-git-send-email-haokexin@gmail.com>
+Subject: [PATCH 4/5] libata: support the ata host which implements a queue depth less than 32
+Date: Thu,  3 Jul 2014 20:09:41 +0800
+Message-ID: <1404389382-27298-5-git-send-email-haokexin@gmail.com>
 References: <1404389382-27298-1-git-send-email-haokexin@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:48399 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751112AbaGCMKm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Jul 2014 08:10:42 -0400
-Received: by mail-pa0-f50.google.com with SMTP id bj1so122931pad.37
-        for <linux-ide@vger.kernel.org>; Thu, 03 Jul 2014 05:10:41 -0700 (PDT)
+Received: from mail-pd0-f174.google.com ([209.85.192.174]:37882 "EHLO
+	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751112AbaGCMKp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Jul 2014 08:10:45 -0400
+Received: by mail-pd0-f174.google.com with SMTP id y10so124910pdj.5
+        for <linux-ide@vger.kernel.org>; Thu, 03 Jul 2014 05:10:44 -0700 (PDT)
 In-Reply-To: <1404389382-27298-1-git-send-email-haokexin@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>
 
-Currently we assume that all the ata host controller has a 32 queue
-depth. But if a ata controller implement a queue depth less than 32,
-we may need an additional 'struct ata_port *' argument to implement
-these help functions. This will be used by the following patch.
+The sata on fsl mpc8315e is broken after the commit 8a4aeec8d2d6
+("libata/ahci: accommodate tag ordered controllers"). The reason is
+that the ata controller on this SoC only implement a queue depth of
+16. When issuing the commands in tag order, all the commands in tag
+16 ~ 17 are mapped to tag 0 unconditionally and then causes the sata
+malfunction. It makes no senses to use a 32 queue in software while
+the hardware has less queue depth. This patch provides the function
+for libata to adjust the queue depth for a host controller.
 
 Signed-off-by: Kevin Hao <haokexin@gmail.com>
 ---
- drivers/ata/libata-core.c | 18 ++++++++++--------
- drivers/ata/libata-eh.c   |  4 ++--
- drivers/ata/sata_fsl.c    | 17 ++++++++++-------
- drivers/ata/sata_nv.c     |  9 +++++----
- drivers/ata/sata_sil24.c  | 10 +++++-----
- include/linux/libata.h    | 11 ++++++-----
- 6 files changed, 38 insertions(+), 31 deletions(-)
+ drivers/ata/libata-core.c | 32 ++++++++++++++++++++++++++++----
+ drivers/ata/libata-eh.c   | 28 ++++++++++++++++++----------
+ drivers/ata/libata-scsi.c |  5 +++--
+ include/linux/libata.h    | 10 ++++++----
+ 4 files changed, 55 insertions(+), 20 deletions(-)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 8807287ab7b0..f1cde0d289fa 100644
+index f1cde0d289fa..08131fe45d42 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -752,7 +752,8 @@ int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
- 	tf->flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
- 	tf->flags |= tf_flags;
- 
--	if (ata_ncq_enabled(dev) && likely(!ata_tag_internal(tag))) {
-+	if (ata_ncq_enabled(dev) &&
-+			likely(!ata_tag_internal(dev->link->ap, tag))) {
- 		/* yay, NCQ */
- 		if (!lba_48_ok(block, n_block))
- 			return -ERANGE;
-@@ -1576,7 +1577,7 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
- 	 * EH stuff without converting to it.
- 	 */
- 	if (ap->ops->error_handler)
--		tag = ata_get_internal_tag();
-+		tag = ata_get_internal_tag(ap);
- 	else
- 		tag = 0;
- 
-@@ -4630,10 +4631,10 @@ int ata_std_qc_defer(struct ata_queued_cmd *qc)
- 	struct ata_link *link = qc->dev->link;
- 
- 	if (qc->tf.protocol == ATA_PROT_NCQ) {
--		if (!ata_tag_valid(link->active_tag))
-+		if (!ata_tag_valid(qc->ap, link->active_tag))
- 			return 0;
- 	} else {
--		if (!ata_tag_valid(link->active_tag) && !link->sactive)
-+		if (!ata_tag_valid(qc->ap, link->active_tag) && !link->sactive)
- 			return 0;
+@@ -2115,7 +2115,8 @@ static int ata_dev_config_ncq(struct ata_device *dev,
+ 		return 0;
+ 	}
+ 	if (ap->flags & ATA_FLAG_NCQ) {
+-		hdepth = min(ap->scsi_host->can_queue, ATA_MAX_QUEUE - 1);
++		hdepth = min((unsigned int)ap->scsi_host->can_queue,
++				 ap->host->queue_depth - 1);
+ 		dev->flags |= ATA_DFLAG_NCQ;
  	}
  
-@@ -4738,7 +4739,7 @@ static struct ata_queued_cmd *ata_qc_new(struct ata_port *ap)
- 		tag = (i + ap->last_tag + 1) % ATA_MAX_QUEUE;
+@@ -4729,14 +4730,14 @@ void swap_buf_le16(u16 *buf, unsigned int buf_words)
+ static struct ata_queued_cmd *ata_qc_new(struct ata_port *ap)
+ {
+ 	struct ata_queued_cmd *qc = NULL;
+-	unsigned int i, tag;
++	unsigned int i, tag, max_queue = ap->host->queue_depth;
+ 
+ 	/* no command while frozen */
+ 	if (unlikely(ap->pflags & ATA_PFLAG_FROZEN))
+ 		return NULL;
+ 
+-	for (i = 0; i < ATA_MAX_QUEUE; i++) {
+-		tag = (i + ap->last_tag + 1) % ATA_MAX_QUEUE;
++	for (i = 0; i < max_queue; i++) {
++		tag = (i + ap->last_tag + 1) % max_queue;
  
  		/* the last tag is reserved for internal command. */
--		if (ata_tag_internal(tag))
-+		if (ata_tag_internal(ap, tag))
- 			continue;
+ 		if (ata_tag_internal(ap, tag))
+@@ -5689,6 +5690,27 @@ static void ata_host_release(struct device *gendev, void *res)
+ }
  
- 		if (!test_and_set_bit(tag, &ap->qc_allocated)) {
-@@ -4797,7 +4798,7 @@ void ata_qc_free(struct ata_queued_cmd *qc)
+ /**
++ *	ata_host_set_queue_depth - set the ATA host controller's queue depth
++ *	@host: ATA host to be set for
++ *	@queue_depth: the queue depth implemented on this host controller
++ *
++ *	We would assume that the ATA host controller has 32 queue depth and
++ *	then set the host->queue_depth to 32 by default. If this is not true
++ *	for one specific ATA host controller, you need to invoke this function
++ *	to set the correct value.
++ */
++int ata_host_set_queue_depth(struct ata_host *host, unsigned int queue_depth)
++{
++	if (!queue_depth || queue_depth > ATA_MAX_QUEUE) {
++		dev_err(host->dev, "Invalid queue depth\n");
++		return -EINVAL;
++	}
++
++	host->queue_depth = queue_depth;
++	return 0;
++}
++
++/**
+  *	ata_host_alloc - allocate and init basic ATA host resources
+  *	@dev: generic device this host is associated with
+  *	@max_ports: maximum number of ATA ports associated with this host
+@@ -5733,6 +5755,7 @@ struct ata_host *ata_host_alloc(struct device *dev, int max_ports)
+ 	mutex_init(&host->eh_mutex);
+ 	host->dev = dev;
+ 	host->n_ports = max_ports;
++	host->queue_depth = ATA_MAX_QUEUE;
  
- 	qc->flags = 0;
- 	tag = qc->tag;
--	if (likely(ata_tag_valid(tag))) {
-+	if (likely(ata_tag_valid(ap, tag))) {
- 		qc->tag = ATA_TAG_POISON;
- 		clear_bit(tag, &ap->qc_allocated);
- 	}
-@@ -4906,7 +4907,7 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
- 		 * Finish internal commands without any further processing
- 		 * and always with the result TF filled.
- 		 */
--		if (unlikely(ata_tag_internal(qc->tag))) {
-+		if (unlikely(ata_tag_internal(ap, qc->tag))) {
- 			fill_result_tf(qc);
- 			__ata_qc_complete(qc);
- 			return;
-@@ -5035,7 +5036,8 @@ void ata_qc_issue(struct ata_queued_cmd *qc)
- 	 * check is skipped for old EH because it reuses active qc to
- 	 * request ATAPI sense.
- 	 */
--	WARN_ON_ONCE(ap->ops->error_handler && ata_tag_valid(link->active_tag));
-+	WARN_ON_ONCE(ap->ops->error_handler &&
-+					ata_tag_valid(ap, link->active_tag));
- 
- 	if (ata_is_ncq(prot)) {
- 		WARN_ON_ONCE(link->sactive & (1 << qc->tag));
+ 	/* allocate ports bound to this host */
+ 	for (i = 0; i < max_ports; i++) {
+@@ -6857,6 +6880,7 @@ EXPORT_SYMBOL_GPL(ata_dev_next);
+ EXPORT_SYMBOL_GPL(ata_std_bios_param);
+ EXPORT_SYMBOL_GPL(ata_scsi_unlock_native_capacity);
+ EXPORT_SYMBOL_GPL(ata_host_init);
++EXPORT_SYMBOL_GPL(ata_host_set_queue_depth);
+ EXPORT_SYMBOL_GPL(ata_host_alloc);
+ EXPORT_SYMBOL_GPL(ata_host_alloc_pinfo);
+ EXPORT_SYMBOL_GPL(ata_slave_link_init);
 diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 6760fc4e85b8..a25af5258217 100644
+index a25af5258217..e277022fc552 100644
 --- a/drivers/ata/libata-eh.c
 +++ b/drivers/ata/libata-eh.c
-@@ -1295,7 +1295,7 @@ static void __ata_eh_qc_complete(struct ata_queued_cmd *qc)
- 	spin_lock_irqsave(ap->lock, flags);
- 	qc->scsidone = ata_eh_scsidone;
- 	__ata_qc_complete(qc);
--	WARN_ON(ata_tag_valid(qc->tag));
-+	WARN_ON(ata_tag_valid(ap, qc->tag));
- 	spin_unlock_irqrestore(ap->lock, flags);
- 
- 	scsi_eh_finish_cmd(scmd, &ap->eh_done_q);
-@@ -3328,7 +3328,7 @@ static int ata_eh_maybe_retry_flush(struct ata_device *dev)
- 	int rc = 0;
- 
- 	/* did flush fail for this device? */
--	if (!ata_tag_valid(link->active_tag))
-+	if (!ata_tag_valid(ap, link->active_tag))
- 		return 0;
- 
- 	qc = __ata_qc_from_tag(ap, link->active_tag);
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index 7fed5c5be426..bffdd96538ff 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -389,13 +389,16 @@ static ssize_t fsl_sata_rx_watermark_store(struct device *dev,
- 	return strlen(buf);
- }
- 
--static inline unsigned int sata_fsl_tag(unsigned int tag,
-+static inline unsigned int sata_fsl_tag(struct ata_queued_cmd *qc,
- 					void __iomem *hcr_base)
+@@ -625,6 +625,7 @@ void ata_scsi_cmd_error_handler(struct Scsi_Host *host, struct ata_port *ap,
  {
-+	unsigned int tag = qc->tag;
-+	struct ata_port *ap = qc->ap;
-+
- 	/* We let libATA core do actual (queue) tag allocation */
+ 	int i;
+ 	unsigned long flags;
++	unsigned int max_queue = ap->host->queue_depth;
  
- 	/* all non NCQ/queued commands should have tag#0 */
--	if (ata_tag_internal(tag)) {
-+	if (ata_tag_internal(ap, tag)) {
- 		DPRINTK("mapping internal cmds to tag#0\n");
- 		return 0;
- 	}
-@@ -518,7 +521,7 @@ static void sata_fsl_qc_prep(struct ata_queued_cmd *qc)
- 	struct sata_fsl_port_priv *pp = ap->private_data;
- 	struct sata_fsl_host_priv *host_priv = ap->host->private_data;
- 	void __iomem *hcr_base = host_priv->hcr_base;
--	unsigned int tag = sata_fsl_tag(qc->tag, hcr_base);
-+	unsigned int tag = sata_fsl_tag(qc, hcr_base);
- 	struct command_desc *cd;
- 	u32 desc_info = CMD_DESC_RES | CMD_DESC_SNOOP_ENABLE;
- 	u32 num_prde = 0;
-@@ -565,7 +568,7 @@ static unsigned int sata_fsl_qc_issue(struct ata_queued_cmd *qc)
- 	struct ata_port *ap = qc->ap;
- 	struct sata_fsl_host_priv *host_priv = ap->host->private_data;
- 	void __iomem *hcr_base = host_priv->hcr_base;
--	unsigned int tag = sata_fsl_tag(qc->tag, hcr_base);
-+	unsigned int tag = sata_fsl_tag(qc, hcr_base);
+ 	/* make sure sff pio task is not running */
+ 	ata_sff_flush_pio_task(ap);
+@@ -664,14 +665,14 @@ void ata_scsi_cmd_error_handler(struct Scsi_Host *host, struct ata_port *ap,
+ 		list_for_each_entry_safe(scmd, tmp, eh_work_q, eh_entry) {
+ 			struct ata_queued_cmd *qc;
  
- 	VPRINTK("xx_qc_issue called,CQ=0x%x,CA=0x%x,CE=0x%x,CC=0x%x\n",
- 		ioread32(CQ + hcr_base),
-@@ -594,7 +597,7 @@ static bool sata_fsl_qc_fill_rtf(struct ata_queued_cmd *qc)
- 	struct sata_fsl_port_priv *pp = qc->ap->private_data;
- 	struct sata_fsl_host_priv *host_priv = qc->ap->host->private_data;
- 	void __iomem *hcr_base = host_priv->hcr_base;
--	unsigned int tag = sata_fsl_tag(qc->tag, hcr_base);
-+	unsigned int tag = sata_fsl_tag(qc, hcr_base);
- 	struct command_desc *cd;
+-			for (i = 0; i < ATA_MAX_QUEUE; i++) {
++			for (i = 0; i < max_queue; i++) {
+ 				qc = __ata_qc_from_tag(ap, i);
+ 				if (qc->flags & ATA_QCFLAG_ACTIVE &&
+ 				    qc->scsicmd == scmd)
+ 					break;
+ 			}
  
- 	cd = pp->cmdentry + tag;
-@@ -1290,9 +1293,9 @@ static void sata_fsl_host_intr(struct ata_port *ap)
- 		ata_qc_complete_multiple(ap, ap->qc_active ^ done_mask);
+-			if (i < ATA_MAX_QUEUE) {
++			if (i < max_queue) {
+ 				/* the scmd has an associated qc */
+ 				if (!(qc->flags & ATA_QCFLAG_FAILED)) {
+ 					/* which hasn't failed yet, timeout */
+@@ -870,9 +871,10 @@ static int ata_eh_nr_in_flight(struct ata_port *ap)
+ {
+ 	unsigned int tag;
+ 	int nr = 0;
++	unsigned int max_queue = ap->host->queue_depth;
+ 
+ 	/* count only non-internal commands */
+-	for (tag = 0; tag < ATA_MAX_QUEUE - 1; tag++)
++	for (tag = 0; tag < max_queue - 1; tag++)
+ 		if (ata_qc_from_tag(ap, tag))
+ 			nr++;
+ 
+@@ -884,6 +886,7 @@ void ata_eh_fastdrain_timerfn(unsigned long arg)
+ 	struct ata_port *ap = (void *)arg;
+ 	unsigned long flags;
+ 	int cnt;
++	unsigned int max_queue = ap->host->queue_depth;
+ 
+ 	spin_lock_irqsave(ap->lock, flags);
+ 
+@@ -899,7 +902,7 @@ void ata_eh_fastdrain_timerfn(unsigned long arg)
+ 		/* No progress during the last interval, tag all
+ 		 * in-flight qcs as timed out and freeze the port.
+ 		 */
+-		for (tag = 0; tag < ATA_MAX_QUEUE - 1; tag++) {
++		for (tag = 0; tag < max_queue - 1; tag++) {
+ 			struct ata_queued_cmd *qc = ata_qc_from_tag(ap, tag);
+ 			if (qc)
+ 				qc->err_mask |= AC_ERR_TIMEOUT;
+@@ -1047,13 +1050,14 @@ void ata_port_schedule_eh(struct ata_port *ap)
+ static int ata_do_link_abort(struct ata_port *ap, struct ata_link *link)
+ {
+ 	int tag, nr_aborted = 0;
++	unsigned int max_queue = ap->host->queue_depth;
+ 
+ 	WARN_ON(!ap->ops->error_handler);
+ 
+ 	/* we're gonna abort all commands, no need for fast drain */
+ 	ata_eh_set_pending(ap, 0);
+ 
+-	for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
++	for (tag = 0; tag < max_queue; tag++) {
+ 		struct ata_queued_cmd *qc = ata_qc_from_tag(ap, tag);
+ 
+ 		if (qc && (!link || qc->dev->link == link)) {
+@@ -1733,6 +1737,7 @@ void ata_eh_analyze_ncq_error(struct ata_link *link)
+ 	struct ata_queued_cmd *qc;
+ 	struct ata_taskfile tf;
+ 	int tag, rc;
++	unsigned int max_queue = ap->host->queue_depth;
+ 
+ 	/* if frozen, we can't do much */
+ 	if (ap->pflags & ATA_PFLAG_FROZEN)
+@@ -1743,7 +1748,7 @@ void ata_eh_analyze_ncq_error(struct ata_link *link)
  		return;
  
--	} else if ((ap->qc_active & (1 << ata_get_internal_tag()))) {
-+	} else if ((ap->qc_active & (1 << ata_get_internal_tag(ap)))) {
- 		iowrite32(1, hcr_base + CC);
--		qc = ata_qc_from_tag(ap, ata_get_internal_tag());
-+		qc = ata_qc_from_tag(ap, ata_get_internal_tag(ap));
+ 	/* has LLDD analyzed already? */
+-	for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
++	for (tag = 0; tag < max_queue; tag++) {
+ 		qc = __ata_qc_from_tag(ap, tag);
  
- 		DPRINTK("completing non-ncq cmd, CC=0x%x\n",
- 			 ioread32(hcr_base + CC));
-diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
-index cdf99fac139a..78f7af47f0ce 100644
---- a/drivers/ata/sata_nv.c
-+++ b/drivers/ata/sata_nv.c
-@@ -931,7 +931,7 @@ static irqreturn_t nv_adma_interrupt(int irq, void *dev_instance)
- 		if (pp->flags & NV_ADMA_PORT_REGISTER_MODE) {
- 			u8 irq_stat = readb(host->iomap[NV_MMIO_BAR] + NV_INT_STATUS_CK804)
- 				>> (NV_INT_PORT_SHIFT * i);
--			if (ata_tag_valid(ap->link.active_tag))
-+			if (ata_tag_valid(ap, ap->link.active_tag))
- 				/** NV_INT_DEV indication seems unreliable
- 				    at times at least in ADMA mode. Force it
- 				    on always when a command is active, to
-@@ -1001,7 +1001,7 @@ static irqreturn_t nv_adma_interrupt(int irq, void *dev_instance)
+ 		if (!(qc->flags & ATA_QCFLAG_FAILED))
+@@ -2124,6 +2129,7 @@ static void ata_eh_link_autopsy(struct ata_link *link)
+ 	int tag;
+ 	u32 serror;
+ 	int rc;
++	unsigned int max_queue = ap->host->queue_depth;
  
- 			if (status & NV_ADMA_STAT_CPBERR) {
- 				/* check all active commands */
--				if (ata_tag_valid(ap->link.active_tag))
-+				if (ata_tag_valid(ap, ap->link.active_tag))
- 					check_commands = 1 <<
- 						ap->link.active_tag;
- 				else
-@@ -1675,7 +1675,8 @@ static void nv_adma_error_handler(struct ata_port *ap)
- 		int i;
- 		u16 tmp;
+ 	DPRINTK("ENTER\n");
  
--		if (ata_tag_valid(ap->link.active_tag) || ap->link.sactive) {
-+		if (ata_tag_valid(ap, ap->link.active_tag) ||
-+			 ap->link.sactive) {
- 			u32 notifier = readl(mmio + NV_ADMA_NOTIFIER);
- 			u32 notifier_error = readl(mmio + NV_ADMA_NOTIFIER_ERROR);
- 			u32 gen_ctl = readl(pp->gen_block + NV_ADMA_GEN_CTL);
-@@ -1692,7 +1693,7 @@ static void nv_adma_error_handler(struct ata_port *ap)
+@@ -2151,7 +2157,7 @@ static void ata_eh_link_autopsy(struct ata_link *link)
  
- 			for (i = 0; i < NV_ADMA_MAX_CPBS; i++) {
- 				struct nv_adma_cpb *cpb = &pp->cpb[i];
--				if ((ata_tag_valid(ap->link.active_tag) && i == ap->link.active_tag) ||
-+				if ((ata_tag_valid(ap, ap->link.active_tag) && i == ap->link.active_tag) ||
- 				    ap->link.sactive & (1 << i))
- 					ata_port_err(ap,
- 						"CPB %d: ctl_flags 0x%x, resp_flags 0x%x\n",
-diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
-index 0534890f118a..24bb1bd27f01 100644
---- a/drivers/ata/sata_sil24.c
-+++ b/drivers/ata/sata_sil24.c
-@@ -458,9 +458,9 @@ static const struct ata_port_info sil24_port_info[] = {
- 	},
- };
+ 	all_err_mask |= ehc->i.err_mask;
  
--static int sil24_tag(int tag)
-+static int sil24_tag(struct ata_port *ap, int tag)
- {
--	if (unlikely(ata_tag_internal(tag)))
-+	if (unlikely(ata_tag_internal(ap, tag)))
- 		return 0;
- 	return tag;
- }
-@@ -491,7 +491,7 @@ static void sil24_read_tf(struct ata_port *ap, int tag, struct ata_taskfile *tf)
- 	struct sil24_prb __iomem *prb;
- 	u8 fis[6 * 4];
+-	for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
++	for (tag = 0; tag < max_queue; tag++) {
+ 		struct ata_queued_cmd *qc = __ata_qc_from_tag(ap, tag);
  
--	prb = port + PORT_LRAM + sil24_tag(tag) * PORT_LRAM_SLOT_SZ;
-+	prb = port + PORT_LRAM + sil24_tag(ap, tag) * PORT_LRAM_SLOT_SZ;
- 	memcpy_fromio(fis, prb->fis, sizeof(fis));
- 	ata_tf_from_fis(fis, tf);
- }
-@@ -848,7 +848,7 @@ static void sil24_qc_prep(struct ata_queued_cmd *qc)
- 	struct sil24_sge *sge;
- 	u16 ctrl = 0;
+ 		if (!(qc->flags & ATA_QCFLAG_FAILED) ||
+@@ -2405,6 +2411,7 @@ static void ata_eh_link_report(struct ata_link *link)
+ 	const char *frozen, *desc;
+ 	char tries_buf[6] = "";
+ 	int tag, nr_failed = 0;
++	unsigned int max_queue = ap->host->queue_depth;
  
--	cb = &pp->cmd_block[sil24_tag(qc->tag)];
-+	cb = &pp->cmd_block[sil24_tag(ap, qc->tag)];
+ 	if (ehc->i.flags & ATA_EHI_QUIET)
+ 		return;
+@@ -2413,7 +2420,7 @@ static void ata_eh_link_report(struct ata_link *link)
+ 	if (ehc->i.desc[0] != '\0')
+ 		desc = ehc->i.desc;
  
- 	if (!ata_is_atapi(qc->tf.protocol)) {
- 		prb = &cb->ata.prb;
-@@ -890,7 +890,7 @@ static unsigned int sil24_qc_issue(struct ata_queued_cmd *qc)
- 	struct ata_port *ap = qc->ap;
- 	struct sil24_port_priv *pp = ap->private_data;
- 	void __iomem *port = sil24_port_base(ap);
--	unsigned int tag = sil24_tag(qc->tag);
-+	unsigned int tag = sil24_tag(ap, qc->tag);
- 	dma_addr_t paddr;
- 	void __iomem *activate;
+-	for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
++	for (tag = 0; tag < max_queue; tag++) {
+ 		struct ata_queued_cmd *qc = __ata_qc_from_tag(ap, tag);
  
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 63462f1274df..74976a08c9bc 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1474,17 +1474,18 @@ extern void ata_port_pbar_desc(struct ata_port *ap, int bar, ssize_t offset,
- 			       const char *name);
+ 		if (!(qc->flags & ATA_QCFLAG_FAILED) ||
+@@ -2477,7 +2484,7 @@ static void ata_eh_link_report(struct ata_link *link)
+ 		  ehc->i.serror & SERR_DEV_XCHG ? "DevExch " : "");
  #endif
  
--static inline unsigned int ata_tag_valid(unsigned int tag)
-+static inline unsigned int ata_tag_valid(struct ata_port *ap, unsigned int tag)
+-	for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
++	for (tag = 0; tag < max_queue; tag++) {
+ 		struct ata_queued_cmd *qc = __ata_qc_from_tag(ap, tag);
+ 		struct ata_taskfile *cmd = &qc->tf, *res = &qc->result_tf;
+ 		const u8 *cdb = qc->cdb;
+@@ -3930,9 +3937,10 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
+ void ata_eh_finish(struct ata_port *ap)
  {
- 	return (tag < ATA_MAX_QUEUE) ? 1 : 0;
+ 	int tag;
++	unsigned int max_queue = ap->host->queue_depth;
+ 
+ 	/* retry or finish qcs */
+-	for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
++	for (tag = 0; tag < max_queue; tag++) {
+ 		struct ata_queued_cmd *qc = __ata_qc_from_tag(ap, tag);
+ 
+ 		if (!(qc->flags & ATA_QCFLAG_FAILED))
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 0586f66d70fa..76a65b652389 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1161,9 +1161,10 @@ static int ata_scsi_dev_config(struct scsi_device *sdev,
+ 
+ 	if (dev->flags & ATA_DFLAG_NCQ) {
+ 		int depth;
++		struct ata_port *ap = dev->link->ap;
+ 
+ 		depth = min(sdev->host->can_queue, ata_id_queue_depth(dev->id));
+-		depth = min(ATA_MAX_QUEUE - 1, depth);
++		depth = min((int)ap->host->queue_depth - 1, depth);
+ 		scsi_adjust_queue_depth(sdev, MSG_SIMPLE_TAG, depth);
+ 	}
+ 
+@@ -1277,7 +1278,7 @@ int __ata_change_queue_depth(struct ata_port *ap, struct scsi_device *sdev,
+ 	/* limit and apply queue depth */
+ 	queue_depth = min(queue_depth, sdev->host->can_queue);
+ 	queue_depth = min(queue_depth, ata_id_queue_depth(dev->id));
+-	queue_depth = min(queue_depth, ATA_MAX_QUEUE - 1);
++	queue_depth = min(queue_depth, (int)ap->host->queue_depth - 1);
+ 
+ 	if (sdev->queue_depth == queue_depth)
+ 		return -EINVAL;
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 74976a08c9bc..31e2090b7c9a 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -126,7 +126,6 @@ enum {
+ 	ATA_DEF_QUEUE		= 1,
+ 	/* tag ATA_MAX_QUEUE - 1 is reserved for internal commands */
+ 	ATA_MAX_QUEUE		= 32,
+-	ATA_TAG_INTERNAL	= ATA_MAX_QUEUE - 1,
+ 	ATA_SHORT_PAUSE		= 16,
+ 
+ 	ATAPI_MAX_DRAIN		= 16 << 10,
+@@ -593,6 +592,7 @@ struct ata_host {
+ 	struct device 		*dev;
+ 	void __iomem * const	*iomap;
+ 	unsigned int		n_ports;
++	unsigned int		queue_depth;
+ 	void			*private_data;
+ 	struct ata_port_operations *ops;
+ 	unsigned long		flags;
+@@ -1104,6 +1104,8 @@ extern int sata_std_hardreset(struct ata_link *link, unsigned int *class,
+ 			      unsigned long deadline);
+ extern void ata_std_postreset(struct ata_link *link, unsigned int *classes);
+ 
++extern int ata_host_set_queue_depth(struct ata_host *host,
++					unsigned int queue_depth);
+ extern struct ata_host *ata_host_alloc(struct device *dev, int max_ports);
+ extern struct ata_host *ata_host_alloc_pinfo(struct device *dev,
+ 			const struct ata_port_info * const * ppi, int n_ports);
+@@ -1476,18 +1478,18 @@ extern void ata_port_pbar_desc(struct ata_port *ap, int bar, ssize_t offset,
+ 
+ static inline unsigned int ata_tag_valid(struct ata_port *ap, unsigned int tag)
+ {
+-	return (tag < ATA_MAX_QUEUE) ? 1 : 0;
++	return (tag < ap->host->queue_depth) ? 1 : 0;
  }
  
--static inline unsigned int ata_get_internal_tag(void)
-+static inline unsigned int ata_get_internal_tag(struct ata_port *ap)
+ static inline unsigned int ata_get_internal_tag(struct ata_port *ap)
  {
- 	return ATA_TAG_INTERNAL;
+-	return ATA_TAG_INTERNAL;
++	return ap->host->queue_depth - 1;
  }
  
--static inline unsigned int ata_tag_internal(unsigned int tag)
-+static inline unsigned int ata_tag_internal(struct ata_port *ap,
-+						unsigned int tag)
+ static inline unsigned int ata_tag_internal(struct ata_port *ap,
+ 						unsigned int tag)
  {
- 	return tag == ATA_TAG_INTERNAL;
- }
-@@ -1536,7 +1537,7 @@ static inline int ata_link_max_devices(const struct ata_link *link)
- 
- static inline int ata_link_active(struct ata_link *link)
- {
--	return ata_tag_valid(link->active_tag) || link->sactive;
-+	return ata_tag_valid(link->ap, link->active_tag) || link->sactive;
+-	return tag == ATA_TAG_INTERNAL;
++	return tag == (ap->host->queue_depth - 1);
  }
  
  /*
-@@ -1627,7 +1628,7 @@ static inline void ata_qc_set_polling(struct ata_queued_cmd *qc)
- static inline struct ata_queued_cmd *__ata_qc_from_tag(struct ata_port *ap,
- 						       unsigned int tag)
- {
--	if (likely(ata_tag_valid(tag)))
-+	if (likely(ata_tag_valid(ap, tag)))
- 		return &ap->qcmd[tag];
- 	return NULL;
- }
 -- 
 1.9.3
 
