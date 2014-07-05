@@ -1,294 +1,256 @@
-From: Abutalib Aghayev <agayev@gmail.com>
-Subject: Re: Race in AHCI code?
-Date: Fri, 04 Jul 2014 12:59:44 -0400
-Message-ID: <871tu1m3z8.fsf@gmail.com>
-References: <87d2dlzxka.fsf@gmail.com> <20140704155752.GB764@mtj.dyndns.org>
+From: Kevin Hao <haokexin@gmail.com>
+Subject: Re: [PATCH 4/5] libata: support the ata host which implements a
+ queue depth less than 32
+Date: Sat, 5 Jul 2014 21:21:34 +0800
+Message-ID: <20140705132134.GA15232@pek-khao-d1.corp.ad.wrs.com>
+References: <1404389382-27298-1-git-send-email-haokexin@gmail.com>
+ <1404389382-27298-5-git-send-email-haokexin@gmail.com>
+ <20140703134717.GA16191@htj.dyndns.org>
+ <20140704064646.GA15828@pek-khao-d1.corp.ad.wrs.com>
+ <20140704153022.GA764@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-=-="
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="ZGiS0Q5IWpPtfppv"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f51.google.com ([209.85.192.51]:42332 "EHLO
-	mail-qg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752832AbaGDRYc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Jul 2014 13:24:32 -0400
-Received: by mail-qg0-f51.google.com with SMTP id z60so1676604qgd.10
-        for <linux-ide@vger.kernel.org>; Fri, 04 Jul 2014 10:24:31 -0700 (PDT)
-In-reply-to: <20140704155752.GB764@mtj.dyndns.org>
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:51340 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755927AbaGENVl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 5 Jul 2014 09:21:41 -0400
+Received: by mail-pa0-f41.google.com with SMTP id fb1so3119902pad.14
+        for <linux-ide@vger.kernel.org>; Sat, 05 Jul 2014 06:21:40 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <20140704153022.GA764@mtj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org
-
---=-=-=
-Content-Type: text/plain
+Cc: linux-ide@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
 
 
-Adding linux-ide per Tejun's request.
+--ZGiS0Q5IWpPtfppv
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, Jul 04 2014 at 11:57 AM, Tejun Heo <tj@kernel.org> wrote:
-> Hello,
->
-> Can you please cc linux-ide@vger.kernel.org in future postings?
->
-> On Thu, Jul 03, 2014 at 09:57:11PM -0400, Abutalib Aghayev wrote:
->> I face the following problem: if I send more
->> than a single bio with 256 pages, one right after another, to a SATA
->> device as follows:
->>
->>    generic_make_request(bio1_with_256_pages);
->>    generic_make_request(bio2_with_256_pages);
->>
->> I get the error at messages you see at the end.  Currently all
->> distributions set max_sectors limit for SATA drives to 1024 sectors (128
->> pages) so this problem does not happen in the wild.  But given the fact
->> that hardware limit is 65535 sectors, I should be able to do the above
->> without any problems.
->
-> That's a widely optimistic view.  I don't think any OS has been
-> regularly using requests that big.  Linux certinaly hasn't.  The
-> problem could be anywhere including the hardware.  Why do you say it's
-> a "race" in AHCI code?  What suggests it's a race condition?
+On Fri, Jul 04, 2014 at 11:30:22AM -0400, Tejun Heo wrote:
+> Hello, Kevin.
+>=20
+> On Fri, Jul 04, 2014 at 02:46:46PM +0800, Kevin Hao wrote:
+> > Since the fsl sata only support a 16 command queue, if we put the inter=
+nal
+> > command to ata_port->qcmd[16 - 1], we can easily change the above code =
+to:
+>=20
+> Hmmm... something that I wanna do is using all 32 tags for regular
+> commands and moving ATA_TAG_INTERNAL to something out-of-bounds, say
+> 32 or INT_MAX and let each driver use whatever command slot (most
+> likely zero) to actually execute internal commands.
+>=20
+> There really is no reason to permanently reserve a command tag for
+> internal commands like we do now; however, it could be that using a
+> tag number to distinguish an internal command isn't a very good idea
+> to begin with and it could be better to use a qcflag instead.
 
-Because it is time dependent -- it takes various number of tries to
-reproduce it -- and HostInt error, according to the spec is FIFO
-over/underflow in HBA.
+I prefer to use a qcflag. How about the following codes? If it is acceptabl=
+e,
+I can rebase my patch on it.
 
-I have attached a proof-of-concept device mapper module that reliably
-reproduces this.  It is a tiny module that is a wrapper around an
-existing SATA drive and it splits the incoming bio into two chunks and
-submits them in sequence.  It takes the chunk size (in pages) of the
-first chunk as parameter.  For chunk size 250 the error happens
-reliably, but for smaller values it never happens.
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 2895254d8388..f3c876ca26e1 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -749,10 +749,12 @@ int ata_build_rw_tf(struct ata_taskfile *tf, struct a=
+ta_device *dev,
+ 		    u64 block, u32 n_block, unsigned int tf_flags,
+ 		    unsigned int tag)
+ {
++	struct ata_queued_cmd *qc =3D __ata_qc_from_tag(dev->link->ap, tag);
++
+ 	tf->flags |=3D ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
+ 	tf->flags |=3D tf_flags;
+=20
+-	if (ata_ncq_enabled(dev) && likely(!ata_tag_internal(tag))) {
++	if (ata_ncq_enabled(dev) && likely(!ata_tag_internal(qc))) {
+ 		/* yay, NCQ */
+ 		if (!lba_48_ok(block, n_block))
+ 			return -ERANGE;
+@@ -1570,15 +1572,8 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
+=20
+ 	/* initialize internal qc */
+=20
+-	/* XXX: Tag 0 is used for drivers with legacy EH as some
+-	 * drivers choke if any other tag is given.  This breaks
+-	 * ata_tag_internal() test for those drivers.  Don't use new
+-	 * EH stuff without converting to it.
+-	 */
+-	if (ap->ops->error_handler)
+-		tag =3D ATA_TAG_INTERNAL;
+-	else
+-		tag =3D 0;
++	/* Tag 0 is used as some drivers choke if any other tag is given. */
++	tag =3D 0;
+=20
+ 	if (test_and_set_bit(tag, &ap->qc_allocated))
+ 		BUG();
+@@ -1609,7 +1604,7 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
+ 	    dma_dir =3D=3D DMA_FROM_DEVICE)
+ 		qc->tf.feature |=3D ATAPI_DMADIR;
+=20
+-	qc->flags |=3D ATA_QCFLAG_RESULT_TF;
++	qc->flags |=3D ATA_QCFLAG_RESULT_TF | ATA_QCFLAG_INTERNAL;
+ 	qc->dma_dir =3D dma_dir;
+ 	if (dma_dir !=3D DMA_NONE) {
+ 		unsigned int i, buflen =3D 0;
+@@ -4737,10 +4732,6 @@ static struct ata_queued_cmd *ata_qc_new(struct ata_=
+port *ap)
+ 	for (i =3D 0; i < ATA_MAX_QUEUE; i++) {
+ 		tag =3D (i + ap->last_tag + 1) % ATA_MAX_QUEUE;
+=20
+-		/* the last tag is reserved for internal command. */
+-		if (ata_tag_internal(tag))
+-			continue;
+-
+ 		if (!test_and_set_bit(tag, &ap->qc_allocated)) {
+ 			qc =3D __ata_qc_from_tag(ap, tag);
+ 			qc->tag =3D tag;
+@@ -4906,7 +4897,7 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
+ 		 * Finish internal commands without any further processing
+ 		 * and always with the result TF filled.
+ 		 */
+-		if (unlikely(ata_tag_internal(qc->tag))) {
++		if (unlikely(ata_tag_internal(qc))) {
+ 			fill_result_tf(qc);
+ 			__ata_qc_complete(qc);
+ 			return;
+diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+index 07bc7e4dbd04..b26e15c91905 100644
+--- a/drivers/ata/sata_fsl.c
++++ b/drivers/ata/sata_fsl.c
+@@ -395,10 +395,6 @@ static inline unsigned int sata_fsl_tag(unsigned int t=
+ag,
+ 	/* We let libATA core do actual (queue) tag allocation */
+=20
+ 	/* all non NCQ/queued commands should have tag#0 */
+-	if (ata_tag_internal(tag)) {
+-		DPRINTK("mapping internal cmds to tag#0\n");
+-		return 0;
+-	}
+=20
+ 	if (unlikely(tag >=3D SATA_FSL_QUEUE_DEPTH)) {
+ 		DPRINTK("tag %d invalid : out of range\n", tag);
+diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
+index 0534890f118a..755459c62641 100644
+--- a/drivers/ata/sata_sil24.c
++++ b/drivers/ata/sata_sil24.c
+@@ -458,13 +458,6 @@ static const struct ata_port_info sil24_port_info[] =
+=3D {
+ 	},
+ };
+=20
+-static int sil24_tag(int tag)
+-{
+-	if (unlikely(ata_tag_internal(tag)))
+-		return 0;
+-	return tag;
+-}
+-
+ static unsigned long sil24_port_offset(struct ata_port *ap)
+ {
+ 	return ap->port_no * PORT_REGS_SIZE;
+@@ -491,7 +484,7 @@ static void sil24_read_tf(struct ata_port *ap, int tag,=
+ struct ata_taskfile *tf)
+ 	struct sil24_prb __iomem *prb;
+ 	u8 fis[6 * 4];
+=20
+-	prb =3D port + PORT_LRAM + sil24_tag(tag) * PORT_LRAM_SLOT_SZ;
++	prb =3D port + PORT_LRAM + tag * PORT_LRAM_SLOT_SZ;
+ 	memcpy_fromio(fis, prb->fis, sizeof(fis));
+ 	ata_tf_from_fis(fis, tf);
+ }
+@@ -848,7 +841,7 @@ static void sil24_qc_prep(struct ata_queued_cmd *qc)
+ 	struct sil24_sge *sge;
+ 	u16 ctrl =3D 0;
+=20
+-	cb =3D &pp->cmd_block[sil24_tag(qc->tag)];
++	cb =3D &pp->cmd_block[qc->tag];
+=20
+ 	if (!ata_is_atapi(qc->tf.protocol)) {
+ 		prb =3D &cb->ata.prb;
+@@ -890,7 +883,7 @@ static unsigned int sil24_qc_issue(struct ata_queued_cm=
+d *qc)
+ 	struct ata_port *ap =3D qc->ap;
+ 	struct sil24_port_priv *pp =3D ap->private_data;
+ 	void __iomem *port =3D sil24_port_base(ap);
+-	unsigned int tag =3D sil24_tag(qc->tag);
++	unsigned int tag =3D qc->tag;
+ 	dma_addr_t paddr;
+ 	void __iomem *activate;
+=20
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 5ab4e3a76721..74612875b198 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -265,6 +265,7 @@ enum {
+ 	ATA_QCFLAG_FAILED	=3D (1 << 16), /* cmd failed and is owned by EH */
+ 	ATA_QCFLAG_SENSE_VALID	=3D (1 << 17), /* sense data valid */
+ 	ATA_QCFLAG_EH_SCHEDULED =3D (1 << 18), /* EH scheduled (obsolete) */
++	ATA_QCFLAG_INTERNAL	=3D (1 << 19), /* Internal command */
+=20
+ 	/* host set flags */
+ 	ATA_HOST_SIMPLEX	=3D (1 << 0),	/* Host is simplex, one DMA channel per ho=
+st only */
+@@ -1479,11 +1480,6 @@ static inline unsigned int ata_tag_valid(unsigned in=
+t tag)
+ 	return (tag < ATA_MAX_QUEUE) ? 1 : 0;
+ }
+=20
+-static inline unsigned int ata_tag_internal(unsigned int tag)
+-{
+-	return tag =3D=3D ATA_TAG_INTERNAL;
+-}
+-
+ /*
+  * device helpers
+  */
+@@ -1642,6 +1638,11 @@ static inline struct ata_queued_cmd *ata_qc_from_tag=
+(struct ata_port *ap,
+ 	return NULL;
+ }
+=20
++static inline unsigned int ata_tag_internal(struct ata_queued_cmd *qc)
++{
++	return (qc->flags & ATA_QCFLAG_INTERNAL);
++}
++
+ static inline unsigned int ata_qc_raw_nbytes(struct ata_queued_cmd *qc)
+ {
+ 	return qc->nbytes - min(qc->extrabytes, qc->nbytes);
+>=20
+> Anyways, sata_fsl already has workaround for ATA_TAG_INTERNAL, right?
 
-Here's how to reproduce:
+Yes, the internal command is mapped to tag 0 in sata_fsl.
 
-1) Compile and install the module and create a device mapper target (250
-is the chunk size here):
+> Given that the situation around internal tag handling may change, I'm
+> not sure about changing the interface now.  Is it a lot of cruft on
+> fsl side?
 
-$ sudo insmod dm-poc.ko
-$ echo 0 100000 poc /dev/sdb 250 | sudo dmsetup create poc
+Yes, I agree.
 
-2) The module silently drops write requests (for safety) and requests
-less than the specified chunk size (since they are not interesting).
-After a few reads you see the errors in the logs:
+Thanks,
+Kevin
 
-$ while :; do sudo dd if=/dev/mapper/poc iflag=direct of=/dev/null bs=$((255*4096)) count=1; done
+--ZGiS0Q5IWpPtfppv
+Content-Type: application/pgp-signature
 
-3) If you create the table with smaller chunk size the error never
-happens:
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.22 (GNU/Linux)
 
-$ sudo dmsetup remove poc
-$ echo 0 100000 poc /dev/sdb 150 | sudo dmsetup create poc
-$ while :; do sleep 1; sudo dd if=/dev/mapper/poc of=/dev/null bs=$((255*4096)) count=1 iflag=direct; done
+iQEcBAEBAgAGBQJTt/veAAoJEJNY7TDerrFxWqgIALYwlmb+/yb6890x25zUn2in
+aE/hA1nE7A910Zfw3/Py3S3B72SHuAoT51eSEdSOxov5OkSW0tEu65Yimcy0jjIX
+xDYuw9bA0Ag1MtEuQ2UqwM3T0vU/CXg0ApyHlIiaQoR2tk4mr6ZJazT5engyuA1R
+LHN+e+MWRxz5dcu5NYiAoKIJ9lVOBkzUU9LDNYL5s0mXRraJQOOgc9lhzBvoCwlr
+m+d+aIpe9USllWa8VsOGo7QrvaHbjes8HKOHT6RmILUKMM0Mba952JVBuh+iOn4o
+xhKNHaSiy43sCzTXzp4vIbiOF9Nlb+Syt6k9kf3nYPJyVdNmq5lvlJWbSV+XUMg=
+=k0iZ
+-----END PGP SIGNATURE-----
 
-The two interesting functions are poc_map() and clone_bio() both of
-which are straightforward and less than 50 LOC.
-
->> I have a small proof of concept code that reproduces this reliably, in
->> case you are interested.  But first, I would like to ask: is the current
->> soft limit of 1024 sectors is due to some limitation in the AHCI driver,
->> since sending larger things causes below error?
->
-> Mostly because that was enough.
->
->> I appreciate your response, thank you!
->>
->> ata3.00: exception Emask 0x60 SAct 0x3 SErr 0x800 action 0x6 frozen
->> ata3.00: irq_stat 0x20000000, host bus error
->> ata3: SError: { HostInt }
->> ata3.00: failed command: WRITE FPDMA QUEUED
->> ata3.00: cmd 61/48:00:58:90:1f/05:00:00:00:00/40 tag 0 ncq 692224 out
->>          res 50/00:58:00:90:1f/00:00:00:00:00/40 Emask 0x60 (host bus error)
->> ata3.00: status: { DRDY }
->
-> This could be the OS messing up SG mapping or the controller puking on
-> a large request.  Which controller are you using?
-
-My controller information is below.  I've tried it on a number of
-different machines with various controllers and I have even sent the POC
-to a disk drive vendor who has reproduced it as well.
-
-Thank you!
-
-00:1f.2 SATA controller: Intel Corporation 8 Series/C220 Series Chipset Family 6-port SATA Controller 1 [AHCI mode] (rev 05) (prog-if 01 [AHCI 1.0])
-        Subsystem: ASRock Incorporation Device 8c02
-        Flags: bus master, 66MHz, medium devsel, latency 0, IRQ 41
-        I/O ports at f0d0 [size=8]
-        I/O ports at f0c0 [size=4]
-        I/O ports at f0b0 [size=8]
-        I/O ports at f0a0 [size=4]
-        I/O ports at f060 [size=32]
-        Memory at f043a000 (32-bit, non-prefetchable) [size=2K]
-        Capabilities: <access denied>
-        Kernel driver in use: ahci
-
-
---=-=-=
-Content-Type: text/plain
-Content-Disposition: attachment; filename=dm-poc.c
-
-#include <linux/module.h>
-#include <linux/init.h>
-#include <linux/blkdev.h>
-#include <linux/bio.h>
-#include <linux/slab.h>
-#include <linux/device-mapper.h>
-
-#define DM_MSG_PREFIX "poc"
-
-struct poc_c {
-	struct dm_dev *dev;
-	int chunk_size_in_pages;
-        atomic_t nr_pending;
-        struct bio *pending_bio;
-};
-
-static void endio(struct bio *bio, int error)
-{
-        struct poc_c *pc = bio->bi_private;
-
-        bio_put(bio);
-
-        if (atomic_dec_and_test(&pc->nr_pending))
-                bio_endio(pc->pending_bio, error);
-}
-
-static struct bio *clone_bio(struct poc_c *pc, struct bio *bio, int idx,
-                             int nr_pages)
-{
-        struct bio *clone = bio_clone(bio, GFP_NOIO);
-
-        if (!clone)
-                return NULL;
-
-        clone->bi_sector = bio->bi_sector + (idx * 8); /* 8 sectors per page. */
-        clone->bi_idx = idx;
-        clone->bi_vcnt = idx + nr_pages;
-        clone->bi_size = nr_pages * PAGE_SIZE;
-        clone->bi_end_io = endio;
-        clone->bi_bdev = pc->dev->bdev;
-        clone->bi_private = pc;
-
-        atomic_inc(&pc->nr_pending);
-
-        return clone;
-}
-
-static int poc_map(struct dm_target *ti, struct bio *bio)
-{
-        struct poc_c *pc = ti->private;
-        struct bio *clone1, *clone2;
-        int nr_pages1 = pc->chunk_size_in_pages;
-        int nr_pages2 = bio_segments(bio) - nr_pages1;
-
-        if (bio_data_dir(bio) == WRITE || nr_pages2 <= 0) {
-                bio_endio(bio, 0);
-                return DM_MAPIO_SUBMITTED;
-        }
-
-        clone1 = clone_bio(pc, bio, 0, nr_pages1);
-        clone2 = clone_bio(pc, bio, nr_pages1, nr_pages2);
-
-        if (!clone1 || !clone2) {
-                printk(KERN_ERR "Failed to clone bio.\n");
-                return -EIO;
-        }
-
-        pc->pending_bio = bio;
-
-        generic_make_request(clone1);
-        generic_make_request(clone2);
-
-	return DM_MAPIO_SUBMITTED;
-}
-
-static int poc_ctr(struct dm_target *ti, unsigned int argc, char **argv)
-{
-	struct poc_c *pc;
-	unsigned long long tmp;
-	char dummy;
-
-	if (argc != 2) {
-		ti->error = "Invalid argument count";
-		return -EINVAL;
-	}
-
-	pc = kzalloc(sizeof(*pc), GFP_KERNEL);
-	if (pc == NULL) {
-		ti->error = "dm-poc: Cannot allocate poc context";
-		return -ENOMEM;
-        }
-
-	if (sscanf(argv[1], "%llu%c", &tmp, &dummy) != 1) {
-		ti->error = "dm-poc: Invalid chunk size";
-		goto bad;
-	}
-	pc->chunk_size_in_pages = tmp;
-        atomic_set(&pc->nr_pending, 0);
-
-	if (dm_get_device(ti, argv[0], dm_table_get_mode(ti->table), &pc->dev)) {
-                printk(KERN_ERR "device is %s", argv[0]);
-		ti->error = "dm-poc: Device lookup failed";
-		goto bad;
-	}
-	ti->private = pc;
-
-	return 0;
-
-      bad:
-	kfree(pc);
-	return -EINVAL;
-}
-
-static void poc_dtr(struct dm_target *ti)
-{
-	struct poc_c *pc = (struct poc_c *) ti->private;
-
-	dm_put_device(ti, pc->dev);
-	kfree(pc);
-}
-
-static struct target_type poc_target = {
-	.name   = "poc",
-	.version = {1, 0, 0},
-	.module = THIS_MODULE,
-	.ctr    = poc_ctr,
-	.dtr    = poc_dtr,
-	.map    = poc_map,
-};
-
-int __init dm_poc_init(void)
-{
-	int r = dm_register_target(&poc_target);
-
-	if (r < 0)
-		DMERR("register failed %d", r);
-
-	return r;
-}
-
-void dm_poc_exit(void)
-{
-	dm_unregister_target(&poc_target);
-}
-
-module_init(dm_poc_init);
-module_exit(dm_poc_exit);
-
-MODULE_LICENSE("GPL");
-
---=-=-=
-Content-Type: text/plain
-Content-Disposition: attachment; filename=Makefile
-
-module := poc
-obj-m := dm-$(module).o
-KDIR := /lib/modules/$(shell uname -r)/build
-PWD := $(shell pwd)
-
-all:
-	$(MAKE) -C $(KDIR) M=$(PWD) modules
-
-clean:
-	$(MAKE) -C $(KDIR) M=$(PWD) clean
-
---=-=-=--
+--ZGiS0Q5IWpPtfppv--
