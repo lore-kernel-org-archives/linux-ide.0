@@ -1,56 +1,36 @@
-From: Kevin Hao <haokexin@gmail.com>
-Subject: [PATCH v2 2/2] sata_fsl: set the correct queue depth for the host controller
-Date: Sun,  6 Jul 2014 14:28:41 +0800
-Message-ID: <1404628121-8158-3-git-send-email-haokexin@gmail.com>
-References: <1404628121-8158-1-git-send-email-haokexin@gmail.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:34597 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751653AbaGFG3p (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 6 Jul 2014 02:29:45 -0400
-Received: by mail-pa0-f44.google.com with SMTP id rd3so3781112pab.3
-        for <linux-ide@vger.kernel.org>; Sat, 05 Jul 2014 23:29:45 -0700 (PDT)
-In-Reply-To: <1404628121-8158-1-git-send-email-haokexin@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Alexander Holler <holler@ahsoftware.de>
+Subject: Re: [rtc-linux] Re: [PATCH 00/13] Remove mach-kirkwood and mach-dove
+Date: Sun, 06 Jul 2014 11:49:38 +0200
+Message-ID: <53B91BB2.3090005@ahsoftware.de>
+References: <1404075603-31838-1-git-send-email-andrew@lunn.ch> <20140629213510.GR32514@n2100.arm.linux.org.uk> <53B154FE.80804@gmail.com> <20140630124320.GZ32514@n2100.arm.linux.org.uk> <53B164B2.7090902@gmail.com> <20140630142516.GA32514@n2100.arm.linux.org.uk> <53B183D5.8020708@gmail.com> <20140630165615.GE32514@n2100.arm.linux.org.uk> <20140630174351.GI18520@lunn.ch> <20140630180853.GF32514@n2100.arm.linux.org.uk> <20140630181640.GL18520@lunn.ch>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-Reply-To: <20140630181640.GL18520@lunn.ch>
+Sender: linux-pm-owner@vger.kernel.org
+To: rtc-linux@googlegroups.com, Russell King - ARM Linux <linux@arm.linux.org.uk>
+Cc: Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Jason Cooper <jason@lakedaemon.net>, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>, Gregory Clement <gregory.clement@free-electrons.com>, Mark Brown <broonie@kernel.org>, alsa-devel@alsa-project.org, Daniel Lezcano <daniel.lezcano@linaro.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Zhang Rui <rui.zhang@intel.com>, Bryan Wu <cooloney@gmail.com>, Richard Purdie <rpurdie@rpsys.net>, linux-leds@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, Kishon Vijay Abraham I <kishon@ti.com>, Alessandro Zummo <a.zummo@towertech.it>, Wim Van Sebroeck <wim@iguana.be>, linux-watchdog@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>
 
-The fsl sata controller only implement a queue depth of 16. So use
-the ata_host_set_queue_depth() to set the correct queue depth for
-host controller. Also add a WARN_ON_ONCE() if a tag above 16 is
-used.
+Am 30.06.2014 20:16, schrieb Andrew Lunn:
+>> So, what do we do now with support for compressed audio streams via
+>> SPDIF on kirkwood hardware?  As far as I can see, it's no longer
+>> possible and mainline kernels will never support this.  Please tell
+>> me I'm wrong...
+> 
+> Well, it would of been nice if you had made a comment to either v1 or
+> v2 of my patchset saying this is going to cause problems for some
+> devices.
+> 
+> So i will go look at your patch to add frontend and backend and see
+> what it means for the current DT binding. The nice thing about
+> kirkwood (and Dove) is, there is no uboot with DT support. Hence
+> nobody is flashing there DT blob. They are always using appended DT.
+> So i'm not against changing the binding. And it has only been in the
+> kernel for one cycle, so i doubt there are too many users at the
+> moment.
 
-Fixes: 8a4aeec8d2d6 ("libata/ahci: accommodate tag ordered controllers")
-Cc: stable@vger.kernel.org
-Signed-off-by: Kevin Hao <haokexin@gmail.com>
----
-v2: Add a WARN_ON_ONCE().
-
- drivers/ata/sata_fsl.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
-index 07bc7e4dbd04..ae55440af86d 100644
---- a/drivers/ata/sata_fsl.c
-+++ b/drivers/ata/sata_fsl.c
-@@ -402,6 +402,7 @@ static inline unsigned int sata_fsl_tag(unsigned int tag,
- 
- 	if (unlikely(tag >= SATA_FSL_QUEUE_DEPTH)) {
- 		DPRINTK("tag %d invalid : out of range\n", tag);
-+		WARN_ON_ONCE(1);
- 		return 0;
- 	}
- 
-@@ -1506,6 +1507,8 @@ static int sata_fsl_probe(struct platform_device *ofdev)
- 		goto error_exit_with_cleanup;
- 	}
- 
-+	ata_host_set_queue_depth(host, SATA_FSL_QUEUE_DEPTH);
-+
- 	/* host->iomap is not used currently */
- 	host->private_data = host_priv;
- 
--- 
-1.9.3
+And most people just don't care if some DT-binding changes as they can
+change the provided DT themself. At least on every sane device.
 
