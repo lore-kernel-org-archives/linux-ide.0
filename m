@@ -1,36 +1,106 @@
-From: Alexander Holler <holler@ahsoftware.de>
-Subject: Re: [rtc-linux] Re: [PATCH 00/13] Remove mach-kirkwood and mach-dove
-Date: Sun, 06 Jul 2014 11:49:38 +0200
-Message-ID: <53B91BB2.3090005@ahsoftware.de>
-References: <1404075603-31838-1-git-send-email-andrew@lunn.ch> <20140629213510.GR32514@n2100.arm.linux.org.uk> <53B154FE.80804@gmail.com> <20140630124320.GZ32514@n2100.arm.linux.org.uk> <53B164B2.7090902@gmail.com> <20140630142516.GA32514@n2100.arm.linux.org.uk> <53B183D5.8020708@gmail.com> <20140630165615.GE32514@n2100.arm.linux.org.uk> <20140630174351.GI18520@lunn.ch> <20140630180853.GF32514@n2100.arm.linux.org.uk> <20140630181640.GL18520@lunn.ch>
+From: =?UTF-8?q?Antoine=20T=C3=A9nart?=
+	<antoine.tenart@free-electrons.com>
+Subject: [PATCH v9 5/7] Documentation: bindings: document the sub-nodes AHCI bindings
+Date: Mon,  7 Jul 2014 12:16:11 +0200
+Message-ID: <1404728173-20263-6-git-send-email-antoine.tenart@free-electrons.com>
+References: <1404728173-20263-1-git-send-email-antoine.tenart@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <20140630181640.GL18520@lunn.ch>
-Sender: linux-pm-owner@vger.kernel.org
-To: rtc-linux@googlegroups.com, Russell King - ARM Linux <linux@arm.linux.org.uk>
-Cc: Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Jason Cooper <jason@lakedaemon.net>, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>, Gregory Clement <gregory.clement@free-electrons.com>, Mark Brown <broonie@kernel.org>, alsa-devel@alsa-project.org, Daniel Lezcano <daniel.lezcano@linaro.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Zhang Rui <rui.zhang@intel.com>, Bryan Wu <cooloney@gmail.com>, Richard Purdie <rpurdie@rpsys.net>, linux-leds@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, Kishon Vijay Abraham I <kishon@ti.com>, Alessandro Zummo <a.zummo@towertech.it>, Wim Van Sebroeck <wim@iguana.be>, linux-watchdog@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from top.free-electrons.com ([176.31.233.9]:55574 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752480AbaGGKQU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Jul 2014 06:16:20 -0400
+In-Reply-To: <1404728173-20263-1-git-send-email-antoine.tenart@free-electrons.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: sebastian.hesselbarth@gmail.com, tj@kernel.org, kishon@ti.com
+Cc: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Am 30.06.2014 20:16, schrieb Andrew Lunn:
->> So, what do we do now with support for compressed audio streams via
->> SPDIF on kirkwood hardware?  As far as I can see, it's no longer
->> possible and mainline kernels will never support this.  Please tell
->> me I'm wrong...
-> 
-> Well, it would of been nice if you had made a comment to either v1 or
-> v2 of my patchset saying this is going to cause problems for some
-> devices.
-> 
-> So i will go look at your patch to add frontend and backend and see
-> what it means for the current DT binding. The nice thing about
-> kirkwood (and Dove) is, there is no uboot with DT support. Hence
-> nobody is flashing there DT blob. They are always using appended DT.
-> So i'm not against changing the binding. And it has only been in the
-> kernel for one cycle, so i doubt there are too many users at the
-> moment.
+The libahci now allows to use multiple PHYs and to represent each port
+as a sub-node. Add these bindings to the documentation.
 
-And most people just don't care if some DT-binding changes as they can
-change the provided DT themself. At least on every sane device.
+Signed-off-by: Antoine T=C3=A9nart <antoine.tenart@free-electrons.com>
+---
+ .../devicetree/bindings/ata/ahci-platform.txt      | 37 ++++++++++++++=
+++++++++
+ 1 file changed, 37 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/=
+Documentation/devicetree/bindings/ata/ahci-platform.txt
+index c96d8dcf98fd..24d95fccfb4a 100644
+--- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
++++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+@@ -3,6 +3,10 @@
+ SATA nodes are defined to describe on-chip Serial ATA controllers.
+ Each SATA controller should have its own node.
+=20
++It is possible, but not required, to represent each port as a sub-node=
+=2E
++It allows to enable each port independently when dealing with multiple
++PHYs.
++
+ Required properties:
+ - compatible        : compatible string, one of:
+   - "allwinner,sun4i-a10-ahci"
+@@ -14,6 +18,7 @@ Required properties:
+   - "snps,dwc-ahci"
+   - "snps,exynos5440-ahci"
+   - "snps,spear-ahci"
++  - "generic-ahci"
+ - interrupts        : <interrupt mapping for SATA IRQ>
+ - reg               : <registers mapping>
+=20
+@@ -21,11 +26,23 @@ Optional properties:
+ - dma-coherent      : Present if dma operations are coherent
+ - clocks            : a list of phandle + clock specifier pairs
+ - target-supply     : regulator for SATA target power
++- phys              : reference to the SATA PHY node
++- phy-names         : must be "sata-phy"
+=20
+ "fsl,imx53-ahci", "fsl,imx6q-ahci" required properties:
+ - clocks            : must contain the sata, sata_ref and ahb clocks
+ - clock-names       : must contain "ahb" for the ahb clock
+=20
++Required properties when using sub-nodes:
++- #address-cells    : number of cells to encode an address
++- #size-cells       : number of cells representing the size of an addr=
+ess
++
++
++Sub-nodes required properties:
++- reg               : the port number
++- phys              : reference to the SATA PHY node
++
++
+ Examples:
+         sata@ffe08000 {
+ 		compatible =3D "snps,spear-ahci";
+@@ -40,3 +57,23 @@ Examples:
+ 		clocks =3D <&pll6 0>, <&ahb_gates 25>;
+ 		target-supply =3D <&reg_ahci_5v>;
+ 	};
++
++With sub-nodes:
++	sata@f7e90000 {
++		compatible =3D "generic-ahci";
++		reg =3D <0xe90000 0x1000>;
++		interrupts =3D <GIC_SPI 7 IRQ_TYPE_LEVEL_HIGH>;
++		clocks =3D <&chip CLKID_SATA>;
++		#address-cells =3D <1>;
++		#size-cells =3D <0>;
++
++		sata0: sata-port@0 {
++			reg =3D <0>;
++			phys =3D <&sata_phy 0>;
++		};
++
++		sata1: sata-port@1 {
++			reg =3D <1>;
++			phys =3D <&sata_phy 1>;
++		};
++	};
+--=20
+1.9.1
 
