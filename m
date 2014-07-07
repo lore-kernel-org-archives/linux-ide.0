@@ -1,85 +1,68 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH v6 1/2] libahci: Export some of the libahci functions.
-Date: Mon,  7 Jul 2014 22:33:04 +0530
-Message-ID: <1404752585-915-2-git-send-email-stripathi@apm.com>
-References: <1404752585-915-1-git-send-email-stripathi@apm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1404752585-915-1-git-send-email-stripathi@apm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH v2 1/2] libata: introduce ata_host_set_queue_depth()
+Date: Mon, 7 Jul 2014 11:19:25 -0700
+Message-ID: <CAPcyv4gLb6i5PSi9_uxHv-UQA8-w=a55eOP1GtkXmvTzY5P+7A@mail.gmail.com>
+References: <1404628121-8158-1-git-send-email-haokexin@gmail.com>
+	<1404628121-8158-2-git-send-email-haokexin@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ig0-f178.google.com ([209.85.213.178]:59271 "EHLO
+	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750809AbaGGST0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Jul 2014 14:19:26 -0400
+Received: by mail-ig0-f178.google.com with SMTP id hn18so4675141igb.5
+        for <linux-ide@vger.kernel.org>; Mon, 07 Jul 2014 11:19:26 -0700 (PDT)
+In-Reply-To: <1404628121-8158-2-git-send-email-haokexin@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Kevin Hao <haokexin@gmail.com>
+Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>
 
-This patch exports the function ahci_qc_issue and ahci_start_fis_rx.
-The subsequent patches will make use of them.
+On Sat, Jul 5, 2014 at 11:28 PM, Kevin Hao <haokexin@gmail.com> wrote:
+> The sata on fsl mpc8315e is broken after the commit 8a4aeec8d2d6
+> ("libata/ahci: accommodate tag ordered controllers"). The reason is
+> that the ata controller on this SoC only implement a queue depth of
+> 16. When issuing the commands in tag order, all the commands in tag
+> 16 ~ 17 are mapped to tag 0 unconditionally and then causes the sata
+> malfunction. It makes no senses to use a 32 queue in software while
+> the hardware has less queue depth. This patch provides the function
+> for libata to adjust the queue depth for a host controller.
+>
+> Fixes: 8a4aeec8d2d6 ("libata/ahci: accommodate tag ordered controllers")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Kevin Hao <haokexin@gmail.com>
+> ---
+> v2: Remove the changes for the ata tag helper functions.
+>
+>  drivers/ata/libata-core.c | 29 ++++++++++++++++++++++++++---
+>  include/linux/libata.h    |  3 +++
+>  2 files changed, 29 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 8f3043165048..c9c51646d8e8 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -4728,14 +4728,14 @@ void swap_buf_le16(u16 *buf, unsigned int buf_words)
+>  static struct ata_queued_cmd *ata_qc_new(struct ata_port *ap)
+>  {
+>         struct ata_queued_cmd *qc = NULL;
+> -       unsigned int i, tag;
+> +       unsigned int i, tag, max_queue = ap->host->queue_depth;
+>
+>         /* no command while frozen */
+>         if (unlikely(ap->pflags & ATA_PFLAG_FROZEN))
+>                 return NULL;
+>
+> -       for (i = 0; i < ATA_MAX_QUEUE; i++) {
+> -               tag = (i + ap->last_tag + 1) % ATA_MAX_QUEUE;
+> +       for (i = 0; i < max_queue; i++) {
+> +               tag = (i + ap->last_tag + 1) % max_queue;
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
----
- drivers/ata/ahci.h    | 2 ++
- drivers/ata/libahci.c | 7 ++++---
- 2 files changed, 6 insertions(+), 3 deletions(-)
+This change may cause the compiler to do a full divide where
+previously it could optimize to power-of-2 math with the visibility of
+the ATA_MAX_QUEUE constant.  How about converting
+ap->host->queue_depth to ap->host->queue_depth_mask?  ...then this
+becomes:
 
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index af63c75..f4a9299 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -370,7 +370,9 @@ int ahci_do_softreset(struct ata_link *link, unsigned int *class,
- 		      int pmp, unsigned long deadline,
- 		      int (*check_ready)(struct ata_link *link));
-
-+unsigned int ahci_qc_issue(struct ata_queued_cmd *qc);
- int ahci_stop_engine(struct ata_port *ap);
-+void ahci_start_fis_rx(struct ata_port *ap);
- void ahci_start_engine(struct ata_port *ap);
- int ahci_check_ready(struct ata_link *link);
- int ahci_kick_engine(struct ata_port *ap);
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index b986145..e6dd89a 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -68,7 +68,6 @@ static ssize_t ahci_transmit_led_message(struct ata_port *ap, u32 state,
-
- static int ahci_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val);
- static int ahci_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val);
--static unsigned int ahci_qc_issue(struct ata_queued_cmd *qc);
- static bool ahci_qc_fill_rtf(struct ata_queued_cmd *qc);
- static int ahci_port_start(struct ata_port *ap);
- static void ahci_port_stop(struct ata_port *ap);
-@@ -615,7 +614,7 @@ int ahci_stop_engine(struct ata_port *ap)
- }
- EXPORT_SYMBOL_GPL(ahci_stop_engine);
-
--static void ahci_start_fis_rx(struct ata_port *ap)
-+void ahci_start_fis_rx(struct ata_port *ap)
- {
- 	void __iomem *port_mmio = ahci_port_base(ap);
- 	struct ahci_host_priv *hpriv = ap->host->private_data;
-@@ -641,6 +640,7 @@ static void ahci_start_fis_rx(struct ata_port *ap)
- 	/* flush */
- 	readl(port_mmio + PORT_CMD);
- }
-+EXPORT_SYMBOL_GPL(ahci_start_fis_rx);
-
- static int ahci_stop_fis_rx(struct ata_port *ap)
- {
-@@ -1940,7 +1940,7 @@ irqreturn_t ahci_interrupt(int irq, void *dev_instance)
- }
- EXPORT_SYMBOL_GPL(ahci_interrupt);
-
--static unsigned int ahci_qc_issue(struct ata_queued_cmd *qc)
-+unsigned int ahci_qc_issue(struct ata_queued_cmd *qc)
- {
- 	struct ata_port *ap = qc->ap;
- 	void __iomem *port_mmio = ahci_port_base(ap);
-@@ -1969,6 +1969,7 @@ static unsigned int ahci_qc_issue(struct ata_queued_cmd *qc)
-
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(ahci_qc_issue);
-
- static bool ahci_qc_fill_rtf(struct ata_queued_cmd *qc)
- {
---
-1.8.2.1
-
+    tag = (i + ap->last_tag + 1) & max_queue_mask
