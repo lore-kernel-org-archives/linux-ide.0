@@ -1,107 +1,40 @@
-From: Bjorn Helgaas <bhelgaas-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 1/3] PCI/MSI: Add pci_enable_msi_partial()
-Date: Mon, 7 Jul 2014 13:40:48 -0600
-Message-ID: <CAErSpo6f6RXWv0DEtLBZX0jXoSUYJeWrSm7mubSJ_F-O7tQp6w@mail.gmail.com>
-References: <cover.1402405331.git.agordeev@redhat.com>
-	<4fef62a2e647a7c38e9f2a1ea4244b3506a85e2b.1402405331.git.agordeev@redhat.com>
-	<20140702202201.GA28852@google.com>
-	<20140704085741.GA12247@dhcp-26-207.brq.redhat.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2 1/2] libata: introduce ata_host_set_queue_depth()
+Date: Mon, 7 Jul 2014 16:06:10 -0400
+Message-ID: <20140707200610.GA1283@mtj.dyndns.org>
+References: <1404628121-8158-1-git-send-email-haokexin@gmail.com>
+ <1404628121-8158-2-git-send-email-haokexin@gmail.com>
+ <CAPcyv4gLb6i5PSi9_uxHv-UQA8-w=a55eOP1GtkXmvTzY5P+7A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <20140704085741.GA12247-hdGaXg0bp3uRXgp2RCiI5R/sF2h8X+2i0E9HWUfgJXw@public.gmane.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Alexander Gordeev <agordeev-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: "linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org" <linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org>, linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:INTEL IOMMU (VT-d)" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, xen-devel-GuqFBffKawtpuQazS67q72D2FQJk+8+b@public.gmane.org, linuxppc-dev <linuxppc-dev-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qg0-f44.google.com ([209.85.192.44]:54784 "EHLO
+	mail-qg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751134AbaGGUGN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Jul 2014 16:06:13 -0400
+Received: by mail-qg0-f44.google.com with SMTP id j107so4218813qga.31
+        for <linux-ide@vger.kernel.org>; Mon, 07 Jul 2014 13:06:12 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4gLb6i5PSi9_uxHv-UQA8-w=a55eOP1GtkXmvTzY5P+7A@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Kevin Hao <haokexin@gmail.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Fri, Jul 4, 2014 at 2:57 AM, Alexander Gordeev <agordeev-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
-> On Wed, Jul 02, 2014 at 02:22:01PM -0600, Bjorn Helgaas wrote:
->> On Tue, Jun 10, 2014 at 03:10:30PM +0200, Alexander Gordeev wrote:
->> > There are PCI devices that require a particular value written
->> > to the Multiple Message Enable (MME) register while aligned on
->> > power of 2 boundary value of actually used MSI vectors 'nvec'
->> > is a lesser of that MME value:
->> >
->> >     roundup_pow_of_two(nvec) < 'Multiple Message Enable'
->> >
->> > However the existing pci_enable_msi_block() interface is not
->> > able to configure such devices, since the value written to the
->> > MME register is calculated from the number of requested MSIs
->> > 'nvec':
->> >
->> >     'Multiple Message Enable' = roundup_pow_of_two(nvec)
->>
->> For MSI, software learns how many vectors a device requests by reading
->> the Multiple Message Capable (MMC) field.  This field is encoded, so a
->> device can only request 1, 2, 4, 8, etc., vectors.  It's impossible
->> for a device to request 3 vectors; it would have to round up that up
->> to a power of two and request 4 vectors.
->>
->> Software writes similarly encoded values to MME to tell the device how
->> many vectors have been allocated for its use.  For example, it's
->> impossible to tell the device that it can use 3 vectors; the OS has to
->> round that up and tell the device it can use 4 vectors.
->
-> Nod.
->
->> So if I understand correctly, the point of this series is to take
->> advantage of device-specific knowledge, e.g., the device requests 4
->> vectors via MMC, but we "know" the device is only capable of using 3.
->> Moreover, we tell the device via MME that 4 vectors are available, but
->> we've only actually set up 3 of them.
->
-> Exactly.
->
->> This makes me uneasy because we're lying to the device, and the device
->> is perfectly within spec to use all 4 of those vectors.  If anything
->> changes the number of vectors the device uses (new device revision,
->> firmware upgrade, etc.), this is liable to break.
->
-> If a device committed via non-MSI specific means to send only 3 vectors
-> out of 4 available why should we expect it to send 4? The probability of
-> a firmware sending 4/4 vectors in this case is equal to the probability
-> of sending 5/4 or 16/4, with the very same reason - a bug in the firmware.
-> Moreover, even vector 4/4 would be unexpected by the device driver, though
-> it is perfectly within the spec.
->
-> As of new device revision or firmware update etc. - it is just yet another
-> case of device driver vs the firmware match/mismatch. Not including this
-> change does not help here at all IMHO.
->
->> Can you quantify the benefit of this?  Can't a device already use
->> MSI-X to request exactly the number of vectors it can use?  (I know
->
-> A Intel AHCI chipset requires 16 vectors written to MME while advertises
-> (via AHCI registers) and uses only 6. Even attempt to init 8 vectors results
-> in device's fallback to 1 (!).
+On Mon, Jul 07, 2014 at 11:19:25AM -0700, Dan Williams wrote:
+> This change may cause the compiler to do a full divide where
+> previously it could optimize to power-of-2 math with the visibility of
+> the ATA_MAX_QUEUE constant.  How about converting
+> ap->host->queue_depth to ap->host->queue_depth_mask?  ...then this
+> becomes:
+> 
+>     tag = (i + ap->last_tag + 1) & max_queue_mask
 
-Is the fact that it uses only 6 vectors documented in the public spec?
+Given how inefficient the test_and_set bit is, I don't think a single
+moduls matters.  Plus, we don't even need modulus there.  We can
+simply use >= max_depth.
 
-Is this a chipset erratum?  Are there newer versions of the chipset
-that fix this, e.g., by requesting 8 vectors and using 6, or by also
-supporting MSI-X?
+Thanks.
 
-I know this conserves vector numbers.  What does that mean in real
-user-visible terms?  Are there systems that won't boot because of this
-issue, and this patch fixes them?  Does it enable bigger
-configurations, e.g., more I/O devices, than before?
-
-Do you know how Windows handles this?  Does it have a similar interface?
-
-As you can tell, I'm a little skeptical about this.  It's a fairly big
-change, it affects the arch interface, it seems to be targeted for
-only a single chipset (though it's widely used), and we already
-support a standard solution (MSI-X, reducing the number of vectors
-requested, or even operating with 1 vector).
-
-Bjorn
+-- 
+tejun
