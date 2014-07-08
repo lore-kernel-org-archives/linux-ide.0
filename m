@@ -1,42 +1,55 @@
-From: Mikko Perttunen <mperttunen@nvidia.com>
-Subject: Re: [PATCH v2 6/7] ata: Add support for the Tegra124 SATA controller
-Date: Tue, 8 Jul 2014 11:20:25 +0300
-Message-ID: <53BBA9C9.8020306@nvidia.com>
-References: <1403101406-15439-1-git-send-email-mperttunen@nvidia.com> <1403101406-15439-7-git-send-email-mperttunen@nvidia.com> <53A9D31A.6030307@wwwdotorg.org> <53AC019A.40404@nvidia.com>
+From: David Laight <David.Laight-ZS65k/vG3HxXrIkS9f7CXA@public.gmane.org>
+Subject: RE: [PATCH 1/3] PCI/MSI: Add pci_enable_msi_partial()
+Date: Tue, 8 Jul 2014 08:33:17 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6D1726E211@AcuExch.aculab.com>
+References: <cover.1402405331.git.agordeev@redhat.com>
+	<4fef62a2e647a7c38e9f2a1ea4244b3506a85e2b.1402405331.git.agordeev@redhat.com>
+	<20140702202201.GA28852@google.com>
+	<063D6719AE5E284EB5DD2968C1650D6D1726BF4E@AcuExch.aculab.com>
+	<20140704085816.GB12247@dhcp-26-207.brq.redhat.com>
+	<CAErSpo7QWc35seoMhJA+H1_=MkKWYMdeYG=hT=i1v=iz8d5ezA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <53AC019A.40404@nvidia.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Stephen Warren <swarren@wwwdotorg.org>, "tj@kernel.org" <tj@kernel.org>
-Cc: "thierry.reding@gmail.com" <thierry.reding@gmail.com>, Peter De Schrijver <pdeschrijver@nvidia.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+In-Reply-To: <CAErSpo7QWc35seoMhJA+H1_=MkKWYMdeYG=hT=i1v=iz8d5ezA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Language: en-US
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
+List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
+List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
+	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
+Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
+To: 'Bjorn Helgaas' <bhelgaas-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Alexander Gordeev <agordeev-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: "linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org" <linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org>, "linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "xen-devel-GuqFBffKawtpuQazS67q72D2FQJk+8+b@public.gmane.org" <xen-devel-GuqFBffKawtpuQazS67q72D2FQJk+8+b@public.gmane.org>, "linuxppc-dev-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org" <linuxppc-dev-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
-Hey Tejun,
+From: Bjorn Helgaas
+...
+> >> Even if you do that, you ought to write valid interrupt information
+> >> into the 4th slot (maybe replicating one of the earlier interrupts).
+> >> Then, if the device does raise the 'unexpected' interrupt you don't
+> >> get a write to a random kernel location.
+> >
+> > I might be missing something, but we are talking of MSI address space
+> > here, aren't we? I am not getting how we could end up with a 'write'
+> > to a random kernel location when a unclaimed MSI vector sent. We could
+> > only expect a spurious interrupt at worst, which is handled and reported.
+> 
+> Yes, that's how I understand it.  With MSI, the OS specifies the a
+> single Message Address, e.g., a LAPIC address, and a single Message
+> Data value, e.g., a vector number that will be written to the LAPIC.
+> The device is permitted to modify some low-order bits of the Message
+> Data to send one of several vector numbers (the MME value tells the
+> device how many bits it can modify).
+> 
+> Bottom line, I think a spurious interrupt is the failure we'd expect
+> if a device used more vectors than the OS expects it to.
 
-the prerequisites for this series have now been acked and it would be 
-nice to have it for 3.17. Could you take a look at it?
+So you need to tell the device where to write in order to raise the
+'spurious interrupt'.
 
-Thanks,
-Mikko
-
-On 26/06/14 14:18, Mikko Perttunen wrote:
-> FWIW, from IRC, the series
->
->   > Tested-by: Steev Klimaszewski <steev@gentoo.org>
->
-> On 24/06/14 22:35, Stephen Warren wrote:
->> On 06/18/2014 08:23 AM, Mikko Perttunen wrote:
->>> This adds support for the integrated AHCI-compliant Serial ATA
->>> controller present on the NVIDIA Tegra124 system-on-chip.
->>
->> At a quick glance, this looks fine to me now. I'll wait for an ack to
->> take this patch through the Tegra tree, for the reasons I mentioned in
->> response to v1.
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-tegra" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+	David
