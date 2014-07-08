@@ -1,40 +1,72 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v9 3/7] ata: libahci: allow to use multiple PHYs
-Date: Tue, 8 Jul 2014 09:42:03 -0400
-Message-ID: <20140708134203.GD4979@htj.dyndns.org>
-References: <1404728173-20263-1-git-send-email-antoine.tenart@free-electrons.com>
- <1404728173-20263-4-git-send-email-antoine.tenart@free-electrons.com>
+From: Peter De Schrijver <pdeschrijver@nvidia.com>
+Subject: Re: [PATCH 6/9] ARM: tegra: Export tegra_powergate_power_on
+Date: Tue, 8 Jul 2014 17:11:35 +0300
+Message-ID: <20140708141135.GC23218@tbergstrom-lnx.Nvidia.com>
+References: <539F691E.5030204@wwwdotorg.org> <20140617121313.GE18816@ulmo>
+ <20140617140146.GH3407@tbergstrom-lnx.Nvidia.com>
+ <20140617215119.GC24743@mithrandir>
+ <20140618121806.GJ3407@tbergstrom-lnx.Nvidia.com>
+ <53A1B252.1030204@wwwdotorg.org>
+ <20140619080234.GK3407@tbergstrom-lnx.Nvidia.com>
+ <53A3096B.1040409@wwwdotorg.org>
+ <20140623101441.GU3407@tbergstrom-lnx.Nvidia.com>
+ <20140708130501.GC9516@ulmo>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f54.google.com ([209.85.192.54]:38829 "EHLO
-	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754819AbaGHNmH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Jul 2014 09:42:07 -0400
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:10230 "EHLO
+	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751834AbaGHOLj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Jul 2014 10:11:39 -0400
 Content-Disposition: inline
-In-Reply-To: <1404728173-20263-4-git-send-email-antoine.tenart@free-electrons.com>
+In-Reply-To: <20140708130501.GC9516@ulmo>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Antoine =?iso-8859-1?Q?T=E9nart?= <antoine.tenart@free-electrons.com>
-Cc: sebastian.hesselbarth@gmail.com, kishon@ti.com, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>, Mikko Perttunen <mperttunen@nvidia.com>, "tj@kernel.org" <tj@kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-One more thing.
+> > 
+> > Yes, but the problem is that you also need clocks and reset of other modules
+> > in the same domain to safely control the domain's status. Eg: the ISPs, VI and
+> > CSI share a domain. VI and CSI are useable without ISP and the ISP lacks
+> > public documentation. So it's not unlikely a VI and CSI driver will upstreamed
+> > someday which means we would need to control the domain and therefore would
+> > need to tell that driver about the ISPs clocks and resets even though the
+> > driver doesn't know anything about the ISP hw otherwise.
+> 
+> Can't we make powergates reference counted so that they don't get
+> disabled as long as there are any users? Looking for example at the
 
-On Mon, Jul 07, 2014 at 12:16:09PM +0200, Antoine T=E9nart wrote:
-> This introduce a new way of defining SATA ports in the device tree, w=
-ith
-> one port per sub-node. This as the advantage of allowing a per port
-> configuration. Because some ports may be accessible but disabled in t=
-he
-> device tree, the default port_map is computed automatically when usin=
-g
-> this.
+We could, but then why not switch to the powerdomain code and make powering
+off a domain a NOP until we sorted out the context save/restore or fixed
+the framework to allow for suspend without turning off the domains?
 
-Any chance the old one phy config can be moved over to this scheme so
-that we don't have to carry two separate mechanisms?
+> display controller driver, modules don't seem to care overly much about
+> the powergate's state except that it needs to be turned on before they
+> touch some of the registers.
+> 
+> From a bit of experimentation it also seems like the sequence encoded
+> within tegra_powergate_sequence_power_up() isn't at all necessary. I
+> couldn't find an authoritative reference for that either, so I'm tempted
+> to conclude that it was simply cargo-culted from the dark-ages.
+> 
+> So I'm thinking that if we ever move to use power domains for this, we
+> may be able to just drop any extra handling (well, we'd need to keep it
+> for backwards-compatibility... *sigh*) and let drivers handle the clock
+> and reset resources.
+> 
+> On the other hand, given that we already need to keep the existing code
+> for backwards-compatibility, I'm not sure there's a real advantage in
+> turning them into power domains, since we'd be adding extra code without
+> an clear gains (especially since it seems like we'd need even more code
+> to properly handle suspend/resume in drivers that need powergates).
+> 
 
-Thanks.
+Unless we fix the framework to require context save/restore for suspend.
+There is a good reason to do that. context save/restore requires energy
+as well, so it's not a given that turning off domains in system suspend
+will save power.
 
---=20
-tejun
+Cheers,
+
+Peter.
