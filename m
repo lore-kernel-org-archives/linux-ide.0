@@ -1,54 +1,50 @@
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH v9 1/7] phy: add a driver for the Berlin SATA PHY
-Date: Tue, 8 Jul 2014 18:43:26 +0530
-Message-ID: <53BBEE76.7090100@ti.com>
-References: <1404728173-20263-1-git-send-email-antoine.tenart@free-electrons.com> <1404728173-20263-2-git-send-email-antoine.tenart@free-electrons.com> <53BBE419.8080107@ti.com> <53BBEB84.50904@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2 6/7] ata: Add support for the Tegra124 SATA controller
+Date: Tue, 8 Jul 2014 09:22:16 -0400
+Message-ID: <20140708132216.GA4979@htj.dyndns.org>
+References: <1403101406-15439-1-git-send-email-mperttunen@nvidia.com>
+ <1403101406-15439-7-git-send-email-mperttunen@nvidia.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <53BBEB84.50904@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <1403101406-15439-7-git-send-email-mperttunen@nvidia.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, =?UTF-8?B?QW50b2luZSBUw6luYXJ0?= <antoine.tenart@free-electrons.com>, tj@kernel.org
-Cc: alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Mikko Perttunen <mperttunen@nvidia.com>
+Cc: swarren@wwwdotorg.org, thierry.reding@gmail.com, pdeschrijver@nvidia.com, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
 List-Id: linux-ide@vger.kernel.org
 
-Hi,
+(cc'ing Hans)
 
-On Tuesday 08 July 2014 06:30 PM, Sebastian Hesselbarth wrote:
-> On 07/08/2014 02:29 PM, Kishon Vijay Abraham I wrote:
->> On Monday 07 July 2014 03:46 PM, Antoine T=C3=A9nart wrote:
->>> The Berlin SoC has a two SATA ports. Add a PHY driver to handle the=
-m.
->>>
->>> The mode selection can let us think this PHY can be configured to f=
-it
->>> other purposes. But there are reasons to think the SATA mode will b=
-e
->>> the only one usable: the PHY registers are only accessible indirect=
-ly
->>> through two registers in the SATA range, the PHY seems to be integr=
-ated
->>> and no information tells us the contrary. For these reasons, make t=
-he
->>> driver a SATA PHY driver.
->>
->> Thanks for doing multiple revisions of this. Looks good to be merged=
- for me now.
->=20
-> I'd like to see some Acked-by from Tejun on the AHCI patches first, b=
-ut
-> if he agrees, should I prepare a stable branch for each of us to pull
-> their patches from?
+Hans, can you please review this patch?
 
-I don't think that's needed. As long as there are no build breaks, each=
- of us
-should be able to take it independently.
->=20
-> AFAIKS, that would be 1+2 for you, 3-5 for Tejun, and the DT crap 6+7
-> for me.
+On Wed, Jun 18, 2014 at 05:23:25PM +0300, Mikko Perttunen wrote:
+> +#define SATA_CONFIGURATION_0				0x180
+> +#define		SATA_CONFIGURATION_EN_FPCI		BIT(0)
 
-right, I'll take 1 and 2 in my tree.
+Let's just indent uniformly.  The new line should give enough visual
+hint on grouping.
 
-Cheers
-Kishon
+> +struct tegra_ahci_priv {
+> +	struct platform_device *pdev;
+> +	void __iomem *sata_regs;
+> +	struct reset_control *sata_rst;
+> +	struct reset_control *sata_oob_rst;
+> +	struct reset_control *sata_cold_rst;
+> +	struct clk *sata_clk;
+> +	struct clk *sata_oob_clk;
+> +	struct clk *cml1_clk;
+> +	struct clk *plle_clk;
+> +	struct regulator_bulk_data supplies[5];
+> +	struct phy *padctl_phy;
+> +};
+
+And please indent the declared fields uniformly too.
+
+Except for the above nitpicks, generally looks good to me but let's
+wait for Hans' review.
+
+Thanks.
+
+-- 
+tejun
