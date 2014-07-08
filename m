@@ -1,55 +1,51 @@
-From: David Laight <David.Laight-ZS65k/vG3HxXrIkS9f7CXA@public.gmane.org>
-Subject: RE: [PATCH 1/3] PCI/MSI: Add pci_enable_msi_partial()
-Date: Tue, 8 Jul 2014 08:33:17 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6D1726E211@AcuExch.aculab.com>
-References: <cover.1402405331.git.agordeev@redhat.com>
-	<4fef62a2e647a7c38e9f2a1ea4244b3506a85e2b.1402405331.git.agordeev@redhat.com>
-	<20140702202201.GA28852@google.com>
-	<063D6719AE5E284EB5DD2968C1650D6D1726BF4E@AcuExch.aculab.com>
-	<20140704085816.GB12247@dhcp-26-207.brq.redhat.com>
-	<CAErSpo7QWc35seoMhJA+H1_=MkKWYMdeYG=hT=i1v=iz8d5ezA@mail.gmail.com>
+From: Jason Cooper <jason@lakedaemon.net>
+Subject: Re: [PATCH 00/13] Remove mach-kirkwood and mach-dove
+Date: Tue, 8 Jul 2014 08:13:01 -0400
+Message-ID: <20140708121301.GU23978@titan.lakedaemon.net>
+References: <1404075603-31838-1-git-send-email-andrew@lunn.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <CAErSpo7QWc35seoMhJA+H1_=MkKWYMdeYG=hT=i1v=iz8d5ezA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Content-Language: en-US
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: 'Bjorn Helgaas' <bhelgaas-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Alexander Gordeev <agordeev-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: "linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org" <linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org>, "linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "xen-devel-GuqFBffKawtpuQazS67q72D2FQJk+8+b@public.gmane.org" <xen-devel-GuqFBffKawtpuQazS67q72D2FQJk+8+b@public.gmane.org>, "linuxppc-dev-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org" <linuxppc-dev-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mho-03-ewr.mailhop.org ([204.13.248.66]:63780 "EHLO
+	mho-01-ewr.mailhop.org" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753322AbaGHMNV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Jul 2014 08:13:21 -0400
+Content-Disposition: inline
+In-Reply-To: <1404075603-31838-1-git-send-email-andrew@lunn.ch>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Andrew Lunn <andrew@lunn.ch>
+Cc: Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>, Gregory Clement <gregory.clement@free-electrons.com>, rmk+kernel@arm.linux.org.uk, Mark Brown <broonie@kernel.org>, alsa-devel@alsa-project.org, Daniel Lezcano <daniel.lezcano@linaro.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Zhang Rui <rui.zhang@intel.com>, Bryan Wu <cooloney@gmail.com>, Richard Purdie <rpurdie@rpsys.net>, linux-leds@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, Kishon Vijay Abraham I <kishon@ti.com>, Alessandro Zummo <a.zummo@towertech.it>, rtc-linux@googlegroups.com, Wim Van Sebroeck <wim@iguana.be>, linux-watchdog@vger.kernel.org
 
-From: Bjorn Helgaas
-...
-> >> Even if you do that, you ought to write valid interrupt information
-> >> into the 4th slot (maybe replicating one of the earlier interrupts).
-> >> Then, if the device does raise the 'unexpected' interrupt you don't
-> >> get a write to a random kernel location.
-> >
-> > I might be missing something, but we are talking of MSI address space
-> > here, aren't we? I am not getting how we could end up with a 'write'
-> > to a random kernel location when a unclaimed MSI vector sent. We could
-> > only expect a spurious interrupt at worst, which is handled and reported.
+Andrew,
+
+On Sun, Jun 29, 2014 at 10:59:47PM +0200, Andrew Lunn wrote:
+> This patchset removes arch/arm/mach-kirkwood and arch/arm/mach-dove.
+> These SoCs are now supported in arch/arm/mach-mvebu using device tree.
 > 
-> Yes, that's how I understand it.  With MSI, the OS specifies the a
-> single Message Address, e.g., a LAPIC address, and a single Message
-> Data value, e.g., a vector number that will be written to the LAPIC.
-> The device is permitted to modify some low-order bits of the Message
-> Data to send one of several vector numbers (the MME value tells the
-> device how many bits it can modify).
+> Change the dependencies for a number of drivers, either to use
+> ARCH_MVEBU where the drivers are generic, or MACH_KIRKWOOD and
+> MACH_DOVE where the drivers are specific to a SoC.
 > 
-> Bottom line, I think a spurious interrupt is the failure we'd expect
-> if a device used more vectors than the OS expects it to.
+> 
+> Andrew Lunn (13):
+>   ARM: Kirkwood: Remove mach-kirkwood
+>   ARM: Dove: Remove mach-dove
+>   sound: ASoC: kirkwood: Remove unused drivers
+>   sound: ASoC: kirkwood: Remove ARCH_KIRKWOOD and ARCH_DOVE dependency
+>   cpuidle: kirkwood: Replace ARCH_KIRKWOOD dependency
+>   ata: Remove ARCH_KIRKWOOD and ARCH_DOVE dependency
+>   thermal: Replace ARCH_KIRKWOOD and ARCH_DOVE dependency
+>   leds: Replace ARCH_KIRKWOOD dependency
+>   PCI: Remove ARCH_KIRKWOOD and ARCH_DOVE dependency
+>   phy: Replace ARCH_KIRKWOOD and ARCH_DOVE dependency
+>   rtc: Remove ARCH_KIRKWOOD and ARCH_DOVE dependency
+>   watchdog: Remove ARCH_KIRKWOOD and ARCH_DOVE dependency
+>   Remove ARCH_DOVE dependency
 
-So you need to tell the device where to write in order to raise the
-'spurious interrupt'.
+Let's just do mach-kirkwood/ removal this time around and we'll
+re-address mach-dove next window.
 
-	David
+thx,
+
+Jason.
