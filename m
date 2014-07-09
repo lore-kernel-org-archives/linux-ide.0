@@ -1,143 +1,97 @@
-From: Antoine =?iso-8859-1?Q?T=E9nart?=
-	<antoine.tenart@free-electrons.com>
-Subject: Re: [PATCH v9 3/7] ata: libahci: allow to use multiple PHYs
-Date: Wed, 9 Jul 2014 10:23:31 +0200
-Message-ID: <20140709082331.GA4510@kwain>
-References: <1404728173-20263-1-git-send-email-antoine.tenart@free-electrons.com>
- <1404728173-20263-4-git-send-email-antoine.tenart@free-electrons.com>
- <20140708134000.GC4979@htj.dyndns.org>
- <20140708170353.GA16148@kwain>
- <20140708171817.GH4979@htj.dyndns.org>
- <20140708174900.GC16148@kwain>
- <20140708214010.GI4979@htj.dyndns.org>
+From: Peter De Schrijver <pdeschrijver@nvidia.com>
+Subject: Re: [PATCH 6/9] ARM: tegra: Export tegra_powergate_power_on
+Date: Wed, 9 Jul 2014 11:33:11 +0300
+Message-ID: <20140709083311.GE23218@tbergstrom-lnx.Nvidia.com>
+References: <20140617140146.GH3407@tbergstrom-lnx.Nvidia.com>
+ <20140617215119.GC24743@mithrandir>
+ <20140618121806.GJ3407@tbergstrom-lnx.Nvidia.com>
+ <53A1B252.1030204@wwwdotorg.org>
+ <20140619080234.GK3407@tbergstrom-lnx.Nvidia.com>
+ <53A3096B.1040409@wwwdotorg.org>
+ <20140623101441.GU3407@tbergstrom-lnx.Nvidia.com>
+ <20140708130501.GC9516@ulmo>
+ <20140708141135.GC23218@tbergstrom-lnx.Nvidia.com>
+ <20140709063130.GA3170@ulmo>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from top.free-electrons.com ([176.31.233.9]:44174 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751294AbaGIIXf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Jul 2014 04:23:35 -0400
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:12322 "EHLO
+	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751778AbaGIIdP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Jul 2014 04:33:15 -0400
 Content-Disposition: inline
-In-Reply-To: <20140708214010.GI4979@htj.dyndns.org>
+In-Reply-To: <20140709063130.GA3170@ulmo>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Antoine =?iso-8859-1?Q?T=E9nart?= <antoine.tenart@free-electrons.com>, sebastian.hesselbarth@gmail.com, kishon@ti.com, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
+To: Thierry Reding <thierry.reding@gmail.com>
+Cc: Stephen Warren <swarren@wwwdotorg.org>, Mikko Perttunen <mperttunen@nvidia.com>, "tj@kernel.org" <tj@kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hi Tejun,
+On Wed, Jul 09, 2014 at 08:31:32AM +0200, Thierry Reding wrote:
+> * PGP Signed by an unknown key
+> 
+> On Tue, Jul 08, 2014 at 05:11:35PM +0300, Peter De Schrijver wrote:
+> > > > 
+> > > > Yes, but the problem is that you also need clocks and reset of other modules
+> > > > in the same domain to safely control the domain's status. Eg: the ISPs, VI and
+> > > > CSI share a domain. VI and CSI are useable without ISP and the ISP lacks
+> > > > public documentation. So it's not unlikely a VI and CSI driver will upstreamed
+> > > > someday which means we would need to control the domain and therefore would
+> > > > need to tell that driver about the ISPs clocks and resets even though the
+> > > > driver doesn't know anything about the ISP hw otherwise.
+> > > 
+> > > Can't we make powergates reference counted so that they don't get
+> > > disabled as long as there are any users? Looking for example at the
+> > 
+> > We could, but then why not switch to the powerdomain code and make powering
+> > off a domain a NOP until we sorted out the context save/restore or fixed
+> > the framework to allow for suspend without turning off the domains?
+> 
+> Well, one of the reasons why I'm not sure it's worth the effort at this
+> point is that we can't get rid of the tegra_powergate_*() API anyway
+> because of backwards compatibility. So we're going to add code (without
+> getting rid of old code) merely to support some generic framework. That
+> doesn't sound very useful to me.
+> 
 
-On Tue, Jul 08, 2014 at 05:40:10PM -0400, Tejun Heo wrote:
-> Hey,
->=20
-> On Tue, Jul 08, 2014 at 07:49:00PM +0200, Antoine T=E9nart wrote:
-> > > So, yeah, it's being used both as input and output and we also ha=
-ve
-> > > the arguments which affect port_map, right?  It does seem confusi=
-ng.
-> >=20
-> > I do see priv->port_map as being automatically set and then restric=
-ted
-> > if needed by the port_map input here. I don't see how that's confus=
-ing.
-> > The only modification is we restrict the port_map parameter to the =
-set
-> > of available ports. The port_map argument affected priv->port_map b=
-efore
-> > this patch.
->=20
-> It is confusing.  If you wanna pass around available ports in hpriv,
-> please add a separate field and replace the arguments to
-> save_initial_config().
+We can also convert the existing users to genpd. Today there are only 2 users
+(gpu/drm/tegra/gr3d.c and pci/host/pci-tegra.c), so that doesn't seem to be
+an impossible task.
 
-I don't get it. Which argument should I replace in
-save_initial_config()? The change is we compute hpriv->port_map.
-I don't see which arguments we can add or replace.
+> > > display controller driver, modules don't seem to care overly much about
+> > > the powergate's state except that it needs to be turned on before they
+> > > touch some of the registers.
+> > > 
+> > > From a bit of experimentation it also seems like the sequence encoded
+> > > within tegra_powergate_sequence_power_up() isn't at all necessary. I
+> > > couldn't find an authoritative reference for that either, so I'm tempted
+> > > to conclude that it was simply cargo-culted from the dark-ages.
+> > > 
+> > > So I'm thinking that if we ever move to use power domains for this, we
+> > > may be able to just drop any extra handling (well, we'd need to keep it
+> > > for backwards-compatibility... *sigh*) and let drivers handle the clock
+> > > and reset resources.
+> > > 
+> > > On the other hand, given that we already need to keep the existing code
+> > > for backwards-compatibility, I'm not sure there's a real advantage in
+> > > turning them into power domains, since we'd be adding extra code without
+> > > an clear gains (especially since it seems like we'd need even more code
+> > > to properly handle suspend/resume in drivers that need powergates).
+> > > 
+> > 
+> > Unless we fix the framework to require context save/restore for suspend.
+> > There is a good reason to do that. context save/restore requires energy
+> > as well, so it's not a given that turning off domains in system suspend
+> > will save power.
+> 
+> I'm not sure I follow. "require context save/restore for suspend" is
+> what many drivers currently don't support, hence we can't use the
+> generic PM domains. Perhaps what you're saying is that the PM domain
+> core code should be enhanced so that domains can be marked so that they
+> stay on during a suspend/resume cycle.
+> 
 
-If that's more clear, the modification here is equivalent to (when usin=
-g
-the new bindings):
+Exactly.
 
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 40ea583d3610..f9d3cfd5d1bd 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -513,7 +513,7 @@ void ahci_save_initial_config(struct device *dev,
-        /* record values to use during operation */
-        hpriv->cap =3D cap;
-        hpriv->cap2 =3D cap2;
--       hpriv->port_map =3D port_map;
-+       hpriv->port_map &=3D port_map;
-=20
-        if (!hpriv->start_engine)
-                hpriv->start_engine =3D ahci_start_engine;
+Cheers,
 
-It just use the argument port_map on the real set of ports. If that's
-still not clear, I can add a separate field. But the field will store
-the exact same information as hpriv->port_map. We will have something
-like:
-
-if (hpriv->available_port_map)
-	hpriv->port_map &=3D hpriv->available_port_map;
-
-> > > Well, so does clk.  Let's say clk is more restricted and phy can =
-be
-> > > one or more per port and thus needs to be dynamic.  If so, should=
-n't
-> > > we at least have some correlation between phys and ports?  It bot=
-hers
-> > > me that now libahci is carrying random number of resources that i=
-t has
-> > > no idea how to associate with the ports it manages.  What if late=
-r we
-> > > want to involve phy driver in power managing unoccupied ports?
-> >=20
-> > I see. This is a first (working) attempt to have a one node per por=
-t. I
-> > agree that would be nice to have a correlation between ports and PH=
-Ys.
-> > This can definitively be added when needed without changing the dt
-> > bindings as only the internal representation changes. This would al=
-so
-> > require to get all phys from the port nodes, which is again interna=
-l
-> > stuff.
-> >=20
-> > Don't you think we can go by steps, and have a following up series =
-for
-> > this when needed (like in a power managing series for unoccupied po=
-rts)?
->=20
-> I don't know.  It isn't exactly difficult to make it per-port, is it?
-> We already have ahci_port_priv and wouldn't the code actually be
-> simpler that way?
-
-I had a quick look on this, and it does not seems to be that simple. Th=
-e
-ahci_port_priv is stored inside the ata_port struct and not accessible
-(as of now) from the ahci_host_priv one. The ahci_port_priv is
-initialized at the end of ahci_platform_init_host(), far after we need
-it. This requires quite a lot of changes. Or is there another way?
-
-To be honest, we are now at v9 and it's been quite a long time since v1=
-=2E
-I'd really like it to be merged in 3.17. As I see it, this patch keeps
-the same logic as what was in place before, only with more PHYs.
-
-Don't take me wrong, I really think this is a good idea to have a
-per-port PHY information. But this is a refactoring not clearly related
-to this series as the logic is not changed. This definitively can be th=
-e
-subject of a dedicated series, especially if I got it right and the
-required modifications are not that obvious.
-
-What do you think?
-
-Thanks,
-
-Antoine
-
---=20
-Antoine T=E9nart, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+Peter.
