@@ -1,125 +1,225 @@
-From: Thierry Reding <thierry.reding@gmail.com>
-Subject: Re: [PATCH 6/9] ARM: tegra: Export tegra_powergate_power_on
-Date: Wed, 9 Jul 2014 08:31:32 +0200
-Message-ID: <20140709063130.GA3170@ulmo>
-References: <20140617121313.GE18816@ulmo>
- <20140617140146.GH3407@tbergstrom-lnx.Nvidia.com>
- <20140617215119.GC24743@mithrandir>
- <20140618121806.GJ3407@tbergstrom-lnx.Nvidia.com>
- <53A1B252.1030204@wwwdotorg.org>
- <20140619080234.GK3407@tbergstrom-lnx.Nvidia.com>
- <53A3096B.1040409@wwwdotorg.org>
- <20140623101441.GU3407@tbergstrom-lnx.Nvidia.com>
- <20140708130501.GC9516@ulmo>
- <20140708141135.GC23218@tbergstrom-lnx.Nvidia.com>
+From: Thierry Reding <thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v2 6/7] ata: Add support for the Tegra124 SATA controller
+Date: Wed, 9 Jul 2014 08:49:29 +0200
+Message-ID: <20140709064928.GC3170@ulmo>
+References: <1403101406-15439-1-git-send-email-mperttunen@nvidia.com>
+ <1403101406-15439-7-git-send-email-mperttunen@nvidia.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="zYM0uCDKw75PZbzx"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wg0-f49.google.com ([74.125.82.49]:44443 "EHLO
-	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751610AbaGIGbf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Jul 2014 02:31:35 -0400
+	protocol="application/pgp-signature"; boundary="B4IIlcmfBL/1gGOG"
+Return-path: <linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20140708141135.GC23218@tbergstrom-lnx.Nvidia.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <1403101406-15439-7-git-send-email-mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Sender: linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Mikko Perttunen <mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Cc: swarren-3lzwWm7+Weoh9ZMKESR00Q@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, pdeschrijver-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: Peter De Schrijver <pdeschrijver@nvidia.com>
-Cc: Stephen Warren <swarren@wwwdotorg.org>, Mikko Perttunen <mperttunen@nvidia.com>, "tj@kernel.org" <tj@kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
 
---zYM0uCDKw75PZbzx
+--B4IIlcmfBL/1gGOG
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-On Tue, Jul 08, 2014 at 05:11:35PM +0300, Peter De Schrijver wrote:
-> > >=20
-> > > Yes, but the problem is that you also need clocks and reset of other =
-modules
-> > > in the same domain to safely control the domain's status. Eg: the ISP=
-s, VI and
-> > > CSI share a domain. VI and CSI are useable without ISP and the ISP la=
-cks
-> > > public documentation. So it's not unlikely a VI and CSI driver will u=
-pstreamed
-> > > someday which means we would need to control the domain and therefore=
- would
-> > > need to tell that driver about the ISPs clocks and resets even though=
- the
-> > > driver doesn't know anything about the ISP hw otherwise.
-> >=20
-> > Can't we make powergates reference counted so that they don't get
-> > disabled as long as there are any users? Looking for example at the
->=20
-> We could, but then why not switch to the powerdomain code and make poweri=
-ng
-> off a domain a NOP until we sorted out the context save/restore or fixed
-> the framework to allow for suspend without turning off the domains?
+On Wed, Jun 18, 2014 at 05:23:25PM +0300, Mikko Perttunen wrote:
+[...]
+> diff --git a/drivers/ata/ahci_tegra.c b/drivers/ata/ahci_tegra.c
+[...]
+> +#include <linux/ahci_platform.h>
+> +#include <linux/reset.h>
+> +#include <linux/errno.h>
+> +#include <linux/kernel.h>
+> +#include <linux/module.h>
+> +#include <linux/of_device.h>
+> +#include <linux/platform_device.h>
+> +#include <linux/tegra-powergate.h>
+> +#include <linux/regulator/consumer.h>
+> +#include <linux/tegra-soc.h>
+> +#include "ahci.h"
+> +
+> +#define SATA_CONFIGURATION_0				0x180
+> +#define		SATA_CONFIGURATION_EN_FPCI		BIT(0)
 
-Well, one of the reasons why I'm not sure it's worth the effort at this
-point is that we can't get rid of the tegra_powergate_*() API anyway
-because of backwards compatibility. So we're going to add code (without
-getting rid of old code) merely to support some generic framework. That
-doesn't sound very useful to me.
+This, and the register/field definitions below look weirdly indented,
+but I guess that's mostly a matter of taste.
 
-> > display controller driver, modules don't seem to care overly much about
-> > the powergate's state except that it needs to be turned on before they
-> > touch some of the registers.
-> >=20
-> > From a bit of experimentation it also seems like the sequence encoded
-> > within tegra_powergate_sequence_power_up() isn't at all necessary. I
-> > couldn't find an authoritative reference for that either, so I'm tempted
-> > to conclude that it was simply cargo-culted from the dark-ages.
-> >=20
-> > So I'm thinking that if we ever move to use power domains for this, we
-> > may be able to just drop any extra handling (well, we'd need to keep it
-> > for backwards-compatibility... *sigh*) and let drivers handle the clock
-> > and reset resources.
-> >=20
-> > On the other hand, given that we already need to keep the existing code
-> > for backwards-compatibility, I'm not sure there's a real advantage in
-> > turning them into power domains, since we'd be adding extra code without
-> > an clear gains (especially since it seems like we'd need even more code
-> > to properly handle suspend/resume in drivers that need powergates).
-> >=20
->=20
-> Unless we fix the framework to require context save/restore for suspend.
-> There is a good reason to do that. context save/restore requires energy
-> as well, so it's not a given that turning off domains in system suspend
-> will save power.
+> +#define T_SATA0_CHX_PHY_CTRL1_GEN1			0x690
+> +#define		T_SATA0_CHX_PHY_CTRL1_GEN1_TX_AMP_MASK	0xff
+> +#define		T_SATA0_CHX_PHY_CTRL1_GEN1_TX_AMP_SHIFT	0
+> +#define		T_SATA0_CHX_PHY_CTRL1_GEN1_TX_PEAK_MASK	(0xff<<8)
 
-I'm not sure I follow. "require context save/restore for suspend" is
-what many drivers currently don't support, hence we can't use the
-generic PM domains. Perhaps what you're saying is that the PM domain
-core code should be enhanced so that domains can be marked so that they
-stay on during a suspend/resume cycle.
+Perhaps single spaces around "<<"? The same for other occurrences below.
 
-Such functionality could be part of a specifier in a DT binding. It's
-technically not a description of the hardware, but it encodes a device's
-requirements regarding suspend/resume latency.
+> +struct sata_pad_calibration {
+> +	u8 gen1_tx_amp, gen1_tx_peak, gen2_tx_amp, gen2_tx_peak;
+> +};
+
+I think a more idiomatic way would be to put the fields in a structure
+declaration on separate lines.
+
+> +static const struct sata_pad_calibration tegra124_pad_calibration[] = {
+> +	{0x18, 0x04, 0x18, 0x0a},
+
+Maybe spaces after '{' and before '}'?
+
+> +static int tegra_ahci_power_on(struct ahci_host_priv *hpriv)
+> +{
+> +	struct tegra_ahci_priv *tegra = hpriv->plat_data;
+> +	int ret;
+> +
+> +	ret = regulator_bulk_enable(ARRAY_SIZE(tegra->supplies),
+> +				    tegra->supplies);
+> +	if (ret)
+> +		return ret;
+> +
+> +	ret = tegra_powergate_sequence_power_up(TEGRA_POWERGATE_SATA,
+> +		tegra->sata_clk, tegra->sata_rst);
+
+These could be aligned with TEGRA_POWERGATE_SATA.
+
+> +	ret = clk_prepare_enable(tegra->cml1_clk);
+> +	if (ret) {
+> +		clk_disable_unprepare(tegra->sata_oob_clk);
+> +		goto disable_power;
+> +	}
+> +
+> +	ret = clk_prepare_enable(tegra->plle_clk);
+> +	if (ret) {
+> +		clk_disable_unprepare(tegra->cml1_clk);
+> +		clk_disable_unprepare(tegra->sata_oob_clk);
+> +		goto disable_power;
+> +	}
+> +
+> +	reset_control_deassert(tegra->sata_cold_rst);
+> +	reset_control_deassert(tegra->sata_oob_rst);
+> +
+> +	ret = phy_power_on(tegra->padctl_phy);
+> +	if (ret) {
+> +		clk_disable_unprepare(tegra->plle_clk);
+> +		clk_disable_unprepare(tegra->cml1_clk);
+> +		clk_disable_unprepare(tegra->sata_oob_clk);
+> +		goto disable_power;
+> +	}
+
+These error paths might be more readable if you did unwind them similar
+to how you did with sata_clk below.
+
+> +static int tegra_ahci_controller_init(struct ahci_host_priv *hpriv)
+> +{
+> +	struct tegra_ahci_priv *tegra = hpriv->plat_data;
+> +	int ret;
+> +	unsigned int val;
+> +	struct sata_pad_calibration calib;
+> +
+> +	ret = tegra_ahci_power_on(hpriv);
+> +	if (ret) {
+> +		dev_err(&tegra->pdev->dev,
+> +			"failed to power on ahci controller: %d\n", ret);
+
+s/ahci/AHCI/
+
+> +		return ret;
+> +	}
+> +
+> +	val = readl(tegra->sata_regs + SATA_CONFIGURATION_0);
+> +	val |= SATA_CONFIGURATION_EN_FPCI;
+> +	writel(val, tegra->sata_regs + SATA_CONFIGURATION_0);
+> +
+> +	/* Pad calibration */
+> +
+> +	ret = tegra_fuse_readl(FUSE_SATA_CALIB, &val);
+> +	if (ret) {
+> +		dev_err(&tegra->pdev->dev,
+> +			"failed to read sata calibration fuse: %d\n", ret);
+
+s/sata/SATA/
+
+> +static struct ata_port_operations ahci_tegra_port_ops = {
+> +	.inherits	= &ahci_ops,
+> +	.host_stop	= tegra_ahci_host_stop,
+> +};
+> +
+> +static const struct ata_port_info ahci_tegra_port_info = {
+> +	.flags		= AHCI_FLAG_COMMON,
+> +	.pio_mask	= ATA_PIO4,
+> +	.udma_mask	= ATA_UDMA6,
+> +	.port_ops	= &ahci_tegra_port_ops,
+> +};
+
+I prefer these to not be arbitrarily indented, but Tejun seemed to
+indicate he did, so it's ultimately his call.
+
+> +static const struct of_device_id tegra_ahci_of_match[] = {
+> +	{ .compatible = "nvidia,tegra124-ahci" },
+> +	{},
+
+Technically there's no need for the comma at the end here. Usually you'd
+put one here so that if somebody ever were to add a new entry after this
+the diff wouldn't need to include the line that you only add a comma to.
+But in this particular case the last entry is used as a sentinel, so
+leaving away the comma is actually useful as a hint that entries should
+be added in front rather than at the end.
+
+> +	hpriv->mmio = devm_ioremap_resource(&pdev->dev,
+> +		platform_get_resource(pdev, IORESOURCE_MEM, 0));
+
+Perhaps a temporary variable for the result of platform_get_resource()
+would help make this look less cluttered.
+
+> +	if (IS_ERR(hpriv->mmio)) {
+> +		dev_err(&pdev->dev, "Failed to get AHCI IO memory\n");
+
+This isn't necessary. devm_ioremap_resource() will already output an
+error message.
+
+> +	tegra->sata_regs = devm_ioremap_resource(&pdev->dev,
+> +		platform_get_resource(pdev, IORESOURCE_MEM, 1));
+> +	if (IS_ERR(tegra->sata_regs)) {
+> +		dev_err(&pdev->dev, "Failed to get SATA IO memory\n");
+
+Same here.
+
+> +	tegra->padctl_phy = devm_phy_get(&pdev->dev, "sata-phy");
+> +	if (IS_ERR(tegra->padctl_phy)) {
+> +		dev_err(&pdev->dev, "Failed to get phy\n");
+
+s/phy/PHY/
+
+> +	ret = devm_regulator_bulk_get(&pdev->dev, ARRAY_SIZE(tegra->supplies),
+> +					tegra->supplies);
+
+The trailing argument here isn't aligned as in other places.
+
+> +static struct platform_driver tegra_ahci_driver = {
+> +	.probe = tegra_ahci_probe,
+> +	.remove = ata_platform_remove_one,
+> +	.driver = {
+> +		.name = "tegra-ahci",
+> +		.owner = THIS_MODULE,
+
+This isn't really needed anymore, module_platform_driver will end up
+setting this for you anyway.
 
 Thierry
 
---zYM0uCDKw75PZbzx
+--B4IIlcmfBL/1gGOG
 Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQIcBAEBAgAGBQJTvOHCAAoJEN0jrNd/PrOhSWYP/ii2wlR15uMXlLs5i6Rfp492
-iakh2grZLuClz0nqqVq6inDhak2+PQ3ehq7Y1x/+9Am7n//vvYwB8Fd/9Oo2zer1
-4uT/xxyrXKXaO9KMuczycTpFLA6hSZS/WbUJMcOdb7axF95FlAeOe/AlaGMrD+aL
-E6FDvvT3nmxVFmJfHJCSorsJWguGW8bYFGkVQt+lGvdRMUtUaRnEYxFfk7jzJWLd
-/E/y38g+RyoaTTw6e05RXEOM9iA+ituSVpkjL/RVlxu2cDuH4TqXhYzK/wAYmVky
-RWeh+CyerRyJ22q8S+kQ5T7aLWlz6zxk7sT6EOyRyRdikqePRgnVv6ThLqJ1KPML
-KrM2K7fXCJkN4yifY8TQAcX11W3OEMpU3EBk6P1BknuQ184mrr7eaMhQVwBZnEnx
-OVPBjaafoPXjkydf9gyZGffEcy6kGEo5b8L673ryaT66rhdwhE2CCUWKifz7R/2c
-hEtkuVOVQo2TSptKecEKFkHfl7a96nuZ7jkFIHfa407pE1pMzTA5a0TQcsMry1Ki
-9WB8hTqJZrVXLlf6pplDQqyn53yM9f7N7aG3YTYdFzvcOYF4pGhSEIuo8hEaWrD/
-9uVqGITBoZIwwbnFbaWoEz9QA3JtrabQFYiioTpTDa6kT6y22IXF66fguTeQwPE/
-6H5h2C0t3amJ1oVii1Fx
-=A34F
+iQIcBAEBAgAGBQJTvOX4AAoJEN0jrNd/PrOhe9AQAJQeRSYMRCkut/2iRRpJmvpp
+h5JL/XLVmcCTsseLiBRcwP0a+2M0CK7QghmvTAEkly0mucWbkthwao0z0T3fdlAR
+jttvC3/YYBsXZVkOMm6Q+N/AFD891BnhTi9IcITNfzYffcSYZurpvhioCtYfOS1t
+7Kwna1n3uG2Rqeqj5MQfxEPuRoWXB7ibMJLYX8twKeAj7P28BJiBkZ99kOae60XQ
+C7zbrMUXkCpRZO6SAs9zPmtAMrKxRDIADmQ2KTLJByYGtcR7A3ZmvaiXTte7S/6x
+VPzAFA66qXwDiBrPBUj1ciP10nLKs/kE53DAOfKItX00dDXMDu+7MQgeIRIW52HE
+uQOMYsV6/1/P2Xm+UmtT6ps486U5meDYW9RNy3KrdsC+pkYT/M2RN3QIwOp54bvA
+KKxxM+XmrM7LDH4Nf0qttklk/CfkSGniacwEOLEelzjh97hMXqGmQ9t4HOBLnvrT
+D2voaxtNPmQ7RyYkvJ6B77JmcOww8j+YeWbi2yEgobuEa/6lJNsNASIoy/GfzIZb
+c3uNeK0Cw5Ox8Wo8Nu88Oe+SzSByna+7ikKjuRiX/6w59zBupASVP7iOYLvlTtN7
+278NXrEv9teXklzCvsp8jUcikp4Ih+/MFEQL8DJo/hk8g9AXUFB2TReOH3hmh4my
+jA7qvcAUP0R9nZxdpmfO
+=Y0ip
 -----END PGP SIGNATURE-----
 
---zYM0uCDKw75PZbzx--
+--B4IIlcmfBL/1gGOG--
