@@ -1,448 +1,110 @@
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH] phy: qcom: Add driver for QCOM APQ8064 SATA PHY
-Date: Wed, 9 Jul 2014 15:38:34 +0530
-Message-ID: <53BD14A2.10807@ti.com>
-References: <1403546409-10860-1-git-send-email-srinivas.kandagatla@linaro.org> <53BD0D17.6030201@linaro.org>
+From: Thierry Reding <thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 6/9] ARM: tegra: Export tegra_powergate_power_on
+Date: Wed, 9 Jul 2014 12:25:52 +0200
+Message-ID: <20140709102551.GA19357@ulmo>
+References: <20140617215119.GC24743@mithrandir>
+ <20140618121806.GJ3407@tbergstrom-lnx.Nvidia.com>
+ <53A1B252.1030204@wwwdotorg.org>
+ <20140619080234.GK3407@tbergstrom-lnx.Nvidia.com>
+ <53A3096B.1040409@wwwdotorg.org>
+ <20140623101441.GU3407@tbergstrom-lnx.Nvidia.com>
+ <20140708130501.GC9516@ulmo>
+ <20140708141135.GC23218@tbergstrom-lnx.Nvidia.com>
+ <20140709063130.GA3170@ulmo>
+ <20140709083311.GE23218@tbergstrom-lnx.Nvidia.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:41827 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754887AbaGIKI5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 9 Jul 2014 06:08:57 -0400
-In-Reply-To: <53BD0D17.6030201@linaro.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="+HP7ph2BbKc20aGI"
+Return-path: <linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20140709083311.GE23218-Rysk9IDjsxmJz7etNGeUX8VPkgjIgRvpAL8bYrjMMd8@public.gmane.org>
+Sender: linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Peter De Schrijver <pdeschrijver-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Cc: Stephen Warren <swarren-3lzwWm7+Weoh9ZMKESR00Q@public.gmane.org>, Mikko Perttunen <mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-Cc: Grant Likely <grant.likely@linaro.org>, Rob Herring <robh+dt@kernel.org>, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-ide@vger.kernel.org, Sujit Reddy Thumma <sthumma@codeaurora.org>
 
 
+--+HP7ph2BbKc20aGI
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On Wednesday 09 July 2014 03:06 PM, Srinivas Kandagatla wrote:
-> Hi Kishon,
-> 
-> Could you please consider this for v3.17?
-> 
+On Wed, Jul 09, 2014 at 11:33:11AM +0300, Peter De Schrijver wrote:
+> On Wed, Jul 09, 2014 at 08:31:32AM +0200, Thierry Reding wrote:
+> > * PGP Signed by an unknown key
+> >=20
+> > On Tue, Jul 08, 2014 at 05:11:35PM +0300, Peter De Schrijver wrote:
+> > > > >=20
+> > > > > Yes, but the problem is that you also need clocks and reset of ot=
+her modules
+> > > > > in the same domain to safely control the domain's status. Eg: the=
+ ISPs, VI and
+> > > > > CSI share a domain. VI and CSI are useable without ISP and the IS=
+P lacks
+> > > > > public documentation. So it's not unlikely a VI and CSI driver wi=
+ll upstreamed
+> > > > > someday which means we would need to control the domain and there=
+fore would
+> > > > > need to tell that driver about the ISPs clocks and resets even th=
+ough the
+> > > > > driver doesn't know anything about the ISP hw otherwise.
+> > > >=20
+> > > > Can't we make powergates reference counted so that they don't get
+> > > > disabled as long as there are any users? Looking for example at the
+> > >=20
+> > > We could, but then why not switch to the powerdomain code and make po=
+wering
+> > > off a domain a NOP until we sorted out the context save/restore or fi=
+xed
+> > > the framework to allow for suspend without turning off the domains?
+> >=20
+> > Well, one of the reasons why I'm not sure it's worth the effort at this
+> > point is that we can't get rid of the tegra_powergate_*() API anyway
+> > because of backwards compatibility. So we're going to add code (without
+> > getting rid of old code) merely to support some generic framework. That
+> > doesn't sound very useful to me.
+> >=20
+>=20
+> We can also convert the existing users to genpd. Today there are only 2 u=
+sers
+> (gpu/drm/tegra/gr3d.c and pci/host/pci-tegra.c), so that doesn't seem to =
+be
+> an impossible task.
 
-sure.. please send the dt binding docs along with this patch.
+We can certainly do that. What I'm trying to say is that since people
+may be running newer versions of the kernel with a DTB that doesn't have
+the necessary properties to hook up power domains, we have to keep calls
+to tegra_powergate_*() functions as-is, lest we break those setups.
 
-Cheers
-Kishon
-> 
-> Thanks,
-> srini
-> 
-> On 23/06/14 19:00, Srinivas Kandagatla wrote:
->> Add a PHY driver for uses with AHCI based SATA controller driver on the
->> APQ8064 family of SoCs.
->>
->> This patch is a forward port plus separating PHY code of SATA driver
->> from Qualcomm's v3.4 andriod kernel.
->>
->> Tested on IFC6410 board.
->>
->> CC: Sujit Reddy Thumma <sthumma@codeaurora.org>
->> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
->> ---
->>   drivers/phy/Kconfig                 |   7 +
->>   drivers/phy/Makefile                |   1 +
->>   drivers/phy/phy-qcom-apq8064-sata.c | 358 ++++++++++++++++++++++++++++++++++++
->>   3 files changed, 366 insertions(+)
->>   create mode 100644 drivers/phy/phy-qcom-apq8064-sata.c
->>
->> diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
->> index b7b6bce..39083c7 100644
->> --- a/drivers/phy/Kconfig
->> +++ b/drivers/phy/Kconfig
->> @@ -178,6 +178,13 @@ config PHY_XGENE
->>       help
->>         This option enables support for APM X-Gene SoC multi-purpose PHY.
->>
->> +config PHY_QCOM_APQ8064_SATA
->> +    tristate "Qualcomm APQ8064 SATA SerDes/PHY driver"
->> +    depends on ARCH_QCOM
->> +    depends on HAS_IOMEM
->> +    depends on OF
->> +    select GENERIC_PHY
->> +
->>   config PHY_QCOM_IPQ806X_SATA
->>       tristate "Qualcomm IPQ806x SATA SerDes/PHY driver"
->>       depends on ARCH_QCOM
->> diff --git a/drivers/phy/Makefile b/drivers/phy/Makefile
->> index d950317..8782088 100644
->> --- a/drivers/phy/Makefile
->> +++ b/drivers/phy/Makefile
->> @@ -20,4 +20,5 @@ phy-exynos-usb2-$(CONFIG_PHY_EXYNOS4X12_USB2)    +=
->> phy-exynos4x12-usb2.o
->>   phy-exynos-usb2-$(CONFIG_PHY_EXYNOS5250_USB2)    += phy-exynos5250-usb2.o
->>   obj-$(CONFIG_PHY_EXYNOS5_USBDRD)    += phy-exynos5-usbdrd.o
->>   obj-$(CONFIG_PHY_XGENE)            += phy-xgene.o
->> +obj-$(CONFIG_PHY_QCOM_APQ8064_SATA)    += phy-qcom-apq8064-sata.o
->>   obj-$(CONFIG_PHY_QCOM_IPQ806X_SATA)    += phy-qcom-ipq806x-sata.o
->> diff --git a/drivers/phy/phy-qcom-apq8064-sata.c
->> b/drivers/phy/phy-qcom-apq8064-sata.c
->> new file mode 100644
->> index 0000000..e9e59e2
->> --- /dev/null
->> +++ b/drivers/phy/phy-qcom-apq8064-sata.c
->> @@ -0,0 +1,358 @@
->> +/*
->> + * Copyright (c) 2014, The Linux Foundation. All rights reserved.
->> + *
->> + * This program is free software; you can redistribute it and/or modify
->> + * it under the terms of the GNU General Public License version 2 and
->> + * only version 2 as published by the Free Software Foundation.
->> + *
->> + * This program is distributed in the hope that it will be useful,
->> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
->> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
->> + * GNU General Public License for more details.
->> + */
->> +
->> +#include <linux/io.h>
->> +#include <linux/kernel.h>
->> +#include <linux/module.h>
->> +#include <linux/of.h>
->> +#include <linux/time.h>
->> +#include <linux/delay.h>
->> +#include <linux/clk.h>
->> +#include <linux/slab.h>
->> +#include <linux/platform_device.h>
->> +#include <linux/phy/phy.h>
->> +
->> +/* PHY registers */
->> +#define UNIPHY_PLL_REFCLK_CFG        0x000
->> +#define UNIPHY_PLL_POSTDIV1_CFG        0x004
->> +#define UNIPHY_PLL_CHGPUMP_CFG        0x008
->> +#define UNIPHY_PLL_VCOLPF_CFG        0x00C
->> +#define UNIPHY_PLL_VREG_CFG        0x010
->> +#define UNIPHY_PLL_PWRGEN_CFG        0x014
->> +#define UNIPHY_PLL_DMUX_CFG        0x018
->> +#define UNIPHY_PLL_AMUX_CFG        0x01C
->> +#define UNIPHY_PLL_GLB_CFG        0x020
->> +#define UNIPHY_PLL_POSTDIV2_CFG        0x024
->> +#define UNIPHY_PLL_POSTDIV3_CFG        0x028
->> +#define UNIPHY_PLL_LPFR_CFG        0x02C
->> +#define UNIPHY_PLL_LPFC1_CFG        0x030
->> +#define UNIPHY_PLL_LPFC2_CFG        0x034
->> +#define UNIPHY_PLL_SDM_CFG0        0x038
->> +#define UNIPHY_PLL_SDM_CFG1        0x03C
->> +#define UNIPHY_PLL_SDM_CFG2        0x040
->> +#define UNIPHY_PLL_SDM_CFG3        0x044
->> +#define UNIPHY_PLL_SDM_CFG4        0x048
->> +#define UNIPHY_PLL_SSC_CFG0        0x04C
->> +#define UNIPHY_PLL_SSC_CFG1        0x050
->> +#define UNIPHY_PLL_SSC_CFG2        0x054
->> +#define UNIPHY_PLL_SSC_CFG3        0x058
->> +#define UNIPHY_PLL_LKDET_CFG0        0x05C
->> +#define UNIPHY_PLL_LKDET_CFG1        0x060
->> +#define UNIPHY_PLL_LKDET_CFG2        0x064
->> +#define UNIPHY_PLL_TEST_CFG        0x068
->> +#define UNIPHY_PLL_CAL_CFG0        0x06C
->> +#define UNIPHY_PLL_CAL_CFG1        0x070
->> +#define UNIPHY_PLL_CAL_CFG2        0x074
->> +#define UNIPHY_PLL_CAL_CFG3        0x078
->> +#define UNIPHY_PLL_CAL_CFG4        0x07C
->> +#define UNIPHY_PLL_CAL_CFG5        0x080
->> +#define UNIPHY_PLL_CAL_CFG6        0x084
->> +#define UNIPHY_PLL_CAL_CFG7        0x088
->> +#define UNIPHY_PLL_CAL_CFG8        0x08C
->> +#define UNIPHY_PLL_CAL_CFG9        0x090
->> +#define UNIPHY_PLL_CAL_CFG10        0x094
->> +#define UNIPHY_PLL_CAL_CFG11        0x098
->> +#define UNIPHY_PLL_EFUSE_CFG        0x09C
->> +#define UNIPHY_PLL_DEBUG_BUS_SEL    0x0A0
->> +#define UNIPHY_PLL_CTRL_42        0x0A4
->> +#define UNIPHY_PLL_CTRL_43        0x0A8
->> +#define UNIPHY_PLL_CTRL_44        0x0AC
->> +#define UNIPHY_PLL_CTRL_45        0x0B0
->> +#define UNIPHY_PLL_CTRL_46        0x0B4
->> +#define UNIPHY_PLL_CTRL_47        0x0B8
->> +#define UNIPHY_PLL_CTRL_48        0x0BC
->> +#define UNIPHY_PLL_STATUS        0x0C0
->> +#define UNIPHY_PLL_DEBUG_BUS0        0x0C4
->> +#define UNIPHY_PLL_DEBUG_BUS1        0x0C8
->> +#define UNIPHY_PLL_DEBUG_BUS2        0x0CC
->> +#define UNIPHY_PLL_DEBUG_BUS3        0x0D0
->> +#define UNIPHY_PLL_CTRL_54        0x0D4
->> +
->> +#define SATA_PHY_SER_CTRL        0x100
->> +#define SATA_PHY_TX_DRIV_CTRL0        0x104
->> +#define SATA_PHY_TX_DRIV_CTRL1        0x108
->> +#define SATA_PHY_TX_DRIV_CTRL2        0x10C
->> +#define SATA_PHY_TX_DRIV_CTRL3        0x110
->> +#define SATA_PHY_TX_IMCAL0        0x11C
->> +#define SATA_PHY_TX_IMCAL1        0x120
->> +#define SATA_PHY_TX_IMCAL2        0x124
->> +#define SATA_PHY_RX_IMCAL0        0x128
->> +#define SATA_PHY_RX_IMCAL1        0x12C
->> +#define SATA_PHY_RX_IMCAL2        0x130
->> +#define SATA_PHY_RX_TERM        0x134
->> +#define SATA_PHY_EQUAL            0x13C
->> +#define SATA_PHY_OOB_TERM        0x144
->> +#define SATA_PHY_CDR_CTRL0        0x148
->> +#define SATA_PHY_CDR_CTRL1        0x14C
->> +#define SATA_PHY_CDR_CTRL2        0x150
->> +#define SATA_PHY_CDR_CTRL3        0x154
->> +#define SATA_PHY_CDR_CTRL4        0x158
->> +#define SATA_PHY_FA_LOAD0        0x15C
->> +#define SATA_PHY_FA_LOAD1        0x160
->> +#define SATA_PHY_PI_CTRL0        0x168
->> +#define SATA_PHY_PI_CTRL1        0x16C
->> +#define SATA_PHY_AD_TPA_CTRL        0x178
->> +#define SATA_PHY_REFCLK_CTRL        0x17C
->> +#define SATA_PHY_POW_DWN_CTRL0        0x180
->> +#define SATA_PHY_POW_DWN_CTRL1        0x184
->> +#define SATA_PHY_TX_DATA_CTRL        0x188
->> +#define SATA_PHY_BIST_GEN0        0x18C
->> +#define SATA_PHY_BIST_GEN1        0x190
->> +#define SATA_PHY_BIST_GEN2        0x194
->> +#define SATA_PHY_BIST_GEN3        0x198
->> +#define SATA_PHY_LBK_CTRL        0x19C
->> +#define SATA_PHY_TEST_DEBUG_CTRL    0x1A0
->> +#define SATA_PHY_ALIGNP            0x1A4
->> +#define SATA_PHY_PRBS_CFG0        0x1A8
->> +#define SATA_PHY_PRBS_CFG1        0x1AC
->> +#define SATA_PHY_PRBS_CFG2        0x1B0
->> +#define SATA_PHY_PRBS_CFG3        0x1B4
->> +#define SATA_PHY_CHAN_COMP_CHK_CNT    0x1B8
->> +#define SATA_PHY_RESET_CTRL        0x1BC
->> +#define SATA_PHY_RX_CLR            0x1C0
->> +#define SATA_PHY_RX_EBUF_CTRL        0x1C4
->> +#define SATA_PHY_ID0            0x1C8
->> +#define SATA_PHY_ID1            0x1CC
->> +#define SATA_PHY_ID2            0x1D0
->> +#define SATA_PHY_ID3            0x1D4
->> +#define SATA_PHY_RX_CHK_ERR_CNT0    0x1D8
->> +#define SATA_PHY_RX_CHK_ERR_CNT1    0x1DC
->> +#define SATA_PHY_RX_CHK_STAT        0x1E0
->> +#define SATA_PHY_TX_IMCAL_STAT        0x1E4
->> +#define SATA_PHY_RX_IMCAL_STAT        0x1E8
->> +#define SATA_PHY_RX_EBUF_STAT        0x1EC
->> +#define SATA_PHY_DEBUG_BUS_STAT0    0x1F0
->> +#define SATA_PHY_DEBUG_BUS_STAT1    0x1F4
->> +#define SATA_PHY_DEBUG_BUS_STAT2    0x1F8
->> +#define SATA_PHY_DEBUG_BUS_STAT3    0x1FC
->> +
->> +#define UNIPHY_PLL_LOCK        BIT(0)
->> +#define SATA_PHY_TX_CAL        BIT(0)
->> +#define SATA_PHY_RX_CAL        BIT(0)
->> +
->> +/* default timeout set to 1 sec */
->> +#define TIMEOUT_MS        10000
->> +
->> +struct qcom_apq8064_sata_phy {
->> +    void __iomem *mmio;
->> +    struct clk *cfg_clk;
->> +    struct device *dev;
->> +};
->> +
->> +/* Helper function to do poll and timeout */
->> +static int read_poll_timeout(void __iomem *addr, u32 mask)
->> +{
->> +    unsigned long timeout = jiffies + msecs_to_jiffies(TIMEOUT_MS);
->> +    u32 val;
->> +
->> +    do {
->> +        cpu_relax();
->> +        val = readl_relaxed(addr);
->> +        if (val & mask)
->> +            break;
->> +    } while (!time_after(jiffies, timeout));
->> +
->> +    return (val & mask) ? 0 : -ETIMEDOUT;
->> +}
->> +
->> +static int qcom_apq8064_sata_phy_init(struct phy *generic_phy)
->> +{
->> +    struct qcom_apq8064_sata_phy *phy = phy_get_drvdata(generic_phy);
->> +    void __iomem *base = phy->mmio;
->> +    int ret = 0;
->> +
->> +    /* SATA phy initialization */
->> +    writel_relaxed(0x01, base + SATA_PHY_SER_CTRL);
->> +    writel_relaxed(0xB1, base + SATA_PHY_POW_DWN_CTRL0);
->> +    /* Make sure the power down happens before power up */
->> +    mb();
->> +    usleep_range(10, 60);
->> +
->> +    writel_relaxed(0x01, base + SATA_PHY_POW_DWN_CTRL0);
->> +    writel_relaxed(0x3E, base + SATA_PHY_POW_DWN_CTRL1);
->> +    writel_relaxed(0x01, base + SATA_PHY_RX_IMCAL0);
->> +    writel_relaxed(0x01, base + SATA_PHY_TX_IMCAL0);
->> +    writel_relaxed(0x02, base + SATA_PHY_TX_IMCAL2);
->> +
->> +    /* Write UNIPHYPLL registers to configure PLL */
->> +    writel_relaxed(0x04, base + UNIPHY_PLL_REFCLK_CFG);
->> +    writel_relaxed(0x00, base + UNIPHY_PLL_PWRGEN_CFG);
->> +
->> +    writel_relaxed(0x0A, base + UNIPHY_PLL_CAL_CFG0);
->> +    writel_relaxed(0xF3, base + UNIPHY_PLL_CAL_CFG8);
->> +    writel_relaxed(0x01, base + UNIPHY_PLL_CAL_CFG9);
->> +    writel_relaxed(0xED, base + UNIPHY_PLL_CAL_CFG10);
->> +    writel_relaxed(0x02, base + UNIPHY_PLL_CAL_CFG11);
->> +
->> +    writel_relaxed(0x36, base + UNIPHY_PLL_SDM_CFG0);
->> +    writel_relaxed(0x0D, base + UNIPHY_PLL_SDM_CFG1);
->> +    writel_relaxed(0xA3, base + UNIPHY_PLL_SDM_CFG2);
->> +    writel_relaxed(0xF0, base + UNIPHY_PLL_SDM_CFG3);
->> +    writel_relaxed(0x00, base + UNIPHY_PLL_SDM_CFG4);
->> +
->> +    writel_relaxed(0x19, base + UNIPHY_PLL_SSC_CFG0);
->> +    writel_relaxed(0xE1, base + UNIPHY_PLL_SSC_CFG1);
->> +    writel_relaxed(0x00, base + UNIPHY_PLL_SSC_CFG2);
->> +    writel_relaxed(0x11, base + UNIPHY_PLL_SSC_CFG3);
->> +
->> +    writel_relaxed(0x04, base + UNIPHY_PLL_LKDET_CFG0);
->> +    writel_relaxed(0xFF, base + UNIPHY_PLL_LKDET_CFG1);
->> +
->> +    writel_relaxed(0x02, base + UNIPHY_PLL_GLB_CFG);
->> +    /* make sure global config LDO power down happens before power up */
->> +    mb();
->> +
->> +    writel_relaxed(0x03, base + UNIPHY_PLL_GLB_CFG);
->> +    writel_relaxed(0x05, base + UNIPHY_PLL_LKDET_CFG2);
->> +
->> +    /* PLL Lock wait */
->> +    ret = read_poll_timeout(base + UNIPHY_PLL_STATUS, UNIPHY_PLL_LOCK);
->> +    if (ret) {
->> +        dev_err(phy->dev, "poll timeout UNIPHY_PLL_STATUS\n");
->> +        return ret;
->> +    }
->> +
->> +    /* TX Calibration */
->> +    ret = read_poll_timeout(base + SATA_PHY_TX_IMCAL_STAT, SATA_PHY_TX_CAL);
->> +    if (ret) {
->> +        dev_err(phy->dev, "poll timeout SATA_PHY_TX_IMCAL_STAT\n");
->> +        return ret;
->> +    }
->> +
->> +    /* RX Calibration */
->> +    ret = read_poll_timeout(base + SATA_PHY_RX_IMCAL_STAT, SATA_PHY_RX_CAL);
->> +    if (ret) {
->> +        dev_err(phy->dev, "poll timeout SATA_PHY_RX_IMCAL_STAT\n");
->> +        return ret;
->> +    }
->> +
->> +    /* SATA phy calibrated succesfully, power up to functional mode */
->> +    writel_relaxed(0x3E, base + SATA_PHY_POW_DWN_CTRL1);
->> +    writel_relaxed(0x01, base + SATA_PHY_RX_IMCAL0);
->> +    writel_relaxed(0x01, base + SATA_PHY_TX_IMCAL0);
->> +
->> +    writel_relaxed(0x00, base + SATA_PHY_POW_DWN_CTRL1);
->> +    writel_relaxed(0x59, base + SATA_PHY_CDR_CTRL0);
->> +    writel_relaxed(0x04, base + SATA_PHY_CDR_CTRL1);
->> +    writel_relaxed(0x00, base + SATA_PHY_CDR_CTRL2);
->> +    writel_relaxed(0x00, base + SATA_PHY_PI_CTRL0);
->> +    writel_relaxed(0x00, base + SATA_PHY_CDR_CTRL3);
->> +    writel_relaxed(0x01, base + SATA_PHY_POW_DWN_CTRL0);
->> +
->> +    writel_relaxed(0x11, base + SATA_PHY_TX_DATA_CTRL);
->> +    writel_relaxed(0x43, base + SATA_PHY_ALIGNP);
->> +    writel_relaxed(0x04, base + SATA_PHY_OOB_TERM);
->> +
->> +    writel_relaxed(0x01, base + SATA_PHY_EQUAL);
->> +    writel_relaxed(0x09, base + SATA_PHY_TX_DRIV_CTRL0);
->> +    writel_relaxed(0x09, base + SATA_PHY_TX_DRIV_CTRL1);
->> +
->> +    return 0;
->> +}
->> +
->> +static int qcom_apq8064_sata_phy_exit(struct phy *generic_phy)
->> +{
->> +    struct qcom_apq8064_sata_phy *phy = phy_get_drvdata(generic_phy);
->> +    void __iomem *base = phy->mmio;
->> +
->> +    /* Power down PHY */
->> +    writel_relaxed(0xF8, base + SATA_PHY_POW_DWN_CTRL0);
->> +    writel_relaxed(0xFE, base + SATA_PHY_POW_DWN_CTRL1);
->> +
->> +    /* Power down PLL block */
->> +    writel_relaxed(0x00, base + UNIPHY_PLL_GLB_CFG);
->> +
->> +    return 0;
->> +}
->> +
->> +static struct phy_ops qcom_apq8064_sata_phy_ops = {
->> +    .init        = qcom_apq8064_sata_phy_init,
->> +    .exit        = qcom_apq8064_sata_phy_exit,
->> +    .owner        = THIS_MODULE,
->> +};
->> +
->> +static int qcom_apq8064_sata_phy_probe(struct platform_device *pdev)
->> +{
->> +    struct qcom_apq8064_sata_phy *phy;
->> +    struct device *dev = &pdev->dev;
->> +    struct resource *res;
->> +    struct phy_provider *phy_provider;
->> +    struct phy *generic_phy;
->> +    int ret;
->> +
->> +    phy = devm_kzalloc(dev, sizeof(*phy), GFP_KERNEL);
->> +    if (!phy)
->> +        return -ENOMEM;
->> +
->> +    res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
->> +    phy->mmio = devm_ioremap_resource(dev, res);
->> +    if (IS_ERR(phy->mmio))
->> +        return PTR_ERR(phy->mmio);
->> +
->> +    generic_phy = devm_phy_create(dev, &qcom_apq8064_sata_phy_ops, NULL);
->> +    if (IS_ERR(generic_phy)) {
->> +        dev_err(dev, "%s: failed to create phy\n", __func__);
->> +        return PTR_ERR(generic_phy);
->> +    }
->> +
->> +    phy->dev = dev;
->> +    phy_set_drvdata(generic_phy, phy);
->> +
->> +    phy->cfg_clk = devm_clk_get(dev, "cfg");
->> +    if (IS_ERR(phy->cfg_clk)) {
->> +        dev_err(dev, "Failed to get sata cfg clock\n");
->> +        return PTR_ERR(phy->cfg_clk);
->> +    }
->> +
->> +    ret = clk_prepare_enable(phy->cfg_clk);
->> +    if (ret)
->> +        return ret;
->> +
->> +    phy_provider = devm_of_phy_provider_register(dev, of_phy_simple_xlate);
->> +    if (IS_ERR(phy_provider)) {
->> +        clk_disable_unprepare(phy->cfg_clk);
->> +        dev_err(dev, "%s: failed to register phy\n", __func__);
->> +        return PTR_ERR(phy_provider);
->> +    }
->> +
->> +    return 0;
->> +}
->> +
->> +static int qcom_apq8064_sata_phy_remove(struct platform_device *pdev)
->> +{
->> +    struct qcom_apq8064_sata_phy *phy = platform_get_drvdata(pdev);
->> +
->> +    clk_disable_unprepare(phy->cfg_clk);
->> +
->> +    return 0;
->> +}
->> +
->> +static const struct of_device_id qcom_apq8064_sata_phy_of_match[] = {
->> +    { .compatible = "qcom,apq8064-sata-phy" },
->> +    { },
->> +};
->> +MODULE_DEVICE_TABLE(of, qcom_apq8064_sata_phy_of_match);
->> +
->> +static struct platform_driver qcom_apq8064_sata_phy_driver = {
->> +    .probe    = qcom_apq8064_sata_phy_probe,
->> +    .remove    = qcom_apq8064_sata_phy_remove,
->> +    .driver = {
->> +        .name    = "qcom-apq8064-sata-phy",
->> +        .owner    = THIS_MODULE,
->> +        .of_match_table    = qcom_apq8064_sata_phy_of_match,
->> +    }
->> +};
->> +module_platform_driver(qcom_apq8064_sata_phy_driver);
->> +
->> +MODULE_DESCRIPTION("QCOM apq8064 SATA PHY driver");
->> +MODULE_LICENSE("GPL v2");
->>
+That then means that each such driver needs a way to figure out whether
+power domains are hooked up (which will be rather clumsy to do if it's
+all supposed to work transparently) and fallback to the legacy API
+otherwise.
+
+So essentially we'll be adding code without the possibility to remove
+any of the old code.
+
+Thierry
+
+--+HP7ph2BbKc20aGI
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBAgAGBQJTvRivAAoJEN0jrNd/PrOhBeIP/jAiJeAv4rwYs7TAAeF4Gc++
+b90eOrw3UTW+bAIRq3x4raOrKbfht5ONk7YjmXEPid9l0XLxaAHzbBvGLsgEqXUP
+csLLO8VHBRuGIENUjHZ5tER5HO/zQE4Cg+sWfDdd2RPLQDyD0SLTAIKPnotEGSv+
+SRG0JToTa36g9MbiiI5UuabFsAF9MneKvnAqjiUnCkL9euWB7MteJ/iVhyGNh65w
+KakGxXtPonnnnBx0FN8VheoGsmAAV9nJWeN1B+kCipIJBmwQ6j4GuT3WvTMVSw3s
+fU3mbg55Cx3NZg9F6s4aZTp7B3mR/T0ERA5zwPLhovfOjdzQm9Www/10LwaE6eG6
+wiUsoONZhBzmQG2HFZvCS7lbNGgSmViveaJVdLupBNbmYfR/+t18RUaTjlP0MyFn
+li8zxXLdO/weVBCcq7L4QRC0tZj6qUxkmNbG+6VuO40gEEEmdMt8eR7s6DFP5AQA
+w57xfVRWRlQE3s/2ExPCzD2TwPcl3wFDgDWUXUESID/QYCzQGcNFIu+zEOW+Wksm
+WH7WHuCBML4f09FHE/uJnDHzzqodGigORpDaMNTcN6QSOlxJXkAr1EKl2qjOxYO2
+L7/OO5+WYiRDKs48f48hyBkfHQ+SSXK5XVKtT9N6RFMHsBnKsWdl0ipmUQaBSl+u
+8mI4gyp+ofyyZpEbboXg
+=rE/b
+-----END PGP SIGNATURE-----
+
+--+HP7ph2BbKc20aGI--
