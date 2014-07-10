@@ -1,56 +1,34 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH v2 2/2] arm64: Fix the APM X-Gene SoC SATA PHY clock DTS node csr-mask of the SATA Host Controller 1.
-Date: Thu, 10 Jul 2014 19:19:16 +0530
-Message-ID: <1405000156-321-3-git-send-email-stripathi@apm.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2 1/2] ata: Fix the watermark threshold for the APM
+ X-Gene SATA host controller driver.
+Date: Thu, 10 Jul 2014 10:45:34 -0400
+Message-ID: <20140710144534.GA6609@htj.dyndns.org>
 References: <1405000156-321-1-git-send-email-stripathi@apm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1405000156-321-1-git-send-email-stripathi@apm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
+ <1405000156-321-2-git-send-email-stripathi@apm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qa0-f41.google.com ([209.85.216.41]:45835 "EHLO
+	mail-qa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751015AbaGJOpi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Jul 2014 10:45:38 -0400
+Content-Disposition: inline
+In-Reply-To: <1405000156-321-2-git-send-email-stripathi@apm.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Suman Tripathi <stripathi@apm.com>
+Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>
 
-This patch fixes the SATA PHY clock DTS node csr-mask of the
-SATA Host controller 1. This patch also fixes the status of
-the PHY clock node of SATA Host Controller 1.
+On Thu, Jul 10, 2014 at 07:19:15PM +0530, Suman Tripathi wrote:
+> This patch fixes the watermark threshold of the receive FIFO for the
+> APM X-Gene SATA host controller driver.
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
----
- arch/arm64/boot/dts/apm-storm.dtsi | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+Can you please explain what are the effects of these patches?  Patch
+descriptions should include why the specific changes are being made in
+addition to the description of the changes themselves.  What are the
+implications of applying this patch?
 
-diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
-index f8c40a6..ce6967c 100644
---- a/arch/arm64/boot/dts/apm-storm.dtsi
-+++ b/arch/arm64/boot/dts/apm-storm.dtsi
-@@ -184,9 +184,8 @@
- 				reg = <0x0 0x1f21c000 0x0 0x1000>;
- 				reg-names = "csr-reg";
- 				clock-output-names = "sataphy1clk";
--				status = "disabled";
- 				csr-offset = <0x4>;
--				csr-mask = <0x00>;
-+				csr-mask = <0x3a>;
- 				enable-offset = <0x0>;
- 				enable-mask = <0x06>;
- 			};
-@@ -198,7 +197,6 @@
- 				reg = <0x0 0x1f22c000 0x0 0x1000>;
- 				reg-names = "csr-reg";
- 				clock-output-names = "sataphy2clk";
--				status = "ok";
- 				csr-offset = <0x4>;
- 				csr-mask = <0x3a>;
- 				enable-offset = <0x0>;
-@@ -212,7 +210,6 @@
- 				reg = <0x0 0x1f23c000 0x0 0x1000>;
- 				reg-names = "csr-reg";
- 				clock-output-names = "sataphy3clk";
--				status = "ok";
- 				csr-offset = <0x4>;
- 				csr-mask = <0x3a>;
- 				enable-offset = <0x0>;
---
-1.8.2.1
+Thanks.
 
+-- 
+tejun
