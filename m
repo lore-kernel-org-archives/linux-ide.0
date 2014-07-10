@@ -1,72 +1,33 @@
-From: Alexander Gordeev <agordeev-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 1/3] PCI/MSI: Add pci_enable_msi_partial()
-Date: Thu, 10 Jul 2014 12:11:51 +0200
-Message-ID: <20140710101151.GA21629@dhcp-26-207.brq.redhat.com>
-References: <cover.1402405331.git.agordeev@redhat.com>
-	<4fef62a2e647a7c38e9f2a1ea4244b3506a85e2b.1402405331.git.agordeev@redhat.com>
-	<20140702202201.GA28852@google.com>
-	<20140704085741.GA12247@dhcp-26-207.brq.redhat.com>
-	<CAErSpo6f6RXWv0DEtLBZX0jXoSUYJeWrSm7mubSJ_F-O7tQp6w@mail.gmail.com>
-	<20140708122606.GB6270@dhcp-26-207.brq.redhat.com>
-	<CAErSpo4oiabgoOjsGdWZpCMPnmopK4xRzB2f3tM0AiUFrdhFww@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <CAErSpo4oiabgoOjsGdWZpCMPnmopK4xRzB2f3tM0AiUFrdhFww-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Bjorn Helgaas <bhelgaas-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Cc: "linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org" <linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org>, "linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <x86-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:INTEL IOMMU (VT-d)" <iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, "xen-devel-GuqFBffKawtpuQazS67q72D2FQJk+8+b@public.gmane.org" <xen-devel-GuqFBffKawtpuQazS67q72D2FQJk+8+b@public.gmane.org>, linuxppc-dev <linuxppc-dev-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org>
+From: Suman Tripathi <stripathi@apm.com>
+Subject: [PATCH v2 0/3] ata: Fixes related to APM X-Gene SATA host controller driver.
+Date: Thu, 10 Jul 2014 19:19:14 +0530
+Message-ID: <1405000156-321-1-git-send-email-stripathi@apm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Wed, Jul 09, 2014 at 10:06:48AM -0600, Bjorn Helgaas wrote:
-> Out of curiosity, do you have a pointer to this?  It looks like it
+This patch set contains a couple of fixes related to APM X-Gene SATA
+controller driver.
 
-I.e. ICH8 chapter 12.1.30 or ICH10 chapter 14.1.27
+v2 Change:
+  - Drop the Link down retry patch from this patch set.
 
-> uses one vector per port, and I'm wondering if the reason it requests
-> 16 is because there's some possibility of a part with more than 8
-> ports.
+Signed-off-by: Loc Ho <lho@apm.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
+---
 
-I doubt that is the reason. The only allowed MME values (powers of two)
-are 0b000, 0b001, 0b010 and 0b100. As you can see, only one bit is used -
-I would speculate it suits nicely to some hardware logic.
+Suman Tripathi (2):
+  ata: Fix the watermark threshold for the APM X-Gene SATA host
+    controller driver.
+  arm64: Fix the APM X-Gene SoC SATA PHY clock DTS node csr-mask of the
+    SATA Host Controller 1.
 
-BTW, apart from AHCI, it seems the reason MSI is not going to disappear
-(in a decade at least) is it is way cheaper to implement than MSI-X.
+ arch/arm64/boot/dts/apm-storm.dtsi | 5 +----
+ drivers/ata/ahci_xgene.c           | 7 +++++++
+ 2 files changed, 8 insertions(+), 4 deletions(-)
 
-> > No, this is not an erratum. The value of 8 vectors is reserved and could
-> > cause undefined results if used.
-> 
-> As I read the spec (PCI 3.0, sec 6.8.1.3), if MMC contains 0b100
-> (requesting 16 vectors), the OS is allowed to allocate 1, 2, 4, 8, or
-> 16 vectors.  If allocating 8 vectors and writing 0b011 to MME causes
-> undefined results, I'd say that's a chipset defect.
+--
+1.8.2.1
 
-Well, the PCI spec does not prevent devices to have their own specs on top
-of it. Undefined results are meant on the device side here. On the MSI side
-these results are likely perfectly within the PCI spec. I feel speaking as
-a lawer here ;)
-
-> Interrupt vector space is the issue I would worry about, but I think
-> I'm going to put this on the back burner until it actually becomes a
-> problem.
-
-I plan to try get rid of arch_msi_check_device() hook. Should I repost
-this series afterwards?
-
-Thanks!
-
--- 
-Regards,
-Alexander Gordeev
-agordeev-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
