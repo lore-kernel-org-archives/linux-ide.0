@@ -1,96 +1,157 @@
-From: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 1/3] PCI/MSI: Add pci_enable_msi_partial()
-Date: Thu, 10 Jul 2014 11:02:24 -0600
-Message-ID: <CAErSpo6p=teHx+ZG9yritgcBvOer-FNtug4-WQQQkHhPhTLjZw@mail.gmail.com>
-References: <cover.1402405331.git.agordeev@redhat.com> <4fef62a2e647a7c38e9f2a1ea4244b3506a85e2b.1402405331.git.agordeev@redhat.com>
- <20140702202201.GA28852@google.com> <20140704085741.GA12247@dhcp-26-207.brq.redhat.com>
- <CAErSpo6f6RXWv0DEtLBZX0jXoSUYJeWrSm7mubSJ_F-O7tQp6w@mail.gmail.com>
- <20140708122606.GB6270@dhcp-26-207.brq.redhat.com> <CAErSpo4oiabgoOjsGdWZpCMPnmopK4xRzB2f3tM0AiUFrdhFww@mail.gmail.com>
- <20140710101151.GA21629@dhcp-26-207.brq.redhat.com>
+From: Andrew Lunn <andrew@lunn.ch>
+Subject: [PATCH v2 00/12] Remove mach-kirkwood
+Date: Thu, 10 Jul 2014 23:36:20 +0200
+Message-ID: <1405028192-9623-1-git-send-email-andrew@lunn.ch>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-doc-owner@vger.kernel.org>
-In-Reply-To: <20140710101151.GA21629@dhcp-26-207.brq.redhat.com>
-Sender: linux-doc-owner@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, "linux-mips@linux-mips.org" <linux-mips@linux-mips.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>, "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>, "x86@kernel.org" <x86@kernel.org>, "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>, "open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <alsa-devel-bounces@alsa-project.org>
+List-Unsubscribe: <http://mailman.alsa-project.org/mailman/options/alsa-devel>,
+ <mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
+List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel/>
+List-Post: <mailto:alsa-devel@alsa-project.org>
+List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
+List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
+ <mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
+Errors-To: alsa-devel-bounces@alsa-project.org
+Sender: alsa-devel-bounces@alsa-project.org
+To: Jason Cooper <jason@lakedaemon.net>
+Cc: Andrew Lunn <andrew@lunn.ch>, alsa-devel@alsa-project.org, linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, Wim Van Sebroeck <wim@iguana.be>, linux-leds@vger.kernel.org, Daniel Lezcano <daniel.lezcano@linaro.org>, Kishon Vijay Abraham I <kishon@ti.com>, Zhang Rui <rui.zhang@intel.com>, linux-watchdog@vger.kernel.org, rtc-linux@googlegroups.com, linux-pm@vger.kernel.org, Bryan Wu <cooloney@gmail.com>, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>, Mark Brown <broonie@kernel.org>, Gregory Clement <gregory.clement@free-electrons.com>, linux ARM <linux-arm-kernel@lists.infradead.org>, Alessandro Zummo <a.zummo@towertech.it>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Richard Purdie <rpurdie@rpsys.net>, Tejun Heo <tj@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, Jul 10, 2014 at 4:11 AM, Alexander Gordeev <agordeev@redhat.com> wrote:
-> On Wed, Jul 09, 2014 at 10:06:48AM -0600, Bjorn Helgaas wrote:
->> Out of curiosity, do you have a pointer to this?  It looks like it
->
-> I.e. ICH8 chapter 12.1.30 or ICH10 chapter 14.1.27
->
->> uses one vector per port, and I'm wondering if the reason it requests
->> 16 is because there's some possibility of a part with more than 8
->> ports.
->
-> I doubt that is the reason. The only allowed MME values (powers of two)
-> are 0b000, 0b001, 0b010 and 0b100. As you can see, only one bit is used -
-> I would speculate it suits nicely to some hardware logic.
->
-> BTW, apart from AHCI, it seems the reason MSI is not going to disappear
-> (in a decade at least) is it is way cheaper to implement than MSI-X.
->
->> > No, this is not an erratum. The value of 8 vectors is reserved and could
->> > cause undefined results if used.
->>
->> As I read the spec (PCI 3.0, sec 6.8.1.3), if MMC contains 0b100
->> (requesting 16 vectors), the OS is allowed to allocate 1, 2, 4, 8, or
->> 16 vectors.  If allocating 8 vectors and writing 0b011 to MME causes
->> undefined results, I'd say that's a chipset defect.
->
-> Well, the PCI spec does not prevent devices to have their own specs on top
-> of it. Undefined results are meant on the device side here. On the MSI side
-> these results are likely perfectly within the PCI spec. I feel speaking as
-> a lawer here ;)
+This patchset removes arch/arm/mach-kirkwood.  This SoCs is now
+supported in arch/arm/mach-mvebu using device tree.
 
-I disagree about this part.  The reason MSI is in the PCI spec is so
-the OS can have generic support for it without having to put
-device-specific support in every driver.  The PCI spec is clear that
-the OS can allocate any number of vectors less than or equal to the
-number requested via MMC.  The SATA device requests 16, and it should
-be perfectly legal for the OS to give it 8.
+V1 of this patchset also removed mach-dove. However it has been
+decided to leave it alone for a while to aid some developers get out
+of tree patches merged.
+                                                                         
+Change the dependencies for a number of drivers, either to use
+ARCH_MVEBU where the drivers are generic, or MACH_KIRKWOOD and where
+the drivers are specific to the SoC.
 
-It's interesting that the ICH10 spec (sec 14.1.27, thanks for the
-reference) says MMC 100b means "8 MSI Capable".  That smells like a
-hardware bug.  The PCI spec says:
+Once Jason Cooper has Acked these patches, we would prefer that
+individual subsystem maintainers take these patches through their own
+trees.
 
-  000 => 1 vector
-  001 => 2 vectors
-  010 => 4 vectors
-  011 => 8 vectors
-  100 => 16 vectors
+Thanks
+	Andrew
 
-The ICH10 spec seems to think 100 means 8 vectors (not 16 as the PCI
-spec says), and that would fit with the rest of the ICH10 MME info.
-If ICH10 was built assuming this table:
+Andrew Lunn (12):
+  ARM: Kirkwood: Remove mach-kirkwood
+  ARM: Kirkwood: Remove kirkwood_defconfig
+  ASoC: kirkwood: Remove unused drivers
+  ASoC: kirkwood: Remove ARCH_KIRKWOOD dependency
+  cpuidle: kirkwood: Remove ARCH_KIRKWOOD dependency
+  ata: Remove ARCH_KIRKWOOD dependency
+  thermal: Remove ARCH_KIRKWOOD dependency
+  leds: Remove ARCH_KIRKWOOD dependency
+  PCI: Remove ARCH_KIRKWOOD dependency
+  phy: Remove ARCH_KIRKWOOD dependency
+  rtc: Remove ARCH_KIRKWOOD dependency
+  watchdog: Remove ARCH_KIRKWOOD dependency
 
-  000 => 1 vector
-  001 => 2 vectors
-  010 => 4 vectors
-  100 => 8 vectors
+ arch/arm/Kconfig                                  |  18 -
+ arch/arm/Kconfig.debug                            |   6 +-
+ arch/arm/Makefile                                 |   1 -
+ arch/arm/boot/dts/Makefile                        |   5 +-
+ arch/arm/configs/kirkwood_defconfig               | 181 ------
+ arch/arm/mach-kirkwood/Kconfig                    | 111 ----
+ arch/arm/mach-kirkwood/Makefile                   |  14 -
+ arch/arm/mach-kirkwood/Makefile.boot              |   3 -
+ arch/arm/mach-kirkwood/board-dt.c                 | 223 -------
+ arch/arm/mach-kirkwood/common.c                   | 746 ----------------------
+ arch/arm/mach-kirkwood/common.h                   |  74 ---
+ arch/arm/mach-kirkwood/d2net_v2-setup.c           | 231 -------
+ arch/arm/mach-kirkwood/include/mach/bridge-regs.h |  86 ---
+ arch/arm/mach-kirkwood/include/mach/entry-macro.S |  34 -
+ arch/arm/mach-kirkwood/include/mach/hardware.h    |  14 -
+ arch/arm/mach-kirkwood/include/mach/irqs.h        |  65 --
+ arch/arm/mach-kirkwood/include/mach/kirkwood.h    | 142 ----
+ arch/arm/mach-kirkwood/include/mach/uncompress.h  |  46 --
+ arch/arm/mach-kirkwood/irq.c                      |  82 ---
+ arch/arm/mach-kirkwood/lacie_v2-common.c          | 114 ----
+ arch/arm/mach-kirkwood/lacie_v2-common.h          |  16 -
+ arch/arm/mach-kirkwood/mpp.c                      |  43 --
+ arch/arm/mach-kirkwood/mpp.h                      | 348 ----------
+ arch/arm/mach-kirkwood/netxbig_v2-setup.c         | 422 ------------
+ arch/arm/mach-kirkwood/openrd-setup.c             | 255 --------
+ arch/arm/mach-kirkwood/pcie.c                     | 296 ---------
+ arch/arm/mach-kirkwood/pm.c                       |  76 ---
+ arch/arm/mach-kirkwood/pm.h                       |  26 -
+ arch/arm/mach-kirkwood/rd88f6192-nas-setup.c      |  89 ---
+ arch/arm/mach-kirkwood/rd88f6281-setup.c          | 128 ----
+ arch/arm/mach-kirkwood/t5325-setup.c              | 216 -------
+ arch/arm/mach-kirkwood/ts219-setup.c              | 142 ----
+ arch/arm/mach-kirkwood/ts41x-setup.c              | 186 ------
+ arch/arm/mach-kirkwood/tsx1x-common.c             | 113 ----
+ arch/arm/mach-kirkwood/tsx1x-common.h             |   7 -
+ arch/arm/mm/Kconfig                               |   2 +-
+ drivers/ata/Kconfig                               |   2 +-
+ drivers/cpuidle/Kconfig.arm                       |   2 +-
+ drivers/leds/Kconfig                              |   4 +-
+ drivers/pci/host/Kconfig                          |   2 +-
+ drivers/phy/Kconfig                               |   2 +-
+ drivers/rtc/Kconfig                               |   2 +-
+ drivers/thermal/Kconfig                           |   2 +-
+ drivers/watchdog/Kconfig                          |   2 +-
+ sound/soc/kirkwood/Kconfig                        |  19 +-
+ sound/soc/kirkwood/Makefile                       |   4 -
+ sound/soc/kirkwood/kirkwood-openrd.c              | 109 ----
+ sound/soc/kirkwood/kirkwood-t5325.c               | 116 ----
+ 48 files changed, 14 insertions(+), 4813 deletions(-)
+ delete mode 100644 arch/arm/configs/kirkwood_defconfig
+ delete mode 100644 arch/arm/mach-kirkwood/Kconfig
+ delete mode 100644 arch/arm/mach-kirkwood/Makefile
+ delete mode 100644 arch/arm/mach-kirkwood/Makefile.boot
+ delete mode 100644 arch/arm/mach-kirkwood/board-dt.c
+ delete mode 100644 arch/arm/mach-kirkwood/common.c
+ delete mode 100644 arch/arm/mach-kirkwood/common.h
+ delete mode 100644 arch/arm/mach-kirkwood/d2net_v2-setup.c
+ delete mode 100644 arch/arm/mach-kirkwood/include/mach/bridge-regs.h
+ delete mode 100644 arch/arm/mach-kirkwood/include/mach/entry-macro.S
+ delete mode 100644 arch/arm/mach-kirkwood/include/mach/hardware.h
+ delete mode 100644 arch/arm/mach-kirkwood/include/mach/irqs.h
+ delete mode 100644 arch/arm/mach-kirkwood/include/mach/kirkwood.h
+ delete mode 100644 arch/arm/mach-kirkwood/include/mach/uncompress.h
+ delete mode 100644 arch/arm/mach-kirkwood/irq.c
+ delete mode 100644 arch/arm/mach-kirkwood/lacie_v2-common.c
+ delete mode 100644 arch/arm/mach-kirkwood/lacie_v2-common.h
+ delete mode 100644 arch/arm/mach-kirkwood/mpp.c
+ delete mode 100644 arch/arm/mach-kirkwood/mpp.h
+ delete mode 100644 arch/arm/mach-kirkwood/netxbig_v2-setup.c
+ delete mode 100644 arch/arm/mach-kirkwood/openrd-setup.c
+ delete mode 100644 arch/arm/mach-kirkwood/pcie.c
+ delete mode 100644 arch/arm/mach-kirkwood/pm.c
+ delete mode 100644 arch/arm/mach-kirkwood/pm.h
+ delete mode 100644 arch/arm/mach-kirkwood/rd88f6192-nas-setup.c
+ delete mode 100644 arch/arm/mach-kirkwood/rd88f6281-setup.c
+ delete mode 100644 arch/arm/mach-kirkwood/t5325-setup.c
+ delete mode 100644 arch/arm/mach-kirkwood/ts219-setup.c
+ delete mode 100644 arch/arm/mach-kirkwood/ts41x-setup.c
+ delete mode 100644 arch/arm/mach-kirkwood/tsx1x-common.c
+ delete mode 100644 arch/arm/mach-kirkwood/tsx1x-common.h
+ delete mode 100644 sound/soc/kirkwood/kirkwood-openrd.c
+ delete mode 100644 sound/soc/kirkwood/kirkwood-t5325.c
 
-then everything makes sense: the device requests 8 vectors, and the
-behavior is defined in all possible MME cases (1, 2, 4, or 8 vectors
-assigned).  The "Values '011b' to '111b' are reserved" part is still
-slightly wrong, because the 100b value is in that range but is not
-reserved, but that's a tangent.
+-- 
+2.0.1
 
-So my guess (speculation, I admit) is that the intent was for ICH SATA
-to request only 8 vectors, but because of this error, it requests 16.
-Maybe some early MSI proposal used a different encoding for MMC and
-MME, and ICH was originally designed using that.
-
->> Interrupt vector space is the issue I would worry about, but I think
->> I'm going to put this on the back burner until it actually becomes a
->> problem.
->
-> I plan to try get rid of arch_msi_check_device() hook. Should I repost
-> this series afterwards?
-
-Honestly, I'm still not inclined to pursue this because of the API
-complication and lack of concrete benefit.
-
-Bjorn
+Cc: Mark Brown <broonie@kernel.org>
+Cc: alsa-devel@alsa-project.org
+Cc: Daniel Lezcano <daniel.lezcano@linaro.org>
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: linux-pm@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
+Cc: Zhang Rui <rui.zhang@intel.com>
+Cc: Bryan Wu <cooloney@gmail.com>
+Cc: Richard Purdie <rpurdie@rpsys.net>
+Cc: linux-leds@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Cc: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Alessandro Zummo <a.zummo@towertech.it>
+Cc: rtc-linux@googlegroups.com
+Cc: Wim Van Sebroeck <wim@iguana.be>
+Cc: linux-watchdog@vger.kernel.org
