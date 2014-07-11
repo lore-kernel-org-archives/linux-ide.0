@@ -1,100 +1,41 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: Re: [PATCH v2 1/2] phy: qcom: Add driver for QCOM APQ8064 SATA PHY
-Date: Fri, 11 Jul 2014 16:33:38 +0200
-Message-ID: <2632799.IFO1aEjqtg@amdc1032>
-References: <1404903807-26032-1-git-send-email-srinivas.kandagatla@linaro.org>
- <1828880.cILxhDlkNH@amdc1032> <53BFE8F9.7050700@linaro.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v3] libata: support the ata host which implements a queue
+ depth less than 32
+Date: Fri, 11 Jul 2014 10:47:01 -0400
+Message-ID: <20140711144701.GB27706@htj.dyndns.org>
+References: <1405059026-18673-1-git-send-email-haokexin@gmail.com>
+ <53BFD10D.3080005@cogentembedded.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-reply-to: <53BFE8F9.7050700@linaro.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>, Grant Likely <grant.likely@linaro.org>, Rob Herring <robh+dt@kernel.org>, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qc0-f172.google.com ([209.85.216.172]:60246 "EHLO
+	mail-qc0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751493AbaGKOrG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jul 2014 10:47:06 -0400
+Received: by mail-qc0-f172.google.com with SMTP id l6so1070704qcy.3
+        for <linux-ide@vger.kernel.org>; Fri, 11 Jul 2014 07:47:04 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <53BFD10D.3080005@cogentembedded.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: Kevin Hao <haokexin@gmail.com>, linux-ide@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
 
-On Friday, July 11, 2014 02:39:05 PM Srinivas Kandagatla wrote:
-> Thankyou for the comments,
+On Fri, Jul 11, 2014 at 03:57:01PM +0400, Sergei Shtylyov wrote:
+> >-	for (i = 0; i < ATA_MAX_QUEUE; i++) {
+> >-		tag = (i + ap->last_tag + 1) % ATA_MAX_QUEUE;
+> >+	for (i = 0, tag = ap->last_tag + 1; i < max_queue; i++, tag++) {
+> >+		tag = tag < max_queue ? tag : 0;
 > 
-> On 11/07/14 13:38, Bartlomiej Zolnierkiewicz wrote:
-> >
-> > Hi,
-> >
-> > On Wednesday, July 09, 2014 12:04:06 PM Srinivas Kandagatla wrote:
-> >> Add a PHY driver for uses with AHCI based SATA controller driver on the
-> >> APQ8064 family of SoCs.
-> >>
-> >> This patch is a forward port from Qualcomm's v3.4 andriod kernel.
-> >
-> > Android?
-> yep.
-> >
-> > unused define, please remove it
-> >
-> Will fix these instances in next version.
-> >> +
-> >> +#define UNIPHY_PLL_LOCK		BIT(0)
-> >> +#define SATA_PHY_TX_CAL		BIT(0)
-> >> +#define SATA_PHY_RX_CAL		BIT(0)
-> >> +
-> >> +/* default timeout set to 1 sec */
-> >> +#define TIMEOUT_MS		10000
-> >> +
-> >> +struct qcom_apq8064_sata_phy {
-> >> +	void __iomem *mmio;
-> >> +	struct clk *cfg_clk;
-> >> +	struct device *dev;
-> >> +};
-> >> +
-> >> +/* Helper function to do poll and timeout */
-> >> +static int read_poll_timeout(void __iomem *addr, u32 mask)
-> >> +{
-> >> +	unsigned long timeout = jiffies + msecs_to_jiffies(TIMEOUT_MS);
-> >> +	u32 val;
-> >> +
-> >> +	do {
-> >> +		cpu_relax();
-> >> +		val = readl_relaxed(addr);
-> >> +		if (val & mask)
-> >> +			break;
-> >> +	} while (!time_after(jiffies, timeout));
-> >
-> > It would be better to use usleep_[range]() (or even msleep() if needed)
-> > instead of just using cpu_relax().
+>    Assigning 'tag' back to 'tag' is quite stupid, don't you think? Why not:
 > 
-> We really want to poll the register here, usleep/msleep would be useful 
-> if we know already know how much delay is required, but in this case the 
-> its not true.
+> 		if (tag >= max_queue)
+> 			tag = 0;
 
-I don't mean replacing the whole function, you can still do polling with
-i.e. doing usleep_range(1000, 2000) with 1000 retries.  The advantage of
-doing it this way would be that processor could do some useful work or
-sleep during wait time instead of just busy waiting.
+I don't really mind it and the explicit if block isn't more readable
+in any way.
 
-One example of many how to do it:
+Thanks.
 
-drivers/i2c/busses/i2c-s3c2410.c:
-
-static bool is_ack(struct s3c24xx_i2c *i2c)
-{
-        int tries;
-
-        for (tries = 50; tries; --tries) {
-                if (readl(i2c->regs + S3C2410_IICCON)
-                        & S3C2410_IICCON_IRQPEND) {
-                        if (!(readl(i2c->regs + S3C2410_IICSTAT)
-                                & S3C2410_IICSTAT_LASTBIT))
-                                return true;
-                }
-                usleep_range(1000, 2000);
-        }
-        dev_err(i2c->dev, "ack was not recieved\n");
-        return false;
-}
-
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
+-- 
+tejun
