@@ -1,37 +1,41 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2 00/12] Remove mach-kirkwood
-Date: Fri, 11 Jul 2014 10:52:03 -0400
-Message-ID: <20140711145203.GD27706@htj.dyndns.org>
-References: <1405028192-9623-1-git-send-email-andrew@lunn.ch>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-leds-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1405028192-9623-1-git-send-email-andrew@lunn.ch>
-Sender: linux-leds-owner@vger.kernel.org
-To: Andrew Lunn <andrew@lunn.ch>
-Cc: Jason Cooper <jason@lakedaemon.net>, linux ARM <linux-arm-kernel@lists.infradead.org>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>, Mark Brown <broonie@kernel.org>, alsa-devel@alsa-project.org, Daniel Lezcano <daniel.lezcano@linaro.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org, linux-ide@vger.kernel.org, Zhang Rui <rui.zhang@intel.com>, Bryan Wu <cooloney@gmail.com>, Richard Purdie <rpurdie@rpsys.net>, linux-leds@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, Kishon Vijay Abraham I <kishon@ti.com>, Alessandro Zummo <a.zummo@towertech.it>, rtc-linux@googlegroups.com, Wim Van Sebroeck <wim@iguana.be>, linux-watchdog@vger.kernel.org
+From: Romain Degez <romain.degez@gmail.com>
+Subject: [PATCH 1/1] Add support for the Promise FastTrak TX8660 SATA HBA (ahci mode)
+Date: Fri, 11 Jul 2014 18:08:13 +0200
+Message-ID: <1405094893-9768-1-git-send-email-romain.degez@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-we0-f178.google.com ([74.125.82.178]:61995 "EHLO
+	mail-we0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750886AbaGKQIt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jul 2014 12:08:49 -0400
+Received: by mail-we0-f178.google.com with SMTP id w61so390604wes.23
+        for <linux-ide@vger.kernel.org>; Fri, 11 Jul 2014 09:08:42 -0700 (PDT)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, Romain Degez <romain.degez@gmail.com>
 
-On Thu, Jul 10, 2014 at 11:36:20PM +0200, Andrew Lunn wrote:
-> This patchset removes arch/arm/mach-kirkwood.  This SoCs is now
-> supported in arch/arm/mach-mvebu using device tree.
-> 
-> V1 of this patchset also removed mach-dove. However it has been
-> decided to leave it alone for a while to aid some developers get out
-> of tree patches merged.
->                                                                          
-> Change the dependencies for a number of drivers, either to use
-> ARCH_MVEBU where the drivers are generic, or MACH_KIRKWOOD and where
-> the drivers are specific to the SoC.
-> 
-> Once Jason Cooper has Acked these patches, we would prefer that
-> individual subsystem maintainers take these patches through their own
-> trees.
+Add support of the Promise FastTrak TX8660 SATA HBA in ahci mode by registering the board in the ahci_pci_tbl[].
 
-Please let me know when I can take the libata part.
+Note: this HBA also provide a hardware RAID mode when activated in BIOS but specific drivers from the manufacturer are required in this case.
 
-Thanks.
+Signed-off-by: Romain Degez <romain.degez@gmail.com>
+Tested-by: Romain Degez <romain.degez@gmail.com>
+---
+ drivers/ata/ahci.c | 1 +
+ 1 file changed, 1 insertion(+)
 
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index dae5607..4cd52a4 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -456,6 +456,7 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 
+ 	/* Promise */
+ 	{ PCI_VDEVICE(PROMISE, 0x3f20), board_ahci },	/* PDC42819 */
++	{ PCI_VDEVICE(PROMISE, 0x3781), board_ahci },   /* FastTrak TX8660 ahci-mode */
+ 
+ 	/* Asmedia */
+ 	{ PCI_VDEVICE(ASMEDIA, 0x0601), board_ahci },	/* ASM1060 */
 -- 
-tejun
+2.0.1
+
