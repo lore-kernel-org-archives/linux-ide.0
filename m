@@ -1,40 +1,35 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v3] libata: support the ata host which implements a queue
- depth less than 32
-Date: Fri, 11 Jul 2014 10:51:05 -0400
-Message-ID: <20140711145105.GC27706@htj.dyndns.org>
-References: <1405059026-18673-1-git-send-email-haokexin@gmail.com>
+Subject: Re: [PATCH v2 00/12] Remove mach-kirkwood
+Date: Fri, 11 Jul 2014 10:52:03 -0400
+Message-ID: <20140711145203.GD27706@htj.dyndns.org>
+References: <1405028192-9623-1-git-send-email-andrew@lunn.ch>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f48.google.com ([209.85.216.48]:37843 "EHLO
-	mail-qa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753486AbaGKOvI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jul 2014 10:51:08 -0400
-Received: by mail-qa0-f48.google.com with SMTP id x12so973367qac.35
-        for <linux-ide@vger.kernel.org>; Fri, 11 Jul 2014 07:51:07 -0700 (PDT)
+Return-path: <linux-leds-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1405059026-18673-1-git-send-email-haokexin@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <1405028192-9623-1-git-send-email-andrew@lunn.ch>
+Sender: linux-leds-owner@vger.kernel.org
+To: Andrew Lunn <andrew@lunn.ch>
+Cc: Jason Cooper <jason@lakedaemon.net>, linux ARM <linux-arm-kernel@lists.infradead.org>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>, Mark Brown <broonie@kernel.org>, alsa-devel@alsa-project.org, Daniel Lezcano <daniel.lezcano@linaro.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org, linux-ide@vger.kernel.org, Zhang Rui <rui.zhang@intel.com>, Bryan Wu <cooloney@gmail.com>, Richard Purdie <rpurdie@rpsys.net>, linux-leds@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, Kishon Vijay Abraham I <kishon@ti.com>, Alessandro Zummo <a.zummo@towertech.it>, rtc-linux@googlegroups.com, Wim Van Sebroeck <wim@iguana.be>, linux-watchdog@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kevin Hao <haokexin@gmail.com>
-Cc: linux-ide@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
 
-On Fri, Jul 11, 2014 at 02:10:26PM +0800, Kevin Hao wrote:
->  static struct ata_queued_cmd *ata_qc_new(struct ata_port *ap)
->  {
->  	struct ata_queued_cmd *qc = NULL;
-> -	unsigned int i, tag;
-> +	unsigned int i, tag, max_queue;
-> +
-> +	max_queue = ap->scsi_host->can_queue;
-> +	WARN_ON_ONCE(max_queue > ATA_MAX_QUEUE);
+On Thu, Jul 10, 2014 at 11:36:20PM +0200, Andrew Lunn wrote:
+> This patchset removes arch/arm/mach-kirkwood.  This SoCs is now
+> supported in arch/arm/mach-mvebu using device tree.
+> 
+> V1 of this patchset also removed mach-dove. However it has been
+> decided to leave it alone for a while to aid some developers get out
+> of tree patches merged.
+>                                                                          
+> Change the dependencies for a number of drivers, either to use
+> ARCH_MVEBU where the drivers are generic, or MACH_KIRKWOOD and where
+> the drivers are specific to the SoC.
+> 
+> Once Jason Cooper has Acked these patches, we would prefer that
+> individual subsystem maintainers take these patches through their own
+> trees.
 
-Let's move the WARN_ON_ONCE() to ata_host_register().  Also, let's
-please update the function comment explaining why we're allocating
-tags the way we do.
-
-Other than that, it looks good to me.
+Please let me know when I can take the libata part.
 
 Thanks.
 
