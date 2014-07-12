@@ -1,65 +1,66 @@
 From: Kevin Hao <haokexin@gmail.com>
 Subject: Re: [PATCH v3] libata: support the ata host which implements a queue
  depth less than 32
-Date: Sat, 12 Jul 2014 08:26:26 +0800
-Message-ID: <20140712002626.GA314@pek-khao-d1.corp.ad.wrs.com>
+Date: Sat, 12 Jul 2014 08:27:42 +0800
+Message-ID: <20140712002742.GB314@pek-khao-d1.corp.ad.wrs.com>
 References: <1405059026-18673-1-git-send-email-haokexin@gmail.com>
- <53BFD10D.3080005@cogentembedded.com>
+ <20140711145105.GC27706@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="ZGiS0Q5IWpPtfppv"
+	protocol="application/pgp-signature"; boundary="PmA2V3Z32TCmWXqI"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pd0-f169.google.com ([209.85.192.169]:53494 "EHLO
-	mail-pd0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754655AbaGLA0e (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jul 2014 20:26:34 -0400
-Received: by mail-pd0-f169.google.com with SMTP id ft15so2195215pdb.14
-        for <linux-ide@vger.kernel.org>; Fri, 11 Jul 2014 17:26:34 -0700 (PDT)
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:47343 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751056AbaGLA1u (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jul 2014 20:27:50 -0400
+Received: by mail-pa0-f41.google.com with SMTP id fb1so2316454pad.0
+        for <linux-ide@vger.kernel.org>; Fri, 11 Jul 2014 17:27:49 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <53BFD10D.3080005@cogentembedded.com>
+In-Reply-To: <20140711145105.GC27706@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
 
 
---ZGiS0Q5IWpPtfppv
+--PmA2V3Z32TCmWXqI
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, Jul 11, 2014 at 03:57:01PM +0400, Sergei Shtylyov wrote:
-> >-	for (i =3D 0; i < ATA_MAX_QUEUE; i++) {
-> >-		tag =3D (i + ap->last_tag + 1) % ATA_MAX_QUEUE;
-> >+	for (i =3D 0, tag =3D ap->last_tag + 1; i < max_queue; i++, tag++) {
-> >+		tag =3D tag < max_queue ? tag : 0;
+On Fri, Jul 11, 2014 at 10:51:05AM -0400, Tejun Heo wrote:
+> On Fri, Jul 11, 2014 at 02:10:26PM +0800, Kevin Hao wrote:
+> >  static struct ata_queued_cmd *ata_qc_new(struct ata_port *ap)
+> >  {
+> >  	struct ata_queued_cmd *qc =3D NULL;
+> > -	unsigned int i, tag;
+> > +	unsigned int i, tag, max_queue;
+> > +
+> > +	max_queue =3D ap->scsi_host->can_queue;
+> > +	WARN_ON_ONCE(max_queue > ATA_MAX_QUEUE);
 >=20
->    Assigning 'tag' back to 'tag' is quite stupid, don't you think? Why no=
-t:
->=20
-> 		if (tag >=3D max_queue)
-> 			tag =3D 0;
+> Let's move the WARN_ON_ONCE() to ata_host_register().  Also, let's
+> please update the function comment explaining why we're allocating
+> tags the way we do.
 
-Since I am an idiot, it is very possible for me to write stupid code.
-But I don't believe this is one. I don't think the above code is more reada=
-ble.
+OK, will do.
 
 Thanks,
 Kevin
 
---ZGiS0Q5IWpPtfppv
+--PmA2V3Z32TCmWXqI
 Content-Type: application/pgp-signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQEcBAEBAgAGBQJTwICyAAoJEJNY7TDerrFxKt4H/1HMSiJJCnBTsWBVTYqm/PiP
-WTI5QRCq1Qy+ZbUV/bPm36rTrRkcTz4Nz/ATFp8pXbgoQ3DFr5PXuMIn2FGt4hg7
-MYmrv6MHUM5ce4su+zjWlhYm6uVs+7KITrL/IxTULUInb4xNUnVbMyVmi8EKHVKJ
-/UwRzf+3cwvcc0j5CsHV3dB06SEmWQAwwqlu5gpiDvAwiQOIc2m/2SByIWjznyX0
-mGNghb0ksh304r4R1Mk8vjvaHh0OOY/Y8udGGjRa+Guzbd8DgIPDU3VWJRP5ZElL
-HYONtiDv6X6wWd79MmY+a7AGu3KTbyP9UIhdplZ0N7Q/0HZchx3qbctRvuBNbK8=
-=1kI3
+iQEcBAEBAgAGBQJTwID+AAoJEJNY7TDerrFxSb0H/A0oTi6qYcL9qBSqPL/FvKlX
+xoiZy180NpVDohr01Y4Wa0FIef7z2LfJM9hz6fuYiLcWX3z4t286D8PgNNk1FGMl
+pyiVjn8kIHms6Q4pHq9qrHU08I0MwaNehz9+mmEMsLNq9iOvrdHVB9u9jBDkH8ck
+TELsB1wj9WhPXC/T+ZYwM16j8Pw71nxc2kQt/eBnIzNH5moc56TvHDWEAOelkPNH
+k1Zq67PonYJ+LM7GDZ5Fmyt7HYNhydZO5neJlDiZQw6IS7CqJLZMk0hEe7muaeu+
+Q2xk530Vw3nDNdYx3xFfHtUuoud9Gkof7Xg9GGwGuvQn1cIdPObxgwSBPjAJwSc=
+=pn8+
 -----END PGP SIGNATURE-----
 
---ZGiS0Q5IWpPtfppv--
+--PmA2V3Z32TCmWXqI--
