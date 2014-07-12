@@ -1,66 +1,45 @@
-From: Kevin Hao <haokexin@gmail.com>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 Subject: Re: [PATCH v3] libata: support the ata host which implements a queue
  depth less than 32
-Date: Sat, 12 Jul 2014 08:27:42 +0800
-Message-ID: <20140712002742.GB314@pek-khao-d1.corp.ad.wrs.com>
-References: <1405059026-18673-1-git-send-email-haokexin@gmail.com>
- <20140711145105.GC27706@htj.dyndns.org>
+Date: Sat, 12 Jul 2014 04:36:43 +0400
+Message-ID: <53C0831B.70504@cogentembedded.com>
+References: <1405059026-18673-1-git-send-email-haokexin@gmail.com> <53BFD10D.3080005@cogentembedded.com> <20140712002626.GA314@pek-khao-d1.corp.ad.wrs.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="PmA2V3Z32TCmWXqI"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:47343 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751056AbaGLA1u (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jul 2014 20:27:50 -0400
-Received: by mail-pa0-f41.google.com with SMTP id fb1so2316454pad.0
-        for <linux-ide@vger.kernel.org>; Fri, 11 Jul 2014 17:27:49 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20140711145105.GC27706@htj.dyndns.org>
+Received: from mail-la0-f42.google.com ([209.85.215.42]:54127 "EHLO
+	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752741AbaGLAgc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Jul 2014 20:36:32 -0400
+Received: by mail-la0-f42.google.com with SMTP id pn19so1444059lab.29
+        for <linux-ide@vger.kernel.org>; Fri, 11 Jul 2014 17:36:30 -0700 (PDT)
+In-Reply-To: <20140712002626.GA314@pek-khao-d1.corp.ad.wrs.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
+To: Kevin Hao <haokexin@gmail.com>
+Cc: linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>
 
+On 07/12/2014 04:26 AM, Kevin Hao wrote:
 
---PmA2V3Z32TCmWXqI
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+>>> -	for (i = 0; i < ATA_MAX_QUEUE; i++) {
+>>> -		tag = (i + ap->last_tag + 1) % ATA_MAX_QUEUE;
+>>> +	for (i = 0, tag = ap->last_tag + 1; i < max_queue; i++, tag++) {
+>>> +		tag = tag < max_queue ? tag : 0;
 
-On Fri, Jul 11, 2014 at 10:51:05AM -0400, Tejun Heo wrote:
-> On Fri, Jul 11, 2014 at 02:10:26PM +0800, Kevin Hao wrote:
-> >  static struct ata_queued_cmd *ata_qc_new(struct ata_port *ap)
-> >  {
-> >  	struct ata_queued_cmd *qc =3D NULL;
-> > -	unsigned int i, tag;
-> > +	unsigned int i, tag, max_queue;
-> > +
-> > +	max_queue =3D ap->scsi_host->can_queue;
-> > +	WARN_ON_ONCE(max_queue > ATA_MAX_QUEUE);
->=20
-> Let's move the WARN_ON_ONCE() to ata_host_register().  Also, let's
-> please update the function comment explaining why we're allocating
-> tags the way we do.
+>>     Assigning 'tag' back to 'tag' is quite stupid, don't you think? Why not:
 
-OK, will do.
+>> 		if (tag >= max_queue)
+>> 			tag = 0;
 
-Thanks,
-Kevin
+> Since I am an idiot, it is very possible for me to write stupid code.
+> But I don't believe this is one. I don't think the above code is more readable.
 
---PmA2V3Z32TCmWXqI
-Content-Type: application/pgp-signature
+    Perhaps I'm an idiot (I even seldom doubt it) but to me it looks like 
+clear abuse of the ?: operator. But that's probably just me...
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+> Thanks,
+> Kevin
 
-iQEcBAEBAgAGBQJTwID+AAoJEJNY7TDerrFxSb0H/A0oTi6qYcL9qBSqPL/FvKlX
-xoiZy180NpVDohr01Y4Wa0FIef7z2LfJM9hz6fuYiLcWX3z4t286D8PgNNk1FGMl
-pyiVjn8kIHms6Q4pHq9qrHU08I0MwaNehz9+mmEMsLNq9iOvrdHVB9u9jBDkH8ck
-TELsB1wj9WhPXC/T+ZYwM16j8Pw71nxc2kQt/eBnIzNH5moc56TvHDWEAOelkPNH
-k1Zq67PonYJ+LM7GDZ5Fmyt7HYNhydZO5neJlDiZQw6IS7CqJLZMk0hEe7muaeu+
-Q2xk530Vw3nDNdYx3xFfHtUuoud9Gkof7Xg9GGwGuvQn1cIdPObxgwSBPjAJwSc=
-=pn8+
------END PGP SIGNATURE-----
+MBR, Sergei
 
---PmA2V3Z32TCmWXqI--
