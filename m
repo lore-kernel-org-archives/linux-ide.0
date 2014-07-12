@@ -1,96 +1,58 @@
-From: Kevin Hao <haokexin@gmail.com>
-Subject: [PATCH v4] libata: support the ata host which implements a queue depth less than 32
-Date: Sat, 12 Jul 2014 12:08:24 +0800
-Message-ID: <1405138104-25769-1-git-send-email-haokexin@gmail.com>
+From: Alexey Asemov <alex@alex-at.ru>
+Subject: [PATCH] libata: handle IDE AMNF errors in the EH path
+Date: Sat, 12 Jul 2014 12:22:53 +0400
+Message-ID: <1405153373-11108-1-git-send-email-alex@alex-at.ru>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pd0-f180.google.com ([209.85.192.180]:60669 "EHLO
-	mail-pd0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750762AbaGLEJN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 12 Jul 2014 00:09:13 -0400
-Received: by mail-pd0-f180.google.com with SMTP id y13so140510pdi.25
-        for <linux-ide@vger.kernel.org>; Fri, 11 Jul 2014 21:09:13 -0700 (PDT)
+Received: from mail.net13.info ([94.19.113.221]:57061 "EHLO mail.net13.info"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751760AbaGLI21 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 12 Jul 2014 04:28:27 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>
+Cc: tj@kernel.org, linux-kernel@vger.kernel.org, Alexey Asemov <alex@alex-at.ru>
 
-The sata on fsl mpc8315e is broken after the commit 8a4aeec8d2d6
-("libata/ahci: accommodate tag ordered controllers"). The reason is
-that the ata controller on this SoC only implement a queue depth of
-16. When issuing the commands in tag order, all the commands in tag
-16 ~ 31 are mapped to tag 0 unconditionally and then causes the sata
-malfunction. It makes no senses to use a 32 queue in software while
-the hardware has less queue depth. So consider the queue depth
-implemented by the hardware when requesting a command tag.
+libata-eh.c should handle AMNF error condition (error byte bit 0, usually
+code 0x01) in libata-eh.c along with UNC as a media error so SCSI stack
+can handle it properly (translation code 0x01 is already present in
+libata-scsi.c) but was never passed down due to lack of handling in EH.
 
-Fixes: 8a4aeec8d2d6 ("libata/ahci: accommodate tag ordered controllers")
-Cc: stable@vger.kernel.org
-Signed-off-by: Kevin Hao <haokexin@gmail.com>
+https://bugzilla.kernel.org/show_bug.cgi?id=80031
+
+Signed-off-by: Alexey Asemov <alex@alex-at.ru>
 ---
-v4:
-  - Change WARN_ON_ONCE() to WARN_ON() and move it to ata_host_register()
-  - Add comment for function ata_qc_new()
+ drivers/ata/libata-eh.c |    9 +++++----
+ 1 files changed, 5 insertions(+), 4 deletions(-)
 
-v3: Use ap->scsi_host->can_queue for the queue depth implemented by hardware.
-    Patch 2 in v2 is also dropped due to this change.
-
-v2: Remove the changes for the ata tag helper functions
-
- drivers/ata/libata-core.c | 22 +++++++++++++++++++---
- 1 file changed, 19 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 8f3043165048..259d87937ce7 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4721,6 +4721,10 @@ void swap_buf_le16(u16 *buf, unsigned int buf_words)
-  *	ata_qc_new - Request an available ATA command, for queueing
-  *	@ap: target port
-  *
-+ *	Some ATA host controllers may implement a queue depth which is less
-+ *	than ATA_MAX_QUEUE. So we shouldn't allocate a tag which is beyond
-+ *	the hardware limitation.
-+ *
-  *	LOCKING:
-  *	None.
-  */
-@@ -4728,14 +4732,16 @@ void swap_buf_le16(u16 *buf, unsigned int buf_words)
- static struct ata_queued_cmd *ata_qc_new(struct ata_port *ap)
- {
- 	struct ata_queued_cmd *qc = NULL;
--	unsigned int i, tag;
-+	unsigned int i, tag, max_queue;
-+
-+	max_queue = ap->scsi_host->can_queue;
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 6760fc4..dad83df 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1811,7 +1811,7 @@ static unsigned int ata_eh_analyze_tf(struct ata_queued_cmd *qc,
+ 	case ATA_DEV_ATA:
+ 		if (err & ATA_ICRC)
+ 			qc->err_mask |= AC_ERR_ATA_BUS;
+-		if (err & ATA_UNC)
++		if (err & (ATA_UNC | ATA_AMNF))
+ 			qc->err_mask |= AC_ERR_MEDIA;
+ 		if (err & ATA_IDNF)
+ 			qc->err_mask |= AC_ERR_INVALID;
+@@ -2556,11 +2556,12 @@ static void ata_eh_link_report(struct ata_link *link)
+ 		}
  
- 	/* no command while frozen */
- 	if (unlikely(ap->pflags & ATA_PFLAG_FROZEN))
- 		return NULL;
- 
--	for (i = 0; i < ATA_MAX_QUEUE; i++) {
--		tag = (i + ap->last_tag + 1) % ATA_MAX_QUEUE;
-+	for (i = 0, tag = ap->last_tag + 1; i < max_queue; i++, tag++) {
-+		tag = tag < max_queue ? tag : 0;
- 
- 		/* the last tag is reserved for internal command. */
- 		if (tag == ATA_TAG_INTERNAL)
-@@ -6103,6 +6109,16 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
- {
- 	int i, rc;
- 
-+	/*
-+	 * The max queue supported by hardware must not be greater than
-+	 * ATA_MAX_QUEUE.
-+	 */
-+	if (sht->can_queue > ATA_MAX_QUEUE) {
-+		dev_err(host->dev, "BUG: the hardware max queue is too large\n");
-+		WARN_ON(1);
-+		return -EINVAL;
-+	}
-+
- 	/* host must have been started */
- 	if (!(host->flags & ATA_HOST_STARTED)) {
- 		dev_err(host->dev, "BUG: trying to register unstarted host\n");
+ 		if (cmd->command != ATA_CMD_PACKET &&
+-		    (res->feature & (ATA_ICRC | ATA_UNC | ATA_IDNF |
+-				     ATA_ABORTED)))
+-			ata_dev_err(qc->dev, "error: { %s%s%s%s}\n",
++		    (res->feature & (ATA_ICRC | ATA_UNC | ATA_AMNF |
++				     ATA_IDNF | ATA_ABORTED)))
++			ata_dev_err(qc->dev, "error: { %s%s%s%s%s}\n",
+ 			  res->feature & ATA_ICRC ? "ICRC " : "",
+ 			  res->feature & ATA_UNC ? "UNC " : "",
++			  res->feature & ATA_AMNF ? "AMNF " : "",
+ 			  res->feature & ATA_IDNF ? "IDNF " : "",
+ 			  res->feature & ATA_ABORTED ? "ABRT " : "");
+ #endif
 -- 
-1.9.3
+1.7.1
 
