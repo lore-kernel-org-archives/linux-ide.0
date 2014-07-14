@@ -1,57 +1,26 @@
-From: Mikko Perttunen <mperttunen@nvidia.com>
+From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Subject: Re: [PATCH v2 6/7] ata: Add support for the Tegra124 SATA controller
-Date: Mon, 14 Jul 2014 09:21:51 +0300
-Message-ID: <53C376FF.3060509@nvidia.com>
-References: <1403101406-15439-1-git-send-email-mperttunen@nvidia.com> <1403101406-15439-7-git-send-email-mperttunen@nvidia.com> <20140708132216.GA4979@htj.dyndns.org>
+Date: Mon, 14 Jul 2014 08:25:09 +0200
+Message-ID: <53C377C5.7070205@redhat.com>
+References: <1403101406-15439-1-git-send-email-mperttunen@nvidia.com> <1403101406-15439-7-git-send-email-mperttunen@nvidia.com> <20140708132216.GA4979@htj.dyndns.org> <53C376FF.3060509@nvidia.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:2471 "EHLO
-	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751505AbaGNGVz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Jul 2014 02:21:55 -0400
-In-Reply-To: <20140708132216.GA4979@htj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <53C376FF.3060509-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Sender: linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Mikko Perttunen <mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "swarren-3lzwWm7+Weoh9ZMKESR00Q@public.gmane.org" <swarren-3lzwWm7+Weoh9ZMKESR00Q@public.gmane.org>, "thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Peter De Schrijver <pdeschrijver-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>, "swarren@wwwdotorg.org" <swarren@wwwdotorg.org>, "thierry.reding@gmail.com" <thierry.reding@gmail.com>, Peter De Schrijver <pdeschrijver@nvidia.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hi Hans, have you been able to take a look at this?
+Hi Miko,
 
-Thanks,
-Mikko
+On 07/14/2014 08:21 AM, Mikko Perttunen wrote:
+> Hi Hans, have you been able to take a look at this?
 
-On 08/07/14 16:22, Tejun Heo wrote:
-> (cc'ing Hans)
->
-> Hans, can you please review this patch?
->
-> On Wed, Jun 18, 2014 at 05:23:25PM +0300, Mikko Perttunen wrote:
->> +#define SATA_CONFIGURATION_0				0x180
->> +#define		SATA_CONFIGURATION_EN_FPCI		BIT(0)
->
-> Let's just indent uniformly.  The new line should give enough visual
-> hint on grouping.
->
->> +struct tegra_ahci_priv {
->> +	struct platform_device *pdev;
->> +	void __iomem *sata_regs;
->> +	struct reset_control *sata_rst;
->> +	struct reset_control *sata_oob_rst;
->> +	struct reset_control *sata_cold_rst;
->> +	struct clk *sata_clk;
->> +	struct clk *sata_oob_clk;
->> +	struct clk *cml1_clk;
->> +	struct clk *plle_clk;
->> +	struct regulator_bulk_data supplies[5];
->> +	struct phy *padctl_phy;
->> +};
->
-> And please indent the declared fields uniformly too.
->
-> Except for the above nitpicks, generally looks good to me but let's
-> wait for Hans' review.
->
-> Thanks.
->
+Not yet, it is on my todo list I hope to get around to
+it today or tomorrow.
+
+Regards,
+
+Hans
