@@ -1,42 +1,71 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v4] libata: support the ata host which implements a queue
- depth less than 32
-Date: Mon, 14 Jul 2014 12:42:44 -0400
-Message-ID: <20140714164244.GG31610@htj.dyndns.org>
-References: <1405138104-25769-1-git-send-email-haokexin@gmail.com>
+From: Ian Pilcher <arequipeno@gmail.com>
+Subject: Monkey-patching libahci
+Date: Mon, 14 Jul 2014 13:30:57 -0500
+Message-ID: <lq17mj$40p$1@ger.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f170.google.com ([209.85.216.170]:35938 "EHLO
-	mail-qc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755819AbaGNQms (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Jul 2014 12:42:48 -0400
-Received: by mail-qc0-f170.google.com with SMTP id c9so3802361qcz.15
-        for <linux-ide@vger.kernel.org>; Mon, 14 Jul 2014 09:42:47 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <1405138104-25769-1-git-send-email-haokexin@gmail.com>
+Received: from plane.gmane.org ([80.91.229.3]:56459 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751943AbaGNScG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 14 Jul 2014 14:32:06 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <lnx-linux-ide@m.gmane.org>)
+	id 1X6l2g-0007Pq-SW
+	for linux-ide@vger.kernel.org; Mon, 14 Jul 2014 20:32:02 +0200
+Received: from pool-173-57-185-5.dllstx.fios.verizon.net ([173.57.185.5])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Mon, 14 Jul 2014 20:32:02 +0200
+Received: from arequipeno by pool-173-57-185-5.dllstx.fios.verizon.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Mon, 14 Jul 2014 20:32:02 +0200
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kevin Hao <haokexin@gmail.com>
-Cc: linux-ide@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
+To: linux-ide@vger.kernel.org
 
-On Sat, Jul 12, 2014 at 12:08:24PM +0800, Kevin Hao wrote:
-> The sata on fsl mpc8315e is broken after the commit 8a4aeec8d2d6
-> ("libata/ahci: accommodate tag ordered controllers"). The reason is
-> that the ata controller on this SoC only implement a queue depth of
-> 16. When issuing the commands in tag order, all the commands in tag
-> 16 ~ 31 are mapped to tag 0 unconditionally and then causes the sata
-> malfunction. It makes no senses to use a 32 queue in software while
-> the hardware has less queue depth. So consider the queue depth
-> implemented by the hardware when requesting a command tag.
-> 
-> Fixes: 8a4aeec8d2d6 ("libata/ahci: accommodate tag ordered controllers")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Kevin Hao <haokexin@gmail.com>
+I have a Thecus N5550 NAS with an ICH10R AHCI controller.  5 of the AHCI
+ports are used for "data" drives, and each of these has an activity LED
+which is driven by one of the ICH GPIOs.  (The other AHCI port is used
+by the internal SATA DOM.)
 
-Applied to libata/for-3.16-fixes.
+In order to make the LEDs actually blink, I am wrapping libahci's
+qc_issue function to blink the LED that corresponds to a given command's
+port (if any):
 
-Thanks.
+
+https://github.com/ipilcher/n5550/blob/master/modules/n5550_ahci_leds.c#L177
+
+I "hook in" the wrapper function by ensuring that my module is loaded
+immediately after libahci (via modprobe configuration) and directly
+modifying ahci_ops.qc_issue.  I do everything I can think of to make
+sure that no other libahci users are loaded while I'm making the
+changes.
+
+
+https://github.com/ipilcher/n5550/blob/master/modules/n5550_ahci_leds.c#L207
+
+I also prevent my module from being unloaded when any other libahci
+users are loaded.  The module keeps an additional reference to itself,
+which is released when the hook is successfully disabled via sysfs.
+
+
+https://github.com/ipilcher/n5550/blob/master/modules/n5550_ahci_leds.c#L79
+
+This definitely works, and it allows me to use pre-packaged kernels on
+this system (ELRepo kernel-lt on CentOS 6 and hopefully the CentOSPlus
+kernel on CentOS 7), but it sure does feel ugly and hackish.
+
+Short of patching and rebuilding the libahci or ahci modules, is there a
+better way to do this?  (Keeping in mind that I'm not worried about
+supporting any other hardware configuration.)
+
+Thanks!
 
 -- 
-tejun
+========================================================================
+Ian Pilcher                                         arequipeno@gmail.com
+-------- "I grew up before Mark Zuckerberg invented friendship" --------
+========================================================================
+
