@@ -1,71 +1,44 @@
-From: Ian Pilcher <arequipeno@gmail.com>
-Subject: Monkey-patching libahci
-Date: Mon, 14 Jul 2014 13:30:57 -0500
-Message-ID: <lq17mj$40p$1@ger.gmane.org>
+From: "Alexey Asemov (Alex/AT)" <alex@alex-at.ru>
+Subject: Re: [PATCH] libata: handle IDE AMNF errors in the EH path
+Date: Tue, 15 Jul 2014 01:16:36 +0400
+Message-ID: <op.xi0apyklxbnnkn@violator>
+References: <1405153373-11108-1-git-send-email-alex@alex-at.ru>
+ <20140714161010.GE31610@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=utf-8; format=flowed; delsp=yes
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:56459 "EHLO plane.gmane.org"
+Received: from mail.net13.info ([92.39.235.156]:17866 "EHLO mail.net13.info"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751943AbaGNScG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 14 Jul 2014 14:32:06 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <lnx-linux-ide@m.gmane.org>)
-	id 1X6l2g-0007Pq-SW
-	for linux-ide@vger.kernel.org; Mon, 14 Jul 2014 20:32:02 +0200
-Received: from pool-173-57-185-5.dllstx.fios.verizon.net ([173.57.185.5])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Mon, 14 Jul 2014 20:32:02 +0200
-Received: from arequipeno by pool-173-57-185-5.dllstx.fios.verizon.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Mon, 14 Jul 2014 20:32:02 +0200
+	id S1756793AbaGNVXo (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 14 Jul 2014 17:23:44 -0400
+In-Reply-To: <20140714161010.GE31610@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-I have a Thecus N5550 NAS with an ICH10R AHCI controller.  5 of the AHCI
-ports are used for "data" drives, and each of these has an activity LED
-which is driven by one of the ICH GPIOs.  (The other AHCI port is used
-by the internal SATA DOM.)
+Tejun Heo <tj@kernel.org> wrote at Mon, 14 Jul 2014 20:10:10 +0400:
 
-In order to make the LEDs actually blink, I am wrapping libahci's
-qc_issue function to blink the LED that corresponds to a given command's
-port (if any):
+> IIRC AMNF has been deprecated for a very long time now.  The bit isn't
+> too likely to get reused given that major updates to ATA spec is
+> improbable but I'm still not quite fond of adding handling of a long
+> deprecated flag.  Can you please provide a bit more detail?  Which
+> device was it?
 
+The hardware is: AMD 6550M-based notebook, WD7500BPVT 2.5" 750G SATA2 hard  
+drive. PCI IDs for the controller are 1022:7801 subsys 1025:059d.
 
-https://github.com/ipilcher/n5550/blob/master/modules/n5550_ahci_leds.c#L177
+I was using linux-based machine to salvage data from failing hard drive,  
+and found that pure AMNF 0x01 error code generates generic "device error"  
+that is retried several times by SCSI stack instead of "media error" that  
+is passed up to software. That slowed down salvaging a lot, so the  
+patching was done and then everything went smooth.
 
-I "hook in" the wrapper function by ensuring that my module is loaded
-immediately after libahci (via modprobe configuration) and directly
-modifying ahci_ops.qc_issue.  I do everything I can think of to make
-sure that no other libahci users are loaded while I'm making the
-changes.
-
-
-https://github.com/ipilcher/n5550/blob/master/modules/n5550_ahci_leds.c#L207
-
-I also prevent my module from being unloaded when any other libahci
-users are loaded.  The module keeps an additional reference to itself,
-which is released when the hook is successfully disabled via sysfs.
-
-
-https://github.com/ipilcher/n5550/blob/master/modules/n5550_ahci_leds.c#L79
-
-This definitely works, and it allows me to use pre-packaged kernels on
-this system (ELRepo kernel-lt on CentOS 6 and hopefully the CentOSPlus
-kernel on CentOS 7), but it sure does feel ugly and hackish.
-
-Short of patching and rebuilding the libahci or ahci modules, is there a
-better way to do this?  (Keeping in mind that I'm not worried about
-supporting any other hardware configuration.)
-
-Thanks!
-
--- 
-========================================================================
-Ian Pilcher                                         arequipeno@gmail.com
--------- "I grew up before Mark Zuckerberg invented friendship" --------
-========================================================================
-
+So I presume AMNF error code is surely not dead yet, and it's better for  
+it to be handled. It is used by modern enough devices, and used properly:  
+drive returned AMNF only when IDs for track cannot be read completely due  
+to dying head or positioning, otherwise it returned UNC(orrectables).  
+Also, there is handling code in libata-scsi.c for 0x01 AMNF error already.  
+Not handling it causes excessive retries that can damage failing drivers  
+further, and wrong generic error code ("device error") reporting.
