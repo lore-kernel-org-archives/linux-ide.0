@@ -1,32 +1,48 @@
-From: Mikko Perttunen <mperttunen@nvidia.com>
-Subject: Re: [PATCH v2 6/7] ata: Add support for the Tegra124 SATA controller
-Date: Mon, 14 Jul 2014 09:28:54 +0300
-Message-ID: <53C378A6.3060400@nvidia.com>
-References: <1403101406-15439-1-git-send-email-mperttunen@nvidia.com> <1403101406-15439-7-git-send-email-mperttunen@nvidia.com> <20140708132216.GA4979@htj.dyndns.org> <53C376FF.3060509@nvidia.com> <53C377C5.7070205@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <53C377C5.7070205@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>, "swarren@wwwdotorg.org" <swarren@wwwdotorg.org>, "thierry.reding@gmail.com" <thierry.reding@gmail.com>, Peter De Schrijver <pdeschrijver@nvidia.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Subject: [PATCH v3 0/2] phy: qcom: Add driver for QCOM APQ8064 SATA PHY
+Date: Mon, 14 Jul 2014 09:47:44 +0100
+Message-ID: <1405327664-27439-1-git-send-email-srinivas.kandagatla@linaro.org>
+References: <1404903807-26032-1-git-send-email-srinivas.kandagatla@linaro.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <1404903807-26032-1-git-send-email-srinivas.kandagatla@linaro.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Grant Likely <grant.likely@linaro.org>, Rob Herring <robh+dt@kernel.org>, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-ide@vger.kernel.org, Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
 List-Id: linux-ide@vger.kernel.org
 
-Ok, that's good, thanks.
+Hi Kishon,
 
-Mikko
+First patch in this series adds support to the APQ8064 SATA PHY.
+Second patch updates the existing Kumar gala's device tree PHY bindings
+with APQ8064 soc specific compatible.
 
-On 14/07/14 09:25, Hans de Goede wrote:
-> Hi Miko,
->
-> On 07/14/2014 08:21 AM, Mikko Perttunen wrote:
->> Hi Hans, have you been able to take a look at this?
->
-> Not yet, it is on my todo list I hope to get around to
-> it today or tomorrow.
->
-> Regards,
->
-> Hans
->
+Eventhough there are two seperate drivers for both IPQ and APQ SOCs,
+the bindings are exactly same, so I did not create new bindings document.
+
+Could you please pick these patches for v3.17.
+
+Changes since v2:
+	- added usleep_range in poll timeout as discussed
+		with Bartlomiej Zolnierkiewicz.
+	- Added missing pdev_set_drvdata spotted by 
+		Bartlomiej Zolnierkiewicz
+
+Changes since v1:
+	- included DT bindings in the series.
+
+Thanks,
+srini
+
+Srinivas Kandagatla (2):
+  phy: qcom: Add driver for QCOM APQ8064 SATA PHY
+  phy: qcom: Update APQ8064 PHY device tree bindings
+
+ Documentation/devicetree/bindings/phy/qcom-phy.txt |   3 +-
+ drivers/phy/Kconfig                                |   7 +
+ drivers/phy/Makefile                               |   1 +
+ drivers/phy/phy-qcom-apq8064-sata.c                | 288 +++++++++++++++++++++
+ 4 files changed, 298 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/phy/phy-qcom-apq8064-sata.c
+
+-- 
+1.9.1
