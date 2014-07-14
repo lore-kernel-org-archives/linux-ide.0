@@ -1,47 +1,31 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH v3] MAINTAINERS: Add Hans de Goede as ahci-platform maintainer
-Date: Mon, 14 Jul 2014 15:41:25 +0200
-Message-ID: <1405345285-4669-1-git-send-email-hdegoede@redhat.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v3] MAINTAINERS: Add Hans de Goede as ahci-platform
+ maintainer
+Date: Mon, 14 Jul 2014 10:16:02 -0400
+Message-ID: <20140714141602.GA31610@htj.dyndns.org>
+References: <1405345285-4669-1-git-send-email-hdegoede@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48486 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754467AbaGNNla (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 14 Jul 2014 09:41:30 -0400
+Received: from mail-qa0-f44.google.com ([209.85.216.44]:56982 "EHLO
+	mail-qa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754850AbaGNOQF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Jul 2014 10:16:05 -0400
+Received: by mail-qa0-f44.google.com with SMTP id f12so3181533qad.3
+        for <linux-ide@vger.kernel.org>; Mon, 14 Jul 2014 07:16:05 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <1405345285-4669-1-git-send-email-hdegoede@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: linux-ide@vger.kernel.org
 
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+On Mon, Jul 14, 2014 at 03:41:25PM +0200, Hans de Goede wrote:
+> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
 
---
-Changes in v2: Add drivers/ata/libahci_platform.c to file list
-Changes in v3: Add include/linux/ahci_platform.h to file list
----
- MAINTAINERS | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+Applied to libata/for-3.16-fixes.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 6813d0a..b18e5ff 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -8007,6 +8007,16 @@ F:	drivers/ata/
- F:	include/linux/ata.h
- F:	include/linux/libata.h
- 
-+SERIAL ATA AHCI PLATFORM devices support
-+M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Tejun Heo <tj@kernel.org>
-+L:	linux-ide@vger.kernel.org
-+T:	git git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git
-+S:	Supported
-+F:	drivers/ata/ahci_platform.c
-+F:	drivers/ata/libahci_platform.c
-+F:	include/linux/ahci_platform.h
-+
- SERVER ENGINES 10Gbps iSCSI - BladeEngine 2 DRIVER
- M:	Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
- L:	linux-scsi@vger.kernel.org
+Thanks.
+
 -- 
-2.0.0
-
+tejun
