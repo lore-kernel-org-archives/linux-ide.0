@@ -1,149 +1,57 @@
-From: Jason Cooper <jason@lakedaemon.net>
-Subject: Re: [PATCH v2 00/12] Remove mach-kirkwood
-Date: Sun, 13 Jul 2014 17:59:24 -0400
-Message-ID: <20140713215924.GG13108@titan.lakedaemon.net>
-References: <1405028192-9623-1-git-send-email-andrew@lunn.ch>
+From: Mikko Perttunen <mperttunen@nvidia.com>
+Subject: Re: [PATCH v2 6/7] ata: Add support for the Tegra124 SATA controller
+Date: Mon, 14 Jul 2014 09:21:51 +0300
+Message-ID: <53C376FF.3060509@nvidia.com>
+References: <1403101406-15439-1-git-send-email-mperttunen@nvidia.com> <1403101406-15439-7-git-send-email-mperttunen@nvidia.com> <20140708132216.GA4979@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <alsa-devel-bounces@alsa-project.org>
-Content-Disposition: inline
-In-Reply-To: <1405028192-9623-1-git-send-email-andrew@lunn.ch>
-List-Unsubscribe: <http://mailman.alsa-project.org/mailman/options/alsa-devel>,
- <mailto:alsa-devel-request@alsa-project.org?subject=unsubscribe>
-List-Archive: <http://mailman.alsa-project.org/pipermail/alsa-devel/>
-List-Post: <mailto:alsa-devel@alsa-project.org>
-List-Help: <mailto:alsa-devel-request@alsa-project.org?subject=help>
-List-Subscribe: <http://mailman.alsa-project.org/mailman/listinfo/alsa-devel>,
- <mailto:alsa-devel-request@alsa-project.org?subject=subscribe>
-Errors-To: alsa-devel-bounces@alsa-project.org
-Sender: alsa-devel-bounces@alsa-project.org
-To: Andrew Lunn <andrew@lunn.ch>
-Cc: linux-ide@vger.kernel.org, Alessandro Zummo <a.zummo@towertech.it>, alsa-devel@alsa-project.org, Bryan Wu <cooloney@gmail.com>, linux-watchdog@vger.kernel.org, rtc-linux@googlegroups.com, linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rjw@rjwysocki.net>, Daniel Lezcano <daniel.lezcano@linaro.org>, Sebastian Hesselbarth <sebastian.hesselbarth@googlemail.com>, Kishon Vijay Abraham I <kishon@ti.com>, Tejun Heo <tj@kernel.org>, Wim Van Sebroeck <wim@iguana.be>, Mark Brown <broonie@kernel.org>, Richard Purdie <rpurdie@rpsys.net>, linux-leds@vger.kernel.org, linux-pci@vger.kernel.org, Gregory Clement <gregory.clement@free-electrons.com>, Zhang Rui <rui.zhang@intel.com>, Bjorn Helgaas <bhelgaas@google.com>, linux ARM <linux-arm-kernel@lists.infradead.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:2471 "EHLO
+	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751505AbaGNGVz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Jul 2014 02:21:55 -0400
+In-Reply-To: <20140708132216.GA4979@htj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, "swarren@wwwdotorg.org" <swarren@wwwdotorg.org>, "thierry.reding@gmail.com" <thierry.reding@gmail.com>, Peter De Schrijver <pdeschrijver@nvidia.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-All driver/sub-system maintainers:
+Hi Hans, have you been able to take a look at this?
 
-On Thu, Jul 10, 2014 at 11:36:20PM +0200, Andrew Lunn wrote:
-> This patchset removes arch/arm/mach-kirkwood.  This SoCs is now
-> supported in arch/arm/mach-mvebu using device tree.
-> 
-> V1 of this patchset also removed mach-dove. However it has been
-> decided to leave it alone for a while to aid some developers get out
-> of tree patches merged.
->                                                                          
-> Change the dependencies for a number of drivers, either to use
-> ARCH_MVEBU where the drivers are generic, or MACH_KIRKWOOD and where
-> the drivers are specific to the SoC.
-> 
-> Once Jason Cooper has Acked these patches, we would prefer that
-> individual subsystem maintainers take these patches through their own
-> trees.
-> 
-> Thanks
-> 	Andrew
-> 
-> Andrew Lunn (12):
->   ARM: Kirkwood: Remove mach-kirkwood
->   ARM: Kirkwood: Remove kirkwood_defconfig
->   ASoC: kirkwood: Remove unused drivers
->   ASoC: kirkwood: Remove ARCH_KIRKWOOD dependency
->   cpuidle: kirkwood: Remove ARCH_KIRKWOOD dependency
->   ata: Remove ARCH_KIRKWOOD dependency
->   thermal: Remove ARCH_KIRKWOOD dependency
->   leds: Remove ARCH_KIRKWOOD dependency
->   PCI: Remove ARCH_KIRKWOOD dependency
->   phy: Remove ARCH_KIRKWOOD dependency
->   rtc: Remove ARCH_KIRKWOOD dependency
->   watchdog: Remove ARCH_KIRKWOOD dependency
-> 
->  arch/arm/Kconfig                                  |  18 -
->  arch/arm/Kconfig.debug                            |   6 +-
->  arch/arm/Makefile                                 |   1 -
->  arch/arm/boot/dts/Makefile                        |   5 +-
->  arch/arm/configs/kirkwood_defconfig               | 181 ------
->  arch/arm/mach-kirkwood/Kconfig                    | 111 ----
->  arch/arm/mach-kirkwood/Makefile                   |  14 -
->  arch/arm/mach-kirkwood/Makefile.boot              |   3 -
->  arch/arm/mach-kirkwood/board-dt.c                 | 223 -------
->  arch/arm/mach-kirkwood/common.c                   | 746 ----------------------
->  arch/arm/mach-kirkwood/common.h                   |  74 ---
->  arch/arm/mach-kirkwood/d2net_v2-setup.c           | 231 -------
->  arch/arm/mach-kirkwood/include/mach/bridge-regs.h |  86 ---
->  arch/arm/mach-kirkwood/include/mach/entry-macro.S |  34 -
->  arch/arm/mach-kirkwood/include/mach/hardware.h    |  14 -
->  arch/arm/mach-kirkwood/include/mach/irqs.h        |  65 --
->  arch/arm/mach-kirkwood/include/mach/kirkwood.h    | 142 ----
->  arch/arm/mach-kirkwood/include/mach/uncompress.h  |  46 --
->  arch/arm/mach-kirkwood/irq.c                      |  82 ---
->  arch/arm/mach-kirkwood/lacie_v2-common.c          | 114 ----
->  arch/arm/mach-kirkwood/lacie_v2-common.h          |  16 -
->  arch/arm/mach-kirkwood/mpp.c                      |  43 --
->  arch/arm/mach-kirkwood/mpp.h                      | 348 ----------
->  arch/arm/mach-kirkwood/netxbig_v2-setup.c         | 422 ------------
->  arch/arm/mach-kirkwood/openrd-setup.c             | 255 --------
->  arch/arm/mach-kirkwood/pcie.c                     | 296 ---------
->  arch/arm/mach-kirkwood/pm.c                       |  76 ---
->  arch/arm/mach-kirkwood/pm.h                       |  26 -
->  arch/arm/mach-kirkwood/rd88f6192-nas-setup.c      |  89 ---
->  arch/arm/mach-kirkwood/rd88f6281-setup.c          | 128 ----
->  arch/arm/mach-kirkwood/t5325-setup.c              | 216 -------
->  arch/arm/mach-kirkwood/ts219-setup.c              | 142 ----
->  arch/arm/mach-kirkwood/ts41x-setup.c              | 186 ------
->  arch/arm/mach-kirkwood/tsx1x-common.c             | 113 ----
->  arch/arm/mach-kirkwood/tsx1x-common.h             |   7 -
->  arch/arm/mm/Kconfig                               |   2 +-
->  drivers/ata/Kconfig                               |   2 +-
->  drivers/cpuidle/Kconfig.arm                       |   2 +-
->  drivers/leds/Kconfig                              |   4 +-
->  drivers/pci/host/Kconfig                          |   2 +-
->  drivers/phy/Kconfig                               |   2 +-
->  drivers/rtc/Kconfig                               |   2 +-
->  drivers/thermal/Kconfig                           |   2 +-
->  drivers/watchdog/Kconfig                          |   2 +-
->  sound/soc/kirkwood/Kconfig                        |  19 +-
->  sound/soc/kirkwood/Makefile                       |   4 -
->  sound/soc/kirkwood/kirkwood-openrd.c              | 109 ----
->  sound/soc/kirkwood/kirkwood-t5325.c               | 116 ----
->  48 files changed, 14 insertions(+), 4813 deletions(-)
->  delete mode 100644 arch/arm/configs/kirkwood_defconfig
->  delete mode 100644 arch/arm/mach-kirkwood/Kconfig
->  delete mode 100644 arch/arm/mach-kirkwood/Makefile
->  delete mode 100644 arch/arm/mach-kirkwood/Makefile.boot
->  delete mode 100644 arch/arm/mach-kirkwood/board-dt.c
->  delete mode 100644 arch/arm/mach-kirkwood/common.c
->  delete mode 100644 arch/arm/mach-kirkwood/common.h
->  delete mode 100644 arch/arm/mach-kirkwood/d2net_v2-setup.c
->  delete mode 100644 arch/arm/mach-kirkwood/include/mach/bridge-regs.h
->  delete mode 100644 arch/arm/mach-kirkwood/include/mach/entry-macro.S
->  delete mode 100644 arch/arm/mach-kirkwood/include/mach/hardware.h
->  delete mode 100644 arch/arm/mach-kirkwood/include/mach/irqs.h
->  delete mode 100644 arch/arm/mach-kirkwood/include/mach/kirkwood.h
->  delete mode 100644 arch/arm/mach-kirkwood/include/mach/uncompress.h
->  delete mode 100644 arch/arm/mach-kirkwood/irq.c
->  delete mode 100644 arch/arm/mach-kirkwood/lacie_v2-common.c
->  delete mode 100644 arch/arm/mach-kirkwood/lacie_v2-common.h
->  delete mode 100644 arch/arm/mach-kirkwood/mpp.c
->  delete mode 100644 arch/arm/mach-kirkwood/mpp.h
->  delete mode 100644 arch/arm/mach-kirkwood/netxbig_v2-setup.c
->  delete mode 100644 arch/arm/mach-kirkwood/openrd-setup.c
->  delete mode 100644 arch/arm/mach-kirkwood/pcie.c
->  delete mode 100644 arch/arm/mach-kirkwood/pm.c
->  delete mode 100644 arch/arm/mach-kirkwood/pm.h
->  delete mode 100644 arch/arm/mach-kirkwood/rd88f6192-nas-setup.c
->  delete mode 100644 arch/arm/mach-kirkwood/rd88f6281-setup.c
->  delete mode 100644 arch/arm/mach-kirkwood/t5325-setup.c
->  delete mode 100644 arch/arm/mach-kirkwood/ts219-setup.c
->  delete mode 100644 arch/arm/mach-kirkwood/ts41x-setup.c
->  delete mode 100644 arch/arm/mach-kirkwood/tsx1x-common.c
->  delete mode 100644 arch/arm/mach-kirkwood/tsx1x-common.h
->  delete mode 100644 sound/soc/kirkwood/kirkwood-openrd.c
->  delete mode 100644 sound/soc/kirkwood/kirkwood-t5325.c
+Thanks,
+Mikko
 
-For all the driver changes:
-
-Acked-by: Jason Cooper <jason@lakedaemon.net>
-
-thx,
-
-Jason.
+On 08/07/14 16:22, Tejun Heo wrote:
+> (cc'ing Hans)
+>
+> Hans, can you please review this patch?
+>
+> On Wed, Jun 18, 2014 at 05:23:25PM +0300, Mikko Perttunen wrote:
+>> +#define SATA_CONFIGURATION_0				0x180
+>> +#define		SATA_CONFIGURATION_EN_FPCI		BIT(0)
+>
+> Let's just indent uniformly.  The new line should give enough visual
+> hint on grouping.
+>
+>> +struct tegra_ahci_priv {
+>> +	struct platform_device *pdev;
+>> +	void __iomem *sata_regs;
+>> +	struct reset_control *sata_rst;
+>> +	struct reset_control *sata_oob_rst;
+>> +	struct reset_control *sata_cold_rst;
+>> +	struct clk *sata_clk;
+>> +	struct clk *sata_oob_clk;
+>> +	struct clk *cml1_clk;
+>> +	struct clk *plle_clk;
+>> +	struct regulator_bulk_data supplies[5];
+>> +	struct phy *padctl_phy;
+>> +};
+>
+> And please indent the declared fields uniformly too.
+>
+> Except for the above nitpicks, generally looks good to me but let's
+> wait for Hans' review.
+>
+> Thanks.
+>
