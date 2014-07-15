@@ -1,68 +1,90 @@
-From: Alexey Asemov <alex@alex-at.ru>
-Subject: [PATCH] libata-eh.c should handle AMNF error condition (error byte bit 0, usually code 0x01) in libata-eh.c along with UNC as a media error so SCSI stack can handle it properly (translation code 0x01 is already present in libata-scsi.c) but was never passed down due to lack of handling in EH.
-Date: Tue, 15 Jul 2014 10:28:42 +0400
-Message-ID: <1405405722-12470-1-git-send-email-alex@alex-at.ru>
-References: <20140714161010.GE31610@htj.dyndns.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20140714161010.GE31610@htj.dyndns.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: tj@kernel.org, linux-kernel@vger.kernel.org, Alexey Asemov <alex@alex-at.ru>
+From: Mikko Perttunen <mperttunen@nvidia.com>
+Subject: Re: [PATCH v2 6/7] ata: Add support for the Tegra124 SATA controller
+Date: Tue, 15 Jul 2014 10:12:50 +0300
+Message-ID: <53C4D472.9010507@nvidia.com>
+References: <1403101406-15439-1-git-send-email-mperttunen@nvidia.com> <1403101406-15439-7-git-send-email-mperttunen@nvidia.com> <20140708132216.GA4979@htj.dyndns.org> <53C3DCF0.3030001@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:18919 "EHLO
+	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757830AbaGOHMy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Jul 2014 03:12:54 -0400
+In-Reply-To: <53C3DCF0.3030001@redhat.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Hans de Goede <hdegoede@redhat.com>, Tejun Heo <tj@kernel.org>
+Cc: "swarren@wwwdotorg.org" <swarren@wwwdotorg.org>, "thierry.reding@gmail.com" <thierry.reding@gmail.com>, Peter De Schrijver <pdeschrijver@nvidia.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-While using linux-based machine (AMD 6550M-based notebook, PCI IDs for the
-controller are 1022:7801 subsys 1025:059d) and ddrescue to salvage data
-from failing hard drive (WD7500BPVT 2.5" 750G SATA2), I've found that pure
-AMNF 0x01 error code generates generic "device error" that is retried
-several times by SCSI stack instead of "media error" that is passed up to
-software.
+Heh, what you are describing is the v1 of this series :)
 
-So we may assume deprecated AMNF error code is surely not dead yet, and
-it's better for it to be handled properly. As we may see it is used by
-modern enough devices, and used properly: drive returned AMNF only when IDs
-for track cannot be read completely due to dying head or positioning,
-otherwise it returned UNC(orrectables).
+However,
 
-Not handling it causes wrong generic error code ("device error") reporting
-down the stack, can damage failing drives further because of excessive
-retries, and slows salvaging down a lot. Also, there is handling code in
-libata-scsi.c for 0x01 AMNF error already.
+17/06/14 Thierry Reding wrote:
+ > I would've preferred tegra_powergate_sequence_power_up() to be used
+ > consistently in all drivers. I'm still not convinced that using the
+ > platform AHCI driver this way is really the best option, since we're
+ > bending over backwards to fit into what this driver dictates. There
+ > shouldn't be a need for that.
 
-https://bugzilla.kernel.org/show_bug.cgi?id=80031
+As you probably noticed, the issue is that on Tegra we want to use 
+tegra_powergate_sequence_power_up to enable the SATA power rail. That 
+function assumes that it gets a disabled clock and returns with the 
+clock enabled. If we use ahci_platform's resource management functions,
+this is not doable, since it wants to handle clocks by itself.
 
-Signed-off-by: Alexey Asemov <alex@alex-at.ru>
----
- drivers/ata/libata-eh.c |    9 +++++----
- 1 files changed, 5 insertions(+), 4 deletions(-)
+To be honest, I too would prefer handling the resources in the driver. 
+The driver needs other resources than what ahci_platform currently 
+manages (at least reset_controls and multiple regulators, later we might 
+get more) and managing them in the driver allows the driver to do proper 
+error handling and manage all resources consistently and in one place. 
+Also, I don't think it is sensible to add support for loading every 
+possible kind of DT resource to ahci_platform, since most drivers won't 
+need them. Other subsystems I've been in don't have this kind of helper 
+library, so diverging here seems weird.
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 6760fc4..dad83df 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1811,7 +1811,7 @@ static unsigned int ata_eh_analyze_tf(struct ata_queued_cmd *qc,
- 	case ATA_DEV_ATA:
- 		if (err & ATA_ICRC)
- 			qc->err_mask |= AC_ERR_ATA_BUS;
--		if (err & ATA_UNC)
-+		if (err & (ATA_UNC | ATA_AMNF))
- 			qc->err_mask |= AC_ERR_MEDIA;
- 		if (err & ATA_IDNF)
- 			qc->err_mask |= AC_ERR_INVALID;
-@@ -2556,11 +2556,12 @@ static void ata_eh_link_report(struct ata_link *link)
- 		}
- 
- 		if (cmd->command != ATA_CMD_PACKET &&
--		    (res->feature & (ATA_ICRC | ATA_UNC | ATA_IDNF |
--				     ATA_ABORTED)))
--			ata_dev_err(qc->dev, "error: { %s%s%s%s}\n",
-+		    (res->feature & (ATA_ICRC | ATA_UNC | ATA_AMNF |
-+				     ATA_IDNF | ATA_ABORTED)))
-+			ata_dev_err(qc->dev, "error: { %s%s%s%s%s}\n",
- 			  res->feature & ATA_ICRC ? "ICRC " : "",
- 			  res->feature & ATA_UNC ? "UNC " : "",
-+			  res->feature & ATA_AMNF ? "AMNF " : "",
- 			  res->feature & ATA_IDNF ? "IDNF " : "",
- 			  res->feature & ATA_ABORTED ? "ABRT " : "");
- #endif
--- 
-1.7.1
+That said, if you feel strongly about this, I can do what you described.
+
+Thanks,
+Mikko
+
+On 14/07/14 16:36, Hans de Goede wrote:
+> Hi,
+>
+> On 07/08/2014 03:22 PM, Tejun Heo wrote:
+>> (cc'ing Hans)
+>>
+>> Hans, can you please review this patch?
+>
+> Done.
+>
+> Mikko, it looks like you are doing a lot of stuff
+> the DIY way. I can see there are good reasons for
+> that though.
+>
+> Still it would be nice if you could use a little bit
+> more of the helper functions provided by libahci_platform.c
+>
+> Specifically I think it would be better if you used
+> ahci_platform_get_resources, that would remove a lot of
+> duplicate code from the new driver.
+>
+> To be specific I would like to suggest that you
+> raise AHCI_MAX_CLKS to 4, and then specify an order
+> in which the clks must be listed in the devicetree
+> binding. Then you can put that order in an enum
+> and use hpriv->clks[CLK_FOO] in your driver, where
+> CLK_FOO comes from the enum.
+>
+> This way you should be able to use ahci_platform_get_resources
+> and drop doing the iomap of the base registers, all the
+> clk_gets and the phy_get yourself.
+>
+> You could then also use ahci_platform_disable_clks() in
+> tegra_ahci_power_off
+>
+> Regards,
+>
+> Hans
+>
