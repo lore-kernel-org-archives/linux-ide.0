@@ -1,56 +1,129 @@
 From: Kumar Gala <galak@codeaurora.org>
-Subject: [PATCH v6 2/2] phy: qcom: Add device tree bindings for IPQ806x SATA PHY
-Date: Tue, 15 Jul 2014 11:29:13 -0500
-Message-ID: <1405441753-18511-2-git-send-email-galak@codeaurora.org>
-References: <1405441753-18511-1-git-send-email-galak@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1405441753-18511-1-git-send-email-galak@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kishon Vijay Abraham I <kishon@ti.com>, Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>
-Cc: Kumar Gala <galak@codeaurora.org>, linux-ide@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH v5 1/2] phy: qcom: Add driver for QCOM IPQ806x SATA PHY
+Date: Tue, 15 Jul 2014 11:29:49 -0500
+Message-ID: <50D43A44-8309-4E12-A737-2003294A87D2@codeaurora.org>
+References: <1403030008-20675-1-git-send-email-galak@codeaurora.org> <53C54497.4010704@ti.com> <53C5460E.8010306@ti.com>
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <53C5460E.8010306@ti.com>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: linux-ide@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, sboyd@codeaurora.org, b.zolnierkie@samsung.com
 List-Id: linux-ide@vger.kernel.org
 
-Add binding spec for Qualcomm SoC PHYs, starting with the SATA PHY on
-the IPQ806x family of SoCs.
 
-Signed-off-by: Kumar Gala <galak@codeaurora.org>
----
-v6:
-* Moved binding to qcom-ipq806x-sata-phy.txt instead of qcom-phy.txt
+On Jul 15, 2014, at 10:17 AM, Kishon Vijay Abraham I <kishon@ti.com> wrote:
 
- .../bindings/phy/qcom-ipq806x-sata-phy.txt         | 23 ++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/phy/qcom-ipq806x-sata-phy.txt
+> 
+> 
+> On Tuesday 15 July 2014 08:41 PM, Kishon Vijay Abraham I wrote:
+>> Hi,
+>> 
+>> On Wednesday 18 June 2014 12:03 AM, Kumar Gala wrote:
+>>> Add a PHY driver for uses with AHCI based SATA controller driver on the
+>>> IPQ806x family of SoCs.
+>>> 
+>>> Signed-off-by: Kumar Gala <galak@codeaurora.org>
+>>> ---
+>>> v5:
+>>> * Fix copy/paste error when killing qcom_ipq806x_sata_delay_us
+>>> 
+>>> v4:
+>>> * removed qcom_ipq806x_sata_delay_us as it was only used one
+>>> 
+>>> v3:
+>>> * Added Kconfig HAS_IOMEM dep
+>>> * re-ordered probe function so phy_provider_register is last
+>>> 
+>>> v2:
+>>> * dropped unused dev pointer in struct qcom_ipq806x_sata_phy
+>>> * remove unnecessary reg initializaiton
+>>> * Removed unneeded error message
+>>> * Added remove function to disable the clock
+>>> 
+>>> drivers/phy/Kconfig                 |   7 ++
+>>> drivers/phy/Makefile                |   1 +
+>>> drivers/phy/phy-qcom-ipq806x-sata.c | 206 ++++++++++++++++++++++++++++++++++++
+>>> 3 files changed, 214 insertions(+)
+>>> create mode 100644 drivers/phy/phy-qcom-ipq806x-sata.c
+>>> 
+>>> diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
+>>> index 16a2f06..b7b6bce 100644
+>>> --- a/drivers/phy/Kconfig
+>>> +++ b/drivers/phy/Kconfig
+>>> @@ -178,4 +178,11 @@ config PHY_XGENE
+>>> 	help
+>>> 	  This option enables support for APM X-Gene SoC multi-purpose PHY.
+>>> 
+>> .
+>> .
+>> <snip>
+>> .
+>> .
+>>> +
+>>> +static int qcom_ipq806x_sata_phy_probe(struct platform_device *pdev)
+>>> +{
+>>> +	struct qcom_ipq806x_sata_phy *phy;
+>>> +	struct device *dev = &pdev->dev;
+>>> +	struct resource *res;
+>>> +	struct phy_provider *phy_provider;
+>>> +	struct phy *generic_phy;
+>>> +	int ret;
+>>> +
+>>> +	phy = devm_kzalloc(dev, sizeof(*phy), GFP_KERNEL);
+>>> +	if (!phy) {
+>>> +		dev_err(dev, "%s: failed to allocate phy\n", __func__);
+>>> +		return -ENOMEM;
+>>> +	}
+>>> +
+>>> +	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+>>> +	phy->mmio = devm_ioremap_resource(dev, res);
+>>> +	if (IS_ERR(phy->mmio))
+>>> +		return PTR_ERR(phy->mmio);
+>>> +
+>>> +	generic_phy = devm_phy_create(dev, &qcom_ipq806x_sata_phy_ops, NULL);
+>>> +	if (IS_ERR(generic_phy)) {
+>>> +		dev_err(dev, "%s: failed to create phy\n", __func__);
+>>> +		return PTR_ERR(generic_phy);
+>>> +	}
+>>> +
+>>> +	phy_set_drvdata(generic_phy, phy);
+>>> +
+>>> +	phy->cfg_clk = devm_clk_get(dev, "cfg");
+>>> +	if (IS_ERR(phy->cfg_clk)) {
+>>> +		dev_err(dev, "Failed to get sata cfg clock\n");
+>>> +		return PTR_ERR(phy->cfg_clk);
+>>> +	}
+>>> +
+>>> +	ret = clk_prepare_enable(phy->cfg_clk);
+>>> +	if (ret)
+>>> +		return ret;
+>>> +
+>>> +	phy_provider = devm_of_phy_provider_register(dev, of_phy_simple_xlate);
+>>> +	if (IS_ERR(phy_provider)) {
+>>> +		clk_disable_unprepare(phy->cfg_clk);
+>>> +		dev_err(dev, "%s: failed to register phy\n", __func__);
+>>> +		return PTR_ERR(phy_provider);
+>>> +	}
+>>> +
+>>> +	return 0;
+>>> +}
+>>> +
+>>> +static int qcom_ipq806x_sata_phy_remove(struct platform_device *pdev)
+>>> +{
+>>> +	struct qcom_ipq806x_sata_phy *phy = platform_get_drvdata(pdev);
+>> 
+>> Where is platform_set_drvdata()?
+> 
+> Btw the patch subject says 1/2 but I couldn't find the second patch. Can you
+> re-send both the patches?
 
-diff --git a/Documentation/devicetree/bindings/phy/qcom-ipq806x-sata-phy.txt b/Documentation/devicetree/bindings/phy/qcom-ipq806x-sata-phy.txt
-new file mode 100644
-index 0000000..76bfbd0
---- /dev/null
-+++ b/Documentation/devicetree/bindings/phy/qcom-ipq806x-sata-phy.txt
-@@ -0,0 +1,23 @@
-+Qualcomm IPQ806x SATA PHY Controller
-+------------------------------------
-+
-+SATA PHY nodes are defined to describe on-chip SATA Physical layer controllers.
-+Each SATA PHY controller should have its own node.
-+
-+Required properties:
-+- compatible: compatible list, contains "qcom,ipq806x-sata-phy"
-+- reg: offset and length of the SATA PHY register set;
-+- #phy-cells: must be zero
-+- clocks: must be exactly one entry
-+- clock-names: must be "cfg"
-+
-+Example:
-+	sata_phy: sata-phy@1b400000 {
-+		compatible = "qcom,ipq806x-sata-phy";
-+		reg = <0x1b400000 0x200>;
-+
-+		clocks = <&gcc SATA_PHY_CFG_CLK>;
-+		clock-names = "cfg";
-+
-+		#phy-cells = <0>;
-+	};
+sent, rebased against your linux-phy.git/next branch.
+
+- k
+
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-hosted by The Linux Foundation
+Employee of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
