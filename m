@@ -1,76 +1,57 @@
-From: Thierry Reding <thierry.reding@gmail.com>
-Subject: Re: [PATCH v2 6/7] ata: Add support for the Tegra124 SATA controller
-Date: Tue, 15 Jul 2014 11:31:49 +0200
-Message-ID: <20140715093148.GA13878@ulmo>
-References: <1403101406-15439-1-git-send-email-mperttunen@nvidia.com>
- <1403101406-15439-7-git-send-email-mperttunen@nvidia.com>
- <20140708132216.GA4979@htj.dyndns.org>
- <53C3DCF0.3030001@redhat.com>
- <53C4D472.9010507@nvidia.com>
- <53C4EC81.1040304@redhat.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="azLHFNyN32YCQGCU"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <53C4EC81.1040304@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: Mikko Perttunen <mperttunen@nvidia.com>, Tejun Heo <tj@kernel.org>, "swarren@wwwdotorg.org" <swarren@wwwdotorg.org>, Peter De Schrijver <pdeschrijver@nvidia.com>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-List-Id: linux-ide@vger.kernel.org
-
-
---azLHFNyN32YCQGCU
+From: Kumar Gala <galak@codeaurora.org>
+Subject: Re: [PATCH v5 1/2] phy: qcom: Add driver for QCOM IPQ806x SATA PHY
+Date: Tue, 15 Jul 2014 09:50:56 -0500
+Message-ID: <3ABB6878-6EED-452A-BE5F-4240EA237BF7@codeaurora.org>
+References: <1403030008-20675-1-git-send-email-galak@codeaurora.org>
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.11.231]:37728 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751437AbaGOOvC convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 15 Jul 2014 10:51:02 -0400
+In-Reply-To: <1403030008-20675-1-git-send-email-galak@codeaurora.org>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: linux-ide@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, sboyd@codeaurora.org, b.zolnierkie@samsung.com
 
-On Tue, Jul 15, 2014 at 10:55:29AM +0200, Hans de Goede wrote:
-> On 07/15/2014 09:12 AM, Mikko Perttunen wrote:
-[...]
-> > Other subsystems I've been in don't have this kind of helper
-> > library, so diverging here seems weird.
->=20
-> Well the usb uhci-platform and ehci-platform drivers are doing the same,
-> what we're trying to do here is avoid needless code duplication and
-> if possible (for ehci and uhci it currently is) make it so that adding
-> support for a new soc only requires adding dt stuff + a phy driver,
-> without touching the ?hci code at all. Again I can see that this
-> is not possible for the Tegra124.
 
-I don't think helper libraries are good at managing resources. They are
-very good for extracting common /functionality/ so that it doesn't have
-to be duplicated. That's where the commonalities really are. Resource
-allocation and setup are usually where the differences are. Trying to
-extract that into common helpers often results in clumsy code.
+On Jun 17, 2014, at 1:33 PM, Kumar Gala <galak@codeaurora.org> wrote:
 
-Also, since resources and setup sequences are often very different, the
-chances are that adding support for a new SoC will always require
-extending the helpers to cope with that new type of resource that the
-new SoC now requires, or bumping the maximum number of resources of an
-existing type.
+> Add a PHY driver for uses with AHCI based SATA controller driver on the
+> IPQ806x family of SoCs.
+> 
+> Signed-off-by: Kumar Gala <galak@codeaurora.org>
+> ---
+> v5:
+> * Fix copy/paste error when killing qcom_ipq806x_sata_delay_us
+> 
+> v4:
+> * removed qcom_ipq806x_sata_delay_us as it was only used one
+> 
+> v3:
+> * Added Kconfig HAS_IOMEM dep
+> * re-ordered probe function so phy_provider_register is last
+> 
+> v2:
+> * dropped unused dev pointer in struct qcom_ipq806x_sata_phy
+> * remove unnecessary reg initializaiton
+> * Removed unneeded error message
+> * Added remove function to disable the clock
+> 
+> drivers/phy/Kconfig                 |   7 ++
+> drivers/phy/Makefile                |   1 +
+> drivers/phy/phy-qcom-ipq806x-sata.c | 206 ++++++++++++++++++++++++++++++++++++
+> 3 files changed, 214 insertions(+)
+> create mode 100644 drivers/phy/phy-qcom-ipq806x-sata.c
 
-Thierry
+any update?
 
---azLHFNyN32YCQGCU
-Content-Type: application/pgp-signature
+- k
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+-- 
+Employee of Qualcomm Innovation Center, Inc.
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
 
-iQIcBAEBAgAGBQJTxPUEAAoJEN0jrNd/PrOhd9AQAJD3tIaz2TYjaUTSpFFcOWbx
-Da5Cgs2uRCjjcbILm08BmtyypWTJozndxa7kUuHul8Wcv62iujKIczA2UO5KlKES
-lPWiTs/s0qdkeeY9qZkTK65XHKBy/egwFAkGt9E7nHx5lJ9tx753cGRo7O9gitsl
-LcqOyENRsZvrRM2BMfRT8CCnuaB+ZXptFVsOVAyujN0rpJoDmOSXSS0/O5Gn2ppB
-JbUjl4FR8gMzNSYtsx00Ud6URkNWyBgfz/+1tQifkRY9Yzg7PoeX9e+2mnF+VW6o
-ieVDLFDT+a9KYbej9x52FiGYlu32NP8EVwkdYY31aY9t+0CdN6mPxt0SYgJqwkLo
-hHlqEfP2D7l3IJjWoNmfcglfthzPX9+RdIbQikhDvfV1PjyaWdvdNVFTDCTcYMY3
-9/cZ2y+K9r14uxDOYuTRwrTdEYOSl++aW/XBtRoB/STCIUnNohBIfAStPLcK+Zrr
-WIU2d260plqTITuJC5Uj4msJT1/kyh9EvX93WJrCj595xdjx/gye2SmD6Ppov+4K
-gjENHtVRW9mGBDgdv/pm1dJZqRgripKMwncf/QfBSnIQuGMHoqlNDVD6htm7mb0w
-SZP0peg+DC0cjZUJHLbGRvtUmiA7B3YQCAOCHvRMCylwRqz0hHKN+60TVDsX0+RY
-Z4ThlQt4FW/bgccDaB32
-=9dsk
------END PGP SIGNATURE-----
-
---azLHFNyN32YCQGCU--
