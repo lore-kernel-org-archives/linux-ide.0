@@ -1,51 +1,66 @@
-From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-Subject: [PATCH] phy: qcom-apq8064: fix possible timeout without check
-Date: Wed, 16 Jul 2014 09:18:43 +0100
-Message-ID: <1405498723-10681-1-git-send-email-srinivas.kandagatla@linaro.org>
+From: Mikko Perttunen <mperttunen@nvidia.com>
+Subject: [PATCH v3 0/8] Serial ATA support for NVIDIA Tegra124
+Date: Wed, 16 Jul 2014 11:54:15 +0300
+Message-ID: <1405500863-19696-1-git-send-email-mperttunen@nvidia.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:38273 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751521AbaGPITA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Jul 2014 04:19:00 -0400
-Received: by mail-wi0-f180.google.com with SMTP id n3so842807wiv.7
-        for <linux-ide@vger.kernel.org>; Wed, 16 Jul 2014 01:18:59 -0700 (PDT)
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:14648 "EHLO
+	hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754688AbaGPIz2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Jul 2014 04:55:28 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-ide@vger.kernel.org, Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+To: swarren@wwwdotorg.org, thierry.reding@gmail.com, tj@kernel.org, hdegoede@redhat.com
+Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org, linux-ide@vger.kernel.org, Mikko Perttunen <mperttunen@nvidia.com>
 
-This patch fixes a possible timeout in poll loop without actually
-checking the register before return. In theory the there is a possibility
-of loop being scheduled after a long lock/delay, which would then force
-the loop to exit without actually checking the register.
+Hi,
 
-Reported-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
----
-Hi Kishon, 
+This series adds support for the onboard AHCI-compliant Serial ATA
+controller found on Tegra124 systems-on-chip.
 
-Just to make it easy for you, am sending this change as a seperate
-patch so that you can apply it on top of linux-phy next.
+A branch containing the series is located at 
+	git://github.com/cyndis/linux.git
+branch ahci-rel-v3.
 
-Thanks,
-srini
+Changes in v3:
+- Fixed style issues in driver
+- Changed resource management to use libahci_platform's functions
+  I opted to not add reset_control support to libahci_platform yet
+  in the interest of getting this series into 3.17. Adding support
+  probably requires breaking the existing API and getting ACKs from
+  the maintainers of each platform driver.
+- Removed code that reads the calibration set to use from fuses.
+  The new-style fuse driver this requires is also going in for 3.17,
+  so this should make merging easier. For now, the driver defaults
+  to assuming FUSE_SATA_CALIB = 0, which works at least for my testing
+  hardware. This should be changed to read the actual fuse once the
+  fuse series has landed.
 
- drivers/phy/phy-qcom-apq8064-sata.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Mikko Perttunen (8):
+  of: Add NVIDIA Tegra SATA controller binding
+  ARM: tegra: Add SATA controller to Tegra124 device tree
+  ARM: tegra: Add SATA and SATA power to Jetson TK1 device tree
+  clk: tegra: Enable hardware control of SATA PLL
+  clk: tegra: Add SATA clocks to Tegra124 initialization table
+  ata: ahci_platform: Increase AHCI_MAX_CLKS to 4
+  ata: Add support for the Tegra124 SATA controller
+  ARM: tegra: Add options for Tegra AHCI support to tegra_defconfig
 
-diff --git a/drivers/phy/phy-qcom-apq8064-sata.c b/drivers/phy/phy-qcom-apq8064-sata.c
-index c9b4dd6..f91e254 100644
---- a/drivers/phy/phy-qcom-apq8064-sata.c
-+++ b/drivers/phy/phy-qcom-apq8064-sata.c
-@@ -91,7 +91,7 @@ static int read_poll_timeout(void __iomem *addr, u32 mask)
- 		 usleep_range(DELAY_INTERVAL_US, DELAY_INTERVAL_US + 50);
- 	} while (!time_after(jiffies, timeout));
- 
--	return -ETIMEDOUT;
-+	return (readl_relaxed(addr) & mask) ? 0 : -ETIMEDOUT;
- }
- 
- static int qcom_apq8064_sata_phy_init(struct phy *generic_phy)
+ .../devicetree/bindings/ata/tegra-sata.txt         |  30 ++
+ arch/arm/boot/dts/tegra124-jetson-tk1.dts          |  35 ++
+ arch/arm/boot/dts/tegra124.dtsi                    |  25 ++
+ arch/arm/configs/tegra_defconfig                   |   3 +
+ drivers/ata/Kconfig                                |   9 +
+ drivers/ata/Makefile                               |   1 +
+ drivers/ata/ahci.h                                 |   2 +-
+ drivers/ata/ahci_tegra.c                           | 406 +++++++++++++++++++++
+ drivers/clk/tegra/clk-pll.c                        |   8 +
+ drivers/clk/tegra/clk-tegra124.c                   |   2 +
+ 10 files changed, 520 insertions(+), 1 deletion(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/tegra-sata.txt
+ create mode 100644 drivers/ata/ahci_tegra.c
+
 -- 
-1.9.1
+1.8.1.5
 
