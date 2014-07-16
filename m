@@ -1,49 +1,37 @@
-From: Mikko Perttunen <mperttunen@nvidia.com>
-Subject: [PATCH v3 5/8] clk: tegra: Add SATA clocks to Tegra124 initialization
- table
-Date: Wed, 16 Jul 2014 11:54:20 +0300
-Message-ID: <1405500863-19696-6-git-send-email-mperttunen@nvidia.com>
+From: Mikko Perttunen <mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH v3 6/8] ata: ahci_platform: Increase AHCI_MAX_CLKS to 4
+Date: Wed, 16 Jul 2014 11:54:21 +0300
+Message-ID: <1405500863-19696-7-git-send-email-mperttunen@nvidia.com>
 References: <1405500863-19696-1-git-send-email-mperttunen@nvidia.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <1405500863-19696-1-git-send-email-mperttunen@nvidia.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: swarren@wwwdotorg.org, thierry.reding@gmail.com, tj@kernel.org, hdegoede@redhat.com
-Cc: linux-tegra@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Mikko Perttunen <mperttunen@nvidia.com>
+Content-Type: text/plain
+Return-path: <linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1405500863-19696-1-git-send-email-mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Sender: linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: swarren-3lzwWm7+Weoh9ZMKESR00Q@public.gmane.org, thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mikko Perttunen <mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
-This adds two clocks, SATA and SATA_OOB, to the Tegra124 clock initialization
-table. The clocks are needed for working SATA support.
+The Tegra124 SATA controller requires 4 clocks. Increase this constant
+to be able to use them all.
 
-Signed-off-by: Mikko Perttunen <mperttunen@nvidia.com>
+Signed-off-by: Mikko Perttunen <mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 ---
-Already ACKed.
+ drivers/ata/ahci.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- drivers/clk/tegra/clk-tegra124.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/clk/tegra/clk-tegra124.c b/drivers/clk/tegra/clk-tegra124.c
-index 80efe51..6770787 100644
---- a/drivers/clk/tegra/clk-tegra124.c
-+++ b/drivers/clk/tegra/clk-tegra124.c
-@@ -1369,6 +1369,8 @@ static struct tegra_clk_init_table init_table[] __initdata = {
- 	{TEGRA124_CLK_XUSB_HS_SRC, TEGRA124_CLK_PLL_U_60M, 60000000, 0},
- 	{TEGRA124_CLK_XUSB_FALCON_SRC, TEGRA124_CLK_PLL_RE_OUT, 224000000, 0},
- 	{TEGRA124_CLK_XUSB_HOST_SRC, TEGRA124_CLK_PLL_RE_OUT, 112000000, 0},
-+	{TEGRA124_CLK_SATA, TEGRA124_CLK_PLL_P, 104000000, 0},
-+	{TEGRA124_CLK_SATA_OOB, TEGRA124_CLK_PLL_P, 204000000, 0},
- 	/* This MUST be the last entry. */
- 	{TEGRA124_CLK_CLK_MAX, TEGRA124_CLK_CLK_MAX, 0, 0},
- };
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index 5513296..2ed84e1 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -53,7 +53,7 @@
+ 
+ enum {
+ 	AHCI_MAX_PORTS		= 32,
+-	AHCI_MAX_CLKS		= 3,
++	AHCI_MAX_CLKS		= 4,
+ 	AHCI_MAX_SG		= 168, /* hardware max is 64K */
+ 	AHCI_DMA_BOUNDARY	= 0xffffffff,
+ 	AHCI_MAX_CMDS		= 32,
 -- 
 1.8.1.5
