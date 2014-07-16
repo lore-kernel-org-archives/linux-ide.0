@@ -1,473 +1,77 @@
-From: Mikko Perttunen <mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v4 7/8] ata: Add support for the Tegra124 SATA controller
-Date: Wed, 16 Jul 2014 14:40:58 +0300
-Message-ID: <1405510858-32195-1-git-send-email-mperttunen@nvidia.com>
-References: <1405500863-19696-8-git-send-email-mperttunen@nvidia.com>
+From: Thierry Reding <thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v3 7/8] ata: Add support for the Tegra124 SATA controller
+Date: Wed, 16 Jul 2014 13:42:18 +0200
+Message-ID: <20140716114217.GA18977@ulmo>
+References: <1405500863-19696-1-git-send-email-mperttunen@nvidia.com>
+ <1405500863-19696-8-git-send-email-mperttunen@nvidia.com>
+ <53C65E96.9070508@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="oyUTqETQ0mS9luUI"
 Return-path: <linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1405500863-19696-8-git-send-email-mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <53C65E96.9070508-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 Sender: linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: swarren-3lzwWm7+Weoh9ZMKESR00Q@public.gmane.org, thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mikko Perttunen <mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Mikko Perttunen <mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, swarren-3lzwWm7+Weoh9ZMKESR00Q@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
-This adds support for the integrated AHCI-compliant Serial ATA
-controller present on the NVIDIA Tegra124 system-on-chip.
 
-Signed-off-by: Mikko Perttunen <mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
----
-v4: init phy in power_on
+--oyUTqETQ0mS9luUI
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
- drivers/ata/Kconfig      |   9 ++
- drivers/ata/Makefile     |   1 +
- drivers/ata/ahci_tegra.c | 406 +++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 416 insertions(+)
- create mode 100644 drivers/ata/ahci_tegra.c
+On Wed, Jul 16, 2014 at 01:14:30PM +0200, Hans de Goede wrote:
+> On 07/16/2014 10:54 AM, Mikko Perttunen wrote:
+[...]
+> > +enum sata_clks {
+> > +	AHCI_CLK_SATA		=3D 0,
+> > +	AHCI_CLK_SATA_OOB	=3D 1,
+> > +	AHCI_CLK_CML1		=3D 2,
+> > +	AHCI_CLK_PLL_E		=3D 3
+> > +};
+>=20
+> You should mention that having the clocks in this order is mandatory
+> in Documentation/devicetree/bindings/ata/tegra-sata.txt / in
+> "[PATCH v3 1/8] of: Add NVIDIA Tegra SATA controller binding"
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index b0d5b5a..e1b9278 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -142,6 +142,15 @@ config AHCI_SUNXI
- 
- 	  If unsure, say N.
- 
-+config AHCI_TEGRA
-+	tristate "NVIDIA Tegra124 AHCI SATA support"
-+	depends on ARCH_TEGRA
-+	help
-+	  This option enables support for the NVIDIA Tegra124 SoC's
-+	  onboard AHCI SATA.
-+
-+	  If unsure, say N.
-+
- config AHCI_XGENE
- 	tristate "APM X-Gene 6.0Gbps AHCI SATA host controller support"
- 	depends on PHY_XGENE
-diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
-index 5a02aee..ae41107 100644
---- a/drivers/ata/Makefile
-+++ b/drivers/ata/Makefile
-@@ -15,6 +15,7 @@ obj-$(CONFIG_AHCI_IMX)		+= ahci_imx.o libahci.o libahci_platform.o
- obj-$(CONFIG_AHCI_MVEBU)	+= ahci_mvebu.o libahci.o libahci_platform.o
- obj-$(CONFIG_AHCI_SUNXI)	+= ahci_sunxi.o libahci.o libahci_platform.o
- obj-$(CONFIG_AHCI_ST)		+= ahci_st.o libahci.o libahci_platform.o
-+obj-$(CONFIG_AHCI_TEGRA)	+= ahci_tegra.o libahci.o libahci_platform.o
- obj-$(CONFIG_AHCI_XGENE)	+= ahci_xgene.o libahci.o libahci_platform.o
- 
- # SFF w/ custom DMA
-diff --git a/drivers/ata/ahci_tegra.c b/drivers/ata/ahci_tegra.c
-new file mode 100644
-index 0000000..0f59ae4
---- /dev/null
-+++ b/drivers/ata/ahci_tegra.c
-@@ -0,0 +1,406 @@
-+/*
-+ * drivers/ata/ahci_tegra.c
-+ *
-+ * Copyright (c) 2014, NVIDIA CORPORATION.  All rights reserved.
-+ *
-+ * Author:
-+ *	Mikko Perttunen <mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-+ *
-+ * This software is licensed under the terms of the GNU General Public
-+ * License version 2, as published by the Free Software Foundation, and
-+ * may be copied, distributed, and modified under those terms.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ */
-+
-+#include <linux/ahci_platform.h>
-+#include <linux/reset.h>
-+#include <linux/errno.h>
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/of_device.h>
-+#include <linux/platform_device.h>
-+#include <linux/tegra-powergate.h>
-+#include <linux/regulator/consumer.h>
-+#include "ahci.h"
-+
-+#define SATA_CONFIGURATION_0				0x180
-+#define SATA_CONFIGURATION_EN_FPCI			BIT(0)
-+
-+#define SCFG_OFFSET					0x1000
-+
-+#define T_SATA0_CFG_1					0x04
-+#define T_SATA0_CFG_1_IO_SPACE				BIT(0)
-+#define T_SATA0_CFG_1_MEMORY_SPACE			BIT(1)
-+#define T_SATA0_CFG_1_BUS_MASTER			BIT(2)
-+#define T_SATA0_CFG_1_SERR				BIT(8)
-+
-+#define T_SATA0_CFG_9					0x24
-+#define T_SATA0_CFG_9_BASE_ADDRESS_SHIFT		13
-+
-+#define SATA_FPCI_BAR5					0x94
-+#define SATA_FPCI_BAR5_START_SHIFT			4
-+
-+#define SATA_INTR_MASK					0x188
-+#define SATA_INTR_MASK_IP_INT_MASK			BIT(16)
-+
-+#define T_SATA0_AHCI_HBA_CAP_BKDR			0x300
-+
-+#define T_SATA0_BKDOOR_CC				0x4a4
-+
-+#define T_SATA0_CFG_SATA				0x54c
-+#define T_SATA0_CFG_SATA_BACKDOOR_PROG_IF_EN		BIT(12)
-+
-+#define T_SATA0_CFG_MISC				0x550
-+
-+#define T_SATA0_INDEX					0x680
-+
-+#define T_SATA0_CHX_PHY_CTRL1_GEN1			0x690
-+#define T_SATA0_CHX_PHY_CTRL1_GEN1_TX_AMP_MASK		0xff
-+#define T_SATA0_CHX_PHY_CTRL1_GEN1_TX_AMP_SHIFT		0
-+#define T_SATA0_CHX_PHY_CTRL1_GEN1_TX_PEAK_MASK		(0xff << 8)
-+#define T_SATA0_CHX_PHY_CTRL1_GEN1_TX_PEAK_SHIFT	8
-+
-+#define T_SATA0_CHX_PHY_CTRL1_GEN2			0x694
-+#define T_SATA0_CHX_PHY_CTRL1_GEN2_TX_AMP_MASK		0xff
-+#define T_SATA0_CHX_PHY_CTRL1_GEN2_TX_AMP_SHIFT		0
-+#define T_SATA0_CHX_PHY_CTRL1_GEN2_TX_PEAK_MASK		(0xff << 12)
-+#define T_SATA0_CHX_PHY_CTRL1_GEN2_TX_PEAK_SHIFT	12
-+
-+#define T_SATA0_CHX_PHY_CTRL2				0x69c
-+#define T_SATA0_CHX_PHY_CTRL2_CDR_CNTL_GEN1		0x23
-+
-+#define T_SATA0_CHX_PHY_CTRL11				0x6d0
-+#define T_SATA0_CHX_PHY_CTRL11_GEN2_RX_EQ		(0x2800 << 16)
-+
-+#define FUSE_SATA_CALIB					0x124
-+#define FUSE_SATA_CALIB_MASK				0x3
-+
-+enum sata_clks {
-+	AHCI_CLK_SATA		= 0,
-+	AHCI_CLK_SATA_OOB	= 1,
-+	AHCI_CLK_CML1		= 2,
-+	AHCI_CLK_PLL_E		= 3
-+};
-+
-+struct sata_pad_calibration {
-+	u8 gen1_tx_amp;
-+	u8 gen1_tx_peak;
-+	u8 gen2_tx_amp;
-+	u8 gen2_tx_peak;
-+};
-+
-+static const struct sata_pad_calibration tegra124_pad_calibration[] = {
-+	{0x18, 0x04, 0x18, 0x0a},
-+	{0x0e, 0x04, 0x14, 0x0a},
-+	{0x0e, 0x07, 0x1a, 0x0e},
-+	{0x14, 0x0e, 0x1a, 0x0e},
-+};
-+
-+struct tegra_ahci_priv {
-+	struct platform_device	   *pdev;
-+	void __iomem		   *sata_regs;
-+	struct reset_control	   *sata_rst;
-+	struct reset_control	   *sata_oob_rst;
-+	struct reset_control	   *sata_cold_rst;
-+	struct regulator_bulk_data supplies[5];
-+};
-+
-+static int tegra_ahci_power_on(struct ahci_host_priv *hpriv)
-+{
-+	struct tegra_ahci_priv *tegra = hpriv->plat_data;
-+	int ret;
-+
-+	ret = regulator_bulk_enable(ARRAY_SIZE(tegra->supplies),
-+				    tegra->supplies);
-+	if (ret)
-+		return ret;
-+
-+	ret = tegra_powergate_sequence_power_up(TEGRA_POWERGATE_SATA,
-+						hpriv->clks[AHCI_CLK_SATA],
-+						tegra->sata_rst);
-+	if (ret)
-+		goto disable_regulators;
-+
-+	reset_control_assert(tegra->sata_oob_rst);
-+	reset_control_assert(tegra->sata_cold_rst);
-+
-+	ret = clk_prepare_enable(hpriv->clks[AHCI_CLK_SATA_OOB]);
-+	if (ret)
-+		goto disable_power;
-+
-+	ret = clk_prepare_enable(hpriv->clks[AHCI_CLK_CML1]);
-+	if (ret)
-+		goto disable_oob;
-+
-+	ret = clk_prepare_enable(hpriv->clks[AHCI_CLK_PLL_E]);
-+	if (ret)
-+		goto disable_cml1;
-+
-+	reset_control_deassert(tegra->sata_cold_rst);
-+	reset_control_deassert(tegra->sata_oob_rst);
-+
-+	ret = phy_init(hpriv->phy);
-+	if (ret)
-+		goto disable_plle;
-+
-+	ret = phy_power_on(hpriv->phy);
-+	if (ret)
-+		goto exit_phy;
-+
-+	return 0;
-+
-+exit_phy:
-+	phy_exit(hpriv->phy);
-+
-+disable_plle:
-+	clk_disable_unprepare(hpriv->clks[AHCI_CLK_PLL_E]);
-+
-+disable_cml1:
-+	clk_disable_unprepare(hpriv->clks[AHCI_CLK_CML1]);
-+
-+disable_oob:
-+	clk_disable_unprepare(hpriv->clks[AHCI_CLK_SATA_OOB]);
-+
-+disable_power:
-+	clk_disable_unprepare(hpriv->clks[AHCI_CLK_SATA]);
-+
-+	tegra_powergate_power_off(TEGRA_POWERGATE_SATA);
-+
-+disable_regulators:
-+	regulator_bulk_disable(ARRAY_SIZE(tegra->supplies), tegra->supplies);
-+
-+	return ret;
-+}
-+
-+static void tegra_ahci_power_off(struct ahci_host_priv *hpriv)
-+{
-+	struct tegra_ahci_priv *tegra = hpriv->plat_data;
-+
-+	ahci_platform_disable_resources(hpriv);
-+
-+	reset_control_assert(tegra->sata_rst);
-+	reset_control_assert(tegra->sata_oob_rst);
-+	reset_control_assert(tegra->sata_cold_rst);
-+
-+	tegra_powergate_power_off(TEGRA_POWERGATE_SATA);
-+
-+	regulator_bulk_disable(ARRAY_SIZE(tegra->supplies), tegra->supplies);
-+}
-+
-+static int tegra_ahci_controller_init(struct ahci_host_priv *hpriv)
-+{
-+	struct tegra_ahci_priv *tegra = hpriv->plat_data;
-+	int ret;
-+	unsigned int val;
-+	struct sata_pad_calibration calib;
-+
-+	ret = tegra_ahci_power_on(hpriv);
-+	if (ret) {
-+		dev_err(&tegra->pdev->dev,
-+			"failed to power on AHCI controller: %d\n", ret);
-+		return ret;
-+	}
-+
-+	val = readl(tegra->sata_regs + SATA_CONFIGURATION_0);
-+	val |= SATA_CONFIGURATION_EN_FPCI;
-+	writel(val, tegra->sata_regs + SATA_CONFIGURATION_0);
-+
-+	/* Pad calibration */
-+
-+	/* FIXME Always use calibration 0. Change this to read the calibration
-+	 * fuse once the fuse driver has landed. */
-+	val = 0;
-+
-+	calib = tegra124_pad_calibration[val & FUSE_SATA_CALIB_MASK];
-+
-+	writel(BIT(0), tegra->sata_regs + SCFG_OFFSET + T_SATA0_INDEX);
-+
-+	val = readl(tegra->sata_regs +
-+		SCFG_OFFSET + T_SATA0_CHX_PHY_CTRL1_GEN1);
-+	val &= ~T_SATA0_CHX_PHY_CTRL1_GEN1_TX_AMP_MASK;
-+	val &= ~T_SATA0_CHX_PHY_CTRL1_GEN1_TX_PEAK_MASK;
-+	val |= calib.gen1_tx_amp <<
-+			T_SATA0_CHX_PHY_CTRL1_GEN1_TX_AMP_SHIFT;
-+	val |= calib.gen1_tx_peak <<
-+			T_SATA0_CHX_PHY_CTRL1_GEN1_TX_PEAK_SHIFT;
-+	writel(val, tegra->sata_regs + SCFG_OFFSET +
-+		T_SATA0_CHX_PHY_CTRL1_GEN1);
-+
-+	val = readl(tegra->sata_regs +
-+			SCFG_OFFSET + T_SATA0_CHX_PHY_CTRL1_GEN2);
-+	val &= ~T_SATA0_CHX_PHY_CTRL1_GEN2_TX_AMP_MASK;
-+	val &= ~T_SATA0_CHX_PHY_CTRL1_GEN2_TX_PEAK_MASK;
-+	val |= calib.gen2_tx_amp <<
-+			T_SATA0_CHX_PHY_CTRL1_GEN1_TX_AMP_SHIFT;
-+	val |= calib.gen2_tx_peak <<
-+			T_SATA0_CHX_PHY_CTRL1_GEN1_TX_PEAK_SHIFT;
-+	writel(val, tegra->sata_regs + SCFG_OFFSET +
-+		T_SATA0_CHX_PHY_CTRL1_GEN2);
-+
-+	writel(T_SATA0_CHX_PHY_CTRL11_GEN2_RX_EQ,
-+		tegra->sata_regs + SCFG_OFFSET + T_SATA0_CHX_PHY_CTRL11);
-+	writel(T_SATA0_CHX_PHY_CTRL2_CDR_CNTL_GEN1,
-+		tegra->sata_regs + SCFG_OFFSET + T_SATA0_CHX_PHY_CTRL2);
-+
-+	writel(0, tegra->sata_regs + SCFG_OFFSET + T_SATA0_INDEX);
-+
-+	/* Program controller device ID */
-+
-+	val = readl(tegra->sata_regs + SCFG_OFFSET + T_SATA0_CFG_SATA);
-+	val |= T_SATA0_CFG_SATA_BACKDOOR_PROG_IF_EN;
-+	writel(val, tegra->sata_regs + SCFG_OFFSET + T_SATA0_CFG_SATA);
-+
-+	writel(0x01060100, tegra->sata_regs + SCFG_OFFSET + T_SATA0_BKDOOR_CC);
-+
-+	val = readl(tegra->sata_regs + SCFG_OFFSET + T_SATA0_CFG_SATA);
-+	val &= ~T_SATA0_CFG_SATA_BACKDOOR_PROG_IF_EN;
-+	writel(val, tegra->sata_regs + SCFG_OFFSET + T_SATA0_CFG_SATA);
-+
-+	/* Enable IO & memory access, bus master mode */
-+
-+	val = readl(tegra->sata_regs + SCFG_OFFSET + T_SATA0_CFG_1);
-+	val |= T_SATA0_CFG_1_IO_SPACE | T_SATA0_CFG_1_MEMORY_SPACE |
-+		T_SATA0_CFG_1_BUS_MASTER | T_SATA0_CFG_1_SERR;
-+	writel(val, tegra->sata_regs + SCFG_OFFSET + T_SATA0_CFG_1);
-+
-+	/* Program SATA MMIO */
-+
-+	writel(0x10000 << SATA_FPCI_BAR5_START_SHIFT,
-+	       tegra->sata_regs + SATA_FPCI_BAR5);
-+
-+	writel(0x08000 << T_SATA0_CFG_9_BASE_ADDRESS_SHIFT,
-+	       tegra->sata_regs + SCFG_OFFSET + T_SATA0_CFG_9);
-+
-+	/* Unmask SATA interrupts */
-+
-+	val = readl(tegra->sata_regs + SATA_INTR_MASK);
-+	val |= SATA_INTR_MASK_IP_INT_MASK;
-+	writel(val, tegra->sata_regs + SATA_INTR_MASK);
-+
-+	return 0;
-+}
-+
-+static void tegra_ahci_controller_deinit(struct ahci_host_priv *hpriv)
-+{
-+	tegra_ahci_power_off(hpriv);
-+}
-+
-+static void tegra_ahci_host_stop(struct ata_host *host)
-+{
-+	struct ahci_host_priv *hpriv = host->private_data;
-+
-+	tegra_ahci_controller_deinit(hpriv);
-+}
-+
-+static struct ata_port_operations ahci_tegra_port_ops = {
-+	.inherits	= &ahci_ops,
-+	.host_stop	= tegra_ahci_host_stop,
-+};
-+
-+static const struct ata_port_info ahci_tegra_port_info = {
-+	.flags		= AHCI_FLAG_COMMON,
-+	.pio_mask	= ATA_PIO4,
-+	.udma_mask	= ATA_UDMA6,
-+	.port_ops	= &ahci_tegra_port_ops,
-+};
-+
-+static const struct of_device_id tegra_ahci_of_match[] = {
-+	{ .compatible = "nvidia,tegra124-ahci" },
-+	{}
-+};
-+MODULE_DEVICE_TABLE(of, tegra_ahci_of_match);
-+
-+static int tegra_ahci_probe(struct platform_device *pdev)
-+{
-+	struct ahci_host_priv *hpriv;
-+	struct tegra_ahci_priv *tegra;
-+	struct resource *res;
-+	int ret;
-+
-+	hpriv = ahci_platform_get_resources(pdev);
-+	if (IS_ERR(hpriv))
-+		return PTR_ERR(hpriv);
-+
-+	tegra = devm_kzalloc(&pdev->dev, sizeof(*tegra), GFP_KERNEL);
-+	if (!tegra)
-+		return -ENOMEM;
-+
-+	hpriv->plat_data = tegra;
-+
-+	tegra->pdev = pdev;
-+
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-+	tegra->sata_regs = devm_ioremap_resource(&pdev->dev, res);
-+	if (IS_ERR(tegra->sata_regs))
-+		return PTR_ERR(tegra->sata_regs);
-+
-+	tegra->sata_rst = devm_reset_control_get(&pdev->dev, "sata");
-+	if (IS_ERR(tegra->sata_rst)) {
-+		dev_err(&pdev->dev, "Failed to get sata reset\n");
-+		return PTR_ERR(tegra->sata_rst);
-+	}
-+
-+	tegra->sata_oob_rst = devm_reset_control_get(&pdev->dev, "sata-oob");
-+	if (IS_ERR(tegra->sata_oob_rst)) {
-+		dev_err(&pdev->dev, "Failed to get sata-oob reset\n");
-+		return PTR_ERR(tegra->sata_oob_rst);
-+	}
-+
-+	tegra->sata_cold_rst = devm_reset_control_get(&pdev->dev, "sata-cold");
-+	if (IS_ERR(tegra->sata_cold_rst)) {
-+		dev_err(&pdev->dev, "Failed to get sata-cold reset\n");
-+		return PTR_ERR(tegra->sata_cold_rst);
-+	}
-+
-+	if (!hpriv->clks[AHCI_CLK_PLL_E])
-+		return -EPROBE_DEFER;
-+
-+	tegra->supplies[0].supply = "avdd";
-+	tegra->supplies[1].supply = "hvdd";
-+	tegra->supplies[2].supply = "vddio";
-+	tegra->supplies[3].supply = "target-5v";
-+	tegra->supplies[4].supply = "target-12v";
-+
-+	ret = devm_regulator_bulk_get(&pdev->dev, ARRAY_SIZE(tegra->supplies),
-+				      tegra->supplies);
-+	if (ret) {
-+		dev_err(&pdev->dev, "Failed to get regulators\n");
-+		return ret;
-+	}
-+
-+	ret = tegra_ahci_controller_init(hpriv);
-+	if (ret)
-+		return ret;
-+
-+	ret = ahci_platform_init_host(pdev, hpriv, &ahci_tegra_port_info,
-+				      0, 0, 0);
-+	if (ret)
-+		goto deinit_controller;
-+
-+	return 0;
-+
-+deinit_controller:
-+	tegra_ahci_controller_deinit(hpriv);
-+
-+	return ret;
-+};
-+
-+static struct platform_driver tegra_ahci_driver = {
-+	.probe = tegra_ahci_probe,
-+	.remove = ata_platform_remove_one,
-+	.driver = {
-+		.name = "tegra-ahci",
-+		.of_match_table = tegra_ahci_of_match,
-+	},
-+	/* LP0 suspend support not implemented */
-+};
-+module_platform_driver(tegra_ahci_driver);
-+
-+MODULE_AUTHOR("Mikko Perttunen <mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>");
-+MODULE_DESCRIPTION("Tegra124 AHCI SATA driver");
-+MODULE_LICENSE("GPL v2");
--- 
-1.8.1.5
+This is precisely why I said that using a library for resources is a bad
+idea. Why on earth would we want to mandate a specific order? The clock
+bindings specifically have the clock-names so that the order in which
+the clocks are listed in the clocks property doesn't matter. Now because
+of these library helpers we can no longer do that, but instead need to
+fix the order.
+
+So we're now in a position where a Linux-specific driver, worse
+actually, a Linux helper library dictates what the device tree binding
+must look like. This obviously conflicts with what device tree people
+have been recommending for years.
+
+What this also means is that since the DT bindings are ABI, the libahci
+platform library code effectively becomes an ABI too.
+
+Thierry
+
+--oyUTqETQ0mS9luUI
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBAgAGBQJTxmUZAAoJEN0jrNd/PrOh5rcP/Ag4x08eeUslFD57YhoFYqXQ
+wuo7P3DkX6UnKMUo9AXQlBJg7/g3VdtRq2ayO0AFawodRLU1sKw9vmpheWfAWrbb
+ZdV23ARSBZmgE2W+X6ZinJPBCAHX9cGJKiOFJg7jtjB+5CZvkoSh0gBpFd3vTH6G
+hZnxnJEF8ZKG5k0vwFVa1Yp8vPq+2suTnfHgmtEickCogI+qN05gWTvz93z5Z9v4
+FinjmFm4I8l0HquS2/QSPPdv+aATxXO/PeA+CfAl8Zwbd5oMPi11kSEXzUc3dbRn
+ws+l/Y3uJjt/6HdUH5cyeFp1f+vsXyUmSR8zCWJBDTToyoVLUb35CJQTQjkyz1N9
+WpRHlhB8F7uU7LoHv8rBkfXljJOQeEidTEL39Ki0cNvS4IYEOam9TwvV+sSINu+w
+HnckNaQWjoK75M/g4O+/PydkTNVBTdPKM+AMFrumNOQoH/0zrWrCqZnuYnleJ1q4
+4/nObKc11XzIxswEvOXfiHmfJBMwpMXqulcVDz0XafIKrg5tilAhwV37VZDweLJu
+sXU7KbGfCIkmyDLqpfMjO5rnwAeFqL+4FPlcQqg8ZT/N/MzksNAw5yiBqJ9ls5jW
+KD3Miv6Mj8gRUbeEg5BPeRpl7jrt6ybePSV57S5UwdB6TSobH+uBd+0Sdsh2lgdC
+UAxx/frKjTw+mTsnD6FL
+=lzFM
+-----END PGP SIGNATURE-----
+
+--oyUTqETQ0mS9luUI--
