@@ -1,282 +1,239 @@
-From: Hans de Goede <hdegoede@redhat.com>
+From: Thierry Reding <thierry.reding@gmail.com>
 Subject: Re: [PATCH v4 1/8] of: Add NVIDIA Tegra SATA controller binding
-Date: Thu, 17 Jul 2014 12:23:47 +0200
-Message-ID: <53C7A433.4070404@redhat.com>
-References: <1405500863-19696-2-git-send-email-mperttunen@nvidia.com> <1405510814-31928-1-git-send-email-mperttunen@nvidia.com> <53C666E5.6030009@redhat.com> <20140716131306.GB23384@ulmo> <53C6908A.2050200@redhat.com> <20140716195136.GB5212@mithrandir> <53C77263.7050903@redhat.com> <20140717073956.GA18640@ulmo>
+Date: Thu, 17 Jul 2014 12:52:45 +0200
+Message-ID: <20140717105244.GG17877@ulmo>
+References: <1405500863-19696-2-git-send-email-mperttunen@nvidia.com>
+ <1405510814-31928-1-git-send-email-mperttunen@nvidia.com>
+ <53C666E5.6030009@redhat.com> <20140716131306.GB23384@ulmo>
+ <53C6908A.2050200@redhat.com> <20140716195136.GB5212@mithrandir>
+ <53C77263.7050903@redhat.com> <20140717073956.GA18640@ulmo>
+ <53C7A433.4070404@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38330 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755695AbaGQKYR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 17 Jul 2014 06:24:17 -0400
-In-Reply-To: <20140717073956.GA18640@ulmo>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: multipart/mixed; boundary="===============5651908808456432842=="
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <53C7A433.4070404@redhat.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: linux-ide@vger.kernel.org, swarren@wwwdotorg.org, linux-kernel@vger.kernel.org, Mikko Perttunen <mperttunen@nvidia.com>, linux-tegra@vger.kernel.org, tj@kernel.org, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Mikko Perttunen <mperttunen@nvidia.com>, swarren@wwwdotorg.org, tj@kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hi,
 
-On 07/17/2014 09:39 AM, Thierry Reding wrote:
-> On Thu, Jul 17, 2014 at 08:51:15AM +0200, Hans de Goede wrote:
->> Hi,
->>
->> On 07/16/2014 09:51 PM, Thierry Reding wrote:
->>> On Wed, Jul 16, 2014 at 04:47:38PM +0200, Hans de Goede wrote:
->>>> Hi,
->>>>
->>>> On 07/16/2014 03:13 PM, Thierry Reding wrote:
->>>>> On Wed, Jul 16, 2014 at 01:49:57PM +0200, Hans de Goede wrote:
->>>>>> Hi,
->>>>>>
->>>>>> On 07/16/2014 01:40 PM, Mikko Perttunen wrote:
->>>>>>> This patch adds device tree binding documentation for the SATA
->>>>>>> controller found on NVIDIA Tegra SoCs.
->>>>>>>
->>>>>>> Signed-off-by: Mikko Perttunen <mperttunen@nvidia.com>
->>>>>>> ---
->>>>>>> v4: clarify mandatory clock order
->>>>>>
->>>>>> Thanks this and the new v4 of "ata: Add support for the Tegra124 SATA controller"
->>>>>> both look good to me. So these 2 + v3 for the rest of the series are:
->>>>>>
->>>>>> Acked-by: Hans de Goede <hdegoede@redhat.com>
->>>>>
->>>>> Like I said in my reply to PATCH v3 7/8, I think this mandatory clock
->>>>> order is a mistake.
->>>>
->>>> We've plenty of other dt bindings where things need to be specified in
->>>> a certain order, e.g. registers. So I don't really see what the problem
->>>> is here.
->>>
->>> Like I said, the clock-names exists so that drivers can request a clock
->>> by name. Therefore the order in which they are listed doesn't matter.
->>> The only thing that matters is that the entries in clocks and
->>> clock-names match up.
->>
->> Ok so I've been think about this, and about the unbalance I've noticed
->> between tegra_ahci_power_on which does everything DIY and tegra_ahci_power_off
->> which uses ahci_platform_disable_resources() in v3 and later.
->>
->> Really only the "sata" clock needs special handling, so I think the following
->> solution is best:
->>
->> 1) Drop the clock ordering requirement and the clk enum
->>
->> 2) Make ahci_tegra.c do a devm_clk_get(dev, "sata"), so that it gets its
->> own handle to the sata-clk (store this in tegra_ahci_priv). no need to
->> get all the other clks which need no special handling
->>
->> 3) Start using ahci_platform_enable_resources() in tegra_ahci_power_on,
->> so it would look something like this:
->>
->> static int tegra_ahci_power_on(struct ahci_host_priv *hpriv)
->> {
->> 	struct tegra_ahci_priv *tegra = hpriv->plat_data;
->> 	int ret;
->>
->> 	ret = regulator_bulk_enable(ARRAY_SIZE(tegra->supplies),
->> 				    tegra->supplies);
->> 	if (ret)
->> 		return ret;
->>
->> 	ret = tegra_powergate_sequence_power_up(TEGRA_POWERGATE_SATA,
->> 						tegra->sata_clk,
->> 						tegra->sata_rst);
->> 	if (ret)
->> 		goto disable_regulators;
->>
->> 	reset_control_deassert(tegra->sata_cold_rst);
->> 	reset_control_deassert(tegra->sata_oob_rst);
->>
->> 	ret = ahci_platform_enable_resources(hpriv);
->> 	if (ret)
->> 		goto powergate_sequence_power_off;
->>
->> 	return 0;
->> ...
->>
->> This will make tegra_ahci_power_on and tegra_ahci_power_off symmetrical
->> which is something I always like to see in functions like this.
->>
->> I realize that this changes the reset-deassert vs clock enabling ordering,
->> if this is an issue please add reset support to libahci-platform.c I believe
->> that is something which we will need to do soonish anyways (reset controllers
->> are popping up everywhere in newer SoCs).
-> 
-> I think we could safely move the reset deassert after the call to
+--===============5651908808456432842==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="jt0yj30bxbg11sci"
+Content-Disposition: inline
+
+
+--jt0yj30bxbg11sci
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Thu, Jul 17, 2014 at 12:23:47PM +0200, Hans de Goede wrote:
+> On 07/17/2014 09:39 AM, Thierry Reding wrote:
+> > On Thu, Jul 17, 2014 at 08:51:15AM +0200, Hans de Goede wrote:
+[...]
+> > > I realize that this changes the reset-deassert vs clock enabling orde=
+ring,
+> > > if this is an issue please add reset support to libahci-platform.c I =
+believe
+> > > that is something which we will need to do soonish anyways (reset con=
+trollers
+> > > are popping up everywhere in newer SoCs).
+> >=20
+> > I think we could safely move the reset deassert after the call to
+> > ahci_platform_enable_resources().
+>=20
+> Will the resets not interfere with the phy_init / power_on which is done =
+=66rom
 > ahci_platform_enable_resources().
 
-Will the resets not interfere with the phy_init / power_on which is done from
-ahci_platform_enable_resources().
+The PHY is a completely different hardware block and I think the only
+requisite is that the regulator be turned on. Resets from SATA don't
+influence it.
 
->> This will nicely reduce the amount of code and also greatly simplify the error
->> return path of tegra_ahci_power_on.
-> 
-> Agreed, htat sounds like it could work.
-> 
->> This means that the sata_clk will get enabled twice, but that is harmless
->> as long as we disable it twice too. This means that we need to add an
->> extra disable to tegra_ahci_power_off because tegra_powergate_power_off
->> seems to not do this (unlike power-on, which is rather unsymmetrical
->> it would be nice to fix this).
-> 
-> We've never had a need for it because the exact power down sequence
-> isn't nearly as important. But I guess we could add a new function
-> tegra_powergate_sequence_power_down() that takes care of disabling the
-> clock and asserting the reset.
+> >> This means that the sata_clk will get enabled twice, but that is harml=
+ess
+> >> as long as we disable it twice too. This means that we need to add an
+> >> extra disable to tegra_ahci_power_off because tegra_powergate_power_off
+> >> seems to not do this (unlike power-on, which is rather unsymmetrical
+> >> it would be nice to fix this).
+> >=20
+> > We've never had a need for it because the exact power down sequence
+> > isn't nearly as important. But I guess we could add a new function
+> > tegra_powergate_sequence_power_down() that takes care of disabling the
+> > clock and asserting the reset.
+>=20
+> Ok, no need to add it for my sake, I was just wondering about the non
+> symmetry of the API.
 
-Ok, no need to add it for my sake, I was just wondering about the non
-symmetry of the API.
+There are discussions on how to make powergates work with PM domains.
+They aren't an ideal fit, but if we manage to make it work the powergate
+API will likely go away anyway.
 
-> One other thing that I've been thinking about is whether it would make
-> sense to make the ahci_platform library use a list of clock names that
-> it should request. This would better mirror the clock bindings
-> convention and allow drivers (such as the Tegra one) to take ownership
-> of clocks that need special handling while at the same time leaving it
-> to the helpers to do the bulk of the work.
-> 
-> One way I can think of to handle this would be by adding a struct
-> ahci_platform_resources * parameter to ahci_platform_get_resources(),
-> sowewhat like this:
-> 
-> 	struct ahci_platform_resources {
-> 		const char *const *clocks;
-> 		unsigned int num_clocks;
-> 
-> 		const char *const *resets;
-> 		unsigned int num_resets;
-> 	};
-> 
-> 	struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
-> 							   const struct ahci_platform_resources *res)
-> 	{
-> 		...
-> 
-> 		for (i = 0; i < res->num_clocks; i++) {
-> 			clk = clk_get(&pdev->dev, res->clocks[i]);
-> 			...
-> 		}
-> 
-> 		...
-> 
-> 		for (i = 0; i < res->num_resets; i++) {
-> 			rst = reset_control_get(&pdev->dev, res->resets[i]);
-> 			...
-> 		}
-> 
-> 		...
-> 	}
+> > One other thing that I've been thinking about is whether it would make
+> > sense to make the ahci_platform library use a list of clock names that
+> > it should request. This would better mirror the clock bindings
+> > convention and allow drivers (such as the Tegra one) to take ownership
+> > of clocks that need special handling while at the same time leaving it
+> > to the helpers to do the bulk of the work.
+> >=20
+> > One way I can think of to handle this would be by adding a struct
+> > ahci_platform_resources * parameter to ahci_platform_get_resources(),
+> > sowewhat like this:
+> >=20
+> > 	struct ahci_platform_resources {
+> > 		const char *const *clocks;
+> > 		unsigned int num_clocks;
+> >=20
+> > 		const char *const *resets;
+> > 		unsigned int num_resets;
+> > 	};
+> >=20
+> > 	struct ahci_host_priv *ahci_platform_get_resources(struct platform_dev=
+ice *pdev,
+> > 							   const struct ahci_platform_resources *res)
+> > 	{
+> > 		...
+> >=20
+> > 		for (i =3D 0; i < res->num_clocks; i++) {
+> > 			clk =3D clk_get(&pdev->dev, res->clocks[i]);
+> > 			...
+> > 		}
+> >=20
+> > 		...
+> >=20
+> > 		for (i =3D 0; i < res->num_resets; i++) {
+> > 			rst =3D reset_control_get(&pdev->dev, res->resets[i]);
+> > 			...
+> > 		}
+> >=20
+> > 		...
+> > 	}
+>=20
+> Interesting, I think this is a quite good idea. I do see some pitfalls th=
+ough,
+> to answers Mikko's question from his followup :
+>=20
+> On 07/17/2014 09:56 AM, Mikko Perttunen wrote:
+> > Also: is there a reason to not use the devm_* variants? I note that the=
+ helper code has not been able to prevent any of the ahci_platform drivers =
+=66rom messing up by not calling ahci_platform_put_resources.
+>=20
+> The libahci_platform.c code / ahci_platform.c code is also used for
+> devices going way back who may not yet be using the new clk framework,
+> so where we need to use clk_get(dev, NULL); quoting from libahci_platform=
+=2Ec :
+>=20
+>         for (i =3D 0; i < AHCI_MAX_CLKS; i++) {
+>                 /*
+>                  * For now we must use clk_get(dev, NULL) for the first c=
+lock,
+>                  * because some platforms (da850, spear13xx) are not yet
+>                  * converted to use devicetree for clocks.  For new platf=
+orms
+>                  * this is equivalent to of_clk_get(dev->of_node, 0).
+>                  */
+>                 if (i =3D=3D 0)
+>                         clk =3D clk_get(dev, NULL);
+>                 else
+>                         clk =3D of_clk_get(dev->of_node, i);
+>=20
+>                 if (IS_ERR(clk)) {
+>                         rc =3D PTR_ERR(clk);
+>                         if (rc =3D=3D -EPROBE_DEFER)
+>                                 goto err_out;
+>                         break;
+>                 }
+>                 hpriv->clks[i] =3D clk;
+>         }
+>=20
+> And there is no devm variant of that, nor is there one to get clocks by i=
+ndex.
+> Note that we also need ahci_platform_put_resources for runtime pm support=
+, so
+> that one is going to stay around anyways and thus there is not that much =
+value
+> in fixing this.
+>=20
+> So although I like Thierry's idea, if we go this way (which sounds good),=
+ we
+> should add support for taking a NULL ahci_platform_resources argument and=
+ in
+> that case behave as before, esp. because of the platforms needing the old
+> style clock handling. An advantage of doing this, is that we can simply p=
+atch
+> all existing users to pass NULL.
 
-Interesting, I think this is a quite good idea. I do see some pitfalls though,
-to answers Mikko's question from his followup :
+Isn't the "legacy" case really just this:
 
-On 07/17/2014 09:56 AM, Mikko Perttunen wrote:
-> Also: is there a reason to not use the devm_* variants? I note that the helper code has not been able to prevent any of the ahci_platform drivers from messing up by not calling ahci_platform_put_resources.
+	static const char *const legacy_ahci_clocks[] =3D {
+		NULL
+	};
 
-The libahci_platform.c code / ahci_platform.c code is also used for
-devices going way back who may not yet be using the new clk framework,
-so where we need to use clk_get(dev, NULL); quoting from libahci_platform.c :
+	static const struct ahci_platform_resources legacy_ahci_resources =3D {
+		.num_clocks =3D ARRAY_SIZE(legacy_ahci_clocks),
+		.clocks =3D legacy_ahci_clocks,
+	};
 
-        for (i = 0; i < AHCI_MAX_CLKS; i++) {
-                /*
-                 * For now we must use clk_get(dev, NULL) for the first clock,
-                 * because some platforms (da850, spear13xx) are not yet
-                 * converted to use devicetree for clocks.  For new platforms
-                 * this is equivalent to of_clk_get(dev->of_node, 0).
-                 */
-                if (i == 0)
-                        clk = clk_get(dev, NULL);
-                else
-                        clk = of_clk_get(dev->of_node, i);
+?
 
-                if (IS_ERR(clk)) {
-                        rc = PTR_ERR(clk);
-                        if (rc == -EPROBE_DEFER)
-                                goto err_out;
-                        break;
-                }
-                hpriv->clks[i] = clk;
-        }
+> > 	static const char *const tegra_ahci_clocks[] =3D {
+> > 		"sata-oob", "cml1", pll_e",
+> > 	};
+>=20
+> Note you could also put the "sata" clock here, since then you will
+> know its index, and can use hpriv->clks to access it. Not putting
+> it here has the advantage of not doing the double enable / disable
+> (and the disadvantage of needing to the clk_get yourself).
 
-And there is no devm variant of that, nor is there one to get clocks by index.
-Note that we also need ahci_platform_put_resources for runtime pm support, so
-that one is going to stay around anyways and thus there is not that much value
-in fixing this.
+Right, the intention here was that we wouldn't have it managed by the
+ahci_platform library because it needs special handling anyway. Having
+it in this table would therefore be redundant.
 
-So although I like Thierry's idea, if we go this way (which sounds good), we
-should add support for taking a NULL ahci_platform_resources argument and in
-that case behave as before, esp. because of the platforms needing the old
-style clock handling. An advantage of doing this, is that we can simply patch
-all existing users to pass NULL.
+Thierry
 
-I guess we could have a default ahci_platform_resources struct which gets
-used when the argument is NULL, then we only need to special case the clocks
-stuff when the argument is NULL.
+--jt0yj30bxbg11sci
+Content-Type: application/pgp-signature
 
-> And I guess the same could be done for regulators (and even phys). The
-> Tegra driver for instance could then do this:
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-Ack.
+iQIcBAEBAgAGBQJTx6r8AAoJEN0jrNd/PrOh/YAP/0u2rmS8lqSVKsSJugBsvkMe
+SAqTzPtCHmIMCCy5YwDYT1b0hmbHxVil1zrhFzlknlgrEi6NKLc146xp+hJKzdlv
+RDtlegY850s/Zpk6jKi6YencgnDZpWFAbULw4n5hFsD0qiHPk6cdPLJyArMweeXt
+yXCc8wX9FgVWw59VRgM3GwGFh2APkECbixTHZUMM92KGFJ7KaakQpdIfH0vwKEW6
+ZVK8Ta3WP0ekNUuF7znwYo3vJCW044voWcGaj4IkkneHoB+5QU20ldMhYVZNzkAh
++Okl2Dw/swpjSyZrq9KiEiCTy1FHdx6dsjSKWmgtraJtqmR4Jm7QFr15VVINy3dw
+ZL9AUclHHP1BRdcbzr6SwiFFrBIuJ7yKOUePtNVCxdeP4XGC4OiGWrNlbyQlwXOb
+7CvIIJ2RR+JWODt3mzhapgtOvMr7MZCuJIzquQvrcNWW1kk1JrsY50Gpm30BDX1A
+a9nuBZLHjaTxyY8kuPvw3nnIgAKh6AAdXZ5+K4EIWN58ePpI8kpfRk0dibrDIcrK
+RI12FGcsSZpdCL0Chy2EB7KrzPaZMJwh2XY2hMg9RbOWXATZz4qUauEez5MvolYy
+Zf+M1+VHphWFhIIosd8Uku6wnLymUFZ/crATLkw93OxMNdC5/vNahZYBbnhE/U3X
+PCME5xA8dbdoCIb1cf7R
+=IWw4
+-----END PGP SIGNATURE-----
+
+--jt0yj30bxbg11sci--
 
 
-> 	static const char *const tegra_ahci_clocks[] = {
-> 		"sata-oob", "cml1", pll_e",
-> 	};
+--===============5651908808456432842==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
-Note you could also put the "sata" clock here, since then you will
-know its index, and can use hpriv->clks to access it. Not putting
-it here has the advantage of not doing the double enable / disable
-(and the disadvantage of needing to the clk_get yourself).
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
 
-> 	static const char *const tegra_ahci_resets[] = {
-> 		"sata-oob", "sata-cold",
-> 	};
-> 
-> 	static const struct ahci_platform_resources tegra_ahci_resources = {
-> 		.num_clocks = ARRAY_SIZE(tegra_ahci_clocks),
-> 		.clocks = tegra_ahci_clocks,
-> 		.num_resets = ARRAY_SIZE(tegra_ahci_resets),
-> 		.resets = tegra_ahci_resets,
-> 	};
-> 
-> 	...
-> 
-> 	struct tegra_ahci {
-> 		struct ahci_host_priv *host;
-> 		struct reset_control *rst;
-> 		struct clk *clk;
-> 		...
-> 	};
-> 
-> 	...
-> 
-> 	static int tegra_ahci_probe(struct platform_device *pdev)
-> 	{
-> 		struct tegra_ahci *ahci;
-> 
-> 		...
-> 
-> 		ahci = devm_kzalloc(&pdev->dev, sizeof(*ahci), GFP_KERNEL);
-> 		if (!ahci)
-> 			return -ENOMEM;
-> 
-> 		ahci->host = ahci_platform_get_resources(pdev, &tegra_ahci_resources);
-> 		if (IS_ERR(ahci->host)) {
-> 			...
-> 		}
-> 
-> 		...
-> 
-> 		platform_set_drvdata(pdev, ahci);
-> 	}
-> 
-> Does that sound reasonable?
-
-Yep, sounds good to me (with the caveat of the back-compat stuff).
-
-Regards,
-
-Hans
+--===============5651908808456432842==--
