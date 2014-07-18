@@ -1,71 +1,36 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH v10 2/8] Documentation: bindings: add the Berlin SATA
- PHY
-Date: Fri, 18 Jul 2014 21:27:28 +0400
-Message-ID: <53C95900.9050200@cogentembedded.com>
-References: <1405686607-8126-1-git-send-email-antoine.tenart@free-electrons.com> <1405686607-8126-3-git-send-email-antoine.tenart@free-electrons.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH v5 1/8] of: Add NVIDIA Tegra SATA controller binding
+Date: Fri, 18 Jul 2014 17:54:04 -0400
+Message-ID: <20140718215404.GA1819@htj.dyndns.org>
+References: <1405500863-19696-2-git-send-email-mperttunen@nvidia.com>
+ <1405667500-7402-1-git-send-email-mperttunen@nvidia.com>
+ <53C8C9BD.3070709@nvidia.com>
+ <53C8F6E6.6020901@redhat.com>
+ <20140718150603.GA7196@ulmo>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-la0-f43.google.com ([209.85.215.43]:33138 "EHLO
-	mail-la0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932247AbaGRR11 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Jul 2014 13:27:27 -0400
-Received: by mail-la0-f43.google.com with SMTP id hr17so3085732lab.2
-        for <linux-ide@vger.kernel.org>; Fri, 18 Jul 2014 10:27:25 -0700 (PDT)
-In-Reply-To: <1405686607-8126-3-git-send-email-antoine.tenart@free-electrons.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20140718150603.GA7196@ulmo>
+Sender: linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Thierry Reding <thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Peter De Schrijver <pdeschrijver-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Stephen Warren <swarren-3lzwWm7+Weoh9ZMKESR00Q@public.gmane.org>, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mikko Perttunen <mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, "linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: =?UTF-8?B?QW50b2luZSBUw6luYXJ0?= <antoine.tenart@free-electrons.com>, sebastian.hesselbarth@gmail.com, tj@kernel.org, kishon@ti.com
-Cc: alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello.
+On Fri, Jul 18, 2014 at 05:06:04PM +0200, Thierry Reding wrote:
+> I think the following patches can go through your tree without causing
+> breakage through unresolved dependencies:
+> 
+> 	[PATCH v5 1/8] of: Add NVIDIA Tegra SATA controller binding
+> 	[PATCH v3 6/8] ata: ahci_platform: Increase AHCI_MAX_CLKS to 4
+> 	[PATCH v5 7/8] ata: Add support for the Tegra124 SATA controller
 
-On 07/18/2014 04:30 PM, Antoine T=C3=A9nart wrote:
+Applied to libata/for-3.17 w/ Hans' acks added.  Please check the
+following branch and give me a holler if something is amiss.
 
-> The Berlin SATA PHY drives the PHY related to the SATA interface. Add
-> the corresponding documentation.
+ git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-3.17
 
-> Signed-off-by: Antoine T=C3=A9nart <antoine.tenart@free-electrons.com=
->
-> ---
->   .../devicetree/bindings/phy/berlin-sata-phy.txt    | 34 +++++++++++=
-+++++++++++
->   1 file changed, 34 insertions(+)
->   create mode 100644 Documentation/devicetree/bindings/phy/berlin-sat=
-a-phy.txt
+Thanks.
 
-> diff --git a/Documentation/devicetree/bindings/phy/berlin-sata-phy.tx=
-t b/Documentation/devicetree/bindings/phy/berlin-sata-phy.txt
-> new file mode 100644
-> index 000000000000..88f8c23384c0
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/phy/berlin-sata-phy.txt
-> @@ -0,0 +1,34 @@
-> +Berlin SATA PHY
-> +---------------
-> +
-> +Required properties:
-> +- compatible: should be "marvell,berlin2q-sata-phy"
-> +- address-cells: should be 1
-> +- size-cells: should be 0
-> +- phy-cells: from the generic PHY bindings, must be 1
-
-    It's "#address-cells", "#size-cells", and "#phy-cells".
-
-> +- reg: address and length of the register
-> +- clocks: reference to the clock entry
-> +
-> +Sub-nodes:
-> +Each PHY should be represented as a sub-node.
-
-    Then "#phy-cells" should also belong to the sub-nodes.
-
-> +
-> +Sub-nodes required properties:
-> +- reg: the PHY number
-
-WBR, Sergei
-
+-- 
+tejun
