@@ -1,43 +1,55 @@
-From: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>
-Subject: [PATCH v10 5/8] ata: ahci_platform: add a generic AHCI compatible
-Date: Fri, 18 Jul 2014 14:30:04 +0200
-Message-ID: <1405686607-8126-6-git-send-email-antoine.tenart@free-electrons.com>
-References: <1405686607-8126-1-git-send-email-antoine.tenart@free-electrons.com>
+From: Varka Bhadram <varkabhadram@gmail.com>
+Subject: Re: [PATCH v10 1/8] phy: add a driver for the Berlin SATA PHY
+Date: Fri, 18 Jul 2014 18:24:22 +0530
+Message-ID: <53C918FE.8040303@gmail.com>
+References: <1405686607-8126-1-git-send-email-antoine.tenart@free-electrons.com> <1405686607-8126-2-git-send-email-antoine.tenart@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <1405686607-8126-1-git-send-email-antoine.tenart@free-electrons.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: sebastian.hesselbarth@gmail.com, tj@kernel.org, kishon@ti.com
-Cc: thomas.petazzoni@free-electrons.com, zmxu@marvell.com, devicetree@vger.kernel.org, =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, alexandre.belloni@free-electrons.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:64211 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753440AbaGRMzw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Jul 2014 08:55:52 -0400
+In-Reply-To: <1405686607-8126-2-git-send-email-antoine.tenart@free-electrons.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: =?UTF-8?B?QW50b2luZSBUw6luYXJ0?= <antoine.tenart@free-electrons.com>, sebastian.hesselbarth@gmail.com, tj@kernel.org, kishon@ti.com
+Cc: alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 
-VGhlIGFoY2lfcGxhdGZvcm0gZHJpdmVyIGlzIGEgZ2VuZXJpYyBkcml2ZXIgdXNpbmcgdGhlIGxp
-YmFoY2lfcGxhdGZvcm0KZnVuY3Rpb25zLiBBZGQgYSBnZW5lcmljIGNvbXBhdGlibGUgdG8gYXZv
-aWQgaGF2aW5nIGFuIGVuZGxlc3MgbGlzdCBvZgpjb21wYXRpYmxlcyB3aXRoIG5vIGRpZmZlcmVu
-Y2VzIGZvciB0aGUgc2FtZSBkcml2ZXIuCgpTaWduZWQtb2ZmLWJ5OiBBbnRvaW5lIFTDqW5hcnQg
-PGFudG9pbmUudGVuYXJ0QGZyZWUtZWxlY3Ryb25zLmNvbT4KLS0tCiBkcml2ZXJzL2F0YS9haGNp
-X3BsYXRmb3JtLmMgfCAyICsrCiAxIGZpbGUgY2hhbmdlZCwgMiBpbnNlcnRpb25zKCspCgpkaWZm
-IC0tZ2l0IGEvZHJpdmVycy9hdGEvYWhjaV9wbGF0Zm9ybS5jIGIvZHJpdmVycy9hdGEvYWhjaV9w
-bGF0Zm9ybS5jCmluZGV4IDk1ZjljYTgyMDgyYS4uNjFiMTVlNzg0MDIwIDEwMDY0NAotLS0gYS9k
-cml2ZXJzL2F0YS9haGNpX3BsYXRmb3JtLmMKKysrIGIvZHJpdmVycy9hdGEvYWhjaV9wbGF0Zm9y
-bS5jCkBAIC03Nyw2ICs3Nyw4IEBAIHN0YXRpYyBTSU1QTEVfREVWX1BNX09QUyhhaGNpX3BtX29w
-cywgYWhjaV9wbGF0Zm9ybV9zdXNwZW5kLAogCQkJIGFoY2lfcGxhdGZvcm1fcmVzdW1lKTsKIAog
-c3RhdGljIGNvbnN0IHN0cnVjdCBvZl9kZXZpY2VfaWQgYWhjaV9vZl9tYXRjaFtdID0geworCXsg
-LmNvbXBhdGlibGUgPSAiZ2VuZXJpYy1haGNpIiwgfSwKKwkvKiBLZWVwIHRoZSBmb2xsb3dpbmcg
-Y29tcGF0aWJsZXMgZm9yIGRldmljZSB0cmVlIGNvbXBhdGliaWxpdHkgKi8KIAl7IC5jb21wYXRp
-YmxlID0gInNucHMsc3BlYXItYWhjaSIsIH0sCiAJeyAuY29tcGF0aWJsZSA9ICJzbnBzLGV4eW5v
-czU0NDAtYWhjaSIsIH0sCiAJeyAuY29tcGF0aWJsZSA9ICJpYm0sNDc2Z3RyLWFoY2kiLCB9LAot
-LSAKMS45LjEKCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-XwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmlu
-ZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9s
-aW51eC1hcm0ta2VybmVsCg==
+On 07/18/2014 06:00 PM, Antoine T=C3=A9nart wrote:
+> The Berlin SoC has a two SATA ports. Add a PHY driver to handle them.
+>
+> The mode selection can let us think this PHY can be configured to fit
+> other purposes. But there are reasons to think the SATA mode will be
+> the only one usable: the PHY registers are only accessible indirectly
+> through two registers in the SATA range, the PHY seems to be integrat=
+ed
+> and no information tells us the contrary. For these reasons, make the
+> driver a SATA PHY driver.
+>
+(...)
+
+> +
+> +static const struct of_device_id phy_berlin_sata_of_match[] =3D {
+> +	{ .compatible =3D "marvell,berlin2q-sata-phy" },
+> +	{ },
+> +};
+> +
+> +static struct platform_driver phy_berlin_sata_driver =3D {
+> +	.probe	=3D phy_berlin_sata_probe,
+> +	.driver	=3D {
+> +		.name		=3D "phy-berlin-sata",
+> +		.owner		=3D THIS_MODULE,
+
+owner filed automatically update with module_platform_driver().
+
+see:http://lxr.free-electrons.com/source/include/linux/platform_device.=
+h#L190
+ =20
+
+--=20
+Regards,
+Varka Bhadram.
+
