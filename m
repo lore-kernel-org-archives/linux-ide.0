@@ -1,50 +1,139 @@
-From: Mikko Perttunen <mperttunen@nvidia.com>
-Subject: Re: [PATCH v5 1/8] of: Add NVIDIA Tegra SATA controller binding
-Date: Fri, 18 Jul 2014 14:32:53 +0300
-Message-ID: <53C905E5.2040406@nvidia.com>
-References: <1405500863-19696-2-git-send-email-mperttunen@nvidia.com> <1405667500-7402-1-git-send-email-mperttunen@nvidia.com> <53C8C9BD.3070709@nvidia.com> <53C8F6E6.6020901@redhat.com>
+From: =?UTF-8?q?Antoine=20T=C3=A9nart?=
+	<antoine.tenart@free-electrons.com>
+Subject: [PATCH v10 0/8] ARM: berlin: add AHCI support
+Date: Fri, 18 Jul 2014 14:29:59 +0200
+Message-ID: <1405686607-8126-1-git-send-email-antoine.tenart@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:11671 "EHLO
-	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755311AbaGRLdD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Jul 2014 07:33:03 -0400
-In-Reply-To: <53C8F6E6.6020901@redhat.com>
+Received: from top.free-electrons.com ([176.31.233.9]:40730 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755391AbaGRMaL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Jul 2014 08:30:11 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hans de Goede <hdegoede@redhat.com>, "swarren@wwwdotorg.org" <swarren@wwwdotorg.org>, "thierry.reding@gmail.com" <thierry.reding@gmail.com>, "tj@kernel.org" <tj@kernel.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: sebastian.hesselbarth@gmail.com, tj@kernel.org, kishon@ti.com
+Cc: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 18/07/14 13:28, Hans de Goede wrote:
-> Hi,
->
-> On 07/18/2014 09:16 AM, Mikko Perttunen wrote:
->> So here's v5: this time, as suggested, I handle the sata clock myself and let ahci_platform handle it too, leading it to be prepared+enabled twice. This works fine, and allows us to remove the DT ordering requirement.
->>
->> I also have in the works a patchset that adds the name-based ahci_platform_get_resources function, but that is not quite ready yet, even if it is quite far along. Also, I am going on vacation and returning on 28.7., so if this v5 is acceptable maybe it could be merged for 3.17 and I could work on the new get_resources scheme after I get back from vacation?
->
-> Yes that works for me v3 of all the patches with no newer version +
-> v5 of patch 1 and 7 are pretty clean and can go into 3.17 from my pov,
-> Tejun can you pick these up for 3.17 please?
+Tejun, Kishon, Sebastian,
 
-Note that the DTC step will fail if Thierry's xusb pinctrl series is not
-applied before this one. (The DTS changes depend on a node called 
-'padctl' and the pinctrl-tegra-xusb header)
+I looked into the AHCI framework to see how to map PHYs and ports
+information. I see two ways of doing this:
+  - We can attach the ahci_port_priv to the ahci_host_priv structure,
+    but that would require quite a lot of changes since the
+    ahci_port_priv is initialized at the very end (in port_start()) and
+    because ahci_port_priv is currently retrieved from the ata_port
+    structure in libahci functions. We do want to parse the dt ports
+    early in the AHCI initialization to be able to generate the right
+    port_map mask. Tests would be needed to ensure nothing is broken.
+  - We can move the PHY handling to where the ports are handled, moving
+    PHYs from ahci_host_priv to ahci_port_priv. This also would require
+    to perform some tests as PHY operations would be moved from
+    libahci_platform to libahci.
 
->
-> And thanks for working on a name-based ahci_platform_get_resources function
-> since what we've now in v5 is quite clean already I think it will be good
-> to take our time to get this right, so postponing this to 3.18 is fine
-> with me.
+In both cases we do not have time to do this for the next release, as
+the request popped up quite late.
 
-Yes.
+So as of now:
+  - Either the series is merged as is and changes to the AHCI framework
+    can be made for 3.18, as it's not particularly linked to this
+    series.
+  - Or you really do not want it. Then that would be great if patches
+    1-2 and 7-8 could be merged so that we do not end up with this big
+    series going for yet another cycle... I think Kishon already took
+    patches 1-2.
 
->
-> Regards,
->
-> Hans
->
+I've done the required modifications so that port_map is not used
+anymore as a mask during the initialization (patch 3).
 
-Thanks, Mikko
+Thanks,
+
+Antoine
+
+
+Changes since v9:
+        - moved port_map parameters into the AHCI structure
+
+Changes since v8:
+        - stopped reset the controller from the PHY driver
+        - removed fixed array sizes
+        - got rid of the custom to_berlin_sata_phy_priv() macro
+        - added dependency to HAS_IOMEM
+
+Changes since v7:
+        - got back to the each PHY as a sub-node representation
+        - renamed the power bit in the PHY driver
+
+Changes since v6:
+        - added the 'clocks' property and support in the PHY driver
+        - updated the PHY compatible
+
+Changes since v5:
+        - rebased on top of v3.16-rc1
+        - added the 'clocks' property in the sata node
+
+Changes since v4:
+        - updated PHY driver as tristate
+        - handled the case were no SATA port is enabled
+        - updated the compatible to a generic one
+        - cosmetic fixups
+
+Changes since v3:
+        - moved all PHY operations to the PHY driver
+        - removed PHY sub-nodes
+        - removed the custom Berlin AHCI driver and switched to
+          ahci_platform
+        - added multiple PHYs support to the libahci_platform
+
+Changes since v2:
+        - modeled each PHY as a sub-node
+        - cosmetic fixups
+
+Changes since v1:
+        - added a PHY driver, allowing to enable each port
+          individually and removed the 'force-port-map' property
+        - made the drivers a bit less magic :)
+        - wrote a function to select and configure registers in the
+          AHCI driver
+        - removed BG2 / BG2CD nodes
+
+Antoine T=C3=A9nart (8):
+  phy: add a driver for the Berlin SATA PHY
+  Documentation: bindings: add the Berlin SATA PHY
+  ata: libahci_platform: move port_map parameters into the AHCI
+    structure
+  ata: libahci: allow to use multiple PHYs
+  ata: ahci_platform: add a generic AHCI compatible
+  Documentation: bindings: document the sub-nodes AHCI bindings
+  ARM: berlin: add the AHCI node for the BG2Q
+  ARM: berlin: enable the eSATA interface on the BG2Q DMP
+
+ .../devicetree/bindings/ata/ahci-platform.txt      |  37 +++
+ .../devicetree/bindings/phy/berlin-sata-phy.txt    |  34 +++
+ arch/arm/boot/dts/berlin2q-marvell-dmp.dts         |   8 +
+ arch/arm/boot/dts/berlin2q.dtsi                    |  39 +++
+ drivers/ata/ahci.h                                 |   9 +-
+ drivers/ata/ahci_da850.c                           |   3 +-
+ drivers/ata/ahci_imx.c                             |   3 +-
+ drivers/ata/ahci_mvebu.c                           |   3 +-
+ drivers/ata/ahci_platform.c                        |   5 +-
+ drivers/ata/ahci_st.c                              |   2 +-
+ drivers/ata/ahci_sunxi.c                           |   2 +-
+ drivers/ata/ahci_xgene.c                           |   2 +-
+ drivers/ata/libahci.c                              |  17 +-
+ drivers/ata/libahci_platform.c                     | 187 ++++++++++---=
+-
+ drivers/phy/Kconfig                                |   7 +
+ drivers/phy/Makefile                               |   1 +
+ drivers/phy/phy-berlin-sata.c                      | 284 +++++++++++++=
+++++++++
+ include/linux/ahci_platform.h                      |   4 +-
+ 18 files changed, 574 insertions(+), 73 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/phy/berlin-sata-p=
+hy.txt
+ create mode 100644 drivers/phy/phy-berlin-sata.c
+
+--=20
+1.9.1
+
