@@ -1,38 +1,43 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [PATCH v5 1/8] of: Add NVIDIA Tegra SATA controller binding
-Date: Fri, 18 Jul 2014 12:28:54 +0200
-Message-ID: <53C8F6E6.6020901@redhat.com>
-References: <1405500863-19696-2-git-send-email-mperttunen@nvidia.com> <1405667500-7402-1-git-send-email-mperttunen@nvidia.com> <53C8C9BD.3070709@nvidia.com>
+From: Mikko Perttunen <mperttunen@nvidia.com>
+Subject: Re: [PATCH v5 7/8] ata: Add support for the Tegra124 SATA controller
+Date: Fri, 18 Jul 2014 13:49:54 +0300
+Message-ID: <53C8FBD2.9@nvidia.com>
+References: <1405500863-19696-8-git-send-email-mperttunen@nvidia.com> <1405667550-7707-1-git-send-email-mperttunen@nvidia.com> <53C8F65C.2020800@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:14378 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756054AbaGRK3V (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 18 Jul 2014 06:29:21 -0400
-In-Reply-To: <53C8C9BD.3070709@nvidia.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Mikko Perttunen <mperttunen@nvidia.com>, "swarren@wwwdotorg.org" <swarren@wwwdotorg.org>, "thierry.reding@gmail.com" <thierry.reding@gmail.com>, "tj@kernel.org" <tj@kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <53C8F65C.2020800@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hans de Goede <hdegoede@redhat.com>, "swarren@wwwdotorg.org" <swarren@wwwdotorg.org>, "thierry.reding@gmail.com" <thierry.reding@gmail.com>, "tj@kernel.org" <tj@kernel.org>
 Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+List-Id: linux-ide@vger.kernel.org
 
-Hi,
+Thanks!
 
-On 07/18/2014 09:16 AM, Mikko Perttunen wrote:
-> So here's v5: this time, as suggested, I handle the sata clock myself and let ahci_platform handle it too, leading it to be prepared+enabled twice. This works fine, and allows us to remove the DT ordering requirement.
-> 
-> I also have in the works a patchset that adds the name-based ahci_platform_get_resources function, but that is not quite ready yet, even if it is quite far along. Also, I am going on vacation and returning on 28.7., so if this v5 is acceptable maybe it could be merged for 3.17 and I could work on the new get_resources scheme after I get back from vacation?
+- Mikko
 
-Yes that works for me v3 of all the patches with no newer version +
-v5 of patch 1 and 7 are pretty clean and can go into 3.17 from my pov,
-Tejun can you pick these up for 3.17 please?
-
-And thanks for working on a name-based ahci_platform_get_resources function
-since what we've now in v5 is quite clean already I think it will be good
-to take our time to get this right, so postponing this to 3.18 is fine
-with me.
-
-Regards,
-
-Hans
+On 18/07/14 13:26, Hans de Goede wrote:
+> Hi,
+>
+> On 07/18/2014 09:12 AM, Mikko Perttunen wrote:
+>> This adds support for the integrated AHCI-compliant Serial ATA
+>> controller present on the NVIDIA Tegra124 system-on-chip.
+>>
+>> Signed-off-by: Mikko Perttunen <mperttunen@nvidia.com>
+>> ---
+>> v5: let ahci_platform handle sata clock and also handle it ourselves.
+>>    this allows use of ahci_platform while having a special sequence
+>>    for the clock.
+>
+> Thanks, I like this one, much better then what we had before.
+>
+> Acked-by: Hans de Goede <hdegoede@redhat.com>
+>
+> Regards,
+>
+> Hans
+>
+>
+>
+ >> ...
