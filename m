@@ -1,53 +1,150 @@
-From: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+From: Hans de Goede <hdegoede@redhat.com>
 Subject: Re: [PATCH v10 0/8] ARM: berlin: add AHCI support
-Date: Sat, 19 Jul 2014 11:03:39 +0200
-Message-ID: <53CA346B.1050802@gmail.com>
+Date: Sat, 19 Jul 2014 12:18:48 +0200
+Message-ID: <53CA4608.3040208@redhat.com>
 References: <1405686607-8126-1-git-send-email-antoine.tenart@free-electrons.com> <20140718135758.GB13012@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:45021 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757620AbaGSJDe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 19 Jul 2014 05:03:34 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:33743 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757989AbaGSKTW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 19 Jul 2014 06:19:22 -0400
 In-Reply-To: <20140718135758.GB13012@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>, =?ISO-8859-1?Q?Antoine_T=E9nart?= <antoine.tenart@free-electrons.com>
-Cc: kishon@ti.com, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
+Cc: sebastian.hesselbarth@gmail.com, kishon@ti.com, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+
+Hi,
 
 On 07/18/2014 03:57 PM, Tejun Heo wrote:
+> (cc'ing Hans who's now maintaining libahci-platform.)
+
+Note I was already following this thread as I'm subscribed to
+linux-ide now.
+
+>
 > On Fri, Jul 18, 2014 at 02:29:59PM +0200, Antoine T=E9nart wrote:
+>> Tejun, Kishon, Sebastian,
+>>
+>> I looked into the AHCI framework to see how to map PHYs and ports
+>> information. I see two ways of doing this:
+>>    - We can attach the ahci_port_priv to the ahci_host_priv structur=
+e,
+>>      but that would require quite a lot of changes since the
+>>      ahci_port_priv is initialized at the very end (in port_start())=
+ and
+>>      because ahci_port_priv is currently retrieved from the ata_port
+>>      structure in libahci functions. We do want to parse the dt port=
+s
+>>      early in the AHCI initialization to be able to generate the rig=
+ht
+>>      port_map mask. Tests would be needed to ensure nothing is broke=
+n.
+>>    - We can move the PHY handling to where the ports are handled, mo=
+ving
+>>      PHYs from ahci_host_priv to ahci_port_priv. This also would req=
+uire
+>>      to perform some tests as PHY operations would be moved from
+>>      libahci_platform to libahci.
+>
+> I don't get the last part.  Why would it have to be moved from
+> libahci_platform to libahci?  Can't we break up the init steps so tha=
+t
+> PHY handling can be put inbetween?  The last time I suggested that,
+> Hans seemed to agree.
+
+Yes as it sounded good, but I did not look at the code to closely,
+looking closer at the code I can see the problem.
+
+ahci_port_priv gets allocated from ahci_port_start in
+libahci.c and that same function also starts the port.
+
+If we want to store the phy in ahci_port_priv then we need to do
+some work between ahci_port_priv getting allocated and the port getting
+started.
+
+ahci_port_start gets allocated from ata_host_start, with the relevant
+bit being:
+
+         for (i =3D 0; i < host->n_ports; i++) {
+                 struct ata_port *ap =3D host->ports[i];
+
+                 if (ap->ops->port_start) {
+                         rc =3D ap->ops->port_start(ap);
+
+
+We could move the allocating of ahci_port_priv to libahci.c:
+ahci_init_controller() which has a similar loop. But then the
+ahci_port_priv info still is allocated after we call
+ahci_platform_enable_resources()
+
+The problem is that:
+
+1) We need to enable resources before we can do ahci_save_initial_confi=
+g()
+2) We must do ahci_save_initial_config() before we can do ata_host_allo=
+c_pinfo()
+3) Therefor we don't have port_info at enable_resources time, which is =
+when we
+want to enable the phys (and we cannot just enable the phys elsewhere a=
+s
+enable_resouces gets used on e.g. resume too).
+
+So I think it is best to just make the phy pointers an array inside
+ahci_host_priv, with a comment that the array indexes must match port
+indexes. Which brings us back to square one, sorry for long dance to
+get there.
+
+I know I initially agreed that it would be good to store the phy
+pointer inside ahci_port_priv, but in practice this just does not
+work well as we get and enable resources before we have ahci_port_priv.
+Which I see is exactly what you've done in patch 4 of v10 of this
+series :)
+
 >> In both cases we do not have time to do this for the next release, a=
 s
 >> the request popped up quite late.
 >>
 >> So as of now:
->>   - Either the series is merged as is and changes to the AHCI framew=
-ork
->>     can be made for 3.18, as it's not particularly linked to this
->>     series.
->>   - Or you really do not want it. Then that would be great if patche=
-s
->>     1-2 and 7-8 could be merged so that we do not end up with this b=
-ig
->>     series going for yet another cycle... I think Kishon already too=
-k
->>     patches 1-2.
->=20
+>>    - Either the series is merged as is and changes to the AHCI frame=
+work
+>>      can be made for 3.18, as it's not particularly linked to this
+>>      series.
+>>    - Or you really do not want it. Then that would be great if patch=
+es
+>>      1-2 and 7-8 could be merged so that we do not end up with this =
+big
+>>      series going for yet another cycle... I think Kishon already to=
+ok
+>>      patches 1-2.
+>
 > I don't wanna take in code which isn't in the shape that it should be=
 =2E
 > Things like this accumulate to become a large maintenance burden over
 > time.  Sure, urgent things can slip in and then later be fixed up but
 > who are gonna do that here?  You guys already seem to be under time
 > pressure as it is.
->=20
+>
 > If you guys can figure something out with Hans regarding how to
 > proceed on this, I'll be happy take the code as is.
 
-I cannot say much about AHCI, but if the PHY driver is fine I can
-take the DT patches adding it to BG2Q and BG2Q-DMP at any time.
+I think the way to proceed with this is just leaving things as they are=
+,
+see above.
 
-Sebastian
+As for taking the ahci parts of this series, except for the minor comme=
+nts
+from you to patch 3 and from me to patch 5 that is fine with me.
 
+Regards,
+
+Hans
+
+
+>
+> Thanks.
+>
