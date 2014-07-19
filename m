@@ -1,36 +1,53 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/1] Add support for the Promise FastTrak TX8660 SATA HBA
- (ahci mode)
-Date: Fri, 18 Jul 2014 18:00:36 -0400
-Message-ID: <20140718220036.GB1819@htj.dyndns.org>
-References: <1405094893-9768-1-git-send-email-romain.degez@gmail.com>
+From: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
+Subject: Re: [PATCH v10 0/8] ARM: berlin: add AHCI support
+Date: Sat, 19 Jul 2014 11:03:39 +0200
+Message-ID: <53CA346B.1050802@gmail.com>
+References: <1405686607-8126-1-git-send-email-antoine.tenart@free-electrons.com> <20140718135758.GB13012@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f54.google.com ([209.85.216.54]:42986 "EHLO
-	mail-qa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752591AbaGRWAk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 18 Jul 2014 18:00:40 -0400
-Received: by mail-qa0-f54.google.com with SMTP id k15so3481733qaq.13
-        for <linux-ide@vger.kernel.org>; Fri, 18 Jul 2014 15:00:39 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <1405094893-9768-1-git-send-email-romain.degez@gmail.com>
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:45021 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757620AbaGSJDe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 19 Jul 2014 05:03:34 -0400
+In-Reply-To: <20140718135758.GB13012@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Romain Degez <romain.degez@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, =?ISO-8859-1?Q?Antoine_T=E9nart?= <antoine.tenart@free-electrons.com>
+Cc: kishon@ti.com, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
 
-On Fri, Jul 11, 2014 at 06:08:13PM +0200, Romain Degez wrote:
-> Add support of the Promise FastTrak TX8660 SATA HBA in ahci mode by registering the board in the ahci_pci_tbl[].
-> 
-> Note: this HBA also provide a hardware RAID mode when activated in BIOS but specific drivers from the manufacturer are required in this case.
-> 
-> Signed-off-by: Romain Degez <romain.degez@gmail.com>
-> Tested-by: Romain Degez <romain.degez@gmail.com>
+On 07/18/2014 03:57 PM, Tejun Heo wrote:
+> On Fri, Jul 18, 2014 at 02:29:59PM +0200, Antoine T=E9nart wrote:
+>> In both cases we do not have time to do this for the next release, a=
+s
+>> the request popped up quite late.
+>>
+>> So as of now:
+>>   - Either the series is merged as is and changes to the AHCI framew=
+ork
+>>     can be made for 3.18, as it's not particularly linked to this
+>>     series.
+>>   - Or you really do not want it. Then that would be great if patche=
+s
+>>     1-2 and 7-8 could be merged so that we do not end up with this b=
+ig
+>>     series going for yet another cycle... I think Kishon already too=
+k
+>>     patches 1-2.
+>=20
+> I don't wanna take in code which isn't in the shape that it should be=
+=2E
+> Things like this accumulate to become a large maintenance burden over
+> time.  Sure, urgent things can slip in and then later be fixed up but
+> who are gonna do that here?  You guys already seem to be under time
+> pressure as it is.
+>=20
+> If you guys can figure something out with Hans regarding how to
+> proceed on this, I'll be happy take the code as is.
 
-Applied to libata/for-3.16-fixes.
+I cannot say much about AHCI, but if the PHY driver is fine I can
+take the DT patches adding it to BG2Q and BG2Q-DMP at any time.
 
-Thanks.
+Sebastian
 
--- 
-tejun
