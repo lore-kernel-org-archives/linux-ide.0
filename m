@@ -1,70 +1,43 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] libata fixes for v3.16-rc6
-Date: Mon, 21 Jul 2014 08:17:40 -0400
-Message-ID: <20140721121740.GB12921@htj.dyndns.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 4/4] sd: Handle ZBC drives correctly
+Date: Mon, 21 Jul 2014 08:01:09 -0700
+Message-ID: <20140721150109.GB15433@infradead.org>
+References: <1405931241-92015-1-git-send-email-hare@suse.de>
+ <1405931241-92015-5-git-send-email-hare@suse.de>
+ <20140721112904.GB15455@infradead.org>
+ <53CCFEBE.8080400@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f45.google.com ([209.85.216.45]:57996 "EHLO
-	mail-qa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753036AbaGUMRq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Jul 2014 08:17:46 -0400
+Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <53CCFEBE.8080400@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomely <jbottomley@parallels.com>
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
 
-Hello, Linus.
+On Mon, Jul 21, 2014 at 01:51:26PM +0200, Hannes Reinecke wrote:
+> Yes, I have.
 
-Late libata fixes.
+How well does the SCSI layer recover when you write outside the write
+pointer?  ZBC defeinds new sense codes that we don't handle, so I'd
+expect we'd get long loops of unrecovered errors.
 
-The most important one is from Kevin Hao which makes sure that libata
-only allocates tags inside the max tag number the controller supports.
-libata always had this problem but the recent tag allocation change
-and addition of support for sata_fsl which only supports queue depth
-of 16 exposed the issue.
+> I was actually considering implementing a module option for sd
+> (eg attach_zbc) to allow zac/zbc devices to be attached to the sd driver.
+> Which will be off per default, so your concern should be addressed.
 
-Hans de Goede agreed to become the maintainer of libahci_platform
-which is under higher than usual development pressure from all the new
-controllers popping up from the ARM world.
+That sounds fine to.
 
-Thanks.
+> However, zbc devices _are_ similar to normal 'sd' devices; it's only that
+> some commands might fail unexpectedly.
+> But all the usual commands from sbc are supported, so I found it a bit odd
+> having to implement my own device driver (which would be a clone of 'sd'
+> anyway).
 
-The following changes since commit 2a0bdff6b958d1b2523d2754b6cd5e0ea4053016:
+They are similar in some ways and very different in others.  I
+defintively agree we should share as much code as possible, but I'm not
+sure exposing them as plain sd devices is a good idea.  I'm defintively
+fine with an optional attachment to sd to start playing around with
+different ways to make use of them.
 
-  ahci_xgene: fix the dma state machine lockup for the IDENTIFY DEVICE PIO mode command. (2014-07-08 11:46:05 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git 
-
-for you to fetch changes up to b32bfc06aefab61acc872dec3222624e6cd867ed:
-
-  ahci: add support for the Promise FastTrak TX8660 SATA HBA (ahci mode) (2014-07-18 18:00:50 -0400)
-
-----------------------------------------------------------------
-Alexey Asemov (1):
-      libata: EH should handle AMNF error condition as a media error
-
-Andrey Utkin (1):
-      drivers/ata/pata_ep93xx.c: use signed int type for result of platform_get_irq()
-
-Hans de Goede (1):
-      MAINTAINERS: Add Hans de Goede as ahci-platform maintainer
-
-Kevin Hao (1):
-      libata: support the ata host which implements a queue depth less than 32
-
-Romain Degez (1):
-      ahci: add support for the Promise FastTrak TX8660 SATA HBA (ahci mode)
-
- MAINTAINERS               | 10 ++++++++++
- drivers/ata/ahci.c        |  1 +
- drivers/ata/libata-core.c | 22 +++++++++++++++++++---
- drivers/ata/libata-eh.c   |  9 +++++----
- drivers/ata/pata_ep93xx.c |  2 +-
- 5 files changed, 36 insertions(+), 8 deletions(-)
-
--- 
-tejun
