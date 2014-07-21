@@ -1,59 +1,70 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 4/4] sd: Handle ZBC drives correctly
-Date: Mon, 21 Jul 2014 13:51:26 +0200
-Message-ID: <53CCFEBE.8080400@suse.de>
-References: <1405931241-92015-1-git-send-email-hare@suse.de> <1405931241-92015-5-git-send-email-hare@suse.de> <20140721112904.GB15455@infradead.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [GIT PULL] libata fixes for v3.16-rc6
+Date: Mon, 21 Jul 2014 08:17:40 -0400
+Message-ID: <20140721121740.GB12921@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:48336 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753061AbaGULv2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 21 Jul 2014 07:51:28 -0400
-In-Reply-To: <20140721112904.GB15455@infradead.org>
+Received: from mail-qa0-f45.google.com ([209.85.216.45]:57996 "EHLO
+	mail-qa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753036AbaGUMRq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Jul 2014 08:17:46 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomely <jbottomley@parallels.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>
 
-On 07/21/2014 01:29 PM, Christoph Hellwig wrote:
-> On Mon, Jul 21, 2014 at 10:27:21AM +0200, Hannes Reinecke wrote:
->> ZBC drives are close to disk devices, so update sd.c to handle
->> ZBC drives correctly.
->
-> While the other patches all look fine with me I strongly disagree wit=
-h
-> this one.  Devices reporting the ZBC device type must have sequential
-> required zones, so they are _not_ anywhere close to disk devices,
-> and writes to them will cause errors that we aren't evenable able to
-> handle yet.
->
-> If it makes some sort of experiment easier for you we can add a way t=
-o
-> force ZBC devices to use sd.c conditionally.  Do you have a test devi=
-ce
-> that this works with?
->
-Yes, I have.
+Hello, Linus.
 
-I was actually considering implementing a module option for sd
-(eg attach_zbc) to allow zac/zbc devices to be attached to the sd=20
-driver.
-Which will be off per default, so your concern should be addressed.
+Late libata fixes.
 
-However, zbc devices _are_ similar to normal 'sd' devices; it's only=20
-that some commands might fail unexpectedly.
-But all the usual commands from sbc are supported, so I found it a=20
-bit odd having to implement my own device driver (which would be a=20
-clone of 'sd' anyway).
+The most important one is from Kevin Hao which makes sure that libata
+only allocates tags inside the max tag number the controller supports.
+libata always had this problem but the recent tag allocation change
+and addition of support for sata_fsl which only supports queue depth
+of 16 exposed the issue.
 
-Cheers,
+Hans de Goede agreed to become the maintainer of libahci_platform
+which is under higher than usual development pressure from all the new
+controllers popping up from the ARM world.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+Thanks.
+
+The following changes since commit 2a0bdff6b958d1b2523d2754b6cd5e0ea4053016:
+
+  ahci_xgene: fix the dma state machine lockup for the IDENTIFY DEVICE PIO mode command. (2014-07-08 11:46:05 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git 
+
+for you to fetch changes up to b32bfc06aefab61acc872dec3222624e6cd867ed:
+
+  ahci: add support for the Promise FastTrak TX8660 SATA HBA (ahci mode) (2014-07-18 18:00:50 -0400)
+
+----------------------------------------------------------------
+Alexey Asemov (1):
+      libata: EH should handle AMNF error condition as a media error
+
+Andrey Utkin (1):
+      drivers/ata/pata_ep93xx.c: use signed int type for result of platform_get_irq()
+
+Hans de Goede (1):
+      MAINTAINERS: Add Hans de Goede as ahci-platform maintainer
+
+Kevin Hao (1):
+      libata: support the ata host which implements a queue depth less than 32
+
+Romain Degez (1):
+      ahci: add support for the Promise FastTrak TX8660 SATA HBA (ahci mode)
+
+ MAINTAINERS               | 10 ++++++++++
+ drivers/ata/ahci.c        |  1 +
+ drivers/ata/libata-core.c | 22 +++++++++++++++++++---
+ drivers/ata/libata-eh.c   |  9 +++++----
+ drivers/ata/pata_ep93xx.c |  2 +-
+ 5 files changed, 36 insertions(+), 8 deletions(-)
+
+-- 
+tejun
