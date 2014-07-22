@@ -1,35 +1,50 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [GIT PULL] libata fixes for v3.16-rc6
-Date: Mon, 21 Jul 2014 11:44:15 -0700
-Message-ID: <CA+55aFwjt8BhmKVnMbFfcVG7NJpkeCV+N5y3KOeiDg8sTGSbww@mail.gmail.com>
-References: <20140721121740.GB12921@htj.dyndns.org>
-	<CA+55aFwzZoef-fXj1D57N9ywxWBF0bj2cWgOQMQDLM=NAH7hrA@mail.gmail.com>
-	<20140721183322.GA29601@mtj.dyndns.org>
+From: David Miller <davem@davemloft.net>
+Subject: [GIT] IDE
+Date: Mon, 21 Jul 2014 22:37:08 -0700 (PDT)
+Message-ID: <20140721.223708.524693301044885285.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vc0-f170.google.com ([209.85.220.170]:48208 "EHLO
-	mail-vc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933237AbaGUSoS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Jul 2014 14:44:18 -0400
-In-Reply-To: <20140721183322.GA29601@mtj.dyndns.org>
+Received: from shards.monkeyblade.net ([149.20.54.216]:41759 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750742AbaGVFhL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Jul 2014 01:37:11 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, IDE-ML <linux-ide@vger.kernel.org>, Hans de Goede <hdegoede@redhat.com>
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Jul 21, 2014 at 11:33 AM, Tejun Heo <tj@kernel.org> wrote:
->
-> Urgh... sorry about that.  This is the same git-request-pull problem
-> that occurred the last time.  I forgot adding cc:stable to the last
-> patch and force-pushed that out before generating the pull request (I
-> had it sitting in my local branch for some days) and git-request-pull
-> dropped the branch name because the commit IDs of local and remote
-> disagreed.  git --version says 1.9.3.  Maybe it's not fixed in this
-> version yet?
 
-So git 2.0 should have the fix where it complains loudly if it cannot
-find things instead of leaving things empty. It's probably not in
-1.9.3.
+Please pull to get these IDE fixes:
 
-           Linus
+1) Fix interrupt registry for some Atari IDE chipsets.
+
+2) Adjust Kconfig dependencies for x86_32 specific chips.
+
+Thanks!
+
+The following changes since commit 0c0bd34a142963ca3454f530e47ce1c230d8cc9d:
+
+  Merge branch 'sched-urgent-for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip (2014-03-03 10:49:24 -0800)
+
+are available in the git repository at:
+
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide.git master
+
+for you to fetch changes up to 5b40dd30bbfaa7fcba0cd945a4852a146c552ea7:
+
+  ide: Fix SC1200 dependencies (2014-03-17 15:57:28 -0400)
+
+----------------------------------------------------------------
+Jean Delvare (2):
+      ide: Fix CS5520 and CS5530 dependencies
+      ide: Fix SC1200 dependencies
+
+Michael Schmitz (1):
+      m68k/atari - ide: do not register interrupt if host->get_lock is set
+
+ drivers/ide/Kconfig     | 5 ++++-
+ drivers/ide/ide-probe.c | 8 +++++---
+ 2 files changed, 9 insertions(+), 4 deletions(-)
