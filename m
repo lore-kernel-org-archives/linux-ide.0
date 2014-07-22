@@ -1,74 +1,85 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2/2] libata: Fix NULL pointer of scsi_host in ata_port
-Date: Tue, 22 Jul 2014 16:11:09 -0400
-Message-ID: <20140722201109.GN13851@htj.dyndns.org>
-References: <1406040688-1762-1-git-send-email-qiudayu@linux.vnet.ibm.com>
- <53CE7C29.6050908@linux.vnet.ibm.com>
- <CAEuXFExJAq5hpYe8R_De7hOtGN1Jrx6HCQt0tQBAKnDTKEpaBA@mail.gmail.com>
+From: Stephen Warren <swarren@wwwdotorg.org>
+Subject: Re: [PATCH v5 1/8] of: Add NVIDIA Tegra SATA controller binding
+Date: Tue, 22 Jul 2014 15:03:12 -0600
+Message-ID: <53CED190.8060702@wwwdotorg.org>
+References: <1405500863-19696-2-git-send-email-mperttunen@nvidia.com> <1405667500-7402-1-git-send-email-mperttunen@nvidia.com> <53C8C9BD.3070709@nvidia.com> <53C8F6E6.6020901@redhat.com> <20140718150603.GA7196@ulmo>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="gFvM3qUNEiBIujkoUOihmKSWH10GoBB3B"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f52.google.com ([209.85.192.52]:48092 "EHLO
-	mail-qg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756777AbaGVULN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Jul 2014 16:11:13 -0400
-Content-Disposition: inline
-In-Reply-To: <CAEuXFExJAq5hpYe8R_De7hOtGN1Jrx6HCQt0tQBAKnDTKEpaBA@mail.gmail.com>
+Received: from avon.wwwdotorg.org ([70.85.31.133]:44151 "EHLO
+	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756877AbaGVVDQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Jul 2014 17:03:16 -0400
+In-Reply-To: <20140718150603.GA7196@ulmo>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jesse Brandeburg <jesse.brandeburg@gmail.com>
-Cc: Mike Qiu <qiudayu@linux.vnet.ibm.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, wenxiong@linux.vnet.ibm.com, brking@linux.vnet.ibm.com, zhenghch@cn.ibm.com, haokexin@gmail.com
+To: Thierry Reding <thierry.reding@gmail.com>, Tejun Heo <tj@kernel.org>, Peter De Schrijver <pdeschrijver@nvidia.com>
+Cc: Hans de Goede <hdegoede@redhat.com>, Mikko Perttunen <mperttunen@nvidia.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hello,
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--gFvM3qUNEiBIujkoUOihmKSWH10GoBB3B
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-Can you please test the following patch?
+On 07/18/2014 09:06 AM, Thierry Reding wrote:
+> On Fri, Jul 18, 2014 at 12:28:54PM +0200, Hans de Goede wrote:
+>> Hi,
+>>
+>> On 07/18/2014 09:16 AM, Mikko Perttunen wrote:
+>>> So here's v5: this time, as suggested, I handle the sata clock myself=
+ and let ahci_platform handle it too, leading it to be prepared+enabled t=
+wice. This works fine, and allows us to remove the DT ordering requiremen=
+t.
+>>>
+>>> I also have in the works a patchset that adds the name-based ahci_pla=
+tform_get_resources function, but that is not quite ready yet, even if it=
+ is quite far along. Also, I am going on vacation and returning on 28.7.,=
+ so if this v5 is acceptable maybe it could be merged for 3.17 and I coul=
+d work on the new get_resources scheme after I get back from vacation?
+>>
+>> Yes that works for me v3 of all the patches with no newer version +
+>> v5 of patch 1 and 7 are pretty clean and can go into 3.17 from my pov,=
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index d19c37a7..773f4e6 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4798,9 +4798,8 @@ void swap_buf_le16(u16 *buf, unsigned int buf_words)
- static struct ata_queued_cmd *ata_qc_new(struct ata_port *ap)
- {
- 	struct ata_queued_cmd *qc = NULL;
--	unsigned int i, tag, max_queue;
--
--	max_queue = ap->scsi_host->can_queue;
-+	unsigned int max_queue = ap->host->n_tags;
-+	unsigned int i, tag;
- 
- 	/* no command while frozen */
- 	if (unlikely(ap->pflags & ATA_PFLAG_FROZEN))
-@@ -6094,6 +6093,7 @@ void ata_host_init(struct ata_host *host, struct device *dev,
- {
- 	spin_lock_init(&host->lock);
- 	mutex_init(&host->eh_mutex);
-+	host->n_tags = ATA_MAX_QUEUE;
- 	host->dev = dev;
- 	host->ops = ops;
- }
-@@ -6179,11 +6179,7 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
- 	 * The max queue supported by hardware must not be greater than
- 	 * ATA_MAX_QUEUE.
- 	 */
--	if (sht->can_queue > ATA_MAX_QUEUE) {
--		dev_err(host->dev, "BUG: the hardware max queue is too large\n");
--		WARN_ON(1);
--		return -EINVAL;
--	}
-+	host->n_tags = clamp(sht->can_queue, 1, ATA_MAX_QUEUE);
- 
- 	/* host must have been started */
- 	if (!(host->flags & ATA_HOST_STARTED)) {
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 5ab4e3a..92abb49 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -593,6 +593,7 @@ struct ata_host {
- 	struct device 		*dev;
- 	void __iomem * const	*iomap;
- 	unsigned int		n_ports;
-+	unsigned int		n_tags;			/* nr of NCQ tags */
- 	void			*private_data;
- 	struct ata_port_operations *ops;
- 	unsigned long		flags;
+>> Tejun can you pick these up for 3.17 please?
+>=20
+> Tejun,
+>=20
+> I think the following patches can go through your tree without causing
+> breakage through unresolved dependencies:
+=2E..
+> Stephen, the rest of the patches would probably best go through the
+> Tegra tree so that we can handle the dependencies there. I've already
+> sent out pull requests for 3.17 today, but maybe Arnd and Olof can be
+> convinced to take one more.
+
+At this point, I'm just going to wait for 3.18 for anything that didn't
+make it into 3.17.
+
+
+--gFvM3qUNEiBIujkoUOihmKSWH10GoBB3B
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
+
+iQIcBAEBAgAGBQJTztGQAAoJEJuNpwkmVCGc7xwP/idWdSGs4e5mhKeFkzHeEDev
+jYyY7eBAE92DF5YFVH3a81gmRAjFuDRMm6tx8U46PEbUOygnvRDH0PsNiEQ06dtf
+DypZiailwoFwKv3jGBgtpgIDKu0u5WQAadzYn4iDwIOaAjHeYFoh99mpqO30rJFA
+jwj9ZFrBbtjF3pjRPEcUv2fxlmab8GIYFtJ9BNrSB+A52Vwns5+u7pefplPGEO+a
+v/1LgXh97K8rE9ZHNXX8VQ12nwxvlLpRvySw/cLSPKgmhVdc9lcUArVP6Mn2x5Em
+8PYEsDNap6qI/ebriNUH8GSS9+2+AkgSqBMaYbqtuUQlxfVpRwZWNQfXCtgtMulq
+YzOnQ/nH0/r5XIRyQJjZYrNEMFZ4bvEoNVPQHRiKzW7dtJXJhr669GMQe2Rt1F9l
+YG3OcT0jlBk9RSyjw3VFi6X7WSDhQM+3+sXS77bxSG0DAR/ZXXhFo9Wz4Y6G8n76
+BzOlqLZYWa6HLkH49FCzBRZzhZUFNxRs7AymBZ2cLqAWN3G8zTe6qlP/wLu6EsZZ
+qpcb3oBXZjbch0NFAwBS/GM0j4nvUdVDbPpdEHsevGSk9JEHIOtCC+xoBMe/gr6z
+0cd8FmzfkNkYKEuQW+Ya3m5Yuf5QicxsDlOiVPKQX7q3jZkf6Pru5xn4RhonGDbV
+3vDWo8h1+2uH0YygEr90
+=Jg4Y
+-----END PGP SIGNATURE-----
+
+--gFvM3qUNEiBIujkoUOihmKSWH10GoBB3B--
