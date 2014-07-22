@@ -1,75 +1,74 @@
-From: Peter Hurley <peter@hurleysoftware.com>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH 2/2] libata: Fix NULL pointer of scsi_host in ata_port
-Date: Tue, 22 Jul 2014 15:47:18 -0400
-Message-ID: <53CEBFC6.2080009@hurleysoftware.com>
+Date: Tue, 22 Jul 2014 16:11:09 -0400
+Message-ID: <20140722201109.GN13851@htj.dyndns.org>
 References: <1406040688-1762-1-git-send-email-qiudayu@linux.vnet.ibm.com>
+ <53CE7C29.6050908@linux.vnet.ibm.com>
+ <CAEuXFExJAq5hpYe8R_De7hOtGN1Jrx6HCQt0tQBAKnDTKEpaBA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1406040688-1762-1-git-send-email-qiudayu@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mike Qiu <qiudayu@linux.vnet.ibm.com>, tj@kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, haokexin@gmail.com, Jesse Brandeburg <jesse.brandeburg@gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qg0-f52.google.com ([209.85.192.52]:48092 "EHLO
+	mail-qg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756777AbaGVULN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Jul 2014 16:11:13 -0400
+Content-Disposition: inline
+In-Reply-To: <CAEuXFExJAq5hpYe8R_De7hOtGN1Jrx6HCQt0tQBAKnDTKEpaBA@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jesse Brandeburg <jesse.brandeburg@gmail.com>
+Cc: Mike Qiu <qiudayu@linux.vnet.ibm.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, wenxiong@linux.vnet.ibm.com, brking@linux.vnet.ibm.com, zhenghch@cn.ibm.com, haokexin@gmail.com
 
-[ +cc Jesse Brandeburg - similar LKML report (but on x86_64) ]
+Hello,
 
-On 07/22/2014 10:51 AM, Mike Qiu wrote:
-> In ata_sas_port_alloc(), it haven't initialized scsi_host field in
-> ata_port, although scsi_host is in parameters list and unused in this
-> function.
-> 
-> With commit 1871ee134b73 ("libata: support the ata host which implements a queue depth less than 32")
-> ata_qc_new() try to use scsi_host, while it
-> is a NULL pointer for ipr IOA and error message shows below:
-> 
-> Unable to handle kernel paging request for data at address 0x00000114
-> Faulting instruction address: 0xc0000000005c2580
-> Oops: Kernel access of bad area, sig: 11 [#1]
-> ...
-> NIP [c0000000005c2580] .ata_qc_new_init+0x30/0x1f0
-> LR [c0000000005c9384] .ata_scsi_translate+0x44/0x230
-> Call Trace:
-> 0xc0000003ad332280 (unreliable)
-> .ata_scsi_translate+0x44/0x230
-> .ipr_queuecommand+0x2e0/0x780 [ipr]
-> .scsi_dispatch_cmd+0xec/0x400
-> .scsi_request_fn+0x52c/0x670
-> .__blk_run_queue+0x5c/0x80
-> .blk_execute_rq_nowait+0xf8/0x1c0
-> .blk_execute_rq+0x88/0x150
-> .scsi_execute+0xf0/0x1f0
-> .scsi_execute_req_flags+0xc4/0x170
-> .scsi_probe_and_add_lun+0x2d4/0xe00
-> .__scsi_scan_target+0x1a4/0x790
-> .scsi_scan_channel.part.3+0x80/0xc0
-> .scsi_scan_host_selected+0x1a0/0x240
-> .do_scan_async+0x30/0x210
-> .async_run_entry_fn+0x78/0x1c0
-> .process_one_work+0x1c4/0x4a0
-> .worker_thread+0x184/0x600
-> .kthread+0x10c/0x130
-> .ret_from_kernel_thread+0x58/0x7c
-> 
-> While scsi_host is unused in ata_sas_port_alloc(), better to set it
-> in ata_sas_port_alloc() instead of in driver.
-> 
-> Signed-off-by: Mike Qiu <qiudayu@linux.vnet.ibm.com>
-> ---
->  drivers/ata/libata-scsi.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index 0586f66..a472b6f 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -4070,6 +4070,7 @@ struct ata_port *ata_sas_port_alloc(struct ata_host *host,
->  	ap->flags |= port_info->flags;
->  	ap->ops = port_info->port_ops;
->  	ap->cbl = ATA_CBL_SATA;
-> +	ap->scsi_host = shost;
->  
->  	return ap;
->  }
-> 
+Can you please test the following patch?
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index d19c37a7..773f4e6 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4798,9 +4798,8 @@ void swap_buf_le16(u16 *buf, unsigned int buf_words)
+ static struct ata_queued_cmd *ata_qc_new(struct ata_port *ap)
+ {
+ 	struct ata_queued_cmd *qc = NULL;
+-	unsigned int i, tag, max_queue;
+-
+-	max_queue = ap->scsi_host->can_queue;
++	unsigned int max_queue = ap->host->n_tags;
++	unsigned int i, tag;
+ 
+ 	/* no command while frozen */
+ 	if (unlikely(ap->pflags & ATA_PFLAG_FROZEN))
+@@ -6094,6 +6093,7 @@ void ata_host_init(struct ata_host *host, struct device *dev,
+ {
+ 	spin_lock_init(&host->lock);
+ 	mutex_init(&host->eh_mutex);
++	host->n_tags = ATA_MAX_QUEUE;
+ 	host->dev = dev;
+ 	host->ops = ops;
+ }
+@@ -6179,11 +6179,7 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
+ 	 * The max queue supported by hardware must not be greater than
+ 	 * ATA_MAX_QUEUE.
+ 	 */
+-	if (sht->can_queue > ATA_MAX_QUEUE) {
+-		dev_err(host->dev, "BUG: the hardware max queue is too large\n");
+-		WARN_ON(1);
+-		return -EINVAL;
+-	}
++	host->n_tags = clamp(sht->can_queue, 1, ATA_MAX_QUEUE);
+ 
+ 	/* host must have been started */
+ 	if (!(host->flags & ATA_HOST_STARTED)) {
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 5ab4e3a..92abb49 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -593,6 +593,7 @@ struct ata_host {
+ 	struct device 		*dev;
+ 	void __iomem * const	*iomap;
+ 	unsigned int		n_ports;
++	unsigned int		n_tags;			/* nr of NCQ tags */
+ 	void			*private_data;
+ 	struct ata_port_operations *ops;
+ 	unsigned long		flags;
