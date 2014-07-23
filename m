@@ -1,85 +1,83 @@
-From: Stephen Warren <swarren@wwwdotorg.org>
-Subject: Re: [PATCH v5 1/8] of: Add NVIDIA Tegra SATA controller binding
-Date: Tue, 22 Jul 2014 15:03:12 -0600
-Message-ID: <53CED190.8060702@wwwdotorg.org>
-References: <1405500863-19696-2-git-send-email-mperttunen@nvidia.com> <1405667500-7402-1-git-send-email-mperttunen@nvidia.com> <53C8C9BD.3070709@nvidia.com> <53C8F6E6.6020901@redhat.com> <20140718150603.GA7196@ulmo>
+From: Mike Qiu <qiudayu@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/2] libata: Fix scsi_host can_queue issue in ata_qc_new()
+Date: Wed, 23 Jul 2014 10:10:38 +0800
+Message-ID: <53CF199E.2020108@linux.vnet.ibm.com>
+References: <1406040619-1722-1-git-send-email-qiudayu@linux.vnet.ibm.com> <20140722154244.GJ13851@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="gFvM3qUNEiBIujkoUOihmKSWH10GoBB3B"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:44151 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756877AbaGVVDQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Jul 2014 17:03:16 -0400
-In-Reply-To: <20140718150603.GA7196@ulmo>
+Received: from e23smtp01.au.ibm.com ([202.81.31.143]:32779 "EHLO
+	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751692AbaGWCKs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Jul 2014 22:10:48 -0400
+Received: from /spool/local
+	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-ide@vger.kernel.org> from <qiudayu@linux.vnet.ibm.com>;
+	Wed, 23 Jul 2014 12:10:45 +1000
+In-Reply-To: <20140722154244.GJ13851@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Thierry Reding <thierry.reding@gmail.com>, Tejun Heo <tj@kernel.org>, Peter De Schrijver <pdeschrijver@nvidia.com>
-Cc: Hans de Goede <hdegoede@redhat.com>, Mikko Perttunen <mperttunen@nvidia.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-tegra@vger.kernel.org" <linux-tegra@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, haokexin@gmail.com, Dan Williams <dan.j.williams@intel.com>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---gFvM3qUNEiBIujkoUOihmKSWH10GoBB3B
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-On 07/18/2014 09:06 AM, Thierry Reding wrote:
-> On Fri, Jul 18, 2014 at 12:28:54PM +0200, Hans de Goede wrote:
->> Hi,
+On 07/22/2014 11:42 PM, Tejun Heo wrote:
+> Hello,
+>
+> (cc'ing Dan)
+>
+> On Tue, Jul 22, 2014 at 10:50:19AM -0400, Mike Qiu wrote:
+>> The can_queue in scsi_host can be more than ATA_MAX_QUEUE (32),
+>> for example, in ipr, it can be 100 or more.
 >>
->> On 07/18/2014 09:16 AM, Mikko Perttunen wrote:
->>> So here's v5: this time, as suggested, I handle the sata clock myself=
- and let ahci_platform handle it too, leading it to be prepared+enabled t=
-wice. This works fine, and allows us to remove the DT ordering requiremen=
-t.
->>>
->>> I also have in the works a patchset that adds the name-based ahci_pla=
-tform_get_resources function, but that is not quite ready yet, even if it=
- is quite far along. Also, I am going on vacation and returning on 28.7.,=
- so if this v5 is acceptable maybe it could be merged for 3.17 and I coul=
-d work on the new get_resources scheme after I get back from vacation?
+>> Also, some drivers, like ipr driver, haven't filled the field
+>> scsi_host in ata_port, and will lead a call trace, so add
+>> check for that.
 >>
->> Yes that works for me v3 of all the patches with no newer version +
->> v5 of patch 1 and 7 are pretty clean and can go into 3.17 from my pov,=
+>> Signed-off-by: Mike Qiu <qiudayu@linux.vnet.ibm.com>
+>> ---
+>>   drivers/ata/libata-core.c | 15 ++++-----------
+>>   1 file changed, 4 insertions(+), 11 deletions(-)
+>>
+>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+>> index 259d879..a5b9c70 100644
+>> --- a/drivers/ata/libata-core.c
+>> +++ b/drivers/ata/libata-core.c
+>> @@ -4734,7 +4734,10 @@ static struct ata_queued_cmd *ata_qc_new(struct ata_port *ap)
+>>   	struct ata_queued_cmd *qc = NULL;
+>>   	unsigned int i, tag, max_queue;
+>>   
+>> -	max_queue = ap->scsi_host->can_queue;
+>> +	if (ap->scsi_host && ap->scsi_host->can_queue <= ATA_MAX_QUEUE)
+>> +		max_queue = ap->scsi_host->can_queue;
+>> +	else
+>> +		max_queue = ATA_MAX_QUEUE;
+>>   
+>>   	/* no command while frozen */
+>>   	if (unlikely(ap->pflags & ATA_PFLAG_FROZEN))
+>> @@ -6109,16 +6112,6 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
+>>   {
+>>   	int i, rc;
+>>   
+>> -	/*
+>> -	 * The max queue supported by hardware must not be greater than
+>> -	 * ATA_MAX_QUEUE.
+>> -	 */
+>> -	if (sht->can_queue > ATA_MAX_QUEUE) {
+>> -		dev_err(host->dev, "BUG: the hardware max queue is too large\n");
+>> -		WARN_ON(1);
+>> -		return -EINVAL;
+>> -	}
+>> -
+> So, ummm, I really don't like that we're adding the conditionals to
+> the hot path (yeah, its implementation is slow but still).  Maybe we
 
->> Tejun can you pick these up for 3.17 please?
->=20
-> Tejun,
->=20
-> I think the following patches can go through your tree without causing
-> breakage through unresolved dependencies:
-=2E..
-> Stephen, the rest of the patches would probably best go through the
-> Tegra tree so that we can handle the dependencies there. I've already
-> sent out pull requests for 3.17 today, but maybe Arnd and Olof can be
-> convinced to take one more.
+Yes, agree ..., not a good idea to do this...
 
-At this point, I'm just going to wait for 3.18 for anything that didn't
-make it into 3.17.
+Thanks
+Mike
+> need to store the chosen queue depth after all?  Dan?
+>
+> Thanks.
+>
 
-
---gFvM3qUNEiBIujkoUOihmKSWH10GoBB3B
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-Comment: Using GnuPG with Thunderbird - http://www.enigmail.net/
-
-iQIcBAEBAgAGBQJTztGQAAoJEJuNpwkmVCGc7xwP/idWdSGs4e5mhKeFkzHeEDev
-jYyY7eBAE92DF5YFVH3a81gmRAjFuDRMm6tx8U46PEbUOygnvRDH0PsNiEQ06dtf
-DypZiailwoFwKv3jGBgtpgIDKu0u5WQAadzYn4iDwIOaAjHeYFoh99mpqO30rJFA
-jwj9ZFrBbtjF3pjRPEcUv2fxlmab8GIYFtJ9BNrSB+A52Vwns5+u7pefplPGEO+a
-v/1LgXh97K8rE9ZHNXX8VQ12nwxvlLpRvySw/cLSPKgmhVdc9lcUArVP6Mn2x5Em
-8PYEsDNap6qI/ebriNUH8GSS9+2+AkgSqBMaYbqtuUQlxfVpRwZWNQfXCtgtMulq
-YzOnQ/nH0/r5XIRyQJjZYrNEMFZ4bvEoNVPQHRiKzW7dtJXJhr669GMQe2Rt1F9l
-YG3OcT0jlBk9RSyjw3VFi6X7WSDhQM+3+sXS77bxSG0DAR/ZXXhFo9Wz4Y6G8n76
-BzOlqLZYWa6HLkH49FCzBRZzhZUFNxRs7AymBZ2cLqAWN3G8zTe6qlP/wLu6EsZZ
-qpcb3oBXZjbch0NFAwBS/GM0j4nvUdVDbPpdEHsevGSk9JEHIOtCC+xoBMe/gr6z
-0cd8FmzfkNkYKEuQW+Ya3m5Yuf5QicxsDlOiVPKQX7q3jZkf6Pru5xn4RhonGDbV
-3vDWo8h1+2uH0YygEr90
-=Jg4Y
------END PGP SIGNATURE-----
-
---gFvM3qUNEiBIujkoUOihmKSWH10GoBB3B--
