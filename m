@@ -1,109 +1,55 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH libata/for-3.16-fixes] libata: introduce ata_host->n_tags to
- avoid oops on SAS controllers
-Date: Wed, 23 Jul 2014 10:46:31 -0400
-Message-ID: <20140723144631.GA7103@htj.dyndns.org>
-References: <1406040688-1762-1-git-send-email-qiudayu@linux.vnet.ibm.com>
- <53CE7C29.6050908@linux.vnet.ibm.com>
- <CAEuXFExJAq5hpYe8R_De7hOtGN1Jrx6HCQt0tQBAKnDTKEpaBA@mail.gmail.com>
- <20140722201109.GN13851@htj.dyndns.org>
+Subject: [GIT PULL] a libata regression fix for v3.16-rc6
+Date: Wed, 23 Jul 2014 10:58:35 -0400
+Message-ID: <20140723145835.GB7103@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f41.google.com ([209.85.216.41]:51060 "EHLO
-	mail-qa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756644AbaGWOqg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Jul 2014 10:46:36 -0400
+Received: from mail-qa0-f51.google.com ([209.85.216.51]:61891 "EHLO
+	mail-qa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757806AbaGWO6i (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Jul 2014 10:58:38 -0400
 Content-Disposition: inline
-In-Reply-To: <20140722201109.GN13851@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jesse Brandeburg <jesse.brandeburg@gmail.com>
-Cc: Mike Qiu <qiudayu@linux.vnet.ibm.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, wenxiong@linux.vnet.ibm.com, brking@linux.vnet.ibm.com, zhenghch@cn.ibm.com, haokexin@gmail.com, Peter Hurley <peter@hurleysoftware.com>, Peter Zijlstra <peterz@infradead.org>, Alexey Kardashevskiy <aik@ozlabs.ru>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hello, guys.
+Hello, Linus.
 
-Sorry about the trouble.  Will soon push the below patch to Linus.
+The last libata/for-3.16-fixes pull contained a regression introduced
+by 1871ee134b73 ("fb4cadab75752a7152ed2813c751") which in turn was a
+fix for a regression introduced earlier while changing queue tag order
+to accomodate hard drives which perform poorly if tags are not
+allocated in circular order (ugh...).
+
+The regression happens only for SAS controllers making use of libata
+to serve ATA devices.  They don't fill an ata_host field which is used
+by the new tag allocation function leading to NULL dereference.  This
+patch adds a new intermediate field ata_host->n_tags which is
+initialized for both SAS and !SAS cases to fix the issue.
 
 Thanks.
 
------- 8< ------
->From 1a112d10f03e83fb3a2fdc4c9165865dec8a3ca6 Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj@kernel.org>
-Date: Wed, 23 Jul 2014 09:05:27 -0400
+The following changes since commit b32bfc06aefab61acc872dec3222624e6cd867ed:
 
-1871ee134b73 ("libata: support the ata host which implements a queue
-depth less than 32") directly used ata_port->scsi_host->can_queue from
-ata_qc_new() to determine the number of tags supported by the host;
-unfortunately, SAS controllers doing SATA don't initialize ->scsi_host
-leading to the following oops.
+  ahci: add support for the Promise FastTrak TX8660 SATA HBA (ahci mode) (2014-07-18 18:00:50 -0400)
 
- BUG: unable to handle kernel NULL pointer dereference at 0000000000000058
- IP: [<ffffffff814e0618>] ata_qc_new_init+0x188/0x1b0
- PGD 0
- Oops: 0002 [#1] SMP
- Modules linked in: isci libsas scsi_transport_sas mgag200 drm_kms_helper ttm
- CPU: 1 PID: 518 Comm: udevd Not tainted 3.16.0-rc6+ #62
- Hardware name: Intel Corporation S2600CO/S2600CO, BIOS SE5C600.86B.02.02.0002.122320131210 12/23/2013
- task: ffff880c1a00b280 ti: ffff88061a000000 task.ti: ffff88061a000000
- RIP: 0010:[<ffffffff814e0618>]  [<ffffffff814e0618>] ata_qc_new_init+0x188/0x1b0
- RSP: 0018:ffff88061a003ae8  EFLAGS: 00010012
- RAX: 0000000000000001 RBX: ffff88000241ca80 RCX: 00000000000000fa
- RDX: 0000000000000020 RSI: 0000000000000020 RDI: ffff8806194aa298
- RBP: ffff88061a003ae8 R08: ffff8806194a8000 R09: 0000000000000000
- R10: 0000000000000000 R11: ffff88000241ca80 R12: ffff88061ad58200
- R13: ffff8806194aa298 R14: ffffffff814e67a0 R15: ffff8806194a8000
- FS:  00007f3ad7fe3840(0000) GS:ffff880627620000(0000) knlGS:0000000000000000
- CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
- CR2: 0000000000000058 CR3: 000000061a118000 CR4: 00000000001407e0
- Stack:
-  ffff88061a003b20 ffffffff814e96e1 ffff88000241ca80 ffff88061ad58200
-  ffff8800b6bf6000 ffff880c1c988000 ffff880619903850 ffff88061a003b68
-  ffffffffa0056ce1 ffff88061a003b48 0000000013d6e6f8 ffff88000241ca80
- Call Trace:
-  [<ffffffff814e96e1>] ata_sas_queuecmd+0xa1/0x430
-  [<ffffffffa0056ce1>] sas_queuecommand+0x191/0x220 [libsas]
-  [<ffffffff8149afee>] scsi_dispatch_cmd+0x10e/0x300
-  [<ffffffff814a3bc5>] scsi_request_fn+0x2f5/0x550
-  [<ffffffff81317613>] __blk_run_queue+0x33/0x40
-  [<ffffffff8131781a>] queue_unplugged+0x2a/0x90
-  [<ffffffff8131ceb4>] blk_flush_plug_list+0x1b4/0x210
-  [<ffffffff8131d274>] blk_finish_plug+0x14/0x50
-  [<ffffffff8117eaa8>] __do_page_cache_readahead+0x198/0x1f0
-  [<ffffffff8117ee21>] force_page_cache_readahead+0x31/0x50
-  [<ffffffff8117ee7e>] page_cache_sync_readahead+0x3e/0x50
-  [<ffffffff81172ac6>] generic_file_read_iter+0x496/0x5a0
-  [<ffffffff81219897>] blkdev_read_iter+0x37/0x40
-  [<ffffffff811e307e>] new_sync_read+0x7e/0xb0
-  [<ffffffff811e3734>] vfs_read+0x94/0x170
-  [<ffffffff811e43c6>] SyS_read+0x46/0xb0
-  [<ffffffff811e33d1>] ? SyS_lseek+0x91/0xb0
-  [<ffffffff8171ee29>] system_call_fastpath+0x16/0x1b
- Code: 00 00 00 88 50 29 83 7f 08 01 19 d2 83 e2 f0 83 ea 50 88 50 34 c6 81 1d 02 00 00 40 c6 81 17 02 00 00 00 5d c3 66 0f 1f 44 00 00 <89> 14 25 58 00 00 00
+are available in the git repository at:
 
-Fix it by introducing ata_host->n_tags which is initialized to
-ATA_MAX_QUEUE - 1 in ata_host_init() for SAS controllers and set to
-scsi_host_template->can_queue in ata_host_register() for !SAS ones.
-As SAS hosts are never registered, this will give them the same
-ATA_MAX_QUEUE - 1 as before.  Note that we can't use
-scsi_host->can_queue directly for SAS hosts anyway as they can go
-higher than the libata maximum.
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-3.16-fixes
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: Mike Qiu <qiudayu@linux.vnet.ibm.com>
-Reported-by: Jesse Brandeburg <jesse.brandeburg@gmail.com>
-Reported-by: Peter Hurley <peter@hurleysoftware.com>
-Reported-by: Peter Zijlstra <peterz@infradead.org>
-Tested-by: Alexey Kardashevskiy <aik@ozlabs.ru>
-Fixes: 1871ee134b73 ("libata: support the ata host which implements a queue depth less than 32")
-Cc: Kevin Hao <haokexin@gmail.com>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: stable@vger.kernel.org
----
+for you to fetch changes up to 1a112d10f03e83fb3a2fdc4c9165865dec8a3ca6:
+
+  libata: introduce ata_host->n_tags to avoid oops on SAS controllers (2014-07-23 10:30:34 -0400)
+
+----------------------------------------------------------------
+Tejun Heo (1):
+      libata: introduce ata_host->n_tags to avoid oops on SAS controllers
+
  drivers/ata/libata-core.c | 16 ++++------------
  include/linux/libata.h    |  1 +
  2 files changed, 5 insertions(+), 12 deletions(-)
-
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
 index d19c37a7..677c0c1 100644
 --- a/drivers/ata/libata-core.c
@@ -157,6 +103,3 @@ index 5ab4e3a..92abb49 100644
  	void			*private_data;
  	struct ata_port_operations *ops;
  	unsigned long		flags;
--- 
-1.9.3
-
