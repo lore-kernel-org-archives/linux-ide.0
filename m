@@ -1,83 +1,83 @@
 From: Mike Qiu <qiudayu@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/2] libata: Fix scsi_host can_queue issue in ata_qc_new()
-Date: Wed, 23 Jul 2014 10:10:38 +0800
-Message-ID: <53CF199E.2020108@linux.vnet.ibm.com>
-References: <1406040619-1722-1-git-send-email-qiudayu@linux.vnet.ibm.com> <20140722154244.GJ13851@htj.dyndns.org>
+Subject: Re: [PATCH 2/2] libata: Fix NULL pointer of scsi_host in ata_port
+Date: Wed, 23 Jul 2014 10:29:22 +0800
+Message-ID: <53CF1E02.4000602@linux.vnet.ibm.com>
+References: <1406040688-1762-1-git-send-email-qiudayu@linux.vnet.ibm.com> <53CE7C29.6050908@linux.vnet.ibm.com> <CAEuXFExJAq5hpYe8R_De7hOtGN1Jrx6HCQt0tQBAKnDTKEpaBA@mail.gmail.com> <20140722201109.GN13851@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e23smtp01.au.ibm.com ([202.81.31.143]:32779 "EHLO
-	e23smtp01.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751692AbaGWCKs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Jul 2014 22:10:48 -0400
+Received: from e28smtp07.in.ibm.com ([122.248.162.7]:49238 "EHLO
+	e28smtp07.in.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752519AbaGWC3b (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Jul 2014 22:29:31 -0400
 Received: from /spool/local
-	by e23smtp01.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	by e28smtp07.in.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
 	for <linux-ide@vger.kernel.org> from <qiudayu@linux.vnet.ibm.com>;
-	Wed, 23 Jul 2014 12:10:45 +1000
-In-Reply-To: <20140722154244.GJ13851@htj.dyndns.org>
+	Wed, 23 Jul 2014 07:59:28 +0530
+In-Reply-To: <20140722201109.GN13851@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, haokexin@gmail.com, Dan Williams <dan.j.williams@intel.com>
+Cc: Jesse Brandeburg <jesse.brandeburg@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, wenxiong@linux.vnet.ibm.com, brking@linux.vnet.ibm.com, zhenghch@cn.ibm.com, haokexin@gmail.com
 
-On 07/22/2014 11:42 PM, Tejun Heo wrote:
+I have tested with the ipr IOA, passed.
+
+Reviewed-and Tested-by: Mike Qiu <qiudayu@linux.vnet.ibm.com>
+
+On 07/23/2014 04:11 AM, Tejun Heo wrote:
 > Hello,
 >
-> (cc'ing Dan)
+> Can you please test the following patch?
 >
-> On Tue, Jul 22, 2014 at 10:50:19AM -0400, Mike Qiu wrote:
->> The can_queue in scsi_host can be more than ATA_MAX_QUEUE (32),
->> for example, in ipr, it can be 100 or more.
->>
->> Also, some drivers, like ipr driver, haven't filled the field
->> scsi_host in ata_port, and will lead a call trace, so add
->> check for that.
->>
->> Signed-off-by: Mike Qiu <qiudayu@linux.vnet.ibm.com>
->> ---
->>   drivers/ata/libata-core.c | 15 ++++-----------
->>   1 file changed, 4 insertions(+), 11 deletions(-)
->>
->> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
->> index 259d879..a5b9c70 100644
->> --- a/drivers/ata/libata-core.c
->> +++ b/drivers/ata/libata-core.c
->> @@ -4734,7 +4734,10 @@ static struct ata_queued_cmd *ata_qc_new(struct ata_port *ap)
->>   	struct ata_queued_cmd *qc = NULL;
->>   	unsigned int i, tag, max_queue;
->>   
->> -	max_queue = ap->scsi_host->can_queue;
->> +	if (ap->scsi_host && ap->scsi_host->can_queue <= ATA_MAX_QUEUE)
->> +		max_queue = ap->scsi_host->can_queue;
->> +	else
->> +		max_queue = ATA_MAX_QUEUE;
->>   
->>   	/* no command while frozen */
->>   	if (unlikely(ap->pflags & ATA_PFLAG_FROZEN))
->> @@ -6109,16 +6112,6 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
->>   {
->>   	int i, rc;
->>   
->> -	/*
->> -	 * The max queue supported by hardware must not be greater than
->> -	 * ATA_MAX_QUEUE.
->> -	 */
->> -	if (sht->can_queue > ATA_MAX_QUEUE) {
->> -		dev_err(host->dev, "BUG: the hardware max queue is too large\n");
->> -		WARN_ON(1);
->> -		return -EINVAL;
->> -	}
->> -
-> So, ummm, I really don't like that we're adding the conditionals to
-> the hot path (yeah, its implementation is slow but still).  Maybe we
-
-Yes, agree ..., not a good idea to do this...
-
-Thanks
-Mike
-> need to store the chosen queue depth after all?  Dan?
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index d19c37a7..773f4e6 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -4798,9 +4798,8 @@ void swap_buf_le16(u16 *buf, unsigned int buf_words)
+>   static struct ata_queued_cmd *ata_qc_new(struct ata_port *ap)
+>   {
+>   	struct ata_queued_cmd *qc = NULL;
+> -	unsigned int i, tag, max_queue;
+> -
+> -	max_queue = ap->scsi_host->can_queue;
+> +	unsigned int max_queue = ap->host->n_tags;
+> +	unsigned int i, tag;
 >
-> Thanks.
+>   	/* no command while frozen */
+>   	if (unlikely(ap->pflags & ATA_PFLAG_FROZEN))
+> @@ -6094,6 +6093,7 @@ void ata_host_init(struct ata_host *host, struct device *dev,
+>   {
+>   	spin_lock_init(&host->lock);
+>   	mutex_init(&host->eh_mutex);
+> +	host->n_tags = ATA_MAX_QUEUE;
+>   	host->dev = dev;
+>   	host->ops = ops;
+>   }
+> @@ -6179,11 +6179,7 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
+>   	 * The max queue supported by hardware must not be greater than
+>   	 * ATA_MAX_QUEUE.
+>   	 */
+> -	if (sht->can_queue > ATA_MAX_QUEUE) {
+> -		dev_err(host->dev, "BUG: the hardware max queue is too large\n");
+> -		WARN_ON(1);
+> -		return -EINVAL;
+> -	}
+> +	host->n_tags = clamp(sht->can_queue, 1, ATA_MAX_QUEUE);
+>
+>   	/* host must have been started */
+>   	if (!(host->flags & ATA_HOST_STARTED)) {
+> diff --git a/include/linux/libata.h b/include/linux/libata.h
+> index 5ab4e3a..92abb49 100644
+> --- a/include/linux/libata.h
+> +++ b/include/linux/libata.h
+> @@ -593,6 +593,7 @@ struct ata_host {
+>   	struct device 		*dev;
+>   	void __iomem * const	*iomap;
+>   	unsigned int		n_ports;
+> +	unsigned int		n_tags;			/* nr of NCQ tags */
+>   	void			*private_data;
+>   	struct ata_port_operations *ops;
+>   	unsigned long		flags;
 >
 
