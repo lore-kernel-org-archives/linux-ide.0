@@ -1,106 +1,51 @@
-From: =?UTF-8?q?Antoine=20T=C3=A9nart?=
-	<antoine.tenart@free-electrons.com>
-Subject: [PATCH v11 6/8] Documentation: bindings: document the sub-nodes AHCI bindings
-Date: Thu, 24 Jul 2014 11:17:28 +0200
-Message-ID: <1406193450-17283-7-git-send-email-antoine.tenart@free-electrons.com>
+From: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>
+Subject: [PATCH v11 2/8] Documentation: bindings: add the Berlin SATA PHY
+Date: Thu, 24 Jul 2014 11:17:24 +0200
+Message-ID: <1406193450-17283-3-git-send-email-antoine.tenart@free-electrons.com>
 References: <1406193450-17283-1-git-send-email-antoine.tenart@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
 In-Reply-To: <1406193450-17283-1-git-send-email-antoine.tenart@free-electrons.com>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
 To: sebastian.hesselbarth@gmail.com, tj@kernel.org, kishon@ti.com
-Cc: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: thomas.petazzoni@free-electrons.com, zmxu@marvell.com, devicetree@vger.kernel.org, =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, alexandre.belloni@free-electrons.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-The libahci now allows to use multiple PHYs and to represent each port
-as a sub-node. Add these bindings to the documentation.
-
-Signed-off-by: Antoine T=C3=A9nart <antoine.tenart@free-electrons.com>
----
- .../devicetree/bindings/ata/ahci-platform.txt      | 41 ++++++++++++++=
-++++++++
- 1 file changed, 41 insertions(+)
-
-diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/=
-Documentation/devicetree/bindings/ata/ahci-platform.txt
-index c96d8dcf98fd..93a6ad3965ca 100644
---- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
-+++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-@@ -3,6 +3,10 @@
- SATA nodes are defined to describe on-chip Serial ATA controllers.
- Each SATA controller should have its own node.
-=20
-+It is possible, but not required, to represent each port as a sub-node=
-=2E
-+It allows to enable each port independently when dealing with multiple
-+PHYs.
-+
- Required properties:
- - compatible        : compatible string, one of:
-   - "allwinner,sun4i-a10-ahci"
-@@ -14,18 +18,35 @@ Required properties:
-   - "snps,dwc-ahci"
-   - "snps,exynos5440-ahci"
-   - "snps,spear-ahci"
-+  - "generic-ahci"
- - interrupts        : <interrupt mapping for SATA IRQ>
- - reg               : <registers mapping>
-=20
-+Please note that when using "generic-ahci" you must also specify a SoC=
- specific
-+compatible:
-+	compatible =3D "manufacturer,soc-model-ahci", "generic-ahci";
-+
- Optional properties:
- - dma-coherent      : Present if dma operations are coherent
- - clocks            : a list of phandle + clock specifier pairs
- - target-supply     : regulator for SATA target power
-+- phys              : reference to the SATA PHY node
-+- phy-names         : must be "sata-phy"
-=20
- "fsl,imx53-ahci", "fsl,imx6q-ahci" required properties:
- - clocks            : must contain the sata, sata_ref and ahb clocks
- - clock-names       : must contain "ahb" for the ahb clock
-=20
-+Required properties when using sub-nodes:
-+- #address-cells    : number of cells to encode an address
-+- #size-cells       : number of cells representing the size of an addr=
-ess
-+
-+
-+Sub-nodes required properties:
-+- reg               : the port number
-+- phys              : reference to the SATA PHY node
-+
-+
- Examples:
-         sata@ffe08000 {
- 		compatible =3D "snps,spear-ahci";
-@@ -40,3 +61,23 @@ Examples:
- 		clocks =3D <&pll6 0>, <&ahb_gates 25>;
- 		target-supply =3D <&reg_ahci_5v>;
- 	};
-+
-+With sub-nodes:
-+	sata@f7e90000 {
-+		compatible =3D "marvell,berlin2q-achi", "generic-ahci";
-+		reg =3D <0xe90000 0x1000>;
-+		interrupts =3D <GIC_SPI 7 IRQ_TYPE_LEVEL_HIGH>;
-+		clocks =3D <&chip CLKID_SATA>;
-+		#address-cells =3D <1>;
-+		#size-cells =3D <0>;
-+
-+		sata0: sata-port@0 {
-+			reg =3D <0>;
-+			phys =3D <&sata_phy 0>;
-+		};
-+
-+		sata1: sata-port@1 {
-+			reg =3D <1>;
-+			phys =3D <&sata_phy 1>;
-+		};
-+	};
---=20
-1.9.1
+VGhlIEJlcmxpbiBTQVRBIFBIWSBkcml2ZXMgdGhlIFBIWSByZWxhdGVkIHRvIHRoZSBTQVRBIGlu
+dGVyZmFjZS4gQWRkCnRoZSBjb3JyZXNwb25kaW5nIGRvY3VtZW50YXRpb24uCgpTaWduZWQtb2Zm
+LWJ5OiBBbnRvaW5lIFTDqW5hcnQgPGFudG9pbmUudGVuYXJ0QGZyZWUtZWxlY3Ryb25zLmNvbT4K
+LS0tCiAuLi4vZGV2aWNldHJlZS9iaW5kaW5ncy9waHkvYmVybGluLXNhdGEtcGh5LnR4dCAgICB8
+IDM0ICsrKysrKysrKysrKysrKysrKysrKysKIDEgZmlsZSBjaGFuZ2VkLCAzNCBpbnNlcnRpb25z
+KCspCiBjcmVhdGUgbW9kZSAxMDA2NDQgRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdz
+L3BoeS9iZXJsaW4tc2F0YS1waHkudHh0CgpkaWZmIC0tZ2l0IGEvRG9jdW1lbnRhdGlvbi9kZXZp
+Y2V0cmVlL2JpbmRpbmdzL3BoeS9iZXJsaW4tc2F0YS1waHkudHh0IGIvRG9jdW1lbnRhdGlvbi9k
+ZXZpY2V0cmVlL2JpbmRpbmdzL3BoeS9iZXJsaW4tc2F0YS1waHkudHh0Cm5ldyBmaWxlIG1vZGUg
+MTAwNjQ0CmluZGV4IDAwMDAwMDAwMDAwMC4uY2RhNGExMDBiMDBmCi0tLSAvZGV2L251bGwKKysr
+IGIvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL3BoeS9iZXJsaW4tc2F0YS1waHku
+dHh0CkBAIC0wLDAgKzEsMzQgQEAKK0JlcmxpbiBTQVRBIFBIWQorLS0tLS0tLS0tLS0tLS0tCisK
+K1JlcXVpcmVkIHByb3BlcnRpZXM6CistIGNvbXBhdGlibGU6IHNob3VsZCBiZSAibWFydmVsbCxi
+ZXJsaW4ycS1zYXRhLXBoeSIKKy0gI2FkZHJlc3MtY2VsbHM6IHNob3VsZCBiZSAxCistICNzaXpl
+LWNlbGxzOiBzaG91bGQgYmUgMAorLSAjcGh5LWNlbGxzOiBmcm9tIHRoZSBnZW5lcmljIFBIWSBi
+aW5kaW5ncywgbXVzdCBiZSAxCistIHJlZzogYWRkcmVzcyBhbmQgbGVuZ3RoIG9mIHRoZSByZWdp
+c3RlcgorLSBjbG9ja3M6IHJlZmVyZW5jZSB0byB0aGUgY2xvY2sgZW50cnkKKworU3ViLW5vZGVz
+OgorRWFjaCBQSFkgc2hvdWxkIGJlIHJlcHJlc2VudGVkIGFzIGEgc3ViLW5vZGUuCisKK1N1Yi1u
+b2RlcyByZXF1aXJlZCBwcm9wZXJ0aWVzOgorLSByZWc6IHRoZSBQSFkgbnVtYmVyCisKK0V4YW1w
+bGU6CisJc2F0YV9waHk6IHBoeUBmN2U5MDBhMCB7CisJCWNvbXBhdGlibGUgPSAibWFydmVsbCxi
+ZXJsaW4ycS1zYXRhLXBoeSI7CisJCXJlZyA9IDwweGY3ZTkwMGEwIDB4MjAwPjsKKwkJY2xvY2tz
+ID0gPCZjaGlwIENMS0lEX1NBVEE+OworCQkjYWRkcmVzcy1jZWxscyA9IDwxPjsKKwkJI3NpemUt
+Y2VsbHMgPSA8MD47CisJCSNwaHktY2VsbHMgPSA8MT47CisKKwkJc2F0YS1waHlAMCB7CisJCQly
+ZWcgPSA8MD47CisJCX07CisKKwkJc2F0YS1waHlAMSB7CisJCQlyZWcgPSA8MT47CisJCX07CisJ
+fTsKLS0gCjEuOS4xCgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0
+cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGlu
+Zm8vbGludXgtYXJtLWtlcm5lbAo=
