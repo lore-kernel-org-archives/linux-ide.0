@@ -1,54 +1,107 @@
-From: Crashplan Pro <linux-ide@crashplan.pro>
-Subject: Marvell 88SE9130 hardware limited feature: PMP only 5 drives on 1
- port maximum?
-Date: Thu, 24 Jul 2014 03:44:52 +0200
-Message-ID: <53D06514.7030603@crashplan.pro>
+From: =?UTF-8?q?Antoine=20T=C3=A9nart?=
+	<antoine.tenart@free-electrons.com>
+Subject: [PATCH v11 0/8] ARM: berlin: add AHCI support
+Date: Thu, 24 Jul 2014 11:17:22 +0200
+Message-ID: <1406193450-17283-1-git-send-email-antoine.tenart@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay6-d.mail.gandi.net ([217.70.183.198]:57490 "EHLO
-	relay6-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756903AbaGXBoz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Jul 2014 21:44:55 -0400
-Received: from mfilter22-d.gandi.net (mfilter22-d.gandi.net [217.70.178.150])
-	by relay6-d.mail.gandi.net (Postfix) with ESMTP id C3C98FB89E
-	for <linux-ide@vger.kernel.org>; Thu, 24 Jul 2014 03:44:53 +0200 (CEST)
-Received: from relay6-d.mail.gandi.net ([217.70.183.198])
-	by mfilter22-d.gandi.net (mfilter22-d.gandi.net [10.0.15.180]) (amavisd-new, port 10024)
-	with ESMTP id 7f80-5AtmbR2 for <linux-ide@vger.kernel.org>;
-	Thu, 24 Jul 2014 03:44:52 +0200 (CEST)
-Received: from mac02.local (82-169-106-120.ip.telfort.nl [82.169.106.120])
-	(Authenticated sender: linux-ide@crashplan.pro)
-	by relay6-d.mail.gandi.net (Postfix) with ESMTPSA id 5CA22FB88B
-	for <linux-ide@vger.kernel.org>; Thu, 24 Jul 2014 03:44:52 +0200 (CEST)
+Received: from top.free-electrons.com ([176.31.233.9]:46457 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750831AbaGXJRe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Jul 2014 05:17:34 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: sebastian.hesselbarth@gmail.com, tj@kernel.org, kishon@ti.com
+Cc: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On https://ata.wiki.kernel.org/index.php/SATA_hardware_features I read 
-that HBA's based on Marvell 88SE9130 chip support PMP technology.
+Changes since v10:
+	- made a 1:1 relation between PHYs and ports numbers
+	- added a SoC specific compatible when using 'generic-ahci'
 
-The Marvell product brief for 88SE9130 also writes that this controller 
-has support port multiplier technology and that this host controller 
-supports two 6 Gb/s SATA peripheral interface ports.
+Changes since v9:
+        - moved port_map parameters into the AHCI structure
 
-Using a SilverStone EC05 (Marvell 88SE9130 chipset) connecting to 2 
-Sil3726 based port multipliers each connecting to 5 Hitachi drives, 
-results in a maximum of 5 SATA drives being detected by Ubuntu 64-bit 
-kernel version 3.13.0-24-generic.
+Changes since v8:
+        - stopped reset the controller from the PHY driver
+        - removed fixed array sizes
+        - got rid of the custom to_berlin_sata_phy_priv() macro
+        - added dependency to HAS_IOMEM
 
-* When attaching PM#1 to EC05 SATA port#1, and PM#2 to EC05 SATA port
-   #2, the 5 drives on PM#1 are detected by the kernel.
-* When attaching PM#1 to EC05 SATA port#2, and PM#2 to EC05 SATA port
-   #1, the 5 drives on PM#1 are detected by the kernel.
-* When attaching PM#2 to EC05 SATA port#2, and disconnecting EC05 SATA
-   port #1, the 5 drives on PM#2 are detected by the kernel.
-   (so PM#2 is not defect)
+Changes since v7:
+        - got back to the each PHY as a sub-node representation
+        - renamed the power bit in the PHY driver
 
-Is this 5 drive limit more likely:
-a.) a limitation in Marvell 88SE9130 hardware
-or
-b.) a Linux kernel with room for improvement
+Changes since v6:
+        - added the 'clocks' property and support in the PHY driver
+        - updated the PHY compatible
 
-Thanks for ideas,
+Changes since v5:
+        - rebased on top of v3.16-rc1
+        - added the 'clocks' property in the sata node
+
+Changes since v4:
+        - updated PHY driver as tristate
+        - handled the case were no SATA port is enabled
+        - updated the compatible to a generic one
+        - cosmetic fixups
+
+Changes since v3:
+        - moved all PHY operations to the PHY driver
+        - removed PHY sub-nodes
+        - removed the custom Berlin AHCI driver and switched to
+          ahci_platform
+        - added multiple PHYs support to the libahci_platform
+
+Changes since v2:
+        - modeled each PHY as a sub-node
+        - cosmetic fixups
+
+Changes since v1:
+        - added a PHY driver, allowing to enable each port
+          individually and removed the 'force-port-map' property
+        - made the drivers a bit less magic :)
+        - wrote a function to select and configure registers in the
+          AHCI driver
+        - removed BG2 / BG2CD nodes
+
+Antoine T=C3=A9nart (8):
+  phy: add a driver for the Berlin SATA PHY
+  Documentation: bindings: add the Berlin SATA PHY
+  ata: libahci_platform: move port_map parameters into the AHCI
+    structure
+  ata: libahci: allow to use multiple PHYs
+  ata: ahci_platform: add a generic AHCI compatible
+  Documentation: bindings: document the sub-nodes AHCI bindings
+  ARM: berlin: add the AHCI node for the BG2Q
+  ARM: berlin: enable the eSATA interface on the BG2Q DMP
+
+ .../devicetree/bindings/ata/ahci-platform.txt      |  41 +++
+ .../devicetree/bindings/phy/berlin-sata-phy.txt    |  34 +++
+ arch/arm/boot/dts/berlin2q-marvell-dmp.dts         |   8 +
+ arch/arm/boot/dts/berlin2q.dtsi                    |  39 +++
+ drivers/ata/ahci.h                                 |  13 +-
+ drivers/ata/ahci_da850.c                           |   3 +-
+ drivers/ata/ahci_imx.c                             |   3 +-
+ drivers/ata/ahci_mvebu.c                           |   3 +-
+ drivers/ata/ahci_platform.c                        |   5 +-
+ drivers/ata/ahci_st.c                              |   2 +-
+ drivers/ata/ahci_sunxi.c                           |   2 +-
+ drivers/ata/ahci_xgene.c                           |   2 +-
+ drivers/ata/libahci.c                              |  17 +-
+ drivers/ata/libahci_platform.c                     | 198 ++++++++++---=
+-
+ drivers/phy/Kconfig                                |   7 +
+ drivers/phy/Makefile                               |   1 +
+ drivers/phy/phy-berlin-sata.c                      | 284 +++++++++++++=
+++++++++
+ include/linux/ahci_platform.h                      |   4 +-
+ 18 files changed, 593 insertions(+), 73 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/phy/berlin-sata-p=
+hy.txt
+ create mode 100644 drivers/phy/phy-berlin-sata.c
+
+--=20
+1.9.1
+
