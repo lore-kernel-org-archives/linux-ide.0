@@ -1,33 +1,83 @@
-From: Jesse Brandeburg <jesse.brandeburg@gmail.com>
-Subject: Re: [PATCH 2/2] libata: Fix NULL pointer of scsi_host in ata_port
-Date: Thu, 24 Jul 2014 15:29:02 -0700
-Message-ID: <CAEuXFEyzdciiMKTFcMCkLtDgYHDOWY2XnMXnyMkFwG9cAVvK6Q@mail.gmail.com>
-References: <1406040688-1762-1-git-send-email-qiudayu@linux.vnet.ibm.com>
-	<53CE7C29.6050908@linux.vnet.ibm.com>
-	<CAEuXFExJAq5hpYe8R_De7hOtGN1Jrx6HCQt0tQBAKnDTKEpaBA@mail.gmail.com>
-	<20140722201109.GN13851@htj.dyndns.org>
-	<53CF7A73.8010402@ozlabs.ru>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH 1/2] libata: Fix scsi_host can_queue issue in ata_qc_new()
+Date: Fri, 25 Jul 2014 10:01:17 -0700
+Message-ID: <CAPcyv4gu6h1MOKG8xCrcCn+Bj5JyMqPUBf5wsmKWFaLjR0mq=Q@mail.gmail.com>
+References: <1406040619-1722-1-git-send-email-qiudayu@linux.vnet.ibm.com>
+	<20140722154244.GJ13851@htj.dyndns.org>
+	<53CF199E.2020108@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f53.google.com ([209.85.216.53]:33508 "EHLO
-	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750832AbaGXW3E (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Jul 2014 18:29:04 -0400
-In-Reply-To: <53CF7A73.8010402@ozlabs.ru>
+Received: from mail-ie0-f173.google.com ([209.85.223.173]:54843 "EHLO
+	mail-ie0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934323AbaGYRBS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 Jul 2014 13:01:18 -0400
+Received: by mail-ie0-f173.google.com with SMTP id tr6so4014725ieb.32
+        for <linux-ide@vger.kernel.org>; Fri, 25 Jul 2014 10:01:17 -0700 (PDT)
+In-Reply-To: <53CF199E.2020108@linux.vnet.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexey Kardashevskiy <aik@ozlabs.ru>
-Cc: Tejun Heo <tj@kernel.org>, Mike Qiu <qiudayu@linux.vnet.ibm.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, wenxiong@linux.vnet.ibm.com, brking@linux.vnet.ibm.com, zhenghch@cn.ibm.com, haokexin@gmail.com
+To: Mike Qiu <qiudayu@linux.vnet.ibm.com>
+Cc: Tejun Heo <tj@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Kevin Hao <haokexin@gmail.com>
 
-On Wed, Jul 23, 2014 at 2:03 AM, Alexey Kardashevskiy <aik@ozlabs.ru> wrote:
-> On 07/23/2014 06:11 AM, Tejun Heo wrote:
+On Tue, Jul 22, 2014 at 7:10 PM, Mike Qiu <qiudayu@linux.vnet.ibm.com> wrote:
+> On 07/22/2014 11:42 PM, Tejun Heo wrote:
+>>
 >> Hello,
 >>
->> Can you please test the following patch?
+>> (cc'ing Dan)
+>>
+>> On Tue, Jul 22, 2014 at 10:50:19AM -0400, Mike Qiu wrote:
+>>>
+>>> The can_queue in scsi_host can be more than ATA_MAX_QUEUE (32),
+>>> for example, in ipr, it can be 100 or more.
+>>>
+>>> Also, some drivers, like ipr driver, haven't filled the field
+>>> scsi_host in ata_port, and will lead a call trace, so add
+>>> check for that.
+>>>
+>>> Signed-off-by: Mike Qiu <qiudayu@linux.vnet.ibm.com>
+>>> ---
+>>>   drivers/ata/libata-core.c | 15 ++++-----------
+>>>   1 file changed, 4 insertions(+), 11 deletions(-)
+>>>
+>>> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+>>> index 259d879..a5b9c70 100644
+>>> --- a/drivers/ata/libata-core.c
+>>> +++ b/drivers/ata/libata-core.c
+>>> @@ -4734,7 +4734,10 @@ static struct ata_queued_cmd *ata_qc_new(struct
+>>> ata_port *ap)
+>>>         struct ata_queued_cmd *qc = NULL;
+>>>         unsigned int i, tag, max_queue;
+>>>   -     max_queue = ap->scsi_host->can_queue;
+>>> +       if (ap->scsi_host && ap->scsi_host->can_queue <= ATA_MAX_QUEUE)
+>>> +               max_queue = ap->scsi_host->can_queue;
+>>> +       else
+>>> +               max_queue = ATA_MAX_QUEUE;
+>>>         /* no command while frozen */
+>>>         if (unlikely(ap->pflags & ATA_PFLAG_FROZEN))
+>>> @@ -6109,16 +6112,6 @@ int ata_host_register(struct ata_host *host,
+>>> struct scsi_host_template *sht)
+>>>   {
+>>>         int i, rc;
+>>>   -     /*
+>>> -        * The max queue supported by hardware must not be greater than
+>>> -        * ATA_MAX_QUEUE.
+>>> -        */
+>>> -       if (sht->can_queue > ATA_MAX_QUEUE) {
+>>> -               dev_err(host->dev, "BUG: the hardware max queue is too
+>>> large\n");
+>>> -               WARN_ON(1);
+>>> -               return -EINVAL;
+>>> -       }
+>>> -
+>>
+>> So, ummm, I really don't like that we're adding the conditionals to
+>> the hot path (yeah, its implementation is slow but still).  Maybe we
 >
-> Tested-by: Alexey Kardashevskiy <aik@ozlabs.ru>
 >
-> on POWER8 + IBM IPR SCSI.
+> Yes, agree ..., not a good idea to do this...
+>
 
-FWIW, I tested Linus's current git tree and the issue is fixed. Thanks!
+...also, seems incomplete given ata_port.qcmd[] is still limited to
+ATA_MAX_QUEUE.
