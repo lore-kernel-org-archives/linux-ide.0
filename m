@@ -1,120 +1,373 @@
-From: Tim Small <tim@seoss.co.uk>
-Subject: sata_sil24 - Silicon Image 3124 cards lock-up machine with 3.16-rc6
- (work with 3.2), MSI works with neither kernel
-Date: Sat, 26 Jul 2014 16:33:50 +0100
-Message-ID: <53D3CA5E.7090807@seoss.co.uk>
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: Re: [PATCH v11 4/8] ata: libahci: allow to use multiple PHYs
+Date: Mon, 28 Jul 2014 12:29:56 +0200
+Message-ID: <53D62624.6070502@redhat.com>
+References: <1406193450-17283-1-git-send-email-antoine.tenart@free-electrons.com> <1406193450-17283-5-git-send-email-antoine.tenart@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay1.allsecuredomains.com ([78.47.234.210]:43462 "EHLO
-	relay1.allsecuredomains.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751434AbaGZP7g (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 26 Jul 2014 11:59:36 -0400
-Received: from [81.174.144.187] (helo=[172.19.198.5])
-	by relay1.allsecuredomains.com with esmtpsa (TLS1.0:DHE_RSA_AES_128_CBC_SHA1:128)
-	(Exim 4.80)
-	(envelope-from <tim@seoss.co.uk>)
-	id 1XB3yo-0005TA-FT
-	for linux-ide@vger.kernel.org; Sat, 26 Jul 2014 16:33:50 +0100
+Received: from mx1.redhat.com ([209.132.183.28]:35453 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752056AbaG1Kam (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 28 Jul 2014 06:30:42 -0400
+In-Reply-To: <1406193450-17283-5-git-send-email-antoine.tenart@free-electrons.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: =?UTF-8?B?QW50b2luZSBUw6luYXJ0?= <antoine.tenart@free-electrons.com>, sebastian.hesselbarth@gmail.com, tj@kernel.org, kishon@ti.com
+Cc: alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 
-I've not got too far debugging this, but thought I'd post here in case
-anyone had any bright ideas...
+Hi,
 
-I have a single box with multiple drives and controller cards - it's
-Intel Sandy Bridge based with a Gigabyte GA-PH67-UD3-B3 motherboard.
+Thanks, this version is almost perfect, unfortunately a second review
+has found one small issue in it, see inline comment below.
 
-The problem has appeared with the Syba/IOCrest "PEX40008" Silicon Image
-3124 cards - these are a slightly unusual card with the PCI-X SiI3124
-chip sitting behind a PCI Express (single lane PCIe 1.0) to PCI-X bridge.
+On 07/24/2014 11:17 AM, Antoine T=C3=A9nart wrote:
+> The current implementation of the libahci does not allow to use multi=
+ple
+> PHYs. This patch adds the support of multiple PHYs by the libahci whi=
+le
+> keeping the old bindings valid for device tree compatibility.
+>=20
+> This introduce a new way of defining SATA ports in the device tree, w=
+ith
+> one port per sub-node. This as the advantage of allowing a per port
+> configuration. Because some ports may be accessible but disabled in t=
+he
+> device tree, the port_map mask is computed automatically when using
+> this.
+>=20
+> Signed-off-by: Antoine T=C3=A9nart <antoine.tenart@free-electrons.com=
+>
+> ---
+>  drivers/ata/ahci.h             |   7 +-
+>  drivers/ata/libahci_platform.c | 190 +++++++++++++++++++++++++++++++=
++---------
+>  2 files changed, 157 insertions(+), 40 deletions(-)
+>=20
+> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+> index cb8d58926851..47de53284ad7 100644
+> --- a/drivers/ata/ahci.h
+> +++ b/drivers/ata/ahci.h
+> @@ -332,7 +332,12 @@ struct ahci_host_priv {
+>  	bool			got_runtime_pm; /* Did we do pm_runtime_get? */
+>  	struct clk		*clks[AHCI_MAX_CLKS]; /* Optional */
+>  	struct regulator	*target_pwr;	/* Optional */
+> -	struct phy		*phy;		/* If platform uses phy */
+> +	/*
+> +	 * If platform uses PHYs. There is a 1:1 relation between the port =
+number and
+> +	 * the PHY position in this array.
+> +	 */
+> +	struct phy		**phys;
+> +	unsigned		nports;		/* Number of ports */
+>  	void			*plat_data;	/* Other platform data */
+>  	/*
+>  	 * Optional ahci_start_engine override, if not set this gets set to=
+ the
+> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_pla=
+tform.c
+> index db9b90d876dd..095df56432d9 100644
+> --- a/drivers/ata/libahci_platform.c
+> +++ b/drivers/ata/libahci_platform.c
+> @@ -39,6 +39,67 @@ static struct scsi_host_template ahci_platform_sht=
+ =3D {
+>  };
+> =20
+>  /**
+> + * ahci_platform_enable_phys - Enable PHYs
+> + * @hpriv: host private area to store config values
+> + *
+> + * This function enables all the PHYs found in hpriv->phys, if any.
+> + * If a PHY fails to be enabled, it disables all the PHYs already
+> + * enabled in reverse order and returns an error.
+> + *
+> + * RETURNS:
+> + * 0 on success otherwise a negative error code
+> + */
+> +int ahci_platform_enable_phys(struct ahci_host_priv *hpriv)
+> +{
+> +	int rc, i;
+> +
+> +	for (i =3D 0; i < hpriv->nports; i++) {
+> +		if (!hpriv->phys[i])
+> +			continue;
+> +
+> +		rc =3D phy_init(hpriv->phys[i]);
+> +		if (rc)
+> +			goto disable_phys;
+> +
+> +		rc =3D phy_power_on(hpriv->phys[i]);
+> +		if (rc) {
+> +			phy_exit(hpriv->phys[i]);
+> +			goto disable_phys;
+> +		}
+> +	}
+> +
+> +	return 0;
+> +
+> +disable_phys:
+> +	while (--i >=3D 0) {
+> +		phy_power_off(hpriv->phys[i]);
+> +		phy_exit(hpriv->phys[i]);
+> +	}
+> +	return rc;
+> +}
+> +EXPORT_SYMBOL_GPL(ahci_platform_enable_phys);
+> +
+> +/**
+> + * ahci_platform_disable_phys - Enable PHYs
+> + * @hpriv: host private area to store config values
+> + *
+> + * This function disables all PHYs found in hpriv->phys.
+> + */
+> +void ahci_platform_disable_phys(struct ahci_host_priv *hpriv)
+> +{
+> +	int i;
+> +
+> +	for (i =3D 0; i < hpriv->nports; i++) {
+> +		if (!hpriv->phys[i])
+> +			continue;
+> +
+> +		phy_power_off(hpriv->phys[i]);
+> +		phy_exit(hpriv->phys[i]);
+> +	}
+> +}
+> +EXPORT_SYMBOL_GPL(ahci_platform_disable_phys);
+> +
+> +/**
+>   * ahci_platform_enable_clks - Enable platform clocks
+>   * @hpriv: host private area to store config values
+>   *
+> @@ -92,7 +153,7 @@ EXPORT_SYMBOL_GPL(ahci_platform_disable_clks);
+>   * following order:
+>   * 1) Regulator
+>   * 2) Clocks (through ahci_platform_enable_clks)
+> - * 3) Phy
+> + * 3) Phys
+>   *
+>   * If resource enabling fails at any point the previous enabled reso=
+urces
+>   * are disabled in reverse order.
+> @@ -114,17 +175,9 @@ int ahci_platform_enable_resources(struct ahci_h=
+ost_priv *hpriv)
+>  	if (rc)
+>  		goto disable_regulator;
+> =20
+> -	if (hpriv->phy) {
+> -		rc =3D phy_init(hpriv->phy);
+> -		if (rc)
+> -			goto disable_clks;
+> -
+> -		rc =3D phy_power_on(hpriv->phy);
+> -		if (rc) {
+> -			phy_exit(hpriv->phy);
+> -			goto disable_clks;
+> -		}
+> -	}
+> +	rc =3D ahci_platform_enable_phys(hpriv);
+> +	if (rc)
+> +		goto disable_clks;
+> =20
+>  	return 0;
+> =20
+> @@ -144,16 +197,13 @@ EXPORT_SYMBOL_GPL(ahci_platform_enable_resource=
+s);
+>   *
+>   * This function disables all ahci_platform managed resources in the
+>   * following order:
+> - * 1) Phy
+> + * 1) Phys
+>   * 2) Clocks (through ahci_platform_disable_clks)
+>   * 3) Regulator
+>   */
+>  void ahci_platform_disable_resources(struct ahci_host_priv *hpriv)
+>  {
+> -	if (hpriv->phy) {
+> -		phy_power_off(hpriv->phy);
+> -		phy_exit(hpriv->phy);
+> -	}
+> +	ahci_platform_disable_phys(hpriv);
+> =20
+>  	ahci_platform_disable_clks(hpriv);
+> =20
+> @@ -187,7 +237,7 @@ static void ahci_platform_put_resources(struct de=
+vice *dev, void *res)
+>   * 2) regulator for controlling the targets power (optional)
+>   * 3) 0 - AHCI_MAX_CLKS clocks, as specified in the devs devicetree =
+node,
+>   *    or for non devicetree enabled platforms a single clock
+> - *	4) phy (optional)
+> + *	4) phys (optional)
+>   *
+>   * RETURNS:
+>   * The allocated ahci_host_priv on success, otherwise an ERR_PTR val=
+ue
+> @@ -197,7 +247,9 @@ struct ahci_host_priv *ahci_platform_get_resource=
+s(struct platform_device *pdev)
+>  	struct device *dev =3D &pdev->dev;
+>  	struct ahci_host_priv *hpriv;
+>  	struct clk *clk;
+> -	int i, rc =3D -ENOMEM;
+> +	struct device_node *child;
+> +	int i, enabled_ports =3D 0, rc =3D -ENOMEM;
+> +	u32 mask_port_map =3D 0;
+> =20
+>  	if (!devres_open_group(dev, NULL, GFP_KERNEL))
+>  		return ERR_PTR(-ENOMEM);
+> @@ -246,27 +298,87 @@ struct ahci_host_priv *ahci_platform_get_resour=
+ces(struct platform_device *pdev)
+>  		hpriv->clks[i] =3D clk;
+>  	}
+> =20
+> -	hpriv->phy =3D devm_phy_get(dev, "sata-phy");
+> -	if (IS_ERR(hpriv->phy)) {
+> -		rc =3D PTR_ERR(hpriv->phy);
+> -		switch (rc) {
+> -		case -ENOSYS:
+> -			/* No PHY support. Check if PHY is required. */
+> -			if (of_find_property(dev->of_node, "phys", NULL)) {
+> -				dev_err(dev, "couldn't get sata-phy: ENOSYS\n");
+> +	hpriv->nports =3D of_get_child_count(dev->of_node);
+> +
+> +	if (hpriv->nports) {
+> +		hpriv->phys =3D devm_kzalloc(dev,
+> +					   hpriv->nports * sizeof(*hpriv->phys),
+> +					   GFP_KERNEL);
+> +		if (!hpriv->phys) {
+> +			rc =3D -ENOMEM;
+> +			goto err_out;
+> +		}
+> +
+> +		for_each_child_of_node(dev->of_node, child) {
+> +			u32 port;
+> +
+> +			if (!of_device_is_available(child))
+> +				continue;
+> +
+> +			if (of_property_read_u32(child, "reg", &port)) {
+> +				rc =3D -EINVAL;
+>  				goto err_out;
+>  			}
+> -		case -ENODEV:
+> -			/* continue normally */
+> -			hpriv->phy =3D NULL;
+> -			break;
+> =20
+> -		case -EPROBE_DEFER:
+> -			goto err_out;
+> +			if (port >=3D hpriv->nports) {
+> +				dev_warn(dev, "invalid port number %d\n", port);
+> +				continue;
+> +			}
+> =20
+> -		default:
+> -			dev_err(dev, "couldn't get sata-phy\n");
+> -			goto err_out;
+> +			mask_port_map |=3D BIT(port);
+> +
+> +			hpriv->phys[port] =3D devm_of_phy_get(dev, child, NULL);
+> +			if (IS_ERR(hpriv->phys[port])) {
+> +				rc =3D PTR_ERR(hpriv->phys[port]);
+> +				dev_err(dev,
+> +					"couldn't get PHY in node %s: %d\n",
+> +					child->name, rc);
+> +				goto err_out;
+> +			}
+> +
+> +			enabled_ports++;
+> +		}
+> +		if (!enabled_ports) {
+> +			dev_warn(dev, "No port enabled\n");
+> +			return ERR_PTR(-ENODEV);
 
-01:00.0 PCI bridge: Pericom Semiconductor Device e111 (rev
-02)                                                                                                                                            
+This should be:
+			rc =3D -ENODEV;
+			goto err_out;
 
-02:04.0 Mass storage controller: Silicon Image, Inc. SiI 3124 PCI-X
-Serial ATA Controller (rev 02)
+Sorry for not catching that sooner.
 
-apparently identical to this one:
+Other then that the entire series looks good and is:
 
-http://www.ebay.com/itm/171387103100
+Acked-by: Hans de Goede <hdegoede@redhat.com>
 
 
-Under heavy I/O (e.g. raid rebuild, or multiple 'dd'), after a few
-minutes the box locks up, normally with messages like:
+Regards,
 
-sata_sil24 0000:02:04.0: IRQ status == 0xffffffff, PCI fault or device removal?
+Hans
 
-(ref my recent patch to identify which card gets the IRQ status error
-message).
 
-The issue appears with multiple cards bought at different times from
-different vendors.
-
-I can't get this lock-up to occur with the 3124 cards on the 3.2 kernel.
-
-If I move all the active disks to Silicon Image 3132 based controllers
-instead, I don't see the lock-up on either 3.2 or 3.16-rc6
-
-I'm currently testing using a single 3124 PCI card behind a different
-PCIe to PCI bridge chip (an ITE 8892 on the motherboard) and haven't had
-any lockups after a couple of hours, but this controller is limited to
-about 75 MB/sec throughput, due to being on a 33MHz PCI bus (limitation
-of the ITE 8892 bridge chip), whereas the PEX40008 cards get circa 200
-MB/sec throughput (limited by a single PCIe slot running at PCIe 1.0
-speeds).
-
-/proc/interrupts [excerpt below] on this box shows shared IRQs to the
-Silicon Image cards:
-
- 16:    4053039          0 IO-APIC-fasteoi   sata_sil24, sata_sil24
- 18:         82     573633 IO-APIC-fasteoi   sata_sil24, ehci_hcd:usb1,
-i801_smbus
- 19:        114    5553654 IO-APIC-fasteoi   sata_sil24, sata_sil24 
- 23:         37          0 IO-APIC-fasteoi   ehci_hcd:usb2
- 41:     184317          0 PCI-MSI-edge      eth0 
- 42:     184364          0 PCI-MSI-edge      ahci 
- 43:          3    3489756 PCI-MSI-edge      ahci 
- 44:         12          0 PCI-MSI-edge      mei_me
- 45:        422          0 PCI-MSI-edge      snd_hda_intel
-
-... and seeing as the fault seems to be IRQ related, I thought I'd use
-the "msi=1" parameter to the sata_sil24 driver to try and enable message
-signalled interrupts, but I didn't have any luck on this -
-
-The 3132 cards enumerate drives correctly and receive a few hundred or a
-few thousand interrupts (e.g. 2050 on one card, ans 2041 to the other in
-the test I just ran), and thereafter don't get any further interrupts,
-causing subsequent I/O to fail:
-
-~# hdparm -t /dev/sdi
-
-/dev/sdi:
- Timing buffered disk reads: read(2097152) returned 131072 bytes
-
-... whereas the 3124 cards don't receive any interrupts at all (all
-counts zero in /proc/interrupts).
-
-MSI is already in use and working fine for the Intel H67 AHCI
-controller, and also an ASMedia ASM1062 based PCIe card in the same machine.
-
-Same MSI failure on both the 3.2 and 3.16rc6 kernels on this box.
-
-Unfortunately, my opportunities to debug on this box are a bit limited
-due to pressure to keep it in service, but I have a couple of 3124 and
-3132 cards that I can borrow from the machine in question and elsewhere,
-and put into another box to test.
-
-Any suggestions for things which would throw more light on the matter (I
-know that using git bisect is a possibility)?
-
-Tim.
-
--- 
-South East Open Source Solutions Limited
-Registered in England and Wales with company number 06134732.  
-Registered Office: 2 Powell Gardens, Redhill, Surrey, RH1 1TQ
-VAT number: 900 6633 53  http://seoss.co.uk/ +44-(0)1273-808309
-
+> +		}
+> +
+> +		if (!hpriv->mask_port_map)
+> +			hpriv->mask_port_map =3D mask_port_map;
+> +	} else {
+> +		/*
+> +		 * If no sub-node was found, keep this for device tree
+> +		 * compatibility
+> +		 */
+> +		struct phy *phy =3D devm_phy_get(dev, "sata-phy");
+> +		if (!IS_ERR(phy)) {
+> +			hpriv->phys =3D devm_kzalloc(dev, sizeof(*hpriv->phys),
+> +						   GFP_KERNEL);
+> +			if (!hpriv->phys) {
+> +				rc =3D -ENOMEM;
+> +				goto err_out;
+> +			}
+> +
+> +			hpriv->phys[0] =3D phy;
+> +			hpriv->nports =3D 1;
+> +		} else {
+> +			rc =3D PTR_ERR(phy);
+> +			switch (rc) {
+> +				case -ENOSYS:
+> +					/* No PHY support. Check if PHY is required. */
+> +					if (of_find_property(dev->of_node, "phys", NULL)) {
+> +						dev_err(dev, "couldn't get sata-phy: ENOSYS\n");
+> +						goto err_out;
+> +					}
+> +				case -ENODEV:
+> +					/* continue normally */
+> +					hpriv->phys =3D NULL;
+> +					break;
+> +
+> +				default:
+> +					goto err_out;
+> +
+> +			}
+>  		}
+>  	}
+> =20
+> @@ -291,7 +403,7 @@ EXPORT_SYMBOL_GPL(ahci_platform_get_resources);
+>   * @host_flags: ahci host flags used in ahci_host_priv
+>   *
+>   * This function does all the usual steps needed to bring up an
+> - * ahci-platform host, note any necessary resources (ie clks, phy, e=
+tc.)
+> + * ahci-platform host, note any necessary resources (ie clks, phys, =
+etc.)
+>   * must be initialized / enabled before calling this.
+>   *
+>   * RETURNS:
+> @@ -395,7 +507,7 @@ static void ahci_host_stop(struct ata_host *host)
+>   * @dev: device pointer for the host
+>   *
+>   * This function does all the usual steps needed to suspend an
+> - * ahci-platform host, note any necessary resources (ie clks, phy, e=
+tc.)
+> + * ahci-platform host, note any necessary resources (ie clks, phys, =
+etc.)
+>   * must be disabled after calling this.
+>   *
+>   * RETURNS:
+> @@ -432,7 +544,7 @@ EXPORT_SYMBOL_GPL(ahci_platform_suspend_host);
+>   * @dev: device pointer for the host
+>   *
+>   * This function does all the usual steps needed to resume an ahci-p=
+latform
+> - * host, note any necessary resources (ie clks, phy, etc.)  must be
+> + * host, note any necessary resources (ie clks, phys, etc.)  must be
+>   * initialized / enabled before calling this.
+>   *
+>   * RETURNS:
+>=20
