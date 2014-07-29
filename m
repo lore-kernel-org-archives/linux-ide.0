@@ -1,37 +1,47 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v4 2/4] arm64: Remove the clock and PHY reference from the APM X-Gene SoC AHCI SATA Host controller dts node.
-Date: Tue, 29 Jul 2014 11:23:56 +0200
-Message-ID: <4479076.DG8ITD3De2@wuerfel>
-References: <1406616892-30273-1-git-send-email-stripathi@apm.com> <1406616892-30273-3-git-send-email-stripathi@apm.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v4 0/4]ata: Fixes related to APM X-Gene SATA host
+ controller driver.
+Date: Tue, 29 Jul 2014 10:26:48 -0400
+Message-ID: <20140729142648.GA4791@htj.dyndns.org>
+References: <1406616892-30273-1-git-send-email-stripathi@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:62375 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753013AbaG2JYI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jul 2014 05:24:08 -0400
-In-Reply-To: <1406616892-30273-3-git-send-email-stripathi@apm.com>
+Received: from mail-qa0-f43.google.com ([209.85.216.43]:41854 "EHLO
+	mail-qa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752101AbaG2O0x (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jul 2014 10:26:53 -0400
+Content-Disposition: inline
+In-Reply-To: <1406616892-30273-1-git-send-email-stripathi@apm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Suman Tripathi <stripathi@apm.com>
-Cc: olof@lixom.net, tj@kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>
+Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>
 
-On Tuesday 29 July 2014 12:24:50 Suman Tripathi wrote:
-> This patch removes all clocks and PHY references from the APM X-Gene
-> SoC AHCI SATA host controller and PHY DTS nodes. The clock and PHY
-> are no longer needed as they are handled by the firmware. By removing
-> only the reference is not enough as any un-used clock entry will get
-> disabled by the clock framework.
+On Tue, Jul 29, 2014 at 12:24:48PM +0530, Suman Tripathi wrote:
+> This patch set contains a couple of fixes related to APM X-Gene SATA
+> controller driver.
+> 
+> v2 Change:
+>    1. Drop the Link down retry patch from this patch set.
+> 
+> v4 Change:
+>    1. Drop the patch to fix the csr-mask in dts for PHY clock
+>      node of SATA Host Controller 1.
+>    2. Add the patch to correct the OOB tunning parameters for
+>      the COMINIT/COMWAKE parameters.
+>    3. Add the patch to remove the NCQ support from the APM
+>      X-Gene AHCI SATA Host controller driver.
+>    4. Add the patch to remove the clock and PHY reference nodes
+>      from the APM X-Gene Host controller dts node.
 > 
 > Signed-off-by: Loc Ho <lho@apm.com>
 > Signed-off-by: Suman Tripathi <stripathi@apm.com>
-> 
 
-This will break booting on older firmware versions I guess, and
-it does not confirm to the binding that lists the phy and clock
-properties as "required".
+Applied 1 and 3 to libata/for-3.17.  4 doesn't apply.  Also, please
+prefix the patches with "ahci_xgene: " from now on.
 
-It doesn't sound like a good idea to apply it.
+Thanks.
 
-	Arnd
+-- 
+tejun
