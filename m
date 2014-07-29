@@ -1,45 +1,51 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v11 4/8] ata: libahci: allow to use multiple PHYs
-Date: Mon, 28 Jul 2014 13:27:24 -0400
-Message-ID: <20140728172724.GA7462@htj.dyndns.org>
-References: <1406193450-17283-1-git-send-email-antoine.tenart@free-electrons.com>
- <1406193450-17283-5-git-send-email-antoine.tenart@free-electrons.com>
- <53D62624.6070502@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Suman Tripathi <stripathi@apm.com>
+Subject: [PATCH v4 0/4]ata: Fixes related to APM X-Gene SATA host controller driver.
+Date: Tue, 29 Jul 2014 12:24:48 +0530
+Message-ID: <1406616892-30273-1-git-send-email-stripathi@apm.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f54.google.com ([209.85.192.54]:47819 "EHLO
-	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750708AbaG1R13 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Jul 2014 13:27:29 -0400
-Content-Disposition: inline
-In-Reply-To: <53D62624.6070502@redhat.com>
+Received: from denmail01-v4020.amcc.com ([192.195.68.30]:52610 "EHLO
+	denmail01.apm.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752628AbaG2Gzt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jul 2014 02:55:49 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: Antoine =?iso-8859-1?Q?T=E9nart?= <antoine.tenart@free-electrons.com>, sebastian.hesselbarth@gmail.com, kishon@ti.com, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
 
-On Mon, Jul 28, 2014 at 12:29:56PM +0200, Hans de Goede wrote:
-...
-> > +		if (!enabled_ports) {
-> > +			dev_warn(dev, "No port enabled\n");
-> > +			return ERR_PTR(-ENODEV);
-> 
-> This should be:
-> 			rc = -ENODEV;
-> 			goto err_out;
-> 
-> Sorry for not catching that sooner.
-> 
-> Other then that the entire series looks good and is:
-> 
-> Acked-by: Hans de Goede <hdegoede@redhat.com>
+This patch set contains a couple of fixes related to APM X-Gene SATA
+controller driver.
 
-Antoine, can you please post an updated version of this patch?  No
-need to repost the whole series.  Also, how should the series be
-routed?
+v2 Change:
+   1. Drop the Link down retry patch from this patch set.
 
-Thanks.
+v4 Change:
+   1. Drop the patch to fix the csr-mask in dts for PHY clock
+     node of SATA Host Controller 1.
+   2. Add the patch to correct the OOB tunning parameters for
+     the COMINIT/COMWAKE parameters.
+   3. Add the patch to remove the NCQ support from the APM
+     X-Gene AHCI SATA Host controller driver.
+   4. Add the patch to remove the clock and PHY reference nodes
+     from the APM X-Gene Host controller dts node.
 
--- 
-tejun
+Signed-off-by: Loc Ho <lho@apm.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
+---
+
+Suman Tripathi (4):
+  ata: Fix the watermark threshold for the APM X-Gene SATA host
+    controller driver.
+  arm64: Remove the clock and PHY reference from the APM X-Gene SoC AHCI
+    SATA Host controller dts node.
+  ata: Use correct OOB tunning parameters for APM X-Gene SoC AHCI SATA
+    Host controller driver.
+  ata: Removing NCQ support from the APM X-Gene SoC AHCI SATA Host
+    Controller driver.
+
+ arch/arm64/boot/dts/apm-storm.dtsi | 92 --------------------------------------
+ drivers/ata/ahci_xgene.c           | 17 ++++---
+ 2 files changed, 12 insertions(+), 97 deletions(-)
+
+--
+1.8.2.1
+
