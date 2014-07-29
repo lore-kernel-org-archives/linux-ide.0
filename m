@@ -1,49 +1,56 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH v4 3/4] ata: Use correct OOB tunning parameters for APM X-Gene SoC AHCI SATA Host controller driver.
-Date: Tue, 29 Jul 2014 12:24:51 +0530
-Message-ID: <1406616892-30273-4-git-send-email-stripathi@apm.com>
-References: <1406616892-30273-1-git-send-email-stripathi@apm.com>
+From: Antoine =?iso-8859-1?Q?T=E9nart?=
+	<antoine.tenart@free-electrons.com>
+Subject: Re: [PATCH v11 4/8] ata: libahci: allow to use multiple PHYs
+Date: Tue, 29 Jul 2014 09:14:47 +0200
+Message-ID: <20140729071447.GA9410@kwain>
+References: <1406193450-17283-1-git-send-email-antoine.tenart@free-electrons.com>
+ <1406193450-17283-5-git-send-email-antoine.tenart@free-electrons.com>
+ <53D62624.6070502@redhat.com>
+ <20140728172724.GA7462@htj.dyndns.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from denmail01-v4020.amcc.com ([192.195.68.30]:52622 "EHLO
-	denmail01.apm.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752628AbaG2Gzy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jul 2014 02:55:54 -0400
-In-Reply-To: <1406616892-30273-1-git-send-email-stripathi@apm.com>
+Received: from top.free-electrons.com ([176.31.233.9]:44648 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751223AbaG2HOw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jul 2014 03:14:52 -0400
+Content-Disposition: inline
+In-Reply-To: <20140728172724.GA7462@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Hans de Goede <hdegoede@redhat.com>, Antoine =?iso-8859-1?Q?T=E9nart?= <antoine.tenart@free-electrons.com>, sebastian.hesselbarth@gmail.com, kishon@ti.com, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 
-APM X-Gene SoC AHCI SATA Host controller driver requires
-some correction of Phy Control OOB timing for the
-COMINIT/COMWAKE parameters to correctly interoperate with
-different kinds of disks.
+Hi,
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
----
- drivers/ata/ahci_xgene.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+On Mon, Jul 28, 2014 at 01:27:24PM -0400, Tejun Heo wrote:
+> On Mon, Jul 28, 2014 at 12:29:56PM +0200, Hans de Goede wrote:
+> ...
+> > > +		if (!enabled_ports) {
+> > > +			dev_warn(dev, "No port enabled\n");
+> > > +			return ERR_PTR(-ENODEV);
+> >=20
+> > This should be:
+> > 			rc =3D -ENODEV;
+> > 			goto err_out;
+> >=20
+> > Sorry for not catching that sooner.
+> >=20
+> > Other then that the entire series looks good and is:
+> >=20
+> > Acked-by: Hans de Goede <hdegoede@redhat.com>
+>=20
+> Antoine, can you please post an updated version of this patch?  No
+> need to repost the whole series.  Also, how should the series be
+> routed?
 
-diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-index 03b6b0f..1d48371 100644
---- a/drivers/ata/ahci_xgene.c
-+++ b/drivers/ata/ahci_xgene.c
-@@ -163,11 +163,11 @@ static void xgene_ahci_set_phy_cfg(struct xgene_ahci_context *ctx, int channel)
- 	/* Disable fix rate */
- 	writel(0x0001fffe, mmio + PORTPHY1CFG);
- 	readl(mmio + PORTPHY1CFG); /* Force a barrier */
--	writel(0x5018461c, mmio + PORTPHY2CFG);
-+	writel(0x28183219, mmio + PORTPHY2CFG);
- 	readl(mmio + PORTPHY2CFG); /* Force a barrier */
--	writel(0x1c081907, mmio + PORTPHY3CFG);
-+	writel(0x13081008, mmio + PORTPHY3CFG);
- 	readl(mmio + PORTPHY3CFG); /* Force a barrier */
--	writel(0x1c080815, mmio + PORTPHY4CFG);
-+	writel(0x00480815, mmio + PORTPHY4CFG);
- 	readl(mmio + PORTPHY4CFG); /* Force a barrier */
- 	/* Set window negotiation */
- 	val = readl(mmio + PORTPHY5CFG);
---
-1.8.2.1
+Sure, I'm doing this right away. Regarding the series, Kishon already
+took patches 1-2.
 
+Antoine
+
+--=20
+Antoine T=E9nart, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
