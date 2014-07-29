@@ -1,47 +1,44 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v4 0/4]ata: Fixes related to APM X-Gene SATA host
- controller driver.
-Date: Tue, 29 Jul 2014 10:26:48 -0400
-Message-ID: <20140729142648.GA4791@htj.dyndns.org>
-References: <1406616892-30273-1-git-send-email-stripathi@apm.com>
+Subject: Re: [PATCH v12 4/8] ata: libahci: allow to use multiple PHYs
+Date: Tue, 29 Jul 2014 10:34:38 -0400
+Message-ID: <20140729143438.GB4791@htj.dyndns.org>
+References: <1406618447-25499-1-git-send-email-antoine.tenart@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f43.google.com ([209.85.216.43]:41854 "EHLO
-	mail-qa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752101AbaG2O0x (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jul 2014 10:26:53 -0400
+Received: from mail-qg0-f50.google.com ([209.85.192.50]:47998 "EHLO
+	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753347AbaG2Oen (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Jul 2014 10:34:43 -0400
 Content-Disposition: inline
-In-Reply-To: <1406616892-30273-1-git-send-email-stripathi@apm.com>
+In-Reply-To: <1406618447-25499-1-git-send-email-antoine.tenart@free-electrons.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Suman Tripathi <stripathi@apm.com>
-Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>
+To: Antoine =?iso-8859-1?Q?T=E9nart?= <antoine.tenart@free-electrons.com>
+Cc: sebastian.hesselbarth@gmail.com, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Jul 29, 2014 at 12:24:48PM +0530, Suman Tripathi wrote:
-> This patch set contains a couple of fixes related to APM X-Gene SATA
-> controller driver.
-> 
-> v2 Change:
->    1. Drop the Link down retry patch from this patch set.
-> 
-> v4 Change:
->    1. Drop the patch to fix the csr-mask in dts for PHY clock
->      node of SATA Host Controller 1.
->    2. Add the patch to correct the OOB tunning parameters for
->      the COMINIT/COMWAKE parameters.
->    3. Add the patch to remove the NCQ support from the APM
->      X-Gene AHCI SATA Host controller driver.
->    4. Add the patch to remove the clock and PHY reference nodes
->      from the APM X-Gene Host controller dts node.
-> 
-> Signed-off-by: Loc Ho <lho@apm.com>
-> Signed-off-by: Suman Tripathi <stripathi@apm.com>
+On Tue, Jul 29, 2014 at 09:20:47AM +0200, Antoine T=E9nart wrote:
+> The current implementation of the libahci does not allow to use multi=
+ple
+> PHYs. This patch adds the support of multiple PHYs by the libahci whi=
+le
+> keeping the old bindings valid for device tree compatibility.
+>=20
+> This introduce a new way of defining SATA ports in the device tree, w=
+ith
+> one port per sub-node. This as the advantage of allowing a per port
+> configuration. Because some ports may be accessible but disabled in t=
+he
+> device tree, the port_map mask is computed automatically when using
+> this.
+>=20
+> Signed-off-by: Antoine T=E9nart <antoine.tenart@free-electrons.com>
+> Acked-by: Hans de Goede <hdegoede@redhat.com>
 
-Applied 1 and 3 to libata/for-3.17.  4 doesn't apply.  Also, please
-prefix the patches with "ahci_xgene: " from now on.
+Patch doesn't apply to libata/for-3.17.  Please refresh.
 
 Thanks.
 
--- 
+--=20
 tejun
