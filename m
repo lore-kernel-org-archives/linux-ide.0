@@ -1,8 +1,8 @@
 From: =?UTF-8?q?Antoine=20T=C3=A9nart?=
 	<antoine.tenart@free-electrons.com>
-Subject: [PATCH v14 3/8] ata: libahci_platform: move port_map parameters into the AHCI structure
-Date: Wed, 30 Jul 2014 20:13:56 +0200
-Message-ID: <1406744041-1269-4-git-send-email-antoine.tenart@free-electrons.com>
+Subject: [PATCH v14 4/8] ata: libahci: allow to use multiple PHYs
+Date: Wed, 30 Jul 2014 20:13:57 +0200
+Message-ID: <1406744041-1269-5-git-send-email-antoine.tenart@free-electrons.com>
 References: <1406744041-1269-1-git-send-email-antoine.tenart@free-electrons.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -14,374 +14,334 @@ To: sebastian.hesselbarth@gmail.com, tj@kernel.org
 Cc: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-This patch moves force_port_map and mask_port_map into the
-ahci_host_priv structure. This allows to modify them into the AHCI
-framework. This is needed by the new dt bindings representing ports as
-the port_map mask is computed automatically.
+The current implementation of the libahci does not allow to use multipl=
+e
+PHYs. This patch adds the support of multiple PHYs by the libahci while
+keeping the old bindings valid for device tree compatibility.
 
-Parameters modifying force_port_map, mask_port_map and flags have been
-removed from the ahci_platform_init_host() function, and inputs in the
-ahci_host_priv structure are now directly filed.
+This introduce a new way of defining SATA ports in the device tree, wit=
+h
+one port per sub-node. This as the advantage of allowing a per port
+configuration. Because some ports may be accessible but disabled in the
+device tree, the port_map mask is computed automatically when using
+this.
 
 Signed-off-by: Antoine T=C3=A9nart <antoine.tenart@free-electrons.com>
+Acked-by: Hans de Goede <hdegoede@redhat.com>
+Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/ata/acard-ahci.c       |  2 +-
- drivers/ata/ahci.c             |  3 +--
- drivers/ata/ahci.h             | 10 ++++++----
- drivers/ata/ahci_da850.c       |  3 +--
- drivers/ata/ahci_imx.c         |  3 +--
- drivers/ata/ahci_mvebu.c       |  3 +--
- drivers/ata/ahci_platform.c    |  6 ++----
- drivers/ata/ahci_st.c          |  2 +-
- drivers/ata/ahci_sunxi.c       |  8 +++-----
- drivers/ata/ahci_tegra.c       |  3 +--
- drivers/ata/ahci_xgene.c       |  6 ++----
- drivers/ata/libahci.c          | 19 +++++++------------
- drivers/ata/libahci_platform.c | 13 +++----------
- drivers/ata/sata_highbank.c    |  2 +-
- include/linux/ahci_platform.h  |  5 +----
- 15 files changed, 32 insertions(+), 56 deletions(-)
+ drivers/ata/ahci.h             |   7 +-
+ drivers/ata/libahci_platform.c | 189 ++++++++++++++++++++++++++++++++-=
+--------
+ 2 files changed, 157 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/ata/acard-ahci.c b/drivers/ata/acard-ahci.c
-index 0cd7c7a39e5b..25d0ac32e721 100644
---- a/drivers/ata/acard-ahci.c
-+++ b/drivers/ata/acard-ahci.c
-@@ -441,7 +441,7 @@ static int acard_ahci_init_one(struct pci_dev *pdev=
-, const struct pci_device_id
- 	hpriv->mmio =3D pcim_iomap_table(pdev)[AHCI_PCI_BAR];
-=20
- 	/* save initial config */
--	ahci_save_initial_config(&pdev->dev, hpriv, 0, 0);
-+	ahci_save_initial_config(&pdev->dev, hpriv);
-=20
- 	/* prepare host */
- 	if (hpriv->cap & HOST_CAP_NCQ)
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 4cd52a4541a9..a29f8012fb08 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -526,8 +526,7 @@ static void ahci_pci_save_initial_config(struct pci=
-_dev *pdev,
- 			  "Disabling your PATA port. Use the boot option 'ahci.marvell_enab=
-le=3D0' to avoid this.\n");
- 	}
-=20
--	ahci_save_initial_config(&pdev->dev, hpriv, force_port_map,
--				 mask_port_map);
-+	ahci_save_initial_config(&pdev->dev, hpriv);
- }
-=20
- static int ahci_pci_reset_controller(struct ata_host *host)
 diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 2ed84e1c70ea..15396f0330ae 100644
+index 15396f0330ae..59ae0ee00149 100644
 --- a/drivers/ata/ahci.h
 +++ b/drivers/ata/ahci.h
-@@ -316,8 +316,12 @@ struct ahci_port_priv {
- };
-=20
- struct ahci_host_priv {
--	void __iomem *		mmio;		/* bus-independent mem map */
-+	/* Input fields */
- 	unsigned int		flags;		/* AHCI_HFLAG_* */
-+	u32			force_port_map;	/* force port map */
-+	u32			mask_port_map;	/* mask out particular bits */
-+
-+	void __iomem *		mmio;		/* bus-independent mem map */
- 	u32			cap;		/* cap to use */
- 	u32			cap2;		/* cap2 to use */
- 	u32			port_map;	/* port map to use */
-@@ -361,9 +365,7 @@ unsigned int ahci_dev_classify(struct ata_port *ap)=
-;
- void ahci_fill_cmd_slot(struct ahci_port_priv *pp, unsigned int tag,
- 			u32 opts);
- void ahci_save_initial_config(struct device *dev,
--			      struct ahci_host_priv *hpriv,
--			      unsigned int force_port_map,
--			      unsigned int mask_port_map);
-+			      struct ahci_host_priv *hpriv);
- void ahci_init_controller(struct ata_host *host);
- int ahci_reset_controller(struct ata_host *host);
-=20
-diff --git a/drivers/ata/ahci_da850.c b/drivers/ata/ahci_da850.c
-index 2b77d53bccf8..ad1e71ec10cf 100644
---- a/drivers/ata/ahci_da850.c
-+++ b/drivers/ata/ahci_da850.c
-@@ -85,8 +85,7 @@ static int ahci_da850_probe(struct platform_device *p=
-dev)
-=20
- 	da850_sata_init(dev, pwrdn_reg, hpriv->mmio);
-=20
--	rc =3D ahci_platform_init_host(pdev, hpriv, &ahci_da850_port_info,
--				     0, 0, 0);
-+	rc =3D ahci_platform_init_host(pdev, hpriv, &ahci_da850_port_info);
- 	if (rc)
- 		goto disable_resources;
-=20
-diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
-index 1e5fa5f21aff..f3970b4ed889 100644
---- a/drivers/ata/ahci_imx.c
-+++ b/drivers/ata/ahci_imx.c
-@@ -620,8 +620,7 @@ static int imx_ahci_probe(struct platform_device *p=
-dev)
- 	reg_val =3D clk_get_rate(imxpriv->ahb_clk) / 1000;
- 	writel(reg_val, hpriv->mmio + IMX_TIMER1MS);
-=20
--	ret =3D ahci_platform_init_host(pdev, hpriv, &ahci_imx_port_info,
--				      0, 0, 0);
-+	ret =3D ahci_platform_init_host(pdev, hpriv, &ahci_imx_port_info);
- 	if (ret)
- 		goto disable_sata;
-=20
-diff --git a/drivers/ata/ahci_mvebu.c b/drivers/ata/ahci_mvebu.c
-index fd3dfd733b84..68672d2692ee 100644
---- a/drivers/ata/ahci_mvebu.c
-+++ b/drivers/ata/ahci_mvebu.c
-@@ -88,8 +88,7 @@ static int ahci_mvebu_probe(struct platform_device *p=
-dev)
- 	ahci_mvebu_mbus_config(hpriv, dram);
- 	ahci_mvebu_regret_option(hpriv);
-=20
--	rc =3D ahci_platform_init_host(pdev, hpriv, &ahci_mvebu_port_info,
--				     0, 0, 0);
-+	rc =3D ahci_platform_init_host(pdev, hpriv, &ahci_mvebu_port_info);
- 	if (rc)
- 		goto disable_resources;
-=20
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index b10d81ddb528..fb3eca5cd66c 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -34,7 +34,6 @@ static int ahci_probe(struct platform_device *pdev)
- 	struct device *dev =3D &pdev->dev;
- 	struct ahci_platform_data *pdata =3D dev_get_platdata(dev);
- 	struct ahci_host_priv *hpriv;
--	unsigned long hflags =3D 0;
- 	int rc;
-=20
- 	hpriv =3D ahci_platform_get_resources(pdev);
-@@ -58,10 +57,9 @@ static int ahci_probe(struct platform_device *pdev)
- 	}
-=20
- 	if (of_device_is_compatible(dev->of_node, "hisilicon,hisi-ahci"))
--		hflags |=3D AHCI_HFLAG_NO_FBS | AHCI_HFLAG_NO_NCQ;
-+		hpriv->flags |=3D AHCI_HFLAG_NO_FBS | AHCI_HFLAG_NO_NCQ;
-=20
--	rc =3D ahci_platform_init_host(pdev, hpriv, &ahci_port_info,
--				     hflags, 0, 0);
-+	rc =3D ahci_platform_init_host(pdev, hpriv, &ahci_port_info);
- 	if (rc)
- 		goto pdata_exit;
-=20
-diff --git a/drivers/ata/ahci_st.c b/drivers/ata/ahci_st.c
-index 29821b9fd13d..835d6eea84fd 100644
---- a/drivers/ata/ahci_st.c
-+++ b/drivers/ata/ahci_st.c
-@@ -166,7 +166,7 @@ static int st_ahci_probe(struct platform_device *pd=
-ev)
- 	if (err)
- 		return err;
-=20
--	err =3D ahci_platform_init_host(pdev, hpriv, &st_ahci_port_info, 0, 0=
-, 0);
-+	err =3D ahci_platform_init_host(pdev, hpriv, &st_ahci_port_info);
- 	if (err) {
- 		ahci_platform_disable_resources(hpriv);
- 		return err;
-diff --git a/drivers/ata/ahci_sunxi.c b/drivers/ata/ahci_sunxi.c
-index 02002f125bd4..e44d675a30ec 100644
---- a/drivers/ata/ahci_sunxi.c
-+++ b/drivers/ata/ahci_sunxi.c
-@@ -167,7 +167,6 @@ static int ahci_sunxi_probe(struct platform_device =
-*pdev)
- {
- 	struct device *dev =3D &pdev->dev;
- 	struct ahci_host_priv *hpriv;
--	unsigned long hflags;
- 	int rc;
-=20
- 	hpriv =3D ahci_platform_get_resources(pdev);
-@@ -184,11 +183,10 @@ static int ahci_sunxi_probe(struct platform_devic=
-e *pdev)
- 	if (rc)
- 		goto disable_resources;
-=20
--	hflags =3D AHCI_HFLAG_32BIT_ONLY | AHCI_HFLAG_NO_MSI |
--		 AHCI_HFLAG_NO_PMP | AHCI_HFLAG_YES_NCQ;
-+	hpriv->flags =3D AHCI_HFLAG_32BIT_ONLY | AHCI_HFLAG_NO_MSI |
-+		       AHCI_HFLAG_NO_PMP | AHCI_HFLAG_YES_NCQ;
-=20
--	rc =3D ahci_platform_init_host(pdev, hpriv, &ahci_sunxi_port_info,
--				     hflags, 0, 0);
-+	rc =3D ahci_platform_init_host(pdev, hpriv, &ahci_sunxi_port_info);
- 	if (rc)
- 		goto disable_resources;
-=20
-diff --git a/drivers/ata/ahci_tegra.c b/drivers/ata/ahci_tegra.c
-index d30bb21afd67..fc3df47fca35 100644
---- a/drivers/ata/ahci_tegra.c
-+++ b/drivers/ata/ahci_tegra.c
-@@ -348,8 +348,7 @@ static int tegra_ahci_probe(struct platform_device =
-*pdev)
- 	if (ret)
- 		return ret;
-=20
--	ret =3D ahci_platform_init_host(pdev, hpriv, &ahci_tegra_port_info,
--				      0, 0, 0);
-+	ret =3D ahci_platform_init_host(pdev, hpriv, &ahci_tegra_port_info);
- 	if (ret)
- 		goto deinit_controller;
-=20
-diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-index 1cfbdca638d2..bc281115490b 100644
---- a/drivers/ata/ahci_xgene.c
-+++ b/drivers/ata/ahci_xgene.c
-@@ -422,7 +422,6 @@ static int xgene_ahci_probe(struct platform_device =
-*pdev)
- 	struct ahci_host_priv *hpriv;
- 	struct xgene_ahci_context *ctx;
- 	struct resource *res;
--	unsigned long hflags;
- 	int rc;
-=20
- 	hpriv =3D ahci_platform_get_resources(pdev);
-@@ -481,10 +480,9 @@ static int xgene_ahci_probe(struct platform_device=
- *pdev)
- 	/* Configure the host controller */
- 	xgene_ahci_hw_init(hpriv);
-=20
--	hflags =3D AHCI_HFLAG_NO_PMP | AHCI_HFLAG_YES_NCQ;
-+	hpriv->flags =3D AHCI_HFLAG_NO_PMP | AHCI_HFLAG_YES_NCQ;
-=20
--	rc =3D ahci_platform_init_host(pdev, hpriv, &xgene_ahci_port_info,
--				     hflags, 0, 0);
-+	rc =3D ahci_platform_init_host(pdev, hpriv, &xgene_ahci_port_info);
- 	if (rc)
- 		goto disable_resources;
-=20
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index d72ce0470309..b784e9de426a 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -382,8 +382,6 @@ static ssize_t ahci_show_em_supported(struct device=
- *dev,
-  *	ahci_save_initial_config - Save and fixup initial config values
-  *	@dev: target AHCI device
-  *	@hpriv: host private area to store config values
-- *	@force_port_map: force port map to a specified value
-- *	@mask_port_map: mask out particular bits from port map
-  *
-  *	Some registers containing configuration info might be setup by
-  *	BIOS and might be cleared on reset.  This function saves the
-@@ -398,10 +396,7 @@ static ssize_t ahci_show_em_supported(struct devic=
-e *dev,
-  *	LOCKING:
-  *	None.
-  */
--void ahci_save_initial_config(struct device *dev,
--			      struct ahci_host_priv *hpriv,
--			      unsigned int force_port_map,
--			      unsigned int mask_port_map)
-+void ahci_save_initial_config(struct device *dev, struct ahci_host_pri=
-v *hpriv)
- {
- 	void __iomem *mmio =3D hpriv->mmio;
- 	u32 cap, cap2, vers, port_map;
-@@ -468,17 +463,17 @@ void ahci_save_initial_config(struct device *dev,
- 		cap &=3D ~HOST_CAP_FBS;
- 	}
-=20
--	if (force_port_map && port_map !=3D force_port_map) {
-+	if (hpriv->force_port_map && port_map !=3D hpriv->force_port_map) {
- 		dev_info(dev, "forcing port_map 0x%x -> 0x%x\n",
--			 port_map, force_port_map);
--		port_map =3D force_port_map;
-+			 port_map, hpriv->force_port_map);
-+		port_map =3D hpriv->force_port_map;
- 	}
-=20
--	if (mask_port_map) {
-+	if (hpriv->mask_port_map) {
- 		dev_warn(dev, "masking port_map 0x%x -> 0x%x\n",
- 			port_map,
--			port_map & mask_port_map);
--		port_map &=3D mask_port_map;
-+			port_map & hpriv->mask_port_map);
-+		port_map &=3D hpriv->mask_port_map;
- 	}
-=20
- 	/* cross check port_map and cap.n_ports */
+@@ -334,7 +334,12 @@ struct ahci_host_priv {
+ 	bool			got_runtime_pm; /* Did we do pm_runtime_get? */
+ 	struct clk		*clks[AHCI_MAX_CLKS]; /* Optional */
+ 	struct regulator	*target_pwr;	/* Optional */
+-	struct phy		*phy;		/* If platform uses phy */
++	/*
++	 * If platform uses PHYs. There is a 1:1 relation between the port nu=
+mber and
++	 * the PHY position in this array.
++	 */
++	struct phy		**phys;
++	unsigned		nports;		/* Number of ports */
+ 	void			*plat_data;	/* Other platform data */
+ 	/*
+ 	 * Optional ahci_start_engine override, if not set this gets set to t=
+he
 diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platf=
 orm.c
-index 28840a2f470f..00582d3a46a4 100644
+index 00582d3a46a4..a60b8cd40198 100644
 --- a/drivers/ata/libahci_platform.c
 +++ b/drivers/ata/libahci_platform.c
-@@ -288,9 +288,6 @@ EXPORT_SYMBOL_GPL(ahci_platform_get_resources);
-  * @pdev: platform device pointer for the host
-  * @hpriv: ahci-host private data for the host
-  * @pi_template: template for the ata_port_info to use
-- * @host_flags: ahci host flags used in ahci_host_priv
-- * @force_port_map: param passed to ahci_save_initial_config
-- * @mask_port_map: param passed to ahci_save_initial_config
-  *
-  * This function does all the usual steps needed to bring up an
-  * ahci-platform host, note any necessary resources (ie clks, phy, etc=
-=2E)
-@@ -301,10 +298,7 @@ EXPORT_SYMBOL_GPL(ahci_platform_get_resources);
-  */
- int ahci_platform_init_host(struct platform_device *pdev,
- 			    struct ahci_host_priv *hpriv,
--			    const struct ata_port_info *pi_template,
--			    unsigned long host_flags,
--			    unsigned int force_port_map,
--			    unsigned int mask_port_map)
-+			    const struct ata_port_info *pi_template)
+@@ -39,6 +39,67 @@ static struct scsi_host_template ahci_platform_sht =3D=
  {
+ };
+=20
+ /**
++ * ahci_platform_enable_phys - Enable PHYs
++ * @hpriv: host private area to store config values
++ *
++ * This function enables all the PHYs found in hpriv->phys, if any.
++ * If a PHY fails to be enabled, it disables all the PHYs already
++ * enabled in reverse order and returns an error.
++ *
++ * RETURNS:
++ * 0 on success otherwise a negative error code
++ */
++int ahci_platform_enable_phys(struct ahci_host_priv *hpriv)
++{
++	int rc, i;
++
++	for (i =3D 0; i < hpriv->nports; i++) {
++		if (!hpriv->phys[i])
++			continue;
++
++		rc =3D phy_init(hpriv->phys[i]);
++		if (rc)
++			goto disable_phys;
++
++		rc =3D phy_power_on(hpriv->phys[i]);
++		if (rc) {
++			phy_exit(hpriv->phys[i]);
++			goto disable_phys;
++		}
++	}
++
++	return 0;
++
++disable_phys:
++	while (--i >=3D 0) {
++		phy_power_off(hpriv->phys[i]);
++		phy_exit(hpriv->phys[i]);
++	}
++	return rc;
++}
++EXPORT_SYMBOL_GPL(ahci_platform_enable_phys);
++
++/**
++ * ahci_platform_disable_phys - Disable PHYs
++ * @hpriv: host private area to store config values
++ *
++ * This function disables all PHYs found in hpriv->phys.
++ */
++void ahci_platform_disable_phys(struct ahci_host_priv *hpriv)
++{
++	int i;
++
++	for (i =3D 0; i < hpriv->nports; i++) {
++		if (!hpriv->phys[i])
++			continue;
++
++		phy_power_off(hpriv->phys[i]);
++		phy_exit(hpriv->phys[i]);
++	}
++}
++EXPORT_SYMBOL_GPL(ahci_platform_disable_phys);
++
++/**
+  * ahci_platform_enable_clks - Enable platform clocks
+  * @hpriv: host private area to store config values
+  *
+@@ -92,7 +153,7 @@ EXPORT_SYMBOL_GPL(ahci_platform_disable_clks);
+  * following order:
+  * 1) Regulator
+  * 2) Clocks (through ahci_platform_enable_clks)
+- * 3) Phy
++ * 3) Phys
+  *
+  * If resource enabling fails at any point the previous enabled resour=
+ces
+  * are disabled in reverse order.
+@@ -114,17 +175,9 @@ int ahci_platform_enable_resources(struct ahci_hos=
+t_priv *hpriv)
+ 	if (rc)
+ 		goto disable_regulator;
+=20
+-	if (hpriv->phy) {
+-		rc =3D phy_init(hpriv->phy);
+-		if (rc)
+-			goto disable_clks;
+-
+-		rc =3D phy_power_on(hpriv->phy);
+-		if (rc) {
+-			phy_exit(hpriv->phy);
+-			goto disable_clks;
+-		}
+-	}
++	rc =3D ahci_platform_enable_phys(hpriv);
++	if (rc)
++		goto disable_clks;
+=20
+ 	return 0;
+=20
+@@ -144,16 +197,13 @@ EXPORT_SYMBOL_GPL(ahci_platform_enable_resources)=
+;
+  *
+  * This function disables all ahci_platform managed resources in the
+  * following order:
+- * 1) Phy
++ * 1) Phys
+  * 2) Clocks (through ahci_platform_disable_clks)
+  * 3) Regulator
+  */
+ void ahci_platform_disable_resources(struct ahci_host_priv *hpriv)
+ {
+-	if (hpriv->phy) {
+-		phy_power_off(hpriv->phy);
+-		phy_exit(hpriv->phy);
+-	}
++	ahci_platform_disable_phys(hpriv);
+=20
+ 	ahci_platform_disable_clks(hpriv);
+=20
+@@ -187,7 +237,7 @@ static void ahci_platform_put_resources(struct devi=
+ce *dev, void *res)
+  * 2) regulator for controlling the targets power (optional)
+  * 3) 0 - AHCI_MAX_CLKS clocks, as specified in the devs devicetree no=
+de,
+  *    or for non devicetree enabled platforms a single clock
+- *	4) phy (optional)
++ *	4) phys (optional)
+  *
+  * RETURNS:
+  * The allocated ahci_host_priv on success, otherwise an ERR_PTR value
+@@ -197,7 +247,9 @@ struct ahci_host_priv *ahci_platform_get_resources(=
+struct platform_device *pdev)
  	struct device *dev =3D &pdev->dev;
- 	struct ata_port_info pi =3D *pi_template;
-@@ -319,10 +313,9 @@ int ahci_platform_init_host(struct platform_device=
- *pdev,
+ 	struct ahci_host_priv *hpriv;
+ 	struct clk *clk;
+-	int i, rc =3D -ENOMEM;
++	struct device_node *child;
++	int i, enabled_ports =3D 0, rc =3D -ENOMEM;
++	u32 mask_port_map =3D 0;
+=20
+ 	if (!devres_open_group(dev, NULL, GFP_KERNEL))
+ 		return ERR_PTR(-ENOMEM);
+@@ -246,28 +298,89 @@ struct ahci_host_priv *ahci_platform_get_resource=
+s(struct platform_device *pdev)
+ 		hpriv->clks[i] =3D clk;
  	}
 =20
- 	/* prepare host */
--	pi.private_data =3D (void *)host_flags;
--	hpriv->flags |=3D host_flags;
-+	pi.private_data =3D (void *)hpriv->flags;
+-	hpriv->phy =3D devm_phy_get(dev, "sata-phy");
+-	if (IS_ERR(hpriv->phy)) {
+-		rc =3D PTR_ERR(hpriv->phy);
+-		switch (rc) {
+-		case -ENOSYS:
+-			/* No PHY support. Check if PHY is required. */
+-			if (of_find_property(dev->of_node, "phys", NULL)) {
+-				dev_err(dev, "couldn't get sata-phy: ENOSYS\n");
++	hpriv->nports =3D of_get_child_count(dev->of_node);
++
++	if (hpriv->nports) {
++		hpriv->phys =3D devm_kzalloc(dev,
++					   hpriv->nports * sizeof(*hpriv->phys),
++					   GFP_KERNEL);
++		if (!hpriv->phys) {
++			rc =3D -ENOMEM;
++			goto err_out;
++		}
++
++		for_each_child_of_node(dev->of_node, child) {
++			u32 port;
++
++			if (!of_device_is_available(child))
++				continue;
++
++			if (of_property_read_u32(child, "reg", &port)) {
++				rc =3D -EINVAL;
+ 				goto err_out;
+ 			}
+-		case -ENODEV:
+-			/* continue normally */
+-			hpriv->phy =3D NULL;
+-			break;
 =20
--	ahci_save_initial_config(dev, hpriv, force_port_map, mask_port_map);
-+	ahci_save_initial_config(dev, hpriv);
+-		case -EPROBE_DEFER:
+-			goto err_out;
++			if (port >=3D hpriv->nports) {
++				dev_warn(dev, "invalid port number %d\n", port);
++				continue;
++			}
++
++			mask_port_map |=3D BIT(port);
++
++			hpriv->phys[port] =3D devm_of_phy_get(dev, child, NULL);
++			if (IS_ERR(hpriv->phys[port])) {
++				rc =3D PTR_ERR(hpriv->phys[port]);
++				dev_err(dev,
++					"couldn't get PHY in node %s: %d\n",
++					child->name, rc);
++				goto err_out;
++			}
 =20
- 	if (hpriv->cap & HOST_CAP_NCQ)
- 		pi.flags |=3D ATA_FLAG_NCQ;
-diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
-index 65965cf5af06..da3bc2709c63 100644
---- a/drivers/ata/sata_highbank.c
-+++ b/drivers/ata/sata_highbank.c
-@@ -512,7 +512,7 @@ static int ahci_highbank_probe(struct platform_devi=
-ce *pdev)
- 		return rc;
+-		default:
+-			dev_err(dev, "couldn't get sata-phy\n");
++			enabled_ports++;
++		}
++		if (!enabled_ports) {
++			dev_warn(dev, "No port enabled\n");
++			rc =3D -ENODEV;
+ 			goto err_out;
+ 		}
++
++		if (!hpriv->mask_port_map)
++			hpriv->mask_port_map =3D mask_port_map;
++	} else {
++		/*
++		 * If no sub-node was found, keep this for device tree
++		 * compatibility
++		 */
++		struct phy *phy =3D devm_phy_get(dev, "sata-phy");
++		if (!IS_ERR(phy)) {
++			hpriv->phys =3D devm_kzalloc(dev, sizeof(*hpriv->phys),
++						   GFP_KERNEL);
++			if (!hpriv->phys) {
++				rc =3D -ENOMEM;
++				goto err_out;
++			}
++
++			hpriv->phys[0] =3D phy;
++			hpriv->nports =3D 1;
++		} else {
++			rc =3D PTR_ERR(phy);
++			switch (rc) {
++				case -ENOSYS:
++					/* No PHY support. Check if PHY is required. */
++					if (of_find_property(dev->of_node, "phys", NULL)) {
++						dev_err(dev, "couldn't get sata-phy: ENOSYS\n");
++						goto err_out;
++					}
++				case -ENODEV:
++					/* continue normally */
++					hpriv->phys =3D NULL;
++					break;
++
++				default:
++					goto err_out;
++
++			}
++		}
+ 	}
 =20
-=20
--	ahci_save_initial_config(dev, hpriv, 0, 0);
-+	ahci_save_initial_config(dev, hpriv);
-=20
- 	/* prepare host */
- 	if (hpriv->cap & HOST_CAP_NCQ)
-diff --git a/include/linux/ahci_platform.h b/include/linux/ahci_platfor=
-m.h
-index 6dfd51a04d77..09a947e8bc87 100644
---- a/include/linux/ahci_platform.h
-+++ b/include/linux/ahci_platform.h
-@@ -43,10 +43,7 @@ struct ahci_host_priv *ahci_platform_get_resources(
- 	struct platform_device *pdev);
- int ahci_platform_init_host(struct platform_device *pdev,
- 			    struct ahci_host_priv *hpriv,
--			    const struct ata_port_info *pi_template,
--			    unsigned long host_flags,
--			    unsigned int force_port_map,
--			    unsigned int mask_port_map);
-+			    const struct ata_port_info *pi_template);
-=20
- int ahci_platform_suspend_host(struct device *dev);
- int ahci_platform_resume_host(struct device *dev);
+ 	pm_runtime_enable(dev);
+@@ -290,7 +403,7 @@ EXPORT_SYMBOL_GPL(ahci_platform_get_resources);
+  * @pi_template: template for the ata_port_info to use
+  *
+  * This function does all the usual steps needed to bring up an
+- * ahci-platform host, note any necessary resources (ie clks, phy, etc=
+=2E)
++ * ahci-platform host, note any necessary resources (ie clks, phys, et=
+c.)
+  * must be initialized / enabled before calling this.
+  *
+  * RETURNS:
+@@ -405,7 +518,7 @@ static void ahci_host_stop(struct ata_host *host)
+  * @dev: device pointer for the host
+  *
+  * This function does all the usual steps needed to suspend an
+- * ahci-platform host, note any necessary resources (ie clks, phy, etc=
+=2E)
++ * ahci-platform host, note any necessary resources (ie clks, phys, et=
+c.)
+  * must be disabled after calling this.
+  *
+  * RETURNS:
+@@ -442,7 +555,7 @@ EXPORT_SYMBOL_GPL(ahci_platform_suspend_host);
+  * @dev: device pointer for the host
+  *
+  * This function does all the usual steps needed to resume an ahci-pla=
+tform
+- * host, note any necessary resources (ie clks, phy, etc.)  must be
++ * host, note any necessary resources (ie clks, phys, etc.)  must be
+  * initialized / enabled before calling this.
+  *
+  * RETURNS:
 --=20
 1.9.1
