@@ -1,30 +1,49 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/4] sd: Optionally attach to ZBC devices
-Date: Tue, 29 Jul 2014 10:14:14 -0700
-Message-ID: <20140729171414.GA1060@infradead.org>
-References: <1406645117-53088-1-git-send-email-hare@suse.de>
- <1406645117-53088-5-git-send-email-hare@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1406645117-53088-5-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hsh@infradead.org>, James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+From: weiyj_lk@163.com
+Subject: [PATCH] ahci: imx: add missing clk_disable_unprepare() on error in imx_sata_enable()
+Date: Wed, 30 Jul 2014 08:54:07 +0800
+Message-ID: <1406681647-24808-1-git-send-email-weiyj_lk@163.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from m12-18.163.com ([220.181.12.18]:44545 "EHLO m12-18.163.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754430AbaG3AyW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 29 Jul 2014 20:54:22 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Grant Likely <grant.likely@linaro.org>, Rob Herring <robh+dt@kernel.org>, Shawn Guo <shawn.guo@freescale.com>
+Cc: Wei Yongjun <yongjun_wei@trendmicro.com.cn>, linux-ide@vger.kernel.org
 
-On Tue, Jul 29, 2014 at 04:45:17PM +0200, Hannes Reinecke wrote:
-> ZBC drives are close to disk devices, so sd.c is well
-> suited as a testbed for ZBC devices.
-> This patch introduces a module option 'attach_zbc' to
-> sd which will make the sd driver accept ZBC
-> devices as normal disk drives.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-Looks reasonable to me.
+Add the missing clk_disable_unprepare() before return from
+imx_sata_enable() in the phy reset error handling case.
 
-I'd also really like a sysfs file that tells us if we're dealing
-with a host aware device, as those report as TYPE_SBC. 
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+---
+ drivers/ata/ahci_imx.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+index cac4360..7767325 100644
+--- a/drivers/ata/ahci_imx.c
++++ b/drivers/ata/ahci_imx.c
+@@ -265,7 +265,7 @@ static int imx_sata_enable(struct ahci_host_priv *hpriv)
+ 		ret = imx_sata_phy_reset(hpriv);
+ 		if (ret) {
+ 			dev_err(dev, "failed to reset phy: %d\n", ret);
+-			goto disable_regulator;
++			goto disable_clk;
+ 		}
+ 	}
+ 
+@@ -273,6 +273,8 @@ static int imx_sata_enable(struct ahci_host_priv *hpriv)
+ 
+ 	return 0;
+ 
++disable_clk:
++	clk_disable_unprepare(imxpriv->sata_ref_clk);
+ disable_regulator:
+ 	if (hpriv->target_pwr)
+ 		regulator_disable(hpriv->target_pwr);
 
