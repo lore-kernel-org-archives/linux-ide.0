@@ -1,54 +1,51 @@
-From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-Subject: Re: Unable to complete boot with pata_sis
-Date: Wed, 30 Jul 2014 15:57:35 +0100
-Message-ID: <20140730155735.20b6d12c@alan.etchedpixels.co.uk>
-References: <CAN_we7P6RF_OnBivLYqnpeftJH64st3msX-dJROetz1UxpDLjw@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v11 3/8] ata: libahci_platform: move port_map parameters
+ into the AHCI structure
+Date: Wed, 30 Jul 2014 11:35:26 -0400
+Message-ID: <20140730153526.GB23734@htj.dyndns.org>
+References: <1406193450-17283-1-git-send-email-antoine.tenart@free-electrons.com>
+ <1406193450-17283-4-git-send-email-antoine.tenart@free-electrons.com>
+ <20140729144042.GD4791@htj.dyndns.org>
+ <20140730082038.GB29900@kwain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:38915 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753701AbaG3O6L (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jul 2014 10:58:11 -0400
-In-Reply-To: <CAN_we7P6RF_OnBivLYqnpeftJH64st3msX-dJROetz1UxpDLjw@mail.gmail.com>
+Received: from mail-qg0-f43.google.com ([209.85.192.43]:34189 "EHLO
+	mail-qg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753046AbaG3Pfa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jul 2014 11:35:30 -0400
+Content-Disposition: inline
+In-Reply-To: <20140730082038.GB29900@kwain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Daniele Forsi <dforsi@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: Antoine =?iso-8859-1?Q?T=E9nart?= <antoine.tenart@free-electrons.com>
+Cc: sebastian.hesselbarth@gmail.com, kishon@ti.com, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sat, 26 Jul 2014 09:45:22 +0200
-Daniele Forsi <dforsi@gmail.com> wrote:
+Hello,
 
-> Hello,
-> 
-> I have a computer with an integrated SiS 5513 IDE Controller that can
-> read GRUB, the kernel and initrd from disk but then is not able to
-> finish booting; this is the first error
-> 
-> [   36.883578] ata1: lost interrupt (Status 0x58)
-> [   36.930523] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
-> [   36.937694] ata1.00: failed command: READ DMA
-> [   36.942177] ata1.00: cmd c8/00:f0:20:b0:5e/00:00:00:00:00/e0 tag 0
-> dma 122880 in
-> [   36.942177]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask
-> 0x4 (timeout)
-> [   36.957097] ata1.00: status: { DRDY }
-> [   36.960983] ata1: soft resetting link
-> [   37.143899] ata1.00: configured for UDMA/33
-> [   37.148216] ata1.00: device reported invalid CHS sector 0
-> [   37.153753] ata1: EH complete
-> 
-> full boot log with kernel 3.16.0-rc6+ is attached.
+On Wed, Jul 30, 2014 at 10:20:38AM +0200, Antoine T=E9nart wrote:
+> How do you want me to send the series? There is two conflicts when
+> applying to libata/for-3.17:
+> - patch 4/8: it takes into account a patch not in libata/for-3.17 but
+>   added before rc7. It should be better to first merge rc7, otherwise
+>   some modifications won't make sense.
+> - patch 6/8: "fsl,imx53-ahci" was removed from the documentation in
+>   libata/for-3.17 but not in rc7. Resolving the conflict is really
+>   simple.
+>=20
+> I think it's better to apply the whole thing after merging rc7 into
+> libata/for-3.17, because it will only have a really simple conflict t=
+o
+> resolve.
+>=20
+> Please tell me what do you prefer before I send the updated version.
 
-I've had a couple of other reports like this from ages ago and never got
-to the bottom of it (in both cases because the reporter decided it was
-far simpler to find a PCI controller instead)
+Hmmm... does pulling in libata/for-3.16-fixes into libata/for-3.17
+resolves the conflict?  If so, please send the patch on top of the
+merged branch.  I wanna avoid pulling in -rc7 wholesale at this point.
 
-Somewhere there is a subtle behavioural difference between pata_sis and
-the ancient sis5513 driver. About the only way to find it would be to
-boot both the old and new kernels and log every single access to the disk
-controller to the point of failure (or some short way into booting) in
-both cases somewhere (eg over the network) then compare them.
+Thanks.
 
-Alan
+--=20
+tejun
