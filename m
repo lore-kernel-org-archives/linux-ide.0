@@ -1,47 +1,54 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 4/4] sd: Optionally attach to ZBC devices
-Date: Wed, 30 Jul 2014 08:41:55 +0200
-Message-ID: <53D893B3.6020407@suse.de>
-References: <1406645117-53088-1-git-send-email-hare@suse.de> <1406645117-53088-5-git-send-email-hare@suse.de> <20140729171414.GA1060@infradead.org>
+From: Antoine =?iso-8859-1?Q?T=E9nart?=
+	<antoine.tenart@free-electrons.com>
+Subject: Re: [PATCH v12 4/8] ata: libahci: allow to use multiple PHYs
+Date: Wed, 30 Jul 2014 09:38:16 +0200
+Message-ID: <20140730073816.GA29900@kwain>
+References: <1406618447-25499-1-git-send-email-antoine.tenart@free-electrons.com>
+ <20140729143438.GB4791@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1;
-	format=flowed
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:58753 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752052AbaG3Gl5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 30 Jul 2014 02:41:57 -0400
-In-Reply-To: <20140729171414.GA1060@infradead.org>
+Received: from top.free-electrons.com ([176.31.233.9]:53232 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755061AbaG3HiV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jul 2014 03:38:21 -0400
+Content-Disposition: inline
+In-Reply-To: <20140729143438.GB4791@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Christoph Hellwig <hsh@infradead.org>, James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Antoine =?iso-8859-1?Q?T=E9nart?= <antoine.tenart@free-electrons.com>, sebastian.hesselbarth@gmail.com, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 07/29/2014 07:14 PM, Christoph Hellwig wrote:
-> On Tue, Jul 29, 2014 at 04:45:17PM +0200, Hannes Reinecke wrote:
->> ZBC drives are close to disk devices, so sd.c is well
->> suited as a testbed for ZBC devices.
->> This patch introduces a module option 'attach_zbc' to
->> sd which will make the sd driver accept ZBC
->> devices as normal disk drives.
->>
->> Signed-off-by: Hannes Reinecke <hare@suse.de>
->
-> Looks reasonable to me.
->
-> I'd also really like a sysfs file that tells us if we're dealing
-> with a host aware device, as those report as TYPE_SBC.
->
-Yes, eventually. But can't we defer that to a next patchset?
-I'd really like to have this one in, as it makes dealing with ZAC=20
-devices _so much_ easier ...
+On Tue, Jul 29, 2014 at 10:34:38AM -0400, Tejun Heo wrote:
+> On Tue, Jul 29, 2014 at 09:20:47AM +0200, Antoine T=E9nart wrote:
+> > The current implementation of the libahci does not allow to use mul=
+tiple
+> > PHYs. This patch adds the support of multiple PHYs by the libahci w=
+hile
+> > keeping the old bindings valid for device tree compatibility.
+> >=20
+> > This introduce a new way of defining SATA ports in the device tree,=
+ with
+> > one port per sub-node. This as the advantage of allowing a per port
+> > configuration. Because some ports may be accessible but disabled in=
+ the
+> > device tree, the port_map mask is computed automatically when using
+> > this.
+> >=20
+> > Signed-off-by: Antoine T=E9nart <antoine.tenart@free-electrons.com>
+> > Acked-by: Hans de Goede <hdegoede@redhat.com>
+>=20
+> Patch doesn't apply to libata/for-3.17.  Please refresh.
 
-Cheers,
+This patch is base on top of v3.16-rc7, taking in account a patch[1]
+introduced after rc1 modifying this same file.
 
-Hannes
+[1] https://lkml.org/lkml/2014/6/6/75
+
+Antoine
+
 --=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+Antoine T=E9nart, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
