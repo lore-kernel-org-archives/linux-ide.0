@@ -1,41 +1,28 @@
-From: =?UTF-8?q?Antoine=20T=C3=A9nart?=
-	<antoine.tenart@free-electrons.com>
-Subject: [PATCH v13 5/8] ata: ahci_platform: add a generic AHCI compatible
-Date: Wed, 30 Jul 2014 19:04:59 +0200
-Message-ID: <1406739902-26311-6-git-send-email-antoine.tenart@free-electrons.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v13 0/8] ARM: berlin: add AHCI support
+Date: Wed, 30 Jul 2014 13:09:23 -0400
+Message-ID: <20140730170923.GE23734@htj.dyndns.org>
 References: <1406739902-26311-1-git-send-email-antoine.tenart@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qg0-f42.google.com ([209.85.192.42]:35691 "EHLO
+	mail-qg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754604AbaG3RJ1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jul 2014 13:09:27 -0400
+Content-Disposition: inline
 In-Reply-To: <1406739902-26311-1-git-send-email-antoine.tenart@free-electrons.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: sebastian.hesselbarth@gmail.com, tj@kernel.org
-Cc: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Antoine =?iso-8859-1?Q?T=E9nart?= <antoine.tenart@free-electrons.com>
+Cc: sebastian.hesselbarth@gmail.com, kishon@ti.com, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The ahci_platform driver is a generic driver using the libahci_platform
-functions. Add a generic compatible to avoid having an endless list of
-compatibles with no differences for the same driver.
+Hello,
 
-Signed-off-by: Antoine T=C3=A9nart <antoine.tenart@free-electrons.com>
----
- drivers/ata/ahci_platform.c | 2 ++
- 1 file changed, 2 insertions(+)
+Applied 3-5 to libata/for-3.17.  I suppose 6-8 are gonna routed
+through a different tree?
 
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index fb3eca5cd66c..f61ddb9146d6 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -76,6 +76,8 @@ static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_platform_s=
-uspend,
- 			 ahci_platform_resume);
-=20
- static const struct of_device_id ahci_of_match[] =3D {
-+	{ .compatible =3D "generic-ahci", },
-+	/* Keep the following compatibles for device tree compatibility */
- 	{ .compatible =3D "snps,spear-ahci", },
- 	{ .compatible =3D "snps,exynos5440-ahci", },
- 	{ .compatible =3D "ibm,476gtr-ahci", },
---=20
-1.9.1
+Thanks a lot for the patience.
+
+-- 
+tejun
