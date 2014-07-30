@@ -1,67 +1,120 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v11 3/8] ata: libahci_platform: move port_map parameters
- into the AHCI structure
-Date: Wed, 30 Jul 2014 12:50:32 -0400
-Message-ID: <20140730165032.GD23734@htj.dyndns.org>
-References: <1406193450-17283-1-git-send-email-antoine.tenart@free-electrons.com>
- <1406193450-17283-4-git-send-email-antoine.tenart@free-electrons.com>
- <20140729144042.GD4791@htj.dyndns.org>
- <20140730082038.GB29900@kwain>
- <20140730153526.GB23734@htj.dyndns.org>
- <20140730164721.GA15772@kwain>
+From: =?UTF-8?q?Antoine=20T=C3=A9nart?=
+	<antoine.tenart@free-electrons.com>
+Subject: [PATCH v13 0/8] ARM: berlin: add AHCI support
+Date: Wed, 30 Jul 2014 19:04:54 +0200
+Message-ID: <1406739902-26311-1-git-send-email-antoine.tenart@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f45.google.com ([209.85.192.45]:47738 "EHLO
-	mail-qg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755083AbaG3Quk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jul 2014 12:50:40 -0400
-Content-Disposition: inline
-In-Reply-To: <20140730164721.GA15772@kwain>
+Received: from top.free-electrons.com ([176.31.233.9]:57279 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755294AbaG3RF1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Jul 2014 13:05:27 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Antoine =?iso-8859-1?Q?T=E9nart?= <antoine.tenart@free-electrons.com>
-Cc: sebastian.hesselbarth@gmail.com, kishon@ti.com, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+To: sebastian.hesselbarth@gmail.com, tj@kernel.org, kishon@ti.com
+Cc: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Jul 30, 2014 at 06:47:21PM +0200, Antoine T=E9nart wrote:
-> On Wed, Jul 30, 2014 at 11:35:26AM -0400, Tejun Heo wrote:
-> > On Wed, Jul 30, 2014 at 10:20:38AM +0200, Antoine T=E9nart wrote:
-> > > How do you want me to send the series? There is two conflicts whe=
-n
-> > > applying to libata/for-3.17:
-> > > - patch 4/8: it takes into account a patch not in libata/for-3.17=
- but
-> > >   added before rc7. It should be better to first merge rc7, other=
-wise
-> > >   some modifications won't make sense.
-> > > - patch 6/8: "fsl,imx53-ahci" was removed from the documentation =
-in
-> > >   libata/for-3.17 but not in rc7. Resolving the conflict is reall=
-y
-> > >   simple.
-> > >=20
-> > > I think it's better to apply the whole thing after merging rc7 in=
-to
-> > > libata/for-3.17, because it will only have a really simple confli=
-ct to
-> > > resolve.
-> > >=20
-> > > Please tell me what do you prefer before I send the updated versi=
-on.
-> >=20
-> > Hmmm... does pulling in libata/for-3.16-fixes into libata/for-3.17
-> > resolves the conflict?  If so, please send the patch on top of the
-> > merged branch.  I wanna avoid pulling in -rc7 wholesale at this poi=
-nt.
->=20
-> Works for me. I'll cook and send a series based on top of
-> libata/for-3.16-fixes merged into libata/for-3.17.
 
-I pulled libata/for-3.16-fixes into for-3.17, so you can just base on
-that one.
+Kishon already took patches 1-2.
 
-Thanks.
+
+Changes since v12:
+	- rebased on top of libata/for-3.17 (with libata/for-3.16-fixes
+	  pulled in)
+	- removed the host_flags argument
+	- added a comment in ahci_host_priv for the inputs
+
+Changes since v11:
+	- fixed a small issue in libahci
+
+Changes since v10:
+        - made a 1:1 relation between PHYs and ports numbers
+        - added a SoC specific compatible when using 'generic-ahci'
+
+Changes since v9:
+        - moved port_map parameters into the AHCI structure
+
+Changes since v8:
+        - stopped reset the controller from the PHY driver
+        - removed fixed array sizes
+        - got rid of the custom to_berlin_sata_phy_priv() macro
+        - added dependency to HAS_IOMEM
+
+Changes since v7:
+        - got back to the each PHY as a sub-node representation
+        - renamed the power bit in the PHY driver
+
+Changes since v6:
+        - added the 'clocks' property and support in the PHY driver
+        - updated the PHY compatible
+
+Changes since v5:
+        - rebased on top of v3.16-rc1
+        - added the 'clocks' property in the sata node
+
+Changes since v4:
+        - updated PHY driver as tristate
+        - handled the case were no SATA port is enabled
+        - updated the compatible to a generic one
+        - cosmetic fixups
+
+Changes since v3:
+        - moved all PHY operations to the PHY driver
+        - removed PHY sub-nodes
+        - removed the custom Berlin AHCI driver and switched to
+          ahci_platform
+        - added multiple PHYs support to the libahci_platform
+
+Changes since v2:
+        - modeled each PHY as a sub-node
+        - cosmetic fixups
+
+Changes since v1:
+        - added a PHY driver, allowing to enable each port
+          individually and removed the 'force-port-map' property
+        - made the drivers a bit less magic :)
+        - wrote a function to select and configure registers in the
+          AHCI driver
+        - removed BG2 / BG2CD nodes
+
+Antoine T=C3=A9nart (8):
+  phy: add a driver for the Berlin SATA PHY
+  Documentation: bindings: add the Berlin SATA PHY
+  ata: libahci_platform: move port_map parameters into the AHCI
+    structure
+  ata: libahci: allow to use multiple PHYs
+  ata: ahci_platform: add a generic AHCI compatible
+  Documentation: bindings: document the sub-nodes AHCI bindings
+  ARM: berlin: add the AHCI node for the BG2Q
+  ARM: berlin: enable the eSATA interface on the BG2Q DMP
+
+ .../devicetree/bindings/ata/ahci-platform.txt      |  41 +++
+ .../devicetree/bindings/phy/berlin-sata-phy.txt    |  34 +++
+ arch/arm/boot/dts/berlin2q-marvell-dmp.dts         |   8 +
+ arch/arm/boot/dts/berlin2q.dtsi                    |  39 +++
+ drivers/ata/ahci.h                                 |  17 +-
+ drivers/ata/ahci_da850.c                           |   3 +-
+ drivers/ata/ahci_imx.c                             |   3 +-
+ drivers/ata/ahci_mvebu.c                           |   3 +-
+ drivers/ata/ahci_platform.c                        |   8 +-
+ drivers/ata/ahci_st.c                              |   2 +-
+ drivers/ata/ahci_sunxi.c                           |   8 +-
+ drivers/ata/ahci_xgene.c                           |   6 +-
+ drivers/ata/libahci.c                              |  17 +-
+ drivers/ata/libahci_platform.c                     | 202 +++++++++++--=
+--
+ drivers/phy/Kconfig                                |   7 +
+ drivers/phy/Makefile                               |   1 +
+ drivers/phy/phy-berlin-sata.c                      | 284 +++++++++++++=
+++++++++
+ include/linux/ahci_platform.h                      |   5 +-
+ 18 files changed, 601 insertions(+), 87 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/phy/berlin-sata-p=
+hy.txt
+ create mode 100644 drivers/phy/phy-berlin-sata.c
 
 --=20
-tejun
+1.9.1
+
