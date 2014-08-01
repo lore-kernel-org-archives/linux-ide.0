@@ -1,99 +1,47 @@
 From: Thierry Reding <thierry.reding@gmail.com>
-Subject: Re: [PATCH] ata: libahci: Make host flags unsigned long
-Date: Fri, 1 Aug 2014 16:11:47 +0200
-Message-ID: <20140801141146.GB1913@ulmo.nvidia.com>
-References: <1406893181-24764-1-git-send-email-thierry.reding@gmail.com>
- <20140801125206.GB21624@htj.dyndns.org>
- <20140801140121.GB373@ulmo.nvidia.com>
- <20140801140928.GE21624@htj.dyndns.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="1UWUbFP1cBYEclgG"
+Subject: [PATCH v2] ata: libahci: Silence compiler warning on 64-bit
+Date: Fri,  1 Aug 2014 16:30:37 +0200
+Message-ID: <1406903437-13995-1-git-send-email-thierry.reding@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pd0-f174.google.com ([209.85.192.174]:45373 "EHLO
-	mail-pd0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754332AbaHAOLw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Aug 2014 10:11:52 -0400
-Content-Disposition: inline
-In-Reply-To: <20140801140928.GE21624@htj.dyndns.org>
+Received: from mail-pd0-f179.google.com ([209.85.192.179]:48416 "EHLO
+	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750783AbaHAOam (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 1 Aug 2014 10:30:42 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: Antoine =?utf-8?Q?T=C3=A9nart?= <antoine.tenart@free-electrons.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+From: Thierry Reding <treding@nvidia.com>
 
---1UWUbFP1cBYEclgG
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Commit 725c7b570fda (ata: libahci_platform: move port_map parameters
+into the AHCI structure) moves flags into the struct ahci_host_priv's
+.flags field, which causes compiler warnings on 64-bit builds when that
+value is cast to a void * pointer. Cast to an unsigned long so that the
+subsequent cast to a pointer doesn't produce a warning.
 
-On Fri, Aug 01, 2014 at 10:09:28AM -0400, Tejun Heo wrote:
-> Hello,
->=20
-> On Fri, Aug 01, 2014 at 04:01:23PM +0200, Thierry Reding wrote:
-> > I think there's just one occurrence. Turning the flags into an unsigned
-> > long seems like a much more natural thing to do, though Besides it being
-> > what many other parts of the kernel use for flags it gives us natural
-> > alignment within struct ahci_host_priv. The structure currently looks
-> > like this:
-> >=20
-> > 	struct ahci_host_priv {
-> > 		unsigned int flags;
-> > 		u32 force_port_map;
-> > 		u32 mask_port_map;
-> >=20
-> > 		void __iomem *mmio;
-> > 		...
-> > 	};
-> >=20
-> > On 64-bit that unsigned int will be 32-bit and cause additional padding
-> > to be inserted between mask_port_map and mmio to align the 64-bit
-> > pointer.
-> >=20
-> > It's not like the alignment is that *hugely* important, but it's still,
-> > you know, pretty.
->=20
-> I don't get how that's pretty.  Sure, that space is consumed by
-> something on 64bit archs but the extra space consumed can't be
-> utilized unless we're gonna change how we use flags depending on the
-> bitness of the architecture.  You're saying that rather than leaving
-> unused space as unused it's better to commit that space to a variable
-> which can't make use of that extra space anyway.  What if we later
-> wanna add another int there?  Do we make that int a long too or modify
-> the complete unrelated ->flags back to int?
->=20
-> Prettiness is a good thing but code fundamentally should match what
-> the underlying requirement dictates it to.  We sure have to trade that
-> off too at times when the benefit gained is worthwhile, but I
-> completely fail to see how this feel-good packed prettiness is
-> anything worthwhile.
->=20
-> In general, please don't do things like this in the kernel.  Use ulong
-> for flags iff it's necessary (atomic bitops).
+Signed-off-by: Thierry Reding <treding@nvidia.com>
+---
+Changes in v2:
+- cast unsigned int to unsigned long to avoid the compiler warning and
+  keep the flags field's type as-is
 
-Oh well, as you wish, then.
+ drivers/ata/libahci_platform.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thierry
+diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+index a60b8cd40198..5b92c290e6c6 100644
+--- a/drivers/ata/libahci_platform.c
++++ b/drivers/ata/libahci_platform.c
+@@ -426,7 +426,7 @@ int ahci_platform_init_host(struct platform_device *pdev,
+ 	}
+ 
+ 	/* prepare host */
+-	pi.private_data = (void *)hpriv->flags;
++	pi.private_data = (void *)(unsigned long)hpriv->flags;
+ 
+ 	ahci_save_initial_config(dev, hpriv);
+ 
+-- 
+2.0.3
 
---1UWUbFP1cBYEclgG
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBAgAGBQJT26AiAAoJEN0jrNd/PrOhJwMQAJkgsS8Q3z0MBWWz9ClXQg2S
-XFvWTkIwryPGbhksplF9SSt1InQfhfvENgVt0duWAtoF/L839FofpnCINjUz0vTR
-DPOL0LnDsdXqjGGCk5kisDgBSjb3g/nPpq7lJN3Th5L4rFWP0okOXq1geuWV0/H2
-l4CjtJPGNT2QYYblYF4CFXju1AltHxouUG5IpwteU6qiL249Rkpv2cSlkRfy5jCM
-GQVSjyqBfsj7Z+K7UNuHMPkxnjZZxIXw1fbxE4ZgszfUUehtwAy+FUskLAqZFYUE
-Ck1nLFNVNQsivHs7NFyX5YCdYQUHVZX9yWyplb9324Snaq9Dw8zGRE/VsuJoR6gS
-LcjieJ2DAErYAz0xDqv6U8/jPR8o3Nv7/lNYowH/Q6LsvX7dOEIZVtWoPZ6bUXeV
-V7vItNxYbPfL+7Ru2CaRTNBokrpWohDbQla4BxDFRncQB28LAUXLeI/UY4RZ0bu/
-yvGvKgzXIhnkvRG4WLIiox58fT9B3rmeCmRB+ChmuSWWxJ2zTG7YVrXbtC1CciYS
-Vavr7wnjSJQDAMSSTaJCPi8JAmryIfWJvjpTH27VAYTaQjDCTjs4/UYRSD+tRifw
-y8mqcVLlpq46BSNdjbmatc/6v6ifD7msun7U9Qewi56RKL6LhxoAxgkEydsTmPTm
-bpznJYP+0M0/5lRADLOV
-=Kc43
------END PGP SIGNATURE-----
-
---1UWUbFP1cBYEclgG--
