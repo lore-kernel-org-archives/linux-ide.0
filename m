@@ -1,46 +1,136 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH v5 1/3] ahci_xgene: Removing NCQ support from the APM X-Gene SoC AHCI SATA Host Controller driver.
-Date: Fri,  1 Aug 2014 23:07:16 +0530
-Message-ID: <1406914638-24721-2-git-send-email-stripathi@apm.com>
-References: <1406914638-24721-1-git-send-email-stripathi@apm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1406914638-24721-1-git-send-email-stripathi@apm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [GIT PULL] libata changes for v3.17-rc1
+Date: Mon, 4 Aug 2014 10:19:45 -0400
+Message-ID: <20140804141945.GD26230@htj.dyndns.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qa0-f41.google.com ([209.85.216.41]:47582 "EHLO
+	mail-qa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752117AbaHDOTt (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 Aug 2014 10:19:49 -0400
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-This patch removes the NCQ support from the APM X-Gene SoC AHCI
-Host Controller driver as it doesn't support it.
+Hello, Linus.
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
----
- drivers/ata/ahci_xgene.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Except for a few, all the changes are for ahci platform drivers for
+the arm devices.  Nothing too interesting or dangerous.  There's one
+merge from libata/for-3.16-fixes to pull in dependent changes.
 
-diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-index 1cfbdca..f416495 100644
---- a/drivers/ata/ahci_xgene.c
-+++ b/drivers/ata/ahci_xgene.c
-@@ -344,7 +344,7 @@ static struct ata_port_operations xgene_ahci_ops = {
- };
+Thanks.
 
- static const struct ata_port_info xgene_ahci_port_info = {
--	.flags = AHCI_FLAG_COMMON | ATA_FLAG_NCQ,
-+	.flags = AHCI_FLAG_COMMON,
- 	.pio_mask = ATA_PIO4,
- 	.udma_mask = ATA_UDMA6,
- 	.port_ops = &xgene_ahci_ops,
-@@ -481,7 +481,7 @@ static int xgene_ahci_probe(struct platform_device *pdev)
- 	/* Configure the host controller */
- 	xgene_ahci_hw_init(hpriv);
+The following changes since commit 1a112d10f03e83fb3a2fdc4c9165865dec8a=
+3ca6:
 
--	hflags = AHCI_HFLAG_NO_PMP | AHCI_HFLAG_YES_NCQ;
-+	hflags = AHCI_HFLAG_NO_PMP | AHCI_HFLAG_NO_NCQ;
+  libata: introduce ata_host->n_tags to avoid oops on SAS controllers (=
+2014-07-23 10:30:34 -0400)
 
- 	rc = ahci_platform_init_host(pdev, hpriv, &xgene_ahci_port_info,
- 				     hflags, 0, 0);
---
-1.8.2.1
+are available in the git repository at:
 
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-3.17
+
+for you to fetch changes up to c4121c650e5c798c852e981c245caa6713c0d99e=
+:
+
+  ata: libahci: Silence compiler warning on 64-bit (2014-08-01 11:18:53=
+ -0400)
+
+----------------------------------------------------------------
+Antoine T=E9nart (4):
+      ata: libahci_platform: move port_map parameters into the AHCI str=
+ucture
+      ata: libahci: allow to use multiple PHYs
+      ata: ahci_platform: add a generic AHCI compatible
+      Documentation: bindings: document the sub-nodes AHCI bindings
+
+Joe Perches (1):
+      ata: Use dma_zalloc_coherent
+
+Kiran Padwal (1):
+      ahci: st: Make of_device_id array const
+
+Kukjin Kim (1):
+      ata: pata_samsung_cf: removes s5pc100 related ata codes
+
+Lee Jones (1):
+      ahci: st: Provide DT bindings for ST's SATA implementation
+
+Mikko Perttunen (3):
+      of: Add NVIDIA Tegra SATA controller binding
+      ata: ahci_platform: Increase AHCI_MAX_CLKS to 4
+      ata: Add support for the Tegra124 SATA controller
+
+Russell King (4):
+      ata: ahci_imx: allow hardware parameters to be specified in DT
+      dt-bindings: ata: add ahci_imx electrical properties
+      ata: ahci_imx: add disable for spread-spectrum
+      dt-bindings: ata: document ability to disable spread-spectrum clo=
+ck
+
+Shawn Guo (1):
+      dt-bindings: ata: create bindings for imx sata controller
+
+Suman Tripathi (2):
+      ahci_xgene: Fix the watermark threshold for the APM X-Gene SATA h=
+ost controller driver.
+      ahci_xgene: Use correct OOB tunning parameters for APM X-Gene SoC=
+ AHCI SATA Host controller driver.
+
+Suravee Suthikulpanit (2):
+      ahci: Check and set 64-bit DMA mask for platform AHCI driver
+      ahci/xgene: Remove logic to set 64-bit DMA mask
+
+Tejun Heo (1):
+      Merge branch 'for-3.16-fixes' of git://git.kernel.org/.../tj/liba=
+ta into for-3.17
+
+Thierry Reding (1):
+      ata: libahci: Silence compiler warning on 64-bit
+
+Tim Small (1):
+      sata_sil24: Identify which card suffered IRQ status error
+
+Wei Yongjun (1):
+      ahci: imx: add missing clk_disable_unprepare() on error in imx_sa=
+ta_enable()
+
+ .../devicetree/bindings/ata/ahci-platform.txt      |  45 ++-
+ Documentation/devicetree/bindings/ata/ahci-st.txt  |  31 ++
+ Documentation/devicetree/bindings/ata/imx-sata.txt |  36 ++
+ .../devicetree/bindings/ata/tegra-sata.txt         |  30 ++
+ drivers/ata/Kconfig                                |   9 +
+ drivers/ata/Makefile                               |   1 +
+ drivers/ata/acard-ahci.c                           |   2 +-
+ drivers/ata/ahci.c                                 |   3 +-
+ drivers/ata/ahci.h                                 |  19 +-
+ drivers/ata/ahci_da850.c                           |   3 +-
+ drivers/ata/ahci_imx.c                             | 187 +++++++++-
+ drivers/ata/ahci_mvebu.c                           |   3 +-
+ drivers/ata/ahci_platform.c                        |   8 +-
+ drivers/ata/ahci_st.c                              |   4 +-
+ drivers/ata/ahci_sunxi.c                           |   8 +-
+ drivers/ata/ahci_tegra.c                           | 376 +++++++++++++=
+++++++++
+ drivers/ata/ahci_xgene.c                           |  29 +-
+ drivers/ata/libahci.c                              |  19 +-
+ drivers/ata/libahci_platform.c                     | 215 +++++++++---
+ drivers/ata/pata_samsung_cf.c                      |  13 -
+ drivers/ata/sata_fsl.c                             |   5 +-
+ drivers/ata/sata_highbank.c                        |   2 +-
+ drivers/ata/sata_sil24.c                           |   4 +-
+ include/linux/ahci_platform.h                      |   5 +-
+ include/linux/platform_data/ata-samsung_cf.h       |   1 -
+ 25 files changed, 917 insertions(+), 141 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ata/ahci-st.txt
+ create mode 100644 Documentation/devicetree/bindings/ata/imx-sata.txt
+ create mode 100644 Documentation/devicetree/bindings/ata/tegra-sata.tx=
+t
+ create mode 100644 drivers/ata/ahci_tegra.c
+
+--=20
+tejun
