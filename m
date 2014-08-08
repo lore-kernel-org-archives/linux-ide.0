@@ -1,344 +1,228 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH 1/3] libsas: modify SATA error handler
-Date: Thu, 7 Aug 2014 16:54:01 -0700
-Message-ID: <CAPcyv4hQxtHdAXDvj9cF1prTpH0unJ7VX1ZjA5aJq8UeVhNC2Q@mail.gmail.com>
+From: Xiangliang Yu <yuxiangl@marvell.com>
+Subject: RE: [PATCH 1/3] libsas: modify SATA error handler
+Date: Fri, 8 Aug 2014 02:46:17 -0700
+Message-ID: <F766E4F80769BD478052FB6533FA745D5944CE9331@SC-VEXCH4.marvell.com>
 References: <1398346047-10276-1-git-send-email-yxlraid@gmail.com>
 	<CAPcyv4jZaR0x4ChMvBYCCq-sUgyvf6CraKj+Tn+qmcvUbxwezQ@mail.gmail.com>
+ <CAPcyv4hQxtHdAXDvj9cF1prTpH0unJ7VX1ZjA5aJq8UeVhNC2Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ie0-f178.google.com ([209.85.223.178]:47853 "EHLO
-	mail-ie0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752088AbaHGXyD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Aug 2014 19:54:03 -0400
-Received: by mail-ie0-f178.google.com with SMTP id rd18so5378538iec.23
-        for <linux-ide@vger.kernel.org>; Thu, 07 Aug 2014 16:54:01 -0700 (PDT)
-In-Reply-To: <CAPcyv4jZaR0x4ChMvBYCCq-sUgyvf6CraKj+Tn+qmcvUbxwezQ@mail.gmail.com>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:47394 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755914AbaHHJqe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Aug 2014 05:46:34 -0400
+In-Reply-To: <CAPcyv4hQxtHdAXDvj9cF1prTpH0unJ7VX1ZjA5aJq8UeVhNC2Q@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Xiangliang Yu <yxlraid@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, James Bottomley <JBottomley@parallels.com>, Todd E Brandt <todd.e.brandt@intel.com>, Lukasz Dorau <lukasz.dorau@intel.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Xiangliang Yu <yuxiangl@marvell.com>
+To: Dan Williams <dan.j.williams@intel.com>, Xiangliang Yu <yxlraid@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, James Bottomley <JBottomley@parallels.com>, Todd E Brandt <todd.e.brandt@intel.com>, Lukasz Dorau <lukasz.dorau@intel.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-[ adding yuxiangl@marvell.com ]
-
-On Tue, Jun 3, 2014 at 6:41 PM, Dan Williams <dan.j.williams@intel.com> wrote:
-> Hi, some notes below:
->
-> On Thu, Apr 24, 2014 at 6:27 AM, Xiangliang Yu <yxlraid@gmail.com> wrote:
->> Add support for SATA port softreset and port multiplier error
->> handling.
->
-> Some more detailed notes about the approach and any caveats would be
-> appreciated.
->
->>
->> Signed-off-by: Xiangliang Yu <yxlraid@gmail.com>
->> ---
->>  drivers/scsi/libsas/sas_ata.c |  226 ++++++++++++++++++++++++++++++++++++++++-
->>  include/scsi/libsas.h         |    6 +
->>  2 files changed, 231 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
->> index 766098a..29a19fd 100644
->> --- a/drivers/scsi/libsas/sas_ata.c
->> +++ b/drivers/scsi/libsas/sas_ata.c
->> @@ -442,6 +442,226 @@ static int sas_ata_hard_reset(struct ata_link *link, unsigned int *class,
->>         return ret;
->>  }
->>
->> +static void sas_ata_freeze(struct ata_port *ap)
->> +{
->> +       struct domain_device *dev = ap->private_data;
->> +       struct sas_ha_struct *sas_ha = dev->port->ha;
->> +       struct Scsi_Host *host = sas_ha->core.shost;
->> +       struct sas_internal *i = to_sas_internal(host->transportt);
->> +
->> +       if (i->dft->lldd_dev_freeze)
->> +               i->dft->lldd_dev_freeze(dev);
->> +}
->> +
->> +static void sas_ata_thaw(struct ata_port *ap)
->> +{
->> +       struct domain_device *dev = ap->private_data;
->> +       struct sas_ha_struct *sas_ha = dev->port->ha;
->> +       struct Scsi_Host *host = sas_ha->core.shost;
->> +       struct sas_internal *i = to_sas_internal(host->transportt);
->> +
->> +       if (i->dft->lldd_dev_thaw)
->> +               i->dft->lldd_dev_thaw(dev);
->> +}
->> +
->> +static int sas_ata_wait_task_done(struct sas_task *task, unsigned long timeout,
->> +               int (*check_done)(struct sas_task *task))
->> +{
->
-> Why do we need a custom check_done() routine?  Since we have a
-> sas_task we can use the normal completion infrastructure.  See
-> smp_execute_task().
->
->> +       struct ata_port *ap = task->uldd_task;
->> +       unsigned long deadline;
->> +       int done;
->> +
->> +       if (!check_done) {
->> +               SAS_DPRINTK("check function is null.\n");
->> +               return -1;
->> +       }
->> +
->> +       deadline = ata_deadline(jiffies, timeout);
->> +       done = check_done(task);
->> +
->> +       while (done && time_before(jiffies, deadline)) {
->> +               ata_msleep(ap, 1);
->> +
->> +               done = check_done(task);
->
-> This can simply be:
->
-> completion_done(&task->slow_task->completion)
->
->> +       }
->> +
->> +       return done;
->> +}
->> +
->> +static int sas_ata_exec_polled_cmd(struct ata_port *ap, struct ata_taskfile *tf,
->> +               int pmp, unsigned long timeout)
->> +{
->> +       struct domain_device *dev = ap->private_data;
->> +       struct sas_ha_struct *sas_ha = dev->port->ha;
->> +       struct Scsi_Host *host = sas_ha->core.shost;
->> +       struct sas_internal *i = to_sas_internal(host->transportt);
->> +       struct sas_task *task = NULL;
->> +       int ret = -1;
->> +
->> +       if (!i->dft->lldd_execute_task) {
->> +               SAS_DPRINTK("execute function is null.\n");
->> +               return ret;
->> +       }
->> +
->> +       task = sas_alloc_task(GFP_ATOMIC);
->
-> I think this can be downgraded to GFP_NOIO.  We're in a sleepable context.
->
->> +       if (!task) {
->> +               SAS_DPRINTK("failed to alloc sas task.\n");
->> +               goto fail;
->> +       }
->> +
->> +       task->dev = dev;
->> +       task->task_proto = SAS_PROTOCOL_SATA;
->> +       task->uldd_task = ap;
->> +
->> +       ata_tf_to_fis(tf, pmp, 0, (u8 *)&task->ata_task.fis);
->> +       task->ata_task.retry_count = 1;
->> +       task->task_state_flags = SAS_TASK_STATE_PENDING;
->> +       task->task_state_flags |= SAS_TASK_NEED_DEV_RESET;
->> +
->> +       ret = i->dft->lldd_execute_task(task, 1, GFP_ATOMIC);
->
-> Same here.
->
->> +       if (ret) {
->> +               SAS_DPRINTK("failed to send internal task.\n");
->> +               goto fail;
->> +       }
->> +
->> +       if (timeout) {
->> +               ret = sas_ata_wait_task_done(task, timeout,
->> +                               i->dft->lldd_wait_task_done);
->> +               if (ret) {
->> +                       SAS_DPRINTK("get wrong status.\n");
->> +                       goto fail;
->> +               }
->> +       }
->> +       list_del_init(&task->list);
->> +       sas_free_task(task);
->> +
->> +       return 0;
->> +fail:
->> +       if (task) {
->> +               list_del_init(&task->list);
->> +               sas_free_task(task);
->> +       }
->> +
->> +       return ret;
->> +}
->> +
->> +static int sas_ata_soft_reset(struct ata_link *link, unsigned int *class,
->> +                             unsigned long deadline)
->> +{
->> +       struct ata_taskfile tf;
->> +       struct ata_port *ap = link->ap;
->> +       struct domain_device *dev = ap->private_data;
->> +       struct sas_ha_struct *sas_ha = dev->port->ha;
->> +       struct Scsi_Host *host = sas_ha->core.shost;
->> +       struct sas_internal *i = to_sas_internal(host->transportt);
->> +       struct sas_phy *phy;
->> +       unsigned long now, msecs;
->> +       unsigned int pmp;
->> +       int ret = -1;
->> +       int (*check_ready)(struct ata_link *link);
->> +
->> +       phy = sas_get_local_phy(dev);
->> +       if (scsi_is_sas_phy_local(phy))
->> +               check_ready = local_ata_check_ready;
->> +       else
->> +               check_ready = smp_ata_check_ready;
->> +       sas_put_local_phy(phy);
->
-> Does this attempt to support expander attached port multiplier's?
-> Last I checked expanders do not support this so we should just fail
-> this for non-local phys.
->
->> +
->> +       pmp = sata_srst_pmp(link);
->> +
->> +       msecs = 0;
->> +       now = jiffies;
->> +       if (time_after(deadline, now))
->> +               msecs = jiffies_to_msecs(deadline - now);
->> +
->> +       memset(&tf, 0, sizeof(struct ata_taskfile));
->> +       tf.ctl = ATA_SRST;
->> +       tf.device = ATA_DEVICE_OBS;
->> +
->> +       if (sas_ata_exec_polled_cmd(ap, &tf, pmp, msecs)) {
->> +               ret = -EIO;
->> +               goto fail;
->> +       }
->> +
->> +       tf.ctl &= ~ATA_SRST;
->> +       sas_ata_exec_polled_cmd(ap, &tf, pmp, msecs);
->
-> What about lldd's that do not know how to handle ATA_SRST?  I think we
-> need preparation patches to make SRST support opt-in, or teach all
-> lldds how to handle these SRST sas_tasks.
->
->> +
->> +       ret = ata_wait_after_reset(link, deadline, check_ready);
->> +       if (ret) {
->> +               SAS_DPRINTK("device is not ready.\n");
->> +               ret = -EIO;
->> +               goto fail;
->> +       } else {
->> +               if (i->dft->lldd_dev_classify)
->> +                       *class = i->dft->lldd_dev_classify(dev);
->> +       }
->> +
->> +       return 0;
->> +
->> +fail:
->> +       SAS_DPRINTK("failed to reset.\n");
->> +       return ret;
->> +}
->> +
->> +/* According sata 3.0 spec 13.15.4.2, enable the device port */
->> +static int sas_ata_pmp_hard_reset(struct ata_link *link, unsigned int *class,
->> +                             unsigned long deadline)
->> +{
->> +       struct ata_port *ap = link->ap;
->> +       struct domain_device *dev = ap->private_data;
->> +       struct sas_ha_struct *sas_ha = dev->port->ha;
->> +       struct Scsi_Host *host = sas_ha->core.shost;
->> +       struct sas_internal *i = to_sas_internal(host->transportt);
->> +       int ret = -1;
->> +       u32 scontrol = 0;
->> +
->> +       set_bit(SAS_DEV_RESET, &dev->state);
->> +
->> +       ret = sata_scr_read(link, SCR_CONTROL, &scontrol);
->
-> I think a comment is needed clarifying that these reads generate
-> sas_tasks to a pmp and are not trying to read/write local SCR
-> registers that do not exist on a SAS hba.
->
->> +       if (ret)
->> +               goto error;
->> +
->> +       /* enable device port */
->> +       scontrol = 0x1;
->> +       ret = sata_scr_write(link, SCR_CONTROL, scontrol);
->> +       if (ret)
->> +               goto error;
->> +
->> +       ata_msleep(ap, 1);
->> +
->> +       scontrol = 0x0;
->> +       ret = sata_scr_write(link, SCR_CONTROL, scontrol);
->> +       if (ret)
->> +               goto error;
->> +
->> +       ata_msleep(ap, 10);
->> +
->> +       /* check device link status */
->> +       if (ata_link_offline(link)) {
->> +               SAS_DPRINTK("link is offline.\n");
->> +               goto error;
->> +       }
->> +
->> +       /* clear X bit */
->> +       scontrol = 0xFFFFFFFF;
->> +       ret = sata_scr_write(link, SCR_ERROR, scontrol);
->> +       if (ret)
->> +               goto error;
->> +
->> +       /* may be need to wait for device sig */
->> +       ata_msleep(ap, 3);
->> +
->> +       /* check device class */
->> +       if (i->dft->lldd_dev_classify)
->> +               *class = i->dft->lldd_dev_classify(dev);
->> +
->> +       return 0;
->> +
->> +error:
->> +       SAS_DPRINTK("failed to hard reset.\n");
->> +       return ret;
->> +}
->> +
->>  /*
->>   * notify the lldd to forget the sas_task for this internal ata command
->>   * that bypasses scsi-eh
->> @@ -551,8 +771,12 @@ void sas_ata_end_eh(struct ata_port *ap)
->>  static struct ata_port_operations sas_sata_ops = {
->>         .prereset               = ata_std_prereset,
->>         .hardreset              = sas_ata_hard_reset,
->> +       .softreset              = sas_ata_soft_reset,
->> +       .pmp_hardreset          = sas_ata_pmp_hard_reset,
->> +       .freeze                 = sas_ata_freeze,
->> +       .thaw                   = sas_ata_thaw,
->>         .postreset              = ata_std_postreset,
->> -       .error_handler          = ata_std_error_handler,
->> +       .error_handler          = sata_pmp_error_handler,
->>         .post_internal_cmd      = sas_ata_post_internal,
->>         .qc_defer               = ata_std_qc_defer,
->>         .qc_prep                = ata_noop_qc_prep,
->> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
->> index ef7872c..a26466a 100644
->> --- a/include/scsi/libsas.h
->> +++ b/include/scsi/libsas.h
->> @@ -689,6 +689,12 @@ struct sas_domain_function_template {
->>         /* GPIO support */
->>         int (*lldd_write_gpio)(struct sas_ha_struct *, u8 reg_type,
->>                                u8 reg_index, u8 reg_count, u8 *write_data);
->> +
->> +       /* ATA EH functions */
->> +       void (*lldd_dev_freeze)(struct domain_device *);
->
-> Why do we need to pass this all the way through to the lldd?  Can we
-> get away with emulating this in sas_ata.c.
->
->> +       void (*lldd_dev_thaw)(struct domain_device *);
->
-> Same note as lldd_dev_freeze
->
->> +       int (*lldd_wait_task_done)(struct sas_task *);
->
-> Should not be needed.
->
->> +       int (*lldd_dev_classify)(struct domain_device *);
->
-> I think this belongs in a different patch set.  If we solve device
-> re-classification for soft reset we need to do the same for the
-> sas_ata_hard_reset path.
+SGksIERhbg0KDQo+IEhpLCBzb21lIG5vdGVzIGJlbG93Og0KPg0KPiBPbiBUaHUsIEFwciAyNCwg
+MjAxNCBhdCA2OjI3IEFNLCBYaWFuZ2xpYW5nIFl1IDx5eGxyYWlkQGdtYWlsLmNvbT4gd3JvdGU6
+DQo+PiBBZGQgc3VwcG9ydCBmb3IgU0FUQSBwb3J0IHNvZnRyZXNldCBhbmQgcG9ydCBtdWx0aXBs
+aWVyIGVycm9yIA0KPj4gaGFuZGxpbmcuDQo+DQo+IFNvbWUgbW9yZSBkZXRhaWxlZCBub3RlcyBh
+Ym91dCB0aGUgYXBwcm9hY2ggYW5kIGFueSBjYXZlYXRzIHdvdWxkIGJlIA0KPiBhcHByZWNpYXRl
+ZC4NCj4NCj4+DQo+PiBTaWduZWQtb2ZmLWJ5OiBYaWFuZ2xpYW5nIFl1IDx5eGxyYWlkQGdtYWls
+LmNvbT4NCj4+IC0tLQ0KPj4gIGRyaXZlcnMvc2NzaS9saWJzYXMvc2FzX2F0YS5jIHwgIDIyNiAr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrLQ0KPj4gIGluY2x1ZGUvc2Nz
+aS9saWJzYXMuaCAgICAgICAgIHwgICAgNiArDQo+PiAgMiBmaWxlcyBjaGFuZ2VkLCAyMzEgaW5z
+ZXJ0aW9ucygrKSwgMSBkZWxldGlvbnMoLSkNCj4+DQo+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9z
+Y3NpL2xpYnNhcy9zYXNfYXRhLmMgDQo+PiBiL2RyaXZlcnMvc2NzaS9saWJzYXMvc2FzX2F0YS5j
+IGluZGV4IDc2NjA5OGEuLjI5YTE5ZmQgMTAwNjQ0DQo+PiAtLS0gYS9kcml2ZXJzL3Njc2kvbGli
+c2FzL3Nhc19hdGEuYw0KPj4gKysrIGIvZHJpdmVycy9zY3NpL2xpYnNhcy9zYXNfYXRhLmMNCj4+
+IEBAIC00NDIsNiArNDQyLDIyNiBAQCBzdGF0aWMgaW50IHNhc19hdGFfaGFyZF9yZXNldChzdHJ1
+Y3QgYXRhX2xpbmsgKmxpbmssIHVuc2lnbmVkIGludCAqY2xhc3MsDQo+PiAgICAgICAgIHJldHVy
+biByZXQ7DQo+PiAgfQ0KPj4NCj4+ICtzdGF0aWMgdm9pZCBzYXNfYXRhX2ZyZWV6ZShzdHJ1Y3Qg
+YXRhX3BvcnQgKmFwKSB7DQo+PiArICAgICAgIHN0cnVjdCBkb21haW5fZGV2aWNlICpkZXYgPSBh
+cC0+cHJpdmF0ZV9kYXRhOw0KPj4gKyAgICAgICBzdHJ1Y3Qgc2FzX2hhX3N0cnVjdCAqc2FzX2hh
+ID0gZGV2LT5wb3J0LT5oYTsNCj4+ICsgICAgICAgc3RydWN0IFNjc2lfSG9zdCAqaG9zdCA9IHNh
+c19oYS0+Y29yZS5zaG9zdDsNCj4+ICsgICAgICAgc3RydWN0IHNhc19pbnRlcm5hbCAqaSA9IHRv
+X3Nhc19pbnRlcm5hbChob3N0LT50cmFuc3BvcnR0KTsNCj4+ICsNCj4+ICsgICAgICAgaWYgKGkt
+PmRmdC0+bGxkZF9kZXZfZnJlZXplKQ0KPj4gKyAgICAgICAgICAgICAgIGktPmRmdC0+bGxkZF9k
+ZXZfZnJlZXplKGRldik7IH0NCj4+ICsNCj4+ICtzdGF0aWMgdm9pZCBzYXNfYXRhX3RoYXcoc3Ry
+dWN0IGF0YV9wb3J0ICphcCkgew0KPj4gKyAgICAgICBzdHJ1Y3QgZG9tYWluX2RldmljZSAqZGV2
+ID0gYXAtPnByaXZhdGVfZGF0YTsNCj4+ICsgICAgICAgc3RydWN0IHNhc19oYV9zdHJ1Y3QgKnNh
+c19oYSA9IGRldi0+cG9ydC0+aGE7DQo+PiArICAgICAgIHN0cnVjdCBTY3NpX0hvc3QgKmhvc3Qg
+PSBzYXNfaGEtPmNvcmUuc2hvc3Q7DQo+PiArICAgICAgIHN0cnVjdCBzYXNfaW50ZXJuYWwgKmkg
+PSB0b19zYXNfaW50ZXJuYWwoaG9zdC0+dHJhbnNwb3J0dCk7DQo+PiArDQo+PiArICAgICAgIGlm
+IChpLT5kZnQtPmxsZGRfZGV2X3RoYXcpDQo+PiArICAgICAgICAgICAgICAgaS0+ZGZ0LT5sbGRk
+X2Rldl90aGF3KGRldik7IH0NCj4+ICsNCj4+ICtzdGF0aWMgaW50IHNhc19hdGFfd2FpdF90YXNr
+X2RvbmUoc3RydWN0IHNhc190YXNrICp0YXNrLCB1bnNpZ25lZCBsb25nIHRpbWVvdXQsDQo+PiAr
+ICAgICAgICAgICAgICAgaW50ICgqY2hlY2tfZG9uZSkoc3RydWN0IHNhc190YXNrICp0YXNrKSkg
+ew0KPg0KPiBXaHkgZG8gd2UgbmVlZCBhIGN1c3RvbSBjaGVja19kb25lKCkgcm91dGluZT8gIFNp
+bmNlIHdlIGhhdmUgYSANCj4gc2FzX3Rhc2sgd2UgY2FuIHVzZSB0aGUgbm9ybWFsIGNvbXBsZXRp
+b24gaW5mcmFzdHJ1Y3R1cmUuICBTZWUgDQo+IHNtcF9leGVjdXRlX3Rhc2soKS4NCg0KWW91IGFy
+ZSByaWdodCwgSSdsbCBjaGFuZ2UgaXQNCg0KPg0KPj4gKyAgICAgICBzdHJ1Y3QgYXRhX3BvcnQg
+KmFwID0gdGFzay0+dWxkZF90YXNrOw0KPj4gKyAgICAgICB1bnNpZ25lZCBsb25nIGRlYWRsaW5l
+Ow0KPj4gKyAgICAgICBpbnQgZG9uZTsNCj4+ICsNCj4+ICsgICAgICAgaWYgKCFjaGVja19kb25l
+KSB7DQo+PiArICAgICAgICAgICAgICAgU0FTX0RQUklOVEsoImNoZWNrIGZ1bmN0aW9uIGlzIG51
+bGwuXG4iKTsNCj4+ICsgICAgICAgICAgICAgICByZXR1cm4gLTE7DQo+PiArICAgICAgIH0NCj4+
+ICsNCj4+ICsgICAgICAgZGVhZGxpbmUgPSBhdGFfZGVhZGxpbmUoamlmZmllcywgdGltZW91dCk7
+DQo+PiArICAgICAgIGRvbmUgPSBjaGVja19kb25lKHRhc2spOw0KPj4gKw0KPj4gKyAgICAgICB3
+aGlsZSAoZG9uZSAmJiB0aW1lX2JlZm9yZShqaWZmaWVzLCBkZWFkbGluZSkpIHsNCj4+ICsgICAg
+ICAgICAgICAgICBhdGFfbXNsZWVwKGFwLCAxKTsNCj4+ICsNCj4+ICsgICAgICAgICAgICAgICBk
+b25lID0gY2hlY2tfZG9uZSh0YXNrKTsNCj4NCj4gVGhpcyBjYW4gc2ltcGx5IGJlOg0KPg0KPiBj
+b21wbGV0aW9uX2RvbmUoJnRhc2stPnNsb3dfdGFzay0+Y29tcGxldGlvbikNCg0KWWVzDQoNCj4N
+Cj4+ICsgICAgICAgfQ0KPj4gKw0KPj4gKyAgICAgICByZXR1cm4gZG9uZTsNCj4+ICt9DQo+PiAr
+DQo+PiArc3RhdGljIGludCBzYXNfYXRhX2V4ZWNfcG9sbGVkX2NtZChzdHJ1Y3QgYXRhX3BvcnQg
+KmFwLCBzdHJ1Y3QgYXRhX3Rhc2tmaWxlICp0ZiwNCj4+ICsgICAgICAgICAgICAgICBpbnQgcG1w
+LCB1bnNpZ25lZCBsb25nIHRpbWVvdXQpIHsNCj4+ICsgICAgICAgc3RydWN0IGRvbWFpbl9kZXZp
+Y2UgKmRldiA9IGFwLT5wcml2YXRlX2RhdGE7DQo+PiArICAgICAgIHN0cnVjdCBzYXNfaGFfc3Ry
+dWN0ICpzYXNfaGEgPSBkZXYtPnBvcnQtPmhhOw0KPj4gKyAgICAgICBzdHJ1Y3QgU2NzaV9Ib3N0
+ICpob3N0ID0gc2FzX2hhLT5jb3JlLnNob3N0Ow0KPj4gKyAgICAgICBzdHJ1Y3Qgc2FzX2ludGVy
+bmFsICppID0gdG9fc2FzX2ludGVybmFsKGhvc3QtPnRyYW5zcG9ydHQpOw0KPj4gKyAgICAgICBz
+dHJ1Y3Qgc2FzX3Rhc2sgKnRhc2sgPSBOVUxMOw0KPj4gKyAgICAgICBpbnQgcmV0ID0gLTE7DQo+
+PiArDQo+PiArICAgICAgIGlmICghaS0+ZGZ0LT5sbGRkX2V4ZWN1dGVfdGFzaykgew0KPj4gKyAg
+ICAgICAgICAgICAgIFNBU19EUFJJTlRLKCJleGVjdXRlIGZ1bmN0aW9uIGlzIG51bGwuXG4iKTsN
+Cj4+ICsgICAgICAgICAgICAgICByZXR1cm4gcmV0Ow0KPj4gKyAgICAgICB9DQo+PiArDQo+PiAr
+ICAgICAgIHRhc2sgPSBzYXNfYWxsb2NfdGFzayhHRlBfQVRPTUlDKTsNCj4NCj4gSSB0aGluayB0
+aGlzIGNhbiBiZSBkb3duZ3JhZGVkIHRvIEdGUF9OT0lPLiAgV2UncmUgaW4gYSBzbGVlcGFibGUg
+Y29udGV4dC4NCg0KWWVzLCBnb3QgaXQNCg0KPg0KPj4gKyAgICAgICBpZiAoIXRhc2spIHsNCj4+
+ICsgICAgICAgICAgICAgICBTQVNfRFBSSU5USygiZmFpbGVkIHRvIGFsbG9jIHNhcyB0YXNrLlxu
+Iik7DQo+PiArICAgICAgICAgICAgICAgZ290byBmYWlsOw0KPj4gKyAgICAgICB9DQo+PiArDQo+
+PiArICAgICAgIHRhc2stPmRldiA9IGRldjsNCj4+ICsgICAgICAgdGFzay0+dGFza19wcm90byA9
+IFNBU19QUk9UT0NPTF9TQVRBOw0KPj4gKyAgICAgICB0YXNrLT51bGRkX3Rhc2sgPSBhcDsNCj4+
+ICsNCj4+ICsgICAgICAgYXRhX3RmX3RvX2Zpcyh0ZiwgcG1wLCAwLCAodTggKikmdGFzay0+YXRh
+X3Rhc2suZmlzKTsNCj4+ICsgICAgICAgdGFzay0+YXRhX3Rhc2sucmV0cnlfY291bnQgPSAxOw0K
+Pj4gKyAgICAgICB0YXNrLT50YXNrX3N0YXRlX2ZsYWdzID0gU0FTX1RBU0tfU1RBVEVfUEVORElO
+RzsNCj4+ICsgICAgICAgdGFzay0+dGFza19zdGF0ZV9mbGFncyB8PSBTQVNfVEFTS19ORUVEX0RF
+Vl9SRVNFVDsNCj4+ICsNCj4+ICsgICAgICAgcmV0ID0gaS0+ZGZ0LT5sbGRkX2V4ZWN1dGVfdGFz
+ayh0YXNrLCAxLCBHRlBfQVRPTUlDKTsNCj4NCj4gU2FtZSBoZXJlLg0KPg0KPj4gKyAgICAgICBp
+ZiAocmV0KSB7DQo+PiArICAgICAgICAgICAgICAgU0FTX0RQUklOVEsoImZhaWxlZCB0byBzZW5k
+IGludGVybmFsIHRhc2suXG4iKTsNCj4+ICsgICAgICAgICAgICAgICBnb3RvIGZhaWw7DQo+PiAr
+ICAgICAgIH0NCj4+ICsNCj4+ICsgICAgICAgaWYgKHRpbWVvdXQpIHsNCj4+ICsgICAgICAgICAg
+ICAgICByZXQgPSBzYXNfYXRhX3dhaXRfdGFza19kb25lKHRhc2ssIHRpbWVvdXQsDQo+PiArICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgIGktPmRmdC0+bGxkZF93YWl0X3Rhc2tfZG9uZSk7
+DQo+PiArICAgICAgICAgICAgICAgaWYgKHJldCkgew0KPj4gKyAgICAgICAgICAgICAgICAgICAg
+ICAgU0FTX0RQUklOVEsoImdldCB3cm9uZyBzdGF0dXMuXG4iKTsNCj4+ICsgICAgICAgICAgICAg
+ICAgICAgICAgIGdvdG8gZmFpbDsNCj4+ICsgICAgICAgICAgICAgICB9DQo+PiArICAgICAgIH0N
+Cj4+ICsgICAgICAgbGlzdF9kZWxfaW5pdCgmdGFzay0+bGlzdCk7DQo+PiArICAgICAgIHNhc19m
+cmVlX3Rhc2sodGFzayk7DQo+PiArDQo+PiArICAgICAgIHJldHVybiAwOw0KPj4gK2ZhaWw6DQo+
+PiArICAgICAgIGlmICh0YXNrKSB7DQo+PiArICAgICAgICAgICAgICAgbGlzdF9kZWxfaW5pdCgm
+dGFzay0+bGlzdCk7DQo+PiArICAgICAgICAgICAgICAgc2FzX2ZyZWVfdGFzayh0YXNrKTsNCj4+
+ICsgICAgICAgfQ0KPj4gKw0KPj4gKyAgICAgICByZXR1cm4gcmV0Ow0KPj4gK30NCj4+ICsNCj4+
+ICtzdGF0aWMgaW50IHNhc19hdGFfc29mdF9yZXNldChzdHJ1Y3QgYXRhX2xpbmsgKmxpbmssIHVu
+c2lnbmVkIGludCAqY2xhc3MsDQo+PiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICB1bnNp
+Z25lZCBsb25nIGRlYWRsaW5lKSB7DQo+PiArICAgICAgIHN0cnVjdCBhdGFfdGFza2ZpbGUgdGY7
+DQo+PiArICAgICAgIHN0cnVjdCBhdGFfcG9ydCAqYXAgPSBsaW5rLT5hcDsNCj4+ICsgICAgICAg
+c3RydWN0IGRvbWFpbl9kZXZpY2UgKmRldiA9IGFwLT5wcml2YXRlX2RhdGE7DQo+PiArICAgICAg
+IHN0cnVjdCBzYXNfaGFfc3RydWN0ICpzYXNfaGEgPSBkZXYtPnBvcnQtPmhhOw0KPj4gKyAgICAg
+ICBzdHJ1Y3QgU2NzaV9Ib3N0ICpob3N0ID0gc2FzX2hhLT5jb3JlLnNob3N0Ow0KPj4gKyAgICAg
+ICBzdHJ1Y3Qgc2FzX2ludGVybmFsICppID0gdG9fc2FzX2ludGVybmFsKGhvc3QtPnRyYW5zcG9y
+dHQpOw0KPj4gKyAgICAgICBzdHJ1Y3Qgc2FzX3BoeSAqcGh5Ow0KPj4gKyAgICAgICB1bnNpZ25l
+ZCBsb25nIG5vdywgbXNlY3M7DQo+PiArICAgICAgIHVuc2lnbmVkIGludCBwbXA7DQo+PiArICAg
+ICAgIGludCByZXQgPSAtMTsNCj4+ICsgICAgICAgaW50ICgqY2hlY2tfcmVhZHkpKHN0cnVjdCBh
+dGFfbGluayAqbGluayk7DQo+PiArDQo+PiArICAgICAgIHBoeSA9IHNhc19nZXRfbG9jYWxfcGh5
+KGRldik7DQo+PiArICAgICAgIGlmIChzY3NpX2lzX3Nhc19waHlfbG9jYWwocGh5KSkNCj4+ICsg
+ICAgICAgICAgICAgICBjaGVja19yZWFkeSA9IGxvY2FsX2F0YV9jaGVja19yZWFkeTsNCj4+ICsg
+ICAgICAgZWxzZQ0KPj4gKyAgICAgICAgICAgICAgIGNoZWNrX3JlYWR5ID0gc21wX2F0YV9jaGVj
+a19yZWFkeTsNCj4+ICsgICAgICAgc2FzX3B1dF9sb2NhbF9waHkocGh5KTsNCj4NCj4gRG9lcyB0
+aGlzIGF0dGVtcHQgdG8gc3VwcG9ydCBleHBhbmRlciBhdHRhY2hlZCBwb3J0IG11bHRpcGxpZXIn
+cz8NCj4gTGFzdCBJIGNoZWNrZWQgZXhwYW5kZXJzIGRvIG5vdCBzdXBwb3J0IHRoaXMgc28gd2Ug
+c2hvdWxkIGp1c3QgZmFpbCANCj4gdGhpcyBmb3Igbm9uLWxvY2FsIHBoeXMuDQoNClNvcnJ5LCBJ
+IGNvcHkgaXQgZnJvbSBoYXJkX3Jlc2V0IGZ1bmN0aW9uLCBhbmQgSSdsbCBjbGVhciB0aGUgY29k
+ZTsNCg0KPg0KPj4gKw0KPj4gKyAgICAgICBwbXAgPSBzYXRhX3Nyc3RfcG1wKGxpbmspOw0KPj4g
+Kw0KPj4gKyAgICAgICBtc2VjcyA9IDA7DQo+PiArICAgICAgIG5vdyA9IGppZmZpZXM7DQo+PiAr
+ICAgICAgIGlmICh0aW1lX2FmdGVyKGRlYWRsaW5lLCBub3cpKQ0KPj4gKyAgICAgICAgICAgICAg
+IG1zZWNzID0gamlmZmllc190b19tc2VjcyhkZWFkbGluZSAtIG5vdyk7DQo+PiArDQo+PiArICAg
+ICAgIG1lbXNldCgmdGYsIDAsIHNpemVvZihzdHJ1Y3QgYXRhX3Rhc2tmaWxlKSk7DQo+PiArICAg
+ICAgIHRmLmN0bCA9IEFUQV9TUlNUOw0KPj4gKyAgICAgICB0Zi5kZXZpY2UgPSBBVEFfREVWSUNF
+X09CUzsNCj4+ICsNCj4+ICsgICAgICAgaWYgKHNhc19hdGFfZXhlY19wb2xsZWRfY21kKGFwLCAm
+dGYsIHBtcCwgbXNlY3MpKSB7DQo+PiArICAgICAgICAgICAgICAgcmV0ID0gLUVJTzsNCj4+ICsg
+ICAgICAgICAgICAgICBnb3RvIGZhaWw7DQo+PiArICAgICAgIH0NCj4+ICsNCj4+ICsgICAgICAg
+dGYuY3RsICY9IH5BVEFfU1JTVDsNCj4+ICsgICAgICAgc2FzX2F0YV9leGVjX3BvbGxlZF9jbWQo
+YXAsICZ0ZiwgcG1wLCBtc2Vjcyk7DQo+DQo+IFdoYXQgYWJvdXQgbGxkZCdzIHRoYXQgZG8gbm90
+IGtub3cgaG93IHRvIGhhbmRsZSBBVEFfU1JTVD8gIEkgdGhpbmsgd2UgDQo+IG5lZWQgcHJlcGFy
+YXRpb24gcGF0Y2hlcyB0byBtYWtlIFNSU1Qgc3VwcG9ydCBvcHQtaW4sIG9yIHRlYWNoIGFsbCAN
+Cj4gbGxkZHMgaG93IHRvIGhhbmRsZSB0aGVzZSBTUlNUIHNhc190YXNrcy4NCg0KSSB0aGluayBs
+bGRkcyBoYXZlIGRpZmZlcmVudCBhY3Rpb25zIHRvIGhhbmRsZSBTUlNUIGJlY2F1c2UgdGhlcmUg
+aXMgbm8gdW5pZmllZCBzdGFuZGFyZC4NCkJ1dCBpdCBzaG91bGQgYmUgZWFzeSB0byBzdXBwb3J0
+IGl0Lg0KTGF0ZXIsIEknbGwgc3VibWl0IGEgbXZzYXMgcGF0Y2ggdG8gc2hvdyBob3cgdG8gc3Vw
+cG9ydCBpdC4gDQoNCj4NCj4+ICsNCj4+ICsgICAgICAgcmV0ID0gYXRhX3dhaXRfYWZ0ZXJfcmVz
+ZXQobGluaywgZGVhZGxpbmUsIGNoZWNrX3JlYWR5KTsNCj4+ICsgICAgICAgaWYgKHJldCkgew0K
+Pj4gKyAgICAgICAgICAgICAgIFNBU19EUFJJTlRLKCJkZXZpY2UgaXMgbm90IHJlYWR5LlxuIik7
+DQo+PiArICAgICAgICAgICAgICAgcmV0ID0gLUVJTzsNCj4+ICsgICAgICAgICAgICAgICBnb3Rv
+IGZhaWw7DQo+PiArICAgICAgIH0gZWxzZSB7DQo+PiArICAgICAgICAgICAgICAgaWYgKGktPmRm
+dC0+bGxkZF9kZXZfY2xhc3NpZnkpDQo+PiArICAgICAgICAgICAgICAgICAgICAgICAqY2xhc3Mg
+PSBpLT5kZnQtPmxsZGRfZGV2X2NsYXNzaWZ5KGRldik7DQo+PiArICAgICAgIH0NCj4+ICsNCj4+
+ICsgICAgICAgcmV0dXJuIDA7DQo+PiArDQo+PiArZmFpbDoNCj4+ICsgICAgICAgU0FTX0RQUklO
+VEsoImZhaWxlZCB0byByZXNldC5cbiIpOw0KPj4gKyAgICAgICByZXR1cm4gcmV0Ow0KPj4gK30N
+Cj4+ICsNCj4+ICsvKiBBY2NvcmRpbmcgc2F0YSAzLjAgc3BlYyAxMy4xNS40LjIsIGVuYWJsZSB0
+aGUgZGV2aWNlIHBvcnQgKi8gDQo+PiArc3RhdGljIGludCBzYXNfYXRhX3BtcF9oYXJkX3Jlc2V0
+KHN0cnVjdCBhdGFfbGluayAqbGluaywgdW5zaWduZWQgaW50ICpjbGFzcywNCj4+ICsgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgIHVuc2lnbmVkIGxvbmcgZGVhZGxpbmUpIHsNCj4+ICsgICAg
+ICAgc3RydWN0IGF0YV9wb3J0ICphcCA9IGxpbmstPmFwOw0KPj4gKyAgICAgICBzdHJ1Y3QgZG9t
+YWluX2RldmljZSAqZGV2ID0gYXAtPnByaXZhdGVfZGF0YTsNCj4+ICsgICAgICAgc3RydWN0IHNh
+c19oYV9zdHJ1Y3QgKnNhc19oYSA9IGRldi0+cG9ydC0+aGE7DQo+PiArICAgICAgIHN0cnVjdCBT
+Y3NpX0hvc3QgKmhvc3QgPSBzYXNfaGEtPmNvcmUuc2hvc3Q7DQo+PiArICAgICAgIHN0cnVjdCBz
+YXNfaW50ZXJuYWwgKmkgPSB0b19zYXNfaW50ZXJuYWwoaG9zdC0+dHJhbnNwb3J0dCk7DQo+PiAr
+ICAgICAgIGludCByZXQgPSAtMTsNCj4+ICsgICAgICAgdTMyIHNjb250cm9sID0gMDsNCj4+ICsN
+Cj4+ICsgICAgICAgc2V0X2JpdChTQVNfREVWX1JFU0VULCAmZGV2LT5zdGF0ZSk7DQo+PiArDQo+
+PiArICAgICAgIHJldCA9IHNhdGFfc2NyX3JlYWQobGluaywgU0NSX0NPTlRST0wsICZzY29udHJv
+bCk7DQo+DQo+IEkgdGhpbmsgYSBjb21tZW50IGlzIG5lZWRlZCBjbGFyaWZ5aW5nIHRoYXQgdGhl
+c2UgcmVhZHMgZ2VuZXJhdGUgDQo+IHNhc190YXNrcyB0byBhIHBtcCBhbmQgYXJlIG5vdCB0cnlp
+bmcgdG8gcmVhZC93cml0ZSBsb2NhbCBTQ1IgDQo+IHJlZ2lzdGVycyB0aGF0IGRvIG5vdCBleGlz
+dCBvbiBhIFNBUyBoYmEuDQo+DQoNCkkgdGhpbmsgdGhlIHNpdHVhdGlvbiBjYW4ndCBoYXBwZW4g
+aGVyZS4NCg0KPj4gKyAgICAgICBpZiAocmV0KQ0KPj4gKyAgICAgICAgICAgICAgIGdvdG8gZXJy
+b3I7DQo+PiArDQo+PiArICAgICAgIC8qIGVuYWJsZSBkZXZpY2UgcG9ydCAqLw0KPj4gKyAgICAg
+ICBzY29udHJvbCA9IDB4MTsNCj4+ICsgICAgICAgcmV0ID0gc2F0YV9zY3Jfd3JpdGUobGluaywg
+U0NSX0NPTlRST0wsIHNjb250cm9sKTsNCj4+ICsgICAgICAgaWYgKHJldCkNCj4+ICsgICAgICAg
+ICAgICAgICBnb3RvIGVycm9yOw0KPj4gKw0KPj4gKyAgICAgICBhdGFfbXNsZWVwKGFwLCAxKTsN
+Cj4+ICsNCj4+ICsgICAgICAgc2NvbnRyb2wgPSAweDA7DQo+PiArICAgICAgIHJldCA9IHNhdGFf
+c2NyX3dyaXRlKGxpbmssIFNDUl9DT05UUk9MLCBzY29udHJvbCk7DQo+PiArICAgICAgIGlmIChy
+ZXQpDQo+PiArICAgICAgICAgICAgICAgZ290byBlcnJvcjsNCj4+ICsNCj4+ICsgICAgICAgYXRh
+X21zbGVlcChhcCwgMTApOw0KPj4gKw0KPj4gKyAgICAgICAvKiBjaGVjayBkZXZpY2UgbGluayBz
+dGF0dXMgKi8NCj4+ICsgICAgICAgaWYgKGF0YV9saW5rX29mZmxpbmUobGluaykpIHsNCj4+ICsg
+ICAgICAgICAgICAgICBTQVNfRFBSSU5USygibGluayBpcyBvZmZsaW5lLlxuIik7DQo+PiArICAg
+ICAgICAgICAgICAgZ290byBlcnJvcjsNCj4+ICsgICAgICAgfQ0KPj4gKw0KPj4gKyAgICAgICAv
+KiBjbGVhciBYIGJpdCAqLw0KPj4gKyAgICAgICBzY29udHJvbCA9IDB4RkZGRkZGRkY7DQo+PiAr
+ICAgICAgIHJldCA9IHNhdGFfc2NyX3dyaXRlKGxpbmssIFNDUl9FUlJPUiwgc2NvbnRyb2wpOw0K
+Pj4gKyAgICAgICBpZiAocmV0KQ0KPj4gKyAgICAgICAgICAgICAgIGdvdG8gZXJyb3I7DQo+PiAr
+DQo+PiArICAgICAgIC8qIG1heSBiZSBuZWVkIHRvIHdhaXQgZm9yIGRldmljZSBzaWcgKi8NCj4+
+ICsgICAgICAgYXRhX21zbGVlcChhcCwgMyk7DQo+PiArDQo+PiArICAgICAgIC8qIGNoZWNrIGRl
+dmljZSBjbGFzcyAqLw0KPj4gKyAgICAgICBpZiAoaS0+ZGZ0LT5sbGRkX2Rldl9jbGFzc2lmeSkN
+Cj4+ICsgICAgICAgICAgICAgICAqY2xhc3MgPSBpLT5kZnQtPmxsZGRfZGV2X2NsYXNzaWZ5KGRl
+dik7DQo+PiArDQo+PiArICAgICAgIHJldHVybiAwOw0KPj4gKw0KPj4gK2Vycm9yOg0KPj4gKyAg
+ICAgICBTQVNfRFBSSU5USygiZmFpbGVkIHRvIGhhcmQgcmVzZXQuXG4iKTsNCj4+ICsgICAgICAg
+cmV0dXJuIHJldDsNCj4+ICt9DQo+PiArDQo+PiAgLyoNCj4+ICAgKiBub3RpZnkgdGhlIGxsZGQg
+dG8gZm9yZ2V0IHRoZSBzYXNfdGFzayBmb3IgdGhpcyBpbnRlcm5hbCBhdGEgY29tbWFuZA0KPj4g
+ICAqIHRoYXQgYnlwYXNzZXMgc2NzaS1laA0KPj4gQEAgLTU1MSw4ICs3NzEsMTIgQEAgdm9pZCBz
+YXNfYXRhX2VuZF9laChzdHJ1Y3QgYXRhX3BvcnQgKmFwKSAgc3RhdGljIA0KPj4gc3RydWN0IGF0
+YV9wb3J0X29wZXJhdGlvbnMgc2FzX3NhdGFfb3BzID0gew0KPj4gICAgICAgICAucHJlcmVzZXQg
+ICAgICAgICAgICAgICA9IGF0YV9zdGRfcHJlcmVzZXQsDQo+PiAgICAgICAgIC5oYXJkcmVzZXQg
+ICAgICAgICAgICAgID0gc2FzX2F0YV9oYXJkX3Jlc2V0LA0KPj4gKyAgICAgICAuc29mdHJlc2V0
+ICAgICAgICAgICAgICA9IHNhc19hdGFfc29mdF9yZXNldCwNCj4+ICsgICAgICAgLnBtcF9oYXJk
+cmVzZXQgICAgICAgICAgPSBzYXNfYXRhX3BtcF9oYXJkX3Jlc2V0LA0KPj4gKyAgICAgICAuZnJl
+ZXplICAgICAgICAgICAgICAgICA9IHNhc19hdGFfZnJlZXplLA0KPj4gKyAgICAgICAudGhhdyAg
+ICAgICAgICAgICAgICAgICA9IHNhc19hdGFfdGhhdywNCj4+ICAgICAgICAgLnBvc3RyZXNldCAg
+ICAgICAgICAgICAgPSBhdGFfc3RkX3Bvc3RyZXNldCwNCj4+IC0gICAgICAgLmVycm9yX2hhbmRs
+ZXIgICAgICAgICAgPSBhdGFfc3RkX2Vycm9yX2hhbmRsZXIsDQo+PiArICAgICAgIC5lcnJvcl9o
+YW5kbGVyICAgICAgICAgID0gc2F0YV9wbXBfZXJyb3JfaGFuZGxlciwNCj4+ICAgICAgICAgLnBv
+c3RfaW50ZXJuYWxfY21kICAgICAgPSBzYXNfYXRhX3Bvc3RfaW50ZXJuYWwsDQo+PiAgICAgICAg
+IC5xY19kZWZlciAgICAgICAgICAgICAgID0gYXRhX3N0ZF9xY19kZWZlciwNCj4+ICAgICAgICAg
+LnFjX3ByZXAgICAgICAgICAgICAgICAgPSBhdGFfbm9vcF9xY19wcmVwLA0KPj4gZGlmZiAtLWdp
+dCBhL2luY2x1ZGUvc2NzaS9saWJzYXMuaCBiL2luY2x1ZGUvc2NzaS9saWJzYXMuaCBpbmRleCAN
+Cj4+IGVmNzg3MmMuLmEyNjQ2NmEgMTAwNjQ0DQo+PiAtLS0gYS9pbmNsdWRlL3Njc2kvbGlic2Fz
+LmgNCj4+ICsrKyBiL2luY2x1ZGUvc2NzaS9saWJzYXMuaA0KPj4gQEAgLTY4OSw2ICs2ODksMTIg
+QEAgc3RydWN0IHNhc19kb21haW5fZnVuY3Rpb25fdGVtcGxhdGUgew0KPj4gICAgICAgICAvKiBH
+UElPIHN1cHBvcnQgKi8NCj4+ICAgICAgICAgaW50ICgqbGxkZF93cml0ZV9ncGlvKShzdHJ1Y3Qg
+c2FzX2hhX3N0cnVjdCAqLCB1OCByZWdfdHlwZSwNCj4+ICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICB1OCByZWdfaW5kZXgsIHU4IHJlZ19jb3VudCwgdTggDQo+PiAqd3JpdGVfZGF0YSk7
+DQo+PiArDQo+PiArICAgICAgIC8qIEFUQSBFSCBmdW5jdGlvbnMgKi8NCj4+ICsgICAgICAgdm9p
+ZCAoKmxsZGRfZGV2X2ZyZWV6ZSkoc3RydWN0IGRvbWFpbl9kZXZpY2UgKik7DQo+DQo+IFdoeSBk
+byB3ZSBuZWVkIHRvIHBhc3MgdGhpcyBhbGwgdGhlIHdheSB0aHJvdWdoIHRvIHRoZSBsbGRkPyAg
+Q2FuIHdlIA0KPiBnZXQgYXdheSB3aXRoIGVtdWxhdGluZyB0aGlzIGluIHNhc19hdGEuYy4NCj4N
+Cg0KQmVjYXVzZSBTQVMgSEJBcyBzcGVjIGhhdmVuJ3QgYSB1bmlmaWVkIHN0YW5kYXJkLCBub3Qg
+bGlrZSBBSENJLg0KQnV0IEkgdGhpbmsgd2UgY2FuIGRlbGV0ZSB0aGUgaW50ZXJmYWNlIGJlY2F1
+c2Ugd2UgZG9uJ3QgZGlzYWJsZSBpbnRlcnJ1cHQgDQpkdXJpbmcgRUggbm93Lg0KDQo+PiArICAg
+ICAgIHZvaWQgKCpsbGRkX2Rldl90aGF3KShzdHJ1Y3QgZG9tYWluX2RldmljZSAqKTsNCj4NCj4g
+U2FtZSBub3RlIGFzIGxsZGRfZGV2X2ZyZWV6ZQ0KPg0KPj4gKyAgICAgICBpbnQgKCpsbGRkX3dh
+aXRfdGFza19kb25lKShzdHJ1Y3Qgc2FzX3Rhc2sgKik7DQo+DQo+IFNob3VsZCBub3QgYmUgbmVl
+ZGVkLg0KPg0KPj4gKyAgICAgICBpbnQgKCpsbGRkX2Rldl9jbGFzc2lmeSkoc3RydWN0IGRvbWFp
+bl9kZXZpY2UgKik7DQo+DQo+IEkgdGhpbmsgdGhpcyBiZWxvbmdzIGluIGEgZGlmZmVyZW50IHBh
+dGNoIHNldC4gIElmIHdlIHNvbHZlIGRldmljZSANCj4gcmUtY2xhc3NpZmljYXRpb24gZm9yIHNv
+ZnQgcmVzZXQgd2UgbmVlZCB0byBkbyB0aGUgc2FtZSBmb3IgdGhlIA0KPiBzYXNfYXRhX2hhcmRf
+cmVzZXQgcGF0aC4NCg0KQ291bGQgeW91IGV4cGxhaW4gbW9yZSBkZXRhaWxzPyBUaGFua3MhDQo=
