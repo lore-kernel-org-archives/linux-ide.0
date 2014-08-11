@@ -1,59 +1,59 @@
-From: Mikko Perttunen <mperttunen@nvidia.com>
-Subject: [PATCH] ata: ahci_tegra: Read calibration fuse
-Date: Mon, 11 Aug 2014 14:19:13 +0300
-Message-ID: <1407755953-11785-1-git-send-email-mperttunen@nvidia.com>
+From: Thierry Reding <thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH] ata: ahci_tegra: Change include to fix compilation
+Date: Mon, 11 Aug 2014 15:39:40 +0200
+Message-ID: <20140811133937.GA26128@ulmo.nvidia.com>
+References: <1407752268-18745-1-git-send-email-mperttunen@nvidia.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:4513 "EHLO
-	hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751402AbaHKLTe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Aug 2014 07:19:34 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="LZvS9be/3tNcYl/X"
+Return-path: <linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1407752268-18745-1-git-send-email-mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Sender: linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Mikko Perttunen <mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: swarren-3lzwWm7+Weoh9ZMKESR00Q@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org, swarren@wwwdotorg.org, thierry.reding@gmail.com
-Cc: linux-ide@vger.kernel.org, linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org, Mikko Perttunen <mperttunen@nvidia.com>
 
-The original version of the driver did not read the SATA calibration
-fuse to remove the dependency to the fuse driver. The fuse driver
-is now merged, so add this functionality.
 
-The calibration fuse contains a 2-bit value used to pick a set
-of calibration values for the SATA pad.
+--LZvS9be/3tNcYl/X
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Mikko Perttunen <mperttunen@nvidia.com>
----
- drivers/ata/ahci_tegra.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+On Mon, Aug 11, 2014 at 01:17:48PM +0300, Mikko Perttunen wrote:
+> Before this patch, the driver included <linux/tegra-powergate.h>,
+> which was effectively renamed to <soc/tegra/pmc.h> at about the same
+> time the ahci_tegra series landed. Fix the include path so that the
+> driver compiles.
+>=20
+> Signed-off-by: Mikko Perttunen <mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+> ---
+> This would be for 3.17.
+>=20
+>  drivers/ata/ahci_tegra.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ata/ahci_tegra.c b/drivers/ata/ahci_tegra.c
-index f1fef74..ad99e0f5 100644
---- a/drivers/ata/ahci_tegra.c
-+++ b/drivers/ata/ahci_tegra.c
-@@ -26,6 +26,7 @@
- #include <linux/platform_device.h>
- #include <linux/regulator/consumer.h>
- #include <soc/tegra/pmc.h>
-+#include <soc/tegra/fuse.h>
- #include "ahci.h"
- 
- #define SATA_CONFIGURATION_0				0x180
-@@ -180,9 +181,12 @@ static int tegra_ahci_controller_init(struct ahci_host_priv *hpriv)
- 
- 	/* Pad calibration */
- 
--	/* FIXME Always use calibration 0. Change this to read the calibration
--	 * fuse once the fuse driver has landed. */
--	val = 0;
-+	ret = tegra_fuse_readl(FUSE_SATA_CALIB, &val);
-+	if (ret) {
-+		dev_err(&tegra->pdev->dev,
-+			"failed to read calibration fuse: %d\n", ret);
-+		return ret;
-+	}
- 
- 	calib = tegra124_pad_calibration[val & FUSE_SATA_CALIB_MASK];
- 
--- 
-1.8.1.5
+Acked-by: Thierry Reding <treding-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 
+--LZvS9be/3tNcYl/X
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBAgAGBQJT6MeZAAoJEN0jrNd/PrOhzoMP/0foe0K5J7B88uuIy3j2allV
+ykDX3JDvpzXGhhcon2U2HejAslIU2/aSvwBAVgQ7N3aps07nFDQNtvHgaFu2o049
+rkSYLbmTWkBphAu0gfCSosr6SHHza1UZA4RYeAzJxUOMu1Gxh1CZp/T6X73rrTjU
+HlwT4Mf0gk2IlmeWpPSwjDxAhRRE6eNYvrgJn6k2gmE5I5GPVVPVds28fM12ritK
+duYPpYLbHnPwVWCLUsDTZ1gcqAWieEttm2+ou5B2+KIWNpLvNXQcLr4z3fA3Urkz
+eRREt0Jrr6Id/Lsy32k+lmv7w0hZnN62cn8FEppHbwtUiA+CzHlmGRCnhIjmnf7q
+9NLdGH+OUgrKtFJPq3o0vITfBKIh1eCh7Qa2VvqW/a2+I1hQow1zuCIDilt+6quw
+2NcZ4AfAjzn1OviuhbJXm/COreMOUXArOp6E9r/v4tvvJoWrH2aDHOZ4LP3AW+De
+8JzwD+8B/0ETiFjEBwBrfWlkZ8tpQcOqIQa/cpPp2Q2iJIlNQZg+lkJDYi0GoD1M
+X/6PORX0dvoze4E23qIv8HHk4pngXGsW60nZCohsDn5jaxel79UO6JX0o43r0zS3
+m7QYmHgYZ2GrB0NUxWsDjvkEH0s35SQaKGnGEHIoa5/pHQBSt/VrCnGKlprMqXyl
+O60Dx/COTs52USIoml6w
+=gyhW
+-----END PGP SIGNATURE-----
+
+--LZvS9be/3tNcYl/X--
