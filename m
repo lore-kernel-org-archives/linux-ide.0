@@ -1,46 +1,45 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v6 2/2] arm64: Remove the clock and PHY reference from the APM X-Gene SoC AHCI SATA Host controller dts node.
-Date: Sat, 9 Aug 2014 22:00:34 +0200
-Message-ID: <201408092200.34651.arnd@arndb.de>
-References: <1407514466-25312-1-git-send-email-stripathi@apm.com> <1407514466-25312-3-git-send-email-stripathi@apm.com>
+From: Mikko Perttunen <mperttunen@nvidia.com>
+Subject: [PATCH] ata: ahci_tegra: Change include to fix compilation
+Date: Mon, 11 Aug 2014 13:17:48 +0300
+Message-ID: <1407752268-18745-1-git-send-email-mperttunen@nvidia.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:65119 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751055AbaHIUBc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 9 Aug 2014 16:01:32 -0400
-In-Reply-To: <1407514466-25312-3-git-send-email-stripathi@apm.com>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:1922 "EHLO
+	hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752360AbaHKKSJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Aug 2014 06:18:09 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Suman Tripathi <stripathi@apm.com>
-Cc: olof@lixom.net, tj@kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>
+To: tj@kernel.org, swarren@wwwdotorg.org, thierry.reding@gmail.com
+Cc: linux-ide@vger.kernel.org, linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org, Mikko Perttunen <mperttunen@nvidia.com>
 
-On Friday 08 August 2014, Suman Tripathi wrote:
-> This patch removes all clocks and PHY references from the APM X-Gene
-> SoC AHCI SATA host controller and PHY DTS nodes. The clock and PHY
-> are no longer needed as they are handled by the firmware. By removing
-> only the reference is not enough as any un-used clock entry will get
-> disabled by the clock framework. This patch also updates the APM X-Gene
-> SOC AHCI SATA Host controller clock and PHY bindings as optional
-> properties.
-> 
-> Signed-off-by: Loc Ho <lho@apm.com>
-> Signed-off-by: Suman Tripathi <stripathi@apm.com>
-> ---
->  .../devicetree/bindings/ata/apm-xgene.txt          | 10 +--
->  arch/arm64/boot/dts/apm-storm.dtsi                 | 93 ----------------------
->  2 files changed, 5 insertions(+), 98 deletions(-)
-> 
+Before this patch, the driver included <linux/tegra-powergate.h>,
+which was effectively renamed to <soc/tegra/pmc.h> at about the same
+time the ahci_tegra series landed. Fix the include path so that the
+driver compiles.
 
-What is the upgrade path here? It sounds like this will still break new kernels
-running on old firmware if you also upgrade the dtb file. You write in the
-introductory email that this will work with old firmware as well, but I don't
-understand how.
+Signed-off-by: Mikko Perttunen <mperttunen@nvidia.com>
+---
+This would be for 3.17.
 
-How about modifying the dtb at boot time by the firmware according to the
-requirements of the firmware itself?
+ drivers/ata/ahci_tegra.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-	Arnd
+diff --git a/drivers/ata/ahci_tegra.c b/drivers/ata/ahci_tegra.c
+index fc3df47..f1fef74 100644
+--- a/drivers/ata/ahci_tegra.c
++++ b/drivers/ata/ahci_tegra.c
+@@ -24,8 +24,8 @@
+ #include <linux/module.h>
+ #include <linux/of_device.h>
+ #include <linux/platform_device.h>
+-#include <linux/tegra-powergate.h>
+ #include <linux/regulator/consumer.h>
++#include <soc/tegra/pmc.h>
+ #include "ahci.h"
+ 
+ #define SATA_CONFIGURATION_0				0x180
+-- 
+1.8.1.5
+
