@@ -1,94 +1,58 @@
-From: Himangi Saraogi <himangi774@gmail.com>
-Subject: [PATCH] Drivers: ide: Remove typedef atiixp_ide_timing
-Date: Thu, 14 Aug 2014 22:14:30 +0530
-Message-ID: <20140814164430.GA4237@himangi-Dell>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Arjun Sreedharan <arjun024@gmail.com>
+Subject: [PATCH] ata: propagate return value of scc_wait_after_reset
+Date: Sat, 16 Aug 2014 15:47:17 +0530
+Message-ID: <1408184238-1733-1-git-send-email-arjun024@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:47965 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752936AbaHNQoh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Aug 2014 12:44:37 -0400
-Content-Disposition: inline
+Received: from mail-pd0-f177.google.com ([209.85.192.177]:61656 "EHLO
+	mail-pd0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751124AbaHPKRc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Aug 2014 06:17:32 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Julia Lawall <julia.lawall@lip6.fr>
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The Linux kernel coding style guidelines suggest not using typedefs
-for structure types. This patch gets rid of the typedef for
-atiixp_ide_timing.
-
-The following Coccinelle semantic patch detects the case:
-
-@tn1@
-type td;
-@@
-
-typedef struct { ... } td;
-
-@script:python tf@
-td << tn1.td;
-tdres;
-@@
-
-coccinelle.tdres = td;
-
-@@
-type tn1.td;
-identifier tf.tdres;
-@@
-
--typedef
- struct
-+  tdres
-   { ... }
--td
- ;
-
-@@
-type tn1.td;
-identifier tf.tdres;
-@@
-
--td
-+ struct tdres
-
-Signed-off-by: Himangi Saraogi <himangi774@gmail.com>
-Acked-by: Julia Lawall <julia.lawall@lip6.fr>
+scc_bus_softreset not necessarily should return zero.
+Propagate the error code.
+Signed-off-by: Arjun Sreedharan <arjun024@gmail.com>
 ---
- drivers/ide/atiixp.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/ata/pata_scc.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/ide/atiixp.c b/drivers/ide/atiixp.c
-index dbd0f24..76650e9 100644
---- a/drivers/ide/atiixp.c
-+++ b/drivers/ide/atiixp.c
-@@ -19,12 +19,12 @@
- #define ATIIXP_IDE_UDMA_CONTROL		0x54
- #define ATIIXP_IDE_UDMA_MODE		0x56
+diff --git a/drivers/ata/pata_scc.c b/drivers/ata/pata_scc.c
+index 4e006d7..5618c4518 100644
+--- a/drivers/ata/pata_scc.c
++++ b/drivers/ata/pata_scc.c
+@@ -585,7 +585,7 @@ static int scc_wait_after_reset(struct ata_link *link, unsigned int devmask,
+  *	Note: Original code is ata_bus_softreset().
+  */
  
--typedef struct {
-+struct atiixp_ide_timing {
- 	u8 command_width;
- 	u8 recover_width;
--} atiixp_ide_timing;
-+};
+-static unsigned int scc_bus_softreset(struct ata_port *ap, unsigned int devmask,
++static int scc_bus_softreset(struct ata_port *ap, unsigned int devmask,
+                                       unsigned long deadline)
+ {
+ 	struct ata_ioports *ioaddr = &ap->ioaddr;
+@@ -599,9 +599,7 @@ static unsigned int scc_bus_softreset(struct ata_port *ap, unsigned int devmask,
+ 	udelay(20);
+ 	out_be32(ioaddr->ctl_addr, ap->ctl);
  
--static atiixp_ide_timing pio_timing[] = {
-+static struct atiixp_ide_timing pio_timing[] = {
- 	{ 0x05, 0x0d },
- 	{ 0x04, 0x07 },
- 	{ 0x03, 0x04 },
-@@ -32,7 +32,7 @@ static atiixp_ide_timing pio_timing[] = {
- 	{ 0x02, 0x00 },
- };
+-	scc_wait_after_reset(&ap->link, devmask, deadline);
+-
+-	return 0;
++	return scc_wait_after_reset(&ap->link, devmask, deadline);
+ }
  
--static atiixp_ide_timing mdma_timing[] = {
-+static struct atiixp_ide_timing mdma_timing[] = {
- 	{ 0x07, 0x07 },
- 	{ 0x02, 0x01 },
- 	{ 0x02, 0x00 },
+ /**
+@@ -618,7 +616,8 @@ static int scc_softreset(struct ata_link *link, unsigned int *classes,
+ {
+ 	struct ata_port *ap = link->ap;
+ 	unsigned int slave_possible = ap->flags & ATA_FLAG_SLAVE_POSS;
+-	unsigned int devmask = 0, err_mask;
++	unsigned int devmask = 0;
++	int err_mask;
+ 	u8 err;
+ 
+ 	DPRINTK("ENTER\n");
 -- 
-1.9.1
+1.7.11.7
 
