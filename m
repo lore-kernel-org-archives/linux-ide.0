@@ -1,38 +1,34 @@
-From: Arjun Sreedharan <arjun024@gmail.com>
-Subject: [PATCH] ata: pata_samsung_cf: change ret type to signed
-Date: Sat, 16 Aug 2014 18:38:34 +0530
-Message-ID: <1408194514-2001-1-git-send-email-arjun024@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v6 1/2] ahci_xgene: Removing NCQ support from the APM
+ X-Gene SoC AHCI SATA Host Controller driver.
+Date: Sat, 16 Aug 2014 09:09:45 -0400
+Message-ID: <20140816130945.GI9305@htj.dyndns.org>
+References: <1407514466-25312-1-git-send-email-stripathi@apm.com>
+ <1407514466-25312-2-git-send-email-stripathi@apm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:41984 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751416AbaHPNI4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Aug 2014 09:08:56 -0400
+Received: from mail-qc0-f173.google.com ([209.85.216.173]:50246 "EHLO
+	mail-qc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751476AbaHPNJs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Aug 2014 09:09:48 -0400
+Content-Disposition: inline
+In-Reply-To: <1407514466-25312-2-git-send-email-stripathi@apm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Suman Tripathi <stripathi@apm.com>
+Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>
 
-Change return type to signed int since it could be
-a negative errno.
+On Fri, Aug 08, 2014 at 09:44:25PM +0530, Suman Tripathi wrote:
+> This patch removes the NCQ support from the APM X-Gene SoC AHCI
+> Host Controller driver as it doesn't support it.
+> 
+> Signed-off-by: Loc Ho <lho@apm.com>
+> Signed-off-by: Suman Tripathi <stripathi@apm.com>
 
-Signed-off-by: Arjun Sreedharan <arjun024@gmail.com>
----
- drivers/ata/pata_samsung_cf.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Applied to libata/for-3.17-fixes w/ stable cc'd.
 
-diff --git a/drivers/ata/pata_samsung_cf.c b/drivers/ata/pata_samsung_cf.c
-index fb52883..0c1c03a 100644
---- a/drivers/ata/pata_samsung_cf.c
-+++ b/drivers/ata/pata_samsung_cf.c
-@@ -361,7 +361,7 @@ static int pata_s3c_wait_after_reset(struct ata_link *link,
- /*
-  * pata_s3c_bus_softreset - PATA device software reset
-  */
--static unsigned int pata_s3c_bus_softreset(struct ata_port *ap,
-+static int pata_s3c_bus_softreset(struct ata_port *ap,
- 		unsigned long deadline)
- {
- 	struct ata_ioports *ioaddr = &ap->ioaddr;
+Thanks.
+
 -- 
-1.7.11.7
-
+tejun
