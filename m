@@ -1,75 +1,36 @@
-From: Arjun Sreedharan <arjun024@gmail.com>
-Subject: [PATCH] ata: propagate return value of scc_wait_after_reset
-Date: Sat, 16 Aug 2014 19:48:04 +0530
-Message-ID: <1408198684-2258-1-git-send-email-arjun024@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] ata: propagate return value of scc_wait_after_reset
+Date: Sun, 17 Aug 2014 07:10:42 -0400
+Message-ID: <20140817111042.GN9305@htj.dyndns.org>
 References: <53ef6157.qX8Csumbm2zNx/EI%fengguang.wu@intel.com>
+ <1408198684-2258-1-git-send-email-arjun024@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:41531 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750992AbaHPOSV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Aug 2014 10:18:21 -0400
-Received: by mail-pa0-f41.google.com with SMTP id rd3so4995487pab.0
-        for <linux-ide@vger.kernel.org>; Sat, 16 Aug 2014 07:18:16 -0700 (PDT)
-In-Reply-To: <53ef6157.qX8Csumbm2zNx/EI%fengguang.wu@intel.com>
+Received: from mail-qa0-f50.google.com ([209.85.216.50]:45653 "EHLO
+	mail-qa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751647AbaHQLKq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Aug 2014 07:10:46 -0400
+Received: by mail-qa0-f50.google.com with SMTP id s7so3411687qap.23
+        for <linux-ide@vger.kernel.org>; Sun, 17 Aug 2014 04:10:45 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <1408198684-2258-1-git-send-email-arjun024@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org
+To: Arjun Sreedharan <arjun024@gmail.com>
 Cc: linux-ide@vger.kernel.org
 
-scc_bus_softreset not necessarily should return zero.
-Propagate the error code.
+On Sat, Aug 16, 2014 at 07:48:04PM +0530, Arjun Sreedharan wrote:
+> scc_bus_softreset not necessarily should return zero.
+> Propagate the error code.
+> 
+> Signed-off-by: Arjun Sreedharan <arjun024@gmail.com>
 
-Signed-off-by: Arjun Sreedharan <arjun024@gmail.com>
----
- drivers/ata/pata_scc.c | 13 ++++++-------
- 1 file changed, 6 insertions(+), 7 deletions(-)
+I reverted the change yesterday but didn't have time to reply.  Don't
+send patches you haven't even compile tested.  This is the most basic
+of your responsibilities when sending out patches.  Okay?
 
-diff --git a/drivers/ata/pata_scc.c b/drivers/ata/pata_scc.c
-index 4e006d7..b5013dc 100644
---- a/drivers/ata/pata_scc.c
-+++ b/drivers/ata/pata_scc.c
-@@ -585,7 +585,7 @@ static int scc_wait_after_reset(struct ata_link *link, unsigned int devmask,
-  *	Note: Original code is ata_bus_softreset().
-  */
- 
--static unsigned int scc_bus_softreset(struct ata_port *ap, unsigned int devmask,
-+static int scc_bus_softreset(struct ata_port *ap, unsigned int devmask,
-                                       unsigned long deadline)
- {
- 	struct ata_ioports *ioaddr = &ap->ioaddr;
-@@ -599,9 +599,7 @@ static unsigned int scc_bus_softreset(struct ata_port *ap, unsigned int devmask,
- 	udelay(20);
- 	out_be32(ioaddr->ctl_addr, ap->ctl);
- 
--	scc_wait_after_reset(&ap->link, devmask, deadline);
--
--	return 0;
-+	return scc_wait_after_reset(&ap->link, devmask, deadline);
- }
- 
- /**
-@@ -618,7 +616,8 @@ static int scc_softreset(struct ata_link *link, unsigned int *classes,
- {
- 	struct ata_port *ap = link->ap;
- 	unsigned int slave_possible = ap->flags & ATA_FLAG_SLAVE_POSS;
--	unsigned int devmask = 0, err_mask;
-+	unsigned int devmask = 0;
-+	int rc;
- 	u8 err;
- 
- 	DPRINTK("ENTER\n");
-@@ -634,8 +633,8 @@ static int scc_softreset(struct ata_link *link, unsigned int *classes,
- 
- 	/* issue bus reset */
- 	DPRINTK("about to softreset, devmask=%x\n", devmask);
--	err_mask = scc_bus_softreset(ap, devmask, deadline);
--	if (err_mask) {
-- 		ata_port_err(ap, "SRST failed (err_mask=0x%x)\n", err_mask);
-+	rc = scc_bus_softreset(ap, devmask, deadline);
-+	if (rc) {
-+ 		ata_port_err(ap, "SRST failed (err_mask=0x%x)\n", rc);
- 		return -EIO;
- 	}
+Applying the updated version to libata/for-3.17-fixes.
+
 -- 
-1.7.11.7
-
+tejun
