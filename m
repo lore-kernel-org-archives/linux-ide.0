@@ -1,83 +1,48 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH v7 3/3] ahci_xgene: Fix the link down in first attempt for the APM X-Gene SoC AHCI SATA host controller driver.
-Date: Tue, 19 Aug 2014 12:01:51 +0530
-Message-ID: <1408429911-1406-4-git-send-email-stripathi@apm.com>
-References: <1408429911-1406-1-git-send-email-stripathi@apm.com>
+From: Alexander Shiyan <shc_work@mail.ru>
+Subject: [PATCH] libata: Use dev_name() for request_irq() to distinguish devices
+Date: Tue, 19 Aug 2014 10:51:04 +0400
+Message-ID: <1408431064-6796-1-git-send-email-shc_work@mail.ru>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from denmail01-v4020.amcc.com ([192.195.68.30]:45869 "EHLO
-	denmail01.apm.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752633AbaHSGdZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Aug 2014 02:33:25 -0400
-In-Reply-To: <1408429911-1406-1-git-send-email-stripathi@apm.com>
+Received: from fallback8.mail.ru ([94.100.181.110]:47130 "EHLO
+	fallback8.mail.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752680AbaHSHcB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Aug 2014 03:32:01 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>
+To: linux-ide@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Alexander Shiyan <shc_work@mail.ru>
 
-The link down issue in first attempt happens due to 2 H/W errata below:
+Use dev_name() instead of driver name for request_irq().
+This will help to distinguish between multiple identical devices.
 
-1. Due to HW errata, during speed negotiation, sometimes controller
-is not able to detect ALIGN at GEN3(6Gbps) within 54.6us results in
-a timeout. This issue can be recovered by issuing a COMRESET again.
+Before:
+ CPU0
+ 5:      34425  clps711x-intc   5  pata_of_platform
+ 6:       6778  clps711x-intc   6  pata_of_platform
 
-2. Due to HW errata, although ALIGH detection is successfull, due to
-8b/10b and disparity BERR, sometimes the signature from the drive is
-not received successfully by the Host controller. Due to this the
-communication with the host and drive is not established due to
-locking of CDR(clock and data recovery) circuit. This issue can be
-recovered by issuing a COMRESET again.
+After:
+ CPU0
+ 5:       2182  clps711x-intc   5  20000000.ide
+ 6:      11024  clps711x-intc   6  20100000.ide
 
-This patch fixes the above issues by retrying the COMRESET with a
-maximum attempts of 3.
+Signed-off-by: Alexander Shiyan <shc_work@mail.ru>
 ---
- drivers/ata/ahci_xgene.c | 25 ++++++++++++++++++-------
- 1 file changed, 18 insertions(+), 7 deletions(-)
+ drivers/ata/libata-core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-index 0a87f2e..294c9a8 100644
---- a/drivers/ata/ahci_xgene.c
-+++ b/drivers/ata/ahci_xgene.c
-@@ -78,6 +78,9 @@
- #define CFG_MEM_RAM_SHUTDOWN		0x00000070
- #define BLOCK_MEM_RDY			0x00000074
-
-+/* Max retry for link down */
-+#define MAX_LINK_DOWN_RETRY 3
-+
- struct xgene_ahci_context {
- 	struct ahci_host_priv *hpriv;
- 	struct device *dev;
-@@ -277,15 +280,23 @@ static int xgene_ahci_do_hardreset(struct ata_link *link,
- 	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
- 	void __iomem *port_mmio = ahci_port_base(ap);
- 	struct ata_taskfile tf;
-+	int link_down_retry = 0;
- 	int rc;
--	u32 val;
--
--	/* clear D2H reception area to properly wait for D2H FIS */
--	ata_tf_init(link->device, &tf);
--	tf.command = ATA_BUSY;
--	ata_tf_to_fis(&tf, 0, 0, d2h_fis);
--	rc = sata_link_hardreset(link, timing, deadline, online,
-+	u32 val, sstatus;
-+
-+	do {
-+		/* clear D2H reception area to properly wait for D2H FIS */
-+		ata_tf_init(link->device, &tf);
-+		tf.command = ATA_BUSY;
-+		ata_tf_to_fis(&tf, 0, 0, d2h_fis);
-+		rc = sata_link_hardreset(link, timing, deadline, online,
- 				 ahci_check_ready);
-+		if (*online)
-+			break;
-+
-+		sata_scr_read(link, SCR_STATUS, &sstatus);
-+	} while (link_down_retry++ < MAX_LINK_DOWN_RETRY &&
-+		 (sstatus & 0xff) == 0x1);
-
- 	val = readl(port_mmio + PORT_SCR_ERR);
- 	if (val & (SERR_DISPARITY | SERR_10B_8B_ERR))
---
-1.8.2.1
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index dbdc5d3..782d126 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -6227,7 +6227,7 @@ int ata_host_activate(struct ata_host *host, int irq,
+ 	}
+ 
+ 	rc = devm_request_irq(host->dev, irq, irq_handler, irq_flags,
+-			      dev_driver_string(host->dev), host);
++			      dev_name(host->dev), host);
+ 	if (rc)
+ 		return rc;
+ 
+-- 
+1.8.5.5
 
