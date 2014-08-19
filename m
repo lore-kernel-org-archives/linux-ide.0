@@ -1,73 +1,63 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: SATA disks disabled on boot
-Date: Sun, 17 Aug 2014 09:39:42 -0400
-Message-ID: <20140817133942.GD7679@mtj.dyndns.org>
-References: <CADqA9uaW6JwirSZQaHjCuB=9GSUQyakOEBAZor1ed-vyjoC=2g@mail.gmail.com>
- <20140714163641.GF31610@htj.dyndns.org>
- <CADqA9uYMCdT1ZpHD0fOVoD67PAx6RaY+8grfmG8SRoqnwyyHgw@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f47.google.com ([209.85.192.47]:59054 "EHLO
-	mail-qg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751282AbaHQNjq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Aug 2014 09:39:46 -0400
-Received: by mail-qg0-f47.google.com with SMTP id i50so3748232qgf.34
-        for <linux-ide@vger.kernel.org>; Sun, 17 Aug 2014 06:39:46 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <CADqA9uYMCdT1ZpHD0fOVoD67PAx6RaY+8grfmG8SRoqnwyyHgw@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Suman Tripathi <stripathi@apm.com>
+Subject: [PATCH v7 1/3] arm64: Fix the csr-mask for APM X-Gene SoC AHCI SATA PHY clock DTS node.
+Date: Tue, 19 Aug 2014 12:01:49 +0530
+Message-ID: <1408429911-1406-2-git-send-email-stripathi@apm.com>
+References: <1408429911-1406-1-git-send-email-stripathi@apm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1408429911-1406-1-git-send-email-stripathi@apm.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
 List-Id: linux-ide@vger.kernel.org
-To: Nuno =?iso-8859-1?Q?Magalh=E3es?= <nunomagalhaes@eu.ipp.pt>
-Cc: linux-ide@vger.kernel.org
 
-Hello,
+The value of the csr-mask of the SATA PHY clock DTS node has a
+wrong value resulting a kernel panic as the clock/reset is not
+proper for the PHY of the SATA host controller 1. This patch
+fixes the correct csr-mask value of the SATA PHY clock DTS node
+for the SATA Host controller 1.
 
-Sorry about the late reply.
+As the 'ok' is the default status of a device tree node, this patch
+removes the status of the PHY clock node of SATA Host Controller 1.
+The status of the clock node is handled from the firmware based on
+the controller enabled/disabled by the user.
 
-On Tue, Jul 15, 2014 at 12:24:21AM +0100, Nuno Magalh=E3es wrote:
-> > Can you please try the followings?
->=20
-> This doesn't happen every-time i boot, only sometimes (about 50/50).
-> Once i booted and the disk was disabled, i created dmesg1.nodisk
->
-> > 1. After boot is complete, re-trigger device attach by doing
-> >
-> >    echo - - - > /sys/class/scsi_host/hostN/scan
->=20
-> Partial dmesg2.reset (i just wanted to see what this output to dmesg,
-> i didn't reboot)
+Signed-off-by: Loc Ho <lho@apm.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
+---
+ arch/arm64/boot/dts/apm-storm.dtsi | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-Does this always work?  ie. can you do it repeatedly and the device is
-always detected correctly?  Or, if you issue rescanning after the
-device fails detection during boot, does it always work?
+diff --git a/arch/arm64/boot/dts/apm-storm.dtsi b/arch/arm64/boot/dts/apm-storm.dtsi
+index 40aa96c..1bdaeda 100644
+--- a/arch/arm64/boot/dts/apm-storm.dtsi
++++ b/arch/arm64/boot/dts/apm-storm.dtsi
+@@ -184,9 +184,8 @@
+ 				reg = <0x0 0x1f21c000 0x0 0x1000>;
+ 				reg-names = "csr-reg";
+ 				clock-output-names = "sataphy1clk";
+-				status = "disabled";
+ 				csr-offset = <0x4>;
+-				csr-mask = <0x00>;
++				csr-mask = <0x3a>;
+ 				enable-offset = <0x0>;
+ 				enable-mask = <0x06>;
+ 			};
+@@ -198,7 +197,6 @@
+ 				reg = <0x0 0x1f22c000 0x0 0x1000>;
+ 				reg-names = "csr-reg";
+ 				clock-output-names = "sataphy2clk";
+-				status = "ok";
+ 				csr-offset = <0x4>;
+ 				csr-mask = <0x3a>;
+ 				enable-offset = <0x0>;
+@@ -212,7 +210,6 @@
+ 				reg = <0x0 0x1f23c000 0x0 0x1000>;
+ 				reg-names = "csr-reg";
+ 				clock-output-names = "sataphy3clk";
+-				status = "ok";
+ 				csr-offset = <0x4>;
+ 				csr-mask = <0x3a>;
+ 				enable-offset = <0x0>;
+--
+1.8.2.1
 
-> > 2. Boot with libata.force=3Ddump_id and report full dmesg after boo=
-t.
->=20
-> dmesg3.dump_id
->
-> > 3. Boot with libata.force=3Dnohrst and see whether anything changes=
-=2E
->=20
-> dmesg4.nohrst
->=20
-> > Thanks.
->=20
-> Thank you for your time.
->=20
-> Both dump_id and nohrst detected the drive the first time i used them=
-=2E
-> Should i keep trying one or the other until the disk is dropped again
-> (or not)? Should i specify both boot options simultaneously?
-
-dump_id shouldn't affect anything but should give us more data about
-the failure.  Can you please try to reproduce the problem with dump_id
-specified?  nohrst may make the problem go away.  Can you please try
-to reproduce the issue with the parameter specified.
-
-Thanks.
-
---=20
-tejun
