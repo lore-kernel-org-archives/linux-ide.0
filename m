@@ -1,65 +1,43 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] libata fixes for v3.17-rc1
-Date: Thu, 21 Aug 2014 14:44:29 -0500
-Message-ID: <20140821194429.GC6168@mtj.dyndns.org>
+From: =?UTF-8?Q?Nuno_Magalh=C3=A3es?= <nunomagalhaes@eu.ipp.pt>
+Subject: Re: SATA disks disabled on boot
+Date: Thu, 21 Aug 2014 23:40:09 +0100
+Message-ID: <CADqA9ubrD1+Ri9d080X4xjrr7wsjqGGz5fjTC45QHjr4Fb1QJg@mail.gmail.com>
+References: <CADqA9uaW6JwirSZQaHjCuB=9GSUQyakOEBAZor1ed-vyjoC=2g@mail.gmail.com>
+ <20140714163641.GF31610@htj.dyndns.org> <CADqA9uYMCdT1ZpHD0fOVoD67PAx6RaY+8grfmG8SRoqnwyyHgw@mail.gmail.com>
+ <20140817133942.GD7679@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f42.google.com ([209.85.216.42]:58979 "EHLO
-	mail-qa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753383AbaHUTom (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Aug 2014 15:44:42 -0400
-Content-Disposition: inline
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:60838 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754744AbaHUWkb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Aug 2014 18:40:31 -0400
+Received: by mail-wi0-f176.google.com with SMTP id bs8so9414600wib.3
+        for <linux-ide@vger.kernel.org>; Thu, 21 Aug 2014 15:40:30 -0700 (PDT)
+In-Reply-To: <20140817133942.GD7679@mtj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
 
-Hello, Linus.
+> dump_id shouldn't affect anything but should give us more data about
+> the failure.  Can you please try to reproduce the problem with dump_id
+> specified?  nohrst may make the problem go away.  Can you please try
+> to reproduce the issue with the parameter specified.
 
-Nothing drastic but pushing out early due to build breakage in the new
-tegra platform.
+I've been shifting the disks around,trying to find a pattern. So far
+only the Reds fail, i haven't been able to fail a Toshiba. At first i
+thought it was because the Toshibas were both on a RAID1 - i'm still
+testing this theory. I.e., i've recently dropped the RAID; one Toshiba
+now holds the OS @SATA1, all the others are empty.
 
-* M550 tagged trim blacklist pattern is widened so that it matches the
-  new 1TB model.
+I'll keep running more tests and document all combinations (SATA
+ports, kernel parameters, etc) and results. I'll re-read on those
+parameters and report back once i have something significant.
 
-* The other three are controller specific fixes.
+Could the PSU have an influence? It's a Nox Urano 500.
 
-Thanks.
+Thank you for your time.
 
-The following changes since commit 88ec63d6f85ccf40988ddae8b430dcb07355b29b:
-
-  Merge tag 'scsi-misc' of git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi (2014-08-15 18:28:58 -0600)
-
-are available in the git repository at:
-
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-3.17-fixes
-
-for you to fetch changes up to 2a13772a144d2956a7fedd18685921d0a9b8b783:
-
-  libata: widen Crucial M550 blacklist matching (2014-08-18 17:40:09 -0400)
-
-----------------------------------------------------------------
-Arjun Sreedharan (2):
-      pata_samsung_cf: change ret type to signed
-      pata_scc: propagate return value of scc_wait_after_reset
-
-Mikko Perttunen (1):
-      ata: ahci_tegra: Change include to fix compilation
-
-Suman Tripathi (1):
-      ahci_xgene: Removing NCQ support from the APM X-Gene SoC AHCI SATA Host Controller driver.
-
-Tejun Heo (1):
-      libata: widen Crucial M550 blacklist matching
-
- drivers/ata/ahci_tegra.c      |  2 +-
- drivers/ata/ahci_xgene.c      |  4 ++--
- drivers/ata/libata-core.c     |  2 +-
- drivers/ata/pata_samsung_cf.c |  2 +-
- drivers/ata/pata_scc.c        | 15 +++++++--------
- 5 files changed, 12 insertions(+), 13 deletions(-)
-
--- 
-tejun
+Cheers,
+Nuno
