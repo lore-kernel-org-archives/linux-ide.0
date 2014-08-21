@@ -1,92 +1,81 @@
 From: Felipe Balbi <balbi-l0cyMroinI0@public.gmane.org>
 Subject: Re: [PATCH] ata: ahci: tegra: fix build error
-Date: Thu, 21 Aug 2014 14:18:06 -0500
-Message-ID: <20140821191806.GN11146@saruman.home>
+Date: Thu, 21 Aug 2014 14:21:34 -0500
+Message-ID: <20140821192134.GO11146@saruman.home>
 References: <20140821190824.GM11146@saruman.home>
+ <53F645BA.4000402@wwwdotorg.org>
 Reply-To: <balbi-l0cyMroinI0@public.gmane.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="JfVplkuTfB13Rsg5"
+	protocol="application/pgp-signature"; boundary="nLMor0SRtNCuLS/8"
 Return-path: <linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20140821190824.GM11146-HgARHv6XitL9zxVx7UNMDg@public.gmane.org>
+In-Reply-To: <53F645BA.4000402-3lzwWm7+Weoh9ZMKESR00Q@public.gmane.org>
 Sender: linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Felipe Balbi <balbi-l0cyMroinI0@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, swarren-3lzwWm7+Weoh9ZMKESR00Q@public.gmane.org, thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Stephen Warren <swarren-3lzwWm7+Weoh9ZMKESR00Q@public.gmane.org>
+Cc: balbi-l0cyMroinI0@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
---JfVplkuTfB13Rsg5
+--nLMor0SRtNCuLS/8
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, Aug 21, 2014 at 02:08:24PM -0500, Felipe Balbi wrote:
-> Currently, ahci_tegra doesn't build because it includes a file that
-> doesn't exist.
+On Thu, Aug 21, 2014 at 01:17:14PM -0600, Stephen Warren wrote:
+> On 08/21/2014 01:08 PM, Felipe Balbi wrote:
+> >Currently, ahci_tegra doesn't build because it includes a file that
+> >doesn't exist.
+> >
+> >The problem is that first commit 306a7f9 (ARM: tegra: Move includes to
+> >include/soc/tegra) renamed include/linux/tegra-powergate.h to
+> >include/soc/tegra/powergate.h.
+> >
+> >Later commit 7232398 (ARM: tegra: Convert PMC to a driver) renamed
+> >include/soc/tegra/powergate.h to include/soc/tegra/pmc.h and neither
+> >commits fixed drivers/ata/ahci_tegra.c.
+> >
+> >Fix that so the driver has a chance of building. With current kernels.
+> >
+> >Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org> # v3.16
 >=20
-> The problem is that first commit 306a7f9 (ARM: tegra: Move includes to
-> include/soc/tegra) renamed include/linux/tegra-powergate.h to
-> include/soc/tegra/powergate.h.
->=20
-> Later commit 7232398 (ARM: tegra: Convert PMC to a driver) renamed
-> include/soc/tegra/powergate.h to include/soc/tegra/pmc.h and neither
-> commits fixed drivers/ata/ahci_tegra.c.
->=20
-> Fix that so the driver has a chance of building. With current kernels.
-                                                 ^
-						 this period shouldn't
-						 exist :-p
->=20
-> Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org> # v3.16
-> Signed-of-by: Felipe Balbi <balbi-l0cyMroinI0@public.gmane.org>
-> ---
->  drivers/ata/ahci_tegra.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/drivers/ata/ahci_tegra.c b/drivers/ata/ahci_tegra.c
-> index fc3df47..7194835 100644
-> --- a/drivers/ata/ahci_tegra.c
-> +++ b/drivers/ata/ahci_tegra.c
-> @@ -24,7 +24,7 @@
->  #include <linux/module.h>
->  #include <linux/of_device.h>
->  #include <linux/platform_device.h>
-> -#include <linux/tegra-powergate.h>
-> +#include <soc/tegra/pmc.h>
->  #include <linux/regulator/consumer.h>
->  #include "ahci.h"
-> =20
-> --
-> 2.0.1.563.g66f467c
->=20
-> --=20
-> balbi
+> This driver first appeared in v3.17-rc1.
 
+hmm... weird, git describe told v3.16-rc1 :-s
 
+> This patch has already been sent, and apparently applied:
+>=20
+> https://lkml.org/lkml/2014/8/16/36
+
+aha, thanks.
+
+> I wonder if libata/for-3.17-fixes isn't in linux-next?
+
+it is, it's just that I was build testing my branch which is based off
+of v3.17-rc1 as of now.
 
 --=20
 balbi
 
---JfVplkuTfB13Rsg5
+--nLMor0SRtNCuLS/8
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: Digital signature
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1
 
-iQIcBAEBAgAGBQJT9kXuAAoJEIaOsuA1yqRE0xAQAKnEQcNJcNru3tT0r/rPGS7U
-Oddv2UqxtqGwhgPnSy7y7xcGAdYySlf/wepB4Jvh41NB9O7Vk1VWtJ+oZO8imV1r
-gBm1QbzBDHxn2FcHXFTm9hfb49/HOOKV49rP30PJF9EHB+qpWxoYu+uVk+/CWMu1
-aNDvOxWEIo5fqwkqJUQZj0U2tU9F054Yj1GLadZxDhqZpZm9l1/0KdmAYcC3Wrqy
-gKbsSYNj+gYMj4bsogMjud+IHk0Of/aWSyIETxEoUjzhQkla3Bx/rkNic1KGnn5r
-OA1zVEgMSkboj/6pKI28+CnMyqHLbnslIXxFWkxPaHpCaAjm74T0iGHXXlsQk+ai
-kGFRhXh5lI2xLv8RCFUyVy3lc6ldbQ/9tYAJ7faDTExdHQMSBWgoE5iLC+052Sn8
-1r9udkLJv7uiNLU+UT5Ze3dDLfE0/pZJouyPMTBjz33R6K13PIrCktuHN3B6/ka0
-iPi9RmWbkF/9P5komeYgWufrcRQBARnjBBJSG4a1zQPkztzb2b/1NiePnKudki8Q
-cOpP4F26jYixLkyAlieGhvSIHHPImBAAF6kI0A3wdKwlw8JtoTtfQAtQ0cHTy0bb
-mFcYm1ZWDXKUWYdVB84Wt3SvksabJFb7OKZ18cGSAClFfpHcRCX2ykMW7ngBTHcM
-oZzKlhUBF3C89llbuijX
-=CyeL
+iQIcBAEBAgAGBQJT9ka+AAoJEIaOsuA1yqREQBAP/jQXcse3UFDEv0rNPXj8Ly+u
+wwWKgy7ULlslpnLRVgUieKE2BZjn0zj5wy5CYksE8rRocgdfy6nmdvPOjkhD4zlm
+dFJ1Phwc1/btCWMIYDTmkvO03HKIxeM4S7PQ+qblYGVuwgR4/gpwMKPj/jx3XRvF
+pKfXA7pkhsxQPNdC1/TtPrSfVQYDJdQVmbBZMAohcFxj1zC/Tu1rKB78DYgvJrhb
+FBREv1lPH8SCGxOzRGfBfM2ZgNBMa+mDflCMbhDxpkTIbJk9a12lXqa+6LFtPO5o
+thIEqyVw1uMhlPBb97oKqATfwUGpqqCkjbRtBfPQ5Kl9BHMtHyChYWJt8eKoTeST
+FNMImlC27e69Se5K5kRIdnR4SfqKK94ChN6t3ZdHqeriR0nweYVI2nmhQWGdW25K
+apmcMUWZnda1sAj2XCFI6C70EdyMjN0kBhXlsFgZdRemEmc5eaYvGOUkwm4uDpi/
+q7Xmr4PSAiBQWeq/mtMFhVI1owXp1kUt26M4zuwZR6SGc7ri3MDWpDFnYPAhljj/
++AC+6pQrb5hrIGZXCKZqkhod/mJt1yyll1SpchyaN1YasX7kUN5iXGO8JiVadg5D
+4PamhaaQrUtPrR0odM4Ug+/izG9uZx4o9JL4LNhJ+On/gOT3TWj9xEWadwqiqjkg
+8rYV4sZdD9ZytgVOhOYT
+=V1g7
 -----END PGP SIGNATURE-----
 
---JfVplkuTfB13Rsg5--
+--nLMor0SRtNCuLS/8--
