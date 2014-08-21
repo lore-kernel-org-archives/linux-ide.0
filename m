@@ -1,30 +1,33 @@
 From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH] ata: ahci: tegra: fix build error
-Date: Thu, 21 Aug 2014 14:31:41 -0500
-Message-ID: <20140821193141.GA6168@mtj.dyndns.org>
-References: <20140821190824.GM11146@saruman.home>
- <53F645BA.4000402@wwwdotorg.org>
- <20140821192134.GO11146@saruman.home>
+Subject: Re: ahci_tegra build failure in Linus' tree
+Date: Thu, 21 Aug 2014 14:32:37 -0500
+Message-ID: <20140821193237.GB6168@mtj.dyndns.org>
+References: <E1XKRXZ-0000vL-4b@cassiel.sirena.org.uk>
+ <20140821185352.GP24407@sirena.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20140821192134.GO11146-HgARHv6XitL9zxVx7UNMDg@public.gmane.org>
+In-Reply-To: <20140821185352.GP24407-GFdadSzt00ze9xe1eoZjHA@public.gmane.org>
 Sender: linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Felipe Balbi <balbi-l0cyMroinI0@public.gmane.org>
-Cc: Stephen Warren <swarren-3lzwWm7+Weoh9ZMKESR00Q@public.gmane.org>, thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Mark Brown <broonie-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: kernel-build-reports-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, linaro-kernel-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, Mikko Perttunen <mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Thierry Reding <treding-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
 Hello,
 
-On Thu, Aug 21, 2014 at 02:21:34PM -0500, Felipe Balbi wrote:
-> > I wonder if libata/for-3.17-fixes isn't in linux-next?
+On Thu, Aug 21, 2014 at 01:53:52PM -0500, Mark Brown wrote:
+> On Thu, Aug 21, 2014 at 01:32:29PM +0100, Build bot for Mark Brown wrote:
 > 
-> it is, it's just that I was build testing my branch which is based off
-> of v3.17-rc1 as of now.
+> > ../drivers/ata/ahci_tegra.c:27:35: fatal error: linux/tegra-powergate.h: No such file or directory
+> 
+> ARM allmodconfig currently fails to build in mainline due to the above
+> error.  It has been fixed in -next by Mikko Perttunen in commit
+> 0e5740770f34381b (ata: ahci_tegra: Change include to fix compilation)
+> but it's not clear to me if that's on it's way to Linus - it'd be great
+> if it could be.
 
-Yeah, I'm traveling and haven't had the chance to push it.  I'll try
-to push it right now.
+Will push it out right away.
 
 Thanks.
 
