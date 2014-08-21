@@ -1,54 +1,81 @@
-From: Mark Brown <broonie-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: ahci_tegra build failure in Linus' tree
-Date: Thu, 21 Aug 2014 13:53:52 -0500
-Message-ID: <20140821185352.GP24407@sirena.org.uk>
-References: <E1XKRXZ-0000vL-4b@cassiel.sirena.org.uk>
+From: Felipe Balbi <balbi-l0cyMroinI0@public.gmane.org>
+Subject: [PATCH] ata: ahci: tegra: fix build error
+Date: Thu, 21 Aug 2014 14:08:24 -0500
+Message-ID: <20140821190824.GM11146@saruman.home>
+Reply-To: <balbi-l0cyMroinI0@public.gmane.org>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="flW39HxDycSWn0NJ"
+	protocol="application/pgp-signature"; boundary="hNG1vEeyG8BCaHbQ"
 Return-path: <linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <E1XKRXZ-0000vL-4b-AwNWNkNSnF8YV1p1LO3TTN73F7V6hmMc@public.gmane.org>
 Sender: linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: kernel-build-reports-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, linaro-kernel-cunTk1MwBs8s++Sfvej+rw@public.gmane.org
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mikko Perttunen <mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Thierry Reding <treding-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, swarren-3lzwWm7+Weoh9ZMKESR00Q@public.gmane.org, thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
-
---flW39HxDycSWn0NJ
+--hNG1vEeyG8BCaHbQ
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, Aug 21, 2014 at 01:32:29PM +0100, Build bot for Mark Brown wrote:
+Currently, ahci_tegra doesn't build because it includes a file that
+doesn't exist.
 
-> ../drivers/ata/ahci_tegra.c:27:35: fatal error: linux/tegra-powergate.h: No such file or directory
+The problem is that first commit 306a7f9 (ARM: tegra: Move includes to
+include/soc/tegra) renamed include/linux/tegra-powergate.h to
+include/soc/tegra/powergate.h.
 
-ARM allmodconfig currently fails to build in mainline due to the above
-error.  It has been fixed in -next by Mikko Perttunen in commit
-0e5740770f34381b (ata: ahci_tegra: Change include to fix compilation)
-but it's not clear to me if that's on it's way to Linus - it'd be great
-if it could be.
+Later commit 7232398 (ARM: tegra: Convert PMC to a driver) renamed
+include/soc/tegra/powergate.h to include/soc/tegra/pmc.h and neither
+commits fixed drivers/ata/ahci_tegra.c.
 
---flW39HxDycSWn0NJ
+Fix that so the driver has a chance of building. With current kernels.
+
+Cc: <stable-u79uwXL29TY76Z2rM5mHXA@public.gmane.org> # v3.16
+Signed-of-by: Felipe Balbi <balbi-l0cyMroinI0@public.gmane.org>
+---
+ drivers/ata/ahci_tegra.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/ata/ahci_tegra.c b/drivers/ata/ahci_tegra.c
+index fc3df47..7194835 100644
+--- a/drivers/ata/ahci_tegra.c
++++ b/drivers/ata/ahci_tegra.c
+@@ -24,7 +24,7 @@
+ #include <linux/module.h>
+ #include <linux/of_device.h>
+ #include <linux/platform_device.h>
+-#include <linux/tegra-powergate.h>
++#include <soc/tegra/pmc.h>
+ #include <linux/regulator/consumer.h>
+ #include "ahci.h"
+=20
+--
+2.0.1.563.g66f467c
+
+--=20
+balbi
+
+--hNG1vEeyG8BCaHbQ
 Content-Type: application/pgp-signature; name="signature.asc"
 Content-Description: Digital signature
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+Version: GnuPG v1
 
-iQIcBAEBAgAGBQJT9kA9AAoJELSic+t+oim9LYIP/17T/hLr7VLmU5DoKQA/vVo8
-hEc40GZExvs3WDxHiFJreGeOyz/0KhC3xP1Y5TtsMINVJXVBqUhev030xhp1uAu0
-/XeoMFamW/gQ+f4yPBy0uiNwGt6g3/gLeP1hwEytYK9HeDEHhCl5WqVyi7dM99uw
-IiQqRv8LErW2Ypv8/CTE1ge3RceuJNhJxv53tIAfRhy5NLSR0xOGsZPIn5G9Mtch
-1gW/+eOfWV9dUnHDEZEQrYzcMWwSpDxre607Dz8KEpfWGy15CxoLplpi3nIgH/X0
-OVRyhLXKyXyyXHFZ/pp5PqSNCipimKQJhnoUZf8sbtPIZ67yPc1uIaCVCrWTx80j
-vuBVVNzubrkR5VHkljFuvG+9yn3cDzAtN11psSzRhNDAGz91Bh3rc7/5ena40Xq3
-QydcRt3s65lm/h+IQQnfCUUshYd/gXru0jPD4cBX5W52E2x8LSsCQWAyPYz/VAqZ
-UqhU/5ltzHEtgQdHqVObdLBeZuHuMZEYolYBk/BTO9bDBmSg5zyfqOjmeqnUzktz
-2rfD8lBTH2sNmYMp7at561EGDT7nsgB6OTrbvdNpXlF9wMFiY4JJ2t1+wePtCT3X
-rlGQaTEB4u/vLIL2vY1vX/haHDIBK9bbbS7WxeqasuRKwfPQROGQ0b0qC3Ku8dTL
-tCLf+zj8iAWvvieOQOnz
-=I9Bb
+iQIcBAEBAgAGBQJT9kOoAAoJEIaOsuA1yqREY2QP+gM4lEUl2NR+MlMhdak9rem0
+ibFSJYKkdMZXJJt2XTgBnUzMmuoiBwAXAWN7LFFHq+dQwmHd0upZUDwEkyJS5I7Z
+p7oIs7hH4VOWbCWdPQJtRy42nwAFGJqBiB00JniIsmyqtM/gwnTwpJfWouO0SBvY
+e2xPdQspPbE4ruK1OXKAFbaVHTRVm11rhtfLxE5Ow6CfsSWemRgf5v2FnD1vdnZ1
+p6wVwj4vyE1Ia8UyUSYH4+TA9T3kXeIPHZR9kqWE4jiW9JMYnyIUgzZAGvdqPyL2
+Tz4Oe7cYehZVCnstbhCCsPWBUy6qSbDrMi0WYKlDVGDH9+R37tmoT8IGJ4RXXcmP
+dgE5Zcb2ernEQiD6ZxGLCUxfltLnZG3bPiCWPMtwI5VXLINPRAafMf2iYGEtM0zL
+DS9EUE0jk0FD4+2dkx0nYk5A6Ag2IhJAQSn76Jz0IdQrxNb+K9zqHA2dN0PSd9z9
+PPlCzDjrpwxRQgcoP9D3plLo32ybwy/jO4sygq907KV69aZFGG7XyWh7/9bmBfB0
+5XV0YhZ1tmiLH2TBQ/DEitUiN/CLJrNeuCgmM/6qhKoGefyopBMqxlF78UBlDGQB
+N6d6DaTAmCVO1sddEvVOd0D32fe86ugnLcxdu3/8mbG8pPrv3RGsFsh+RMBMNqWc
+g8xd0db96ITxPVj8W+Fy
+=jOn+
 -----END PGP SIGNATURE-----
 
---flW39HxDycSWn0NJ--
+--hNG1vEeyG8BCaHbQ--
