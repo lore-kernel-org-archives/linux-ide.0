@@ -1,43 +1,92 @@
-From: =?UTF-8?B?QWxleGFuZGVyIFNoaXlhbg==?= <shc_work@mail.ru>
-Subject: =?UTF-8?B?UmU6IFtQQVRDSCA0LzRdIHBhdGFfcGxhdGZvcm06IFVzZSAxNi1iaXQgd2lk?=
- =?UTF-8?B?ZSBkYXRhIHRyYW5zZmVy?=
-Date: Sat, 23 Aug 2014 21:29:15 +0400
-Message-ID: <1408814955.452399984@f133.i.mail.ru>
-References: <1408790772-5305-1-git-send-email-shc_work@mail.ru>
- <1408790772-5305-3-git-send-email-shc_work@mail.ru>
- <20140823165326.GA13540@mtj.dyndns.org>
-Reply-To: =?UTF-8?B?QWxleGFuZGVyIFNoaXlhbg==?= <shc_work@mail.ru>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: base64
+From: Suman Tripathi <stripathi@apm.com>
+Subject: [PATCH v8 0/3] ahci_xgene: Fixes related to APM X-Gene SATA host controller driver.
+Date: Sun, 24 Aug 2014 00:07:24 +0530
+Message-ID: <1408819047-17224-1-git-send-email-stripathi@apm.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fallback5.mail.ru ([94.100.181.253]:49168 "EHLO
-	fallback5.mail.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751199AbaHWR3g (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Aug 2014 13:29:36 -0400
-In-Reply-To: <20140823165326.GA13540@mtj.dyndns.org>
+Received: from denmail01-v4020.amcc.com ([192.195.68.30]:43173 "EHLO
+	denmail01.apm.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751928AbaHWSiw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Aug 2014 14:38:52 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?UTF-8?B?VGVqdW4gSGVv?= <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
 
-U2F0LCAyMyBBdWcgMjAxNCAxMjo1MzoyNiAtMDQwMCDQvtGCIFRlanVuIEhlbyA8dGpAa2VybmVs
-Lm9yZz46Cj4gSGVsbG8sCj4gCj4gT24gU2F0LCBBdWcgMjMsIDIwMTQgYXQgMDI6NDY6MTJQTSAr
-MDQwMCwgQWxleGFuZGVyIFNoaXlhbiB3cm90ZToKPiA+IEluIHNvbWUgY2FzZXMsIHN5c3RlbSBi
-dXMgY2FuIGJlIGNvbmZpZ3VyZWQgZm9yIDE2LWJpdCBtb2RlLCBpbiB0aGlzCj4gPiBjYXNlIHVz
-aW5nIG9mIHJlYWQvd3JpdGUgZnVuY3Rpb25zIGZvciB0aGUgMzIgYml0IHZhbHVlcyBjYXVzZXMg
-dHdvCj4gPiBjeWNsZXMgb2YgMTYgYml0cywgd2hpY2ggaXMgaW5jb3JyZWN0Lgo+IAo+IFNob3Vs
-ZG4ndCB3ZSBkaXN0aW5ndWlzaCB0aGVtIGluc3RlYWQgb2YgZm9yY2luZyAxNmJpdCB0cmFuc2Zl
-ciBvbgo+IGFsbD8KCkkgZG8gbm90IHNlZSBhbnkgcmVhc29uIHRvIGRpc3Rpbmd1aXNoLiBUaGlz
-IGVtYm9kaW1lbnQgY2FuIGJlIHVzZWQgd2l0aAoxNi1iaXQgYW5kIDMyLWJpdCBidXMsIGFuZCBl
-dmVuIGZvciA2NC1iaXQgOykKCi4uLgo+ID4gK3N0YXRpYyB1bnNpZ25lZCBpbnQgcGF0YV9wbGF0
-Zm9ybV94ZmVyX25vaXJxKHN0cnVjdCBhdGFfZGV2aWNlICpkZXYsCj4gPiArCQkJCQkgICAgIHVu
-c2lnbmVkIGNoYXIgKmJ1ZiwKPiA+ICsJCQkJCSAgICAgdW5zaWduZWQgaW50IGJ1ZmxlbiwgaW50
-IHJ3KQo+ID4gK3sKPiA+ICsJdW5zaWduZWQgbG9uZyBmbGFnczsKPiA+ICsJdW5zaWduZWQgaW50
-IGNvbnN1bWVkOwo+ID4gKwo+ID4gKwlsb2NhbF9pcnFfc2F2ZShmbGFncyk7Cj4gPiArCS8qIFVz
-ZSAxNi1iaXQgdHJhbnNmZXIgKi8KPiA+ICsJY29uc3VtZWQgPSBhdGFfc2ZmX2RhdGFfeGZlcihk
-ZXYsIGJ1ZiwgYnVmbGVuLCBydyk7Cj4gPiArCWxvY2FsX2lycV9yZXN0b3JlKGZsYWdzKTsKPiA+
-ICsKPiA+ICsJcmV0dXJuIGNvbnN1bWVkOwo+ID4gK30KPiAKPiBUaGlzIGRvZXNuJ3Qgc2VlbSBs
-aWtlIGEgZ29vZCBsb2NhdGlvbiBmb3IgdGhpcyBmdW5jdGlvbi4gIFBsZWFzZQo+IHJlbmFtZSB0
-aGUgZXhpc3Rpbmcgbm9pcnEgZnVuY3Rpb24gdG8geGZlcjMyX25vcmlxIGFuZCBhZGQgZ2VuZXJp
-Ywo+IHhmZXJfbm9pcnEgZm9yIDE2Yml0IHhmZXJzLgoKT2suCgotLS0KCg==
+This patch set contains a couple of fixes related to APM X-Gene SATA
+controller driver.
+
+v2 Change:
+   1. Drop the Link down retry patch from this patch set.
+
+v4 Change:
+   1. Drop the patch to fix the csr-mask in dts for PHY clock
+     node of SATA Host Controller 1.
+   2. Add the patch to correct the OOB tunning parameters for
+     the COMINIT/COMWAKE parameters.
+   3. Add the patch to remove the NCQ support from the APM
+     X-Gene AHCI SATA Host controller driver.
+   4. Add the patch to remove the clock and PHY reference nodes
+     from the APM X-Gene Host controller dts node.
+
+v5 Change :
+   1. All the patches are based on 3.16.0-rc6/for-3.17 kernel.
+   2. Drop the patch to remove the clock and PHY reference nodes
+     from the APM X-Gene Host controller dts node as it breaks
+     with old firmware.
+   3. Add the patch to skip phy and clock initialisation if
+     already done in the firmware.
+   4. Add the patch to fix the csr-mask in dts for PHY clock
+     node of SATA Host Controller 1.
+   5. Add the patch to remove the NCQ support from the APM
+     X-Gene AHCI SATA Host controller driver based on 3.16.0-rc6/
+     for-3.17 kernel.
+   6. Drop the patch to correct the OOB tunning parameters for
+     the COMINIT/COMWAKE parameters as it is already applied to
+     3.16/for-3.17 branch by the maintainer.
+   7. Drop the patch to fix the watermark threshold as it is
+     already applied to 3.16/for-3.17 branch by the maintainer.
+
+v6 change :
+   1. Drop the patch to skip phy and clock initialisation if
+     already done in the firmware.
+   2. Drop the patch to fix the csr-mask in dts for PHY clock
+     node of SATA Host Controller 1.
+   3. Add the remove the clock and PHY node patch as it
+     fixes the dropped patches together. This patch works with
+     old and new firmware as well.
+
+v7 change :
+   1. Drop the patch to remove the clock and PHY reference nodes
+     from the APM X-Gene Host controller dts node as it breaks
+     with old firmware if sata not initialised from the firmware.
+   2. Add the patch to skip phy and clock initialisation if
+     already done in the firmware.
+   3. Add the patch to fix the csr-mask in dts for PHY clock
+     node of SATA Host Controller 1.
+   4. Add the Link down retry patch with a proper comments and
+     explanation.
+   5. Drop the patch to remove NCQ as it is applied to 3.16/for-3.17.
+
+v8 change :
+   1. Adding proper comments for link down retry patch.
+   2. changing the return type to bool for skip phy patch.
+
+Signed-off-by: Loc Ho <lho@apm.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
+---
+
+Suman Tripathi (3):
+  arm64: Fix the csr-mask for APM X-Gene SoC AHCI SATA PHY clock DTS
+    node.
+  ahci_xgene: Skip the PHY and clock initialization if already
+    configured by the firmware.
+  ahci_xgene: Fix the link down in first attempt for the APM X-Gene SoC
+    AHCI SATA host controller driver.
+
+ arch/arm64/boot/dts/apm-storm.dtsi |  5 +----
+ drivers/ata/ahci_xgene.c           | 41 +++++++++++++++++++++++++++++++-------
+ 2 files changed, 35 insertions(+), 11 deletions(-)
+
+--
+1.8.2.1
+
