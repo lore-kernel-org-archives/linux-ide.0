@@ -1,66 +1,70 @@
-From: Alexander Shiyan <shc_work@mail.ru>
-Subject: [PATCH 1/4] pata_of_platform: Remove "electra-ide" quirk
-Date: Sat, 23 Aug 2014 14:46:10 +0400
-Message-ID: <1408790772-5305-1-git-send-email-shc_work@mail.ru>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 4/4] pata_platform: Use 16-bit wide data transfer
+Date: Sat, 23 Aug 2014 12:53:26 -0400
+Message-ID: <20140823165326.GA13540@mtj.dyndns.org>
+References: <1408790772-5305-1-git-send-email-shc_work@mail.ru>
+ <1408790772-5305-3-git-send-email-shc_work@mail.ru>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fallback2.mail.ru ([94.100.179.22]:55759 "EHLO
-	fallback2.mail.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752479AbaHWKxO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Aug 2014 06:53:14 -0400
+Received: from mail-qc0-f178.google.com ([209.85.216.178]:46155 "EHLO
+	mail-qc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750809AbaHWQxa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Aug 2014 12:53:30 -0400
+Received: by mail-qc0-f178.google.com with SMTP id x3so11957083qcv.23
+        for <linux-ide@vger.kernel.org>; Sat, 23 Aug 2014 09:53:30 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <1408790772-5305-3-git-send-email-shc_work@mail.ru>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, Alexander Shiyan <shc_work@mail.ru>
+To: Alexander Shiyan <shc_work@mail.ru>
+Cc: linux-ide@vger.kernel.org
 
-"electra-ide" is not used anywhere in the kernel and could be
-represented in devicetree in a normal way.
-This patch removes specific quirk for "electra-ide".
+Hello,
 
-Signed-off-by: Alexander Shiyan <shc_work@mail.ru>
----
- drivers/ata/pata_of_platform.c | 22 ++++++----------------
- 1 file changed, 6 insertions(+), 16 deletions(-)
+On Sat, Aug 23, 2014 at 02:46:12PM +0400, Alexander Shiyan wrote:
+> In some cases, system bus can be configured for 16-bit mode, in this
+> case using of read/write functions for the 32 bit values causes two
+> cycles of 16 bits, which is incorrect.
 
-diff --git a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
-index a7e95a5..6af1c9b 100644
---- a/drivers/ata/pata_of_platform.c
-+++ b/drivers/ata/pata_of_platform.c
-@@ -35,20 +35,11 @@ static int pata_of_platform_probe(struct platform_device *ofdev)
- 		return -EINVAL;
- 	}
- 
--	if (of_device_is_compatible(dn, "electra-ide")) {
--		/* Altstatus is really at offset 0x3f6 from the primary window
--		 * on electra-ide. Adjust ctl_res and io_res accordingly.
--		 */
--		ctl_res = io_res;
--		ctl_res.start = ctl_res.start+0x3f6;
--		io_res.end = ctl_res.start-1;
--	} else {
--		ret = of_address_to_resource(dn, 1, &ctl_res);
--		if (ret) {
--			dev_err(&ofdev->dev, "can't get CTL address from "
--				"device tree\n");
--			return -EINVAL;
--		}
-+	ret = of_address_to_resource(dn, 1, &ctl_res);
-+	if (ret) {
-+		dev_err(&ofdev->dev, "can't get CTL address from "
-+			"device tree\n");
-+		return -EINVAL;
- 	}
- 
- 	irq_res = platform_get_resource(ofdev, IORESOURCE_IRQ, 0);
-@@ -79,8 +70,7 @@ static int pata_of_platform_probe(struct platform_device *ofdev)
- 
- static struct of_device_id pata_of_platform_match[] = {
- 	{ .compatible = "ata-generic", },
--	{ .compatible = "electra-ide", },
--	{},
-+	{ },
- };
- MODULE_DEVICE_TABLE(of, pata_of_platform_match);
- 
+Shouldn't we distinguish them instead of forcing 16bit transfer on
+all?
+
+> The patch provides its own function to use the proper 16-bit mode.
+> 
+> Signed-off-by: Alexander Shiyan <shc_work@mail.ru>
+> ---
+>  drivers/ata/pata_platform.c | 17 ++++++++++++++++-
+>  1 file changed, 16 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
+> index ecbc3bf..79dd223 100644
+> --- a/drivers/ata/pata_platform.c
+> +++ b/drivers/ata/pata_platform.c
+> @@ -43,13 +43,28 @@ static int pata_platform_set_mode(struct ata_link *link, struct ata_device **unu
+>  	return 0;
+>  }
+>  
+> +static unsigned int pata_platform_xfer_noirq(struct ata_device *dev,
+> +					     unsigned char *buf,
+> +					     unsigned int buflen, int rw)
+> +{
+> +	unsigned long flags;
+> +	unsigned int consumed;
+> +
+> +	local_irq_save(flags);
+> +	/* Use 16-bit transfer */
+> +	consumed = ata_sff_data_xfer(dev, buf, buflen, rw);
+> +	local_irq_restore(flags);
+> +
+> +	return consumed;
+> +}
+
+This doesn't seem like a good location for this function.  Please
+rename the existing noirq function to xfer32_noriq and add generic
+xfer_noirq for 16bit xfers.
+
+Thanks.
+
 -- 
-1.8.5.5
-
+tejun
