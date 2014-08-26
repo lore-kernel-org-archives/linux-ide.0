@@ -1,38 +1,50 @@
-From: Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Subject: Re: [PATCH v14 8/8] ARM: berlin: enable the eSATA interface on the
- BG2Q DMP
-Date: Tue, 26 Aug 2014 15:40:58 +0200
-Message-ID: <53FC8E6A.8020008@gmail.com>
-References: <1406744041-1269-1-git-send-email-antoine.tenart@free-electrons.com> <1406744041-1269-9-git-send-email-antoine.tenart@free-electrons.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2] ata: ahci_tegra: Read calibration fuse
+Date: Tue, 26 Aug 2014 10:50:59 -0400
+Message-ID: <20140826145059.GA29286@htj.dyndns.org>
+References: <1409043630-9674-1-git-send-email-mperttunen@nvidia.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wg0-f44.google.com ([74.125.82.44]:63845 "EHLO
-	mail-wg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755088AbaHZNlD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Aug 2014 09:41:03 -0400
-In-Reply-To: <1406744041-1269-9-git-send-email-antoine.tenart@free-electrons.com>
+Received: from mail-qg0-f50.google.com ([209.85.192.50]:61578 "EHLO
+	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758250AbaHZOvD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Aug 2014 10:51:03 -0400
+Content-Disposition: inline
+In-Reply-To: <1409043630-9674-1-git-send-email-mperttunen@nvidia.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?UTF-8?B?QW50b2luZSBUw6luYXJ0?= <antoine.tenart@free-electrons.com>, tj@kernel.org
-Cc: alexandre.belloni@free-electrons.com, thomas.petazzoni@free-electrons.com, zmxu@marvell.com, jszhang@marvell.com, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Mikko Perttunen <mperttunen@nvidia.com>
+Cc: swarren@wwwdotorg.org, thierry.reding@gmail.com, linux-ide@vger.kernel.org, linux-tegra@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 07/30/2014 08:14 PM, Antoine T=C3=A9nart wrote:
-> The BG2Q has an AHCI SATA controller with an eSATA interface. Enable =
-it.
-> Only enable the first port, the BG2Q DMP does not support the second =
-one.
->
-> Signed-off-by: Antoine T=C3=A9nart <antoine.tenart@free-electrons.com=
->
-> ---
->   arch/arm/boot/dts/berlin2q-marvell-dmp.dts | 8 ++++++++
->   1 file changed, 8 insertions(+)
+On Tue, Aug 26, 2014 at 12:00:30PM +0300, Mikko Perttunen wrote:
+> The original version of the driver did not read the SATA calibration
+> fuse to remove the dependency to the fuse driver. The fuse driver
+> is now merged, so add this functionality.
+> 
+> The calibration fuse contains a 2-bit value used to pick a set
+> of calibration values for the SATA pad.
+> 
+> Signed-off-by: Mikko Perttunen <mperttunen@nvidia.com>
 
-Applied to berlin/dt.
+Applied to libata/for-3.17-fixes.  One comment below.
 
-Thanks for the patience!
+>  #include <linux/ahci_platform.h>
+> -#include <linux/reset.h>
+>  #include <linux/errno.h>
+>  #include <linux/kernel.h>
+>  #include <linux/module.h>
+>  #include <linux/of_device.h>
+>  #include <linux/platform_device.h>
+>  #include <linux/regulator/consumer.h>
+> +#include <linux/reset.h>
 
-Sebastian
+You moved the include of reset.h w/o any explanation in the patch
+description.  The description doesn't have to be super verbose on
+trivial stuff but it at least has to cover all changes included in the
+patch w/ their rationales, however trivial they may be.
 
+Thanks.
+
+-- 
+tejun
