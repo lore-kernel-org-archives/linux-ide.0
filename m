@@ -1,25 +1,43 @@
-From: Stephen Warren <swarren@wwwdotorg.org>
-Subject: Re: [PATCH v3 8/8] ARM: tegra: Add options for Tegra AHCI support
- to tegra_defconfig
-Date: Tue, 26 Aug 2014 11:46:41 -0600
-Message-ID: <53FCC801.5000703@wwwdotorg.org>
-References: <1405500863-19696-1-git-send-email-mperttunen@nvidia.com> <1405500863-19696-9-git-send-email-mperttunen@nvidia.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+From: James Ralston <james.d.ralston@intel.com>
+Subject: [PATCH 1/3] ahci: Add Device IDs for Intel 9 Series PCH
+Date: Wed, 27 Aug 2014 14:29:07 -0700
+Message-ID: <1409174947-4684-1-git-send-email-james.d.ralston@intel.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from avon.wwwdotorg.org ([70.85.31.133]:48791 "EHLO
-	avon.wwwdotorg.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751602AbaHZRqp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Aug 2014 13:46:45 -0400
-In-Reply-To: <1405500863-19696-9-git-send-email-mperttunen@nvidia.com>
+Received: from mga09.intel.com ([134.134.136.24]:61549 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932146AbaH0V3r (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 27 Aug 2014 17:29:47 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mikko Perttunen <mperttunen@nvidia.com>
-Cc: thierry.reding@gmail.com, tj@kernel.org, hdegoede@redhat.com, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-tegra@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: James Ralston <james.d.ralston@intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 07/16/2014 02:54 AM, Mikko Perttunen wrote:
-> This adds ATA, SATA_AHCI and AHCI_TEGRA support to tegra_defconfig
-> so that the SATA support will be automatically enabled.
+This patch adds the AHCI mode SATA Device IDs for the Intel 9 Series PCH.
 
-I've applied this to Tegra's for-3.18/dt branch.
+Signed-off-by: James Ralston <james.d.ralston@intel.com>
+---
+ drivers/ata/ahci.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index a29f801..bca3d64 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -305,6 +305,14 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x9c85), board_ahci }, /* Wildcat Point-LP RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x9c87), board_ahci }, /* Wildcat Point-LP RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x9c8f), board_ahci }, /* Wildcat Point-LP RAID */
++	{ PCI_VDEVICE(INTEL, 0x8c82), board_ahci }, /* 9 Series AHCI */
++	{ PCI_VDEVICE(INTEL, 0x8c83), board_ahci }, /* 9 Series AHCI */
++	{ PCI_VDEVICE(INTEL, 0x8c84), board_ahci }, /* 9 Series RAID */
++	{ PCI_VDEVICE(INTEL, 0x8c85), board_ahci }, /* 9 Series RAID */
++	{ PCI_VDEVICE(INTEL, 0x8c86), board_ahci }, /* 9 Series RAID */
++	{ PCI_VDEVICE(INTEL, 0x8c87), board_ahci }, /* 9 Series RAID */
++	{ PCI_VDEVICE(INTEL, 0x8c8e), board_ahci }, /* 9 Series RAID */
++	{ PCI_VDEVICE(INTEL, 0x8c8f), board_ahci }, /* 9 Series RAID */
+ 
+ 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
+ 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+-- 
+1.8.3.1
+
