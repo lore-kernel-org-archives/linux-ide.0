@@ -1,68 +1,30 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH v9 2/3] ahci_xgene: Skip the PHY and clock initialization if already configured by the firmware.
-Date: Thu, 28 Aug 2014 14:51:21 +0530
-Message-ID: <1409217682-5759-3-git-send-email-stripathi@apm.com>
-References: <1409217682-5759-1-git-send-email-stripathi@apm.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 1/3] ahci: Add Device IDs for Intel 9 Series PCH
+Date: Thu, 28 Aug 2014 08:54:28 -0400
+Message-ID: <20140828125428.GB29737@htj.dyndns.org>
+References: <1409174947-4684-1-git-send-email-james.d.ralston@intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from denmail01-v4020.amcc.com ([192.195.68.30]:56408 "EHLO
-	denmail01.apm.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S965540AbaH1JYh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 28 Aug 2014 05:24:37 -0400
-In-Reply-To: <1409217682-5759-1-git-send-email-stripathi@apm.com>
+Received: from mail-qg0-f43.google.com ([209.85.192.43]:49401 "EHLO
+	mail-qg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750748AbaH1Myc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 28 Aug 2014 08:54:32 -0400
+Content-Disposition: inline
+In-Reply-To: <1409174947-4684-1-git-send-email-james.d.ralston@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
+To: James Ralston <james.d.ralston@intel.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This patch implements the feature to skip the PHY and clock
-initialization if it is already configured by the firmware.
+On Wed, Aug 27, 2014 at 02:29:07PM -0700, James Ralston wrote:
+> This patch adds the AHCI mode SATA Device IDs for the Intel 9 Series PCH.
+> 
+> Signed-off-by: James Ralston <james.d.ralston@intel.com>
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
----
- drivers/ata/ahci_xgene.c | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+Applied to libata/for-3.17-fixes w/ stable cc'd.
 
-diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-index f416495..c721887 100644
---- a/drivers/ata/ahci_xgene.c
-+++ b/drivers/ata/ahci_xgene.c
-@@ -145,6 +145,14 @@ static unsigned int xgene_ahci_qc_issue(struct ata_queued_cmd *qc)
- 	return rc;
- }
+Thanks.
 
-+static bool xgene_ahci_is_memram_inited(struct xgene_ahci_context *ctx)
-+{
-+	void __iomem *diagcsr = ctx->csr_diag;
-+
-+	return (readl(diagcsr + CFG_MEM_RAM_SHUTDOWN) == 0 &&
-+	        readl(diagcsr + BLOCK_MEM_RDY) == 0xFFFFFFFF);
-+}
-+
- /**
-  * xgene_ahci_read_id - Read ID data from the specified device
-  * @dev: device
-@@ -468,6 +476,11 @@ static int xgene_ahci_probe(struct platform_device *pdev)
- 		return -ENODEV;
- 	}
-
-+	if (xgene_ahci_is_memram_inited(ctx)) {
-+		dev_info(dev, "skip clock and PHY initialization\n");
-+		goto skip_clk_phy;
-+	}
-+
- 	/* Due to errata, HW requires full toggle transition */
- 	rc = ahci_platform_enable_clks(hpriv);
- 	if (rc)
-@@ -481,6 +494,8 @@ static int xgene_ahci_probe(struct platform_device *pdev)
- 	/* Configure the host controller */
- 	xgene_ahci_hw_init(hpriv);
-
-+skip_clk_phy:
-+
- 	hflags = AHCI_HFLAG_NO_PMP | AHCI_HFLAG_NO_NCQ;
-
- 	rc = ahci_platform_init_host(pdev, hpriv, &xgene_ahci_port_info,
---
-1.8.2.1
-
+-- 
+tejun
