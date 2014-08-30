@@ -1,61 +1,73 @@
-From: Andrew Lunn <andrew@lunn.ch>
-Subject: [Patch v3] 0/7] Remove mach-kirkwood
-Date: Sat, 30 Aug 2014 18:46:05 +0200
-Message-ID: <1409417172-6846-1-git-send-email-andrew@lunn.ch>
+From: Fabio Estevam <festevam@gmail.com>
+Subject: [PATCH] libahci_platform: Staticize ahci_platform_<en/dis>able_phys()
+Date: Sat, 30 Aug 2014 16:39:09 -0300
+Message-ID: <1409427549-1846-1-git-send-email-festevam@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vps0.lunn.ch ([178.209.37.122]:42032 "EHLO vps0.lunn.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751677AbaH3QxC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 30 Aug 2014 12:53:02 -0400
+Received: from mail-yh0-f45.google.com ([209.85.213.45]:55762 "EHLO
+	mail-yh0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751640AbaH3Tj0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 30 Aug 2014 15:39:26 -0400
+Received: by mail-yh0-f45.google.com with SMTP id i57so2383040yha.4
+        for <linux-ide@vger.kernel.org>; Sat, 30 Aug 2014 12:39:26 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jason Cooper <jason@lakedaemon.net>
-Cc: linux ARM <linux-arm-kernel@lists.infradead.org>, Andrew Lunn <andrew@lunn.ch>, Daniel Lezcano <daniel.lezcano@linaro.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, linux-pm@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Zhang Rui <rui.zhang@intel.com>, Richard Purdie <rpurdie@rpsys.net>, linux-leds@vger.kernel.org, Alessandro Zummo <a.zummo@towertech.it>, rtc-linux@googlegroups.com, Wim Van Sebroeck <wim@iguana.be>, linux-watchdog@vger.kernel.org, Viresh Kumar <viresh.kumar@linaro.org>
+To: tj@kernel.org
+Cc: hdegoede@redhat.com, linux-ide@vger.kernel.org, Fabio Estevam <fabio.estevam@freescale.com>
 
-This is mostly a resend of these patches, removing mach-kirkwood.  Not
-all maintainers picked up there patches, which has resulted in some
-dead kernel configuration in v3.17-rcX.
+From: Fabio Estevam <fabio.estevam@freescale.com>
 
-The patch set has been rebased on v3.17-rc2, and it is intended that
-Jason Cooper will submit them for inclusion in an RC. Subsystem
-maintainers do not need to do anything.
+ahci_platform_enable_phys() and ahci_platform_disable_phys() are currently
+exported, but they are not used anywhere else other than libahci_platform.c.
 
-The last patch "cpufreq: Remove ARCH_KIRKWOOD dependency" is new,
-since what it is removing was added during v3.16-rcX. It follows the
-pattern of all the other patches.
+So make them static and do not export them to fix the following sparse
+warnings:
 
-Andrew Lunn (7):
-  cpuidle: kirkwood: Remove ARCH_KIRKWOOD dependency
-  ata: Remove ARCH_KIRKWOOD dependency
-  thermal: Remove ARCH_KIRKWOOD dependency
-  leds: Remove ARCH_KIRKWOOD dependency
-  rtc: Remove ARCH_KIRKWOOD dependency
-  watchdog: Remove ARCH_KIRKWOOD dependency
-  cpufreq: Remove ARCH_KIRKWOOD dependency
+drivers/ata/libahci_platform.c:52:5: warning: symbol 'ahci_platform_enable_phys' was not declared. Should it be static?
+drivers/ata/libahci_platform.c:88:6: warning: symbol 'ahci_platform_disable_phys' was not declared. Should it be static?
 
- drivers/ata/Kconfig         | 2 +-
- drivers/cpufreq/Kconfig.arm | 2 +-
- drivers/cpuidle/Kconfig.arm | 2 +-
- drivers/leds/Kconfig        | 4 ++--
- drivers/rtc/Kconfig         | 2 +-
- drivers/thermal/Kconfig     | 2 +-
- drivers/watchdog/Kconfig    | 2 +-
- 7 files changed, 8 insertions(+), 8 deletions(-)
+Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+---
+ drivers/ata/libahci_platform.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
---
-2.1.0
+diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+index c0510de..c7f787e 100644
+--- a/drivers/ata/libahci_platform.c
++++ b/drivers/ata/libahci_platform.c
+@@ -49,7 +49,7 @@ static struct scsi_host_template ahci_platform_sht = {
+  * RETURNS:
+  * 0 on success otherwise a negative error code
+  */
+-int ahci_platform_enable_phys(struct ahci_host_priv *hpriv)
++static int ahci_platform_enable_phys(struct ahci_host_priv *hpriv)
+ {
+ 	int rc, i;
+ 
+@@ -77,7 +77,6 @@ disable_phys:
+ 	}
+ 	return rc;
+ }
+-EXPORT_SYMBOL_GPL(ahci_platform_enable_phys);
+ 
+ /**
+  * ahci_platform_disable_phys - Disable PHYs
+@@ -85,7 +84,7 @@ EXPORT_SYMBOL_GPL(ahci_platform_enable_phys);
+  *
+  * This function disables all PHYs found in hpriv->phys.
+  */
+-void ahci_platform_disable_phys(struct ahci_host_priv *hpriv)
++static void ahci_platform_disable_phys(struct ahci_host_priv *hpriv)
+ {
+ 	int i;
+ 
+@@ -97,7 +96,6 @@ void ahci_platform_disable_phys(struct ahci_host_priv *hpriv)
+ 		phy_exit(hpriv->phys[i]);
+ 	}
+ }
+-EXPORT_SYMBOL_GPL(ahci_platform_disable_phys);
+ 
+ /**
+  * ahci_platform_enable_clks - Enable platform clocks
+-- 
+1.9.1
 
-Cc: Daniel Lezcano <daniel.lezcano@linaro.org>
-Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-Cc: linux-pm@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org
-Cc: Zhang Rui <rui.zhang@intel.com>
-Cc: linux-pm@vger.kernel.org
-Cc: Richard Purdie <rpurdie@rpsys.net>
-Cc: linux-leds@vger.kernel.org
-Cc: Alessandro Zummo <a.zummo@towertech.it>
-Cc: rtc-linux@googlegroups.com
-Cc: Wim Van Sebroeck <wim@iguana.be>
-Cc: linux-watchdog@vger.kernel.org
-Cc: Viresh Kumar <viresh.kumar@linaro.org>
