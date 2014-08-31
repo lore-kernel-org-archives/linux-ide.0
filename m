@@ -1,40 +1,39 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libahci_platform: Staticize
- ahci_platform_<en/dis>able_phys()
-Date: Sun, 31 Aug 2014 00:01:58 -0400
-Message-ID: <20140831040158.GA5013@htj.dyndns.org>
-References: <1409427549-1846-1-git-send-email-festevam@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Mathias Krause <minipli@googlemail.com>
+Subject: [PATCH] ahci: ahci_p5wdh_workaround - constify DMI table
+Date: Sun, 31 Aug 2014 10:57:09 +0200
+Message-ID: <1409475429-11356-1-git-send-email-minipli@googlemail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f52.google.com ([209.85.192.52]:48780 "EHLO
-	mail-qg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750705AbaHaECC (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 31 Aug 2014 00:02:02 -0400
-Received: by mail-qg0-f52.google.com with SMTP id z60so3995245qgd.11
-        for <linux-ide@vger.kernel.org>; Sat, 30 Aug 2014 21:02:01 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <1409427549-1846-1-git-send-email-festevam@gmail.com>
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:36815 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750855AbaHaI5V (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 31 Aug 2014 04:57:21 -0400
+Received: by mail-wg0-f48.google.com with SMTP id n12so3948835wgh.19
+        for <linux-ide@vger.kernel.org>; Sun, 31 Aug 2014 01:57:20 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Fabio Estevam <festevam@gmail.com>
-Cc: hdegoede@redhat.com, linux-ide@vger.kernel.org, Fabio Estevam <fabio.estevam@freescale.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, Mathias Krause <minipli@googlemail.com>
 
-On Sat, Aug 30, 2014 at 04:39:09PM -0300, Fabio Estevam wrote:
-> From: Fabio Estevam <fabio.estevam@freescale.com>
-> 
-> ahci_platform_enable_phys() and ahci_platform_disable_phys() are currently
-> exported, but they are not used anywhere else other than libahci_platform.c.
-> 
-> So make them static and do not export them to fix the following sparse
-> warnings:
-> 
-> drivers/ata/libahci_platform.c:52:5: warning: symbol 'ahci_platform_enable_phys' was not declared. Should it be static?
-> drivers/ata/libahci_platform.c:88:6: warning: symbol 'ahci_platform_disable_phys' was not declared. Should it be static?
-> 
-> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+The DMI table does not need to be written to, make it r/o.
 
-Applied to libata/for-3.18. Thanks.
+Signed-off-by: Mathias Krause <minipli@googlemail.com>
+---
+ drivers/ata/ahci.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index a29f8012fb08..c880699a7d0b 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -780,7 +780,7 @@ static void ahci_pci_print_info(struct ata_host *host)
+  */
+ static void ahci_p5wdh_workaround(struct ata_host *host)
+ {
+-	static struct dmi_system_id sysids[] = {
++	static const struct dmi_system_id sysids[] = {
+ 		{
+ 			.ident = "P5W DH Deluxe",
+ 			.matches = {
 -- 
-tejun
+1.7.10.4
+
