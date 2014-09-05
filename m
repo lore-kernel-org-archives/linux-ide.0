@@ -1,44 +1,35 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC v2 6/6] pata_marvell: use async probe
-Date: Fri, 5 Sep 2014 16:15:35 +0900
-Message-ID: <20140905071535.GA9323@mtj.dyndns.org>
-References: <1409899047-13045-1-git-send-email-mcgrof@do-not-panic.com>
- <1409899047-13045-7-git-send-email-mcgrof@do-not-panic.com>
+From: Murali Karicheri <m-karicheri2@ti.com>
+Subject: [PATCH] ahci: add pcid for Marvel 0x9182 controller
+Date: Fri, 5 Sep 2014 13:12:26 -0400
+Message-ID: <1409937146-30450-1-git-send-email-m-karicheri2@ti.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pd0-f179.google.com ([209.85.192.179]:59206 "EHLO
-	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750781AbaIEHPp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Sep 2014 03:15:45 -0400
-Content-Disposition: inline
-In-Reply-To: <1409899047-13045-7-git-send-email-mcgrof@do-not-panic.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Murali Karicheri <m-karicheri2@ti.com>, Tejun Heo <tj@kernel.org>, Santosh Shilimkar <santosh.shilimkar@ti.com>
 List-Id: linux-ide@vger.kernel.org
-To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
-Cc: gregkh@linuxfoundation.org, dmitry.torokhov@gmail.com, falcon@meizu.com, tiwai@suse.de, arjan@linux.intel.com, linux-kernel@vger.kernel.org, oleg@redhat.com, hare@suse.com, akpm@linux-foundation.org, penguin-kernel@i-love.sakura.ne.jp, joseph.salisbury@canonical.com, bpoirier@suse.de, santosh@chelsio.com, "Luis R. Rodriguez" <mcgrof@suse.com>, linux-ide@vger.kernel.org, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, patrakov@gmail.com
 
-On Thu, Sep 04, 2014 at 11:37:27PM -0700, Luis R. Rodriguez wrote:
-> diff --git a/drivers/ata/pata_marvell.c b/drivers/ata/pata_marvell.c
-> index ae9feb1..6a543b9 100644
-> --- a/drivers/ata/pata_marvell.c
-> +++ b/drivers/ata/pata_marvell.c
-> @@ -175,6 +175,7 @@ static struct pci_driver marvell_pci_driver = {
->  	.suspend		= ata_pci_device_suspend,
->  	.resume			= ata_pci_device_resume,
->  #endif
-> +	.driver.async_probe = true,
+Signed-off-by: Murali Karicheri <m-karicheri2@ti.com>
 
-You can't do this.  There's nothing special about pata_marvell.  Sure
-there was a bug report which made long probe durations more common on
-this driver on certain configurations but those long durations can
-happen on *any* libata driver and singling out pata_marvell for async
-probing is adding a different probing behavior basically arbitrarily.
-I really can't see how this marking random drivers with async probing
-would work, so one driver does synchronous probing while the
-equivalent next one doesn't?  That's crazy.
+CC: Tejun Heo <tj@kernel.org>
+CC: Santosh Shilimkar <santosh.shilimkar@ti.com>
+---
+ drivers/ata/ahci.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
-Thanks.
-
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index a29f801..02a415e 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -442,6 +442,8 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x917a),
+ 	  .driver_data = board_ahci_yes_fbs },			/* 88se9172 */
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9172),
++	  .driver_data = board_ahci_yes_fbs },			/* 88se9182 */
++	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9182),
+ 	  .driver_data = board_ahci_yes_fbs },			/* 88se9172 */
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9192),
+ 	  .driver_data = board_ahci_yes_fbs },			/* 88se9172 on some Gigabyte */
 -- 
-tejun
+1.7.9.5
