@@ -1,47 +1,71 @@
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: Re: [Patch v3] 0/7] Remove mach-kirkwood
-Date: Tue, 02 Sep 2014 01:46:36 +0200
-Message-ID: <21386976.Th3DhM7uPl@vostro.rjw.lan>
-References: <1409417172-6846-1-git-send-email-andrew@lunn.ch> <1997148.5Fa3W8ZmXx@vostro.rjw.lan> <20140901140320.GE11312@lunn.ch>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-pm-owner@vger.kernel.org>
-In-Reply-To: <20140901140320.GE11312@lunn.ch>
-Sender: linux-pm-owner@vger.kernel.org
-To: Andrew Lunn <andrew@lunn.ch>
-Cc: Jason Cooper <jason@lakedaemon.net>, linux ARM <linux-arm-kernel@lists.infradead.org>, Daniel Lezcano <daniel.lezcano@linaro.org>, linux-pm@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Zhang Rui <rui.zhang@intel.com>, Richard Purdie <rpurdie@rpsys.net>, linux-leds@vger.kernel.org, Alessandro Zummo <a.zummo@towertech.it>, rtc-linux@googlegroups.com, Wim Van Sebroeck <wim@iguana.be>, linux-watchdog@vger.kernel.org, Viresh Kumar <viresh.kumar@linaro.org>
+From: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [RFC v2 6/6] pata_marvell: use async probe
+Date: Thu,  4 Sep 2014 23:37:27 -0700
+Message-ID: <1409899047-13045-7-git-send-email-mcgrof@do-not-panic.com>
+References: <1409899047-13045-1-git-send-email-mcgrof@do-not-panic.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pd0-f179.google.com ([209.85.192.179]:34724 "EHLO
+	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755909AbaIEGiG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Sep 2014 02:38:06 -0400
+In-Reply-To: <1409899047-13045-1-git-send-email-mcgrof@do-not-panic.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: gregkh@linuxfoundation.org, dmitry.torokhov@gmail.com, falcon@meizu.com, tiwai@suse.de, tj@kernel.org, arjan@linux.intel.com
+Cc: linux-kernel@vger.kernel.org, oleg@redhat.com, hare@suse.com, akpm@linux-foundation.org, penguin-kernel@i-love.sakura.ne.jp, joseph.salisbury@canonical.com, bpoirier@suse.de, santosh@chelsio.com, "Luis R. Rodriguez" <mcgrof@suse.com>, linux-ide@vger.kernel.org, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, patrakov@gmail.com
 
-On Monday, September 01, 2014 04:03:20 PM Andrew Lunn wrote:
-> On Mon, Sep 01, 2014 at 03:56:43PM +0200, Rafael J. Wysocki wrote:
-> > On Saturday, August 30, 2014 06:46:05 PM Andrew Lunn wrote:
-> > > This is mostly a resend of these patches, removing mach-kirkwood.  Not
-> > > all maintainers picked up there patches, which has resulted in some
-> > > dead kernel configuration in v3.17-rcX.
-> > > 
-> > > The patch set has been rebased on v3.17-rc2, and it is intended that
-> > > Jason Cooper will submit them for inclusion in an RC. Subsystem
-> > > maintainers do not need to do anything.
-> > > 
-> > > The last patch "cpufreq: Remove ARCH_KIRKWOOD dependency" is new,
-> > > since what it is removing was added during v3.16-rcX. It follows the
-> > > pattern of all the other patches.
-> > > 
-> > > Andrew Lunn (7):
-> > >   cpuidle: kirkwood: Remove ARCH_KIRKWOOD dependency
-> > >   ata: Remove ARCH_KIRKWOOD dependency
-> > >   thermal: Remove ARCH_KIRKWOOD dependency
-> > >   leds: Remove ARCH_KIRKWOOD dependency
-> > >   rtc: Remove ARCH_KIRKWOOD dependency
-> > >   watchdog: Remove ARCH_KIRKWOOD dependency
-> > >   cpufreq: Remove ARCH_KIRKWOOD dependency
-> > 
-> > I have no problems with these changes, but what exactly am I supposed to do?
-> 
-> Jason will submit the whole series. So an Acked-by: would be nice.
+From: "Luis R. Rodriguez" <mcgrof@suse.com>
 
-OK, so please regard the cpuidle and cpufreq patches as ACKed.
+Alexander reported that on his Sony VAIO VPCZ23A4R laptop
+experiences long delays on boot when connected to its dock
+station on pre 3.9 kernels but anything after 3.9 will cause
+the device to not be detected at all ending with:
 
-Rafael
+[   38.065673] pata_marvell 0000:1a:00.0: no available native port
+[   38.065769] pata_acpi 0000:1a:00.0: no available native port
+
+This laptop has a Marvell 88SE6121 SATA II Controller [11ab:6121]
+and a BluRay writer attached. The reason for the delays are
+caused by SRST errors and the link being slow to respond.
+The pata_marvell driver is a simple libata wrapper so the
+real required changes need to be made on libata however not
+many folks are around and available anymore with intimate
+knowledge and experience with these devices. Alexander notes
+that it may be that *any* ATA BMDMA controller that fails to
+respond to an identify command until a reset or other device
+poking might suffer from similar fate, this needs to be
+investigated further. Using async probe the issue caused
+by systemd killing the driver after taking over 30 seconds
+on probe.
+
+[0] https://bugzilla.kernel.org/show_bug.cgi?id=59581
+
+Cc: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
+Cc: Oleg Nesterov <oleg@redhat.com>
+Cc: Benjamin Poirier <bpoirier@suse.de>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: patrakov@gmail.com
+Reported-by: "Alexander E. Patrakov" <patrakov@gmail.com>
+Signed-off-by: Luis R. Rodriguez <mcgrof@suse.com>
+---
+ drivers/ata/pata_marvell.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/ata/pata_marvell.c b/drivers/ata/pata_marvell.c
+index ae9feb1..6a543b9 100644
+--- a/drivers/ata/pata_marvell.c
++++ b/drivers/ata/pata_marvell.c
+@@ -175,6 +175,7 @@ static struct pci_driver marvell_pci_driver = {
+ 	.suspend		= ata_pci_device_suspend,
+ 	.resume			= ata_pci_device_resume,
+ #endif
++	.driver.async_probe = true,
+ };
+ 
+ module_pci_driver(marvell_pci_driver);
+-- 
+2.0.3
 
