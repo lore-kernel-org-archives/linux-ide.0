@@ -1,40 +1,70 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v9 3/3] ahci_xgene: Fix the link down in first attempt
- for the APM X-Gene SoC AHCI SATA host controller driver.
-Date: Sat, 6 Sep 2014 11:28:09 +0900
-Message-ID: <20140906022809.GB21579@mtj.dyndns.org>
-References: <1409217682-5759-1-git-send-email-stripathi@apm.com>
- <1409217682-5759-4-git-send-email-stripathi@apm.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/4] libata: consolidate ata_dev_classify()
+Date: Sat, 06 Sep 2014 10:21:51 +0200
+Message-ID: <540AC41F.8020506@suse.de>
+References: <1406706911-79510-1-git-send-email-hare@suse.de> <1406706911-79510-2-git-send-email-hare@suse.de> <20140905234241.GH15723@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pd0-f175.google.com ([209.85.192.175]:41295 "EHLO
-	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751176AbaIFC2P (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Sep 2014 22:28:15 -0400
-Content-Disposition: inline
-In-Reply-To: <1409217682-5759-4-git-send-email-stripathi@apm.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20140905234241.GH15723@mtj.dyndns.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
 List-Id: linux-ide@vger.kernel.org
-To: Suman Tripathi <stripathi@apm.com>
-Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>
 
-On Thu, Aug 28, 2014 at 02:51:22PM +0530, Suman Tripathi wrote:
-> Due to HW errata the APM X-Gene AHCI SATA host controller reports link
-> down even if the device presence is detected. This issue is due to speed
-> negotiation failure. This patch implements the algorithm to retry the
-> COMRESET if PxSTAT register reports device presence detected but
-> PHY communication not established. The maximum retry attempts are 3.
-> 
-> This patch also fixes the code to match the algorithm for the printing
-> a warning message if the disparity error still exists after link up.
-> 
-> Signed-off-by: Loc Ho <lho@apm.com>
-> Signed-off-by: Suman Tripathi <stripathi@apm.com>
+On 09/06/2014 01:42 AM, Tejun Heo wrote:
+> Hello, Hannes.
+>
+> Sorry about the delay.
+>
+> On Wed, Jul 30, 2014 at 09:55:08AM +0200, Hannes Reinecke wrote:
+>> ata_dev_classify() just uses the 'lbah' and 'lbam'
+>> fields from the taskfile, so we can as well use those
+>> as arguments and rip out the custom code from sas_ata.
+>
+> I wonder whether it'd easier to just make sas code pass in
+> ata_taskfile instead?  The interface which takes three consecutive
+> u8's is kinda error-prone.
+>
+Well, yes, in principle. I was looking into that, too.
+But then I figured that moving to ata_taskfile would be a major overhau=
+l=20
+for libsas, which would be quite beyond scope here.
+And all for a puny little patch.
 
-Applied to libata/for-3.17-fixes.
 
-Thanks.
+>> --- a/drivers/scsi/aic94xx/aic94xx_task.c
+>> +++ b/drivers/scsi/aic94xx/aic94xx_task.c
+>> @@ -373,10 +373,10 @@ static int asd_build_ata_ascb(struct asd_ascb =
+*ascb, struct sas_task *task,
+>>
+>>   	if (unlikely(task->ata_task.device_control_reg_update))
+>>   		scb->header.opcode =3D CONTROL_ATA_DEV;
+>> -	else if (dev->sata_dev.command_set =3D=3D ATA_COMMAND_SET)
+>> -		scb->header.opcode =3D INITIATE_ATA_TASK;
+>> -	else
+>> +	else if (dev->sata_dev.class =3D=3D ATA_DEV_ATAPI)
+>>   		scb->header.opcode =3D INITIATE_ATAPI_TASK;
+>> +	else
+>> +		scb->header.opcode =3D INITIATE_ATA_TASK;
+>
+> Are these changes covered by the patch description?  Looks like the
+> patch is mixing two separate logical changes.
+>
+Okay, I'll be splitting them up.
 
--- 
-tejun
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
