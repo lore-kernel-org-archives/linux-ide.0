@@ -1,25 +1,32 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 3/4] libata-scsi: Update SATL for ZAC drives
-Date: Sat, 6 Sep 2014 08:44:37 +0900
-Message-ID: <20140905234437.GI15723@mtj.dyndns.org>
-References: <1406706911-79510-1-git-send-email-hare@suse.de>
- <1406706911-79510-4-git-send-email-hare@suse.de>
+Subject: Re: [PATCH v9 2/3] ahci_xgene: Skip the PHY and clock initialization
+ if already configured by the firmware.
+Date: Sat, 6 Sep 2014 11:27:46 +0900
+Message-ID: <20140906022746.GA21579@mtj.dyndns.org>
+References: <1409217682-5759-1-git-send-email-stripathi@apm.com>
+ <1409217682-5759-3-git-send-email-stripathi@apm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:45491 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751176AbaIFC1w (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Sep 2014 22:27:52 -0400
 Content-Disposition: inline
-In-Reply-To: <1406706911-79510-4-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+In-Reply-To: <1409217682-5759-3-git-send-email-stripathi@apm.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Suman Tripathi <stripathi@apm.com>
+Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>
 
-On Wed, Jul 30, 2014 at 09:55:10AM +0200, Hannes Reinecke wrote:
-> ZAC (zoned-access command) drives translate into ZBC (Zoned block
-> command) device type for SCSI. So implement the correct mappings
-> into libata-scsi and update the SCSI command set versions.
+On Thu, Aug 28, 2014 at 02:51:21PM +0530, Suman Tripathi wrote:
+> This patch implements the feature to skip the PHY and clock
+> initialization if it is already configured by the firmware.
+> 
+> Signed-off-by: Loc Ho <lho@apm.com>
+> Signed-off-by: Suman Tripathi <stripathi@apm.com>
 
-Patch 2-3 look good to me.
+Applied to libata/for-3.17-fixes.
 
 Thanks.
 
