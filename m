@@ -1,63 +1,177 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] libata fixes for v3.17-rc4
-Date: Mon, 8 Sep 2014 09:59:44 +0900
-Message-ID: <20140908005944.GD5061@mtj.dyndns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:42844 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751151AbaIHA7s (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Sep 2014 20:59:48 -0400
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+From: Kumar Gala <galak@codeaurora.org>
+Subject: [PATCH v4 2/3] ata: Add Qualcomm ARM SoC AHCI SATA host controller driver
+Date: Mon,  8 Sep 2014 11:39:49 -0500
+Message-ID: <1410194390-29007-2-git-send-email-galak@codeaurora.org>
+References: <1410194390-29007-1-git-send-email-galak@codeaurora.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1410194390-29007-1-git-send-email-galak@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Kumar Gala <galak@codeaurora.org>, linux-ide@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hello, Linus.
+Add support for the Qualcomm AHCI SATA controller that exists on several
+SoC and specifically the IPQ806x family of chips.  The IPQ806x SATA support
+requires the associated IPQ806x SATA PHY Driver to be enabled as well.
 
-Two patches are to add PCI IDs for ICH9 and all others are device
-specific fixes.  Nothing too interesting.
+Signed-off-by: Kumar Gala <galak@codeaurora.org>
+---
+v4:
+* Added simple PM ops implementation
+* Added setting of pmalive clk
 
-Thanks.
+v3:
+* Added comment about suspend/resume not supported
+* Fixup ahci_platform_init_host for upstream change to interface
+* cleanup error handling of rxoob clk, moved to devm_clk_get/put
 
-The following changes since commit 2a13772a144d2956a7fedd18685921d0a9b8b783:
+v2:
+* Fixed MODULE_LICENSE to be GPL v2
 
-  libata: widen Crucial M550 blacklist matching (2014-08-18 17:40:09 -0400)
+ drivers/ata/Kconfig     | 10 +++++
+ drivers/ata/Makefile    |  1 +
+ drivers/ata/ahci_qcom.c | 99 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 110 insertions(+)
+ create mode 100644 drivers/ata/ahci_qcom.c
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-3.17-fixes
-
-for you to fetch changes up to 0babe614b6b4c7d1d8e12d7a6dbdac6e2f0df8e2:
-
-  ahci_xgene: Fix the link down in first attempt for the APM X-Gene SoC AHCI SATA host controller driver. (2014-09-06 11:27:15 +0900)
-
-----------------------------------------------------------------
-Chuansheng Liu (1):
-      ata: Disabling the async PM for JMicron chip 363/361
-
-James Ralston (2):
-      ahci: Add Device IDs for Intel 9 Series PCH
-      ata_piix: Add Device IDs for Intel 9 Series PCH
-
-Mikko Perttunen (1):
-      ata: ahci_tegra: Read calibration fuse
-
-Murali Karicheri (1):
-      ahci: add pcid for Marvel 0x9182 controller
-
-Suman Tripathi (2):
-      ahci_xgene: Skip the PHY and clock initialization if already configured by the firmware.
-      ahci_xgene: Fix the link down in first attempt for the APM X-Gene SoC AHCI SATA host controller driver.
-
- drivers/ata/ahci.c         | 22 +++++++++++++++++
- drivers/ata/ahci_tegra.c   | 14 ++++++++---
- drivers/ata/ahci_xgene.c   | 61 +++++++++++++++++++++++++++++++++++-----------
- drivers/ata/ata_piix.c     |  8 ++++++
- drivers/ata/pata_jmicron.c | 12 +++++++++
- 5 files changed, 99 insertions(+), 18 deletions(-)
-
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index e1b9278..165d2fa 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -133,6 +133,16 @@ config AHCI_MVEBU
+ 
+ 	  If unsure, say N.
+ 
++config AHCI_QCOM
++	tristate "Qualcomm AHCI SATA support"
++	depends on ARCH_QCOM
++	help
++	  This option enables support for AHCI SATA controller
++	  integrated into Qualcomm ARM SoC chipsets. For more
++	  information please refer to http://www.qualcomm.com/chipsets.
++
++	  If unsure, say N.
++
+ config AHCI_SUNXI
+ 	tristate "Allwinner sunxi AHCI SATA support"
+ 	depends on ARCH_SUNXI
+diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+index ae41107..812435c 100644
+--- a/drivers/ata/Makefile
++++ b/drivers/ata/Makefile
+@@ -13,6 +13,7 @@ obj-$(CONFIG_SATA_HIGHBANK)	+= sata_highbank.o libahci.o
+ obj-$(CONFIG_AHCI_DA850)	+= ahci_da850.o libahci.o libahci_platform.o
+ obj-$(CONFIG_AHCI_IMX)		+= ahci_imx.o libahci.o libahci_platform.o
+ obj-$(CONFIG_AHCI_MVEBU)	+= ahci_mvebu.o libahci.o libahci_platform.o
++obj-$(CONFIG_AHCI_QCOM)		+= ahci_qcom.o libahci.o libahci_platform.o
+ obj-$(CONFIG_AHCI_SUNXI)	+= ahci_sunxi.o libahci.o libahci_platform.o
+ obj-$(CONFIG_AHCI_ST)		+= ahci_st.o libahci.o libahci_platform.o
+ obj-$(CONFIG_AHCI_TEGRA)	+= ahci_tegra.o libahci.o libahci_platform.o
+diff --git a/drivers/ata/ahci_qcom.c b/drivers/ata/ahci_qcom.c
+new file mode 100644
+index 0000000..3da0c94
+--- /dev/null
++++ b/drivers/ata/ahci_qcom.c
+@@ -0,0 +1,99 @@
++/*
++ * Qualcomm ARM SoC AHCI SATA platform driver
++ *
++ * based on the AHCI SATA platform driver by Jeff Garzik and Anton Vorontsov
++ *
++ * Copyright (c) 2014, The Linux Foundation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 and
++ * only version 2 as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */
++
++#include <linux/ahci_platform.h>
++#include <linux/device.h>
++#include <linux/kernel.h>
++#include <linux/libata.h>
++#include <linux/module.h>
++#include <linux/platform_device.h>
++#include <linux/pm.h>
++#include "ahci.h"
++
++static const struct ata_port_info qcom_ahci_port_info = {
++	.flags		= AHCI_FLAG_COMMON,
++	.pio_mask	= ATA_PIO4,
++	.udma_mask	= ATA_UDMA6,
++	.port_ops	= &ahci_platform_ops,
++};
++
++static int qcom_ahci_probe(struct platform_device *pdev)
++{
++	struct ahci_host_priv *hpriv;
++	struct clk *rxoob_clk, *pmalive_clk;
++	int rc;
++
++	hpriv = ahci_platform_get_resources(pdev);
++	if (IS_ERR(hpriv))
++		return PTR_ERR(hpriv);
++
++	/* Try and set the rxoob clk to 100Mhz */
++	rxoob_clk = of_clk_get_by_name(pdev->dev.of_node, "rxoob");
++	if (IS_ERR(rxoob_clk))
++		return PTR_ERR(rxoob_clk);
++
++	rc = clk_set_rate(rxoob_clk, 100000000);
++	if (rc)
++		return rc;
++
++	/* Try and set the pmalive clk to 100Mhz */
++	pmalive_clk = of_clk_get_by_name(pdev->dev.of_node, "pmalive");
++	if (IS_ERR(pmalive_clk))
++		return PTR_ERR(pmalive_clk);
++
++	rc = clk_set_rate(pmalive_clk, 100000000);
++	if (rc)
++		return rc;
++
++	rc = ahci_platform_enable_resources(hpriv);
++	if (rc)
++		return rc;
++
++	rc = ahci_platform_init_host(pdev, hpriv, &qcom_ahci_port_info);
++	if (rc)
++		goto disable_resources;
++
++	return 0;
++disable_resources:
++	ahci_platform_disable_resources(hpriv);
++	return rc;
++}
++
++static const struct of_device_id qcom_ahci_of_match[] = {
++	{ .compatible = "qcom,msm-ahci", },
++	{},
++};
++MODULE_DEVICE_TABLE(of, qcom_ahci_of_match);
++
++static SIMPLE_DEV_PM_OPS(qcom_ahci_pm_ops, ahci_platform_suspend,
++			 ahci_platform_resume);
++
++static struct platform_driver qcom_ahci_driver = {
++	.probe = qcom_ahci_probe,
++	.remove = ata_platform_remove_one,
++	.driver = {
++		.name = "qcom_ahci_qcom",
++		.owner = THIS_MODULE,
++		.of_match_table = qcom_ahci_of_match,
++		.pm = &qcom_ahci_pm_ops,
++	},
++};
++module_platform_driver(qcom_ahci_driver);
++
++MODULE_DESCRIPTION("Qualcomm AHCI SATA platform driver");
++MODULE_LICENSE("GPL v2");
++MODULE_ALIAS("ahci:qcom");
 -- 
-tejun
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+hosted by The Linux Foundation
