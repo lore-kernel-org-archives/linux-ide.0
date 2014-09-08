@@ -1,36 +1,63 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/4] libata: consolidate ata_dev_classify()
-Date: Mon, 8 Sep 2014 01:02:34 +0900
-Message-ID: <20140907160234.GA26367@mtj.dyndns.org>
-References: <1406706911-79510-1-git-send-email-hare@suse.de>
- <1406706911-79510-2-git-send-email-hare@suse.de>
- <20140905234241.GH15723@mtj.dyndns.org>
- <540AC41F.8020506@suse.de>
- <20140906125227.GA29401@mtj.dyndns.org>
- <540C407F.5030305@suse.de>
+Subject: [GIT PULL] libata fixes for v3.17-rc4
+Date: Mon, 8 Sep 2014 09:59:44 +0900
+Message-ID: <20140908005944.GD5061@mtj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:62058 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752488AbaIGQCk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Sep 2014 12:02:40 -0400
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:42844 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751151AbaIHA7s (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Sep 2014 20:59:48 -0400
 Content-Disposition: inline
-In-Reply-To: <540C407F.5030305@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <jbottomley@parallels.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Sun, Sep 07, 2014 at 01:24:47PM +0200, Hannes Reinecke wrote:
-> Which was actually my first attempt, but then I figured I'd be
-> increasing the stacksize in doing so.
-> But sure, if you're okay with it I'll be redoing the patch.
+Hello, Linus.
 
-The struct is only 32 bytes.  I don't think it's gonna make any
-meaningful difference.
+Two patches are to add PCI IDs for ICH9 and all others are device
+specific fixes.  Nothing too interesting.
 
 Thanks.
+
+The following changes since commit 2a13772a144d2956a7fedd18685921d0a9b8b783:
+
+  libata: widen Crucial M550 blacklist matching (2014-08-18 17:40:09 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-3.17-fixes
+
+for you to fetch changes up to 0babe614b6b4c7d1d8e12d7a6dbdac6e2f0df8e2:
+
+  ahci_xgene: Fix the link down in first attempt for the APM X-Gene SoC AHCI SATA host controller driver. (2014-09-06 11:27:15 +0900)
+
+----------------------------------------------------------------
+Chuansheng Liu (1):
+      ata: Disabling the async PM for JMicron chip 363/361
+
+James Ralston (2):
+      ahci: Add Device IDs for Intel 9 Series PCH
+      ata_piix: Add Device IDs for Intel 9 Series PCH
+
+Mikko Perttunen (1):
+      ata: ahci_tegra: Read calibration fuse
+
+Murali Karicheri (1):
+      ahci: add pcid for Marvel 0x9182 controller
+
+Suman Tripathi (2):
+      ahci_xgene: Skip the PHY and clock initialization if already configured by the firmware.
+      ahci_xgene: Fix the link down in first attempt for the APM X-Gene SoC AHCI SATA host controller driver.
+
+ drivers/ata/ahci.c         | 22 +++++++++++++++++
+ drivers/ata/ahci_tegra.c   | 14 ++++++++---
+ drivers/ata/ahci_xgene.c   | 61 +++++++++++++++++++++++++++++++++++-----------
+ drivers/ata/ata_piix.c     |  8 ++++++
+ drivers/ata/pata_jmicron.c | 12 +++++++++
+ 5 files changed, 99 insertions(+), 18 deletions(-)
 
 -- 
 tejun
