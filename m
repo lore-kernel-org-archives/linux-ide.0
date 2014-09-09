@@ -1,83 +1,91 @@
-From: Kumar Gala <galak@codeaurora.org>
-Subject: [PATCH v4 3/3] ata: qcom: Add device tree bindings information
-Date: Tue,  9 Sep 2014 10:36:48 -0500
-Message-ID: <1410277008-20242-3-git-send-email-galak@codeaurora.org>
-References: <1410277008-20242-1-git-send-email-galak@codeaurora.org>
+From: <suravee.suthikulpanit@amd.com>
+Subject: [PATCH] ata: ahci_platform: Add ACPI support for AMD Seattle SATA controller
+Date: Tue, 9 Sep 2014 15:37:15 -0500
+Message-ID: <1410295035-14471-1-git-send-email-suravee.suthikulpanit@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <1410277008-20242-1-git-send-email-galak@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Hans de Goede <hdegoede@redhat.com>
-Cc: devicetree@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kumar Gala <galak@codeaurora.org>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: tj@kernel.org, hdegoede@redhat.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 List-Id: linux-ide@vger.kernel.org
 
-Add device tree binding for Qualcomm AHCI SATA controller and specifically
-the sata controller on the IPQ806x family of SoCs.
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-Signed-off-by: Kumar Gala <galak@codeaurora.org>
+This patch adds ACPI support for non-PCI SATA contoller in ahci_platform driver.
+It adds ACPI matching table in ahci_platform to support AMD Seattle SATA controller
+with following ASL structure in DSDT:
+
+    Device (SATA0)
+    {
+      Name(_HID, "AMDI0600")	// Seattle AHSATA
+      Name (_CCA, 1)		// Cache-coherent controller
+      Name (_CRS, ResourceTemplate ()
+      {
+        Memory32Fixed (ReadWrite, 0xE0300000, 0x00010000)
+        Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive,,,) { 387 }
+      })
+    }
+
+Since ATA driver should not require PCI support for ATA_ACPI,
+this patch also removes dependency in the driver/ata/Kconfig.
+
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 ---
-(reposted with Hans on list)
+ drivers/ata/Kconfig         |  2 +-
+ drivers/ata/ahci_platform.c | 13 +++++++++++++
+ 2 files changed, 14 insertions(+), 1 deletion(-)
 
- .../devicetree/bindings/ata/qcom-sata.txt          | 40 ++++++++++++++++++++++
- 1 file changed, 40 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/ata/qcom-sata.txt
-
-diff --git a/Documentation/devicetree/bindings/ata/qcom-sata.txt b/Documentation/devicetree/bindings/ata/qcom-sata.txt
-new file mode 100644
-index 0000000..5e74e41
---- /dev/null
-+++ b/Documentation/devicetree/bindings/ata/qcom-sata.txt
-@@ -0,0 +1,40 @@
-+* Qualcomm AHCI SATA Controller
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index e1b9278..f2e6c9e 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -48,7 +48,7 @@ config ATA_VERBOSE_ERROR
+ 
+ config ATA_ACPI
+ 	bool "ATA ACPI Support"
+-	depends on ACPI && PCI
++	depends on ACPI
+ 	default y
+ 	help
+ 	  This option adds support for ATA-related ACPI objects.
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index f61ddb9..3499bab 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -20,6 +20,9 @@
+ #include <linux/platform_device.h>
+ #include <linux/libata.h>
+ #include <linux/ahci_platform.h>
++#ifdef CONFIG_ATA_ACPI
++#include <linux/acpi.h>
++#endif
+ #include "ahci.h"
+ 
+ static const struct ata_port_info ahci_port_info = {
+@@ -87,6 +90,13 @@ static const struct of_device_id ahci_of_match[] = {
+ };
+ MODULE_DEVICE_TABLE(of, ahci_of_match);
+ 
++#ifdef CONFIG_ATA_ACPI
++static const struct acpi_device_id ahci_acpi_match[] = {
++	{ "AMDI0600", 0 }, /* AMD Seattle AHCI */
++	{ },
++};
++#endif
 +
-+SATA nodes are defined to describe on-chip Serial ATA controllers.
-+Each SATA controller should have its own node.
-+
-+Required properties:
-+- compatible		: compatible list, contains "qcom,msm-ahci"
-+- interrupts		: <interrupt mapping for SATA IRQ>
-+- reg			: <registers mapping>
-+- phys			: Must contain exactly one entry as specified
-+			  in phy-bindings.txt
-+- phy-names		: Must be "sata-phy"
-+
-+Required properties for "qcom,ipq806x-ahci" compatible:
-+- clocks		: Must contain an entry for each entry in clock-names.
-+- clock-names		: Shall be:
-+				"slave_iface" - Fabric port AHB clock for SATA
-+				"iface" - AHB clock
-+				"core" - core clock
-+				"rxoob" - RX out-of-band clock
-+				"pmalive" - Power Module Alive clock
-+
-+Example:
-+	sata@29000000 {
-+		compatible = "qcom,ipq806x-ahci", "qcom,msm-ahci";
-+		reg = <0x29000000 0x180>;
-+
-+		interrupts = <0 209 0x0>;
-+
-+		clocks = <&gcc SFAB_SATA_S_H_CLK>,
-+			 <&gcc SATA_H_CLK>,
-+			 <&gcc SATA_A_CLK>,
-+			 <&gcc SATA_RXOOB_CLK>,
-+			 <&gcc SATA_PMALIVE_CLK>;
-+		clock-names = "slave_iface", "iface", "core",
-+				"rxoob", "pmalive";
-+
-+		phys = <&sata_phy>;
-+		phy-names = "sata-phy";
-+	};
+ static struct platform_driver ahci_driver = {
+ 	.probe = ahci_probe,
+ 	.remove = ata_platform_remove_one,
+@@ -94,6 +104,9 @@ static struct platform_driver ahci_driver = {
+ 		.name = "ahci",
+ 		.owner = THIS_MODULE,
+ 		.of_match_table = ahci_of_match,
++#ifdef CONFIG_ATA_ACPI
++		.acpi_match_table = ACPI_PTR(ahci_acpi_match),
++#endif
+ 		.pm = &ahci_pm_ops,
+ 	},
+ };
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-hosted by The Linux Foundation
+1.9.3
