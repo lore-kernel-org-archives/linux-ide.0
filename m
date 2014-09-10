@@ -1,49 +1,35 @@
-From: "Patel, Gaurav" <gspatel@hp.com>
-Subject: RE: [Bug] 3.16 fwdownload failure on Marvell 88SE9125 sata
- controller
-Date: Wed, 10 Sep 2014 16:11:59 +0000
-Message-ID: <4693A34300ED74418DB0F7454C3D19DA16A9969B@G5W2736.americas.hpqcorp.net>
-References: <CACVXFVN6f3Og+D_70M+4j_qhGNsryJWzTJK8G+rY0sxXweMqQg@mail.gmail.com>
-	<540FC7C8.1070904@gmail.com>
- <CACVXFVOFci3572cJ=G8vAQ0-R_0A9rcDUcwa-8t0rjuGduJdwg@mail.gmail.com>
+From: Murali Karicheri <m-karicheri2@ti.com>
+Subject: Re: [RESEND: PATCH] ahci: add pcid for Marvel 0x9182 controller
+Date: Wed, 10 Sep 2014 14:14:30 -0400
+Message-ID: <54109506.70207@ti.com>
+References: <1409937660-30544-1-git-send-email-m-karicheri2@ti.com> <20140905175326.GB12991@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:47060 "EHLO
-	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750944AbaIJQNO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Sep 2014 12:13:14 -0400
-In-Reply-To: <CACVXFVOFci3572cJ=G8vAQ0-R_0A9rcDUcwa-8t0rjuGduJdwg@mail.gmail.com>
-Content-Language: en-US
+Received: from comal.ext.ti.com ([198.47.26.152]:38097 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751696AbaIJSOK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 10 Sep 2014 14:14:10 -0400
+In-Reply-To: <20140905175326.GB12991@mtj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ming Lei <ming.lei@canonical.com>, Robert Hancock <hancockrwd@gmail.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Santosh Shilimkar <santosh.shilimkar@ti.com>
 
-DQoiPj4gV2hlbiB3ZSB1c2UgaGRwYXJtIHRvIGRvd25sb2FkIGZpcm13YXJlIG9uIHN5c3RlbSB3
-aXRoIE1hcnZlbGwgDQo+PiA4OFNFOTEyNSBTQVRBIGNvbnRyb2xsZXIsIGl0IHJldHVybnMgZmFp
-bHVyZSBhbHdheXMgYW5kIGl0IGhhcyBiZWVuIA0KPj4gb2JzZXJ2ZWQgaW4gc2V2ZXJhbCBzeXN0
-ZW1zOiINCg0KIFtHYXVyYXZdOiAgU28gSSBoYXZlIGFub3RoZXIgbW9vbnNob3QgY2FydHJpZGdl
-IHdpdGggc2FtZSBTQVRBIGNvbnRyb2xsZXIgYW5kIEkgd2FzIGFibGUgdG8gdXBkYXRlIEZXIHdp
-dGggaGRwYXJtIHdpdGggUmVkSGF0NjUgd2l0aG91dCBhbnkgaXNzdWVzLiBTbyB0aGlzIGxvb2tz
-IHRvIG1lIGlzc3VlIHdpdGggVWJ1bnR1IGtlcm5lbCBkb3Mgbm90IGhhdmUgY29ycmVjdCBkcml2
-ZXIgKG9yIHNvbWV0aGluZyBpcyBtaXNzaW5nIHRvIHN1cHBvcnQgaGRwYXJtIG9yIHNhdGEgY29u
-dHJvbGxlcikuICANCg0KDQpUaGFua3MsDQpHYXVyYXYgUGF0ZWwNCkVtYWlsOiBHc3BhdGVsQGhw
-LmNvbQ0KQ2VsbCAjIDgzMi0zODItNTU1MA0KDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0t
-DQpGcm9tOiBNaW5nIExlaSBbbWFpbHRvOm1pbmcubGVpQGNhbm9uaWNhbC5jb21dIA0KU2VudDog
-V2VkbmVzZGF5LCBTZXB0ZW1iZXIgMTAsIDIwMTQgMTozNCBBTQ0KVG86IFJvYmVydCBIYW5jb2Nr
-DQpDYzogbGludXgtaWRlQHZnZXIua2VybmVsLm9yZzsgVGVqdW4gSGVvOyBMaW51eCBLZXJuZWwg
-TWFpbGluZyBMaXN0OyBQYXRlbCwgR2F1cmF2DQpTdWJqZWN0OiBSZTogW0J1Z10gMy4xNiBmd2Rv
-d25sb2FkIGZhaWx1cmUgb24gTWFydmVsbCA4OFNFOTEyNSBzYXRhIGNvbnRyb2xsZXINCg0KT24g
-V2VkLCBTZXAgMTAsIDIwMTQgYXQgMTE6MzggQU0sIFJvYmVydCBIYW5jb2NrIDxoYW5jb2Nrcndk
-QGdtYWlsLmNvbT4gd3JvdGU6DQo+IE9uIDAxLzA5LzE0IDAyOjIyIEFNLCBNaW5nIExlaSB3cm90
-ZToNCj4+DQo+PiBIaSBHdXlzLA0KPj4NCj4+IFdoZW4gd2UgdXNlIGhkcGFybSB0byBkb3dubG9h
-ZCBmaXJtd2FyZSBvbiBzeXN0ZW0gd2l0aCBNYXJ2ZWxsIA0KPj4gODhTRTkxMjUgU0FUQSBjb250
-cm9sbGVyLCBpdCByZXR1cm5zIGZhaWx1cmUgYWx3YXlzIGFuZCBpdCBoYXMgYmVlbiANCj4+IG9i
-c2VydmVkIGluIHNldmVyYWwgc3lzdGVtczoNCj4+DQo+PiAjaGRwYXJtIC0tZndkb3dubG9hZC1t
-b2RlNyBmdy5iaW4NCj4+IC0teWVzLWkta25vLXdoYXQtaS1hbS1kb2luZyAtLXBsZWFzZS1kZXN0
-cm95LW15LWRyaXZlIC9kZXYvc2RhDQo+Pg0KPj4gL2Rldi9zZGE6DQo+PiBmd2Rvd25sb2FkOiB4
-ZmVyX21vZGU9NyBtaW49MSBtYXg9NjU1MzUgc2l6ZT02OTkzOTINCj4+IEZBSUxFRDogSW5wdXQv
-b3V0cHV0IGVycm9yDQo+DQo+DQo+IEFueSBlcnJvcnMgaW4gZG1lc2cgYWZ0ZXIgZG9pbmcgdGhp
-cz8NCg0KTm8gYW55IGZhaWx1cmUgbG9nIGZyb20ga2VybmVsLg0KDQpUaGFua3MsDQo=
+On 09/05/2014 01:53 PM, Tejun Heo wrote:
+> On Fri, Sep 05, 2014 at 01:21:00PM -0400, Murali Karicheri wrote:
+>> Keystone K2E EVM uses Marvel 0x9182 controller. This requires support
+>> for the ID in the ahci driver.
+>>
+>> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
+>
+> Applied to libata/for-3.17-fixes w/ stable cc'd.
+>
+> Thanks.
+>
+Tejun,
+
+Thanks
+
+Murali
