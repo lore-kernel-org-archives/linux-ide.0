@@ -1,91 +1,35 @@
-From: <suravee.suthikulpanit@amd.com>
-Subject: [PATCH] ata: ahci_platform: Add ACPI support for AMD Seattle SATA controller
-Date: Tue, 9 Sep 2014 15:37:15 -0500
-Message-ID: <1410295035-14471-1-git-send-email-suravee.suthikulpanit@amd.com>
+From: Robert Hancock <hancockrwd@gmail.com>
+Subject: Re: [Bug] 3.16 fwdownload failure on Marvell 88SE9125 sata controller
+Date: Tue, 09 Sep 2014 21:38:48 -0600
+Message-ID: <540FC7C8.1070904@gmail.com>
+References: <CACVXFVN6f3Og+D_70M+4j_qhGNsryJWzTJK8G+rY0sxXweMqQg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: tj@kernel.org, hdegoede@redhat.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pd0-f170.google.com ([209.85.192.170]:45875 "EHLO
+	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751146AbaIJDiw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Sep 2014 23:38:52 -0400
+In-Reply-To: <CACVXFVN6f3Og+D_70M+4j_qhGNsryJWzTJK8G+rY0sxXweMqQg@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Ming Lei <ming.lei@canonical.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Gaurav <gspatel@hp.com>
 
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+On 01/09/14 02:22 AM, Ming Lei wrote:
+> Hi Guys,
+>
+> When we use hdparm to download firmware on system with
+> Marvell 88SE9125 SATA controller, it returns failure always
+> and it has been observed in several systems:
+>
+> #hdparm --fwdownload-mode7 fw.bin
+> --yes-i-kno-what-i-am-doing --please-destroy-my-drive /dev/sda
+>
+> /dev/sda:
+> fwdownload: xfer_mode=7 min=1 max=65535 size=699392
+> FAILED: Input/output error
 
-This patch adds ACPI support for non-PCI SATA contoller in ahci_platform driver.
-It adds ACPI matching table in ahci_platform to support AMD Seattle SATA controller
-with following ASL structure in DSDT:
+Any errors in dmesg after doing this?
 
-    Device (SATA0)
-    {
-      Name(_HID, "AMDI0600")	// Seattle AHSATA
-      Name (_CCA, 1)		// Cache-coherent controller
-      Name (_CRS, ResourceTemplate ()
-      {
-        Memory32Fixed (ReadWrite, 0xE0300000, 0x00010000)
-        Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive,,,) { 387 }
-      })
-    }
-
-Since ATA driver should not require PCI support for ATA_ACPI,
-this patch also removes dependency in the driver/ata/Kconfig.
-
-Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
----
- drivers/ata/Kconfig         |  2 +-
- drivers/ata/ahci_platform.c | 13 +++++++++++++
- 2 files changed, 14 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index e1b9278..f2e6c9e 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -48,7 +48,7 @@ config ATA_VERBOSE_ERROR
- 
- config ATA_ACPI
- 	bool "ATA ACPI Support"
--	depends on ACPI && PCI
-+	depends on ACPI
- 	default y
- 	help
- 	  This option adds support for ATA-related ACPI objects.
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index f61ddb9..3499bab 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -20,6 +20,9 @@
- #include <linux/platform_device.h>
- #include <linux/libata.h>
- #include <linux/ahci_platform.h>
-+#ifdef CONFIG_ATA_ACPI
-+#include <linux/acpi.h>
-+#endif
- #include "ahci.h"
- 
- static const struct ata_port_info ahci_port_info = {
-@@ -87,6 +90,13 @@ static const struct of_device_id ahci_of_match[] = {
- };
- MODULE_DEVICE_TABLE(of, ahci_of_match);
- 
-+#ifdef CONFIG_ATA_ACPI
-+static const struct acpi_device_id ahci_acpi_match[] = {
-+	{ "AMDI0600", 0 }, /* AMD Seattle AHCI */
-+	{ },
-+};
-+#endif
-+
- static struct platform_driver ahci_driver = {
- 	.probe = ahci_probe,
- 	.remove = ata_platform_remove_one,
-@@ -94,6 +104,9 @@ static struct platform_driver ahci_driver = {
- 		.name = "ahci",
- 		.owner = THIS_MODULE,
- 		.of_match_table = ahci_of_match,
-+#ifdef CONFIG_ATA_ACPI
-+		.acpi_match_table = ACPI_PTR(ahci_acpi_match),
-+#endif
- 		.pm = &ahci_pm_ops,
- 	},
- };
--- 
-1.9.3
