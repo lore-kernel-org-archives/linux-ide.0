@@ -1,35 +1,80 @@
-From: Murali Karicheri <m-karicheri2@ti.com>
-Subject: Re: [RESEND: PATCH] ahci: add pcid for Marvel 0x9182 controller
-Date: Wed, 10 Sep 2014 14:14:30 -0400
-Message-ID: <54109506.70207@ti.com>
-References: <1409937660-30544-1-git-send-email-m-karicheri2@ti.com> <20140905175326.GB12991@mtj.dyndns.org>
+From: Ming Lei <ming.lei@canonical.com>
+Subject: Re: [Bug] 3.16 fwdownload failure on Marvell 88SE9125 sata controller
+Date: Thu, 11 Sep 2014 07:00:46 +0800
+Message-ID: <CACVXFVPen-__38-XGHAe2Yxb0CGVLr3sGxQXvvk=Zkwzn-A_gA@mail.gmail.com>
+References: <CACVXFVN6f3Og+D_70M+4j_qhGNsryJWzTJK8G+rY0sxXweMqQg@mail.gmail.com>
+	<540FC7C8.1070904@gmail.com>
+	<CACVXFVOFci3572cJ=G8vAQ0-R_0A9rcDUcwa-8t0rjuGduJdwg@mail.gmail.com>
+	<4693A34300ED74418DB0F7454C3D19DA16A9969B@G5W2736.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:38097 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751696AbaIJSOK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 10 Sep 2014 14:14:10 -0400
-In-Reply-To: <20140905175326.GB12991@mtj.dyndns.org>
+Received: from youngberry.canonical.com ([91.189.89.112]:48019 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751453AbaIJXAt convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Sep 2014 19:00:49 -0400
+In-Reply-To: <4693A34300ED74418DB0F7454C3D19DA16A9969B@G5W2736.americas.hpqcorp.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Santosh Shilimkar <santosh.shilimkar@ti.com>
+To: "Patel, Gaurav" <gspatel@hp.com>
+Cc: Robert Hancock <hancockrwd@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On 09/05/2014 01:53 PM, Tejun Heo wrote:
-> On Fri, Sep 05, 2014 at 01:21:00PM -0400, Murali Karicheri wrote:
->> Keystone K2E EVM uses Marvel 0x9182 controller. This requires support
->> for the ID in the ahci driver.
+On Thu, Sep 11, 2014 at 12:11 AM, Patel, Gaurav <gspatel@hp.com> wrote:
+>
+> ">> When we use hdparm to download firmware on system with Marvell
+>>> 88SE9125 SATA controller, it returns failure always and it has been
+>>> observed in several systems:"
+>
+>  [Gaurav]:  So I have another moonshot cartridge with same SATA controller and I was able to update FW with hdparm with RedHat65 without any issues. So this looks to me issue with Ubuntu kernel dos not have correct driver (or something is missing to support hdparm or sata controller).
+
+But RedHat65 ships a 2.6.32 kernel as you said, and you can test the stable
+2.6.32 kernel on one ubuntu release too.
+
+As far as I can tell, the problem is very probably related with
+kernel, that is why
+I suggest you to test upstream kernel and run 'git bisect' later to
+find the commit
+which caused the regression.
+
+But looks you have simply install problem.
+
+Thanks,
+
+
+>
+> Thanks,
+> Gaurav Patel
+> Email: Gspatel@hp.com
+> Cell # 832-382-5550
+>
+>
+> -----Original Message-----
+> From: Ming Lei [mailto:ming.lei@canonical.com]
+> Sent: Wednesday, September 10, 2014 1:34 AM
+> To: Robert Hancock
+> Cc: linux-ide@vger.kernel.org; Tejun Heo; Linux Kernel Mailing List; Patel, Gaurav
+> Subject: Re: [Bug] 3.16 fwdownload failure on Marvell 88SE9125 sata controller
+>
+> On Wed, Sep 10, 2014 at 11:38 AM, Robert Hancock <hancockrwd@gmail.com> wrote:
+>> On 01/09/14 02:22 AM, Ming Lei wrote:
+>>>
+>>> Hi Guys,
+>>>
+>>> When we use hdparm to download firmware on system with Marvell
+>>> 88SE9125 SATA controller, it returns failure always and it has been
+>>> observed in several systems:
+>>>
+>>> #hdparm --fwdownload-mode7 fw.bin
+>>> --yes-i-kno-what-i-am-doing --please-destroy-my-drive /dev/sda
+>>>
+>>> /dev/sda:
+>>> fwdownload: xfer_mode=7 min=1 max=65535 size=699392
+>>> FAILED: Input/output error
 >>
->> Signed-off-by: Murali Karicheri<m-karicheri2@ti.com>
+>>
+>> Any errors in dmesg after doing this?
 >
-> Applied to libata/for-3.17-fixes w/ stable cc'd.
+> No any failure log from kernel.
 >
-> Thanks.
->
-Tejun,
-
-Thanks
-
-Murali
+> Thanks,
