@@ -1,114 +1,49 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [PATCH] ata: ahci_platform: Add ACPI support for AMD Seattle
- SATA controller
-Date: Wed, 10 Sep 2014 12:11:55 +0200
-Message-ID: <541023EB.70705@redhat.com>
-References: <1410295035-14471-1-git-send-email-suravee.suthikulpanit@amd.com>
+From: "Patel, Gaurav" <gspatel@hp.com>
+Subject: RE: [Bug] 3.16 fwdownload failure on Marvell 88SE9125 sata
+ controller
+Date: Wed, 10 Sep 2014 16:11:59 +0000
+Message-ID: <4693A34300ED74418DB0F7454C3D19DA16A9969B@G5W2736.americas.hpqcorp.net>
+References: <CACVXFVN6f3Og+D_70M+4j_qhGNsryJWzTJK8G+rY0sxXweMqQg@mail.gmail.com>
+	<540FC7C8.1070904@gmail.com>
+ <CACVXFVOFci3572cJ=G8vAQ0-R_0A9rcDUcwa-8t0rjuGduJdwg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1410295035-14471-1-git-send-email-suravee.suthikulpanit@amd.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: suravee.suthikulpanit@amd.com, tj@kernel.org
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from g9t1613g.houston.hp.com ([15.240.0.71]:47060 "EHLO
+	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750944AbaIJQNO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Sep 2014 12:13:14 -0400
+In-Reply-To: <CACVXFVOFci3572cJ=G8vAQ0-R_0A9rcDUcwa-8t0rjuGduJdwg@mail.gmail.com>
+Content-Language: en-US
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Ming Lei <ming.lei@canonical.com>, Robert Hancock <hancockrwd@gmail.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-Hi,
-
-On 09/09/2014 10:37 PM, suravee.suthikulpanit@amd.com wrote:
-> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> 
-> This patch adds ACPI support for non-PCI SATA contoller in ahci_platform driver.
-> It adds ACPI matching table in ahci_platform to support AMD Seattle SATA controller
-> with following ASL structure in DSDT:
-> 
->     Device (SATA0)
->     {
->       Name(_HID, "AMDI0600")	// Seattle AHSATA
->       Name (_CCA, 1)		// Cache-coherent controller
->       Name (_CRS, ResourceTemplate ()
->       {
->         Memory32Fixed (ReadWrite, 0xE0300000, 0x00010000)
->         Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive,,,) { 387 }
->       })
->     }
-> 
-> Since ATA driver should not require PCI support for ATA_ACPI,
-> this patch also removes dependency in the driver/ata/Kconfig.
-> 
-> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-
-Looks good to me, one small nitpick inline.
-
-Acked-by: Hans de Goede <hdegoede@redhat.com>
-
-
-
-> ---
->  drivers/ata/Kconfig         |  2 +-
->  drivers/ata/ahci_platform.c | 13 +++++++++++++
->  2 files changed, 14 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-> index e1b9278..f2e6c9e 100644
-> --- a/drivers/ata/Kconfig
-> +++ b/drivers/ata/Kconfig
-> @@ -48,7 +48,7 @@ config ATA_VERBOSE_ERROR
->  
->  config ATA_ACPI
->  	bool "ATA ACPI Support"
-> -	depends on ACPI && PCI
-> +	depends on ACPI
->  	default y
->  	help
->  	  This option adds support for ATA-related ACPI objects.
-> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-> index f61ddb9..3499bab 100644
-> --- a/drivers/ata/ahci_platform.c
-> +++ b/drivers/ata/ahci_platform.c
-> @@ -20,6 +20,9 @@
->  #include <linux/platform_device.h>
->  #include <linux/libata.h>
->  #include <linux/ahci_platform.h>
-> +#ifdef CONFIG_ATA_ACPI
-> +#include <linux/acpi.h>
-> +#endif
->  #include "ahci.h"
->  
->  static const struct ata_port_info ahci_port_info = {
-> @@ -87,6 +90,13 @@ static const struct of_device_id ahci_of_match[] = {
->  };
->  MODULE_DEVICE_TABLE(of, ahci_of_match);
->  
-> +#ifdef CONFIG_ATA_ACPI
-> +static const struct acpi_device_id ahci_acpi_match[] = {
-> +	{ "AMDI0600", 0 }, /* AMD Seattle AHCI */
-> +	{ },
-> +};
-> +#endif
-> +
->  static struct platform_driver ahci_driver = {
->  	.probe = ahci_probe,
->  	.remove = ata_platform_remove_one,
-> @@ -94,6 +104,9 @@ static struct platform_driver ahci_driver = {
->  		.name = "ahci",
->  		.owner = THIS_MODULE,
->  		.of_match_table = ahci_of_match,
-> +#ifdef CONFIG_ATA_ACPI
-> +		.acpi_match_table = ACPI_PTR(ahci_acpi_match),
-> +#endif
-
-Hmm, is the cast here really necessary ? AFAIK nowadays we usually
-don't need this cast macros, and they can hide accidental prototype
-differences, so they are better avoided.
-
-
->  		.pm = &ahci_pm_ops,
->  	},
->  };
-> 
-
-Regards,
-
-Hans
+DQoiPj4gV2hlbiB3ZSB1c2UgaGRwYXJtIHRvIGRvd25sb2FkIGZpcm13YXJlIG9uIHN5c3RlbSB3
+aXRoIE1hcnZlbGwgDQo+PiA4OFNFOTEyNSBTQVRBIGNvbnRyb2xsZXIsIGl0IHJldHVybnMgZmFp
+bHVyZSBhbHdheXMgYW5kIGl0IGhhcyBiZWVuIA0KPj4gb2JzZXJ2ZWQgaW4gc2V2ZXJhbCBzeXN0
+ZW1zOiINCg0KIFtHYXVyYXZdOiAgU28gSSBoYXZlIGFub3RoZXIgbW9vbnNob3QgY2FydHJpZGdl
+IHdpdGggc2FtZSBTQVRBIGNvbnRyb2xsZXIgYW5kIEkgd2FzIGFibGUgdG8gdXBkYXRlIEZXIHdp
+dGggaGRwYXJtIHdpdGggUmVkSGF0NjUgd2l0aG91dCBhbnkgaXNzdWVzLiBTbyB0aGlzIGxvb2tz
+IHRvIG1lIGlzc3VlIHdpdGggVWJ1bnR1IGtlcm5lbCBkb3Mgbm90IGhhdmUgY29ycmVjdCBkcml2
+ZXIgKG9yIHNvbWV0aGluZyBpcyBtaXNzaW5nIHRvIHN1cHBvcnQgaGRwYXJtIG9yIHNhdGEgY29u
+dHJvbGxlcikuICANCg0KDQpUaGFua3MsDQpHYXVyYXYgUGF0ZWwNCkVtYWlsOiBHc3BhdGVsQGhw
+LmNvbQ0KQ2VsbCAjIDgzMi0zODItNTU1MA0KDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0t
+DQpGcm9tOiBNaW5nIExlaSBbbWFpbHRvOm1pbmcubGVpQGNhbm9uaWNhbC5jb21dIA0KU2VudDog
+V2VkbmVzZGF5LCBTZXB0ZW1iZXIgMTAsIDIwMTQgMTozNCBBTQ0KVG86IFJvYmVydCBIYW5jb2Nr
+DQpDYzogbGludXgtaWRlQHZnZXIua2VybmVsLm9yZzsgVGVqdW4gSGVvOyBMaW51eCBLZXJuZWwg
+TWFpbGluZyBMaXN0OyBQYXRlbCwgR2F1cmF2DQpTdWJqZWN0OiBSZTogW0J1Z10gMy4xNiBmd2Rv
+d25sb2FkIGZhaWx1cmUgb24gTWFydmVsbCA4OFNFOTEyNSBzYXRhIGNvbnRyb2xsZXINCg0KT24g
+V2VkLCBTZXAgMTAsIDIwMTQgYXQgMTE6MzggQU0sIFJvYmVydCBIYW5jb2NrIDxoYW5jb2Nrcndk
+QGdtYWlsLmNvbT4gd3JvdGU6DQo+IE9uIDAxLzA5LzE0IDAyOjIyIEFNLCBNaW5nIExlaSB3cm90
+ZToNCj4+DQo+PiBIaSBHdXlzLA0KPj4NCj4+IFdoZW4gd2UgdXNlIGhkcGFybSB0byBkb3dubG9h
+ZCBmaXJtd2FyZSBvbiBzeXN0ZW0gd2l0aCBNYXJ2ZWxsIA0KPj4gODhTRTkxMjUgU0FUQSBjb250
+cm9sbGVyLCBpdCByZXR1cm5zIGZhaWx1cmUgYWx3YXlzIGFuZCBpdCBoYXMgYmVlbiANCj4+IG9i
+c2VydmVkIGluIHNldmVyYWwgc3lzdGVtczoNCj4+DQo+PiAjaGRwYXJtIC0tZndkb3dubG9hZC1t
+b2RlNyBmdy5iaW4NCj4+IC0teWVzLWkta25vLXdoYXQtaS1hbS1kb2luZyAtLXBsZWFzZS1kZXN0
+cm95LW15LWRyaXZlIC9kZXYvc2RhDQo+Pg0KPj4gL2Rldi9zZGE6DQo+PiBmd2Rvd25sb2FkOiB4
+ZmVyX21vZGU9NyBtaW49MSBtYXg9NjU1MzUgc2l6ZT02OTkzOTINCj4+IEZBSUxFRDogSW5wdXQv
+b3V0cHV0IGVycm9yDQo+DQo+DQo+IEFueSBlcnJvcnMgaW4gZG1lc2cgYWZ0ZXIgZG9pbmcgdGhp
+cz8NCg0KTm8gYW55IGZhaWx1cmUgbG9nIGZyb20ga2VybmVsLg0KDQpUaGFua3MsDQo=
