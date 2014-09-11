@@ -1,69 +1,101 @@
-From: "Patel, Gaurav" <gspatel@hp.com>
-Subject: RE: [Bug] 3.16 fwdownload failure on Marvell 88SE9125 sata
- controller
-Date: Thu, 11 Sep 2014 00:45:22 +0000
-Message-ID: <4693A34300ED74418DB0F7454C3D19DA16A99994@G5W2736.americas.hpqcorp.net>
+From: Ming Lei <ming.lei@canonical.com>
+Subject: Re: [Bug] 3.16 fwdownload failure on Marvell 88SE9125 sata controller
+Date: Thu, 11 Sep 2014 08:59:46 +0800
+Message-ID: <CACVXFVN9KUzMQQcUGGFfg5TG2EK3B+GO2ciuC5pQb4NHaa8h_w@mail.gmail.com>
 References: <CACVXFVN6f3Og+D_70M+4j_qhGNsryJWzTJK8G+rY0sxXweMqQg@mail.gmail.com>
 	<540FC7C8.1070904@gmail.com>
 	<CACVXFVOFci3572cJ=G8vAQ0-R_0A9rcDUcwa-8t0rjuGduJdwg@mail.gmail.com>
 	<4693A34300ED74418DB0F7454C3D19DA16A9969B@G5W2736.americas.hpqcorp.net>
- <CACVXFVPen-__38-XGHAe2Yxb0CGVLr3sGxQXvvk=Zkwzn-A_gA@mail.gmail.com>
+	<CACVXFVPen-__38-XGHAe2Yxb0CGVLr3sGxQXvvk=Zkwzn-A_gA@mail.gmail.com>
+	<4693A34300ED74418DB0F7454C3D19DA16A99994@G5W2736.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:52804 "EHLO
-	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753663AbaIKAr3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Sep 2014 20:47:29 -0400
-In-Reply-To: <CACVXFVPen-__38-XGHAe2Yxb0CGVLr3sGxQXvvk=Zkwzn-A_gA@mail.gmail.com>
-Content-Language: en-US
+Received: from youngberry.canonical.com ([91.189.89.112]:48520 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751765AbaIKA7v convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Sep 2014 20:59:51 -0400
+In-Reply-To: <4693A34300ED74418DB0F7454C3D19DA16A99994@G5W2736.americas.hpqcorp.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ming Lei <ming.lei@canonical.com>
+To: "Patel, Gaurav" <gspatel@hp.com>
 Cc: Robert Hancock <hancockrwd@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-SSB3aWxsIHRyeSB0byB1cGRhdGUga2VybmVsIG9uIFVidW50dSB0byAyLjYuMzIgYW5kIHJ1biB0
-aGUgdGVzdC4NCg0KSSB3YXMgbm90IGFibGUgdG8gaW5zdGFsbCAzLjE2IHVidW50dSBrZXJuZWwg
-b24gUnJkSGF0Lg0KDQpUaGFua3MsDQpHYXVyYXYgUGF0ZWwNCkVtYWlsOiBHc3BhdGVsQGhwLmNv
-bQ0KQ2VsbCAjIDgzMi0zODItNTU1MA0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJv
-bTogTWluZyBMZWkgW21haWx0bzptaW5nLmxlaUBjYW5vbmljYWwuY29tXSANClNlbnQ6IFdlZG5l
-c2RheSwgU2VwdGVtYmVyIDEwLCAyMDE0IDY6MDEgUE0NClRvOiBQYXRlbCwgR2F1cmF2DQpDYzog
-Um9iZXJ0IEhhbmNvY2s7IGxpbnV4LWlkZUB2Z2VyLmtlcm5lbC5vcmc7IFRlanVuIEhlbzsgTGlu
-dXggS2VybmVsIE1haWxpbmcgTGlzdA0KU3ViamVjdDogUmU6IFtCdWddIDMuMTYgZndkb3dubG9h
-ZCBmYWlsdXJlIG9uIE1hcnZlbGwgODhTRTkxMjUgc2F0YSBjb250cm9sbGVyDQoNCk9uIFRodSwg
-U2VwIDExLCAyMDE0IGF0IDEyOjExIEFNLCBQYXRlbCwgR2F1cmF2IDxnc3BhdGVsQGhwLmNvbT4g
-d3JvdGU6DQo+DQo+ICI+PiBXaGVuIHdlIHVzZSBoZHBhcm0gdG8gZG93bmxvYWQgZmlybXdhcmUg
-b24gc3lzdGVtIHdpdGggTWFydmVsbA0KPj4+IDg4U0U5MTI1IFNBVEEgY29udHJvbGxlciwgaXQg
-cmV0dXJucyBmYWlsdXJlIGFsd2F5cyBhbmQgaXQgaGFzIGJlZW4gDQo+Pj4gb2JzZXJ2ZWQgaW4g
-c2V2ZXJhbCBzeXN0ZW1zOiINCj4NCj4gIFtHYXVyYXZdOiAgU28gSSBoYXZlIGFub3RoZXIgbW9v
-bnNob3QgY2FydHJpZGdlIHdpdGggc2FtZSBTQVRBIGNvbnRyb2xsZXIgYW5kIEkgd2FzIGFibGUg
-dG8gdXBkYXRlIEZXIHdpdGggaGRwYXJtIHdpdGggUmVkSGF0NjUgd2l0aG91dCBhbnkgaXNzdWVz
-LiBTbyB0aGlzIGxvb2tzIHRvIG1lIGlzc3VlIHdpdGggVWJ1bnR1IGtlcm5lbCBkb3Mgbm90IGhh
-dmUgY29ycmVjdCBkcml2ZXIgKG9yIHNvbWV0aGluZyBpcyBtaXNzaW5nIHRvIHN1cHBvcnQgaGRw
-YXJtIG9yIHNhdGEgY29udHJvbGxlcikuDQoNCkJ1dCBSZWRIYXQ2NSBzaGlwcyBhIDIuNi4zMiBr
-ZXJuZWwgYXMgeW91IHNhaWQsIGFuZCB5b3UgY2FuIHRlc3QgdGhlIHN0YWJsZQ0KMi42LjMyIGtl
-cm5lbCBvbiBvbmUgdWJ1bnR1IHJlbGVhc2UgdG9vLg0KDQpBcyBmYXIgYXMgSSBjYW4gdGVsbCwg
-dGhlIHByb2JsZW0gaXMgdmVyeSBwcm9iYWJseSByZWxhdGVkIHdpdGgga2VybmVsLCB0aGF0IGlz
-IHdoeSBJIHN1Z2dlc3QgeW91IHRvIHRlc3QgdXBzdHJlYW0ga2VybmVsIGFuZCBydW4gJ2dpdCBi
-aXNlY3QnIGxhdGVyIHRvIGZpbmQgdGhlIGNvbW1pdCB3aGljaCBjYXVzZWQgdGhlIHJlZ3Jlc3Np
-b24uDQoNCkJ1dCBsb29rcyB5b3UgaGF2ZSBzaW1wbHkgaW5zdGFsbCBwcm9ibGVtLg0KDQpUaGFu
-a3MsDQoNCg0KPg0KPiBUaGFua3MsDQo+IEdhdXJhdiBQYXRlbA0KPiBFbWFpbDogR3NwYXRlbEBo
-cC5jb20NCj4gQ2VsbCAjIDgzMi0zODItNTU1MA0KPg0KPg0KPiAtLS0tLU9yaWdpbmFsIE1lc3Nh
-Z2UtLS0tLQ0KPiBGcm9tOiBNaW5nIExlaSBbbWFpbHRvOm1pbmcubGVpQGNhbm9uaWNhbC5jb21d
-DQo+IFNlbnQ6IFdlZG5lc2RheSwgU2VwdGVtYmVyIDEwLCAyMDE0IDE6MzQgQU0NCj4gVG86IFJv
-YmVydCBIYW5jb2NrDQo+IENjOiBsaW51eC1pZGVAdmdlci5rZXJuZWwub3JnOyBUZWp1biBIZW87
-IExpbnV4IEtlcm5lbCBNYWlsaW5nIExpc3Q7IA0KPiBQYXRlbCwgR2F1cmF2DQo+IFN1YmplY3Q6
-IFJlOiBbQnVnXSAzLjE2IGZ3ZG93bmxvYWQgZmFpbHVyZSBvbiBNYXJ2ZWxsIDg4U0U5MTI1IHNh
-dGEgDQo+IGNvbnRyb2xsZXINCj4NCj4gT24gV2VkLCBTZXAgMTAsIDIwMTQgYXQgMTE6MzggQU0s
-IFJvYmVydCBIYW5jb2NrIDxoYW5jb2NrcndkQGdtYWlsLmNvbT4gd3JvdGU6DQo+PiBPbiAwMS8w
-OS8xNCAwMjoyMiBBTSwgTWluZyBMZWkgd3JvdGU6DQo+Pj4NCj4+PiBIaSBHdXlzLA0KPj4+DQo+
-Pj4gV2hlbiB3ZSB1c2UgaGRwYXJtIHRvIGRvd25sb2FkIGZpcm13YXJlIG9uIHN5c3RlbSB3aXRo
-IE1hcnZlbGwNCj4+PiA4OFNFOTEyNSBTQVRBIGNvbnRyb2xsZXIsIGl0IHJldHVybnMgZmFpbHVy
-ZSBhbHdheXMgYW5kIGl0IGhhcyBiZWVuIA0KPj4+IG9ic2VydmVkIGluIHNldmVyYWwgc3lzdGVt
-czoNCj4+Pg0KPj4+ICNoZHBhcm0gLS1md2Rvd25sb2FkLW1vZGU3IGZ3LmJpbg0KPj4+IC0teWVz
-LWkta25vLXdoYXQtaS1hbS1kb2luZyAtLXBsZWFzZS1kZXN0cm95LW15LWRyaXZlIC9kZXYvc2Rh
-DQo+Pj4NCj4+PiAvZGV2L3NkYToNCj4+PiBmd2Rvd25sb2FkOiB4ZmVyX21vZGU9NyBtaW49MSBt
-YXg9NjU1MzUgc2l6ZT02OTkzOTINCj4+PiBGQUlMRUQ6IElucHV0L291dHB1dCBlcnJvcg0KPj4N
-Cj4+DQo+PiBBbnkgZXJyb3JzIGluIGRtZXNnIGFmdGVyIGRvaW5nIHRoaXM/DQo+DQo+IE5vIGFu
-eSBmYWlsdXJlIGxvZyBmcm9tIGtlcm5lbC4NCj4NCj4gVGhhbmtzLA0K
+On Thu, Sep 11, 2014 at 8:45 AM, Patel, Gaurav <gspatel@hp.com> wrote:
+> I will try to update kernel on Ubuntu to 2.6.32 and run the test.
+>
+> I was not able to install 3.16 ubuntu kernel on RrdHat.
+
+I didn't ask you to install 3.16 ubuntu kernel on Redhat, and you just
+need to install upstream 3.16 kernel, :-)
+
+>
+> Thanks,
+> Gaurav Patel
+> Email: Gspatel@hp.com
+> Cell # 832-382-5550
+>
+> -----Original Message-----
+> From: Ming Lei [mailto:ming.lei@canonical.com]
+> Sent: Wednesday, September 10, 2014 6:01 PM
+> To: Patel, Gaurav
+> Cc: Robert Hancock; linux-ide@vger.kernel.org; Tejun Heo; Linux Kernel Mailing List
+> Subject: Re: [Bug] 3.16 fwdownload failure on Marvell 88SE9125 sata controller
+>
+> On Thu, Sep 11, 2014 at 12:11 AM, Patel, Gaurav <gspatel@hp.com> wrote:
+>>
+>> ">> When we use hdparm to download firmware on system with Marvell
+>>>> 88SE9125 SATA controller, it returns failure always and it has been
+>>>> observed in several systems:"
+>>
+>>  [Gaurav]:  So I have another moonshot cartridge with same SATA controller and I was able to update FW with hdparm with RedHat65 without any issues. So this looks to me issue with Ubuntu kernel dos not have correct driver (or something is missing to support hdparm or sata controller).
+>
+> But RedHat65 ships a 2.6.32 kernel as you said, and you can test the stable
+> 2.6.32 kernel on one ubuntu release too.
+>
+> As far as I can tell, the problem is very probably related with kernel, that is why I suggest you to test upstream kernel and run 'git bisect' later to find the commit which caused the regression.
+>
+> But looks you have simply install problem.
+>
+> Thanks,
+>
+>
+>>
+>> Thanks,
+>> Gaurav Patel
+>> Email: Gspatel@hp.com
+>> Cell # 832-382-5550
+>>
+>>
+>> -----Original Message-----
+>> From: Ming Lei [mailto:ming.lei@canonical.com]
+>> Sent: Wednesday, September 10, 2014 1:34 AM
+>> To: Robert Hancock
+>> Cc: linux-ide@vger.kernel.org; Tejun Heo; Linux Kernel Mailing List;
+>> Patel, Gaurav
+>> Subject: Re: [Bug] 3.16 fwdownload failure on Marvell 88SE9125 sata
+>> controller
+>>
+>> On Wed, Sep 10, 2014 at 11:38 AM, Robert Hancock <hancockrwd@gmail.com> wrote:
+>>> On 01/09/14 02:22 AM, Ming Lei wrote:
+>>>>
+>>>> Hi Guys,
+>>>>
+>>>> When we use hdparm to download firmware on system with Marvell
+>>>> 88SE9125 SATA controller, it returns failure always and it has been
+>>>> observed in several systems:
+>>>>
+>>>> #hdparm --fwdownload-mode7 fw.bin
+>>>> --yes-i-kno-what-i-am-doing --please-destroy-my-drive /dev/sda
+>>>>
+>>>> /dev/sda:
+>>>> fwdownload: xfer_mode=7 min=1 max=65535 size=699392
+>>>> FAILED: Input/output error
+>>>
+>>>
+>>> Any errors in dmesg after doing this?
+>>
+>> No any failure log from kernel.
+>>
+>> Thanks,
