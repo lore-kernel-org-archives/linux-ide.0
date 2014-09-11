@@ -1,81 +1,57 @@
-From: "Patel, Gaurav" <gspatel@hp.com>
-Subject: RE: [Bug] 3.16 fwdownload failure on Marvell 88SE9125 sata
- controller
-Date: Thu, 11 Sep 2014 01:05:49 +0000
-Message-ID: <4693A34300ED74418DB0F7454C3D19DA16A999C1@G5W2736.americas.hpqcorp.net>
-References: <CACVXFVN6f3Og+D_70M+4j_qhGNsryJWzTJK8G+rY0sxXweMqQg@mail.gmail.com>
-	<540FC7C8.1070904@gmail.com>
-	<CACVXFVOFci3572cJ=G8vAQ0-R_0A9rcDUcwa-8t0rjuGduJdwg@mail.gmail.com>
-	<4693A34300ED74418DB0F7454C3D19DA16A9969B@G5W2736.americas.hpqcorp.net>
-	<CACVXFVPen-__38-XGHAe2Yxb0CGVLr3sGxQXvvk=Zkwzn-A_gA@mail.gmail.com>
-	<4693A34300ED74418DB0F7454C3D19DA16A99994@G5W2736.americas.hpqcorp.net>
- <CACVXFVN9KUzMQQcUGGFfg5TG2EK3B+GO2ciuC5pQb4NHaa8h_w@mail.gmail.com>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH RESEND 0/1] AHCI: Optimize interrupt processing
+Date: Thu, 11 Sep 2014 14:42:49 +0200
+Message-ID: <20140911124248.GA18490@dhcp-27-160.brq.redhat.com>
+References: <cover.1369155164.git.agordeev@redhat.com>
+ <20130521235003.GE6985@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CACVXFVN9KUzMQQcUGGFfg5TG2EK3B+GO2ciuC5pQb4NHaa8h_w@mail.gmail.com>
-Content-Language: en-US
+Content-Disposition: inline
+In-Reply-To: <20130521235003.GE6985@mtj.dyndns.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Ming Lei <ming.lei@canonical.com>
-Cc: Robert Hancock <hancockrwd@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-R290IGl0Lg0KSSBqdXN0IGZvbGxvd2VkIHlvdXIgc3RlcCBidXQgaXQgZGlkIG5vdCB3b3JrLiBJ
-IHdpbGwgdHJ5IHNvbWV0aGluZyBlbHNlIHRvIGdldCAzLjE2IGluc3RhbGwgb24gcmVkaGF0Lg0K
-DQpUaGFua3MsDQpHYXVyYXYgUGF0ZWwNCkVtYWlsOiBHc3BhdGVsQGhwLmNvbQ0KQ2VsbCAjIDgz
-Mi0zODItNTU1MA0KDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBNaW5nIExl
-aSBbbWFpbHRvOm1pbmcubGVpQGNhbm9uaWNhbC5jb21dIA0KU2VudDogV2VkbmVzZGF5LCBTZXB0
-ZW1iZXIgMTAsIDIwMTQgODowMCBQTQ0KVG86IFBhdGVsLCBHYXVyYXYNCkNjOiBSb2JlcnQgSGFu
-Y29jazsgbGludXgtaWRlQHZnZXIua2VybmVsLm9yZzsgVGVqdW4gSGVvOyBMaW51eCBLZXJuZWwg
-TWFpbGluZyBMaXN0DQpTdWJqZWN0OiBSZTogW0J1Z10gMy4xNiBmd2Rvd25sb2FkIGZhaWx1cmUg
-b24gTWFydmVsbCA4OFNFOTEyNSBzYXRhIGNvbnRyb2xsZXINCg0KT24gVGh1LCBTZXAgMTEsIDIw
-MTQgYXQgODo0NSBBTSwgUGF0ZWwsIEdhdXJhdiA8Z3NwYXRlbEBocC5jb20+IHdyb3RlOg0KPiBJ
-IHdpbGwgdHJ5IHRvIHVwZGF0ZSBrZXJuZWwgb24gVWJ1bnR1IHRvIDIuNi4zMiBhbmQgcnVuIHRo
-ZSB0ZXN0Lg0KPg0KPiBJIHdhcyBub3QgYWJsZSB0byBpbnN0YWxsIDMuMTYgdWJ1bnR1IGtlcm5l
-bCBvbiBScmRIYXQuDQoNCkkgZGlkbid0IGFzayB5b3UgdG8gaW5zdGFsbCAzLjE2IHVidW50dSBr
-ZXJuZWwgb24gUmVkaGF0LCBhbmQgeW91IGp1c3QgbmVlZCB0byBpbnN0YWxsIHVwc3RyZWFtIDMu
-MTYga2VybmVsLCA6LSkNCg0KPg0KPiBUaGFua3MsDQo+IEdhdXJhdiBQYXRlbA0KPiBFbWFpbDog
-R3NwYXRlbEBocC5jb20NCj4gQ2VsbCAjIDgzMi0zODItNTU1MA0KPg0KPiAtLS0tLU9yaWdpbmFs
-IE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBNaW5nIExlaSBbbWFpbHRvOm1pbmcubGVpQGNhbm9uaWNh
-bC5jb21dDQo+IFNlbnQ6IFdlZG5lc2RheSwgU2VwdGVtYmVyIDEwLCAyMDE0IDY6MDEgUE0NCj4g
-VG86IFBhdGVsLCBHYXVyYXYNCj4gQ2M6IFJvYmVydCBIYW5jb2NrOyBsaW51eC1pZGVAdmdlci5r
-ZXJuZWwub3JnOyBUZWp1biBIZW87IExpbnV4IEtlcm5lbCANCj4gTWFpbGluZyBMaXN0DQo+IFN1
-YmplY3Q6IFJlOiBbQnVnXSAzLjE2IGZ3ZG93bmxvYWQgZmFpbHVyZSBvbiBNYXJ2ZWxsIDg4U0U5
-MTI1IHNhdGEgDQo+IGNvbnRyb2xsZXINCj4NCj4gT24gVGh1LCBTZXAgMTEsIDIwMTQgYXQgMTI6
-MTEgQU0sIFBhdGVsLCBHYXVyYXYgPGdzcGF0ZWxAaHAuY29tPiB3cm90ZToNCj4+DQo+PiAiPj4g
-V2hlbiB3ZSB1c2UgaGRwYXJtIHRvIGRvd25sb2FkIGZpcm13YXJlIG9uIHN5c3RlbSB3aXRoIE1h
-cnZlbGwNCj4+Pj4gODhTRTkxMjUgU0FUQSBjb250cm9sbGVyLCBpdCByZXR1cm5zIGZhaWx1cmUg
-YWx3YXlzIGFuZCBpdCBoYXMgYmVlbiANCj4+Pj4gb2JzZXJ2ZWQgaW4gc2V2ZXJhbCBzeXN0ZW1z
-OiINCj4+DQo+PiAgW0dhdXJhdl06ICBTbyBJIGhhdmUgYW5vdGhlciBtb29uc2hvdCBjYXJ0cmlk
-Z2Ugd2l0aCBzYW1lIFNBVEEgY29udHJvbGxlciBhbmQgSSB3YXMgYWJsZSB0byB1cGRhdGUgRlcg
-d2l0aCBoZHBhcm0gd2l0aCBSZWRIYXQ2NSB3aXRob3V0IGFueSBpc3N1ZXMuIFNvIHRoaXMgbG9v
-a3MgdG8gbWUgaXNzdWUgd2l0aCBVYnVudHUga2VybmVsIGRvcyBub3QgaGF2ZSBjb3JyZWN0IGRy
-aXZlciAob3Igc29tZXRoaW5nIGlzIG1pc3NpbmcgdG8gc3VwcG9ydCBoZHBhcm0gb3Igc2F0YSBj
-b250cm9sbGVyKS4NCj4NCj4gQnV0IFJlZEhhdDY1IHNoaXBzIGEgMi42LjMyIGtlcm5lbCBhcyB5
-b3Ugc2FpZCwgYW5kIHlvdSBjYW4gdGVzdCB0aGUgDQo+IHN0YWJsZQ0KPiAyLjYuMzIga2VybmVs
-IG9uIG9uZSB1YnVudHUgcmVsZWFzZSB0b28uDQo+DQo+IEFzIGZhciBhcyBJIGNhbiB0ZWxsLCB0
-aGUgcHJvYmxlbSBpcyB2ZXJ5IHByb2JhYmx5IHJlbGF0ZWQgd2l0aCBrZXJuZWwsIHRoYXQgaXMg
-d2h5IEkgc3VnZ2VzdCB5b3UgdG8gdGVzdCB1cHN0cmVhbSBrZXJuZWwgYW5kIHJ1biAnZ2l0IGJp
-c2VjdCcgbGF0ZXIgdG8gZmluZCB0aGUgY29tbWl0IHdoaWNoIGNhdXNlZCB0aGUgcmVncmVzc2lv
-bi4NCj4NCj4gQnV0IGxvb2tzIHlvdSBoYXZlIHNpbXBseSBpbnN0YWxsIHByb2JsZW0uDQo+DQo+
-IFRoYW5rcywNCj4NCj4NCj4+DQo+PiBUaGFua3MsDQo+PiBHYXVyYXYgUGF0ZWwNCj4+IEVtYWls
-OiBHc3BhdGVsQGhwLmNvbQ0KPj4gQ2VsbCAjIDgzMi0zODItNTU1MA0KPj4NCj4+DQo+PiAtLS0t
-LU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPj4gRnJvbTogTWluZyBMZWkgW21haWx0bzptaW5nLmxl
-aUBjYW5vbmljYWwuY29tXQ0KPj4gU2VudDogV2VkbmVzZGF5LCBTZXB0ZW1iZXIgMTAsIDIwMTQg
-MTozNCBBTQ0KPj4gVG86IFJvYmVydCBIYW5jb2NrDQo+PiBDYzogbGludXgtaWRlQHZnZXIua2Vy
-bmVsLm9yZzsgVGVqdW4gSGVvOyBMaW51eCBLZXJuZWwgTWFpbGluZyBMaXN0OyANCj4+IFBhdGVs
-LCBHYXVyYXYNCj4+IFN1YmplY3Q6IFJlOiBbQnVnXSAzLjE2IGZ3ZG93bmxvYWQgZmFpbHVyZSBv
-biBNYXJ2ZWxsIDg4U0U5MTI1IHNhdGEgDQo+PiBjb250cm9sbGVyDQo+Pg0KPj4gT24gV2VkLCBT
-ZXAgMTAsIDIwMTQgYXQgMTE6MzggQU0sIFJvYmVydCBIYW5jb2NrIDxoYW5jb2NrcndkQGdtYWls
-LmNvbT4gd3JvdGU6DQo+Pj4gT24gMDEvMDkvMTQgMDI6MjIgQU0sIE1pbmcgTGVpIHdyb3RlOg0K
-Pj4+Pg0KPj4+PiBIaSBHdXlzLA0KPj4+Pg0KPj4+PiBXaGVuIHdlIHVzZSBoZHBhcm0gdG8gZG93
-bmxvYWQgZmlybXdhcmUgb24gc3lzdGVtIHdpdGggTWFydmVsbA0KPj4+PiA4OFNFOTEyNSBTQVRB
-IGNvbnRyb2xsZXIsIGl0IHJldHVybnMgZmFpbHVyZSBhbHdheXMgYW5kIGl0IGhhcyBiZWVuIA0K
-Pj4+PiBvYnNlcnZlZCBpbiBzZXZlcmFsIHN5c3RlbXM6DQo+Pj4+DQo+Pj4+ICNoZHBhcm0gLS1m
-d2Rvd25sb2FkLW1vZGU3IGZ3LmJpbg0KPj4+PiAtLXllcy1pLWtuby13aGF0LWktYW0tZG9pbmcg
-LS1wbGVhc2UtZGVzdHJveS1teS1kcml2ZSAvZGV2L3NkYQ0KPj4+Pg0KPj4+PiAvZGV2L3NkYToN
-Cj4+Pj4gZndkb3dubG9hZDogeGZlcl9tb2RlPTcgbWluPTEgbWF4PTY1NTM1IHNpemU9Njk5Mzky
-DQo+Pj4+IEZBSUxFRDogSW5wdXQvb3V0cHV0IGVycm9yDQo+Pj4NCj4+Pg0KPj4+IEFueSBlcnJv
-cnMgaW4gZG1lc2cgYWZ0ZXIgZG9pbmcgdGhpcz8NCj4+DQo+PiBObyBhbnkgZmFpbHVyZSBsb2cg
-ZnJvbSBrZXJuZWwuDQo+Pg0KPj4gVGhhbmtzLA0K
+On Wed, May 22, 2013 at 08:50:03AM +0900, Tejun Heo wrote:
+> Hmmmmmm..... I'd normally apply this patch but block layer is just
+> growing multi-queue support and libata is likely to be converted to mq
+> in foreseeable future, so I'm a bit hesitant to make irq handling more
+> sophiscated right now.  Would you be interested in looking into
+> converting libata to blk mq support?  I'm pretty sure it'd yield far
+> better outcome if done properly.
+
+Hi Tejun,
+
+As conversion of libata to blk mq has long done I tried the change
+against the recent version and the results still appear worthwhile.
+
+The numbers are taken by running 'dd if=/dev/sd{a,b} of=/dev/null'
+in parallel. All time values are in us.
+
+Before this update host lock average holdtime was 2.45 and
+average waittime was 1.24. After the update average holdtime
+dropped to 0.29 (about eight times) while average waittime
+decreased to 0.58 (about two times).
+
+Also, port events are handled with local interrupts enabled
+and compete on individual per-port locks with average holdtime
+1.25 and average waittime 1.48. So combined average holdtime
+spent while holding host and port locks decreased from 2.45 to
+0.29 + 1.25 = 1.54 (about 1.6 times).
+
+The downside of this change is introduction of a kernel thread.
+
+The upside is shorter access time to port locks and moving port
+interrupts handling out of the hardware interrupt context.
+
+Thanks!
+
+> -- 
+> tejun
+
+-- 
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
