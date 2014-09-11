@@ -1,101 +1,81 @@
-From: Ming Lei <ming.lei@canonical.com>
-Subject: Re: [Bug] 3.16 fwdownload failure on Marvell 88SE9125 sata controller
-Date: Thu, 11 Sep 2014 08:59:46 +0800
-Message-ID: <CACVXFVN9KUzMQQcUGGFfg5TG2EK3B+GO2ciuC5pQb4NHaa8h_w@mail.gmail.com>
+From: "Patel, Gaurav" <gspatel@hp.com>
+Subject: RE: [Bug] 3.16 fwdownload failure on Marvell 88SE9125 sata
+ controller
+Date: Thu, 11 Sep 2014 01:05:49 +0000
+Message-ID: <4693A34300ED74418DB0F7454C3D19DA16A999C1@G5W2736.americas.hpqcorp.net>
 References: <CACVXFVN6f3Og+D_70M+4j_qhGNsryJWzTJK8G+rY0sxXweMqQg@mail.gmail.com>
 	<540FC7C8.1070904@gmail.com>
 	<CACVXFVOFci3572cJ=G8vAQ0-R_0A9rcDUcwa-8t0rjuGduJdwg@mail.gmail.com>
 	<4693A34300ED74418DB0F7454C3D19DA16A9969B@G5W2736.americas.hpqcorp.net>
 	<CACVXFVPen-__38-XGHAe2Yxb0CGVLr3sGxQXvvk=Zkwzn-A_gA@mail.gmail.com>
 	<4693A34300ED74418DB0F7454C3D19DA16A99994@G5W2736.americas.hpqcorp.net>
+ <CACVXFVN9KUzMQQcUGGFfg5TG2EK3B+GO2ciuC5pQb4NHaa8h_w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:48520 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751765AbaIKA7v convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Sep 2014 20:59:51 -0400
-In-Reply-To: <4693A34300ED74418DB0F7454C3D19DA16A99994@G5W2736.americas.hpqcorp.net>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: "Patel, Gaurav" <gspatel@hp.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CACVXFVN9KUzMQQcUGGFfg5TG2EK3B+GO2ciuC5pQb4NHaa8h_w@mail.gmail.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ming Lei <ming.lei@canonical.com>
 Cc: Robert Hancock <hancockrwd@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+List-Id: linux-ide@vger.kernel.org
 
-On Thu, Sep 11, 2014 at 8:45 AM, Patel, Gaurav <gspatel@hp.com> wrote:
-> I will try to update kernel on Ubuntu to 2.6.32 and run the test.
->
-> I was not able to install 3.16 ubuntu kernel on RrdHat.
-
-I didn't ask you to install 3.16 ubuntu kernel on Redhat, and you just
-need to install upstream 3.16 kernel, :-)
-
->
-> Thanks,
-> Gaurav Patel
-> Email: Gspatel@hp.com
-> Cell # 832-382-5550
->
-> -----Original Message-----
-> From: Ming Lei [mailto:ming.lei@canonical.com]
-> Sent: Wednesday, September 10, 2014 6:01 PM
-> To: Patel, Gaurav
-> Cc: Robert Hancock; linux-ide@vger.kernel.org; Tejun Heo; Linux Kernel Mailing List
-> Subject: Re: [Bug] 3.16 fwdownload failure on Marvell 88SE9125 sata controller
->
-> On Thu, Sep 11, 2014 at 12:11 AM, Patel, Gaurav <gspatel@hp.com> wrote:
->>
->> ">> When we use hdparm to download firmware on system with Marvell
->>>> 88SE9125 SATA controller, it returns failure always and it has been
->>>> observed in several systems:"
->>
->>  [Gaurav]:  So I have another moonshot cartridge with same SATA controller and I was able to update FW with hdparm with RedHat65 without any issues. So this looks to me issue with Ubuntu kernel dos not have correct driver (or something is missing to support hdparm or sata controller).
->
-> But RedHat65 ships a 2.6.32 kernel as you said, and you can test the stable
-> 2.6.32 kernel on one ubuntu release too.
->
-> As far as I can tell, the problem is very probably related with kernel, that is why I suggest you to test upstream kernel and run 'git bisect' later to find the commit which caused the regression.
->
-> But looks you have simply install problem.
->
-> Thanks,
->
->
->>
->> Thanks,
->> Gaurav Patel
->> Email: Gspatel@hp.com
->> Cell # 832-382-5550
->>
->>
->> -----Original Message-----
->> From: Ming Lei [mailto:ming.lei@canonical.com]
->> Sent: Wednesday, September 10, 2014 1:34 AM
->> To: Robert Hancock
->> Cc: linux-ide@vger.kernel.org; Tejun Heo; Linux Kernel Mailing List;
->> Patel, Gaurav
->> Subject: Re: [Bug] 3.16 fwdownload failure on Marvell 88SE9125 sata
->> controller
->>
->> On Wed, Sep 10, 2014 at 11:38 AM, Robert Hancock <hancockrwd@gmail.com> wrote:
->>> On 01/09/14 02:22 AM, Ming Lei wrote:
->>>>
->>>> Hi Guys,
->>>>
->>>> When we use hdparm to download firmware on system with Marvell
->>>> 88SE9125 SATA controller, it returns failure always and it has been
->>>> observed in several systems:
->>>>
->>>> #hdparm --fwdownload-mode7 fw.bin
->>>> --yes-i-kno-what-i-am-doing --please-destroy-my-drive /dev/sda
->>>>
->>>> /dev/sda:
->>>> fwdownload: xfer_mode=7 min=1 max=65535 size=699392
->>>> FAILED: Input/output error
->>>
->>>
->>> Any errors in dmesg after doing this?
->>
->> No any failure log from kernel.
->>
->> Thanks,
+R290IGl0Lg0KSSBqdXN0IGZvbGxvd2VkIHlvdXIgc3RlcCBidXQgaXQgZGlkIG5vdCB3b3JrLiBJ
+IHdpbGwgdHJ5IHNvbWV0aGluZyBlbHNlIHRvIGdldCAzLjE2IGluc3RhbGwgb24gcmVkaGF0Lg0K
+DQpUaGFua3MsDQpHYXVyYXYgUGF0ZWwNCkVtYWlsOiBHc3BhdGVsQGhwLmNvbQ0KQ2VsbCAjIDgz
+Mi0zODItNTU1MA0KDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBNaW5nIExl
+aSBbbWFpbHRvOm1pbmcubGVpQGNhbm9uaWNhbC5jb21dIA0KU2VudDogV2VkbmVzZGF5LCBTZXB0
+ZW1iZXIgMTAsIDIwMTQgODowMCBQTQ0KVG86IFBhdGVsLCBHYXVyYXYNCkNjOiBSb2JlcnQgSGFu
+Y29jazsgbGludXgtaWRlQHZnZXIua2VybmVsLm9yZzsgVGVqdW4gSGVvOyBMaW51eCBLZXJuZWwg
+TWFpbGluZyBMaXN0DQpTdWJqZWN0OiBSZTogW0J1Z10gMy4xNiBmd2Rvd25sb2FkIGZhaWx1cmUg
+b24gTWFydmVsbCA4OFNFOTEyNSBzYXRhIGNvbnRyb2xsZXINCg0KT24gVGh1LCBTZXAgMTEsIDIw
+MTQgYXQgODo0NSBBTSwgUGF0ZWwsIEdhdXJhdiA8Z3NwYXRlbEBocC5jb20+IHdyb3RlOg0KPiBJ
+IHdpbGwgdHJ5IHRvIHVwZGF0ZSBrZXJuZWwgb24gVWJ1bnR1IHRvIDIuNi4zMiBhbmQgcnVuIHRo
+ZSB0ZXN0Lg0KPg0KPiBJIHdhcyBub3QgYWJsZSB0byBpbnN0YWxsIDMuMTYgdWJ1bnR1IGtlcm5l
+bCBvbiBScmRIYXQuDQoNCkkgZGlkbid0IGFzayB5b3UgdG8gaW5zdGFsbCAzLjE2IHVidW50dSBr
+ZXJuZWwgb24gUmVkaGF0LCBhbmQgeW91IGp1c3QgbmVlZCB0byBpbnN0YWxsIHVwc3RyZWFtIDMu
+MTYga2VybmVsLCA6LSkNCg0KPg0KPiBUaGFua3MsDQo+IEdhdXJhdiBQYXRlbA0KPiBFbWFpbDog
+R3NwYXRlbEBocC5jb20NCj4gQ2VsbCAjIDgzMi0zODItNTU1MA0KPg0KPiAtLS0tLU9yaWdpbmFs
+IE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBNaW5nIExlaSBbbWFpbHRvOm1pbmcubGVpQGNhbm9uaWNh
+bC5jb21dDQo+IFNlbnQ6IFdlZG5lc2RheSwgU2VwdGVtYmVyIDEwLCAyMDE0IDY6MDEgUE0NCj4g
+VG86IFBhdGVsLCBHYXVyYXYNCj4gQ2M6IFJvYmVydCBIYW5jb2NrOyBsaW51eC1pZGVAdmdlci5r
+ZXJuZWwub3JnOyBUZWp1biBIZW87IExpbnV4IEtlcm5lbCANCj4gTWFpbGluZyBMaXN0DQo+IFN1
+YmplY3Q6IFJlOiBbQnVnXSAzLjE2IGZ3ZG93bmxvYWQgZmFpbHVyZSBvbiBNYXJ2ZWxsIDg4U0U5
+MTI1IHNhdGEgDQo+IGNvbnRyb2xsZXINCj4NCj4gT24gVGh1LCBTZXAgMTEsIDIwMTQgYXQgMTI6
+MTEgQU0sIFBhdGVsLCBHYXVyYXYgPGdzcGF0ZWxAaHAuY29tPiB3cm90ZToNCj4+DQo+PiAiPj4g
+V2hlbiB3ZSB1c2UgaGRwYXJtIHRvIGRvd25sb2FkIGZpcm13YXJlIG9uIHN5c3RlbSB3aXRoIE1h
+cnZlbGwNCj4+Pj4gODhTRTkxMjUgU0FUQSBjb250cm9sbGVyLCBpdCByZXR1cm5zIGZhaWx1cmUg
+YWx3YXlzIGFuZCBpdCBoYXMgYmVlbiANCj4+Pj4gb2JzZXJ2ZWQgaW4gc2V2ZXJhbCBzeXN0ZW1z
+OiINCj4+DQo+PiAgW0dhdXJhdl06ICBTbyBJIGhhdmUgYW5vdGhlciBtb29uc2hvdCBjYXJ0cmlk
+Z2Ugd2l0aCBzYW1lIFNBVEEgY29udHJvbGxlciBhbmQgSSB3YXMgYWJsZSB0byB1cGRhdGUgRlcg
+d2l0aCBoZHBhcm0gd2l0aCBSZWRIYXQ2NSB3aXRob3V0IGFueSBpc3N1ZXMuIFNvIHRoaXMgbG9v
+a3MgdG8gbWUgaXNzdWUgd2l0aCBVYnVudHUga2VybmVsIGRvcyBub3QgaGF2ZSBjb3JyZWN0IGRy
+aXZlciAob3Igc29tZXRoaW5nIGlzIG1pc3NpbmcgdG8gc3VwcG9ydCBoZHBhcm0gb3Igc2F0YSBj
+b250cm9sbGVyKS4NCj4NCj4gQnV0IFJlZEhhdDY1IHNoaXBzIGEgMi42LjMyIGtlcm5lbCBhcyB5
+b3Ugc2FpZCwgYW5kIHlvdSBjYW4gdGVzdCB0aGUgDQo+IHN0YWJsZQ0KPiAyLjYuMzIga2VybmVs
+IG9uIG9uZSB1YnVudHUgcmVsZWFzZSB0b28uDQo+DQo+IEFzIGZhciBhcyBJIGNhbiB0ZWxsLCB0
+aGUgcHJvYmxlbSBpcyB2ZXJ5IHByb2JhYmx5IHJlbGF0ZWQgd2l0aCBrZXJuZWwsIHRoYXQgaXMg
+d2h5IEkgc3VnZ2VzdCB5b3UgdG8gdGVzdCB1cHN0cmVhbSBrZXJuZWwgYW5kIHJ1biAnZ2l0IGJp
+c2VjdCcgbGF0ZXIgdG8gZmluZCB0aGUgY29tbWl0IHdoaWNoIGNhdXNlZCB0aGUgcmVncmVzc2lv
+bi4NCj4NCj4gQnV0IGxvb2tzIHlvdSBoYXZlIHNpbXBseSBpbnN0YWxsIHByb2JsZW0uDQo+DQo+
+IFRoYW5rcywNCj4NCj4NCj4+DQo+PiBUaGFua3MsDQo+PiBHYXVyYXYgUGF0ZWwNCj4+IEVtYWls
+OiBHc3BhdGVsQGhwLmNvbQ0KPj4gQ2VsbCAjIDgzMi0zODItNTU1MA0KPj4NCj4+DQo+PiAtLS0t
+LU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPj4gRnJvbTogTWluZyBMZWkgW21haWx0bzptaW5nLmxl
+aUBjYW5vbmljYWwuY29tXQ0KPj4gU2VudDogV2VkbmVzZGF5LCBTZXB0ZW1iZXIgMTAsIDIwMTQg
+MTozNCBBTQ0KPj4gVG86IFJvYmVydCBIYW5jb2NrDQo+PiBDYzogbGludXgtaWRlQHZnZXIua2Vy
+bmVsLm9yZzsgVGVqdW4gSGVvOyBMaW51eCBLZXJuZWwgTWFpbGluZyBMaXN0OyANCj4+IFBhdGVs
+LCBHYXVyYXYNCj4+IFN1YmplY3Q6IFJlOiBbQnVnXSAzLjE2IGZ3ZG93bmxvYWQgZmFpbHVyZSBv
+biBNYXJ2ZWxsIDg4U0U5MTI1IHNhdGEgDQo+PiBjb250cm9sbGVyDQo+Pg0KPj4gT24gV2VkLCBT
+ZXAgMTAsIDIwMTQgYXQgMTE6MzggQU0sIFJvYmVydCBIYW5jb2NrIDxoYW5jb2NrcndkQGdtYWls
+LmNvbT4gd3JvdGU6DQo+Pj4gT24gMDEvMDkvMTQgMDI6MjIgQU0sIE1pbmcgTGVpIHdyb3RlOg0K
+Pj4+Pg0KPj4+PiBIaSBHdXlzLA0KPj4+Pg0KPj4+PiBXaGVuIHdlIHVzZSBoZHBhcm0gdG8gZG93
+bmxvYWQgZmlybXdhcmUgb24gc3lzdGVtIHdpdGggTWFydmVsbA0KPj4+PiA4OFNFOTEyNSBTQVRB
+IGNvbnRyb2xsZXIsIGl0IHJldHVybnMgZmFpbHVyZSBhbHdheXMgYW5kIGl0IGhhcyBiZWVuIA0K
+Pj4+PiBvYnNlcnZlZCBpbiBzZXZlcmFsIHN5c3RlbXM6DQo+Pj4+DQo+Pj4+ICNoZHBhcm0gLS1m
+d2Rvd25sb2FkLW1vZGU3IGZ3LmJpbg0KPj4+PiAtLXllcy1pLWtuby13aGF0LWktYW0tZG9pbmcg
+LS1wbGVhc2UtZGVzdHJveS1teS1kcml2ZSAvZGV2L3NkYQ0KPj4+Pg0KPj4+PiAvZGV2L3NkYToN
+Cj4+Pj4gZndkb3dubG9hZDogeGZlcl9tb2RlPTcgbWluPTEgbWF4PTY1NTM1IHNpemU9Njk5Mzky
+DQo+Pj4+IEZBSUxFRDogSW5wdXQvb3V0cHV0IGVycm9yDQo+Pj4NCj4+Pg0KPj4+IEFueSBlcnJv
+cnMgaW4gZG1lc2cgYWZ0ZXIgZG9pbmcgdGhpcz8NCj4+DQo+PiBObyBhbnkgZmFpbHVyZSBsb2cg
+ZnJvbSBrZXJuZWwuDQo+Pg0KPj4gVGhhbmtzLA0K
