@@ -1,121 +1,48 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [PATCH] ata: ahci_platform: Add ACPI support for AMD Seattle
- SATA controller
-Date: Fri, 12 Sep 2014 10:14:18 +0200
-Message-ID: <5412AB5A.3090801@redhat.com>
-References: <1410295035-14471-1-git-send-email-suravee.suthikulpanit@amd.com> <CAOesGMh_Ku-pReg5LHVFvRM0-s_zEO4rgAvaD5rv-eTfPD71Yw@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] ahci_xgene: Fix the error print invalid resource for APM
+ X-Gene SoC AHCI SATA Host Controller driver.
+Date: Sat, 13 Sep 2014 02:50:14 +0900
+Message-ID: <20140912175014.GA6298@mtj.dyndns.org>
+References: <1410508448-25111-1-git-send-email-stripathi@apm.com>
+ <1410508448-25111-2-git-send-email-stripathi@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAOesGMh_Ku-pReg5LHVFvRM0-s_zEO4rgAvaD5rv-eTfPD71Yw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Olof Johansson <olof@lixom.net>, Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1410508448-25111-2-git-send-email-stripathi@apm.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Suman Tripathi <stripathi@apm.com>
+Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>
 List-Id: linux-ide@vger.kernel.org
 
-Hi,
-
-On 09/11/2014 10:17 PM, Olof Johansson wrote:
-> On Tue, Sep 9, 2014 at 1:37 PM,  <suravee.suthikulpanit@amd.com> wrote:
->> From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->>
->> This patch adds ACPI support for non-PCI SATA contoller in ahci_platform driver.
->> It adds ACPI matching table in ahci_platform to support AMD Seattle SATA controller
->> with following ASL structure in DSDT:
->>
->>     Device (SATA0)
->>     {
->>       Name(_HID, "AMDI0600")    // Seattle AHSATA
->>       Name (_CCA, 1)            // Cache-coherent controller
->>       Name (_CRS, ResourceTemplate ()
->>       {
->>         Memory32Fixed (ReadWrite, 0xE0300000, 0x00010000)
->>         Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive,,,) { 387 }
->>       })
->>     }
->>
->> Since ATA driver should not require PCI support for ATA_ACPI,
->> this patch also removes dependency in the driver/ata/Kconfig.
->>
->> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
->> ---
->>  drivers/ata/Kconfig         |  2 +-
->>  drivers/ata/ahci_platform.c | 13 +++++++++++++
->>  2 files changed, 14 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
->> index e1b9278..f2e6c9e 100644
->> --- a/drivers/ata/Kconfig
->> +++ b/drivers/ata/Kconfig
->> @@ -48,7 +48,7 @@ config ATA_VERBOSE_ERROR
->>
->>  config ATA_ACPI
->>         bool "ATA ACPI Support"
->> -       depends on ACPI && PCI
->> +       depends on ACPI
->>         default y
->>         help
->>           This option adds support for ATA-related ACPI objects.
->> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
->> index f61ddb9..3499bab 100644
->> --- a/drivers/ata/ahci_platform.c
->> +++ b/drivers/ata/ahci_platform.c
->> @@ -20,6 +20,9 @@
->>  #include <linux/platform_device.h>
->>  #include <linux/libata.h>
->>  #include <linux/ahci_platform.h>
->> +#ifdef CONFIG_ATA_ACPI
->> +#include <linux/acpi.h>
->> +#endif
->>  #include "ahci.h"
->>
->>  static const struct ata_port_info ahci_port_info = {
->> @@ -87,6 +90,13 @@ static const struct of_device_id ahci_of_match[] = {
->>  };
->>  MODULE_DEVICE_TABLE(of, ahci_of_match);
->>
->> +#ifdef CONFIG_ATA_ACPI
->> +static const struct acpi_device_id ahci_acpi_match[] = {
->> +       { "AMDI0600", 0 }, /* AMD Seattle AHCI */
->> +       { },
->> +};
->> +#endif
->> +
->>  static struct platform_driver ahci_driver = {
->>         .probe = ahci_probe,
->>         .remove = ata_platform_remove_one,
->> @@ -94,6 +104,9 @@ static struct platform_driver ahci_driver = {
->>                 .name = "ahci",
->>                 .owner = THIS_MODULE,
->>                 .of_match_table = ahci_of_match,
->> +#ifdef CONFIG_ATA_ACPI
->> +               .acpi_match_table = ACPI_PTR(ahci_acpi_match),
->> +#endif
+On Fri, Sep 12, 2014 at 01:24:08PM +0530, Suman Tripathi wrote:
+> This patch fixes the error print invalid resource for the APM X-Gene
+> SoC AHCI SATA Host Controller driver. This print was due to the fact
+> that the controller 3 don't have a mux resource. This didn't result
+> in any errors but the print seems like meaningless.
 > 
-> The whole point of having ACPI_PTR() is to avoid having ifdefs like
-> these. The structure member is always there, so there's no need to
-> have it conditionally compiled out.
+> Signed-off-by: Loc Ho <lho@apm.com>
+> Signed-off-by: Suman Tripathi <stripathi@apm.com>
+> ---
+>  drivers/ata/ahci_xgene.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> Come to think of it, the match table should be under CONFIG_ACPI
-> instead -- why do a separate config option just for this?
-
-To clarify this for people like me who were under the impression
-that ACPI_PTR() does some kind of cast, this is the definition
-of ACPI_PTR:
-
-#ifdef  CONFIG_ACPI
-#define ACPI_PTR(_ptr)  (_ptr)
-#else
-#define ACPI_PTR(_ptr)  (NULL)
-#endif
-
-Regards,
-
-Hans
-
-
+> diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
+> index 40d0a76..9404db0c 100644
+> --- a/drivers/ata/ahci_xgene.c
+> +++ b/drivers/ata/ahci_xgene.c
+> @@ -434,7 +434,7 @@ static int xgene_ahci_mux_select(struct xgene_ahci_context *ctx)
+>  	u32 val;
 > 
-> 
-> -Olof
-> 
+>  	/* Check for optional MUX resource */
+> -	if (IS_ERR(ctx->csr_mux))
+> +	if (!ctx->csr_mux)
+>  		return 0;
+
+Hmmm?  So, if devm_ioremap_resource() call actually fails, now the
+function tries to operation on ERR_PTR() value as a real pointer?
+
+Thanks.
+
+-- 
+tejun
