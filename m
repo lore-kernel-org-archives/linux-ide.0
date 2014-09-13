@@ -1,46 +1,33 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ahci_xgene: Fix the error print invalid resource for APM
- X-Gene SoC AHCI SATA Host Controller driver.
-Date: Sat, 13 Sep 2014 02:50:14 +0900
-Message-ID: <20140912175014.GA6298@mtj.dyndns.org>
-References: <1410508448-25111-1-git-send-email-stripathi@apm.com>
- <1410508448-25111-2-git-send-email-stripathi@apm.com>
+Subject: Re: [PATCH v2] AHCI: Optimize interrupt processing
+Date: Sat, 13 Sep 2014 13:43:51 +0900
+Message-ID: <20140913044351.GA30477@mtj.dyndns.org>
+References: <cover.1369155164.git.agordeev@redhat.com>
+ <20130521235003.GE6985@mtj.dyndns.org>
+ <20140911124248.GA18490@dhcp-27-160.brq.redhat.com>
+ <20140911124437.GB18490@dhcp-27-160.brq.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pd0-f181.google.com ([209.85.192.181]:33997 "EHLO
+	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751153AbaIMEoA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 Sep 2014 00:44:00 -0400
 Content-Disposition: inline
-In-Reply-To: <1410508448-25111-2-git-send-email-stripathi@apm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Suman Tripathi <stripathi@apm.com>
-Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>
+In-Reply-To: <20140911124437.GB18490@dhcp-27-160.brq.redhat.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Fri, Sep 12, 2014 at 01:24:08PM +0530, Suman Tripathi wrote:
-> This patch fixes the error print invalid resource for the APM X-Gene
-> SoC AHCI SATA Host Controller driver. This print was due to the fact
-> that the controller 3 don't have a mux resource. This didn't result
-> in any errors but the print seems like meaningless.
-> 
-> Signed-off-by: Loc Ho <lho@apm.com>
-> Signed-off-by: Suman Tripathi <stripathi@apm.com>
-> ---
->  drivers/ata/ahci_xgene.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-> index 40d0a76..9404db0c 100644
-> --- a/drivers/ata/ahci_xgene.c
-> +++ b/drivers/ata/ahci_xgene.c
-> @@ -434,7 +434,7 @@ static int xgene_ahci_mux_select(struct xgene_ahci_context *ctx)
->  	u32 val;
-> 
->  	/* Check for optional MUX resource */
-> -	if (IS_ERR(ctx->csr_mux))
-> +	if (!ctx->csr_mux)
->  		return 0;
+On Thu, Sep 11, 2014 at 02:44:37PM +0200, Alexander Gordeev wrote:
+> Split interrupt service routine into hardware context handler and
+> threaded context handler. That allows to protect ports with individual
+> locks rather than with a single host-wide lock, which results in better
+> parallelism.
 
-Hmmm?  So, if devm_ioremap_resource() call actually fails, now the
-function tries to operation on ERR_PTR() value as a real pointer?
+This patch is way too large.  Can you please split it up to smaller
+logical changes?
 
 Thanks.
 
