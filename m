@@ -1,138 +1,36 @@
-From: Joe Perches <joe@perches.com>
-Subject: [PATCH] libata: change ata_<foo>_printk routines to return void
-Date: Mon, 22 Sep 2014 09:52:18 -0700
-Message-ID: <1411404738.2952.39.camel@joe-AO725>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+From: Kumar Gala <galak@codeaurora.org>
+Subject: [PATCH v5 1/2] ahci-platform: Bump max number of clocks to 5
+Date: Mon, 22 Sep 2014 15:09:45 -0500
+Message-ID: <1411416586-18320-1-git-send-email-galak@codeaurora.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>
+Cc: Kumar Gala <galak@codeaurora.org>, linux-ide@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-The return value is not used by callers of these functions nor
-by uses of all macros so change the functions to return void.
+Qualcomm IPQ806x SoCs with SATA controllers need 5 clocks to be enabled.
 
-Signed-off-by: Joe Perches <joe@perches.com>
+Signed-off-by: Kumar Gala <galak@codeaurora.org>
 ---
-This change is associated to a desire to eventually
-change printk to return void.
+v4/v5:
+* Updated to upstream changes
 
- drivers/ata/libata-core.c | 35 +++++++++++++----------------------
- include/linux/libata.h    | 12 ++++++------
- 2 files changed, 19 insertions(+), 28 deletions(-)
+ drivers/ata/ahci.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index f27dc07..b80b160 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -6772,32 +6772,28 @@ const struct ata_port_info ata_dummy_port_info = {
- /*
-  * Utility print functions
-  */
--int ata_port_printk(const struct ata_port *ap, const char *level,
--		    const char *fmt, ...)
-+void ata_port_printk(const struct ata_port *ap, const char *level,
-+		     const char *fmt, ...)
- {
- 	struct va_format vaf;
- 	va_list args;
--	int r;
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index 59ae0ee..90156ff 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -53,7 +53,7 @@
  
- 	va_start(args, fmt);
- 
- 	vaf.fmt = fmt;
- 	vaf.va = &args;
- 
--	r = printk("%sata%u: %pV", level, ap->print_id, &vaf);
-+	printk("%sata%u: %pV", level, ap->print_id, &vaf);
- 
- 	va_end(args);
--
--	return r;
- }
- EXPORT_SYMBOL(ata_port_printk);
- 
--int ata_link_printk(const struct ata_link *link, const char *level,
--		    const char *fmt, ...)
-+void ata_link_printk(const struct ata_link *link, const char *level,
-+		     const char *fmt, ...)
- {
- 	struct va_format vaf;
- 	va_list args;
--	int r;
- 
- 	va_start(args, fmt);
- 
-@@ -6805,37 +6801,32 @@ int ata_link_printk(const struct ata_link *link, const char *level,
- 	vaf.va = &args;
- 
- 	if (sata_pmp_attached(link->ap) || link->ap->slave_link)
--		r = printk("%sata%u.%02u: %pV",
--			   level, link->ap->print_id, link->pmp, &vaf);
-+		printk("%sata%u.%02u: %pV",
-+		       level, link->ap->print_id, link->pmp, &vaf);
- 	else
--		r = printk("%sata%u: %pV",
--			   level, link->ap->print_id, &vaf);
-+		printk("%sata%u: %pV",
-+		       level, link->ap->print_id, &vaf);
- 
- 	va_end(args);
--
--	return r;
- }
- EXPORT_SYMBOL(ata_link_printk);
- 
--int ata_dev_printk(const struct ata_device *dev, const char *level,
-+void ata_dev_printk(const struct ata_device *dev, const char *level,
- 		    const char *fmt, ...)
- {
- 	struct va_format vaf;
- 	va_list args;
--	int r;
- 
- 	va_start(args, fmt);
- 
- 	vaf.fmt = fmt;
- 	vaf.va = &args;
- 
--	r = printk("%sata%u.%02u: %pV",
--		   level, dev->link->ap->print_id, dev->link->pmp + dev->devno,
--		   &vaf);
-+	printk("%sata%u.%02u: %pV",
-+	       level, dev->link->ap->print_id, dev->link->pmp + dev->devno,
-+	       &vaf);
- 
- 	va_end(args);
--
--	return r;
- }
- EXPORT_SYMBOL(ata_dev_printk);
- 
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 92abb49..bd5fefe 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1404,14 +1404,14 @@ static inline int sata_srst_pmp(struct ata_link *link)
-  * printk helpers
-  */
- __printf(3, 4)
--int ata_port_printk(const struct ata_port *ap, const char *level,
--		    const char *fmt, ...);
-+void ata_port_printk(const struct ata_port *ap, const char *level,
-+		     const char *fmt, ...);
- __printf(3, 4)
--int ata_link_printk(const struct ata_link *link, const char *level,
--		    const char *fmt, ...);
-+void ata_link_printk(const struct ata_link *link, const char *level,
-+		     const char *fmt, ...);
- __printf(3, 4)
--int ata_dev_printk(const struct ata_device *dev, const char *level,
--		   const char *fmt, ...);
-+void ata_dev_printk(const struct ata_device *dev, const char *level,
-+		    const char *fmt, ...);
- 
- #define ata_port_err(ap, fmt, ...)				\
- 	ata_port_printk(ap, KERN_ERR, fmt, ##__VA_ARGS__)
+ enum {
+ 	AHCI_MAX_PORTS		= 32,
+-	AHCI_MAX_CLKS		= 4,
++	AHCI_MAX_CLKS		= 5,
+ 	AHCI_MAX_SG		= 168, /* hardware max is 64K */
+ 	AHCI_DMA_BOUNDARY	= 0xffffffff,
+ 	AHCI_MAX_CMDS		= 32,
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+hosted by The Linux Foundation
