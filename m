@@ -1,136 +1,58 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH RESEND v3 6/6] AHCI: Do not read HOST_IRQ_STAT reg in multi-MSI mode
-Date: Sun, 21 Sep 2014 15:19:29 +0200
-Message-ID: <bad782a13ebaedbe1fd39bcefad2b98712dfe373.1411297686.git.agordeev@redhat.com>
-References: <cover.1411297686.git.agordeev@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1411297686.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, linux-ide@vger.kernel.org
+From: Suman Tripathi <stripathi@apm.com>
+Subject: [PATCH] ahci_xgene: Fix the error print invalid resource for APM X-Gene SoC AHCI SATA Host Controller driver.
+Date: Mon, 22 Sep 2014 18:31:33 +0530
+Message-ID: <1411390893-22911-2-git-send-email-stripathi@apm.com>
+References: <1411390893-22911-1-git-send-email-stripathi@apm.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from denmail01-v4020.amcc.com ([192.195.68.30]:40039 "EHLO
+	denmail01.apm.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753644AbaIVNCm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Sep 2014 09:02:42 -0400
+In-Reply-To: <1411390893-22911-1-git-send-email-stripathi@apm.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
 
-As described in AHCI v1.0 specification chapter 10.6.2.2
-"Multiple MSI Based Messages" generation of interrupts
-is not controlled through the HOST_IRQ_STAT register.
+This patch fixes the error print invalid resource for the APM X-Gene
+SoC AHCI SATA Host Controller driver. This print was due to the fact
+that the controller 3 don't have a mux resource. This didn't result
+in any errors but the print seems like meaningless.
 
-Considering MMIO access is expensive remove unnecessary
-reading and writing of HOST_IRQ_STAT register.
-
-Further, serializing access to the host data is no longer
-needed and the interrupt service routine can avoid competing
-on the host lock.
-
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Suggested-by: "Jiang, Dave" <dave.jiang@intel.com>
-Cc: linux-ide@vger.kernel.org
+Signed-off-by: Loc Ho <lho@apm.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
 ---
- drivers/ata/ahci.h    |  2 ++
- drivers/ata/libahci.c | 59 ++++++++++++---------------------------------------
- 2 files changed, 15 insertions(+), 46 deletions(-)
+ drivers/ata/ahci_xgene.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index c12f590..2476024 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -305,6 +305,8 @@ struct ahci_port_priv {
- 	unsigned int		ncq_saw_dmas:1;
- 	unsigned int		ncq_saw_sdb:1;
- 	u32			intr_status;	/* interrupts to handle */
-+	spinlock_t		*intr_lock;	/* interrupt context lock */
-+	spinlock_t		__intr_lock;	/* protects intr_status */
- 	spinlock_t		lock;		/* protects parent ata_port */
- 	u32 			intr_mask;	/* interrupts to enable */
- 	bool			fbs_supported;	/* set iff FBS is supported */
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 169c272..beaeb76 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -1785,11 +1785,11 @@ irqreturn_t ahci_port_thread_fn(int irq, void *dev_instance)
- 	unsigned long flags;
- 	u32 status;
- 
--	spin_lock_irqsave(&ap->host->lock, flags);
-+	spin_lock_irqsave(pp->intr_lock, flags);
- 	status = pp->intr_status;
- 	if (status)
- 		pp->intr_status = 0;
--	spin_unlock_irqrestore(&ap->host->lock, flags);
-+	spin_unlock_irqrestore(pp->intr_lock, flags);
- 
- 	spin_lock_bh(ap->lock);
- 	ahci_handle_port_interrupt(ap, status);
-@@ -1842,53 +1842,14 @@ static void ahci_update_intr_status(struct ata_port *ap)
- 
- irqreturn_t ahci_multi_irqs_intr(int irq, void *dev_instance)
- {
--	struct ata_port *ap_this = dev_instance;
--	struct ahci_port_priv *pp = ap_this->private_data;
--	struct ata_host *host = ap_this->host;
--	struct ahci_host_priv *hpriv = host->private_data;
--	void __iomem *mmio = hpriv->mmio;
--	unsigned int i;
--	u32 irq_stat, irq_masked;
-+	struct ata_port *ap = dev_instance;
-+	struct ahci_port_priv *pp = ap->private_data;
- 
- 	VPRINTK("ENTER\n");
- 
--	spin_lock(&host->lock);
--
--	irq_stat = readl(mmio + HOST_IRQ_STAT);
--
--	if (!irq_stat) {
--		u32 status = pp->intr_status;
--
--		spin_unlock(&host->lock);
--
--		VPRINTK("EXIT\n");
--
--		return status ? IRQ_WAKE_THREAD : IRQ_NONE;
--	}
--
--	irq_masked = irq_stat & hpriv->port_map;
--
--	for (i = 0; i < host->n_ports; i++) {
--		struct ata_port *ap;
--
--		if (!(irq_masked & (1 << i)))
--			continue;
--
--		ap = host->ports[i];
--		if (ap) {
--			ahci_update_intr_status(ap);
--			VPRINTK("port %u\n", i);
--		} else {
--			VPRINTK("port %u (no irq)\n", i);
--			if (ata_ratelimit())
--				dev_warn(host->dev,
--					 "interrupt on disabled port %u\n", i);
--		}
--	}
--
--	writel(irq_stat, mmio + HOST_IRQ_STAT);
--
--	spin_unlock(&host->lock);
-+	spin_lock(pp->intr_lock);
-+	ahci_update_intr_status(ap);
-+	spin_unlock(pp->intr_lock);
- 
- 	VPRINTK("EXIT\n");
- 
-@@ -2366,6 +2327,12 @@ static int ahci_port_start(struct ata_port *ap)
- 	 */
- 	pp->intr_mask = DEF_PORT_IRQ;
- 
-+	if (hpriv->flags & AHCI_HFLAG_MULTI_MSI) {
-+		spin_lock_init(&pp->__intr_lock);
-+		pp->intr_lock = &pp->__intr_lock;
-+	} else {
-+		pp->intr_lock = &ap->host->lock;
+diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
+index 40d0a76..26f1f78 100644
+--- a/drivers/ata/ahci_xgene.c
++++ b/drivers/ata/ahci_xgene.c
+@@ -434,7 +434,7 @@ static int xgene_ahci_mux_select(struct xgene_ahci_context *ctx)
+ 	u32 val;
+
+ 	/* Check for optional MUX resource */
+-	if (IS_ERR(ctx->csr_mux))
++	if (!ctx->csr_mux)
+ 		return 0;
+
+ 	val = readl(ctx->csr_mux + SATA_ENET_CONFIG_REG);
+@@ -485,7 +485,13 @@ static int xgene_ahci_probe(struct platform_device *pdev)
+
+ 	/* Retrieve the optional IP mux resource */
+ 	res = platform_get_resource(pdev, IORESOURCE_MEM, 4);
+-	ctx->csr_mux = devm_ioremap_resource(dev, res);
++	if (res) {
++		void __iomem *csr = devm_ioremap_resource(dev, res);
++		if (IS_ERR(csr))
++			return PTR_ERR(csr);
++
++		ctx->csr_mux = csr;
 +	}
- 	spin_lock_init(&pp->lock);
- 	ap->lock = &pp->lock;
- 
--- 
-1.8.3.1
+
+ 	dev_dbg(dev, "VAddr 0x%p Mmio VAddr 0x%p\n", ctx->csr_core,
+ 		hpriv->mmio);
+--
+1.8.2.1
+
