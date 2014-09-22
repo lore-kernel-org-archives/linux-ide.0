@@ -1,58 +1,138 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH] ahci_xgene: Fix the error print invalid resource for APM X-Gene SoC AHCI SATA Host Controller driver.
-Date: Mon, 22 Sep 2014 18:31:33 +0530
-Message-ID: <1411390893-22911-2-git-send-email-stripathi@apm.com>
-References: <1411390893-22911-1-git-send-email-stripathi@apm.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from denmail01-v4020.amcc.com ([192.195.68.30]:40039 "EHLO
-	denmail01.apm.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753644AbaIVNCm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Sep 2014 09:02:42 -0400
-In-Reply-To: <1411390893-22911-1-git-send-email-stripathi@apm.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH] libata: change ata_<foo>_printk routines to return void
+Date: Mon, 22 Sep 2014 09:52:18 -0700
+Message-ID: <1411404738.2952.39.camel@joe-AO725>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>
 
-This patch fixes the error print invalid resource for the APM X-Gene
-SoC AHCI SATA Host Controller driver. This print was due to the fact
-that the controller 3 don't have a mux resource. This didn't result
-in any errors but the print seems like meaningless.
+The return value is not used by callers of these functions nor
+by uses of all macros so change the functions to return void.
 
-Signed-off-by: Loc Ho <lho@apm.com>
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
- drivers/ata/ahci_xgene.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+This change is associated to a desire to eventually
+change printk to return void.
 
-diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-index 40d0a76..26f1f78 100644
---- a/drivers/ata/ahci_xgene.c
-+++ b/drivers/ata/ahci_xgene.c
-@@ -434,7 +434,7 @@ static int xgene_ahci_mux_select(struct xgene_ahci_context *ctx)
- 	u32 val;
+ drivers/ata/libata-core.c | 35 +++++++++++++----------------------
+ include/linux/libata.h    | 12 ++++++------
+ 2 files changed, 19 insertions(+), 28 deletions(-)
 
- 	/* Check for optional MUX resource */
--	if (IS_ERR(ctx->csr_mux))
-+	if (!ctx->csr_mux)
- 		return 0;
-
- 	val = readl(ctx->csr_mux + SATA_ENET_CONFIG_REG);
-@@ -485,7 +485,13 @@ static int xgene_ahci_probe(struct platform_device *pdev)
-
- 	/* Retrieve the optional IP mux resource */
- 	res = platform_get_resource(pdev, IORESOURCE_MEM, 4);
--	ctx->csr_mux = devm_ioremap_resource(dev, res);
-+	if (res) {
-+		void __iomem *csr = devm_ioremap_resource(dev, res);
-+		if (IS_ERR(csr))
-+			return PTR_ERR(csr);
-+
-+		ctx->csr_mux = csr;
-+	}
-
- 	dev_dbg(dev, "VAddr 0x%p Mmio VAddr 0x%p\n", ctx->csr_core,
- 		hpriv->mmio);
---
-1.8.2.1
-
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index f27dc07..b80b160 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -6772,32 +6772,28 @@ const struct ata_port_info ata_dummy_port_info = {
+ /*
+  * Utility print functions
+  */
+-int ata_port_printk(const struct ata_port *ap, const char *level,
+-		    const char *fmt, ...)
++void ata_port_printk(const struct ata_port *ap, const char *level,
++		     const char *fmt, ...)
+ {
+ 	struct va_format vaf;
+ 	va_list args;
+-	int r;
+ 
+ 	va_start(args, fmt);
+ 
+ 	vaf.fmt = fmt;
+ 	vaf.va = &args;
+ 
+-	r = printk("%sata%u: %pV", level, ap->print_id, &vaf);
++	printk("%sata%u: %pV", level, ap->print_id, &vaf);
+ 
+ 	va_end(args);
+-
+-	return r;
+ }
+ EXPORT_SYMBOL(ata_port_printk);
+ 
+-int ata_link_printk(const struct ata_link *link, const char *level,
+-		    const char *fmt, ...)
++void ata_link_printk(const struct ata_link *link, const char *level,
++		     const char *fmt, ...)
+ {
+ 	struct va_format vaf;
+ 	va_list args;
+-	int r;
+ 
+ 	va_start(args, fmt);
+ 
+@@ -6805,37 +6801,32 @@ int ata_link_printk(const struct ata_link *link, const char *level,
+ 	vaf.va = &args;
+ 
+ 	if (sata_pmp_attached(link->ap) || link->ap->slave_link)
+-		r = printk("%sata%u.%02u: %pV",
+-			   level, link->ap->print_id, link->pmp, &vaf);
++		printk("%sata%u.%02u: %pV",
++		       level, link->ap->print_id, link->pmp, &vaf);
+ 	else
+-		r = printk("%sata%u: %pV",
+-			   level, link->ap->print_id, &vaf);
++		printk("%sata%u: %pV",
++		       level, link->ap->print_id, &vaf);
+ 
+ 	va_end(args);
+-
+-	return r;
+ }
+ EXPORT_SYMBOL(ata_link_printk);
+ 
+-int ata_dev_printk(const struct ata_device *dev, const char *level,
++void ata_dev_printk(const struct ata_device *dev, const char *level,
+ 		    const char *fmt, ...)
+ {
+ 	struct va_format vaf;
+ 	va_list args;
+-	int r;
+ 
+ 	va_start(args, fmt);
+ 
+ 	vaf.fmt = fmt;
+ 	vaf.va = &args;
+ 
+-	r = printk("%sata%u.%02u: %pV",
+-		   level, dev->link->ap->print_id, dev->link->pmp + dev->devno,
+-		   &vaf);
++	printk("%sata%u.%02u: %pV",
++	       level, dev->link->ap->print_id, dev->link->pmp + dev->devno,
++	       &vaf);
+ 
+ 	va_end(args);
+-
+-	return r;
+ }
+ EXPORT_SYMBOL(ata_dev_printk);
+ 
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 92abb49..bd5fefe 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1404,14 +1404,14 @@ static inline int sata_srst_pmp(struct ata_link *link)
+  * printk helpers
+  */
+ __printf(3, 4)
+-int ata_port_printk(const struct ata_port *ap, const char *level,
+-		    const char *fmt, ...);
++void ata_port_printk(const struct ata_port *ap, const char *level,
++		     const char *fmt, ...);
+ __printf(3, 4)
+-int ata_link_printk(const struct ata_link *link, const char *level,
+-		    const char *fmt, ...);
++void ata_link_printk(const struct ata_link *link, const char *level,
++		     const char *fmt, ...);
+ __printf(3, 4)
+-int ata_dev_printk(const struct ata_device *dev, const char *level,
+-		   const char *fmt, ...);
++void ata_dev_printk(const struct ata_device *dev, const char *level,
++		    const char *fmt, ...);
+ 
+ #define ata_port_err(ap, fmt, ...)				\
+ 	ata_port_printk(ap, KERN_ERR, fmt, ##__VA_ARGS__)
