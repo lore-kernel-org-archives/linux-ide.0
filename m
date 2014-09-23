@@ -1,28 +1,32 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ahci_xgene: Fix the error print invalid resource for APM
- X-Gene SoC AHCI SATA Host Controller driver.
-Date: Tue, 23 Sep 2014 10:22:21 -0400
-Message-ID: <20140923142221.GA19208@htj.dyndns.org>
-References: <1411390893-22911-1-git-send-email-stripathi@apm.com>
- <1411390893-22911-2-git-send-email-stripathi@apm.com>
+Subject: Re: [PATCH RESEND v3 1/6] AHCI: Cleanup checking of multiple
+ MSIs/SLM modes
+Date: Tue, 23 Sep 2014 16:18:22 -0400
+Message-ID: <20140923201822.GD14111@mtj.dyndns.org>
+References: <cover.1411297686.git.agordeev@redhat.com>
+ <e5b010c7698160c8b93c92e7463f5dbb4cf33e52.1411297686.git.agordeev@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qg0-f53.google.com ([209.85.192.53]:54079 "EHLO
+	mail-qg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753097AbaIWUS0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Sep 2014 16:18:26 -0400
 Content-Disposition: inline
-In-Reply-To: <1411390893-22911-2-git-send-email-stripathi@apm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Suman Tripathi <stripathi@apm.com>
-Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Loc Ho <lho@apm.com>
+In-Reply-To: <e5b010c7698160c8b93c92e7463f5dbb4cf33e52.1411297686.git.agordeev@redhat.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Mon, Sep 22, 2014 at 06:31:33PM +0530, Suman Tripathi wrote:
-> This patch fixes the error print invalid resource for the APM X-Gene
-> SoC AHCI SATA Host Controller driver. This print was due to the fact
-> that the controller 3 don't have a mux resource. This didn't result
-> in any errors but the print seems like meaningless.
+On Sun, Sep 21, 2014 at 03:19:24PM +0200, Alexander Gordeev wrote:
+> Sharing Last Message (SLM) mode is currently checked in two
+> functions: ahci_host_activate() and ahci_init_interrupts().
+> This update consolidates SLM mode check with activation of
+> multiple MSIs mode.
 > 
-> Signed-off-by: Loc Ho <lho@apm.com>
-> Signed-off-by: Suman Tripathi <stripathi@apm.com>
+> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Cc: linux-ide@vger.kernel.org
 
 Applied to libata/for-3.18.
 
