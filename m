@@ -1,24 +1,56 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v5 1/2] ahci-platform: Bump max number of clocks to 5
-Date: Tue, 23 Sep 2014 09:17:30 -0400
-Message-ID: <20140923131730.GD14905@mtj.dyndns.org>
-References: <1411416586-18320-1-git-send-email-galak@codeaurora.org>
+Subject: Re: [PATCH] ata: Disabling the async PM for JMicron chips
+Date: Tue, 23 Sep 2014 10:00:53 -0400
+Message-ID: <20140923140053.GG14905@mtj.dyndns.org>
+References: <1411450671-2367-1-git-send-email-chuansheng.liu@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qa0-f45.google.com ([209.85.216.45]:57114 "EHLO
+	mail-qa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754040AbaIWOA6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Sep 2014 10:00:58 -0400
 Content-Disposition: inline
-In-Reply-To: <1411416586-18320-1-git-send-email-galak@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: Kumar Gala <galak@codeaurora.org>
-Cc: Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+In-Reply-To: <1411450671-2367-1-git-send-email-chuansheng.liu@intel.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Chuansheng Liu <chuansheng.liu@intel.com>
+Cc: rjw@rjwysocki.net, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, mister.freeman@laposte.net, rui.zhang@intel.com
 
-On Mon, Sep 22, 2014 at 03:09:45PM -0500, Kumar Gala wrote:
-> Qualcomm IPQ806x SoCs with SATA controllers need 5 clocks to be enabled.
+On Tue, Sep 23, 2014 at 01:37:51PM +0800, Chuansheng Liu wrote:
+> Be similar with commit (ata: Disabling the async PM for JMicron chip 363/361),
+
+Please use 12_DIGIT_SHA1_PREFIX ("SUBJ") format when referring to
+commits.
+
+> Barto found the similar issue for JMicron chip 368, that 363/368 has no
+> parent-children relationship, but they have the power dependency.
 > 
-> Signed-off-by: Kumar Gala <galak@codeaurora.org>
+> So here we can exclude the JMicron chips out of pm_async method directly,
+> to avoid further similar issues.
+> 
+> Details in:
+> https://bugzilla.kernel.org/show_bug.cgi?id=84861
+> 
+> Reported-and-tested-by: Barto <mister.freeman@laposte.net>
+> Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+> ---
+>  drivers/ata/ahci.c         |    6 +++---
+>  drivers/ata/pata_jmicron.c |    6 +++---
+>  2 files changed, 6 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index a0cc0ed..c096d49 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -1345,10 +1345,10 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>  	 * follow the sequence one by one, otherwise one of them can not be
+>  	 * powered on successfully, so here we disable the async suspend
+>  	 * method for these chips.
+> +	 * Jmicron chip 368 has been found has the similar issue, here we can
+> +	 * exclude the Jmicron family directly to avoid other similar issues.
 
-Applied 1-2 to libata/for-3.18.
+Let's update the comment as a whole instead of appending to it.
 
 Thanks.
 
