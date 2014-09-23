@@ -1,98 +1,70 @@
-From: Kumar Gala <galak@codeaurora.org>
-Subject: [PATCH 2/2] ata: qcom: Add device tree bindings information
-Date: Mon, 22 Sep 2014 15:09:46 -0500
-Message-ID: <1411416586-18320-2-git-send-email-galak@codeaurora.org>
-References: <1411416586-18320-1-git-send-email-galak@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1411416586-18320-1-git-send-email-galak@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>
-Cc: Kumar Gala <galak@codeaurora.org>, linux-ide@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com
+From: Chuansheng Liu <chuansheng.liu@intel.com>
+Subject: [PATCH] ata: Disabling the async PM for JMicron chips
+Date: Tue, 23 Sep 2014 13:37:51 +0800
+Message-ID: <1411450671-2367-1-git-send-email-chuansheng.liu@intel.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:46861 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751270AbaIWFxu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 23 Sep 2014 01:53:50 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: tj@kernel.org, rjw@rjwysocki.net
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, mister.freeman@laposte.net, rui.zhang@intel.com, chuansheng.liu@intel.com
 
-Add device tree binding for Qualcomm AHCI SATA controller and specifically
-the sata controller on the IPQ806x family of SoCs.
+Be similar with commit (ata: Disabling the async PM for JMicron chip 363/361),
+Barto found the similar issue for JMicron chip 368, that 363/368 has no
+parent-children relationship, but they have the power dependency.
 
-We can utilize the "generic-ahci" platform driver with the addition of the
-sata phy to enable SATA support on Qualcomm SoCs with AHCI controllers.
+So here we can exclude the JMicron chips out of pm_async method directly,
+to avoid further similar issues.
 
-Signed-off-by: Kumar Gala <galak@codeaurora.org>
+Details in:
+https://bugzilla.kernel.org/show_bug.cgi?id=84861
+
+Reported-and-tested-by: Barto <mister.freeman@laposte.net>
+Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
 ---
-v5:
-* Moved to using "generic-ahci" binding support and assigned-clocks
-  so we can use upstream generic ahci support w/o a special driver.
-  Updated binding spec to reflect that.
+ drivers/ata/ahci.c         |    6 +++---
+ drivers/ata/pata_jmicron.c |    6 +++---
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-v4:
-* Added simple PM ops implementation
-* Added setting of pmalive clk
-
-v3:
-* Added comment about suspend/resume not supported
-* Fixup ahci_platform_init_host for upstream change to interface
-* cleanup error handling of rxoob clk, moved to devm_clk_get/put
-
-v2:
-* Fixed MODULE_LICENSE to be GPL v2
-
- .../devicetree/bindings/ata/qcom-sata.txt          | 48 ++++++++++++++++++++++
- 1 file changed, 48 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/ata/qcom-sata.txt
-
-diff --git a/Documentation/devicetree/bindings/ata/qcom-sata.txt b/Documentation/devicetree/bindings/ata/qcom-sata.txt
-new file mode 100644
-index 0000000..094de91
---- /dev/null
-+++ b/Documentation/devicetree/bindings/ata/qcom-sata.txt
-@@ -0,0 +1,48 @@
-+* Qualcomm AHCI SATA Controller
-+
-+SATA nodes are defined to describe on-chip Serial ATA controllers.
-+Each SATA controller should have its own node.
-+
-+Required properties:
-+- compatible		: compatible list, must contain "generic-ahci"
-+- interrupts		: <interrupt mapping for SATA IRQ>
-+- reg			: <registers mapping>
-+- phys			: Must contain exactly one entry as specified
-+			  in phy-bindings.txt
-+- phy-names		: Must be "sata-phy"
-+
-+Required properties for "qcom,ipq806x-ahci" compatible:
-+- clocks		: Must contain an entry for each entry in clock-names.
-+- clock-names		: Shall be:
-+				"slave_iface" - Fabric port AHB clock for SATA
-+				"iface" - AHB clock
-+				"core" - core clock
-+				"rxoob" - RX out-of-band clock
-+				"pmalive" - Power Module Alive clock
-+- assigned-clocks	: Shall be:
-+				SATA_RXOOB_CLK
-+				SATA_PMALIVE_CLK
-+- assigned-clock-rates	: Shall be:
-+				100Mhz (100000000) for SATA_RXOOB_CLK
-+				100Mhz (100000000) for SATA_PMALIVE_CLK
-+
-+Example:
-+	sata@29000000 {
-+		compatible = "qcom,ipq806x-ahci", "generic-ahci";
-+		reg = <0x29000000 0x180>;
-+
-+		interrupts = <0 209 0x0>;
-+
-+		clocks = <&gcc SFAB_SATA_S_H_CLK>,
-+			 <&gcc SATA_H_CLK>,
-+			 <&gcc SATA_A_CLK>,
-+			 <&gcc SATA_RXOOB_CLK>,
-+			 <&gcc SATA_PMALIVE_CLK>;
-+		clock-names = "slave_iface", "iface", "core",
-+				"rxoob", "pmalive";
-+		assigned-clocks = <&gcc SATA_RXOOB_CLK>, <&gcc SATA_PMALIVE_CLK>;
-+		assigned-clock-rates = <100000000>, <100000000>;
-+
-+		phys = <&sata_phy>;
-+		phy-names = "sata-phy";
-+	};
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index a0cc0ed..c096d49 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1345,10 +1345,10 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	 * follow the sequence one by one, otherwise one of them can not be
+ 	 * powered on successfully, so here we disable the async suspend
+ 	 * method for these chips.
++	 * Jmicron chip 368 has been found has the similar issue, here we can
++	 * exclude the Jmicron family directly to avoid other similar issues.
+ 	 */
+-	if (pdev->vendor == PCI_VENDOR_ID_JMICRON &&
+-		(pdev->device == PCI_DEVICE_ID_JMICRON_JMB363 ||
+-		pdev->device == PCI_DEVICE_ID_JMICRON_JMB361))
++	if (pdev->vendor == PCI_VENDOR_ID_JMICRON)
+ 		device_disable_async_suspend(&pdev->dev);
+ 
+ 	/* acquire resources */
+diff --git a/drivers/ata/pata_jmicron.c b/drivers/ata/pata_jmicron.c
+index 47e418b..48c993b 100644
+--- a/drivers/ata/pata_jmicron.c
++++ b/drivers/ata/pata_jmicron.c
+@@ -149,10 +149,10 @@ static int jmicron_init_one (struct pci_dev *pdev, const struct pci_device_id *i
+ 	 * follow the sequence one by one, otherwise one of them can not be
+ 	 * powered on successfully, so here we disable the async suspend
+ 	 * method for these chips.
++	 * Jmicron chip 368 has been found has the similar issue, here we can
++	 * exclude the Jmicron family directly to avoid other similar issues.
+ 	 */
+-	if (pdev->vendor == PCI_VENDOR_ID_JMICRON &&
+-		(pdev->device == PCI_DEVICE_ID_JMICRON_JMB363 ||
+-		pdev->device == PCI_DEVICE_ID_JMICRON_JMB361))
++	if (pdev->vendor == PCI_VENDOR_ID_JMICRON)
+ 		device_disable_async_suspend(&pdev->dev);
+ 
+ 	return ata_pci_bmdma_init_one(pdev, ppi, &jmicron_sht, NULL, 0);
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-hosted by The Linux Foundation
+1.7.9.5
+
