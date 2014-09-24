@@ -1,40 +1,52 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH RESEND v3 2/6] AHCI: Move host activation code into
- ahci_host_activate()
-Date: Tue, 23 Sep 2014 16:55:43 -0400
-Message-ID: <20140923205543.GA17332@mtj.dyndns.org>
-References: <cover.1411297686.git.agordeev@redhat.com>
- <4dde1cd7e44724d464b87c14c6192dec52fc8b50.1411297686.git.agordeev@redhat.com>
- <20140923202247.GF14111@mtj.dyndns.org>
+From: "Liu, Chuansheng" <chuansheng.liu@intel.com>
+Subject: RE: [PATCH] ata: Disabling the async PM for JMicron chips
+Date: Wed, 24 Sep 2014 06:20:14 +0000
+Message-ID: <27240C0AC20F114CBF8149A2696CBE4A01E87CA6@SHSMSX101.ccr.corp.intel.com>
+References: <1411450671-2367-1-git-send-email-chuansheng.liu@intel.com>
+ <20140923140053.GG14905@mtj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f45.google.com ([209.85.192.45]:33396 "EHLO
-	mail-qg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756138AbaIWUzr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Sep 2014 16:55:47 -0400
-Content-Disposition: inline
-In-Reply-To: <20140923202247.GF14111@mtj.dyndns.org>
+Received: from mga03.intel.com ([134.134.136.65]:64682 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750744AbaIXGaB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Sep 2014 02:30:01 -0400
+In-Reply-To: <20140923140053.GG14905@mtj.dyndns.org>
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: "rjw@rjwysocki.net" <rjw@rjwysocki.net>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "mister.freeman@laposte.net" <mister.freeman@laposte.net>, "Zhang, Rui" <rui.zhang@intel.com>
 
-On Tue, Sep 23, 2014 at 04:22:47PM -0400, Tejun Heo wrote:
-> On Sun, Sep 21, 2014 at 03:19:25PM +0200, Alexander Gordeev wrote:
-> > Currently host activation done by calling either function
-> > ahci_host_activate() or ata_host_activate(). Consolidate
-> > the code by only calling ahci_host_activate() for all AHCI
-> > devices.
-> > 
-> > Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-> > Cc: linux-ide@vger.kernel.org
+
+
+> -----Original Message-----
+> From: Tejun Heo [mailto:htejun@gmail.com] On Behalf Of Tejun Heo
+> Sent: Tuesday, September 23, 2014 10:01 PM
+> To: Liu, Chuansheng
+> Cc: rjw@rjwysocki.net; linux-ide@vger.kernel.org;
+> linux-kernel@vger.kernel.org; mister.freeman@laposte.net; Zhang, Rui
+> Subject: Re: [PATCH] ata: Disabling the async PM for JMicron chips
 > 
-> Applied to libata/for-3.18.
+> On Tue, Sep 23, 2014 at 01:37:51PM +0800, Chuansheng Liu wrote:
+> > Be similar with commit (ata: Disabling the async PM for JMicron chip
+> 363/361),
+> 
+> Please use 12_DIGIT_SHA1_PREFIX ("SUBJ") format when referring to
+> commits.
+> 
 
-Oops, build failure.  Reverting both patches.
 
-Thanks.
+> > @@ -1345,10 +1345,10 @@ static int ahci_init_one(struct pci_dev *pdev,
+> const struct pci_device_id *ent)
+> >  	 * follow the sequence one by one, otherwise one of them can not be
+> >  	 * powered on successfully, so here we disable the async suspend
+> >  	 * method for these chips.
+> > +	 * Jmicron chip 368 has been found has the similar issue, here we can
+> > +	 * exclude the Jmicron family directly to avoid other similar issues.
+> 
+> Let's update the comment as a whole instead of appending to it.
+> 
 
--- 
-tejun
+Thanks your comments, Tejun, will send one new patch to review.
