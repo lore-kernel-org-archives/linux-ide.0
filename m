@@ -1,84 +1,45 @@
-From: Chuansheng Liu <chuansheng.liu@intel.com>
-Subject: [PATCH V2] ata: Disabling the async PM for JMicron chips
-Date: Wed, 24 Sep 2014 15:22:18 +0800
-Message-ID: <1411543338-2257-1-git-send-email-chuansheng.liu@intel.com>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: Re: [PATCH RESEND v3 5/6] AHCI: Optimize single IRQ interrupt
+ processing
+Date: Wed, 24 Sep 2014 11:42:15 +0100
+Message-ID: <20140924104213.GA2695@agordeev.usersys.redhat.com>
+References: <cover.1411297686.git.agordeev@redhat.com>
+ <b1a04379e05e40f9774fb4668609fac4255a6514.1411297686.git.agordeev@redhat.com>
+ <20140923205710.GB17332@mtj.dyndns.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:19153 "EHLO mga03.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:48336 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752991AbaIXHiU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 24 Sep 2014 03:38:20 -0400
+	id S1751772AbaIXKdW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 24 Sep 2014 06:33:22 -0400
+Content-Disposition: inline
+In-Reply-To: <20140923205710.GB17332@mtj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org, rjw@rjwysocki.net
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, mister.freeman@laposte.net, rui.zhang@intel.com, chuansheng.liu@intel.com
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Like the commit e6b7e41cdd8c ("ata: Disabling the async PM for JMicron chip 363/361"),
-Barto found the similar issue for JMicron chip 368, that 363/368 has no
-parent-children relationship, but they have the power dependency.
+On Tue, Sep 23, 2014 at 04:57:10PM -0400, Tejun Heo wrote:
+> Hmmm... how does it affect single device operation tho?  It does make
+> individual interrupt handling heavier, no?
 
-So here we can exclude the JMicron chips out of pm_async method directly,
-to avoid further similar issues.
+I think it is difficult to assess "individual interrupt handling", since
+it depends from both the hardware and device access pattern. On the system
+I use the results are rather counter-intuitive: ahci_thread_fn() does not
+show up in perf report at all, nor ahci_single_irq_intr(). While before
+the change ahci_single_irq_intr() reported 0.00%.
 
-Details in:
-https://bugzilla.kernel.org/show_bug.cgi?id=84861
+But since the handling is split in two parts it is rather incorrect to
+apply the same metric to the threaded context. Obviously, the threaded
+handler is expected slowed down by other interrupts handlers, but the
+whole system should benefit from it, which is exactly the aim of this
+change.
 
-Reported-and-tested-by: Barto <mister.freeman@laposte.net>
-Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
----
- drivers/ata/ahci.c         |   11 +++++------
- drivers/ata/pata_jmicron.c |   11 +++++------
- 2 files changed, 10 insertions(+), 12 deletions(-)
+> -- 
+> tejun
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index a0cc0ed..85aa6ec 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1340,15 +1340,14 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		ahci_pci_bar = AHCI_PCI_BAR_ENMOTUS;
- 
- 	/*
--	 * The JMicron chip 361/363 contains one SATA controller and one
-+	 * The JMicron chip 361/363/368 contains one SATA controller and one
- 	 * PATA controller,for powering on these both controllers, we must
- 	 * follow the sequence one by one, otherwise one of them can not be
--	 * powered on successfully, so here we disable the async suspend
--	 * method for these chips.
-+	 * powered on successfully.
-+	 * Here we can exclude the Jmicron family directly out of pm_async
-+	 * method to follow the power-on sequence.
- 	 */
--	if (pdev->vendor == PCI_VENDOR_ID_JMICRON &&
--		(pdev->device == PCI_DEVICE_ID_JMICRON_JMB363 ||
--		pdev->device == PCI_DEVICE_ID_JMICRON_JMB361))
-+	if (pdev->vendor == PCI_VENDOR_ID_JMICRON)
- 		device_disable_async_suspend(&pdev->dev);
- 
- 	/* acquire resources */
-diff --git a/drivers/ata/pata_jmicron.c b/drivers/ata/pata_jmicron.c
-index 47e418b..1d685b6 100644
---- a/drivers/ata/pata_jmicron.c
-+++ b/drivers/ata/pata_jmicron.c
-@@ -144,15 +144,14 @@ static int jmicron_init_one (struct pci_dev *pdev, const struct pci_device_id *i
- 	const struct ata_port_info *ppi[] = { &info, NULL };
- 
- 	/*
--	 * The JMicron chip 361/363 contains one SATA controller and one
-+	 * The JMicron chip 361/363/368 contains one SATA controller and one
- 	 * PATA controller,for powering on these both controllers, we must
- 	 * follow the sequence one by one, otherwise one of them can not be
--	 * powered on successfully, so here we disable the async suspend
--	 * method for these chips.
-+	 * powered on successfully.
-+	 * Here we can exclude the Jmicron family directly out of pm_async
-+	 * method to follow the power-on sequence.
- 	 */
--	if (pdev->vendor == PCI_VENDOR_ID_JMICRON &&
--		(pdev->device == PCI_DEVICE_ID_JMICRON_JMB363 ||
--		pdev->device == PCI_DEVICE_ID_JMICRON_JMB361))
-+	if (pdev->vendor == PCI_VENDOR_ID_JMICRON)
- 		device_disable_async_suspend(&pdev->dev);
- 
- 	return ata_pci_bmdma_init_one(pdev, ppi, &jmicron_sht, NULL, 0);
 -- 
-1.7.9.5
-
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
