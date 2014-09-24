@@ -1,52 +1,84 @@
-From: "Liu, Chuansheng" <chuansheng.liu@intel.com>
-Subject: RE: [PATCH] ata: Disabling the async PM for JMicron chips
-Date: Wed, 24 Sep 2014 06:20:14 +0000
-Message-ID: <27240C0AC20F114CBF8149A2696CBE4A01E87CA6@SHSMSX101.ccr.corp.intel.com>
-References: <1411450671-2367-1-git-send-email-chuansheng.liu@intel.com>
- <20140923140053.GG14905@mtj.dyndns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: Chuansheng Liu <chuansheng.liu@intel.com>
+Subject: [PATCH V2] ata: Disabling the async PM for JMicron chips
+Date: Wed, 24 Sep 2014 15:22:18 +0800
+Message-ID: <1411543338-2257-1-git-send-email-chuansheng.liu@intel.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:64682 "EHLO mga03.intel.com"
+Received: from mga03.intel.com ([134.134.136.65]:19153 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750744AbaIXGaB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 24 Sep 2014 02:30:01 -0400
-In-Reply-To: <20140923140053.GG14905@mtj.dyndns.org>
-Content-Language: en-US
+	id S1752991AbaIXHiU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 24 Sep 2014 03:38:20 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: "rjw@rjwysocki.net" <rjw@rjwysocki.net>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "mister.freeman@laposte.net" <mister.freeman@laposte.net>, "Zhang, Rui" <rui.zhang@intel.com>
+To: tj@kernel.org, rjw@rjwysocki.net
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, mister.freeman@laposte.net, rui.zhang@intel.com, chuansheng.liu@intel.com
 
+Like the commit e6b7e41cdd8c ("ata: Disabling the async PM for JMicron chip 363/361"),
+Barto found the similar issue for JMicron chip 368, that 363/368 has no
+parent-children relationship, but they have the power dependency.
 
+So here we can exclude the JMicron chips out of pm_async method directly,
+to avoid further similar issues.
 
-> -----Original Message-----
-> From: Tejun Heo [mailto:htejun@gmail.com] On Behalf Of Tejun Heo
-> Sent: Tuesday, September 23, 2014 10:01 PM
-> To: Liu, Chuansheng
-> Cc: rjw@rjwysocki.net; linux-ide@vger.kernel.org;
-> linux-kernel@vger.kernel.org; mister.freeman@laposte.net; Zhang, Rui
-> Subject: Re: [PATCH] ata: Disabling the async PM for JMicron chips
-> 
-> On Tue, Sep 23, 2014 at 01:37:51PM +0800, Chuansheng Liu wrote:
-> > Be similar with commit (ata: Disabling the async PM for JMicron chip
-> 363/361),
-> 
-> Please use 12_DIGIT_SHA1_PREFIX ("SUBJ") format when referring to
-> commits.
-> 
+Details in:
+https://bugzilla.kernel.org/show_bug.cgi?id=84861
 
+Reported-and-tested-by: Barto <mister.freeman@laposte.net>
+Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+---
+ drivers/ata/ahci.c         |   11 +++++------
+ drivers/ata/pata_jmicron.c |   11 +++++------
+ 2 files changed, 10 insertions(+), 12 deletions(-)
 
-> > @@ -1345,10 +1345,10 @@ static int ahci_init_one(struct pci_dev *pdev,
-> const struct pci_device_id *ent)
-> >  	 * follow the sequence one by one, otherwise one of them can not be
-> >  	 * powered on successfully, so here we disable the async suspend
-> >  	 * method for these chips.
-> > +	 * Jmicron chip 368 has been found has the similar issue, here we can
-> > +	 * exclude the Jmicron family directly to avoid other similar issues.
-> 
-> Let's update the comment as a whole instead of appending to it.
-> 
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index a0cc0ed..85aa6ec 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1340,15 +1340,14 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		ahci_pci_bar = AHCI_PCI_BAR_ENMOTUS;
+ 
+ 	/*
+-	 * The JMicron chip 361/363 contains one SATA controller and one
++	 * The JMicron chip 361/363/368 contains one SATA controller and one
+ 	 * PATA controller,for powering on these both controllers, we must
+ 	 * follow the sequence one by one, otherwise one of them can not be
+-	 * powered on successfully, so here we disable the async suspend
+-	 * method for these chips.
++	 * powered on successfully.
++	 * Here we can exclude the Jmicron family directly out of pm_async
++	 * method to follow the power-on sequence.
+ 	 */
+-	if (pdev->vendor == PCI_VENDOR_ID_JMICRON &&
+-		(pdev->device == PCI_DEVICE_ID_JMICRON_JMB363 ||
+-		pdev->device == PCI_DEVICE_ID_JMICRON_JMB361))
++	if (pdev->vendor == PCI_VENDOR_ID_JMICRON)
+ 		device_disable_async_suspend(&pdev->dev);
+ 
+ 	/* acquire resources */
+diff --git a/drivers/ata/pata_jmicron.c b/drivers/ata/pata_jmicron.c
+index 47e418b..1d685b6 100644
+--- a/drivers/ata/pata_jmicron.c
++++ b/drivers/ata/pata_jmicron.c
+@@ -144,15 +144,14 @@ static int jmicron_init_one (struct pci_dev *pdev, const struct pci_device_id *i
+ 	const struct ata_port_info *ppi[] = { &info, NULL };
+ 
+ 	/*
+-	 * The JMicron chip 361/363 contains one SATA controller and one
++	 * The JMicron chip 361/363/368 contains one SATA controller and one
+ 	 * PATA controller,for powering on these both controllers, we must
+ 	 * follow the sequence one by one, otherwise one of them can not be
+-	 * powered on successfully, so here we disable the async suspend
+-	 * method for these chips.
++	 * powered on successfully.
++	 * Here we can exclude the Jmicron family directly out of pm_async
++	 * method to follow the power-on sequence.
+ 	 */
+-	if (pdev->vendor == PCI_VENDOR_ID_JMICRON &&
+-		(pdev->device == PCI_DEVICE_ID_JMICRON_JMB363 ||
+-		pdev->device == PCI_DEVICE_ID_JMICRON_JMB361))
++	if (pdev->vendor == PCI_VENDOR_ID_JMICRON)
+ 		device_disable_async_suspend(&pdev->dev);
+ 
+ 	return ata_pci_bmdma_init_one(pdev, ppi, &jmicron_sht, NULL, 0);
+-- 
+1.7.9.5
 
-Thanks your comments, Tejun, will send one new patch to review.
