@@ -1,83 +1,88 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata-sff: Fix controllers with no ctl port
-Date: Sun, 28 Sep 2014 11:19:50 -0400
-Message-ID: <20140928151950.GA6072@mtj.dyndns.org>
-References: <1411769086-12408-1-git-send-email-linux@rainbow-software.org>
+Subject: Re: [PATCH v4 2/4] AHCI: Move host activation code into
+ ahci_host_activate()
+Date: Sun, 28 Sep 2014 12:04:08 -0400
+Message-ID: <20140928160408.GA8050@mtj.dyndns.org>
+References: <cover.1411648623.git.agordeev@redhat.com>
+ <39cff5287f4fcc33d0f00f89cb2337c5a5ec22b6.1411648623.git.agordeev@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f47.google.com ([209.85.216.47]:48783 "EHLO
-	mail-qa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750901AbaI1PTy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Sep 2014 11:19:54 -0400
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:65421 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751404AbaI1QEN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Sep 2014 12:04:13 -0400
 Content-Disposition: inline
-In-Reply-To: <1411769086-12408-1-git-send-email-linux@rainbow-software.org>
+In-Reply-To: <39cff5287f4fcc33d0f00f89cb2337c5a5ec22b6.1411648623.git.agordeev@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ondrej Zary <linux@rainbow-software.org>
-Cc: linux-ide@vger.kernel.org, Kernel development list <linux-kernel@vger.kernel.org>
+To: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Sat, Sep 27, 2014 at 12:04:46AM +0200, Ondrej Zary wrote:
-> Currently, ata_sff_softreset is skipped for controllers with no ctl port.
-> But that also skips ata_sff_dev_classify required for device detection.
-> This means that libata is currently broken on controllers with no ctl port.
-> 
-> No device connected:
-> [    1.872480] pata_isapnp 01:01.02: activated
-> [    1.889823] scsi2 : pata_isapnp
-> [    1.890109] ata3: PATA max PIO0 cmd 0x1e8 ctl 0x0 irq 11
-> [    6.888110] ata3.01: qc timeout (cmd 0xec)
-> [    6.888179] ata3.01: failed to IDENTIFY (I/O error, err_mask=0x5)
-> [   16.888085] ata3.01: qc timeout (cmd 0xec)
-> [   16.888147] ata3.01: failed to IDENTIFY (I/O error, err_mask=0x5)
-> [   46.888086] ata3.01: qc timeout (cmd 0xec)
-> [   46.888148] ata3.01: failed to IDENTIFY (I/O error, err_mask=0x5)
-> [   51.888100] ata3.00: qc timeout (cmd 0xec)
-> [   51.888160] ata3.00: failed to IDENTIFY (I/O error, err_mask=0x5)
-> [   61.888079] ata3.00: qc timeout (cmd 0xec)
-> [   61.888141] ata3.00: failed to IDENTIFY (I/O error, err_mask=0x5)
-> [   91.888089] ata3.00: qc timeout (cmd 0xec)
-> [   91.888152] ata3.00: failed to IDENTIFY (I/O error, err_mask=0x5)
-> 
-> ATAPI device connected:
-> [    1.882061] pata_isapnp 01:01.02: activated
-> [    1.893430] scsi2 : pata_isapnp
-> [    1.893719] ata3: PATA max PIO0 cmd 0x1e8 ctl 0x0 irq 11
-> [    6.892107] ata3.01: qc timeout (cmd 0xec)
-> [    6.892171] ata3.01: failed to IDENTIFY (I/O error, err_mask=0x5)
-> [   16.892079] ata3.01: qc timeout (cmd 0xec)
-> [   16.892138] ata3.01: failed to IDENTIFY (I/O error, err_mask=0x5)
-> [   46.892079] ata3.01: qc timeout (cmd 0xec)
-> [   46.892138] ata3.01: failed to IDENTIFY (I/O error, err_mask=0x5)
-> [   46.908586] ata3.00: ATAPI: ACER CD-767E/O, V1.5X, max PIO2, CDB intr
-> [   46.924570] ata3.00: configured for PIO0 (device error ignored)
-> [   46.926295] scsi 2:0:0:0: CD-ROM            ACER     CD-767E/O        1.5X PQ: 0 ANSI: 5
-> [   46.984519] sr0: scsi3-mmc drive: 6x/6x xa/form2 tray
-> [   46.984592] cdrom: Uniform CD-ROM driver Revision: 3.20
-> 
-> So don't skip ata_sff_softreset, just skip the reset part of ata_bus_softreset
-> if the ctl port is not available.
-> 
-> This makes IDE port on ES968 behave correctly:
-> 
-> No device connected:
-> [    4.670888] pata_isapnp 01:01.02: activated
-> [    4.673207] scsi host2: pata_isapnp
-> [    4.673675] ata3: PATA max PIO0 cmd 0x1e8 ctl 0x0 irq 11
-> [    7.081840] Adding 2541652k swap on /dev/sda2.  Priority:-1 extents:1 across:2541652k
-> 
-> ATAPI device connected:
-> [    4.704362] pata_isapnp 01:01.02: activated
-> [    4.706620] scsi host2: pata_isapnp
-> [    4.706877] ata3: PATA max PIO0 cmd 0x1e8 ctl 0x0 irq 11
-> [    4.872782] ata3.00: ATAPI: ACER CD-767E/O, V1.5X, max PIO2, CDB intr
-> [    4.888673] ata3.00: configured for PIO0 (device error ignored)
-> [    4.893984] scsi 2:0:0:0: CD-ROM            ACER     CD-767E/O        1.5X PQ: 0 ANSI: 5
-> [    7.015578] Adding 2541652k swap on /dev/sda2.  Priority:-1 extents:1 across:2541652k
-> 
-> Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+On Thu, Sep 25, 2014 at 03:13:22PM +0200, Alexander Gordeev wrote:
+> -/**
+> - *	ahci_host_activate - start AHCI host, request IRQs and register it
+> - *	@host: target ATA host
+> - *	@irq: base IRQ number to request
+> - *	@irq_handler: irq_handler used when requesting IRQs
+> - *	@irq_flags: irq_flags used when requesting IRQs
+> - *
+> - *	Similar to ata_host_activate, but requests IRQs according to AHCI-1.1
+> - *	when multiple MSIs were allocated. That is one MSI per port, starting
+> - *	from @irq.
+> - *
+> - *	LOCKING:
+> - *	Inherited from calling layer (may sleep).
+> - *
+> - *	RETURNS:
+> - *	0 on success, -errno otherwise.
+> - */
+> -int ahci_host_activate(struct ata_host *host, int irq)
+> -{
+> -	int i, rc;
+> -
+> -	rc = ata_host_start(host);
+> -	if (rc)
+> -		return rc;
+> -
+> -	for (i = 0; i < host->n_ports; i++) {
+> -		struct ahci_port_priv *pp = host->ports[i]->private_data;
+> -
+> -		/* Do not receive interrupts sent by dummy ports */
+> -		if (!pp) {
+> -			disable_irq(irq + i);
+> -			continue;
+> -		}
+> -
+> -		rc = devm_request_threaded_irq(host->dev, irq + i,
+> -					       ahci_hw_interrupt,
+> -					       ahci_thread_fn, IRQF_SHARED,
+> -					       pp->irq_desc, host->ports[i]);
+> -		if (rc)
+> -			goto out_free_irqs;
+> -	}
+> -
+> -	for (i = 0; i < host->n_ports; i++)
+> -		ata_port_desc(host->ports[i], "irq %d", irq + i);
+> -
+> -	rc = ata_host_register(host, &ahci_sht);
+> -	if (rc)
+> -		goto out_free_all_irqs;
+> -
+> -	return 0;
+> -
+> -out_free_all_irqs:
+> -	i = host->n_ports;
+> -out_free_irqs:
+> -	for (i--; i >= 0; i--)
+> -		devm_free_irq(host->dev, irq + i, host->ports[i]);
+> -
+> -	return rc;
+> -}
 
-Applied to libata/for-3.18 w/ stable cc'd.
+It's generally a bad idea to mix code movement w/ other changes.  I'm
+applying this one but please separate code movements to separate
+patches from now on.
 
 Thanks.
 
