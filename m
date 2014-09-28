@@ -1,98 +1,85 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH V2] ata: Disabling the async PM for JMicron chips
-Date: Sun, 28 Sep 2014 13:54:31 +0800
-Message-ID: <5427A297.7050605@intel.com>
-References: <1411543338-2257-1-git-send-email-chuansheng.liu@intel.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] libata-sff: Fix controllers with no ctl port
+Date: Sun, 28 Sep 2014 11:19:50 -0400
+Message-ID: <20140928151950.GA6072@mtj.dyndns.org>
+References: <1411769086-12408-1-git-send-email-linux@rainbow-software.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:52247 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750807AbaI1Fyf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 28 Sep 2014 01:54:35 -0400
-In-Reply-To: <1411543338-2257-1-git-send-email-chuansheng.liu@intel.com>
+Received: from mail-qa0-f47.google.com ([209.85.216.47]:48783 "EHLO
+	mail-qa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750901AbaI1PTy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Sep 2014 11:19:54 -0400
+Content-Disposition: inline
+In-Reply-To: <1411769086-12408-1-git-send-email-linux@rainbow-software.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Chuansheng Liu <chuansheng.liu@intel.com>, Tejun Heo <tj@kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, mister.freeman@laposte.net, rui.zhang@intel.com, Linux PCI <linux-pci@vger.kernel.org>
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: linux-ide@vger.kernel.org, Kernel development list <linux-kernel@vger.kernel.org>
 
-On 09/24/2014 03:22 PM, Chuansheng Liu wrote:
-> Like the commit e6b7e41cdd8c ("ata: Disabling the async PM for JMicron chip 363/361"),
-> Barto found the similar issue for JMicron chip 368, that 363/368 has no
-> parent-children relationship, but they have the power dependency.
+On Sat, Sep 27, 2014 at 12:04:46AM +0200, Ondrej Zary wrote:
+> Currently, ata_sff_softreset is skipped for controllers with no ctl port.
+> But that also skips ata_sff_dev_classify required for device detection.
+> This means that libata is currently broken on controllers with no ctl port.
 > 
-> So here we can exclude the JMicron chips out of pm_async method directly,
-> to avoid further similar issues.
+> No device connected:
+> [    1.872480] pata_isapnp 01:01.02: activated
+> [    1.889823] scsi2 : pata_isapnp
+> [    1.890109] ata3: PATA max PIO0 cmd 0x1e8 ctl 0x0 irq 11
+> [    6.888110] ata3.01: qc timeout (cmd 0xec)
+> [    6.888179] ata3.01: failed to IDENTIFY (I/O error, err_mask=0x5)
+> [   16.888085] ata3.01: qc timeout (cmd 0xec)
+> [   16.888147] ata3.01: failed to IDENTIFY (I/O error, err_mask=0x5)
+> [   46.888086] ata3.01: qc timeout (cmd 0xec)
+> [   46.888148] ata3.01: failed to IDENTIFY (I/O error, err_mask=0x5)
+> [   51.888100] ata3.00: qc timeout (cmd 0xec)
+> [   51.888160] ata3.00: failed to IDENTIFY (I/O error, err_mask=0x5)
+> [   61.888079] ata3.00: qc timeout (cmd 0xec)
+> [   61.888141] ata3.00: failed to IDENTIFY (I/O error, err_mask=0x5)
+> [   91.888089] ata3.00: qc timeout (cmd 0xec)
+> [   91.888152] ata3.00: failed to IDENTIFY (I/O error, err_mask=0x5)
 > 
-> Details in:
-> https://bugzilla.kernel.org/show_bug.cgi?id=84861
+> ATAPI device connected:
+> [    1.882061] pata_isapnp 01:01.02: activated
+> [    1.893430] scsi2 : pata_isapnp
+> [    1.893719] ata3: PATA max PIO0 cmd 0x1e8 ctl 0x0 irq 11
+> [    6.892107] ata3.01: qc timeout (cmd 0xec)
+> [    6.892171] ata3.01: failed to IDENTIFY (I/O error, err_mask=0x5)
+> [   16.892079] ata3.01: qc timeout (cmd 0xec)
+> [   16.892138] ata3.01: failed to IDENTIFY (I/O error, err_mask=0x5)
+> [   46.892079] ata3.01: qc timeout (cmd 0xec)
+> [   46.892138] ata3.01: failed to IDENTIFY (I/O error, err_mask=0x5)
+> [   46.908586] ata3.00: ATAPI: ACER CD-767E/O, V1.5X, max PIO2, CDB intr
+> [   46.924570] ata3.00: configured for PIO0 (device error ignored)
+> [   46.926295] scsi 2:0:0:0: CD-ROM            ACER     CD-767E/O        1.5X PQ: 0 ANSI: 5
+> [   46.984519] sr0: scsi3-mmc drive: 6x/6x xa/form2 tray
+> [   46.984592] cdrom: Uniform CD-ROM driver Revision: 3.20
+> 
+> So don't skip ata_sff_softreset, just skip the reset part of ata_bus_softreset
+> if the ctl port is not available.
+> 
+> This makes IDE port on ES968 behave correctly:
+> 
+> No device connected:
+> [    4.670888] pata_isapnp 01:01.02: activated
+> [    4.673207] scsi host2: pata_isapnp
+> [    4.673675] ata3: PATA max PIO0 cmd 0x1e8 ctl 0x0 irq 11
+> [    7.081840] Adding 2541652k swap on /dev/sda2.  Priority:-1 extents:1 across:2541652k
+> 
+> ATAPI device connected:
+> [    4.704362] pata_isapnp 01:01.02: activated
+> [    4.706620] scsi host2: pata_isapnp
+> [    4.706877] ata3: PATA max PIO0 cmd 0x1e8 ctl 0x0 irq 11
+> [    4.872782] ata3.00: ATAPI: ACER CD-767E/O, V1.5X, max PIO2, CDB intr
+> [    4.888673] ata3.00: configured for PIO0 (device error ignored)
+> [    4.893984] scsi 2:0:0:0: CD-ROM            ACER     CD-767E/O        1.5X PQ: 0 ANSI: 5
+> [    7.015578] Adding 2541652k swap on /dev/sda2.  Priority:-1 extents:1 across:2541652k
+> 
+> Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 
-I think we can disable the async PM for JMicron chips in PCI subsystem:
-pci_pm_init, check if it is JMicron chip and then enable_async
-accordingly. The problem doesn't have much to do with ATA, so move them
-to PCI may be more appropriate.
+Applied to libata/for-3.18 w/ stable cc'd.
 
-Thanks,
-Aaron
+Thanks.
 
-> 
-> Reported-and-tested-by: Barto <mister.freeman@laposte.net>
-> Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
-> ---
->  drivers/ata/ahci.c         |   11 +++++------
->  drivers/ata/pata_jmicron.c |   11 +++++------
->  2 files changed, 10 insertions(+), 12 deletions(-)
-> 
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index a0cc0ed..85aa6ec 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -1340,15 +1340,14 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->  		ahci_pci_bar = AHCI_PCI_BAR_ENMOTUS;
->  
->  	/*
-> -	 * The JMicron chip 361/363 contains one SATA controller and one
-> +	 * The JMicron chip 361/363/368 contains one SATA controller and one
->  	 * PATA controller,for powering on these both controllers, we must
->  	 * follow the sequence one by one, otherwise one of them can not be
-> -	 * powered on successfully, so here we disable the async suspend
-> -	 * method for these chips.
-> +	 * powered on successfully.
-> +	 * Here we can exclude the Jmicron family directly out of pm_async
-> +	 * method to follow the power-on sequence.
->  	 */
-> -	if (pdev->vendor == PCI_VENDOR_ID_JMICRON &&
-> -		(pdev->device == PCI_DEVICE_ID_JMICRON_JMB363 ||
-> -		pdev->device == PCI_DEVICE_ID_JMICRON_JMB361))
-> +	if (pdev->vendor == PCI_VENDOR_ID_JMICRON)
->  		device_disable_async_suspend(&pdev->dev);
->  
->  	/* acquire resources */
-> diff --git a/drivers/ata/pata_jmicron.c b/drivers/ata/pata_jmicron.c
-> index 47e418b..1d685b6 100644
-> --- a/drivers/ata/pata_jmicron.c
-> +++ b/drivers/ata/pata_jmicron.c
-> @@ -144,15 +144,14 @@ static int jmicron_init_one (struct pci_dev *pdev, const struct pci_device_id *i
->  	const struct ata_port_info *ppi[] = { &info, NULL };
->  
->  	/*
-> -	 * The JMicron chip 361/363 contains one SATA controller and one
-> +	 * The JMicron chip 361/363/368 contains one SATA controller and one
->  	 * PATA controller,for powering on these both controllers, we must
->  	 * follow the sequence one by one, otherwise one of them can not be
-> -	 * powered on successfully, so here we disable the async suspend
-> -	 * method for these chips.
-> +	 * powered on successfully.
-> +	 * Here we can exclude the Jmicron family directly out of pm_async
-> +	 * method to follow the power-on sequence.
->  	 */
-> -	if (pdev->vendor == PCI_VENDOR_ID_JMICRON &&
-> -		(pdev->device == PCI_DEVICE_ID_JMICRON_JMB363 ||
-> -		pdev->device == PCI_DEVICE_ID_JMICRON_JMB361))
-> +	if (pdev->vendor == PCI_VENDOR_ID_JMICRON)
->  		device_disable_async_suspend(&pdev->dev);
->  
->  	return ata_pci_bmdma_init_one(pdev, ppi, &jmicron_sht, NULL, 0);
-> 
-
+-- 
+tejun
