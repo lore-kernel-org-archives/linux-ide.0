@@ -1,33 +1,29 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] AHCI: Move host activation code into ahci_host_activate()
-Date: Mon, 29 Sep 2014 10:04:01 -0400
-Message-ID: <20140929140401.GA15925@htj.dyndns.org>
-References: <cover.1411648623.git.agordeev@redhat.com>
- <39cff5287f4fcc33d0f00f89cb2337c5a5ec22b6.1411648623.git.agordeev@redhat.com>
- <20140928160408.GA8050@mtj.dyndns.org>
- <20140929101846.GA8971@agordeev.usersys.redhat.com>
- <20140929101948.GB8971@agordeev.usersys.redhat.com>
+Subject: Re: [PATCH 33/38] libata: use __scsi_print_command()
+Date: Mon, 29 Sep 2014 10:06:06 -0400
+Message-ID: <20140929140606.GB15925@htj.dyndns.org>
+References: <1411991947-130166-1-git-send-email-hare@suse.de>
+ <1411991947-130166-34-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20140929101948.GB8971@agordeev.usersys.redhat.com>
+In-Reply-To: <1411991947-130166-34-git-send-email-hare@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Mon, Sep 29, 2014 at 11:19:49AM +0100, Alexander Gordeev wrote:
-> Currently host activation done by calling either function
-> ahci_host_activate() or ata_host_activate(). Consolidate
-> the code by only calling ahci_host_activate() for all AHCI
-> devices.
+On Mon, Sep 29, 2014 at 01:59:02PM +0200, Hannes Reinecke wrote:
+> libata already uses an internal buffer, so we should be using
+> __scsi_print_command() here.
 > 
-> Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+> Cc: Tejun Heo <tj@kernel.org>
 > Cc: linux-ide@vger.kernel.org
+> Cc: LKML <linux-kernel@vger.kernel.org>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
 
-I reverted 2-3.  Can you please respin the patches so that code
-movement is separate from other changes?
+Applied to libata/for-3.18.
 
 Thanks.
 
