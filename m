@@ -1,89 +1,86 @@
 From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH v5 4/5] AHCI: Make few function names more descriptive
-Date: Mon, 29 Sep 2014 18:26:00 +0200
-Message-ID: <780a0e72a5f0a2b6c72f6e5980d60aa842692723.1412007152.git.agordeev@redhat.com>
+Subject: [PATCH v5 1/5] AHCI: Pass SCSI host template as arg to ahci_host_activate()
+Date: Mon, 29 Sep 2014 18:25:57 +0200
+Message-ID: <25463ff3da3daca105ffd0a6299a21268fba7452.1412007152.git.agordeev@redhat.com>
 References: <cover.1412007152.git.agordeev@redhat.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:31328 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754236AbaI2Q0P (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Sep 2014 12:26:15 -0400
 In-Reply-To: <cover.1412007152.git.agordeev@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: linux-kernel@vger.kernel.org
 Cc: Alexander Gordeev <agordeev@redhat.com>, linux-ide@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+
+This update is a prerequisite for consolidation of
+AHCI host activation code within ahci_host_activate()
+function.
 
 Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
 Cc: linux-ide@vger.kernel.org
 ---
- drivers/ata/libahci.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+ drivers/ata/ahci.c | 10 +++++-----
+ drivers/ata/ahci.h |  3 ++-
+ 2 files changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 0080551..48175e5 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -1789,7 +1789,7 @@ static void ahci_port_intr(struct ata_port *ap)
- 	ahci_handle_port_interrupt(ap, port_mmio, status);
- }
- 
--static irqreturn_t ahci_thread_fn(int irq, void *dev_instance)
-+static irqreturn_t ahci_port_thread_fn(int irq, void *dev_instance)
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index f68a995..fcda5b6 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1230,8 +1230,7 @@ intx:
+  *	ahci_host_activate - start AHCI host, request IRQs and register it
+  *	@host: target ATA host
+  *	@irq: base IRQ number to request
+- *	@irq_handler: irq_handler used when requesting IRQs
+- *	@irq_flags: irq_flags used when requesting IRQs
++ *	@sht: scsi_host_template to use when registering the host
+  *
+  *	Similar to ata_host_activate, but requests IRQs according to AHCI-1.1
+  *	when multiple MSIs were allocated. That is one MSI per port, starting
+@@ -1243,7 +1242,8 @@ intx:
+  *	RETURNS:
+  *	0 on success, -errno otherwise.
+  */
+-int ahci_host_activate(struct ata_host *host, int irq)
++int ahci_host_activate(struct ata_host *host, int irq,
++		       struct scsi_host_template *sht)
  {
- 	struct ata_port *ap = dev_instance;
- 	struct ahci_port_priv *pp = ap->private_data;
-@@ -1810,7 +1810,7 @@ static irqreturn_t ahci_thread_fn(int irq, void *dev_instance)
- 	return IRQ_HANDLED;
- }
+ 	int i, rc;
  
--static void ahci_hw_port_interrupt(struct ata_port *ap)
-+static void ahci_update_intr_status(struct ata_port *ap)
- {
- 	void __iomem *port_mmio = ahci_port_base(ap);
- 	struct ahci_port_priv *pp = ap->private_data;
-@@ -1822,7 +1822,7 @@ static void ahci_hw_port_interrupt(struct ata_port *ap)
- 	pp->intr_status |= status;
- }
+@@ -1271,7 +1271,7 @@ int ahci_host_activate(struct ata_host *host, int irq)
+ 	for (i = 0; i < host->n_ports; i++)
+ 		ata_port_desc(host->ports[i], "irq %d", irq + i);
  
--static irqreturn_t ahci_hw_interrupt(int irq, void *dev_instance)
-+static irqreturn_t ahci_multi_irqs_intr(int irq, void *dev_instance)
- {
- 	struct ata_port *ap_this = dev_instance;
- 	struct ahci_port_priv *pp = ap_this->private_data;
-@@ -1858,7 +1858,7 @@ static irqreturn_t ahci_hw_interrupt(int irq, void *dev_instance)
+-	rc = ata_host_register(host, &ahci_sht);
++	rc = ata_host_register(host, sht);
+ 	if (rc)
+ 		goto out_free_all_irqs;
  
- 		ap = host->ports[i];
- 		if (ap) {
--			ahci_hw_port_interrupt(ap);
-+			ahci_update_intr_status(ap);
- 			VPRINTK("port %u\n", i);
- 		} else {
- 			VPRINTK("port %u (no irq)\n", i);
-@@ -1877,7 +1877,7 @@ static irqreturn_t ahci_hw_interrupt(int irq, void *dev_instance)
- 	return IRQ_WAKE_THREAD;
- }
+@@ -1488,7 +1488,7 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	pci_set_master(pdev);
  
--static irqreturn_t ahci_interrupt(int irq, void *dev_instance)
-+static irqreturn_t ahci_single_irq_intr(int irq, void *dev_instance)
- {
- 	struct ata_host *host = dev_instance;
- 	struct ahci_host_priv *hpriv;
-@@ -2488,8 +2488,8 @@ static int ahci_host_activate_multi_irqs(struct ata_host *host, int irq,
- 		}
- 
- 		rc = devm_request_threaded_irq(host->dev, irq + i,
--					       ahci_hw_interrupt,
--					       ahci_thread_fn, IRQF_SHARED,
-+					       ahci_multi_irqs_intr,
-+					       ahci_port_thread_fn, IRQF_SHARED,
- 					       pp->irq_desc, host->ports[i]);
- 		if (rc)
- 			goto out_free_irqs;
-@@ -2538,7 +2538,7 @@ int ahci_host_activate(struct ata_host *host, int irq,
  	if (hpriv->flags & AHCI_HFLAG_MULTI_MSI)
- 		rc = ahci_host_activate_multi_irqs(host, irq, sht);
- 	else
--		rc = ata_host_activate(host, irq, ahci_interrupt,
-+		rc = ata_host_activate(host, irq, ahci_single_irq_intr,
- 				       IRQF_SHARED, sht);
- 	return rc;
- }
+-		return ahci_host_activate(host, pdev->irq);
++		return ahci_host_activate(host, pdev->irq, &ahci_sht);
+ 
+ 	return ata_host_activate(host, pdev->irq, ahci_interrupt, IRQF_SHARED,
+ 				 &ahci_sht);
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index a074c73..31b4c44 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -392,7 +392,8 @@ irqreturn_t ahci_interrupt(int irq, void *dev_instance);
+ irqreturn_t ahci_hw_interrupt(int irq, void *dev_instance);
+ irqreturn_t ahci_thread_fn(int irq, void *dev_instance);
+ void ahci_print_info(struct ata_host *host, const char *scc_s);
+-int ahci_host_activate(struct ata_host *host, int irq);
++int ahci_host_activate(struct ata_host *host, int irq,
++		       struct scsi_host_template *sht);
+ void ahci_error_handler(struct ata_port *ap);
+ 
+ static inline void __iomem *__ahci_port_base(struct ata_host *host,
 -- 
 1.8.3.1
+
