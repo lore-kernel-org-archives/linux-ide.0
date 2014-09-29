@@ -1,50 +1,89 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 33/38] libata: use __scsi_print_command()
-Date: Mon, 29 Sep 2014 10:11:44 -0400
-Message-ID: <20140929141144.GC15925@htj.dyndns.org>
-References: <1411991947-130166-1-git-send-email-hare@suse.de>
- <1411991947-130166-34-git-send-email-hare@suse.de>
- <20140929140606.GB15925@htj.dyndns.org>
- <54296856.2020104@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <54296856.2020104@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <jbottomley@parallels.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, Robert Elliott <elliott@hp.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: [PATCH v5 4/5] AHCI: Make few function names more descriptive
+Date: Mon, 29 Sep 2014 18:26:00 +0200
+Message-ID: <780a0e72a5f0a2b6c72f6e5980d60aa842692723.1412007152.git.agordeev@redhat.com>
+References: <cover.1412007152.git.agordeev@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <cover.1412007152.git.agordeev@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Alexander Gordeev <agordeev@redhat.com>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Mon, Sep 29, 2014 at 04:10:30PM +0200, Hannes Reinecke wrote:
-> On 09/29/2014 04:06 PM, Tejun Heo wrote:
-> > On Mon, Sep 29, 2014 at 01:59:02PM +0200, Hannes Reinecke wrote:
-> >> libata already uses an internal buffer, so we should be using
-> >> __scsi_print_command() here.
-> >>
-> >> Cc: Tejun Heo <tj@kernel.org>
-> >> Cc: linux-ide@vger.kernel.org
-> >> Cc: LKML <linux-kernel@vger.kernel.org>
-> >> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> > 
-> > Applied to libata/for-3.18.
-> > 
-> > Thanks.
-> > 
-> Errm.
-> Nice that you did, but it sort of relies for patches 01-32 to be
-> applied previously.
-> I'd rather apply your Signed-off-by: to the patch and have it
-> routed through the SCSI tree; that way we're sure it'll only be
-> applied if the previous patches are in.
-> 
-> Can you please pull it from libata to avoid build issues?
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-ide@vger.kernel.org
+---
+ drivers/ata/libahci.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-Ah, okay, pulled it.  Please feel free to add
-
- Acked-by: Tejun Heo <tj@kernel.org>
-
-Thanks.
-
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 0080551..48175e5 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -1789,7 +1789,7 @@ static void ahci_port_intr(struct ata_port *ap)
+ 	ahci_handle_port_interrupt(ap, port_mmio, status);
+ }
+ 
+-static irqreturn_t ahci_thread_fn(int irq, void *dev_instance)
++static irqreturn_t ahci_port_thread_fn(int irq, void *dev_instance)
+ {
+ 	struct ata_port *ap = dev_instance;
+ 	struct ahci_port_priv *pp = ap->private_data;
+@@ -1810,7 +1810,7 @@ static irqreturn_t ahci_thread_fn(int irq, void *dev_instance)
+ 	return IRQ_HANDLED;
+ }
+ 
+-static void ahci_hw_port_interrupt(struct ata_port *ap)
++static void ahci_update_intr_status(struct ata_port *ap)
+ {
+ 	void __iomem *port_mmio = ahci_port_base(ap);
+ 	struct ahci_port_priv *pp = ap->private_data;
+@@ -1822,7 +1822,7 @@ static void ahci_hw_port_interrupt(struct ata_port *ap)
+ 	pp->intr_status |= status;
+ }
+ 
+-static irqreturn_t ahci_hw_interrupt(int irq, void *dev_instance)
++static irqreturn_t ahci_multi_irqs_intr(int irq, void *dev_instance)
+ {
+ 	struct ata_port *ap_this = dev_instance;
+ 	struct ahci_port_priv *pp = ap_this->private_data;
+@@ -1858,7 +1858,7 @@ static irqreturn_t ahci_hw_interrupt(int irq, void *dev_instance)
+ 
+ 		ap = host->ports[i];
+ 		if (ap) {
+-			ahci_hw_port_interrupt(ap);
++			ahci_update_intr_status(ap);
+ 			VPRINTK("port %u\n", i);
+ 		} else {
+ 			VPRINTK("port %u (no irq)\n", i);
+@@ -1877,7 +1877,7 @@ static irqreturn_t ahci_hw_interrupt(int irq, void *dev_instance)
+ 	return IRQ_WAKE_THREAD;
+ }
+ 
+-static irqreturn_t ahci_interrupt(int irq, void *dev_instance)
++static irqreturn_t ahci_single_irq_intr(int irq, void *dev_instance)
+ {
+ 	struct ata_host *host = dev_instance;
+ 	struct ahci_host_priv *hpriv;
+@@ -2488,8 +2488,8 @@ static int ahci_host_activate_multi_irqs(struct ata_host *host, int irq,
+ 		}
+ 
+ 		rc = devm_request_threaded_irq(host->dev, irq + i,
+-					       ahci_hw_interrupt,
+-					       ahci_thread_fn, IRQF_SHARED,
++					       ahci_multi_irqs_intr,
++					       ahci_port_thread_fn, IRQF_SHARED,
+ 					       pp->irq_desc, host->ports[i]);
+ 		if (rc)
+ 			goto out_free_irqs;
+@@ -2538,7 +2538,7 @@ int ahci_host_activate(struct ata_host *host, int irq,
+ 	if (hpriv->flags & AHCI_HFLAG_MULTI_MSI)
+ 		rc = ahci_host_activate_multi_irqs(host, irq, sht);
+ 	else
+-		rc = ata_host_activate(host, irq, ahci_interrupt,
++		rc = ata_host_activate(host, irq, ahci_single_irq_intr,
+ 				       IRQF_SHARED, sht);
+ 	return rc;
+ }
 -- 
-tejun
+1.8.3.1
