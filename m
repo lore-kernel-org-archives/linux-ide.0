@@ -1,147 +1,35 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: [PATCH v5 5/5] AHCI: Do not read HOST_IRQ_STAT reg in multi-MSI mode
-Date: Mon, 29 Sep 2014 18:26:01 +0200
-Message-ID: <aba0062d828bf06c93ffa9b6631c72dd6ba9f5f4.1412007152.git.agordeev@redhat.com>
-References: <cover.1412007152.git.agordeev@redhat.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:6941 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754921AbaI2Q0Z (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 29 Sep 2014 12:26:25 -0400
-In-Reply-To: <cover.1412007152.git.agordeev@redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH] ata: ahci_platform: Add ACPI support for AMD Seattle SATA controller
+Date: Mon, 29 Sep 2014 20:16:05 +0200
+Message-ID: <4070982.j4ECbq7XE2@wuerfel>
+References: <1410295035-14471-1-git-send-email-suravee.suthikulpanit@amd.com> <CAOesGMh_Ku-pReg5LHVFvRM0-s_zEO4rgAvaD5rv-eTfPD71Yw@mail.gmail.com> <542882E3.2050908@amd.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <542882E3.2050908@amd.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: linux-arm-kernel@lists.infradead.org
+Cc: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>, Olof Johansson <olof@lixom.net>, linux-ide@vger.kernel.org, "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Hans de Goede <hdegoede@redhat.com>, Tejun Heo <tj@kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Alexander Gordeev <agordeev@redhat.com>, "Jiang, Dave" <dave.jiang@intel.com>, linux-ide@vger.kernel.org
 
-As described in AHCI v1.0 specification chapter 10.6.2.2
-"Multiple MSI Based Messages" generation of interrupts
-is not controlled through the HOST_IRQ_STAT register.
+On Sunday 28 September 2014 16:51:31 Suravee Suthikulpanit wrote:
+> >> @@ -87,6 +90,13 @@ static const struct of_device_id ahci_of_match[] = {
+> >>   };
+> >>   MODULE_DEVICE_TABLE(of, ahci_of_match);
+> >>
+> >> +#ifdef CONFIG_ATA_ACPI
+> >> +static const struct acpi_device_id ahci_acpi_match[] = {
+> >> +       { "AMDI0600", 0 }, /* AMD Seattle AHCI */
+> >> +       { },
+> >> +};
+> >> +#endif
+> >> +
 
-Considering MMIO access is expensive remove unnecessary
-reading and writing of HOST_IRQ_STAT register.
+I just noticed this patch and stumbled over this hack. Since SBSA requires
+any SATA support to be compatible with AHCI and not vendor specific, I think
+this needs to be a more generic compatibility string that can be used by
+all vendors, while the current one looks very AMD specific for hardware
+that is not.
 
-Further, serializing access to the host data is no longer
-needed and the interrupt service routine can avoid competing
-on the host lock.
-
-Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
-Suggested-by: "Jiang, Dave" <dave.jiang@intel.com>
-Cc: "Jiang, Dave" <dave.jiang@intel.com>
-Cc: linux-ide@vger.kernel.org
----
- drivers/ata/ahci.h    |  2 +-
- drivers/ata/libahci.c | 67 ++++++---------------------------------------------
- 2 files changed, 9 insertions(+), 60 deletions(-)
-
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 6a22055..40f0e34 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -304,7 +304,7 @@ struct ahci_port_priv {
- 	unsigned int		ncq_saw_d2h:1;
- 	unsigned int		ncq_saw_dmas:1;
- 	unsigned int		ncq_saw_sdb:1;
--	u32			intr_status;	/* interrupts to handle */
-+	atomic_t		intr_status;	/* interrupts to handle */
- 	spinlock_t		lock;		/* protects parent ata_port */
- 	u32 			intr_mask;	/* interrupts to enable */
- 	bool			fbs_supported;	/* set iff FBS is supported */
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 48175e5..97683e4 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -1794,14 +1794,11 @@ static irqreturn_t ahci_port_thread_fn(int irq, void *dev_instance)
- 	struct ata_port *ap = dev_instance;
- 	struct ahci_port_priv *pp = ap->private_data;
- 	void __iomem *port_mmio = ahci_port_base(ap);
--	unsigned long flags;
- 	u32 status;
- 
--	spin_lock_irqsave(&ap->host->lock, flags);
--	status = pp->intr_status;
--	if (status)
--		pp->intr_status = 0;
--	spin_unlock_irqrestore(&ap->host->lock, flags);
-+	status = atomic_xchg(&pp->intr_status, 0);
-+	if (!status)
-+		return IRQ_NONE;
- 
- 	spin_lock_bh(ap->lock);
- 	ahci_handle_port_interrupt(ap, port_mmio, status);
-@@ -1810,67 +1807,19 @@ static irqreturn_t ahci_port_thread_fn(int irq, void *dev_instance)
- 	return IRQ_HANDLED;
- }
- 
--static void ahci_update_intr_status(struct ata_port *ap)
-+static irqreturn_t ahci_multi_irqs_intr(int irq, void *dev_instance)
- {
-+	struct ata_port *ap = dev_instance;
- 	void __iomem *port_mmio = ahci_port_base(ap);
- 	struct ahci_port_priv *pp = ap->private_data;
- 	u32 status;
- 
--	status = readl(port_mmio + PORT_IRQ_STAT);
--	writel(status, port_mmio + PORT_IRQ_STAT);
--
--	pp->intr_status |= status;
--}
--
--static irqreturn_t ahci_multi_irqs_intr(int irq, void *dev_instance)
--{
--	struct ata_port *ap_this = dev_instance;
--	struct ahci_port_priv *pp = ap_this->private_data;
--	struct ata_host *host = ap_this->host;
--	struct ahci_host_priv *hpriv = host->private_data;
--	void __iomem *mmio = hpriv->mmio;
--	unsigned int i;
--	u32 irq_stat, irq_masked;
--
- 	VPRINTK("ENTER\n");
- 
--	spin_lock(&host->lock);
--
--	irq_stat = readl(mmio + HOST_IRQ_STAT);
--
--	if (!irq_stat) {
--		u32 status = pp->intr_status;
--
--		spin_unlock(&host->lock);
--
--		VPRINTK("EXIT\n");
--
--		return status ? IRQ_WAKE_THREAD : IRQ_NONE;
--	}
--
--	irq_masked = irq_stat & hpriv->port_map;
--
--	for (i = 0; i < host->n_ports; i++) {
--		struct ata_port *ap;
--
--		if (!(irq_masked & (1 << i)))
--			continue;
--
--		ap = host->ports[i];
--		if (ap) {
--			ahci_update_intr_status(ap);
--			VPRINTK("port %u\n", i);
--		} else {
--			VPRINTK("port %u (no irq)\n", i);
--			if (ata_ratelimit())
--				dev_warn(host->dev,
--					 "interrupt on disabled port %u\n", i);
--		}
--	}
--
--	writel(irq_stat, mmio + HOST_IRQ_STAT);
-+	status = readl(port_mmio + PORT_IRQ_STAT);
-+	writel(status, port_mmio + PORT_IRQ_STAT);
- 
--	spin_unlock(&host->lock);
-+	atomic_or(status, &pp->intr_status);
- 
- 	VPRINTK("EXIT\n");
- 
--- 
-1.8.3.1
-
+	Arnc
