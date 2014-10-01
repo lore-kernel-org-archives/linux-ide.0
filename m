@@ -1,8 +1,8 @@
 From: Alexander Gordeev <agordeev@redhat.com>
 Subject: Re: [PATCH RESEND v3 5/6] AHCI: Optimize single IRQ interrupt
  processing
-Date: Wed, 1 Oct 2014 16:31:15 +0100
-Message-ID: <20141001153114.GE8971@agordeev.usersys.redhat.com>
+Date: Wed, 1 Oct 2014 16:39:58 +0100
+Message-ID: <20141001153958.GF8971@agordeev.usersys.redhat.com>
 References: <cover.1411297686.git.agordeev@redhat.com>
  <b1a04379e05e40f9774fb4668609fac4255a6514.1411297686.git.agordeev@redhat.com>
  <20140923205710.GB17332@mtj.dyndns.org>
@@ -10,54 +10,81 @@ References: <cover.1411297686.git.agordeev@redhat.com>
  <20140924130444.GA16555@htj.dyndns.org>
  <20140924140844.GB2695@agordeev.usersys.redhat.com>
  <20140924143913.GH16555@htj.dyndns.org>
+ <20141001153114.GE8971@agordeev.usersys.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed; boundary="C7zPtVaVf+AK4Oqc"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56781 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:54436 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751822AbaJAPWb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 1 Oct 2014 11:22:31 -0400
+	id S1751283AbaJAPbO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 1 Oct 2014 11:31:14 -0400
 Content-Disposition: inline
-In-Reply-To: <20140924143913.GH16555@htj.dyndns.org>
+In-Reply-To: <20141001153114.GE8971@agordeev.usersys.redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Wed, Sep 24, 2014 at 10:39:13AM -0400, Tejun Heo wrote:
-> Hello, Alexander.
-> 
-> On Wed, Sep 24, 2014 at 03:08:44PM +0100, Alexander Gordeev wrote:
-> > > Hmmm, how would the whole system benefit from it if there's only
-> > > single device?  Each individual servicing of the interrupt does more
-> > > now which includes scheduling which may end up adding to completion
-> > > latency.
-> > 
-> > As Chuck noticed, non-AHCI hardware context handlers will benefit.
-> 
-> Maybe I'm off but I'm kinda skeptical that we'd be gaining back the
-> overhead we pay by punting to a thread.
 
-Hi Tejun,
+--C7zPtVaVf+AK4Oqc
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-As odd as it sounds, I did not mention there is *no* change in IO
-performance at all (in my system): neither with one drive nor two.
-The change is only about how the interrupt handlers co-exist with
-other devices.
+On Wed, Oct 01, 2014 at 04:31:14PM +0100, Alexander Gordeev wrote:
+> I am attaching excerpts from some new perf tests I have done (this
 
-I am attaching excerpts from some new perf tests I have done (this
-time in legacy interrupt mode). As you can notice, ahci_interrupt()
-CPU time drops from 4% to none.
-
-As of your concern wrt threaded handler invocation overhead - I am
-not quite sure here, but if SCHED_FIFO policy (the handler runs with)
-makes the difference? Anyway, as said above the overall IO does not
-suffer.
-
-> -- 
-> tejun
+Attaching :)
 
 -- 
 Regards,
 Alexander Gordeev
 agordeev@redhat.com
+
+--C7zPtVaVf+AK4Oqc
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="perf.hist.0-3.16.0.txt"
+
+  0.04%     dd  [kernel.kallsyms]  [k] ata_std_qc_defer
+  0.04%     dd  [kernel.kallsyms]  [k] ata_scsi_rw_xlat
+  0.03%     dd  [kernel.kallsyms]  [k] ata_scsi_queuecmd
+  0.03%     dd  [kernel.kallsyms]  [k] __ata_scsi_find_dev
+  0.02%     dd  [kernel.kallsyms]  [k] ata_scsi_translate
+  0.02%     dd  [kernel.kallsyms]  [k] ata_qc_new_init
+  0.02%     dd  [kernel.kallsyms]  [k] ata_scsi_qc_complete
+  0.02%     dd  [kernel.kallsyms]  [k] ata_build_rw_tf
+  0.01%     dd  [kernel.kallsyms]  [k] ata_qc_issue
+  0.01%     dd  [kernel.kallsyms]  [k] ata_sg_init
+  0.00%     dd  [kernel.kallsyms]  [k] ata_tf_to_fis
+  0.00%     dd  [kernel.kallsyms]  [k] ata_qc_complete_multiple
+  0.00%     dd  [kernel.kallsyms]  [k] __ata_qc_complete
+  0.00%     dd  [kernel.kallsyms]  [k] ata_qc_complete
+  0.00%     dd  [kernel.kallsyms]  [k] ata_scsi_find_dev
+  0.00%     dd  [kernel.kallsyms]  [k] ata_qc_free
+  0.04%     dd  [kernel.kallsyms]  [k] ahci_interrupt
+  0.02%     dd  [kernel.kallsyms]  [k] ahci_qc_issue
+  0.02%     dd  [kernel.kallsyms]  [k] ahci_qc_prep
+  0.02%     dd  [kernel.kallsyms]  [k] ahci_scr_read
+  0.01%     dd  [kernel.kallsyms]  [k] ahci_handle_port_interrupt
+  0.01%     dd  [kernel.kallsyms]  [k] ahci_pmp_qc_defer
+  0.00%     dd  [kernel.kallsyms]  [k] ahci_scr_write
+
+--C7zPtVaVf+AK4Oqc
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="perf.hist.0-3.16.0.opt-intr.txt"
+
+  0.04%     dd  [kernel.kallsyms]  [k] ata_scsi_queuecmd
+  0.03%     dd  [kernel.kallsyms]  [k] ata_scsi_rw_xlat
+  0.03%     dd  [kernel.kallsyms]  [k] ata_scsi_translate
+  0.03%     dd  [kernel.kallsyms]  [k] ata_qc_new_init
+  0.02%     dd  [kernel.kallsyms]  [k] ata_build_rw_tf
+  0.02%     dd  [kernel.kallsyms]  [k] ata_qc_issue
+  0.01%     dd  [kernel.kallsyms]  [k] ata_sg_init
+  0.01%     dd  [kernel.kallsyms]  [k] ata_std_qc_defer
+  0.01%     dd  [kernel.kallsyms]  [k] ata_tf_to_fis
+  0.00%     dd  [kernel.kallsyms]  [k] ata_scsi_find_dev
+  0.00%     dd  [kernel.kallsyms]  [k] __ata_scsi_find_dev
+  0.02%     dd  [kernel.kallsyms]  [k] ahci_qc_prep
+  0.02%     dd  [kernel.kallsyms]  [k] ahci_qc_issue
+  0.01%     dd  [kernel.kallsyms]  [k] ahci_pmp_qc_defer
+
+--C7zPtVaVf+AK4Oqc--
