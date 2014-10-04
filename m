@@ -1,90 +1,58 @@
-From: Alexander Gordeev <agordeev@redhat.com>
-Subject: Re: [PATCH RESEND v3 5/6] AHCI: Optimize single IRQ interrupt
- processing
-Date: Wed, 1 Oct 2014 16:39:58 +0100
-Message-ID: <20141001153958.GF8971@agordeev.usersys.redhat.com>
-References: <cover.1411297686.git.agordeev@redhat.com>
- <b1a04379e05e40f9774fb4668609fac4255a6514.1411297686.git.agordeev@redhat.com>
- <20140923205710.GB17332@mtj.dyndns.org>
- <20140924104213.GA2695@agordeev.usersys.redhat.com>
- <20140924130444.GA16555@htj.dyndns.org>
- <20140924140844.GB2695@agordeev.usersys.redhat.com>
- <20140924143913.GH16555@htj.dyndns.org>
- <20141001153114.GE8971@agordeev.usersys.redhat.com>
-Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="C7zPtVaVf+AK4Oqc"
+From: Fabio Estevam <festevam@gmail.com>
+Subject: [PATCH] ata: pata_imx: Use the SIMPLE_DEV_PM_OPS() macro
+Date: Sat,  4 Oct 2014 09:03:06 -0300
+Message-ID: <1412424186-4296-1-git-send-email-festevam@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54436 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751283AbaJAPbO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 1 Oct 2014 11:31:14 -0400
-Content-Disposition: inline
-In-Reply-To: <20141001153114.GE8971@agordeev.usersys.redhat.com>
+Received: from mail-qc0-f175.google.com ([209.85.216.175]:38199 "EHLO
+	mail-qc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750850AbaJDMDf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Oct 2014 08:03:35 -0400
+Received: by mail-qc0-f175.google.com with SMTP id w7so2183526qcr.34
+        for <linux-ide@vger.kernel.org>; Sat, 04 Oct 2014 05:03:34 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, Fabio Estevam <fabio.estevam@freescale.com>
 
+From: Fabio Estevam <fabio.estevam@freescale.com>
 
---C7zPtVaVf+AK4Oqc
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Using the SIMPLE_DEV_PM_OPS() macro can make the code shorter and cleaner.
 
-On Wed, Oct 01, 2014 at 04:31:14PM +0100, Alexander Gordeev wrote:
-> I am attaching excerpts from some new perf tests I have done (this
+Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+---
+ drivers/ata/pata_imx.c | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
 
-Attaching :)
-
+diff --git a/drivers/ata/pata_imx.c b/drivers/ata/pata_imx.c
+index af42457..989ff5a 100644
+--- a/drivers/ata/pata_imx.c
++++ b/drivers/ata/pata_imx.c
+@@ -221,13 +221,10 @@ static int pata_imx_resume(struct device *dev)
+ 
+ 	return 0;
+ }
+-
+-static const struct dev_pm_ops pata_imx_pm_ops = {
+-	.suspend	= pata_imx_suspend,
+-	.resume		= pata_imx_resume,
+-};
+ #endif
+ 
++static SIMPLE_DEV_PM_OPS(pata_imx_pm_ops, pata_imx_suspend, pata_imx_resume);
++
+ static const struct of_device_id imx_pata_dt_ids[] = {
+ 	{
+ 		.compatible = "fsl,imx27-pata",
+@@ -244,9 +241,7 @@ static struct platform_driver pata_imx_driver = {
+ 		.name		= DRV_NAME,
+ 		.of_match_table	= imx_pata_dt_ids,
+ 		.owner		= THIS_MODULE,
+-#ifdef CONFIG_PM_SLEEP
+ 		.pm		= &pata_imx_pm_ops,
+-#endif
+ 	},
+ };
+ 
 -- 
-Regards,
-Alexander Gordeev
-agordeev@redhat.com
+1.9.1
 
---C7zPtVaVf+AK4Oqc
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="perf.hist.0-3.16.0.txt"
-
-  0.04%     dd  [kernel.kallsyms]  [k] ata_std_qc_defer
-  0.04%     dd  [kernel.kallsyms]  [k] ata_scsi_rw_xlat
-  0.03%     dd  [kernel.kallsyms]  [k] ata_scsi_queuecmd
-  0.03%     dd  [kernel.kallsyms]  [k] __ata_scsi_find_dev
-  0.02%     dd  [kernel.kallsyms]  [k] ata_scsi_translate
-  0.02%     dd  [kernel.kallsyms]  [k] ata_qc_new_init
-  0.02%     dd  [kernel.kallsyms]  [k] ata_scsi_qc_complete
-  0.02%     dd  [kernel.kallsyms]  [k] ata_build_rw_tf
-  0.01%     dd  [kernel.kallsyms]  [k] ata_qc_issue
-  0.01%     dd  [kernel.kallsyms]  [k] ata_sg_init
-  0.00%     dd  [kernel.kallsyms]  [k] ata_tf_to_fis
-  0.00%     dd  [kernel.kallsyms]  [k] ata_qc_complete_multiple
-  0.00%     dd  [kernel.kallsyms]  [k] __ata_qc_complete
-  0.00%     dd  [kernel.kallsyms]  [k] ata_qc_complete
-  0.00%     dd  [kernel.kallsyms]  [k] ata_scsi_find_dev
-  0.00%     dd  [kernel.kallsyms]  [k] ata_qc_free
-  0.04%     dd  [kernel.kallsyms]  [k] ahci_interrupt
-  0.02%     dd  [kernel.kallsyms]  [k] ahci_qc_issue
-  0.02%     dd  [kernel.kallsyms]  [k] ahci_qc_prep
-  0.02%     dd  [kernel.kallsyms]  [k] ahci_scr_read
-  0.01%     dd  [kernel.kallsyms]  [k] ahci_handle_port_interrupt
-  0.01%     dd  [kernel.kallsyms]  [k] ahci_pmp_qc_defer
-  0.00%     dd  [kernel.kallsyms]  [k] ahci_scr_write
-
---C7zPtVaVf+AK4Oqc
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: attachment; filename="perf.hist.0-3.16.0.opt-intr.txt"
-
-  0.04%     dd  [kernel.kallsyms]  [k] ata_scsi_queuecmd
-  0.03%     dd  [kernel.kallsyms]  [k] ata_scsi_rw_xlat
-  0.03%     dd  [kernel.kallsyms]  [k] ata_scsi_translate
-  0.03%     dd  [kernel.kallsyms]  [k] ata_qc_new_init
-  0.02%     dd  [kernel.kallsyms]  [k] ata_build_rw_tf
-  0.02%     dd  [kernel.kallsyms]  [k] ata_qc_issue
-  0.01%     dd  [kernel.kallsyms]  [k] ata_sg_init
-  0.01%     dd  [kernel.kallsyms]  [k] ata_std_qc_defer
-  0.01%     dd  [kernel.kallsyms]  [k] ata_tf_to_fis
-  0.00%     dd  [kernel.kallsyms]  [k] ata_scsi_find_dev
-  0.00%     dd  [kernel.kallsyms]  [k] __ata_scsi_find_dev
-  0.02%     dd  [kernel.kallsyms]  [k] ahci_qc_prep
-  0.02%     dd  [kernel.kallsyms]  [k] ahci_qc_issue
-  0.01%     dd  [kernel.kallsyms]  [k] ahci_pmp_qc_defer
-
---C7zPtVaVf+AK4Oqc--
