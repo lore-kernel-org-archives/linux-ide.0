@@ -1,47 +1,32 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH RESEND v3 5/6] AHCI: Optimize single IRQ interrupt
- processing
-Date: Sat, 4 Oct 2014 22:23:11 -0400
-Message-ID: <20141005022311.GD8549@htj.dyndns.org>
-References: <cover.1411297686.git.agordeev@redhat.com>
- <b1a04379e05e40f9774fb4668609fac4255a6514.1411297686.git.agordeev@redhat.com>
- <20140923205710.GB17332@mtj.dyndns.org>
- <20140924104213.GA2695@agordeev.usersys.redhat.com>
- <20140924130444.GA16555@htj.dyndns.org>
- <20140924140844.GB2695@agordeev.usersys.redhat.com>
- <20140924143913.GH16555@htj.dyndns.org>
- <20141001153114.GE8971@agordeev.usersys.redhat.com>
+From: Fabio Estevam <festevam@gmail.com>
+Subject: Re: [PATCH] ata: pata_imx: Use the SIMPLE_DEV_PM_OPS() macro
+Date: Sun, 5 Oct 2014 08:32:09 -0300
+Message-ID: <CAOMZO5Dw17pE_YTm2hXHXrPtwe_LQWWak=Vbs6OZA6sRoj5tWw@mail.gmail.com>
+References: <1412424186-4296-1-git-send-email-festevam@gmail.com>
+	<20141005021111.GA8549@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f172.google.com ([209.85.216.172]:63181 "EHLO
-	mail-qc0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751448AbaJECXO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 4 Oct 2014 22:23:14 -0400
-Content-Disposition: inline
-In-Reply-To: <20141001153114.GE8971@agordeev.usersys.redhat.com>
+Received: from mail-la0-f49.google.com ([209.85.215.49]:47185 "EHLO
+	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751205AbaJELcL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 5 Oct 2014 07:32:11 -0400
+Received: by mail-la0-f49.google.com with SMTP id q1so3070639lam.36
+        for <linux-ide@vger.kernel.org>; Sun, 05 Oct 2014 04:32:09 -0700 (PDT)
+In-Reply-To: <20141005021111.GA8549@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, Fabio Estevam <fabio.estevam@freescale.com>
 
-Hey, Alexander.
+On Sat, Oct 4, 2014 at 11:11 PM, Tejun Heo <tj@kernel.org> wrote:
+> On Sat, Oct 04, 2014 at 09:03:06AM -0300, Fabio Estevam wrote:
+>> From: Fabio Estevam <fabio.estevam@freescale.com>
+>>
+>> Using the SIMPLE_DEV_PM_OPS() macro can make the code shorter and cleaner.
+>>
+>> Signed-off-by: Fabio Estevam <fabio.estevam@freescale.com>
+>
+> Applied to libata/for-3.18.  Care to convert other drivers too?
 
-On Wed, Oct 01, 2014 at 04:31:15PM +0100, Alexander Gordeev wrote:
-> As of your concern wrt threaded handler invocation overhead - I am
-> not quite sure here, but if SCHED_FIFO policy (the handler runs with)
-> makes the difference? Anyway, as said above the overall IO does not
-> suffer.
-
-Hmmm.... so, AFAICS, there's no real pros or cons of going either way,
-right?  The only thing which could be different is possibly slightly
-lower latency in servicing other IRQs or RT tasks on the same CPU but
-given that the ahci IRQ handler already doesn't do anything which
-takes time, I'm doubtful whether that'd be anything measureable.
-
-I just don't get why ahci bothers with threaded irq, MMSI or not.
-
-Thanks.
-
--- 
-tejun
+Yes, I can submit patches for other drivers too. Thanks
