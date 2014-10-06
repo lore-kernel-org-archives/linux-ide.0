@@ -1,51 +1,53 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH RESEND v3 5/6] AHCI: Optimize single IRQ interrupt
- processing
-Date: Sun, 5 Oct 2014 12:16:46 -0400
-Message-ID: <20141005161646.GB22223@mtj.dyndns.org>
-References: <cover.1411297686.git.agordeev@redhat.com>
- <b1a04379e05e40f9774fb4668609fac4255a6514.1411297686.git.agordeev@redhat.com>
- <20140923205710.GB17332@mtj.dyndns.org>
- <20140924104213.GA2695@agordeev.usersys.redhat.com>
- <20140924130444.GA16555@htj.dyndns.org>
- <20140924140844.GB2695@agordeev.usersys.redhat.com>
- <20140924143913.GH16555@htj.dyndns.org>
- <20141001153114.GE8971@agordeev.usersys.redhat.com>
- <20141005022311.GD8549@htj.dyndns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Suman Tripathi <stripathi@apm.com>
+Subject: (unknown)
+Date: Mon,  6 Oct 2014 12:26:02 +0530
+Message-ID: <1412578562-11749-1-git-send-email-stripathi@apm.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f181.google.com ([209.85.216.181]:42930 "EHLO
-	mail-qc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751610AbaJEQQu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 5 Oct 2014 12:16:50 -0400
-Content-Disposition: inline
-In-Reply-To: <20141005022311.GD8549@htj.dyndns.org>
+Received: from denmail01-v4020.amcc.com ([192.195.68.30]:55667 "EHLO
+	denmail01.apm.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750888AbaJFG53 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Oct 2014 02:57:29 -0400
+Subject: 
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, ddutile@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>, Loc Ho <lho@apm.com>, Ben Hutchings <ben@decadent.org.uk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-A bit of addition.
+commit 72f79f9e35bd3f78ee8853f2fcacaa197d23ebac upstream.
+Subject: [PATCH 3.16 350/357] ahci_xgene: Removing NCQ support from the APM X-Gene SoC AHCI SATA Host Controller driver.
 
-On Sat, Oct 04, 2014 at 10:23:11PM -0400, Tejun Heo wrote:
-> Hmmm.... so, AFAICS, there's no real pros or cons of going either way,
-> right?  The only thing which could be different is possibly slightly
-> lower latency in servicing other IRQs or RT tasks on the same CPU but
-> given that the ahci IRQ handler already doesn't do anything which
-> takes time, I'm doubtful whether that'd be anything measureable.
-> 
-> I just don't get why ahci bothers with threaded irq, MMSI or not.
+This patch removes the NCQ support from the APM X-Gene SoC AHCI
+Host Controller driver as it doesn't support it.
 
-I think the thing which bothers me is that due to softirq we end up
-bouncing the context twice.  IRQ schedules threaded IRQ handler after
-doing minimal amount of work.  The threaded IRQ handler gets scheduled
-and again it doesn't do much but basically just schedules block
-softirq to actually run completions which is the heavier part.
-Apparently this doesn't seem to hurt measureably but it's just weird.
-Why are we bouncing the context twice?
+Signed-off-by: Loc Ho <lho@apm.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+[bwh: Backported to 3.16: host flags are passed to ahci_platform_init_host()]
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Acked-by: Suman Tripathi <stripathi@apm.com>
 
-Thanks.
+---
+ drivers/ata/ahci_xgene.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
--- 
-tejun
+--- a/drivers/ata/ahci_xgene.c
++++ b/drivers/ata/ahci_xgene.c
+@@ -337,7 +337,7 @@ static struct ata_port_operations xgene_
+ };
+ 
+ static const struct ata_port_info xgene_ahci_port_info = {
+-	.flags = AHCI_FLAG_COMMON | ATA_FLAG_NCQ,
++	.flags = AHCI_FLAG_COMMON,
+ 	.pio_mask = ATA_PIO4,
+ 	.udma_mask = ATA_UDMA6,
+ 	.port_ops = &xgene_ahci_ops,
+@@ -484,7 +484,7 @@ static int xgene_ahci_probe(struct platf
+ 		goto disable_resources;
+ 	}
+ 
+-	hflags = AHCI_HFLAG_NO_PMP | AHCI_HFLAG_YES_NCQ;
++	hflags = AHCI_HFLAG_NO_PMP | AHCI_HFLAG_NO_NCQ;
+ 
+ 	rc = ahci_platform_init_host(pdev, hpriv, &xgene_ahci_port_info,
+ 				     hflags, 0, 0);
