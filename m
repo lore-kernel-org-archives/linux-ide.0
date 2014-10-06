@@ -1,46 +1,184 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH RESEND v3 5/6] AHCI: Optimize single IRQ interrupt
- processing
-Date: Mon, 6 Oct 2014 10:54:03 -0400
-Message-ID: <20141006145403.GB18303@htj.dyndns.org>
-References: <20140924104213.GA2695@agordeev.usersys.redhat.com>
- <20140924130444.GA16555@htj.dyndns.org>
- <20140924140844.GB2695@agordeev.usersys.redhat.com>
- <20140924143913.GH16555@htj.dyndns.org>
- <20141001153114.GE8971@agordeev.usersys.redhat.com>
- <20141005022311.GD8549@htj.dyndns.org>
- <20141005161646.GB22223@mtj.dyndns.org>
- <20141006072710.GH8971@agordeev.usersys.redhat.com>
- <20141006125817.GA18303@htj.dyndns.org>
- <20141006132445.GA18339@agordeev.usersys.redhat.com>
+From: Alexander Gordeev <agordeev@redhat.com>
+Subject: [PATCH 6/5] AHCI: Optimize single IRQ interrupt processing
+Date: Mon, 6 Oct 2014 16:24:45 +0100
+Message-ID: <20141006152443.GA18209@agordeev.usersys.redhat.com>
+References: <cover.1412007152.git.agordeev@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f47.google.com ([209.85.216.47]:46105 "EHLO
-	mail-qa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752687AbaJFOyH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Oct 2014 10:54:07 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:65379 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752723AbaJFPQF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 6 Oct 2014 11:16:05 -0400
 Content-Disposition: inline
-In-Reply-To: <20141006132445.GA18339@agordeev.usersys.redhat.com>
+In-Reply-To: <cover.1412007152.git.agordeev@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexander Gordeev <agordeev@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
-On Mon, Oct 06, 2014 at 02:24:46PM +0100, Alexander Gordeev wrote:
-> On Mon, Oct 06, 2014 at 08:58:17AM -0400, Tejun Heo wrote:
-> > I don't think we'd be able to move libata handling to block softirq
-> > and probably end up just doing it from the irq context.  Anyways, as
-> > long as you're gonna keep working on it, I have no objection to the
-> > proposed changes.  Do you have a refreshed version or is the current
-> > version good for inclusion?
-> 
-> No, this one would not apply. I can send updated version on top of
-> v5 I posted earlier. Should I?
+Split interrupt service routine into hardware context handler
+and threaded context handler. That allows to protect ports with
+individual locks rather than with a single host-wide lock and
+move port interrupts handling out of the hardware interrupt
+context.
 
-Yeap, please do so.
+Testing was done by transferring 8GB on two hard drives in
+parallel using command 'dd if=/dev/sd{a,b} of=/dev/null'. With
+lock_stat statistics I measured access times to ata_host::lock
+spinlock (since interrupt handler code is fully embraced with
+this lock). The average lock's holdtime decreased eight times
+while average waittime decreased two times.
 
-Thanks a lot for your patience!  :)
+Both before and after the change the transfer time is the same,
+while 'perf record -e cycles:k ...' shows 1%-4% CPU time spent
+in ahci_single_irq_intr() routine before the update and not even
+sampled/shown ahci_single_irq_intr() after the update.
+
+Signed-off-by: Alexander Gordeev <agordeev@redhat.com>
+Cc: linux-ide@vger.kernel.org
+---
+ drivers/ata/libahci.c | 74 ++++++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 61 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 97683e4..3ce3d23 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -1778,15 +1778,16 @@ static void ahci_handle_port_interrupt(struct ata_port *ap,
+ 	}
+ }
+ 
+-static void ahci_port_intr(struct ata_port *ap)
++static void ahci_update_intr_status(struct ata_port *ap)
+ {
+ 	void __iomem *port_mmio = ahci_port_base(ap);
++	struct ahci_port_priv *pp = ap->private_data;
+ 	u32 status;
+ 
+ 	status = readl(port_mmio + PORT_IRQ_STAT);
+ 	writel(status, port_mmio + PORT_IRQ_STAT);
+ 
+-	ahci_handle_port_interrupt(ap, port_mmio, status);
++	atomic_or(status, &pp->intr_status);
+ }
+ 
+ static irqreturn_t ahci_port_thread_fn(int irq, void *dev_instance)
+@@ -1807,6 +1808,34 @@ static irqreturn_t ahci_port_thread_fn(int irq, void *dev_instance)
+ 	return IRQ_HANDLED;
+ }
+ 
++irqreturn_t ahci_thread_fn(int irq, void *dev_instance)
++{
++	struct ata_host *host = dev_instance;
++	struct ahci_host_priv *hpriv = host->private_data;
++	u32 irq_masked = hpriv->port_map;
++	unsigned int i;
++
++	for (i = 0; i < host->n_ports; i++) {
++		struct ata_port *ap;
++
++		if (!(irq_masked & (1 << i)))
++			continue;
++
++		ap = host->ports[i];
++		if (ap) {
++			ahci_port_thread_fn(irq, ap);
++			VPRINTK("port %u\n", i);
++		} else {
++			VPRINTK("port %u (no irq)\n", i);
++			if (ata_ratelimit())
++				dev_warn(host->dev,
++					 "interrupt on disabled port %u\n", i);
++		}
++	}
++
++	return IRQ_HANDLED;
++}
++
+ static irqreturn_t ahci_multi_irqs_intr(int irq, void *dev_instance)
+ {
+ 	struct ata_port *ap = dev_instance;
+@@ -1856,7 +1885,7 @@ static irqreturn_t ahci_single_irq_intr(int irq, void *dev_instance)
+ 
+ 		ap = host->ports[i];
+ 		if (ap) {
+-			ahci_port_intr(ap);
++			ahci_update_intr_status(ap);
+ 			VPRINTK("port %u\n", i);
+ 		} else {
+ 			VPRINTK("port %u (no irq)\n", i);
+@@ -1883,7 +1912,7 @@ static irqreturn_t ahci_single_irq_intr(int irq, void *dev_instance)
+ 
+ 	VPRINTK("EXIT\n");
+ 
+-	return IRQ_RETVAL(handled);
++	return handled ? IRQ_WAKE_THREAD : IRQ_NONE;
+ }
+ 
+ unsigned int ahci_qc_issue(struct ata_queued_cmd *qc)
+@@ -2295,13 +2324,8 @@ static int ahci_port_start(struct ata_port *ap)
+ 	 */
+ 	pp->intr_mask = DEF_PORT_IRQ;
+ 
+-	/*
+-	 * Switch to per-port locking in case each port has its own MSI vector.
+-	 */
+-	if ((hpriv->flags & AHCI_HFLAG_MULTI_MSI)) {
+-		spin_lock_init(&pp->lock);
+-		ap->lock = &pp->lock;
+-	}
++	spin_lock_init(&pp->lock);
++	ap->lock = &pp->lock;
+ 
+ 	ap->private_data = pp;
+ 
+@@ -2462,6 +2486,31 @@ out_free_irqs:
+ 	return rc;
+ }
+ 
++static int ahci_host_activate_single_irq(struct ata_host *host, int irq,
++					 struct scsi_host_template *sht)
++{
++	int i, rc;
++
++	rc = ata_host_start(host);
++	if (rc)
++		return rc;
++
++	rc = devm_request_threaded_irq(host->dev, irq, ahci_single_irq_intr,
++				       ahci_thread_fn, IRQF_SHARED,
++				       dev_driver_string(host->dev), host);
++	if (rc)
++		return rc;
++
++	for (i = 0; i < host->n_ports; i++)
++		ata_port_desc(host->ports[i], "irq %d", irq);
++
++	rc = ata_host_register(host, sht);
++	if (rc)
++		devm_free_irq(host->dev, irq, host);
++
++	return rc;
++}
++
+ /**
+  *	ahci_host_activate - start AHCI host, request IRQs and register it
+  *	@host: target ATA host
+@@ -2487,8 +2536,7 @@ int ahci_host_activate(struct ata_host *host, int irq,
+ 	if (hpriv->flags & AHCI_HFLAG_MULTI_MSI)
+ 		rc = ahci_host_activate_multi_irqs(host, irq, sht);
+ 	else
+-		rc = ata_host_activate(host, irq, ahci_single_irq_intr,
+-				       IRQF_SHARED, sht);
++		rc = ahci_host_activate_single_irq(host, irq, sht);
+ 	return rc;
+ }
+ EXPORT_SYMBOL_GPL(ahci_host_activate);
+-- 
+1.8.3.1
 
 -- 
-tejun
+Regards,
+Alexander Gordeev
+agordeev@redhat.com
