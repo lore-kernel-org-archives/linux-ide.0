@@ -1,85 +1,57 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH] ata: sata_rcar: Add DIPM mode disabling workaround
-Date: Fri, 10 Oct 2014 14:04:34 +0400
-Message-ID: <5437AF32.1080606@cogentembedded.com>
-References: <1412930703-24976-1-git-send-email-ykaneko0929@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-sh-owner@vger.kernel.org>
-In-Reply-To: <1412930703-24976-1-git-send-email-ykaneko0929@gmail.com>
-Sender: linux-sh-owner@vger.kernel.org
-To: Yoshihiro Kaneko <ykaneko0929@gmail.com>, linux-ide@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, Simon Horman <horms@verge.net.au>, Magnus Damm <magnus.damm@gmail.com>, linux-sh@vger.kernel.org
+From: Vinod Koul <vinod.koul@intel.com>
+Subject: [PATCH 00/12] dmaengine: remove users of device_control
+Date: Sat, 11 Oct 2014 21:09:33 +0530
+Message-ID: <1413041973-28146-1-git-send-email-vinod.koul@intel.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:8978 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750918AbaJKQOL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 11 Oct 2014 12:14:11 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: dmaengine@vger.kernel.org
+Cc: Vinod Koul <vinod.koul@intel.com>, Viresh Kumar <viresh.linux@gmail.com>, Tejun Heo <tj@kernel.org>, Linus Walleij <linus.walleij@linaro.org>, Dan Williams <dan.j.williams@intel.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, Mauro Carvalho Chehab <m.chehab@samsung.com>, David Woodhouse <dwmw2@infradead.org>, Brian Norris <computersforpeace@gmail.com>, Nicolas Ferre <nicolas.ferre@atmel.com>, Mark Brown <broonie@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.cz>, Felipe Balbi <balbi@ti.com>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, Tomi Valkeinen <tomi.valkeinen@ti.com>, Liam Girdwood <lgirdwood@gmail.com>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.de>, Jingoo Han <jg1.han@samsung.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Laurent Pinchart <laurent.pinchart+renesas@ideaso>
 
-Hello.
+The recent discussion [1] on the API have resulted in moving away from
+device_control ioctl method to proper channel APIs.
+There are still few users on the device_control which should use the wrappers
+existing rather than access device_control.
+This will aid us in deprecating and removing device_control, possibly after
+the merge window.
 
-On 10/10/2014 12:45 PM, Yoshihiro Kaneko wrote:
+These can be merged thru respective subsystem tree or dmaengine tree. Either
+way please just let me know.
 
-> From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Feng's kbuild has tested these as well [2]
 
-> This workaround must be applied to R8A7790(H2) ES1
+[1]: http://www.spinics.net/lists/dmaengine/msg02212.html
+[2]: http://git.infradead.org/users/vkoul/slave-dma.git/shortlog/refs/heads/topic/dma_control_cleanup
 
-> Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
-> Signed-off-by: Yoshihiro Kaneko <ykaneko0929@gmail.com>
-> ---
+Vinod Koul (12):
+  pata_arasan_cf: use dmaengine_terminate_all() API
+  dmaengine: coh901318: use dmaengine_terminate_all() API
+  [media] V4L2: mx3_camer: use dmaengine_pause() API
+  mtd: fsmc_nand: use dmaengine_terminate_all() API
+  mtd: sh_flctl: use dmaengine_terminate_all() API
+  net: ks8842: use dmaengine_terminate_all() API
+  spi/atmel: use dmaengine_terminate_all() API
+  spi/spi-dw-mid.c: use dmaengine_slave_config() API
+  serial: sh-sci: use dmaengine_terminate_all() API
+  usb: musb: ux500_dma: use dmaengine_xxx() APIs
+  ASoC: txx9: use dmaengine_terminate_all() API
+  video: mx3fb: use dmaengine_terminate_all() API
 
-> This patch is against for-next branch of Tejun's libata repo.
-
->   drivers/ata/sata_rcar.c | 25 +++++++++++++++++++++++--
->   1 file changed, 23 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
-> index 61eb6d7..0ba5974 100644
-> --- a/drivers/ata/sata_rcar.c
-> +++ b/drivers/ata/sata_rcar.c
-> @@ -143,6 +143,11 @@
->   #define RCAR_GEN2_PHY_CTL5_DC		BIT(1)	/* DC connection */
->   #define RCAR_GEN2_PHY_CTL5_TR		BIT(2)	/* Termination Resistor */
->
-> +/* Product Register */
-> +#define PRODUCT_REGISTER		0xFF000044
-> +#define PRODUCT_CUT_MASK		0x00007FF0
-> +#define PRODUCT_H2_BIT			(0x45 << 8)
-
-    Why _BIT? And why not 0x00004500?
-
-> @@ -751,18 +756,30 @@ done:
->   	return IRQ_RETVAL(handled);
->   }
->
-> -static void sata_rcar_setup_port(struct ata_host *host)
-> +static int sata_rcar_setup_port(struct ata_host *host)
->   {
->   	struct ata_port *ap = host->ports[0];
->   	struct ata_ioports *ioaddr = &ap->ioaddr;
->   	struct sata_rcar_priv *priv = host->private_data;
->   	void __iomem *base = priv->base;
-> +	void __iomem *product_reg;
->
->   	ap->ops		= &sata_rcar_port_ops;
->   	ap->pio_mask	= ATA_PIO4;
->   	ap->udma_mask	= ATA_UDMA6;
->   	ap->flags	|= ATA_FLAG_SATA;
->
-> +	product_reg = ioremap_nocache(PRODUCT_REGISTER, 0x04);
-
-    Don't we need some platform function to read that register instead? It's 
-not specific to SATA, AFAICT.
-
-> +	if (!product_reg) {
-> +		dev_warn(host->dev, "ioremap fail\n");
-
-    s/fail/failed/.
-
-> +		return -ENOMEM;
-> +	}
-> +	/* Add the workaround of DIPM mode disabling in R-Car H2 ES1.x.*/
-
-    Please add space before */
-
-[...]
-
-WBR, Sergei
+ drivers/ata/pata_arasan_cf.c                   |    5 ++---
+ drivers/dma/coh901318.c                        |    2 +-
+ drivers/media/platform/soc_camera/mx3_camera.c |    6 ++----
+ drivers/mtd/nand/fsmc_nand.c                   |    2 +-
+ drivers/mtd/nand/sh_flctl.c                    |    2 +-
+ drivers/net/ethernet/micrel/ks8842.c           |    6 ++----
+ drivers/spi/spi-atmel.c                        |    6 ++----
+ drivers/spi/spi-dw-mid.c                       |    6 ++----
+ drivers/tty/serial/sh-sci.c                    |    2 +-
+ drivers/usb/musb/ux500_dma.c                   |    7 ++-----
+ drivers/video/fbdev/mx3fb.c                    |    3 +--
+ sound/soc/txx9/txx9aclc.c                      |    7 +++----
+ 12 files changed, 20 insertions(+), 34 deletions(-)
 
