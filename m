@@ -1,40 +1,51 @@
-From: James Ralston <james.d.ralston@intel.com>
-Subject: [PATCH 1/4] ahci: Add Device IDs for Intel Sunrise Point PCH
-Date: Mon, 13 Oct 2014 15:16:38 -0700
-Message-ID: <1413238598-5425-1-git-send-email-james.d.ralston@intel.com>
+From: Yoshihiro Kaneko <ykaneko0929@gmail.com>
+Subject: [PATCH] ata: sata_rcar: Add r8a7793 device support
+Date: Tue, 14 Oct 2014 16:31:34 +0900
+Message-ID: <1413271894-10056-1-git-send-email-ykaneko0929@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:18167 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750877AbaJMWQ7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 13 Oct 2014 18:16:59 -0400
+Received: from mail-pd0-f181.google.com ([209.85.192.181]:33814 "EHLO
+	mail-pd0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752941AbaJNHbu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Oct 2014 03:31:50 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: James Ralston <james.d.ralston@intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Simon Horman <horms@verge.net.au>, Magnus Damm <magnus.damm@gmail.com>, linux-sh@vger.kernel.org
 
-This patch adds the AHCI-mode SATA Device IDs for the Intel Sunrise Point PCH.
+From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
 
-Signed-off-by: James Ralston <james.d.ralston@intel.com>
+Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Signed-off-by: Yoshihiro Kaneko <ykaneko0929@gmail.com>
 ---
- drivers/ata/ahci.c | 5 +++++
+
+This patch is against for-next branch of Tejun's libata repo.
+
+ drivers/ata/sata_rcar.c | 5 +++++
  1 file changed, 5 insertions(+)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index a0cc0ed..efa08f4 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -313,6 +313,11 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_VDEVICE(INTEL, 0x8c87), board_ahci }, /* 9 Series RAID */
- 	{ PCI_VDEVICE(INTEL, 0x8c8e), board_ahci }, /* 9 Series RAID */
- 	{ PCI_VDEVICE(INTEL, 0x8c8f), board_ahci }, /* 9 Series RAID */
-+	{ PCI_VDEVICE(INTEL, 0xa103), board_ahci }, /* Sunrise Point-H AHCI */
-+	{ PCI_VDEVICE(INTEL, 0xa103), board_ahci }, /* Sunrise Point-H RAID */
-+	{ PCI_VDEVICE(INTEL, 0xa105), board_ahci }, /* Sunrise Point-H RAID */
-+	{ PCI_VDEVICE(INTEL, 0xa107), board_ahci }, /* Sunrise Point-H RAID */
-+	{ PCI_VDEVICE(INTEL, 0xa10f), board_ahci }, /* Sunrise Point-H RAID */
- 
- 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
- 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
+index 61eb6d7..6f8ed8e 100644
+--- a/drivers/ata/sata_rcar.c
++++ b/drivers/ata/sata_rcar.c
+@@ -841,6 +841,10 @@ static struct of_device_id sata_rcar_match[] = {
+ 		.compatible = "renesas,sata-r8a7791",
+ 		.data = (void *)RCAR_GEN2_SATA
+ 	},
++	{
++		.compatible = "renesas,sata-r8a7793",
++		.data = (void *)RCAR_GEN2_SATA
++	},
+ 	{ },
+ };
+ MODULE_DEVICE_TABLE(of, sata_rcar_match);
+@@ -850,6 +854,7 @@ static const struct platform_device_id sata_rcar_id_table[] = {
+ 	{ "sata-r8a7779", RCAR_GEN1_SATA },
+ 	{ "sata-r8a7790", RCAR_GEN2_SATA },
+ 	{ "sata-r8a7791", RCAR_GEN2_SATA },
++	{ "sata-r8a7793", RCAR_GEN2_SATA },
+ 	{ },
+ };
+ MODULE_DEVICE_TABLE(platform, sata_rcar_id_table);
 -- 
-1.8.3.1
+1.9.1
 
