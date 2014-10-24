@@ -1,109 +1,90 @@
-From: Marc Zyngier <marc.zyngier@arm.com>
-Subject: [PATCH] AHCI: Fix threaded interrupt setup
-Date: Thu, 23 Oct 2014 17:49:30 +0100
-Message-ID: <1414082970-20775-1-git-send-email-marc.zyngier@arm.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:47755 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752144AbaJWQtj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 Oct 2014 12:49:39 -0400
-Sender: linux-ide-owner@vger.kernel.org
+From: Simon Horman <horms+renesas@verge.net.au>
+Subject: [PATCH v2] ata: sata_rcar: Disable DIPM mode for r8a7790 ES1
+Date: Fri, 24 Oct 2014 11:05:19 +0900
+Message-ID: <1414116319-16813-1-git-send-email-horms+renesas@verge.net.au>
+Return-path: <linux-sh-owner@vger.kernel.org>
+Sender: linux-sh-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Yoshihiro Kaneko <ykaneko0929@gmail.com>, Magnus Damm <magnus.damm@gmail.com>, linux-sh@vger.kernel.org, Simon Horman <horms+renesas@verge.net.au>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-sunxi@googlegroups.com, Alexander Gordeev <agordeev@redhat.com>, linux-ide@vger.kernel.org
 
-Commit 18dcf433f3de (AHCI: Optimize single IRQ interrupt processing)
-switched the single IRQ case of the AHCI driver to use threaded
-threaded interrupts.
+Unlike other SATA R-Car r8a7790 controllers the r8a7790 ES1 SATA R-Car
+controller needs to be run with DIPM disabled.
 
-During this conversion, only the IRQF_SHARED flag was provided. The net
-effect of this in the presence of level interrupts is that the
-interrupt will not be masked during the execution of the treaded
-handler, leading to a screaming interrupt if the thread is not
-scheduled quickly enough, specially in error conditions:
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
-[    2.728051] ahci-sunxi 1c18000.sata: controller can't do PMP, turning off CAP_PMP
-[    2.735578] ahci-sunxi 1c18000.sata: SSS flag set, parallel bus scan disabled
-[    2.742792] ahci-sunxi 1c18000.sata: AHCI 0001.0100 32 slots 1 ports 3 Gbps 0x1 impl platform mode
-[    2.751789] ahci-sunxi 1c18000.sata: flags: ncq sntf stag pm led clo only pio slum part ccc
-[    2.761539] scsi host0: ahci_platform
-[    2.765754] ata1: SATA max UDMA/133 mmio [mem 0x01c18000-0x01c18fff] port 0x100 irq 88
-[...]
-[    3.127977] ata1: SATA link down (SStatus 0 SControl 300)
-[...]
-[    3.162035] Waiting for root device /dev/sda1...
-[    3.163700] random: nonblocking pool is initialized
-[    3.326593] irq 88: nobody cared (try booting with the "irqpoll" option)
-[    3.333296] CPU: 0 PID: 0 Comm: swapper/0 Not tainted 3.18.0-rc1+ #3077
-[    3.339936] [<c002b318>] (unwind_backtrace) from [<c0026980>] (show_stack+0x20/0x24)
-[    3.347681] [<c0026980>] (show_stack) from [<c067dd18>] (dump_stack+0x9c/0xd4)
-[    3.354904] [<c067dd18>] (dump_stack) from [<c007ac08>] (__report_bad_irq+0x38/0xd4)
-[    3.362643] [<c007ac08>] (__report_bad_irq) from [<c007b1dc>] (note_interrupt+0x280/0x2d0)
-[    3.370903] [<c007b1dc>] (note_interrupt) from [<c0078a70>] (handle_irq_event_percpu+0x210/0x27c)
-[    3.379771] [<c0078a70>] (handle_irq_event_percpu) from [<c0078b28>] (handle_irq_event+0x4c/0x6c)
-[    3.388636] [<c0078b28>] (handle_irq_event) from [<c007b860>] (handle_fasteoi_irq+0xbc/0x1a0)
-[    3.397156] [<c007b860>] (handle_fasteoi_irq) from [<c0077f5c>] (generic_handle_irq+0x3c/0x4c)
-[    3.405764] [<c0077f5c>] (generic_handle_irq) from [<c0078220>] (__handle_domain_irq+0x6c/0xb4)
-[    3.414456] [<c0078220>] (__handle_domain_irq) from [<c0008754>] (gic_handle_irq+0x34/0x6c)
-[    3.422802] [<c0008754>] (gic_handle_irq) from [<c0027540>] (__irq_svc+0x40/0x74)
-[    3.430274] Exception stack(0xc09c1df8 to 0xc09c1e40)
-[    3.435321] 1de0:                                                       00000001 c0a27ec0
-[    3.443491] 1e00: 00000000 00000000 c09c0028 0000001e 00000282 00000000 ee00c400 c0a239f8
-[    3.451660] 1e20: c09c0000 c09c1ea4 c0a27ec0 c09c1e40 00200000 c003c7cc 20000113 ffffffff
-[    3.459835] [<c0027540>] (__irq_svc) from [<c003c7cc>] (__do_softirq+0xbc/0x34c)
-[    3.467229] [<c003c7cc>] (__do_softirq) from [<c003cd44>] (irq_exit+0xbc/0x104)
-[    3.474536] [<c003cd44>] (irq_exit) from [<c0078224>] (__handle_domain_irq+0x70/0xb4)
-[    3.482362] [<c0078224>] (__handle_domain_irq) from [<c0008754>] (gic_handle_x74)
-[    3.498169] Exception stack(0xc09c1f10 to 0xc09c1f58)
-[    3.503216] 1f00:                                     ee7ca310 00000000 00000ab4 c0035560
-[    3.511386] 1f20: c09c0000 00000000 c0a23f84 c09c8474 c09c84bc c09c0000 c0688bf8 c09c1f64
-[    3.519554] 1f40: c09c1f68 c09c1f58 c00235d8 c00235dc 60000113 ffffffff
-[    3.526165] [<c0027540>] (__irq_svc) from [<c00235dc>] (arch_cpu_idle+0x48/0x4c)
-[    3.533557] [<c00235dc>] (arch_cpu_idle) from [<c00701fc>] (cpu_startup_entry+0x13c/0x27c)
-[    3.541816] [<c00701fc>] (cpu_startup_entry) from [<c067af1c>] (rest_init+0x94/0x98)
-[    3.549557] [<c067af1c>] (rest_init) from [<c093dd38>] (start_kernel+0x3f0/0x3fc)
-[    3.557036] [<c093dd38>] (start_kernel) from [<40008084>] (0x40008084)
-[    3.563555] handlers:
-[    3.565830] [<c03a1a80>] ahci_single_irq_intr threaded [<c03a223c>] ahci_thread_fn
-[    3.573415] Disabling IRQ #88
-[    3.576532] ata1: exception Emask 0x10 SAct 0x0 SErr 0x4050002 action 0xe frozen
-[    3.583977] ata1: irq_stat 0x00400040, connection status changed
-[    3.590006] ata1: SError: { RecovComm PHYRdyChg CommWake DevExch }
-[    3.596209] ata1: hard resetting link
-[...]
-
-Not good. The culprit is a missing IRQF_ONESHOT flag, which addition
-solves the problem entierly. The number of interrupts drops radically:
-
-[Booting Debian Jessie to a prompt]
-Before fix:
- 88:       3562          0       GIC  88  ahci-sunxi
-After fix:
- 88:       1992          0       GIC  88  ahci-sunxi
-
-Tested on a A20 board (ahci-sunxi).
-
-Cc: Alexander Gordeev <agordeev@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
 ---
- drivers/ata/libahci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+v2
+* Handle ES1 in sata_rcar_init_controller()
+---
+ Documentation/devicetree/bindings/ata/sata_rcar.txt |  3 ++-
+ drivers/ata/sata_rcar.c                             | 11 +++++++++++
+ 2 files changed, 13 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 5eb61c9..49c649f 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -2492,7 +2492,7 @@ static int ahci_host_activate_single_irq(struct ata_host *host, int irq,
- 		return rc;
+diff --git a/Documentation/devicetree/bindings/ata/sata_rcar.txt b/Documentation/devicetree/bindings/ata/sata_rcar.txt
+index 1e61113..7dd32d3 100644
+--- a/Documentation/devicetree/bindings/ata/sata_rcar.txt
++++ b/Documentation/devicetree/bindings/ata/sata_rcar.txt
+@@ -3,7 +3,8 @@
+ Required properties:
+ - compatible		: should contain one of the following:
+ 			  - "renesas,sata-r8a7779" for R-Car H1
+-			  - "renesas,sata-r8a7790" for R-Car H2
++			  - "renesas,sata-r8a7790-es1" for R-Car H2 ES1
++			  - "renesas,sata-r8a7790" for R-Car H2 other than ES1
+ 			  - "renesas,sata-r8a7791" for R-Car M2
+ - reg			: address and length of the SATA registers;
+ - interrupts		: must consist of one interrupt specifier.
+diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
+index 61eb6d7..b398513 100644
+--- a/drivers/ata/sata_rcar.c
++++ b/drivers/ata/sata_rcar.c
+@@ -146,6 +146,7 @@
+ enum sata_rcar_type {
+ 	RCAR_GEN1_SATA,
+ 	RCAR_GEN2_SATA,
++	RCAR_R8A7790_ES1_SATA,
+ };
  
- 	rc = devm_request_threaded_irq(host->dev, irq, ahci_single_irq_intr,
--				       ahci_thread_fn, IRQF_SHARED,
-+				       ahci_thread_fn, IRQF_SHARED | IRQF_ONESHOT,
- 				       dev_driver_string(host->dev), host);
- 	if (rc)
- 		return rc;
+ struct sata_rcar_priv {
+@@ -763,6 +764,10 @@ static void sata_rcar_setup_port(struct ata_host *host)
+ 	ap->udma_mask	= ATA_UDMA6;
+ 	ap->flags	|= ATA_FLAG_SATA;
+ 
++	if (priv->type == RCAR_R8A7790_ES1_SATA) {
++		ap->flags	|= ATA_FLAG_NO_DIPM;
++	}
++
+ 	ioaddr->cmd_addr = base + SDATA_REG;
+ 	ioaddr->ctl_addr = base + SSDEVCON_REG;
+ 	ioaddr->scr_addr = base + SCRSSTS_REG;
+@@ -792,6 +797,7 @@ static void sata_rcar_init_controller(struct ata_host *host)
+ 		sata_rcar_gen1_phy_init(priv);
+ 		break;
+ 	case RCAR_GEN2_SATA:
++	case RCAR_R8A7790_ES1_SATA:
+ 		sata_rcar_gen2_phy_init(priv);
+ 		break;
+ 	default:
+@@ -838,6 +844,10 @@ static struct of_device_id sata_rcar_match[] = {
+ 		.data = (void *)RCAR_GEN2_SATA
+ 	},
+ 	{
++		.compatible = "renesas,sata-r8a7790-es1",
++		.data = (void *)RCAR_R8A7790_ES1_SATA
++	},
++	{
+ 		.compatible = "renesas,sata-r8a7791",
+ 		.data = (void *)RCAR_GEN2_SATA
+ 	},
+@@ -849,6 +859,7 @@ static const struct platform_device_id sata_rcar_id_table[] = {
+ 	{ "sata_rcar", RCAR_GEN1_SATA }, /* Deprecated by "sata-r8a7779" */
+ 	{ "sata-r8a7779", RCAR_GEN1_SATA },
+ 	{ "sata-r8a7790", RCAR_GEN2_SATA },
++	{ "sata-r8a7790-es1", RCAR_R8A7790_ES1_SATA },
+ 	{ "sata-r8a7791", RCAR_GEN2_SATA },
+ 	{ },
+ };
 -- 
-2.0.4
+2.1.1
 
