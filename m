@@ -1,51 +1,37 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH libata/for-3.18-fixes] Revert "AHCI:
- Optimize single IRQ interrupt processing"
-Date: Mon, 27 Oct 2014 12:03:48 -0400
-Message-ID: <20141027160348.GT4436@htj.dyndns.org>
-References: <1414082970-20775-1-git-send-email-marc.zyngier@arm.com>
- <20141027132045.GA30198@agordeev.usersys.redhat.com>
- <20141027135802.GI4436@htj.dyndns.org>
- <20141027160546.GB30198@agordeev.usersys.redhat.com>
-Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Mark Lord <kernel@start.ca>
+Subject: Re: blkdiscard vs hdparm for erasing a SSD?
+Date: Mon, 27 Oct 2014 22:09:11 -0400
+Message-ID: <544EFAC7.80501@start.ca>
+References: <2523736.cvg5kvG8qa@al>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-sunxi+bncBDQ2FCEAWYLRBZ6ZXGRAKGQEMP4TBPQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <20141027160546.GB30198-QOHinCyTyHu/4bX3TIDHR/XAX3CI6PSWQQ4Iyu8u01E@public.gmane.org>
-List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/linux-sunxi
-List-Subscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <http://groups.google.com/group/linux-sunxi/subscribe>
-Content-Disposition: inline
-To: Alexander Gordeev <agordeev-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Marc Zyngier <marc.zyngier-5wv7dgnIgG8@public.gmane.org>, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail3.start.ca ([64.140.120.243]:37699 "EHLO mail3.start.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752904AbaJ1CUG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 27 Oct 2014 22:20:06 -0400
+In-Reply-To: <2523736.cvg5kvG8qa@al>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Peter Wu <peter@lekensteyn.nl>, linux-ide@vger.kernel.org, util-linux@vger.kernel.org
 
-On Mon, Oct 27, 2014 at 04:05:47PM +0000, Alexander Gordeev wrote:
-> On Mon, Oct 27, 2014 at 09:58:02AM -0400, Tejun Heo wrote:
-> > From 61e268068c92ed000f078dc1ab71d1228439fecd Mon Sep 17 00:00:00 2001
-> > From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> > Date: Mon, 27 Oct 2014 09:50:36 -0400
-> > 
-> > This reverts commit 18dcf433f3ded61eb140a55e7048ec2fef79e723.
-> > IRQF_ONESHOT was missing from the conversion causing screaming
-> > interrupts problems on some setups and LKP detected measureable drop
-> > in IO performance.  It looks like we'll first need to drop the
-> > threaded IRQ handling first before splitting locking.
+On 14-10-15 09:12 AM, Peter Wu wrote:
+> Hi,
 > 
-> Tejun,
+> Recent versions of util-linux have a blkdiscard program. How does this compare
+> to the --security-erase option of hdparm? The goal is to erase the contents of
+> an previously used SSD to improve performance.
 > 
-> Sorry for missing to mention - I think it is better to revert 33fb0d0
-> ("AHCI: Do not acquire ata_host::lock from single IRQ handler") first,
-> unless you examined it is fine to leave (I did not).
+> Is the command `blkdiscard -s /dev/sdd` equivalent to the instructions listed on
+> https://ata.wiki.kernel.org/index.php/ATA_Secure_Erase?
 
-Alright, redid the revert and rebased the tree.  Can you please take a
-look at libata/for-3.18-fixes and see whether it looks okay?
+--security-erase is the nearest thing to a "low level format" that exists.
+On some mechanical drives, it actually performs a true low level format.
 
-Thanks.
+For SSDs, most manufacturers that I have dealt with use --security-erase
+as their preferred method for reinitializing a corrupted drive.
 
--- 
-tejun
+--security-erase is normally much faster than TRIM as well.
+
+Cheers
