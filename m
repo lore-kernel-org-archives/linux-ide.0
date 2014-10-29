@@ -1,7 +1,7 @@
 From: "Jason B. Akers" <jason.b.akers@intel.com>
-Subject: [RFC PATCH 2/5] block: ioprio hint to low-level device drivers
-Date: Wed, 29 Oct 2014 11:23:53 -0700
-Message-ID: <20141029182353.4879.67152.stgit@stg-AndroidDev-VirtualBox>
+Subject: [RFC PATCH 1/5] block, ioprio: include caching advice via ionice
+Date: Wed, 29 Oct 2014 11:23:45 -0700
+Message-ID: <20141029182345.4879.98373.stgit@stg-AndroidDev-VirtualBox>
 References: <20141029180454.4879.75088.stgit@stg-AndroidDev-VirtualBox>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -10,70 +10,98 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20141029180454.4879.75088.stgit@stg-AndroidDev-VirtualBox>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: axboe@fb.com, dan.j.williams@intel.com, kapil.karkra@intel.com, linux-kernel@vger.kernel.org
+Cc: axboe@fb.com, kapil.karkra@intel.com, dan.j.williams@intel.com, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
 From: Dan Williams <dan.j.williams@intel.com>
 
-The priority in the io_context is consumed by the io scheduler.  For
-caching advice we need the request->ioprio field to be up-to-date.  Set
-the bio ioprio at submit time.
+Steal one unused bit from the priority class and two bits from the
+priority data, to implement a 3 bit cache-advice field.  Similar to the
+page cache advice from fadvise() these hints are meant to be consumed
+by hybrid drives.  Solid State Hyrbid-Drives, as defined by the SATA-IO
+Specification, implement up to a 4-bit cache priority that can be
+specified along with a FPDMA command.
 
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+	IOPRIO_ADV_NONE: default if ionice hint is not provided
+
+	IOPRIO_ADV_EVICT: indicate that if the lba's associated with
+			this command are in the cache, write them back
+			and invalidate.
+	IOPRIO_ADV_DONTNEED: caching this data has little value, but no
+	need to actively evict
+
+	IOPRIO_ADV_NORMAL: perform best-effort / device-default caching
+
+	IOPRIO_ADV_RESERVED1: reserved for future use, potentially
+	IOPRIO_ADV_RESERVED2: permit the kernel to use these for
+	IOPRIO_ADV_RESERVED3: internal cache priorities, but userspace
+				owns highest priority override
+
+	IOPRIO_ADV_WILLNEED: cache this data at the highest possible priority
+
+The expectation is that a table in the driver is responsible for
+translating this advice into transport/device specific priority value.
+
+Signed-off-by: Kapil Karkra <kapil.karkra@intel.com>
 Signed-off-by: Jason B. Akers <jason.b.akers@intel.com>
 ---
- block/bio.c    |    1 +
- block/ioprio.c |   22 ++++++++++++++++------
- 2 files changed, 17 insertions(+), 6 deletions(-)
+ include/linux/ioprio.h |   32 ++++++++++++++++++++++++++++----
+ 1 file changed, 28 insertions(+), 4 deletions(-)
 
-diff --git a/block/bio.c b/block/bio.c
-index 3e6e198..e133b5c 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -2009,6 +2009,7 @@ int bio_associate_current(struct bio *bio)
- 	/* acquire active ref on @ioc and associate */
- 	get_io_context_active(ioc);
- 	bio->bi_ioc = ioc;
-+	bio_set_prio(bio, ioprio_best(ioc->ioprio, bio_prio(bio)));
+diff --git a/include/linux/ioprio.h b/include/linux/ioprio.h
+index beb9ce1..752813d 100644
+--- a/include/linux/ioprio.h
++++ b/include/linux/ioprio.h
+@@ -5,17 +5,27 @@
+ #include <linux/iocontext.h>
  
- 	/* associate blkcg if exists */
- 	rcu_read_lock();
-diff --git a/block/ioprio.c b/block/ioprio.c
-index e50170c..fec1202 100644
---- a/block/ioprio.c
-+++ b/block/ioprio.c
-@@ -159,18 +159,28 @@ int ioprio_best(unsigned short aprio, unsigned short bprio)
- {
- 	unsigned short aclass = IOPRIO_PRIO_CLASS(aprio);
- 	unsigned short bclass = IOPRIO_PRIO_CLASS(bprio);
-+	unsigned short class, data, advice;
+ /*
+- * Gives us 8 prio classes with 13-bits of data for each class
++ * Gives us 4 prio classes with 11-bits of data for each class
++ * ...additionally a prio can indicate one of 7 cacheability hints
+  */
+ #define IOPRIO_BITS		(16)
++#define IOPRIO_CACHE_SHIFT	(15) /* msb of the cache-advice mask */
+ #define IOPRIO_CLASS_SHIFT	(13)
+-#define IOPRIO_PRIO_MASK	((1UL << IOPRIO_CLASS_SHIFT) - 1)
++#define IOPRIO_ADV_SHIFT	(11)
++#define IOPRIO_PRIO_MASK	((1UL << IOPRIO_ADV_SHIFT) - 1)
  
- 	if (aclass == IOPRIO_CLASS_NONE)
- 		aclass = IOPRIO_CLASS_BE;
- 	if (bclass == IOPRIO_CLASS_NONE)
- 		bclass = IOPRIO_CLASS_BE;
+-#define IOPRIO_PRIO_CLASS(mask)	((mask) >> IOPRIO_CLASS_SHIFT)
++#define IOPRIO_PRIO_CLASS(mask)	(((mask) >> IOPRIO_CLASS_SHIFT) & 3)
+ #define IOPRIO_PRIO_DATA(mask)	((mask) & IOPRIO_PRIO_MASK)
++#define IOPRIO_ADVICE(mask)     ((((mask) >> IOPRIO_ADV_SHIFT) & 3) | \
++				(((mask) >> IOPRIO_CACHE_SHIFT & 1) << 2))
+ #define IOPRIO_PRIO_VALUE(class, data)	(((class) << IOPRIO_CLASS_SHIFT) | data)
++#define IOPRIO_ADVISE(class, data, advice) \
++	((IOPRIO_PRIO_VALUE(class, data) | ((advice) & 3) << IOPRIO_ADV_SHIFT)\
++	| (((advice) & 4)  << (IOPRIO_CACHE_SHIFT - 2)))
  
--	if (aclass == bclass)
--		return min(aprio, bprio);
--	if (aclass > bclass)
--		return bprio;
--	else
--		return aprio;
-+	/* best priority */
-+	if (aclass == bclass) {
-+		class = aclass;
-+		data = min(IOPRIO_PRIO_DATA(aprio), IOPRIO_PRIO_DATA(bprio));
-+	} else if (aclass > bclass) {
-+		class = bclass;
-+		data = IOPRIO_PRIO_DATA(bprio);
-+	} else {
-+		class = aclass;
-+		data = IOPRIO_PRIO_DATA(aprio);
-+	}
+-#define ioprio_valid(mask)	(IOPRIO_PRIO_CLASS((mask)) != IOPRIO_CLASS_NONE)
++#define ioprio_valid(mask)	(IOPRIO_PRIO_CLASS((mask)) != \
++						IOPRIO_CLASS_NONE)
++#define ioprio_advice_valid(mask) (IOPRIO_ADVICE(mask) != IOPRIO_ADV_NONE)
+ 
+ /*
+  * These are the io priority groups as implemented by CFQ. RT is the realtime
+@@ -31,6 +41,20 @@ enum {
+ };
+ 
+ /*
++ * Four cacheability hints that map to their fadvise(2) equivalents
++ */
++enum {
++	IOPRIO_ADV_NONE,
++	IOPRIO_ADV_EVICT, /* actively discard cached data */
++	IOPRIO_ADV_DONTNEED, /* caching this data has little value */
++	IOPRIO_ADV_NORMAL, /* best-effort / device-default cache priority */
++	IOPRIO_ADV_RESERVED1, /* reserved for future use */
++	IOPRIO_ADV_RESERVED2,
++	IOPRIO_ADV_RESERVED3,
++	IOPRIO_ADV_WILLNEED, /* high temporal locality or cache valuable */
++};
 +
-+	/* best cache advice, assumes invalid advice is zero */
-+	advice = max(IOPRIO_ADVICE(aprio), IOPRIO_ADVICE(bprio));
-+	return IOPRIO_ADVISE(class, data, advice);
- }
- 
- SYSCALL_DEFINE2(ioprio_get, int, which, int, who)
++/*
+  * 8 best effort priority levels are supported
+  */
+ #define IOPRIO_BE_NR	(8)
