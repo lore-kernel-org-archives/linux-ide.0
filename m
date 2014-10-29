@@ -1,101 +1,209 @@
 From: "Jason B. Akers" <jason.b.akers@intel.com>
-Subject: [RFC PATCH 0/5] Enable use of Solid State Hybrid Drives
-Date: Wed, 29 Oct 2014 11:23:38 -0700
-Message-ID: <20141029180454.4879.75088.stgit@stg-AndroidDev-VirtualBox>
+Subject: [RFC PATCH 3/5] block: untangle ioprio from BLK_CGROUP and
+ BLK_DEV_THROTTLING
+Date: Wed, 29 Oct 2014 11:23:58 -0700
+Message-ID: <20141029182358.4879.86399.stgit@stg-AndroidDev-VirtualBox>
+References: <20141029180454.4879.75088.stgit@stg-AndroidDev-VirtualBox>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:10954 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755556AbaJ2SgM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 29 Oct 2014 14:36:12 -0400
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20141029180454.4879.75088.stgit@stg-AndroidDev-VirtualBox>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: axboe@fb.com, dan.j.williams@intel.com, kapil.karkra@intel.com, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-The following series enables the use of Solid State hybrid drives
-ATA standard 3.2 defines the hybrid information feature, which provides a means for the host driver to provide hints to the SSHDs to guide what to place on the SSD/NAND portion and what to place on the magnetic media.
+From: Dan Williams <dan.j.williams@intel.com>
 
-This implementation allows user space applications to provide the cache hints to the kernel using the existing ionice syscall. 
+If BLK_CGROUP is disabled, still enable ionice to set advice on bios.
 
-An application can pass a priority number coding up bits 11, 12, and 15 of the ionice command to form a 3 bit field that encodes the following priorities:
-	OPRIO_ADV_NONE,
-	IOPRIO_ADV_EVICT, /* actively discard cached data */
-	IOPRIO_ADV_DONTNEED, /* caching this data has little value */
-	IOPRIO_ADV_NORMAL, /* best-effort cache priority (default) */
-	IOPRIO_ADV_RESERVED1, /* reserved for future use */
-	IOPRIO_ADV_RESERVED2,
-	IOPRIO_ADV_RESERVED3,
-	IOPRIO_ADV_WILLNEED, /* high temporal locality */
-
-For example the following commands from the user space will make dd IOs to be generated with a hint of IOPRIO_ADV_DONTNEED assuming the SSHD is /dev/sdc.
-
-ionice -c2 -n4096 dd if=/dev/zero of=/dev/sdc bs=1M count=1024
-ionice -c2 -n4096 dd if=/dev/sdc of=/dev/null bs=1M count=1024
-
-Note that the class field indicates the best effort while the n field identifies the io priority. Also note that these io priorities translate to the SSHD hints that pass down the SATA link as follows IOPRIO_ADV_NONE translates to 0x0 IOPRIO_ADV_EVICT translates to 0x20 IOPRIO_ADV_DONTNEED translates to 0x21 IOPRIO_ADV_NORMAL translates to MAX PRI - 1 IOPRIO_ADV_NORMAL translates to MAX PRI
-
-MAX PRI is the maximum priority level supported by the SSHD
-
-The translation from ionice cache hint to ATA hybrid hint is controlled using a hybrid_translation_table. A default table is built-in to libata.
-
-This default table can be overridden with a new table through the firmware_update. The new table can be applied on a per ata_device basis. The reasoning is that the translation can be optimized for VendorA SSHDs differently from VendorB SSHDs. A hybrid_information_table.bin could override the ./firmware directory to update this table.
-
-The .config might be modified to build-in the new table CONFIG_EXTRA_FIRMWARE="hybrid_information_table.bin"
-CONFIG_EXTRA_FIRMWARE_DIR="firmware"
-
-To toggle enable/disable of the feature
-echo 1 > /sys/class/ata_device/devX.0/hybrid
-
-We ran performance tests with SSHDs from two different vendors and saw the following results with default all-insert policy:
-	50% improvement in boot times
-	45% improvment in App launch
-	3x faster browser
-	4x faster SQLite
-
-The performance results also showed that host hinting using the above default performed significantly better than the self hinting in using benchmarks.
-
-We are looking for feedback on the cache hinting approach, as it seems others are interested in this capability.  We're also looking for comments on the libata implementation for supporting host hinted SSHDs. A patch to sg3_utils for retrieving the Hybrid Information Log follows. Per the spec host-hinted SSHDs revert to internal firmware hinted SSHDs if the log is not read after a certain number of power cycles.
-
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+Signed-off-by: Jason B. Akers <jason.b.akers@intel.com>
 ---
+ block/bio.c         |   43 +++++++++++---------------------
+ block/blk.h         |    2 ++
+ include/linux/bio.h |   68 +++++++++++++++++++++++++++++++++++++++++++++++----
+ 3 files changed, 79 insertions(+), 34 deletions(-)
 
-Dan Williams (3):
-      block, ioprio: include caching advice via ionice
-      block: ioprio hint to low-level device drivers
-      block: untangle ioprio from BLK_CGROUP and BLK_DEV_THROTTLING
-
-Jason B. Akers (1):
-      libata: Enabling Solid State Hybrid Drives (SSHDs) based on SATA 3.2 standard
-
-Kapil Karkra (1):
-      block, mm: Added the necessary plumbing to take ioprio hints down to block layer
-
-
- block/bio.c                    |   76 +++++++-----
- block/blk-throttle.c           |    5 +
- block/blk.h                    |    2 
- block/ioprio.c                 |   22 ++-
- drivers/ata/Makefile           |    2 
- drivers/ata/libata-core.c      |   13 ++
- drivers/ata/libata-eh.c        |   11 ++
- drivers/ata/libata-hybrid.c    |  261 ++++++++++++++++++++++++++++++++++++++++
- drivers/ata/libata-hybrid.h    |   14 ++
- drivers/ata/libata-scsi.c      |    4 -
- drivers/ata/libata-transport.c |   45 +++++++
- drivers/ata/libata.h           |    2 
- include/linux/ata.h            |    1 
- include/linux/bio.h            |   69 ++++++++++-
- include/linux/ioprio.h         |   32 ++++-
- include/linux/libata.h         |    4 +
- include/linux/page-flags.h     |   24 ++++
- mm/debug.c                     |    5 +
- mm/filemap.c                   |   18 +++
- 19 files changed, 561 insertions(+), 49 deletions(-)
- create mode 100644 drivers/ata/libata-hybrid.c
- create mode 100644 drivers/ata/libata-hybrid.h
-
---
-Thanks,
-jba
+diff --git a/block/bio.c b/block/bio.c
+index e133b5c..b93ae04 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -1980,7 +1980,6 @@ struct bio_set *bioset_create_nobvec(unsigned int pool_size, unsigned int front_
+ }
+ EXPORT_SYMBOL(bioset_create_nobvec);
+ 
+-#ifdef CONFIG_BLK_CGROUP
+ /**
+  * bio_associate_current - associate a bio with %current
+  * @bio: target bio
+@@ -1989,34 +1988,28 @@ EXPORT_SYMBOL(bioset_create_nobvec);
+  * layer will treat @bio as if it were issued by %current no matter which
+  * task actually issues it.
+  *
+- * This function takes an extra reference of @task's io_context and blkcg
+- * which will be put when @bio is released.  The caller must own @bio,
+- * ensure %current->io_context exists, and is responsible for synchronizing
+- * calls to this function.
++ * When BLK_CGROUP=y this function takes an extra reference of @task's
++ * io_context and blkcg which will be put when @bio is released.  The caller
++ * must own @bio, ensure %current->io_context exists, and is responsible for
++ * synchronizing calls to this function.
++ *
++ * When BLK_CGROUP=n this function simply sets the bio priority and cache advice
+  */
+ int bio_associate_current(struct bio *bio)
+ {
+ 	struct io_context *ioc;
+-	struct cgroup_subsys_state *css;
+-
+-	if (bio->bi_ioc)
+-		return -EBUSY;
++	int rc;
+ 
+ 	ioc = current->io_context;
+ 	if (!ioc)
+ 		return -ENOENT;
+ 
+-	/* acquire active ref on @ioc and associate */
+-	get_io_context_active(ioc);
+-	bio->bi_ioc = ioc;
+-	bio_set_prio(bio, ioprio_best(ioc->ioprio, bio_prio(bio)));
++	rc = bio_associate_ioc(bio, ioc);
++	if (rc)
++		return rc;
+ 
+-	/* associate blkcg if exists */
+-	rcu_read_lock();
+-	css = task_css(current, blkio_cgrp_id);
+-	if (css && css_tryget_online(css))
+-		bio->bi_css = css;
+-	rcu_read_unlock();
++	bio_associate_blkcg(bio, current);
++	bio_set_prio(bio, ioprio_best(ioc->ioprio, bio_prio(bio)));
+ 
+ 	return 0;
+ }
+@@ -2027,18 +2020,10 @@ int bio_associate_current(struct bio *bio)
+  */
+ void bio_disassociate_task(struct bio *bio)
+ {
+-	if (bio->bi_ioc) {
+-		put_io_context(bio->bi_ioc);
+-		bio->bi_ioc = NULL;
+-	}
+-	if (bio->bi_css) {
+-		css_put(bio->bi_css);
+-		bio->bi_css = NULL;
+-	}
++	bio_disassociate_ioc(bio);
++	bio_disassociate_blkcg(bio);
+ }
+ 
+-#endif /* CONFIG_BLK_CGROUP */
+-
+ static void __init biovec_init_slabs(void)
+ {
+ 	int i;
+diff --git a/block/blk.h b/block/blk.h
+index 43b0361..6d7c4df 100644
+--- a/block/blk.h
++++ b/block/blk.h
+@@ -274,6 +274,8 @@ extern void blk_throtl_exit(struct request_queue *q);
+ #else /* CONFIG_BLK_DEV_THROTTLING */
+ static inline bool blk_throtl_bio(struct request_queue *q, struct bio *bio)
+ {
++	/* set prio, but don't throttle */
++	bio_associate_current(bio);
+ 	return false;
+ }
+ static inline void blk_throtl_drain(struct request_queue *q) { }
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index 7347f48..8419319 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -22,6 +22,7 @@
+ 
+ #include <linux/highmem.h>
+ #include <linux/mempool.h>
++#include <linux/cgroup.h>
+ #include <linux/ioprio.h>
+ #include <linux/bug.h>
+ 
+@@ -469,13 +470,70 @@ extern struct bio_vec *bvec_alloc(gfp_t, int, unsigned long *, mempool_t *);
+ extern void bvec_free(mempool_t *, struct bio_vec *, unsigned int);
+ extern unsigned int bvec_nr_vecs(unsigned short idx);
+ 
+-#ifdef CONFIG_BLK_CGROUP
+ int bio_associate_current(struct bio *bio);
+ void bio_disassociate_task(struct bio *bio);
+-#else	/* CONFIG_BLK_CGROUP */
+-static inline int bio_associate_current(struct bio *bio) { return -ENOENT; }
+-static inline void bio_disassociate_task(struct bio *bio) { }
+-#endif	/* CONFIG_BLK_CGROUP */
++
++#ifdef CONFIG_BLK_CGROUP
++static inline int bio_associate_ioc(struct bio *bio, struct io_context *ioc)
++{
++	if (bio->bi_ioc)
++		return -EBUSY;
++
++	/* acquire active ref on @ioc and associate */
++	get_io_context_active(ioc);
++	bio->bi_ioc = ioc;
++
++	return 0;
++}
++
++static inline void bio_associate_blkcg(struct bio *bio,
++					struct task_struct *task)
++{
++	struct cgroup_subsys_state *css;
++
++	/* associate blkcg if exists */
++	rcu_read_lock();
++	css = task_css(task, blkio_cgrp_id);
++	if (css && css_tryget(css))
++		bio->bi_css = css;
++	rcu_read_unlock();
++}
++
++static inline void bio_disassociate_ioc(struct bio *bio)
++{
++	if (bio->bi_ioc) {
++		put_io_context(bio->bi_ioc);
++		bio->bi_ioc = NULL;
++	}
++}
++
++static inline void bio_disassociate_blkcg(struct bio *bio)
++{
++	if (bio->bi_css) {
++		css_put(bio->bi_css);
++		bio->bi_css = NULL;
++	}
++}
++#else
++static inline int bio_associate_ioc(struct bio *bio, struct io_context *ioc)
++{
++	return 0;
++}
++
++static inline void bio_associate_blkcg(struct bio *bio,
++					struct task_struct *task)
++{
++}
++
++static inline void bio_disassociate_ioc(struct bio *bio)
++{
++}
++
++static inline void bio_disassociate_blkcg(struct bio *bio)
++{
++}
++
++#endif
+ 
+ #ifdef CONFIG_HIGHMEM
+ /*
