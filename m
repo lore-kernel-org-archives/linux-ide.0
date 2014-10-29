@@ -1,51 +1,47 @@
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC PATCH 0/5] Enable use of Solid State Hybrid Drives
-Date: Thu, 30 Oct 2014 07:14:17 +1100
-Message-ID: <20141029201417.GK16186@dastard>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [RFC PATCH 1/5] block, ioprio: include caching advice via ionice
+Date: Wed, 29 Oct 2014 14:07:58 -0700
+Message-ID: <CAPcyv4hgeoGJMG3aAb4auQj+bwnv4J__AkC_MvRHWdNP9gOGPg@mail.gmail.com>
 References: <20141029180454.4879.75088.stgit@stg-AndroidDev-VirtualBox>
+	<20141029182345.4879.98373.stgit@stg-AndroidDev-VirtualBox>
+	<x49bnoupulp.fsf@segfault.boston.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20141029180454.4879.75088.stgit@stg-AndroidDev-VirtualBox>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Jason B. Akers" <jason.b.akers@intel.com>
-Cc: linux-ide@vger.kernel.org, axboe@fb.com, dan.j.williams@intel.com, kapil.karkra@intel.com, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-vc0-f181.google.com ([209.85.220.181]:33125 "EHLO
+	mail-vc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756034AbaJ2VH7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Oct 2014 17:07:59 -0400
+Received: by mail-vc0-f181.google.com with SMTP id hy10so2017905vcb.26
+        for <linux-ide@vger.kernel.org>; Wed, 29 Oct 2014 14:07:58 -0700 (PDT)
+In-Reply-To: <x49bnoupulp.fsf@segfault.boston.devel.redhat.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jeff Moyer <jmoyer@redhat.com>
+Cc: "Jason B. Akers" <jason.b.akers@intel.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, axboe@fb.com, "Karkra, Kapil" <kapil.karkra@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Wed, Oct 29, 2014 at 11:23:38AM -0700, Jason B. Akers wrote:
-> The following series enables the use of Solid State hybrid drives
-> ATA standard 3.2 defines the hybrid information feature, which provides a means for the host driver to provide hints to the SSHDs to guide what to place on the SSD/NAND portion and what to place on the magnetic media.
-> 
-> This implementation allows user space applications to provide the cache hints to the kernel using the existing ionice syscall. 
-> 
-> An application can pass a priority number coding up bits 11, 12, and 15 of the ionice command to form a 3 bit field that encodes the following priorities:
-> 	OPRIO_ADV_NONE,
-> 	IOPRIO_ADV_EVICT, /* actively discard cached data */
-> 	IOPRIO_ADV_DONTNEED, /* caching this data has little value */
-> 	IOPRIO_ADV_NORMAL, /* best-effort cache priority (default) */
-> 	IOPRIO_ADV_RESERVED1, /* reserved for future use */
-> 	IOPRIO_ADV_RESERVED2,
-> 	IOPRIO_ADV_RESERVED3,
-> 	IOPRIO_ADV_WILLNEED, /* high temporal locality */
-> 
-> For example the following commands from the user space will make dd IOs to be generated with a hint of IOPRIO_ADV_DONTNEED assuming the SSHD is /dev/sdc.
-> 
-> ionice -c2 -n4096 dd if=/dev/zero of=/dev/sdc bs=1M count=1024
-> ionice -c2 -n4096 dd if=/dev/sdc of=/dev/null bs=1M count=1024
+On Wed, Oct 29, 2014 at 12:02 PM, Jeff Moyer <jmoyer@redhat.com> wrote:
+> "Jason B. Akers" <jason.b.akers@intel.com> writes:
+>
+>> From: Dan Williams <dan.j.williams@intel.com>
+>>
+>> Steal one unused bit from the priority class and two bits from the
+>> priority data, to implement a 3 bit cache-advice field.  Similar to the
+>> page cache advice from fadvise() these hints are meant to be consumed
+>> by hybrid drives.  Solid State Hyrbid-Drives, as defined by the SATA-IO
+>> Specification, implement up to a 4-bit cache priority that can be
+>> specified along with a FPDMA command.
+>
+> ionice is about setting an I/O scheduling class for a *process*.  So,
+> unless I've missed something, this does not seem like the right
+> interface for passing I/O hints.
+>
+> You mention fadvise hints, which sounds like a good fit (and madvise
+> would be equally interesting), but I don't see where you've wired them
+> up in this patch set.  Did I miss it?
 
-This looks to be the wrong way to implement per-IO priority
-information.
-
-How does a filesystem make use of this to make sure it's
-metadata ends up with IOPRIO_ADV_WILLNEED to store frequently
-accessed metadata in flash. Conversely, journal writes need to
-be issued with IOPRIO_ADV_DONTNEED so they don't unneceessarily
-consume flash space as they are never-read IOs...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+It turns out we didn't need it.  It's straightforward to add, but I
+think "80%" of the benefit can be had by just having a per-thread
+cache priority.  It's more powerful to say "any page cache page this
+thread touches, or any direct i/o this thread does, goes down the
+stack at the given priority".
