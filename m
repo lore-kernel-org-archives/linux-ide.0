@@ -1,37 +1,44 @@
 From: Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: [PATCH 3/3] ARM: shmobile: r8a7779 dtsi: Add SoC-specific SATA compatible property
-Date: Wed, 29 Oct 2014 14:58:51 +0100
-Message-ID: <1414591131-21771-4-git-send-email-geert+renesas@glider.be>
-References: <1414591131-21771-1-git-send-email-geert+renesas@glider.be>
+Subject: [PATCH 0/3] ARM: shmobile: sata_rcar updates
+Date: Wed, 29 Oct 2014 14:58:48 +0100
+Message-ID: <1414591131-21771-1-git-send-email-geert+renesas@glider.be>
 Return-path: <linux-sh-owner@vger.kernel.org>
-In-Reply-To: <1414591131-21771-1-git-send-email-geert+renesas@glider.be>
 Sender: linux-sh-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>, Simon Horman <horms@verge.net.au>, Magnus Damm <magnus.damm@gmail.com>
 Cc: Valentine Barshak <valentine.barshak@cogentembedded.com>, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-sh@vger.kernel.org, Geert Uytterhoeven <geert+renesas@glider.be>
 List-Id: linux-ide@vger.kernel.org
 
-The SATA node used the generic compatible property only, which was
-deprecated by commit e67adb4e669db834 ("sata_rcar: Add R-Car Gen2 SATA
-PHY support"). Add the SoC-specific one introduced by that commit.
+	Hi Tejun, Simon, Magnus,
 
-Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
----
- arch/arm/boot/dts/r8a7779.dtsi | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This patch series improves DT bindings documentation and usage for the
+sata_rcar driver.
 
-diff --git a/arch/arm/boot/dts/r8a7779.dtsi b/arch/arm/boot/dts/r8a7779.dtsi
-index fda814ed191d1531..a8845328827a3f0c 100644
---- a/arch/arm/boot/dts/r8a7779.dtsi
-+++ b/arch/arm/boot/dts/r8a7779.dtsi
-@@ -303,7 +303,7 @@
- 	};
- 
- 	sata: sata@fc600000 {
--		compatible = "renesas,rcar-sata";
-+		compatible = "renesas,sata-r8a7779", "renesas,rcar-sata";
- 		reg = <0xfc600000 0x2000>;
- 		interrupts = <0 100 IRQ_TYPE_LEVEL_HIGH>;
- 		clocks = <&mstp1_clks R8A7779_CLK_SATA>;
+The first patch was sent before by Valentine Barshak a while ago, but never
+updated according to the review comments.
+
+Thanks for applying!
+
+Geert Uytterhoeven (2):
+  sata_rcar: Document deprecated "renesas,rcar-sata"
+  ARM: shmobile: r8a7779 dtsi: Add SoC-specific SATA compatible property
+
+Valentine Barshak (1):
+  sata_rcar: Add clocks to sata_rcar bindings
+
+ Documentation/devicetree/bindings/ata/sata_rcar.txt | 11 +++++++----
+ arch/arm/boot/dts/r8a7779.dtsi                      |  2 +-
+ 2 files changed, 8 insertions(+), 5 deletions(-)
+
 -- 
 1.9.1
 
+Gr{oetje,eeting}s,
+
+						Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
