@@ -1,68 +1,41 @@
-From: Yoshihiro Kaneko <ykaneko0929@gmail.com>
-Subject: [PATCH v3] ata: sata_rcar: Add r8a7793 device support
-Date: Tue, 28 Oct 2014 12:45:32 +0900
-Message-ID: <1414467932-17688-1-git-send-email-ykaneko0929@gmail.com>
-Return-path: <linux-sh-owner@vger.kernel.org>
-Sender: linux-sh-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, Simon Horman <horms@verge.net.au>, Magnus Damm <magnus.damm@gmail.com>, linux-sh@vger.kernel.org, devicetree@vger.kernel.org
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Subject: [PATCH 2/3] sata_rcar: Document deprecated "renesas,rcar-sata"
+Date: Wed, 29 Oct 2014 14:58:50 +0100
+Message-ID: <1414591131-21771-3-git-send-email-geert+renesas@glider.be>
+References: <1414591131-21771-1-git-send-email-geert+renesas@glider.be>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from laurent.telenet-ops.be ([195.130.137.89]:53181 "EHLO
+	laurent.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932850AbaJ2N6p (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Oct 2014 09:58:45 -0400
+In-Reply-To: <1414591131-21771-1-git-send-email-geert+renesas@glider.be>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Simon Horman <horms@verge.net.au>, Magnus Damm <magnus.damm@gmail.com>
+Cc: Valentine Barshak <valentine.barshak@cogentembedded.com>, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-sh@vger.kernel.org, Geert Uytterhoeven <geert+renesas@glider.be>
 
-From: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
+Commit e67adb4e669db834 ("sata_rcar: Add R-Car Gen2 SATA PHY support")
+deprecated "renesas,rcar-sata" in favor of "renesas,sata-r8a7779", but
+the deprecated value was never documented in the binding documentation,
+while it is still in active use.
 
-Signed-off-by: Koji Matsuoka <koji.matsuoka.xm@renesas.com>
-Signed-off-by: Yoshihiro Kaneko <ykaneko0929@gmail.com>
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
 ---
-
-This patch is against for-3.19 branch of Tejun's libata repo.
-
-v3 [Yoshihiro Kaneko]
-* Rebased on top of for-3.19
-
-v2 [Yoshihiro Kaneko]
-* Update the binding documentation
-
- Documentation/devicetree/bindings/ata/sata_rcar.txt | 3 ++-
- drivers/ata/sata_rcar.c                             | 5 +++++
- 2 files changed, 7 insertions(+), 1 deletion(-)
+ Documentation/devicetree/bindings/ata/sata_rcar.txt | 1 +
+ 1 file changed, 1 insertion(+)
 
 diff --git a/Documentation/devicetree/bindings/ata/sata_rcar.txt b/Documentation/devicetree/bindings/ata/sata_rcar.txt
-index 7dd32d3..80ae87a 100644
+index 12d9de915ebd6cbf..ed266c87ce106f20 100644
 --- a/Documentation/devicetree/bindings/ata/sata_rcar.txt
 +++ b/Documentation/devicetree/bindings/ata/sata_rcar.txt
-@@ -5,7 +5,8 @@ Required properties:
+@@ -3,6 +3,7 @@
+ Required properties:
+ - compatible		: should contain one of the following:
  			  - "renesas,sata-r8a7779" for R-Car H1
- 			  - "renesas,sata-r8a7790-es1" for R-Car H2 ES1
- 			  - "renesas,sata-r8a7790" for R-Car H2 other than ES1
--			  - "renesas,sata-r8a7791" for R-Car M2
-+			  - "renesas,sata-r8a7791" for R-Car M2-W
-+			  - "renesas,sata-r8a7793" for R-Car M2-N
++			    ("renesas,rcar-sata" is deprecated)
+ 			  - "renesas,sata-r8a7790" for R-Car H2
+ 			  - "renesas,sata-r8a7791" for R-Car M2
  - reg			: address and length of the SATA registers;
- - interrupts		: must consist of one interrupt specifier.
- 
-diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
-index 8732e42..ea1fbc1 100644
---- a/drivers/ata/sata_rcar.c
-+++ b/drivers/ata/sata_rcar.c
-@@ -850,6 +850,10 @@ static struct of_device_id sata_rcar_match[] = {
- 		.compatible = "renesas,sata-r8a7791",
- 		.data = (void *)RCAR_GEN2_SATA
- 	},
-+	{
-+		.compatible = "renesas,sata-r8a7793",
-+		.data = (void *)RCAR_GEN2_SATA
-+	},
- 	{ },
- };
- MODULE_DEVICE_TABLE(of, sata_rcar_match);
-@@ -860,6 +864,7 @@ static const struct platform_device_id sata_rcar_id_table[] = {
- 	{ "sata-r8a7790", RCAR_GEN2_SATA },
- 	{ "sata-r8a7790-es1", RCAR_R8A7790_ES1_SATA },
- 	{ "sata-r8a7791", RCAR_GEN2_SATA },
-+	{ "sata-r8a7793", RCAR_GEN2_SATA },
- 	{ },
- };
- MODULE_DEVICE_TABLE(platform, sata_rcar_id_table);
 -- 
 1.9.1
 
