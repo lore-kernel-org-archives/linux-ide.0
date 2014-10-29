@@ -1,216 +1,101 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [bz87101 PATCH] libata: allow sata_sil24 to opt-out of tag ordered
- submission
-Date: Wed, 29 Oct 2014 10:21:08 -0700
-Message-ID: <20141029171402.17994.16801.stgit@viggo.jf.intel.com>
+From: "Jason B. Akers" <jason.b.akers@intel.com>
+Subject: [RFC PATCH 0/5] Enable use of Solid State Hybrid Drives
+Date: Wed, 29 Oct 2014 11:23:38 -0700
+Message-ID: <20141029180454.4879.75088.stgit@stg-AndroidDev-VirtualBox>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:19484 "EHLO mga09.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:10954 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934130AbaJ2RVP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 29 Oct 2014 13:21:15 -0400
+	id S1755556AbaJ2SgM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 29 Oct 2014 14:36:12 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, Ronny Hegewald <Ronny.Hegewald@online.de>, stable@vger.kernel.org
+Cc: axboe@fb.com, dan.j.williams@intel.com, kapil.karkra@intel.com, linux-kernel@vger.kernel.org
 
-Ronny reports: https://bugzilla.kernel.org/show_bug.cgi?id=87101
-    "Since commit 8a4aeec8d 'libata/ahci: accommodate tag ordered
-    controllers' the access to the harddisk on the first SATA-port is
-    failing on its first access. The access to the harddisk on the
-    second port is working normal.
+The following series enables the use of Solid State hybrid drives
+ATA standard 3.2 defines the hybrid information feature, which provides a means for the host driver to provide hints to the SSHDs to guide what to place on the SSD/NAND portion and what to place on the magnetic media.
 
-    When reverting the above commit, access to both harddisks is working
-    fine again."
+This implementation allows user space applications to provide the cache hints to the kernel using the existing ionice syscall. 
 
-Maintain tag ordered submission as the default, but allow sata_sil24 to
-continue with the old behavior.
+An application can pass a priority number coding up bits 11, 12, and 15 of the ionice command to form a 3 bit field that encodes the following priorities:
+	OPRIO_ADV_NONE,
+	IOPRIO_ADV_EVICT, /* actively discard cached data */
+	IOPRIO_ADV_DONTNEED, /* caching this data has little value */
+	IOPRIO_ADV_NORMAL, /* best-effort cache priority (default) */
+	IOPRIO_ADV_RESERVED1, /* reserved for future use */
+	IOPRIO_ADV_RESERVED2,
+	IOPRIO_ADV_RESERVED3,
+	IOPRIO_ADV_WILLNEED, /* high temporal locality */
 
-Cc: <stable@vger.kernel.org>
-Cc: Tejun Heo <tj@kernel.org>
-Reported-by: Ronny Hegewald <Ronny.Hegewald@online.de>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+For example the following commands from the user space will make dd IOs to be generated with a hint of IOPRIO_ADV_DONTNEED assuming the SSHD is /dev/sdc.
+
+ionice -c2 -n4096 dd if=/dev/zero of=/dev/sdc bs=1M count=1024
+ionice -c2 -n4096 dd if=/dev/sdc of=/dev/null bs=1M count=1024
+
+Note that the class field indicates the best effort while the n field identifies the io priority. Also note that these io priorities translate to the SSHD hints that pass down the SATA link as follows IOPRIO_ADV_NONE translates to 0x0 IOPRIO_ADV_EVICT translates to 0x20 IOPRIO_ADV_DONTNEED translates to 0x21 IOPRIO_ADV_NORMAL translates to MAX PRI - 1 IOPRIO_ADV_NORMAL translates to MAX PRI
+
+MAX PRI is the maximum priority level supported by the SSHD
+
+The translation from ionice cache hint to ATA hybrid hint is controlled using a hybrid_translation_table. A default table is built-in to libata.
+
+This default table can be overridden with a new table through the firmware_update. The new table can be applied on a per ata_device basis. The reasoning is that the translation can be optimized for VendorA SSHDs differently from VendorB SSHDs. A hybrid_information_table.bin could override the ./firmware directory to update this table.
+
+The .config might be modified to build-in the new table CONFIG_EXTRA_FIRMWARE="hybrid_information_table.bin"
+CONFIG_EXTRA_FIRMWARE_DIR="firmware"
+
+To toggle enable/disable of the feature
+echo 1 > /sys/class/ata_device/devX.0/hybrid
+
+We ran performance tests with SSHDs from two different vendors and saw the following results with default all-insert policy:
+	50% improvement in boot times
+	45% improvment in App launch
+	3x faster browser
+	4x faster SQLite
+
+The performance results also showed that host hinting using the above default performed significantly better than the self hinting in using benchmarks.
+
+We are looking for feedback on the cache hinting approach, as it seems others are interested in this capability.  We're also looking for comments on the libata implementation for supporting host hinted SSHDs. A patch to sg3_utils for retrieving the Hybrid Information Log follows. Per the spec host-hinted SSHDs revert to internal firmware hinted SSHDs if the log is not read after a certain number of power cycles.
+
 ---
 
-There's an open question if the tag ordering is just exposing a separate
-bug in sata_sil24, similar to how xgene identified a separate fix when
-it tripped over commit 8a4aeec8d "libata/ahci: accommodate tag ordered
-controllers": http://marc.info/?l=linux-ide&m=140323674630985&w=2
+Dan Williams (3):
+      block, ioprio: include caching advice via ionice
+      block: ioprio hint to low-level device drivers
+      block: untangle ioprio from BLK_CGROUP and BLK_DEV_THROTTLING
 
- drivers/ata/libata-core.c |   42 +++++++++++++++++++++++++++++++++++++++---
- drivers/ata/libata.h      |    2 ++
- drivers/ata/sata_sil24.c  |   14 ++++++++------
- include/linux/libata.h    |    1 +
- 4 files changed, 50 insertions(+), 9 deletions(-)
+Jason B. Akers (1):
+      libata: Enabling Solid State Hybrid Drives (SSHDs) based on SATA 3.2 standard
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index c5ba15af87d3..8d1df11af1a4 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -84,6 +84,7 @@ const struct ata_port_operations ata_base_port_ops = {
- 	.error_handler		= ata_std_error_handler,
- 	.sched_eh		= ata_std_sched_eh,
- 	.end_eh			= ata_std_end_eh,
-+	.qc_new			= ata_qc_new_tag_order,
- };
- 
- const struct ata_port_operations sata_port_ops = {
-@@ -4718,9 +4719,12 @@ void swap_buf_le16(u16 *buf, unsigned int buf_words)
- }
- 
- /**
-- *	ata_qc_new - Request an available ATA command, for queueing
-+ *	ata_qc_new_tag_order - Request an available ATA command, for queueing
-  *	@ap: target port
-  *
-+ *	Accomodates controllers that issue commands in tag order rather
-+ *	than FIFO order (Intel AHCI).
-+ *
-  *	Some ATA host controllers may implement a queue depth which is less
-  *	than ATA_MAX_QUEUE. So we shouldn't allocate a tag which is beyond
-  *	the hardware limitation.
-@@ -4729,7 +4733,7 @@ void swap_buf_le16(u16 *buf, unsigned int buf_words)
-  *	None.
-  */
- 
--static struct ata_queued_cmd *ata_qc_new(struct ata_port *ap)
-+struct ata_queued_cmd *ata_qc_new_tag_order(struct ata_port *ap)
- {
- 	struct ata_queued_cmd *qc = NULL;
- 	unsigned int max_queue = ap->host->n_tags;
-@@ -4758,6 +4762,38 @@ static struct ata_queued_cmd *ata_qc_new(struct ata_port *ap)
- }
- 
- /**
-+ *	ata_qc_new_fifo_order - Request an available ATA command, for queueing
-+ *	@ap: target port
-+ *
-+ *	Allocate first available tag, for hosts that maintain fifo issue
-+ *	order on the wire, or otherwise cannot handle tag order.
-+ *
-+ *	LOCKING:
-+ *	None.
-+ */
-+
-+struct ata_queued_cmd *ata_qc_new_fifo_order(struct ata_port *ap)
-+{
-+	struct ata_queued_cmd *qc = NULL;
-+	unsigned int i;
-+
-+	/* no command while frozen */
-+	if (unlikely(ap->pflags & ATA_PFLAG_FROZEN))
-+		return NULL;
-+
-+	/* the last tag is reserved for internal command. */
-+	for (i = 0; i < ATA_MAX_QUEUE - 1; i++)
-+		if (!test_and_set_bit(i, &ap->qc_allocated)) {
-+			qc = __ata_qc_from_tag(ap, i);
-+			qc->tag = i;
-+			break;
-+		}
-+
-+	return qc;
-+}
-+EXPORT_SYMBOL_GPL(ata_qc_new_fifo_order);
-+
-+/**
-  *	ata_qc_new_init - Request an available ATA command, and initialize it
-  *	@dev: Device from whom we request an available command structure
-  *
-@@ -4770,7 +4806,7 @@ struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev)
- 	struct ata_port *ap = dev->link->ap;
- 	struct ata_queued_cmd *qc;
- 
--	qc = ata_qc_new(ap);
-+	qc = ap->ops->qc_new(ap);
- 	if (qc) {
- 		qc->scsicmd = NULL;
- 		qc->ap = ap;
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 5f4e0cca56ec..16f75854cd99 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -90,6 +90,8 @@ extern int ata_down_xfermask_limit(struct ata_device *dev, unsigned int sel);
- extern unsigned int ata_dev_set_feature(struct ata_device *dev,
- 					u8 enable, u8 feature);
- extern void ata_sg_clean(struct ata_queued_cmd *qc);
-+extern struct ata_queued_cmd *ata_qc_new_tag_order(struct ata_port *ap);
-+extern struct ata_queued_cmd *ata_qc_new_fifo_order(struct ata_port *ap);
- extern void ata_qc_free(struct ata_queued_cmd *qc);
- extern void ata_qc_issue(struct ata_queued_cmd *qc);
- extern void __ata_qc_complete(struct ata_queued_cmd *qc);
-diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
-index d81b20ddb527..59719ded8ef1 100644
---- a/drivers/ata/sata_sil24.c
-+++ b/drivers/ata/sata_sil24.c
-@@ -30,8 +30,9 @@
- #include <scsi/scsi_cmnd.h>
- #include <linux/libata.h>
- 
--#define DRV_NAME	"sata_sil24"
--#define DRV_VERSION	"1.1"
-+#include "libata.h"
-+
-+#define SATA_SIL24_DRV_VERSION "1.1"
- 
- /*
-  * Port request block (PRB) 32 bytes
-@@ -373,7 +374,7 @@ static const struct pci_device_id sil24_pci_tbl[] = {
- };
- 
- static struct pci_driver sil24_pci_driver = {
--	.name			= DRV_NAME,
-+	.name			= KBUILD_MODNAME,
- 	.id_table		= sil24_pci_tbl,
- 	.probe			= sil24_init_one,
- 	.remove			= ata_pci_remove_one,
-@@ -384,7 +385,7 @@ static struct pci_driver sil24_pci_driver = {
- };
- 
- static struct scsi_host_template sil24_sht = {
--	ATA_NCQ_SHT(DRV_NAME),
-+	ATA_NCQ_SHT(KBUILD_MODNAME),
- 	.can_queue		= SIL24_MAX_CMDS,
- 	.sg_tablesize		= SIL24_MAX_SGE,
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
-@@ -397,6 +398,7 @@ static struct ata_port_operations sil24_ops = {
- 	.qc_prep		= sil24_qc_prep,
- 	.qc_issue		= sil24_qc_issue,
- 	.qc_fill_rtf		= sil24_qc_fill_rtf,
-+	.qc_new			= ata_qc_new_fifo_order,
- 
- 	.freeze			= sil24_freeze,
- 	.thaw			= sil24_thaw,
-@@ -1279,7 +1281,7 @@ static int sil24_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	if (sizeof(union sil24_cmd_block) != PAGE_SIZE)
- 		__MARKER__sil24_cmd_block_is_sized_wrongly = 1;
- 
--	ata_print_version_once(&pdev->dev, DRV_VERSION);
-+	ata_print_version_once(&pdev->dev, SATA_SIL24_DRV_VERSION);
- 
- 	/* acquire resources */
- 	rc = pcim_enable_device(pdev);
-@@ -1288,7 +1290,7 @@ static int sil24_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	rc = pcim_iomap_regions(pdev,
- 				(1 << SIL24_HOST_BAR) | (1 << SIL24_PORT_BAR),
--				DRV_NAME);
-+				KBUILD_MODNAME);
- 	if (rc)
- 		return rc;
- 	iomap = pcim_iomap_table(pdev);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index bd5fefeaf548..dd94e06ba91a 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -881,6 +881,7 @@ struct ata_port_operations {
- 	void (*qc_prep)(struct ata_queued_cmd *qc);
- 	unsigned int (*qc_issue)(struct ata_queued_cmd *qc);
- 	bool (*qc_fill_rtf)(struct ata_queued_cmd *qc);
-+	struct ata_queued_cmd *(*qc_new)(struct ata_port *ap);
- 
- 	/*
- 	 * Configuration and exception handling
+Kapil Karkra (1):
+      block, mm: Added the necessary plumbing to take ioprio hints down to block layer
 
+
+ block/bio.c                    |   76 +++++++-----
+ block/blk-throttle.c           |    5 +
+ block/blk.h                    |    2 
+ block/ioprio.c                 |   22 ++-
+ drivers/ata/Makefile           |    2 
+ drivers/ata/libata-core.c      |   13 ++
+ drivers/ata/libata-eh.c        |   11 ++
+ drivers/ata/libata-hybrid.c    |  261 ++++++++++++++++++++++++++++++++++++++++
+ drivers/ata/libata-hybrid.h    |   14 ++
+ drivers/ata/libata-scsi.c      |    4 -
+ drivers/ata/libata-transport.c |   45 +++++++
+ drivers/ata/libata.h           |    2 
+ include/linux/ata.h            |    1 
+ include/linux/bio.h            |   69 ++++++++++-
+ include/linux/ioprio.h         |   32 ++++-
+ include/linux/libata.h         |    4 +
+ include/linux/page-flags.h     |   24 ++++
+ mm/debug.c                     |    5 +
+ mm/filemap.c                   |   18 +++
+ 19 files changed, 561 insertions(+), 49 deletions(-)
+ create mode 100644 drivers/ata/libata-hybrid.c
+ create mode 100644 drivers/ata/libata-hybrid.h
+
+--
+Thanks,
+jba
