@@ -1,67 +1,103 @@
-From: Jens Axboe <axboe@fb.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: [RFC PATCH 0/5] Enable use of Solid State Hybrid Drives
-Date: Wed, 29 Oct 2014 20:35:33 -0600
-Message-ID: <5451A3F5.9020903@fb.com>
-References: <20141029180454.4879.75088.stgit@stg-AndroidDev-VirtualBox> <yq1k33il3b3.fsf@sermon.lab.mkp.net>
+Date: Wed, 29 Oct 2014 23:28:29 -0400
+Message-ID: <yq1bnoukzhe.fsf@sermon.lab.mkp.net>
+References: <20141029180454.4879.75088.stgit@stg-AndroidDev-VirtualBox>
+	<yq1k33il3b3.fsf@sermon.lab.mkp.net> <5451A3F5.9020903@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:30895 "EHLO
-	mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752117AbaJ3Cfq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Oct 2014 22:35:46 -0400
-In-Reply-To: <yq1k33il3b3.fsf@sermon.lab.mkp.net>
+Received: from userp1040.oracle.com ([156.151.31.81]:40145 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752165AbaJ3D2h (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Oct 2014 23:28:37 -0400
+In-Reply-To: <5451A3F5.9020903@fb.com> (Jens Axboe's message of "Wed, 29 Oct
+	2014 20:35:33 -0600")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, "Jason B. Akers" <jason.b.akers@intel.com>
-Cc: linux-ide@vger.kernel.org, dan.j.williams@intel.com, kapil.karkra@intel.com, linux-kernel@vger.kernel.org
+To: Jens Axboe <axboe@fb.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "Jason B. Akers" <jason.b.akers@intel.com>, linux-ide@vger.kernel.org, dan.j.williams@intel.com, kapil.karkra@intel.com, linux-kernel@vger.kernel.org
 
-On 2014-10-29 20:05, Martin K. Petersen wrote:
->>>>>> "Jason" == Jason B Akers <jason.b.akers@intel.com> writes:
->
-> Jason> The following series enables the use of Solid State hybrid drives
-> Jason> ATA standard 3.2 defines the hybrid information feature, which
-> Jason> provides a means for the host driver to provide hints to the
-> Jason> SSHDs to guide what to place on the SSD/NAND portion and what to
-> Jason> place on the magnetic media.
->
-> I have been ripping my hair out in this department for a while.
->
-> A colleague and I presented our findings at SNIA SDC a few weeks
-> ago. I'm trying to find out if there's an embargo on the slides or if I
-> can post them.
->
-> First of all I completely agree with Dave's comments about hooking into
-> fadvise()/madvise().
+>>>>> "Jens" == Jens Axboe <axboe@fb.com> writes:
 
-The problem with xadvise() is that it handles only one part of this - it 
-handles the case of tying some sort of IO related priority information 
-to an inode. It does not handle the case of different parts of the file, 
-at least not without adding specific extra tracking for this on the 
-kernel side.
+Jens> The problem with xadvise() is that it handles only one part of
+Jens> this - it handles the case of tying some sort of IO related
+Jens> priority information to an inode. It does not handle the case of
+Jens> different parts of the file, at least not without adding specific
+Jens> extra tracking for this on the kernel side.
 
-I think we've needed a proper API for passing in appropriate hints on a 
-per-io basis for a LONG time.
+Are there actually people asking for sub-file granularity? I didn't get
+any requests for that in the survey I did this summer.
 
-> My challenge with hints has been trying to bridge all the various
-> existing approaches with the new stuff that's coming down the pipe in
-> T10/T13 (LBMD hints) and NFS v4.2 ditto. That turned into a huge mapping
-> table as well as a few amendments to what's currently being worked on in
-> the standards bodies.
+I talked to several application people about what they really needed and
+wanted. That turned into a huge twisted mess of a table with ponies of
+various sizes.
 
-That is the big challenge. We've tried (and failed) in the past to 
-define a set of hints that make sense. It'd be a shame to add something 
-that's specific to a given transport/technology. That said, this set of 
-hints do seem pretty basic and would not necessarily be a bad place to 
-start. But they are still very specific to this use case. And who knows 
-what will happen on the device side. I might assume that WILLNEED is the 
-same as HOT, and that DONTNEED is the same as cold. And then 
-applications get upset when vendor X and Y treat them somewhat 
-differently, because that's how it fit into their architecture.
+I condensed all those needs and desires into something like this:
 
-This is the primary reason that hints never happened previously.
++-----------------+------------+----------+------------+
+| I/O Class       | Command    | Desired  | Predicted  |
+|                 | Completion | Future   | Future     |
+|                 | Urgency    | Access   | Access     |
+|                 |            | Latency  | Frequency  |
++-----------------+------------+----------+------------+
+| Transaction     | High       | Low      | High       |
++-----------------+------------+----------+------------+
+| Metadata        | High       | Low      | Normal     |
++-----------------+------------+----------+------------+
+| Paging          | High       | Normal   | Normal     |
++-----------------+------------+----------+------------+
+| Streaming       | High       | Normal   | Low        |
++-----------------+------------+----------+------------+
+| Data            | Normal     | Normal   | Normal     |
++-----------------+------------+----------+------------+
+| Background      | Low        | Normal*  | Low        |
++-----------------+------------+----------+------------+
+
+Command completion urgency is really just the existing I/O priority.
+Desired future access latency affects data placement in a tiered
+device. Predicted future access frequency is essentially a caching hint.
+
+The names and I/O classes themselves are not really important. It's just
+a reduced version of all the things people asked for. Essentially:
+Relative priority, data placement and caching.
+
+I had also asked why people wanted to specify any hints. And that boiled
+down to the I/O classes in the left column above. People wanted stuff on
+a low latency storage tier because it was a transactional or metadata
+type of I/O. Or to isolate production I/O from any side effects of a
+background scrub or backup run.
+
+Incidentally, the classes data, transaction and background covered
+almost all the use cases that people had asked for. The metadata class
+mostly came about from good results with REQ_META tagging in a previous
+prototype. A few vendors wanted to be able to identify swap to prevent
+platter spin-ups. Streaming was requested by a couple of video folks.
+
+The notion of telling the storage *why* you're doing I/O instead of
+telling it how to manage its cache and where to put stuff is closely
+aligned with our internal experiences with I/O hints over the last
+decade. But it's a bit of a departure from where things are going in the
+standards bodies. In any case I thought it was interesting that pretty
+much every use case that people came up with could be adequately
+described by a handful of I/O classes.
+
+The next step was trying to map these hints into what was available in
+xadvise(), NFS 4.2 and the recent T10/T13 efforts. That wasn't trivial
+and there really isn't a 1:1 mapping that works. So I went to T10 and
+tried to nudge things in the same direction as NFS 4.2. Mainly because
+that's closer to what we already have in xadvise().
+
+Jens> I think we've needed a proper API for passing in appropriate hints
+Jens> on a per-io basis for a LONG time.
+
+Yup.
+
+Jens> That is the big challenge. We've tried (and failed) in the past to
+Jens> define a set of hints that make sense. It'd be a shame to add
+Jens> something that's specific to a given transport/technology.
+
+Absolutely!
 
 -- 
-Jens Axboe
-
+Martin K. Petersen	Oracle Linux Engineering
