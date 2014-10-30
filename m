@@ -1,103 +1,61 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
+From: Dan Williams <dan.j.williams@intel.com>
 Subject: Re: [RFC PATCH 0/5] Enable use of Solid State Hybrid Drives
-Date: Wed, 29 Oct 2014 23:28:29 -0400
-Message-ID: <yq1bnoukzhe.fsf@sermon.lab.mkp.net>
+Date: Wed, 29 Oct 2014 21:19:02 -0700
+Message-ID: <CAPcyv4ggAXzWows0PayvspOX4aP9G0PmLDes+0Q+m6VXQcF9Mw@mail.gmail.com>
 References: <20141029180454.4879.75088.stgit@stg-AndroidDev-VirtualBox>
-	<yq1k33il3b3.fsf@sermon.lab.mkp.net> <5451A3F5.9020903@fb.com>
+	<yq1k33il3b3.fsf@sermon.lab.mkp.net>
+	<5451A3F5.9020903@fb.com>
+	<yq1bnoukzhe.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:40145 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752165AbaJ3D2h (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Oct 2014 23:28:37 -0400
-In-Reply-To: <5451A3F5.9020903@fb.com> (Jens Axboe's message of "Wed, 29 Oct
-	2014 20:35:33 -0600")
+Received: from mail-vc0-f178.google.com ([209.85.220.178]:48284 "EHLO
+	mail-vc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756300AbaJ3ETD (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Oct 2014 00:19:03 -0400
+Received: by mail-vc0-f178.google.com with SMTP id hq12so2277263vcb.23
+        for <linux-ide@vger.kernel.org>; Wed, 29 Oct 2014 21:19:02 -0700 (PDT)
+In-Reply-To: <yq1bnoukzhe.fsf@sermon.lab.mkp.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jens Axboe <axboe@fb.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "Jason B. Akers" <jason.b.akers@intel.com>, linux-ide@vger.kernel.org, dan.j.williams@intel.com, kapil.karkra@intel.com, linux-kernel@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Jens Axboe <axboe@fb.com>, "Jason B. Akers" <jason.b.akers@intel.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, "Karkra, Kapil" <kapil.karkra@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-nvme@lists.infradead.org
 
->>>>> "Jens" == Jens Axboe <axboe@fb.com> writes:
+On Wed, Oct 29, 2014 at 8:28 PM, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+> The next step was trying to map these hints into what was available in
+> xadvise(), NFS 4.2 and the recent T10/T13 efforts. That wasn't trivial
+> and there really isn't a 1:1 mapping that works. So I went to T10 and
+> tried to nudge things in the same direction as NFS 4.2. Mainly because
+> that's closer to what we already have in xadvise().
 
-Jens> The problem with xadvise() is that it handles only one part of
-Jens> this - it handles the case of tying some sort of IO related
-Jens> priority information to an inode. It does not handle the case of
-Jens> different parts of the file, at least not without adding specific
-Jens> extra tracking for this on the kernel side.
+In case you still have hair left to pull wrangling these multiple
+specifications, Matthew reminds me that NVME also has cache advice at
+the transport layer.
 
-Are there actually people asking for sub-file granularity? I didn't get
-any requests for that in the survey I did this summer.
+> Jens> I think we've needed a proper API for passing in appropriate hints
+> Jens> on a per-io basis for a LONG time.
+>
+> Yup.
 
-I talked to several application people about what they really needed and
-wanted. That turned into a huge twisted mess of a table with ponies of
-various sizes.
+I understand the desire to have per-io / per-inode xadvise()-style
+hints, but I don't see why not also include a per-pid capability?
 
-I condensed all those needs and desires into something like this:
+Per-pid was not "icky" for flashcache [1].  It let's you flag
+processes that should not pollute the cache, as well "cache warming"
+processes pre-loading sub-ranges of files that is awkward to do with a
+per-inode hint.  Per-pid also allows hinting on behalf of other
+otherwise cache-unaware processes.
 
-+-----------------+------------+----------+------------+
-| I/O Class       | Command    | Desired  | Predicted  |
-|                 | Completion | Future   | Future     |
-|                 | Urgency    | Access   | Access     |
-|                 |            | Latency  | Frequency  |
-+-----------------+------------+----------+------------+
-| Transaction     | High       | Low      | High       |
-+-----------------+------------+----------+------------+
-| Metadata        | High       | Low      | Normal     |
-+-----------------+------------+----------+------------+
-| Paging          | High       | Normal   | Normal     |
-+-----------------+------------+----------+------------+
-| Streaming       | High       | Normal   | Low        |
-+-----------------+------------+----------+------------+
-| Data            | Normal     | Normal   | Normal     |
-+-----------------+------------+----------+------------+
-| Background      | Low        | Normal*  | Low        |
-+-----------------+------------+----------+------------+
+> Jens> That is the big challenge. We've tried (and failed) in the past to
+> Jens> define a set of hints that make sense. It'd be a shame to add
+> Jens> something that's specific to a given transport/technology.
+>
+> Absolutely!
 
-Command completion urgency is really just the existing I/O priority.
-Desired future access latency affects data placement in a tiered
-device. Predicted future access frequency is essentially a caching hint.
+In this RFC we end up punting the ultimate kernel-to-transport hint
+translation to userspace.  The kernel has a default interpretation,
+but it seems it will almost always be inadequate trying to account for
+per-device-quirks and platform performance policies.
 
-The names and I/O classes themselves are not really important. It's just
-a reduced version of all the things people asked for. Essentially:
-Relative priority, data placement and caching.
-
-I had also asked why people wanted to specify any hints. And that boiled
-down to the I/O classes in the left column above. People wanted stuff on
-a low latency storage tier because it was a transactional or metadata
-type of I/O. Or to isolate production I/O from any side effects of a
-background scrub or backup run.
-
-Incidentally, the classes data, transaction and background covered
-almost all the use cases that people had asked for. The metadata class
-mostly came about from good results with REQ_META tagging in a previous
-prototype. A few vendors wanted to be able to identify swap to prevent
-platter spin-ups. Streaming was requested by a couple of video folks.
-
-The notion of telling the storage *why* you're doing I/O instead of
-telling it how to manage its cache and where to put stuff is closely
-aligned with our internal experiences with I/O hints over the last
-decade. But it's a bit of a departure from where things are going in the
-standards bodies. In any case I thought it was interesting that pretty
-much every use case that people came up with could be adequately
-described by a handful of I/O classes.
-
-The next step was trying to map these hints into what was available in
-xadvise(), NFS 4.2 and the recent T10/T13 efforts. That wasn't trivial
-and there really isn't a 1:1 mapping that works. So I went to T10 and
-tried to nudge things in the same direction as NFS 4.2. Mainly because
-that's closer to what we already have in xadvise().
-
-Jens> I think we've needed a proper API for passing in appropriate hints
-Jens> on a per-io basis for a LONG time.
-
-Yup.
-
-Jens> That is the big challenge. We've tried (and failed) in the past to
-Jens> define a set of hints that make sense. It'd be a shame to add
-Jens> something that's specific to a given transport/technology.
-
-Absolutely!
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+[1]: https://github.com/facebook/flashcache/blob/master/doc/flashcache-doc.txt#L139
