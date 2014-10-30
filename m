@@ -1,42 +1,50 @@
 From: Simon Horman <horms@verge.net.au>
-Subject: Re: [PATCH 0/3] ARM: shmobile: sata_rcar updates
-Date: Thu, 30 Oct 2014 09:00:02 +0900
-Message-ID: <20141030000002.GE4599@verge.net.au>
+Subject: Re: [PATCH 3/3] ARM: shmobile: r8a7779 dtsi: Add SoC-specific SATA
+ compatible property
+Date: Thu, 30 Oct 2014 10:03:30 +0900
+Message-ID: <20141030010329.GE22052@verge.net.au>
 References: <1414591131-21771-1-git-send-email-geert+renesas@glider.be>
- <20141029145151.GD25226@htj.dyndns.org>
- <CAMuHMdXN-=6budQ=QViG0p3Cfdz1CSVyG6jUC0sRi+iis1nYMA@mail.gmail.com>
+ <1414591131-21771-4-git-send-email-geert+renesas@glider.be>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-sh-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from kirsty.vergenet.net ([202.4.237.240]:56357 "EHLO
+	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757971AbaJ3BDd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Oct 2014 21:03:33 -0400
 Content-Disposition: inline
-In-Reply-To: <CAMuHMdXN-=6budQ=QViG0p3Cfdz1CSVyG6jUC0sRi+iis1nYMA@mail.gmail.com>
-Sender: linux-sh-owner@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Tejun Heo <tj@kernel.org>, Geert Uytterhoeven <geert+renesas@glider.be>, Magnus Damm <magnus.damm@gmail.com>, Valentine Barshak <valentine.barshak@cogentembedded.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Linux-sh list <linux-sh@vger.kernel.org>
+In-Reply-To: <1414591131-21771-4-git-send-email-geert+renesas@glider.be>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Tejun Heo <tj@kernel.org>, Magnus Damm <magnus.damm@gmail.com>, Valentine Barshak <valentine.barshak@cogentembedded.com>, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-sh@vger.kernel.org
 
-On Wed, Oct 29, 2014 at 03:58:11PM +0100, Geert Uytterhoeven wrote:
-> Hi Tejun,
+On Wed, Oct 29, 2014 at 02:58:51PM +0100, Geert Uytterhoeven wrote:
+> The SATA node used the generic compatible property only, which was
+> deprecated by commit e67adb4e669db834 ("sata_rcar: Add R-Car Gen2 SATA
+> PHY support"). Add the SoC-specific one introduced by that commit.
 > 
-> On Wed, Oct 29, 2014 at 3:51 PM, Tejun Heo <tj@kernel.org> wrote:
-> > On Wed, Oct 29, 2014 at 02:58:48PM +0100, Geert Uytterhoeven wrote:
-> >> This patch series improves DT bindings documentation and usage for the
-> >> sata_rcar driver.
-> >>
-> >> The first patch was sent before by Valentine Barshak a while ago, but never
-> >> updated according to the review comments.
-> >
-> > I can route these through libata tree once Simon acks them.  Please
-> > let me know thorugh which tree these should be routed.
+> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+
+Thanks, I have queued this up.
+
+> ---
+>  arch/arm/boot/dts/r8a7779.dtsi | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> I think the first two, tagged "sata_rcar", should go through your tree.
-> The third one, tagged "ARM: shmobile", should go through Simon's tree.
-
-Yes, I think so too.
-
-For the first two patches:
-
-Acked-by: Simon Horman <horms+renesas@verge.net.au>
-
-I'll pick up the last patch myself.
-
+> diff --git a/arch/arm/boot/dts/r8a7779.dtsi b/arch/arm/boot/dts/r8a7779.dtsi
+> index fda814ed191d1531..a8845328827a3f0c 100644
+> --- a/arch/arm/boot/dts/r8a7779.dtsi
+> +++ b/arch/arm/boot/dts/r8a7779.dtsi
+> @@ -303,7 +303,7 @@
+>  	};
+>  
+>  	sata: sata@fc600000 {
+> -		compatible = "renesas,rcar-sata";
+> +		compatible = "renesas,sata-r8a7779", "renesas,rcar-sata";
+>  		reg = <0xfc600000 0x2000>;
+>  		interrupts = <0 100 IRQ_TYPE_LEVEL_HIGH>;
+>  		clocks = <&mstp1_clks R8A7779_CLK_SATA>;
+> -- 
+> 1.9.1
+> 
