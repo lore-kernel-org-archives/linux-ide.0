@@ -1,97 +1,42 @@
-From: Jens Axboe <axboe@fb.com>
-Subject: Re: [RFC PATCH 0/5] Enable use of Solid State Hybrid Drives
-Date: Wed, 29 Oct 2014 16:49:41 -0600
-Message-ID: <54516F05.8050204@fb.com>
-References: <20141029180454.4879.75088.stgit@stg-AndroidDev-VirtualBox> <20141029201417.GK16186@dastard> <545157DB.70304@fb.com> <20141029220905.GL16186@dastard>
+From: Simon Horman <horms@verge.net.au>
+Subject: Re: [PATCH 0/3] ARM: shmobile: sata_rcar updates
+Date: Thu, 30 Oct 2014 09:00:02 +0900
+Message-ID: <20141030000002.GE4599@verge.net.au>
+References: <1414591131-21771-1-git-send-email-geert+renesas@glider.be>
+ <20141029145151.GD25226@htj.dyndns.org>
+ <CAMuHMdXN-=6budQ=QViG0p3Cfdz1CSVyG6jUC0sRi+iis1nYMA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:56434 "EHLO
-	mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756039AbaJ2Wtt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Oct 2014 18:49:49 -0400
-In-Reply-To: <20141029220905.GL16186@dastard>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-sh-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAMuHMdXN-=6budQ=QViG0p3Cfdz1CSVyG6jUC0sRi+iis1nYMA@mail.gmail.com>
+Sender: linux-sh-owner@vger.kernel.org
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Tejun Heo <tj@kernel.org>, Geert Uytterhoeven <geert+renesas@glider.be>, Magnus Damm <magnus.damm@gmail.com>, Valentine Barshak <valentine.barshak@cogentembedded.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Linux-sh list <linux-sh@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Jason B. Akers" <jason.b.akers@intel.com>, linux-ide@vger.kernel.org, dan.j.williams@intel.com, kapil.karkra@intel.com, linux-kernel@vger.kernel.org
 
-On 10/29/2014 04:09 PM, Dave Chinner wrote:
-> On Wed, Oct 29, 2014 at 03:10:51PM -0600, Jens Axboe wrote:
->> On 10/29/2014 02:14 PM, Dave Chinner wrote:
->>> On Wed, Oct 29, 2014 at 11:23:38AM -0700, Jason B. Akers wrote:
->>>> The following series enables the use of Solid State hybrid drives
->>>> ATA standard 3.2 defines the hybrid information feature, which provides a means for the host driver to provide hints to the SSHDs to guide what to place on the SSD/NAND portion and what to place on the magnetic media.
->>>>
->>>> This implementation allows user space applications to provide the cache hints to the kernel using the existing ionice syscall. 
->>>>
->>>> An application can pass a priority number coding up bits 11, 12, and 15 of the ionice command to form a 3 bit field that encodes the following priorities:
->>>> 	OPRIO_ADV_NONE,
->>>> 	IOPRIO_ADV_EVICT, /* actively discard cached data */
->>>> 	IOPRIO_ADV_DONTNEED, /* caching this data has little value */
->>>> 	IOPRIO_ADV_NORMAL, /* best-effort cache priority (default) */
->>>> 	IOPRIO_ADV_RESERVED1, /* reserved for future use */
->>>> 	IOPRIO_ADV_RESERVED2,
->>>> 	IOPRIO_ADV_RESERVED3,
->>>> 	IOPRIO_ADV_WILLNEED, /* high temporal locality */
->>>>
->>>> For example the following commands from the user space will make dd IOs to be generated with a hint of IOPRIO_ADV_DONTNEED assuming the SSHD is /dev/sdc.
->>>>
->>>> ionice -c2 -n4096 dd if=/dev/zero of=/dev/sdc bs=1M count=1024
->>>> ionice -c2 -n4096 dd if=/dev/sdc of=/dev/null bs=1M count=1024
->>>
->>> This looks to be the wrong way to implement per-IO priority
->>> information.
->>>
->>> How does a filesystem make use of this to make sure it's
->>> metadata ends up with IOPRIO_ADV_WILLNEED to store frequently
->>> accessed metadata in flash. Conversely, journal writes need to
->>> be issued with IOPRIO_ADV_DONTNEED so they don't unneceessarily
->>> consume flash space as they are never-read IOs...
->>
->> Not disagreeing that loading more into the io priority fields is a
->> bit... icky. I see why it's done, though, it requires the least amount
->> of plumbing.
+On Wed, Oct 29, 2014 at 03:58:11PM +0100, Geert Uytterhoeven wrote:
+> Hi Tejun,
 > 
-> Yeah, but we don't do things the easy way just because it's easy. We
-> do things the right way. ;)
-
-Still not disagreeing with you, merely stating that I can see why they
-chose to do it this way. Still doesn't change the fact that it feels
-like a hack, not a designed solution.
-
->> As for the fs accessing this, the io nice fields are readily exposed
->> through the ->bi_rw setting. So while the above example uses ionice to
->> set a task io priority (that a bio will then inherit), nothing prevents
->> you from passing it in directly from the kernel.
+> On Wed, Oct 29, 2014 at 3:51 PM, Tejun Heo <tj@kernel.org> wrote:
+> > On Wed, Oct 29, 2014 at 02:58:48PM +0100, Geert Uytterhoeven wrote:
+> >> This patch series improves DT bindings documentation and usage for the
+> >> sata_rcar driver.
+> >>
+> >> The first patch was sent before by Valentine Barshak a while ago, but never
+> >> updated according to the review comments.
+> >
+> > I can route these through libata tree once Simon acks them.  Please
+> > let me know thorugh which tree these should be routed.
 > 
-> Right, but now the filesystem needs to provide that on a per-inode
-> basis, not from the task structure as the task that is submitting
-> the bio is not necesarily the task doing the read/write syscall.
+> I think the first two, tagged "sata_rcar", should go through your tree.
+> The third one, tagged "ARM: shmobile", should go through Simon's tree.
 
-Whomever submits the bio would need to provide it, yes. And with the
-disconnect for async writes, that becomes... interesting.
+Yes, I think so too.
 
-> e.g. the write case above doesn't actually inherit the task priority
-> at the bio level at all because the IO is being dispatched by a
-> background flusher thread, not the ioniced task calling write(2). 
+For the first two patches:
 
-Oh yes, I realize that.
+Acked-by: Simon Horman <horms+renesas@verge.net.au>
 
-> IMO using ionice is a nice hack, but utimately it looks mostly useless
-> from a user and application perspective as cache residency is a
-> property of the data being read/written, not the task doing the IO.
-> e.g. a database will want it's indexes in flash and bulk
-> data in non-cached storage.
-> 
-> IOWs, to make effective use of this the task will need different
-> cache hints for each different type of data needs to do IO on, and
-> so overloading IO priorities just seems the wrong direction to be
-> starting from.
-
-Agree.
-
--- 
-Jens Axboe
+I'll pick up the last patch myself.
 
