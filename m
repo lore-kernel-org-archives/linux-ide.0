@@ -1,61 +1,88 @@
-From: Dan Williams <dan.j.williams@intel.com>
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [RFC PATCH 0/5] Enable use of Solid State Hybrid Drives
-Date: Wed, 29 Oct 2014 21:19:02 -0700
-Message-ID: <CAPcyv4ggAXzWows0PayvspOX4aP9G0PmLDes+0Q+m6VXQcF9Mw@mail.gmail.com>
+Date: Thu, 30 Oct 2014 18:21:11 +1100
+Message-ID: <20141030072111.GJ13323@dastard>
 References: <20141029180454.4879.75088.stgit@stg-AndroidDev-VirtualBox>
-	<yq1k33il3b3.fsf@sermon.lab.mkp.net>
-	<5451A3F5.9020903@fb.com>
-	<yq1bnoukzhe.fsf@sermon.lab.mkp.net>
+ <20141029201417.GK16186@dastard>
+ <545157DB.70304@fb.com>
+ <20141029220905.GL16186@dastard>
+ <CAPcyv4iiqfeWQyZpzYwASFV+7Ztjcjrp0DEq3ThOmdwgWGGJUw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vc0-f178.google.com ([209.85.220.178]:48284 "EHLO
-	mail-vc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756300AbaJ3ETD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Oct 2014 00:19:03 -0400
-Received: by mail-vc0-f178.google.com with SMTP id hq12so2277263vcb.23
-        for <linux-ide@vger.kernel.org>; Wed, 29 Oct 2014 21:19:02 -0700 (PDT)
-In-Reply-To: <yq1bnoukzhe.fsf@sermon.lab.mkp.net>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4iiqfeWQyZpzYwASFV+7Ztjcjrp0DEq3ThOmdwgWGGJUw@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Jens Axboe <axboe@fb.com>, "Jason B. Akers" <jason.b.akers@intel.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, "Karkra, Kapil" <kapil.karkra@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Jens Axboe <axboe@fb.com>, "Jason B. Akers" <jason.b.akers@intel.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, "Karkra, Kapil" <kapil.karkra@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-nvme@lists.infradead.org
 
-On Wed, Oct 29, 2014 at 8:28 PM, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
-> The next step was trying to map these hints into what was available in
-> xadvise(), NFS 4.2 and the recent T10/T13 efforts. That wasn't trivial
-> and there really isn't a 1:1 mapping that works. So I went to T10 and
-> tried to nudge things in the same direction as NFS 4.2. Mainly because
-> that's closer to what we already have in xadvise().
+On Wed, Oct 29, 2014 at 03:24:11PM -0700, Dan Williams wrote:
+> On Wed, Oct 29, 2014 at 3:09 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Wed, Oct 29, 2014 at 03:10:51PM -0600, Jens Axboe wrote:
+> >> As for the fs accessing this, the io nice fields are readily exposed
+> >> through the ->bi_rw setting. So while the above example uses ionice to
+> >> set a task io priority (that a bio will then inherit), nothing prevents
+> >> you from passing it in directly from the kernel.
+> >
+> > Right, but now the filesystem needs to provide that on a per-inode
+> > basis, not from the task structure as the task that is submitting
+> > the bio is not necesarily the task doing the read/write syscall.
+> >
+> > e.g. the write case above doesn't actually inherit the task priority
+> > at the bio level at all because the IO is being dispatched by a
+> > background flusher thread, not the ioniced task calling write(2).
+> 
+> When the ioniced task calling write(2) inserts the page into the page
+> cache then the current priority is recorded in the struct page.  The
 
-In case you still have hair left to pull wrangling these multiple
-specifications, Matthew reminds me that NVME also has cache advice at
-the transport layer.
+It does? Can you point me to where the page cache code does this,
+because I've clearly missed something important go by in the past
+few months...
 
-> Jens> I think we've needed a proper API for passing in appropriate hints
-> Jens> on a per-io basis for a LONG time.
->
-> Yup.
+> background flusher likely runs at a lower / neutral caching priority
+> and the priority carried in the page will be the effective caching
+> priority applied to the bio.
 
-I understand the desire to have per-io / per-inode xadvise()-style
-hints, but I don't see why not also include a per-pid capability?
+How? The writepage code that adds the pages to the bio doesn't look
+at priorities at all. If we're supposed to be doing this, then it
+isn't being done in XFS when we are building bios, and nobody has
+told me we need to do it...
 
-Per-pid was not "icky" for flashcache [1].  It let's you flag
-processes that should not pollute the cache, as well "cache warming"
-processes pre-loading sub-ranges of files that is awkward to do with a
-per-inode hint.  Per-pid also allows hinting on behalf of other
-otherwise cache-unaware processes.
+Hmmm - ok, so what happens if an IO is made up of pages from
+different tasks with different priorities? what then? ;)
 
-> Jens> That is the big challenge. We've tried (and failed) in the past to
-> Jens> define a set of hints that make sense. It'd be a shame to add
-> Jens> something that's specific to a given transport/technology.
->
-> Absolutely!
+> > from a user and application perspective as cache residency is a
+> > property of the data being read/written, not the task doing the IO.
+> > e.g. a database will want it's indexes in flash and bulk
+> > data in non-cached storage.
+> 
+> Right, if those are doing direct-i/o then have a separate thread-id
+> for those write(2) calls.
 
-In this RFC we end up punting the ultimate kernel-to-transport hint
-translation to userspace.  The kernel has a default interpretation,
-but it seems it will almost always be inadequate trying to account for
-per-device-quirks and platform performance policies.
+Which, again, is not how applications are designed or implemented.
+If the current transaction needs to read/write index blocks, it does
+it directly, not have to wait for some other dispatch thread to do
+it for it....
 
-[1]: https://github.com/facebook/flashcache/blob/master/doc/flashcache-doc.txt#L139
+> Otherwise if they are dirtying page cache
+> the struct page carries the hint.
+> 
+> > IOWs, to make effective use of this the task will need different
+> > cache hints for each different type of data needs to do IO on, and
+> > so overloading IO priorities just seems the wrong direction to be
+> > starting from.
+> 
+> There's also the fadvise() enabling that could be bolted on top of
+> this capability.  But, before that step, is a thread-id per-caching
+> context too much to ask?
+
+If we do it that way, we are stuck with it forever. So let's get our
+ducks in line first before pulling the trigger...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
