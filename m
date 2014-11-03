@@ -1,134 +1,117 @@
-From: Antoine Tenart <antoine.tenart@free-electrons.com>
-Subject: Re: BUG: AHCI: ata8 port resetting needlessly, slow boot
-Date: Mon, 3 Nov 2014 10:11:16 +0100
-Message-ID: <20141103091116.GA21659@kwain>
-References: <54564A6C.4060009@bitsync.net>
+From: Barto <mister.freeman@laposte.net>
+Subject: Re: FW: [PATCH V2] ata: Disabling the async PM for JMicron chips
+Date: Mon, 03 Nov 2014 11:34:25 +0100
+Message-ID: <54575A31.3090202@laposte.net>
+References: <1411543338-2257-1-git-send-email-chuansheng.liu@intel.com> <27240C0AC20F114CBF8149A2696CBE4A01EB378D@SHSMSX101.ccr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="y0ulUmNC+osPPQO6"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:51758 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751175AbaKCJLT (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Nov 2014 04:11:19 -0500
-Content-Disposition: inline
-In-Reply-To: <54564A6C.4060009@bitsync.net>
+In-Reply-To: <27240C0AC20F114CBF8149A2696CBE4A01EB378D@SHSMSX101.ccr.corp.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Zlatko Calusic <zcalusic@bitsync.net>
-Cc: Antoine =?iso-8859-1?Q?T=E9nart?= <antoine.tenart@free-electrons.com>, Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org
+To: "Liu, Chuansheng" <chuansheng.liu@intel.com>, "tj"@kernel.org, rjw@rjwysocki.net
+
+Hello,
+
+yes I confirm that this patch solves the problem with JMicron JMB363-36=
+8
+sata/ide controlers,
+
+I have tested this patch with kernel 3.17.2 and kernel 3.18rc3, my
+JMicron JMB363/368 can now work after a standby mode,
+
+so I hope that this patch will be merged
 
 
---y0ulUmNC+osPPQO6
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-
-Hi Zlatko,
-
-On Sun, Nov 02, 2014 at 04:14:52PM +0100, Zlatko Calusic wrote:
-> 
-> I have an issue with AHCI driver, starting with kernel 3.17.0, where ata8
-> port is resetting multiple times during boot, and it takes about a minute
-> until it gives up, dmesg excerpt:
-> 
-> [    0.698367] ata8: SATA max UDMA/133 abar m8192@0xfebfe000 port 0xfebfe180
-> irq 16
-> [    6.052229] ata8: link is slow to respond, please be patient (ready=-19)
-> [   10.744229] ata8: COMRESET failed (errno=-16)
-> [   16.098114] ata8: link is slow to respond, please be patient (ready=-19)
-> [   20.790040] ata8: COMRESET failed (errno=-16)
-> [   26.144229] ata8: link is slow to respond, please be patient (ready=-19)
-> [   55.826199] ata8: COMRESET failed (errno=-16)
-> [   55.826386] ata8: limiting SATA link speed to 1.5 Gbps
-> [   60.874228] ata8: COMRESET failed (errno=-16)
-> [   60.874413] ata8: reset failed, giving up
-> 
-> In kernel 3.16.0 the same port was reported as dummy and the boot sequence
-> was fast:
-> 
-> [    0.757323] ata8: DUMMY
-> 
-> I took some time, bisected between 3.16 and 3.17, and eventually found this
-> commit as culprit:
-> 
-> commit 725c7b570fda4207e465ff8856c2c12c2645a685
-> Author: Antoine Ténart <antoine.tenart@free-electrons.com>
-> Date:   Wed Jul 30 20:13:56 2014 +0200
-> 
->     ata: libahci_platform: move port_map parameters into the AHCI structure
-> 
-> Indeed, after reverting that commit in current 3.18-rc2, once again ata8 is
-> reported as dummy, and the machine boots fast.
-> 
-> I'm attaching the full dmesg output.
-
-Thanks for reporting this!
-Can you give a try to the attached patch, to see if it fixes the issue?
-
-Thanks,
-
-Antoine
-
--- 
-Antoine Ténart, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
-
---y0ulUmNC+osPPQO6
-Content-Type: text/x-diff; charset=us-ascii
-Content-Disposition: attachment; filename="0001-ahci-fix-AHCI-parameters-not-taken-into-account.patch"
-
->From 78af1100856d5f304b794727005fda589d2c4c84 Mon Sep 17 00:00:00 2001
-From: Antoine Tenart <antoine.tenart@free-electrons.com>
-Date: Mon, 3 Nov 2014 09:56:11 +0100
-Subject: [PATCH] ahci: fix AHCI parameters not taken into account
-
-Changes into the AHCI subsystem have introduced a bug by not taking into
-account the force_port_map and mask_port_map parameters when using the
-ahci_pci_save_initial_config function. This commit fixes it by setting
-the internal parameters of the ahci_port_priv structure.
-
-Fixes: 725c7b570fda
-
-Reported-by: Zlatko Calusic <zcalusic@bitsync.net>
-Signed-off-by: Antoine Tenart <antoine.tenart@free-electrons.com>
----
- drivers/ata/ahci.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index a29f8012fb08..b3da6a2c44dd 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -504,12 +504,9 @@ MODULE_PARM_DESC(marvell_enable, "Marvell SATA via AHCI (1 = enabled)");
- static void ahci_pci_save_initial_config(struct pci_dev *pdev,
- 					 struct ahci_host_priv *hpriv)
- {
--	unsigned int force_port_map = 0;
--	unsigned int mask_port_map = 0;
--
- 	if (pdev->vendor == PCI_VENDOR_ID_JMICRON && pdev->device == 0x2361) {
- 		dev_info(&pdev->dev, "JMB361 has only one port\n");
--		force_port_map = 1;
-+		hpriv->force_port_map = 1;
- 	}
- 
- 	/*
-@@ -519,9 +516,9 @@ static void ahci_pci_save_initial_config(struct pci_dev *pdev,
- 	 */
- 	if (hpriv->flags & AHCI_HFLAG_MV_PATA) {
- 		if (pdev->device == 0x6121)
--			mask_port_map = 0x3;
-+			hpriv->mask_port_map = 0x3;
- 		else
--			mask_port_map = 0xf;
-+			hpriv->mask_port_map = 0xf;
- 		dev_info(&pdev->dev,
- 			  "Disabling your PATA port. Use the boot option 'ahci.marvell_enable=0' to avoid this.\n");
- 	}
--- 
-2.1.0
-
-
---y0ulUmNC+osPPQO6--
+Le 03/11/2014 10:13, Liu, Chuansheng a =E9crit :
+> Hello Mister,
+> You should have received this email, please reply to all with your te=
+st result, which will help the patch merged, thanks.
+>=20
+> Best Regards
+> Chuansheng
+>=20
+> -----Original Message-----
+> From: Liu, Chuansheng=20
+> Sent: Wednesday, September 24, 2014 3:22 PM
+> To: tj@kernel.org; rjw@rjwysocki.net
+> Cc: linux-ide@vger.kernel.org; linux-kernel@vger.kernel.org; mister.f=
+reeman@laposte.net; Zhang, Rui; Liu, Chuansheng
+> Subject: [PATCH V2] ata: Disabling the async PM for JMicron chips
+>=20
+> Like the commit e6b7e41cdd8c ("ata: Disabling the async PM for JMicro=
+n chip 363/361"),
+> Barto found the similar issue for JMicron chip 368, that 363/368 has =
+no
+> parent-children relationship, but they have the power dependency.
+>=20
+> So here we can exclude the JMicron chips out of pm_async method direc=
+tly,
+> to avoid further similar issues.
+>=20
+> Details in:
+> https://bugzilla.kernel.org/show_bug.cgi?id=3D84861
+>=20
+> Reported-and-tested-by: Barto <mister.freeman@laposte.net>
+> Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+> ---
+>  drivers/ata/ahci.c         |   11 +++++------
+>  drivers/ata/pata_jmicron.c |   11 +++++------
+>  2 files changed, 10 insertions(+), 12 deletions(-)
+>=20
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index a0cc0ed..85aa6ec 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -1340,15 +1340,14 @@ static int ahci_init_one(struct pci_dev *pdev=
+, const struct pci_device_id *ent)
+>  		ahci_pci_bar =3D AHCI_PCI_BAR_ENMOTUS;
+> =20
+>  	/*
+> -	 * The JMicron chip 361/363 contains one SATA controller and one
+> +	 * The JMicron chip 361/363/368 contains one SATA controller and on=
+e
+>  	 * PATA controller,for powering on these both controllers, we must
+>  	 * follow the sequence one by one, otherwise one of them can not be
+> -	 * powered on successfully, so here we disable the async suspend
+> -	 * method for these chips.
+> +	 * powered on successfully.
+> +	 * Here we can exclude the Jmicron family directly out of pm_async
+> +	 * method to follow the power-on sequence.
+>  	 */
+> -	if (pdev->vendor =3D=3D PCI_VENDOR_ID_JMICRON &&
+> -		(pdev->device =3D=3D PCI_DEVICE_ID_JMICRON_JMB363 ||
+> -		pdev->device =3D=3D PCI_DEVICE_ID_JMICRON_JMB361))
+> +	if (pdev->vendor =3D=3D PCI_VENDOR_ID_JMICRON)
+>  		device_disable_async_suspend(&pdev->dev);
+> =20
+>  	/* acquire resources */
+> diff --git a/drivers/ata/pata_jmicron.c b/drivers/ata/pata_jmicron.c
+> index 47e418b..1d685b6 100644
+> --- a/drivers/ata/pata_jmicron.c
+> +++ b/drivers/ata/pata_jmicron.c
+> @@ -144,15 +144,14 @@ static int jmicron_init_one (struct pci_dev *pd=
+ev, const struct pci_device_id *i
+>  	const struct ata_port_info *ppi[] =3D { &info, NULL };
+> =20
+>  	/*
+> -	 * The JMicron chip 361/363 contains one SATA controller and one
+> +	 * The JMicron chip 361/363/368 contains one SATA controller and on=
+e
+>  	 * PATA controller,for powering on these both controllers, we must
+>  	 * follow the sequence one by one, otherwise one of them can not be
+> -	 * powered on successfully, so here we disable the async suspend
+> -	 * method for these chips.
+> +	 * powered on successfully.
+> +	 * Here we can exclude the Jmicron family directly out of pm_async
+> +	 * method to follow the power-on sequence.
+>  	 */
+> -	if (pdev->vendor =3D=3D PCI_VENDOR_ID_JMICRON &&
+> -		(pdev->device =3D=3D PCI_DEVICE_ID_JMICRON_JMB363 ||
+> -		pdev->device =3D=3D PCI_DEVICE_ID_JMICRON_JMB361))
+> +	if (pdev->vendor =3D=3D PCI_VENDOR_ID_JMICRON)
+>  		device_disable_async_suspend(&pdev->dev);
+> =20
+>  	return ata_pci_bmdma_init_one(pdev, ppi, &jmicron_sht, NULL, 0);
+>=20
