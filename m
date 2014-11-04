@@ -1,65 +1,42 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [bz87101 PATCH] libata: allow sata_sil24 to opt-out of tag
- ordered submission
-Date: Tue, 4 Nov 2014 09:27:14 -0500
-Message-ID: <20141104142714.GE14459@htj.dyndns.org>
-References: <20141029171402.17994.16801.stgit@viggo.jf.intel.com>
+From: Zlatko Calusic <zcalusic@bitsync.net>
+Subject: Re: BUG: AHCI: ata8 port resetting needlessly, slow boot
+Date: Tue, 04 Nov 2014 18:54:51 +0100
+Message-ID: <545912EB.1020006@bitsync.net>
+References: <54564A6C.4060009@bitsync.net> <20141103091116.GA21659@kwain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f176.google.com ([209.85.216.176]:47773 "EHLO
-	mail-qc0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751104AbaKDO1S (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 4 Nov 2014 09:27:18 -0500
-Content-Disposition: inline
-In-Reply-To: <20141029171402.17994.16801.stgit@viggo.jf.intel.com>
+Received: from bitsync.net ([80.83.126.10]:57935 "EHLO bitsync.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750985AbaKDRyy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 4 Nov 2014 12:54:54 -0500
+In-Reply-To: <20141103091116.GA21659@kwain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-ide@vger.kernel.org, Ronny Hegewald <Ronny.Hegewald@online.de>, stable@vger.kernel.org
+To: Antoine Tenart <antoine.tenart@free-electrons.com>
+Cc: Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org
 
-Hello, Dan.
+On 03.11.2014 10:11, Antoine Tenart wrote:
+> Hi Zlatko,
+>
+> Thanks for reporting this!
+> Can you give a try to the attached patch, to see if it fixes the issue?
+>
 
-On Wed, Oct 29, 2014 at 10:21:08AM -0700, Dan Williams wrote:
-> diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-> index 5f4e0cca56ec..16f75854cd99 100644
-> --- a/drivers/ata/libata.h
-> +++ b/drivers/ata/libata.h
-> @@ -90,6 +90,8 @@ extern int ata_down_xfermask_limit(struct ata_device *dev, unsigned int sel);
->  extern unsigned int ata_dev_set_feature(struct ata_device *dev,
->  					u8 enable, u8 feature);
->  extern void ata_sg_clean(struct ata_queued_cmd *qc);
-> +extern struct ata_queued_cmd *ata_qc_new_tag_order(struct ata_port *ap);
-> +extern struct ata_queued_cmd *ata_qc_new_fifo_order(struct ata_port *ap);
->  extern void ata_qc_free(struct ata_queued_cmd *qc);
->  extern void ata_qc_issue(struct ata_queued_cmd *qc);
->  extern void __ata_qc_complete(struct ata_queued_cmd *qc);
-> diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
-> index d81b20ddb527..59719ded8ef1 100644
-> --- a/drivers/ata/sata_sil24.c
-> +++ b/drivers/ata/sata_sil24.c
-> @@ -30,8 +30,9 @@
->  #include <scsi/scsi_cmnd.h>
->  #include <linux/libata.h>
->  
-> -#define DRV_NAME	"sata_sil24"
-> -#define DRV_VERSION	"1.1"
-> +#include "libata.h"
-> +
-> +#define SATA_SIL24_DRV_VERSION "1.1"
+Hello Antoine,
 
-Why are we changing these in this patch?
+First of all, thank you for a quick fix! And then my apologies for a 
+delay in replying, suddenly got very busy yesterday...
 
-> @@ -397,6 +398,7 @@ static struct ata_port_operations sil24_ops = {
->  	.qc_prep		= sil24_qc_prep,
->  	.qc_issue		= sil24_qc_issue,
->  	.qc_fill_rtf		= sil24_qc_fill_rtf,
-> +	.qc_new			= ata_qc_new_fifo_order,
+Just booted the patched kernel (patch applies cleanly to 3.18.0-rc3+), 
+and I'm happy to report that your patch fixes the issue, ata8 is again 
+reported as DUMMY, and there's no bootup delay anymore. Good job!
 
-Maybe it'd be easier to just make it a flag?  Are we expecting other
-varieties here?
+Feel free to tag Reported-and-tested-by: Zlatko Calusic 
+<zcalusic@bitsync.net>
 
-Thanks.
-
+Best regards,
 -- 
-tejun
+Zlatko
+
