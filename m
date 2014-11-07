@@ -1,41 +1,30 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/3] block: Introduce blkdev_issue_zeroout_discard()
- function
-Date: Fri, 7 Nov 2014 00:26:10 -0800
-Message-ID: <20141107082610.GC8394@infradead.org>
+From: Bernd Schubert <bschubert@ddn.com>
+Subject: Re: [RFC] Discard update for 3.19
+Date: Fri, 7 Nov 2014 12:11:07 +0000
+Message-ID: <F6E129D0B46B7F4B89EF4089CE55578C045C9146@LAX-EX-MB4.datadirect.datadirectnet.com>
 References: <1415336894-15327-1-git-send-email-martin.petersen@oracle.com>
- <1415336894-15327-4-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:49394 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750962AbaKGI0K (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Nov 2014 03:26:10 -0500
-Content-Disposition: inline
-In-Reply-To: <1415336894-15327-4-git-send-email-martin.petersen@oracle.com>
+Received: from legacy.ddn.com ([64.47.133.206]:20116 "EHLO legacy.ddn.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751564AbaKGMQU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Nov 2014 07:16:20 -0500
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org, neilb@suse.de
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "neilb@suse.de" <neilb@suse.de>
 
-On Fri, Nov 07, 2014 at 12:08:14AM -0500, Martin K. Petersen wrote:
-> blkdev_issue_discard() will zero a given block range on disk. This is
-> done by way of either WRITE SAME or regular WRITE. I.e. the blocks on
-> disk will be written and thus provisioned.
-> 
-> There are use cases where the desired behavior is to zero the blocks but
-> unprovision them if possible. The blocks must deterministically contain
-> zeroes when they are subsequently read back.
-> 
-> This patch introduces a blkdev_issue_zeroout_discard() call that
-> provides this functionality. If a block device guarantees
-> discard_zeroes_data the new function will use discard to clear the block
-> range. If the device does not support discard_zeroes_data or if the
-> discard request fails we will fall back to blkdev_issue_zeroout() to
-> ensure predictable results.
+> The second patch tweaks the SCSI disk driver to prefer WRITE SAME w/
+> UNMAP instead of the UNMAP command since the former has deterministic
+> behavior.
 
-I'm not a fan of adding another function here and would prefer a flag,
-but it looks correct, so:
+I have seen data corruption on an Intel SSD 510 after sending WRITE SAME
+UNMAP. As far as I remember, these disks ignore writes after sending
+that command. Unmap worked fine, though. So possibly there is another
+blacklisting required.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Cheers,
+Bernd
+
