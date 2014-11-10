@@ -1,96 +1,130 @@
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC PATCH 0/5] Enable use of Solid State Hybrid Drives
-Date: Mon, 10 Nov 2014 15:22:44 +1100
-Message-ID: <20141110042244.GN23575@dastard>
-References: <20141029180454.4879.75088.stgit@stg-AndroidDev-VirtualBox>
- <20141029201417.GK16186@dastard>
- <545157DB.70304@fb.com>
- <20141029220905.GL16186@dastard>
- <CAPcyv4iiqfeWQyZpzYwASFV+7Ztjcjrp0DEq3ThOmdwgWGGJUw@mail.gmail.com>
- <20141030072111.GJ13323@dastard>
- <CAPcyv4i1hNUSyTuQUuShBHqXcejLwEq3UcK1W01WCswGL-MoMQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Robert Richter <rric@kernel.org>
+Subject: [PATCH] AHCI: Add generic MSI-X interrupt support to SATA PCI driver
+Date: Sun,  9 Nov 2014 21:30:17 -0800
+Message-ID: <1415597417-10547-1-git-send-email-rric@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:19226 "EHLO
-	ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751101AbaKJEWr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Nov 2014 23:22:47 -0500
-Content-Disposition: inline
-In-Reply-To: <CAPcyv4i1hNUSyTuQUuShBHqXcejLwEq3UcK1W01WCswGL-MoMQ@mail.gmail.com>
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:46478 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751225AbaKJFa1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Nov 2014 00:30:27 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Jens Axboe <axboe@fb.com>, "Jason B. Akers" <jason.b.akers@intel.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, "Karkra, Kapil" <kapil.karkra@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Sunil Goutham <sgoutham@cavium.com>, Robert Richter <rrichter@cavium.com>
 
-[Been distrcted with other issues, so just getting back to this.]
+From: Sunil Goutham <sgoutham@cavium.com>
 
-On Thu, Oct 30, 2014 at 10:07:47AM -0700, Dan Williams wrote:
-> On Thu, Oct 30, 2014 at 12:21 AM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Wed, Oct 29, 2014 at 03:24:11PM -0700, Dan Williams wrote:
-> >> On Wed, Oct 29, 2014 at 3:09 PM, Dave Chinner <david@fromorbit.com> wrote:
-> >> > On Wed, Oct 29, 2014 at 03:10:51PM -0600, Jens Axboe wrote:
-> >> >> As for the fs accessing this, the io nice fields are readily exposed
-> >> >> through the ->bi_rw setting. So while the above example uses ionice to
-> >> >> set a task io priority (that a bio will then inherit), nothing prevents
-> >> >> you from passing it in directly from the kernel.
-> >> >
-> >> > Right, but now the filesystem needs to provide that on a per-inode
-> >> > basis, not from the task structure as the task that is submitting
-> >> > the bio is not necesarily the task doing the read/write syscall.
-> >> >
-> >> > e.g. the write case above doesn't actually inherit the task priority
-> >> > at the bio level at all because the IO is being dispatched by a
-> >> > background flusher thread, not the ioniced task calling write(2).
-> >>
-> >> When the ioniced task calling write(2) inserts the page into the page
-> >> cache then the current priority is recorded in the struct page.  The
-> >
-> > It does? Can you point me to where the page cache code does this,
-> > because I've clearly missed something important go by in the past
-> > few months...
-> 
-> Sorry, should have been more clear that this patch set added that
-> capability in patch-4.  The idea is to claim some unused extended page
-> flags to stash priority bits.  Yes, the PageSetAdvice() helper needs
-> to be fixed up to do the flags update atomically, and yes this
-> precludes hinting on 32-bit platforms.  I also think that
-> bio_add_page() is the better place to read the per-page priority into
-> the bio.  We felt ok deferring these items until after the initial
-> RFC.
+This patch adds generic support for MSI-X interrupts to the SATA PCI
+driver. Only single interrupt support is implemented. Thus, per-port
+interrupts can not yet be enabled.
 
-I think that using page flags for this is a 'orrible idea. Yeah,
-it's a neat hack that you can use for proff of concept
-demonstrations, but my biggest concern is that it isn't a scalable
-channel for carrying IO priority information through the page cache.
-e.g. it can't carry existing ionice priority scheduling information,
-it can't carry blkcg IO control information, etc.
+The driver now checks the device for the existence of MSI-X and tries
+to enable the interrupt. Otherwise, if a device is not MSI-X capable,
+the initialization is skipped and MSI or intx interrupts are
+configured.
 
-So, really, I think that this buffered write IO priority issue is
-bigger than this patch series, and we need to solve it properly
-rather than hack ugly special cases into core infrastructure
-that are an evolutionary dead-end....
+This patch also enables AHCI for Cavium Thunder SoCs that uses MSI-X.
 
-> >> > IOWs, to make effective use of this the task will need different
-> >> > cache hints for each different type of data needs to do IO on, and
-> >> > so overloading IO priorities just seems the wrong direction to be
-> >> > starting from.
-> >>
-> >> There's also the fadvise() enabling that could be bolted on top of
-> >> this capability.  But, before that step, is a thread-id per-caching
-> >> context too much to ask?
-> >
-> > If we do it that way, we are stuck with it forever. So let's get our
-> > ducks in line first before pulling the trigger...
-> 
-> Are you objecting to ionice as the interface or per-pid based hinting
-> in general?
+Signed-off-by: Sunil Goutham <sgoutham@cavium.com>
+Signed-off-by: Robert Richter <rrichter@cavium.com>
+---
+ arch/arm64/Kconfig |  1 +
+ drivers/ata/ahci.c | 40 +++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 40 insertions(+), 1 deletion(-)
 
-Neither. It's the implementation I don't like.
-
-Cheers,
-
-Dave.
+diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
+index ac9afde76dea..55970474d3ae 100644
+--- a/arch/arm64/Kconfig
++++ b/arch/arm64/Kconfig
+@@ -145,6 +145,7 @@ config ARCH_THUNDER
+ 	bool "Cavium Inc. Thunder SoC Family"
+ 	help
+ 	  This enables support for Cavium's Thunder Family of SoCs.
++	select SATA_AHCI
+ 
+ config ARCH_VEXPRESS
+ 	bool "ARMv8 software model (Versatile Express)"
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 5f039f191067..8e43ccb72c95 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -52,6 +52,7 @@
+ 
+ enum {
+ 	AHCI_PCI_BAR_STA2X11	= 0,
++	AHCI_PCI_BAR_CAVIUM	= 0,
+ 	AHCI_PCI_BAR_ENMOTUS	= 2,
+ 	AHCI_PCI_BAR_STANDARD	= 5,
+ };
+@@ -483,6 +484,9 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	/* Enmotus */
+ 	{ PCI_DEVICE(0x1c44, 0x8000), board_ahci },
+ 
++	/* Cavium */
++	{ PCI_DEVICE(0x177d, 0xa01c), .driver_data = board_ahci },
++
+ 	/* Generic, PCI class code for AHCI */
+ 	{ PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+ 	  PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff, board_ahci },
+@@ -1188,11 +1192,43 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
+ {}
+ #endif
+ 
++static int ahci_init_msix(struct pci_dev *pdev, unsigned int n_ports,
++			  struct ahci_host_priv *hpriv)
++{
++	int rc, nvec;
++	struct msix_entry entry = {};
++
++	/* check if msix is supported */
++	nvec = pci_msix_vec_count(pdev);
++	if (nvec <= 0)
++		return 0;
++
++	/* per-port msix interrupts are not supported */
++	if (n_ports > 1 && nvec >= n_ports)
++		return -ENOSYS;
++
++	/* only enable the first entry (entry.entry = 0) */
++	rc = pci_enable_msix_exact(pdev, &entry, 1);
++	if (rc < 0)
++		return rc;
++
++	pdev->irq = entry.vector;
++
++	return 1;
++}
++
+ static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
+ 				struct ahci_host_priv *hpriv)
+ {
+ 	int rc, nvec;
+ 
++	nvec = ahci_init_msix(pdev, n_ports, hpriv);
++	if (nvec > 0)
++		return nvec;
++
++	if (nvec && nvec != -ENOSYS)
++		dev_err(&pdev->dev, "failed to enable MSI-X: %d", nvec);
++
+ 	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
+ 		goto intx;
+ 
+@@ -1271,11 +1307,13 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		dev_info(&pdev->dev,
+ 			 "PDC42819 can only drive SATA devices with this driver\n");
+ 
+-	/* Both Connext and Enmotus devices use non-standard BARs */
++	/* Some devices use non-standard BARs */
+ 	if (pdev->vendor == PCI_VENDOR_ID_STMICRO && pdev->device == 0xCC06)
+ 		ahci_pci_bar = AHCI_PCI_BAR_STA2X11;
+ 	else if (pdev->vendor == 0x1c44 && pdev->device == 0x8000)
+ 		ahci_pci_bar = AHCI_PCI_BAR_ENMOTUS;
++	else if (pdev->vendor == 0x177d && pdev->device == 0xa01c)
++		ahci_pci_bar = AHCI_PCI_BAR_CAVIUM;
+ 
+ 	/*
+ 	 * The JMicron chip 361/363 contains one SATA controller and one
 -- 
-Dave Chinner
-david@fromorbit.com
+2.1.3
+
