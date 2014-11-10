@@ -1,40 +1,89 @@
-From: Robert Richter <rric@kernel.org>
-Subject: Re: [PATCH] AHCI: Add generic MSI-X interrupt support to SATA PCI
- driver
-Date: Mon, 10 Nov 2014 21:55:18 +0100
-Message-ID: <20141110205518.GY20170@rric.localhost>
-References: <1415597417-10547-1-git-send-email-rric@kernel.org>
- <5460D100.90403@linux.intel.com>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH 2/3] sd: Disable discard_zeroes_data for UNMAP
+Date: Tue, 11 Nov 2014 00:43:07 +0100
+Message-ID: <54614D8B.2070808@redhat.com>
+References: <1415336894-15327-1-git-send-email-martin.petersen@oracle.com> <1415336894-15327-3-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wg0-f47.google.com ([74.125.82.47]:59300 "EHLO
-	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751427AbaKJUzY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Nov 2014 15:55:24 -0500
-Content-Disposition: inline
-In-Reply-To: <5460D100.90403@linux.intel.com>
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:44815 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751119AbaKJXnP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Nov 2014 18:43:15 -0500
+In-Reply-To: <1415336894-15327-3-git-send-email-martin.petersen@oracle.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jiang Liu <jiang.liu@linux.intel.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Sunil Goutham <sgoutham@cavium.com>, Robert Richter <rrichter@cavium.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org, neilb@suse.de
 
-On 10.11.14 22:51:44, Jiang Liu wrote:
-> On 2014/11/10 13:30, Robert Richter wrote:
-> > From: Sunil Goutham <sgoutham@cavium.com>
+On 07/11/2014 06:08, Martin K. Petersen wrote:
+> The T10 SBC UNMAP command does not provide any hard guarantees that
+> blocks will return zeroes on a subsequent READ. This is due to the fact
+> that the device server is free to silently ignore all or parts of the
+> request.
+> 
+> The only way to ensure that a block consistently returns zeroes after
+> being unmapped is to use WRITE SAME with the UNMAP bit set. Should the
+> device be unable to unmap one or more blocks described by the command it
+> is required to manually write zeroes to them.
+> 
+> Until now we have preferred UNMAP over the WRITE SAME variants to
+> accommodate thinly provisioned devices that predated the final SBC-3
+> spec. This patch changes the heuristic so that we favor WRITE SAME(16)
+> or (10) over UNMAP if these commands are marked as supported in the
+> Logical Block Provisioning VPD page.
+> 
+> The patch also disables discard_zeroes_data for devices operating in
+> UNMAP mode.
+> 
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> ---
+>  drivers/scsi/sd.c | 10 ++++++----
+>  1 file changed, 6 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index b041eca8955d..95bfb7bfbb9d 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -656,7 +656,7 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
+>  	unsigned int logical_block_size = sdkp->device->sector_size;
+>  	unsigned int max_blocks = 0;
+>  
+> -	q->limits.discard_zeroes_data = sdkp->lbprz;
+> +	q->limits.discard_zeroes_data = 0;
+>  	q->limits.discard_alignment = sdkp->unmap_alignment *
+>  		logical_block_size;
+>  	q->limits.discard_granularity =
+> @@ -680,11 +680,13 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
+>  	case SD_LBP_WS16:
+>  		max_blocks = min_not_zero(sdkp->max_ws_blocks,
+>  					  (u32)SD_MAX_WS16_BLOCKS);
+> +		q->limits.discard_zeroes_data = sdkp->lbprz;
+>  		break;
+>  
+>  	case SD_LBP_WS10:
+>  		max_blocks = min_not_zero(sdkp->max_ws_blocks,
+>  					  (u32)SD_MAX_WS10_BLOCKS);
+> +		q->limits.discard_zeroes_data = sdkp->lbprz;
+>  		break;
+>  
+>  	case SD_LBP_ZERO:
+> @@ -2622,12 +2624,12 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
+>  
+>  		} else {	/* LBP VPD page tells us what to use */
+>  
+> -			if (sdkp->lbpu && sdkp->max_unmap_blocks)
+> -				sd_config_discard(sdkp, SD_LBP_UNMAP);
+> -			else if (sdkp->lbpws)
+> +			if (sdkp->lbpws)
+>  				sd_config_discard(sdkp, SD_LBP_WS16);
+>  			else if (sdkp->lbpws10)
+>  				sd_config_discard(sdkp, SD_LBP_WS10);
+> +			else if (sdkp->lbpu && sdkp->max_unmap_blocks)
+> +				sd_config_discard(sdkp, SD_LBP_UNMAP);
+>  			else
+>  				sd_config_discard(sdkp, SD_LBP_DISABLE);
+>  		}
+> 
 
-> > +   /* only enable the first entry (entry.entry = 0) */
-> > +   rc = pci_enable_msix_exact(pdev, &entry, 1);
-> > +   if (rc < 0)
-> > +           return rc;
-> > +
-> > +   pdev->irq = entry.vector;
-
->       You can't overwrite pci_dev->irq for MSI-X, it's no way to
-> recover original irq for INTx after unbinding ahci driver. Instead,
-> you may access msi_desc->irq when requesting irq.
-
-Right, I have a version now that determines the irq vector from
-pdev->msi_list.
-
--Robert
+Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
