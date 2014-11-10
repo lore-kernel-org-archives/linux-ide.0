@@ -1,54 +1,40 @@
-From: Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: [PATCH v2 1/2] sata_rcar: Add clocks to sata_rcar bindings
-Date: Mon, 10 Nov 2014 19:42:29 +0100
-Message-ID: <1415644950-2983-1-git-send-email-geert+renesas@glider.be>
-Return-path: <linux-sh-owner@vger.kernel.org>
-Sender: linux-sh-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Simon Horman <horms@verge.net.au>, Magnus Damm <magnus.damm@gmail.com>, Valentine Barshak <valentine.barshak@cogentembedded.com>, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-sh@vger.kernel.org, Geert Uytterhoeven <geert+renesas@glider.be>
+From: Robert Richter <rric@kernel.org>
+Subject: Re: [PATCH] AHCI: Add generic MSI-X interrupt support to SATA PCI
+ driver
+Date: Mon, 10 Nov 2014 21:55:18 +0100
+Message-ID: <20141110205518.GY20170@rric.localhost>
+References: <1415597417-10547-1-git-send-email-rric@kernel.org>
+ <5460D100.90403@linux.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-wg0-f47.google.com ([74.125.82.47]:59300 "EHLO
+	mail-wg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751427AbaKJUzY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Nov 2014 15:55:24 -0500
+Content-Disposition: inline
+In-Reply-To: <5460D100.90403@linux.intel.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jiang Liu <jiang.liu@linux.intel.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Sunil Goutham <sgoutham@cavium.com>, Robert Richter <rrichter@cavium.com>
 
-From: Valentine Barshak <valentine.barshak@cogentembedded.com>
+On 10.11.14 22:51:44, Jiang Liu wrote:
+> On 2014/11/10 13:30, Robert Richter wrote:
+> > From: Sunil Goutham <sgoutham@cavium.com>
 
-Now that the clocks are available in the R-Car Gen2 DT,
-add clocks property description to the sata_rcar bindings.
-The clocks have been tested on r8a7791 so we use that
-as an example of the R-Car SATA node.
+> > +   /* only enable the first entry (entry.entry = 0) */
+> > +   rc = pci_enable_msix_exact(pdev, &entry, 1);
+> > +   if (rc < 0)
+> > +           return rc;
+> > +
+> > +   pdev->irq = entry.vector;
 
-Signed-off-by: Valentine Barshak <valentine.barshak@cogentembedded.com>
-[geert: Reworded clocks property]
-Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
-Acked-by: Simon Horman <horms+renesas@verge.net.au>
----
-v2:
-  - Add Acked-by
----
- Documentation/devicetree/bindings/ata/sata_rcar.txt | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+>       You can't overwrite pci_dev->irq for MSI-X, it's no way to
+> recover original irq for INTx after unbinding ahci driver. Instead,
+> you may access msi_desc->irq when requesting irq.
 
-diff --git a/Documentation/devicetree/bindings/ata/sata_rcar.txt b/Documentation/devicetree/bindings/ata/sata_rcar.txt
-index 80ae87a0784bdba8..f09c1ee260ba1d10 100644
---- a/Documentation/devicetree/bindings/ata/sata_rcar.txt
-+++ b/Documentation/devicetree/bindings/ata/sata_rcar.txt
-@@ -9,12 +9,14 @@ Required properties:
- 			  - "renesas,sata-r8a7793" for R-Car M2-N
- - reg			: address and length of the SATA registers;
- - interrupts		: must consist of one interrupt specifier.
-+- clocks		: must contain a reference to the functional clock.
- 
- Example:
- 
--sata: sata@fc600000 {
--	compatible = "renesas,sata-r8a7779";
--	reg = <0xfc600000 0x2000>;
-+sata0: sata@ee300000 {
-+	compatible = "renesas,sata-r8a7791";
-+	reg = <0 0xee300000 0 0x2000>;
- 	interrupt-parent = <&gic>;
--	interrupts = <0 100 IRQ_TYPE_LEVEL_HIGH>;
-+	interrupts = <0 105 IRQ_TYPE_LEVEL_HIGH>;
-+	clocks = <&mstp8_clks R8A7791_CLK_SATA0>;
- };
--- 
-1.9.1
+Right, I have a version now that determines the irq vector from
+pdev->msi_list.
 
+-Robert
