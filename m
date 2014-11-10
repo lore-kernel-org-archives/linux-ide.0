@@ -1,130 +1,24 @@
-From: Robert Richter <rric@kernel.org>
-Subject: [PATCH] AHCI: Add generic MSI-X interrupt support to SATA PCI driver
-Date: Sun,  9 Nov 2014 21:30:17 -0800
-Message-ID: <1415597417-10547-1-git-send-email-rric@kernel.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [RFC] Discard update for 3.19
+Date: Mon, 10 Nov 2014 06:19:06 -0800
+Message-ID: <20141110141906.GA20891@infradead.org>
+References: <1415336894-15327-1-git-send-email-martin.petersen@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wg0-f50.google.com ([74.125.82.50]:46478 "EHLO
-	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751225AbaKJFa1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Nov 2014 00:30:27 -0500
+Received: from bombadil.infradead.org ([198.137.202.9]:46864 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752014AbaKJOTH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Nov 2014 09:19:07 -0500
+Content-Disposition: inline
+In-Reply-To: <1415336894-15327-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Sunil Goutham <sgoutham@cavium.com>, Robert Richter <rrichter@cavium.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org, neilb@suse.de
 
-From: Sunil Goutham <sgoutham@cavium.com>
+Looks like there is no real dependency between these patches, so we
+might take on each through the libata, scsi and block trees.
 
-This patch adds generic support for MSI-X interrupts to the SATA PCI
-driver. Only single interrupt support is implemented. Thus, per-port
-interrupts can not yet be enabled.
-
-The driver now checks the device for the existence of MSI-X and tries
-to enable the interrupt. Otherwise, if a device is not MSI-X capable,
-the initialization is skipped and MSI or intx interrupts are
-configured.
-
-This patch also enables AHCI for Cavium Thunder SoCs that uses MSI-X.
-
-Signed-off-by: Sunil Goutham <sgoutham@cavium.com>
-Signed-off-by: Robert Richter <rrichter@cavium.com>
----
- arch/arm64/Kconfig |  1 +
- drivers/ata/ahci.c | 40 +++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 40 insertions(+), 1 deletion(-)
-
-diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-index ac9afde76dea..55970474d3ae 100644
---- a/arch/arm64/Kconfig
-+++ b/arch/arm64/Kconfig
-@@ -145,6 +145,7 @@ config ARCH_THUNDER
- 	bool "Cavium Inc. Thunder SoC Family"
- 	help
- 	  This enables support for Cavium's Thunder Family of SoCs.
-+	select SATA_AHCI
- 
- config ARCH_VEXPRESS
- 	bool "ARMv8 software model (Versatile Express)"
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 5f039f191067..8e43ccb72c95 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -52,6 +52,7 @@
- 
- enum {
- 	AHCI_PCI_BAR_STA2X11	= 0,
-+	AHCI_PCI_BAR_CAVIUM	= 0,
- 	AHCI_PCI_BAR_ENMOTUS	= 2,
- 	AHCI_PCI_BAR_STANDARD	= 5,
- };
-@@ -483,6 +484,9 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	/* Enmotus */
- 	{ PCI_DEVICE(0x1c44, 0x8000), board_ahci },
- 
-+	/* Cavium */
-+	{ PCI_DEVICE(0x177d, 0xa01c), .driver_data = board_ahci },
-+
- 	/* Generic, PCI class code for AHCI */
- 	{ PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
- 	  PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff, board_ahci },
-@@ -1188,11 +1192,43 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
- {}
- #endif
- 
-+static int ahci_init_msix(struct pci_dev *pdev, unsigned int n_ports,
-+			  struct ahci_host_priv *hpriv)
-+{
-+	int rc, nvec;
-+	struct msix_entry entry = {};
-+
-+	/* check if msix is supported */
-+	nvec = pci_msix_vec_count(pdev);
-+	if (nvec <= 0)
-+		return 0;
-+
-+	/* per-port msix interrupts are not supported */
-+	if (n_ports > 1 && nvec >= n_ports)
-+		return -ENOSYS;
-+
-+	/* only enable the first entry (entry.entry = 0) */
-+	rc = pci_enable_msix_exact(pdev, &entry, 1);
-+	if (rc < 0)
-+		return rc;
-+
-+	pdev->irq = entry.vector;
-+
-+	return 1;
-+}
-+
- static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
- 				struct ahci_host_priv *hpriv)
- {
- 	int rc, nvec;
- 
-+	nvec = ahci_init_msix(pdev, n_ports, hpriv);
-+	if (nvec > 0)
-+		return nvec;
-+
-+	if (nvec && nvec != -ENOSYS)
-+		dev_err(&pdev->dev, "failed to enable MSI-X: %d", nvec);
-+
- 	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
- 		goto intx;
- 
-@@ -1271,11 +1307,13 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		dev_info(&pdev->dev,
- 			 "PDC42819 can only drive SATA devices with this driver\n");
- 
--	/* Both Connext and Enmotus devices use non-standard BARs */
-+	/* Some devices use non-standard BARs */
- 	if (pdev->vendor == PCI_VENDOR_ID_STMICRO && pdev->device == 0xCC06)
- 		ahci_pci_bar = AHCI_PCI_BAR_STA2X11;
- 	else if (pdev->vendor == 0x1c44 && pdev->device == 0x8000)
- 		ahci_pci_bar = AHCI_PCI_BAR_ENMOTUS;
-+	else if (pdev->vendor == 0x177d && pdev->device == 0xa01c)
-+		ahci_pci_bar = AHCI_PCI_BAR_CAVIUM;
- 
- 	/*
- 	 * The JMicron chip 361/363 contains one SATA controller and one
--- 
-2.1.3
+Can I get another review for the sd patch, please?
 
