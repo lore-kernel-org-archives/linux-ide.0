@@ -1,49 +1,96 @@
-From: Devin Ryles <devin.ryles@intel.com>
-Subject: [PATCH 2/3] AHCI: Add DeviceIDs for Sunrise Point-LP SATA controller
-Date: Fri, 07 Nov 2014 17:59:05 -0500
-Message-ID: <1415401145.1954.11.camel@localhost.localdomain>
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC PATCH 0/5] Enable use of Solid State Hybrid Drives
+Date: Mon, 10 Nov 2014 15:22:44 +1100
+Message-ID: <20141110042244.GN23575@dastard>
+References: <20141029180454.4879.75088.stgit@stg-AndroidDev-VirtualBox>
+ <20141029201417.GK16186@dastard>
+ <545157DB.70304@fb.com>
+ <20141029220905.GL16186@dastard>
+ <CAPcyv4iiqfeWQyZpzYwASFV+7Ztjcjrp0DEq3ThOmdwgWGGJUw@mail.gmail.com>
+ <20141030072111.GJ13323@dastard>
+ <CAPcyv4i1hNUSyTuQUuShBHqXcejLwEq3UcK1W01WCswGL-MoMQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:2758 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751837AbaKGW7L (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 7 Nov 2014 17:59:11 -0500
+Received: from ipmail06.adl2.internode.on.net ([150.101.137.129]:19226 "EHLO
+	ipmail06.adl2.internode.on.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751101AbaKJEWr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 9 Nov 2014 23:22:47 -0500
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4i1hNUSyTuQUuShBHqXcejLwEq3UcK1W01WCswGL-MoMQ@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, james.d.ralston@intel.com, frank.riegel@intel.com, devin.ryles@intel.com
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Jens Axboe <axboe@fb.com>, "Jason B. Akers" <jason.b.akers@intel.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, "Karkra, Kapil" <kapil.karkra@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
->From f01919cca1259bb2eec1c6db00cf31055a5c481d Mon Sep 17 00:00:00 2001
-From: Devin Ryles <devin.ryles@intel.com>
-Date: Wed, 5 Nov 2014 17:41:22 -0500
-Subject: [PATCH 2/3] AHCI: Add DeviceIDs for Sunrise Point-LP SATA
-controller
+[Been distrcted with other issues, so just getting back to this.]
 
-This patch adds DeviceIDs for Sunrise Point-LP
+On Thu, Oct 30, 2014 at 10:07:47AM -0700, Dan Williams wrote:
+> On Thu, Oct 30, 2014 at 12:21 AM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Wed, Oct 29, 2014 at 03:24:11PM -0700, Dan Williams wrote:
+> >> On Wed, Oct 29, 2014 at 3:09 PM, Dave Chinner <david@fromorbit.com> wrote:
+> >> > On Wed, Oct 29, 2014 at 03:10:51PM -0600, Jens Axboe wrote:
+> >> >> As for the fs accessing this, the io nice fields are readily exposed
+> >> >> through the ->bi_rw setting. So while the above example uses ionice to
+> >> >> set a task io priority (that a bio will then inherit), nothing prevents
+> >> >> you from passing it in directly from the kernel.
+> >> >
+> >> > Right, but now the filesystem needs to provide that on a per-inode
+> >> > basis, not from the task structure as the task that is submitting
+> >> > the bio is not necesarily the task doing the read/write syscall.
+> >> >
+> >> > e.g. the write case above doesn't actually inherit the task priority
+> >> > at the bio level at all because the IO is being dispatched by a
+> >> > background flusher thread, not the ioniced task calling write(2).
+> >>
+> >> When the ioniced task calling write(2) inserts the page into the page
+> >> cache then the current priority is recorded in the struct page.  The
+> >
+> > It does? Can you point me to where the page cache code does this,
+> > because I've clearly missed something important go by in the past
+> > few months...
+> 
+> Sorry, should have been more clear that this patch set added that
+> capability in patch-4.  The idea is to claim some unused extended page
+> flags to stash priority bits.  Yes, the PageSetAdvice() helper needs
+> to be fixed up to do the flags update atomically, and yes this
+> precludes hinting on 32-bit platforms.  I also think that
+> bio_add_page() is the better place to read the per-page priority into
+> the bio.  We felt ok deferring these items until after the initial
+> RFC.
 
-Signed-off-by: Devin Ryles <devin.ryles@intel.com>
----
- drivers/ata/ahci.c | 3 +++
- 1 file changed, 3 insertions(+)
+I think that using page flags for this is a 'orrible idea. Yeah,
+it's a neat hack that you can use for proff of concept
+demonstrations, but my biggest concern is that it isn't a scalable
+channel for carrying IO priority information through the page cache.
+e.g. it can't carry existing ionice priority scheduling information,
+it can't carry blkcg IO control information, etc.
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 5f039f1..50d9de5 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -313,6 +313,9 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_VDEVICE(INTEL, 0x8c87), board_ahci }, /* 9 Series RAID */
- 	{ PCI_VDEVICE(INTEL, 0x8c8e), board_ahci }, /* 9 Series RAID */
- 	{ PCI_VDEVICE(INTEL, 0x8c8f), board_ahci }, /* 9 Series RAID */
-+	{ PCI_VDEVICE(INTEL, 0x9d03), board_ahci }, /* Sunrise Point-LP AHCI*/
-+	{ PCI_VDEVICE(INTEL, 0x9d05), board_ahci }, /* Sunrise Point-LP RAID*/
-+	{ PCI_VDEVICE(INTEL, 0x9d07), board_ahci }, /* Sunrise Point-LP RAID*/
- 
- 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
- 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+So, really, I think that this buffered write IO priority issue is
+bigger than this patch series, and we need to solve it properly
+rather than hack ugly special cases into core infrastructure
+that are an evolutionary dead-end....
+
+> >> > IOWs, to make effective use of this the task will need different
+> >> > cache hints for each different type of data needs to do IO on, and
+> >> > so overloading IO priorities just seems the wrong direction to be
+> >> > starting from.
+> >>
+> >> There's also the fadvise() enabling that could be bolted on top of
+> >> this capability.  But, before that step, is a thread-id per-caching
+> >> context too much to ask?
+> >
+> > If we do it that way, we are stuck with it forever. So let's get our
+> > ducks in line first before pulling the trigger...
+> 
+> Are you objecting to ionice as the interface or per-pid based hinting
+> in general?
+
+Neither. It's the implementation I don't like.
+
+Cheers,
+
+Dave.
 -- 
-1.9.3
-
-
-
+Dave Chinner
+david@fromorbit.com
