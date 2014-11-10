@@ -1,141 +1,46 @@
-From: Jiang Liu <jiang.liu@linux.intel.com>
-Subject: Re: [PATCH] AHCI: Add generic MSI-X interrupt support to SATA PCI
- driver
-Date: Mon, 10 Nov 2014 22:51:44 +0800
-Message-ID: <5460D100.90403@linux.intel.com>
-References: <1415597417-10547-1-git-send-email-rric@kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Subject: [PATCH v2 2/2] sata_rcar: Document deprecated "renesas,rcar-sata"
+Date: Mon, 10 Nov 2014 19:42:30 +0100
+Message-ID: <1415644950-2983-2-git-send-email-geert+renesas@glider.be>
+References: <1415644950-2983-1-git-send-email-geert+renesas@glider.be>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:55654 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752803AbaKJOv6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 10 Nov 2014 09:51:58 -0500
-In-Reply-To: <1415597417-10547-1-git-send-email-rric@kernel.org>
+Received: from albert.telenet-ops.be ([195.130.137.90]:49256 "EHLO
+	albert.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751579AbaKJSmX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Nov 2014 13:42:23 -0500
+In-Reply-To: <1415644950-2983-1-git-send-email-geert+renesas@glider.be>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Richter <rric@kernel.org>, Tejun Heo <tj@kernel.org>
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Sunil Goutham <sgoutham@cavium.com>, Robert Richter <rrichter@cavium.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Simon Horman <horms@verge.net.au>, Magnus Damm <magnus.damm@gmail.com>, Valentine Barshak <valentine.barshak@cogentembedded.com>, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-sh@vger.kernel.org, Geert Uytterhoeven <geert+renesas@glider.be>
 
-On 2014/11/10 13:30, Robert Richter wrote:
-> From: Sunil Goutham <sgoutham@cavium.com>
-> 
-> This patch adds generic support for MSI-X interrupts to the SATA PCI
-> driver. Only single interrupt support is implemented. Thus, per-port
-> interrupts can not yet be enabled.
-> 
-> The driver now checks the device for the existence of MSI-X and tries
-> to enable the interrupt. Otherwise, if a device is not MSI-X capable,
-> the initialization is skipped and MSI or intx interrupts are
-> configured.
-> 
-> This patch also enables AHCI for Cavium Thunder SoCs that uses MSI-X.
-> 
-> Signed-off-by: Sunil Goutham <sgoutham@cavium.com>
-> Signed-off-by: Robert Richter <rrichter@cavium.com>
-> ---
->  arch/arm64/Kconfig |  1 +
->  drivers/ata/ahci.c | 40 +++++++++++++++++++++++++++++++++++++++-
->  2 files changed, 40 insertions(+), 1 deletion(-)
-> 
-> diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-> index ac9afde76dea..55970474d3ae 100644
-> --- a/arch/arm64/Kconfig
-> +++ b/arch/arm64/Kconfig
-> @@ -145,6 +145,7 @@ config ARCH_THUNDER
->  	bool "Cavium Inc. Thunder SoC Family"
->  	help
->  	  This enables support for Cavium's Thunder Family of SoCs.
-> +	select SATA_AHCI
->  
->  config ARCH_VEXPRESS
->  	bool "ARMv8 software model (Versatile Express)"
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index 5f039f191067..8e43ccb72c95 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -52,6 +52,7 @@
->  
->  enum {
->  	AHCI_PCI_BAR_STA2X11	= 0,
-> +	AHCI_PCI_BAR_CAVIUM	= 0,
->  	AHCI_PCI_BAR_ENMOTUS	= 2,
->  	AHCI_PCI_BAR_STANDARD	= 5,
->  };
-> @@ -483,6 +484,9 @@ static const struct pci_device_id ahci_pci_tbl[] = {
->  	/* Enmotus */
->  	{ PCI_DEVICE(0x1c44, 0x8000), board_ahci },
->  
-> +	/* Cavium */
-> +	{ PCI_DEVICE(0x177d, 0xa01c), .driver_data = board_ahci },
-> +
->  	/* Generic, PCI class code for AHCI */
->  	{ PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
->  	  PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff, board_ahci },
-> @@ -1188,11 +1192,43 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
->  {}
->  #endif
->  
-> +static int ahci_init_msix(struct pci_dev *pdev, unsigned int n_ports,
-> +			  struct ahci_host_priv *hpriv)
-> +{
-> +	int rc, nvec;
-> +	struct msix_entry entry = {};
-> +
-> +	/* check if msix is supported */
-> +	nvec = pci_msix_vec_count(pdev);
-> +	if (nvec <= 0)
-> +		return 0;
-> +
-> +	/* per-port msix interrupts are not supported */
-> +	if (n_ports > 1 && nvec >= n_ports)
-> +		return -ENOSYS;
-> +
-> +	/* only enable the first entry (entry.entry = 0) */
-> +	rc = pci_enable_msix_exact(pdev, &entry, 1);
-> +	if (rc < 0)
-> +		return rc;
-> +
-> +	pdev->irq = entry.vector;
-Hi Robert,
-	You can't overwrite pci_dev->irq for MSI-X, it's no way to
-recover original irq for INTx after unbinding ahci driver. Instead,
-you may access msi_desc->irq when requesting irq.
-Regards!
-Gerry
-> +
-> +	return 1;
-> +}
-> +
->  static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
->  				struct ahci_host_priv *hpriv)
->  {
->  	int rc, nvec;
->  
-> +	nvec = ahci_init_msix(pdev, n_ports, hpriv);
-> +	if (nvec > 0)
-> +		return nvec;
-> +
-> +	if (nvec && nvec != -ENOSYS)
-> +		dev_err(&pdev->dev, "failed to enable MSI-X: %d", nvec);
-> +
->  	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
->  		goto intx;
->  
-> @@ -1271,11 +1307,13 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->  		dev_info(&pdev->dev,
->  			 "PDC42819 can only drive SATA devices with this driver\n");
->  
-> -	/* Both Connext and Enmotus devices use non-standard BARs */
-> +	/* Some devices use non-standard BARs */
->  	if (pdev->vendor == PCI_VENDOR_ID_STMICRO && pdev->device == 0xCC06)
->  		ahci_pci_bar = AHCI_PCI_BAR_STA2X11;
->  	else if (pdev->vendor == 0x1c44 && pdev->device == 0x8000)
->  		ahci_pci_bar = AHCI_PCI_BAR_ENMOTUS;
-> +	else if (pdev->vendor == 0x177d && pdev->device == 0xa01c)
-> +		ahci_pci_bar = AHCI_PCI_BAR_CAVIUM;
->  
->  	/*
->  	 * The JMicron chip 361/363 contains one SATA controller and one
-> 
+Commit e67adb4e669db834 ("sata_rcar: Add R-Car Gen2 SATA PHY support")
+deprecated "renesas,rcar-sata" in favor of "renesas,sata-r8a7779", but
+the deprecated value was never documented in the binding documentation,
+while it is still in active use.
+
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Acked-by: Simon Horman <horms+renesas@verge.net.au>
+---
+v2:
+  - Add Acked-by,
+  - Rebased on top of libata/for-next
+---
+ Documentation/devicetree/bindings/ata/sata_rcar.txt | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Documentation/devicetree/bindings/ata/sata_rcar.txt b/Documentation/devicetree/bindings/ata/sata_rcar.txt
+index f09c1ee260ba1d10..2493a5a316551de8 100644
+--- a/Documentation/devicetree/bindings/ata/sata_rcar.txt
++++ b/Documentation/devicetree/bindings/ata/sata_rcar.txt
+@@ -3,6 +3,7 @@
+ Required properties:
+ - compatible		: should contain one of the following:
+ 			  - "renesas,sata-r8a7779" for R-Car H1
++			    ("renesas,rcar-sata" is deprecated)
+ 			  - "renesas,sata-r8a7790-es1" for R-Car H2 ES1
+ 			  - "renesas,sata-r8a7790" for R-Car H2 other than ES1
+ 			  - "renesas,sata-r8a7791" for R-Car M2-W
+-- 
+1.9.1
+
