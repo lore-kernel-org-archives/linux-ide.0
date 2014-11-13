@@ -1,113 +1,55 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH] AHCI: Fix threaded interrupt setup
-Date: Thu, 13 Nov 2014 10:44:42 +0100
-Message-ID: <1415871882-634-2-git-send-email-hdegoede@redhat.com>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Subject: Re: [PATCH resend regression?] AHCI: Fix threaded interrupt setup
+Date: Thu, 13 Nov 2014 10:06:33 +0000
+Message-ID: <546482A9.20803@arm.com>
 References: <1415871882-634-1-git-send-email-hdegoede@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=WINDOWS-1252
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60128 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932197AbaKMJou (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 13 Nov 2014 04:44:50 -0500
+Received: from service87.mimecast.com ([91.220.42.44]:50686 "EHLO
+	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932176AbaKMKGj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Nov 2014 05:06:39 -0500
 In-Reply-To: <1415871882-634-1-git-send-email-hdegoede@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>
-Cc: linux-ide@vger.kernel.org, Alexander Gordeev <agordeev@redhat.com>
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-From: Marc Zyngier <marc.zyngier@arm.com>
+Hi Hans,
 
-Commit 18dcf433f3de (AHCI: Optimize single IRQ interrupt processing)
-switched the single IRQ case of the AHCI driver to use threaded
-threaded interrupts.
+On 13/11/14 09:44, Hans de Goede wrote:
+> Hi Tejun,
+> 
+> Since this patch mentioned sunxi it gained my attention, but as it touches
+> ahci core code I was expecting you to pick it up, which seems to not have
+> happened, so hence this resend.
+> 
+> FWIW I've tried to reproduce the problem, but it does not reproduce for me,
+> that does not mean it is not a real problem though. I'm afraid I'm to
+> unfamiliar with the ahci interrupt handling to say anything more sensible
+> about this.
 
-During this conversion, only the IRQF_SHARED flag was provided. The net
-effect of this in the presence of level interrupts is that the
-interrupt will not be masked during the execution of the treaded
-handler, leading to a screaming interrupt if the thread is not
-scheduled quickly enough, specially in error conditions:
+I can reproduce it about once every 5 boots or so. You can also notice
+that the interrupt rate is much higher with the threaded interrupt code,
+which is a sign that something is very fishy (the level interrupt is
+never masked...).
 
-[    2.728051] ahci-sunxi 1c18000.sata: controller can't do PMP, turning off CAP_PMP
-[    2.735578] ahci-sunxi 1c18000.sata: SSS flag set, parallel bus scan disabled
-[    2.742792] ahci-sunxi 1c18000.sata: AHCI 0001.0100 32 slots 1 ports 3 Gbps 0x1 impl platform mode
-[    2.751789] ahci-sunxi 1c18000.sata: flags: ncq sntf stag pm led clo only pio slum part ccc
-[    2.761539] scsi host0: ahci_platform
-[    2.765754] ata1: SATA max UDMA/133 mmio [mem 0x01c18000-0x01c18fff] port 0x100 irq 88
-[...]
-[    3.127977] ata1: SATA link down (SStatus 0 SControl 300)
-[...]
-[    3.162035] Waiting for root device /dev/sda1...
-[    3.163700] random: nonblocking pool is initialized
-[    3.326593] irq 88: nobody cared (try booting with the "irqpoll" option)
-[    3.333296] CPU: 0 PID: 0 Comm: swapper/0 Not tainted 3.18.0-rc1+ #3077
-[    3.339936] [<c002b318>] (unwind_backtrace) from [<c0026980>] (show_stack+0x20/0x24)
-[    3.347681] [<c0026980>] (show_stack) from [<c067dd18>] (dump_stack+0x9c/0xd4)
-[    3.354904] [<c067dd18>] (dump_stack) from [<c007ac08>] (__report_bad_irq+0x38/0xd4)
-[    3.362643] [<c007ac08>] (__report_bad_irq) from [<c007b1dc>] (note_interrupt+0x280/0x2d0)
-[    3.370903] [<c007b1dc>] (note_interrupt) from [<c0078a70>] (handle_irq_event_percpu+0x210/0x27c)
-[    3.379771] [<c0078a70>] (handle_irq_event_percpu) from [<c0078b28>] (handle_irq_event+0x4c/0x6c)
-[    3.388636] [<c0078b28>] (handle_irq_event) from [<c007b860>] (handle_fasteoi_irq+0xbc/0x1a0)
-[    3.397156] [<c007b860>] (handle_fasteoi_irq) from [<c0077f5c>] (generic_handle_irq+0x3c/0x4c)
-[    3.405764] [<c0077f5c>] (generic_handle_irq) from [<c0078220>] (__handle_domain_irq+0x6c/0xb4)
-[    3.414456] [<c0078220>] (__handle_domain_irq) from [<c0008754>] (gic_handle_irq+0x34/0x6c)
-[    3.422802] [<c0008754>] (gic_handle_irq) from [<c0027540>] (__irq_svc+0x40/0x74)
-[    3.430274] Exception stack(0xc09c1df8 to 0xc09c1e40)
-[    3.435321] 1de0:                                                       00000001 c0a27ec0
-[    3.443491] 1e00: 00000000 00000000 c09c0028 0000001e 00000282 00000000 ee00c400 c0a239f8
-[    3.451660] 1e20: c09c0000 c09c1ea4 c0a27ec0 c09c1e40 00200000 c003c7cc 20000113 ffffffff
-[    3.459835] [<c0027540>] (__irq_svc) from [<c003c7cc>] (__do_softirq+0xbc/0x34c)
-[    3.467229] [<c003c7cc>] (__do_softirq) from [<c003cd44>] (irq_exit+0xbc/0x104)
-[    3.474536] [<c003cd44>] (irq_exit) from [<c0078224>] (__handle_domain_irq+0x70/0xb4)
-[    3.482362] [<c0078224>] (__handle_domain_irq) from [<c0008754>] (gic_handle_x74)
-[    3.498169] Exception stack(0xc09c1f10 to 0xc09c1f58)
-[    3.503216] 1f00:                                     ee7ca310 00000000 00000ab4 c0035560
-[    3.511386] 1f20: c09c0000 00000000 c0a23f84 c09c8474 c09c84bc c09c0000 c0688bf8 c09c1f64
-[    3.519554] 1f40: c09c1f68 c09c1f58 c00235d8 c00235dc 60000113 ffffffff
-[    3.526165] [<c0027540>] (__irq_svc) from [<c00235dc>] (arch_cpu_idle+0x48/0x4c)
-[    3.533557] [<c00235dc>] (arch_cpu_idle) from [<c00701fc>] (cpu_startup_entry+0x13c/0x27c)
-[    3.541816] [<c00701fc>] (cpu_startup_entry) from [<c067af1c>] (rest_init+0x94/0x98)
-[    3.549557] [<c067af1c>] (rest_init) from [<c093dd38>] (start_kernel+0x3f0/0x3fc)
-[    3.557036] [<c093dd38>] (start_kernel) from [<40008084>] (0x40008084)
-[    3.563555] handlers:
-[    3.565830] [<c03a1a80>] ahci_single_irq_intr threaded [<c03a223c>] ahci_thread_fn
-[    3.573415] Disabling IRQ #88
-[    3.576532] ata1: exception Emask 0x10 SAct 0x0 SErr 0x4050002 action 0xe frozen
-[    3.583977] ata1: irq_stat 0x00400040, connection status changed
-[    3.590006] ata1: SError: { RecovComm PHYRdyChg CommWake DevExch }
-[    3.596209] ata1: hard resetting link
-[...]
+> It looks like this is a 3.18 regression, so if this is a real issue, we
+> should probably get this patch in for 3.18 .
 
-Not good. The culprit is a missing IRQF_ONESHOT flag, which addition
-solves the problem entierly. The number of interrupts drops radically:
+I think the real fix should be to revert the whole threaded interrupt
+thing. Adding the IRQF_ONESHOT breaks some Intel platforms in a rather
+bad way in case of a shared interrupt (for gory details, see
+http://www.gossamer-threads.com/lists/linux/kernel/2043506).
 
-[Booting Debian Jessie to a prompt]
-Before fix:
- 88:       3562          0       GIC  88  ahci-sunxi
-After fix:
- 88:       1992          0       GIC  88  ahci-sunxi
+Tejun did prepare a set of patches to revert this, but I haven't seen it
+being pulled in yet. It would be good to get something into 3.18.
 
-Tested on a A20 board (ahci-sunxi).
+Thanks,
 
-Cc: Alexander Gordeev <agordeev@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
----
- drivers/ata/libahci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 5eb61c9..49c649f 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -2492,7 +2492,7 @@ static int ahci_host_activate_single_irq(struct ata_host *host, int irq,
- 		return rc;
- 
- 	rc = devm_request_threaded_irq(host->dev, irq, ahci_single_irq_intr,
--				       ahci_thread_fn, IRQF_SHARED,
-+				       ahci_thread_fn, IRQF_SHARED | IRQF_ONESHOT,
- 				       dev_driver_string(host->dev), host);
- 	if (rc)
- 		return rc;
+	M.
 -- 
-2.1.0
+Jazz is not dead. It just smells funny...
 
