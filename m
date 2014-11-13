@@ -1,29 +1,31 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [RFC] Discard update for 3.19
-Date: Wed, 12 Nov 2014 14:41:53 -0500
-Message-ID: <yq1mw7wyzni.fsf@sermon.lab.mkp.net>
-References: <1415336894-15327-1-git-send-email-martin.petersen@oracle.com>
-	<20141110141906.GA20891@infradead.org>
-	<1415817615.16672.49.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1415817615.16672.49.camel@localhost.localdomain> (Ewan Milne's
-	message of "Wed, 12 Nov 2014 13:40:15 -0500")
-Sender: linux-scsi-owner@vger.kernel.org
-To: emilne@redhat.com
-Cc: Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org, neilb@suse.de
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: [PATCH resend regression?] AHCI: Fix threaded interrupt setup
+Date: Thu, 13 Nov 2014 10:44:41 +0100
+Message-ID: <1415871882-634-1-git-send-email-hdegoede@redhat.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:39554 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932136AbaKMJot (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 13 Nov 2014 04:44:49 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>
+Cc: linux-ide@vger.kernel.org
 
->>>>> "Ewan" == Ewan Milne <emilne@redhat.com> writes:
+Hi Tejun,
 
-Ewan> The changes in [PATCH 2/3] sd: Disable discard_zeroes_data for
-Ewan> UNMAP look fine to me.  I was wondering, though, if the changes to
-Ewan> add the "devices_handle_discard_safely" module parameter to the MD
-Ewan> raid drivers are really needed if this is fixed.
+Since this patch mentioned sunxi it gained my attention, but as it touches
+ahci core code I was expecting you to pick it up, which seems to not have
+happened, so hence this resend.
 
-I was expecting Neil to either revert or toggle the default once this
-change was in place.
+FWIW I've tried to reproduce the problem, but it does not reproduce for me,
+that does not mean it is not a real problem though. I'm afraid I'm to
+unfamiliar with the ahci interrupt handling to say anything more sensible
+about this.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+It looks like this is a 3.18 regression, so if this is a real issue, we
+should probably get this patch in for 3.18 .
+
+Regards,
+
+Hans
