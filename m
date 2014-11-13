@@ -1,55 +1,60 @@
-From: Marc Zyngier <marc.zyngier@arm.com>
-Subject: Re: [PATCH resend regression?] AHCI: Fix threaded interrupt setup
-Date: Thu, 13 Nov 2014 10:06:33 +0000
-Message-ID: <546482A9.20803@arm.com>
-References: <1415871882-634-1-git-send-email-hdegoede@redhat.com>
+From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] ahci_sunxi: Drop AHCI_HFLAG_NO_PMP flag
+Date: Thu, 13 Nov 2014 11:24:16 +0100
+Message-ID: <1415874256-6580-1-git-send-email-hdegoede@redhat.com>
+Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=WINDOWS-1252
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from service87.mimecast.com ([91.220.42.44]:50686 "EHLO
-	service87.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932176AbaKMKGj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 13 Nov 2014 05:06:39 -0500
-In-Reply-To: <1415871882-634-1-git-send-email-hdegoede@redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-sunxi+bncBDRZXY4CYYORBWENSKRQKGQEICEUD3Y-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/linux-sunxi
+Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <http://groups.google.com/group/linux-sunxi/subscribe>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Ian Campbell <ijc-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org>, Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hi Hans,
+This is something which we inherited from the Allwinner android kernel sources,
+and I've always wanted to test if this is really necessary.
 
-On 13/11/14 09:44, Hans de Goede wrote:
-> Hi Tejun,
-> 
-> Since this patch mentioned sunxi it gained my attention, but as it touches
-> ahci core code I was expecting you to pick it up, which seems to not have
-> happened, so hence this resend.
-> 
-> FWIW I've tried to reproduce the problem, but it does not reproduce for me,
-> that does not mean it is not a real problem though. I'm afraid I'm to
-> unfamiliar with the ahci interrupt handling to say anything more sensible
-> about this.
+So recently I've bought a sata port multiplexer, and I've given this a test
+spin on both A10 and A20 devices, and it seems to work fine:
 
-I can reproduce it about once every 5 boots or so. You can also notice
-that the interrupt rate is much higher with the threaded interrupt code,
-which is a sign that something is very fishy (the level interrupt is
-never masked...).
+[    2.154456] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[    2.161092] ata1.15: Port Multiplier 1.2, 0x197b:0x0325 r0, 5 ports, feat 0x5/0xf
+[    2.175511] ata1.00: hard resetting link
+[    2.524929] ata1.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+[    2.531430] ata1.01: hard resetting link
+[    2.974465] ata1.01: link resume succeeded after 1 retries
+[    3.094932] ata1.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[    3.101431] ata1.02: hard resetting link
+[    4.174466] ata1.02: failed to resume link (SControl 0)
+[    4.180065] ata1.02: SATA link down (SStatus 0 SControl 0)
+(and the same for links 3 and 4)
 
-> It looks like this is a 3.18 regression, so if this is a real issue, we
-> should probably get this patch in for 3.18 .
+Once the NO_PMP flag is removed it correctly sees the 2 disks which I've
+attached, and I can mount and use them just fine, so lets drop the flag.
 
-I think the real fix should be to revert the whole threaded interrupt
-thing. Adding the IRQF_ONESHOT breaks some Intel platforms in a rather
-bad way in case of a shared interrupt (for gory details, see
-http://www.gossamer-threads.com/lists/linux/kernel/2043506).
+Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+ drivers/ata/ahci_sunxi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Tejun did prepare a set of patches to revert this, but I haven't seen it
-being pulled in yet. It would be good to get something into 3.18.
-
-Thanks,
-
-	M.
+diff --git a/drivers/ata/ahci_sunxi.c b/drivers/ata/ahci_sunxi.c
+index e44d675..3dd0224 100644
+--- a/drivers/ata/ahci_sunxi.c
++++ b/drivers/ata/ahci_sunxi.c
+@@ -184,7 +184,7 @@ static int ahci_sunxi_probe(struct platform_device *pdev)
+ 		goto disable_resources;
+ 
+ 	hpriv->flags = AHCI_HFLAG_32BIT_ONLY | AHCI_HFLAG_NO_MSI |
+-		       AHCI_HFLAG_NO_PMP | AHCI_HFLAG_YES_NCQ;
++		       AHCI_HFLAG_YES_NCQ;
+ 
+ 	rc = ahci_platform_init_host(pdev, hpriv, &ahci_sunxi_port_info);
+ 	if (rc)
 -- 
-Jazz is not dead. It just smells funny...
-
+2.1.0
