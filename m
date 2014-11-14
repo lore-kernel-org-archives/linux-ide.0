@@ -1,82 +1,65 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH 06/10] libata: use __scsi_format_command()
-Date: Fri, 14 Nov 2014 16:02:19 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B4029593A7DEA@G9W0745.americas.hpqcorp.net>
-References: <1415262639-121586-1-git-send-email-hare@suse.de>
- <1415262639-121586-7-git-send-email-hare@suse.de>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] ahci_sunxi: Make AHCI_HFLAG_NO_PMP flag
+ configurable with a module option
+Date: Fri, 14 Nov 2014 11:49:40 -0500
+Message-ID: <20141114164940.GA25889@htj.dyndns.org>
+References: <1415977771-5909-1-git-send-email-hdegoede@redhat.com>
+Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1415262639-121586-7-git-send-email-hare@suse.de>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, James Bottomley <jbottomley@parallels.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Ewan Milne <emilne@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-sunxi+bncBDQ2FCEAWYLRBJ7FTCRQKGQEOENODEQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+In-Reply-To: <1415977771-5909-1-git-send-email-hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/linux-sunxi
+List-Subscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <http://groups.google.com/group/linux-sunxi/subscribe>
+Content-Disposition: inline
+To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
-
-
-> -----Original Message-----
-> From: Hannes Reinecke [mailto:hare@suse.de]
-> Sent: Thursday, 06 November, 2014 2:31 AM
-> To: James Bottomley
-> Cc: Christoph Hellwig; Ewan Milne; Elliott, Robert (Server Storage);
-> linux-scsi@vger.kernel.org; Hannes Reinecke; linux-
-> ide@vger.kernel.org; LKML
-> Subject: [PATCH 06/10] libata: use __scsi_format_command()
+On Fri, Nov 14, 2014 at 04:09:31PM +0100, Hans de Goede wrote:
+> The use of the AHCI_HFLAG_NO_PMP flag is something which we inherited from
+> the Allwinner android kernel sources, and I've always wanted to test if this
+> is really necessary.
 > 
-> libata already uses an internal buffer, so we should be using
-> __scsi_format_command() here.
+> So recently I've bought a sata port multiplexer, and I've given this a test
+> spin on both A10 and A20 devices, and it seems to work fine:
 > 
-> Cc: linux-ide@vger.kernel.org
-> Cc: LKML <linux-kernel@vger.kernel.org>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Acked-by: Tejun Heo <tj@kernel.org>
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/ata/libata-eh.c | 13 +++++--------
->  1 file changed, 5 insertions(+), 8 deletions(-)
+> [    2.154456] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [    2.161092] ata1.15: Port Multiplier 1.2, 0x197b:0x0325 r0, 5 ports, feat 0x5/0xf
+> [    2.175511] ata1.00: hard resetting link
+> [    2.524929] ata1.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+> [    2.531430] ata1.01: hard resetting link
+> [    2.974465] ata1.01: link resume succeeded after 1 retries
+> [    3.094932] ata1.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+> [    3.101431] ata1.02: hard resetting link
+> [    4.174466] ata1.02: failed to resume link (SControl 0)
+> [    4.180065] ata1.02: SATA link down (SStatus 0 SControl 0)
+> (and the same for links 3 and 4)
 > 
-> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-> index dad83df..6550a9a 100644
-> --- a/drivers/ata/libata-eh.c
-> +++ b/drivers/ata/libata-eh.c
-> @@ -2509,15 +2509,12 @@ static void ata_eh_link_report(struct
-> ata_link *link)
+> Once the NO_PMP flag is removed it correctly sees the 2 disks which I've
+> attached, and I can mount and use them just fine.
 > 
->  		if (ata_is_atapi(qc->tf.protocol)) {
->  			if (qc->scsicmd)
-> -				scsi_print_command(qc->scsicmd);
-> +				__scsi_format_command(cdb_buf,
-> sizeof(cdb_buf),
-> +						      qc->scsicmd->cmnd,
-> +						      qc->scsicmd->cmd_len);
->  			else
-> -				snprintf(cdb_buf, sizeof(cdb_buf),
-> -				 "cdb %02x %02x %02x %02x %02x %02x %02x
-> %02x  "
-> -				 "%02x %02x %02x %02x %02x %02x %02x %02x\n
-> ",
-> -				 cdb[0], cdb[1], cdb[2], cdb[3],
-> -				 cdb[4], cdb[5], cdb[6], cdb[7],
-> -				 cdb[8], cdb[9], cdb[10], cdb[11],
-> -				 cdb[12], cdb[13], cdb[14], cdb[15]);
-> +				__scsi_format_command(cdb_buf,
-> sizeof(cdb_buf),
-> +						      cdb, qc->dev->cdb_len);
+> Unfortunately when I then directly attached a disk to the sata port on the
+> sunxi SoC, and booted a kernel without the AHCI_HFLAG_NO_PMP flag, it would
+> not recognize that disk.
+> 
+> It turns out that the sata controller in the sunxi SoCs fails to handle
+> soft-resets issued to directly attached disks, and when pmp support is
+> enabled the kernel will always issue a soft-reset.
+> 
+> So add a module parameter to enable pmp usage, and default this to off, so
+> that directly attached disks keep working normally.
+> 
+> Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 
-Since results in just one "cdb" variable usage, you could change
-"cdb" to qc->cdb" to get rid of the variable declaration and 
-slightly simplify the code.
-                const u8 *cdb = qc->cdb;
+Applied to libata/for-3.19.
 
+Thanks.
 
->  		} else {
->  			const char *descr = ata_get_cmd_descript(cmd-
-> >command);
->  			if (descr)
-> --
-> 1.8.5.2
-
-Reviewed-by: Robert Elliott <elliott@hp.com>
+-- 
+tejun
