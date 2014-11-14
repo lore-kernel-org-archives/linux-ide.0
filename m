@@ -1,63 +1,94 @@
-From: Roger Heflin <rogerheflin@gmail.com>
-Subject: Re: read performance is too low compared to write - /dev/sda1
-Date: Fri, 14 Nov 2014 07:52:59 -0600
-Message-ID: <CAAMCDedJnXjF+3c5vXOKsZDqk0FgBODs9zX18guuGZNKh+QSsw@mail.gmail.com>
-References: <CAD6G_RREb58La-pC48BHW+9r9oruUXnCrk-RS8LaKSw6y9jgxg@mail.gmail.com>
- <CAAMCDec3EJ4e=bDKwH3i0PL655yrOQkBu_typihYMGD3GHZiQA@mail.gmail.com> <CAD6G_RSiyhD2zSxEAGY_uFz3cjHtsRb+riF9EhziA78AwqvpwA@mail.gmail.com>
+From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH] ahci_sunxi: Make AHCI_HFLAG_NO_PMP flag
+ configurable with a module option
+Date: Fri, 14 Nov 2014 16:09:31 +0100
+Message-ID: <1415977771-5909-1-git-send-email-hdegoede@redhat.com>
+Reply-To: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yk0-f173.google.com ([209.85.160.173]:39410 "EHLO
-	mail-yk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965331AbaKNNxU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 14 Nov 2014 08:53:20 -0500
-In-Reply-To: <CAD6G_RSiyhD2zSxEAGY_uFz3cjHtsRb+riF9EhziA78AwqvpwA@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-sunxi+bncBDRZXY4CYYORBM5WTCRQKGQECQXIDKY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Post: <http://groups.google.com/group/linux-sunxi/post>, <mailto:linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/>, <mailto:linux-sunxi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/linux-sunxi
+Sender: linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/linux-sunxi/subscribe>, <mailto:linux-sunxi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+1076902468213+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <http://groups.google.com/group/linux-sunxi/subscribe>
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-sunxi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: Jagan Teki <jagannadh.teki@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, davem <davem@davemloft.net>, linux-ide <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-What kind of underlying disk is it?
+The use of the AHCI_HFLAG_NO_PMP flag is something which we inherited from
+the Allwinner android kernel sources, and I've always wanted to test if this
+is really necessary.
 
-On Fri, Nov 14, 2014 at 7:36 AM, Jagan Teki <jagannadh.teki@gmail.com> wrote:
-> On 14 November 2014 18:50, Roger Heflin <rogerheflin@gmail.com> wrote:
->> If you are robocoping small files you will hit other limits.
->>
->> Best I have seen with small files is around 30 files/second, and that
->> involves multiple copies going on.   Remember with a small files there
->> are several reads and writes that need to be done to complete a create
->> of a small file and each of these take time.    30 files/second ~ 30ms
->> per file, not that bad considering that on a real spinning disk a
->> single read/write op is 5-10ms, and creating the file entry, copying
->> data and closing the file takes several operations (at least create
->> file entry, write small amount of data, update file entry
->> date/time/info).     If the write in the middle is not a significant
->> amount of data, the 2 extra ops are what hurts.
->>
->
-> But, I tried 4gb and 1gb files both got a similar numbers.
->
->> On Fri, Nov 14, 2014 at 6:55 AM, Jagan Teki <jagannadh.teki@gmail.com> wrote:
->>> Hi,
->>>
->>> I'm doing a performance testing on my bench ARM box.
->>>
->>> 1. dd test: I have validate the read and write by mounting /dev/sda1
->>> with ext4 filesystem,
->>>     able to get the good performance numbers where read is high
->>> compared to write
->>>
->>> 2.  robocopy test:
->>>      - mkfs.ext4 /dev/sda1
->>>      - mount /dev/sda1 /media/disk
->>>      - << configured samba >>
->>>      - Mapped the /media/disk on windows
->>>      - login on the mapped driver in windows
->>>      - did a robocopy test, where write got 84MBps and read 14MBps
->>>
->>> read performance is too slow when compared to write in robocopy case.
->>> Can anyone help me out, how to debug this further.
->
-> thanks!
-> --
-> Jagan.
+So recently I've bought a sata port multiplexer, and I've given this a test
+spin on both A10 and A20 devices, and it seems to work fine:
+
+[    2.154456] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[    2.161092] ata1.15: Port Multiplier 1.2, 0x197b:0x0325 r0, 5 ports, feat 0x5/0xf
+[    2.175511] ata1.00: hard resetting link
+[    2.524929] ata1.00: SATA link up 3.0 Gbps (SStatus 123 SControl 320)
+[    2.531430] ata1.01: hard resetting link
+[    2.974465] ata1.01: link resume succeeded after 1 retries
+[    3.094932] ata1.01: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[    3.101431] ata1.02: hard resetting link
+[    4.174466] ata1.02: failed to resume link (SControl 0)
+[    4.180065] ata1.02: SATA link down (SStatus 0 SControl 0)
+(and the same for links 3 and 4)
+
+Once the NO_PMP flag is removed it correctly sees the 2 disks which I've
+attached, and I can mount and use them just fine.
+
+Unfortunately when I then directly attached a disk to the sata port on the
+sunxi SoC, and booted a kernel without the AHCI_HFLAG_NO_PMP flag, it would
+not recognize that disk.
+
+It turns out that the sata controller in the sunxi SoCs fails to handle
+soft-resets issued to directly attached disks, and when pmp support is
+enabled the kernel will always issue a soft-reset.
+
+So add a module parameter to enable pmp usage, and default this to off, so
+that directly attached disks keep working normally.
+
+Signed-off-by: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+---
+ drivers/ata/ahci_sunxi.c | 16 +++++++++++++++-
+ 1 file changed, 15 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/ahci_sunxi.c b/drivers/ata/ahci_sunxi.c
+index e44d675..b5aedca 100644
+--- a/drivers/ata/ahci_sunxi.c
++++ b/drivers/ata/ahci_sunxi.c
+@@ -27,6 +27,12 @@
+ #include <linux/regulator/consumer.h>
+ #include "ahci.h"
+ 
++/* Insmod parameters */
++static bool enable_pmp;
++module_param(enable_pmp, bool, 0);
++MODULE_PARM_DESC(enable_pmp,
++	"Enable support for sata port multipliers, only use if you use a pmp!");
++
+ #define AHCI_BISTAFR	0x00a0
+ #define AHCI_BISTCR	0x00a4
+ #define AHCI_BISTFCTR	0x00a8
+@@ -184,7 +190,15 @@ static int ahci_sunxi_probe(struct platform_device *pdev)
+ 		goto disable_resources;
+ 
+ 	hpriv->flags = AHCI_HFLAG_32BIT_ONLY | AHCI_HFLAG_NO_MSI |
+-		       AHCI_HFLAG_NO_PMP | AHCI_HFLAG_YES_NCQ;
++		       AHCI_HFLAG_YES_NCQ;
++
++	/*
++	 * The sunxi sata controller seems to be unable to successfully do a
++	 * soft reset if no pmp is attached, so disable pmp use unless
++	 * requested, otherwise directly attached disks do not work.
++	 */
++	if (!enable_pmp)
++		hpriv->flags |= AHCI_HFLAG_NO_PMP;
+ 
+ 	rc = ahci_platform_init_host(pdev, hpriv, &ahci_sunxi_port_info);
+ 	if (rc)
+-- 
+2.1.0
