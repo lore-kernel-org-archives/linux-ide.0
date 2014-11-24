@@ -1,47 +1,39 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 1/1] IDE: Deletion of an unnecessary check before the function
- call "module_put"
-Date: Fri, 21 Nov 2014 20:26:29 +0100
-Message-ID: <546F91E5.60104@users.sourceforge.net>
-References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.so
- urceforge.net>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: BUG in scsi_lib.c due to a bad commit
+Date: Mon, 24 Nov 2014 01:18:35 -0800
+Message-ID: <20141124091835.GA21579@infradead.org>
+References: <20141120060933.GA21432@infradead.org>
+ <546E2880.5070303@laposte.net>
+ <20141120175316.GA19590@infradead.org>
+ <546E32A5.4040202@laposte.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <5317A59D.4@users.sourceforge.net>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
-Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <546E32A5.4040202@laposte.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Barto <mister.freeman@laposte.net>
+Cc: Christoph Hellwig <hch@infradead.org>, "Elliott, Robert (Server Storage)" <Elliott@hp.com>, Guenter Roeck <linux@roeck-us.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Fri, 21 Nov 2014 20:22:32 +0100
+On Thu, Nov 20, 2014 at 07:27:49PM +0100, Barto wrote:
+> but the sata DVD burner is now connected on a Jmicron sata PCIe card (
+> with this configuration the bug doesn't occur ), I don't know if this
+> change can modify the result of your command,
+> 
+> here is the result of another command :
+> 
+> $ for i in /sys/class/scsi_host/*; do cat $i/proc_name; done
+> pata_jmicron
+> pata_jmicron
+> ata_piix
+> ata_piix
+> ata_piix
+> ata_piix
+> ahci
+> ahci
 
-The module_put() function tests whether its argument is NULL and then
-returns immediately. Thus the test around the call is not needed.
-
-This issue was detected by using the Coccinelle software.
-
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/ide/ide.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/ide/ide.c b/drivers/ide/ide.c
-index 2ce6268..e29b02c 100644
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -101,8 +101,7 @@ void ide_device_put(ide_drive_t *drive)
- 	struct device *host_dev = drive->hwif->host->dev[0];
- 	struct module *module = host_dev ? host_dev->driver->owner : NULL;
- 
--	if (module)
--		module_put(module);
-+	module_put(module);
- #endif
- 	put_device(&drive->gendev);
- }
--- 
-2.1.3
-
+Interesting.  So the jmicron card also has a queue depth of just one,
+but the error still occurs?  I've added the linux-ide list, maybe
+someone there has an idea how piix vs jmicron could have such different
+behaviors for queueing or error handling.
