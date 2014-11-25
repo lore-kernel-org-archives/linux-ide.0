@@ -1,61 +1,98 @@
-From: "Akers, Jason B" <jason.b.akers@intel.com>
-Subject: RE: [RFC PATCH] sg3_utils: Added hybrid information log utility
-Date: Tue, 25 Nov 2014 19:13:09 +0000
-Message-ID: <372C7AE269BA5E4D92B1082F530ED4B88A13F692@ORSMSX110.amr.corp.intel.com>
-References: <20141029195400.5225.96984.stgit@stg-AndroidDev-VirtualBox>
- <20141029195720.5225.51331.stgit@stg-AndroidDev-VirtualBox>
- <5473CE5C.7010300@ubuntu.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [RFC PATCH] sg3_utils: Added hybrid information log utility
+Date: Tue, 25 Nov 2014 15:27:44 -0500
+Message-ID: <5474E640.7020206@interlog.com>
+References: <20141029195400.5225.96984.stgit@stg-AndroidDev-VirtualBox> <20141029195720.5225.51331.stgit@stg-AndroidDev-VirtualBox> <5473CE5C.7010300@ubuntu.com> <372C7AE269BA5E4D92B1082F530ED4B88A13F692@ORSMSX110.amr.corp.intel.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:19550 "EHLO mga09.intel.com"
+Received: from smtp.infotech.no ([82.134.31.41]:47264 "EHLO smtp.infotech.no"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750816AbaKYTOq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 25 Nov 2014 14:14:46 -0500
-In-Reply-To: <5473CE5C.7010300@ubuntu.com>
-Content-Language: en-US
+	id S1750994AbaKYU2D (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 25 Nov 2014 15:28:03 -0500
+In-Reply-To: <372C7AE269BA5E4D92B1082F530ED4B88A13F692@ORSMSX110.amr.corp.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Phillip Susi <psusi@ubuntu.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Cc: "Karkra, Kapil" <kapil.karkra@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "dgilbert@interlog.com" <dgilbert@interlog.com>
+To: "Akers, Jason B" <jason.b.akers@intel.com>, Phillip Susi <psusi@ubuntu.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: "Karkra, Kapil" <kapil.karkra@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-SGkgUGhpbGxpcCwNCkl0IHR1cm5zIG91dCB0aGF0IHRoaXMgcGF0Y2ggd2FzIGJhc2VkIG9uIGFu
-IG9sZCBnaXRodWIgcmVwb3NpdG9yeSB0aGF0IGRvZXNuJ3QgYXBwZWFyIHRvIGJlIHVwZGF0ZWQu
-IERvdWcgR2lsYmVydCByZWFjaGVkIG91dCBhZnRlciB0aGUgaW5pdGlhbCBSRkMgYW5kIGRpcmVj
-dGVkIHVzIHRvIGhpcyBwYWdlIChodHRwOi8vc2cuZGFubnkuY3ovc2cvKSB3aGVyZSBoZSBoYXMg
-dXBkYXRlZCBzZzNfdXRpbHMgY29kZS4NCg0KQXMgd2UgY29udGludWUgdG8gd29yayB0aHJvdWdo
-IHRoZSBmZWVkYmFjayBmcm9tIG91ciBTU0hEIGtlcm5lbCBwYXRjaGVzLCBJJ20gZ29pbmcgdG8g
-Zm9sbG93IHVwIHdpdGggRG91ZyBhZ2FpbiBvbiBzZzNfdXRpbHMuDQoNCj4gLS0tLS1PcmlnaW5h
-bCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogUGhpbGxpcCBTdXNpIFttYWlsdG86cHN1c2lAdWJ1bnR1
-LmNvbV0NCj4gU2VudDogTW9uZGF5LCBOb3ZlbWJlciAyNCwgMjAxNCA0OjM0IFBNDQo+IFRvOiBB
-a2VycywgSmFzb24gQjsgbGludXgtaWRlQHZnZXIua2VybmVsLm9yZw0KPiBDYzogS2Fya3JhLCBL
-YXBpbDsgV2lsbGlhbXMsIERhbiBKOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOw0KPiBk
-Z2lsYmVydEBpbnRlcmxvZy5jb20NCj4gU3ViamVjdDogUmU6IFtSRkMgUEFUQ0hdIHNnM191dGls
-czogQWRkZWQgaHlicmlkIGluZm9ybWF0aW9uIGxvZyB1dGlsaXR5DQo+IA0KPiAtLS0tLUJFR0lO
-IFBHUCBTSUdORUQgTUVTU0FHRS0tLS0tDQo+IEhhc2g6IFNIQTUxMg0KPiANCj4gT24gMTAvMjkv
-MjAxNCAwMzo1NyBQTSwgSmFzb24gQi4gQWtlcnMgd3JvdGU6DQo+ID4gRnJvbTogS2FwaWwgS2Fy
-a3JhIDxrYXBpbC5rYXJrcmFAaW50ZWwuY29tPg0KPiA+DQo+ID4gQSBzb2xpZCBzdGF0ZSBoeWJy
-aWQgZHJpdmUgKFNTSEQpIGlzIGEgaGFyZCBkcml2ZSB3aXRoIGEgc21hbGwNCj4gPiBlbWJlZGRl
-ZCBOQU5ELiBIb3N0IGRyaXZlcnMgY2FuIG1hbmFnZSB0aGlzIE5BTkQgdXNpbmcgdGhlDQo+IGNv
-bW1hbmRzDQo+ID4gZGVmaW5lZCBieSBTQVRBIDMuMiBzdGFuZGFyZC4gT25lIFNBVEEgY29tbWFu
-ZCB0aGF0IHByb3ZpZGVzDQo+ID4gdmlzaWJpbGl0eSBpbnRvIHRoZSBTU0hEJ3MgY2FjaGUgYmVo
-YXZpb3IgaXMgZ2V0IGh5YnJpZCBsb2cgY29tbWFuZC4NCj4gPiBUaGlzIGF1Z21lbnRhdGlvbiBh
-bGxvd3MgdXNlcnMgdG8gaXNzdWUgdGhlIGNvbW1hbmQgYXMNCj4gPiBmb2xsb3dzOg0KPiA+DQo+
-ID4gc2dfc2F0X2dldF9oeWJyaWRfbG9nIC9kZXYvc2RjIGFzc3VtaW5nIC9kZXYvc2RjIGlzIGFu
-IFNTSEQuDQo+ID4NCj4gPiBwYXRjaCBhcHBsaWVzIHRvIHRoZSBmb2xsb3dpbmcgc291cmNlYmFz
-ZSBmcm9tIHdoZXJlIHRvIGNsb25lOg0KPiA+IGh0dHBzOi8vZ2l0aHViLmNvbS9ocmVpbmVja2Uv
-c2czX3V0aWxzLmdpdA0KPiANCj4gSSBjbG9uZWQgdGhhdCByZXBvIGFuZCB0aGUgcGF0Y2ggZG9l
-cyBub3QgYXBwbHkgY2xlYW5seS4gIGdpdCBhbSAtMyBzYXlzIHRoZQ0KPiByZWZlcmVuY2VkIGJs
-b2JzIGFyZSBub3QgZm91bmQgYW5kIGl0IGhhcyBjb25mbGljdHMgaW4gc3JjL01ha2VmaWxlLmFt
-LiAgSQ0KPiBtYW51YWxseSBmaXhlZCB0aGF0IHVwIGFuZCB0aGVuIGl0IGZhaWxzIHRvIGxpbmsg
-ZHVlIHRvIHVucmVzb2x2ZWQgZXh0ZXJuYWxzLg0KPiANCj4gDQo+IA0KPiAtLS0tLUJFR0lOIFBH
-UCBTSUdOQVRVUkUtLS0tLQ0KPiBWZXJzaW9uOiBHbnVQRyB2MQ0KPiANCj4gaVFFY0JBRUJDZ0FH
-QlFKVWM4NVVBQW9KRU5SVnJ3MmNqbDVSUjNZSUFKT0YwZmNUa0Y1cE0wT0lBODdoSzhrDQo+IDgN
-Cj4gdWp3ZmxCVHk2NlpiUHpYTUQ5N2NUR1lRNmdQcDNVQ2VUL1pjRWxCZnJHR0F1RDV1L0VUWE1K
-WTdscUFaZ1l0DQo+IEsNCj4gYkVMUHY2b0xoejN5YTJJTzQ0MnNVbFJZTzRkVmZ3aHNuYWsrMnJM
-aVFrWEN5NFdLU0oxRVlpTUlQL1ZIajhuZQ0KPiA1ZThWWWt1YzBLYW1LanZUNHY2RXdKN3RNMGJs
-ZkpiWWdtRkdydUl4T1NnQ0FvOTRacDl0aEFjY3RiOVBiUmV4DQo+IEhuUFRjbnc1Y0kxc0NvTGY1
-ZkphZmhjOXcvMUg0NVdqSlRuR0Y3enM0aHEvR0dzWUN3cnl2STBvdndBelU5U1QNCj4gUjNqUnZF
-Kzcwb2l5UURzajlFQmFrNjNoUllJQWQ4UXpRM1RrQ2phTTVFMVhIU1U3dlRueHZ4QWpLYjRaeUY0
-PQ0KPiA9YThWaA0KPiAtLS0tLUVORCBQR1AgU0lHTkFUVVJFLS0tLS0NCg==
+On 14-11-25 02:13 PM, Akers, Jason B wrote:
+> Hi Phillip,
+> It turns out that this patch was based on an old github repository that doesn't appear to be updated. Doug Gilbert reached out after the initial RFC and directed us to his page (http://sg.danny.cz/sg/) where he has updated sg3_utils code.
+>
+> As we continue to work through the feedback from our SSHD kernel patches, I'm going to follow up with Doug again on sg3_utils.
+
+Hi,
+As discussed earlier in this thread adding a new utility
+for each log page like sg_sat_get_hybrid_log would lead to
+hundreds of utilities. There are now these groups of
+storage related pages (with user space utilities to decode
+them shown in parentheses):
+   - SCSI VPD pages  (sg_vpd (sdparm and legacy sg_inq))
+   - SCSI mode pages (sdparm and sg_modes)
+   - SCSI log pages  (sg_logs)
+   - ATA GP log pages (from 1.40 sg_sat_read_gplog)
+   - ATA SMART log pages (smartctl)
+
+At the start of this thread the proposed patch was very
+close to the release of sg3_utils version 1.40 and Hannes
+Reinecke contributed a more general approach:
+sg_sat_read_gplog which I did incorporate. Currently it
+only decodes pages to hex.
+
+Please look at that utility (i.e. sg_sat_read_gplog) as the
+basis for adding ATA GP log page decoding such as the SATA
+hybrid information page. Please send patches against its source.
+
+Doug Gilbert
+
+
+>> -----Original Message-----
+>> From: Phillip Susi [mailto:psusi@ubuntu.com]
+>> Sent: Monday, November 24, 2014 4:34 PM
+>> To: Akers, Jason B; linux-ide@vger.kernel.org
+>> Cc: Karkra, Kapil; Williams, Dan J; linux-kernel@vger.kernel.org;
+>> dgilbert@interlog.com
+>> Subject: Re: [RFC PATCH] sg3_utils: Added hybrid information log utility
+>>
+>> -----BEGIN PGP SIGNED MESSAGE-----
+>> Hash: SHA512
+>>
+>> On 10/29/2014 03:57 PM, Jason B. Akers wrote:
+>>> From: Kapil Karkra <kapil.karkra@intel.com>
+>>>
+>>> A solid state hybrid drive (SSHD) is a hard drive with a small
+>>> embedded NAND. Host drivers can manage this NAND using the
+>> commands
+>>> defined by SATA 3.2 standard. One SATA command that provides
+>>> visibility into the SSHD's cache behavior is get hybrid log command.
+>>> This augmentation allows users to issue the command as
+>>> follows:
+>>>
+>>> sg_sat_get_hybrid_log /dev/sdc assuming /dev/sdc is an SSHD.
+>>>
+>>> patch applies to the following sourcebase from where to clone:
+>>> https://github.com/hreinecke/sg3_utils.git
+>>
+>> I cloned that repo and the patch does not apply cleanly.  git am -3 says the
+>> referenced blobs are not found and it has conflicts in src/Makefile.am.  I
+>> manually fixed that up and then it fails to link due to unresolved externals.
+>>
+>>
+>>
+>> -----BEGIN PGP SIGNATURE-----
+>> Version: GnuPG v1
+>>
+>> iQEcBAEBCgAGBQJUc85UAAoJENRVrw2cjl5RR3YIAJOF0fcTkF5pM0OIA87hK8k
+>> 8
+>> ujwflBTy66ZbPzXMD97cTGYQ6gPp3UCeT/ZcElBfrGGAuD5u/ETXMJY7lqAZgYt
+>> K
+>> bELPv6oLhz3ya2IO442sUlRYO4dVfwhsnak+2rLiQkXCy4WKSJ1EYiMIP/VHj8ne
+>> 5e8VYkuc0KamKjvT4v6EwJ7tM0blfJbYgmFGruIxOSgCAo94Zp9thAcctb9PbRex
+>> HnPTcnw5cI1sCoLf5fJafhc9w/1H45WjJTnGF7zs4hq/GGsYCwryvI0ovwAzU9ST
+>> R3jRvE+70oiyQDsj9EBak63hRYIAd8QzQ3TkCjaM5E1XHSU7vTnxvxAjKb4ZyF4=
+>> =a8Vh
+>> -----END PGP SIGNATURE-----
+
