@@ -1,32 +1,30 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2/3] AHCI: Add DeviceIDs for Sunrise Point-LP SATA
- controller
-Date: Tue, 2 Dec 2014 12:40:43 -0500
-Message-ID: <20141202174043.GE10918@htj.dyndns.org>
-References: <1415401145.1954.11.camel@localhost.localdomain>
+Subject: Re: [PATCH] sata_fsl: fix error handling of irq_of_parse_and_map
+Date: Tue, 2 Dec 2014 13:00:37 -0500
+Message-ID: <20141202180037.GG10918@htj.dyndns.org>
+References: <20141114213905.GA25228@dtor-ws>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qa0-f51.google.com ([209.85.216.51]:52463 "EHLO
+	mail-qa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751916AbaLBSAl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Dec 2014 13:00:41 -0500
 Content-Disposition: inline
-In-Reply-To: <1415401145.1954.11.camel@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Devin Ryles <devin.ryles@intel.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, james.d.ralston@intel.com, frank.riegel@intel.com
+In-Reply-To: <20141114213905.GA25228@dtor-ws>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Dmitry Torokhov <dtor@chromium.org>
+Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Wolfram Sang <wsa@the-dreams.de>, Joe Perches <joe@perches.com>, Paul Bolle <pebolle@tiscali.nl>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Nov 07, 2014 at 05:59:05PM -0500, Devin Ryles wrote:
-> From f01919cca1259bb2eec1c6db00cf31055a5c481d Mon Sep 17 00:00:00 2001
-> From: Devin Ryles <devin.ryles@intel.com>
-> Date: Wed, 5 Nov 2014 17:41:22 -0500
-> Subject: [PATCH 2/3] AHCI: Add DeviceIDs for Sunrise Point-LP SATA
-> controller
+On Fri, Nov 14, 2014 at 01:39:05PM -0800, Dmitry Torokhov wrote:
+> irq_of_parse_and_map() returns 0 on error (the result is unsigned int),
+> so testing for negative result never works.
 > 
-> This patch adds DeviceIDs for Sunrise Point-LP
-> 
-> Signed-off-by: Devin Ryles <devin.ryles@intel.com>
+> Signed-off-by: Dmitry Torokhov <dtor@chromium.org>
 
-Sorry, confused this one with the other sunrise patch.  Applied to
-libata/for-3.18-fixes.
+Sorry about the delay.  Applied to libata/for-3.18-fixes w/ stable
+cc'd.
 
 Thanks.
 
