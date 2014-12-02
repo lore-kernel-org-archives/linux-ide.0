@@ -1,64 +1,34 @@
-From: Alan Cox <alan@linux.intel.com>
-Subject: Re: [PATCH] ata: add MAINTAINERS entry for libata PATA drivers
-Date: Tue, 02 Dec 2014 17:29:07 +0000
-Message-ID: <1417541347.3203.77.camel@acox1-desk.ger.corp.intel.com>
-References: <27267694.oe0s2nj2E5@amdc1032>
-	 <547DF518.20104@cogentembedded.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 2/3] AHCI: Add DeviceIDs for Sunrise Point-LP SATA
+ controller
+Date: Tue, 2 Dec 2014 12:40:43 -0500
+Message-ID: <20141202174043.GE10918@htj.dyndns.org>
+References: <1415401145.1954.11.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:32773 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754648AbaLBR3K (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 2 Dec 2014 12:29:10 -0500
-In-Reply-To: <547DF518.20104@cogentembedded.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1415401145.1954.11.camel@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Devin Ryles <devin.ryles@intel.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, james.d.ralston@intel.com, frank.riegel@intel.com
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>, Kyungmin Park <kyungmin.park@samsung.com>, linux-ide@vger.kernel.org
 
-On Tue, 2014-12-02 at 20:21 +0300, Sergei Shtylyov wrote:
-> On 12/02/2014 07:29 PM, Bartlomiej Zolnierkiewicz wrote:
+On Fri, Nov 07, 2014 at 05:59:05PM -0500, Devin Ryles wrote:
+> From f01919cca1259bb2eec1c6db00cf31055a5c481d Mon Sep 17 00:00:00 2001
+> From: Devin Ryles <devin.ryles@intel.com>
+> Date: Wed, 5 Nov 2014 17:41:22 -0500
+> Subject: [PATCH 2/3] AHCI: Add DeviceIDs for Sunrise Point-LP SATA
+> controller
 > 
-> > Add myself as the primary maintainer for libata PATA drivers.
+> This patch adds DeviceIDs for Sunrise Point-LP
 > 
-> > The merging process would remain unchanged with patches going
-> > through Tejun's tree.
-> 
-> > Cc: Alan Cox <alan@linux.intel.com>
-> > Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-> > Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-> > Acked-by: Kyungmin Park <kyungmin.park@samsung.com>
-> > ---
-> > If people are fine with it I would like to more officially take
-> > care of the libata PATA drivers.
-> 
-> >   MAINTAINERS |    8 ++++++++
-> >   1 file changed, 8 insertions(+)
-> 
-> > Index: b/MAINTAINERS
-> > ===================================================================
-> > --- a/MAINTAINERS	2014-12-02 16:48:28.932973963 +0100
-> > +++ b/MAINTAINERS	2014-12-02 16:58:35.532969351 +0100
-> > @@ -7116,6 +7116,14 @@ F:	drivers/video/fbdev/sti*
-> >   F:	drivers/video/console/sti*
-> >   F:	drivers/video/logo/logo_parisc*
-> >
-> > +PATA LIBATA DRIVERS
-> > +M:	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-> > +M:	Tejun Heo <tj@kernel.org>
-> > +L:	linux-ide@vger.kernel.org
-> > +T:	git git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git
-> > +S:	Supported
-> > +F:	drivers/ata/pata_*.c
-> > +
-> 
->     What about ata_{generic|piix}.c? Those are PATA as well as SATA...
+> Signed-off-by: Devin Ryles <devin.ryles@intel.com>
 
-ata_piix is maintained (as such as it needs to be) by Intel and pretty
-much every change in recent history is SATA.
+Sorry, confused this one with the other sunrise patch.  Applied to
+libata/for-3.18-fixes.
 
-ata_generic is a good point.
+Thanks.
 
-
+-- 
+tejun
