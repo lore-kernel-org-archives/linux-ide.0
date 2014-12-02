@@ -1,67 +1,42 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: copy speed slows down after kernel update
-Date: Tue, 2 Dec 2014 14:34:45 -0500
-Message-ID: <20141202193445.GN10918@htj.dyndns.org>
-References: <CAAmAy+=W2Jp=rfqq32VAKt2g6rkyMZUXdU0CUp2zZOUFK71dTQ@mail.gmail.com>
+Subject: Re: SATA disks disabled on boot
+Date: Tue, 2 Dec 2014 14:56:53 -0500
+Message-ID: <20141202195653.GQ10918@htj.dyndns.org>
+References: <CADqA9uaW6JwirSZQaHjCuB=9GSUQyakOEBAZor1ed-vyjoC=2g@mail.gmail.com>
+ <20140714163641.GF31610@htj.dyndns.org>
+ <CADqA9uYMCdT1ZpHD0fOVoD67PAx6RaY+8grfmG8SRoqnwyyHgw@mail.gmail.com>
+ <20140817133942.GD7679@mtj.dyndns.org>
+ <CADqA9ubrD1+Ri9d080X4xjrr7wsjqGGz5fjTC45QHjr4Fb1QJg@mail.gmail.com>
+ <CADqA9uaj0MrpffnzE8xnhU57Hx9pv7O1sAhB+xS_4hi8z_dkMA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f51.google.com ([209.85.192.51]:34340 "EHLO
-	mail-qg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934035AbaLBTes (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Dec 2014 14:34:48 -0500
-Received: by mail-qg0-f51.google.com with SMTP id l89so9629380qgf.38
-        for <linux-ide@vger.kernel.org>; Tue, 02 Dec 2014 11:34:47 -0800 (PST)
+Received: from mail-qg0-f49.google.com ([209.85.192.49]:48296 "EHLO
+	mail-qg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933377AbaLBT44 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Dec 2014 14:56:56 -0500
+Received: by mail-qg0-f49.google.com with SMTP id a108so9690414qge.8
+        for <linux-ide@vger.kernel.org>; Tue, 02 Dec 2014 11:56:55 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <CAAmAy+=W2Jp=rfqq32VAKt2g6rkyMZUXdU0CUp2zZOUFK71dTQ@mail.gmail.com>
+In-Reply-To: <CADqA9uaj0MrpffnzE8xnhU57Hx9pv7O1sAhB+xS_4hi8z_dkMA@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?utf-8?B?0JzQuNGF0LDQuNC7?= <kriolord@gmail.com>
+To: Nuno =?iso-8859-1?Q?Magalh=E3es?= <nunomagalhaes@eu.ipp.pt>
 Cc: linux-ide@vger.kernel.org
 
 Hello,
 
-On Fri, Nov 28, 2014 at 02:13:35PM +0400, =D0=9C=D0=B8=D1=85=D0=B0=D0=B8=
-=D0=BB wrote:
-> Technical description:
-> MacBook Air Model A1370 (googling as: Apple MacBook Air "Core i7" 1.8=
- 11"
-> (Mid-2011))
-> Disk A: Lacie Little Big Disk with Samsung HN-M101MBB 1 TB
-> Disk B: Lacie Little Big Disk with OCZ Vertex 3
-> Disk C: Seagate thunderbolt Adapter from STCB3000400 with OCZ Vertex =
-3
-> Disk D: Seagate thunderbolt Adapter from STCB3000400 with Samsung
-> HN-M101MBB 1 TB
+On Fri, Oct 17, 2014 at 11:02:43PM +0100, Nuno Magalh=E3es wrote:
+> The Toshibas would hold the OS in a RAID1 while the WDs would hold da=
+ta in ZFS.
+> At the moment T1 has the OS, T2 has a partition, the WDs are empty.
 >=20
-> using copy cammand: dd if=3D/dev/sda(internal Mac Book disk)
-> of=3D/mnt/sdb1/test.dd bs=3D4M
->=20
-> Test bench 1. Bootable distro based on Debian whezzy 7.2 stable from
-> October 12, 2013, kernel 3.2.0.4
-> 1.1 Disk A (ext2). Stable copying speed =3D 81,4 MB/s.
-> 1.2 Disk B (ext2). Stable copying speed =3D 196 MB/s. !!!!!
-> 1.3 Disk C (ext2). Stable copying speed =3D 199 MB/s.
-> 1.4 Disk D (ext2). Stable copying speed =3D 87 MB/s.
->=20
-> Test bench 2. Bootable distro based on Debian jessie from November 17=
-,
-> 2014, kernel 3.16.7 + thunderbolt driver compiled in.
-> 2.1 Disk A (ext2). Stable copying speed =3D 94 MB/s.
-> 2.2 Disk B (ext2). Stable copying speed =3D 150 MB/s. !!!!!!
->=20
-> Test bench 3. Bootable distro based on Debian jessie from November 17=
-,
-> 2014, kernel 3.17.3 + thunderbolt driver compiled as module.
-> 3.1 Disk A (ext2). Stable copying speed =3D 97 MB/s.
-> 3.2 Disk B (ext2). Stable copying speed =3D 151 MB/s.
-> 3.3 Disk C (ext2). Stable copying speed =3D 156 MB/s. !!!!!
-> 3.4 Disk D (ext2). Stable copying speed =3D 108 MB/s.
->=20
-> after and before insmod .../thunderbolt.ko the same results.
+> My next test will be to move T2 to the bottom of the BIOS boot
+> priority, so it'll become T1, W1, W2, T2 to see if it fails.
 
-Can you please post kernel boot messages from the old and new kernels?
+If you're still working on it, can you please try to reproduce the
+failure with the debug patch applied and report the dmesg?
 
 Thanks.
 
