@@ -1,122 +1,55 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: SATA disks disabled on boot
-Date: Thu, 4 Dec 2014 12:48:19 -0500
-Message-ID: <20141204174819.GC2995@htj.dyndns.org>
-References: <CADqA9uaW6JwirSZQaHjCuB=9GSUQyakOEBAZor1ed-vyjoC=2g@mail.gmail.com>
- <20140714163641.GF31610@htj.dyndns.org>
- <CADqA9uYMCdT1ZpHD0fOVoD67PAx6RaY+8grfmG8SRoqnwyyHgw@mail.gmail.com>
- <20140817133942.GD7679@mtj.dyndns.org>
- <CADqA9ubrD1+Ri9d080X4xjrr7wsjqGGz5fjTC45QHjr4Fb1QJg@mail.gmail.com>
- <CADqA9uaj0MrpffnzE8xnhU57Hx9pv7O1sAhB+xS_4hi8z_dkMA@mail.gmail.com>
- <20141202195653.GQ10918@htj.dyndns.org>
- <547E4817.8000603@eu.ipp.pt>
+Subject: [PATCH libata/for-3.19] libata: Remove FIXME comment in
+ atapi_request_sense()
+Date: Thu, 4 Dec 2014 13:05:00 -0500
+Message-ID: <20141204180500.GA4080@htj.dyndns.org>
+References: <1417558142-2901-1-git-send-email-xerofoify@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:45204 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932343AbaLDRsX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Dec 2014 12:48:23 -0500
-Received: by mail-qc0-f174.google.com with SMTP id c9so13001828qcz.19
-        for <linux-ide@vger.kernel.org>; Thu, 04 Dec 2014 09:48:22 -0800 (PST)
+Received: from mail-qg0-f54.google.com ([209.85.192.54]:38167 "EHLO
+	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751351AbaLDSFE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Dec 2014 13:05:04 -0500
 Content-Disposition: inline
-In-Reply-To: <547E4817.8000603@eu.ipp.pt>
+In-Reply-To: <1417558142-2901-1-git-send-email-xerofoify@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Nuno =?iso-8859-1?Q?Magalh=E3es?= <nunomagalhaes@eu.ipp.pt>
-Cc: linux-ide@vger.kernel.org
+To: Nicholas Krause <xerofoify@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello,
+>From 2ba520f0cd65c2e688f8beb495bb6634a61ee17b Mon Sep 17 00:00:00 2001
+From: Nicholas Krause <xerofoify@gmail.com>
+Date: Tue, 2 Dec 2014 17:09:02 -0500
 
-On Tue, Dec 02, 2014 at 11:15:35PM +0000, Nuno Magalh=E3es wrote:
-> Next will be to move the toshibas to physical ports 3 and 4 and try a=
-gain.
+Remove the FIXME comment in atapi_request_sense() asking whether
+memset of sense buffer is necessary.  The buffer may be partially or
+fully filled by the device.  We want it to be cleared.
 
-I don't think it will make any difference.
+tj: Updated description.
 
-> > If you're still working on it, can you please try to reproduce the
-> > failure with the debug patch applied and report the dmesg?
->=20
-> What debug patch is that? I assume i'd have to get libata source from
-> somewhere first (end user here)? Any RTFM links i can use?
-
-I meant dump_id.  Sorry about the confusion.  Occassionally the
-problematic drives report zeroes for the latter half of IDENTIFY data.
-
-This is how it should look.
-
-  00000000: 427a 3fff c837 0010 0000 0000 003f 0000  zB.?7.......?...
-  00000010: 0000 0000 2020 2020 2057 442d 5743 4334  ....    W -DCW4C
-  00000020: 4a32 3030 3136 3731 0000 0000 0000 3031  2J006117......10
-  00000030: 2e30 3141 3031 5744 4320 5744 3130 4546  0.A110DW CDW01FE
-  00000040: 5258 2d36 3850 4a43 4e30 2020 2020 2020  XR6-P8CJ0N
-  00000050: 2020 2020 2020 2020 2020 2020 2020 8010                ..
-  00000060: 4000 2f00 4001 0000 0000 0007 3fff 0010  .@./.@.......?..
-  00000070: 003f fc10 00fb 0101 ffff 0fff 0000 0007  ?...............
-  00000080: 0003 0078 0078 0078 0078 0000 0000 0000  ..x.x.x.x.......
-  00000090: 0000 0000 0000 001f 9f0e 0004 004c 0040  ............L.@.
-  000000a0: 03fe 0000 746b 7d61 6733 7469 bc41 6723  ....kta}3gitA.#g
-  000000b0: 407f 0048 0048 0000 fffe 0000 0000 0008  .@H.H...........
-  000000c0: 0000 0000 86a0 0001 6db0 7470 0000 0000  .........mpt....
-  000000d0: 0000 0000 6003 0000 5001 4ee2 5f03 f57d  .....`...P.N._}.
-  000000e0: 0000 0000 0000 0000 0000 0000 0000 401c  ...............@
-  000000f0: 401c 0000 0000 0000 0000 0000 0000 0000  .@..............
-  00000100: 0021 0400 0001 0000 0000 0000 0000 0000  !...............
-  00000110: 0000 0000 0000 0000 0000 0000 0004 0000  ................
-  00000120: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-  00000130: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-  00000140: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-  00000150: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-  00000160: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-  00000170: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-  00000180: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-  00000190: 0000 0000 0000 0000 303d 0000 0000 4000  ........=3D0.....@
-  000001a0: 0000 0000 0000 0000 0000 0000 0000 1518  ................
-  000001b0: 0000 0000 0000 0000 103e 0000 0000 0000  ........>.......
-  000001c0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-  000001d0: 0001 1000 0000 0000 0000 0000 0000 0000  ................
-  000001e0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-  000001f0: 0000 0000 0000 0000 0000 7ea5 0000 0000  ...........~....
-
-But the drive sometimes reports the following.
-
-  00000000: 427a 3fff c837 0010 0000 0000 003f 0000  zB.?7.......?...
-  00000010: 0000 0000 2020 2020 2057 442d 5743 4334  ....    W -DCW4C
-  00000020: 4a32 3030 3136 3731 0000 0000 0000 3031  2J006117......10
-  00000030: 2e30 3141 3031 5744 4320 5744 3130 4546  0.A110DW CDW01FE
-  00000040: 5258 2d36 3850 4a43 4e30 2020 2020 2020  XR6-P8CJ0N
-  00000050: 2020 2020 2020 2020 2020 2020 2020 8010                ..
-  00000060: 4000 2f00 4001 0000 0000 0007 3fff 0010  .@./.@.......?..
-  00000070: 003f fc10 00fb 0101 ffff 0fff 0000 0007  ?...............
-  00000080: 0003 0078 0078 0078 0078 0000 0000 0000  ..x.x.x.x.......
-  00000090: 0000 0000 0000 001f 9f0e 0004 004c 0040  ............L.@.
-  000000a0: 03fe 0000 746b 7d61 6733 7469 bc41 6723  ....kta}3gitA.#g
-  000000b0: 407f 0048 0048 0000 fffe 0000 0000 0008  .@H.H...........
-  000000c0: 0000 0000 86a0 0001 6db0 7470 0000 0000  .........mpt....
-  000000d0: 0000 0000 6003 0000 5001 4ee2 5f03 f57d  .....`...P.N._}.
-  000000e0: 0000 0000 0000 0000 0000 0000 0000 401c  ...............@
-  000000f0: 401c 0000 0000 0000 0000 0000 0000 0000  .@..............
-  00000100: 0021 0400 0001 0000 0000 0000 0000 0000  !...............
-  00000110: 0000 0000 0000 0000 0000 0000 0004 0000  ................
-  00000120: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-  00000130: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-  00000140: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-  00000150: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-  00000160: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-  00000170: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-  00000180: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-  00000190: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-  000001a0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-  000001b0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-  000001c0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-  000001d0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-  000001e0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-  000001f0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-
-I have no idea why it's doing that yet.  Weird... I'll ask around.
+Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+Applied to libata/for-3.19 with updated description.
 
 Thanks.
 
---=20
-tejun
+ drivers/ata/libata-scsi.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 1db6eab..6a5fcf1 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2595,7 +2595,6 @@ static void atapi_request_sense(struct ata_queued_cmd *qc)
+ 
+ 	DPRINTK("ATAPI request sense\n");
+ 
+-	/* FIXME: is this needed? */
+ 	memset(cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
+ 
+ #ifdef CONFIG_ATA_SFF
+-- 
+2.1.0
+
