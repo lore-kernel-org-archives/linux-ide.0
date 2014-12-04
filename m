@@ -1,76 +1,122 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata: Whitelist SSDs that are known to properly return
- zeroes after TRIM
-Date: Thu, 4 Dec 2014 12:06:11 -0500
-Message-ID: <20141204170611.GB2995@htj.dyndns.org>
-References: <yq18uiojfq9.fsf@sermon.lab.mkp.net>
+Subject: Re: SATA disks disabled on boot
+Date: Thu, 4 Dec 2014 12:48:19 -0500
+Message-ID: <20141204174819.GC2995@htj.dyndns.org>
+References: <CADqA9uaW6JwirSZQaHjCuB=9GSUQyakOEBAZor1ed-vyjoC=2g@mail.gmail.com>
+ <20140714163641.GF31610@htj.dyndns.org>
+ <CADqA9uYMCdT1ZpHD0fOVoD67PAx6RaY+8grfmG8SRoqnwyyHgw@mail.gmail.com>
+ <20140817133942.GD7679@mtj.dyndns.org>
+ <CADqA9ubrD1+Ri9d080X4xjrr7wsjqGGz5fjTC45QHjr4Fb1QJg@mail.gmail.com>
+ <CADqA9uaj0MrpffnzE8xnhU57Hx9pv7O1sAhB+xS_4hi8z_dkMA@mail.gmail.com>
+ <20141202195653.GQ10918@htj.dyndns.org>
+ <547E4817.8000603@eu.ipp.pt>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f43.google.com ([209.85.216.43]:51699 "EHLO
-	mail-qa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932313AbaLDRGV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Dec 2014 12:06:21 -0500
-Received: by mail-qa0-f43.google.com with SMTP id bm13so12112124qab.16
-        for <linux-ide@vger.kernel.org>; Thu, 04 Dec 2014 09:06:20 -0800 (PST)
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:45204 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932343AbaLDRsX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Dec 2014 12:48:23 -0500
+Received: by mail-qc0-f174.google.com with SMTP id c9so13001828qcz.19
+        for <linux-ide@vger.kernel.org>; Thu, 04 Dec 2014 09:48:22 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <yq18uiojfq9.fsf@sermon.lab.mkp.net>
+In-Reply-To: <547E4817.8000603@eu.ipp.pt>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Nuno =?iso-8859-1?Q?Magalh=E3es?= <nunomagalhaes@eu.ipp.pt>
 Cc: linux-ide@vger.kernel.org
 
-Hello, Martin.
+Hello,
 
-On Wed, Dec 03, 2014 at 09:44:46PM -0500, Martin K. Petersen wrote:
-> 
-> As defined, the DRAT (Deterministic Read After Trim) and RZAT (Return
-> Zero After Trim) flags in the ATA Command Set are unreliable in the
-> sense that they only define what happens if the device successfully
-> executed the DSM TRIM command. TRIM is only advisory, however, and the
-> device is free to silently ignore all or parts of the request.
-> 
-> In practice this renders the DRAT and RZAT flags completely useless and
-> because the results are unpredictable we decided to disable discard in
-> MD for 3.18 to avoid the risk of data corruption.
-> 
-> Hardware vendors in the real world obviously need better guarantees than
-> what the standards bodies provide. Unfortuntely those guarantees are
-> encoded in product requirements documents rather than somewhere we can
-> key off of them programatically. So we are compelled to disabling
-> discard_zeroes_data for all devices unless we explicitly have data to
-> support whitelisting them.
-> 
-> This patch whitelists SSDs from a few of the main vendors. None of the
-> whitelists are based on written guarantees. They are purely based on
-> empirical evidence collected from internal and external users that have
-> tested or qualified these drives in RAID deployments.
-> 
-> The whitelist is only meant as a starting point and is by no means
-> comprehensive:
-> 
->    - All intel SSD models except for 510
->    - Micron M5*
->    - Samsung SSDs
->    - Seagate SSDs
+On Tue, Dec 02, 2014 at 11:15:35PM +0000, Nuno Magalh=E3es wrote:
+> Next will be to move the toshibas to physical ports 3 and 4 and try a=
+gain.
 
-Generally, I'm extremely skeptical about whitelists.  It's very
-difficult to keep them meaningfully up-to-date and often just ends up
-bit rotting after the initial flurry of updates, especially given how
-little this particular feature would be visible to most users.
+I don't think it will make any difference.
 
-If there's something on the horizon which would solve the
-identification problem and we only have to worry about the current
-batch of devices, whitelisting can be useful but otherwise I'm not
-sure this is a good idea.
+> > If you're still working on it, can you please try to reproduce the
+> > failure with the debug patch applied and report the dmesg?
+>=20
+> What debug patch is that? I assume i'd have to get libata source from
+> somewhere first (end user here)? Any RTFM links i can use?
 
-If there currently is no way of properly indicating this feature,
-let's please disable it unconditionally.  If this is absolutely
-necesary in certain cases (is it?), we can add libata.force flags or
-sysfs knobs to force enable it for users who care enough about it and
-knows what they're doing.
+I meant dump_id.  Sorry about the confusion.  Occassionally the
+problematic drives report zeroes for the latter half of IDENTIFY data.
+
+This is how it should look.
+
+  00000000: 427a 3fff c837 0010 0000 0000 003f 0000  zB.?7.......?...
+  00000010: 0000 0000 2020 2020 2057 442d 5743 4334  ....    W -DCW4C
+  00000020: 4a32 3030 3136 3731 0000 0000 0000 3031  2J006117......10
+  00000030: 2e30 3141 3031 5744 4320 5744 3130 4546  0.A110DW CDW01FE
+  00000040: 5258 2d36 3850 4a43 4e30 2020 2020 2020  XR6-P8CJ0N
+  00000050: 2020 2020 2020 2020 2020 2020 2020 8010                ..
+  00000060: 4000 2f00 4001 0000 0000 0007 3fff 0010  .@./.@.......?..
+  00000070: 003f fc10 00fb 0101 ffff 0fff 0000 0007  ?...............
+  00000080: 0003 0078 0078 0078 0078 0000 0000 0000  ..x.x.x.x.......
+  00000090: 0000 0000 0000 001f 9f0e 0004 004c 0040  ............L.@.
+  000000a0: 03fe 0000 746b 7d61 6733 7469 bc41 6723  ....kta}3gitA.#g
+  000000b0: 407f 0048 0048 0000 fffe 0000 0000 0008  .@H.H...........
+  000000c0: 0000 0000 86a0 0001 6db0 7470 0000 0000  .........mpt....
+  000000d0: 0000 0000 6003 0000 5001 4ee2 5f03 f57d  .....`...P.N._}.
+  000000e0: 0000 0000 0000 0000 0000 0000 0000 401c  ...............@
+  000000f0: 401c 0000 0000 0000 0000 0000 0000 0000  .@..............
+  00000100: 0021 0400 0001 0000 0000 0000 0000 0000  !...............
+  00000110: 0000 0000 0000 0000 0000 0000 0004 0000  ................
+  00000120: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+  00000130: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+  00000140: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+  00000150: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+  00000160: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+  00000170: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+  00000180: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+  00000190: 0000 0000 0000 0000 303d 0000 0000 4000  ........=3D0.....@
+  000001a0: 0000 0000 0000 0000 0000 0000 0000 1518  ................
+  000001b0: 0000 0000 0000 0000 103e 0000 0000 0000  ........>.......
+  000001c0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+  000001d0: 0001 1000 0000 0000 0000 0000 0000 0000  ................
+  000001e0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+  000001f0: 0000 0000 0000 0000 0000 7ea5 0000 0000  ...........~....
+
+But the drive sometimes reports the following.
+
+  00000000: 427a 3fff c837 0010 0000 0000 003f 0000  zB.?7.......?...
+  00000010: 0000 0000 2020 2020 2057 442d 5743 4334  ....    W -DCW4C
+  00000020: 4a32 3030 3136 3731 0000 0000 0000 3031  2J006117......10
+  00000030: 2e30 3141 3031 5744 4320 5744 3130 4546  0.A110DW CDW01FE
+  00000040: 5258 2d36 3850 4a43 4e30 2020 2020 2020  XR6-P8CJ0N
+  00000050: 2020 2020 2020 2020 2020 2020 2020 8010                ..
+  00000060: 4000 2f00 4001 0000 0000 0007 3fff 0010  .@./.@.......?..
+  00000070: 003f fc10 00fb 0101 ffff 0fff 0000 0007  ?...............
+  00000080: 0003 0078 0078 0078 0078 0000 0000 0000  ..x.x.x.x.......
+  00000090: 0000 0000 0000 001f 9f0e 0004 004c 0040  ............L.@.
+  000000a0: 03fe 0000 746b 7d61 6733 7469 bc41 6723  ....kta}3gitA.#g
+  000000b0: 407f 0048 0048 0000 fffe 0000 0000 0008  .@H.H...........
+  000000c0: 0000 0000 86a0 0001 6db0 7470 0000 0000  .........mpt....
+  000000d0: 0000 0000 6003 0000 5001 4ee2 5f03 f57d  .....`...P.N._}.
+  000000e0: 0000 0000 0000 0000 0000 0000 0000 401c  ...............@
+  000000f0: 401c 0000 0000 0000 0000 0000 0000 0000  .@..............
+  00000100: 0021 0400 0001 0000 0000 0000 0000 0000  !...............
+  00000110: 0000 0000 0000 0000 0000 0000 0004 0000  ................
+  00000120: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+  00000130: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+  00000140: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+  00000150: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+  00000160: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+  00000170: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+  00000180: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+  00000190: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+  000001a0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+  000001b0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+  000001c0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+  000001d0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+  000001e0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+  000001f0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+
+I have no idea why it's doing that yet.  Weird... I'll ask around.
 
 Thanks.
 
--- 
+--=20
 tejun
