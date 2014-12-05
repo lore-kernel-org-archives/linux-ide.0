@@ -1,107 +1,28 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH 1/3] libata: Whitelist SSDs that are known to properly
- return zeroes after TRIM
-Date: Fri, 05 Dec 2014 17:45:04 +0100
-Message-ID: <5481E110.2060309@redhat.com>
-References: <1415336894-15327-1-git-send-email-martin.petersen@oracle.com> <1415336894-15327-2-git-send-email-martin.petersen@oracle.com>
+From: =?UTF-8?B?TnVubyBNYWdhbGjDo2Vz?= <nunomagalhaes@eu.ipp.pt>
+Subject: Re: SATA disks disabled on boot
+Date: Fri, 05 Dec 2014 22:12:35 +0000
+Message-ID: <54822DD3.6040405@eu.ipp.pt>
+References: <CADqA9uaW6JwirSZQaHjCuB=9GSUQyakOEBAZor1ed-vyjoC=2g@mail.gmail.com> <20140714163641.GF31610@htj.dyndns.org> <CADqA9uYMCdT1ZpHD0fOVoD67PAx6RaY+8grfmG8SRoqnwyyHgw@mail.gmail.com> <20140817133942.GD7679@mtj.dyndns.org> <CADqA9ubrD1+Ri9d080X4xjrr7wsjqGGz5fjTC45QHjr4Fb1QJg@mail.gmail.com> <CADqA9uaj0MrpffnzE8xnhU57Hx9pv7O1sAhB+xS_4hi8z_dkMA@mail.gmail.com> <20141202195653.GQ10918@htj.dyndns.org> <547E4817.8000603@eu.ipp.pt> <20141204174819.GC2995@htj.dyndns.org> <5480F54B.9070306@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1415336894-15327-2-git-send-email-martin.petersen@oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org, neilb@suse.de
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-wg0-f49.google.com ([74.125.82.49]:54109 "EHLO
+	mail-wg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751016AbaLEWMk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Dec 2014 17:12:40 -0500
+Received: by mail-wg0-f49.google.com with SMTP id n12so2001991wgh.36
+        for <linux-ide@vger.kernel.org>; Fri, 05 Dec 2014 14:12:38 -0800 (PST)
+In-Reply-To: <5480F54B.9070306@ubuntu.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Phillip Susi <psusi@ubuntu.com>, Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
 
+On 2014-12-04 23:59, Phillip Susi wrote:
+> Looks a lot like a drive that has Power Up In Standby enabled; on 
+> power up they don't know what to report for many of the fields 
+> until the media has been read.
 
-
-On 07/11/2014 06:08, Martin K. Petersen wrote:
-> The whitelist is only meant as a starting point and is by no means
-> comprehensive:
-> 
->    - All intel SSD models except for 510
->    - Micron M5*
->    - Samsung SSDs
->    - Seagate SSDs
-> 
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> ---
->  drivers/ata/libata-core.c | 18 ++++++++++++++----
->  drivers/ata/libata-scsi.c | 10 ++++++----
->  include/linux/libata.h    |  1 +
->  3 files changed, 21 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-> index c5ba15af87d3..f41f24a8bc21 100644
-> --- a/drivers/ata/libata-core.c
-> +++ b/drivers/ata/libata-core.c
-> @@ -4225,10 +4225,20 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
->  	{ "PIONEER DVD-RW  DVR-216D",	NULL,	ATA_HORKAGE_NOSETXFER },
->  
->  	/* devices that don't properly handle queued TRIM commands */
-> -	{ "Micron_M500*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
-> -	{ "Crucial_CT???M500SSD*",	NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
-> -	{ "Micron_M550*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
-> -	{ "Crucial_CT*M550SSD*",	NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
-> +	{ "Micron_M5?0*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
-> +						ATA_HORKAGE_ZERO_AFTER_TRIM, },
-> +	{ "Crucial_CT???M5?0SSD*",	NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
-
-I have a Crucial_CT256MX1 (i.e. MX100) and it does reliably zero.
-
-BTW. it's the same hardware as the M550, so probably the same set of
-quirks should apply to both.
-
-Paolo
-
-> +
-> +	/*
-> +	 * DRAT/RZAT are weak guarantees. Explicitly black/whitelist
-> +	 * SSDs that provide reliable zero after TRIM.
-> +	 */
-> +	{ "INTEL*SSDSC2MH*",		NULL,	0, }, /* Blacklist intel 510 */
-> +	{ "INTEL*SSD*", 		NULL,	ATA_HORKAGE_ZERO_AFTER_TRIM, },
-> +	{ "SSD*INTEL*",			NULL,	ATA_HORKAGE_ZERO_AFTER_TRIM, },
-> +	{ "Samsung*SSD*",		NULL,	ATA_HORKAGE_ZERO_AFTER_TRIM, },
-> +	{ "SAMSUNG*SSD*",		NULL,	ATA_HORKAGE_ZERO_AFTER_TRIM, },
-> +	{ "ST[1248][0248]0[FH]*",	NULL,	ATA_HORKAGE_ZERO_AFTER_TRIM, },
->  
->  	/*
->  	 * Some WD SATA-I drives spin up and down erratically when the link
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index 0586f66d70fa..deaa6e34ed4d 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -2515,13 +2515,15 @@ static unsigned int ata_scsiop_read_cap(struct ata_scsi_args *args, u8 *rbuf)
->  		rbuf[15] = lowest_aligned;
->  
->  		if (ata_id_has_trim(args->id)) {
-> -			rbuf[14] |= 0x80; /* TPE */
-> +			rbuf[14] |= 0x80; /* LBPME */
->  
-> -			if (ata_id_has_zero_after_trim(args->id))
-> -				rbuf[14] |= 0x40; /* TPRZ */
-> +			if (ata_id_has_zero_after_trim(args->id) &&
-> +			    dev->horkage & ATA_HORKAGE_ZERO_AFTER_TRIM) {
-> +				ata_dev_warn(dev, "Enabling discard_zeroes_data\n");
-> +				rbuf[14] |= 0x40; /* LBPRZ */
-> +			}
->  		}
->  	}
-> -
->  	return 0;
->  }
->  
-> diff --git a/include/linux/libata.h b/include/linux/libata.h
-> index bd5fefeaf548..45ac825b8366 100644
-> --- a/include/linux/libata.h
-> +++ b/include/linux/libata.h
-> @@ -421,6 +421,7 @@ enum {
->  	ATA_HORKAGE_NO_NCQ_TRIM	= (1 << 19),	/* don't use queued TRIM */
->  	ATA_HORKAGE_NOLPM	= (1 << 20),	/* don't use LPM */
->  	ATA_HORKAGE_WD_BROKEN_LPM = (1 << 21),	/* some WDs have broken LPM */
-> +	ATA_HORKAGE_ZERO_AFTER_TRIM = (1 << 22),/* guarantees zero after trim */
->  
->  	 /* DMA mask for user DMA control: User visible values; DO NOT
->  	    renumber */
-> 
+The problem is this only happens sometimes and only on WD drives, but
+i'll look into that, thanks.
