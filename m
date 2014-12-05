@@ -1,62 +1,64 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: [PATCH] libata: Whitelist SSDs that are known to properly return zeroes after TRIM
-Date: Thu, 04 Dec 2014 20:53:22 -0500
-Message-ID: <yq18uimhnfx.fsf@sermon.lab.mkp.net>
-References: <yq18uiojfq9.fsf@sermon.lab.mkp.net> <547FCECB.4090908@ubuntu.com>
-	<yq1sigwgkqt.fsf@sermon.lab.mkp.net> <547FD4F6.7090700@ubuntu.com>
-	<yq1k328gk80.fsf@sermon.lab.mkp.net> <547FE5BD.9070101@ubuntu.com>
+Date: Thu, 04 Dec 2014 21:13:22 -0500
+Message-ID: <yq14mtahmil.fsf@sermon.lab.mkp.net>
+References: <yq18uiojfq9.fsf@sermon.lab.mkp.net>
+	<20141204170611.GB2995@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:40430 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754792AbaLEBxa (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Dec 2014 20:53:30 -0500
-In-Reply-To: <547FE5BD.9070101@ubuntu.com> (Phillip Susi's message of "Wed, 03
-	Dec 2014 23:40:29 -0500")
+Received: from aserp1040.oracle.com ([141.146.126.69]:42247 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932098AbaLECN2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Dec 2014 21:13:28 -0500
+In-Reply-To: <20141204170611.GB2995@htj.dyndns.org> (Tejun Heo's message of
+	"Thu, 4 Dec 2014 12:06:11 -0500")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Phillip Susi <psusi@ubuntu.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org
 
->>>>> "Phillip" == Phillip Susi <psusi@ubuntu.com> writes:
+>>>>> "Tejun" == Tejun Heo <tj@kernel.org> writes:
 
-Phillip> So your assertion is that you have seen it in writing, 
+Tejun> Generally, I'm extremely skeptical about whitelists.
 
-Actually I haven't. I have talked to a bunch of people that have done
-RAID qualification on SSDs. I also gleaned on a few vendor lists of
-supported drive configurations.
+Me too. Unfortunately, in this case the blacklist is essentially
+unbounded whereas the whitelist is small.
 
-The good news is that practice of each OEM having their own custom drive
-firmware build is not very common for SSDs. And most of the results I
-looked at was collected using off-the-shelf drives.
+Tejun> If there's something on the horizon which would solve the
+Tejun> identification problem and we only have to worry about the
+Tejun> current batch of devices, whitelisting can be useful but
+Tejun> otherwise I'm not sure this is a good idea.
 
-Phillip> I'm not saying a hard hell no, but this certainly makes me
-Phillip> uncomfortable.  
+There isn't :( The only saving grace is that SSDs are gravitating
+towards NVMe and other non-ATA interfaces.
 
-You do realize that my patch *restricts* the drives we enable
-discard_zeroes_data on, right? Instead of relying solely on the drive's
-own reporting we now also require empirical evidence that they do the
-right thing.
+Tejun> It's very difficult to keep them meaningfully up-to-date and
+Tejun> often just ends up bit rotting after the initial flurry of
+Tejun> updates,
 
-Phillip> I'd much rather see the manufacturers put it in writing that
-Phillip> yes, this make and model will perform this way even though it
-Phillip> is not strictly required by ATA8.
+I'm well aware that this adds another truckload of ongoing pain to my
+plate. Several of us discussed this issue at conferences this fall and
+the consensus was that whitelisting is the only way to go about it.
 
-Wishful thinking.
+I've already tightened up things in SCSI so we now prefer WRITE SAME
+which does give hard guarantees unlike UNMAP. But because we use WRITE
+SAME in the libata SATL it is imperative that we change our internal
+flagging to be equally restrictive.
 
-The sad reality is that standards are deliberately written to be
-vague. And that any hard guarantees are part of product requirements
-documents. That's not specific to SSDs in any way. That's true for
-pretty much any piece of hardware.
+Tejun> If there currently is no way of properly indicating this feature,
+Tejun> let's please disable it unconditionally.
 
-Phillip> What would be better still is if the bloody ATA standard got a
-Phillip> clue and said that if the drive claims that it does in fact
-Phillip> zero after TRIM, that the TRIM command becomes mandatory
-Phillip> instead of advisory.
+Well, we recently disabled discard support in MD RAID5/6 to avoid
+corruption. There currently is a manual override and that may be good
+enough.
 
-I agree that the standards efforts in this department are a total train
-wreck.
+I just feel bad about disabling the feature for the many existing users
+(and there are quite a few) that are using well-behaved drives in their
+RAID deployments. And the filesystem folks have been begging for the
+zeroout discard variant that I posted a few weeks ago. So the users are
+there. I'm just trying to accommodate them the best I can given the lame
+spec.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
