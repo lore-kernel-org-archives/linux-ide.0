@@ -1,96 +1,52 @@
-From: "Elliott, Robert (Server Storage)" <Elliott@hp.com>
-Subject: RE: [PATCH 1/3] libata: Whitelist SSDs that are known to properly
- return zeroes after TRIM
-Date: Fri, 5 Dec 2014 22:58:09 +0000
-Message-ID: <94D0CD8314A33A4D9D801C0FE68B4029593FA1F3@G4W3202.americas.hpqcorp.net>
-References: <1415336894-15327-1-git-send-email-martin.petersen@oracle.com>
- <1415336894-15327-2-git-send-email-martin.petersen@oracle.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [GIT PULL] libata fixes for v3.18-rc7
+Date: Sun, 7 Dec 2014 09:07:46 -0500
+Message-ID: <20141207140746.GC19034@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <1415336894-15327-2-git-send-email-martin.petersen@oracle.com>
-Content-Language: en-US
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Paolo Bonzini <pbonzini@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "neilb@suse.de" <neilb@suse.de>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qa0-f45.google.com ([209.85.216.45]:62338 "EHLO
+	mail-qa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752937AbaLGOHu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Dec 2014 09:07:50 -0500
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
+Hello, Linus.
 
+Three libata fixes for v3.18.  Nothing too interesting.  PCI ID ID and
+quirk additions to ahci and an error handling path fix in sata_fsl.
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Martin K. Petersen
-> Sent: Thursday, 06 November, 2014 11:08 PM
-> To: linux-scsi@vger.kernel.org; linux-ide@vger.kernel.org; linux-
-> fsdevel@vger.kernel.org; neilb@suse.de
-> Cc: Martin K. Petersen
-> Subject: [PATCH 1/3] libata: Whitelist SSDs that are known to properly return
-> zeroes after TRIM
-> 
-> As defined, the DRAT (Deterministic Read After Trim) and RZAT (Return
-> Zero After Trim) flags in the ATA Command Set are unreliable in the
-> sense that they only define what happens if the device successfully
-> executed the DSM TRIM command. TRIM is only advisory, however, and the
-> device is free to silently ignore all or parts of the request.
-> 
-> In practice this renders the DRAT and RZAT flags completely useless and
-> because the results are unpredictable we decided to disable discard in
-> MD for 3.18 to avoid the risk of data corruption.
-> 
-> Hardware vendors in the real world obviously need better guarantees than
-> what the standards bodies provide. Unfortuntely those guarantees are
-> encoded in product requirements documents rather than somewhere we can
-> key off of them programatically. So we are compelled to disabling
-> discard_zeroes_data for all devices unless we explicitly have data to
-> support whitelisting them.
-> 
-> This patch whitelists SSDs from a few of the main vendors. None of the
-> whitelists are based on written guarantees. They are purely based on
-> empirical evidence collected from internal and external users that have
-> tested or qualified these drives in RAID deployments.
-> 
-> The whitelist is only meant as a starting point and is by no means
-> comprehensive:
-> 
->    - All intel SSD models except for 510
->    - Micron M5*
->    - Samsung SSDs
->    - Seagate SSDs
-> 
+Thanks.
 
-That description and Paolo's reply:
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Paolo Bonzini
-> Sent: Friday, 05 December, 2014 10:45 AM
-...
-> I have a Crucial_CT256MX1 (i.e. MX100) and it does reliably zero.
+The following changes since commit 9a23c1d6f0f5dbac4c9b73fa6cea7c9ee3d29074:
 
-make me concerned about this whitelist approach.
+  ahci: fix AHCI parameters not taken into account (2014-11-04 12:56:25 -0500)
 
-I think you need a manufacturer assertion that this is indeed
-the design intent; you cannot be certain based on observation
-from outside.
+are available in the git repository at:
 
-Since the SCSI and ATA standards allow ignoring the hint, it 
-might be honored most of the time, but ignored in some rare
-cases (e.g., drive firmware has a malloc() failure that only
-happens when the drive is handling an overtemperature
-condition and six other problems at the same time).
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-3.18-fixes
 
-Maybe there should be two levels:
-* vendor asserts the drive is designed to always honor the hint
-* community observes the drive always seems to honor the hint
+for you to fetch changes up to 2b21ef0aae65f22f5ba86b13c4588f6f0c2dbefb:
 
-and a sysfs flag for users to select the level at which 
-they feel safe.
+  ahci: disable MSI on SAMSUNG 0xa800 SSD (2014-12-04 13:18:55 -0500)
 
-A user running 3 replicas of the data in different sites 
-might be more trusting than a user for which this is the 
-only copy of the data.
+----------------------------------------------------------------
+Devin Ryles (1):
+      AHCI: Add DeviceIDs for Sunrise Point-LP SATA controller
 
----
-Rob Elliott    HP Server Storage
+Dmitry Torokhov (1):
+      sata_fsl: fix error handling of irq_of_parse_and_map
 
+Tejun Heo (1):
+      ahci: disable MSI on SAMSUNG 0xa800 SSD
 
+ drivers/ata/ahci.c     | 4 ++++
+ drivers/ata/sata_fsl.c | 2 +-
+ 2 files changed, 5 insertions(+), 1 deletion(-)
 
-
+-- 
+tejun
