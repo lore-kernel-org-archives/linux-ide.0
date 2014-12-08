@@ -1,27 +1,29 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
 Subject: Re: [PATCH 1/3] libata: Whitelist SSDs that are known to properly
  return zeroes after TRIM
-Date: Mon, 08 Dec 2014 07:28:45 -0800
-Message-ID: <1418052525.2208.6.camel@HansenPartnership.com>
+Date: Mon, 8 Dec 2014 22:59:15 +0000
+Message-ID: <20141208225915.1ec39f03@lxorguk.ukuu.org.uk>
 References: <1415336894-15327-1-git-send-email-martin.petersen@oracle.com>
-	 <1415336894-15327-2-git-send-email-martin.petersen@oracle.com>
-	 <94D0CD8314A33A4D9D801C0FE68B4029593FA1F3@G4W3202.americas.hpqcorp.net>
-	 <20141208151559.GB7001@thunk.org>
+	<1415336894-15327-2-git-send-email-martin.petersen@oracle.com>
+	<94D0CD8314A33A4D9D801C0FE68B4029593FA1F3@G4W3202.americas.hpqcorp.net>
+	<20141208151559.GB7001@thunk.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:33604 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755414AbaLHP2s (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Dec 2014 10:28:48 -0500
+Received: from 251.110.2.81.in-addr.arpa ([81.2.110.251]:34708 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753206AbaLHW7u (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Dec 2014 17:59:50 -0500
 In-Reply-To: <20141208151559.GB7001@thunk.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Theodore Ts'o <tytso@mit.edu>
 Cc: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Paolo Bonzini <pbonzini@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "neilb@suse.de" <neilb@suse.de>
 
-On Mon, 2014-12-08 at 10:15 -0500, Theodore Ts'o wrote:
+On Mon, 8 Dec 2014 10:15:59 -0500
+"Theodore Ts'o" <tytso@mit.edu> wrote:
+
 > On Fri, Dec 05, 2014 at 10:58:09PM +0000, Elliott, Robert (Server Storage) wrote:
 > > > I have a Crucial_CT256MX1 (i.e. MX100) and it does reliably zero.
 > > 
@@ -37,44 +39,18 @@ On Mon, 2014-12-08 at 10:15 -0500, Theodore Ts'o wrote:
 > just to get higher Winbench scores.  Does that mean we can't trust
 > them to do anything right?
 
-That answer depends on device type manufacturer.  USB devices, hell no.
-ATA devices, maybe and SCSI devices usually.
+At the time they never promised to honour cache flush. The reason it was
+became mandatory in the specification was in part so that the vendors
+could all force each other to play fair. If its "optional" then it's
+tough..., if they say they meet the standard it's class action 8)
 
-The main problem is usually testing.  Consumer devices like USB and
-(s)ATA rarely get tested on anything but windows.  USB devices tend to
-supply their own driver, so they're on the "we fix it in the driver"
-model which is why they bite us so badly. (S)ATA usually comply, but
-they only test what windows exercises, so if windows doesn't do it,
-chances are it never got tested.  SCSI devices still tend to be tested
-in legacy UNIX environments, which are as diverse as we are.
+If this is a promise then it ought to be good 
 
-> What I'd suggest instead is that if a vendor states this on a spec
-> sheet --- more than just an e-mail assertion --- so they can be sued
-> if they knowingly misrepresent their product, that we take their word
-> at it.  Of course, there will be bugs, which is why we have
-> blacklists, or why we can remove them from the list if it turns out
-> there are edge conditions where it appears the disk doesn't quite do
-> the right thing.
-> 
-> After all, we generally take the manufacturer's word that air bags
-> will work as claimed, even if potentially 11 million of them are
-> currently subject to recall.  And do we think that "the community"
-> would necessarily be more suited than the vendors and the manufacturer
-> to figure out whether or not air bags or drives are working as
-> desired?
-> 
-> That being said, if someone wants to create a open source program
-> which stress tests SSD's to look for cases where it is dropping a
-> requested discard, that would certainly be a good thing to do...
+James:  "USB devices tend to supply their own driver"
 
-The purpose of DRAT and RZAT is to enable disk arrays deterministically
-to use TRIM/Unmap so arrays know what happens to stripes on discard.
-Arrays are being built of mostly SATA technology these days, so some
-manufacturers have retargetted to arrays and consumer technology (and
-are testing the array cases).  However, windows doesn't use either
-feature, so manufacturers not targetting arrays will never test this
-feature.  Hence, in this case, I think a whitelist does make sense.
+has not been true for some years now. Microsoft provide an in-box driver
+and vendors have the choice of using that or certifying their own via
+WHQL, which is a bit like choosing between free ice cream and banging
+your head against a plank cover in nails.
 
-James
-
-
+Alan
