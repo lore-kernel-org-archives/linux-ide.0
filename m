@@ -1,73 +1,55 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] libata changes for v3.19-rc1
-Date: Wed, 10 Dec 2014 11:53:57 -0500
-Message-ID: <20141210165357.GD6294@htj.dyndns.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] libata: Whitelist SSDs that are known to properly
+ return zeroes after TRIM
+Date: Wed, 10 Dec 2014 23:34:39 +0300
+Message-ID: <1418243679.8310.13.camel@HansenPartnership.com>
+References: <yq18uiojfq9.fsf@sermon.lab.mkp.net>
+	 <20141204170611.GB2995@htj.dyndns.org> <yq14mtahmil.fsf@sermon.lab.mkp.net>
+	 <20141205145148.GI4080@htj.dyndns.org>
+	 <1418184578.2121.3.camel@HansenPartnership.com>
+	 <20141210142927.GA6294@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f53.google.com ([209.85.192.53]:55515 "EHLO
-	mail-qg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755312AbaLJQyA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Dec 2014 11:54:00 -0500
-Content-Disposition: inline
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:44714 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932527AbaLJUep (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Dec 2014 15:34:45 -0500
+In-Reply-To: <20141210142927.GA6294@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org
 
-Hello,
+On Wed, 2014-12-10 at 09:29 -0500, Tejun Heo wrote:
+> Hello,
+> 
+> On Wed, Dec 10, 2014 at 07:09:38AM +0300, James Bottomley wrote:
+> > Conversely, drives that return random junk after a trim cause
+> > verification failures, so we just elect not to transmit trim down to
+> > them from the RAID layer.
+> 
+> I see.  Thanks for the explanation.  I suppose the current raid
+> implementations' metadata handling on partially built devices isn't
+> developed enough to simply mark those trimmed blocks as unsynced?
 
-The only interesting piece is the support for shingled drives.  The
-changes in libata layer are minimal.  All it does is identifying the
-new class of device and report upwards accordingly.
+We do have a log, which could be used for RAID-1 for this purpose, but
+it doesn't seem to be much used in practise.  It takes extra space which
+most admins don't account for.
 
-Thanks.
+For RAID-2+ or erasure codes this won't work because a bad block read
+corrupts the stripe: the really subtle failure here is that you trim a
+stripe and then partially write it, the RMW you do for parity will be an
+incorrect partial syndrome because it's based on junk rather than the
+syndrome of the other blocks and the corruption wouldn't be detected
+until you get an actual disk failure (meaning everything will look fine
+until that crucial day you need your data protection mechanism to work).
+We could cope with this with an even more subtle logging mechanism,
+where we only trim stripes and then log trimmed stripes and insist on
+full instead of partial writes so we get back to a known syndrome, but
+that's introducing a lot of subtlety into the logging code ...
 
-The following changes since commit 9a23c1d6f0f5dbac4c9b73fa6cea7c9ee3d29074:
+James
 
-  ahci: fix AHCI parameters not taken into account (2014-11-04 12:56:25 -0500)
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-3.19
-
-for you to fetch changes up to 2ba520f0cd65c2e688f8beb495bb6634a61ee17b:
-
-  libata: Remove FIXME comment in atapi_request_sense() (2014-12-04 12:58:50 -0500)
-
-----------------------------------------------------------------
-Geert Uytterhoeven (1):
-      sata_rcar: Document deprecated "renesas,rcar-sata"
-
-Hannes Reinecke (3):
-      libsas: use ata_dev_classify()
-      libata: Implement ATA_DEV_ZAC
-      libata-scsi: Update SATL for ZAC drives
-
-Hans de Goede (1):
-      ahci_sunxi: Make AHCI_HFLAG_NO_PMP flag configurable with a module option
-
-Nicholas Krause (1):
-      libata: Remove FIXME comment in atapi_request_sense()
-
-Valentine Barshak (1):
-      sata_rcar: Add clocks to sata_rcar bindings
-
- .../devicetree/bindings/ata/sata_rcar.txt          | 11 ++--
- drivers/ata/ahci_sunxi.c                           | 16 +++++-
- drivers/ata/libata-core.c                          | 20 +++++--
- drivers/ata/libata-eh.c                            |  7 ++-
- drivers/ata/libata-scsi.c                          | 31 ++++++++--
- drivers/ata/libata-transport.c                     |  1 +
- drivers/scsi/aic94xx/aic94xx_task.c                | 10 ++--
- drivers/scsi/isci/request.c                        |  4 +-
- drivers/scsi/libsas/sas_ata.c                      | 66 ++++------------------
- drivers/scsi/mvsas/mv_sas.c                        |  4 +-
- drivers/scsi/pm8001/pm8001_hwi.c                   |  2 +-
- drivers/scsi/pm8001/pm80xx_hwi.c                   |  2 +-
- include/linux/libata.h                             |  6 +-
- include/scsi/libsas.h                              | 11 +---
- 14 files changed, 98 insertions(+), 93 deletions(-)
-
--- 
-tejun
