@@ -1,82 +1,73 @@
-From: Tim Small <tim@seoss.co.uk>
-Subject: Re: [PATCH] libata: Whitelist SSDs that are known to properly return
- zeroes after TRIM
-Date: Wed, 10 Dec 2014 15:43:03 +0000
-Message-ID: <54886A07.5080307@seoss.co.uk>
-References: <yq18uiojfq9.fsf@sermon.lab.mkp.net>	 <20141204170611.GB2995@htj.dyndns.org> <yq14mtahmil.fsf@sermon.lab.mkp.net>	 <20141205145148.GI4080@htj.dyndns.org> <1418184578.2121.3.camel@HansenPartnership.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [GIT PULL] libata changes for v3.19-rc1
+Date: Wed, 10 Dec 2014 11:53:57 -0500
+Message-ID: <20141210165357.GD6294@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay0.allsecuredomains.com ([78.129.187.18]:59180 "EHLO
-	relay0.allsecuredomains.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757931AbaLJQLk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Dec 2014 11:11:40 -0500
-In-Reply-To: <1418184578.2121.3.camel@HansenPartnership.com>
+Received: from mail-qg0-f53.google.com ([209.85.192.53]:55515 "EHLO
+	mail-qg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755312AbaLJQyA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Dec 2014 11:54:00 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Tejun Heo <tj@kernel.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
+Hello,
 
-On 10/12/14 04:09, James Bottomley wrote:
+The only interesting piece is the support for shingled drives.  The
+changes in libata layer are minimal.  All it does is identifying the
+new class of device and report upwards accordingly.
 
-> RAID requires that the redundancy verification of the array 
-> components matches otherwise a verify of the RAID fails.  This means
-> we have to have a guarantee what the verify read of a trimmed block
-> of a RAID component will return. So for RAID-1, we just need both
-> trimmed components to return the same data (we don't actually care
-> what it is, just that it be mirrored);
+Thanks.
 
+The following changes since commit 9a23c1d6f0f5dbac4c9b73fa6cea7c9ee3d29074:
 
-FWIW, Unless I'm out-of-date, md RAID-1 and RAID-10 currently DON'T
-guarantee that the data is always mirrored.  The md(4) man page from
-http://git.neil.brown.name/?p=mdadm.git;a=blob;f=md.4 says:
+  ahci: fix AHCI parameters not taken into account (2014-11-04 12:56:25 -0500)
 
-> However on RAID1 and RAID10 it is possible for software issues to 
-> cause a mismatch to be reported.  This does not necessarily mean
-> that the data on the array is corrupted.  It could simply be that
-> the system does not care what is stored on that part of the array -
-> it is unused space.
-> 
-> The most likely cause for an unexpected mismatch on RAID1 or RAID10 
-> occurs if a swap partition or swap file is stored on the array.
-> 
-> When the swap subsystem wants to write a page of memory out, it
-> flags the page as 'clean' in the memory manager and requests the
-> swap device to write it out.  It is quite possible that the memory
-> will be changed while the write-out is happening.  In that case the
-> 'clean' flag will be found to be clear when the write completes and
-> so the swap subsystem will simply forget that the swapout had been 
-> attempted, and will possibly choose a different page to write out.
-> 
-> If the swap device was on RAID1 (or RAID10), then the data is sent 
-> from memory to a device twice (or more depending on the number of 
-> devices in the array).  Thus it is possible that the memory gets 
-> changed  between the times it is sent, so different data can be 
-> written to the different devices in the array.  This will be
-> detected by check as a mismatch.  However it does not reflect any
-> corruption as the block where this mismatch occurs is being treated
-> by the swap system as being empty, and the data will never be read
-> from that block.
-> 
-> It is conceivable for a similar situation to occur on non-swap
-> files, though it is less likely.
+are available in the git repository at:
 
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-3.19
 
+for you to fetch changes up to 2ba520f0cd65c2e688f8beb495bb6634a61ee17b:
 
-In my experience these inconsistencies are very common in data written
-by certain applications (e.g. DBMS) on md RAID1 and RAID10 devices, and
-effectively makes md verify useless for them.  This is a shame -
-particularly with things like FTLs where (at least anecdotally) data
-scrambling seems to be a reasonably frequent occurrence.
+  libata: Remove FIXME comment in atapi_request_sense() (2014-12-04 12:58:50 -0500)
 
-So unreliable read-zero-on-TRIM isn't going to break the md RAID-1 /
-RAID-10 use-case significantly, because verify hasn't worked on those
-forever anyway.
+----------------------------------------------------------------
+Geert Uytterhoeven (1):
+      sata_rcar: Document deprecated "renesas,rcar-sata"
 
-Of course, a non-deterministic return-zero-on-trim will still cause
-problems with md RAID5/6, and with other users such as dm RAID too I'd
-guess.
+Hannes Reinecke (3):
+      libsas: use ata_dev_classify()
+      libata: Implement ATA_DEV_ZAC
+      libata-scsi: Update SATL for ZAC drives
 
-Tim.
+Hans de Goede (1):
+      ahci_sunxi: Make AHCI_HFLAG_NO_PMP flag configurable with a module option
+
+Nicholas Krause (1):
+      libata: Remove FIXME comment in atapi_request_sense()
+
+Valentine Barshak (1):
+      sata_rcar: Add clocks to sata_rcar bindings
+
+ .../devicetree/bindings/ata/sata_rcar.txt          | 11 ++--
+ drivers/ata/ahci_sunxi.c                           | 16 +++++-
+ drivers/ata/libata-core.c                          | 20 +++++--
+ drivers/ata/libata-eh.c                            |  7 ++-
+ drivers/ata/libata-scsi.c                          | 31 ++++++++--
+ drivers/ata/libata-transport.c                     |  1 +
+ drivers/scsi/aic94xx/aic94xx_task.c                | 10 ++--
+ drivers/scsi/isci/request.c                        |  4 +-
+ drivers/scsi/libsas/sas_ata.c                      | 66 ++++------------------
+ drivers/scsi/mvsas/mv_sas.c                        |  4 +-
+ drivers/scsi/pm8001/pm8001_hwi.c                   |  2 +-
+ drivers/scsi/pm8001/pm80xx_hwi.c                   |  2 +-
+ include/linux/libata.h                             |  6 +-
+ include/scsi/libsas.h                              | 11 +---
+ 14 files changed, 98 insertions(+), 93 deletions(-)
+
+-- 
+tejun
