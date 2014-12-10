@@ -1,51 +1,45 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] libata: Whitelist SSDs that are known to properly
- return zeroes after TRIM
-Date: Wed, 10 Dec 2014 07:09:38 +0300
-Message-ID: <1418184578.2121.3.camel@HansenPartnership.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] libata: Whitelist SSDs that are known to properly return
+ zeroes after TRIM
+Date: Wed, 10 Dec 2014 09:29:27 -0500
+Message-ID: <20141210142927.GA6294@htj.dyndns.org>
 References: <yq18uiojfq9.fsf@sermon.lab.mkp.net>
-	 <20141204170611.GB2995@htj.dyndns.org> <yq14mtahmil.fsf@sermon.lab.mkp.net>
-	 <20141205145148.GI4080@htj.dyndns.org>
+ <20141204170611.GB2995@htj.dyndns.org>
+ <yq14mtahmil.fsf@sermon.lab.mkp.net>
+ <20141205145148.GI4080@htj.dyndns.org>
+ <1418184578.2121.3.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:41309 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755226AbaLJEJn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Dec 2014 23:09:43 -0500
-In-Reply-To: <20141205145148.GI4080@htj.dyndns.org>
+Received: from mail-qa0-f54.google.com ([209.85.216.54]:35645 "EHLO
+	mail-qa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757135AbaLJO3k (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Dec 2014 09:29:40 -0500
+Received: by mail-qa0-f54.google.com with SMTP id i13so2077517qae.27
+        for <linux-ide@vger.kernel.org>; Wed, 10 Dec 2014 06:29:39 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <1418184578.2121.3.camel@HansenPartnership.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org
 
-On Fri, 2014-12-05 at 09:51 -0500, Tejun Heo wrote:
-> > I just feel bad about disabling the feature for the many existing users
-> > (and there are quite a few) that are using well-behaved drives in their
-> > RAID deployments. And the filesystem folks have been begging for the
-> > zeroout discard variant that I posted a few weeks ago. So the users are
-> > there. I'm just trying to accommodate them the best I can given the lame
-> > spec.
-> 
-> Can you please explain further the practical gains of using trims
+Hello,
 
-It's for RAID devices.  We'd like to trim RAID devices simply by sending
-the trim down to every component.  If we actually have to translate trim
-to a write it would damage performance (and defeat the purpose of
-helping the SSD FTL reuse blocks).  However, RAID requires that the
-redundancy verification of the array components matches otherwise a
-verify of the RAID fails.  This means we have to have a guarantee what
-the verify read of a trimmed block of a RAID component will return.  So
-for RAID-1, we just need both trimmed components to return the same data
-(we don't actually care what it is, just that it be mirrored); for
-RAID-5 we need zeros on every trimmed component, because zero^zero =
-zero.
+On Wed, Dec 10, 2014 at 07:09:38AM +0300, James Bottomley wrote:
+> Conversely, drives that return random junk after a trim cause
+> verification failures, so we just elect not to transmit trim down to
+> them from the RAID layer.
 
-Conversely, drives that return random junk after a trim cause
-verification failures, so we just elect not to transmit trim down to
-them from the RAID layer.
+I see.  Thanks for the explanation.  I suppose the current raid
+implementations' metadata handling on partially built devices isn't
+developed enough to simply mark those trimmed blocks as unsynced?  If
+raid consistency truly is the only reason for this, that approach
+seems way more fruitful to me than playing this optional feature game
+with hardware vendors which so often leads to eventual abysmal
+outcomes.
 
-James
+Thanks.
 
-
+-- 
+tejun
