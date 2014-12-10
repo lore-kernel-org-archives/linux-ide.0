@@ -1,56 +1,51 @@
-From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 1/3] libata: Whitelist SSDs that are known to properly
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] libata: Whitelist SSDs that are known to properly
  return zeroes after TRIM
-Date: Mon, 8 Dec 2014 22:59:15 +0000
-Message-ID: <20141208225915.1ec39f03@lxorguk.ukuu.org.uk>
-References: <1415336894-15327-1-git-send-email-martin.petersen@oracle.com>
-	<1415336894-15327-2-git-send-email-martin.petersen@oracle.com>
-	<94D0CD8314A33A4D9D801C0FE68B4029593FA1F3@G4W3202.americas.hpqcorp.net>
-	<20141208151559.GB7001@thunk.org>
+Date: Wed, 10 Dec 2014 07:09:38 +0300
+Message-ID: <1418184578.2121.3.camel@HansenPartnership.com>
+References: <yq18uiojfq9.fsf@sermon.lab.mkp.net>
+	 <20141204170611.GB2995@htj.dyndns.org> <yq14mtahmil.fsf@sermon.lab.mkp.net>
+	 <20141205145148.GI4080@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 251.110.2.81.in-addr.arpa ([81.2.110.251]:34708 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753206AbaLHW7u (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Dec 2014 17:59:50 -0500
-In-Reply-To: <20141208151559.GB7001@thunk.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:41309 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755226AbaLJEJn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Dec 2014 23:09:43 -0500
+In-Reply-To: <20141205145148.GI4080@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: "Elliott, Robert (Server Storage)" <Elliott@hp.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Paolo Bonzini <pbonzini@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "neilb@suse.de" <neilb@suse.de>
+To: Tejun Heo <tj@kernel.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org
 
-On Mon, 8 Dec 2014 10:15:59 -0500
-"Theodore Ts'o" <tytso@mit.edu> wrote:
-
-> On Fri, Dec 05, 2014 at 10:58:09PM +0000, Elliott, Robert (Server Storage) wrote:
-> > > I have a Crucial_CT256MX1 (i.e. MX100) and it does reliably zero.
-> > 
-> > make me concerned about this whitelist approach.
-> > 
-> > I think you need a manufacturer assertion that this is indeed
-> > the design intent; you cannot be certain based on observation
-> > from outside.
+On Fri, 2014-12-05 at 09:51 -0500, Tejun Heo wrote:
+> > I just feel bad about disabling the feature for the many existing users
+> > (and there are quite a few) that are using well-behaved drives in their
+> > RAID deployments. And the filesystem folks have been begging for the
+> > zeroout discard variant that I posted a few weeks ago. So the users are
+> > there. I'm just trying to accommodate them the best I can given the lame
+> > spec.
 > 
-> How is this different from a manufacturer assertion that they follow a
-> SCSI or ATA standard?  There have been cases in the distant past
-> (fortunately) of disk manufacturers that ignored a CACHE FLUSH command
-> just to get higher Winbench scores.  Does that mean we can't trust
-> them to do anything right?
+> Can you please explain further the practical gains of using trims
 
-At the time they never promised to honour cache flush. The reason it was
-became mandatory in the specification was in part so that the vendors
-could all force each other to play fair. If its "optional" then it's
-tough..., if they say they meet the standard it's class action 8)
+It's for RAID devices.  We'd like to trim RAID devices simply by sending
+the trim down to every component.  If we actually have to translate trim
+to a write it would damage performance (and defeat the purpose of
+helping the SSD FTL reuse blocks).  However, RAID requires that the
+redundancy verification of the array components matches otherwise a
+verify of the RAID fails.  This means we have to have a guarantee what
+the verify read of a trimmed block of a RAID component will return.  So
+for RAID-1, we just need both trimmed components to return the same data
+(we don't actually care what it is, just that it be mirrored); for
+RAID-5 we need zeros on every trimmed component, because zero^zero =
+zero.
 
-If this is a promise then it ought to be good 
+Conversely, drives that return random junk after a trim cause
+verification failures, so we just elect not to transmit trim down to
+them from the RAID layer.
 
-James:  "USB devices tend to supply their own driver"
+James
 
-has not been true for some years now. Microsoft provide an in-box driver
-and vendors have the choice of using that or certifying their own via
-WHQL, which is a bit like choosing between free ice cream and banging
-your head against a plank cover in nails.
 
-Alan
