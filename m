@@ -1,44 +1,37 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [PATCH] libata: Whitelist SSDs that are known to properly return
- zeroes after TRIM
-Date: Fri, 12 Dec 2014 16:35:41 +0800
-Message-ID: <CACVXFVNYBVb-AiKKNXnc17uo+oa7At6o6kQUCoK_Ng8h5q=pcw@mail.gmail.com>
-References: <yq18uiojfq9.fsf@sermon.lab.mkp.net>
-	<20141204170611.GB2995@htj.dyndns.org>
-	<yq14mtahmil.fsf@sermon.lab.mkp.net>
-	<20141205145148.GI4080@htj.dyndns.org>
-	<1418184578.2121.3.camel@HansenPartnership.com>
-	<20141210142927.GA6294@htj.dyndns.org>
-	<yq1oarbcj6f.fsf@sermon.lab.mkp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1] libata: export ata_get_cmd_descript()
+Date: Fri, 12 Dec 2014 17:16:31 +0200
+Message-ID: <1418397391-13668-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:45042 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751428AbaLLIfm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Dec 2014 03:35:42 -0500
-Received: by mail-ob0-f175.google.com with SMTP id wp4so7169303obc.6
-        for <linux-ide@vger.kernel.org>; Fri, 12 Dec 2014 00:35:41 -0800 (PST)
-In-Reply-To: <yq1oarbcj6f.fsf@sermon.lab.mkp.net>
+Received: from mga02.intel.com ([134.134.136.20]:2896 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933263AbaLLPRY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 12 Dec 2014 10:17:24 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-On Thu, Dec 11, 2014 at 5:02 AM, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->>>>>> "Tejun" == Tejun Heo <tj@kernel.org> writes:
->
-> Tejun> If raid consistency truly is the only reason for this, that
-> Tejun> approach seems way more fruitful to me than playing this optional
-> Tejun> feature game with hardware vendors which so often leads to
-> Tejun> eventual abysmal outcomes.
->
-> The other use case is the filesystem one where it is common to zero
-> block ranges for bitmaps, etc. In many workloads there's is a
-> significant win to trimming over writing out many blocks of zeroes.
+The driver sata_dwc_460ex is using this symbol. To build it as a module we have
+to have the symbol exported. This patch adds EXPORT_SYMBOL() macro for that.
 
-Yes, looks mkfs is using the feature.
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/ata/libata-eh.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks,
-Ming Lei
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 3dbec89..74fef87 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -2389,6 +2389,7 @@ const char *ata_get_cmd_descript(u8 command)
+ 
+ 	return NULL;
+ }
++EXPORT_SYMBOL(ata_get_cmd_descript);
+ 
+ /**
+  *	ata_eh_link_report - report error handling to user
+-- 
+2.1.3
+
