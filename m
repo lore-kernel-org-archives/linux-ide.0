@@ -1,56 +1,44 @@
-From: Feng Kan <fkan@apm.com>
-Subject: [PATCH] sata: xgene: add ACPI support for APM X-Gene SATA ports
-Date: Thu, 11 Dec 2014 14:31:10 -0800
-Message-ID: <1418337070-17644-1-git-send-email-fkan@apm.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: patches@apm.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org, msalter@redhat.com, tj@kernel.org, hdegoede@redhat.com
-Cc: Feng Kan <fkan@apm.com>
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: [PATCH] libata: Whitelist SSDs that are known to properly return
+ zeroes after TRIM
+Date: Fri, 12 Dec 2014 16:35:41 +0800
+Message-ID: <CACVXFVNYBVb-AiKKNXnc17uo+oa7At6o6kQUCoK_Ng8h5q=pcw@mail.gmail.com>
+References: <yq18uiojfq9.fsf@sermon.lab.mkp.net>
+	<20141204170611.GB2995@htj.dyndns.org>
+	<yq14mtahmil.fsf@sermon.lab.mkp.net>
+	<20141205145148.GI4080@htj.dyndns.org>
+	<1418184578.2121.3.camel@HansenPartnership.com>
+	<20141210142927.GA6294@htj.dyndns.org>
+	<yq1oarbcj6f.fsf@sermon.lab.mkp.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:45042 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751428AbaLLIfm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Dec 2014 03:35:42 -0500
+Received: by mail-ob0-f175.google.com with SMTP id wp4so7169303obc.6
+        for <linux-ide@vger.kernel.org>; Fri, 12 Dec 2014 00:35:41 -0800 (PST)
+In-Reply-To: <yq1oarbcj6f.fsf@sermon.lab.mkp.net>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-This adds ACPI support for the APM X-Gene SATA ports. When the system
-boots using ACPI table, the SATA ports are able to configure using the
-values supplied by the ACPI table rather than the DTS.
+On Thu, Dec 11, 2014 at 5:02 AM, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>>>>>> "Tejun" == Tejun Heo <tj@kernel.org> writes:
+>
+> Tejun> If raid consistency truly is the only reason for this, that
+> Tejun> approach seems way more fruitful to me than playing this optional
+> Tejun> feature game with hardware vendors which so often leads to
+> Tejun> eventual abysmal outcomes.
+>
+> The other use case is the filesystem one where it is common to zero
+> block ranges for bitmaps, etc. In many workloads there's is a
+> significant win to trimming over writing out many blocks of zeroes.
 
-Signed-off-by: Feng Kan <fkan@apm.com>
----
- drivers/ata/ahci_xgene.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+Yes, looks mkfs is using the feature.
 
-diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-index d0c851a..4951392 100644
---- a/drivers/ata/ahci_xgene.c
-+++ b/drivers/ata/ahci_xgene.c
-@@ -22,6 +22,7 @@
-  * NOTE: PM support is not currently available.
-  *
-  */
-+#include <linux/acpi.h>
- #include <linux/module.h>
- #include <linux/platform_device.h>
- #include <linux/ahci_platform.h>
-@@ -521,6 +522,14 @@ disable_resources:
- 	return rc;
- }
- 
-+#ifdef CONFIG_ACPI
-+static const struct acpi_device_id xgene_ahci_acpi_match[] = {
-+	{ "APMC0D0D", },
-+	{ }
-+};
-+MODULE_DEVICE_TABLE(acpi, xgene_ahci_acpi_match);
-+#endif
-+
- static const struct of_device_id xgene_ahci_of_match[] = {
- 	{.compatible = "apm,xgene-ahci"},
- 	{},
-@@ -534,6 +543,7 @@ static struct platform_driver xgene_ahci_driver = {
- 		.name = "xgene-ahci",
- 		.owner = THIS_MODULE,
- 		.of_match_table = xgene_ahci_of_match,
-+		.acpi_match_table = ACPI_PTR(xgene_ahci_acpi_match),
- 	},
- };
- 
--- 
-1.9.1
+Thanks,
+Ming Lei
