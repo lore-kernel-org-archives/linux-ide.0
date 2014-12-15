@@ -1,208 +1,224 @@
-From: Daniel Golle <daniel@makrotopia.org>
-Subject: [PATCH v2] libata: add ledtrig support
-Date: Sat, 13 Dec 2014 01:07:20 +0100
-Message-ID: <20141213000714.GA24441@makrotopia.org>
+From: Shaohua Li <shli@fb.com>
+Subject: [PATCH 1/2] block: support different tag allocation policy
+Date: Sun, 14 Dec 2014 19:21:49 -0800
+Message-ID: <e0ea802ef0d4170ad409e5dbf814c28581c091ac.1418613253.git.shli@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fudo.makrotopia.org ([5.135.190.93]:60625 "EHLO
-	fudo.makrotopia.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753185AbaLMAG1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Dec 2014 19:06:27 -0500
-Content-Disposition: inline
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:57591 "EHLO
+	mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750713AbaLODVy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 Dec 2014 22:21:54 -0500
+Received: from pps.filterd (m0004346 [127.0.0.1])
+	by mx0a-00082601.pphosted.com (8.14.5/8.14.5) with SMTP id sBF3JV79028970
+	for <linux-ide@vger.kernel.org>; Sun, 14 Dec 2014 19:21:54 -0800
+Received: from mail.thefacebook.com ([199.201.64.23])
+	by mx0a-00082601.pphosted.com with ESMTP id 1r96r49gqr-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=OK)
+	for <linux-ide@vger.kernel.org>; Sun, 14 Dec 2014 19:21:53 -0800
+Received: from facebook.com (2401:db00:20:7003:face:0:4d:0)	by
+ mx-out.facebook.com (10.223.100.97) with ESMTP	id
+ 82a10bf8840911e4a22e24be0593f280-ec7fa390 for <linux-ide@vger.kernel.org>;
+	Sun, 14 Dec 2014 19:21:51 -0800
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: Dave Miller <davem@davemloft.net>
+Cc: Kernel-team@fb.com, Jens Axboe <axboe@fb.com>, Tejun Heo <tj@kernel.org>
 
-This adds a LED trigger for each ATA port indicating disk activity.
+The libata tag allocation is using a round-robin policy. Next patch will
+make libata use block generic tag allocation, so let's add a policy to
+tag allocation.
 
-As this is needed only on specific platforms (NAS SoCs and such),
-these platforms should define ARCH_WANTS_LIBATA_LEDS if there
-are boards with LED(s) intended to indicate ATA disk activity and
-need the OS to take care of that.
-In that way, if not selected, LED trigger support not will be
-included in libata-core and both, codepaths and structures remain
-untouched.
+Currently two policies: FIFO (default) and round-robin.
 
-I'm currently deploying this for the oxnas target in OpenWrt
-https://dev.openwrt.org/changeset/43675/
-
-v2: rebased to kernel/git/tj/libata.git
-    plus small corrections and comments added
-
-Signed-off-by: Daniel Golle <daniel@makrotopia.org>
+Cc: Jens Axboe <axboe@fb.com>
+Cc: Tejun Heo <tj@kernel.org>
+Signed-off-by: Shaohua Li <shli@fb.com>
 ---
+ block/blk-tag.c          | 33 +++++++++++++++++++++++++--------
+ drivers/block/osdblk.c   |  2 +-
+ drivers/scsi/scsi_scan.c |  3 ++-
+ include/linux/blkdev.h   |  8 ++++++--
+ include/scsi/scsi_host.h |  3 +++
+ include/scsi/scsi_tcq.h  |  2 +-
+ 6 files changed, 38 insertions(+), 13 deletions(-)
 
-If there is anything fundamentally wrong with that approach, I'd be
-glad for some advise on how to do it better.
-I conciously choose an #ifdev approach to make sure performance will
-not be affected for non-users of that code.
-
-Thanks
-
-Daniel
-
----
- drivers/ata/Kconfig       | 16 ++++++++++++++
- drivers/ata/libata-core.c | 56 +++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/libata.h    |  7 ++++++
- 3 files changed, 79 insertions(+)
-
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index cd4cccb..7a085ec 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -46,6 +46,22 @@ config ATA_VERBOSE_ERROR
- 
- 	  If unsure, say Y.
- 
-+config ARCH_WANT_LIBATA_LEDS
-+	bool
-+
-+config ATA_LEDS
-+	bool "support ATA port LED triggers"
-+	depends on ARCH_WANT_LIBATA_LEDS
-+	select NEW_LEDS
-+	select LEDS_CLASS
-+	select LEDS_TRIGGERS
-+	default y
-+	help
-+	  This option adds a LED trigger for each registered ATA port.
-+	  It is used to drive disk activity leds connected via GPIO.
-+
-+	  If unsure, say N.
-+
- config ATA_ACPI
- 	bool "ATA ACPI Support"
- 	depends on ACPI && PCI
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index c5ba15a..615d11c 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -725,6 +725,7 @@ u64 ata_tf_read_block(struct ata_taskfile *tf, struct ata_device *dev)
- 	return block;
+diff --git a/block/blk-tag.c b/block/blk-tag.c
+index a185b86..f0344e6 100644
+--- a/block/blk-tag.c
++++ b/block/blk-tag.c
+@@ -119,7 +119,7 @@ init_tag_map(struct request_queue *q, struct blk_queue_tag *tags, int depth)
  }
  
-+
- /**
-  *	ata_build_rw_tf - Build ATA taskfile for given read/write request
-  *	@tf: Target ATA taskfile
-@@ -4718,6 +4719,30 @@ void swap_buf_le16(u16 *buf, unsigned int buf_words)
- }
+ static struct blk_queue_tag *__blk_queue_init_tags(struct request_queue *q,
+-						   int depth)
++						int depth, int alloc_policy)
+ {
+ 	struct blk_queue_tag *tags;
  
+@@ -131,6 +131,8 @@ static struct blk_queue_tag *__blk_queue_init_tags(struct request_queue *q,
+ 		goto fail;
+ 
+ 	atomic_set(&tags->refcnt, 1);
++	tags->alloc_policy = alloc_policy;
++	tags->next_tag = 0;
+ 	return tags;
+ fail:
+ 	kfree(tags);
+@@ -140,10 +142,11 @@ static struct blk_queue_tag *__blk_queue_init_tags(struct request_queue *q,
  /**
-+ *	ata_led_act - Trigger port activity LED
-+ *	@ap: indicating port
-+ *
-+ *	Blinks any LEDs registered to the trigger.
-+ *	Commonly used with leds-gpio on NAS systems with disk activity
-+ *	indicator LEDs.
-+ *
-+ *	LOCKING:
-+ *	None.
-+ */
-+static inline void ata_led_act(struct ata_port *ap)
-+{
-+#if CONFIG_ATA_LEDS
-+#define LIBATA_BLINK_DELAY 20 /* ms */
-+	unsigned long led_delay = LIBATA_BLINK_DELAY;
-+
-+	if (unlikely(!ap->ledtrig))
-+		return;
-+
-+	led_trigger_blink_oneshot(ap->ledtrig, &led_delay, &led_delay, 0);
-+#endif /* CONFIG_ATA_LEDS */
-+}
-+
-+/**
-  *	ata_qc_new - Request an available ATA command, for queueing
-  *	@ap: target port
+  * blk_init_tags - initialize the tag info for an external tag map
+  * @depth:	the maximum queue depth supported
++ * @alloc_policy: tag allocation policy
+  **/
+-struct blk_queue_tag *blk_init_tags(int depth)
++struct blk_queue_tag *blk_init_tags(int depth, int alloc_policy)
+ {
+-	return __blk_queue_init_tags(NULL, depth);
++	return __blk_queue_init_tags(NULL, depth, alloc_policy);
+ }
+ EXPORT_SYMBOL(blk_init_tags);
+ 
+@@ -152,19 +155,20 @@ EXPORT_SYMBOL(blk_init_tags);
+  * @q:  the request queue for the device
+  * @depth:  the maximum queue depth supported
+  * @tags: the tag to use
++ * @alloc_policy: tag allocation policy
   *
-@@ -4753,6 +4778,9 @@ static struct ata_queued_cmd *ata_qc_new(struct ata_port *ap)
- 			break;
- 		}
- 	}
-+#if CONFIG_ATA_LEDS
-+	ata_led_act(ap);
-+#endif
+  * Queue lock must be held here if the function is called to resize an
+  * existing map.
+  **/
+ int blk_queue_init_tags(struct request_queue *q, int depth,
+-			struct blk_queue_tag *tags)
++			struct blk_queue_tag *tags, int alloc_policy)
+ {
+ 	int rc;
  
- 	return qc;
- }
-@@ -5663,6 +5691,9 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
- 	ap->stats.unhandled_irq = 1;
- 	ap->stats.idle_irq = 1;
- #endif
-+#if CONFIG_ATA_LEDS
-+	ap->ledtrig = kzalloc(sizeof(struct led_trigger), GFP_KERNEL);
-+#endif
- 	ata_sff_port_init(ap);
+ 	BUG_ON(tags && q->queue_tags && tags != q->queue_tags);
  
- 	return ap;
-@@ -5684,6 +5715,12 @@ static void ata_host_release(struct device *gendev, void *res)
+ 	if (!tags && !q->queue_tags) {
+-		tags = __blk_queue_init_tags(q, depth);
++		tags = __blk_queue_init_tags(q, depth, alloc_policy);
  
- 		kfree(ap->pmp_link);
- 		kfree(ap->slave_link);
-+#if CONFIG_ATA_LEDS
-+		if (ap->ledtrig) {
-+			led_trigger_unregister(ap->ledtrig);
-+			kfree(ap->ledtrig);
-+		};
-+#endif
- 		kfree(ap);
- 		host->ports[i] = NULL;
- 	}
-@@ -6131,6 +6168,25 @@ int ata_host_register(struct ata_host *host, struct scsi_host_template *sht)
- 		host->ports[i]->local_port_no = i + 1;
+ 		if (!tags)
+ 			return -ENOMEM;
+@@ -344,9 +348,21 @@ int blk_queue_start_tag(struct request_queue *q, struct request *rq)
  	}
  
-+#if CONFIG_ATA_LEDS
-+	/* register LED triggers for all ports */
-+	for (i = 0; i < host->n_ports; i++) {
-+		if (unlikely(!host->ports[i]->ledtrig))
-+			continue;
-+
-+		snprintf(host->ports[i]->ledtrig_name,
-+			sizeof(host->ports[i]->ledtrig_name), "ata%u",
-+			host->ports[i]->print_id);
-+
-+		host->ports[i]->ledtrig->name = host->ports[i]->ledtrig_name;
-+
-+		if (led_trigger_register(host->ports[i]->ledtrig)) {
-+			kfree(host->ports[i]->ledtrig);
-+			host->ports[i]->ledtrig = NULL;
+ 	do {
+-		tag = find_first_zero_bit(bqt->tag_map, max_depth);
+-		if (tag >= max_depth)
+-			return 1;
++		if (bqt->alloc_policy == BLK_TAG_ALLOC_FIFO) {
++			tag = find_first_zero_bit(bqt->tag_map, max_depth);
++			if (tag >= max_depth)
++				return 1;
++		} else {
++			int start = bqt->next_tag;
++			int size = min_t(int, bqt->max_depth, max_depth + start);
++			tag = find_next_zero_bit(bqt->tag_map, size, start);
++			if (tag >= size && start + size > bqt->max_depth) {
++				size = start + size - bqt->max_depth;
++				tag = find_first_zero_bit(bqt->tag_map, size);
++			}
++			if (tag >= size)
++				return 1;
 +		}
-+	}
-+#endif
-+
- 	/* Create associated sysfs transport objects  */
- 	for (i = 0; i < host->n_ports; i++) {
- 		rc = ata_tport_add(host->dev,host->ports[i]);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index bfbc817..4f9c918 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -38,6 +38,7 @@
- #include <linux/acpi.h>
- #include <linux/cdrom.h>
- #include <linux/sched.h>
-+#include <linux/leds.h>
  
- /*
-  * Define if arch has non-standard setup.  This is a _PCI_ standard
-@@ -861,6 +862,12 @@ struct ata_port {
- #ifdef CONFIG_ATA_ACPI
- 	struct ata_acpi_gtm	__acpi_init_gtm; /* use ata_acpi_init_gtm() */
- #endif
-+
-+#ifdef CONFIG_ATA_LEDS
-+	struct led_trigger	*ledtrig;
-+	char			ledtrig_name[8];
-+#endif
-+
- 	/* owned by EH */
- 	u8			sector_buf[ATA_SECT_SIZE] ____cacheline_aligned;
+ 	} while (test_and_set_bit_lock(tag, bqt->tag_map));
+ 	/*
+@@ -354,6 +370,7 @@ int blk_queue_start_tag(struct request_queue *q, struct request *rq)
+ 	 * See blk_queue_end_tag for details.
+ 	 */
+ 
++	bqt->next_tag = (tag + 1) % bqt->max_depth;
+ 	rq->cmd_flags |= REQ_QUEUED;
+ 	rq->tag = tag;
+ 	bqt->tag_index[tag] = rq;
+diff --git a/drivers/block/osdblk.c b/drivers/block/osdblk.c
+index 79aa179..e229425 100644
+--- a/drivers/block/osdblk.c
++++ b/drivers/block/osdblk.c
+@@ -423,7 +423,7 @@ static int osdblk_init_disk(struct osdblk_device *osdev)
+ 	}
+ 
+ 	/* switch queue to TCQ mode; allocate tag map */
+-	rc = blk_queue_init_tags(q, OSDBLK_MAX_REQ, NULL);
++	rc = blk_queue_init_tags(q, OSDBLK_MAX_REQ, NULL, BLK_TAG_ALLOC_FIFO);
+ 	if (rc) {
+ 		blk_cleanup_queue(q);
+ 		put_disk(disk);
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 983aed1..921a8c8 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -290,7 +290,8 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+ 	if (!shost_use_blk_mq(sdev->host) &&
+ 	    (shost->bqt || shost->hostt->use_blk_tags)) {
+ 		blk_queue_init_tags(sdev->request_queue,
+-				    sdev->host->cmd_per_lun, shost->bqt);
++				    sdev->host->cmd_per_lun, shost->bqt,
++				    shost->hostt->tag_alloc_policy);
+ 	}
+ 	scsi_change_queue_depth(sdev, sdev->host->cmd_per_lun);
+ 
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 92f4b4b..38b095d 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -272,7 +272,11 @@ struct blk_queue_tag {
+ 	int max_depth;			/* what we will send to device */
+ 	int real_max_depth;		/* what the array can hold */
+ 	atomic_t refcnt;		/* map can be shared */
++	int alloc_policy;		/* tag allocation policy */
++	int next_tag;			/* next tag */
  };
++#define BLK_TAG_ALLOC_FIFO 0 /* allocate starting from 0 */
++#define BLK_TAG_ALLOC_RR 1 /* allocate starting from last allocated tag */
+ 
+ #define BLK_SCSI_MAX_CMDS	(256)
+ #define BLK_SCSI_CMD_PER_LONG	(BLK_SCSI_MAX_CMDS / (sizeof(long) * 8))
+@@ -1139,11 +1143,11 @@ static inline bool blk_needs_flush_plug(struct task_struct *tsk)
+ extern int blk_queue_start_tag(struct request_queue *, struct request *);
+ extern struct request *blk_queue_find_tag(struct request_queue *, int);
+ extern void blk_queue_end_tag(struct request_queue *, struct request *);
+-extern int blk_queue_init_tags(struct request_queue *, int, struct blk_queue_tag *);
++extern int blk_queue_init_tags(struct request_queue *, int, struct blk_queue_tag *, int);
+ extern void blk_queue_free_tags(struct request_queue *);
+ extern int blk_queue_resize_tags(struct request_queue *, int);
+ extern void blk_queue_invalidate_tags(struct request_queue *);
+-extern struct blk_queue_tag *blk_init_tags(int);
++extern struct blk_queue_tag *blk_init_tags(int, int);
+ extern void blk_free_tags(struct blk_queue_tag *);
+ 
+ static inline struct request *blk_map_queue_find_tag(struct blk_queue_tag *bqt,
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index e939d2b..642884e 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -415,6 +415,9 @@ struct scsi_host_template {
+ 	 */
+ 	unsigned char present;
+ 
++	/* If use block layer to manage tags, this is tag allocation policy */
++	int tag_alloc_policy;
++
+ 	/*
+ 	 * Let the block layer assigns tags to all commands.
+ 	 */
+diff --git a/include/scsi/scsi_tcq.h b/include/scsi/scsi_tcq.h
+index fe4a702..c814fae 100644
+--- a/include/scsi/scsi_tcq.h
++++ b/include/scsi/scsi_tcq.h
+@@ -102,7 +102,7 @@ static inline int scsi_init_shared_tag_map(struct Scsi_Host *shost, int depth)
+ 	 * devices on the shared host (for libata)
+ 	 */
+ 	if (!shost->bqt) {
+-		shost->bqt = blk_init_tags(depth);
++		shost->bqt = blk_init_tags(depth, BLK_TAG_ALLOC_FIFO);
+ 		if (!shost->bqt)
+ 			return -ENOMEM;
+ 	}
 -- 
-2.1.3
+1.8.1
 
