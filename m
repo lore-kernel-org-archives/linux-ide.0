@@ -1,230 +1,226 @@
 From: Shaohua Li <shli@fb.com>
-Subject: [PATCH v2 2/3] blk-mq: add tag allocation policy
-Date: Thu, 18 Dec 2014 10:46:21 -0800
-Message-ID: <be6eb099c483f26e63dc43080055e7644bc2bcad.1418928090.git.shli@fb.com>
-References: <e8fb0a8f15f291f6dae88d51295432a2fa7ad71b.1418928090.git.shli@fb.com>
+Subject: [PATCH v2 1/3] block: support different tag allocation policy
+Date: Thu, 18 Dec 2014 10:46:20 -0800
+Message-ID: <e8fb0a8f15f291f6dae88d51295432a2fa7ad71b.1418928090.git.shli@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:45079 "EHLO
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:36241 "EHLO
 	mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751057AbaLRSq1 (ORCPT
+	by vger.kernel.org with ESMTP id S1751215AbaLRSq1 (ORCPT
 	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Dec 2014 13:46:27 -0500
-Received: from pps.filterd (m0004347 [127.0.0.1])
-	by m0004347.ppops.net (8.14.5/8.14.5) with SMTP id sBIIk4ZZ020910
-	for <linux-ide@vger.kernel.org>; Thu, 18 Dec 2014 10:46:26 -0800
+Received: from pps.filterd (m0004348 [127.0.0.1])
+	by m0004348.ppops.net (8.14.5/8.14.5) with SMTP id sBIIhhF8029800
+	for <linux-ide@vger.kernel.org>; Thu, 18 Dec 2014 10:46:27 -0800
 Received: from mail.thefacebook.com ([199.201.64.23])
-	by m0004347.ppops.net with ESMTP id 1rc4g6r01n-1
+	by m0004348.ppops.net with ESMTP id 1rc39607ej-4
 	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=OK)
 	for <linux-ide@vger.kernel.org>; Thu, 18 Dec 2014 10:46:26 -0800
 Received: from facebook.com (2401:db00:20:7003:face:0:4d:0)	by
- mx-out.facebook.com (10.223.101.97) with ESMTP	id
- 29bbf04a86e611e4a6b324be0595f910-cf7f5390 for <linux-ide@vger.kernel.org>;
+ mx-out.facebook.com (10.223.100.99) with ESMTP	id
+ 29b5966486e611e4bdbf24be05956610-8dfd6390 for <linux-ide@vger.kernel.org>;
 	Thu, 18 Dec 2014 10:46:23 -0800
-In-Reply-To: <e8fb0a8f15f291f6dae88d51295432a2fa7ad71b.1418928090.git.shli@fb.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Kernel-team@fb.com, Jens Axboe <axboe@fb.com>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@infradead.org>
 
-This is the blk-mq part to support tag allocation policy. The default
-allocation policy isn't changed (though it's not a strict FIFO). The new
-policy is round-robin for libata. But it's a try-best implementation. If
-multiple tasks are competing, the tags returned will be mixed (which is
-unavoidable even with !mq, as requests from different tasks can be
-mixed in queue)
+The libata tag allocation is using a round-robin policy. Next patch will
+make libata use block generic tag allocation, so let's add a policy to
+tag allocation.
+
+Currently two policies: FIFO (default) and round-robin.
 
 Cc: Jens Axboe <axboe@fb.com>
 Cc: Tejun Heo <tj@kernel.org>
 Cc: Christoph Hellwig <hch@infradead.org>
 Signed-off-by: Shaohua Li <shli@fb.com>
 ---
- block/blk-mq-tag.c      | 35 +++++++++++++++++++++++++----------
- block/blk-mq-tag.h      |  4 +++-
- block/blk-mq.c          |  3 ++-
- drivers/scsi/scsi_lib.c |  2 ++
- include/linux/blk-mq.h  |  8 ++++++++
- 5 files changed, 40 insertions(+), 12 deletions(-)
+ block/blk-tag.c          | 33 +++++++++++++++++++++++++--------
+ drivers/block/osdblk.c   |  2 +-
+ drivers/scsi/scsi_scan.c |  3 ++-
+ include/linux/blkdev.h   |  8 ++++++--
+ include/scsi/scsi_host.h |  3 +++
+ include/scsi/scsi_tcq.h  |  3 ++-
+ 6 files changed, 39 insertions(+), 13 deletions(-)
 
-diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
-index 32e8dbb..d4d7fa1 100644
---- a/block/blk-mq-tag.c
-+++ b/block/blk-mq-tag.c
-@@ -134,10 +134,13 @@ static inline bool hctx_may_queue(struct blk_mq_hw_ctx *hctx,
- 	return atomic_read(&hctx->nr_active) < depth;
+diff --git a/block/blk-tag.c b/block/blk-tag.c
+index a185b86..f0344e6 100644
+--- a/block/blk-tag.c
++++ b/block/blk-tag.c
+@@ -119,7 +119,7 @@ init_tag_map(struct request_queue *q, struct blk_queue_tag *tags, int depth)
  }
  
--static int __bt_get_word(struct blk_align_bitmap *bm, unsigned int last_tag)
-+#define BT_ALLOC_RR(bt) (atomic_read(&bt->rr_next) != -1)
-+
-+static int __bt_get_word(struct blk_align_bitmap *bm, unsigned int last_tag,
-+			 bool nowrap)
+ static struct blk_queue_tag *__blk_queue_init_tags(struct request_queue *q,
+-						   int depth)
++						int depth, int alloc_policy)
  {
- 	int tag, org_last_tag, end;
--	bool wrap = last_tag != 0;
-+	bool wrap = last_tag != 0 && !nowrap;
+ 	struct blk_queue_tag *tags;
  
- 	org_last_tag = last_tag;
- 	end = bm->depth;
-@@ -183,11 +186,15 @@ static int __bt_get(struct blk_mq_hw_ctx *hctx, struct blk_mq_bitmap_tags *bt,
- 	if (!hctx_may_queue(hctx, bt))
- 		return -1;
+@@ -131,6 +131,8 @@ static struct blk_queue_tag *__blk_queue_init_tags(struct request_queue *q,
+ 		goto fail;
  
--	last_tag = org_last_tag = *tag_cache;
-+	if (unlikely(BT_ALLOC_RR(bt)))
-+		last_tag = org_last_tag = atomic_read(&bt->rr_next);
-+	else
-+		last_tag = org_last_tag = *tag_cache;
- 	index = TAG_TO_INDEX(bt, last_tag);
- 
- 	for (i = 0; i < bt->map_nr; i++) {
--		tag = __bt_get_word(&bt->map[index], TAG_TO_BIT(bt, last_tag));
-+		tag = __bt_get_word(&bt->map[index], TAG_TO_BIT(bt, last_tag),
-+				    BT_ALLOC_RR(bt));
- 		if (tag != -1) {
- 			tag += (index << bt->bits_per_word);
- 			goto done;
-@@ -206,6 +213,8 @@ static int __bt_get(struct blk_mq_hw_ctx *hctx, struct blk_mq_bitmap_tags *bt,
- 	 * up using the specific cached tag.
- 	 */
- done:
-+	if (unlikely(BT_ALLOC_RR(bt)))
-+		atomic_set(&bt->rr_next, (tag + 1) % bt->depth);
- 	if (tag == org_last_tag) {
- 		last_tag = tag + 1;
- 		if (last_tag >= bt->depth - 1)
-@@ -463,7 +472,7 @@ static void bt_update_count(struct blk_mq_bitmap_tags *bt,
+ 	atomic_set(&tags->refcnt, 1);
++	tags->alloc_policy = alloc_policy;
++	tags->next_tag = 0;
+ 	return tags;
+ fail:
+ 	kfree(tags);
+@@ -140,10 +142,11 @@ static struct blk_queue_tag *__blk_queue_init_tags(struct request_queue *q,
+ /**
+  * blk_init_tags - initialize the tag info for an external tag map
+  * @depth:	the maximum queue depth supported
++ * @alloc_policy: tag allocation policy
+  **/
+-struct blk_queue_tag *blk_init_tags(int depth)
++struct blk_queue_tag *blk_init_tags(int depth, int alloc_policy)
+ {
+-	return __blk_queue_init_tags(NULL, depth);
++	return __blk_queue_init_tags(NULL, depth, alloc_policy);
  }
+ EXPORT_SYMBOL(blk_init_tags);
  
- static int bt_alloc(struct blk_mq_bitmap_tags *bt, unsigned int depth,
--			int node, bool reserved)
-+			int node, bool reserved, int alloc_policy)
+@@ -152,19 +155,20 @@ EXPORT_SYMBOL(blk_init_tags);
+  * @q:  the request queue for the device
+  * @depth:  the maximum queue depth supported
+  * @tags: the tag to use
++ * @alloc_policy: tag allocation policy
+  *
+  * Queue lock must be held here if the function is called to resize an
+  * existing map.
+  **/
+ int blk_queue_init_tags(struct request_queue *q, int depth,
+-			struct blk_queue_tag *tags)
++			struct blk_queue_tag *tags, int alloc_policy)
  {
- 	int i;
+ 	int rc;
  
-@@ -513,6 +522,10 @@ static int bt_alloc(struct blk_mq_bitmap_tags *bt, unsigned int depth,
- 		atomic_set(&bt->bs[i].wait_cnt, bt->wake_cnt);
+ 	BUG_ON(tags && q->queue_tags && tags != q->queue_tags);
+ 
+ 	if (!tags && !q->queue_tags) {
+-		tags = __blk_queue_init_tags(q, depth);
++		tags = __blk_queue_init_tags(q, depth, alloc_policy);
+ 
+ 		if (!tags)
+ 			return -ENOMEM;
+@@ -344,9 +348,21 @@ int blk_queue_start_tag(struct request_queue *q, struct request *rq)
  	}
  
-+	if (alloc_policy == BLK_TAG_ALLOC_RR)
-+		atomic_set(&bt->rr_next, 0);
-+	else
-+		atomic_set(&bt->rr_next, -1);
- 	return 0;
- }
+ 	do {
+-		tag = find_first_zero_bit(bqt->tag_map, max_depth);
+-		if (tag >= max_depth)
+-			return 1;
++		if (bqt->alloc_policy == BLK_TAG_ALLOC_FIFO) {
++			tag = find_first_zero_bit(bqt->tag_map, max_depth);
++			if (tag >= max_depth)
++				return 1;
++		} else {
++			int start = bqt->next_tag;
++			int size = min_t(int, bqt->max_depth, max_depth + start);
++			tag = find_next_zero_bit(bqt->tag_map, size, start);
++			if (tag >= size && start + size > bqt->max_depth) {
++				size = start + size - bqt->max_depth;
++				tag = find_first_zero_bit(bqt->tag_map, size);
++			}
++			if (tag >= size)
++				return 1;
++		}
  
-@@ -523,13 +536,14 @@ static void bt_free(struct blk_mq_bitmap_tags *bt)
- }
+ 	} while (test_and_set_bit_lock(tag, bqt->tag_map));
+ 	/*
+@@ -354,6 +370,7 @@ int blk_queue_start_tag(struct request_queue *q, struct request *rq)
+ 	 * See blk_queue_end_tag for details.
+ 	 */
  
- static struct blk_mq_tags *blk_mq_init_bitmap_tags(struct blk_mq_tags *tags,
--						   int node)
-+						   int node, int alloc_policy)
- {
- 	unsigned int depth = tags->nr_tags - tags->nr_reserved_tags;
++	bqt->next_tag = (tag + 1) % bqt->max_depth;
+ 	rq->cmd_flags |= REQ_QUEUED;
+ 	rq->tag = tag;
+ 	bqt->tag_index[tag] = rq;
+diff --git a/drivers/block/osdblk.c b/drivers/block/osdblk.c
+index 79aa179..e229425 100644
+--- a/drivers/block/osdblk.c
++++ b/drivers/block/osdblk.c
+@@ -423,7 +423,7 @@ static int osdblk_init_disk(struct osdblk_device *osdev)
+ 	}
  
--	if (bt_alloc(&tags->bitmap_tags, depth, node, false))
-+	if (bt_alloc(&tags->bitmap_tags, depth, node, false, alloc_policy))
- 		goto enomem;
--	if (bt_alloc(&tags->breserved_tags, tags->nr_reserved_tags, node, true))
-+	if (bt_alloc(&tags->breserved_tags, tags->nr_reserved_tags, node,
-+		     true, alloc_policy))
- 		goto enomem;
+ 	/* switch queue to TCQ mode; allocate tag map */
+-	rc = blk_queue_init_tags(q, OSDBLK_MAX_REQ, NULL);
++	rc = blk_queue_init_tags(q, OSDBLK_MAX_REQ, NULL, BLK_TAG_ALLOC_FIFO);
+ 	if (rc) {
+ 		blk_cleanup_queue(q);
+ 		put_disk(disk);
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 983aed1..921a8c8 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -290,7 +290,8 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+ 	if (!shost_use_blk_mq(sdev->host) &&
+ 	    (shost->bqt || shost->hostt->use_blk_tags)) {
+ 		blk_queue_init_tags(sdev->request_queue,
+-				    sdev->host->cmd_per_lun, shost->bqt);
++				    sdev->host->cmd_per_lun, shost->bqt,
++				    shost->hostt->tag_alloc_policy);
+ 	}
+ 	scsi_change_queue_depth(sdev, sdev->host->cmd_per_lun);
  
- 	return tags;
-@@ -540,7 +554,8 @@ static struct blk_mq_tags *blk_mq_init_bitmap_tags(struct blk_mq_tags *tags,
- }
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 92f4b4b..38b095d 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -272,7 +272,11 @@ struct blk_queue_tag {
+ 	int max_depth;			/* what we will send to device */
+ 	int real_max_depth;		/* what the array can hold */
+ 	atomic_t refcnt;		/* map can be shared */
++	int alloc_policy;		/* tag allocation policy */
++	int next_tag;			/* next tag */
+ };
++#define BLK_TAG_ALLOC_FIFO 0 /* allocate starting from 0 */
++#define BLK_TAG_ALLOC_RR 1 /* allocate starting from last allocated tag */
  
- struct blk_mq_tags *blk_mq_init_tags(unsigned int total_tags,
--				     unsigned int reserved_tags, int node)
-+				     unsigned int reserved_tags,
-+				     int node, int alloc_policy)
- {
- 	struct blk_mq_tags *tags;
+ #define BLK_SCSI_MAX_CMDS	(256)
+ #define BLK_SCSI_CMD_PER_LONG	(BLK_SCSI_MAX_CMDS / (sizeof(long) * 8))
+@@ -1139,11 +1143,11 @@ static inline bool blk_needs_flush_plug(struct task_struct *tsk)
+ extern int blk_queue_start_tag(struct request_queue *, struct request *);
+ extern struct request *blk_queue_find_tag(struct request_queue *, int);
+ extern void blk_queue_end_tag(struct request_queue *, struct request *);
+-extern int blk_queue_init_tags(struct request_queue *, int, struct blk_queue_tag *);
++extern int blk_queue_init_tags(struct request_queue *, int, struct blk_queue_tag *, int);
+ extern void blk_queue_free_tags(struct request_queue *);
+ extern int blk_queue_resize_tags(struct request_queue *, int);
+ extern void blk_queue_invalidate_tags(struct request_queue *);
+-extern struct blk_queue_tag *blk_init_tags(int);
++extern struct blk_queue_tag *blk_init_tags(int, int);
+ extern void blk_free_tags(struct blk_queue_tag *);
  
-@@ -556,7 +571,7 @@ struct blk_mq_tags *blk_mq_init_tags(unsigned int total_tags,
- 	tags->nr_tags = total_tags;
- 	tags->nr_reserved_tags = reserved_tags;
+ static inline struct request *blk_map_queue_find_tag(struct blk_queue_tag *bqt,
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index e939d2b..642884e 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -415,6 +415,9 @@ struct scsi_host_template {
+ 	 */
+ 	unsigned char present;
  
--	return blk_mq_init_bitmap_tags(tags, node);
-+	return blk_mq_init_bitmap_tags(tags, node, alloc_policy);
- }
- 
- void blk_mq_free_tags(struct blk_mq_tags *tags)
-diff --git a/block/blk-mq-tag.h b/block/blk-mq-tag.h
-index 6206ed1..3ffa336 100644
---- a/block/blk-mq-tag.h
-+++ b/block/blk-mq-tag.h
-@@ -26,6 +26,8 @@ struct blk_mq_bitmap_tags {
- 
- 	atomic_t wake_index;
- 	struct bt_wait_state *bs;
++	/* If use block layer to manage tags, this is tag allocation policy */
++	int tag_alloc_policy;
 +
-+	atomic_t rr_next;
- };
- 
- /*
-@@ -45,7 +47,7 @@ struct blk_mq_tags {
- };
- 
- 
--extern struct blk_mq_tags *blk_mq_init_tags(unsigned int nr_tags, unsigned int reserved_tags, int node);
-+extern struct blk_mq_tags *blk_mq_init_tags(unsigned int nr_tags, unsigned int reserved_tags, int node, int alloc_policy);
- extern void blk_mq_free_tags(struct blk_mq_tags *tags);
- 
- extern unsigned int blk_mq_get_tag(struct blk_mq_alloc_data *data);
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index da1ab56..7bf3656 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -1359,7 +1359,8 @@ static struct blk_mq_tags *blk_mq_init_rq_map(struct blk_mq_tag_set *set,
- 	size_t rq_size, left;
- 
- 	tags = blk_mq_init_tags(set->queue_depth, set->reserved_tags,
--				set->numa_node);
-+				set->numa_node,
-+				BLK_MQ_FLAG_TO_ALLOC_POLICY(set->flags));
- 	if (!tags)
- 		return NULL;
- 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 43318d5..7fd8d17 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2186,6 +2186,8 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
- 	shost->tag_set.cmd_size = cmd_size;
- 	shost->tag_set.numa_node = NUMA_NO_NODE;
- 	shost->tag_set.flags = BLK_MQ_F_SHOULD_MERGE | BLK_MQ_F_SG_MERGE;
-+	shost->tag_set.flags |=
-+		BLK_ALLOC_POLICY_TO_MQ_FLAG(shost->hostt->tag_alloc_policy);
- 	shost->tag_set.driver_data = shost;
- 
- 	return blk_mq_alloc_tag_set(&shost->tag_set);
-diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index 8aded9a..b4bf93a 100644
---- a/include/linux/blk-mq.h
-+++ b/include/linux/blk-mq.h
-@@ -147,6 +147,8 @@ enum {
- 	BLK_MQ_F_SG_MERGE	= 1 << 2,
- 	BLK_MQ_F_SYSFS_UP	= 1 << 3,
- 	BLK_MQ_F_DEFER_ISSUE	= 1 << 4,
-+	BLK_MQ_F_ALLOC_POLICY_START_BIT = 8,
-+	BLK_MQ_F_ALLOC_POLICY_BITS = 1,
- 
- 	BLK_MQ_S_STOPPED	= 0,
- 	BLK_MQ_S_TAG_ACTIVE	= 1,
-@@ -155,6 +157,12 @@ enum {
- 
- 	BLK_MQ_CPU_WORK_BATCH	= 8,
- };
-+#define BLK_MQ_FLAG_TO_ALLOC_POLICY(flags) \
-+	((flags >> BLK_MQ_F_ALLOC_POLICY_START_BIT) & \
-+		((1 << BLK_MQ_F_ALLOC_POLICY_BITS) - 1))
-+#define BLK_ALLOC_POLICY_TO_MQ_FLAG(policy) \
-+	((policy & ((1 << BLK_MQ_F_ALLOC_POLICY_BITS) - 1)) \
-+		<< BLK_MQ_F_ALLOC_POLICY_START_BIT)
- 
- struct request_queue *blk_mq_init_queue(struct blk_mq_tag_set *);
- void blk_mq_finish_init(struct request_queue *q);
+ 	/*
+ 	 * Let the block layer assigns tags to all commands.
+ 	 */
+diff --git a/include/scsi/scsi_tcq.h b/include/scsi/scsi_tcq.h
+index fe4a702..80ae8f8 100644
+--- a/include/scsi/scsi_tcq.h
++++ b/include/scsi/scsi_tcq.h
+@@ -102,7 +102,8 @@ static inline int scsi_init_shared_tag_map(struct Scsi_Host *shost, int depth)
+ 	 * devices on the shared host (for libata)
+ 	 */
+ 	if (!shost->bqt) {
+-		shost->bqt = blk_init_tags(depth);
++		shost->bqt = blk_init_tags(depth,
++			shost->hostt->tag_alloc_policy);
+ 		if (!shost->bqt)
+ 			return -ENOMEM;
+ 	}
 -- 
 1.8.1
 
