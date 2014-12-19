@@ -1,88 +1,54 @@
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [PATCH 2/2] ata: ahci_platform: Add ACPI _CLS matching
-Date: Fri, 19 Dec 2014 14:13:08 -0600
-Message-ID: <1419019988-4398-3-git-send-email-Suravee.Suthikulpanit@amd.com>
-References: <1419019988-4398-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: Re: [PATCH v5 2/3] libata: async resume
+Date: Fri, 19 Dec 2014 18:46:25 -0500
+Message-ID: <5494B8D1.1070608@ubuntu.com>
+References: <20140305201443.20088.85361.stgit@viggo.jf.intel.com> <20140305201735.20088.22124.stgit@viggo.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bn1bon0117.outbound.protection.outlook.com ([157.56.111.117]:44384
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751281AbaLSU2j (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 Dec 2014 15:28:39 -0500
-In-Reply-To: <1419019988-4398-1-git-send-email-Suravee.Suthikulpanit@amd.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20140305201735.20088.22124.stgit@viggo.jf.intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Todd Brandt <todd.e.brandt@linux.intel.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, tj@kernel.org, JBottomley@Parallels.com, Len Brown <len.brown@intel.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
 List-Id: linux-ide@vger.kernel.org
-To: rjw@rjwysocki.net, lenb@kernel.org, hdegoede@redhat.com, tj@kernel.org, arnd@arndb.de, mjg59@srcf.ucam.org
-Cc: hanjun.guo@linaro.org, al.stone@linaro.org, graeme.gregory@linaro.org, leo.duran@amd.com, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org, Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-This patch adds ACPI supports for AHCI platform driver, which uses _CLS
-method to match the device.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
 
-The following is an example of ASL structure in DSDT for a SATA controller,
-which contains _CLS package to be matched by the ahci_platform driver:
+On 03/05/2014 03:17 PM, Dan Williams wrote:
+> From: Todd Brandt <todd.e.brandt@linux.intel.com>
+> 
+> Improve overall system resume time by making libata link recovery 
+> actions asynchronous relative to other resume events.
+> 
+> Link resume operations are performed using the scsi_eh thread, so 
+> commands, particularly the sd resume start/stop command, will be
+> held off until the device exits error handling.  Libata already
+> flushes eh with ata_port_wait_eh() in the port teardown paths, so
+> there are no concerns with async operation colliding with the
+> end-of-life of the ata_port object.  Also, libata-core is already
+> careful to flush in-flight pm operations before another round of pm
+> starts on the given ata_port.
 
-  Device (AHC0) // AHCI Controller
-  {
-    Name(_HID, "AMDI0600")
-    Name (_CCA, 1)
-    Name (_CLS, Package (3)
-    {
-      0x01, // Base Class: Mass Storage
-      0x06, // Sub-Class: serial ATA
-      0x01, // Interface: AHCI
-    })
-    Name (_CRS, ResourceTemplate ()
-    {
-      Memory32Fixed (ReadWrite, 0xE0300000, 0x00010000)
-      Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive,,,) { 387 }
-    })
-  }
+I realize this is a little late but I finally started looking at the
+patch set I was working on last year again, and now that I look at
+your version that was accepted, I realize that it only addresses the
+libata side of things.  sd still issues START_STOP_UNIT synchronously
+in the resume path, so without the patch fixing that, you shouldn't
+see any actual speed up in resume times.  Or are you using the
+manage_start_stop flag to inhibit that ( at the cost of taking an
+emergency park on each suspend/shutdown )?
 
-Also, since ATA driver should not require PCI support for ATA_ACPI,
-this patch removes dependency in the driver/ata/Kconfig.
 
-Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
----
- drivers/ata/Kconfig         | 2 +-
- drivers/ata/ahci_platform.c | 3 +++
- 2 files changed, 4 insertions(+), 1 deletion(-)
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index cd4cccb..edb00c6 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -48,7 +48,7 @@ config ATA_VERBOSE_ERROR
- 
- config ATA_ACPI
- 	bool "ATA ACPI Support"
--	depends on ACPI && PCI
-+	depends on ACPI
- 	default y
- 	help
- 	  This option adds support for ATA-related ACPI objects.
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index 06f1d59..4879f9b 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -71,6 +71,8 @@ static const struct of_device_id ahci_of_match[] = {
- };
- MODULE_DEVICE_TABLE(of, ahci_of_match);
- 
-+static const struct acpi_device_cls ahci_cls = {0x01, 0x06, 0x01};
-+
- static struct platform_driver ahci_driver = {
- 	.probe = ahci_probe,
- 	.remove = ata_platform_remove_one,
-@@ -78,6 +80,7 @@ static struct platform_driver ahci_driver = {
- 		.name = "ahci",
- 		.owner = THIS_MODULE,
- 		.of_match_table = ahci_of_match,
-+		.acpi_cls = &ahci_cls,
- 		.pm = &ahci_pm_ops,
- 	},
- };
--- 
-1.9.3
-
+iQEcBAEBCgAGBQJUlLjNAAoJENRVrw2cjl5RU48H/2APBJMJ9XyTEfa7r6+M76zH
+jf238VwOJUuTUC+Mh2h3AoQVkNy4E8CM/CAnWww8Y1iAvuRTptp9J64NrAQdylCf
+p3KLIqhXaGmGvgx1SpzwzwGhbvZ9YM8w1uRC1VLACr9ZwySjEXyEv3B2kZDDUMEj
+xxnnQfM47f2km6pxhV7nzt1jHlvaWhvPsuRSaVFxLQstbGR9U1VLJnESZgBFYipR
+w5z0dmhssE21A/T8B7dSAx5tDCATeWsMn5fDtQ15MFXgfguXrmmOuHLBtv9EGPZt
+d5M1rr2E7WXems5pBoxJMcYFblwQ/h30qPEkRNgYXrfTRx7h79q20tWNI+B1D1c=
+=s6tS
+-----END PGP SIGNATURE-----
