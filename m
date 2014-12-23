@@ -1,33 +1,34 @@
-From: Jens Axboe <axboe@fb.com>
-Subject: Re: [PATCH v2 2/3] blk-mq: add tag allocation policy
-Date: Mon, 22 Dec 2014 16:25:19 -0700
-Message-ID: <5498A85F.7090508@fb.com>
-References: <e8fb0a8f15f291f6dae88d51295432a2fa7ad71b.1418928090.git.shli@fb.com> <be6eb099c483f26e63dc43080055e7644bc2bcad.1418928090.git.shli@fb.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: Issues with commit 34b48db6 ("block: remove artifical
+	max_hw_sectors cap")
+Date: Tue, 23 Dec 2014 09:31:40 +0100
+Message-ID: <20141223083140.GB2303@lst.de>
+References: <alpine.DEB.2.10.1412211420560.4323@tosh-p75a>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:22943 "EHLO
-	mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754020AbaLVXZr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Dec 2014 18:25:47 -0500
-In-Reply-To: <be6eb099c483f26e63dc43080055e7644bc2bcad.1418928090.git.shli@fb.com>
+Received: from verein.lst.de ([213.95.11.211]:36993 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755096AbaLWIbn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 23 Dec 2014 03:31:43 -0500
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.10.1412211420560.4323@tosh-p75a>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Shaohua Li <shli@fb.com>, linux-ide@vger.kernel.org
-Cc: Kernel-team@fb.com, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@infradead.org>
+To: "Kenneth R. Crudup" <kenny@panix.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On 12/18/2014 11:46 AM, Shaohua Li wrote:
-> This is the blk-mq part to support tag allocation policy. The default
-> allocation policy isn't changed (though it's not a strict FIFO). The new
-> policy is round-robin for libata. But it's a try-best implementation. If
-> multiple tasks are competing, the tags returned will be mixed (which is
-> unavoidable even with !mq, as requests from different tasks can be
-> mixed in queue)
+On Sun, Dec 21, 2014 at 02:44:20PM -0800, Kenneth R. Crudup wrote:
+> 
+> I had issues with my Samsung 4GB disk recently in Linus' master tree kernels,
+> and have bisected it to the above commit. When doing running bonnie++ (etc.
+> I get EIOs.
+> 
+> Some info is below, let me know if you need anything else. Is there a "quirks"
+> available for this option so I may special-case this particular disk?
 
-Can we get rid of the atomic_read() on non-rr? It's never set outside of 
-initialization there.
-
--- 
-Jens Axboe
+Looks like we need to quirk it.  Can you try to echo different limits
+to the /sys/block/sdc/queue/max_hw_sectors_kb  file for the device to
+find the limit
+for it?
 
