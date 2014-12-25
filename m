@@ -1,30 +1,29 @@
-From: "Kenneth R. Crudup" <kenny@panix.com>
-Subject: Re: Issues with commit 34b48db6 ("block: remove artifical max_hw_sectors
- cap")
-Date: Wed, 24 Dec 2014 00:18:59 -0800 (PST)
-Message-ID: <alpine.DEB.2.10.1412240017480.4626@tosh-p75a>
-References: <alpine.DEB.2.10.1412211420560.4323@tosh-p75a> <20141223083140.GB2303@lst.de> <alpine.DEB.2.10.1412232342040.4626@tosh-p75a>
-Reply-To: "Kenneth R. Crudup" <kenny@panix.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] drivers:ata: Fix spelling typos in libata-scsi.c and the
+ header file,ata.h
+Date: Thu, 25 Dec 2014 15:28:56 -0500
+Message-ID: <20141225202856.GE22951@htj.dyndns.org>
+References: <1419219397-14627-1-git-send-email-xerofoify@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.10.1412232342040.4626@tosh-p75a>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1419219397-14627-1-git-send-email-xerofoify@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Nicholas Krause <xerofoify@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
+On Sun, Dec 21, 2014 at 10:36:37PM -0500, Nicholas Krause wrote:
+> Changes the spelling typos of removeable to removable where ata_id_removeable is defined in
+> ata.h and called in libata-scsi.c respectively.
+> 
+> Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
 
-> To recap for the various lists:
->   Vendor: Samsung  Model: D3 Station       Rev: 0202
->   Type:   Direct-Access                    ANSI  SCSI revision: 06
-> It's the 4TB model:
+Well, this isn't exactly wrong but why not?  Applied to
+libata/for-3.20 with the description updated.
 
-I forgot to add the USB PID/VID information:
-
-  Bus 002 Device 002: ID 04e8:6125 Samsung Electronics Co., Ltd
-
-	-Kenny
+Thanks.
 
 -- 
-Kenneth R. Crudup  Sr. SW Engineer, Scott County Consulting, Silicon Valley
+tejun
