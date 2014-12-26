@@ -1,44 +1,36 @@
-From: Gregory CLEMENT <gregory.clement@free-electrons.com>
-Subject: (unknown)
-Date: Fri, 26 Dec 2014 18:26:37 +0100
-Message-ID: <1419614799-5770-1-git-send-email-gregory.clement@free-electrons.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Subject: 
-Sender: linux-kernel-owner@vger.kernel.org
-To: Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>, linux-kernel@vger.kernel.org
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Maxime Ripard <maxime.ripard@free-electrons.com>, Boris BREZILLON <boris.brezillon@free-electrons.com>, Lior Amsalem <alior@marvell.com>, Tawfik Bayouk <tawfik@marvell.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org, Gregory CLEMENT <gregory.clement@free-electrons.com>
+From: Rob Herring <robherring2@gmail.com>
+Subject: Re: Question about mv_print_info in sata_mv.c in sata_mv.c
+Date: Fri, 26 Dec 2014 14:55:40 -0600
+Message-ID: <CAL_JsqKQYuZJBCPO7KTS3C=ef3_Z3KjMsJ4Foo=zJhS-XT+DMw@mail.gmail.com>
+References: <5498E9E4.4040308@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-wi0-f176.google.com ([209.85.212.176]:49064 "EHLO
+	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751173AbaLZU4D (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Dec 2014 15:56:03 -0500
+In-Reply-To: <5498E9E4.4040308@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: nick <xerofoify@gmail.com>
+Cc: "tj@kernel.org >> Tejun Heo" <tj@kernel.org>, Grant Likely <grant.likely@linaro.org>, Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
 
-Subject: [PATCH 0/2] regulator: Add the device tree version to the regulator_get family
+On Mon, Dec 22, 2014 at 10:04 PM, nick <xerofoify@gmail.com> wrote:
+> Greetings Tejuin,Grant and Rob,
+> Hope you are having a good holidays. I am wondering if there is
+> anything we need to add to this function as stated in a fix me above it.I am pretty certain
+> there isn't but as the maintainers, I am double checking first with you:). Please let me
+> known if you think of something.
 
-Hi,
+Grant and I are not actually maintainers of this driver.
+get_maintainer.pl is somewhat wrong here because it matches on regex
+that is present in about every driver that is DT enabled. I've sent a
+patch now to change that.
 
-Currently it is not possible to associate a regulator to a child node
-which is not a device. The several ports of an ahci controller are
-represented as subnodes but they are not created as devices. In order
-to be able to associate each port with a regulator the framework API
-needs to be extended.
+It would help also if you paste in the actually code you are referring to.
 
-The second patch adds the device tree version (of_) for each member of
-the regulator_get family: normal, exclusive, optional and all of the
-manageable version.The of_regulator_get* functions allow using a
-device node to get the regulator instead using the device object.
+Rob
 
-The first patch is not related to the second one, but it is little
-improvement.
-
-Gregory
-
-Gregory CLEMENT (2):
-  regulator: core: Add a sanity check on the regulator_ enable/disable
-    functions
-  regulator: core: Add the device tree version to the regulator_get
-    family
-
- drivers/regulator/core.c           | 127 +++++++++++++++++++++++++++++++++----
- drivers/regulator/devres.c         |  70 ++++++++++++++++++--
- include/linux/regulator/consumer.h |  20 ++++++
- 3 files changed, 198 insertions(+), 19 deletions(-)
-
--- 
-1.9.1
+> Regards and Have a Great Holidays :),
+> Nick
