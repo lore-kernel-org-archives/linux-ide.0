@@ -1,30 +1,57 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] drivers:ata: Remove unneeded fix me comment for the
+Subject: Re: [PATCHv2] drivers:ata: Remove unneeded fix me comment for the
  function,mv_print_info in sata_mv.c
-Date: Fri, 26 Dec 2014 16:43:35 -0500
-Message-ID: <20141226214335.GB10889@htj.dyndns.org>
-References: <1419629997-2623-1-git-send-email-xerofoify@gmail.com>
+Date: Fri, 26 Dec 2014 17:12:27 -0500
+Message-ID: <20141226221227.GC10889@htj.dyndns.org>
+References: <1419630959-2889-1-git-send-email-xerofoify@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f53.google.com ([209.85.216.53]:65142 "EHLO
-	mail-qa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750893AbaLZVnj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Dec 2014 16:43:39 -0500
+Received: from mail-qg0-f42.google.com ([209.85.192.42]:36998 "EHLO
+	mail-qg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750779AbaLZWMb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Dec 2014 17:12:31 -0500
 Content-Disposition: inline
-In-Reply-To: <1419629997-2623-1-git-send-email-xerofoify@gmail.com>
+In-Reply-To: <1419630959-2889-1-git-send-email-xerofoify@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Nicholas Krause <xerofoify@gmail.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Dec 26, 2014 at 04:39:57PM -0500, Nicholas Krause wrote:
-> Removes a unneed fix me comment for the function,mv_print_info in sata_mv.c.
-> This comment is no longer needed as this function has been completed correctly
-> to print out hardware info to the kernel log buffer and therefore this comment
-> is no longer needed for the function,mv_print_info.
+Hello, Nicholas.
 
-How do we know the function is completed correctly?
+On Fri, Dec 26, 2014 at 04:55:59PM -0500, Nicholas Krause wrote:
+> Removes a unneed fix me comment for the function,mv_print_info in sata_mv.c.
+> This function is correctly completed due to printing out needed info about 
+> hardware to the kernel log buffer. The needed information that is being 
+> printed successfully now to the callers of this function is the host 
+> number of ports, the generation of hardware, the maximum q depth the
+> hardware supports, if the hardware is either RAID or SCSI enabled and
+> finally the IRQ mode enabled when called and the flag enabled with the
+> respectful IRQ called. 
+
+It's often more effective to discuss to conclusion on thread before
+sending another patch.
+
+When tracking down FIXME comments, it's often a good idea to look at
+how the comment came to be by digging through the history.  git blame
+on the file shows that the comment was added by 05b308e1df6d ("[PATCH]
+libata: Marvell function headers") a long time ago.  Compared to then,
+the function grew generation info printing, which could have been what
+the original FIXME author had in mind or maybe not.  Regardless, given
+that nobody has complained about lacking information over the years,
+it can be argued that the FIXME is spurious.
+
+So, I don't object to the patch itself.  These are just taking way too
+much effort given that the actual gain is almost nil.  If you want to
+continue to do this, please research about the history of FIXME and
+construct and present a valid rationale for the change.  For this one,
+listing what it prints out doesn't constitute rationale in itself.
+
+Please do keep in mind these changes are ultimately frivolous.  If
+they incur more cost than they're beneficial, they're pointless, so
+please send properly formed and reasoned patches.  This probably is my
+last response on the subject.
 
 Thanks.
 
