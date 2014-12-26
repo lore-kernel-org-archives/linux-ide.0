@@ -1,58 +1,70 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2/2] ata: ahci_platform: Add ACPI _CLS matching
-Date: Thu, 25 Dec 2014 15:32:02 -0500
-Message-ID: <20141225203202.GF22951@htj.dyndns.org>
-References: <1419019988-4398-1-git-send-email-Suravee.Suthikulpanit@amd.com>
- <1419019988-4398-3-git-send-email-Suravee.Suthikulpanit@amd.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Gregory CLEMENT <gregory.clement@free-electrons.com>
+Subject: [PATCH 1/2] regulator: core: Add a sanity check on the regulator_ enable/disable functions
+Date: Fri, 26 Dec 2014 18:26:38 +0100
+Message-ID: <1419614799-5770-2-git-send-email-gregory.clement@free-electrons.com>
+References: <1419614799-5770-1-git-send-email-gregory.clement@free-electrons.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f51.google.com ([209.85.216.51]:34233 "EHLO
-	mail-qa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751498AbaLYUcH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Dec 2014 15:32:07 -0500
-Content-Disposition: inline
-In-Reply-To: <1419019988-4398-3-git-send-email-Suravee.Suthikulpanit@amd.com>
+Received: from down.free-electrons.com ([37.187.137.238]:45943 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751118AbaLZR1F (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 26 Dec 2014 12:27:05 -0500
+In-Reply-To: <1419614799-5770-1-git-send-email-gregory.clement@free-electrons.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Cc: rjw@rjwysocki.net, lenb@kernel.org, hdegoede@redhat.com, arnd@arndb.de, mjg59@srcf.ucam.org, hanjun.guo@linaro.org, al.stone@linaro.org, graeme.gregory@linaro.org, leo.duran@amd.com, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org
+To: Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>, linux-kernel@vger.kernel.org
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Maxime Ripard <maxime.ripard@free-electrons.com>, Boris BREZILLON <boris.brezillon@free-electrons.com>, Lior Amsalem <alior@marvell.com>, Tawfik Bayouk <tawfik@marvell.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org, Gregory CLEMENT <gregory.clement@free-electrons.com>
 
-On Fri, Dec 19, 2014 at 02:13:08PM -0600, Suravee Suthikulpanit wrote:
-> This patch adds ACPI supports for AHCI platform driver, which uses _CLS
-> method to match the device.
-> 
-> The following is an example of ASL structure in DSDT for a SATA controller,
-> which contains _CLS package to be matched by the ahci_platform driver:
-> 
->   Device (AHC0) // AHCI Controller
->   {
->     Name(_HID, "AMDI0600")
->     Name (_CCA, 1)
->     Name (_CLS, Package (3)
->     {
->       0x01, // Base Class: Mass Storage
->       0x06, // Sub-Class: serial ATA
->       0x01, // Interface: AHCI
->     })
->     Name (_CRS, ResourceTemplate ()
->     {
->       Memory32Fixed (ReadWrite, 0xE0300000, 0x00010000)
->       Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive,,,) { 387 }
->     })
->   }
-> 
-> Also, since ATA driver should not require PCI support for ATA_ACPI,
-> this patch removes dependency in the driver/ata/Kconfig.
-> 
-> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+These two functions use the pointer passed in parameter without any
+check. By adding a NULL pointer check, it allows using those functions
+from a driver in a more generic way. It is useful especially for the
+disable case if the regulator is optional.
 
-Acked-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
+---
+ drivers/regulator/core.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
-Please feel free to route this as you see fit.  Let me know if this
-should go through libata.
-
-Thanks.
-
+diff --git a/drivers/regulator/core.c b/drivers/regulator/core.c
+index e225711bb8bc..de29399b5430 100644
+--- a/drivers/regulator/core.c
++++ b/drivers/regulator/core.c
+@@ -1911,12 +1911,16 @@ static int _regulator_enable(struct regulator_dev *rdev)
+  */
+ int regulator_enable(struct regulator *regulator)
+ {
+-	struct regulator_dev *rdev = regulator->rdev;
++	struct regulator_dev *rdev;
+ 	int ret = 0;
+ 
++	if (!regulator)
++		return 0;
++
+ 	if (regulator->always_on)
+ 		return 0;
+ 
++	rdev = regulator->rdev;
+ 	if (rdev->supply) {
+ 		ret = regulator_enable(rdev->supply);
+ 		if (ret != 0)
+@@ -2024,12 +2028,17 @@ static int _regulator_disable(struct regulator_dev *rdev)
+  */
+ int regulator_disable(struct regulator *regulator)
+ {
+-	struct regulator_dev *rdev = regulator->rdev;
++	struct regulator_dev *rdev;
+ 	int ret = 0;
+ 
++	if (!regulator)
++		return 0;
++
+ 	if (regulator->always_on)
+ 		return 0;
+ 
++	rdev = regulator->rdev;
++
+ 	mutex_lock(&rdev->mutex);
+ 	ret = _regulator_disable(rdev);
+ 	mutex_unlock(&rdev->mutex);
 -- 
-tejun
+1.9.1
+
