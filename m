@@ -1,53 +1,62 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: Issues with commit 34b48db6 ("block: remove artifical
-	max_hw_sectors cap")
-Date: Sat, 27 Dec 2014 16:13:19 +0100
-Message-ID: <20141227151319.GA18607@lst.de>
-References: <alpine.DEB.2.10.1412211420560.4323@tosh-p75a> <20141223083140.GB2303@lst.de> <alpine.DEB.2.10.1412232342040.4626@tosh-p75a>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Issues with commit 34b48db6 ("block: remove artifical max_hw_sectors
+ cap")
+Date: Sun, 28 Dec 2014 22:10:01 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1412282200040.24524-100000@netrider.rowland.org>
+References: <20141227151319.GA18607@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:43717 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750795AbaL0PNX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 27 Dec 2014 10:13:23 -0500
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.10.1412232342040.4626@tosh-p75a>
+Received: from netrider.rowland.org ([192.131.102.5]:41280 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751747AbaL2DKC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Dec 2014 22:10:02 -0500
+In-Reply-To: <20141227151319.GA18607@lst.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Kenneth R. Crudup" <kenny@panix.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Kenneth R. Crudup" <kenny@panix.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 
-On Tue, Dec 23, 2014 at 11:48:40PM -0800, Kenneth R. Crudup wrote:
-> > Looks like we need to quirk it.  Can you try to echo different limits
-> > to the /sys/block/sdc/queue/max_hw_sectors_kb  file for the device to
-> > find the limit for it?
-> 
-> Looks like it's 32767; making it an even 32K sectors starts the EIOs again.
-> 
-> To recap for the various lists:
-> 
->   Vendor: Samsung  Model: D3 Station       Rev: 0202
->   Type:   Direct-Access                    ANSI  SCSI revision: 06
-> 
-> It's the 4TB model:
-> 
-> /sys/block/sdc/size:7814037160
-> /sys/block/sdc/queue/max_hw_sectors_kb:61440
-> 
-> Works OK if I echo 32767 > /sys/block/sdc/queue/max_sectors_kb
+On Sat, 27 Dec 2014, Christoph Hellwig wrote:
 
-Interesting.  Basically this is the limit for modern ATA disks:
+> On Tue, Dec 23, 2014 at 11:48:40PM -0800, Kenneth R. Crudup wrote:
+> > > Looks like we need to quirk it.  Can you try to echo different limits
+> > > to the /sys/block/sdc/queue/max_hw_sectors_kb  file for the device to
+> > > find the limit for it?
+> > 
+> > Looks like it's 32767; making it an even 32K sectors starts the EIOs again.
+> > 
+> > To recap for the various lists:
+> > 
+> >   Vendor: Samsung  Model: D3 Station       Rev: 0202
+> >   Type:   Direct-Access                    ANSI  SCSI revision: 06
+> > 
+> > It's the 4TB model:
+> > 
+> > /sys/block/sdc/size:7814037160
+> > /sys/block/sdc/queue/max_hw_sectors_kb:61440
+> > 
+> > Works OK if I echo 32767 > /sys/block/sdc/queue/max_sectors_kb
+> 
+> Interesting.  Basically this is the limit for modern ATA disks:
+> 
+> drivers/ata/libata-core.c:             dev->max_sectors = ATA_MAX_SECTORS_LBA48;
+> drivers/ata/libata-core.c:             dev->max_sectors = ATA_MAX_SECTORS_LBA48;
+> include/linux/ata.h:    ATA_MAX_SECTORS_LBA48   = 65535,/* TODO: 65536? */
+> 
+> Seems like the USB bridge isn't properly communicating this limit to the SCSI
+> layer.  Maybe it's a good idea to generally limit USB storage to this size?
 
-drivers/ata/libata-core.c:             dev->max_sectors = ATA_MAX_SECTORS_LBA48;
-drivers/ata/libata-core.c:             dev->max_sectors = ATA_MAX_SECTORS_LBA48;
-include/linux/ata.h:    ATA_MAX_SECTORS_LBA48   = 65535,/* TODO: 65536? */
+(Is this a USB device?  Presumably you wouldn't have CC'ed the
+linux-usb and usb-storage mailing lists if it wasn't...)
 
-Seems like the USB bridge isn't properly communicating this limit to the SCSI
-layer.  Maybe it's a good idea to generally limit USB storage to this size?
+The only limits usb-storage imposes on max_sectors are those needed to
+work around bugs in the devices' USB bridges.  (Okay, there's also
+something for tape drive devices, but it probably doesn't belong in
+usb-storage -- it should be handled by the SCSI tape driver.)
 
-> Has anyone seen a disk out there that's got a (properly-supported)
-> "max_hw_sectors_kb" >= 32K? If not, maybe we should clamp that value to
-> prevent other misreporting(?) disks?
+If the ATA layer needs to set a limit on max_sectors, why doesn't it
+simply go ahead and do so?
 
-Yes, lots of SCSI disks and arrays properly support this.
+Alan Stern
+
