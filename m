@@ -1,53 +1,57 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH 2/2] ahci_xgene: Fix the dma state machine lockup for
- the ATA_CMD_PACKET PIO mode command.
-Date: Mon, 29 Dec 2014 13:09:04 +0300
-Message-ID: <54A12840.90703@cogentembedded.com>
-References: <1418748575-27301-1-git-send-email-stripathi@apm.com>	<1418748575-27301-3-git-send-email-stripathi@apm.com>	<54906CF0.9010908@cogentembedded.com>	<CAOHikRCRHPnVAziU8jwD9gGFODyt_5DpL1dm7Eb8uGA-WOfxOw@mail.gmail.com>	<5491BE11.4070500@cogentembedded.com> <CAOHikRAH3rrNw_+_DYx=Fc13BBQMq1Wg0zGyqrxLhNk7TSKqhw@mail.gmail.com>
+From: Mark Brown <broonie@kernel.org>
+Subject: Re: [PATCH 1/2] regulator: core: Add a sanity check on the
+ regulator_ enable/disable functions
+Date: Mon, 29 Dec 2014 15:40:30 +0000
+Message-ID: <20141229154030.GJ17800@sirena.org.uk>
+References: <1419614799-5770-1-git-send-email-gregory.clement@free-electrons.com>
+ <1419614799-5770-2-git-send-email-gregory.clement@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <CAOHikRAH3rrNw_+_DYx=Fc13BBQMq1Wg0zGyqrxLhNk7TSKqhw@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Suman Tripathi <stripathi@apm.com>
-Cc: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Don Dutile <ddutile@redhat.com>, Jon Masters <jcm@redhat.com>, patches@apm.com
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="Ss+0cqQwq/UQoUvX"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mezzanine.sirena.org.uk ([106.187.55.193]:54202 "EHLO
+	mezzanine.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751449AbaL2Pk6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Dec 2014 10:40:58 -0500
+Content-Disposition: inline
+In-Reply-To: <1419614799-5770-2-git-send-email-gregory.clement@free-electrons.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-
-Hello.
-
-On 12/29/2014 8:35 AM, Suman Tripathi wrote:
-
->          This patch addresses the issue with ATA_CMD_PACKET pio mode
->          command for enumeration and device detection with ATAPI devices.It is the
->          same issue as in patch
+To: Gregory CLEMENT <gregory.clement@free-electrons.com>
+Cc: Liam Girdwood <lgirdwood@gmail.com>, linux-kernel@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Maxime Ripard <maxime.ripard@free-electrons.com>, Boris BREZILLON <boris.brezillon@free-electrons.com>, Lior Amsalem <alior@marvell.com>, Tawfik Bayouk <tawfik@marvell.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org
 
 
->     Ugh, HTML... Please stick to plain text when posting to the
-> 'vger.kernel.org <http://vger.kernel.org/>' mailing lists (HTML mails are
-> supposed to be ignored).
+--Ss+0cqQwq/UQoUvX
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
->     www.spinics.net/lists/linux-____ide/msg49092.html
->     <http://www.spinics.net/lists/linux-__ide/msg49092.html>
->          <http://www.spinics.net/lists/__linux-ide/msg49092.html
->     <http://www.spinics.net/lists/linux-ide/msg49092.html>>
+On Fri, Dec 26, 2014 at 06:26:38PM +0100, Gregory CLEMENT wrote:
+> These two functions use the pointer passed in parameter without any
+> check. By adding a NULL pointer check, it allows using those functions
+> from a driver in a more generic way. It is useful especially for the
+> disable case if the regulator is optional.
 
-> This is something strange. I posted it in plain text only. Because when I do
-> show original of the patch in gmail, it shows me the plaintext.
-> Please help me out to figure the issue. I saw many other patches referred in
-> the same way. I am sending the patch through git-send-email  that sends in
-> plain text format only,
+No, especially in the case of regulator_enable() this is deliberate -
+we're trying to ensure that if people are using regulators they're being
+careful about it, checking error codes and so on.  I'd really want to
+see some persuasive use case for this.  What you're saying here sounds
+like the consumer shouldn't be treating the regulator as optional at
+all but should instead be using a normal regulator.
 
-    The patch was OK, but your replies do use HTML (as well as plain text).
+--Ss+0cqQwq/UQoUvX
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
 
->          Signed-off-by: Suman Tripathi <stripathi@apm.com
->     <mailto:stripathi@apm.com> <mailto:stripathi@apm.com
->     <mailto:stripathi@apm.com>>>
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-> --
-> Thanks,
-> with regards,
-> Suman Tripathi
+iQEcBAEBAgAGBQJUoXXtAAoJECTWi3JdVIfQQ4YH/10bXMdYTF9pD3MjYdT2VlcU
+gQ9jHKyxXu+vZIhuVGBfu6OOcJKCe5ZjSTK5keH9C5lyb+IZ4zMrBp1pHRei1BcT
+l16RNYX9GuLzbRUHSY3bijzUs+JJlznMOdI7PKYkoKGLB9gsGYe9tM0O1xvh3z7C
+dKBHNim+G9/Y4ftpS338CqQvzJbsWOjNph7WSnUoG4Ah92BVP2ecjXibwm8Rzie6
+vd1g1twz6J3McjYTzlG40sS0/tdGkV7VFHWoq0sG5yfVwGTzdmb0FN8KXrigtnBb
+H0uqrR79Dp1UfT/DCnLR2e5LprUYJaVIdE7LttWkD/X/SeaDkMYFnSmUxtSIILQ=
+=u9aP
+-----END PGP SIGNATURE-----
 
-MBR, Sergei
-
+--Ss+0cqQwq/UQoUvX--
