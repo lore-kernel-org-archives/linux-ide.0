@@ -1,38 +1,35 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Issues with commit 34b48db6 ("block: remove artifical
- max_hw_sectors cap")
-Date: Tue, 30 Dec 2014 08:54:20 -0800
-Message-ID: <1419958460.2164.7.camel@HansenPartnership.com>
-References: <Pine.LNX.4.44L0.1412301132130.32416-100000@netrider.rowland.org>
+From: David Miller <davem@davemloft.net>
+Subject: Re: Question about FIXME in au1xxx-ide.c
+Date: Tue, 30 Dec 2014 16:14:17 -0500 (EST)
+Message-ID: <20141230.161417.1724826704176493969.davem@davemloft.net>
+References: <54A2E158.9020407@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:39619 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751749AbaL3QyV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Dec 2014 11:54:21 -0500
-In-Reply-To: <Pine.LNX.4.44L0.1412301132130.32416-100000@netrider.rowland.org>
+Received: from shards.monkeyblade.net ([149.20.54.216]:35551 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751321AbaL3VOX (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 30 Dec 2014 16:14:23 -0500
+In-Reply-To: <54A2E158.9020407@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Christoph Hellwig <hch@lst.de>, "Kenneth R. Crudup" <kenny@panix.com>, SCSI development list <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org, USB list <linux-usb@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
+To: xerofoify@gmail.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, 2014-12-30 at 11:45 -0500, Alan Stern wrote:
+From: nick <xerofoify@gmail.com>
+Date: Tue, 30 Dec 2014 12:31:04 -0500
 
-> PS: What's the current situation of my "SCSI: fix regression in 
-> scsi_send_eh_cmnd()" patch:
-> 
-> 	http://marc.info/?l=linux-scsi&m=141658469207765&w=2
-> 
-> submitted on November 21?  Since it was a bug-fix, I rather expected it 
-> to get merged before 3.18 was released.  Since it didn't, I certainly 
-> hope it will get in before 3.19.
+> Greetings David,
+> I am wondering about the fix me in the file,au1xxx-ide.c for
+> the function,auide_ddma_init. While it's obvious to check the
+> return code of the function called below the FIXME comment,it
+> seems to be that there is more to this issue and therefore I 
+> have a few questions. The first being can this device fail and
+> the system will function properly? The second question being don't
+> we need to remove the device if the allocation fails in the creation
+> of the data structures for it's use by the kernel as otherwise aren't
+> we leaking memory?
 
-Looks like it just got overlooked.  Since Hannes has reviewed it, I'll
-add it to the fixes branch.
-
-James
-
-
-
+I have no idea why the FIXME comment is there, I didn't write this
+driver nor have I ever made any changes to it.
