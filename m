@@ -1,58 +1,40 @@
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: Re: [PATCH v1] libata: export ata_get_cmd_descript()
-Date: Mon, 05 Jan 2015 19:44:45 +0200
-Message-ID: <1420479885.12456.21.camel@linux.intel.com>
-References: <1418397391-13668-1-git-send-email-andriy.shevchenko@linux.intel.com>
-	 <548B2524.9050806@cogentembedded.com>
-	 <1418405747.17201.64.camel@linux.intel.com>
-	 <20150105162145.GO15833@htj.dyndns.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Issues with commit 34b48db6 ("block: remove artifical max_hw_sectors
+ cap")
+Date: Mon, 5 Jan 2015 15:07:56 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1501051452440.1101-100000@iolanthe.rowland.org>
+References: <20150105171940.GC30028@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20150105162145.GO15833@htj.dyndns.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20150105171940.GC30028@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Kenneth R. Crudup" <kenny@panix.com>, Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 List-Id: linux-ide@vger.kernel.org
 
-On Mon, 2015-01-05 at 11:21 -0500, Tejun Heo wrote:
-> On Fri, Dec 12, 2014 at 07:35:47PM +0200, Andy Shevchenko wrote:
-> > On Fri, 2014-12-12 at 20:25 +0300, Sergei Shtylyov wrote:
-> > > Hello.
-> > > 
-> > > On 12/12/2014 06:16 PM, Andy Shevchenko wrote:
-> > > 
-> > > > The driver sata_dwc_460ex is using this symbol. To build it as a module we have
-> > > > to have the symbol exported. This patch adds EXPORT_SYMBOL() macro for that.
-> > > 
-> > > > Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> > > > ---
-> > > >   drivers/ata/libata-eh.c | 1 +
-> > > >   1 file changed, 1 insertion(+)
-> > > 
-> > > > diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-> > > > index 3dbec89..74fef87 100644
-> > > > --- a/drivers/ata/libata-eh.c
-> > > > +++ b/drivers/ata/libata-eh.c
-> > > > @@ -2389,6 +2389,7 @@ const char *ata_get_cmd_descript(u8 command)
-> > > >
-> > > >   	return NULL;
-> > > >   }
-> > > > +EXPORT_SYMBOL(ata_get_cmd_descript);
-> > > 
-> > >     Why not EXPORT_SYMBOL_GPL()?
-> > 
-> > Some of the symbols are exported in that way. I think better to wait the
-> > maintainer to tell which is preferred there.
+On Mon, 5 Jan 2015, Christoph Hellwig wrote:
+
+> On Tue, Dec 30, 2014 at 08:36:34AM -0800, Kenneth R. Crudup wrote:
+> > OP here. FWIW, this is what I get when running that command on the SCSI
+> > generic device that corresponds to the USB-3 (non-UAS) disk[1] that had the
+> > issue:
 > 
-> I don't really care.  As the sole user is an in-kernel module, I'm
-> gonna append _GPL for now.
-> 
+> So it looks like this one actually provides sane values, but we don't
+> we never even look at EVPD pages for usb devices due to the wrong SCSI
+> level?
 
-I'm okay with GPL. Thanks!
+According to James Bottomley, it doesn't matter much what the EVPD
+pages say.  The limitation is imposed by the USB _bridge_, whereas the
+EVPD data indicates what the _drive_ is capable of.  So we can't rely
+on that data anyway.  (Although if the EVPD data indicates a limit 
+smaller than the bridge can handle, then we'd need to pay attention to 
+it.)
 
+The patch I posted sets a general limit of 32 MB for USB drives that 
+don't have a quirk flag for a smaller limit.
 
--- 
-Andy Shevchenko <andriy.shevchenko@intel.com>
-Intel Finland Oy
+Kenneth, have you tried that patch?  Does it fix your problem?
+
+Alan Stern
+
