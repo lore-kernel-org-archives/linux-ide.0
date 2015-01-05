@@ -1,39 +1,27 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] drivers:ata: Fix spelling typos in libata-scsi.c and the
- header file,ata.h
-Date: Mon, 5 Jan 2015 11:35:07 -0500
-Message-ID: <20150105163507.GQ15833@htj.dyndns.org>
-References: <1419219397-14627-1-git-send-email-xerofoify@gmail.com>
- <20141225202856.GE22951@htj.dyndns.org>
- <549CC66F.2070606@gmail.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: Issues with commit 34b48db6 ("block: remove artifical
+	max_hw_sectors cap")
+Date: Mon, 5 Jan 2015 18:18:38 +0100
+Message-ID: <20150105171838.GB30028@lst.de>
+References: <Pine.LNX.4.44L0.1412301017060.30572-100000@netrider.rowland.org> <54A2D07B.4040607@interlog.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:58042 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751510AbbAEQfL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jan 2015 11:35:11 -0500
+Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <549CC66F.2070606@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <54A2D07B.4040607@interlog.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Douglas Gilbert <dgilbert@interlog.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Christoph Hellwig <hch@lst.de>, "Kenneth R. Crudup" <kenny@panix.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 List-Id: linux-ide@vger.kernel.org
-To: nick <xerofoify@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello, sorry about the delay.
+On Tue, Dec 30, 2014 at 11:19:07AM -0500, Douglas Gilbert wrote:
+> In SCSI, the VPD page 0xb0 (Block limits) has a "Maximum transfer
+> length" field (32 bits long). Its units are logical blocks. Useful
+> if >0 as 0 means "unreported".
+>
+> USB to SATA bridges should comply with SAT. However SAT and SAT-2
+> don't even mention that VPD page. SAT-3 and SAT-4 mention that page
+> but have "unspecified" next to that field. Basically useless.
 
-On Thu, Dec 25, 2014 at 09:22:39PM -0500, nick wrote:
-> 
-> Tejun,
-> So I can learn where my commit messages are wrong can you send me the updated commit message.
-
-The commit is at
-
- https://git.kernel.org/cgit/linux/kernel/git/tj/libata.git/commit/?h=for-3.20&id=0628ee7c81a8ced9b10f9ee300707f7f79fdecf1
-
-The main thing is that the subject is made more specific.
-
-Thanks.
-
--- 
-tejun
+Maybe we need to cap the max sectors value to something fairly low
+unless we have the block limits VPD page and it contains useful information.
