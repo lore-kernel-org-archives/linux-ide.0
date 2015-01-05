@@ -1,55 +1,50 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v1] libata: export ata_get_cmd_descript()
-Date: Mon, 5 Jan 2015 11:21:45 -0500
-Message-ID: <20150105162145.GO15833@htj.dyndns.org>
-References: <1418397391-13668-1-git-send-email-andriy.shevchenko@linux.intel.com>
- <548B2524.9050806@cogentembedded.com>
- <1418405747.17201.64.camel@linux.intel.com>
+Subject: Re: [PATCH] libata: Whitelist SSDs that are known to properly return
+ zeroes after TRIM
+Date: Mon, 5 Jan 2015 11:28:30 -0500
+Message-ID: <20150105162830.GP15833@htj.dyndns.org>
+References: <yq18uiojfq9.fsf@sermon.lab.mkp.net>
+ <20141204170611.GB2995@htj.dyndns.org>
+ <yq14mtahmil.fsf@sermon.lab.mkp.net>
+ <20141205145148.GI4080@htj.dyndns.org>
+ <1418184578.2121.3.camel@HansenPartnership.com>
+ <20141210142927.GA6294@htj.dyndns.org>
+ <yq1oarbcj6f.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f182.google.com ([209.85.216.182]:46075 "EHLO
-	mail-qc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751011AbbAEQVt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jan 2015 11:21:49 -0500
+Received: from mail-qg0-f49.google.com ([209.85.192.49]:40558 "EHLO
+	mail-qg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753428AbbAEQ2e (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jan 2015 11:28:34 -0500
+Received: by mail-qg0-f49.google.com with SMTP id f51so2409681qge.22
+        for <linux-ide@vger.kernel.org>; Mon, 05 Jan 2015 08:28:33 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <1418405747.17201.64.camel@linux.intel.com>
+In-Reply-To: <yq1oarbcj6f.fsf@sermon.lab.mkp.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-ide@vger.kernel.org
 
-On Fri, Dec 12, 2014 at 07:35:47PM +0200, Andy Shevchenko wrote:
-> On Fri, 2014-12-12 at 20:25 +0300, Sergei Shtylyov wrote:
-> > Hello.
-> > 
-> > On 12/12/2014 06:16 PM, Andy Shevchenko wrote:
-> > 
-> > > The driver sata_dwc_460ex is using this symbol. To build it as a module we have
-> > > to have the symbol exported. This patch adds EXPORT_SYMBOL() macro for that.
-> > 
-> > > Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> > > ---
-> > >   drivers/ata/libata-eh.c | 1 +
-> > >   1 file changed, 1 insertion(+)
-> > 
-> > > diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-> > > index 3dbec89..74fef87 100644
-> > > --- a/drivers/ata/libata-eh.c
-> > > +++ b/drivers/ata/libata-eh.c
-> > > @@ -2389,6 +2389,7 @@ const char *ata_get_cmd_descript(u8 command)
-> > >
-> > >   	return NULL;
-> > >   }
-> > > +EXPORT_SYMBOL(ata_get_cmd_descript);
-> > 
-> >     Why not EXPORT_SYMBOL_GPL()?
+Hello, Martin.
+
+On Wed, Dec 10, 2014 at 04:02:32PM -0500, Martin K. Petersen wrote:
+> >>>>> "Tejun" == Tejun Heo <tj@kernel.org> writes:
 > 
-> Some of the symbols are exported in that way. I think better to wait the
-> maintainer to tell which is preferred there.
+> Tejun> If raid consistency truly is the only reason for this, that
+> Tejun> approach seems way more fruitful to me than playing this optional
+> Tejun> feature game with hardware vendors which so often leads to
+> Tejun> eventual abysmal outcomes.
+> 
+> The other use case is the filesystem one where it is common to zero
+> block ranges for bitmaps, etc. In many workloads there's is a
+> significant win to trimming over writing out many blocks of zeroes.
 
-I don't really care.  As the sole user is an in-kernel module, I'm
-gonna append _GPL for now.
+Isn't that kinda niche and specialized tho?  Besides, in this use
+case, the kernel is essentially just serving as the whitelist and
+nothing else.  Userland would have to issue TRIMs directly.  I'm not
+against this patch being merged but this really looks like an
+ultimately futile effort to me.
 
 Thanks.
 
