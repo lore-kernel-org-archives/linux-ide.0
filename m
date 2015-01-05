@@ -1,27 +1,24 @@
 From: Christoph Hellwig <hch@lst.de>
 Subject: Re: Issues with commit 34b48db6 ("block: remove artifical
 	max_hw_sectors cap")
-Date: Mon, 5 Jan 2015 18:18:38 +0100
-Message-ID: <20150105171838.GB30028@lst.de>
-References: <Pine.LNX.4.44L0.1412301017060.30572-100000@netrider.rowland.org> <54A2D07B.4040607@interlog.com>
+Date: Mon, 5 Jan 2015 18:19:40 +0100
+Message-ID: <20150105171940.GC30028@lst.de>
+References: <Pine.LNX.4.44L0.1412301017060.30572-100000@netrider.rowland.org> <54A2D07B.4040607@interlog.com> <alpine.DEB.2.10.1412300830420.12831@tosh-p75a>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <54A2D07B.4040607@interlog.com>
+In-Reply-To: <alpine.DEB.2.10.1412300830420.12831@tosh-p75a>
 Sender: linux-scsi-owner@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Christoph Hellwig <hch@lst.de>, "Kenneth R. Crudup" <kenny@panix.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
+To: "Kenneth R. Crudup" <kenny@panix.com>
+Cc: Douglas Gilbert <dgilbert@interlog.com>, Alan Stern <stern@rowland.harvard.edu>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, Dec 30, 2014 at 11:19:07AM -0500, Douglas Gilbert wrote:
-> In SCSI, the VPD page 0xb0 (Block limits) has a "Maximum transfer
-> length" field (32 bits long). Its units are logical blocks. Useful
-> if >0 as 0 means "unreported".
->
-> USB to SATA bridges should comply with SAT. However SAT and SAT-2
-> don't even mention that VPD page. SAT-3 and SAT-4 mention that page
-> but have "unspecified" next to that field. Basically useless.
+On Tue, Dec 30, 2014 at 08:36:34AM -0800, Kenneth R. Crudup wrote:
+> OP here. FWIW, this is what I get when running that command on the SCSI
+> generic device that corresponds to the USB-3 (non-UAS) disk[1] that had the
+> issue:
 
-Maybe we need to cap the max sectors value to something fairly low
-unless we have the block limits VPD page and it contains useful information.
+So it looks like this one actually provides sane values, but we don't
+we never even look at EVPD pages for usb devices due to the wrong SCSI
+level?
