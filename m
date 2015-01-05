@@ -1,113 +1,50 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH 1/2] ahci_xgene: Fix the xgene_ahci_restart_engine function
- to support Port Multiplier for APM X-Gene SoC AHCI SATA host controller driver.
-Date: Mon, 05 Jan 2015 17:50:23 +0300
-Message-ID: <54AAA4AF.8030503@cogentembedded.com>
-References: <1420453305-15986-1-git-send-email-stripathi@apm.com> <1420453305-15986-2-git-send-email-stripathi@apm.com>
+From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
+Subject: Re: inic162x
+Date: Mon, 5 Jan 2015 15:16:17 +0000
+Message-ID: <20150105151617.0a5a68d9@lxorguk.ukuu.org.uk>
+References: <2171761.W9v3jf2zpF@c21>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lb0-f172.google.com ([209.85.217.172]:52767 "EHLO
-	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753268AbbAEOuU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jan 2015 09:50:20 -0500
-Received: by mail-lb0-f172.google.com with SMTP id z12so10063182lbi.17
-        for <linux-ide@vger.kernel.org>; Mon, 05 Jan 2015 06:50:19 -0800 (PST)
-In-Reply-To: <1420453305-15986-2-git-send-email-stripathi@apm.com>
+Received: from 251.110.2.81.in-addr.arpa ([81.2.110.251]:60513 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753516AbbAEPQ1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jan 2015 10:16:27 -0500
+In-Reply-To: <2171761.W9v3jf2zpF@c21>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Suman Tripathi <stripathi@apm.com>, olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com
+To: mtths@nurfuerspam.de
+Cc: linux-ide@vger.kernel.org
 
-Hello.
+On Sat, 03 Jan 2015 21:25:28 +0100
+mtths@nurfuerspam.de wrote:
 
-On 1/5/2015 1:21 PM, Suman Tripathi wrote:
+> Hi,
+> 
+> a simple question about the module sata_inic162x: Is there a chance that the 
+> driver will reach a stable state?
+> 
+> A card with such a controller was used mainly for video recording - and, yes, 
+> there were errors ... After a short test it seemed that copying big files or 
+> many small files resulted in corrupted copies; only writing infrequently small 
+> files was okay. This applies to both channels / ports.
+> 
+> The card is an equip 111817 (S/N: 11072600052): 1 internal + 1 external port
+> Initio INIC-1622TA2
+> RAID-BIOS: version 1.11
+> lspci: 1101:1622
+> 
+> If you want additional information or tests, let me know.
+> (On the other hand: Mark it as broken - there are inexpensive alternatives 
+> ...)
 
-    Your patch summary seems too long.
+There are people it works very well for, and a few it doesn't. It's hard
+to know if its the drive, the card, the software ore some combination of
+all three.
 
-> This patch implements the function xgene_ahci_poll_reg_val to poll
-> PxCI for multiple IDENTIFY DEVICE commands to finish before
-> restarting the DMA engine in case of Port Multiplier.
+Whether anyone ever fixes those cases depends upon whether anyone who
+hits it wants to spend some considerable time trying to debug it all and
+submit patches.
 
-> Signed-off-by: Suman Tripathi <stripathi@apm.com>
-> ---
->   drivers/ata/ahci_xgene.c | 56 ++++++++++++++++++++++++++++++++++++++++++++++--
->   1 file changed, 54 insertions(+), 2 deletions(-)
-
-> diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-> index 0f8538f..2180223 100644
-> --- a/drivers/ata/ahci_xgene.c
-> +++ b/drivers/ata/ahci_xgene.c
-> @@ -105,17 +105,69 @@ static int xgene_ahci_init_memram(struct xgene_ahci_context *ctx)
->   }
->
->   /**
-> + * xgene_ahci_poll_reg_val- Poll a register on a specific value.
-> + * @ap : ATA port of interest.
-> + * @reg : Register of interest.
-> + * @val : Value to be attained.
-> + * @interval : waiting interval for polling.
-> + * @timeout : timeout for achieving the value.
-> + */
-> +static int xgene_ahci_poll_reg_val(struct ata_port *ap,
-> +				   void __iomem *reg, unsigned
-> +				   int val, unsigned long interval,
-> +				   unsigned long timeout)
-> +{
-> +	unsigned long deadline;
-> +	unsigned int tmp;
-> +
-> +	tmp = ioread32(reg);
-> +	deadline = ata_deadline(jiffies, timeout);
-> +
-> +	while ((tmp != val) && (time_before(jiffies, deadline))) {
-
-    Parens around the operands of && are not needed, especially around the 
-right one.
-
-> +		ata_msleep(ap, interval);
-> +		tmp = ioread32(reg);
-> +	}
-> +
-> +	return tmp;
-> +}
-> +
-> +/**
->    * xgene_ahci_restart_engine - Restart the dma engine.
->    * @ap : ATA port of interest
->    *
-> - * Restarts the dma engine inside the controller.
-> + * Waits for completion of multiple commands and restarts
-> + * the DMA engine inside the controller.
->    */
->   static int xgene_ahci_restart_engine(struct ata_port *ap)
->   {
->   	struct ahci_host_priv *hpriv = ap->host->private_data;
-> +	struct ahci_port_priv *pp = ap->private_data;
-> +	void __iomem *port_mmio = ahci_port_base(ap);
-> +	u32 fbs;
-> +
-> +	/*
-> +	 * In case of PMP multiple IDENTIFY DEVICE commands can be
-> +	 * issued inside PxCI. So need to poll PxCI for the
-> +	 * completion of outstanding IDENTIFY DEVICE commands before
-> +	 * we restart the DMA engine.
-> +	 */
-> +	if (xgene_ahci_poll_reg_val(ap, port_mmio +
-> +				    PORT_CMD_ISSUE, 0x0, 1, 100))
-> +		  return -EBUSY;
->
->   	ahci_stop_engine(ap);
->   	ahci_start_fis_rx(ap);
-> +
-> +	/*
-> +	 * Enable the PxFBS.FBS_EN bit as it
-> +	 * gets cleared due to stop engine.
-
-    s/stop/stopping the/.
-
-[...]
-
-MBR, Sergei
-
+Alan
