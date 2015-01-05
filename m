@@ -1,24 +1,58 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: Issues with commit 34b48db6 ("block: remove artifical
-	max_hw_sectors cap")
-Date: Mon, 5 Jan 2015 18:19:40 +0100
-Message-ID: <20150105171940.GC30028@lst.de>
-References: <Pine.LNX.4.44L0.1412301017060.30572-100000@netrider.rowland.org> <54A2D07B.4040607@interlog.com> <alpine.DEB.2.10.1412300830420.12831@tosh-p75a>
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: Re: [PATCH v1] libata: export ata_get_cmd_descript()
+Date: Mon, 05 Jan 2015 19:44:45 +0200
+Message-ID: <1420479885.12456.21.camel@linux.intel.com>
+References: <1418397391-13668-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	 <548B2524.9050806@cogentembedded.com>
+	 <1418405747.17201.64.camel@linux.intel.com>
+	 <20150105162145.GO15833@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.10.1412300830420.12831@tosh-p75a>
-Sender: linux-scsi-owner@vger.kernel.org
-To: "Kenneth R. Crudup" <kenny@panix.com>
-Cc: Douglas Gilbert <dgilbert@interlog.com>, Alan Stern <stern@rowland.harvard.edu>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20150105162145.GO15833@htj.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, Dec 30, 2014 at 08:36:34AM -0800, Kenneth R. Crudup wrote:
-> OP here. FWIW, this is what I get when running that command on the SCSI
-> generic device that corresponds to the USB-3 (non-UAS) disk[1] that had the
-> issue:
+On Mon, 2015-01-05 at 11:21 -0500, Tejun Heo wrote:
+> On Fri, Dec 12, 2014 at 07:35:47PM +0200, Andy Shevchenko wrote:
+> > On Fri, 2014-12-12 at 20:25 +0300, Sergei Shtylyov wrote:
+> > > Hello.
+> > > 
+> > > On 12/12/2014 06:16 PM, Andy Shevchenko wrote:
+> > > 
+> > > > The driver sata_dwc_460ex is using this symbol. To build it as a module we have
+> > > > to have the symbol exported. This patch adds EXPORT_SYMBOL() macro for that.
+> > > 
+> > > > Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> > > > ---
+> > > >   drivers/ata/libata-eh.c | 1 +
+> > > >   1 file changed, 1 insertion(+)
+> > > 
+> > > > diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+> > > > index 3dbec89..74fef87 100644
+> > > > --- a/drivers/ata/libata-eh.c
+> > > > +++ b/drivers/ata/libata-eh.c
+> > > > @@ -2389,6 +2389,7 @@ const char *ata_get_cmd_descript(u8 command)
+> > > >
+> > > >   	return NULL;
+> > > >   }
+> > > > +EXPORT_SYMBOL(ata_get_cmd_descript);
+> > > 
+> > >     Why not EXPORT_SYMBOL_GPL()?
+> > 
+> > Some of the symbols are exported in that way. I think better to wait the
+> > maintainer to tell which is preferred there.
+> 
+> I don't really care.  As the sole user is an in-kernel module, I'm
+> gonna append _GPL for now.
+> 
 
-So it looks like this one actually provides sane values, but we don't
-we never even look at EVPD pages for usb devices due to the wrong SCSI
-level?
+I'm okay with GPL. Thanks!
+
+
+-- 
+Andy Shevchenko <andriy.shevchenko@intel.com>
+Intel Finland Oy
