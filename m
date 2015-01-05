@@ -1,50 +1,37 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata: Whitelist SSDs that are known to properly return
- zeroes after TRIM
-Date: Mon, 5 Jan 2015 11:28:30 -0500
-Message-ID: <20150105162830.GP15833@htj.dyndns.org>
-References: <yq18uiojfq9.fsf@sermon.lab.mkp.net>
- <20141204170611.GB2995@htj.dyndns.org>
- <yq14mtahmil.fsf@sermon.lab.mkp.net>
- <20141205145148.GI4080@htj.dyndns.org>
- <1418184578.2121.3.camel@HansenPartnership.com>
- <20141210142927.GA6294@htj.dyndns.org>
- <yq1oarbcj6f.fsf@sermon.lab.mkp.net>
+Subject: Re: [PATCH] drivers:ata: Fix spelling typos in libata-scsi.c and the
+ header file,ata.h
+Date: Mon, 5 Jan 2015 11:35:07 -0500
+Message-ID: <20150105163507.GQ15833@htj.dyndns.org>
+References: <1419219397-14627-1-git-send-email-xerofoify@gmail.com>
+ <20141225202856.GE22951@htj.dyndns.org>
+ <549CC66F.2070606@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f49.google.com ([209.85.192.49]:40558 "EHLO
-	mail-qg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753428AbbAEQ2e (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jan 2015 11:28:34 -0500
-Received: by mail-qg0-f49.google.com with SMTP id f51so2409681qge.22
-        for <linux-ide@vger.kernel.org>; Mon, 05 Jan 2015 08:28:33 -0800 (PST)
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:58042 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751510AbbAEQfL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jan 2015 11:35:11 -0500
 Content-Disposition: inline
-In-Reply-To: <yq1oarbcj6f.fsf@sermon.lab.mkp.net>
+In-Reply-To: <549CC66F.2070606@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-ide@vger.kernel.org
+To: nick <xerofoify@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello, Martin.
+Hello, sorry about the delay.
 
-On Wed, Dec 10, 2014 at 04:02:32PM -0500, Martin K. Petersen wrote:
-> >>>>> "Tejun" == Tejun Heo <tj@kernel.org> writes:
+On Thu, Dec 25, 2014 at 09:22:39PM -0500, nick wrote:
 > 
-> Tejun> If raid consistency truly is the only reason for this, that
-> Tejun> approach seems way more fruitful to me than playing this optional
-> Tejun> feature game with hardware vendors which so often leads to
-> Tejun> eventual abysmal outcomes.
-> 
-> The other use case is the filesystem one where it is common to zero
-> block ranges for bitmaps, etc. In many workloads there's is a
-> significant win to trimming over writing out many blocks of zeroes.
+> Tejun,
+> So I can learn where my commit messages are wrong can you send me the updated commit message.
 
-Isn't that kinda niche and specialized tho?  Besides, in this use
-case, the kernel is essentially just serving as the whitelist and
-nothing else.  Userland would have to issue TRIMs directly.  I'm not
-against this patch being merged but this really looks like an
-ultimately futile effort to me.
+The commit is at
+
+ https://git.kernel.org/cgit/linux/kernel/git/tj/libata.git/commit/?h=for-3.20&id=0628ee7c81a8ced9b10f9ee300707f7f79fdecf1
+
+The main thing is that the subject is made more specific.
 
 Thanks.
 
