@@ -1,55 +1,67 @@
-From: "Kenneth R. Crudup" <kenny@panix.com>
-Subject: Re: Issues with commit 34b48db6 ("block: remove artifical max_hw_sectors cap")
-Date: Mon, 05 Jan 2015 12:19:52 -0800
-Message-ID: <9196E79D-9938-4704-AB14-523297F9019F@panix.com>
-References: <Pine.LNX.4.44L0.1501051452440.1101-100000@iolanthe.rowland.org>
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [V2 PATCH 0/2] Introduce ACPI support for ahci_platform driver
+Date: Mon, 5 Jan 2015 15:11:13 -0600
+Message-ID: <1420492275-6878-1-git-send-email-Suravee.Suthikulpanit@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailbackend.panix.com ([166.84.1.89]:36787 "EHLO
-	mailbackend.panix.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754170AbbAEUT5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Jan 2015 15:19:57 -0500
-In-Reply-To: <Pine.LNX.4.44L0.1501051452440.1101-100000@iolanthe.rowland.org>
+Received: from mail-bn1on0146.outbound.protection.outlook.com ([157.56.110.146]:22688
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753922AbbAEVLg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 5 Jan 2015 16:11:36 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>, Christoph Hellwig <hch@lst.de>
-Cc: Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
+To: rjw@rjwysocki.net, lenb@kernel.org, hdegoede@redhat.com, tj@kernel.org, arnd@arndb.de, mjg59@srcf.ucam.org, grant.likely@linaro.org
+Cc: hanjun.guo@linaro.org, al.stone@linaro.org, graeme.gregory@linaro.org, leo.duran@amd.com, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org, Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-I will later tonight. For now, I'm using 3.18.x (for another reason), which doesn't have this commit.
+This patch series introduce ACPI support for non-PCI AHCI platform driver.
+Existing ACPI support for AHCI assumes the device controller is a PCI device.
 
-My Linus-latest tree has a "fix" that imposed a hard limit of 32767, which worked for me then.
+Also, since there is no ACPI _HID/_CID for generic AHCI controller, the driver
+could not use them for matching devices. Therefore, this patch introduces
+a mechanism for drivers to match devices using ACPI _CLS method.
 
-On January 5, 2015 12:07:56 PM PST, Alan Stern <stern@rowland.harvard.edu> wrote:
->On Mon, 5 Jan 2015, Christoph Hellwig wrote:
->
->> On Tue, Dec 30, 2014 at 08:36:34AM -0800, Kenneth R. Crudup wrote:
->> > OP here. FWIW, this is what I get when running that command on the
->SCSI
->> > generic device that corresponds to the USB-3 (non-UAS) disk[1] that
->had the
->> > issue:
->> 
->> So it looks like this one actually provides sane values, but we don't
->> we never even look at EVPD pages for usb devices due to the wrong
->SCSI
->> level?
->
->According to James Bottomley, it doesn't matter much what the EVPD
->pages say.  The limitation is imposed by the USB _bridge_, whereas the
->EVPD data indicates what the _drive_ is capable of.  So we can't rely
->on that data anyway.  (Although if the EVPD data indicates a limit 
->smaller than the bridge can handle, then we'd need to pay attention to 
->it.)
->
->The patch I posted sets a general limit of 32 MB for USB drives that 
->don't have a quirk flag for a smaller limit.
->
->Kenneth, have you tried that patch?  Does it fix your problem?
->
->Alan Stern
+This patch series is rebased from and tested with:
+
+    http://git.linaro.org/leg/acpi/acpi.git acpi-5.1-v7
+
+This topic was discussed earlier here (as part of introducing support for
+AMD Seattle SATA controller):
+
+    http://marc.info/?l=linux-arm-kernel&m=141083492521584&w=2
+
+NOTE:
+	* PATCH 2/2 has already been Acked-by Tejun Heo in V1. I only made
+	  a minor renaming of the acpi_cls to acpi_match_cls for clarity
+	  in V2. It probably should be routed together with the PATCH 1/2
+	  (once acked) since it defines the new member in the struct.
+
+Changes V1 (https://lkml.org/lkml/2014/12/19/345)
+	* Rebased to 3.19.0-rc2
+	* Change from acpi_cls in device_driver to acpi_match_cls (Hanjun comment)
+	* Change the matching logic in acpi_driver_match_device() due to the new
+	  special PRP0001 _HID.
+	* Simplify the return type of acpi_match_device_cls() to boolean.
+
+Changes from RFC (https://lkml.org/lkml/2014/12/17/446)
+	* Remove #ifdef and make non-ACPI version of the acpi_match_device_cls
+	  as inline. (per Arnd)
+	* Simplify logic to retrieve and evaluate _CLS handle. (per Hanjun)
+
+Suravee Suthikulpanit (2):
+  ACPI / scan: Add support for ACPI _CLS device matching
+  ata: ahci_platform: Add ACPI _CLS matching
+
+ drivers/acpi/scan.c             | 79 +++++++++++++++++++++++++++++++++++++++--
+ drivers/ata/Kconfig             |  2 +-
+ drivers/ata/ahci_platform.c     |  3 ++
+ include/acpi/acnames.h          |  1 +
+ include/linux/acpi.h            | 10 ++++++
+ include/linux/device.h          |  1 +
+ include/linux/mod_devicetable.h |  6 ++++
+ 7 files changed, 98 insertions(+), 4 deletions(-)
 
 -- 
-Sent from my 2014 Galaxy Note 10.1
+1.9.3
+
