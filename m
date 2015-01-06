@@ -1,43 +1,53 @@
-From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-Subject: attempting task abort with block: remove artifical max_hw_sectors
- cap
-Date: Tue, 06 Jan 2015 12:16:35 +0100
-Message-ID: <54ABC413.6090000@profihost.ag>
+From: Gregory CLEMENT <gregory.clement@free-electrons.com>
+Subject: Re: [PATCH 1/2] regulator: core: Add a sanity check on the regulator_
+ enable/disable functions
+Date: Tue, 06 Jan 2015 12:36:02 +0100
+Message-ID: <54ABC8A2.7090905@free-electrons.com>
+References: <1419614799-5770-1-git-send-email-gregory.clement@free-electrons.com> <1419614799-5770-2-git-send-email-gregory.clement@free-electrons.com> <20141229154030.GJ17800@sirena.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ph.de-nserver.de ([85.158.179.214]:55353 "EHLO
-	mail-ph.de-nserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755003AbbAFLQh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Jan 2015 06:16:37 -0500
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20141229154030.GJ17800@sirena.org.uk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mark Brown <broonie@kernel.org>
+Cc: Liam Girdwood <lgirdwood@gmail.com>, linux-kernel@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Maxime Ripard <maxime.ripard@free-electrons.com>, Boris BREZILLON <boris.brezillon@free-electrons.com>, Lior Amsalem <alior@marvell.com>, Tawfik Bayouk <tawfik@marvell.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-Dear list,
+Hi Mark,
 
-while testing 595b8ecd47e4dde64f704bf78d8c9b97e070ac67 ([PATCH] block:
-remove artifical max_hw_sectors cap), i came around a problem with some
-crucial m500 ssds direct attached.
+On 29/12/2014 16:40, Mark Brown wrote:
+> On Fri, Dec 26, 2014 at 06:26:38PM +0100, Gregory CLEMENT wrote:
+>> These two functions use the pointer passed in parameter without any
+>> check. By adding a NULL pointer check, it allows using those functions
+>> from a driver in a more generic way. It is useful especially for the
+>> disable case if the regulator is optional.
+> 
+> No, especially in the case of regulator_enable() this is deliberate -
+> we're trying to ensure that if people are using regulators they're being
+> careful about it, checking error codes and so on.  I'd really want to
 
-With the patch applied, i see the following max_sectors_kb value:
-# cat /sys/block/sdi/queue/max_sectors_kb
-16383
+OK so at least we should check that the pointer is not NULL before using it
+and inform the user of it by using a WARNING() or even a BUG() instead of
+just let the kernel crash latter.
 
-But this results in the following error messages (at random time - most
-probably at high load):
+> see some persuasive use case for this.  What you're saying here sounds
+> like the consumer shouldn't be treating the regulator as optional at
+> all but should instead be using a normal regulator.
+> 
 
-Write(10): 2a 00 04 f9 db f0 00 0c d8 00
-scsi target0:0:7: handle(0x000a), sas_address(0x4433221107000000), phy(7)
-scsi target0:0:7: enclosure_logical_id(0x5003048016aee700), slot(5)
-sd 0:0:7:0: task abort: SUCCESS scmd(ffff88018c6b4700)
-sd 0:0:7:0: attempting task abort! scmd(ffff8807a12e6800)
-sd 0:0:7:0: [sdh] CDB: Read(10): 28 00 15 d4 f9 60 00 00 10 00
-scsi target0:0:7: handle(0x000a), sas_address(0x4433221107000000), phy(7)
-scsi target0:0:7: enclosure_logical_id(0x5003048016aee700), slot(5)
-sd 0:0:7:0: task abort: SUCCESS scmd(ffff8807a12e6800)
-sd 0:0:7:0: attempting task abort! scmd(ffff88078d989800)
-sd 0:0:7:0: [sdh] CDB: Read(10): 28 00 15 aa d2 f9 00 00 20 00
+Being able to deal with NULL pointer in the disable function is convenient
+and is done in other similar subsystems such as phy or clk for example. Instead
+of having a check on the NULL pointer in each driver, it seems more logical to
+do it directly in the disable function.
 
-Stefan
+Thanks for you review,
+
+Gregory
+
+
+-- 
+Gregory Clement, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
