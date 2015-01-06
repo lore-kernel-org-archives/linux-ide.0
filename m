@@ -1,61 +1,65 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v1 0/2] Add the PMP support for APM X-Gene SoC AHCI SATA
- Host Controller driver.
-Date: Tue, 6 Jan 2015 08:41:54 -0500
-Message-ID: <20150106134154.GC3077@htj.dyndns.org>
-References: <1420538536-32165-1-git-send-email-stripathi@apm.com>
- <20150106125252.GB3077@htj.dyndns.org>
- <CAOHikRBs=tH+MTPTmhDkEpV67grLWJK+6a-i8qeMyx_dJ9oyeA@mail.gmail.com>
- <CAOHikRAcSnD=5gvNkNZz8vUXTjkXQo8W4-KQcGajMeajxd73HQ@mail.gmail.com>
+From: Mark Brown <broonie@kernel.org>
+Subject: Re: [PATCH 1/2] regulator: core: Add a sanity check on the
+ regulator_ enable/disable functions
+Date: Tue, 6 Jan 2015 16:03:17 +0000
+Message-ID: <20150106160317.GB2634@sirena.org.uk>
+References: <1419614799-5770-1-git-send-email-gregory.clement@free-electrons.com>
+ <1419614799-5770-2-git-send-email-gregory.clement@free-electrons.com>
+ <20141229154030.GJ17800@sirena.org.uk>
+ <54ABC8A2.7090905@free-electrons.com>
+ <20150106120012.GW2634@sirena.org.uk>
+ <54ABD474.6060403@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="GhOjTe89cQfBPqWP"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f49.google.com ([209.85.216.49]:40500 "EHLO
-	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755190AbbAFNl5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Jan 2015 08:41:57 -0500
+Received: from mezzanine.sirena.org.uk ([106.187.55.193]:38671 "EHLO
+	mezzanine.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755186AbbAFQDl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Jan 2015 11:03:41 -0500
 Content-Disposition: inline
-In-Reply-To: <CAOHikRAcSnD=5gvNkNZz8vUXTjkXQo8W4-KQcGajMeajxd73HQ@mail.gmail.com>
+In-Reply-To: <54ABD474.6060403@free-electrons.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Suman Tripathi <stripathi@apm.com>
-Cc: Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Mark Langsdorf <mlangsdo@redhat.com>, Jon Masters <jcm@redhat.com>, patches@apm.com
+To: Gregory CLEMENT <gregory.clement@free-electrons.com>
+Cc: Liam Girdwood <lgirdwood@gmail.com>, linux-kernel@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Maxime Ripard <maxime.ripard@free-electrons.com>, Boris BREZILLON <boris.brezillon@free-electrons.com>, Lior Amsalem <alior@marvell.com>, Tawfik Bayouk <tawfik@marvell.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org
 
-On Tue, Jan 06, 2015 at 07:10:31PM +0530, Suman Tripathi wrote:
-> Hi ,
-> 
-> For more info here is the git log output before applying the patch.
-> 
-> git log
-> 
-> commit b84b25cb0900b99b28c742dd33101be779f58259
-> Merge: 0628ee7 36aae28
-> Author: Tejun Heo <tj@kernel.org>
-> Date:   Tue Jan 6 07:48:24 2015 -0500
->  Merge branch 'for-3.19-fixes' of git://git.kernel.org/pub/scm/linux/kernel/g
-> 
->     Pull to receive the following two ahci_xgene fixes for the planned
->     xgene PMP support patches.
-> 
->      5c0b8e0de76a8 ("ahci_xgene: Fix the endianess issue in APM X-Gene SoC AHCI
->      1102407bb714d ("ahci_xgene: Fix the DMA state machine lockup for the ATA_CM
-> 
->     Signed-off-by: Tejun Heo <tj@kernel.org>
-> 
-> commit 36aae28e3df4127e296f2680d65cb6310ce61021
-> Author: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> Date:   Fri Dec 12 17:16:31 2014 +0200
-> 
->     libata: export ata_get_cmd_descript()
-> 
->     The driver sata_dwc_460ex is using this symbol. To build it as a
->     module we have to have the symbol exported. This patch adds
-> Broken pipe
 
-Ah, this was me being stupid.  I was using the old patches.  Sorry
-about that.  Applied to libata/for-3.20.
+--GhOjTe89cQfBPqWP
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Thanks.
+On Tue, Jan 06, 2015 at 01:26:28PM +0100, Gregory CLEMENT wrote:
+> On 06/01/2015 13:00, Mark Brown wrote:
 
--- 
-tejun
+> > This really only applies if it's likely that some thing that always gets
+> > used if it's there might be missing which isn't the case for regulators,
+> > it's not at all common to have power supplies that might be missing and
+
+> Well the pattern the following pattern is very common in the drivers using
+> the regulator:
+
+> if (!IS_ERR(regulator_pointer)
+> 	regulator_disable(regulator_pointer);
+
+> So for me it was a good hint that we can factorize it.
+
+It is?  It shouldn't be...
+
+--GhOjTe89cQfBPqWP
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQEcBAEBAgAGBQJUrAdEAAoJECTWi3JdVIfQ2j0H/27+wdMimsjGY/cahnajFqfg
+DJwWlqOPFScKPJnHvf0UoIabaVEcyDrJKGUJ57PbYyIBrXF4iu+YN9ySqO0RSWrR
+hBm4dJNqNVPs5entlnoYtpxCwmaTCuiaqJcFKToQan90vu5N+PfHgHB4uGRA85p+
+2Ya6zScnJWMQNBcoZFILCE/6wD1ziuSNmQHA/+fNXITUTW01/HnXiImN/eSrul3n
+yXLg25QujA5Gu/Qj9tzOcBJko8exceft5vn+O2b5JymVZ9NV/wZ5us94NGkVJzkS
+V7O5GQ2N1QY7lpU4D7wyAGlD1eW0cBsXWUeK6J8XEFtVzLDW+AWqCru9MLlwPmw=
+=r6/y
+-----END PGP SIGNATURE-----
+
+--GhOjTe89cQfBPqWP--
