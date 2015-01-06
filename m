@@ -1,134 +1,73 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH libata/for-3.19-fixes] libata: clean up MAINTAINERS entries
-Date: Tue, 6 Jan 2015 18:41:41 -0500
-Message-ID: <20150106234141.GE24106@htj.dyndns.org>
+Subject: [PATCH libata/for-3.19-fixes] ata: add MAINTAINERS entry for libata
+ PATA drivers
+Date: Tue, 6 Jan 2015 18:44:57 -0500
+Message-ID: <20150106234457.GF24106@htj.dyndns.org>
+References: <27267694.oe0s2nj2E5@amdc1032>
+ <1417541347.3203.77.camel@acox1-desk.ger.corp.intel.com>
+ <2792593.liaEN2q9W3@amdc1032>
+ <2294122.mDExhRe5Kf@amdc1032>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f49.google.com ([209.85.216.49]:65148 "EHLO
-	mail-qa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752554AbbAFXlp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Jan 2015 18:41:45 -0500
+Received: from mail-qc0-f173.google.com ([209.85.216.173]:45953 "EHLO
+	mail-qc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751845AbbAFXpA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Jan 2015 18:45:00 -0500
+Received: by mail-qc0-f173.google.com with SMTP id i17so224757qcy.4
+        for <linux-ide@vger.kernel.org>; Tue, 06 Jan 2015 15:45:00 -0800 (PST)
 Content-Disposition: inline
+In-Reply-To: <2294122.mDExhRe5Kf@amdc1032>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: linux-ide@vger.kernel.org
 
->From 32ac7cb262177f58c7c8846311599460e5e7e3c5 Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj@kernel.org>
-Date: Tue, 6 Jan 2015 18:36:44 -0500
+>From c7fa056c820fef26de34d346b148943e717958a0 Mon Sep 17 00:00:00 2001
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Date: Tue, 2 Dec 2014 17:29:08 +0100
 
-Make all libata entries start with LIBATA and collect them in one
-place.  Driver specfic ones have the second SATA or PATA prefix.
+Add myself as the primary maintainer for libata PATA drivers.
 
+The merging process would remain unchanged with patches going
+through Tejun's tree.
+
+Cc: Alan Cox <alan@linux.intel.com>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Acked-by: Kyungmin Park <kyungmin.park@samsung.com>
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
-Applied to libata/for-3.19-fixes.
+Hello,
+
+Sorry about the delay.  I forgot about this one.  Applied the
+following to libata/for-3.19-fixes.
 
 Thanks.
 
- MAINTAINERS | 66 +++++++++++++++++++++++++++++++------------------------------
- 1 file changed, 34 insertions(+), 32 deletions(-)
+ MAINTAINERS | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
 diff --git a/MAINTAINERS b/MAINTAINERS
-index ddb9ac8..c20aebe 100644
+index c20aebe..5d7b387 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -754,13 +754,6 @@ L:	linux-media@vger.kernel.org
- S:	Maintained
- F:	drivers/media/i2c/aptina-pll.*
+@@ -5703,6 +5703,15 @@ S:	Maintained
+ F:	include/linux/pata_arasan_cf_data.h
+ F:	drivers/ata/pata_arasan_cf.c
  
--ARASAN COMPACT FLASH PATA CONTROLLER
--M:	Viresh Kumar <viresh.linux@gmail.com>
--L:	linux-ide@vger.kernel.org
--S:	Maintained
--F:	include/linux/pata_arasan_cf_data.h
--F:	drivers/ata/pata_arasan_cf.c
--
- ARC FRAMEBUFFER DRIVER
- M:	Jaya Kumar <jayalk@intworks.biz>
- S:	Maintained
-@@ -5693,6 +5686,40 @@ F:	drivers/lguest/
- F:	include/linux/lguest*.h
- F:	tools/lguest/
- 
-+LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)
++LIBATA PATA DRIVERS
++M:	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 +M:	Tejun Heo <tj@kernel.org>
 +L:	linux-ide@vger.kernel.org
 +T:	git git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git
 +S:	Maintained
-+F:	drivers/ata/
-+F:	include/linux/ata.h
-+F:	include/linux/libata.h
++F:	drivers/ata/pata_*.c
++F:	drivers/ata/ata_generic.c
 +
-+LIBATA PATA ARASAN COMPACT FLASH CONTROLLER
-+M:	Viresh Kumar <viresh.linux@gmail.com>
-+L:	linux-ide@vger.kernel.org
-+T:	git git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git
-+S:	Maintained
-+F:	include/linux/pata_arasan_cf_data.h
-+F:	drivers/ata/pata_arasan_cf.c
-+
-+LIBATA SATA AHCI PLATFORM devices support
-+M:	Hans de Goede <hdegoede@redhat.com>
-+M:	Tejun Heo <tj@kernel.org>
-+L:	linux-ide@vger.kernel.org
-+T:	git git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git
-+S:	Maintained
-+F:	drivers/ata/ahci_platform.c
-+F:	drivers/ata/libahci_platform.c
-+F:	include/linux/ahci_platform.h
-+
-+LIBATA SATA PROMISE TX2/TX4 CONTROLLER DRIVER
-+M:	Mikael Pettersson <mikpelinux@gmail.com>
-+L:	linux-ide@vger.kernel.org
-+T:	git git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git
-+S:	Maintained
-+F:	drivers/ata/sata_promise.*
-+
- LIBLOCKDEP
- M:	Sasha Levin <sasha.levin@oracle.com>
- S:	Maintained
-@@ -7566,12 +7593,6 @@ W:	http://wireless.kernel.org/en/users/Drivers/p54
- S:	Obsolete
- F:	drivers/net/wireless/prism54/
- 
--PROMISE SATA TX2/TX4 CONTROLLER LIBATA DRIVER
--M:	Mikael Pettersson <mikpelinux@gmail.com>
--L:	linux-ide@vger.kernel.org
--S:	Maintained
--F:	drivers/ata/sata_promise.*
--
- PS3 NETWORK SUPPORT
- M:	Geoff Levand <geoff@infradead.org>
- L:	netdev@vger.kernel.org
-@@ -8546,25 +8567,6 @@ S:	Maintained
- F:	drivers/misc/phantom.c
- F:	include/uapi/linux/phantom.h
- 
--SERIAL ATA (SATA) SUBSYSTEM
--M:	Tejun Heo <tj@kernel.org>
--L:	linux-ide@vger.kernel.org
--T:	git git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git
--S:	Supported
--F:	drivers/ata/
--F:	include/linux/ata.h
--F:	include/linux/libata.h
--
--SERIAL ATA AHCI PLATFORM devices support
--M:	Hans de Goede <hdegoede@redhat.com>
--M:	Tejun Heo <tj@kernel.org>
--L:	linux-ide@vger.kernel.org
--T:	git git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git
--S:	Supported
--F:	drivers/ata/ahci_platform.c
--F:	drivers/ata/libahci_platform.c
--F:	include/linux/ahci_platform.h
--
- SERVER ENGINES 10Gbps iSCSI - BladeEngine 2 DRIVER
- M:	Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
- L:	linux-scsi@vger.kernel.org
+ LIBATA SATA AHCI PLATFORM devices support
+ M:	Hans de Goede <hdegoede@redhat.com>
+ M:	Tejun Heo <tj@kernel.org>
 -- 
 2.1.0
 
