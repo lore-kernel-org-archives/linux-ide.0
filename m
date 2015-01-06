@@ -1,30 +1,43 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH v1 0/2] Add the PMP support for APM X-Gene SoC AHCI SATA Host Controller driver.
-Date: Tue,  6 Jan 2015 15:32:14 +0530
-Message-ID: <1420538536-32165-1-git-send-email-stripathi@apm.com>
+From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+Subject: attempting task abort with block: remove artifical max_hw_sectors
+ cap
+Date: Tue, 06 Jan 2015 12:16:35 +0100
+Message-ID: <54ABC413.6090000@profihost.ag>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from denmail01-v4020.amcc.com ([192.195.68.30]:48837 "EHLO
-	denmail01.apm.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752753AbbAFKDH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Jan 2015 05:03:07 -0500
+Received: from mail-ph.de-nserver.de ([85.158.179.214]:55353 "EHLO
+	mail-ph.de-nserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755003AbbAFLQh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Jan 2015 06:16:37 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>
+To: linux-ide@vger.kernel.org
 
-This patch set implements the PMP support for APM X-Gene SoC AHCI SATA Host Controller driver.
+Dear list,
 
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
----
+while testing 595b8ecd47e4dde64f704bf78d8c9b97e070ac67 ([PATCH] block:
+remove artifical max_hw_sectors cap), i came around a problem with some
+crucial m500 ssds direct attached.
 
-Suman Tripathi (2):
-  ahci_xgene: Implement the xgene_ahci_poll_reg_val to support PMP.
-  ahci_xgene: Implement the workaround to support PMP enumeration and
-    discovery.
+With the patch applied, i see the following max_sectors_kb value:
+# cat /sys/block/sdi/queue/max_sectors_kb
+16383
 
- drivers/ata/ahci_xgene.c | 189 +++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 182 insertions(+), 7 deletions(-)
+But this results in the following error messages (at random time - most
+probably at high load):
 
---
-1.8.2.1
+Write(10): 2a 00 04 f9 db f0 00 0c d8 00
+scsi target0:0:7: handle(0x000a), sas_address(0x4433221107000000), phy(7)
+scsi target0:0:7: enclosure_logical_id(0x5003048016aee700), slot(5)
+sd 0:0:7:0: task abort: SUCCESS scmd(ffff88018c6b4700)
+sd 0:0:7:0: attempting task abort! scmd(ffff8807a12e6800)
+sd 0:0:7:0: [sdh] CDB: Read(10): 28 00 15 d4 f9 60 00 00 10 00
+scsi target0:0:7: handle(0x000a), sas_address(0x4433221107000000), phy(7)
+scsi target0:0:7: enclosure_logical_id(0x5003048016aee700), slot(5)
+sd 0:0:7:0: task abort: SUCCESS scmd(ffff8807a12e6800)
+sd 0:0:7:0: attempting task abort! scmd(ffff88078d989800)
+sd 0:0:7:0: [sdh] CDB: Read(10): 28 00 15 aa d2 f9 00 00 20 00
 
+Stefan
