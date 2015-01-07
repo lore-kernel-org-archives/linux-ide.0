@@ -1,87 +1,67 @@
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] libata: Whitelist SSDs that are known to properly return
- zeroes after TRIM
-Date: Wed, 7 Jan 2015 15:15:37 +1100
-Message-ID: <20150107041537.GH31508@dastard>
-References: <yq18uiojfq9.fsf@sermon.lab.mkp.net>
- <20141204170611.GB2995@htj.dyndns.org>
- <yq14mtahmil.fsf@sermon.lab.mkp.net>
- <20141205145148.GI4080@htj.dyndns.org>
- <1418184578.2121.3.camel@HansenPartnership.com>
- <20141210142927.GA6294@htj.dyndns.org>
- <yq1oarbcj6f.fsf@sermon.lab.mkp.net>
- <20150105162830.GP15833@htj.dyndns.org>
- <yq1387n8nfv.fsf@sermon.lab.mkp.net>
- <20150107025455.GL3077@htj.dyndns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20150107025455.GL3077@htj.dyndns.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 3/4] sata_dwc_460ex: enable COMPILE_TEST for the driver
+Date: Wed,  7 Jan 2015 15:24:21 +0200
+Message-ID: <1420637062-15450-3-git-send-email-andriy.shevchenko@linux.intel.com>
+References: <1420637062-15450-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:20927 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753058AbbAGNYq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 7 Jan 2015 08:24:46 -0500
+In-Reply-To: <1420637062-15450-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mark Miesfeld <mmiesfeld@amcc.com>, Jeff Garzik <jgarzik@redhat.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-On Tue, Jan 06, 2015 at 09:54:55PM -0500, Tejun Heo wrote:
-> Hello, Martin.
-> 
-> On Tue, Jan 06, 2015 at 07:05:40PM -0500, Martin K. Petersen wrote:
-> > Tejun> Isn't that kinda niche and specialized tho?  
-> > 
-> > I don't think so. There are two reasons for zeroing block ranges:
-> > 
-> >  1) To ensure they contain zeroes on subsequent reads
-> > 
-> >  2) To preallocate them or anchor them down on thin provisioned devices
-> > 
-> > The filesystem folks have specifically asked to be able to make that
-> > distinction. Hence the patch that changes blkdev_issue_zeroout().
-> > 
-> > You really don't want to write out gobs and gobs of zeroes and cause
-> > unnecessary flash wear if all you care about is the blocks being in a
-> > deterministic state.
-> 
-> I think I'm still missing something.  Are there enough cases where
-> filesystems want to write out zeroes during operation?
+To test how the driver could be compiled in the non-native environment let's
+enable COMPILE_TEST for it. It would be useful for further work.
 
-IMO, yes.
+This patch enables COMPILE_TEST for the driver and fixes compilation errors on
+at least x86 platforms.
 
-w.r.t. thinp devices, we need to be able to guarantee that
-prellocated regions in the filesystem are actually backed by real
-blocks in the thinp device so we don't get ENOSPC from the thinp
-device. No filesystems do this yet because we don't have a mechanism
-for telling the lower layers "preallocate these blocks to zero".
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/ata/Kconfig          |  2 +-
+ drivers/ata/sata_dwc_460ex.c | 12 ++++++++++++
+ 2 files changed, 13 insertions(+), 1 deletion(-)
 
-The biggest issue is that we currently have no easy way to say
-"these blocks need to contain zeros, but we aren't actually using
-them yet". i.e. the filesystem code assumes that they contain zeros
-(e.g. in ext4 inode tables because mkfs used to zero them) if they
-haven't been used, so when it reads them it detects that
-initialisation is needed because the blocks are empty....
-
-FWIW, some filesystems need these regions to actually contain
-zeros because they can't track unwritten extents (e.g.
-gfs2). having sb_issue_zeroout() just do the right thing enables us
-to efficiently zero the regions they are preallocating...
-
-> Earlier in the
-> thread, it was mentioned that this is currently mostly useful for
-> raids which need the blocks actually cleared for checksum consistency,
-> which basically means that raid metadata handling isn't (yet) capable
-> of just marking those (parts of) stripes as unused.  If a filesystem
-> wants to read back zeros from data blocks, wouldn't it be just marking
-> the matching index as such?
-
-Not all filesystems can do this for user data (see gfs2 case above)
-and no linux filesystem tracks whether free space contains zeros or
-stale data. Hence if we want blocks to be zeroed on disk, we
-currently have to write zeros to them and hence they get pinned in
-devices as "used space" even though they may never get used again.
-
-Cheers,
-
-Dave.
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index a3a1360..5ed20e3 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -269,7 +269,7 @@ config ATA_PIIX
+ 
+ config SATA_DWC
+ 	tristate "DesignWare Cores SATA support"
+-	depends on 460EX
++	depends on 460EX || COMPILE_TEST
+ 	help
+ 	  This option enables support for the on-chip SATA controller of the
+ 	  AppliedMicro processor 460EX.
+diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+index 5c34395..c1723e0 100644
+--- a/drivers/ata/sata_dwc_460ex.c
++++ b/drivers/ata/sata_dwc_460ex.c
+@@ -48,6 +48,18 @@
+ #define DRV_NAME        "sata-dwc"
+ #define DRV_VERSION     "1.3"
+ 
++#ifndef out_le32
++#define out_le32(a, v)	__raw_writel(__cpu_to_le32(v), (void __iomem *)(a))
++#endif
++
++#ifndef in_le32
++#define in_le32(a)	__le32_to_cpu(__raw_readl((void __iomem *)(a)))
++#endif
++
++#ifndef NO_IRQ
++#define NO_IRQ		0
++#endif
++
+ /* SATA DMA driver Globals */
+ #define DMA_NUM_CHANS		1
+ #define DMA_NUM_CHAN_REGS	8
 -- 
-Dave Chinner
-david@fromorbit.com
+2.1.3
+
