@@ -1,47 +1,66 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v1 4/4] sata_dwc_460ex: fix most of the sparse warnings
-Date: Wed, 7 Jan 2015 10:36:32 -0500
-Message-ID: <20150107153632.GD4395@htj.dyndns.org>
-References: <1420637062-15450-1-git-send-email-andriy.shevchenko@linux.intel.com>
- <1420637062-15450-4-git-send-email-andriy.shevchenko@linux.intel.com>
+From: Feng Kan <fkan@apm.com>
+Subject: Re: [PATCH] sata: xgene: add ACPI support for APM X-Gene SATA ports
+Date: Wed, 7 Jan 2015 09:32:56 -0800
+Message-ID: <CAL85gmAHLk9XCbr-1+USmOKxd5O7iCxWX0vqSRf74Brn2pzESg@mail.gmail.com>
+References: <1418337070-17644-1-git-send-email-fkan@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f53.google.com ([209.85.192.53]:51382 "EHLO
-	mail-qg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753274AbbAGPgg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Jan 2015 10:36:36 -0500
-Received: by mail-qg0-f53.google.com with SMTP id l89so996002qgf.26
-        for <linux-ide@vger.kernel.org>; Wed, 07 Jan 2015 07:36:36 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <1420637062-15450-4-git-send-email-andriy.shevchenko@linux.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1418337070-17644-1-git-send-email-fkan@apm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: patches <patches@apm.com>, linux-ide@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>, Mark Salter <msalter@redhat.com>, tj@kernel.org, hdegoede@redhat.com
+Cc: Feng Kan <fkan@apm.com>
 List-Id: linux-ide@vger.kernel.org
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Mark Miesfeld <mmiesfeld@amcc.com>, Jeff Garzik <jgarzik@redhat.com>, linux-ide@vger.kernel.org
 
-On Wed, Jan 07, 2015 at 03:24:22PM +0200, Andy Shevchenko wrote:
-> There are a lot sparse warnings. Most of them related to __iomem keyword which
-> sometimes absent when it's needed and vise versa.
-> 
-> The patch fixes most of the warnings.
-> 
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Just want to ping this again.
 
-Applied 1-4 to libata/for-3.19-fixes.  One nit below.
+Happy new year
 
-> @@ -1630,7 +1629,7 @@ static struct scsi_host_template sata_dwc_sht = {
->  	 * max of 1. This will get fixed in in a future release.
->  	 */
->  	.sg_tablesize		= LIBATA_MAX_PRD,
-> -	.can_queue		= ATA_DEF_QUEUE,	/* ATA_MAX_QUEUE */
-> +	/* .can_queue		= ATA_MAX_QUEUE, */
-
-This part isn't explained by the patch description.  I added it while
-applying but please make sure that the patch descriptions are
-comprehensive.
-
-Thanks!
-
--- 
-tejun
+On Thu, Dec 11, 2014 at 2:31 PM, Feng Kan <fkan@apm.com> wrote:
+> This adds ACPI support for the APM X-Gene SATA ports. When the system
+> boots using ACPI table, the SATA ports are able to configure using the
+> values supplied by the ACPI table rather than the DTS.
+>
+> Signed-off-by: Feng Kan <fkan@apm.com>
+> ---
+>  drivers/ata/ahci_xgene.c | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
+>
+> diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
+> index d0c851a..4951392 100644
+> --- a/drivers/ata/ahci_xgene.c
+> +++ b/drivers/ata/ahci_xgene.c
+> @@ -22,6 +22,7 @@
+>   * NOTE: PM support is not currently available.
+>   *
+>   */
+> +#include <linux/acpi.h>
+>  #include <linux/module.h>
+>  #include <linux/platform_device.h>
+>  #include <linux/ahci_platform.h>
+> @@ -521,6 +522,14 @@ disable_resources:
+>         return rc;
+>  }
+>
+> +#ifdef CONFIG_ACPI
+> +static const struct acpi_device_id xgene_ahci_acpi_match[] = {
+> +       { "APMC0D0D", },
+> +       { }
+> +};
+> +MODULE_DEVICE_TABLE(acpi, xgene_ahci_acpi_match);
+> +#endif
+> +
+>  static const struct of_device_id xgene_ahci_of_match[] = {
+>         {.compatible = "apm,xgene-ahci"},
+>         {},
+> @@ -534,6 +543,7 @@ static struct platform_driver xgene_ahci_driver = {
+>                 .name = "xgene-ahci",
+>                 .owner = THIS_MODULE,
+>                 .of_match_table = xgene_ahci_of_match,
+> +               .acpi_match_table = ACPI_PTR(xgene_ahci_acpi_match),
+>         },
+>  };
+>
+> --
+> 1.9.1
+>
