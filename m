@@ -1,51 +1,66 @@
-From: Phillip Susi <psusi@ubuntu.com>
-Subject: Re: PMP product ID mismatch
-Date: Tue, 06 Jan 2015 21:40:37 -0500
-Message-ID: <54AC9CA5.1080504@ubuntu.com>
-References: <54AB3992.5090106@ubuntu.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] libata: Whitelist SSDs that are known to properly return
+ zeroes after TRIM
+Date: Tue, 6 Jan 2015 21:54:55 -0500
+Message-ID: <20150107025455.GL3077@htj.dyndns.org>
+References: <yq18uiojfq9.fsf@sermon.lab.mkp.net>
+ <20141204170611.GB2995@htj.dyndns.org>
+ <yq14mtahmil.fsf@sermon.lab.mkp.net>
+ <20141205145148.GI4080@htj.dyndns.org>
+ <1418184578.2121.3.camel@HansenPartnership.com>
+ <20141210142927.GA6294@htj.dyndns.org>
+ <yq1oarbcj6f.fsf@sermon.lab.mkp.net>
+ <20150105162830.GP15833@htj.dyndns.org>
+ <yq1387n8nfv.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cdptpa-outbound-snat.email.rr.com ([107.14.166.226]:41579 "EHLO
-	cdptpa-oedge-vip.email.rr.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755089AbbAGCkv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Jan 2015 21:40:51 -0500
-In-Reply-To: <54AB3992.5090106@ubuntu.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <yq1387n8nfv.fsf@sermon.lab.mkp.net>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA512
+Hello, Martin.
 
-On 01/05/2015 08:25 PM, Phillip Susi wrote:
-> I'm getting a PMP product ID mismatch error after the two drives in
-> my esata dock are attached to the scsi layer and IO fails to them
-> and they are then offlined.  When I connect the dock to another
-> controller it works fine.  What could cause this?  One thing I
-> noticed is that the good controller does not support FIS Based
-> Switching, but the bad one does.  Is there a way to disable fbs to
-> see if that fixes it?
+On Tue, Jan 06, 2015 at 07:05:40PM -0500, Martin K. Petersen wrote:
+> Tejun> Isn't that kinda niche and specialized tho?  
+> 
+> I don't think so. There are two reasons for zeroing block ranges:
+> 
+>  1) To ensure they contain zeroes on subsequent reads
+> 
+>  2) To preallocate them or anchor them down on thin provisioned devices
+> 
+> The filesystem folks have specifically asked to be able to make that
+> distinction. Hence the patch that changes blkdev_issue_zeroout().
+> 
+> You really don't want to write out gobs and gobs of zeroes and cause
+> unnecessary flash wear if all you care about is the blocks being in a
+> deterministic state.
 
-So I patched the kernel to disable FBS and it works now.  Looks like
-maybe this controller needs a quirk?
+I think I'm still missing something.  Are there enough cases where
+filesystems want to write out zeroes during operation?  Earlier in the
+thread, it was mentioned that this is currently mostly useful for
+raids which need the blocks actually cleared for checksum consistency,
+which basically means that raid metadata handling isn't (yet) capable
+of just marking those (parts of) stripes as unused.  If a filesystem
+wants to read back zeros from data blocks, wouldn't it be just marking
+the matching index as such?  And if you take out the zeroing case,
+trims are just trims and whether they return 0 afterwards or not is
+irrelevant.
 
-09:00.0 0106: 1b4b:9172 (rev 11)
+There sure can be use cases where zeroing fast and securely make
+noticeable difference but the cases put forth till this point seem
+relatively weak.  I mean, after all, requiring trim to zero the blocks
+is essentially pushing down that amount of metadata management to the
+device - the device would do the exactly same thing.  Pushing it down
+the layers can definitely be beneficial especially when there's no
+agreed-upon metadata on the medium (so, mkfs time), but it seems kinda
+superflous during normal operation.  What am I missing?
 
-aka:
+Thanks.
 
-09:00.0 SATA controller: Marvell Technology Group Ltd. 88SE9172 SATA
-6Gb/s Controller (rev 11)
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQEbBAEBCgAGBQJUrJycAAoJENRVrw2cjl5RcRcH+OOurYXJo8p7EHoECgNwy/rV
-eP4cBSP+A3Rz7cDjvhRBl03VTQgZa0wvKCCyDwDoukRMRSWBSOdh7pEKsd+4/Hv6
-O2IXtZDFS662QCxCSlpNKcPMUKi2N67jlOgTBtXi6x5hwxZcw7VM6akLieOhv+Jg
-qHzGGSOnRfqZS+ir7r50Y15VN2nytg5zk9c061hgwW1+EqsS5aWHdjAelDAQEKk8
-Wy0b/JN2zanc/eaKkLn+QWa3LFfzJ3YM5zUEDr2C56Ptkpv20rztLyIiIg5+g02A
-CEPG4slyDGt4wYxgB/kWe1Ya8iEL8nx0aYAVIcMAZzjMcHauKsKg8gFnZhGPPw==
-=URYD
------END PGP SIGNATURE-----
+-- 
+tejun
