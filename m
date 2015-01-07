@@ -1,45 +1,51 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] libata: Whitelist SSDs that are known to properly return zeroes after TRIM
-Date: Tue, 06 Jan 2015 19:05:40 -0500
-Message-ID: <yq1387n8nfv.fsf@sermon.lab.mkp.net>
-References: <yq18uiojfq9.fsf@sermon.lab.mkp.net>
-	<20141204170611.GB2995@htj.dyndns.org>
-	<yq14mtahmil.fsf@sermon.lab.mkp.net>
-	<20141205145148.GI4080@htj.dyndns.org>
-	<1418184578.2121.3.camel@HansenPartnership.com>
-	<20141210142927.GA6294@htj.dyndns.org>
-	<yq1oarbcj6f.fsf@sermon.lab.mkp.net>
-	<20150105162830.GP15833@htj.dyndns.org>
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: Re: PMP product ID mismatch
+Date: Tue, 06 Jan 2015 21:40:37 -0500
+Message-ID: <54AC9CA5.1080504@ubuntu.com>
+References: <54AB3992.5090106@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20150105162830.GP15833@htj.dyndns.org> (Tejun Heo's message of
-	"Mon, 5 Jan 2015 11:28:30 -0500")
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from cdptpa-outbound-snat.email.rr.com ([107.14.166.226]:41579 "EHLO
+	cdptpa-oedge-vip.email.rr.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755089AbbAGCkv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Jan 2015 21:40:51 -0500
+In-Reply-To: <54AB3992.5090106@ubuntu.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
->>>>> "Tejun" == Tejun Heo <tj@kernel.org> writes:
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
 
->> The other use case is the filesystem one where it is common to zero
->> block ranges for bitmaps, etc. In many workloads there's is a
->> significant win to trimming over writing out many blocks of zeroes.
+On 01/05/2015 08:25 PM, Phillip Susi wrote:
+> I'm getting a PMP product ID mismatch error after the two drives in
+> my esata dock are attached to the scsi layer and IO fails to them
+> and they are then offlined.  When I connect the dock to another
+> controller it works fine.  What could cause this?  One thing I
+> noticed is that the good controller does not support FIS Based
+> Switching, but the bad one does.  Is there a way to disable fbs to
+> see if that fixes it?
 
-Tejun> Isn't that kinda niche and specialized tho?  
+So I patched the kernel to disable FBS and it works now.  Looks like
+maybe this controller needs a quirk?
 
-I don't think so. There are two reasons for zeroing block ranges:
+09:00.0 0106: 1b4b:9172 (rev 11)
 
- 1) To ensure they contain zeroes on subsequent reads
+aka:
 
- 2) To preallocate them or anchor them down on thin provisioned devices
+09:00.0 SATA controller: Marvell Technology Group Ltd. 88SE9172 SATA
+6Gb/s Controller (rev 11)
 
-The filesystem folks have specifically asked to be able to make that
-distinction. Hence the patch that changes blkdev_issue_zeroout().
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
 
-You really don't want to write out gobs and gobs of zeroes and cause
-unnecessary flash wear if all you care about is the blocks being in a
-deterministic state.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+iQEbBAEBCgAGBQJUrJycAAoJENRVrw2cjl5RcRcH+OOurYXJo8p7EHoECgNwy/rV
+eP4cBSP+A3Rz7cDjvhRBl03VTQgZa0wvKCCyDwDoukRMRSWBSOdh7pEKsd+4/Hv6
+O2IXtZDFS662QCxCSlpNKcPMUKi2N67jlOgTBtXi6x5hwxZcw7VM6akLieOhv+Jg
+qHzGGSOnRfqZS+ir7r50Y15VN2nytg5zk9c061hgwW1+EqsS5aWHdjAelDAQEKk8
+Wy0b/JN2zanc/eaKkLn+QWa3LFfzJ3YM5zUEDr2C56Ptkpv20rztLyIiIg5+g02A
+CEPG4slyDGt4wYxgB/kWe1Ya8iEL8nx0aYAVIcMAZzjMcHauKsKg8gFnZhGPPw==
+=URYD
+-----END PGP SIGNATURE-----
