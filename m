@@ -1,73 +1,45 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH libata/for-3.19-fixes] ata: add MAINTAINERS entry for libata
- PATA drivers
-Date: Tue, 6 Jan 2015 18:44:57 -0500
-Message-ID: <20150106234457.GF24106@htj.dyndns.org>
-References: <27267694.oe0s2nj2E5@amdc1032>
- <1417541347.3203.77.camel@acox1-desk.ger.corp.intel.com>
- <2792593.liaEN2q9W3@amdc1032>
- <2294122.mDExhRe5Kf@amdc1032>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] libata: Whitelist SSDs that are known to properly return zeroes after TRIM
+Date: Tue, 06 Jan 2015 19:05:40 -0500
+Message-ID: <yq1387n8nfv.fsf@sermon.lab.mkp.net>
+References: <yq18uiojfq9.fsf@sermon.lab.mkp.net>
+	<20141204170611.GB2995@htj.dyndns.org>
+	<yq14mtahmil.fsf@sermon.lab.mkp.net>
+	<20141205145148.GI4080@htj.dyndns.org>
+	<1418184578.2121.3.camel@HansenPartnership.com>
+	<20141210142927.GA6294@htj.dyndns.org>
+	<yq1oarbcj6f.fsf@sermon.lab.mkp.net>
+	<20150105162830.GP15833@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f173.google.com ([209.85.216.173]:45953 "EHLO
-	mail-qc0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751845AbbAFXpA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Jan 2015 18:45:00 -0500
-Received: by mail-qc0-f173.google.com with SMTP id i17so224757qcy.4
-        for <linux-ide@vger.kernel.org>; Tue, 06 Jan 2015 15:45:00 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <2294122.mDExhRe5Kf@amdc1032>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20150105162830.GP15833@htj.dyndns.org> (Tejun Heo's message of
+	"Mon, 5 Jan 2015 11:28:30 -0500")
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: linux-ide@vger.kernel.org
 
->From c7fa056c820fef26de34d346b148943e717958a0 Mon Sep 17 00:00:00 2001
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Date: Tue, 2 Dec 2014 17:29:08 +0100
+>>>>> "Tejun" == Tejun Heo <tj@kernel.org> writes:
 
-Add myself as the primary maintainer for libata PATA drivers.
+>> The other use case is the filesystem one where it is common to zero
+>> block ranges for bitmaps, etc. In many workloads there's is a
+>> significant win to trimming over writing out many blocks of zeroes.
 
-The merging process would remain unchanged with patches going
-through Tejun's tree.
+Tejun> Isn't that kinda niche and specialized tho?  
 
-Cc: Alan Cox <alan@linux.intel.com>
-Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Acked-by: Kyungmin Park <kyungmin.park@samsung.com>
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
-Hello,
+I don't think so. There are two reasons for zeroing block ranges:
 
-Sorry about the delay.  I forgot about this one.  Applied the
-following to libata/for-3.19-fixes.
+ 1) To ensure they contain zeroes on subsequent reads
 
-Thanks.
+ 2) To preallocate them or anchor them down on thin provisioned devices
 
- MAINTAINERS | 9 +++++++++
- 1 file changed, 9 insertions(+)
+The filesystem folks have specifically asked to be able to make that
+distinction. Hence the patch that changes blkdev_issue_zeroout().
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index c20aebe..5d7b387 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -5703,6 +5703,15 @@ S:	Maintained
- F:	include/linux/pata_arasan_cf_data.h
- F:	drivers/ata/pata_arasan_cf.c
- 
-+LIBATA PATA DRIVERS
-+M:	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-+M:	Tejun Heo <tj@kernel.org>
-+L:	linux-ide@vger.kernel.org
-+T:	git git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git
-+S:	Maintained
-+F:	drivers/ata/pata_*.c
-+F:	drivers/ata/ata_generic.c
-+
- LIBATA SATA AHCI PLATFORM devices support
- M:	Hans de Goede <hdegoede@redhat.com>
- M:	Tejun Heo <tj@kernel.org>
+You really don't want to write out gobs and gobs of zeroes and cause
+unnecessary flash wear if all you care about is the blocks being in a
+deterministic state.
+
 -- 
-2.1.0
-
+Martin K. Petersen	Oracle Linux Engineering
