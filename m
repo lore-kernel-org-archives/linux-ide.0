@@ -1,33 +1,30 @@
-From: Sasha Levin <sasha.levin@oracle.com>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC] - SMR Modifications to EXT4 (and other
- generic file systems)
-Date: Wed, 07 Jan 2015 09:57:47 -0500
-Message-ID: <54AD496B.8080708@oracle.com>
-References: <CAKdFiL6CMHTHWCvSFjFNw6hzvPLDEWWAC-o3wdivq9co7SX1FA@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] libata: Remove FIXME comment in atapi_eh_request_sense
+Date: Wed, 7 Jan 2015 10:08:09 -0500
+Message-ID: <20150107150809.GA4395@htj.dyndns.org>
+References: <1420609492-19422-1-git-send-email-xerofoify@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <CAKdFiL6CMHTHWCvSFjFNw6hzvPLDEWWAC-o3wdivq9co7SX1FA@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Adrian Palmer <adrian.palmer@seagate.com>, lsf-pc@lists.linux-foundation.org
-Cc: linux-fsdevel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qg0-f48.google.com ([209.85.192.48]:58159 "EHLO
+	mail-qg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752399AbbAGPIO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Jan 2015 10:08:14 -0500
+Content-Disposition: inline
+In-Reply-To: <1420609492-19422-1-git-send-email-xerofoify@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Nicholas Krause <xerofoify@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 01/06/2015 06:29 PM, Adrian Palmer wrote:
-> I'd like to host a discussion of SMRFFS and ZAC for consumer and cloud
-> systems at LSF/MM. I want to gather community consensus at LSF/MM of the
-> required technical kernel changes before this topic is presented at Vault.
+On Wed, Jan 07, 2015 at 12:44:52AM -0500, Nicholas Krause wrote:
+> Remove the FIXME comment in  atapi_eh_request_sense () asking whether
+> memset of sense buffer is necessary.  The buffer may be partially or
+> fully filled by the device.  We want it to be cleared.
 > 
-> Subtopics:
-> 
-> On-disk metadata structures and data algorithms
-> Explicit in-order write requirement and a look at the IO stack
-> New IOCTLs to call from the FS and the need to know about the underlying
-> disk -- no longer completely disk agnostic
+> Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
 
-Where can we read about the details of SMRFFS before LSF/MM / Vault?
+Applied to libata/for-3.20.  Thanks.
 
-
-Thanks,
-Sasha
+-- 
+tejun
