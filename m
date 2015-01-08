@@ -1,122 +1,62 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH] libata: Whitelist SSDs that are known to properly return zeroes after TRIM
-Date: Thu,  8 Jan 2015 09:28:31 -0500
-Message-ID: <1420727311-7066-1-git-send-email-martin.petersen@oracle.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] libata: Whitelist SSDs that are known to properly return
+ zeroes after TRIM
+Date: Thu, 8 Jan 2015 10:11:51 -0500
+Message-ID: <20150108151151.GC9402@htj.dyndns.org>
 References: <20150107152648.GC4395@htj.dyndns.org>
+ <1420727311-7066-1-git-send-email-martin.petersen@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:33355 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752290AbbAHO2y (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Jan 2015 09:28:54 -0500
-In-Reply-To: <20150107152648.GC4395@htj.dyndns.org>
+Received: from mail-qc0-f170.google.com ([209.85.216.170]:59429 "EHLO
+	mail-qc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753218AbbAHPLz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 8 Jan 2015 10:11:55 -0500
+Content-Disposition: inline
+In-Reply-To: <1420727311-7066-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org
-Cc: linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-As defined, the DRAT (Deterministic Read After Trim) and RZAT (Return
-Zero After Trim) flags in the ATA Command Set are unreliable in the
-sense that they only define what happens if the device successfully
-executed the DSM TRIM command. TRIM is only advisory, however, and the
-device is free to silently ignore all or parts of the request.
+Hello, Martin.
 
-In practice this renders the DRAT and RZAT flags completely useless and
-because the results are unpredictable we decided to disable discard in
-MD for 3.18 to avoid the risk of data corruption.
+The patch looks okay to me.  Just one nit.
 
-Hardware vendors in the real world obviously need better guarantees than
-what the standards bodies provide. Unfortuntely those guarantees are
-encoded in product requirements documents rather than somewhere we can
-key off of them programatically. So we are compelled to disabling
-discard_zeroes_data for all devices unless we explicitly have data to
-support whitelisting them.
+On Thu, Jan 08, 2015 at 09:28:31AM -0500, Martin K. Petersen wrote:
+> @@ -4233,10 +4233,20 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+>  	{ "PIONEER DVD-RW  DVR-216D",	NULL,	ATA_HORKAGE_NOSETXFER },
+>  
+>  	/* devices that don't properly handle queued TRIM commands */
+> -	{ "Micron_M500*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
+> -	{ "Crucial_CT???M500SSD*",	NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
+> -	{ "Micron_M550*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
+> -	{ "Crucial_CT*M550SSD*",	NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
+> +	{ "Micron_M[56]*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
+> +						ATA_HORKAGE_ZERO_AFTER_TRIM, },
+> +	{ "Crucial_CT*SSD*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
+> +
+> +	/*
+> +	 * DRAT/RZAT are weak guarantees. Explicitly black/whitelist
+> +	 * SSDs that provide reliable zero after TRIM.
+> +	 */
 
-This patch whitelists SSDs from a few of the main vendors. None of the
-whitelists are based on written guarantees. They are purely based on
-empirical evidence collected from internal and external users that have
-tested or qualified these drives in RAID deployments.
+Can you please be more detailed on the above explanation?  It's not
+like most people would be familiar with acronyms like DRAT/RZAT and
+what the surrounding situation is like to require this sort of
+whitelisting.
 
-The whitelist is only meant as a starting point and is by no means
-comprehensive:
+> +	{ "INTEL*SSDSC2MH*",		NULL,	0, }, /* Blacklist intel 510 */
+> +	{ "INTEL*SSD*", 		NULL,	ATA_HORKAGE_ZERO_AFTER_TRIM, },
 
-   - All intel SSD models except for 510
-   - Micron M5?0/M600
-   - Samsung SSDs
-   - Seagate SSDs
+I think the above two can use a bit more verbose explanation too.
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- drivers/ata/libata-core.c | 18 ++++++++++++++----
- drivers/ata/libata-scsi.c | 10 ++++++----
- include/linux/libata.h    |  1 +
- 3 files changed, 21 insertions(+), 8 deletions(-)
+> +	{ "SSD*INTEL*",			NULL,	ATA_HORKAGE_ZERO_AFTER_TRIM, },
+> +	{ "Samsung*SSD*",		NULL,	ATA_HORKAGE_ZERO_AFTER_TRIM, },
+> +	{ "SAMSUNG*SSD*",		NULL,	ATA_HORKAGE_ZERO_AFTER_TRIM, },
+> +	{ "ST[1248][0248]0[FH]*",	NULL,	ATA_HORKAGE_ZERO_AFTER_TRIM, },
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 5c84fb5c3372..7c03401dc5d8 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4233,10 +4233,20 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	{ "PIONEER DVD-RW  DVR-216D",	NULL,	ATA_HORKAGE_NOSETXFER },
- 
- 	/* devices that don't properly handle queued TRIM commands */
--	{ "Micron_M500*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
--	{ "Crucial_CT???M500SSD*",	NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
--	{ "Micron_M550*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
--	{ "Crucial_CT*M550SSD*",	NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
-+	{ "Micron_M[56]*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
-+						ATA_HORKAGE_ZERO_AFTER_TRIM, },
-+	{ "Crucial_CT*SSD*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
-+
-+	/*
-+	 * DRAT/RZAT are weak guarantees. Explicitly black/whitelist
-+	 * SSDs that provide reliable zero after TRIM.
-+	 */
-+	{ "INTEL*SSDSC2MH*",		NULL,	0, }, /* Blacklist intel 510 */
-+	{ "INTEL*SSD*", 		NULL,	ATA_HORKAGE_ZERO_AFTER_TRIM, },
-+	{ "SSD*INTEL*",			NULL,	ATA_HORKAGE_ZERO_AFTER_TRIM, },
-+	{ "Samsung*SSD*",		NULL,	ATA_HORKAGE_ZERO_AFTER_TRIM, },
-+	{ "SAMSUNG*SSD*",		NULL,	ATA_HORKAGE_ZERO_AFTER_TRIM, },
-+	{ "ST[1248][0248]0[FH]*",	NULL,	ATA_HORKAGE_ZERO_AFTER_TRIM, },
- 
- 	/*
- 	 * Some WD SATA-I drives spin up and down erratically when the link
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 7659d6468303..280729325ebd 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -2532,13 +2532,15 @@ static unsigned int ata_scsiop_read_cap(struct ata_scsi_args *args, u8 *rbuf)
- 		rbuf[15] = lowest_aligned;
- 
- 		if (ata_id_has_trim(args->id)) {
--			rbuf[14] |= 0x80; /* TPE */
-+			rbuf[14] |= 0x80; /* LBPME */
- 
--			if (ata_id_has_zero_after_trim(args->id))
--				rbuf[14] |= 0x40; /* TPRZ */
-+			if (ata_id_has_zero_after_trim(args->id) &&
-+			    dev->horkage & ATA_HORKAGE_ZERO_AFTER_TRIM) {
-+				ata_dev_info(dev, "Enabling discard_zeroes_data\n");
-+				rbuf[14] |= 0x40; /* LBPRZ */
-+			}
- 		}
- 	}
--
- 	return 0;
- }
- 
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 2d182413b1db..f2b440e44fd7 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -422,6 +422,7 @@ enum {
- 	ATA_HORKAGE_NO_NCQ_TRIM	= (1 << 19),	/* don't use queued TRIM */
- 	ATA_HORKAGE_NOLPM	= (1 << 20),	/* don't use LPM */
- 	ATA_HORKAGE_WD_BROKEN_LPM = (1 << 21),	/* some WDs have broken LPM */
-+	ATA_HORKAGE_ZERO_AFTER_TRIM = (1 << 22),/* guarantees zero after trim */
- 
- 	 /* DMA mask for user DMA control: User visible values; DO NOT
- 	    renumber */
+Thanks.
+
 -- 
-1.9.3
-
+tejun
