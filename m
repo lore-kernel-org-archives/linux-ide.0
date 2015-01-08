@@ -1,59 +1,66 @@
-From: Gabriele Mazzotta <gabriele.mzt@gmail.com>
-Subject: SATA link power management issues
-Date: Thu, 08 Jan 2015 20:37:35 +0100
-Message-ID: <3352987.ugV1Ipy7Z5@xps13>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
-Cc: tj@kernel.org
+From: Andreas Dilger <adilger@dilger.ca>
+Subject: Re: [PATCH] libata: Whitelist SSDs that are known to properly return zeroes after TRIM
+Date: Thu, 8 Jan 2015 15:31:28 -0700
+Message-ID: <EF7B8F96-3DCB-4A22-B813-5717B9C22193@dilger.ca>
+References: <yq18uiojfq9.fsf@sermon.lab.mkp.net> <20141204170611.GB2995@htj.dyndns.org> <yq14mtahmil.fsf@sermon.lab.mkp.net> <20141205145148.GI4080@htj.dyndns.org> <1418184578.2121.3.camel@HansenPartnership.com> <20141210142927.GA6294@htj.dyndns.org> <yq1oarbcj6f.fsf@sermon.lab.mkp.net> <20150105162830.GP15833@htj.dyndns.org> <yq1387n8nfv.fsf@sermon.lab.mkp.net> <20150107025455.GL3077@htj.dyndns.org> <20150107041537.GH31508@dastard> <54AE01EF.8050106@ubuntu.com> <6B6B37A7-B853-4E9C-A5EE-EC03555BB539@dilger.ca> <54AE8FAB.7030702@ubuntu.com>
+Mime-Version: 1.0 (Mac OS X Mail 8.1 \(1993\))
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <54AE8FAB.7030702@ubuntu.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Phillip Susi <psusi@ubuntu.com>
+Cc: Dave Chinner <david@fromorbit.com>, Tejun Heo <tj@kernel.org>, Martin Petersen <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Hi,
+On Jan 8, 2015, at 7:09 AM, Phillip Susi <psusi@ubuntu.com> wrote:
+> On 1/7/2015 11:58 PM, Andreas Dilger wrote:
+>>> No, it knows that the inode table needs initialized because there
+>>> is a flag in the group descriptor that says this inode table is
+>>> still uninitalized.  It never reads the blocks to see if they are
+>>> full of zeros.  mke2fs sets the flag when it does not initialize
+>>> the table with zeros, either by direct writes ( which it doesn't
+>>> do if lazy_itable_init is true, which it defaults to these days
+>>> ), or by discarding the blocks when the device claims to support
+>>> deterministic discard that zeros.
+>> 
+>> That is only partially correct.  While it is true that mke2fs sets
+>> the UNINIT flag at format time, the "lazy" part of that means there
+>> is a kernel thread still does the zeroing of the inode table
+>> blocks, but after the filesystem is mounted, for any group that
+>> does not have the ZEROED flag set.  After that point, the "UNINIT"
+>> flag is an optimization to avoid reading the bitmap and unused
+>> blocks from disk during allocation.
+> 
+> That is pretty much what I said, except that I was pointing out that
+> it does not *read* first to see if the disk is already zeroed, as that
+> would be a waste of time.  It just writes out the zeros for block
+> groups that still have the uninit flag set.
 
-I'm having some problems with the link_power_management_policy on my
-Dell XPS13 9333.
-Changing policy from min_power or medium_power to max_performance
-causes the following errors:
+Sorry, I didn't get that from my reading, so I thought I'd clarify.
+I'd actually proposed that the ext4_init_inode_table() thread start
+by reading the itable blocks first, check them for zeroes, and only
+switch over to writing if it finds any non-zero data in the blocks.
 
-[ 3955.667086] ahci 0000:00:1f.2: port does not support device sleep
-[ 3958.257106] ata3.00: exception Emask 0x10 SAct 0x40 SErr 0x50000 action 0xe frozen
-[ 3958.257110] ata3.00: irq_stat 0x00400000, PHY RDY changed
-[ 3958.257113] ata3: SError: { PHYRdyChg CommWake }
-[ 3958.257116] ata3.00: failed command: READ FPDMA QUEUED
-[ 3958.257120] ata3.00: cmd 60/00:30:c8:60:10/01:00:1d:00:00/40 tag 6 ncq 131072 in
-         res 40/00:34:c8:60:10/00:00:1d:00:00/40 Emask 0x10 (ATA bus error)
-[ 3958.257122] ata3.00: status: { DRDY }
-[ 3958.257126] ata3: hard resetting link
-[ 3958.981727] ata3: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-[ 3958.984994] ata3.00: configured for UDMA/133
-[ 3958.997686] ahci 0000:00:1f.2: port does not support device sleep
-[ 3958.997698] ata3: EH complete
+I think that would be a net win in some cases, and only a tiny bit
+of overhead (a single read) if it turns out to be wrong.
 
-Sometimes I get "failed command: WRITE FPDMA QUEUED" multiple times.
+>> This is needed in case the group descriptor or inode bitmap is
+>> corrupted, and e2fsck needs to scan the inode table for in-use
+>> inodes.  We don't want it to find old inodes from before the
+>> filesystem was formatted.
+>> 
+>> The ext4_init_inode_table() calls
+>> sb_issue_zeroout->blkdev_issue_zeroout(), so if the underlying
+>> storage supported deterministic zeroing of the underlying storage,
+>> this could be handled very efficiently.
+> 
+> Again, that's pretty much what I said.
 
-As far as I know, this had always happened and it was confirmed
-by another user. I've also come across some logs of the same system
-and saw the same errors here and there, so it shouldn't be a problem
-of my laptop in particular.
 
-What I find interesting is that transitions from min_power to
-medium_power and vice versa do not cause these errors. There are only
-problem switching from min_power and medium_power to max_performance.
-Doing the opposite, i.e. from max_performance to min_power or
-medium_power, seems to work fine.
+Cheers, Andreas
 
-As a consequence of these continuous errors, the speed is reduced
-from 6.0 Gbps to 1.5 Gbps.
 
-I'd prefer not to disable LPM as it saves a considerable amount of
-power when I'm using the battery. For this reason I'm currently using
-medium_power and min_power only to prevent errors.
 
-Is it normal that these errors appears only when I switch to
-max_performance? Was something similar observed on other systems?
 
-Thanks,
-Gabriele
+
