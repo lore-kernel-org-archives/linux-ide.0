@@ -1,51 +1,77 @@
-From: Andreas Dilger <adilger@dilger.ca>
-Subject: Re: [PATCH] libata: Whitelist SSDs that are known to properly return zeroes after TRIM
-Date: Wed, 7 Jan 2015 21:58:02 -0700
-Message-ID: <6B6B37A7-B853-4E9C-A5EE-EC03555BB539@dilger.ca>
-References: <yq18uiojfq9.fsf@sermon.lab.mkp.net> <20141204170611.GB2995@htj.dyndns.org> <yq14mtahmil.fsf@sermon.lab.mkp.net> <20141205145148.GI4080@htj.dyndns.org> <1418184578.2121.3.camel@HansenPartnership.com> <20141210142927.GA6294@htj.dyndns.org> <yq1oarbcj6f.fsf@sermon.lab.mkp.net> <20150105162830.GP15833@htj.dyndns.org> <yq1387n8nfv.fsf@sermon.lab.mkp.net> <20150107025455.GL3077@htj.dyndns.org> <20150107041537.GH31508@dastard> <54AE01EF.8050106@ubuntu.com>
-Mime-Version: 1.0 (Mac OS X Mail 8.1 \(1993\))
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <54AE01EF.8050106@ubuntu.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Phillip Susi <psusi@ubuntu.com>
-Cc: Dave Chinner <david@fromorbit.com>, Tejun Heo <tj@kernel.org>, Martin Petersen <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-ide@vger.kernel.org, linux-fsdevel@vger.kernel.org
+From: Hanjun Guo <hanjun.guo@linaro.org>
+Subject: Re: [PATCH] sata: xgene: add ACPI support for APM X-Gene SATA ports
+Date: Thu, 08 Jan 2015 15:50:07 +0800
+Message-ID: <54AE36AF.3070603@linaro.org>
+References: <1418337070-17644-1-git-send-email-fkan@apm.com> <CAL85gmAHLk9XCbr-1+USmOKxd5O7iCxWX0vqSRf74Brn2pzESg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <CAL85gmAHLk9XCbr-1+USmOKxd5O7iCxWX0vqSRf74Brn2pzESg@mail.gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Feng Kan <fkan@apm.com>, patches <patches@apm.com>, linux-ide@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>, Mark Salter <msalter@redhat.com>, tj@kernel.org, hdegoede@redhat.com
 List-Id: linux-ide@vger.kernel.org
 
-On Jan 7, 2015, at 9:05 PM, Phillip Susi <psusi@ubuntu.com> wrote:
-> On 01/06/2015 11:15 PM, Dave Chinner wrote:
->> (e.g. in ext4 inode tables because mkfs used to zero them) if they 
->> haven't been used, so when it reads them it detects that 
->> initialisation is needed because the blocks are empty....
-> 
-> No, it knows that the inode table needs initialized because there is a
-> flag in the group descriptor that says this inode table is still
-> uninitalized.  It never reads the blocks to see if they are full of
-> zeros.  mke2fs sets the flag when it does not initialize the table
-> with zeros, either by direct writes ( which it doesn't do if
-> lazy_itable_init is true, which it defaults to these days ), or by
-> discarding the blocks when the device claims to support deterministic
-> discard that zeros.
+Hi Feng Kan,
 
-That is only partially correct.  While it is true that mke2fs sets the
-UNINIT flag at format time, the "lazy" part of that means there is a
-kernel thread still does the zeroing of the inode table blocks, but after
-the filesystem is mounted, for any group that does not have the ZEROED
-flag set.  After that point, the "UNINIT" flag is an optimization to
-avoid reading the bitmap and unused blocks from disk during allocation.
+I have some comments below.
 
-This is needed in case the group descriptor or inode bitmap is corrupted,
-and e2fsck needs to scan the inode table for in-use inodes.  We don't
-want it to find old inodes from before the filesystem was formatted.
+On 2015=E5=B9=B401=E6=9C=8808=E6=97=A5 01:32, Feng Kan wrote:
+> Just want to ping this again.
+>
+> Happy new year
+>
+> On Thu, Dec 11, 2014 at 2:31 PM, Feng Kan <fkan@apm.com> wrote:
+>> This adds ACPI support for the APM X-Gene SATA ports. When the syste=
+m
+>> boots using ACPI table, the SATA ports are able to configure using t=
+he
+>> values supplied by the ACPI table rather than the DTS.
+>>
+>> Signed-off-by: Feng Kan <fkan@apm.com>
+>> ---
+>>   drivers/ata/ahci_xgene.c | 10 ++++++++++
+>>   1 file changed, 10 insertions(+)
+>>
+>> diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
+>> index d0c851a..4951392 100644
+>> --- a/drivers/ata/ahci_xgene.c
+>> +++ b/drivers/ata/ahci_xgene.c
+>> @@ -22,6 +22,7 @@
+>>    * NOTE: PM support is not currently available.
+>>    *
+>>    */
+>> +#include <linux/acpi.h>
+>>   #include <linux/module.h>
+>>   #include <linux/platform_device.h>
+>>   #include <linux/ahci_platform.h>
+>> @@ -521,6 +522,14 @@ disable_resources:
+>>          return rc;
+>>   }
+>>
+>> +#ifdef CONFIG_ACPI
+>> +static const struct acpi_device_id xgene_ahci_acpi_match[] =3D {
+>> +       { "APMC0D0D", },
 
-The ext4_init_inode_table() calls sb_issue_zeroout->blkdev_issue_zeroout(),
-so if the underlying storage supported deterministic zeroing of the
-underlying storage, this could be handled very efficiently.
+When I was going through the PNP and ACPI ID list in
+http://www.uefi.org/PNP_ACPI_Registry, I found that
+there is no "APMC" for ACPI ID, I only found that there is
+a PNP ID "APM" for Applied Memory Tech company, are
+you using PNP ID for this one?
 
-Cheers, Andreas
+if not, I think you can send a request to UEFI and
+request a new ACPI ID of "APMC" for Applied Micro, and then
+submit the patch again.
 
+How to send a request to register the ACPI ID, you can
+refer to:
+http://www.uefi.org/PNP_ACPI_Registry
 
-
-
-
+Thanks
+Hanjun
+--
+To unsubscribe from this list: send the line "unsubscribe linux-acpi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
