@@ -1,32 +1,30 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2 3/3] libata: use blk taging
-Date: Fri, 9 Jan 2015 16:43:07 -0500
-Message-ID: <20150109214307.GE2785@htj.dyndns.org>
-References: <e8fb0a8f15f291f6dae88d51295432a2fa7ad71b.1418928090.git.shli@fb.com>
- <546516bb62c91671b1464e6a7c68eebc8422efe5.1418928090.git.shli@fb.com>
- <20150109181529.GA1301458@devbig257.prn2.facebook.com>
+Subject: Re: [PATCH] ahci: Use dev_info() to inform about the lack of Device
+ Sleep support
+Date: Fri, 9 Jan 2015 16:54:01 -0500
+Message-ID: <20150109215401.GG2785@htj.dyndns.org>
+References: <1420742494-5017-1-git-send-email-gabriele.mzt@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f180.google.com ([209.85.216.180]:63274 "EHLO
-	mail-qc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751827AbbAIVnK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Jan 2015 16:43:10 -0500
-Received: by mail-qc0-f180.google.com with SMTP id i8so11198395qcq.11
-        for <linux-ide@vger.kernel.org>; Fri, 09 Jan 2015 13:43:10 -0800 (PST)
+Received: from mail-qc0-f169.google.com ([209.85.216.169]:57782 "EHLO
+	mail-qc0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751213AbbAIVyG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Jan 2015 16:54:06 -0500
 Content-Disposition: inline
-In-Reply-To: <20150109181529.GA1301458@devbig257.prn2.facebook.com>
+In-Reply-To: <1420742494-5017-1-git-send-email-gabriele.mzt@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Shaohua Li <shli@fb.com>
-Cc: linux-ide@vger.kernel.org, Kernel-team@fb.com, Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@infradead.org>
+To: Gabriele Mazzotta <gabriele.mzt@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Jan 09, 2015 at 10:15:29AM -0800, Shaohua Li wrote:
-> Ping!
+On Thu, Jan 08, 2015 at 07:41:34PM +0100, Gabriele Mazzotta wrote:
+> According to the Serial ATA AHCI specification, Device Sleep is an
+> optional feature and as such no errors should be printed if it's
+> missing. Keep informing users, but use dev_info() instead of dev_err().
 
-I like the idea but it bothers me that we end up with two separate
-ways of allocating command tags.  Any chance the old one can be
-removed?
+Does this condition actually occur?  The cap's advertise that the
+controller does DEVSLP but the port register doesn't have it?
 
 Thanks.
 
