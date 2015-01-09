@@ -1,71 +1,70 @@
-From: Gregory CLEMENT <gregory.clement-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
-Subject: [PATCH v2 0/4] ata: libahci: Allow using a regulator for each port
-Date: Fri,  9 Jan 2015 11:39:45 +0100
-Message-ID: <1420799989-10645-1-git-send-email-gregory.clement@free-electrons.com>
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: Re: [PATCH v2 2/4] Documentation: bindings: Add the regulator property
+ to the sub-nodes AHCI bindings
+Date: Fri, 09 Jan 2015 16:46:43 +0100
+Message-ID: <54AFF7E3.4070506@redhat.com>
+References: <1420799989-10645-1-git-send-email-gregory.clement@free-electrons.com> <1420799989-10645-3-git-send-email-gregory.clement@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=y
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Thomas Petazzoni <thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Ezequiel Garcia <ezequiel.garcia-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Boris BREZILLON <boris.brezillon-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Jason Cooper <jason-NLaQJdtUoK4Be96aLqz0jA@public.gmane.org>, Andrew Lunn <andrew-g2DYL2Zd6BY@public.gmane.org>, Sebastian Hesselbarth <sebastian.hesselbarth-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Gregory CLEMENT <gregory.clement-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Lior Amsalem <alior-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org>, Tawfik Bayouk <tawfik-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org>, Nadav Haklai <nadavh-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1420799989-10645-3-git-send-email-gregory.clement@free-electrons.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Gregory CLEMENT <gregory.clement@free-electrons.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: =?windows-1252?Q?Antoine_T=E9nart?= <antoine.tenart@free-electrons.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Maxime Ripard <maxime.ripard@free-electrons.com>, Boris BREZILLON <boris.brezillon@free-electrons.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, linux-arm-kernel@lists.infradead.org, Lior Amsalem <alior@marvell.com>, Tawfik Bayouk <tawfik@marvell.com>, Nadav Haklai <nadavh@marvell.com>, Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
 Hi,
 
-The current implementation of the libahci allows using one PHY per
-port but we still have one single regulator for the whole
-controller. This series adds the support of multiple regulators.
+On 09-01-15 11:39, Gregory CLEMENT wrote:
+> It is now possible to use a regulator property for each port of the
+> AHCI controller.
+>
+> Signed-off-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
+> ---
+>   Documentation/devicetree/bindings/ata/ahci-platform.txt | 9 ++++++---
+>   1 file changed, 6 insertions(+), 3 deletions(-)
+>
+> diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+> index 4ab09f2202d4..87416d71c758 100644
+> --- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
+> +++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+> @@ -37,9 +37,10 @@ Required properties when using sub-nodes:
+>
+>
+>   Sub-nodes required properties:
+> -- reg               : the port number
+> -- phys              : reference to the SATA PHY node
+> -
+> +- reg					: the port number
+> +And at least one of the following properties:
+> +- phys              	: reference to the SATA PHY node
+> +- target-port<n>-supply	: regulator for SATA target power for port <n>
+>
+>   Examples:
+>           sata@ffe08000 {
+> @@ -68,10 +69,12 @@ With sub-nodes:
+>   		sata0: sata-port@0 {
+>   			reg = <0>;
+>   			phys = <&sata_phy 0>;
+> +			target-port0-supply = <&reg_sata0>;
+>   		};
+>
 
-This is the second version of the series.
+I'm sorry, but I've to NAK this, I did not follow the regulator discussion.,
+thinking that it was just about the use of some utility function vs diy or
+some such, I had no idea this would impact the dt-binding.
 
-The previous version depended of a patch set for the regulator
-framework which was not accepted. Then I needed to do this in a
-different way that it was done for the PHY. As result the regulator
-need to be associated to each port as the host node level using the
-property target-port<n>-supply, where <n> is the port number. But it
-is however mandatory to have one port sub-node for each port
-associated to a regulator.
+The -port%d- bit is completely unnecessary from a dt pov. Devicetree is
+supposed to be OS agnostic, we cannot make the dt-binding ugly just because
+the regulator subsys in Linux does not provide the necessary functionality.
 
-Since the 1st version I also took into account the comments from Hans
-and added a patch to use the new binding for the device tree of the
-Armada 38x GP. This last patch should be merged through the mvebu
-tree.
+I'm afraid you will have to get back to the regulator subsys people and tell
+them that we really need an of_regulator_get, so that we can tell the
+regulator subsys we want a regulator from a specific of_node.
 
-Thanks,
+Please CC me when you re-open the discussion with the regulator people.
 
-Gr=C3=A9gory
+Regards,
 
-Changelog:
-
- v1 -> v2:
-- Kept the case when no child node are present under the ahci node
-- Fix the test done under the label disable_target_pwrs
-- No more use an of_ version of the regulator framework and instead
-  associate each regulator of a port with an unique name.
-- Added the acked-by on the clean-up patch
-
-Gregory CLEMENT (4):
-  ata: libahci: Clean-up the ahci_platform_en/disable_phys functions
-  Documentation: bindings: Add the regulator property to the sub-nodes
-    AHCI bindings
-  ata: libahci: Allow using multiple regulators
-  ARM: mvebu: Armada 385 GP: Add regulators to the SATA port
-
- .../devicetree/bindings/ata/ahci-platform.txt      |   9 +-
- arch/arm/boot/dts/armada-388-gp.dts                | 126 ++++++++++++
- drivers/ata/ahci.h                                 |   2 +-
- drivers/ata/ahci_imx.c                             |  14 +-
- drivers/ata/libahci_platform.c                     | 224 +++++++++++++=
-+-------
- include/linux/ahci_platform.h                      |   2 +
- 6 files changed, 294 insertions(+), 83 deletions(-)
-
---=20
-1.9.1
-
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" i=
-n
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hans
