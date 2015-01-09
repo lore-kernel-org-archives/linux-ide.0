@@ -1,70 +1,106 @@
-From: Hans de Goede <hdegoede@redhat.com>
+From: Gregory CLEMENT <gregory.clement@free-electrons.com>
 Subject: Re: [PATCH v2 2/4] Documentation: bindings: Add the regulator property
  to the sub-nodes AHCI bindings
-Date: Fri, 09 Jan 2015 16:46:43 +0100
-Message-ID: <54AFF7E3.4070506@redhat.com>
-References: <1420799989-10645-1-git-send-email-gregory.clement@free-electrons.com> <1420799989-10645-3-git-send-email-gregory.clement@free-electrons.com>
+Date: Fri, 09 Jan 2015 17:20:44 +0100
+Message-ID: <54AFFFDC.7020307@free-electrons.com>
+References: <1420799989-10645-1-git-send-email-gregory.clement@free-electrons.com> <1420799989-10645-3-git-send-email-gregory.clement@free-electrons.com> <54AFF7E3.4070506@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1420799989-10645-3-git-send-email-gregory.clement@free-electrons.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Gregory CLEMENT <gregory.clement@free-electrons.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: =?windows-1252?Q?Antoine_T=E9nart?= <antoine.tenart@free-electrons.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Maxime Ripard <maxime.ripard@free-electrons.com>, Boris BREZILLON <boris.brezillon@free-electrons.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, linux-arm-kernel@lists.infradead.org, Lior Amsalem <alior@marvell.com>, Tawfik Bayouk <tawfik@marvell.com>, Nadav Haklai <nadavh@marvell.com>, Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from down.free-electrons.com ([37.187.137.238]:41974 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751161AbbAIQVG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Jan 2015 11:21:06 -0500
+In-Reply-To: <54AFF7E3.4070506@redhat.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Hans de Goede <hdegoede@redhat.com>, linux-kernel@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, =?windows-1252?Q?Antoine_T=E9nart?= <antoine.tenart@free-electrons.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Maxime Ripard <maxime.ripard@free-electrons.com>, Boris BREZILLON <boris.brezillon@free-electrons.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, linux-arm-kernel@lists.infradead.org, Lior Amsalem <alior@marvell.com>, Tawfik Bayouk <tawfik@marvell.com>, Nadav Haklai <nadavh@marvell.com>, Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org, Mark Brown <broonie@kernel.org>
 
-Hi,
+Hi Hans,
 
-On 09-01-15 11:39, Gregory CLEMENT wrote:
-> It is now possible to use a regulator property for each port of the
-> AHCI controller.
->
-> Signed-off-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
-> ---
->   Documentation/devicetree/bindings/ata/ahci-platform.txt | 9 ++++++---
->   1 file changed, 6 insertions(+), 3 deletions(-)
->
-> diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-> index 4ab09f2202d4..87416d71c758 100644
-> --- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
-> +++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-> @@ -37,9 +37,10 @@ Required properties when using sub-nodes:
->
->
->   Sub-nodes required properties:
-> -- reg               : the port number
-> -- phys              : reference to the SATA PHY node
-> -
-> +- reg					: the port number
-> +And at least one of the following properties:
-> +- phys              	: reference to the SATA PHY node
-> +- target-port<n>-supply	: regulator for SATA target power for port <n>
->
->   Examples:
->           sata@ffe08000 {
-> @@ -68,10 +69,12 @@ With sub-nodes:
->   		sata0: sata-port@0 {
->   			reg = <0>;
->   			phys = <&sata_phy 0>;
-> +			target-port0-supply = <&reg_sata0>;
->   		};
->
+On 09/01/2015 16:46, Hans de Goede wrote:
+> Hi,
+> 
+> On 09-01-15 11:39, Gregory CLEMENT wrote:
+>> It is now possible to use a regulator property for each port of the
+>> AHCI controller.
+>>
+>> Signed-off-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
+>> ---
+>>   Documentation/devicetree/bindings/ata/ahci-platform.txt | 9 ++++++---
+>>   1 file changed, 6 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+>> index 4ab09f2202d4..87416d71c758 100644
+>> --- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
+>> +++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+>> @@ -37,9 +37,10 @@ Required properties when using sub-nodes:
+>>
+>>
+>>   Sub-nodes required properties:
+>> -- reg               : the port number
+>> -- phys              : reference to the SATA PHY node
+>> -
+>> +- reg					: the port number
+>> +And at least one of the following properties:
+>> +- phys              	: reference to the SATA PHY node
+>> +- target-port<n>-supply	: regulator for SATA target power for port <n>
+>>
+>>   Examples:
+>>           sata@ffe08000 {
+>> @@ -68,10 +69,12 @@ With sub-nodes:
+>>   		sata0: sata-port@0 {
+>>   			reg = <0>;
+>>   			phys = <&sata_phy 0>;
+>> +			target-port0-supply = <&reg_sata0>;
+>>   		};
+>>
+> 
+> I'm sorry, but I've to NAK this, I did not follow the regulator discussion.,
+> thinking that it was just about the use of some utility function vs diy or
+> some such, I had no idea this would impact the dt-binding.
+> 
+> The -port%d- bit is completely unnecessary from a dt pov. Devicetree is
+> supposed to be OS agnostic, we cannot make the dt-binding ugly just because
+> the regulator subsys in Linux does not provide the necessary functionality.
+> 
+> I'm afraid you will have to get back to the regulator subsys people and tell
+> them that we really need an of_regulator_get, so that we can tell the
+> regulator subsys we want a regulator from a specific of_node.
 
-I'm sorry, but I've to NAK this, I did not follow the regulator discussion.,
-thinking that it was just about the use of some utility function vs diy or
-some such, I had no idea this would impact the dt-binding.
+I didn't cc you especially, but I cc the linux-ide mailing list. The
+email was "[PATCH 2/2] regulator: core: Add the device tree version to
+the regulator_get family" (see
+http://thread.gmane.org/gmane.linux.kernel/1856154).
 
-The -port%d- bit is completely unnecessary from a dt pov. Devicetree is
-supposed to be OS agnostic, we cannot make the dt-binding ugly just because
-the regulator subsys in Linux does not provide the necessary functionality.
+Mark Brown didn't want a firmware specific interface. The regulator
+framework allows associating only a regulator to a device and
+currently, at least from the point of view of the device tree, the
+port subnodes are not devices. He suggested making the child node
+device. However, when I had a look on it, it didn't seem an easy
+task. As you know better this code, what do you think of it?
 
-I'm afraid you will have to get back to the regulator subsys people and tell
-them that we really need an of_regulator_get, so that we can tell the
-regulator subsys we want a regulator from a specific of_node.
+(I added Mark Bronw in CC of this email so he can add more explanation
+if needed)
 
-Please CC me when you re-open the discussion with the regulator people.
 
-Regards,
+Thanks,
 
-Hans
+Gregory
+
+> 
+> Please CC me when you re-open the discussion with the regulator people.
+> 
+> Regards,
+> 
+> Hans
+> 
+
+
+-- 
+Gregory Clement, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
