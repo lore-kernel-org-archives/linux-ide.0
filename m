@@ -1,109 +1,56 @@
-From: Mark Brown <broonie@kernel.org>
-Subject: Re: [PATCH v2 2/4] Documentation: bindings: Add the regulator
- property to the sub-nodes AHCI bindings
-Date: Sat, 10 Jan 2015 11:17:48 +0000
-Message-ID: <20150110111748.GB4160@sirena.org.uk>
-References: <1420799989-10645-1-git-send-email-gregory.clement@free-electrons.com>
- <1420799989-10645-3-git-send-email-gregory.clement@free-electrons.com>
- <54AFF7E3.4070506@redhat.com>
- <54AFFFDC.7020307@free-electrons.com>
- <CAGb2v674q4Cjp9qy9CbUXe2j5pT_ez98CKxXHC8u4Diap2TT1A@mail.gmail.com>
- <20150109171131.GH2634@sirena.org.uk>
- <54B0FCDD.7000300@redhat.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC] - SMR Modifications to EXT4 (and other
+ generic file systems)
+Date: Sat, 10 Jan 2015 14:40:32 +0100
+Message-ID: <54B12BD0.4080608@suse.de>
+References: <CAKdFiL6CMHTHWCvSFjFNw6hzvPLDEWWAC-o3wdivq9co7SX1FA@mail.gmail.com> <54AD496B.8080708@oracle.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="FsscpQKzF/jJk6ya"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <54B0FCDD.7000300@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: Chen-Yu Tsai <wens@csie.org>, Gregory CLEMENT <gregory.clement@free-electrons.com>, linux-kernel <linux-kernel@vger.kernel.org>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Boris BREZILLON <boris.brezillon@free-electrons.com>, Jason Cooper <jason@lakedaemon.net>, Tawfik Bayouk <tawfik@marvell.com>, Andrew Lunn <andrew@lunn.ch>, devicetree <devicetree@vger.kernel.org>, Antoine =?iso-8859-1?Q?T=E9nart?= <antoine.tenart@free-electrons.com>, Mark Rutland <mark.rutland@arm.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org, Lior Amsalem <alior@marvell.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Tejun Heo <tj@kernel.org>, Maxime Ripard <maxime.ripard@free-electrons.com>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Ulf Hansson <ulf.hansson@linaro.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:52120 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752709AbbAJNkf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 10 Jan 2015 08:40:35 -0500
+In-Reply-To: <54AD496B.8080708@oracle.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sasha Levin <sasha.levin@oracle.com>, Adrian Palmer <adrian.palmer@seagate.com>, lsf-pc@lists.linux-foundation.org
+Cc: linux-fsdevel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-
---FsscpQKzF/jJk6ya
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Sat, Jan 10, 2015 at 11:20:13AM +0100, Hans de Goede wrote:
-> On 09-01-15 18:11, Mark Brown wrote:
-
-> >Or if the supply is for the device at the other end of the link (which
-> >is what it sounded like) then use that.  This just sounds like the same
-> >problem we have for all the enumerable buses in embedded systems where
-> >we need to be able to understand that the device exists prior to it
-> >being fully ready to appear in the system.  Having the link/slot be a
-> >device in Linux does indeed seem to be a common way people think about
-> >doing this, it sounds like for this one it might be the most direct.
-
-> I think we should be careful to not think too much from an implementation
-> pov here, the purpose of the devicetree description is to describe the ha=
-rdware,
-> as is.
-
-I don't think anyone is talking about changing the DT here, only the way
-it's represented inside Linux.
-
->                 sata0: sata-port@0 {
->                         reg =3D <0>;
->                         phys =3D <&sata_phy 0>;
-> 			target-supply =3D <&reg_sata0>;
->                 };
+On 01/07/2015 03:57 PM, Sasha Levin wrote:
+> On 01/06/2015 06:29 PM, Adrian Palmer wrote:
+>> I'd like to host a discussion of SMRFFS and ZAC for consumer and clo=
+ud
+>> systems at LSF/MM. I want to gather community consensus at LSF/MM of=
+ the
+>> required technical kernel changes before this topic is presented at =
+Vault.
+>>
+>> Subtopics:
+>>
+>> On-disk metadata structures and data algorithms
+>> Explicit in-order write requirement and a look at the IO stack
+>> New IOCTLs to call from the FS and the need to know about the underl=
+ying
+>> disk -- no longer completely disk agnostic
 >=20
->                 sata1: sata-port@1 {
->                         reg =3D <1>;
->                         phys =3D <&sata_phy 1>;
-> 			target-supply =3D <&reg_sata1>;
->                 };
->         };
+> Where can we read about the details of SMRFFS before LSF/MM / Vault?
+>=20
+Please be aware that I've been working on a ZAC prototype, and have
+applied for a session at LSF/MM.
+And my paper for Vault has just been accepted (which will be a survey o=
+f
+existing filesystems and their suitability for SMR drives).
 
-> Seems to match the hardware pretty exactly, and also matches how we've
-> been describing similar devices with only one sata port + power plug sofa=
-r,
-> so from a consistency pov it also is a good model.
+Can you keep me in the loop here?
+Maybe we should have a joint session at LSF ...
 
-Right, I think that makes sense - it also looks to me like these things
-should be representable as devices within Linux.
+Cheers,
 
-> So supporting this model requires having a regulator_get API which allows
-> specifying which of_node to get the regulator from, e.g. the proposed
-
-It requires nothing of the sort.
-
-> of_regulator_get function. I know you (Mark) do not like this, but all
-> other subsystems have an of_foo_get function taking an of_node as argumen=
-t,
-> I do not see how the regulator subsys is so special that it cannot have o=
-ne,
-> and also notice that this is only a kernel internal API which we can alwa=
-ys
-> change later.
-
-Two things there.  One is that mostly those APIs are legacy APIs from
-before we made DT a first class citizen and generally they shouldn't be
-used these days.  The other is that at least for regulators we have
-constant problems with people abusing the API in various ways, as a
-result the API has a goal of not helping undesirable usage patterns in
-order to help people spot problems.  Having an API which makes it easy
-create broken bindings means that it is much more likely that people
-will do just that.
-
---FsscpQKzF/jJk6ya
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQEcBAEBAgAGBQJUsQpbAAoJECTWi3JdVIfQxwYH/iEzJFcp4qFzIVt/Af9ri40/
-1g1Wjuujq3TMMYu/OcutyMvYEp8VBK8LOV0dYnQ6CJ08g+0+Tbg+RHzmOjtG3eeE
-XCGxoVOn6HwRLBledYyoAsFEzqdVaBGTYRUBGnU4Yhq6XGzQBrqigZyiSbWrR4nV
-oO0gj5We4WsB4Y0bCZhxJwG6nVIMoLdbDHjQCyGf2PdhhyW6CogHJ5fIWMG3HPKr
-i8h/RbK/qkaFmmGGtdZrkiVG03fH46YvcGmdvUswBoZISRRIrCH5C9m9OBF4NvI6
-dt48gKFuMQsflZ4/EoO+tPhu3dIE4rbz8EBVSaxHqNm3pYIaPuVv64qv4QwwbG4=
-=+bOd
------END PGP SIGNATURE-----
-
---FsscpQKzF/jJk6ya--
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
