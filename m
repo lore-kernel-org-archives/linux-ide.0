@@ -1,119 +1,88 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [PATCH v2 2/4] Documentation: bindings: Add the regulator property
- to the sub-nodes AHCI bindings
-Date: Sat, 10 Jan 2015 14:51:16 +0100
-Message-ID: <54B12E54.7000704@redhat.com>
-References: <1420799989-10645-1-git-send-email-gregory.clement@free-electrons.com> <1420799989-10645-3-git-send-email-gregory.clement@free-electrons.com> <54AFF7E3.4070506@redhat.com> <54AFFFDC.7020307@free-electrons.com> <CAGb2v674q4Cjp9qy9CbUXe2j5pT_ez98CKxXHC8u4Diap2TT1A@mail.gmail.com> <20150109171131.GH2634@sirena.org.uk> <54B0FCDD.7000300@redhat.com> <20150110111748.GB4160@sirena.org.uk>
+From: Jeroen Van den Keybus <jeroen.vandenkeybus@gmail.com>
+Subject: Marvell 88SE9320 SATA controller failure during heavy load
+Date: Sun, 11 Jan 2015 13:32:30 +0100
+Message-ID: <CAPRPZsAZ1n0pd6kviJ5E8C6gV3RGECEZYGQx=485wysS_OYcxA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41557 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752227AbbAJNwF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 10 Jan 2015 08:52:05 -0500
-In-Reply-To: <20150110111748.GB4160@sirena.org.uk>
+Received: from mail-qc0-f182.google.com ([209.85.216.182]:36699 "EHLO
+	mail-qc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750922AbbAKMca (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Jan 2015 07:32:30 -0500
+Received: by mail-qc0-f182.google.com with SMTP id r5so14962871qcx.13
+        for <linux-ide@vger.kernel.org>; Sun, 11 Jan 2015 04:32:30 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Brown <broonie@kernel.org>
-Cc: Chen-Yu Tsai <wens@csie.org>, Gregory CLEMENT <gregory.clement@free-electrons.com>, linux-kernel <linux-kernel@vger.kernel.org>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Boris BREZILLON <boris.brezillon@free-electrons.com>, Jason Cooper <jason@lakedaemon.net>, Tawfik Bayouk <tawfik@marvell.com>, Andrew Lunn <andrew@lunn.ch>, devicetree <devicetree@vger.kernel.org>, =?windows-1252?Q?Antoine_T=E9nart?= <antoine.tenart@free-electrons.com>, Mark Rutland <mark.rutland@arm.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org, Lior Amsalem <alior@marvell.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Tejun Heo <tj@kernel.org>, Maxime Ripard <maxime.ripard@free-electrons.com>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Ulf Hansson <ulf.hansson@linaro.org>
+To: linux-ide@vger.kernel.org
 
-Hi,
+I am using 4x 3TB WD HDDs (WD30EFRX-68EUZN0) on a HighPoint 640L board
+with Marvell 88SE9230 AHCI SATA controller. I am using btrfs in RAID5
+on these drives. Large copy operations to the disks work fine.
+Scrubbing the 4-drive array afterwards reveals 0 errors.
 
-On 10-01-15 12:17, Mark Brown wrote:
-> On Sat, Jan 10, 2015 at 11:20:13AM +0100, Hans de Goede wrote:
->> On 09-01-15 18:11, Mark Brown wrote:
->
->>> Or if the supply is for the device at the other end of the link (which
->>> is what it sounded like) then use that.  This just sounds like the same
->>> problem we have for all the enumerable buses in embedded systems where
->>> we need to be able to understand that the device exists prior to it
->>> being fully ready to appear in the system.  Having the link/slot be a
->>> device in Linux does indeed seem to be a common way people think about
->>> doing this, it sounds like for this one it might be the most direct.
->
->> I think we should be careful to not think too much from an implementation
->> pov here, the purpose of the devicetree description is to describe the hardware,
->> as is.
->
-> I don't think anyone is talking about changing the DT here, only the way
-> it's represented inside Linux.
->
->>                  sata0: sata-port@0 {
->>                          reg = <0>;
->>                          phys = <&sata_phy 0>;
->> 			target-supply = <&reg_sata0>;
->>                  };
->>
->>                  sata1: sata-port@1 {
->>                          reg = <1>;
->>                          phys = <&sata_phy 1>;
->> 			target-supply = <&reg_sata1>;
->>                  };
->>          };
->
->> Seems to match the hardware pretty exactly, and also matches how we've
->> been describing similar devices with only one sata port + power plug sofar,
->> so from a consistency pov it also is a good model.
->
-> Right, I think that makes sense
+However, when a SMART command is issued during the transfers,
+occasionally the following error occurs:
 
-Good, as said I think getting the dt bit rights is the most important
-thing here. So if we agree that the above dt example looks sane, lets see
-how we can best implement that.
+[255341.597723] ata7.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+[255341.597882] ata7.00: failed command: SMART
+[255341.597974] ata7.00: cmd b0/d1:01:01:4f:c2/00:00:00:00:00/00 tag
+18 pio 512 in
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+[255341.598227] ata7.00: status: { DRDY }
+[255341.598307] ata7: hard resetting link
+[255341.917587] ata7: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+[255341.919688] ata7.00: configured for UDMA/133
+[255341.919773] ata7: EH complete
 
- > it also looks to me like these things
-> should be representable as devices within Linux.
+This happens primarily on ata7 but also on ata10 (the 4th drive on the
+4-port board). The only other failing command I observed is IDENTIFY
+DEVICE. I issued both:
 
-I guess we could manually instantiate platform devices for each of the
-subnodes which represent an sata port here, yes that should not be
-hard to do, it feels like a bit overkill though.
+$ sudo smartctl -a /dev/sde
 
-So for our this should likely look something like this:
+and
 
-         if (IS_ENABLED(CONFIG_OF_ADDRESS) && dev->of_node) {
-                 for_each_child_of_node(dev->of_node, np) {
-                         pdev[i++] = of_platform_device_create(np, NULL, NULL);
-                 }
-         }
+$ sudo hddtemp /dev/sde
 
-and then loop over the pdev[] array and get the regulator, and phy for each.
+to trigger these.
 
-I wonder if of_platform_device_create can deal with nodes with
-#size-cells = <0>; is 0 though, if it cannot maybe we need to teach it.
+Disk activity to the array (the copy operation) suspends completely
+until 'EH complete'.  After the incident, the copy operations continue
+as if nothing happened. Scrub is also fine. But if I hammer the array
+with:
 
->> So supporting this model requires having a regulator_get API which allows
->> specifying which of_node to get the regulator from, e.g. the proposed
->
-> It requires nothing of the sort.
+$ for i in {1..10}; do sudo smartctl -a /dev/sde; done
 
-You're proposed solution of instantiating devices does more or less exactly
-what I say is required, it is a way to pass an of_node into regulator_get,
-but you're hiding the node inside dev->of_node. I can see the appeal in
-that.
+eventually NCQ is also disabled:
 
->> of_regulator_get function. I know you (Mark) do not like this, but all
->> other subsystems have an of_foo_get function taking an of_node as argument,
->> I do not see how the regulator subsys is so special that it cannot have one,
->> and also notice that this is only a kernel internal API which we can always
->> change later.
->
-> Two things there.  One is that mostly those APIs are legacy APIs from
-> before we made DT a first class citizen and generally they shouldn't be
-> used these days.  The other is that at least for regulators we have
-> constant problems with people abusing the API in various ways, as a
-> result the API has a goal of not helping undesirable usage patterns in
-> order to help people spot problems.  Having an API which makes it easy
-> create broken bindings means that it is much more likely that people
-> will do just that.
+[255406.661724] ata7.00: NCQ disabled due to excessive errors
+[255406.661745] ata7.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+[255406.661894] ata7.00: failed command: IDENTIFY DEVICE
+[255406.662000] ata7.00: cmd ec/00:01:00:00:00/00:00:00:00:00/00 tag
+10 pio 512 in
+         res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+[255406.662253] ata7.00: status: { DRDY }
+[255406.662333] ata7: hard resetting link
+[255406.989862] ata7: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+[255406.992147] ata7.00: configured for UDMA/133
+[255406.992256] ata7: EH complete
 
-Hmm I can see where you're coming from, and your proposed solution may
-also be useful for when we get similar boards requiring explicit regulator
-handling with the sata ports described in ACPI tables.
+The driver in use is ahci and the kernel version is 3.18 (on Ubuntu
+14.10 server).
 
-Gregory, can you give the setup using per sata port devices a try, and
-see how that works out code wise ?
+I found two reports of a comparable issue at
 
-Regards,
+https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=700975 and
+https://www.centos.org/forums/viewtopic.php?f=15&t=48964
 
-Hans
+but in my case the storage system does not break down entirely. People
+simply resorted to using another controller and none of the two
+reports were eventually solved. Though I normally do not use SMART, I
+feel uneasy at the prospect of having to rely on a drive array that is
+known to have failed hard once.
+
+
+Thanks for any advice,
+
+
+Jeroen.
