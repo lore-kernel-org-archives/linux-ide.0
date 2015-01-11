@@ -1,79 +1,30 @@
-From: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
-Subject: [PATCH] ata: libata-core: Remove unused function
-Date: Sun, 11 Jan 2015 15:27:01 +0100
-Message-ID: <1420986421-18686-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] ata: libata-core: Remove unused function
+Date: Sun, 11 Jan 2015 11:55:01 -0500
+Message-ID: <20150111165501.GG25319@htj.dyndns.org>
+References: <1420986421-18686-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wi0-f169.google.com ([209.85.212.169]:63175 "EHLO
-	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751541AbbAKOX4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Jan 2015 09:23:56 -0500
-Received: by mail-wi0-f169.google.com with SMTP id r20so9745122wiv.0
-        for <linux-ide@vger.kernel.org>; Sun, 11 Jan 2015 06:23:55 -0800 (PST)
+Received: from mail-qa0-f48.google.com ([209.85.216.48]:57093 "EHLO
+	mail-qa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751406AbbAKQzF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 11 Jan 2015 11:55:05 -0500
+Content-Disposition: inline
+In-Reply-To: <1420986421-18686-1-git-send-email-rickard_strandqvist@spectrumdigital.se>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
-Cc: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>, linux-kernel@vger.kernel.org
+To: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Remove the function ata_do_simple_cmd() that is not used anywhere.
+On Sun, Jan 11, 2015 at 03:27:01PM +0100, Rickard Strandqvist wrote:
+> Remove the function ata_do_simple_cmd() that is not used anywhere.
+> 
+> This was partially found by using a static code analysis program called cppcheck.
+> 
+> Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
 
-This was partially found by using a static code analysis program called cppcheck.
+Applied to libata/for-3.20.  Thanks.
 
-Signed-off-by: Rickard Strandqvist <rickard_strandqvist@spectrumdigital.se>
----
- drivers/ata/libata-core.c |   27 ---------------------------
- drivers/ata/libata.h      |    1 -
- 2 files changed, 28 deletions(-)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index c5ba15a..e525319 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -1747,33 +1747,6 @@ unsigned ata_exec_internal(struct ata_device *dev,
- }
- 
- /**
-- *	ata_do_simple_cmd - execute simple internal command
-- *	@dev: Device to which the command is sent
-- *	@cmd: Opcode to execute
-- *
-- *	Execute a 'simple' command, that only consists of the opcode
-- *	'cmd' itself, without filling any other registers
-- *
-- *	LOCKING:
-- *	Kernel thread context (may sleep).
-- *
-- *	RETURNS:
-- *	Zero on success, AC_ERR_* mask on failure
-- */
--unsigned int ata_do_simple_cmd(struct ata_device *dev, u8 cmd)
--{
--	struct ata_taskfile tf;
--
--	ata_tf_init(dev, &tf);
--
--	tf.command = cmd;
--	tf.flags |= ATA_TFLAG_DEVICE;
--	tf.protocol = ATA_PROT_NODATA;
--
--	return ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, 0);
--}
--
--/**
-  *	ata_pio_need_iordy	-	check if iordy needed
-  *	@adev: ATA device
-  *
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 5f4e0cc..82ebe26 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -76,7 +76,6 @@ extern unsigned ata_exec_internal_sg(struct ata_device *dev,
- 				     struct ata_taskfile *tf, const u8 *cdb,
- 				     int dma_dir, struct scatterlist *sg,
- 				     unsigned int n_elem, unsigned long timeout);
--extern unsigned int ata_do_simple_cmd(struct ata_device *dev, u8 cmd);
- extern int ata_wait_ready(struct ata_link *link, unsigned long deadline,
- 			  int (*check_ready)(struct ata_link *link));
- extern int ata_dev_read_id(struct ata_device *dev, unsigned int *p_class,
 -- 
-1.7.10.4
-
+tejun
