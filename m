@@ -1,61 +1,125 @@
-From: Mark Brown <broonie@kernel.org>
-Subject: sata_dwc_460ex build failures in -next
-Date: Mon, 12 Jan 2015 12:36:55 +0000
-Message-ID: <20150112123655.GF4160@sirena.org.uk>
-References: <E1YAZyB-0007iE-CZ@debutante>
+From: Gregory CLEMENT <gregory.clement@free-electrons.com>
+Subject: Re: [PATCH v2 2/4] Documentation: bindings: Add the regulator property
+ to the sub-nodes AHCI bindings
+Date: Mon, 12 Jan 2015 13:49:56 +0100
+Message-ID: <54B3C2F4.4010007@free-electrons.com>
+References: <1420799989-10645-1-git-send-email-gregory.clement@free-electrons.com> <1420799989-10645-3-git-send-email-gregory.clement@free-electrons.com> <54AFF7E3.4070506@redhat.com> <54AFFFDC.7020307@free-electrons.com> <CAGb2v674q4Cjp9qy9CbUXe2j5pT_ez98CKxXHC8u4Diap2TT1A@mail.gmail.com> <20150109171131.GH2634@sirena.org.uk> <54B0FCDD.7000300@redhat.com> <20150110111748.GB4160@sirena.org.uk> <54B12E54.7000704@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="XaUbO9McV5wPQijU"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mezzanine.sirena.org.uk ([106.187.55.193]:52757 "EHLO
-	mezzanine.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753034AbbALMhE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Jan 2015 07:37:04 -0500
-Content-Disposition: inline
-In-Reply-To: <E1YAZyB-0007iE-CZ@debutante>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <54B12E54.7000704@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hans de Goede <hdegoede@redhat.com>, Mark Brown <broonie@kernel.org>
+Cc: Chen-Yu Tsai <wens@csie.org>, linux-kernel <linux-kernel@vger.kernel.org>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Boris BREZILLON <boris.brezillon@free-electrons.com>, Jason Cooper <jason@lakedaemon.net>, Tawfik Bayouk <tawfik@marvell.com>, Andrew Lunn <andrew@lunn.ch>, devicetree <devicetree@vger.kernel.org>, =?windows-1252?Q?Antoine_T=E9?= =?windows-1252?Q?nart?= <antoine.tenart@free-electrons.com>, Mark Rutland <mark.rutland@arm.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org, Lior Amsalem <alior@marvell.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Tejun Heo <tj@kernel.org>, Maxime Ripard <maxime.ripard@free-electrons.com>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Ulf Hansson <ulf.hansson@linaro.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: kernel-build-reports@lists.linaro.org, linaro-kernel@lists.linaro.org, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+
+On 10/01/2015 14:51, Hans de Goede wrote:
+> Hi,
+> 
+> On 10-01-15 12:17, Mark Brown wrote:
+>> On Sat, Jan 10, 2015 at 11:20:13AM +0100, Hans de Goede wrote:
+>>> On 09-01-15 18:11, Mark Brown wrote:
+>>
+>>>> Or if the supply is for the device at the other end of the link (which
+>>>> is what it sounded like) then use that.  This just sounds like the same
+>>>> problem we have for all the enumerable buses in embedded systems where
+>>>> we need to be able to understand that the device exists prior to it
+>>>> being fully ready to appear in the system.  Having the link/slot be a
+>>>> device in Linux does indeed seem to be a common way people think about
+>>>> doing this, it sounds like for this one it might be the most direct.
+>>
+>>> I think we should be careful to not think too much from an implementation
+>>> pov here, the purpose of the devicetree description is to describe the hardware,
+>>> as is.
+>>
+>> I don't think anyone is talking about changing the DT here, only the way
+>> it's represented inside Linux.
+>>
+>>>                  sata0: sata-port@0 {
+>>>                          reg = <0>;
+>>>                          phys = <&sata_phy 0>;
+>>> 			target-supply = <&reg_sata0>;
+>>>                  };
+>>>
+>>>                  sata1: sata-port@1 {
+>>>                          reg = <1>;
+>>>                          phys = <&sata_phy 1>;
+>>> 			target-supply = <&reg_sata1>;
+>>>                  };
+>>>          };
+>>
+>>> Seems to match the hardware pretty exactly, and also matches how we've
+>>> been describing similar devices with only one sata port + power plug sofar,
+>>> so from a consistency pov it also is a good model.
+>>
+>> Right, I think that makes sense
+> 
+> Good, as said I think getting the dt bit rights is the most important
+> thing here. So if we agree that the above dt example looks sane, lets see
+> how we can best implement that.
+> 
+>  > it also looks to me like these things
+>> should be representable as devices within Linux.
+> 
+> I guess we could manually instantiate platform devices for each of the
+> subnodes which represent an sata port here, yes that should not be
+> hard to do, it feels like a bit overkill though.
+> 
+> So for our this should likely look something like this:
+> 
+>          if (IS_ENABLED(CONFIG_OF_ADDRESS) && dev->of_node) {
+>                  for_each_child_of_node(dev->of_node, np) {
+>                          pdev[i++] = of_platform_device_create(np, NULL, NULL);
+>                  }
+>          }
+> 
+> and then loop over the pdev[] array and get the regulator, and phy for each.
+> 
+> I wonder if of_platform_device_create can deal with nodes with
+> #size-cells = <0>; is 0 though, if it cannot maybe we need to teach it.
+> 
+>>> So supporting this model requires having a regulator_get API which allows
+>>> specifying which of_node to get the regulator from, e.g. the proposed
+>>
+>> It requires nothing of the sort.
+> 
+> You're proposed solution of instantiating devices does more or less exactly
+> what I say is required, it is a way to pass an of_node into regulator_get,
+> but you're hiding the node inside dev->of_node. I can see the appeal in
+> that.
+> 
+>>> of_regulator_get function. I know you (Mark) do not like this, but all
+>>> other subsystems have an of_foo_get function taking an of_node as argument,
+>>> I do not see how the regulator subsys is so special that it cannot have one,
+>>> and also notice that this is only a kernel internal API which we can always
+>>> change later.
+>>
+>> Two things there.  One is that mostly those APIs are legacy APIs from
+>> before we made DT a first class citizen and generally they shouldn't be
+>> used these days.  The other is that at least for regulators we have
+>> constant problems with people abusing the API in various ways, as a
+>> result the API has a goal of not helping undesirable usage patterns in
+>> order to help people spot problems.  Having an API which makes it easy
+>> create broken bindings means that it is much more likely that people
+>> will do just that.
+> 
+> Hmm I can see where you're coming from, and your proposed solution may
+> also be useful for when we get similar boards requiring explicit regulator
+> handling with the sata ports described in ACPI tables.
+> 
+> Gregory, can you give the setup using per sata port devices a try, and
+> see how that works out code wise ?
+
+OK, I am taking care of it.
 
 
---XaUbO9McV5wPQijU
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Thanks,
 
-On Mon, Jan 12, 2015 at 08:03:27AM +0000, Build bot for Mark Brown wrote:
+Gregory
 
-> 	arm64-allmodconfig
-> ../drivers/ata/sata_dwc_460ex.c:719:3: error: implicit declaration of fun=
-ction 'dma_cache_sync' [-Werror=3Dimplicit-function-declaration]
->=20
-> 	arm-allmodconfig
-> ../drivers/ata/sata_dwc_460ex.c:719:3: error: implicit declaration of fun=
-ction 'dma_cache_sync' [-Werror=3Dimplicit-function-declaration]
-
-Since commit 84683a7e081ff60e (sata_dwc_460ex: enable COMPILE_TEST for
-the driver) the sata_dwc_460ex has been breaking the all*config builds
-for arm and arm64 as the driver uses dma_cache_sync() but this function
-is not provided on those architectures.
-
-Either a more specific dependency is needed or the function shouldn't be
-used, I've not looked at the code.
-
---XaUbO9McV5wPQijU
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQEcBAEBAgAGBQJUs7/nAAoJECTWi3JdVIfQ/TsH/1NCH97BQLYRQWrAp4y77/0k
-n4PXCLD5UiMOfVEw/97I5fYEi7vaxiQwM9av97g1QwOlQibTSzDYWkjOlEsUa4Kk
-9UGXdz3z+eeLAdbV1sMFfx2LC5CwlYgFrxdliezzkpjB+u+aEktEEfDa2TZD9e9Q
-hyLEYJP7DaVKH7sZ4cOf9ZIqCxiqgU/dwn+YVlDYs4qb+vcmYv+sXubHisb/x43p
-7QqXbENS3y60C2+9ywX0w9Z2Ru0iIC6VwrB931cG8jADm1mzGRk68q0m8eQtk2/T
-5MiJyQFLSnY6Myl+ddk6OwrYWeodCEl8bEZUsPJEwivF/GmqzyYQtsHZn41Vfzw=
-=RWk0
------END PGP SIGNATURE-----
-
---XaUbO9McV5wPQijU--
+-- 
+Gregory Clement, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
