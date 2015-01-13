@@ -1,34 +1,28 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: ata_eh_report() unable to handle kernel NULL pointer dereference
-Date: Tue, 13 Jan 2015 10:27:38 -0500
-Message-ID: <20150113152738.GC2976@htj.dyndns.org>
-References: <20150113142509.GA985@swordfish>
+Subject: Re: [PATCH 1/1] ahci: Remove Device ID for Intel Sunrise Point PCH
+Date: Tue, 13 Jan 2015 10:33:54 -0500
+Message-ID: <20150113153354.GA3553@htj.dyndns.org>
+References: <1421108032-5582-1-git-send-email-james.d.ralston@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f46.google.com ([209.85.192.46]:62819 "EHLO
-	mail-qg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751132AbbAMP1m (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Jan 2015 10:27:42 -0500
+Received: from mail-qc0-f182.google.com ([209.85.216.182]:36121 "EHLO
+	mail-qc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751145AbbAMPd6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Jan 2015 10:33:58 -0500
 Content-Disposition: inline
-In-Reply-To: <20150113142509.GA985@swordfish>
+In-Reply-To: <1421108032-5582-1-git-send-email-james.d.ralston@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+To: James Ralston <james.d.ralston@intel.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Jan 13, 2015 at 11:25:09PM +0900, Sergey Senozhatsky wrote:
-> Hi,
+On Mon, Jan 12, 2015 at 04:13:52PM -0800, James Ralston wrote:
+> This patch removes a duplicate AHCI-mode SATA Device ID for the Intel Sunrise Point PCH.
 > 
-> linux-next 20150112
-> 
-> [  934.572323] ata2: exception Emask 0x50 SAct 0x0 SErr 0x4090800 action 0xe frozen
-> [  934.572329] ata2: irq_stat 0x00400040, connection status changed
-> [  934.572332] ata2: SError: { HostInt PHYRdyChg 10B8B DevExch }
-> [  934.572341] BUG: unable to handle kernel NULL pointer dereference at 0000000000000460
-> [  934.572346] IP: [<ffffffff812c722c>] ata_eh_report+0x3ad/0x74d
+> Signed-off-by: James Ralston <james.d.ralston@intel.com>
 
-Any chance you can run addr2line on it and map it to the source line?
+Applied to libata/for-3.19-fixes.
 
 Thanks.
 
