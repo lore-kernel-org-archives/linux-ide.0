@@ -1,73 +1,32 @@
-From: Adrian Palmer <adrian.palmer@seagate.com>
-Subject: Re: [LSF/MM TOPIC] - SMR Modifications to EXT4 (and other generic
- file systems)
-Date: Tue, 13 Jan 2015 13:32:26 -0700
-Message-ID: <CAKdFiL6XVxq-mjJd2TMkoEyE4kss5yTfWGKyeY-EZa2NDyLwFw@mail.gmail.com>
-References: <CAKdFiL6CMHTHWCvSFjFNw6hzvPLDEWWAC-o3wdivq9co7SX1FA@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] ata: pata_at91: depend on !ARCH_MULTIPLATFORM
+Date: Tue, 13 Jan 2015 15:56:57 -0500
+Message-ID: <20150113205657.GF9489@htj.dyndns.org>
+References: <1421173517-21246-1-git-send-email-alexandre.belloni@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx0b-00003501.pphosted.com ([67.231.152.68]:7911 "EHLO
-	mx0b-00003501.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751196AbbAMUc1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Jan 2015 15:32:27 -0500
-Received: from pps.filterd (m0075028.ppops.net [127.0.0.1])
-	by mx0b-00003501.pphosted.com (8.14.5/8.14.5) with SMTP id t0DKMQIe024910
-	for <linux-ide@vger.kernel.org>; Tue, 13 Jan 2015 15:32:27 -0500
-Received: from mail-ie0-f175.google.com (mail-ie0-f175.google.com [209.85.223.175])
-	by mx0b-00003501.pphosted.com with ESMTP id 1rw8fc0tay-3
-	(version=TLSv1/SSLv3 cipher=RC4-SHA bits=128 verify=NOT)
-	for <linux-ide@vger.kernel.org>; Tue, 13 Jan 2015 15:32:26 -0500
-Received: by mail-ie0-f175.google.com with SMTP id x19so5046405ier.6
-        for <linux-ide@vger.kernel.org>; Tue, 13 Jan 2015 12:32:26 -0800 (PST)
-In-Reply-To: <CAKdFiL6CMHTHWCvSFjFNw6hzvPLDEWWAC-o3wdivq9co7SX1FA@mail.gmail.com>
+Received: from mail-qa0-f42.google.com ([209.85.216.42]:41818 "EHLO
+	mail-qa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751098AbbAMU5C (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Jan 2015 15:57:02 -0500
+Content-Disposition: inline
+In-Reply-To: <1421173517-21246-1-git-send-email-alexandre.belloni@free-electrons.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: lsf-pc@lists.linux-foundation.org
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Alexandre Belloni <alexandre.belloni@free-electrons.com>
+Cc: linux-ide@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Nicolas Ferre <nicolas.ferre@atmel.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
 
-This seemed to bounce on most of the lists to which it originally
-sent.  I'm resending..
+On Tue, Jan 13, 2015 at 07:25:17PM +0100, Alexandre Belloni wrote:
+> Until the driver is corrected to stop using mach/at91isam9_smc.h, it won't
+> compile in a ARCH_MULTIPLATFORM configuration.
+> 
+> Suggested-by: Arnd Bergmann <arnd@arndb.de>
+> Signed-off-by: Alexandre Belloni <alexandre.belloni@free-electrons.com>
 
-I've uploaded an introductory design document at
-https://github.com/Seagate/SMR_FS-EXT4. I'll update regularly.  Please
-feel free to send questions my way.
+Applied to libata/for-3.19-fixes.
 
-It seems there are many sub topics requested related to SMR for this conference.
+Thanks.
 
-Adrian
-
-On Tue, Jan 6, 2015 at 4:29 PM, Adrian Palmer <adrian.palmer@seagate.com> wrote:
-> I agree wholeheartedly with Dr. Reinecke in discussing what is becoming my
-> favourite topic also. I support the need for generic filesystem support with
-> SMR and ZAC/ZBC drives.
->
-> Dr. Reinecke has already proposed a discussion on the ZAC/ZBC
-> implementation.  As a complementary topic, I want to discuss the generic
-> filesystem support for Host Aware (HA) / Host Managed (HM) drives.
->
-> We at Seagate are developing an SMR Friendly File System (SMRFFS) for this
-> very purpose.  Instead of a new filesystem with a long development time, we
-> are implementing it as an HA extension to EXT4 (and WILL be backwards
-> compatible with minimal code paths).  I'll be talking about the the on-disk
-> changes we need to consider as well as the needed kernel changes common to
-> all generic filesystems.  Later, we intend to evaluate the work for use in
-> other filesystems and kernel processes.
->
-> I'd like to host a discussion of SMRFFS and ZAC for consumer and cloud
-> systems at LSF/MM. I want to gather community consensus at LSF/MM of the
-> required technical kernel changes before this topic is presented at Vault.
->
-> Subtopics:
->
-> On-disk metadata structures and data algorithms
-> Explicit in-order write requirement and a look at the IO stack
-> New IOCTLs to call from the FS and the need to know about the underlying
-> disk -- no longer completely disk agnostic
->
->
-> Adrian Palmer
-> Firmware Engineer II
-> R&D Firmware
-> Seagate, Longmont Colorado
-> 720-684-1307
+-- 
+tejun
