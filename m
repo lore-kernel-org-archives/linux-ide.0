@@ -1,41 +1,36 @@
-From: Gabriele Mazzotta <gabriele.mzt@gmail.com>
-Subject: Re: SATA link power management issues
-Date: Mon, 12 Jan 2015 15:05:01 -0800 (PST)
-Message-ID: <2526428.uJaEqCTeIa@xps13>
-References: <3352987.ugV1Ipy7Z5@xps13>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <3352987.ugV1Ipy7Z5@xps13>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, tj@kernel.org, stripathi@apm.com
+From: James Ralston <james.d.ralston@intel.com>
+Subject: [PATCH 1/1] ahci: Remove Device ID for Intel Sunrise Point PCH
+Date: Mon, 12 Jan 2015 16:13:52 -0800
+Message-ID: <1421108032-5582-1-git-send-email-james.d.ralston@intel.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga14.intel.com ([192.55.52.115]:53593 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751792AbbAMAOX (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 12 Jan 2015 19:14:23 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, James Ralston <james.d.ralston@intel.com>
 
-I just tried the following and I no longer get errors:
+This patch removes a duplicate AHCI-mode SATA Device ID for the Intel Sunrise Point PCH.
 
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 97683e4..c815b31 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -1708,10 +1708,10 @@ static void ahci_handle_port_interrupt(struct ata_port *ap,
- 		status &= ~PORT_IRQ_BAD_PMP;
- 
- 	/* if LPM is enabled, PHYRDY doesn't mean anything */
--	if (ap->link.lpm_policy > ATA_LPM_MAX_POWER) {
-+//	if (ap->link.lpm_policy > ATA_LPM_MAX_POWER) {
- 		status &= ~PORT_IRQ_PHYRDY;
- 		ahci_scr_write(&ap->link, SCR_ERROR, SERR_PHYRDY_CHG);
--	}
-+// 	}
- 
- 	if (unlikely(status & PORT_IRQ_ERROR)) {
- 		ahci_error_intr(ap, status);
+Signed-off-by: James Ralston <james.d.ralston@intel.com>
+---
+ drivers/ata/ahci.c | 1 -
+ 1 file changed, 1 deletion(-)
 
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 49f1e68..33bb06e 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -325,7 +325,6 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x9d05), board_ahci }, /* Sunrise Point-LP RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x9d07), board_ahci }, /* Sunrise Point-LP RAID */
+ 	{ PCI_VDEVICE(INTEL, 0xa103), board_ahci }, /* Sunrise Point-H AHCI */
+-	{ PCI_VDEVICE(INTEL, 0xa103), board_ahci }, /* Sunrise Point-H RAID */
+ 	{ PCI_VDEVICE(INTEL, 0xa105), board_ahci }, /* Sunrise Point-H RAID */
+ 	{ PCI_VDEVICE(INTEL, 0xa107), board_ahci }, /* Sunrise Point-H RAID */
+ 	{ PCI_VDEVICE(INTEL, 0xa10f), board_ahci }, /* Sunrise Point-H RAID */
+-- 
+1.8.3.1
 
-I haven't read the specification, so this might be bad. I did this in
-base of some consideration I made that, as far as I know, could be
-completely wrong. I hope you can get something meaningful out of this.
-
-Gabriele
