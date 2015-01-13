@@ -1,30 +1,38 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/1] ahci: Remove Device ID for Intel Sunrise Point PCH
-Date: Tue, 13 Jan 2015 10:33:54 -0500
-Message-ID: <20150113153354.GA3553@htj.dyndns.org>
-References: <1421108032-5582-1-git-send-email-james.d.ralston@intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Alexandre Belloni <alexandre.belloni@free-electrons.com>
+Subject: [PATCH] ata: pata_at91: depend on !ARCH_MULTIPLATFORM
+Date: Tue, 13 Jan 2015 19:25:17 +0100
+Message-ID: <1421173517-21246-1-git-send-email-alexandre.belloni@free-electrons.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f182.google.com ([209.85.216.182]:36121 "EHLO
-	mail-qc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751145AbbAMPd6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Jan 2015 10:33:58 -0500
-Content-Disposition: inline
-In-Reply-To: <1421108032-5582-1-git-send-email-james.d.ralston@intel.com>
+Received: from down.free-electrons.com ([37.187.137.238]:36772 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753337AbbAMSZU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Jan 2015 13:25:20 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Ralston <james.d.ralston@intel.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Nicolas Ferre <nicolas.ferre@atmel.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, Alexandre Belloni <alexandre.belloni@free-electrons.com>
 
-On Mon, Jan 12, 2015 at 04:13:52PM -0800, James Ralston wrote:
-> This patch removes a duplicate AHCI-mode SATA Device ID for the Intel Sunrise Point PCH.
-> 
-> Signed-off-by: James Ralston <james.d.ralston@intel.com>
+Until the driver is corrected to stop using mach/at91isam9_smc.h, it won't
+compile in a ARCH_MULTIPLATFORM configuration.
 
-Applied to libata/for-3.19-fixes.
+Suggested-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Alexandre Belloni <alexandre.belloni@free-electrons.com>
+---
+ drivers/ata/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks.
-
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index a3a13605a9c4..5f601553b9b0 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -835,6 +835,7 @@ config PATA_AT32
+ config PATA_AT91
+ 	tristate "PATA support for AT91SAM9260"
+ 	depends on ARM && SOC_AT91SAM9
++	depends on !ARCH_MULTIPLATFORM
+ 	help
+ 	  This option enables support for IDE devices on the Atmel AT91SAM9260 SoC.
+ 
 -- 
-tejun
+2.1.0
+
