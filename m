@@ -1,172 +1,71 @@
-From: Gregory CLEMENT <gregory.clement@free-electrons.com>
-Subject: [PATCH v3 4/4] ARM: mvebu: Armada 385 GP: Add regulators to the SATA port
-Date: Tue, 13 Jan 2015 15:22:33 +0100
-Message-ID: <1421158953-2957-5-git-send-email-gregory.clement@free-electrons.com>
-References: <1421158953-2957-1-git-send-email-gregory.clement@free-electrons.com>
+From: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+Subject: ata_eh_report() unable to handle kernel NULL pointer dereference
+Date: Tue, 13 Jan 2015 23:25:09 +0900
+Message-ID: <20150113142509.GA985@swordfish>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1421158953-2957-1-git-send-email-gregory.clement@free-electrons.com>
+Content-Disposition: inline
 Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Maxime Ripard <maxime.ripard@free-electrons.com>, Boris BREZILLON <boris.brezillon@free-electrons.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Gregory CLEMENT <gregory.clement@free-electrons.com>, linux-arm-kernel@lists.infradead.org, Lior Amsalem <alior@marvell.com>, Tawfik Bayouk <tawfik@marvell.com>, Nadav Haklai <nadavh@marvell.com>, Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Add the regulators to each SATA port.
+Hi,
 
-Signed-off-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
----
- arch/arm/boot/dts/armada-388-gp.dts | 126 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 126 insertions(+)
+linux-next 20150112
 
-diff --git a/arch/arm/boot/dts/armada-388-gp.dts b/arch/arm/boot/dts/armada-388-gp.dts
-index 4df22bf91683..590b383db323 100644
---- a/arch/arm/boot/dts/armada-388-gp.dts
-+++ b/arch/arm/boot/dts/armada-388-gp.dts
-@@ -173,6 +173,16 @@
- 				status = "okay";
- 				#address-cells = <1>;
- 				#size-cells = <0>;
-+
-+				sata0: sata-port@0 {
-+					reg = <0>;
-+					target-supply = <&reg_5v_sata0>;
-+				};
-+
-+				sata1: sata-port@1 {
-+					reg = <1>;
-+					target-supply = <&reg_5v_sata1>;
-+				};
- 			};
- 
- 			sata@e0000 {
-@@ -181,6 +191,16 @@
- 				status = "okay";
- 				#address-cells = <1>;
- 				#size-cells = <0>;
-+
-+				sata2: sata-port@0 {
-+					reg = <0>;
-+					target-supply = <&reg_5v_sata2>;
-+				};
-+
-+				sata3: sata-port@1 {
-+					reg = <1>;
-+					target-supply = <&reg_5v_sata3>;
-+				};
- 			};
- 
- 			sdhci@d8000 {
-@@ -278,6 +298,112 @@
- 		regulator-always-on;
- 		gpio = <&expander0 4 GPIO_ACTIVE_HIGH>;
- 	};
-+
-+	reg_sata0: pwr-sata0 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "pwr_en_sata0";
-+		enable-active-high;
-+		regulator-always-on;
-+
-+	};
-+
-+	reg_5v_sata0: v5-sata0 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "v5.0-sata0";
-+		regulator-min-microvolt = <5000000>;
-+		regulator-max-microvolt = <5000000>;
-+		regulator-always-on;
-+		vin-supply = <&reg_sata0>;
-+	};
-+
-+	reg_12v_sata0: v12-sata0 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "v12.0-sata0";
-+		regulator-min-microvolt = <12000000>;
-+		regulator-max-microvolt = <12000000>;
-+		regulator-always-on;
-+		vin-supply = <&reg_sata0>;
-+	};
-+
-+	reg_sata1: pwr-sata1 {
-+		regulator-name = "pwr_en_sata1";
-+		compatible = "regulator-fixed";
-+		regulator-min-microvolt = <12000000>;
-+		regulator-max-microvolt = <12000000>;
-+		enable-active-high;
-+		regulator-always-on;
-+		gpio = <&expander0 3 GPIO_ACTIVE_HIGH>;
-+	};
-+
-+	reg_5v_sata1: v5-sata1 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "v5.0-sata1";
-+		regulator-min-microvolt = <5000000>;
-+		regulator-max-microvolt = <5000000>;
-+		regulator-always-on;
-+		vin-supply = <&reg_sata1>;
-+	};
-+
-+	reg_12v_sata1: v12-sata1 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "v12.0-sata1";
-+		regulator-min-microvolt = <12000000>;
-+		regulator-max-microvolt = <12000000>;
-+		regulator-always-on;
-+		vin-supply = <&reg_sata1>;
-+	};
-+
-+	reg_sata2: pwr-sata2 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "pwr_en_sata2";
-+		enable-active-high;
-+		regulator-always-on;
-+		gpio = <&expander0 11 GPIO_ACTIVE_HIGH>;
-+	};
-+
-+	reg_5v_sata2: v5-sata2 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "v5.0-sata2";
-+		regulator-min-microvolt = <5000000>;
-+		regulator-max-microvolt = <5000000>;
-+		regulator-always-on;
-+		vin-supply = <&reg_sata2>;
-+	};
-+
-+	reg_12v_sata2: v12-sata2 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "v12.0-sata2";
-+		regulator-min-microvolt = <12000000>;
-+		regulator-max-microvolt = <12000000>;
-+		regulator-always-on;
-+		vin-supply = <&reg_sata2>;
-+	};
-+
-+	reg_sata3: pwr-sata3 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "pwr_en_sata3";
-+		enable-active-high;
-+		regulator-always-on;
-+		gpio = <&expander0 12 GPIO_ACTIVE_HIGH>;
-+	};
-+
-+	reg_5v_sata3: v5-sata3 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "v5.0-sata3";
-+		regulator-min-microvolt = <5000000>;
-+		regulator-max-microvolt = <5000000>;
-+		regulator-always-on;
-+		vin-supply = <&reg_sata3>;
-+	};
-+
-+	reg_12v_sata3: v12-sata3 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "v12.0-sata3";
-+		regulator-min-microvolt = <12000000>;
-+		regulator-max-microvolt = <12000000>;
-+		regulator-always-on;
-+		vin-supply = <&reg_sata3>;
-+	};
- };
- 
- &pinctrl {
--- 
-1.9.1
+[  934.572323] ata2: exception Emask 0x50 SAct 0x0 SErr 0x4090800 action 0xe frozen
+[  934.572329] ata2: irq_stat 0x00400040, connection status changed
+[  934.572332] ata2: SError: { HostInt PHYRdyChg 10B8B DevExch }
+[  934.572341] BUG: unable to handle kernel NULL pointer dereference at 0000000000000460
+[  934.572346] IP: [<ffffffff812c722c>] ata_eh_report+0x3ad/0x74d
+[  934.572354] PGD 0 
+[  934.572357] Oops: 0000 [#1] PREEMPT SMP 
+[  934.572360] Modules linked in: ipv6 rndis_host cdc_ether usbnet broadcom mii crc32c_intel tg3 microcode psmouse evdev ac i2c_i801 lpc_ich wmi battery processor ehci_pci ehci_hcd usbcore sd_mod ahci
+[  934.572382] CPU: 3 PID: 81 Comm: scsi_eh_1 Not tainted 3.19.0-rc4-next-20150112-dbg-dirty #441
+[  934.572384] Hardware name: Acer             Aspire 5741G    /Aspire 5741G    , BIOS V1.20 02/08/2011
+[  934.572387] task: ffff880151a1a0c0 ti: ffff88009ad8c000 task.ti: ffff88009ad8c000
+[  934.572388] RIP: 0010:[<ffffffff812c722c>]  [<ffffffff812c722c>] ata_eh_report+0x3ad/0x74d
+[  934.572392] RSP: 0018:ffff88009ad8fba8  EFLAGS: 00010246
+[  934.572394] RAX: 0000000000000000 RBX: ffff88009ade4000 RCX: 0000000000000000
+[  934.572396] RDX: 0000000000000000 RSI: ffffffff81580e6d RDI: ffff88009ad8fc0a
+[  934.572398] RBP: ffff88009ad8fc78 R08: 0000000000000001 R09: 0000000000000000
+[  934.572400] R10: 0000000080582700 R11: ffffffff82613e00 R12: ffff88009ade5e98
+[  934.572402] R13: ffffffff81580e6d R14: 0000000000000020 R15: ffff88009ad8fc02
+[  934.572404] FS:  0000000000000000(0000) GS:ffff880157d80000(0000) knlGS:0000000000000000
+[  934.572406] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[  934.572408] CR2: 0000000000000460 CR3: 000000000180b000 CR4: 00000000000007e0
+[  934.572409] Stack:
+[  934.572410]  ffff88009ad8fc48 ffffffff81580e6d ffffffff81580e6d ffffffff81580e6d
+[  934.572414]  ffffffff81580e6d ffffffff81580e6d ffffffff81580e6d ffff88009ade4000
+[  934.572418]  0000000000000000 0000000000000000 0000000000000000 0000000000000000
+[  934.572421] Call Trace:
+[  934.572426]  [<ffffffff812c96e5>] ata_do_eh+0x2b/0x93
+[  934.572429]  [<ffffffff812c05c0>] ? ata_phys_link_offline+0x29/0x29
+[  934.572434]  [<ffffffff812d0bab>] ? ahci_do_softreset+0x192/0x192
+[  934.572437]  [<ffffffff812cfb7e>] ? ahci_dev_classify+0x4d/0x4d
+[  934.572440]  [<ffffffff812cf943>] ? ahci_pmp_attach+0x11d/0x11d
+[  934.572442]  [<ffffffff812cfb7e>] ? ahci_dev_classify+0x4d/0x4d
+[  934.572445]  [<ffffffff812c97a3>] ata_std_error_handler+0x56/0x5e
+[  934.572448]  [<ffffffff812cfe8f>] ahci_error_handler+0x33/0x54
+[  934.572451]  [<ffffffff812c9297>] ata_scsi_port_error_handler+0x21c/0x582
+[  934.572454]  [<ffffffff812c968f>] ata_scsi_error+0x92/0xbd
+[  934.572460]  [<ffffffff812b1b23>] scsi_error_handler+0x1ae/0x802
+[  934.572465]  [<ffffffff810683c2>] ? trace_hardirqs_on_caller+0x180/0x19c
+[  934.572468]  [<ffffffff810683eb>] ? trace_hardirqs_on+0xd/0xf
+[  934.572473]  [<ffffffff813c0d5d>] ? _raw_spin_unlock_irqrestore+0x46/0x5b
+[  934.572476]  [<ffffffff812b1975>] ? scsi_eh_get_sense+0x19e/0x19e
+[  934.572480]  [<ffffffff81051a1c>] kthread+0x10e/0x116
+[  934.572484]  [<ffffffff8105bee3>] ? arch_vtime_task_switch+0x106/0x113
+[  934.572488]  [<ffffffff8105190e>] ? kthread_create_on_node+0x1b6/0x1b6
+[  934.572491]  [<ffffffff813c162c>] ret_from_fork+0x7c/0xb0
+[  934.572494]  [<ffffffff8105190e>] ? kthread_create_on_node+0x1b6/0x1b6
+[  934.572495] Code: 03 00 00 00 48 8b 93 88 01 00 00 48 c7 85 76 ff ff ff 00 00 00 00 48 8d bd 7e ff ff ff 48 c7 45 8a 00 00 00 00 f3 ab 48 8d 7d 92 <44> 8b aa 60 04 00 00 b1 3e f3 aa f6 83 d2 01 00 00 01 0f 84 55 
+[  934.572532] RIP  [<ffffffff812c722c>] ata_eh_report+0x3ad/0x74d
+[  934.572535]  RSP <ffff88009ad8fba8>
+[  934.572537] CR2: 0000000000000460
+[  934.572540] ---[ end trace 62160753352ee227 ]---
+
+
+	-ss
