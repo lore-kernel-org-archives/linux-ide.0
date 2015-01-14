@@ -1,75 +1,97 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: ata_eh_report() unable to handle kernel NULL pointer dereference
-Date: Wed, 14 Jan 2015 09:47:44 -0500
-Message-ID: <20150114144744.GF3565@htj.dyndns.org>
-References: <20150113142509.GA985@swordfish>
- <20150113152738.GC2976@htj.dyndns.org>
- <20150114143033.GA23906@swordfish>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f175.google.com ([209.85.216.175]:42621 "EHLO
-	mail-qc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752903AbbANOrs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Jan 2015 09:47:48 -0500
-Content-Disposition: inline
-In-Reply-To: <20150114143033.GA23906@swordfish>
-Sender: linux-ide-owner@vger.kernel.org
+From: Grant Likely <grant.likely@secretlab.ca>
+Subject: Re: [Linaro-acpi] [PATCH 2/2] ata: ahci_platform: Add ACPI _CLS
+ matching
+Date: Wed, 14 Jan 2015 15:52:25 +0000
+Message-ID: <20150114155225.7F098C40FDA@trevor.secretlab.ca>
+References: <1419019988-4398-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+	<1419019988-4398-3-git-send-email-Suravee.Suthikulpanit@amd.com>
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <1419019988-4398-3-git-send-email-Suravee.Suthikulpanit@amd.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>, rjw@rjwysocki.net, lenb@kernel.org, hdegoede@redhat.com, tj@kernel.org, arnd@arndb.de, mjg59@srcf.ucam.org
+Cc: linux-ide@vger.kernel.org, linaro-acpi@lists.linaro.org, linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>, Hannes Reinecke <hare@suse.de>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Jan 14, 2015 at 11:30:33PM +0900, Sergey Senozhatsky wrote:
-> On (01/13/15 10:27), Tejun Heo wrote:
-> > On Tue, Jan 13, 2015 at 11:25:09PM +0900, Sergey Senozhatsky wrote:
-> > > Hi,
-> > > 
-> > > linux-next 20150112
-> > > 
-> > > [  934.572323] ata2: exception Emask 0x50 SAct 0x0 SErr 0x4090800 action 0xe frozen
-> > > [  934.572329] ata2: irq_stat 0x00400040, connection status changed
-> > > [  934.572332] ata2: SError: { HostInt PHYRdyChg 10B8B DevExch }
-> > > [  934.572341] BUG: unable to handle kernel NULL pointer dereference at 0000000000000460
-> > > [  934.572346] IP: [<ffffffff812c722c>] ata_eh_report+0x3ad/0x74d
-> > 
-> > Any chance you can run addr2line on it and map it to the source line?
-> >
+On Fri, 19 Dec 2014 14:13:08 -0600
+, Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+ wrote:
+> This patch adds ACPI supports for AHCI platform driver, which uses _CLS
+> method to match the device.
 > 
-> Hello,
+> The following is an example of ASL structure in DSDT for a SATA controller,
+> which contains _CLS package to be matched by the ahci_platform driver:
 > 
-> sorry for the delay, emails from my android gmail app are blocked as "outlook
-> spam".
+>   Device (AHC0) // AHCI Controller
+>   {
+>     Name(_HID, "AMDI0600")
+>     Name (_CCA, 1)
+>     Name (_CLS, Package (3)
+>     {
+>       0x01, // Base Class: Mass Storage
+>       0x06, // Sub-Class: serial ATA
+>       0x01, // Interface: AHCI
+>     })
+>     Name (_CRS, ResourceTemplate ()
+>     {
+>       Memory32Fixed (ReadWrite, 0xE0300000, 0x00010000)
+>       Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive,,,) { 387 }
+>     })
+>   }
 > 
-> here it is in reverse order, RIP is the last one.
+> Also, since ATA driver should not require PCI support for ATA_ACPI,
+> this patch removes dependency in the driver/ata/Kconfig.
 > 
-> ~/_next$ addr2line -e vmlinux -i ffffffff812c97a3
->    _next/drivers/ata/libata-eh.c:4020
-> ~/_next$ addr2line -e vmlinux -i ffffffff812cfb7e
->    _next/drivers/ata/libahci.c:1438
-> ~/_next$ addr2line -e vmlinux -i ffffffff812cf943
->    _next/drivers/ata/libahci.c:1470
-> ~/_next$ addr2line -e vmlinux -i ffffffff812cfb7e
->    _next/drivers/ata/libahci.c:1438
-> ~/_next$ addr2line -e vmlinux -i ffffffff812d0bab
->    _next/drivers/ata/libahci.c:1383
-> ~/_next$ addr2line -e vmlinux -i ffffffff812c05c0
->    _next/include/linux/libata.h:1085
->    _next/drivers/ata/libata-core.c:3715
-> ~/_next$ addr2line -e vmlinux -i ffffffff812c96e5
->    _next/drivers/ata/libata-eh.c:3991
-> ~/_next$ addr2line -e vmlinux -i ffffffff812c722c
->    _next/drivers/ata/libata-eh.c:2485
->    _next/drivers/ata/libata-eh.c:2583
+> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-Ah, the culprit is cbba5b0ee4c6 ("libata: use
-__scsi_format_command()") which moved qc->dev->cdb_len deref to before
-the loop verifies the qc is valid.
+Looks good to me.
 
-Hannes, I think the right thing to do is moving that variable
-declaration inside the if (ata_is_atapi()) block.  Can you please take
-care of it?
+Reviewed-by: Grant Likely <grant.likely@linaro.org>
 
-Thanks a lot.
+> ---
+>  drivers/ata/Kconfig         | 2 +-
+>  drivers/ata/ahci_platform.c | 3 +++
+>  2 files changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+> index cd4cccb..edb00c6 100644
+> --- a/drivers/ata/Kconfig
+> +++ b/drivers/ata/Kconfig
+> @@ -48,7 +48,7 @@ config ATA_VERBOSE_ERROR
+>  
+>  config ATA_ACPI
+>  	bool "ATA ACPI Support"
+> -	depends on ACPI && PCI
+> +	depends on ACPI
+>  	default y
+>  	help
+>  	  This option adds support for ATA-related ACPI objects.
+> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+> index 06f1d59..4879f9b 100644
+> --- a/drivers/ata/ahci_platform.c
+> +++ b/drivers/ata/ahci_platform.c
+> @@ -71,6 +71,8 @@ static const struct of_device_id ahci_of_match[] = {
+>  };
+>  MODULE_DEVICE_TABLE(of, ahci_of_match);
+>  
+> +static const struct acpi_device_cls ahci_cls = {0x01, 0x06, 0x01};
+> +
+>  static struct platform_driver ahci_driver = {
+>  	.probe = ahci_probe,
+>  	.remove = ata_platform_remove_one,
+> @@ -78,6 +80,7 @@ static struct platform_driver ahci_driver = {
+>  		.name = "ahci",
+>  		.owner = THIS_MODULE,
+>  		.of_match_table = ahci_of_match,
+> +		.acpi_cls = &ahci_cls,
+>  		.pm = &ahci_pm_ops,
+>  	},
+>  };
+> -- 
+> 1.9.3
+> 
+> 
+> _______________________________________________
+> Linaro-acpi mailing list
+> Linaro-acpi@lists.linaro.org
+> http://lists.linaro.org/mailman/listinfo/linaro-acpi
 
--- 
-tejun
