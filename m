@@ -1,7 +1,7 @@
 From: Gregory CLEMENT <gregory.clement@free-electrons.com>
-Subject: [PATCH v4 2/4] Documentation: bindings: Add the regulator property to the sub-nodes AHCI bindings
-Date: Thu, 15 Jan 2015 15:09:36 +0100
-Message-ID: <1421330978-9694-3-git-send-email-gregory.clement@free-electrons.com>
+Subject: [PATCH v4 4/4] ARM: mvebu: Armada 385 GP: Add regulators to the SATA port
+Date: Thu, 15 Jan 2015 15:09:38 +0100
+Message-ID: <1421330978-9694-5-git-send-email-gregory.clement@free-electrons.com>
 References: <1421330978-9694-1-git-send-email-gregory.clement@free-electrons.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1421330978-9694-1-git-send-email-gregory.clement@free-electrons.com>
@@ -10,44 +10,163 @@ To: Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, linux-ide@vg
 Cc: =?UTF-8?q?Antoine=20T=C3=A9nart?= <antoine.tenart@free-electrons.com>, Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Maxime Ripard <maxime.ripard@free-electrons.com>, Boris BREZILLON <boris.brezillon@free-electrons.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Gregory CLEMENT <gregory.clement@free-electrons.com>, linux-arm-kernel@lists.infradead.org, Lior Amsalem <alior@marvell.com>, Tawfik Bayouk <tawfik@marvell.com>, Nadav Haklai <nadavh@marvell.com>, Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-It is now possible to use a regulator property for each port of the
-AHCI controller.
+Add the regulators to each SATA port.
 
 Signed-off-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
 ---
- Documentation/devicetree/bindings/ata/ahci-platform.txt | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ arch/arm/boot/dts/armada-388-gp.dts | 126 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 126 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-index 4ab09f2202d4..c2340eeeb97f 100644
---- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
-+++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-@@ -37,9 +37,10 @@ Required properties when using sub-nodes:
+diff --git a/arch/arm/boot/dts/armada-388-gp.dts b/arch/arm/boot/dts/armada-388-gp.dts
+index 4df22bf91683..590b383db323 100644
+--- a/arch/arm/boot/dts/armada-388-gp.dts
++++ b/arch/arm/boot/dts/armada-388-gp.dts
+@@ -173,6 +173,16 @@
+ 				status = "okay";
+ 				#address-cells = <1>;
+ 				#size-cells = <0>;
++
++				sata0: sata-port@0 {
++					reg = <0>;
++					target-supply = <&reg_5v_sata0>;
++				};
++
++				sata1: sata-port@1 {
++					reg = <1>;
++					target-supply = <&reg_5v_sata1>;
++				};
+ 			};
  
+ 			sata@e0000 {
+@@ -181,6 +191,16 @@
+ 				status = "okay";
+ 				#address-cells = <1>;
+ 				#size-cells = <0>;
++
++				sata2: sata-port@0 {
++					reg = <0>;
++					target-supply = <&reg_5v_sata2>;
++				};
++
++				sata3: sata-port@1 {
++					reg = <1>;
++					target-supply = <&reg_5v_sata3>;
++				};
+ 			};
  
- Sub-nodes required properties:
--- reg               : the port number
--- phys              : reference to the SATA PHY node
--
-+- reg		    : the port number
-+And at least one of the following properties:
-+- phys		    : reference to the SATA PHY node
-+- target-supply    : regulator for SATA target power
- 
- Examples:
-         sata@ffe08000 {
-@@ -68,10 +69,12 @@ With sub-nodes:
- 		sata0: sata-port@0 {
- 			reg = <0>;
- 			phys = <&sata_phy 0>;
-+			target-supply = <&reg_sata0>;
- 		};
- 
- 		sata1: sata-port@1 {
- 			reg = <1>;
- 			phys = <&sata_phy 1>;
-+			target-supply = <&reg_sata1>;;
- 		};
+ 			sdhci@d8000 {
+@@ -278,6 +298,112 @@
+ 		regulator-always-on;
+ 		gpio = <&expander0 4 GPIO_ACTIVE_HIGH>;
  	};
++
++	reg_sata0: pwr-sata0 {
++		compatible = "regulator-fixed";
++		regulator-name = "pwr_en_sata0";
++		enable-active-high;
++		regulator-always-on;
++
++	};
++
++	reg_5v_sata0: v5-sata0 {
++		compatible = "regulator-fixed";
++		regulator-name = "v5.0-sata0";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		regulator-always-on;
++		vin-supply = <&reg_sata0>;
++	};
++
++	reg_12v_sata0: v12-sata0 {
++		compatible = "regulator-fixed";
++		regulator-name = "v12.0-sata0";
++		regulator-min-microvolt = <12000000>;
++		regulator-max-microvolt = <12000000>;
++		regulator-always-on;
++		vin-supply = <&reg_sata0>;
++	};
++
++	reg_sata1: pwr-sata1 {
++		regulator-name = "pwr_en_sata1";
++		compatible = "regulator-fixed";
++		regulator-min-microvolt = <12000000>;
++		regulator-max-microvolt = <12000000>;
++		enable-active-high;
++		regulator-always-on;
++		gpio = <&expander0 3 GPIO_ACTIVE_HIGH>;
++	};
++
++	reg_5v_sata1: v5-sata1 {
++		compatible = "regulator-fixed";
++		regulator-name = "v5.0-sata1";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		regulator-always-on;
++		vin-supply = <&reg_sata1>;
++	};
++
++	reg_12v_sata1: v12-sata1 {
++		compatible = "regulator-fixed";
++		regulator-name = "v12.0-sata1";
++		regulator-min-microvolt = <12000000>;
++		regulator-max-microvolt = <12000000>;
++		regulator-always-on;
++		vin-supply = <&reg_sata1>;
++	};
++
++	reg_sata2: pwr-sata2 {
++		compatible = "regulator-fixed";
++		regulator-name = "pwr_en_sata2";
++		enable-active-high;
++		regulator-always-on;
++		gpio = <&expander0 11 GPIO_ACTIVE_HIGH>;
++	};
++
++	reg_5v_sata2: v5-sata2 {
++		compatible = "regulator-fixed";
++		regulator-name = "v5.0-sata2";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		regulator-always-on;
++		vin-supply = <&reg_sata2>;
++	};
++
++	reg_12v_sata2: v12-sata2 {
++		compatible = "regulator-fixed";
++		regulator-name = "v12.0-sata2";
++		regulator-min-microvolt = <12000000>;
++		regulator-max-microvolt = <12000000>;
++		regulator-always-on;
++		vin-supply = <&reg_sata2>;
++	};
++
++	reg_sata3: pwr-sata3 {
++		compatible = "regulator-fixed";
++		regulator-name = "pwr_en_sata3";
++		enable-active-high;
++		regulator-always-on;
++		gpio = <&expander0 12 GPIO_ACTIVE_HIGH>;
++	};
++
++	reg_5v_sata3: v5-sata3 {
++		compatible = "regulator-fixed";
++		regulator-name = "v5.0-sata3";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		regulator-always-on;
++		vin-supply = <&reg_sata3>;
++	};
++
++	reg_12v_sata3: v12-sata3 {
++		compatible = "regulator-fixed";
++		regulator-name = "v12.0-sata3";
++		regulator-min-microvolt = <12000000>;
++		regulator-max-microvolt = <12000000>;
++		regulator-always-on;
++		vin-supply = <&reg_sata3>;
++	};
+ };
+ 
+ &pinctrl {
 -- 
 1.9.1
