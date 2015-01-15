@@ -1,110 +1,472 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH v2 3/3] libata: use blk taging
-Date: Wed, 14 Jan 2015 09:37:30 -0800
-Message-ID: <CAPcyv4geWdT7hEzeuVgLO8X5GKy1ez93uK_vxBOmdZWAK94ngw@mail.gmail.com>
-References: <e8fb0a8f15f291f6dae88d51295432a2fa7ad71b.1418928090.git.shli@fb.com>
-	<546516bb62c91671b1464e6a7c68eebc8422efe5.1418928090.git.shli@fb.com>
-	<20150109181529.GA1301458@devbig257.prn2.facebook.com>
-	<20150109214307.GE2785@htj.dyndns.org>
-	<20150109215919.GA1826518@devbig257.prn2.facebook.com>
-	<20150109221209.GA1851286@devbig257.prn2.facebook.com>
-	<CAA9_cmeJvjTjovC4VdeH5P2JYWKZK0OQ8Dc1Ts15TvLiS+qrBQ@mail.gmail.com>
-	<20150114163006.GA3575264@devbig257.prn2.facebook.com>
-	<CAPcyv4hMwpGzeaovnXtqyYFM46wodRamZd7CNVoR43JJYh0Tjg@mail.gmail.com>
-	<20150114171328.GA3636164@devbig257.prn2.facebook.com>
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: Re: [PATCH v3 3/4] ata: libahci: Allow using multiple regulators
+Date: Thu, 15 Jan 2015 09:46:15 +0100
+Message-ID: <54B77E57.7060708@redhat.com>
+References: <1421158953-2957-1-git-send-email-gregory.clement@free-electrons.com> <1421158953-2957-4-git-send-email-gregory.clement@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wg0-f53.google.com ([74.125.82.53]:50524 "EHLO
-	mail-wg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752361AbbANRhc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Jan 2015 12:37:32 -0500
-Received: by mail-wg0-f53.google.com with SMTP id x13so10281819wgg.12
-        for <linux-ide@vger.kernel.org>; Wed, 14 Jan 2015 09:37:31 -0800 (PST)
-In-Reply-To: <20150114171328.GA3636164@devbig257.prn2.facebook.com>
+Received: from mx1.redhat.com ([209.132.183.28]:53790 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751433AbbAOIrB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 15 Jan 2015 03:47:01 -0500
+In-Reply-To: <1421158953-2957-4-git-send-email-gregory.clement@free-electrons.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Shaohua Li <shli@fb.com>
-Cc: Tejun Heo <tj@kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Kernel-team@fb.com, Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@infradead.org>
+To: Gregory CLEMENT <gregory.clement@free-electrons.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: =?windows-1252?Q?Antoine_T=E9nart?= <antoine.tenart@free-electrons.com>, Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Maxime Ripard <maxime.ripard@free-electrons.com>, Boris BREZILLON <boris.brezillon@free-electrons.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, linux-arm-kernel@lists.infradead.org, Lior Amsalem <alior@marvell.com>, Tawfik Bayouk <tawfik@marvell.com>, Nadav Haklai <nadavh@marvell.com>, Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org
 
-On Wed, Jan 14, 2015 at 9:13 AM, Shaohua Li <shli@fb.com> wrote:
-> On Wed, Jan 14, 2015 at 09:04:24AM -0800, Dan Williams wrote:
->> On Wed, Jan 14, 2015 at 8:30 AM, Shaohua Li <shli@fb.com> wrote:
->>
->> > On Wed, Jan 14, 2015 at 12:08:26AM -0800, Dan Williams wrote:
->> > > On Fri, Jan 9, 2015 at 2:12 PM, Shaohua Li <shli@fb.com> wrote:
->> > > > On Fri, Jan 09, 2015 at 01:59:19PM -0800, Shaohua Li wrote:
->> > > >> On Fri, Jan 09, 2015 at 04:43:07PM -0500, Tejun Heo wrote:
->> > > >> > On Fri, Jan 09, 2015 at 10:15:29AM -0800, Shaohua Li wrote:
->> > > >> > > Ping!
->> > > >> >
->> > > >> > I like the idea but it bothers me that we end up with two separate
->> > > >> > ways of allocating command tags.  Any chance the old one can be
->> > > >> > removed?
->> > > >
->> > > > Oh, sorry, my reply truncated.
->> > > >
->> > > > So I checked with IPR driver guys, the ipr doesn't use ncq, so we can
->> > > > always use sata tag 0, but not sure for libsas.
->> > > >
->> > > > Maybe Dan can answer if there is a way we can map SCSI tag to SATA tag.
->> > > >
->> > >
->> > > For libsas or for ata drivers?  For libsas, iirc, the internal libata
->> > > tag is ignored and we use the scsi tag for the sas task  For ata some
->> > > drivers want round robin, but others appear to care about using the
->> > > lowest available:
->> > https://urldefense.proofpoint.com/v1/url?u=https://bugzilla.kernel.org/show_bug.cgi?id%3D87101&k=ZVNjlDMF0FElm4dQtryO4A%3D%3D%0A&r=3RFlL12A7nwmLRXunVJq2g%3D%3D%0A&m=i5Fz0FbsOgTMAtXW2WeXro9juvX%2BRmkKOK%2Fnl5ZZWMw%3D%0A&s=b8747b79ff51a364a841dd8e2ff51814536fcd63eedb7ad8f1de68e6691e5e98
->> > .
->> > >
->> > > Is ata using it's own legacy tag ordering scheme getting in the way of
->> > > other improvements?  I'd just as soon recommend letting legacy dogs
->> > > lie.  In other words what do we gain by switching?
->> > >
->> > > I need to follow up on bz87101, seems I never reworked the patch as
->> > > Tejun asked.  However, I'm glad a fix like the one proposed in that
->> > > report can be self-contained to libata and need not worry about
->> > > supporting ata specific quirks in the block layer tag ordering scheme.
->> >
->> > Basically I'd like using block tag instead of an open coded tag
->> > implementation in libata. The block tag implenmentation is more
->> > sophisticated, and with blk-mq tag is built-in, so it's great to remove
->> > tag implementation in libata.
->>
->>
->> Is it great to remove?  It's not clear what the cost of maintaining it is.
->> How would you handle the case where some ata controllers want the lowest
->> available tag vs others that want round robin.
+Hi,
+
+On 13-01-15 15:22, Gregory CLEMENT wrote:
+> The current implementation of the libahci allows using multiple PHYs
+> but not multiple regulators. This patch adds the support of multiple
+> regulators. Until now it was mandatory to have a PHY under a subnode,
+> now a port subnode can contain either a regulator or a PHY (or both).
 >
-> I added a flag to blk-tag/blk-mq tag to implement different tag
-> allocation strategy, for example, round robin and fifo.
-
-Right, but you seem to do it at the scsi_host level, if I'm not
-mistaken.  Isn't that too high for ata quirks?
-
->> > For sata, it's easy to do it. The problem
->> > is sas, which implements its own scsi driver/tag. My question is if we
->> > can map SCSI tag (of libsas) to ATA tag. So for example, the ipr sas
->> > driver doesn't use NCQ, so we can always use ata tag 0 in libata for
->> > ipr. I'm wondering if we can do some mapping in libsas too, so we can
->> > completely delete the tag code in libata.
->> >
->>
->> The problem with using the scsi tag for libsas is that the scsi_host may
->> support 256 commands, but only 32 per ata device.   Seems like a problem
->> blk-mq has already solved (controller + per-endpoint tag queues), but I
->> have not looked...
+> In order to be able to asociate a port with a regulator the port are
+> now a platform device in the device tree case.
 >
-> This is exactly the issue I'm talking about. Is there a way to map the
-> 256 (scsi tag) to ata tag for libsas? Like I said, for ipr sas, I'll do
-> scsi tag -> ata tag 0, since it doesn't use NCQ for SATA. Is there
-> something similar or whatever for libsas? From search, ipr and libsas
-> are the only scsi drivers using libata.
+> There was only one driver which used directly the regulator field of
+> the ahci_host_priv structure. To preserve the bisectability the change
+> in the ahci_imx driver was done in the same patch.
+>
+> Signed-off-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
 
-libsas uses the libata allocated tag for NCQ.  libsas first asks
-libata to allocate a tag/qc for ncq, then it creates a sas_task and
-assigns the scsi tag.  To use a generic allocator I assume you would
-need to flip that ordering to allocate the sas_task tag first and then
-use that plus another key to allocate a sub-tag for ata to use for
-NCQ.
+Looks good, still needs one more (small) revision though, see comments
+inline.
+
+> ---
+>   drivers/ata/ahci.h             |   2 +-
+>   drivers/ata/ahci_imx.c         |  14 +--
+>   drivers/ata/libahci_platform.c | 227 +++++++++++++++++++++++++++++------------
+>   include/linux/ahci_platform.h  |   2 +
+>   4 files changed, 170 insertions(+), 75 deletions(-)
+>
+> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+> index 40f0e34f17af..275358ae0b3f 100644
+> --- a/drivers/ata/ahci.h
+> +++ b/drivers/ata/ahci.h
+> @@ -333,7 +333,7 @@ struct ahci_host_priv {
+>   	u32			em_msg_type;	/* EM message type */
+>   	bool			got_runtime_pm; /* Did we do pm_runtime_get? */
+>   	struct clk		*clks[AHCI_MAX_CLKS]; /* Optional */
+> -	struct regulator	*target_pwr;	/* Optional */
+> +	struct regulator	**target_pwrs;	/* Optional */
+>   	/*
+>   	 * If platform uses PHYs. There is a 1:1 relation between the port number and
+>   	 * the PHY position in this array.
+> diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+> index 35d51c59a370..41632e57d46f 100644
+> --- a/drivers/ata/ahci_imx.c
+> +++ b/drivers/ata/ahci_imx.c
+> @@ -221,11 +221,9 @@ static int imx_sata_enable(struct ahci_host_priv *hpriv)
+>   	if (imxpriv->no_device)
+>   		return 0;
+>
+> -	if (hpriv->target_pwr) {
+> -		ret = regulator_enable(hpriv->target_pwr);
+> -		if (ret)
+> -			return ret;
+> -	}
+> +	ret = ahci_platform_enable_regulators(hpriv);
+> +	if (ret)
+> +		return ret;
+>
+>   	ret = clk_prepare_enable(imxpriv->sata_ref_clk);
+>   	if (ret < 0)
+> @@ -270,8 +268,7 @@ static int imx_sata_enable(struct ahci_host_priv *hpriv)
+>   disable_clk:
+>   	clk_disable_unprepare(imxpriv->sata_ref_clk);
+>   disable_regulator:
+> -	if (hpriv->target_pwr)
+> -		regulator_disable(hpriv->target_pwr);
+> +	ahci_platform_disable_regulators(hpriv);
+>
+>   	return ret;
+>   }
+> @@ -291,8 +288,7 @@ static void imx_sata_disable(struct ahci_host_priv *hpriv)
+>
+>   	clk_disable_unprepare(imxpriv->sata_ref_clk);
+>
+> -	if (hpriv->target_pwr)
+> -		regulator_disable(hpriv->target_pwr);
+> +	ahci_platform_disable_regulators(hpriv);
+>   }
+>
+>   static void ahci_imx_error_handler(struct ata_port *ap)
+> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+> index a147aaadca85..1db968ef6ff8 100644
+> --- a/drivers/ata/libahci_platform.c
+> +++ b/drivers/ata/libahci_platform.c
+> @@ -24,6 +24,7 @@
+>   #include <linux/ahci_platform.h>
+>   #include <linux/phy/phy.h>
+>   #include <linux/pm_runtime.h>
+> +#include <linux/of_platform.h>
+>   #include "ahci.h"
+>
+>   static void ahci_host_stop(struct ata_host *host);
+> @@ -138,6 +139,59 @@ void ahci_platform_disable_clks(struct ahci_host_priv *hpriv)
+>   EXPORT_SYMBOL_GPL(ahci_platform_disable_clks);
+>
+>   /**
+> + * ahci_platform_enable_regulators - Enable regulators
+> + * @hpriv: host private area to store config values
+> + *
+> + * This function enables all the regulators found in
+> + * hpriv->target_pwrs, if any.  If a regulator fails to be enabled, it
+> + * disables all the regulators already enabled in reverse order and
+> + * returns an error.
+> + *
+> + * RETURNS:
+> + * 0 on success otherwise a negative error code
+> + */
+> +int ahci_platform_enable_regulators(struct ahci_host_priv *hpriv)
+> +{
+> +	int rc, i;
+> +
+> +	for (i = 0; i < hpriv->nports; i++) {
+> +		if (!hpriv->target_pwrs[i])
+> +			continue;
+> +
+> +		rc = regulator_enable(hpriv->target_pwrs[i]);
+> +		if (rc)
+> +			goto disable_target_pwrs;
+> +	}
+> +
+> +	return 0;
+> +
+> +disable_target_pwrs:
+> +	while (--i >= 0)
+> +		if (hpriv->target_pwrs[i])
+> +			regulator_disable(hpriv->target_pwrs[i]);
+> +
+> +	return rc;
+> +}
+> +EXPORT_SYMBOL_GPL(ahci_platform_enable_regulators);
+> +
+> +/**
+> + * ahci_platform_disable_regulators - Disable regulators
+> + * @hpriv: host private area to store config values
+> + *
+> + * This function disables all regulators found in hpriv->target_pwrs.
+> + */
+> +void ahci_platform_disable_regulators(struct ahci_host_priv *hpriv)
+> +{
+> +	int i;
+> +
+> +	for (i = 0; i < hpriv->nports; i++) {
+> +		if (!hpriv->target_pwrs[i])
+> +			continue;
+> +		regulator_disable(hpriv->target_pwrs[i]);
+> +	}
+> +}
+> +EXPORT_SYMBOL_GPL(ahci_platform_disable_regulators);
+> +/**
+>    * ahci_platform_enable_resources - Enable platform resources
+>    * @hpriv: host private area to store config values
+>    *
+> @@ -157,11 +211,9 @@ int ahci_platform_enable_resources(struct ahci_host_priv *hpriv)
+>   {
+>   	int rc;
+>
+> -	if (hpriv->target_pwr) {
+> -		rc = regulator_enable(hpriv->target_pwr);
+> -		if (rc)
+> -			return rc;
+> -	}
+> +	rc = ahci_platform_enable_regulators(hpriv);
+> +	if (rc)
+> +		return rc;
+>
+>   	rc = ahci_platform_enable_clks(hpriv);
+>   	if (rc)
+> @@ -177,8 +229,8 @@ disable_clks:
+>   	ahci_platform_disable_clks(hpriv);
+>
+>   disable_regulator:
+> -	if (hpriv->target_pwr)
+> -		regulator_disable(hpriv->target_pwr);
+> +	ahci_platform_disable_regulators(hpriv);
+> +
+>   	return rc;
+>   }
+>   EXPORT_SYMBOL_GPL(ahci_platform_enable_resources);
+> @@ -199,8 +251,7 @@ void ahci_platform_disable_resources(struct ahci_host_priv *hpriv)
+>
+>   	ahci_platform_disable_clks(hpriv);
+>
+> -	if (hpriv->target_pwr)
+> -		regulator_disable(hpriv->target_pwr);
+> +	ahci_platform_disable_regulators(hpriv);
+>   }
+>   EXPORT_SYMBOL_GPL(ahci_platform_disable_resources);
+>
+> @@ -218,6 +269,59 @@ static void ahci_platform_put_resources(struct device *dev, void *res)
+>   		clk_put(hpriv->clks[c]);
+>   }
+>
+> +static int ahci_platform_get_phy(struct ahci_host_priv *hpriv, u32 port,
+> +				struct device *dev, struct device_node *node)
+> +{
+> +	int rc;
+> +
+> +	hpriv->phys[port] = devm_of_phy_get(dev, node, NULL);
+> +
+> +	if (!IS_ERR(hpriv->phys[port]))
+> +		return 0;
+> +
+> +	rc = PTR_ERR(hpriv->phys[port]);
+> +	switch (rc) {
+> +	case -ENOSYS:
+> +		/* No PHY support. Check if PHY is required. */
+> +		if (of_find_property(node, "phys", NULL)) {
+> +			dev_err(dev,
+> +				"couldn't get PHY in node %s: ENOSYS\n",
+> +				node->name);
+> +			break;
+> +		}
+> +	case -ENODEV:
+> +		/* continue normally */
+> +		hpriv->phys[port] = NULL;
+> +		rc = 0;
+> +		break;
+> +
+> +	default:
+> +		dev_err(dev,
+> +			"couldn't get PHY in node %s: %d\n",
+> +			node->name, rc);
+> +
+> +		break;
+> +	}
+> +
+> +	return rc;
+> +}
+> +
+> +static int ahci_platform_get_regulator(struct ahci_host_priv *hpriv, u32 port,
+> +				struct device *dev)
+> +{
+> +	struct regulator *target_pwr;
+> +	int rc = 0;
+> +
+> +	target_pwr = devm_regulator_get_optional(dev, "target");
+
+As you've already found out the devm framework does not work for freeing
+things which are tied to the child node devices, so it is better to
+use the non devm function here, the devm variant just adds overhead
+(extra malloc under the hood), without buying us anything here.
+
+> +
+> +	if (!IS_ERR(target_pwr))
+> +		hpriv->target_pwrs[port] = target_pwr;
+> +	else
+> +		rc = PTR_ERR(target_pwr);
+> +
+> +	return rc;
+> +}
+> +
+>   /**
+>    * ahci_platform_get_resources - Get platform resources
+>    * @pdev: platform device to get resources for
+
+
+You're not modifying ahci_platform_put_resources to put the regulators here,
+since the regulators may now be bound to the platfrom-devs for the child nodes,
+they will not get cleaned up by the devm framework on driver unbind, as the
+driver is only bound to the main device and thus the devm framework only
+cleans up resources attached to the main device.
+
+So you need to modify ahci_platform_put_resources to explicitly put the
+reference to the regulators.
+
+Note since ahci_platform_put_resources gets called during probe errors too,
+you need to check hpriv->target_pwrs before you deref it as it may be NULL!
+
+Please also add a comment to ahci_platform_put_resources why the regulators
+cannot be devm managed.
+
+> @@ -240,7 +344,7 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev)
+>   	struct ahci_host_priv *hpriv;
+>   	struct clk *clk;
+>   	struct device_node *child;
+> -	int i, enabled_ports = 0, rc = -ENOMEM;
+> +	int i, sz, enabled_ports = 0, rc = -ENOMEM, child_nodes;
+>   	u32 mask_port_map = 0;
+>
+>   	if (!devres_open_group(dev, NULL, GFP_KERNEL))
+> @@ -261,14 +365,6 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev)
+>   		goto err_out;
+>   	}
+>
+> -	hpriv->target_pwr = devm_regulator_get_optional(dev, "target");
+> -	if (IS_ERR(hpriv->target_pwr)) {
+> -		rc = PTR_ERR(hpriv->target_pwr);
+> -		if (rc == -EPROBE_DEFER)
+> -			goto err_out;
+> -		hpriv->target_pwr = NULL;
+> -	}
+> -
+>   	for (i = 0; i < AHCI_MAX_CLKS; i++) {
+>   		/*
+>   		 * For now we must use clk_get(dev, NULL) for the first clock,
+> @@ -290,19 +386,33 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev)
+>   		hpriv->clks[i] = clk;
+>   	}
+>
+> -	hpriv->nports = of_get_child_count(dev->of_node);
+> +	hpriv->nports = child_nodes = of_get_child_count(dev->of_node);
+>
+> -	if (hpriv->nports) {
+> -		hpriv->phys = devm_kzalloc(dev,
+> -					   hpriv->nports * sizeof(*hpriv->phys),
+> -					   GFP_KERNEL);
+> -		if (!hpriv->phys) {
+> -			rc = -ENOMEM;
+> -			goto err_out;
+> -		}
+> +	/*
+> +	 * If no sub-node was found, we still need to set nports to
+> +	 * one in order to be able to use the
+> +	 * ahci_platform_[en|dis]able_[phys|regulators] functions.
+> +	 */
+> +	if (!child_nodes)
+> +		hpriv->nports = 1;
+> +
+> +	sz = hpriv->nports * sizeof(*hpriv->phys);
+> +	hpriv->phys = devm_kzalloc(dev, sz, GFP_KERNEL);
+> +	if (!hpriv->phys) {
+> +		rc = -ENOMEM;
+> +		goto err_out;
+> +	}
+> +	sz = hpriv->nports * sizeof(*hpriv->target_pwrs);
+> +	hpriv->target_pwrs = devm_kzalloc(dev, sz, GFP_KERNEL);
+> +	if (!hpriv->target_pwrs) {
+> +		rc = -ENOMEM;
+> +		goto err_out;
+> +	}
+>
+> +	if (child_nodes) {
+>   		for_each_child_of_node(dev->of_node, child) {
+>   			u32 port;
+> +			struct platform_device *port_dev;
+>
+>   			if (!of_device_is_available(child))
+>   				continue;
+> @@ -316,17 +426,20 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev)
+>   				dev_warn(dev, "invalid port number %d\n", port);
+>   				continue;
+>   			}
+> -
+>   			mask_port_map |= BIT(port);
+>
+> -			hpriv->phys[port] = devm_of_phy_get(dev, child, NULL);
+> -			if (IS_ERR(hpriv->phys[port])) {
+> -				rc = PTR_ERR(hpriv->phys[port]);
+> -				dev_err(dev,
+> -					"couldn't get PHY in node %s: %d\n",
+> -					child->name, rc);
+> +			of_platform_device_create(child, NULL, NULL);
+> +
+> +			port_dev = of_find_device_by_node(child);
+
+This call can fail, you need to error check it before dereferencing the port_dev
+pointer below.
+
+> +
+> +			rc = ahci_platform_get_regulator(hpriv, port,
+> +							&port_dev->dev);
+> +			if (rc == -EPROBE_DEFER)
+> +				goto err_out;
+> +
+> +			rc = ahci_platform_get_phy(hpriv, port, dev, child);
+> +			if (rc)
+>   				goto err_out;
+> -			}
+>
+>   			enabled_ports++;
+>   		}
+> @@ -343,38 +456,14 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev)
+>   		 * If no sub-node was found, keep this for device tree
+>   		 * compatibility
+>   		 */
+> -		struct phy *phy = devm_phy_get(dev, "sata-phy");
+> -		if (!IS_ERR(phy)) {
+> -			hpriv->phys = devm_kzalloc(dev, sizeof(*hpriv->phys),
+> -						   GFP_KERNEL);
+> -			if (!hpriv->phys) {
+> -				rc = -ENOMEM;
+> -				goto err_out;
+> -			}
+> -
+> -			hpriv->phys[0] = phy;
+> -			hpriv->nports = 1;
+> -		} else {
+> -			rc = PTR_ERR(phy);
+> -			switch (rc) {
+> -				case -ENOSYS:
+> -					/* No PHY support. Check if PHY is required. */
+> -					if (of_find_property(dev->of_node, "phys", NULL)) {
+> -						dev_err(dev, "couldn't get sata-phy: ENOSYS\n");
+> -						goto err_out;
+> -					}
+> -				case -ENODEV:
+> -					/* continue normally */
+> -					hpriv->phys = NULL;
+> -					break;
+> -
+> -				default:
+> -					goto err_out;
+> +		rc = ahci_platform_get_phy(hpriv, 0, dev, dev->of_node);
+> +		if (rc)
+> +			goto err_out;
+>
+> -			}
+> -		}
+> +		rc = ahci_platform_get_regulator(hpriv, 0, dev);
+> +		if (rc == -EPROBE_DEFER)
+> +			goto err_out;
+>   	}
+> -
+>   	pm_runtime_enable(dev);
+>   	pm_runtime_get_sync(dev);
+>   	hpriv->got_runtime_pm = true;
+> @@ -383,6 +472,14 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev)
+>   	return hpriv;
+>
+>   err_out:
+> +	/*
+> +	 * In case of a deferred probe, previous regulators may have
+> +	 * been already get, so put them to be able to get them again
+> +	 * in the next probe.
+> +	 */
+> +	for (i = 0; i < hpriv->nports; i++)
+> +		if (hpriv->target_pwrs[i])
+> +			devm_regulator_put(hpriv->target_pwrs[i]);
+
+Once you've added the regulator_put calls to ahci_platform_put_resources
+you can drop this as the devres_release_group() call will call
+ahci_platform_put_resources().
+
+>   	devres_release_group(dev, NULL);
+>   	return ERR_PTR(rc);
+>   }
+> diff --git a/include/linux/ahci_platform.h b/include/linux/ahci_platform.h
+> index 642d6ae4030c..f65b33809170 100644
+> --- a/include/linux/ahci_platform.h
+> +++ b/include/linux/ahci_platform.h
+> @@ -24,6 +24,8 @@ struct platform_device;
+>
+>   int ahci_platform_enable_clks(struct ahci_host_priv *hpriv);
+>   void ahci_platform_disable_clks(struct ahci_host_priv *hpriv);
+> +int ahci_platform_enable_regulators(struct ahci_host_priv *hpriv);
+> +void ahci_platform_disable_regulators(struct ahci_host_priv *hpriv);
+>   int ahci_platform_enable_resources(struct ahci_host_priv *hpriv);
+>   void ahci_platform_disable_resources(struct ahci_host_priv *hpriv);
+>   struct ahci_host_priv *ahci_platform_get_resources(
+>
+
+Regards,
+
+Hans
