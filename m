@@ -1,75 +1,56 @@
-From: Jens Axboe <axboe@fb.com>
+From: Dan Williams <dan.j.williams@intel.com>
 Subject: Re: [PATCH v2 3/3] libata: use blk taging
-Date: Thu, 15 Jan 2015 12:15:19 -0700
-Message-ID: <54B811C7.8000700@fb.com>
-References: <20150109181529.GA1301458@devbig257.prn2.facebook.com>	<20150109214307.GE2785@htj.dyndns.org>	<20150109215919.GA1826518@devbig257.prn2.facebook.com>	<20150109221209.GA1851286@devbig257.prn2.facebook.com>	<CAA9_cmeJvjTjovC4VdeH5P2JYWKZK0OQ8Dc1Ts15TvLiS+qrBQ@mail.gmail.com>	<20150114163006.GA3575264@devbig257.prn2.facebook.com>	<CAPcyv4hMwpGzeaovnXtqyYFM46wodRamZd7CNVoR43JJYh0Tjg@mail.gmail.com>	<20150114171328.GA3636164@devbig257.prn2.facebook.com>	<CAPcyv4geWdT7hEzeuVgLO8X5GKy1ez93uK_vxBOmdZWAK94ngw@mail.gmail.com>	<20150115092836.GA14051@infradead.org>	<20150115184008.GA2222288@devbig257.prn2.facebook.com> <CAPcyv4imdCq83gN+KOWsu4=0arB59um8upnaGRV0UxhBwc6T4A@mail.gmail.com>
+Date: Thu, 15 Jan 2015 11:51:37 -0800
+Message-ID: <CAPcyv4iu4jwJsfuYTBgY1yfxts2NgvSfYhKo_wegT5r3E7N2yQ@mail.gmail.com>
+References: <20150109181529.GA1301458@devbig257.prn2.facebook.com>
+	<20150109214307.GE2785@htj.dyndns.org>
+	<20150109215919.GA1826518@devbig257.prn2.facebook.com>
+	<20150109221209.GA1851286@devbig257.prn2.facebook.com>
+	<CAA9_cmeJvjTjovC4VdeH5P2JYWKZK0OQ8Dc1Ts15TvLiS+qrBQ@mail.gmail.com>
+	<20150114163006.GA3575264@devbig257.prn2.facebook.com>
+	<CAPcyv4hMwpGzeaovnXtqyYFM46wodRamZd7CNVoR43JJYh0Tjg@mail.gmail.com>
+	<20150114171328.GA3636164@devbig257.prn2.facebook.com>
+	<CAPcyv4geWdT7hEzeuVgLO8X5GKy1ez93uK_vxBOmdZWAK94ngw@mail.gmail.com>
+	<20150115092836.GA14051@infradead.org>
+	<20150115184008.GA2222288@devbig257.prn2.facebook.com>
+	<CAPcyv4imdCq83gN+KOWsu4=0arB59um8upnaGRV0UxhBwc6T4A@mail.gmail.com>
+	<54B811C7.8000700@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:50602 "EHLO
-	mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751489AbbAOTQO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Jan 2015 14:16:14 -0500
-In-Reply-To: <CAPcyv4imdCq83gN+KOWsu4=0arB59um8upnaGRV0UxhBwc6T4A@mail.gmail.com>
+Received: from mail-wi0-f175.google.com ([209.85.212.175]:58659 "EHLO
+	mail-wi0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754787AbbAOTvj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Jan 2015 14:51:39 -0500
+Received: by mail-wi0-f175.google.com with SMTP id l15so37507243wiw.2
+        for <linux-ide@vger.kernel.org>; Thu, 15 Jan 2015 11:51:38 -0800 (PST)
+In-Reply-To: <54B811C7.8000700@fb.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>, Shaohua Li <shli@fb.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Tejun Heo <tj@kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Kernel-team@fb.com
+To: Jens Axboe <axboe@fb.com>
+Cc: Shaohua Li <shli@fb.com>, Christoph Hellwig <hch@infradead.org>, Tejun Heo <tj@kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Kernel-team@fb.com
 
-On 01/15/2015 11:59 AM, Dan Williams wrote:
-> On Thu, Jan 15, 2015 at 10:40 AM, Shaohua Li <shli@fb.com> wrote:
->> On Thu, Jan 15, 2015 at 01:28:36AM -0800, Christoph Hellwig wrote:
->>> On Wed, Jan 14, 2015 at 09:37:30AM -0800, Dan Williams wrote:
->>>> libsas uses the libata allocated tag for NCQ.  libsas first asks
->>>> libata to allocate a tag/qc for ncq, then it creates a sas_task and
->>>> assigns the scsi tag.  To use a generic allocator I assume you would
->>>> need to flip that ordering to allocate the sas_task tag first and then
->>>> use that plus another key to allocate a sub-tag for ata to use for
->>>> NCQ.
->>>
->>> As far as I can tell all libsas drivers as well as ipr use block
->>> layer tagging, so they always get requests/scsi_cmnds with a tag
->>> already assigned. For libsas drivers currently use per-LUN tags,
->>> although with scsi-mq we will get per-host tags.
->>>
->>> libata on the other hand at the moment assigns it's own tags,
->>> which are only stored in struct ata_queued_cmd, but never in the
->>> request. libata assigns tags per ata_host.  Each ata_host
->>> might have multiple ports, which each get their own Scsi_Host
->>> allocated.
->>>
->>> Given that ATA NCQ has a fairly low queue depth I assume we want
->>> to stick to assigning ATA tags per-device, but due to the host
->>> per device scheme libata that even works using scsi-mq. (Q: how do tags
->>> work when port mulipliers are involved?)
->>>
->>> So for SAS driver using libata we will need a separate tag allocator,
->>> but that one might as well be in libsas instead of keeping it in libata.
->>
->> Yep, the ATA NCQ should work well with block tag as each port is a
->> scsi host. So looks it's not easy to map scsi tag to ATA tag for libsas
->> and we eventually will have another tag allocator for libsas.
->>
->> Tejun,
->> I'm afraid I can't work out a patch to delete the old tag allocator for
->> libata. Can we take this patch series first and later we can delete the
->> old tag allocator till libsas has its own tag allocator. This isn't
->> optimal, but I really know nothing about libsas.
+On Thu, Jan 15, 2015 at 11:15 AM, Jens Axboe <axboe@fb.com> wrote:
+> On 01/15/2015 11:59 AM, Dan Williams wrote:
+>> I still don't understand what we get by adding this new allocator
+>> besides complexity, am I missing something?
 >
-> I still don't understand what we get by adding this new allocator
-> besides complexity, am I missing something?
+>
+> Two things:
+>
+> - libata tag allocator sucks. Like seriously sucks, it's almost a worst case
+> implementation.
 
-Two things:
+Not questioning its suckiness, but I thought the SATA suckiness made
+it moot.  Apparently not in all cases...
 
-- libata tag allocator sucks. Like seriously sucks, it's almost a worst 
-case implementation.
-- Much better to have a single unified allocator to tweak and tune, than 
-having separate version.
+> - Much better to have a single unified allocator to tweak and tune, than
+> having separate version.
+>
+> #2 is still lacking a bit, but I don't think it'd be impossible to unify it
+> all.
 
-#2 is still lacking a bit, but I don't think it'd be impossible to unify 
-it all.
-
--- 
-Jens Axboe
-
+https://bugzilla.kernel.org/show_bug.cgi?id=87101 has gone silent, I
+need to ping it.  That's my primary concern with the current proposal,
+supporting controllers that have weird/unnatural relationships  with
+the value of the tag.
