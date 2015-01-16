@@ -1,206 +1,89 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [PATCH v4 4/4] ARM: mvebu: Armada 385 GP: Add regulators to the
- SATA port
-Date: Fri, 16 Jan 2015 09:17:55 +0100
-Message-ID: <54B8C933.7020502@redhat.com>
-References: <1421330978-9694-1-git-send-email-gregory.clement@free-electrons.com> <1421330978-9694-5-git-send-email-gregory.clement@free-electrons.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v3 3/3] libata: use blk taging
+Date: Fri, 16 Jan 2015 00:23:44 -0800
+Message-ID: <20150116082344.GA4913@infradead.org>
+References: <81b8ef84122544faa1f37a404cf2e7c71791d961.1421371412.git.shli@fb.com>
+ <92a8da78d57926f61e9050168499872d52066f1c.1421371412.git.shli@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35065 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752139AbbAPISk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 16 Jan 2015 03:18:40 -0500
-In-Reply-To: <1421330978-9694-5-git-send-email-gregory.clement@free-electrons.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:50618 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752061AbbAPIXp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Jan 2015 03:23:45 -0500
+Content-Disposition: inline
+In-Reply-To: <92a8da78d57926f61e9050168499872d52066f1c.1421371412.git.shli@fb.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gregory CLEMENT <gregory.clement@free-electrons.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: =?windows-1252?Q?Antoine_T=E9nart?= <antoine.tenart@free-electrons.com>, Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Maxime Ripard <maxime.ripard@free-electrons.com>, Boris BREZILLON <boris.brezillon@free-electrons.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, linux-arm-kernel@lists.infradead.org, Lior Amsalem <alior@marvell.com>, Tawfik Bayouk <tawfik@marvell.com>, Nadav Haklai <nadavh@marvell.com>, Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org
+To: Shaohua Li <shli@fb.com>
+Cc: linux-ide@vger.kernel.org, Kernel-team@fb.com, dan.j.williams@intel.com, Jens Axboe <axboe@fb.com>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@infradead.org>
 
-Hi,
+> +static bool ata_valid_internal_tag(struct ata_port *ap, struct ata_device *dev,
+> +				   unsigned int tag)
+> +{
+> +	if (!ap->scsi_host)
+> +		return !test_and_set_bit(tag, &ap->sas_tag_allocated);
+> +	return !dev->sdev ||
+> +	       !blk_queue_find_tag(dev->sdev->request_queue, tag);
 
-On 15-01-15 15:09, Gregory CLEMENT wrote:
-> Add the regulators to each SATA port.
->
-> Signed-off-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
-> ---
->   arch/arm/boot/dts/armada-388-gp.dts | 126 ++++++++++++++++++++++++++++++++++++
->   1 file changed, 126 insertions(+)
->
-> diff --git a/arch/arm/boot/dts/armada-388-gp.dts b/arch/arm/boot/dts/armada-388-gp.dts
-> index 4df22bf91683..590b383db323 100644
-> --- a/arch/arm/boot/dts/armada-388-gp.dts
-> +++ b/arch/arm/boot/dts/armada-388-gp.dts
-> @@ -173,6 +173,16 @@
->   				status = "okay";
->   				#address-cells = <1>;
->   				#size-cells = <0>;
-> +
-> +				sata0: sata-port@0 {
-> +					reg = <0>;
-> +					target-supply = <&reg_5v_sata0>;
-> +				};
-> +
-> +				sata1: sata-port@1 {
-> +					reg = <1>;
-> +					target-supply = <&reg_5v_sata1>;
-> +				};
->   			};
->
->   			sata@e0000 {
-> @@ -181,6 +191,16 @@
->   				status = "okay";
->   				#address-cells = <1>;
->   				#size-cells = <0>;
-> +
-> +				sata2: sata-port@0 {
-> +					reg = <0>;
-> +					target-supply = <&reg_5v_sata2>;
-> +				};
-> +
-> +				sata3: sata-port@1 {
-> +					reg = <1>;
-> +					target-supply = <&reg_5v_sata3>;
-> +				};
->   			};
->
->   			sdhci@d8000 {
-> @@ -278,6 +298,112 @@
->   		regulator-always-on;
->   		gpio = <&expander0 4 GPIO_ACTIVE_HIGH>;
->   	};
-> +
-> +	reg_sata0: pwr-sata0 {
-> +		compatible = "regulator-fixed";
-> +		regulator-name = "pwr_en_sata0";
-> +		enable-active-high;
-> +		regulator-always-on;
-> +
-> +	};
-> +
-> +	reg_5v_sata0: v5-sata0 {
-> +		compatible = "regulator-fixed";
-> +		regulator-name = "v5.0-sata0";
-> +		regulator-min-microvolt = <5000000>;
-> +		regulator-max-microvolt = <5000000>;
-> +		regulator-always-on;
-> +		vin-supply = <&reg_sata0>;
-> +	};
-> +
-> +	reg_12v_sata0: v12-sata0 {
-> +		compatible = "regulator-fixed";
-> +		regulator-name = "v12.0-sata0";
-> +		regulator-min-microvolt = <12000000>;
-> +		regulator-max-microvolt = <12000000>;
-> +		regulator-always-on;
-> +		vin-supply = <&reg_sata0>;
-> +	};
+How is this supposed to work with blk-mq?
 
-AFAIK the separate v5 / 12v regulators you're creating here
-are not used anywhere. So I guess there just here to
-accurately / completely describe the power topology ?
+> +}
+> +
+>  /**
+>   *	ata_exec_internal_sg - execute libata internal command
+>   *	@dev: Device to which the command is sent
+> @@ -1585,8 +1594,7 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
+>  	else
+>  		tag = 0;
+>  
+> -	if (test_and_set_bit(tag, &ap->qc_allocated))
+> -		BUG();
+> +	BUG_ON(!ata_valid_internal_tag(ap, dev, tag));
 
-> +
-> +	reg_sata1: pwr-sata1 {
-> +		regulator-name = "pwr_en_sata1";
-> +		compatible = "regulator-fixed";
-> +		regulator-min-microvolt = <12000000>;
-> +		regulator-max-microvolt = <12000000>;
-> +		enable-active-high;
-> +		regulator-always-on;
+But given that this is just a single assert we might as well just
+remove that whole thing.
 
+> +static struct ata_queued_cmd *ata_qc_new(struct ata_port *ap, int blktag)
+> +{
+> +	struct ata_queued_cmd *qc;
+> +
+> +	/* no command while frozen */
+> +	if (unlikely(ap->pflags & ATA_PFLAG_FROZEN))
+> +		return NULL;
+> +
+> +	/* SATA will directly use block tag. libsas need its own tag management */
+> +	if (ap->scsi_host) {
+> +		qc = __ata_qc_from_tag(ap, blktag);
+> +		qc->tag = blktag;
+> +		return qc;
+> +	}
+> +
+> +	return sas_ata_qc_new(ap);
 
-The always on here seems to a bit weird, wasn't the
-whole purpose of this patch set to teach ahci_platform
-to turn it on as needed ?
+Why don't you merge tis into ata_qc_new_init?
 
-You do probably want to put a regulator-boot-on here so
-that disks do not get an unwanted powercycle (bad for
-their lifetime) when the firmware has already turned on
-the disk. Downside of using regulator-boot-on is that if
-the power is not actually turned on no power-on-delay is
-done, but we're not using a power on delay anyways.
+> +static void sas_ata_qc_free(unsigned int tag, struct ata_port *ap)
+> +{
+> +	if (!ap->scsi_host)
 
-The same goes for reg_sata2 & reg_sata3.
+Given the sas_ name I'd move the check into the caller.
 
-> +		gpio = <&expander0 3 GPIO_ACTIVE_HIGH>;
-> +	};
-> +
-> +	reg_5v_sata1: v5-sata1 {
-> +		compatible = "regulator-fixed";
-> +		regulator-name = "v5.0-sata1";
-> +		regulator-min-microvolt = <5000000>;
-> +		regulator-max-microvolt = <5000000>;
-> +		regulator-always-on;
-> +		vin-supply = <&reg_sata1>;
-> +	};
-> +
-> +	reg_12v_sata1: v12-sata1 {
-> +		compatible = "regulator-fixed";
-> +		regulator-name = "v12.0-sata1";
-> +		regulator-min-microvolt = <12000000>;
-> +		regulator-max-microvolt = <12000000>;
-> +		regulator-always-on;
-> +		vin-supply = <&reg_sata1>;
-> +	};
-> +
-> +	reg_sata2: pwr-sata2 {
-> +		compatible = "regulator-fixed";
-> +		regulator-name = "pwr_en_sata2";
-> +		enable-active-high;
-> +		regulator-always-on;
-> +		gpio = <&expander0 11 GPIO_ACTIVE_HIGH>;
-> +	};
-> +
-> +	reg_5v_sata2: v5-sata2 {
-> +		compatible = "regulator-fixed";
-> +		regulator-name = "v5.0-sata2";
-> +		regulator-min-microvolt = <5000000>;
-> +		regulator-max-microvolt = <5000000>;
-> +		regulator-always-on;
-> +		vin-supply = <&reg_sata2>;
-> +	};
-> +
-> +	reg_12v_sata2: v12-sata2 {
-> +		compatible = "regulator-fixed";
-> +		regulator-name = "v12.0-sata2";
-> +		regulator-min-microvolt = <12000000>;
-> +		regulator-max-microvolt = <12000000>;
-> +		regulator-always-on;
-> +		vin-supply = <&reg_sata2>;
-> +	};
-> +
-> +	reg_sata3: pwr-sata3 {
-> +		compatible = "regulator-fixed";
-> +		regulator-name = "pwr_en_sata3";
-> +		enable-active-high;
-> +		regulator-always-on;
-> +		gpio = <&expander0 12 GPIO_ACTIVE_HIGH>;
-> +	};
-> +
-> +	reg_5v_sata3: v5-sata3 {
-> +		compatible = "regulator-fixed";
-> +		regulator-name = "v5.0-sata3";
-> +		regulator-min-microvolt = <5000000>;
-> +		regulator-max-microvolt = <5000000>;
-> +		regulator-always-on;
-> +		vin-supply = <&reg_sata3>;
-> +	};
-> +
-> +	reg_12v_sata3: v12-sata3 {
-> +		compatible = "regulator-fixed";
-> +		regulator-name = "v12.0-sata3";
-> +		regulator-min-microvolt = <12000000>;
-> +		regulator-max-microvolt = <12000000>;
-> +		regulator-always-on;
-> +		vin-supply = <&reg_sata3>;
-> +	};
->   };
->
->   &pinctrl {
->
+That beeing said I wonder if you shouldn't do all this at a much
+higher level.
 
-Regards,
+__ata_scsi_queuecmd has a two callers, one for sata, and one for sas.
+If you pass in the tag from that level the low lever code won't
+need any branches for sas vs libata.  The only downside would be
+that you now consume a tag for simulated command on SAS, but as that's
+already done for SATA it can't be that bad.
 
-Hans
+> @@ -3666,6 +3666,8 @@ int ata_scsi_add_hosts(struct ata_host *host, struct scsi_host_template *sht)
+>  		 */
+>  		shost->max_host_blocked = 1;
+>  
+> +		scsi_init_shared_tag_map(shost, host->n_tags);
+> +
+
+You need to check the return value here.
+
