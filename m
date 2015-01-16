@@ -1,68 +1,226 @@
-From: Jens Axboe <axboe@fb.com>
-Subject: Re: [PATCH v2 3/3] libata: use blk taging
-Date: Thu, 15 Jan 2015 15:28:14 -0700
-Message-ID: <54B83EFE.9000000@fb.com>
-References: <20150109181529.GA1301458@devbig257.prn2.facebook.com>	<20150109214307.GE2785@htj.dyndns.org>	<20150109215919.GA1826518@devbig257.prn2.facebook.com>	<20150109221209.GA1851286@devbig257.prn2.facebook.com>	<CAA9_cmeJvjTjovC4VdeH5P2JYWKZK0OQ8Dc1Ts15TvLiS+qrBQ@mail.gmail.com>	<20150114163006.GA3575264@devbig257.prn2.facebook.com>	<CAPcyv4hMwpGzeaovnXtqyYFM46wodRamZd7CNVoR43JJYh0Tjg@mail.gmail.com>	<20150114171328.GA3636164@devbig257.prn2.facebook.com>	<CAPcyv4geWdT7hEzeuVgLO8X5GKy1ez93uK_vxBOmdZWAK94ngw@mail.gmail.com>	<20150115092836.GA14051@infradead.org>	<20150115184008.GA2222288@devbig257.prn2.facebook.com>	<CAPcyv4imdCq83gN+KOWsu4=0arB59um8upnaGRV0UxhBwc6T4A@mail.gmail.com>	<54B811C7.8000700@fb.com> <CAPcyv4iu4jwJsfuYTBgY1yfxts2NgvSfYhKo_wegT5r3E7N2yQ@mail.gmail.com>
+From: Shaohua Li <shli@fb.com>
+Subject: [PATCH v3 1/3] block: support different tag allocation policy
+Date: Thu, 15 Jan 2015 17:32:25 -0800
+Message-ID: <81b8ef84122544faa1f37a404cf2e7c71791d961.1421371412.git.shli@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:61562 "EHLO
-	mx0b-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752057AbbAOW2q (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Jan 2015 17:28:46 -0500
-In-Reply-To: <CAPcyv4iu4jwJsfuYTBgY1yfxts2NgvSfYhKo_wegT5r3E7N2yQ@mail.gmail.com>
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:32611 "EHLO
+	mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754474AbbAPBcb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Jan 2015 20:32:31 -0500
+Received: from pps.filterd (m0044012 [127.0.0.1])
+	by mx0a-00082601.pphosted.com (8.14.5/8.14.5) with SMTP id t0G1WUpk021614
+	for <linux-ide@vger.kernel.org>; Thu, 15 Jan 2015 17:32:30 -0800
+Received: from mail.thefacebook.com ([199.201.64.23])
+	by mx0a-00082601.pphosted.com with ESMTP id 1rxnje8b59-1
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=OK)
+	for <linux-ide@vger.kernel.org>; Thu, 15 Jan 2015 17:32:30 -0800
+Received: from facebook.com (2401:db00:20:7003:face:0:4d:0)	by
+ mx-out.facebook.com (10.212.236.87) with ESMTP	id
+ 8851fed49d1f11e4acaf0002c9521c9e-7f8eb390 for <linux-ide@vger.kernel.org>;
+	Thu, 15 Jan 2015 17:32:28 -0800
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Shaohua Li <shli@fb.com>, Christoph Hellwig <hch@infradead.org>, Tejun Heo <tj@kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Kernel-team@fb.com
+To: linux-ide@vger.kernel.org
+Cc: Kernel-team@fb.com, dan.j.williams@intel.com, Jens Axboe <axboe@fb.com>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@infradead.org>
 
-On 01/15/2015 12:51 PM, Dan Williams wrote:
-> On Thu, Jan 15, 2015 at 11:15 AM, Jens Axboe <axboe@fb.com> wrote:
->> On 01/15/2015 11:59 AM, Dan Williams wrote:
->>> I still don't understand what we get by adding this new allocator
->>> besides complexity, am I missing something?
->>
->>
->> Two things:
->>
->> - libata tag allocator sucks. Like seriously sucks, it's almost a worst case
->> implementation.
->
-> Not questioning its suckiness, but I thought the SATA suckiness made
-> it moot.  Apparently not in all cases...
+The libata tag allocation is using a round-robin policy. Next patch will
+make libata use block generic tag allocation, so let's add a policy to
+tag allocation.
 
-The laptop I'm typing this from does 145K 4k random read IOPS, it's 
-definitely into the area of it mattering.
+Currently two policies: FIFO (default) and round-robin.
 
->> - Much better to have a single unified allocator to tweak and tune, than
->> having separate version.
->>
->> #2 is still lacking a bit, but I don't think it'd be impossible to unify it
->> all.
->
-> https://bugzilla.kernel.org/show_bug.cgi?id=87101 has gone silent, I
-> need to ping it.  That's my primary concern with the current proposal,
-> supporting controllers that have weird/unnatural relationships  with
-> the value of the tag.
+Cc: Jens Axboe <axboe@fb.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>
+Signed-off-by: Shaohua Li <shli@fb.com>
+---
+ block/blk-tag.c          | 33 +++++++++++++++++++++++++--------
+ drivers/block/osdblk.c   |  2 +-
+ drivers/scsi/scsi_scan.c |  3 ++-
+ include/linux/blkdev.h   |  8 ++++++--
+ include/scsi/scsi_host.h |  3 +++
+ include/scsi/scsi_tcq.h  |  3 ++-
+ 6 files changed, 39 insertions(+), 13 deletions(-)
 
-Unfortunately parts of SATA is as crappy as USB when it comes to things 
-like that. I can understand why some controllers would like to see a 
-natural ordering of the tags (even if it is stupid to require, but AHCI 
-doesn't help there), but it makes very little sense why it would break 
-others. Looks like this particular case was likely a different bug, the 
-ordering just made it show up more easily.
-
-And speaking of strict ordering, the blk-mq tagging should actually 
-improve ordering. The libata implementation orders globally, but that'll 
-equally break down on multiple processes accessing the device. For that 
-case, you end up interleaving, and if the drive does strict by-tag 
-ordering of what IO to do, it'll go random pretty quickly. The blk-mq 
-implementation preserves ordering between threads in that case, due to 
-how the last tag is cached. So I would expect to see an improvement in 
-behavior with that for use cases that offload IO to thread pools (like 
-posix aio, or private implementations in programs).
-
+diff --git a/block/blk-tag.c b/block/blk-tag.c
+index a185b86..f0344e6 100644
+--- a/block/blk-tag.c
++++ b/block/blk-tag.c
+@@ -119,7 +119,7 @@ init_tag_map(struct request_queue *q, struct blk_queue_tag *tags, int depth)
+ }
+ 
+ static struct blk_queue_tag *__blk_queue_init_tags(struct request_queue *q,
+-						   int depth)
++						int depth, int alloc_policy)
+ {
+ 	struct blk_queue_tag *tags;
+ 
+@@ -131,6 +131,8 @@ static struct blk_queue_tag *__blk_queue_init_tags(struct request_queue *q,
+ 		goto fail;
+ 
+ 	atomic_set(&tags->refcnt, 1);
++	tags->alloc_policy = alloc_policy;
++	tags->next_tag = 0;
+ 	return tags;
+ fail:
+ 	kfree(tags);
+@@ -140,10 +142,11 @@ static struct blk_queue_tag *__blk_queue_init_tags(struct request_queue *q,
+ /**
+  * blk_init_tags - initialize the tag info for an external tag map
+  * @depth:	the maximum queue depth supported
++ * @alloc_policy: tag allocation policy
+  **/
+-struct blk_queue_tag *blk_init_tags(int depth)
++struct blk_queue_tag *blk_init_tags(int depth, int alloc_policy)
+ {
+-	return __blk_queue_init_tags(NULL, depth);
++	return __blk_queue_init_tags(NULL, depth, alloc_policy);
+ }
+ EXPORT_SYMBOL(blk_init_tags);
+ 
+@@ -152,19 +155,20 @@ EXPORT_SYMBOL(blk_init_tags);
+  * @q:  the request queue for the device
+  * @depth:  the maximum queue depth supported
+  * @tags: the tag to use
++ * @alloc_policy: tag allocation policy
+  *
+  * Queue lock must be held here if the function is called to resize an
+  * existing map.
+  **/
+ int blk_queue_init_tags(struct request_queue *q, int depth,
+-			struct blk_queue_tag *tags)
++			struct blk_queue_tag *tags, int alloc_policy)
+ {
+ 	int rc;
+ 
+ 	BUG_ON(tags && q->queue_tags && tags != q->queue_tags);
+ 
+ 	if (!tags && !q->queue_tags) {
+-		tags = __blk_queue_init_tags(q, depth);
++		tags = __blk_queue_init_tags(q, depth, alloc_policy);
+ 
+ 		if (!tags)
+ 			return -ENOMEM;
+@@ -344,9 +348,21 @@ int blk_queue_start_tag(struct request_queue *q, struct request *rq)
+ 	}
+ 
+ 	do {
+-		tag = find_first_zero_bit(bqt->tag_map, max_depth);
+-		if (tag >= max_depth)
+-			return 1;
++		if (bqt->alloc_policy == BLK_TAG_ALLOC_FIFO) {
++			tag = find_first_zero_bit(bqt->tag_map, max_depth);
++			if (tag >= max_depth)
++				return 1;
++		} else {
++			int start = bqt->next_tag;
++			int size = min_t(int, bqt->max_depth, max_depth + start);
++			tag = find_next_zero_bit(bqt->tag_map, size, start);
++			if (tag >= size && start + size > bqt->max_depth) {
++				size = start + size - bqt->max_depth;
++				tag = find_first_zero_bit(bqt->tag_map, size);
++			}
++			if (tag >= size)
++				return 1;
++		}
+ 
+ 	} while (test_and_set_bit_lock(tag, bqt->tag_map));
+ 	/*
+@@ -354,6 +370,7 @@ int blk_queue_start_tag(struct request_queue *q, struct request *rq)
+ 	 * See blk_queue_end_tag for details.
+ 	 */
+ 
++	bqt->next_tag = (tag + 1) % bqt->max_depth;
+ 	rq->cmd_flags |= REQ_QUEUED;
+ 	rq->tag = tag;
+ 	bqt->tag_index[tag] = rq;
+diff --git a/drivers/block/osdblk.c b/drivers/block/osdblk.c
+index 79aa179..e229425 100644
+--- a/drivers/block/osdblk.c
++++ b/drivers/block/osdblk.c
+@@ -423,7 +423,7 @@ static int osdblk_init_disk(struct osdblk_device *osdev)
+ 	}
+ 
+ 	/* switch queue to TCQ mode; allocate tag map */
+-	rc = blk_queue_init_tags(q, OSDBLK_MAX_REQ, NULL);
++	rc = blk_queue_init_tags(q, OSDBLK_MAX_REQ, NULL, BLK_TAG_ALLOC_FIFO);
+ 	if (rc) {
+ 		blk_cleanup_queue(q);
+ 		put_disk(disk);
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 983aed1..921a8c8 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -290,7 +290,8 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+ 	if (!shost_use_blk_mq(sdev->host) &&
+ 	    (shost->bqt || shost->hostt->use_blk_tags)) {
+ 		blk_queue_init_tags(sdev->request_queue,
+-				    sdev->host->cmd_per_lun, shost->bqt);
++				    sdev->host->cmd_per_lun, shost->bqt,
++				    shost->hostt->tag_alloc_policy);
+ 	}
+ 	scsi_change_queue_depth(sdev, sdev->host->cmd_per_lun);
+ 
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 92f4b4b..38b095d 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -272,7 +272,11 @@ struct blk_queue_tag {
+ 	int max_depth;			/* what we will send to device */
+ 	int real_max_depth;		/* what the array can hold */
+ 	atomic_t refcnt;		/* map can be shared */
++	int alloc_policy;		/* tag allocation policy */
++	int next_tag;			/* next tag */
+ };
++#define BLK_TAG_ALLOC_FIFO 0 /* allocate starting from 0 */
++#define BLK_TAG_ALLOC_RR 1 /* allocate starting from last allocated tag */
+ 
+ #define BLK_SCSI_MAX_CMDS	(256)
+ #define BLK_SCSI_CMD_PER_LONG	(BLK_SCSI_MAX_CMDS / (sizeof(long) * 8))
+@@ -1139,11 +1143,11 @@ static inline bool blk_needs_flush_plug(struct task_struct *tsk)
+ extern int blk_queue_start_tag(struct request_queue *, struct request *);
+ extern struct request *blk_queue_find_tag(struct request_queue *, int);
+ extern void blk_queue_end_tag(struct request_queue *, struct request *);
+-extern int blk_queue_init_tags(struct request_queue *, int, struct blk_queue_tag *);
++extern int blk_queue_init_tags(struct request_queue *, int, struct blk_queue_tag *, int);
+ extern void blk_queue_free_tags(struct request_queue *);
+ extern int blk_queue_resize_tags(struct request_queue *, int);
+ extern void blk_queue_invalidate_tags(struct request_queue *);
+-extern struct blk_queue_tag *blk_init_tags(int);
++extern struct blk_queue_tag *blk_init_tags(int, int);
+ extern void blk_free_tags(struct blk_queue_tag *);
+ 
+ static inline struct request *blk_map_queue_find_tag(struct blk_queue_tag *bqt,
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 019e668..e113c75 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -402,6 +402,9 @@ struct scsi_host_template {
+ 	 */
+ 	unsigned char present;
+ 
++	/* If use block layer to manage tags, this is tag allocation policy */
++	int tag_alloc_policy;
++
+ 	/*
+ 	 * Let the block layer assigns tags to all commands.
+ 	 */
+diff --git a/include/scsi/scsi_tcq.h b/include/scsi/scsi_tcq.h
+index 9708b28..b27977e 100644
+--- a/include/scsi/scsi_tcq.h
++++ b/include/scsi/scsi_tcq.h
+@@ -66,7 +66,8 @@ static inline int scsi_init_shared_tag_map(struct Scsi_Host *shost, int depth)
+ 	 * devices on the shared host (for libata)
+ 	 */
+ 	if (!shost->bqt) {
+-		shost->bqt = blk_init_tags(depth);
++		shost->bqt = blk_init_tags(depth,
++			shost->hostt->tag_alloc_policy);
+ 		if (!shost->bqt)
+ 			return -ENOMEM;
+ 	}
 -- 
-Jens Axboe
+1.8.1
 
