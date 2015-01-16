@@ -1,98 +1,329 @@
-From: Mark Brown <broonie-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v4 4/4] ARM: mvebu: Armada 385 GP: Add regulators to the
- SATA port
-Date: Fri, 16 Jan 2015 20:25:16 +0000
-Message-ID: <20150116202516.GL3856@sirena.org.uk>
-References: <1421330978-9694-1-git-send-email-gregory.clement@free-electrons.com>
- <1421330978-9694-5-git-send-email-gregory.clement@free-electrons.com>
- <54B8C933.7020502@redhat.com>
- <54B8D97B.3090908@free-electrons.com>
- <54B8E38A.6020709@redhat.com>
- <20150116123705.GM3043@sirena.org.uk>
- <54B9629C.9090800@redhat.com>
+From: Shaohua Li <shli@fb.com>
+Subject: Re: [PATCH v3 3/3] libata: use blk taging
+Date: Fri, 16 Jan 2015 14:16:00 -0800
+Message-ID: <20150116221600.GA1099317@devbig257.prn2.facebook.com>
+References: <81b8ef84122544faa1f37a404cf2e7c71791d961.1421371412.git.shli@fb.com>
+ <92a8da78d57926f61e9050168499872d52066f1c.1421371412.git.shli@fb.com>
+ <20150116082344.GA4913@infradead.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="L/Qt9NZ8t00Dhfad"
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:33252 "EHLO
+	mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750968AbbAPWQh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Jan 2015 17:16:37 -0500
 Content-Disposition: inline
-In-Reply-To: <54B9629C.9090800-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Gregory CLEMENT <gregory.clement-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Antoine =?iso-8859-1?Q?T=E9nart?= <antoine.tenart-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Liam Girdwood <lgirdwood-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Thomas Petazzoni <thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Ezequiel Garcia <ezequiel.garcia-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Boris BREZILLON <boris.brezillon-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Jason Cooper <jason-NLaQJdtUoK4Be96aLqz0jA@public.gmane.org>, Andrew Lunn <andrew-g2DYL2Zd6BY@public.gmane.org>, Sebastian Hesselbarth <sebastian.hesselbarth-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Lior Amsalem <alior-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org>, Tawfik Bayouk <tawfik-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org>, Nadav Haklai <nadavh-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20150116082344.GA4913@infradead.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-ide@vger.kernel.org, Kernel-team@fb.com, dan.j.williams@intel.com, Jens Axboe <axboe@fb.com>, Tejun Heo <tj@kernel.org>
+
+On Fri, Jan 16, 2015 at 12:23:44AM -0800, Christoph Hellwig wrote:
+> > +static bool ata_valid_internal_tag(struct ata_port *ap, struct ata_device *dev,
+> > +				   unsigned int tag)
+> > +{
+> > +	if (!ap->scsi_host)
+> > +		return !test_and_set_bit(tag, &ap->sas_tag_allocated);
+> > +	return !dev->sdev ||
+> > +	       !blk_queue_find_tag(dev->sdev->request_queue, tag);
+> 
+> How is this supposed to work with blk-mq?
+> 
+> > +}
+> > +
+> >  /**
+> >   *	ata_exec_internal_sg - execute libata internal command
+> >   *	@dev: Device to which the command is sent
+> > @@ -1585,8 +1594,7 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
+> >  	else
+> >  		tag = 0;
+> >  
+> > -	if (test_and_set_bit(tag, &ap->qc_allocated))
+> > -		BUG();
+> > +	BUG_ON(!ata_valid_internal_tag(ap, dev, tag));
+> 
+> But given that this is just a single assert we might as well just
+> remove that whole thing.
+
+Ok, I delete it
+ 
+> > +static struct ata_queued_cmd *ata_qc_new(struct ata_port *ap, int blktag)
+> > +{
+> > +	struct ata_queued_cmd *qc;
+> > +
+> > +	/* no command while frozen */
+> > +	if (unlikely(ap->pflags & ATA_PFLAG_FROZEN))
+> > +		return NULL;
+> > +
+> > +	/* SATA will directly use block tag. libsas need its own tag management */
+> > +	if (ap->scsi_host) {
+> > +		qc = __ata_qc_from_tag(ap, blktag);
+> > +		qc->tag = blktag;
+> > +		return qc;
+> > +	}
+> > +
+> > +	return sas_ata_qc_new(ap);
+> 
+> Why don't you merge tis into ata_qc_new_init?
+> 
+> > +static void sas_ata_qc_free(unsigned int tag, struct ata_port *ap)
+> > +{
+> > +	if (!ap->scsi_host)
+> 
+> Given the sas_ name I'd move the check into the caller.
+> 
+> That beeing said I wonder if you shouldn't do all this at a much
+> higher level.
+> 
+> __ata_scsi_queuecmd has a two callers, one for sata, and one for sas.
+> If you pass in the tag from that level the low lever code won't
+> need any branches for sas vs libata.  The only downside would be
+> that you now consume a tag for simulated command on SAS, but as that's
+> already done for SATA it can't be that bad.
+
+I can do this in __ata_scsi_queuecmd, but don't see a good place to free
+the tag, which really should be done at scsi_done. The whole thing
+should be done at a higher level. I moved the ata tag allocation code to
+libata-scsi.c to make it clearer.
 
 
---L/Qt9NZ8t00Dhfad
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+>From 125d41a001b8555fac42ea5b35dae45049655ab0 Mon Sep 17 00:00:00 2001
+Message-Id: <125d41a001b8555fac42ea5b35dae45049655ab0.1421446044.git.shli@fb.com>
+In-Reply-To: <81b8ef84122544faa1f37a404cf2e7c71791d961.1421446044.git.shli@fb.com>
+References: <81b8ef84122544faa1f37a404cf2e7c71791d961.1421446044.git.shli@fb.com>
+From: Shaohua Li <shli@fb.com>
+Date: Thu, 18 Dec 2014 09:04:25 -0800
+Subject: [PATCH 3/3] libata: use blk taging
 
-On Fri, Jan 16, 2015 at 08:12:28PM +0100, Hans de Goede wrote:
-> On 16-01-15 13:37, Mark Brown wrote:
+libata uses its own tag management which is duplication and the
+implementation is poor. And if we switch to blk-mq, tag is build-in.
+It's time to switch to generic taging.
 
-> >>It is probably a good idea to use regulator-boot-on and
-> >>then test things this way, and if that works use
-> >>regulator-boot-on.
+The SAS driver has its own tag management, and looks we can't directly
+map the host controler tag to SATA tag. So I just bypassed the SAS case.
 
-> >No, it's unlikely that boot-on makes sense here - it's there for cases
-> >where we can't read back the hardware state at power on.
+I changed the code/variable name for the tag management of libata to
+make it self contained. Only sas will use it. Later if libsas implements
+its tag management, the tag management code in libata can be deleted
+easily.
 
-> Which we cannot here since we've a gpio driven regulator, with the pin
-> in output mode, so we cannot read it back. Or at least the current kernel
-> implementation relies on regulator-boot-on rather then reading the
-> state back from the hardware.
+Cc: Jens Axboe <axboe@fb.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>
+Signed-off-by: Shaohua Li <shli@fb.com>
+---
+ drivers/ata/libata-core.c | 67 +++++++++++++----------------------------------
+ drivers/ata/libata-scsi.c | 30 ++++++++++++++++++++-
+ drivers/ata/libata.h      |  4 ++-
+ include/linux/libata.h    |  5 ++--
+ 4 files changed, 53 insertions(+), 53 deletions(-)
 
-Right, this always seems like a problem with the GPIO API - not being
-able to read the state back is a total pain for boot handover, we should
-really have a way of reading back the current output state.  This is one
-of the few cases where boot-on can be useful, though ideally it'd be set
-by the bootloader rather than as a static thing since otherwise you have
-the opposite problem in the case where the disk isn't being used at the
-current time.
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 5c84fb5..d626605 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -1585,8 +1585,6 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
+ 	else
+ 		tag = 0;
+ 
+-	if (test_and_set_bit(tag, &ap->qc_allocated))
+-		BUG();
+ 	qc = __ata_qc_from_tag(ap, tag);
+ 
+ 	qc->tag = tag;
+@@ -4726,66 +4724,36 @@ void swap_buf_le16(u16 *buf, unsigned int buf_words)
+ }
+ 
+ /**
+- *	ata_qc_new - Request an available ATA command, for queueing
+- *	@ap: target port
+- *
+- *	Some ATA host controllers may implement a queue depth which is less
+- *	than ATA_MAX_QUEUE. So we shouldn't allocate a tag which is beyond
+- *	the hardware limitation.
++ *	ata_qc_new_init - Request an available ATA command, and initialize it
++ *	@dev: Device from whom we request an available command structure
+  *
+  *	LOCKING:
+  *	None.
+  */
+ 
+-static struct ata_queued_cmd *ata_qc_new(struct ata_port *ap)
++struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev, int tag)
+ {
+-	struct ata_queued_cmd *qc = NULL;
+-	unsigned int max_queue = ap->host->n_tags;
+-	unsigned int i, tag;
++	struct ata_port *ap = dev->link->ap;
++	struct ata_queued_cmd *qc;
+ 
+ 	/* no command while frozen */
+ 	if (unlikely(ap->pflags & ATA_PFLAG_FROZEN))
+ 		return NULL;
+ 
+-	for (i = 0, tag = ap->last_tag + 1; i < max_queue; i++, tag++) {
+-		tag = tag < max_queue ? tag : 0;
+-
+-		/* the last tag is reserved for internal command. */
+-		if (tag == ATA_TAG_INTERNAL)
+-			continue;
+-
+-		if (!test_and_set_bit(tag, &ap->qc_allocated)) {
+-			qc = __ata_qc_from_tag(ap, tag);
+-			qc->tag = tag;
+-			ap->last_tag = tag;
+-			break;
+-		}
++	/* libsas case */
++	if (!ap->scsi_host) {
++		tag = ata_sas_allocate_tag(ap);
++		if (tag < 0)
++			return NULL;
+ 	}
+ 
+-	return qc;
+-}
+-
+-/**
+- *	ata_qc_new_init - Request an available ATA command, and initialize it
+- *	@dev: Device from whom we request an available command structure
+- *
+- *	LOCKING:
+- *	None.
+- */
+-
+-struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev)
+-{
+-	struct ata_port *ap = dev->link->ap;
+-	struct ata_queued_cmd *qc;
+-
+-	qc = ata_qc_new(ap);
+-	if (qc) {
+-		qc->scsicmd = NULL;
+-		qc->ap = ap;
+-		qc->dev = dev;
++	qc = __ata_qc_from_tag(ap, tag);
++	qc->tag = tag;
++	qc->scsicmd = NULL;
++	qc->ap = ap;
++	qc->dev = dev;
+ 
+-		ata_qc_reinit(qc);
+-	}
++	ata_qc_reinit(qc);
+ 
+ 	return qc;
+ }
+@@ -4812,7 +4780,8 @@ void ata_qc_free(struct ata_queued_cmd *qc)
+ 	tag = qc->tag;
+ 	if (likely(ata_tag_valid(tag))) {
+ 		qc->tag = ATA_TAG_POISON;
+-		clear_bit(tag, &ap->qc_allocated);
++		if (!ap->scsi_host)
++			ata_sas_free_tag(tag, ap);
+ 	}
+ }
+ 
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index e364e86..59c9d72 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -756,7 +756,7 @@ static struct ata_queued_cmd *ata_scsi_qc_new(struct ata_device *dev,
+ {
+ 	struct ata_queued_cmd *qc;
+ 
+-	qc = ata_qc_new_init(dev);
++	qc = ata_qc_new_init(dev, cmd->request->tag);
+ 	if (qc) {
+ 		qc->scsicmd = cmd;
+ 		qc->scsidone = cmd->scsi_done;
+@@ -3666,6 +3666,9 @@ int ata_scsi_add_hosts(struct ata_host *host, struct scsi_host_template *sht)
+ 		 */
+ 		shost->max_host_blocked = 1;
+ 
++		if (scsi_init_shared_tag_map(shost, host->n_tags))
++			goto err_add;
++
+ 		rc = scsi_add_host_with_dma(ap->scsi_host,
+ 						&ap->tdev, ap->host->dev);
+ 		if (rc)
+@@ -4228,3 +4231,28 @@ int ata_sas_queuecmd(struct scsi_cmnd *cmd, struct ata_port *ap)
+ 	return rc;
+ }
+ EXPORT_SYMBOL_GPL(ata_sas_queuecmd);
++
++int ata_sas_allocate_tag(struct ata_port *ap)
++{
++	unsigned int max_queue = ap->host->n_tags;
++	unsigned int i, tag;
++
++	for (i = 0, tag = ap->sas_last_tag + 1; i < max_queue; i++, tag++) {
++		tag = tag < max_queue ? tag : 0;
++
++		/* the last tag is reserved for internal command. */
++		if (tag == ATA_TAG_INTERNAL)
++			continue;
++
++		if (!test_and_set_bit(tag, &ap->sas_tag_allocated)) {
++			ap->sas_last_tag = tag;
++			return tag;
++		}
++	}
++	return -1;
++}
++
++void ata_sas_free_tag(unsigned int tag, struct ata_port *ap)
++{
++	clear_bit(tag, &ap->sas_tag_allocated);
++}
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 5f4e0cc..8c491cd 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -63,7 +63,7 @@ extern struct ata_link *ata_dev_phys_link(struct ata_device *dev);
+ extern void ata_force_cbl(struct ata_port *ap);
+ extern u64 ata_tf_to_lba(const struct ata_taskfile *tf);
+ extern u64 ata_tf_to_lba48(const struct ata_taskfile *tf);
+-extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev);
++extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev, int tag);
+ extern int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
+ 			   u64 block, u32 n_block, unsigned int tf_flags,
+ 			   unsigned int tag);
+@@ -145,6 +145,8 @@ extern void ata_scsi_dev_rescan(struct work_struct *work);
+ extern int ata_bus_probe(struct ata_port *ap);
+ extern int ata_scsi_user_scan(struct Scsi_Host *shost, unsigned int channel,
+ 			      unsigned int id, u64 lun);
++int ata_sas_allocate_tag(struct ata_port *ap);
++void ata_sas_free_tag(unsigned int tag, struct ata_port *ap);
+ 
+ 
+ /* libata-eh.c */
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 2d18241..f234547 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -821,10 +821,10 @@ struct ata_port {
+ 	unsigned int		cbl;	/* cable type; ATA_CBL_xxx */
+ 
+ 	struct ata_queued_cmd	qcmd[ATA_MAX_QUEUE];
+-	unsigned long		qc_allocated;
++	unsigned long		sas_tag_allocated; /* for sas tag allocation only */
+ 	unsigned int		qc_active;
+ 	int			nr_active_links; /* #links with active qcs */
+-	unsigned int		last_tag;	/* track next tag hw expects */
++	unsigned int		sas_last_tag;	/* track next tag hw expects */
+ 
+ 	struct ata_link		link;		/* host default link */
+ 	struct ata_link		*slave_link;	/* see ata_slave_link_init() */
+@@ -1344,6 +1344,7 @@ extern struct device_attribute *ata_common_sdev_attrs[];
+ 	.ioctl			= ata_scsi_ioctl,		\
+ 	.queuecommand		= ata_scsi_queuecmd,		\
+ 	.can_queue		= ATA_DEF_QUEUE,		\
++	.tag_alloc_policy	= BLK_TAG_ALLOC_RR,		\
+ 	.this_id		= ATA_SHT_THIS_ID,		\
+ 	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,		\
+ 	.emulated		= ATA_SHT_EMULATED,		\
+-- 
+1.8.1
 
-> While we're discussing this I would also like to advocate to change the
-> behavior for regulator-boot-on to be the same as always-on when it comes
-> to regulator_init_complete(), iow regulator-boot-on regulators should
-> not be touched by regulator_init_complete(). It makes no sense to have
-> different behavior for build in versus module drivers here.
-
-Like I say boot-on is *only* intended to support bootstrapping, if you
-want the regulator to be always on then mark it as always on.  If you
-want some way of marking the end of userspace init so we can defer
-cleanup of unused resources then go do that - it's a change I've
-advocated before, it'd help with modular drivers in general.
-
-> I believe we should still leave these on once userspace starts running,
-> there is a reason they are marked as regulator-boot-on and the fact that
-> we're ready to start running userspace does not take away that reason, to
-> me regulator-boot-on means "do not turn off until explicitly told so by
-> a driver which (hopefully) knows wtf it is doing".
-
-No, that's not it at all - it just means that either the hardware didn't
-support readback or we're working around our own limitations in not
-being capable of doing that.  Remember, regulators are reference counted
-so with a few exceptions drivers aren't saying "turn this off now"
-they're saying "this device doesn't need this regulator right now, turn
-it off if you like" and there's no guarantee that a driver will ever be
-loaded in the first place.
-
---L/Qt9NZ8t00Dhfad
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQEcBAEBCAAGBQJUuXOrAAoJECTWi3JdVIfQz+AH/iTVjM6UoztE8KH6D4cdKvEC
-K62qWmJP5la171aLSd1HF9W0NnF+SGQmc0tpeTNnj59pPhORznMcBP0aPzvLFIA+
-Qjr19QzdIDo4z8Hd6EHhpJV/N25pLwHQb2Ei3r52vwArIx21TyedAReX73zBiyiX
-zSDR/GSJzgOY/HN3Nxu8S+JxVfGseWEzvSubWKID5Lgjia1eLcH5uYjTaJsJM1QG
-V14PPLaLXHQE1DUgam7IUstTO0ixeT8swTwZkxYF7lPngpZ2jfme7J3GhUofdaDn
-ze7FcKfZY4XqJ/S/LNxo48SuMVSdmyFsTAjVKN5f5CpUZNZo+o7XFJ6r6TLvKTI=
-=xv2A
------END PGP SIGNATURE-----
-
---L/Qt9NZ8t00Dhfad--
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
