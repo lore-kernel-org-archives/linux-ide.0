@@ -1,83 +1,105 @@
-From: Mark Brown <broonie-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: Hans de Goede <hdegoede@redhat.com>
 Subject: Re: [PATCH v4 4/4] ARM: mvebu: Armada 385 GP: Add regulators to the
  SATA port
-Date: Fri, 16 Jan 2015 15:34:51 +0000
-Message-ID: <20150116153451.GA3856@sirena.org.uk>
-References: <1421330978-9694-1-git-send-email-gregory.clement@free-electrons.com>
- <1421330978-9694-5-git-send-email-gregory.clement@free-electrons.com>
- <54B8C933.7020502@redhat.com>
- <54B8D97B.3090908@free-electrons.com>
- <54B8E38A.6020709@redhat.com>
- <20150116123705.GM3043@sirena.org.uk>
- <54B91FB4.5080707@free-electrons.com>
+Date: Fri, 16 Jan 2015 20:12:28 +0100
+Message-ID: <54B9629C.9090800@redhat.com>
+References: <1421330978-9694-1-git-send-email-gregory.clement@free-electrons.com> <1421330978-9694-5-git-send-email-gregory.clement@free-electrons.com> <54B8C933.7020502@redhat.com> <54B8D97B.3090908@free-electrons.com> <54B8E38A.6020709@redhat.com> <20150116123705.GM3043@sirena.org.uk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="IJpNTDwzlM2Ie8A6"
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <54B91FB4.5080707-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Gregory CLEMENT <gregory.clement-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
-Cc: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Antoine =?iso-8859-1?Q?T=E9nart?= <antoine.tenart-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Liam Girdwood <lgirdwood-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Thomas Petazzoni <thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Ezequiel Garcia <ezequiel.garcia-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Boris BREZILLON <boris.brezillon-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Jason Cooper <jason-NLaQJdtUoK4Be96aLqz0jA@public.gmane.org>, Andrew Lunn <andrew-g2DYL2Zd6BY@public.gmane.org>, Sebastian Hesselbarth <sebastian.hesselbarth-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Lior Amsalem <alior-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org>, Tawfik Bayouk <tawfik-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org>, Nadav Haklai <nadavh-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:60241 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752036AbbAPTNM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 16 Jan 2015 14:13:12 -0500
+In-Reply-To: <20150116123705.GM3043@sirena.org.uk>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mark Brown <broonie@kernel.org>
+Cc: Gregory CLEMENT <gregory.clement@free-electrons.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, =?windows-1252?Q?Antoine_T=E9nart?= <antoine.tenart@free-electrons.com>, Liam Girdwood <lgirdwood@gmail.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Maxime Ripard <maxime.ripard@free-electrons.com>, Boris BREZILLON <boris.brezillon@free-electrons.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, linux-arm-kernel@lists.infradead.org, Lior Amsalem <alior@marvell.com>, Tawfik Bayouk <tawfik@marvell.com>, Nadav Haklai <nadavh@marvell.com>, Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org
 
+Hi,
 
---IJpNTDwzlM2Ie8A6
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+On 16-01-15 13:37, Mark Brown wrote:
+> On Fri, Jan 16, 2015 at 11:10:18AM +0100, Hans de Goede wrote:
+>> On 16-01-15 10:27, Gregory CLEMENT wrote:
+>
+>>>>> +	reg_sata0: pwr-sata0 {
+>>>>> +		compatible = "regulator-fixed";
+>>>>> +		regulator-name = "pwr_en_sata0";
+>>>>> +		enable-active-high;
+>>>>> +		regulator-always-on;
+>
+>>>> done, but we're not using a power on delay anyways.
+>
+>>> But if regulator-always-on prevent to switch it off in
+>>> suspend then yes using regulator-boot-on is better.
+>
+>> AFAIK regulator-always-on means exactly that and thus likely
+>> is not what you want. As for using regulator-off-in-suspend
+>> that is not necessary as the suspend method for the acpi
+>> driver will already turn it off.
+>
+> regulator-always-on is a bit fuzzy for suspend, if the regulator has
+> suspend control it'll kick in - it's really about the Linux refcounting
+> while it's running.  What's more concerning here is that the quick
+> sample of the regulators flagged as always on like the above that I
+> looked at in the patch don't seem to have any enable control in the DT
+> so this will have absolutely no effect.
+>
+>> It is probably a good idea to use regulator-boot-on and
+>> then test things this way, and if that works use
+>> regulator-boot-on.
+>
+> No, it's unlikely that boot-on makes sense here - it's there for cases
+> where we can't read back the hardware state at power on.
 
-On Fri, Jan 16, 2015 at 03:27:00PM +0100, Gregory CLEMENT wrote:
-> On 16/01/2015 13:37, Mark Brown wrote:
+Which we cannot here since we've a gpio driven regulator, with the pin
+in output mode, so we cannot read it back. Or at least the current kernel
+implementation relies on regulator-boot-on rather then reading the
+state back from the hardware.
 
-> > regulator-always-on is a bit fuzzy for suspend, if the regulator has
-> > suspend control it'll kick in - it's really about the Linux refcounting
-> > while it's running.  What's more concerning here is that the quick
-> > sample of the regulators flagged as always on like the above that I
-> > looked at in the patch don't seem to have any enable control in the DT
-> > so this will have absolutely no effect.
+If we do not specify regulator-boot-on then drivers/regulator/fixed.c :
+of_get_fixed_voltage_config() will set the cfg.ena_gpio_flags
+GPIOF_OUT_INIT_HIGH / GPIOF_OUT_INIT_LOW flags such that the regulator
+will get turned off when registered (*) and then it will get turned back
+on when the ahci driver loads causing the disk to powercycle while
+spinning seriously deteriorating its live time, so regulator nodes
+for supplies which power spinning disks definitely need
+regulator-boot-on.
 
-> Actually the reg_sata[0-4] are controlled by gpio, so there is a mean
-> to enable/disable them. For the reg_5v_sata[0-4] and reg_12v_sata[0-4]
-> they depend on their respective reg_sata and I just propagated the
-> regulator-always-on, this was maybe a mistake.
+An alternative would be using regulator-always-on, but using
+regulator-always-on here is wrong because it removes all of control from
+the driver, making e.g. runtime pm for unused disks or empty drive-bays
+impossible.
 
-It certainly makes everything confusing if you have control related
-stuff on regulators that are not directly controllable.
+*) It will turn it off as soon as it requests the gpio.
 
-> >> It is probably a good idea to use regulator-boot-on and
-> >> then test things this way, and if that works use
-> >> regulator-boot-on.
+> Generally
+> drivers should work regardless of the initial state of the regulator
+> (and modular drivers will actually break if they try to rely on boot-on
+> since we clean up unused regulators at boot).
 
-> > No, it's unlikely that boot-on makes sense here - it's there for cases
-> > where we can't read back the hardware state at power on.  Generally
-> > drivers should work regardless of the initial state of the regulator
-> > (and modular drivers will actually break if they try to rely on boot-on
-> > since we clean up unused regulators at boot).
+This is not about drivers, the driver will work fine, the problem is
+that power-cycling disks which have already been spun-up by the bootloader
+is very bad for those disks.
 
-> As pointed by Hans my concern here was be sure that during boot the disk
-> are not power off. In this case which property would be accurate?
+While we're discussing this I would also like to advocate to change the
+behavior for regulator-boot-on to be the same as always-on when it comes
+to regulator_init_complete(), iow regulator-boot-on regulators should
+not be touched by regulator_init_complete(). It makes no sense to have
+different behavior for build in versus module drivers here.
 
-None, the core won't do anything with the regulator until the end of
-init anyway.
+For build-in the regulator is left on (or turned on even) as soon as the
+regulator registers, and then stays that way until explicitly turned off
+by a driver,
 
---IJpNTDwzlM2Ie8A6
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+I believe we should still leave these on once userspace starts running,
+there is a reason they are marked as regulator-boot-on and the fact that
+we're ready to start running userspace does not take away that reason, to
+me regulator-boot-on means "do not turn off until explicitly told so by
+a driver which (hopefully) knows wtf it is doing".
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+Regards,
 
-iQEcBAEBCAAGBQJUuS+aAAoJECTWi3JdVIfQKNgH/iCKWQY2+aKb+dO9noEIqfEE
-bbz5hA4zbaLkLmNBkQug7NPlzJa86y5NTSqUp9wJjPhJbdvdeCFubJDCTYfpFsiH
-+2xtvzYzkH+yYEcxMZFWs0tRdN02GbYXrAwfVlmI6S/FpNBCXHzSjwzfVQTcHLSA
-SQbfMu/SyptuJbWsBQmA7KbKtqm2SRgDrTHDWfOcz50H4SGX1g0ytxUQfUTm3k0a
-HAiwoHd356IXVugZ2yJxgUoOQBo35FyucNrM3cHnOPoN8iRjrrv7SjeNgJ6Iq1D4
-ldAPiC1hsGvCfd1T+xJzi3ISnuBaQDbqNthUuOsV3DFLEzaG6x8VPnLZ4oYS1MM=
-=69LJ
------END PGP SIGNATURE-----
-
---IJpNTDwzlM2Ie8A6--
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hans
