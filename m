@@ -1,77 +1,43 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: [PATCH] sata_rcar: extend PM methods
-Date: Sat, 17 Jan 2015 02:00:36 +0300
-Message-ID: <2490673.vl8J86zUxO@wasted.cogentembedded.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH 0/2] fix sil24 regression and muddy the ata tag allocation
+ waters
+Date: Fri, 16 Jan 2015 15:12:57 -0800
+Message-ID: <20150116231225.18771.75061.stgit@viggo.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-sh-owner@vger.kernel.org>
-Sender: linux-sh-owner@vger.kernel.org
-To: tj@kernel.org, linux-ide@vger.kernel.org
-Cc: linux-sh@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:54502 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750983AbbAPXMv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 16 Jan 2015 18:12:51 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Christoph Hellwig <hch@infradead.org>, stable@vger.kernel.org, Jens Axboe <axboe@fb.com>, Shaohua Li <shli@fb.com>, Tejun Heo <tj@kernel.org>, Ronny Hegewald <Ronny.Hegewald@online.de>
 
-From: Mikhail Ulyanov <mikhail.ulyanov@cogentembedded.com>
+The last we left the fix for the reported sil24 regression [1], Tejun
+had asked that I simplify the patch to just a flag [2].
 
-In order to make it possible to restore from hibernation not only in Linux but
-also in e.g. U-Boot, we have to extend  sata_rcar_{suspend|resume}() to {freeze|
-thaw}() PM  methods and implement  the  restore() PM method.
+Patch1 incorporates that feedback.  Patch2 tries to make the ata tag
+allocator implementation slightly better than its current worst case
+implementation.  I'm fine with replacing it with something better from
+the block layer, but that implementation had better address the quirk
+that patch1 does.
 
-Signed-off-by: Mikhail Ulyanov <mikhail.ulyanov@cogentembedded.com>
-[Sergei: killed unused variable, changed the order of initializers, modified
-copyrights, renamed, modified changelog.]
-Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+[1]: https://bugzilla.kernel.org/show_bug.cgi?id=87101
+[2]: http://marc.info/?l=linux-ide&m=141511124009903&w=2
 
 ---
-This patch is against the 'for-next' branch of Tejun Heo's 'libata.git' repo.
 
- drivers/ata/sata_rcar.c |   25 +++++++++++++++++++++++--
- 1 file changed, 23 insertions(+), 2 deletions(-)
+Dan Williams (2):
+      libata: allow sata_sil24 to opt-out of tag ordered submission
+      libata: micro-optimize tag allocation
 
-Index: libata/drivers/ata/sata_rcar.c
-===================================================================
---- libata.orig/drivers/ata/sata_rcar.c
-+++ libata/drivers/ata/sata_rcar.c
-@@ -2,8 +2,8 @@
-  * Renesas R-Car SATA driver
-  *
-  * Author: Vladimir Barinov <source@cogentembedded.com>
-- * Copyright (C) 2013 Cogent Embedded, Inc.
-- * Copyright (C) 2013 Renesas Solutions Corp.
-+ * Copyright (C) 2013-2015 Cogent Embedded, Inc.
-+ * Copyright (C) 2013-2015 Renesas Solutions Corp.
-  *
-  * This program is free software; you can redistribute  it and/or modify it
-  * under  the terms of  the GNU General  Public License as published by the
-@@ -992,9 +992,30 @@ static int sata_rcar_resume(struct devic
- 	return 0;
- }
- 
-+static int sata_rcar_restore(struct device *dev)
-+{
-+	struct ata_host *host = dev_get_drvdata(dev);
-+	struct sata_rcar_priv *priv = host->private_data;
-+
-+	clk_prepare_enable(priv->clk);
-+
-+	sata_rcar_setup_port(host);
-+
-+	/* initialize host controller */
-+	sata_rcar_init_controller(host);
-+
-+	ata_host_resume(host);
-+
-+	return 0;
-+}
-+
- static const struct dev_pm_ops sata_rcar_pm_ops = {
- 	.suspend	= sata_rcar_suspend,
- 	.resume		= sata_rcar_resume,
-+	.freeze		= sata_rcar_suspend,
-+	.thaw		= sata_rcar_resume,
-+	.poweroff	= sata_rcar_suspend,
-+	.restore	= sata_rcar_restore,
- };
- #endif
- 
 
+ drivers/ata/libahci.c     |    2 +-
+ drivers/ata/libata-core.c |   56 ++++++++++++++++++++++++++-------------------
+ drivers/ata/libata-sff.c  |    2 +-
+ drivers/ata/sata_sil24.c  |    2 +-
+ include/linux/libata.h    |    4 ++-
+ 5 files changed, 37 insertions(+), 29 deletions(-)
