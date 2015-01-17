@@ -1,83 +1,66 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: Making udev emit a signal when it is done
+From: Mark Brown <broonie@kernel.org>
+Subject: Re: [systemd-devel] Making udev emit a signal when it is done
  loading modules
-Date: Sat, 17 Jan 2015 05:56:30 -0800
-Message-ID: <20150117135630.GA25585@kroah.com>
+Date: Sat, 17 Jan 2015 14:12:48 +0000
+Message-ID: <20150117141248.GD6414@sirena.org.uk>
 References: <54BA20D0.7060402@redhat.com>
+ <20150117135630.GA25585@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <systemd-devel-bounces@lists.freedesktop.org>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="GpGaEY17fSl8rd50"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mezzanine.sirena.org.uk ([106.187.55.193]:44263 "EHLO
+	mezzanine.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751567AbbAQONL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 17 Jan 2015 09:13:11 -0500
 Content-Disposition: inline
-In-Reply-To: <54BA20D0.7060402@redhat.com>
-List-Unsubscribe: <http://lists.freedesktop.org/mailman/options/systemd-devel>,
- <mailto:systemd-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <http://lists.freedesktop.org/archives/systemd-devel>
-List-Post: <mailto:systemd-devel@lists.freedesktop.org>
-List-Help: <mailto:systemd-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <http://lists.freedesktop.org/mailman/listinfo/systemd-devel>,
- <mailto:systemd-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: systemd-devel-bounces@lists.freedesktop.org
-Sender: "systemd-devel" <systemd-devel-bounces@lists.freedesktop.org>
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Mark Brown <broonie@kernel.org>, systemd-devel@lists.freedesktop.org, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, devicetree <devicetree@vger.kernel.org>
+In-Reply-To: <20150117135630.GA25585@kroah.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: Hans de Goede <hdegoede@redhat.com>, systemd-devel@lists.freedesktop.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, devicetree <devicetree@vger.kernel.org>
 
-T24gU2F0LCBKYW4gMTcsIDIwMTUgYXQgMDk6NDQ6MDBBTSArMDEwMCwgSGFucyBkZSBHb2VkZSB3
-cm90ZToKPiBEZWFyIHVkZXYgZGV2ZWxvcGVycywKPiAKPiBXZSAobWUgYW5kIHNvbWUga2VybmVs
-IGRldnMgbW9zdGx5KSB3b3VsZCBsaWtlIHRvIGFkZCBzdXBwb3J0IHRvCj4gdGhlIGtlcm5lbCBm
-b3IgdXNlcnNwYWNlIHRlbGxpbmcgdGhlIGtlcm5lbCB0aGF0IGl0IGlzIGRvbmUgd2l0aAo+IHRo
-ZSAqaW5pdGlhbCogbG9hZGluZyBvZiBtb2R1bGVzLCB3aXRoIHRoZSBwdXJwb3NlIG9mIGNsZWFu
-aW5nIHVwCj4gKGRpc2FibGluZykgdW51c2VkIGhhcndhcmUgcmVzb3VyY2VzIGxpa2UgZS5nLiBy
-ZWd1bGF0b3JzIGFuZAo+IGNsb2Nrcy4KCkJ1dCB5b3UgZG9uJ3QgImtub3ciIHdoZW4gdGhhdCBo
-YXBwZW5zLiAgRXNwZWNpYWxseSB3aXRoIGRpc2NvdmVyYWJsZQpidXNzZXMgKFBDSSwgVVNCLCBl
-dGMuKSwgeW91IGtub3cgdGhpcyA6KQoKPiBDdXJyZW50bHkgdGhlIGtlcm5lbCBkb2VzIHRoaXMg
-Y2xlYW51cCBqdXN0IGJlZm9yZSBpdCBzdGFydHMgaW5pdAo+ICh3aGljaCBtYXkgdmVyeSB3ZWxs
-IGJlIGluaXQgZnJvbSBhIHJhbWRpc2spLiBJbiBzb21lIGNhc2VzIHRoaXMKPiBpcyB0b28gZWFy
-bHkgcmVhbGx5LCBiZWNhdXNlIGxhdGVyIG9uIGEgbW9kdWxlIG1heSBnZXQgbG9hZGVkCj4gd2hp
-Y2ggbmVlZHMgdGhpcyByZXNvdXJjZXMsIHRoZXNlIHJlc291cmNlcyB3aWxsIHRoZW4gZ2V0IHR1
-cm5lZAo+IG9uIGFnYWluIGJ5IHRoZSBsb2FkZWQgZHJpdmVyLCBhbmQgbW9zdCBvZiB0aGUgdGlt
-ZSB0aGlzIGlzIG5vdAo+IGFuIGlzc3VlLCBidXQgc29tZXRpbWVzIGl0IGlzLgo+IAo+IEkgcmVh
-bGl6ZSB2ZXJ5IHdlbGwgdGhhdCB0aGVyZSBpcyBubyBtYWdpYyBtb21lbnQgd2hlcmUgdWRldiBp
-cwo+IHJlYWxseSBldmVyIGRvbmUgbG9hZGluZyBtb2R1bGVzLCBidXQgdGhlIGNhc2Ugd2hpY2gg
-d2Ugd2FudCB0bwo+IHN1cHBvcnQgb25seSBpbnZvbHZlcyBkZXZpY2VzIHdoaWNoIGFyZSAqYWxy
-ZWFkeSBlbnVtZXJhdGVkKiwgYnV0Cj4gbWF5IG5vdCB5ZXQgaGF2ZSBhIGRyaXZlciBsb2FkZWQs
-IHdoZW4gdWRldiBzdGFydHMuIFdlIHdvdWxkIGxpa2UKPiB1ZGV2IHRvIGVtaXQgYSBzaWduYWwg
-KEFCSSB0byBiZSBkaXNjdXNzZWQpIHdoZW4gaXQgaXMgZG9uZQo+IHRyeWluZyB0byBsb2FkIG1v
-ZHVsZXMgZm9yIGV2ZXJ5dGhpbmcgd2hpY2ggd2FzIGFscmVhZHkgZW51bWVyYXRlZAo+IHdoZW4g
-aXQgc3RhcnRzLCBpb3cgd2hlbiB0aGVyZSBhcmUgbm8gbmV3IGRldmljZSBldmVudHMgcGVuZGlu
-Zwo+IGFueW1vcmUgd2hlbiB1ZGV2IGRvZXMgaXRzIGluaXRpYWwgaG90cGx1ZyByZXBsYXkuCgpU
-aGUga2VybmVsIGRvZXNuJ3QgZXZlbiAia25vdyIgd2hlbiB0aGlzIHR5cGUgb2YgdGhpbmcgaXMs
-IGhvdyBjYW4gdWRldgprbm93IHRoaXM/Cgo+IFNvIHRoZSBxdWVzdGlvbiB0byB5b3UgaXMgd291
-bGQgeW91IGJlIHdpbGxpbmcgdG8gaW5jbHVkZSBzdWNoCj4gZnVuY3Rpb25hbGl0eSBpbiB1ZGV2
-ID8gIE5vdGUgdGhpcyBzaWduYWwgd291bGQgbmVlZCB0byBiZSBlbWl0dGVkCj4gd2hlbiB1ZGV2
-IGZyb20gdGhlIHJlYWwgcm9vdGZzIGlzIGRvbmUgd2l0aCB0aGUgaW5pdGlhbCBtb2R1bGUKPiBs
-b2FkaW5nLCBhcyB0aGUgcmVhbCByb290ZnMgbWF5IHZlcnkgd2VsbCBoYXZlIG1vcmUgbW9kdWxl
-cwo+IGF2YWlsYWJsZSB0aGVuIHRoZSBpbml0cmQuCj4gCj4gIyMjCj4gCj4gV2l0aCB0aGUgZ2Vu
-ZXJpYyBzdG9yeSBhYm92ZSB0b2xkIGxldCBtZSBhbHNvIGdpdmUgdGhlIGNvbmNyZXRlCj4gZXhh
-bXBsZSAvIHByb2JsZW0gd2hpY2ggaGFzIGxldCB0byBtZSBhc2tpbmcgdGhpcyAobm90ZSB0aGlz
-IGhhcwo+IGJlZW4gYnJvdWdodCB1cCBiZWZvcmUgb24gdmFyaW91cyBrZXJuZWwgbGlzdHMsIGl0
-IGlzIGEKPiByZS1vY2N1cmluZyB0aGVtZSwgdGhpcyBpcyBqdXN0IGFuIGV4YW1wbGUgcmVhbGx5
-KSA6Cj4gCj4gVGhlIHByb2JsZW0gYXQgaGFuZCBpcyBhIHNhdGEgY29ubmVjdG9yIHdoaWNoIGFs
-c28gaGFzIGEgc2F0YS1wb3dlcgo+IGNvbm5lY3RvciBvbiBhbiBlbWJlZGRlZCAoaXNoKSBib2Fy
-ZCB3aGVyZSB0aGUgc2F0YS1wb3dlciBpcwo+IGNvbnRyb2xsZWQgdGhyb3VnaCBhIGdwaW8uIFRo
-ZSBzYXRhLXBvd2VyIGNvbm5lY3RvciBpcyBtb2RlbGVkCj4gaW4gZGV2aWNldHJlZSBhcyBhIHBv
-d2VyLXN1cHBseSBhbmQgdGhpcyBzdXBwbHkgZ2V0cyBjb250cm9sbGVkCj4gYnkgdGhlIGFoY2lf
-cGxhdGZvcm0gZHJpdmVyLgo+IAo+IFRoZSBkaXNrIHBvd2VyIG1heSB2ZXJ5IHdlbGwgaGF2ZSBh
-bHJlYWR5IGJlZW4gdHVybmVkIG9uIGJ5IHRoZQo+IGJvb3Rsb2FkZXIsIHNvIHdlIGFkZCBhIHJl
-Z3VsYXRvci1ib290LW9uIHByb3BlcnR5IHRvIHRoZSByZWd1bGF0b3IKPiBub2RlIGluIGRldmlj
-ZXRyZWUgdG8gbWFrZSBzdXJlIHRoYXQgaXQgaXMgbGVmdCB1bnRvdWNoZWQgd2hlbiB0aGUKPiBy
-ZWd1bGF0b3IgZHJpdmVyIGxvYWRzLiBJZiB0aGUgYWhjaV9wbGF0Zm9ybSBkcml2ZXIgaXMgYnVp
-bGQgaW50bwo+IHRoZSBrZXJuZWwsIGl0IHdpbGwgdGhlbiB0YWtlIGNvbnRyb2wgb2YgdGhlIHJl
-Z3VsYXRvciBhbmQKPiBldmVyeXRoaW5nIHdvcmtzIHdlbGwuCj4gCj4gSWYgaG93ZXZlciB0aGUg
-YWhjaV9wbGF0Zm9ybSBkcml2ZXIgaXMgYSBtb2R1bGUsIHRoZW4gYXMgc29vbiBhcwo+IHRoZSBr
-ZXJuZWwgaXMgcmVhZHkgdG8gc3RhcnQgaW5pdCwgdW51c2VkIHJlZ3VsYXRvcnMgYXJlIHR1cm5l
-ZCBvZmYKPiBhbmQgdGhlIGRpc2sgbG9vc2VzIGl0cyBwb3dlciB3aGlsZSBzcGlubmluZyBhbmQg
-ZW5kcyB1cCBkb2luZyBhbgo+IGVtZXJnZW5jeSBoZWFkcyBwYXJrLgoKV2hhdCB0dXJucyBvZmYg
-dGhlIHBvd2VyIGluIHRoaXMgc2l0dWF0aW9uPyAgVGhlIGtlcm5lbD8gIE9yIHVzZXJzcGFjZT8K
-RG9uJ3QgeW91IGhhdmUgY29udHJvbCBvZiB0aGlzPwoKSGF2ZSB5b3UgdHJpZWQgdG8gZXZlbiBj
-cmVhdGUgYSBwYXRjaCB0aGF0IGNvdWxkIGRvIHRoaXMgdHlwZSBvZiB0aGluZwp0byB1ZGV2IHRv
-IHNlZSBpZiBpdCBpcyBldmVuIHBvc3NpYmxlPwoKdGhhbmtzLAoKZ3JlZyBrLWgKX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18Kc3lzdGVtZC1kZXZlbCBtYWls
-aW5nIGxpc3QKc3lzdGVtZC1kZXZlbEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cDovL2xpc3Rz
-LmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL3N5c3RlbWQtZGV2ZWwK
+
+--GpGaEY17fSl8rd50
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+On Sat, Jan 17, 2015 at 05:56:30AM -0800, Greg KH wrote:
+> On Sat, Jan 17, 2015 at 09:44:00AM +0100, Hans de Goede wrote:
+
+> > If however the ahci_platform driver is a module, then as soon as
+> > the kernel is ready to start init, unused regulators are turned off
+> > and the disk looses its power while spinning and ends up doing an
+> > emergency heads park.
+
+> What turns off the power in this situation?  The kernel?  Or userspace?
+> Don't you have control of this?
+
+The kernel turns off the power in late_initcall because it noticed that
+nothing is using the regulator, it does this because otherwise we're
+just left with whatever the bootloader had which will may well be
+wasting power on unused rails due to inflexible PMICs (we do similar
+things for other subsystems like clocks).  This works fine for most use
+cases since in embedded systems anything critical tends to end up built
+in.
+
+There is configurability to allow things to be flagged as always on so
+they never get turned off.
+
+--GpGaEY17fSl8rd50
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQEcBAEBCAAGBQJUum3fAAoJECTWi3JdVIfQm+kH/0HUApLmcI7p3Yi6npf1bqH7
+sId0i/epl7MsZKUuz0aBPtRs9nuZp1yNBwPaQqbQw/2m8/Sts+OECMXxGZVJ8mNG
+wjJscIVE3uVEiBqGp8+SlavcSHREYvQjqFpQNrJQTBtKrECawAvlF7+PS0HD3Ikp
+BVE6yrxAx/m5w6XCz5o4pF1YVWvC1CaI8AOcpvP61M1dMJXwR0+KfywJB70Sa2Ih
+DQDyUZ9/hdsgQ87sBo8bS2hoF/6YS50UY6lUU/dB6i5vLAVxaCT3V+R8LiDvDr6r
+t3yoFYl1Ye/ZcONkgkOt1pmlMh8KCrzb1TanVU3EV8x3r0TjvtwOJoRs7qfaAKQ=
+=DvwQ
+-----END PGP SIGNATURE-----
+
+--GpGaEY17fSl8rd50--
