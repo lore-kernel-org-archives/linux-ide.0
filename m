@@ -1,68 +1,83 @@
-From: Mark Brown <broonie-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v4 4/4] ARM: mvebu: Armada 385 GP: Add regulators to the
- SATA port
-Date: Sat, 17 Jan 2015 13:14:05 +0000
-Message-ID: <20150117131404.GA6414@sirena.org.uk>
-References: <1421330978-9694-1-git-send-email-gregory.clement@free-electrons.com>
- <1421330978-9694-5-git-send-email-gregory.clement@free-electrons.com>
- <54B8C933.7020502@redhat.com>
- <54B8D97B.3090908@free-electrons.com>
- <54B8E38A.6020709@redhat.com>
- <20150116123705.GM3043@sirena.org.uk>
- <54B9629C.9090800@redhat.com>
- <20150116202516.GL3856@sirena.org.uk>
- <54BA21F9.5050408@redhat.com>
+From: Greg KH <greg@kroah.com>
+Subject: Re: Making udev emit a signal when it is done
+ loading modules
+Date: Sat, 17 Jan 2015 05:56:30 -0800
+Message-ID: <20150117135630.GA25585@kroah.com>
+References: <54BA20D0.7060402@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="5mCyUwZo2JvN/JJP"
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <systemd-devel-bounces@lists.freedesktop.org>
 Content-Disposition: inline
-In-Reply-To: <54BA21F9.5050408-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Gregory CLEMENT <gregory.clement-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Antoine =?iso-8859-1?Q?T=E9nart?= <antoine.tenart-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Liam Girdwood <lgirdwood-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Thomas Petazzoni <thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Ezequiel Garcia <ezequiel.garcia-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Maxime Ripard <maxime.ripard-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Boris BREZILLON <boris.brezillon-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Jason Cooper <jason-NLaQJdtUoK4Be96aLqz0jA@public.gmane.org>, Andrew Lunn <andrew-g2DYL2Zd6BY@public.gmane.org>, Sebastian Hesselbarth <sebastian.hesselbarth-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Lior Amsalem <alior-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org>, Tawfik Bayouk <tawfik-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org>, Nadav Haklai <nadavh-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <54BA20D0.7060402@redhat.com>
+List-Unsubscribe: <http://lists.freedesktop.org/mailman/options/systemd-devel>,
+ <mailto:systemd-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <http://lists.freedesktop.org/archives/systemd-devel>
+List-Post: <mailto:systemd-devel@lists.freedesktop.org>
+List-Help: <mailto:systemd-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <http://lists.freedesktop.org/mailman/listinfo/systemd-devel>,
+ <mailto:systemd-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: systemd-devel-bounces@lists.freedesktop.org
+Sender: "systemd-devel" <systemd-devel-bounces@lists.freedesktop.org>
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Mark Brown <broonie@kernel.org>, systemd-devel@lists.freedesktop.org, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, devicetree <devicetree@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-
---5mCyUwZo2JvN/JJP
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-On Sat, Jan 17, 2015 at 09:48:57AM +0100, Hans de Goede wrote:
-
-> and leave these regulators on, rather then turn them of $random time,
-> because as I've advocated before (see the simplefb thread) there is
-> no simple magic moment when it is right to turn things off, so doing
-> it when userspace starts is more or less as good as any moment, and if
-> it turns out that that is not a good moment, then maybe we need to
-> re-think the turning off in general.
-
-Following your argument to the logical conclusion means we can never
-turn any regualtor off - we always have the risk that there's another
-shared user which is going to get a power bounce if we power down.  More
-directly we'll also get people complaining that we're burning power
-pointlessly on their systems for devices they've not even got drivers
-enabled for.  This powering down is something there's been user demand
-for.
-
---5mCyUwZo2JvN/JJP
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQEcBAEBCAAGBQJUumAcAAoJECTWi3JdVIfQlH0IAIaIzrngaQ6SB0xsjq9eZMgi
-sqS7M9Oi9AveSVZraYdpQ4AgmkgddW+Mqkn3eiojRw75prISheVi09T7veN5C0+t
-nq4MhUM8spaInxnT7Ns4GQP7wHwzhWohR6++b24V8olea2Mp+iUQ0C3e7cgxiJLQ
-vCQvE8CjYH6o6I57XLx2NsvheHh3CsOK6wdfJnb9f8e7kgK6E1vi9ICOvWsTBaMs
-BMzJojO0OgM3GqU9A6XIwbW8OvLUDMStN0lCRgRjXWgD19dZIuEqR4zfCzRXiIz+
-CjLOYUZ5deaxrLjS5c4epyO37eBgfSwZfpAMLZpE3h9ANKG0ealiW6aIN71MtSY=
-=3ctk
------END PGP SIGNATURE-----
-
---5mCyUwZo2JvN/JJP--
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+T24gU2F0LCBKYW4gMTcsIDIwMTUgYXQgMDk6NDQ6MDBBTSArMDEwMCwgSGFucyBkZSBHb2VkZSB3
+cm90ZToKPiBEZWFyIHVkZXYgZGV2ZWxvcGVycywKPiAKPiBXZSAobWUgYW5kIHNvbWUga2VybmVs
+IGRldnMgbW9zdGx5KSB3b3VsZCBsaWtlIHRvIGFkZCBzdXBwb3J0IHRvCj4gdGhlIGtlcm5lbCBm
+b3IgdXNlcnNwYWNlIHRlbGxpbmcgdGhlIGtlcm5lbCB0aGF0IGl0IGlzIGRvbmUgd2l0aAo+IHRo
+ZSAqaW5pdGlhbCogbG9hZGluZyBvZiBtb2R1bGVzLCB3aXRoIHRoZSBwdXJwb3NlIG9mIGNsZWFu
+aW5nIHVwCj4gKGRpc2FibGluZykgdW51c2VkIGhhcndhcmUgcmVzb3VyY2VzIGxpa2UgZS5nLiBy
+ZWd1bGF0b3JzIGFuZAo+IGNsb2Nrcy4KCkJ1dCB5b3UgZG9uJ3QgImtub3ciIHdoZW4gdGhhdCBo
+YXBwZW5zLiAgRXNwZWNpYWxseSB3aXRoIGRpc2NvdmVyYWJsZQpidXNzZXMgKFBDSSwgVVNCLCBl
+dGMuKSwgeW91IGtub3cgdGhpcyA6KQoKPiBDdXJyZW50bHkgdGhlIGtlcm5lbCBkb2VzIHRoaXMg
+Y2xlYW51cCBqdXN0IGJlZm9yZSBpdCBzdGFydHMgaW5pdAo+ICh3aGljaCBtYXkgdmVyeSB3ZWxs
+IGJlIGluaXQgZnJvbSBhIHJhbWRpc2spLiBJbiBzb21lIGNhc2VzIHRoaXMKPiBpcyB0b28gZWFy
+bHkgcmVhbGx5LCBiZWNhdXNlIGxhdGVyIG9uIGEgbW9kdWxlIG1heSBnZXQgbG9hZGVkCj4gd2hp
+Y2ggbmVlZHMgdGhpcyByZXNvdXJjZXMsIHRoZXNlIHJlc291cmNlcyB3aWxsIHRoZW4gZ2V0IHR1
+cm5lZAo+IG9uIGFnYWluIGJ5IHRoZSBsb2FkZWQgZHJpdmVyLCBhbmQgbW9zdCBvZiB0aGUgdGlt
+ZSB0aGlzIGlzIG5vdAo+IGFuIGlzc3VlLCBidXQgc29tZXRpbWVzIGl0IGlzLgo+IAo+IEkgcmVh
+bGl6ZSB2ZXJ5IHdlbGwgdGhhdCB0aGVyZSBpcyBubyBtYWdpYyBtb21lbnQgd2hlcmUgdWRldiBp
+cwo+IHJlYWxseSBldmVyIGRvbmUgbG9hZGluZyBtb2R1bGVzLCBidXQgdGhlIGNhc2Ugd2hpY2gg
+d2Ugd2FudCB0bwo+IHN1cHBvcnQgb25seSBpbnZvbHZlcyBkZXZpY2VzIHdoaWNoIGFyZSAqYWxy
+ZWFkeSBlbnVtZXJhdGVkKiwgYnV0Cj4gbWF5IG5vdCB5ZXQgaGF2ZSBhIGRyaXZlciBsb2FkZWQs
+IHdoZW4gdWRldiBzdGFydHMuIFdlIHdvdWxkIGxpa2UKPiB1ZGV2IHRvIGVtaXQgYSBzaWduYWwg
+KEFCSSB0byBiZSBkaXNjdXNzZWQpIHdoZW4gaXQgaXMgZG9uZQo+IHRyeWluZyB0byBsb2FkIG1v
+ZHVsZXMgZm9yIGV2ZXJ5dGhpbmcgd2hpY2ggd2FzIGFscmVhZHkgZW51bWVyYXRlZAo+IHdoZW4g
+aXQgc3RhcnRzLCBpb3cgd2hlbiB0aGVyZSBhcmUgbm8gbmV3IGRldmljZSBldmVudHMgcGVuZGlu
+Zwo+IGFueW1vcmUgd2hlbiB1ZGV2IGRvZXMgaXRzIGluaXRpYWwgaG90cGx1ZyByZXBsYXkuCgpU
+aGUga2VybmVsIGRvZXNuJ3QgZXZlbiAia25vdyIgd2hlbiB0aGlzIHR5cGUgb2YgdGhpbmcgaXMs
+IGhvdyBjYW4gdWRldgprbm93IHRoaXM/Cgo+IFNvIHRoZSBxdWVzdGlvbiB0byB5b3UgaXMgd291
+bGQgeW91IGJlIHdpbGxpbmcgdG8gaW5jbHVkZSBzdWNoCj4gZnVuY3Rpb25hbGl0eSBpbiB1ZGV2
+ID8gIE5vdGUgdGhpcyBzaWduYWwgd291bGQgbmVlZCB0byBiZSBlbWl0dGVkCj4gd2hlbiB1ZGV2
+IGZyb20gdGhlIHJlYWwgcm9vdGZzIGlzIGRvbmUgd2l0aCB0aGUgaW5pdGlhbCBtb2R1bGUKPiBs
+b2FkaW5nLCBhcyB0aGUgcmVhbCByb290ZnMgbWF5IHZlcnkgd2VsbCBoYXZlIG1vcmUgbW9kdWxl
+cwo+IGF2YWlsYWJsZSB0aGVuIHRoZSBpbml0cmQuCj4gCj4gIyMjCj4gCj4gV2l0aCB0aGUgZ2Vu
+ZXJpYyBzdG9yeSBhYm92ZSB0b2xkIGxldCBtZSBhbHNvIGdpdmUgdGhlIGNvbmNyZXRlCj4gZXhh
+bXBsZSAvIHByb2JsZW0gd2hpY2ggaGFzIGxldCB0byBtZSBhc2tpbmcgdGhpcyAobm90ZSB0aGlz
+IGhhcwo+IGJlZW4gYnJvdWdodCB1cCBiZWZvcmUgb24gdmFyaW91cyBrZXJuZWwgbGlzdHMsIGl0
+IGlzIGEKPiByZS1vY2N1cmluZyB0aGVtZSwgdGhpcyBpcyBqdXN0IGFuIGV4YW1wbGUgcmVhbGx5
+KSA6Cj4gCj4gVGhlIHByb2JsZW0gYXQgaGFuZCBpcyBhIHNhdGEgY29ubmVjdG9yIHdoaWNoIGFs
+c28gaGFzIGEgc2F0YS1wb3dlcgo+IGNvbm5lY3RvciBvbiBhbiBlbWJlZGRlZCAoaXNoKSBib2Fy
+ZCB3aGVyZSB0aGUgc2F0YS1wb3dlciBpcwo+IGNvbnRyb2xsZWQgdGhyb3VnaCBhIGdwaW8uIFRo
+ZSBzYXRhLXBvd2VyIGNvbm5lY3RvciBpcyBtb2RlbGVkCj4gaW4gZGV2aWNldHJlZSBhcyBhIHBv
+d2VyLXN1cHBseSBhbmQgdGhpcyBzdXBwbHkgZ2V0cyBjb250cm9sbGVkCj4gYnkgdGhlIGFoY2lf
+cGxhdGZvcm0gZHJpdmVyLgo+IAo+IFRoZSBkaXNrIHBvd2VyIG1heSB2ZXJ5IHdlbGwgaGF2ZSBh
+bHJlYWR5IGJlZW4gdHVybmVkIG9uIGJ5IHRoZQo+IGJvb3Rsb2FkZXIsIHNvIHdlIGFkZCBhIHJl
+Z3VsYXRvci1ib290LW9uIHByb3BlcnR5IHRvIHRoZSByZWd1bGF0b3IKPiBub2RlIGluIGRldmlj
+ZXRyZWUgdG8gbWFrZSBzdXJlIHRoYXQgaXQgaXMgbGVmdCB1bnRvdWNoZWQgd2hlbiB0aGUKPiBy
+ZWd1bGF0b3IgZHJpdmVyIGxvYWRzLiBJZiB0aGUgYWhjaV9wbGF0Zm9ybSBkcml2ZXIgaXMgYnVp
+bGQgaW50bwo+IHRoZSBrZXJuZWwsIGl0IHdpbGwgdGhlbiB0YWtlIGNvbnRyb2wgb2YgdGhlIHJl
+Z3VsYXRvciBhbmQKPiBldmVyeXRoaW5nIHdvcmtzIHdlbGwuCj4gCj4gSWYgaG93ZXZlciB0aGUg
+YWhjaV9wbGF0Zm9ybSBkcml2ZXIgaXMgYSBtb2R1bGUsIHRoZW4gYXMgc29vbiBhcwo+IHRoZSBr
+ZXJuZWwgaXMgcmVhZHkgdG8gc3RhcnQgaW5pdCwgdW51c2VkIHJlZ3VsYXRvcnMgYXJlIHR1cm5l
+ZCBvZmYKPiBhbmQgdGhlIGRpc2sgbG9vc2VzIGl0cyBwb3dlciB3aGlsZSBzcGlubmluZyBhbmQg
+ZW5kcyB1cCBkb2luZyBhbgo+IGVtZXJnZW5jeSBoZWFkcyBwYXJrLgoKV2hhdCB0dXJucyBvZmYg
+dGhlIHBvd2VyIGluIHRoaXMgc2l0dWF0aW9uPyAgVGhlIGtlcm5lbD8gIE9yIHVzZXJzcGFjZT8K
+RG9uJ3QgeW91IGhhdmUgY29udHJvbCBvZiB0aGlzPwoKSGF2ZSB5b3UgdHJpZWQgdG8gZXZlbiBj
+cmVhdGUgYSBwYXRjaCB0aGF0IGNvdWxkIGRvIHRoaXMgdHlwZSBvZiB0aGluZwp0byB1ZGV2IHRv
+IHNlZSBpZiBpdCBpcyBldmVuIHBvc3NpYmxlPwoKdGhhbmtzLAoKZ3JlZyBrLWgKX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18Kc3lzdGVtZC1kZXZlbCBtYWls
+aW5nIGxpc3QKc3lzdGVtZC1kZXZlbEBsaXN0cy5mcmVlZGVza3RvcC5vcmcKaHR0cDovL2xpc3Rz
+LmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL3N5c3RlbWQtZGV2ZWwK
