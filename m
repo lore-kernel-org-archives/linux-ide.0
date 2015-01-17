@@ -1,108 +1,140 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: Making udev emit a signal when it is done
- loading modules
-Date: Sat, 17 Jan 2015 15:52:17 +0100
-Message-ID: <54BA7721.6030102@redhat.com>
-References: <54BA20D0.7060402@redhat.com> <20150117135630.GA25585@kroah.com>
+From: "jonsmirl-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <jonsmirl-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [systemd-devel] Making udev emit a signal when it is done loading modules
+Date: Sat, 17 Jan 2015 10:23:21 -0500
+Message-ID: <CAKON4Ox-7YBqEkvor5wt6erSR1sFyz1N1t-0XUXO5cvN3pGtsA@mail.gmail.com>
+References: <54BA20D0.7060402@redhat.com>
+	<20150117135630.GA25585@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
-Content-Transfer-Encoding: base64
-Return-path: <systemd-devel-bounces@lists.freedesktop.org>
-In-Reply-To: <20150117135630.GA25585@kroah.com>
-List-Unsubscribe: <http://lists.freedesktop.org/mailman/options/systemd-devel>,
- <mailto:systemd-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <http://lists.freedesktop.org/archives/systemd-devel>
-List-Post: <mailto:systemd-devel@lists.freedesktop.org>
-List-Help: <mailto:systemd-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <http://lists.freedesktop.org/mailman/listinfo/systemd-devel>,
- <mailto:systemd-devel-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: systemd-devel-bounces@lists.freedesktop.org
-Sender: "systemd-devel" <systemd-devel-bounces@lists.freedesktop.org>
-To: Greg KH <greg@kroah.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Mark Brown <broonie@kernel.org>, systemd-devel@lists.freedesktop.org, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, devicetree <devicetree@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20150117135630.GA25585-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
+Cc: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Mark Brown <broonie-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, systemd-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, linux-arm-kernel <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, devicetree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
-SGksCgpPbiAxNy0wMS0xNSAxNDo1NiwgR3JlZyBLSCB3cm90ZToKPiBPbiBTYXQsIEphbiAxNywg
-MjAxNSBhdCAwOTo0NDowMEFNICswMTAwLCBIYW5zIGRlIEdvZWRlIHdyb3RlOgo+PiBEZWFyIHVk
-ZXYgZGV2ZWxvcGVycywKPj4KPj4gV2UgKG1lIGFuZCBzb21lIGtlcm5lbCBkZXZzIG1vc3RseSkg
-d291bGQgbGlrZSB0byBhZGQgc3VwcG9ydCB0bwo+PiB0aGUga2VybmVsIGZvciB1c2Vyc3BhY2Ug
-dGVsbGluZyB0aGUga2VybmVsIHRoYXQgaXQgaXMgZG9uZSB3aXRoCj4+IHRoZSAqaW5pdGlhbCog
-bG9hZGluZyBvZiBtb2R1bGVzLCB3aXRoIHRoZSBwdXJwb3NlIG9mIGNsZWFuaW5nIHVwCj4+IChk
-aXNhYmxpbmcpIHVudXNlZCBoYXJ3YXJlIHJlc291cmNlcyBsaWtlIGUuZy4gcmVndWxhdG9ycyBh
-bmQKPj4gY2xvY2tzLgo+Cj4gQnV0IHlvdSBkb24ndCAia25vdyIgd2hlbiB0aGF0IGhhcHBlbnMu
-ICBFc3BlY2lhbGx5IHdpdGggZGlzY292ZXJhYmxlCj4gYnVzc2VzIChQQ0ksIFVTQiwgZXRjLiks
-IHlvdSBrbm93IHRoaXMgOikKClJpZ2h0LCBJJ20ganVzdCBicmluZ2luZyB0aGlzIHVwIGJlY2F1
-c2UgaXQga2VlcHMgY29taW5nIGJhY2sgYXMKYSBwb3NzaWJsZSBzb2x1dGlvbiB0byBoYXJkd2Fy
-ZSByZXNvdXJjZXMgZ2V0dGluZyB0dXJuZWQgb2ZmCnRvbyBlYXJseSBkdXJpbmcgdmFyaW91cyBr
-ZXJuZWwgZGlzY3Vzc2lvbnMsIHNvIEkgdGhvdWdodCB0aGF0IGFzCnRoaXMgaXMgYSByZS1vY2N1
-cmluZyB0aGVtZSwgYXQgYSBtaW5pbXVtIHNvbWVvbmUgc2hvdWxkIGRpc2N1c3MKdGhpcyB3aXRo
-IHRoZSB1ZGV2IHBlb3BsZS4KCklPVyBJJ20gbWVyZWx5IHRoZSBtYW5hZ2VyLCBhbmQgeW91IGtu
-b3cgd2hhdCB0aGV5IHNheSBhYm91dAptZXNzZW5nZXJzIC4uLiAgOikKCj4KPj4gQ3VycmVudGx5
-IHRoZSBrZXJuZWwgZG9lcyB0aGlzIGNsZWFudXAganVzdCBiZWZvcmUgaXQgc3RhcnRzIGluaXQK
-Pj4gKHdoaWNoIG1heSB2ZXJ5IHdlbGwgYmUgaW5pdCBmcm9tIGEgcmFtZGlzaykuIEluIHNvbWUg
-Y2FzZXMgdGhpcwo+PiBpcyB0b28gZWFybHkgcmVhbGx5LCBiZWNhdXNlIGxhdGVyIG9uIGEgbW9k
-dWxlIG1heSBnZXQgbG9hZGVkCj4+IHdoaWNoIG5lZWRzIHRoaXMgcmVzb3VyY2VzLCB0aGVzZSBy
-ZXNvdXJjZXMgd2lsbCB0aGVuIGdldCB0dXJuZWQKPj4gb24gYWdhaW4gYnkgdGhlIGxvYWRlZCBk
-cml2ZXIsIGFuZCBtb3N0IG9mIHRoZSB0aW1lIHRoaXMgaXMgbm90Cj4+IGFuIGlzc3VlLCBidXQg
-c29tZXRpbWVzIGl0IGlzLgo+Pgo+PiBJIHJlYWxpemUgdmVyeSB3ZWxsIHRoYXQgdGhlcmUgaXMg
-bm8gbWFnaWMgbW9tZW50IHdoZXJlIHVkZXYgaXMKPj4gcmVhbGx5IGV2ZXIgZG9uZSBsb2FkaW5n
-IG1vZHVsZXMsIGJ1dCB0aGUgY2FzZSB3aGljaCB3ZSB3YW50IHRvCj4+IHN1cHBvcnQgb25seSBp
-bnZvbHZlcyBkZXZpY2VzIHdoaWNoIGFyZSAqYWxyZWFkeSBlbnVtZXJhdGVkKiwgYnV0Cj4+IG1h
-eSBub3QgeWV0IGhhdmUgYSBkcml2ZXIgbG9hZGVkLCB3aGVuIHVkZXYgc3RhcnRzLiBXZSB3b3Vs
-ZCBsaWtlCj4+IHVkZXYgdG8gZW1pdCBhIHNpZ25hbCAoQUJJIHRvIGJlIGRpc2N1c3NlZCkgd2hl
-biBpdCBpcyBkb25lCj4+IHRyeWluZyB0byBsb2FkIG1vZHVsZXMgZm9yIGV2ZXJ5dGhpbmcgd2hp
-Y2ggd2FzIGFscmVhZHkgZW51bWVyYXRlZAo+PiB3aGVuIGl0IHN0YXJ0cywgaW93IHdoZW4gdGhl
-cmUgYXJlIG5vIG5ldyBkZXZpY2UgZXZlbnRzIHBlbmRpbmcKPj4gYW55bW9yZSB3aGVuIHVkZXYg
-ZG9lcyBpdHMgaW5pdGlhbCBob3RwbHVnIHJlcGxheS4KPgo+IFRoZSBrZXJuZWwgZG9lc24ndCBl
-dmVuICJrbm93IiB3aGVuIHRoaXMgdHlwZSBvZiB0aGluZyBpcywgaG93IGNhbiB1ZGV2Cj4ga25v
-dyB0aGlzPwoKVGhpcyBpcyB3aHkgSSBjbGVhcmx5IGxpbWl0ZWQgdGhpcyB0byAqYWxyZWFkeSBl
-bnVtZXJhdGVkKiBkZXZpY2VzLAp1ZGV2IHdpbGwga25vdyB3aGVuIGl0IGhhcyBleGhhdXN0ZWQg
-d2hhdGV2ZXIgdGhlIGtlcm5lbCBoYXMgZW51bWVyYXRlZApiZWZvcmUgaXQgc3RhcnRlZCwgYmVj
-YXVzZSBhdCBvbmUgcG9pbnQgaXQgd2lsbCBzdG9wIGdldHRpbmcgdWV2ZW50cwp3aGVuIHJlcGxh
-eWluZy4gVGhpcyBkb2VzIG5vdCBtZWFuIGVudW1lcmF0aW9uIGlzIHJlYWxseSBjb21wbGV0ZSBp
-biBhbnkKd2F5LCBpdCBqdXN0IG1lYW5zIHRoYXQgbW9kcHJvYmUgaGFzIGJlZW4gcnVuIGZvciBh
-bnkgKmFscmVhZHkgZW51bWVyYXRlZCoKZGV2aWNlcy4KCk1vc3Qgb2YgdGhlc2UgcHJvYmxlbXMg
-YXJlIG9uIGVtYmVkZGVkIChpc2gpIHN5c3RlbXMsIGFuZCB0aGVyZSBpdCBpcwphIGdvb2QgYmV0
-IHRoYXQgdGhlIHRyb3VibGVzb21lIGRldmljZSBpcyBlbnVtZXJhdGVkIGFscmVhZHksIHNpbmNl
-IGl0Cmxpa2VseSBpcyBkZXZpY2V0cmVlIGluc3RhbnRpYXRlZC4KCgo+Cj4+IFNvIHRoZSBxdWVz
-dGlvbiB0byB5b3UgaXMgd291bGQgeW91IGJlIHdpbGxpbmcgdG8gaW5jbHVkZSBzdWNoCj4+IGZ1
-bmN0aW9uYWxpdHkgaW4gdWRldiA/ICBOb3RlIHRoaXMgc2lnbmFsIHdvdWxkIG5lZWQgdG8gYmUg
-ZW1pdHRlZAo+PiB3aGVuIHVkZXYgZnJvbSB0aGUgcmVhbCByb290ZnMgaXMgZG9uZSB3aXRoIHRo
-ZSBpbml0aWFsIG1vZHVsZQo+PiBsb2FkaW5nLCBhcyB0aGUgcmVhbCByb290ZnMgbWF5IHZlcnkg
-d2VsbCBoYXZlIG1vcmUgbW9kdWxlcwo+PiBhdmFpbGFibGUgdGhlbiB0aGUgaW5pdHJkLgo+Pgo+
-PiAjIyMKPj4KPj4gV2l0aCB0aGUgZ2VuZXJpYyBzdG9yeSBhYm92ZSB0b2xkIGxldCBtZSBhbHNv
-IGdpdmUgdGhlIGNvbmNyZXRlCj4+IGV4YW1wbGUgLyBwcm9ibGVtIHdoaWNoIGhhcyBsZXQgdG8g
-bWUgYXNraW5nIHRoaXMgKG5vdGUgdGhpcyBoYXMKPj4gYmVlbiBicm91Z2h0IHVwIGJlZm9yZSBv
-biB2YXJpb3VzIGtlcm5lbCBsaXN0cywgaXQgaXMgYQo+PiByZS1vY2N1cmluZyB0aGVtZSwgdGhp
-cyBpcyBqdXN0IGFuIGV4YW1wbGUgcmVhbGx5KSA6Cj4+Cj4+IFRoZSBwcm9ibGVtIGF0IGhhbmQg
-aXMgYSBzYXRhIGNvbm5lY3RvciB3aGljaCBhbHNvIGhhcyBhIHNhdGEtcG93ZXIKPj4gY29ubmVj
-dG9yIG9uIGFuIGVtYmVkZGVkIChpc2gpIGJvYXJkIHdoZXJlIHRoZSBzYXRhLXBvd2VyIGlzCj4+
-IGNvbnRyb2xsZWQgdGhyb3VnaCBhIGdwaW8uIFRoZSBzYXRhLXBvd2VyIGNvbm5lY3RvciBpcyBt
-b2RlbGVkCj4+IGluIGRldmljZXRyZWUgYXMgYSBwb3dlci1zdXBwbHkgYW5kIHRoaXMgc3VwcGx5
-IGdldHMgY29udHJvbGxlZAo+PiBieSB0aGUgYWhjaV9wbGF0Zm9ybSBkcml2ZXIuCj4+Cj4+IFRo
-ZSBkaXNrIHBvd2VyIG1heSB2ZXJ5IHdlbGwgaGF2ZSBhbHJlYWR5IGJlZW4gdHVybmVkIG9uIGJ5
-IHRoZQo+PiBib290bG9hZGVyLCBzbyB3ZSBhZGQgYSByZWd1bGF0b3ItYm9vdC1vbiBwcm9wZXJ0
-eSB0byB0aGUgcmVndWxhdG9yCj4+IG5vZGUgaW4gZGV2aWNldHJlZSB0byBtYWtlIHN1cmUgdGhh
-dCBpdCBpcyBsZWZ0IHVudG91Y2hlZCB3aGVuIHRoZQo+PiByZWd1bGF0b3IgZHJpdmVyIGxvYWRz
-LiBJZiB0aGUgYWhjaV9wbGF0Zm9ybSBkcml2ZXIgaXMgYnVpbGQgaW50bwo+PiB0aGUga2VybmVs
-LCBpdCB3aWxsIHRoZW4gdGFrZSBjb250cm9sIG9mIHRoZSByZWd1bGF0b3IgYW5kCj4+IGV2ZXJ5
-dGhpbmcgd29ya3Mgd2VsbC4KPj4KPj4gSWYgaG93ZXZlciB0aGUgYWhjaV9wbGF0Zm9ybSBkcml2
-ZXIgaXMgYSBtb2R1bGUsIHRoZW4gYXMgc29vbiBhcwo+PiB0aGUga2VybmVsIGlzIHJlYWR5IHRv
-IHN0YXJ0IGluaXQsIHVudXNlZCByZWd1bGF0b3JzIGFyZSB0dXJuZWQgb2ZmCj4+IGFuZCB0aGUg
-ZGlzayBsb29zZXMgaXRzIHBvd2VyIHdoaWxlIHNwaW5uaW5nIGFuZCBlbmRzIHVwIGRvaW5nIGFu
-Cj4+IGVtZXJnZW5jeSBoZWFkcyBwYXJrLgo+Cj4gV2hhdCB0dXJucyBvZmYgdGhlIHBvd2VyIGlu
-IHRoaXMgc2l0dWF0aW9uPyAgVGhlIGtlcm5lbD8gIE9yIHVzZXJzcGFjZT8KClRoZSBrZXJuZWwu
-Cgo+IERvbid0IHlvdSBoYXZlIGNvbnRyb2wgb2YgdGhpcz8KClRvIHNvbWUgZGVncmVlLCB0aGlz
-IGNhbiBiZSBjb250cm9sbGVyIGJ5IGEgZHJpdmVyLCBhbmQgYSBkcml2ZXIgY2FuCnN0b3AgdGhp
-cyB0dXJuaW5nIG9mZiwgYnV0IGF0bSB0aGlzIG1lYW5zIHRoYXQgdGhlIGRyaXZlciBNVVNUIGJl
-IGJ1aWx0aW4sCnRoYXQgaXMgd2hhdCB3ZSB3b3VsZCBsaWtlIHRvIGZpeC4KCj4gSGF2ZSB5b3Ug
-dHJpZWQgdG8gZXZlbiBjcmVhdGUgYSBwYXRjaCB0aGF0IGNvdWxkIGRvIHRoaXMgdHlwZSBvZiB0
-aGluZwo+IHRvIHVkZXYgdG8gc2VlIGlmIGl0IGlzIGV2ZW4gcG9zc2libGU/CgpObywgYmVjYXVz
-ZSBhcyB5b3UgaW5kaWNhdGVkIGF0IHRoZSBzdGFydCBvZiB5b3VyIG1haWwgSSBrbm93IHRoaXMK
-YXJlYSBwcmV0dHkgd2VsbCBhbmQgSSBrbm93IHRoaXMgYSBzb21ld2hhdCBjb250cm92ZXJzaWFs
-IHByb3Bvc2FsLApzbyBJTUhPIHRoZXJlIGlzIG5vIHVzZSBpbiBzcGVuZGluZyB0aW1lIG9uIHRo
-aXMgd2l0aG91dCBhdCBsZWFzdApzb21lIGJ1eS1pbiBvZiBpbnZvbHZlZCBwZW9wbGUuCgpSZWdh
-cmRzLAoKSGFucwpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-XwpzeXN0ZW1kLWRldmVsIG1haWxpbmcgbGlzdApzeXN0ZW1kLWRldmVsQGxpc3RzLmZyZWVkZXNr
-dG9wLm9yZwpodHRwOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vc3lz
-dGVtZC1kZXZlbAo=
+On Sat, Jan 17, 2015 at 8:56 AM, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org> wrote:
+> On Sat, Jan 17, 2015 at 09:44:00AM +0100, Hans de Goede wrote:
+>> Dear udev developers,
+>>
+>> We (me and some kernel devs mostly) would like to add support to
+>> the kernel for userspace telling the kernel that it is done with
+>> the *initial* loading of modules, with the purpose of cleaning up
+>> (disabling) unused harware resources like e.g. regulators and
+>> clocks.
+>
+> But you don't "know" when that happens.  Especially with discoverable
+> busses (PCI, USB, etc.), you know this :)
+
+Consider the ARM multi-arch kernels where everything is a loadable
+device driver.
+
+1) BIOS does basic system setup
+2) Core kernel boots with very few drivers.
+3) Late-init calls runs - does power/clock clean up and turns everything off
+--everything in system blinks---
+4) Now the modules start loading and devices all get turned back on.
+These are loadable modules for hardware that is known to be present
+since it is listed in the device tree.
+-- better place to be doing power/clock clean up
+5) Doesn't matter now if you load a module an hour later, you wanted
+the clock/power turned off for that hour.
+
+I know of two ways to fix this interval where the system blinks....
+1) An enumerated protection scheme. Device tree lists out all of the
+clock/regulators/etc... that it doesn't want the power cleanup turning
+off. Then it hopes that a driver gets loaded that uses these devices.
+If not those clock/regulators stay on forever. This is fragile and
+requires coordination with the BIOS.
+2) in my opinion power clean is happening too early. In needs to moved
+after the initial phase of loading modules for device tree enumerated
+devices.
+
+Power/clock clean up does not need to be at an exact point in system
+boot. It is just a clean up to reduce power consumption from things
+the BIOS turned on that kernel does not use. It is usually not fatal
+if it runs at the wrong point, but it makes everything blink when it
+runs too early.
+
+For example the automatic clean up could be removed from late_init
+calls and turned into something that could be triggered from a script.
+Then runs that script action late in the boot. Or if udev is smart
+enough it could trigger cleanup after it has loaded modules for all
+devices it is aware of. But any way you look at it, cleaning up in
+late-init call for a multi-arch kernel is the too early.
+
+>
+>> Currently the kernel does this cleanup just before it starts init
+>> (which may very well be init from a ramdisk). In some cases this
+>> is too early really, because later on a module may get loaded
+>> which needs this resources, these resources will then get turned
+>> on again by the loaded driver, and most of the time this is not
+>> an issue, but sometimes it is.
+>>
+>> I realize very well that there is no magic moment where udev is
+>> really ever done loading modules, but the case which we want to
+>> support only involves devices which are *already enumerated*, but
+>> may not yet have a driver loaded, when udev starts. We would like
+>> udev to emit a signal (ABI to be discussed) when it is done
+>> trying to load modules for everything which was already enumerated
+>> when it starts, iow when there are no new device events pending
+>> anymore when udev does its initial hotplug replay.
+>
+> The kernel doesn't even "know" when this type of thing is, how can udev
+> know this?
+>
+>> So the question to you is would you be willing to include such
+>> functionality in udev ?  Note this signal would need to be emitted
+>> when udev from the real rootfs is done with the initial module
+>> loading, as the real rootfs may very well have more modules
+>> available then the initrd.
+>>
+>> ###
+>>
+>> With the generic story above told let me also give the concrete
+>> example / problem which has let to me asking this (note this has
+>> been brought up before on various kernel lists, it is a
+>> re-occuring theme, this is just an example really) :
+>>
+>> The problem at hand is a sata connector which also has a sata-power
+>> connector on an embedded (ish) board where the sata-power is
+>> controlled through a gpio. The sata-power connector is modeled
+>> in devicetree as a power-supply and this supply gets controlled
+>> by the ahci_platform driver.
+>>
+>> The disk power may very well have already been turned on by the
+>> bootloader, so we add a regulator-boot-on property to the regulator
+>> node in devicetree to make sure that it is left untouched when the
+>> regulator driver loads. If the ahci_platform driver is build into
+>> the kernel, it will then take control of the regulator and
+>> everything works well.
+>>
+>> If however the ahci_platform driver is a module, then as soon as
+>> the kernel is ready to start init, unused regulators are turned off
+>> and the disk looses its power while spinning and ends up doing an
+>> emergency heads park.
+>
+> What turns off the power in this situation?  The kernel?  Or userspace?
+> Don't you have control of this?
+>
+> Have you tried to even create a patch that could do this type of thing
+> to udev to see if it is even possible?
+>
+> thanks,
+>
+> greg k-h
+>
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+
+
+-- 
+Jon Smirl
+jonsmirl-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
