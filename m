@@ -1,49 +1,108 @@
 From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [PATCH v4 4/4] ARM: mvebu: Armada 385 GP: Add regulators to the
- SATA port
-Date: Sat, 17 Jan 2015 15:28:39 +0100
-Message-ID: <54BA7197.40301@redhat.com>
-References: <1421330978-9694-1-git-send-email-gregory.clement@free-electrons.com> <1421330978-9694-5-git-send-email-gregory.clement@free-electrons.com> <54B8C933.7020502@redhat.com> <54B8D97B.3090908@free-electrons.com> <54B8E38A.6020709@redhat.com> <20150116123705.GM3043@sirena.org.uk> <54B9629C.9090800@redhat.com> <20150116202516.GL3856@sirena.org.uk> <54BA21F9.5050408@redhat.com> <20150117131404.GA6414@sirena.org.uk>
+Subject: Re: Making udev emit a signal when it is done
+ loading modules
+Date: Sat, 17 Jan 2015 15:52:17 +0100
+Message-ID: <54BA7721.6030102@redhat.com>
+References: <54BA20D0.7060402@redhat.com> <20150117135630.GA25585@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36472 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751505AbbAQO3X (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 17 Jan 2015 09:29:23 -0500
-In-Reply-To: <20150117131404.GA6414@sirena.org.uk>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Transfer-Encoding: base64
+Return-path: <systemd-devel-bounces@lists.freedesktop.org>
+In-Reply-To: <20150117135630.GA25585@kroah.com>
+List-Unsubscribe: <http://lists.freedesktop.org/mailman/options/systemd-devel>,
+ <mailto:systemd-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <http://lists.freedesktop.org/archives/systemd-devel>
+List-Post: <mailto:systemd-devel@lists.freedesktop.org>
+List-Help: <mailto:systemd-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <http://lists.freedesktop.org/mailman/listinfo/systemd-devel>,
+ <mailto:systemd-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: systemd-devel-bounces@lists.freedesktop.org
+Sender: "systemd-devel" <systemd-devel-bounces@lists.freedesktop.org>
+To: Greg KH <greg@kroah.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Mark Brown <broonie@kernel.org>, systemd-devel@lists.freedesktop.org, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, devicetree <devicetree@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Mark Brown <broonie@kernel.org>
-Cc: Gregory CLEMENT <gregory.clement@free-electrons.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, =?windows-1252?Q?Antoine_T=E9nart?= <antoine.tenart@free-electrons.com>, Liam Girdwood <lgirdwood@gmail.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Maxime Ripard <maxime.ripard@free-electrons.com>, Boris BREZILLON <boris.brezillon@free-electrons.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, linux-arm-kernel@lists.infradead.org, Lior Amsalem <alior@marvell.com>, Tawfik Bayouk <tawfik@marvell.com>, Nadav Haklai <nadavh@marvell.com>, Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org
 
-Hi,
-
-On 17-01-15 14:14, Mark Brown wrote:
-> On Sat, Jan 17, 2015 at 09:48:57AM +0100, Hans de Goede wrote:
->
->> and leave these regulators on, rather then turn them of $random time,
->> because as I've advocated before (see the simplefb thread) there is
->> no simple magic moment when it is right to turn things off, so doing
->> it when userspace starts is more or less as good as any moment, and if
->> it turns out that that is not a good moment, then maybe we need to
->> re-think the turning off in general.
->
-> Following your argument to the logical conclusion means we can never
-> turn any regualtor off - we always have the risk that there's another
-> shared user which is going to get a power bounce if we power down.  More
-> directly we'll also get people complaining that we're burning power
-> pointlessly on their systems for devices they've not even got drivers
-> enabled for.  This powering down is something there's been user demand
-> for.
-
-Right, note I'm only advocating to not turn off regulators marked as
-regulator-boot-on. I would expect any regulator to have such a
-marking to have at least one user with an actual driver. If people decide
-to not build that driver, and then complain we can simply tell them to
-build the driver ...
-
-Regards,
-
-Hans
+SGksCgpPbiAxNy0wMS0xNSAxNDo1NiwgR3JlZyBLSCB3cm90ZToKPiBPbiBTYXQsIEphbiAxNywg
+MjAxNSBhdCAwOTo0NDowMEFNICswMTAwLCBIYW5zIGRlIEdvZWRlIHdyb3RlOgo+PiBEZWFyIHVk
+ZXYgZGV2ZWxvcGVycywKPj4KPj4gV2UgKG1lIGFuZCBzb21lIGtlcm5lbCBkZXZzIG1vc3RseSkg
+d291bGQgbGlrZSB0byBhZGQgc3VwcG9ydCB0bwo+PiB0aGUga2VybmVsIGZvciB1c2Vyc3BhY2Ug
+dGVsbGluZyB0aGUga2VybmVsIHRoYXQgaXQgaXMgZG9uZSB3aXRoCj4+IHRoZSAqaW5pdGlhbCog
+bG9hZGluZyBvZiBtb2R1bGVzLCB3aXRoIHRoZSBwdXJwb3NlIG9mIGNsZWFuaW5nIHVwCj4+IChk
+aXNhYmxpbmcpIHVudXNlZCBoYXJ3YXJlIHJlc291cmNlcyBsaWtlIGUuZy4gcmVndWxhdG9ycyBh
+bmQKPj4gY2xvY2tzLgo+Cj4gQnV0IHlvdSBkb24ndCAia25vdyIgd2hlbiB0aGF0IGhhcHBlbnMu
+ICBFc3BlY2lhbGx5IHdpdGggZGlzY292ZXJhYmxlCj4gYnVzc2VzIChQQ0ksIFVTQiwgZXRjLiks
+IHlvdSBrbm93IHRoaXMgOikKClJpZ2h0LCBJJ20ganVzdCBicmluZ2luZyB0aGlzIHVwIGJlY2F1
+c2UgaXQga2VlcHMgY29taW5nIGJhY2sgYXMKYSBwb3NzaWJsZSBzb2x1dGlvbiB0byBoYXJkd2Fy
+ZSByZXNvdXJjZXMgZ2V0dGluZyB0dXJuZWQgb2ZmCnRvbyBlYXJseSBkdXJpbmcgdmFyaW91cyBr
+ZXJuZWwgZGlzY3Vzc2lvbnMsIHNvIEkgdGhvdWdodCB0aGF0IGFzCnRoaXMgaXMgYSByZS1vY2N1
+cmluZyB0aGVtZSwgYXQgYSBtaW5pbXVtIHNvbWVvbmUgc2hvdWxkIGRpc2N1c3MKdGhpcyB3aXRo
+IHRoZSB1ZGV2IHBlb3BsZS4KCklPVyBJJ20gbWVyZWx5IHRoZSBtYW5hZ2VyLCBhbmQgeW91IGtu
+b3cgd2hhdCB0aGV5IHNheSBhYm91dAptZXNzZW5nZXJzIC4uLiAgOikKCj4KPj4gQ3VycmVudGx5
+IHRoZSBrZXJuZWwgZG9lcyB0aGlzIGNsZWFudXAganVzdCBiZWZvcmUgaXQgc3RhcnRzIGluaXQK
+Pj4gKHdoaWNoIG1heSB2ZXJ5IHdlbGwgYmUgaW5pdCBmcm9tIGEgcmFtZGlzaykuIEluIHNvbWUg
+Y2FzZXMgdGhpcwo+PiBpcyB0b28gZWFybHkgcmVhbGx5LCBiZWNhdXNlIGxhdGVyIG9uIGEgbW9k
+dWxlIG1heSBnZXQgbG9hZGVkCj4+IHdoaWNoIG5lZWRzIHRoaXMgcmVzb3VyY2VzLCB0aGVzZSBy
+ZXNvdXJjZXMgd2lsbCB0aGVuIGdldCB0dXJuZWQKPj4gb24gYWdhaW4gYnkgdGhlIGxvYWRlZCBk
+cml2ZXIsIGFuZCBtb3N0IG9mIHRoZSB0aW1lIHRoaXMgaXMgbm90Cj4+IGFuIGlzc3VlLCBidXQg
+c29tZXRpbWVzIGl0IGlzLgo+Pgo+PiBJIHJlYWxpemUgdmVyeSB3ZWxsIHRoYXQgdGhlcmUgaXMg
+bm8gbWFnaWMgbW9tZW50IHdoZXJlIHVkZXYgaXMKPj4gcmVhbGx5IGV2ZXIgZG9uZSBsb2FkaW5n
+IG1vZHVsZXMsIGJ1dCB0aGUgY2FzZSB3aGljaCB3ZSB3YW50IHRvCj4+IHN1cHBvcnQgb25seSBp
+bnZvbHZlcyBkZXZpY2VzIHdoaWNoIGFyZSAqYWxyZWFkeSBlbnVtZXJhdGVkKiwgYnV0Cj4+IG1h
+eSBub3QgeWV0IGhhdmUgYSBkcml2ZXIgbG9hZGVkLCB3aGVuIHVkZXYgc3RhcnRzLiBXZSB3b3Vs
+ZCBsaWtlCj4+IHVkZXYgdG8gZW1pdCBhIHNpZ25hbCAoQUJJIHRvIGJlIGRpc2N1c3NlZCkgd2hl
+biBpdCBpcyBkb25lCj4+IHRyeWluZyB0byBsb2FkIG1vZHVsZXMgZm9yIGV2ZXJ5dGhpbmcgd2hp
+Y2ggd2FzIGFscmVhZHkgZW51bWVyYXRlZAo+PiB3aGVuIGl0IHN0YXJ0cywgaW93IHdoZW4gdGhl
+cmUgYXJlIG5vIG5ldyBkZXZpY2UgZXZlbnRzIHBlbmRpbmcKPj4gYW55bW9yZSB3aGVuIHVkZXYg
+ZG9lcyBpdHMgaW5pdGlhbCBob3RwbHVnIHJlcGxheS4KPgo+IFRoZSBrZXJuZWwgZG9lc24ndCBl
+dmVuICJrbm93IiB3aGVuIHRoaXMgdHlwZSBvZiB0aGluZyBpcywgaG93IGNhbiB1ZGV2Cj4ga25v
+dyB0aGlzPwoKVGhpcyBpcyB3aHkgSSBjbGVhcmx5IGxpbWl0ZWQgdGhpcyB0byAqYWxyZWFkeSBl
+bnVtZXJhdGVkKiBkZXZpY2VzLAp1ZGV2IHdpbGwga25vdyB3aGVuIGl0IGhhcyBleGhhdXN0ZWQg
+d2hhdGV2ZXIgdGhlIGtlcm5lbCBoYXMgZW51bWVyYXRlZApiZWZvcmUgaXQgc3RhcnRlZCwgYmVj
+YXVzZSBhdCBvbmUgcG9pbnQgaXQgd2lsbCBzdG9wIGdldHRpbmcgdWV2ZW50cwp3aGVuIHJlcGxh
+eWluZy4gVGhpcyBkb2VzIG5vdCBtZWFuIGVudW1lcmF0aW9uIGlzIHJlYWxseSBjb21wbGV0ZSBp
+biBhbnkKd2F5LCBpdCBqdXN0IG1lYW5zIHRoYXQgbW9kcHJvYmUgaGFzIGJlZW4gcnVuIGZvciBh
+bnkgKmFscmVhZHkgZW51bWVyYXRlZCoKZGV2aWNlcy4KCk1vc3Qgb2YgdGhlc2UgcHJvYmxlbXMg
+YXJlIG9uIGVtYmVkZGVkIChpc2gpIHN5c3RlbXMsIGFuZCB0aGVyZSBpdCBpcwphIGdvb2QgYmV0
+IHRoYXQgdGhlIHRyb3VibGVzb21lIGRldmljZSBpcyBlbnVtZXJhdGVkIGFscmVhZHksIHNpbmNl
+IGl0Cmxpa2VseSBpcyBkZXZpY2V0cmVlIGluc3RhbnRpYXRlZC4KCgo+Cj4+IFNvIHRoZSBxdWVz
+dGlvbiB0byB5b3UgaXMgd291bGQgeW91IGJlIHdpbGxpbmcgdG8gaW5jbHVkZSBzdWNoCj4+IGZ1
+bmN0aW9uYWxpdHkgaW4gdWRldiA/ICBOb3RlIHRoaXMgc2lnbmFsIHdvdWxkIG5lZWQgdG8gYmUg
+ZW1pdHRlZAo+PiB3aGVuIHVkZXYgZnJvbSB0aGUgcmVhbCByb290ZnMgaXMgZG9uZSB3aXRoIHRo
+ZSBpbml0aWFsIG1vZHVsZQo+PiBsb2FkaW5nLCBhcyB0aGUgcmVhbCByb290ZnMgbWF5IHZlcnkg
+d2VsbCBoYXZlIG1vcmUgbW9kdWxlcwo+PiBhdmFpbGFibGUgdGhlbiB0aGUgaW5pdHJkLgo+Pgo+
+PiAjIyMKPj4KPj4gV2l0aCB0aGUgZ2VuZXJpYyBzdG9yeSBhYm92ZSB0b2xkIGxldCBtZSBhbHNv
+IGdpdmUgdGhlIGNvbmNyZXRlCj4+IGV4YW1wbGUgLyBwcm9ibGVtIHdoaWNoIGhhcyBsZXQgdG8g
+bWUgYXNraW5nIHRoaXMgKG5vdGUgdGhpcyBoYXMKPj4gYmVlbiBicm91Z2h0IHVwIGJlZm9yZSBv
+biB2YXJpb3VzIGtlcm5lbCBsaXN0cywgaXQgaXMgYQo+PiByZS1vY2N1cmluZyB0aGVtZSwgdGhp
+cyBpcyBqdXN0IGFuIGV4YW1wbGUgcmVhbGx5KSA6Cj4+Cj4+IFRoZSBwcm9ibGVtIGF0IGhhbmQg
+aXMgYSBzYXRhIGNvbm5lY3RvciB3aGljaCBhbHNvIGhhcyBhIHNhdGEtcG93ZXIKPj4gY29ubmVj
+dG9yIG9uIGFuIGVtYmVkZGVkIChpc2gpIGJvYXJkIHdoZXJlIHRoZSBzYXRhLXBvd2VyIGlzCj4+
+IGNvbnRyb2xsZWQgdGhyb3VnaCBhIGdwaW8uIFRoZSBzYXRhLXBvd2VyIGNvbm5lY3RvciBpcyBt
+b2RlbGVkCj4+IGluIGRldmljZXRyZWUgYXMgYSBwb3dlci1zdXBwbHkgYW5kIHRoaXMgc3VwcGx5
+IGdldHMgY29udHJvbGxlZAo+PiBieSB0aGUgYWhjaV9wbGF0Zm9ybSBkcml2ZXIuCj4+Cj4+IFRo
+ZSBkaXNrIHBvd2VyIG1heSB2ZXJ5IHdlbGwgaGF2ZSBhbHJlYWR5IGJlZW4gdHVybmVkIG9uIGJ5
+IHRoZQo+PiBib290bG9hZGVyLCBzbyB3ZSBhZGQgYSByZWd1bGF0b3ItYm9vdC1vbiBwcm9wZXJ0
+eSB0byB0aGUgcmVndWxhdG9yCj4+IG5vZGUgaW4gZGV2aWNldHJlZSB0byBtYWtlIHN1cmUgdGhh
+dCBpdCBpcyBsZWZ0IHVudG91Y2hlZCB3aGVuIHRoZQo+PiByZWd1bGF0b3IgZHJpdmVyIGxvYWRz
+LiBJZiB0aGUgYWhjaV9wbGF0Zm9ybSBkcml2ZXIgaXMgYnVpbGQgaW50bwo+PiB0aGUga2VybmVs
+LCBpdCB3aWxsIHRoZW4gdGFrZSBjb250cm9sIG9mIHRoZSByZWd1bGF0b3IgYW5kCj4+IGV2ZXJ5
+dGhpbmcgd29ya3Mgd2VsbC4KPj4KPj4gSWYgaG93ZXZlciB0aGUgYWhjaV9wbGF0Zm9ybSBkcml2
+ZXIgaXMgYSBtb2R1bGUsIHRoZW4gYXMgc29vbiBhcwo+PiB0aGUga2VybmVsIGlzIHJlYWR5IHRv
+IHN0YXJ0IGluaXQsIHVudXNlZCByZWd1bGF0b3JzIGFyZSB0dXJuZWQgb2ZmCj4+IGFuZCB0aGUg
+ZGlzayBsb29zZXMgaXRzIHBvd2VyIHdoaWxlIHNwaW5uaW5nIGFuZCBlbmRzIHVwIGRvaW5nIGFu
+Cj4+IGVtZXJnZW5jeSBoZWFkcyBwYXJrLgo+Cj4gV2hhdCB0dXJucyBvZmYgdGhlIHBvd2VyIGlu
+IHRoaXMgc2l0dWF0aW9uPyAgVGhlIGtlcm5lbD8gIE9yIHVzZXJzcGFjZT8KClRoZSBrZXJuZWwu
+Cgo+IERvbid0IHlvdSBoYXZlIGNvbnRyb2wgb2YgdGhpcz8KClRvIHNvbWUgZGVncmVlLCB0aGlz
+IGNhbiBiZSBjb250cm9sbGVyIGJ5IGEgZHJpdmVyLCBhbmQgYSBkcml2ZXIgY2FuCnN0b3AgdGhp
+cyB0dXJuaW5nIG9mZiwgYnV0IGF0bSB0aGlzIG1lYW5zIHRoYXQgdGhlIGRyaXZlciBNVVNUIGJl
+IGJ1aWx0aW4sCnRoYXQgaXMgd2hhdCB3ZSB3b3VsZCBsaWtlIHRvIGZpeC4KCj4gSGF2ZSB5b3Ug
+dHJpZWQgdG8gZXZlbiBjcmVhdGUgYSBwYXRjaCB0aGF0IGNvdWxkIGRvIHRoaXMgdHlwZSBvZiB0
+aGluZwo+IHRvIHVkZXYgdG8gc2VlIGlmIGl0IGlzIGV2ZW4gcG9zc2libGU/CgpObywgYmVjYXVz
+ZSBhcyB5b3UgaW5kaWNhdGVkIGF0IHRoZSBzdGFydCBvZiB5b3VyIG1haWwgSSBrbm93IHRoaXMK
+YXJlYSBwcmV0dHkgd2VsbCBhbmQgSSBrbm93IHRoaXMgYSBzb21ld2hhdCBjb250cm92ZXJzaWFs
+IHByb3Bvc2FsLApzbyBJTUhPIHRoZXJlIGlzIG5vIHVzZSBpbiBzcGVuZGluZyB0aW1lIG9uIHRo
+aXMgd2l0aG91dCBhdCBsZWFzdApzb21lIGJ1eS1pbiBvZiBpbnZvbHZlZCBwZW9wbGUuCgpSZWdh
+cmRzLAoKSGFucwpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+XwpzeXN0ZW1kLWRldmVsIG1haWxpbmcgbGlzdApzeXN0ZW1kLWRldmVsQGxpc3RzLmZyZWVkZXNr
+dG9wLm9yZwpodHRwOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vc3lz
+dGVtZC1kZXZlbAo=
