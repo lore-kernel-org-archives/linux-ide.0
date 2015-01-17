@@ -1,77 +1,73 @@
-From: Shaohua Li <shli@fb.com>
-Subject: Re: [PATCH 2/2] libata: micro-optimize tag allocation
-Date: Fri, 16 Jan 2015 16:10:20 -0800
-Message-ID: <20150117001020.GA1388637@devbig257.prn2.facebook.com>
-References: <20150116231225.18771.75061.stgit@viggo.jf.intel.com>
- <20150116231307.18771.52330.stgit@viggo.jf.intel.com>
- <20150116233100.GA1281684@devbig257.prn2.facebook.com>
- <CAPcyv4hWkWFYH1+d9nmw=bP-2X2kR=V4w=nEZ=QyOSMdpYAk3g@mail.gmail.com>
- <20150116235545.GA1358222@devbig257.prn2.facebook.com>
- <CAPcyv4igYQmqrpwE1W4yMzuJBAU9dMZRdce63EHx5rPSUBihhw@mail.gmail.com>
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: Making udev emit a signal when it is done loading
+	modules
+Date: Sat, 17 Jan 2015 09:44:00 +0100
+Message-ID: <54BA20D0.7060402@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:5647 "EHLO
-	mx0b-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751729AbbAQAK7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Jan 2015 19:10:59 -0500
-Content-Disposition: inline
-In-Reply-To: <CAPcyv4igYQmqrpwE1W4yMzuJBAU9dMZRdce63EHx5rPSUBihhw@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Transfer-Encoding: base64
+Return-path: <systemd-devel-bounces@lists.freedesktop.org>
+List-Unsubscribe: <http://lists.freedesktop.org/mailman/options/systemd-devel>,
+ <mailto:systemd-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <http://lists.freedesktop.org/archives/systemd-devel>
+List-Post: <mailto:systemd-devel@lists.freedesktop.org>
+List-Help: <mailto:systemd-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <http://lists.freedesktop.org/mailman/listinfo/systemd-devel>,
+ <mailto:systemd-devel-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: systemd-devel-bounces@lists.freedesktop.org
+Sender: "systemd-devel" <systemd-devel-bounces@lists.freedesktop.org>
+To: systemd-devel@lists.freedesktop.org
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Mark Brown <broonie@kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, devicetree <devicetree@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Jens Axboe <axboe@fb.com>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@infradead.org>
 
-On Fri, Jan 16, 2015 at 03:59:32PM -0800, Dan Williams wrote:
-> On Fri, Jan 16, 2015 at 3:55 PM, Shaohua Li <shli@fb.com> wrote:
-> > On Fri, Jan 16, 2015 at 03:49:07PM -0800, Dan Williams wrote:
-> >> On Fri, Jan 16, 2015 at 3:31 PM, Shaohua Li <shli@fb.com> wrote:
-> >> > On Fri, Jan 16, 2015 at 03:13:08PM -0800, Dan Williams wrote:
-> >> >> Jens notes, "libata tag allocator sucks. Like seriously sucks, it's
-> >> >> almost a worst case implementation."  Previously I thought SATA mmio
-> >> >> latency dominated performance profiles, but as Tejun notes:
-> >> >>
-> >> >>   "Hmmm... one problem with the existing tag allocator in ata is that
-> >> >>    it's not very efficient which actually shows up in profile when libata
-> >> >>    is used with a very zippy SSD.  Given that ata needs a different
-> >> >>    allocation policies anyway maybe the right thing to do is making the
-> >> >>    existing allocator suck less."
-> >> >>
-> >> >> So replace it with a naive enhancement that also supports the existing
-> >> >> quirks.  Hopefully, soon to be replaced by Shaohua's patches [1], but
-> >> >> those do not yet support the quirk needed by sil24 (ATA_FLAG_LOWTAG)
-> >> >> [2].
-> >> >>
-> >> >> [1]: https://urldefense.proofpoint.com/v1/url?u=http://marc.info/?l%3Dlinux-ide%26m%3D142137195324687%26w%3D2&k=ZVNjlDMF0FElm4dQtryO4A%3D%3D%0A&r=3RFlL12A7nwmLRXunVJq2g%3D%3D%0A&m=5iyIBsm0XLUeBFFdEfPvaP6LL8KiN2TcuEGgJH6RzTc%3D%0A&s=cea914a77883ea668400a1f19621d1241cab16f6a4c0e68d0749de4c2448cdb1
-> >> >> [2]: https://urldefense.proofpoint.com/v1/url?u=https://bugzilla.kernel.org/show_bug.cgi?id%3D87101&k=ZVNjlDMF0FElm4dQtryO4A%3D%3D%0A&r=3RFlL12A7nwmLRXunVJq2g%3D%3D%0A&m=5iyIBsm0XLUeBFFdEfPvaP6LL8KiN2TcuEGgJH6RzTc%3D%0A&s=82d11bc720e9f0cbd0ad6aa7e8ece18315ac1e4f97cb02d49460893e5006228e
-> >> >
-> >> > with my patch, we can fix this as:
-> >> >
-> >> >
-> >> > diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
-> >> > index d81b20d..5242897 100644
-> >> > --- a/drivers/ata/sata_sil24.c
-> >> > +++ b/drivers/ata/sata_sil24.c
-> >> > @@ -388,6 +388,7 @@ static struct scsi_host_template sil24_sht = {
-> >> >         .can_queue              = SIL24_MAX_CMDS,
-> >> >         .sg_tablesize           = SIL24_MAX_SGE,
-> >> >         .dma_boundary           = ATA_DMA_BOUNDARY,
-> >> > +       .tag_alloc_policy       = BLK_TAG_ALLOC_FIFO,
-> >> >  };
-> >> >
-> >> >  static struct ata_port_operations sil24_ops = {
-> >>
-> >> Ok, thanks for that.
-> >>
-> >> We still need patch1 as the minimal fix for the regression, agreed?
-> >
-> > The BLK_TAG_ALLOC_FIFO will make blk/blk-mq tag allocation allocates
-> > lowest tag (eg, FIFO). So I thought it already fixes the sil24 bug, if I
-> > understand the bug clearly.
-> >
-> 
-> It looks like it does, but converting to blk-mq tagging is not
-> suitable for a -stable patch.
-
-don't need converting to blk-mq, I added FIFO allocation for legacy tag
-too, but right, it might not suitable for -stable
+RGVhciB1ZGV2IGRldmVsb3BlcnMsCgpXZSAobWUgYW5kIHNvbWUga2VybmVsIGRldnMgbW9zdGx5
+KSB3b3VsZCBsaWtlIHRvIGFkZCBzdXBwb3J0IHRvCnRoZSBrZXJuZWwgZm9yIHVzZXJzcGFjZSB0
+ZWxsaW5nIHRoZSBrZXJuZWwgdGhhdCBpdCBpcyBkb25lIHdpdGgKdGhlICppbml0aWFsKiBsb2Fk
+aW5nIG9mIG1vZHVsZXMsIHdpdGggdGhlIHB1cnBvc2Ugb2YgY2xlYW5pbmcgdXAKKGRpc2FibGlu
+ZykgdW51c2VkIGhhcndhcmUgcmVzb3VyY2VzIGxpa2UgZS5nLiByZWd1bGF0b3JzIGFuZApjbG9j
+a3MuCgpDdXJyZW50bHkgdGhlIGtlcm5lbCBkb2VzIHRoaXMgY2xlYW51cCBqdXN0IGJlZm9yZSBp
+dCBzdGFydHMgaW5pdAood2hpY2ggbWF5IHZlcnkgd2VsbCBiZSBpbml0IGZyb20gYSByYW1kaXNr
+KS4gSW4gc29tZSBjYXNlcyB0aGlzCmlzIHRvbyBlYXJseSByZWFsbHksIGJlY2F1c2UgbGF0ZXIg
+b24gYSBtb2R1bGUgbWF5IGdldCBsb2FkZWQKd2hpY2ggbmVlZHMgdGhpcyByZXNvdXJjZXMsIHRo
+ZXNlIHJlc291cmNlcyB3aWxsIHRoZW4gZ2V0IHR1cm5lZApvbiBhZ2FpbiBieSB0aGUgbG9hZGVk
+IGRyaXZlciwgYW5kIG1vc3Qgb2YgdGhlIHRpbWUgdGhpcyBpcyBub3QKYW4gaXNzdWUsIGJ1dCBz
+b21ldGltZXMgaXQgaXMuCgpJIHJlYWxpemUgdmVyeSB3ZWxsIHRoYXQgdGhlcmUgaXMgbm8gbWFn
+aWMgbW9tZW50IHdoZXJlIHVkZXYgaXMKcmVhbGx5IGV2ZXIgZG9uZSBsb2FkaW5nIG1vZHVsZXMs
+IGJ1dCB0aGUgY2FzZSB3aGljaCB3ZSB3YW50IHRvCnN1cHBvcnQgb25seSBpbnZvbHZlcyBkZXZp
+Y2VzIHdoaWNoIGFyZSAqYWxyZWFkeSBlbnVtZXJhdGVkKiwgYnV0Cm1heSBub3QgeWV0IGhhdmUg
+YSBkcml2ZXIgbG9hZGVkLCB3aGVuIHVkZXYgc3RhcnRzLiBXZSB3b3VsZCBsaWtlCnVkZXYgdG8g
+ZW1pdCBhIHNpZ25hbCAoQUJJIHRvIGJlIGRpc2N1c3NlZCkgd2hlbiBpdCBpcyBkb25lCnRyeWlu
+ZyB0byBsb2FkIG1vZHVsZXMgZm9yIGV2ZXJ5dGhpbmcgd2hpY2ggd2FzIGFscmVhZHkgZW51bWVy
+YXRlZAp3aGVuIGl0IHN0YXJ0cywgaW93IHdoZW4gdGhlcmUgYXJlIG5vIG5ldyBkZXZpY2UgZXZl
+bnRzIHBlbmRpbmcKYW55bW9yZSB3aGVuIHVkZXYgZG9lcyBpdHMgaW5pdGlhbCBob3RwbHVnIHJl
+cGxheS4KClNvIHRoZSBxdWVzdGlvbiB0byB5b3UgaXMgd291bGQgeW91IGJlIHdpbGxpbmcgdG8g
+aW5jbHVkZSBzdWNoCmZ1bmN0aW9uYWxpdHkgaW4gdWRldiA/ICBOb3RlIHRoaXMgc2lnbmFsIHdv
+dWxkIG5lZWQgdG8gYmUgZW1pdHRlZAp3aGVuIHVkZXYgZnJvbSB0aGUgcmVhbCByb290ZnMgaXMg
+ZG9uZSB3aXRoIHRoZSBpbml0aWFsIG1vZHVsZQpsb2FkaW5nLCBhcyB0aGUgcmVhbCByb290ZnMg
+bWF5IHZlcnkgd2VsbCBoYXZlIG1vcmUgbW9kdWxlcwphdmFpbGFibGUgdGhlbiB0aGUgaW5pdHJk
+LgoKIyMjCgpXaXRoIHRoZSBnZW5lcmljIHN0b3J5IGFib3ZlIHRvbGQgbGV0IG1lIGFsc28gZ2l2
+ZSB0aGUgY29uY3JldGUKZXhhbXBsZSAvIHByb2JsZW0gd2hpY2ggaGFzIGxldCB0byBtZSBhc2tp
+bmcgdGhpcyAobm90ZSB0aGlzIGhhcwpiZWVuIGJyb3VnaHQgdXAgYmVmb3JlIG9uIHZhcmlvdXMg
+a2VybmVsIGxpc3RzLCBpdCBpcyBhCnJlLW9jY3VyaW5nIHRoZW1lLCB0aGlzIGlzIGp1c3QgYW4g
+ZXhhbXBsZSByZWFsbHkpIDoKClRoZSBwcm9ibGVtIGF0IGhhbmQgaXMgYSBzYXRhIGNvbm5lY3Rv
+ciB3aGljaCBhbHNvIGhhcyBhIHNhdGEtcG93ZXIKY29ubmVjdG9yIG9uIGFuIGVtYmVkZGVkIChp
+c2gpIGJvYXJkIHdoZXJlIHRoZSBzYXRhLXBvd2VyIGlzCmNvbnRyb2xsZWQgdGhyb3VnaCBhIGdw
+aW8uIFRoZSBzYXRhLXBvd2VyIGNvbm5lY3RvciBpcyBtb2RlbGVkCmluIGRldmljZXRyZWUgYXMg
+YSBwb3dlci1zdXBwbHkgYW5kIHRoaXMgc3VwcGx5IGdldHMgY29udHJvbGxlZApieSB0aGUgYWhj
+aV9wbGF0Zm9ybSBkcml2ZXIuCgpUaGUgZGlzayBwb3dlciBtYXkgdmVyeSB3ZWxsIGhhdmUgYWxy
+ZWFkeSBiZWVuIHR1cm5lZCBvbiBieSB0aGUKYm9vdGxvYWRlciwgc28gd2UgYWRkIGEgcmVndWxh
+dG9yLWJvb3Qtb24gcHJvcGVydHkgdG8gdGhlIHJlZ3VsYXRvcgpub2RlIGluIGRldmljZXRyZWUg
+dG8gbWFrZSBzdXJlIHRoYXQgaXQgaXMgbGVmdCB1bnRvdWNoZWQgd2hlbiB0aGUKcmVndWxhdG9y
+IGRyaXZlciBsb2Fkcy4gSWYgdGhlIGFoY2lfcGxhdGZvcm0gZHJpdmVyIGlzIGJ1aWxkIGludG8K
+dGhlIGtlcm5lbCwgaXQgd2lsbCB0aGVuIHRha2UgY29udHJvbCBvZiB0aGUgcmVndWxhdG9yIGFu
+ZApldmVyeXRoaW5nIHdvcmtzIHdlbGwuCgpJZiBob3dldmVyIHRoZSBhaGNpX3BsYXRmb3JtIGRy
+aXZlciBpcyBhIG1vZHVsZSwgdGhlbiBhcyBzb29uIGFzCnRoZSBrZXJuZWwgaXMgcmVhZHkgdG8g
+c3RhcnQgaW5pdCwgdW51c2VkIHJlZ3VsYXRvcnMgYXJlIHR1cm5lZCBvZmYKYW5kIHRoZSBkaXNr
+IGxvb3NlcyBpdHMgcG93ZXIgd2hpbGUgc3Bpbm5pbmcgYW5kIGVuZHMgdXAgZG9pbmcgYW4KZW1l
+cmdlbmN5IGhlYWRzIHBhcmsuIFRoZW4gYXMgc29vbiBhcyB0aGUgYWhjaV9wbGF0Zm9ybSBtb2R1
+bGUKbG9hZHMgdGhlIGRpc2sgaXMgc3BpbiB1cCBhZ2Fpbi4gVGhpcyBpcyBub3QgZ29vZCAocXVp
+dGUgYmFkCmFjdHVhbGx5KSBmb3IgdGhlIGxpZmV0aW1lIG9mIHRoZSBkaXNrLgoKUmVnYXJkcywK
+CkhhbnMKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18Kc3lz
+dGVtZC1kZXZlbCBtYWlsaW5nIGxpc3QKc3lzdGVtZC1kZXZlbEBsaXN0cy5mcmVlZGVza3RvcC5v
+cmcKaHR0cDovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL3N5c3RlbWQt
+ZGV2ZWwK
