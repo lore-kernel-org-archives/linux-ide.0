@@ -1,131 +1,66 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH v4 11/11] ata: pata_of_platform: adjust module reference for scsi host
-Date: Mon, 19 Jan 2015 00:06:09 +0900
-Message-ID: <1421593569-5089-12-git-send-email-akinobu.mita@gmail.com>
-References: <1421593569-5089-1-git-send-email-akinobu.mita@gmail.com>
+From: Hans de Goede <hdegoede@redhat.com>
+Subject: Re: [PATCH v4 4/4] ARM: mvebu: Armada 385 GP: Add regulators to the
+ SATA port
+Date: Sun, 18 Jan 2015 16:29:02 +0100
+Message-ID: <54BBD13E.6030901@redhat.com>
+References: <1421330978-9694-5-git-send-email-gregory.clement@free-electrons.com> <54B8C933.7020502@redhat.com> <54B8D97B.3090908@free-electrons.com> <54B8E38A.6020709@redhat.com> <20150116123705.GM3043@sirena.org.uk> <54B9629C.9090800@redhat.com> <20150116202516.GL3856@sirena.org.uk> <54BA21F9.5050408@redhat.com> <20150117131404.GA6414@sirena.org.uk> <54BA7197.40301@redhat.com> <20150118123531.GA2809@sirena.org.uk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:36748 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752212AbbARPHL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Jan 2015 10:07:11 -0500
-In-Reply-To: <1421593569-5089-1-git-send-email-akinobu.mita@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:57268 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751646AbbARP3x (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 18 Jan 2015 10:29:53 -0500
+In-Reply-To: <20150118123531.GA2809@sirena.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-ide@vger.kernel.org
+To: Mark Brown <broonie@kernel.org>
+Cc: Gregory CLEMENT <gregory.clement@free-electrons.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, =?windows-1252?Q?Antoine_T=E9nart?= <antoine.tenart@free-electrons.com>, Liam Girdwood <lgirdwood@gmail.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Maxime Ripard <maxime.ripard@free-electrons.com>, Boris BREZILLON <boris.brezillon@free-electrons.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, linux-arm-kernel@lists.infradead.org, Lior Amsalem <alior@marvell.com>, Tawfik Bayouk <tawfik@marvell.com>, Nadav Haklai <nadavh@marvell.com>, Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org
 
-The pata_of_platform driver depends on pata_platform module.  The
-module reference of this scsi host is initialized to pata_platform's
-one.  Because this drivers use __pata_platform_probe() which is
-defined in pata_platform module and calls scsi_host_alloc() internally.
-So these drivers can be unloaded even if the scsi device is being
-accessed.
+Hi,
 
-This fixes it by converting into __pata_platform_probe() macro so that
-these drivers can pass their correct module reference through
-__ata_host_alloc().
+On 18-01-15 13:35, Mark Brown wrote:
+> On Sat, Jan 17, 2015 at 03:28:39PM +0100, Hans de Goede wrote:
+>> On 17-01-15 14:14, Mark Brown wrote:
+>
+>>> Following your argument to the logical conclusion means we can never
+>>> turn any regualtor off - we always have the risk that there's another
+>>> shared user which is going to get a power bounce if we power down.  More
+>>> directly we'll also get people complaining that we're burning power
+>>> pointlessly on their systems for devices they've not even got drivers
+>>> enabled for.  This powering down is something there's been user demand
+>>> for.
+>
+>> Right, note I'm only advocating to not turn off regulators marked as
+>> regulator-boot-on. I would expect any regulator to have such a
+>> marking to have at least one user with an actual driver. If people decide
+>> to not build that driver, and then complain we can simply tell them to
+>> build the driver ...
+>
+> Right, but that's not what regulator-boot-on actually means (and I'm not
+> sure why you would think it would TBH)
 
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-ide@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
----
- drivers/ata/pata_platform.c  | 18 ++++++++++--------
- include/linux/ata_platform.h | 16 ++++++++++------
- 2 files changed, 20 insertions(+), 14 deletions(-)
+Well, the meaning of regulator-boot-on is not clearly defined really, to
+begin we need with fixing that, currently all the bindings file says is:
 
-diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
-index 1eedfe4..c84e834 100644
---- a/drivers/ata/pata_platform.c
-+++ b/drivers/ata/pata_platform.c
-@@ -71,13 +71,14 @@ static void pata_platform_setup_port(struct ata_ioports *ioaddr,
- }
- 
- /**
-- *	__pata_platform_probe		-	attach a platform interface
-+ *	___pata_platform_probe		-	attach a platform interface
-  *	@dev: device
-  *	@io_res: Resource representing I/O base
-  *	@ctl_res: Resource representing CTL base
-  *	@irq_res: Resource representing IRQ and its flags
-  *	@ioport_shift: I/O port shift
-  *	@__pio_mask: PIO mask
-+ *	@owner: module which will be the owner of the ATA host
-  *
-  *	Register a platform bus IDE interface. Such interfaces are PIO and we
-  *	assume do not support IRQ sharing.
-@@ -97,9 +98,10 @@ static void pata_platform_setup_port(struct ata_ioports *ioaddr,
-  *
-  *	If no IRQ resource is present, PIO polling mode is used instead.
-  */
--int __pata_platform_probe(struct device *dev, struct resource *io_res,
--			  struct resource *ctl_res, struct resource *irq_res,
--			  unsigned int ioport_shift, int __pio_mask)
-+int ___pata_platform_probe(struct device *dev, struct resource *io_res,
-+			   struct resource *ctl_res, struct resource *irq_res,
-+			   unsigned int ioport_shift, int __pio_mask,
-+			   struct module *owner)
- {
- 	struct ata_host *host;
- 	struct ata_port *ap;
-@@ -124,7 +126,7 @@ int __pata_platform_probe(struct device *dev, struct resource *io_res,
- 	/*
- 	 * Now that that's out of the way, wire up the port..
- 	 */
--	host = ata_host_alloc(dev, 1);
-+	host = __ata_host_alloc(dev, 1, owner);
- 	if (!host)
- 		return -ENOMEM;
- 	ap = host->ports[0];
-@@ -172,7 +174,7 @@ int __pata_platform_probe(struct device *dev, struct resource *io_res,
- 	return ata_host_activate(host, irq, irq ? ata_sff_interrupt : NULL,
- 				 irq_flags, &pata_platform_sht);
- }
--EXPORT_SYMBOL_GPL(__pata_platform_probe);
-+EXPORT_SYMBOL_GPL(___pata_platform_probe);
- 
- static int pata_platform_probe(struct platform_device *pdev)
- {
-@@ -215,8 +217,8 @@ static int pata_platform_probe(struct platform_device *pdev)
- 	irq_res = platform_get_resource(pdev, IORESOURCE_IRQ, 0);
- 
- 	return __pata_platform_probe(&pdev->dev, io_res, ctl_res, irq_res,
--				     pp_info ? pp_info->ioport_shift : 0,
--				     pio_mask);
-+				   pp_info ? pp_info->ioport_shift : 0,
-+				   pio_mask);
- }
- 
- static struct platform_driver pata_platform_driver = {
-diff --git a/include/linux/ata_platform.h b/include/linux/ata_platform.h
-index 5c618a0..20bca38 100644
---- a/include/linux/ata_platform.h
-+++ b/include/linux/ata_platform.h
-@@ -10,12 +10,16 @@ struct pata_platform_info {
- 	unsigned int ioport_shift;
- };
- 
--extern int __pata_platform_probe(struct device *dev,
--				 struct resource *io_res,
--				 struct resource *ctl_res,
--				 struct resource *irq_res,
--				 unsigned int ioport_shift,
--				 int __pio_mask);
-+extern int ___pata_platform_probe(struct device *dev,
-+				  struct resource *io_res,
-+				  struct resource *ctl_res,
-+				  struct resource *irq_res,
-+				  unsigned int ioport_shift,
-+				  int __pio_mask, struct module *owner);
-+#define __pata_platform_probe(dev, io_res, ctl_res, irq_res,		\
-+			      ioport_shift, __pio_mask)			\
-+	___pata_platform_probe(dev, io_res, ctl_res, irq_res,		\
-+			       ioport_shift, __pio_mask, THIS_MODULE)
- 
- /*
-  * Marvell SATA private data
--- 
-1.9.1
+- regulator-boot-on: bootloader/firmware enabled regulator
+
+One could easily argue that the bootloader likely has a good reason to turn
+the regulator on, and that unless there is a specific driver which claims
+the regulator and thus knows what to do with it it is best left alone ...
+
+> so this will disrupt existing
+> users who are expecting the current behaviour.  We could try adding a
+> new property but it doesn't feel very idiomatic for DT which isn't very
+> nice.
+>
+> Telling people not to build the driver doesn't in general work any
+> better than telling them to build it in I fear, it seems like it's
+> essentially just shuffling things around so people have to change their
+> kernel config in a different way to avoid issues.
+
+Regards,
+
+Hans
 
