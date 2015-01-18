@@ -1,386 +1,245 @@
 From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH v4 01/11] ata: prepare to move module reference from scsi_host_template to Scsi_Host
-Date: Mon, 19 Jan 2015 00:05:59 +0900
-Message-ID: <1421593569-5089-2-git-send-email-akinobu.mita@gmail.com>
+Subject: [PATCH v4 07/11] scsi: move module reference from scsi_host_template to Scsi_Host
+Date: Mon, 19 Jan 2015 00:06:05 +0900
+Message-ID: <1421593569-5089-8-git-send-email-akinobu.mita@gmail.com>
 References: <1421593569-5089-1-git-send-email-akinobu.mita@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pd0-f176.google.com ([209.85.192.176]:35831 "EHLO
-	mail-pd0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751731AbbARPGc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Jan 2015 10:06:32 -0500
+Received: from mail-pd0-f182.google.com ([209.85.192.182]:34615 "EHLO
+	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751912AbbARPG5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 18 Jan 2015 10:06:57 -0500
 In-Reply-To: <1421593569-5089-1-git-send-email-akinobu.mita@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, Hans de Goede <hdegoede@redhat.com>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-ide@vger.kernel.org
+Cc: Akinobu Mita <akinobu.mita@gmail.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alan Stern <stern@rowland.harvard.edu>, "David S. Miller" <davem@davemloft.net>, Hannes Reinecke <hare@suse.de>, Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Mike Christie <michaelc@cs.wisc.edu>, Karen Xie <kxie@chelsio.com>, Robert Love <robert.w.love@intel.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, open-iscsi@googlegroups.com, fcoe-devel@open-fcoe.org, linux-ide@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 
-In preparation for moving owner module reference field from struct
-scsi_host_template to struct Scsi_Host, this converts the following
-functions into macros so that LLDDs can pass THIS_MODULE to
-scsi_host_alloc() through them instead of scsi_host_template->module.
+While accessing a scsi_device, the use count of the underlying LLDD
+module is incremented.  The module reference is retrieved through
+.module field of struct scsi_host_template.
 
-ata_host_alloc()
-ata_host_alloc_pinfo()
-ata_pci_sff_prepare_host()
-ata_pci_sff_init_one()
-ata_pci_bmdma_prepare_host()
-ata_pci_bmdma_init_one()
+This mapping between scsi_device and underlying LLDD module works well
+except some drivers which consist with the core driver and the actual
+LLDDs and scsi_host_template is defined in the core driver.  In these
+cases, the actual LLDDs can be unloaded even if the scsi_device is
+being accessed.
+
+This moves owner module reference from struct scsi_host_template to
+struct Scsi_Host, and it is passed through scsi_host_alloc().  Some
+drivers which have the module reference mismatch problem described above
+can pass their correct module reference by using __scsi_host_alloc()
+which takes module reference argument.
+
+Sub drivers of esp_scsi (mac_esp, am53c974, sun_esp, jazz_esp, sun3x_esp)
+use a single scsi_host_template defined in esp_scsi module, so these
+had module reference mismatch problem, but this change implicitly fixes
+it.  Because sub drivers directly call scsi_host_alloc() and THIS_MODULE
+is used for the module reference instead of scsi_host_template->module.
 
 Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Hans de Goede <hdegoede@redhat.com>
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>
+Cc: Dolev Raviv <draviv@codeaurora.org>
+Cc: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Cc: Subhash Jadavani <subhashj@codeaurora.org>
+Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Hannes Reinecke <hare@suse.de>
 Cc: Tejun Heo <tj@kernel.org>
+Cc: Hans de Goede <hdegoede@redhat.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Karen Xie <kxie@chelsio.com>
+Cc: Robert Love <robert.w.love@intel.com>
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
+Cc: open-iscsi@googlegroups.com
+Cc: fcoe-devel@open-fcoe.org
 Cc: linux-ide@vger.kernel.org
+Cc: linux-usb@vger.kernel.org
+Cc: usb-storage@lists.one-eyed-alien.net
 Cc: linux-scsi@vger.kernel.org
 ---
- drivers/ata/libata-core.c | 22 ++++++++++-------
- drivers/ata/libata-sff.c  | 61 +++++++++++++++++++++++++----------------------
- include/linux/libata.h    | 52 ++++++++++++++++++++++++++++------------
- 3 files changed, 83 insertions(+), 52 deletions(-)
+ drivers/ata/libata-scsi.c     |  2 +-
+ drivers/scsi/53c700.c         |  2 +-
+ drivers/scsi/hosts.c          | 11 +++++++----
+ drivers/scsi/libfc/fc_lport.c |  2 +-
+ drivers/scsi/libfc/fc_npiv.c  |  3 +--
+ drivers/scsi/libiscsi.c       |  2 +-
+ drivers/scsi/scsi.c           |  4 ++--
+ include/scsi/scsi_host.h      |  8 +++++++-
+ 8 files changed, 21 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 5c84fb5..a3cc0e3 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5700,9 +5700,10 @@ static void ata_host_release(struct device *gendev, void *res)
- }
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index e364e86..20a963c 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3643,7 +3643,7 @@ int ata_scsi_add_hosts(struct ata_host *host, struct scsi_host_template *sht)
+ 		struct Scsi_Host *shost;
  
- /**
-- *	ata_host_alloc - allocate and init basic ATA host resources
-+ *	__ata_host_alloc - allocate and init basic ATA host resources
-  *	@dev: generic device this host is associated with
-  *	@max_ports: maximum number of ATA ports associated with this host
-+ *	@owner: module which will be the owner of the ATA host
-  *
-  *	Allocate and initialize basic ATA host resources.  LLD calls
-  *	this function to allocate a host, initializes it fully and
-@@ -5719,7 +5720,8 @@ static void ata_host_release(struct device *gendev, void *res)
-  *	LOCKING:
-  *	Inherited from calling layer (may sleep).
-  */
--struct ata_host *ata_host_alloc(struct device *dev, int max_ports)
-+struct ata_host *__ata_host_alloc(struct device *dev, int max_ports,
-+				  struct module *owner)
- {
- 	struct ata_host *host;
- 	size_t sz;
-@@ -5744,6 +5746,7 @@ struct ata_host *ata_host_alloc(struct device *dev, int max_ports)
- 	mutex_init(&host->eh_mutex);
- 	host->dev = dev;
- 	host->n_ports = max_ports;
-+	host->module = owner;
+ 		rc = -ENOMEM;
+-		shost = scsi_host_alloc(sht, sizeof(struct ata_port *));
++		shost = __scsi_host_alloc(sht, sizeof(ap), host->module);
+ 		if (!shost)
+ 			goto err_alloc;
  
- 	/* allocate ports bound to this host */
- 	for (i = 0; i < max_ports; i++) {
-@@ -5766,10 +5769,11 @@ struct ata_host *ata_host_alloc(struct device *dev, int max_ports)
- }
+diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
+index e70fd05..a5777f8 100644
+--- a/drivers/scsi/53c700.c
++++ b/drivers/scsi/53c700.c
+@@ -333,7 +333,7 @@ __NCR_700_detect(struct scsi_host_template *tpnt,
+ 	if(tpnt->proc_name == NULL)
+ 		tpnt->proc_name = "53c700";
  
- /**
-- *	ata_host_alloc_pinfo - alloc host and init with port_info array
-+ *	__ata_host_alloc_pinfo - alloc host and init with port_info array
-  *	@dev: generic device this host is associated with
-  *	@ppi: array of ATA port_info to initialize host with
-  *	@n_ports: number of ATA ports attached to this host
-+ *	@owner: module which will be the owner of the ATA host
-  *
-  *	Allocate ATA host and initialize with info from @ppi.  If NULL
-  *	terminated, @ppi may contain fewer entries than @n_ports.  The
-@@ -5781,15 +5785,15 @@ struct ata_host *ata_host_alloc(struct device *dev, int max_ports)
-  *	LOCKING:
-  *	Inherited from calling layer (may sleep).
-  */
--struct ata_host *ata_host_alloc_pinfo(struct device *dev,
--				      const struct ata_port_info * const * ppi,
--				      int n_ports)
-+struct ata_host *__ata_host_alloc_pinfo(struct device *dev,
-+					const struct ata_port_info * const *ppi,
-+					int n_ports, struct module *owner)
- {
- 	const struct ata_port_info *pi;
- 	struct ata_host *host;
- 	int i, j;
- 
--	host = ata_host_alloc(dev, n_ports);
-+	host = __ata_host_alloc(dev, n_ports, owner);
+-	host = scsi_host_alloc(tpnt, 4);
++	host = __scsi_host_alloc(tpnt, sizeof(hostdata), owner);
  	if (!host)
  		return NULL;
- 
-@@ -6862,8 +6866,8 @@ EXPORT_SYMBOL_GPL(ata_dev_next);
- EXPORT_SYMBOL_GPL(ata_std_bios_param);
- EXPORT_SYMBOL_GPL(ata_scsi_unlock_native_capacity);
- EXPORT_SYMBOL_GPL(ata_host_init);
--EXPORT_SYMBOL_GPL(ata_host_alloc);
--EXPORT_SYMBOL_GPL(ata_host_alloc_pinfo);
-+EXPORT_SYMBOL_GPL(__ata_host_alloc);
-+EXPORT_SYMBOL_GPL(__ata_host_alloc_pinfo);
- EXPORT_SYMBOL_GPL(ata_slave_link_init);
- EXPORT_SYMBOL_GPL(ata_host_start);
- EXPORT_SYMBOL_GPL(ata_host_register);
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index db90aa3..323c9d8 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -2349,10 +2349,11 @@ int ata_pci_sff_init_host(struct ata_host *host)
- EXPORT_SYMBOL_GPL(ata_pci_sff_init_host);
+ 	memset(hostdata->slots, 0, sizeof(struct NCR_700_command_slot)
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index eb324f1..90c109e 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -354,9 +354,10 @@ static struct device_type scsi_host_type = {
+ };
  
  /**
-- *	ata_pci_sff_prepare_host - helper to prepare PCI PIO-only SFF ATA host
-+ *	__ata_pci_sff_prepare_host - helper to prepare PCI PIO-only SFF ATA host
-  *	@pdev: target PCI device
-  *	@ppi: array of port_info, must be enough for two ports
-  *	@r_host: out argument for the initialized ATA host
-+ *	@owner: module which will be the owner of the ATA host
+- * scsi_host_alloc - register a scsi host adapter instance.
++ * __scsi_host_alloc - register a scsi host adapter instance.
+  * @sht:	pointer to scsi host template
+  * @privsize:	extra bytes to allocate for driver
++ * @owner:	module which will be the owner of the scsi host
   *
-  *	Helper to allocate PIO-only SFF ATA host for @pdev, acquire
-  *	all PCI resources and initialize it accordingly in one go.
-@@ -2363,9 +2364,9 @@ EXPORT_SYMBOL_GPL(ata_pci_sff_init_host);
-  *	RETURNS:
-  *	0 on success, -errno otherwise.
-  */
--int ata_pci_sff_prepare_host(struct pci_dev *pdev,
--			     const struct ata_port_info * const *ppi,
--			     struct ata_host **r_host)
-+int __ata_pci_sff_prepare_host(struct pci_dev *pdev,
-+			       const struct ata_port_info * const *ppi,
-+			       struct ata_host **r_host, struct module *owner)
+  * Note:
+  * 	Allocate a new Scsi_Host and perform basic initialization.
+@@ -366,7 +367,8 @@ static struct device_type scsi_host_type = {
+  * Return value:
+  * 	Pointer to a new Scsi_Host
+  **/
+-struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
++struct Scsi_Host *__scsi_host_alloc(struct scsi_host_template *sht,
++				    int privsize, struct module *owner)
  {
- 	struct ata_host *host;
- 	int rc;
-@@ -2373,7 +2374,7 @@ int ata_pci_sff_prepare_host(struct pci_dev *pdev,
- 	if (!devres_open_group(&pdev->dev, NULL, GFP_KERNEL))
- 		return -ENOMEM;
- 
--	host = ata_host_alloc_pinfo(&pdev->dev, ppi, 2);
-+	host = __ata_host_alloc_pinfo(&pdev->dev, ppi, 2, owner);
- 	if (!host) {
- 		dev_err(&pdev->dev, "failed to allocate ATA host\n");
- 		rc = -ENOMEM;
-@@ -2392,7 +2393,7 @@ err_out:
- 	devres_release_group(&pdev->dev, NULL);
- 	return rc;
+ 	struct Scsi_Host *shost;
+ 	gfp_t gfp_mask = GFP_KERNEL;
+@@ -411,6 +413,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 	 */
+ 	shost->max_cmd_len = 12;
+ 	shost->hostt = sht;
++	shost->module = owner;
+ 	shost->this_id = sht->this_id;
+ 	shost->can_queue = sht->can_queue;
+ 	shost->sg_tablesize = sht->sg_tablesize;
+@@ -497,12 +500,12 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 	kfree(shost);
+ 	return NULL;
  }
--EXPORT_SYMBOL_GPL(ata_pci_sff_prepare_host);
-+EXPORT_SYMBOL_GPL(__ata_pci_sff_prepare_host);
+-EXPORT_SYMBOL(scsi_host_alloc);
++EXPORT_SYMBOL(__scsi_host_alloc);
  
- /**
-  *	ata_pci_sff_activate_host - start SFF host, request IRQ and register it
-@@ -2500,7 +2501,7 @@ static const struct ata_port_info *ata_sff_find_valid_pi(
- static int ata_pci_init_one(struct pci_dev *pdev,
- 		const struct ata_port_info * const *ppi,
- 		struct scsi_host_template *sht, void *host_priv,
--		int hflags, bool bmdma)
-+		int hflags, bool bmdma, struct module *owner)
+ struct Scsi_Host *__scsi_register(struct scsi_host_template *sht, int privsize,
+ 				  struct module *owner)
  {
- 	struct device *dev = &pdev->dev;
- 	const struct ata_port_info *pi;
-@@ -2525,11 +2526,11 @@ static int ata_pci_init_one(struct pci_dev *pdev,
- #ifdef CONFIG_ATA_BMDMA
- 	if (bmdma)
- 		/* prepare and activate BMDMA host */
--		rc = ata_pci_bmdma_prepare_host(pdev, ppi, &host);
-+		rc = __ata_pci_bmdma_prepare_host(pdev, ppi, &host, owner);
- 	else
- #endif
- 		/* prepare and activate SFF host */
--		rc = ata_pci_sff_prepare_host(pdev, ppi, &host);
-+		rc = __ata_pci_sff_prepare_host(pdev, ppi, &host, owner);
- 	if (rc)
- 		goto out;
- 	host->private_data = host_priv;
-@@ -2552,12 +2553,13 @@ out:
- }
+-	struct Scsi_Host *shost = scsi_host_alloc(sht, privsize);
++	struct Scsi_Host *shost = __scsi_host_alloc(sht, privsize, owner);
  
- /**
-- *	ata_pci_sff_init_one - Initialize/register PIO-only PCI IDE controller
-+ *	__ata_pci_sff_init_one - Initialize/register PIO-only PCI IDE controller
-  *	@pdev: Controller to be initialized
-  *	@ppi: array of port_info, must be enough for two ports
-  *	@sht: scsi_host_template to use when registering the host
-  *	@host_priv: host private_data
-  *	@hflag: host flags
-+ *	@owner: module which will be the owner of the ATA host
-  *
-  *	This is a helper function which can be called from a driver's
-  *	xxx_init_one() probe function if the hardware uses traditional
-@@ -2573,13 +2575,14 @@ out:
-  *	RETURNS:
-  *	Zero on success, negative on errno-based value on error.
-  */
--int ata_pci_sff_init_one(struct pci_dev *pdev,
--		 const struct ata_port_info * const *ppi,
--		 struct scsi_host_template *sht, void *host_priv, int hflag)
-+int __ata_pci_sff_init_one(struct pci_dev *pdev,
-+			   const struct ata_port_info * const *ppi,
-+			   struct scsi_host_template *sht, void *host_priv,
-+			   int hflag, struct module *owner)
- {
--	return ata_pci_init_one(pdev, ppi, sht, host_priv, hflag, 0);
-+	return ata_pci_init_one(pdev, ppi, sht, host_priv, hflag, 0, owner);
- }
--EXPORT_SYMBOL_GPL(ata_pci_sff_init_one);
-+EXPORT_SYMBOL_GPL(__ata_pci_sff_init_one);
+ 	if (!sht->detect) {
+ 		printk(KERN_WARNING "scsi_register() called on new-style "
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index d931e69..54ef1c4 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -2158,7 +2158,7 @@ struct fc_lport *__libfc_host_alloc(struct scsi_host_template *sht,
+ 	struct fc_lport *lport;
+ 	struct Scsi_Host *shost;
  
- #endif /* CONFIG_PCI */
+-	shost = scsi_host_alloc(sht, sizeof(*lport) + priv_size);
++	shost = __scsi_host_alloc(sht, sizeof(*lport) + priv_size, owner);
+ 	if (!shost)
+ 		return NULL;
+ 	lport = shost_priv(shost);
+diff --git a/drivers/scsi/libfc/fc_npiv.c b/drivers/scsi/libfc/fc_npiv.c
+index 86133f9..1cf2abb 100644
+--- a/drivers/scsi/libfc/fc_npiv.c
++++ b/drivers/scsi/libfc/fc_npiv.c
+@@ -36,8 +36,7 @@ struct fc_lport *libfc_vport_create(struct fc_vport *vport, int privsize)
+ 	struct fc_lport *n_port = shost_priv(shost);
+ 	struct fc_lport *vn_port;
  
-@@ -3245,10 +3248,11 @@ void ata_pci_bmdma_init(struct ata_host *host)
- EXPORT_SYMBOL_GPL(ata_pci_bmdma_init);
+-	vn_port = __libfc_host_alloc(shost->hostt, privsize,
+-				     shost->hostt->module);
++	vn_port = __libfc_host_alloc(shost->hostt, privsize, shost->module);
+ 	if (!vn_port)
+ 		return vn_port;
  
- /**
-- *	ata_pci_bmdma_prepare_host - helper to prepare PCI BMDMA ATA host
-+ *	__ata_pci_bmdma_prepare_host - helper to prepare PCI BMDMA ATA host
-  *	@pdev: target PCI device
-  *	@ppi: array of port_info, must be enough for two ports
-  *	@r_host: out argument for the initialized ATA host
-+ *	@owner: module which will be the owner of the ATA host
-  *
-  *	Helper to allocate BMDMA ATA host for @pdev, acquire all PCI
-  *	resources and initialize it accordingly in one go.
-@@ -3259,28 +3263,29 @@ EXPORT_SYMBOL_GPL(ata_pci_bmdma_init);
-  *	RETURNS:
-  *	0 on success, -errno otherwise.
-  */
--int ata_pci_bmdma_prepare_host(struct pci_dev *pdev,
--			       const struct ata_port_info * const * ppi,
--			       struct ata_host **r_host)
-+int __ata_pci_bmdma_prepare_host(struct pci_dev *pdev,
-+				 const struct ata_port_info * const *ppi,
-+				 struct ata_host **r_host, struct module *owner)
- {
- 	int rc;
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 4c5be6b..6c2ebf3 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -2609,7 +2609,7 @@ struct Scsi_Host *__iscsi_host_alloc(struct scsi_host_template *sht,
+ 	struct Scsi_Host *shost;
+ 	struct iscsi_host *ihost;
  
--	rc = ata_pci_sff_prepare_host(pdev, ppi, r_host);
-+	rc = __ata_pci_sff_prepare_host(pdev, ppi, r_host, owner);
- 	if (rc)
- 		return rc;
+-	shost = scsi_host_alloc(sht, sizeof(struct iscsi_host) + dd_data_size);
++	shost = __scsi_host_alloc(sht, sizeof(*ihost) + dd_data_size, owner);
+ 	if (!shost)
+ 		return NULL;
+ 	ihost = shost_priv(shost);
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index e028854..5905b83 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -988,7 +988,7 @@ int scsi_device_get(struct scsi_device *sdev)
+ 		return -ENXIO;
+ 	/* We can fail this if we're doing SCSI operations
+ 	 * from module exit (like cache flush) */
+-	try_module_get(sdev->host->hostt->module);
++	try_module_get(sdev->host->module);
  
- 	ata_pci_bmdma_init(*r_host);
  	return 0;
  }
--EXPORT_SYMBOL_GPL(ata_pci_bmdma_prepare_host);
-+EXPORT_SYMBOL_GPL(__ata_pci_bmdma_prepare_host);
- 
- /**
-- *	ata_pci_bmdma_init_one - Initialize/register BMDMA PCI IDE controller
-+ *	__ata_pci_bmdma_init_one - Initialize/register BMDMA PCI IDE controller
-  *	@pdev: Controller to be initialized
-  *	@ppi: array of port_info, must be enough for two ports
-  *	@sht: scsi_host_template to use when registering the host
-  *	@host_priv: host private_data
-  *	@hflags: host flags
-+ *	@owner: module which will be the owner of the ATA host
-  *
-  *	This function is similar to ata_pci_sff_init_one() but also
-  *	takes care of BMDMA initialization.
-@@ -3291,14 +3296,14 @@ EXPORT_SYMBOL_GPL(ata_pci_bmdma_prepare_host);
-  *	RETURNS:
-  *	Zero on success, negative on errno-based value on error.
-  */
--int ata_pci_bmdma_init_one(struct pci_dev *pdev,
--			   const struct ata_port_info * const * ppi,
--			   struct scsi_host_template *sht, void *host_priv,
--			   int hflags)
-+int __ata_pci_bmdma_init_one(struct pci_dev *pdev,
-+			     const struct ata_port_info * const *ppi,
-+			     struct scsi_host_template *sht, void *host_priv,
-+			     int hflags, struct module *owner)
+@@ -1005,7 +1005,7 @@ EXPORT_SYMBOL(scsi_device_get);
+ void scsi_device_put(struct scsi_device *sdev)
  {
--	return ata_pci_init_one(pdev, ppi, sht, host_priv, hflags, 1);
-+	return ata_pci_init_one(pdev, ppi, sht, host_priv, hflags, 1, owner);
- }
--EXPORT_SYMBOL_GPL(ata_pci_bmdma_init_one);
-+EXPORT_SYMBOL_GPL(__ata_pci_bmdma_init_one);
+ #ifdef CONFIG_MODULE_UNLOAD
+-	struct module *module = sdev->host->hostt->module;
++	struct module *module = sdev->host->module;
  
- #endif /* CONFIG_PCI */
- #endif /* CONFIG_ATA_BMDMA */
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 2d18241..541ceb1 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -598,6 +598,7 @@ struct ata_host {
- 	void			*private_data;
- 	struct ata_port_operations *ops;
- 	unsigned long		flags;
-+	struct module		*module;
+ 	/* The module refcount will be zero if scsi_device_get()
+ 	 * was called from a module removal routine */
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 0369b4e..acdf828 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -47,6 +47,7 @@ struct blk_queue_tags;
+ #define ENABLE_CLUSTERING 1
  
- 	struct mutex		eh_mutex;
- 	struct task_struct	*eh_owner;
-@@ -1106,9 +1107,15 @@ extern int sata_std_hardreset(struct ata_link *link, unsigned int *class,
- 			      unsigned long deadline);
- extern void ata_std_postreset(struct ata_link *link, unsigned int *classes);
+ struct scsi_host_template {
++	/* This is unused and will be removed after mass conversion */
+ 	struct module *module;
+ 	const char *name;
  
--extern struct ata_host *ata_host_alloc(struct device *dev, int max_ports);
--extern struct ata_host *ata_host_alloc_pinfo(struct device *dev,
--			const struct ata_port_info * const * ppi, int n_ports);
-+extern struct ata_host *__ata_host_alloc(struct device *dev, int max_ports,
-+					struct module *owner);
-+#define ata_host_alloc(dev, max_ports) \
-+	__ata_host_alloc(dev, max_ports, THIS_MODULE)
-+extern struct ata_host *__ata_host_alloc_pinfo(struct device *dev,
-+			const struct ata_port_info * const *ppi, int n_ports,
-+			struct module *owner);
-+#define ata_host_alloc_pinfo(dev, ppi, n_ports) \
-+	__ata_host_alloc_pinfo(dev, ppi, n_ports, THIS_MODULE)
- extern int ata_slave_link_init(struct ata_port *ap);
- extern int ata_host_start(struct ata_host *host);
- extern int ata_host_register(struct ata_host *host,
-@@ -1835,15 +1842,22 @@ extern void ata_sff_error_handler(struct ata_port *ap);
- extern void ata_sff_std_ports(struct ata_ioports *ioaddr);
- #ifdef CONFIG_PCI
- extern int ata_pci_sff_init_host(struct ata_host *host);
--extern int ata_pci_sff_prepare_host(struct pci_dev *pdev,
--				    const struct ata_port_info * const * ppi,
--				    struct ata_host **r_host);
-+extern int __ata_pci_sff_prepare_host(struct pci_dev *pdev,
-+				      const struct ata_port_info * const *ppi,
-+				      struct ata_host **r_host,
-+				      struct module *owner);
-+#define ata_pci_sff_prepare_host(pdev, ppi, r_host) \
-+	__ata_pci_sff_prepare_host(pdev, ppi, r_host, THIS_MODULE)
- extern int ata_pci_sff_activate_host(struct ata_host *host,
- 				     irq_handler_t irq_handler,
- 				     struct scsi_host_template *sht);
--extern int ata_pci_sff_init_one(struct pci_dev *pdev,
-+extern int __ata_pci_sff_init_one(struct pci_dev *pdev,
- 		const struct ata_port_info * const * ppi,
--		struct scsi_host_template *sht, void *host_priv, int hflags);
-+		struct scsi_host_template *sht, void *host_priv, int hflags,
-+		struct module *owner);
-+#define ata_pci_sff_init_one(pdev, ppi, sht, host_priv, hflag)	\
-+	__ata_pci_sff_init_one(pdev, ppi, sht, host_priv, hflag, THIS_MODULE)
+@@ -617,6 +618,7 @@ struct Scsi_Host {
+ 	 */
+ 	unsigned short max_cmd_len;
+ 
++	struct module *module;
+ 	int this_id;
+ 	int can_queue;
+ 	short cmd_per_lun;
+@@ -783,7 +785,11 @@ static inline bool shost_use_blk_mq(struct Scsi_Host *shost)
+ extern int scsi_queue_work(struct Scsi_Host *, struct work_struct *);
+ extern void scsi_flush_work(struct Scsi_Host *);
+ 
+-extern struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *, int);
++extern struct Scsi_Host *__scsi_host_alloc(struct scsi_host_template *, int,
++					struct module *);
++#define scsi_host_alloc(sht, privsize) \
++	__scsi_host_alloc(sht, privsize, THIS_MODULE)
 +
- #endif /* CONFIG_PCI */
- 
- #ifdef CONFIG_ATA_BMDMA
-@@ -1874,13 +1888,21 @@ extern int ata_bmdma_port_start32(struct ata_port *ap);
- #ifdef CONFIG_PCI
- extern int ata_pci_bmdma_clear_simplex(struct pci_dev *pdev);
- extern void ata_pci_bmdma_init(struct ata_host *host);
--extern int ata_pci_bmdma_prepare_host(struct pci_dev *pdev,
--				      const struct ata_port_info * const * ppi,
--				      struct ata_host **r_host);
--extern int ata_pci_bmdma_init_one(struct pci_dev *pdev,
--				  const struct ata_port_info * const * ppi,
--				  struct scsi_host_template *sht,
--				  void *host_priv, int hflags);
-+extern int __ata_pci_bmdma_prepare_host(struct pci_dev *pdev,
-+					const struct ata_port_info * const *ppi,
-+					struct ata_host **r_host,
-+					struct module *owner);
-+#define ata_pci_bmdma_prepare_host(pdev, ppi, r_host) \
-+	__ata_pci_bmdma_prepare_host(pdev, ppi, r_host, THIS_MODULE)
-+
-+extern int __ata_pci_bmdma_init_one(struct pci_dev *pdev,
-+				    const struct ata_port_info * const *ppi,
-+				    struct scsi_host_template *sht,
-+				    void *host_priv, int hflags,
-+				    struct module *owner);
-+#define ata_pci_bmdma_init_one(pdev, ppi, sht, host_priv, hflags) \
-+	__ata_pci_bmdma_init_one(pdev, ppi, sht, host_priv, hflags, THIS_MODULE)
-+
- #endif /* CONFIG_PCI */
- #endif /* CONFIG_ATA_BMDMA */
- 
+ extern int __must_check scsi_add_host_with_dma(struct Scsi_Host *,
+ 					       struct device *,
+ 					       struct device *);
 -- 
 1.9.1
 
