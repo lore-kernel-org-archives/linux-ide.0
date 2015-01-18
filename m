@@ -1,121 +1,73 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [PATCH v4 10/11] ata: ahci_platform: adjust module reference
- for scsi host
-Date: Sun, 18 Jan 2015 16:30:54 +0100
-Message-ID: <54BBD1AE.4070805@redhat.com>
-References: <1421593569-5089-1-git-send-email-akinobu.mita@gmail.com> <1421593569-5089-11-git-send-email-akinobu.mita@gmail.com>
+From: Mark Brown <broonie@kernel.org>
+Subject: Re: [PATCH v4 4/4] ARM: mvebu: Armada 385 GP: Add regulators to the
+ SATA port
+Date: Sun, 18 Jan 2015 19:28:34 +0000
+Message-ID: <20150118192834.GE2809@sirena.org.uk>
+References: <54B8D97B.3090908@free-electrons.com>
+ <54B8E38A.6020709@redhat.com>
+ <20150116123705.GM3043@sirena.org.uk>
+ <54B9629C.9090800@redhat.com>
+ <20150116202516.GL3856@sirena.org.uk>
+ <54BA21F9.5050408@redhat.com>
+ <20150117131404.GA6414@sirena.org.uk>
+ <54BA7197.40301@redhat.com>
+ <20150118123531.GA2809@sirena.org.uk>
+ <54BBD13E.6030901@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1421593569-5089-11-git-send-email-akinobu.mita@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>, linux-scsi@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-ide@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="LSp5EJdfMPwZcMS1"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <54BBD13E.6030901@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: Gregory CLEMENT <gregory.clement@free-electrons.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Antoine =?iso-8859-1?Q?T=E9nart?= <antoine.tenart@free-electrons.com>, Liam Girdwood <lgirdwood@gmail.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, Maxime Ripard <maxime.ripard@free-electrons.com>, Boris BREZILLON <boris.brezillon@free-electrons.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, linux-arm-kernel@lists.infradead.org, Lior Amsalem <alior@marvell.com>, Tawfik Bayouk <tawfik@marvell.com>, Nadav Haklai <nadavh@marvell.com>, Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Hi,
 
-On 18-01-15 16:06, Akinobu Mita wrote:
-> The ahci platform drivers depend on libahci_platform module.  The
-> module reference of these scsi host is initialized to libahci_platform's
-> one.  Because these drivers use ahci_platform_init_host() which is
-> defined in libahci_platform module and calls scsi_host_alloc()
-> internally.  So these drivers can be unloaded even if the scsi device
-> is being accessed.
->
-> This fixes it by converting into ahci_platform_init_host() macro so that
-> these drivers can pass their correct module reference through
-> __ata_host_alloc_pinfo().
->
-> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-> Cc: Hans de Goede <hdegoede@redhat.com>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-> Cc: linux-ide@vger.kernel.org
-> Cc: linux-scsi@vger.kernel.org
+--LSp5EJdfMPwZcMS1
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Looks good to me:
+On Sun, Jan 18, 2015 at 04:29:02PM +0100, Hans de Goede wrote:
+> On 18-01-15 13:35, Mark Brown wrote:
 
-Acked-by: Hans de Goede <hdegoede@redhat.com>
+> >Right, but that's not what regulator-boot-on actually means (and I'm not
+> >sure why you would think it would TBH)
 
-Regards,
+> Well, the meaning of regulator-boot-on is not clearly defined really, to
+> begin we need with fixing that, currently all the bindings file says is:
 
-Hans
+> - regulator-boot-on: bootloader/firmware enabled regulator
 
-> ---
->   drivers/ata/libahci_platform.c | 14 ++++++++------
->   include/linux/ahci_platform.h  |  9 ++++++---
->   2 files changed, 14 insertions(+), 9 deletions(-)
->
-> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-> index 0b03f90..ea75416 100644
-> --- a/drivers/ata/libahci_platform.c
-> +++ b/drivers/ata/libahci_platform.c
-> @@ -395,10 +395,11 @@ err_out:
->   EXPORT_SYMBOL_GPL(ahci_platform_get_resources);
->
->   /**
-> - * ahci_platform_init_host - Bring up an ahci-platform host
-> + * __ahci_platform_init_host - Bring up an ahci-platform host
->    * @pdev: platform device pointer for the host
->    * @hpriv: ahci-host private data for the host
->    * @pi_template: template for the ata_port_info to use
-> + * @owner: module which will be the owner of the ahci-platform host
->    *
->    * This function does all the usual steps needed to bring up an
->    * ahci-platform host, note any necessary resources (ie clks, phys, etc.)
-> @@ -407,9 +408,10 @@ EXPORT_SYMBOL_GPL(ahci_platform_get_resources);
->    * RETURNS:
->    * 0 on success otherwise a negative error code
->    */
-> -int ahci_platform_init_host(struct platform_device *pdev,
-> -			    struct ahci_host_priv *hpriv,
-> -			    const struct ata_port_info *pi_template)
-> +int __ahci_platform_init_host(struct platform_device *pdev,
-> +			      struct ahci_host_priv *hpriv,
-> +			      const struct ata_port_info *pi_template,
-> +			      struct module *owner)
->   {
->   	struct device *dev = &pdev->dev;
->   	struct ata_port_info pi = *pi_template;
-> @@ -443,7 +445,7 @@ int ahci_platform_init_host(struct platform_device *pdev,
->   	 */
->   	n_ports = max(ahci_nr_ports(hpriv->cap), fls(hpriv->port_map));
->
-> -	host = ata_host_alloc_pinfo(dev, ppi, n_ports);
-> +	host = __ata_host_alloc_pinfo(dev, ppi, n_ports, owner);
->   	if (!host)
->   		return -ENOMEM;
->
-> @@ -495,7 +497,7 @@ int ahci_platform_init_host(struct platform_device *pdev,
->
->   	return ahci_host_activate(host, irq, &ahci_platform_sht);
->   }
-> -EXPORT_SYMBOL_GPL(ahci_platform_init_host);
-> +EXPORT_SYMBOL_GPL(__ahci_platform_init_host);
->
->   static void ahci_host_stop(struct ata_host *host)
->   {
-> diff --git a/include/linux/ahci_platform.h b/include/linux/ahci_platform.h
-> index 642d6ae..0dcac84 100644
-> --- a/include/linux/ahci_platform.h
-> +++ b/include/linux/ahci_platform.h
-> @@ -28,9 +28,12 @@ int ahci_platform_enable_resources(struct ahci_host_priv *hpriv);
->   void ahci_platform_disable_resources(struct ahci_host_priv *hpriv);
->   struct ahci_host_priv *ahci_platform_get_resources(
->   	struct platform_device *pdev);
-> -int ahci_platform_init_host(struct platform_device *pdev,
-> -			    struct ahci_host_priv *hpriv,
-> -			    const struct ata_port_info *pi_template);
-> +int __ahci_platform_init_host(struct platform_device *pdev,
-> +			      struct ahci_host_priv *hpriv,
-> +			      const struct ata_port_info *pi_template,
-> +			      struct module *owner);
-> +#define ahci_platform_init_host(pdev, hpriv, pi_template) \
-> +	__ahci_platform_init_host(pdev, hpriv, pi_template, THIS_MODULE)
->
->   int ahci_platform_suspend_host(struct device *dev);
->   int ahci_platform_resume_host(struct device *dev);
->
+If that meant anything about what to do with the regulator at runtime it
+would say so - it means exactly what it says.
+
+> One could easily argue that the bootloader likely has a good reason to turn
+> the regulator on, and that unless there is a specific driver which claims
+> the regulator and thus knows what to do with it it is best left alone ...
+
+That's an excessively big stretch; it doesn't reflect the reality that
+the bootloader is often just leaving the settings it found on initial
+power up alone nor the general quality of implementation concerns one
+often sees with bootloaders.  A big use case for this feature is that
+there is a fairly large class of systems where the bootloader can't be
+relied on.
+
+--LSp5EJdfMPwZcMS1
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQEcBAEBCAAGBQJUvAlhAAoJECTWi3JdVIfQFugH/2MtQS8neODkPiv2p92VJqpA
+yyGQvGqIheznrWmlk6q6VztpOWTirZdB8dXmwJ5iAlojBYVZ37RUt6gBpmUoAOTH
+vk3rKGwKANixryQ6p/INxeN/eI/ezGtpKyse5DP1jdHrx8nXlokm5gQPm/wzQeDu
+WMk9+pgYUlzRBbibYa10E38oAzStNsYmZMxZuHCjPmOZ5g0zLp/tGySZYZw5Y5jS
+eTEvtcsDrJ0QjQPBlrb696PdQuc5cHdZ218fPbZf/brvfVB7ATtQG2oIq7WL6bQs
+17TdfnUJrnGJHcNTQ/mXKBIW2y/pl6wz2UszfTWfhtW95yFx9LlOrbZYzH7zydI=
+=m6+K
+-----END PGP SIGNATURE-----
+
+--LSp5EJdfMPwZcMS1--
