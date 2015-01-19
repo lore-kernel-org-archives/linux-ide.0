@@ -1,49 +1,37 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] libata: fixup oops in ata_eh_link_report()
-Date: Mon, 19 Jan 2015 13:00:59 +0100
-Message-ID: <1421668859-4593-1-git-send-email-hare@suse.de>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:52918 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751474AbbASMBD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 19 Jan 2015 07:01:03 -0500
-Sender: linux-ide-owner@vger.kernel.org
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 1/2] libata: allow sata_sil24 to opt-out of tag ordered
+ submission
+Date: Mon, 19 Jan 2015 09:12:49 -0500
+Message-ID: <20150119141249.GA8140@htj.dyndns.org>
+References: <20150116231225.18771.75061.stgit@viggo.jf.intel.com>
+ <20150116231302.18771.62862.stgit@viggo.jf.intel.com>
+ <54BA409E.4040901@cogentembedded.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <stable-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <54BA409E.4040901@cogentembedded.com>
+Sender: stable-owner@vger.kernel.org
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, linux-ide@vger.kernel.org, Ronny Hegewald <Ronny.Hegewald@online.de>, stable@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Sergey Senozhatsky <sergey.senozhatsky@gmail.com>, Hannes Reinecke <hare@suse.de>
 
-We should only try to evaluate the cdb if this is an ATAPI
-device, for any other device the 'cdb' field and the cdb_len
-has no meaning.
+On Sat, Jan 17, 2015 at 01:59:42PM +0300, Sergei Shtylyov wrote:
+> >  	for (i = 0, tag = ap->last_tag + 1; i < max_queue; i++, tag++) {
+> >-		tag = tag < max_queue ? tag : 0;
+> >+		if (ap->flags & ATA_FLAG_LOWTAG)
+> >+			tag = i;
+> >+		else
+> >+			tag = tag < max_queue ? tag : 0;
+> 
+>    Ugh, this is clear abuse of the ?: operator... Why not simply:
+> 
+> 		else if (tag >= max_queue)
+> 			tag = 0;
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/ata/libata-eh.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Why is that a clear abuse?  Seems like a pretty typical use to me.
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 9179f11..584c6ae 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -2481,8 +2481,6 @@ static void ata_eh_link_report(struct ata_link *link)
- 	for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
- 		struct ata_queued_cmd *qc = __ata_qc_from_tag(ap, tag);
- 		struct ata_taskfile *cmd = &qc->tf, *res = &qc->result_tf;
--		const u8 *cdb = qc->cdb;
--		size_t cdb_len = qc->dev->cdb_len;
- 		char data_buf[20] = "";
- 		char cdb_buf[70] = "";
- 
-@@ -2510,6 +2508,9 @@ static void ata_eh_link_report(struct ata_link *link)
- 		}
- 
- 		if (ata_is_atapi(qc->tf.protocol)) {
-+			const u8 *cdb = qc->cdb;
-+			size_t cdb_len = qd->dev->cdb_len;
-+
- 			if (qc->scsicmd) {
- 				cdb = qc->scsicmd->cmnd;
- 				cdb_len = qc->scsicmd->cmd_len;
+Thanks.
+
 -- 
-1.8.5.2
-
+tejun
