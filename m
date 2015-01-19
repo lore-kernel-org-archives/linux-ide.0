@@ -1,66 +1,49 @@
-From: "Kenneth R. Crudup" <kenny@panix.com>
-Subject: Re: Issues with commit 34b48db6 ("block: remove artifical max_hw_sectors
- cap")
-Date: Mon, 19 Jan 2015 01:45:50 -0800 (PST)
-Message-ID: <alpine.DEB.2.10.1501190139360.4837@tosh-p75a>
-References: <Pine.LNX.4.44L0.1501051452440.1101-100000@iolanthe.rowland.org>
-Reply-To: "Kenneth R. Crudup" <kenny@panix.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1501051452440.1101-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Christoph Hellwig <hch@lst.de>, Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] libata: fixup oops in ata_eh_link_report()
+Date: Mon, 19 Jan 2015 13:00:59 +0100
+Message-ID: <1421668859-4593-1-git-send-email-hare@suse.de>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:52918 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751474AbbASMBD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 19 Jan 2015 07:01:03 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Sergey Senozhatsky <sergey.senozhatsky@gmail.com>, Hannes Reinecke <hare@suse.de>
 
+We should only try to evaluate the cdb if this is an ATAPI
+device, for any other device the 'cdb' field and the cdb_len
+has no meaning.
 
-Sorry for taking so long to get back to you guys about this (the 3.19-rc series has been
-problematic for me in a couple of areas, so I'd let it go for a while):
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/ata/libata-eh.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-On Mon, 5 Jan 2015, Alan Stern wrote:
-
-> The patch I posted sets a general limit of 32 MB for USB drives that
-> don't have a quirk flag for a smaller limit.
-> Kenneth, have you tried that patch?  Does it fix your problem?
-
-No, it fails in the same way (applied to 3.19-rc5):
-
-----
-Jan 19 01:38:16 tosh-p75a kernel: [  268.606258] sd 5:0:0:0: [sdc] FAILED Result: hostbyte=DID_ERROR driverbyte=DRIVER_OK
-Jan 19 01:38:16 tosh-p75a kernel: [  268.606262] sd 5:0:0:0: [sdc] CDB:
-Jan 19 01:38:16 tosh-p75a kernel: [  268.606263] Write(10): 2a 00 0f e8 e0 40 00 3c 00 00
-Jan 19 01:38:16 tosh-p75a kernel: [  268.606268] blk_update_request: I/O error, dev sdc, sector 2135360000
-Jan 19 01:38:16 tosh-p75a kernel: [  268.839597] sd 5:0:0:0: [sdc] FAILED Result: hostbyte=DID_ERROR driverbyte=DRIVER_OK
-Jan 19 01:38:16 tosh-p75a kernel: [  268.839603] sd 5:0:0:0: [sdc] CDB:
-Jan 19 01:38:16 tosh-p75a kernel: [  268.839605] Write(10): 2a 00 0f e9 68 40 00 3c 00 00
-Jan 19 01:38:16 tosh-p75a kernel: [  268.839615] blk_update_request: I/O error, dev sdc, sector 2135638528
-<snip>
-Jan 19 01:38:47 tosh-p75a kernel: [  300.103494] usb 2-4.2: reset SuperSpeed USB device number 3 using xhci_hcd
-Jan 19 01:38:47 tosh-p75a kernel: [  300.115145] xhci_hcd 0000:00:14.0: xHCI xhci_drop_endpoint called with disabled ep ffff880448c9bf00
-Jan 19 01:38:47 tosh-p75a kernel: [  300.115150] xhci_hcd 0000:00:14.0: xHCI xhci_drop_endpoint called with disabled ep ffff880448c9bf48
-Jan 19 01:38:48 tosh-p75a kernel: [  300.443729] INFO: task kworker/u16:6:197 blocked for more than 30 seconds.
-----
-
-FWIW, my quick fix gets me going again:
-
-----
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index 6ed2cbe..3a10bf6 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -257,7 +257,8 @@ void blk_limits_max_hw_sectors(struct queue_limits *limits, unsigned int max_hw_
-                       __func__, max_hw_sectors);
-        }
-
--       limits->max_sectors = limits->max_hw_sectors = max_hw_sectors;
-+       limits->max_sectors = limits->max_hw_sectors =
-+               min_t(unsigned int, max_hw_sectors, 65535);
- }
- EXPORT_SYMBOL(blk_limits_max_hw_sectors);
-----
-
-	-Kenny
-
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 9179f11..584c6ae 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -2481,8 +2481,6 @@ static void ata_eh_link_report(struct ata_link *link)
+ 	for (tag = 0; tag < ATA_MAX_QUEUE; tag++) {
+ 		struct ata_queued_cmd *qc = __ata_qc_from_tag(ap, tag);
+ 		struct ata_taskfile *cmd = &qc->tf, *res = &qc->result_tf;
+-		const u8 *cdb = qc->cdb;
+-		size_t cdb_len = qc->dev->cdb_len;
+ 		char data_buf[20] = "";
+ 		char cdb_buf[70] = "";
+ 
+@@ -2510,6 +2508,9 @@ static void ata_eh_link_report(struct ata_link *link)
+ 		}
+ 
+ 		if (ata_is_atapi(qc->tf.protocol)) {
++			const u8 *cdb = qc->cdb;
++			size_t cdb_len = qd->dev->cdb_len;
++
+ 			if (qc->scsicmd) {
+ 				cdb = qc->scsicmd->cmnd;
+ 				cdb_len = qc->scsicmd->cmd_len;
 -- 
-Kenneth R. Crudup  Sr. SW Engineer, Scott County Consulting, Silicon Valley
+1.8.5.2
+
