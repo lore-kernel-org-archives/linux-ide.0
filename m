@@ -1,18 +1,34 @@
-From: David Milburn <dmilburn@redhat.com>
+From: Tejun Heo <tj@kernel.org>
 Subject: [PATCH v2] libata: prevent HSM state change race between ISR and PIO
-Date: Mon, 19 Jan 2015 13:03:25 -0600
-Message-ID: <1421694205-14944-1-git-send-email-dmilburn@redhat.com>
+Date: Mon, 19 Jan 2015 14:15:24 -0500
+Message-ID: <20150119191524.GC10570@htj.dyndns.org>
+References: <1421694205-14944-1-git-send-email-dmilburn@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:1189 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751839AbbASSw3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 19 Jan 2015 13:52:29 -0500
+Received: from mail-qc0-f178.google.com ([209.85.216.178]:61289 "EHLO
+	mail-qc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751166AbbASTP2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Jan 2015 14:15:28 -0500
+Received: by mail-qc0-f178.google.com with SMTP id b13so5010314qcw.9
+        for <linux-ide@vger.kernel.org>; Mon, 19 Jan 2015 11:15:27 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <1421694205-14944-1-git-send-email-dmilburn@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org
+To: David Milburn <dmilburn@redhat.com>
 Cc: linux-ide@vger.kernel.org
 
+Hello,
+
+I massaged it a bit and applied to libata/for-3.19-fixes.
+
+Thanks.
+---- 8< ----
+>From ce7514526742c0898b837d4395f515b79dfb5a12 Mon Sep 17 00:00:00 2001
 From: David Jeffery <djeffery@redhat.com>
+Date: Mon, 19 Jan 2015 13:03:25 -0600
+Subject: [PATCH] libata: prevent HSM state change race between ISR and PIO
 
 It is possible for ata_sff_flush_pio_task() to set ap->hsm_task_state to
 HSM_ST_IDLE in between the time __ata_sff_port_intr() checks for HSM_ST_IDLE
@@ -29,7 +45,7 @@ On examining the ata port's state, its hsm_task_state field has a value of HSM_S
 crash> struct ata_port.hsm_task_state ffff881c1121c000
   hsm_task_state = 0
 
-Normally, this should not be possible as ata_sff_hsm_move() was called from ata_sff_host_intr(), 
+Normally, this should not be possible as ata_sff_hsm_move() was called from ata_sff_host_intr(),
 which checks hsm_task_state and won't call ata_sff_hsm_move() if it has a HSM_ST_IDLE value.
 
 PID: 11053  TASK: ffff8816e846cae0  CPU: 0   COMMAND: "sshd"
@@ -51,17 +67,7 @@ PID: 11053  TASK: ffff8816e846cae0  CPU: 0   COMMAND: "sshd"
  #7 [ffff88008ba03d08] ata_sff_host_intr at ffffffff813a7fbd
  #8 [ffff88008ba03d38] ata_sff_interrupt at ffffffff813a821e
  #9 [ffff88008ba03d78] handle_IRQ_event at ffffffff810e6ec0
-#10 [ffff88008ba03dc8] handle_edge_irq at ffffffff810e981e
-#11 [ffff88008ba03e08] handle_irq at ffffffff8100faf9
-#12 [ffff88008ba03e28] do_IRQ at ffffffff81530fdc
-#13 [ffff88008ba03eb8] __do_softirq at ffffffff8107a893
-#14 [ffff88008ba03f48] call_softirq at ffffffff8100c30c
-#15 [ffff88008ba03f60] do_softirq at ffffffff8100fa75
-#16 [ffff88008ba03f80] irq_exit at ffffffff8107a795
-#17 [ffff88008ba03f90] smp_apic_timer_interrupt at ffffffff815310aa
-#18 [ffff88008ba03fb0] apic_timer_interrupt at ffffffff8100bb93
 --- <IRQ stack> ---
-#19 [ffff880f26d45908] apic_timer_interrupt at ffffffff8100bb93
     [exception RIP: pipe_poll+48]
     RIP: ffffffff81192780  RSP: ffff880f26d459b8  RFLAGS: 00000246
     RAX: 0000000000000000  RBX: ffff880f26d459c8  RCX: 0000000000000000
@@ -70,10 +76,6 @@ PID: 11053  TASK: ffff8816e846cae0  CPU: 0   COMMAND: "sshd"
     R10: ffff880f26d45dd0  R11: 0000000000000008  R12: ffffffff8109b646
     R13: ffff880f26d45948  R14: 0000000000000246  R15: 0000000000000246
     ORIG_RAX: ffffffffffffff10  CS: 0010  SS: 0018
-#20 [ffff880f26d459d0] do_select at ffffffff811a0bc2
-#21 [ffff880f26d45d70] core_sys_select at ffffffff811a107a
-#22 [ffff880f26d45f10] sys_select at ffffffff811a1407
-#23 [ffff880f26d45f80] system_call_fastpath at ffffffff8100b072
     RIP: 00007f26017435c3  RSP: 00007fffe020c420  RFLAGS: 00000206
     RAX: 0000000000000017  RBX: ffffffff8100b072  RCX: 00007fffe020c45c
     RDX: 00007f2604a3f120  RSI: 00007f2604a3f140  RDI: 000000000000000d
@@ -82,8 +84,8 @@ PID: 11053  TASK: ffff8816e846cae0  CPU: 0   COMMAND: "sshd"
     R13: 00007fffe020e5f4  R14: 00007f26045f373c  R15: 00007fffe020e5e0
     ORIG_RAX: 0000000000000017  CS: 0033  SS: 002b
 
-Somewhere between the ata_sff_hsm_move() check and the ata_sff_host_intr() check, the value changed.  
-On examining the other cpus to see what else was running, another cpu was running the error handler 
+Somewhere between the ata_sff_hsm_move() check and the ata_sff_host_intr() check, the value changed.
+On examining the other cpus to see what else was running, another cpu was running the error handler
 routines:
 
 PID: 326    TASK: ffff881c11014aa0  CPU: 1   COMMAND: "scsi_eh_1"
@@ -106,57 +108,48 @@ PID: 326    TASK: ffff881c11014aa0  CPU: 1   COMMAND: "scsi_eh_1"
  #7 [ffff881c11a73aa8] ata_exec_internal_sg at ffffffff81396fb5
  #8 [ffff881c11a73b58] ata_exec_internal at ffffffff81397109
  #9 [ffff881c11a73bd8] atapi_eh_request_sense at ffffffff813a34eb
-#10 [ffff881c11a73c38] ata_eh_link_autopsy at ffffffff813a4aa4
-#11 [ffff881c11a73cd8] ata_eh_autopsy at ffffffff813a4c50
-#12 [ffff881c11a73cf8] ata_do_eh at ffffffff813a4d32
-#13 [ffff881c11a73d38] ata_sff_error_handler at ffffffff813a5e86
-#14 [ffff881c11a73d88] ata_scsi_port_error_handler at ffffffff813a2b2e
-#15 [ffff881c11a73de8] ata_scsi_error at ffffffff813a2f98
-#16 [ffff881c11a73e28] scsi_error_handler at ffffffff81386cfa
-#17 [ffff881c11a73ee8] kthread at ffffffff8109aef6
-#18 [ffff881c11a73f48] kernel_thread at ffffffff8100c20a
 
-Before it tried to acquire a spinlock, ata_exec_internal_sg() called ata_sff_flush_pio_task().  
-This function will set ap->hsm_task_state to HSM_ST_IDLE, and has no locking around setting this 
-value. ata_sff_flush_pio_task() can then race with the interrupt handler and potentially set 
+Before it tried to acquire a spinlock, ata_exec_internal_sg() called ata_sff_flush_pio_task().
+This function will set ap->hsm_task_state to HSM_ST_IDLE, and has no locking around setting this
+value. ata_sff_flush_pio_task() can then race with the interrupt handler and potentially set
 HSM_ST_IDLE at a fatal moment, which will trigger a kernel BUG.
 
 v2: Fixup comment in ata_sff_flush_pio_task()
 
+tj: Further updated comment.  Use ap->lock instead of shost lock and
+    use the [un]lock_irq variant instead of the irqsave/restore one.
+
 Signed-off-by: David Milburn <dmilburn@redhat.com>
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: stable@vger.kernel.org
 ---
- drivers/ata/libata-sff.c |   14 ++++++++++++++
- 1 files changed, 14 insertions(+), 0 deletions(-)
+ drivers/ata/libata-sff.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
 diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index db90aa3..4f768a6 100644
+index db90aa3..2e86e3b 100644
 --- a/drivers/ata/libata-sff.c
 +++ b/drivers/ata/libata-sff.c
-@@ -1330,10 +1330,24 @@ EXPORT_SYMBOL_GPL(ata_sff_queue_pio_task);
- 
- void ata_sff_flush_pio_task(struct ata_port *ap)
- {
-+	struct Scsi_Host *host = ap->scsi_host;
-+	unsigned long flags;
-+
+@@ -1333,7 +1333,19 @@ void ata_sff_flush_pio_task(struct ata_port *ap)
  	DPRINTK("ENTER\n");
  
  	cancel_delayed_work_sync(&ap->sff_pio_task);
 +
 +	/*
-+	  Without grabbing the host_lock, it is possible for
-+	  ata_sff_flush_pio_task() to set ap->hsm_task_state
-+	  to HSM_ST_IDLE in between the time __ata_sff_port_intr()
-+	  checks for HSM_ST_IDLE and before it calls ata_sff_hsm_move()
-+	  causing ata_sff_hsm_move() to BUG().
-+	*/
-+	spin_lock_irqsave(host->host_lock, flags);
++	 * We wanna reset the HSM state to IDLE.  If we do so without
++	 * grabbing the port lock, critical sections protected by it which
++	 * expect the HSM state to stay stable may get surprised.  For
++	 * example, we may set IDLE in between the time
++	 * __ata_sff_port_intr() checks for HSM_ST_IDLE and before it calls
++	 * ata_sff_hsm_move() causing ata_sff_hsm_move() to BUG().
++	 */
++	spin_lock_irq(ap->lock);
  	ap->hsm_task_state = HSM_ST_IDLE;
-+	spin_unlock_irqrestore(host->host_lock, flags);
++	spin_unlock_irq(ap->lock);
 +
  	ap->sff_pio_task_link = NULL;
  
  	if (ata_msg_ctl(ap))
 -- 
-1.7.1
+2.1.0
 
