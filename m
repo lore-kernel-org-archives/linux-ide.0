@@ -1,155 +1,216 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH v2] libata: prevent HSM state change race between ISR and PIO
-Date: Mon, 19 Jan 2015 14:15:24 -0500
-Message-ID: <20150119191524.GC10570@htj.dyndns.org>
-References: <1421694205-14944-1-git-send-email-dmilburn@redhat.com>
+From: David Daney <ddaney.cavm@gmail.com>
+Subject: Re: [PATCH] SATA: OCTEON: support SATA on OCTEON platform
+Date: Mon, 19 Jan 2015 11:16:28 -0800
+Message-ID: <54BD580C.6030701@gmail.com>
+References: <1421681040-3392-1-git-send-email-aleksey.makarov@auriga.com> <20150119154357.GH21553@leverpostej>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f178.google.com ([209.85.216.178]:61289 "EHLO
-	mail-qc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751166AbbASTP2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Jan 2015 14:15:28 -0500
-Received: by mail-qc0-f178.google.com with SMTP id b13so5010314qcw.9
-        for <linux-ide@vger.kernel.org>; Mon, 19 Jan 2015 11:15:27 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <1421694205-14944-1-git-send-email-dmilburn@redhat.com>
+Received: from mail-ie0-f182.google.com ([209.85.223.182]:65438 "EHLO
+	mail-ie0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751758AbbASTQb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Jan 2015 14:16:31 -0500
+In-Reply-To: <20150119154357.GH21553@leverpostej>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Milburn <dmilburn@redhat.com>
-Cc: linux-ide@vger.kernel.org
+To: Mark Rutland <mark.rutland@arm.com>, Aleksey Makarov <aleksey.makarov@auriga.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-mips@linux-mips.org" <linux-mips@linux-mips.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, David Daney <david.daney@cavium.com>, Anton Vorontsov <avorontsov@ru.mvista.com>, Vinita Gupta <vgupta@caviumnetworks.com>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <Pawel.Moll@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Ralf Baechle <ralf@linux-mips.org>, Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
 
-Hello,
+On 01/19/2015 07:43 AM, Mark Rutland wrote:
+> On Mon, Jan 19, 2015 at 03:23:58PM +0000, Aleksey Makarov wrote:
+>> The OCTEON SATA controller is currently found on cn71XX devices.
+>>
+>> Signed-off-by: David Daney <david.daney@cavium.com>
+>> Signed-off-by: Vinita Gupta <vgupta@caviumnetworks.com>
+>> [aleksey.makarov@auriga.com: preparing for submission,
+>> conflict resolution, fixes for the platform code]
+>> Signed-off-by: Aleksey Makarov <aleksey.makarov@auriga.com>
+>> ---
+>>   .../devicetree/bindings/ata/ahci-platform.txt      |   1 +
+>>   .../devicetree/bindings/mips/cavium/sata-uctl.txt  |  31 ++++++
+>>   arch/mips/cavium-octeon/octeon-platform.c          |   1 +
+>>   drivers/ata/Kconfig                                |   9 ++
+>>   drivers/ata/Makefile                               |   1 +
+>>   drivers/ata/ahci_platform.c                        |  10 ++
+>>   drivers/ata/sata_octeon.c                          | 107 +++++++++++++++++++++
+>>   7 files changed, 160 insertions(+)
+>>   create mode 100644 Documentation/devicetree/bindings/mips/cavium/sata-uctl.txt
+>>   create mode 100644 drivers/ata/sata_octeon.c
+>>
+>> diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+>> index 4ab09f2..1a5d3be 100644
+>> --- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
+>> +++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+>> @@ -11,6 +11,7 @@ Required properties:
+>>   - compatible        : compatible string, one of:
+>>     - "allwinner,sun4i-a10-ahci"
+>>     - "hisilicon,hisi-ahci"
+>> +  - "cavium,octeon-7130-ahci"
+>>     - "ibm,476gtr-ahci"
+>>     - "marvell,armada-380-ahci"
+>>     - "snps,dwc-ahci"
+>> diff --git a/Documentation/devicetree/bindings/mips/cavium/sata-uctl.txt b/Documentation/devicetree/bindings/mips/cavium/sata-uctl.txt
+>> new file mode 100644
+>> index 0000000..222e66e
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/mips/cavium/sata-uctl.txt
+>> @@ -0,0 +1,31 @@
+>> +* UCTL SATA controller glue
+>
+> I'm not sure I follow. What does this mean?
 
-I massaged it a bit and applied to libata/for-3.19-fixes.
+Well, UCTL is the internal name of the hardware block.  It functions to 
+connect a standard AHCI controller to the internal busses of the OCTEON SoC.
 
-Thanks.
----- 8< ----
->From ce7514526742c0898b837d4395f515b79dfb5a12 Mon Sep 17 00:00:00 2001
-From: David Jeffery <djeffery@redhat.com>
-Date: Mon, 19 Jan 2015 13:03:25 -0600
-Subject: [PATCH] libata: prevent HSM state change race between ISR and PIO
+>
+>> +
+>> +Properties:
+>> +- compatible: "cavium,octeon-7130-sata-uctl"
+>> +
+>> +  Compatibility with the cn7130 SOC.
+>> +
+>> +- reg: The base address of the UCTL register bank.
+>> +
+>> +- #address-cells: Must be <2>.
+>> +
+>> +- #size-cells: Must be <2>.
+>> +
+>> +- ranges: Empty to signify direct mapping of the children.
+>
+> Why can't these be any values which are sufficient to map children?
 
-It is possible for ata_sff_flush_pio_task() to set ap->hsm_task_state to
-HSM_ST_IDLE in between the time __ata_sff_port_intr() checks for HSM_ST_IDLE
-and before it calls ata_sff_hsm_move() causing ata_sff_hsm_move() to BUG().
+They can.  It happens to be the case that it is always empty.
 
-This problem is hard to reproduce making this patch hard to verify, but this
-fix will prevent the race.
 
-I have not been able to reproduce the problem, but here is a crash dump from
-a 2.6.32 kernel.
+>
+>> +
+>> +Example:
+>> +
+>> +	uctl@118006c000000 {
+>> +	        compatible = "cavium,octeon-7130-sata-uctl";
+>> +	        reg = <0x00011800 0x6c000000 0x00000000 0x00000100>;
+>> +	        ranges;
+>> +	        #address-cells = <0x00000002>;
+>> +	        #size-cells = <0x00000002>;
+>
+> No need for all the zero-padding on these, they aren't addresses.
 
-On examining the ata port's state, its hsm_task_state field has a value of HSM_ST_IDLE:
+OK.
 
-crash> struct ata_port.hsm_task_state ffff881c1121c000
-  hsm_task_state = 0
+>
+>> +	        sata@16c00 {
+>> +	                compatible = "cavium,octeon-7130-ahci";
+>> +	                reg = <0x00016c00 0x00000000 0x00000000 0x00000200>;
+>> +	                interrupt-parent = <0x0000000d>;
+>> +	                interrupts = <0x00000002 0x00000004>;
+>> +	                cavium,qlm-trim-alias = "sata";
+>
+> What's this property for? It wasn't documented above, and doesn't exist
+> in mainline.
 
-Normally, this should not be possible as ata_sff_hsm_move() was called from ata_sff_host_intr(),
-which checks hsm_task_state and won't call ata_sff_hsm_move() if it has a HSM_ST_IDLE value.
+It is not a part of the public interface, we will remove this line.
 
-PID: 11053  TASK: ffff8816e846cae0  CPU: 0   COMMAND: "sshd"
- #0 [ffff88008ba03960] machine_kexec at ffffffff81038f3b
- #1 [ffff88008ba039c0] crash_kexec at ffffffff810c5d92
- #2 [ffff88008ba03a90] oops_end at ffffffff8152b510
- #3 [ffff88008ba03ac0] die at ffffffff81010e0b
- #4 [ffff88008ba03af0] do_trap at ffffffff8152ad74
- #5 [ffff88008ba03b50] do_invalid_op at ffffffff8100cf95
- #6 [ffff88008ba03bf0] invalid_op at ffffffff8100bf9b
-    [exception RIP: ata_sff_hsm_move+317]
-    RIP: ffffffff813a77ad  RSP: ffff88008ba03ca0  RFLAGS: 00010097
-    RAX: 0000000000000000  RBX: ffff881c1121dc60  RCX: 0000000000000000
-    RDX: ffff881c1121dd10  RSI: ffff881c1121dc60  RDI: ffff881c1121c000
-    RBP: ffff88008ba03d00   R8: 0000000000000000   R9: 000000000000002e
-    R10: 000000000001003f  R11: 000000000000009b  R12: ffff881c1121c000
-    R13: 0000000000000000  R14: 0000000000000050  R15: ffff881c1121dd78
-    ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
- #7 [ffff88008ba03d08] ata_sff_host_intr at ffffffff813a7fbd
- #8 [ffff88008ba03d38] ata_sff_interrupt at ffffffff813a821e
- #9 [ffff88008ba03d78] handle_IRQ_event at ffffffff810e6ec0
---- <IRQ stack> ---
-    [exception RIP: pipe_poll+48]
-    RIP: ffffffff81192780  RSP: ffff880f26d459b8  RFLAGS: 00000246
-    RAX: 0000000000000000  RBX: ffff880f26d459c8  RCX: 0000000000000000
-    RDX: 0000000000000001  RSI: 0000000000000000  RDI: ffff881a0539fa80
-    RBP: ffffffff8100bb8e   R8: ffff8803b23324a0   R9: 0000000000000000
-    R10: ffff880f26d45dd0  R11: 0000000000000008  R12: ffffffff8109b646
-    R13: ffff880f26d45948  R14: 0000000000000246  R15: 0000000000000246
-    ORIG_RAX: ffffffffffffff10  CS: 0010  SS: 0018
-    RIP: 00007f26017435c3  RSP: 00007fffe020c420  RFLAGS: 00000206
-    RAX: 0000000000000017  RBX: ffffffff8100b072  RCX: 00007fffe020c45c
-    RDX: 00007f2604a3f120  RSI: 00007f2604a3f140  RDI: 000000000000000d
-    RBP: 0000000000000000   R8: 00007fffe020e570   R9: 0101010101010101
-    R10: 0000000000000000  R11: 0000000000000246  R12: 00007fffe020e5f0
-    R13: 00007fffe020e5f4  R14: 00007f26045f373c  R15: 00007fffe020e5e0
-    ORIG_RAX: 0000000000000017  CS: 0033  SS: 002b
+>
+> [...]
+>
+>> diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+>> index ae41107..4a0e5e3 100644
+>> --- a/drivers/ata/Makefile
+>> +++ b/drivers/ata/Makefile
+>> @@ -17,6 +17,7 @@ obj-$(CONFIG_AHCI_SUNXI)	+= ahci_sunxi.o libahci.o libahci_platform.o
+>>   obj-$(CONFIG_AHCI_ST)		+= ahci_st.o libahci.o libahci_platform.o
+>>   obj-$(CONFIG_AHCI_TEGRA)	+= ahci_tegra.o libahci.o libahci_platform.o
+>>   obj-$(CONFIG_AHCI_XGENE)	+= ahci_xgene.o libahci.o libahci_platform.o
+>> +obj-$(CONFIG_SATA_OCTEON)	+= sata_octeon.o
+>>
+>>   # SFF w/ custom DMA
+>>   obj-$(CONFIG_PDC_ADMA)		+= pdc_adma.o
+>> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+>> index 18d5398..bb36396 100644
+>> --- a/drivers/ata/ahci_platform.c
+>> +++ b/drivers/ata/ahci_platform.c
+>> @@ -22,6 +22,12 @@
+>>   #include <linux/ahci_platform.h>
+>>   #include "ahci.h"
+>>
+>> +#if IS_ENABLED(CONFIG_SATA_OCTEON)
+>> +void ahci_octeon_config(struct platform_device *pdev);
+>> +#else
+>> +static inline void ahci_octeon_config(struct platform_device *pdev) {}
+>> +#endif
+>> +
+>>   static const struct ata_port_info ahci_port_info = {
+>>   	.flags		= AHCI_FLAG_COMMON,
+>>   	.pio_mask	= ATA_PIO4,
+>> @@ -46,6 +52,9 @@ static int ahci_probe(struct platform_device *pdev)
+>>   	if (of_device_is_compatible(dev->of_node, "hisilicon,hisi-ahci"))
+>>   		hpriv->flags |= AHCI_HFLAG_NO_FBS | AHCI_HFLAG_NO_NCQ;
+>>
+>> +	if (of_device_is_compatible(dev->of_node, "cavium,octeon-7130-ahci"))
+>> +		ahci_octeon_config(pdev);
+>> +
+>
+> If we really need this kind of thing, make a new struct and associate it
+> with of_device_id::data in the table below. Then we make this path free
+> from any device-specific code.
+>
 
-Somewhere between the ata_sff_hsm_move() check and the ata_sff_host_intr() check, the value changed.
-On examining the other cpus to see what else was running, another cpu was running the error handler
-routines:
+Good idea.
 
-PID: 326    TASK: ffff881c11014aa0  CPU: 1   COMMAND: "scsi_eh_1"
- #0 [ffff88008ba27e90] crash_nmi_callback at ffffffff8102fee6
- #1 [ffff88008ba27ea0] notifier_call_chain at ffffffff8152d515
- #2 [ffff88008ba27ee0] atomic_notifier_call_chain at ffffffff8152d57a
- #3 [ffff88008ba27ef0] notify_die at ffffffff810a154e
- #4 [ffff88008ba27f20] do_nmi at ffffffff8152b1db
- #5 [ffff88008ba27f50] nmi at ffffffff8152aaa0
-    [exception RIP: _spin_lock_irqsave+47]
-    RIP: ffffffff8152a1ff  RSP: ffff881c11a73aa0  RFLAGS: 00000006
-    RAX: 0000000000000001  RBX: ffff881c1121deb8  RCX: 0000000000000000
-    RDX: 0000000000000246  RSI: 0000000000000020  RDI: ffff881c122612d8
-    RBP: ffff881c11a73aa0   R8: ffff881c17083800   R9: 0000000000000000
-    R10: 0000000000000000  R11: 0000000000000000  R12: ffff881c1121c000
-    R13: 000000000000001f  R14: ffff881c1121dd50  R15: ffff881c1121dc60
-    ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0000
---- <NMI exception stack> ---
- #6 [ffff881c11a73aa0] _spin_lock_irqsave at ffffffff8152a1ff
- #7 [ffff881c11a73aa8] ata_exec_internal_sg at ffffffff81396fb5
- #8 [ffff881c11a73b58] ata_exec_internal at ffffffff81397109
- #9 [ffff881c11a73bd8] atapi_eh_request_sense at ffffffff813a34eb
+We will attempt to factor this into a separate driver module for the 
+"cavium,octeon-7130-sata-uctl" block.  If that turns out to be too ugly, 
+I would like to keep the code in this file, but with the change you suggest.
 
-Before it tried to acquire a spinlock, ata_exec_internal_sg() called ata_sff_flush_pio_task().
-This function will set ap->hsm_task_state to HSM_ST_IDLE, and has no locking around setting this
-value. ata_sff_flush_pio_task() can then race with the interrupt handler and potentially set
-HSM_ST_IDLE at a fatal moment, which will trigger a kernel BUG.
+>>   	rc = ahci_platform_init_host(pdev, hpriv, &ahci_port_info);
+>>   	if (rc)
+>>   		goto disable_resources;
+>> @@ -67,6 +76,7 @@ static const struct of_device_id ahci_of_match[] = {
+>>   	{ .compatible = "ibm,476gtr-ahci", },
+>>   	{ .compatible = "snps,dwc-ahci", },
+>>   	{ .compatible = "hisilicon,hisi-ahci", },
+>> +	{ .compatible = "cavium,octeon-7130-ahci", },
+>>   	{},
+>
+> I was under the impression that the strings other than "generic-ahci"
+> were only for compatibility with existing DTBs. Why do we need to add
+> new platform-specific strings here?
 
-v2: Fixup comment in ata_sff_flush_pio_task()
+Because it is an "existing DTB", The device tree doesn't contain the 
+compatible property of "generic-ahci", only "cavium,octeon-7130-ahci".
 
-tj: Further updated comment.  Use ap->lock instead of shost lock and
-    use the [un]lock_irq variant instead of the irqsave/restore one.
+>
+> [...]
+>
+>> +void ahci_octeon_config(struct platform_device *pdev)
+>> +{
+>> +	union cvmx_sata_uctl_shim_cfg shim_cfg;
+>> +
+>> +	/* set-up endian mode */
+>> +	shim_cfg.u64 = cvmx_read_csr(CVMX_SATA_UCTL_SHIM_CFG);
+>> +#ifdef __BIG_ENDIAN
+>> +	shim_cfg.s.dma_endian_mode = 1;
+>> +	shim_cfg.s.csr_endian_mode = 1;
+>> +#else
+>> +	shim_cfg.s.dma_endian_mode = 0;
+>> +	shim_cfg.s.csr_endian_mode = 0;
+>> +#endif
+>> +	shim_cfg.s.dma_read_cmd = 1; /* No allocate L2C */
+>> +	cvmx_write_csr(CVMX_SATA_UCTL_SHIM_CFG, shim_cfg.u64);
+>> +
+>> +	/* Set a good dma_mask */
+>> +	pdev->dev.coherent_dma_mask = DMA_BIT_MASK(64);
+>> +	pdev->dev.dma_mask = &pdev->dev.coherent_dma_mask;
+>
+> I thought a dma-ranges property in the DT could be used to set up the
+> DMA mask appropriately?
 
-Signed-off-by: David Milburn <dmilburn@redhat.com>
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: stable@vger.kernel.org
----
- drivers/ata/libata-sff.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+The DT contains no dma-ranges property, and we know a priori, that it 
+should be 64-bits.
 
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index db90aa3..2e86e3b 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -1333,7 +1333,19 @@ void ata_sff_flush_pio_task(struct ata_port *ap)
- 	DPRINTK("ENTER\n");
- 
- 	cancel_delayed_work_sync(&ap->sff_pio_task);
-+
-+	/*
-+	 * We wanna reset the HSM state to IDLE.  If we do so without
-+	 * grabbing the port lock, critical sections protected by it which
-+	 * expect the HSM state to stay stable may get surprised.  For
-+	 * example, we may set IDLE in between the time
-+	 * __ata_sff_port_intr() checks for HSM_ST_IDLE and before it calls
-+	 * ata_sff_hsm_move() causing ata_sff_hsm_move() to BUG().
-+	 */
-+	spin_lock_irq(ap->lock);
- 	ap->hsm_task_state = HSM_ST_IDLE;
-+	spin_unlock_irq(ap->lock);
-+
- 	ap->sff_pio_task_link = NULL;
- 
- 	if (ata_msg_ctl(ap))
--- 
-2.1.0
+>
+> Thanks,
+> Mark.
+>
+>
 
