@@ -1,31 +1,43 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] sata_rcar: extend PM methods
-Date: Mon, 19 Jan 2015 09:15:10 -0500
-Message-ID: <20150119141510.GD8140@htj.dyndns.org>
-References: <2490673.vl8J86zUxO@wasted.cogentembedded.com>
+Subject: Re: [PATCH v4 00/11] scsi: fix module reference mismatch for scsi
+ host
+Date: Mon, 19 Jan 2015 09:22:06 -0500
+Message-ID: <20150119142206.GE8140@htj.dyndns.org>
+References: <1421593569-5089-1-git-send-email-akinobu.mita@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-sh-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <2490673.vl8J86zUxO@wasted.cogentembedded.com>
-Sender: linux-sh-owner@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: linux-ide@vger.kernel.org, linux-sh@vger.kernel.org
+In-Reply-To: <1421593569-5089-1-git-send-email-akinobu.mita@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Akinobu Mita <akinobu.mita@gmail.com>
+Cc: linux-scsi@vger.kernel.org, Vinayak Holikatti <vinholikatti@gmail.com>, Dolev Raviv <draviv@codeaurora.org>, Sujit Reddy Thumma <sthumma@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alan Stern <stern@rowland.harvard.edu>, "David S. Miller" <davem@davemloft.net>, Hannes Reinecke <hare@suse.de>, Hans de Goede <hdegoede@redhat.com>, Mike Christie <michaelc@cs.wisc.edu>, Karen Xie <kxie@chelsio.com>, Robert Love <robert.w.love@intel.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, open-iscsi@googlegroups.com, fcoe-devel@open-fcoe.org, linux-ide@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 List-Id: linux-ide@vger.kernel.org
 
-On Sat, Jan 17, 2015 at 02:00:36AM +0300, Sergei Shtylyov wrote:
-> From: Mikhail Ulyanov <mikhail.ulyanov@cogentembedded.com>
+On Mon, Jan 19, 2015 at 12:05:58AM +0900, Akinobu Mita wrote:
+> While accessing a scsi_device, the use count of the underlying LLDD
+> module is incremented.  The module reference is retrieved through
+> .module field of struct scsi_host_template.
 > 
-> In order to make it possible to restore from hibernation not only in Linux but
-> also in e.g. U-Boot, we have to extend  sata_rcar_{suspend|resume}() to {freeze|
-> thaw}() PM  methods and implement  the  restore() PM method.
+> This mapping between scsi_device and underlying LLDD module works well
+> except some drivers which consist with the core driver and the actual
+> LLDDs and scsi_host_template is defined in the core driver.  In these
+> cases, the actual LLDDs can be unloaded even if the scsi_device is
+> being accessed.
 > 
-> Signed-off-by: Mikhail Ulyanov <mikhail.ulyanov@cogentembedded.com>
-> [Sergei: killed unused variable, changed the order of initializers, modified
-> copyrights, renamed, modified changelog.]
-> Signed-off-by: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+> This patch series fixes the module reference mismatch problem for
+> ufs, usb-storage, esp_scsi, ahci_platform, and pata_platform drivers
+> by moving owner module reference field from struct scsi_host_template
+> to struct Scsi_Host and allowing the LLDDs to set their correct module
+> reference.
 
-Applied to libata/for-3.20.
+Hmmm, can't we just move sht definitions to actual LLDDs?  libata can
+do that easily.  sht, as its name implies, is the template for
+creating the scsi_hosts of a given type.  We're now just moving module
+ownership from sht definition site to whatever callsite the actual
+instance is being created which can also be wrapped in a separate
+layer requiring explicit propagation.  Why not just propagate sht's
+directly?  What's the difference?
 
 Thanks.
 
