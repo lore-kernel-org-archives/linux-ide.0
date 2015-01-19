@@ -1,46 +1,44 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata: prevent HSM state change race between ISR and PIO
-Date: Mon, 19 Jan 2015 12:41:41 -0500
-Message-ID: <20150119174141.GB10570@htj.dyndns.org>
-References: <1421684851-14561-1-git-send-email-dmilburn@redhat.com>
+From: David Milburn <dmilburn@redhat.com>
+Subject: Re: [PATCH] libata: prevent HSM state change race between ISR and
+ PIO
+Date: Mon, 19 Jan 2015 12:03:23 -0600
+Message-ID: <54BD46EB.5080207@redhat.com>
+References: <1421684851-14561-1-git-send-email-dmilburn@redhat.com> <20150119174141.GB10570@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f47.google.com ([209.85.192.47]:46133 "EHLO
-	mail-qg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752260AbbASRlx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Jan 2015 12:41:53 -0500
-Received: by mail-qg0-f47.google.com with SMTP id j5so12530074qga.6
-        for <linux-ide@vger.kernel.org>; Mon, 19 Jan 2015 09:41:52 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <1421684851-14561-1-git-send-email-dmilburn@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:34336 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752164AbbASSEt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 19 Jan 2015 13:04:49 -0500
+In-Reply-To: <20150119174141.GB10570@htj.dyndns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Milburn <dmilburn@redhat.com>
+To: Tejun Heo <tj@kernel.org>
 Cc: linux-ide@vger.kernel.org
 
-On Mon, Jan 19, 2015 at 10:27:31AM -0600, David Milburn wrote:
->  void ata_sff_flush_pio_task(struct ata_port *ap)
->  {
-> +	struct Scsi_Host *host = ap->scsi_host;
-> +	unsigned long flags;
-> +
->  	DPRINTK("ENTER\n");
->  
->  	cancel_delayed_work_sync(&ap->sff_pio_task);
-> +
-> +	/* prevent racing with ISR's use of ap->hsm_task_state */
+Hi Tejun,
 
-Can we have a more descriptive comment please?  lock, assign, unlock
-sequence is pretty unusual, so let's give the full explanation here.
+On 01/19/2015 11:41 AM, Tejun Heo wrote:
+> On Mon, Jan 19, 2015 at 10:27:31AM -0600, David Milburn wrote:
+>>   void ata_sff_flush_pio_task(struct ata_port *ap)
+>>   {
+>> +	struct Scsi_Host *host = ap->scsi_host;
+>> +	unsigned long flags;
+>> +
+>>   	DPRINTK("ENTER\n");
+>>
+>>   	cancel_delayed_work_sync(&ap->sff_pio_task);
+>> +
+>> +	/* prevent racing with ISR's use of ap->hsm_task_state */
+>
+> Can we have a more descriptive comment please?  lock, assign, unlock
+> sequence is pretty unusual, so let's give the full explanation here.
+>
 
-> +	spin_lock_irqsave(host->host_lock, flags);
->  	ap->hsm_task_state = HSM_ST_IDLE;
-> +	spin_unlock_irqrestore(host->host_lock, flags);
+Ok, will do.
 
-Other than that, yeah, nice spotting.
+Thanks,
+David
 
-Thanks.
-
--- 
-tejun
