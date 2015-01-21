@@ -1,124 +1,47 @@
-From: Thierry Reding <treding@nvidia.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 Subject: Re: next-20150120 broken on Tegra by "ata: libahci: Allow using
  multiple regulators"
-Date: Wed, 21 Jan 2015 16:55:21 +0100
-Message-ID: <20150121155519.GA25166@ulmo.nvidia.com>
+Date: Wed, 21 Jan 2015 11:25:23 -0500
+Message-ID: <20150121162523.GE8684@htj.dyndns.org>
 References: <alpine.DEB.2.02.1501210003010.5450@utopia.booyaka.com>
  <20150121105001.GA9921@ulmo.nvidia.com>
  <20150121123134.GD8684@htj.dyndns.org>
+ <20150121155519.GA25166@ulmo.nvidia.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="IrhDeMKUP4DT/M7F"
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <20150121123134.GD8684@htj.dyndns.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-Sender: linux-next-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Paul Walmsley <paul@pwsan.com>, gregory.clement@free-electrons.com, hdegoede@redhat.com, pwalmsley@nvidia.com, linux-tegra@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-next@vger.kernel.org, linux-ide@vger.kernel.org
+In-Reply-To: <20150121155519.GA25166-AwZRO8vwLAwmlAP/+Wk3EA@public.gmane.org>
+Sender: linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Thierry Reding <treding-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Cc: Paul Walmsley <paul-DWxLp4Yu+b8AvxtiuMwx3w@public.gmane.org>, gregory.clement-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org, hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, pwalmsley-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org, linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-next-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
---IrhDeMKUP4DT/M7F
-Content-Type: multipart/mixed; boundary="SLDf9lqlvOQaIe6s"
-Content-Disposition: inline
+On Wed, Jan 21, 2015 at 04:55:21PM +0100, Thierry Reding wrote:
+> From a4f78e3ec05f1b2ad86aa44d6bd5394d75a23a06 Mon Sep 17 00:00:00 2001
+> From: Thierry Reding <treding-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+> Date: Wed, 21 Jan 2015 11:50:52 +0100
+> Subject: [PATCH] ata: libahci: Fix devres cleanup on failure
+> 
+> Commit c7d7ddee7e24 ("ata: libahci: Allow using multiple regulators")
+> releases regulators during ahci_platform_put_resources(). That doesn't
+> work because the function is run as part of the devres machinery. Such
+> resources are torn down in reverse order. Since the array that holds
+> pointers to the regulators is allocated using devres after the device
+> context to which ahci_platform_put_resources() is attached, the memory
+> will be freed before calling ahci_platform_put_resources() and thereby
+> causing a use-after-free error.
+> 
+> This commit fixes this by using regular allocations for the array. The
+> memory can then be freed after the regulators have been released. This
+> conserves the advantages of using the managed API.
+> 
+> Reported-by: Paul Walmsley <paul-DWxLp4Yu+b8AvxtiuMwx3w@public.gmane.org>
+> Signed-off-by: Thierry Reding <treding-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
 
+Applied to libata/for-3.20.
 
---SLDf9lqlvOQaIe6s
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Thanks.
 
-On Wed, Jan 21, 2015 at 07:31:34AM -0500, Tejun Heo wrote:
-> On Wed, Jan 21, 2015 at 11:50:03AM +0100, Thierry Reding wrote:
-> > Tejun, preferably the attached patch should be squashed into commit
-> > c7d7ddee7e24 ("ata: libahci: Allow using multiple regulators") to avoid
-> > breaking bisectability. If you don't want to rewrite history, let me
-> > know and I can turn it into a proper patch.
->=20
-> Yes, please make it a proper patch.
->=20
-> Thanks a lot!
-
-Attaching the patch.
-
-Thierry
-
---SLDf9lqlvOQaIe6s
-Content-Type: text/x-diff; charset=us-ascii
-Content-Disposition: inline; filename="0001-ata-libahci-Fix-devres-cleanup-on-failure.patch"
-Content-Transfer-Encoding: quoted-printable
-
-=46rom a4f78e3ec05f1b2ad86aa44d6bd5394d75a23a06 Mon Sep 17 00:00:00 2001
-=46rom: Thierry Reding <treding@nvidia.com>
-Date: Wed, 21 Jan 2015 11:50:52 +0100
-Subject: [PATCH] ata: libahci: Fix devres cleanup on failure
-
-Commit c7d7ddee7e24 ("ata: libahci: Allow using multiple regulators")
-releases regulators during ahci_platform_put_resources(). That doesn't
-work because the function is run as part of the devres machinery. Such
-resources are torn down in reverse order. Since the array that holds
-pointers to the regulators is allocated using devres after the device
-context to which ahci_platform_put_resources() is attached, the memory
-will be freed before calling ahci_platform_put_resources() and thereby
-causing a use-after-free error.
-
-This commit fixes this by using regular allocations for the array. The
-memory can then be freed after the regulators have been released. This
-conserves the advantages of using the managed API.
-
-Reported-by: Paul Walmsley <paul@pwsan.com>
-Signed-off-by: Thierry Reding <treding@nvidia.com>
----
- drivers/ata/libahci_platform.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-index 73a086664ee7..504d534ccbfe 100644
---- a/drivers/ata/libahci_platform.c
-+++ b/drivers/ata/libahci_platform.c
-@@ -276,6 +276,7 @@ static void ahci_platform_put_resources(struct device *=
-dev, void *res)
- 		if (hpriv->target_pwrs && hpriv->target_pwrs[c])
- 			regulator_put(hpriv->target_pwrs[c]);
-=20
-+	kfree(hpriv->target_pwrs);
- }
-=20
- static int ahci_platform_get_phy(struct ahci_host_priv *hpriv, u32 port,
-@@ -412,7 +413,7 @@ struct ahci_host_priv *ahci_platform_get_resources(stru=
-ct platform_device *pdev)
- 		goto err_out;
- 	}
- 	sz =3D hpriv->nports * sizeof(*hpriv->target_pwrs);
--	hpriv->target_pwrs =3D devm_kzalloc(dev, sz, GFP_KERNEL);
-+	hpriv->target_pwrs =3D kzalloc(sz, GFP_KERNEL);
- 	if (!hpriv->target_pwrs) {
- 		rc =3D -ENOMEM;
- 		goto err_out;
---=20
-2.1.3
-
-
---SLDf9lqlvOQaIe6s--
-
---IrhDeMKUP4DT/M7F
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBAgAGBQJUv8vnAAoJEN0jrNd/PrOhEwIQAMLBYpKKV58MUIA2O91w3pdr
-2jYzWy2Dl8iBQOeoYurUIU+MdVt1tqY6ISnaBiSlH+8w2AF7vEo/GbQXUaIiFroW
-/9u/QQLQndO/a40/EdWB4lGs2a3vp8sk+pNDK8LpHbtxfNCdERKgHMyfDpbJWpjC
-XEiGit0dktT7jrqg8JIaQ3veCvp/6iaByvU4pO+wH92krl2us7NXtweyaF5IKNmv
-fliUxmEVXLpM2Jmhogr5UQqS16+nhT6heTK5L7NS69WZd2bOUhYZMPoW4TuwQG6l
-SL7dmKaj5fjsmGufmGiccdcF0UN3s/O5ZIUVm3fCTrdjUEg3jleAK9JPdDRGJdqR
-p8q4crc+4g3V0tWg5bR/PlLu/HY5U/GDvucMqgM/gXYvg5HFNkpIOzGFoD1rl/Is
-VSe9l4uIIZm34kVO/jwaSDdAAMB7PKp7B5YWT7TB81G7H0WnoqwC+vtvj/0iIuJO
-UT3jXArYHxf20snTP6Bvt9zCCk2XWS6qvc0F0he2vm3ICTnqs9U/Fu5bgaqe2GDQ
-Hgx38ScAzp8614ouv0Jjn5vzrEzZVqKHIcH9eZSw8ssirX1QLodT+6DR3sXjxIwy
-WqCLdVHaQlLuyEL4u5mZbhndMUCiPlBnMKk7MrvJeIXi8Z09QbdguR2FwiSlZvDX
-tCmZUCv3I3/zgOR4erVW
-=1neP
------END PGP SIGNATURE-----
-
---IrhDeMKUP4DT/M7F--
+-- 
+tejun
