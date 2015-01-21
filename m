@@ -1,69 +1,46 @@
-From: David Daney <ddaney@caviumnetworks.com>
-Subject: Re: [PATCH] SATA: OCTEON: support SATA on OCTEON platform
-Date: Wed, 21 Jan 2015 09:17:31 -0800
-Message-ID: <54BFDF2B.80708@caviumnetworks.com>
-References: <1421681040-3392-1-git-send-email-aleksey.makarov@auriga.com> <20150119154357.GH21553@leverpostej> <54BD580C.6030701@gmail.com> <20150121165427.GA8722@leverpostej>
+From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
+Subject: Re: 64 bit kernel won't mount /
+Date: Wed, 21 Jan 2015 17:23:26 +0000
+Message-ID: <20150121172326.040dd702@lxorguk.ukuu.org.uk>
+References: <201501191145.41492.gheskett@wdtv.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-mips-bounce@linux-mips.org>
-In-Reply-To: <20150121165427.GA8722@leverpostej>
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-List-help: <mailto:ecartis@linux-mips.org?Subject=help>
-List-unsubscribe: <mailto:ecartis@linux-mips.org?subject=unsubscribe%20linux-mips>
-List-software: Ecartis version 1.0.0
-List-subscribe: <mailto:ecartis@linux-mips.org?subject=subscribe%20linux-mips>
-List-owner: <mailto:ralf@linux-mips.org>
-List-post: <mailto:linux-mips@linux-mips.org>
-List-archive: <http://www.linux-mips.org/archives/linux-mips/>
-To: Mark Rutland <mark.rutland@arm.com>
-Cc: David Daney <ddaney.cavm@gmail.com>, Aleksey Makarov <aleksey.makarov@auriga.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-mips@linux-mips.org" <linux-mips@linux-mips.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, David Daney <david.daney@cavium.com>, Anton Vorontsov <avorontsov@ru.mvista.com>, Vinita Gupta <vgupta@caviumnetworks.com>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <Pawel.Moll@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Ralf Baechle <ralf@linux-mips.org>, Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from 251.110.2.81.in-addr.arpa ([81.2.110.251]:54057 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754140AbbAURXe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 21 Jan 2015 12:23:34 -0500
+In-Reply-To: <201501191145.41492.gheskett@wdtv.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Gene Heskett <gheskett@wdtv.com>
+Cc: linux-ide@vger.kernel.org
 
-On 01/21/2015 08:54 AM, Mark Rutland wrote:
-> On Mon, Jan 19, 2015 at 07:16:28PM +0000, David Daney wrote:
-[...]
->>>> @@ -67,6 +76,7 @@ static const struct of_device_id ahci_of_match[] = {
->>>>    	{ .compatible = "ibm,476gtr-ahci", },
->>>>    	{ .compatible = "snps,dwc-ahci", },
->>>>    	{ .compatible = "hisilicon,hisi-ahci", },
->>>> +	{ .compatible = "cavium,octeon-7130-ahci", },
->>>>    	{},
->>>
->>> I was under the impression that the strings other than "generic-ahci"
->>> were only for compatibility with existing DTBs. Why do we need to add
->>> new platform-specific strings here?
->>
->> Because it is an "existing DTB", The device tree doesn't contain the
->> compatible property of "generic-ahci", only "cavium,octeon-7130-ahci".
->
-> While the DTB may already exist, the string "cavium,octeon-7130-ahci"
-> isn't in mainline, and as far as I can see has never been supported.
+On Mon, 19 Jan 2015 11:45:41 -0500
+Gene Heskett <gheskett@wdtv.com> wrote:
 
-There seems to be a disconnect here.  The DTB comes from the hardware 
-boot environment.  The hardware is in some cases already deployed.  It 
-is for all practical purposes, impossible to change the DTB.
+> Greetings;
+> 
+> Amd Phenom, 8Gb of dram on an Asus M2N-SLI Deluxe board.  So old USB3 
+> isn't.
+> 
+> Ubuntu 10.04.4 LTS 32 bit server install here.  A recent experiment with a 
 
-The idea that the kernel source code controls the content of the device 
-tree doesn't apply here.
+Then you want to ask Ubuntu lists, nobody here can remember that far back
+8) or did you mean 14.04 ?
 
-> We
-> _maintain_ support for existing DTBs, we don't just copy what some
-> forked kernel happens to do.
->
-> Trying to push that under the "don't break existing DTBs" rule is
-> bending the definition.
+> I have been reading up on man fstab, but it has not solved my problem of 
+> the boot waiting, sometimes for 30 seconds, for the drive to be mounted at 
+> / to appear.  There is no disk activity during this wait period, and it 
+> does not always do it when booting a 32 bit PAE kernel.
 
-The purpose of the kernel is to provide services on top of actual 
-hardware.  In general, for a kernel driver to support any given device, 
-it may have to add device specific identifiers, that correspond to the 
-device, in the probing code.
+30 seconds is about the timeout for the case when there appears to be a
+drive but probing it gets no results.
 
-David Daney
+> Fdisk complains that there are 3503 unallocated 512 byte sectors after 
+> partition 1 on the disk, but its been doing that for 3 or 4 years.  
 
->
-> Thanks,
-> Mark.
->
->
+Doesn't matter.
+
+Alan
