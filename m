@@ -1,229 +1,110 @@
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: Re: [V2 PATCH 1/2] ACPI / scan: Add support for ACPI _CLS device matching
-Date: Wed, 21 Jan 2015 23:40:30 +0100
-Message-ID: <5683234.1DZkid7LZL@vostro.rjw.lan>
-References: <1420492275-6878-1-git-send-email-Suravee.Suthikulpanit@amd.com> <1420492275-6878-2-git-send-email-Suravee.Suthikulpanit@amd.com>
+From: Akinobu Mita <akinobu.mita-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v4 00/11] scsi: fix module reference mismatch for scsi host
+Date: Thu, 22 Jan 2015 22:17:58 +0900
+Message-ID: <CAC5umyh9wgTdtHbnRHtB16JaDbHrpkbOF+eVK4onkCs9s1pqCQ@mail.gmail.com>
+References: <CAC5umyh+x_B3GOc4q=Q+2NsAK8KmaHvpyW329iG-d1yAUwN02A@mail.gmail.com>
+	<Pine.LNX.4.44L0.1501201013440.1150-100000@iolanthe.rowland.org>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <1420492275-6878-2-git-send-email-Suravee.Suthikulpanit@amd.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Cc: lenb@kernel.org, hdegoede@redhat.com, tj@kernel.org, arnd@arndb.de, mjg59@srcf.ucam.org, grant.likely@linaro.org, hanjun.guo@linaro.org, al.stone@linaro.org, graeme.gregory@linaro.org, leo.duran@amd.com, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <open-iscsi+bncBCPM5SUWUYIRBB7RQOTAKGQEZCEM4MY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <Pine.LNX.4.44L0.1501201013440.1150-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
+List-Post: <http://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/open-iscsi
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <http://groups.google.com/group/open-iscsi/subscribe>
+To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Vinayak Holikatti <vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dolev Raviv <draviv-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Sujit Reddy Thumma <sthumma-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Subhash Jadavani <subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, Karen Xie <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>, Robert Love <robert.w.love-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, "James E.J. Bottomley" <JBottomley-bzQdu9zFT3WakBO8gow8eQ@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
-On Monday, January 05, 2015 03:11:14 PM Suravee Suthikulpanit wrote:
-> Device drivers typically use ACPI _HIDs/_CIDs listed in struct device_driver
-> acpi_match_table to match devices. However, for generic drivers, we do
-> not want to list _HID for all supported devices, and some device classes
-> do not have _CID (e.g. SATA, USB). Instead, we can leverage ACPI _CLS,
-> which specifies PCI-defined class code (i.e. base-class, subclass and
-> programming interface).
-> 
-> This patch adds support for matching ACPI devices using the _CLS method.
-> 
-> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-> ---
->  drivers/acpi/scan.c             | 79 +++++++++++++++++++++++++++++++++++++++--
->  include/acpi/acnames.h          |  1 +
->  include/linux/acpi.h            | 10 ++++++
->  include/linux/device.h          |  1 +
->  include/linux/mod_devicetable.h |  6 ++++
->  5 files changed, 94 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-> index 16914cc..7b25221 100644
-> --- a/drivers/acpi/scan.c
-> +++ b/drivers/acpi/scan.c
-> @@ -987,13 +987,86 @@ static bool acpi_of_driver_match_device(struct device *dev,
->  bool acpi_driver_match_device(struct device *dev,
->  			      const struct device_driver *drv)
->  {
-> -	if (!drv->acpi_match_table)
-> -		return acpi_of_driver_match_device(dev, drv);
-> +	bool ret = false;
->  
-> -	return !!acpi_match_device(drv->acpi_match_table, dev);
-> +	if (drv->acpi_match_table)
-> +		ret = !!acpi_match_device(drv->acpi_match_table, dev);
-> +
-> +	/* Next, try to match with special "PRP0001" _HID */
-> +	if (!ret && drv->of_match_table)
-> +		ret = acpi_of_driver_match_device(dev, drv);
-> +
-> +	/* Next, try to match with PCI-defined class-code */
-> +	if (!ret && drv->acpi_match_cls)
-> +		ret = acpi_match_device_cls(drv->acpi_match_cls, dev);
-> +
-> +	return ret;
->  }
->  EXPORT_SYMBOL_GPL(acpi_driver_match_device);
->  
-> +/**
-> + * acpi_match_device_cls - Match a struct device against a ACPI _CLS method
-> + * @dev_cls: A pointer to struct acpi_device_cls object to match against.
-> + * @dev: The ACPI device structure to match.
-> + *
-> + * Check if @dev has a valid ACPI and _CLS handle. If there is a
-> + * struct acpi_device_cls object for that handle, use that object to match
-> + * against the given struct acpi_device_cls object.
-> + *
-> + * Return true on success or false on failure.
-> + */
-> +bool acpi_match_device_cls(const struct acpi_device_cls *dev_cls,
-> +			  const struct device *dev)
-> +{
-> +	bool ret = false;
-> +	acpi_status status;
-> +	union acpi_object *pkg;
-> +	struct acpi_device_cls cls;
-> +	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
-> +	struct acpi_buffer format = { sizeof("NNN"), "NNN" };
-> +	struct acpi_buffer state = { 0, NULL };
-> +	struct acpi_device *adev = ACPI_COMPANION(dev);
-> +	acpi_handle handle = ACPI_HANDLE(dev);
+2015-01-21 0:20 GMT+09:00 Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>:
+> On Tue, 20 Jan 2015, Akinobu Mita wrote:
+>
+>> 2015-01-19 23:22 GMT+09:00 Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>:
+>> > On Mon, Jan 19, 2015 at 12:05:58AM +0900, Akinobu Mita wrote:
+>> >> While accessing a scsi_device, the use count of the underlying LLDD
+>> >> module is incremented.  The module reference is retrieved through
+>> >> .module field of struct scsi_host_template.
+>> >>
+>> >> This mapping between scsi_device and underlying LLDD module works well
+>> >> except some drivers which consist with the core driver and the actual
+>> >> LLDDs and scsi_host_template is defined in the core driver.  In these
+>> >> cases, the actual LLDDs can be unloaded even if the scsi_device is
+>> >> being accessed.
+>> >>
+>> >> This patch series fixes the module reference mismatch problem for
+>> >> ufs, usb-storage, esp_scsi, ahci_platform, and pata_platform drivers
+>> >> by moving owner module reference field from struct scsi_host_template
+>> >> to struct Scsi_Host and allowing the LLDDs to set their correct module
+>> >> reference.
+>> >
+>> > Hmmm, can't we just move sht definitions to actual LLDDs?  libata can
+>> > do that easily.  sht, as its name implies, is the template for
+>> > creating the scsi_hosts of a given type.  We're now just moving module
+>> > ownership from sht definition site to whatever callsite the actual
+>> > instance is being created which can also be wrapped in a separate
+>> > layer requiring explicit propagation.  Why not just propagate sht's
+>> > directly?  What's the difference?
+>>
+>> The reason I didn't move sht from the core driver to the LLDDs for
+>> fixing ufs and ums-* in the first place is to avoid exporting many
+>> symbols for callbacks in sht.  But I realized that we can do it
+>> without that many exported symbols by creating a single function that
+>> returns a kmemdup()ed sht with a few change including ->module.
+>>
+>> So there are three options we can take for fixing this problem.
+>> I would like to know the opinions which one should be taken.
+>>
+>> (1) Add owner module field to Scsi_Host for allowing LLDDs to adjust
+>> it after scsi host allocation.  This approach is used by v1,2,3 of
+>> this patch series and the scsi midlayer change is minimum.
+>>
+>> (2) Move owner module field from scsi_host_template to Scsi_Host.
+>> The owner module reference is retrieved from the callsite of
+>> scsi_host_alloc() by passing THIS_MODULE to the extra argument.
+>> The scsi midlayer change is small, but we need the same macro trick
+>> for each scsi_host_alloc() wrapper and these changes are relatively
+>> large (required by libata, libiscsi, libfc, cxgbi, 53c700, legacy).
+>> This approach is used by v4 of this patch series.
+>>
+>> (3) Allocate scsi host template for each module.  No scsi midlayer
+>> change is required.  Instead of sharing a single scsi host template
+>> defined in the core, create a single function that returns a
+>> kmemdup()ed sht with a few change including ->module so that the sub
+>> modules can use it as their sht.
+>
+> (3) means duplicating a reasonably large data structure in order to
+> alter just one field.  It also means changing all the subdrivers to
+> make them call the new function.
+>
+> (1) is the simplest.  Since the use of subdrivers in general tends to
+> be a special case (most SCSI drivers don't do it), I prefer to keep the
+> code optimized for it.  In other words, I prefer option (1).  If people
+> think (2) is better, it can always be layered on top of (1).
 
-That must be equal to adev->handle, so it is not necessary to use ACPI_HANDLE() here.
+OK, I agree that (1) is the simplest.
 
-> +
-> +	if (!handle || !adev || !adev->status.present || !dev_cls)
-> +		return ret;
+Christoph,
 
-		return false;
+Option (2) required a lot of changes as this v4 shows that
+scsi_host_alloc() is used by several libraries on scsi mid level in
+various forms.  It is a bit different from pci_register_driver() or
+similar registration interfaces.  Although they also use the same
+macro trick to get a module reference, but they are called directly
+or through thin and straightforward wrapper interfaces by lower
+level drivers.
 
-and set 'ret' later.  And if you check 'adev', you don't need to check 'handle'.
-And you can use adev->handle directly below, so the 'handle' variable is not
-necessary.
-
-> +
-> +	status = acpi_evaluate_object(handle, METHOD_NAME__CLS, NULL, &buffer);
-> +	if (ACPI_FAILURE(status))
-> +		return ret;
-
-		return false;
-
-> +
-> +	/**
-> +	 * Note:
-> +	 * ACPIv5.1 defines the package to contain 3 integers for
-> +	 * Base-Class code, Sub-Class code, and Programming Interface code.
-> +	 */
-> +	pkg = buffer.pointer;
-> +	if (!pkg ||
-> +	    (pkg->type != ACPI_TYPE_PACKAGE) ||
-> +	    (pkg->package.count != 3)) {
-> +		dev_err(&adev->dev, "Invalid _CLS data\n");
-
-dev_dbg() here, please.
-
-> +		goto out;
-> +	}
-> +
-> +	state.length = sizeof(struct acpi_device_cls);
-> +	state.pointer = &cls;
-> +
-> +	status = acpi_extract_package(pkg, &format, &state);
-> +	if (ACPI_FAILURE(status)) {
-> +		ACPI_EXCEPTION((AE_INFO, status, "Invalid data"));
-
-I'm not sure how useful that message is going to be to be honest.
-
-> +		goto out;
-> +	}
-> +
-> +	if ((dev_cls->base_class == cls.base_class) &&
-> +	    (dev_cls->sub_class == cls.sub_class) &&
-> +	    (dev_cls->prog_interface == cls.prog_interface))
-> +		ret = true;
-
-	ret = dev_cls->base_class == cls.base_class &&
-		dev_cls->sub_class == cls.sub_class &&
-		dev_cls->prog_interface == cls.prog_interface;
-
-> +out:
-> +	kfree(buffer.pointer);
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL_GPL(acpi_match_device_cls);
-> +
->  static void acpi_free_power_resources_lists(struct acpi_device *device)
->  {
->  	int i;
-> diff --git a/include/acpi/acnames.h b/include/acpi/acnames.h
-> index 7461327..22332a6 100644
-> --- a/include/acpi/acnames.h
-> +++ b/include/acpi/acnames.h
-> @@ -51,6 +51,7 @@
->  #define METHOD_NAME__BBN        "_BBN"
->  #define METHOD_NAME__CBA        "_CBA"
->  #define METHOD_NAME__CID        "_CID"
-> +#define METHOD_NAME__CLS        "_CLS"
->  #define METHOD_NAME__CRS        "_CRS"
->  #define METHOD_NAME__DDN        "_DDN"
->  #define METHOD_NAME__HID        "_HID"
-> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-> index 87f365e..2f2b8ce 100644
-> --- a/include/linux/acpi.h
-> +++ b/include/linux/acpi.h
-> @@ -432,6 +432,10 @@ const struct acpi_device_id *acpi_match_device(const struct acpi_device_id *ids,
->  
->  extern bool acpi_driver_match_device(struct device *dev,
->  				     const struct device_driver *drv);
-> +
-> +bool acpi_match_device_cls(const struct acpi_device_cls *dev_cls,
-> +			   const struct device *dev);
-> +
->  int acpi_device_uevent_modalias(struct device *, struct kobj_uevent_env *);
->  int acpi_device_modalias(struct device *, char *, int);
->  void acpi_walk_dep_device_list(acpi_handle handle);
-> @@ -527,6 +531,12 @@ static inline const struct acpi_device_id *acpi_match_device(
->  	return NULL;
->  }
->  
-> +static inline bool acpi_match_device_cls(const struct acpi_device_cls *dev_cls,
-> +					 const struct device *dev)
-> +{
-> +	return false;
-> +}
-> +
->  static inline bool acpi_driver_match_device(struct device *dev,
->  					    const struct device_driver *drv)
->  {
-> diff --git a/include/linux/device.h b/include/linux/device.h
-> index fb50673..8e259c5c 100644
-> --- a/include/linux/device.h
-> +++ b/include/linux/device.h
-> @@ -237,6 +237,7 @@ struct device_driver {
->  
->  	const struct of_device_id	*of_match_table;
->  	const struct acpi_device_id	*acpi_match_table;
-> +	const struct acpi_device_cls	*acpi_match_cls;
->  
->  	int (*probe) (struct device *dev);
->  	int (*remove) (struct device *dev);
-> diff --git a/include/linux/mod_devicetable.h b/include/linux/mod_devicetable.h
-> index 745def8..00e94ec 100644
-> --- a/include/linux/mod_devicetable.h
-> +++ b/include/linux/mod_devicetable.h
-> @@ -186,6 +186,12 @@ struct css_device_id {
->  
->  #define ACPI_ID_LEN	9
->  
-> +struct acpi_device_cls {
-> +	kernel_ulong_t base_class;
-> +	kernel_ulong_t sub_class;
-> +	kernel_ulong_t prog_interface;
-> +};
-> +
-
-Move that below the struct acpi_device_id definition.
-
->  struct acpi_device_id {
->  	__u8 id[ACPI_ID_LEN];
->  	kernel_ulong_t driver_data;
-> 
+So, option (1) seems to be a better choice than (2), (3) for fixing
+ufs, ums-*, and esp_scsi drivers.  For ahci_platform and pata_platform,
+they can be fixed easily by moving sht definision to LLDDs as Tejun
+suggested.  Do you think it is ok to prepare v5 of series in this way?
 
 -- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at http://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
