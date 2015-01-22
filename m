@@ -1,87 +1,37 @@
-From: Mark Rutland <mark.rutland@arm.com>
-Subject: Re: [PATCH] SATA: OCTEON: support SATA on OCTEON platform
-Date: Thu, 22 Jan 2015 14:53:32 +0000
-Message-ID: <20150122145331.GC12911@leverpostej>
-References: <1421681040-3392-1-git-send-email-aleksey.makarov@auriga.com>
- <20150119154357.GH21553@leverpostej>
- <54BD580C.6030701@gmail.com>
- <20150121165427.GA8722@leverpostej>
- <54BFDF2B.80708@caviumnetworks.com>
- <CAL_Jsq+Vtp=G6PJZvgksfLSXHBkoTC4TxLymP0ONk9MjaMtMPQ@mail.gmail.com>
+From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
+Subject: Re: 64 bit kernel won't mount /
+Date: Thu, 22 Jan 2015 15:34:58 +0000
+Message-ID: <20150122153458.6493d3fd@lxorguk.ukuu.org.uk>
+References: <201501191145.41492.gheskett@wdtv.com>
+	<20150121172326.040dd702@lxorguk.ukuu.org.uk>
+	<201501211421.35532.gheskett@wdtv.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from foss-mx-na.foss.arm.com ([217.140.108.86]:41023 "EHLO
-	foss-mx-na.foss.arm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751801AbbAVOyD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Jan 2015 09:54:03 -0500
-Content-Disposition: inline
-In-Reply-To: <CAL_Jsq+Vtp=G6PJZvgksfLSXHBkoTC4TxLymP0ONk9MjaMtMPQ@mail.gmail.com>
+Received: from 251.110.2.81.in-addr.arpa ([81.2.110.251]:55300 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751299AbbAVPfG (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Jan 2015 10:35:06 -0500
+In-Reply-To: <201501211421.35532.gheskett@wdtv.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Rob Herring <robherring2@gmail.com>
-Cc: David Daney <ddaney@caviumnetworks.com>, David Daney <ddaney.cavm@gmail.com>, Aleksey Makarov <aleksey.makarov@auriga.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-mips@linux-mips.org" <linux-mips@linux-mips.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, David Daney <david.daney@cavium.com>, Anton Vorontsov <avorontsov@ru.mvista.com>, Vinita Gupta <vgupta@caviumnetworks.com>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <Pawel.Moll@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Ralf Baechle <ralf@linux-mips.org>, Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+To: Gene Heskett <gheskett@wdtv.com>
+Cc: linux-ide@vger.kernel.org
 
-On Thu, Jan 22, 2015 at 02:19:55PM +0000, Rob Herring wrote:
-> On Wed, Jan 21, 2015 at 11:17 AM, David Daney <ddaney@caviumnetworks.com> wrote:
-> > On 01/21/2015 08:54 AM, Mark Rutland wrote:
-> >>
-> >> On Mon, Jan 19, 2015 at 07:16:28PM +0000, David Daney wrote:
-> >
-> > [...]
-> >>>>>
-> >>>>> @@ -67,6 +76,7 @@ static const struct of_device_id ahci_of_match[] = {
-> >>>>>         { .compatible = "ibm,476gtr-ahci", },
-> >>>>>         { .compatible = "snps,dwc-ahci", },
-> >>>>>         { .compatible = "hisilicon,hisi-ahci", },
-> >>>>> +       { .compatible = "cavium,octeon-7130-ahci", },
-> >>>>>         {},
-> >>>>
-> >>>>
-> >>>> I was under the impression that the strings other than "generic-ahci"
-> >>>> were only for compatibility with existing DTBs. Why do we need to add
-> >>>> new platform-specific strings here?
-> >>>
-> >>>
-> >>> Because it is an "existing DTB", The device tree doesn't contain the
-> >>> compatible property of "generic-ahci", only "cavium,octeon-7130-ahci".
-> >>
-> >>
-> >> While the DTB may already exist, the string "cavium,octeon-7130-ahci"
-> >> isn't in mainline, and as far as I can see has never been supported.
-> >
-> >
-> > There seems to be a disconnect here.  The DTB comes from the hardware boot
-> > environment.  The hardware is in some cases already deployed.  It is for all
-> > practical purposes, impossible to change the DTB.
-> >
-> > The idea that the kernel source code controls the content of the device tree
-> > doesn't apply here.
-> 
-> I have to agree that adding the compatible string here is okay.
-> Allowing/using generic names is the exception, not the rule. We're
-> usually pushing the other way. People often complain about having to
-> add a compatible string when they don't need it (yet).
+> I am convinced ATM that this boot stall is an artifact of the fact that 
+> none of the linux installers used, knows a thing about 4k/sector disks, 
+> and that somehow in my configuring a .config, I have crippled the kernels 
+> ability to deal with a miss-aligned disk partition, and none of the 
+> installers is smart enough to align its partitions.  The net results of 
+> course are 15M/sec write speeds on a disk that can do 120M/sec when it 
+> does work. But first, it has to boot.
 
-If people are happy adding the string, then I have no problem with that.
+Unlikely. Apart from fdisk the setup is basically invisible. The drive
+reports a block size and an offset. The firmware offset is chosen so that
+the chassic DOS alignments in fdisk happen to just fall nicely on 4K
+boundaries for partition starts.
 
-My concern was with the "existing DTB" argument, which you've covered
-below.
+There is nothing special the OS does to deal with ATA/SATA 4K sectors.
 
-Thanks,
-Mark.
-
-> However, the argument that the privately developed DTB has to be
-> accepted as is is complete crap. Maybe you have done a good job and
-> have all straightforward bindings, so having them accepted won't be a
-> big deal. We should be reasonable and not bikeshed things which are
-> already in use and only affect a single device. Many of the bindings
-> in vendor trees I have seen are a complete mess, but I expect better
-> from you.
-> 
-> Rob
-> --
-> To unsubscribe from this list: send the line "unsubscribe devicetree" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Alan
