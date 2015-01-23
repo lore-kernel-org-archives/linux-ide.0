@@ -1,41 +1,50 @@
-From: Aaro Koskinen <aaro.koskinen-X3B1VOXEql0@public.gmane.org>
-Subject: Re: [PATCH] SATA: OCTEON: support SATA on OCTEON platform
-Date: Thu, 22 Jan 2015 23:55:43 +0200
-Message-ID: <20150122215543.GA5048@fuloong-minipc.musicnaut.iki.fi>
-References: <1421681040-3392-1-git-send-email-aleksey.makarov@auriga.com>
- <20150119154357.GH21553@leverpostej>
- <54BD580C.6030701@gmail.com>
- <20150121165427.GA8722@leverpostej>
- <54BFDF2B.80708@caviumnetworks.com>
+From: Gene Heskett <gheskett@wdtv.com>
+Subject: Re: 64 bit kernel won't mount /
+Date: Fri, 23 Jan 2015 00:06:36 -0500
+Message-ID: <201501230006.36907.gheskett@wdtv.com>
+References: <201501191145.41492.gheskett@wdtv.com> <201501211421.35532.gheskett@wdtv.com> <20150122153458.6493d3fd@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <54BFDF2B.80708-M3mlKVOIwJVv6pq1l3V1OdBPR1lH4CV8@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: David Daney <ddaney-M3mlKVOIwJVv6pq1l3V1OdBPR1lH4CV8@public.gmane.org>
-Cc: Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, David Daney <ddaney.cavm-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Aleksey Makarov <aleksey.makarov-tx70/tkNEWbQT0dZR+AlfA@public.gmane.org>, "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org" <linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, David Daney <david.daney-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>, Anton Vorontsov <avorontsov-hkdhdckH98+B+jHODAdFcQ@public.gmane.org>, Vinita Gupta <vgupta-M3mlKVOIwJVv6pq1l3V1OdBPR1lH4CV8@public.gmane.org>, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Pawel Moll <Pawel.Moll-5wv7dgnIgG8@public.gmane.org>, Ian Campbell <ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org>, Kumar Gala <galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Ralf Baechle <ralf-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: Text/Plain;
+  charset="windows-1256"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.wdtv.com ([66.118.69.84]:45743 "EHLO mail.wdtv.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754314AbbAWFGj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 23 Jan 2015 00:06:39 -0500
+In-Reply-To: <20150122153458.6493d3fd@lxorguk.ukuu.org.uk>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
+Cc: linux-ide@vger.kernel.org
 
-Hi,
-
-On Wed, Jan 21, 2015 at 09:17:31AM -0800, David Daney wrote:
-> On 01/21/2015 08:54 AM, Mark Rutland wrote:
-> >While the DTB may already exist, the string "cavium,octeon-7130-ahci"
-> >isn't in mainline, and as far as I can see has never been supported.
+On Thursday 22 January 2015 10:34:58 One Thousand Gnomes did opine
+And Gene did reply:
+> > I am convinced ATM that this boot stall is an artifact of the fact
+> > that none of the linux installers used, knows a thing about
+> > 4k/sector disks, and that somehow in my configuring a .config, I
+> > have crippled the kernels ability to deal with a miss-aligned disk
+> > partition, and none of the installers is smart enough to align its
+> > partitions.  The net results of course are 15M/sec write speeds on a
+> > disk that can do 120M/sec when it does work. But first, it has to
+> > boot.
 > 
-> There seems to be a disconnect here.  The DTB comes from the hardware boot
-> environment.  The hardware is in some cases already deployed.  It is for all
-> practical purposes, impossible to change the DTB.
+> Unlikely. Apart from fdisk the setup is basically invisible. The drive
+> reports a block size and an offset. The firmware offset is chosen so
+> that the chassic DOS alignments in fdisk happen to just fall nicely on
+> 4K boundaries for partition starts.
+> 
+> There is nothing special the OS does to deal with ATA/SATA 4K sectors.
+> 
+> Alan
 
-It's possible to change/fix the DTB in platform code like currently
-done for the OCTEON in-tree DTBs. But that's ugly.
+Good to know Alan, thanks. I'll turn my flashlight in a different 
+direction then.
 
-I think there should be also a mechanism to override the DTB completely
-with a user supplied one like with kernel APPENDED_DTB on ARM.
-
-A.
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Cheers, Gene Heskett
+-- 
+"There are four boxes to be used in defense of liberty:
+ soap, ballot, jury, and ammo. Please use in that order."
+-Ed Howdershelt (Author)
+Genes Web page <http://geneslinuxbox.net:6309/gene>
+US V Castleman, SCOTUS, Mar 2014 is grounds for Impeaching SCOTUS
