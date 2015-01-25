@@ -1,78 +1,53 @@
-From: Shaohua Li <shli@fb.com>
-Subject: [PATCH] libata: make sata_sil24 use fifo tag allocator
-Date: Fri, 23 Jan 2015 20:17:59 -0800
-Message-ID: <e836211c9bce48b23ddf37a4d8832e1b2fbd893c.1422072962.git.shli@fb.com>
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: Re: 64 bit kernel won't mount /
+Date: Sun, 25 Jan 2015 16:18:27 -0500
+Message-ID: <54C55DA3.4050400@ubuntu.com>
+References: <201501191145.41492.gheskett@wdtv.com>	<20150121172326.040dd702@lxorguk.ukuu.org.uk>	<201501211421.35532.gheskett@wdtv.com> <20150122153458.6493d3fd@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:7082 "EHLO
-	mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751317AbbAXESF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Jan 2015 23:18:05 -0500
-Received: from pps.filterd (m0004347 [127.0.0.1])
-	by m0004347.ppops.net (8.14.5/8.14.5) with SMTP id t0O4H83L016798
-	for <linux-ide@vger.kernel.org>; Fri, 23 Jan 2015 20:18:03 -0800
-Received: from mail.thefacebook.com ([199.201.64.23])
-	by m0004347.ppops.net with ESMTP id 1s3y510ewu-2
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=OK)
-	for <linux-ide@vger.kernel.org>; Fri, 23 Jan 2015 20:18:03 -0800
-Received: from facebook.com (2401:db00:20:7003:face:0:4d:0)	by
- mx-out.facebook.com (10.212.232.63) with ESMTP	id
- fb722522a37f11e497d60002c992ebde-d16d7390 for <linux-ide@vger.kernel.org>;
-	Fri, 23 Jan 2015 20:18:00 -0800
+Received: from cdptpa-outbound-snat.email.rr.com ([107.14.166.231]:13099 "EHLO
+	cdptpa-oedge-vip.email.rr.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754495AbbAYVSb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 25 Jan 2015 16:18:31 -0500
+In-Reply-To: <20150122153458.6493d3fd@lxorguk.ukuu.org.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Jens Axboe <axboe@fb.com>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>
+To: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Gene Heskett <gheskett@wdtv.com>
+Cc: linux-ide@vger.kernel.org
 
-libata starts using block tag now, we can use BLK_TAG_ALLOC_FIFO to
-solve the sata_sil24 tag bug.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
 
-https://bugzilla.kernel.org/show_bug.cgi?id=87101
+On 01/22/2015 10:34 AM, One Thousand Gnomes wrote:
+> Unlikely. Apart from fdisk the setup is basically invisible. The
+> drive reports a block size and an offset. The firmware offset is
+> chosen so that the chassic DOS alignments in fdisk happen to just
+> fall nicely on 4K boundaries for partition starts.
+> 
+> There is nothing special the OS does to deal with ATA/SATA 4K
+> sectors.
 
-Cc: Jens Axboe <axboe@fb.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Signed-off-by: Shaohua Li <shli@fb.com>
----
- drivers/ata/sata_sil24.c | 3 ++-
- include/linux/libata.h   | 1 -
- 2 files changed, 2 insertions(+), 2 deletions(-)
+Incorrect: the kernel bogus/synthetic "geometry" is the maximum
+allowed of 63 sectors per track, and the old dos default alignment for
+the first partition on the disk places its start at sector 63, which
+is not 4k aligned.  The special thing that partitioning tools have to
+do is to align the partition start to a 4k boundary.  For several
+years now, parted has defaulted to 1 MiB alignment, like Windows has
+done, which gives a 4k alignment.  I don't recall if Ubuntu 10.04 is
+old enough to predate this change.  You certainly do NOT want to use
+the cylinder alignment option in gparted.
 
-diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
-index ea65594..5242897 100644
---- a/drivers/ata/sata_sil24.c
-+++ b/drivers/ata/sata_sil24.c
-@@ -246,7 +246,7 @@ enum {
- 	/* host flags */
- 	SIL24_COMMON_FLAGS	= ATA_FLAG_SATA | ATA_FLAG_PIO_DMA |
- 				  ATA_FLAG_NCQ | ATA_FLAG_ACPI_SATA |
--				  ATA_FLAG_AN | ATA_FLAG_PMP | ATA_FLAG_LOWTAG,
-+				  ATA_FLAG_AN | ATA_FLAG_PMP,
- 	SIL24_FLAG_PCIX_IRQ_WOC	= (1 << 24), /* IRQ loss errata on PCI-X */
- 
- 	IRQ_STAT_4PORTS		= 0xf,
-@@ -388,6 +388,7 @@ static struct scsi_host_template sil24_sht = {
- 	.can_queue		= SIL24_MAX_CMDS,
- 	.sg_tablesize		= SIL24_MAX_SGE,
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
-+	.tag_alloc_policy	= BLK_TAG_ALLOC_FIFO,
- };
- 
- static struct ata_port_operations sil24_ops = {
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index f9adde4..adad50d 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -231,7 +231,6 @@ enum {
- 	ATA_FLAG_SW_ACTIVITY	= (1 << 22), /* driver supports sw activity
- 					      * led */
- 	ATA_FLAG_NO_DIPM	= (1 << 23), /* host not happy with DIPM */
--	ATA_FLAG_LOWTAG		= (1 << 24), /* host wants lowest available tag */
- 
- 	/* bits 24:31 of ap->flags are reserved for LLD specific flags */
- 
--- 
-1.8.1
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQEcBAEBCgAGBQJUxV2jAAoJENRVrw2cjl5RjZIH/ijuJw1bfOxqHDi5PsfOjZqi
+yiH9wGiwJukiwTkfqXoR3hRLemP3WO7vMxf/Ub/+DhmLQR7F3iGlHwfDq/8wQzpQ
+2MucBJDT0ARt/I9z/xhPK3bUVdj9ooSUJfHGklhyhijdceAi7M/HwYh9Hftx5Mrn
+5qw0N0E6TLNLaNYraJEEqc2aATfXRFcfLrqI5pmRhoT+KCs6IFrggyj4F7uwiaNb
+QmrvUPzdAN5jmbVxm+sActWdDG/UDxIXeqLXxJ+N/OwYd4iPh6QNlsPv0/U1R71W
+i+ZEoNNH729N1JMQUN/qD7Ut4oNj2nqLzrsVh5K8Z5fRkIXYLIuUMgKn0KJJQDk=
+=3PnL
+-----END PGP SIGNATURE-----
