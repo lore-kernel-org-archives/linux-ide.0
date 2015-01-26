@@ -1,33 +1,47 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH] libata: make sata_sil24 use fifo tag allocator
-Date: Mon, 26 Jan 2015 08:39:27 -0800
-Message-ID: <CAPcyv4jEDewtXJRZROCZHUW2Mm2ab-hGbf+rOfebmOv0-ERWJQ@mail.gmail.com>
-References: <e836211c9bce48b23ddf37a4d8832e1b2fbd893c.1422072962.git.shli@fb.com>
+From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
+Subject: Re: 64 bit kernel won't mount /
+Date: Mon, 26 Jan 2015 21:38:30 +0000
+Message-ID: <20150126213830.3f9f38f5@lxorguk.ukuu.org.uk>
+References: <201501191145.41492.gheskett@wdtv.com>
+	<20150121172326.040dd702@lxorguk.ukuu.org.uk>
+	<201501211421.35532.gheskett@wdtv.com>
+	<20150122153458.6493d3fd@lxorguk.ukuu.org.uk>
+	<54C55DA3.4050400@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wi0-f176.google.com ([209.85.212.176]:56841 "EHLO
-	mail-wi0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752905AbbAZQj3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Jan 2015 11:39:29 -0500
-Received: by mail-wi0-f176.google.com with SMTP id em10so11285970wid.3
-        for <linux-ide@vger.kernel.org>; Mon, 26 Jan 2015 08:39:27 -0800 (PST)
-In-Reply-To: <e836211c9bce48b23ddf37a4d8832e1b2fbd893c.1422072962.git.shli@fb.com>
+Received: from 251.110.2.81.in-addr.arpa ([81.2.110.251]:60280 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753100AbbAZWGW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Jan 2015 17:06:22 -0500
+In-Reply-To: <54C55DA3.4050400@ubuntu.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Shaohua Li <shli@fb.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>, Jens Axboe <axboe@fb.com>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@infradead.org>
+To: Phillip Susi <psusi@ubuntu.com>
+Cc: Gene Heskett <gheskett@wdtv.com>, linux-ide@vger.kernel.org
 
-On Fri, Jan 23, 2015 at 8:17 PM, Shaohua Li <shli@fb.com> wrote:
-> libata starts using block tag now, we can use BLK_TAG_ALLOC_FIFO to
-> solve the sata_sil24 tag bug.
->
-> https://bugzilla.kernel.org/show_bug.cgi?id=87101
->
-> Cc: Jens Axboe <axboe@fb.com>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: Christoph Hellwig <hch@infradead.org>
-> Cc: Dan Williams <dan.j.williams@intel.com>
-> Signed-off-by: Shaohua Li <shli@fb.com>
+On Sun, 25 Jan 2015 16:18:27 -0500
+Phillip Susi <psusi@ubuntu.com> wrote:
 
-Acked-by: Dan Williams <dan.j.williams@intel.com>
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA512
+> 
+> On 01/22/2015 10:34 AM, One Thousand Gnomes wrote:
+> > Unlikely. Apart from fdisk the setup is basically invisible. The
+> > drive reports a block size and an offset. The firmware offset is
+> > chosen so that the chassic DOS alignments in fdisk happen to just
+> > fall nicely on 4K boundaries for partition starts.
+> > 
+> > There is nothing special the OS does to deal with ATA/SATA 4K
+> > sectors.
+> 
+> Incorrect: the kernel bogus/synthetic "geometry" is the maximum
+> allowed of 63 sectors per track, and the old dos default alignment for
+> the first partition on the disk places its start at sector 63, which
+> is not 4k aligned.  The special thing that partitioning tools 
+
+I guess if you count partitioning tools as the "OS" this is true, but by
+the OS I meant "system call layer and below".
+
+Alan
