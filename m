@@ -1,23 +1,25 @@
-From: Arnd Bergmann <arnd@arndb.de>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH v3] ata: Use 64-bit timekeeping
-Date: Tue, 27 Jan 2015 11:42:59 +0100
-Message-ID: <2129071.xymq3JjTtL@wuerfel>
+Date: Tue, 27 Jan 2015 11:08:02 -0500
+Message-ID: <20150127160802.GA12314@htj.dyndns.org>
 References: <20150127101948.GA5656@tinar>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:60826 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750961AbbA0KnG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Jan 2015 05:43:06 -0500
+Received: from mail-qc0-f182.google.com ([209.85.216.182]:42836 "EHLO
+	mail-qc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754639AbbA0QIH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Jan 2015 11:08:07 -0500
+Received: by mail-qc0-f182.google.com with SMTP id l6so12676436qcy.13
+        for <linux-ide@vger.kernel.org>; Tue, 27 Jan 2015 08:08:05 -0800 (PST)
+Content-Disposition: inline
 In-Reply-To: <20150127101948.GA5656@tinar>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tina Ruchandani <ruchandani.tina@gmail.com>
-Cc: linux-ide@vger.kernel.org, tj@kernel.org
+Cc: linux-ide@vger.kernel.org, arnd@arndb.de
 
-On Tuesday 27 January 2015 15:49:48 Tina Ruchandani wrote:
+On Tue, Jan 27, 2015 at 03:49:48PM +0530, Tina Ruchandani wrote:
 > Function pdc_detect_pll_input_clock uses 'struct timeval'
 > to measure start and end times, used to compute the pll_clock value.
 > 'struct timeval' on 32-bit systems will have its tv_sec field
@@ -27,6 +29,10 @@ On Tuesday 27 January 2015 15:49:48 Tina Ruchandani wrote:
 > Suggested-by: Arnd Bergmann <arnd@arndb.de>
 > Signed-off-by: Tina Ruchandani <ruchandani.tina@gmail.com>
 
-Looks great,
+Applied to libata/for-3.20 w/ subject updated to indicate that its
+scope is pata_pdc2027x.
 
-Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+Thanks.
+
+-- 
+tejun
