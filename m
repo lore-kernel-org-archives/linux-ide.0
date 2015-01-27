@@ -1,126 +1,89 @@
-From: Akinobu Mita <akinobu.mita@gmail.com>
-Subject: [PATCH 2/2] ata: pata_platform: fix owner module reference mismatch for scsi host
-Date: Tue, 27 Jan 2015 08:34:59 +0900
-Message-ID: <1422315299-4614-2-git-send-email-akinobu.mita@gmail.com>
-References: <1422315299-4614-1-git-send-email-akinobu.mita@gmail.com>
+From: Tina Ruchandani <ruchandani.tina@gmail.com>
+Subject: [PATCH v3] ata: Use 64-bit timekeeping
+Date: Tue, 27 Jan 2015 15:49:48 +0530
+Message-ID: <20150127101948.GA5656@tinar>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pd0-f171.google.com ([209.85.192.171]:64100 "EHLO
-	mail-pd0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756835AbbAZXfS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Jan 2015 18:35:18 -0500
-In-Reply-To: <1422315299-4614-1-git-send-email-akinobu.mita@gmail.com>
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:38745 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753338AbbA0KTy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Jan 2015 05:19:54 -0500
+Received: by mail-pa0-f53.google.com with SMTP id kx10so17645663pab.12
+        for <linux-ide@vger.kernel.org>; Tue, 27 Jan 2015 02:19:53 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
-Cc: Akinobu Mita <akinobu.mita@gmail.com>, Hans de Goede <hdegoede@redhat.com>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
+Cc: arnd@arndb.de, tj@kernel.org
 
-The owner module reference of the pata_of_platform's scsi_host is
-initialized to pata_platform's one, because pata_of_platform driver
-use a scsi_host_template defined in pata_platform.  So this drivers
-can be unloaded even if the scsi device is being accessed.
+Function pdc_detect_pll_input_clock uses 'struct timeval'
+to measure start and end times, used to compute the pll_clock value.
+'struct timeval' on 32-bit systems will have its tv_sec field
+overflow in year 2038 and beyond. This patch uses 'ktime_t'
+(which uses 64 bits for seconds) for start and end times instead.
 
-This fixes it by propagating the scsi_host_template to pata_of_platform
-driver.  The scsi_host_template is passed through a new
-argument of __pata_platform_probe().
-
-Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: Hans de Goede <hdegoede@redhat.com>
-Cc: Tejun Heo <tj@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: "James E.J. Bottomley" <JBottomley@parallels.com>
-Cc: linux-ide@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
+Suggested-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Tina Ruchandani <ruchandani.tina@gmail.com>
 ---
- drivers/ata/pata_of_platform.c | 6 +++++-
- drivers/ata/pata_platform.c    | 8 +++++---
- include/linux/ata_platform.h   | 5 ++++-
- 3 files changed, 14 insertions(+), 5 deletions(-)
+Changes in v3:
+	- Switch back to usec_elapsed being a 'long'.
+Changes in v2:
+	- Switch from timespec64 to ktime_t - more efficient.
+	- Use ktime_us_delta to get usec_elapsed, it is more
+	  efficient than manual computation of usecs from timespec64.
+---
+ drivers/ata/pata_pdc2027x.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
-index dcc408a..ec904ae 100644
---- a/drivers/ata/pata_of_platform.c
-+++ b/drivers/ata/pata_of_platform.c
-@@ -16,6 +16,10 @@
- #include <linux/ata_platform.h>
- #include <linux/libata.h>
+diff --git a/drivers/ata/pata_pdc2027x.c b/drivers/ata/pata_pdc2027x.c
+index 4d06a5c..dca8251 100644
+--- a/drivers/ata/pata_pdc2027x.c
++++ b/drivers/ata/pata_pdc2027x.c
+@@ -28,6 +28,7 @@
+ #include <linux/blkdev.h>
+ #include <linux/delay.h>
+ #include <linux/device.h>
++#include <linux/ktime.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_cmnd.h>
+@@ -605,7 +606,7 @@ static long pdc_detect_pll_input_clock(struct ata_host *host)
+ 	void __iomem *mmio_base = host->iomap[PDC_MMIO_BAR];
+ 	u32 scr;
+ 	long start_count, end_count;
+-	struct timeval start_time, end_time;
++	ktime_t start_time, end_time;
+ 	long pll_clock, usec_elapsed;
  
-+static struct scsi_host_template pata_platform_sht = {
-+	ATA_PIO_SHT(DRV_NAME),
-+};
-+
- static int pata_of_platform_probe(struct platform_device *ofdev)
- {
- 	int ret;
-@@ -63,7 +67,7 @@ static int pata_of_platform_probe(struct platform_device *ofdev)
- 	pio_mask |= (1 << pio_mode) - 1;
+ 	/* Start the test mode */
+@@ -616,14 +617,14 @@ static long pdc_detect_pll_input_clock(struct ata_host *host)
  
- 	return __pata_platform_probe(&ofdev->dev, &io_res, &ctl_res, irq_res,
--				     reg_shift, pio_mask);
-+				     reg_shift, pio_mask, &pata_platform_sht);
- }
+ 	/* Read current counter value */
+ 	start_count = pdc_read_counter(host);
+-	do_gettimeofday(&start_time);
++	start_time = ktime_get();
  
- static struct of_device_id pata_of_platform_match[] = {
-diff --git a/drivers/ata/pata_platform.c b/drivers/ata/pata_platform.c
-index 1eedfe4..c503ded 100644
---- a/drivers/ata/pata_platform.c
-+++ b/drivers/ata/pata_platform.c
-@@ -78,6 +78,7 @@ static void pata_platform_setup_port(struct ata_ioports *ioaddr,
-  *	@irq_res: Resource representing IRQ and its flags
-  *	@ioport_shift: I/O port shift
-  *	@__pio_mask: PIO mask
-+ *	@sht: scsi_host_template to use when registering
-  *
-  *	Register a platform bus IDE interface. Such interfaces are PIO and we
-  *	assume do not support IRQ sharing.
-@@ -99,7 +100,8 @@ static void pata_platform_setup_port(struct ata_ioports *ioaddr,
-  */
- int __pata_platform_probe(struct device *dev, struct resource *io_res,
- 			  struct resource *ctl_res, struct resource *irq_res,
--			  unsigned int ioport_shift, int __pio_mask)
-+			  unsigned int ioport_shift, int __pio_mask,
-+			  struct scsi_host_template *sht)
- {
- 	struct ata_host *host;
- 	struct ata_port *ap;
-@@ -170,7 +172,7 @@ int __pata_platform_probe(struct device *dev, struct resource *io_res,
+ 	/* Let the counter run for 100 ms. */
+ 	mdelay(100);
  
- 	/* activate */
- 	return ata_host_activate(host, irq, irq ? ata_sff_interrupt : NULL,
--				 irq_flags, &pata_platform_sht);
-+				 irq_flags, sht);
- }
- EXPORT_SYMBOL_GPL(__pata_platform_probe);
+ 	/* Read the counter values again */
+ 	end_count = pdc_read_counter(host);
+-	do_gettimeofday(&end_time);
++	end_time = ktime_get();
  
-@@ -216,7 +218,7 @@ static int pata_platform_probe(struct platform_device *pdev)
+ 	/* Stop the test mode */
+ 	scr = ioread32(mmio_base + PDC_SYS_CTL);
+@@ -632,8 +633,7 @@ static long pdc_detect_pll_input_clock(struct ata_host *host)
+ 	ioread32(mmio_base + PDC_SYS_CTL); /* flush */
  
- 	return __pata_platform_probe(&pdev->dev, io_res, ctl_res, irq_res,
- 				     pp_info ? pp_info->ioport_shift : 0,
--				     pio_mask);
-+				     pio_mask, &pata_platform_sht);
- }
+ 	/* calculate the input clock in Hz */
+-	usec_elapsed = (end_time.tv_sec - start_time.tv_sec) * 1000000 +
+-		(end_time.tv_usec - start_time.tv_usec);
++	usec_elapsed = (long) ktime_us_delta(end_time, start_time);
  
- static struct platform_driver pata_platform_driver = {
-diff --git a/include/linux/ata_platform.h b/include/linux/ata_platform.h
-index 5c618a0..619d9e7 100644
---- a/include/linux/ata_platform.h
-+++ b/include/linux/ata_platform.h
-@@ -10,12 +10,15 @@ struct pata_platform_info {
- 	unsigned int ioport_shift;
- };
- 
-+struct scsi_host_template;
-+
- extern int __pata_platform_probe(struct device *dev,
- 				 struct resource *io_res,
- 				 struct resource *ctl_res,
- 				 struct resource *irq_res,
- 				 unsigned int ioport_shift,
--				 int __pio_mask);
-+				 int __pio_mask,
-+				 struct scsi_host_template *sht);
- 
- /*
-  * Marvell SATA private data
+ 	pll_clock = ((start_count - end_count) & 0x3fffffff) / 100 *
+ 		(100000000 / usec_elapsed);
 -- 
-1.9.1
+2.2.0.rc0.207.ga3a616c
 
