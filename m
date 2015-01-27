@@ -1,44 +1,27 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/2] ata: ahci_platform: fix owner module reference
- mismatch for scsi host
-Date: Tue, 27 Jan 2015 11:21:31 -0500
-Message-ID: <20150127162131.GC12314@htj.dyndns.org>
-References: <1422315299-4614-1-git-send-email-akinobu.mita@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f174.google.com ([209.85.216.174]:51028 "EHLO
-	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758543AbbA0QVf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Jan 2015 11:21:35 -0500
-Content-Disposition: inline
-In-Reply-To: <1422315299-4614-1-git-send-email-akinobu.mita@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
+Subject: [PATCH] Fix the dma state machine lockup for the ATA_CMD_SMART PIO mode command.
+Date: Tue, 27 Jan 2015 23:26:10 +0530
+Message-ID: <1422381371-11361-1-git-send-email-stripathi@apm.com>
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, mlangsdo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, jcm-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, patches-qTEPVZfXA3Y@public.gmane.org, Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <JBottomley@parallels.com>, linux-scsi@vger.kernel.org
 
-Hello,
+Signed-off-by: Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
+---
 
-On Tue, Jan 27, 2015 at 08:34:58AM +0900, Akinobu Mita wrote:
-> The owner module reference of the ahci platform's scsi_host is
-> initialized to libahci_platform's one, because these drivers use a
-> scsi_host_template defined in libahci_platform.  So these drivers can
-> be unloaded even if the scsi device is being accessed.
-> 
-> This fixes it by pushing the scsi_host_template from libahci_platform
-> to all leaf drivers.  The scsi_host_template is passed through a new
-> argument of ahci_platform_init_host().
+Suman Tripathi (1):
+  ahci_xgene: Fix the dma state machine lockup for the ATA_CMD_SMART PIO
+    mode command.
 
-Two things.
+ drivers/ata/ahci_xgene.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-* It proly would be a better idea to use the specific platform driver
-  name for each sht.
+--
+1.8.2.1
 
-* Can you please add comments on top of the SHT macros that these must
-  be instantiated by the edge drivers and explain why?
-
-Thanks.
-
--- 
-tejun
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
