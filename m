@@ -1,47 +1,51 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: linux-next: libahci_platform has undefined symbol on sparc
-Date: Sat, 31 Jan 2015 17:25:43 +0100
-Message-ID: <54CD0207.2090306@redhat.com>
-References: <1422710050.3030.17.camel@opteya.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+From: Guenter Roeck <linux@roeck-us.net>
+Subject: [PATCH] ata: libahci: Use of_platform_device_create only if supported
+Date: Sat, 31 Jan 2015 08:32:18 -0800
+Message-ID: <1422721938-1542-1-git-send-email-linux@roeck-us.net>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52067 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751221AbbAaQZ5 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 31 Jan 2015 11:25:57 -0500
-In-Reply-To: <1422710050.3030.17.camel@opteya.com>
+Received: from bh-25.webhostbox.net ([208.91.199.152]:53471 "EHLO
+	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752472AbbAaQca (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 31 Jan 2015 11:32:30 -0500
+Received: from mailnull by bh-25.webhostbox.net with sa-checked (Exim 4.82)
+	(envelope-from <linux@roeck-us.net>)
+	id 1YHayF-0000TM-5q
+	for linux-ide@vger.kernel.org; Sat, 31 Jan 2015 16:32:31 +0000
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Yann Droneaud <ydroneaud@opteya.com>, Gregory CLEMENT <gregory.clement@free-electrons.com>, Tejun Heo <tj@kernel.org>
-Cc: linux-next@vger.kernel.org, linux-ide@vger.kernel.org, sparclinux@vger.kernel.org
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Guenter Roeck <linux@roeck-us.net>, Gregory CLEMENT <gregory.clement@free-electrons.com>
 
-Hi,
+of_platform_device_create does not exist if OF_ADDRESS is not configured,
+so limit its use accordingly.
 
-On 01/31/2015 02:14 PM, Yann Droneaud wrote:
-> Hi,
-> 
-> I've seen another issue regarding commit c7d7ddee7e24eedde6149eefbcfbfbc7125b9ff0
-> ("ata: libahci: Allow using multiple regulators") from linux-next:
-> This commit modify ahci_platform_get_resources to use of_platform_device_create().
-> 
-> Unfortunately, it seems that of_platform_device_create() is not
-> available on sparc (see CONFIG_OF_ADDRESS), so when built for sparc,
-> the module libahci_platform.ko is rejected by modpost:
-> 
->   ERROR: "of_platform_device_create" [drivers/ata/libahci_platform.ko] undefined!
->   ../scripts/Makefile.modpost:91: recipe for target '__modpost' failed
->   make[2]: *** [__modpost] Error 1
->   src/linux/Makefile:1120: recipe for target 'modules' failed
+Without this fix, the sparc64:allmodconfig build fails with
 
-Ah yes we had the same problem in simplefb, the example code for using
-of_platform_device came from simplefb, and already had the fix, but it look
-like Gregory did not include the bits fixing this in the ahci_platform code
+ERROR: "of_platform_device_create" [drivers/ata/libahci_platform.ko] undefined!
 
-Gregory, can you please submit a follow up patch fixing this? See simplefb.c
-for the easiest way to fix this.
+Fixes: c7d7ddee7e24 ("ata: libahci: Allow using multiple regulators")
+Cc: Gregory CLEMENT <gregory.clement@free-electrons.com>
+Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+---
+Applies to -next.
 
-Regards,
+ drivers/ata/libahci_platform.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Hans
+diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+index 077c7a2..de9a5dc 100644
+--- a/drivers/ata/libahci_platform.c
++++ b/drivers/ata/libahci_platform.c
+@@ -434,7 +434,8 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev)
+ 			}
+ 			mask_port_map |= BIT(port);
+ 
+-			of_platform_device_create(child, NULL, NULL);
++			if (IS_ENABLED(CONFIG_OF_ADDRESS))
++				of_platform_device_create(child, NULL, NULL);
+ 
+ 			port_dev = of_find_device_by_node(child);
+ 
+-- 
+2.1.0
+
