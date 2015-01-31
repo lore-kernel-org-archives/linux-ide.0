@@ -1,60 +1,55 @@
-From: Gregory CLEMENT <gregory.clement@free-electrons.com>
-Subject: Re: linux-next: libahci_platform has undefined symbol on sparc
-Date: Sat, 31 Jan 2015 17:38:45 +0100
-Message-ID: <54CD0515.8000004@free-electrons.com>
-References: <1422710050.3030.17.camel@opteya.com> <54CD0207.2090306@redhat.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] ata: libahci: Use of_platform_device_create only if
+ supported
+Date: Sat, 31 Jan 2015 11:45:17 -0500
+Message-ID: <20150131164517.GB3088@htj.dyndns.org>
+References: <1422721938-1542-1-git-send-email-linux@roeck-us.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <sparclinux-owner@vger.kernel.org>
-In-Reply-To: <54CD0207.2090306@redhat.com>
-Sender: sparclinux-owner@vger.kernel.org
-To: Hans de Goede <hdegoede@redhat.com>, Yann Droneaud <ydroneaud@opteya.com>, Tejun Heo <tj@kernel.org>
-Cc: linux-next@vger.kernel.org, linux-ide@vger.kernel.org, sparclinux@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1422721938-1542-1-git-send-email-linux@roeck-us.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Guenter Roeck <linux@roeck-us.net>
+Cc: Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Gregory CLEMENT <gregory.clement@free-electrons.com>
 List-Id: linux-ide@vger.kernel.org
 
-Hi Hans,
-
-On 31/01/2015 17:25, Hans de Goede wrote:
-> Hi,
+On Sat, Jan 31, 2015 at 08:32:18AM -0800, Guenter Roeck wrote:
+> of_platform_device_create does not exist if OF_ADDRESS is not configured,
+> so limit its use accordingly.
 > 
-> On 01/31/2015 02:14 PM, Yann Droneaud wrote:
->> Hi,
->>
->> I've seen another issue regarding commit c7d7ddee7e24eedde6149eefbcfbfbc7125b9ff0
->> ("ata: libahci: Allow using multiple regulators") from linux-next:
->> This commit modify ahci_platform_get_resources to use of_platform_device_create().
->>
->> Unfortunately, it seems that of_platform_device_create() is not
->> available on sparc (see CONFIG_OF_ADDRESS), so when built for sparc,
->> the module libahci_platform.ko is rejected by modpost:
->>
->>   ERROR: "of_platform_device_create" [drivers/ata/libahci_platform.ko] undefined!
->>   ../scripts/Makefile.modpost:91: recipe for target '__modpost' failed
->>   make[2]: *** [__modpost] Error 1
->>   src/linux/Makefile:1120: recipe for target 'modules' failed
+> Without this fix, the sparc64:allmodconfig build fails with
 > 
-> Ah yes we had the same problem in simplefb, the example code for using
-> of_platform_device came from simplefb, and already had the fix, but it look
-> like Gregory did not include the bits fixing this in the ahci_platform code
+> ERROR: "of_platform_device_create" [drivers/ata/libahci_platform.ko] undefined!
 > 
-> Gregory, can you please submit a follow up patch fixing this? See simplefb.c
-> for the easiest way to fix this.
-
-
-I could but Guenter already sent it :)
-
-Gregory
-
+> Fixes: c7d7ddee7e24 ("ata: libahci: Allow using multiple regulators")
+> Cc: Gregory CLEMENT <gregory.clement@free-electrons.com>
+> Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+> ---
+> Applies to -next.
 > 
-> Regards,
+>  drivers/ata/libahci_platform.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
 > 
-> Hans
-> 
+> diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
+> index 077c7a2..de9a5dc 100644
+> --- a/drivers/ata/libahci_platform.c
+> +++ b/drivers/ata/libahci_platform.c
+> @@ -434,7 +434,8 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev)
+>  			}
+>  			mask_port_map |= BIT(port);
+>  
+> -			of_platform_device_create(child, NULL, NULL);
+> +			if (IS_ENABLED(CONFIG_OF_ADDRESS))
+> +				of_platform_device_create(child, NULL, NULL);
 
+This is weird.  Please either define a proper dummy version of the
+function in the appropriate header file or take out the whole
+invocation section w/ #ifndef.  The above is a weird hybrid where both
+the declaration and the user here are doing things half-way.  Please
+don't do this in other places either.
+
+Thanks.
 
 -- 
-Gregory Clement, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+tejun
