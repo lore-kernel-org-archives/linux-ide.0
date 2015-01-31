@@ -1,44 +1,50 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ata: libahci: Use of_platform_device_create only if
- supported
-Date: Sat, 31 Jan 2015 12:08:12 -0500
-Message-ID: <20150131170812.GC3088@htj.dyndns.org>
-References: <1422721938-1542-1-git-send-email-linux@roeck-us.net>
- <20150131164517.GB3088@htj.dyndns.org>
- <54CD0890.7050800@roeck-us.net>
+From: Guenter Roeck <linux@roeck-us.net>
+Subject: Re: [PATCH] ata: libahci: Use of_platform_device_create only if supported
+Date: Sat, 31 Jan 2015 09:33:55 -0800
+Message-ID: <54CD1203.6010400@roeck-us.net>
+References: <1422721938-1542-1-git-send-email-linux@roeck-us.net> <20150131164517.GB3088@htj.dyndns.org> <54CD0890.7050800@roeck-us.net> <20150131170812.GC3088@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qa0-f51.google.com ([209.85.216.51]:59291 "EHLO
-	mail-qa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754027AbbAaRIP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 31 Jan 2015 12:08:15 -0500
-Content-Disposition: inline
-In-Reply-To: <54CD0890.7050800@roeck-us.net>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: Guenter Roeck <linux@roeck-us.net>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20150131170812.GC3088@htj.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
 Cc: Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Gregory CLEMENT <gregory.clement@free-electrons.com>
+List-Id: linux-ide@vger.kernel.org
 
-On Sat, Jan 31, 2015 at 08:53:36AM -0800, Guenter Roeck wrote:
-> I agree, it is weird, as is the whole "all API functions associated
-> with OF_ADDRESS are handled differently on sparc" thing. But that
-> is neither new nor something I can fix.
+On 01/31/2015 09:08 AM, Tejun Heo wrote:
+> On Sat, Jan 31, 2015 at 08:53:36AM -0800, Guenter Roeck wrote:
+>> I agree, it is weird, as is the whole "all API functions associated
+>> with OF_ADDRESS are handled differently on sparc" thing. But that
+>> is neither new nor something I can fix.
+>
+> Out of curiousity, why isn't the header file doing the following?
+>
+> #ifdef CONFIG_OF_ADDRESS
+>
+> void of_platform_device_create(blah);
+> ...
+>
+> #else
+>
+> static inline void of_platform_device_create(blah)
+> {
+> }
+>
+> #endif
+>
 
-Out of curiousity, why isn't the header file doing the following?
+Maybe it is to ensure that the callers realize that the code won't
+always work as intended, but I don't really know. It is kind of annoying,
+though, since the resulting compile errors show up on a regular basis.
+Mostly they are resolved by disabling the affected code for sparc,
+but obviously that won't work here.
 
-#ifdef CONFIG_OF_ADDRESS
+AFAIK this only affects sparc, all other architectures support OF_ADDRESS.
 
-void of_platform_device_create(blah);
-...
+There was some discussion to get rid of OF_ADDRESS at some point,
+so there is hope that this will get resolved. Until then all we can do
+is to put in bandages.
 
-#else
-
-static inline void of_platform_device_create(blah)
-{
-}
-
-#endif
-
--- 
-tejun
+Guenter
