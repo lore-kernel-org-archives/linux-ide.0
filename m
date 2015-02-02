@@ -1,120 +1,53 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: Re: [PATCH v3] ahci_xgene: Fix the dma state machine lockup for the
- ATA_CMD_SMART PIO mode command.
-Date: Tue, 3 Feb 2015 01:18:52 +0530
-Message-ID: <CAOHikRDZ-xxBxT_jr44HmKiDHfn2Q1K0ihbNDH-6LvYaq08=gw@mail.gmail.com>
-References: <1422900439-5541-1-git-send-email-stripathi@apm.com>
-	<1422900439-5541-2-git-send-email-stripathi@apm.com>
-	<54CFCC28.6050609@cogentembedded.com>
-	<CAOHikRBMPbyS0q6814+Xkez7ToBwrC7Yzp4sy=NMmPDg-5wCBA@mail.gmail.com>
-	<54CFD38F.2060803@cogentembedded.com>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: [PATCH] ata: Delete unnecessary checks before the function call "pci_dev_put"
+Date: Mon, 02 Feb 2015 22:22:32 +0100
+Message-ID: <54CFEA98.6040301@users.sourceforge.net>
+References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6> <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6> <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6> <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien> <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien> <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien> <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6> <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6> <5317A59D.4@users.so
+ urceforge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from exprod5og106.obsmtp.com ([64.18.0.182]:39471 "EHLO
-	mail-yh0-f43.google.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S933306AbbBBTsx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Feb 2015 14:48:53 -0500
-Received: by mail-yh0-f43.google.com with SMTP id 29so16830121yhl.2
-        for <linux-ide@vger.kernel.org>; Mon, 02 Feb 2015 11:48:52 -0800 (PST)
-In-Reply-To: <54CFD38F.2060803@cogentembedded.com>
+Received: from mout.web.de ([212.227.17.12]:64240 "EHLO mout.web.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964928AbbBBVWx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 2 Feb 2015 16:22:53 -0500
+In-Reply-To: <5317A59D.4@users.sourceforge.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Mark Langsdorf <mlangsdo@redhat.com>, Jon Masters <jcm@redhat.com>, patches <patches@apm.com>
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 
-   Ugh, please avoid using HTML when posting to the lists hosted on
-vger.kernel.org -- it's configured to ignore such mails AFAIK.
-Yeah forgot to set the plain text mode. Sorry for that
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Mon, 2 Feb 2015 22:08:29 +0100
 
->>>     This patch addresses the issue with ATA_CMD_SMART pio mode
->>>     command for enumeration and device detection with ATA devices.
->>>     The X-Gene AHCI controller has an errata in which it cannot clear
->>>     the BSY bit after the PIO setup FIS. The dma state machine enters
+The pci_dev_put() function tests whether its argument is NULL and then
+returns immediately. Thus the test around the call is not needed.
 
+This issue was detected by using the Coccinelle software.
 
->>     Hum, if this happens after every PIO command (PIO setup FISes are not
->> specific to the command, right?), perhaps it would make more sense to record
->> the *protocol* used by the last command?
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+---
+ drivers/ata/pata_cs5530.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-
-> No it happens for IDENTIFY DEVICE, ATA_CMD_PACKET and ATA_CMD_SMART commands .
-> It is actually the commands associated with a BSY bit clearing.
-
-
-   I don't understand that -- BSY bit is cleared for *every* command,
-either at the end of it, or along with setting the DRQ bit for PIO
-data transfer.
-BSY bit is cleared after the end of these commands by the controller.
-So due to the bug it doesn't clear it. When the DMA commands is issued
-, it check for the BSY bit cleared or not and finds not cleared and
-results in CMFatalErrorUpdate  and hangs.
-
->>>     CMFatalErrorUpdate state and locks up. It is the same issue as
->>>     in the commit 2a0bdff6b958d1b2523d2754b6cd5e__0ea4053016 (ahci-xgene:
->>>     fix the dma state machine lockup for the IDENTIFY DEVICE PIO mode
->>>     command).
-
-
->> [...]
-
-
->>>     Signed-off-by: Suman Tripathi <stripathi@apm.com <mailto:stripathi@apm.com>>
->>>     Reported-by:   Mark Langsdorf <mlangsdo@redhat.com
->>>     <mailto:mlangsdo@redhat.com>>
->>>
-
-MBR, Sergei
-
-On Tue, Feb 3, 2015 at 1:14 AM, Sergei Shtylyov
-<sergei.shtylyov@cogentembedded.com> wrote:
-> On 02/02/2015 10:37 PM, Suman Tripathi wrote:
->
->    Ugh, please avoid using HTML when posting to the lists hosted on
-> vger.kernel.org -- it's configured to ignore such mails AFAIK.
->
->>>>     This patch addresses the issue with ATA_CMD_SMART pio mode
->>>>     command for enumeration and device detection with ATA devices.
->>>>     The X-Gene AHCI controller has an errata in which it cannot clear
->>>>     the BSY bit after the PIO setup FIS. The dma state machine enters
->
->
->>>     Hum, if this happens after every PIO command (PIO setup FISes are not
->>> specific to the command, right?), perhaps it would make more sense to
->>> record
->>> the *protocol* used by the last command?
->
->
->> No it happens for IDENTIFY DEVICE, ATA_CMD_PACKET and ATA_CMD_SMART
->> commands .
->> It is actually the commands associated with a BSY bit clearing.
->
->
->    I don't understand that -- BSY bit is cleared for *every* command, either
-> at the end of it, or along with setting the DRQ bit for PIO data transfer.
->
->>>>     CMFatalErrorUpdate state and locks up. It is the same issue as
->>>>     in the commit 2a0bdff6b958d1b2523d2754b6cd5e__0ea4053016
->>>> (ahci-xgene:
->>>>     fix the dma state machine lockup for the IDENTIFY DEVICE PIO mode
->>>>     command).
->
->
->>> [...]
->
->
->>>>     Signed-off-by: Suman Tripathi <stripathi@apm.com
->>>> <mailto:stripathi@apm.com>>
->>>>     Reported-by:   Mark Langsdorf <mlangsdo@redhat.com
->>>>     <mailto:mlangsdo@redhat.com>>
->>>>
->
-> MBR, Sergei
->
-
-
-
+diff --git a/drivers/ata/pata_cs5530.c b/drivers/ata/pata_cs5530.c
+index 48ae4b4..f9ca72e 100644
+--- a/drivers/ata/pata_cs5530.c
++++ b/drivers/ata/pata_cs5530.c
+@@ -276,10 +276,8 @@ static int cs5530_init_chip(void)
+ 	pci_dev_put(cs5530_0);
+ 	return 0;
+ fail_put:
+-	if (master_0)
+-		pci_dev_put(master_0);
+-	if (cs5530_0)
+-		pci_dev_put(cs5530_0);
++	pci_dev_put(master_0);
++	pci_dev_put(cs5530_0);
+ 	return -ENODEV;
+ }
+ 
 -- 
-Thanks,
-with regards,
-Suman Tripathi
+2.2.2
+
