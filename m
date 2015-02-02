@@ -1,34 +1,30 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH v1] ahci_xgene: Fix the dma state machine lockup for the
- ATA_CMD_SMART PIO mode command.
-Date: Mon, 02 Feb 2015 13:47:28 +0300
-Message-ID: <54CF55C0.5080404@cogentembedded.com>
-References: <1422872328-16700-1-git-send-email-stripathi@apm.com> <1422872328-16700-2-git-send-email-stripathi@apm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Suman Tripathi <stripathi@apm.com>
+Subject: [PATCH v2] Fix the dma state machine lockup for the ATA_CMD_SMART PIO mode command.
+Date: Mon,  2 Feb 2015 17:27:08 +0530
+Message-ID: <1422878229-20488-1-git-send-email-stripathi@apm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1422872328-16700-2-git-send-email-stripathi@apm.com>
 Sender: linux-scsi-owner@vger.kernel.org
-To: Suman Tripathi <stripathi@apm.com>, olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>
 List-Id: linux-ide@vger.kernel.org
 
-Hello.
+v1 changes:
+ * Update the commit id as per Tejun's comments.
+ * Add a bit explanation.
 
-On 2/2/2015 1:18 PM, Suman Tripathi wrote:
+v2 changes:
+ * Update the comments from sergei.
 
-> This patch addresses the issue with ATA_CMD_SMART pio mode
-> command for enumeration and device detection with ATA devices.
-> The X-Gene AHCI controller has an errata in which it cannot clear
-> the BSY bit after the PIO setup FIS. The dma state machine enters
-> CMFatalErrorUpdate state and locks up. It is the same issue as
-> in the patch(Commit ID : 2a0bdff6b958d1b2523d2754b6cd5e0ea4053016).
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
+---
 
-    Just "in the commit 2a0bdff6b958d1b2523d2754b6cd5e0ea4053016". And you 
-also need to specify the commit's summary line in parens.
+Suman Tripathi (1):
+  ahci_xgene: Fix the dma state machine lockup for the ATA_CMD_SMART PIO
+    mode command.
 
-> Signed-off-by: Suman Tripathi <stripathi@apm.com>
+ drivers/ata/ahci_xgene.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-WBR, Sergei
+--
+1.8.2.1
 
