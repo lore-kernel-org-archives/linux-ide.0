@@ -1,122 +1,54 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] libata changes for v3.20-rc1
-Date: Mon, 9 Feb 2015 08:01:28 -0500
-Message-ID: <20150209130128.GE3220@htj.duckdns.org>
+From: =?UTF-8?Q?Nuno_Magalh=C3=A3es?= <nunomagalhaes@eu.ipp.pt>
+Subject: Re: SATA disks disabled on boot
+Date: Mon, 9 Feb 2015 13:02:01 +0000
+Message-ID: <CADqA9uZx+mAcZRYxbtWv8GDAzw0SkHTaP0Gv+ah7_YvabL9gTw@mail.gmail.com>
+References: <CADqA9uaW6JwirSZQaHjCuB=9GSUQyakOEBAZor1ed-vyjoC=2g@mail.gmail.com>
+ <20140714163641.GF31610@htj.dyndns.org> <CADqA9uYMCdT1ZpHD0fOVoD67PAx6RaY+8grfmG8SRoqnwyyHgw@mail.gmail.com>
+ <20140817133942.GD7679@mtj.dyndns.org> <CADqA9ubrD1+Ri9d080X4xjrr7wsjqGGz5fjTC45QHjr4Fb1QJg@mail.gmail.com>
+ <CADqA9uaj0MrpffnzE8xnhU57Hx9pv7O1sAhB+xS_4hi8z_dkMA@mail.gmail.com>
+ <20141202195653.GQ10918@htj.dyndns.org> <547E4817.8000603@eu.ipp.pt>
+ <20141204174819.GC2995@htj.dyndns.org> <5480F54B.9070306@ubuntu.com>
+ <54822DD3.6040405@eu.ipp.pt> <CADqA9ubh5wHZPHJNYeSrMgOQsRYZSObRkg7irg3w+H+2M+hTmw@mail.gmail.com>
+ <54C8ECA2.3020705@ubuntu.com> <CADqA9ubfXpirXFgqKzaT4xQ-jQN7KGs7DHBRcgbrgQoRkY-EqA@mail.gmail.com>
+ <54CB8CC6.5040801@ubuntu.com> <CADqA9uajygUCniypA2xqbi6HKBH6Conv=66u4BxPuuGP+v7gMg@mail.gmail.com>
+ <54D12558.6000805@ubuntu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f178.google.com ([209.85.216.178]:37200 "EHLO
-	mail-qc0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759519AbbBINBc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Feb 2015 08:01:32 -0500
-Content-Disposition: inline
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:51047 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759680AbbBINCW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Feb 2015 08:02:22 -0500
+Received: by mail-ig0-f181.google.com with SMTP id hn18so15999646igb.2
+        for <linux-ide@vger.kernel.org>; Mon, 09 Feb 2015 05:02:21 -0800 (PST)
+In-Reply-To: <54D12558.6000805@ubuntu.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Hans de Goede <hdegoede@redhat.com>
+To: linux-ide@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Phillip Susi <psusi@ubuntu.com>
 
-Hello, Linus.
+On Tue, Feb 3, 2015 at 7:45 PM, Phillip Susi <psusi@ubuntu.com> wrote:
+> On 2/3/2015 2:32 PM, Nuno Magalh=C3=A3es wrote:
+>> The BIOS shows the regular Primary/Secondary IDE Master/Slave (to
+>> which only the CDROM is attached) alongside SATA. It doesn't seem
+>> like SATA is the option, bu rather that both IDE and SATA are seen
+>> as current usable interfaces (at the time the BIOS was released:
+>> 2010). It does have NVRAID, which is disabled (i use mdadm).
+>
+> Typically there is a knob that toggles between three states: IDE,
+> AHCI, and RAID.  RAID really is AHCI just with a different PCI
+> identifier that causes windows to load their proprietary driver that
+> does the software raid.  If you only have an on/off switch for the
+> raid, then try switching it on.
 
-Mostly driver-specific changes.  Nothing too noteworthy.  This pull
-request contains three merges from for-3.19-fixes.  The first two are
-to pull ahci_xgene and sata_dwc_460ex fix commits which are depended
-upon by later changes.  The last one is to pull in a fix patch which
-missed the v3.19-rc window.
+A knob? You mean a knob on the motherboard? No such thing (that i can
+see). A jumper perhaps? I'll check the manual.
+As for BIOS RAID, every howto and tutorial i read about software
+RAID/mdadm advices aggainst using the BIOS RAID implementation as it's
+usually quite lacking in terms of quality.
 
-Thanks.
+>> There is no mention of AHCI that i could find.
 
-The following changes since commit ce7514526742c0898b837d4395f515b79dfb5a12:
-
-  libata: prevent HSM state change race between ISR and PIO (2015-01-19 14:11:23 -0500)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-3.20
-
-for you to fetch changes up to b12aa1f25e1da7e23fa44f646ac46e41366cfc6c:
-
-  Merge branch 'for-3.19-fixes' of git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata into for-3.20 (2015-02-09 07:54:41 -0500)
-
-----------------------------------------------------------------
-Akinobu Mita (2):
-      ata: ahci_platform: fix owner module reference mismatch for scsi host
-      ata: pata_platform: fix owner module reference mismatch for scsi host
-
-Andy Shevchenko (7):
-      sata_dwc_460ex: remove redundant dev_set_drvdata
-      sata_dwc_460ex: enable COMPILE_TEST for the driver
-      sata_dwc_460ex: fix most of the sparse warnings
-      sata_dwc_460ex: use np local variable in ->probe()
-      sata_dwc_460ex: remove extra message
-      sata_dwc_460ex: convert to devm_kzalloc in ->probe()
-      sata_dwc_460ex: disable compilation on ARM and ARM64
-
-Gregory CLEMENT (3):
-      ata: libahci: Clean-up the ahci_platform_en/disable_phys functions
-      Documentation: bindings: Add the regulator property to the sub-nodes AHCI bindings
-      ata: libahci: Allow using multiple regulators
-
-Guenter Roeck (1):
-      ata: libahci: Use of_platform_device_create only if supported
-
-Markus Elfring (2):
-      ata: Delete unnecessary checks before the function call "pci_dev_put"
-      sata_mv: Delete unnecessary checks before the function call "phy_power_off"
-
-Mikhail Ulyanov (1):
-      sata_rcar: extend PM methods
-
-Nicholas Krause (2):
-      libata: s/ata_id_removeable()/ata_id_removable()/
-      libata: Remove FIXME comment in atapi_eh_request_sense
-
-Rickard Strandqvist (1):
-      ata: libata-core: Remove unused function
-
-Suman Tripathi (3):
-      ahci_xgene: Implement the xgene_ahci_poll_reg_val to support PMP.
-      ahci_xgene: Implement the workaround to support PMP enumeration and discovery.
-      ahci_xgene: Fix the dma state machine lockup for the ATA_CMD_SMART PIO mode command.
-
-Tejun Heo (3):
-      Merge branch 'for-3.19-fixes' of git://git.kernel.org/.../tj/libata into for-3.20
-      Merge branch 'for-3.19-fixes' of git://git.kernel.org/.../tj/libata into for-3.20
-      Merge branch 'for-3.19-fixes' of git://git.kernel.org/.../tj/libata into for-3.20
-
-Thierry Reding (1):
-      ata: libahci: Fix devres cleanup on failure
-
-Tina Ruchandani (1):
-      pata_pdc2027x: Use 64-bit timekeeping
-
- .../devicetree/bindings/ata/ahci-platform.txt      |   9 +-
- drivers/ata/Kconfig                                |   2 +-
- drivers/ata/ahci.h                                 |   6 +-
- drivers/ata/ahci_da850.c                           |  11 +-
- drivers/ata/ahci_imx.c                             |  25 ++-
- drivers/ata/ahci_mvebu.c                           |  11 +-
- drivers/ata/ahci_platform.c                        |  11 +-
- drivers/ata/ahci_st.c                              |  11 +-
- drivers/ata/ahci_sunxi.c                           |  11 +-
- drivers/ata/ahci_tegra.c                           |  11 +-
- drivers/ata/ahci_xgene.c                           | 203 ++++++++++++++++-
- drivers/ata/libahci_platform.c                     | 249 ++++++++++++++-------
- drivers/ata/libata-core.c                          |  27 ---
- drivers/ata/libata-eh.c                            |   1 -
- drivers/ata/libata-scsi.c                          |   4 +-
- drivers/ata/libata.h                               |   1 -
- drivers/ata/pata_cs5530.c                          |   6 +-
- drivers/ata/pata_of_platform.c                     |  10 +-
- drivers/ata/pata_pdc2027x.c                        |  10 +-
- drivers/ata/pata_platform.c                        |   8 +-
- drivers/ata/sata_dwc_460ex.c                       | 116 +++++-----
- drivers/ata/sata_mv.c                              |   6 +-
- drivers/ata/sata_rcar.c                            |  25 ++-
- include/linux/ahci_platform.h                      |   6 +-
- include/linux/ata.h                                |   2 +-
- include/linux/ata_platform.h                       |   5 +-
- include/linux/libata.h                             |   6 +
- 27 files changed, 563 insertions(+), 230 deletions(-)
-
--- 
-tejun
+Maybe it never got to this BIOS. Maybe there is something AHCI-related
+in NVRAID, i never poked into that.
