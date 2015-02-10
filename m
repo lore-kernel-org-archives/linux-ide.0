@@ -1,66 +1,48 @@
-From: Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH v2] libata: fixup wait_for_completion_timeout return handling
-Date: Tue, 10 Feb 2015 11:22:37 -0500
-Message-ID: <1423585357-2580-1-git-send-email-hofrat@osadl.org>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:53016 "EHLO www.osadl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750729AbbBJQ1P (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 10 Feb 2015 11:27:15 -0500
-Sender: linux-ide-owner@vger.kernel.org
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH] libata: fixup return type of wait_for_completion_timeout
+Date: Tue, 10 Feb 2015 19:38:41 +0300
+Message-ID: <54DA3411.3050309@cogentembedded.com>
+References: <1423557576-18984-1-git-send-email-hofrat@osadl.org> <20150210145341.GJ3220@htj.duckdns.org> <20150210155517.GB1883@opentech.at>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20150210155517.GB1883@opentech.at>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Nicholas Mc Guire <der.herr@hofr.at>, Tejun Heo <tj@kernel.org>
+Cc: Nicholas Mc Guire <hofrat@osadl.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
 
-return type of wait_for_completion_timeout is unsigned long not int. The
-return variable is renamed to reflect its use and the type adjusted to
-unsigned long.
+On 02/10/2015 06:55 PM, Nicholas Mc Guire wrote:
 
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
----
+>> On Tue, Feb 10, 2015 at 03:39:36AM -0500, Nicholas Mc Guire wrote:
+>>> -	if (!rc) {
+>>> +	if (irq_timeout == 0) {
 
-v2: rename of variable to make the timeout condition clear
-    as requested by Tejun Heo <tj@kernel.org>
+>> Why == 0 tho?  This always bothers me.  To match this style, we'd use
+>> != 0 to test the other direction.  In what way is "if (ret != 0)"
+>> better than "if (ret)"?  We're negating the two tests needlessly.
 
-Patch was only compile tested with x86_64_defconfig
-(implies CONFIG_ATA=y)
+> The == 0 seemed better to me than ! here because it would read
 
-Patch is against 3.19.0 (localversion-next is -next-20150210)
+>    if (not irq_timeout) {
 
- drivers/ata/libata-core.c |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+    No, 'irq_timeout  == 0' isn't really better.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 4c35f08..0d9ef27 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -1563,7 +1563,7 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
- 	DECLARE_COMPLETION_ONSTACK(wait);
- 	unsigned long flags;
- 	unsigned int err_mask;
--	int rc;
-+	unsigned long time_left;
- 
- 	spin_lock_irqsave(ap->lock, flags);
- 
-@@ -1644,14 +1644,15 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
- 	if (ap->ops->error_handler)
- 		ata_eh_release(ap);
- 
--	rc = wait_for_completion_timeout(&wait, msecs_to_jiffies(timeout));
-+	time_left = wait_for_completion_timeout(&wait,
-+						msecs_to_jiffies(timeout));
- 
- 	if (ap->ops->error_handler)
- 		ata_eh_acquire(ap);
- 
- 	ata_sff_flush_pio_task(ap);
- 
--	if (!rc) {
-+	if (time_left == 0) {
- 		spin_lock_irqsave(ap->lock, flags);
- 
- 		/* We're racing with irq here.  If we lose, the
--- 
-1.7.10.4
+> while it actually did time out - but this could be resolved by renaming
+> irq_timeout to time_left (as was suggested by Sergei Shtylyov
+> <sergei.shtylyov@cogentembedded.com> for a similar patch) and then it
+> would read:
 
+>     if (time_left == 0) {
+
+> which would nicely describe the timeout state.
+
+    '!time_left' also would.
+
+> if that addresses your concerns then I'll fix it up and repost.
+
+> thx!
+> hofrat
+
+MBR, Sergei
