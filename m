@@ -1,37 +1,62 @@
-From: =?UTF-8?Q?Nuno_Magalh=C3=A3es?= <nunomagalhaes@eu.ipp.pt>
-Subject: Re: SATA disks disabled on boot
-Date: Mon, 9 Feb 2015 23:52:45 +0000
-Message-ID: <CADqA9uY=odc27ZMefcz+k=rqpBT+cQtvjag7+jc82XePEhyt5w@mail.gmail.com>
-References: <CADqA9uaW6JwirSZQaHjCuB=9GSUQyakOEBAZor1ed-vyjoC=2g@mail.gmail.com>
- <20140714163641.GF31610@htj.dyndns.org> <CADqA9uYMCdT1ZpHD0fOVoD67PAx6RaY+8grfmG8SRoqnwyyHgw@mail.gmail.com>
- <20140817133942.GD7679@mtj.dyndns.org> <CADqA9ubrD1+Ri9d080X4xjrr7wsjqGGz5fjTC45QHjr4Fb1QJg@mail.gmail.com>
- <CADqA9uaj0MrpffnzE8xnhU57Hx9pv7O1sAhB+xS_4hi8z_dkMA@mail.gmail.com>
- <20141202195653.GQ10918@htj.dyndns.org> <547E4817.8000603@eu.ipp.pt>
- <20141204174819.GC2995@htj.dyndns.org> <5480F54B.9070306@ubuntu.com>
- <54822DD3.6040405@eu.ipp.pt> <CADqA9ubh5wHZPHJNYeSrMgOQsRYZSObRkg7irg3w+H+2M+hTmw@mail.gmail.com>
- <54C8ECA2.3020705@ubuntu.com> <CADqA9ubfXpirXFgqKzaT4xQ-jQN7KGs7DHBRcgbrgQoRkY-EqA@mail.gmail.com>
- <54CB8CC6.5040801@ubuntu.com> <CADqA9uajygUCniypA2xqbi6HKBH6Conv=66u4BxPuuGP+v7gMg@mail.gmail.com>
- <54D12558.6000805@ubuntu.com> <CADqA9uZx+mAcZRYxbtWv8GDAzw0SkHTaP0Gv+ah7_YvabL9gTw@mail.gmail.com>
- <54D8B96C.8000804@ubuntu.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Nicholas Mc Guire <hofrat@osadl.org>
+Subject: [PATCH] libata: fixup return type of wait_for_completion_timeout
+Date: Tue, 10 Feb 2015 03:39:36 -0500
+Message-ID: <1423557576-18984-1-git-send-email-hofrat@osadl.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ig0-f180.google.com ([209.85.213.180]:54544 "EHLO
-	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751111AbbBIXxI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Feb 2015 18:53:08 -0500
-Received: by mail-ig0-f180.google.com with SMTP id b16so20127623igk.1
-        for <linux-ide@vger.kernel.org>; Mon, 09 Feb 2015 15:53:06 -0800 (PST)
-In-Reply-To: <54D8B96C.8000804@ubuntu.com>
+Received: from www.osadl.org ([62.245.132.105]:49119 "EHLO www.osadl.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932262AbbBJIno (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 10 Feb 2015 03:43:44 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Phillip Susi <psusi@ubuntu.com>
-Cc: linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
 
-On Mon, Feb 9, 2015 at 1:43 PM, Phillip Susi <psusi@ubuntu.com> wrote:
-> Putting the controller into raid mode != *using* the fakeraid
-> capability.  In other words, just don't create a raid array in the
-> bios utility and the disks will be used normally, while still
-> operating in AHCI mode.
+return type of wait_for_completion_timeout is unsigned long not int. The
+return variable is renamed to reflect its use and the type adjusted to
+unsigned long.
 
-Ah, gotcha. Same effect though. Had to reset them.
+Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+---
+
+Patch was only compile tested with x86_64_defconfig (implies CONFIG_ATA=y)
+
+Patch is against 3.19.0-rc7 (localversion-next is -next-20150209)
+
+ drivers/ata/libata-core.c |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 4c35f08..bddf8b6 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -1563,7 +1563,7 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
+ 	DECLARE_COMPLETION_ONSTACK(wait);
+ 	unsigned long flags;
+ 	unsigned int err_mask;
+-	int rc;
++	unsigned long irq_timeout;
+ 
+ 	spin_lock_irqsave(ap->lock, flags);
+ 
+@@ -1644,14 +1644,15 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
+ 	if (ap->ops->error_handler)
+ 		ata_eh_release(ap);
+ 
+-	rc = wait_for_completion_timeout(&wait, msecs_to_jiffies(timeout));
++	irq_timeout = wait_for_completion_timeout(&wait,
++					      msecs_to_jiffies(timeout));
+ 
+ 	if (ap->ops->error_handler)
+ 		ata_eh_acquire(ap);
+ 
+ 	ata_sff_flush_pio_task(ap);
+ 
+-	if (!rc) {
++	if (irq_timeout == 0) {
+ 		spin_lock_irqsave(ap->lock, flags);
+ 
+ 		/* We're racing with irq here.  If we lose, the
+-- 
+1.7.10.4
+
