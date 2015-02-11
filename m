@@ -1,66 +1,55 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: SATA_DWC COMPILE_TEST is nasty horrid stuff (was "GIT PULL] libata
- changes for v3.20-rc1")
-Date: Tue, 10 Feb 2015 17:44:38 -0800
-Message-ID: <CA+55aFwwp3xEgjk3Qo_CHLKLXA6hOtqSaLwCPJzj34f5AHKRhQ@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH] sata_dwc_460ex: disable COMPILE_TEST
+Date: Tue, 10 Feb 2015 21:54:58 -0500
+Message-ID: <20150211025458.GB21356@htj.duckdns.org>
+References: <CA+55aFwwp3xEgjk3Qo_CHLKLXA6hOtqSaLwCPJzj34f5AHKRhQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ie0-f181.google.com ([209.85.223.181]:35590 "EHLO
-	mail-ie0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751075AbbBKBol (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Feb 2015 20:44:41 -0500
-Received: by iebtr6 with SMTP id tr6so816115ieb.2
-        for <linux-ide@vger.kernel.org>; Tue, 10 Feb 2015 17:44:41 -0800 (PST)
+Received: from mail-qc0-f175.google.com ([209.85.216.175]:44215 "EHLO
+	mail-qc0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751256AbbBKCzC (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 10 Feb 2015 21:55:02 -0500
+Received: by mail-qc0-f175.google.com with SMTP id c9so804295qcz.6
+        for <linux-ide@vger.kernel.org>; Tue, 10 Feb 2015 18:55:01 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <CA+55aFwwp3xEgjk3Qo_CHLKLXA6hOtqSaLwCPJzj34f5AHKRhQ@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Tejun Heo <tj@kernel.org>
-Cc: IDE-ML <linux-ide@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, IDE-ML <linux-ide@vger.kernel.org>
 
-This COMPILE_TEST thing is beyond annoying.
+84683a7e081f ("sata_dwc_460ex: enable COMPILE_TEST for the driver")
+enabled COMPILE_TEST for the driver and 2de5a9c004e9 ("sata_dwc_460ex:
+disable compilation on ARM and ARM64") subsequently turned it off for
+ARMs but it still triggers compile warnings on 64bits.
 
-It was already disabled for ARM and ARM64. And I'm going to disable it
-entirely, because the driver noisy as hell, and I don't want to see
-the insane warnings from it in my allmodconfig build.
+   drivers/ata/sata_dwc_460ex.c:652:32: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
+      lli[idx].sar = cpu_to_le32((u32)dmadr_addr);
+                                 ^
+Disable it completely for now.
 
-I'm talking about these things:
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+Sorry about the trouble.  In case you haven't done it already, here's
+the patch.
 
-  drivers/ata/sata_dwc_460ex.c:652:32: warning: cast from pointer to
-integer of different size [-Wpointer-to-int-cast]
-     lli[idx].sar = cpu_to_le32((u32)dmadr_addr);
-                                ^
+Thanks.
 
-and as far as I can tell (but maybe I didn't trace things right) that
-"dmadr_addr" really is a pointer, and doesn't necessarily fit in 32
-bits. It's somewhat obscure with the random casting to "void __iomem
-*") etc, but the source of it seems to be
+ drivers/ata/Kconfig |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- &hsdev->sata_dwc_regs->dmadr
-
-which looks to come from this:
-
-  hsdev->sata_dwc_regs = (void *__iomem)(base + SATA_DWC_REG_OFFSET);
-
-so that whole thing is basically
-
-    base + SATA_DWC_REG_OFFSET + offsetof(dmadr)
-
-Fine. But it also does
-
-    base = of_iomap(np, 0);
-
-so the whole driver seems to basically depend on the low 32 bits of
-the "of_iomap()" thing being meaningful. And I'm not at all sure it
-is.
-
-So I'm not at all sure that can possibly make sense, but I *am* sure
-that it causes very noisy warnings. And the warnings are just hiding
-other warnings that might be more relevant, so right now enabling that
-driver on other architectures is not an improvement, it just sucks.
-
-You guys can try again when the driver has actually been cleaned up
-and might compile cleanly. Right now it's just nasty, and looking at
-the code I think that the thing is fundamentally wrong and cannot work
-outside of its original environment (ppc 460ex, apparently) anyway.
-
-                           Linus
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index e7f338a..5f60155 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -269,7 +269,7 @@ config ATA_PIIX
+ 
+ config SATA_DWC
+ 	tristate "DesignWare Cores SATA support"
+-	depends on 460EX || (COMPILE_TEST && !(ARM || ARM64))
++	depends on 460EX
+ 	help
+ 	  This option enables support for the on-chip SATA controller of the
+ 	  AppliedMicro processor 460EX.
