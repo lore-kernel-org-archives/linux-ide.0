@@ -1,42 +1,68 @@
-From: Martin Hicks <mort@bork.org>
-Subject: [PATCH] sata-fsl: Apply link speed limits
-Date: Thu, 19 Feb 2015 15:05:47 -0500
-Message-ID: <20150219200547.GA25730@darwin.bork.org>
+From: Gabriele Mazzotta <gabriele.mzt@gmail.com>
+Subject: Re: SATA link power management issues
+Date: Sun, 22 Feb 2015 21:53:35 +0100
+Message-ID: <9895435.0ZSsstcbFA@xps13>
+References: <3352987.ugV1Ipy7Z5@xps13> <2526428.uJaEqCTeIa@xps13>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-Content-Disposition: inline
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: "Linuxppc-dev"
- <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-To: Scott Wood <scottwood@freescale.com>, Kumar Gala <galak@kernel.crashing.org>
-Cc: linux-ide@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-wi0-f172.google.com ([209.85.212.172]:35785 "EHLO
+	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751601AbbBVUxi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 22 Feb 2015 15:53:38 -0500
+In-Reply-To: <2526428.uJaEqCTeIa@xps13>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, tj@kernel.org, stripathi@apm.com
 
-CgpUaGUgZHJpdmVyIHdhcyBpZ25vcmluZyBsaW1pdHMgcmVxdWVzdGVkIGJ5IGxpYmF0YS5mb3Jj
-ZS4gIFRoZSBvdXRwdXQKd291bGQgbG9vayBsaWtlOgoKZnNsLXNhdGEgZmZlMTgwMDAuc2F0YTog
-U2F0YSBGU0wgUGxhdGZvcm0vQ1NCIERyaXZlciBpbml0CmF0YTE6IEZPUkNFOiBQSFkgc3BkIGxp
-bWl0IHNldCB0byAxLjVHYnBzCmF0YTE6IFNBVEEgbWF4IFVETUEvMTMzIGlycSA3NAphdGExOiBT
-aWduYXR1cmUgVXBkYXRlIGRldGVjdGVkIEAgMCBtc2VjcwphdGExOiBTQVRBIGxpbmsgdXAgMy4w
-IEdicHMgKFNTdGF0dXMgMTIzIFNDb250cm9sIDMxMCkKClNpZ25lZC1vZmYtYnk6IE1hcnRpbiBI
-aWNrcyA8bW9ydEBib3JrLm9yZz4KLS0tCiBkcml2ZXJzL2F0YS9zYXRhX2ZzbC5jIHwgICAgMiAr
-KwogMSBmaWxlIGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygrKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMv
-YXRhL3NhdGFfZnNsLmMgYi9kcml2ZXJzL2F0YS9zYXRhX2ZzbC5jCmluZGV4IGY5MDU0Y2QuLmE5
-YjU1MDggMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvYXRhL3NhdGFfZnNsLmMKKysrIGIvZHJpdmVycy9h
-dGEvc2F0YV9mc2wuYwpAQCAtODY4LDYgKzg2OCw4IEBAIHRyeV9vZmZsaW5lX2FnYWluOgogCSAq
-IFBIWSByZXNldCBzaG91bGQgcmVtYWluIGFzc2VydGVkIGZvciBhdGxlYXN0IDFtcwogCSAqLwog
-CWF0YV9tc2xlZXAoYXAsIDEpOworCQorCXNhdGFfc2V0X3NwZChsaW5rKTsKIAogCS8qCiAJICog
-Tm93LCBicmluZyB0aGUgaG9zdCBjb250cm9sbGVyIG9ubGluZSBhZ2FpbiwgdGhpcyBjYW4gdGFr
-ZSB0aW1lCi0tIAoxLjcuMTAuNAoKCi0tIApNYXJ0aW4gSGlja3MgUC5FbmcuICAgIHwgICAgICBt
-b3J0QGJvcmsub3JnCkJvcmsgQ29uc3VsdGluZyBJbmMuICAgfCAgKzEgKDYxMykgMjY2LTIyOTYK
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KTGludXhwcGMt
-ZGV2IG1haWxpbmcgbGlzdApMaW51eHBwYy1kZXZAbGlzdHMub3psYWJzLm9yZwpodHRwczovL2xp
-c3RzLm96bGFicy5vcmcvbGlzdGluZm8vbGludXhwcGMtZGV2
+Hi,
+
+It seems that the following patch prevents errors when the policy is
+changed. Could anybody explain why?
+
+Thanks,
+Gabriele
+
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 61a9c07..38d39f7 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -1708,7 +1708,10 @@ static void ahci_handle_port_interrupt(struct ata_port *ap,
+ 		status &= ~PORT_IRQ_BAD_PMP;
+ 
+ 	/* if LPM is enabled, PHYRDY doesn't mean anything */
+-	if (ap->link.lpm_policy > ATA_LPM_MAX_POWER) {
++	if (ap->link.lpm_policy > ATA_LPM_MAX_POWER ||
++	    ap->link.flags & ATA_LFLAG_CHANGED) {
++		if (ap->link.flags & ATA_LFLAG_CHANGED)
++			ap->link.flags &= ~ATA_LFLAG_CHANGED;
+ 		status &= ~PORT_IRQ_PHYRDY;
+ 		ahci_scr_write(&ap->link, SCR_ERROR, SERR_PHYRDY_CHG);
+ 	}
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index d2029a4..e8f965c 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -3489,6 +3489,8 @@ static int ata_eh_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+ 		}
+ 	}
+ 
++	link->flags |= ATA_LFLAG_CHANGED;
++
+ 	return 0;
+ 
+ fail:
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index fc03efa..5abf5f2 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -205,6 +205,7 @@ enum {
+ 	ATA_LFLAG_SW_ACTIVITY	= (1 << 7), /* keep activity stats */
+ 	ATA_LFLAG_NO_LPM	= (1 << 8), /* disable LPM on this link */
+ 	ATA_LFLAG_RST_ONCE	= (1 << 9), /* limit recovery to one reset */
++	ATA_LFLAG_CHANGED	= (1 << 10),
+ 
+ 	/* struct ata_port flags */
+ 	ATA_FLAG_SLAVE_POSS	= (1 << 0), /* host supports slave dev */
