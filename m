@@ -1,41 +1,40 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
+From: dimitrios tranoudakis <jimpapi@yahoo.com>
 Subject: Re: Samsung SSD 850Pro firmware update queued TRIM problems
-Date: Wed, 25 Feb 2015 17:15:47 -0500
-Message-ID: <yq1twy9k57w.fsf@sermon.lab.mkp.net>
+Date: Thu, 26 Feb 2015 10:13:43 +0000 (UTC)
+Message-ID: <loom.20150226T110323-694@post.gmane.org>
 References: <54EB35EF.2050103@zahlenfresser.de>
-	<yq1zj8340nj.fsf@sermon.lab.mkp.net>
-	<54ECE94B.9050302@zahlenfresser.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:42214 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753603AbbBYWPw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 25 Feb 2015 17:15:52 -0500
-In-Reply-To: <54ECE94B.9050302@zahlenfresser.de> (Stefan Keller's message of
-	"Tue, 24 Feb 2015 22:12:43 +0100")
+Received: from plane.gmane.org ([80.91.229.3]:57117 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752696AbbBZLuG (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 26 Feb 2015 06:50:06 -0500
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <lnx-linux-ide@m.gmane.org>)
+	id 1YQwxA-0005sM-8g
+	for linux-ide@vger.kernel.org; Thu, 26 Feb 2015 12:50:04 +0100
+Received: from 213.249.42.14 ([213.249.42.14])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Thu, 26 Feb 2015 12:50:04 +0100
+Received: from jimpapi by 213.249.42.14 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Thu, 26 Feb 2015 12:50:04 +0100
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stefan Keller <linux-list@zahlenfresser.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
->>>>> "Stefan" == Stefan Keller <linux-list@zahlenfresser.de> writes:
+hello Stefan ,,,My name is Dimitrios,. I have problem with the new firmware 
+of Samsung 850 pro. As hundreds other users my ssd is dead after the 
+firmware update. I tried everything under Linux as gparted, secure erase 
+with dd tool and hdparm. seems that remains locked nad get errors all the 
+time...have you any idea to unlockit??? it would help many of us with dead 
+ssd's.
+thanks in advance!
+friendly Dimitrios from Athens Greece
 
-Stefan> Hello list, I recently updated the firmware on my Samsung 850
-Stefan> Pro from EXM01B6Q to EXM02B6Q.  Now "fstrim -v /" causes SATA
-Stefan> command timeouts related to TRIM with NCQ.
->> 
->> Do these timeouts happen if you disable ALPM?
 
-Stefan> Yes.
 
-Bummer. The only good data point we have wrt. queued TRIM problems is
-that things only appear to fail when ALPM is enabled. Things are working
-fine for me on all the systems in the lab, however, and I have never
-been able to reproduce any of the issues reported.
 
-I don't have any 850 drives but will try to get one. For now we should
-blacklist queued trim on those.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
