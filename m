@@ -1,75 +1,100 @@
-From: Felix Miata <mrmazda@earthlink.net>
-Subject: please help ID delay source
-Date: Sat, 28 Feb 2015 21:51:40 -0500
-Message-ID: <54F27EBC.1000309@earthlink.net>
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [V4 PATCH 2/2] ata: ahci_platform: Add ACPI _CLS matching
+Date: Mon, 2 Mar 2015 02:27:20 -0600
+Message-ID: <1425284840-9233-3-git-send-email-Suravee.Suthikulpanit@amd.com>
+References: <1425284840-9233-1-git-send-email-Suravee.Suthikulpanit@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from elasmtp-galgo.atl.sa.earthlink.net ([209.86.89.61]:35617 "EHLO
-	elasmtp-galgo.atl.sa.earthlink.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752993AbbCADCE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 28 Feb 2015 22:02:04 -0500
-Received: from [69.22.67.58] (helo=[192.168.0.11])
-	by elasmtp-galgo.atl.sa.earthlink.net with esmtpa (Exim 4.67)
-	(envelope-from <mrmazda@earthlink.net>)
-	id 1YRtyn-0005II-35
-	for linux-ide@vger.kernel.org; Sat, 28 Feb 2015 21:51:41 -0500
+Received: from mail-bn1bon0140.outbound.protection.outlook.com ([157.56.111.140]:36118
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751846AbbCBI1h (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 2 Mar 2015 03:27:37 -0500
+In-Reply-To: <1425284840-9233-1-git-send-email-Suravee.Suthikulpanit@amd.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: rjw@rjwysocki.net, mika.westerberg@linux.intel.com, lv.zheng@intel.com, hpa@linux.intel.com
+Cc: lenb@kernel.org, hdegoede@redhat.com, tj@kernel.org, arnd@arndb.de, mjg59@srcf.ucam.org, gregkh@linuxfoundation.org, hanjun.guo@linaro.org, al.stone@linaro.org, graeme.gregory@linaro.org, leo.duran@amd.com, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org, Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-I'm experiencing long delays at bootloader time on one multiboot system
-(BIOS; 2 core), but only for some installations.
+This patch adds ACPI supports for AHCI platform driver, which uses _CLS
+method to match the device.
 
-No delays with these:
-openSUSE 13.1 3.12.36
-Kubuntu 14.10 3.16.0
-Mageia 4 3.18.2
-Fedora 21 3.18.7
-Fedora 22 3.19.rc4
-Fedora 22 3.19.rc7
-Rawhide 3.19.rc7
-Cauldron 3.19.0
-Fedora 22 4.0.0.rc1
+The following is an example of ASL structure in DSDT for a SATA controller,
+which contains _CLS package to be matched by the ahci_platform driver:
 
-For each not producing delay, 80x25 screen shows very briefly, before init
-proceeds normally, output in the following form:
+  Device (AHC0) // AHCI Controller
+  {
+    Name(_HID, "AMDI0600")
+    Name (_CCA, 1)
+    Name (_CLS, Package (3)
+    {
+      0x01, // Base Class: Mass Storage
+      0x06, // Sub-Class: serial ATA
+      0x01, // Interface: AHCI
+    })
+    Name (_CRS, ResourceTemplate ()
+    {
+      Memory32Fixed (ReadWrite, 0xE0300000, 0x00010000)
+      Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive,,,) { 387 }
+    })
+  }
 
-root (hd#,##)
- Filesystem type is ext2fs, partition type 0x83
-kernel /boot/vmlinuz...video=1024x768@60 3
-  [Linux-Bz-Image, setup=0x####, size=0x######]
-initrd /boot/initrd
+Also, since ATA driver should not require PCI support for ATA_ACPI,
+this patch removes dependency in the driver/ata/Kconfig.
 
-For those producing delay, the last line above does not appear until after
-the delay expires. The following consistently produce delays:
-openSUSE 13.2 3.16.6 (168 seconds)
-openSUSE 13.2 3.16.7 (169 seconds)
-openSUSE Tumbleweed 3.19.0 (174 seconds)
-Rawhide 4.0.0.rc1 (104 seconds)
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+---
+ drivers/ata/Kconfig         | 2 +-
+ drivers/ata/ahci_platform.c | 9 +++++++++
+ 2 files changed, 10 insertions(+), 1 deletion(-)
 
->From what I can tell from output from smart and hdparm, the HD is not the
-source of delay:
-http://fm.no-ip.com/Tmp/Linux/Boot/hdparmdata-big41-test.txt
-
-All installations are normally booted using the same Grub on /dev/sda3, using
-identical syntax, so their cmdlines all look about the same except for the
-root= parameter. Instead chainloading to the installed bootloader on each /
-filesystem has no impact on delays that I have as yet noticed. This system
-has been normally functional more than 30 months with same HD. The delays
-started only recently, though whether as much as a week or a month since
-delays started I cannot recall.
-
-Output from journalctl -k -b from each installation above (except Kubuntu)
-can be found here:
-http://fm.no-ip.com/Tmp/Linux/Boot/
-
-Any ideas how to locate the fault?
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 5f60155..50305e3 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -48,7 +48,7 @@ config ATA_VERBOSE_ERROR
+ 
+ config ATA_ACPI
+ 	bool "ATA ACPI Support"
+-	depends on ACPI && PCI
++	depends on ACPI
+ 	default y
+ 	help
+ 	  This option adds support for ATA-related ACPI objects.
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index 78d6ae0..842cd13 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -20,6 +20,8 @@
+ #include <linux/platform_device.h>
+ #include <linux/libata.h>
+ #include <linux/ahci_platform.h>
++#include <linux/acpi.h>
++#include <linux/pci_ids.h>
+ #include "ahci.h"
+ 
+ #define DRV_NAME "ahci"
+@@ -78,12 +80,19 @@ static const struct of_device_id ahci_of_match[] = {
+ };
+ MODULE_DEVICE_TABLE(of, ahci_of_match);
+ 
++static const struct acpi_device_id ahci_acpi_match[] = {
++	{ "", 0, PCI_CLASS_STORAGE_SATA_AHCI },
++	{},
++};
++MODULE_DEVICE_TABLE(acpi, ahci_acpi_match);
++
+ static struct platform_driver ahci_driver = {
+ 	.probe = ahci_probe,
+ 	.remove = ata_platform_remove_one,
+ 	.driver = {
+ 		.name = DRV_NAME,
+ 		.of_match_table = ahci_of_match,
++		.acpi_match_table = ahci_acpi_match,
+ 		.pm = &ahci_pm_ops,
+ 	},
+ };
 -- 
-"The wise are known for their understanding, and pleasant
-words are persuasive." Proverbs 16:21 (New Living Translation)
+2.1.0
 
- Team OS/2 ** Reg. Linux User #211409 ** a11y rocks!
-
-Felix Miata  ***  http://fm.no-ip.com/
