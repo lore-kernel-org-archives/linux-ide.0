@@ -1,100 +1,75 @@
 From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [V4 PATCH 2/2] ata: ahci_platform: Add ACPI _CLS matching
-Date: Mon, 2 Mar 2015 02:27:20 -0600
-Message-ID: <1425284840-9233-3-git-send-email-Suravee.Suthikulpanit@amd.com>
-References: <1425284840-9233-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+Subject: [V4 PATCH 0/2] Introduce ACPI support for ahci_platform driver
+Date: Mon, 2 Mar 2015 02:27:18 -0600
+Message-ID: <1425284840-9233-1-git-send-email-Suravee.Suthikulpanit@amd.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bn1bon0140.outbound.protection.outlook.com ([157.56.111.140]:36118
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751846AbbCBI1h (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 2 Mar 2015 03:27:37 -0500
-In-Reply-To: <1425284840-9233-1-git-send-email-Suravee.Suthikulpanit@amd.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: rjw@rjwysocki.net, mika.westerberg@linux.intel.com, lv.zheng@intel.com, hpa@linux.intel.com
 Cc: lenb@kernel.org, hdegoede@redhat.com, tj@kernel.org, arnd@arndb.de, mjg59@srcf.ucam.org, gregkh@linuxfoundation.org, hanjun.guo@linaro.org, al.stone@linaro.org, graeme.gregory@linaro.org, leo.duran@amd.com, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org, Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+List-Id: linux-ide@vger.kernel.org
 
-This patch adds ACPI supports for AHCI platform driver, which uses _CLS
-method to match the device.
+This patch series introduce ACPI support for AHCI platform driver.
+Existing ACPI support for AHCI assumes the device controller is a PCI device.
+Since there is no ACPI _CID for generic AHCI controller, the driver
+could not use it for matching devices. Therefore, this patch introduces
+a mechanism for drivers to match devices using ACPI _CLS method.
+_CLS contains PCI-defined class-code.
 
-The following is an example of ASL structure in DSDT for a SATA controller,
-which contains _CLS package to be matched by the ahci_platform driver:
+This patch series also modifies ACPI modalias to add class-code to the
+exisiting format, which currently only uses _HID and _CIDs. This is required
+to support loadable modules w/ _CLS.
 
-  Device (AHC0) // AHCI Controller
-  {
-    Name(_HID, "AMDI0600")
-    Name (_CCA, 1)
-    Name (_CLS, Package (3)
-    {
-      0x01, // Base Class: Mass Storage
-      0x06, // Sub-Class: serial ATA
-      0x01, // Interface: AHCI
-    })
-    Name (_CRS, ResourceTemplate ()
-    {
-      Memory32Fixed (ReadWrite, 0xE0300000, 0x00010000)
-      Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive,,,) { 387 }
-    })
-  }
+This patch series is rebased from and tested with:
 
-Also, since ATA driver should not require PCI support for ATA_ACPI,
-this patch removes dependency in the driver/ata/Kconfig.
+    http://git.linaro.org/leg/acpi/acpi.git acpi-5.1-v9
 
-Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
----
- drivers/ata/Kconfig         | 2 +-
- drivers/ata/ahci_platform.c | 9 +++++++++
- 2 files changed, 10 insertions(+), 1 deletion(-)
+This topic was discussed earlier here (as part of introducing support for
+AMD Seattle SATA controller):
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 5f60155..50305e3 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -48,7 +48,7 @@ config ATA_VERBOSE_ERROR
- 
- config ATA_ACPI
- 	bool "ATA ACPI Support"
--	depends on ACPI && PCI
-+	depends on ACPI
- 	default y
- 	help
- 	  This option adds support for ATA-related ACPI objects.
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index 78d6ae0..842cd13 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -20,6 +20,8 @@
- #include <linux/platform_device.h>
- #include <linux/libata.h>
- #include <linux/ahci_platform.h>
-+#include <linux/acpi.h>
-+#include <linux/pci_ids.h>
- #include "ahci.h"
- 
- #define DRV_NAME "ahci"
-@@ -78,12 +80,19 @@ static const struct of_device_id ahci_of_match[] = {
- };
- MODULE_DEVICE_TABLE(of, ahci_of_match);
- 
-+static const struct acpi_device_id ahci_acpi_match[] = {
-+	{ "", 0, PCI_CLASS_STORAGE_SATA_AHCI },
-+	{},
-+};
-+MODULE_DEVICE_TABLE(acpi, ahci_acpi_match);
-+
- static struct platform_driver ahci_driver = {
- 	.probe = ahci_probe,
- 	.remove = ata_platform_remove_one,
- 	.driver = {
- 		.name = DRV_NAME,
- 		.of_match_table = ahci_of_match,
-+		.acpi_match_table = ahci_acpi_match,
- 		.pm = &ahci_pm_ops,
- 	},
- };
+    http://marc.info/?l=linux-arm-kernel&m=141083492521584&w=2
+
+Changes from V3 (https://lkml.org/lkml/2015/2/8/106)
+	* Instead of introducing new structure acpi_device_cls, add cls into
+	  the acpi_device_id, and modify the __acpi_match_device
+	  to also match for cls. (per Mika suggestion.)
+	* Add loadable module support, which requires changes in ACPI
+	  modalias. (per Mika suggestion.)
+	* Rebased and tested with acpi-5.1-v9
+
+Changes from V2 (https://lkml.org/lkml/2015/1/5/662)
+	* Update with review comment from Rafael in patch 1/2
+	* Rebased and tested with acpi-5.1-v8
+
+Changes from V1 (https://lkml.org/lkml/2014/12/19/345)
+	* Rebased to 3.19.0-rc2
+	* Change from acpi_cls in device_driver to acpi_match_cls (Hanjun comment)
+	* Change the matching logic in acpi_driver_match_device() due to the new
+	  special PRP0001 _HID.
+	* Simplify the return type of acpi_match_device_cls() to boolean.
+
+Changes from RFC (https://lkml.org/lkml/2014/12/17/446)
+	* Remove #ifdef and make non-ACPI version of the acpi_match_device_cls
+	  as inline. (per Arnd)
+	* Simplify logic to retrieve and evaluate _CLS handle. (per Hanjun)
+
+Suravee Suthikulpanit (2):
+  ACPI / scan: Add support for ACPI _CLS device matching
+  ata: ahci_platform: Add ACPI _CLS matching
+
+ drivers/acpi/acpica/acutils.h     |  3 ++
+ drivers/acpi/acpica/nsxfname.c    | 20 +++++++++--
+ drivers/acpi/acpica/utids.c       | 71 +++++++++++++++++++++++++++++++++++++++
+ drivers/acpi/scan.c               | 17 ++++++++--
+ drivers/ata/Kconfig               |  2 +-
+ drivers/ata/ahci_platform.c       |  9 +++++
+ include/acpi/acnames.h            |  1 +
+ include/acpi/actypes.h            |  4 ++-
+ include/linux/mod_devicetable.h   |  1 +
+ scripts/mod/devicetable-offsets.c |  1 +
+ scripts/mod/file2alias.c          | 13 +++++--
+ 11 files changed, 133 insertions(+), 9 deletions(-)
+
 -- 
 2.1.0
-
