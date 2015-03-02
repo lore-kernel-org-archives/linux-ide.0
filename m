@@ -1,80 +1,59 @@
-From: Peter Griffin <peter.griffin@linaro.org>
-Subject: [PATCH 2/3] ARM: DT: STi: STiH407: Add sata DT nodes.
-Date: Mon,  2 Mar 2015 12:48:38 +0000
-Message-ID: <1425300519-13747-3-git-send-email-peter.griffin@linaro.org>
-References: <1425300519-13747-1-git-send-email-peter.griffin@linaro.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1425300519-13747-1-git-send-email-peter.griffin@linaro.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, maxime.coquelin@st.com, patrice.chotard@st.com, srinivas.kandagatla@gmail.com, tj@kernel.org
-Cc: peter.griffin@linaro.org, lee.jones@linaro.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [V4 PATCH 2/2] ata: ahci_platform: Add ACPI _CLS matching
+Date: Mon, 2 Mar 2015 11:41:03 -0500
+Message-ID: <20150302164103.GH17694@htj.duckdns.org>
+References: <1425284840-9233-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+ <1425284840-9233-3-git-send-email-Suravee.Suthikulpanit@amd.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qc0-f174.google.com ([209.85.216.174]:45060 "EHLO
+	mail-qc0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753616AbbCBQlH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Mar 2015 11:41:07 -0500
+Content-Disposition: inline
+In-Reply-To: <1425284840-9233-3-git-send-email-Suravee.Suthikulpanit@amd.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Cc: rjw@rjwysocki.net, mika.westerberg@linux.intel.com, lv.zheng@intel.com, hpa@linux.intel.com, lenb@kernel.org, hdegoede@redhat.com, arnd@arndb.de, mjg59@srcf.ucam.org, gregkh@linuxfoundation.org, hanjun.guo@linaro.org, al.stone@linaro.org, graeme.gregory@linaro.org, leo.duran@amd.com, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org
 
-Now that the miphy28lp is upstream, we can add the sata dt nodes
-for stih407 family silicon. This has been tested on b2120 board
-J4 (sata0 channel). These nodes are disabled by default as a
-special mini pci-e to sata daughter board is required which
-isn't shipped with the board.
+On Mon, Mar 02, 2015 at 02:27:20AM -0600, Suravee Suthikulpanit wrote:
+> This patch adds ACPI supports for AHCI platform driver, which uses _CLS
+> method to match the device.
+> 
+> The following is an example of ASL structure in DSDT for a SATA controller,
+> which contains _CLS package to be matched by the ahci_platform driver:
+> 
+>   Device (AHC0) // AHCI Controller
+>   {
+>     Name(_HID, "AMDI0600")
+>     Name (_CCA, 1)
+>     Name (_CLS, Package (3)
+>     {
+>       0x01, // Base Class: Mass Storage
+>       0x06, // Sub-Class: serial ATA
+>       0x01, // Interface: AHCI
+>     })
+>     Name (_CRS, ResourceTemplate ()
+>     {
+>       Memory32Fixed (ReadWrite, 0xE0300000, 0x00010000)
+>       Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive,,,) { 387 }
+>     })
+>   }
+> 
+> Also, since ATA driver should not require PCI support for ATA_ACPI,
+> this patch removes dependency in the driver/ata/Kconfig.
+> 
+> Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
----
- arch/arm/boot/dts/stih407-family.dtsi | 44 +++++++++++++++++++++++++++++++++++
- 1 file changed, 44 insertions(+)
+Looks good to me from the libata side.
 
-diff --git a/arch/arm/boot/dts/stih407-family.dtsi b/arch/arm/boot/dts/stih407-family.dtsi
-index a57c06e..d526921 100644
---- a/arch/arm/boot/dts/stih407-family.dtsi
-+++ b/arch/arm/boot/dts/stih407-family.dtsi
-@@ -338,6 +338,50 @@
- 			};
- 		};
- 
-+		sata0: sata@9b20000 {
-+			compatible = "st,ahci";
-+			reg = <0x9b20000 0x1000>;
-+
-+			interrupts = <GIC_SPI 159 IRQ_TYPE_NONE>;
-+			interrupt-names = "hostc";
-+
-+			phys = <&phy_port0 PHY_TYPE_SATA>;
-+			phy-names = "ahci_phy";
-+
-+			resets = <&powerdown STIH407_SATA0_POWERDOWN>,
-+				 <&softreset STIH407_SATA0_SOFTRESET>,
-+				 <&softreset STIH407_SATA0_PWR_SOFTRESET>;
-+			reset-names = "pwr-dwn", "sw-rst", "pwr-rst";
-+
-+			clock-names = "ahci_clk";
-+			clocks = <&clk_s_c0_flexgen CLK_ICN_REG>;
-+
-+			status = "disabled";
-+		};
-+
-+		sata1: sata@9b28000 {
-+			compatible = "st,ahci";
-+			reg = <0x9b28000 0x1000>;
-+
-+			interrupts = <GIC_SPI 170 IRQ_TYPE_NONE>;
-+			interrupt-names = "hostc";
-+
-+			phys = <&phy_port1 PHY_TYPE_SATA>;
-+			phy-names = "ahci_phy";
-+
-+			resets = <&powerdown STIH407_SATA1_POWERDOWN>,
-+				 <&softreset STIH407_SATA1_SOFTRESET>,
-+				 <&softreset STIH407_SATA1_PWR_SOFTRESET>;
-+			reset-names = "pwr-dwn",
-+				      "sw-rst",
-+				      "pwr-rst";
-+
-+			clock-names = "ahci_clk";
-+			clocks = <&clk_s_c0_flexgen CLK_ICN_REG>;
-+
-+			status = "disabled";
-+		};
-+
- 		st_dwc3: dwc3@8f94000 {
- 			compatible	= "st,stih407-dwc3";
- 			reg		= <0x08f94000 0x1000>, <0x110 0x4>;
+ Acked-by: Tejun Heo <tj@kernel.org>
+
+Please let me now if this needs to go through libata.
+
+Thanks.
+
 -- 
-1.9.1
+tejun
