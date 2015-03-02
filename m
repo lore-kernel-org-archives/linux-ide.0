@@ -1,80 +1,41 @@
-From: Lee Jones <lee.jones@linaro.org>
-Subject: Re: [PATCH 3/3] ahci: st: st_configure_oob must be called after IP
- is clocked.
-Date: Mon, 2 Mar 2015 17:03:38 +0000
-Message-ID: <20150302170338.GC6976@x1>
-References: <1425300519-13747-1-git-send-email-peter.griffin@linaro.org>
- <1425300519-13747-4-git-send-email-peter.griffin@linaro.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] sata-fsl: Apply link speed limits
+Date: Mon, 2 Mar 2015 12:09:22 -0500
+Message-ID: <20150302170922.GK17694@htj.duckdns.org>
+References: <20150219200547.GA25730@darwin.bork.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qc0-f182.google.com ([209.85.216.182]:34980 "EHLO
+	mail-qc0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754404AbbCBRJZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Mar 2015 12:09:25 -0500
+Received: by qcyl6 with SMTP id l6so25769497qcy.2
+        for <linux-ide@vger.kernel.org>; Mon, 02 Mar 2015 09:09:25 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <1425300519-13747-4-git-send-email-peter.griffin@linaro.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Peter Griffin <peter.griffin@linaro.org>
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, maxime.coquelin@st.com, patrice.chotard@st.com, srinivas.kandagatla@gmail.com, tj@kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org
+In-Reply-To: <20150219200547.GA25730@darwin.bork.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Martin Hicks <mort@bork.org>
+Cc: Scott Wood <scottwood@freescale.com>, Kumar Gala <galak@kernel.crashing.org>, linuxppc-dev@lists.ozlabs.org, linux-ide@vger.kernel.org
 
-On Mon, 02 Mar 2015, Peter Griffin wrote:
+On Thu, Feb 19, 2015 at 03:05:47PM -0500, Martin Hicks wrote:
+> 
+> 
+> The driver was ignoring limits requested by libata.force.  The output
+> would look like:
+> 
+> fsl-sata ffe18000.sata: Sata FSL Platform/CSB Driver init
+> ata1: FORCE: PHY spd limit set to 1.5Gbps
+> ata1: SATA max UDMA/133 irq 74
+> ata1: Signature Update detected @ 0 msecs
+> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 310)
+> 
+> Signed-off-by: Martin Hicks <mort@bork.org>
 
-> Currently the ahci_st driver will hang the system on probe, as the
-> st_configure_oob function does some register writes before the IP
-> is clocked. This patch moves the function call to after
-> ahci_platform_enable_resources (which enables the IP clock), and
-> resolves the hang.
->=20
-> Addtionally st_ahci_configure_oob should be called in the st_ahci_res=
-ume
-> function, so we also rectify that ensuring it is also called after
-> the IP clock has been enabled.
->=20
-> Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
-> ---
->  drivers/ata/ahci_st.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
+Applied to libata/for-4.0-fixes.
 
-I suspect we might find a few issues like this now we're not using
-'clk_ignore_unused'.
+Thanks.
 
-Acked-by: Lee Jones <lee.jones@linaro.org>
-=20
-> diff --git a/drivers/ata/ahci_st.c b/drivers/ata/ahci_st.c
-> index bc971af..ea0ff00 100644
-> --- a/drivers/ata/ahci_st.c
-> +++ b/drivers/ata/ahci_st.c
-> @@ -68,8 +68,6 @@ static int st_ahci_deassert_resets(struct device *d=
-ev)
->  		}
->  	}
-> =20
-> -	st_ahci_configure_oob(drv_data->hpriv->mmio);
-> -
->  	if (drv_data->sw_rst) {
->  		err =3D reset_control_deassert(drv_data->sw_rst);
->  		if (err) {
-> @@ -172,6 +170,8 @@ static int st_ahci_probe(struct platform_device *=
-pdev)
->  	if (err)
->  		return err;
-> =20
-> +	st_ahci_configure_oob(drv_data->hpriv->mmio);
-> +
->  	err =3D ahci_platform_init_host(pdev, hpriv, &st_ahci_port_info,
->  				      &ahci_platform_sht);
->  	if (err) {
-> @@ -222,6 +222,8 @@ static int st_ahci_resume(struct device *dev)
->  		return err;
->  	}
-> =20
-> +	st_ahci_configure_oob(drv_data->hpriv->mmio);
-> +
->  	return ahci_platform_resume_host(dev);
->  }
->  #endif
-
---=20
-Lee Jones
-Linaro STMicroelectronics Landing Team Lead
-Linaro.org =E2=94=82 Open source software for ARM SoCs
-=46ollow Linaro: Facebook | Twitter | Blog
+-- 
+tejun
