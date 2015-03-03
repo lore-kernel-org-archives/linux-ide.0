@@ -1,46 +1,50 @@
-From: Maxime Coquelin <maxime.coquelin@st.com>
-Subject: Re: [PATCH 0/3] Enable ahci_st for stih407 and fix hang
-Date: Tue, 3 Mar 2015 13:23:09 +0100
-Message-ID: <54F5A7AD.9000906@st.com>
-References: <1425300519-13747-1-git-send-email-peter.griffin@linaro.org>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH v2] ide_tape: convert jiffies with jiffies_to_msecs
+Date: Tue, 03 Mar 2015 17:11:13 +0300
+Message-ID: <54F5C101.9070409@cogentembedded.com>
+References: <1425379971-12641-1-git-send-email-hofrat@osadl.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1425300519-13747-1-git-send-email-peter.griffin@linaro.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Peter Griffin <peter.griffin@linaro.org>, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, patrice.chotard@st.com, srinivas.kandagatla@gmail.com, tj@kernel.org
-Cc: lee.jones@linaro.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-la0-f49.google.com ([209.85.215.49]:43238 "EHLO
+	mail-la0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754583AbbCCOLT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Mar 2015 09:11:19 -0500
+Received: by labgf13 with SMTP id gf13so13031707lab.10
+        for <linux-ide@vger.kernel.org>; Tue, 03 Mar 2015 06:11:18 -0800 (PST)
+In-Reply-To: <1425379971-12641-1-git-send-email-hofrat@osadl.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Nicholas Mc Guire <hofrat@osadl.org>, "David S. Miller" <davem@davemloft.net>
+Cc: Joe Perches <joe@perches.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi Peter,
+Hello.
 
-On 03/02/2015 01:48 PM, Peter Griffin wrote:
-> Hi,
->
-> Now that miphy28lp phy is present upstream we can add sata DT nodes for
-> stih407 family silicon. As part of testing this I found a hang
-> with the current driver implmentation which does some register writes
-> before enabling the IP clock. Presumably on stih416 devices the sata
-> clock must have already been enabled by the targetpack/bootloader.
->
-> This series also tidys up some inaccuracies in the DT documentation
-> where the doc hasn't kept aligned with the driver. In addtion to these
-> fixes I've also added an example for stih407 silicon.
->
-> Peter Griffin (3):
->    ahci: st: Update the ahci_st DT documentation
->    ARM: DT: STi: STiH407: Add sata DT nodes.
->    ahci: st: st_configure_oob must be called after IP is clocked.
->
->   Documentation/devicetree/bindings/ata/ahci-st.txt | 45 ++++++++++++++++-------
->   arch/arm/boot/dts/stih407-family.dtsi             | 44 ++++++++++++++++++++++
->   drivers/ata/ahci_st.c                             |  6 ++-
->   3 files changed, 80 insertions(+), 15 deletions(-)
->
+On 3/3/2015 1:52 PM, Nicholas Mc Guire wrote:
 
-For the series, you can add my:
-Acked-by: Maxime Coquelin <maxime.coquelin@st.com>
+> Use jiffies_to_msecs for converting jiffies as it handles all of the corner
+> cases reliably and also helps readability. The printk format is fixed up
+> as jiffies_to_msecs returns unsigned int not unsigned long.
 
-Thanks,
-Maxime
+> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+> ---
+
+> v2: change printk format string from %d to %u as suggested by
+>      Joe Perches <joe@perches.com>.
+
+> Note that this patch will give a checkpatch warning due to "quoted string
+> split across lines" but thats not related to this change.
+
+> This was only compile tested with x86_64_defconfig + CONFIG_IDE=m,
+> CONFIG_BLK_DEV_IDETAPE=m
+
+> Patch is against 4.0-rc1 (localversion-next is -next-20150303)
+>
+>   drivers/ide/ide-tape.c |    4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
+
+    The driver is called ide-tape.c, yet your subject prefix is "ide_tape:".
+
+WBR, Sergei
+
