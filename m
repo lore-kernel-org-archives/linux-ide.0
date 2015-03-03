@@ -1,44 +1,46 @@
-From: Nicholas Mc Guire <der.herr@hofr.at>
-Subject: Re: [PATCH] ide_tape: convert jiffies with jiffies_to_msecs
-Date: Tue, 3 Mar 2015 12:35:54 +0100
-Message-ID: <20150303113554.GA8142@opentech.at>
-References: <1425378228-6095-1-git-send-email-hofrat@osadl.org> <1425379047.17273.11.camel@perches.com> <20150303105701.GA30191@opentech.at> <1425380684.17273.13.camel@perches.com>
+From: Maxime Coquelin <maxime.coquelin@st.com>
+Subject: Re: [PATCH 0/3] Enable ahci_st for stih407 and fix hang
+Date: Tue, 3 Mar 2015 13:23:09 +0100
+Message-ID: <54F5A7AD.9000906@st.com>
+References: <1425300519-13747-1-git-send-email-peter.griffin@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from hofr.at ([212.69.189.236]:37223 "EHLO mail.hofr.at"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752322AbbCCLf4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 3 Mar 2015 06:35:56 -0500
-Content-Disposition: inline
-In-Reply-To: <1425380684.17273.13.camel@perches.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1425300519-13747-1-git-send-email-peter.griffin@linaro.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Peter Griffin <peter.griffin@linaro.org>, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, patrice.chotard@st.com, srinivas.kandagatla@gmail.com, tj@kernel.org
+Cc: lee.jones@linaro.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: Nicholas Mc Guire <hofrat@osadl.org>, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, 03 Mar 2015, Joe Perches wrote:
+Hi Peter,
 
-> On Tue, 2015-03-03 at 11:57 +0100, Nicholas Mc Guire wrote:
-> > On Tue, 03 Mar 2015, Joe Perches wrote:
-> > > On Tue, 2015-03-03 at 05:23 -0500, Nicholas Mc Guire wrote:
-> > > > Note that this patch will give a checkpatch warning due to "quoted string 
-> > > > split across lines" but thats not related to this change - not sure if this
-> > > > should be fixed - looks intentional to me.
-> > > 
-> > > It's not.  It'd be better coalesced.
-> > 
-> > well it did seem quite systematic in this file, aside from it also needing
-> > to move over the pr_* so thats going to need a few seperate cleanups.
-> 
-> Sure, no worries, whenever/ifever.
-> 
-> I'm pretty sure there aren't many active users
-> of ide-tape devices.
+On 03/02/2015 01:48 PM, Peter Griffin wrote:
+> Hi,
 >
-Im sure thats true - the motivation for cleanups though is that what ever
-stays in old drivers - even if hardly in use- gets copied into new drivers
-at some point...
+> Now that miphy28lp phy is present upstream we can add sata DT nodes for
+> stih407 family silicon. As part of testing this I found a hang
+> with the current driver implmentation which does some register writes
+> before enabling the IP clock. Presumably on stih416 devices the sata
+> clock must have already been enabled by the targetpack/bootloader.
+>
+> This series also tidys up some inaccuracies in the DT documentation
+> where the doc hasn't kept aligned with the driver. In addtion to these
+> fixes I've also added an example for stih407 silicon.
+>
+> Peter Griffin (3):
+>    ahci: st: Update the ahci_st DT documentation
+>    ARM: DT: STi: STiH407: Add sata DT nodes.
+>    ahci: st: st_configure_oob must be called after IP is clocked.
+>
+>   Documentation/devicetree/bindings/ata/ahci-st.txt | 45 ++++++++++++++++-------
+>   arch/arm/boot/dts/stih407-family.dtsi             | 44 ++++++++++++++++++++++
+>   drivers/ata/ahci_st.c                             |  6 ++-
+>   3 files changed, 80 insertions(+), 15 deletions(-)
+>
 
-thx!
-hofrat 
+For the series, you can add my:
+Acked-by: Maxime Coquelin <maxime.coquelin@st.com>
+
+Thanks,
+Maxime
