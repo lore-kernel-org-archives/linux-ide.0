@@ -1,51 +1,39 @@
-From: Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH v2] ide_tape: convert jiffies with jiffies_to_msecs
-Date: Tue,  3 Mar 2015 05:52:51 -0500
-Message-ID: <1425379971-12641-1-git-send-email-hofrat@osadl.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "David S. Miller" <davem@davemloft.net>
-Cc: Joe Perches <joe@perches.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
+From: Joe Perches <joe@perches.com>
+Subject: Re: [PATCH] ide_tape: convert jiffies with jiffies_to_msecs
+Date: Tue, 03 Mar 2015 03:04:44 -0800
+Message-ID: <1425380684.17273.13.camel@perches.com>
+References: <1425378228-6095-1-git-send-email-hofrat@osadl.org>
+	 <1425379047.17273.11.camel@perches.com>
+	 <20150303105701.GA30191@opentech.at>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtprelay0142.hostedemail.com ([216.40.44.142]:58149 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754021AbbCCLEs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Mar 2015 06:04:48 -0500
+In-Reply-To: <20150303105701.GA30191@opentech.at>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Nicholas Mc Guire <der.herr@hofr.at>
+Cc: Nicholas Mc Guire <hofrat@osadl.org>, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Use jiffies_to_msecs for converting jiffies as it handles all of the corner
-cases reliably and also helps readability. The printk format is fixed up 
-as jiffies_to_msecs returns unsigned int not unsigned long.
+On Tue, 2015-03-03 at 11:57 +0100, Nicholas Mc Guire wrote:
+> On Tue, 03 Mar 2015, Joe Perches wrote:
+> > On Tue, 2015-03-03 at 05:23 -0500, Nicholas Mc Guire wrote:
+> > > Note that this patch will give a checkpatch warning due to "quoted string 
+> > > split across lines" but thats not related to this change - not sure if this
+> > > should be fixed - looks intentional to me.
+> > 
+> > It's not.  It'd be better coalesced.
+> 
+> well it did seem quite systematic in this file, aside from it also needing
+> to move over the pr_* so thats going to need a few seperate cleanups.
 
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
----
+Sure, no worries, whenever/ifever.
 
-v2: change printk format string from %d to %u as suggested by
-    Joe Perches <joe@perches.com>.
+I'm pretty sure there aren't many active users
+of ide-tape devices.
 
-Note that this patch will give a checkpatch warning due to "quoted string 
-split across lines" but thats not related to this change.
 
-This was only compile tested with x86_64_defconfig + CONFIG_IDE=m,
-CONFIG_BLK_DEV_IDETAPE=m
-
-Patch is against 4.0-rc1 (localversion-next is -next-20150303)
-
- drivers/ide/ide-tape.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index 1793aea..d9ce376 100644
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -1793,11 +1793,11 @@ static void idetape_setup(ide_drive_t *drive, idetape_tape_t *tape, int minor)
- 	tape->best_dsc_rw_freq = clamp_t(unsigned long, t, IDETAPE_DSC_RW_MIN,
- 					 IDETAPE_DSC_RW_MAX);
- 	printk(KERN_INFO "ide-tape: %s <-> %s: %dKBps, %d*%dkB buffer, "
--		"%lums tDSC%s\n",
-+		"%ums tDSC%s\n",
- 		drive->name, tape->name, *(u16 *)&tape->caps[14],
- 		(*(u16 *)&tape->caps[16] * 512) / tape->buffer_size,
- 		tape->buffer_size / 1024,
--		tape->best_dsc_rw_freq * 1000 / HZ,
-+		jiffies_to_msecs(tape->best_dsc_rw_freq),
- 		(drive->dev_flags & IDE_DFLAG_USING_DMA) ? ", DMA" : "");
- 
- 	ide_proc_register_driver(drive, tape->driver);
--- 
-1.7.10.4
