@@ -1,35 +1,49 @@
-From: "Mr. Juan Sebastian Morato" <noreply@popfax.com>
-Subject: Confidential Letter
-Date: Mon, 02 Mar 2015 01:34:39 +0100
-Message-ID: <20150302003446.12AFD3EE0FD__31824.2537360222$1425321336$gmane$org@mail.quartzbg.ro>
-Reply-To: juan_morato@yahoo.es
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.quartzbg.ro ([82.79.64.94]:35160 "EHLO mail.quartzbg.ro"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754284AbbCBSfS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Mar 2015 13:35:18 -0500
-Content-Description: Mail message body
-Sender: linux-ide-owner@vger.kernel.org
+From: Nicholas Mc Guire <hofrat@osadl.org>
+Subject: [PATCH] ide_tape: convert jiffies with jiffies_to_msecs
+Date: Tue,  3 Mar 2015 05:23:48 -0500
+Message-ID: <1425378228-6095-1-git-send-email-hofrat@osadl.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "David S. Miller" <davem@davemloft.net>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
 List-Id: linux-ide@vger.kernel.org
-To: Recipients <noreply@popfax.com>
 
-Dear Friend, 
+Use jiffies_to_msecs for converting jiffies as it handles all of the corner
+cases reliably and also helps readability. The printk format is fixed up 
+as jiffies_to_msecs returns unsigned int not unsigned long.
 
-I am Mr. Juan Sebastian Morato, the Auditor General of Unicaja Bank Madrid. In the course of my auditing, I discovered a floating fund in an account, which was opened in 1990 at Cam Bank before it was bought over by Unicaja Group which I am the auditor belonging to a dead foreigner Mr. Kenny who died in 2004. Every effort made to track any member of his family or next of kin has since failed; hence I got in contact with you to stand as his next of kin since you bear the same last name. He died leaving no heir or a will.
+Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+---
 
-My intention is to transfer this sum of 5.5M in the aforementioned account to a safe account. I am therefore proposing that you quietly partner with me and provide an account or set up a new one that will serve the purpose of receiving this fund. For your assistance in this venture, I am ready to part with a good percentage of the entire funds. After going through the deceased person's records and files, I discovered that:
+Note that this patch will give a checkpatch warning due to "quoted string 
+split across lines" but thats not related to this change - not sure if this
+should be fixed - looks intentional to me.
 
-(1) No one has operated this account since 2004
-(2) He died without an heir; hence the money has been floating.
-(3) No other person knows about this account and there was no known beneficiary.
+This was only compile tested with x86_64_defconfig + CONFIG_IDE=m,
+CONFIG_BLK_DEV_IDETAPE=m
 
-If I do not remit this money urgently, it would be forfeited and subsequently converted to company's funds, which will benefit only the directors of my firm. This money can be approved to you legally as with all the necessary documentary approvals in your name. However, you would be required to show some proof of claim, which I will provide you with and also guide you on how to make your applications.
+Patch is against 4.0-rc1 (localversion-next is -next-20150303)
 
-Please do give me a reply on my private e-mail juan.morato1@1email.eu or fax 00 34 917 692 656 so that I can send you detailed information on the modalities of my proposition. I completely trust you to keep this proposition absolutely confidential. Kindly forward your telephone number where I can reach you easily. I look forward to your prompt response.
+ drivers/ide/ide-tape.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Best Regards,
-Mr. Juan Sebastian Morato
-Fax: 00 34 917 692 656
+diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
+index 1793aea..d9ce376 100644
+--- a/drivers/ide/ide-tape.c
++++ b/drivers/ide/ide-tape.c
+@@ -1793,11 +1793,11 @@ static void idetape_setup(ide_drive_t *drive, idetape_tape_t *tape, int minor)
+ 	tape->best_dsc_rw_freq = clamp_t(unsigned long, t, IDETAPE_DSC_RW_MIN,
+ 					 IDETAPE_DSC_RW_MAX);
+ 	printk(KERN_INFO "ide-tape: %s <-> %s: %dKBps, %d*%dkB buffer, "
+-		"%lums tDSC%s\n",
++		"%dms tDSC%s\n",
+ 		drive->name, tape->name, *(u16 *)&tape->caps[14],
+ 		(*(u16 *)&tape->caps[16] * 512) / tape->buffer_size,
+ 		tape->buffer_size / 1024,
+-		tape->best_dsc_rw_freq * 1000 / HZ,
++		jiffies_to_msecs(tape->best_dsc_rw_freq),
+ 		(drive->dev_flags & IDE_DFLAG_USING_DMA) ? ", DMA" : "");
+ 
+ 	ide_proc_register_driver(drive, tape->driver);
+-- 
+1.7.10.4
