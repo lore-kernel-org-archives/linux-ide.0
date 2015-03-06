@@ -1,102 +1,99 @@
-From: Internet Mail Delivery <postmaster@mxin11.netvision.net.il>
-Subject: Delivery Notification: Delivery has failed
-Date: Fri, 06 Mar 2015 14:00:11 +0200 (IST)
-Message-ID: <0NKS00A18HCB8C00@mxin11.netvision.net.il>
+From: David Daney <ddaney.cavm-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v3] SATA: OCTEON: support SATA on OCTEON platform
+Date: Fri, 06 Mar 2015 08:25:06 -0800
+Message-ID: <54F9D4E2.20107@gmail.com>
+References: <1425567540-31572-1-git-send-email-aleksey.makarov@auriga.com> <54F97C27.508@redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/report; report-type=delivery-status;
- boundary="Boundary_(ID_9/I/B00Myf3GfJnHAHIHMg)"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mxin11.netvision.net.il ([194.90.9.46]:36910 "EHLO
-	mxin11.netvision.net.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751124AbbCFMAN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 6 Mar 2015 07:00:13 -0500
-Received: from process-daemon.mxin11.netvision.net.il by
- mxin11.netvision.net.il
- (Oracle Communications Messaging Server 7u4-24.01(7.0.4.24.0) 64bit (built Nov
- 17 2011)) id <0NKS00800GYK9E00@mxin11.netvision.net.il> for
- linux-ide@vger.kernel.org; Fri, 06 Mar 2015 14:00:11 +0200 (IST)
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <54F97C27.508-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Aleksey Makarov <aleksey.makarov-tx70/tkNEWbQT0dZR+AlfA@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, David Daney <david.daney-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>, Vinita Gupta <vgupta-M3mlKVOIwJVv6pq1l3V1OdBPR1lH4CV8@public.gmane.org>, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Pawel Moll <pawel.moll-5wv7dgnIgG8@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Ian Campbell <ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org>, Kumar Gala <galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+
+On 03/06/2015 02:06 AM, Hans de Goede wrote:
+> Hi,
+>
+> On 05-03-15 15:58, Aleksey Makarov wrote:
+>> The OCTEON SATA controller is currently found on cn71XX devices.
+>>
+>> Signed-off-by: David Daney <david.daney-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
+>> Signed-off-by: Vinita Gupta <vgupta-M3mlKVOIwJVv6pq1l3V1OdBPR1lH4CV8@public.gmane.org>
+>> Signed-off-by: Aleksey Makarov <aleksey.makarov-tx70/tkNEWbQT0dZR+AlfA@public.gmane.org>
+>> ---
+[...]
+>> diff --git
+>> a/Documentation/devicetree/bindings/mips/cavium/sata-uctl.txt
+>> b/Documentation/devicetree/bindings/mips/cavium/sata-uctl.txt
+>> new file mode 100644
+>> index 0000000..59e86a7
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/mips/cavium/sata-uctl.txt
+>> @@ -0,0 +1,28 @@
+>> +* UCTL SATA controller glue
+>> +
+>> +Properties:
+>> +- compatible: "cavium,octeon-7130-sata-uctl"
+>> +
+>> +  Compatibility with the cn7130 SOC.
+>> +
+>> +- reg: The base address of the UCTL register bank.
+>> +
+>> +- #address-cells, #size-cells, and ranges must be present and hold
+>> +    suitable values to map all child nodes.
+>> +
+>> +Example:
+>> +
+>> +    uctl@118006c000000 {
+>> +        compatible = "cavium,octeon-7130-sata-uctl";
+>> +        reg = <0x11800 0x6c000000 0x0 0x100>;
+>> +        ranges; /* Direct mapping */
+>> +        #address-cells = <2>;
+>> +        #size-cells = <2>;
+>> +
+>> +        sata: sata@16c0000000000 {
+>> +            compatible = "cavium,octeon-7130-ahci";
+>> +            reg = <0x16c00 0x00000000 0x0 0x200>;
+>> +            interrupt-parent = <&cibsata>;
+>> +            interrupts = <2 4>; /* Bit: 2, level */
+>> +        };
+>> +    };
+>
+> Sorry for jumping into this discussion a bit late, but this nonsense
+> nesting of what clearly are 2 related but different hw blocks,
+> both living at completely different register addresses is unacceptable,
+> this is not a proper operating system dependent hw description as
+> devicetree is supposed to be. This is an ugly hack to ensure a
+> certain init ordering, and requiring manual instantiation of
+> the platform device for the nested dt-node.
+>
+> NACK.
+
+Can you point to the portion of the device tree specification that 
+states that if a node has both "reg" *and* "ranges" properties, the 
+parent-bus-address ranges must be a proper subset of the "reg" property 
+ranges of the parent?   Because that seems like what you are saying 
+here.  I would really like to read the documentation myself so that we 
+can get a better understanding of the requirements.
+
+For what it's worth, there are existing bindings that take the same 
+form, and they don't seem to break anything.  See for example 
+Documentation/devicetree/bindings/mips/cavium/uctl.txt
+
+In any event, it is somewhat moot at this point.  The device tree being 
+effectively being a frozen ABI, cannot really be changed.  We are merely 
+documenting what is supplied by the preexisting system boot ROMs, not 
+starting from scratch and discussing what the proper device tree binding 
+for the device should be.
+
+Thanks,
+David Daney
 
 
---Boundary_(ID_9/I/B00Myf3GfJnHAHIHMg)
-Content-type: text/plain; charset=us-ascii
-Content-language: en-US
-
-This report relates to a message you sent with the following header fields:
-
-  Message-id: <557783463.95858037917872@vger.kernel.org>
-  Date: Fri, 06 Mar 2015 21:03:28 +0100
-  From: Gail Lang <linux-ide@vger.kernel.org>
-  To: motialmog@013.net
-  Subject: It's time to enlarge your penis choosing the safest,
-   doctor approved method!
-
-Your message cannot be delivered to the following recipients:
-
-  Recipient address: @mss13s.netvision.net.il.lmtp:25266897@lmtpcs-daemon
-  Original address: motialmog@013.net.il
-  Reason: LMTP transmission failure has occurred
-  Diagnostic code: lmtp;550 4.2.2 Delivery failed: Over quota
-  Remote system: dns;mss13s.netvision.net.il (TCP|194.90.9.46|36908|194.90.6.112|225)
-
-
---Boundary_(ID_9/I/B00Myf3GfJnHAHIHMg)
-Content-type: message/delivery-status
-
-Reporting-MTA: dns;mxin11.netvision.net.il (lmtpcs-daemon)
-Arrival-date: Fri, 06 Mar 2015 14:00:11 +0200 (IST)
-
-Original-recipient: rfc822;motialmog@013.net.il
-Final-recipient: rfc822;@mss13s.netvision.net.il.lmtp:25266897@lmtpcs-daemon
-Action: failed
-Status: 4.2.2 (LMTP transmission failure has occurred)
-Remote-MTA: dns;mss13s.netvision.net.il (TCP|194.90.9.46|36908|194.90.6.112|225)
-Diagnostic-code: lmtp;550 4.2.2 Delivery failed: Over quota
-
---Boundary_(ID_9/I/B00Myf3GfJnHAHIHMg)
-Content-type: message/rfc822
-
-Return-path: <linux-ide@vger.kernel.org>
-Received: from lmtpcs-daemon.mxin11.netvision.net.il by mxin11.netvision.net.il
- (Oracle Communications Messaging Server 7u4-24.01(7.0.4.24.0) 64bit (built Nov
- 17 2011)) id <0NKS00A15HCB8C00@mxin11.netvision.net.il>; Fri,
- 06 Mar 2015 14:00:11 +0200 (IST)
-Received: from dynamic-adsl-78-13-123-223.clienti.tiscali.it ([78.13.123.223])
- by mxin11.netvision.net.il
- (Oracle Communications Messaging Server 7u4-24.01(7.0.4.24.0) 64bit (built Nov
- 17 2011)) with ESMTP id <0NKS004QOHC8M3C0@mxin11.netvision.net.il> for
- motialmog@013.net; Fri, 06 Mar 2015 14:00:11 +0200 (IST)
-Received: from [78.13.123.223] by vger.kernel.org; Fri,
- 06 Mar 2015 21:03:28 +0100
-Date: Fri, 06 Mar 2015 21:03:28 +0100
-From: Gail Lang <linux-ide@vger.kernel.org>
-Subject: It's time to enlarge your penis choosing the safest,
- doctor approved method!
-To: motialmog@013.net
-Reply-to: linux-ide@vger.kernel.org
-Message-id: <557783463.95858037917872@vger.kernel.org>
-MIME-version: 1.0
-X-Mailer: The Bat! (v2.01) Personal
-Content-type: text/plain; charset=us-ascii
-Content-transfer-encoding: 8BIT
-X-Priority: 3 (Normal)
-
-                                                                                                 
-Hello Motialmog
-            
-When you reach the growth size that you want to achieve, you no longer need to take Max Gentleman.
-If you want to be all the time confident in yourself and archive everything you want in every bed. Based only on herbal products – our product can help every man.
-                     
-*********************************
-My marriage has been on the rocks for over seven years because of this “ED” problem I have. Thanks to MaxGentleman, this “problem” has now turned into a blessing.
-Thankee
-                       FRITZ WHITMAN
-*********************************
-                                                                 
-Click here ---> http://longerin3months.ru
-
-                     
-
---Boundary_(ID_9/I/B00Myf3GfJnHAHIHMg)--
+[...]
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
