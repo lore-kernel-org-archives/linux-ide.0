@@ -1,108 +1,59 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [PATCH v3] SATA: OCTEON: support SATA on OCTEON platform
-Date: Sat, 07 Mar 2015 13:06:48 +0100
-Message-ID: <54FAE9D8.9050206@redhat.com>
-References: <1425567540-31572-1-git-send-email-aleksey.makarov@auriga.com> <54F97C27.508@redhat.com> <54F9D4E2.20107@gmail.com>
+From: Fleck <Fleck@Rullz.lv>
+Subject: eSata problem
+Date: Sun, 08 Mar 2015 01:21:34 +0200
+Message-ID: <54FB87FE.3050109@Rullz.lv>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41820 "EHLO mx1.redhat.com"
+Received: from cccserv1.ccc.lv ([92.240.69.148]:42858 "EHLO cccserv1.ccc.lv"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750892AbbCGMI0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 7 Mar 2015 07:08:26 -0500
-In-Reply-To: <54F9D4E2.20107@gmail.com>
+	id S1751957AbbCGXWa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 7 Mar 2015 18:22:30 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Daney <ddaney.cavm@gmail.com>
-Cc: Aleksey Makarov <aleksey.makarov@auriga.com>, linux-ide@vger.kernel.org, linux-mips@linux-mips.org, linux-kernel@vger.kernel.org, David Daney <david.daney@cavium.com>, Vinita Gupta <vgupta@caviumnetworks.com>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Tejun Heo <tj@kernel.org>, devicetree@vger.kernel.org
+To: linux-ide@vger.kernel.org, lkml@vger.kernel.org
 
-Hi,
+  Hello, I have got the following eSata 4-bay device: 
+http://www.mediasonic.ca/product.php?id=1357292050
+Motherboard Asus M5A97 EVO R2.0 with eSata controler: 04:00.0 SATA 
+controller: ASMedia Technology Inc. ASM1062 Serial ATA Controller (rev 01)
+As you can see, the 4-bay device needs Port Multiplier, in Windows 7 
+everything works fine (just saying, hardware is OK), all 4 disk drives 
+are detected, but in linux not a single drive is detected! Here is dmesg 
+output after powering 4-bay device off and on again:
 
-On 06-03-15 17:25, David Daney wrote:
-> On 03/06/2015 02:06 AM, Hans de Goede wrote:
->> Hi,
->>
->> On 05-03-15 15:58, Aleksey Makarov wrote:
->>> The OCTEON SATA controller is currently found on cn71XX devices.
->>>
->>> Signed-off-by: David Daney <david.daney@cavium.com>
->>> Signed-off-by: Vinita Gupta <vgupta@caviumnetworks.com>
->>> Signed-off-by: Aleksey Makarov <aleksey.makarov@auriga.com>
->>> ---
-> [...]
->>> diff --git
->>> a/Documentation/devicetree/bindings/mips/cavium/sata-uctl.txt
->>> b/Documentation/devicetree/bindings/mips/cavium/sata-uctl.txt
->>> new file mode 100644
->>> index 0000000..59e86a7
->>> --- /dev/null
->>> +++ b/Documentation/devicetree/bindings/mips/cavium/sata-uctl.txt
->>> @@ -0,0 +1,28 @@
->>> +* UCTL SATA controller glue
->>> +
->>> +Properties:
->>> +- compatible: "cavium,octeon-7130-sata-uctl"
->>> +
->>> +  Compatibility with the cn7130 SOC.
->>> +
->>> +- reg: The base address of the UCTL register bank.
->>> +
->>> +- #address-cells, #size-cells, and ranges must be present and hold
->>> +    suitable values to map all child nodes.
->>> +
->>> +Example:
->>> +
->>> +    uctl@118006c000000 {
->>> +        compatible = "cavium,octeon-7130-sata-uctl";
->>> +        reg = <0x11800 0x6c000000 0x0 0x100>;
->>> +        ranges; /* Direct mapping */
->>> +        #address-cells = <2>;
->>> +        #size-cells = <2>;
->>> +
->>> +        sata: sata@16c0000000000 {
->>> +            compatible = "cavium,octeon-7130-ahci";
->>> +            reg = <0x16c00 0x00000000 0x0 0x200>;
->>> +            interrupt-parent = <&cibsata>;
->>> +            interrupts = <2 4>; /* Bit: 2, level */
->>> +        };
->>> +    };
->>
->> Sorry for jumping into this discussion a bit late, but this nonsense
->> nesting of what clearly are 2 related but different hw blocks,
->> both living at completely different register addresses is unacceptable,
->> this is not a proper operating system dependent hw description as
->> devicetree is supposed to be. This is an ugly hack to ensure a
->> certain init ordering, and requiring manual instantiation of
->> the platform device for the nested dt-node.
->>
->> NACK.
->
-> Can you point to the portion of the device tree specification that states that if a node has both "reg" *and* "ranges" properties, the parent-bus-address ranges must be a proper subset of the "reg" property ranges of the parent?   Because that seems like what you are saying here.  I would really like to read the documentation myself so that we can get a better understanding of the requirements.
+[ 1438.120315] ata11: exception Emask 0x10 SAct 0x0 SErr 0x10002 action 
+0xe frozen
+[ 1438.120323] ata11: irq_stat 0x00400000, PHY RDY changed
+[ 1438.120329] ata11: SError: { RecovComm PHYRdyChg }
+[ 1438.120340] ata11: hard resetting link
+[ 1438.842876] ata11: SATA link down (SStatus 0 SControl 300)
+[ 1438.842896] ata11: EH complete
+[ 1449.670083] ata11: exception Emask 0x10 SAct 0x0 SErr 0x4040000 
+action 0xe frozen
+[ 1449.670091] ata11: irq_stat 0x00000040, connection status changed
+[ 1449.670097] ata11: SError: { CommWake DevExch }
+[ 1449.670107] ata11: hard resetting link
+[ 1455.601866] ata11: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[ 1460.599233] ata11.00: qc timeout (cmd 0xec)
+[ 1460.599247] ata11.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+[ 1460.599255] ata11: hard resetting link
+[ 1461.090989] ata11: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[ 1471.085591] ata11.00: qc timeout (cmd 0xec)
+[ 1471.085605] ata11.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+[ 1471.085636] ata11: limiting SATA link speed to 1.5 Gbps
+[ 1471.085642] ata11: hard resetting link
+[ 1471.577336] ata11: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+[ 1501.561182] ata11.00: qc timeout (cmd 0xec)
+[ 1501.561196] ata11.00: failed to IDENTIFY (I/O error, err_mask=0x4)
+[ 1501.561204] ata11: hard resetting link
+[ 1502.052960] ata11: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+[ 1502.052980] ata11: EH complete
 
-This is not a written rule, it is just logic to not represent something
-nested in devicetree while the real world address space it sits in is
-flat. As said devicetree is about (accurately) describing hardware,
-and having nesting in the devicetree where there is no nesting in the
-real hardware is just wrong.
 
-> For what it's worth, there are existing bindings that take the same form, and they don't seem to break anything.  See for example Documentation/devicetree/bindings/mips/cavium/uctl.txt
+Any ideas, how can I get this device working in linux?
+BTW got this mail in #kernel channel @ freenode! :)
 
-I'm not claiming that this will not work, just that it is wrong from
-a conceptual pov IMHO.
 
-> In any event, it is somewhat moot at this point.  The device tree being effectively being a frozen ABI, cannot really be changed.  We are merely documenting what is supplied by the preexisting system boot ROMs, not starting from scratch and discussing what the proper device tree binding for the device should be.
-
-Ah I see, I did not know that this was already a shipped ABI.
-
-Given that the devicetree ABI is fixed, and that that was my only
-reason for NACK-ing this patch, I hereby withdraw my NACK.
-
-Other then the dt bindings issue, the code looks good, so this
-patch is:
-
-Acked-by: Hans de Goede <hdegoede@redhat.com>
-
-Regards,
-
-Hans
+     Thanks, best regards - Fleck
