@@ -1,36 +1,77 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata: revert "libata: use blk taging" et al.
-Date: Thu, 12 Mar 2015 09:59:26 -0400
-Message-ID: <20150312135926.GK25944@htj.duckdns.org>
-References: <5500863D.4070807@cybernetics.com>
- <5500B783.20106@fb.com>
- <5500BF6F.6080000@cybernetics.com>
- <20150312023148.GA1960870@devbig257.prn2.facebook.com>
- <CAPcyv4izOUB93ySh1Qua6qbDC8utgCjY5Zj__NbUXvS9MNY5EQ@mail.gmail.com>
- <20150312121157.GH25944@htj.duckdns.org>
- <20150312124601.GA2750169@devbig257.prn2.facebook.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20150312124601.GA2750169@devbig257.prn2.facebook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Shaohua Li <shli@fb.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, Tony Battersby <tonyb@cybernetics.com>, Jens Axboe <axboe@fb.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+From: John Stultz <john.stultz@linaro.org>
+Subject: [PATCH] ide: pdc202xxx_new: Remove do_gettimeofday() usage for ktime_get
+Date: Thu, 12 Mar 2015 10:23:52 -0700
+Message-ID: <1426181032-2397-1-git-send-email-john.stultz@linaro.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pd0-f175.google.com ([209.85.192.175]:45627 "EHLO
+	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754502AbbCLRX4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 Mar 2015 13:23:56 -0400
+Received: by pdjy10 with SMTP id y10so21601066pdj.12
+        for <linux-ide@vger.kernel.org>; Thu, 12 Mar 2015 10:23:56 -0700 (PDT)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: lkml <linux-kernel@vger.kernel.org>
+Cc: John Stultz <john.stultz@linaro.org>, "David S. Miller" <davem@davemloft.net>, Arnd Bergmann <arnd@arndb.de>, linux-ide@vger.kernel.org
 
-On Thu, Mar 12, 2015 at 05:46:01AM -0700, Shaohua Li wrote:
-> ata: Add a new flag for sas controller
-> 
-> Add a new flag to destinguish sas controller. sas controller has its own tag
-> allocation, which doesn't directly match to ata tag. We use the new flag for
-> sas ata tag allocation.
+As part of the y2038 cleanups, this patch removes the do_gettimeofday
+usage replacing it with ktime_get.
 
-This doesn't really explain why the patch came to be.  Can you please
-update it to include what broke how and got fixed?  A Fixes: tag would
-be nice too.
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-ide@vger.kernel.org
+Signed-off-by: John Stultz <john.stultz@linaro.org>
+---
+ drivers/ide/pdc202xx_new.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-Thanks.
-
+diff --git a/drivers/ide/pdc202xx_new.c b/drivers/ide/pdc202xx_new.c
+index df73cbd..94bd05f 100644
+--- a/drivers/ide/pdc202xx_new.c
++++ b/drivers/ide/pdc202xx_new.c
+@@ -18,6 +18,7 @@
+ #include <linux/module.h>
+ #include <linux/types.h>
+ #include <linux/kernel.h>
++#include <linux/ktime.h>
+ #include <linux/delay.h>
+ #include <linux/pci.h>
+ #include <linux/init.h>
+@@ -243,13 +244,13 @@ static long read_counter(u32 dma_base)
+  */
+ static long detect_pll_input_clock(unsigned long dma_base)
+ {
+-	struct timeval start_time, end_time;
++	ktime_t start_time, end_time;
+ 	long start_count, end_count;
+ 	long pll_input, usec_elapsed;
+ 	u8 scr1;
+ 
+ 	start_count = read_counter(dma_base);
+-	do_gettimeofday(&start_time);
++	start_time = ktime_get();
+ 
+ 	/* Start the test mode */
+ 	outb(0x01, dma_base + 0x01);
+@@ -261,7 +262,7 @@ static long detect_pll_input_clock(unsigned long dma_base)
+ 	mdelay(10);
+ 
+ 	end_count = read_counter(dma_base);
+-	do_gettimeofday(&end_time);
++	end_time = ktime_get();
+ 
+ 	/* Stop the test mode */
+ 	outb(0x01, dma_base + 0x01);
+@@ -273,8 +274,7 @@ static long detect_pll_input_clock(unsigned long dma_base)
+ 	 * Calculate the input clock in Hz
+ 	 * (the clock counter is 30 bit wide and counts down)
+ 	 */
+-	usec_elapsed = (end_time.tv_sec - start_time.tv_sec) * 1000000 +
+-		(end_time.tv_usec - start_time.tv_usec);
++	usec_elapsed = (long)ktime_to_ns(ktime_sub(end_time, start_time))/1000;
+ 	pll_input = ((start_count - end_count) & 0x3fffffff) / 10 *
+ 		(10000000 / usec_elapsed);
+ 
 -- 
-tejun
+1.9.1
+
