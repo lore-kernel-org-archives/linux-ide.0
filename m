@@ -1,17 +1,17 @@
 From: Shaohua Li <shli@fb.com>
 Subject: Re: [PATCH] libata: revert "libata: use blk taging" et al.
-Date: Wed, 11 Mar 2015 18:53:53 -0700
-Message-ID: <20150312015352.GA1881710@devbig257.prn2.facebook.com>
+Date: Wed, 11 Mar 2015 19:31:48 -0700
+Message-ID: <20150312023148.GA1960870@devbig257.prn2.facebook.com>
 References: <5500863D.4070807@cybernetics.com>
  <5500B783.20106@fb.com>
  <5500BF6F.6080000@cybernetics.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:4710 "EHLO
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:24375 "EHLO
 	mx0b-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752342AbbCLBzO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Mar 2015 21:55:14 -0400
+	by vger.kernel.org with ESMTP id S1751587AbbCLCc2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 Mar 2015 22:32:28 -0400
 Content-Disposition: inline
 In-Reply-To: <5500BF6F.6080000@cybernetics.com>
 Sender: linux-ide-owner@vger.kernel.org
@@ -124,9 +124,17 @@ On Wed, Mar 11, 2015 at 06:19:27PM -0400, Tony Battersby wrote:
 > 194.  With scsi-mq disabled, I get a max tag of 30 no matter how many
 > disks I test.
 
-ata_qc_new_init() has a check, if !ap->scsi_host, request tag will not
-be used and fallback to original tag allocation. you are using sas
-controller, so the problem is why ap->scsi_host is set in your case.
+Can you please try this debug patch:
 
-Thanks,
-Shaohua
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 932d9cc..46f153f 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -572,7 +572,6 @@ int sas_ata_init(struct domain_device *found_dev)
+ 
+ 	ap->private_data = found_dev;
+ 	ap->cbl = ATA_CBL_SATA;
+-	ap->scsi_host = shost;
+ 	rc = ata_sas_port_init(ap);
+ 	if (rc) {
+ 		ata_sas_port_destroy(ap);
