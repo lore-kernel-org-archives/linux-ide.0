@@ -1,309 +1,181 @@
 From: Alexandre Belloni <alexandre.belloni@free-electrons.com>
-Subject: [PATCH 04/10] ARM: at91: drop sam9_smc.c
-Date: Mon, 16 Mar 2015 23:44:40 +0100
-Message-ID: <1426545886-19162-5-git-send-email-alexandre.belloni@free-electrons.com>
+Subject: [PATCH 05/10] mfd: syscon: Add Atmel MC (Memory Controller) registers definition
+Date: Mon, 16 Mar 2015 23:44:41 +0100
+Message-ID: <1426545886-19162-6-git-send-email-alexandre.belloni@free-electrons.com>
 References: <1426545886-19162-1-git-send-email-alexandre.belloni@free-electrons.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:38399 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755127AbbCPWow (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Mar 2015 18:44:52 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1426545886-19162-1-git-send-email-alexandre.belloni@free-electrons.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Nicolas Ferre <nicolas.ferre@atmel.com>
-Cc: Lee Jones <lee.jones@linaro.org>, Boris Brezillon <boris.brezillon@free-electrons.com>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-arm-kernel@lists.infradead.org, Alexandre Belloni <alexandre.belloni@free-electrons.com>
+Cc: Lee Jones <lee.jones@linaro.org>, Boris Brezillon <boris.brezillon@free-electrons.com>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-arm-kernel@lists.infradead.org
+List-Id: linux-ide@vger.kernel.org
 
-sam9_smc.c has no users anymore, remove it along with both sam9_smc.h and
-mach/at91sam9_smc.h
+From: Boris Brezillon <boris.brezillon@free-electrons.com>
 
-Signed-off-by: Alexandre Belloni <alexandre.belloni@free-electrons.com>
+The at91rm9200 SoC embeds a Memory Controller block which is used to
+configure several aspects of the platform:
+- AHB/APB Bus behavior
+- SDRAM Controller
+- EBI (External Bus Interface) and SMC (Static Memory Controller) config
+
+Those registers might be accessed by different drivers, hence we need to
+define it as a syscon device.
+
+Signed-off-by: Boris Brezillon <boris.brezillon@free-electrons.com>
 ---
- arch/arm/mach-at91/Makefile                    |   2 -
- arch/arm/mach-at91/include/mach/at91sam9_smc.h |  98 ------------------
- arch/arm/mach-at91/sam9_smc.c                  | 136 -------------------------
- arch/arm/mach-at91/sam9_smc.h                  |  11 --
- 4 files changed, 247 deletions(-)
- delete mode 100644 arch/arm/mach-at91/include/mach/at91sam9_smc.h
- delete mode 100644 arch/arm/mach-at91/sam9_smc.c
- delete mode 100644 arch/arm/mach-at91/sam9_smc.h
+ include/linux/mfd/syscon/atmel-mc.h | 144 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 144 insertions(+)
+ create mode 100644 include/linux/mfd/syscon/atmel-mc.h
 
-diff --git a/arch/arm/mach-at91/Makefile b/arch/arm/mach-at91/Makefile
-index 06a4cefd33a0..3586d977e99d 100644
---- a/arch/arm/mach-at91/Makefile
-+++ b/arch/arm/mach-at91/Makefile
-@@ -6,8 +6,6 @@ asflags-$(CONFIG_ARCH_MULTIPLATFORM) := -I$(srctree)/$(src)/include
- 
- obj-y		:= soc.o
- 
--obj-$(CONFIG_SOC_AT91SAM9)	+= sam9_smc.o
--
- # CPU-specific support
- obj-$(CONFIG_SOC_AT91RM9200)	+= at91rm9200.o
- obj-$(CONFIG_SOC_AT91SAM9)	+= at91sam9.o
-diff --git a/arch/arm/mach-at91/include/mach/at91sam9_smc.h b/arch/arm/mach-at91/include/mach/at91sam9_smc.h
-deleted file mode 100644
-index ff54a0ce90e3..000000000000
---- a/arch/arm/mach-at91/include/mach/at91sam9_smc.h
-+++ /dev/null
-@@ -1,98 +0,0 @@
--/*
-- * arch/arm/mach-at91/include/mach/at91sam9_smc.h
-- *
-- * Copyright (C) 2007 Andrew Victor
-- * Copyright (C) 2007 Atmel Corporation.
-- *
-- * Static Memory Controllers (SMC) - System peripherals registers.
-- * Based on AT91SAM9261 datasheet revision D.
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published by
-- * the Free Software Foundation; either version 2 of the License, or
-- * (at your option) any later version.
-- */
--
--#ifndef AT91SAM9_SMC_H
--#define AT91SAM9_SMC_H
--
--#ifndef __ASSEMBLY__
--struct sam9_smc_config {
--	/* Setup register */
--	u8 ncs_read_setup;
--	u8 nrd_setup;
--	u8 ncs_write_setup;
--	u8 nwe_setup;
--
--	/* Pulse register */
--	u8 ncs_read_pulse;
--	u8 nrd_pulse;
--	u8 ncs_write_pulse;
--	u8 nwe_pulse;
--
--	/* Cycle register */
--	u16 read_cycle;
--	u16 write_cycle;
--
--	/* Mode register */
--	u32 mode;
--	u8 tdf_cycles:4;
--};
--
--extern void sam9_smc_configure(int id, int cs, struct sam9_smc_config *config);
--extern void sam9_smc_read(int id, int cs, struct sam9_smc_config *config);
--extern void sam9_smc_read_mode(int id, int cs, struct sam9_smc_config *config);
--extern void sam9_smc_write_mode(int id, int cs, struct sam9_smc_config *config);
--#endif
--
--#define AT91_SMC_SETUP		0x00				/* Setup Register for CS n */
--#define		AT91_SMC_NWESETUP	(0x3f << 0)			/* NWE Setup Length */
--#define			AT91_SMC_NWESETUP_(x)	((x) << 0)
--#define		AT91_SMC_NCS_WRSETUP	(0x3f << 8)			/* NCS Setup Length in Write Access */
--#define			AT91_SMC_NCS_WRSETUP_(x)	((x) << 8)
--#define		AT91_SMC_NRDSETUP	(0x3f << 16)			/* NRD Setup Length */
--#define			AT91_SMC_NRDSETUP_(x)	((x) << 16)
--#define		AT91_SMC_NCS_RDSETUP	(0x3f << 24)			/* NCS Setup Length in Read Access */
--#define			AT91_SMC_NCS_RDSETUP_(x)	((x) << 24)
--
--#define AT91_SMC_PULSE		0x04				/* Pulse Register for CS n */
--#define		AT91_SMC_NWEPULSE	(0x7f <<  0)			/* NWE Pulse Length */
--#define			AT91_SMC_NWEPULSE_(x)	((x) << 0)
--#define		AT91_SMC_NCS_WRPULSE	(0x7f <<  8)			/* NCS Pulse Length in Write Access */
--#define			AT91_SMC_NCS_WRPULSE_(x)((x) << 8)
--#define		AT91_SMC_NRDPULSE	(0x7f << 16)			/* NRD Pulse Length */
--#define			AT91_SMC_NRDPULSE_(x)	((x) << 16)
--#define		AT91_SMC_NCS_RDPULSE	(0x7f << 24)			/* NCS Pulse Length in Read Access */
--#define			AT91_SMC_NCS_RDPULSE_(x)((x) << 24)
--
--#define AT91_SMC_CYCLE		0x08				/* Cycle Register for CS n */
--#define		AT91_SMC_NWECYCLE	(0x1ff << 0 )			/* Total Write Cycle Length */
--#define			AT91_SMC_NWECYCLE_(x)	((x) << 0)
--#define		AT91_SMC_NRDCYCLE	(0x1ff << 16)			/* Total Read Cycle Length */
--#define			AT91_SMC_NRDCYCLE_(x)	((x) << 16)
--
--#define AT91_SMC_MODE		0x0c				/* Mode Register for CS n */
--#define		AT91_SMC_READMODE	(1 <<  0)			/* Read Mode */
--#define		AT91_SMC_WRITEMODE	(1 <<  1)			/* Write Mode */
--#define		AT91_SMC_EXNWMODE	(3 <<  4)			/* NWAIT Mode */
--#define			AT91_SMC_EXNWMODE_DISABLE	(0 << 4)
--#define			AT91_SMC_EXNWMODE_FROZEN	(2 << 4)
--#define			AT91_SMC_EXNWMODE_READY		(3 << 4)
--#define		AT91_SMC_BAT		(1 <<  8)			/* Byte Access Type */
--#define			AT91_SMC_BAT_SELECT		(0 << 8)
--#define			AT91_SMC_BAT_WRITE		(1 << 8)
--#define		AT91_SMC_DBW		(3 << 12)			/* Data Bus Width */
--#define			AT91_SMC_DBW_8			(0 << 12)
--#define			AT91_SMC_DBW_16			(1 << 12)
--#define			AT91_SMC_DBW_32			(2 << 12)
--#define		AT91_SMC_TDF		(0xf << 16)			/* Data Float Time. */
--#define			AT91_SMC_TDF_(x)		((x) << 16)
--#define		AT91_SMC_TDFMODE	(1 << 20)			/* TDF Optimization - Enabled */
--#define		AT91_SMC_PMEN		(1 << 24)			/* Page Mode Enabled */
--#define		AT91_SMC_PS		(3 << 28)			/* Page Size */
--#define			AT91_SMC_PS_4			(0 << 28)
--#define			AT91_SMC_PS_8			(1 << 28)
--#define			AT91_SMC_PS_16			(2 << 28)
--#define			AT91_SMC_PS_32			(3 << 28)
--
--#endif
-diff --git a/arch/arm/mach-at91/sam9_smc.c b/arch/arm/mach-at91/sam9_smc.c
-deleted file mode 100644
-index 826315af6d11..000000000000
---- a/arch/arm/mach-at91/sam9_smc.c
-+++ /dev/null
-@@ -1,136 +0,0 @@
--/*
-- * linux/arch/arm/mach-at91/sam9_smc.c
-- *
-- * Copyright (C) 2008 Andrew Victor
-- * Copyright (C) 2011 Jean-Christophe PLAGNIOL-VILLARD <plagnioj@jcrosoft.com>
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License version 2 as
-- * published by the Free Software Foundation.
-- */
--
--#include <linux/module.h>
--#include <linux/io.h>
--#include <linux/of.h>
--#include <linux/of_address.h>
--
--#include <mach/at91sam9_smc.h>
--
--#include "sam9_smc.h"
--
--
--#define AT91_SMC_CS(id, n)	(smc_base_addr[id] + ((n) * 0x10))
--
--static void __iomem *smc_base_addr[2];
--
--static void sam9_smc_cs_write_mode(void __iomem *base,
--					struct sam9_smc_config *config)
--{
--	__raw_writel(config->mode
--		   | AT91_SMC_TDF_(config->tdf_cycles),
--		   base + AT91_SMC_MODE);
--}
--
--void sam9_smc_write_mode(int id, int cs,
--					struct sam9_smc_config *config)
--{
--	sam9_smc_cs_write_mode(AT91_SMC_CS(id, cs), config);
--}
--EXPORT_SYMBOL_GPL(sam9_smc_write_mode);
--
--static void sam9_smc_cs_configure(void __iomem *base,
--					struct sam9_smc_config *config)
--{
--
--	/* Setup register */
--	__raw_writel(AT91_SMC_NWESETUP_(config->nwe_setup)
--		   | AT91_SMC_NCS_WRSETUP_(config->ncs_write_setup)
--		   | AT91_SMC_NRDSETUP_(config->nrd_setup)
--		   | AT91_SMC_NCS_RDSETUP_(config->ncs_read_setup),
--		   base + AT91_SMC_SETUP);
--
--	/* Pulse register */
--	__raw_writel(AT91_SMC_NWEPULSE_(config->nwe_pulse)
--		   | AT91_SMC_NCS_WRPULSE_(config->ncs_write_pulse)
--		   | AT91_SMC_NRDPULSE_(config->nrd_pulse)
--		   | AT91_SMC_NCS_RDPULSE_(config->ncs_read_pulse),
--		   base + AT91_SMC_PULSE);
--
--	/* Cycle register */
--	__raw_writel(AT91_SMC_NWECYCLE_(config->write_cycle)
--		   | AT91_SMC_NRDCYCLE_(config->read_cycle),
--		   base + AT91_SMC_CYCLE);
--
--	/* Mode register */
--	sam9_smc_cs_write_mode(base, config);
--}
--
--void sam9_smc_configure(int id, int cs,
--					struct sam9_smc_config *config)
--{
--	sam9_smc_cs_configure(AT91_SMC_CS(id, cs), config);
--}
--EXPORT_SYMBOL_GPL(sam9_smc_configure);
--
--static void sam9_smc_cs_read_mode(void __iomem *base,
--					struct sam9_smc_config *config)
--{
--	u32 val = __raw_readl(base + AT91_SMC_MODE);
--
--	config->mode = (val & ~AT91_SMC_NWECYCLE);
--	config->tdf_cycles = (val & AT91_SMC_NWECYCLE) >> 16 ;
--}
--
--void sam9_smc_read_mode(int id, int cs,
--					struct sam9_smc_config *config)
--{
--	sam9_smc_cs_read_mode(AT91_SMC_CS(id, cs), config);
--}
--EXPORT_SYMBOL_GPL(sam9_smc_read_mode);
--
--static void sam9_smc_cs_read(void __iomem *base,
--					struct sam9_smc_config *config)
--{
--	u32 val;
--
--	/* Setup register */
--	val = __raw_readl(base + AT91_SMC_SETUP);
--
--	config->nwe_setup = val & AT91_SMC_NWESETUP;
--	config->ncs_write_setup = (val & AT91_SMC_NCS_WRSETUP) >> 8;
--	config->nrd_setup = (val & AT91_SMC_NRDSETUP) >> 16;
--	config->ncs_read_setup = (val & AT91_SMC_NCS_RDSETUP) >> 24;
--
--	/* Pulse register */
--	val = __raw_readl(base + AT91_SMC_PULSE);
--
--	config->nwe_pulse = val & AT91_SMC_NWEPULSE;
--	config->ncs_write_pulse = (val & AT91_SMC_NCS_WRPULSE) >> 8;
--	config->nrd_pulse = (val & AT91_SMC_NRDPULSE) >> 16;
--	config->ncs_read_pulse = (val & AT91_SMC_NCS_RDPULSE) >> 24;
--
--	/* Cycle register */
--	val = __raw_readl(base + AT91_SMC_CYCLE);
--
--	config->write_cycle = val & AT91_SMC_NWECYCLE;
--	config->read_cycle = (val & AT91_SMC_NRDCYCLE) >> 16;
--
--	/* Mode register */
--	sam9_smc_cs_read_mode(base, config);
--}
--
--void sam9_smc_read(int id, int cs, struct sam9_smc_config *config)
--{
--	sam9_smc_cs_read(AT91_SMC_CS(id, cs), config);
--}
--
--void __init at91sam9_ioremap_smc(int id, u32 addr)
--{
--	if (id > 1) {
--		pr_warn("%s: id > 2\n", __func__);
--		return;
--	}
--	smc_base_addr[id] = ioremap(addr, 512);
--	if (!smc_base_addr[id])
--		pr_warn("Impossible to ioremap smc.%d 0x%x\n", id, addr);
--}
-diff --git a/arch/arm/mach-at91/sam9_smc.h b/arch/arm/mach-at91/sam9_smc.h
-deleted file mode 100644
-index 3e52dcd4a59f..000000000000
---- a/arch/arm/mach-at91/sam9_smc.h
-+++ /dev/null
-@@ -1,11 +0,0 @@
--/*
-- * linux/arch/arm/mach-at91/sam9_smc.
-- *
-- * Copyright (C) 2008 Andrew Victor
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License version 2 as
-- * published by the Free Software Foundation.
-- */
--
--extern void __init at91sam9_ioremap_smc(int id, u32 addr);
+diff --git a/include/linux/mfd/syscon/atmel-mc.h b/include/linux/mfd/syscon/atmel-mc.h
+new file mode 100644
+index 000000000000..cb7d9fe89e44
+--- /dev/null
++++ b/include/linux/mfd/syscon/atmel-mc.h
+@@ -0,0 +1,144 @@
++/*
++ * Copyright (C) 2005 Ivan Kokshaysky
++ * Copyright (C) SAN People
++ *
++ * Memory Controllers (MC, EBI, SMC, SDRAMC, BFC) - System peripherals
++ * registers.
++ * Based on AT91RM9200 datasheet revision E.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++#ifndef _LINUX_MFD_SYSCON_ATMEL_MC_H_
++#define _LINUX_MFD_SYSCON_ATMEL_MC_H_
++
++/* Memory Controller */
++#define AT91_MC_RCR			0x00
++#define AT91_MC_RCB			BIT(0)
++
++#define AT91_MC_ASR			0x04
++#define AT91_MC_UNADD			BIT(0)
++#define AT91_MC_MISADD			BIT(1)
++#define AT91_MC_ABTSZ			GENMASK(9, 8)
++#define AT91_MC_ABTSZ_BYTE		(0 << 8)
++#define AT91_MC_ABTSZ_HALFWORD		(1 << 8)
++#define AT91_MC_ABTSZ_WORD		(2 << 8)
++#define AT91_MC_ABTTYP			GENMASK(11, 10)
++#define AT91_MC_ABTTYP_DATAREAD		(0 << 10)
++#define AT91_MC_ABTTYP_DATAWRITE	(1 << 10)
++#define AT91_MC_ABTTYP_FETCH		(2 << 10)
++#define AT91_MC_MST(n)			BIT(16 + (n))
++#define AT91_MC_SVMST(n)		BIT(24 + (n))
++
++#define AT91_MC_AASR			0x08
++
++#define AT91_MC_MPR			0x0c
++#define AT91_MPR_MSTP(n)		GENMASK(2 + ((x) * 4), ((x) * 4))
++
++/* External Bus Interface (EBI) registers */
++#define AT91_MC_EBI_CSA			0x60
++#define AT91_MC_EBI_CS(n)		BIT(x)
++#define AT91_MC_EBI_NUM_CS		8
++
++#define AT91_MC_EBI_CFGR		0x64
++#define AT91_MC_EBI_DBPUC		BIT(0)
++
++/* Static Memory Controller (SMC) registers */
++#define	AT91_MC_SMC_CSR(n)		(0x70 + ((n) * 4))
++#define AT91_MC_SMC_NWS			GENMASK(6, 0)
++#define AT91_MC_SMC_NWS_(x)		((x) << 0)
++#define AT91_MC_SMC_WSEN		BIT(7)
++#define AT91_MC_SMC_TDF			GENMASK(11, 8)
++#define AT91_MC_SMC_TDF_(x)		((x) << 8)
++#define AT91_MC_SMC_TDF_MAX		0xf
++#define AT91_MC_SMC_BAT			BIT(12)
++#define AT91_MC_SMC_DBW			GENMASK(14, 13)
++#define AT91_MC_SMC_DBW_16		(1 << 13)
++#define AT91_MC_SMC_DBW_8		(2 << 13)
++#define AT91_MC_SMC_DPR			BIT(15)
++#define AT91_MC_SMC_ACSS		GENMASK(17, 16)
++#define AT91_MC_SMC_ACSS_(x)		((x) << 16)
++#define AT91_MC_SMC_ACSS_MAX		3
++#define AT91_MC_SMC_RWSETUP		GENMASK(26, 24)
++#define AT91_MC_SMC_RWSETUP_(x)		((x) << 24)
++#define AT91_MC_SMC_RWHOLD		GENMASK(30, 28)
++#define AT91_MC_SMC_RWHOLD_(x)		((x) << 28)
++#define AT91_MC_SMC_RWHOLDSETUP_MAX	7
++
++/* SDRAM Controller registers */
++#define AT91_MC_SDRAMC_MR		0x90
++#define AT91_MC_SDRAMC_MODE		GENMASK(3, 0)
++#define AT91_MC_SDRAMC_MODE_NORMAL	(0 << 0)
++#define AT91_MC_SDRAMC_MODE_NOP		(1 << 0)
++#define AT91_MC_SDRAMC_MODE_PRECHARGE	(2 << 0)
++#define AT91_MC_SDRAMC_MODE_LMR		(3 << 0)
++#define AT91_MC_SDRAMC_MODE_REFRESH	(4 << 0)
++#define AT91_MC_SDRAMC_DBW_16		BIT(4)
++
++#define AT91_MC_SDRAMC_TR		0x94
++#define AT91_MC_SDRAMC_COUNT		GENMASK(11, 0)
++
++#define AT91_MC_SDRAMC_CR		0x98
++#define AT91_MC_SDRAMC_NC		GENMASK(1, 0)
++#define AT91_MC_SDRAMC_NC_8		(0 << 0)
++#define AT91_MC_SDRAMC_NC_9		(1 << 0)
++#define AT91_MC_SDRAMC_NC_10		(2 << 0)
++#define AT91_MC_SDRAMC_NC_11		(3 << 0)
++#define AT91_MC_SDRAMC_NR		GENMASK(3, 2)
++#define AT91_MC_SDRAMC_NR_11		(0 << 2)
++#define AT91_MC_SDRAMC_NR_12		(1 << 2)
++#define AT91_MC_SDRAMC_NR_13		(2 << 2)
++#define	AT91_MC_SDRAMC_NB		BIT(4)
++#define AT91_MC_SDRAMC_NB_2		(0 << 4)
++#define AT91_MC_SDRAMC_NB_4		(1 << 4)
++#define AT91_MC_SDRAMC_CAS		GENMASK(6, 5)
++#define AT91_MC_SDRAMC_CAS_2		(2 << 5)
++#define AT91_MC_SDRAMC_TWR		GENMASK(10,  7)
++#define AT91_MC_SDRAMC_TRC		GENMASK(14, 11)
++#define AT91_MC_SDRAMC_TRP		GENMASK(18, 15)
++#define AT91_MC_SDRAMC_TRCD		GENMASK(22, 19)
++#define AT91_MC_SDRAMC_TRAS		GENMASK(26, 23)
++#define AT91_MC_SDRAMC_TXSR		GENMASK(30, 27)
++
++#define AT91_MC_SDRAMC_SRR		0x9c
++#define AT91_MC_SDRAMC_SRCB		BIT(0)
++
++#define AT91_MC_SDRAMC_LPR		0xa0
++#define AT91_MC_SDRAMC_LPCB		BIT(0)
++
++#define AT91_MC_SDRAMC_IER		0xa4
++#define AT91_MC_SDRAMC_IDR		0xa8
++#define AT91_MC_SDRAMC_IMR		0xac
++#define AT91_MC_SDRAMC_ISR		0xb0
++#define AT91_MC_SDRAMC_RES		BIT(0)
++
++/* Burst Flash Controller register */
++#define AT91_MC_BFC_MR			0xc0
++#define AT91_MC_BFC_BFCOM		GENMASK(1, 0)
++#define AT91_MC_BFC_BFCOM_DISABLED	(0 << 0)
++#define AT91_MC_BFC_BFCOM_ASYNC		(1 << 0)
++#define AT91_MC_BFC_BFCOM_BURST		(2 << 0)
++#define AT91_MC_BFC_BFCC		GENMASK(3, 2)
++#define AT91_MC_BFC_BFCC_MCK		(1 << 2)
++#define AT91_MC_BFC_BFCC_DIV2		(2 << 2)
++#define AT91_MC_BFC_BFCC_DIV4		(3 << 2)
++#define AT91_MC_BFC_AVL			GENMASK(7,  4)
++#define AT91_MC_BFC_PAGES		GENMASK(10, 8)
++#define AT91_MC_BFC_PAGES_NO_PAGE	(0 << 8)
++#define AT91_MC_BFC_PAGES_16		(1 << 8)
++#define AT91_MC_BFC_PAGES_32		(2 << 8)
++#define AT91_MC_BFC_PAGES_64		(3 << 8)
++#define AT91_MC_BFC_PAGES_128		(4 << 8)
++#define AT91_MC_BFC_PAGES_256		(5 << 8)
++#define AT91_MC_BFC_PAGES_512		(6 << 8)
++#define AT91_MC_BFC_PAGES_1024		(7 << 8)
++#define AT91_MC_BFC_OEL			GENMASK(13, 12)
++#define AT91_MC_BFC_BAAEN		BIT(16)
++#define AT91_MC_BFC_BFOEH		BIT(17)
++#define AT91_MC_BFC_MUXEN		BIT(18)
++#define AT91_MC_BFC_RDYEN		BIT(19)
++
++#endif /* _LINUX_MFD_SYSCON_ATMEL_MC_H_ */
 -- 
 2.1.0
-
