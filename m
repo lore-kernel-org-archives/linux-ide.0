@@ -1,206 +1,309 @@
 From: Alexandre Belloni <alexandre.belloni@free-electrons.com>
-Subject: [PATCH 03/10] ata: at91: use syscon to configure the smc
-Date: Mon, 16 Mar 2015 23:44:39 +0100
-Message-ID: <1426545886-19162-4-git-send-email-alexandre.belloni@free-electrons.com>
+Subject: [PATCH 04/10] ARM: at91: drop sam9_smc.c
+Date: Mon, 16 Mar 2015 23:44:40 +0100
+Message-ID: <1426545886-19162-5-git-send-email-alexandre.belloni@free-electrons.com>
 References: <1426545886-19162-1-git-send-email-alexandre.belloni@free-electrons.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from down.free-electrons.com ([37.187.137.238]:38399 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755127AbbCPWow (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Mar 2015 18:44:52 -0400
 In-Reply-To: <1426545886-19162-1-git-send-email-alexandre.belloni@free-electrons.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Nicolas Ferre <nicolas.ferre@atmel.com>
-Cc: Boris Brezillon <boris.brezillon@free-electrons.com>, Lee Jones <lee.jones@linaro.org>, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Alexandre Belloni <alexandre.belloni@free-electrons.com>, Tejun Heo <tj@kernel.org>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, linux-arm-kernel@lists.infradead.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Nicolas Ferre <nicolas.ferre@atmel.com>
+Cc: Lee Jones <lee.jones@linaro.org>, Boris Brezillon <boris.brezillon@free-electrons.com>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-arm-kernel@lists.infradead.org, Alexandre Belloni <alexandre.belloni@free-electrons.com>
 
-Use syscon/regmap to configure the smc. This allows to avoid using
-at91sam9_smc.h and to compile the driver in a multiplatform configuration.
-
-The driver will still not probe until the proper DT bindings are added.
+sam9_smc.c has no users anymore, remove it along with both sam9_smc.h and
+mach/at91sam9_smc.h
 
 Signed-off-by: Alexandre Belloni <alexandre.belloni@free-electrons.com>
 ---
- drivers/ata/Kconfig     |  1 -
- drivers/ata/pata_at91.c | 92 ++++++++++++++++++++++++++++++++++++++-----------
- 2 files changed, 71 insertions(+), 22 deletions(-)
+ arch/arm/mach-at91/Makefile                    |   2 -
+ arch/arm/mach-at91/include/mach/at91sam9_smc.h |  98 ------------------
+ arch/arm/mach-at91/sam9_smc.c                  | 136 -------------------------
+ arch/arm/mach-at91/sam9_smc.h                  |  11 --
+ 4 files changed, 247 deletions(-)
+ delete mode 100644 arch/arm/mach-at91/include/mach/at91sam9_smc.h
+ delete mode 100644 arch/arm/mach-at91/sam9_smc.c
+ delete mode 100644 arch/arm/mach-at91/sam9_smc.h
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 5f601553b9b0..a3a13605a9c4 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -835,7 +835,6 @@ config PATA_AT32
- config PATA_AT91
- 	tristate "PATA support for AT91SAM9260"
- 	depends on ARM && SOC_AT91SAM9
--	depends on !ARCH_MULTIPLATFORM
- 	help
- 	  This option enables support for IDE devices on the Atmel AT91SAM9260 SoC.
+diff --git a/arch/arm/mach-at91/Makefile b/arch/arm/mach-at91/Makefile
+index 06a4cefd33a0..3586d977e99d 100644
+--- a/arch/arm/mach-at91/Makefile
++++ b/arch/arm/mach-at91/Makefile
+@@ -6,8 +6,6 @@ asflags-$(CONFIG_ARCH_MULTIPLATFORM) := -I$(srctree)/$(src)/include
  
-diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
-index 9e85937d36a9..ace0a4de3449 100644
---- a/drivers/ata/pata_at91.c
-+++ b/drivers/ata/pata_at91.c
-@@ -24,11 +24,13 @@
- #include <linux/ata.h>
- #include <linux/clk.h>
- #include <linux/libata.h>
-+#include <linux/mfd/syscon.h>
-+#include <linux/mfd/syscon/atmel-smc.h>
- #include <linux/platform_device.h>
- #include <linux/ata_platform.h>
- #include <linux/platform_data/atmel.h>
-+#include <linux/regmap.h>
+ obj-y		:= soc.o
  
--#include <mach/at91sam9_smc.h>
- #include <asm/gpio.h>
- 
- #define DRV_NAME		"pata_at91"
-@@ -57,6 +59,15 @@ struct smc_range {
- 	int max;
- };
- 
-+struct regmap *smc;
-+
-+struct at91sam9_smc_generic_fields {
-+	struct regmap_field *setup;
-+	struct regmap_field *pulse;
-+	struct regmap_field *cycle;
-+	struct regmap_field *mode;
-+} fields;
-+
- /**
-  * adjust_smc_value - adjust value for one of SMC registers.
-  * @value: adjusted value
-@@ -206,7 +217,6 @@ static void set_smc_timing(struct device *dev, struct ata_device *adev,
- {
- 	int ret = 0;
- 	int use_iordy;
--	struct sam9_smc_config smc;
- 	unsigned int t6z;         /* data tristate time in ns */
- 	unsigned int cycle;       /* SMC Cycle width in MCK ticks */
- 	unsigned int setup;       /* SMC Setup width in MCK ticks */
-@@ -244,19 +254,21 @@ static void set_smc_timing(struct device *dev, struct ata_device *adev,
- 
- 	dev_dbg(dev, "Use IORDY=%u, TDF Cycles=%u\n", use_iordy, tdf_cycles);
- 
--	/* SMC Setup Register */
--	smc.nwe_setup = smc.nrd_setup = setup;
--	smc.ncs_write_setup = smc.ncs_read_setup = 0;
--	/* SMC Pulse Register */
--	smc.nwe_pulse = smc.nrd_pulse = pulse;
--	smc.ncs_write_pulse = smc.ncs_read_pulse = cs_pulse;
--	/* SMC Cycle Register */
--	smc.write_cycle = smc.read_cycle = cycle;
--	/* SMC Mode Register*/
--	smc.tdf_cycles = tdf_cycles;
--	smc.mode = info->mode;
+-obj-$(CONFIG_SOC_AT91SAM9)	+= sam9_smc.o
 -
--	sam9_smc_configure(0, info->cs, &smc);
-+	regmap_fields_write(fields.setup, info->cs,
-+			    AT91SAM9_SMC_NRDSETUP(setup) |
-+			    AT91SAM9_SMC_NWESETUP(setup) |
-+			    AT91SAM9_SMC_NCS_NRDSETUP(0) |
-+			    AT91SAM9_SMC_NCS_WRSETUP(0));
-+	regmap_fields_write(fields.pulse, info->cs,
-+			    AT91SAM9_SMC_NRDPULSE(pulse) |
-+			    AT91SAM9_SMC_NWEPULSE(pulse) |
-+			    AT91SAM9_SMC_NCS_NRDPULSE(cs_pulse) |
-+			    AT91SAM9_SMC_NCS_WRPULSE(cs_pulse));
-+	regmap_fields_write(fields.cycle, info->cs,
-+			    AT91SAM9_SMC_NRDCYCLE(cycle) |
-+			    AT91SAM9_SMC_NWECYCLE(cycle));
-+	regmap_fields_write(fields.mode, info->cs, info->mode |
-+			    AT91_SMC_TDF_(tdf_cycles));
- }
- 
- static void pata_at91_set_piomode(struct ata_port *ap, struct ata_device *adev)
-@@ -280,21 +292,21 @@ static unsigned int pata_at91_data_xfer_noirq(struct ata_device *dev,
- {
- 	struct at91_ide_info *info = dev->link->ap->host->private_data;
- 	unsigned int consumed;
-+	unsigned int mode;
- 	unsigned long flags;
--	struct sam9_smc_config smc;
- 
- 	local_irq_save(flags);
--	sam9_smc_read_mode(0, info->cs, &smc);
-+	regmap_fields_read(fields.mode, info->cs, &mode);
- 
- 	/* set 16bit mode before writing data */
--	smc.mode = (smc.mode & ~AT91_SMC_DBW) | AT91_SMC_DBW_16;
--	sam9_smc_write_mode(0, info->cs, &smc);
-+	regmap_fields_write(fields.mode, info->cs, (mode & ~AT91_SMC_DBW) |
-+			    AT91_SMC_DBW_16);
- 
- 	consumed = ata_sff_data_xfer(dev, buf, buflen, rw);
- 
- 	/* restore 8bit mode after data is written */
--	smc.mode = (smc.mode & ~AT91_SMC_DBW) | AT91_SMC_DBW_8;
--	sam9_smc_write_mode(0, info->cs, &smc);
-+	regmap_fields_write(fields.mode, info->cs, (mode & ~AT91_SMC_DBW) |
-+			    AT91_SMC_DBW_8);
- 
- 	local_irq_restore(flags);
- 	return consumed;
-@@ -312,6 +324,36 @@ static struct ata_port_operations pata_at91_port_ops = {
- 	.cable_detect	= ata_cable_40wire,
- };
- 
-+static int at91sam9_smc_fields_init(struct device *dev)
-+{
-+	struct reg_field field = REG_FIELD(0, 0, 31);
-+
-+	field.id_size = 8;
-+	field.id_offset = AT91SAM9_SMC_GENERIC_BLK_SZ;
-+
-+	field.reg = AT91SAM9_SMC_SETUP(AT91SAM9_SMC_GENERIC);
-+	fields.setup = devm_regmap_field_alloc(dev, smc, field);
-+	if (IS_ERR(fields.setup))
-+		return PTR_ERR(fields.setup);
-+
-+	field.reg = AT91SAM9_SMC_PULSE(AT91SAM9_SMC_GENERIC);
-+	fields.pulse = devm_regmap_field_alloc(dev, smc, field);
-+	if (IS_ERR(fields.pulse))
-+		return PTR_ERR(fields.pulse);
-+
-+	field.reg = AT91SAM9_SMC_CYCLE(AT91SAM9_SMC_GENERIC);
-+	fields.cycle = devm_regmap_field_alloc(dev, smc, field);
-+	if (IS_ERR(fields.cycle))
-+		return PTR_ERR(fields.cycle);
-+
-+	field.reg = AT91SAM9_SMC_MODE(AT91SAM9_SMC_GENERIC);
-+	fields.mode = devm_regmap_field_alloc(dev, smc, field);
-+	if (IS_ERR(fields.mode))
-+		return PTR_ERR(fields.mode);
-+
-+	return 0;
-+}
-+
- static int pata_at91_probe(struct platform_device *pdev)
- {
- 	struct at91_cf_data *board = dev_get_platdata(&pdev->dev);
-@@ -341,6 +383,14 @@ static int pata_at91_probe(struct platform_device *pdev)
- 
- 	irq = board->irq_pin;
- 
-+	smc = syscon_regmap_lookup_by_phandle(pdev->dev.of_node, "atmel,smc");
-+	if (IS_ERR(smc))
-+		return PTR_ERR(smc);
-+
-+	ret = at91sam9_smc_fields_init(dev);
-+	if (ret < 0)
-+		return ret;
-+
- 	/* init ata host */
- 
- 	host = ata_host_alloc(dev, 1);
+ # CPU-specific support
+ obj-$(CONFIG_SOC_AT91RM9200)	+= at91rm9200.o
+ obj-$(CONFIG_SOC_AT91SAM9)	+= at91sam9.o
+diff --git a/arch/arm/mach-at91/include/mach/at91sam9_smc.h b/arch/arm/mach-at91/include/mach/at91sam9_smc.h
+deleted file mode 100644
+index ff54a0ce90e3..000000000000
+--- a/arch/arm/mach-at91/include/mach/at91sam9_smc.h
++++ /dev/null
+@@ -1,98 +0,0 @@
+-/*
+- * arch/arm/mach-at91/include/mach/at91sam9_smc.h
+- *
+- * Copyright (C) 2007 Andrew Victor
+- * Copyright (C) 2007 Atmel Corporation.
+- *
+- * Static Memory Controllers (SMC) - System peripherals registers.
+- * Based on AT91SAM9261 datasheet revision D.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+- */
+-
+-#ifndef AT91SAM9_SMC_H
+-#define AT91SAM9_SMC_H
+-
+-#ifndef __ASSEMBLY__
+-struct sam9_smc_config {
+-	/* Setup register */
+-	u8 ncs_read_setup;
+-	u8 nrd_setup;
+-	u8 ncs_write_setup;
+-	u8 nwe_setup;
+-
+-	/* Pulse register */
+-	u8 ncs_read_pulse;
+-	u8 nrd_pulse;
+-	u8 ncs_write_pulse;
+-	u8 nwe_pulse;
+-
+-	/* Cycle register */
+-	u16 read_cycle;
+-	u16 write_cycle;
+-
+-	/* Mode register */
+-	u32 mode;
+-	u8 tdf_cycles:4;
+-};
+-
+-extern void sam9_smc_configure(int id, int cs, struct sam9_smc_config *config);
+-extern void sam9_smc_read(int id, int cs, struct sam9_smc_config *config);
+-extern void sam9_smc_read_mode(int id, int cs, struct sam9_smc_config *config);
+-extern void sam9_smc_write_mode(int id, int cs, struct sam9_smc_config *config);
+-#endif
+-
+-#define AT91_SMC_SETUP		0x00				/* Setup Register for CS n */
+-#define		AT91_SMC_NWESETUP	(0x3f << 0)			/* NWE Setup Length */
+-#define			AT91_SMC_NWESETUP_(x)	((x) << 0)
+-#define		AT91_SMC_NCS_WRSETUP	(0x3f << 8)			/* NCS Setup Length in Write Access */
+-#define			AT91_SMC_NCS_WRSETUP_(x)	((x) << 8)
+-#define		AT91_SMC_NRDSETUP	(0x3f << 16)			/* NRD Setup Length */
+-#define			AT91_SMC_NRDSETUP_(x)	((x) << 16)
+-#define		AT91_SMC_NCS_RDSETUP	(0x3f << 24)			/* NCS Setup Length in Read Access */
+-#define			AT91_SMC_NCS_RDSETUP_(x)	((x) << 24)
+-
+-#define AT91_SMC_PULSE		0x04				/* Pulse Register for CS n */
+-#define		AT91_SMC_NWEPULSE	(0x7f <<  0)			/* NWE Pulse Length */
+-#define			AT91_SMC_NWEPULSE_(x)	((x) << 0)
+-#define		AT91_SMC_NCS_WRPULSE	(0x7f <<  8)			/* NCS Pulse Length in Write Access */
+-#define			AT91_SMC_NCS_WRPULSE_(x)((x) << 8)
+-#define		AT91_SMC_NRDPULSE	(0x7f << 16)			/* NRD Pulse Length */
+-#define			AT91_SMC_NRDPULSE_(x)	((x) << 16)
+-#define		AT91_SMC_NCS_RDPULSE	(0x7f << 24)			/* NCS Pulse Length in Read Access */
+-#define			AT91_SMC_NCS_RDPULSE_(x)((x) << 24)
+-
+-#define AT91_SMC_CYCLE		0x08				/* Cycle Register for CS n */
+-#define		AT91_SMC_NWECYCLE	(0x1ff << 0 )			/* Total Write Cycle Length */
+-#define			AT91_SMC_NWECYCLE_(x)	((x) << 0)
+-#define		AT91_SMC_NRDCYCLE	(0x1ff << 16)			/* Total Read Cycle Length */
+-#define			AT91_SMC_NRDCYCLE_(x)	((x) << 16)
+-
+-#define AT91_SMC_MODE		0x0c				/* Mode Register for CS n */
+-#define		AT91_SMC_READMODE	(1 <<  0)			/* Read Mode */
+-#define		AT91_SMC_WRITEMODE	(1 <<  1)			/* Write Mode */
+-#define		AT91_SMC_EXNWMODE	(3 <<  4)			/* NWAIT Mode */
+-#define			AT91_SMC_EXNWMODE_DISABLE	(0 << 4)
+-#define			AT91_SMC_EXNWMODE_FROZEN	(2 << 4)
+-#define			AT91_SMC_EXNWMODE_READY		(3 << 4)
+-#define		AT91_SMC_BAT		(1 <<  8)			/* Byte Access Type */
+-#define			AT91_SMC_BAT_SELECT		(0 << 8)
+-#define			AT91_SMC_BAT_WRITE		(1 << 8)
+-#define		AT91_SMC_DBW		(3 << 12)			/* Data Bus Width */
+-#define			AT91_SMC_DBW_8			(0 << 12)
+-#define			AT91_SMC_DBW_16			(1 << 12)
+-#define			AT91_SMC_DBW_32			(2 << 12)
+-#define		AT91_SMC_TDF		(0xf << 16)			/* Data Float Time. */
+-#define			AT91_SMC_TDF_(x)		((x) << 16)
+-#define		AT91_SMC_TDFMODE	(1 << 20)			/* TDF Optimization - Enabled */
+-#define		AT91_SMC_PMEN		(1 << 24)			/* Page Mode Enabled */
+-#define		AT91_SMC_PS		(3 << 28)			/* Page Size */
+-#define			AT91_SMC_PS_4			(0 << 28)
+-#define			AT91_SMC_PS_8			(1 << 28)
+-#define			AT91_SMC_PS_16			(2 << 28)
+-#define			AT91_SMC_PS_32			(3 << 28)
+-
+-#endif
+diff --git a/arch/arm/mach-at91/sam9_smc.c b/arch/arm/mach-at91/sam9_smc.c
+deleted file mode 100644
+index 826315af6d11..000000000000
+--- a/arch/arm/mach-at91/sam9_smc.c
++++ /dev/null
+@@ -1,136 +0,0 @@
+-/*
+- * linux/arch/arm/mach-at91/sam9_smc.c
+- *
+- * Copyright (C) 2008 Andrew Victor
+- * Copyright (C) 2011 Jean-Christophe PLAGNIOL-VILLARD <plagnioj@jcrosoft.com>
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License version 2 as
+- * published by the Free Software Foundation.
+- */
+-
+-#include <linux/module.h>
+-#include <linux/io.h>
+-#include <linux/of.h>
+-#include <linux/of_address.h>
+-
+-#include <mach/at91sam9_smc.h>
+-
+-#include "sam9_smc.h"
+-
+-
+-#define AT91_SMC_CS(id, n)	(smc_base_addr[id] + ((n) * 0x10))
+-
+-static void __iomem *smc_base_addr[2];
+-
+-static void sam9_smc_cs_write_mode(void __iomem *base,
+-					struct sam9_smc_config *config)
+-{
+-	__raw_writel(config->mode
+-		   | AT91_SMC_TDF_(config->tdf_cycles),
+-		   base + AT91_SMC_MODE);
+-}
+-
+-void sam9_smc_write_mode(int id, int cs,
+-					struct sam9_smc_config *config)
+-{
+-	sam9_smc_cs_write_mode(AT91_SMC_CS(id, cs), config);
+-}
+-EXPORT_SYMBOL_GPL(sam9_smc_write_mode);
+-
+-static void sam9_smc_cs_configure(void __iomem *base,
+-					struct sam9_smc_config *config)
+-{
+-
+-	/* Setup register */
+-	__raw_writel(AT91_SMC_NWESETUP_(config->nwe_setup)
+-		   | AT91_SMC_NCS_WRSETUP_(config->ncs_write_setup)
+-		   | AT91_SMC_NRDSETUP_(config->nrd_setup)
+-		   | AT91_SMC_NCS_RDSETUP_(config->ncs_read_setup),
+-		   base + AT91_SMC_SETUP);
+-
+-	/* Pulse register */
+-	__raw_writel(AT91_SMC_NWEPULSE_(config->nwe_pulse)
+-		   | AT91_SMC_NCS_WRPULSE_(config->ncs_write_pulse)
+-		   | AT91_SMC_NRDPULSE_(config->nrd_pulse)
+-		   | AT91_SMC_NCS_RDPULSE_(config->ncs_read_pulse),
+-		   base + AT91_SMC_PULSE);
+-
+-	/* Cycle register */
+-	__raw_writel(AT91_SMC_NWECYCLE_(config->write_cycle)
+-		   | AT91_SMC_NRDCYCLE_(config->read_cycle),
+-		   base + AT91_SMC_CYCLE);
+-
+-	/* Mode register */
+-	sam9_smc_cs_write_mode(base, config);
+-}
+-
+-void sam9_smc_configure(int id, int cs,
+-					struct sam9_smc_config *config)
+-{
+-	sam9_smc_cs_configure(AT91_SMC_CS(id, cs), config);
+-}
+-EXPORT_SYMBOL_GPL(sam9_smc_configure);
+-
+-static void sam9_smc_cs_read_mode(void __iomem *base,
+-					struct sam9_smc_config *config)
+-{
+-	u32 val = __raw_readl(base + AT91_SMC_MODE);
+-
+-	config->mode = (val & ~AT91_SMC_NWECYCLE);
+-	config->tdf_cycles = (val & AT91_SMC_NWECYCLE) >> 16 ;
+-}
+-
+-void sam9_smc_read_mode(int id, int cs,
+-					struct sam9_smc_config *config)
+-{
+-	sam9_smc_cs_read_mode(AT91_SMC_CS(id, cs), config);
+-}
+-EXPORT_SYMBOL_GPL(sam9_smc_read_mode);
+-
+-static void sam9_smc_cs_read(void __iomem *base,
+-					struct sam9_smc_config *config)
+-{
+-	u32 val;
+-
+-	/* Setup register */
+-	val = __raw_readl(base + AT91_SMC_SETUP);
+-
+-	config->nwe_setup = val & AT91_SMC_NWESETUP;
+-	config->ncs_write_setup = (val & AT91_SMC_NCS_WRSETUP) >> 8;
+-	config->nrd_setup = (val & AT91_SMC_NRDSETUP) >> 16;
+-	config->ncs_read_setup = (val & AT91_SMC_NCS_RDSETUP) >> 24;
+-
+-	/* Pulse register */
+-	val = __raw_readl(base + AT91_SMC_PULSE);
+-
+-	config->nwe_pulse = val & AT91_SMC_NWEPULSE;
+-	config->ncs_write_pulse = (val & AT91_SMC_NCS_WRPULSE) >> 8;
+-	config->nrd_pulse = (val & AT91_SMC_NRDPULSE) >> 16;
+-	config->ncs_read_pulse = (val & AT91_SMC_NCS_RDPULSE) >> 24;
+-
+-	/* Cycle register */
+-	val = __raw_readl(base + AT91_SMC_CYCLE);
+-
+-	config->write_cycle = val & AT91_SMC_NWECYCLE;
+-	config->read_cycle = (val & AT91_SMC_NRDCYCLE) >> 16;
+-
+-	/* Mode register */
+-	sam9_smc_cs_read_mode(base, config);
+-}
+-
+-void sam9_smc_read(int id, int cs, struct sam9_smc_config *config)
+-{
+-	sam9_smc_cs_read(AT91_SMC_CS(id, cs), config);
+-}
+-
+-void __init at91sam9_ioremap_smc(int id, u32 addr)
+-{
+-	if (id > 1) {
+-		pr_warn("%s: id > 2\n", __func__);
+-		return;
+-	}
+-	smc_base_addr[id] = ioremap(addr, 512);
+-	if (!smc_base_addr[id])
+-		pr_warn("Impossible to ioremap smc.%d 0x%x\n", id, addr);
+-}
+diff --git a/arch/arm/mach-at91/sam9_smc.h b/arch/arm/mach-at91/sam9_smc.h
+deleted file mode 100644
+index 3e52dcd4a59f..000000000000
+--- a/arch/arm/mach-at91/sam9_smc.h
++++ /dev/null
+@@ -1,11 +0,0 @@
+-/*
+- * linux/arch/arm/mach-at91/sam9_smc.
+- *
+- * Copyright (C) 2008 Andrew Victor
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License version 2 as
+- * published by the Free Software Foundation.
+- */
+-
+-extern void __init at91sam9_ioremap_smc(int id, u32 addr);
 -- 
 2.1.0
+
