@@ -1,87 +1,92 @@
 From: Alexandre Belloni <alexandre.belloni@free-electrons.com>
-Subject: [PATCH 08/10] ARM: at91/pm: use the atmel-mc syscon defines
-Date: Mon, 16 Mar 2015 23:44:44 +0100
-Message-ID: <1426545886-19162-9-git-send-email-alexandre.belloni@free-electrons.com>
+Subject: [PATCH 10/10] ARM: at91: remove at91rm9200_sdramc.h
+Date: Mon, 16 Mar 2015 23:44:46 +0100
+Message-ID: <1426545886-19162-11-git-send-email-alexandre.belloni@free-electrons.com>
 References: <1426545886-19162-1-git-send-email-alexandre.belloni@free-electrons.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:38420 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755079AbbCPWo4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Mar 2015 18:44:56 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1426545886-19162-1-git-send-email-alexandre.belloni@free-electrons.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Nicolas Ferre <nicolas.ferre@atmel.com>
 Cc: Lee Jones <lee.jones@linaro.org>, Boris Brezillon <boris.brezillon@free-electrons.com>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-arm-kernel@lists.infradead.org, Alexandre Belloni <alexandre.belloni@free-electrons.com>
+List-Id: linux-ide@vger.kernel.org
 
-Use the defines from atmel-mc.h instead of at91rm9200_sdramc.h
+include/soc/at91/at91rm9200_sdramc.h is replaced by
+include/linux/mfd/syscon/atmel-smc.h as this is actually a syscon device.
 
 Signed-off-by: Alexandre Belloni <alexandre.belloni@free-electrons.com>
 ---
- arch/arm/mach-at91/include/mach/at91_ramc.h | 2 +-
- arch/arm/mach-at91/pm.c                     | 8 ++++----
- arch/arm/mach-at91/pm_suspend.S             | 2 +-
- 3 files changed, 6 insertions(+), 6 deletions(-)
+ include/soc/at91/at91rm9200_sdramc.h | 63 ------------------------------------
+ 1 file changed, 63 deletions(-)
+ delete mode 100644 include/soc/at91/at91rm9200_sdramc.h
 
-diff --git a/arch/arm/mach-at91/include/mach/at91_ramc.h b/arch/arm/mach-at91/include/mach/at91_ramc.h
-index 493bc486e858..39547496d4b0 100644
---- a/arch/arm/mach-at91/include/mach/at91_ramc.h
-+++ b/arch/arm/mach-at91/include/mach/at91_ramc.h
-@@ -21,7 +21,7 @@ extern void __iomem *at91_ramc_base[];
- .extern at91_ramc_base
- #endif
- 
--#include <soc/at91/at91rm9200_sdramc.h>
-+#include <linux/mfd/syscon/atmel-mc.h>
- #include <soc/at91/at91sam9_ddrsdr.h>
- #include <soc/at91/at91sam9_sdramc.h>
- 
-diff --git a/arch/arm/mach-at91/pm.c b/arch/arm/mach-at91/pm.c
-index 5062699cbb12..1e184767c3be 100644
---- a/arch/arm/mach-at91/pm.c
-+++ b/arch/arm/mach-at91/pm.c
-@@ -233,7 +233,7 @@ static void at91_pm_set_standby(void (*at91_standby)(void))
-  */
- static void at91rm9200_standby(void)
- {
--	u32 lpr = at91_ramc_read(0, AT91RM9200_SDRAMC_LPR);
-+	u32 lpr = at91_ramc_read(0, AT91_MC_SDRAMC_LPR);
- 
- 	asm volatile(
- 		"b    1f\n\t"
-@@ -244,8 +244,8 @@ static void at91rm9200_standby(void)
- 		"    mcr    p15, 0, %0, c7, c0, 4\n\t"
- 		"    str    %5, [%1, %2]"
- 		:
--		: "r" (0), "r" (at91_ramc_base[0]), "r" (AT91RM9200_SDRAMC_LPR),
--		  "r" (1), "r" (AT91RM9200_SDRAMC_SRR),
-+		: "r" (0), "r" (at91_ramc_base[0]), "r" (AT91_MC_SDRAMC_LPR),
-+		  "r" (1), "r" (AT91_MC_SDRAMC_SRR),
- 		  "r" (lpr));
- }
- 
-@@ -414,7 +414,7 @@ void __init at91rm9200_pm_init(void)
- 	/*
- 	 * AT91RM9200 SDRAM low-power mode cannot be used with self-refresh.
- 	 */
--	at91_ramc_write(0, AT91RM9200_SDRAMC_LPR, 0);
-+	at91_ramc_write(0, AT91_MC_SDRAMC_LPR, 0);
- 
- 	at91_pm_data.uhp_udp_mask = AT91RM9200_PMC_UHP | AT91RM9200_PMC_UDP;
- 	at91_pm_data.memctrl = AT91_MEMCTRL_MC;
-diff --git a/arch/arm/mach-at91/pm_suspend.S b/arch/arm/mach-at91/pm_suspend.S
-index bd22b2c8a051..fda4e0164ed7 100644
---- a/arch/arm/mach-at91/pm_suspend.S
-+++ b/arch/arm/mach-at91/pm_suspend.S
-@@ -216,7 +216,7 @@ ENTRY(at91_sramc_self_refresh)
- 
- 	/* Active SDRAM self-refresh mode */
- 	mov	r3, #1
--	str	r3, [r2, #AT91RM9200_SDRAMC_SRR]
-+	str	r3, [r2, #AT91_MC_SDRAMC_SRR]
- 	b	exit_sramc_sf
- 
- ddrc_sf:
+diff --git a/include/soc/at91/at91rm9200_sdramc.h b/include/soc/at91/at91rm9200_sdramc.h
+deleted file mode 100644
+index aa047f458f1b..000000000000
+--- a/include/soc/at91/at91rm9200_sdramc.h
++++ /dev/null
+@@ -1,63 +0,0 @@
+-/*
+- * arch/arm/mach-at91/include/mach/at91rm9200_sdramc.h
+- *
+- * Copyright (C) 2005 Ivan Kokshaysky
+- * Copyright (C) SAN People
+- *
+- * Memory Controllers (SDRAMC only) - System peripherals registers.
+- * Based on AT91RM9200 datasheet revision E.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2 of the License, or
+- * (at your option) any later version.
+- */
+-
+-#ifndef AT91RM9200_SDRAMC_H
+-#define AT91RM9200_SDRAMC_H
+-
+-/* SDRAM Controller registers */
+-#define AT91RM9200_SDRAMC_MR		0x90			/* Mode Register */
+-#define		AT91RM9200_SDRAMC_MODE	(0xf << 0)		/* Command Mode */
+-#define			AT91RM9200_SDRAMC_MODE_NORMAL		(0 << 0)
+-#define			AT91RM9200_SDRAMC_MODE_NOP		(1 << 0)
+-#define			AT91RM9200_SDRAMC_MODE_PRECHARGE	(2 << 0)
+-#define			AT91RM9200_SDRAMC_MODE_LMR		(3 << 0)
+-#define			AT91RM9200_SDRAMC_MODE_REFRESH	(4 << 0)
+-#define		AT91RM9200_SDRAMC_DBW		(1   << 4)		/* Data Bus Width */
+-#define			AT91RM9200_SDRAMC_DBW_32	(0 << 4)
+-#define			AT91RM9200_SDRAMC_DBW_16	(1 << 4)
+-
+-#define AT91RM9200_SDRAMC_TR		0x94			/* Refresh Timer Register */
+-#define		AT91RM9200_SDRAMC_COUNT	(0xfff << 0)		/* Refresh Timer Count */
+-
+-#define AT91RM9200_SDRAMC_CR		0x98			/* Configuration Register */
+-#define		AT91RM9200_SDRAMC_NC		(3   <<  0)		/* Number of Column Bits */
+-#define			AT91RM9200_SDRAMC_NC_8	(0 << 0)
+-#define			AT91RM9200_SDRAMC_NC_9	(1 << 0)
+-#define			AT91RM9200_SDRAMC_NC_10	(2 << 0)
+-#define			AT91RM9200_SDRAMC_NC_11	(3 << 0)
+-#define		AT91RM9200_SDRAMC_NR		(3   <<  2)		/* Number of Row Bits */
+-#define			AT91RM9200_SDRAMC_NR_11	(0 << 2)
+-#define			AT91RM9200_SDRAMC_NR_12	(1 << 2)
+-#define			AT91RM9200_SDRAMC_NR_13	(2 << 2)
+-#define		AT91RM9200_SDRAMC_NB		(1   <<  4)		/* Number of Banks */
+-#define			AT91RM9200_SDRAMC_NB_2	(0 << 4)
+-#define			AT91RM9200_SDRAMC_NB_4	(1 << 4)
+-#define		AT91RM9200_SDRAMC_CAS		(3   <<  5)		/* CAS Latency */
+-#define			AT91RM9200_SDRAMC_CAS_2	(2 << 5)
+-#define		AT91RM9200_SDRAMC_TWR		(0xf <<  7)		/* Write Recovery Delay */
+-#define		AT91RM9200_SDRAMC_TRC		(0xf << 11)		/* Row Cycle Delay */
+-#define		AT91RM9200_SDRAMC_TRP		(0xf << 15)		/* Row Precharge Delay */
+-#define		AT91RM9200_SDRAMC_TRCD	(0xf << 19)		/* Row to Column Delay */
+-#define		AT91RM9200_SDRAMC_TRAS	(0xf << 23)		/* Active to Precharge Delay */
+-#define		AT91RM9200_SDRAMC_TXSR	(0xf << 27)		/* Exit Self Refresh to Active Delay */
+-
+-#define AT91RM9200_SDRAMC_SRR		0x9c			/* Self Refresh Register */
+-#define AT91RM9200_SDRAMC_LPR		0xa0			/* Low Power Register */
+-#define AT91RM9200_SDRAMC_IER		0xa4			/* Interrupt Enable Register */
+-#define AT91RM9200_SDRAMC_IDR		0xa8			/* Interrupt Disable Register */
+-#define AT91RM9200_SDRAMC_IMR		0xac			/* Interrupt Mask Register */
+-#define AT91RM9200_SDRAMC_ISR		0xb0			/* Interrupt Status Register */
+-
+-#endif
 -- 
 2.1.0
-
