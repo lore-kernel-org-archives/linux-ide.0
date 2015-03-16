@@ -1,92 +1,63 @@
 From: Alexandre Belloni <alexandre.belloni@free-electrons.com>
-Subject: [PATCH 10/10] ARM: at91: remove at91rm9200_sdramc.h
-Date: Mon, 16 Mar 2015 23:44:46 +0100
-Message-ID: <1426545886-19162-11-git-send-email-alexandre.belloni@free-electrons.com>
+Subject: [PATCH 02/10] ARM: at91/pm: move AT91_MEMCTRL_* to pm.h
+Date: Mon, 16 Mar 2015 23:44:38 +0100
+Message-ID: <1426545886-19162-3-git-send-email-alexandre.belloni@free-electrons.com>
 References: <1426545886-19162-1-git-send-email-alexandre.belloni@free-electrons.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org>
 In-Reply-To: <1426545886-19162-1-git-send-email-alexandre.belloni@free-electrons.com>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-pcmcia>,
+ <mailto:linux-pcmcia-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-pcmcia/>
+List-Post: <mailto:linux-pcmcia@lists.infradead.org>
+List-Help: <mailto:linux-pcmcia-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
+ <mailto:linux-pcmcia-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-pcmcia" <linux-pcmcia-bounces@lists.infradead.org>
+Errors-To: linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org
 To: Nicolas Ferre <nicolas.ferre@atmel.com>
-Cc: Lee Jones <lee.jones@linaro.org>, Boris Brezillon <boris.brezillon@free-electrons.com>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-arm-kernel@lists.infradead.org, Alexandre Belloni <alexandre.belloni@free-electrons.com>
+Cc: Boris Brezillon <boris.brezillon@free-electrons.com>, Lee Jones <lee.jones@linaro.org>, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Alexandre Belloni <alexandre.belloni@free-electrons.com>, Tejun Heo <tj@kernel.org>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-include/soc/at91/at91rm9200_sdramc.h is replaced by
-include/linux/mfd/syscon/atmel-smc.h as this is actually a syscon device.
+the AT91_MEMCTRL_* defines are only used by the pm code, move them to pm.h
 
 Signed-off-by: Alexandre Belloni <alexandre.belloni@free-electrons.com>
 ---
- include/soc/at91/at91rm9200_sdramc.h | 63 ------------------------------------
- 1 file changed, 63 deletions(-)
- delete mode 100644 include/soc/at91/at91rm9200_sdramc.h
+ arch/arm/mach-at91/include/mach/at91_ramc.h | 4 ----
+ arch/arm/mach-at91/pm.h                     | 4 ++++
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/include/soc/at91/at91rm9200_sdramc.h b/include/soc/at91/at91rm9200_sdramc.h
-deleted file mode 100644
-index aa047f458f1b..000000000000
---- a/include/soc/at91/at91rm9200_sdramc.h
-+++ /dev/null
-@@ -1,63 +0,0 @@
--/*
-- * arch/arm/mach-at91/include/mach/at91rm9200_sdramc.h
-- *
-- * Copyright (C) 2005 Ivan Kokshaysky
-- * Copyright (C) SAN People
-- *
-- * Memory Controllers (SDRAMC only) - System peripherals registers.
-- * Based on AT91RM9200 datasheet revision E.
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License as published by
-- * the Free Software Foundation; either version 2 of the License, or
-- * (at your option) any later version.
-- */
+diff --git a/arch/arm/mach-at91/include/mach/at91_ramc.h b/arch/arm/mach-at91/include/mach/at91_ramc.h
+index e4492b151fee..493bc486e858 100644
+--- a/arch/arm/mach-at91/include/mach/at91_ramc.h
++++ b/arch/arm/mach-at91/include/mach/at91_ramc.h
+@@ -21,10 +21,6 @@ extern void __iomem *at91_ramc_base[];
+ .extern at91_ramc_base
+ #endif
+ 
+-#define AT91_MEMCTRL_MC		0
+-#define AT91_MEMCTRL_SDRAMC	1
+-#define AT91_MEMCTRL_DDRSDR	2
 -
--#ifndef AT91RM9200_SDRAMC_H
--#define AT91RM9200_SDRAMC_H
--
--/* SDRAM Controller registers */
--#define AT91RM9200_SDRAMC_MR		0x90			/* Mode Register */
--#define		AT91RM9200_SDRAMC_MODE	(0xf << 0)		/* Command Mode */
--#define			AT91RM9200_SDRAMC_MODE_NORMAL		(0 << 0)
--#define			AT91RM9200_SDRAMC_MODE_NOP		(1 << 0)
--#define			AT91RM9200_SDRAMC_MODE_PRECHARGE	(2 << 0)
--#define			AT91RM9200_SDRAMC_MODE_LMR		(3 << 0)
--#define			AT91RM9200_SDRAMC_MODE_REFRESH	(4 << 0)
--#define		AT91RM9200_SDRAMC_DBW		(1   << 4)		/* Data Bus Width */
--#define			AT91RM9200_SDRAMC_DBW_32	(0 << 4)
--#define			AT91RM9200_SDRAMC_DBW_16	(1 << 4)
--
--#define AT91RM9200_SDRAMC_TR		0x94			/* Refresh Timer Register */
--#define		AT91RM9200_SDRAMC_COUNT	(0xfff << 0)		/* Refresh Timer Count */
--
--#define AT91RM9200_SDRAMC_CR		0x98			/* Configuration Register */
--#define		AT91RM9200_SDRAMC_NC		(3   <<  0)		/* Number of Column Bits */
--#define			AT91RM9200_SDRAMC_NC_8	(0 << 0)
--#define			AT91RM9200_SDRAMC_NC_9	(1 << 0)
--#define			AT91RM9200_SDRAMC_NC_10	(2 << 0)
--#define			AT91RM9200_SDRAMC_NC_11	(3 << 0)
--#define		AT91RM9200_SDRAMC_NR		(3   <<  2)		/* Number of Row Bits */
--#define			AT91RM9200_SDRAMC_NR_11	(0 << 2)
--#define			AT91RM9200_SDRAMC_NR_12	(1 << 2)
--#define			AT91RM9200_SDRAMC_NR_13	(2 << 2)
--#define		AT91RM9200_SDRAMC_NB		(1   <<  4)		/* Number of Banks */
--#define			AT91RM9200_SDRAMC_NB_2	(0 << 4)
--#define			AT91RM9200_SDRAMC_NB_4	(1 << 4)
--#define		AT91RM9200_SDRAMC_CAS		(3   <<  5)		/* CAS Latency */
--#define			AT91RM9200_SDRAMC_CAS_2	(2 << 5)
--#define		AT91RM9200_SDRAMC_TWR		(0xf <<  7)		/* Write Recovery Delay */
--#define		AT91RM9200_SDRAMC_TRC		(0xf << 11)		/* Row Cycle Delay */
--#define		AT91RM9200_SDRAMC_TRP		(0xf << 15)		/* Row Precharge Delay */
--#define		AT91RM9200_SDRAMC_TRCD	(0xf << 19)		/* Row to Column Delay */
--#define		AT91RM9200_SDRAMC_TRAS	(0xf << 23)		/* Active to Precharge Delay */
--#define		AT91RM9200_SDRAMC_TXSR	(0xf << 27)		/* Exit Self Refresh to Active Delay */
--
--#define AT91RM9200_SDRAMC_SRR		0x9c			/* Self Refresh Register */
--#define AT91RM9200_SDRAMC_LPR		0xa0			/* Low Power Register */
--#define AT91RM9200_SDRAMC_IER		0xa4			/* Interrupt Enable Register */
--#define AT91RM9200_SDRAMC_IDR		0xa8			/* Interrupt Disable Register */
--#define AT91RM9200_SDRAMC_IMR		0xac			/* Interrupt Mask Register */
--#define AT91RM9200_SDRAMC_ISR		0xb0			/* Interrupt Status Register */
--
--#endif
+ #include <soc/at91/at91rm9200_sdramc.h>
+ #include <soc/at91/at91sam9_ddrsdr.h>
+ #include <soc/at91/at91sam9_sdramc.h>
+diff --git a/arch/arm/mach-at91/pm.h b/arch/arm/mach-at91/pm.h
+index 3223967d3460..ecd875a91d52 100644
+--- a/arch/arm/mach-at91/pm.h
++++ b/arch/arm/mach-at91/pm.h
+@@ -15,6 +15,10 @@
+ 
+ #include <mach/at91_ramc.h>
+ 
++#define AT91_MEMCTRL_MC		0
++#define AT91_MEMCTRL_SDRAMC	1
++#define AT91_MEMCTRL_DDRSDR	2
++
+ #define	AT91_PM_MEMTYPE_MASK	0x0f
+ 
+ #define	AT91_PM_MODE_OFFSET	4
 -- 
 2.1.0
