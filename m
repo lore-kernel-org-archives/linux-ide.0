@@ -1,110 +1,206 @@
 From: Alexandre Belloni <alexandre.belloni@free-electrons.com>
-Subject: [PATCH 07/10] pcmcia: at91_cf: Use syscon to configure the MC/smc
-Date: Mon, 16 Mar 2015 23:44:43 +0100
-Message-ID: <1426545886-19162-8-git-send-email-alexandre.belloni@free-electrons.com>
+Subject: [PATCH 03/10] ata: at91: use syscon to configure the smc
+Date: Mon, 16 Mar 2015 23:44:39 +0100
+Message-ID: <1426545886-19162-4-git-send-email-alexandre.belloni@free-electrons.com>
 References: <1426545886-19162-1-git-send-email-alexandre.belloni@free-electrons.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
 In-Reply-To: <1426545886-19162-1-git-send-email-alexandre.belloni@free-electrons.com>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
 To: Nicolas Ferre <nicolas.ferre@atmel.com>
-Cc: Lee Jones <lee.jones@linaro.org>, Boris Brezillon <boris.brezillon@free-electrons.com>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-arm-kernel@lists.infradead.org, Alexandre Belloni <alexandre.belloni@free-electrons.com>
+Cc: Boris Brezillon <boris.brezillon@free-electrons.com>, Lee Jones <lee.jones@linaro.org>, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Alexandre Belloni <alexandre.belloni@free-electrons.com>, Tejun Heo <tj@kernel.org>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-Use syscon/regmap to configure the smc part of the memory controller. This
-allows to avoid using mach/at91rm9200_mc.h and mach/at91_ramc.h and to compile
-the driver in a multiplatform configuration.
+Use syscon/regmap to configure the smc. This allows to avoid using
+at91sam9_smc.h and to compile the driver in a multiplatform configuration.
+
+The driver will still not probe until the proper DT bindings are added.
 
 Signed-off-by: Alexandre Belloni <alexandre.belloni@free-electrons.com>
 ---
- drivers/pcmcia/Kconfig   |  1 -
- drivers/pcmcia/at91_cf.c | 25 ++++++++++++++-----------
- 2 files changed, 14 insertions(+), 12 deletions(-)
+ drivers/ata/Kconfig     |  1 -
+ drivers/ata/pata_at91.c | 92 ++++++++++++++++++++++++++++++++++++++-----------
+ 2 files changed, 71 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/pcmcia/Kconfig b/drivers/pcmcia/Kconfig
-index 075d5cd4c5ab..56ff3dc1235e 100644
---- a/drivers/pcmcia/Kconfig
-+++ b/drivers/pcmcia/Kconfig
-@@ -280,7 +280,6 @@ config AT91_CF
- 	tristate "AT91 CompactFlash Controller"
- 	depends on PCI
- 	depends on PCMCIA && ARCH_AT91
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 5f601553b9b0..a3a13605a9c4 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -835,7 +835,6 @@ config PATA_AT32
+ config PATA_AT91
+ 	tristate "PATA support for AT91SAM9260"
+ 	depends on ARM && SOC_AT91SAM9
 -	depends on !ARCH_MULTIPLATFORM
  	help
- 	  Say Y here to support the CompactFlash controller on AT91 chips.
- 	  Or choose M to compile the driver as a module named "at91_cf".
-diff --git a/drivers/pcmcia/at91_cf.c b/drivers/pcmcia/at91_cf.c
-index e7775a41ae5d..87147bcd1655 100644
---- a/drivers/pcmcia/at91_cf.c
-+++ b/drivers/pcmcia/at91_cf.c
-@@ -20,16 +20,15 @@
- #include <linux/platform_data/atmel.h>
- #include <linux/io.h>
- #include <linux/sizes.h>
+ 	  This option enables support for IDE devices on the Atmel AT91SAM9260 SoC.
+ 
+diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
+index 9e85937d36a9..ace0a4de3449 100644
+--- a/drivers/ata/pata_at91.c
++++ b/drivers/ata/pata_at91.c
+@@ -24,11 +24,13 @@
+ #include <linux/ata.h>
+ #include <linux/clk.h>
+ #include <linux/libata.h>
 +#include <linux/mfd/syscon.h>
-+#include <linux/mfd/syscon/atmel-mc.h>
- #include <linux/of.h>
- #include <linux/of_device.h>
- #include <linux/of_gpio.h>
++#include <linux/mfd/syscon/atmel-smc.h>
+ #include <linux/platform_device.h>
+ #include <linux/ata_platform.h>
+ #include <linux/platform_data/atmel.h>
 +#include <linux/regmap.h>
  
- #include <pcmcia/ss.h>
+-#include <mach/at91sam9_smc.h>
+ #include <asm/gpio.h>
  
--#include <mach/at91rm9200_mc.h>
--#include <mach/at91_ramc.h>
--
--
- /*
-  * A0..A10 work in each range; A23 indicates I/O space;  A25 is CFRNW;
-  * some other bit in {A24,A22..A11} is nREG to flag memory access
-@@ -40,6 +39,8 @@
- #define	CF_IO_PHYS	(1 << 23)
- #define	CF_MEM_PHYS	(0x017ff800)
+ #define DRV_NAME		"pata_at91"
+@@ -57,6 +59,15 @@ struct smc_range {
+ 	int max;
+ };
  
-+struct regmap *mc;
++struct regmap *smc;
 +
- /*--------------------------------------------------------------------------*/
- 
- struct at91_cf_socket {
-@@ -155,10 +156,7 @@ static int at91_cf_set_io_map(struct pcmcia_socket *s, struct pccard_io_map *io)
- 
- 	/*
- 	 * Use 16 bit accesses unless/until we need 8-bit i/o space.
--	 */
--	csr = at91_ramc_read(0, AT91_SMC_CSR(cf->board->chipselect)) & ~AT91_SMC_DBW;
--
--	/*
-+	 *
- 	 * NOTE: this CF controller ignores IOIS16, so we can't really do
- 	 * MAP_AUTOSZ.  The 16bit mode allows single byte access on either
- 	 * D0-D7 (even addr) or D8-D15 (odd), so it's close enough for many
-@@ -169,13 +167,14 @@ static int at91_cf_set_io_map(struct pcmcia_socket *s, struct pccard_io_map *io)
- 	 * CF 3.0 spec table 35 also giving the D8-D15 option.
- 	 */
- 	if (!(io->flags & (MAP_16BIT | MAP_AUTOSZ))) {
--		csr |= AT91_SMC_DBW_8;
-+		csr = AT91_MC_SMC_DBW_8;
- 		dev_dbg(&cf->pdev->dev, "8bit i/o bus\n");
- 	} else {
--		csr |= AT91_SMC_DBW_16;
-+		csr = AT91_MC_SMC_DBW_16;
- 		dev_dbg(&cf->pdev->dev, "16bit i/o bus\n");
- 	}
--	at91_ramc_write(0, AT91_SMC_CSR(cf->board->chipselect), csr);
-+	regmap_update_bits(mc, AT91_MC_SMC_CSR(cf->board->chipselect),
-+			   AT91_MC_SMC_DBW, csr);
- 
- 	io->start = cf->socket.io_offset;
- 	io->stop = io->start + SZ_2K - 1;
-@@ -236,6 +235,10 @@ static int at91_cf_dt_init(struct platform_device *pdev)
- 
- 	pdev->dev.platform_data = board;
- 
-+	mc = syscon_regmap_lookup_by_compatible("atmel,at91rm9200-sdramc");
-+	if (IS_ERR(mc))
-+		return PTR_ERR(mc);
++struct at91sam9_smc_generic_fields {
++	struct regmap_field *setup;
++	struct regmap_field *pulse;
++	struct regmap_field *cycle;
++	struct regmap_field *mode;
++} fields;
 +
- 	return 0;
+ /**
+  * adjust_smc_value - adjust value for one of SMC registers.
+  * @value: adjusted value
+@@ -206,7 +217,6 @@ static void set_smc_timing(struct device *dev, struct ata_device *adev,
+ {
+ 	int ret = 0;
+ 	int use_iordy;
+-	struct sam9_smc_config smc;
+ 	unsigned int t6z;         /* data tristate time in ns */
+ 	unsigned int cycle;       /* SMC Cycle width in MCK ticks */
+ 	unsigned int setup;       /* SMC Setup width in MCK ticks */
+@@ -244,19 +254,21 @@ static void set_smc_timing(struct device *dev, struct ata_device *adev,
+ 
+ 	dev_dbg(dev, "Use IORDY=%u, TDF Cycles=%u\n", use_iordy, tdf_cycles);
+ 
+-	/* SMC Setup Register */
+-	smc.nwe_setup = smc.nrd_setup = setup;
+-	smc.ncs_write_setup = smc.ncs_read_setup = 0;
+-	/* SMC Pulse Register */
+-	smc.nwe_pulse = smc.nrd_pulse = pulse;
+-	smc.ncs_write_pulse = smc.ncs_read_pulse = cs_pulse;
+-	/* SMC Cycle Register */
+-	smc.write_cycle = smc.read_cycle = cycle;
+-	/* SMC Mode Register*/
+-	smc.tdf_cycles = tdf_cycles;
+-	smc.mode = info->mode;
+-
+-	sam9_smc_configure(0, info->cs, &smc);
++	regmap_fields_write(fields.setup, info->cs,
++			    AT91SAM9_SMC_NRDSETUP(setup) |
++			    AT91SAM9_SMC_NWESETUP(setup) |
++			    AT91SAM9_SMC_NCS_NRDSETUP(0) |
++			    AT91SAM9_SMC_NCS_WRSETUP(0));
++	regmap_fields_write(fields.pulse, info->cs,
++			    AT91SAM9_SMC_NRDPULSE(pulse) |
++			    AT91SAM9_SMC_NWEPULSE(pulse) |
++			    AT91SAM9_SMC_NCS_NRDPULSE(cs_pulse) |
++			    AT91SAM9_SMC_NCS_WRPULSE(cs_pulse));
++	regmap_fields_write(fields.cycle, info->cs,
++			    AT91SAM9_SMC_NRDCYCLE(cycle) |
++			    AT91SAM9_SMC_NWECYCLE(cycle));
++	regmap_fields_write(fields.mode, info->cs, info->mode |
++			    AT91_SMC_TDF_(tdf_cycles));
  }
- #else
+ 
+ static void pata_at91_set_piomode(struct ata_port *ap, struct ata_device *adev)
+@@ -280,21 +292,21 @@ static unsigned int pata_at91_data_xfer_noirq(struct ata_device *dev,
+ {
+ 	struct at91_ide_info *info = dev->link->ap->host->private_data;
+ 	unsigned int consumed;
++	unsigned int mode;
+ 	unsigned long flags;
+-	struct sam9_smc_config smc;
+ 
+ 	local_irq_save(flags);
+-	sam9_smc_read_mode(0, info->cs, &smc);
++	regmap_fields_read(fields.mode, info->cs, &mode);
+ 
+ 	/* set 16bit mode before writing data */
+-	smc.mode = (smc.mode & ~AT91_SMC_DBW) | AT91_SMC_DBW_16;
+-	sam9_smc_write_mode(0, info->cs, &smc);
++	regmap_fields_write(fields.mode, info->cs, (mode & ~AT91_SMC_DBW) |
++			    AT91_SMC_DBW_16);
+ 
+ 	consumed = ata_sff_data_xfer(dev, buf, buflen, rw);
+ 
+ 	/* restore 8bit mode after data is written */
+-	smc.mode = (smc.mode & ~AT91_SMC_DBW) | AT91_SMC_DBW_8;
+-	sam9_smc_write_mode(0, info->cs, &smc);
++	regmap_fields_write(fields.mode, info->cs, (mode & ~AT91_SMC_DBW) |
++			    AT91_SMC_DBW_8);
+ 
+ 	local_irq_restore(flags);
+ 	return consumed;
+@@ -312,6 +324,36 @@ static struct ata_port_operations pata_at91_port_ops = {
+ 	.cable_detect	= ata_cable_40wire,
+ };
+ 
++static int at91sam9_smc_fields_init(struct device *dev)
++{
++	struct reg_field field = REG_FIELD(0, 0, 31);
++
++	field.id_size = 8;
++	field.id_offset = AT91SAM9_SMC_GENERIC_BLK_SZ;
++
++	field.reg = AT91SAM9_SMC_SETUP(AT91SAM9_SMC_GENERIC);
++	fields.setup = devm_regmap_field_alloc(dev, smc, field);
++	if (IS_ERR(fields.setup))
++		return PTR_ERR(fields.setup);
++
++	field.reg = AT91SAM9_SMC_PULSE(AT91SAM9_SMC_GENERIC);
++	fields.pulse = devm_regmap_field_alloc(dev, smc, field);
++	if (IS_ERR(fields.pulse))
++		return PTR_ERR(fields.pulse);
++
++	field.reg = AT91SAM9_SMC_CYCLE(AT91SAM9_SMC_GENERIC);
++	fields.cycle = devm_regmap_field_alloc(dev, smc, field);
++	if (IS_ERR(fields.cycle))
++		return PTR_ERR(fields.cycle);
++
++	field.reg = AT91SAM9_SMC_MODE(AT91SAM9_SMC_GENERIC);
++	fields.mode = devm_regmap_field_alloc(dev, smc, field);
++	if (IS_ERR(fields.mode))
++		return PTR_ERR(fields.mode);
++
++	return 0;
++}
++
+ static int pata_at91_probe(struct platform_device *pdev)
+ {
+ 	struct at91_cf_data *board = dev_get_platdata(&pdev->dev);
+@@ -341,6 +383,14 @@ static int pata_at91_probe(struct platform_device *pdev)
+ 
+ 	irq = board->irq_pin;
+ 
++	smc = syscon_regmap_lookup_by_phandle(pdev->dev.of_node, "atmel,smc");
++	if (IS_ERR(smc))
++		return PTR_ERR(smc);
++
++	ret = at91sam9_smc_fields_init(dev);
++	if (ret < 0)
++		return ret;
++
+ 	/* init ata host */
+ 
+ 	host = ata_host_alloc(dev, 1);
 -- 
 2.1.0
