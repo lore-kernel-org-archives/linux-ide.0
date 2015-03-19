@@ -1,91 +1,95 @@
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Subject: Re: [PATCH RESEND] sata: xgene: add ACPI support for APM X-Gene SATA ports
-Date: Thu, 19 Mar 2015 12:32:33 +0100
-Message-ID: <5003912.K8jaqGYKiW@vostro.rjw.lan>
-References: <1426723435-22378-1-git-send-email-fkan@apm.com> <20150319095850.GO2165@lahna.fi.intel.com>
+From: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 5/5] ARM: dts: brcmstb: add nodes for SATA controller
+ and PHY
+Date: Thu, 19 Mar 2015 12:10:25 +0100
+Message-ID: <550AAEA1.5080301@redhat.com>
+References: <1426728222-8197-1-git-send-email-computersforpeace@gmail.com> <1426728222-8197-5-git-send-email-computersforpeace@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from v094114.home.net.pl ([79.96.170.134]:56310 "HELO
-	v094114.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752002AbbCSLIj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Mar 2015 07:08:39 -0400
-In-Reply-To: <20150319095850.GO2165@lahna.fi.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1426728222-8197-5-git-send-email-computersforpeace-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Brian Norris <computersforpeace-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kishon Vijay Abraham I <kishon-l0cyMroinI0@public.gmane.org>
+Cc: Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Pawel Moll <pawel.moll-5wv7dgnIgG8@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Ian Campbell <ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org>, Kumar Gala <galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Gregory Fong <gregory.0xf0-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Florian Fainelli <f.fainelli-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: Mika Westerberg <mika.westerberg@linux.intel.com>, Feng Kan <fkan@apm.com>, tj@kernel.org
-Cc: patches@apm.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
 
-On Thursday, March 19, 2015 11:58:50 AM Mika Westerberg wrote:
-> On Wed, Mar 18, 2015 at 05:03:55PM -0700, Feng Kan wrote:
-> > This adds ACPI support for the APM X-Gene SATA ports. When the system
-> > boots using ACPI table, the SATA ports are able to configure using the
-> > values supplied by the ACPI table rather than the DTS.
-> > 
-> > Signed-off-by: Feng Kan <fkan@apm.com>
-> > Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
-> 
-> One minor comment, see below. Other than that this looks good to me:
-> 
-> Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Hi,
 
-Thanks Mika!
+On 19-03-15 02:23, Brian Norris wrote:
+> Signed-off-by: Brian Norris <computersforpeace-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> ---
+> Light dependency on:
+>    http://lists.infradead.org/pipermail/linux-arm-kernel/2015-March/331921.html
+> for the surrounding text.
+>
+>   arch/arm/boot/dts/bcm7445.dtsi | 36 ++++++++++++++++++++++++++++++++++++
+>   1 file changed, 36 insertions(+)
+>
+> diff --git a/arch/arm/boot/dts/bcm7445.dtsi b/arch/arm/boot/dts/bcm7445.dtsi
+> index 9eaeac8dce1b..7a7c4d8c2afe 100644
+> --- a/arch/arm/boot/dts/bcm7445.dtsi
+> +++ b/arch/arm/boot/dts/bcm7445.dtsi
+> @@ -108,6 +108,42 @@
+>   			brcm,int-map-mask = <0x25c>, <0x7000000>;
+>   			brcm,int-fwd-mask = <0x70000>;
+>   		};
+> +
+> +		sata@f045a000 {
+> +			compatible = "brcm,bcm7445-ahci", "brcm,sata3-ahci";
+> +			reg-names = "ahci", "top-ctrl";
+> +			reg = <0x45a000 0xa9c>, <0x458040 0x24>;
 
-So for the patch
+Why not simply drop the second register range here, and the minimal top-ctrl
+poking you need in the phy driver's phy_init function ?
 
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+This avoids the weird / ugly register overlap with the phy driver, and I think you
+can then just use the ahci_platform driver unmodified.
 
-> > ---
-> >  drivers/ata/ahci_xgene.c | 10 ++++++++++
-> >  1 file changed, 10 insertions(+)
-> > 
-> > diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-> > index 2e8bb60..2b78510 100644
-> > --- a/drivers/ata/ahci_xgene.c
-> > +++ b/drivers/ata/ahci_xgene.c
-> > @@ -22,6 +22,7 @@
-> >   * NOTE: PM support is not currently available.
-> >   *
-> >   */
-> > +#include <linux/acpi.h>
-> >  #include <linux/module.h>
-> >  #include <linux/platform_device.h>
-> >  #include <linux/ahci_platform.h>
-> > @@ -718,6 +719,14 @@ disable_resources:
-> >  	return rc;
-> >  }
-> >  
-> > +#ifdef CONFIG_ACPI
-> > +static const struct acpi_device_id xgene_ahci_acpi_match[] = {
-> > +	{ "APMC0D0D", },
-> 
-> I think writing the above without comma would look better:
-> 
-> 	{ "APMC0D0D" },
-> 
-> 
-> > +	{ }
-> > +};
-> > +MODULE_DEVICE_TABLE(acpi, xgene_ahci_acpi_match);
-> > +#endif
-> > +
-> >  static const struct of_device_id xgene_ahci_of_match[] = {
-> >  	{.compatible = "apm,xgene-ahci"},
-> >  	{},
-> > @@ -730,6 +739,7 @@ static struct platform_driver xgene_ahci_driver = {
-> >  	.driver = {
-> >  		.name = DRV_NAME,
-> >  		.of_match_table = xgene_ahci_of_match,
-> > +		.acpi_match_table = ACPI_PTR(xgene_ahci_acpi_match),
-> >  	},
-> >  };
-> >  
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> +			interrupts = <GIC_SPI 30 0>;
+> +			#address-cells = <1>;
+> +			#size-cells = <0>;
+> +
+> +			sata0: sata-port@0 {
+> +				reg = <0>;
+> +				phys = <&sata_phy 0>;
+> +			};
+> +
+> +			sata1: sata-port@1 {
+> +				reg = <1>;
+> +				phys = <&sata_phy 1>;
+> +			};
+> +		};
+> +
+> +		sata_phy: sata-phy@f0458100 {
+> +			compatible = "brcm,bcm7445-sata-phy", "brcm,phy-sata3";
+> +			reg = <0x458100 0x1e00>, <0x45804c 0x10>;
 
--- 
-I speak only for myself.
-Rafael J. Wysocki, Intel Open Source Technology Center.
+Why not simply use: reg = <0x458000 0x2000>, to me it seems that what you should
+really be using here.
+
+> +			reg-names = "phy", "port-ctrl";
+> +			#phy-cells = <1>;
+> +			#address-cells = <0x1>;
+> +			#size-cells = <0x0>;
+> +
+> +			sata-phy@0 {
+> +				reg = <0>;
+> +			};
+> +
+> +			sata-phy@1 {
+> +				reg = <1>;
+> +			};
+> +		};
+>   	};
+>
+>   	smpboot {
+>
+
+Regards,
+
+Hans
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
