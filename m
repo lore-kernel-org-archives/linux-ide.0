@@ -1,29 +1,37 @@
 From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH v2] ide_tape: convert jiffies with jiffies_to_msecs
-Date: Wed, 18 Mar 2015 23:27:05 -0400 (EDT)
-Message-ID: <20150318.232705.2124623765475489475.davem@davemloft.net>
-References: <1425379971-12641-1-git-send-email-hofrat@osadl.org>
+Subject: [GIT] IDE
+Date: Thu, 19 Mar 2015 00:59:19 -0400 (EDT)
+Message-ID: <20150319.005919.1254990682721385315.davem@davemloft.net>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1425379971-12641-1-git-send-email-hofrat@osadl.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: hofrat@osadl.org
-Cc: joe@perches.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-From: Nicholas Mc Guire <hofrat@osadl.org>
-Date: Tue,  3 Mar 2015 05:52:51 -0500
 
-> Use jiffies_to_msecs for converting jiffies as it handles all of the corner
-> cases reliably and also helps readability. The printk format is fixed up 
-> as jiffies_to_msecs returns unsigned int not unsigned long.
-> 
-> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
-> ---
-> 
-> v2: change printk format string from %d to %u as suggested by
->     Joe Perches <joe@perches.com>.
+Just one fix to convert a by-hand conversion of jiffies to
+msecs, from Nicholas McGuire.
 
-Applied, thanks.
+Please pull, thanks a lot!
+
+The following changes since commit 7b09ac704bac2de5bf0362793edc22a0094e381c:
+
+  Merge tag 'sound-4.0-rc5' of git://git.kernel.org/pub/scm/linux/kernel/git/tiwai/sound (2015-03-18 11:17:03 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide.git 
+
+for you to fetch changes up to 842159640782539a80153c040d6fc2b80756aa3a:
+
+  ide_tape: convert jiffies with jiffies_to_msecs (2015-03-18 23:25:57 -0400)
+
+----------------------------------------------------------------
+Nicholas Mc Guire (1):
+      ide_tape: convert jiffies with jiffies_to_msecs
+
+ drivers/ide/ide-tape.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
