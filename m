@@ -1,64 +1,66 @@
-From: Sergei Shtylyov <sergei.shtylyov-M4DtvfQ/ZS1MRgGoP+s0PdBPR1lH4CV8@public.gmane.org>
-Subject: Re: [PATCH 5/5] ARM: dts: brcmstb: add nodes for SATA controller
- and PHY
-Date: Thu, 19 Mar 2015 14:33:32 +0300
-Message-ID: <550AB40C.8060607@cogentembedded.com>
-References: <1426728222-8197-1-git-send-email-computersforpeace@gmail.com> <1426728222-8197-5-git-send-email-computersforpeace@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1426728222-8197-5-git-send-email-computersforpeace-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Brian Norris <computersforpeace-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kishon Vijay Abraham I <kishon-l0cyMroinI0@public.gmane.org>
-Cc: Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Pawel Moll <pawel.moll-5wv7dgnIgG8@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Ian Campbell <ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org>, Kumar Gala <galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Gregory Fong <gregory.0xf0-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Florian Fainelli <f.fainelli-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: [PATCH] ata: sata_mv: add proper definitions for LP_PHY_CTL register values
+Date: Thu, 19 Mar 2015 14:36:37 +0100
+Message-ID: <1426772197-17908-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from down.free-electrons.com ([37.187.137.238]:59170 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751362AbbCSNhA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 Mar 2015 09:37:00 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Gregory Clement <gregory.clement@free-electrons.com>, linux-arm-kernel@lists.infradead.org, Simon Guinot <simon.guinot@sequanux.org>, Christophe Vu-Brugier <cvubrugier@lacie.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 
-Hello.
+Commit 9013d64e661fc ("ata: sata_mv: fix disk hotplug for Armada
+370/XP SoCs") added some manipulation of the LP_PHY_CTL register, but
+using magic values. This commit changes the code to use proper
+definitions for the LP_PHY_CTL register, which allows to document what
+the different bits are doing.
 
-On 3/19/2015 4:23 AM, Brian Norris wrote:
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/ata/sata_mv.c | 20 ++++++++++++++++----
+ 1 file changed, 16 insertions(+), 4 deletions(-)
 
-> Signed-off-by: Brian Norris <computersforpeace-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> ---
-> Light dependency on:
->    http://lists.infradead.org/pipermail/linux-arm-kernel/2015-March/331921.html
-> for the surrounding text.
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index f8c33e3..0281785 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -306,6 +306,11 @@ enum {
+ 	MV5_PHY_CTL		= 0x0C,
+ 	SATA_IFCFG		= 0x050,
+ 	LP_PHY_CTL		= 0x058,
++	LP_PHY_CTL_PIN_PU_PLL   = (1 << 0),
++	LP_PHY_CTL_PIN_PU_RX    = (1 << 1),
++	LP_PHY_CTL_PIN_PU_TX    = (1 << 2),
++	LP_PHY_CTL_GEN_TX_3G    = (1 << 5),
++	LP_PHY_CTL_GEN_RX_3G    = (1 << 9),
+ 
+ 	MV_M2_PREAMP_MASK	= 0x7e0,
+ 
+@@ -1391,10 +1396,17 @@ static int mv_scr_write(struct ata_link *link, unsigned int sc_reg_in, u32 val)
+ 				/*
+ 				 * Set PHY speed according to SControl speed.
+ 				 */
+-				if ((val & 0xf0) == 0x10)
+-					writelfl(0x7, lp_phy_addr);
+-				else
+-					writelfl(0x227, lp_phy_addr);
++				u32 lp_phy_val =
++					LP_PHY_CTL_PIN_PU_PLL |
++					LP_PHY_CTL_PIN_PU_RX  |
++					LP_PHY_CTL_PIN_PU_TX;
++
++				if ((val & 0xf0) != 0x10)
++					lp_phy_val |=
++						LP_PHY_CTL_GEN_TX_3G |
++						LP_PHY_CTL_GEN_RX_3G;
++
++				writelfl(lp_phy_val, lp_phy_addr);
+ 			}
+ 		}
+ 		writelfl(val, addr);
+-- 
+2.1.0
 
->   arch/arm/boot/dts/bcm7445.dtsi | 36 ++++++++++++++++++++++++++++++++++++
->   1 file changed, 36 insertions(+)
-
-> diff --git a/arch/arm/boot/dts/bcm7445.dtsi b/arch/arm/boot/dts/bcm7445.dtsi
-> index 9eaeac8dce1b..7a7c4d8c2afe 100644
-> --- a/arch/arm/boot/dts/bcm7445.dtsi
-> +++ b/arch/arm/boot/dts/bcm7445.dtsi
-> @@ -108,6 +108,42 @@
->   			brcm,int-map-mask = <0x25c>, <0x7000000>;
->   			brcm,int-fwd-mask = <0x70000>;
->   		};
-> +
-> +		sata@f045a000 {
-
-    Hm, why the <unit-address> part of the name doesn't correspond to the 
-"reg" prop?
-
-> +			compatible = "brcm,bcm7445-ahci", "brcm,sata3-ahci";
-> +			reg-names = "ahci", "top-ctrl";
-> +			reg = <0x45a000 0xa9c>, <0x458040 0x24>;
-> +			interrupts = <GIC_SPI 30 0>;
-> +			#address-cells = <1>;
-> +			#size-cells = <0>;
-[...]
-> +		sata_phy: sata-phy@f0458100 {
-
-    Same question here...
-
-> +			compatible = "brcm,bcm7445-sata-phy", "brcm,phy-sata3";
-> +			reg = <0x458100 0x1e00>, <0x45804c 0x10>;
-[...]
-
-WBR, Sergei
-
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
