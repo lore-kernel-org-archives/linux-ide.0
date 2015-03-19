@@ -1,47 +1,58 @@
-From: Fabian Frederick <fabf@skynet.be>
-Subject: Re: [PATCH 01/35 linux-next] ata: constify of_device_id array
-Date: Tue, 17 Mar 2015 19:48:16 +0100 (CET)
-Message-ID: <833110133.20140.1426618096533.open-xchange@webmail.nmp.proximus.be>
-References: <1426533469-25458-1-git-send-email-fabf@skynet.be> <1426533469-25458-2-git-send-email-fabf@skynet.be> <CAFLxGvybHX_h5qmS3k80GFtKCRFaK8f9xxh-6KCT7ZuMVRwrpw@mail.gmail.com>
-Reply-To: Fabian Frederick <fabf@skynet.be>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailsec119.isp.belgacom.be ([195.238.20.115]:49970 "EHLO
-	mailsec119.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753383AbbCQSsU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 Mar 2015 14:48:20 -0400
-In-Reply-To: <CAFLxGvybHX_h5qmS3k80GFtKCRFaK8f9xxh-6KCT7ZuMVRwrpw@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Feng Kan <fkan@apm.com>
+Subject: [PATCH RESEND] sata: xgene: add ACPI support for APM X-Gene SATA ports
+Date: Wed, 18 Mar 2015 17:03:55 -0700
+Message-ID: <1426723435-22378-1-git-send-email-fkan@apm.com>
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Sender: linux-acpi-owner@vger.kernel.org
+To: patches@apm.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org, tj@kernel.org
+Cc: Feng Kan <fkan@apm.com>
 List-Id: linux-ide@vger.kernel.org
-To: Richard Weinberger <richard.weinberger@gmail.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, LKML <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
+This adds ACPI support for the APM X-Gene SATA ports. When the system
+boots using ACPI table, the SATA ports are able to configure using the
+values supplied by the ACPI table rather than the DTS.
 
+Signed-off-by: Feng Kan <fkan@apm.com>
+Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
+---
+ drivers/ata/ahci_xgene.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-> On 16 March 2015 at 23:16 Richard Weinberger <richard.weinberger@gmail.com>
-> wrote:
->
->
-> Fabian,
->
-> On Mon, Mar 16, 2015 at 8:17 PM, Fabian Frederick <fabf@skynet.be> wrote:
-> > of_device_id is always used as const.
-> > (See driver.of_match_table and open firmware functions)
->
-> Do you know the gcc plugin-system?
-> You could improve the const plugin in to find more interesting structs
-> to constify them.
-> http://grsecurity.net/~ephox/const_plugin/
-> Please check also the latest grsecurity patch.
+diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
+index 2e8bb60..2b78510 100644
+--- a/drivers/ata/ahci_xgene.c
++++ b/drivers/ata/ahci_xgene.c
+@@ -22,6 +22,7 @@
+  * NOTE: PM support is not currently available.
+  *
+  */
++#include <linux/acpi.h>
+ #include <linux/module.h>
+ #include <linux/platform_device.h>
+ #include <linux/ahci_platform.h>
+@@ -718,6 +719,14 @@ disable_resources:
+ 	return rc;
+ }
+ 
++#ifdef CONFIG_ACPI
++static const struct acpi_device_id xgene_ahci_acpi_match[] = {
++	{ "APMC0D0D", },
++	{ }
++};
++MODULE_DEVICE_TABLE(acpi, xgene_ahci_acpi_match);
++#endif
++
+ static const struct of_device_id xgene_ahci_of_match[] = {
+ 	{.compatible = "apm,xgene-ahci"},
+ 	{},
+@@ -730,6 +739,7 @@ static struct platform_driver xgene_ahci_driver = {
+ 	.driver = {
+ 		.name = DRV_NAME,
+ 		.of_match_table = xgene_ahci_of_match,
++		.acpi_match_table = ACPI_PTR(xgene_ahci_acpi_match),
+ 	},
+ };
+ 
+-- 
+1.9.1
 
-Thanks a lot for information Richard, I didn't know about that project.
-
-Regards,
-Fabian
-
->
-> --
-> Thanks,
-> //richard
