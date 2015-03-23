@@ -1,208 +1,82 @@
 From: Alexandre Belloni <alexandre.belloni@free-electrons.com>
-Subject: [PATCH v2 1/9] ata: at91: use syscon to configure the smc
-Date: Mon, 23 Mar 2015 20:29:07 +0100
-Message-ID: <1427138955-3617-2-git-send-email-alexandre.belloni@free-electrons.com>
+Subject: [PATCH v2 6/9] ARM: at91/pm: use the atmel-mc syscon defines
+Date: Mon, 23 Mar 2015 20:29:12 +0100
+Message-ID: <1427138955-3617-7-git-send-email-alexandre.belloni@free-electrons.com>
 References: <1427138955-3617-1-git-send-email-alexandre.belloni@free-electrons.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1427138955-3617-1-git-send-email-alexandre.belloni@free-electrons.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-pcmcia>,
- <mailto:linux-pcmcia-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-pcmcia/>
-List-Post: <mailto:linux-pcmcia@lists.infradead.org>
-List-Help: <mailto:linux-pcmcia-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-pcmcia>,
- <mailto:linux-pcmcia-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-pcmcia" <linux-pcmcia-bounces@lists.infradead.org>
-Errors-To: linux-pcmcia-bounces+glkpd-linux-pcmcia=m.gmane.org@lists.infradead.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Nicolas Ferre <nicolas.ferre@atmel.com>
-Cc: Boris Brezillon <boris.brezillon@free-electrons.com>, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Alexandre Belloni <alexandre.belloni@free-electrons.com>, Tejun Heo <tj@kernel.org>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, linux-arm-kernel@lists.infradead.org
+Cc: Boris Brezillon <boris.brezillon@free-electrons.com>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-arm-kernel@lists.infradead.org, Alexandre Belloni <alexandre.belloni@free-electrons.com>
 List-Id: linux-ide@vger.kernel.org
 
-Use syscon/regmap to configure the smc. This allows to avoid using
-at91sam9_smc.h and to compile the driver in a multiplatform configuration.
-
-The driver will still not probe until the proper DT bindings are added. That
-binding will include an atmel,smc property that is a phandle to the SMC the CF
-controller is connected to.
+Use the defines from atmel-mc.h instead of at91rm9200_sdramc.h
 
 Signed-off-by: Alexandre Belloni <alexandre.belloni@free-electrons.com>
 ---
- drivers/ata/Kconfig     |  1 -
- drivers/ata/pata_at91.c | 92 ++++++++++++++++++++++++++++++++++++++-----------
- 2 files changed, 71 insertions(+), 22 deletions(-)
+ arch/arm/mach-at91/include/mach/at91_ramc.h | 2 +-
+ arch/arm/mach-at91/pm.c                     | 8 ++++----
+ arch/arm/mach-at91/pm_suspend.S             | 2 +-
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 5f601553b9b0..a3a13605a9c4 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -835,7 +835,6 @@ config PATA_AT32
- config PATA_AT91
- 	tristate "PATA support for AT91SAM9260"
- 	depends on ARM && SOC_AT91SAM9
--	depends on !ARCH_MULTIPLATFORM
- 	help
- 	  This option enables support for IDE devices on the Atmel AT91SAM9260 SoC.
+diff --git a/arch/arm/mach-at91/include/mach/at91_ramc.h b/arch/arm/mach-at91/include/mach/at91_ramc.h
+index 493bc486e858..39547496d4b0 100644
+--- a/arch/arm/mach-at91/include/mach/at91_ramc.h
++++ b/arch/arm/mach-at91/include/mach/at91_ramc.h
+@@ -21,7 +21,7 @@ extern void __iomem *at91_ramc_base[];
+ .extern at91_ramc_base
+ #endif
  
-diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
-index 9e85937d36a9..ace0a4de3449 100644
---- a/drivers/ata/pata_at91.c
-+++ b/drivers/ata/pata_at91.c
-@@ -24,11 +24,13 @@
- #include <linux/ata.h>
- #include <linux/clk.h>
- #include <linux/libata.h>
-+#include <linux/mfd/syscon.h>
-+#include <linux/mfd/syscon/atmel-smc.h>
- #include <linux/platform_device.h>
- #include <linux/ata_platform.h>
- #include <linux/platform_data/atmel.h>
-+#include <linux/regmap.h>
+-#include <soc/at91/at91rm9200_sdramc.h>
++#include <linux/mfd/syscon/atmel-mc.h>
+ #include <soc/at91/at91sam9_ddrsdr.h>
+ #include <soc/at91/at91sam9_sdramc.h>
  
--#include <mach/at91sam9_smc.h>
- #include <asm/gpio.h>
- 
- #define DRV_NAME		"pata_at91"
-@@ -57,6 +59,15 @@ struct smc_range {
- 	int max;
- };
- 
-+struct regmap *smc;
-+
-+struct at91sam9_smc_generic_fields {
-+	struct regmap_field *setup;
-+	struct regmap_field *pulse;
-+	struct regmap_field *cycle;
-+	struct regmap_field *mode;
-+} fields;
-+
- /**
-  * adjust_smc_value - adjust value for one of SMC registers.
-  * @value: adjusted value
-@@ -206,7 +217,6 @@ static void set_smc_timing(struct device *dev, struct ata_device *adev,
+diff --git a/arch/arm/mach-at91/pm.c b/arch/arm/mach-at91/pm.c
+index 5062699cbb12..1e184767c3be 100644
+--- a/arch/arm/mach-at91/pm.c
++++ b/arch/arm/mach-at91/pm.c
+@@ -233,7 +233,7 @@ static void at91_pm_set_standby(void (*at91_standby)(void))
+  */
+ static void at91rm9200_standby(void)
  {
- 	int ret = 0;
- 	int use_iordy;
--	struct sam9_smc_config smc;
- 	unsigned int t6z;         /* data tristate time in ns */
- 	unsigned int cycle;       /* SMC Cycle width in MCK ticks */
- 	unsigned int setup;       /* SMC Setup width in MCK ticks */
-@@ -244,19 +254,21 @@ static void set_smc_timing(struct device *dev, struct ata_device *adev,
+-	u32 lpr = at91_ramc_read(0, AT91RM9200_SDRAMC_LPR);
++	u32 lpr = at91_ramc_read(0, AT91_MC_SDRAMC_LPR);
  
- 	dev_dbg(dev, "Use IORDY=%u, TDF Cycles=%u\n", use_iordy, tdf_cycles);
- 
--	/* SMC Setup Register */
--	smc.nwe_setup = smc.nrd_setup = setup;
--	smc.ncs_write_setup = smc.ncs_read_setup = 0;
--	/* SMC Pulse Register */
--	smc.nwe_pulse = smc.nrd_pulse = pulse;
--	smc.ncs_write_pulse = smc.ncs_read_pulse = cs_pulse;
--	/* SMC Cycle Register */
--	smc.write_cycle = smc.read_cycle = cycle;
--	/* SMC Mode Register*/
--	smc.tdf_cycles = tdf_cycles;
--	smc.mode = info->mode;
--
--	sam9_smc_configure(0, info->cs, &smc);
-+	regmap_fields_write(fields.setup, info->cs,
-+			    AT91SAM9_SMC_NRDSETUP(setup) |
-+			    AT91SAM9_SMC_NWESETUP(setup) |
-+			    AT91SAM9_SMC_NCS_NRDSETUP(0) |
-+			    AT91SAM9_SMC_NCS_WRSETUP(0));
-+	regmap_fields_write(fields.pulse, info->cs,
-+			    AT91SAM9_SMC_NRDPULSE(pulse) |
-+			    AT91SAM9_SMC_NWEPULSE(pulse) |
-+			    AT91SAM9_SMC_NCS_NRDPULSE(cs_pulse) |
-+			    AT91SAM9_SMC_NCS_WRPULSE(cs_pulse));
-+	regmap_fields_write(fields.cycle, info->cs,
-+			    AT91SAM9_SMC_NRDCYCLE(cycle) |
-+			    AT91SAM9_SMC_NWECYCLE(cycle));
-+	regmap_fields_write(fields.mode, info->cs, info->mode |
-+			    AT91_SMC_TDF_(tdf_cycles));
+ 	asm volatile(
+ 		"b    1f\n\t"
+@@ -244,8 +244,8 @@ static void at91rm9200_standby(void)
+ 		"    mcr    p15, 0, %0, c7, c0, 4\n\t"
+ 		"    str    %5, [%1, %2]"
+ 		:
+-		: "r" (0), "r" (at91_ramc_base[0]), "r" (AT91RM9200_SDRAMC_LPR),
+-		  "r" (1), "r" (AT91RM9200_SDRAMC_SRR),
++		: "r" (0), "r" (at91_ramc_base[0]), "r" (AT91_MC_SDRAMC_LPR),
++		  "r" (1), "r" (AT91_MC_SDRAMC_SRR),
+ 		  "r" (lpr));
  }
  
- static void pata_at91_set_piomode(struct ata_port *ap, struct ata_device *adev)
-@@ -280,21 +292,21 @@ static unsigned int pata_at91_data_xfer_noirq(struct ata_device *dev,
- {
- 	struct at91_ide_info *info = dev->link->ap->host->private_data;
- 	unsigned int consumed;
-+	unsigned int mode;
- 	unsigned long flags;
--	struct sam9_smc_config smc;
+@@ -414,7 +414,7 @@ void __init at91rm9200_pm_init(void)
+ 	/*
+ 	 * AT91RM9200 SDRAM low-power mode cannot be used with self-refresh.
+ 	 */
+-	at91_ramc_write(0, AT91RM9200_SDRAMC_LPR, 0);
++	at91_ramc_write(0, AT91_MC_SDRAMC_LPR, 0);
  
- 	local_irq_save(flags);
--	sam9_smc_read_mode(0, info->cs, &smc);
-+	regmap_fields_read(fields.mode, info->cs, &mode);
+ 	at91_pm_data.uhp_udp_mask = AT91RM9200_PMC_UHP | AT91RM9200_PMC_UDP;
+ 	at91_pm_data.memctrl = AT91_MEMCTRL_MC;
+diff --git a/arch/arm/mach-at91/pm_suspend.S b/arch/arm/mach-at91/pm_suspend.S
+index bd22b2c8a051..fda4e0164ed7 100644
+--- a/arch/arm/mach-at91/pm_suspend.S
++++ b/arch/arm/mach-at91/pm_suspend.S
+@@ -216,7 +216,7 @@ ENTRY(at91_sramc_self_refresh)
  
- 	/* set 16bit mode before writing data */
--	smc.mode = (smc.mode & ~AT91_SMC_DBW) | AT91_SMC_DBW_16;
--	sam9_smc_write_mode(0, info->cs, &smc);
-+	regmap_fields_write(fields.mode, info->cs, (mode & ~AT91_SMC_DBW) |
-+			    AT91_SMC_DBW_16);
+ 	/* Active SDRAM self-refresh mode */
+ 	mov	r3, #1
+-	str	r3, [r2, #AT91RM9200_SDRAMC_SRR]
++	str	r3, [r2, #AT91_MC_SDRAMC_SRR]
+ 	b	exit_sramc_sf
  
- 	consumed = ata_sff_data_xfer(dev, buf, buflen, rw);
- 
- 	/* restore 8bit mode after data is written */
--	smc.mode = (smc.mode & ~AT91_SMC_DBW) | AT91_SMC_DBW_8;
--	sam9_smc_write_mode(0, info->cs, &smc);
-+	regmap_fields_write(fields.mode, info->cs, (mode & ~AT91_SMC_DBW) |
-+			    AT91_SMC_DBW_8);
- 
- 	local_irq_restore(flags);
- 	return consumed;
-@@ -312,6 +324,36 @@ static struct ata_port_operations pata_at91_port_ops = {
- 	.cable_detect	= ata_cable_40wire,
- };
- 
-+static int at91sam9_smc_fields_init(struct device *dev)
-+{
-+	struct reg_field field = REG_FIELD(0, 0, 31);
-+
-+	field.id_size = 8;
-+	field.id_offset = AT91SAM9_SMC_GENERIC_BLK_SZ;
-+
-+	field.reg = AT91SAM9_SMC_SETUP(AT91SAM9_SMC_GENERIC);
-+	fields.setup = devm_regmap_field_alloc(dev, smc, field);
-+	if (IS_ERR(fields.setup))
-+		return PTR_ERR(fields.setup);
-+
-+	field.reg = AT91SAM9_SMC_PULSE(AT91SAM9_SMC_GENERIC);
-+	fields.pulse = devm_regmap_field_alloc(dev, smc, field);
-+	if (IS_ERR(fields.pulse))
-+		return PTR_ERR(fields.pulse);
-+
-+	field.reg = AT91SAM9_SMC_CYCLE(AT91SAM9_SMC_GENERIC);
-+	fields.cycle = devm_regmap_field_alloc(dev, smc, field);
-+	if (IS_ERR(fields.cycle))
-+		return PTR_ERR(fields.cycle);
-+
-+	field.reg = AT91SAM9_SMC_MODE(AT91SAM9_SMC_GENERIC);
-+	fields.mode = devm_regmap_field_alloc(dev, smc, field);
-+	if (IS_ERR(fields.mode))
-+		return PTR_ERR(fields.mode);
-+
-+	return 0;
-+}
-+
- static int pata_at91_probe(struct platform_device *pdev)
- {
- 	struct at91_cf_data *board = dev_get_platdata(&pdev->dev);
-@@ -341,6 +383,14 @@ static int pata_at91_probe(struct platform_device *pdev)
- 
- 	irq = board->irq_pin;
- 
-+	smc = syscon_regmap_lookup_by_phandle(pdev->dev.of_node, "atmel,smc");
-+	if (IS_ERR(smc))
-+		return PTR_ERR(smc);
-+
-+	ret = at91sam9_smc_fields_init(dev);
-+	if (ret < 0)
-+		return ret;
-+
- 	/* init ata host */
- 
- 	host = ata_host_alloc(dev, 1);
+ ddrc_sf:
 -- 
 2.1.0
