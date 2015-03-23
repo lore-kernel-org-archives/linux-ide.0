@@ -1,269 +1,229 @@
 From: Nicolas Ferre <nicolas.ferre@atmel.com>
-Subject: Re: [PATCH 09/10] ARM: at91: remove mach/at91_ramc.h and mach/at91rm9200_mc.h
-Date: Mon, 23 Mar 2015 11:01:07 +0100
-Message-ID: <550FE463.3040300@atmel.com>
-References: <1426545886-19162-1-git-send-email-alexandre.belloni@free-electrons.com> <1426545886-19162-10-git-send-email-alexandre.belloni@free-electrons.com>
+Subject: Re: [PATCH 03/10] ata: at91: use syscon to configure the smc
+Date: Mon, 23 Mar 2015 11:11:35 +0100
+Message-ID: <550FE6D7.6000107@atmel.com>
+References: <1426545886-19162-1-git-send-email-alexandre.belloni@free-electrons.com> <1426545886-19162-4-git-send-email-alexandre.belloni@free-electrons.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:63694 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:26018 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752062AbbCWKBJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Mar 2015 06:01:09 -0400
-In-Reply-To: <1426545886-19162-10-git-send-email-alexandre.belloni@free-electrons.com>
+	with ESMTP id S1752152AbbCWKLi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Mar 2015 06:11:38 -0400
+In-Reply-To: <1426545886-19162-4-git-send-email-alexandre.belloni@free-electrons.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Alexandre Belloni <alexandre.belloni@free-electrons.com>
 Cc: Lee Jones <lee.jones@linaro.org>, Boris Brezillon <boris.brezillon@free-electrons.com>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-arm-kernel@lists.infradead.org
 
 Le 16/03/2015 23:44, Alexandre Belloni a =E9crit :
-> mach/at91_ramc.h and mach/at91rm9200_mc.h are necessary anymore, remo=
-ve them.
+> Use syscon/regmap to configure the smc. This allows to avoid using
+> at91sam9_smc.h and to compile the driver in a multiplatform configura=
+tion.
+>=20
+> The driver will still not probe until the proper DT bindings are adde=
+d.
 
-s/are/aren't/ ?
+Alexandre, just for the record, can you describe the DT node that will
+match this?
+Is it one that will be added to
+Documentation/devicetree/bindings/mfd/atmel-smc.txt?
+
+=2E..
 
 > Signed-off-by: Alexandre Belloni <alexandre.belloni@free-electrons.co=
 m>
 > ---
->  arch/arm/mach-at91/Makefile                     |   3 -
->  arch/arm/mach-at91/include/mach/at91_ramc.h     |  28 ------
->  arch/arm/mach-at91/include/mach/at91rm9200_mc.h | 116 --------------=
+>  drivers/ata/Kconfig     |  1 -
+>  drivers/ata/pata_at91.c | 92 ++++++++++++++++++++++++++++++++++++++-=
 ----------
->  arch/arm/mach-at91/pm.h                         |  14 ++-
->  arch/arm/mach-at91/pm_suspend.S                 |   1 -
->  5 files changed, 13 insertions(+), 149 deletions(-)
->  delete mode 100644 arch/arm/mach-at91/include/mach/at91_ramc.h
->  delete mode 100644 arch/arm/mach-at91/include/mach/at91rm9200_mc.h
+>  2 files changed, 71 insertions(+), 22 deletions(-)
 >=20
-> diff --git a/arch/arm/mach-at91/Makefile b/arch/arm/mach-at91/Makefil=
-e
-> index 3586d977e99d..fa4393ab3e7b 100644
-> --- a/arch/arm/mach-at91/Makefile
-> +++ b/arch/arm/mach-at91/Makefile
-> @@ -1,9 +1,6 @@
->  #
->  # Makefile for the linux kernel.
->  #
-> -ccflags-$(CONFIG_ARCH_MULTIPLATFORM) :=3D -I$(srctree)/$(src)/includ=
-e
-> -asflags-$(CONFIG_ARCH_MULTIPLATFORM) :=3D -I$(srctree)/$(src)/includ=
-e
-> -
->  obj-y		:=3D soc.o
+> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+> index 5f601553b9b0..a3a13605a9c4 100644
+> --- a/drivers/ata/Kconfig
+> +++ b/drivers/ata/Kconfig
+> @@ -835,7 +835,6 @@ config PATA_AT32
+>  config PATA_AT91
+>  	tristate "PATA support for AT91SAM9260"
+>  	depends on ARM && SOC_AT91SAM9
+> -	depends on !ARCH_MULTIPLATFORM
+>  	help
+>  	  This option enables support for IDE devices on the Atmel AT91SAM9=
+260 SoC.
 > =20
->  # CPU-specific support
-> diff --git a/arch/arm/mach-at91/include/mach/at91_ramc.h b/arch/arm/m=
-ach-at91/include/mach/at91_ramc.h
-> deleted file mode 100644
-> index 39547496d4b0..000000000000
-> --- a/arch/arm/mach-at91/include/mach/at91_ramc.h
-> +++ /dev/null
-> @@ -1,28 +0,0 @@
-> -/*
-> - * Header file for the Atmel RAM Controller
-> - *
-> - * Copyright (C) 2011 Jean-Christophe PLAGNIOL-VILLARD <plagnioj@jcr=
-osoft.com>
-> - *
-> - * Under GPLv2 only
-> - */
-> -
-> -#ifndef __AT91_RAMC_H__
-> -#define __AT91_RAMC_H__
-> -
-> -#ifndef __ASSEMBLY__
-> -extern void __iomem *at91_ramc_base[];
-> -
-> -#define at91_ramc_read(id, field) \
-> -	__raw_readl(at91_ramc_base[id] + field)
-> -
-> -#define at91_ramc_write(id, field, value) \
-> -	__raw_writel(value, at91_ramc_base[id] + field)
-> -#else
-> -.extern at91_ramc_base
-> -#endif
-> -
-> -#include <linux/mfd/syscon/atmel-mc.h>
-> -#include <soc/at91/at91sam9_ddrsdr.h>
-> -#include <soc/at91/at91sam9_sdramc.h>
-> -
-> -#endif /* __AT91_RAMC_H__ */
-> diff --git a/arch/arm/mach-at91/include/mach/at91rm9200_mc.h b/arch/a=
-rm/mach-at91/include/mach/at91rm9200_mc.h
-> deleted file mode 100644
-> index aeaadfb452af..000000000000
-> --- a/arch/arm/mach-at91/include/mach/at91rm9200_mc.h
-> +++ /dev/null
-> @@ -1,116 +0,0 @@
-> -/*
-> - * arch/arm/mach-at91/include/mach/at91rm9200_mc.h
-> - *
-> - * Copyright (C) 2005 Ivan Kokshaysky
-> - * Copyright (C) SAN People
-> - *
-> - * Memory Controllers (MC, EBI, SMC, SDRAMC, BFC) - System periphera=
-ls registers.
-> - * Based on AT91RM9200 datasheet revision E.
-> - *
-> - * This program is free software; you can redistribute it and/or mod=
-ify
-> - * it under the terms of the GNU General Public License as published=
- by
-> - * the Free Software Foundation; either version 2 of the License, or
-> - * (at your option) any later version.
-> - */
-> -
-> -#ifndef AT91RM9200_MC_H
-> -#define AT91RM9200_MC_H
-> -
-> -/* Memory Controller */
-> -#define AT91_MC_RCR		0x00			/* MC Remap Control Register */
-> -#define		AT91_MC_RCB		(1 <<  0)		/* Remap Command Bit */
-> -
-> -#define AT91_MC_ASR		0x04			/* MC Abort Status Register */
-> -#define		AT91_MC_UNADD		(1 <<  0)		/* Undefined Address Abort Status=
- */
-> -#define		AT91_MC_MISADD		(1 <<  1)		/* Misaligned Address Abort Stat=
-us */
-> -#define		AT91_MC_ABTSZ		(3 <<  8)		/* Abort Size Status */
-> -#define			AT91_MC_ABTSZ_BYTE		(0 << 8)
-> -#define			AT91_MC_ABTSZ_HALFWORD		(1 << 8)
-> -#define			AT91_MC_ABTSZ_WORD		(2 << 8)
-> -#define		AT91_MC_ABTTYP		(3 << 10)		/* Abort Type Status */
-> -#define			AT91_MC_ABTTYP_DATAREAD		(0 << 10)
-> -#define			AT91_MC_ABTTYP_DATAWRITE	(1 << 10)
-> -#define			AT91_MC_ABTTYP_FETCH		(2 << 10)
-> -#define		AT91_MC_MST0		(1 << 16)		/* ARM920T Abort Source */
-> -#define		AT91_MC_MST1		(1 << 17)		/* PDC Abort Source */
-> -#define		AT91_MC_MST2		(1 << 18)		/* UHP Abort Source */
-> -#define		AT91_MC_MST3		(1 << 19)		/* EMAC Abort Source */
-> -#define		AT91_MC_SVMST0		(1 << 24)		/* Saved ARM920T Abort Source */
-> -#define		AT91_MC_SVMST1		(1 << 25)		/* Saved PDC Abort Source */
-> -#define		AT91_MC_SVMST2		(1 << 26)		/* Saved UHP Abort Source */
-> -#define		AT91_MC_SVMST3		(1 << 27)		/* Saved EMAC Abort Source */
-> -
-> -#define AT91_MC_AASR		0x08			/* MC Abort Address Status Register */
-> -
-> -#define AT91_MC_MPR		0x0c			/* MC Master Priority Register */
-> -#define		AT91_MPR_MSTP0		(7 <<  0)		/* ARM920T Priority */
-> -#define		AT91_MPR_MSTP1		(7 <<  4)		/* PDC Priority */
-> -#define		AT91_MPR_MSTP2		(7 <<  8)		/* UHP Priority */
-> -#define		AT91_MPR_MSTP3		(7 << 12)		/* EMAC Priority */
-> -
-> -/* External Bus Interface (EBI) registers */
-> -#define AT91_EBI_CSA		0x60			/* Chip Select Assignment Register */
-> -#define		AT91_EBI_CS0A		(1 << 0)		/* Chip Select 0 Assignment */
-> -#define			AT91_EBI_CS0A_SMC		(0 << 0)
-> -#define			AT91_EBI_CS0A_BFC		(1 << 0)
-> -#define		AT91_EBI_CS1A		(1 << 1)		/* Chip Select 1 Assignment */
-> -#define			AT91_EBI_CS1A_SMC		(0 << 1)
-> -#define			AT91_EBI_CS1A_SDRAMC		(1 << 1)
-> -#define		AT91_EBI_CS3A		(1 << 3)		/* Chip Select 2 Assignment */
-> -#define			AT91_EBI_CS3A_SMC		(0 << 3)
-> -#define			AT91_EBI_CS3A_SMC_SMARTMEDIA	(1 << 3)
-> -#define		AT91_EBI_CS4A		(1 << 4)		/* Chip Select 3 Assignment */
-> -#define			AT91_EBI_CS4A_SMC		(0 << 4)
-> -#define			AT91_EBI_CS4A_SMC_COMPACTFLASH	(1 << 4)
-> -#define AT91_EBI_CFGR		(AT91_MC + 0x64)	/* Configuration Register */
-> -#define		AT91_EBI_DBPUC		(1 << 0)		/* Data Bus Pull-Up Configuration=
- */
-> -
-> -/* Static Memory Controller (SMC) registers */
-> -#define	AT91_SMC_CSR(n)		(0x70 + ((n) * 4))	/* SMC Chip Select Regis=
-ter */
-> -#define		AT91_SMC_NWS		(0x7f <<  0)		/* Number of Wait States */
-> -#define			AT91_SMC_NWS_(x)	((x) << 0)
-> -#define		AT91_SMC_WSEN		(1    <<  7)		/* Wait State Enable */
-> -#define		AT91_SMC_TDF		(0xf  <<  8)		/* Data Float Time */
-> -#define			AT91_SMC_TDF_(x)	((x) << 8)
-> -#define		AT91_SMC_BAT		(1    << 12)		/* Byte Access Type */
-> -#define		AT91_SMC_DBW		(3    << 13)		/* Data Bus Width */
-> -#define			AT91_SMC_DBW_16		(1 << 13)
-> -#define			AT91_SMC_DBW_8		(2 << 13)
-> -#define		AT91_SMC_DPR		(1 << 15)		/* Data Read Protocol */
-> -#define		AT91_SMC_ACSS		(3 << 16)		/* Address to Chip Select Setup *=
-/
-> -#define			AT91_SMC_ACSS_STD	(0 << 16)
-> -#define			AT91_SMC_ACSS_1		(1 << 16)
-> -#define			AT91_SMC_ACSS_2		(2 << 16)
-> -#define			AT91_SMC_ACSS_3		(3 << 16)
-> -#define		AT91_SMC_RWSETUP	(7 << 24)		/* Read & Write Signal Time Set=
-up */
-> -#define			AT91_SMC_RWSETUP_(x)	((x) << 24)
-> -#define		AT91_SMC_RWHOLD		(7 << 28)		/* Read & Write Signal Hold Tim=
-e */
-> -#define			AT91_SMC_RWHOLD_(x)	((x) << 28)
-> -
-> -/* Burst Flash Controller register */
-> -#define AT91_BFC_MR		0xc0			/* Mode Register */
-> -#define		AT91_BFC_BFCOM		(3   <<  0)		/* Burst Flash Controller Oper=
-ating Mode */
-> -#define			AT91_BFC_BFCOM_DISABLED	(0 << 0)
-> -#define			AT91_BFC_BFCOM_ASYNC	(1 << 0)
-> -#define			AT91_BFC_BFCOM_BURST	(2 << 0)
-> -#define		AT91_BFC_BFCC		(3   <<  2)		/* Burst Flash Controller Clock=
- */
-> -#define			AT91_BFC_BFCC_MCK	(1 << 2)
-> -#define			AT91_BFC_BFCC_DIV2	(2 << 2)
-> -#define			AT91_BFC_BFCC_DIV4	(3 << 2)
-> -#define		AT91_BFC_AVL		(0xf <<  4)		/* Address Valid Latency */
-> -#define		AT91_BFC_PAGES		(7   <<  8)		/* Page Size */
-> -#define			AT91_BFC_PAGES_NO_PAGE	(0 << 8)
-> -#define			AT91_BFC_PAGES_16	(1 << 8)
-> -#define			AT91_BFC_PAGES_32	(2 << 8)
-> -#define			AT91_BFC_PAGES_64	(3 << 8)
-> -#define			AT91_BFC_PAGES_128	(4 << 8)
-> -#define			AT91_BFC_PAGES_256	(5 << 8)
-> -#define			AT91_BFC_PAGES_512	(6 << 8)
-> -#define			AT91_BFC_PAGES_1024	(7 << 8)
-> -#define		AT91_BFC_OEL		(3   << 12)		/* Output Enable Latency */
-> -#define		AT91_BFC_BAAEN		(1   << 16)		/* Burst Address Advance Enabl=
-e */
-> -#define		AT91_BFC_BFOEH		(1   << 17)		/* Burst Flash Output Enable H=
-andling */
-> -#define		AT91_BFC_MUXEN		(1   << 18)		/* Multiplexed Bus Enable */
-> -#define		AT91_BFC_RDYEN		(1   << 19)		/* Ready Enable Mode */
-> -
-> -#endif
-> diff --git a/arch/arm/mach-at91/pm.h b/arch/arm/mach-at91/pm.h
-> index ecd875a91d52..3fcf8810f14e 100644
-> --- a/arch/arm/mach-at91/pm.h
-> +++ b/arch/arm/mach-at91/pm.h
-> @@ -13,7 +13,19 @@
+> diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
+> index 9e85937d36a9..ace0a4de3449 100644
+> --- a/drivers/ata/pata_at91.c
+> +++ b/drivers/ata/pata_at91.c
+> @@ -24,11 +24,13 @@
+>  #include <linux/ata.h>
+>  #include <linux/clk.h>
+>  #include <linux/libata.h>
+> +#include <linux/mfd/syscon.h>
+> +#include <linux/mfd/syscon/atmel-smc.h>
+>  #include <linux/platform_device.h>
+>  #include <linux/ata_platform.h>
+>  #include <linux/platform_data/atmel.h>
+> +#include <linux/regmap.h>
 > =20
->  #include <asm/proc-fns.h>
+> -#include <mach/at91sam9_smc.h>
+>  #include <asm/gpio.h>
 > =20
-> -#include <mach/at91_ramc.h>
-> +#include <linux/mfd/syscon/atmel-mc.h>
-> +#include <soc/at91/at91sam9_ddrsdr.h>
-> +#include <soc/at91/at91sam9_sdramc.h>
+>  #define DRV_NAME		"pata_at91"
+> @@ -57,6 +59,15 @@ struct smc_range {
+>  	int max;
+>  };
+> =20
+> +struct regmap *smc;
 > +
-> +#ifndef __ASSEMBLY__
-> +extern void __iomem *at91_ramc_base[];
+> +struct at91sam9_smc_generic_fields {
+> +	struct regmap_field *setup;
+> +	struct regmap_field *pulse;
+> +	struct regmap_field *cycle;
+> +	struct regmap_field *mode;
+> +} fields;
 > +
-> +#define at91_ramc_read(id, field) \
-> +	__raw_readl(at91_ramc_base[id] + field)
+>  /**
+>   * adjust_smc_value - adjust value for one of SMC registers.
+>   * @value: adjusted value
+> @@ -206,7 +217,6 @@ static void set_smc_timing(struct device *dev, st=
+ruct ata_device *adev,
+>  {
+>  	int ret =3D 0;
+>  	int use_iordy;
+> -	struct sam9_smc_config smc;
+>  	unsigned int t6z;         /* data tristate time in ns */
+>  	unsigned int cycle;       /* SMC Cycle width in MCK ticks */
+>  	unsigned int setup;       /* SMC Setup width in MCK ticks */
+> @@ -244,19 +254,21 @@ static void set_smc_timing(struct device *dev, =
+struct ata_device *adev,
+> =20
+>  	dev_dbg(dev, "Use IORDY=3D%u, TDF Cycles=3D%u\n", use_iordy, tdf_cy=
+cles);
+> =20
+> -	/* SMC Setup Register */
+> -	smc.nwe_setup =3D smc.nrd_setup =3D setup;
+> -	smc.ncs_write_setup =3D smc.ncs_read_setup =3D 0;
+> -	/* SMC Pulse Register */
+> -	smc.nwe_pulse =3D smc.nrd_pulse =3D pulse;
+> -	smc.ncs_write_pulse =3D smc.ncs_read_pulse =3D cs_pulse;
+> -	/* SMC Cycle Register */
+> -	smc.write_cycle =3D smc.read_cycle =3D cycle;
+> -	/* SMC Mode Register*/
+> -	smc.tdf_cycles =3D tdf_cycles;
+> -	smc.mode =3D info->mode;
+> -
+> -	sam9_smc_configure(0, info->cs, &smc);
+> +	regmap_fields_write(fields.setup, info->cs,
+> +			    AT91SAM9_SMC_NRDSETUP(setup) |
+> +			    AT91SAM9_SMC_NWESETUP(setup) |
+> +			    AT91SAM9_SMC_NCS_NRDSETUP(0) |
+> +			    AT91SAM9_SMC_NCS_WRSETUP(0));
+> +	regmap_fields_write(fields.pulse, info->cs,
+> +			    AT91SAM9_SMC_NRDPULSE(pulse) |
+> +			    AT91SAM9_SMC_NWEPULSE(pulse) |
+> +			    AT91SAM9_SMC_NCS_NRDPULSE(cs_pulse) |
+> +			    AT91SAM9_SMC_NCS_WRPULSE(cs_pulse));
+> +	regmap_fields_write(fields.cycle, info->cs,
+> +			    AT91SAM9_SMC_NRDCYCLE(cycle) |
+> +			    AT91SAM9_SMC_NWECYCLE(cycle));
+> +	regmap_fields_write(fields.mode, info->cs, info->mode |
+> +			    AT91_SMC_TDF_(tdf_cycles));
+>  }
+> =20
+>  static void pata_at91_set_piomode(struct ata_port *ap, struct ata_de=
+vice *adev)
+> @@ -280,21 +292,21 @@ static unsigned int pata_at91_data_xfer_noirq(s=
+truct ata_device *dev,
+>  {
+>  	struct at91_ide_info *info =3D dev->link->ap->host->private_data;
+>  	unsigned int consumed;
+> +	unsigned int mode;
+>  	unsigned long flags;
+> -	struct sam9_smc_config smc;
+> =20
+>  	local_irq_save(flags);
+> -	sam9_smc_read_mode(0, info->cs, &smc);
+> +	regmap_fields_read(fields.mode, info->cs, &mode);
+> =20
+>  	/* set 16bit mode before writing data */
+> -	smc.mode =3D (smc.mode & ~AT91_SMC_DBW) | AT91_SMC_DBW_16;
+> -	sam9_smc_write_mode(0, info->cs, &smc);
+> +	regmap_fields_write(fields.mode, info->cs, (mode & ~AT91_SMC_DBW) |
+> +			    AT91_SMC_DBW_16);
+> =20
+>  	consumed =3D ata_sff_data_xfer(dev, buf, buflen, rw);
+> =20
+>  	/* restore 8bit mode after data is written */
+> -	smc.mode =3D (smc.mode & ~AT91_SMC_DBW) | AT91_SMC_DBW_8;
+> -	sam9_smc_write_mode(0, info->cs, &smc);
+> +	regmap_fields_write(fields.mode, info->cs, (mode & ~AT91_SMC_DBW) |
+> +			    AT91_SMC_DBW_8);
+> =20
+>  	local_irq_restore(flags);
+>  	return consumed;
+> @@ -312,6 +324,36 @@ static struct ata_port_operations pata_at91_port=
+_ops =3D {
+>  	.cable_detect	=3D ata_cable_40wire,
+>  };
+> =20
+> +static int at91sam9_smc_fields_init(struct device *dev)
+> +{
+> +	struct reg_field field =3D REG_FIELD(0, 0, 31);
 > +
-> +#define at91_ramc_write(id, field, value) \
-> +	__raw_writel(value, at91_ramc_base[id] + field)
-> +#endif
+> +	field.id_size =3D 8;
+> +	field.id_offset =3D AT91SAM9_SMC_GENERIC_BLK_SZ;
+> +
+> +	field.reg =3D AT91SAM9_SMC_SETUP(AT91SAM9_SMC_GENERIC);
+> +	fields.setup =3D devm_regmap_field_alloc(dev, smc, field);
+> +	if (IS_ERR(fields.setup))
+> +		return PTR_ERR(fields.setup);
+> +
+> +	field.reg =3D AT91SAM9_SMC_PULSE(AT91SAM9_SMC_GENERIC);
+> +	fields.pulse =3D devm_regmap_field_alloc(dev, smc, field);
+> +	if (IS_ERR(fields.pulse))
+> +		return PTR_ERR(fields.pulse);
+> +
+> +	field.reg =3D AT91SAM9_SMC_CYCLE(AT91SAM9_SMC_GENERIC);
+> +	fields.cycle =3D devm_regmap_field_alloc(dev, smc, field);
+> +	if (IS_ERR(fields.cycle))
+> +		return PTR_ERR(fields.cycle);
+> +
+> +	field.reg =3D AT91SAM9_SMC_MODE(AT91SAM9_SMC_GENERIC);
+> +	fields.mode =3D devm_regmap_field_alloc(dev, smc, field);
+> +	if (IS_ERR(fields.mode))
+> +		return PTR_ERR(fields.mode);
+> +
+> +	return 0;
+> +}
+> +
+>  static int pata_at91_probe(struct platform_device *pdev)
+>  {
+>  	struct at91_cf_data *board =3D dev_get_platdata(&pdev->dev);
+> @@ -341,6 +383,14 @@ static int pata_at91_probe(struct platform_devic=
+e *pdev)
 > =20
->  #define AT91_MEMCTRL_MC		0
->  #define AT91_MEMCTRL_SDRAMC	1
-> diff --git a/arch/arm/mach-at91/pm_suspend.S b/arch/arm/mach-at91/pm_=
-suspend.S
-> index fda4e0164ed7..0d95f488b47a 100644
-> --- a/arch/arm/mach-at91/pm_suspend.S
-> +++ b/arch/arm/mach-at91/pm_suspend.S
-> @@ -13,7 +13,6 @@
->   */
->  #include <linux/linkage.h>
->  #include <linux/clk/at91_pmc.h>
-> -#include <mach/at91_ramc.h>
->  #include "pm.h"
+>  	irq =3D board->irq_pin;
 > =20
->  #define	SRAMC_SELF_FRESH_ACTIVE		0x01
+> +	smc =3D syscon_regmap_lookup_by_phandle(pdev->dev.of_node, "atmel,s=
+mc");
+
+=2E.. yes, regarding this string "atmel,smc": what will it match?
+
+Thanks, bye.
+
+> +	if (IS_ERR(smc))
+> +		return PTR_ERR(smc);
+> +
+> +	ret =3D at91sam9_smc_fields_init(dev);
+> +	if (ret < 0)
+> +		return ret;
+> +
+>  	/* init ata host */
+> =20
+>  	host =3D ata_host_alloc(dev, 1);
 >=20
 
 
