@@ -1,90 +1,252 @@
 From: Nicolas Ferre <nicolas.ferre@atmel.com>
-Subject: Re: [PATCH 00/10] ARM: at91 cleanups for 4.1 #2
-Date: Mon, 23 Mar 2015 11:14:35 +0100
-Message-ID: <550FE78B.6090900@atmel.com>
-References: <1426545886-19162-1-git-send-email-alexandre.belloni@free-electrons.com>
+Subject: Re: [PATCH 01/10] ARM: at91/pm: move the standby functions to pm.c
+Date: Mon, 23 Mar 2015 11:14:52 +0100
+Message-ID: <550FE79C.6050305@atmel.com>
+References: <1426545886-19162-1-git-send-email-alexandre.belloni@free-electrons.com> <1426545886-19162-2-git-send-email-alexandre.belloni@free-electrons.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:11538 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752356AbbCWKOh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 Mar 2015 06:14:37 -0400
-In-Reply-To: <1426545886-19162-1-git-send-email-alexandre.belloni@free-electrons.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1426545886-19162-2-git-send-email-alexandre.belloni@free-electrons.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alexandre Belloni <alexandre.belloni@free-electrons.com>
+Cc: Lee Jones <lee.jones@linaro.org>, Boris Brezillon <boris.brezillon@free-electrons.com>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexandre Belloni <alexandre.belloni@free-electrons.com>, Lee Jones <lee.jones@linaro.org>
-Cc: Boris Brezillon <boris.brezillon@free-electrons.com>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-arm-kernel@lists.infradead.org
 
 Le 16/03/2015 23:44, Alexandre Belloni a =E9crit :
-> Hi,
+> The standby functions are now only used in pm.c, move them there.
 >=20
-> This patch set finishes the clean up of the mach-at91 directory.
+> Also, they are not inlined as a pointer to those functions is passed =
+to the
+> cpuidle driver.
 >=20
-> It fixed the remaining two drivers (at91_cf and pata_at91) so that th=
-ey compile
-> in a multiplatform configuration.
->=20
-> Then it removes the uneeded headers.
->=20
->=20
-> Alexandre Belloni (9):
->   ARM: at91/pm: move the standby functions to pm.c
->   ARM: at91/pm: move AT91_MEMCTRL_* to pm.h
+> Signed-off-by: Alexandre Belloni <alexandre.belloni@free-electrons.co=
+m>
 
-Ok, I only take the first 2 patches of this series for now.
-
-The rest looks good as well, but I need more insight and the review fro=
-m
-Lee to go forward.
-
-Thanks, bye.
-
-
->   ata: at91: use syscon to configure the smc
->   ARM: at91: drop sam9_smc.c
->   ARM: at91: declare the at91rm9200 memory controller as a syscon
->   pcmcia: at91_cf: Use syscon to configure the MC/smc
->   ARM: at91/pm: use the atmel-mc syscon defines
->   ARM: at91: remove mach/at91_ramc.h and mach/at91rm9200_mc.h
->   ARM: at91: remove at91rm9200_sdramc.h
+Acked-by: Nicolas Ferre <nicolas.ferre@atmel.com>
+> ---
+>  arch/arm/mach-at91/pm.c | 89 +++++++++++++++++++++++++++++++++++++++=
+++++++++
+>  arch/arm/mach-at91/pm.h | 92 ---------------------------------------=
+----------
+>  2 files changed, 89 insertions(+), 92 deletions(-)
 >=20
-> Boris Brezillon (1):
->   mfd: syscon: Add Atmel MC (Memory Controller) registers definition
->=20
->  .../devicetree/bindings/arm/atmel-at91.txt         |   2 +-
->  arch/arm/boot/dts/at91rm9200.dtsi                  |   2 +-
->  arch/arm/mach-at91/Makefile                        |   5 -
->  arch/arm/mach-at91/include/mach/at91_ramc.h        |  32 -----
->  arch/arm/mach-at91/include/mach/at91rm9200_mc.h    | 116 -----------=
-------
->  arch/arm/mach-at91/include/mach/at91sam9_smc.h     |  98 -----------=
----
->  arch/arm/mach-at91/pm.c                            |  91 +++++++++++=
-+-
->  arch/arm/mach-at91/pm.h                            | 110 +++--------=
------
->  arch/arm/mach-at91/pm_suspend.S                    |   3 +-
->  arch/arm/mach-at91/sam9_smc.c                      | 136 -----------=
---------
->  arch/arm/mach-at91/sam9_smc.h                      |  11 --
->  drivers/ata/Kconfig                                |   1 -
->  drivers/ata/pata_at91.c                            |  92 ++++++++++-=
---
->  drivers/pcmcia/Kconfig                             |   1 -
->  drivers/pcmcia/at91_cf.c                           |  25 ++--
->  include/linux/mfd/syscon/atmel-mc.h                | 144 +++++++++++=
-++++++++++
->  include/soc/at91/at91rm9200_sdramc.h               |  63 ---------
->  17 files changed, 339 insertions(+), 593 deletions(-)
->  delete mode 100644 arch/arm/mach-at91/include/mach/at91_ramc.h
->  delete mode 100644 arch/arm/mach-at91/include/mach/at91rm9200_mc.h
->  delete mode 100644 arch/arm/mach-at91/include/mach/at91sam9_smc.h
->  delete mode 100644 arch/arm/mach-at91/sam9_smc.c
->  delete mode 100644 arch/arm/mach-at91/sam9_smc.h
->  create mode 100644 include/linux/mfd/syscon/atmel-mc.h
->  delete mode 100644 include/soc/at91/at91rm9200_sdramc.h
+> diff --git a/arch/arm/mach-at91/pm.c b/arch/arm/mach-at91/pm.c
+> index f93a735ba327..5062699cbb12 100644
+> --- a/arch/arm/mach-at91/pm.c
+> +++ b/arch/arm/mach-at91/pm.c
+> @@ -222,6 +222,95 @@ static void at91_pm_set_standby(void (*at91_stan=
+dby)(void))
+>  		at91_cpuidle_device.dev.platform_data =3D at91_standby;
+>  }
+> =20
+> +/*
+> + * The AT91RM9200 goes into self-refresh mode with this command, and=
+ will
+> + * terminate self-refresh automatically on the next SDRAM access.
+> + *
+> + * Self-refresh mode is exited as soon as a memory access is made, b=
+ut we don't
+> + * know for sure when that happens. However, we need to restore the =
+low-power
+> + * mode if it was enabled before going idle. Restoring low-power mod=
+e while
+> + * still in self-refresh is "not recommended", but seems to work.
+> + */
+> +static void at91rm9200_standby(void)
+> +{
+> +	u32 lpr =3D at91_ramc_read(0, AT91RM9200_SDRAMC_LPR);
+> +
+> +	asm volatile(
+> +		"b    1f\n\t"
+> +		".align    5\n\t"
+> +		"1:  mcr    p15, 0, %0, c7, c10, 4\n\t"
+> +		"    str    %0, [%1, %2]\n\t"
+> +		"    str    %3, [%1, %4]\n\t"
+> +		"    mcr    p15, 0, %0, c7, c0, 4\n\t"
+> +		"    str    %5, [%1, %2]"
+> +		:
+> +		: "r" (0), "r" (at91_ramc_base[0]), "r" (AT91RM9200_SDRAMC_LPR),
+> +		  "r" (1), "r" (AT91RM9200_SDRAMC_SRR),
+> +		  "r" (lpr));
+> +}
+> +
+> +/* We manage both DDRAM/SDRAM controllers, we need more than one val=
+ue to
+> + * remember.
+> + */
+> +static void at91_ddr_standby(void)
+> +{
+> +	/* Those two values allow us to delay self-refresh activation
+> +	 * to the maximum. */
+> +	u32 lpr0, lpr1 =3D 0;
+> +	u32 saved_lpr0, saved_lpr1 =3D 0;
+> +
+> +	if (at91_ramc_base[1]) {
+> +		saved_lpr1 =3D at91_ramc_read(1, AT91_DDRSDRC_LPR);
+> +		lpr1 =3D saved_lpr1 & ~AT91_DDRSDRC_LPCB;
+> +		lpr1 |=3D AT91_DDRSDRC_LPCB_SELF_REFRESH;
+> +	}
+> +
+> +	saved_lpr0 =3D at91_ramc_read(0, AT91_DDRSDRC_LPR);
+> +	lpr0 =3D saved_lpr0 & ~AT91_DDRSDRC_LPCB;
+> +	lpr0 |=3D AT91_DDRSDRC_LPCB_SELF_REFRESH;
+> +
+> +	/* self-refresh mode now */
+> +	at91_ramc_write(0, AT91_DDRSDRC_LPR, lpr0);
+> +	if (at91_ramc_base[1])
+> +		at91_ramc_write(1, AT91_DDRSDRC_LPR, lpr1);
+> +
+> +	cpu_do_idle();
+> +
+> +	at91_ramc_write(0, AT91_DDRSDRC_LPR, saved_lpr0);
+> +	if (at91_ramc_base[1])
+> +		at91_ramc_write(1, AT91_DDRSDRC_LPR, saved_lpr1);
+> +}
+> +
+> +/* We manage both DDRAM/SDRAM controllers, we need more than one val=
+ue to
+> + * remember.
+> + */
+> +static void at91sam9_sdram_standby(void)
+> +{
+> +	u32 lpr0, lpr1 =3D 0;
+> +	u32 saved_lpr0, saved_lpr1 =3D 0;
+> +
+> +	if (at91_ramc_base[1]) {
+> +		saved_lpr1 =3D at91_ramc_read(1, AT91_SDRAMC_LPR);
+> +		lpr1 =3D saved_lpr1 & ~AT91_SDRAMC_LPCB;
+> +		lpr1 |=3D AT91_SDRAMC_LPCB_SELF_REFRESH;
+> +	}
+> +
+> +	saved_lpr0 =3D at91_ramc_read(0, AT91_SDRAMC_LPR);
+> +	lpr0 =3D saved_lpr0 & ~AT91_SDRAMC_LPCB;
+> +	lpr0 |=3D AT91_SDRAMC_LPCB_SELF_REFRESH;
+> +
+> +	/* self-refresh mode now */
+> +	at91_ramc_write(0, AT91_SDRAMC_LPR, lpr0);
+> +	if (at91_ramc_base[1])
+> +		at91_ramc_write(1, AT91_SDRAMC_LPR, lpr1);
+> +
+> +	cpu_do_idle();
+> +
+> +	at91_ramc_write(0, AT91_SDRAMC_LPR, saved_lpr0);
+> +	if (at91_ramc_base[1])
+> +		at91_ramc_write(1, AT91_SDRAMC_LPR, saved_lpr1);
+> +}
+> +
+>  static const struct of_device_id ramc_ids[] __initconst =3D {
+>  	{ .compatible =3D "atmel,at91rm9200-sdramc", .data =3D at91rm9200_s=
+tandby },
+>  	{ .compatible =3D "atmel,at91sam9260-sdramc", .data =3D at91sam9_sd=
+ram_standby },
+> diff --git a/arch/arm/mach-at91/pm.h b/arch/arm/mach-at91/pm.h
+> index dcacfa1ad3fa..3223967d3460 100644
+> --- a/arch/arm/mach-at91/pm.h
+> +++ b/arch/arm/mach-at91/pm.h
+> @@ -23,96 +23,4 @@
+> =20
+>  #define	AT91_PM_SLOW_CLOCK	0x01
+> =20
+> -/*
+> - * The AT91RM9200 goes into self-refresh mode with this command, and=
+ will
+> - * terminate self-refresh automatically on the next SDRAM access.
+> - *
+> - * Self-refresh mode is exited as soon as a memory access is made, b=
+ut we don't
+> - * know for sure when that happens. However, we need to restore the =
+low-power
+> - * mode if it was enabled before going idle. Restoring low-power mod=
+e while
+> - * still in self-refresh is "not recommended", but seems to work.
+> - */
+> -
+> -#ifndef __ASSEMBLY__
+> -static inline void at91rm9200_standby(void)
+> -{
+> -	u32 lpr =3D at91_ramc_read(0, AT91RM9200_SDRAMC_LPR);
+> -
+> -	asm volatile(
+> -		"b    1f\n\t"
+> -		".align    5\n\t"
+> -		"1:  mcr    p15, 0, %0, c7, c10, 4\n\t"
+> -		"    str    %0, [%1, %2]\n\t"
+> -		"    str    %3, [%1, %4]\n\t"
+> -		"    mcr    p15, 0, %0, c7, c0, 4\n\t"
+> -		"    str    %5, [%1, %2]"
+> -		:
+> -		: "r" (0), "r" (at91_ramc_base[0]), "r" (AT91RM9200_SDRAMC_LPR),
+> -		  "r" (1), "r" (AT91RM9200_SDRAMC_SRR),
+> -		  "r" (lpr));
+> -}
+> -
+> -/* We manage both DDRAM/SDRAM controllers, we need more than one val=
+ue to
+> - * remember.
+> - */
+> -static inline void at91_ddr_standby(void)
+> -{
+> -	/* Those two values allow us to delay self-refresh activation
+> -	 * to the maximum. */
+> -	u32 lpr0, lpr1 =3D 0;
+> -	u32 saved_lpr0, saved_lpr1 =3D 0;
+> -
+> -	if (at91_ramc_base[1]) {
+> -		saved_lpr1 =3D at91_ramc_read(1, AT91_DDRSDRC_LPR);
+> -		lpr1 =3D saved_lpr1 & ~AT91_DDRSDRC_LPCB;
+> -		lpr1 |=3D AT91_DDRSDRC_LPCB_SELF_REFRESH;
+> -	}
+> -
+> -	saved_lpr0 =3D at91_ramc_read(0, AT91_DDRSDRC_LPR);
+> -	lpr0 =3D saved_lpr0 & ~AT91_DDRSDRC_LPCB;
+> -	lpr0 |=3D AT91_DDRSDRC_LPCB_SELF_REFRESH;
+> -
+> -	/* self-refresh mode now */
+> -	at91_ramc_write(0, AT91_DDRSDRC_LPR, lpr0);
+> -	if (at91_ramc_base[1])
+> -		at91_ramc_write(1, AT91_DDRSDRC_LPR, lpr1);
+> -
+> -	cpu_do_idle();
+> -
+> -	at91_ramc_write(0, AT91_DDRSDRC_LPR, saved_lpr0);
+> -	if (at91_ramc_base[1])
+> -		at91_ramc_write(1, AT91_DDRSDRC_LPR, saved_lpr1);
+> -}
+> -
+> -/* We manage both DDRAM/SDRAM controllers, we need more than one val=
+ue to
+> - * remember.
+> - */
+> -static inline void at91sam9_sdram_standby(void)
+> -{
+> -	u32 lpr0, lpr1 =3D 0;
+> -	u32 saved_lpr0, saved_lpr1 =3D 0;
+> -
+> -	if (at91_ramc_base[1]) {
+> -		saved_lpr1 =3D at91_ramc_read(1, AT91_SDRAMC_LPR);
+> -		lpr1 =3D saved_lpr1 & ~AT91_SDRAMC_LPCB;
+> -		lpr1 |=3D AT91_SDRAMC_LPCB_SELF_REFRESH;
+> -	}
+> -
+> -	saved_lpr0 =3D at91_ramc_read(0, AT91_SDRAMC_LPR);
+> -	lpr0 =3D saved_lpr0 & ~AT91_SDRAMC_LPCB;
+> -	lpr0 |=3D AT91_SDRAMC_LPCB_SELF_REFRESH;
+> -
+> -	/* self-refresh mode now */
+> -	at91_ramc_write(0, AT91_SDRAMC_LPR, lpr0);
+> -	if (at91_ramc_base[1])
+> -		at91_ramc_write(1, AT91_SDRAMC_LPR, lpr1);
+> -
+> -	cpu_do_idle();
+> -
+> -	at91_ramc_write(0, AT91_SDRAMC_LPR, saved_lpr0);
+> -	if (at91_ramc_base[1])
+> -		at91_ramc_write(1, AT91_SDRAMC_LPR, saved_lpr1);
+> -}
+> -
+> -#endif
+>  #endif
 >=20
 
 
