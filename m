@@ -1,50 +1,49 @@
-From: Alexandre Belloni <alexandre.belloni@free-electrons.com>
-Subject: [PATCH v2 4/9] ARM: at91: declare the at91rm9200 memory controller as a syscon
-Date: Mon, 23 Mar 2015 20:29:10 +0100
-Message-ID: <1427138955-3617-5-git-send-email-alexandre.belloni@free-electrons.com>
-References: <1427138955-3617-1-git-send-email-alexandre.belloni@free-electrons.com>
+From: Phillip Susi <psusi@ubuntu.com>
+Subject: Re: [RFC PATCH] sg3_utils: Added hybrid information log utility
+Date: Mon, 23 Mar 2015 22:27:02 -0400
+Message-ID: <5510CB76.3030709@ubuntu.com>
+References: <20141029195400.5225.96984.stgit@stg-AndroidDev-VirtualBox> <20141029195720.5225.51331.stgit@stg-AndroidDev-VirtualBox> <5473CE5C.7010300@ubuntu.com> <372C7AE269BA5E4D92B1082F530ED4B88A13F692@ORSMSX110.amr.corp.intel.com> <548F80CA.8010900@ubuntu.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1427138955-3617-1-git-send-email-alexandre.belloni@free-electrons.com>
+In-Reply-To: <548F80CA.8010900@ubuntu.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Nicolas Ferre <nicolas.ferre@atmel.com>
-Cc: Boris Brezillon <boris.brezillon@free-electrons.com>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-pcmcia@lists.infradead.org, linux-arm-kernel@lists.infradead.org, Alexandre Belloni <alexandre.belloni@free-electrons.com>
+To: "Akers, Jason B" <jason.b.akers@intel.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: "Karkra, Kapil" <kapil.karkra@intel.com>, "Williams, Dan J" <dan.j.williams@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "dgilbert@interlog.com" <dgilbert@interlog.com>
 List-Id: linux-ide@vger.kernel.org
 
-The at91rm9200 memory controller is not simply an SDRAM controller. It also
-controls the EBI (External Bus Interface), the SMC (Static Memory Controller)and
-the Burst Flash Controller.
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
 
-Signed-off-by: Alexandre Belloni <alexandre.belloni@free-electrons.com>
----
- Documentation/devicetree/bindings/arm/atmel-at91.txt | 2 +-
- arch/arm/boot/dts/at91rm9200.dtsi                    | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+On 12/15/2014 07:46 PM, Phillip Susi wrote:
+> On 11/25/2014 02:13 PM, Akers, Jason B wrote:
+>> Hi Phillip, It turns out that this patch was based on an old 
+>> github repository that doesn't appear to be updated. Doug
+>> Gilbert reached out after the initial RFC and directed us to his
+>> page (http://sg.danny.cz/sg/) where he has updated sg3_utils
+>> code.
+> 
+>> As we continue to work through the feedback from our SSHD kernel
+>>  patches, I'm going to follow up with Doug again on sg3_utils.
+> 
+> So is there a set of patches that applies to a release from that
+> web site?  Also is the source only released as tarballs?  There is
+> no source repo?
 
-diff --git a/Documentation/devicetree/bindings/arm/atmel-at91.txt b/Documentation/devicetree/bindings/arm/atmel-at91.txt
-index 2e99b5b57350..424ac8cbfa08 100644
---- a/Documentation/devicetree/bindings/arm/atmel-at91.txt
-+++ b/Documentation/devicetree/bindings/arm/atmel-at91.txt
-@@ -98,7 +98,7 @@ Example:
- 	};
- 
- RAMC SDRAM/DDR Controller required properties:
--- compatible: Should be "atmel,at91rm9200-sdramc",
-+- compatible: Should be "atmel,at91rm9200-sdramc", "syscon"
- 			"atmel,at91sam9260-sdramc",
- 			"atmel,at91sam9g45-ddramc",
- 			"atmel,sama5d3-ddramc",
-diff --git a/arch/arm/boot/dts/at91rm9200.dtsi b/arch/arm/boot/dts/at91rm9200.dtsi
-index 4fb333bd1f85..6d0fa9b87f46 100644
---- a/arch/arm/boot/dts/at91rm9200.dtsi
-+++ b/arch/arm/boot/dts/at91rm9200.dtsi
-@@ -92,7 +92,7 @@
- 			};
- 
- 			ramc0: ramc@ffffff00 {
--				compatible = "atmel,at91rm9200-sdramc";
-+				compatible = "atmel,at91rm9200-sdramc", "syscon";
- 				reg = <0xffffff00 0x100>;
- 			};
- 
--- 
-2.1.0
+Hello.  I am still beta testing an SSHD drive and would very much like
+to get some more information out of its logs and/or manipulate the
+cache pinned working set.  Is there somewhere I can get these patched
+utilities yet?
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQEcBAEBCgAGBQJVEMt2AAoJENRVrw2cjl5RR7AH/iOPMYRoT1/gdpdVlbIfCsWw
+kP9MnaWVTcqT3O1rgKbudFuMqcJGD/ScnZOIsowdnJkKxwWyGUq7w863GFtaPOul
+o4DBWqLYPYFbmbsgs/meiS3I2qyFrUNGYL0Db8H2mQ2bbaXg59hJ4gO00eSvf8Zm
+gMOu3njcs3REEfu/QDi2pfJXXlWMAQfgUUomxdGb1HHmnQqR7YGAdakfRXOXfNHk
+Feu2QtdZTLZPkBYkcNDM22yPDSYOb6LbpbuNTYFUfPfHp8X8aejAV8zdtZx5aH7C
+ZNA3DEejFqlOltT1fcgTTSb0U0WV/ZcvfTH4g9FCUfx5HOnTI5Oz86He1OthbR0=
+=YMQp
+-----END PGP SIGNATURE-----
