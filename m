@@ -1,8 +1,8 @@
 From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 Subject: Re: [V5 PATCH 1/2] ACPI / scan: Add support for ACPI _CLS device
  matching
-Date: Wed, 25 Mar 2015 10:09:42 -0500
-Message-ID: <5512CFB6.1020606@amd.com>
+Date: Wed, 25 Mar 2015 10:11:01 -0500
+Message-ID: <5512D005.70801@amd.com>
 References: <1425622302-15193-1-git-send-email-Suravee.Suthikulpanit@amd.com>
  <55117373.3020808@amd.com> <20150324144346.GO1878@lahna.fi.intel.com>
  <1602323.I0oL7Cv9OO@vostro.rjw.lan>
