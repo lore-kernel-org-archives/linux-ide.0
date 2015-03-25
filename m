@@ -1,59 +1,190 @@
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [V5 PATCH 1/2] ACPI / scan: Add support for ACPI _CLS device
- matching
-Date: Wed, 25 Mar 2015 17:11:39 +0200
-Message-ID: <20150325151139.GA1878@lahna.fi.intel.com>
-References: <1425622302-15193-1-git-send-email-Suravee.Suthikulpanit@amd.com>
- <55117373.3020808@amd.com>
- <20150324144346.GO1878@lahna.fi.intel.com>
- <1602323.I0oL7Cv9OO@vostro.rjw.lan>
- <5512CFB6.1020606@amd.com>
+From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+Subject: [V6 PATCH 1/3] ACPICA: Add ACPI _CLS processing
+Date: Wed, 25 Mar 2015 15:46:06 -0500
+Message-ID: <1427316368-20965-2-git-send-email-Suravee.Suthikulpanit@amd.com>
+References: <1427316368-20965-1-git-send-email-Suravee.Suthikulpanit@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:1563 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753863AbbCYPNx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 25 Mar 2015 11:13:53 -0400
-Content-Disposition: inline
-In-Reply-To: <5512CFB6.1020606@amd.com>
+Received: from mail-bn1on0135.outbound.protection.outlook.com ([157.56.110.135]:13120
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752148AbbCYUq3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 25 Mar 2015 16:46:29 -0400
+In-Reply-To: <1427316368-20965-1-git-send-email-Suravee.Suthikulpanit@amd.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>, lv.zheng@intel.com, hpa@linux.intel.com, lenb@kernel.org, hdegoede@redhat.com, tj@kernel.org, arnd@arndb.de, mjg59@srcf.ucam.org, gregkh@linuxfoundation.org, hanjun.guo@linaro.org, al.stone@linaro.org, graeme.gregory@linaro.org, leo.duran@amd.com, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org
+To: rjw@rjwysocki.net, mika.westerberg@linux.intel.com, robert.moore@intel.com, lv.zheng@intel.com
+Cc: lenb@kernel.org, hdegoede@redhat.com, tj@kernel.org, mjg59@srcf.ucam.org, gregkh@linuxfoundation.org, hanjun.guo@linaro.org, al.stone@linaro.org, graeme.gregory@linaro.org, leo.duran@amd.com, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org, Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 
-On Wed, Mar 25, 2015 at 10:09:42AM -0500, Suravee Suthikulpanit wrote:
-> On 3/24/15 15:20, Rafael J. Wysocki wrote:
-> >On Tuesday, March 24, 2015 04:43:46 PM Mika Westerberg wrote:
-> >>On Tue, Mar 24, 2015 at 09:23:47AM -0500, Suravee Suthikulpanit wrote:
-> >>>On 3/9/15 10:20, Mika Westerberg wrote:
-> >>>>>[....]
-> >>>>>diff --git a/include/linux/mod_devicetable.h b/include/linux/mod_devicetable.h
-> >>>>>index e530533..9a42522 100644
-> >>>>>--- a/include/linux/mod_devicetable.h
-> >>>>>+++ b/include/linux/mod_devicetable.h
-> >>>>>@@ -189,6 +189,7 @@ struct css_device_id {
-> >>>>>  struct acpi_device_id {
-> >>>>>  	__u8 id[ACPI_ID_LEN];
-> >>>>>  	kernel_ulong_t driver_data;
-> >>>>>+	__u32 cls;
-> >>>>
-> >>>>It would be nice if we could change ordering here but I understand that
-> >>>>it breaks quite many drivers. Perhaps we should consider creating
-> >>>>ACPI_DEVICE() macro and convert existing drivers to that at some point.
-> >>>
-> >>>Yes, a roughly grep in the drivers directory showing about 112 files at the
-> >>>moment. If you think this is the right approach going forward, we can work
-> >>>on cleaning this up on a separate patch series. Please let me know what you
-> >>>think.
-> >>
-> >>I think having ACPI_DEVICE() macro would be pretty useful and it avoids
-> >>things like this if we need to add new fields in the future. Rafael has
-> >>the last word, though :-)
-> >
-> >I agree.
-> 
-> Okay, how should I organize this big change? Can we do this as a separate
-> patch series?
+ACPI Device configuration often contain _CLS object to suppy PCI-defined
+class code for the device. This patch introduces logic to process the _CLS
+object.
 
-Separate patch series is fine.
+Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
+---
+ drivers/acpi/acpica/acutils.h  |  3 ++
+ drivers/acpi/acpica/nsxfname.c | 21 +++++++++++--
+ drivers/acpi/acpica/utids.c    | 71 ++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 93 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/acpi/acpica/acutils.h b/drivers/acpi/acpica/acutils.h
+index c2f03e8..2aef850 100644
+--- a/drivers/acpi/acpica/acutils.h
++++ b/drivers/acpi/acpica/acutils.h
+@@ -430,6 +430,9 @@ acpi_status
+ acpi_ut_execute_CID(struct acpi_namespace_node *device_node,
+ 		    struct acpi_pnp_device_id_list ** return_cid_list);
+ 
++acpi_status
++acpi_ut_execute_CLS(struct acpi_namespace_node *device_node,
++		    struct acpi_pnp_device_id **return_id);
+ /*
+  * utlock - reader/writer locks
+  */
+diff --git a/drivers/acpi/acpica/nsxfname.c b/drivers/acpi/acpica/nsxfname.c
+index d66c326..590ef06 100644
+--- a/drivers/acpi/acpica/nsxfname.c
++++ b/drivers/acpi/acpica/nsxfname.c
+@@ -276,11 +276,12 @@ acpi_get_object_info(acpi_handle handle,
+ 	struct acpi_pnp_device_id *hid = NULL;
+ 	struct acpi_pnp_device_id *uid = NULL;
+ 	struct acpi_pnp_device_id *sub = NULL;
++	struct acpi_pnp_device_id *cls = NULL;
+ 	char *next_id_string;
+ 	acpi_object_type type;
+ 	acpi_name name;
+ 	u8 param_count = 0;
+-	u8 valid = 0;
++	u16 valid = 0;
+ 	u32 info_size;
+ 	u32 i;
+ 	acpi_status status;
+@@ -320,7 +321,7 @@ acpi_get_object_info(acpi_handle handle,
+ 	if ((type == ACPI_TYPE_DEVICE) || (type == ACPI_TYPE_PROCESSOR)) {
+ 		/*
+ 		 * Get extra info for ACPI Device/Processor objects only:
+-		 * Run the Device _HID, _UID, _SUB, and _CID methods.
++		 * Run the Device _HID, _UID, _SUB, _CID and _CLS methods.
+ 		 *
+ 		 * Note: none of these methods are required, so they may or may
+ 		 * not be present for this device. The Info->Valid bitfield is used
+@@ -351,6 +352,14 @@ acpi_get_object_info(acpi_handle handle,
+ 			valid |= ACPI_VALID_SUB;
+ 		}
+ 
++		/* Execute the Device._CLS method */
++
++		status = acpi_ut_execute_CLS(node, &cls);
++		if (ACPI_SUCCESS(status)) {
++			info_size += cls->length;
++			valid |= ACPI_VALID_CLS;
++		}
++
+ 		/* Execute the Device._CID method */
+ 
+ 		status = acpi_ut_execute_CID(node, &cid_list);
+@@ -468,6 +477,11 @@ acpi_get_object_info(acpi_handle handle,
+ 							sub, next_id_string);
+ 	}
+ 
++	if (cls) {
++		next_id_string = acpi_ns_copy_device_id(&info->cls,
++							cls, next_id_string);
++	}
++
+ 	if (cid_list) {
+ 		info->compatible_id_list.count = cid_list->count;
+ 		info->compatible_id_list.list_size = cid_list->list_size;
+@@ -507,6 +521,9 @@ cleanup:
+ 	if (sub) {
+ 		ACPI_FREE(sub);
+ 	}
++	if (cls) {
++		ACPI_FREE(cls);
++	}
+ 	if (cid_list) {
+ 		ACPI_FREE(cid_list);
+ 	}
+diff --git a/drivers/acpi/acpica/utids.c b/drivers/acpi/acpica/utids.c
+index 27431cf..a64b5d1 100644
+--- a/drivers/acpi/acpica/utids.c
++++ b/drivers/acpi/acpica/utids.c
+@@ -416,3 +416,74 @@ cleanup:
+ 	acpi_ut_remove_reference(obj_desc);
+ 	return_ACPI_STATUS(status);
+ }
++
++/*******************************************************************************
++ *
++ * FUNCTION:    acpi_ut_execute_CLS
++ *
++ * PARAMETERS:  device_node         - Node for the device
++ *              return_id           - Where the string UID is returned
++ *
++ * RETURN:      Status
++ *
++ * DESCRIPTION: Executes the _CLS control method that returns PCI-defined
++ *              class code of the device. The ACPI spec define _CLS as a
++ *              package with three integers. The returned string has format:
++ *
++ *                      "bbsspp"
++ *              where:
++ *                  bb = Base-class code
++ *                  ss = Sub-class code
++ *                  pp = Programming Interface code
++ *
++ ******************************************************************************/
++
++acpi_status
++acpi_ut_execute_CLS(struct acpi_namespace_node *device_node,
++		    struct acpi_pnp_device_id **return_id)
++{
++	struct acpi_pnp_device_id *cls;
++	union acpi_operand_object *obj_desc;
++	union acpi_operand_object **cls_objects;
++	acpi_status status;
++
++	ACPI_FUNCTION_TRACE(ut_execute_CLS);
++	status = acpi_ut_evaluate_object(device_node, METHOD_NAME__CLS,
++					 ACPI_BTYPE_PACKAGE, &obj_desc);
++	if (ACPI_FAILURE(status))
++		return_ACPI_STATUS(status);
++
++	cls_objects = obj_desc->package.elements;
++
++	if (obj_desc->common.type == ACPI_TYPE_PACKAGE &&
++	    obj_desc->package.count == 3 &&
++	    cls_objects[0]->common.type == ACPI_TYPE_INTEGER &&
++	    cls_objects[1]->common.type == ACPI_TYPE_INTEGER &&
++	    cls_objects[2]->common.type == ACPI_TYPE_INTEGER) {
++
++		/* Allocate a buffer for the CLS */
++		cls = ACPI_ALLOCATE_ZEROED(sizeof(struct acpi_pnp_device_id) +
++					 (acpi_size) 7);
++		if (!cls) {
++			status = AE_NO_MEMORY;
++			goto cleanup;
++		}
++
++		cls->string =
++		    ACPI_ADD_PTR(char, cls, sizeof(struct acpi_pnp_device_id));
++
++		sprintf(cls->string, "%02x%02x%02x",
++			(u8)ACPI_TO_INTEGER(cls_objects[0]->integer.value),
++			(u8)ACPI_TO_INTEGER(cls_objects[1]->integer.value),
++			(u8)ACPI_TO_INTEGER(cls_objects[2]->integer.value));
++		cls->length = 7;
++		*return_id = cls;
++	}
++
++cleanup:
++
++	/* On exit, we must delete the return object */
++
++	acpi_ut_remove_reference(obj_desc);
++	return_ACPI_STATUS(status);
++}
+-- 
+2.1.0
+
