@@ -1,171 +1,220 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 8/9] libata-eh: Set 'information' field for autosense
-Date: Fri, 27 Mar 2015 16:46:37 +0100
-Message-ID: <1427471198-62676-9-git-send-email-hare@suse.de>
-References: <1427471198-62676-1-git-send-email-hare@suse.de>
+Subject: [PATCH 7/9] libata: Implement support for sense data reporting
+Date: Fri, 27 Mar 2015 16:48:17 +0100
+Message-ID: <1427471297-62805-1-git-send-email-hare@suse.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1427471198-62676-1-git-send-email-hare@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 List-Id: linux-ide@vger.kernel.org
 
-If NCQ autosense or the sense data reporting feature is enabled
-the LBA of the offending command should be stored in the sense
-data 'information' field.
+ACS-4 defines a sense data reporting feature set.
+This patch implements support for it.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/ata/libata-core.c |  4 ++--
- drivers/ata/libata-eh.c   |  3 +++
- drivers/ata/libata-scsi.c | 12 ++++++++++++
- drivers/ata/libata.h      |  5 ++++-
- drivers/scsi/scsi_error.c | 31 +++++++++++++++++++++++++++++++
- include/scsi/scsi_eh.h    |  1 +
- 6 files changed, 53 insertions(+), 3 deletions(-)
+ drivers/ata/libata-core.c | 20 ++++++++++-
+ drivers/ata/libata-eh.c   | 86 +++++++++++++++++++++++++++++++++++++++++++++--
+ include/linux/ata.h       | 18 ++++++++++
+ 3 files changed, 120 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 2ff3ab6..51cba76 100644
+index ef150eb..2ff3ab6 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -691,11 +691,11 @@ static int ata_rwcmd_protocol(struct ata_taskfile *tf, struct ata_device *dev)
-  *	RETURNS:
-  *	Block address read from @tf.
-  */
--u64 ata_tf_read_block(struct ata_taskfile *tf, struct ata_device *dev)
-+u64 ata_tf_read_block(const struct ata_taskfile *tf, struct ata_device *dev)
- {
- 	u64 block = 0;
- 
--	if (tf->flags & ATA_TFLAG_LBA) {
-+	if (!dev || tf->flags & ATA_TFLAG_LBA) {
- 		if (tf->flags & ATA_TFLAG_LBA48) {
- 			block |= (u64)tf->hob_lbah << 40;
- 			block |= (u64)tf->hob_lbam << 32;
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 9fa81d9..77ef43e 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1852,6 +1852,7 @@ void ata_eh_analyze_ncq_error(struct ata_link *link)
- 		ata_dev_dbg(dev, "NCQ Autosense %02x/%02x/%02x\n",
- 			    sense_key, asc, ascq);
- 		ata_scsi_set_sense(qc->scsicmd, sense_key, asc, ascq);
-+		ata_scsi_set_sense_information(qc->scsicmd, &qc->result_tf);
- 		qc->flags |= ATA_QCFLAG_SENSE_VALID;
- 	}
- 
-@@ -1894,6 +1895,8 @@ static unsigned int ata_eh_analyze_tf(struct ata_queued_cmd *qc,
- 			tmp = ata_eh_request_sense(qc, qc->scsicmd);
- 			if (tmp)
- 				qc->err_mask |= tmp;
-+			else
-+				ata_scsi_set_sense_information(qc->scsicmd, tf);
- 		} else {
- 			ata_dev_warn(qc->dev, "sense data available but port frozen\n");
- 		}
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 2e126c1..35fec70 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -280,6 +280,18 @@ void ata_scsi_set_sense(struct scsi_cmnd *cmd, u8 sk, u8 asc, u8 ascq)
- 	scsi_build_sense_buffer(0, cmd->sense_buffer, sk, asc, ascq);
+@@ -2144,6 +2144,24 @@ static int ata_dev_config_ncq(struct ata_device *dev,
+ 	return 0;
  }
  
-+void ata_scsi_set_sense_information(struct scsi_cmnd *cmd,
-+				    const struct ata_taskfile *tf)
++static void ata_dev_config_sense_reporting(struct ata_device *dev)
 +{
-+	u64 information;
++	unsigned int err_mask;
 +
-+	if (!cmd)
++	if (!ata_id_has_sense_reporting(dev->id))
 +		return;
 +
-+	information = ata_tf_read_block(tf, NULL);
-+	scsi_set_sense_information(cmd->sense_buffer, information);
-+}
++	if (ata_id_sense_reporting_enabled(dev->id))
++		return;
 +
- static ssize_t
- ata_scsi_em_message_store(struct device *dev, struct device_attribute *attr,
- 			  const char *buf, size_t count)
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 8cfdd96..a998a17 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -67,7 +67,8 @@ extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev, int tag);
- extern int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
- 			   u64 block, u32 n_block, unsigned int tf_flags,
- 			   unsigned int tag);
--extern u64 ata_tf_read_block(struct ata_taskfile *tf, struct ata_device *dev);
-+extern u64 ata_tf_read_block(const struct ata_taskfile *tf,
-+			     struct ata_device *dev);
- extern unsigned ata_exec_internal(struct ata_device *dev,
- 				  struct ata_taskfile *tf, const u8 *cdb,
- 				  int dma_dir, void *buf, unsigned int buflen,
-@@ -138,6 +139,8 @@ extern int ata_scsi_add_hosts(struct ata_host *host,
- extern void ata_scsi_scan_host(struct ata_port *ap, int sync);
- extern int ata_scsi_offline_dev(struct ata_device *dev);
- extern void ata_scsi_set_sense(struct scsi_cmnd *cmd, u8 sk, u8 asc, u8 ascq);
-+extern void ata_scsi_set_sense_information(struct scsi_cmnd *cmd,
-+					   const struct ata_taskfile *tf);
- extern void ata_scsi_media_change_notify(struct ata_device *dev);
- extern void ata_scsi_hotplug(struct work_struct *work);
- extern void ata_schedule_scsi_eh(struct Scsi_Host *shost);
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 4cdaffc..c95a4e9 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -26,6 +26,7 @@
- #include <linux/blkdev.h>
- #include <linux/delay.h>
- #include <linux/jiffies.h>
-+#include <asm/unaligned.h>
- 
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
-@@ -2586,3 +2587,33 @@ void scsi_build_sense_buffer(int desc, u8 *buf, u8 key, u8 asc, u8 ascq)
- 	}
- }
- EXPORT_SYMBOL(scsi_build_sense_buffer);
-+
-+/**
-+ * scsi_set_sense_information - set the information field in a
-+ *		formatted sense data buffer
-+ * @buf:	Where to build sense data
-+ * @info:	64-bit information value to be set
-+ *
-+ **/
-+void scsi_set_sense_information(u8 *buf, u64 info)
-+{
-+	if ((buf[0] & 0x7f) == 0x72) {
-+		u8 *ucp, len;
-+
-+		len = buf[7];
-+		ucp = (char *)scsi_sense_desc_find(buf, len + 8, 0);
-+		if (!ucp) {
-+			buf[7] = len + 0xa;
-+			ucp = buf + 8 + len;
-+		}
-+		ucp[0] = 0;
-+		ucp[1] = 0xa;
-+		ucp[2] = 0x80; /* Valid bit */
-+		ucp[3] = 0;
-+		put_unaligned_be64(info, &ucp[4]);
-+	} else if ((buf[0] & 0x7f) == 0x70) {
-+		buf[0] |= 0x80;
-+		put_unaligned_be64(info, &buf[3]);
++	err_mask = ata_dev_set_feature(dev, SETFEATURE_SENSE_DATA, 0x1);
++	if (err_mask) {
++		ata_dev_dbg(dev,
++			    "failed to enable Sense Data Reporting, Emask 0x%x\n",
++			    err_mask);
 +	}
 +}
-+EXPORT_SYMBOL(scsi_set_sense_information);
-diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
-index 1e1421b..5a4bb5b 100644
---- a/include/scsi/scsi_eh.h
-+++ b/include/scsi/scsi_eh.h
-@@ -59,6 +59,7 @@ extern int scsi_get_sense_info_fld(const u8 * sense_buffer, int sb_len,
- 				   u64 * info_out);
++
+ /**
+  *	ata_dev_configure - Configure the specified ATA/ATAPI device
+  *	@dev: Target device to configure
+@@ -2366,7 +2384,7 @@ int ata_dev_configure(struct ata_device *dev)
+ 					dev->devslp_timing[i] = sata_setting[j];
+ 				}
+ 		}
+-
++		ata_dev_config_sense_reporting(dev);
+ 		dev->cdb_len = 16;
+ 	}
  
- extern void scsi_build_sense_buffer(int desc, u8 *buf, u8 key, u8 asc, u8 ascq);
-+extern void scsi_set_sense_information(u8 *buf, u64 info);
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index c9b1994..9fa81d9 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1618,6 +1618,70 @@ unsigned int atapi_eh_tur(struct ata_device *dev, u8 *r_sense_key)
+ }
  
- extern int scsi_ioctl_reset(struct scsi_device *, int __user *);
+ /**
++ *	ata_eh_request_sense - perform REQUEST_SENSE_DATA_EXT
++ *	@dev: device to perform REQUEST_SENSE_SENSE_DATA_EXT to
++ *	@sense_buf: result sense data buffer (SCSI_SENSE_BUFFERSIZE bytes long)
++ *	@dfl_sense_key: default sense key to use
++ *
++ *	Perform REQUEST_SENSE_DATA_EXT after the device reported CHECK
++ *	SENSE.  This function is EH helper.
++ *
++ *	LOCKING:
++ *	Kernel thread context (may sleep).
++ *
++ *	RETURNS:
++ *	encoded sense data on success, 0 on failure or if sense data
++ *	is not available.
++ */
++static u32 ata_eh_request_sense(struct ata_queued_cmd *qc,
++				struct scsi_cmnd *cmd)
++{
++	struct ata_device *dev = qc->dev;
++	struct ata_taskfile tf;
++	unsigned int err_mask;
++
++	if (!cmd)
++		return 0;
++
++	DPRINTK("ATA request sense\n");
++	ata_dev_warn(dev, "request sense\n");
++	if (!ata_id_sense_reporting_enabled(dev->id)) {
++		ata_dev_warn(qc->dev, "sense data reporting disabled\n");
++		return 0;
++	}
++	ata_tf_init(dev, &tf);
++
++	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
++	tf.flags |= ATA_TFLAG_LBA | ATA_TFLAG_LBA48;
++	tf.command = ATA_CMD_REQ_SENSE_DATA;
++	tf.protocol = ATA_PROT_NODATA;
++
++	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, 0);
++	/*
++	 * ACS-4 states:
++	 * The device may set the SENSE DATA AVAILABLE bit to one in the
++	 * STATUS field and clear the ERROR bit to zero in the STATUS field
++	 * to indicate that the command returned completion without an error
++	 * and the sense data described in table 306 is available.
++	 *
++	 * IOW the 'ATA_SENSE' bit might not be set even though valid
++	 * sense data is available.
++	 * So check for both.
++	 */
++	if ((tf.command & ATA_SENSE) ||
++		tf.lbah != 0 || tf.lbam != 0 || tf.lbal != 0) {
++		ata_scsi_set_sense(cmd, tf.lbah, tf.lbam, tf.lbal);
++		qc->flags |= ATA_QCFLAG_SENSE_VALID;
++		ata_dev_warn(dev, "sense data %02x/%02x/%02x\n",
++			     tf.lbah, tf.lbam, tf.lbal);
++	} else {
++		ata_dev_warn(dev, "request sense failed stat %02x emask %x\n",
++			     tf.command, err_mask);
++	}
++	return err_mask;
++}
++
++/**
+  *	atapi_eh_request_sense - perform ATAPI REQUEST_SENSE
+  *	@dev: device to perform REQUEST_SENSE to
+  *	@sense_buf: result sense data buffer (SCSI_SENSE_BUFFERSIZE bytes long)
+@@ -1820,7 +1884,22 @@ static unsigned int ata_eh_analyze_tf(struct ata_queued_cmd *qc,
+ 		return ATA_EH_RESET;
+ 	}
  
+-	/* Set by NCQ autosense */
++	/*
++	 * Sense data reporting does not work if the
++	 * device fault bit is set.
++	 */
++	if ((stat & ATA_SENSE) && !(stat & ATA_DF) &&
++	    !(qc->flags & ATA_QCFLAG_SENSE_VALID)) {
++		if (!(qc->ap->pflags & ATA_PFLAG_FROZEN)) {
++			tmp = ata_eh_request_sense(qc, qc->scsicmd);
++			if (tmp)
++				qc->err_mask |= tmp;
++		} else {
++			ata_dev_warn(qc->dev, "sense data available but port frozen\n");
++		}
++	}
++
++	/* Set by NCQ autosense or request sense above */
+ 	if (qc->flags & ATA_QCFLAG_SENSE_VALID)
+ 		return 0;
+ 
+@@ -2566,14 +2645,15 @@ static void ata_eh_link_report(struct ata_link *link)
+ 
+ #ifdef CONFIG_ATA_VERBOSE_ERROR
+ 		if (res->command & (ATA_BUSY | ATA_DRDY | ATA_DF | ATA_DRQ |
+-				    ATA_ERR)) {
++				    ATA_SENSE | ATA_ERR)) {
+ 			if (res->command & ATA_BUSY)
+ 				ata_dev_err(qc->dev, "status: { Busy }\n");
+ 			else
+-				ata_dev_err(qc->dev, "status: { %s%s%s%s}\n",
++				ata_dev_err(qc->dev, "status: { %s%s%s%s%s}\n",
+ 				  res->command & ATA_DRDY ? "DRDY " : "",
+ 				  res->command & ATA_DF ? "DF " : "",
+ 				  res->command & ATA_DRQ ? "DRQ " : "",
++				  res->command & ATA_SENSE ? "SENSE " : "",
+ 				  res->command & ATA_ERR ? "ERR " : "");
+ 		}
+ 
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index 0c65526..b666b77 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -94,6 +94,8 @@ enum {
+ 	ATA_ID_SECTOR_SIZE	= 106,
+ 	ATA_ID_WWN		= 108,
+ 	ATA_ID_LOGICAL_SECTOR_SIZE	= 117,	/* and 118 */
++	ATA_ID_COMMAND_SET_3	= 119,
++	ATA_ID_COMMAND_SET_4	= 120,
+ 	ATA_ID_LAST_LUN		= 126,
+ 	ATA_ID_DLF		= 128,
+ 	ATA_ID_CSFO		= 129,
+@@ -382,6 +384,8 @@ enum {
+ 	SATA_SSP		= 0x06,	/* Software Settings Preservation */
+ 	SATA_DEVSLP		= 0x09,	/* Device Sleep */
+ 
++	SETFEATURE_SENSE_DATA = 0xC3, /* Sense Data Reporting feature */
++
+ 	/* feature values for SET_MAX */
+ 	ATA_SET_MAX_ADDR	= 0x00,
+ 	ATA_SET_MAX_PASSWD	= 0x01,
+@@ -705,6 +709,20 @@ static inline bool ata_id_has_read_log_dma_ext(const u16 *id)
+ 	return id[ATA_ID_COMMAND_SET_3] & (1 << 3);
+ }
+ 
++static inline bool ata_id_has_sense_reporting(const u16 *id)
++{
++	if (!(id[ATA_ID_CFS_ENABLE_2] & (1 << 15)))
++		return false;
++	return id[ATA_ID_COMMAND_SET_3] & (1 << 6);
++}
++
++static inline bool ata_id_sense_reporting_enabled(const u16 *id)
++{
++	if (!(id[ATA_ID_CFS_ENABLE_2] & (1 << 15)))
++		return false;
++	return id[ATA_ID_COMMAND_SET_4] & (1 << 6);
++}
++
+ /**
+  *	ata_id_major_version	-	get ATA level of drive
+  *	@id: Identify data
 -- 
 1.8.5.2
