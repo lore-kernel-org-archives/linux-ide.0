@@ -1,106 +1,71 @@
-From: Mark Salter <msalter@redhat.com>
-Subject: Re: [V7 PATCH 0/3] Introduce ACPI support for ahci_platform driver
-Date: Thu, 26 Mar 2015 15:57:51 -0400
-Message-ID: <1427399871.9430.51.camel@deneb.redhat.com>
-References: <1427397195-15273-1-git-send-email-Suravee.Suthikulpanit@amd.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1427397195-15273-1-git-send-email-Suravee.Suthikulpanit@amd.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Cc: rjw@rjwysocki.net, mika.westerberg@linux.intel.com, robert.moore@intel.com, lv.zheng@intel.com, hanjun.guo@linaro.org, mjg59@srcf.ucam.org, graeme.gregory@linaro.org, al.stone@linaro.org, linux-ide@vger.kernel.org, gregkh@linuxfoundation.org, linaro-acpi@lists.linaro.org, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, hdegoede@redhat.com, tj@kernel.org, lenb@kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 1/9] libata: use READ_LOG_DMA_EXT
+Date: Fri, 27 Mar 2015 16:46:30 +0100
+Message-ID: <1427471198-62676-2-git-send-email-hare@suse.de>
+References: <1427471198-62676-1-git-send-email-hare@suse.de>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:41464 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753183AbbC0Pqm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 27 Mar 2015 11:46:42 -0400
+In-Reply-To: <1427471198-62676-1-git-send-email-hare@suse.de>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-On Thu, 2015-03-26 at 14:13 -0500, Suravee Suthikulpanit wrote:
-> This patch series introduce ACPI support for AHCI platform driver.
-> Existing ACPI support for AHCI assumes the device controller is a PCI device.
-> Since there is no ACPI _CID for generic AHCI controller, the driver
-> could not use it for matching devices. Therefore, this patch introduces
-> a mechanism for drivers to match devices using ACPI _CLS method.
-> _CLS contains PCI-defined class-code.
-> 
-> This patch series also modifies ACPI modalias to add class-code to the
-> exisiting format, which currently only uses _HID and _CIDs. This is required
-> to support loadable modules w/ _CLS.
-> 
-> This is rebased from and tested with:
-> 
->     http://git.linaro.org/leg/acpi/acpi.git acpi-5.1-v11
-> 
-> This topic was discussed earlier here (as part of introducing support for
-> AMD Seattle SATA controller):
-> 
->     http://marc.info/?l=linux-arm-kernel&m=141083492521584&w=2
-> 
-> Changes from V6 (https://lkml.org/lkml/2015/3/25/797)
-> 	* Adding Acked-by Mika, and Reviewed-by Hanjun
-> 	* Minor clen up to use lower case 0xffffff for cls_msk
-> 	  (per Mika suggestions).
-> 	* Modify the ACPI_DEVICE_CLASS macro to use designated initializer
-> 	  (per Mika suggestions).
-> 
-> Changes from V5 (https://lkml.org/lkml/2015/3/6/24)
-> 	* Rebased and tested with acpi-5.1-v11
-> 	* Splitting up the ACPICA changes into a separate patch [1/3].
-> 	  (per Mika suggestion)
-> 	* Adding class-code mask support (per Mika suggestion)
-> 	* Use macro to define struct acpi_device_id entry (per Mika suggestion)
-> 	* Note: Mika also recommend reordering the member of struct acpi_device_id
-> 	  and define a macro to be used for declaring each table entry. This is a
-> 	  large amount of changes, and will be done separtely from this patch series.
-> 
-> Changes from V4 (https://lkml.org/lkml/2015/3/2/56)
-> 	* [1/2] Bug fixed: Reorder the declaration of
-> 	  struct acpi_pnp_device_id cls in the struct acpi_device_info
-> 	  (include/acpi/actypes.h) since compatible_id_list must be last one.
-> 	* [2/2] Added Acked-by: Tejun Heo <tj@kernel.org>
-> 
-> Changes from V3 (https://lkml.org/lkml/2015/2/8/106)
-> 	* Instead of introducing new structure acpi_device_cls, add cls into
-> 	  the acpi_device_id, and modify the __acpi_match_device
-> 	  to also match for cls. (per Mika suggestion.)
-> 	* Add loadable module support, which requires changes in ACPI
-> 	  modalias. (per Mika suggestion.)
-> 	* Rebased and tested with acpi-5.1-v9
-> 
-> Changes from V2 (https://lkml.org/lkml/2015/1/5/662)
-> 	* Update with review comment from Rafael in patch 1/2
-> 	* Rebased and tested with acpi-5.1-v8
-> 
-> Changes from V1 (https://lkml.org/lkml/2014/12/19/345)
-> 	* Rebased to 3.19.0-rc2
-> 	* Change from acpi_cls in device_driver to acpi_match_cls (Hanjun comment)
-> 	* Change the matching logic in acpi_driver_match_device() due to the new
-> 	  special PRP0001 _HID.
-> 	* Simplify the return type of acpi_match_device_cls() to boolean.
-> 
-> Changes from RFC (https://lkml.org/lkml/2014/12/17/446)
-> 	* Remove #ifdef and make non-ACPI version of the acpi_match_device_cls
-> 	  as inline. (per Arnd)
-> 	* Simplify logic to retrieve and evaluate _CLS handle. (per Hanjun)
-> 
-> Suravee Suthikulpanit (3):
->   ACPICA: Add ACPI _CLS processing
->   ACPI / scan: Add support for ACPI _CLS device matching
->   ata: ahci_platform: Add ACPI _CLS matching
-> 
->  drivers/acpi/acpica/acutils.h     |  3 ++
->  drivers/acpi/acpica/nsxfname.c    | 21 ++++++++++--
->  drivers/acpi/acpica/utids.c       | 71 +++++++++++++++++++++++++++++++++++++++
->  drivers/acpi/scan.c               | 36 +++++++++++++++++---
->  drivers/ata/Kconfig               |  2 +-
->  drivers/ata/ahci_platform.c       |  9 +++++
->  include/acpi/acnames.h            |  1 +
->  include/acpi/actypes.h            |  4 ++-
->  include/linux/acpi.h              | 13 +++++++
->  include/linux/mod_devicetable.h   |  2 ++
->  scripts/mod/devicetable-offsets.c |  2 ++
->  scripts/mod/file2alias.c          | 32 ++++++++++++++++--
->  12 files changed, 186 insertions(+), 10 deletions(-)
-> 
+If READ_LOG_DMA_EXT is supported we should try to use it for
+reading the log pages.
 
-FWIW,
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/ata/libata-eh.c | 9 +++++++--
+ include/linux/ata.h     | 7 +++++++
+ 2 files changed, 14 insertions(+), 2 deletions(-)
 
-Tested-by: Mark Salter <msalter@redhat.com>
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index d2029a4..d35d7a7 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1510,13 +1510,18 @@ unsigned int ata_read_log_page(struct ata_device *dev, u8 log,
+ 	DPRINTK("read log page - log 0x%x, page 0x%x\n", log, page);
+ 
+ 	ata_tf_init(dev, &tf);
+-	tf.command = ATA_CMD_READ_LOG_EXT;
++	if (dev->dma_mode && ata_id_has_read_log_dma_ext(dev->id)) {
++		tf.command = ATA_CMD_READ_LOG_DMA_EXT;
++		tf.protocol = ATA_PROT_DMA;
++	} else {
++		tf.command = ATA_CMD_READ_LOG_EXT;
++		tf.protocol = ATA_PROT_PIO;
++	}
+ 	tf.lbal = log;
+ 	tf.lbam = page;
+ 	tf.nsect = sectors;
+ 	tf.hob_nsect = sectors >> 8;
+ 	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_LBA48 | ATA_TFLAG_DEVICE;
+-	tf.protocol = ATA_PROT_PIO;
+ 
+ 	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_FROM_DEVICE,
+ 				     buf, sectors * ATA_SECT_SIZE, 0);
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index 1648026..681520f 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -696,6 +696,13 @@ static inline bool ata_id_wcache_enabled(const u16 *id)
+ 	return id[ATA_ID_CFS_ENABLE_1] & (1 << 5);
+ }
+ 
++static inline bool ata_id_has_read_log_dma_ext(const u16 *id)
++{
++	if (!(id[ATA_ID_CFS_ENABLE_2] & (1 << 15)))
++		return false;
++	return id[ATA_ID_COMMAND_SET_3] & (1 << 3);
++}
++
+ /**
+  *	ata_id_major_version	-	get ATA level of drive
+  *	@id: Identify data
+-- 
+1.8.5.2
+
