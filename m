@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 1/9] libata: use READ_LOG_DMA_EXT
-Date: Fri, 27 Mar 2015 16:46:30 +0100
-Message-ID: <1427471198-62676-2-git-send-email-hare@suse.de>
+Subject: [PATCH 4/9] ide,ata: Rename ATA_IDX to ATA_SENSE
+Date: Fri, 27 Mar 2015 16:46:33 +0100
+Message-ID: <1427471198-62676-5-git-send-email-hare@suse.de>
 References: <1427471198-62676-1-git-send-email-hare@suse.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:41464 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:41466 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753183AbbC0Pqm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	id S1753083AbbC0Pqm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
 	Fri, 27 Mar 2015 11:46:42 -0400
 In-Reply-To: <1427471198-62676-1-git-send-email-hare@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
@@ -14,58 +14,70 @@ List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-If READ_LOG_DMA_EXT is supported we should try to use it for
-reading the log pages.
+ATA-8 defines bit 1 as 'ATA_SENSE', not 'ATA_IDX'.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/ata/libata-eh.c | 9 +++++++--
- include/linux/ata.h     | 7 +++++++
- 2 files changed, 14 insertions(+), 2 deletions(-)
+ drivers/ata/libata-scsi.c | 2 +-
+ drivers/ide/ide-lib.c     | 4 ++--
+ drivers/ide/ide-probe.c   | 2 +-
+ include/linux/ata.h       | 2 +-
+ 4 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index d2029a4..d35d7a7 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1510,13 +1510,18 @@ unsigned int ata_read_log_page(struct ata_device *dev, u8 log,
- 	DPRINTK("read log page - log 0x%x, page 0x%x\n", log, page);
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index d2b6196..1f1cb69 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -804,7 +804,7 @@ static void ata_dump_status(unsigned id, struct ata_taskfile *tf)
+ 		if (stat & 0x10)	printk("SeekComplete ");
+ 		if (stat & 0x08)	printk("DataRequest ");
+ 		if (stat & 0x04)	printk("CorrectedError ");
+-		if (stat & 0x02)	printk("Index ");
++		if (stat & 0x02)	printk("Sense ");
+ 		if (stat & 0x01)	printk("Error ");
+ 		printk("}\n");
  
- 	ata_tf_init(dev, &tf);
--	tf.command = ATA_CMD_READ_LOG_EXT;
-+	if (dev->dma_mode && ata_id_has_read_log_dma_ext(dev->id)) {
-+		tf.command = ATA_CMD_READ_LOG_DMA_EXT;
-+		tf.protocol = ATA_PROT_DMA;
-+	} else {
-+		tf.command = ATA_CMD_READ_LOG_EXT;
-+		tf.protocol = ATA_PROT_PIO;
-+	}
- 	tf.lbal = log;
- 	tf.lbam = page;
- 	tf.nsect = sectors;
- 	tf.hob_nsect = sectors >> 8;
- 	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_LBA48 | ATA_TFLAG_DEVICE;
--	tf.protocol = ATA_PROT_PIO;
- 
- 	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_FROM_DEVICE,
- 				     buf, sectors * ATA_SECT_SIZE, 0);
+diff --git a/drivers/ide/ide-lib.c b/drivers/ide/ide-lib.c
+index d9c9829..e1180fa 100644
+--- a/drivers/ide/ide-lib.c
++++ b/drivers/ide/ide-lib.c
+@@ -148,8 +148,8 @@ u8 ide_dump_status(ide_drive_t *drive, const char *msg, u8 stat)
+ 			printk(KERN_CONT "DataRequest ");
+ 		if (stat & ATA_CORR)
+ 			printk(KERN_CONT "CorrectedError ");
+-		if (stat & ATA_IDX)
+-			printk(KERN_CONT "Index ");
++		if (stat & ATA_SENSE)
++			printk(KERN_CONT "Sense ");
+ 		if (stat & ATA_ERR)
+ 			printk(KERN_CONT "Error ");
+ 	}
+diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
+index a3d3b17..0b63fac 100644
+--- a/drivers/ide/ide-probe.c
++++ b/drivers/ide/ide-probe.c
+@@ -273,7 +273,7 @@ int ide_dev_read_id(ide_drive_t *drive, u8 cmd, u16 *id, int irq_ctx)
+ 	    (hwif->host_flags & IDE_HFLAG_BROKEN_ALTSTATUS) == 0) {
+ 		a = tp_ops->read_altstatus(hwif);
+ 		s = tp_ops->read_status(hwif);
+-		if ((a ^ s) & ~ATA_IDX)
++		if ((a ^ s) & ~ATA_SENSE)
+ 			/* ancient Seagate drives, broken interfaces */
+ 			printk(KERN_INFO "%s: probing with STATUS(0x%02x) "
+ 					 "instead of ALTSTATUS(0x%02x)\n",
 diff --git a/include/linux/ata.h b/include/linux/ata.h
-index 1648026..681520f 100644
+index 681520f..e3cb41c 100644
 --- a/include/linux/ata.h
 +++ b/include/linux/ata.h
-@@ -696,6 +696,13 @@ static inline bool ata_id_wcache_enabled(const u16 *id)
- 	return id[ATA_ID_CFS_ENABLE_1] & (1 << 5);
- }
- 
-+static inline bool ata_id_has_read_log_dma_ext(const u16 *id)
-+{
-+	if (!(id[ATA_ID_CFS_ENABLE_2] & (1 << 15)))
-+		return false;
-+	return id[ATA_ID_COMMAND_SET_3] & (1 << 3);
-+}
-+
- /**
-  *	ata_id_major_version	-	get ATA level of drive
-  *	@id: Identify data
+@@ -177,7 +177,7 @@ enum {
+ 	ATA_DSC			= (1 << 4),	/* drive seek complete */
+ 	ATA_DRQ			= (1 << 3),	/* data request i/o */
+ 	ATA_CORR		= (1 << 2),	/* corrected data error */
+-	ATA_IDX			= (1 << 1),	/* index */
++	ATA_SENSE		= (1 << 1),	/* sense code available */
+ 	ATA_ERR			= (1 << 0),	/* have an error */
+ 	ATA_SRST		= (1 << 2),	/* software reset */
+ 	ATA_ICRC		= (1 << 7),	/* interface CRC error */
 -- 
 1.8.5.2
 
