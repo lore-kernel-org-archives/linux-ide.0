@@ -1,7 +1,7 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 7/9] libata: Implement support for sense data reporting
-Date: Fri, 27 Mar 2015 16:46:36 +0100
-Message-ID: <1427471198-62676-8-git-send-email-hare@suse.de>
+Subject: [PATCH 9/9] libata: Add tracepoints
+Date: Fri, 27 Mar 2015 16:46:38 +0100
+Message-ID: <1427471198-62676-10-git-send-email-hare@suse.de>
 References: <1427471198-62676-1-git-send-email-hare@suse.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1427471198-62676-1-git-send-email-hare@suse.de>
@@ -10,213 +10,597 @@ To: Tejun Heo <tj@kernel.org>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 List-Id: linux-ide@vger.kernel.org
 
-ACS-4 defines a sense data reporting feature set.
-This patch implements support for it.
+Add some tracepoints for ata_qc_issue, ata_qc_complete, and
+ata_eh_link_autopsy.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/ata/libata-core.c | 20 ++++++++++-
- drivers/ata/libata-eh.c   | 86 +++++++++++++++++++++++++++++++++++++++++++++--
- include/linux/ata.h       | 18 ++++++++++
- 3 files changed, 120 insertions(+), 4 deletions(-)
+ drivers/ata/Makefile          |   3 +-
+ drivers/ata/libata-core.c     |   8 +-
+ drivers/ata/libata-eh.c       |   4 +-
+ drivers/ata/libata-trace.c    | 151 ++++++++++++++++++++
+ include/trace/events/libata.h | 325 ++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 488 insertions(+), 3 deletions(-)
+ create mode 100644 drivers/ata/libata-trace.c
+ create mode 100644 include/trace/events/libata.h
 
+diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+index ae41107..b67e995 100644
+--- a/drivers/ata/Makefile
++++ b/drivers/ata/Makefile
+@@ -111,7 +111,8 @@ obj-$(CONFIG_ATA_GENERIC)	+= ata_generic.o
+ # Should be last libata driver
+ obj-$(CONFIG_PATA_LEGACY)	+= pata_legacy.o
+ 
+-libata-y	:= libata-core.o libata-scsi.o libata-eh.o libata-transport.o
++libata-y	:= libata-core.o libata-scsi.o libata-eh.o \
++	libata-transport.o libata-trace.o
+ libata-$(CONFIG_ATA_SFF)	+= libata-sff.o
+ libata-$(CONFIG_SATA_PMP)	+= libata-pmp.o
+ libata-$(CONFIG_ATA_ACPI)	+= libata-acpi.o
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index ef150eb..2ff3ab6 100644
+index 51cba76..1882fd2 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -2144,6 +2144,24 @@ static int ata_dev_config_ncq(struct ata_device *dev,
- 	return 0;
- }
+@@ -70,6 +70,9 @@
+ #include <linux/pm_runtime.h>
+ #include <linux/platform_device.h>
  
-+static void ata_dev_config_sense_reporting(struct ata_device *dev)
-+{
-+	unsigned int err_mask;
++#define CREATE_TRACE_POINTS
++#include <trace/events/libata.h>
 +
-+	if (!ata_id_has_sense_reporting(dev->id))
-+		return;
-+
-+	if (ata_id_sense_reporting_enabled(dev->id))
-+		return;
-+
-+	err_mask = ata_dev_set_feature(dev, SETFEATURE_SENSE_DATA, 0x1);
-+	if (err_mask) {
-+		ata_dev_dbg(dev,
-+			    "failed to enable Sense Data Reporting, Emask 0x%x\n",
-+			    err_mask);
-+	}
-+}
-+
- /**
-  *	ata_dev_configure - Configure the specified ATA/ATAPI device
-  *	@dev: Target device to configure
-@@ -2366,7 +2384,7 @@ int ata_dev_configure(struct ata_device *dev)
- 					dev->devslp_timing[i] = sata_setting[j];
- 				}
+ #include "libata.h"
+ #include "libata-transport.h"
+ 
+@@ -4904,6 +4907,7 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
+ 		 */
+ 		if (unlikely(ata_tag_internal(qc->tag))) {
+ 			fill_result_tf(qc);
++			trace_ata_qc_complete_internal(qc);
+ 			__ata_qc_complete(qc);
+ 			return;
  		}
--
-+		ata_dev_config_sense_reporting(dev);
- 		dev->cdb_len = 16;
+@@ -4914,6 +4918,7 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
+ 		 */
+ 		if (unlikely(qc->flags & ATA_QCFLAG_FAILED)) {
+ 			fill_result_tf(qc);
++			trace_ata_qc_complete_failed(qc);
+ 			ata_qc_schedule_eh(qc);
+ 			return;
+ 		}
+@@ -4924,6 +4929,7 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
+ 		if (qc->flags & ATA_QCFLAG_RESULT_TF)
+ 			fill_result_tf(qc);
+ 
++		trace_ata_qc_complete_done(qc);
+ 		/* Some commands need post-processing after successful
+ 		 * completion.
+ 		 */
+@@ -5071,7 +5077,7 @@ void ata_qc_issue(struct ata_queued_cmd *qc)
  	}
  
+ 	ap->ops->qc_prep(qc);
+-
++	trace_ata_qc_issue(qc);
+ 	qc->err_mask |= ap->ops->qc_issue(qc);
+ 	if (unlikely(qc->err_mask))
+ 		goto err;
 diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index c9b1994..9fa81d9 100644
+index 77ef43e..07f41be 100644
 --- a/drivers/ata/libata-eh.c
 +++ b/drivers/ata/libata-eh.c
-@@ -1618,6 +1618,70 @@ unsigned int atapi_eh_tur(struct ata_device *dev, u8 *r_sense_key)
- }
+@@ -46,6 +46,7 @@
  
- /**
-+ *	ata_eh_request_sense - perform REQUEST_SENSE_DATA_EXT
-+ *	@dev: device to perform REQUEST_SENSE_SENSE_DATA_EXT to
-+ *	@sense_buf: result sense data buffer (SCSI_SENSE_BUFFERSIZE bytes long)
-+ *	@dfl_sense_key: default sense key to use
-+ *
-+ *	Perform REQUEST_SENSE_DATA_EXT after the device reported CHECK
-+ *	SENSE.  This function is EH helper.
-+ *
-+ *	LOCKING:
-+ *	Kernel thread context (may sleep).
-+ *
-+ *	RETURNS:
-+ *	encoded sense data on success, 0 on failure or if sense data
-+ *	is not available.
-+ */
-+static u32 ata_eh_request_sense(struct ata_queued_cmd *qc,
-+				struct scsi_cmnd *cmd)
-+{
-+	struct ata_device *dev = qc->dev;
-+	struct ata_taskfile tf;
-+	unsigned int err_mask;
-+
-+	if (!cmd)
-+		return 0;
-+
-+	DPRINTK("ATA request sense\n");
-+	ata_dev_warn(dev, "request sense\n");
-+	if (!ata_id_sense_reporting_enabled(dev->id)) {
-+		ata_dev_warn(qc->dev, "sense data reporting disabled\n");
-+		return 0;
-+	}
-+	ata_tf_init(dev, &tf);
-+
-+	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
-+	tf.flags |= ATA_TFLAG_LBA | ATA_TFLAG_LBA48;
-+	tf.command = ATA_CMD_REQ_SENSE_DATA;
-+	tf.protocol = ATA_PROT_NODATA;
-+
-+	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, 0);
-+	/*
-+	 * ACS-4 states:
-+	 * The device may set the SENSE DATA AVAILABLE bit to one in the
-+	 * STATUS field and clear the ERROR bit to zero in the STATUS field
-+	 * to indicate that the command returned completion without an error
-+	 * and the sense data described in table 306 is available.
-+	 *
-+	 * IOW the 'ATA_SENSE' bit might not be set even though valid
-+	 * sense data is available.
-+	 * So check for both.
-+	 */
-+	if ((tf.command & ATA_SENSE) ||
-+		tf.lbah != 0 || tf.lbam != 0 || tf.lbal != 0) {
-+		ata_scsi_set_sense(cmd, tf.lbah, tf.lbam, tf.lbal);
-+		qc->flags |= ATA_QCFLAG_SENSE_VALID;
-+		ata_dev_warn(dev, "sense data %02x/%02x/%02x\n",
-+			     tf.lbah, tf.lbam, tf.lbal);
-+	} else {
-+		ata_dev_warn(dev, "request sense failed stat %02x emask %x\n",
-+			     tf.command, err_mask);
-+	}
-+	return err_mask;
-+}
-+
-+/**
-  *	atapi_eh_request_sense - perform ATAPI REQUEST_SENSE
-  *	@dev: device to perform REQUEST_SENSE to
-  *	@sense_buf: result sense data buffer (SCSI_SENSE_BUFFERSIZE bytes long)
-@@ -1820,7 +1884,22 @@ static unsigned int ata_eh_analyze_tf(struct ata_queued_cmd *qc,
- 		return ATA_EH_RESET;
+ #include <linux/libata.h>
+ 
++#include <trace/events/libata.h>
+ #include "libata.h"
+ 
+ enum {
+@@ -2291,6 +2292,7 @@ static void ata_eh_link_autopsy(struct ata_link *link)
+ 		all_err_mask |= qc->err_mask;
+ 		if (qc->flags & ATA_QCFLAG_IO)
+ 			eflags |= ATA_EFLAG_IS_IO;
++		trace_ata_eh_link_autopsy_qc(qc);
  	}
  
--	/* Set by NCQ autosense */
-+	/*
-+	 * Sense data reporting does not work if the
-+	 * device fault bit is set.
-+	 */
-+	if ((stat & ATA_SENSE) && !(stat & ATA_DF) &&
-+	    !(qc->flags & ATA_QCFLAG_SENSE_VALID)) {
-+		if (!(qc->ap->pflags & ATA_PFLAG_FROZEN)) {
-+			tmp = ata_eh_request_sense(qc, qc->scsicmd);
-+			if (tmp)
-+				qc->err_mask |= tmp;
-+		} else {
-+			ata_dev_warn(qc->dev, "sense data available but port frozen\n");
-+		}
-+	}
-+
-+	/* Set by NCQ autosense or request sense above */
- 	if (qc->flags & ATA_QCFLAG_SENSE_VALID)
- 		return 0;
- 
-@@ -2566,14 +2645,15 @@ static void ata_eh_link_report(struct ata_link *link)
- 
- #ifdef CONFIG_ATA_VERBOSE_ERROR
- 		if (res->command & (ATA_BUSY | ATA_DRDY | ATA_DF | ATA_DRQ |
--				    ATA_ERR)) {
-+				    ATA_SENSE | ATA_ERR)) {
- 			if (res->command & ATA_BUSY)
- 				ata_dev_err(qc->dev, "status: { Busy }\n");
- 			else
--				ata_dev_err(qc->dev, "status: { %s%s%s%s}\n",
-+				ata_dev_err(qc->dev, "status: { %s%s%s%s%s}\n",
- 				  res->command & ATA_DRDY ? "DRDY " : "",
- 				  res->command & ATA_DF ? "DF " : "",
- 				  res->command & ATA_DRQ ? "DRQ " : "",
-+				  res->command & ATA_SENSE ? "SENSE " : "",
- 				  res->command & ATA_ERR ? "ERR " : "");
- 		}
- 
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index 0c65526..b666b77 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -94,6 +94,8 @@ enum {
- 	ATA_ID_SECTOR_SIZE	= 106,
- 	ATA_ID_WWN		= 108,
- 	ATA_ID_LOGICAL_SECTOR_SIZE	= 117,	/* and 118 */
-+	ATA_ID_COMMAND_SET_3	= 119,
-+	ATA_ID_COMMAND_SET_4	= 120,
- 	ATA_ID_LAST_LUN		= 126,
- 	ATA_ID_DLF		= 128,
- 	ATA_ID_CSFO		= 129,
-@@ -382,6 +384,8 @@ enum {
- 	SATA_SSP		= 0x06,	/* Software Settings Preservation */
- 	SATA_DEVSLP		= 0x09,	/* Device Sleep */
- 
-+	SETFEATURE_SENSE_DATA = 0xC3, /* Sense Data Reporting feature */
-+
- 	/* feature values for SET_MAX */
- 	ATA_SET_MAX_ADDR	= 0x00,
- 	ATA_SET_MAX_PASSWD	= 0x01,
-@@ -705,6 +709,20 @@ static inline bool ata_id_has_read_log_dma_ext(const u16 *id)
- 	return id[ATA_ID_COMMAND_SET_3] & (1 << 3);
+ 	/* enforce default EH actions */
+@@ -2325,7 +2327,7 @@ static void ata_eh_link_autopsy(struct ata_link *link)
+ 			eflags |= ATA_EFLAG_DUBIOUS_XFER;
+ 		ehc->i.action |= ata_eh_speed_down(dev, eflags, all_err_mask);
+ 	}
+-
++	trace_ata_eh_link_autopsy(dev, ehc->i.action, all_err_mask);
+ 	DPRINTK("EXIT\n");
  }
  
-+static inline bool ata_id_has_sense_reporting(const u16 *id)
+diff --git a/drivers/ata/libata-trace.c b/drivers/ata/libata-trace.c
+new file mode 100644
+index 0000000..fd30b8c
+--- /dev/null
++++ b/drivers/ata/libata-trace.c
+@@ -0,0 +1,151 @@
++/*
++ * libata-trace.c - trace functions for libata
++ *
++ * Copyright 2015 Hannes Reinecke
++ * Copyright 2015 SUSE Linux GmbH
++ *
++ *  This program is free software; you can redistribute it and/or modify
++ *  it under the terms of the GNU General Public License as published by
++ *  the Free Software Foundation; either version 2, or (at your option)
++ *  any later version.
++ *
++ *  This program is distributed in the hope that it will be useful,
++ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ *  GNU General Public License for more details.
++ *
++ *  You should have received a copy of the GNU General Public License
++ *  along with this program; see the file COPYING.  If not, write to
++ *  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
++ */
++
++#include <linux/kernel.h>
++#include <linux/trace_seq.h>
++#include <trace/events/libata.h>
++
++const char *
++libata_trace_parse_status(struct trace_seq *p, unsigned char status)
 +{
-+	if (!(id[ATA_ID_CFS_ENABLE_2] & (1 << 15)))
-+		return false;
-+	return id[ATA_ID_COMMAND_SET_3] & (1 << 6);
++	const char *ret = trace_seq_buffer_ptr(p);
++
++	trace_seq_printf(p, "{ ");
++	if (status & ATA_BUSY)
++		trace_seq_printf(p, "BUSY ");
++	if (status & ATA_DRDY)
++		trace_seq_printf(p, "DRDY ");
++	if (status & ATA_DF)
++		trace_seq_printf(p, "DF ");
++	if (status & ATA_DSC)
++		trace_seq_printf(p, "DSC ");
++	if (status & ATA_DRQ)
++		trace_seq_printf(p, "DRQ ");
++	if (status & ATA_CORR)
++		trace_seq_printf(p, "CORR ");
++	if (status & ATA_SENSE)
++		trace_seq_printf(p, "SENSE ");
++	if (status & ATA_ERR)
++		trace_seq_printf(p, "ERR ");
++	trace_seq_putc(p, '}');
++	trace_seq_putc(p, 0);
++
++	return ret;
 +}
 +
-+static inline bool ata_id_sense_reporting_enabled(const u16 *id)
++const char *
++libata_trace_parse_eh_action(struct trace_seq *p, unsigned int eh_action)
 +{
-+	if (!(id[ATA_ID_CFS_ENABLE_2] & (1 << 15)))
-+		return false;
-+	return id[ATA_ID_COMMAND_SET_4] & (1 << 6);
++	const char *ret = trace_seq_buffer_ptr(p);
++
++	trace_seq_printf(p, "%x", eh_action);
++	if (eh_action) {
++		trace_seq_printf(p, "{ ");
++		if (eh_action & ATA_EH_REVALIDATE)
++			trace_seq_printf(p, "REVALIDATE ");
++		if (eh_action & (ATA_EH_SOFTRESET | ATA_EH_HARDRESET))
++			trace_seq_printf(p, "RESET ");
++		else if (eh_action & ATA_EH_SOFTRESET)
++			trace_seq_printf(p, "SOFTRESET ");
++		else if (eh_action & ATA_EH_HARDRESET)
++			trace_seq_printf(p, "HARDRESET ");
++		if (eh_action & ATA_EH_ENABLE_LINK)
++			trace_seq_printf(p, "ENABLE_LINK ");
++		if (eh_action & ATA_EH_PARK)
++			trace_seq_printf(p, "PARK ");
++		trace_seq_putc(p, '}');
++	}
++	trace_seq_putc(p, 0);
++
++	return ret;
 +}
 +
- /**
-  *	ata_id_major_version	-	get ATA level of drive
-  *	@id: Identify data
++const char *
++libata_trace_parse_eh_err_mask(struct trace_seq *p, unsigned int eh_err_mask)
++{
++	const char *ret = trace_seq_buffer_ptr(p);
++
++	trace_seq_printf(p, "%x", eh_err_mask);
++	if (eh_err_mask) {
++		trace_seq_printf(p, "{ ");
++		if (eh_err_mask & AC_ERR_DEV)
++			trace_seq_printf(p, "DEV ");
++		if (eh_err_mask & AC_ERR_HSM)
++			trace_seq_printf(p, "HSM ");
++		if (eh_err_mask & AC_ERR_TIMEOUT)
++			trace_seq_printf(p, "TIMEOUT ");
++		if (eh_err_mask & AC_ERR_MEDIA)
++			trace_seq_printf(p, "MEDIA ");
++		if (eh_err_mask & AC_ERR_ATA_BUS)
++			trace_seq_printf(p, "ATA_BUS ");
++		if (eh_err_mask & AC_ERR_HOST_BUS)
++			trace_seq_printf(p, "HOST_BUS ");
++		if (eh_err_mask & AC_ERR_SYSTEM)
++			trace_seq_printf(p, "SYSTEM ");
++		if (eh_err_mask & AC_ERR_INVALID)
++			trace_seq_printf(p, "INVALID ");
++		if (eh_err_mask & AC_ERR_OTHER)
++			trace_seq_printf(p, "OTHER ");
++		if (eh_err_mask & AC_ERR_NODEV_HINT)
++			trace_seq_printf(p, "NODEV_HINT ");
++		if (eh_err_mask & AC_ERR_NCQ)
++			trace_seq_printf(p, "NCQ ");
++		trace_seq_putc(p, '}');
++	}
++	trace_seq_putc(p, 0);
++
++	return ret;
++}
++
++const char *
++libata_trace_parse_qc_flags(struct trace_seq *p, unsigned int qc_flags)
++{
++	const char *ret = trace_seq_buffer_ptr(p);
++
++	trace_seq_printf(p, "%x", qc_flags);
++	if (qc_flags) {
++		trace_seq_printf(p, "{ ");
++		if (qc_flags & ATA_QCFLAG_ACTIVE)
++			trace_seq_printf(p, "ACTIVE ");
++		if (qc_flags & ATA_QCFLAG_DMAMAP)
++			trace_seq_printf(p, "DMAMAP ");
++		if (qc_flags & ATA_QCFLAG_IO)
++			trace_seq_printf(p, "IO ");
++		if (qc_flags & ATA_QCFLAG_RESULT_TF)
++			trace_seq_printf(p, "RESULT_TF ");
++		if (qc_flags & ATA_QCFLAG_CLEAR_EXCL)
++			trace_seq_printf(p, "CLEAR_EXCL ");
++		if (qc_flags & ATA_QCFLAG_QUIET)
++			trace_seq_printf(p, "QUIET ");
++		if (qc_flags & ATA_QCFLAG_RETRY)
++			trace_seq_printf(p, "RETRY ");
++		if (qc_flags & ATA_QCFLAG_FAILED)
++			trace_seq_printf(p, "FAILED ");
++		if (qc_flags & ATA_QCFLAG_SENSE_VALID)
++			trace_seq_printf(p, "SENSE_VALID ");
++		if (qc_flags & ATA_QCFLAG_EH_SCHEDULED)
++			trace_seq_printf(p, "EH_SCHEDULED ");
++		trace_seq_putc(p, '}');
++	}
++	trace_seq_putc(p, 0);
++
++	return ret;
++}
+diff --git a/include/trace/events/libata.h b/include/trace/events/libata.h
+new file mode 100644
+index 0000000..8b0fbd9
+--- /dev/null
++++ b/include/trace/events/libata.h
+@@ -0,0 +1,325 @@
++#undef TRACE_SYSTEM
++#define TRACE_SYSTEM libata
++
++#if !defined(_TRACE_LIBATA_H) || defined(TRACE_HEADER_MULTI_READ)
++#define _TRACE_LIBATA_H
++
++#include <linux/ata.h>
++#include <linux/libata.h>
++#include <linux/tracepoint.h>
++#include <linux/trace_seq.h>
++
++#define ata_opcode_name(opcode)	{ opcode, #opcode }
++#define show_opcode_name(val)					\
++	__print_symbolic(val,					\
++		 ata_opcode_name(ATA_CMD_DEV_RESET),		\
++		 ata_opcode_name(ATA_CMD_CHK_POWER),		\
++		 ata_opcode_name(ATA_CMD_STANDBY),		\
++		 ata_opcode_name(ATA_CMD_IDLE),			\
++		 ata_opcode_name(ATA_CMD_EDD),			\
++		 ata_opcode_name(ATA_CMD_DOWNLOAD_MICRO),	\
++		 ata_opcode_name(ATA_CMD_DOWNLOAD_MICRO_DMA),	\
++		 ata_opcode_name(ATA_CMD_NOP),			\
++		 ata_opcode_name(ATA_CMD_FLUSH),		\
++		 ata_opcode_name(ATA_CMD_FLUSH_EXT),		\
++		 ata_opcode_name(ATA_CMD_ID_ATA),		\
++		 ata_opcode_name(ATA_CMD_ID_ATAPI),		\
++		 ata_opcode_name(ATA_CMD_SERVICE),		\
++		 ata_opcode_name(ATA_CMD_READ),			\
++		 ata_opcode_name(ATA_CMD_READ_EXT),		\
++		 ata_opcode_name(ATA_CMD_READ_QUEUED),		\
++		 ata_opcode_name(ATA_CMD_READ_STREAM_EXT),	\
++		 ata_opcode_name(ATA_CMD_READ_STREAM_DMA_EXT),	\
++		 ata_opcode_name(ATA_CMD_WRITE),		\
++		 ata_opcode_name(ATA_CMD_WRITE_EXT),		\
++		 ata_opcode_name(ATA_CMD_WRITE_QUEUED),		\
++		 ata_opcode_name(ATA_CMD_WRITE_STREAM_EXT),	\
++		 ata_opcode_name(ATA_CMD_WRITE_STREAM_DMA_EXT), \
++		 ata_opcode_name(ATA_CMD_WRITE_FUA_EXT),	\
++		 ata_opcode_name(ATA_CMD_WRITE_QUEUED_FUA_EXT), \
++		 ata_opcode_name(ATA_CMD_FPDMA_READ),		\
++		 ata_opcode_name(ATA_CMD_FPDMA_WRITE),		\
++		 ata_opcode_name(ATA_CMD_FPDMA_SEND),		\
++		 ata_opcode_name(ATA_CMD_FPDMA_RECV),		\
++		 ata_opcode_name(ATA_CMD_PIO_READ),		\
++		 ata_opcode_name(ATA_CMD_PIO_READ_EXT),		\
++		 ata_opcode_name(ATA_CMD_PIO_WRITE),		\
++		 ata_opcode_name(ATA_CMD_PIO_WRITE_EXT),	\
++		 ata_opcode_name(ATA_CMD_READ_MULTI),		\
++		 ata_opcode_name(ATA_CMD_READ_MULTI_EXT),	\
++		 ata_opcode_name(ATA_CMD_WRITE_MULTI),		\
++		 ata_opcode_name(ATA_CMD_WRITE_MULTI_EXT),	\
++		 ata_opcode_name(ATA_CMD_WRITE_MULTI_FUA_EXT),	\
++		 ata_opcode_name(ATA_CMD_SET_FEATURES),		\
++		 ata_opcode_name(ATA_CMD_SET_MULTI),		\
++		 ata_opcode_name(ATA_CMD_PACKET),		\
++		 ata_opcode_name(ATA_CMD_VERIFY),		\
++		 ata_opcode_name(ATA_CMD_VERIFY_EXT),		\
++		 ata_opcode_name(ATA_CMD_WRITE_UNCORR_EXT),	\
++		 ata_opcode_name(ATA_CMD_STANDBYNOW1),		\
++		 ata_opcode_name(ATA_CMD_IDLEIMMEDIATE),	\
++		 ata_opcode_name(ATA_CMD_SLEEP),		\
++		 ata_opcode_name(ATA_CMD_INIT_DEV_PARAMS),	\
++		 ata_opcode_name(ATA_CMD_READ_NATIVE_MAX),	\
++		 ata_opcode_name(ATA_CMD_READ_NATIVE_MAX_EXT),	\
++		 ata_opcode_name(ATA_CMD_SET_MAX),		\
++		 ata_opcode_name(ATA_CMD_SET_MAX_EXT),		\
++		 ata_opcode_name(ATA_CMD_READ_LOG_EXT),		\
++		 ata_opcode_name(ATA_CMD_WRITE_LOG_EXT),	\
++		 ata_opcode_name(ATA_CMD_READ_LOG_DMA_EXT),	\
++		 ata_opcode_name(ATA_CMD_WRITE_LOG_DMA_EXT),	\
++		 ata_opcode_name(ATA_CMD_TRUSTED_NONDATA),	\
++		 ata_opcode_name(ATA_CMD_TRUSTED_RCV),		\
++		 ata_opcode_name(ATA_CMD_TRUSTED_RCV_DMA),	\
++		 ata_opcode_name(ATA_CMD_TRUSTED_SND),		\
++		 ata_opcode_name(ATA_CMD_TRUSTED_SND_DMA),	\
++		 ata_opcode_name(ATA_CMD_PMP_READ),		\
++		 ata_opcode_name(ATA_CMD_PMP_READ_DMA),		\
++		 ata_opcode_name(ATA_CMD_PMP_WRITE),		\
++		 ata_opcode_name(ATA_CMD_PMP_WRITE_DMA),	\
++		 ata_opcode_name(ATA_CMD_CONF_OVERLAY),		\
++		 ata_opcode_name(ATA_CMD_SEC_SET_PASS),		\
++		 ata_opcode_name(ATA_CMD_SEC_UNLOCK),		\
++		 ata_opcode_name(ATA_CMD_SEC_ERASE_PREP),	\
++		 ata_opcode_name(ATA_CMD_SEC_ERASE_UNIT),	\
++		 ata_opcode_name(ATA_CMD_SEC_FREEZE_LOCK),	\
++		 ata_opcode_name(ATA_CMD_SEC_DISABLE_PASS),	\
++		 ata_opcode_name(ATA_CMD_CONFIG_STREAM),	\
++		 ata_opcode_name(ATA_CMD_SMART),		\
++		 ata_opcode_name(ATA_CMD_MEDIA_LOCK),		\
++		 ata_opcode_name(ATA_CMD_MEDIA_UNLOCK),		\
++		 ata_opcode_name(ATA_CMD_DSM),			\
++		 ata_opcode_name(ATA_CMD_CHK_MED_CRD_TYP),	\
++		 ata_opcode_name(ATA_CMD_CFA_REQ_EXT_ERR),	\
++		 ata_opcode_name(ATA_CMD_CFA_WRITE_NE),		\
++		 ata_opcode_name(ATA_CMD_CFA_TRANS_SECT),	\
++		 ata_opcode_name(ATA_CMD_CFA_ERASE),		\
++		 ata_opcode_name(ATA_CMD_CFA_WRITE_MULT_NE),	\
++		 ata_opcode_name(ATA_CMD_REQ_SENSE_DATA),	\
++		 ata_opcode_name(ATA_CMD_SANITIZE_DEVICE),	\
++		 ata_opcode_name(ATA_CMD_RESTORE),		\
++		 ata_opcode_name(ATA_CMD_READ_LONG),		\
++		 ata_opcode_name(ATA_CMD_READ_LONG_ONCE),	\
++		 ata_opcode_name(ATA_CMD_WRITE_LONG),		\
++		 ata_opcode_name(ATA_CMD_WRITE_LONG_ONCE))
++
++#define ata_error_name(result)	{ result, #result }
++#define show_error_name(val)				\
++	__print_symbolic(val,				\
++		ata_error_name(ATA_ICRC),		\
++		ata_error_name(ATA_UNC),		\
++		ata_error_name(ATA_MC),			\
++		ata_error_name(ATA_IDNF),		\
++		ata_error_name(ATA_MCR),		\
++		ata_error_name(ATA_ABORTED),		\
++		ata_error_name(ATA_TRK0NF),		\
++		ata_error_name(ATA_AMNF))
++
++#define ata_protocol_name(proto)	{ proto, #proto }
++#define show_protocol_name(val)				\
++	__print_symbolic(val,				\
++		ata_protocol_name(ATA_PROT_UNKNOWN),	\
++		ata_protocol_name(ATA_PROT_NODATA),	\
++		ata_protocol_name(ATA_PROT_PIO),	\
++		ata_protocol_name(ATA_PROT_DMA),	\
++		ata_protocol_name(ATA_PROT_NCQ),	\
++		ata_protocol_name(ATAPI_PROT_NODATA),	\
++		ata_protocol_name(ATAPI_PROT_PIO),	\
++		ata_protocol_name(ATAPI_PROT_DMA))
++
++const char *libata_trace_parse_status(struct trace_seq*, unsigned char);
++#define __parse_status(s) libata_trace_parse_status(p, s)
++
++const char *libata_trace_parse_eh_action(struct trace_seq *, unsigned int);
++#define __parse_eh_action(a) libata_trace_parse_eh_action(p, a)
++
++const char *libata_trace_parse_eh_err_mask(struct trace_seq *, unsigned int);
++#define __parse_eh_err_mask(m) libata_trace_parse_eh_err_mask(p, m)
++
++const char *libata_trace_parse_qc_flags(struct trace_seq *, unsigned int);
++#define __parse_qc_flags(f) libata_trace_parse_qc_flags(p, f)
++
++TRACE_EVENT(ata_qc_issue,
++
++	TP_PROTO(struct ata_queued_cmd *qc),
++
++	TP_ARGS(qc),
++
++	TP_STRUCT__entry(
++		__field( unsigned int,	ata_port )
++		__field( unsigned int,	ata_dev	)
++		__field( unsigned int,	tag	)
++		__field( unsigned char,	cmd	)
++		__field( unsigned char,	dev	)
++		__field( unsigned char,	lbal	)
++		__field( unsigned char,	lbam	)
++		__field( unsigned char,	lbah	)
++		__field( unsigned char,	nsect	)
++		__field( unsigned char,	feature	)
++		__field( unsigned char,	hob_lbal )
++		__field( unsigned char,	hob_lbam )
++		__field( unsigned char,	hob_lbah )
++		__field( unsigned char,	hob_nsect )
++		__field( unsigned char,	hob_feature )
++		__field( unsigned char,	ctl )
++		__field( unsigned char,	proto )
++		__field( unsigned long,	flags )
++	),
++
++	TP_fast_assign(
++		__entry->ata_port	= qc->ap->print_id;
++		__entry->ata_dev	= qc->dev->link->pmp + qc->dev->devno;
++		__entry->tag		= qc->tag;
++		__entry->proto		= qc->tf.protocol;
++		__entry->cmd		= qc->tf.command;
++		__entry->dev		= qc->tf.device;
++		__entry->lbal		= qc->tf.lbal;
++		__entry->lbam		= qc->tf.lbam;
++		__entry->lbah		= qc->tf.lbah;
++		__entry->hob_lbal	= qc->tf.hob_lbal;
++		__entry->hob_lbam	= qc->tf.hob_lbam;
++		__entry->hob_lbah	= qc->tf.hob_lbah;
++		__entry->feature	= qc->tf.feature;
++		__entry->hob_feature	= qc->tf.hob_feature;
++		__entry->nsect		= qc->tf.nsect;
++		__entry->hob_nsect	= qc->tf.hob_nsect;
++	),
++
++	TP_printk("ata_port=%u ata_dev=%u tag=%d proto=%s cmd=%s " \
++		  " tf=(%02x/%02x:%02x:%02x:%02x:%02x/%02x:%02x:%02x:%02x:%02x/%02x)",
++		  __entry->ata_port, __entry->ata_dev, __entry->tag,
++		  show_protocol_name(__entry->proto),
++		  show_opcode_name(__entry->cmd),
++		  __entry->cmd, __entry->feature, __entry->nsect,
++		  __entry->lbal, __entry->lbam, __entry->lbah,
++		  __entry->hob_feature, __entry->hob_nsect,
++		  __entry->hob_lbal, __entry->hob_lbam, __entry->hob_lbah,
++		  __entry->dev)
++);
++
++DECLARE_EVENT_CLASS(ata_qc_complete_template,
++
++	TP_PROTO(struct ata_queued_cmd *qc),
++
++	TP_ARGS(qc),
++
++	TP_STRUCT__entry(
++		__field( unsigned int,	ata_port )
++		__field( unsigned int,	ata_dev	)
++		__field( unsigned int,	tag	)
++		__field( unsigned char,	status	)
++		__field( unsigned char,	dev	)
++		__field( unsigned char,	lbal	)
++		__field( unsigned char,	lbam	)
++		__field( unsigned char,	lbah	)
++		__field( unsigned char,	nsect	)
++		__field( unsigned char,	error	)
++		__field( unsigned char,	hob_lbal )
++		__field( unsigned char,	hob_lbam )
++		__field( unsigned char,	hob_lbah )
++		__field( unsigned char,	hob_nsect )
++		__field( unsigned char,	hob_feature )
++		__field( unsigned char,	ctl )
++		__field( unsigned long,	flags )
++	),
++
++	TP_fast_assign(
++		__entry->ata_port	= qc->ap->print_id;
++		__entry->ata_dev	= qc->dev->link->pmp + qc->dev->devno;
++		__entry->tag		= qc->tag;
++		__entry->status		= qc->result_tf.command;
++		__entry->dev		= qc->result_tf.device;
++		__entry->lbal		= qc->result_tf.lbal;
++		__entry->lbam		= qc->result_tf.lbam;
++		__entry->lbah		= qc->result_tf.lbah;
++		__entry->hob_lbal	= qc->result_tf.hob_lbal;
++		__entry->hob_lbam	= qc->result_tf.hob_lbam;
++		__entry->hob_lbah	= qc->result_tf.hob_lbah;
++		__entry->error		= qc->result_tf.feature;
++		__entry->hob_feature	= qc->result_tf.hob_feature;
++		__entry->nsect		= qc->result_tf.nsect;
++		__entry->hob_nsect	= qc->result_tf.hob_nsect;
++	),
++
++	TP_printk("ata_port=%u ata_dev=%u tag=%d flags=%s status=%s " \
++		  " res=(%02x/%02x:%02x:%02x:%02x:%02x/%02x:%02x:%02x:%02x:%02x/%02x)",
++		  __entry->ata_port, __entry->ata_dev, __entry->tag,
++		  __parse_qc_flags(__entry->flags),
++		  __parse_status(__entry->status),
++		  __entry->status, __entry->error, __entry->nsect,
++		  __entry->lbal, __entry->lbam, __entry->lbah,
++		  __entry->hob_feature, __entry->hob_nsect,
++		  __entry->hob_lbal, __entry->hob_lbam, __entry->hob_lbah,
++		  __entry->dev)
++);
++
++DEFINE_EVENT(ata_qc_complete_template, ata_qc_complete_internal,
++	     TP_PROTO(struct ata_queued_cmd *qc),
++	     TP_ARGS(qc));
++
++DEFINE_EVENT(ata_qc_complete_template, ata_qc_complete_failed,
++	     TP_PROTO(struct ata_queued_cmd *qc),
++	     TP_ARGS(qc));
++
++DEFINE_EVENT(ata_qc_complete_template, ata_qc_complete_done,
++	     TP_PROTO(struct ata_queued_cmd *qc),
++	     TP_ARGS(qc));
++
++TRACE_EVENT(ata_eh_link_autopsy,
++
++	TP_PROTO(struct ata_device *dev, unsigned int eh_action, unsigned int eh_err_mask),
++
++	TP_ARGS(dev, eh_action, eh_err_mask),
++
++	TP_STRUCT__entry(
++		__field( unsigned int,	ata_port )
++		__field( unsigned int,	ata_dev	)
++		__field( unsigned int,	eh_action )
++		__field( unsigned int,	eh_err_mask)
++	),
++
++	TP_fast_assign(
++		__entry->ata_port	= dev->link->ap->print_id;
++		__entry->ata_dev	= dev->link->pmp + dev->devno;
++		__entry->eh_action	= eh_action;
++		__entry->eh_err_mask	= eh_err_mask;
++	),
++
++	TP_printk("ata_port=%u ata_dev=%u eh_action=%s err_mask=%s",
++		  __entry->ata_port, __entry->ata_dev,
++		  __parse_eh_action(__entry->eh_action),
++		  __parse_eh_err_mask(__entry->eh_err_mask))
++);
++
++TRACE_EVENT(ata_eh_link_autopsy_qc,
++
++	TP_PROTO(struct ata_queued_cmd *qc),
++
++	TP_ARGS(qc),
++
++	TP_STRUCT__entry(
++		__field( unsigned int,	ata_port )
++		__field( unsigned int,	ata_dev	)
++		__field( unsigned int,	tag	)
++		__field( unsigned int,	qc_flags )
++		__field( unsigned int,	eh_err_mask)
++	),
++
++	TP_fast_assign(
++		__entry->ata_port	= qc->ap->print_id;
++		__entry->ata_dev	= qc->dev->link->pmp + qc->dev->devno;
++		__entry->tag		= qc->tag;
++		__entry->qc_flags	= qc->flags;
++		__entry->eh_err_mask	= qc->err_mask;
++	),
++
++	TP_printk("ata_port=%u ata_dev=%u tag=%d flags=%s err_mask=%s",
++		  __entry->ata_port, __entry->ata_dev, __entry->tag,
++		  __parse_qc_flags(__entry->qc_flags),
++		  __parse_eh_err_mask(__entry->eh_err_mask))
++);
++
++#endif /*  _TRACE_LIBATA_H */
++
++/* This part must be outside protection */
++#include <trace/define_trace.h>
 -- 
 1.8.5.2
