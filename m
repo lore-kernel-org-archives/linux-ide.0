@@ -1,7 +1,7 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 3/9] libata: whitespace fixes in ata_to_sense_error()
-Date: Fri, 27 Mar 2015 16:46:32 +0100
-Message-ID: <1427471198-62676-4-git-send-email-hare@suse.de>
+Subject: [PATCH 8/9] libata-eh: Set 'information' field for autosense
+Date: Fri, 27 Mar 2015 16:46:37 +0100
+Message-ID: <1427471198-62676-9-git-send-email-hare@suse.de>
 References: <1427471198-62676-1-git-send-email-hare@suse.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1427471198-62676-1-git-send-email-hare@suse.de>
@@ -10,95 +10,162 @@ To: Tejun Heo <tj@kernel.org>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 List-Id: linux-ide@vger.kernel.org
 
+If NCQ autosense or the sense data reporting feature is enabled
+the LBA of the offending command should be stored in the sense
+data 'information' field.
+
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/ata/libata-scsi.c | 61 +++++++++++++++++++++++++++++++----------------
- 1 file changed, 40 insertions(+), 21 deletions(-)
+ drivers/ata/libata-core.c |  4 ++--
+ drivers/ata/libata-eh.c   |  3 +++
+ drivers/ata/libata-scsi.c | 12 ++++++++++++
+ drivers/ata/libata.h      |  5 ++++-
+ drivers/scsi/scsi_error.c | 31 +++++++++++++++++++++++++++++++
+ include/scsi/scsi_eh.h    |  1 +
+ 6 files changed, 53 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 2ff3ab6..51cba76 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -691,11 +691,11 @@ static int ata_rwcmd_protocol(struct ata_taskfile *tf, struct ata_device *dev)
+  *	RETURNS:
+  *	Block address read from @tf.
+  */
+-u64 ata_tf_read_block(struct ata_taskfile *tf, struct ata_device *dev)
++u64 ata_tf_read_block(const struct ata_taskfile *tf, struct ata_device *dev)
+ {
+ 	u64 block = 0;
+ 
+-	if (tf->flags & ATA_TFLAG_LBA) {
++	if (!dev || tf->flags & ATA_TFLAG_LBA) {
+ 		if (tf->flags & ATA_TFLAG_LBA48) {
+ 			block |= (u64)tf->hob_lbah << 40;
+ 			block |= (u64)tf->hob_lbam << 32;
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 9fa81d9..77ef43e 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1852,6 +1852,7 @@ void ata_eh_analyze_ncq_error(struct ata_link *link)
+ 		ata_dev_dbg(dev, "NCQ Autosense %02x/%02x/%02x\n",
+ 			    sense_key, asc, ascq);
+ 		ata_scsi_set_sense(qc->scsicmd, sense_key, asc, ascq);
++		ata_scsi_set_sense_information(qc->scsicmd, &qc->result_tf);
+ 		qc->flags |= ATA_QCFLAG_SENSE_VALID;
+ 	}
+ 
+@@ -1894,6 +1895,8 @@ static unsigned int ata_eh_analyze_tf(struct ata_queued_cmd *qc,
+ 			tmp = ata_eh_request_sense(qc, qc->scsicmd);
+ 			if (tmp)
+ 				qc->err_mask |= tmp;
++			else
++				ata_scsi_set_sense_information(qc->scsicmd, tf);
+ 		} else {
+ 			ata_dev_warn(qc->dev, "sense data available but port frozen\n");
+ 		}
 diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index b061ba2..d2b6196 100644
+index 2e126c1..35fec70 100644
 --- a/drivers/ata/libata-scsi.c
 +++ b/drivers/ata/libata-scsi.c
-@@ -849,40 +849,59 @@ static void ata_to_sense_error(unsigned id, u8 drv_stat, u8 drv_err, u8 *sk,
- 	/* Based on the 3ware driver translation table */
- 	static const unsigned char sense_table[][4] = {
- 		/* BBD|ECC|ID|MAR */
--		{0xd1, 		ABORTED_COMMAND, 0x00, 0x00}, 	// Device busy                  Aborted command
-+		{0xd1,		ABORTED_COMMAND, 0x00, 0x00},
-+			// Device busy                  Aborted command
- 		/* BBD|ECC|ID */
--		{0xd0,  	ABORTED_COMMAND, 0x00, 0x00}, 	// Device busy                  Aborted command
-+		{0xd0,		ABORTED_COMMAND, 0x00, 0x00},
-+			// Device busy                  Aborted command
- 		/* ECC|MC|MARK */
--		{0x61, 		HARDWARE_ERROR, 0x00, 0x00}, 	// Device fault                 Hardware error
-+		{0x61,		HARDWARE_ERROR, 0x00, 0x00},
-+			// Device fault                 Hardware error
- 		/* ICRC|ABRT */		/* NB: ICRC & !ABRT is BBD */
--		{0x84, 		ABORTED_COMMAND, 0x47, 0x00}, 	// Data CRC error               SCSI parity error
-+		{0x84,		ABORTED_COMMAND, 0x47, 0x00},
-+			// Data CRC error               SCSI parity error
- 		/* MC|ID|ABRT|TRK0|MARK */
--		{0x37, 		NOT_READY, 0x04, 0x00}, 	// Unit offline                 Not ready
-+		{0x37,		NOT_READY, 0x04, 0x00},
-+			// Unit offline                 Not ready
- 		/* MCR|MARK */
--		{0x09, 		NOT_READY, 0x04, 0x00}, 	// Unrecovered disk error       Not ready
-+		{0x09,		NOT_READY, 0x04, 0x00},
-+			// Unrecovered disk error       Not ready
- 		/*  Bad address mark */
--		{0x01, 		MEDIUM_ERROR, 0x13, 0x00}, 	// Address mark not found       Address mark not found for data field
--		/* TRK0 */
--		{0x02, 		HARDWARE_ERROR, 0x00, 0x00}, 	// Track 0 not found		Hardware error
-+		{0x01,		MEDIUM_ERROR, 0x13, 0x00},
-+			// Address mark not found for data field
-+		/* TRK0 - Track 0 not found */
-+		{0x02,		HARDWARE_ERROR, 0x00, 0x00},
-+			// Hardware error
- 		/* Abort: 0x04 is not translated here, see below */
- 		/* Media change request */
--		{0x08, 		NOT_READY, 0x04, 0x00}, 	// Media change request	  FIXME: faking offline
--		/* SRV/IDNF */
--		{0x10, 		ILLEGAL_REQUEST, 0x21, 0x00}, 	// ID not found                 Logical address out of range
--		/* MC */
--		{0x20, 		UNIT_ATTENTION, 0x28, 0x00}, 	// Media Changed		Not ready to ready change, medium may have changed
--		/* ECC */
--		{0x40, 		MEDIUM_ERROR, 0x11, 0x04}, 	// Uncorrectable ECC error      Unrecovered read error
-+		{0x08,		NOT_READY, 0x04, 0x00},
-+			// FIXME: faking offline
-+		/* SRV/IDNF - ID not found */
-+		{0x10,		ILLEGAL_REQUEST, 0x21, 0x00},
-+			// Logical address out of range
-+		/* MC - Media Changed */
-+		{0x20,		UNIT_ATTENTION, 0x28, 0x00},
-+			// Not ready to ready change, medium may have changed
-+		/* ECC - Uncorrectable ECC error */
-+		{0x40,		MEDIUM_ERROR, 0x11, 0x04},
-+			// Unrecovered read error
- 		/* BBD - block marked bad */
--		{0x80, 		MEDIUM_ERROR, 0x11, 0x04}, 	// Block marked bad		Medium error, unrecovered read error
-+		{0x80,		MEDIUM_ERROR, 0x11, 0x04},
-+			// Block marked bad	Medium error, unrecovered read error
- 		{0xFF, 0xFF, 0xFF, 0xFF}, // END mark
- 	};
- 	static const unsigned char stat_table[][4] = {
- 		/* Must be first because BUSY means no other bits valid */
--		{0x80, 		ABORTED_COMMAND, 0x47, 0x00},	// Busy, fake parity for now
--		{0x20, 		HARDWARE_ERROR,  0x44, 0x00}, 	// Device fault, internal target failure
--		{0x08, 		ABORTED_COMMAND, 0x47, 0x00},	// Timed out in xfer, fake parity for now
--		{0x04, 		RECOVERED_ERROR, 0x11, 0x00},	// Recovered ECC error	  Medium error, recovered
-+		{0x80,		ABORTED_COMMAND, 0x47, 0x00},
-+		// Busy, fake parity for now
-+		{0x40,		ILLEGAL_REQUEST, 0x21, 0x04},
-+		// Device ready, unaligned write command
-+		{0x20,		HARDWARE_ERROR,  0x44, 0x00},
-+		// Device fault, internal target failure
-+		{0x08,		ABORTED_COMMAND, 0x47, 0x00},
-+		// Timed out in xfer, fake parity for now
-+		{0x04,		RECOVERED_ERROR, 0x11, 0x00},
-+		// Recovered ECC error	  Medium error, recovered
- 		{0xFF, 0xFF, 0xFF, 0xFF}, // END mark
- 	};
+@@ -280,6 +280,18 @@ void ata_scsi_set_sense(struct scsi_cmnd *cmd, u8 sk, u8 asc, u8 ascq)
+ 	scsi_build_sense_buffer(0, cmd->sense_buffer, sk, asc, ascq);
+ }
+ 
++void ata_scsi_set_sense_information(struct scsi_cmnd *cmd,
++				    const struct ata_taskfile *tf)
++{
++	u64 information;
++
++	if (!cmd)
++		return;
++
++	information = ata_tf_read_block(tf, NULL);
++	scsi_set_sense_information(cmd->sense_buffer, information);
++}
++
+ static ssize_t
+ ata_scsi_em_message_store(struct device *dev, struct device_attribute *attr,
+ 			  const char *buf, size_t count)
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 8cfdd96..a998a17 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -67,7 +67,8 @@ extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev, int tag);
+ extern int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
+ 			   u64 block, u32 n_block, unsigned int tf_flags,
+ 			   unsigned int tag);
+-extern u64 ata_tf_read_block(struct ata_taskfile *tf, struct ata_device *dev);
++extern u64 ata_tf_read_block(const struct ata_taskfile *tf,
++			     struct ata_device *dev);
+ extern unsigned ata_exec_internal(struct ata_device *dev,
+ 				  struct ata_taskfile *tf, const u8 *cdb,
+ 				  int dma_dir, void *buf, unsigned int buflen,
+@@ -138,6 +139,8 @@ extern int ata_scsi_add_hosts(struct ata_host *host,
+ extern void ata_scsi_scan_host(struct ata_port *ap, int sync);
+ extern int ata_scsi_offline_dev(struct ata_device *dev);
+ extern void ata_scsi_set_sense(struct scsi_cmnd *cmd, u8 sk, u8 asc, u8 ascq);
++extern void ata_scsi_set_sense_information(struct scsi_cmnd *cmd,
++					   const struct ata_taskfile *tf);
+ extern void ata_scsi_media_change_notify(struct ata_device *dev);
+ extern void ata_scsi_hotplug(struct work_struct *work);
+ extern void ata_schedule_scsi_eh(struct Scsi_Host *shost);
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 4cdaffc..c95a4e9 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -26,6 +26,7 @@
+ #include <linux/blkdev.h>
+ #include <linux/delay.h>
+ #include <linux/jiffies.h>
++#include <asm/unaligned.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+@@ -2586,3 +2587,33 @@ void scsi_build_sense_buffer(int desc, u8 *buf, u8 key, u8 asc, u8 ascq)
+ 	}
+ }
+ EXPORT_SYMBOL(scsi_build_sense_buffer);
++
++/**
++ * scsi_set_sense_information - set the information field in a
++ *		formatted sense data buffer
++ * @buf:	Where to build sense data
++ * @info:	64-bit information value to be set
++ *
++ **/
++void scsi_set_sense_information(u8 *buf, u64 info)
++{
++	if ((buf[0] & 0x7f) == 0x72) {
++		u8 *ucp, len;
++
++		len = buf[7];
++		ucp = (char *)scsi_sense_desc_find(buf, len + 8, 0);
++		if (!ucp) {
++			buf[7] = len + 0xa;
++			ucp = buf + 8 + len;
++		}
++		ucp[0] = 0;
++		ucp[1] = 0xa;
++		ucp[2] = 0x80; /* Valid bit */
++		ucp[3] = 0;
++		put_unaligned_be64(info, &ucp[4]);
++	} else if ((buf[0] & 0x7f) == 0x70) {
++		buf[0] |= 0x80;
++		put_unaligned_be64(info, &buf[3]);
++	}
++}
++EXPORT_SYMBOL(scsi_set_sense_information);
+diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
+index 1e1421b..5a4bb5b 100644
+--- a/include/scsi/scsi_eh.h
++++ b/include/scsi/scsi_eh.h
+@@ -59,6 +59,7 @@ extern int scsi_get_sense_info_fld(const u8 * sense_buffer, int sb_len,
+ 				   u64 * info_out);
+ 
+ extern void scsi_build_sense_buffer(int desc, u8 *buf, u8 key, u8 asc, u8 ascq);
++extern void scsi_set_sense_information(u8 *buf, u64 info);
+ 
+ extern int scsi_ioctl_reset(struct scsi_device *, int __user *);
  
 -- 
 1.8.5.2
