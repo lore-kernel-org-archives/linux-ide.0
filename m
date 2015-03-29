@@ -1,59 +1,39 @@
-From: Simon Bourne <simonbourne+gmane@gmail.com>
-Subject: Re: Samsung SSD 850Pro firmware update queued TRIM problems
-Date: Sun, 29 Mar 2015 10:00:41 +0000 (UTC)
-Message-ID: <loom.20150329T115337-231@post.gmane.org>
-References: <54EB35EF.2050103@zahlenfresser.de> <yq1zj8340nj.fsf@sermon.lab.mkp.net> <54ECE94B.9050302@zahlenfresser.de> <yq1twy9k57w.fsf@sermon.lab.mkp.net>
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: [PATCH 40/86] ide/generic: use uapi/linux/pci_ids.h directly
+Date: Sun, 29 Mar 2015 15:40:45 +0200
+Message-ID: <1427635734-24786-41-git-send-email-mst@redhat.com>
+References: <1427635734-24786-1-git-send-email-mst@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:50286 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751012AbbC2KFH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 29 Mar 2015 06:05:07 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <lnx-linux-ide@m.gmane.org>)
-	id 1YcA5Y-0002Je-MG
-	for linux-ide@vger.kernel.org; Sun, 29 Mar 2015 12:05:04 +0200
-Received: from cpc19-flit3-2-0-cust71.9-1.cable.virginm.net ([82.9.65.72])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Sun, 29 Mar 2015 12:05:04 +0200
-Received: from simonbourne+gmane by cpc19-flit3-2-0-cust71.9-1.cable.virginm.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Sun, 29 Mar 2015 12:05:04 +0200
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1427635734-24786-1-git-send-email-mst@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-Martin K. Petersen <martin.petersen <at> oracle.com> writes:
+Header moved from linux/pci_ids.h to uapi/linux/pci_ids.h,
+use the new header directly so we can drop
+the wrapper in include/linux/pci_ids.h.
 
-> 
-> >>>>> "Stefan" == Stefan Keller <linux-list <at> zahlenfresser.de> writes:
-> 
-> Stefan> Hello list, I recently updated the firmware on my Samsung 850
-> Stefan> Pro from EXM01B6Q to EXM02B6Q.  Now "fstrim -v /" causes SATA
-> Stefan> command timeouts related to TRIM with NCQ.
-> >> 
-> >> Do these timeouts happen if you disable ALPM?
-> 
-> Stefan> Yes.
-> 
-> Bummer. The only good data point we have wrt. queued TRIM problems is
-> that things only appear to fail when ALPM is enabled. Things are working
-> fine for me on all the systems in the lab, however, and I have never
-> been able to reproduce any of the issues reported.
-> 
-> I don't have any 850 drives but will try to get one. For now we should
-> blacklist queued trim on those.
-> 
+Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+---
+ drivers/ide/ide-generic.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-
-Another data point: I have the same problem, but on a 256 pro. Same firmware
-(EXM02B6Q from factory), with ALPM disabled.
-
-Regards,
-
-Simon
-
-
+diff --git a/drivers/ide/ide-generic.c b/drivers/ide/ide-generic.c
+index 54d7c46..4edb39f 100644
+--- a/drivers/ide/ide-generic.c
++++ b/drivers/ide/ide-generic.c
+@@ -11,7 +11,7 @@
+ #include <linux/init.h>
+ #include <linux/module.h>
+ #include <linux/ide.h>
+-#include <linux/pci_ids.h>
++#include <uapi/linux/pci_ids.h>
+ 
+ /* FIXME: convert arm and m32r to use ide_platform host driver */
+ #ifdef CONFIG_ARM
+-- 
+MST
