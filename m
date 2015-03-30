@@ -1,58 +1,36 @@
-From: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [PATCH 40/86] ide/generic: use uapi/linux/pci_ids.h directly
-Date: Sun, 29 Mar 2015 16:52:26 +0200
-Message-ID: <20150329164934-mutt-send-email-mst@redhat.com>
-References: <1427635734-24786-1-git-send-email-mst@redhat.com>
- <1427635734-24786-41-git-send-email-mst@redhat.com>
- <5518085D.4050805@cogentembedded.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch] sata_dwc_460ex: indent an if statement
+Date: Mon, 30 Mar 2015 13:30:25 +0300
+Message-ID: <20150330103025.GA27144@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59345 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752771AbbC2Owc (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 29 Mar 2015 10:52:32 -0400
+Received: from userp1040.oracle.com ([156.151.31.81]:40560 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751459AbbC3Kan (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Mar 2015 06:30:43 -0400
 Content-Disposition: inline
-In-Reply-To: <5518085D.4050805@cogentembedded.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: linux-kernel@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: linux-ide@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-On Sun, Mar 29, 2015 at 05:12:45PM +0300, Sergei Shtylyov wrote:
-> Hello.
-> 
-> On 3/29/2015 4:40 PM, Michael S. Tsirkin wrote:
-> 
-> >Header moved from linux/pci_ids.h to uapi/linux/pci_ids.h,
-> >use the new header directly so we can drop
-> >the wrapper in include/linux/pci_ids.h.
-> 
-> >Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> >---
-> >  drivers/ide/ide-generic.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> >diff --git a/drivers/ide/ide-generic.c b/drivers/ide/ide-generic.c
-> >index 54d7c46..4edb39f 100644
-> >--- a/drivers/ide/ide-generic.c
-> >+++ b/drivers/ide/ide-generic.c
-> >@@ -11,7 +11,7 @@
-> >  #include <linux/init.h>
-> >  #include <linux/module.h>
-> >  #include <linux/ide.h>
-> >-#include <linux/pci_ids.h>
-> >+#include <uapi/linux/pci_ids.h>
-> 
->    Hm, I thought include/uapi/ was always in #include file search path, so
-> there should be no need to explicitly mention it, and so no need for this
-> patch...
-> 
-> WBR, Sergei
+We shuffled some code around in 8b3444852a2b ('sata_dwc_460ex: move to
+generic DMA driver') an accidentally deleted a tab character here.  It
+causes a Smatch warning "if statement not indented".
 
-There's some confusion about whether headers should be preferably
-included using #include <uapi/linux/...> or #include <linux/...>.
-It might be a good idea to document this somewhere.
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
--- 
-MST
+diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+index 5ab4849..9020349 100644
+--- a/drivers/ata/sata_dwc_460ex.c
++++ b/drivers/ata/sata_dwc_460ex.c
+@@ -295,7 +295,7 @@ static void dma_dwc_xfer_done(void *hsdev_instance)
+ 	}
+ 
+ 	if ((hsdevp->dma_interrupt_count % 2) == 0)
+-	sata_dwc_dma_xfer_complete(ap, 1);
++		sata_dwc_dma_xfer_complete(ap, 1);
+ 
+ 	spin_unlock_irqrestore(&host->lock, flags);
+ }
