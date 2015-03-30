@@ -1,77 +1,52 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] libata fixes for v4.0-rc6
-Date: Mon, 30 Mar 2015 13:23:49 -0400
-Message-ID: <20150330172349.GB9974@htj.duckdns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f44.google.com ([209.85.192.44]:36828 "EHLO
-	mail-qg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753123AbbC3RXx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Mar 2015 13:23:53 -0400
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+From: Gregory CLEMENT <gregory.clement@free-electrons.com>
+Subject: [PATCH] sata_mv: Manage SATA port multiplier while searching for active links
+Date: Mon, 30 Mar 2015 19:32:45 +0200
+Message-ID: <1427736765-846-1-git-send-email-gregory.clement@free-electrons.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Gregory CLEMENT <gregory.clement@free-electrons.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, linux-arm-kernel@lists.infradead.org, Maxime Ripard <maxime.ripard@free-electrons.com>, Boris BREZILLON <boris.brezillon@free-electrons.com>, Lior Amsalem <alior@marvell.com>, Tawfik Bayouk <tawfik@marvell.com>, Nadav Haklai <nadavh@marvell.com>
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hello, Linus.
+From: Nadav Haklai <nadavh@marvell.com>
 
-Nothing exciting.  Two patches to update queued trim blacklist.
+With this patch, when searching for active link, first search through
+the port multiplier links. And then fall to the default ap active_tag
+only if no there is no active link in the port multiplier.
 
-Thanks.
+[gregory.clement@free-electrons.com: reword commit log and title]
 
-The following changes since commit 5067c0469c643512f24786990e315f9c15cc7d24:
+Signed-off-by: Lior Amsalem <alior@marvell.com>
+Reviewed-by: Nadav Haklai <nadavh@marvell.com>
+Signed-off-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
+---
+ drivers/ata/sata_mv.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-  ata: Add a new flag to destinguish sas controller (2015-03-19 14:14:43 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-4.0-fixes
-
-for you to fetch changes up to 6fc4d97a4987c5d247655a157a9377996626221a:
-
-  libata: Blacklist queued TRIM on Samsung SSD 850 Pro (2015-03-27 15:22:46 -0400)
-
-----------------------------------------------------------------
-Martin K. Petersen (2):
-      libata: Update Crucial/Micron blacklist
-      libata: Blacklist queued TRIM on Samsung SSD 850 Pro
-
- drivers/ata/libata-core.c | 15 +++++++++++++--
- 1 file changed, 13 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index ef150eb..23dac3b 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4204,9 +4204,18 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	{ "PIONEER DVD-RW  DVR-216D",	NULL,	ATA_HORKAGE_NOSETXFER },
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index f8c33e3772b8..7fac4d0fee86 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -2423,10 +2423,19 @@ static struct ata_queued_cmd *mv_get_active_qc(struct ata_port *ap)
+ {
+ 	struct mv_port_priv *pp = ap->private_data;
+ 	struct ata_queued_cmd *qc;
++	struct ata_link *link = NULL;
  
- 	/* devices that don't properly handle queued TRIM commands */
--	{ "Micron_M[56]*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
-+	{ "Micron_M500*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
-+						ATA_HORKAGE_ZERO_AFTER_TRIM, },
-+	{ "Crucial_CT*M500*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
-+						ATA_HORKAGE_ZERO_AFTER_TRIM, },
-+	{ "Micron_M5[15]0*",		"MU01",	ATA_HORKAGE_NO_NCQ_TRIM |
-+						ATA_HORKAGE_ZERO_AFTER_TRIM, },
-+	{ "Crucial_CT*M550*",		"MU01",	ATA_HORKAGE_NO_NCQ_TRIM |
-+						ATA_HORKAGE_ZERO_AFTER_TRIM, },
-+	{ "Crucial_CT*MX100*",		"MU01",	ATA_HORKAGE_NO_NCQ_TRIM |
-+						ATA_HORKAGE_ZERO_AFTER_TRIM, },
-+	{ "Samsung SSD 850 PRO*",	NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
- 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
--	{ "Crucial_CT*SSD*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM, },
- 
- 	/*
- 	 * As defined, the DRAT (Deterministic Read After Trim) and RZAT
-@@ -4226,6 +4235,8 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	 */
- 	{ "INTEL*SSDSC2MH*",		NULL,	0, },
- 
-+	{ "Micron*",			NULL,	ATA_HORKAGE_ZERO_AFTER_TRIM, },
-+	{ "Crucial*",			NULL,	ATA_HORKAGE_ZERO_AFTER_TRIM, },
- 	{ "INTEL*SSD*", 		NULL,	ATA_HORKAGE_ZERO_AFTER_TRIM, },
- 	{ "SSD*INTEL*",			NULL,	ATA_HORKAGE_ZERO_AFTER_TRIM, },
- 	{ "Samsung*SSD*",		NULL,	ATA_HORKAGE_ZERO_AFTER_TRIM, },
+ 	if (pp->pp_flags & MV_PP_FLAG_NCQ_EN)
+ 		return NULL;
+-	qc = ata_qc_from_tag(ap, ap->link.active_tag);
++
++	ata_for_each_link(link, ap, EDGE)
++		if (ata_link_active(link))
++			break;
++
++	if (!link)
++		link = &ap->link;
++
++	qc = ata_qc_from_tag(ap, link->active_tag);
+ 	if (qc && !(qc->tf.flags & ATA_TFLAG_POLLING))
+ 		return qc;
+ 	return NULL;
+-- 
+2.1.0
