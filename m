@@ -1,57 +1,32 @@
-From: "Moore, Robert" <robert.moore@intel.com>
-Subject: RE: [V7 PATCH 1/3] ACPICA: Add ACPI _CLS processing
-Date: Mon, 30 Mar 2015 17:09:02 +0000
-Message-ID: <94F2FBAB4432B54E8AACC7DFDE6C92E37D2B1C7B@ORSMSX112.amr.corp.intel.com>
-References: <1427397195-15273-1-git-send-email-Suravee.Suthikulpanit@amd.com>
- <1427397195-15273-2-git-send-email-Suravee.Suthikulpanit@amd.com>
- <94F2FBAB4432B54E8AACC7DFDE6C92E37D2A5F70@ORSMSX112.amr.corp.intel.com>
- <55195AE6.2050801@amd.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [patch] sata_dwc_460ex: indent an if statement
+Date: Mon, 30 Mar 2015 13:17:16 -0400
+Message-ID: <20150330171716.GA9974@htj.duckdns.org>
+References: <20150330103025.GA27144@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <55195AE6.2050801@amd.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>, "rjw@rjwysocki.net" <rjw@rjwysocki.net>, "mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>, "Zheng, Lv" <lv.zheng@intel.com>, "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>
-Cc: "lenb@kernel.org" <lenb@kernel.org>, "hdegoede@redhat.com" <hdegoede@redhat.com>, "tj@kernel.org" <tj@kernel.org>, "mjg59@srcf.ucam.org" <mjg59@srcf.ucam.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "al.stone@linaro.org" <al.stone@linaro.org>, "graeme.gregory@linaro.org" <graeme.gregory@linaro.org>, "leo.duran@amd.com" <leo.duran@amd.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qc0-f170.google.com ([209.85.216.170]:36665 "EHLO
+	mail-qc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752807AbbC3RRU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Mar 2015 13:17:20 -0400
+Content-Disposition: inline
+In-Reply-To: <20150330103025.GA27144@mwanda>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, linux-ide@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-AE_AML_OPERAND_TYPE -- used to indicate an exception raised by a type issue related to the AML code. Used to differentiate between a programmer error (AE_TYPE).
+On Mon, Mar 30, 2015 at 01:30:25PM +0300, Dan Carpenter wrote:
+> We shuffled some code around in 8b3444852a2b ('sata_dwc_460ex: move to
+> generic DMA driver') an accidentally deleted a tab character here.  It
+> causes a Smatch warning "if statement not indented".
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
+Applied to libata/for-4.1.
 
-> -----Original Message-----
-> From: Suravee Suthikulanit [mailto:suravee.suthikulpanit@amd.com]
-> Sent: Monday, March 30, 2015 7:17 AM
-> To: Moore, Robert; rjw@rjwysocki.net; mika.westerberg@linux.intel.com;
-> Zheng, Lv; hanjun.guo@linaro.org
-> Cc: lenb@kernel.org; hdegoede@redhat.com; tj@kernel.org;
-> mjg59@srcf.ucam.org; gregkh@linuxfoundation.org; al.stone@linaro.org;
-> graeme.gregory@linaro.org; leo.duran@amd.com; linux-ide@vger.kernel.org;
-> linux-acpi@vger.kernel.org; linux-kernel@vger.kernel.org; linaro-
-> acpi@lists.linaro.org
-> Subject: Re: [V7 PATCH 1/3] ACPICA: Add ACPI _CLS processing
-> 
-> On 3/27/2015 12:51 PM, Moore, Robert wrote:
-> > +	cls_objects = obj_desc->package.elements;
-> > +
-> > +	if (obj_desc->common.type == ACPI_TYPE_PACKAGE &&
-> > +	    obj_desc->package.count == 3 &&
-> > +	    cls_objects[0]->common.type == ACPI_TYPE_INTEGER &&
-> > +	    cls_objects[1]->common.type == ACPI_TYPE_INTEGER &&
-> > +	    cls_objects[2]->common.type == ACPI_TYPE_INTEGER) {
-> > +
-> > +		/* Allocate a buffer for the CLS */
-> > +		cls = ACPI_ALLOCATE_ZEROED(sizeof(struct acpi_pnp_device_id) +
-> > +					 (acpi_size) 7);
-> >
-> > I would like to see an error returned if an object or subobject is of
-> the incorrect type.
-> > Then, the caller knows not to attempt to look at it.
-> >
-> 
-> Ok. I will return AE_TYPE if the condition is false here.
-> 
-> Thanks,
-> 
-> Suravee
+Thanks.
+
+-- 
+tejun
