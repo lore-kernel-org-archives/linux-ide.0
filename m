@@ -1,53 +1,29 @@
-From: Peter Griffin <peter.griffin-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH 3/3] ahci: st: st_configure_oob must be called after IP
  is clocked.
-Date: Tue, 31 Mar 2015 16:36:27 +0100
-Message-ID: <20150331153627.GA8200@griffinp-ThinkPad-X1-Carbon-2nd>
+Date: Tue, 31 Mar 2015 11:59:51 -0400
+Message-ID: <20150331155951.GG9974@htj.duckdns.org>
 References: <1427787309-1601-1-git-send-email-peter.griffin@linaro.org>
  <1427787309-1601-4-git-send-email-peter.griffin@linaro.org>
  <20150331152958.GF9974@htj.duckdns.org>
+ <20150331153627.GA8200@griffinp-ThinkPad-X1-Carbon-2nd>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20150331152958.GF9974-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, maxime.coquelin-qxv4g6HH51o@public.gmane.org, patrice.chotard-qxv4g6HH51o@public.gmane.org, srinivas.kandagatla-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, lee.jones-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20150331153627.GA8200@griffinp-ThinkPad-X1-Carbon-2nd>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Peter Griffin <peter.griffin@linaro.org>
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, maxime.coquelin@st.com, patrice.chotard@st.com, srinivas.kandagatla@gmail.com, lee.jones@linaro.org, devicetree@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Hi Tejun,
+On Tue, Mar 31, 2015 at 04:36:27PM +0100, Peter Griffin wrote:
+> This patch (and also the DT documentation change) can go via your tree. Maxime
+> will take the stih407 DT patch.
 
-On Tue, 31 Mar 2015, Tejun Heo wrote:
+Hmmm... The first patch doesn't apply to libata/for-4.1?
 
-> On Tue, Mar 31, 2015 at 08:35:09AM +0100, Peter Griffin wrote:
-> > Currently the ahci_st driver will hang the system on probe, as the
-> > st_configure_oob function does some register writes before the IP
-> > is clocked. This patch moves the function call to after
-> > ahci_platform_enable_resources (which enables the IP clock), and
-> > resolves the hang.
-> > 
-> > Addtionally st_ahci_configure_oob should be called in the st_ahci_resume
-> > function, so we also rectify that ensuring it is also called after
-> > the IP clock has been enabled.
-> > 
-> > Signed-off-by: Peter Griffin <peter.griffin-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-> > Acked-by: Lee Jones <lee.jones-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-> > Acked-by: Maxime Coquelin <maxime.coquelin-qxv4g6HH51o@public.gmane.org>
-> 
-> How should this patch be routed?  Should I pick this up and apply to
-> libata/for-4.1 or should it go together with the other patches?  If
-> the latter, please feel free to add my acked-by.
+Thanks.
 
-This patch (and also the DT documentation change) can go via your tree. Maxime
-will take the stih407 DT patch.
-
-regards,
-
-Peter.
-
-
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+tejun
