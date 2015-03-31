@@ -1,56 +1,45 @@
-From: Gregory CLEMENT <gregory.clement@free-electrons.com>
-Subject: Re: [PATCH] sata_mv: Manage SATA port multiplier while searching
- for active links
-Date: Tue, 31 Mar 2015 09:15:22 +0200
-Message-ID: <551A498A.2010008@free-electrons.com>
-References: <1427736765-846-1-git-send-email-gregory.clement@free-electrons.com> <20150330173515.GC9974@htj.duckdns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+From: Peter Griffin <peter.griffin@linaro.org>
+Subject: [PATCH RESEND 0/3] Enable ahci_st for stih407 and fix hang
+Date: Tue, 31 Mar 2015 08:35:06 +0100
+Message-ID: <1427787309-1601-1-git-send-email-peter.griffin@linaro.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:48039 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751413AbbCaHP0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Mar 2015 03:15:26 -0400
-In-Reply-To: <20150330173515.GC9974@htj.duckdns.org>
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:34082 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752131AbbCaHfO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Mar 2015 03:35:14 -0400
+Received: by wgbdm7 with SMTP id dm7so9179989wgb.1
+        for <linux-ide@vger.kernel.org>; Tue, 31 Mar 2015 00:35:13 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Ezequiel Garcia <ezequiel.garcia@free-electrons.com>, linux-arm-kernel@lists.infradead.org, Maxime Ripard <maxime.ripard@free-electrons.com>, Boris BREZILLON <boris.brezillon@free-electrons.com>, Lior Amsalem <alior@marvell.com>, Tawfik Bayouk <tawfik@marvell.com>, Nadav Haklai <nadavh@marvell.com>
+To: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, maxime.coquelin@st.com, patrice.chotard@st.com, tj@kernel.org, srinivas.kandagatla@gmail.com
+Cc: peter.griffin@linaro.org, lee.jones@linaro.org, devicetree@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hi Tejun,
+Hi,
 
-On 30/03/2015 19:35, Tejun Heo wrote:
-> Hello,
-> 
-> On Mon, Mar 30, 2015 at 07:32:45PM +0200, Gregory CLEMENT wrote:
->> From: Nadav Haklai <nadavh@marvell.com>
->>
->> With this patch, when searching for active link, first search through
->> the port multiplier links. And then fall to the default ap active_tag
->> only if no there is no active link in the port multiplier.
-> 
-> What does this fix?  What was broken before?  What's the impact of the
-> patch?  A patch description which just restates the patch content
-> isn't all that useful.
+Now that miphy28lp phy is present upstream we can add sata DT nodes for
+stih407 family silicon. As part of testing this I found a hang
+with the current driver implmentation which does some register writes
+before enabling the IP clock. Presumably on stih416 devices the sata
+clock must have already been enabled by the targetpack/bootloader.
 
-I _thought_ that the purpose of this patch was to manage the port multiplier,
-and without this patch we don't only handle it. I will ask more detail and
-come back with a new version of the patch with a more useful description.
+This series also tidys up some inaccuracies in the DT documentation
+where the doc hasn't kept aligned with the driver. In addtion to these
+fixes I've also added an example for stih407 silicon.
 
-Thanks,
+Changes in RESEND:
+- Rebased on v4.0-rc6 (Pete)
+- Applied Acks (Pete)
 
-Gregory
+Peter Griffin (3):
+  ahci: st: Update the ahci_st DT documentation
+  ARM: DT: STi: STiH407: Add sata DT nodes.
+  ahci: st: st_configure_oob must be called after IP is clocked.
 
-
-
-> 
-> Thanks.
-> 
-
+ Documentation/devicetree/bindings/ata/ahci-st.txt | 45 ++++++++++++++++-------
+ arch/arm/boot/dts/stih407-family.dtsi             | 44 ++++++++++++++++++++++
+ drivers/ata/ahci_st.c                             |  6 ++-
+ 3 files changed, 80 insertions(+), 15 deletions(-)
 
 -- 
-Gregory Clement, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+1.9.1
+
