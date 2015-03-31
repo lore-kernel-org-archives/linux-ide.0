@@ -1,37 +1,40 @@
-From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 3/3] libata: support host-aware ZAC devices
-Date: Tue, 31 Mar 2015 13:56:34 +0100
-Message-ID: <20150331135634.047af7b8@lxorguk.ukuu.org.uk>
-References: <1427791963-90832-1-git-send-email-hare@suse.de>
-	<1427791963-90832-4-git-send-email-hare@suse.de>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 3/3] ahci: st: st_configure_oob must be called after IP
+ is clocked.
+Date: Tue, 31 Mar 2015 11:29:58 -0400
+Message-ID: <20150331152958.GF9974@htj.duckdns.org>
+References: <1427787309-1601-1-git-send-email-peter.griffin@linaro.org>
+ <1427787309-1601-4-git-send-email-peter.griffin@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 251.110.2.81.in-addr.arpa ([81.2.110.251]:49986 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751289AbbCaM4t (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 Mar 2015 08:56:49 -0400
-In-Reply-To: <1427791963-90832-4-git-send-email-hare@suse.de>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1427787309-1601-4-git-send-email-peter.griffin@linaro.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Peter Griffin <peter.griffin@linaro.org>
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, maxime.coquelin@st.com, patrice.chotard@st.com, srinivas.kandagatla@gmail.com, lee.jones@linaro.org, devicetree@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, 31 Mar 2015 10:52:43 +0200
-Hannes Reinecke <hare@suse.de> wrote:
+On Tue, Mar 31, 2015 at 08:35:09AM +0100, Peter Griffin wrote:
+> Currently the ahci_st driver will hang the system on probe, as the
+> st_configure_oob function does some register writes before the IP
+> is clocked. This patch moves the function call to after
+> ahci_platform_enable_resources (which enables the IP clock), and
+> resolves the hang.
+> 
+> Addtionally st_ahci_configure_oob should be called in the st_ahci_resume
+> function, so we also rectify that ensuring it is also called after
+> the IP clock has been enabled.
+> 
+> Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
+> Acked-by: Lee Jones <lee.jones@linaro.org>
+> Acked-by: Maxime Coquelin <maxime.coquelin@st.com>
 
-> Byte 69 bits 0:1 in the IDENTIFY DEVICE data are proposed
-> to indicate a host-aware ZAC device.
-> And whenever we detect a ZAC-compatible device we should
-> be displaying the zoned block characteristics VPD page.
+How should this patch be routed?  Should I pick this up and apply to
+libata/for-4.1 or should it go together with the other patches?  If
+the latter, please feel free to add my acked-by.
 
-I don't think this belongs upstream as is - because this is a "proposed"
-- it might change and then we have Linux boxes in the field randomly
-misinterpreting bits if instead other bits are used or the definition
-changes.
+Thanks.
 
-Until it's officially in the spec there ought IMHO to be a boot option to
-enable the test.
-
-Alan
+-- 
+tejun
