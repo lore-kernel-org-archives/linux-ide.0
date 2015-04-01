@@ -1,42 +1,53 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 3/3] ahci: st: st_configure_oob must be called after IP
- is clocked.
-Date: Wed, 1 Apr 2015 12:07:44 -0400
-Message-ID: <20150401160744.GR9974@htj.duckdns.org>
-References: <1427787309-1601-1-git-send-email-peter.griffin@linaro.org>
- <1427787309-1601-4-git-send-email-peter.griffin@linaro.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v1] ata: ahci_xgene: Add AHCI Support for second
+ generation of APM X-Gene SoC
+Date: Wed, 1 Apr 2015 12:13:36 -0400
+Message-ID: <20150401161336.GS9974@htj.duckdns.org>
+References: <1427899682-10912-1-git-send-email-stripathi@apm.com>
+ <1427899682-10912-2-git-send-email-stripathi@apm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1427787309-1601-4-git-send-email-peter.griffin-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Peter Griffin <peter.griffin-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-Cc: linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, maxime.coquelin-qxv4g6HH51o@public.gmane.org, patrice.chotard-qxv4g6HH51o@public.gmane.org, srinivas.kandagatla-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, lee.jones-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <1427899682-10912-2-git-send-email-stripathi@apm.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Suman Tripathi <stripathi@apm.com>
+Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com
 List-Id: linux-ide@vger.kernel.org
 
-On Tue, Mar 31, 2015 at 08:35:09AM +0100, Peter Griffin wrote:
-> Currently the ahci_st driver will hang the system on probe, as the
-> st_configure_oob function does some register writes before the IP
-> is clocked. This patch moves the function call to after
-> ahci_platform_enable_resources (which enables the IP clock), and
-> resolves the hang.
+On Wed, Apr 01, 2015 at 08:18:02PM +0530, Suman Tripathi wrote:
+> This patch enables full AHCI feature support for APM X-Gene SoC SATA host host
+> controller. The following errata's are removed:
 > 
-> Addtionally st_ahci_configure_oob should be called in the st_ahci_resume
-> function, so we also rectify that ensuring it is also called after
-> the IP clock has been enabled.
+> 1. 2a0bdff6b95 ("ahci-xgene: fix the dma state machine lockup for the
+>                  IDENTIFY DEVICE PIO mode command")
+> 2. 09c32aaa368 ("ahci_xgene: Fix the dma state machine lockup for the
+>                  ATA_CMD_SMART PIO mode command")
+> 3. 1540035da71 ("ahci_xgene: Implement the xgene_ahci_poll_reg_val to
+>                  support PMP")
+> 4. a3a84bc7c88 ("ahci_xgene: Implement the workaround to support PMP
+>                  enumeration and discovery")
+> 5. 1102407bb71 ("ahci_xgene: Fix the DMA state machine lockup for the
+>                  ATA_CMD_PACKET PIO mode command")
+> 6. 72f79f9e35b ("ahci_xgene: Removing NCQ support from the APM X-Gene SoC
+>                  AHCI SATA Host Controller driver")
 > 
-> Signed-off-by: Peter Griffin <peter.griffin-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-> Acked-by: Lee Jones <lee.jones-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
-> Acked-by: Maxime Coquelin <maxime.coquelin-qxv4g6HH51o@public.gmane.org>
+> In addition, enable PMP support for second generation APM X-Gene SoC.
+> 
+> Signed-off-by : Suman Tripathi <stripathi@apm.com>
 
-Applied 1, 3 to libata/for-4.1.
+Applied to libata/for-4.1 w/ minor edit.
+
+> +	if (xgene_ahci_version1()) {
+> +		/*
+> +		 * Override the callbacks due to
+> +		 * XGENE1 ERRATA's.
+> +		 */
+
+The column limit is 80 (more like 75), not 40.  I collapsed the above
+into one line.
 
 Thanks.
 
 -- 
 tejun
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
