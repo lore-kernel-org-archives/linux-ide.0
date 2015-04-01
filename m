@@ -1,88 +1,42 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH v1] ata: ahci_xgene: Add AHCI Support for second generation of APM X-Gene SoC
-Date: Wed,  1 Apr 2015 20:18:02 +0530
-Message-ID: <1427899682-10912-2-git-send-email-stripathi@apm.com>
-References: <1427899682-10912-1-git-send-email-stripathi@apm.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from denmail01-v4020.amcc.com ([192.195.68.30]:37323 "EHLO
-	denmail01.apm.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753329AbbDAOtV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Apr 2015 10:49:21 -0400
-In-Reply-To: <1427899682-10912-1-git-send-email-stripathi@apm.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 3/3] ahci: st: st_configure_oob must be called after IP
+ is clocked.
+Date: Wed, 1 Apr 2015 12:07:44 -0400
+Message-ID: <20150401160744.GR9974@htj.duckdns.org>
+References: <1427787309-1601-1-git-send-email-peter.griffin@linaro.org>
+ <1427787309-1601-4-git-send-email-peter.griffin@linaro.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1427787309-1601-4-git-send-email-peter.griffin-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Peter Griffin <peter.griffin-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Cc: linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, maxime.coquelin-qxv4g6HH51o@public.gmane.org, patrice.chotard-qxv4g6HH51o@public.gmane.org, srinivas.kandagatla-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, lee.jones-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>
 
-This patch enables full AHCI feature support for APM X-Gene SoC SATA host host
-controller. The following errata's are removed:
+On Tue, Mar 31, 2015 at 08:35:09AM +0100, Peter Griffin wrote:
+> Currently the ahci_st driver will hang the system on probe, as the
+> st_configure_oob function does some register writes before the IP
+> is clocked. This patch moves the function call to after
+> ahci_platform_enable_resources (which enables the IP clock), and
+> resolves the hang.
+> 
+> Addtionally st_ahci_configure_oob should be called in the st_ahci_resume
+> function, so we also rectify that ensuring it is also called after
+> the IP clock has been enabled.
+> 
+> Signed-off-by: Peter Griffin <peter.griffin-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+> Acked-by: Lee Jones <lee.jones-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+> Acked-by: Maxime Coquelin <maxime.coquelin-qxv4g6HH51o@public.gmane.org>
 
-1. 2a0bdff6b95 ("ahci-xgene: fix the dma state machine lockup for the
-                 IDENTIFY DEVICE PIO mode command")
-2. 09c32aaa368 ("ahci_xgene: Fix the dma state machine lockup for the
-                 ATA_CMD_SMART PIO mode command")
-3. 1540035da71 ("ahci_xgene: Implement the xgene_ahci_poll_reg_val to
-                 support PMP")
-4. a3a84bc7c88 ("ahci_xgene: Implement the workaround to support PMP
-                 enumeration and discovery")
-5. 1102407bb71 ("ahci_xgene: Fix the DMA state machine lockup for the
-                 ATA_CMD_PACKET PIO mode command")
-6. 72f79f9e35b ("ahci_xgene: Removing NCQ support from the APM X-Gene SoC
-                 AHCI SATA Host Controller driver")
+Applied 1, 3 to libata/for-4.1.
 
-In addition, enable PMP support for second generation APM X-Gene SoC.
+Thanks.
 
-Signed-off-by : Suman Tripathi <stripathi@apm.com>
----
- drivers/ata/ahci_xgene.c | 21 ++++++++++++++++++++-
- 1 file changed, 20 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-index 2e8bb60..0be47b0 100644
---- a/drivers/ata/ahci_xgene.c
-+++ b/drivers/ata/ahci_xgene.c
-@@ -28,6 +28,8 @@
- #include <linux/of_address.h>
- #include <linux/of_irq.h>
- #include <linux/phy/phy.h>
-+#include <asm/cputype.h>
-+
- #include "ahci.h"
-
- #define DRV_NAME "xgene-ahci"
-@@ -94,6 +96,11 @@ struct xgene_ahci_context {
- 	void __iomem *csr_mux;		/* MUX CSR address of IP */
- };
-
-+static bool xgene_ahci_version1(void)
-+{
-+	return MIDR_VARIANT(read_cpuid_id()) == 0 ? true : false;
-+}
-+
- static int xgene_ahci_init_memram(struct xgene_ahci_context *ctx)
- {
- 	dev_dbg(ctx->dev, "Release memory from shutdown\n");
-@@ -703,7 +710,19 @@ static int xgene_ahci_probe(struct platform_device *pdev)
- 	/* Configure the host controller */
- 	xgene_ahci_hw_init(hpriv);
- skip_clk_phy:
--	hpriv->flags = AHCI_HFLAG_NO_PMP | AHCI_HFLAG_NO_NCQ;
-+
-+	if (xgene_ahci_version1()) {
-+		/*
-+		 * Override the callbacks due to
-+		 * XGENE1 ERRATA's.
-+		 */
-+		hpriv->flags |= AHCI_HFLAG_NO_NCQ;
-+		xgene_ahci_ops.qc_issue = xgene_ahci_qc_issue;
-+		xgene_ahci_ops.softreset = xgene_ahci_softreset;
-+		xgene_ahci_ops.pmp_softreset = xgene_ahci_pmp_softreset;
-+	} else {
-+		hpriv->flags |= AHCI_HFLAG_YES_FBS;
-+	}
-
- 	rc = ahci_platform_init_host(pdev, hpriv, &xgene_ahci_port_info,
- 				     &ahci_platform_sht);
+-- 
+tejun
 --
-1.8.2.1
-
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
