@@ -1,118 +1,61 @@
-From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
-Subject: Re: [V8 PATCH 0/3] Introduce ACPI support for ahci_platform driver
-Date: Mon, 6 Apr 2015 10:45:19 -0500
-Message-ID: <5522AA0F.8000008@amd.com>
-References: <1427752579-19234-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+From: Sebastian Reichel <sre@kernel.org>
+Subject: Re: [PATCH 16/25] include/linux: Use bool function return values of
+ true/false not 1/0
+Date: Mon, 6 Apr 2015 21:39:32 +0200
+Message-ID: <20150406193931.GA987@earth>
+References: <cover.1427759009.git.joe@perches.com>
+ <5edb9453646625a405ef0a642bec0819c0e6c2eb.1427759009.git.joe@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <1427752579-19234-1-git-send-email-Suravee.Suthikulpanit@amd.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: rjw@rjwysocki.net, mika.westerberg@linux.intel.com, robert.moore@intel.com, lv.zheng@intel.com, hanjun.guo@linaro.org
-Cc: lenb@kernel.org, hdegoede@redhat.com, tj@kernel.org, mjg59@srcf.ucam.org, gregkh@linuxfoundation.org, al.stone@linaro.org, graeme.gregory@linaro.org, leo.duran@amd.com, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="fUYQa+Pmc3FrFX/N"
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <5edb9453646625a405ef0a642bec0819c0e6c2eb.1427759009.git.joe@perches.com>
+Sender: owner-linux-mm@kvack.org
+To: Joe Perches <joe@perches.com>
+Cc: linux-kernel@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, Jason Wessel <jason.wessel@windriver.com>, Samuel Ortiz <sameo@linux.intel.com>, Lee Jones <lee.jones@linaro.org>, Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>, David Woodhouse <dwmw2@infradead.org>, Michael Buesch <m@bues.ch>, linux-ide@vger.kernel.org, kgdb-bugreport@lists.sourceforge.net, linux-mm@kvack.org, linux-pm@vger.kernel.org, netdev@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Ping.
 
-Are there any other concerns for this patch series?
+--fUYQa+Pmc3FrFX/N
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Thanks,
+Hi,
 
-Suravee
+On Mon, Mar 30, 2015 at 04:46:14PM -0700, Joe Perches wrote:
+> Use the normal return values for bool functions
 
-On 3/30/2015 4:56 PM, Suravee Suthikulpanit wrote:
-> This patch series introduce ACPI support for AHCI platform driver.
-> Existing ACPI support for AHCI assumes the device controller is a PCI device.
-> Since there is no ACPI _CID for generic AHCI controller, the driver
-> could not use it for matching devices. Therefore, this patch introduces
-> a mechanism for drivers to match devices using ACPI _CLS method.
-> _CLS contains PCI-defined class-code.
->
-> This patch series also modifies ACPI modalias to add class-code to the
-> exisiting format, which currently only uses _HID and _CIDs. This is required
-> to support loadable modules w/ _CLS.
->
-> This is rebased from and tested with:
->
->      http://git.linaro.org/leg/acpi/acpi.git acpi-5.1-v11
->
-> This topic was discussed earlier here (as part of introducing support for
-> AMD Seattle SATA controller):
->
->      http://marc.info/?l=linux-arm-kernel&m=141083492521584&w=2
->
-> Changes from V7 (https://lkml.org/lkml/2015/3/26/592)
-> 	* [1/3] Return AE_AML_OPERAND_TYPE when _CLS package containing
-> 	  invalid type (per Robert Moore suggestion).
-> 	* [2/3] Fixed build error due missing ACPI_DEVICE_CLASS definition
-> 	  when disabling ACPI.
->
-> Changes from V6 (https://lkml.org/lkml/2015/3/25/797)
-> 	* Adding Acked-by Mika, and Reviewed-by Hanjun
-> 	* Minor clen up to use lower case 0xffffff for cls_msk
-> 	  (per Mika suggestions).
-> 	* Modify the ACPI_DEVICE_CLASS macro to use designated initializer
-> 	  (per Mika suggestions).
->
-> Changes from V5 (https://lkml.org/lkml/2015/3/6/24)
-> 	* Rebased and tested with acpi-5.1-v11
-> 	* Splitting up the ACPICA changes into a separate patch [1/3].
-> 	  (per Mika suggestion)
-> 	* Adding class-code mask support (per Mika suggestion)
-> 	* Use macro to define struct acpi_device_id entry (per Mika suggestion)
-> 	* Note: Mika also recommend reordering the member of struct acpi_device_id
-> 	  and define a macro to be used for declaring each table entry. This is a
-> 	  large amount of changes, and will be done separtely from this patch series.
->
-> Changes from V4 (https://lkml.org/lkml/2015/3/2/56)
-> 	* [1/2] Bug fixed: Reorder the declaration of
-> 	  struct acpi_pnp_device_id cls in the struct acpi_device_info
-> 	  (include/acpi/actypes.h) since compatible_id_list must be last one.
-> 	* [2/2] Added Acked-by: Tejun Heo <tj@kernel.org>
->
-> Changes from V3 (https://lkml.org/lkml/2015/2/8/106)
-> 	* Instead of introducing new structure acpi_device_cls, add cls into
-> 	  the acpi_device_id, and modify the __acpi_match_device
-> 	  to also match for cls. (per Mika suggestion.)
-> 	* Add loadable module support, which requires changes in ACPI
-> 	  modalias. (per Mika suggestion.)
-> 	* Rebased and tested with acpi-5.1-v9
->
-> Changes from V2 (https://lkml.org/lkml/2015/1/5/662)
-> 	* Update with review comment from Rafael in patch 1/2
-> 	* Rebased and tested with acpi-5.1-v8
->
-> Changes from V1 (https://lkml.org/lkml/2014/12/19/345)
-> 	* Rebased to 3.19.0-rc2
-> 	* Change from acpi_cls in device_driver to acpi_match_cls (Hanjun comment)
-> 	* Change the matching logic in acpi_driver_match_device() due to the new
-> 	  special PRP0001 _HID.
-> 	* Simplify the return type of acpi_match_device_cls() to boolean.
->
-> Changes from RFC (https://lkml.org/lkml/2014/12/17/446)
-> 	* Remove #ifdef and make non-ACPI version of the acpi_match_device_cls
-> 	  as inline. (per Arnd)
-> 	* Simplify logic to retrieve and evaluate _CLS handle. (per Hanjun)
->
-> Suravee Suthikulpanit (3):
->    ACPICA: Add ACPI _CLS processing
->    ACPI / scan: Add support for ACPI _CLS device matching
->    ata: ahci_platform: Add ACPI _CLS matching
->
->   drivers/acpi/acpica/acutils.h     |  3 ++
->   drivers/acpi/acpica/nsxfname.c    | 21 +++++++++--
->   drivers/acpi/acpica/utids.c       | 73 +++++++++++++++++++++++++++++++++++++++
->   drivers/acpi/scan.c               | 36 ++++++++++++++++---
->   drivers/ata/Kconfig               |  2 +-
->   drivers/ata/ahci_platform.c       |  9 +++++
->   include/acpi/acnames.h            |  1 +
->   include/acpi/actypes.h            |  4 ++-
->   include/linux/acpi.h              | 14 ++++++++
->   include/linux/mod_devicetable.h   |  2 ++
->   scripts/mod/devicetable-offsets.c |  2 ++
->   scripts/mod/file2alias.c          | 32 +++++++++++++++--
->   12 files changed, 189 insertions(+), 10 deletions(-)
->
+Acked-By: Sebastian Reichel <sre@kernel.org>
 
+-- Sebastian
 
+--fUYQa+Pmc3FrFX/N
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBCgAGBQJVIuDwAAoJENju1/PIO/qaqk4P/1T77yAjH3OWYaxSSH8mrwQs
+dYFbDr7X97o2lePKrZe/1fFTpO24u+tOp6v27f7NkRDiw+A7k1ZkHLbGKsCZ4CFc
+9vbR4vE1sPPlbLZTgkHzvGYlTAjdMEa5elbDMRthh+vvqI7Q/yIX+H5Ln+Txtk7u
+MPpv6JqW9efxZgxOUnSaFa8Xlj2VbAKqzQsMYICTRjYezmPV5gdd165KMCV41PqC
+vdiF6HxjaB+lyW7vhWzCA660MJGpqOelRk1vYjR2uoNFbVQnEv1Z0NGBrr1xEtW2
+CWdeee+kj3JtAFFTMNgZZpGzbdZ0Ka4tg8Yk2Sxo3tsOO+l7D0s+S6qlIaCqOmd9
+hse/43XhxQbxl5fW9Oriu76sDYYxccdk7syqGf/2rsakVk3StJprfLrhyOnYkx8C
+UCVeWH/JNiH4ngov8Iz4hIUMpXrmo9gUSYK3Z7qX5Xg6F9hTLIxZnJAh3ShNyOYr
+lSf3K/SsHigNYtm5+YwFzaYqIaSnBfdeiMuStK6sT5+cDDUAeQ2ilt9/tCZbPfvC
+DemPzS371iq80QPzDDmva74L3TKYUJOodOY/rBCDJYtMwLdH3UotDHPjKFBQ3nnS
+h64nLHgmHR0CRQtqp/Sz+ePY8Cjs69OLxhHi6RQyijZjKc2Uarxkfcs6DcMdn1WL
+TbT3PZSZMM547HAFeN4v
+=yK9g
+-----END PGP SIGNATURE-----
+
+--fUYQa+Pmc3FrFX/N--
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
