@@ -1,173 +1,118 @@
-From: Brian Norris <computersforpeace@gmail.com>
-Subject: Re: [PATCH 4/5] phy: add Broadcom SATA3 PHY driver for Broadcom STB
- SoCs
-Date: Wed, 1 Apr 2015 19:28:22 -0700
-Message-ID: <20150402022822.GE32500@ld-irv-0074>
-References: <1426728222-8197-1-git-send-email-computersforpeace@gmail.com>
- <1426728222-8197-4-git-send-email-computersforpeace@gmail.com>
- <55132FD0.2000103@ti.com>
- <20150328002844.GA32500@ld-irv-0074>
- <551A3844.6060806@ti.com>
+From: Suravee Suthikulanit <suravee.suthikulpanit@amd.com>
+Subject: Re: [V8 PATCH 0/3] Introduce ACPI support for ahci_platform driver
+Date: Mon, 6 Apr 2015 10:45:19 -0500
+Message-ID: <5522AA0F.8000008@amd.com>
+References: <1427752579-19234-1-git-send-email-Suravee.Suthikulpanit@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:34485 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751521AbbDBC20 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Apr 2015 22:28:26 -0400
-Content-Disposition: inline
-In-Reply-To: <551A3844.6060806@ti.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <1427752579-19234-1-git-send-email-Suravee.Suthikulpanit@amd.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: rjw@rjwysocki.net, mika.westerberg@linux.intel.com, robert.moore@intel.com, lv.zheng@intel.com, hanjun.guo@linaro.org
+Cc: lenb@kernel.org, hdegoede@redhat.com, tj@kernel.org, mjg59@srcf.ucam.org, gregkh@linuxfoundation.org, al.stone@linaro.org, graeme.gregory@linaro.org, leo.duran@amd.com, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org
 List-Id: linux-ide@vger.kernel.org
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Gregory Fong <gregory.0xf0@gmail.com>, Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Tue, Mar 31, 2015 at 11:31:40AM +0530, Kishon Vijay Abraham I wrote:
-> On Saturday 28 March 2015 05:58 AM, Brian Norris wrote:
-> >On Thu, Mar 26, 2015 at 03:29:44AM +0530, Kishon Vijay Abraham I wrote:
-> >>On Thursday 19 March 2015 06:53 AM, Brian Norris wrote:
-> >>>+static struct phy *brcm_sata_phy_xlate(struct device *dev,
-> >>>+				       struct of_phandle_args *args)
-> >>>+{
-> >>>+	struct brcm_sata_phy *priv = dev_get_drvdata(dev);
-> >>>+	int i = args->args[0];
-> >>>+
-> >>>+	if (i >= MAX_PORTS || !priv->phys[i].phy) {
-> >>>+		dev_err(dev, "invalid phy: %d\n", i);
-> >>>+		return ERR_PTR(-ENODEV);
-> >>>+	}
-> >>>+
-> >>>+	return priv->phys[i].phy;
-> >>>+}
-> >>
-> >>this xlate is not required at all if the controller device tree node has
-> >>phandle to the phy node (sub node) instead of the phy provider device tree
-> >>node.
-> >
-> >That doesn't match any convention I see in existing SATA phy bindings,
-> >nor do I see how the existing of_phy_simple_xlate() would support this,
-> >unless I instantiate a device for each port's PHY. If I adjust the
-> >device tree as you suggest, and use of_phy_simple_xlate() instead of
-> >this, of_phy_get() can't find the PHY provider, because the provider is
-> >registered to the parent, not the subnode.
-> 
-> The phy core should still be able to get the PHY provider.
-> See this in of_phy_provider_lookup
->                 for_each_child_of_node(phy_provider->dev->of_node, child)
->                         if (child == node)
->                                 return phy_provider;
+Ping.
 
-That just searches for children of the node. It doesn't walk parent
-nodes.
+Are there any other concerns for this patch series?
 
-> Can you post your device tree node here?
+Thanks,
 
-You mean patch 5?
+Suravee
 
-https://lkml.org/lkml/2015/3/18/937
+On 3/30/2015 4:56 PM, Suravee Suthikulpanit wrote:
+> This patch series introduce ACPI support for AHCI platform driver.
+> Existing ACPI support for AHCI assumes the device controller is a PCI device.
+> Since there is no ACPI _CID for generic AHCI controller, the driver
+> could not use it for matching devices. Therefore, this patch introduces
+> a mechanism for drivers to match devices using ACPI _CLS method.
+> _CLS contains PCI-defined class-code.
+>
+> This patch series also modifies ACPI modalias to add class-code to the
+> exisiting format, which currently only uses _HID and _CIDs. This is required
+> to support loadable modules w/ _CLS.
+>
+> This is rebased from and tested with:
+>
+>      http://git.linaro.org/leg/acpi/acpi.git acpi-5.1-v11
+>
+> This topic was discussed earlier here (as part of introducing support for
+> AMD Seattle SATA controller):
+>
+>      http://marc.info/?l=linux-arm-kernel&m=141083492521584&w=2
+>
+> Changes from V7 (https://lkml.org/lkml/2015/3/26/592)
+> 	* [1/3] Return AE_AML_OPERAND_TYPE when _CLS package containing
+> 	  invalid type (per Robert Moore suggestion).
+> 	* [2/3] Fixed build error due missing ACPI_DEVICE_CLASS definition
+> 	  when disabling ACPI.
+>
+> Changes from V6 (https://lkml.org/lkml/2015/3/25/797)
+> 	* Adding Acked-by Mika, and Reviewed-by Hanjun
+> 	* Minor clen up to use lower case 0xffffff for cls_msk
+> 	  (per Mika suggestions).
+> 	* Modify the ACPI_DEVICE_CLASS macro to use designated initializer
+> 	  (per Mika suggestions).
+>
+> Changes from V5 (https://lkml.org/lkml/2015/3/6/24)
+> 	* Rebased and tested with acpi-5.1-v11
+> 	* Splitting up the ACPICA changes into a separate patch [1/3].
+> 	  (per Mika suggestion)
+> 	* Adding class-code mask support (per Mika suggestion)
+> 	* Use macro to define struct acpi_device_id entry (per Mika suggestion)
+> 	* Note: Mika also recommend reordering the member of struct acpi_device_id
+> 	  and define a macro to be used for declaring each table entry. This is a
+> 	  large amount of changes, and will be done separtely from this patch series.
+>
+> Changes from V4 (https://lkml.org/lkml/2015/3/2/56)
+> 	* [1/2] Bug fixed: Reorder the declaration of
+> 	  struct acpi_pnp_device_id cls in the struct acpi_device_info
+> 	  (include/acpi/actypes.h) since compatible_id_list must be last one.
+> 	* [2/2] Added Acked-by: Tejun Heo <tj@kernel.org>
+>
+> Changes from V3 (https://lkml.org/lkml/2015/2/8/106)
+> 	* Instead of introducing new structure acpi_device_cls, add cls into
+> 	  the acpi_device_id, and modify the __acpi_match_device
+> 	  to also match for cls. (per Mika suggestion.)
+> 	* Add loadable module support, which requires changes in ACPI
+> 	  modalias. (per Mika suggestion.)
+> 	* Rebased and tested with acpi-5.1-v9
+>
+> Changes from V2 (https://lkml.org/lkml/2015/1/5/662)
+> 	* Update with review comment from Rafael in patch 1/2
+> 	* Rebased and tested with acpi-5.1-v8
+>
+> Changes from V1 (https://lkml.org/lkml/2014/12/19/345)
+> 	* Rebased to 3.19.0-rc2
+> 	* Change from acpi_cls in device_driver to acpi_match_cls (Hanjun comment)
+> 	* Change the matching logic in acpi_driver_match_device() due to the new
+> 	  special PRP0001 _HID.
+> 	* Simplify the return type of acpi_match_device_cls() to boolean.
+>
+> Changes from RFC (https://lkml.org/lkml/2014/12/17/446)
+> 	* Remove #ifdef and make non-ACPI version of the acpi_match_device_cls
+> 	  as inline. (per Arnd)
+> 	* Simplify logic to retrieve and evaluate _CLS handle. (per Hanjun)
+>
+> Suravee Suthikulpanit (3):
+>    ACPICA: Add ACPI _CLS processing
+>    ACPI / scan: Add support for ACPI _CLS device matching
+>    ata: ahci_platform: Add ACPI _CLS matching
+>
+>   drivers/acpi/acpica/acutils.h     |  3 ++
+>   drivers/acpi/acpica/nsxfname.c    | 21 +++++++++--
+>   drivers/acpi/acpica/utids.c       | 73 +++++++++++++++++++++++++++++++++++++++
+>   drivers/acpi/scan.c               | 36 ++++++++++++++++---
+>   drivers/ata/Kconfig               |  2 +-
+>   drivers/ata/ahci_platform.c       |  9 +++++
+>   include/acpi/acnames.h            |  1 +
+>   include/acpi/actypes.h            |  4 ++-
+>   include/linux/acpi.h              | 14 ++++++++
+>   include/linux/mod_devicetable.h   |  2 ++
+>   scripts/mod/devicetable-offsets.c |  2 ++
+>   scripts/mod/file2alias.c          | 32 +++++++++++++++--
+>   12 files changed, 189 insertions(+), 10 deletions(-)
+>
 
-> >
-> >Can you elaborate on your suggestion?
-> >
-> >>>+
-> >>>+static const struct of_device_id brcmstb_sata_phy_of_match[] = {
-> >>>+	{ .compatible	= "brcm,bcm7445-sata-phy" },
-> >>>+	{},
-> >>>+};
-> >>>+MODULE_DEVICE_TABLE(of, brcmstb_sata_phy_of_match);
-> >>>+
-> >>>+static int brcmstb_sata_phy_probe(struct platform_device *pdev)
-> >>>+{
-> >>>+	struct device *dev = &pdev->dev;
-> >>>+	struct device_node *dn = dev->of_node, *child;
-> >>>+	struct brcm_sata_phy *priv;
-> >>>+	struct resource *res;
-> >>>+	struct phy_provider *provider;
-> >>>+	int count = 0;
-> >>>+
-> >>>+	if (of_get_child_count(dn) == 0)
-> >>>+		return -ENODEV;
-> >>>+
-> >>>+	priv = devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
-> >>>+	if (!priv)
-> >>>+		return -ENOMEM;
-> >>>+	dev_set_drvdata(dev, priv);
-> >>>+	priv->dev = dev;
-> >>>+
-> >>>+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "port-ctrl");
-> >>>+	if (!res) {
-> >>>+		dev_err(dev, "couldn't get port-ctrl resource\n");
-> >>>+		return -EINVAL;
-> >>>+	}
-> >>>+	/*
-> >>>+	 * Don't request region, since it may be within a region owned by the
-> >>>+	 * SATA driver
-> >>
-> >>It should be in the SATA driver then. Why is it here?
-> >
-> >Did you read the discussion branching here?
-> >
-> >http://article.gmane.org/gmane.linux.drivers.devicetree/114637
-> >
-> >I've seen the exact opposite suggestion already (move it to the PHY
-> >driver), and I'm not sure either suggestion is correct. The same
-> >register block has registers for both the PHY and the SATA controller.
-> 
-> IMHO the register space shouldn't be defined based on the programming sequence
-> but by where the register is actually present in the IP. From that thread it
-> doesn't look like it is present in the PHY IP.
 
-If you say so. But it has plenty of PHY controls packed into those
-registers, so are you just recommending handling those bits from the
-SATA driver?
-
-...
-
-> >>lets not make the boot noisy. Make it dev_vdbg if it is required.
-> >
-> >I think it's important to have at least some of the three informational
-> >prints that you're suggesting turn into dbg. It's pretty important to
-> >see that we're powering on one or more PHY ports, for both
-> >power/correctness concerns (trying to power on a port that is
-> >OTP-disabled, for instance) and debugging concerns (the suggestions you
-> >made about the device tree yielded a dead SATA, and it was obvious,
-> >because the "powering on" prints were missing).
-> 
-> All these are debugging info. Hence it's better to keep in dev_vdbg or dev_dbg.
-> >
-> >I'd kinda like to see the previous power on/off prints above stay as
-> >dev_info(), though the "registered" print might be superfluous, as the
-> >registration info should show up in sysfs.
-> >
-> >Related: I don't see any API for monitoring the PHY status from user
-> >space. e.g., there's nothing useful in /sys/class/phy/*/.
-> 
-> Do you really need to monitor the PHY status? We should be careful about
-> exposing anything to the user space since it will become an ABI and we can
-> never modify it.
-
-Not really, but the debugging info (which you want me to remove by
-default, and which is unretrievable after system boot) is the next
-easiest solution. It doesn't provide an ABI, exactly, but it keeps the
-info readily available.
-
-> >>>+
-> >>>+	return 0;
-> >>>+}
-> >>>+
-> >>>+static int brcmstb_sata_phy_remove(struct platform_device *pdev)
-> >>>+{
-> >>>+	return 0;
-> >>>+}
-> >>
-> >>Remove this function if it doesn't have anything to do.
-> >
-> >I was confused; I thought that that the driver model would not allow a
-> >device to be detached if there was no remove function. Will remove now.
-> 
-> okay. I'll cross check that again.
-
-I haven't done an exhaustive search, but it looks like
-__device_release_driver() handles a missing .remove just fine.
-
-Brian
