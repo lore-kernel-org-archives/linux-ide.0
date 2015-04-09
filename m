@@ -1,119 +1,45 @@
 From: Quentin Lambert <lambert.quentin@gmail.com>
-Subject: [PATCH 1/2] ide: remove deprecated use of pci api
-Date: Thu,  9 Apr 2015 13:46:27 +0200
-Message-ID: <1428579988-10167-2-git-send-email-lambert.quentin@gmail.com>
+Subject: [PATCH 2/2] ide: replace GFP_ATOMIC by GFP_KERNEL
+Date: Thu,  9 Apr 2015 13:46:28 +0200
+Message-ID: <1428579988-10167-3-git-send-email-lambert.quentin@gmail.com>
 References: <1428579988-10167-1-git-send-email-lambert.quentin@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <kernel-janitors-owner@vger.kernel.org>
 In-Reply-To: <1428579988-10167-1-git-send-email-lambert.quentin@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: kernel-janitors-owner@vger.kernel.org
 To: "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 Cc: Quentin Lambert <lambert.quentin@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-Replace occurences of the pci api by appropriate call to the dma api.
-
-A simplified version of the semantic patch that finds this problem is as
-follows: (http://coccinelle.lip6.fr)
-
-@deprecated@
-idexpression id;
-position p;
-@@
-
-(
-  pci_dma_supported@p ( id, ...)
-|
-  pci_alloc_consistent@p ( id, ...)
-)
-
-@bad1@
-idexpression id;
-position deprecated.p;
-@@
-...when != &id->dev
-   when != pci_get_drvdata ( id )
-   when != pci_enable_device ( id )
-(
-  pci_dma_supported@p ( id, ...)
-|
-  pci_alloc_consistent@p ( id, ...)
-)
-
-@depends on !bad1@
-idexpression id;
-expression direction;
-position deprecated.p;
-@@
-
-(
-- pci_dma_supported@p ( id,
-+ dma_supported ( &id->dev,
-...
-+ , GFP_ATOMIC
-  )
-|
-- pci_alloc_consistent@p ( id,
-+ dma_alloc_coherent ( &id->dev,
-...
-+ , GFP_ATOMIC
-  )
-)
+Both pmac_ide_init_dma and ide_dma_sgiioc4 are stored in the init_dma field of
+an ide_port_info structure. This field seems to only be called from contexts
+where sleep is allowed. Therefore, this patch replaces uses of GFP_ATOMIC by
+GFP_KERNEL.
 
 Signed-off-by: Quentin Lambert <lambert.quentin@gmail.com>
 ---
- drivers/ide/cs5520.c    |    2 +-
- drivers/ide/pmac.c      |    5 ++---
- drivers/ide/setup-pci.c |    2 +-
- drivers/ide/sgiioc4.c   |    4 ++--
- 4 files changed, 6 insertions(+), 7 deletions(-)
+ drivers/ide/pmac.c    |    2 +-
+ drivers/ide/sgiioc4.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
---- a/drivers/ide/cs5520.c
-+++ b/drivers/ide/cs5520.c
-@@ -123,7 +123,7 @@ static int cs5520_init_one(struct pci_de
- 		return -ENODEV;
- 	}
- 	pci_set_master(dev);
--	if (pci_set_dma_mask(dev, DMA_BIT_MASK(32))) {
-+	if (dma_set_mask(&dev->dev, DMA_BIT_MASK(32))) {
- 		printk(KERN_WARNING "%s: No suitable DMA available.\n",
- 			d->name);
- 		return -ENODEV;
 --- a/drivers/ide/pmac.c
 +++ b/drivers/ide/pmac.c
-@@ -1689,10 +1689,9 @@ static int pmac_ide_init_dma(ide_hwif_t
- 	 * The +2 is +1 for the stop command and +1 to allow for
- 	 * aligning the start address to a multiple of 16 bytes.
+@@ -1691,7 +1691,7 @@ static int pmac_ide_init_dma(ide_hwif_t
  	 */
--	pmif->dma_table_cpu = pci_alloc_consistent(
--		dev,
-+	pmif->dma_table_cpu = dma_alloc_coherent(&dev->dev,
+ 	pmif->dma_table_cpu = dma_alloc_coherent(&dev->dev,
  		(MAX_DCMDS + 2) * sizeof(struct dbdma_cmd),
--		&hwif->dmatable_dma);
-+		&hwif->dmatable_dma, GFP_ATOMIC);
+-		&hwif->dmatable_dma, GFP_ATOMIC);
++		&hwif->dmatable_dma, GFP_KERNEL);
  	if (pmif->dma_table_cpu == NULL) {
  		printk(KERN_ERR "%s: unable to allocate DMA command list\n",
  		       hwif->name);
---- a/drivers/ide/setup-pci.c
-+++ b/drivers/ide/setup-pci.c
-@@ -209,7 +209,7 @@ static int ide_pci_enable(struct pci_dev
- 	 * a DMA mask field to the struct ide_port_info if we need it
- 	 * (or let lower level driver set the DMA mask)
- 	 */
--	ret = pci_set_dma_mask(dev, DMA_BIT_MASK(32));
-+	ret = dma_set_mask(&dev->dev, DMA_BIT_MASK(32));
- 	if (ret < 0) {
- 		printk(KERN_ERR "%s %s: can't set DMA mask\n",
- 			d->name, pci_name(dev));
 --- a/drivers/ide/sgiioc4.c
 +++ b/drivers/ide/sgiioc4.c
-@@ -334,8 +334,8 @@ static int ide_dma_sgiioc4(ide_hwif_t *h
- 	if (ide_allocate_dma_engine(hwif))
+@@ -335,7 +335,7 @@ static int ide_dma_sgiioc4(ide_hwif_t *h
  		goto dma_pci_alloc_failure;
  
--	pad = pci_alloc_consistent(dev, IOC4_IDE_CACHELINE_SIZE,
--				   (dma_addr_t *)&hwif->extra_base);
-+	pad = dma_alloc_coherent(&dev->dev, IOC4_IDE_CACHELINE_SIZE,
-+				   (dma_addr_t *)&hwif->extra_base, GFP_ATOMIC);
+ 	pad = dma_alloc_coherent(&dev->dev, IOC4_IDE_CACHELINE_SIZE,
+-				   (dma_addr_t *)&hwif->extra_base, GFP_ATOMIC);
++				   (dma_addr_t *)&hwif->extra_base, GFP_KERNEL);
  	if (pad) {
  		ide_set_hwifdata(hwif, pad);
  		return 0;
