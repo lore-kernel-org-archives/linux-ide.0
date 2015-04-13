@@ -1,121 +1,26 @@
-From: Quentin Lambert <lambert.quentin@gmail.com>
-Subject: [PATCH v2] ide: remove deprecated use of pci api
-Date: Mon, 13 Apr 2015 10:26:53 +0200
-Message-ID: <1428913613-12375-1-git-send-email-lambert.quentin@gmail.com>
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, Quentin Lambert <lambert.quentin@gmail.com>
+From: Suman Tripathi <stripathi@apm.com>
+Subject: [PATCH v2 0/1] ata: ahci_xgene: Enable native NCQ and FBS for second generation of X-Gene SoC.
+Date: Mon, 13 Apr 2015 15:02:39 +0530
+Message-ID: <1428917560-9142-1-git-send-email-stripathi@apm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>
 List-Id: linux-ide@vger.kernel.org
 
-Replace occurences of the pci api by appropriate call to the dma api.
+V2 change:
+ * Drop the MIDR based implementation as it is wrong.
 
-A simplified version of the semantic patch that finds this problem is as
-follows: (http://coccinelle.lip6.fr)
-
-@deprecated@
-idexpression id;
-position p;
-@@
-
-(
-  pci_dma_supported@p ( id, ...)
-|
-  pci_alloc_consistent@p ( id, ...)
-)
-
-@bad1@
-idexpression id;
-position deprecated.p;
-@@
-...when != &id->dev
-   when != pci_get_drvdata ( id )
-   when != pci_enable_device ( id )
-(
-  pci_dma_supported@p ( id, ...)
-|
-  pci_alloc_consistent@p ( id, ...)
-)
-
-@depends on !bad1@
-idexpression id;
-expression direction;
-position deprecated.p;
-@@
-
-(
-- pci_dma_supported@p ( id,
-+ dma_supported ( &id->dev,
-...
-+ , GFP_ATOMIC
-  )
-|
-- pci_alloc_consistent@p ( id,
-+ dma_alloc_coherent ( &id->dev,
-...
-+ , GFP_ATOMIC
-  )
-)
-
-Signed-off-by: Quentin Lambert <lambert.quentin@gmail.com>
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
 ---
- Changes since v1:
-  - fold the two patches into one, GFP_ATOMIC is now replaced by
-    GFP_KERNEL
 
- drivers/ide/cs5520.c    |    2 +-
- drivers/ide/pmac.c      |    5 ++---
- drivers/ide/setup-pci.c |    2 +-
- drivers/ide/sgiioc4.c   |    4 ++--
- 4 files changed, 6 insertions(+), 7 deletions(-)
+Suman Tripathi (1):
+  ata: ahci_xgene: Add AHCI Support for second generation of APM X-Gene
+    SoC
 
---- a/drivers/ide/cs5520.c
-+++ b/drivers/ide/cs5520.c
-@@ -123,7 +123,7 @@ static int cs5520_init_one(struct pci_de
- 		return -ENODEV;
- 	}
- 	pci_set_master(dev);
--	if (pci_set_dma_mask(dev, DMA_BIT_MASK(32))) {
-+	if (dma_set_mask(&dev->dev, DMA_BIT_MASK(32))) {
- 		printk(KERN_WARNING "%s: No suitable DMA available.\n",
- 			d->name);
- 		return -ENODEV;
---- a/drivers/ide/pmac.c
-+++ b/drivers/ide/pmac.c
-@@ -1689,10 +1689,9 @@ static int pmac_ide_init_dma(ide_hwif_t
- 	 * The +2 is +1 for the stop command and +1 to allow for
- 	 * aligning the start address to a multiple of 16 bytes.
- 	 */
--	pmif->dma_table_cpu = pci_alloc_consistent(
--		dev,
-+	pmif->dma_table_cpu = dma_alloc_coherent(&dev->dev,
- 		(MAX_DCMDS + 2) * sizeof(struct dbdma_cmd),
--		&hwif->dmatable_dma);
-+		&hwif->dmatable_dma, GFP_KERNEL);
- 	if (pmif->dma_table_cpu == NULL) {
- 		printk(KERN_ERR "%s: unable to allocate DMA command list\n",
- 		       hwif->name);
---- a/drivers/ide/setup-pci.c
-+++ b/drivers/ide/setup-pci.c
-@@ -209,7 +209,7 @@ static int ide_pci_enable(struct pci_dev
- 	 * a DMA mask field to the struct ide_port_info if we need it
- 	 * (or let lower level driver set the DMA mask)
- 	 */
--	ret = pci_set_dma_mask(dev, DMA_BIT_MASK(32));
-+	ret = dma_set_mask(&dev->dev, DMA_BIT_MASK(32));
- 	if (ret < 0) {
- 		printk(KERN_ERR "%s %s: can't set DMA mask\n",
- 			d->name, pci_name(dev));
---- a/drivers/ide/sgiioc4.c
-+++ b/drivers/ide/sgiioc4.c
-@@ -334,8 +334,8 @@ static int ide_dma_sgiioc4(ide_hwif_t *h
- 	if (ide_allocate_dma_engine(hwif))
- 		goto dma_pci_alloc_failure;
- 
--	pad = pci_alloc_consistent(dev, IOC4_IDE_CACHELINE_SIZE,
--				   (dma_addr_t *)&hwif->extra_base);
-+	pad = dma_alloc_coherent(&dev->dev, IOC4_IDE_CACHELINE_SIZE,
-+				   (dma_addr_t *)&hwif->extra_base, GFP_KERNEL);
- 	if (pad) {
- 		ide_set_hwifdata(hwif, pad);
- 		return 0;
+ drivers/ata/ahci_xgene.c | 96 +++++++++++++++++++++++++++++++++++++++---------
+ 1 file changed, 78 insertions(+), 18 deletions(-)
+
+--
+1.8.2.1
+
