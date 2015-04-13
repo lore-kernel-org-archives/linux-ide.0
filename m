@@ -1,40 +1,37 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v2 1/1] ata: ahci_xgene: Add AHCI Support for second generation of APM X-Gene SoC
-Date: Mon, 13 Apr 2015 17:47:06 +0200
-Message-ID: <13858039.DrYB9oMvMT@wuerfel>
-References: <1428917560-9142-1-git-send-email-stripathi@apm.com> <1428917560-9142-2-git-send-email-stripathi@apm.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH 1/2] ide: remove deprecated use of pci api
+Date: Mon, 13 Apr 2015 13:08:13 -0400 (EDT)
+Message-ID: <20150413.130813.2058573928379941715.davem@davemloft.net>
+References: <1428579988-10167-1-git-send-email-lambert.quentin@gmail.com>
+	<1428579988-10167-2-git-send-email-lambert.quentin@gmail.com>
+	<20150413132530.210f1d3b@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1428917560-9142-2-git-send-email-stripathi@apm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Suman Tripathi <stripathi@apm.com>
-Cc: olof@lixom.net, tj@kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <20150413132530.210f1d3b@lxorguk.ukuu.org.uk>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: gnomes@lxorguk.ukuu.org.uk
+Cc: lambert.quentin@gmail.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Monday 13 April 2015 15:02:40 Suman Tripathi wrote:
-> This patch enables full AHCI feature support for APM X-Gene SoC SATA host host
-> controller. The following errata's are removed:
-> 
-> 1. 2a0bdff6b95 ("ahci-xgene: fix the dma state machine lockup for the
->                  IDENTIFY DEVICE PIO mode command")
-> 2. 09c32aaa368 ("ahci_xgene: Fix the dma state machine lockup for the
->                  ATA_CMD_SMART PIO mode command")
-> 3. 1540035da71 ("ahci_xgene: Implement the xgene_ahci_poll_reg_val to
->                  support PMP")
-> 4. a3a84bc7c88 ("ahci_xgene: Implement the workaround to support PMP
->                  enumeration and discovery")
-> 5. 1102407bb71 ("ahci_xgene: Fix the DMA state machine lockup for the
->                  ATA_CMD_PACKET PIO mode command")
-> 6. 72f79f9e35b ("ahci_xgene: Removing NCQ support from the APM X-Gene SoC
->                  AHCI SATA Host Controller driver")
-> 
-> In addition, enable PMP support for APM X-Gene SoC and enable FBS support
-> for second generation APM X-Gene SoC.
-> 
+From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
+Date: Mon, 13 Apr 2015 13:25:30 +0100
 
-Is this now close enough to AHCI that you can just use the normal AHCI
-driver, or are there still too many remaining errata?
+> On Thu,  9 Apr 2015 13:46:27 +0200
+> Quentin Lambert <lambert.quentin@gmail.com> wrote:
+> 
+>> Replace occurences of the pci api by appropriate call to the dma api.
+>> 
+> 
+> Drivers/ide is obsolete. It probably ought to go at this point but even
+> so it exists solely in case of a problem or compatibility issue with
+> drivers/ata. Cleaning it up without testing all the drivers makes no
+> sense IMHO. Cleaning it up and testing them doesn't make much sense
+> either.
 
-	Arnd
+It's a straightforward transformation, that actually evaluates to what
+the definitions of the deprecated pci DMA interfaces are defined to.
+
+So I intend to apply this patch, especially for the sake of allowing
+these PCI DMA interfaces to be removed.
