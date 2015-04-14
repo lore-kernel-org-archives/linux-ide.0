@@ -1,20 +1,20 @@
 From: Daniel Axtens <dja@axtens.net>
-Subject: [PATCH 2/3] Remove celleb-only SCC PATA drivers
-Date: Tue, 14 Apr 2015 15:23:25 +1000
-Message-ID: <1428989006-5929-2-git-send-email-dja@axtens.net>
-References: <1428989006-5929-1-git-send-email-dja@axtens.net>
+Subject: [PATCH v2 2/3] Remove celleb-only SCC PATA drivers
+Date: Tue, 14 Apr 2015 15:28:45 +1000
+Message-ID: <1428989326-7637-2-git-send-email-dja@axtens.net>
+References: <1428989326-7637-1-git-send-email-dja@axtens.net>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pd0-f182.google.com ([209.85.192.182]:33346 "EHLO
-	mail-pd0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751900AbbDNFYG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Apr 2015 01:24:06 -0400
-Received: by pdbnk13 with SMTP id nk13so131929549pdb.0
-        for <linux-ide@vger.kernel.org>; Mon, 13 Apr 2015 22:24:05 -0700 (PDT)
-In-Reply-To: <1428989006-5929-1-git-send-email-dja@axtens.net>
+Received: from mail-pd0-f175.google.com ([209.85.192.175]:34576 "EHLO
+	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751842AbbDNF3X (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Apr 2015 01:29:23 -0400
+Received: by pdbqa5 with SMTP id qa5so131980785pdb.1
+        for <linux-ide@vger.kernel.org>; Mon, 13 Apr 2015 22:29:22 -0700 (PDT)
+In-Reply-To: <1428989326-7637-1-git-send-email-dja@axtens.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: Daniel Axtens <dja@axtens.net>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org, Valentin Rothberg <valentinrothberg@gmail.com>, mpe@ellerman.id.au, linuxppc-dev@lists.ozlab.org
+Cc: Daniel Axtens <dja@axtens.net>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org, Valentin Rothberg <valentinrothberg@gmail.com>, mpe@ellerman.id.au, linuxppc-dev@lists.ozlabs.org
 
 The SCC PATA interface is only used by celleb.
 celleb has been dropped [1], so drop the drivers.
@@ -27,8 +27,11 @@ CC: "David S. Miller" <davem@davemloft.net>
 CC: linux-ide@vger.kernel.org
 CC: Valentin Rothberg <valentinrothberg@gmail.com>
 CC: mpe@ellerman.id.au
-CC: linuxppc-dev@lists.ozlab.org
+CC: linuxppc-dev@lists.ozlabs.org
 Signed-off-by: Daniel Axtens <dja@axtens.net>
+
+---
+v2: get name of ozlab*s*.org right. Sorry all.
 ---
  drivers/ata/Kconfig    |    9 -
  drivers/ata/Makefile   |    1 -
