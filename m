@@ -1,62 +1,44 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: Re: ahci Port to Host interrupt as edge trigger
-Date: Fri, 17 Apr 2015 22:39:25 +0530
-Message-ID: <CAOHikRBpoc+2zSUn23V3i_0JnvLtTAFQsjfDLdx70c2WLWs8fA@mail.gmail.com>
-References: <CAOHikRCrbKhchHM71KPUUxSw7107ZWpBCbmTHsSSqSbUdCLJyg@mail.gmail.com>
-	<20150417144235.GB1954@htj.duckdns.org>
+From: David Miller <davem@davemloft.net>
+Subject: [GIT] IDE
+Date: Fri, 17 Apr 2015 16:14:08 -0400 (EDT)
+Message-ID: <20150417.161408.1291414955530392610.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20150417144235.GB1954@htj.duckdns.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>, Loc Ho <lho@apm.com>
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from shards.monkeyblade.net ([149.20.54.216]:46810 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932258AbbDQUOK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Apr 2015 16:14:10 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-
-> Hi ,
->
-> I need some suggestion .
->
-> From the below interrupt handler in libahci.c it explains that the
-> interrupt from port to Host is level  triggered. Do we have any
-> existing implementation that handles the port to Host as Edge
-> triggered.
-
-Not that I know of but if it works as a edge triggered latch, would it
-need anything done different?
-
- We met a scenario which explains the below :
-
-1. PxIS0 raised set to 1 and Host IS detects a level . After some
-interval PxIS1  raised and Host IS  detects a level and interrupt
-service routine clear and it work. This is as per the libahci
-implementation
-
-2. PxIS0 set to 1 and Host IS detects a edge . After some interval
-PxIS1 raised and Host IS detects a edge but ISR  implementation is
-level trigger so it looses interrupts.  Was asking about this scenario
-??
-
-On Fri, Apr 17, 2015 at 8:12 PM, Tejun Heo <tj@kernel.org> wrote:
-> On Fri, Apr 17, 2015 at 04:22:17PM +0530, Suman Tripathi wrote:
->> Hi ,
->>
->> I need some suggestion .
->>
->> From the below interrupt handler in libahci.c it explains that the
->> interrupt from port to Host is level  triggered. Do we have any
->> existing implementation that handles the port to Host as Edge
->> triggered.
->
-> Not that I know of but if it works as a edge triggered latch, would it
-> need anything done different?
->
-> --
-> tejun
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
+Just one change, getting rid of usage of the deprecated PCI DMA
+interfaces in the IDE drivers.
 
--- 
-Thanks,
-with regards,
-Suman Tripathi
+Please pull, thanks a lot!
+
+The following changes since commit 54e514b91b95d6441c12a7955addfb9f9d2afc65:
+
+  Merge branch 'akpm' (patches from Andrew) (2015-04-17 09:04:38 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide.git 
+
+for you to fetch changes up to d681f1166919d6829083c069a83edcd59bfd5e34:
+
+  ide: remove deprecated use of pci api (2015-04-17 15:32:07 -0400)
+
+----------------------------------------------------------------
+Quentin Lambert (1):
+      ide: remove deprecated use of pci api
+
+ drivers/ide/cs5520.c    | 2 +-
+ drivers/ide/pmac.c      | 5 ++---
+ drivers/ide/setup-pci.c | 2 +-
+ drivers/ide/sgiioc4.c   | 4 ++--
+ 4 files changed, 6 insertions(+), 7 deletions(-)
