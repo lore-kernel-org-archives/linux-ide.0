@@ -1,33 +1,62 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ata: ahci_st: fixup layering violations / drvdata errors
-Date: Fri, 17 Apr 2015 10:55:58 -0400
-Message-ID: <20150417145558.GD1954@htj.duckdns.org>
-References: <1428519599-31885-1-git-send-email-computersforpeace@gmail.com>
- <552627BD.9060109@st.com>
- <20150409094310.GA29026@griffinp-ThinkPad-X1-Carbon-2nd>
+From: Suman Tripathi <stripathi@apm.com>
+Subject: Re: ahci Port to Host interrupt as edge trigger
+Date: Fri, 17 Apr 2015 22:39:25 +0530
+Message-ID: <CAOHikRBpoc+2zSUn23V3i_0JnvLtTAFQsjfDLdx70c2WLWs8fA@mail.gmail.com>
+References: <CAOHikRCrbKhchHM71KPUUxSw7107ZWpBCbmTHsSSqSbUdCLJyg@mail.gmail.com>
+	<20150417144235.GB1954@htj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qk0-f169.google.com ([209.85.220.169]:34833 "EHLO
-	mail-qk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933454AbbDQO4C (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 17 Apr 2015 10:56:02 -0400
-Content-Disposition: inline
-In-Reply-To: <20150409094310.GA29026@griffinp-ThinkPad-X1-Carbon-2nd>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20150417144235.GB1954@htj.duckdns.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>, Loc Ho <lho@apm.com>
 List-Id: linux-ide@vger.kernel.org
-To: Peter Griffin <peter.griffin@linaro.org>
-Cc: Maxime Coquelin <maxime.coquelin@st.com>, Brian Norris <computersforpeace@gmail.com>, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, kernel@stlinux.com, Srinivas Kandagatla <srinivas.kandagatla@gmail.com>, Patrice Chotard <patrice.chotard@st.com>
 
-On Thu, Apr 09, 2015 at 10:43:10AM +0100, Peter Griffin wrote:
-> Yes I can test, although not until Saturday as I only have remote
-> access to the board today & tomorrow and the hard drive isn't
-> plugged in.
+> Hi ,
+>
+> I need some suggestion .
+>
+> From the below interrupt handler in libahci.c it explains that the
+> interrupt from port to Host is level  triggered. Do we have any
+> existing implementation that handles the port to Host as Edge
+> triggered.
 
-What's the status on this patch?  Should I push it through
-for-4.1-fixes?
+Not that I know of but if it works as a edge triggered latch, would it
+need anything done different?
 
-Thanks.
+ We met a scenario which explains the below :
+
+1. PxIS0 raised set to 1 and Host IS detects a level . After some
+interval PxIS1  raised and Host IS  detects a level and interrupt
+service routine clear and it work. This is as per the libahci
+implementation
+
+2. PxIS0 set to 1 and Host IS detects a edge . After some interval
+PxIS1 raised and Host IS detects a edge but ISR  implementation is
+level trigger so it looses interrupts.  Was asking about this scenario
+??
+
+On Fri, Apr 17, 2015 at 8:12 PM, Tejun Heo <tj@kernel.org> wrote:
+> On Fri, Apr 17, 2015 at 04:22:17PM +0530, Suman Tripathi wrote:
+>> Hi ,
+>>
+>> I need some suggestion .
+>>
+>> From the below interrupt handler in libahci.c it explains that the
+>> interrupt from port to Host is level  triggered. Do we have any
+>> existing implementation that handles the port to Host as Edge
+>> triggered.
+>
+> Not that I know of but if it works as a edge triggered latch, would it
+> need anything done different?
+>
+> --
+> tejun
+
+
 
 -- 
-tejun
+Thanks,
+with regards,
+Suman Tripathi
