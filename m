@@ -1,244 +1,100 @@
 From: Matthew Garrett <mjg59@coreos.com>
-Subject: [PATCH 2/3] libata: Add firmware_default LPM policy
-Date: Sat, 18 Apr 2015 08:26:35 -0700
-Message-ID: <1429370796-5881-3-git-send-email-mjg59@coreos.com>
+Subject: [PATCH 3/3] libata: Change medium_power LPM policy to match Intel recommendations
+Date: Sat, 18 Apr 2015 08:26:36 -0700
+Message-ID: <1429370796-5881-4-git-send-email-mjg59@coreos.com>
 References: <1429370796-5881-1-git-send-email-mjg59@coreos.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from cavan.codon.org.uk ([93.93.128.6]:37142 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753492AbbDRP10 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 18 Apr 2015 11:27:26 -0400
 In-Reply-To: <1429370796-5881-1-git-send-email-mjg59@coreos.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: tj@kernel.org
 Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, kristen@linux.intel.com, Matthew Garrett <mjg59@coreos.com>
-List-Id: linux-ide@vger.kernel.org
 
-System vendors may configure SATA link power management appropriately for
-their systems in firmware, based on their knowledge of the hardware
-installed. Add an additional LPM policy designed to inherit the
-configuration provided by the firmware.
+Intel publish a document on designing energy efficient SATA devices at
+http://www.intel.com/content/dam/doc/reference-guide/sata-devices-implementation-recommendations.pdf
+which recommends that ALPE be set, ASPE be cleared and that DIPM be enabled
+on the device. Right now we have no policy that matches that - medium_power
+does not enable DIPM and min_power sets ASPE. Change medium_power to
+implement these recommendations, with the addition of devslp state being
+inherited from the initial configuration. With luck this will provide
+reasonable power savings without causing the device breakages we
+occasionally see with the min_power policy.
 
 Signed-off-by: Matthew Garrett <mjg59@coreos.com>
 ---
- .../scsi/link_power_management_policy.txt          |  5 +-
- drivers/ata/libahci.c                              | 62 +++++++++++++++-------
- drivers/ata/libata-core.c                          |  7 ++-
- drivers/ata/libata-eh.c                            | 15 +++---
- drivers/ata/libata-scsi.c                          |  1 +
- include/linux/libata.h                             |  1 +
- 6 files changed, 63 insertions(+), 28 deletions(-)
+ drivers/ata/libahci.c     |  1 +
+ drivers/ata/libata-core.c |  4 ----
+ drivers/ata/libata-eh.c   | 10 ++++------
+ 3 files changed, 5 insertions(+), 10 deletions(-)
 
-diff --git a/Documentation/scsi/link_power_management_policy.txt b/Documentation/scsi/link_power_management_policy.txt
-index d18993d..0285601 100644
---- a/Documentation/scsi/link_power_management_policy.txt
-+++ b/Documentation/scsi/link_power_management_policy.txt
-@@ -1,8 +1,11 @@
- This parameter allows the user to set the link (interface) power management.
--There are 3 possible options:
-+There are 4 possible options:
- 
- Value			Effect
- ----------------------------------------------------------------------------
-+firmware_defaults	Inherit configuration from the state programmed by
-+			the firmware during system init.
-+
- min_power		Tell the controller to try to make the link use the
- 			least possible power when possible.  This may
- 			sacrifice some performance due to increased latency
 diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index f0c7120..fabcff4 100644
+index fabcff4..8efacb9 100644
 --- a/drivers/ata/libahci.c
 +++ b/drivers/ata/libahci.c
-@@ -684,6 +684,7 @@ static int ahci_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
- {
- 	struct ata_port *ap = link->ap;
- 	struct ahci_host_priv *hpriv = ap->host->private_data;
-+	struct ahci_port_priv *ppriv = ap->private_data;
- 	struct ahci_port_priv *pp = ap->private_data;
- 	void __iomem *port_mmio = ahci_port_base(ap);
- 
-@@ -701,9 +702,9 @@ static int ahci_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
- 
- 	if (hpriv->cap & HOST_CAP_ALPM) {
- 		u32 cmd = readl(port_mmio + PORT_CMD);
-+		cmd &= ~(PORT_CMD_ASP | PORT_CMD_ALPE);
- 
- 		if (policy == ATA_LPM_MAX_POWER || !(hints & ATA_LPM_HIPM)) {
--			cmd &= ~(PORT_CMD_ASP | PORT_CMD_ALPE);
- 			cmd |= PORT_CMD_ICC_ACTIVE;
- 
- 			writel(cmd, port_mmio + PORT_CMD);
-@@ -711,6 +712,13 @@ static int ahci_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
- 
- 			/* wait 10ms to be sure we've come out of LPM state */
- 			ata_msleep(ap, 10);
-+		} else if (policy == ATA_LPM_FIRMWARE_DEFAULTS) {
-+			if (ppriv->init_alpe)
-+				cmd |= PORT_CMD_ALPE;
-+			if (ppriv->init_asp)
-+				cmd |= PORT_CMD_ASP;
-+
-+			writel(cmd, port_mmio + PORT_CMD);
- 		} else {
- 			cmd |= PORT_CMD_ALPE;
- 			if (policy == ATA_LPM_MIN_POWER)
-@@ -725,10 +733,17 @@ static int ahci_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
- 	if ((hpriv->cap2 & HOST_CAP2_SDS) &&
- 	    (hpriv->cap2 & HOST_CAP2_SADM) &&
- 	    (link->device->flags & ATA_DFLAG_DEVSLP)) {
--		if (policy == ATA_LPM_MIN_POWER)
-+		switch (policy) {
-+		case ATA_LPM_MIN_POWER:
+@@ -738,6 +738,7 @@ static int ahci_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
  			ahci_set_aggressive_devslp(ap, true);
--		else
-+			break;
-+		case ATA_LPM_FIRMWARE_DEFAULTS:
-+			ahci_set_aggressive_devslp(ap, ppriv->init_devslp);
-+			break;
-+		default:
- 			ahci_set_aggressive_devslp(ap, false);
-+			break;
-+		}
- 	}
- 
- 	if (policy == ATA_LPM_MAX_POWER) {
-@@ -1995,6 +2010,7 @@ static void ahci_post_internal_cmd(struct ata_queued_cmd *qc)
- static void ahci_set_aggressive_devslp(struct ata_port *ap, bool sleep)
- {
- 	struct ahci_host_priv *hpriv = ap->host->private_data;
-+	struct ahci_port_priv *ppriv = ap->private_data;
- 	void __iomem *port_mmio = ahci_port_base(ap);
- 	struct ata_device *dev = ap->link.device;
- 	u32 devslp, dm, dito, mdat, deto;
-@@ -2030,26 +2046,32 @@ static void ahci_set_aggressive_devslp(struct ata_port *ap, bool sleep)
- 	if (rc)
- 		return;
- 
--	dm = (devslp & PORT_DEVSLP_DM_MASK) >> PORT_DEVSLP_DM_OFFSET;
--	dito = devslp_idle_timeout / (dm + 1);
--	if (dito > 0x3ff)
--		dito = 0x3ff;
-+	if (ppriv->init_devslp) {
-+		dito = ppriv->init_dito;
-+		deto = ppriv->init_deto;
-+		mdat = ppriv->init_mdat;
-+	} else {
-+		dm = (devslp & PORT_DEVSLP_DM_MASK) >> PORT_DEVSLP_DM_OFFSET;
-+		dito = devslp_idle_timeout / (dm + 1);
-+		if (dito > 0x3ff)
-+			dito = 0x3ff;
- 
--	/* Use the nominal value 10 ms if the read MDAT is zero,
--	 * the nominal value of DETO is 20 ms.
--	 */
--	if (dev->devslp_timing[ATA_LOG_DEVSLP_VALID] &
--	    ATA_LOG_DEVSLP_VALID_MASK) {
--		mdat = dev->devslp_timing[ATA_LOG_DEVSLP_MDAT] &
--		       ATA_LOG_DEVSLP_MDAT_MASK;
--		if (!mdat)
-+		/* Use the nominal value 10 ms if the read MDAT is zero,
-+		 * the nominal value of DETO is 20 ms.
-+		 */
-+		if (dev->devslp_timing[ATA_LOG_DEVSLP_VALID] &
-+		    ATA_LOG_DEVSLP_VALID_MASK) {
-+			mdat = dev->devslp_timing[ATA_LOG_DEVSLP_MDAT] &
-+				ATA_LOG_DEVSLP_MDAT_MASK;
-+			if (!mdat)
-+				mdat = 10;
-+			deto = dev->devslp_timing[ATA_LOG_DEVSLP_DETO];
-+			if (!deto)
-+				deto = 20;
-+		} else {
- 			mdat = 10;
--		deto = dev->devslp_timing[ATA_LOG_DEVSLP_DETO];
--		if (!deto)
- 			deto = 20;
--	} else {
--		mdat = 10;
--		deto = 20;
-+		}
- 	}
- 
- 	devslp |= ((dito << PORT_DEVSLP_DITO_OFFSET) |
+ 			break;
+ 		case ATA_LPM_FIRMWARE_DEFAULTS:
++		case ATA_LPM_MED_POWER:
+ 			ahci_set_aggressive_devslp(ap, ppriv->init_devslp);
+ 			break;
+ 		default:
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index c037f33..0a78f01 100644
+index 0a78f01..99a7b8f 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -2024,7 +2024,7 @@ retry:
+@@ -3687,10 +3687,6 @@ int sata_link_scr_lpm(struct ata_link *link, enum ata_lpm_policy policy,
  		}
- 	}
- 
--	if (id[79] & SATA_DIPM)
-+	if (id[79] & (1 << SATA_DIPM))
- 		dev->init_dipm = true;
- 
- 	*p_class = class;
-@@ -3672,6 +3672,11 @@ int sata_link_scr_lpm(struct ata_link *link, enum ata_lpm_policy policy,
- 		return rc;
- 
- 	switch (policy) {
-+	case ATA_LPM_FIRMWARE_DEFAULTS:
-+		/* use the values we read at probe */
-+		scontrol &= ~(0x7 << 8);
-+		scontrol |= (link->init_lpm << 8);
-+		break;
- 	case ATA_LPM_MAX_POWER:
- 		/* disable all LPM transitions */
- 		scontrol |= (0x7 << 8);
+ 		break;
+ 	case ATA_LPM_MED_POWER:
+-		/* allow LPM to PARTIAL */
+-		scontrol &= ~(0x1 << 8);
+-		scontrol |= (0x6 << 8);
+-		break;
+ 	case ATA_LPM_MIN_POWER:
+ 		if (ata_link_nr_enabled(link) > 0)
+ 			/* no restrictions on LPM transitions */
 diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 07f41be..c36fa56 100644
+index c36fa56..25d5f37 100644
 --- a/drivers/ata/libata-eh.c
 +++ b/drivers/ata/libata-eh.c
-@@ -3519,9 +3519,9 @@ static int ata_eh_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+@@ -3519,8 +3519,6 @@ static int ata_eh_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
  		return 0;
  
  	/*
--	 * DIPM is enabled only for MIN_POWER as some devices
--	 * misbehave when the host NACKs transition to SLUMBER.  Order
--	 * device and link configurations such that the host always
-+	 * DIPM is enabled only for MIN_POWER and FIRMWARE_DEFAULT as some
-+	 * devices misbehave when the host NACKs transition to SLUMBER.
-+	 * Order device and link configurations such that the host always
+-	 * DIPM is enabled only for MIN_POWER and FIRMWARE_DEFAULT as some
+-	 * devices misbehave when the host NACKs transition to SLUMBER.
+ 	 * Order device and link configurations such that the host always
  	 * allows DIPM requests.
  	 */
- 	ata_for_each_dev(dev, link, ENABLED) {
-@@ -3581,10 +3581,13 @@ static int ata_eh_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+@@ -3540,7 +3538,7 @@ static int ata_eh_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+ 			hints &= ~ATA_LPM_HIPM;
+ 
+ 		/* disable DIPM before changing link config */
+-		if (policy != ATA_LPM_MIN_POWER && dipm) {
++		if (policy < ATA_LPM_MED_POWER && dipm) {
+ 			err_mask = ata_dev_set_feature(dev,
+ 					SETFEATURES_SATA_DISABLE, SATA_DIPM);
+ 			if (err_mask && err_mask != AC_ERR_DEV) {
+@@ -3581,11 +3579,11 @@ static int ata_eh_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
  	if (ap && ap->slave_link)
  		ap->slave_link->lpm_policy = policy;
  
--	/* host config updated, enable DIPM if transitioning to MIN_POWER */
-+	/* host config updated, enable DIPM if transitioning to MIN_POWER or
-+	 * FIRMWARE_DEFAULT when enabled by firmware
-+	 */
+-	/* host config updated, enable DIPM if transitioning to MIN_POWER or
+-	 * FIRMWARE_DEFAULT when enabled by firmware
++	/* host config updated, enable DIPM if transitioning to MED_POWER,
++	 * MIN_POWER or FIRMWARE_DEFAULT when enabled by firmware
+ 	 */
  	ata_for_each_dev(dev, link, ENABLED) {
--		if (policy == ATA_LPM_MIN_POWER && !no_dipm &&
--		    ata_id_has_dipm(dev->id)) {
-+		if ((policy == ATA_LPM_MIN_POWER && !no_dipm &&
-+		     ata_id_has_dipm(dev->id)) ||
-+		    (policy == ATA_LPM_FIRMWARE_DEFAULTS && dev->init_dipm)) {
+-		if ((policy == ATA_LPM_MIN_POWER && !no_dipm &&
++		if ((policy >= ATA_LPM_MED_POWER && !no_dipm &&
+ 		     ata_id_has_dipm(dev->id)) ||
+ 		    (policy == ATA_LPM_FIRMWARE_DEFAULTS && dev->init_dipm)) {
  			err_mask = ata_dev_set_feature(dev,
- 					SETFEATURES_SATA_ENABLE, SATA_DIPM);
- 			if (err_mask && err_mask != AC_ERR_DEV) {
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 3131adc..f1ea052 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -107,6 +107,7 @@ static const u8 def_control_mpage[CONTROL_MPAGE_LEN] = {
- static const char *ata_lpm_policy_names[] = {
- 	[ATA_LPM_UNKNOWN]	= "max_performance",
- 	[ATA_LPM_MAX_POWER]	= "max_performance",
-+	[ATA_LPM_FIRMWARE_DEFAULTS] = "firmware_defaults",
- 	[ATA_LPM_MED_POWER]	= "medium_power",
- 	[ATA_LPM_MIN_POWER]	= "min_power",
- };
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 31c149b..57b465d 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -507,6 +507,7 @@ enum ata_completion_errors {
- enum ata_lpm_policy {
- 	ATA_LPM_UNKNOWN,
- 	ATA_LPM_MAX_POWER,
-+	ATA_LPM_FIRMWARE_DEFAULTS,
- 	ATA_LPM_MED_POWER,
- 	ATA_LPM_MIN_POWER,
- };
 -- 
 2.3.5
+
