@@ -1,53 +1,76 @@
-From: Peter Griffin <peter.griffin@linaro.org>
-Subject: [PATCH v2] ata: ahci_st: fixup layering violations / drvdata errors
-Date: Mon, 20 Apr 2015 14:41:04 +0100
-Message-ID: <1429537265-22367-1-git-send-email-peter.griffin@linaro.org>
+From: Gabriele Mazzotta <gabriele.mzt@gmail.com>
+Subject: Re: SATA link power management issues
+Date: Mon, 20 Apr 2015 22:02:12 +0200
+Message-ID: <2356903.cA2H5W8V2D@xps13>
+References: <3352987.ugV1Ipy7Z5@xps13> <2526428.uJaEqCTeIa@xps13> <9895435.0ZSsstcbFA@xps13>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wg0-f54.google.com ([74.125.82.54]:35858 "EHLO
-	mail-wg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751340AbbDTNlL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Apr 2015 09:41:11 -0400
-Received: by wgsk9 with SMTP id k9so179253667wgs.3
-        for <linux-ide@vger.kernel.org>; Mon, 20 Apr 2015 06:41:10 -0700 (PDT)
+Received: from mail-wg0-f50.google.com ([74.125.82.50]:35968 "EHLO
+	mail-wg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752317AbbDTUCP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 20 Apr 2015 16:02:15 -0400
+In-Reply-To: <9895435.0ZSsstcbFA@xps13>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, srinivas.kandagatla@gmail.com, maxime.coquelin@st.com, patrice.chotard@st.com, tj@kernel.org, computersforpeace@gmail.com
-Cc: peter.griffin@linaro.org, lee.jones@linaro.org, linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, tj@kernel.org, stripathi@apm.com
 
-Hi Tejun / Brian,
+On Sunday 22 February 2015 21:53:35 Gabriele Mazzotta wrote:
+> Hi,
+> 
+> It seems that the following patch prevents errors when the policy is
+> changed. Could anybody explain why?
+> 
+> Thanks,
+> Gabriele
+> 
+> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+> index 61a9c07..38d39f7 100644
+> --- a/drivers/ata/libahci.c
+> +++ b/drivers/ata/libahci.c
+> @@ -1708,7 +1708,10 @@ static void ahci_handle_port_interrupt(struct ata_port *ap,
+>  		status &= ~PORT_IRQ_BAD_PMP;
+>  
+>  	/* if LPM is enabled, PHYRDY doesn't mean anything */
+> -	if (ap->link.lpm_policy > ATA_LPM_MAX_POWER) {
+> +	if (ap->link.lpm_policy > ATA_LPM_MAX_POWER ||
+> +	    ap->link.flags & ATA_LFLAG_CHANGED) {
+> +		if (ap->link.flags & ATA_LFLAG_CHANGED)
+> +			ap->link.flags &= ~ATA_LFLAG_CHANGED;
+>  		status &= ~PORT_IRQ_PHYRDY;
+>  		ahci_scr_write(&ap->link, SCR_ERROR, SERR_PHYRDY_CHG);
+>  	}
+> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+> index d2029a4..e8f965c 100644
+> --- a/drivers/ata/libata-eh.c
+> +++ b/drivers/ata/libata-eh.c
+> @@ -3489,6 +3489,8 @@ static int ata_eh_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+>  		}
+>  	}
+>  
+> +	link->flags |= ATA_LFLAG_CHANGED;
+> +
+>  	return 0;
+>  
+>  fail:
+> diff --git a/include/linux/libata.h b/include/linux/libata.h
+> index fc03efa..5abf5f2 100644
+> --- a/include/linux/libata.h
+> +++ b/include/linux/libata.h
+> @@ -205,6 +205,7 @@ enum {
+>  	ATA_LFLAG_SW_ACTIVITY	= (1 << 7), /* keep activity stats */
+>  	ATA_LFLAG_NO_LPM	= (1 << 8), /* disable LPM on this link */
+>  	ATA_LFLAG_RST_ONCE	= (1 << 9), /* limit recovery to one reset */
+> +	ATA_LFLAG_CHANGED	= (1 << 10),
+>  
+>  	/* struct ata_port flags */
+>  	ATA_FLAG_SLAVE_POSS	= (1 << 0), /* host supports slave dev */
 
-I tested the initial version of this patch (see http://patchwork.ozlabs.org/patch/459422/)
-on stih410 hardware, however it introduced a NULL ptr dereference, as plat_data
-isn't set until ahci_platform_init_host() but plat_data was being used before
-this in the st_ahci_probe_resets and st_ahci_deassert_resets() functions.
+Hi,
 
-Also the original patch had a conflict with a patch which Tejun has already
-taken of mine 
-(see here http://lists.infradead.org/pipermail/linux-arm-kernel/2015-March/326900.html).
+did anyone looked at the above change?
 
-So this V2 fixes the conflict, and re-works st_ahci_probe_resets and 
-st_ahci_deassert_resets functions to take struct ahci_host_priv *hpriv as
-a parameter.
-
-Brian - I'm not sure of the correct patch etiquette here. Currently I have
-taken authorship of the patch and added a "Suggested-by" tag on the V2.
-Maybe I should have also kept your "Signed-off-by" or done something else?
-Please let me know if this is OK or if you would like something changed.
-
-regards,
-
-Peter. 
-
-Changes since v1:
- - Rework st_ahci_deassert_resets and st_ahci_probe_resets
- - Fix conflict with "st_configure_oob must be called after IP is clocked." patch
-
-Peter Griffin (1):
-  ata: ahci_st: fixup layering violations / drvdata errors
-
- drivers/ata/ahci_st.c | 49 ++++++++++++++++++++++++-------------------------
- 1 file changed, 24 insertions(+), 25 deletions(-)
-
--- 
-1.9.1
-
+Thanks,
+Gabriele
