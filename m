@@ -1,44 +1,66 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: SATA link power management issues
-Date: Tue, 21 Apr 2015 16:56:08 -0400
-Message-ID: <20150421205608.GF9455@htj.duckdns.org>
-References: <3352987.ugV1Ipy7Z5@xps13>
- <2356903.cA2H5W8V2D@xps13>
- <20150421153121.GD9455@htj.duckdns.org>
- <9107428.nVaRUddl4K@xps13>
+Subject: Re: [PATCH 1/3] libata: Stash initial power management configuration
+Date: Tue, 21 Apr 2015 17:26:49 -0400
+Message-ID: <20150421212649.GH9455@htj.duckdns.org>
+References: <1429370796-5881-1-git-send-email-mjg59@coreos.com>
+ <1429370796-5881-2-git-send-email-mjg59@coreos.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f50.google.com ([209.85.192.50]:32804 "EHLO
-	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932694AbbDUU4M (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Apr 2015 16:56:12 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <9107428.nVaRUddl4K@xps13>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <1429370796-5881-2-git-send-email-mjg59@coreos.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matthew Garrett <mjg59@coreos.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, kristen@linux.intel.com, Matthew Garrett <mjg59@srcf.ucam.org>
 List-Id: linux-ide@vger.kernel.org
-To: Gabriele Mazzotta <gabriele.mzt@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, stripathi@apm.com
 
-Hello,
+Hello, Matthew.
 
-On Tue, Apr 21, 2015 at 10:29:38PM +0200, Gabriele Mazzotta wrote:
-> Doing some quick tests I found that in some cases it takes 5 or 6
-> seconds for the first interrupt to arrive, so I'd have to use a quite
-> long interval to completely prevent errors.
+On Sat, Apr 18, 2015 at 08:26:34AM -0700, Matthew Garrett wrote:
+> @@ -313,6 +313,12 @@ struct ahci_port_priv {
+>  	/* enclosure management info per PM slot */
+>  	struct ahci_em_priv	em_priv[EM_MAX_SLOTS];
+>  	char			*irq_desc;	/* desc in /proc/interrupts */
 
-Hmm...
+Can you please add a comment here referring to
+ahci_setup_port_privdata()?
 
-> I am wondering if it would be better using my original solution
-> (i.e. ignore first event), but make it device specific given that it
-> might make no sense on other systems and seems to be more reliable than
-> the time-based one.
+> +	bool			init_alpe;	/* alpe enabled by default */
+> +	bool			init_asp;	/* asp enabled by default */
+> +	bool			init_devslp;	/* devslp enabled by default */
+> +	u32			init_dito;	/* initial dito configuration */
+> +	u32			init_deto;	/* initial deto configuration */
+> +	u32			init_mdat;	/* initial mdat configuration */
+>  };
+...
+> +/*
+> + * Allocate port privdata and read back initial power management configuration
+> + */
 
-I'm not sure.  What if the extra PHY event isn't that reliable.  It'd
-be pretty confusing if it ends up ignoring a legitimate PHY event
-after, say, two hours, so one way or the other, we'd need to cap how
-long we're gonna be ignoring the event.  Ignore the first PHY event
-for 10s after LPM state change?
+And convert this to proper function comment which explains where it's
+supposed to be called from and why it does what it does there?
+
+> +int ahci_setup_port_privdata(struct ata_port *ap)
+> +{
+...
+> @@ -5583,11 +5586,11 @@ void ata_link_init(struct ata_port *ap, struct ata_link *link, int pmp)
+>  }
+>  
+>  /**
+> - *	sata_link_init_spd - Initialize link->sata_spd_limit
+> - *	@link: Link to configure sata_spd_limit for
+> + *	sata_link_init_config - Initialize link->sata_spd_limit and init_lpm
+> + *	@link: Link to configure sata_spd_limit and init_lpm for
+>   *
+> - *	Initialize @link->[hw_]sata_spd_limit to the currently
+> - *	configured value.
+> + *	Initialize @link->[hw_]sata_spd_limit and @link->init_lpm to the
+> + *	currently configured value.
+
+And I think it probably would be a better idea to make the libata core
+dipm part a separate patch.
+
+Other than that, looks good to me.
 
 Thanks.
 
