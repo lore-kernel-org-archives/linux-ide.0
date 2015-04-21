@@ -1,68 +1,37 @@
-From: Jason L Tibbitts III <tibbs@math.uh.edu>
-Subject: Re: Sporadic timeouts accessing shingled drives with 3.19.
-Date: Mon, 20 Apr 2015 18:01:38 -0500
-Message-ID: <ufa383u4d65.fsf@epithumia.math.uh.edu>
-References: <ufabnii4k31.fsf@epithumia.math.uh.edu>
-	<CAKdFiL5wOg9Ab4nuJuty0GSNGRMbKu9VgePDSHFe6kPzMfyyqQ@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: SATA link power management issues
+Date: Tue, 21 Apr 2015 11:31:21 -0400
+Message-ID: <20150421153121.GD9455@htj.duckdns.org>
+References: <3352987.ugV1Ipy7Z5@xps13>
+ <2526428.uJaEqCTeIa@xps13>
+ <9895435.0ZSsstcbFA@xps13>
+ <2356903.cA2H5W8V2D@xps13>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx2.math.uh.edu ([129.7.128.33]:40051 "EHLO mx2.math.uh.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751350AbbDTXBk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 20 Apr 2015 19:01:40 -0400
-In-Reply-To: <CAKdFiL5wOg9Ab4nuJuty0GSNGRMbKu9VgePDSHFe6kPzMfyyqQ@mail.gmail.com>
-	(Adrian Palmer's message of "Mon, 20 Apr 2015 15:36:40 -0600")
+Received: from mail-qk0-f169.google.com ([209.85.220.169]:36423 "EHLO
+	mail-qk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751322AbbDUPb0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Apr 2015 11:31:26 -0400
+Content-Disposition: inline
+In-Reply-To: <2356903.cA2H5W8V2D@xps13>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Adrian Palmer <adrian.palmer@seagate.com>
-Cc: linux-ide@vger.kernel.org
+To: Gabriele Mazzotta <gabriele.mzt@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, stripathi@apm.com
 
->>>>> "AP" == Adrian Palmer <adrian.palmer@seagate.com> writes:
+On Mon, Apr 20, 2015 at 10:02:12PM +0200, Gabriele Mazzotta wrote:
+> On Sunday 22 February 2015 21:53:35 Gabriele Mazzotta wrote:
+> > It seems that the following patch prevents errors when the policy is
+> > changed. Could anybody explain why?
 
-AP> I'm the Seagate engineer leading SMR/ZAC/ZBC support in the kernel.
-AP> I would be very interested in learning about your setup and
-AP> workload.
+The device is generating a spurious PHY event after LPM state change
+and the patch is ignoring the event once after state change.  It's a
+bit too specific.  Maybe we should do this timeout-based - e.g. ignore
+phy events for 1s after LPM state change.  Gabriele, would be
+interested in making such changes?
 
-There's not much to it, really; I just needed a lot of space.  The
-machine hasn't really been doing all that much yet besides RAID
-resyncs.
+Thanks.
 
-Its function is a security system.  IP cameras connect to a web server,
-push a video file which gets saved in RAM.  Once done, that file gets
-converted to MP4 by ffmpeg with the output going to disk.  A smaller
-thumbnail file (lower resolution and sped up) is also generated and
-written to disk.  Then an sqlite file is updated and a log file is
-written.  That's... about it.  Total writes are about 250GB/day, which
-happens to be less than the amount of RAM in the system.
-
-So the bulk of the writes are streaming, and no temporary files ever hit
-the disk.  Of course, the OS is there doing whatever writes it feels it
-needs to do.
-
-AP> There are 3 types of SMR drives: Drive Managed (DM), Host Managed
-AP> (HM), and Host Aware (HA).  I suspect that you have DM drives.
-
-Definitely.  These are just the plain 8TB "archive" disks that Seagate
-offers, purchased from Newegg.  Nothing fancy.  The model info was in
-the logs: ST8000AS0002-1NA17Z, AR13.
-
-AP> With DM, there is both nothing done, and nothing to be done in the
-AP> kernel.  The mechanics of SMR are implemented in the drive,
-AP> completely abstracted from the system.  The use case is not targeted
-AP> toward RAID applications -- as of yet, I've seen poor performance
-AP> from around the web from those that have attempted it.
-
-Well, performance isn't really the goal here.  I'm not sure that "RAID
-applications" has any general meaning; if you mean heavy use file
-server stuff, sure, the drives are terrible for that.  But the fact that
-the drives are in an array doesn't imply any usage pattern at all.  I
-just needed a lot of space and some basic redundancy.
-
-However, regardless of the use case at which the drives are targeted,
-they should at least not drop off the bus.  Now, at this point I can't
-tell if the fault lies in the drives, but given that I'm cranking along
-just fine on 3.18.9 while 3.19.4 is mostly useless I know where I'd look
-first.
-
- - J<
+-- 
+tejun
