@@ -1,114 +1,117 @@
-From: Arun Ramamurthy <arun.ramamurthy@broadcom.com>
-Subject: [PATCHv3 1/4] phy: phy-core: Make GENERIC_PHY an invisible option
-Date: Wed, 22 Apr 2015 16:04:10 -0700
-Message-ID: <1429743853-10254-2-git-send-email-arun.ramamurthy@broadcom.com>
+From: Arun Ramamurthy <arun.ramamurthy-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Subject: [PATCHv3 3/4] usb: ehci-platform: Use devm_of_phy_get_by_index
+Date: Wed, 22 Apr 2015 16:04:12 -0700
+Message-ID: <1429743853-10254-4-git-send-email-arun.ramamurthy@broadcom.com>
 References: <1429743853-10254-1-git-send-email-arun.ramamurthy@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-media-owner@vger.kernel.org>
-In-Reply-To: <1429743853-10254-1-git-send-email-arun.ramamurthy@broadcom.com>
-Sender: linux-media-owner@vger.kernel.org
-To: Jonathan Corbet <corbet@lwn.net>, Tejun Heo <tj@kernel.org>, Kyungmin Park <kyungmin.park@samsung.com>, Sylwester Nawrocki <s.nawrocki@samsung.com>, Mauro Carvalho Chehab <mchehab@osg.samsung.com>, Kukjin Kim <kgene@kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alan Stern <stern@rowland.harvard.edu>, Tony Prisk <linux@prisktech.co.nz>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, Tomi Valkeinen <tomi.valkeinen@ti.com>, Arnd Bergmann <arnd@arndb.de>, Felipe Balbi <balbi@ti.com>, Mathias Nyman <mathias.nyman@linux.intel.com>, Paul Bolle <pebolle@tiscali.nl>, Thomas Pugliese <thomas.pugliese@gmail.com>, Srinivas Kandagatla <srinivas.kandagatla@linaro.org>, Masanari Iida <standby24x7@gmail.com>, David Mosberger <davidm@egauge.net>, Peter Griffin <peter.griffin@linaro.org>, Gregory CLEMENT <gregory>
-Cc: linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-media@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-samsung-soc@vger.kernel.org, linux-usb@vger.kernel.org, linux-fbdev@vger.kernel.org, Dmitry Torokhov <dtor@google.com>, Anatol Pomazau <anatol@google.com>, Jonathan Richardson <jonathar@broadcom.com>, Scott Branden <sbranden@broadcom.com>, Ray Jui <rjui@broadcom.com>, bcm-kernel-feedback-list@broadcom.com, Arun Ramamurthy <arun.ramamurthy@broadcom.com>
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1429743853-10254-1-git-send-email-arun.ramamurthy-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kyungmin Park <kyungmin.park-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Sylwester Nawrocki <s.nawrocki-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Mauro Carvalho Chehab <mchehab-JPH+aEBZ4P+UEJcrhfAQsw@public.gmane.org>, Kukjin Kim <kgene-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kishon Vijay Abraham I <kishon-l0cyMroinI0@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, Tony Prisk <linux-ci5G2KO2hbZ+pU9mqzGVBQ@public.gmane.org>, Jean-Christophe Plagniol-Villard <plagnioj-sclMFOaUSTBWk0Htik3J/w@public.gmane.org>, Tomi Valkeinen <tomi.valkeinen-l0cyMroinI0@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Felipe Balbi <balbi-l0cyMroinI0@public.gmane.org>, Mathias Nyman <mathias.nyman-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Paul Bolle <pebolle-IWqWACnzNjzz+pZb47iToQ@public.gmane.org>, Thomas Pugliese <thomas.pugliese-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Srinivas Kandagatla <srinivas.kandagatla-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Masanari Iida <standby24x7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, David Mosberger <davidm-haPfTeumbwasTnJN9+BGXg@public.gmane.org>, Peter Griffin <peter.griffin-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Gregory CLEMENT <gregory>
+Cc: linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-samsung-soc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fbdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dmitry Torokhov <dtor-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Anatol Pomazau <anatol-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jonathan Richardson <jonathar-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Scott Branden <sbranden-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Ray Jui <rjui-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, bcm-kernel-feedback-list-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Arun Ramamurthy <arun.ramamurthy-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
-Most of the phy providers use "select" to enable GENERIC_PHY. Since select
-is only recommended when the config is not visible, GENERIC_PHY is changed
-an invisible option. To maintain consistency, all phy providers are changed
-to "select" GENERIC_PHY and all non-phy drivers use "depends on" when the
-phy framework is explicity required. USB_MUSB_OMAP2PLUS has a cyclic
-dependency, so it is left as "select".
+Getting phys by index instead of phy names so that we do
+not have to create a naming scheme when multiple phys
+are present
 
-Signed-off-by: Arun Ramamurthy <arun.ramamurthy@broadcom.com>
+Signed-off-by: Arun Ramamurthy <arun.ramamurthy-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Reviewed-by: Ray Jui <rjui-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Reviewed-by: Scott Branden <sbranden-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
 ---
- drivers/ata/Kconfig                       | 1 -
- drivers/media/platform/exynos4-is/Kconfig | 2 +-
- drivers/phy/Kconfig                       | 4 ++--
- drivers/usb/host/Kconfig                  | 4 ++--
- drivers/video/fbdev/exynos/Kconfig        | 2 +-
- 5 files changed, 6 insertions(+), 7 deletions(-)
+ drivers/usb/host/ehci-platform.c | 69 ++++++++++++++--------------------------
+ 1 file changed, 24 insertions(+), 45 deletions(-)
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 5f60155..6d2e881 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -301,7 +301,6 @@ config SATA_MV
- 	tristate "Marvell SATA support"
- 	depends on PCI || ARCH_DOVE || ARCH_MV78XX0 || \
- 		   ARCH_MVEBU || ARCH_ORION5X || COMPILE_TEST
--	select GENERIC_PHY
- 	help
- 	  This option enables support for the Marvell Serial ATA family.
- 	  Currently supports 88SX[56]0[48][01] PCI(-X) chips,
-diff --git a/drivers/media/platform/exynos4-is/Kconfig b/drivers/media/platform/exynos4-is/Kconfig
-index b7b2e47..b6f3eaa 100644
---- a/drivers/media/platform/exynos4-is/Kconfig
-+++ b/drivers/media/platform/exynos4-is/Kconfig
-@@ -31,7 +31,7 @@ config VIDEO_S5P_FIMC
- config VIDEO_S5P_MIPI_CSIS
- 	tristate "S5P/EXYNOS MIPI-CSI2 receiver (MIPI-CSIS) driver"
- 	depends on REGULATOR
--	select GENERIC_PHY
-+	depends on GENERIC_PHY
- 	help
- 	  This is a V4L2 driver for Samsung S5P and EXYNOS4 SoC MIPI-CSI2
- 	  receiver (MIPI-CSIS) devices.
-diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
-index 2962de2..edecdb1 100644
---- a/drivers/phy/Kconfig
-+++ b/drivers/phy/Kconfig
-@@ -5,7 +5,7 @@
- menu "PHY Subsystem"
+diff --git a/drivers/usb/host/ehci-platform.c b/drivers/usb/host/ehci-platform.c
+index d8a75a5..145bf19 100644
+--- a/drivers/usb/host/ehci-platform.c
++++ b/drivers/usb/host/ehci-platform.c
+@@ -88,15 +88,13 @@ static int ehci_platform_power_on(struct platform_device *dev)
+ 	}
  
- config GENERIC_PHY
--	bool "PHY Core"
-+	bool
- 	help
- 	  Generic PHY support.
+ 	for (phy_num = 0; phy_num < priv->num_phys; phy_num++) {
+-		if (priv->phys[phy_num]) {
+-			ret = phy_init(priv->phys[phy_num]);
+-			if (ret)
+-				goto err_exit_phy;
+-			ret = phy_power_on(priv->phys[phy_num]);
+-			if (ret) {
+-				phy_exit(priv->phys[phy_num]);
+-				goto err_exit_phy;
+-			}
++		ret = phy_init(priv->phys[phy_num]);
++		if (ret)
++			goto err_exit_phy;
++		ret = phy_power_on(priv->phys[phy_num]);
++		if (ret) {
++			phy_exit(priv->phys[phy_num]);
++			goto err_exit_phy;
+ 		}
+ 	}
  
-@@ -72,7 +72,7 @@ config PHY_MIPHY365X
- config PHY_RCAR_GEN2
- 	tristate "Renesas R-Car generation 2 USB PHY driver"
- 	depends on ARCH_SHMOBILE
--	depends on GENERIC_PHY
-+	select GENERIC_PHY
- 	help
- 	  Support for USB PHY found on Renesas R-Car generation 2 SoCs.
+@@ -104,10 +102,8 @@ static int ehci_platform_power_on(struct platform_device *dev)
  
-diff --git a/drivers/usb/host/Kconfig b/drivers/usb/host/Kconfig
-index 5ad60e4..e2197e2 100644
---- a/drivers/usb/host/Kconfig
-+++ b/drivers/usb/host/Kconfig
-@@ -182,7 +182,7 @@ config USB_EHCI_HCD_SPEAR
- config USB_EHCI_HCD_STI
- 	tristate "Support for ST STiHxxx on-chip EHCI USB controller"
- 	depends on ARCH_STI && OF
--	select GENERIC_PHY
-+	depends on GENERIC_PHY
- 	select USB_EHCI_HCD_PLATFORM
- 	help
- 	  Enable support for the on-chip EHCI controller found on
-@@ -409,7 +409,7 @@ config USB_OHCI_HCD_SPEAR
- config USB_OHCI_HCD_STI
- 	tristate "Support for ST STiHxxx on-chip OHCI USB controller"
- 	depends on ARCH_STI && OF
--	select GENERIC_PHY
-+	depends on GENERIC_PHY
- 	select USB_OHCI_HCD_PLATFORM
- 	help
- 	  Enable support for the on-chip OHCI controller found on
-diff --git a/drivers/video/fbdev/exynos/Kconfig b/drivers/video/fbdev/exynos/Kconfig
-index 1f16b46..6c53894 100644
---- a/drivers/video/fbdev/exynos/Kconfig
-+++ b/drivers/video/fbdev/exynos/Kconfig
-@@ -16,7 +16,7 @@ if EXYNOS_VIDEO
+ err_exit_phy:
+ 	while (--phy_num >= 0) {
+-		if (priv->phys[phy_num]) {
+-			phy_power_off(priv->phys[phy_num]);
+-			phy_exit(priv->phys[phy_num]);
+-		}
++		phy_power_off(priv->phys[phy_num]);
++		phy_exit(priv->phys[phy_num]);
+ 	}
+ err_disable_clks:
+ 	while (--clk >= 0)
+@@ -123,10 +119,8 @@ static void ehci_platform_power_off(struct platform_device *dev)
+ 	int clk, phy_num;
  
- config EXYNOS_MIPI_DSI
- 	bool "EXYNOS MIPI DSI driver support."
--	select GENERIC_PHY
-+	depends on GENERIC_PHY
- 	help
- 	  This enables support for MIPI-DSI device.
+ 	for (phy_num = 0; phy_num < priv->num_phys; phy_num++) {
+-		if (priv->phys[phy_num]) {
+-			phy_power_off(priv->phys[phy_num]);
+-			phy_exit(priv->phys[phy_num]);
+-		}
++		phy_power_off(priv->phys[phy_num]);
++		phy_exit(priv->phys[phy_num]);
+ 	}
  
--- 
-2.3.4
+ 	for (clk = EHCI_MAX_CLKS - 1; clk >= 0; clk--)
+@@ -154,7 +148,6 @@ static int ehci_platform_probe(struct platform_device *dev)
+ 	struct usb_ehci_pdata *pdata = dev_get_platdata(&dev->dev);
+ 	struct ehci_platform_priv *priv;
+ 	struct ehci_hcd *ehci;
+-	const char *phy_name;
+ 	int err, irq, phy_num, clk = 0;
+ 
+ 	if (usb_disabled())
+@@ -204,36 +197,22 @@ static int ehci_platform_probe(struct platform_device *dev)
+ 
+ 		priv->num_phys = of_count_phandle_with_args(dev->dev.of_node,
+ 				"phys", "#phy-cells");
+-		priv->num_phys = priv->num_phys > 0 ? priv->num_phys : 1;
+ 
+-		priv->phys = devm_kcalloc(&dev->dev, priv->num_phys,
+-				sizeof(struct phy *), GFP_KERNEL);
+-		if (!priv->phys)
+-			return -ENOMEM;
++		if (priv->num_phys > 0) {
++			priv->phys = devm_kcalloc(&dev->dev, priv->num_phys,
++					    sizeof(struct phy *), GFP_KERNEL);
++			if (!priv->phys)
++				return -ENOMEM;
++		} else
++			priv->num_phys = 0;
+ 
+ 		for (phy_num = 0; phy_num < priv->num_phys; phy_num++) {
+-				err = of_property_read_string_index(
+-						dev->dev.of_node,
+-						"phy-names", phy_num,
+-						&phy_name);
+-
+-				if (err < 0) {
+-					if (priv->num_phys > 1) {
+-						dev_err(&dev->dev, "phy-names not provided");
+-						goto err_put_hcd;
+-					} else
+-						phy_name = "usb";
+-				}
