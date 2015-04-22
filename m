@@ -1,33 +1,32 @@
-From: Arun Ramamurthy <arun.ramamurthy-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-Subject: [PATCHv3 3/4] usb: ehci-platform: Use devm_of_phy_get_by_index
-Date: Wed, 22 Apr 2015 16:04:12 -0700
-Message-ID: <1429743853-10254-4-git-send-email-arun.ramamurthy@broadcom.com>
+From: Arun Ramamurthy <arun.ramamurthy@broadcom.com>
+Subject: [PATCHv3 4/4] usb: ohci-platform: Use devm_of_phy_get_by_index
+Date: Wed, 22 Apr 2015 16:04:13 -0700
+Message-ID: <1429743853-10254-5-git-send-email-arun.ramamurthy@broadcom.com>
 References: <1429743853-10254-1-git-send-email-arun.ramamurthy@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1429743853-10254-1-git-send-email-arun.ramamurthy-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kyungmin Park <kyungmin.park-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Sylwester Nawrocki <s.nawrocki-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>, Mauro Carvalho Chehab <mchehab-JPH+aEBZ4P+UEJcrhfAQsw@public.gmane.org>, Kukjin Kim <kgene-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kishon Vijay Abraham I <kishon-l0cyMroinI0@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, Tony Prisk <linux-ci5G2KO2hbZ+pU9mqzGVBQ@public.gmane.org>, Jean-Christophe Plagniol-Villard <plagnioj-sclMFOaUSTBWk0Htik3J/w@public.gmane.org>, Tomi Valkeinen <tomi.valkeinen-l0cyMroinI0@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Felipe Balbi <balbi-l0cyMroinI0@public.gmane.org>, Mathias Nyman <mathias.nyman-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Paul Bolle <pebolle-IWqWACnzNjzz+pZb47iToQ@public.gmane.org>, Thomas Pugliese <thomas.pugliese-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Srinivas Kandagatla <srinivas.kandagatla-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Masanari Iida <standby24x7-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, David Mosberger <davidm-haPfTeumbwasTnJN9+BGXg@public.gmane.org>, Peter Griffin <peter.griffin-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Gregory CLEMENT <gregory>
-Cc: linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-samsung-soc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fbdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Dmitry Torokhov <dtor-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Anatol Pomazau <anatol-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Jonathan Richardson <jonathar-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Scott Branden <sbranden-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Ray Jui <rjui-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, bcm-kernel-feedback-list-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, Arun Ramamurthy <arun.ramamurthy-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1429743853-10254-1-git-send-email-arun.ramamurthy@broadcom.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jonathan Corbet <corbet@lwn.net>, Tejun Heo <tj@kernel.org>, Kyungmin Park <kyungmin.park@samsung.com>, Sylwester Nawrocki <s.nawrocki@samsung.com>, Mauro Carvalho Chehab <mchehab@osg.samsung.com>, Kukjin Kim <kgene@kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alan Stern <stern@rowland.harvard.edu>, Tony Prisk <linux@prisktech.co.nz>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, Tomi Valkeinen <tomi.valkeinen@ti.com>, Arnd Bergmann <arnd@arndb.de>, Felipe Balbi <balbi@ti.com>, Mathias Nyman <mathias.nyman@linux.intel.com>, Paul Bolle <pebolle@tiscali.nl>, Thomas Pugliese <thomas.pugliese@gmail.com>, Srinivas Kandagatla <srinivas.kandagatla@linaro.org>, Masanari Iida <standby24x7@gmail.com>, David Mosberger <davidm@egauge.net>, Peter Griffin <peter.griffin@linaro.org>, Gregory CLEMENT <gregory>
+Cc: linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-media@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-samsung-soc@vger.kernel.org, linux-usb@vger.kernel.org, linux-fbdev@vger.kernel.org, Dmitry Torokhov <dtor@google.com>, Anatol Pomazau <anatol@google.com>, Jonathan Richardson <jonathar@broadcom.com>, Scott Branden <sbranden@broadcom.com>, Ray Jui <rjui@broadcom.com>, bcm-kernel-feedback-list@broadcom.com, Arun Ramamurthy <arun.ramamurthy@broadcom.com>
 List-Id: linux-ide@vger.kernel.org
 
 Getting phys by index instead of phy names so that we do
-not have to create a naming scheme when multiple phys
-are present
+not have to create a naming scheme when multiple phys are present
 
-Signed-off-by: Arun Ramamurthy <arun.ramamurthy-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-Reviewed-by: Ray Jui <rjui-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-Reviewed-by: Scott Branden <sbranden-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Signed-off-by: Arun Ramamurthy <arun.ramamurthy@broadcom.com>
+Reviewed-by: Ray Jui <rjui@broadcom.com>
+Reviewed-by: Scott Branden <sbranden@broadcom.com>
 ---
- drivers/usb/host/ehci-platform.c | 69 ++++++++++++++--------------------------
+ drivers/usb/host/ohci-platform.c | 69 ++++++++++++++--------------------------
  1 file changed, 24 insertions(+), 45 deletions(-)
 
-diff --git a/drivers/usb/host/ehci-platform.c b/drivers/usb/host/ehci-platform.c
-index d8a75a5..145bf19 100644
---- a/drivers/usb/host/ehci-platform.c
-+++ b/drivers/usb/host/ehci-platform.c
-@@ -88,15 +88,13 @@ static int ehci_platform_power_on(struct platform_device *dev)
+diff --git a/drivers/usb/host/ohci-platform.c b/drivers/usb/host/ohci-platform.c
+index 185ceee..c2669f18 100644
+--- a/drivers/usb/host/ohci-platform.c
++++ b/drivers/usb/host/ohci-platform.c
+@@ -57,15 +57,13 @@ static int ohci_platform_power_on(struct platform_device *dev)
  	}
  
  	for (phy_num = 0; phy_num < priv->num_phys; phy_num++) {
@@ -50,7 +49,7 @@ index d8a75a5..145bf19 100644
  		}
  	}
  
-@@ -104,10 +102,8 @@ static int ehci_platform_power_on(struct platform_device *dev)
+@@ -73,10 +71,8 @@ static int ohci_platform_power_on(struct platform_device *dev)
  
  err_exit_phy:
  	while (--phy_num >= 0) {
@@ -63,7 +62,7 @@ index d8a75a5..145bf19 100644
  	}
  err_disable_clks:
  	while (--clk >= 0)
-@@ -123,10 +119,8 @@ static void ehci_platform_power_off(struct platform_device *dev)
+@@ -92,10 +88,8 @@ static void ohci_platform_power_off(struct platform_device *dev)
  	int clk, phy_num;
  
  	for (phy_num = 0; phy_num < priv->num_phys; phy_num++) {
@@ -75,16 +74,16 @@ index d8a75a5..145bf19 100644
 +		phy_exit(priv->phys[phy_num]);
  	}
  
- 	for (clk = EHCI_MAX_CLKS - 1; clk >= 0; clk--)
-@@ -154,7 +148,6 @@ static int ehci_platform_probe(struct platform_device *dev)
- 	struct usb_ehci_pdata *pdata = dev_get_platdata(&dev->dev);
- 	struct ehci_platform_priv *priv;
- 	struct ehci_hcd *ehci;
+ 	for (clk = OHCI_MAX_CLKS - 1; clk >= 0; clk--)
+@@ -123,7 +117,6 @@ static int ohci_platform_probe(struct platform_device *dev)
+ 	struct usb_ohci_pdata *pdata = dev_get_platdata(&dev->dev);
+ 	struct ohci_platform_priv *priv;
+ 	struct ohci_hcd *ohci;
 -	const char *phy_name;
  	int err, irq, phy_num, clk = 0;
  
  	if (usb_disabled())
-@@ -204,36 +197,22 @@ static int ehci_platform_probe(struct platform_device *dev)
+@@ -174,36 +167,22 @@ static int ohci_platform_probe(struct platform_device *dev)
  
  		priv->num_phys = of_count_phandle_with_args(dev->dev.of_node,
  				"phys", "#phy-cells");
@@ -115,3 +114,24 @@ index d8a75a5..145bf19 100644
 -					} else
 -						phy_name = "usb";
 -				}
+-
+-				priv->phys[phy_num] = devm_phy_get(&dev->dev,
+-						phy_name);
+-				if (IS_ERR(priv->phys[phy_num])) {
+-					err = PTR_ERR(priv->phys[phy_num]);
+-					if ((priv->num_phys > 1) ||
+-					    (err == -EPROBE_DEFER))
+-						goto err_put_hcd;
+-					priv->phys[phy_num] = NULL;
+-				}
++			priv->phys[phy_num] = devm_of_phy_get_by_index(
++					&dev->dev, dev->dev.of_node, phy_num);
++			if (IS_ERR(priv->phys[phy_num])) {
++				err = PTR_ERR(priv->phys[phy_num]);
++				goto err_put_hcd;
++			}
+ 		}
+ 
+ 		for (clk = 0; clk < OHCI_MAX_CLKS; clk++) {
+-- 
+2.3.4
