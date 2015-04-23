@@ -1,27 +1,56 @@
 From: Brian Norris <computersforpeace@gmail.com>
-Subject: Re: [PATCH v2] ata: ahci_st: fixup layering violations / drvdata
- errors
-Date: Wed, 22 Apr 2015 18:18:08 -0700
-Message-ID: <20150423011808.GY32500@ld-irv-0074>
-References: <1429537265-22367-1-git-send-email-peter.griffin@linaro.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1429537265-22367-1-git-send-email-peter.griffin@linaro.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Peter Griffin <peter.griffin@linaro.org>
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, srinivas.kandagatla@gmail.com, maxime.coquelin@st.com, patrice.chotard@st.com, tj@kernel.org, lee.jones@linaro.org, linux-ide@vger.kernel.org
+Subject: [PATCH v2 0/5] AHCI and SATA PHY support for Broadcom STB SoCs
+Date: Wed, 22 Apr 2015 19:59:05 -0700
+Message-ID: <1429757950-28789-1-git-send-email-computersforpeace@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pd0-f175.google.com ([209.85.192.175]:35097 "EHLO
+	mail-pd0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756002AbbDWDAr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 22 Apr 2015 23:00:47 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Brian Norris <computersforpeace@gmail.com>, Gregory Fong <gregory.0xf0@gmail.com>, Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, bcm-kernel-feedback-list@broadcom.com
 
-On Mon, Apr 20, 2015 at 02:41:04PM +0100, Peter Griffin wrote:
-> Brian - I'm not sure of the correct patch etiquette here. Currently I have
-> taken authorship of the patch and added a "Suggested-by" tag on the V2.
-> Maybe I should have also kept your "Signed-off-by" or done something else?
-> Please let me know if this is OK or if you would like something changed.
+Hi,
 
-No problem. 'Suggested-by' seems appropriate to me.
+Here are my updates based on everyone's feedback. I'll try to include most of
+the changelog info in each patch, but a few summary points for v1 -> v2:
 
-For the patch:
+ - reworked the PHY DT binding so that we don't need do any custom xlate in the
+   PHY driver
 
-Acked-by: Brian Norris <computersforpeace@gmail.com>
+ - moved all handling of the 'SATA_TOP_CTRL' block into the SATA driver,
+   instead of sharing it between SATA and PHY drivers. This means we have to do
+   a little extra work in sata_brcmstb.c to decide which ports to power on, but
+   at least this way, we're really describing the hardware, not just how the SW
+   frameworks want to use the hardware.
+
+Enjoy,
+Brian
+
+Brian Norris (5):
+  Documentation: devicetree: add Broadcom SATA binding
+  Documentation: devicetree: add Broadcom SATA PHY binding
+  ata: add Broadcom AHCI SATA3 driver for STB chips
+  phy: add Broadcom SATA3 PHY driver for Broadcom STB SoCs
+  ARM: dts: brcmstb: add nodes for SATA controller and PHY
+
+ .../devicetree/bindings/ata/brcm,sata-brcmstb.txt  |  35 +++
+ .../bindings/phy/brcm,brcmstb-sata-phy.txt         |  40 +++
+ arch/arm/boot/dts/bcm7445.dtsi                     |  37 +++
+ drivers/ata/Kconfig                                |   9 +
+ drivers/ata/Makefile                               |   1 +
+ drivers/ata/sata_brcmstb.c                         | 285 +++++++++++++++++++++
+ drivers/phy/Kconfig                                |   9 +
+ drivers/phy/Makefile                               |   1 +
+ drivers/phy/phy-brcmstb-sata.c                     | 216 ++++++++++++++++
+ 9 files changed, 632 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/ata/brcm,sata-brcmstb.txt
+ create mode 100644 Documentation/devicetree/bindings/phy/brcm,brcmstb-sata-phy.txt
+ create mode 100644 drivers/ata/sata_brcmstb.c
+ create mode 100644 drivers/phy/phy-brcmstb-sata.c
+
+-- 
+1.9.1
+
