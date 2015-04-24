@@ -1,48 +1,69 @@
-From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: Re: [V8 PATCH 1/3] ACPICA: Add ACPI _CLS processing
-Date: Fri, 24 Apr 2015 16:08:31 -0500
-Message-ID: <553AB0CF.1010904@amd.com>
-References: <1427752579-19234-1-git-send-email-Suravee.Suthikulpanit@amd.com>
- <1427752579-19234-2-git-send-email-Suravee.Suthikulpanit@amd.com>
- <1AE640813FDE7649BE1B193DEA596E8802704682@SHSMSX101.ccr.corp.intel.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: SATA link power management issues
+Date: Fri, 24 Apr 2015 17:44:54 -0400
+Message-ID: <20150424214214.GD27034@htj.duckdns.org>
+References: <3352987.ugV1Ipy7Z5@xps13>
+ <9107428.nVaRUddl4K@xps13>
+ <20150421205608.GF9455@htj.duckdns.org>
+ <23060306.XvNh4Q3UlK@xps13>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <1AE640813FDE7649BE1B193DEA596E8802704682@SHSMSX101.ccr.corp.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: "Zheng, Lv" <lv.zheng@intel.com>, "rjw@rjwysocki.net" <rjw@rjwysocki.net>, "mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>, "Moore, Robert" <robert.moore@intel.com>, "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>
-Cc: "lenb@kernel.org" <lenb@kernel.org>, "hdegoede@redhat.com" <hdegoede@redhat.com>, "tj@kernel.org" <tj@kernel.org>, "mjg59@srcf.ucam.org" <mjg59@srcf.ucam.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "al.stone@linaro.org" <al.stone@linaro.org>, "graeme.gregory@linaro.org" <graeme.gregory@linaro.org>, "leo.duran@amd.com" <leo.duran@amd.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-vn0-f53.google.com ([209.85.216.53]:33851 "EHLO
+	mail-vn0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756005AbbDXVo6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 24 Apr 2015 17:44:58 -0400
+Content-Disposition: inline
+In-Reply-To: <23060306.XvNh4Q3UlK@xps13>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Gabriele Mazzotta <gabriele.mzt@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, stripathi@apm.com
 
-On 4/16/15 20:45, Zheng, Lv wrote:
-> Before back porting this to ACPICA, let me ask one simple question.
-> According to the spec, the _CLS is optional and PCI specific.
-> So why should we implement it in ACPICA core not OSPM specific modules?
-> If this need to be implemented in ACPICA, then what about the following device identification objects?
-> _DDN, _HRV, _MLS, _PLD, _STR, _SUN
->
-> Thanks and best regards
-> -Lv
+Hello, Gabriele.
 
-Hi,
+On Tue, Apr 21, 2015 at 11:44:28PM +0200, Gabriele Mazzotta wrote:
+> I haven't considered that possibility. Something like the following then?
 
-Sorry for late reply. As for the justification for introducing the _CLS 
-support in the ACPICA, this is mainly because ACPI does not currently 
-define _CID for certain device classes, which used to mostly be PCI 
-devices. Instead, ACPI spec mentioned that _CLS can be used for loading 
-generic drivers on hardware that is compatible with PCI-defined device 
-classes, but that is not implemented on the PCI bus (and is therefore 
-enumerated by ACPI.)
+Yeah, looks great.  Some minor comments below.
 
-The code introduced for supporting _CLS is also similar in the way 
-ACPICA is currently parsing the _CID or _SUB (which are also optional), 
-and using it for the same purpose of identifying devices for loading 
-drivers.
+> --- a/drivers/ata/libahci.c
+> +++ b/drivers/ata/libahci.c
+> @@ -1700,6 +1700,8 @@ static void ahci_handle_port_interrupt(struct ata_port *ap,
+>  	struct ahci_port_priv *pp = ap->private_data;
+>  	struct ahci_host_priv *hpriv = ap->host->private_data;
+>  	int resetting = !!(ap->pflags & ATA_PFLAG_RESETTING);
+> +	unsigned long lpm_timeout = ap->link.last_lpm_change + 10 * HZ;
 
-Also, since this method for identifying devices is OS-independent, I 
-believe this should not be done in the OSPM specific modules.
+We prolly want to define the timeout as a constant symbol in libata.h
+and explain what this is about.
 
-Thanks,
+> +	int ignore_event = 0;
 
-Suravee
+Use bool?
+
+> @@ -1707,8 +1709,13 @@ static void ahci_handle_port_interrupt(struct ata_port *ap,
+>  	if (unlikely(resetting))
+>  		status &= ~PORT_IRQ_BAD_PMP;
+>  
+> +	if (time_before(jiffies, lpm_timeout) &&
+> +	    (ap->link.flags & ATA_LFLAG_CHANGED))
+> +		ignore_event = 1;
+
+Nothing major but testing LFLAG first would prolly be a better style
+given that timeout value is relevant only while the flag is asserted
+and some comment would be nice too.
+
+> @@ -788,6 +789,8 @@ struct ata_link {
+>  	struct ata_eh_context	eh_context;
+>  
+>  	struct ata_device	device[ATA_MAX_DEVICES];
+> +
+> +	unsigned long		last_lpm_change;
+
+A brief explanation would be nice.
+
+Thanks.
+
+-- 
+tejun
