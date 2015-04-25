@@ -1,38 +1,38 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2 2/2] libata: Ignore spurious PHY event on LPM policy
- change
-Date: Sat, 25 Apr 2015 16:53:59 -0400
-Message-ID: <20150425205359.GB1499@htj.duckdns.org>
-References: <1429984357-2223-1-git-send-email-gabriele.mzt@gmail.com>
- <1429984357-2223-3-git-send-email-gabriele.mzt@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Silvan Wicki <linux_wi@tinag.ch>
+Subject: [PATCH] Ata: ahci: reindent
+Date: Sun, 26 Apr 2015 00:02:32 +0200
+Message-ID: <1429999352-10942-1-git-send-email-linux_wi@tinag.ch>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vn0-f54.google.com ([209.85.216.54]:42014 "EHLO
-	mail-vn0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751172AbbDYUyE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Apr 2015 16:54:04 -0400
-Content-Disposition: inline
-In-Reply-To: <1429984357-2223-3-git-send-email-gabriele.mzt@gmail.com>
+Received: from mxout017.mail.hostpoint.ch ([217.26.49.177]:10810 "EHLO
+	mxout017.mail.hostpoint.ch" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750891AbbDYXTv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Apr 2015 19:19:51 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gabriele Mazzotta <gabriele.mzt@gmail.com>
-Cc: stripathi@apm.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, Silvan Wicki <linux_wi@tinag.ch>
 
-On Sat, Apr 25, 2015 at 07:52:37PM +0200, Gabriele Mazzotta wrote:
-> When the LPM policy is set to ATA_LPM_MAX_POWER, the device might
-> generate a spurious PHY event that cuases errors on the link.
-> Ignore this event if it occured within 10s after the policy change.
-> 
-> The timeout was chosen observing that on a Dell XPS13 9333 these
-> spurious events can occur up to roughly 6s after the policy change.
-> 
-> Link: http://lkml.kernel.org/g/3352987.ugV1Ipy7Z5@xps13
-> Signed-off-by: Gabriele Mazzotta <gabriele.mzt@gmail.com>
+This patch fixes checkpatch.pl warning:
+- "WARNING: please, no space before tabs"
 
-Applied 1-2 to libata/for-4.1-fixes w/ stable cc'd.
+Signed-off-by: Silvan Wicki <linux_wi@tinag.ch>
+---
+ drivers/ata/ahci.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks a lot.
-
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 33bb06e..be3438f 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -2,7 +2,7 @@
+  *  ahci.c - AHCI SATA support
+  *
+  *  Maintained by:  Tejun Heo <tj@kernel.org>
+- *    		    Please ALWAYS copy linux-ide@vger.kernel.org
++ *		    Please ALWAYS copy linux-ide@vger.kernel.org
+  *		    on emails.
+  *
+  *  Copyright 2004-2005 Red Hat, Inc.
 -- 
-tejun
+2.1.4
+
