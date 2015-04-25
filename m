@@ -1,28 +1,30 @@
 From: Gabriele Mazzotta <gabriele.mzt@gmail.com>
-Subject: Re: [PATCH] libata: Ignore spurious PHY events on LPM policy change
-Date: Sat, 25 Apr 2015 19:57:18 +0200
-Message-ID: <4018340.TCLCYqQ7qt@xps13>
-References: <20150424214214.GD27034@htj.duckdns.org> <1429954469-27892-1-git-send-email-gabriele.mzt@gmail.com> <20150425153751.GA31335@htj.duckdns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20150425153751.GA31335@htj.duckdns.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: stripathi@apm.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+Subject: [PATCH v2 0/2] libata: Ignore spurious PHY event on LPM policy change
+Date: Sat, 25 Apr 2015 19:52:35 +0200
+Message-ID: <1429984357-2223-1-git-send-email-gabriele.mzt@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-wg0-f46.google.com ([74.125.82.46]:35856 "EHLO
+	mail-wg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754670AbbDYR6C (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 25 Apr 2015 13:58:02 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: tj@kernel.org
+Cc: stripathi@apm.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Gabriele Mazzotta <gabriele.mzt@gmail.com>
 
-On Saturday 25 April 2015 11:37:51 Tejun Heo wrote:
-> I thought more about it and it's weird to have ATA_LFLAG_CHANGED and
-> last_lpm_change timestamp in libata core side and then open-code the
-> actual logic in ahci.  How about implementing a generic helper, say,
-> bool sata_lpm_ignore_phy_events(link) in libata core and use it in
-> specific drivers?  It can test both the current lpm_policy and the
-> timeout (preferably a separate patch to introduce the function and
-> factor out lpm policy testing).
+Changes since v1:
+ - Added generic helper to keep the logic in one place
 
-I agree. I'm now going to send the revised patches, thanks for all
-the suggestions.
+Gabriele Mazzotta (2):
+  libata: Add helper to determine when PHY events should be ignored
+  libata: Ignore spurious PHY event on LPM policy change
 
-Gabriele
+ drivers/ata/libahci.c     |  3 +--
+ drivers/ata/libata-core.c | 32 ++++++++++++++++++++++++++++++++
+ drivers/ata/libata-eh.c   |  3 +++
+ include/linux/libata.h    | 10 ++++++++++
+ 4 files changed, 46 insertions(+), 2 deletions(-)
+
+-- 
+2.1.4
+
