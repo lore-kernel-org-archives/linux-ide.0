@@ -1,214 +1,101 @@
-From: Brian Norris <computersforpeace@gmail.com>
-Subject: Re: [PATCH v2 3/5] ata: add Broadcom AHCI SATA3 driver for STB chips
-Date: Mon, 27 Apr 2015 14:55:41 -0700
-Message-ID: <20150427215541.GB32500@ld-irv-0074>
-References: <1429757950-28789-1-git-send-email-computersforpeace@gmail.com>
- <3096499.KSW6zqWKEA@wuerfel>
- <20150423164611.GZ32500@ld-irv-0074>
- <2143403.KdtLGyP3SG@wuerfel>
+From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
+Subject: Re: [V8 PATCH 1/3] ACPICA: Add ACPI _CLS processing
+Date: Mon, 27 Apr 2015 17:18:28 -0500
+Message-ID: <553EB5B4.4030901@amd.com>
+References: <D162D21D.19BCD%suravee.suthikulpanit@amd.com>
+ <3419939.l8boJE7mrB@vostro.rjw.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <2143403.KdtLGyP3SG@wuerfel>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Tejun Heo <tj@kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Gregory Fong <gregory.0xf0@gmail.com>, Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, bcm-kernel-feedback-list@broadcom.com
+Content-Type: text/plain; charset=utf-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-bn1bbn0103.outbound.protection.outlook.com ([157.56.111.103]:14707
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S965422AbbD0WSj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Apr 2015 18:18:39 -0400
+In-Reply-To: <3419939.l8boJE7mrB@vostro.rjw.lan>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: "Zheng, Lv" <lv.zheng@intel.com>, "mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>, "Moore, Robert" <robert.moore@intel.com>, "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>, "lenb@kernel.org" <lenb@kernel.org>, "hdegoede@redhat.com" <hdegoede@redhat.com>, "tj@kernel.org" <tj@kernel.org>, "mjg59@srcf.ucam.org" <mjg59@srcf.ucam.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "al.stone@linaro.org" <al.stone@linaro.org>, "graeme.gregory@linaro.org" <graeme.gregory@linaro.org>, "Duran, Leo" <leo.duran@amd.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
 
-On Fri, Apr 24, 2015 at 09:46:01AM +0200, Arnd Bergmann wrote:
-> On Thursday 23 April 2015 09:46:11 Brian Norris wrote:
-> > On Thu, Apr 23, 2015 at 09:43:55AM +0200, Arnd Bergmann wrote:
-> > > On Wednesday 22 April 2015 19:59:08 Brian Norris wrote:
 
-[snip]
-> > So we have a PHY driver, but it doesn't cover everything. Did you want
-> > me to write a second PHY driver?? I'm not sure how that'd work...
-> 
-> I think this is all fine, I mainly wanted to make sure that it had been
-> considered and that a decision was made after comparing the options.
-> What I'd really like to see is that you put this summary into the
-> patch description, because any reviewer will wonder about this.
-> You can use a 'Link: https://lkml.org/lkml/2015/3/18/940' tag behind
-> your signed-off-by to reference the earlier discussion, in addition to
-> the summary.
 
-I summarized most of the conclusions in the cover letter, but I suppose
-a plain link to the original thread could do the job too.
+On 04/27/2015 03:38 PM, Rafael J. Wysocki wrote:
+> On Sunday, April 26, 2015 10:45:29 PM Suthikulpanit, Suravee wrote:
+>> On 4/24/15, 21:28, "Rafael J. Wysocki" <rjw@rjwysocki.net> wrote:
+>>
+>>> On Friday, April 24, 2015 04:08:31 PM Suravee Suthikulpanit wrote:
+>>>> On 4/16/15 20:45, Zheng, Lv wrote:
+>>>>> Before back porting this to ACPICA, let me ask one simple questio=
+n.
+>>>>> According to the spec, the _CLS is optional and PCI specific.
+>>>>> So why should we implement it in ACPICA core not OSPM specific
+>>>> modules?
+>>>>> If this need to be implemented in ACPICA, then what about the
+>>>> following device identification objects?
+>>>>> _DDN, _HRV, _MLS, _PLD, _STR, _SUN
+>>>>>
+>>>>> Thanks and best regards
+>>>>> -Lv
+>>>>
+>>>> Hi,
+>>>>
+>>>> Sorry for late reply. As for the justification for introducing the=
+ _CLS
+>>>> support in the ACPICA, this is mainly because ACPI does not curren=
+tly
+>>>> define _CID for certain device classes, which used to mostly be PC=
+I
+>>>> devices. Instead, ACPI spec mentioned that _CLS can be used for lo=
+ading
+>>>> generic drivers on hardware that is compatible with PCI-defined de=
+vice
+>>>> classes, but that is not implemented on the PCI bus (and is theref=
+ore
+>>>> enumerated by ACPI.)
+>>>
+>>> I think it would be good to point to the particular part of the spe=
+c
+>>> making that provision.  In what section is that mentioned, exactly?
+>>
+>> Here is the copied from section 6.1.3 _CLS (Class Code) from ACPI 5.=
+1 spec:
+>> "This object is used to supply OSPM with the PCI-defined class, subc=
+lass
+>> and programming interface for a device. This object is optional but =
+may be
+>> useful for generic drivers written for PCI devices that move off of =
+PCI
+>> and are enumerated by ACPI."
+>
+> OK, so the "move off of PCI" part should be understood as "something =
+that
+> used to be on the PCI bus, but now may be included into an SoC direct=
+ly
+> in which case it won't be a PCI device any more", right?
 
-> > > > diff --git a/drivers/ata/sata_brcmstb.c b/drivers/ata/sata_brcmstb.c
-> > > > new file mode 100644
-> > > > index 000000000000..ab8d2261fa96
-> > > > --- /dev/null
-> > > > +++ b/drivers/ata/sata_brcmstb.c
-> > > > @@ -0,0 +1,285 @@
-> > > > +/*
-> > > > + * Broadcom SATA3 AHCI Controller Driver
-> > > 
-> > > Is this AHCI or not? Most AHCI drivers are called ahci_*.c, not sata_*.c
-> > 
-> > It is AHCI. I can rename if necessary...
-> > 
-> > If you're wondering about the comment there, SATA3 is left to indicate
-> > the difference between earlier (non-AHCI) SATA cores that only supported
-> > up to Gen2 SATA.
-> 
-> Up to the ata maintainer of course, but I'd use ahci_brcmstb in the name
-> just for consistency with the other drivers.
+That's right. For example, the SATA controller is a good example for=20
+this case. On most x86 platforms, they are often enumerated as PCI=20
+devices. However, in the ARM64 SOC (e.g. on AMD Seattle), it could be=20
+enumerated as non-PCI device.
 
-OK, maybe I'll do that.
+Thanks,
 
-> > > > +#ifdef __BIG_ENDIAN
-> > > > +#define DATA_ENDIAN			 2 /* AHCI->DDR inbound accesses */
-> > > > +#define MMIO_ENDIAN			 2 /* CPU->AHCI outbound accesses */
-> > > > +#else
-> > > > +#define DATA_ENDIAN			 0
-> > > > +#define MMIO_ENDIAN			 0
-> > > > +#endif
-> > > 
-> > > Is this for MIPS or ARM based chips or both?
-> > 
-> > Both. (This particular iteration of the driver was only tested on
-> > ARM, but this particular code has been the same on MIPS.)
-> > 
-> > > ARM SoCs should never care
-> > > about the endianess of the CPU,
-> > 
-> > Why do you say that? What makes ARM different than MIPS here? If
-> > somebody were using ARM BE, then they would (just like in MIPS) need to
-> > configure our AHCI core to pretend like it's in LE mode, as that's what
-> > libahci.c assumes.
-> 
-> MIPS is special regarding endianess here, because their CPU cores
-> use a power-on setting that defines a fixed endianess, while others
-> tend to let software decide at runtime.
+Suravee
 
-I wasn't really considering this. I haven't seen a Broadcom chip where
-runtime switching was used. But I haven't played with too many big
-endian systems, and all have been MIPS.
-
-> Broadcom usually wires peripherals in a way to match the CPU endianess,
-> but this is not necessarily what other MIPS chips do, and on most
-> architectures that would be considered a mistake in the hardware
-> design, because it breaks device drivers.
-
-I understand this. But this has no relevance to Broadcom IP. It's
-probably a good argument for putting good comments, I suppose.
-
-> If you can configure the endianess of the AHCI core through software,
-> it would be best to always set it to little-endian unconditionally,
-> so you can just use readl() or readl_relaxed() all the time.
-
-We're already doing this in the driver as written, at least for the
-three configurations that have been tested (MIPS LE, MIPS BE, ARM LE).
-IIUC, you're focusing on ARM BE? This is not in any support plan for
-these chips.
-
-But to straighten out what you're saying (correct me if I'm wrong), it
-seems like you're saying that on a (theoretical) BCM7xxx ARM in BE mode,
-the chip will come up in LE as normal, all busing will be configured for
-LE mode, and the BE kernel would only later change CPU endianness. This
-would mean that AHCI should be left as it was -- in LE mode -- whereas
-this driver submission would actually configure AHCI to do its own
-internal swapping, effectively making it BE mode again. And that would
-be wrong.
-
-Now I think this has a few problems:
-
-1. ARM BE is not (and won't be) supported on these chips. There has been
-no plan and no testing, and I'm sure we'd run into more problems than
-those you're suggesting here.
-
-2. To get ARM BE working properly, I'm not confident we'd do (only)
-runtime 'setend' endianness switching. We're more likely to get a
-bus-level endianness switch and be back with a native-endian driver
-again. But then, I'm only speculating (as you are).
-
-> > > > +static void brcm_sata_phy_enable(struct brcm_ahci_priv *priv, int port)
-> > > > +{
-> > > > +	void __iomem *phyctrl = priv->top_ctrl + SATA_TOP_CTRL_PHY_CTRL +
-> > > > +				(port * SATA_TOP_CTRL_PHY_OFFS);
-> > > > +	void __iomem *p;
-> > > > +	u32 reg;
-> > > > +
-> > > > +	/* clear PHY_DEFAULT_POWER_STATE */
-> > > > +	p = phyctrl + SATA_TOP_CTRL_PHY_CTRL_1;
-> > > > +	reg = __raw_readl(p);
-> > > > +	reg &= ~SATA_TOP_CTRL_1_PHY_DEFAULT_POWER_STATE;
-> > > > +	__raw_writel(reg, p);
-> > > 
-> > > Similarly, the use of __raw_readl() is broken on ARM here and won't
-> > > work on big-endian kernels. Better use a driver specific helper
-> > > function that does the right thing based on the architecture and
-> > > endianess. You can use the same conditional as above and do
-> > > 
-> > > #if defined(__BIG_ENDIAN) && defined(CONFIG_MIPS)
-> > > 
-> > > static inline brcm_sata_phy_read(struct brcm_ahci_phy *priv, int port int reg)
-> > > {
-> > > 	void __iomem *phyctrl = priv->regs;
-> > > 
-> > > 	if (IS_ENABLED(CONFIG_MIPS) && IS_ENABLED(__BIG_ENDIAN))
-> > > 		return __raw_readl(regs->reg);
-> > > 
-> > > 	return readl_relaxed(regs->reg);
-> > > }
-> > 
-> > Huh? I'm fine with a driver-specific helper to abstract this out, but
-> > why the MIPS fiddling? I'm fairly confident that in *all*
-> > configurations, this piece of the IP is wired up to work in native
-> > endianness, so it should never be doing an endian swap. The
-> > readl_relaxed() you're adding looks like it would just break the
-> > (theoretical) ARM BE case.
-> > 
-> > I understand that you don't like bare __raw_{read,write}l(), but some IP
-> > is just wired this way.
-> 
-> Kevin Cernekee recently introduced the "native-endian" DT property that
-> you can use to do runtime detection if that is necessary (i.e. you can't
-> tell the endianess from the CPU architecture, and you can't set it either).
-
-I've seen that series. That works fine for IP that's shared on other
-systems, and that's what Broadcom has to work with. But I'm not sure
-that's worth doing on Broadcom-only IP, which is *always* accessed in
-native endianness.
-
-> Using __raw_readl() in driver code just means that the driver is not
-> endian-aware at all, and we don't do that any more: new drivers that
-> can be used on ARM must be written in a way that works on both
-> little-endian and big-endian, and it's a good idea to use endian-safe
-> code on other architectures too.
-> 
-> It's ok to special-case MIPS here when you know that MIPS is weird. If
-> you don't want that, use run-time detection instead.
-
-I'm not sure I come to the same conclusions as you. ARM BE is never
-tested on these chips, so if you're really stuck on "handling" it
-(without testing), I'm almost more inclined to put in compile
-dependencies instead. e.g.:
-
-#if defined(CONFIG_ARM) && defined(CONFIG_CPU_BIG_ENDIAN)
-#error ARM BE not supported
-#endif
-
-Or maybe Kconfig deps instead. Or maybe a 'native-endian' DT property,
-and we just fail to probe for !native-endian.
-
-Now, this particular case is pretty trivial, and I'm sure I could just
-do what you say (since really, I don't care about ARM BE anyway), but I
-guarantee these same questions will come up over and over again on
-newly-upstreamed Broadcom drivers, where many of them are intentionally
-written for native endianness (because that's how the hardware works for
-all supported use cases) and have never been tested (and likely never
-will) on big endian ARM. To add extra levels of indirection (either
-conditional, or function pointers) to something as low-level as a
-register access, and for reasons that look almost 100% theoretical,
-seems excessive.
-
-If, however, you really have strong arguments for doing the extra work
-(and not testing it, and almost definitely never using it), then I can
-try and make sure we don't run across these problems in the future. I
-won't be too happy about it, but at least I won't have to waste my time
-on these discussions.
-
-Brian
+>
+>> Otherwise, if the community think it=C2=B9s better to not putting th=
+e _CLS the
+>> _CLS parsing code in ACPICA since, I can try looking into pulling th=
+e code
+>> out of ACPICA. I also noticed a little issue in the patch series whe=
+re the
+>> ACPI_VALID_CLS is used in the patch 1 but defined in patch 2. I can =
+send
+>> out v9 with the fix once we agree on the _CLS parsing.
+>
+> To me that pretty much depends on the answer to the above question.
+>
+>
