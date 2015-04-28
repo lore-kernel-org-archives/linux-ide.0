@@ -1,101 +1,214 @@
-From: Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
-Subject: Re: [V8 PATCH 1/3] ACPICA: Add ACPI _CLS processing
-Date: Mon, 27 Apr 2015 17:18:28 -0500
-Message-ID: <553EB5B4.4030901@amd.com>
-References: <D162D21D.19BCD%suravee.suthikulpanit@amd.com>
- <3419939.l8boJE7mrB@vostro.rjw.lan>
+From: Lee Jones <lee.jones@linaro.org>
+Subject: Re: [PATCH v2 3/9] mfd: syscon: Add Atmel MC (Memory Controller)
+ registers definition
+Date: Tue, 28 Apr 2015 13:30:58 +0100
+Message-ID: <20150428123058.GC9169@x1>
+References: <1427138955-3617-1-git-send-email-alexandre.belloni@free-electrons.com>
+ <1427138955-3617-4-git-send-email-alexandre.belloni@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8;
-	format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bn1bbn0103.outbound.protection.outlook.com ([157.56.111.103]:14707
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S965422AbbD0WSj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Apr 2015 18:18:39 -0400
-In-Reply-To: <3419939.l8boJE7mrB@vostro.rjw.lan>
+Received: from mail-wg0-f51.google.com ([74.125.82.51]:34694 "EHLO
+	mail-wg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965465AbbD1MbE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Apr 2015 08:31:04 -0400
+Received: by wgso17 with SMTP id o17so149861727wgs.1
+        for <linux-ide@vger.kernel.org>; Tue, 28 Apr 2015 05:31:02 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <1427138955-3617-4-git-send-email-alexandre.belloni@free-electrons.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: "Zheng, Lv" <lv.zheng@intel.com>, "mika.westerberg@linux.intel.com" <mika.westerberg@linux.intel.com>, "Moore, Robert" <robert.moore@intel.com>, "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>, "lenb@kernel.org" <lenb@kernel.org>, "hdegoede@redhat.com" <hdegoede@redhat.com>, "tj@kernel.org" <tj@kernel.org>, "mjg59@srcf.ucam.org" <mjg59@srcf.ucam.org>, "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>, "al.stone@linaro.org" <al.stone@linaro.org>, "graeme.gregory@linaro.org" <graeme.gregory@linaro.org>, "Duran, Leo" <leo.duran@amd.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linaro-acpi@lists.linaro.org" <linaro-acpi@lists.linaro.org>
+To: Alexandre Belloni <alexandre.belloni@free-electrons.com>
+Cc: Nicolas Ferre <nicolas.ferre@atmel.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, linux-arm-kernel@lists.infradead.org
 
+On Mon, 23 Mar 2015, Alexandre Belloni wrote:
 
+> From: Boris Brezillon <boris.brezillon@free-electrons.com>
+>=20
+> The at91rm9200 SoC embeds a Memory Controller block which is used to
+> configure several aspects of the platform:
+> - AHB/APB Bus behavior
+> - SDRAM Controller
+> - EBI (External Bus Interface) and SMC (Static Memory Controller) con=
+fig
+>=20
+> Those registers might be accessed by different drivers, hence we need=
+ to
+> define it as a syscon device.
+>=20
+> Signed-off-by: Boris Brezillon <boris.brezillon@free-electrons.com>
+> Signed-off-by: Alexandre Belloni <alexandre.belloni@free-electrons.co=
+m>
+> Acked-by: Lee Jones <lee.jones@linaro.org>
+> Acked-by: Nicolas Ferre <nicolas.ferre@atmel.com>
+> ---
+>  include/linux/mfd/syscon/atmel-mc.h | 144 ++++++++++++++++++++++++++=
+++++++++++
+>  1 file changed, 144 insertions(+)
+>  create mode 100644 include/linux/mfd/syscon/atmel-mc.h
 
-On 04/27/2015 03:38 PM, Rafael J. Wysocki wrote:
-> On Sunday, April 26, 2015 10:45:29 PM Suthikulpanit, Suravee wrote:
->> On 4/24/15, 21:28, "Rafael J. Wysocki" <rjw@rjwysocki.net> wrote:
->>
->>> On Friday, April 24, 2015 04:08:31 PM Suravee Suthikulpanit wrote:
->>>> On 4/16/15 20:45, Zheng, Lv wrote:
->>>>> Before back porting this to ACPICA, let me ask one simple questio=
-n.
->>>>> According to the spec, the _CLS is optional and PCI specific.
->>>>> So why should we implement it in ACPICA core not OSPM specific
->>>> modules?
->>>>> If this need to be implemented in ACPICA, then what about the
->>>> following device identification objects?
->>>>> _DDN, _HRV, _MLS, _PLD, _STR, _SUN
->>>>>
->>>>> Thanks and best regards
->>>>> -Lv
->>>>
->>>> Hi,
->>>>
->>>> Sorry for late reply. As for the justification for introducing the=
- _CLS
->>>> support in the ACPICA, this is mainly because ACPI does not curren=
-tly
->>>> define _CID for certain device classes, which used to mostly be PC=
-I
->>>> devices. Instead, ACPI spec mentioned that _CLS can be used for lo=
-ading
->>>> generic drivers on hardware that is compatible with PCI-defined de=
-vice
->>>> classes, but that is not implemented on the PCI bus (and is theref=
-ore
->>>> enumerated by ACPI.)
->>>
->>> I think it would be good to point to the particular part of the spe=
-c
->>> making that provision.  In what section is that mentioned, exactly?
->>
->> Here is the copied from section 6.1.3 _CLS (Class Code) from ACPI 5.=
-1 spec:
->> "This object is used to supply OSPM with the PCI-defined class, subc=
-lass
->> and programming interface for a device. This object is optional but =
-may be
->> useful for generic drivers written for PCI devices that move off of =
-PCI
->> and are enumerated by ACPI."
->
-> OK, so the "move off of PCI" part should be understood as "something =
-that
-> used to be on the PCI bus, but now may be included into an SoC direct=
-ly
-> in which case it won't be a PCI device any more", right?
+I've lost context here.
 
-That's right. For example, the SATA controller is a good example for=20
-this case. On most x86 platforms, they are often enumerated as PCI=20
-devices. However, in the ARM64 SOC (e.g. on AMD Seattle), it could be=20
-enumerated as non-PCI device.
+Is it okay to take this now?
 
-Thanks,
+> diff --git a/include/linux/mfd/syscon/atmel-mc.h b/include/linux/mfd/=
+syscon/atmel-mc.h
+> new file mode 100644
+> index 000000000000..afd9b8f1e363
+> --- /dev/null
+> +++ b/include/linux/mfd/syscon/atmel-mc.h
+> @@ -0,0 +1,144 @@
+> +/*
+> + * Copyright (C) 2005 Ivan Kokshaysky
+> + * Copyright (C) SAN People
+> + *
+> + * Memory Controllers (MC, EBI, SMC, SDRAMC, BFC) - System periphera=
+ls
+> + * registers.
+> + * Based on AT91RM9200 datasheet revision E.
+> + *
+> + * This program is free software; you can redistribute it and/or mod=
+ify
+> + * it under the terms of the GNU General Public License as published=
+ by
+> + * the Free Software Foundation; either version 2 of the License, or
+> + * (at your option) any later version.
+> + */
+> +
+> +#ifndef _LINUX_MFD_SYSCON_ATMEL_MC_H_
+> +#define _LINUX_MFD_SYSCON_ATMEL_MC_H_
+> +
+> +/* Memory Controller */
+> +#define AT91_MC_RCR			0x00
+> +#define AT91_MC_RCB			BIT(0)
+> +
+> +#define AT91_MC_ASR			0x04
+> +#define AT91_MC_UNADD			BIT(0)
+> +#define AT91_MC_MISADD			BIT(1)
+> +#define AT91_MC_ABTSZ			GENMASK(9, 8)
+> +#define AT91_MC_ABTSZ_BYTE		(0 << 8)
+> +#define AT91_MC_ABTSZ_HALFWORD		(1 << 8)
+> +#define AT91_MC_ABTSZ_WORD		(2 << 8)
+> +#define AT91_MC_ABTTYP			GENMASK(11, 10)
+> +#define AT91_MC_ABTTYP_DATAREAD		(0 << 10)
+> +#define AT91_MC_ABTTYP_DATAWRITE	(1 << 10)
+> +#define AT91_MC_ABTTYP_FETCH		(2 << 10)
+> +#define AT91_MC_MST(n)			BIT(16 + (n))
+> +#define AT91_MC_SVMST(n)		BIT(24 + (n))
+> +
+> +#define AT91_MC_AASR			0x08
+> +
+> +#define AT91_MC_MPR			0x0c
+> +#define AT91_MPR_MSTP(n)		GENMASK(2 + ((x) * 4), ((x) * 4))
+> +
+> +/* External Bus Interface (EBI) registers */
+> +#define AT91_MC_EBI_CSA			0x60
+> +#define AT91_MC_EBI_CS(n)		BIT(x)
+> +#define AT91_MC_EBI_NUM_CS		8
+> +
+> +#define AT91_MC_EBI_CFGR		0x64
+> +#define AT91_MC_EBI_DBPUC		BIT(0)
+> +
+> +/* Static Memory Controller (SMC) registers */
+> +#define AT91_MC_SMC_CSR(n)		(0x70 + ((n) * 4))
+> +#define AT91_MC_SMC_NWS			GENMASK(6, 0)
+> +#define AT91_MC_SMC_NWS_(x)		((x) << 0)
+> +#define AT91_MC_SMC_WSEN		BIT(7)
+> +#define AT91_MC_SMC_TDF			GENMASK(11, 8)
+> +#define AT91_MC_SMC_TDF_(x)		((x) << 8)
+> +#define AT91_MC_SMC_TDF_MAX		0xf
+> +#define AT91_MC_SMC_BAT			BIT(12)
+> +#define AT91_MC_SMC_DBW			GENMASK(14, 13)
+> +#define AT91_MC_SMC_DBW_16		(1 << 13)
+> +#define AT91_MC_SMC_DBW_8		(2 << 13)
+> +#define AT91_MC_SMC_DPR			BIT(15)
+> +#define AT91_MC_SMC_ACSS		GENMASK(17, 16)
+> +#define AT91_MC_SMC_ACSS_(x)		((x) << 16)
+> +#define AT91_MC_SMC_ACSS_MAX		3
+> +#define AT91_MC_SMC_RWSETUP		GENMASK(26, 24)
+> +#define AT91_MC_SMC_RWSETUP_(x)		((x) << 24)
+> +#define AT91_MC_SMC_RWHOLD		GENMASK(30, 28)
+> +#define AT91_MC_SMC_RWHOLD_(x)		((x) << 28)
+> +#define AT91_MC_SMC_RWHOLDSETUP_MAX	7
+> +
+> +/* SDRAM Controller registers */
+> +#define AT91_MC_SDRAMC_MR		0x90
+> +#define AT91_MC_SDRAMC_MODE		GENMASK(3, 0)
+> +#define AT91_MC_SDRAMC_MODE_NORMAL	(0 << 0)
+> +#define AT91_MC_SDRAMC_MODE_NOP		(1 << 0)
+> +#define AT91_MC_SDRAMC_MODE_PRECHARGE	(2 << 0)
+> +#define AT91_MC_SDRAMC_MODE_LMR		(3 << 0)
+> +#define AT91_MC_SDRAMC_MODE_REFRESH	(4 << 0)
+> +#define AT91_MC_SDRAMC_DBW_16		BIT(4)
+> +
+> +#define AT91_MC_SDRAMC_TR		0x94
+> +#define AT91_MC_SDRAMC_COUNT		GENMASK(11, 0)
+> +
+> +#define AT91_MC_SDRAMC_CR		0x98
+> +#define AT91_MC_SDRAMC_NC		GENMASK(1, 0)
+> +#define AT91_MC_SDRAMC_NC_8		(0 << 0)
+> +#define AT91_MC_SDRAMC_NC_9		(1 << 0)
+> +#define AT91_MC_SDRAMC_NC_10		(2 << 0)
+> +#define AT91_MC_SDRAMC_NC_11		(3 << 0)
+> +#define AT91_MC_SDRAMC_NR		GENMASK(3, 2)
+> +#define AT91_MC_SDRAMC_NR_11		(0 << 2)
+> +#define AT91_MC_SDRAMC_NR_12		(1 << 2)
+> +#define AT91_MC_SDRAMC_NR_13		(2 << 2)
+> +#define AT91_MC_SDRAMC_NB		BIT(4)
+> +#define AT91_MC_SDRAMC_NB_2		(0 << 4)
+> +#define AT91_MC_SDRAMC_NB_4		(1 << 4)
+> +#define AT91_MC_SDRAMC_CAS		GENMASK(6, 5)
+> +#define AT91_MC_SDRAMC_CAS_2		(2 << 5)
+> +#define AT91_MC_SDRAMC_TWR		GENMASK(10,  7)
+> +#define AT91_MC_SDRAMC_TRC		GENMASK(14, 11)
+> +#define AT91_MC_SDRAMC_TRP		GENMASK(18, 15)
+> +#define AT91_MC_SDRAMC_TRCD		GENMASK(22, 19)
+> +#define AT91_MC_SDRAMC_TRAS		GENMASK(26, 23)
+> +#define AT91_MC_SDRAMC_TXSR		GENMASK(30, 27)
+> +
+> +#define AT91_MC_SDRAMC_SRR		0x9c
+> +#define AT91_MC_SDRAMC_SRCB		BIT(0)
+> +
+> +#define AT91_MC_SDRAMC_LPR		0xa0
+> +#define AT91_MC_SDRAMC_LPCB		BIT(0)
+> +
+> +#define AT91_MC_SDRAMC_IER		0xa4
+> +#define AT91_MC_SDRAMC_IDR		0xa8
+> +#define AT91_MC_SDRAMC_IMR		0xac
+> +#define AT91_MC_SDRAMC_ISR		0xb0
+> +#define AT91_MC_SDRAMC_RES		BIT(0)
+> +
+> +/* Burst Flash Controller register */
+> +#define AT91_MC_BFC_MR			0xc0
+> +#define AT91_MC_BFC_BFCOM		GENMASK(1, 0)
+> +#define AT91_MC_BFC_BFCOM_DISABLED	(0 << 0)
+> +#define AT91_MC_BFC_BFCOM_ASYNC		(1 << 0)
+> +#define AT91_MC_BFC_BFCOM_BURST		(2 << 0)
+> +#define AT91_MC_BFC_BFCC		GENMASK(3, 2)
+> +#define AT91_MC_BFC_BFCC_MCK		(1 << 2)
+> +#define AT91_MC_BFC_BFCC_DIV2		(2 << 2)
+> +#define AT91_MC_BFC_BFCC_DIV4		(3 << 2)
+> +#define AT91_MC_BFC_AVL			GENMASK(7,  4)
+> +#define AT91_MC_BFC_PAGES		GENMASK(10, 8)
+> +#define AT91_MC_BFC_PAGES_NO_PAGE	(0 << 8)
+> +#define AT91_MC_BFC_PAGES_16		(1 << 8)
+> +#define AT91_MC_BFC_PAGES_32		(2 << 8)
+> +#define AT91_MC_BFC_PAGES_64		(3 << 8)
+> +#define AT91_MC_BFC_PAGES_128		(4 << 8)
+> +#define AT91_MC_BFC_PAGES_256		(5 << 8)
+> +#define AT91_MC_BFC_PAGES_512		(6 << 8)
+> +#define AT91_MC_BFC_PAGES_1024		(7 << 8)
+> +#define AT91_MC_BFC_OEL			GENMASK(13, 12)
+> +#define AT91_MC_BFC_BAAEN		BIT(16)
+> +#define AT91_MC_BFC_BFOEH		BIT(17)
+> +#define AT91_MC_BFC_MUXEN		BIT(18)
+> +#define AT91_MC_BFC_RDYEN		BIT(19)
+> +
+> +#endif /* _LINUX_MFD_SYSCON_ATMEL_MC_H_ */
 
-Suravee
-
->
->> Otherwise, if the community think it=C2=B9s better to not putting th=
-e _CLS the
->> _CLS parsing code in ACPICA since, I can try looking into pulling th=
-e code
->> out of ACPICA. I also noticed a little issue in the patch series whe=
-re the
->> ACPI_VALID_CLS is used in the patch 1 but defined in patch 2. I can =
-send
->> out v9 with the fix once we agree on the _CLS parsing.
->
-> To me that pretty much depends on the answer to the above question.
->
->
+--=20
+Lee Jones
+Linaro STMicroelectronics Landing Team Lead
+Linaro.org =E2=94=82 Open source software for ARM SoCs
+=46ollow Linaro: Facebook | Twitter | Blog
