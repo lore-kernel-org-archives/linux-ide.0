@@ -1,57 +1,76 @@
-From: Alexey Orishko <alexey.orishko@gmail.com>
-Subject: printouts about removable disk in the kernel log
-Date: Tue, 28 Apr 2015 17:49:18 +0200
-Message-ID: <CAL_Kpj2BAO781yXF-q2Q1AHoxXZpSXeOHfxDc7uoyeEURJZ5qg@mail.gmail.com>
+From: Lee Jones <lee.jones@linaro.org>
+Subject: Re: [PATCH v2 3/9] mfd: syscon: Add Atmel MC (Memory Controller)
+ registers definition
+Date: Tue, 28 Apr 2015 18:59:37 +0100
+Message-ID: <20150428175937.GH9169@x1>
+References: <1427138955-3617-1-git-send-email-alexandre.belloni@free-electrons.com>
+ <1427138955-3617-4-git-send-email-alexandre.belloni@free-electrons.com>
+ <20150428123058.GC9169@x1>
+ <20150428125558.GD3687@piout.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qk0-f176.google.com ([209.85.220.176]:33646 "EHLO
-	mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965792AbbD1PtS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Apr 2015 11:49:18 -0400
-Received: by qkx62 with SMTP id 62so82482825qkx.0
-        for <linux-ide@vger.kernel.org>; Tue, 28 Apr 2015 08:49:18 -0700 (PDT)
+Received: from mail-wi0-f170.google.com ([209.85.212.170]:34989 "EHLO
+	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030577AbbD1R7n (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Apr 2015 13:59:43 -0400
+Received: by widdi4 with SMTP id di4so150262992wid.0
+        for <linux-ide@vger.kernel.org>; Tue, 28 Apr 2015 10:59:42 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <20150428125558.GD3687@piout.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Alexandre Belloni <alexandre.belloni@free-electrons.com>
+Cc: Nicolas Ferre <nicolas.ferre@atmel.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, linux-arm-kernel@lists.infradead.org
 
-Hi guys,
+On Tue, 28 Apr 2015, Alexandre Belloni wrote:
 
-Sorry, if I'm off topic/wrong email list..
-I'm using kernel 3.18.11 kernel with log level 3 and I wonder what module/driver
-spamming kernel log with messages like:
-...
-[333670.400456]  sdc: sdc1
-[333681.164482]  sdc: sdc1
-[333703.092187]  sdc: sdc1
-[333735.383544]  sdc: sdc1
-[333745.723305]  sdc: sdc1
-[333767.222874]  sdc: sdc1
-[333777.664778]  sdc: sdc1
-...
-[334196.922476]  sdc: sdc1
-[334203.111184] sdc: detected capacity change from 80022167552 to 0
-[334203.113963] ata4: exception Emask 0x10 SAct 0x0 SErr 0x4010000
-action 0xe frozen
-[334203.113965] ata4: irq_stat 0x00400040, connection status changed
-[334203.113968] ata4: SError: { PHYRdyChg DevExch }
-[334203.113976] ata4: hard resetting link
-[334203.836637] ata4: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-..
+> Hi,
+>=20
+> On 28/04/2015 at 13:30:58 +0100, Lee Jones wrote :
+> > On Mon, 23 Mar 2015, Alexandre Belloni wrote:
+> >=20
+> > > From: Boris Brezillon <boris.brezillon@free-electrons.com>
+> > >=20
+> > > The at91rm9200 SoC embeds a Memory Controller block which is used=
+ to
+> > > configure several aspects of the platform:
+> > > - AHB/APB Bus behavior
+> > > - SDRAM Controller
+> > > - EBI (External Bus Interface) and SMC (Static Memory Controller)=
+ config
+> > >=20
+> > > Those registers might be accessed by different drivers, hence we =
+need to
+> > > define it as a syscon device.
+> > >=20
+> > > Signed-off-by: Boris Brezillon <boris.brezillon@free-electrons.co=
+m>
+> > > Signed-off-by: Alexandre Belloni <alexandre.belloni@free-electron=
+s.com>
+> > > Acked-by: Lee Jones <lee.jones@linaro.org>
+> > > Acked-by: Nicolas Ferre <nicolas.ferre@atmel.com>
+> > > ---
+> > >  include/linux/mfd/syscon/atmel-mc.h | 144 ++++++++++++++++++++++=
+++++++++++++++
+> > >  1 file changed, 144 insertions(+)
+> > >  create mode 100644 include/linux/mfd/syscon/atmel-mc.h
+> >=20
+> > I've lost context here.
+> >=20
+> > Is it okay to take this now?
+> >=20
+>=20
+> I'd say that it would be better to get that one through the AT91 tree
+> along with the following patches as they depend on it. Is that okay w=
+ith
+> you?
 
-When a removable disk is connected, kernel log is overwhelmed with
-messages about
-disk and its partition like in example above. Messages in the kernel
-log stop after disk
-was removed (ejected). The messages are not really informative and I
-wonder if they can be
-switched off.
+Yes, no problem.
 
-It is difficult to find this message in the kernel code, since based
-on the the look it is
-most likely containing only arguments to print function.
-
-Does anyone know the origin of such messages so they can be removed?
-
-Regards,
-Alexey
+--=20
+Lee Jones
+Linaro STMicroelectronics Landing Team Lead
+Linaro.org =E2=94=82 Open source software for ARM SoCs
+=46ollow Linaro: Facebook | Twitter | Blog
