@@ -1,7 +1,7 @@
 From: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Subject: [V9 PATCH 1/3] ACPICA: Utilities: Add _CLS processing
-Date: Tue, 28 Apr 2015 10:39:59 -0500
-Message-ID: <1430235601-8842-2-git-send-email-Suravee.Suthikulpanit@amd.com>
+Subject: [V9 PATCH 2/3] ACPI / scan: Add support for ACPI _CLS device matching
+Date: Tue, 28 Apr 2015 10:40:00 -0500
+Message-ID: <1430235601-8842-3-git-send-email-Suravee.Suthikulpanit@amd.com>
 References: <1430235601-8842-1-git-send-email-Suravee.Suthikulpanit@amd.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,341 +12,213 @@ To: rjw@rjwysocki.net, mika.westerberg@linux.intel.com, robert.moore@intel.com, 
 Cc: lenb@kernel.org, hdegoede@redhat.com, tj@kernel.org, mjg59@srcf.ucam.org, gregkh@linuxfoundation.org, al.stone@linaro.org, graeme.gregory@linaro.org, leo.duran@amd.com, linux-ide@vger.kernel.org, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org, linaro-acpi@lists.linaro.org, Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
 List-Id: linux-ide@vger.kernel.org
 
-ACPI Device object often contains a _CLS object to suppy PCI-defined class
-code for the device. This patch introduces logic to process the _CLS
-object.
+Device drivers typically use ACPI _HIDs/_CIDs listed in struct device_driver
+acpi_match_table to match devices. However, for generic drivers, we do not
+want to list _HID for all supported devices. Also, certain classes of devices
+do not have _CID (e.g. SATA, USB). Instead, we can leverage ACPI _CLS,
+which specifies PCI-defined class code (i.e. base-class, subclass and
+programming interface). This patch adds support for matching ACPI devices using
+the _CLS method.
+
+To support loadable module, current design uses _HID or _CID to match device's
+modalias. With the new way of matching with _CLS this would requires modification
+to the current ACPI modalias key to include _CLS. This patch appends PCI-defined
+class-code to the existing ACPI modalias as following.
+
+    acpi:<HID>:<CID1>:<CID2>:..:<CIDn>:<bbsspp>:
+E.g:
+    # cat /sys/devices/platform/AMDI0600:00/modalias
+    acpi:AMDI0600:010601:
+
+where bb is th base-class code, ss is te sub-class code, and pp is the
+programming interface code
+
+Since there would not be _HID/_CID in the ACPI matching table of the driver,
+this patch adds a field to acpi_device_id to specify the matching _CLS.
+
+    static const struct acpi_device_id ahci_acpi_match[] = {
+        { ACPI_DEVICE_CLASS(PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff) },
+        {},
+    };
+
+In this case, the corresponded entry in modules.alias file would be:
+
+    alias acpi*:010601:* ahci_platform
 
 Acked-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 Reviewed-by: Hanjun Guo <hanjun.guo@linaro.org>
 Signed-off-by: Suravee Suthikulpanit <Suravee.Suthikulpanit@amd.com>
-Signed-off-by: Lv Zheng <lv.zheng@intel.com>
 ---
- drivers/acpi/acpica/acinterp.h |  2 +
- drivers/acpi/acpica/acutils.h  |  4 ++
- drivers/acpi/acpica/exutils.c  | 32 +++++++++++++++
- drivers/acpi/acpica/nsxfname.c | 23 +++++++++--
- drivers/acpi/acpica/utids.c    | 91 +++++++++++++++++++++++++++++++++++++++++-
- include/acpi/acnames.h         |  1 +
- include/acpi/actypes.h         | 24 ++++++-----
- 7 files changed, 164 insertions(+), 13 deletions(-)
+ drivers/acpi/scan.c               | 32 ++++++++++++++++++++++++++++++--
+ include/linux/acpi.h              | 14 ++++++++++++++
+ include/linux/mod_devicetable.h   |  2 ++
+ scripts/mod/devicetable-offsets.c |  2 ++
+ scripts/mod/file2alias.c          | 32 ++++++++++++++++++++++++++++++--
+ 5 files changed, 78 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/acpi/acpica/acinterp.h b/drivers/acpi/acpica/acinterp.h
-index 1886bde..7ac9800 100644
---- a/drivers/acpi/acpica/acinterp.h
-+++ b/drivers/acpi/acpica/acinterp.h
-@@ -468,6 +468,8 @@ void acpi_ex_eisa_id_to_string(char *dest, u64 compressed_id);
+diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+index 79a48bb..f0662aa 100644
+--- a/drivers/acpi/scan.c
++++ b/drivers/acpi/scan.c
+@@ -1017,6 +1017,29 @@ static bool acpi_of_match_device(struct acpi_device *adev,
+ 	return false;
+ }
  
- void acpi_ex_integer_to_string(char *dest, u64 value);
- 
-+void acpi_ex_pci_cls_to_string(char *dest, u8 class_code[3]);
-+
- u8 acpi_is_valid_space_id(u8 space_id);
- 
- /*
-diff --git a/drivers/acpi/acpica/acutils.h b/drivers/acpi/acpica/acutils.h
-index 2b3c5bd..f1f4c83 100644
---- a/drivers/acpi/acpica/acutils.h
-+++ b/drivers/acpi/acpica/acutils.h
-@@ -430,6 +430,10 @@ acpi_status
- acpi_ut_execute_CID(struct acpi_namespace_node *device_node,
- 		    struct acpi_pnp_device_id_list ** return_cid_list);
- 
-+acpi_status
-+acpi_ut_execute_CLS(struct acpi_namespace_node *device_node,
-+		    struct acpi_pnp_device_id **return_id);
-+
- /*
-  * utlock - reader/writer locks
-  */
-diff --git a/drivers/acpi/acpica/exutils.c b/drivers/acpi/acpica/exutils.c
-index 3f4225e..30c3f46 100644
---- a/drivers/acpi/acpica/exutils.c
-+++ b/drivers/acpi/acpica/exutils.c
-@@ -380,6 +380,38 @@ void acpi_ex_integer_to_string(char *out_string, u64 value)
- 
- /*******************************************************************************
-  *
-+ * FUNCTION:    acpi_ex_pci_cls_to_string
-+ *
-+ * PARAMETERS:  out_string      - Where to put the converted string (7 bytes)
-+ * PARAMETERS:  class_code      - PCI class code to be converted (3 bytes)
-+ *
-+ * RETURN:      None
-+ *
-+ * DESCRIPTION: Convert 3-bytes PCI class code to string representation.
-+ *              Return buffer must be large enough to hold the string. The
-+ *              string returned is always exactly of length
-+ *              ACPI_PCICLS_STRING_SIZE (includes null terminator).
-+ *
-+ ******************************************************************************/
-+
-+void acpi_ex_pci_cls_to_string(char *out_string, u8 class_code[3])
++static bool __acpi_match_device_cls(const struct acpi_device_id *id,
++				    struct acpi_hardware_id *hwid)
 +{
++	int i, msk, byte_shift;
++	char buf[3];
 +
-+	ACPI_FUNCTION_ENTRY();
++	if (!id->cls)
++		return false;
 +
-+	/* All 3 bytes are hexadecimal */
++	/* Apply class-code bitmask, before checking each class-code byte */
++	for (i = 1; i <= 3; i++) {
++		byte_shift = 8 * (3 - i);
++		msk = (id->cls_msk >> byte_shift) & 0xFF;
++		if (!msk)
++			continue;
 +
-+	out_string[0] = acpi_ut_hex_to_ascii_char((u64)class_code[0], 4);
-+	out_string[1] = acpi_ut_hex_to_ascii_char((u64)class_code[0], 0);
-+	out_string[2] = acpi_ut_hex_to_ascii_char((u64)class_code[1], 4);
-+	out_string[3] = acpi_ut_hex_to_ascii_char((u64)class_code[1], 0);
-+	out_string[4] = acpi_ut_hex_to_ascii_char((u64)class_code[2], 4);
-+	out_string[5] = acpi_ut_hex_to_ascii_char((u64)class_code[2], 0);
-+	out_string[6] = 0;
++		sprintf(buf, "%02x", (id->cls >> byte_shift) & msk);
++		if (strncmp(buf, &hwid->id[(i - 1) * 2], 2))
++			return false;
++	}
++	return true;
 +}
 +
-+/*******************************************************************************
-+ *
-  * FUNCTION:    acpi_is_valid_space_id
-  *
-  * PARAMETERS:  space_id            - ID to be validated
-diff --git a/drivers/acpi/acpica/nsxfname.c b/drivers/acpi/acpica/nsxfname.c
-index d66c326..49266b4 100644
---- a/drivers/acpi/acpica/nsxfname.c
-+++ b/drivers/acpi/acpica/nsxfname.c
-@@ -260,7 +260,7 @@ static char *acpi_ns_copy_device_id(struct acpi_pnp_device_id *dest,
-  *              control methods (Such as in the case of a device.)
-  *
-  * For Device and Processor objects, run the Device _HID, _UID, _CID, _SUB,
-- * _STA, _ADR, _sx_w, and _sx_d methods.
-+ * _CLS, _STA, _ADR, _sx_w, and _sx_d methods.
-  *
-  * Note: Allocates the return buffer, must be freed by the caller.
-  *
-@@ -276,11 +276,12 @@ acpi_get_object_info(acpi_handle handle,
- 	struct acpi_pnp_device_id *hid = NULL;
- 	struct acpi_pnp_device_id *uid = NULL;
- 	struct acpi_pnp_device_id *sub = NULL;
-+	struct acpi_pnp_device_id *cls = NULL;
- 	char *next_id_string;
- 	acpi_object_type type;
- 	acpi_name name;
- 	u8 param_count = 0;
--	u8 valid = 0;
-+	u16 valid = 0;
- 	u32 info_size;
- 	u32 i;
- 	acpi_status status;
-@@ -320,7 +321,7 @@ acpi_get_object_info(acpi_handle handle,
- 	if ((type == ACPI_TYPE_DEVICE) || (type == ACPI_TYPE_PROCESSOR)) {
+ static const struct acpi_device_id *__acpi_match_device(
+ 	struct acpi_device *device,
+ 	const struct acpi_device_id *ids,
+@@ -1034,9 +1057,12 @@ static const struct acpi_device_id *__acpi_match_device(
+ 
+ 	list_for_each_entry(hwid, &device->pnp.ids, list) {
+ 		/* First, check the ACPI/PNP IDs provided by the caller. */
+-		for (id = ids; id->id[0]; id++)
+-			if (!strcmp((char *) id->id, hwid->id))
++		for (id = ids; id->id[0] || id->cls; id++) {
++			if (id->id[0] && !strcmp((char *) id->id, hwid->id))
+ 				return id;
++			else if (id->cls && __acpi_match_device_cls(id, hwid))
++				return id;
++		}
+ 
  		/*
- 		 * Get extra info for ACPI Device/Processor objects only:
--		 * Run the Device _HID, _UID, _SUB, and _CID methods.
-+		 * Run the Device _HID, _UID, _SUB, _CID, and _CLS methods.
- 		 *
- 		 * Note: none of these methods are required, so they may or may
- 		 * not be present for this device. The Info->Valid bitfield is used
-@@ -363,6 +364,14 @@ acpi_get_object_info(acpi_handle handle,
- 			     sizeof(struct acpi_pnp_device_id_list));
- 			valid |= ACPI_VALID_CID;
- 		}
-+
-+		/* Execute the Device._CLS method */
-+
-+		status = acpi_ut_execute_CLS(node, &cls);
-+		if (ACPI_SUCCESS(status)) {
-+			info_size += cls->length;
-+			valid |= ACPI_VALID_CLS;
-+		}
- 	}
+ 		 * Next, check the special "PRP0001" ID and try to match the
+@@ -2057,6 +2083,8 @@ static void acpi_set_pnp_ids(acpi_handle handle, struct acpi_device_pnp *pnp,
+ 		if (info->valid & ACPI_VALID_UID)
+ 			pnp->unique_id = kstrdup(info->unique_id.string,
+ 							GFP_KERNEL);
++		if (info->valid & ACPI_VALID_CLS)
++			acpi_add_id(pnp, info->cls.string);
  
- 	/*
-@@ -486,6 +495,11 @@ acpi_get_object_info(acpi_handle handle,
- 		}
- 	}
+ 		kfree(info);
  
-+	if (cls) {
-+		next_id_string = acpi_ns_copy_device_id(&info->cls,
-+							cls, next_id_string);
-+	}
-+
- 	/* Copy the fixed-length data */
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index e4da5e3..b10c4a6 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -58,6 +58,19 @@ static inline acpi_handle acpi_device_handle(struct acpi_device *adev)
+ 	acpi_fwnode_handle(adev) : NULL)
+ #define ACPI_HANDLE(dev)		acpi_device_handle(ACPI_COMPANION(dev))
  
- 	info->info_size = info_size;
-@@ -510,6 +524,9 @@ cleanup:
- 	if (cid_list) {
- 		ACPI_FREE(cid_list);
- 	}
-+	if (cls) {
-+		ACPI_FREE(cls);
-+	}
- 	return (status);
- }
- 
-diff --git a/drivers/acpi/acpica/utids.c b/drivers/acpi/acpica/utids.c
-index 27431cf..3afe07f 100644
---- a/drivers/acpi/acpica/utids.c
-+++ b/drivers/acpi/acpica/utids.c
-@@ -1,6 +1,6 @@
- /******************************************************************************
-  *
-- * Module Name: utids - support for device Ids - HID, UID, CID
-+ * Module Name: utids - support for device Ids - HID, UID, CID, SUB, CLS
-  *
-  *****************************************************************************/
- 
-@@ -416,3 +416,92 @@ cleanup:
- 	acpi_ut_remove_reference(obj_desc);
- 	return_ACPI_STATUS(status);
- }
-+
-+/*******************************************************************************
++/**
++ * ACPI_DEVICE_CLASS - macro used to describe an ACPI device with
++ * the PCI-defined class-code information
 + *
-+ * FUNCTION:    acpi_ut_execute_CLS
++ * @_cls : the class, subclass, prog-if triple for this device
++ * @_msk : the class mask for this device
 + *
-+ * PARAMETERS:  device_node         - Node for the device
-+ *              return_id           - Where the _CLS is returned
-+ *
-+ * RETURN:      Status
-+ *
-+ * DESCRIPTION: Executes the _CLS control method that returns PCI-defined
-+ *              class code of the device. The _CLS value is always a package
-+ *              containing PCI class information as a list of integers.
-+ *              The returned string has format "BBSSPP", where:
-+ *                BB = Base-class code
-+ *                SS = Sub-class code
-+ *                PP = Programming Interface code
-+ *
-+ ******************************************************************************/
++ * This macro is used to create a struct acpi_device_id that matches a
++ * specific PCI class. The .id and .driver_data fields will be left
++ * initialized with the default value.
++ */
++#define ACPI_DEVICE_CLASS(_cls, _msk)	.cls = (_cls), .cls_msk = (_msk),
 +
-+acpi_status
-+acpi_ut_execute_CLS(struct acpi_namespace_node *device_node,
-+		    struct acpi_pnp_device_id **return_id)
-+{
-+	union acpi_operand_object *obj_desc;
-+	union acpi_operand_object **cls_objects;
-+	u32 count;
-+	struct acpi_pnp_device_id *cls;
-+	u32 length;
-+	acpi_status status;
-+	u8 class_code[3] = { 0, 0, 0 };
-+
-+	ACPI_FUNCTION_TRACE(ut_execute_CLS);
-+
-+	status = acpi_ut_evaluate_object(device_node, METHOD_NAME__CLS,
-+					 ACPI_BTYPE_PACKAGE, &obj_desc);
-+	if (ACPI_FAILURE(status)) {
-+		return_ACPI_STATUS(status);
-+	}
-+
-+	/* Get the size of the String to be returned, includes null terminator */
-+
-+	length = ACPI_PCICLS_STRING_SIZE;
-+	cls_objects = obj_desc->package.elements;
-+	count = obj_desc->package.count;
-+
-+	if (obj_desc->common.type == ACPI_TYPE_PACKAGE) {
-+		if (count > 0
-+		    && cls_objects[0]->common.type == ACPI_TYPE_INTEGER) {
-+			class_code[0] = (u8)cls_objects[0]->integer.value;
-+		}
-+		if (count > 1
-+		    && cls_objects[1]->common.type == ACPI_TYPE_INTEGER) {
-+			class_code[1] = (u8)cls_objects[1]->integer.value;
-+		}
-+		if (count > 2
-+		    && cls_objects[2]->common.type == ACPI_TYPE_INTEGER) {
-+			class_code[2] = (u8)cls_objects[2]->integer.value;
-+		}
-+	}
-+
-+	/* Allocate a buffer for the CLS */
-+
-+	cls =
-+	    ACPI_ALLOCATE_ZEROED(sizeof(struct acpi_pnp_device_id) +
-+				 (acpi_size) length);
-+	if (!cls) {
-+		status = AE_NO_MEMORY;
-+		goto cleanup;
-+	}
-+
-+	/* Area for the string starts after PNP_DEVICE_ID struct */
-+
-+	cls->string =
-+	    ACPI_ADD_PTR(char, cls, sizeof(struct acpi_pnp_device_id));
-+
-+	/* Simply copy existing string */
-+
-+	acpi_ex_pci_cls_to_string(cls->string, class_code);
-+	cls->length = length;
-+	*return_id = cls;
-+
-+cleanup:
-+
-+	/* On exit, we must delete the return object */
-+
-+	acpi_ut_remove_reference(obj_desc);
-+	return_ACPI_STATUS(status);
-+}
-diff --git a/include/acpi/acnames.h b/include/acpi/acnames.h
-index 273de70..b52c0dc 100644
---- a/include/acpi/acnames.h
-+++ b/include/acpi/acnames.h
-@@ -51,6 +51,7 @@
- #define METHOD_NAME__BBN        "_BBN"
- #define METHOD_NAME__CBA        "_CBA"
- #define METHOD_NAME__CID        "_CID"
-+#define METHOD_NAME__CLS        "_CLS"
- #define METHOD_NAME__CRS        "_CRS"
- #define METHOD_NAME__DDN        "_DDN"
- #define METHOD_NAME__HID        "_HID"
-diff --git a/include/acpi/actypes.h b/include/acpi/actypes.h
-index f5ca0e9..3da3ea2 100644
---- a/include/acpi/actypes.h
-+++ b/include/acpi/actypes.h
-@@ -1145,6 +1145,10 @@ u32 (*acpi_interface_handler) (acpi_string interface_name, u32 supported);
+ static inline bool has_acpi_companion(struct device *dev)
+ {
+ 	return is_acpi_node(dev->fwnode);
+@@ -465,6 +478,7 @@ struct platform_device *acpi_create_platform_device(struct acpi_device *);
+ #define ACPI_COMPANION(dev)		(NULL)
+ #define ACPI_COMPANION_SET(dev, adev)	do { } while (0)
+ #define ACPI_HANDLE(dev)		(NULL)
++#define ACPI_DEVICE_CLASS(_cls, _msk)	.cls = (0), .cls_msk = (0),
  
- #define ACPI_UUID_LENGTH                16
+ struct fwnode_handle;
  
-+/* Length of 3-byte PCI class code values when converted back to a string */
-+
-+#define ACPI_PCICLS_STRING_SIZE         7	/* Includes null terminator */
-+
- /* Structures used for device/processor HID, UID, CID, and SUB */
- 
- struct acpi_pnp_device_id {
-@@ -1167,7 +1171,7 @@ struct acpi_device_info {
- 	u32 name;		/* ACPI object Name */
- 	acpi_object_type type;	/* ACPI object Type */
- 	u8 param_count;		/* If a method, required parameter count */
--	u8 valid;		/* Indicates which optional fields are valid */
-+	u16 valid;		/* Indicates which optional fields are valid */
- 	u8 flags;		/* Miscellaneous info */
- 	u8 highest_dstates[4];	/* _sx_d values: 0xFF indicates not valid */
- 	u8 lowest_dstates[5];	/* _sx_w values: 0xFF indicates not valid */
-@@ -1176,6 +1180,7 @@ struct acpi_device_info {
- 	struct acpi_pnp_device_id hardware_id;	/* _HID value */
- 	struct acpi_pnp_device_id unique_id;	/* _UID value */
- 	struct acpi_pnp_device_id subsystem_id;	/* _SUB value */
-+	struct acpi_pnp_device_id cls;		/* _CLS value */
- 	struct acpi_pnp_device_id_list compatible_id_list;	/* _CID list <must be last> */
+diff --git a/include/linux/mod_devicetable.h b/include/linux/mod_devicetable.h
+index 3bfd567..242037b 100644
+--- a/include/linux/mod_devicetable.h
++++ b/include/linux/mod_devicetable.h
+@@ -189,6 +189,8 @@ struct css_device_id {
+ struct acpi_device_id {
+ 	__u8 id[ACPI_ID_LEN];
+ 	kernel_ulong_t driver_data;
++	__u32 cls;
++	__u32 cls_msk;
  };
  
-@@ -1185,14 +1190,15 @@ struct acpi_device_info {
+ #define PNP_ID_LEN	8
+diff --git a/scripts/mod/devicetable-offsets.c b/scripts/mod/devicetable-offsets.c
+index fce36d0..0ced0ca 100644
+--- a/scripts/mod/devicetable-offsets.c
++++ b/scripts/mod/devicetable-offsets.c
+@@ -63,6 +63,8 @@ int main(void)
  
- /* Flags for Valid field above (acpi_get_object_info) */
+ 	DEVID(acpi_device_id);
+ 	DEVID_FIELD(acpi_device_id, id);
++	DEVID_FIELD(acpi_device_id, cls);
++	DEVID_FIELD(acpi_device_id, cls_msk);
  
--#define ACPI_VALID_STA                  0x01
--#define ACPI_VALID_ADR                  0x02
--#define ACPI_VALID_HID                  0x04
--#define ACPI_VALID_UID                  0x08
--#define ACPI_VALID_SUB                  0x10
--#define ACPI_VALID_CID                  0x20
--#define ACPI_VALID_SXDS                 0x40
--#define ACPI_VALID_SXWS                 0x80
-+#define ACPI_VALID_STA                  0x0001
-+#define ACPI_VALID_ADR                  0x0002
-+#define ACPI_VALID_HID                  0x0004
-+#define ACPI_VALID_UID                  0x0008
-+#define ACPI_VALID_SUB                  0x0010
-+#define ACPI_VALID_CID                  0x0020
-+#define ACPI_VALID_CLS                  0x0040
-+#define ACPI_VALID_SXDS                 0x0100
-+#define ACPI_VALID_SXWS                 0x0200
+ 	DEVID(pnp_device_id);
+ 	DEVID_FIELD(pnp_device_id, id);
+diff --git a/scripts/mod/file2alias.c b/scripts/mod/file2alias.c
+index 78691d5..ea238e2f 100644
+--- a/scripts/mod/file2alias.c
++++ b/scripts/mod/file2alias.c
+@@ -511,12 +511,40 @@ static int do_serio_entry(const char *filename,
+ }
+ ADD_TO_DEVTABLE("serio", serio_device_id, do_serio_entry);
  
- /* Flags for _STA return value (current_status above) */
- 
+-/* looks like: "acpi:ACPI0003 or acpi:PNP0C0B" or "acpi:LNXVIDEO" */
++/* looks like: "acpi:ACPI0003" or "acpi:PNP0C0B" or "acpi:LNXVIDEO" or
++ *             "acpi:bbsspp" (bb=base-class, ss=sub-class, pp=prog-if)
++ *
++ * NOTE: Each driver should use one of the following : _HID, _CIDs
++ *       or _CLS. Also, bb, ss, and pp can be substituted with ??
++ *       as don't care byte.
++ */
+ static int do_acpi_entry(const char *filename,
+ 			void *symval, char *alias)
+ {
+ 	DEF_FIELD_ADDR(symval, acpi_device_id, id);
+-	sprintf(alias, "acpi*:%s:*", *id);
++	DEF_FIELD_ADDR(symval, acpi_device_id, cls);
++	DEF_FIELD_ADDR(symval, acpi_device_id, cls_msk);
++
++	if (id && strlen((const char *)*id))
++		sprintf(alias, "acpi*:%s:*", *id);
++	else if (cls) {
++		int i, byte_shift, cnt = 0;
++		unsigned int msk;
++
++		sprintf(&alias[cnt], "acpi*:");
++		cnt = 6;
++		for (i = 1; i <= 3; i++) {
++			byte_shift = 8 * (3-i);
++			msk = (*cls_msk >> byte_shift) & 0xFF;
++			if (msk)
++				sprintf(&alias[cnt], "%02x",
++					(*cls >> byte_shift) & 0xFF);
++			else
++				sprintf(&alias[cnt], "??");
++			cnt += 2;
++		}
++		sprintf(&alias[cnt], ":*");
++	}
+ 	return 1;
+ }
+ ADD_TO_DEVTABLE("acpi", acpi_device_id, do_acpi_entry);
 -- 
 2.1.0
 
