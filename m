@@ -1,76 +1,53 @@
-From: Lee Jones <lee.jones@linaro.org>
-Subject: Re: [PATCH v2 3/9] mfd: syscon: Add Atmel MC (Memory Controller)
- registers definition
-Date: Tue, 28 Apr 2015 18:59:37 +0100
-Message-ID: <20150428175937.GH9169@x1>
-References: <1427138955-3617-1-git-send-email-alexandre.belloni@free-electrons.com>
- <1427138955-3617-4-git-send-email-alexandre.belloni@free-electrons.com>
- <20150428123058.GC9169@x1>
- <20150428125558.GD3687@piout.net>
+From: Maxime Coquelin <maxime.coquelin@st.com>
+Subject: Re: [PATCH v2] ata: ahci_st: fixup layering violations / drvdata
+ errors
+Date: Wed, 29 Apr 2015 16:30:51 +0200
+Message-ID: <5540EB1B.10505@st.com>
+References: <1429537265-22367-1-git-send-email-peter.griffin@linaro.org> <1429537265-22367-2-git-send-email-peter.griffin@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wi0-f170.google.com ([209.85.212.170]:34989 "EHLO
-	mail-wi0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030577AbbD1R7n (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 28 Apr 2015 13:59:43 -0400
-Received: by widdi4 with SMTP id di4so150262992wid.0
-        for <linux-ide@vger.kernel.org>; Tue, 28 Apr 2015 10:59:42 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20150428125558.GD3687@piout.net>
+Received: from mx08-00178001.pphosted.com ([91.207.212.93]:58334 "EHLO
+	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1422821AbbD2Oba (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Apr 2015 10:31:30 -0400
+In-Reply-To: <1429537265-22367-2-git-send-email-peter.griffin@linaro.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexandre Belloni <alexandre.belloni@free-electrons.com>
-Cc: Nicolas Ferre <nicolas.ferre@atmel.com>, Boris Brezillon <boris.brezillon@free-electrons.com>, linux-pcmcia@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, linux-arm-kernel@lists.infradead.org
+To: Peter Griffin <peter.griffin@linaro.org>, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, srinivas.kandagatla@gmail.com, patrice.chotard@st.com, tj@kernel.org, computersforpeace@gmail.com
+Cc: lee.jones@linaro.org, linux-ide@vger.kernel.org
 
-On Tue, 28 Apr 2015, Alexandre Belloni wrote:
+Hi Peter,
 
-> Hi,
->=20
-> On 28/04/2015 at 13:30:58 +0100, Lee Jones wrote :
-> > On Mon, 23 Mar 2015, Alexandre Belloni wrote:
-> >=20
-> > > From: Boris Brezillon <boris.brezillon@free-electrons.com>
-> > >=20
-> > > The at91rm9200 SoC embeds a Memory Controller block which is used=
- to
-> > > configure several aspects of the platform:
-> > > - AHB/APB Bus behavior
-> > > - SDRAM Controller
-> > > - EBI (External Bus Interface) and SMC (Static Memory Controller)=
- config
-> > >=20
-> > > Those registers might be accessed by different drivers, hence we =
-need to
-> > > define it as a syscon device.
-> > >=20
-> > > Signed-off-by: Boris Brezillon <boris.brezillon@free-electrons.co=
-m>
-> > > Signed-off-by: Alexandre Belloni <alexandre.belloni@free-electron=
-s.com>
-> > > Acked-by: Lee Jones <lee.jones@linaro.org>
-> > > Acked-by: Nicolas Ferre <nicolas.ferre@atmel.com>
-> > > ---
-> > >  include/linux/mfd/syscon/atmel-mc.h | 144 ++++++++++++++++++++++=
-++++++++++++++
-> > >  1 file changed, 144 insertions(+)
-> > >  create mode 100644 include/linux/mfd/syscon/atmel-mc.h
-> >=20
-> > I've lost context here.
-> >=20
-> > Is it okay to take this now?
-> >=20
->=20
-> I'd say that it would be better to get that one through the AT91 tree
-> along with the following patches as they depend on it. Is that okay w=
-ith
-> you?
+On 04/20/2015 03:41 PM, Peter Griffin wrote:
+> Brian noticed while working on another SATA driver that uses libahci_platform,
+> an error in this driver; it tries to the the driver data for its
+> device, while libata also thinks it can set the driver data. See:
+>
+>    ahci_platform_init_host()
+>    -> ata_host_alloc_pinfo()
+>       -> ata_host_alloc()
+>          -> dev_set_drvdata()
+>
+> So instead of sticking the IP-specific platform data into drvdata, let's
+> use the plat_data variable that is reserved for this use.
+>
+> Addtionally plat_data isn't set until ahci_platform_init_host() has been
+> called further down in probe(). So re-work the st_ahci_probe_resets and
+> st_ahci_deassert_resets functions to take ahci_host_priv *hpriv as a
+> parameter.
+>
+> Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
+> Suggested-by: Brian Norris <computersforpeace@gmail.com>
+> Cc: Srinivas Kandagatla <srinivas.kandagatla@gmail.com>
+> Cc: Maxime Coquelin <maxime.coquelin@st.com>
+> Cc: Patrice Chotard <patrice.chotard@st.com>
+> ---
+>
 
-Yes, no problem.
+You can add my:
+Acked-by: Maxime Coquelin <maxime.coquelin@st.com>
 
---=20
-Lee Jones
-Linaro STMicroelectronics Landing Team Lead
-Linaro.org =E2=94=82 Open source software for ARM SoCs
-=46ollow Linaro: Facebook | Twitter | Blog
+Thanks!
+Maxime
