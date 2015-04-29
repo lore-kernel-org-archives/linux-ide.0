@@ -1,53 +1,40 @@
-From: Maxime Coquelin <maxime.coquelin@st.com>
-Subject: Re: [PATCH v2] ata: ahci_st: fixup layering violations / drvdata
- errors
-Date: Wed, 29 Apr 2015 16:30:51 +0200
-Message-ID: <5540EB1B.10505@st.com>
-References: <1429537265-22367-1-git-send-email-peter.griffin@linaro.org> <1429537265-22367-2-git-send-email-peter.griffin@linaro.org>
+From: "Andy Falanga (afalanga)" <afalanga@micron.com>
+Subject: Please help me to understand the interaction of the various ATA
+ drivers
+Date: Wed, 29 Apr 2015 21:38:41 +0000
+Message-ID: <1430343517.30346.10.camel@afalanga4.micron.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx08-00178001.pphosted.com ([91.207.212.93]:58334 "EHLO
-	mx08-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1422821AbbD2Oba (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Apr 2015 10:31:30 -0400
-In-Reply-To: <1429537265-22367-2-git-send-email-peter.griffin@linaro.org>
+Received: from mailout.micron.com ([137.201.242.129]:34190 "EHLO
+	mailout.micron.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750990AbbD2Vip (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 29 Apr 2015 17:38:45 -0400
+Content-Language: en-US
+Content-ID: <1FD5D8A74816CA46B26046B190B33609@micron.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Peter Griffin <peter.griffin@linaro.org>, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, srinivas.kandagatla@gmail.com, patrice.chotard@st.com, tj@kernel.org, computersforpeace@gmail.com
-Cc: lee.jones@linaro.org, linux-ide@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hi Peter,
-
-On 04/20/2015 03:41 PM, Peter Griffin wrote:
-> Brian noticed while working on another SATA driver that uses libahci_platform,
-> an error in this driver; it tries to the the driver data for its
-> device, while libata also thinks it can set the driver data. See:
->
->    ahci_platform_init_host()
->    -> ata_host_alloc_pinfo()
->       -> ata_host_alloc()
->          -> dev_set_drvdata()
->
-> So instead of sticking the IP-specific platform data into drvdata, let's
-> use the plat_data variable that is reserved for this use.
->
-> Addtionally plat_data isn't set until ahci_platform_init_host() has been
-> called further down in probe(). So re-work the st_ahci_probe_resets and
-> st_ahci_deassert_resets functions to take ahci_host_priv *hpriv as a
-> parameter.
->
-> Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
-> Suggested-by: Brian Norris <computersforpeace@gmail.com>
-> Cc: Srinivas Kandagatla <srinivas.kandagatla@gmail.com>
-> Cc: Maxime Coquelin <maxime.coquelin@st.com>
-> Cc: Patrice Chotard <patrice.chotard@st.com>
-> ---
->
-
-You can add my:
-Acked-by: Maxime Coquelin <maxime.coquelin@st.com>
-
-Thanks!
-Maxime
+SmVmZiwNCg0KSSBkb24ndCBrbm93IGlmIHlvdSdyZSBzdGlsbCB0aGUgbWFpbnRhaW5lciBvZiB0
+aGVzZSBkcml2ZXJzIGJ1dCB5b3UncmUNCmxpc3RlZCBhcyB0aGUgb3JpZ2luYWwgYXV0aG9yIG9m
+IHRoZSBjb2RlIGluIHRoZSAyLjYga2VybmVsIHdoaWNoIEknbQ0Kd29ya2luZyBvbiBtb2RpZnlp
+bmcuICBJIGhhdmUgdG8gd3JpdGUgYSBkcml2ZXIgd2hpY2ggSSBjYW4gZXhwb3NlDQphY2Nlc3Mg
+dG8gdGhlIHZhcmlvdXMgSEJBIGFuZCBQb3J0IHJlZ2lzdGVycyBmb3IgYW4gQUhDSSBjbGFzcyBI
+QkEuICBJbg0KYWRkaXRpb24sIHRoaXMgZHJpdmVyIG11c3QgYWN0IGFzIGEgcGFzcyB0aHJvdWdo
+IGRyaXZlciBmb3IgbXkgY2xpZW50cw0KdG8gYmUgYWJsZSB0byBleGVjdXRlIEFUQSBjb21tYW5k
+cy4gIEknZCBsaWtlIGZvciBpdCB0byBiZSBhIHRydWUgcGFzcw0KdGhyb3VnaCBkcml2ZXIgYW5k
+IG5vdCBoYXZlIHRvIHJ1biB0aHJvdWdoIHRoZSBrZXJuZWwncyBzY2hlZHVsZXMgYW5kDQpzdWNo
+LCBidXQgdGhhdCdzIGFub3RoZXIgZGlzY3Vzc2lvbi4NCg0KTXkgcXVlc3Rpb24gZm9yIHlvdSBp
+cyBzaW1wbHksIGhvdyBhcmUgdGhlc2UgdmFyaW91cyBkcml2ZXJzIHN1cHBvc2VkIHRvDQp3b3Jr
+IHRvZ2V0aGVyPyAgT24gdGhlIFZNIHdoaWNoIEknbSBkb2luZyBteSBkZXZlbG9wbWVudCwgSSBz
+ZWUgdGhlDQpmb2xsb3dpbmcgZnJvbSBsc21vZDoNCg0KIyBsc21vZA0KLi4uDQphaGNpICAgICAg
+ICAgICAgICAgICAgICAgIDQxMjA4ICAgICAgICAgMg0KcGF0YV9hY3BpICAgICAgICAgICAgICAg
+ICAgMzcwMSAgICAgICAgIDANCmF0YV9nZW5lcmljICAgICAgICAgICAgICAgIDM4MzcgICAgICAg
+ICAwDQphdGFfcGlpeCAgICAgICAgICAgICAgICAgIDI0NDA5ICAgICAgICAgMQ0KLi4uDQoNCg0K
+VGhpcyBhdCBsZWFzdCBzaG93cyBtZSB0aGF0IG5vbmUgb2YgdGhlc2UgbW9kdWxlcyBkZXBlbmQg
+dXBvbiBvbmUNCmFub3RoZXIgZm9yIGZ1bmN0aW9uYWxpdHkuICBIb3dldmVyLCB0byBzb21lIGxl
+dmVsLCB0aGV5IG11c3QgYmUNCmludGVycmVsYXRlZC4gIA0KDQpUaGFua3MgZm9yIGFueSBsaWdo
+dCB5b3UgY2FuIHNoZWQgb24gdGhpcyBmb3IgbWUuDQoNCkFuZHkNCg==
