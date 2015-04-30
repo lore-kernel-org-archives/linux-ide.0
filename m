@@ -1,36 +1,73 @@
-From: Maxime Coquelin <maxime.coquelin@st.com>
-Subject: Re: [PATCH 2/3] ARM: DT: STi: STiH407: Add sata DT nodes.
-Date: Thu, 30 Apr 2015 13:06:27 +0200
-Message-ID: <55420CB3.8040800@st.com>
-References: <1427787309-1601-1-git-send-email-peter.griffin@linaro.org> <1427787309-1601-3-git-send-email-peter.griffin@linaro.org>
+From: "Andy Falanga (afalanga)" <afalanga@micron.com>
+Subject: Re: Please help me to understand the interaction of the various ATA
+ drivers
+Date: Thu, 30 Apr 2015 15:06:42 +0000
+Message-ID: <1430406393.30346.17.camel@afalanga4.micron.com>
+References: <1430343517.30346.10.camel@afalanga4.micron.com>
+	 <20150430114306.37cb3425@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1427787309-1601-3-git-send-email-peter.griffin@linaro.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Peter Griffin <peter.griffin@linaro.org>, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, patrice.chotard@st.com, tj@kernel.org, srinivas.kandagatla@gmail.com
-Cc: lee.jones@linaro.org, devicetree@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mailout.micron.com ([137.201.242.129]:28615 "EHLO
+	mailout.micron.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751148AbbD3PGz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 30 Apr 2015 11:06:55 -0400
+In-Reply-To: <20150430114306.37cb3425@lxorguk.ukuu.org.uk>
+Content-Language: en-US
+Content-ID: <18A30D5CB1386546A5F0DD3796AE5169@micron.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
+Cc: Jeff Garzik <jgarzik@pobox.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-
-
-On 03/31/2015 09:35 AM, Peter Griffin wrote:
-> Now that the miphy28lp is upstream, we can add the sata dt nodes
-> for stih407 family silicon. This has been tested on b2120 board
-> J4 (sata0 channel). These nodes are disabled by default as a
-> special mini pci-e to sata daughter board is required which
-> isn't shipped with the board.
->
-> Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
-> Acked-by: Lee Jones <lee.jones@linaro.org>
-> Acked-by: Maxime Coquelin <maxime.coquelin@st.com>
-> ---
->   arch/arm/boot/dts/stih407-family.dtsi | 44 +++++++++++++++++++++++++++++++++++
->   1 file changed, 44 insertions(+)
->
->
-Applied in sti-dt-for-v4.2.
-
-Thanks!
-Maxime
+LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IE9uZSBUaG91c2FuZCBHbm9tZXMgPGdu
+b21lc0BseG9yZ3VrLnVrdXUub3JnLnVrPg0KVG86IEFuZHkgRmFsYW5nYSAoYWZhbGFuZ2EpIDxh
+ZmFsYW5nYUBtaWNyb24uY29tPg0KU3ViamVjdDogUmU6IFBsZWFzZSBoZWxwIG1lIHRvIHVuZGVy
+c3RhbmQgdGhlIGludGVyYWN0aW9uIG9mIHRoZSB2YXJpb3VzDQpBVEEgZHJpdmVycw0KRGF0ZTog
+VGh1LCAzMCBBcHIgMjAxNSAxMTo0MzowNiArMDEwMA0KDQpPbiBXZWQsIDI5IEFwciAyMDE1IDIx
+OjM4OjQxICswMDAwDQoiQW5keSBGYWxhbmdhIChhZmFsYW5nYSkiIDxhZmFsYW5nYUBtaWNyb24u
+Y29tPiB3cm90ZToNCg0KPj4gSmVmZiwNCj4+IA0KPj4gSSBkb24ndCBrbm93IGlmIHlvdSdyZSBz
+dGlsbCB0aGUgbWFpbnRhaW5lciBvZiB0aGVzZSBkcml2ZXJzIGJ1dCB5b3UncmUNCj4+IGxpc3Rl
+ZCBhcyB0aGUgb3JpZ2luYWwgYXV0aG9yIG9mIHRoZSBjb2RlIGluIHRoZSAyLjYga2VybmVsIHdo
+aWNoIEknbQ0KDQo+IFRoaW5rIEplZmYgaXMgbW9zdGx5IG9mZiBkb2luZyB3b25kZXJvdXMgdGhp
+bmdzIHdpdGggQml0Y29pbi4gDQoNCkknbSB3b25kZXJmdWxseSBvdXQgb2YgdG91Y2guICBIYSwg
+SSBoYWQgdG8gbG9vayB1cCBCaXRjb2luLg0KDQoNCj4+IE15IHF1ZXN0aW9uIGZvciB5b3UgaXMg
+c2ltcGx5LCBob3cgYXJlIHRoZXNlIHZhcmlvdXMgZHJpdmVycyBzdXBwb3NlZCB0bw0KPj4gd29y
+ayB0b2dldGhlcj8gIE9uIHRoZSBWTSB3aGljaCBJJ20gZG9pbmcgbXkgZGV2ZWxvcG1lbnQsIEkg
+c2VlIHRoZQ0KPj4gZm9sbG93aW5nIGZyb20gbHNtb2Q6DQo+PiANCj4+ICMgbHNtb2QNCj4+IC4u
+Lg0KPj4gYWhjaSAgICAgICAgICAgICAgICAgICAgICA0MTIwOCAgICAgICAgIDINCj4+IHBhdGFf
+YWNwaSAgICAgICAgICAgICAgICAgIDM3MDEgICAgICAgICAwDQo+PiBhdGFfZ2VuZXJpYyAgICAg
+ICAgICAgICAgICAzODM3ICAgICAgICAgMA0KPj4gYXRhX3BpaXggICAgICAgICAgICAgICAgICAy
+NDQwOSAgICAgICAgIDENCg0KPiBhdGFfZ2VuZXJpYyBpcyBhIGJ1cyBtYXN0ZXJpbmcgZHJpdmVy
+IGZvciBQQ0kgSURFIGNsYXNzIGRldmljZXMuIEluIHlvdXINCj4gY2FzZSBpdHMgYmVlbiBsb2Fk
+ZWQgZm9yIHNvbWUgcmVhc29uIGJ1dCBpcyBub3QgYmVpbmcgdXNlZA0KDQo+IHBhdGFfYWNwaSBp
+cyBhIGRyaXZlciBmb3IgQUNQSSBkZXNjcmliZWQgZ2VuZXJpYyBpbnRlcmZhY2VzLCBhbmQgYWdh
+aW4gaXMNCj4gbm90IGJlaW5nIHVzZWQNCg0KSSBoYWQgZmlndXJlZCBvdXQgdGhhdCBwYXRhX2Fj
+cGkgd2FzIGZvciBJREUgZGV2aWNlcyBidXQgSSBoYWRuJ3QgZmlndXJlZA0KdGhhdCBhdGFfZ2Vu
+ZXJpYyB3YXMuICBUaGFua3MuICBZZXMsIG15IFZNIHBsYWNlZCBhIENEIGRyaXZlIG9uIHRoZSBQ
+QVRBDQppbnRlcmZhY2UuICBBcyB5b3Uga25vdywgbXkgYXBwbGljYXRpb24gbmVlZG4ndCB3b3Jy
+eSBhYm91dCB0aGlzIG9uZS4NCg0KPiBhdGFfcGlpeCBpcyBhIGRyaXZlciBzcGVjaWZpY2FsbHkg
+Zm9yIEludGVsIFBJSVgvSUNIIGludGVyZmFjZXMgaW4gbGVnYWN5DQo+IG1vZGUgYW5kIGRvZXMg
+c2VlbSB0byBiZSBnZXR0aW5nIHVzZWQsIHNvIHByZXN1bWFibHkgeW91ciB2aXJ0dWFsIG1hY2hp
+bmUNCj4gaGFzIGF0IGxlYXN0IG9uZSBsZWdhY3kgbW9kZSBQSUlYIG9yIElDSCBlbXVsYXRlZCBv
+biBpdA0KDQpJIGNhbiBpZ25vcmUgdGhpcyBvbmUgYXMgd2VsbCBpdCB3b3VsZCBzZWVtLg0KDQoN
+Cj4gYWhjaSBpcyBhIGRyaXZlciBmb3IgY29udHJvbGxlcnMgdGhhdCBhcmUgQUhDSSBjbGFzcywg
+b3IgbWF0Y2ggYSBmZXcNCj4gaWRlbnRpZmllcnMgZm9yIEFIQ0kgY29udHJvbGxlcnMgbm90IGRl
+Y2xhcmluZyB0aGVtc2VsdmVzIEFIQ0kgY2xhc3MgKGVnDQo+IHRob3NlIHRoYXQgdHJ5IGFuZCBo
+aWRlIGZyb20gV2luZG93cyBBSENJIGRyaXZlcnMgc28gcHJvcHJpZXRhcnkgcmFpZA0KPiBwcm9k
+dWN0cyBjYW4gYmUgdXNlZCB3aXRoIHRoZW0gb24gV2luZG93cykNCg0KVGhpcyBpcyB0aGUgb25l
+IEkgd2FzIGhvcGluZyBJIGNvdWxkIHRhcCBpbnRvLiAgVGhhdCBpcywgSSB3YXMgaG9waW5nIHRv
+DQp3cml0ZSBhIGhpZ2gtbGV2ZWwgZHJpdmVyLCBleHBvc2luZyBhIGRldmljZSBub2RlLCB3aGlj
+aCBJIGNvdWxkIGp1c3QgcGFzcw0KcmVxdWVzdHMgdG8gYWhjaS5rby4gIFNvdW5kcyBsaWtlIHRo
+aXMgbWF5IGJlIG1vcmUgdHJvdWJsZSB0aGF0IGl0J3Mgd29ydGgNCmdpdmVuIHRoYXQgeW91J3Jl
+IHN1Z2dlc3RpbmcgSSBtb2RpZnkgaXQgdG8gaWdub3JlIHRoZSBoYXJkd2FyZSBJJ2QgbGlrZQ0K
+dG8gY29udHJvbCBhbmQgd3JpdGUgYSBzaW1wbGUgZHJpdmVyIHRvIHNvLiAgVGhlIG9uZSBkcmF3
+YmFjayBpcyB0aGF0IG15DQpkcml2ZXIgcmVhbGx5IG5lZWRzIHRvIHdvcmsgd2l0aCBhbGwgQUhD
+SSBkZXZpY2VzLiAgVGhpcyB3b3VsZCBtZWFuIEkgZWl0aGVyDQpyZW1vdmUgYWhjaSBvciBoYW1z
+dHJpbmcgaXQgdG8gaWdub3JlIGFsbCBBSENJIGhhcmR3YXJlLg0KDQo+IFNvIEkgdGhpbmsgeW91
+J2QgbmVlZCB0bw0KPg0KPiBhKSBtb2RpZnkgYWhjaSB0byBpZ25vcmUgeW91ciBzcGVjaWZpYyBk
+ZXZpY2UgaW4gaXRzIHByb2JlIG1ldGhvZA0KPiBiKSB3cml0ZSBhIHNpbXBsZSBkcml2ZXIgc28g
+eW91IGNhbiBwb2tlIHRoZSBwb3J0cyBhbmQgZG8gYW55IG5lZWRlZCBETUENCg0KVGhhbmtzIGZv
+ciB0aGUgc3VnZ2VzdGlvbnMuICBUaGlzIGdpdmVzIG1lIHNvbWV0aGluZyB0byBnbyBvbi4NCg0K
+QW5keQ0KDQoNCg0K
