@@ -1,45 +1,70 @@
-From: =?UTF-8?B?R8O8bnRlciBXYWxsZXI=?= <g.wal@web.de>
-Subject: Re: Samsung 840 EVO
-Date: Mon, 04 May 2015 18:37:20 +0200
-Message-ID: <5547A040.4060505@web.de>
-References: <5547685F.7000103@web.de> <yq16188tl8v.fsf@sermon.lab.mkp.net>	<55479C21.8020608@web.de> <yq1twvss43t.fsf@sermon.lab.mkp.net>
+From: Suman Tripathi <stripathi@apm.com>
+Subject: Re: [PATCH v3 1/2] libahci: Add support to handle HOST_IRQ_STAT as
+ edge trigger latch.
+Date: Mon, 4 May 2015 22:13:11 +0530
+Message-ID: <CAOHikRCZimsE+_-6dqTiCT6qRTFLp9VGt6=WHWA_Z86GBn+WRg@mail.gmail.com>
+References: <1430667220-23477-1-git-send-email-stripathi@apm.com>
+	<1430667220-23477-2-git-send-email-stripathi@apm.com>
+	<20150504154726.GA1971@htj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.15.3]:54660 "EHLO mout.web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750779AbbEDQhb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 4 May 2015 12:37:31 -0400
-In-Reply-To: <yq1twvss43t.fsf@sermon.lab.mkp.net>
+Received: from exprod5og112.obsmtp.com ([64.18.0.24]:58509 "EHLO
+	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751846AbbEDQnN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 May 2015 12:43:13 -0400
+Received: by wiun10 with SMTP id n10so116559297wiu.1
+        for <linux-ide@vger.kernel.org>; Mon, 04 May 2015 09:43:11 -0700 (PDT)
+In-Reply-To: <20150504154726.GA1971@htj.duckdns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Mark Langsdorf <mlangsdo@redhat.com>, Jon Masters <jcm@redhat.com>, patches <patches@apm.com>
 
-Martin,
-do you mind if I post the essence of your last two mails to my thread i=
-n
-the Ubuntu MATE forum? So the maintainers of that system can see what i=
-s
-going on.
+On Mon, May 4, 2015 at 9:17 PM, Tejun Heo <tj@kernel.org> wrote:
+> On Sun, May 03, 2015 at 09:03:39PM +0530, Suman Tripathi wrote:
+>> This patch adds the support to handle HOST_IRQ_STAT as edge trigger
+>> latch.
+> ...
+>> +     /*
+>> +      * HOST_IRQ_STAT behaves as edge trigger latch. When HOST_IRQ_STAT
+>> +      * detects a egde from PORT_IRQ_STAT, it happens to loose interrupts
+>> +      * when interrupts are triggered from both ports. So handling of
+>> +      * the residual interrupt is required.
+>> +      */
+>> +     if (hpriv->flags & AHCI_HFLAG_EDGE_TRIG_IRQ) {
+>> +             for (i = 0; i < host->n_ports; i++) {
+>> +                     struct ata_port *ap;
+>> +
+>> +                     ap = host->ports[i];
+>> +                     if (ap) {
+>> +                             ahci_port_intr(ap);
+>> +                             VPRINTK("Residual irq from port %u\n", i);
+>> +                     }
+>> +                     handled = 1;
+>> +             }
+>> +     }
+>
+> This is kinda gross.  The right thing do is clearing irq stat
+> registers before handling the events, right?  That shouldn't be too
+> difficult to implement.  Create a separate set of irq functions which
+> clear irqs before processing rather than after.
 
-Am 04.05.2015 um 18:24 schrieb Martin K. Petersen:
->>>>>> "G=C3=BCnter" =3D=3D G=C3=BCnter Waller <g.wal@web.de> writes:
->=20
-> G=C3=BCnter> the second command, however, did not seem to produce any=
-thing
-> G=C3=BCnter> useful.  But beware: this is the old firmware, EXT0BB6Q,
->=20
-> Yes, this confirms that the old firmware did not support queued
-> TRIM. Whereas the new one does.
->=20
-> I'll try to reach out to my contacts at Samsung again so we can get t=
-his
-> resolved.
->=20
-> Until then, I have sent out a patch that blacklists queued TRIM for a=
-ll
-> Samsung 800-series drives. It appears to be generic to their
-> implementation and not tied to a particular drive model.
->=20
+AFAIK clearing host_irq_stat means we have handled port interrupts .
+Now for our case we still have interrupts left because it didn't get
+detected on
+first ahci_port_intr.  So you  mean to handle that residual irq in the
+next cycle (i mean next call intr handler ) ??
+
+>
+> Thanks.
+>
+> --
+> tejun
+
+
+
+-- 
+Thanks,
+with regards,
+Suman Tripathi
