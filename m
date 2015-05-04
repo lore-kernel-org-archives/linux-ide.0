@@ -1,49 +1,98 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v3 1/2] libahci: Add support to handle HOST_IRQ_STAT as
- edge trigger latch.
-Date: Mon, 4 May 2015 14:26:18 -0400
-Message-ID: <20150504182618.GG1971@htj.duckdns.org>
-References: <1430667220-23477-1-git-send-email-stripathi@apm.com>
- <1430667220-23477-2-git-send-email-stripathi@apm.com>
- <20150504154726.GA1971@htj.duckdns.org>
- <CAOHikRCZimsE+_-6dqTiCT6qRTFLp9VGt6=WHWA_Z86GBn+WRg@mail.gmail.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: imx6 sata cdrom driver issue
+Date: Mon, 04 May 2015 20:37:42 +0200
+Message-ID: <3757889.IHh7sEV0GH@wuerfel>
+References: <5539101D.1020909@lenbrook.com> <15678294.L2fz4hMtva@wuerfel> <55439CA1.4030601@lenbrook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f54.google.com ([209.85.192.54]:36536 "EHLO
-	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751129AbbEDS0X (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 May 2015 14:26:23 -0400
-Content-Disposition: inline
-In-Reply-To: <CAOHikRCZimsE+_-6dqTiCT6qRTFLp9VGt6=WHWA_Z86GBn+WRg@mail.gmail.com>
+Received: from mout.kundenserver.de ([212.227.126.130]:57741 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750992AbbEDSiL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 May 2015 14:38:11 -0400
+In-Reply-To: <55439CA1.4030601@lenbrook.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Suman Tripathi <stripathi@apm.com>
-Cc: Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Mark Langsdorf <mlangsdo@redhat.com>, Jon Masters <jcm@redhat.com>, patches <patches@apm.com>
+To: Jonathan Bagg <jbagg@lenbrook.com>
+Cc: linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org
 
-Hello,
+On Friday 01 May 2015 11:32:49 Jonathan Bagg wrote:
+> On 15-04-24 03:58 AM, Arnd Bergmann wrote:
+> > On Thursday 23 April 2015 11:30:37 Jonathan Bagg wrote:
+> >
+> > Do you have two SATA ports on one controller, with the other one being
+> > conneced to a disk drive?
+> Not when this error happened, but the CD-ROM was connected through a 
+> port multiplier.  One time I noticed sda device appear so I mounted it 
+> and it was the CD-ROM filesystem!
 
-On Mon, May 04, 2015 at 10:13:11PM +0530, Suman Tripathi wrote:
-> AFAIK clearing host_irq_stat means we have handled port interrupts .
-> Now for our case we still have interrupts left because it didn't get
-> detected on
-> first ahci_port_intr.  So you  mean to handle that residual irq in the
-> next cycle (i mean next call intr handler ) ??
+Very strange, I'm sure something went wrong there and either the SATA
+host or the CDROM driver does not work well with a port multiplier.
 
-Heh, I think we're talking past each other.  For level triggered IRQs,
-the latched IRQ bits should be cleared after handling the events;
-otherwise, the latched bits are gonna get set immediately as the
-events are still pending.  Also, this doesn't lose any events as
-they're level triggered latches - if any event is pending, the IRQ is
-gonna be raised again.
+Is there a way for you to reproduce the problem without the multiplier?
 
-Edge triggered latches are the other way around.  You should clear the
-latches before actually handling and clearing the events.  The pending
-events won't trigger the latches again as it's edge-triggered and the
-events which happens after this irq handling starts won't get lost as
-they'll be latched for the next round.
+> > My best guess is that something in the error handling of
+> > drivers/ata/ahci_imx.c causes a reset of the entire bus and that
+> > triggers the other bugs. Can you instrument that error handling to
+> > see what's going on?
+> >
+> Also tried a cubox 
+> <https://www.solid-run.com/products/cubox-i-mini-computer/>, (imx6) 
+> running  Linux OpenELEC 3.14.18 #1 SMP Sun Sep 14 12:22:14 EDT 2014 
+> armv7l GNU/Linux
 
-Thanks.
+Can you find out if there is a port multiplier in that machine?
 
--- 
-tejun
+Does it list the sda device in /proc/partitions, or just the /dev/sr0?
+
+> Most of the time mount /dev/sr0 /tmp/test succeeds with....
+> 
+> [  954.355669] ISO 9660 Extensions: Microsoft Joliet Level 3
+> [  954.530595] ISOFS: changing to secondary root
+> 
+> one time once it succeed but needed to reset the link....
+> 
+> [ 1272.000951] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 
+> frozen
+> [ 1272.000969] ata1.00: failed command: IDENTIFY PACKET DEVICE
+> [ 1272.000993] ata1.00: cmd a1/00:01:00:00:00/00:00:00:00:00/00 tag 2 
+> pio 512 in
+> [ 1272.000993]          res 40/00:03:00:16:00/00:00:00:00:00/a0 Emask 
+> 0x4 (timeout)
+> [ 1272.001004] ata1.00: status: { DRDY }
+> [ 1272.001021] ata1: hard resetting link
+> [ 1272.487628] ata1: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> [ 1272.495523] ata1.00: configured for UDMA/100
+> [ 1272.500917] ata1: EH complete
+> [ 1290.746222] ISO 9660 Extensions: Microsoft Joliet Level 3
+> 
+> rarely if fails with this....
+> 
+> [  724.697232] ISO 9660 Extensions: Microsoft Joliet Level 3
+> [  724.827435] ISOFS: changing to secondary root
+> [  724.910232] isofs_fill_super: root inode is not a directory. 
+> Corrupted media?
+> [  725.133516] UDF-fs: warning (device sr0): udf_fill_super: No 
+> partition found (2)
+> [  725.351106] F2FS-fs (sr0): Magic Mismatch, valid(0xf2f52010) - read(0x0)
+> [  725.351132] F2FS-fs (sr0): Can't find valid F2FS filesystem in 1th 
+> superblock
+> [  725.352029] F2FS-fs (sr0): Magic Mismatch, valid(0xf2f52010) - read(0x0)
+> [  725.352052] F2FS-fs (sr0): Can't find valid F2FS filesystem in 2th 
+> superblock
+> 
+> 
+> Specifying read only (mount -o ro /dev/sr0 /tmp/test) has worked 100% of 
+> the time on both the cubox and sabre boards.
+
+Interesting. That would indicate that something actually tries to write
+to the device on normal mount.  Can you try if 
+
+mount -t iso9660 /dev/sr0 /tmp/test
+
+avoids that problem as well? That file system should never attempt to write
+to the device, so if it's the failed write that causes the host reset,
+that should solve it too.
+
+	Arnd
