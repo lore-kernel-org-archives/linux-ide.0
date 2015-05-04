@@ -1,43 +1,39 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata: Blacklist queued TRIM on all Samsung 800-series
-Date: Mon, 4 May 2015 12:29:37 -0400
-Message-ID: <20150504162937.GE1971@htj.duckdns.org>
-References: <mi84f3@ger.gmane.org>
- <1430756429-2258-1-git-send-email-martin.petersen@oracle.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: Samsung 840 EVO
+Date: Mon, 04 May 2015 12:35:50 -0400
+Message-ID: <yq1pp6gs3kp.fsf@sermon.lab.mkp.net>
+References: <5547685F.7000103@web.de> <yq16188tl8v.fsf@sermon.lab.mkp.net>
+	<mi84f3$vjo$1@ger.gmane.org> <yq1y4l4s47z.fsf@sermon.lab.mkp.net>
+	<55479DF0.9090405@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f54.google.com ([209.85.192.54]:36225 "EHLO
-	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750779AbbEDQ3k (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 May 2015 12:29:40 -0400
-Content-Disposition: inline
-In-Reply-To: <1430756429-2258-1-git-send-email-martin.petersen@oracle.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:38148 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750887AbbEDQfy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 May 2015 12:35:54 -0400
+In-Reply-To: <55479DF0.9090405@gmail.com> ("Sven =?utf-8?Q?K=C3=B6hler=22'?=
+ =?utf-8?Q?s?= message of "Mon, 04
+	May 2015 19:27:28 +0300")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-ide@vger.kernel.org, g.wal@web.de, sven.koehler@gmail.com, stable@vger.kernel.org
+To: Sven =?utf-8?Q?K=C3=B6hler?= <sven.koehler@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org
 
-On Mon, May 04, 2015 at 12:20:29PM -0400, Martin K. Petersen wrote:
-> The queued TRIM problems appear to be generic to Samsung's firmware a=
-nd
-> not tied to a particular model. A recent update to the 840 EVO firmwa=
-re
-> introduced the same issue as we saw on 850 Pro.
->=20
-> Blacklist queued TRIM on all 800-series drives while we work this iss=
-ue
-> with Samsung.
->=20
-> Reported-by: G=FCnter Waller <g.wal@web.de>
-> Reported-by: Sven K=F6hler <sven.koehler@gmail.com>
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> Cc: stable@vger.kernel.org
+>>>>> "Sven" =3D=3D Sven K=C3=B6hler <sven.koehler@gmail.com> writes:
 
-Patch applied.  Will push out in a couple days.
+>> It is helpful. It shows us that Samsung has indeed enabled queued
+>> TRIM functionality in this firmware update.
 
-Thanks a lot for handling this.
+Sven> Are you saying that previous firmwares didn't claim that the driv=
+e
+Sven> supports queued TRIM. But the new firmware does - even though the
+Sven> feature appears to be broken?
+
+Correct. The old firmware releases for this drive did not advertise
+support for queued TRIM whereas the new one does. We saw exactly the
+same issue with a firmware update for 850 Pro.
 
 --=20
-tejun
+Martin K. Petersen	Oracle Linux Engineering
