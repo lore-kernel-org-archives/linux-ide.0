@@ -1,53 +1,42 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH v3 1/2] libahci: Add support to handle HOST_IRQ_STAT as
- edge trigger latch.
-Date: Mon, 04 May 2015 16:08:08 +0300
-Message-ID: <55476F38.7080002@cogentembedded.com>
-References: <1430667220-23477-1-git-send-email-stripathi@apm.com> <1430667220-23477-2-git-send-email-stripathi@apm.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: Samsung 840 EVO
+Date: Mon, 04 May 2015 11:28:48 -0400
+Message-ID: <yq16188tl8v.fsf@sermon.lab.mkp.net>
+References: <5547685F.7000103@web.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:33735 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752548AbbEDNIL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 May 2015 09:08:11 -0400
-Received: by lbbzk7 with SMTP id zk7so104353758lbb.0
-        for <linux-ide@vger.kernel.org>; Mon, 04 May 2015 06:08:09 -0700 (PDT)
-In-Reply-To: <1430667220-23477-2-git-send-email-stripathi@apm.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:31139 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751272AbbEDP2x convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 May 2015 11:28:53 -0400
+In-Reply-To: <5547685F.7000103@web.de> (=?utf-8?Q?=22G=C3=BCnter?= Waller"'s
+ message of "Mon, 04
+	May 2015 14:38:55 +0200")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Suman Tripathi <stripathi@apm.com>, olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com
+To: =?utf-8?Q?G=C3=BCnter?= Waller <g.wal@web.de>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 
-Hello.
+>>>>> "G=C3=BCnter" =3D=3D G=C3=BCnter Waller <g.wal@web.de> writes:
 
-On 5/3/2015 6:33 PM, Suman Tripathi wrote:
+G=C3=BCnter> the subject Samsung SSD is having performance issues with =
+"old
+G=C3=BCnter> data" which Samsung now addresses with a new firmware.
 
-> This patch adds the support to handle HOST_IRQ_STAT as edge trigger
-> latch.
+I wonder if they enabled the same botched queued discard that they did
+in 850 Pro?
 
-> Signed-off-by: Suman Tripathi <stripathi@apm.com>
-> ---
->   drivers/ata/ahci.h    |  2 ++
->   drivers/ata/libahci.c | 19 +++++++++++++++++++
->   2 files changed, 21 insertions(+)
+If someone has an 840 Evo with the new firmware it would be helpful for
+us to receive the output of:
 
-> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-> index 71262e0..2df2237 100644
-> --- a/drivers/ata/ahci.h
-> +++ b/drivers/ata/ahci.h
-[...]
-> +++ b/drivers/ata/libahci.c
-> @@ -1879,6 +1879,25 @@ static irqreturn_t ahci_single_irq_intr(int irq, void *dev_instance)
->   	 */
->   	writel(irq_stat, mmio + HOST_IRQ_STAT);
->
-> +	/*
-> +	 * HOST_IRQ_STAT behaves as edge trigger latch. When HOST_IRQ_STAT
-> +	 * detects a egde from PORT_IRQ_STAT, it happens to loose interrupts
+# hdparm -I /dev/sdN
+# smartctl -l gplog,0x13 /dev/sdN
 
-    s/loose/lose/.
+I think I might have an 840 in the lab. Will head down and update it
+later this week unless somebody beats me to providing the information
+above.
 
-MBR, Sergei
-
+--=20
+Martin K. Petersen	Oracle Linux Engineering
