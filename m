@@ -1,134 +1,51 @@
-From: =?UTF-8?B?R8O8bnRlciBXYWxsZXI=?= <g.wal@web.de>
-Subject: Re: Samsung 840 EVO
-Date: Mon, 04 May 2015 18:19:45 +0200
-Message-ID: <55479C21.8020608@web.de>
-References: <5547685F.7000103@web.de> <yq16188tl8v.fsf@sermon.lab.mkp.net>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH] libata: Blacklist queued TRIM on all Samsung 800-series
+Date: Mon,  4 May 2015 12:20:29 -0400
+Message-ID: <1430756429-2258-1-git-send-email-martin.petersen@oracle.com>
+References: <mi84f3@ger.gmane.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------090907010909010801030407"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.15.4]:64557 "EHLO mout.web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750992AbbEDQTz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 4 May 2015 12:19:55 -0400
-In-Reply-To: <yq16188tl8v.fsf@sermon.lab.mkp.net>
+Received: from userp1040.oracle.com ([156.151.31.81]:35354 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751069AbbEDQUl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 May 2015 12:20:41 -0400
+In-Reply-To: <mi84f3@ger.gmane.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+To: tj@kernel.org, linux-ide@vger.kernel.org
+Cc: g.wal@web.de, sven.koehler@gmail.com, "Martin K. Petersen" <martin.petersen@oracle.com>, stable@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------090907010909010801030407
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+The queued TRIM problems appear to be generic to Samsung's firmware and
+not tied to a particular model. A recent update to the 840 EVO firmware
+introduced the same issue as we saw on 850 Pro.
 
-Hi Martin,
-here you are - the second command, however, did not seem to produce
-anything useful.
-But beware: this is the old firmware, EXT0BB6Q, i.e. the one with the
-performance issues (not seen on my machine yet), not the one that causes
-the problems with fstrim - named EXT0DB6Q.
-As I mentioned I shy away from upgrading at this point, not knowing
-whether my Linux system runs fstrim somewhere behind my back. I am not
-that deeply involved in the inner workings of the kernel as you guys.
-This is my bread and butter machine, I'd rather not expose it to risk if
-I can help it.
-Cheers
-Günter
+Blacklist queued TRIM on all 800-series drives while we work this issue
+with Samsung.
 
+Reported-by: G=C3=BCnter Waller <g.wal@web.de>
+Reported-by: Sven K=C3=B6hler <sven.koehler@gmail.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: stable@vger.kernel.org
+---
+ drivers/ata/libata-core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Am 04.05.2015 um 17:28 schrieb Martin K. Petersen:
->>>>>> "Günter" == Günter Waller <g.wal@web.de> writes:
-> 
-> Günter> the subject Samsung SSD is having performance issues with "old
-> Günter> data" which Samsung now addresses with a new firmware.
-> 
-> I wonder if they enabled the same botched queued discard that they did
-> in 850 Pro?
-> 
-> If someone has an 840 Evo with the new firmware it would be helpful for
-> us to receive the output of:
-> 
-> # hdparm -I /dev/sdN
-> # smartctl -l gplog,0x13 /dev/sdN
-> 
-> I think I might have an 840 in the lab. Will head down and update it
-> later this week unless somebody beats me to providing the information
-> above.
-> 
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index f6cb1f1b30b7..4476fb590733 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4235,7 +4235,7 @@ static const struct ata_blacklist_entry ata_devic=
+e_blacklist [] =3D {
+ 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
+ 	{ "Crucial_CT*MX100*",		"MU01",	ATA_HORKAGE_NO_NCQ_TRIM |
+ 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
+-	{ "Samsung SSD 850 PRO*",	NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
++	{ "Samsung SSD 8*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
+ 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
+=20
+ 	/*
+--=20
+1.9.3
 
---------------090907010909010801030407
-Content-Type: text/plain; charset=UTF-8;
- name="840evo.txt"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="840evo.txt"
-
-aGRwYXJtIC1JIC9kZXYvc2RhCi9kZXYvc2RhOgoKQVRBIGRldmljZSwgd2l0aCBub24tcmVt
-b3ZhYmxlIG1lZGlhCglNb2RlbCBOdW1iZXI6ICAgICAgIFNhbXN1bmcgU1NEIDg0MCBFVk8g
-MjUwR0IgICAgICAgICAgICAgICAKCVNlcmlhbCBOdW1iZXI6ICAgICAgUzFEQk5TQkY3Njcz
-ODNUICAgICAKCUZpcm13YXJlIFJldmlzaW9uOiAgRVhUMEJCNlEKCVRyYW5zcG9ydDogICAg
-ICAgICAgU2VyaWFsLCBBVEE4LUFTVCwgU0FUQSAxLjBhLCBTQVRBIElJIEV4dGVuc2lvbnMs
-IFNBVEEgUmV2IDIuNSwgU0FUQSBSZXYgMi42LCBTQVRBIFJldiAzLjAKU3RhbmRhcmRzOgoJ
-VXNlZDogdW5rbm93biAobWlub3IgcmV2aXNpb24gY29kZSAweDAwMzkpIAoJU3VwcG9ydGVk
-OiA5IDggNyA2IDUgCglMaWtlbHkgdXNlZDogOQpDb25maWd1cmF0aW9uOgoJTG9naWNhbAkJ
-bWF4CWN1cnJlbnQKCWN5bGluZGVycwkxNjM4MwkxNjM4MwoJaGVhZHMJCTE2CTE2CglzZWN0
-b3JzL3RyYWNrCTYzCTYzCgktLQoJQ0hTIGN1cnJlbnQgYWRkcmVzc2FibGUgc2VjdG9yczog
-ICAxNjUxNDA2NAoJTEJBICAgIHVzZXIgYWRkcmVzc2FibGUgc2VjdG9yczogIDI2ODQzNTQ1
-NQoJTEJBNDggIHVzZXIgYWRkcmVzc2FibGUgc2VjdG9yczogIDQ4ODM5NzE2OAoJTG9naWNh
-bCAgU2VjdG9yIHNpemU6ICAgICAgICAgICAgICAgICAgIDUxMiBieXRlcwoJUGh5c2ljYWwg
-U2VjdG9yIHNpemU6ICAgICAgICAgICAgICAgICAgIDUxMiBieXRlcwoJTG9naWNhbCBTZWN0
-b3ItMCBvZmZzZXQ6ICAgICAgICAgICAgICAgICAgMCBieXRlcwoJZGV2aWNlIHNpemUgd2l0
-aCBNID0gMTAyNCoxMDI0OiAgICAgIDIzODQ3NSBNQnl0ZXMKCWRldmljZSBzaXplIHdpdGgg
-TSA9IDEwMDAqMTAwMDogICAgICAyNTAwNTkgTUJ5dGVzICgyNTAgR0IpCgljYWNoZS9idWZm
-ZXIgc2l6ZSAgPSB1bmtub3duCglOb21pbmFsIE1lZGlhIFJvdGF0aW9uIFJhdGU6IFNvbGlk
-IFN0YXRlIERldmljZQpDYXBhYmlsaXRpZXM6CglMQkEsIElPUkRZKGNhbiBiZSBkaXNhYmxl
-ZCkKCVF1ZXVlIGRlcHRoOiAzMgoJU3RhbmRieSB0aW1lciB2YWx1ZXM6IHNwZWMnZCBieSBT
-dGFuZGFyZCwgbm8gZGV2aWNlIHNwZWNpZmljIG1pbmltdW0KCVIvVyBtdWx0aXBsZSBzZWN0
-b3IgdHJhbnNmZXI6IE1heCA9IDEJQ3VycmVudCA9IDEKCURNQTogbWRtYTAgbWRtYTEgbWRt
-YTIgdWRtYTAgdWRtYTEgdWRtYTIgdWRtYTMgdWRtYTQgdWRtYTUgKnVkbWE2IAoJICAgICBD
-eWNsZSB0aW1lOiBtaW49MTIwbnMgcmVjb21tZW5kZWQ9MTIwbnMKCVBJTzogcGlvMCBwaW8x
-IHBpbzIgcGlvMyBwaW80IAoJICAgICBDeWNsZSB0aW1lOiBubyBmbG93IGNvbnRyb2w9MTIw
-bnMgIElPUkRZIGZsb3cgY29udHJvbD0xMjBucwpDb21tYW5kcy9mZWF0dXJlczoKCUVuYWJs
-ZWQJU3VwcG9ydGVkOgoJICAgKglTTUFSVCBmZWF0dXJlIHNldAoJICAgIAlTZWN1cml0eSBN
-b2RlIGZlYXR1cmUgc2V0CgkgICAqCVBvd2VyIE1hbmFnZW1lbnQgZmVhdHVyZSBzZXQKCSAg
-ICoJV3JpdGUgY2FjaGUKCSAgICoJTG9vay1haGVhZAoJICAgKglIb3N0IFByb3RlY3RlZCBB
-cmVhIGZlYXR1cmUgc2V0CgkgICAqCVdSSVRFX0JVRkZFUiBjb21tYW5kCgkgICAqCVJFQURf
-QlVGRkVSIGNvbW1hbmQKCSAgICoJTk9QIGNtZAoJICAgKglET1dOTE9BRF9NSUNST0NPREUK
-CSAgICAJU0VUX01BWCBzZWN1cml0eSBleHRlbnNpb24KCSAgICoJNDgtYml0IEFkZHJlc3Mg
-ZmVhdHVyZSBzZXQKCSAgICoJRGV2aWNlIENvbmZpZ3VyYXRpb24gT3ZlcmxheSBmZWF0dXJl
-IHNldAoJICAgKglNYW5kYXRvcnkgRkxVU0hfQ0FDSEUKCSAgICoJRkxVU0hfQ0FDSEVfRVhU
-CgkgICAqCVNNQVJUIGVycm9yIGxvZ2dpbmcKCSAgICoJU01BUlQgc2VsZi10ZXN0CgkgICAq
-CUdlbmVyYWwgUHVycG9zZSBMb2dnaW5nIGZlYXR1cmUgc2V0CgkgICAqCVdSSVRFX3tETUF8
-TVVMVElQTEV9X0ZVQV9FWFQKCSAgICoJNjQtYml0IFdvcmxkIHdpZGUgbmFtZQoJICAgIAlX
-cml0ZS1SZWFkLVZlcmlmeSBmZWF0dXJlIHNldAoJICAgKglXUklURV9VTkNPUlJFQ1RBQkxF
-X0VYVCBjb21tYW5kCgkgICAqCXtSRUFELFdSSVRFfV9ETUFfRVhUX0dQTCBjb21tYW5kcwoJ
-ICAgKglTZWdtZW50ZWQgRE9XTkxPQURfTUlDUk9DT0RFCgkgICAqCUdlbjEgc2lnbmFsaW5n
-IHNwZWVkICgxLjVHYi9zKQoJICAgKglHZW4yIHNpZ25hbGluZyBzcGVlZCAoMy4wR2IvcykK
-CSAgICoJR2VuMyBzaWduYWxpbmcgc3BlZWQgKDYuMEdiL3MpCgkgICAqCU5hdGl2ZSBDb21t
-YW5kIFF1ZXVlaW5nIChOQ1EpCgkgICAqCVBoeSBldmVudCBjb3VudGVycwoJICAgKglSRUFE
-X0xPR19ETUFfRVhUIGVxdWl2YWxlbnQgdG8gUkVBRF9MT0dfRVhUCgkgICAqCURNQSBTZXR1
-cCBBdXRvLUFjdGl2YXRlIG9wdGltaXphdGlvbgoJICAgIAlEZXZpY2UtaW5pdGlhdGVkIGlu
-dGVyZmFjZSBwb3dlciBtYW5hZ2VtZW50CgkgICAqCUFzeW5jaHJvbm91cyBub3RpZmljYXRp
-b24gKGVnLiBtZWRpYSBjaGFuZ2UpCgkgICAqCVNvZnR3YXJlIHNldHRpbmdzIHByZXNlcnZh
-dGlvbgoJICAgKglTTUFSVCBDb21tYW5kIFRyYW5zcG9ydCAoU0NUKSBmZWF0dXJlIHNldAoJ
-ICAgKglTQ1QgV3JpdGUgU2FtZSAoQUMyKQoJICAgKglTQ1QgRXJyb3IgUmVjb3ZlcnkgQ29u
-dHJvbCAoQUMzKQoJICAgKglTQ1QgRmVhdHVyZXMgQ29udHJvbCAoQUM0KQoJICAgKglTQ1Qg
-RGF0YSBUYWJsZXMgKEFDNSkKCSAgICoJcmVzZXJ2ZWQgNjlbNF0KCSAgICoJRE9XTkxPQUQg
-TUlDUk9DT0RFIERNQSBjb21tYW5kCgkgICAqCVNFVCBNQVggU0VUUEFTU1dPUkQvVU5MT0NL
-IERNQSBjb21tYW5kcwoJICAgKglXUklURSBCVUZGRVIgRE1BIGNvbW1hbmQKCSAgICoJUkVB
-RCBCVUZGRVIgRE1BIGNvbW1hbmQKCSAgICoJRGF0YSBTZXQgTWFuYWdlbWVudCBUUklNIHN1
-cHBvcnRlZCAobGltaXQgOCBibG9ja3MpClNlY3VyaXR5OiAKCU1hc3RlciBwYXNzd29yZCBy
-ZXZpc2lvbiBjb2RlID0gNjU1MzQKCQlzdXBwb3J0ZWQKCW5vdAllbmFibGVkCglub3QJbG9j
-a2VkCgkJZnJvemVuCglub3QJZXhwaXJlZDogc2VjdXJpdHkgY291bnQKCQlzdXBwb3J0ZWQ6
-IGVuaGFuY2VkIGVyYXNlCgkybWluIGZvciBTRUNVUklUWSBFUkFTRSBVTklULiA4bWluIGZv
-ciBFTkhBTkNFRCBTRUNVUklUWSBFUkFTRSBVTklULiAKTG9naWNhbCBVbml0IFdXTiBEZXZp
-Y2UgSWRlbnRpZmllcjogNTAwMjUzODhhMDVkMmFmYQoJTkFBCQk6IDUKCUlFRUUgT1VJCTog
-MDAyNTM4CglVbmlxdWUgSUQJOiA4YTA1ZDJhZmEKQ2hlY2tzdW06IGNvcnJlY3QKCioqKioq
-KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioq
-KioKc21hcnRjdGwgLWwgZ3Bsb2csMHgxMyAvZGV2L3NkYQpzbWFydGN0bCA2LjIgMjAxMy0w
-Ny0yNiByMzg0MSBbeDg2XzY0LWxpbnV4LTMuMTMuMC01MS1nZW5lcmljXSAobG9jYWwgYnVp
-bGQpCkNvcHlyaWdodCAoQykgMjAwMi0xMywgQnJ1Y2UgQWxsZW4sIENocmlzdGlhbiBGcmFu
-a2UsIHd3dy5zbWFydG1vbnRvb2xzLm9yZwoKR2VuZXJhbCBQdXJwb3NlIExvZyAweDEzIGRv
-ZXMgbm90IGV4aXN0IChvdmVycmlkZSB3aXRoICctVCBwZXJtaXNzaXZlJyBvcHRpb24pCg==
---------------090907010909010801030407--
