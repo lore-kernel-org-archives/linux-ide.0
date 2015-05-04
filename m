@@ -1,70 +1,33 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: Re: [PATCH v3 1/2] libahci: Add support to handle HOST_IRQ_STAT as
- edge trigger latch.
-Date: Mon, 4 May 2015 22:13:11 +0530
-Message-ID: <CAOHikRCZimsE+_-6dqTiCT6qRTFLp9VGt6=WHWA_Z86GBn+WRg@mail.gmail.com>
-References: <1430667220-23477-1-git-send-email-stripathi@apm.com>
-	<1430667220-23477-2-git-send-email-stripathi@apm.com>
-	<20150504154726.GA1971@htj.duckdns.org>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: Samsung 840 EVO
+Date: Mon, 04 May 2015 12:47:30 -0400
+Message-ID: <yq1lhh4s319.fsf@sermon.lab.mkp.net>
+References: <5547685F.7000103@web.de> <yq16188tl8v.fsf@sermon.lab.mkp.net>
+	<55479C21.8020608@web.de> <yq1twvss43t.fsf@sermon.lab.mkp.net>
+	<5547A040.4060505@web.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from exprod5og112.obsmtp.com ([64.18.0.24]:58509 "EHLO
-	mail-wi0-f177.google.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751846AbbEDQnN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 May 2015 12:43:13 -0400
-Received: by wiun10 with SMTP id n10so116559297wiu.1
-        for <linux-ide@vger.kernel.org>; Mon, 04 May 2015 09:43:11 -0700 (PDT)
-In-Reply-To: <20150504154726.GA1971@htj.duckdns.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:45311 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751559AbbEDQrj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 May 2015 12:47:39 -0400
+In-Reply-To: <5547A040.4060505@web.de> (=?utf-8?Q?=22G=C3=BCnter?= Waller"'s
+ message of "Mon, 04
+	May 2015 18:37:20 +0200")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Mark Langsdorf <mlangsdo@redhat.com>, Jon Masters <jcm@redhat.com>, patches <patches@apm.com>
+To: =?utf-8?Q?G=C3=BCnter?= Waller <g.wal@web.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 
-On Mon, May 4, 2015 at 9:17 PM, Tejun Heo <tj@kernel.org> wrote:
-> On Sun, May 03, 2015 at 09:03:39PM +0530, Suman Tripathi wrote:
->> This patch adds the support to handle HOST_IRQ_STAT as edge trigger
->> latch.
-> ...
->> +     /*
->> +      * HOST_IRQ_STAT behaves as edge trigger latch. When HOST_IRQ_STAT
->> +      * detects a egde from PORT_IRQ_STAT, it happens to loose interrupts
->> +      * when interrupts are triggered from both ports. So handling of
->> +      * the residual interrupt is required.
->> +      */
->> +     if (hpriv->flags & AHCI_HFLAG_EDGE_TRIG_IRQ) {
->> +             for (i = 0; i < host->n_ports; i++) {
->> +                     struct ata_port *ap;
->> +
->> +                     ap = host->ports[i];
->> +                     if (ap) {
->> +                             ahci_port_intr(ap);
->> +                             VPRINTK("Residual irq from port %u\n", i);
->> +                     }
->> +                     handled = 1;
->> +             }
->> +     }
->
-> This is kinda gross.  The right thing do is clearing irq stat
-> registers before handling the events, right?  That shouldn't be too
-> difficult to implement.  Create a separate set of irq functions which
-> clear irqs before processing rather than after.
+>>>>> "G=C3=BCnter" =3D=3D G=C3=BCnter Waller <g.wal@web.de> writes:
 
-AFAIK clearing host_irq_stat means we have handled port interrupts .
-Now for our case we still have interrupts left because it didn't get
-detected on
-first ahci_port_intr.  So you  mean to handle that residual irq in the
-next cycle (i mean next call intr handler ) ??
+G=C3=BCnter> Martin, do you mind if I post the essence of your last two=
+ mails
+G=C3=BCnter> to my thread in the Ubuntu MATE forum?
 
->
-> Thanks.
->
-> --
-> tejun
+Go right ahead.
 
-
-
--- 
-Thanks,
-with regards,
-Suman Tripathi
+--=20
+Martin K. Petersen	Oracle Linux Engineering
