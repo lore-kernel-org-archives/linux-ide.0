@@ -1,53 +1,171 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v3 1/2] libahci: Add support to handle HOST_IRQ_STAT as
- edge trigger latch.
-Date: Mon, 4 May 2015 11:47:26 -0400
-Message-ID: <20150504154726.GA1971@htj.duckdns.org>
-References: <1430667220-23477-1-git-send-email-stripathi@apm.com>
- <1430667220-23477-2-git-send-email-stripathi@apm.com>
+From: =?UTF-8?B?U3ZlbiBLw7ZobGVy?= <sven.koehler@gmail.com>
+Subject: Re: Samsung 840 EVO
+Date: Mon, 04 May 2015 18:49:56 +0300
+Message-ID: <mi84f3$vjo$1@ger.gmane.org>
+References: <5547685F.7000103@web.de> <yq16188tl8v.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------080207040707010509060506"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qk0-f177.google.com ([209.85.220.177]:33184 "EHLO
-	mail-qk0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751324AbbEDPra (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 May 2015 11:47:30 -0400
-Content-Disposition: inline
-In-Reply-To: <1430667220-23477-2-git-send-email-stripathi@apm.com>
+Received: from plane.gmane.org ([80.91.229.3]:43167 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750912AbbEDPuH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 4 May 2015 11:50:07 -0400
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <lnx-linux-ide@m.gmane.org>)
+	id 1YpIdA-00016S-SW
+	for linux-ide@vger.kernel.org; Mon, 04 May 2015 17:50:05 +0200
+Received: from 132.70.228.38 ([132.70.228.38])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Mon, 04 May 2015 17:50:04 +0200
+Received: from sven.koehler by 132.70.228.38 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-ide@vger.kernel.org>; Mon, 04 May 2015 17:50:04 +0200
+In-Reply-To: <yq16188tl8v.fsf@sermon.lab.mkp.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Suman Tripathi <stripathi@apm.com>
-Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com
+To: linux-ide@vger.kernel.org
 
-On Sun, May 03, 2015 at 09:03:39PM +0530, Suman Tripathi wrote:
-> This patch adds the support to handle HOST_IRQ_STAT as edge trigger
-> latch.
-...
-> +	/*
-> +	 * HOST_IRQ_STAT behaves as edge trigger latch. When HOST_IRQ_STAT
-> +	 * detects a egde from PORT_IRQ_STAT, it happens to loose interrupts
-> +	 * when interrupts are triggered from both ports. So handling of
-> +	 * the residual interrupt is required.
-> +	 */
-> +	if (hpriv->flags & AHCI_HFLAG_EDGE_TRIG_IRQ) {
-> +		for (i = 0; i < host->n_ports; i++) {
-> +			struct ata_port *ap;
-> +
-> +			ap = host->ports[i];
-> +			if (ap) {
-> +				ahci_port_intr(ap);
-> +				VPRINTK("Residual irq from port %u\n", i);
-> +			}
-> +			handled = 1;
-> +		}
-> +	}
+This is a multi-part message in MIME format.
+--------------080207040707010509060506
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 
-This is kinda gross.  The right thing do is clearing irq stat
-registers before handling the events, right?  That shouldn't be too
-difficult to implement.  Create a separate set of irq functions which
-clear irqs before processing rather than after.
+Am 04.05.2015 um 18:28 schrieb Martin K. Petersen:
+> If someone has an 840 Evo with the new firmware it would be helpful for
+> us to receive the output of:
+> 
+> # hdparm -I /dev/sdN
+> # smartctl -l gplog,0x13 /dev/sdN
 
-Thanks.
+Find the output attached. But I'm not sure the smartctl is helpful,
+since my machine has been running with discard disabled for about half a
+day now.
 
--- 
-tejun
+--------------080207040707010509060506
+Content-Type: text/plain; charset=UTF-8;
+ name="hdparm.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="hdparm.txt"
+
+Ci9kZXYvc2RhOgoKQVRBIGRldmljZSwgd2l0aCBub24tcmVtb3ZhYmxlIG1lZGlhCglNb2Rl
+bCBOdW1iZXI6ICAgICAgIFNhbXN1bmcgU1NEIDg0MCBFVk8gMjUwR0IgICAgICAgICAgICAg
+ICAKCVNlcmlhbCBOdW1iZXI6ICAgICAgZGVsZXRlZAoJRmlybXdhcmUgUmV2aXNpb246ICBF
+WFQwREI2UQoJVHJhbnNwb3J0OiAgICAgICAgICBTZXJpYWwsIEFUQTgtQVNULCBTQVRBIDEu
+MGEsIFNBVEEgSUkgRXh0ZW5zaW9ucywgU0FUQSBSZXYgMi41LCBTQVRBIFJldiAyLjYsIFNB
+VEEgUmV2IDMuMApTdGFuZGFyZHM6CglVc2VkOiB1bmtub3duIChtaW5vciByZXZpc2lvbiBj
+b2RlIDB4MDAzOSkgCglTdXBwb3J0ZWQ6IDkgOCA3IDYgNSAKCUxpa2VseSB1c2VkOiA5CkNv
+bmZpZ3VyYXRpb246CglMb2dpY2FsCQltYXgJY3VycmVudAoJY3lsaW5kZXJzCTE2MzgzCTE2
+MzgzCgloZWFkcwkJMTYJMTYKCXNlY3RvcnMvdHJhY2sJNjMJNjMKCS0tCglDSFMgY3VycmVu
+dCBhZGRyZXNzYWJsZSBzZWN0b3JzOiAgIDE2NTE0MDY0CglMQkEgICAgdXNlciBhZGRyZXNz
+YWJsZSBzZWN0b3JzOiAgMjY4NDM1NDU1CglMQkE0OCAgdXNlciBhZGRyZXNzYWJsZSBzZWN0
+b3JzOiAgNDg4Mzk3MTY4CglMb2dpY2FsICBTZWN0b3Igc2l6ZTogICAgICAgICAgICAgICAg
+ICAgNTEyIGJ5dGVzCglQaHlzaWNhbCBTZWN0b3Igc2l6ZTogICAgICAgICAgICAgICAgICAg
+NTEyIGJ5dGVzCglMb2dpY2FsIFNlY3Rvci0wIG9mZnNldDogICAgICAgICAgICAgICAgICAw
+IGJ5dGVzCglkZXZpY2Ugc2l6ZSB3aXRoIE0gPSAxMDI0KjEwMjQ6ICAgICAgMjM4NDc1IE1C
+eXRlcwoJZGV2aWNlIHNpemUgd2l0aCBNID0gMTAwMCoxMDAwOiAgICAgIDI1MDA1OSBNQnl0
+ZXMgKDI1MCBHQikKCWNhY2hlL2J1ZmZlciBzaXplICA9IHVua25vd24KCU5vbWluYWwgTWVk
+aWEgUm90YXRpb24gUmF0ZTogU29saWQgU3RhdGUgRGV2aWNlCkNhcGFiaWxpdGllczoKCUxC
+QSwgSU9SRFkoY2FuIGJlIGRpc2FibGVkKQoJUXVldWUgZGVwdGg6IDMyCglTdGFuZGJ5IHRp
+bWVyIHZhbHVlczogc3BlYydkIGJ5IFN0YW5kYXJkLCBubyBkZXZpY2Ugc3BlY2lmaWMgbWlu
+aW11bQoJUi9XIG11bHRpcGxlIHNlY3RvciB0cmFuc2ZlcjogTWF4ID0gMQlDdXJyZW50ID0g
+MQoJRE1BOiBtZG1hMCBtZG1hMSBtZG1hMiB1ZG1hMCB1ZG1hMSB1ZG1hMiB1ZG1hMyB1ZG1h
+NCB1ZG1hNSAqdWRtYTYgCgkgICAgIEN5Y2xlIHRpbWU6IG1pbj0xMjBucyByZWNvbW1lbmRl
+ZD0xMjBucwoJUElPOiBwaW8wIHBpbzEgcGlvMiBwaW8zIHBpbzQgCgkgICAgIEN5Y2xlIHRp
+bWU6IG5vIGZsb3cgY29udHJvbD0xMjBucyAgSU9SRFkgZmxvdyBjb250cm9sPTEyMG5zCkNv
+bW1hbmRzL2ZlYXR1cmVzOgoJRW5hYmxlZAlTdXBwb3J0ZWQ6CgkgICAqCVNNQVJUIGZlYXR1
+cmUgc2V0CgkgICAgCVNlY3VyaXR5IE1vZGUgZmVhdHVyZSBzZXQKCSAgICoJUG93ZXIgTWFu
+YWdlbWVudCBmZWF0dXJlIHNldAoJICAgKglXcml0ZSBjYWNoZQoJICAgKglMb29rLWFoZWFk
+CgkgICAqCUhvc3QgUHJvdGVjdGVkIEFyZWEgZmVhdHVyZSBzZXQKCSAgICoJV1JJVEVfQlVG
+RkVSIGNvbW1hbmQKCSAgICoJUkVBRF9CVUZGRVIgY29tbWFuZAoJICAgKglOT1AgY21kCgkg
+ICAqCURPV05MT0FEX01JQ1JPQ09ERQoJICAgIAlTRVRfTUFYIHNlY3VyaXR5IGV4dGVuc2lv
+bgoJICAgKgk0OC1iaXQgQWRkcmVzcyBmZWF0dXJlIHNldAoJICAgKglEZXZpY2UgQ29uZmln
+dXJhdGlvbiBPdmVybGF5IGZlYXR1cmUgc2V0CgkgICAqCU1hbmRhdG9yeSBGTFVTSF9DQUNI
+RQoJICAgKglGTFVTSF9DQUNIRV9FWFQKCSAgICoJU01BUlQgZXJyb3IgbG9nZ2luZwoJICAg
+KglTTUFSVCBzZWxmLXRlc3QKCSAgICoJR2VuZXJhbCBQdXJwb3NlIExvZ2dpbmcgZmVhdHVy
+ZSBzZXQKCSAgICoJV1JJVEVfe0RNQXxNVUxUSVBMRX1fRlVBX0VYVAoJICAgKgk2NC1iaXQg
+V29ybGQgd2lkZSBuYW1lCgkgICAgCVdyaXRlLVJlYWQtVmVyaWZ5IGZlYXR1cmUgc2V0Cgkg
+ICAqCVdSSVRFX1VOQ09SUkVDVEFCTEVfRVhUIGNvbW1hbmQKCSAgICoJe1JFQUQsV1JJVEV9
+X0RNQV9FWFRfR1BMIGNvbW1hbmRzCgkgICAqCVNlZ21lbnRlZCBET1dOTE9BRF9NSUNST0NP
+REUKCSAgICoJR2VuMSBzaWduYWxpbmcgc3BlZWQgKDEuNUdiL3MpCgkgICAqCUdlbjIgc2ln
+bmFsaW5nIHNwZWVkICgzLjBHYi9zKQoJICAgKglHZW4zIHNpZ25hbGluZyBzcGVlZCAoNi4w
+R2IvcykKCSAgICoJTmF0aXZlIENvbW1hbmQgUXVldWVpbmcgKE5DUSkKCSAgICoJUGh5IGV2
+ZW50IGNvdW50ZXJzCgkgICAqCXVua25vd24gNzZbMTVdCgkgICAqCURNQSBTZXR1cCBBdXRv
+LUFjdGl2YXRlIG9wdGltaXphdGlvbgoJICAgIAlEZXZpY2UtaW5pdGlhdGVkIGludGVyZmFj
+ZSBwb3dlciBtYW5hZ2VtZW50CgkgICAqCUFzeW5jaHJvbm91cyBub3RpZmljYXRpb24gKGVn
+LiBtZWRpYSBjaGFuZ2UpCgkgICAqCVNvZnR3YXJlIHNldHRpbmdzIHByZXNlcnZhdGlvbgoJ
+ICAgKglTTUFSVCBDb21tYW5kIFRyYW5zcG9ydCAoU0NUKSBmZWF0dXJlIHNldAoJICAgKglT
+Q1QgTEJBIFNlZ21lbnQgQWNjZXNzIChBQzIpCgkgICAqCVNDVCBFcnJvciBSZWNvdmVyeSBD
+b250cm9sIChBQzMpCgkgICAqCVNDVCBGZWF0dXJlcyBDb250cm9sIChBQzQpCgkgICAqCVND
+VCBEYXRhIFRhYmxlcyAoQUM1KQoJICAgKglyZXNlcnZlZCA2OVs0XQoJICAgKglET1dOTE9B
+RCBNSUNST0NPREUgRE1BIGNvbW1hbmQKCSAgICoJU0VUIE1BWCBTRVRQQVNTV09SRC9VTkxP
+Q0sgRE1BIGNvbW1hbmRzCgkgICAqCVdSSVRFIEJVRkZFUiBETUEgY29tbWFuZAoJICAgKglS
+RUFEIEJVRkZFUiBETUEgY29tbWFuZAoJICAgKglEYXRhIFNldCBNYW5hZ2VtZW50IFRSSU0g
+c3VwcG9ydGVkIChsaW1pdCA4IGJsb2NrcykKU2VjdXJpdHk6IAoJTWFzdGVyIHBhc3N3b3Jk
+IHJldmlzaW9uIGNvZGUgPSA2NTUzNAoJCXN1cHBvcnRlZAoJbm90CWVuYWJsZWQKCW5vdAls
+b2NrZWQKCQlmcm96ZW4KCW5vdAlleHBpcmVkOiBzZWN1cml0eSBjb3VudAoJCXN1cHBvcnRl
+ZDogZW5oYW5jZWQgZXJhc2UKCTJtaW4gZm9yIFNFQ1VSSVRZIEVSQVNFIFVOSVQuIDhtaW4g
+Zm9yIEVOSEFOQ0VEIFNFQ1VSSVRZIEVSQVNFIFVOSVQuIApMb2dpY2FsIFVuaXQgV1dOIERl
+dmljZSBJZGVudGlmaWVyOiA1MDAyNTM4OGEwNTQ1NmM4CglOQUEJCTogNQoJSUVFRSBPVUkJ
+OiAwMDI1MzgKCVVuaXF1ZSBJRAk6IDhhMDU0NTZjOApDaGVja3N1bTogY29ycmVjdAo=
+--------------080207040707010509060506
+Content-Type: text/plain; charset=UTF-8;
+ name="smart.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="smart.txt"
+
+c21hcnRjdGwgNi4zIDIwMTQtMDctMjYgcjM5NzYgW3g4Nl82NC1saW51eC0zLjE5LjZdIChs
+b2NhbCBidWlsZCkKQ29weXJpZ2h0IChDKSAyMDAyLTE0LCBCcnVjZSBBbGxlbiwgQ2hyaXN0
+aWFuIEZyYW5rZSwgd3d3LnNtYXJ0bW9udG9vbHMub3JnCgpHZW5lcmFsIFB1cnBvc2UgTG9n
+IDB4MTMgW1NBVEEgTkNRIFNlbmQgYW5kIFJlY2VpdmUgbG9nXSwgUGFnZSAwLTAgKG9mIDEp
+CjAwMDAwMDA6IDAxIDAwIDAwIDAwIDAxIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
+IDAwIHwuLi4uLi4uLi4uLi4uLi4ufAowMDAwMDEwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
+MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCB8Li4uLi4uLi4uLi4uLi4uLnwKMDAwMDAyMDog
+MDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgfC4uLi4u
+Li4uLi4uLi4uLi58CjAwMDAwMzA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
+IDAwIDAwIDAwIDAwIDAwIHwuLi4uLi4uLi4uLi4uLi4ufAowMDAwMDQwOiAwMCAwMCAwMCAw
+MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCB8Li4uLi4uLi4uLi4uLi4u
+LnwKMDAwMDA1MDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
+MDAgMDAgfC4uLi4uLi4uLi4uLi4uLi58CjAwMDAwNjA6IDAwIDAwIDAwIDAwIDAwIDAwIDAw
+IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIHwuLi4uLi4uLi4uLi4uLi4ufAowMDAwMDcw
+OiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCB8Li4u
+Li4uLi4uLi4uLi4uLnwKMDAwMDA4MDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
+MDAgMDAgMDAgMDAgMDAgMDAgfC4uLi4uLi4uLi4uLi4uLi58CjAwMDAwOTA6IDAwIDAwIDAw
+IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIHwuLi4uLi4uLi4uLi4u
+Li4ufAowMDAwMGEwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
+MCAwMCAwMCB8Li4uLi4uLi4uLi4uLi4uLnwKMDAwMDBiMDogMDAgMDAgMDAgMDAgMDAgMDAg
+MDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgfC4uLi4uLi4uLi4uLi4uLi58CjAwMDAw
+YzA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIHwu
+Li4uLi4uLi4uLi4uLi4ufAowMDAwMGQwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
+MCAwMCAwMCAwMCAwMCAwMCAwMCB8Li4uLi4uLi4uLi4uLi4uLnwKMDAwMDBlMDogMDAgMDAg
+MDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgfC4uLi4uLi4uLi4u
+Li4uLi58CjAwMDAwZjA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
+IDAwIDAwIDAwIHwuLi4uLi4uLi4uLi4uLi4ufAowMDAwMTAwOiAwMCAwMCAwMCAwMCAwMCAw
+MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCB8Li4uLi4uLi4uLi4uLi4uLnwKMDAw
+MDExMDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
+fC4uLi4uLi4uLi4uLi4uLi58CjAwMDAxMjA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
+IDAwIDAwIDAwIDAwIDAwIDAwIDAwIHwuLi4uLi4uLi4uLi4uLi4ufAowMDAwMTMwOiAwMCAw
+MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCB8Li4uLi4uLi4u
+Li4uLi4uLnwKMDAwMDE0MDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
+MDAgMDAgMDAgMDAgfC4uLi4uLi4uLi4uLi4uLi58CjAwMDAxNTA6IDAwIDAwIDAwIDAwIDAw
+IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIHwuLi4uLi4uLi4uLi4uLi4ufAow
+MDAwMTYwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
+MCB8Li4uLi4uLi4uLi4uLi4uLnwKMDAwMDE3MDogMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
+MDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgfC4uLi4uLi4uLi4uLi4uLi58CjAwMDAxODA6IDAw
+IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIHwuLi4uLi4u
+Li4uLi4uLi4ufAowMDAwMTkwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
+MCAwMCAwMCAwMCAwMCB8Li4uLi4uLi4uLi4uLi4uLnwKMDAwMDFhMDogMDAgMDAgMDAgMDAg
+MDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgfC4uLi4uLi4uLi4uLi4uLi58
+CjAwMDAxYjA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
+IDAwIHwuLi4uLi4uLi4uLi4uLi4ufAowMDAwMWMwOiAwMCAwMCAwMCAwMCAwMCAwMCAwMCAw
+MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCB8Li4uLi4uLi4uLi4uLi4uLnwKMDAwMDFkMDog
+MDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgfC4uLi4u
+Li4uLi4uLi4uLi58CjAwMDAxZTA6IDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAwIDAw
+IDAwIDAwIDAwIDAwIDAwIHwuLi4uLi4uLi4uLi4uLi4ufAowMDAwMWYwOiAwMCAwMCAwMCAw
+MCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCAwMCB8Li4uLi4uLi4uLi4uLi4u
+LnwKCg==
+--------------080207040707010509060506--
+
