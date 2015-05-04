@@ -1,132 +1,70 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2] AHCI: Add generic MSI-X interrupt support to SATA PCI
- driver
-Date: Mon, 4 May 2015 12:06:52 -0400
-Message-ID: <20150504160652.GB1971@htj.duckdns.org>
-References: <1430725538-22162-1-git-send-email-rric@kernel.org>
+From: Jonathan Bagg <jbagg@lenbrook.com>
+Subject: Re: imx6 sata cdrom driver issue
+Date: Mon, 4 May 2015 12:15:02 -0400
+Message-ID: <55479B06.7090006@lenbrook.com>
+References: <5539101D.1020909@lenbrook.com> <15678294.L2fz4hMtva@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qk0-f176.google.com ([209.85.220.176]:35107 "EHLO
-	mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751642AbbEDQG5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 May 2015 12:06:57 -0400
-Content-Disposition: inline
-In-Reply-To: <1430725538-22162-1-git-send-email-rric@kernel.org>
+Received: from mail.lenbrook.com ([206.191.95.214]:27961 "EHLO
+	mail.lenbrook.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750798AbbEDQPL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 May 2015 12:15:11 -0400
+In-Reply-To: <15678294.L2fz4hMtva@wuerfel>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Richter <rric@kernel.org>
-Cc: Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, Sunil Goutham <sgoutham@cavium.com>, Jiang Liu <jiang.liu@linux.intel.com>, Robert Richter <rrichter@cavium.com>, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Alexander Gordeev <agordeev@redhat.com>
+To: Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org
+Cc: linux-ide@vger.kernel.org
 
-Hello, Robert. (cc'ing Alexander for ahci msi)
+On 15-04-24 03:58 AM, Arnd Bergmann wrote:
+> On Thursday 23 April 2015 11:30:37 Jonathan Bagg wrote:
+>> Spam Status: CRM114
+>> On arm imx6, running mainline 3.19, mounting a SATA CDROM fails aprox
+>> 1/20 times with this error....
+>>
+>> root@freescale /tmp$ mount /dev/sr0 test/
+>> UDF-fs: warning (device sr0): udf_fill_super: No partition found (2)
+>> mount: mounting /dev/sr0 on test/ failed: Invalid argument
+>>
+>> I've tried several disks and dvd drivers.  They all experience this
+>> issue.  The same disks mount 100% of the time on an x86 machine.  Once
+>> mounted, I can read data without issue.  Also tried a HDD on the same
+>> SATA link, no issue.
+>>
+>> Sometimes the kernel will dump out the attached backtrace on the mount
+>> command.
+>>
+> I think  you have a combination of two bugs:
+>
+> a) something that mount() does leads to the 'sd' device being unregistered
+> b) something goes wrong in the cleanup of that device, which leads to
+>     the messages you see.
+>
+> What is particularly strange here is the error about unregistering the
+> /disk/ rather than the cdrom.
+>
+> Do you have two SATA ports on one controller, with the other one being
+> conneced to a disk drive?
+>
+> My best guess is that something in the error handling of
+> drivers/ata/ahci_imx.c causes a reset of the entire bus and that
+> triggers the other bugs. Can you instrument that error handling to
+> see what's going on?
+>
+> 	Arnd
+How do I enable ATA error / debug messages?  I've tried adding
 
-On Mon, May 04, 2015 at 09:45:37AM +0200, Robert Richter wrote:
-> From: Robert Richter <rrichter@cavium.com>
-> 
-> This patch adds generic support for MSI-X interrupts to the SATA PCI
-> driver. Only single interrupt support is implemented. Thus, per-port
-> interrupts can not yet be enabled.
-> 
-> The driver now checks the device for the existence of MSI-X and tries
-> to enable the interrupt. Otherwise, if a device is not MSI-X capable,
-> the initialization is skipped and MSI or intx interrupts are
-> configured.
-> 
-> This patch also enables AHCI for Cavium Thunder SoCs that uses MSI-X.
+debug
+ignore_loglevel
+log_buf_len=10M
 
-Please don't mix these two changes in the same patch.
-
-> @@ -1202,11 +1207,41 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
->  {}
->  #endif
->  
-> -static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
-> -				struct ahci_host_priv *hpriv)
-> +static int ahci_init_msix(struct pci_dev *pdev, unsigned int n_ports,
-> +			  struct ahci_host_priv *hpriv)
-> +{
-> +	int rc, nvec;
-> +	struct msix_entry entry = {};
-> +
-> +	/* check if msix is supported */
-> +	nvec = pci_msix_vec_count(pdev);
-> +	if (nvec <= 0)
-> +		return 0;
-> +
-> +	/* per-port msix interrupts are not supported */
-> +	if (n_ports > 1 && nvec >= n_ports)
-> +		return -ENOSYS;
-
-Hmm... can you please elaborate why the condition isn't nvec > 1?
-Also, shouldn't we be printing a warning message here explaining why
-probing is failing?
-
-> +
-> +	/* only enable the first entry (entry.entry = 0) */
-> +	rc = pci_enable_msix_exact(pdev, &entry, 1);
-
-So, enabling the first msix works if nvec > 1 && nvec < n_ports but
-not if nvec >= n_ports?
-
-> +	if (rc < 0)
-> +		return rc;
-> +
-> +	return 1;
-> +}
-> +
-> +static int __ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
-> +				  struct ahci_host_priv *hpriv)
->  {
->  	int rc, nvec;
->  
-> +	nvec = ahci_init_msix(pdev, n_ports, hpriv);
-> +	if (nvec > 0)
-> +		return nvec;
-> +
-> +	if (nvec && nvec != -ENOSYS)
-> +		dev_err(&pdev->dev, "failed to enable MSI-X: %d", nvec);
-> +
->  	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
->  		goto intx;
->  
-> @@ -1250,6 +1285,35 @@ static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
->  	return 0;
->  }
->  
-> +static struct msi_desc *msix_get_desc(struct pci_dev *dev, u16 entry)
-> +{
-> +	struct msi_desc *desc;
-> +
-> +	list_for_each_entry(desc, &dev->msi_list, list) {
-> +		if (desc->msi_attrib.entry_nr == entry)
-> +			return desc;
-> +	}
-> +
-> +	return NULL;
-> +}
-> +
-> +static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
-> +				struct ahci_host_priv *hpriv)
-> +{
-> +	struct msi_desc *desc;
-> +
-> +	__ahci_init_interrupts(pdev, n_ports, hpriv);
-> +
-> +	if (!pdev->msix_enabled)
-> +		return pdev->irq;
-> +
-> +	desc = msix_get_desc(pdev, 0);	/* first entry */
-> +	if (!desc)
-> +		return -ENODEV;
-> +
-> +	return desc->irq;
-> +}
-
-Can we please do this properly?  We should be able to move port priv
-allocation to host allocaotion time and add and use pp->irq instead,
-right?
-
-Thanks.
+to my bootargs and confirmed they are added by checking /proc/cmdline?  
+(I'm a userspace developer)
 
 -- 
-tejun
+Jonathan Bagg
+Embedded Systems Developer
+NAD Electronics | Lenbrook Industries Limited
+633 Granite Court, Pickering, Ontario, Canada L1W 3K1 | 905-831-0799 ext 4478 | http://www.nadelectronics.com
+
