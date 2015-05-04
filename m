@@ -1,64 +1,132 @@
-From: =?UTF-8?B?U3ZlbiBLw7ZobGVy?= <sven.koehler@gmail.com>
-Subject: Re: Samsung 840 EVO
-Date: Mon, 04 May 2015 18:45:04 +0300
-Message-ID: <mi845v$r46$1@ger.gmane.org>
-References: <5547685F.7000103@web.de>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2] AHCI: Add generic MSI-X interrupt support to SATA PCI
+ driver
+Date: Mon, 4 May 2015 12:06:52 -0400
+Message-ID: <20150504160652.GB1971@htj.duckdns.org>
+References: <1430725538-22162-1-git-send-email-rric@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:43168 "EHLO plane.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750943AbbEDPuH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 4 May 2015 11:50:07 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <lnx-linux-ide@m.gmane.org>)
-	id 1YpIdB-000178-7Y
-	for linux-ide@vger.kernel.org; Mon, 04 May 2015 17:50:05 +0200
-Received: from 132.70.228.38 ([132.70.228.38])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Mon, 04 May 2015 17:50:05 +0200
-Received: from sven.koehler by 132.70.228.38 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-ide@vger.kernel.org>; Mon, 04 May 2015 17:50:05 +0200
-In-Reply-To: <5547685F.7000103@web.de>
+Received: from mail-qk0-f176.google.com ([209.85.220.176]:35107 "EHLO
+	mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751642AbbEDQG5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 May 2015 12:06:57 -0400
+Content-Disposition: inline
+In-Reply-To: <1430725538-22162-1-git-send-email-rric@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Robert Richter <rric@kernel.org>
+Cc: Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, Sunil Goutham <sgoutham@cavium.com>, Jiang Liu <jiang.liu@linux.intel.com>, Robert Richter <rrichter@cavium.com>, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Alexander Gordeev <agordeev@redhat.com>
 
-Am 04.05.2015 um 15:38 schrieb G=C3=BCnter Waller:
-> But there is also a big concern for Linux users which this FW version
-> seems to introduce. The link below points to a warning (backed by
-> others, elsewhere on the web) that fstrim in combination with this FW
-> will wreck your drive.
-> http://www.overclock.net/t/1507897/samsung-840-evo-read-speed-drops-o=
-n-old-written-data-in-the-drive/2640%23post_23827674
-> (search for fstrim)
-> I raised this in a discussion thread of the Ubuntu MATE community and
-> was pointed to the SSD blacklist that is part of the module
-> libata-core.c which names you as the maintainer. I wonder if you coul=
-d
-> take a look at this issue - maybe you want to add the device to the
-> blacklist thereafter if need be.
-> If you find the time and find this worthwhile to investigate I would
-> appreciate a brief notification of the outcome. For now I am holding
-> back the FW update.
+Hello, Robert. (cc'ing Alexander for ahci msi)
 
-Here is a discussion of the issue and a patch:
-https://bugs.launchpad.net/ubuntu/+source/fstrim/+bug/1449005
+On Mon, May 04, 2015 at 09:45:37AM +0200, Robert Richter wrote:
+> From: Robert Richter <rrichter@cavium.com>
+> 
+> This patch adds generic support for MSI-X interrupts to the SATA PCI
+> driver. Only single interrupt support is implemented. Thus, per-port
+> interrupts can not yet be enabled.
+> 
+> The driver now checks the device for the existence of MSI-X and tries
+> to enable the interrupt. Otherwise, if a device is not MSI-X capable,
+> the initialization is skipped and MSI or intx interrupts are
+> configured.
+> 
+> This patch also enables AHCI for Cavium Thunder SoCs that uses MSI-X.
 
-Apparently, TRIM in combination with NCQ is broken with the new
-firmware. Having the discard mount option enabled didn't wreck my drive=
-,
-but it kept my machine from booting. I had to disable that option and
-the patch given at the URL above seems to disable NCQ specifically for
-TRIM only. So the performance hit might be minimal.
+Please don't mix these two changes in the same patch.
 
-The patch should really be applied asap and it should be backported to
-all stable branched as far as possible.
+> @@ -1202,11 +1207,41 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
+>  {}
+>  #endif
+>  
+> -static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
+> -				struct ahci_host_priv *hpriv)
+> +static int ahci_init_msix(struct pci_dev *pdev, unsigned int n_ports,
+> +			  struct ahci_host_priv *hpriv)
+> +{
+> +	int rc, nvec;
+> +	struct msix_entry entry = {};
+> +
+> +	/* check if msix is supported */
+> +	nvec = pci_msix_vec_count(pdev);
+> +	if (nvec <= 0)
+> +		return 0;
+> +
+> +	/* per-port msix interrupts are not supported */
+> +	if (n_ports > 1 && nvec >= n_ports)
+> +		return -ENOSYS;
 
+Hmm... can you please elaborate why the condition isn't nvec > 1?
+Also, shouldn't we be printing a warning message here explaining why
+probing is failing?
 
-Regards,
-  Sven
+> +
+> +	/* only enable the first entry (entry.entry = 0) */
+> +	rc = pci_enable_msix_exact(pdev, &entry, 1);
 
+So, enabling the first msix works if nvec > 1 && nvec < n_ports but
+not if nvec >= n_ports?
+
+> +	if (rc < 0)
+> +		return rc;
+> +
+> +	return 1;
+> +}
+> +
+> +static int __ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
+> +				  struct ahci_host_priv *hpriv)
+>  {
+>  	int rc, nvec;
+>  
+> +	nvec = ahci_init_msix(pdev, n_ports, hpriv);
+> +	if (nvec > 0)
+> +		return nvec;
+> +
+> +	if (nvec && nvec != -ENOSYS)
+> +		dev_err(&pdev->dev, "failed to enable MSI-X: %d", nvec);
+> +
+>  	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
+>  		goto intx;
+>  
+> @@ -1250,6 +1285,35 @@ static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
+>  	return 0;
+>  }
+>  
+> +static struct msi_desc *msix_get_desc(struct pci_dev *dev, u16 entry)
+> +{
+> +	struct msi_desc *desc;
+> +
+> +	list_for_each_entry(desc, &dev->msi_list, list) {
+> +		if (desc->msi_attrib.entry_nr == entry)
+> +			return desc;
+> +	}
+> +
+> +	return NULL;
+> +}
+> +
+> +static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
+> +				struct ahci_host_priv *hpriv)
+> +{
+> +	struct msi_desc *desc;
+> +
+> +	__ahci_init_interrupts(pdev, n_ports, hpriv);
+> +
+> +	if (!pdev->msix_enabled)
+> +		return pdev->irq;
+> +
+> +	desc = msix_get_desc(pdev, 0);	/* first entry */
+> +	if (!desc)
+> +		return -ENODEV;
+> +
+> +	return desc->irq;
+> +}
+
+Can we please do this properly?  We should be able to move port priv
+allocation to host allocaotion time and add and use pp->irq instead,
+right?
+
+Thanks.
+
+-- 
+tejun
