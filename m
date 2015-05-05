@@ -1,61 +1,68 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: Re: [PATCH v3 1/2] libahci: Add support to handle HOST_IRQ_STAT as
- edge trigger latch.
-Date: Tue, 5 May 2015 11:25:14 +0530
-Message-ID: <CAOHikRBeM3MYohDgYgbLL1uhZp+Ch4hS+eduDVbx759321=EHg@mail.gmail.com>
-References: <1430667220-23477-1-git-send-email-stripathi@apm.com>
-	<1430667220-23477-2-git-send-email-stripathi@apm.com>
-	<20150504154726.GA1971@htj.duckdns.org>
-	<CAOHikRCZimsE+_-6dqTiCT6qRTFLp9VGt6=WHWA_Z86GBn+WRg@mail.gmail.com>
-	<20150504182618.GG1971@htj.duckdns.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 3/4] libata: READ LOG DMA EXT support can be in either
+ page 119 or 120
+Date: Tue, 05 May 2015 08:00:03 +0200
+Message-ID: <55485C63.6010807@suse.de>
+References: <1430790861-30066-1-git-send-email-martin.petersen@oracle.com> <1430790861-30066-3-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20150504182618.GG1971@htj.duckdns.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Mark Langsdorf <mlangsdo@redhat.com>, Jon Masters <jcm@redhat.com>, patches <patches@apm.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:39670 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752993AbbEEGAE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 5 May 2015 02:00:04 -0400
+In-Reply-To: <1430790861-30066-3-git-send-email-martin.petersen@oracle.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, tj@kernel.org
+Cc: linux-ide@vger.kernel.org
 
-Hi Tejun,
+On 05/05/2015 03:54 AM, Martin K. Petersen wrote:
+> Support for the READ/WRITE LOG DMA EXT commands can be signaled eithe=
+r
+> in page 119 or page 120. We should check both pages.
+>=20
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> ---
+>  include/linux/ata.h | 12 +++++++++++-
+>  1 file changed, 11 insertions(+), 1 deletion(-)
+>=20
+> diff --git a/include/linux/ata.h b/include/linux/ata.h
+> index b666b773e111..fed36418dd1c 100644
+> --- a/include/linux/ata.h
+> +++ b/include/linux/ata.h
+> @@ -704,9 +704,19 @@ static inline bool ata_id_wcache_enabled(const u=
+16 *id)
+> =20
+>  static inline bool ata_id_has_read_log_dma_ext(const u16 *id)
+>  {
+> +	/* Word 86 must have bit 15 set */
+>  	if (!(id[ATA_ID_CFS_ENABLE_2] & (1 << 15)))
+>  		return false;
+> -	return id[ATA_ID_COMMAND_SET_3] & (1 << 3);
+> +
+> +	/* READ LOG DMA EXT support can be signaled either from word 119
+> +	 * or from word 120. The format is the same for both words: Bit
+> +	 * 15 must be cleared, bit 14 set and bit 3 set.
+> +	 */
+> +	if ((id[ATA_ID_COMMAND_SET_3] & 0xC008) =3D=3D 0x4008 ||
+> +	    (id[ATA_ID_COMMAND_SET_4] & 0xC008) =3D=3D 0x4008)
+> +		return true;
+> +
+> +	return false;
+>  }
+> =20
+>  static inline bool ata_id_has_sense_reporting(const u16 *id)
+>=20
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-On Mon, May 4, 2015 at 11:56 PM, Tejun Heo <tj@kernel.org> wrote:
-> Hello,
->
-> On Mon, May 04, 2015 at 10:13:11PM +0530, Suman Tripathi wrote:
->> AFAIK clearing host_irq_stat means we have handled port interrupts .
->> Now for our case we still have interrupts left because it didn't get
->> detected on
->> first ahci_port_intr.  So you  mean to handle that residual irq in the
->> next cycle (i mean next call intr handler ) ??
->
-> Heh, I think we're talking past each other.  For level triggered IRQs,
-> the latched IRQ bits should be cleared after handling the events;
-> otherwise, the latched bits are gonna get set immediately as the
-> events are still pending.  Also, this doesn't lose any events as
-> they're level triggered latches - if any event is pending, the IRQ is
-> gonna be raised again.
->
-> Edge triggered latches are the other way around.  You should clear the
-> latches before actually handling and clearing the events.  The pending
-> events won't trigger the latches again as it's edge-triggered and the
-> events which happens after this irq handling starts won't get lost as
-> they'll be latched for the next round.
+Cheers,
 
-Yeah it's very simple. The clearing of irq_stat needs to move up.
-That's it. tried and it worked. Thanks a lot !!
-Just a quick question : Why edge trigger handling is not yet present
-in libahci yet? I mean no one has used it yet ??
-
->
-> Thanks.
->
-> --
-> tejun
-
-
-
--- 
-Thanks,
-with regards,
-Suman Tripathi
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
