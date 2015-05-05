@@ -1,52 +1,78 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 3/4] libata: READ LOG DMA EXT support can be in either page 119 or 120
-Date: Mon,  4 May 2015 21:54:20 -0400
-Message-ID: <1430790861-30066-3-git-send-email-martin.petersen@oracle.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/4] libata: Allow NCQ TRIM to be enabled or disabled
+ with a module parameter
+Date: Tue, 05 May 2015 07:51:40 +0200
+Message-ID: <55485A6C.6040800@suse.de>
 References: <1430790861-30066-1-git-send-email-martin.petersen@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:48437 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932727AbbEEByg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 4 May 2015 21:54:36 -0400
+Received: from cantor2.suse.de ([195.135.220.15]:38556 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752256AbbEEFvm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 5 May 2015 01:51:42 -0400
 In-Reply-To: <1430790861-30066-1-git-send-email-martin.petersen@oracle.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org
-Cc: hare@suse.de, linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, tj@kernel.org
+Cc: linux-ide@vger.kernel.org
 
-Support for the READ/WRITE LOG DMA EXT commands can be signaled either
-in page 119 or page 120. We should check both pages.
+On 05/05/2015 03:54 AM, Martin K. Petersen wrote:
+> We have started seeing SSD firmware updates introduce support for que=
+ued
+> TRIM. Sadly, in most cases this support is completely untested and ca=
+n
+> lead to either errors or data corruption.
+>=20
+> Add two libata force flags that can be used to either enable or disab=
+le
+> queued TRIM support.
+>=20
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> ---
+>  Documentation/kernel-parameters.txt | 2 ++
+>  drivers/ata/libata-core.c           | 2 ++
+>  2 files changed, 4 insertions(+)
+>=20
+> diff --git a/Documentation/kernel-parameters.txt b/Documentation/kern=
+el-parameters.txt
+> index 61ab1628a057..a2e4891a714f 100644
+> --- a/Documentation/kernel-parameters.txt
+> +++ b/Documentation/kernel-parameters.txt
+> @@ -1774,6 +1774,8 @@ bytes respectively. Such letter suffixes can al=
+so be entirely omitted.
+> =20
+>  			* [no]ncq: Turn on or off NCQ.
+> =20
+> +			* [no]ncqtrim: Turn off queued DSM TRIM.
+> +
+>  			* nohrst, nosrst, norst: suppress hard, soft
+>                            and both resets.
+> =20
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 4476fb590733..9cebd7872ac6 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -6472,6 +6472,8 @@ static int __init ata_parse_force_one(char **cu=
+r,
+>  		{ "3.0Gbps",	.spd_limit	=3D 2 },
+>  		{ "noncq",	.horkage_on	=3D ATA_HORKAGE_NONCQ },
+>  		{ "ncq",	.horkage_off	=3D ATA_HORKAGE_NONCQ },
+> +		{ "noncqtrim",	.horkage_on	=3D ATA_HORKAGE_NO_NCQ_TRIM },
+> +		{ "ncqtrim",	.horkage_off	=3D ATA_HORKAGE_NO_NCQ_TRIM },
+>  		{ "dump_id",	.horkage_on	=3D ATA_HORKAGE_DUMP_ID },
+>  		{ "pio0",	.xfer_mask	=3D 1 << (ATA_SHIFT_PIO + 0) },
+>  		{ "pio1",	.xfer_mask	=3D 1 << (ATA_SHIFT_PIO + 1) },
+>=20
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
----
- include/linux/ata.h | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
+Cheers,
 
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index b666b773e111..fed36418dd1c 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -704,9 +704,19 @@ static inline bool ata_id_wcache_enabled(const u16 *id)
- 
- static inline bool ata_id_has_read_log_dma_ext(const u16 *id)
- {
-+	/* Word 86 must have bit 15 set */
- 	if (!(id[ATA_ID_CFS_ENABLE_2] & (1 << 15)))
- 		return false;
--	return id[ATA_ID_COMMAND_SET_3] & (1 << 3);
-+
-+	/* READ LOG DMA EXT support can be signaled either from word 119
-+	 * or from word 120. The format is the same for both words: Bit
-+	 * 15 must be cleared, bit 14 set and bit 3 set.
-+	 */
-+	if ((id[ATA_ID_COMMAND_SET_3] & 0xC008) == 0x4008 ||
-+	    (id[ATA_ID_COMMAND_SET_4] & 0xC008) == 0x4008)
-+		return true;
-+
-+	return false;
- }
- 
- static inline bool ata_id_has_sense_reporting(const u16 *id)
--- 
-1.9.3
-
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
