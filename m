@@ -1,60 +1,69 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 1/4] libata: Allow NCQ TRIM to be enabled or disabled
- with a module parameter
-Date: Tue, 05 May 2015 16:07:46 +0200
-Message-ID: <5548CEB2.9000106@suse.de>
-References: <1430790861-30066-1-git-send-email-martin.petersen@oracle.com> <20150505133106.GK1971@htj.duckdns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v4 1/2] libahci: Add support to handle HOST_IRQ_STAT as
+ edge trigger latch.
+Date: Tue, 5 May 2015 13:04:40 -0400
+Message-ID: <20150505170440.GW1971@htj.duckdns.org>
+References: <1430838822-17507-1-git-send-email-stripathi@apm.com>
+ <1430838822-17507-2-git-send-email-stripathi@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:49306 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752295AbbEEOHs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 5 May 2015 10:07:48 -0400
-In-Reply-To: <20150505133106.GK1971@htj.duckdns.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1430838822-17507-2-git-send-email-stripathi@apm.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Suman Tripathi <stripathi@apm.com>
+Cc: olof@lixom.net, arnd@arndb.de, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-ide@vger.kernel.org
 
-On 05/05/2015 03:31 PM, Tejun Heo wrote:
-> On Mon, May 04, 2015 at 09:54:18PM -0400, Martin K. Petersen wrote:
->> We have started seeing SSD firmware updates introduce support for qu=
-eued
->> TRIM. Sadly, in most cases this support is completely untested and c=
-an
->> lead to either errors or data corruption.
->>
->> Add two libata force flags that can be used to either enable or disa=
-ble
->> queued TRIM support.
->>
->> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
->=20
-> Applied 1-4 to libata/for-4.2.
->=20
-> Thanks.
->=20
-As a side note: queue TRIM requires 'SEND FPDMA QUEUED', which is an
-_optional_ part of the NCQ feature set.
-And unfortunately there are no identify bits telling us whether SEND
-=46PDMA QUEUE is actually implemented (or RECEIVE FPDMA QUEUED, for
-that matter).
-I've been advocating to implement this (it would come in very handy
-for the SMR/ZAC stuff) but to no avail so far.
-Needless to say, none of the drives I have implement SEND FPDMA
-QUEUED...
+Hello, Suman.
 
-Maybe it's an idea to poke the powers that be about additional
-identify bits for this ...
+Looks pretty.  Some nitpicks.
 
-Cheers,
+On Tue, May 05, 2015 at 08:43:41PM +0530, Suman Tripathi wrote:
+> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+> index 71262e0..2df2237 100644
+> --- a/drivers/ata/ahci.h
+> +++ b/drivers/ata/ahci.h
+> @@ -238,6 +238,8 @@ enum {
+>  	AHCI_HFLAG_MULTI_MSI		= (1 << 16), /* multiple PCI MSIs */
+>  	AHCI_HFLAG_NO_DEVSLP		= (1 << 17), /* no device sleep */
+>  	AHCI_HFLAG_NO_FBS		= (1 << 18), /* no FBS */
+> +	AHCI_HFLAG_EDGE_TRIG_IRQ	= (1 << 19), /* HOST_IRQ_STAT behaves as
+> +							Edge Triggered */
 
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
+Let's just name it ahci_HFLAG_EDGE_IRQ.
+
+> +static irqreturn_t ahci_level_trig_intr(int irq, void *dev_instance)
+
+ahci_single_level_irq_intr()
+
+> +{
+...
+> @@ -1877,13 +1885,51 @@ static irqreturn_t ahci_single_irq_intr(int irq, void *dev_instance)
+>  	 * Also, use the unmasked value to clear interrupt as spurious
+>  	 * pending event on a dummy port might cause screaming IRQ.
+>  	 */
+> +
+
+Extra newline which wasn't there before.
+
+> +	writel(irq_stat, mmio + HOST_IRQ_STAT);
+> +
+> +	spin_unlock(&host->lock);
+> +
+> +	VPRINTK("EXIT\n");
+> +
+> +	return IRQ_RETVAL(rc);
+> +}
+> +
+> +static irqreturn_t ahci_edge_trig_intr(int irq, void *dev_instance)
+
+ahci_single_edge_irq_intr()
+
+And let's please separate refactoring of intr routine and addition of
+edge irq handling into two patches.
+
+Thanks.
+
+-- 
+tejun
