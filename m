@@ -1,46 +1,34 @@
-From: Julian Margetson <runaway@candw.ms>
-Subject: Re: [PATCH 1/1] ata: select DW_DMAC in case of SATA_DWC
-Date: Tue, 05 May 2015 07:37:27 -0400
-Message-ID: <5548AB77.4000208@candw.ms>
-References: <1430817243-98654-1-git-send-email-andriy.shevchenko@linux.intel.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v3 1/2] libahci: Add support to handle HOST_IRQ_STAT as
+ edge trigger latch.
+Date: Tue, 5 May 2015 09:18:54 -0400
+Message-ID: <20150505131854.GJ1971@htj.duckdns.org>
+References: <1430667220-23477-1-git-send-email-stripathi@apm.com>
+ <1430667220-23477-2-git-send-email-stripathi@apm.com>
+ <20150504154726.GA1971@htj.duckdns.org>
+ <CAOHikRCZimsE+_-6dqTiCT6qRTFLp9VGt6=WHWA_Z86GBn+WRg@mail.gmail.com>
+ <20150504182618.GG1971@htj.duckdns.org>
+ <CAOHikRBeM3MYohDgYgbLL1uhZp+Ch4hS+eduDVbx759321=EHg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-vn0-f45.google.com ([209.85.216.45]:45414 "EHLO
-	mail-vn0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753440AbbEELhc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 May 2015 07:37:32 -0400
-Received: by vnbg190 with SMTP id g190so16635123vnb.12
-        for <linux-ide@vger.kernel.org>; Tue, 05 May 2015 04:37:30 -0700 (PDT)
-In-Reply-To: <1430817243-98654-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAOHikRBeM3MYohDgYgbLL1uhZp+Ch4hS+eduDVbx759321=EHg@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Suman Tripathi <stripathi@apm.com>
+Cc: Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Mark Langsdorf <mlangsdo@redhat.com>, Jon Masters <jcm@redhat.com>, patches <patches@apm.com>
 List-Id: linux-ide@vger.kernel.org
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Michael Ellerman <mpe@ellerman.id.au>, linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 
-Thank you.
-this resolves the build issue .
+On Tue, May 05, 2015 at 11:25:14AM +0530, Suman Tripathi wrote:
+> Yeah it's very simple. The clearing of irq_stat needs to move up.
+> That's it. tried and it worked. Thanks a lot !!
+> Just a quick question : Why edge trigger handling is not yet present
+> in libahci yet? I mean no one has used it yet ??
 
-On 5/5/2015 5:14 AM, Andy Shevchenko wrote:
-> Since sata_dwc_460ex.c was moved to generic DMA driver we have to ensure that
-> user can still compile it.
->
-> Fixes: 8b3444852a2b (sata_dwc_460ex: move to generic DMA driver)
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> ---
->   drivers/ata/Kconfig | 1 +
->   1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-> index ee5209f..9dca4b9 100644
-> --- a/drivers/ata/Kconfig
-> +++ b/drivers/ata/Kconfig
-> @@ -270,6 +270,7 @@ config ATA_PIIX
->   config SATA_DWC
->   	tristate "DesignWare Cores SATA support"
->   	depends on 460EX
-> +	select DW_DMAC
->   	help
->   	  This option enables support for the on-chip SATA controller of the
->   	  AppliedMicro processor 460EX.
+Yeah, no other ahci controller uses edge triggered latches.  I think
+ahci spec says irq is supposed to be level triggered.
 
+Thanks.
+
+-- 
+tejun
