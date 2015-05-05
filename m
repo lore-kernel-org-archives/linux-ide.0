@@ -1,92 +1,26 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: Re: [PATCH v4 1/2] libahci: Add support to handle HOST_IRQ_STAT as
- edge trigger latch.
-Date: Tue, 5 May 2015 23:18:09 +0530
-Message-ID: <CAOHikRAnS1+c4K0thYN9HxwJD1b7FiDE87xi8eBi=uA3XCyv2A@mail.gmail.com>
-References: <1430838822-17507-1-git-send-email-stripathi@apm.com>
-	<1430838822-17507-2-git-send-email-stripathi@apm.com>
-	<20150505170440.GW1971@htj.duckdns.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/4] libata: Expose TRIM capability in sysfs
+Date: Tue, 5 May 2015 10:50:55 -0700
+Message-ID: <20150505175055.GA24551@infradead.org>
+References: <1430790861-30066-1-git-send-email-martin.petersen@oracle.com>
+ <1430790861-30066-2-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20150505170440.GW1971@htj.duckdns.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Mark Langsdorf <mlangsdo@redhat.com>, Jon Masters <jcm@redhat.com>, patches <patches@apm.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:60399 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030279AbbEERu5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 May 2015 13:50:57 -0400
+Content-Disposition: inline
+In-Reply-To: <1430790861-30066-2-git-send-email-martin.petersen@oracle.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: tj@kernel.org, hare@suse.de, linux-ide@vger.kernel.org
 
-Hi Tejun,
+> +	forced_unqueued:	Drive's unqueued DSM support is known to be
+> +				buggy and only unqueued TRIM commands
+> +				are sent
 
-On Tue, May 5, 2015 at 10:34 PM, Tejun Heo <tj@kernel.org> wrote:
-> Hello, Suman.
->
-> Looks pretty.  Some nitpicks.
->
-> On Tue, May 05, 2015 at 08:43:41PM +0530, Suman Tripathi wrote:
->> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
->> index 71262e0..2df2237 100644
->> --- a/drivers/ata/ahci.h
->> +++ b/drivers/ata/ahci.h
->> @@ -238,6 +238,8 @@ enum {
->>       AHCI_HFLAG_MULTI_MSI            = (1 << 16), /* multiple PCI MSIs */
->>       AHCI_HFLAG_NO_DEVSLP            = (1 << 17), /* no device sleep */
->>       AHCI_HFLAG_NO_FBS               = (1 << 18), /* no FBS */
->> +     AHCI_HFLAG_EDGE_TRIG_IRQ        = (1 << 19), /* HOST_IRQ_STAT behaves as
->> +                                                     Edge Triggered */
->
-> Let's just name it ahci_HFLAG_EDGE_IRQ.
+Shouldn't the first "unqueued" be a "queued"
 
-Sure
-
->
->> +static irqreturn_t ahci_level_trig_intr(int irq, void *dev_instance)
->
-> ahci_single_level_irq_intr()
->
->> +{
-> ...
->> @@ -1877,13 +1885,51 @@ static irqreturn_t ahci_single_irq_intr(int irq, void *dev_instance)
->>        * Also, use the unmasked value to clear interrupt as spurious
->>        * pending event on a dummy port might cause screaming IRQ.
->>        */
->> +
->
-> Extra newline which wasn't there before.
-
-sorry . Happened mistakenly
-
->
->> +     writel(irq_stat, mmio + HOST_IRQ_STAT);
->> +
->> +     spin_unlock(&host->lock);
->> +
->> +     VPRINTK("EXIT\n");
->> +
->> +     return IRQ_RETVAL(rc);
->> +}
->> +
->> +static irqreturn_t ahci_edge_trig_intr(int irq, void *dev_instance)
->
-> ahci_single_edge_irq_intr()
-
-Sure.
-
->
-> And let's please separate refactoring of intr routine and addition of
-> edge irq handling into two patches.
-
-Okay
-
-
->
-> Thanks.
->
-> --
-> tejun
-
-
-
--- 
-Thanks,
-with regards,
-Suman Tripathi
