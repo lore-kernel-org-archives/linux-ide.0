@@ -1,46 +1,32 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: [PATCH v5 0/3] ata: ahci_xgene: Add support for 2nd HW version of APM X-Gene SoC AHCI SATA Host controller driver.
-Date: Wed,  6 May 2015 00:51:09 +0530
-Message-ID: <1430853672-6227-1-git-send-email-stripathi@apm.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 2/4] libata: Expose TRIM capability in sysfs
+Date: Tue, 05 May 2015 17:54:13 -0400
+Message-ID: <yq1oalyr8qi.fsf@sermon.lab.mkp.net>
+References: <1430790861-30066-1-git-send-email-martin.petersen@oracle.com>
+	<1430790861-30066-2-git-send-email-martin.petersen@oracle.com>
+	<20150505175055.GA24551@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from denmail01-v4020.amcc.com ([192.195.68.30]:33299 "EHLO
-	denmail01.amcc.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757164AbbEETWB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 May 2015 15:22:01 -0400
+Received: from aserp1040.oracle.com ([141.146.126.69]:22066 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752022AbbEEVyq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 May 2015 17:54:46 -0400
+In-Reply-To: <20150505175055.GA24551@infradead.org> (Christoph Hellwig's
+	message of "Tue, 5 May 2015 10:50:55 -0700")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, tj@kernel.org, hare@suse.de, linux-ide@vger.kernel.org
 
-V2 change:
- * Drop the MIDR based implementation.
+>>>>> "Christoph" == Christoph Hellwig <hch@infradead.org> writes:
 
-V3 change:
- * Implement the support for HOST_IRQ_STAT as edge trigger latch.
+>> + forced_unqueued: Drive's unqueued DSM support is known to be +
+>> buggy and only unqueued TRIM commands + are sent
 
-V4 change:
- * Implement seperate irq handler for level and edge trigger latch.
+Christoph> Shouldn't the first "unqueued" be a "queued"
 
-V5 change:
- * Refactoring the ahci_single_irq_intr.
- * Split refactoring of level trigger and edge trigger into 2 patches.
+Yes, sorry about that.
 
-Signed-off-by: Suman Tripathi <stripathi@apm.com>
----
-
-
-Suman Tripathi (3):
-  libahci: Refactoring of ahci_single_irq_intr function.
-  libahci: Add support to handle HOST_IRQ_STAT as edge      trigger
-    latch.
-  ata: ahci_xgene: Add AHCI Support for 2nd HW version of      APM
-    X-Gene SoC AHCI SATA Host controller.
-
- drivers/ata/ahci.h       |  2 ++
- drivers/ata/ahci_xgene.c | 90 ++++++++++++++++++++++++++++++++++++++----------
- drivers/ata/libahci.c    | 89 ++++++++++++++++++++++++++++++++++++-----------
- 3 files changed, 143 insertions(+), 38 deletions(-)
-
---
-1.8.2.1
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
