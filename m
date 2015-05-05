@@ -1,108 +1,61 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/4] libata: Expose TRIM capability in sysfs
-Date: Tue, 05 May 2015 07:54:03 +0200
-Message-ID: <55485AFB.6050302@suse.de>
-References: <1430790861-30066-1-git-send-email-martin.petersen@oracle.com> <1430790861-30066-2-git-send-email-martin.petersen@oracle.com>
+From: Suman Tripathi <stripathi@apm.com>
+Subject: Re: [PATCH v3 1/2] libahci: Add support to handle HOST_IRQ_STAT as
+ edge trigger latch.
+Date: Tue, 5 May 2015 11:25:14 +0530
+Message-ID: <CAOHikRBeM3MYohDgYgbLL1uhZp+Ch4hS+eduDVbx759321=EHg@mail.gmail.com>
+References: <1430667220-23477-1-git-send-email-stripathi@apm.com>
+	<1430667220-23477-2-git-send-email-stripathi@apm.com>
+	<20150504154726.GA1971@htj.duckdns.org>
+	<CAOHikRCZimsE+_-6dqTiCT6qRTFLp9VGt6=WHWA_Z86GBn+WRg@mail.gmail.com>
+	<20150504182618.GG1971@htj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:38791 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752256AbbEEFyF (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 5 May 2015 01:54:05 -0400
-In-Reply-To: <1430790861-30066-2-git-send-email-martin.petersen@oracle.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20150504182618.GG1971@htj.duckdns.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Mark Langsdorf <mlangsdo@redhat.com>, Jon Masters <jcm@redhat.com>, patches <patches@apm.com>
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, tj@kernel.org
-Cc: linux-ide@vger.kernel.org
 
-On 05/05/2015 03:54 AM, Martin K. Petersen wrote:
-> Create a sysfs "trim" attribute for each ata_device that displays
-> whether DSM TRIM is "unsupported", "unqueued", "forced_unqueued"
-> (blacklisted) or "queued".
->=20
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> ---
->  Documentation/ABI/testing/sysfs-ata | 11 +++++++++++
->  drivers/ata/libata-transport.c      | 22 ++++++++++++++++++++++
->  2 files changed, 33 insertions(+)
->=20
-> diff --git a/Documentation/ABI/testing/sysfs-ata b/Documentation/ABI/=
-testing/sysfs-ata
-> index 0a932155cbba..9231daef3813 100644
-> --- a/Documentation/ABI/testing/sysfs-ata
-> +++ b/Documentation/ABI/testing/sysfs-ata
-> @@ -90,6 +90,17 @@ gscr
->  	130:	SATA_PMP_GSCR_SII_GPIO
->  	Only valid if the device is a PM.
-> =20
-> +trim
-> +
-> +	Shows the DSM TRIM mode currently used by the device. Valid
-> +	values are:
-> +	unsupported:		Drive does not support DSM TRIM
-> +	unqueued:		Drive supports unqueued DSM TRIM only
-> +	queued:			Drive supports queued DSM TRIM
-> +	forced_unqueued:	Drive's unqueued DSM support is known to be
-> +				buggy and only unqueued TRIM commands
-> +				are sent
-> +
->  spdn_cnt
-> =20
->  	Number of time libata decided to lower the speed of link due to err=
-ors.
-> diff --git a/drivers/ata/libata-transport.c b/drivers/ata/libata-tran=
-sport.c
-> index 3227b7c8a05f..d6c37bcd416d 100644
-> --- a/drivers/ata/libata-transport.c
-> +++ b/drivers/ata/libata-transport.c
-> @@ -560,6 +560,27 @@ show_ata_dev_gscr(struct device *dev,
-> =20
->  static DEVICE_ATTR(gscr, S_IRUGO, show_ata_dev_gscr, NULL);
-> =20
-> +static ssize_t
-> +show_ata_dev_trim(struct device *dev,
-> +		  struct device_attribute *attr, char *buf)
-> +{
-> +	struct ata_device *ata_dev =3D transport_class_to_dev(dev);
-> +	unsigned char *mode;
-> +
-> +	if (!ata_id_has_trim(ata_dev->id))
-> +		mode =3D "unsupported";
-> +	else if (ata_dev->horkage & ATA_HORKAGE_NO_NCQ_TRIM)
-> +			mode =3D "forced_unqueued";
-> +	else if (ata_fpdma_dsm_supported(ata_dev))
-> +		mode =3D "queued";
-> +	else
-> +		mode =3D "unqueued";
-> +
-> +	return snprintf(buf, 20, "%s\n", mode);
-> +}
-> +
-> +static DEVICE_ATTR(trim, S_IRUGO, show_ata_dev_trim, NULL);
-> +
->  static DECLARE_TRANSPORT_CLASS(ata_dev_class,
->  			       "ata_device", NULL, NULL, NULL);
-> =20
-> @@ -733,6 +754,7 @@ struct scsi_transport_template *ata_attach_transp=
-ort(void)
->  	SETUP_DEV_ATTRIBUTE(ering);
->  	SETUP_DEV_ATTRIBUTE(id);
->  	SETUP_DEV_ATTRIBUTE(gscr);
-> +	SETUP_DEV_ATTRIBUTE(trim);
->  	BUG_ON(count > ATA_DEV_ATTRS);
->  	i->dev_attrs[count] =3D NULL;
-> =20
->=20
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Hi Tejun,
 
-Cheers,
+On Mon, May 4, 2015 at 11:56 PM, Tejun Heo <tj@kernel.org> wrote:
+> Hello,
+>
+> On Mon, May 04, 2015 at 10:13:11PM +0530, Suman Tripathi wrote:
+>> AFAIK clearing host_irq_stat means we have handled port interrupts .
+>> Now for our case we still have interrupts left because it didn't get
+>> detected on
+>> first ahci_port_intr.  So you  mean to handle that residual irq in the
+>> next cycle (i mean next call intr handler ) ??
+>
+> Heh, I think we're talking past each other.  For level triggered IRQs,
+> the latched IRQ bits should be cleared after handling the events;
+> otherwise, the latched bits are gonna get set immediately as the
+> events are still pending.  Also, this doesn't lose any events as
+> they're level triggered latches - if any event is pending, the IRQ is
+> gonna be raised again.
+>
+> Edge triggered latches are the other way around.  You should clear the
+> latches before actually handling and clearing the events.  The pending
+> events won't trigger the latches again as it's edge-triggered and the
+> events which happens after this irq handling starts won't get lost as
+> they'll be latched for the next round.
 
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
+Yeah it's very simple. The clearing of irq_stat needs to move up.
+That's it. tried and it worked. Thanks a lot !!
+Just a quick question : Why edge trigger handling is not yet present
+in libahci yet? I mean no one has used it yet ??
+
+>
+> Thanks.
+>
+> --
+> tejun
+
+
+
+-- 
+Thanks,
+with regards,
+Suman Tripathi
