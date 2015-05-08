@@ -1,184 +1,156 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v2] ahci: avoton port-disable reset-quirk
-Date: Fri, 08 May 2015 15:23:55 -0400
-Message-ID: <20150508192113.33528.60893.stgit@dwillia2-desk3.amr.corp.intel.com>
+From: Jonathan Bagg <jbagg@lenbrook.com>
+Subject: Re: imx6 sata cdrom driver issue
+Date: Fri, 8 May 2015 15:45:56 -0400
+Message-ID: <554D1274.70804@lenbrook.com>
+References: <5539101D.1020909@lenbrook.com> <3757889.IHh7sEV0GH@wuerfel> <5547DEA7.8080009@lenbrook.com> <2901871.Bfl6KrJo7t@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="------------080607020405050002090204"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:21258 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752899AbbEHT0g (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 8 May 2015 15:26:36 -0400
+Received: from mail.lenbrook.com ([206.191.95.214]:10185 "EHLO
+	mail.lenbrook.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751733AbbEHTp6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 May 2015 15:45:58 -0400
+In-Reply-To: <2901871.Bfl6KrJo7t@wuerfel>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org
-Cc: linux-ide@vger.kernel.org, stable@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org
+Cc: linux-ide@vger.kernel.org
 
-Avoton AHCI occasionally sees drive probe timeouts at driver load time.
-When this happens SCR_STATUS indicates device detected, but no D2H FIS
-reception.  Reset the internal link state machines by bouncing
-port-enable in the PCS register when this occurs.
+--------------080607020405050002090204
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
+On 15-05-05 06:48 AM, Arnd Bergmann wrote:
+> On Monday 04 May 2015 17:03:35 Jonathan Bagg wrote:
+>> On 15-05-04 02:37 PM, Arnd Bergmann wrote:
+>>> On Friday 01 May 2015 11:32:49 Jonathan Bagg wrote:
+>>>> On 15-04-24 03:58 AM, Arnd Bergmann wrote:
+>>>>> On Thursday 23 April 2015 11:30:37 Jonathan Bagg wrote:
+>>>>>
+>>>>> Do you have two SATA ports on one controller, with the other one being
+>>>>> conneced to a disk drive?
+>>>> Not when this error happened, but the CD-ROM was connected through a
+>>>> port multiplier.  One time I noticed sda device appear so I mounted it
+>>>> and it was the CD-ROM filesystem!
+>>> Very strange, I'm sure something went wrong there and either the SATA
+>>> host or the CDROM driver does not work well with a port multiplier.
+>>>
+>>> Is there a way for you to reproduce the problem without the multiplier?
+>>>
+>>>>> My best guess is that something in the error handling of
+>>>>> drivers/ata/ahci_imx.c causes a reset of the entire bus and that
+>>>>> triggers the other bugs. Can you instrument that error handling to
+>>>>> see what's going on?
+>>>>>
+>>>> Also tried a cubox
+>>>> <https://www.solid-run.com/products/cubox-i-mini-computer/>, (imx6)
+>>>> running  Linux OpenELEC 3.14.18 #1 SMP Sun Sep 14 12:22:14 EDT 2014
+>>>> armv7l GNU/Linux
+>>> Can you find out if there is a port multiplier in that machine?
+>> I've tried with and without a multiplier.  I have a port multiplier on a
+>> development board that I can connect between the CDROM and Sabre SATA
+>> port or connect the CDROM directly to the Sabre SATA port .
+>>> Does it list the sda device in /proc/partitions, or just the /dev/sr0?
+>> sda is only listed in /proc/partitions if I connect up a HDD.  The issue
+>> where the CDROM filesystem mounting as sda1 has never reproduced.
+>>
+>> I've also discovered, and it is 100% reproducible, that with the HDD and
+>> CDROM connected using the port multiplier, the kernel never lists the
+>> partition on the HDD.  If I connect the HDD directly to the Sabre or
+>> connect the HDD to the Sabre using the multiplier without the CDROM,
+>> /dev/sda1 will exist.
+> Ok, interesting. Does the same happen if you connect that port
+> multiplier to a PC?
+I don't think the host sata port on the PC I tried supported 
+multipliers.  I tried the port multiplier on a imx53 Quick Start Board 
+and it worked fine.  We've also discovered that cdparanoia (audio CD 
+ripper) fails to recognize the CDROM drive 100% of the time on imx6 with 
+or without the port multiplier.  On the imx53 Quick Start Board, running 
+the same kernel, just a different device tree, cdparanoia works great 
+with and without the port multiplier. If you apply the attached patch to 
+enable sata debug output, the imx6 output is different than the imx53's....
 
-v2: added a descriptive comment for ahci_avn_hardreset, and flipped the
-logic around for when we skip the second reset.  Add -stable to the Cc:.
+cdparanoia -vsQ
+dmesg | grep CDB
 
-Thanks Tejun!
+imx53
 
- drivers/ata/ahci.c |  103 ++++++++++++++++++++++++++++++++++++++++++++++++----
- 1 file changed, 95 insertions(+), 8 deletions(-)
+ata_scsi_dump_cdb: CDB (1:0,0,-571258880) 00 00 4a 01 00 00 10 00 00
+CDB rbuf: [4a 01 00 00 10 00 00 00 08]
+CDB rbuf: 00000000: 00 06 04 56 00 02 00 00
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 33bb06e006c9..adce56fa9cef 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -66,6 +66,7 @@ enum board_ids {
- 	board_ahci_yes_fbs,
+imx6 - third line is always zeros
+
+ata_scsi_dump_cdb: CDB (1:0,0,-1122908160) 00 00 4a 01 00 00 10 00 00
+CDB rbuf: [4a 01 00 00 10 00 00 00 08]
+CDB rbuf: 00000000: 00 00 00 00 00 00 00 00
+
+We also tried kernel versions 3.12, 3.14, 3.19 and most recent 4.x, all 
+are effected.  imx6 sata support didn't exists in 3.10, so we couldn't 
+go further back.
+
+https://community.freescale.com/message/514169#514169
+
+
+
+-- 
+Jonathan Bagg
+Embedded Systems Developer
+NAD Electronics | Lenbrook Industries Limited
+633 Granite Court, Pickering, Ontario, Canada L1W 3K1 | 905-831-0799 ext 4478 | http://www.nadelectronics.com
+
+
+--------------080607020405050002090204
+Content-Type: text/x-patch; name="ata_debug.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment; filename="ata_debug.patch"
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 6abd17a..cb3a705 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2712,6 +2712,26 @@ static void atapi_qc_complete(struct ata_queued_cmd *qc)
+ 		}
  
- 	/* board IDs for specific chipsets in alphabetical order */
-+	board_ahci_avn,
- 	board_ahci_mcp65,
- 	board_ahci_mcp77,
- 	board_ahci_mcp89,
-@@ -84,6 +85,8 @@ enum board_ids {
- static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
- static int ahci_vt8251_hardreset(struct ata_link *link, unsigned int *class,
- 				 unsigned long deadline);
-+static int ahci_avn_hardreset(struct ata_link *link, unsigned int *class,
-+			      unsigned long deadline);
- static void ahci_mcp89_apple_enable(struct pci_dev *pdev);
- static bool is_mcp89_apple(struct pci_dev *pdev);
- static int ahci_p5wdh_hardreset(struct ata_link *link, unsigned int *class,
-@@ -107,6 +110,11 @@ static struct ata_port_operations ahci_p5wdh_ops = {
- 	.hardreset		= ahci_p5wdh_hardreset,
- };
+ 		cmd->result = SAM_STAT_GOOD;
++
++		if(1)
++		{
++			unsigned long flags;
++			u8 *buf, *scsicmd;
++			int len;
++
++			buf = ata_scsi_rbuf_get(cmd, true, &flags);
++			len = scsi_bufflen(cmd);
++			scsicmd = cmd->cmnd;
++
++			printk(KERN_INFO "CDB rbuf: [%02x %02x %02x %02x %02x %02x %02x %02x %02x]\n",
++				scsicmd[0], scsicmd[1], scsicmd[2], scsicmd[3],
++				scsicmd[4], scsicmd[5], scsicmd[6], scsicmd[7],
++				scsicmd[8]);
++
++			print_hex_dump(KERN_INFO, "CDB rbuf: ", DUMP_PREFIX_OFFSET, 16, 1, buf, len, true);
++
++			ata_scsi_rbuf_put(cmd, true, &flags);
++		}
+ 	}
  
-+static struct ata_port_operations ahci_avn_ops = {
-+	.inherits		= &ahci_ops,
-+	.hardreset		= ahci_avn_hardreset,
-+};
-+
- static const struct ata_port_info ahci_port_info[] = {
- 	/* by features */
- 	[board_ahci] = {
-@@ -151,6 +159,12 @@ static const struct ata_port_info ahci_port_info[] = {
- 		.port_ops	= &ahci_ops,
- 	},
- 	/* by chipsets */
-+	[board_ahci_avn] = {
-+		.flags		= AHCI_FLAG_COMMON,
-+		.pio_mask	= ATA_PIO4,
-+		.udma_mask	= ATA_UDMA6,
-+		.port_ops	= &ahci_avn_ops,
-+	},
- 	[board_ahci_mcp65] = {
- 		AHCI_HFLAGS	(AHCI_HFLAG_NO_FPDMA_AA | AHCI_HFLAG_NO_PMP |
- 				 AHCI_HFLAG_YES_NCQ),
-@@ -290,14 +304,14 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_VDEVICE(INTEL, 0x1f27), board_ahci }, /* Avoton RAID */
- 	{ PCI_VDEVICE(INTEL, 0x1f2e), board_ahci }, /* Avoton RAID */
- 	{ PCI_VDEVICE(INTEL, 0x1f2f), board_ahci }, /* Avoton RAID */
--	{ PCI_VDEVICE(INTEL, 0x1f32), board_ahci }, /* Avoton AHCI */
--	{ PCI_VDEVICE(INTEL, 0x1f33), board_ahci }, /* Avoton AHCI */
--	{ PCI_VDEVICE(INTEL, 0x1f34), board_ahci }, /* Avoton RAID */
--	{ PCI_VDEVICE(INTEL, 0x1f35), board_ahci }, /* Avoton RAID */
--	{ PCI_VDEVICE(INTEL, 0x1f36), board_ahci }, /* Avoton RAID */
--	{ PCI_VDEVICE(INTEL, 0x1f37), board_ahci }, /* Avoton RAID */
--	{ PCI_VDEVICE(INTEL, 0x1f3e), board_ahci }, /* Avoton RAID */
--	{ PCI_VDEVICE(INTEL, 0x1f3f), board_ahci }, /* Avoton RAID */
-+	{ PCI_VDEVICE(INTEL, 0x1f32), board_ahci_avn }, /* Avoton AHCI */
-+	{ PCI_VDEVICE(INTEL, 0x1f33), board_ahci_avn }, /* Avoton AHCI */
-+	{ PCI_VDEVICE(INTEL, 0x1f34), board_ahci_avn }, /* Avoton RAID */
-+	{ PCI_VDEVICE(INTEL, 0x1f35), board_ahci_avn }, /* Avoton RAID */
-+	{ PCI_VDEVICE(INTEL, 0x1f36), board_ahci_avn }, /* Avoton RAID */
-+	{ PCI_VDEVICE(INTEL, 0x1f37), board_ahci_avn }, /* Avoton RAID */
-+	{ PCI_VDEVICE(INTEL, 0x1f3e), board_ahci_avn }, /* Avoton RAID */
-+	{ PCI_VDEVICE(INTEL, 0x1f3f), board_ahci_avn }, /* Avoton RAID */
- 	{ PCI_VDEVICE(INTEL, 0x2823), board_ahci }, /* Wellsburg RAID */
- 	{ PCI_VDEVICE(INTEL, 0x2827), board_ahci }, /* Wellsburg RAID */
- 	{ PCI_VDEVICE(INTEL, 0x8d02), board_ahci }, /* Wellsburg AHCI */
-@@ -670,6 +684,79 @@ static int ahci_p5wdh_hardreset(struct ata_link *link, unsigned int *class,
- 	return rc;
- }
+ 	qc->scsidone(cmd);
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 91f705d..4373982 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -53,8 +53,8 @@
+  * compile-time options: to be removed as soon as all the drivers are
+  * converted to the new debugging mechanism
+  */
+-#undef ATA_DEBUG		/* debugging output */
+-#undef ATA_VERBOSE_DEBUG	/* yet more debugging output */
++#define ATA_DEBUG		/* debugging output */
++#define ATA_VERBOSE_DEBUG	/* yet more debugging output */
+ #undef ATA_IRQ_TRAP		/* define to ack screaming irqs */
+ #undef ATA_NDEBUG		/* define to disable quick runtime checks */
  
-+/*
-+ * ahci_avn_hardreset - attempt more aggressive recovery of Avoton ports.
-+ *
-+ * It has been observed with some SSDs that the timing of events in the
-+ * link synchronization phase can leave the port in a state that can not
-+ * be recovered by a SATA-hard-reset alone.  The failing signature is
-+ * SStatus.DET stuck at 1 ("Device presence detected but Phy
-+ * communication not established").  It was found that unloading and
-+ * reloading the driver when this problem occurs allows the drive
-+ * connection to be recovered (DET advanced to 0x3).  The critical
-+ * component of reloading the driver is that the port state machines are
-+ * reset by bouncing "port enable" in the AHCI PCS configuration
-+ * register.  So, reproduce that effect by bouncing a port whenever we
-+ * see DET==1 after a reset.
-+ */
-+static int ahci_avn_hardreset(struct ata_link *link, unsigned int *class,
-+			      unsigned long deadline)
-+{
-+	const unsigned long *timing = sata_ehc_deb_timing(&link->eh_context);
-+	struct ata_port *ap = link->ap;
-+	struct ahci_port_priv *pp = ap->private_data;
-+	struct ahci_host_priv *hpriv = ap->host->private_data;
-+	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
-+	unsigned long tmo = deadline - jiffies;
-+	struct ata_taskfile tf;
-+	bool online;
-+	int rc, i;
-+
-+	DPRINTK("ENTER\n");
-+
-+	ahci_stop_engine(ap);
-+
-+	for (i = 0; i < 2; i++) {
-+		u16 val;
-+		u32 sstatus;
-+		int port = ap->port_no;
-+		struct ata_host *host = ap->host;
-+		struct pci_dev *pdev = to_pci_dev(host->dev);
-+
-+		/* clear D2H reception area to properly wait for D2H FIS */
-+		ata_tf_init(link->device, &tf);
-+		tf.command = ATA_BUSY;
-+		ata_tf_to_fis(&tf, 0, 0, d2h_fis);
-+
-+		rc = sata_link_hardreset(link, timing, deadline, &online,
-+				ahci_check_ready);
-+
-+		if (sata_scr_read(link, SCR_STATUS, &sstatus) != 0 ||
-+				(sstatus & 0xf) != 1)
-+			break;
-+
-+		ata_link_printk(link, KERN_INFO, "avn bounce port%d\n",
-+				port);
-+
-+		pci_read_config_word(pdev, 0x92, &val);
-+		val &= ~(1 << port);
-+		pci_write_config_word(pdev, 0x92, val);
-+		ata_msleep(ap, 1000);
-+		val |= 1 << port;
-+		pci_write_config_word(pdev, 0x92, val);
-+		deadline += tmo;
-+	}
-+
-+	hpriv->start_engine(ap);
-+
-+	if (online)
-+		*class = ahci_dev_classify(ap);
-+
-+	DPRINTK("EXIT, rc=%d, class=%u\n", rc, *class);
-+	return rc;
-+}
-+
-+
- #ifdef CONFIG_PM
- static int ahci_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg)
- {
 
+--------------080607020405050002090204--
