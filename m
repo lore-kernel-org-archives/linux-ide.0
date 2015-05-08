@@ -1,207 +1,184 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: Re: [PATCH v5 3/3] ata: ahci_xgene: Add AHCI Support for 2nd HW
- version of APM X-Gene SoC AHCI SATA Host controller.
-Date: Sat, 9 May 2015 00:44:45 +0530
-Message-ID: <CAOHikRBHy_u+Yur1oujFE5Szz13Aej=1KMFeN=za-WpXNYQ7tw@mail.gmail.com>
-References: <1430853672-6227-1-git-send-email-stripathi@apm.com>
-	<1430853672-6227-4-git-send-email-stripathi@apm.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH v2] ahci: avoton port-disable reset-quirk
+Date: Fri, 08 May 2015 15:23:55 -0400
+Message-ID: <20150508192113.33528.60893.stgit@dwillia2-desk3.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from exprod5og108.obsmtp.com ([64.18.0.186]:53023 "EHLO
-	mail-wi0-f172.google.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753038AbbEHTOs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 May 2015 15:14:48 -0400
-Received: by widdi4 with SMTP id di4so37758634wid.0
-        for <linux-ide@vger.kernel.org>; Fri, 08 May 2015 12:14:46 -0700 (PDT)
-In-Reply-To: <1430853672-6227-4-git-send-email-stripathi@apm.com>
+Received: from mga03.intel.com ([134.134.136.65]:21258 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752899AbbEHT0g (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 8 May 2015 15:26:36 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Arnd Bergmann <arnd@arndb.de>
-Cc: Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Mark Langsdorf <mlangsdo@redhat.com>, Jon Masters <jcm@redhat.com>, patches <patches@apm.com>, Suman Tripathi <stripathi@apm.com>
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, stable@vger.kernel.org
 
-On Wed, May 6, 2015 at 12:51 AM, Suman Tripathi <stripathi@apm.com> wrote:
-> This patch enables full AHCI feature support for APM X-Gene SoC SATA
-> host controller. The following errata's are removed:
->
-> 1. 2a0bdff6b95 ("ahci-xgene: fix the dma state machine lockup for the
->                  IDENTIFY DEVICE PIO mode command")
-> 2. 09c32aaa368 ("ahci_xgene: Fix the dma state machine lockup for the
->                  ATA_CMD_SMART PIO mode command")
-> 3. 1540035da71 ("ahci_xgene: Implement the xgene_ahci_poll_reg_val to
->                  support PMP")
-> 4. a3a84bc7c88 ("ahci_xgene: Implement the workaround to support PMP
->                  enumeration and discovery")
-> 5. 1102407bb71 ("ahci_xgene: Fix the DMA state machine lockup for the
->                  ATA_CMD_PACKET PIO mode command")
-> 6. 72f79f9e35b ("ahci_xgene: Removing NCQ support from the APM X-Gene
->                 SoC AHCI SATA Host Controller driver")
->
-> In addition, enable PMP support for APM X-Gene SoC and enable FBS
-> support for second generation APM X-Gene SoC.
->
-> Signed-off-by: Suman Tripathi <stripathi@apm.com>
-> ---
->  drivers/ata/ahci_xgene.c | 90 ++++++++++++++++++++++++++++++++++++++----------
->  1 file changed, 72 insertions(+), 18 deletions(-)
->
-> diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-> index 2b78510..88a0988 100644
-> --- a/drivers/ata/ahci_xgene.c
-> +++ b/drivers/ata/ahci_xgene.c
-> @@ -27,6 +27,7 @@
->  #include <linux/platform_device.h>
->  #include <linux/ahci_platform.h>
->  #include <linux/of_address.h>
-> +#include <linux/of_device.h>
->  #include <linux/of_irq.h>
->  #include <linux/phy/phy.h>
->  #include "ahci.h"
-> @@ -84,6 +85,11 @@
->  /* Max retry for link down */
->  #define MAX_LINK_DOWN_RETRY 3
->
-> +enum xgene_ahci_version {
-> +       XGENE_AHCI_V1 = 1,
-> +       XGENE_AHCI_V2,
-> +};
-> +
->  struct xgene_ahci_context {
->         struct ahci_host_priv *hpriv;
->         struct device *dev;
-> @@ -547,9 +553,6 @@ static struct ata_port_operations xgene_ahci_ops = {
->         .host_stop = xgene_ahci_host_stop,
->         .hardreset = xgene_ahci_hardreset,
->         .read_id = xgene_ahci_read_id,
-> -       .qc_issue = xgene_ahci_qc_issue,
-> -       .softreset = xgene_ahci_softreset,
-> -       .pmp_softreset = xgene_ahci_pmp_softreset
->  };
->
->  static const struct ata_port_info xgene_ahci_port_info = {
-> @@ -629,12 +632,30 @@ static struct scsi_host_template ahci_platform_sht = {
->         AHCI_SHT(DRV_NAME),
->  };
->
-> +#ifdef CONFIG_ACPI
-> +static const struct acpi_device_id xgene_ahci_acpi_match[] = {
-> +       { "APMC0D0D", XGENE_AHCI_V1},
-> +       { "APMC0D32", XGENE_AHCI_V2},
-> +       {},
-> +};
-> +MODULE_DEVICE_TABLE(acpi, xgene_ahci_acpi_match);
-> +#endif
-> +
-> +static const struct of_device_id xgene_ahci_of_match[] = {
-> +       {.compatible = "apm,xgene-ahci", .data = (void *) XGENE_AHCI_V1},
-> +       {.compatible = "apm,xgene-ahci-v2", .data = (void *) XGENE_AHCI_V2},
-> +       {},
-> +};
-> +MODULE_DEVICE_TABLE(of, xgene_ahci_of_match);
-> +
->  static int xgene_ahci_probe(struct platform_device *pdev)
->  {
->         struct device *dev = &pdev->dev;
->         struct ahci_host_priv *hpriv;
->         struct xgene_ahci_context *ctx;
->         struct resource *res;
-> +       const struct of_device_id *of_devid;
-> +       enum xgene_ahci_version version = XGENE_AHCI_V1;
->         int rc;
->
->         hpriv = ahci_platform_get_resources(pdev);
-> @@ -677,6 +698,37 @@ static int xgene_ahci_probe(struct platform_device *pdev)
->                 ctx->csr_mux = csr;
->         }
->
-> +       of_devid = of_match_device(xgene_ahci_of_match, dev);
-> +       if (of_devid) {
-> +               if (of_devid->data)
-> +                       version = (enum xgene_ahci_version) of_devid->data;
-> +       }
-> +#ifdef CONFIG_ACPI
-> +       else {
-> +               const struct acpi_device_id *acpi_id;
-> +               struct acpi_device_info *info;
-> +               acpi_status status;
-> +
-> +               acpi_id = acpi_match_device(xgene_ahci_acpi_match, &pdev->dev);
-> +               if (!acpi_id) {
-> +                       dev_warn(&pdev->dev, "No node entry in ACPI table. Assume version1\n");
-> +                       version = XGENE_AHCI_V1;
-> +               }
-> +
-> +               if (acpi_id->driver_data) {
-> +                       version = (enum xgene_ahci_version) acpi_id->driver_data;
-> +                       status = acpi_get_object_info(ACPI_HANDLE(&pdev->dev), &info);
-> +                       if (ACPI_FAILURE(status)) {
-> +                               dev_warn(&pdev->dev, "%s: Error reading device info. Assume version1\n",
-> +                                       __func__);
-> +                               version = XGENE_AHCI_V1;
-> +                       }
-> +                       if (info->valid & ACPI_VALID_CID)
-> +                               version = XGENE_AHCI_V2;
-> +               }
-> +       }
-> +#endif
-> +
->         dev_dbg(dev, "VAddr 0x%p Mmio VAddr 0x%p\n", ctx->csr_core,
->                 hpriv->mmio);
->
-> @@ -704,7 +756,23 @@ static int xgene_ahci_probe(struct platform_device *pdev)
->         /* Configure the host controller */
->         xgene_ahci_hw_init(hpriv);
->  skip_clk_phy:
-> -       hpriv->flags = AHCI_HFLAG_NO_PMP | AHCI_HFLAG_NO_NCQ;
-> +
-> +       switch (version) {
-> +       case XGENE_AHCI_V1:
-> +               hpriv->flags = AHCI_HFLAG_NO_NCQ;
-> +               /*
-> +                * Override the callbacks for storm ERRATA
-> +                */
-> +               xgene_ahci_ops.qc_issue = xgene_ahci_qc_issue;
-> +               xgene_ahci_ops.softreset = xgene_ahci_softreset;
-> +               xgene_ahci_ops.pmp_softreset = xgene_ahci_pmp_softreset;
-> +               break;
-> +       case XGENE_AHCI_V2:
-> +               hpriv->flags |= AHCI_HFLAG_YES_FBS | AHCI_HFLAG_EDGE_IRQ;
-> +               break;
-> +       default:
-> +               break;
-> +       }
->
->         rc = ahci_platform_init_host(pdev, hpriv, &xgene_ahci_port_info,
->                                      &ahci_platform_sht);
-> @@ -719,20 +787,6 @@ disable_resources:
->         return rc;
->  }
->
-> -#ifdef CONFIG_ACPI
-> -static const struct acpi_device_id xgene_ahci_acpi_match[] = {
-> -       { "APMC0D0D", },
-> -       { }
-> -};
-> -MODULE_DEVICE_TABLE(acpi, xgene_ahci_acpi_match);
-> -#endif
-> -
-> -static const struct of_device_id xgene_ahci_of_match[] = {
-> -       {.compatible = "apm,xgene-ahci"},
-> -       {},
-> -};
-> -MODULE_DEVICE_TABLE(of, xgene_ahci_of_match);
-> -
->  static struct platform_driver xgene_ahci_driver = {
->         .probe = xgene_ahci_probe,
->         .remove = ata_platform_remove_one,
-> --
-> 1.8.2.1
->
+Avoton AHCI occasionally sees drive probe timeouts at driver load time.
+When this happens SCR_STATUS indicates device detected, but no D2H FIS
+reception.  Reset the internal link state machines by bouncing
+port-enable in the PCS register when this occurs.
 
-Any comments on this version ??
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
 
+v2: added a descriptive comment for ahci_avn_hardreset, and flipped the
+logic around for when we skip the second reset.  Add -stable to the Cc:.
 
--- 
-Thanks,
-with regards,
-Suman Tripathi
+Thanks Tejun!
+
+ drivers/ata/ahci.c |  103 ++++++++++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 95 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 33bb06e006c9..adce56fa9cef 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -66,6 +66,7 @@ enum board_ids {
+ 	board_ahci_yes_fbs,
+ 
+ 	/* board IDs for specific chipsets in alphabetical order */
++	board_ahci_avn,
+ 	board_ahci_mcp65,
+ 	board_ahci_mcp77,
+ 	board_ahci_mcp89,
+@@ -84,6 +85,8 @@ enum board_ids {
+ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
+ static int ahci_vt8251_hardreset(struct ata_link *link, unsigned int *class,
+ 				 unsigned long deadline);
++static int ahci_avn_hardreset(struct ata_link *link, unsigned int *class,
++			      unsigned long deadline);
+ static void ahci_mcp89_apple_enable(struct pci_dev *pdev);
+ static bool is_mcp89_apple(struct pci_dev *pdev);
+ static int ahci_p5wdh_hardreset(struct ata_link *link, unsigned int *class,
+@@ -107,6 +110,11 @@ static struct ata_port_operations ahci_p5wdh_ops = {
+ 	.hardreset		= ahci_p5wdh_hardreset,
+ };
+ 
++static struct ata_port_operations ahci_avn_ops = {
++	.inherits		= &ahci_ops,
++	.hardreset		= ahci_avn_hardreset,
++};
++
+ static const struct ata_port_info ahci_port_info[] = {
+ 	/* by features */
+ 	[board_ahci] = {
+@@ -151,6 +159,12 @@ static const struct ata_port_info ahci_port_info[] = {
+ 		.port_ops	= &ahci_ops,
+ 	},
+ 	/* by chipsets */
++	[board_ahci_avn] = {
++		.flags		= AHCI_FLAG_COMMON,
++		.pio_mask	= ATA_PIO4,
++		.udma_mask	= ATA_UDMA6,
++		.port_ops	= &ahci_avn_ops,
++	},
+ 	[board_ahci_mcp65] = {
+ 		AHCI_HFLAGS	(AHCI_HFLAG_NO_FPDMA_AA | AHCI_HFLAG_NO_PMP |
+ 				 AHCI_HFLAG_YES_NCQ),
+@@ -290,14 +304,14 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	{ PCI_VDEVICE(INTEL, 0x1f27), board_ahci }, /* Avoton RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x1f2e), board_ahci }, /* Avoton RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x1f2f), board_ahci }, /* Avoton RAID */
+-	{ PCI_VDEVICE(INTEL, 0x1f32), board_ahci }, /* Avoton AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x1f33), board_ahci }, /* Avoton AHCI */
+-	{ PCI_VDEVICE(INTEL, 0x1f34), board_ahci }, /* Avoton RAID */
+-	{ PCI_VDEVICE(INTEL, 0x1f35), board_ahci }, /* Avoton RAID */
+-	{ PCI_VDEVICE(INTEL, 0x1f36), board_ahci }, /* Avoton RAID */
+-	{ PCI_VDEVICE(INTEL, 0x1f37), board_ahci }, /* Avoton RAID */
+-	{ PCI_VDEVICE(INTEL, 0x1f3e), board_ahci }, /* Avoton RAID */
+-	{ PCI_VDEVICE(INTEL, 0x1f3f), board_ahci }, /* Avoton RAID */
++	{ PCI_VDEVICE(INTEL, 0x1f32), board_ahci_avn }, /* Avoton AHCI */
++	{ PCI_VDEVICE(INTEL, 0x1f33), board_ahci_avn }, /* Avoton AHCI */
++	{ PCI_VDEVICE(INTEL, 0x1f34), board_ahci_avn }, /* Avoton RAID */
++	{ PCI_VDEVICE(INTEL, 0x1f35), board_ahci_avn }, /* Avoton RAID */
++	{ PCI_VDEVICE(INTEL, 0x1f36), board_ahci_avn }, /* Avoton RAID */
++	{ PCI_VDEVICE(INTEL, 0x1f37), board_ahci_avn }, /* Avoton RAID */
++	{ PCI_VDEVICE(INTEL, 0x1f3e), board_ahci_avn }, /* Avoton RAID */
++	{ PCI_VDEVICE(INTEL, 0x1f3f), board_ahci_avn }, /* Avoton RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x2823), board_ahci }, /* Wellsburg RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x2827), board_ahci }, /* Wellsburg RAID */
+ 	{ PCI_VDEVICE(INTEL, 0x8d02), board_ahci }, /* Wellsburg AHCI */
+@@ -670,6 +684,79 @@ static int ahci_p5wdh_hardreset(struct ata_link *link, unsigned int *class,
+ 	return rc;
+ }
+ 
++/*
++ * ahci_avn_hardreset - attempt more aggressive recovery of Avoton ports.
++ *
++ * It has been observed with some SSDs that the timing of events in the
++ * link synchronization phase can leave the port in a state that can not
++ * be recovered by a SATA-hard-reset alone.  The failing signature is
++ * SStatus.DET stuck at 1 ("Device presence detected but Phy
++ * communication not established").  It was found that unloading and
++ * reloading the driver when this problem occurs allows the drive
++ * connection to be recovered (DET advanced to 0x3).  The critical
++ * component of reloading the driver is that the port state machines are
++ * reset by bouncing "port enable" in the AHCI PCS configuration
++ * register.  So, reproduce that effect by bouncing a port whenever we
++ * see DET==1 after a reset.
++ */
++static int ahci_avn_hardreset(struct ata_link *link, unsigned int *class,
++			      unsigned long deadline)
++{
++	const unsigned long *timing = sata_ehc_deb_timing(&link->eh_context);
++	struct ata_port *ap = link->ap;
++	struct ahci_port_priv *pp = ap->private_data;
++	struct ahci_host_priv *hpriv = ap->host->private_data;
++	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
++	unsigned long tmo = deadline - jiffies;
++	struct ata_taskfile tf;
++	bool online;
++	int rc, i;
++
++	DPRINTK("ENTER\n");
++
++	ahci_stop_engine(ap);
++
++	for (i = 0; i < 2; i++) {
++		u16 val;
++		u32 sstatus;
++		int port = ap->port_no;
++		struct ata_host *host = ap->host;
++		struct pci_dev *pdev = to_pci_dev(host->dev);
++
++		/* clear D2H reception area to properly wait for D2H FIS */
++		ata_tf_init(link->device, &tf);
++		tf.command = ATA_BUSY;
++		ata_tf_to_fis(&tf, 0, 0, d2h_fis);
++
++		rc = sata_link_hardreset(link, timing, deadline, &online,
++				ahci_check_ready);
++
++		if (sata_scr_read(link, SCR_STATUS, &sstatus) != 0 ||
++				(sstatus & 0xf) != 1)
++			break;
++
++		ata_link_printk(link, KERN_INFO, "avn bounce port%d\n",
++				port);
++
++		pci_read_config_word(pdev, 0x92, &val);
++		val &= ~(1 << port);
++		pci_write_config_word(pdev, 0x92, val);
++		ata_msleep(ap, 1000);
++		val |= 1 << port;
++		pci_write_config_word(pdev, 0x92, val);
++		deadline += tmo;
++	}
++
++	hpriv->start_engine(ap);
++
++	if (online)
++		*class = ahci_dev_classify(ap);
++
++	DPRINTK("EXIT, rc=%d, class=%u\n", rc, *class);
++	return rc;
++}
++
++
+ #ifdef CONFIG_PM
+ static int ahci_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg)
+ {
+
