@@ -1,94 +1,116 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC PATCH] ahci: avoton port-disable reset-quirk
-Date: Fri, 8 May 2015 11:44:23 -0400
-Message-ID: <20150508154423.GD28439@htj.duckdns.org>
-References: <20150507184529.25927.35320.stgit@dwillia2-desk3.amr.corp.intel.com>
+From: Suman Tripathi <stripathi@apm.com>
+Subject: Re: [PATCH v5 2/3] libahci: Add support to handle HOST_IRQ_STAT as
+ edge trigger latch.
+Date: Sat, 9 May 2015 00:43:49 +0530
+Message-ID: <CAOHikRA9uiqVcmN0x3CaBp7Pd9bAidfqL3UzSTC3hYESRnSdTQ@mail.gmail.com>
+References: <1430853672-6227-1-git-send-email-stripathi@apm.com>
+	<1430853672-6227-3-git-send-email-stripathi@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qk0-f172.google.com ([209.85.220.172]:36401 "EHLO
-	mail-qk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932145AbbEHPo1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 May 2015 11:44:27 -0400
-Received: by qku63 with SMTP id 63so50528310qku.3
-        for <linux-ide@vger.kernel.org>; Fri, 08 May 2015 08:44:26 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20150507184529.25927.35320.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from exprod5og103.obsmtp.com ([64.18.0.145]:56222 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S932258AbbEHTNv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 May 2015 15:13:51 -0400
+Received: by widdi4 with SMTP id di4so37735409wid.0
+        for <linux-ide@vger.kernel.org>; Fri, 08 May 2015 12:13:49 -0700 (PDT)
+In-Reply-To: <1430853672-6227-3-git-send-email-stripathi@apm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-ide@vger.kernel.org
+To: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Arnd Bergmann <arnd@arndb.de>
+Cc: Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Mark Langsdorf <mlangsdo@redhat.com>, Jon Masters <jcm@redhat.com>, patches <patches@apm.com>, Suman Tripathi <stripathi@apm.com>
 
-Hello, Dan.
+Hi Tejun
 
-On Thu, May 07, 2015 at 02:45:50PM -0400, Dan Williams wrote:
-> The field reports success with this patch, but I wonder what problems I
-> might induce by bouncing the port aggressively upon seeing SStatus == 1?
-> Otherwise, if this looks good, please merge.
-
-I don't think it's too likely that this breaks anything.  It's a bit
-of brute force approach but if this is what makes things work
-smoothly...  Just some nitpicks.
-
-Please add detailed function comment here explaining why this function
-exists and what it tries to achieve.
-
-> +static int ahci_avn_hardreset(struct ata_link *link, unsigned int *class,
-> +			      unsigned long deadline)
+On Wed, May 6, 2015 at 12:51 AM, Suman Tripathi <stripathi@apm.com> wrote:
+>
+> This patch adds the support to handle HOST_IRQ_STAT as edge trigger
+> latch.
+>
+> Signed-off-by: Suman Tripathi <stripathi@apm.com>
+> ---
+>  drivers/ata/ahci.h    |  2 ++
+>  drivers/ata/libahci.c | 40 ++++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 42 insertions(+)
+>
+> diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+> index 71262e0..f442960 100644
+> --- a/drivers/ata/ahci.h
+> +++ b/drivers/ata/ahci.h
+> @@ -238,6 +238,8 @@ enum {
+>         AHCI_HFLAG_MULTI_MSI            = (1 << 16), /* multiple PCI MSIs */
+>         AHCI_HFLAG_NO_DEVSLP            = (1 << 17), /* no device sleep */
+>         AHCI_HFLAG_NO_FBS               = (1 << 18), /* no FBS */
+> +       AHCI_HFLAG_EDGE_IRQ             = (1 << 19), /* HOST_IRQ_STAT behaves as
+> +                                                       Edge Triggered */
+>
+>         /* ap->flags bits */
+>
+> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+> index aa89c8e..1add5ba 100644
+> --- a/drivers/ata/libahci.c
+> +++ b/drivers/ata/libahci.c
+> @@ -1853,6 +1853,43 @@ static u32 ahci_handle_port_intr(struct ata_host *host, u32 irq_masked)
+>         return handled;
+>  }
+>
+> +static irqreturn_t ahci_single_edge_irq_intr(int irq, void *dev_instance)
 > +{
-> +	const unsigned long *timing = sata_ehc_deb_timing(&link->eh_context);
-> +	struct ata_port *ap = link->ap;
-> +	struct ahci_port_priv *pp = ap->private_data;
-> +	struct ahci_host_priv *hpriv = ap->host->private_data;
-> +	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
-> +	unsigned long tmo = deadline - jiffies;
-> +	struct ata_taskfile tf;
-> +	bool online;
-> +	int rc, i;
+> +       struct ata_host *host = dev_instance;
+> +       struct ahci_host_priv *hpriv;
+> +       unsigned int rc = 0;
+> +       void __iomem *mmio;
+> +       u32 irq_stat, irq_masked;
 > +
-> +	DPRINTK("ENTER\n");
+> +       VPRINTK("ENTER\n");
 > +
-> +	ahci_stop_engine(ap);
+> +       hpriv = host->private_data;
+> +       mmio = hpriv->mmio;
 > +
-> +	for (i = 0; i < 2; i++) {
-> +		u32 sstatus;
+> +       /* sigh.  0xffffffff is a valid return from h/w */
+> +       irq_stat = readl(mmio + HOST_IRQ_STAT);
+> +       if (!irq_stat)
+> +               return IRQ_NONE;
 > +
-> +		/* clear D2H reception area to properly wait for D2H FIS */
-> +		ata_tf_init(link->device, &tf);
-> +		tf.command = ATA_BUSY;
-> +		ata_tf_to_fis(&tf, 0, 0, d2h_fis);
+> +       irq_masked = irq_stat & hpriv->port_map;
 > +
-> +		rc = sata_link_hardreset(link, timing, deadline, &online,
-> +				ahci_check_ready);
+> +       spin_lock(&host->lock);
 > +
-> +		/*
-> +		 * If the the link is stuck at DET==1 after a reset try
-> +		 * bouncing the port and retrying the reset.
-> +		 */
-> +		if (sata_scr_read(link, SCR_STATUS, &sstatus) == 0 &&
-> +				(sstatus & 0xf) == 1) {
-> +			u16 val;
-> +			int port = ap->port_no;
-> +			struct ata_host *host = ap->host;
-> +			struct pci_dev *pdev = to_pci_dev(host->dev);
+> +       /*
+> +        * HOST_IRQ_STAT behaves as edge triggered latch meaning that
+> +        * it should be cleared before all the port events are cleared.
+> +        */
+> +       writel(irq_stat, mmio + HOST_IRQ_STAT);
 > +
-> +			ata_link_printk(link, KERN_INFO, "avn bounce port%d\n",
-> +					port);
+> +       rc = ahci_handle_port_intr(host, irq_masked);
 > +
-> +			/* bounce port-enable in PCS */
-> +			pci_read_config_word(pdev, 0x92, &val);
-> +			val &= ~(1 << port);
-> +			pci_write_config_word(pdev, 0x92, val);
-> +			ata_msleep(ap, 1000);
-> +			val |= 1 << port;
-> +			pci_write_config_word(pdev, 0x92, val);
-> +			deadline += tmo;
-> +		} else
-> +			break;
+> +       spin_unlock(&host->lock);
+> +
+> +       VPRINTK("EXIT\n");
+> +
+> +       return IRQ_RETVAL(rc);
+> +}
+> +
+>  static irqreturn_t ahci_single_level_irq_intr(int irq, void *dev_instance)
+>  {
+>         struct ata_host *host = dev_instance;
+> @@ -2495,6 +2532,9 @@ int ahci_host_activate(struct ata_host *host, int irq,
+>
+>         if (hpriv->flags & AHCI_HFLAG_MULTI_MSI)
+>                 rc = ahci_host_activate_multi_irqs(host, irq, sht);
+> +       else if (hpriv->flags & AHCI_HFLAG_EDGE_IRQ)
+> +               rc = ata_host_activate(host, irq, ahci_single_edge_irq_intr,
+> +                                      IRQF_SHARED, sht);
+>         else
+>                 rc = ata_host_activate(host, irq, ahci_single_level_irq_intr,
+>                                        IRQF_SHARED, sht);
+> --
+> 1.8.2.1
+>
 
-This looks weird.  Maybe just do if (counter_cond) break;?
-
-Thanks.
+Any comments on this version ??
 
 -- 
-tejun
+Thanks,
+with regards,
+Suman Tripathi
