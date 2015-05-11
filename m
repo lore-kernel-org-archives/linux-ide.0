@@ -1,53 +1,64 @@
 From: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCHv3 0/4] add devm_of_phy_get_by_index and update platform
- drivers
-Date: Mon, 11 May 2015 19:14:53 +0530
-Message-ID: <5550B255.3040404@ti.com>
-References: <Pine.LNX.4.44L0.1504231031170.1529-100000@iolanthe.rowland.org>
+Subject: Re: [PATCH v2 0/5] AHCI and SATA PHY support for Broadcom STB SoCs
+Date: Mon, 11 May 2015 20:11:01 +0530
+Message-ID: <5550BF7D.6010107@ti.com>
+References: <1429757950-28789-1-git-send-email-computersforpeace@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-doc-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1504231031170.1529-100000@iolanthe.rowland.org>
-Sender: linux-doc-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>, Arun Ramamurthy <arun.ramamurthy@broadcom.com>
-Cc: Jonathan Corbet <corbet@lwn.net>, Tejun Heo <tj@kernel.org>, Kyungmin Park <kyungmin.park@samsung.com>, Sylwester Nawrocki <s.nawrocki@samsung.com>, Mauro Carvalho Chehab <mchehab@osg.samsung.com>, Kukjin Kim <kgene@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tony Prisk <linux@prisktech.co.nz>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, Tomi Valkeinen <tomi.valkeinen@ti.com>, Arnd Bergmann <arnd@arndb.de>, Felipe Balbi <balbi@ti.com>, Mathias Nyman <mathias.nyman@linux.intel.com>, Paul Bolle <pebolle@tiscali.nl>, Thomas Pugliese <thomas.pugliese@gmail.com>, Srinivas Kandagatla <srinivas.kandagatla@linaro.org>, Masanari Iida <standby24x7@gmail.com>, David Mosberger <davidm@egauge.net>, Peter Griffin <peter.griffin@linaro.org>, Gregory CLEMENT <gregory.clement@free-electrons.com>, Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1429757950-28789-1-git-send-email-computersforpeace@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Brian Norris <computersforpeace@gmail.com>, Tejun Heo <tj@kernel.org>
+Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Gregory Fong <gregory.0xf0@gmail.com>, Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, bcm-kernel-feedback-list@broadcom.com
 List-Id: linux-ide@vger.kernel.org
 
 Hi,
 
-On Thursday 23 April 2015 08:01 PM, Alan Stern wrote:
-> On Wed, 22 Apr 2015, Arun Ramamurthy wrote:
+On Thursday 23 April 2015 08:29 AM, Brian Norris wrote:
+> Hi,
 >
->> This patch set adds a new API to get phy by index when multiple
->> phys are present. This patch is based on discussion with Arnd Bergmann
->> about dt bindings for multiple phys.
->>
->> History:
->> v1:
->>      - Removed null pointers on Dmitry's suggestion
->>      - Improved documentation in commit messages
->>      - Exported new phy api
->> v2:
->>      - EHCI and OHCI platform Kconfigs select Generic Phy
->>        to fix build errors in certain configs.
->> v3:
->>      - Made GENERIC_PHY an invisible option so
->>      that other configs can select it
->>      - Added stubs for devm_of_phy_get_by_index
->>      - Reformated code
->>
->> Arun Ramamurthy (4):
->>    phy: phy-core: Make GENERIC_PHY an invisible option
->>    phy: core: Add devm_of_phy_get_by_index to phy-core
->>    usb: ehci-platform: Use devm_of_phy_get_by_index
->>    usb: ohci-platform: Use devm_of_phy_get_by_index
+> Here are my updates based on everyone's feedback. I'll try to include most of
+> the changelog info in each patch, but a few summary points for v1 -> v2:
 >
-> For patches 3 and 4:
+>   - reworked the PHY DT binding so that we don't need do any custom xlate in the
+>     PHY driver
 >
-> Acked-by: Alan Stern <stern@rowland.harvard.edu>
+>   - moved all handling of the 'SATA_TOP_CTRL' block into the SATA driver,
+>     instead of sharing it between SATA and PHY drivers. This means we have to do
+>     a little extra work in sata_brcmstb.c to decide which ports to power on, but
+>     at least this way, we're really describing the hardware, not just how the SW
+>     frameworks want to use the hardware.
 
-merged this to linux-phy.
+I don't see any problems with the PHY patches. Let me know If I can take this 
+via linux-phy tree.
 
-Thanks
+Cheers
 Kishon
+
+>
+> Enjoy,
+> Brian
+>
+> Brian Norris (5):
+>    Documentation: devicetree: add Broadcom SATA binding
+>    Documentation: devicetree: add Broadcom SATA PHY binding
+>    ata: add Broadcom AHCI SATA3 driver for STB chips
+>    phy: add Broadcom SATA3 PHY driver for Broadcom STB SoCs
+>    ARM: dts: brcmstb: add nodes for SATA controller and PHY
+>
+>   .../devicetree/bindings/ata/brcm,sata-brcmstb.txt  |  35 +++
+>   .../bindings/phy/brcm,brcmstb-sata-phy.txt         |  40 +++
+>   arch/arm/boot/dts/bcm7445.dtsi                     |  37 +++
+>   drivers/ata/Kconfig                                |   9 +
+>   drivers/ata/Makefile                               |   1 +
+>   drivers/ata/sata_brcmstb.c                         | 285 +++++++++++++++++++++
+>   drivers/phy/Kconfig                                |   9 +
+>   drivers/phy/Makefile                               |   1 +
+>   drivers/phy/phy-brcmstb-sata.c                     | 216 ++++++++++++++++
+>   9 files changed, 632 insertions(+)
+>   create mode 100644 Documentation/devicetree/bindings/ata/brcm,sata-brcmstb.txt
+>   create mode 100644 Documentation/devicetree/bindings/phy/brcm,brcmstb-sata-phy.txt
+>   create mode 100644 drivers/ata/sata_brcmstb.c
+>   create mode 100644 drivers/phy/phy-brcmstb-sata.c
+>
