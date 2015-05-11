@@ -1,55 +1,53 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: Re: [PATCH v6 1/1] ata: ahci_xgene: Add AHCI Support for 2nd HW
- version of APM X-Gene SoC AHCI SATA Host controller.
-Date: Mon, 11 May 2015 19:01:32 +0530
-Message-ID: <CAOHikRBC_KOtL=hJHp7D+9DWNOnuN=VE=RQEnU_TJJ6wOXkO9g@mail.gmail.com>
-References: <1431333375-30433-1-git-send-email-stripathi@apm.com>
-	<1431333375-30433-2-git-send-email-stripathi@apm.com>
-	<20150511112800.GA11388@htj.duckdns.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCHv3 0/4] add devm_of_phy_get_by_index and update platform
+ drivers
+Date: Mon, 11 May 2015 19:14:53 +0530
+Message-ID: <5550B255.3040404@ti.com>
+References: <Pine.LNX.4.44L0.1504231031170.1529-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20150511112800.GA11388@htj.duckdns.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Mark Langsdorf <mlangsdo@redhat.com>, Jon Masters <jcm@redhat.com>, patches <patches@apm.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-doc-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.1504231031170.1529-100000@iolanthe.rowland.org>
+Sender: linux-doc-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>, Arun Ramamurthy <arun.ramamurthy@broadcom.com>
+Cc: Jonathan Corbet <corbet@lwn.net>, Tejun Heo <tj@kernel.org>, Kyungmin Park <kyungmin.park@samsung.com>, Sylwester Nawrocki <s.nawrocki@samsung.com>, Mauro Carvalho Chehab <mchehab@osg.samsung.com>, Kukjin Kim <kgene@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tony Prisk <linux@prisktech.co.nz>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, Tomi Valkeinen <tomi.valkeinen@ti.com>, Arnd Bergmann <arnd@arndb.de>, Felipe Balbi <balbi@ti.com>, Mathias Nyman <mathias.nyman@linux.intel.com>, Paul Bolle <pebolle@tiscali.nl>, Thomas Pugliese <thomas.pugliese@gmail.com>, Srinivas Kandagatla <srinivas.kandagatla@linaro.org>, Masanari Iida <standby24x7@gmail.com>, David Mosberger <davidm@egauge.net>, Peter Griffin <peter.griffin@linaro.org>, Gregory CLEMENT <gregory.clement@free-electrons.com>, Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 List-Id: linux-ide@vger.kernel.org
 
-Hi Tejun,
+Hi,
 
-On Mon, May 11, 2015 at 4:58 PM, Tejun Heo <tj@kernel.org> wrote:
-> Hello, Suman.
+On Thursday 23 April 2015 08:01 PM, Alan Stern wrote:
+> On Wed, 22 Apr 2015, Arun Ramamurthy wrote:
 >
-> On Mon, May 11, 2015 at 02:06:15PM +0530, Suman Tripathi wrote:
->> -#ifdef CONFIG_ACPI
->> -static const struct acpi_device_id xgene_ahci_acpi_match[] = {
->> -     { "APMC0D0D", },
->> -     { }
->> -};
->> -MODULE_DEVICE_TABLE(acpi, xgene_ahci_acpi_match);
->> -#endif
->> -
->> -static const struct of_device_id xgene_ahci_of_match[] = {
->> -     {.compatible = "apm,xgene-ahci"},
->> -     {},
->> -};
->> -MODULE_DEVICE_TABLE(of, xgene_ahci_of_match);
+>> This patch set adds a new API to get phy by index when multiple
+>> phys are present. This patch is based on discussion with Arnd Bergmann
+>> about dt bindings for multiple phys.
+>>
+>> History:
+>> v1:
+>>      - Removed null pointers on Dmitry's suggestion
+>>      - Improved documentation in commit messages
+>>      - Exported new phy api
+>> v2:
+>>      - EHCI and OHCI platform Kconfigs select Generic Phy
+>>        to fix build errors in certain configs.
+>> v3:
+>>      - Made GENERIC_PHY an invisible option so
+>>      that other configs can select it
+>>      - Added stubs for devm_of_phy_get_by_index
+>>      - Reformated code
+>>
+>> Arun Ramamurthy (4):
+>>    phy: phy-core: Make GENERIC_PHY an invisible option
+>>    phy: core: Add devm_of_phy_get_by_index to phy-core
+>>    usb: ehci-platform: Use devm_of_phy_get_by_index
+>>    usb: ohci-platform: Use devm_of_phy_get_by_index
 >
-> I applied the patch as-is this time but please don't combine code
-> movement with actual changes in the future.  Split them out to
-> separate patches.  It makes the changes a lot easier to follow and
-> verify.
-
-Sorry . I will take care of it next time onwards.
+> For patches 3 and 4:
 >
-> Thanks.
->
-> --
-> tejun
+> Acked-by: Alan Stern <stern@rowland.harvard.edu>
 
+merged this to linux-phy.
 
-
--- 
-Thanks,
-with regards,
-Suman Tripathi
+Thanks
+Kishon
