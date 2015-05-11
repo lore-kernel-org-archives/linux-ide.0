@@ -1,50 +1,50 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2/3] libata: Add firmware_default LPM policy
-Date: Mon, 11 May 2015 16:43:30 -0400
-Message-ID: <20150511204330.GJ11388@htj.duckdns.org>
-References: <1429370796-5881-1-git-send-email-mjg59@coreos.com>
- <1429370796-5881-3-git-send-email-mjg59@coreos.com>
- <20150422144812.GA10592@htj.duckdns.org>
- <CAPeXnHuSccpYkDRmWO5tKuec2q0WqX7Ktxk_yX9te77xrEe=SA@mail.gmail.com>
- <20150511202830.GH11388@htj.duckdns.org>
- <CAPeXnHtVZ-fuzxYiCFBTn_5g_z+mbLHGnD5yQpam_3Ypjfv0HQ@mail.gmail.com>
+From: Brian Norris <computersforpeace@gmail.com>
+Subject: Re: [PATCH v2 0/5] AHCI and SATA PHY support for Broadcom STB SoCs
+Date: Mon, 11 May 2015 16:20:34 -0700
+Message-ID: <20150511232034.GK32500@ld-irv-0074>
+References: <1429757950-28789-1-git-send-email-computersforpeace@gmail.com>
+ <5550BF7D.6010107@ti.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f170.google.com ([209.85.216.170]:33442 "EHLO
-	mail-qc0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752752AbbEKUne (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 May 2015 16:43:34 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CAPeXnHtVZ-fuzxYiCFBTn_5g_z+mbLHGnD5yQpam_3Ypjfv0HQ@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <5550BF7D.6010107@ti.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Gregory Fong <gregory.0xf0@gmail.com>, Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, bcm-kernel-feedback-list@broadcom.com
 List-Id: linux-ide@vger.kernel.org
-To: Matthew Garrett <matthew.garrett@coreos.com>
-Cc: Matthew Garrett <mjg59@coreos.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, kristen@linux.intel.com, sgunderson@bigfoot.com
 
-Hello, Matthew.
+Hi Kishon,
 
-On Mon, May 11, 2015 at 01:34:40PM -0700, Matthew Garrett wrote:
-> On Mon, May 11, 2015 at 1:28 PM, Tejun Heo <tj@kernel.org> wrote:
+On Mon, May 11, 2015 at 08:11:01PM +0530, Kishon Vijay Abraham I wrote:
+> On Thursday 23 April 2015 08:29 AM, Brian Norris wrote:
+> >Here are my updates based on everyone's feedback. I'll try to include most of
+> >the changelog info in each patch, but a few summary points for v1 -> v2:
+> >
+> >  - reworked the PHY DT binding so that we don't need do any custom xlate in the
+> >    PHY driver
+> >
+> >  - moved all handling of the 'SATA_TOP_CTRL' block into the SATA driver,
+> >    instead of sharing it between SATA and PHY drivers. This means we have to do
+> >    a little extra work in sata_brcmstb.c to decide which ports to power on, but
+> >    at least this way, we're really describing the hardware, not just how the SW
+> >    frameworks want to use the hardware.
 > 
-> > CommWake isn't the problem here.  SError is being dumped just for
-> > information.  The disk is reporting failure on a write command which
-> > is diagnosed as "device error" and thus the link is not reset.  It's
-> > really the device actively reporting command failure.
-> 
-> Ok, that makes sense. Is there any practical way for us to identify
-> why the device might be doing that? It seems to be limited to the LPM
-> case, but this is (theoretically) in the same configuration that the
-> firmware programmed, so it's a little surprising.
+> I don't see any problems with the PHY patches. Let me know If I can
+> take this via linux-phy tree.
 
-Modern ATA spec do implement extended error reporting and Hannes
-recently (not mainline yet) added support for it and the kernel will
-print out sense codes if the device reports it ("NCQ Autosense
-xx/xx/xx").  Another vector could be SMART error log which is
-accessible through smartctl, but it's quite possible that the ABRT bit
-is the only thing the device is exposing at all.
+I think the only remaining objections were about endianness.
+Incidentally, the PHY driver was using readl()/writel(), so that should
+be OK then. It might be a problem for big endian MIPS, but this
+particular PHY IP is not available on MIPS. If it ever is used there,
+then we may need to patch in something like this:
 
-Thanks.
+	if (big endian MIPS)
+		iowrite32be(val, addr);
+	else
+		iowrite32(val, addr);
 
--- 
-tejun
+But for now, I think all is OK, so feel free to take it. I'll just
+rework/resend the SATA driver, SATA binding, and ARM/dts updates.
+
+Brian
