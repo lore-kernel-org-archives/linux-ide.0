@@ -1,126 +1,85 @@
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCHv3 2/4] phy: core: Add devm_of_phy_get_by_index to phy-core
-Date: Mon, 11 May 2015 20:39:57 +0530
-Message-ID: <5550C645.6090106@ti.com>
-References: <1429743853-10254-1-git-send-email-arun.ramamurthy@broadcom.com> <1429743853-10254-3-git-send-email-arun.ramamurthy@broadcom.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [GIT PULL] libata fixes for v4.1-rc3
+Date: Mon, 11 May 2015 11:14:41 -0400
+Message-ID: <20150511151441.GG11388@htj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-media-owner@vger.kernel.org>
-In-Reply-To: <1429743853-10254-3-git-send-email-arun.ramamurthy@broadcom.com>
-Sender: linux-media-owner@vger.kernel.org
-To: Arun Ramamurthy <arun.ramamurthy@broadcom.com>, Jonathan Corbet <corbet@lwn.net>, Tejun Heo <tj@kernel.org>, Kyungmin Park <kyungmin.park@samsung.com>, Sylwester Nawrocki <s.nawrocki@samsung.com>, Mauro Carvalho Chehab <mchehab@osg.samsung.com>, Kukjin Kim <kgene@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alan Stern <stern@rowland.harvard.edu>, Tony Prisk <linux@prisktech.co.nz>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, Tomi Valkeinen <tomi.valkeinen@ti.com>, Arnd Bergmann <arnd@arndb.de>, Felipe Balbi <balbi@ti.com>, Mathias Nyman <mathias.nyman@linux.intel.com>, Paul Bolle <pebolle@tiscali.nl>, Thomas Pugliese <thomas.pugliese@gmail.com>, Srinivas Kandagatla <srinivas.kandagatla@linaro.org>, Masanari Iida <standby24x7@gmail.com>, David Mosberger <davidm@egauge.net>, Peter Griffin <peter.griffin@linaro.org>Gregory CLEMENT <gre>
-Cc: linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-media@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-samsung-soc@vger.kernel.org, linux-usb@vger.kernel.org, linux-fbdev@vger.kernel.org, Dmitry Torokhov <dtor@google.com>, Anatol Pomazau <anatol@google.com>, Jonathan Richardson <jonathar@broadcom.com>, Scott Branden <sbranden@broadcom.com>, Ray Jui <rjui@broadcom.com>, bcm-kernel-feedback-list@broadcom.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qc0-f181.google.com ([209.85.216.181]:34599 "EHLO
+	mail-qc0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751478AbbEKPOp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 May 2015 11:14:45 -0400
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hi,
+Hello, Linus.
 
-On Thursday 23 April 2015 04:34 AM, Arun Ramamurthy wrote:
-> Some generic drivers, such as ehci, may use multiple phys and for such
-> drivers referencing phy(s) by name(s) does not make sense. Instead of
-> inventing new naming schemes and using custom code to iterate through them,
-> such drivers are better of using nameless phy bindings and using this newly
-> introduced API to iterate through them.
->
-> Signed-off-by: Arun Ramamurthy <arun.ramamurthy@broadcom.com>
-> Reviewed-by: Ray Jui <rjui@broadcom.com>
-> Reviewed-by: Scott Branden <sbranden@broadcom.com>
-> ---
->   Documentation/phy.txt   |  7 ++++++-
->   drivers/phy/phy-core.c  | 32 ++++++++++++++++++++++++++++++++
->   include/linux/phy/phy.h |  8 ++++++++
->   3 files changed, 46 insertions(+), 1 deletion(-)
->
-> diff --git a/Documentation/phy.txt b/Documentation/phy.txt
-> index 371361c..b388c5a 100644
-> --- a/Documentation/phy.txt
-> +++ b/Documentation/phy.txt
-> @@ -76,6 +76,8 @@ struct phy *phy_get(struct device *dev, const char *string);
->   struct phy *phy_optional_get(struct device *dev, const char *string);
->   struct phy *devm_phy_get(struct device *dev, const char *string);
->   struct phy *devm_phy_optional_get(struct device *dev, const char *string);
-> +struct phy *devm_of_phy_get_by_index(struct device *dev, struct device_node *np,
-> +				     int index);
->
->   phy_get, phy_optional_get, devm_phy_get and devm_phy_optional_get can
->   be used to get the PHY. In the case of dt boot, the string arguments
-> @@ -86,7 +88,10 @@ successful PHY get. On driver detach, release function is invoked on
->   the the devres data and devres data is freed. phy_optional_get and
->   devm_phy_optional_get should be used when the phy is optional. These
->   two functions will never return -ENODEV, but instead returns NULL when
-> -the phy cannot be found.
-> +the phy cannot be found.Some generic drivers, such as ehci, may use multiple
-> +phys and for such drivers referencing phy(s) by name(s) does not make sense. In
-> +this case, devm_of_phy_get_by_index can be used to get a phy reference based on
-> +the index.
->
->   It should be noted that NULL is a valid phy reference. All phy
->   consumer calls on the NULL phy become NOPs. That is the release calls,
-> diff --git a/drivers/phy/phy-core.c b/drivers/phy/phy-core.c
-> index 3791838..964a84d 100644
-> --- a/drivers/phy/phy-core.c
-> +++ b/drivers/phy/phy-core.c
-> @@ -623,6 +623,38 @@ struct phy *devm_of_phy_get(struct device *dev, struct device_node *np,
->   EXPORT_SYMBOL_GPL(devm_of_phy_get);
->
->   /**
-> + * devm_of_phy_get_by_index() - lookup and obtain a reference to a phy by index.
-> + * @dev: device that requests this phy
-> + * @np: node containing the phy
-> + * @index: index of the phy
-> + *
-> + * Gets the phy using _of_phy_get(), and associates a device with it using
-> + * devres. On driver detach, release function is invoked on the devres data,
-> + * then, devres data is freed.
-> + *
-> + */
-> +struct phy *devm_of_phy_get_by_index(struct device *dev, struct device_node *np,
-> +				     int index)
-> +{
-> +	struct phy **ptr, *phy;
-> +
-> +	ptr = devres_alloc(devm_phy_release, sizeof(*ptr), GFP_KERNEL);
-> +	if (!ptr)
-> +		return ERR_PTR(-ENOMEM);
-> +
-> +	phy = _of_phy_get(np, index);
-> +	if (!IS_ERR(phy)) {
-> +		*ptr = phy;
-> +		devres_add(dev, ptr);
-> +	} else {
-> +		devres_free(ptr);
-> +	}
-> +
-> +	return phy;
-> +}
-> +EXPORT_SYMBOL_GPL(devm_of_phy_get_by_index);
-> +
-> +/**
->    * phy_create() - create a new phy
->    * @dev: device that is creating the new phy
->    * @node: device node of the phy
-> diff --git a/include/linux/phy/phy.h b/include/linux/phy/phy.h
-> index a0197fa..978d5af 100644
-> --- a/include/linux/phy/phy.h
-> +++ b/include/linux/phy/phy.h
-> @@ -133,6 +133,8 @@ struct phy *devm_phy_get(struct device *dev, const char *string);
->   struct phy *devm_phy_optional_get(struct device *dev, const char *string);
->   struct phy *devm_of_phy_get(struct device *dev, struct device_node *np,
->   			    const char *con_id);
-> +struct phy *devm_of_phy_get_by_index(struct device *dev, struct device_node *np,
-> +				     int index);
->   void phy_put(struct phy *phy);
->   void devm_phy_put(struct device *dev, struct phy *phy);
->   struct phy *of_phy_get(struct device_node *np, const char *con_id);
-> @@ -261,6 +263,12 @@ static inline struct phy *devm_of_phy_get(struct device *dev,
->   	return ERR_PTR(-ENOSYS);
->   }
->
-> +struct phy *devm_of_phy_get_by_index(struct device *dev, struct device_node *np,
-> +				     int index);
+libata fixes for v4.1-rc3.  Rather big for fixes pull.
 
-Fixed the compilation error because of the ';' in the end and merged it to 
-linux-phy.
+* SCC controllers never lived to see the light of the day.  Both
+  libata and ide drivers removed.
 
-Thanks
-Kishon
+* In some configurations, link power management policy changes
+  sometimes cause delayed spurious PHY events which can develop into
+  noticeable failures.  This has been reported several times over the
+  years.  Gabriele's patches suppress PHY events for a while after LPM
+  policy changes which should help most of these failures without
+  causing too much problem for hotplug use cases.
+
+* A few controller specific fixes.
+
+Thanks.
+
+The following changes since commit 31f7dc796998d2967e999a0f9229d8a50c7b348d:
+
+  ACPI / battery: Fix doubly added battery on system suspend (2015-04-14 09:03:33 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-4.1-fixes
+
+for you to fetch changes up to dbfe8ef5599a5370abc441fcdbb382b656563eb4:
+
+  ahci: avoton port-disable reset-quirk (2015-05-10 11:39:16 -0400)
+
+----------------------------------------------------------------
+Andy Shevchenko (1):
+      ata: select DW_DMAC in case of SATA_DWC
+
+Dan Williams (1):
+      ahci: avoton port-disable reset-quirk
+
+Daniel Axtens (1):
+      Remove celleb-only SCC PATA drivers
+
+Gabriele Mazzotta (2):
+      libata: Add helper to determine when PHY events should be ignored
+      libata: Ignore spurious PHY event on LPM policy change
+
+Martin K. Petersen (1):
+      libata: Blacklist queued TRIM on all Samsung 800-series
+
+Peter Griffin (1):
+      ata: ahci_st: fixup layering violations / drvdata errors
+
+ drivers/ata/Kconfig       |   10 +-
+ drivers/ata/Makefile      |    1 -
+ drivers/ata/ahci.c        |  103 ++++-
+ drivers/ata/ahci_st.c     |   49 +-
+ drivers/ata/libahci.c     |    3 +-
+ drivers/ata/libata-core.c |   34 +-
+ drivers/ata/libata-eh.c   |    3 +
+ drivers/ata/pata_scc.c    | 1110 ---------------------------------------------
+ drivers/ide/Kconfig       |    9 -
+ drivers/ide/Makefile      |    1 -
+ drivers/ide/scc_pata.c    |  887 ------------------------------------
+ include/linux/libata.h    |   10 +
+ 12 files changed, 167 insertions(+), 2053 deletions(-)
+ delete mode 100644 drivers/ata/pata_scc.c
+ delete mode 100644 drivers/ide/scc_pata.c
+
+-- 
+tejun
