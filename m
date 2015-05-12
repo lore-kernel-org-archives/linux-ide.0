@@ -1,73 +1,99 @@
 From: Brian Norris <computersforpeace@gmail.com>
-Subject: [PATCH v3 4/5] phy: add Broadcom SATA3 PHY driver for Broadcom STB SoCs
-Date: Tue, 12 May 2015 16:28:22 -0700
-Message-ID: <1431473303-18873-5-git-send-email-computersforpeace@gmail.com>
+Subject: [PATCH v3 3/5] ata: add Broadcom AHCI SATA3 driver for STB chips
+Date: Tue, 12 May 2015 16:28:21 -0700
+Message-ID: <1431473303-18873-4-git-send-email-computersforpeace@gmail.com>
 References: <1431473303-18873-1-git-send-email-computersforpeace@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pd0-f179.google.com ([209.85.192.179]:33986 "EHLO
+	mail-pd0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934287AbbELX30 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 May 2015 19:29:26 -0400
 In-Reply-To: <1431473303-18873-1-git-send-email-computersforpeace@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>
 Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Brian Norris <computersforpeace@gmail.com>, Gregory Fong <gregory.0xf0@gmail.com>, Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, bcm-kernel-feedback-list@broadcom.com, Kevin Cernekee <cernekee@gmail.com>
-List-Id: linux-ide@vger.kernel.org
 
-Supports up to two ports which can each be powered on/off and configure=
-d
-independently.
+Pretty straightforward driver, using the nice library-ization of the
+generic ahci_platform driver.
 
 Signed-off-by: Brian Norris <computersforpeace@gmail.com>
 ---
-v3: no change
+v3:
+ - straighten out endianness for big endian MIPS and ARM
+ - rename from sata_brcmstb.c to ahci_brcmstb.c
+ - bind against the specific string, "brcm,bcm7445-ahci" instead of the=
+ generic
+   one
 
-v2:=20
-  - stop sharing SATA_TOP_CTRL registers with SATA driver
-  - kill custom xlate function
-
- drivers/phy/Kconfig            |   9 ++
- drivers/phy/Makefile           |   1 +
- drivers/phy/phy-brcmstb-sata.c | 216 +++++++++++++++++++++++++++++++++=
-++++++++
- 3 files changed, 226 insertions(+)
- create mode 100644 drivers/phy/phy-brcmstb-sata.c
-
-diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
-index a53bd5b52df9..36788b6f0220 100644
---- a/drivers/phy/Kconfig
-+++ b/drivers/phy/Kconfig
-@@ -309,4 +309,13 @@ config PHY_QCOM_UFS
- 	help
- 	  Support for UFS PHY on QCOM chipsets.
+v2:
+  - move port enabling into this driver, since the affected registers a=
+re in
+    the SATA_TOP_CTRL block. This means we need to check for the implem=
+ented
+    port(s) here.
+   =20
+  - fix up layering issues with using drvdata (libata expects to use dr=
+vdata),
+    similar to this issue:
 =20
-+config PHY_BRCMSTB_SATA
-+	tristate "Broadcom STB SATA PHY driver"
+      http://marc.info/?l=3Dlinux-ide&m=3D142851961920009&w=3D2
+
+  - trivial fixups
+
+ drivers/ata/Kconfig        |   9 ++
+ drivers/ata/Makefile       |   1 +
+ drivers/ata/ahci_brcmstb.c | 322 +++++++++++++++++++++++++++++++++++++=
+++++++++
+ 3 files changed, 332 insertions(+)
+ create mode 100644 drivers/ata/ahci_brcmstb.c
+
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 5f601553b9b0..dfb273a1194b 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -98,6 +98,15 @@ config SATA_AHCI_PLATFORM
+=20
+ 	  If unsure, say N.
+=20
++config AHCI_BRCMSTB
++	tristate "Broadcom STB AHCI SATA support"
 +	depends on ARCH_BRCMSTB
-+	depends on OF
-+	select GENERIC_PHY
 +	help
-+	  Enable this to support the SATA3 PHY on 28nm Broadcom STB SoCs.
-+	  Likely useful only with CONFIG_SATA_BRCMSTB enabled.
++	  This option enables support for the AHCI SATA3 controller found on
++	  STB SoC's.
 +
- endmenu
-diff --git a/drivers/phy/Makefile b/drivers/phy/Makefile
-index f12625178780..c61f3fdd191e 100644
---- a/drivers/phy/Makefile
-+++ b/drivers/phy/Makefile
-@@ -40,3 +40,4 @@ obj-$(CONFIG_PHY_STIH41X_USB)		+=3D phy-stih41x-usb.o
- obj-$(CONFIG_PHY_QCOM_UFS) 	+=3D phy-qcom-ufs.o
- obj-$(CONFIG_PHY_QCOM_UFS) 	+=3D phy-qcom-ufs-qmp-20nm.o
- obj-$(CONFIG_PHY_QCOM_UFS) 	+=3D phy-qcom-ufs-qmp-14nm.o
-+obj-$(CONFIG_PHY_BRCMSTB_SATA)		+=3D phy-brcmstb-sata.o
-diff --git a/drivers/phy/phy-brcmstb-sata.c b/drivers/phy/phy-brcmstb-s=
-ata.c
++	  If unsure, say N.
++
+ config AHCI_DA850
+ 	tristate "DaVinci DA850 AHCI SATA support"
+ 	depends on ARCH_DAVINCI_DA850
+diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+index b67e995179a9..b95449184ae1 100644
+--- a/drivers/ata/Makefile
++++ b/drivers/ata/Makefile
+@@ -10,6 +10,7 @@ obj-$(CONFIG_SATA_INIC162X)	+=3D sata_inic162x.o
+ obj-$(CONFIG_SATA_SIL24)	+=3D sata_sil24.o
+ obj-$(CONFIG_SATA_DWC)		+=3D sata_dwc_460ex.o
+ obj-$(CONFIG_SATA_HIGHBANK)	+=3D sata_highbank.o libahci.o
++obj-$(CONFIG_AHCI_BRCMSTB)	+=3D ahci_brcmstb.o libahci.o libahci_platf=
+orm.o
+ obj-$(CONFIG_AHCI_DA850)	+=3D ahci_da850.o libahci.o libahci_platform.=
+o
+ obj-$(CONFIG_AHCI_IMX)		+=3D ahci_imx.o libahci.o libahci_platform.o
+ obj-$(CONFIG_AHCI_MVEBU)	+=3D ahci_mvebu.o libahci.o libahci_platform.=
+o
+diff --git a/drivers/ata/ahci_brcmstb.c b/drivers/ata/ahci_brcmstb.c
 new file mode 100644
-index 000000000000..8387c8cbea8c
+index 000000000000..ce1e3a885981
 --- /dev/null
-+++ b/drivers/phy/phy-brcmstb-sata.c
-@@ -0,0 +1,216 @@
++++ b/drivers/ata/ahci_brcmstb.c
+@@ -0,0 +1,322 @@
 +/*
-+ * Broadcom SATA3 AHCI Controller PHY Driver
++ * Broadcom SATA3 AHCI Controller Driver
 + *
 + * Copyright =C2=A9 2009-2015 Broadcom Corporation
 + *
@@ -84,207 +110,322 @@ y
 + * GNU General Public License for more details.
 + */
 +
++#include <linux/ahci_platform.h>
++#include <linux/compiler.h>
 +#include <linux/device.h>
 +#include <linux/init.h>
 +#include <linux/interrupt.h>
 +#include <linux/io.h>
 +#include <linux/kernel.h>
++#include <linux/libata.h>
 +#include <linux/module.h>
 +#include <linux/of.h>
-+#include <linux/phy/phy.h>
 +#include <linux/platform_device.h>
++#include <linux/string.h>
 +
-+#define SATA_MDIO_BANK_OFFSET				0x23c
-+#define SATA_MDIO_REG_OFFSET(ofs)			((ofs) * 4)
-+#define SATA_MDIO_REG_SPACE_SIZE			0x1000
-+#define SATA_MDIO_REG_LENGTH				0x1f00
++#include "ahci.h"
 +
-+#define MAX_PORTS					2
++#define DRV_NAME					"brcm-ahci"
 +
-+/* Register offset between PHYs in PCB space */
-+#define SATA_MDIO_REG_SPACE_SIZE			0x1000
++#define SATA_TOP_CTRL_VERSION				0x0
++#define SATA_TOP_CTRL_BUS_CTRL				0x4
++ #define MMIO_ENDIAN_SHIFT				0 /* CPU->AHCI */
++ #define DMADESC_ENDIAN_SHIFT				2 /* AHCI->DDR */
++ #define DMADATA_ENDIAN_SHIFT				4 /* AHCI->DDR */
++ #define PIODATA_ENDIAN_SHIFT				6
++  #define ENDIAN_SWAP_NONE				0
++  #define ENDIAN_SWAP_FULL				2
++ #define OVERRIDE_HWINIT				BIT(16)
++#define SATA_TOP_CTRL_TP_CTRL				0x8
++#define SATA_TOP_CTRL_PHY_CTRL				0xc
++ #define SATA_TOP_CTRL_PHY_CTRL_1			0x0
++  #define SATA_TOP_CTRL_1_PHY_DEFAULT_POWER_STATE	BIT(14)
++ #define SATA_TOP_CTRL_PHY_CTRL_2			0x4
++  #define SATA_TOP_CTRL_2_SW_RST_MDIOREG		BIT(0)
++  #define SATA_TOP_CTRL_2_SW_RST_OOB			BIT(1)
++  #define SATA_TOP_CTRL_2_SW_RST_RX			BIT(2)
++  #define SATA_TOP_CTRL_2_SW_RST_TX			BIT(3)
++  #define SATA_TOP_CTRL_2_PHY_GLOBAL_RESET		BIT(14)
++ #define SATA_TOP_CTRL_PHY_OFFS				0x8
++ #define SATA_TOP_MAX_PHYS				2
++#define SATA_TOP_CTRL_SATA_TP_OUT			0x1c
++#define SATA_TOP_CTRL_CLIENT_INIT_CTRL			0x20
 +
-+struct brcm_sata_port {
-+	int portnum;
-+	struct phy *phy;
-+	struct brcm_sata_phy *phy_priv;
-+	bool ssc_en;
-+};
++/* On big-endian MIPS, buses are reversed to big endian, so switch the=
+m back */
++#if defined(CONFIG_MIPS) && defined(__BIG_ENDIAN)
++#define DATA_ENDIAN			 2 /* AHCI->DDR inbound accesses */
++#define MMIO_ENDIAN			 2 /* CPU->AHCI outbound accesses */
++#else
++#define DATA_ENDIAN			 0
++#define MMIO_ENDIAN			 0
++#endif
 +
-+struct brcm_sata_phy {
++#define BUS_CTRL_ENDIAN_CONF				\
++	((DATA_ENDIAN << DMADATA_ENDIAN_SHIFT) |	\
++	(DATA_ENDIAN << DMADESC_ENDIAN_SHIFT) |		\
++	(MMIO_ENDIAN << MMIO_ENDIAN_SHIFT))
++
++struct brcm_ahci_priv {
 +	struct device *dev;
-+	void __iomem *phy_base;
-+
-+	struct brcm_sata_port phys[MAX_PORTS];
++	void __iomem *top_ctrl;
++	u32 port_mask;
 +};
 +
-+enum sata_mdio_phy_regs_28nm {
-+	PLL_REG_BANK_0				=3D 0x50,
-+	PLL_REG_BANK_0_PLLCONTROL_0		=3D 0x81,
-+
-+	TXPMD_REG_BANK				=3D 0x1a0,
-+	TXPMD_CONTROL1				=3D 0x81,
-+	TXPMD_CONTROL1_TX_SSC_EN_FRC		=3D BIT(0),
-+	TXPMD_CONTROL1_TX_SSC_EN_FRC_VAL	=3D BIT(1),
-+	TXPMD_TX_FREQ_CTRL_CONTROL1		=3D 0x82,
-+	TXPMD_TX_FREQ_CTRL_CONTROL2		=3D 0x83,
-+	TXPMD_TX_FREQ_CTRL_CONTROL2_FMIN_MASK	=3D 0x3ff,
-+	TXPMD_TX_FREQ_CTRL_CONTROL3		=3D 0x84,
-+	TXPMD_TX_FREQ_CTRL_CONTROL3_FMAX_MASK	=3D 0x3ff,
++static const struct ata_port_info ahci_brcm_port_info =3D {
++	.flags		=3D AHCI_FLAG_COMMON,
++	.pio_mask	=3D ATA_PIO4,
++	.udma_mask	=3D ATA_UDMA6,
++	.port_ops	=3D &ahci_platform_ops,
 +};
 +
-+static inline void __iomem *brcm_sata_phy_base(struct brcm_sata_port *=
-port)
++static inline u32 brcm_sata_readreg(void __iomem *addr)
 +{
-+	struct brcm_sata_phy *priv =3D port->phy_priv;
-+
-+	return priv->phy_base + (port->portnum * SATA_MDIO_REG_SPACE_SIZE);
++	/*
++	 * MIPS endianness is configured by boot strap, which also reverses a=
+ll
++	 * bus endianness (i.e., big-endian CPU + big endian bus =3D=3D> nati=
+ve
++	 * endian I/O).
++	 *
++	 * Other architectures (e.g., ARM) either do not support big endian, =
+or
++	 * else leave I/O in little endian mode.
++	 */
++	if (IS_ENABLED(CONFIG_MIPS) && IS_ENABLED(__BIG_ENDIAN))
++		return __raw_readl(addr);
++	else
++		return readl_relaxed(addr);
 +}
 +
-+static void brcm_sata_mdio_wr(void __iomem *addr, u32 bank, u32 ofs,
-+			      u32 msk, u32 value)
++static inline void brcm_sata_writereg(u32 val, void __iomem *addr)
 +{
-+	u32 tmp;
-+
-+	writel(bank, addr + SATA_MDIO_BANK_OFFSET);
-+	tmp =3D readl(addr + SATA_MDIO_REG_OFFSET(ofs));
-+	tmp =3D (tmp & msk) | value;
-+	writel(tmp, addr + SATA_MDIO_REG_OFFSET(ofs));
++	/* See brcm_sata_readreg() comments */
++	if (IS_ENABLED(CONFIG_MIPS) && IS_ENABLED(__BIG_ENDIAN))
++		__raw_writel(val, addr);
++	else
++		writel_relaxed(val, addr);
 +}
 +
-+/* These defaults were characterized by H/W group */
-+#define FMIN_VAL_DEFAULT	0x3df
-+#define FMAX_VAL_DEFAULT	0x3df
-+#define FMAX_VAL_SSC		0x83
-+
-+static void cfg_ssc_28nm(struct brcm_sata_port *port)
++static void brcm_sata_phy_enable(struct brcm_ahci_priv *priv, int port=
+)
 +{
-+	void __iomem *base =3D brcm_sata_phy_base(port);
-+	struct brcm_sata_phy *priv =3D port->phy_priv;
-+	u32 tmp;
++	void __iomem *phyctrl =3D priv->top_ctrl + SATA_TOP_CTRL_PHY_CTRL +
++				(port * SATA_TOP_CTRL_PHY_OFFS);
++	void __iomem *p;
++	u32 reg;
 +
-+	/* override the TX spread spectrum setting */
-+	tmp =3D TXPMD_CONTROL1_TX_SSC_EN_FRC_VAL | TXPMD_CONTROL1_TX_SSC_EN_F=
-RC;
-+	brcm_sata_mdio_wr(base, TXPMD_REG_BANK, TXPMD_CONTROL1, ~tmp, tmp);
++	/* clear PHY_DEFAULT_POWER_STATE */
++	p =3D phyctrl + SATA_TOP_CTRL_PHY_CTRL_1;
++	reg =3D brcm_sata_readreg(p);
++	reg &=3D ~SATA_TOP_CTRL_1_PHY_DEFAULT_POWER_STATE;
++	brcm_sata_writereg(reg, p);
 +
-+	/* set fixed min freq */
-+	brcm_sata_mdio_wr(base, TXPMD_REG_BANK, TXPMD_TX_FREQ_CTRL_CONTROL2,
-+			  ~TXPMD_TX_FREQ_CTRL_CONTROL2_FMIN_MASK,
-+			  FMIN_VAL_DEFAULT);
-+
-+	/* set fixed max freq depending on SSC config */
-+	if (port->ssc_en) {
-+		dev_info(priv->dev, "enabling SSC on port %d\n", port->portnum);
-+		tmp =3D FMAX_VAL_SSC;
-+	} else {
-+		tmp =3D FMAX_VAL_DEFAULT;
-+	}
-+
-+	brcm_sata_mdio_wr(base, TXPMD_REG_BANK, TXPMD_TX_FREQ_CTRL_CONTROL3,
-+			  ~TXPMD_TX_FREQ_CTRL_CONTROL3_FMAX_MASK, tmp);
++	/* reset the PHY digital logic */
++	p =3D phyctrl + SATA_TOP_CTRL_PHY_CTRL_2;
++	reg =3D brcm_sata_readreg(p);
++	reg &=3D ~(SATA_TOP_CTRL_2_SW_RST_MDIOREG | SATA_TOP_CTRL_2_SW_RST_OO=
+B |
++		 SATA_TOP_CTRL_2_SW_RST_RX);
++	reg |=3D SATA_TOP_CTRL_2_SW_RST_TX;
++	brcm_sata_writereg(reg, p);
++	reg =3D brcm_sata_readreg(p);
++	reg |=3D SATA_TOP_CTRL_2_PHY_GLOBAL_RESET;
++	brcm_sata_writereg(reg, p);
++	reg =3D brcm_sata_readreg(p);
++	reg &=3D ~SATA_TOP_CTRL_2_PHY_GLOBAL_RESET;
++	brcm_sata_writereg(reg, p);
++	(void)brcm_sata_readreg(p);
 +}
 +
-+static int brcm_sata_phy_init(struct phy *phy)
++static void brcm_sata_phy_disable(struct brcm_ahci_priv *priv, int por=
+t)
 +{
-+	struct brcm_sata_port *port =3D phy_get_drvdata(phy);
++	void __iomem *phyctrl =3D priv->top_ctrl + SATA_TOP_CTRL_PHY_CTRL +
++				(port * SATA_TOP_CTRL_PHY_OFFS);
++	void __iomem *p;
++	u32 reg;
 +
-+	cfg_ssc_28nm(port);
++	/* power-off the PHY digital logic */
++	p =3D phyctrl + SATA_TOP_CTRL_PHY_CTRL_2;
++	reg =3D brcm_sata_readreg(p);
++	reg |=3D (SATA_TOP_CTRL_2_SW_RST_MDIOREG | SATA_TOP_CTRL_2_SW_RST_OOB=
+ |
++		SATA_TOP_CTRL_2_SW_RST_RX | SATA_TOP_CTRL_2_SW_RST_TX |
++		SATA_TOP_CTRL_2_PHY_GLOBAL_RESET);
++	brcm_sata_writereg(reg, p);
 +
-+	return 0;
++	/* set PHY_DEFAULT_POWER_STATE */
++	p =3D phyctrl + SATA_TOP_CTRL_PHY_CTRL_1;
++	reg =3D brcm_sata_readreg(p);
++	reg |=3D SATA_TOP_CTRL_1_PHY_DEFAULT_POWER_STATE;
++	brcm_sata_writereg(reg, p);
 +}
 +
-+static struct phy_ops phy_ops_28nm =3D {
-+	.init		=3D brcm_sata_phy_init,
-+	.owner		=3D THIS_MODULE,
++static void brcm_sata_phys_enable(struct brcm_ahci_priv *priv)
++{
++	int i;
++
++	for (i =3D 0; i < SATA_TOP_MAX_PHYS; i++)
++		if (priv->port_mask & BIT(i))
++			brcm_sata_phy_enable(priv, i);
++}
++
++static void brcm_sata_phys_disable(struct brcm_ahci_priv *priv)
++{
++	int i;
++
++	for (i =3D 0; i < SATA_TOP_MAX_PHYS; i++)
++		if (priv->port_mask & BIT(i))
++			brcm_sata_phy_disable(priv, i);
++}
++
++static u32 brcm_ahci_get_portmask(struct platform_device *pdev,
++				  struct brcm_ahci_priv *priv)
++{
++	void __iomem *ahci;
++	struct resource *res;
++	u32 impl;
++
++	res =3D platform_get_resource_byname(pdev, IORESOURCE_MEM, "ahci");
++	ahci =3D devm_ioremap_resource(&pdev->dev, res);
++	if (IS_ERR(ahci))
++		return 0;
++
++	impl =3D readl(ahci + HOST_PORTS_IMPL);
++
++	if (fls(impl) > SATA_TOP_MAX_PHYS)
++		dev_warn(priv->dev, "warning: more ports than PHYs (%#x)\n",
++			 impl);
++	else if (!impl)
++		dev_info(priv->dev, "no ports found\n");
++
++	devm_iounmap(&pdev->dev, ahci);
++	devm_release_mem_region(&pdev->dev, res->start, resource_size(res));
++
++	return impl;
++}
++
++static void brcm_sata_init(struct brcm_ahci_priv *priv)
++{
++	/* Configure endianness */
++	brcm_sata_writereg(BUS_CTRL_ENDIAN_CONF,
++			   priv->top_ctrl + SATA_TOP_CTRL_BUS_CTRL);
++}
++
++static int brcm_ahci_suspend(struct device *dev)
++{
++	struct ata_host *host =3D dev_get_drvdata(dev);
++	struct ahci_host_priv *hpriv =3D host->private_data;
++	struct brcm_ahci_priv *priv =3D hpriv->plat_data;
++	int ret;
++
++	ret =3D ahci_platform_suspend(dev);
++	brcm_sata_phys_disable(priv);
++	return ret;
++}
++
++static int brcm_ahci_resume(struct device *dev)
++{
++	struct ata_host *host =3D dev_get_drvdata(dev);
++	struct ahci_host_priv *hpriv =3D host->private_data;
++	struct brcm_ahci_priv *priv =3D hpriv->plat_data;
++
++	brcm_sata_init(priv);
++	brcm_sata_phys_enable(priv);
++	return ahci_platform_resume(dev);
++}
++
++static struct scsi_host_template ahci_platform_sht =3D {
++	AHCI_SHT(DRV_NAME),
 +};
 +
-+static const struct of_device_id brcm_sata_phy_of_match[] =3D {
-+	{ .compatible	=3D "brcm,bcm7445-sata-phy" },
-+	{},
-+};
-+MODULE_DEVICE_TABLE(of, brcm_sata_phy_of_match);
-+
-+static int brcm_sata_phy_probe(struct platform_device *pdev)
++static int brcm_ahci_probe(struct platform_device *pdev)
 +{
 +	struct device *dev =3D &pdev->dev;
-+	struct device_node *dn =3D dev->of_node, *child;
-+	struct brcm_sata_phy *priv;
++	struct brcm_ahci_priv *priv;
++	struct ahci_host_priv *hpriv;
 +	struct resource *res;
-+	struct phy_provider *provider;
-+	int count =3D 0;
-+
-+	if (of_get_child_count(dn) =3D=3D 0)
-+		return -ENODEV;
++	int ret;
 +
 +	priv =3D devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
 +	if (!priv)
 +		return -ENOMEM;
-+	dev_set_drvdata(dev, priv);
 +	priv->dev =3D dev;
 +
-+	res =3D platform_get_resource_byname(pdev, IORESOURCE_MEM, "phy");
-+	priv->phy_base =3D devm_ioremap_resource(dev, res);
-+	if (IS_ERR(priv->phy_base))
-+		return PTR_ERR(priv->phy_base);
++	res =3D platform_get_resource_byname(pdev, IORESOURCE_MEM, "top-ctrl"=
+);
++	priv->top_ctrl =3D devm_ioremap_resource(dev, res);
++	if (IS_ERR(priv->top_ctrl))
++		return PTR_ERR(priv->top_ctrl);
 +
-+	for_each_available_child_of_node(dn, child) {
-+		unsigned int id;
-+		struct brcm_sata_port *port;
++	brcm_sata_init(priv);
 +
-+		if (of_property_read_u32(child, "reg", &id)) {
-+			dev_err(dev, "missing reg property in node %s\n",
-+					child->name);
-+			return -EINVAL;
-+		}
++	priv->port_mask =3D brcm_ahci_get_portmask(pdev, priv);
++	if (!priv->port_mask)
++		return -ENODEV;
 +
-+		if (id >=3D MAX_PORTS) {
-+			dev_err(dev, "invalid reg: %u\n", id);
-+			return -EINVAL;
-+		}
-+		if (priv->phys[id].phy) {
-+			dev_err(dev, "already registered port %u\n", id);
-+			return -EINVAL;
-+		}
++	brcm_sata_phys_enable(priv);
 +
-+		port =3D &priv->phys[id];
-+		port->portnum =3D id;
-+		port->phy_priv =3D priv;
-+		port->phy =3D devm_phy_create(dev, child, &phy_ops_28nm);
-+		port->ssc_en =3D of_property_read_bool(child, "brcm,enable-ssc");
-+		if (IS_ERR(port->phy)) {
-+			dev_err(dev, "failed to create PHY\n");
-+			return PTR_ERR(port->phy);
-+		}
++	hpriv =3D ahci_platform_get_resources(pdev);
++	if (IS_ERR(hpriv))
++		return PTR_ERR(hpriv);
++	hpriv->plat_data =3D priv;
 +
-+		phy_set_drvdata(port->phy, port);
-+		count++;
-+	}
++	ret =3D ahci_platform_enable_resources(hpriv);
++	if (ret)
++		return ret;
 +
-+	provider =3D devm_of_phy_provider_register(dev, of_phy_simple_xlate);
-+	if (IS_ERR(provider)) {
-+		dev_err(dev, "could not register PHY provider\n");
-+		return PTR_ERR(provider);
-+	}
++	ret =3D ahci_platform_init_host(pdev, hpriv, &ahci_brcm_port_info,
++				      &ahci_platform_sht);
++	if (ret)
++		return ret;
 +
-+	dev_info(dev, "registered %d port(s)\n", count);
++	dev_info(dev, "Broadcom AHCI SATA3 registered\n");
 +
 +	return 0;
 +}
 +
-+static struct platform_driver brcm_sata_phy_driver =3D {
-+	.probe	=3D brcm_sata_phy_probe,
-+	.driver	=3D {
-+		.of_match_table	=3D brcm_sata_phy_of_match,
-+		.name		=3D "brcmstb-sata-phy",
-+	}
-+};
-+module_platform_driver(brcm_sata_phy_driver);
++static int brcm_ahci_remove(struct platform_device *pdev)
++{
++	struct ata_host *host =3D dev_get_drvdata(&pdev->dev);
++	struct ahci_host_priv *hpriv =3D host->private_data;
++	struct brcm_ahci_priv *priv =3D hpriv->plat_data;
++	int ret;
 +
-+MODULE_DESCRIPTION("Broadcom STB SATA PHY driver");
-+MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Marc Carino");
++	ret =3D ata_platform_remove_one(pdev);
++	if (ret)
++		return ret;
++
++	brcm_sata_phys_disable(priv);
++
++	return 0;
++}
++
++static const struct of_device_id ahci_of_match[] =3D {
++	{.compatible =3D "brcm,bcm7445-ahci"},
++	{},
++};
++MODULE_DEVICE_TABLE(of, ahci_of_match);
++
++static SIMPLE_DEV_PM_OPS(ahci_brcm_pm_ops, brcm_ahci_suspend, brcm_ahc=
+i_resume);
++
++static struct platform_driver brcm_ahci_driver =3D {
++	.probe =3D brcm_ahci_probe,
++	.remove =3D brcm_ahci_remove,
++	.driver =3D {
++		.name =3D DRV_NAME,
++		.of_match_table =3D ahci_of_match,
++		.pm =3D &ahci_brcm_pm_ops,
++	},
++};
++module_platform_driver(brcm_ahci_driver);
++
++MODULE_DESCRIPTION("Broadcom SATA3 AHCI Controller Driver");
 +MODULE_AUTHOR("Brian Norris");
-+MODULE_ALIAS("platform:phy-brcmstb-sata");
++MODULE_LICENSE("GPL");
++MODULE_ALIAS("platform:sata-brcmstb");
 --=20
 1.9.1
+
