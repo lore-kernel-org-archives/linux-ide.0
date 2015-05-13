@@ -1,297 +1,79 @@
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH v3 4/5] phy: add Broadcom SATA3 PHY driver for Broadcom
- STB SoCs
-Date: Wed, 13 May 2015 16:37:05 +0530
-Message-ID: <55533059.6050705@ti.com>
-References: <1431473303-18873-1-git-send-email-computersforpeace@gmail.com> <1431473303-18873-5-git-send-email-computersforpeace@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2] AHCI: Add generic MSI-X interrupt support to SATA PCI
+ driver
+Date: Wed, 13 May 2015 10:33:53 -0400
+Message-ID: <20150513143353.GU11388@htj.duckdns.org>
+References: <1430725538-22162-1-git-send-email-rric@kernel.org>
+ <20150504160652.GB1971@htj.duckdns.org>
+ <20150511171810.GB29499@rric.localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:43981 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753565AbbEMLHx (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 May 2015 07:07:53 -0400
-In-Reply-To: <1431473303-18873-5-git-send-email-computersforpeace@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20150511171810.GB29499@rric.localhost>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Robert Richter <robert.richter@caviumnetworks.com>
+Cc: Robert Richter <rric@kernel.org>, Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, Sunil Goutham <sgoutham@cavium.com>, Jiang Liu <jiang.liu@linux.intel.com>, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Alexander Gordeev <agordeev@redhat.com>
 List-Id: linux-ide@vger.kernel.org
-To: Brian Norris <computersforpeace@gmail.com>, Tejun Heo <tj@kernel.org>
-Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Gregory Fong <gregory.0xf0@gmail.com>, Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, bcm-kernel-feedback-list@broadcom.com, Kevin Cernekee <cernekee@gmail.com>
 
-Hi,
+Hello, Robert.
 
-On Wednesday 13 May 2015 04:58 AM, Brian Norris wrote:
-> Supports up to two ports which can each be powered on/off and configu=
-red
-> independently.
->
-> Signed-off-by: Brian Norris <computersforpeace@gmail.com>
+On Mon, May 11, 2015 at 07:18:10PM +0200, Robert Richter wrote:
+> static int ahci_init_msix(struct pci_dev *pdev, unsigned int n_ports,
+> 			  struct ahci_host_priv *hpriv)
+> {
+> 	int rc, nvec;
+> 	struct msix_entry entry = {};
+> 
+> 	/* check if msix is supported */
+> 	nvec = pci_msix_vec_count(pdev);
+> 	if (nvec <= 0)
+> 		return 0;
+> 
+> 	/*
+> 	 * Per-port msix interrupts are not supported. Assume single
+> 	 * port interrupts for:
+> 	 *
+> 	 *  n_ports == 1, or
+> 	 *  nvec < n_ports.
+> 	 *
+> 	 * We also need to check for n_ports != 0 which is implicitly
+> 	 * covered here since nvec > 0.
+> 	 */
+> 	if (n_ports != 1 && nvec >= n_ports)
+> 		return -ENOSYS;
 
-couple of minor comments below
-> ---
-> v3: no change
->
-> v2:
->    - stop sharing SATA_TOP_CTRL registers with SATA driver
->    - kill custom xlate function
->
->   drivers/phy/Kconfig            |   9 ++
->   drivers/phy/Makefile           |   1 +
->   drivers/phy/phy-brcmstb-sata.c | 216 ++++++++++++++++++++++++++++++=
-+++++++++++
->   3 files changed, 226 insertions(+)
->   create mode 100644 drivers/phy/phy-brcmstb-sata.c
->
-> diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
-> index a53bd5b52df9..36788b6f0220 100644
-> --- a/drivers/phy/Kconfig
-> +++ b/drivers/phy/Kconfig
-> @@ -309,4 +309,13 @@ config PHY_QCOM_UFS
->   	help
->   	  Support for UFS PHY on QCOM chipsets.
->
-> +config PHY_BRCMSTB_SATA
-> +	tristate "Broadcom STB SATA PHY driver"
-> +	depends on ARCH_BRCMSTB
-> +	depends on OF
-> +	select GENERIC_PHY
-> +	help
-> +	  Enable this to support the SATA3 PHY on 28nm Broadcom STB SoCs.
-> +	  Likely useful only with CONFIG_SATA_BRCMSTB enabled.
-> +
->   endmenu
-> diff --git a/drivers/phy/Makefile b/drivers/phy/Makefile
-> index f12625178780..c61f3fdd191e 100644
-> --- a/drivers/phy/Makefile
-> +++ b/drivers/phy/Makefile
-> @@ -40,3 +40,4 @@ obj-$(CONFIG_PHY_STIH41X_USB)		+=3D phy-stih41x-usb=
-=2Eo
->   obj-$(CONFIG_PHY_QCOM_UFS) 	+=3D phy-qcom-ufs.o
->   obj-$(CONFIG_PHY_QCOM_UFS) 	+=3D phy-qcom-ufs-qmp-20nm.o
->   obj-$(CONFIG_PHY_QCOM_UFS) 	+=3D phy-qcom-ufs-qmp-14nm.o
-> +obj-$(CONFIG_PHY_BRCMSTB_SATA)		+=3D phy-brcmstb-sata.o
-> diff --git a/drivers/phy/phy-brcmstb-sata.c b/drivers/phy/phy-brcmstb=
--sata.c
-> new file mode 100644
-> index 000000000000..8387c8cbea8c
-> --- /dev/null
-> +++ b/drivers/phy/phy-brcmstb-sata.c
-> @@ -0,0 +1,216 @@
-> +/*
-> + * Broadcom SATA3 AHCI Controller PHY Driver
-> + *
-> + * Copyright =C2=A9 2009-2015 Broadcom Corporation
-> + *
-> + * This program is free software; you can redistribute it and/or mod=
-ify
-> + * it under the terms of the GNU General Public License as published=
- by
-> + * the Free Software Foundation; either version 2, or (at your optio=
-n)
-> + * any later version.
-> + *
-> + * This program is distributed in the hope that it will be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + */
-> +
-> +#include <linux/device.h>
-> +#include <linux/init.h>
-> +#include <linux/interrupt.h>
-> +#include <linux/io.h>
-> +#include <linux/kernel.h>
-> +#include <linux/module.h>
-> +#include <linux/of.h>
-> +#include <linux/phy/phy.h>
-> +#include <linux/platform_device.h>
-> +
-> +#define SATA_MDIO_BANK_OFFSET				0x23c
-> +#define SATA_MDIO_REG_OFFSET(ofs)			((ofs) * 4)
-> +#define SATA_MDIO_REG_SPACE_SIZE			0x1000
-> +#define SATA_MDIO_REG_LENGTH				0x1f00
-> +
-> +#define MAX_PORTS					2
-> +
-> +/* Register offset between PHYs in PCB space */
-> +#define SATA_MDIO_REG_SPACE_SIZE			0x1000
-> +
-> +struct brcm_sata_port {
-> +	int portnum;
-> +	struct phy *phy;
-> +	struct brcm_sata_phy *phy_priv;
-> +	bool ssc_en;
-> +};
-> +
-> +struct brcm_sata_phy {
-> +	struct device *dev;
-> +	void __iomem *phy_base;
-> +
-> +	struct brcm_sata_port phys[MAX_PORTS];
-> +};
-> +
-> +enum sata_mdio_phy_regs_28nm {
+Why are failing the whole thing when nvec >= n_ports?  Can't we just
+print some warning and configure it for single interrupt mode?
 
-Why should these defines be in enum?
+> > Also, shouldn't we be printing a warning message here explaining why
+> > probing is failing?
+> 
+> I didn't want to print a warning in case -ENOSYS for backward
+> compatability. Only if msi-x code fails there is a message, see
+> __ahci_init_interrupts(). In any other case the behaviour is as
+> before, thus no message is printed.
 
+I'm confused here.  Why are we implementing msix support at all if it
+only support single interrupt mode?  I kinda assumed that that was
+because you're trying to support a controller which does only msix,
+no?  At any rate, I don't think it's wrong to print an informational /
+warning message when a controller declares msix support but has wacko
+parameters.
 
-> +	PLL_REG_BANK_0				=3D 0x50,
-> +	PLL_REG_BANK_0_PLLCONTROL_0		=3D 0x81,
-> +
-> +	TXPMD_REG_BANK				=3D 0x1a0,
-> +	TXPMD_CONTROL1				=3D 0x81,
-> +	TXPMD_CONTROL1_TX_SSC_EN_FRC		=3D BIT(0),
-> +	TXPMD_CONTROL1_TX_SSC_EN_FRC_VAL	=3D BIT(1),
-> +	TXPMD_TX_FREQ_CTRL_CONTROL1		=3D 0x82,
-> +	TXPMD_TX_FREQ_CTRL_CONTROL2		=3D 0x83,
-> +	TXPMD_TX_FREQ_CTRL_CONTROL2_FMIN_MASK	=3D 0x3ff,
-> +	TXPMD_TX_FREQ_CTRL_CONTROL3		=3D 0x84,
-> +	TXPMD_TX_FREQ_CTRL_CONTROL3_FMAX_MASK	=3D 0x3ff,
-> +};
-> +
-> +static inline void __iomem *brcm_sata_phy_base(struct brcm_sata_port=
- *port)
-> +{
-> +	struct brcm_sata_phy *priv =3D port->phy_priv;
-> +
-> +	return priv->phy_base + (port->portnum * SATA_MDIO_REG_SPACE_SIZE);
-> +}
-> +
-> +static void brcm_sata_mdio_wr(void __iomem *addr, u32 bank, u32 ofs,
-> +			      u32 msk, u32 value)
-> +{
-> +	u32 tmp;
-> +
-> +	writel(bank, addr + SATA_MDIO_BANK_OFFSET);
-> +	tmp =3D readl(addr + SATA_MDIO_REG_OFFSET(ofs));
-> +	tmp =3D (tmp & msk) | value;
-> +	writel(tmp, addr + SATA_MDIO_REG_OFFSET(ofs));
-> +}
-> +
-> +/* These defaults were characterized by H/W group */
-> +#define FMIN_VAL_DEFAULT	0x3df
-> +#define FMAX_VAL_DEFAULT	0x3df
-> +#define FMAX_VAL_SSC		0x83
-> +
-> +static void cfg_ssc_28nm(struct brcm_sata_port *port)
+> > > +
+> > > +   /* only enable the first entry (entry.entry = 0) */
+> > > +   rc = pci_enable_msix_exact(pdev, &entry, 1);
+> >
+> > So, enabling the first msix works if nvec > 1 && nvec < n_ports but
+> > not if nvec >= n_ports?
+> 
+> For n_ports > 1 && nvec >= n_ports we need to assume per-port
+> interrupts. There are enough vectors for all ports then.
 
-brcm_sata_cfg_ssc_28nm to make it similar to other functions.
-> +{
-> +	void __iomem *base =3D brcm_sata_phy_base(port);
-> +	struct brcm_sata_phy *priv =3D port->phy_priv;
-> +	u32 tmp;
-> +
-> +	/* override the TX spread spectrum setting */
-> +	tmp =3D TXPMD_CONTROL1_TX_SSC_EN_FRC_VAL | TXPMD_CONTROL1_TX_SSC_EN=
-_FRC;
-> +	brcm_sata_mdio_wr(base, TXPMD_REG_BANK, TXPMD_CONTROL1, ~tmp, tmp);
-> +
-> +	/* set fixed min freq */
-> +	brcm_sata_mdio_wr(base, TXPMD_REG_BANK, TXPMD_TX_FREQ_CTRL_CONTROL2=
-,
-> +			  ~TXPMD_TX_FREQ_CTRL_CONTROL2_FMIN_MASK,
-> +			  FMIN_VAL_DEFAULT);
-> +
-> +	/* set fixed max freq depending on SSC config */
-> +	if (port->ssc_en) {
-> +		dev_info(priv->dev, "enabling SSC on port %d\n", port->portnum);
-> +		tmp =3D FMAX_VAL_SSC;
-> +	} else {
-> +		tmp =3D FMAX_VAL_DEFAULT;
-> +	}
-> +
-> +	brcm_sata_mdio_wr(base, TXPMD_REG_BANK, TXPMD_TX_FREQ_CTRL_CONTROL3=
-,
-> +			  ~TXPMD_TX_FREQ_CTRL_CONTROL3_FMAX_MASK, tmp);
-> +}
-> +
-> +static int brcm_sata_phy_init(struct phy *phy)
-> +{
-> +	struct brcm_sata_port *port =3D phy_get_drvdata(phy);
-> +
-> +	cfg_ssc_28nm(port);
-> +
-> +	return 0;
-> +}
-> +
-> +static struct phy_ops phy_ops_28nm =3D {
-> +	.init		=3D brcm_sata_phy_init,
-> +	.owner		=3D THIS_MODULE,
-> +};
-> +
-> +static const struct of_device_id brcm_sata_phy_of_match[] =3D {
-> +	{ .compatible	=3D "brcm,bcm7445-sata-phy" },
-> +	{},
-> +};
-> +MODULE_DEVICE_TABLE(of, brcm_sata_phy_of_match);
-> +
-> +static int brcm_sata_phy_probe(struct platform_device *pdev)
-> +{
-> +	struct device *dev =3D &pdev->dev;
-> +	struct device_node *dn =3D dev->of_node, *child;
-> +	struct brcm_sata_phy *priv;
-> +	struct resource *res;
-> +	struct phy_provider *provider;
-> +	int count =3D 0;
-> +
-> +	if (of_get_child_count(dn) =3D=3D 0)
-> +		return -ENODEV;
-> +
-> +	priv =3D devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
-> +	if (!priv)
-> +		return -ENOMEM;
-> +	dev_set_drvdata(dev, priv);
-> +	priv->dev =3D dev;
-> +
-> +	res =3D platform_get_resource_byname(pdev, IORESOURCE_MEM, "phy");
-> +	priv->phy_base =3D devm_ioremap_resource(dev, res);
-> +	if (IS_ERR(priv->phy_base))
-> +		return PTR_ERR(priv->phy_base);
-> +
-> +	for_each_available_child_of_node(dn, child) {
-> +		unsigned int id;
-> +		struct brcm_sata_port *port;
-> +
-> +		if (of_property_read_u32(child, "reg", &id)) {
-> +			dev_err(dev, "missing reg property in node %s\n",
-> +					child->name);
-> +			return -EINVAL;
-> +		}
-> +
-> +		if (id >=3D MAX_PORTS) {
-> +			dev_err(dev, "invalid reg: %u\n", id);
-> +			return -EINVAL;
-> +		}
-> +		if (priv->phys[id].phy) {
-> +			dev_err(dev, "already registered port %u\n", id);
-> +			return -EINVAL;
-> +		}
-> +
-> +		port =3D &priv->phys[id];
-> +		port->portnum =3D id;
-> +		port->phy_priv =3D priv;
-> +		port->phy =3D devm_phy_create(dev, child, &phy_ops_28nm);
-> +		port->ssc_en =3D of_property_read_bool(child, "brcm,enable-ssc");
-> +		if (IS_ERR(port->phy)) {
-> +			dev_err(dev, "failed to create PHY\n");
-> +			return PTR_ERR(port->phy);
-> +		}
-> +
-> +		phy_set_drvdata(port->phy, port);
-> +		count++;
-> +	}
-> +
-> +	provider =3D devm_of_phy_provider_register(dev, of_phy_simple_xlate=
-);
-> +	if (IS_ERR(provider)) {
-> +		dev_err(dev, "could not register PHY provider\n");
-> +		return PTR_ERR(provider);
-> +	}
-> +
-> +	dev_info(dev, "registered %d port(s)\n", count);
+Again, and we fail irq init in that case?
 
-lets not make the boot noisy. Change to dev_dbg?
+Thanks.
 
-Thanks
-Kishon
+-- 
+tejun
