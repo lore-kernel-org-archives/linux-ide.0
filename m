@@ -1,210 +1,324 @@
-From: wenxiong@linux.vnet.ibm.com
-Subject: [PATCH] ahci: Add support for EEH error recovery
-Date: Wed, 13 May 2015 20:35:19 -0500
-Message-ID: <1431567319-3380-1-git-send-email-wenxiong@linux.vnet.ibm.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e24smtp02.br.ibm.com ([32.104.18.86]:45869 "EHLO
-	e24smtp02.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753749AbbENBjv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 May 2015 21:39:51 -0400
-Received: from /spool/local
-	by e24smtp02.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-ide@vger.kernel.org> from <wenxiong@us.ibm.com>;
-	Wed, 13 May 2015 22:39:47 -0300
-Received: from d24relay01.br.ibm.com (d24relay01.br.ibm.com [9.8.31.16])
-	by d24dlp01.br.ibm.com (Postfix) with ESMTP id ACBF23520054
-	for <linux-ide@vger.kernel.org>; Wed, 13 May 2015 21:38:40 -0400 (EDT)
-Received: from d24av03.br.ibm.com (d24av03.br.ibm.com [9.8.31.95])
-	by d24relay01.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id t4E1e2wb4751452
-	for <linux-ide@vger.kernel.org>; Wed, 13 May 2015 22:40:03 -0300
-Received: from d24av03.br.ibm.com (localhost [127.0.0.1])
-	by d24av03.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id t4E1dggY007456
-	for <linux-ide@vger.kernel.org>; Wed, 13 May 2015 22:39:42 -0300
-Sender: linux-ide-owner@vger.kernel.org
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCH v3 4/5] phy: add Broadcom SATA3 PHY driver for Broadcom
+ STB SoCs
+Date: Thu, 14 May 2015 11:22:55 +0530
+Message-ID: <55543837.5030100@ti.com>
+References: <1431473303-18873-1-git-send-email-computersforpeace@gmail.com> <1431473303-18873-5-git-send-email-computersforpeace@gmail.com> <55533059.6050705@ti.com> <20150513184921.GE11598@ld-irv-0074>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20150513184921.GE11598@ld-irv-0074>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Brian Norris <computersforpeace@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Gregory Fong <gregory.0xf0@gmail.com>, Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, bcm-kernel-feedback-list@broadcom.com, Kevin Cernekee <cernekee@gmail.com>
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org
-Cc: jgarzik@pobox.com, linux-ide@vger.kernel.org, bjking1@us.ibm.com, wenxiong@us.ibm.com, Wen Xiong <wenxiong@linux.vnet.ibm.com>
 
-From: Wen Xiong <wenxiong@linux.vnet.ibm.com>
+Hi,
 
-This patch adds the callback functions to support EEH error
-recovery in ahci driver. Also adds the code in ahci_error_handler
-to issue an MMIO load then check if it is in EEH. If it is in EEH,
-ahci_error_handler will wait until EEH recovery is completed.
+On Thursday 14 May 2015 12:19 AM, Brian Norris wrote:
+> On Wed, May 13, 2015 at 04:37:05PM +0530, Kishon Vijay Abraham I wrot=
+e:
+>> Hi,
+>>
+>> On Wednesday 13 May 2015 04:58 AM, Brian Norris wrote:
+>>> Supports up to two ports which can each be powered on/off and confi=
+gured
+>>> independently.
+>>>
+>>> Signed-off-by: Brian Norris <computersforpeace@gmail.com>
+>>
+>> couple of minor comments below
+>>> ---
+>>> v3: no change
+>>>
+>>> v2:
+>>>    - stop sharing SATA_TOP_CTRL registers with SATA driver
+>>>    - kill custom xlate function
+>>>
+>>>   drivers/phy/Kconfig            |   9 ++
+>>>   drivers/phy/Makefile           |   1 +
+>>>   drivers/phy/phy-brcmstb-sata.c | 216 ++++++++++++++++++++++++++++=
++++++++++++++
+>>>   3 files changed, 226 insertions(+)
+>>>   create mode 100644 drivers/phy/phy-brcmstb-sata.c
+>>>
+>>> diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
+>>> index a53bd5b52df9..36788b6f0220 100644
+>>> --- a/drivers/phy/Kconfig
+>>> +++ b/drivers/phy/Kconfig
+>>> @@ -309,4 +309,13 @@ config PHY_QCOM_UFS
+>>>   	help
+>>>   	  Support for UFS PHY on QCOM chipsets.
+>>>
+>>> +config PHY_BRCMSTB_SATA
+>>> +	tristate "Broadcom STB SATA PHY driver"
+>>> +	depends on ARCH_BRCMSTB
+>>> +	depends on OF
+>>> +	select GENERIC_PHY
+>>> +	help
+>>> +	  Enable this to support the SATA3 PHY on 28nm Broadcom STB SoCs.
+>>> +	  Likely useful only with CONFIG_SATA_BRCMSTB enabled.
+>>> +
+>>>   endmenu
+>>> diff --git a/drivers/phy/Makefile b/drivers/phy/Makefile
+>>> index f12625178780..c61f3fdd191e 100644
+>>> --- a/drivers/phy/Makefile
+>>> +++ b/drivers/phy/Makefile
+>>> @@ -40,3 +40,4 @@ obj-$(CONFIG_PHY_STIH41X_USB)		+=3D phy-stih41x-u=
+sb.o
+>>>   obj-$(CONFIG_PHY_QCOM_UFS) 	+=3D phy-qcom-ufs.o
+>>>   obj-$(CONFIG_PHY_QCOM_UFS) 	+=3D phy-qcom-ufs-qmp-20nm.o
+>>>   obj-$(CONFIG_PHY_QCOM_UFS) 	+=3D phy-qcom-ufs-qmp-14nm.o
+>>> +obj-$(CONFIG_PHY_BRCMSTB_SATA)		+=3D phy-brcmstb-sata.o
+>>> diff --git a/drivers/phy/phy-brcmstb-sata.c b/drivers/phy/phy-brcms=
+tb-sata.c
+>>> new file mode 100644
+>>> index 000000000000..8387c8cbea8c
+>>> --- /dev/null
+>>> +++ b/drivers/phy/phy-brcmstb-sata.c
+>>> @@ -0,0 +1,216 @@
+>>> +/*
+>>> + * Broadcom SATA3 AHCI Controller PHY Driver
+>>> + *
+>>> + * Copyright =A9 2009-2015 Broadcom Corporation
+>>> + *
+>>> + * This program is free software; you can redistribute it and/or m=
+odify
+>>> + * it under the terms of the GNU General Public License as publish=
+ed by
+>>> + * the Free Software Foundation; either version 2, or (at your opt=
+ion)
+>>> + * any later version.
+>>> + *
+>>> + * This program is distributed in the hope that it will be useful,
+>>> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+>>> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+>>> + * GNU General Public License for more details.
+>>> + */
+>>> +
+>>> +#include <linux/device.h>
+>>> +#include <linux/init.h>
+>>> +#include <linux/interrupt.h>
+>>> +#include <linux/io.h>
+>>> +#include <linux/kernel.h>
+>>> +#include <linux/module.h>
+>>> +#include <linux/of.h>
+>>> +#include <linux/phy/phy.h>
+>>> +#include <linux/platform_device.h>
+>>> +
+>>> +#define SATA_MDIO_BANK_OFFSET				0x23c
+>>> +#define SATA_MDIO_REG_OFFSET(ofs)			((ofs) * 4)
+>>> +#define SATA_MDIO_REG_SPACE_SIZE			0x1000
+>>> +#define SATA_MDIO_REG_LENGTH				0x1f00
+>>> +
+>>> +#define MAX_PORTS					2
+>>> +
+>>> +/* Register offset between PHYs in PCB space */
+>>> +#define SATA_MDIO_REG_SPACE_SIZE			0x1000
+>>> +
+>>> +struct brcm_sata_port {
+>>> +	int portnum;
+>>> +	struct phy *phy;
+>>> +	struct brcm_sata_phy *phy_priv;
+>>> +	bool ssc_en;
+>>> +};
+>>> +
+>>> +struct brcm_sata_phy {
+>>> +	struct device *dev;
+>>> +	void __iomem *phy_base;
+>>> +
+>>> +	struct brcm_sata_port phys[MAX_PORTS];
+>>> +};
+>>> +
+>>> +enum sata_mdio_phy_regs_28nm {
+>>
+>> Why should these defines be in enum?
+>
+> Why not? They're logically grouped this way, and IMO, they look nicer=
+=2E
+> You can see drivers/ata/ahci.h for a similar example.
 
-Signed-off-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
----
- drivers/ata/ahci.c    |   70 +++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/ata/ahci.h    |    3 ++
- drivers/ata/libahci.c |   11 +++++++
- 3 files changed, 84 insertions(+), 0 deletions(-)
+fair enough.
+>
+>>> +	PLL_REG_BANK_0				=3D 0x50,
+>>> +	PLL_REG_BANK_0_PLLCONTROL_0		=3D 0x81,
+>>> +
+>>> +	TXPMD_REG_BANK				=3D 0x1a0,
+>>> +	TXPMD_CONTROL1				=3D 0x81,
+>>> +	TXPMD_CONTROL1_TX_SSC_EN_FRC		=3D BIT(0),
+>>> +	TXPMD_CONTROL1_TX_SSC_EN_FRC_VAL	=3D BIT(1),
+>>> +	TXPMD_TX_FREQ_CTRL_CONTROL1		=3D 0x82,
+>>> +	TXPMD_TX_FREQ_CTRL_CONTROL2		=3D 0x83,
+>>> +	TXPMD_TX_FREQ_CTRL_CONTROL2_FMIN_MASK	=3D 0x3ff,
+>>> +	TXPMD_TX_FREQ_CTRL_CONTROL3		=3D 0x84,
+>>> +	TXPMD_TX_FREQ_CTRL_CONTROL3_FMAX_MASK	=3D 0x3ff,
+>>> +};
+>>> +
+>>> +static inline void __iomem *brcm_sata_phy_base(struct brcm_sata_po=
+rt *port)
+>>> +{
+>>> +	struct brcm_sata_phy *priv =3D port->phy_priv;
+>>> +
+>>> +	return priv->phy_base + (port->portnum * SATA_MDIO_REG_SPACE_SIZE=
+);
+>>> +}
+>>> +
+>>> +static void brcm_sata_mdio_wr(void __iomem *addr, u32 bank, u32 of=
+s,
+>>> +			      u32 msk, u32 value)
+>>> +{
+>>> +	u32 tmp;
+>>> +
+>>> +	writel(bank, addr + SATA_MDIO_BANK_OFFSET);
+>>> +	tmp =3D readl(addr + SATA_MDIO_REG_OFFSET(ofs));
+>>> +	tmp =3D (tmp & msk) | value;
+>>> +	writel(tmp, addr + SATA_MDIO_REG_OFFSET(ofs));
+>>> +}
+>>> +
+>>> +/* These defaults were characterized by H/W group */
+>>> +#define FMIN_VAL_DEFAULT	0x3df
+>>> +#define FMAX_VAL_DEFAULT	0x3df
+>>> +#define FMAX_VAL_SSC		0x83
+>>> +
+>>> +static void cfg_ssc_28nm(struct brcm_sata_port *port)
+>>
+>> brcm_sata_cfg_ssc_28nm to make it similar to other functions.
+>
+> OK.
+>
+>>> +{
+>>> +	void __iomem *base =3D brcm_sata_phy_base(port);
+>>> +	struct brcm_sata_phy *priv =3D port->phy_priv;
+>>> +	u32 tmp;
+>>> +
+>>> +	/* override the TX spread spectrum setting */
+>>> +	tmp =3D TXPMD_CONTROL1_TX_SSC_EN_FRC_VAL | TXPMD_CONTROL1_TX_SSC_=
+EN_FRC;
+>>> +	brcm_sata_mdio_wr(base, TXPMD_REG_BANK, TXPMD_CONTROL1, ~tmp, tmp=
+);
+>>> +
+>>> +	/* set fixed min freq */
+>>> +	brcm_sata_mdio_wr(base, TXPMD_REG_BANK, TXPMD_TX_FREQ_CTRL_CONTRO=
+L2,
+>>> +			  ~TXPMD_TX_FREQ_CTRL_CONTROL2_FMIN_MASK,
+>>> +			  FMIN_VAL_DEFAULT);
+>>> +
+>>> +	/* set fixed max freq depending on SSC config */
+>>> +	if (port->ssc_en) {
+>>> +		dev_info(priv->dev, "enabling SSC on port %d\n", port->portnum);
+>>> +		tmp =3D FMAX_VAL_SSC;
+>>> +	} else {
+>>> +		tmp =3D FMAX_VAL_DEFAULT;
+>>> +	}
+>>> +
+>>> +	brcm_sata_mdio_wr(base, TXPMD_REG_BANK, TXPMD_TX_FREQ_CTRL_CONTRO=
+L3,
+>>> +			  ~TXPMD_TX_FREQ_CTRL_CONTROL3_FMAX_MASK, tmp);
+>>> +}
+>>> +
+>>> +static int brcm_sata_phy_init(struct phy *phy)
+>>> +{
+>>> +	struct brcm_sata_port *port =3D phy_get_drvdata(phy);
+>>> +
+>>> +	cfg_ssc_28nm(port);
+>>> +
+>>> +	return 0;
+>>> +}
+>>> +
+>>> +static struct phy_ops phy_ops_28nm =3D {
+>>> +	.init		=3D brcm_sata_phy_init,
+>>> +	.owner		=3D THIS_MODULE,
+>>> +};
+>>> +
+>>> +static const struct of_device_id brcm_sata_phy_of_match[] =3D {
+>>> +	{ .compatible	=3D "brcm,bcm7445-sata-phy" },
+>>> +	{},
+>>> +};
+>>> +MODULE_DEVICE_TABLE(of, brcm_sata_phy_of_match);
+>>> +
+>>> +static int brcm_sata_phy_probe(struct platform_device *pdev)
+>>> +{
+>>> +	struct device *dev =3D &pdev->dev;
+>>> +	struct device_node *dn =3D dev->of_node, *child;
+>>> +	struct brcm_sata_phy *priv;
+>>> +	struct resource *res;
+>>> +	struct phy_provider *provider;
+>>> +	int count =3D 0;
+>>> +
+>>> +	if (of_get_child_count(dn) =3D=3D 0)
+>>> +		return -ENODEV;
+>>> +
+>>> +	priv =3D devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
+>>> +	if (!priv)
+>>> +		return -ENOMEM;
+>>> +	dev_set_drvdata(dev, priv);
+>>> +	priv->dev =3D dev;
+>>> +
+>>> +	res =3D platform_get_resource_byname(pdev, IORESOURCE_MEM, "phy")=
+;
+>>> +	priv->phy_base =3D devm_ioremap_resource(dev, res);
+>>> +	if (IS_ERR(priv->phy_base))
+>>> +		return PTR_ERR(priv->phy_base);
+>>> +
+>>> +	for_each_available_child_of_node(dn, child) {
+>>> +		unsigned int id;
+>>> +		struct brcm_sata_port *port;
+>>> +
+>>> +		if (of_property_read_u32(child, "reg", &id)) {
+>>> +			dev_err(dev, "missing reg property in node %s\n",
+>>> +					child->name);
+>>> +			return -EINVAL;
+>>> +		}
+>>> +
+>>> +		if (id >=3D MAX_PORTS) {
+>>> +			dev_err(dev, "invalid reg: %u\n", id);
+>>> +			return -EINVAL;
+>>> +		}
+>>> +		if (priv->phys[id].phy) {
+>>> +			dev_err(dev, "already registered port %u\n", id);
+>>> +			return -EINVAL;
+>>> +		}
+>>> +
+>>> +		port =3D &priv->phys[id];
+>>> +		port->portnum =3D id;
+>>> +		port->phy_priv =3D priv;
+>>> +		port->phy =3D devm_phy_create(dev, child, &phy_ops_28nm);
+>>> +		port->ssc_en =3D of_property_read_bool(child, "brcm,enable-ssc")=
+;
+>>> +		if (IS_ERR(port->phy)) {
+>>> +			dev_err(dev, "failed to create PHY\n");
+>>> +			return PTR_ERR(port->phy);
+>>> +		}
+>>> +
+>>> +		phy_set_drvdata(port->phy, port);
+>>> +		count++;
+>>> +	}
+>>> +
+>>> +	provider =3D devm_of_phy_provider_register(dev, of_phy_simple_xla=
+te);
+>>> +	if (IS_ERR(provider)) {
+>>> +		dev_err(dev, "could not register PHY provider\n");
+>>> +		return PTR_ERR(provider);
+>>> +	}
+>>> +
+>>> +	dev_info(dev, "registered %d port(s)\n", count);
+>>
+>> lets not make the boot noisy. Change to dev_dbg?
+>
+> Why? What's the harm? And I thought we discussed this already. "Noisy=
+"
+> depends on your point of view; IMO, this is important information. If
+> for some reason this driver wasn't loaded or probed, we'd want to kno=
+w.
+> Besides, dev_dbg() requires you to fiddle with both the log level and
+> the dynamic debug boot parameters just to get these informational
+> messages.
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 65ee944..0184677 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -96,6 +96,10 @@ static int ahci_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg);
- static int ahci_pci_device_resume(struct pci_dev *pdev);
- #endif
- 
-+static pci_ers_result_t ahci_pci_error_detected(struct pci_dev *pdev,
-+					       pci_channel_state_t state);
-+static pci_ers_result_t ahci_pci_slot_reset(struct pci_dev *pdev);
-+
- static struct scsi_host_template ahci_sht = {
- 	AHCI_SHT("ahci"),
- };
-@@ -520,6 +524,10 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ }	/* terminate list */
- };
- 
-+static const struct pci_error_handlers ahci_err_handler = {
-+	.error_detected = ahci_pci_error_detected,
-+	.slot_reset = ahci_pci_slot_reset,
-+};
- 
- static struct pci_driver ahci_pci_driver = {
- 	.name			= DRV_NAME,
-@@ -530,6 +538,7 @@ static struct pci_driver ahci_pci_driver = {
- 	.suspend		= ahci_pci_device_suspend,
- 	.resume			= ahci_pci_device_resume,
- #endif
-+	.err_handler		= &ahci_err_handler,
- };
- 
- #if defined(CONFIG_PATA_MARVELL) || defined(CONFIG_PATA_MARVELL_MODULE)
-@@ -813,6 +822,64 @@ static int ahci_pci_device_resume(struct pci_dev *pdev)
- }
- #endif
- 
-+/**
-+ * ahci_pci_error_detected - Called when a PCI error is detected.
-+ * @pdev:	PCI device struct
-+ * @state:	PCI channel state
-+ *
-+ * Description: Called when a PCI error is detected.
-+ *
-+ * Return value:
-+ * PCI_ERS_RESULT_NEED_RESET or PCI_ERS_RESULT_DISCONNECT
-+ */
-+static pci_ers_result_t ahci_pci_error_detected(struct pci_dev *pdev,
-+					       pci_channel_state_t state)
-+{
-+	struct ata_host *host = pci_get_drvdata(pdev);
-+	int i;
-+
-+	if (state == pci_channel_io_perm_failure)
-+		return PCI_ERS_RESULT_DISCONNECT;
-+
-+	for (i = 0; i < host->n_ports; i++)
-+		scsi_block_requests(host->ports[i]->scsi_host);
-+
-+	return PCI_ERS_RESULT_NEED_RESET;
-+
-+}
-+
-+/**
-+ * ahci_pci_slot_reset - Called when PCI slot has been reset.
-+ * @pdev:	PCI device struct
-+ *
-+ * Description: This routine is called by the pci error recovery
-+ * code after the PCI slot has been reset, just before we
-+ * should resume normal operations.
-+ */
-+static pci_ers_result_t ahci_pci_slot_reset(struct pci_dev *pdev)
-+{
-+	struct ata_host *host = pci_get_drvdata(pdev);
-+	struct ahci_host_priv *hpriv = host->private_data;
-+	int i, rc;
-+
-+	pci_restore_state(pdev);
-+
-+	pci_save_state(pdev);
-+
-+	rc = ahci_pci_reset_controller(host);
-+	if (rc)
-+		return PCI_ERS_RESULT_DISCONNECT;
-+
-+	ahci_pci_init_controller(host);
-+
-+	for (i = 0; i < host->n_ports; i++)
-+		scsi_unblock_requests(host->ports[i]->scsi_host);
-+
-+	wake_up_all(&hpriv->eeh_wait_q);
-+
-+	return PCI_ERS_RESULT_RECOVERED;
-+}
-+
- static int ahci_configure_dma_masks(struct pci_dev *pdev, int using_dac)
- {
- 	int rc;
-@@ -1439,6 +1506,7 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	hpriv->mmio = pcim_iomap_table(pdev)[ahci_pci_bar];
- 
-+	init_waitqueue_head(&hpriv->eeh_wait_q);
- 	/* must set flag prior to save config in order to take effect */
- 	if (ahci_broken_devslp(pdev))
- 		hpriv->flags |= AHCI_HFLAG_NO_DEVSLP;
-@@ -1549,6 +1617,8 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	pci_set_master(pdev);
- 
-+	pci_save_state(pdev);
-+
- 	return ahci_host_activate(host, pdev->irq, &ahci_sht);
- }
- 
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 71262e0..6bbf747 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -51,6 +51,8 @@
- #define EM_MSG_LED_VALUE_OFF          0xfff80000
- #define EM_MSG_LED_VALUE_ON           0x00010000
- 
-+#define AHCI_PCI_ERROR_RECOVERY_TIMEOUT	(120 * HZ)
-+
- enum {
- 	AHCI_MAX_PORTS		= 32,
- 	AHCI_MAX_CLKS		= 5,
-@@ -341,6 +343,7 @@ struct ahci_host_priv {
- 	struct phy		**phys;
- 	unsigned		nports;		/* Number of ports */
- 	void			*plat_data;	/* Other platform data */
-+	wait_queue_head_t	eeh_wait_q;
- 	/*
- 	 * Optional ahci_start_engine override, if not set this gets set to the
- 	 * default ahci_start_engine during ahci_save_initial_config, this can
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 287c4ba..bd7422a 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -43,6 +43,7 @@
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_cmnd.h>
- #include <linux/libata.h>
-+#include <linux/pci.h>
- #include "ahci.h"
- #include "libata.h"
- 
-@@ -1968,6 +1969,16 @@ static void ahci_thaw(struct ata_port *ap)
- void ahci_error_handler(struct ata_port *ap)
- {
- 	struct ahci_host_priv *hpriv = ap->host->private_data;
-+	void __iomem *mmio = hpriv->mmio;
-+	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-+	u32 irq_stat;
-+
-+	irq_stat = readl(mmio + HOST_IRQ_STAT);
-+
-+	if (pci_channel_offline(pdev))
-+		wait_event_timeout(hpriv->eeh_wait_q,
-+				!pci_channel_offline(pdev),
-+				AHCI_PCI_ERROR_RECOVERY_TIMEOUT);
- 
- 	if (!(ap->pflags & ATA_PFLAG_FROZEN)) {
- 		/* restart engine */
--- 
-1.7.1
+so be it. While sending the next version please also add a MAINTAINERs =
+entry=20
+for this driver.
 
+Cheers
+Kishon
