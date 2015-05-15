@@ -1,43 +1,46 @@
-From: Mauro Carvalho Chehab <mchehab@osg.samsung.com>
-Subject: Re: [PATCHv3 1/4] phy: phy-core: Make GENERIC_PHY an invisible
- option
-Date: Thu, 14 May 2015 18:57:10 -0300
-Message-ID: <20150514185710.2f8889a3@recife.lan>
+From: Felipe Balbi <balbi@ti.com>
+Subject: Re: [PATCHv3 1/4] phy: phy-core: Make GENERIC_PHY an invisible option
+Date: Thu, 14 May 2015 19:52:10 -0500
+Message-ID: <20150515005210.GA31534@saruman.tx.rr.com>
 References: <1429743853-10254-1-git-send-email-arun.ramamurthy@broadcom.com>
-	<1429743853-10254-2-git-send-email-arun.ramamurthy@broadcom.com>
+ <1429743853-10254-2-git-send-email-arun.ramamurthy@broadcom.com>
+Reply-To: <balbi@ti.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-media-owner@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="LQksG6bCIzRHxTLp"
+Return-path: <linux-doc-owner@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <1429743853-10254-2-git-send-email-arun.ramamurthy@broadcom.com>
-Sender: linux-media-owner@vger.kernel.org
+Sender: linux-doc-owner@vger.kernel.org
 To: Arun Ramamurthy <arun.ramamurthy@broadcom.com>
-Cc: Jonathan Corbet <corbet@lwn.net>, Tejun Heo <tj@kernel.org>, Kyungmin Park <kyungmin.park@samsung.com>, Sylwester Nawrocki <s.nawrocki@samsung.com>, Kukjin Kim <kgene@kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alan Stern <stern@rowland.harvard.edu>, Tony Prisk <linux@prisktech.co.nz>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, Tomi Valkeinen <tomi.valkeinen@ti.com>, Arnd Bergmann <arnd@arndb.de>, Felipe Balbi <balbi@ti.com>, Mathias Nyman <mathias.nyman@linux.intel.com>, Paul Bolle <pebolle@tiscali.nl>, Thomas Pugliese <thomas.pugliese@gmail.com>, Srinivas Kandagatla <srinivas.kandagatla@linaro.org>, Masanari Iida <standby24x7@gmail.com>, David Mosberger <davidm@egauge.net>, Peter Griffin <peter.griffin@linaro.org>, Gregory CLEMENT <gregory.clement@free-electrons.com>Laurent Pinchart <l>
+Cc: Jonathan Corbet <corbet@lwn.net>, Tejun Heo <tj@kernel.org>, Kyungmin Park <kyungmin.park@samsung.com>, Sylwester Nawrocki <s.nawrocki@samsung.com>, Mauro Carvalho Chehab <mchehab@osg.samsung.com>, Kukjin Kim <kgene@kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alan Stern <stern@rowland.harvard.edu>, Tony Prisk <linux@prisktech.co.nz>, Jean-Christophe Plagniol-Villard <plagnioj@jcrosoft.com>, Tomi Valkeinen <tomi.valkeinen@ti.com>, Arnd Bergmann <arnd@arndb.de>, Felipe Balbi <balbi@ti.com>, Mathias Nyman <mathias.nyman@linux.intel.com>, Paul Bolle <pebolle@tiscali.nl>, Thomas Pugliese <thomas.pugliese@gmail.com>, Srinivas Kandagatla <srinivas.kandagatla@linaro.org>, Masanari Iida <standby24x7@gmail.com>, David Mosberger <davidm@egauge.net>, Peter Griffin <peter.griffin@linaro.org>, Gregory CLEMENT <gregory.cle>
 List-Id: linux-ide@vger.kernel.org
 
-Em Wed, 22 Apr 2015 16:04:10 -0700
-Arun Ramamurthy <arun.ramamurthy@broadcom.com> escreveu:
+--LQksG6bCIzRHxTLp
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+Hi,
+
+On Wed, Apr 22, 2015 at 04:04:10PM -0700, Arun Ramamurthy wrote:
 > Most of the phy providers use "select" to enable GENERIC_PHY. Since select
 > is only recommended when the config is not visible, GENERIC_PHY is changed
-> an invisible option. To maintain consistency, all phy providers are changed
+> an invisible option. To maintain consistency, all phy providers are chang=
+ed
 > to "select" GENERIC_PHY and all non-phy drivers use "depends on" when the
 > phy framework is explicity required. USB_MUSB_OMAP2PLUS has a cyclic
 > dependency, so it is left as "select".
-> 
+>=20
 > Signed-off-by: Arun Ramamurthy <arun.ramamurthy@broadcom.com>
 > ---
 >  drivers/ata/Kconfig                       | 1 -
-
 >  drivers/media/platform/exynos4-is/Kconfig | 2 +-
-For media part:
-	Acked-by: Mauro Carvalho Chehab <mchehab@osg.samsung.com>
-
 >  drivers/phy/Kconfig                       | 4 ++--
 >  drivers/usb/host/Kconfig                  | 4 ++--
 >  drivers/video/fbdev/exynos/Kconfig        | 2 +-
 >  5 files changed, 6 insertions(+), 7 deletions(-)
-> 
+>=20
 > diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
 > index 5f60155..6d2e881 100644
 > --- a/drivers/ata/Kconfig
@@ -50,7 +53,8 @@ For media part:
 >  	help
 >  	  This option enables support for the Marvell Serial ATA family.
 >  	  Currently supports 88SX[56]0[48][01] PCI(-X) chips,
-> diff --git a/drivers/media/platform/exynos4-is/Kconfig b/drivers/media/platform/exynos4-is/Kconfig
+> diff --git a/drivers/media/platform/exynos4-is/Kconfig b/drivers/media/pl=
+atform/exynos4-is/Kconfig
 > index b7b2e47..b6f3eaa 100644
 > --- a/drivers/media/platform/exynos4-is/Kconfig
 > +++ b/drivers/media/platform/exynos4-is/Kconfig
@@ -69,22 +73,25 @@ For media part:
 > +++ b/drivers/phy/Kconfig
 > @@ -5,7 +5,7 @@
 >  menu "PHY Subsystem"
->  
+> =20
 >  config GENERIC_PHY
 > -	bool "PHY Core"
 > +	bool
 >  	help
 >  	  Generic PHY support.
->  
+> =20
 > @@ -72,7 +72,7 @@ config PHY_MIPHY365X
 >  config PHY_RCAR_GEN2
 >  	tristate "Renesas R-Car generation 2 USB PHY driver"
 >  	depends on ARCH_SHMOBILE
 > -	depends on GENERIC_PHY
 > +	select GENERIC_PHY
+
+so some you changed from depends to select...
+
 >  	help
 >  	  Support for USB PHY found on Renesas R-Car generation 2 SoCs.
->  
+> =20
 > diff --git a/drivers/usb/host/Kconfig b/drivers/usb/host/Kconfig
 > index 5ad60e4..e2197e2 100644
 > --- a/drivers/usb/host/Kconfig
@@ -95,28 +102,34 @@ For media part:
 >  	depends on ARCH_STI && OF
 > -	select GENERIC_PHY
 > +	depends on GENERIC_PHY
->  	select USB_EHCI_HCD_PLATFORM
->  	help
->  	  Enable support for the on-chip EHCI controller found on
-> @@ -409,7 +409,7 @@ config USB_OHCI_HCD_SPEAR
->  config USB_OHCI_HCD_STI
->  	tristate "Support for ST STiHxxx on-chip OHCI USB controller"
->  	depends on ARCH_STI && OF
-> -	select GENERIC_PHY
-> +	depends on GENERIC_PHY
->  	select USB_OHCI_HCD_PLATFORM
->  	help
->  	  Enable support for the on-chip OHCI controller found on
-> diff --git a/drivers/video/fbdev/exynos/Kconfig b/drivers/video/fbdev/exynos/Kconfig
-> index 1f16b46..6c53894 100644
-> --- a/drivers/video/fbdev/exynos/Kconfig
-> +++ b/drivers/video/fbdev/exynos/Kconfig
-> @@ -16,7 +16,7 @@ if EXYNOS_VIDEO
->  
->  config EXYNOS_MIPI_DSI
->  	bool "EXYNOS MIPI DSI driver support."
-> -	select GENERIC_PHY
-> +	depends on GENERIC_PHY
->  	help
->  	  This enables support for MIPI-DSI device.
->  
+
+while others you changed from select to depends.
+
+NAK.
+
+--=20
+balbi
+
+--LQksG6bCIzRHxTLp
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJVVUM6AAoJEIaOsuA1yqRE1EwP/RDMwkCFyZHRfZL/OOXOfdof
+EFZFSuW7QcNT5MceiWlbo0uWjo7xiUSSyHUe4/D66pntOQEWobnJhQJrqQA5WoPl
++c74g5NE/dkjdOmPcHoA9nyfi4M+uW7X1JI34+Y2oSfDAETWKNu5QGxTFulm9tKp
+4vNODYmU2lbe+4+xl71iSYyjbkpliuhM/sRj6P2hNhV24kysfsL1Nqh5dEatR/un
+XvBqVxxDAMXe7T647CI9R+urW1zQ2ix8ALVcYBD9lot4gDL5Lru1zadHkOBx7RPr
+43wI9PSgEIb/Z+Ur6M0b4OsJkq0VVK42dkRd3gMyKeC7Djf2nfSU/XmtyWkewTwO
+1ACWBo+9lnpIvGiblkZFtuNqehTupdVvGakXrRXojtIytt8ipCVGDYsl//IPmahC
+JkZG4BnhsLgmXYlwSYlDEtmE/82Mg7w1n2AyLjbWgwbkbzZmT+iYiLiorhlNJO9H
+U+kq+cd0RQK3mQqRc8GiE6Y2OeLoOWzRgQKrcFhQ5jrIbeEwqhAnxAH35uHywcgp
+Mx4VmyOQRuNWkytQJEj0WNetvkwjs6pVRjyxPgs+T7h9JKuPxGTlkhYmLoczz8zx
+5J3EKJ2c6/PpRYdYXpl18dFdRhaDDV6R0rSHCBdqw/G8uczcGxifNHErfnAlIs/h
+OltLWaE+xPlWhGZS0xSx
+=urxV
+-----END PGP SIGNATURE-----
+
+--LQksG6bCIzRHxTLp--
