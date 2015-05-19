@@ -1,57 +1,56 @@
-From: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-Subject: Re: READ LOG DMA EXT failed, trying unqueued
-Date: Tue, 19 May 2015 21:10:51 +0900
-Message-ID: <20150519121051.GA352@swordfish>
-References: <20150519113320.GA498@swordfish>
- <yq1wq04kcso.fsf@sermon.lab.mkp.net>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] ata: hpt366: fix constant cast warning
+Date: Tue, 19 May 2015 16:34:05 +0200
+Message-ID: <2549322.XbiTlcDvMS@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:35934 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754614AbbESMLP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 May 2015 08:11:15 -0400
-Content-Disposition: inline
-In-Reply-To: <yq1wq04kcso.fsf@sermon.lab.mkp.net>
+Received: from mout.kundenserver.de ([212.227.126.131]:56903 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932899AbbESOen (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 May 2015 10:34:43 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>, Hannes Reinecke <hare@suse.de>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 
-On (05/19/15 07:49), Martin K. Petersen wrote:
-> Sergey> Hello, my laptop doesn't boot anymore, spinning in "READ LOG DMA
-> Sergey> EXT failed, trying unqueued".  any reason it loops forever?
-> 
-> Does the patch below help?
-> 
+gcc-5.x warns about a preexisting problem in the hpt36x pata driver:
 
-it does.
+drivers/ata/pata_hpt366.c: In function 'hpt36x_init_one':
+drivers/ata/pata_hpt366.c:376:9: warning: assignment discards 'const' qualifier from pointer target type [-Wdiscarded-array-qualifiers]
 
-Reported-and-tested-by: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+Other ata drivers have the same problem, as ata_pci_bmdma_init_one
+takes a non-const pointer, and they solve it by using a cast to
+turn that pointer into a normal non-const pointer.
 
-	-ss
+I also tried to change the ata core code to make host->private_data
+a const pointer, but that quickly got out of hand, as some other
+drivers expect it to be writable, so I ended up using the same
+hack as the others here.
 
-> Also, please let us know which drive you have and send us the output of:
-> 
-> # smartctl -l gplog,0x13 /dev/sdN
-> 
-> Thanks!
-> 
-> -- 
-> Martin K. Petersen	Oracle Linux Engineering
-> 
-> 
-> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-> index 2893563d0537..2b370ee0ae86 100644
-> --- a/drivers/ata/libata-eh.c
-> +++ b/drivers/ata/libata-eh.c
-> @@ -1521,6 +1521,7 @@ retry:
->  	} else {
->  		tf.command = ATA_CMD_READ_LOG_EXT;
->  		tf.protocol = ATA_PROT_PIO;
-> +		dma = false;
->  	}
->  	tf.lbal = log;
->  	tf.lbam = page;
-> 
-> 
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+
+diff --git a/drivers/ata/pata_hpt366.c b/drivers/ata/pata_hpt366.c
+index cbc3de793d1d..0038dc4c06c7 100644
+--- a/drivers/ata/pata_hpt366.c
++++ b/drivers/ata/pata_hpt366.c
+@@ -352,7 +352,7 @@ static int hpt36x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ 	};
+ 	const struct ata_port_info *ppi[] = { &info_hpt366, NULL };
+ 
+-	void *hpriv = NULL;
++	const void *hpriv = NULL;
+ 	u32 reg1;
+ 	int rc;
+ 
+@@ -383,7 +383,7 @@ static int hpt36x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ 		break;
+ 	}
+ 	/* Now kick off ATA set up */
+-	return ata_pci_bmdma_init_one(dev, ppi, &hpt36x_sht, hpriv, 0);
++	return ata_pci_bmdma_init_one(dev, ppi, &hpt36x_sht, (void *)hpriv, 0);
+ }
+ 
+ #ifdef CONFIG_PM_SLEEP
+
