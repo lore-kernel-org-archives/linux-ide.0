@@ -1,54 +1,42 @@
-From: "Andy Falanga (afalanga)" <afalanga@micron.com>
-Subject: Best way to store struct ata_host objects for later use
-Date: Tue, 19 May 2015 20:26:15 +0000
-Message-ID: <1432067157.11450.14.camel@afalanga4.micron.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH] libata: Fix regression when the NCQ Send and Receive log page is absent
+Date: Tue, 19 May 2015 19:44:17 -0400
+Message-ID: <1432079057-11262-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.micron.com ([137.201.242.129]:12334 "EHLO
-	mailout.micron.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750825AbbESU0R (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 May 2015 16:26:17 -0400
-Received: from mail.micron.com (ntxboicas02.micron.com [137.201.20.138])
-	by mailout.micron.com (8.14.4/8.14.6) with ESMTP id t4JKQGY6020628
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=FAIL)
-	for <linux-ide@vger.kernel.org>; Tue, 19 May 2015 14:26:16 -0600
-Content-Language: en-US
-Content-ID: <F20127C59EC0ED4C9D329EA50065052F@micron.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:30406 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750734AbbESXo1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 May 2015 19:44:27 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, sergey.senozhatsky@gmail.com, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-SGksDQoNCldoYXQncyB0aGUgbW9zdCBhZHZpc2FibGUgbWVhbnMgb2Ygc3RvcmluZyBzdHJ1Y3Qg
-YXRhX2hvc3Qgb2JqZWN0cyBmb3INCmxhdGVyIHJlZmVyZW5jZT8gIENhbiB0aGV5IGJlIGNvbnN0
-cnVjdGVkIHJlbGF0aXZlbHkgZWFzaWx5IGZyb20gb3RoZXIsDQptb3JlIGJhc2ljLCBrZXJuZWwg
-c3RydWN0dXJlcyB3aGljaCBzaG91bGQgZXhpc3QgYWZ0ZXIgdGhlIGFoY2kua28NCmRyaXZlciBo
-YXMgbG9hZGVkPw0KDQpCcmllZmx5LCB3aGF0J3MgcHJvbXB0aW5nIHRoaXMgaXMgdGhhdCBJJ20g
-d3JpdGluZyBhIGNoYXJhY3RlciBkcml2ZXIgdG8NCmFjdCBhcyBhIHBhc3MgdGhyb3VnaCBmcm9t
-IHVzZXIgc3BhY2UgdG8gYWhjaS5rbyAoYWN0dWFsbHksIGEgbW9kaWZpZWQNCnZlcnNpb24gb2Yg
-YWhjaS5rbykuICBPbmUgb2YgdGhlIG1vZHMgSSd2ZSBtYWRlIGlzIGEgbGlua2VkIGxpc3Qgb2YN
-CnN0cnVjdCBhdGFfaG9zdCBvYmplY3RzIHdoaWNoIGlzIHVzZWQgYnkgbXkgY2hhcmFjdGVyIGRy
-aXZlciB0byBrbm93IGhvdw0KbWFueSBkZXZpY2Ugbm9kZXMgdG8gaW5zdGFudGlhdGUgKDEgZm9y
-IGVhY2ggcG9ydCBvbiBob3dldmVyIG1hbnkgSEJBcw0KdGhlIExMRCBpcyBkcml2aW5nKS4gIEF0
-IHRoaXMgbG9jYXRpb24sIGh0dHA6Ly9seHIubGludXgubm8vbGludXgNCisqL2RyaXZlcnMvYXRh
-L2FoY2kuYyNMMzIzMCAsIEkgcGxhY2VkIGEgY2FsbCB0byBhIGZ1bmN0aW9uIEkgYWRkZWQNCndo
-aWNoIHNpbXBseSBhbGxvY2F0ZXMsIHZpYSBrYWxsb2MoKSwgYSBuZXcgYXRhX2hvc3Qgc3RydWN0
-dXJlLiAgSSB0aGVuDQpzaW1wbHkgbWVtY3B5KCkgdGhlIGNvbnRlbnRzIG9mIHdoYXQgdGhlIGRy
-aXZlciBoYXMgZHV0aWZ1bGx5DQppbnN0YW50aWF0ZWQuICBJIGZpZ3VyZWQgdGhhdCBjb3B5aW5n
-IHRoZSBzdHJ1Y3R1cmUgYXQgdGhpcyBwb2ludCB3YXMNCnNhZmUgYmVjYXVzZSBpdCB3YXMgZnVs
-bHkgYnVpbHQuDQoNClRoZSByZWFzb24gZm9yIGFsbCBvZiB0aGlzIGlzIHNvIHRoYXQgdGhlIGNo
-YXJhY3RlciBkcml2ZXIgY2FuIGtlZXANCnRyYWNrIG9mIHdoaWNoIGF0YSBob3N0IG93bnMgdGhl
-IHBvcnQsIGV0Yy4gIE9uZSBvZiB0aGUgdGhpbmdzIG15DQpjaGFyYWN0ZXIgZHJpdmVyIGFsbG93
-cyBpcyBhY2Nlc3MgdG8gSEJBIGFuZCBwb3J0IHJlZ2lzdGVycy4gIEluIG15IHZlcnkNCmVhcmx5
-IGRyYWZ0cywgSSdtIGNhbGxpbmcgcGNpX2dldF9kZXZpY2UoKSwgYnV0IHRoaXMganVzdCBpc24n
-dCB3b3JrYWJsZQ0KYmVjYXVzZSBJIGRvbid0IHdhbnQgdGhlIHVwcGVyIGxheWVyIGRyaXZlciB0
-aWVkIHRvIHNwZWNpZmljIGhhcmR3YXJlLg0KSSB1c2UgdGhlIGF0YV9ob3N0LCBhbmQgaXRzIGF0
-YV9wb3J0LCBvYmplY3RzIHRvIGdldCBhY2Nlc3MgdG8gdGhlDQppb21hcHBlZCBtZW1vcnkuDQoN
-CkVzc2VudGlhbGx5LCB0aGUgaWRlYSB3YXMgdGhhdCB0aGUgY2hhcmFjdGVyIGRyaXZlciB3b3Vs
-ZCBwYXNzIHRoZQ0KYXRhX2hvc3Qgc3RydWN0dXJlIHRvIHRoZSBMTEQgZHJpdmVyIGZvciBIQkEg
-cmVnaXN0ZXJzLCBhbmQgYW4gYXRhX3BvcnQNCnN0cnVjdHVyZSBmb3IgdGhlIHBvcnQgcmVnaXN0
-ZXJzLiAgQXBwYXJlbnRseSwgaG93ZXZlciwgdGhlcmUncyBtb3JlDQpnb2luZyBvbiBhbmQgc2lt
-cGx5IGNvcHlpbmcgKGEgc2hhbGxvdyBjb3B5IGF0IHRoYXQpIHRoZXNlIHN0cnVjdHVyZXMNCmRv
-ZXNuJ3QgcHJvdmlkZSBlbm91Z2ggc2VjdXJpdHkuICBJIGNhdXNlZCBhIGtlcm5lbCBvb3BzLg0K
-DQpJcyB0aGVyZSBhIGJldHRlciBtZWFucyBvZiBnb2luZyBhYm91dCB0aGlzPw0KDQpBbmR5DQo=
+Commit 5d3abf8ff67f allowed us to fall back to the unqueued READ LOG
+variant if the queued version failed. However, if the device did not
+support the page at all we would end up looping due to a merge snafu.
+
+Ensure we only take the fallback path once.
+
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Reported-by: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+Tested-by: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+---
+ drivers/ata/libata-eh.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 2893563d0537..2b370ee0ae86 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1521,6 +1521,7 @@ retry:
+ 	} else {
+ 		tf.command = ATA_CMD_READ_LOG_EXT;
+ 		tf.protocol = ATA_PROT_PIO;
++		dma = false;
+ 	}
+ 	tf.lbal = log;
+ 	tf.lbam = page;
+-- 
+1.9.3
+
