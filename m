@@ -1,50 +1,60 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
+From: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
 Subject: Re: READ LOG DMA EXT failed, trying unqueued
-Date: Tue, 19 May 2015 07:49:11 -0400
-Message-ID: <yq1wq04kcso.fsf@sermon.lab.mkp.net>
+Date: Tue, 19 May 2015 21:00:17 +0900
+Message-ID: <20150519120017.GA390@swordfish>
 References: <20150519113320.GA498@swordfish>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:37507 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751257AbbESLtS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 May 2015 07:49:18 -0400
-In-Reply-To: <20150519113320.GA498@swordfish> (Sergey Senozhatsky's message of
-	"Tue, 19 May 2015 20:33:20 +0900")
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:33280 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753070AbbESMAl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 May 2015 08:00:41 -0400
+Received: by padbw4 with SMTP id bw4so21497581pad.0
+        for <linux-ide@vger.kernel.org>; Tue, 19 May 2015 05:00:41 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <20150519113320.GA498@swordfish>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Hannes Reinecke <hare@suse.de>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, "linux-kernel@vger.kernel.org Sergey Senozhatsky" <sergey.senozhatsky@gmail.com>, Sergey Senozhatsky <sergey.senozhatsky.work@gmail.com>
 
->>>>> "Sergey" == Sergey Senozhatsky <sergey.senozhatsky@gmail.com> writes:
+On (05/19/15 20:33), Sergey Senozhatsky wrote:
+> my laptop doesn't boot anymore, spinning in "READ LOG DMA EXT failed, trying unqueued".
+> any reason it loops forever?
+> 
 
-Sergey> Hello, my laptop doesn't boot anymore, spinning in "READ LOG DMA
-Sergey> EXT failed, trying unqueued".  any reason it loops forever?
+perhaps something like this?
 
-Does the patch below help?
+8<-----8<-----
 
-Also, please let us know which drive you have and send us the output of:
+>From 826eb3644e7d4b1f66a898c63865f217fb82f1f9 Mon Sep 17 00:00:00 2001
+From: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
+Date: Tue, 19 May 2015 20:54:18 +0900
+Subject: [PATCH] ata: do not retry ata_read_log_page() forever
 
-# smartctl -l gplog,0x13 /dev/sdN
+Do not spin on failing ata_exec_internal() forever, make a one shot
+ATA_HORKAGE_NO_NCQ_LOG retry.
 
-Thanks!
+Signed-off-by: Sergey Senozhatsky <sergey.senozhatsky@gmail.com>
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
-
+---
+ drivers/ata/libata-eh.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 2893563d0537..2b370ee0ae86 100644
+index f093174..20f1549 100644
 --- a/drivers/ata/libata-eh.c
 +++ b/drivers/ata/libata-eh.c
-@@ -1521,6 +1521,7 @@ retry:
- 	} else {
- 		tf.command = ATA_CMD_READ_LOG_EXT;
- 		tf.protocol = ATA_PROT_PIO;
-+		dma = false;
- 	}
- 	tf.lbal = log;
- 	tf.lbam = page;
-
+@@ -1531,7 +1531,7 @@ retry:
+ 	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_FROM_DEVICE,
+ 				     buf, sectors * ATA_SECT_SIZE, 0);
+ 
+-	if (err_mask && dma) {
++	if (err_mask && dma && !(dev->horkage & ATA_HORKAGE_NO_NCQ_LOG)) {
+ 		dev->horkage |= ATA_HORKAGE_NO_NCQ_LOG;
+ 		ata_dev_warn(dev, "READ LOG DMA EXT failed, trying unqueued\n");
+ 		goto retry;
+-- 
+2.4.1.168.g1ea28e1
 
