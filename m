@@ -1,36 +1,33 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ata: hpt366: fix constant cast warning
-Date: Thu, 21 May 2015 17:38:47 -0400
-Message-ID: <20150521213847.GB4914@htj.duckdns.org>
-References: <2549322.XbiTlcDvMS@wuerfel>
+Subject: Re: [PATCH] libata: Fix regression when the NCQ Send and Receive log
+ page is absent
+Date: Thu, 21 May 2015 17:53:56 -0400
+Message-ID: <20150521215356.GC4914@htj.duckdns.org>
+References: <1432079057-11262-1-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qc0-f171.google.com ([209.85.216.171]:32956 "EHLO
+	mail-qc0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422686AbbEUVyA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 May 2015 17:54:00 -0400
+Received: by qcblr10 with SMTP id lr10so405952qcb.0
+        for <linux-ide@vger.kernel.org>; Thu, 21 May 2015 14:53:59 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <2549322.XbiTlcDvMS@wuerfel>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+In-Reply-To: <1432079057-11262-1-git-send-email-martin.petersen@oracle.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-ide@vger.kernel.org, sergey.senozhatsky@gmail.com
 
-On Tue, May 19, 2015 at 04:34:05PM +0200, Arnd Bergmann wrote:
-> gcc-5.x warns about a preexisting problem in the hpt36x pata driver:
+On Tue, May 19, 2015 at 07:44:17PM -0400, Martin K. Petersen wrote:
+> Commit 5d3abf8ff67f allowed us to fall back to the unqueued READ LOG
+> variant if the queued version failed. However, if the device did not
+> support the page at all we would end up looping due to a merge snafu.
 > 
-> drivers/ata/pata_hpt366.c: In function 'hpt36x_init_one':
-> drivers/ata/pata_hpt366.c:376:9: warning: assignment discards 'const' qualifier from pointer target type [-Wdiscarded-array-qualifiers]
-> 
-> Other ata drivers have the same problem, as ata_pci_bmdma_init_one
-> takes a non-const pointer, and they solve it by using a cast to
-> turn that pointer into a normal non-const pointer.
-> 
-> I also tried to change the ata core code to make host->private_data
-> a const pointer, but that quickly got out of hand, as some other
-> drivers expect it to be writable, so I ended up using the same
-> hack as the others here.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Ensure we only take the fallback path once.
 
-Applied to libata/for-4.2.
+Applied w/ commit title added in the description.
 
 Thanks.
 
