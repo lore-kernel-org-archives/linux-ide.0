@@ -1,46 +1,37 @@
 From: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH v3 0/5] AHCI and SATA PHY support for Broadcom STB SoCs
-Date: Thu, 21 May 2015 18:52:51 +0530
-Message-ID: <555DDC2B.1040608@ti.com>
-References: <1431473303-18873-1-git-send-email-computersforpeace@gmail.com>
+Subject: Re: [PATCH v3 4/5] phy: add Broadcom SATA3 PHY driver for Broadcom
+ STB SoCs
+Date: Thu, 21 May 2015 18:53:40 +0530
+Message-ID: <555DDC5C.1010003@ti.com>
+References: <1431473303-18873-1-git-send-email-computersforpeace@gmail.com> <1431473303-18873-5-git-send-email-computersforpeace@gmail.com> <55533059.6050705@ti.com> <20150513184921.GE11598@ld-irv-0074> <55543837.5030100@ti.com> <20150514173902.GK11598@ld-irv-0074> <5554DE86.8020005@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1431473303-18873-1-git-send-email-computersforpeace@gmail.com>
+In-Reply-To: <5554DE86.8020005@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Brian Norris <computersforpeace@gmail.com>, Tejun Heo <tj@kernel.org>
-Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Gregory Fong <gregory.0xf0@gmail.com>, Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, bcm-kernel-feedback-list@broadcom.com, Kevin Cernekee <cernekee@gmail.com>
+To: Florian Fainelli <f.fainelli@gmail.com>, Brian Norris <computersforpeace@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Gregory Fong <gregory.0xf0@gmail.com>, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, bcm-kernel-feedback-list@broadcom.com, Kevin Cernekee <cernekee@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-Hi Tejun,
 
-On Wednesday 13 May 2015 04:58 AM, Brian Norris wrote:
-> Few changes since v2, and the changes are *only* to the SATA driver, not to any
-> of the DT bindings or the PHY driver. I'm resending the whole series for
-> completeness.
->
-> I'll list the changelog in each patch, but in summary:
->
-> v2 -> v3:
->   - straighten out endianness for big endian MIPS and ARM in AHCI driver
->   - rename sata_brcmstb.c to ahci_brcmstb.c
->   - bind ahci_brcmstb.c against the specific string, "brcm,bcm7445-ahci" instead
->     of the generic one
->
-> Brian
->
-> Brian Norris (5):
->    Documentation: devicetree: add Broadcom SATA binding
->    Documentation: devicetree: add Broadcom SATA PHY binding
->    ata: add Broadcom AHCI SATA3 driver for STB chips
->    phy: add Broadcom SATA3 PHY driver for Broadcom STB SoCs
->    ARM: dts: brcmstb: add nodes for SATA controller and PHY
 
-I'll pick "[PATCH v3 2/5] Documentation: devicetree: add Broadcom SATA PHY 
-binding" and
-"[PATCH v4] phy: add Broadcom SATA3 PHY driver for Broadcom STB SoCs"
-in the linux-phy tree.
+On Thursday 14 May 2015 11:12 PM, Florian Fainelli wrote:
+> On 14/05/15 10:39, Brian Norris wrote:
+>> On Thu, May 14, 2015 at 11:22:55AM +0530, Kishon Vijay Abraham I wrote:
+>>> While sending the next version please also add a
+>>> MAINTAINERs entry for this driver.
+>>
+>> I think this has it covered, right?
+>>
+>> https://lkml.org/lkml/2015/3/18/932
+>
+> Kishon, this patch is on its way to arm-soc via a pull request:
+> http://www.spinics.net/lists/arm-kernel/msg418276.html
+>
+> this should address your concern. Thanks!
+
+Indeed!
 
 Thanks
 Kishon
