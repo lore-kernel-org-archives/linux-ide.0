@@ -1,54 +1,58 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v3 3/5] ata: add Broadcom AHCI SATA3 driver for STB chips
-Date: Thu, 21 May 2015 18:28:16 -0400
-Message-ID: <20150521222816.GO4914@htj.duckdns.org>
+From: Brian Norris <computersforpeace@gmail.com>
+Subject: Re: [PATCH v3 0/5] AHCI and SATA PHY support for Broadcom STB SoCs
+Date: Thu, 21 May 2015 15:38:25 -0700
+Message-ID: <20150521223825.GA27753@ld-irv-0074>
 References: <1431473303-18873-1-git-send-email-computersforpeace@gmail.com>
- <1431473303-18873-4-git-send-email-computersforpeace@gmail.com>
- <CAOMZO5DtNa2-bgdGmiiJM4JZ7MHz2THSsNMwT=9oWO1ThNu2KA@mail.gmail.com>
- <20150521222059.GM4914@htj.duckdns.org>
- <CAN8TOE-eQF1QGSYTm12ryWy868jfJ+B1XUbSgpm9v275rCaFTQ@mail.gmail.com>
+ <555DDC2B.1040608@ti.com>
+ <20150521220050.GF4914@htj.duckdns.org>
+ <20150521220138.GG4914@htj.duckdns.org>
+ <20150521220328.GE11598@ld-irv-0074>
+ <20150521220430.GI4914@htj.duckdns.org>
+ <20150521221306.GF11598@ld-irv-0074>
+ <20150521222350.GN4914@htj.duckdns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f53.google.com ([209.85.192.53]:34771 "EHLO
-	mail-qg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756098AbbEUW2V (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 May 2015 18:28:21 -0400
+Received: from mail-pd0-f172.google.com ([209.85.192.172]:36280 "EHLO
+	mail-pd0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754066AbbEUWjQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 May 2015 18:39:16 -0400
 Content-Disposition: inline
-In-Reply-To: <CAN8TOE-eQF1QGSYTm12ryWy868jfJ+B1XUbSgpm9v275rCaFTQ@mail.gmail.com>
+In-Reply-To: <20150521222350.GN4914@htj.duckdns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brian Norris <computersforpeace@gmail.com>
-Cc: Fabio Estevam <festevam@gmail.com>, Kishon Vijay Abraham I <kishon@ti.com>, Mark Rutland <mark.rutland@arm.com>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Hans de Goede <hdegoede@redhat.com>, Florian Fainelli <f.fainelli@gmail.com>, Pawel Moll <pawel.moll@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kevin Cernekee <cernekee@gmail.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>, Gregory Fong <gregory.0xf0@gmail.com>, Kumar Gala <galak@codeaurora.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Gregory Fong <gregory.0xf0@gmail.com>, Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, bcm-kernel-feedback-list@broadcom.com, Kevin Cernekee <cernekee@gmail.com>
 
-On Thu, May 21, 2015 at 03:26:10PM -0700, Brian Norris wrote:
-> On Thu, May 21, 2015 at 3:20 PM, Tejun Heo <tj@kernel.org> wrote:
-> > On Thu, May 21, 2015 at 07:16:07PM -0300, Fabio Estevam wrote:
-> >> On Tue, May 12, 2015 at 8:28 PM, Brian Norris
-> >> <computersforpeace@gmail.com> wrote:
-> >>
-> >> > +       res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ahci");
-> >> > +       ahci = devm_ioremap_resource(&pdev->dev, res);
-> >> > +       if (IS_ERR(ahci))
-> >> > +               return 0;
-> >>
-> >> You should propagate 'return PTR_ERR(ahci)' instead.
-> >
-> > Brian, can you please update the patch?
-> 
-> Note how the function brcm_ahci_get_portmask() is used. In brcm_ahci_probe():
-> 
->         priv->port_mask = brcm_ahci_get_portmask(pdev, priv);
->         if (!priv->port_mask)
->                 return -ENODEV;
-> 
-> I could try to change the return semantics if really needed. Or I
-> could add some comments on brcm_ahci_get_portmask() to note its return
-> semantics. Or I could just leave the driver as-is. Your call.
+I can explain part of this, but I'm curious if anyone else has different
+info.
 
-Ah, you're right.  It's fine.  Leave it alone.
+On Thu, May 21, 2015 at 06:23:50PM -0400, Tejun Heo wrote:
+> But the rules have never been clear to me.  If the subsystem
+> maintainer is okay with it, I'm happy to take the patches.  I'm just
+> kinda curious why this doesn't go through devicetree tree while some
+> other devicetree patches go through there.
 
-Thanks.
+AFAIK, there is no official tree for device tree bindings. There's just
+a mailing list and several reviewers, who usually try to help on the big
+picture binding review. Note that there's no tree listed in MAINTAINERS
+under:
 
--- 
-tejun
+  OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS
+
+But you will see several MAINTAINERS entries for different subdirs of
+Documentation/devicetree/bindings/. Maybe you should add one for .../ata
+if you're going to continue taking patches?
+
+It's possible you're confusing binding documentation with .dts source
+files? The DTS files (arch/*/boot/dts/) go through arch trees. For
+instance, the arm-soc maintainers have a structured process by which
+sub-architecture maintainers track .dts(i) file updates for their
+boards/chips and filter them up to Arnd, Olof, etc., via their separate
+'dts' branches. That's why Florian took patch 5 to his tree.
+
+> Can somebody explain the
+> overall policy to me?  I'm not looking for some absolute rules and
+> exceptions are fine but I do wanna have a general direction.
+
+Brian
