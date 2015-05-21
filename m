@@ -1,37 +1,38 @@
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH v3 4/5] phy: add Broadcom SATA3 PHY driver for Broadcom
- STB SoCs
-Date: Thu, 21 May 2015 18:53:40 +0530
-Message-ID: <555DDC5C.1010003@ti.com>
-References: <1431473303-18873-1-git-send-email-computersforpeace@gmail.com> <1431473303-18873-5-git-send-email-computersforpeace@gmail.com> <55533059.6050705@ti.com> <20150513184921.GE11598@ld-irv-0074> <55543837.5030100@ti.com> <20150514173902.GK11598@ld-irv-0074> <5554DE86.8020005@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] ata: hpt366: fix constant cast warning
+Date: Thu, 21 May 2015 17:38:47 -0400
+Message-ID: <20150521213847.GB4914@htj.duckdns.org>
+References: <2549322.XbiTlcDvMS@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <5554DE86.8020005@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <2549322.XbiTlcDvMS@wuerfel>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Florian Fainelli <f.fainelli@gmail.com>, Brian Norris <computersforpeace@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Gregory Fong <gregory.0xf0@gmail.com>, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, bcm-kernel-feedback-list@broadcom.com, Kevin Cernekee <cernekee@gmail.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
+On Tue, May 19, 2015 at 04:34:05PM +0200, Arnd Bergmann wrote:
+> gcc-5.x warns about a preexisting problem in the hpt36x pata driver:
+> 
+> drivers/ata/pata_hpt366.c: In function 'hpt36x_init_one':
+> drivers/ata/pata_hpt366.c:376:9: warning: assignment discards 'const' qualifier from pointer target type [-Wdiscarded-array-qualifiers]
+> 
+> Other ata drivers have the same problem, as ata_pci_bmdma_init_one
+> takes a non-const pointer, and they solve it by using a cast to
+> turn that pointer into a normal non-const pointer.
+> 
+> I also tried to change the ata core code to make host->private_data
+> a const pointer, but that quickly got out of hand, as some other
+> drivers expect it to be writable, so I ended up using the same
+> hack as the others here.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
+Applied to libata/for-4.2.
 
-On Thursday 14 May 2015 11:12 PM, Florian Fainelli wrote:
-> On 14/05/15 10:39, Brian Norris wrote:
->> On Thu, May 14, 2015 at 11:22:55AM +0530, Kishon Vijay Abraham I wrote:
->>> While sending the next version please also add a
->>> MAINTAINERs entry for this driver.
->>
->> I think this has it covered, right?
->>
->> https://lkml.org/lkml/2015/3/18/932
->
-> Kishon, this patch is on its way to arm-soc via a pull request:
-> http://www.spinics.net/lists/arm-kernel/msg418276.html
->
-> this should address your concern. Thanks!
+Thanks.
 
-Indeed!
-
-Thanks
-Kishon
+-- 
+tejun
