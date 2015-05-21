@@ -1,307 +1,295 @@
-From: Brian Norris <computersforpeace@gmail.com>
-Subject: [PATCH v4] phy: add Broadcom SATA3 PHY driver for Broadcom STB SoCs
-Date: Wed, 20 May 2015 17:18:40 -0700
-Message-ID: <1432167520-18643-1-git-send-email-computersforpeace@gmail.com>
-References: <1431473303-18873-5-git-send-email-computersforpeace@gmail.com>
+From: Suneel Garapati <suneel.garapati@xilinx.com>
+Subject: [PATCH 2/2] drivers: ata: add support for Ceva sata host controller
+Date: Thu, 21 May 2015 09:27:05 +0530
+Message-ID: <1432180625-25159-3-git-send-email-suneel.garapati@xilinx.com>
+References: <1432180625-25159-1-git-send-email-suneel.garapati@xilinx.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:33695 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753636AbbEUATc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 May 2015 20:19:32 -0400
-In-Reply-To: <1431473303-18873-5-git-send-email-computersforpeace@gmail.com>
+Received: from mail-bl2on0077.outbound.protection.outlook.com ([65.55.169.77]:48190
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751338AbbEUD5c (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 20 May 2015 23:57:32 -0400
+In-Reply-To: <1432180625-25159-1-git-send-email-suneel.garapati@xilinx.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Brian Norris <computersforpeace@gmail.com>, Gregory Fong <gregory.0xf0@gmail.com>, Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, bcm-kernel-feedback-list@broadcom.com, Kevin Cernekee <cernekee@gmail.com>
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: tj@kernel.org, michals@xilinx.com, sorenb@xilinx.com, devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Suneel Garapati <suneel.garapati@xilinx.com>
 
-Supports up to two ports which can each be powered on/off and configure=
-d
-independently.
+Adds support for Ceva sata host controller on Xilinx
+Zynq UltraScale+ MPSoC.
 
-Signed-off-by: Brian Norris <computersforpeace@gmail.com>
+Signed-off-by: Suneel Garapati <suneel.garapati@xilinx.com>
 ---
-Note this was part of a 5-patch series (this patch is 'In-Reply-To' ver=
-sion 3
-of the series). Because there were no comments on the other patches, an=
-d this
-driver only had a trivial modification, I'm sending just this single dr=
-iver.
-Please consider merging v3 of all the other patches.
+ drivers/ata/Kconfig     |   9 ++
+ drivers/ata/Makefile    |   1 +
+ drivers/ata/ahci_ceva.c | 225 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 235 insertions(+)
+ create mode 100644 drivers/ata/ahci_ceva.c
 
-v4:=20
-  - rename cfg_ssc_28nm() to brcm_sata_cfg_ssc_28nm()
-  - MAINTAINERS entry is queued up in arm-soc (regex for brcmstb)
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 9dca4b9..ef3cfde 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -124,6 +124,15 @@ config AHCI_IMX
 
-v3: no change
+	  If unsure, say N.
 
-v2:
-  - stop sharing SATA_TOP_CTRL registers with SATA driver
-  - kill custom xlate function
-
- drivers/phy/Kconfig            |   9 ++
- drivers/phy/Makefile           |   1 +
- drivers/phy/phy-brcmstb-sata.c | 216 +++++++++++++++++++++++++++++++++=
-++++++++
- 3 files changed, 226 insertions(+)
- create mode 100644 drivers/phy/phy-brcmstb-sata.c
-
-diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
-index a53bd5b52df9..36788b6f0220 100644
---- a/drivers/phy/Kconfig
-+++ b/drivers/phy/Kconfig
-@@ -309,4 +309,13 @@ config PHY_QCOM_UFS
- 	help
- 	  Support for UFS PHY on QCOM chipsets.
-=20
-+config PHY_BRCMSTB_SATA
-+	tristate "Broadcom STB SATA PHY driver"
-+	depends on ARCH_BRCMSTB
++config AHCI_CEVA
++	tristate "CEVA AHCI SATA support"
 +	depends on OF
-+	select GENERIC_PHY
 +	help
-+	  Enable this to support the SATA3 PHY on 28nm Broadcom STB SoCs.
-+	  Likely useful only with CONFIG_SATA_BRCMSTB enabled.
++	  This option enables support for the CEVA AHCI SATA.
++	  It can be found on the Xilinx Zynq UltraScale+ MPSoC.
 +
- endmenu
-diff --git a/drivers/phy/Makefile b/drivers/phy/Makefile
-index f12625178780..c61f3fdd191e 100644
---- a/drivers/phy/Makefile
-+++ b/drivers/phy/Makefile
-@@ -40,3 +40,4 @@ obj-$(CONFIG_PHY_STIH41X_USB)		+=3D phy-stih41x-usb.o
- obj-$(CONFIG_PHY_QCOM_UFS) 	+=3D phy-qcom-ufs.o
- obj-$(CONFIG_PHY_QCOM_UFS) 	+=3D phy-qcom-ufs-qmp-20nm.o
- obj-$(CONFIG_PHY_QCOM_UFS) 	+=3D phy-qcom-ufs-qmp-14nm.o
-+obj-$(CONFIG_PHY_BRCMSTB_SATA)		+=3D phy-brcmstb-sata.o
-diff --git a/drivers/phy/phy-brcmstb-sata.c b/drivers/phy/phy-brcmstb-s=
-ata.c
++	  If unsure, say N.
++
+ config AHCI_MVEBU
+	tristate "Marvell EBU AHCI SATA support"
+	depends on ARCH_MVEBU
+diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+index 40f7865..dc3a320 100644
+--- a/drivers/ata/Makefile
++++ b/drivers/ata/Makefile
+@@ -10,6 +10,7 @@ obj-$(CONFIG_SATA_INIC162X)	+= sata_inic162x.o
+ obj-$(CONFIG_SATA_SIL24)	+= sata_sil24.o
+ obj-$(CONFIG_SATA_DWC)		+= sata_dwc_460ex.o
+ obj-$(CONFIG_SATA_HIGHBANK)	+= sata_highbank.o libahci.o
++obj-$(CONFIG_AHCI_CEVA)		+= ahci_ceva.o libahci.o libahci_platform.o
+ obj-$(CONFIG_AHCI_DA850)	+= ahci_da850.o libahci.o libahci_platform.o
+ obj-$(CONFIG_AHCI_IMX)		+= ahci_imx.o libahci.o libahci_platform.o
+ obj-$(CONFIG_AHCI_MVEBU)	+= ahci_mvebu.o libahci.o libahci_platform.o
+diff --git a/drivers/ata/ahci_ceva.c b/drivers/ata/ahci_ceva.c
 new file mode 100644
-index 000000000000..b7e303d28caf
+index 0000000..dfcd2f4
 --- /dev/null
-+++ b/drivers/phy/phy-brcmstb-sata.c
-@@ -0,0 +1,216 @@
++++ b/drivers/ata/ahci_ceva.c
+@@ -0,0 +1,225 @@
 +/*
-+ * Broadcom SATA3 AHCI Controller PHY Driver
++ * Copyright (C) 2015 Xilinx, Inc.
++ * CEVA AHCI SATA platform driver
 + *
-+ * Copyright =C2=A9 2009-2015 Broadcom Corporation
++ * based on the AHCI SATA platform driver by Jeff Garzik and Anton Vorontsov
 + *
-+ * This program is free software; you can redistribute it and/or modif=
-y
-+ * it under the terms of the GNU General Public License as published b=
-y
-+ * the Free Software Foundation; either version 2, or (at your option)
-+ * any later version.
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
 + *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program. If not, see <http://www.gnu.org/licenses/>.
 + */
 +
-+#include <linux/device.h>
-+#include <linux/init.h>
-+#include <linux/interrupt.h>
-+#include <linux/io.h>
++#include <linux/ahci_platform.h>
 +#include <linux/kernel.h>
++#include <linux/libata.h>
 +#include <linux/module.h>
-+#include <linux/of.h>
-+#include <linux/phy/phy.h>
++#include <linux/of_device.h>
 +#include <linux/platform_device.h>
++#include "ahci.h"
 +
-+#define SATA_MDIO_BANK_OFFSET				0x23c
-+#define SATA_MDIO_REG_OFFSET(ofs)			((ofs) * 4)
-+#define SATA_MDIO_REG_SPACE_SIZE			0x1000
-+#define SATA_MDIO_REG_LENGTH				0x1f00
++/* Vendor Specific Register Offsets */
++#define AHCI_VEND_PCFG  0xA4
++#define AHCI_VEND_PPCFG 0xA8
++#define AHCI_VEND_PP2C  0xAC
++#define AHCI_VEND_PP3C  0xB0
++#define AHCI_VEND_PP4C  0xB4
++#define AHCI_VEND_PP5C  0xB8
++#define AHCI_VEND_PAXIC 0xC0
++#define AHCI_VEND_PTC   0xC8
 +
-+#define MAX_PORTS					2
++/* Vendor Specific Register bit definitions */
++#define PAXIC_ADBW_BW64 0x1
++#define PAXIC_MAWIDD	(1 << 8)
++#define PAXIC_MARIDD	(1 << 16)
++#define PAXIC_OTL	(0x4 << 20)
 +
-+/* Register offset between PHYs in PCB space */
-+#define SATA_MDIO_REG_SPACE_SIZE			0x1000
++#define PCFG_TPSS_VAL	(0x32 << 16)
++#define PCFG_TPRS_VAL	(0x2 << 12)
++#define PCFG_PAD_VAL	0x2
 +
-+struct brcm_sata_port {
-+	int portnum;
-+	struct phy *phy;
-+	struct brcm_sata_phy *phy_priv;
-+	bool ssc_en;
++#define PPCFG_TTA	0x1FFFE
++#define PPCFG_PSSO_EN	(1 << 28)
++#define PPCFG_PSS_EN	(1 << 29)
++#define PPCFG_ESDF_EN	(1 << 31)
++
++#define PP2C_CIBGMN	0x0F
++#define PP2C_CIBGMX	(0x25 << 8)
++#define PP2C_CIBGN	(0x18 << 16)
++#define PP2C_CINMP	(0x29 << 24)
++
++#define PP3C_CWBGMN	0x04
++#define PP3C_CWBGMX	(0x0B << 8)
++#define PP3C_CWBGN	(0x08 << 16)
++#define PP3C_CWNMP	(0x0F << 24)
++
++#define PP4C_BMX	0x0a
++#define PP4C_BNM	(0x08 << 8)
++#define PP4C_SFD	(0x4a << 16)
++#define PP4C_PTST	(0x06 << 24)
++
++#define PP5C_RIT	0x60216
++#define PP5C_RCT	(0x7f0 << 20)
++
++#define PTC_RX_WM_VAL	0x40
++#define PTC_RSVD	(1 << 27)
++
++#define PORT0_BASE	0x100
++#define PORT1_BASE	0x180
++
++/* Port Control Register Bit Definitions */
++#define PORT_SCTL_SPD_GEN2	(0x2 << 4)
++#define PORT_SCTL_SPD_GEN1	(0x1 << 4)
++#define PORT_SCTL_IPM		(0x3 << 8)
++
++#define PORT_BASE	0x100
++#define PORT_OFFSET	0x80
++#define NR_PORTS	2
++#define DRV_NAME	"ahci-ceva"
++#define CEVA_FLAG_BROKEN_GEN2	1
++
++struct ceva_ahci_priv {
++	struct platform_device *ahci_pdev;
++	int flags;
 +};
 +
-+struct brcm_sata_phy {
-+	struct device *dev;
-+	void __iomem *phy_base;
-+
-+	struct brcm_sata_port phys[MAX_PORTS];
++static struct ata_port_operations ahci_ceva_ops = {
++	.inherits = &ahci_platform_ops,
 +};
 +
-+enum sata_mdio_phy_regs_28nm {
-+	PLL_REG_BANK_0				=3D 0x50,
-+	PLL_REG_BANK_0_PLLCONTROL_0		=3D 0x81,
-+
-+	TXPMD_REG_BANK				=3D 0x1a0,
-+	TXPMD_CONTROL1				=3D 0x81,
-+	TXPMD_CONTROL1_TX_SSC_EN_FRC		=3D BIT(0),
-+	TXPMD_CONTROL1_TX_SSC_EN_FRC_VAL	=3D BIT(1),
-+	TXPMD_TX_FREQ_CTRL_CONTROL1		=3D 0x82,
-+	TXPMD_TX_FREQ_CTRL_CONTROL2		=3D 0x83,
-+	TXPMD_TX_FREQ_CTRL_CONTROL2_FMIN_MASK	=3D 0x3ff,
-+	TXPMD_TX_FREQ_CTRL_CONTROL3		=3D 0x84,
-+	TXPMD_TX_FREQ_CTRL_CONTROL3_FMAX_MASK	=3D 0x3ff,
++static const struct ata_port_info ahci_ceva_port_info = {
++	.flags          = AHCI_FLAG_COMMON,
++	.pio_mask       = ATA_PIO4,
++	.udma_mask      = ATA_UDMA6,
++	.port_ops	= &ahci_ceva_ops,
 +};
 +
-+static inline void __iomem *brcm_sata_phy_base(struct brcm_sata_port *=
-port)
++static void ahci_ceva_setup(struct ahci_host_priv *hpriv)
 +{
-+	struct brcm_sata_phy *priv =3D port->phy_priv;
-+
-+	return priv->phy_base + (port->portnum * SATA_MDIO_REG_SPACE_SIZE);
-+}
-+
-+static void brcm_sata_mdio_wr(void __iomem *addr, u32 bank, u32 ofs,
-+			      u32 msk, u32 value)
-+{
++	void __iomem *mmio = hpriv->mmio;
++	struct ceva_ahci_priv *cevapriv = hpriv->plat_data;
 +	u32 tmp;
++	int i;
 +
-+	writel(bank, addr + SATA_MDIO_BANK_OFFSET);
-+	tmp =3D readl(addr + SATA_MDIO_REG_OFFSET(ofs));
-+	tmp =3D (tmp & msk) | value;
-+	writel(tmp, addr + SATA_MDIO_REG_OFFSET(ofs));
-+}
++	/*
++	 * AXI Data bus width to 64
++	 * Set Mem Addr Read, Write ID for data transfers
++	 * Transfer limit to 72 DWord
++	 */
++	tmp = PAXIC_ADBW_BW64 | PAXIC_MAWIDD | PAXIC_MARIDD | PAXIC_OTL;
++	writel(tmp, mmio + AHCI_VEND_PAXIC);
 +
-+/* These defaults were characterized by H/W group */
-+#define FMIN_VAL_DEFAULT	0x3df
-+#define FMAX_VAL_DEFAULT	0x3df
-+#define FMAX_VAL_SSC		0x83
++	/* Set AHCI Enable */
++	tmp = readl(mmio + HOST_CTL);
++	tmp |= HOST_AHCI_EN;
++	writel(tmp, mmio + HOST_CTL);
 +
-+static void brcm_sata_cfg_ssc_28nm(struct brcm_sata_port *port)
-+{
-+	void __iomem *base =3D brcm_sata_phy_base(port);
-+	struct brcm_sata_phy *priv =3D port->phy_priv;
-+	u32 tmp;
++	for (i = 0; i < NR_PORTS; i++) {
++		/* TPSS TPRS scalars, CISE and Port Addr */
++		tmp = PCFG_TPSS_VAL | PCFG_TPRS_VAL | (PCFG_PAD_VAL + i);
++		writel(tmp, mmio + AHCI_VEND_PCFG);
 +
-+	/* override the TX spread spectrum setting */
-+	tmp =3D TXPMD_CONTROL1_TX_SSC_EN_FRC_VAL | TXPMD_CONTROL1_TX_SSC_EN_F=
-RC;
-+	brcm_sata_mdio_wr(base, TXPMD_REG_BANK, TXPMD_CONTROL1, ~tmp, tmp);
++		/* Port Phy Cfg register enables */
++		tmp = PPCFG_TTA | PPCFG_PSS_EN | PPCFG_ESDF_EN;
++		writel(tmp, mmio + AHCI_VEND_PPCFG);
 +
-+	/* set fixed min freq */
-+	brcm_sata_mdio_wr(base, TXPMD_REG_BANK, TXPMD_TX_FREQ_CTRL_CONTROL2,
-+			  ~TXPMD_TX_FREQ_CTRL_CONTROL2_FMIN_MASK,
-+			  FMIN_VAL_DEFAULT);
++		/* Phy Control OOB timing parameters COMINIT */
++		tmp = PP2C_CIBGMN | PP2C_CIBGMX | PP2C_CIBGN | PP2C_CINMP;
++		writel(tmp, mmio + AHCI_VEND_PP2C);
 +
-+	/* set fixed max freq depending on SSC config */
-+	if (port->ssc_en) {
-+		dev_info(priv->dev, "enabling SSC on port %d\n", port->portnum);
-+		tmp =3D FMAX_VAL_SSC;
-+	} else {
-+		tmp =3D FMAX_VAL_DEFAULT;
++		/* Phy Control OOB timing parameters COMWAKE */
++		tmp = PP3C_CWBGMN | PP3C_CWBGMX | PP3C_CWBGN | PP3C_CWNMP;
++		writel(tmp, mmio + AHCI_VEND_PP3C);
++
++		/* Phy Control Burst timing setting */
++		tmp = PP4C_BMX | PP4C_BNM | PP4C_SFD | PP4C_PTST;
++		writel(tmp, mmio + AHCI_VEND_PP4C);
++
++		/* Rate Change Timer and Retry Interval Timer setting */
++		tmp = PP5C_RIT | PP5C_RCT;
++		writel(tmp, mmio + AHCI_VEND_PP5C);
++
++		/* Rx Watermark setting  */
++		tmp = PTC_RX_WM_VAL | PTC_RSVD;
++		writel(tmp, mmio + AHCI_VEND_PTC);
++
++		/* Default to Gen 2 Speed and Gen 1 if Gen2 is broken */
++		tmp = PORT_SCTL_SPD_GEN2 | PORT_SCTL_IPM;
++		if (cevapriv->flags & CEVA_FLAG_BROKEN_GEN2)
++			tmp = PORT_SCTL_SPD_GEN1 | PORT_SCTL_IPM;
++		writel(tmp, mmio + PORT_SCR_CTL + PORT_BASE + PORT_OFFSET * i);
 +	}
-+
-+	brcm_sata_mdio_wr(base, TXPMD_REG_BANK, TXPMD_TX_FREQ_CTRL_CONTROL3,
-+			  ~TXPMD_TX_FREQ_CTRL_CONTROL3_FMAX_MASK, tmp);
 +}
 +
-+static int brcm_sata_phy_init(struct phy *phy)
-+{
-+	struct brcm_sata_port *port =3D phy_get_drvdata(phy);
-+
-+	brcm_sata_cfg_ssc_28nm(port);
-+
-+	return 0;
-+}
-+
-+static struct phy_ops phy_ops_28nm =3D {
-+	.init		=3D brcm_sata_phy_init,
-+	.owner		=3D THIS_MODULE,
++static struct scsi_host_template ahci_platform_sht = {
++	AHCI_SHT(DRV_NAME),
 +};
 +
-+static const struct of_device_id brcm_sata_phy_of_match[] =3D {
-+	{ .compatible	=3D "brcm,bcm7445-sata-phy" },
++static int ceva_ahci_probe(struct platform_device *pdev)
++{
++	struct device_node *np = pdev->dev.of_node;
++	struct device *dev = &pdev->dev;
++	struct ahci_host_priv *hpriv;
++	struct ceva_ahci_priv *cevapriv;
++
++	cevapriv = devm_kzalloc(dev, sizeof(*cevapriv), GFP_KERNEL);
++	if (!cevapriv)
++		return -ENOMEM;
++
++	cevapriv->ahci_pdev = pdev;
++
++	hpriv = ahci_platform_get_resources(pdev);
++	if (IS_ERR(hpriv))
++		return PTR_ERR(hpriv);
++
++	if (of_property_read_bool(np, "ceva,broken-gen2"))
++		cevapriv->flags = CEVA_FLAG_BROKEN_GEN2;
++
++	hpriv->plat_data = cevapriv;
++
++	/* CEVA specific initialization */
++	ahci_ceva_setup(hpriv);
++
++	return ahci_platform_init_host(pdev, hpriv, &ahci_ceva_port_info,
++					&ahci_platform_sht);
++}
++
++static int __maybe_unused ceva_ahci_suspend(struct device *dev)
++{
++	return ahci_platform_suspend_host(dev);
++}
++
++static int __maybe_unused ceva_ahci_resume(struct device *dev)
++{
++	return ahci_platform_resume_host(dev);
++}
++
++static SIMPLE_DEV_PM_OPS(ahci_ceva_pm_ops, ceva_ahci_suspend, ceva_ahci_resume);
++
++static const struct of_device_id ceva_ahci_of_match[] = {
++	{ .compatible = "ceva,ahci-1v84" },
 +	{},
 +};
-+MODULE_DEVICE_TABLE(of, brcm_sata_phy_of_match);
++MODULE_DEVICE_TABLE(of, ceva_ahci_of_match);
 +
-+static int brcm_sata_phy_probe(struct platform_device *pdev)
-+{
-+	struct device *dev =3D &pdev->dev;
-+	struct device_node *dn =3D dev->of_node, *child;
-+	struct brcm_sata_phy *priv;
-+	struct resource *res;
-+	struct phy_provider *provider;
-+	int count =3D 0;
-+
-+	if (of_get_child_count(dn) =3D=3D 0)
-+		return -ENODEV;
-+
-+	priv =3D devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
-+	if (!priv)
-+		return -ENOMEM;
-+	dev_set_drvdata(dev, priv);
-+	priv->dev =3D dev;
-+
-+	res =3D platform_get_resource_byname(pdev, IORESOURCE_MEM, "phy");
-+	priv->phy_base =3D devm_ioremap_resource(dev, res);
-+	if (IS_ERR(priv->phy_base))
-+		return PTR_ERR(priv->phy_base);
-+
-+	for_each_available_child_of_node(dn, child) {
-+		unsigned int id;
-+		struct brcm_sata_port *port;
-+
-+		if (of_property_read_u32(child, "reg", &id)) {
-+			dev_err(dev, "missing reg property in node %s\n",
-+					child->name);
-+			return -EINVAL;
-+		}
-+
-+		if (id >=3D MAX_PORTS) {
-+			dev_err(dev, "invalid reg: %u\n", id);
-+			return -EINVAL;
-+		}
-+		if (priv->phys[id].phy) {
-+			dev_err(dev, "already registered port %u\n", id);
-+			return -EINVAL;
-+		}
-+
-+		port =3D &priv->phys[id];
-+		port->portnum =3D id;
-+		port->phy_priv =3D priv;
-+		port->phy =3D devm_phy_create(dev, child, &phy_ops_28nm);
-+		port->ssc_en =3D of_property_read_bool(child, "brcm,enable-ssc");
-+		if (IS_ERR(port->phy)) {
-+			dev_err(dev, "failed to create PHY\n");
-+			return PTR_ERR(port->phy);
-+		}
-+
-+		phy_set_drvdata(port->phy, port);
-+		count++;
-+	}
-+
-+	provider =3D devm_of_phy_provider_register(dev, of_phy_simple_xlate);
-+	if (IS_ERR(provider)) {
-+		dev_err(dev, "could not register PHY provider\n");
-+		return PTR_ERR(provider);
-+	}
-+
-+	dev_info(dev, "registered %d port(s)\n", count);
-+
-+	return 0;
-+}
-+
-+static struct platform_driver brcm_sata_phy_driver =3D {
-+	.probe	=3D brcm_sata_phy_probe,
-+	.driver	=3D {
-+		.of_match_table	=3D brcm_sata_phy_of_match,
-+		.name		=3D "brcmstb-sata-phy",
-+	}
++static struct platform_driver ceva_ahci_driver = {
++	.probe = ceva_ahci_probe,
++	.remove = ata_platform_remove_one,
++	.driver = {
++		.name = DRV_NAME,
++		.of_match_table = ceva_ahci_of_match,
++		.pm = &ahci_ceva_pm_ops,
++	},
 +};
-+module_platform_driver(brcm_sata_phy_driver);
++module_platform_driver(ceva_ahci_driver);
 +
-+MODULE_DESCRIPTION("Broadcom STB SATA PHY driver");
-+MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Marc Carino");
-+MODULE_AUTHOR("Brian Norris");
-+MODULE_ALIAS("platform:phy-brcmstb-sata");
---=20
-1.9.1
-
++MODULE_DESCRIPTION("CEVA AHCI SATA platform driver");
++MODULE_AUTHOR("Xilinx Inc.");
++MODULE_LICENSE("GPLv2");
+--
+2.1.2
