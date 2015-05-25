@@ -1,40 +1,45 @@
-From: BARRISTER PAUL WILLIAMS <pw190339@gmail.com>
-Subject: Honourable Barrister Paul Williams.
-Date: Fri, 22 May 2015 20:25:14 -0700
-Message-ID: <CADGqVRLj2CstifdWtCQsw0s3SaG_HoRXcp6fajmiWwatp9m6qA@mail.gmail.com>
-Reply-To: honourablebarrister0@gmail.com
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v3 0/5] AHCI and SATA PHY support for Broadcom STB SoCs
+Date: Sun, 24 May 2015 20:08:33 -0400
+Message-ID: <20150525000833.GF7099@htj.duckdns.org>
+References: <1431473303-18873-1-git-send-email-computersforpeace@gmail.com>
+ <555DDC2B.1040608@ti.com>
+ <20150521220050.GF4914@htj.duckdns.org>
+ <20150521220138.GG4914@htj.duckdns.org>
+ <20150521220328.GE11598@ld-irv-0074>
+ <20150521220430.GI4914@htj.duckdns.org>
+ <20150521221306.GF11598@ld-irv-0074>
+ <20150521222350.GN4914@htj.duckdns.org>
+ <20150521223825.GA27753@ld-irv-0074>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:33423 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756243AbbEWDZP convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 May 2015 23:25:15 -0400
-Received: by igbpi8 with SMTP id pi8so5162560igb.0
-        for <linux-ide@vger.kernel.org>; Fri, 22 May 2015 20:25:14 -0700 (PDT)
+Received: from mail-qk0-f178.google.com ([209.85.220.178]:33359 "EHLO
+	mail-qk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751366AbbEYAIh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 24 May 2015 20:08:37 -0400
+Content-Disposition: inline
+In-Reply-To: <20150521223825.GA27753@ld-irv-0074>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Brian Norris <computersforpeace@gmail.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Gregory Fong <gregory.0xf0@gmail.com>, Florian Fainelli <f.fainelli@gmail.com>, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, bcm-kernel-feedback-list@broadcom.com, Kevin Cernekee <cernekee@gmail.com>
 
-Attn: Sir/Madam
+Hello, Brian.
 
-I am Honourable Barrister Paul Williams the personal resident Attorney
-here in Burkina Faso to Late Mr. Muammar Muhammad Abu Minyar
-al-Gaddafi of Libya c. 1942 =E2=80=93 20 October 2011.
+On Thu, May 21, 2015 at 03:38:25PM -0700, Brian Norris wrote:
+> It's possible you're confusing binding documentation with .dts source
+> files? The DTS files (arch/*/boot/dts/) go through arch trees. For
+> instance, the arm-soc maintainers have a structured process by which
+> sub-architecture maintainers track .dts(i) file updates for their
+> boards/chips and filter them up to Arnd, Olof, etc., via their separate
+> 'dts' branches. That's why Florian took patch 5 to his tree.
 
-My client Late Mr. Muammar Muhammad Abu Minyar al-Gaddafi c. 1942 =E2=80=
-=93 20
-October 2011, was having a deposit sum of {thirty million four Hundred
-thousand united state dollars} only ($30.4M USD) with a security
-finance firm affiliated with African development bank here in Burkina
-=46aso.
+Yeah, I think that's why I'm constantly getting confused, so the
+binding documentation and actual libata changes through libata and the
+rest through arch trees.  Got it.
 
-With the above explanation=E2=80=99s I want to move this money from Bur=
-kina
-=46aso to your country, affidavit on your name, but note that this is a
-deal between me and you and should not be related to anybody until the
-deal is over for security reasons, please if interested reply as soon
-as possible.
+Thanks for the explanation.
 
-Thanks,
-Honourable Barrister Paul Williams.
+-- 
+tejun
