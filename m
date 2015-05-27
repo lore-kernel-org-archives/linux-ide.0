@@ -1,25 +1,52 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ata:sata_nv - Change 1 to true for bool type variable.
-Date: Tue, 26 May 2015 14:47:58 -0400
-Message-ID: <20150526184758.GK7099@htj.duckdns.org>
-References: <1432584505-5274-1-git-send-email-shailendra.capricorn@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1432584505-5274-1-git-send-email-shailendra.capricorn@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Shailendra Verma <shailendra.capricorn@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Robert Richter <rric@kernel.org>
+Subject: [PATCH v3 0/3] AHCI: Add generic MSI-X interrupt support to SATA PCI driver
+Date: Wed, 27 May 2015 10:01:30 +0200
+Message-ID: <1432713693-4282-1-git-send-email-rric@kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:38431 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752174AbbE0IB4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 May 2015 04:01:56 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Sunil Goutham <sgoutham@cavium.com>, Jiang Liu <jiang.liu@linux.intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Robert Richter <rrichter@cavium.com>
 
-On Tue, May 26, 2015 at 01:38:25AM +0530, Shailendra Verma wrote:
-> The variable swncq_enabled is bool type. Hence initialize it
-> with true instead of 1.
-> 
-> Signed-off-by: Shailendra Verma <shailendra.capricorn@gmail.com>
+From: Robert Richter <rrichter@cavium.com>
 
-Applied to libata/for-4.2.
+This patch set adds generic support for MSI-X interrupts to the SATA
+PCI driver.
+
+The first 2 patches rework the code, one splits msi and intx code into
+separate functions, the other changes interrupt initialization to
+store the irq number in the ahci data structure (struct
+ahci_host_priv). Both changes are needed to implement MSI-X support in
+the last 3rd patch.
+
+v3:
+ * store irq number in struct ahci_host_priv
+ * change initialization order from msix-msi-intx to msi-msix-intx
+ * improve comments in ahci_init_msix()
+ * improve error message in ahci_init_msix()
+ * do not enable MSI-X if MSI is actively disabled for the device
+
+v2:
+ * determine irq vector from pci_dev->msi_list
+
+
+Robert Richter (3):
+  ahci: Move interrupt enablement code to separate functions
+  ahci: Store irq number in struct ahci_host_priv
+  AHCI: Add generic MSI-X interrupt support to SATA PCI driver
+
+ drivers/ata/acard-ahci.c       |   4 +-
+ drivers/ata/ahci.c             | 138 ++++++++++++++++++++++++++++++++++++-----
+ drivers/ata/ahci.h             |   4 +-
+ drivers/ata/libahci.c          |  25 +++-----
+ drivers/ata/libahci_platform.c |   4 +-
+ drivers/ata/sata_highbank.c    |   3 +-
+ 6 files changed, 143 insertions(+), 35 deletions(-)
 
 -- 
-tejun
+2.1.1
+
