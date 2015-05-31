@@ -1,13 +1,13 @@
 From: Robert Richter <rric@kernel.org>
-Subject: [PATCH v4 3/3] AHCI: Add generic MSI-X interrupt support to SATA PCI driver
-Date: Sun, 31 May 2015 13:55:19 +0200
-Message-ID: <1433073319-13796-4-git-send-email-rric@kernel.org>
+Subject: [PATCH v4 1/3] ahci: Move interrupt enablement code to a separate function
+Date: Sun, 31 May 2015 13:55:17 +0200
+Message-ID: <1433073319-13796-2-git-send-email-rric@kernel.org>
 References: <1433073319-13796-1-git-send-email-rric@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wg0-f48.google.com ([74.125.82.48]:33045 "EHLO
-	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758158AbbEaLze (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 31 May 2015 07:55:34 -0400
+Received: from mail-wg0-f41.google.com ([74.125.82.41]:33025 "EHLO
+	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754026AbbEaLzb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 31 May 2015 07:55:31 -0400
 In-Reply-To: <1433073319-13796-1-git-send-email-rric@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -16,194 +16,82 @@ Cc: Sunil Goutham <sgoutham@cavium.com>, Jiang Liu <jiang.liu@linux.intel.com>, 
 
 From: Robert Richter <rrichter@cavium.com>
 
-This patch adds generic support for MSI-X interrupts to the SATA PCI
-driver. MSI-X support is needed for host controller that only have
-MSI-X support implemented, such as the controller on Cavium's ThunderX
-SoC. Only support for single interrupts is added, multiple per-port
-MSI-X interrupts are not yet implemented.
-
-The new implementation still initializes MSIs first. Only if that
-fails, the code tries to enable MSI-X. If that fails too, setup is
-continued with intx interrupts.
-
-To not break other chips by this generic code change, there are the
-following precautions:
-
- * Interrupt ranges are not enabled at all.
-
- * Only single interrupt mode is enabled for msix cap devices. These
-   devices require a single port only or a total number of int entries
-   less than the total number of ports. In this case only one
-   interrupt will be enabled.
-
- * During the discussion with Tejun we agreed to change the init
-   sequence from msix-msi-intx to msi-msix-intx. Thus, if a device
-   offers msi and init does not fail, the msix init code will not be
-   executed. This is equivalent to current code.
-
-With this, the code only setups single mode msix as a last resort if
-msi fails. No interrupt range is enabled at all. Only one interrupt
-will be enabled.
-
-v4:
- * removed implementation of ahci_init_intx()
- * improved patch descriptions
- * rebased onto libata/for-4.2
-
-v3:
- * store irq number in struct ahci_host_priv
- * change initialization order from msix-msi-intx to msi-msix-intx
- * improve comments in ahci_init_msix()
- * improve error message in ahci_init_msix()
- * do not enable MSI-X if MSI is actively disabled for the device
-
-v2:
- * determine irq vector from pci_dev->msi_list
-
-Based on a patch from Sunil Goutham <sgoutham@cavium.com>.
+This patch refactors ahci_init_interrupts() and moves msi code to a
+separate function. Need the split since we add msix initialization in
+a later patch. The initialization for msix will be done after msi but
+before intx.
 
 Signed-off-by: Robert Richter <rrichter@cavium.com>
 ---
- drivers/ata/ahci.c | 87 +++++++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 86 insertions(+), 1 deletion(-)
+ drivers/ata/ahci.c | 31 ++++++++++++++++++++++---------
+ 1 file changed, 22 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index a3c66c3bb76e..30200e757cdb 100644
+index c7a92a743ed0..7ba5332476c6 100644
 --- a/drivers/ata/ahci.c
 +++ b/drivers/ata/ahci.c
-@@ -42,6 +42,7 @@
- #include <linux/device.h>
- #include <linux/dmi.h>
- #include <linux/gfp.h>
-+#include <linux/msi.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_cmnd.h>
- #include <linux/libata.h>
-@@ -52,6 +53,7 @@
- 
- enum {
- 	AHCI_PCI_BAR_STA2X11	= 0,
-+	AHCI_PCI_BAR_CAVIUM	= 0,
- 	AHCI_PCI_BAR_ENMOTUS	= 2,
- 	AHCI_PCI_BAR_STANDARD	= 5,
- };
-@@ -499,6 +501,9 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	/* Enmotus */
- 	{ PCI_DEVICE(0x1c44, 0x8000), board_ahci },
- 
-+	/* Cavium */
-+	{ PCI_DEVICE(0x177d, 0xa01c), .driver_data = board_ahci },
-+
- 	/* Generic, PCI class code for AHCI */
- 	{ PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
- 	  PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff, board_ahci },
-@@ -1201,6 +1206,80 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
+@@ -1201,17 +1201,17 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
  {}
  #endif
  
-+static struct msi_desc *msix_get_desc(struct pci_dev *dev, u16 entry)
-+{
-+	struct msi_desc *desc;
-+
-+	list_for_each_entry(desc, &dev->msi_list, list) {
-+		if (desc->msi_attrib.entry_nr == entry)
-+			return desc;
-+	}
-+
-+	return NULL;
-+}
-+
-+static int ahci_init_msix(struct pci_dev *pdev, unsigned int n_ports,
-+			  struct ahci_host_priv *hpriv)
-+{
-+	struct msi_desc *desc;
-+	int rc, nvec;
-+	struct msix_entry entry = {};
-+
-+	/* Do not init MSI-X if MSI is disabled for the device */
-+	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
-+		return -ENODEV;
-+
-+	nvec = pci_msix_vec_count(pdev);
-+	if (nvec < 0)
-+		return nvec;
-+
-+	if (!nvec) {
-+		rc = -ENODEV;
-+		goto fail;
-+	}
-+
-+	/*
-+	 * Per-port msix interrupts are not supported. Assume single
-+	 * port interrupts for:
-+	 *
-+	 *  n_ports == 1, or
-+	 *  nvec < n_ports.
-+	 *
-+	 * We also need to check for n_ports != 0 which is implicitly
-+	 * covered here since nvec > 0.
-+	 */
-+	if (n_ports != 1 && nvec >= n_ports) {
-+		rc = -ENOSYS;
-+		goto fail;
-+	}
-+
-+	/*
-+	 * There can exist more than one vector (e.g. for error
-+	 * detection or hdd hotplug). Then the first vector is used,
-+	 * all others are ignored. Only enable the first entry here
-+	 * (entry.entry = 0).
-+	 */
-+	rc = pci_enable_msix_exact(pdev, &entry, 1);
-+	if (rc < 0)
-+		goto fail;
-+
-+	desc = msix_get_desc(pdev, 0);	/* first entry */
-+	if (!desc) {
-+		rc = -EINVAL;
-+		goto fail;
-+	}
-+
-+	hpriv->irq = desc->irq;
-+
-+	return 1;
-+fail:
-+	dev_err(&pdev->dev,
-+		"failed to enable MSI-X with error %d, # of vectors: %d\n",
-+		rc, nvec);
-+
-+	return rc;
-+}
-+
- static int ahci_init_msi(struct pci_dev *pdev, unsigned int n_ports,
- 			struct ahci_host_priv *hpriv)
+-static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
+-				struct ahci_host_priv *hpriv)
++static int ahci_init_msi(struct pci_dev *pdev, unsigned int n_ports,
++			struct ahci_host_priv *hpriv)
  {
-@@ -1260,6 +1339,10 @@ static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
- 	if (nvec >= 0)
- 		return nvec;
+ 	int rc, nvec;
  
-+	nvec = ahci_init_msix(pdev, n_ports, hpriv);
+ 	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
+-		goto intx;
++		return -ENODEV;
+ 
+ 	nvec = pci_msi_vec_count(pdev);
+ 	if (nvec < 0)
+-		goto intx;
++		return nvec;
+ 
+ 	/*
+ 	 * If number of MSIs is less than number of ports then Sharing Last
+@@ -1224,8 +1224,8 @@ static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
+ 	rc = pci_enable_msi_exact(pdev, nvec);
+ 	if (rc == -ENOSPC)
+ 		goto single_msi;
+-	else if (rc < 0)
+-		goto intx;
++	if (rc < 0)
++		return rc;
+ 
+ 	/* fallback to single MSI mode if the controller enforced MRSM mode */
+ 	if (readl(hpriv->mmio + HOST_CTL) & HOST_MRSM) {
+@@ -1240,12 +1240,25 @@ static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
+ 	return nvec;
+ 
+ single_msi:
+-	if (pci_enable_msi(pdev))
+-		goto intx;
++	rc = pci_enable_msi(pdev);
++	if (rc < 0)
++		return rc;
++
+ 	return 1;
++}
+ 
+-intx:
++static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
++				struct ahci_host_priv *hpriv)
++{
++	int nvec;
++
++	nvec = ahci_init_msi(pdev, n_ports, hpriv);
 +	if (nvec >= 0)
 +		return nvec;
 +
- 	/* lagacy intx interrupts */
++	/* lagacy intx interrupts */
  	pci_intx(pdev, 1);
- 	hpriv->irq = pdev->irq;
-@@ -1302,11 +1385,13 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		dev_info(&pdev->dev,
- 			 "PDC42819 can only drive SATA devices with this driver\n");
++
+ 	return 0;
+ }
  
--	/* Both Connext and Enmotus devices use non-standard BARs */
-+	/* Some devices use non-standard BARs */
- 	if (pdev->vendor == PCI_VENDOR_ID_STMICRO && pdev->device == 0xCC06)
- 		ahci_pci_bar = AHCI_PCI_BAR_STA2X11;
- 	else if (pdev->vendor == 0x1c44 && pdev->device == 0x8000)
- 		ahci_pci_bar = AHCI_PCI_BAR_ENMOTUS;
-+	else if (pdev->vendor == 0x177d && pdev->device == 0xa01c)
-+		ahci_pci_bar = AHCI_PCI_BAR_CAVIUM;
- 
- 	/*
- 	 * The JMicron chip 361/363 contains one SATA controller and one
 -- 
 2.1.1
 
