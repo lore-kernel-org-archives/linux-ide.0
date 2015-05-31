@@ -1,97 +1,67 @@
-From: Robert Richter <rric@kernel.org>
-Subject: [PATCH v4 1/3] ahci: Move interrupt enablement code to a separate function
-Date: Sun, 31 May 2015 13:55:17 +0200
-Message-ID: <1433073319-13796-2-git-send-email-rric@kernel.org>
-References: <1433073319-13796-1-git-send-email-rric@kernel.org>
+From: Ian Campbell <ijc@debian.org>
+Subject: Re: QNAP TS-419: sata_mv fails to initialise with "can't set global
+ reset"
+Date: Sun, 31 May 2015 19:54:35 +0100
+Message-ID: <1433098475.5748.280.camel@debian.org>
+References: <1433068534.5748.276.camel@debian.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wg0-f41.google.com ([74.125.82.41]:33025 "EHLO
-	mail-wg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754026AbbEaLzb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 31 May 2015 07:55:31 -0400
-In-Reply-To: <1433073319-13796-1-git-send-email-rric@kernel.org>
+Received: from benson.vm.bytemark.co.uk ([212.110.190.137]:53274 "EHLO
+	benson.vm.bytemark.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751099AbbEaSym (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 31 May 2015 14:54:42 -0400
+In-Reply-To: <1433068534.5748.276.camel@debian.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Sunil Goutham <sgoutham@cavium.com>, Jiang Liu <jiang.liu@linux.intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Robert Richter <rrichter@cavium.com>
+To: Jason Cooper <jason@lakedaemon.net>
+Cc: Andrew Lunn <andrew@lunn.ch>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org
 
-From: Robert Richter <rrichter@cavium.com>
+On Sun, 2015-05-31 at 11:35 +0100, Ian Campbell wrote:
+> Hi,
+> 
+> After updating to 4.0.4 (from the Debian kernel package)
 
-This patch refactors ahci_init_interrupts() and moves msi code to a
-separate function. Need the split since we add msix initialization in
-a later patch. The initialization for msix will be done after msi but
-before intx.
+FYI 4.1-rc5 behaves the same.
 
-Signed-off-by: Robert Richter <rrichter@cavium.com>
----
- drivers/ata/ahci.c | 31 ++++++++++++++++++++++---------
- 1 file changed, 22 insertions(+), 9 deletions(-)
+>  my TS-419 can
+> no longer see its SATA disks. In dmesg I see:
+> 
+> [    2.599060] SCSI subsystem initialized
+> [    2.662882] libata version 3.00 loaded.
+> [    2.664776] sata_mv 0000:01:00.0: version 1.28
+> [    2.664888] pci 0000:00:01.0: enabling device (0140 -> 0143)
+> [    2.687579] sata_mv: can't set global reset
+> [    2.691825] sata_mv 0000:01:00.0: Driver probe function unexpectedly returned 1
+> [    2.734954] sata_mv f1080000.sata: version 1.28
+> [    2.735222] sata_mv f1080000.sata: slots 32 ports 2
+> [    2.773358] scsi host0: sata_mv
+> [    2.785712] scsi host1: sata_mv
+> [    2.796204] ata1: SATA max UDMA/133 irq 35
+> [    2.800359] ata2: SATA max UDMA/133 irq 35
+> [    3.120986] ata1: SATA link down (SStatus 0 SControl F300)
+> [    3.444974] ata2: SATA link down (SStatus 0 SControl F300)
+> 
+> The last version I tried which worked was the 3.18.5 package.
+> 
+> This is using kirkwood-ts419-6281.dtb, which given this I think is the
+> correct one:
+> 
+> [    0.000000] Linux version 4.0.0-2-kirkwood (debian-kernel@lists.debian.org) (gcc version 4.9.2 (Debian 4.9.2-18) ) #1 Debian 4.0.4-1 (2015-05-26)
+> [    0.000000] CPU: Feroceon 88FR131 [56251311] revision 1 (ARMv5TE), cr=0005397f
+> [    0.000000] CPU: VIVT data cache, VIVT instruction cache
+> [    0.000000] Machine model: QNAP TS419 family
+> [...]
+> [    0.044889] mvebu-soc-id: MVEBU SoC ID=0x6281, Rev=0x2
+> 
+> I can also see both PCI devices which IIRC is the main difference
+> between the 6281 and 6282.
+> 
+> I don't see anything in the git logs after 4.0 which looks like an
+> obviously related fix, but I'm currently building 4.1-rc5 to have a
+> check.
+> 
+> Ian.
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index c7a92a743ed0..7ba5332476c6 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1201,17 +1201,17 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
- {}
- #endif
- 
--static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
--				struct ahci_host_priv *hpriv)
-+static int ahci_init_msi(struct pci_dev *pdev, unsigned int n_ports,
-+			struct ahci_host_priv *hpriv)
- {
- 	int rc, nvec;
- 
- 	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
--		goto intx;
-+		return -ENODEV;
- 
- 	nvec = pci_msi_vec_count(pdev);
- 	if (nvec < 0)
--		goto intx;
-+		return nvec;
- 
- 	/*
- 	 * If number of MSIs is less than number of ports then Sharing Last
-@@ -1224,8 +1224,8 @@ static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
- 	rc = pci_enable_msi_exact(pdev, nvec);
- 	if (rc == -ENOSPC)
- 		goto single_msi;
--	else if (rc < 0)
--		goto intx;
-+	if (rc < 0)
-+		return rc;
- 
- 	/* fallback to single MSI mode if the controller enforced MRSM mode */
- 	if (readl(hpriv->mmio + HOST_CTL) & HOST_MRSM) {
-@@ -1240,12 +1240,25 @@ static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
- 	return nvec;
- 
- single_msi:
--	if (pci_enable_msi(pdev))
--		goto intx;
-+	rc = pci_enable_msi(pdev);
-+	if (rc < 0)
-+		return rc;
-+
- 	return 1;
-+}
- 
--intx:
-+static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
-+				struct ahci_host_priv *hpriv)
-+{
-+	int nvec;
-+
-+	nvec = ahci_init_msi(pdev, n_ports, hpriv);
-+	if (nvec >= 0)
-+		return nvec;
-+
-+	/* lagacy intx interrupts */
- 	pci_intx(pdev, 1);
-+
- 	return 0;
- }
- 
--- 
-2.1.1
 
