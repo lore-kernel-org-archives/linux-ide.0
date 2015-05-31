@@ -1,242 +1,209 @@
 From: Robert Richter <rric@kernel.org>
-Subject: [PATCH v4 2/3] ahci: Store irq number in struct ahci_host_priv
-Date: Sun, 31 May 2015 13:55:18 +0200
-Message-ID: <1433073319-13796-3-git-send-email-rric@kernel.org>
+Subject: [PATCH v4 3/3] AHCI: Add generic MSI-X interrupt support to SATA PCI driver
+Date: Sun, 31 May 2015 13:55:19 +0200
+Message-ID: <1433073319-13796-4-git-send-email-rric@kernel.org>
 References: <1433073319-13796-1-git-send-email-rric@kernel.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wi0-f180.google.com ([209.85.212.180]:35039 "EHLO
-	mail-wi0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758147AbbEaLzd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 31 May 2015 07:55:33 -0400
+Received: from mail-wg0-f48.google.com ([74.125.82.48]:33045 "EHLO
+	mail-wg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758158AbbEaLze (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 31 May 2015 07:55:34 -0400
 In-Reply-To: <1433073319-13796-1-git-send-email-rric@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>
+To: Tejun Heo <tj@kernel.org>
 Cc: Sunil Goutham <sgoutham@cavium.com>, Jiang Liu <jiang.liu@linux.intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Robert Richter <rrichter@cavium.com>
 
 From: Robert Richter <rrichter@cavium.com>
 
-Currently, ahci supports only msi and intx. To also support msix the
-handling of the irq number need to be changed. The irq number for msix
-devices is taken from msi_list instead of pci_dev. Thus, the irq
-number of a device needs to be stored in struct ahci_host_priv now.
-This allows the host controller to be activated in a generic way.
+This patch adds generic support for MSI-X interrupts to the SATA PCI
+driver. MSI-X support is needed for host controller that only have
+MSI-X support implemented, such as the controller on Cavium's ThunderX
+SoC. Only support for single interrupts is added, multiple per-port
+MSI-X interrupts are not yet implemented.
 
-This change is only intended for ahci drivers. For that reason the irq
-number is stored in struct ahci_host_priv used only by ahci drivers.
-Thus, the ABI changes only for ahci_host_activate(), but existing ata
-drivers (about 50) are unaffected and keep unchanged. All users of
-ahci_host_activate() have been updated.
+The new implementation still initializes MSIs first. Only if that
+fails, the code tries to enable MSI-X. If that fails too, setup is
+continued with intx interrupts.
 
-While touching drivers/ata/libahci.c, doing a small code cleanup in
-ahci_port_start().
+To not break other chips by this generic code change, there are the
+following precautions:
+
+ * Interrupt ranges are not enabled at all.
+
+ * Only single interrupt mode is enabled for msix cap devices. These
+   devices require a single port only or a total number of int entries
+   less than the total number of ports. In this case only one
+   interrupt will be enabled.
+
+ * During the discussion with Tejun we agreed to change the init
+   sequence from msix-msi-intx to msi-msix-intx. Thus, if a device
+   offers msi and init does not fail, the msix init code will not be
+   executed. This is equivalent to current code.
+
+With this, the code only setups single mode msix as a last resort if
+msi fails. No interrupt range is enabled at all. Only one interrupt
+will be enabled.
+
+v4:
+ * removed implementation of ahci_init_intx()
+ * improved patch descriptions
+ * rebased onto libata/for-4.2
+
+v3:
+ * store irq number in struct ahci_host_priv
+ * change initialization order from msix-msi-intx to msi-msix-intx
+ * improve comments in ahci_init_msix()
+ * improve error message in ahci_init_msix()
+ * do not enable MSI-X if MSI is actively disabled for the device
+
+v2:
+ * determine irq vector from pci_dev->msi_list
+
+Based on a patch from Sunil Goutham <sgoutham@cavium.com>.
 
 Signed-off-by: Robert Richter <rrichter@cavium.com>
 ---
- drivers/ata/acard-ahci.c       |  4 +++-
- drivers/ata/ahci.c             | 15 ++++++++++-----
- drivers/ata/ahci.h             |  4 ++--
- drivers/ata/libahci.c          | 16 +++++++---------
- drivers/ata/libahci_platform.c |  4 +++-
- drivers/ata/sata_highbank.c    |  3 ++-
- 6 files changed, 27 insertions(+), 19 deletions(-)
+ drivers/ata/ahci.c | 87 +++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 86 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/ata/acard-ahci.c b/drivers/ata/acard-ahci.c
-index 12489ce863c4..ed6a30cd681a 100644
---- a/drivers/ata/acard-ahci.c
-+++ b/drivers/ata/acard-ahci.c
-@@ -433,6 +433,8 @@ static int acard_ahci_init_one(struct pci_dev *pdev, const struct pci_device_id
- 	hpriv = devm_kzalloc(dev, sizeof(*hpriv), GFP_KERNEL);
- 	if (!hpriv)
- 		return -ENOMEM;
-+
-+	hpriv->irq = pdev->irq;
- 	hpriv->flags |= (unsigned long)pi.private_data;
- 
- 	if (!(hpriv->flags & AHCI_HFLAG_NO_MSI))
-@@ -498,7 +500,7 @@ static int acard_ahci_init_one(struct pci_dev *pdev, const struct pci_device_id
- 	acard_ahci_pci_print_info(host);
- 
- 	pci_set_master(pdev);
--	return ahci_host_activate(host, pdev->irq, &acard_ahci_sht);
-+	return ahci_host_activate(host, &acard_ahci_sht);
- }
- 
- module_pci_driver(acard_ahci_pci_driver);
 diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 7ba5332476c6..a3c66c3bb76e 100644
+index a3c66c3bb76e..30200e757cdb 100644
 --- a/drivers/ata/ahci.c
 +++ b/drivers/ata/ahci.c
-@@ -1237,14 +1237,18 @@ static int ahci_init_msi(struct pci_dev *pdev, unsigned int n_ports,
- 	if (nvec > 1)
- 		hpriv->flags |= AHCI_HFLAG_MULTI_MSI;
+@@ -42,6 +42,7 @@
+ #include <linux/device.h>
+ #include <linux/dmi.h>
+ #include <linux/gfp.h>
++#include <linux/msi.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_cmnd.h>
+ #include <linux/libata.h>
+@@ -52,6 +53,7 @@
  
--	return nvec;
-+	goto out;
+ enum {
+ 	AHCI_PCI_BAR_STA2X11	= 0,
++	AHCI_PCI_BAR_CAVIUM	= 0,
+ 	AHCI_PCI_BAR_ENMOTUS	= 2,
+ 	AHCI_PCI_BAR_STANDARD	= 5,
+ };
+@@ -499,6 +501,9 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	/* Enmotus */
+ 	{ PCI_DEVICE(0x1c44, 0x8000), board_ahci },
  
- single_msi:
-+	nvec = 1;
++	/* Cavium */
++	{ PCI_DEVICE(0x177d, 0xa01c), .driver_data = board_ahci },
 +
- 	rc = pci_enable_msi(pdev);
- 	if (rc < 0)
- 		return rc;
-+out:
-+	hpriv->irq = pdev->irq;
+ 	/* Generic, PCI class code for AHCI */
+ 	{ PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+ 	  PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff, board_ahci },
+@@ -1201,6 +1206,80 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
+ {}
+ #endif
  
--	return 1;
-+	return nvec;
- }
++static struct msi_desc *msix_get_desc(struct pci_dev *dev, u16 entry)
++{
++	struct msi_desc *desc;
++
++	list_for_each_entry(desc, &dev->msi_list, list) {
++		if (desc->msi_attrib.entry_nr == entry)
++			return desc;
++	}
++
++	return NULL;
++}
++
++static int ahci_init_msix(struct pci_dev *pdev, unsigned int n_ports,
++			  struct ahci_host_priv *hpriv)
++{
++	struct msi_desc *desc;
++	int rc, nvec;
++	struct msix_entry entry = {};
++
++	/* Do not init MSI-X if MSI is disabled for the device */
++	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
++		return -ENODEV;
++
++	nvec = pci_msix_vec_count(pdev);
++	if (nvec < 0)
++		return nvec;
++
++	if (!nvec) {
++		rc = -ENODEV;
++		goto fail;
++	}
++
++	/*
++	 * Per-port msix interrupts are not supported. Assume single
++	 * port interrupts for:
++	 *
++	 *  n_ports == 1, or
++	 *  nvec < n_ports.
++	 *
++	 * We also need to check for n_ports != 0 which is implicitly
++	 * covered here since nvec > 0.
++	 */
++	if (n_ports != 1 && nvec >= n_ports) {
++		rc = -ENOSYS;
++		goto fail;
++	}
++
++	/*
++	 * There can exist more than one vector (e.g. for error
++	 * detection or hdd hotplug). Then the first vector is used,
++	 * all others are ignored. Only enable the first entry here
++	 * (entry.entry = 0).
++	 */
++	rc = pci_enable_msix_exact(pdev, &entry, 1);
++	if (rc < 0)
++		goto fail;
++
++	desc = msix_get_desc(pdev, 0);	/* first entry */
++	if (!desc) {
++		rc = -EINVAL;
++		goto fail;
++	}
++
++	hpriv->irq = desc->irq;
++
++	return 1;
++fail:
++	dev_err(&pdev->dev,
++		"failed to enable MSI-X with error %d, # of vectors: %d\n",
++		rc, nvec);
++
++	return rc;
++}
++
+ static int ahci_init_msi(struct pci_dev *pdev, unsigned int n_ports,
+ 			struct ahci_host_priv *hpriv)
+ {
+@@ -1260,6 +1339,10 @@ static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
+ 	if (nvec >= 0)
+ 		return nvec;
  
- static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
-@@ -1258,6 +1262,7 @@ static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
- 
++	nvec = ahci_init_msix(pdev, n_ports, hpriv);
++	if (nvec >= 0)
++		return nvec;
++
  	/* lagacy intx interrupts */
  	pci_intx(pdev, 1);
-+	hpriv->irq = pdev->irq;
+ 	hpriv->irq = pdev->irq;
+@@ -1302,11 +1385,13 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		dev_info(&pdev->dev,
+ 			 "PDC42819 can only drive SATA devices with this driver\n");
  
- 	return 0;
- }
-@@ -1423,13 +1428,13 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	 */
- 	n_ports = max(ahci_nr_ports(hpriv->cap), fls(hpriv->port_map));
+-	/* Both Connext and Enmotus devices use non-standard BARs */
++	/* Some devices use non-standard BARs */
+ 	if (pdev->vendor == PCI_VENDOR_ID_STMICRO && pdev->device == 0xCC06)
+ 		ahci_pci_bar = AHCI_PCI_BAR_STA2X11;
+ 	else if (pdev->vendor == 0x1c44 && pdev->device == 0x8000)
+ 		ahci_pci_bar = AHCI_PCI_BAR_ENMOTUS;
++	else if (pdev->vendor == 0x177d && pdev->device == 0xa01c)
++		ahci_pci_bar = AHCI_PCI_BAR_CAVIUM;
  
--	ahci_init_interrupts(pdev, n_ports, hpriv);
--
- 	host = ata_host_alloc_pinfo(&pdev->dev, ppi, n_ports);
- 	if (!host)
- 		return -ENOMEM;
- 	host->private_data = hpriv;
- 
-+	ahci_init_interrupts(pdev, n_ports, hpriv);
-+
- 	if (!(hpriv->cap & HOST_CAP_SSS) || ahci_ignore_sss)
- 		host->flags |= ATA_HOST_PARALLEL_SCAN;
- 	else
-@@ -1475,7 +1480,7 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	pci_set_master(pdev);
- 
--	return ahci_host_activate(host, pdev->irq, &ahci_sht);
-+	return ahci_host_activate(host, &ahci_sht);
- }
- 
- module_pci_driver(ahci_pci_driver);
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index f4429600e2bf..5b8e8a0fab48 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -343,6 +343,7 @@ struct ahci_host_priv {
- 	struct phy		**phys;
- 	unsigned		nports;		/* Number of ports */
- 	void			*plat_data;	/* Other platform data */
-+	unsigned int		irq;		/* interrupt line */
  	/*
- 	 * Optional ahci_start_engine override, if not set this gets set to the
- 	 * default ahci_start_engine during ahci_save_initial_config, this can
-@@ -395,8 +396,7 @@ void ahci_set_em_messages(struct ahci_host_priv *hpriv,
- 			  struct ata_port_info *pi);
- int ahci_reset_em(struct ata_host *host);
- void ahci_print_info(struct ata_host *host, const char *scc_s);
--int ahci_host_activate(struct ata_host *host, int irq,
--		       struct scsi_host_template *sht);
-+int ahci_host_activate(struct ata_host *host, struct scsi_host_template *sht);
- void ahci_error_handler(struct ata_port *ap);
- 
- static inline void __iomem *__ahci_port_base(struct ata_host *host,
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 1add5baec584..1c99402a1017 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -2344,7 +2344,7 @@ static int ahci_port_start(struct ata_port *ap)
- 	/*
- 	 * Switch to per-port locking in case each port has its own MSI vector.
- 	 */
--	if ((hpriv->flags & AHCI_HFLAG_MULTI_MSI)) {
-+	if (hpriv->flags & AHCI_HFLAG_MULTI_MSI) {
- 		spin_lock_init(&pp->lock);
- 		ap->lock = &pp->lock;
- 	}
-@@ -2472,7 +2472,10 @@ static int ahci_host_activate_multi_irqs(struct ata_host *host, int irq,
- 	rc = ata_host_start(host);
- 	if (rc)
- 		return rc;
--
-+	/*
-+	 * Requests IRQs according to AHCI-1.1 when multiple MSIs were
-+	 * allocated. That is one MSI per port, starting from @irq.
-+	 */
- 	for (i = 0; i < host->n_ports; i++) {
- 		struct ahci_port_priv *pp = host->ports[i]->private_data;
- 
-@@ -2511,23 +2514,18 @@ static int ahci_host_activate_multi_irqs(struct ata_host *host, int irq,
- /**
-  *	ahci_host_activate - start AHCI host, request IRQs and register it
-  *	@host: target ATA host
-- *	@irq: base IRQ number to request
-  *	@sht: scsi_host_template to use when registering the host
-  *
-- *	Similar to ata_host_activate, but requests IRQs according to AHCI-1.1
-- *	when multiple MSIs were allocated. That is one MSI per port, starting
-- *	from @irq.
-- *
-  *	LOCKING:
-  *	Inherited from calling layer (may sleep).
-  *
-  *	RETURNS:
-  *	0 on success, -errno otherwise.
-  */
--int ahci_host_activate(struct ata_host *host, int irq,
--		       struct scsi_host_template *sht)
-+int ahci_host_activate(struct ata_host *host, struct scsi_host_template *sht)
- {
- 	struct ahci_host_priv *hpriv = host->private_data;
-+	int irq = hpriv->irq;
- 	int rc;
- 
- 	if (hpriv->flags & AHCI_HFLAG_MULTI_MSI)
-diff --git a/drivers/ata/libahci_platform.c b/drivers/ata/libahci_platform.c
-index d89305d289f6..aaa761b9081c 100644
---- a/drivers/ata/libahci_platform.c
-+++ b/drivers/ata/libahci_platform.c
-@@ -518,6 +518,8 @@ int ahci_platform_init_host(struct platform_device *pdev,
- 		return -EINVAL;
- 	}
- 
-+	hpriv->irq = irq;
-+
- 	/* prepare host */
- 	pi.private_data = (void *)(unsigned long)hpriv->flags;
- 
-@@ -588,7 +590,7 @@ int ahci_platform_init_host(struct platform_device *pdev,
- 	ahci_init_controller(host);
- 	ahci_print_info(host, "platform");
- 
--	return ahci_host_activate(host, irq, sht);
-+	return ahci_host_activate(host, sht);
- }
- EXPORT_SYMBOL_GPL(ahci_platform_init_host);
- 
-diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
-index 24e311fe2c1c..8638d575b2b9 100644
---- a/drivers/ata/sata_highbank.c
-+++ b/drivers/ata/sata_highbank.c
-@@ -499,6 +499,7 @@ static int ahci_highbank_probe(struct platform_device *pdev)
- 		return -ENOMEM;
- 	}
- 
-+	hpriv->irq = irq;
- 	hpriv->flags |= (unsigned long)pi.private_data;
- 
- 	hpriv->mmio = devm_ioremap(dev, mem->start, resource_size(mem));
-@@ -568,7 +569,7 @@ static int ahci_highbank_probe(struct platform_device *pdev)
- 	ahci_init_controller(host);
- 	ahci_print_info(host, "platform");
- 
--	rc = ahci_host_activate(host, irq, &ahci_highbank_platform_sht);
-+	rc = ahci_host_activate(host, &ahci_highbank_platform_sht);
- 	if (rc)
- 		goto err0;
- 
+ 	 * The JMicron chip 361/363 contains one SATA controller and one
 -- 
 2.1.1
 
