@@ -1,31 +1,27 @@
-From: Ian Campbell <ijc@debian.org>
+From: Andrew Lunn <andrew@lunn.ch>
 Subject: Re: QNAP TS-419: sata_mv fails to initialise with "can't set global
  reset"
-Date: Sun, 31 May 2015 19:54:35 +0100
-Message-ID: <1433098475.5748.280.camel@debian.org>
+Date: Mon, 1 Jun 2015 04:37:59 +0200
+Message-ID: <20150601023759.GA11354@lunn.ch>
 References: <1433068534.5748.276.camel@debian.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from benson.vm.bytemark.co.uk ([212.110.190.137]:53274 "EHLO
-	benson.vm.bytemark.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751099AbbEaSym (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 31 May 2015 14:54:42 -0400
+Received: from vps0.lunn.ch ([178.209.37.122]:48739 "EHLO vps0.lunn.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754529AbbFACn0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 31 May 2015 22:43:26 -0400
+Content-Disposition: inline
 In-Reply-To: <1433068534.5748.276.camel@debian.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jason Cooper <jason@lakedaemon.net>
-Cc: Andrew Lunn <andrew@lunn.ch>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org
+To: Ian Campbell <ijc@debian.org>
+Cc: Jason Cooper <jason@lakedaemon.net>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 
-On Sun, 2015-05-31 at 11:35 +0100, Ian Campbell wrote:
+On Sun, May 31, 2015 at 11:35:34AM +0100, Ian Campbell wrote:
 > Hi,
 > 
-> After updating to 4.0.4 (from the Debian kernel package)
-
-FYI 4.1-rc5 behaves the same.
-
->  my TS-419 can
+> After updating to 4.0.4 (from the Debian kernel package) my TS-419 can
 > no longer see its SATA disks. In dmesg I see:
 > 
 > [    2.599060] SCSI subsystem initialized
@@ -61,7 +57,16 @@ FYI 4.1-rc5 behaves the same.
 > I don't see anything in the git logs after 4.0 which looks like an
 > obviously related fix, but I'm currently building 4.1-rc5 to have a
 > check.
-> 
-> Ian.
 
+Hi Ian
 
+I just booted my QNAP TS-119P, and it found its disk. No message about
+missing reset.
+
+Since TS-419 is a four driver device, it does not use the internal
+SATA controllers for its disks, it uses a PCI controller. So i think
+this is somehow PCI related.
+
+Can you do a bissect?
+
+    Andrew
