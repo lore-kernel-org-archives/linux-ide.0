@@ -1,22 +1,22 @@
 From: Andrew Lunn <andrew@lunn.ch>
 Subject: Re: QNAP TS-419: sata_mv fails to initialise with "can't set global
  reset"
-Date: Mon, 1 Jun 2015 04:37:59 +0200
-Message-ID: <20150601023759.GA11354@lunn.ch>
+Date: Mon, 1 Jun 2015 04:50:50 +0200
+Message-ID: <20150601025050.GB11354@lunn.ch>
 References: <1433068534.5748.276.camel@debian.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vps0.lunn.ch ([178.209.37.122]:48739 "EHLO vps0.lunn.ch"
+Received: from vps0.lunn.ch ([178.209.37.122]:48747 "EHLO vps0.lunn.ch"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754529AbbFACn0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 31 May 2015 22:43:26 -0400
+	id S1751475AbbFAC4T (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 31 May 2015 22:56:19 -0400
 Content-Disposition: inline
 In-Reply-To: <1433068534.5748.276.camel@debian.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Ian Campbell <ijc@debian.org>
-Cc: Jason Cooper <jason@lakedaemon.net>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Cc: Jason Cooper <jason@lakedaemon.net>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org
 
 On Sun, May 31, 2015 at 11:35:34AM +0100, Ian Campbell wrote:
 > Hi,
@@ -57,16 +57,13 @@ On Sun, May 31, 2015 at 11:35:34AM +0100, Ian Campbell wrote:
 > I don't see anything in the git logs after 4.0 which looks like an
 > obviously related fix, but I'm currently building 4.1-rc5 to have a
 > check.
-
+ 
 Hi Ian
 
-I just booted my QNAP TS-119P, and it found its disk. No message about
-missing reset.
+You might also want to try 
 
-Since TS-419 is a four driver device, it does not use the internal
-SATA controllers for its disks, it uses a PCI controller. So i think
-this is somehow PCI related.
+http://comments.gmane.org/gmane.linux.ports.arm.kernel/416589
 
-Can you do a bissect?
+In particular the first patch.
 
-    Andrew
+  Andrew
