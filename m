@@ -1,58 +1,74 @@
-From: <Yuantian.Tang@freescale.com>
-Subject: [PATCH] ahci: added support for Freescale AHCI sata
-Date: Thu, 4 Jun 2015 15:10:04 +0800
-Message-ID: <1433401804-21524-1-git-send-email-Yuantian.Tang@freescale.com>
+From: Robert Richter <robert.richter@caviumnetworks.com>
+Subject: Re: [PATCH v4 3/3] AHCI: Add generic MSI-X interrupt support to SATA
+ PCI driver
+Date: Thu, 4 Jun 2015 11:03:55 +0200
+Message-ID: <20150604090355.GC10428@rric.localhost>
+References: <1433073319-13796-1-git-send-email-rric@kernel.org>
+ <1433073319-13796-4-git-send-email-rric@kernel.org>
+ <20150603054422.GD20091@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bn1bon0113.outbound.protection.outlook.com ([157.56.111.113]:57664
+Received: from mail-bn1bon0096.outbound.protection.outlook.com ([157.56.111.96]:16460
 	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750868AbbFDH3T (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 4 Jun 2015 03:29:19 -0400
+	id S1752081AbbFDJEU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 4 Jun 2015 05:04:20 -0400
+Content-Disposition: inline
+In-Reply-To: <20150603054422.GD20091@mtj.duckdns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: hdegoede@redhat.com
-Cc: tj@kernel.org, devicetree@vger.kernel.org, linux-ide@vger.kernel.org, Tang Yuantian <Yuantian.Tang@freescale.com>, Shaohui Xie <Shaohui.Xie@freescale.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Robert Richter <rric@kernel.org>, Sunil Goutham <sgoutham@cavium.com>, Jiang Liu <jiang.liu@linux.intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 
-From: Tang Yuantian <Yuantian.Tang@freescale.com>
+Tejun,
 
-Freescale introduced QorIQ series SOCs, like ls1021 ls2085, with AHCI
-sata support. It complies with the serial ATA 3.0 specification
-and the AHCI 1.3 specification.
+thanks for applying first 2 patches of this series already.
 
-Signed-off-by: Shaohui Xie <Shaohui.Xie@freescale.com>
-Signed-off-by: Yuantian Tang <Yuantian.Tang@freescale.com>
----
- Documentation/devicetree/bindings/ata/ahci-platform.txt | 2 ++
- drivers/ata/ahci_platform.c                             | 1 +
- 2 files changed, 3 insertions(+)
+I will address the comments you made on this patch in my next
+submission. But see my question below.
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-index c2340ee..a232181 100644
---- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
-+++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-@@ -16,6 +16,8 @@ Required properties:
-   - "snps,dwc-ahci"
-   - "snps,exynos5440-ahci"
-   - "snps,spear-ahci"
-+  - "fsl,qoriq-ahci" : for qoriq series socs which include ls1021, ls2085, etc.
-+  - "fsl,<chip>-ahci" : chip could be ls1021, ls2085 etc.
-   - "generic-ahci"
- - interrupts        : <interrupt mapping for SATA IRQ>
- - reg               : <registers mapping>
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index 78d6ae0..614c78f 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -74,6 +74,7 @@ static const struct of_device_id ahci_of_match[] = {
- 	{ .compatible = "ibm,476gtr-ahci", },
- 	{ .compatible = "snps,dwc-ahci", },
- 	{ .compatible = "hisilicon,hisi-ahci", },
-+	{ .compatible = "fsl,qoriq-ahci", },
- 	{},
- };
- MODULE_DEVICE_TABLE(of, ahci_of_match);
--- 
-2.1.0.27.g96db324
+On 03.06.15 14:44:22, Tejun Heo wrote:
+> > +	/*
+> > +	 * Per-port msix interrupts are not supported. Assume single
+> > +	 * port interrupts for:
+> > +	 *
+> > +	 *  n_ports == 1, or
+> > +	 *  nvec < n_ports.
+> > +	 *
+> > +	 * We also need to check for n_ports != 0 which is implicitly
+> > +	 * covered here since nvec > 0.
+> > +	 */
+> > +	if (n_ports != 1 && nvec >= n_ports) {
+> > +		rc = -ENOSYS;
+> > +		goto fail;
+> > +	}
+> 
+> Didn't I ask this one too the last time?  Can you explain why we can't
+> initialize single IRQ mode if nvec >= n_ports?
 
+I was hoping the comment above the code explains it. Since the code is
+generic I implemented it a bit conservative wrt enabling msix. So the
+above does not enable msix for devices with more than one port if the
+number of interrupts is greater than the number of ports. In this case
+the device could be multiple IRQ capable.
+
+Now, after reading the section in the ahci spec about multiple IRQs
+more detailed, I tend to be less stricter here. Single IRQ mode is
+default for each device and multi mode must be explicitly enabled.
+Thus, we could just enable single msix support for all kind of
+devices.
+
+There are 2 options now. One is to keep the above which means we need
+to enable multi IRQ capable devices later. The other would be to drop
+the check above completly and enable single IRQ support for all msix
+devices.
+
+I can't estimate the impact to other devices of this change (option
+2). If you think this will be ok I will remove the check. But we could
+leave it in for the first time and remove it later once tested on such
+a device. Please let me know your opinion on this.
+
+Thanks,
+
+-Robert
