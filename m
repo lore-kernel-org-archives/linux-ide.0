@@ -1,349 +1,62 @@
-From: Michal Simek <monstr@monstr.eu>
-Subject: Re: [PATCH v2 2/2] drivers: ata: add support for Ceva sata host controller
-Date: Fri, 05 Jun 2015 08:49:40 +0200
-Message-ID: <55714684.20207@monstr.eu>
-References: <1433484148-7464-1-git-send-email-suneel.garapati@xilinx.com> <1433484148-7464-3-git-send-email-suneel.garapati@xilinx.com>
-Reply-To: monstr@monstr.eu
-Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="PmnJLCLuEgS2sfASTB7UtOSh76Ehob7gS"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:33896 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751285AbbFEGto (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Jun 2015 02:49:44 -0400
-Received: by wibut5 with SMTP id ut5so10861261wib.1
-        for <linux-ide@vger.kernel.org>; Thu, 04 Jun 2015 23:49:43 -0700 (PDT)
-In-Reply-To: <1433484148-7464-3-git-send-email-suneel.garapati@xilinx.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Robert Richter <rric@kernel.org>
+Subject: [PATCH v5 2/2] ahci: Add support for Cavium's ThunderX host controller
+Date: Fri,  5 Jun 2015 19:49:26 +0200
+Message-ID: <1433526566-21136-3-git-send-email-rric@kernel.org>
+References: <1433526566-21136-1-git-send-email-rric@kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1433526566-21136-1-git-send-email-rric@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Sunil Goutham <sgoutham@cavium.com>, Jiang Liu <jiang.liu@linux.intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Robert Richter <rrichter@cavium.com>
 List-Id: linux-ide@vger.kernel.org
-To: Suneel Garapati <suneel.garapati@xilinx.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: tj@kernel.org, michals@xilinx.com, sorenb@xilinx.com, devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---PmnJLCLuEgS2sfASTB7UtOSh76Ehob7gS
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: quoted-printable
+From: Robert Richter <rrichter@cavium.com>
 
-On 06/05/2015 08:02 AM, Suneel Garapati wrote:
-> Adds support for Ceva sata host controller on Xilinx
-> Zynq UltraScale+ MPSoC.
->=20
-> Signed-off-by: Suneel Garapati <suneel.garapati@xilinx.com>
-> ---
-> Changes v2
->  - Change module license string to GPL v2
-> ---
->  drivers/ata/Kconfig     |   9 ++
->  drivers/ata/Makefile    |   1 +
->  drivers/ata/ahci_ceva.c | 225 ++++++++++++++++++++++++++++++++++++++++=
-++++++++
->  3 files changed, 235 insertions(+)
->  create mode 100644 drivers/ata/ahci_ceva.c
->=20
-> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-> index b4524f4..6d17a3b 100644
-> --- a/drivers/ata/Kconfig
-> +++ b/drivers/ata/Kconfig
-> @@ -133,6 +133,15 @@ config AHCI_IMX
->=20
-> 	  If unsure, say N.
->=20
-> +config AHCI_CEVA
-> +	tristate "CEVA AHCI SATA support"
-> +	depends on OF
-> +	help
-> +	  This option enables support for the CEVA AHCI SATA.
-> +	  It can be found on the Xilinx Zynq UltraScale+ MPSoC.
-> +
-> +	  If unsure, say N.
-> +
->  config AHCI_MVEBU
-> 	tristate "Marvell EBU AHCI SATA support"
-> 	depends on ARCH_MVEBU
-> diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
-> index 5154753..af70919 100644
-> --- a/drivers/ata/Makefile
-> +++ b/drivers/ata/Makefile
-> @@ -11,6 +11,7 @@ obj-$(CONFIG_SATA_SIL24)	+=3D sata_sil24.o
->  obj-$(CONFIG_SATA_DWC)		+=3D sata_dwc_460ex.o
->  obj-$(CONFIG_SATA_HIGHBANK)	+=3D sata_highbank.o libahci.o
->  obj-$(CONFIG_AHCI_BRCMSTB)	+=3D ahci_brcmstb.o libahci.o libahci_platf=
-orm.o
-> +obj-$(CONFIG_AHCI_CEVA)		+=3D ahci_ceva.o libahci.o libahci_platform.o=
+This patch adds support for Cavium's ThunderX host controller. The
+controller resides on the SoC and is a AHCI compatible SATA controller
+with one port, compliant with Serial ATA 3.1 and AHCI Revision 1.31.
+There can exists multiple SATA controllers on the SoC.
 
->  obj-$(CONFIG_AHCI_DA850)	+=3D ahci_da850.o libahci.o libahci_platform.=
-o
->  obj-$(CONFIG_AHCI_IMX)		+=3D ahci_imx.o libahci.o libahci_platform.o
->  obj-$(CONFIG_AHCI_MVEBU)	+=3D ahci_mvebu.o libahci.o libahci_platform.=
-o
-> diff --git a/drivers/ata/ahci_ceva.c b/drivers/ata/ahci_ceva.c
-> new file mode 100644
-> index 0000000..559d960
-> --- /dev/null
-> +++ b/drivers/ata/ahci_ceva.c
-> @@ -0,0 +1,225 @@
-> +/*
-> + * Copyright (C) 2015 Xilinx, Inc.
-> + * CEVA AHCI SATA platform driver
-> + *
-> + * based on the AHCI SATA platform driver by Jeff Garzik and Anton Vor=
-ontsov
-> + *
-> + * This program is free software; you can redistribute it and/or modif=
-y it
-> + * under the terms and conditions of the GNU General Public License,
-> + * version 2, as published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope it will be useful, but WITH=
-OUT
-> + * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY =
-or
-> + * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public Licens=
-e for
-> + * more details.
-> + *
-> + * You should have received a copy of the GNU General Public License a=
-long with
-> + * this program. If not, see <http://www.gnu.org/licenses/>.
-> + */
-> +
-> +#include <linux/ahci_platform.h>
-> +#include <linux/kernel.h>
-> +#include <linux/libata.h>
-> +#include <linux/module.h>
-> +#include <linux/of_device.h>
-> +#include <linux/platform_device.h>
-> +#include "ahci.h"
-> +
-> +/* Vendor Specific Register Offsets */
-> +#define AHCI_VEND_PCFG  0xA4
-> +#define AHCI_VEND_PPCFG 0xA8
-> +#define AHCI_VEND_PP2C  0xAC
-> +#define AHCI_VEND_PP3C  0xB0
-> +#define AHCI_VEND_PP4C  0xB4
-> +#define AHCI_VEND_PP5C  0xB8
-> +#define AHCI_VEND_PAXIC 0xC0
-> +#define AHCI_VEND_PTC   0xC8
-> +
-> +/* Vendor Specific Register bit definitions */
-> +#define PAXIC_ADBW_BW64 0x1
-> +#define PAXIC_MAWIDD	(1 << 8)
-> +#define PAXIC_MARIDD	(1 << 16)
-> +#define PAXIC_OTL	(0x4 << 20)
-> +
-> +#define PCFG_TPSS_VAL	(0x32 << 16)
-> +#define PCFG_TPRS_VAL	(0x2 << 12)
-> +#define PCFG_PAD_VAL	0x2
-> +
-> +#define PPCFG_TTA	0x1FFFE
-> +#define PPCFG_PSSO_EN	(1 << 28)
-> +#define PPCFG_PSS_EN	(1 << 29)
-> +#define PPCFG_ESDF_EN	(1 << 31)
-> +
-> +#define PP2C_CIBGMN	0x0F
-> +#define PP2C_CIBGMX	(0x25 << 8)
-> +#define PP2C_CIBGN	(0x18 << 16)
-> +#define PP2C_CINMP	(0x29 << 24)
-> +
-> +#define PP3C_CWBGMN	0x04
-> +#define PP3C_CWBGMX	(0x0B << 8)
-> +#define PP3C_CWBGN	(0x08 << 16)
-> +#define PP3C_CWNMP	(0x0F << 24)
-> +
-> +#define PP4C_BMX	0x0a
-> +#define PP4C_BNM	(0x08 << 8)
-> +#define PP4C_SFD	(0x4a << 16)
-> +#define PP4C_PTST	(0x06 << 24)
-> +
-> +#define PP5C_RIT	0x60216
-> +#define PP5C_RCT	(0x7f0 << 20)
-> +
-> +#define PTC_RX_WM_VAL	0x40
-> +#define PTC_RSVD	(1 << 27)
-> +
-> +#define PORT0_BASE	0x100
-> +#define PORT1_BASE	0x180
-> +
-> +/* Port Control Register Bit Definitions */
-> +#define PORT_SCTL_SPD_GEN2	(0x2 << 4)
-> +#define PORT_SCTL_SPD_GEN1	(0x1 << 4)
-> +#define PORT_SCTL_IPM		(0x3 << 8)
-> +
-> +#define PORT_BASE	0x100
-> +#define PORT_OFFSET	0x80
-> +#define NR_PORTS	2
-> +#define DRV_NAME	"ahci-ceva"
-> +#define CEVA_FLAG_BROKEN_GEN2	1
-> +
-> +struct ceva_ahci_priv {
-> +	struct platform_device *ahci_pdev;
-> +	int flags;
-> +};
-> +
-> +static struct ata_port_operations ahci_ceva_ops =3D {
-> +	.inherits =3D &ahci_platform_ops,
-> +};
-> +
-> +static const struct ata_port_info ahci_ceva_port_info =3D {
-> +	.flags          =3D AHCI_FLAG_COMMON,
-> +	.pio_mask       =3D ATA_PIO4,
-> +	.udma_mask      =3D ATA_UDMA6,
-> +	.port_ops	=3D &ahci_ceva_ops,
-> +};
-> +
-> +static void ahci_ceva_setup(struct ahci_host_priv *hpriv)
-> +{
-> +	void __iomem *mmio =3D hpriv->mmio;
-> +	struct ceva_ahci_priv *cevapriv =3D hpriv->plat_data;
-> +	u32 tmp;
-> +	int i;
-> +
-> +	/*
-> +	 * AXI Data bus width to 64
-> +	 * Set Mem Addr Read, Write ID for data transfers
-> +	 * Transfer limit to 72 DWord
-> +	 */
-> +	tmp =3D PAXIC_ADBW_BW64 | PAXIC_MAWIDD | PAXIC_MARIDD | PAXIC_OTL;
-> +	writel(tmp, mmio + AHCI_VEND_PAXIC);
-> +
-> +	/* Set AHCI Enable */
-> +	tmp =3D readl(mmio + HOST_CTL);
-> +	tmp |=3D HOST_AHCI_EN;
-> +	writel(tmp, mmio + HOST_CTL);
-> +
-> +	for (i =3D 0; i < NR_PORTS; i++) {
-> +		/* TPSS TPRS scalars, CISE and Port Addr */
-> +		tmp =3D PCFG_TPSS_VAL | PCFG_TPRS_VAL | (PCFG_PAD_VAL + i);
-> +		writel(tmp, mmio + AHCI_VEND_PCFG);
-> +
-> +		/* Port Phy Cfg register enables */
-> +		tmp =3D PPCFG_TTA | PPCFG_PSS_EN | PPCFG_ESDF_EN;
-> +		writel(tmp, mmio + AHCI_VEND_PPCFG);
-> +
-> +		/* Phy Control OOB timing parameters COMINIT */
-> +		tmp =3D PP2C_CIBGMN | PP2C_CIBGMX | PP2C_CIBGN | PP2C_CINMP;
-> +		writel(tmp, mmio + AHCI_VEND_PP2C);
-> +
-> +		/* Phy Control OOB timing parameters COMWAKE */
-> +		tmp =3D PP3C_CWBGMN | PP3C_CWBGMX | PP3C_CWBGN | PP3C_CWNMP;
-> +		writel(tmp, mmio + AHCI_VEND_PP3C);
-> +
-> +		/* Phy Control Burst timing setting */
-> +		tmp =3D PP4C_BMX | PP4C_BNM | PP4C_SFD | PP4C_PTST;
-> +		writel(tmp, mmio + AHCI_VEND_PP4C);
-> +
-> +		/* Rate Change Timer and Retry Interval Timer setting */
-> +		tmp =3D PP5C_RIT | PP5C_RCT;
-> +		writel(tmp, mmio + AHCI_VEND_PP5C);
-> +
-> +		/* Rx Watermark setting  */
-> +		tmp =3D PTC_RX_WM_VAL | PTC_RSVD;
-> +		writel(tmp, mmio + AHCI_VEND_PTC);
-> +
-> +		/* Default to Gen 2 Speed and Gen 1 if Gen2 is broken */
-> +		tmp =3D PORT_SCTL_SPD_GEN2 | PORT_SCTL_IPM;
-> +		if (cevapriv->flags & CEVA_FLAG_BROKEN_GEN2)
-> +			tmp =3D PORT_SCTL_SPD_GEN1 | PORT_SCTL_IPM;
-> +		writel(tmp, mmio + PORT_SCR_CTL + PORT_BASE + PORT_OFFSET * i);
-> +	}
-> +}
-> +
-> +static struct scsi_host_template ahci_platform_sht =3D {
-> +	AHCI_SHT(DRV_NAME),
-> +};
-> +
-> +static int ceva_ahci_probe(struct platform_device *pdev)
-> +{
-> +	struct device_node *np =3D pdev->dev.of_node;
-> +	struct device *dev =3D &pdev->dev;
-> +	struct ahci_host_priv *hpriv;
-> +	struct ceva_ahci_priv *cevapriv;
-> +
-> +	cevapriv =3D devm_kzalloc(dev, sizeof(*cevapriv), GFP_KERNEL);
-> +	if (!cevapriv)
-> +		return -ENOMEM;
-> +
-> +	cevapriv->ahci_pdev =3D pdev;
-> +
-> +	hpriv =3D ahci_platform_get_resources(pdev);
-> +	if (IS_ERR(hpriv))
-> +		return PTR_ERR(hpriv);
-> +
-> +	if (of_property_read_bool(np, "ceva,broken-gen2"))
-> +		cevapriv->flags =3D CEVA_FLAG_BROKEN_GEN2;
-> +
-> +	hpriv->plat_data =3D cevapriv;
-> +
-> +	/* CEVA specific initialization */
-> +	ahci_ceva_setup(hpriv);
-> +
-> +	return ahci_platform_init_host(pdev, hpriv, &ahci_ceva_port_info,
-> +					&ahci_platform_sht);
-> +}
-> +
-> +static int __maybe_unused ceva_ahci_suspend(struct device *dev)
-> +{
-> +	return ahci_platform_suspend_host(dev);
-> +}
-> +
-> +static int __maybe_unused ceva_ahci_resume(struct device *dev)
-> +{
-> +	return ahci_platform_resume_host(dev);
-> +}
-> +
-> +static SIMPLE_DEV_PM_OPS(ahci_ceva_pm_ops, ceva_ahci_suspend, ceva_ahc=
-i_resume);
-> +
-> +static const struct of_device_id ceva_ahci_of_match[] =3D {
-> +	{ .compatible =3D "ceva,ahci-1v84" },
-> +	{},
-> +};
-> +MODULE_DEVICE_TABLE(of, ceva_ahci_of_match);
-> +
-> +static struct platform_driver ceva_ahci_driver =3D {
-> +	.probe =3D ceva_ahci_probe,
-> +	.remove =3D ata_platform_remove_one,
-> +	.driver =3D {
-> +		.name =3D DRV_NAME,
-> +		.of_match_table =3D ceva_ahci_of_match,
-> +		.pm =3D &ahci_ceva_pm_ops,
-> +	},
-> +};
-> +module_platform_driver(ceva_ahci_driver);
-> +
-> +MODULE_DESCRIPTION("CEVA AHCI SATA platform driver");
-> +MODULE_AUTHOR("Xilinx Inc.");
-> +MODULE_LICENSE("GPL v2");
-> --
-> 2.1.2
+The controller depends on MSI-X support since the PCI ECAM controller
+on the SoC does not implement MSI nor lagacy intx interrupt support.
+Thus, during device initialization, if MSI fails MSI-X will be used to
+enable the device's interrupts.
 
-Tested-by: Michal Simek <michal.simek@xilinx.com>
+The controller uses non-standard BAR0 for its register range. The
+already existing device lookup (vendor and device id) that is already
+implemented for other host controllers is used to change the PCI BAR.
 
-Thanks,
-Michal
+Signed-off-by: Robert Richter <rrichter@cavium.com>
+---
+ drivers/ata/ahci.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
---=20
-Michal Simek, Ing. (M.Eng), OpenPGP -> KeyID: FE3D1F91
-w: www.monstr.eu p: +42-0-721842854
-Maintainer of Linux kernel - Microblaze cpu - http://www.monstr.eu/fdt/
-Maintainer of Linux kernel - Xilinx Zynq ARM architecture
-Microblaze U-BOOT custodian and responsible for u-boot arm zynq platform
-
-
-
---PmnJLCLuEgS2sfASTB7UtOSh76Ehob7gS
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.14 (GNU/Linux)
-
-iEYEARECAAYFAlVxRoQACgkQykllyylKDCFQSwCgl8Si3rjTxnqRWsu+pyarE2Ql
-QdYAnRnDvkUxR/tlyeERQQzNbC0LD9cq
-=HdSK
------END PGP SIGNATURE-----
-
---PmnJLCLuEgS2sfASTB7UtOSh76Ehob7gS--
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index f300aa583678..094649db3330 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -53,6 +53,7 @@
+ 
+ enum {
+ 	AHCI_PCI_BAR_STA2X11	= 0,
++	AHCI_PCI_BAR_CAVIUM	= 0,
+ 	AHCI_PCI_BAR_ENMOTUS	= 2,
+ 	AHCI_PCI_BAR_STANDARD	= 5,
+ };
+@@ -1379,11 +1380,13 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		dev_info(&pdev->dev,
+ 			 "PDC42819 can only drive SATA devices with this driver\n");
+ 
+-	/* Both Connext and Enmotus devices use non-standard BARs */
++	/* Some devices use non-standard BARs */
+ 	if (pdev->vendor == PCI_VENDOR_ID_STMICRO && pdev->device == 0xCC06)
+ 		ahci_pci_bar = AHCI_PCI_BAR_STA2X11;
+ 	else if (pdev->vendor == 0x1c44 && pdev->device == 0x8000)
+ 		ahci_pci_bar = AHCI_PCI_BAR_ENMOTUS;
++	else if (pdev->vendor == 0x177d && pdev->device == 0xa01c)
++		ahci_pci_bar = AHCI_PCI_BAR_CAVIUM;
+ 
+ 	/*
+ 	 * The JMicron chip 361/363 contains one SATA controller and one
+-- 
+2.1.1
