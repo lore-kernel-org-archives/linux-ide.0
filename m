@@ -1,51 +1,48 @@
-From: Suneel Garapati <suneel.garapati@xilinx.com>
-Subject: [PATCH v3 1/2] devicetree:bindings: add devicetree bindings for ceva ahci
-Date: Tue, 9 Jun 2015 14:23:49 +0530
-Message-ID: <1433840030-31453-2-git-send-email-suneel.garapati@xilinx.com>
-References: <1433840030-31453-1-git-send-email-suneel.garapati@xilinx.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1433840030-31453-1-git-send-email-suneel.garapati@xilinx.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: tj@kernel.org, michals@xilinx.com, sorenb@xilinx.com, devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Suneel Garapati <suneel.garapati@xilinx.com>
+From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Subject: [PATCH] libata: finally use __initconst in ata_parse_force_one()
+Date: Tue,  9 Jun 2015 15:33:19 +0200
+Message-ID: <1433856799-24825-1-git-send-email-linux@rasmusvillemoes.dk>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-la0-f42.google.com ([209.85.215.42]:33967 "EHLO
+	mail-la0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751955AbbFINdc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Jun 2015 09:33:32 -0400
+Received: by laew7 with SMTP id w7so12391121lae.1
+        for <linux-ide@vger.kernel.org>; Tue, 09 Jun 2015 06:33:30 -0700 (PDT)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-adds bindings for CEVA AHCI SATA controller. optional property
-broken-gen2 is useful incase of hardware speed limitation.
+Just six days after this FIXME was added seven years ago, Sam Ravnborg
+added the missing feature (37c514e3dfc8 "Add missing init section
+definitions"), though it ended up being called __initconst.
 
-Signed-off-by: Suneel Garapati <suneel.garapati@xilinx.com>
+Let's use it; better late than never.
+
+Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
 ---
- Documentation/devicetree/bindings/ata/ahci-ceva.txt | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/ata/ahci-ceva.txt
+ drivers/ata/libata-core.c | 7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-ceva.txt b/Documentation/devicetree/bindings/ata/ahci-ceva.txt
-new file mode 100644
-index 0000000..7ca8b97
---- /dev/null
-+++ b/Documentation/devicetree/bindings/ata/ahci-ceva.txt
-@@ -0,0 +1,20 @@
-+Binding for CEVA AHCI SATA Controller
-+
-+Required properties:
-+  - reg: Physical base address and size of the controller's register area.
-+  - compatible: Compatibility string. Must be 'ceva,ahci-1v84'.
-+  - clocks: Input clock specifier. Refer to common clock bindings.
-+  - interrupts: Interrupt specifier. Refer to interrupt binding.
-+
-+Optional properties:
-+  - ceva,broken-gen2: limit to gen1 speed instead of gen2.
-+
-+Examples:
-+	ahci@fd0c0000 {
-+		compatible = "ceva,ahci-1v84";
-+		reg = <0xfd0c0000 0x200>;
-+		interrupt-parent = <&gic>;
-+		interrupts = <0 133 4>;
-+		clocks = <&clkc SATA_CLK_ID>;
-+		ceva,broken-gen2;
-+	};
---
-2.1.2
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 577849c6611a..9581e6f6cd0e 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -6456,12 +6456,7 @@ static int __init ata_parse_force_one(char **cur,
+ 				      struct ata_force_ent *force_ent,
+ 				      const char **reason)
+ {
+-	/* FIXME: Currently, there's no way to tag init const data and
+-	 * using __initdata causes build failure on some versions of
+-	 * gcc.  Once __initdataconst is implemented, add const to the
+-	 * following structure.
+-	 */
+-	static struct ata_force_param force_tbl[] __initdata = {
++	static const struct ata_force_param force_tbl[] __initconst = {
+ 		{ "40c",	.cbl		= ATA_CBL_PATA40 },
+ 		{ "80c",	.cbl		= ATA_CBL_PATA80 },
+ 		{ "short40c",	.cbl		= ATA_CBL_PATA40_SHORT },
+-- 
+2.1.3
+
