@@ -1,34 +1,35 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] pata_octeon_cf: fix broken build
-Date: Mon, 8 Jun 2015 18:12:07 +0900
-Message-ID: <20150608091207.GG21465@mtj.duckdns.org>
-References: <1433752363-6373-1-git-send-email-aaro.koskinen@nokia.com>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH] ahci: added support for Freescale AHCI sata
+Date: Tue, 9 Jun 2015 14:03:11 +0900
+Message-ID: <20150609050311.GS21465@mtj.duckdns.org>
+References: <1433401804-21524-1-git-send-email-Yuantian.Tang@freescale.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pd0-f178.google.com ([209.85.192.178]:33121 "EHLO
-	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752698AbbFHJMP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Jun 2015 05:12:15 -0400
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1433752363-6373-1-git-send-email-aaro.koskinen@nokia.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <1433401804-21524-1-git-send-email-Yuantian.Tang-KZfg59tc24xl57MIdRCFDg@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Yuantian.Tang-KZfg59tc24xl57MIdRCFDg@public.gmane.org
+Cc: hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Shaohui Xie <Shaohui.Xie-KZfg59tc24xl57MIdRCFDg@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: Aaro Koskinen <aaro.koskinen@nokia.com>
-Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, David Daney <ddaney@caviumnetworks.com>
 
-Hello,
-
-On Mon, Jun 08, 2015 at 11:32:43AM +0300, Aaro Koskinen wrote:
-> MODULE_DEVICE_TABLE is referring to wrong driver's table and breaks the
-> build. Fix that.
+On Thu, Jun 04, 2015 at 03:10:04PM +0800, Yuantian.Tang-KZfg59tc24xl57MIdRCFDg@public.gmane.org wrote:
+> From: Tang Yuantian <Yuantian.Tang-KZfg59tc24xl57MIdRCFDg@public.gmane.org>
 > 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Aaro Koskinen <aaro.koskinen@nokia.com>
+> Freescale introduced QorIQ series SOCs, like ls1021 ls2085, with AHCI
+> sata support. It complies with the serial ATA 3.0 specification
+> and the AHCI 1.3 specification.
+> 
+> Signed-off-by: Shaohui Xie <Shaohui.Xie-KZfg59tc24xl57MIdRCFDg@public.gmane.org>
+> Signed-off-by: Yuantian Tang <Yuantian.Tang-KZfg59tc24xl57MIdRCFDg@public.gmane.org>
 
-Applied to libata/for-4.1-fixes.
+Applied to libata/for-4.2.
 
 Thanks.
 
 -- 
 tejun
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
