@@ -1,92 +1,116 @@
-From: Andre <nandre@riseup.net>
-Subject: Device unreadable, no SMART errors found
-Date: Thu, 11 Jun 2015 21:26:54 -0300
-Message-ID: <20150612002654.GB13708@tagesuhu-pc.ookami>
+From: David Milburn <dmilburn@redhat.com>
+Subject: Re: [PATCH 4/4] libata: Fall back to unqueued READ LOG EXT if the
+ DMA variant fails
+Date: Fri, 12 Jun 2015 14:58:51 -0500
+Message-ID: <557B39FB.4060304@redhat.com>
+References: <1430790861-30066-1-git-send-email-martin.petersen@oracle.com> <1430790861-30066-4-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="opJtzjQTFsWo+cga"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.riseup.net ([198.252.153.129]:38466 "EHLO mx1.riseup.net"
+Received: from mx1.redhat.com ([209.132.183.28]:49189 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750915AbbFLA1H (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 11 Jun 2015 20:27:07 -0400
-Received: from plantcutter.riseup.net (plantcutter-pn.riseup.net [10.0.1.121])
-	(using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-	(Client CN "*.riseup.net", Issuer "COMODO RSA Domain Validation Secure Server CA" (verified OK))
-	by mx1.riseup.net (Postfix) with ESMTPS id AACF240E08
-	for <linux-ide@vger.kernel.org>; Fri, 12 Jun 2015 00:27:06 +0000 (UTC)
-Content-Disposition: inline
+	id S1752552AbbFLT7s (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 12 Jun 2015 15:59:48 -0400
+In-Reply-To: <1430790861-30066-4-git-send-email-martin.petersen@oracle.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, tj@kernel.org
+Cc: hare@suse.de, linux-ide@vger.kernel.org
 
 
---opJtzjQTFsWo+cga
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Hi Martin,
 
-Hi,
+On 05/04/2015 08:54 PM, Martin K. Petersen wrote:
+> Some devices advertise support for the READ/WRITE LOG DMA EXT commands
+> but fail when we try to issue them. This can lead to queued TRIM being
+> unintentionally disabled since the relevant feature flag is located in a
+> general purpose log page.
+>
+> Fall back to unqueued READ LOG EXT if the DMA variant fails while
+> reading a log page.
 
-I've got a SATA 2.5 inch disk which is currently unreadable, though not
-password locked nor presenting any errors during a SMART selftest.
+Have you seen both commands fail on any of the Samsung SSD 840 EVO
+drives?
 
-I've tried to access it both using a SATA USB Bridge and a SATA cable
-and couldn't do it with neither of them.
+# dmesg | grep Samsung
+[    2.254443] ata10.00: ATA-9: Samsung SSD 840 EVO 1TB, EXT0BB6Q, max 
+UDMA/133
 
-I've also tried to reset it using hdparm, blocking DMA and using PIO
-(libata.dma=3D0), blocking ncq (libata.force=3Dnoncq), and I still cannot f=
-ind
-out what is happening with this device.
+<dmesg output>
+[    2.254390] ata10.00: READ LOG DMA EXT failed, trying unqueued
+[    2.254441] ata10.00: failed to get NCQ Send/Recv Log Emask 0x1
+<dmesg output>
 
-The most meaningful error logs are:
+(In this case it also failed READ LOG EXT)
 
-[  126.156761] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-[  126.156770] ata1.00: irq_stat 0x40000001
-[  126.156777] ata1.00: failed command: READ DMA
-[  126.156788] ata1.00: cmd c8/00:08:08:00:00/00:00:00:00:00/e0 tag 17
-dma 4096 in
-[  126.156788]          res 51/04:08:08:00:00/00:00:00:00:00/00 Emask
-0x1 (device error)
-[  126.156794] ata1.00: status: { DRDY ERR }
-[  126.156798] ata1.00: error: { ABRT }
-[  126.159279] ata1.00: configured for UDMA/133
-[  126.167330] sd 0:0:0:0: [sda]=20
-[  126.167335] Result: hostbyte=3DDID_OK driverbyte=3DDRIVER_SENSE
-[  126.167339] sd 0:0:0:0: [sda] =20
-[  126.167342] Sense Key : Aborted Command [current] [descriptor]
+This is linux-4.1.0-rc7 patched with the following from
+http://git.kernel.org/cgit/linux/kernel/git/tj/libata.git/log/?h=for-4.2
 
-You can read the full logs of dmesg, hdparm and smartctl at
-http://paste.ubuntu.com/11699099/
+libata: Allow NCQ TRIM to be enabled or disabled with a module parameter
+libata: Expose TRIM capability in sysfs
+libata: READ LOG DMA EXT support can be in either page 119 or 120
+libata: Fall back to unqueued READ LOG EXT if the DMA variant fails
+libata: Fix regression when the NCQ Send and Receive log page is absent
 
-With udev running the log messages go berserk as it keeps trying to
-read the device without success.
+Thanks,
+David
 
-I'm running Debian kernel 3.16.7-ckt11-1 and hope someone here will be
-able to help me sort this out.
 
-Thanks
+>
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> ---
+>   drivers/ata/libata-eh.c | 12 +++++++++++-
+>   include/linux/libata.h  |  1 +
+>   2 files changed, 12 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+> index 07f41be38fbe..2893563d0537 100644
+> --- a/drivers/ata/libata-eh.c
+> +++ b/drivers/ata/libata-eh.c
+> @@ -1507,13 +1507,17 @@ unsigned int ata_read_log_page(struct ata_device *dev, u8 log,
+>   {
+>   	struct ata_taskfile tf;
+>   	unsigned int err_mask;
+> +	bool dma = false;
+>
+>   	DPRINTK("read log page - log 0x%x, page 0x%x\n", log, page);
+>
+> +retry:
+>   	ata_tf_init(dev, &tf);
+> -	if (dev->dma_mode && ata_id_has_read_log_dma_ext(dev->id)) {
+> +	if (dev->dma_mode && ata_id_has_read_log_dma_ext(dev->id) &&
+> +	    !(dev->horkage & ATA_HORKAGE_NO_NCQ_LOG)) {
+>   		tf.command = ATA_CMD_READ_LOG_DMA_EXT;
+>   		tf.protocol = ATA_PROT_DMA;
+> +		dma = true;
+>   	} else {
+>   		tf.command = ATA_CMD_READ_LOG_EXT;
+>   		tf.protocol = ATA_PROT_PIO;
+> @@ -1527,6 +1531,12 @@ unsigned int ata_read_log_page(struct ata_device *dev, u8 log,
+>   	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_FROM_DEVICE,
+>   				     buf, sectors * ATA_SECT_SIZE, 0);
+>
+> +	if (err_mask && dma) {
+> +		dev->horkage |= ATA_HORKAGE_NO_NCQ_LOG;
+> +		ata_dev_warn(dev, "READ LOG DMA EXT failed, trying unqueued\n");
+> +		goto retry;
+> +	}
+> +
+>   	DPRINTK("EXIT, err_mask=%x\n", err_mask);
+>   	return err_mask;
+>   }
+> diff --git a/include/linux/libata.h b/include/linux/libata.h
+> index 8dad4a307bb8..c3ef58014b33 100644
+> --- a/include/linux/libata.h
+> +++ b/include/linux/libata.h
+> @@ -424,6 +424,7 @@ enum {
+>   	ATA_HORKAGE_NOLPM	= (1 << 20),	/* don't use LPM */
+>   	ATA_HORKAGE_WD_BROKEN_LPM = (1 << 21),	/* some WDs have broken LPM */
+>   	ATA_HORKAGE_ZERO_AFTER_TRIM = (1 << 22),/* guarantees zero after trim */
+> +	ATA_HORKAGE_NO_NCQ_LOG	= (1 << 23),	/* don't use NCQ for log read */
+>
+>   	 /* DMA mask for user DMA control: User visible values; DO NOT
+>   	    renumber */
+>
 
---opJtzjQTFsWo+cga
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.12 (GNU/Linux)
-
-iQIiBAEBCgAMBQJVeidOBYMJZgGAAAoJENfnm1LRPpKL9vMP/RvyCCUktUfChDq2
-MtC3+2s1+E8esDDmqndpfCPLQt2fAUD1BiO9VHnGSBTcAm8rp/6jLx37fj2lf07u
-yXbDFgOz9o7z+RRKYJwf2yjt/DYmy7XAxgFRnzL3zaXWSls4KPX0skeE0J5kjLZ0
-4IpDvumbQ5QUiGd/+e3j9WnN3OzJbYKzdCkFNeEbBtOA/YSlS4AioshKz0XWCi2n
-OuyPR9mBC6lO0f9Kohcwz7mU043nmq4yH6nZ89pfiEp8sT0ms6BOUphMo0FZjgsZ
-4GdGTA2dyEMW5TLlg9MD+yUInScfl4PkgfFHYa2PQWdcneL83AkuQcp8ZFTyT6fF
-9HVbS6qLd5CrW4XO3yx43j7m0AUuSgt16uXZCNgTlmaSXb5QJQBM9wHrRTb+1Z7N
-hf12nDrxZf3ZRnKyDXH0YihTgkyzqOE1oBKSqvRm9KxVMzlMnJjWMYCZMUhPZyBH
-dRG3H2Q3warjc48Qf+n9xMYHtmZuOnMZ0DN5uIzyPzzPq/V2E3mOXcpJBglTphjC
-7ARiAbO6TL+QX+kLjezH7MXfabXMwtiUyRBgoikhrw6QA7RJbrD15fIMs1Pr56iE
-0aGMujshziwil/chOqqhbnuAyh6chOHtI73JnrWjt60HB4FK5JIPa4pHwC5wMW7v
-gayfFAcUQrYeKOrjRmOsOCjT4GME
-=lxC0
------END PGP SIGNATURE-----
-
---opJtzjQTFsWo+cga--
