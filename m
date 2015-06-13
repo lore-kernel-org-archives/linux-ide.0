@@ -1,56 +1,55 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: configurable discard parameters
-Date: Mon, 22 Jun 2015 16:57:27 -0400
-Message-ID: <yq1616f796w.fsf@sermon.lab.mkp.net>
-References: <CAGnHSEmDQ6xaJsw9i=v23BffWQ8RncrgNBsGWy3ziC36QK+9yQ@mail.gmail.com>
-	<yq1fv5l9ajd.fsf@sermon.lab.mkp.net>
-	<CAGnHSEk+=r1CwQaGd9n4nUm3_e3O7GOL_iFDeJTuNyaSq9WFYg@mail.gmail.com>
-	<CAGnHSEnevg=advtq=CW2FvV5b93GX3kNwrFu587O2V7hf1J8hA@mail.gmail.com>
-	<CAGnHSEnBvgWKw6g=c4vpCNEfpdh_45orz5JcSmfM7jadxjpxzQ@mail.gmail.com>
-	<CAGnHSEnLACL6XisaFn3axRETAD3CjOa7fGrHKR7s6GOroQXkew@mail.gmail.com>
+From: "Herr Martins D Weber" <test@fumeilaistone.cn>
+Subject: Lieber Freund!!!
+Date: Sat, 13 Jun 2015 05:14:03 -0700
+Message-ID: <CA2C27E7-11B9-4C7B-8B69-CD876ABFFA05__11470.3055508018$1435056597$gmane$org@fumeilaistone.cn>
+Reply-To: <martinsdweber@aim.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <CAGnHSEnLACL6XisaFn3axRETAD3CjOa7fGrHKR7s6GOroQXkew@mail.gmail.com>
-	(Tom Yan's message of "Mon, 22 Jun 2015 04:30:00 +0800")
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tom Yan <tom.ty89@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=Windows-1251
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from [115.29.104.60] ([115.29.104.60]:49258 "HELO fumeilaistone.cn"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+	id S1754578AbbFWKtj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Jun 2015 06:49:39 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
->>>>> "Tom" == Tom Yan <tom.ty89@gmail.com> writes:
+Lieber Freund!!!
 
-Tom> However, I am curious what is the meaning of "Our current TRIM
-Tom> payload is a single sector that can accommodate 64 * 65535 blocks
-Tom> being unmapped. Report this value in the Block Limits Maximum Unmap
-Tom> LBA count field." in the commit message. What does the value
-Tom> actually mean/affect? Could it cause trouble to certain drives?
+Ich vermute das diese E-Mail eine ?berraschung f?r Sie sein wird, aber =
+es ist wahr.Ich bin bei einer routinen ?berpr?fung in meiner Bank (Stan=
+dardBank PLC von S?d Afrika) wo ich arbeite, auf einem Konto gesto?en, =
+was nicht in anspruch genommen worden ist, wo derzeit USD$18.5M (Achtze=
+hn Million, F?nf Hundert Tausend, US Dollar)  gutgeschrieben sind.Diese=
+s Konto geh?rte Herrn Manfred Becker, der ein Kunde in unsere Bank war,=
+ der leider verstorben ist. Herrn Manfred Becker war ein geb?rtiger Deu=
+tscher.
 
-DSM Trim takes a payload of <block nr, block count> ranges. The block
-count is constrained to 65535 by virtue of being 16 bits. We can fit 64
-8-byte range descriptors in a single 512-byte sector payload. That's why
-we set the limit for a single, contiguous discard request to
-0x3fffc0. That results in 2GB minus change for a single command.
+Damit es mir m?glich ist dieses Geld $18,500,000 inanspruch zunehmen,be=
+n?tige ich die zusammenarbeit eines Ausl?ndischen Partners wie Sie,den =
+ich als Verwandter und Erbe des verstorbenen Herrn Manfred Becker vorst=
+ellen kann,damit wir das Geld inanspruch nehmen k?nnen. F?r diese Unter=
+st?tzung erhalten Sie 30% der Erbschaftsumme und die restlichen 70% tei=
+le ich mirmit meinen zwei Arbeitskollegen, die mich bei dieser Transakt=
+ion ebenfalls unterst?tzen.
 
-Tom> By the way I think I got the answer for my USB TRIM question.
-Tom> Basically for USB->SATA drives the SATL is implemented in the
-Tom> bridges, so it must be able to "SAT" one of the three SCSI unmap
-Tom> methods to ATA TRIM, just like libata does,
 
-Yep. I have set to see one that gets that right, though. There are even
-many enterprise SAS/RAID controllers that don't support UNMAP-TRIM
-translation.
+Wenn Sie interessiert sind, k?nnen Sie mir bitte eine E-Mail schicken, =
+damit ich Ihnen mehr Details zukommen lassen kann. N.B.BITTE SENDEN SIE=
+ MIR Martins D Weber ANTWORT ZU durch mein E-mail: ( martinsdweber@aim.=
+com ) f?R VERTRAULICHEN GRUND. Schicken Sie keine POST ZU MEINEM B?RO-E=
+-MAIL.(martinsdweber@aim.com )
 
-Linux' libata was one of the first implementations of SCSI-ATA
-translation for TRIM. Initially we bent the rules for UNMAP a bit. When
-the standards caught up we switched to WRITE SAME.
 
-Tom> So it actually tells. And I hope that the kernel wouldn't "falsify"
-Tom> anything for devices which do provide some VPD(s). : \
+If you understand english,please  kindly reply with english ( martinsdw=
+eber@aim.com )
 
-SATA doesn't have VPDs.
+Mit freundlichen Gr=FC=DFen
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+Herr Martins D Weber
+
+---
+This email has been checked for viruses by Avast antivirus software.
+https://www.avast.com/antivirus
+
+
