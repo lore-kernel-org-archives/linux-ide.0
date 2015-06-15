@@ -1,35 +1,26 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 4/4] libata: Fall back to unqueued READ LOG EXT if the DMA variant fails
-Date: Sun, 14 Jun 2015 19:45:49 -0400
-Message-ID: <yq1wpz5hn0y.fsf@sermon.lab.mkp.net>
-References: <1430790861-30066-1-git-send-email-martin.petersen@oracle.com>
-	<1430790861-30066-4-git-send-email-martin.petersen@oracle.com>
-	<557B39FB.4060304@redhat.com>
+From: "Klientskie bazi tel +79133913837 Email: nonen22pp@gmail.com Yznaite
+	podrobnee!!!" <linux-ide@vger.kernel.org>
+Subject: Klientskie bazi tel +79133913837 Email: nonen22pp@gmail.com Yznaite podrobnee!!!
+Date: Mon, 15 Jun 2015 09:46:39 +0400
+Message-ID: <B14B7E330FDBF5469A9FD66B1F45A28B@vger.kernel.org>
+Reply-To: "Klientskie bazi tel +79133913837 Email: nonen22pp@gmail.com Yznaite
+	  podrobnee!!!" <nonen22pp@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	format=flowed;
+	charset="utf-8";
+	reply-type=original
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:19342 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751752AbbFNXp6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 Jun 2015 19:45:58 -0400
-In-Reply-To: <557B39FB.4060304@redhat.com> (David Milburn's message of "Fri,
-	12 Jun 2015 14:58:51 -0500")
+Received: from [5.196.219.74] ([5.196.219.74]:50877 "EHLO
+	localhost.localdomain" rhost-flags-FAIL-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753292AbbFOHth (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 15 Jun 2015 03:49:37 -0400
+Received: from 5.196.219.74 (localhost [IPv6:::1])
+	by localhost.localdomain (Postfix) with SMTP id 1B44C290382
+	for <linux-ide@vger.kernel.org>; Thu,  4 Jun 2015 16:50:22 -0400 (EDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Milburn <dmilburn@redhat.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, tj@kernel.org, hare@suse.de, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
->>>>> "David" == David Milburn <dmilburn@redhat.com> writes:
-
-David> Have you seen both commands fail on any of the Samsung SSD 840
-David> EVO drives?
-
-David> # dmesg | grep Samsung [ 2.254443] ata10.00: ATA-9: Samsung SSD
-David> 840 EVO 1TB, EXT0BB6Q, max UDMA/133
-
-I have an 840 EVO in my test box. However, yours is running an older
-firmware that predates queued TRIM support. So I guess that's
-expected...
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Klientskie bazi tel +79133913837 Email: nonen22pp@gmail.com Yznaite podrobnee!!!
