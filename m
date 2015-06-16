@@ -1,91 +1,35 @@
-From: Tom Yan <tom.ty89@gmail.com>
-Subject: Re: how to "decode" SG_IO: bad/missing sense data?
-Date: Tue, 16 Jun 2015 23:58:39 +0800
-Message-ID: <CAGnHSEnqPFyfZxg6-CXxhUHAg=TcNy7qxjbPaSV1qJaGsSOPew@mail.gmail.com>
-References: <CAGnHSEkbmVnby-QRs56JRUWCXHYxNZ_jiuE7R4Uard59GOy=Yw@mail.gmail.com>
-	<55800767.4080601@interlog.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 4/4] libata: Fall back to unqueued READ LOG EXT if the DMA variant fails
+Date: Tue, 16 Jun 2015 12:43:24 -0400
+Message-ID: <yq14mm7hadv.fsf@sermon.lab.mkp.net>
+References: <1430790861-30066-1-git-send-email-martin.petersen@oracle.com>
+	<1430790861-30066-4-git-send-email-martin.petersen@oracle.com>
+	<557B39FB.4060304@redhat.com> <yq1wpz5hn0y.fsf@sermon.lab.mkp.net>
+	<20150615152459.GA14007@dhcp-10-15-1-8.hsv.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f51.google.com ([209.85.192.51]:36660 "EHLO
-	mail-qg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750838AbbFPP6k (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Jun 2015 11:58:40 -0400
-In-Reply-To: <55800767.4080601@interlog.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:41914 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755789AbbFPQne (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Jun 2015 12:43:34 -0400
+In-Reply-To: <20150615152459.GA14007@dhcp-10-15-1-8.hsv.redhat.com> (David
+	Milburn's message of "Mon, 15 Jun 2015 10:24:59 -0500")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: David Milburn <dmilburn@redhat.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, hare@suse.de, tj@kernel.org
 
-I knew both sg_decode_sense and the SAT spec, but I didn't think of
-using them together to decode this. (Didn't bother to download the
-spec as well because it requires a bit of "registration" :P) Thanks
-for the pointer.
+>>>>> "David" == David Milburn <dmilburn@redhat.com> writes:
 
-According to the latest draft, if "CK_COND" is set to 1, the sense
-data returned will be:
+David> Ahh, ok, would it be ok to slightly change the error message to
+David> indicate the drive doesn't support queued TRIM.
 
-"No error, successful completion or command in progress. The SATL shall
-terminate the command with CHECK CONDITION status with the sense key
-set to RECOVERED ERROR with the additional sense code set to ATA
-PASS-THROUGH INFORMATION AVAILABLE (see SPC-4)."
+I don't have a problem with your more elaborate debug message.
 
-though I do not find anything useful to further decode the additional
-fields like "status=0x50". (Some google results did tell me that 50
-means success.)
+It is a clear bug in the drive firmware, though. The ACS spec mandates
+that the log page shall be supported if IDENTIFY DEVICE word 77, bit 6
+is set.
 
-The man page of sg_sat_identify also mentioned a bit about it:
-
-       -c, --ck_cond
-              sets  the CK_COND bit in the ATA PASS-THROUGH SCSI cdb.
-The default setting is clear (i.e. 0). When set the SATL should yield
-a sense buffer containing a ATA Result descriptor irrespective of
-              whether the command succeeded or failed. When clear the
-SATL should only yield a sense buffer containing a ATA Result
-descriptor if the command failed.
-
-When I run `sg_sat_identify` with `-c` to my different drives, the
-drive which makes hdparm gives the SG_IO error seems to be the only
-one actually respond to the "CK_COND" bit:
-
-[tom@localhost ~]$ sudo sg_sat_identify -c /dev/sdb
-expected descriptor sense format, response code=0xf0
-
-others simply reacts as if the bit is not set.
-
-Anyway the SG_IO error is given by hdparm, so I guess I should talk to
-the hdparm guys now.
-
-On 16 June 2015 at 19:24, Douglas Gilbert <dgilbert@interlog.com> wrote:
-> On 15-06-16 01:05 PM, Tom Yan wrote:
->>
->> When I "ATA Secure Erase" a USB Flash Drive, I got:
->>
->> SG_IO: bad/missing sense data, sb[]:  f0 00 01 00 50 40 00 0a 00 00 00
->> 00 00 1d 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->>
->> While the erase seems to work without bricking the device (multiple
->> trials with shred and hexdump), this message still bothers me a bit.
->> So is there anyway I could "decode" it so that I can know what it
->> actually means?
->
->
-> Hi,
-> Install the sg3_utils package then copy that hex sequence and place
-> it after the sg_decode_sense command. In this case:
->
-> $ sg_decode_sense f0 00 01 00 50 40 00 0a 00 00 00 00 00 1d 00 00 00 00 00
-> 00 00 00 00 00 00 00 00 00 00 00 00 00
->  Fixed format, current;  Sense key: Recovered Error
->  Additional sense: ATA pass through information available
->   error=0x0, status=0x50, device=0x40, sector_count(7:0)=0x0
->   extend=0, log_index=0x0, lba_high,mid,low(7:0)=0x0,0x0,0x0
->
-> So that ATA Secure Erase command is sending a SCSI error back
-> through the SAT mechanism. Check the SAT standard (at www.t10.org)
-> for details.
->
-> Doug Gilbert
->
->
->
+-- 
+Martin K. Petersen	Oracle Linux Engineering
