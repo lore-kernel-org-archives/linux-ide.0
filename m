@@ -1,49 +1,46 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: how to "decode" SG_IO: bad/missing sense data?
-Date: Tue, 16 Jun 2015 13:24:23 +0200
-Message-ID: <55800767.4080601@interlog.com>
-References: <CAGnHSEkbmVnby-QRs56JRUWCXHYxNZ_jiuE7R4Uard59GOy=Yw@mail.gmail.com>
-Reply-To: dgilbert@interlog.com
+From: Robert Richter <robert.richter@caviumnetworks.com>
+Subject: Re: [PATCH v5 0/2] ahci: Add generic MSI-X support for single
+ interrupts to SATA PCI
+Date: Tue, 16 Jun 2015 15:24:34 +0200
+Message-ID: <20150616132434.GO10428@rric.localhost>
+References: <1433526566-21136-1-git-send-email-rric@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:58235 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752409AbbFPLYy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 Jun 2015 07:24:54 -0400
-In-Reply-To: <CAGnHSEkbmVnby-QRs56JRUWCXHYxNZ_jiuE7R4Uard59GOy=Yw@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1433526566-21136-1-git-send-email-rric@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Robert Richter <rric@kernel.org>
+Cc: Tejun Heo <tj@kernel.org>, Sunil Goutham <sgoutham@cavium.com>, Jiang Liu <jiang.liu@linux.intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
-To: Tom Yan <tom.ty89@gmail.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On 15-06-16 01:05 PM, Tom Yan wrote:
-> When I "ATA Secure Erase" a USB Flash Drive, I got:
->
-> SG_IO: bad/missing sense data, sb[]:  f0 00 01 00 50 40 00 0a 00 00 00
-> 00 00 1d 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->
-> While the erase seems to work without bricking the device (multiple
-> trials with shred and hexdump), this message still bothers me a bit.
-> So is there anyway I could "decode" it so that I can know what it
-> actually means?
+On 05.06.15 19:49:24, Robert Richter wrote:
+> From: Robert Richter <rrichter@cavium.com>
+> 
+> This patch set adds generic support for MSI-X interrupts to the SATA
+> PCI driver.
+> 
+> One patch does the generic change, the other add support for Cavium's
+> ThunderX host controller.
 
-Hi,
-Install the sg3_utils package then copy that hex sequence and place
-it after the sg_decode_sense command. In this case:
+Tejun,
 
-$ sg_decode_sense f0 00 01 00 50 40 00 0a 00 00 00 00 00 1d 00 00 00 00 00 00 00 
-00 00 00 00 00 00 00 00 00 00 00
-  Fixed format, current;  Sense key: Recovered Error
-  Additional sense: ATA pass through information available
-   error=0x0, status=0x50, device=0x40, sector_count(7:0)=0x0
-   extend=0, log_index=0x0, lba_high,mid,low(7:0)=0x0,0x0,0x0
+any comment on this?
 
-So that ATA Secure Erase command is sending a SCSI error back
-through the SAT mechanism. Check the SAT standard (at www.t10.org)
-for details.
+Thanks,
 
-Doug Gilbert
+-Robert
 
-
-
+> 
+> 
+> Robert Richter (2):
+>   ahci: Add generic MSI-X support for single interrupts to SATA PCI
+>     driver
+>   ahci: Add support for Cavium's ThunderX host controller
+> 
+>  drivers/ata/ahci.c | 82 +++++++++++++++++++++++++++++++++++++++++++++++++++++-
+>  1 file changed, 81 insertions(+), 1 deletion(-)
+> 
+> -- 
+> 2.1.1
+> 
