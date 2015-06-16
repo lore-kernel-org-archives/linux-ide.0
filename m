@@ -1,35 +1,43 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 4/4] libata: Fall back to unqueued READ LOG EXT if the DMA variant fails
-Date: Tue, 16 Jun 2015 12:43:24 -0400
-Message-ID: <yq14mm7hadv.fsf@sermon.lab.mkp.net>
-References: <1430790861-30066-1-git-send-email-martin.petersen@oracle.com>
-	<1430790861-30066-4-git-send-email-martin.petersen@oracle.com>
-	<557B39FB.4060304@redhat.com> <yq1wpz5hn0y.fsf@sermon.lab.mkp.net>
-	<20150615152459.GA14007@dhcp-10-15-1-8.hsv.redhat.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v5 0/2] ahci: Add generic MSI-X support for single
+ interrupts to SATA PCI
+Date: Tue, 16 Jun 2015 16:13:41 -0400
+Message-ID: <20150616201341.GD22637@mtj.duckdns.org>
+References: <1433526566-21136-1-git-send-email-rric@kernel.org>
+ <20150616132434.GO10428@rric.localhost>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:41914 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755789AbbFPQne (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Jun 2015 12:43:34 -0400
-In-Reply-To: <20150615152459.GA14007@dhcp-10-15-1-8.hsv.redhat.com> (David
-	Milburn's message of "Mon, 15 Jun 2015 10:24:59 -0500")
+Received: from mail-yh0-f47.google.com ([209.85.213.47]:32981 "EHLO
+	mail-yh0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754157AbbFPUNp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Jun 2015 16:13:45 -0400
+Content-Disposition: inline
+In-Reply-To: <20150616132434.GO10428@rric.localhost>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Milburn <dmilburn@redhat.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, hare@suse.de, tj@kernel.org
+To: Robert Richter <robert.richter@caviumnetworks.com>
+Cc: Robert Richter <rric@kernel.org>, Sunil Goutham <sgoutham@cavium.com>, Jiang Liu <jiang.liu@linux.intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 
->>>>> "David" == David Milburn <dmilburn@redhat.com> writes:
+On Tue, Jun 16, 2015 at 03:24:34PM +0200, Robert Richter wrote:
+> On 05.06.15 19:49:24, Robert Richter wrote:
+> > From: Robert Richter <rrichter@cavium.com>
+> > 
+> > This patch set adds generic support for MSI-X interrupts to the SATA
+> > PCI driver.
+> > 
+> > One patch does the generic change, the other add support for Cavium's
+> > ThunderX host controller.
+> 
+> Tejun,
+> 
+> any comment on this?
 
-David> Ahh, ok, would it be ok to slightly change the error message to
-David> indicate the drive doesn't support queued TRIM.
+Oops, sorry, the thread fell through the crack somehow.  I applied the
+two patches to libata/for-4.2 with some comment edits on the first
+patch.
 
-I don't have a problem with your more elaborate debug message.
-
-It is a clear bug in the drive firmware, though. The ACS spec mandates
-that the log page shall be supported if IDENTIFY DEVICE word 77, bit 6
-is set.
+Thanks!
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+tejun
