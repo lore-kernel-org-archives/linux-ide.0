@@ -1,55 +1,37 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2] ahci, msix: Fix build error for !PCI_MSI
-Date: Wed, 17 Jun 2015 14:17:34 -0400
-Message-ID: <20150617181734.GH22637@mtj.duckdns.org>
-References: <1433526566-21136-1-git-send-email-rric@kernel.org>
- <20150616132434.GO10428@rric.localhost>
- <20150616201341.GD22637@mtj.duckdns.org>
- <20150617084852.GL4914@rric.localhost>
- <5581379C.3090607@linux.intel.com>
- <20150617133002.GW10428@rric.localhost>
+Subject: Re: [PATCH] ata: ahci_mvebu: add suspend/resume support
+Date: Wed, 17 Jun 2015 14:26:32 -0400
+Message-ID: <20150617182632.GJ22637@mtj.duckdns.org>
+References: <1434543061-3066-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yh0-f46.google.com ([209.85.213.46]:33933 "EHLO
-	mail-yh0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753567AbbFQSRh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Jun 2015 14:17:37 -0400
+Received: from mail-yk0-f180.google.com ([209.85.160.180]:33641 "EHLO
+	mail-yk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757774AbbFQS0f (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Jun 2015 14:26:35 -0400
+Received: by ykfr66 with SMTP id r66so47100768ykf.0
+        for <linux-ide@vger.kernel.org>; Wed, 17 Jun 2015 11:26:34 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <20150617133002.GW10428@rric.localhost>
+In-Reply-To: <1434543061-3066-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Robert Richter <robert.richter@caviumnetworks.com>
-Cc: Jiang Liu <jiang.liu@linux.intel.com>, Robert Richter <rric@kernel.org>, Sunil Goutham <sgoutham@cavium.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, kbuild test robot <fengguang.wu@intel.com>, kbuild-all@01.org
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Tawfik Bayouk <tawfik@marvell.com>, Nadav Haklai <nadavh@marvell.com>, Lior Amsalem <alior@marvell.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Gregory Clement <gregory.clement@free-electrons.com>
 
-On Wed, Jun 17, 2015 at 03:30:02PM +0200, Robert Richter wrote:
-> From e43b79f0afd794d3e37ec0922c75e44b1c3f2e22 Mon Sep 17 00:00:00 200=
-1
-> From: Robert Richter <rrichter@cavium.com>
-> Date: Wed, 17 Jun 2015 10:33:22 +0200
-> Subject: [PATCH v2] ahci, msix: Fix build error for !PCI_MSI
-> MIME-Version: 1.0
-> Content-Type: text/plain; charset=3DUTF-8
-> Content-Transfer-Encoding: 8bit
->=20
-> It turned out the irq vector of the msix can be obtained from struct
-> msix_entry. This makes the lookup function for msi_desc obsolete.
->=20
-> This fixes a build error if PCI_MSI is unset:
->=20
->  drivers/ata/ahci.c: In function =E2=80=98msix_get_desc=E2=80=99:
->  drivers/ata/ahci.c:1210:2: error: =E2=80=98struct pci_dev=E2=80=99 h=
-as no member named =E2=80=98msi_list=E2=80=99
->=20
-> Catched by Fengguang's build bot.
->=20
-> Reported-by: kbuild test robot <fengguang.wu@intel.com>
-> Signed-off-by: Robert Richter <rrichter@cavium.com>
+On Wed, Jun 17, 2015 at 02:11:01PM +0200, Thomas Petazzoni wrote:
+> This commit adds suspend/resume support to the ahci_mvebu driver. The
+> suspend hook doesn't do anything special despite calling the generic
+> ahci_platform_suspend_host() function. However, the resume hook has to
+> restore the MBus windows configuration, as well as the regret option.
+> 
+> Tested on Marvell Armada 388 GP.
+> 
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 
 Applied to libata/for-4.2.
 
 Thanks.
 
---=20
+-- 
 tejun
