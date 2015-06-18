@@ -1,37 +1,41 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ata: ahci_mvebu: add suspend/resume support
-Date: Wed, 17 Jun 2015 14:26:32 -0400
-Message-ID: <20150617182632.GJ22637@mtj.duckdns.org>
-References: <1434543061-3066-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH] libata: Do not blacklist Micron M500DC
+Date: Thu, 18 Jun 2015 14:50:18 -0400
+Message-ID: <1434653418-4562-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yk0-f180.google.com ([209.85.160.180]:33641 "EHLO
-	mail-yk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757774AbbFQS0f (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Jun 2015 14:26:35 -0400
-Received: by ykfr66 with SMTP id r66so47100768ykf.0
-        for <linux-ide@vger.kernel.org>; Wed, 17 Jun 2015 11:26:34 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <1434543061-3066-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:27803 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752029AbbFRSvQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Jun 2015 14:51:16 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Tawfik Bayouk <tawfik@marvell.com>, Nadav Haklai <nadavh@marvell.com>, Lior Amsalem <alior@marvell.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Gregory Clement <gregory.clement@free-electrons.com>
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, stable@vger.kernel.org
 
-On Wed, Jun 17, 2015 at 02:11:01PM +0200, Thomas Petazzoni wrote:
-> This commit adds suspend/resume support to the ahci_mvebu driver. The
-> suspend hook doesn't do anything special despite calling the generic
-> ahci_platform_suspend_host() function. However, the resume hook has to
-> restore the MBus windows configuration, as well as the regret option.
-> 
-> Tested on Marvell Armada 388 GP.
-> 
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Queued TRIM got disabled on Micron M500DC drives thanks to the
+"Micron_M500*" pattern we had in place to accommodate the previous
+generation of this drive family. Tweak the blacklist entry slightly so
+we only disable queued TRIM for the non-DC variants of M500 drives.
 
-Applied to libata/for-4.2.
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: stable@vger.kernel.org
+---
+ drivers/ata/libata-core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks.
-
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 9cebd7872ac6..8815b9f691bd 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4225,7 +4225,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 	{ "PIONEER DVD-RW  DVR-216D",	NULL,	ATA_HORKAGE_NOSETXFER },
+ 
+ 	/* devices that don't properly handle queued TRIM commands */
+-	{ "Micron_M500*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
++	{ "Micron_M500_*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
+ 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
+ 	{ "Crucial_CT*M500*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
+ 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
 -- 
-tejun
+2.4.3
+
