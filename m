@@ -1,46 +1,56 @@
-From: "Andy Falanga (afalanga)" <afalanga@micron.com>
-Subject: how to issue an ATA command
-Date: Mon, 22 Jun 2015 19:02:41 +0000
-Message-ID: <1434999754.17290.8.camel@afalanga4.micron.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: configurable discard parameters
+Date: Mon, 22 Jun 2015 16:57:27 -0400
+Message-ID: <yq1616f796w.fsf@sermon.lab.mkp.net>
+References: <CAGnHSEmDQ6xaJsw9i=v23BffWQ8RncrgNBsGWy3ziC36QK+9yQ@mail.gmail.com>
+	<yq1fv5l9ajd.fsf@sermon.lab.mkp.net>
+	<CAGnHSEk+=r1CwQaGd9n4nUm3_e3O7GOL_iFDeJTuNyaSq9WFYg@mail.gmail.com>
+	<CAGnHSEnevg=advtq=CW2FvV5b93GX3kNwrFu587O2V7hf1J8hA@mail.gmail.com>
+	<CAGnHSEnBvgWKw6g=c4vpCNEfpdh_45orz5JcSmfM7jadxjpxzQ@mail.gmail.com>
+	<CAGnHSEnLACL6XisaFn3axRETAD3CjOa7fGrHKR7s6GOroQXkew@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.micron.com ([137.201.242.129]:25572 "EHLO
-	mailout.micron.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751010AbbFVTCo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Jun 2015 15:02:44 -0400
-Received: from mail.micron.com (ntxboicas01.micron.com [137.201.84.60])
-	by mailout.micron.com (8.14.4/8.14.6) with ESMTP id t5MJ2goG020436
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=FAIL)
-	for <linux-ide@vger.kernel.org>; Mon, 22 Jun 2015 13:02:43 -0600
-Content-Language: en-US
-Content-ID: <37EEE608C991EA46BC1FF1AE32AA35B1@micron.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <CAGnHSEnLACL6XisaFn3axRETAD3CjOa7fGrHKR7s6GOroQXkew@mail.gmail.com>
+	(Tom Yan's message of "Mon, 22 Jun 2015 04:30:00 +0800")
+Sender: linux-scsi-owner@vger.kernel.org
+To: Tom Yan <tom.ty89@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide <linux-ide@vger.kernel.org>
 
-SGksDQoNCkknbSB3cml0aW5nIGEgY2hhcmFjdGVyIGRyaXZlciB3aGljaCBpcyBtZWFudCB0byBh
-Y3QgYXMgYSBwYXNzLXRocm91Z2gNCmZyb20gdXNlciBzcGFjZSB0byB0aGUgYWhjaSBkcml2ZXIu
-ICBVc2luZyB0aGUgMi42LjMyIGtlcm5lbCAoQ2VudE9TIDYpLA0KSSd2ZSBleHBvcnRlZCBhaGNp
-X3FjX2lzc3VlKCkgKGluIGFoY2kuYyB0aGUgTExERCwgd2hpY2ggYXBwZWFycyB0byBiZQ0Kc29t
-ZXRoaW5nIFJIIGJhY2twb3J0ZWQgYmVjYXVzZSBJJ20gbm90IGZpbmRpbmcgdGhlIHN5bWJvbCBh
-dCB0aGUgbHhyDQpzaXRlIEkgdXNlIGZvciAyLjYuMzIpIHNvIHRoYXQgbXkgdXBwZXIgbGF5ZXIg
-ZHJpdmVyIGNhbiB0YWxrIHRvIHRoZSBMTC4NCkkndmUgbW9kaWZpZWQgZW5vdWdoIHRoYXQgSSBj
-YW4gcGVlay9wb2tlIHJlZ2lzdGVycyBvbiB0aGUgSEJBIHVzaW5nDQppb2N0bHMuICBOb3csIGl0
-J3Mgb250byB0aGUgbmV4dCB0YXNrIHdoaWNoIGlzIGFsbG93aW5nIHVzZXJzIHRvIGlzc3VlDQpB
-VEEgY29tbWFuZHMgdGhyb3VnaCB0aGlzIGRyaXZlci4gIEkgbmVlZCB0byBiZSBhYmxlIHRvIGRv
-IHNvIHVzaW5nDQp0aGlzLCBhcyBvcHBvc2VkIHRvIHNnLCBiZWNhdXNlIHdlIHRydWx5IHdhbnQg
-YSBwYXNzLXRocm91Z2ggZHJpdmVyDQp3aGljaCB3aWxsIGJ5IHBhc3MgdGhlIHJlc3Qgb2YgdGhl
-IGtlcm5lbCBpbiB0aGlzIGFyZWEuICBXZSBhbHNvIGhhdmUgYQ0KbmVlZCBmb3IgaXNzdWluZyBj
-b21tYW5kcyB1bmRlciBjaXJjdW1zdGFuY2VzIHdoaWNoIHByZXZlbnQgdGhlIGV4aXN0aW5nDQpk
-cml2ZXJzIGZyb20gbWFraW5nIGRldmljZSBub2RlcyAoaS5lLiAvZGV2L3NnTikgZm9yIHRoZSBk
-cml2ZSB1bmRlcg0Kc2NydXRpbnkuICBUaHVzLCBteSB1cHBlciBsYXllciBkcml2ZXIgbWFrZXMg
-YSBkZXZpY2Ugbm9kZSBmb3IgZWFjaCBwb3J0DQpvbiB0aGUgSEJBLg0KDQpOb3csIEknbSBleGFt
-aW5pbmcgdGhlIGF0YV9xdWV1ZWRfY21kIHN0cnVjdHVyZQ0KaHR0cDovL2x4ci5mcmVlLWVsZWN0
-cm9ucy5jb20vc291cmNlL2luY2x1ZGUvbGludXgvbGliYXRhLmg/dj0yLjYuMzIjTDU0MSBidXQg
-dGhpcyByYWlzZXMgbWFueSBxdWVzdGlvbnMuICBXaGljaCBmaWVsZHMgbXVzdCBJIGNoZWNrL3Nl
-dD8gIFdoYXQgaXMgbmVjZXNzYXJ5IGFuZCB3aGF0IG1heSBiZSBpZ25vcmVkPyAgQW55IGhlbHAv
-Z3VpZGFuY2Ugb24gdGhpcyBpcyBncmVhdGx5IGFwcHJlY2lhdGVkLg0KDQpBbmR5DQo=
+>>>>> "Tom" == Tom Yan <tom.ty89@gmail.com> writes:
+
+Tom> However, I am curious what is the meaning of "Our current TRIM
+Tom> payload is a single sector that can accommodate 64 * 65535 blocks
+Tom> being unmapped. Report this value in the Block Limits Maximum Unmap
+Tom> LBA count field." in the commit message. What does the value
+Tom> actually mean/affect? Could it cause trouble to certain drives?
+
+DSM Trim takes a payload of <block nr, block count> ranges. The block
+count is constrained to 65535 by virtue of being 16 bits. We can fit 64
+8-byte range descriptors in a single 512-byte sector payload. That's why
+we set the limit for a single, contiguous discard request to
+0x3fffc0. That results in 2GB minus change for a single command.
+
+Tom> By the way I think I got the answer for my USB TRIM question.
+Tom> Basically for USB->SATA drives the SATL is implemented in the
+Tom> bridges, so it must be able to "SAT" one of the three SCSI unmap
+Tom> methods to ATA TRIM, just like libata does,
+
+Yep. I have set to see one that gets that right, though. There are even
+many enterprise SAS/RAID controllers that don't support UNMAP-TRIM
+translation.
+
+Linux' libata was one of the first implementations of SCSI-ATA
+translation for TRIM. Initially we bent the rules for UNMAP a bit. When
+the standards caught up we switched to WRITE SAME.
+
+Tom> So it actually tells. And I hope that the kernel wouldn't "falsify"
+Tom> anything for devices which do provide some VPD(s). : \
+
+SATA doesn't have VPDs.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
 --
-To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
