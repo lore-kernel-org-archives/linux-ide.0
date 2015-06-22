@@ -1,95 +1,46 @@
-From: Tom Yan <tom.ty89@gmail.com>
-Subject: Re: configurable discard parameters
-Date: Mon, 22 Jun 2015 04:30:00 +0800
-Message-ID: <CAGnHSEnLACL6XisaFn3axRETAD3CjOa7fGrHKR7s6GOroQXkew@mail.gmail.com>
-References: <CAGnHSEmDQ6xaJsw9i=v23BffWQ8RncrgNBsGWy3ziC36QK+9yQ@mail.gmail.com>
-	<yq1fv5l9ajd.fsf@sermon.lab.mkp.net>
-	<CAGnHSEk+=r1CwQaGd9n4nUm3_e3O7GOL_iFDeJTuNyaSq9WFYg@mail.gmail.com>
-	<CAGnHSEnevg=advtq=CW2FvV5b93GX3kNwrFu587O2V7hf1J8hA@mail.gmail.com>
-	<CAGnHSEnBvgWKw6g=c4vpCNEfpdh_45orz5JcSmfM7jadxjpxzQ@mail.gmail.com>
+From: "Andy Falanga (afalanga)" <afalanga@micron.com>
+Subject: how to issue an ATA command
+Date: Mon, 22 Jun 2015 19:02:41 +0000
+Message-ID: <1434999754.17290.8.camel@afalanga4.micron.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qc0-f180.google.com ([209.85.216.180]:34781 "EHLO
-	mail-qc0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752688AbbFUUaB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 21 Jun 2015 16:30:01 -0400
-In-Reply-To: <CAGnHSEnBvgWKw6g=c4vpCNEfpdh_45orz5JcSmfM7jadxjpxzQ@mail.gmail.com>
+Received: from mailout.micron.com ([137.201.242.129]:25572 "EHLO
+	mailout.micron.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751010AbbFVTCo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 22 Jun 2015 15:02:44 -0400
+Received: from mail.micron.com (ntxboicas01.micron.com [137.201.84.60])
+	by mailout.micron.com (8.14.4/8.14.6) with ESMTP id t5MJ2goG020436
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=FAIL)
+	for <linux-ide@vger.kernel.org>; Mon, 22 Jun 2015 13:02:43 -0600
+Content-Language: en-US
+Content-ID: <37EEE608C991EA46BC1FF1AE32AA35B1@micron.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide <linux-ide@vger.kernel.org>
 
-After rechecking the result of blkdiscard (without specifying --step)
-with hexdump, I see that the single ioctl is actually broken into
-multiple TRIM commands/ranges by 65535 sector. I wonder if it will be
-further tuned by ANY KIND of granularity though. Though it will
-probably only be a problem for device TRIM, and for that you can
-probably always rely on blkdiscard with --step (and avoid device TRIM
-with things like mkfs.btrfs) so I guess it won't be a big problem. And
-it will be fine for filesystem TRIM anyway I guess.
-
-So it seems that "Maximum write same length: 0x3fffc0 blocks" doesn't
-really matter (In fact when I ran `sg_write_same -U --lba=0
---num=0x7fffffff`, the command also trim the first 65528 sectors of
-the drive). However, I am curious what is the meaning of "Our current
-TRIM payload is a single sector that can accommodate 64 * 65535 blocks
-being unmapped. Report this value in the Block Limits Maximum Unmap
-LBA count field." in the commit message. What does the value actually
-mean/affect? Could it cause trouble to certain drives?
-
-By the way I think I got the answer for my USB TRIM question.
-Basically for USB->SATA drives the SATL is implemented in the bridges,
-so it must be able to "SAT" one of the three SCSI unmap methods to ATA
-TRIM, just like libata does, so that it can handle whatever requested
-through the scsi disk driver, otherwise one can only TRIM it through
-SCSI's ATA pass-through commands if the bridge supports them, e.g.
-hdparm. So my dirty hacking was silly.
-
-P.S.:
-
-[tom@localhost ~]$ sudo sg_vpd -p ai /dev/sda
-ATA information VPD page:
-  SAT Vendor identification: linux
-  SAT Product identification: libata
-  SAT Product revision level: 3.00
-
-So it actually tells. And I hope that the kernel wouldn't "falsify"
-anything for devices which do provide some VPD(s). : \
-
-Another P.S.: I made a mistake in one of my last mails. 65535 is two
-bytes, not four bytes. : /
-
-On 21 June 2015 at 20:36, Tom Yan <tom.ty89@gmail.com> wrote:
-> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/drivers/ata/libata-scsi.c?id=18f0f97850059303ed73b1f02084f55ca330a80c
->
-> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/drivers/ata/libata-scsi.c?id=e78db4dfb1355a895f7ea50133b702b55b8ed184
->
-> So I think I found the answer myself. But I don't see the rationale
-> here at all. So values (arbitrary?) of granularity and maximum has
-> been hardcoded in the kernel for ALL devices which make use of libata,
-> and the parameter cannot be changed by user in runtime? So does it
-> expect all devices to be of the same spec? Or is it just like a
-> draft/example which people can only consider it as "may work"?
->
-> On 21 June 2015 at 16:05, Tom Yan <tom.ty89@gmail.com> wrote:
->> By the way do you think it could be a bug of libata's SATL anyway?
->> Like perhaps it should break a single unmap request to multiple ATA
->> commands? I am not totally sure about it but it looks like there's a
->> limit of addressed blocks in a single ATA DSM/TRIM command (4 bytes,
->> which is 65535).
->>
->> On 21 June 2015 at 15:03, Tom Yan <tom.ty89@gmail.com> wrote:
->>> On 21 June 2015 at 08:20, Martin K. Petersen <martin.petersen@oracle.com> wrote:
->>>> It is a SATA-attached drive, it has no block limits VPD. What you are
->>>> seeing is information prepared by libata's SATL.
->>>>
->>>> Because if the vendor got these trivial values wrong there is little to
->>>> no chance that they implemented discard correctly in their firmware.
->>>
->>> I don't get it. So there's a chance that the VPDs is not purely from
->>> the hardware? Then how can I differentiate them? But then you said
->>> "the vendor got these trivial values wrong", so were you talking about
->>> this drive or just for real SCSI drives?
+SGksDQoNCkknbSB3cml0aW5nIGEgY2hhcmFjdGVyIGRyaXZlciB3aGljaCBpcyBtZWFudCB0byBh
+Y3QgYXMgYSBwYXNzLXRocm91Z2gNCmZyb20gdXNlciBzcGFjZSB0byB0aGUgYWhjaSBkcml2ZXIu
+ICBVc2luZyB0aGUgMi42LjMyIGtlcm5lbCAoQ2VudE9TIDYpLA0KSSd2ZSBleHBvcnRlZCBhaGNp
+X3FjX2lzc3VlKCkgKGluIGFoY2kuYyB0aGUgTExERCwgd2hpY2ggYXBwZWFycyB0byBiZQ0Kc29t
+ZXRoaW5nIFJIIGJhY2twb3J0ZWQgYmVjYXVzZSBJJ20gbm90IGZpbmRpbmcgdGhlIHN5bWJvbCBh
+dCB0aGUgbHhyDQpzaXRlIEkgdXNlIGZvciAyLjYuMzIpIHNvIHRoYXQgbXkgdXBwZXIgbGF5ZXIg
+ZHJpdmVyIGNhbiB0YWxrIHRvIHRoZSBMTC4NCkkndmUgbW9kaWZpZWQgZW5vdWdoIHRoYXQgSSBj
+YW4gcGVlay9wb2tlIHJlZ2lzdGVycyBvbiB0aGUgSEJBIHVzaW5nDQppb2N0bHMuICBOb3csIGl0
+J3Mgb250byB0aGUgbmV4dCB0YXNrIHdoaWNoIGlzIGFsbG93aW5nIHVzZXJzIHRvIGlzc3VlDQpB
+VEEgY29tbWFuZHMgdGhyb3VnaCB0aGlzIGRyaXZlci4gIEkgbmVlZCB0byBiZSBhYmxlIHRvIGRv
+IHNvIHVzaW5nDQp0aGlzLCBhcyBvcHBvc2VkIHRvIHNnLCBiZWNhdXNlIHdlIHRydWx5IHdhbnQg
+YSBwYXNzLXRocm91Z2ggZHJpdmVyDQp3aGljaCB3aWxsIGJ5IHBhc3MgdGhlIHJlc3Qgb2YgdGhl
+IGtlcm5lbCBpbiB0aGlzIGFyZWEuICBXZSBhbHNvIGhhdmUgYQ0KbmVlZCBmb3IgaXNzdWluZyBj
+b21tYW5kcyB1bmRlciBjaXJjdW1zdGFuY2VzIHdoaWNoIHByZXZlbnQgdGhlIGV4aXN0aW5nDQpk
+cml2ZXJzIGZyb20gbWFraW5nIGRldmljZSBub2RlcyAoaS5lLiAvZGV2L3NnTikgZm9yIHRoZSBk
+cml2ZSB1bmRlcg0Kc2NydXRpbnkuICBUaHVzLCBteSB1cHBlciBsYXllciBkcml2ZXIgbWFrZXMg
+YSBkZXZpY2Ugbm9kZSBmb3IgZWFjaCBwb3J0DQpvbiB0aGUgSEJBLg0KDQpOb3csIEknbSBleGFt
+aW5pbmcgdGhlIGF0YV9xdWV1ZWRfY21kIHN0cnVjdHVyZQ0KaHR0cDovL2x4ci5mcmVlLWVsZWN0
+cm9ucy5jb20vc291cmNlL2luY2x1ZGUvbGludXgvbGliYXRhLmg/dj0yLjYuMzIjTDU0MSBidXQg
+dGhpcyByYWlzZXMgbWFueSBxdWVzdGlvbnMuICBXaGljaCBmaWVsZHMgbXVzdCBJIGNoZWNrL3Nl
+dD8gIFdoYXQgaXMgbmVjZXNzYXJ5IGFuZCB3aGF0IG1heSBiZSBpZ25vcmVkPyAgQW55IGhlbHAv
+Z3VpZGFuY2Ugb24gdGhpcyBpcyBncmVhdGx5IGFwcHJlY2lhdGVkLg0KDQpBbmR5DQo=
 --
 To unsubscribe from this list: send the line "unsubscribe linux-ide" in
