@@ -1,55 +1,43 @@
-From: "Herr Martins D Weber" <test@fumeilaistone.cn>
-Subject: Lieber Freund!!!
-Date: Sat, 13 Jun 2015 05:14:03 -0700
-Message-ID: <CA2C27E7-11B9-4C7B-8B69-CD876ABFFA05__11470.3055508018$1435056597$gmane$org@fumeilaistone.cn>
-Reply-To: <martinsdweber@aim.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=Windows-1251
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Subject: [PATCH] ata: sata_rcar: Remove obsolete sata-r8a779* platform_device_id entries
+Date: Tue, 23 Jun 2015 14:55:13 +0200
+Message-ID: <1435064113-10742-1-git-send-email-geert+renesas@glider.be>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [115.29.104.60] ([115.29.104.60]:49258 "HELO fumeilaistone.cn"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1754578AbbFWKtj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Jun 2015 06:49:39 -0400
+Received: from xavier.telenet-ops.be ([195.130.132.52]:54032 "EHLO
+	xavier.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932520AbbFWMzP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Jun 2015 08:55:15 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-sh@vger.kernel.org, Geert Uytterhoeven <geert+renesas@glider.be>
 
-Lieber Freund!!!
+Since commit a483dcbfa21f919c ("ARM: shmobile: lager: Remove legacy
+board support"), R-Car Gen2 SoCs are only supported in generic DT-only
+ARM multi-platform builds.  The driver doesn't need to match platform
+devices by name anymore, hence remove the corresponding
+platform_device_id entry.
 
-Ich vermute das diese E-Mail eine ?berraschung f?r Sie sein wird, aber =
-es ist wahr.Ich bin bei einer routinen ?berpr?fung in meiner Bank (Stan=
-dardBank PLC von S?d Afrika) wo ich arbeite, auf einem Konto gesto?en, =
-was nicht in anspruch genommen worden ist, wo derzeit USD$18.5M (Achtze=
-hn Million, F?nf Hundert Tausend, US Dollar)  gutgeschrieben sind.Diese=
-s Konto geh?rte Herrn Manfred Becker, der ein Kunde in unsere Bank war,=
- der leider verstorben ist. Herrn Manfred Becker war ein geb?rtiger Deu=
-tscher.
-
-Damit es mir m?glich ist dieses Geld $18,500,000 inanspruch zunehmen,be=
-n?tige ich die zusammenarbeit eines Ausl?ndischen Partners wie Sie,den =
-ich als Verwandter und Erbe des verstorbenen Herrn Manfred Becker vorst=
-ellen kann,damit wir das Geld inanspruch nehmen k?nnen. F?r diese Unter=
-st?tzung erhalten Sie 30% der Erbschaftsumme und die restlichen 70% tei=
-le ich mirmit meinen zwei Arbeitskollegen, die mich bei dieser Transakt=
-ion ebenfalls unterst?tzen.
-
-
-Wenn Sie interessiert sind, k?nnen Sie mir bitte eine E-Mail schicken, =
-damit ich Ihnen mehr Details zukommen lassen kann. N.B.BITTE SENDEN SIE=
- MIR Martins D Weber ANTWORT ZU durch mein E-mail: ( martinsdweber@aim.=
-com ) f?R VERTRAULICHEN GRUND. Schicken Sie keine POST ZU MEINEM B?RO-E=
--MAIL.(martinsdweber@aim.com )
-
-
-If you understand english,please  kindly reply with english ( martinsdw=
-eber@aim.com )
-
-Mit freundlichen Gr=FC=DFen
-
-Herr Martins D Weber
-
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
 ---
-This email has been checked for viruses by Avast antivirus software.
-https://www.avast.com/antivirus
+ drivers/ata/sata_rcar.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
+diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
+index d49a5193b7de9e94..8804127b108c0f8e 100644
+--- a/drivers/ata/sata_rcar.c
++++ b/drivers/ata/sata_rcar.c
+@@ -861,10 +861,6 @@ MODULE_DEVICE_TABLE(of, sata_rcar_match);
+ static const struct platform_device_id sata_rcar_id_table[] = {
+ 	{ "sata_rcar", RCAR_GEN1_SATA }, /* Deprecated by "sata-r8a7779" */
+ 	{ "sata-r8a7779", RCAR_GEN1_SATA },
+-	{ "sata-r8a7790", RCAR_GEN2_SATA },
+-	{ "sata-r8a7790-es1", RCAR_R8A7790_ES1_SATA },
+-	{ "sata-r8a7791", RCAR_GEN2_SATA },
+-	{ "sata-r8a7793", RCAR_GEN2_SATA },
+ 	{ },
+ };
+ MODULE_DEVICE_TABLE(platform, sata_rcar_id_table);
+-- 
+1.9.1
 
