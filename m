@@ -1,7 +1,7 @@
-From: Tom Yan <tom.ty89@gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: configurable discard parameters
-Date: Wed, 24 Jun 2015 00:41:20 +0800
-Message-ID: <CAGnHSEm89yFPPTVUtbk1s84wanKK6RTY5hdZCMdbw+a+vwecDA@mail.gmail.com>
+Date: Tue, 23 Jun 2015 13:03:00 -0400
+Message-ID: <yq1mvzq4at7.fsf@sermon.lab.mkp.net>
 References: <CAGnHSEmDQ6xaJsw9i=v23BffWQ8RncrgNBsGWy3ziC36QK+9yQ@mail.gmail.com>
 	<yq1fv5l9ajd.fsf@sermon.lab.mkp.net>
 	<CAGnHSEk+=r1CwQaGd9n4nUm3_e3O7GOL_iFDeJTuNyaSq9WFYg@mail.gmail.com>
@@ -11,46 +11,54 @@ References: <CAGnHSEmDQ6xaJsw9i=v23BffWQ8RncrgNBsGWy3ziC36QK+9yQ@mail.gmail.com>
 	<yq1616f796w.fsf@sermon.lab.mkp.net>
 	<CAGnHSEn4EPC_RHTJXtvFC8dj8L+aDd_pRvSsDWNaqHz3Tdxj5w@mail.gmail.com>
 	<yq1bng65te8.fsf@sermon.lab.mkp.net>
+	<CAGnHSEm89yFPPTVUtbk1s84wanKK6RTY5hdZCMdbw+a+vwecDA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <yq1bng65te8.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:41790 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933555AbbFWRDI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Jun 2015 13:03:08 -0400
+In-Reply-To: <CAGnHSEm89yFPPTVUtbk1s84wanKK6RTY5hdZCMdbw+a+vwecDA@mail.gmail.com>
+	(Tom Yan's message of "Wed, 24 Jun 2015 00:41:20 +0800")
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tom Yan <tom.ty89@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On 23 June 2015 at 23:36, Martin K. Petersen <martin.petersen@oracle.com> wrote:
->
-> You haven't given us any reason to. We are not aware of any ATA drives
-> that put constraints on the range block count.
->
+>>>>> "Tom" == Tom Yan <tom.ty89@gmail.com> writes:
 
-What I have been doing is trying to show you example of those
-constraints. When I talked about the block count limit of the SanDisk
-Extreme USB, I am not asking you to fix anything for the drive I HAVE
-(because I can only use hdparm to TRIM it anyway), but to show you
-that some devices MIGHT have such limit. I just can't be 100% sure of
-it, even though from what I see in the different results on payload
-size and range sector count, I don't think the bridge is intervening
-at all (but just the limit of the SATA controller behind).
+Tom> Currently what the kernel does is assume all devices support 1
+Tom> sector granularity.
 
-But for my Intel 530 SSD, the granularity problem is obvious and solid
-enough because it's connected directly with SATA. Currently what the
-kernel does is assume all devices support 1 sector granularity. And
-the problem doesn't even lie on the current "hardcoded" granularity in
-libata, because blkdev_issue_discard() only does "mod check" against
-the granularity on the maximum sector counts, so even if it's allowed
-to be configured, it wouldn't really help. And I have yet to see
-anything which actually does "mod check" against ANY granularity on
-the sector count per range. This is what the example in my last mail
-was about.
+The ATA Command Set does not allow for any other granularity than 1
+sector.
 
-And the only info I have ever saw about TRIM block limit of a SATA
-drive is in `hdparm -I`. For my Intel SSD, which actually has a lower
-limit of 8 sectors, it shows:
-Data Set Management TRIM supported (limit 1 block)
-while for the SanDisk Extreme USB, which actually has a lower limit of
-256 sectors, it shows:
-Data Set Management TRIM supported (limit 8 blocks)
-Inspite of the accuracy, I don't see the kernel actually read this limit.
+Bigger granularity reporting is supported in SCSI SBC to allow for
+thinly provisioned disk arrays with a bigger allocation unit. It is
+common for disk arrays to provision LUN space in units of 1MB or more.
+
+Tom> For my Intel SSD, which actually has a lower limit of 8 sectors, it
+Tom> shows: Data Set Management TRIM supported (limit 1 block) while for
+Tom> the SanDisk Extreme USB, which actually has a lower limit of 256
+Tom> sectors, it shows: Data Set Management TRIM supported (limit 8
+Tom> blocks)
+
+It don't know what these "lower limits" you are talking about are.
+
+What hdparm tells you is that DSM TRIM on the Intel drive supports 1
+block (512 bytes) of range payload data. Whereas the SanDisk drive
+supports a full 4KB page of range payload data (8 * 512 bytes).
+
+We did try to enable payloads bigger than 512 bytes back in the day but
+most drives that reported supporting the bigger payload actually didn't
+and all hell broke loose. So we reverted to a single sector payload for
+libata.
+
+I still have the payload patch in my SSD test branch and regularly test
+with it. But there are still drives that fail in mysterious ways with it
+in place and so far I haven't felt compelled to maintain yet another
+blacklist.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
