@@ -1,173 +1,54 @@
-From: Tom Yan <tom.ty89@gmail.com>
-Subject: Re: configurable discard parameters
-Date: Wed, 24 Jun 2015 05:25:20 +0800
-Message-ID: <CAGnHSEnJ=_NV8Ed_=Ykr+30C+YSLFDPzyzeSY9b4p6pyaNOE4A@mail.gmail.com>
-References: <CAGnHSEmDQ6xaJsw9i=v23BffWQ8RncrgNBsGWy3ziC36QK+9yQ@mail.gmail.com>
-	<yq1fv5l9ajd.fsf@sermon.lab.mkp.net>
-	<CAGnHSEk+=r1CwQaGd9n4nUm3_e3O7GOL_iFDeJTuNyaSq9WFYg@mail.gmail.com>
-	<CAGnHSEnevg=advtq=CW2FvV5b93GX3kNwrFu587O2V7hf1J8hA@mail.gmail.com>
-	<CAGnHSEnBvgWKw6g=c4vpCNEfpdh_45orz5JcSmfM7jadxjpxzQ@mail.gmail.com>
-	<CAGnHSEnLACL6XisaFn3axRETAD3CjOa7fGrHKR7s6GOroQXkew@mail.gmail.com>
-	<yq1616f796w.fsf@sermon.lab.mkp.net>
-	<CAGnHSEn4EPC_RHTJXtvFC8dj8L+aDd_pRvSsDWNaqHz3Tdxj5w@mail.gmail.com>
-	<yq1bng65te8.fsf@sermon.lab.mkp.net>
-	<CAGnHSEm89yFPPTVUtbk1s84wanKK6RTY5hdZCMdbw+a+vwecDA@mail.gmail.com>
-	<yq1mvzq4at7.fsf@sermon.lab.mkp.net>
-	<CAGnHSEkF+uXh2=wpq9dwjK8_NrjF5kqcasXeuCF_=TONu6Q7Cw@mail.gmail.com>
-	<yq1egl246yd.fsf@sermon.lab.mkp.net>
+From: Simon Horman <horms@verge.net.au>
+Subject: Re: [PATCH] ata: sata_rcar: Remove obsolete sata-r8a779*
+ platform_device_id entries
+Date: Wed, 24 Jun 2015 08:48:16 +0900
+Message-ID: <20150623234815.GB9988@verge.net.au>
+References: <1435064113-10742-1-git-send-email-geert+renesas@glider.be>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=001a1147b2ae08398e0519360726
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <yq1egl246yd.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-sh-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1435064113-10742-1-git-send-email-geert+renesas@glider.be>
+Sender: linux-sh-owner@vger.kernel.org
+To: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-sh@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
---001a1147b2ae08398e0519360726
-Content-Type: text/plain; charset=UTF-8
+On Tue, Jun 23, 2015 at 02:55:13PM +0200, Geert Uytterhoeven wrote:
+> Since commit a483dcbfa21f919c ("ARM: shmobile: lager: Remove legacy
+> board support"), R-Car Gen2 SoCs are only supported in generic DT-only
+> ARM multi-platform builds.  The driver doesn't need to match platform
+> devices by name anymore, hence remove the corresponding
+> platform_device_id entry.
+> 
+> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
 
-First of all let me add another "statistic" about the issue:
+Acked-by: Simon Horman <horms+renesas@verge.net.au>
 
-[tom@localhost ~]$ sudo shred -n 1 /dev/sda3
-[tom@localhost ~]$ sudo blkdiscard /dev/sda3
-[tom@localhost ~]$ sudo hexdump /dev/sda3 | wc -l
-310635
-[tom@localhost ~]$ sudo hexdump /dev/sda3 | pcregrep -M '0000 0000
-0000 0000 0000 0000 0000 0000\n\*' | wc -l
-2410
-
-total untrimmed sectors: (310635 - 1 - 2410) / 32 = 9632
-total ranges: (43 GiB * (1024 ^ 3) / 512) / 65535 ~= 1376
-average untrimmed sectors per range: (9632 / 1376) = 7 = (65535 % 8)
-
-Also, FWIW:
-
-[tom@localhost ~]$ sudo shred -n 1 /dev/sda3
-[tom@localhost ~]$ let step=(65535-65535%8)*512
-[tom@localhost ~]$ echo $step
-33550336
-[tom@localhost ~]$ sudo blkdiscard -p "$step" /dev/sda3
-[tom@localhost ~]$ sudo hexdump /dev/sda3
-0000000 0000 0000 0000 0000 0000 0000 0000 0000
-*
-ac0000000
-
-On 24 June 2015 at 02:26, Martin K. Petersen <martin.petersen@oracle.com> wrote:
->
-> What happens if you discard sectors 0-6 and then sector 7?
->
-
-[tom@localhost ~]$ sudo shred -n 1 /dev/sda3
-[tom@localhost ~]$ sudo blkdiscard -l 3584 /dev/sda3
-[tom@localhost ~]$ sudo blkdiscard -o 3584 -l 512 /dev/sda3
-[tom@localhost ~]$ sudo hexdump -n 4096 /dev/sda3
-0000000 f06d 8365 5e1b 616c 7362 4d61 2182 02fb
-...
-0000ff0 54ef 9579 51bc 9042 115a 375e c28f 4dcc
-0001000
-
->
-> This is on the Intel 530? What does the drive report in
-> /sys/block/sdN/queue/discard_zeroes_data?
->
-
-Yes. It reports 0. In `hdparm -I`:
-       *    Data Set Management TRIM supported (limit 1 block)
-       *    Deterministic read data after TRIM
-
-You may also want to check out and compare the two attached test case files.
-
---001a1147b2ae08398e0519360726
-Content-Type: application/octet-stream; name=sandisk_test
-Content-Disposition: attachment; filename=sandisk_test
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_ib9u2wdb0
-
-W3RvbUBsb2NhbGhvc3Qgfl0kIHN1ZG8gc2hyZWQgLW4gMSAvZGV2L3NkYzEKW3RvbUBsb2NhbGhv
-c3Qgfl0kIHN1ZG8gaGRwYXJtIC0tcGxlYXNlLWRlc3Ryb3ktbXktZHJpdmUgLS10cmltLXNlY3Rv
-ci1yYW5nZXMgMjU2OjEgL2Rldi9zZGMKCi9kZXYvc2RjOgp0cmltbWluZyAxIHNlY3RvcnMgZnJv
-bSAxIHJhbmdlcwpzdWNjZWVkZWQKW3RvbUBsb2NhbGhvc3Qgfl0kIHN1ZG8gaGV4ZHVtcCAvZGV2
-L3NkYzEgfCBoZWFkIC1uIDMKMDAwMDAwMCAyYzFjIDFlZjcgYjllZCBiY2MzIDliY2UgY2Y3MCAz
-ODQ5IGM2MDEKMDAwMDAxMCA2M2JiIDY0MjMgMjA0ZiA5NWFmIGU0MTQgNjRjNiA0OGM5IDZhMzUK
-MDAwMDAyMCA2OTE0IGY0YzIgYmU2ZSA5YzkzIGQ1NjEgOWJmNCBjNzZiIDBiY2UKW3RvbUBsb2Nh
-bGhvc3Qgfl0kIHN1ZG8gc2hyZWQgLW4gMSAvZGV2L3NkYzEKW3RvbUBsb2NhbGhvc3Qgfl0kIHN1
-ZG8gaGRwYXJtIC0tcGxlYXNlLWRlc3Ryb3ktbXktZHJpdmUgLS10cmltLXNlY3Rvci1yYW5nZXMg
-MjU2OjEyOCAvZGV2L3NkYwoKL2Rldi9zZGM6CnRyaW1taW5nIDEyOCBzZWN0b3JzIGZyb20gMSBy
-YW5nZXMKc3VjY2VlZGVkClt0b21AbG9jYWxob3N0IH5dJCBzdWRvIGhleGR1bXAgL2Rldi9zZGMx
-IHwgaGVhZCAtbiAzCjAwMDAwMDAgZGU5NCAxYjk3IGU2MGYgNDE2YyA2ZGNlIGUxMzggYTVhNiA3
-Y2I5CjAwMDAwMTAgNTQxMiA5ZjAwIGQ1NzMgZDljMSA2ZmRmIGU0ZGYgNjVhZCAxZTI2CjAwMDAw
-MjAgZTZmZCAyNGRkIDA5MDcgOTQ3MSBiNWY0IDNiNjcgZTdjZiBjMTY1Clt0b21AbG9jYWxob3N0
-IH5dJCBzdWRvIHNocmVkIC1uIDEgL2Rldi9zZGMxClt0b21AbG9jYWxob3N0IH5dJCBzdWRvIGhk
-cGFybSAtLXBsZWFzZS1kZXN0cm95LW15LWRyaXZlIC0tdHJpbS1zZWN0b3ItcmFuZ2VzIDI1Njoy
-NTYgL2Rldi9zZGMKCi9kZXYvc2RjOgp0cmltbWluZyAyNTYgc2VjdG9ycyBmcm9tIDEgcmFuZ2Vz
-CnN1Y2NlZWRlZApbdG9tQGxvY2FsaG9zdCB+XSQgc3VkbyBoZXhkdW1wIC9kZXYvc2RjMSB8IGhl
-YWQgLW4gMwowMDAwMDAwIDAwMDAgMDAwMCAwMDAwIDAwMDAgMDAwMCAwMDAwIDAwMDAgMDAwMAoq
-CjAwMjAwMDAgOGZkYiA3YTIwIGMzZWUgOWUyOSBjMzI1IDI5YjIgYzMyMyAyOWRkClt0b21AbG9j
-YWxob3N0IH5dJCBzdWRvIHNocmVkIC1uIDEgL2Rldi9zZGMxClt0b21AbG9jYWxob3N0IH5dJCBm
-b3IgKCggaT0yNTY7IGk8PTI1NjsgaSs9MSApKTsgZG8gZWNobyAiJGk6MSI7IGRvbmUgfCBzdWRv
-IGhkcGFybSAtLXBsZWFzZS1kZXN0cm95LW15LWRyaXZlIC0tdHJpbS1zZWN0b3ItcmFuZ2VzLXN0
-ZGluIC9kZXYvc2RjCgovZGV2L3NkYzoKdHJpbW1pbmcgMSBzZWN0b3JzIGZyb20gMSByYW5nZXMK
-c3VjY2VlZGVkClt0b21AbG9jYWxob3N0IH5dJCBzdWRvIGhleGR1bXAgL2Rldi9zZGMxIHwgaGVh
-ZCAtbiAzCjAwMDAwMDAgYWU3ZCBkMDc5IGU5YzEgNGY1YyAzYzgzIDg5ODkgYzFiNyAzZjVhCjAw
-MDAwMTAgOGM0MSA1MTk3IDY2YTYgY2ZlZSAxZDJmIDI0NjggMGM5NSAzMmI5CjAwMDAwMjAgNDY3
-OSBmZGVhIDRiMzMgYjg2ZCAzNGM3IDY3MjEgYTkyMSBmMzVjClt0b21AbG9jYWxob3N0IH5dJCBz
-dWRvIHNocmVkIC1uIDEgL2Rldi9zZGMxClt0b21AbG9jYWxob3N0IH5dJCBmb3IgKCggaT0yNTY7
-IGk8PTM4MzsgaSs9MSApKTsgZG8gZWNobyAiJGk6MSI7IGRvbmUgfCBzdWRvIGhkcGFybSAtLXBs
-ZWFzZS1kZXN0cm95LW15LWRyaXZlIC0tdHJpbS1zZWN0b3ItcmFuZ2VzLXN0ZGluIC9kZXYvc2Rj
-CgovZGV2L3NkYzoKdHJpbW1pbmcgMTI4IHNlY3RvcnMgZnJvbSAxMjggcmFuZ2VzCnN1Y2NlZWRl
-ZApbdG9tQGxvY2FsaG9zdCB+XSQgc3VkbyBoZXhkdW1wIC9kZXYvc2RjMSB8IGhlYWQgLW4gMwow
-MDAwMDAwIDYwNjcgZTJjMyA4ZmUyIDQ3NWMgMmNmNyBiN2QxIDVjOWYgZTdkZgowMDAwMDEwIDlm
-MTIgMWEwOSA4YzE1IGQ1NGQgMGI5YSA2OTczIGMzYTEgMmJjMQowMDAwMDIwIDdlMzAgNGIxYyBl
-NDI3IDc2MDggOWYxZiA4ZDVhIGYzOTAgZmYxYQpbdG9tQGxvY2FsaG9zdCB+XSQgc3VkbyBzaHJl
-ZCAtbiAxIC9kZXYvc2RjMQpbdG9tQGxvY2FsaG9zdCB+XSQgZm9yICgoIGk9MjU2OyBpPD01MTE7
-IGkrPTEgKSk7IGRvIGVjaG8gIiRpOjEiOyBkb25lIHwgc3VkbyBoZHBhcm0gLS1wbGVhc2UtZGVz
-dHJveS1teS1kcml2ZSAtLXRyaW0tc2VjdG9yLXJhbmdlcy1zdGRpbiAvZGV2L3NkYwoKL2Rldi9z
-ZGM6CnRyaW1taW5nIDI1NiBzZWN0b3JzIGZyb20gMjU2IHJhbmdlcwpzdWNjZWVkZWQKW3RvbUBs
-b2NhbGhvc3Qgfl0kIHN1ZG8gaGV4ZHVtcCAvZGV2L3NkYzEgfCBoZWFkIC1uIDMKMDAwMDAwMCAw
-MDAwIDAwMDAgMDAwMCAwMDAwIDAwMDAgMDAwMCAwMDAwIDAwMDAKKgowMDIwMDAwIGU5MGMgOWRk
-MSA5ZjdjIDA1MDQgYWZjMyAyNGVjIGUwN2QgZDkzYQpbdG9tQGxvY2FsaG9zdCB+XSQgc3VkbyBz
-aHJlZCAtbiAxIC9kZXYvc2RjMQpbdG9tQGxvY2FsaG9zdCB+XSQgc3VkbyBoZHBhcm0gLS1wbGVh
-c2UtZGVzdHJveS1teS1kcml2ZSAtLXRyaW0tc2VjdG9yLXJhbmdlcyAyNTY6NjU1MzUgNjU3OTE6
-NjUwMjUgL2Rldi9zZGMKCi9kZXYvc2RjOgp0cmltbWluZyAxMzA1NjAgc2VjdG9ycyBmcm9tIDIg
-cmFuZ2VzCnN1Y2NlZWRlZApbdG9tQGxvY2FsaG9zdCB+XSQgc3VkbyBoZXhkdW1wIC9kZXYvc2Rj
-MSB8IGhlYWQgLW4gMwowMDAwMDAwIDAwMDAgMDAwMCAwMDAwIDAwMDAgMDAwMCAwMDAwIDAwMDAg
-MDAwMAoqCjFmZTAwMDAgZjYzNCBjZTc0IDAyZTkgNDNhMCAxNjRkIDczODggZWEyNiA2NzY3Clt0
-b21AbG9jYWxob3N0IH5dJCBzdWRvIHNocmVkIC1uIDEgL2Rldi9zZGMxClt0b21AbG9jYWxob3N0
-IH5dJCBzdWRvIGhkcGFybSAtLXBsZWFzZS1kZXN0cm95LW15LWRyaXZlIC0tdHJpbS1zZWN0b3It
-cmFuZ2VzIDI1Njo2NTI4MCA2NTUzNjo2NTI4MCAvZGV2L3NkYwoKL2Rldi9zZGM6CnRyaW1taW5n
-IDEzMDU2MCBzZWN0b3JzIGZyb20gMiByYW5nZXMKc3VjY2VlZGVkClt0b21AbG9jYWxob3N0IH5d
-JCBzdWRvIGhleGR1bXAgL2Rldi9zZGMxIHwgaGVhZCAtbiAzCjAwMDAwMDAgMDAwMCAwMDAwIDAw
-MDAgMDAwMCAwMDAwIDAwMDAgMDAwMCAwMDAwCioKM2ZjMDAwMCA2MmY0IGMwYTMgMjc4OSBlYzcy
-IGY1NTUgOTk0YiA0NDlmIDlmZjIKW3RvbUBsb2NhbGhvc3Qgfl0kIAo=
---001a1147b2ae08398e0519360726
-Content-Type: application/octet-stream; name=intel_test
-Content-Disposition: attachment; filename=intel_test
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_ib9u7jdb1
-
-W3RvbUBsb2NhbGhvc3Qgfl0kIHN1ZG8gc2ggLWMgJ2ZvciAoKCBpPTUxMjsgaTw9NDA5NjsgaSs9
-NTEyICkpOyBkbyBibGtkaXNjYXJkIC1wICIkaSIgLWwgNDA5NiAvZGV2L3NkYTM7IHNsZWVwIDU7
-IGVjaG8gIiR7aX06IjsgaGV4ZHVtcCAvZGV2L3NkYTMgfCBoZWFkIC1uIDM7IGRvbmUnCjUxMjoK
-MDAwMDAwMCA4NTM3IDM4YWUgMGVkMiAxNDQyIDM2YzAgZmFiNiAwYmJmIDliOTYKMDAwMDAxMCAz
-ZDVlIDEzOGYgODg5MCAzYWY0IDY0NGUgMDRhNiAwNjJiIDA2MjUKMDAwMDAyMCA5ZjYyIGU2NWMg
-Y2I4ZCAwM2MyIDM2ZGYgMzdjNyA5OTljIGJkMTYKMTAyNDoKMDAwMDAwMCA4NTM3IDM4YWUgMGVk
-MiAxNDQyIDM2YzAgZmFiNiAwYmJmIDliOTYKMDAwMDAxMCAzZDVlIDEzOGYgODg5MCAzYWY0IDY0
-NGUgMDRhNiAwNjJiIDA2MjUKMDAwMDAyMCA5ZjYyIGU2NWMgY2I4ZCAwM2MyIDM2ZGYgMzdjNyA5
-OTljIGJkMTYKMTUzNjoKMDAwMDAwMCA4NTM3IDM4YWUgMGVkMiAxNDQyIDM2YzAgZmFiNiAwYmJm
-IDliOTYKMDAwMDAxMCAzZDVlIDEzOGYgODg5MCAzYWY0IDY0NGUgMDRhNiAwNjJiIDA2MjUKMDAw
-MDAyMCA5ZjYyIGU2NWMgY2I4ZCAwM2MyIDM2ZGYgMzdjNyA5OTljIGJkMTYKMjA0ODoKMDAwMDAw
-MCA4NTM3IDM4YWUgMGVkMiAxNDQyIDM2YzAgZmFiNiAwYmJmIDliOTYKMDAwMDAxMCAzZDVlIDEz
-OGYgODg5MCAzYWY0IDY0NGUgMDRhNiAwNjJiIDA2MjUKMDAwMDAyMCA5ZjYyIGU2NWMgY2I4ZCAw
-M2MyIDM2ZGYgMzdjNyA5OTljIGJkMTYKMjU2MDoKMDAwMDAwMCA4NTM3IDM4YWUgMGVkMiAxNDQy
-IDM2YzAgZmFiNiAwYmJmIDliOTYKMDAwMDAxMCAzZDVlIDEzOGYgODg5MCAzYWY0IDY0NGUgMDRh
-NiAwNjJiIDA2MjUKMDAwMDAyMCA5ZjYyIGU2NWMgY2I4ZCAwM2MyIDM2ZGYgMzdjNyA5OTljIGJk
-MTYKMzA3MjoKMDAwMDAwMCA4NTM3IDM4YWUgMGVkMiAxNDQyIDM2YzAgZmFiNiAwYmJmIDliOTYK
-MDAwMDAxMCAzZDVlIDEzOGYgODg5MCAzYWY0IDY0NGUgMDRhNiAwNjJiIDA2MjUKMDAwMDAyMCA5
-ZjYyIGU2NWMgY2I4ZCAwM2MyIDM2ZGYgMzdjNyA5OTljIGJkMTYKMzU4NDoKMDAwMDAwMCA4NTM3
-IDM4YWUgMGVkMiAxNDQyIDM2YzAgZmFiNiAwYmJmIDliOTYKMDAwMDAxMCAzZDVlIDEzOGYgODg5
-MCAzYWY0IDY0NGUgMDRhNiAwNjJiIDA2MjUKMDAwMDAyMCA5ZjYyIGU2NWMgY2I4ZCAwM2MyIDM2
-ZGYgMzdjNyA5OTljIGJkMTYKNDA5NjoKMDAwMDAwMCAwMDAwIDAwMDAgMDAwMCAwMDAwIDAwMDAg
-MDAwMCAwMDAwIDAwMDAKKgowMDAxMDAwIDIxOTYgYjA5MSA3MGU0IDI0ZWIgM2RhYiAyODM0IGEx
-Y2YgMjQ5YQpbdG9tQGxvY2FsaG9zdCB+XSQgCg==
---001a1147b2ae08398e0519360726--
+> ---
+>  drivers/ata/sata_rcar.c | 4 ----
+>  1 file changed, 4 deletions(-)
+> 
+> diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
+> index d49a5193b7de9e94..8804127b108c0f8e 100644
+> --- a/drivers/ata/sata_rcar.c
+> +++ b/drivers/ata/sata_rcar.c
+> @@ -861,10 +861,6 @@ MODULE_DEVICE_TABLE(of, sata_rcar_match);
+>  static const struct platform_device_id sata_rcar_id_table[] = {
+>  	{ "sata_rcar", RCAR_GEN1_SATA }, /* Deprecated by "sata-r8a7779" */
+>  	{ "sata-r8a7779", RCAR_GEN1_SATA },
+> -	{ "sata-r8a7790", RCAR_GEN2_SATA },
+> -	{ "sata-r8a7790-es1", RCAR_R8A7790_ES1_SATA },
+> -	{ "sata-r8a7791", RCAR_GEN2_SATA },
+> -	{ "sata-r8a7793", RCAR_GEN2_SATA },
+>  	{ },
+>  };
+>  MODULE_DEVICE_TABLE(platform, sata_rcar_id_table);
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-sh" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
