@@ -1,43 +1,55 @@
-From: Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: [PATCH] ata: sata_rcar: Remove obsolete sata-r8a779* platform_device_id entries
-Date: Tue, 23 Jun 2015 14:55:13 +0200
-Message-ID: <1435064113-10742-1-git-send-email-geert+renesas@glider.be>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from xavier.telenet-ops.be ([195.130.132.52]:54032 "EHLO
-	xavier.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932520AbbFWMzP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Jun 2015 08:55:15 -0400
-Sender: linux-ide-owner@vger.kernel.org
+From: Tom Yan <tom.ty89@gmail.com>
+Subject: Re: configurable discard parameters
+Date: Tue, 23 Jun 2015 22:16:22 +0800
+Message-ID: <CAGnHSEn4EPC_RHTJXtvFC8dj8L+aDd_pRvSsDWNaqHz3Tdxj5w@mail.gmail.com>
+References: <CAGnHSEmDQ6xaJsw9i=v23BffWQ8RncrgNBsGWy3ziC36QK+9yQ@mail.gmail.com>
+	<yq1fv5l9ajd.fsf@sermon.lab.mkp.net>
+	<CAGnHSEk+=r1CwQaGd9n4nUm3_e3O7GOL_iFDeJTuNyaSq9WFYg@mail.gmail.com>
+	<CAGnHSEnevg=advtq=CW2FvV5b93GX3kNwrFu587O2V7hf1J8hA@mail.gmail.com>
+	<CAGnHSEnBvgWKw6g=c4vpCNEfpdh_45orz5JcSmfM7jadxjpxzQ@mail.gmail.com>
+	<CAGnHSEnLACL6XisaFn3axRETAD3CjOa7fGrHKR7s6GOroQXkew@mail.gmail.com>
+	<yq1616f796w.fsf@sermon.lab.mkp.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <yq1616f796w.fsf@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-sh@vger.kernel.org, Geert Uytterhoeven <geert+renesas@glider.be>
 
-Since commit a483dcbfa21f919c ("ARM: shmobile: lager: Remove legacy
-board support"), R-Car Gen2 SoCs are only supported in generic DT-only
-ARM multi-platform builds.  The driver doesn't need to match platform
-devices by name anymore, hence remove the corresponding
-platform_device_id entry.
+Still, I wonder if the kernel should allow the user to configure the
+real granularity and send ATA commands that are rounded off by it
+(which works just like --step in blkdiscard). For example,
 
-Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
----
- drivers/ata/sata_rcar.c | 4 ----
- 1 file changed, 4 deletions(-)
+(64 * 65535) % 8 = 0
 
-diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
-index d49a5193b7de9e94..8804127b108c0f8e 100644
---- a/drivers/ata/sata_rcar.c
-+++ b/drivers/ata/sata_rcar.c
-@@ -861,10 +861,6 @@ MODULE_DEVICE_TABLE(of, sata_rcar_match);
- static const struct platform_device_id sata_rcar_id_table[] = {
- 	{ "sata_rcar", RCAR_GEN1_SATA }, /* Deprecated by "sata-r8a7779" */
- 	{ "sata-r8a7779", RCAR_GEN1_SATA },
--	{ "sata-r8a7790", RCAR_GEN2_SATA },
--	{ "sata-r8a7790-es1", RCAR_R8A7790_ES1_SATA },
--	{ "sata-r8a7791", RCAR_GEN2_SATA },
--	{ "sata-r8a7793", RCAR_GEN2_SATA },
- 	{ },
- };
- MODULE_DEVICE_TABLE(platform, sata_rcar_id_table);
--- 
-1.9.1
+but
 
+65535 % 8 = 7
+
+So the block count limit for the ATA commands would be 65535 - (65535
+% real_gran) per range.
+
+
+Also, by experimenting on my SanDisk Extreme USB with hdparm TRIM and
+hexdump, I can see that the maximum block/sector allowed to be
+discarded per ATA command is 65536, inspite of the payload size. I
+don't know whether the USB bridging or the way hdparm does TRIM
+matters, but it seems that some devices can't really handle limit like
+0x3fffc0 blocks.
+
+So I still think that the kernel should allow users to configure
+limits that can make libata send reliable ATA TRIM commands.
+
+On 23 June 2015 at 04:57, Martin K. Petersen <martin.petersen@oracle.com> wrote:
+>
+> Tom> So it actually tells. And I hope that the kernel wouldn't "falsify"
+> Tom> anything for devices which do provide some VPD(s). : \
+>
+> SATA doesn't have VPDs.
+>
+
+I know now, that's why I think it's "alright" for libata to do so. I
+just don't know whether the kernel would tamper with them for devices
+like USB or real SCSI drives.
