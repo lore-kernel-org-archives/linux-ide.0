@@ -1,54 +1,146 @@
-From: Simon Horman <horms@verge.net.au>
-Subject: Re: [PATCH] ata: sata_rcar: Remove obsolete sata-r8a779*
- platform_device_id entries
-Date: Wed, 24 Jun 2015 08:48:16 +0900
-Message-ID: <20150623234815.GB9988@verge.net.au>
-References: <1435064113-10742-1-git-send-email-geert+renesas@glider.be>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: configurable discard parameters
+Date: Tue, 23 Jun 2015 22:55:57 -0400
+Message-ID: <yq1616d4xxe.fsf@sermon.lab.mkp.net>
+References: <CAGnHSEmDQ6xaJsw9i=v23BffWQ8RncrgNBsGWy3ziC36QK+9yQ@mail.gmail.com>
+	<yq1fv5l9ajd.fsf@sermon.lab.mkp.net>
+	<CAGnHSEk+=r1CwQaGd9n4nUm3_e3O7GOL_iFDeJTuNyaSq9WFYg@mail.gmail.com>
+	<CAGnHSEnevg=advtq=CW2FvV5b93GX3kNwrFu587O2V7hf1J8hA@mail.gmail.com>
+	<CAGnHSEnBvgWKw6g=c4vpCNEfpdh_45orz5JcSmfM7jadxjpxzQ@mail.gmail.com>
+	<CAGnHSEnLACL6XisaFn3axRETAD3CjOa7fGrHKR7s6GOroQXkew@mail.gmail.com>
+	<yq1616f796w.fsf@sermon.lab.mkp.net>
+	<CAGnHSEn4EPC_RHTJXtvFC8dj8L+aDd_pRvSsDWNaqHz3Tdxj5w@mail.gmail.com>
+	<yq1bng65te8.fsf@sermon.lab.mkp.net>
+	<CAGnHSEm89yFPPTVUtbk1s84wanKK6RTY5hdZCMdbw+a+vwecDA@mail.gmail.com>
+	<yq1mvzq4at7.fsf@sermon.lab.mkp.net>
+	<CAGnHSEkF+uXh2=wpq9dwjK8_NrjF5kqcasXeuCF_=TONu6Q7Cw@mail.gmail.com>
+	<yq1egl246yd.fsf@sermon.lab.mkp.net>
+	<CAGnHSEnJ=_NV8Ed_=Ykr+30C+YSLFDPzyzeSY9b4p6pyaNOE4A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-sh-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1435064113-10742-1-git-send-email-geert+renesas@glider.be>
-Sender: linux-sh-owner@vger.kernel.org
-To: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-sh@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:45869 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752959AbbFXC4G (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 23 Jun 2015 22:56:06 -0400
+In-Reply-To: <CAGnHSEnJ=_NV8Ed_=Ykr+30C+YSLFDPzyzeSY9b4p6pyaNOE4A@mail.gmail.com>
+	(Tom Yan's message of "Wed, 24 Jun 2015 05:25:20 +0800")
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tom Yan <tom.ty89@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Tue, Jun 23, 2015 at 02:55:13PM +0200, Geert Uytterhoeven wrote:
-> Since commit a483dcbfa21f919c ("ARM: shmobile: lager: Remove legacy
-> board support"), R-Car Gen2 SoCs are only supported in generic DT-only
-> ARM multi-platform builds.  The driver doesn't need to match platform
-> devices by name anymore, hence remove the corresponding
-> platform_device_id entry.
-> 
-> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+>>>>> "Tom" == Tom Yan <tom.ty89@gmail.com> writes:
 
-Acked-by: Simon Horman <horms+renesas@verge.net.au>
+Tom> total untrimmed sectors: (310635 - 1 - 2410) / 32 = 9632 total
+Tom> ranges: (43 GiB * (1024 ^ 3) / 512) / 65535 ~= 1376 average
+Tom> untrimmed sectors per range: (9632 / 1376) = 7 = (65535 % 8)
 
-> ---
->  drivers/ata/sata_rcar.c | 4 ----
->  1 file changed, 4 deletions(-)
-> 
-> diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
-> index d49a5193b7de9e94..8804127b108c0f8e 100644
-> --- a/drivers/ata/sata_rcar.c
-> +++ b/drivers/ata/sata_rcar.c
-> @@ -861,10 +861,6 @@ MODULE_DEVICE_TABLE(of, sata_rcar_match);
->  static const struct platform_device_id sata_rcar_id_table[] = {
->  	{ "sata_rcar", RCAR_GEN1_SATA }, /* Deprecated by "sata-r8a7779" */
->  	{ "sata-r8a7779", RCAR_GEN1_SATA },
-> -	{ "sata-r8a7790", RCAR_GEN2_SATA },
-> -	{ "sata-r8a7790-es1", RCAR_R8A7790_ES1_SATA },
-> -	{ "sata-r8a7791", RCAR_GEN2_SATA },
-> -	{ "sata-r8a7793", RCAR_GEN2_SATA },
->  	{ },
->  };
->  MODULE_DEVICE_TABLE(platform, sata_rcar_id_table);
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-sh" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Every type of drive has its own internal restrictions. Unless the drive
+guarantees zero after TRIM it is perfectly normal for heads, tails or
+random pieces in-between to be left untouched.
+
+I am surprised that the common case of contiguous range entries was not
+handled properly by your drive. Most of them deal with that just fine
+(regardless of their internal granularity and alignment constraints). It
+is normally only the partial block tracking between command invocations
+that causes grief.
+
+In any case. Unless discard_zeroes_data is 1 (and that requires
+guarantees above and beyond what can be discovered via the ATA Command
+Set) all bets are off wrt. dependable behavior.
+
+The code below is an untested proof of concept to see what it would take
+to alleviate your particular issue. I am, however, not at all convinced
+that introducing such a change is worth the risk. I know of at least a
+couple of devices that would blow up as a result of this patch...
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 3131adcc1f87..9c270a303f0b 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2238,8 +2238,24 @@ static unsigned int ata_scsiop_inq_b0(struct ata_scsi_args *args, u8 *rbuf)
+ 	 * with the unmap bit set.
+ 	 */
+ 	if (ata_id_has_trim(args->id)) {
+-		put_unaligned_be64(65535 * 512 / 8, &rbuf[36]);
+-		put_unaligned_be32(1, &rbuf[28]);
++		/*
++		 * If the drive supports reliable zero after trim we set
++		 * the granularity to 1 and the blocks per range to
++		 * 0xffff. Otherwise we set set the granularity to 8 and
++		 * restrict the blocks per range to 0xfff8. This is done
++		 * to accommodate older drives which prefer 4K-alignment.
++		 */
++
++		if (ata_id_has_zero_after_trim(args->id) &&
++		    args->dev->horkage & ATA_HORKAGE_ZERO_AFTER_TRIM) {
++			put_unaligned_be64(ATA_MAX_TRIM_RANGE * 512 / 8,
++					   &rbuf[36]);
++			put_unaligned_be32(1, &rbuf[28]);
++		} else {
++			put_unaligned_be64(ATA_ALIGNED_TRIM_RANGE * 512 / 8,
++					   &rbuf[36]);
++			put_unaligned_be32(8, &rbuf[28]);
++		}
+ 	}
+ 
+ 	return 0;
+@@ -3168,7 +3184,14 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
+ 		goto invalid_fld;
+ 
+ 	buf = page_address(sg_page(scsi_sglist(scmd)));
+-	size = ata_set_lba_range_entries(buf, 512, block, n_block);
++
++	if (ata_id_has_zero_after_trim(dev->id) &&
++	    dev->horkage & ATA_HORKAGE_ZERO_AFTER_TRIM)
++		size = ata_set_lba_range_entries(buf, 512, block, n_block,
++						 ATA_MAX_TRIM_RANGE);
++	else
++		size = ata_set_lba_range_entries(buf, 512, block, n_block,
++						 ATA_ALIGNED_TRIM_RANGE);
+ 
+ 	if (ata_ncq_enabled(dev) && ata_fpdma_dsm_supported(dev)) {
+ 		/* Newer devices support queued TRIM commands */
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index fed36418dd1c..8a17fa22cdbe 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -47,6 +47,8 @@ enum {
+ 	ATA_MAX_SECTORS		= 256,
+ 	ATA_MAX_SECTORS_LBA48	= 65535,/* TODO: 65536? */
+ 	ATA_MAX_SECTORS_TAPE	= 65535,
++	ATA_MAX_TRIM_RANGE	= 0xffff,
++	ATA_ALIGNED_TRIM_RANGE	= 0xfff8,
+ 
+ 	ATA_ID_WORDS		= 256,
+ 	ATA_ID_CONFIG		= 0,
+@@ -1012,19 +1014,20 @@ static inline void ata_id_to_hd_driveid(u16 *id)
+  * TO NV CACHE PINNED SET.
+  */
+ static inline unsigned ata_set_lba_range_entries(void *_buffer,
+-		unsigned buf_size, u64 sector, unsigned long count)
++		unsigned buf_size, u64 sector, unsigned long count,
++		u16 bpe)
+ {
+ 	__le64 *buffer = _buffer;
+ 	unsigned i = 0, used_bytes;
+ 
+ 	while (i < buf_size / 8 ) { /* 6-byte LBA + 2-byte range per entry */
+ 		u64 entry = sector |
+-			((u64)(count > 0xffff ? 0xffff : count) << 48);
++			((u64)(count > bpe ? bpe : count) << 48);
+ 		buffer[i++] = __cpu_to_le64(entry);
+-		if (count <= 0xffff)
++		if (count <= bpe)
+ 			break;
+-		count -= 0xffff;
+-		sector += 0xffff;
++		count -= bpe;
++		sector += bpe;
+ 	}
+ 
+ 	used_bytes = ALIGN(i * 8, 512);
