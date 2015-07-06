@@ -1,43 +1,41 @@
-From: Aleksei Mamlin <mamlinav@gmail.com>
-Subject: [PATCH] libata: add ATA_HORKAGE_BROKEN_FPDMA_AA quirk for HP 250GB SATA disk VB0250EAVER
-Date: Wed,  1 Jul 2015 13:48:30 +0300
-Message-ID: <1435747710-3270-1-git-send-email-mamlinav@gmail.com>
+From: "Andy Falanga (afalanga)" <afalanga@micron.com>
+Subject: Addresses in PxCLB and PxCLBU
+Date: Mon, 6 Jul 2015 23:41:01 +0000
+Message-ID: <559B11FD.2040800@micron.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lb0-f178.google.com ([209.85.217.178]:35261 "EHLO
-	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753821AbbGAKtz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Jul 2015 06:49:55 -0400
+Received: from mailout.micron.com ([137.201.242.129]:46567 "EHLO
+	mailout.micron.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756275AbbGFXlE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Jul 2015 19:41:04 -0400
+Received: from mail.micron.com (ntxboicas04.micron.com [137.201.20.214])
+	by mailout.micron.com (8.14.4/8.14.6) with ESMTP id t66Nf2qO021468
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=FAIL)
+	for <linux-ide@vger.kernel.org>; Mon, 6 Jul 2015 17:41:02 -0600
+Content-Language: en-US
+Content-ID: <D601C48FFB6A5A4488D7F88135DDBF3B@micron.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Aleksei Mamlin <mamlinav@gmail.com>
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Enabling AA on HP 250GB SATA disk VB0250EAVER causes errors:
-
-[    3.788362] ata3.00: failed to enable AA (error_mask=0x1)
-[    3.789243] ata3.00: failed to enable AA (error_mask=0x1)
-
-Add the ATA_HORKAGE_BROKEN_FPDMA_AA for this specific harddisk.
-
-Signed-off-by: Aleksei Mamlin <mamlinav@gmail.com>
----
- drivers/ata/libata-core.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index f6cb1f1..3314116 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4178,6 +4178,9 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	{ "ST1000LM024 HN-M101MBB", "2AR10001",	ATA_HORKAGE_BROKEN_FPDMA_AA },
- 	{ "ST1000LM024 HN-M101MBB", "2BA30001",	ATA_HORKAGE_BROKEN_FPDMA_AA },
- 
-+	/* HP 250GB SATA disk VB0250EAVER seem to have FPMDA_AA issues */
-+	{ "VB0250EAVER",	"HPG7",		ATA_HORKAGE_BROKEN_FPDMA_AA },
-+
- 	/* Blacklist entries taken from Silicon Image 3124/3132
- 	   Windows driver .inf file - also several Linux problem reports */
- 	{ "HTS541060G9SA00",    "MB3OC60D",     ATA_HORKAGE_NONCQ, },
--- 
-2.3.6
-
+SGksDQoNCkknbSB3b3JraW5nIHdpdGggdGhlIHJlZ2lzdGVycyBpbiBhbiBBSENJIGNvbnRyb2xs
+ZXIuICBUaGUgbWVtb3J5IA0KYWRkcmVzcyBjb250YWluZWQgaW4gUHhDTEIgYW5kIFB4Q0xCVSAo
+aWYgNjQtYml0IGFkZHJlc3NpbmcgaXMgDQpzdXBwb3J0ZWQpOiB3aGF0IGtpbmQgb2YgYWRkcmVz
+cyBhcmUgdGhleT8gIEN1cnJlbnRseSwgd2hlbiBJIGdldCB0aGUgDQphZGRyZXNzIGFuZCBwbGFj
+ZSBpdCBpbnRvIGEgcG9pbnRlciBvZiBzdHJ1Y3QgYWhjaV9jbWRfaGRyIGFuZCB0cnkgdG8gDQpk
+ZXJlZmVyZW5jZSwgbXkgVk0gbG9ja3MgYW5kIHRoZW4gcmVib290cy4gIFdoYXQgYW0gSSBkb2lu
+ZyBpbmNvcnJlY3RseT8NCg0KQmFzaWNhbGx5LCBJIGhhdmUgdGhpczoNCg0Kdm9pZCBfX2lvbWVt
+ICogcGJhc2UgPSBhaGNpX3BvcnRfYmFzZSgoc3RydWN0IGF0YV9wb3J0KikpOw0Kc3RydWN0IGFo
+Y2lfY21kX2hkciAqY21kX2hkciA9IE5VTEw7DQoNCmNtZF9oZHIgPSAoc3RydWN0IGFoY2lfY21k
+X2hkciopKHU2NCkNCiAgICAoKHU2NCkoKih0ZW1wICsgUE9SVF9MU1RfQUREUl9ISSkpIDw8IDMy
+IHwgKnRlbXApOw0KDQpwcl9pbmZvKCJjbWRfaGRyIGlzICVwXG4iLCBjbWRfaGRyKTsNCnByX2lu
+Zm8oImNtZF9oZHItPm9wdHMgaXMgJWRcbiIsIGNtZF9oZHItPm9wdHMpOyAgLyogb3B0cyBpcyBf
+X2xlMzIgKi8NCg0KDQpBdCB0aGUgbGFzdCBsaW5lIGFib3ZlIG15IFZNIGhhbmdzIGFuZCByZWJv
+b3RzLiAgVGhlIG1lbW9yeSBhZGRyZXNzIGlzIA0Kc29tZXRoaW5nIGxpa2UgMHgwMDAwMDAwMDM3
+OTAwMDAwLiAgVGhpcyBhZGRyZXNzIG1ha2VzIG1lIHRoaW5rIHRoYXQgSSANCnNpbXBseSBjYW4n
+dCBkZXJlZmVyZW5jZSBpdCBidXQgSSdtIHF1aXRlIG5ldyB0byB0aGlzIGFuZCBJIGRvbid0IGtu
+b3cgDQp3aGF0IEkgc2hvdWxkIGRvLiAgSSdkIGFwcHJlY2lhdGUgYW55IGhlbHAgZXZlbiBpZiB0
+aGF0J3MgYSBwb2ludGVyIChubyANCnB1biBpbnRlbmRlZCkgdG8gYSBtb3JlIGFwcHJvcHJpYXRl
+IGZvcnVtLg0KDQpUaGFua3MsDQpBbmR5
