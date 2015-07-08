@@ -1,54 +1,45 @@
-From: "Andy Falanga (afalanga)" <afalanga@micron.com>
-Subject: Re: Addresses in PxCLB and PxCLBU
-Date: Wed, 8 Jul 2015 14:20:47 +0000
-Message-ID: <559D31AE.5010609@micron.com>
-References: <559B11FD.2040800@micron.com>
- <559CFF09.2040300@cogentembedded.com>
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: [PATCH] libata: increase the timeout when setting transfer mode
+Date: Wed, 8 Jul 2015 13:06:12 -0400 (EDT)
+Message-ID: <alpine.LRH.2.02.1507081304050.5355@file01.intranet.prod.int.rdu2.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.micron.com ([137.201.242.129]:56833 "EHLO
-	mailout.micron.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758486AbbGHOUw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Jul 2015 10:20:52 -0400
-In-Reply-To: <559CFF09.2040300@cogentembedded.com>
-Content-Language: en-US
-Content-ID: <5E4B46318569254C922ED042DDCDDB63@micron.com>
+Received: from mx1.redhat.com ([209.132.183.28]:46265 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758552AbbGHRGN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 8 Jul 2015 13:06:13 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-T24gMDcvMDgvMjAxNSAwNDo0NCBBTSwgU2VyZ2VpIFNodHlseW92IHdyb3RlOg0KPiBIZWxsby4N
-Cj4NCj4gT24gNy83LzIwMTUgMjo0MSBBTSwgQW5keSBGYWxhbmdhIChhZmFsYW5nYSkgd3JvdGU6
-DQo+DQo+PiBJJ20gd29ya2luZyB3aXRoIHRoZSByZWdpc3RlcnMgaW4gYW4gQUhDSSBjb250cm9s
-bGVyLiAgVGhlIG1lbW9yeQ0KPj4gYWRkcmVzcyBjb250YWluZWQgaW4gUHhDTEIgYW5kIFB4Q0xC
-VSAoaWYgNjQtYml0IGFkZHJlc3NpbmcgaXMNCj4+IHN1cHBvcnRlZCk6IHdoYXQga2luZCBvZiBh
-ZGRyZXNzIGFyZSB0aGV5Pw0KPg0KPiAgICBBcHBhcmVudGx5LCBwaHlzaWNhbC4gVGhlIGhhcmR3
-YXJlIG9ubHkgb3BlcmF0ZXMgb24gdGhlIHBoeXNpY2FsIA0KPiBhZGRyZXNzZXMuDQo+DQo+PiBD
-dXJyZW50bHksIHdoZW4gSSBnZXQgdGhlDQo+PiBhZGRyZXNzIGFuZCBwbGFjZSBpdCBpbnRvIGEg
-cG9pbnRlciBvZiBzdHJ1Y3QgYWhjaV9jbWRfaGRyIGFuZCB0cnkgdG8NCj4+IGRlcmVmZXJlbmNl
-LCBteSBWTSBsb2NrcyBhbmQgdGhlbiByZWJvb3RzLiAgV2hhdCBhbSBJIGRvaW5nIGluY29ycmVj
-dGx5Pw0KPg0KPiAgICBZb3UgY2FuJ3QgZGUtcmVmZXJlbmNlIHBoeXNpY2FsIGFkZHJlc3Nlcy4N
-Cj4NCj4+IEJhc2ljYWxseSwgSSBoYXZlIHRoaXM6DQo+DQo+PiB2b2lkIF9faW9tZW0gKiBwYmFz
-ZSA9IGFoY2lfcG9ydF9iYXNlKChzdHJ1Y3QgYXRhX3BvcnQqKSk7DQo+DQo+ICAgIENhbid0IHBh
-cnNlIHRoaXMuDQo+DQo+PiBzdHJ1Y3QgYWhjaV9jbWRfaGRyICpjbWRfaGRyID0gTlVMTDsNCj4N
-Cj4+IGNtZF9oZHIgPSAoc3RydWN0IGFoY2lfY21kX2hkciopKHU2NCkNCj4+ICAgICAgKCh1NjQp
-KCoodGVtcCArIFBPUlRfTFNUX0FERFJfSEkpKSA8PCAzMiB8ICp0ZW1wKTsNCj4NCj4gICB0ZW1w
-Pw0KPg0KPj4gcHJfaW5mbygiY21kX2hkciBpcyAlcFxuIiwgY21kX2hkcik7DQo+PiBwcl9pbmZv
-KCJjbWRfaGRyLT5vcHRzIGlzICVkXG4iLCBjbWRfaGRyLT5vcHRzKTsgIC8qIG9wdHMgaXMgX19s
-ZTMyICovDQo+DQo+PiBBdCB0aGUgbGFzdCBsaW5lIGFib3ZlIG15IFZNIGhhbmdzIGFuZCByZWJv
-b3RzLiAgVGhlIG1lbW9yeSBhZGRyZXNzIGlzDQo+PiBzb21ldGhpbmcgbGlrZSAweDAwMDAwMDAw
-Mzc5MDAwMDAuICBUaGlzIGFkZHJlc3MgbWFrZXMgbWUgdGhpbmsgdGhhdCBJDQo+PiBzaW1wbHkg
-Y2FuJ3QgZGVyZWZlcmVuY2UgaXQgYnV0IEknbSBxdWl0ZSBuZXcgdG8gdGhpcyBhbmQgSSBkb24n
-dCBrbm93DQo+PiB3aGF0IEkgc2hvdWxkIGRvLiAgSSdkIGFwcHJlY2lhdGUgYW55IGhlbHAgZXZl
-biBpZiB0aGF0J3MgYSBwb2ludGVyIChubw0KPj4gcHVuIGludGVuZGVkKSB0byBhIG1vcmUgYXBw
-cm9wcmlhdGUgZm9ydW0uDQo+DQo+ICAgIFRoZSBjb3JyZXNwb25kaW5nIHZpcnR1YWwgYWRkcmVz
-cyBzZWVtcyB0byBiZSBjb250YWluZWQgaW4gDQo+IGFoY2lfcG9ydF9wcml2OjpjbWRfc2xvdC4N
-Cj4NCj4+IFRoYW5rcywNCj4+IEFuZHkNCj4NCg0KVGhhbmsgeW91IFNlcmdlaS4gIFlvdSBhcmUg
-Y29ycmVjdC4gIEknbSBmaW5kaW5nIHRoYXQgZGl0Y2hpbmcgb2xkIA0KaGFiaXRzIGZyb20gdXNl
-ci1sYW5kIGFyZSBoYXJkIHRvIGRvLiAgSSBrbmV3IEkgbmVlZGVkIHRvIHVzZSB0aGluZ3MgDQps
-aWtlIGlvcmVhZCovaW93cml0ZSogd2hlbiBhY2Nlc3NpbmcgdGhvc2UgcG9pbnRlcnMgYnV0IEkg
-anVzdCBnb3Qgc3R1Y2sgDQppbiBhIHJoeXRobSBvZiAiSSd2ZSBnb3QgYSBwb2ludGVyIG5vdyBh
-bGwgSSBkbyBpcyBkZXJlZmVyZW5jZSAuLi4uIiAuICANCk9oIHdlbGwuDQoNClRoYW5rcyBtdWNo
-IGZvciBnZXR0aW5nIGJhY2sgdG8gbWUuDQoNCkFuZHk=
+I have a ST4000DM000 disk. If Linux is booted while the disk is spun down,
+the command that sets transfer mode causes the disk to spin up. The
+spin-up takes longer than the default 5s timeout, so the command fails and
+timeout is reported.
+
+Fix this by increasing the timeout to 15s, which is enough for the disk to
+spin up.
+
+Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
+Cc: stable@vger.kernel.org
+
+---
+ drivers/ata/libata-core.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+Index: linux-4.1.1/drivers/ata/libata-core.c
+===================================================================
+--- linux-4.1.1.orig/drivers/ata/libata-core.c	2015-07-07 22:21:39.962112941 +0200
++++ linux-4.1.1/drivers/ata/libata-core.c	2015-07-08 18:59:03.852951057 +0200
+@@ -4501,7 +4501,8 @@ static unsigned int ata_dev_set_xfermode
+ 	else /* In the ancient relic department - skip all of this */
+ 		return 0;
+ 
+-	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, 0);
++	/* On some disks, this command causes spin-up, so we need longer timeout */
++	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, 15000);
+ 
+ 	DPRINTK("EXIT, err_mask=%x\n", err_mask);
+ 	return err_mask;
