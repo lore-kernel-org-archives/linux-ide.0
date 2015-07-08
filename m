@@ -1,66 +1,54 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+From: "Andy Falanga (afalanga)" <afalanga@micron.com>
 Subject: Re: Addresses in PxCLB and PxCLBU
-Date: Wed, 8 Jul 2015 13:44:25 +0300
-Message-ID: <559CFF09.2040300@cogentembedded.com>
+Date: Wed, 8 Jul 2015 14:20:47 +0000
+Message-ID: <559D31AE.5010609@micron.com>
 References: <559B11FD.2040800@micron.com>
+ <559CFF09.2040300@cogentembedded.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lb0-f172.google.com ([209.85.217.172]:34157 "EHLO
-	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756953AbbGHKo3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Jul 2015 06:44:29 -0400
-Received: by lbnk3 with SMTP id k3so53490911lbn.1
-        for <linux-ide@vger.kernel.org>; Wed, 08 Jul 2015 03:44:27 -0700 (PDT)
-In-Reply-To: <559B11FD.2040800@micron.com>
+Received: from mailout.micron.com ([137.201.242.129]:56833 "EHLO
+	mailout.micron.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758486AbbGHOUw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Jul 2015 10:20:52 -0400
+In-Reply-To: <559CFF09.2040300@cogentembedded.com>
+Content-Language: en-US
+Content-ID: <5E4B46318569254C922ED042DDCDDB63@micron.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Andy Falanga (afalanga)" <afalanga@micron.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hello.
-
-On 7/7/2015 2:41 AM, Andy Falanga (afalanga) wrote:
-
-> I'm working with the registers in an AHCI controller.  The memory
-> address contained in PxCLB and PxCLBU (if 64-bit addressing is
-> supported): what kind of address are they?
-
-    Apparently, physical. The hardware only operates on the physical addresses.
-
-> Currently, when I get the
-> address and place it into a pointer of struct ahci_cmd_hdr and try to
-> dereference, my VM locks and then reboots.  What am I doing incorrectly?
-
-    You can't de-reference physical addresses.
-
-> Basically, I have this:
-
-> void __iomem * pbase = ahci_port_base((struct ata_port*));
-
-    Can't parse this.
-
-> struct ahci_cmd_hdr *cmd_hdr = NULL;
-
-> cmd_hdr = (struct ahci_cmd_hdr*)(u64)
->      ((u64)(*(temp + PORT_LST_ADDR_HI)) << 32 | *temp);
-
-   temp?
-
-> pr_info("cmd_hdr is %p\n", cmd_hdr);
-> pr_info("cmd_hdr->opts is %d\n", cmd_hdr->opts);  /* opts is __le32 */
-
-> At the last line above my VM hangs and reboots.  The memory address is
-> something like 0x0000000037900000.  This address makes me think that I
-> simply can't dereference it but I'm quite new to this and I don't know
-> what I should do.  I'd appreciate any help even if that's a pointer (no
-> pun intended) to a more appropriate forum.
-
-    The corresponding virtual address seems to be contained in 
-ahci_port_priv::cmd_slot.
-
-> Thanks,
-> Andy
-
-WBR, Sergei
-
+T24gMDcvMDgvMjAxNSAwNDo0NCBBTSwgU2VyZ2VpIFNodHlseW92IHdyb3RlOg0KPiBIZWxsby4N
+Cj4NCj4gT24gNy83LzIwMTUgMjo0MSBBTSwgQW5keSBGYWxhbmdhIChhZmFsYW5nYSkgd3JvdGU6
+DQo+DQo+PiBJJ20gd29ya2luZyB3aXRoIHRoZSByZWdpc3RlcnMgaW4gYW4gQUhDSSBjb250cm9s
+bGVyLiAgVGhlIG1lbW9yeQ0KPj4gYWRkcmVzcyBjb250YWluZWQgaW4gUHhDTEIgYW5kIFB4Q0xC
+VSAoaWYgNjQtYml0IGFkZHJlc3NpbmcgaXMNCj4+IHN1cHBvcnRlZCk6IHdoYXQga2luZCBvZiBh
+ZGRyZXNzIGFyZSB0aGV5Pw0KPg0KPiAgICBBcHBhcmVudGx5LCBwaHlzaWNhbC4gVGhlIGhhcmR3
+YXJlIG9ubHkgb3BlcmF0ZXMgb24gdGhlIHBoeXNpY2FsIA0KPiBhZGRyZXNzZXMuDQo+DQo+PiBD
+dXJyZW50bHksIHdoZW4gSSBnZXQgdGhlDQo+PiBhZGRyZXNzIGFuZCBwbGFjZSBpdCBpbnRvIGEg
+cG9pbnRlciBvZiBzdHJ1Y3QgYWhjaV9jbWRfaGRyIGFuZCB0cnkgdG8NCj4+IGRlcmVmZXJlbmNl
+LCBteSBWTSBsb2NrcyBhbmQgdGhlbiByZWJvb3RzLiAgV2hhdCBhbSBJIGRvaW5nIGluY29ycmVj
+dGx5Pw0KPg0KPiAgICBZb3UgY2FuJ3QgZGUtcmVmZXJlbmNlIHBoeXNpY2FsIGFkZHJlc3Nlcy4N
+Cj4NCj4+IEJhc2ljYWxseSwgSSBoYXZlIHRoaXM6DQo+DQo+PiB2b2lkIF9faW9tZW0gKiBwYmFz
+ZSA9IGFoY2lfcG9ydF9iYXNlKChzdHJ1Y3QgYXRhX3BvcnQqKSk7DQo+DQo+ICAgIENhbid0IHBh
+cnNlIHRoaXMuDQo+DQo+PiBzdHJ1Y3QgYWhjaV9jbWRfaGRyICpjbWRfaGRyID0gTlVMTDsNCj4N
+Cj4+IGNtZF9oZHIgPSAoc3RydWN0IGFoY2lfY21kX2hkciopKHU2NCkNCj4+ICAgICAgKCh1NjQp
+KCoodGVtcCArIFBPUlRfTFNUX0FERFJfSEkpKSA8PCAzMiB8ICp0ZW1wKTsNCj4NCj4gICB0ZW1w
+Pw0KPg0KPj4gcHJfaW5mbygiY21kX2hkciBpcyAlcFxuIiwgY21kX2hkcik7DQo+PiBwcl9pbmZv
+KCJjbWRfaGRyLT5vcHRzIGlzICVkXG4iLCBjbWRfaGRyLT5vcHRzKTsgIC8qIG9wdHMgaXMgX19s
+ZTMyICovDQo+DQo+PiBBdCB0aGUgbGFzdCBsaW5lIGFib3ZlIG15IFZNIGhhbmdzIGFuZCByZWJv
+b3RzLiAgVGhlIG1lbW9yeSBhZGRyZXNzIGlzDQo+PiBzb21ldGhpbmcgbGlrZSAweDAwMDAwMDAw
+Mzc5MDAwMDAuICBUaGlzIGFkZHJlc3MgbWFrZXMgbWUgdGhpbmsgdGhhdCBJDQo+PiBzaW1wbHkg
+Y2FuJ3QgZGVyZWZlcmVuY2UgaXQgYnV0IEknbSBxdWl0ZSBuZXcgdG8gdGhpcyBhbmQgSSBkb24n
+dCBrbm93DQo+PiB3aGF0IEkgc2hvdWxkIGRvLiAgSSdkIGFwcHJlY2lhdGUgYW55IGhlbHAgZXZl
+biBpZiB0aGF0J3MgYSBwb2ludGVyIChubw0KPj4gcHVuIGludGVuZGVkKSB0byBhIG1vcmUgYXBw
+cm9wcmlhdGUgZm9ydW0uDQo+DQo+ICAgIFRoZSBjb3JyZXNwb25kaW5nIHZpcnR1YWwgYWRkcmVz
+cyBzZWVtcyB0byBiZSBjb250YWluZWQgaW4gDQo+IGFoY2lfcG9ydF9wcml2OjpjbWRfc2xvdC4N
+Cj4NCj4+IFRoYW5rcywNCj4+IEFuZHkNCj4NCg0KVGhhbmsgeW91IFNlcmdlaS4gIFlvdSBhcmUg
+Y29ycmVjdC4gIEknbSBmaW5kaW5nIHRoYXQgZGl0Y2hpbmcgb2xkIA0KaGFiaXRzIGZyb20gdXNl
+ci1sYW5kIGFyZSBoYXJkIHRvIGRvLiAgSSBrbmV3IEkgbmVlZGVkIHRvIHVzZSB0aGluZ3MgDQps
+aWtlIGlvcmVhZCovaW93cml0ZSogd2hlbiBhY2Nlc3NpbmcgdGhvc2UgcG9pbnRlcnMgYnV0IEkg
+anVzdCBnb3Qgc3R1Y2sgDQppbiBhIHJoeXRobSBvZiAiSSd2ZSBnb3QgYSBwb2ludGVyIG5vdyBh
+bGwgSSBkbyBpcyBkZXJlZmVyZW5jZSAuLi4uIiAuICANCk9oIHdlbGwuDQoNClRoYW5rcyBtdWNo
+IGZvciBnZXR0aW5nIGJhY2sgdG8gbWUuDQoNCkFuZHk=
