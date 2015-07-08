@@ -1,41 +1,66 @@
-From: "Andy Falanga (afalanga)" <afalanga@micron.com>
-Subject: Addresses in PxCLB and PxCLBU
-Date: Mon, 6 Jul 2015 23:41:01 +0000
-Message-ID: <559B11FD.2040800@micron.com>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: Addresses in PxCLB and PxCLBU
+Date: Wed, 8 Jul 2015 13:44:25 +0300
+Message-ID: <559CFF09.2040300@cogentembedded.com>
+References: <559B11FD.2040800@micron.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.micron.com ([137.201.242.129]:46567 "EHLO
-	mailout.micron.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756275AbbGFXlE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 6 Jul 2015 19:41:04 -0400
-Received: from mail.micron.com (ntxboicas04.micron.com [137.201.20.214])
-	by mailout.micron.com (8.14.4/8.14.6) with ESMTP id t66Nf2qO021468
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=FAIL)
-	for <linux-ide@vger.kernel.org>; Mon, 6 Jul 2015 17:41:02 -0600
-Content-Language: en-US
-Content-ID: <D601C48FFB6A5A4488D7F88135DDBF3B@micron.com>
+Received: from mail-lb0-f172.google.com ([209.85.217.172]:34157 "EHLO
+	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756953AbbGHKo3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 8 Jul 2015 06:44:29 -0400
+Received: by lbnk3 with SMTP id k3so53490911lbn.1
+        for <linux-ide@vger.kernel.org>; Wed, 08 Jul 2015 03:44:27 -0700 (PDT)
+In-Reply-To: <559B11FD.2040800@micron.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: "Andy Falanga (afalanga)" <afalanga@micron.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-SGksDQoNCkknbSB3b3JraW5nIHdpdGggdGhlIHJlZ2lzdGVycyBpbiBhbiBBSENJIGNvbnRyb2xs
-ZXIuICBUaGUgbWVtb3J5IA0KYWRkcmVzcyBjb250YWluZWQgaW4gUHhDTEIgYW5kIFB4Q0xCVSAo
-aWYgNjQtYml0IGFkZHJlc3NpbmcgaXMgDQpzdXBwb3J0ZWQpOiB3aGF0IGtpbmQgb2YgYWRkcmVz
-cyBhcmUgdGhleT8gIEN1cnJlbnRseSwgd2hlbiBJIGdldCB0aGUgDQphZGRyZXNzIGFuZCBwbGFj
-ZSBpdCBpbnRvIGEgcG9pbnRlciBvZiBzdHJ1Y3QgYWhjaV9jbWRfaGRyIGFuZCB0cnkgdG8gDQpk
-ZXJlZmVyZW5jZSwgbXkgVk0gbG9ja3MgYW5kIHRoZW4gcmVib290cy4gIFdoYXQgYW0gSSBkb2lu
-ZyBpbmNvcnJlY3RseT8NCg0KQmFzaWNhbGx5LCBJIGhhdmUgdGhpczoNCg0Kdm9pZCBfX2lvbWVt
-ICogcGJhc2UgPSBhaGNpX3BvcnRfYmFzZSgoc3RydWN0IGF0YV9wb3J0KikpOw0Kc3RydWN0IGFo
-Y2lfY21kX2hkciAqY21kX2hkciA9IE5VTEw7DQoNCmNtZF9oZHIgPSAoc3RydWN0IGFoY2lfY21k
-X2hkciopKHU2NCkNCiAgICAoKHU2NCkoKih0ZW1wICsgUE9SVF9MU1RfQUREUl9ISSkpIDw8IDMy
-IHwgKnRlbXApOw0KDQpwcl9pbmZvKCJjbWRfaGRyIGlzICVwXG4iLCBjbWRfaGRyKTsNCnByX2lu
-Zm8oImNtZF9oZHItPm9wdHMgaXMgJWRcbiIsIGNtZF9oZHItPm9wdHMpOyAgLyogb3B0cyBpcyBf
-X2xlMzIgKi8NCg0KDQpBdCB0aGUgbGFzdCBsaW5lIGFib3ZlIG15IFZNIGhhbmdzIGFuZCByZWJv
-b3RzLiAgVGhlIG1lbW9yeSBhZGRyZXNzIGlzIA0Kc29tZXRoaW5nIGxpa2UgMHgwMDAwMDAwMDM3
-OTAwMDAwLiAgVGhpcyBhZGRyZXNzIG1ha2VzIG1lIHRoaW5rIHRoYXQgSSANCnNpbXBseSBjYW4n
-dCBkZXJlZmVyZW5jZSBpdCBidXQgSSdtIHF1aXRlIG5ldyB0byB0aGlzIGFuZCBJIGRvbid0IGtu
-b3cgDQp3aGF0IEkgc2hvdWxkIGRvLiAgSSdkIGFwcHJlY2lhdGUgYW55IGhlbHAgZXZlbiBpZiB0
-aGF0J3MgYSBwb2ludGVyIChubyANCnB1biBpbnRlbmRlZCkgdG8gYSBtb3JlIGFwcHJvcHJpYXRl
-IGZvcnVtLg0KDQpUaGFua3MsDQpBbmR5
+Hello.
+
+On 7/7/2015 2:41 AM, Andy Falanga (afalanga) wrote:
+
+> I'm working with the registers in an AHCI controller.  The memory
+> address contained in PxCLB and PxCLBU (if 64-bit addressing is
+> supported): what kind of address are they?
+
+    Apparently, physical. The hardware only operates on the physical addresses.
+
+> Currently, when I get the
+> address and place it into a pointer of struct ahci_cmd_hdr and try to
+> dereference, my VM locks and then reboots.  What am I doing incorrectly?
+
+    You can't de-reference physical addresses.
+
+> Basically, I have this:
+
+> void __iomem * pbase = ahci_port_base((struct ata_port*));
+
+    Can't parse this.
+
+> struct ahci_cmd_hdr *cmd_hdr = NULL;
+
+> cmd_hdr = (struct ahci_cmd_hdr*)(u64)
+>      ((u64)(*(temp + PORT_LST_ADDR_HI)) << 32 | *temp);
+
+   temp?
+
+> pr_info("cmd_hdr is %p\n", cmd_hdr);
+> pr_info("cmd_hdr->opts is %d\n", cmd_hdr->opts);  /* opts is __le32 */
+
+> At the last line above my VM hangs and reboots.  The memory address is
+> something like 0x0000000037900000.  This address makes me think that I
+> simply can't dereference it but I'm quite new to this and I don't know
+> what I should do.  I'd appreciate any help even if that's a pointer (no
+> pun intended) to a more appropriate forum.
+
+    The corresponding virtual address seems to be contained in 
+ahci_port_priv::cmd_slot.
+
+> Thanks,
+> Andy
+
+WBR, Sergei
+
