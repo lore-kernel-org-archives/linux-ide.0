@@ -1,45 +1,53 @@
-From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: [PATCH] libata: increase the timeout when setting transfer mode
-Date: Wed, 8 Jul 2015 13:06:12 -0400 (EDT)
-Message-ID: <alpine.LRH.2.02.1507081304050.5355@file01.intranet.prod.int.rdu2.redhat.com>
+From: Vaishali Thakkar <vthakkar1994@gmail.com>
+Subject: [PATCH] ide: Add helper macro for struct pci_driver bolierplate
+Date: Sat, 11 Jul 2015 15:39:11 +0530
+Message-ID: <20150711100910.GA16981@vaishali-Ideapad-Z570>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46265 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758552AbbGHRGN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 8 Jul 2015 13:06:13 -0400
+Received: from mail-pd0-f178.google.com ([209.85.192.178]:32773 "EHLO
+	mail-pd0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753556AbbGKKJS (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 11 Jul 2015 06:09:18 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
+To: "David S. Miller" <davem@davemloft.net>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-I have a ST4000DM000 disk. If Linux is booted while the disk is spun down,
-the command that sets transfer mode causes the disk to spin up. The
-spin-up takes longer than the default 5s timeout, so the command fails and
-timeout is reported.
+For simple IDE modules that contain a single pci_driver without any
+additional setup code then ends up being a block of duplicated
+boilerplate. This patch adds a new macro, module_ide_pci_driver(),
+which replaces the module_init()/module_exit() registrations with
+template functions.
 
-Fix this by increasing the timeout to 15s, which is enough for the disk to
-spin up.
-
-Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
-Cc: stable@vger.kernel.org
-
+Signed-off-by: Vaishali Thakkar <vthakkar1994@gmail.com>
 ---
- drivers/ata/libata-core.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ include/linux/ide.h | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-Index: linux-4.1.1/drivers/ata/libata-core.c
-===================================================================
---- linux-4.1.1.orig/drivers/ata/libata-core.c	2015-07-07 22:21:39.962112941 +0200
-+++ linux-4.1.1/drivers/ata/libata-core.c	2015-07-08 18:59:03.852951057 +0200
-@@ -4501,7 +4501,8 @@ static unsigned int ata_dev_set_xfermode
- 	else /* In the ancient relic department - skip all of this */
- 		return 0;
+diff --git a/include/linux/ide.h b/include/linux/ide.h
+index a633898..ac93cf5 100644
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -1189,6 +1189,17 @@ extern int __ide_pci_register_driver(struct pci_driver *driver, struct module *o
+ #define ide_pci_register_driver(d) pci_register_driver(d)
+ #endif
  
--	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, 0);
-+	/* On some disks, this command causes spin-up, so we need longer timeout */
-+	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, 15000);
- 
- 	DPRINTK("EXIT, err_mask=%x\n", err_mask);
- 	return err_mask;
++/**
++ * module_ide_pci_driver() - Helper macro for registering a IDE drivers
++ * @__pci_driver: pci_driver struct
++ * Helper macro for IDE drivers which do not do anything special in module
++ * init/exit. This eliminates a lot of boilerplate. Each module may only
++ * use this macro once, and calling it replaces module_init() and module_exit()
++ */
++#define module_ide_pci_driver(__pci_driver) \
++	module_driver(__pci_driver, ide_pci_register_driver, \
++			pci_unregister_driver)
++
+ static inline int ide_pci_is_in_compatibility_mode(struct pci_dev *dev)
+ {
+ 	if ((dev->class >> 8) == PCI_CLASS_STORAGE_IDE && (dev->class & 5) != 5)
+-- 
+1.9.1
+
