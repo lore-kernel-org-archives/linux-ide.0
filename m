@@ -1,60 +1,42 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata: add ATA_HORKAGE_BROKEN_FPDMA_AA quirk for HP
- 250GB SATA disk VB0250EAVER
-Date: Tue, 14 Jul 2015 17:59:03 -0400
-Message-ID: <20150714215903.GJ2273@mtj.duckdns.org>
-References: <1435747710-3270-1-git-send-email-mamlinav@gmail.com>
+From: Brian Norris <computersforpeace@gmail.com>
+Subject: Re: [PATCH 4.2] ata: ahci_brcmstb: Fix warnings with
+ CONFIG_PM_SLEEP=n
+Date: Tue, 14 Jul 2015 15:06:29 -0700
+Message-ID: <20150714220629.GA21362@localhost>
+References: <1436904213-9205-1-git-send-email-f.fainelli@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:32798 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752324AbbGNWGh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Jul 2015 18:06:37 -0400
 Content-Disposition: inline
-In-Reply-To: <1435747710-3270-1-git-send-email-mamlinav@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Aleksei Mamlin <mamlinav@gmail.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <1436904213-9205-1-git-send-email-f.fainelli@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Florian Fainelli <f.fainelli@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, gregory.0xf0@gmail.com, tj@kernel.org
 
-Hello,
+On Tue, Jul 14, 2015 at 01:03:33PM -0700, Florian Fainelli wrote:
+> When CONFIG_PM_SLEEP is disabled, brcm_ahci_{suspend,resume} are not
+> used, which causes such a build warning to occur:
+> 
+>   CC      drivers/ata/ahci_brcmstb.o
+> drivers/ata/ahci_brcmstb.c:212:12: warning: 'brcm_ahci_suspend' defined
+> but not used [-Wunused-function]
+>  static int brcm_ahci_suspend(struct device *dev)
+>             ^
+> drivers/ata/ahci_brcmstb.c:224:12: warning: 'brcm_ahci_resume' defined
+> but not used [-Wunused-function]
+>  static int brcm_ahci_resume(struct device *dev)
+>             ^
+>   LD      drivers/ata/built-in.o
+> 
+> Fixes: 766a2d979632 ("ata: add Broadcom AHCI SATA3 driver for STB chips")
+> Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
+> ---
+> Tejun, this is a new driver that got merged during 4.2, could you queue
+> this up for an upcoming 4.2-rcX pull request?
 
-Applied to libata/for-4.2-fixes with minor updates.
-
-Thanks.
------ 8< -----
->From 08c85d2a599d967ede38a847f5594447b6100642 Mon Sep 17 00:00:00 2001
-From: Aleksei Mamlin <mamlinav@gmail.com>
-Date: Wed, 1 Jul 2015 13:48:30 +0300
-
-Enabling AA on HP 250GB SATA disk VB0250EAVER causes errors:
-
-[    3.788362] ata3.00: failed to enable AA (error_mask=0x1)
-[    3.789243] ata3.00: failed to enable AA (error_mask=0x1)
-
-Add the ATA_HORKAGE_BROKEN_FPDMA_AA for this specific harddisk.
-
-tj: Collected FPDMA_AA entries and updated comment.
-
-Signed-off-by: Aleksei Mamlin <mamlinav@gmail.com>
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: stable@vger.kernel.org
----
- drivers/ata/libata-core.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index e83fc3d..58a6db8f 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4174,9 +4174,10 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	{ "ST3320[68]13AS",	"SD1[5-9]",	ATA_HORKAGE_NONCQ |
- 						ATA_HORKAGE_FIRMWARE_WARN },
- 
--	/* Seagate Momentus SpinPoint M8 seem to have FPMDA_AA issues */
-+	/* drives which fail FPDMA_AA activation (some may freeze afterwards) */
- 	{ "ST1000LM024 HN-M101MBB", "2AR10001",	ATA_HORKAGE_BROKEN_FPDMA_AA },
- 	{ "ST1000LM024 HN-M101MBB", "2BA30001",	ATA_HORKAGE_BROKEN_FPDMA_AA },
-+	{ "VB0250EAVER",	"HPG7",		ATA_HORKAGE_BROKEN_FPDMA_AA },
- 
- 	/* Blacklist entries taken from Silicon Image 3124/3132
- 	   Windows driver .inf file - also several Linux problem reports */
--- 
-2.4.3
+Acked-by: Brian Norris <computersforpeace@gmail.com>
