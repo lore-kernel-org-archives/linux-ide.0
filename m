@@ -1,40 +1,57 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2/2] libata: force disable trim for SuperSSpeed S238
-Date: Tue, 14 Jul 2015 14:54:18 -0400
-Message-ID: <20150714185418.GB2273@mtj.duckdns.org>
-References: <1436873314-22563-1-git-send-email-arne_f@ipfire.org>
- <1436873314-22563-3-git-send-email-arne_f@ipfire.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qk0-f175.google.com ([209.85.220.175]:36130 "EHLO
-	mail-qk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752827AbbGNSyW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Jul 2015 14:54:22 -0400
-Received: by qkdv3 with SMTP id v3so12844568qkd.3
-        for <linux-ide@vger.kernel.org>; Tue, 14 Jul 2015 11:54:21 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <1436873314-22563-3-git-send-email-arne_f@ipfire.org>
-Sender: linux-ide-owner@vger.kernel.org
+From: Florian Fainelli <f.fainelli@gmail.com>
+Subject: [PATCH 4.2] ata: ahci_brcmstb: Fix warnings with CONFIG_PM_SLEEP=n
+Date: Tue, 14 Jul 2015 13:03:33 -0700
+Message-ID: <1436904213-9205-1-git-send-email-f.fainelli@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, gregory.0xf0@gmail.com, computersforpeace@gmail.com, tj@kernel.org, Florian Fainelli <f.fainelli@gmail.com>
 List-Id: linux-ide@vger.kernel.org
-To: Arne Fitzenreiter <arne_f@ipfire.org>
-Cc: linux-ide@vger.kernel.org
 
-On Tue, Jul 14, 2015 at 01:28:34PM +0200, Arne Fitzenreiter wrote:
-> this disc lose blocks if trim is used. most time the partition
-> area.
+When CONFIG_PM_SLEEP is disabled, brcm_ahci_{suspend,resume} are not
+used, which causes such a build warning to occur:
 
-This device loses blocks, often the partition table area, on trim.
-Disable TRIM.
+  CC      drivers/ata/ahci_brcmstb.o
+drivers/ata/ahci_brcmstb.c:212:12: warning: 'brcm_ahci_suspend' defined
+but not used [-Wunused-function]
+ static int brcm_ahci_suspend(struct device *dev)
+            ^
+drivers/ata/ahci_brcmstb.c:224:12: warning: 'brcm_ahci_resume' defined
+but not used [-Wunused-function]
+ static int brcm_ahci_resume(struct device *dev)
+            ^
+  LD      drivers/ata/built-in.o
 
-Signed-off-by:...
-Cc: stable@vger.kernel.org  (the previous patch too)
+Fixes: 766a2d979632 ("ata: add Broadcom AHCI SATA3 driver for STB chips")
+Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
+---
+Tejun, this is a new driver that got merged during 4.2, could you queue
+this up for an upcoming 4.2-rcX pull request?
 
-Also, how did you learn that the device loses data on trim?  Is there
-a report?  If this is something you noticed yourself, can you please
-detail what you observed and how reproducible the problem is?
+Thanks!
 
-Thanks.
+ drivers/ata/ahci_brcmstb.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
+diff --git a/drivers/ata/ahci_brcmstb.c b/drivers/ata/ahci_brcmstb.c
+index ce1e3a885981..42b6cf4a05c8 100644
+--- a/drivers/ata/ahci_brcmstb.c
++++ b/drivers/ata/ahci_brcmstb.c
+@@ -209,6 +209,7 @@ static void brcm_sata_init(struct brcm_ahci_priv *priv)
+ 			   priv->top_ctrl + SATA_TOP_CTRL_BUS_CTRL);
+ }
+ 
++#ifdef CONFIG_PM_SLEEP
+ static int brcm_ahci_suspend(struct device *dev)
+ {
+ 	struct ata_host *host = dev_get_drvdata(dev);
+@@ -231,6 +232,7 @@ static int brcm_ahci_resume(struct device *dev)
+ 	brcm_sata_phys_enable(priv);
+ 	return ahci_platform_resume(dev);
+ }
++#endif
+ 
+ static struct scsi_host_template ahci_platform_sht = {
+ 	AHCI_SHT(DRV_NAME),
 -- 
-tejun
+2.1.0
