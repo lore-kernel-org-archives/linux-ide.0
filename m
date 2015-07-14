@@ -1,41 +1,35 @@
-From: Arne Fitzenreiter <arne_f@ipfire.org>
-Subject: [PATCH 2/2] libata: force disable trim for SuperSSpeed S238
-Date: Tue, 14 Jul 2015 15:01:49 +0200
-Message-ID: <1436878909-26698-3-git-send-email-arne_f@ipfire.org>
-References: <1436878909-26698-1-git-send-email-arne_f@ipfire.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 1/2] libata: add ATA_HORKAGE_NOTRIM
+Date: Tue, 14 Jul 2015 14:50:47 -0400
+Message-ID: <20150714185047.GA2273@mtj.duckdns.org>
+References: <1436873314-22563-1-git-send-email-arne_f@ipfire.org>
+ <1436873314-22563-2-git-send-email-arne_f@ipfire.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail01.ipfire.org ([178.63.73.247]:56224 "EHLO
-	mail01.ipfire.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751886AbbGNNCE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Jul 2015 09:02:04 -0400
-In-Reply-To: <1436878909-26698-1-git-send-email-arne_f@ipfire.org>
+Received: from mail-qg0-f53.google.com ([209.85.192.53]:36499 "EHLO
+	mail-qg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752132AbbGNSuu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Jul 2015 14:50:50 -0400
+Received: by qgy5 with SMTP id 5so8365399qgy.3
+        for <linux-ide@vger.kernel.org>; Tue, 14 Jul 2015 11:50:49 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <1436873314-22563-2-git-send-email-arne_f@ipfire.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org
-Cc: linux-ide@vger.kernel.org, Arne Fitzenreiter <arne_f@ipfire.org>
+To: Arne Fitzenreiter <arne_f@ipfire.org>
+Cc: linux-ide@vger.kernel.org
 
-this disc lose blocks if trim is used. most time the partition
-area.
+On Tue, Jul 14, 2015 at 01:28:33PM +0200, Arne Fitzenreiter wrote:
+> sone disks lose data at trim also with disabled ncq
+> so this add a switch to force disable trim.
 
-Signed-off-by: Arne Fitzenreiter <arne_f@ipfire.org>
----
- drivers/ata/libata-core.c | 3 +++
- 1 file changed, 3 insertions(+)
+Some devices lose data on TRIM whether queued or not.  This patch adds
+a horkage to disable TRIM.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index e83fc3d..d2d3b21 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4238,6 +4238,9 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
- 	{ "Samsung SSD 8*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
- 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
- 
-+	/* devices that don't properly handle TRIM commands */
-+	{ "SuperSSpeed S238*",		NULL,	ATA_HORKAGE_NOTRIM, },
-+
- 	/*
- 	 * As defined, the DRAT (Deterministic Read After Trim) and RZAT
- 	 * (Return Zero After Trim) flags in the ATA Command Set are
+Signed-off-by:....
+
+Thanks.
+
 -- 
-2.4.4
-
+tejun
