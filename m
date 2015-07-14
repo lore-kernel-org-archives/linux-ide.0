@@ -1,36 +1,29 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ata: pmp: add quirk for Marvell 4140 SATA PMP
-Date: Tue, 14 Jul 2015 17:46:21 -0400
-Message-ID: <20150714214621.GH2273@mtj.duckdns.org>
-References: <1435673389-10729-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH] ata: sata_rcar: Remove obsolete sata-r8a779*
+ platform_device_id entries
+Date: Tue, 14 Jul 2015 17:39:41 -0400
+Message-ID: <20150714213941.GF2273@mtj.duckdns.org>
+References: <1435064113-10742-1-git-send-email-geert+renesas@glider.be>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f47.google.com ([209.85.192.47]:36058 "EHLO
-	mail-qg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752520AbbGNVqY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 14 Jul 2015 17:46:24 -0400
-Received: by qgy5 with SMTP id 5so10419889qgy.3
-        for <linux-ide@vger.kernel.org>; Tue, 14 Jul 2015 14:46:23 -0700 (PDT)
+Return-path: <linux-sh-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1435673389-10729-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <1435064113-10742-1-git-send-email-geert+renesas@glider.be>
+Sender: linux-sh-owner@vger.kernel.org
+To: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: linux-ide@vger.kernel.org, linux-sh@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: linux-ide@vger.kernel.org, Tawfik Bayouk <tawfik@marvell.com>, Nadav Haklai <nadavh@marvell.com>, Lior Amsalem <alior@marvell.com>, Gregory Clement <gregory.clement@free-electrons.com>
 
-On Tue, Jun 30, 2015 at 04:09:49PM +0200, Thomas Petazzoni wrote:
-> From: Lior Amsalem <alior@marvell.com>
+On Tue, Jun 23, 2015 at 02:55:13PM +0200, Geert Uytterhoeven wrote:
+> Since commit a483dcbfa21f919c ("ARM: shmobile: lager: Remove legacy
+> board support"), R-Car Gen2 SoCs are only supported in generic DT-only
+> ARM multi-platform builds.  The driver doesn't need to match platform
+> devices by name anymore, hence remove the corresponding
+> platform_device_id entry.
 > 
-> This commit adds the necessary quirk to make the Marvell 4140 SATA PMP
-> work properly. This PMP doesn't like SRST on port number 4 (the host
-> port) so this commit marks this port as not supporting SRST.
-> 
-> Signed-off-by: Lior Amsalem <alior@marvell.com>
-> Reviewed-by: Nadav Haklai <nadavh@marvell.com>
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
 
-Applied to libata/for-4.2-fixes w/ stable cc'd.
+Applied to libata/for-4.3.
 
 Thanks.
 
