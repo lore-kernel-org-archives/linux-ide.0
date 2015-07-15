@@ -1,33 +1,28 @@
 From: Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 1/2] libata: add ATA_HORKAGE_NOTRIM
-Date: Wed, 15 Jul 2015 07:26:10 -0700
-Message-ID: <20150715142610.GA2127@kroah.com>
+Subject: Re: [PATCH 2/2] libata: force disable trim for SuperSSpeed S238
+Date: Wed, 15 Jul 2015 07:26:20 -0700
+Message-ID: <20150715142620.GB2127@kroah.com>
 References: <1436961277-4069-1-git-send-email-arne_f@ipfire.org>
- <1436961277-4069-2-git-send-email-arne_f@ipfire.org>
+ <1436961277-4069-3-git-send-email-arne_f@ipfire.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:40142 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751732AbbGOO0M (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Jul 2015 10:26:12 -0400
+Return-path: <stable-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1436961277-4069-2-git-send-email-arne_f@ipfire.org>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+In-Reply-To: <1436961277-4069-3-git-send-email-arne_f@ipfire.org>
+Sender: stable-owner@vger.kernel.org
 To: Arne Fitzenreiter <arne_f@ipfire.org>
 Cc: tj@kernel.org, linux-ide@vger.kernel.org, stable@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-On Wed, Jul 15, 2015 at 01:54:36PM +0200, Arne Fitzenreiter wrote:
-> Some devices lose data on TRIM whether queued or not.  This patch adds
-> a horkage to disable TRIM.
+On Wed, Jul 15, 2015 at 01:54:37PM +0200, Arne Fitzenreiter wrote:
+> This device loses blocks, often the partition table area, on trim.
+> Disable TRIM.
+> http://pcengines.ch/msata16a.htm
 > 
 > Signed-off-by: Arne Fitzenreiter <arne_f@ipfire.org>
 > ---
->  drivers/ata/libata-scsi.c      | 14 ++++++++------
->  drivers/ata/libata-transport.c |  2 ++
->  include/linux/libata.h         |  2 ++
->  3 files changed, 12 insertions(+), 6 deletions(-)
+>  drivers/ata/libata-core.c | 3 +++
+>  1 file changed, 3 insertions(+)
 
 <formletter>
 
