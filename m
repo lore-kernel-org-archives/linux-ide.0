@@ -1,53 +1,40 @@
-From: Rajat Jain <rajatja@google.com>
-Subject: Implementing aio cancel for SCSI/SATA devices
-Date: Wed, 15 Jul 2015 17:24:55 -0700
-Message-ID: <CACK8Z6EfZw3NrHZk_HD1Qh17ZAntOaxXzRx=kpp2noNfJ6KRWg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: "James E.J. Bottomley" <JBottomley@odin.com>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Benjamin LaHaise <bcrl@kvack.org>, Theodore Tso <tytso@google.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, linux-aio@kvack.org, Kent Overstreet <kent.overstreet@gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH] libata: Do not blacklist M510DC
+Date: Wed, 15 Jul 2015 21:03:23 -0400
+Message-ID: <1437008603-16554-1-git-send-email-martin.petersen@oracle.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:19335 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751764AbbGPBDh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Jul 2015 21:03:37 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: tj@kernel.org, linux-ide@vger.kernel.org
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, stable@vger.kernel.org
 
-Hello,
+A new Micron drive was just announced, once again recycling the first
+part of the model string. Add an underscore to the M510/M550 pattern to
+avoid picking up the new DC drive.
 
-Currently I don't see any users of aio cancellation facility (except a
-USB gadget driver).
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: <stable@vger.kernel.org>
+---
+ drivers/ata/libata-core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I have a SATA controller and disk that both support the NCQ command
-aborts, and I am thinking of ways to implement aio cancellation on
-these devices in the kernel. The way I see it, at the time user
-requests for a command to be cancelled, it could be be in one of the 2
-places:
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 12b176a10d57..db5d9f79a247 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4240,7 +4240,7 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
+ 	{ "Crucial_CT*M500*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
+ 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
+-	{ "Micron_M5[15]0*",		"MU01",	ATA_HORKAGE_NO_NCQ_TRIM |
++	{ "Micron_M5[15]0_*",		"MU01",	ATA_HORKAGE_NO_NCQ_TRIM |
+ 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
+ 	{ "Crucial_CT*M550*",		"MU01",	ATA_HORKAGE_NO_NCQ_TRIM |
+ 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
+-- 
+2.4.3
 
-1. Sitting in block layer elevator queues, and not yet submitted it to
-the SCSI subsystem (scsi_dispatch_cmd() not yet called). [I see some
-solutions available to this https://lkml.org/lkml/2013/5/13/615 ]
-
-2. Submitted to the SCSI subsystem / LLD, but pending in the LLD SW or
-the HW  (scsi_done() not yet called). This part is what I am keen on
-adding.
-
-My line of thought (10000 ft view) currently is, that I should:
-
-A) Do the necessary plumbing (through the block & scsi layers) such
-that the kiocb_cancel() should eventually result in a call to the
-eh_abort_handler() for the LLD for that particular command. This
-should (atleast in my theory) let the LLD know that it needs to cancel
-the command, and can do whatever it needs to do in order to cancel it.
-
-B) Add a helper function in libata that allocates & initializes a new
-"Queue Management - Abort (0x63)" ATA command, that the LLD's
-eh_abort_handler() can choose to use in case it sees that the command
-is already sent to the disk drive. It can then send this new
-ata_queued_cmd to abort the pending command to the drive. This is of
-course optional and to be used at LLD(s) discretion.
-
-Comments? Thoughts?
-
-I'd appreciate if you could please let me know if I'm on the right
-track or totally off?
-
-Thanks,
-
-Rajat
