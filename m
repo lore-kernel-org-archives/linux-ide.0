@@ -1,42 +1,29 @@
-From: Linus Walleij <linus.walleij@linaro.org>
-Subject: Re: [PATCH] MIPS: Remove most of the custom gpio.h
-Date: Thu, 23 Jul 2015 15:03:36 +0200
-Message-ID: <CACRpkdYqwOymyK31rwhe7EQnSxLFrcy3PTBvCsyK1TR+J7=EQg@mail.gmail.com>
-References: <1437586416-14735-1-git-send-email-albeu@free.fr>
+From: "Andy Falanga (afalanga)" <afalanga@micron.com>
+Subject: How do the upper layers know a SATA drive has just been plugged in
+Date: Thu, 23 Jul 2015 15:28:44 +0000
+Message-ID: <55B107FE.8020109@micron.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:34167 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752964AbbGWNDh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 Jul 2015 09:03:37 -0400
-Received: by obre1 with SMTP id e1so153579895obr.1
-        for <linux-ide@vger.kernel.org>; Thu, 23 Jul 2015 06:03:36 -0700 (PDT)
-In-Reply-To: <1437586416-14735-1-git-send-email-albeu@free.fr>
+Received: from mailout.micron.com ([137.201.242.129]:46965 "EHLO
+	mailout.micron.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753804AbbGWP2t (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 Jul 2015 11:28:49 -0400
+Received: from mail.micron.com (ntxboicas01.micron.com [137.201.84.60])
+	by mailout.micron.com (8.14.4/8.14.6) with ESMTP id t6NFSlHX024240
+	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=FAIL)
+	for <linux-ide@vger.kernel.org>; Thu, 23 Jul 2015 09:28:48 -0600
+Content-Language: en-US
+Content-ID: <E894C7C99885B040903E1C1FBB9B3CAC@micron.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alban Bedel <albeu@free.fr>
-Cc: Linux MIPS <linux-mips@linux-mips.org>, Ralf Baechle <ralf@linux-mips.org>, Hauke Mehrtens <hauke@hauke-m.de>, =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>, Alexandre Courbot <gnurou@gmail.com>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Florian Fainelli <florian@openwrt.org>, Joe Perches <joe@perches.com>, Daniel Walter <dwalter@google.com>, Sergey Ryazanov <ryazanov.s.a@gmail.com>, Huacai Chen <chenhc@lemote.com>, Andrew Bresticker <abrestic@chromium.org>, James Hartley <james.hartley@imgtec.com>, Paul Burton <paul.burton@imgtec.com>, Waldemar Brodkorb <wbx@openadk.org>, James Hogan <james.hogan@imgtec.com>, Tomi Valkeinen <tomi.valkeinen@ti.com>, Levente Kurusa <levex@linux.com>, abdoulaye berthe <berthe.ab@gmail.com>, Wolfram Sang <wsa@the-dreams.de>, linux-kernel@vger
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Wed, Jul 22, 2015 at 7:33 PM, Alban Bedel <albeu@free.fr> wrote:
-
-> Currently CONFIG_ARCH_HAVE_CUSTOM_GPIO_H is defined for all MIPS
-> machines, and each machine type provides its own gpio.h. However only
-> the Alchemy machine really use the feature, all other machines only
-> use the default wrappers.
->
-> For most machine types we can just remove the custom gpio.h, as well
-> as the custom wrappers if some exists. A few more fixes are need in
-> a few drivers as they rely on linux/gpio.h to provides some machine
-> specific definitions, or used asm/gpio.h instead of linux/gpio.h for
-> the gpio API.
->
-> Signed-off-by: Alban Bedel <albeu@free.fr>
-
-This is exactly what the kernel needs. Enjoy my:
-Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
-
-And feel free to merge this through the MIPS tree.
-
-Yours,
-Linus Walleij
+SSdtIGxvb2tpbmcgZm9yIHRoZSBsaW5rIGJldHdlZW4gYWhjaS5rbyBhbmQgdGhlIHVwcGVyIGxh
+eWVycyBmb3IgaG93IA0KdGhleSBrbm93IGEgZHJpdmUgaGFzIGJlZW4gcGx1Z2dlZCBpbnRvIHRo
+ZSBzeXN0ZW0uICBJIGhhdmUgbmVlZCwgaW4gDQp2ZXJ5IHNlbGVjdCBjaXJjdW1zdGFuY2VzLCB0
+byBibG9jayB0aGlzIG5vdGlmaWNhdGlvbi4gSG93ZXZlciwgSSdtIG5vdCANCmZpbmRpbmcgaG93
+IHRoZSBhaGNpIGRyaXZlciBhY3R1YWxseSBkb2VzIHRoaXMgbm90aWZpY2F0aW9uLiAgQ2FuIA0K
+c29tZW9uZSBwbGVhc2UgZXhwbGFpbiBpdCB0byBtZSwgb3IgcHV0IG1lIG9uIHRoZSBjb3JyZWN0
+IHRyYWlsPw0KDQpUaGFua3MsDQpBbmR5
