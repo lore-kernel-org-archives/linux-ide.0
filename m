@@ -1,29 +1,37 @@
-From: "Andy Falanga (afalanga)" <afalanga@micron.com>
-Subject: How do the upper layers know a SATA drive has just been plugged in
-Date: Thu, 23 Jul 2015 15:28:44 +0000
-Message-ID: <55B107FE.8020109@micron.com>
+From: Lars-Peter Clausen <lars@metafoo.de>
+Subject: Re: [PATCH] MIPS: Remove most of the custom gpio.h
+Date: Thu, 23 Jul 2015 20:25:53 +0200
+Message-ID: <55B131B1.10302@metafoo.de>
+References: <1437586416-14735-1-git-send-email-albeu@free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.micron.com ([137.201.242.129]:46965 "EHLO
-	mailout.micron.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753804AbbGWP2t (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 Jul 2015 11:28:49 -0400
-Received: from mail.micron.com (ntxboicas01.micron.com [137.201.84.60])
-	by mailout.micron.com (8.14.4/8.14.6) with ESMTP id t6NFSlHX024240
-	(version=TLSv1/SSLv3 cipher=AES128-SHA bits=128 verify=FAIL)
-	for <linux-ide@vger.kernel.org>; Thu, 23 Jul 2015 09:28:48 -0600
-Content-Language: en-US
-Content-ID: <E894C7C99885B040903E1C1FBB9B3CAC@micron.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1437586416-14735-1-git-send-email-albeu@free.fr>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alban Bedel <albeu@free.fr>, linux-mips@linux-mips.org
+Cc: Ralf Baechle <ralf@linux-mips.org>, Hauke Mehrtens <hauke@hauke-m.de>, =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>, Linus Walleij <linus.walleij@linaro.org>, Alexandre Courbot <gnurou@gmail.com>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Florian Fainelli <florian@openwrt.org>, Joe Perches <joe@perches.com>, Daniel Walter <dwalter@google.com>, Sergey Ryazanov <ryazanov.s.a@gmail.com>, Huacai Chen <chenhc@lemote.com>, Andrew Bresticker <abrestic@chromium.org>, James Hartley <james.hartley@imgtec.com>, Paul Burton <paul.burton@imgtec.com>, Waldemar Brodkorb <wbx@openadk.org>, James Hogan <james.hogan@imgtec.com>, Tomi Valkeinen <tomi.valkeinen@ti.com>, Levente Kurusa <levex@linux.com>, abdoulaye berthe <berthe.ab@gmail.com>, Wolfram Sang <wsa@the-dreams.de>, linux-kernel@vger
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-SSdtIGxvb2tpbmcgZm9yIHRoZSBsaW5rIGJldHdlZW4gYWhjaS5rbyBhbmQgdGhlIHVwcGVyIGxh
-eWVycyBmb3IgaG93IA0KdGhleSBrbm93IGEgZHJpdmUgaGFzIGJlZW4gcGx1Z2dlZCBpbnRvIHRo
-ZSBzeXN0ZW0uICBJIGhhdmUgbmVlZCwgaW4gDQp2ZXJ5IHNlbGVjdCBjaXJjdW1zdGFuY2VzLCB0
-byBibG9jayB0aGlzIG5vdGlmaWNhdGlvbi4gSG93ZXZlciwgSSdtIG5vdCANCmZpbmRpbmcgaG93
-IHRoZSBhaGNpIGRyaXZlciBhY3R1YWxseSBkb2VzIHRoaXMgbm90aWZpY2F0aW9uLiAgQ2FuIA0K
-c29tZW9uZSBwbGVhc2UgZXhwbGFpbiBpdCB0byBtZSwgb3IgcHV0IG1lIG9uIHRoZSBjb3JyZWN0
-IHRyYWlsPw0KDQpUaGFua3MsDQpBbmR5
+On 07/22/2015 07:33 PM, Alban Bedel wrote:
+> diff --git a/arch/mips/jz4740/gpio.c b/arch/mips/jz4740/gpio.c
+> index 54c80d4..3dc500c 100644
+> --- a/arch/mips/jz4740/gpio.c
+> +++ b/arch/mips/jz4740/gpio.c
+> @@ -262,18 +262,6 @@ uint32_t jz_gpio_port_get_value(int port, uint32_t mask)
+>   }
+>   EXPORT_SYMBOL(jz_gpio_port_get_value);
+>
+> -int gpio_to_irq(unsigned gpio)
+> -{
+> -	return JZ4740_IRQ_GPIO(0) + gpio;
+> -}
+> -EXPORT_SYMBOL_GPL(gpio_to_irq);
+
+This need to be hooked up the gpio_to_irq() callback of the gpio_chip struct 
+of this driver rather than completely removing it. Otherwise this 
+functionality will be broken.
+
+Similar for other platforms which implement the function.
+
+- Lars
