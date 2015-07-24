@@ -1,37 +1,102 @@
-From: Lars-Peter Clausen <lars@metafoo.de>
-Subject: Re: [PATCH] MIPS: Remove most of the custom gpio.h
-Date: Thu, 23 Jul 2015 20:25:53 +0200
-Message-ID: <55B131B1.10302@metafoo.de>
-References: <1437586416-14735-1-git-send-email-albeu@free.fr>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: Since Linux 4.1: A lot of AMD-Vi IO_PAGE_FAULTs
+Date: Fri, 24 Jul 2015 11:15:54 -0500
+Message-ID: <CAErSpo666MBxpDe+uPvfVc7LPJsJQsVTusBhHygtwbou5GGj1w@mail.gmail.com>
+References: <55AE5F84.5020204@01019freenet.de> <1437492886.1391.847.camel@redhat.com>
+ <20150721155635.GE10969@8bytes.org> <55AE7147.7070902@maya.org>
+ <20150721163517.GG10969@8bytes.org> <55B1BDA3.3030507@maya.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1437586416-14735-1-git-send-email-albeu@free.fr>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alban Bedel <albeu@free.fr>, linux-mips@linux-mips.org
-Cc: Ralf Baechle <ralf@linux-mips.org>, Hauke Mehrtens <hauke@hauke-m.de>, =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>, Linus Walleij <linus.walleij@linaro.org>, Alexandre Courbot <gnurou@gmail.com>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Florian Fainelli <florian@openwrt.org>, Joe Perches <joe@perches.com>, Daniel Walter <dwalter@google.com>, Sergey Ryazanov <ryazanov.s.a@gmail.com>, Huacai Chen <chenhc@lemote.com>, Andrew Bresticker <abrestic@chromium.org>, James Hartley <james.hartley@imgtec.com>, Paul Burton <paul.burton@imgtec.com>, Waldemar Brodkorb <wbx@openadk.org>, James Hogan <james.hogan@imgtec.com>, Tomi Valkeinen <tomi.valkeinen@ti.com>, Levente Kurusa <levex@linux.com>, abdoulaye berthe <berthe.ab@gmail.com>, Wolfram Sang <wsa@the-dreams.de>, linux-kernel@vger
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-pci-owner@vger.kernel.org>
+In-Reply-To: <55B1BDA3.3030507@maya.org>
+Sender: linux-pci-owner@vger.kernel.org
+To: Andreas Hartmann <andihartmann@freenet.de>
+Cc: Joerg Roedel <joro@8bytes.org>, Alex Williamson <alex.williamson@redhat.com>, linux-pci <linux-pci@vger.kernel.org>, iommu <iommu@lists.linux-foundation.org>, Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-On 07/22/2015 07:33 PM, Alban Bedel wrote:
-> diff --git a/arch/mips/jz4740/gpio.c b/arch/mips/jz4740/gpio.c
-> index 54c80d4..3dc500c 100644
-> --- a/arch/mips/jz4740/gpio.c
-> +++ b/arch/mips/jz4740/gpio.c
-> @@ -262,18 +262,6 @@ uint32_t jz_gpio_port_get_value(int port, uint32_t mask)
->   }
->   EXPORT_SYMBOL(jz_gpio_port_get_value);
+[+cc Tejun, linux-ide]
+
+On Thu, Jul 23, 2015 at 11:22 PM, Andreas Hartmann
+<andihartmann@freenet.de> wrote:
+> On Tue, Jul 21, 2015 at 06:35PM +0200, Joerg Roedel wrote:
+>> On Tue, Jul 21, 2015 at 06:20:23PM +0200, Andreas Hartmann wrote:
+>>> [   48.193901] <6>[fglrx] Firegl kernel thread PID: 1840
+>>> [   48.193985] <6>[fglrx] Firegl kernel thread PID: 1841
+>>> [   48.194063] <6>[fglrx] Firegl kernel thread PID: 1842
+>>> [   48.194172] <6>[fglrx] IRQ 28 Enabled
+>>> [   48.261580] <6>[fglrx] Reserved FB block: Shared offset:0, size:1000000
+>>> [   48.261586] <6>[fglrx] Reserved FB block: Unshared offset:f7b4000, size:4000
+>>> [   48.261587] <6>[fglrx] Reserved FB block: Unshared offset:f7b8000, size:548000
+>>> [   48.261588] <6>[fglrx] Reserved FB block: Unshared offset:3fff3000, size:d000
+>>
+>> From a first glance it doesn't look like an IOMMU driver issue, because
+>> the addresses where the faults happen are not from the AMD IOMMU driver.
+>>
+>> And you have proprietary closed-source drivers loaded, can you reproduce
+>> the issue without fglrx?
 >
-> -int gpio_to_irq(unsigned gpio)
-> -{
-> -	return JZ4740_IRQ_GPIO(0) + gpio;
-> -}
-> -EXPORT_SYMBOL_GPL(gpio_to_irq);
+> Yes. I attached this one.
+>
+> Meanwhile I tested with 4.0.9, too. I wasn't able to reproduce the
+> problem with this kernel even after lots of reboots (the problem w/ 4.1
+> usually comes up during boot process (but not only - it can be seen
+> after boot process, too)).
+>
+> The problem always is, that there are errors w/ one of the sata discs
+> and at the same time, IO_PAGE_FAULT errors are rising as described before:
+>
+> [  152.533708] ata3.00: failed command: READ FPDMA QUEUED
+> [  152.538102] ata3.00: failed command: READ FPDMA QUEUED
+> [  152.539862] ata3.00: failed command: READ FPDMA QUEUED
+> [  152.541778] ata3.00: failed command: WRITE FPDMA QUEUED
+> [  152.543861] ata3.00: failed command: WRITE FPDMA QUEUED
+>
+> [ 5818.068050] ata2.00: failed command: WRITE FPDMA QUEUED
+> [ 5818.068059] ata2.00: failed command: WRITE FPDMA QUEUED
+>
+> I compared dmesg from 4.1 w/ 4.0 and I realized the following *missing*
+> entries in 4.1:
+>
+> [    0.000000] ACPI: LAPIC (acpi_id[0x00] lapic_id[0x00] enabled)
+> [    0.000000] ACPI: LAPIC (acpi_id[0x01] lapic_id[0x01] enabled)
+> [    0.000000] ACPI: LAPIC (acpi_id[0x02] lapic_id[0x02] enabled)
+> [    0.000000] ACPI: LAPIC (acpi_id[0x03] lapic_id[0x03] enabled)
+> [    0.000000] ACPI: LAPIC (acpi_id[0x04] lapic_id[0x04] enabled)
+> [    0.000000] ACPI: LAPIC (acpi_id[0x05] lapic_id[0x05] enabled)
+> [    0.000000] ACPI: LAPIC (acpi_id[0x06] lapic_id[0x06] enabled)
+> [    0.000000] ACPI: LAPIC (acpi_id[0x07] lapic_id[0x07] enabled)
+>
+>
+> What does this mean? Is there missing some part of the acpi initialization?
+>
+>
+> Thanks for any hint as Linux 4.1 is completely unusable here with these
+> errors.
 
-This need to be hooked up the gpio_to_irq() callback of the gpio_chip struct 
-of this driver rather than completely removing it. Otherwise this 
-functionality will be broken.
+This looks more like an AHCI problem than an IOMMU or PCI problem.
+Seems like the device has the wrong idea about where its DMA buffers
+are.  Maybe something scribbled on its command list?
 
-Similar for other platforms which implement the function.
+>From your attachments:
 
-- Lars
+# lspci -vvs 00:11.0
+00:11.0 SATA controller: Advanced Micro Devices, Inc. [AMD/ATI]
+SB7x0/SB8x0/SB9x0 SATA Controller [AHCI mode] (rev 40) (prog-if 01 [AHCI
+1.0])
+
+pci 0000:00:11.0: [1002:4391] type 00 class 0x010601
+ahci 0000:00:11.0: version 3.0
+ahci 0000:00:11.0: AHCI 0001.0200 32 slots 6 ports 6 Gbps 0x3f impl SATA mode
+ahci 0000:00:11.0: flags: 64bit ncq sntf ilck pm led clo pmp pio slum part
+AMD-Vi: Event logged [IO_PAGE_FAULT device=00:11.0 domain=0x0008
+address=0x40eba32100618000 flags=0x0010]
+AMD-Vi: Event logged [IO_PAGE_FAULT device=00:11.0 domain=0x0008
+address=0x40eba32100618040 flags=0x0010]
+AMD-Vi: Event logged [IO_PAGE_FAULT device=00:11.0 domain=0x0008
+address=0x0000000000000000 flags=0x0000]
+AMD-Vi: Event logged [IO_PAGE_FAULT device=00:11.0 domain=0x0008
+address=0x00000000000000c0 flags=0x0000]
+AMD-Vi: Event logged [IO_PAGE_FAULT device=00:11.0 domain=0x0008
+address=0x0000000000000040 flags=0x0000]
+AMD-Vi: Event logged [IO_PAGE_FAULT device=00:11.0 domain=0x0008
+address=0x00000000000001c0 flags=0x0000]
