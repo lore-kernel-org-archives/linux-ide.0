@@ -1,50 +1,48 @@
-From: Linus Walleij <linus.walleij@linaro.org>
-Subject: Re: [PATCH] MIPS: Remove most of the custom gpio.h
-Date: Mon, 27 Jul 2015 15:20:08 +0200
-Message-ID: <CACRpkdZon9XHSMyieGDU8F037+4TxyCq=6z5vJwQ3k6QJm6MTg@mail.gmail.com>
-References: <1437586416-14735-1-git-send-email-albeu@free.fr>
-	<55B131B1.10302@metafoo.de>
+From: Florian Fainelli <f.fainelli@gmail.com>
+Subject: Re: [PATCH 4.2] ata: ahci_brcmstb: Fix warnings with CONFIG_PM_SLEEP=n
+Date: Mon, 27 Jul 2015 12:54:07 -0700
+Message-ID: <55B68C5F.5050301@gmail.com>
+References: <1436904213-9205-1-git-send-email-f.fainelli@gmail.com> <20150714220629.GA21362@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <55B131B1.10302@metafoo.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Lars-Peter Clausen <lars@metafoo.de>
-Cc: Alban Bedel <albeu@free.fr>, Linux MIPS <linux-mips@linux-mips.org>, Ralf Baechle <ralf@linux-mips.org>, Hauke Mehrtens <hauke@hauke-m.de>, =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>, Alexandre Courbot <gnurou@gmail.com>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Florian Fainelli <florian@openwrt.org>, Joe Perches <joe@perches.com>, Daniel Walter <dwalter@google.com>, Sergey Ryazanov <ryazanov.s.a@gmail.com>, Huacai Chen <chenhc@lemote.com>, Andrew Bresticker <abrestic@chromium.org>, James Hartley <james.hartley@imgtec.com>, Paul Burton <paul.burton@imgtec.com>, Waldemar Brodkorb <wbx@openadk.org>, James Hogan <james.hogan@imgtec.com>, Tomi Valkeinen <tomi.valkeinen@ti.com>, Levente Kurusa <levex@linux.com>, abdoulaye berthe <berthe.ab@gmail.com>, Wolfram Sang <wsa@the-d>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:34423 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753460AbbG0T4L (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Jul 2015 15:56:11 -0400
+In-Reply-To: <20150714220629.GA21362@localhost>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Brian Norris <computersforpeace@gmail.com>, tj@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, gregory.0xf0@gmail.com
 
-On Thu, Jul 23, 2015 at 8:25 PM, Lars-Peter Clausen <lars@metafoo.de> wrote:
-> On 07/22/2015 07:33 PM, Alban Bedel wrote:
+On 14/07/15 15:06, Brian Norris wrote:
+> On Tue, Jul 14, 2015 at 01:03:33PM -0700, Florian Fainelli wrote:
+>> When CONFIG_PM_SLEEP is disabled, brcm_ahci_{suspend,resume} are not
+>> used, which causes such a build warning to occur:
 >>
->> diff --git a/arch/mips/jz4740/gpio.c b/arch/mips/jz4740/gpio.c
->> index 54c80d4..3dc500c 100644
->> --- a/arch/mips/jz4740/gpio.c
->> +++ b/arch/mips/jz4740/gpio.c
->> @@ -262,18 +262,6 @@ uint32_t jz_gpio_port_get_value(int port, uint32_t
->> mask)
->>   }
->>   EXPORT_SYMBOL(jz_gpio_port_get_value);
+>>   CC      drivers/ata/ahci_brcmstb.o
+>> drivers/ata/ahci_brcmstb.c:212:12: warning: 'brcm_ahci_suspend' defined
+>> but not used [-Wunused-function]
+>>  static int brcm_ahci_suspend(struct device *dev)
+>>             ^
+>> drivers/ata/ahci_brcmstb.c:224:12: warning: 'brcm_ahci_resume' defined
+>> but not used [-Wunused-function]
+>>  static int brcm_ahci_resume(struct device *dev)
+>>             ^
+>>   LD      drivers/ata/built-in.o
 >>
->> -int gpio_to_irq(unsigned gpio)
->> -{
->> -       return JZ4740_IRQ_GPIO(0) + gpio;
->> -}
->> -EXPORT_SYMBOL_GPL(gpio_to_irq);
->
->
-> This need to be hooked up the gpio_to_irq() callback of the gpio_chip struct
-> of this driver rather than completely removing it. Otherwise this
-> functionality will be broken.
->
-> Similar for other platforms which implement the function.
+>> Fixes: 766a2d979632 ("ata: add Broadcom AHCI SATA3 driver for STB chips")
+>> Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
+>> ---
+>> Tejun, this is a new driver that got merged during 4.2, could you queue
+>> this up for an upcoming 4.2-rcX pull request?
+> 
+> Acked-by: Brian Norris <computersforpeace@gmail.com>
+> 
 
-Even better is to see if we can convert the driver to
-GPIOLIB_IRQCHIP which moves the handling of IRQ mapping
-to the gpiolib core. This works for all simple cascading GPIO-with-IRQ
-controllers with a local mask register. (Not when the system intcon
-and GPIO is mashed up though.)
-
-But no hurry with that.
-
-Yours,
-Linus Walleij
+Tejun, I am not seeing this change queued in your for-4.2-fixes branch
+did you need me to do anything?
+-- 
+Florian
