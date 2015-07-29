@@ -1,53 +1,34 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 4.2] ata: ahci_brcmstb: Fix warnings with
- CONFIG_PM_SLEEP=n
-Date: Tue, 28 Jul 2015 14:02:59 -0400
-Message-ID: <20150728180259.GK5322@mtj.duckdns.org>
-References: <1436904213-9205-1-git-send-email-f.fainelli@gmail.com>
- <20150714220629.GA21362@localhost>
- <55B68C5F.5050301@gmail.com>
+From: Joerg Roedel <joro@8bytes.org>
+Subject: Re: Since Linux 4.1: A lot of AMD-Vi IO_PAGE_FAULTs
+Date: Wed, 29 Jul 2015 17:22:08 +0200
+Message-ID: <20150729152208.GS10969@8bytes.org>
+References: <55AE5F84.5020204@01019freenet.de>
+ <1437492886.1391.847.camel@redhat.com>
+ <20150721155635.GE10969@8bytes.org>
+ <55AE7147.7070902@maya.org>
+ <20150721163517.GG10969@8bytes.org>
+ <55B1BDA3.3030507@maya.org>
+ <CAErSpo666MBxpDe+uPvfVc7LPJsJQsVTusBhHygtwbou5GGj1w@mail.gmail.com>
+ <55B27CEB.6010007@maya.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-pci-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <55B68C5F.5050301@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Florian Fainelli <f.fainelli@gmail.com>
-Cc: Brian Norris <computersforpeace@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, gregory.0xf0@gmail.com
+In-Reply-To: <55B27CEB.6010007@maya.org>
+Sender: linux-pci-owner@vger.kernel.org
+To: Andreas Hartmann <andihartmann@freenet.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Alex Williamson <alex.williamson@redhat.com>, linux-pci <linux-pci@vger.kernel.org>, iommu <iommu@lists.linux-foundation.org>, Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Mon, Jul 27, 2015 at 12:54:07PM -0700, Florian Fainelli wrote:
-> On 14/07/15 15:06, Brian Norris wrote:
-> > On Tue, Jul 14, 2015 at 01:03:33PM -0700, Florian Fainelli wrote:
-> >> When CONFIG_PM_SLEEP is disabled, brcm_ahci_{suspend,resume} are not
-> >> used, which causes such a build warning to occur:
-> >>
-> >>   CC      drivers/ata/ahci_brcmstb.o
-> >> drivers/ata/ahci_brcmstb.c:212:12: warning: 'brcm_ahci_suspend' defined
-> >> but not used [-Wunused-function]
-> >>  static int brcm_ahci_suspend(struct device *dev)
-> >>             ^
-> >> drivers/ata/ahci_brcmstb.c:224:12: warning: 'brcm_ahci_resume' defined
-> >> but not used [-Wunused-function]
-> >>  static int brcm_ahci_resume(struct device *dev)
-> >>             ^
-> >>   LD      drivers/ata/built-in.o
-> >>
-> >> Fixes: 766a2d979632 ("ata: add Broadcom AHCI SATA3 driver for STB chips")
-> >> Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
-> >> ---
-> >> Tejun, this is a new driver that got merged during 4.2, could you queue
-> >> this up for an upcoming 4.2-rcX pull request?
-> > 
-> > Acked-by: Brian Norris <computersforpeace@gmail.com>
-> > 
-> 
-> Tejun, I am not seeing this change queued in your for-4.2-fixes branch
-> did you need me to do anything?
+Hi Andreas,
 
-Oops, I missed it, sorry.  Applied to libata/for-4.2-fixes.
+On Fri, Jul 24, 2015 at 07:59:07PM +0200, Andreas Hartmann wrote:
+> New information: During testing, I now realized that Linux 4.0.9 shows
+> the same problem ... . I'm now testing 3.19.4.
 
-Thanks.
+Have you seen the issue on 3.19 too or hasn't it happened there at all
+yet? The question is where to look for a commit that breaks it on  your
+machine.
 
--- 
-tejun
+
+	Joerg
