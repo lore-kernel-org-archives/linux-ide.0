@@ -1,35 +1,67 @@
-From: Ralf Baechle <ralf@linux-mips.org>
-Subject: Re: [PATCH] MIPS: Remove all the uses of custom gpio.h
-Date: Mon, 3 Aug 2015 09:23:32 +0200
-Message-ID: <20150803072332.GC16650@linux-mips.org>
-References: <1438277338-7246-1-git-send-email-albeu@free.fr>
- <CACRpkdbUhYysC+mGuJY6Y8kd18LQLoWu+av81+ZD4UZo2nM-Yw@mail.gmail.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 0/6] ZAC host-aware device support
+Date: Mon, 03 Aug 2015 09:24:57 +0200
+Message-ID: <55BF1749.8090606@suse.de>
+References: <1438347728-106434-1-git-send-email-hare@suse.de> <1438531870.2182.23.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from eddie.linux-mips.org ([148.251.95.138]:39014 "EHLO
-	cvs.linux-mips.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751549AbbHCHXw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Aug 2015 03:23:52 -0400
-Content-Disposition: inline
-In-Reply-To: <CACRpkdbUhYysC+mGuJY6Y8kd18LQLoWu+av81+ZD4UZo2nM-Yw@mail.gmail.com>
+Received: from mx2.suse.de ([195.135.220.15]:50643 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751539AbbHCHZA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 3 Aug 2015 03:25:00 -0400
+In-Reply-To: <1438531870.2182.23.camel@HansenPartnership.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Walleij <linus.walleij@linaro.org>
-Cc: Alban Bedel <albeu@free.fr>, Linux MIPS <linux-mips@linux-mips.org>, Hauke Mehrtens <hauke@hauke-m.de>, =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>, Alexandre Courbot <gnurou@gmail.com>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Florian Fainelli <florian@openwrt.org>, Manuel Lauss <manuel.lauss@gmail.com>, Joe Perches <joe@perches.com>, Daniel Walter <dwalter@google.com>, Sergey Ryazanov <ryazanov.s.a@gmail.com>, Huacai Chen <chenhc@lemote.com>, Andrew Bresticker <abrestic@chromium.org>, James Hartley <james.hartley@imgtec.com>, Paul Burton <paul.burton@imgtec.com>, Bjorn Helgaas <bhelgaas@google.com>, Wolfram Sang <wsa@the-dreams.de>, Simon Horman <horms+renesas@verge.net.au>, Geert Uytterhoeven <geert@linux-m68k.org>, Varka Bhadram <varkabhadram@gmail.com>, Masanari
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, Aug 03, 2015 at 09:13:27AM +0200, Linus Walleij wrote:
+On 08/02/2015 06:11 PM, James Bottomley wrote:
+> On Fri, 2015-07-31 at 15:02 +0200, Hannes Reinecke wrote:
+>> Hi all,
+>>
+>> here is a patchset for adding ZAC host-aware device support to libat=
+a.
+>> Main bits are translations for ZBC IN and ZBC OUT; others are the
+>> required plumbing like generating the correct VPD pages.
+>> James, do you require a separate patch for adding ZBC IN and ZBC OUT
+>> or is it okay to have it queued here?
+>=20
+> This really belongs in the ZBC patch set, doesn't it? Why isn't it
+> there.  You can't avoid the dependency.  If it goes with the ZAC patc=
+h
+> set, then the ZBC one depends on ZAC.  If it goes properly with ZBC t=
+hen
+> you need an additional patch adding the ATA translations after the ZB=
+C
+> one.  On the whole, I'd prefer the latter so we always have the requi=
+red
+> consumers of the API.
+>=20
+> In fact, if I read the dependencies correctly, you need the ZBC patch=
+es
+> first, don't you ... otherwise there's nothing to drive host aware ZA=
+C?
+>=20
+No. These patches just implement a proper SATL for ZAC drives.
+So in effect they just bring libata support on par with 'real' ZBC
+drives, allowing things like 'sg_rep_zones' to work properly there.
 
-> Very good job being done here.
-> Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
-> 
-> I guess this better go in through the MIPS tree.
-> Given all the OpenWRT ports using MIPS this is excellent
-> progress for a large hobbyist community.
+As such I've considered those patches to be a precursor for ZBC support=
+=2E
 
-Alban has posted a v2 [1] already but I take it that your Reviewed-by: applies
-to the v2 patch as well?
+But then, I don't mind how it's being handled.
+I surely can turn things around, ZBC support first, and ZAC as an
+add-on to that.
+Just say the word.
 
-  Ralf
+Cheers,
 
-[1] https://patchwork.linux-mips.org/patch/10828/
+Hannes
+--=20
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
