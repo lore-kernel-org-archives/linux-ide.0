@@ -1,68 +1,52 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 0/6] ZAC host-aware device support
-Date: Mon, 03 Aug 2015 08:31:42 -0700
-Message-ID: <1438615902.2173.14.camel@HansenPartnership.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH libata/for-4.2-fixes] libata: disable NCQ autosense
+Date: Mon, 3 Aug 2015 11:39:06 -0400
+Message-ID: <20150803153906.GH32599@mtj.duckdns.org>
 References: <1438347728-106434-1-git-send-email-hare@suse.de>
-	 <1438531870.2182.23.camel@HansenPartnership.com> <55BF1749.8090606@suse.de>
+ <1438347728-106434-2-git-send-email-hare@suse.de>
+ <20150802154415.GA31100@mtj.duckdns.org>
+ <55BF18ED.3000002@suse.de>
+ <20150803150428.GE32599@mtj.duckdns.org>
+ <20150803151621.GF32599@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:49395 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753585AbbHCPbo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Aug 2015 11:31:44 -0400
-In-Reply-To: <55BF1749.8090606@suse.de>
+Received: from mail-yk0-f178.google.com ([209.85.160.178]:35921 "EHLO
+	mail-yk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753432AbbHCPjJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Aug 2015 11:39:09 -0400
+Content-Disposition: inline
+In-Reply-To: <20150803151621.GF32599@mtj.duckdns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <james.bottomley@hansenpartnership.com>
 
-On Mon, 2015-08-03 at 09:24 +0200, Hannes Reinecke wrote:
-> On 08/02/2015 06:11 PM, James Bottomley wrote:
-> > On Fri, 2015-07-31 at 15:02 +0200, Hannes Reinecke wrote:
-> >> Hi all,
-> >>
-> >> here is a patchset for adding ZAC host-aware device support to libata.
-> >> Main bits are translations for ZBC IN and ZBC OUT; others are the
-> >> required plumbing like generating the correct VPD pages.
-> >> James, do you require a separate patch for adding ZBC IN and ZBC OUT
-> >> or is it okay to have it queued here?
-> > 
-> > This really belongs in the ZBC patch set, doesn't it? Why isn't it
-> > there.  You can't avoid the dependency.  If it goes with the ZAC patch
-> > set, then the ZBC one depends on ZAC.  If it goes properly with ZBC then
-> > you need an additional patch adding the ATA translations after the ZBC
-> > one.  On the whole, I'd prefer the latter so we always have the required
-> > consumers of the API.
-> > 
-> > In fact, if I read the dependencies correctly, you need the ZBC patches
-> > first, don't you ... otherwise there's nothing to drive host aware ZAC?
-> > 
-> No. These patches just implement a proper SATL for ZAC drives.
-> So in effect they just bring libata support on par with 'real' ZBC
-> drives, allowing things like 'sg_rep_zones' to work properly there.
-
-But that was my point: the Linux SATL exists to support our ULDs on ATA
-devices.  Until that support exists within SCSI, we don't really need
-the SATL to support it.  You can argue it's for SG_IO, but really, if
-you're doing user level control of ZAC devices, you'd use ATA commands.
-
-> As such I've considered those patches to be a precursor for ZBC support.
+On Mon, Aug 03, 2015 at 11:16:21AM -0400, Tejun Heo wrote:
+> From 8c0fa3e7ca99b0d6d96cb2cf194a912f643da7c5 Mon Sep 17 00:00:00 2001
+> From: Tejun Heo <tj@kernel.org>
+> Date: Mon, 3 Aug 2015 11:10:45 -0400
 > 
-> But then, I don't mind how it's being handled.
-> I surely can turn things around, ZBC support first, and ZAC as an
-> add-on to that.
-> Just say the word.
+> fe7173c206de ("libata: Implement support for sense data reporting")
+> and subsequent patches enabled NCQ autosense reporting; unfortunately,
+> this breaks libata EH behavior for devices which support the feature
+> because it assumes that only ATAPI devices report sense data and that
+> sense data trumps explicit device error indication.
 
-Well, um, since there's no ATA ULD, there is no real kernel handling of
-ZAC devices, so doesn't that mean we have to at least have the reporting
-done via block and sd before the ATA bits will do anything meaningful?
+So, this isn't enough and apparently you're bypassing the entire
+device side error analyzing when the device reports sense data.  Sorry
+that I missed this on the first submission but I can't see how this
+would work.  Even if you fix the immediate issue in this thread, how
+is it gonna handle link error reported by the device?  Who's gonna
+tell libata EH that the link better be reset and may be sped down if
+errors keep occurring?  This is a significant regression in EH
+behavior.
 
-So to me, this looks very like supporting 512e: agree what parameters
-block exposes and how userspace uses them, then plumb into block, then
-SCSI then ATA (i.e. work down the stack, not up).
+I'm gonna revert the whole ACS-4 sense thing.  ATM, I'm pretty
+doubtful that this buys antying substantial for us and even if so we
+need to figure out a better way to integrate this.
 
-James
+Thanks.
 
-
+-- 
+tejun
