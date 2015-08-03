@@ -1,52 +1,62 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/6] libata: Do not retry commands with valid autosense
-Date: Mon, 3 Aug 2015 11:04:28 -0400
-Message-ID: <20150803150428.GE32599@mtj.duckdns.org>
+Subject: [PATCH libata/for-4.2-fixes] libata: disable NCQ autosense
+Date: Mon, 3 Aug 2015 11:16:21 -0400
+Message-ID: <20150803151621.GF32599@mtj.duckdns.org>
 References: <1438347728-106434-1-git-send-email-hare@suse.de>
  <1438347728-106434-2-git-send-email-hare@suse.de>
  <20150802154415.GA31100@mtj.duckdns.org>
  <55BF18ED.3000002@suse.de>
+ <20150803150428.GE32599@mtj.duckdns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-yk0-f179.google.com ([209.85.160.179]:33387 "EHLO
+	mail-yk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751637AbbHCPQe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Aug 2015 11:16:34 -0400
 Content-Disposition: inline
-In-Reply-To: <55BF18ED.3000002@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20150803150428.GE32599@mtj.duckdns.org>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
 Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <james.bottomley@hansenpartnership.com>
-List-Id: linux-ide@vger.kernel.org
 
-Hello,
+>From 8c0fa3e7ca99b0d6d96cb2cf194a912f643da7c5 Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj@kernel.org>
+Date: Mon, 3 Aug 2015 11:10:45 -0400
 
-On Mon, Aug 03, 2015 at 09:31:57AM +0200, Hannes Reinecke wrote:
-> The whole point of the autosense feature is that you do _not_
-> have to fall back to the original trial-and-error libata EH,
-> but know exactly what the problem is. Plus any retry will be giving
-> us (in most cases) exactly the same sense code.
+fe7173c206de ("libata: Implement support for sense data reporting")
+and subsequent patches enabled NCQ autosense reporting; unfortunately,
+this breaks libata EH behavior for devices which support the feature
+because it assumes that only ATAPI devices report sense data and that
+sense data trumps explicit device error indication.
 
-Can you please give some examples?  As lacking as ATA error reporting
-is, it still can tell whether retry is necessary or not in most cases.
+For now, disable NCQ autosense.
 
-> _And_ the SCSI layer is actually able to understand the sense code,
-> allowing him to make a better judgment on what to do with that error.
->
-> So any retry in the libata layer will only slow things down,
-> leading to the same results eventually.
+Cc: stable@vger.kernel.org # v4.1+
+Fixes: fe7173c206de ("libata: Implement support for sense data reporting")
+---
+ drivers/ata/libata-core.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-Have you tested actual error handling?  I doubt this would work as you
-expect it to.  libata EH takes over the entire error handling and when
-it determines that the command has failed and retrying won't do any
-good, it tells SCSI EH to not retry either.
-
-Ugh... so this is from NCQ autosense thing.  Now ATA devices reports
-sense data too which trumps AC_ERR_DEV so libata EH decides to retry
-even when the device indicates unrecoverable error.  Urgh... we
-shouldn't be taking completely different error handling paths because
-a device chooses to report error conditions slightly differently.
-Please map them so that they behave in a consistent manner.  I'm gonna
-plug autosense for now.
-
-Thanks.
-
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index db5d9f7..32451ac 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -2151,6 +2151,13 @@ static void ata_dev_config_sense_reporting(struct ata_device *dev)
+ {
+ 	unsigned int err_mask;
+ 
++	/*
++	 * FIXME: This makes ATA devices report sense data on failure which
++	 * in turn makes libata EH ignore AC_ERR_DEV leading to incorrect
++	 * error handling behaviors.
++	 */
++	return;
++
+ 	if (!ata_id_has_sense_reporting(dev->id))
+ 		return;
+ 
 -- 
-tejun
+2.4.3
+
