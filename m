@@ -1,60 +1,73 @@
-From: Tomer Barletz <barletz@gmail.com>
-Subject: [PATCH] Check return code from pdc20621_i2c_read()
-Date: Sun,  2 Aug 2015 23:06:34 -0700
-Message-ID: <1438581994-23521-1-git-send-email-barletz@gmail.com>
-References: <CAO-S75CRyh=FPbeTJMZWiYTvpd_wn57f4eGQgOHW2p16+9ANhQ@mail.gmail.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pd0-f170.google.com ([209.85.192.170]:33991 "EHLO
-	mail-pd0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751438AbbHCGHB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Aug 2015 02:07:01 -0400
-In-Reply-To: <CAO-S75CRyh=FPbeTJMZWiYTvpd_wn57f4eGQgOHW2p16+9ANhQ@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Linus Walleij <linus.walleij@linaro.org>
+Subject: Re: [PATCH] MIPS: Remove all the uses of custom gpio.h
+Date: Mon, 3 Aug 2015 09:13:27 +0200
+Message-ID: <CACRpkdbUhYysC+mGuJY6Y8kd18LQLoWu+av81+ZD4UZo2nM-Yw@mail.gmail.com>
+References: <1438277338-7246-1-git-send-email-albeu@free.fr>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-gpio-owner@vger.kernel.org>
+In-Reply-To: <1438277338-7246-1-git-send-email-albeu@free.fr>
+Sender: linux-gpio-owner@vger.kernel.org
+To: Alban Bedel <albeu@free.fr>
+Cc: Linux MIPS <linux-mips@linux-mips.org>, Ralf Baechle <ralf@linux-mips.org>, Hauke Mehrtens <hauke@hauke-m.de>, =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>, Alexandre Courbot <gnurou@gmail.com>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Florian Fainelli <florian@openwrt.org>, Manuel Lauss <manuel.lauss@gmail.com>, Joe Perches <joe@perches.com>, Daniel Walter <dwalter@google.com>, Sergey Ryazanov <ryazanov.s.a@gmail.com>, Huacai Chen <chenhc@lemote.com>, Andrew Bresticker <abrestic@chromium.org>, James Hartley <james.hartley@imgtec.com>, Paul Burton <paul.burton@imgtec.com>, Bjorn Helgaas <bhelgaas@google.com>, Wolfram Sang <wsa@the-dreams.de>, Simon Horman <horms+renesas@verge.net.au>, Geert Uytterhoeven <geert@linux-m68k.org>, Varka Bhadram <varkabhadram@gmail.com>, Masan
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org, sergei.shtylyov@cogentembedded.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Tomer Barletz <barletz@gmail.com>
 
-The variable spd0 might be used uninitialized when pdc20621_i2c_read()
-fails.
-This also generates a compilation warning with gcc 5.1.
+On Thu, Jul 30, 2015 at 7:28 PM, Alban Bedel <albeu@free.fr> wrote:
 
-Signed-off-by: Tomer Barletz <barletz@gmail.com>
----
- drivers/ata/sata_sx4.c | 14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+> Currently CONFIG_ARCH_HAVE_CUSTOM_GPIO_H is defined for all MIPS
+> machines, and each machine type provides its own gpio.h. However
+> only a handful really implement the GPIO API, most just forward
+> everythings to gpiolib.
+>
+> The Alchemy machine is notable as it provides a system to allow
+> implementing the GPIO API at the board level. But it is not used by
+> any board currently supported, so it can also be removed.
+>
+> For most machine types we can just remove the custom gpio.h, as well
+> as the custom wrappers if some exists. Some of the code found in
+> the wrappers must be moved to the respective GPIO driver.
+>
+> A few more fixes are need in some drivers as they rely on linux/gpio.h
+> to provides some machine specific definitions, or used asm/gpio.h
+> instead of linux/gpio.h for the gpio API.
+>
+> Signed-off-by: Alban Bedel <albeu@free.fr>
+> ---
+>
+> This patch is based on my previous serie:
+> "MIPS: ath79: Move the GPIO driver to drivers/gpio".
+>
+> It supercede my previous patch named:
+> "MIPS: Remove most of the custom gpio.h"
+>
+> Compared to the previous patch:
+> * Fixed gpio_to_irq on jz4740 and rb532
+> * Cleaned up alchemy as well
+> * Removed asm/gpio.h
+>
+> For testing I tried to build all mips defconfig, however my toolchain
+> couldn't handle a few configs: ip28 malta_qemu_32r6 maltasmvp_eva
+> sead3micro. If somebody can test these that would be more than welcome.
+>
+> Now a few stats about the state of CONFIG_ARCH_HAVE_CUSTOM_GPIO_H
+> after appling this patch. Of the 31 supportd arch, 15 still have
+> asm/gpio.h, of these 9 are just a "#warning Include linux/gpio.h
+> instead of asm/gpio.h". So we have 6 arch left: arm, avr32, blackfin,
+> m68k, sh and unicore32. But only m68k and unicore32 really provides
+> custom wrappers, all the others only forward to gpiolib.
+>
+> On the drivers side we only have 13 occurences of '#include
+> <asm/gpio.h>' left, mostly in drivers used on ARM SoC.
+>
+> So the work left to phase out the legacy GPIO is really not that much
+> anymore.
 
-diff --git a/drivers/ata/sata_sx4.c b/drivers/ata/sata_sx4.c
-index 3a18a8a..070b272 100644
---- a/drivers/ata/sata_sx4.c
-+++ b/drivers/ata/sata_sx4.c
-@@ -1238,8 +1238,11 @@ static unsigned int pdc20621_prog_dimm_global(struct ata_host *host)
- 	readl(mmio + PDC_SDRAM_CONTROL);
- 
- 	/* Turn on for ECC */
--	pdc20621_i2c_read(host, PDC_DIMM0_SPD_DEV_ADDRESS,
--			  PDC_DIMM_SPD_TYPE, &spd0);
-+	if (!pdc20621_i2c_read(host, PDC_DIMM0_SPD_DEV_ADDRESS,
-+	                       PDC_DIMM_SPD_TYPE, &spd0)) {
-+		printk(KERN_ERR "Failed in i2c read: device=%#x, subaddr=%#x\n", PDC_DIMM0_SPD_DEV_ADDRESS, PDC_DIMM_SPD_TYPE);
-+		return 1;
-+	}
- 	if (spd0 == 0x02) {
- 		data |= (0x01 << 16);
- 		writel(data, mmio + PDC_SDRAM_CONTROL);
-@@ -1380,8 +1383,11 @@ static unsigned int pdc20621_dimm_init(struct ata_host *host)
- 
- 	/* ECC initiliazation. */
- 
--	pdc20621_i2c_read(host, PDC_DIMM0_SPD_DEV_ADDRESS,
--			  PDC_DIMM_SPD_TYPE, &spd0);
-+	if (!pdc20621_i2c_read(host, PDC_DIMM0_SPD_DEV_ADDRESS,
-+	                       PDC_DIMM_SPD_TYPE, &spd0)) {
-+		printk(KERN_ERR "Failed in i2c read: device=%#x, subaddr=%#x\n", PDC_DIMM0_SPD_DEV_ADDRESS, PDC_DIMM_SPD_TYPE);
-+		return 1;
-+	}
- 	if (spd0 == 0x02) {
- 		void *buf;
- 		VPRINTK("Start ECC initialization\n");
--- 
-2.4.3
+Very good job being done here.
+Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
 
+I guess this better go in through the MIPS tree.
+Given all the OpenWRT ports using MIPS this is excellent
+progress for a large hobbyist community.
+
+Yours,
+Linus Walleij
