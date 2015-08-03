@@ -1,36 +1,64 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH] Check return code from pdc20621_i2c_read()
-Date: Mon, 3 Aug 2015 18:52:09 +0300
-Message-ID: <55BF8E29.6000200@cogentembedded.com>
-References: <1438510340-21568-1-git-send-email-barletz@gmail.com>
- <55BDFA5C.3040506@cogentembedded.com>
- <CAO-S75CRyh=FPbeTJMZWiYTvpd_wn57f4eGQgOHW2p16+9ANhQ@mail.gmail.com>
- <CAO-S75DznUxvYg9RPcDOaw1H8XK8MuXxFGOARVt-5OtW2_RJnA@mail.gmail.com>
- <55BF8BCA.40602@cogentembedded.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 1/6] libata: Do not retry commands with valid autosense
+Date: Mon, 3 Aug 2015 11:55:13 -0400
+Message-ID: <20150803155513.GI32599@mtj.duckdns.org>
+References: <1438347728-106434-1-git-send-email-hare@suse.de>
+ <1438347728-106434-2-git-send-email-hare@suse.de>
+ <20150802154415.GA31100@mtj.duckdns.org>
+ <55BF18ED.3000002@suse.de>
+ <20150803150428.GE32599@mtj.duckdns.org>
+ <20150803151826.GG32599@mtj.duckdns.org>
+ <1438616563.2173.16.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <55BF8BCA.40602@cogentembedded.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tomer Barletz <barletz@gmail.com>
-Cc: tj@kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-yk0-f179.google.com ([209.85.160.179]:33878 "EHLO
+	mail-yk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752906AbbHCPzQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Aug 2015 11:55:16 -0400
+Content-Disposition: inline
+In-Reply-To: <1438616563.2173.16.camel@HansenPartnership.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
+Hello, James.
 
-On 08/03/2015 06:42 PM, Sergei Shtylyov wrote:
+On Mon, Aug 03, 2015 at 08:42:43AM -0700, James Bottomley wrote:
+> I'd think it would be the same reason as all modern transports: it's
+> faster and allows processing of sense data in-band.  Under the old
+> regime, the device is effectively frozen until you collect the data.
+> Under autosense, the data is collected as part of the in-band command
+> processing, so it doesn't stall the device.
+> 
+> Modern drives (and protocols) are moving towards being somewhat more
+> chatty with sense data.  It doesn't just signal an error, mostly it's
+> just reporting about drive characteristics or other advisory stuff.
+> This means that if you handle it the old way, you'll get more drive
+> stalls and a corresponding reduction in throughput.
 
->>>     Please use pr_err() instead. And "0x%d" makes no sense at all, please
->>> use "%#x" instead.
+The problem is not the "auto" part but the "sense" part, I guess.  ATA
+devices (the harddisks) never reported sense data and instead had a
+more rudimentary error bits and for newer devices NCQ log pages, so
+libata EH decodes those error information and takes appropriate
+actions for the indicated error condition.
 
->> Yeah, not sure what I was drinking before writing this 0x%d thing...
+Hannes's patchset makes ATA devices mostly bypass libata EH when sense
+data is present.  For, say, unrecoverable read errors, it'd be
+possible to make this scheme work (broken currently tho); however,
+libata and SCSI aren't that closely tied and there currently is no way
+for SCSI to tell libata that, e.g., link error was detected on the
+device side, so libata will fail to take link recovery actions on
+those cases.
 
->> Regarding the pr_err() - it is not used at all in this file, and
->> printk() is used instead.
+This *can* be made to work in a couple different ways but what's
+implemented now is pretty broken and making it work properly in any
+other way than integrating sense decoding into libata EH would require
+major restructuring of the whole thing which I'm not sure would be
+worthwhile at this point.
 
-    Didn't notice before: the patch subject should start with the driver name 
-and a colon, "sats_sx4: ".
+Thanks.
 
->> --Tomer
-
-MBR, Sergei
+-- 
+tejun
