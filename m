@@ -1,51 +1,33 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 1/6] libata: Do not retry commands with valid autosense
-Date: Mon, 03 Aug 2015 09:31:57 +0200
-Message-ID: <55BF18ED.3000002@suse.de>
-References: <1438347728-106434-1-git-send-email-hare@suse.de> <1438347728-106434-2-git-send-email-hare@suse.de> <20150802154415.GA31100@mtj.duckdns.org>
+From: Linus Walleij <linus.walleij@linaro.org>
+Subject: Re: [PATCH] MIPS: Remove all the uses of custom gpio.h
+Date: Mon, 3 Aug 2015 13:25:36 +0200
+Message-ID: <CACRpkdYk13TQXYVfG0cOvmz9RTZ717rFWax+fij7oPbaUoqpOA@mail.gmail.com>
+References: <1438277338-7246-1-git-send-email-albeu@free.fr>
+	<CACRpkdbUhYysC+mGuJY6Y8kd18LQLoWu+av81+ZD4UZo2nM-Yw@mail.gmail.com>
+	<20150803072332.GC16650@linux-mips.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50869 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751255AbbHCHb7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 3 Aug 2015 03:31:59 -0400
-In-Reply-To: <20150802154415.GA31100@mtj.duckdns.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-input-owner@vger.kernel.org>
+In-Reply-To: <20150803072332.GC16650@linux-mips.org>
+Sender: linux-input-owner@vger.kernel.org
+To: Ralf Baechle <ralf@linux-mips.org>
+Cc: Alban Bedel <albeu@free.fr>, Linux MIPS <linux-mips@linux-mips.org>, Hauke Mehrtens <hauke@hauke-m.de>, =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>, Alexandre Courbot <gnurou@gmail.com>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Florian Fainelli <florian@openwrt.org>, Manuel Lauss <manuel.lauss@gmail.com>, Joe Perches <joe@perches.com>, Daniel Walter <dwalter@google.com>, Sergey Ryazanov <ryazanov.s.a@gmail.com>, Huacai Chen <chenhc@lemote.com>, Andrew Bresticker <abrestic@chromium.org>, James Hartley <james.hartley@imgtec.com>, Paul Burton <paul.burton@imgtec.com>, Bjorn Helgaas <bhelgaas@google.com>, Wolfram Sang <wsa@the-dreams.de>, Simon Horman <horms+renesas@verge.net.au>, Geert Uytterhoeven <geert@linux-m68k.org>, Varka Bhadram <varkabhadram@gmail.com>, Masanari
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <james.bottomley@hansenpartnership.com>
 
-On 08/02/2015 05:44 PM, Tejun Heo wrote:
-> Hello,
->=20
-> On Fri, Jul 31, 2015 at 03:02:03PM +0200, Hannes Reinecke wrote:
->> If a failed command has a valid autosense there is no need to
->> retry it on the ATA level; at best we're incurring the same
->> error again. So rather not retry it here, but leave it to
->> the SCSI layer to decide if a retry is in order.
->=20
-> Hmmm... I don't know.  So, we change how we handle errors completely
-> depending on how the device reports it?  Doesn't seem like a
-> particularly good idea to me.
->=20
-The whole point of the autosense feature is that you do _not_
-have to fall back to the original trial-and-error libata EH,
-but know exactly what the problem is. Plus any retry will be giving
-us (in most cases) exactly the same sense code.
-_And_ the SCSI layer is actually able to understand the sense code,
-allowing him to make a better judgment on what to do with that error.
+On Mon, Aug 3, 2015 at 9:23 AM, Ralf Baechle <ralf@linux-mips.org> wrote:
+> On Mon, Aug 03, 2015 at 09:13:27AM +0200, Linus Walleij wrote:
+>
+>> Very good job being done here.
+>> Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+>>
+>> I guess this better go in through the MIPS tree.
+>> Given all the OpenWRT ports using MIPS this is excellent
+>> progress for a large hobbyist community.
+>
+> Alban has posted a v2 [1] already but I take it that your Reviewed-by: applies
+> to the v2 patch as well?
 
-So any retry in the libata layer will only slow things down,
-leading to the same results eventually.
+Sure thing. Green light for this.
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
+Yours,
+Linus Walleij
