@@ -1,62 +1,41 @@
-From: Tomer Barletz <barletz@gmail.com>
-Subject: [PATCH] sata_sx4: Check return code from pdc20621_i2c_read()
-Date: Mon,  3 Aug 2015 12:18:13 -0700
-Message-ID: <1438629493-17610-1-git-send-email-barletz@gmail.com>
-References: <55BFB87C.1010405@cogentembedded.com>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH] sata_sx4: Check return code from pdc20621_i2c_read()
+Date: Mon, 3 Aug 2015 22:19:10 +0300
+Message-ID: <55BFBEAE.6030707@cogentembedded.com>
+References: <55BF8E29.6000200@cogentembedded.com>
+ <1438627595-17126-1-git-send-email-barletz@gmail.com>
+ <55BFB87C.1010405@cogentembedded.com>
+ <CAO-S75BnJJvNsEN3xFrtO9xO=4=UnwJeL6UHLeMbOaSyjk4Htw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:35267 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752589AbbHCTSS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Aug 2015 15:18:18 -0400
-In-Reply-To: <55BFB87C.1010405@cogentembedded.com>
+Received: from mail-lb0-f180.google.com ([209.85.217.180]:33890 "EHLO
+	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754754AbbHCTTN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 3 Aug 2015 15:19:13 -0400
+Received: by lbqc9 with SMTP id c9so57806330lbq.1
+        for <linux-ide@vger.kernel.org>; Mon, 03 Aug 2015 12:19:11 -0700 (PDT)
+In-Reply-To: <CAO-S75BnJJvNsEN3xFrtO9xO=4=UnwJeL6UHLeMbOaSyjk4Htw@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org, sergei.shtylyov@cogentembedded.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Tomer Barletz <barletz@gmail.com>
+To: Tomer Barletz <barletz@gmail.com>
+Cc: tj@kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The variable spd0 might be used uninitialized when pdc20621_i2c_read()
-fails.
-This also generates a compilation warning with gcc 5.1.
+On 08/03/2015 10:04 PM, Tomer Barletz wrote:
 
-Signed-off-by: Tomer Barletz <barletz@gmail.com>
----
- drivers/ata/sata_sx4.c | 16 ++++++++++++----
- 1 file changed, 12 insertions(+), 4 deletions(-)
+    Please don't top-post.
 
-diff --git a/drivers/ata/sata_sx4.c b/drivers/ata/sata_sx4.c
-index 3a18a8a..b482c25 100644
---- a/drivers/ata/sata_sx4.c
-+++ b/drivers/ata/sata_sx4.c
-@@ -1238,8 +1238,12 @@ static unsigned int pdc20621_prog_dimm_global(struct ata_host *host)
- 	readl(mmio + PDC_SDRAM_CONTROL);
- 
- 	/* Turn on for ECC */
--	pdc20621_i2c_read(host, PDC_DIMM0_SPD_DEV_ADDRESS,
--			  PDC_DIMM_SPD_TYPE, &spd0);
-+	if (!pdc20621_i2c_read(host, PDC_DIMM0_SPD_DEV_ADDRESS,
-+			       PDC_DIMM_SPD_TYPE, &spd0)) {
-+		printk(KERN_ERR "Failed in i2c read: device=%#x, subaddr=%#x\n",
-+		       PDC_DIMM0_SPD_DEV_ADDRESS, PDC_DIMM_SPD_TYPE);
-+		return 1;
-+	}
- 	if (spd0 == 0x02) {
- 		data |= (0x01 << 16);
- 		writel(data, mmio + PDC_SDRAM_CONTROL);
-@@ -1380,8 +1384,12 @@ static unsigned int pdc20621_dimm_init(struct ata_host *host)
- 
- 	/* ECC initiliazation. */
- 
--	pdc20621_i2c_read(host, PDC_DIMM0_SPD_DEV_ADDRESS,
--			  PDC_DIMM_SPD_TYPE, &spd0);
-+	if (!pdc20621_i2c_read(host, PDC_DIMM0_SPD_DEV_ADDRESS,
-+			       PDC_DIMM_SPD_TYPE, &spd0)) {
-+		printk(KERN_ERR "Failed in i2c read: device=%#x, subaddr=%#x\n",
-+		       PDC_DIMM0_SPD_DEV_ADDRESS, PDC_DIMM_SPD_TYPE);
-+		return 1;
-+	}
- 	if (spd0 == 0x02) {
- 		void *buf;
- 		VPRINTK("Start ECC initialization\n");
--- 
-2.4.3
+> I see how it makes sense to add a tab to align with the previous line
+> of code, as it will always look similar in all editors, no matter how
+> their tab character is set up to be.
+> However, adding more tabs will just mess up editors that are not set
+> up with 8-space width tabs.
+
+> Is this a bug in checkpatch.pl, or are we saying everyone should have
+> their editor set to 8-spaces width tabs?
+
+    The latter. :-)
+
+MBR, Sergei
 
