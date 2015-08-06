@@ -1,85 +1,74 @@
-From: Andreas Hartmann <andihartmann-KuiJ5kEpwI6ELgA04lAiVw@public.gmane.org>
-Subject: Re: AMD-Vi IO_PAGE_FAULTs and ata3.00: failed command: READ FPDMA
-	QUEUED errors since Linux 4.0
-Date: Tue, 4 Aug 2015 20:11:53 +0200
-Message-ID: <55C10069.6060303@maya.org>
-References: <55B7BEA2.30205@01019freenet.de>
-	<20150728175054.GB24782@redhat.com> <55B7D054.4070308@maya.org>
-	<20150728192908.GA25264@redhat.com> <55BCD5A7.2080708@maya.org>
-	<55BE1D5E.6020709@maya.org>
-	<alpine.LRH.2.02.1508021347480.17729@file01.intranet.prod.int.rdu2.redhat.com>
-	<55BE65E6.7060901@maya.org> <20150803081249.GF14980@8bytes.org>
-	<20150804144711.GB24716@redhat.com>
-	<x4937zzm3uc.fsf@segfault.boston.devel.redhat.com>
+From: Axel Lin <axel.lin@ingics.com>
+Subject: [PATCH RFT] ata: ahci_brcmstb: Fix misuse of IS_ENABLED
+Date: Thu, 06 Aug 2015 10:16:34 +0800
+Message-ID: <1438827394.19066.1.camel@ingics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-In-Reply-To: <x4937zzm3uc.fsf-RRHT56Q3PSP4kTEheFKJxxDDeQx5vsVwAInAS/Ez/D0@public.gmane.org>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/iommu/>
-List-Post: <mailto:iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
-List-Help: <mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/iommu>,
-	<mailto:iommu-request-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org?subject=subscribe>
-Sender: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-Errors-To: iommu-bounces-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org
-To: Jeff Moyer <jmoyer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: device-mapper development <dm-devel-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-pci <linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Andreas Hartmann <andihartmann-KuiJ5kEpwI6ELgA04lAiVw@public.gmane.org>, Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, iommu-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org, Mikulas Patocka <mpatocka-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Milan Broz <mbroz-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:35242 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752682AbbHFCQl (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 5 Aug 2015 22:16:41 -0400
+Received: by pabxd6 with SMTP id xd6so32358001pab.2
+        for <linux-ide@vger.kernel.org>; Wed, 05 Aug 2015 19:16:40 -0700 (PDT)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Brian Norris <computersforpeace@gmail.com>, Gregory Fong <gregory.0xf0@gmail.com>, Florian Fainelli <f.fainelli@gmail.com>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 
-On 08/04/2015 at 06:10 PM Jeff Moyer wrote:
-> Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> writes:
-> 
->> On Mon, Aug 03 2015 at  4:12am -0400,
->> Joerg Roedel <joro-zLv9SwRftAIdnm+yROfE0A@public.gmane.org> wrote:
->>
->>> On Sun, Aug 02, 2015 at 08:48:06PM +0200, Andreas Hartmann wrote:
->>>>>> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=34b48db66e08ca1c1bc07cf305d672ac940268dc
->>>>>>
->>>>>> block: remove artifical max_hw_sectors cap
->>>
->>> Looking at the patch, it seems to me that it just uncovered a bug
->>> elsewhere. It looks like an underlying driver doesn't expect the
->>> big io-requests that the patch enables and does not dma-map the whole
->>> target buffer, causing the IO_PAGE_FAULTs later.
->>
->> That patch has caused issues elsewhere too, see this 'Revert "block:
->> remove artifical max_hw_sectors cap"' thread (if/when lkml.org
->> cooperates): https://lkml.org/lkml/2015/7/20/572
->>
->> But it could be that there is a need for a horkage fix for this specific
->> hardware? something comparable to this?:
->> http://git.kernel.org/linus/af34d637637eabaf49406eb35c948cd51ba262a6
->>
->> We are running out of time to fix these whack-a-mole issues in 4.2
->> though.
-> 
-> CC-ing linux-ide.  Original dm-devel posting:
->   https://www.redhat.com/archives/dm-devel/2015-July/msg00178.html
-> 
-> Andreas, I would be curious to know what the value of
-> /sys/block/sdX/queue/max_hw_sectors_kb is for the affected disks.
+While IS_ENABLED() is perfectly fine for CONFIG_* symbols, it is not
+for other symbols such as __BIG_ENDIAN that is provided directly by
+the compiler.
+
+Signed-off-by: Axel Lin <axel.lin@ingics.com>
+---
+Hi,
+I don't have a big endian machine to test this, so I'd appreciate if
+someone can review and test this patch.
+
+A similar misuse of IS_ENABLED is reported and fixed in:
+https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/drivers/dma/mv_xor.c?id=0ec9ebc706fbd394bc233d87ac7aaad1c4f3ab54
+
+ drivers/ata/ahci_brcmstb.c | 18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/ata/ahci_brcmstb.c b/drivers/ata/ahci_brcmstb.c
+index 42b6cf4..fc6413f 100644
+--- a/drivers/ata/ahci_brcmstb.c
++++ b/drivers/ata/ahci_brcmstb.c
+@@ -92,19 +92,21 @@ static inline u32 brcm_sata_readreg(void __iomem *addr)
+ 	 * Other architectures (e.g., ARM) either do not support big endian, or
+ 	 * else leave I/O in little endian mode.
+ 	 */
+-	if (IS_ENABLED(CONFIG_MIPS) && IS_ENABLED(__BIG_ENDIAN))
+-		return __raw_readl(addr);
+-	else
+-		return readl_relaxed(addr);
++#if defined(__BIG_ENDIAN) && IS_ENABLED(CONFIG_MIPS)
++	return __raw_readl(addr);
++#else
++	return readl_relaxed(addr);
++#endif
+ }
+ 
+ static inline void brcm_sata_writereg(u32 val, void __iomem *addr)
+ {
+ 	/* See brcm_sata_readreg() comments */
+-	if (IS_ENABLED(CONFIG_MIPS) && IS_ENABLED(__BIG_ENDIAN))
+-		__raw_writel(val, addr);
+-	else
+-		writel_relaxed(val, addr);
++#if defined(__BIG_ENDIAN) && IS_ENABLED(CONFIG_MIPS)
++	__raw_writel(val, addr);
++#else
++	writel_relaxed(val, addr);
++#endif
+ }
+ 
+ static void brcm_sata_phy_enable(struct brcm_ahci_priv *priv, int port)
+-- 
+2.1.0
 
 
-It's always 32767.
 
-Where does this value come from? Is it empirical or is it calculated (on
-base of which parameters)?
-
-
-Devices are:
-
-1 x Corsair Force GT (SSD)
-2 x ST3000DM001-1CH166 (rotational) (WD)
-
-
-How can I set a higher max_sectors_kb on boot before the partitions are
-mounted (-> as kernel option)? Mounting the partitions here (w/ systemd)
-is the easiest and best way to trigger the problem!
-
-
-
-Thanks,
-Andreas
