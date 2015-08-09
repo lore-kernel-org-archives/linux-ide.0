@@ -1,170 +1,121 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [PATCH] ide: add IDE to libata host drivers conversion table document
-Date: Fri, 07 Aug 2015 20:14:39 +0200
-Message-ID: <2270946.hqZQQORTj1@amdc1976>
+From: Christian Kujau <lists@nerdbynature.de>
+Subject: Re: 4.1-rc6: ATA link is slow to respond, please be patient
+Date: Sat, 8 Aug 2015 21:17:02 -0700 (PDT)
+Message-ID: <alpine.DEB.2.20.8.1508082049490.12626@trent.utfs.org>
+References: <alpine.DEB.2.20.8.1508070306080.12626@trent.utfs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:51964 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932419AbbHGSPo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 7 Aug 2015 14:15:44 -0400
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: "David S. Miller" <davem@davemloft.net>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <alpine.DEB.2.20.8.1508070306080.12626@trent.utfs.org>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: linuxppc-dev@ozlabs.org
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-Document relationships between IDE subsystem and libata PATA
-host drivers by adding a simple lookup table (for easing conversion
-from IDE to libata).
-
-Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
----
- Documentation/ide/00-INDEX                    |   2 +
- Documentation/ide/host-drivers-conversion.txt | 119 ++++++++++++++++++++++++++
- 2 files changed, 121 insertions(+)
- create mode 100644 Documentation/ide/host-drivers-conversion.txt
-
-diff --git a/Documentation/ide/00-INDEX b/Documentation/ide/00-INDEX
-index 22f98ca..4290b31 100644
---- a/Documentation/ide/00-INDEX
-+++ b/Documentation/ide/00-INDEX
-@@ -10,5 +10,7 @@ ide-tape.txt
- 	- info on the IDE ATAPI streaming tape driver
- ide.txt
- 	- important info for users of ATA devices (IDE/EIDE disks and CD-ROMS).
-+host-drivers-conversion.txt
-+	- IDE to libata host drivers conversion table
- warm-plug-howto.txt
- 	- using sysfs to remove and add IDE devices.
-\ No newline at end of file
-diff --git a/Documentation/ide/host-drivers-conversion.txt b/Documentation/ide/host-drivers-conversion.txt
-new file mode 100644
-index 0000000..43f2c92
---- /dev/null
-+++ b/Documentation/ide/host-drivers-conversion.txt
-@@ -0,0 +1,119 @@
-+-----------------------------------------------------------------------------
-+IDE subsystem                           | libata PATA                       |
-+----------------------------------------|-----------------------------------|
-+config option           driver name     | config option    driver name      |
-+----------------------------------------|-----------------------------------|
-+                                        |                                   |
-+BLK_DEV_IDECS           ide-cs          | PATA_PCMCIA      pata_pcmcia      |
-+                                        |                                   |
-+BLK_DEV_DELKIN          delkin_cb       | PATA_NINJA32     pata_ninja32     |
-+                                        |                                   |
-+IDE_GENERIC             ide-generic     | PATA_LEGACY      pata_legacy      |
-+BLK_DEV_ALI14XX         ali14xx         |                                   |
-+BLK_DEV_DTC2278         dtc2278         |                                   |
-+BLK_DEV_HT6560B         ht6560b         |                                   |
-+BLK_DEV_QD65XX          qd65xx          |                                   |
-+BLK_DEV_UMC8672         umc8672         |                                   |
-+                                        |                                   |
-+BLK_DEV_PLATFORM        ide_platform    | PATA_PLATFORM    pata_platform    |
-+                                        |                                   |
-+BLK_DEV_CMD640          cmd640          | PATA_CMD640_PCI  pata_cmd640_pci  |
-+                                        |                                   |
-+BLK_DEV_IDEPNP          ide-pnp         | PATA_ISAPNP      pata_isapnp      |
-+                                        |                                   |
-+BLK_DEV_GENERIC         ide-pci-generic | ATA_GENERIC      ata_generic      |
-+                                        |                                   |
-+BLK_DEV_OPTI621         opti621         | PATA_OPTI        pata_opti        |
-+                                        |                                   |
-+BLK_DEV_RZ1000          rz1000          | PATA_RZ1000      pata_rz1000      |
-+                                        |                                   |
-+BLK_DEV_AEC62XX         aec62xx         | PATA_ARTOP       pata_artop       |
-+                                        |                                   |
-+BLK_DEV_ALI15X3         alim15x3        | PATA_ALI         pata_ali         |
-+                                        |                                   |
-+BLK_DEV_AMD74XX         amd74xx         | PATA_AMD         pata_amd         |
-+                                        |                                   |
-+BLK_DEV_ATIIXP          atiixp          | PATA_ATIIXP      pata_atiixp      |
-+                                        |                                   |
-+BLK_DEV_CMD64X          cmd64x          | PATA_CMD64X      pata_cmd64x      |
-+                                        |                                   |
-+BLK_DEV_TRIFLEX         triflex         | PATA_TRIFLEX     pata_triflex     |
-+                                        |                                   |
-+BLK_DEV_CY82C693        cy82c693        | PATA_CYPRESS     pata_cypress     |
-+                                        |                                   |
-+BLK_DEV_CS5520          cs5520          | PATA_CS5520      pata_cs5520      |
-+                                        |                                   |
-+BLK_DEV_CS5530          cs5530          | PATA_CS5530      pata_cs5530      |
-+                                        |                                   |
-+BLK_DEV_CS5535          cs5535          | PATA_CS5535      pata_cs5535      |
-+                                        |                                   |
-+BLK_DEV_CS5536          cs5536          | PATA_CS5536      pata_cs5536      |
-+                                        |                                   |
-+BLK_DEV_HPT366          hpt366          | PATA_HPT366      pata_hpt366      |
-+                                        | PATA_HPT37X      pata_37x         |
-+                                        | PATA_HPT3X2N     pata_hpt3x2n     |
-+                                        |                                   |
-+BLK_DEV_JMICRON         jmicron         | PATA_JMICRON     pata_jmicron     |
-+                                        |                                   |
-+BLK_DEV_SC1200          sc1200          | PATA_SC1200      pata_sc1200      |
-+                                        |                                   |
-+BLK_DEV_PIIX            piix            | ATA_PIIX         ata_piix         |
-+                                        | PATA_MPIIX       pata_mpiix       |
-+                                        |                                   |
-+BLK_DEV_IT8172          it8172          | -                -                |
-+                                        |                                   |
-+BLK_DEV_IT8213          it8213          | PATA_IT8213      pata_it8213      |
-+                                        |                                   |
-+BLK_DEV_IT821X          it821x          | PATA_IT821X      pata_it821x      |
-+                                        |                                   |
-+BLK_DEV_NS87415         ns87415         | PATA_NS87415     pata_ns87415     |
-+                                        |                                   |
-+BLK_DEV_PDC202XX_OLD    pdc202xx_old    | PATA_PDC_OLD     pata_pdc_old     |
-+                                        |                                   |
-+BLK_DEV_PDC202XX_NEW    pdc202xx_new    | PATA_PDC2027X    pata_pdc2027x    |
-+                                        |                                   |
-+BLK_DEV_SVWKS           serverworks     | PATA_SERVERWORKS pata_serverworks |
-+                                        |                                   |
-+BLK_DEV_SGIIOC4         sgiioc4         | -                -                |
-+                                        |                                   |
-+BLK_DEV_SIIMAGE         siimage         | PATA_SIL680      pata_sil680      |
-+                                        |                                   |
-+BLK_DEV_SIS5513         sis5513         | PATA_SIS         pata_sis         |
-+                                        |                                   |
-+BLK_DEV_SL82C105        sl82c105        | PATA_WINBOND     pata_winbond     |
-+                                        |                                   |
-+BLK_DEV_SLC90E66        slc90e66        | PATA_EFAR        pata_efar        |
-+                                        |                                   |
-+BLK_DEV_TRM290          trm290          | -                -                |
-+                                        |                                   |
-+BLK_DEV_VIA82CXXX       via82cxxx       | PATA_VIA         pata_via         |
-+                                        |                                   |
-+BLK_DEV_TC86C001        tc86c001        | -                -                |
-+                                        |                                   |
-+BLK_DEV_IDE_PMAC        pmac            | PATA_MACIO       pata_macio       |
-+                                        |                                   |
-+BLK_DEV_IDE_AU1XXX      au1xxx-ide      | -                -                |
-+                                        |                                   |
-+BLK_DEV_IDE_TX4938      tx4938ide       | -                -                |
-+                                        |                                   |
-+BLK_DEV_IDE_TX4939      tx4939ide       | -                -                |
-+                                        |                                   |
-+BLK_DEV_IDE_ICSIDE      icside          | PATA_ICSIDE      pata_icside      |
-+                                        |                                   |
-+BLK_DEV_IDE_RAPIDE      rapide          | -                -                |
-+                                        |                                   |
-+BLK_DEV_GAYLE           gayle           | -                -                |
-+                                        |                                   |
-+BLK_DEV_BUDDHA          buddha          | -                -                |
-+                                        |                                   |
-+BLK_DEV_FALCON_IDE      falconide       | -                -                |
-+                                        |                                   |
-+BLK_DEV_MAC_IDE         macide          | -                -                |
-+                                        |                                   |
-+BLK_DEV_Q40IDE          q40ide          | -                -                |
-+                                        |                                   |
-+BLK_DEV_PALMCHIP_BK3710 palm_bk3710     | -                -                |
-+                                        |                                   |
-+BLK_DEV_4DRIVES         ide-4drives     | -                -                |
-+                                        |                                   |
-+-----------------------------------------------------------------------------
--- 
-1.9.1
-
-
+W0FkZGluZyBsaW51eC1pZGVAdmdlci5rZXJuZWwub3JnXQoKT24gRnJpLCA3IEF1ZyAyMDE1LCBD
+aHJpc3RpYW4gS3VqYXUgd3JvdGU6Cj4gdGhpcyBQb3dlckJvb2sgRzQgd2FzIHJ1bm5pbmcgMy4x
+NiBmb3IgYSB3aGlsZSBidXQgbm93IEkgd2FudGVkIHRvIHVwZ3JhZGUgCj4gdG8gbGF0ZXN0IG1h
+aW5saW5lLiBIb3dldmVyLCBkdXJpbmcgYm9vdHVwIHRoZSBmb2xsb3dpbmcgaGFwcGVuczoKPiAK
+PiA9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Cj4gWyAgICAyLjIzNzEwMl0gYXRhMTog
+UEFUQSBtYXggVURNQS8xMDAgaXJxIDM5Cj4gWyAgICAyLjQwMTcwOF0gYXRhMS4wMDogQVRBLTg6
+IFNBTVNVTkcgSE0wNjFHQywgTFIxMDAtMTAsIG1heCBVRE1BLzEwMAo+IFsgICAgMi40MDE3NjRd
+IGF0YTEuMDA6IDExNzIzMTQwOCBzZWN0b3JzLCBtdWx0aSAxNjogTEJBNDggCj4gWyAgICAyLjQx
+NzYzM10gYXRhMS4wMDogY29uZmlndXJlZCBmb3IgVURNQS8xMDAKPiBbICAgNDQuOTE4MTAyXSBh
+dGExLjAwOiBleGNlcHRpb24gRW1hc2sgMHgwIFNBY3QgMHgwIFNFcnIgMHgwIGFjdGlvbiAweDAK
+PiBbICAgNDQuOTIwNDUyXSBhdGExLjAwOiBmYWlsZWQgY29tbWFuZDogUkVBRCBETUEKPiBbICAg
+NDQuOTIyNzI1XSBhdGExLjAwOiBjbWQgYzgvMDA6ODg6NjQ6YzI6MTIvMDA6MDA6MDA6MDA6MDAv
+ZTAgdGFnIDAgZG1hIDY5NjMyIGluCj4gWyAgIDQ0LjkyNzI1N10gYXRhMS4wMDogc3RhdHVzOiB7
+IERSRFkgfQo+IFsgICA0OS45NzE3ODRdIGF0YTEuMDA6IHFjIHRpbWVvdXQgKGNtZCAweGVjKQo+
+IFsgICA0OS45NzY1MjldIGF0YTEuMDA6IGZhaWxlZCB0byBJREVOVElGWSAoSS9PIGVycm9yLCBl
+cnJfbWFzaz0weDQpCj4gWyAgIDQ5Ljk3ODkwOF0gYXRhMS4wMDogcmV2YWxpZGF0aW9uIGZhaWxl
+ZCAoZXJybm89LTUpCj4gWyAgIDU1LjAxOTY2Ml0gYXRhMTogbGluayBpcyBzbG93IHRvIHJlc3Bv
+bmQsIHBsZWFzZSBiZSBwYXRpZW50IChyZWFkeT0wKQo+IFsgICA2MC4wMDc2NzddIGF0YTE6IGRl
+dmljZSBub3QgcmVhZHkgKGVycm5vPS0xNiksIGZvcmNpbmcgaGFyZHJlc2V0Cj4gWyAgIDYwLjAx
+MjY3MF0gYXRhMTogc29mdCByZXNldHRpbmcgbGluawo+IFsgICA2MC4xOTM2MzhdIGF0YTEuMDA6
+IGNvbmZpZ3VyZWQgZm9yIFVETUEvMTAwCj4gWyAgIDYwLjE5NjE1OF0gYXRhMS4wMDogZGV2aWNl
+IHJlcG9ydGVkIGludmFsaWQgQ0hTIHNlY3RvciAwCj4gWyAgIDYwLjE5ODYxMF0gYXRhMTogRUgg
+Y29tcGxldGUKPiA9PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Cj4gCj4gVGhpcyBoYXBw
+ZW5zIG9ubHkgb25jZSwgYnV0IHN5c3RlbWQgdGhpbmtzIHRoZXJlJ3MgYSBoYXJkIHByb2JsZW0g
+YW5kIHdpbGwgCj4gZHJvcCB0byBhIHJlY292ZXJ5IHNoZWxsLiBJIGNhbiBzdGFydCBzc2hkIGFu
+ZCBsb2dpbiByZW1vdGVseSBhbmQgdGhlbiB0aGUgCj4gc3lzdGVtIGFwcGVhcnMgdG8gYmUgcnVu
+bmluZyBqdXN0IGZpbmUuCj4gCj4gVGhpcyBoYXBwZW5lZCBpbiA0LjIuMC1yYzUgc28gSSB3ZW50
+IGJhY2sgYSBmZXcgdmVyc2lvbnMgYW5kIGZvdW5kIHRoYXQKPiA0LjEtcmM1IHdhcyBPSyAodGhl
+IGVycm9yIGRvZXMgbm90IHNob3cgdXAgYW5kIHRoZSBzeXN0ZW0gYm9vdHMganVzdCBmaW5lKQo+
+IGFuZCA0LjEtcmM2IGlzIG5vdC4KPiAKCkFmdGVyIG1vcmUgZGlnZ2luZyBhcm91bmQgSSBub3Rp
+Y2VkIHRoYXQgdGhlIHNhbWUgZXJyb3IgKHdpdGggCmNoYW5nZWQgd29yZGluZykgaGFwcGVucyB3
+aXRoIGEgRGViaWFuIDMuMTYuMC00LXBvd2VycGMga2VybmVsIC0gc28gaXQKZG9lc24ndCBhcHBl
+YXIgdG8gYmUgYSByZWNlbnQgcmVncmVzc2lvbiBhcyBJIHN1c3BlY3RlZCBhdCBmaXJzdDoKCj09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KWyAgIDQ2LjkwNzE0N10gYXRhMTogZHJh
+aW5lZCA1NzIgYnl0ZXMgdG8gY2xlYXIgRFJRClsgICA0Ni45MDcxNjZdIGF0YTEuMDA6IGV4Y2Vw
+dGlvbiBFbWFzayAweDAgU0FjdCAweDAgU0VyciAweDAgYWN0aW9uIDB4MApbICAgNDYuOTA4NDE5
+XSBhdGExLjAwOiBmYWlsZWQgY29tbWFuZDogUkVBRCBETUEKWyAgIDQ2LjkwOTA1OF0gYXRhMS4w
+MDogY21kIGM4LzAwOjgwOjljOmY5OjYwLzAwOjAwOjAwOjAwOjAwL2UwIHRhZyAwIGRtYSA2NTUz
+NiBpbgogICAgICAgICByZXMgNDAvMDA6ZmU6MDA6MDA6MDAvMDA6MDA6MDA6MDA6MDAvNDAgRW1h
+c2sgMHgyMCAoaG9zdCBidXMgZXJyb3IpClsgICA0Ni45MTAzMDNdIGF0YTEuMDA6IHN0YXR1czog
+eyBEUkRZIH0KWyAgIDQ2Ljk3MDU3OV0gYXRhMS4wMDogY29uZmlndXJlZCBmb3IgVURNQS8xMDAK
+WyAgIDQ2Ljk3MTg1M10gYXRhMS4wMDogZGV2aWNlIHJlcG9ydGVkIGludmFsaWQgQ0hTIHNlY3Rv
+ciAwClsgICA0Ni45NzI1MjRdIGF0YTE6IEVIIGNvbXBsZXRlCj09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT0KCkFsc28sIHRoZSBlcnJvciBjYW5ub3QgcmVwZHVjZWQgYXMgcmVsaWFi
+bHkgYXMgSSB0aG91Z2h0OiBzb21ldGltZXMsIHRoZSAKbWFjaGluZSBqdXN0IGJvb3RzIHcvbyBh
+IGhpdGNoIC0gYW5kIHRoYXQgbWlnaHQgYmUgdGhlIHJlYXNvbnMgd2h5IG15IApiaXNlY3QgYXR0
+ZW1wdHMgZmFpbGVkIGFuZCBpbmNvcnJlY3RseSBibGFtZWQgdG90YWxseSB1bnJlbGF0ZWQgY29t
+bWl0czogCmFmdGVyIGVhY2ggImdpdCBiaXNlY3Qge2dvb2QsYmFkfSIgKCtjb21waWxpbmcpIEkg
+cmVib290ZWQgYnV0IHRoZXJlIHdhcyBhIApjaGFuY2UgdGhhdCB0aGUgc3lzdGVtIGNhbWUgdXAg
+anVzdCBmaW5lIC8gc2hvd2VkIHRoZSBzYW1lIEFUQSBlcnJvciBhbmQgCnRodXMgZmFsc2lmaWVk
+IHRoZSBnaXQtYmlzZWN0IHJlc3VsdHMuCgpJIG5vdGljZWQgdGhhdCB3aXRoIHRoaXMgRGViaWFu
+IDMuMTYga2VybmVsLCBpdCBoYXBwZW5zIGxlc3Mgb2Z0ZW4gd2hlbiBJIAp1c2UgdGhlICJpcnFw
+b2xsIiBvcHRpb24uIEJ1dCB3aXRoIDQuMi1yYzUgdGhpcyBkb2Vzbid0IHNlZW0gdG8gaGVscCBt
+dWNoLCAKdGhlIHN5c3RlbSBzdGlsbCBoYW5ncyBkdXJpbmcgYm9vdCBidXQgY29udGludWVzIGFm
+dGVyIHRoZSAiRUggY29tcGxldGUgIiAKbWVzc2FnZS4gQW5kIGl0IGRvZXNuJ3QgYXBwZWFyIGFm
+dGVyd2FyZHMsIEkgY2FuIHJlYWQgZnJvbSBteSByb290IGRpc2sgCmp1c3QgZmluZSBhbmQgYSBs
+b25nIFNNQVJUIGNoZWNrIGFsc28gY29tZXMgYmFjayBmaW5lLgoKQmVjYXVzZSB0aGUgZXJyb3Ig
+b25seSBhcHBlYXJzIHRvIGhhcHBlbiBvbiB0aGUgdmVyeSBmaXJzdCBhY2Nlc3MgYWZ0ZXIgYSAK
+cmVib290LCBJIHRyaWVkIHRvIGJvb3Qgd2l0aCByb290ZGVsYXk9MzAgLSBidXQgb2YgY291cnNl
+IHRoZW4gaXQganVzdCAKd2FpdHMgImJlZm9yZSIgYWNjZXNzaW5nIHRoZSByb290IGRpc2suIEkn
+ZCBuZWVkIGEgbWFnaWMgb3B0aW9uIHRvIHdhaXQgYSAKZmV3IHNlY29uZHMgImFmdGVyIiB0aGUg
+Zmlyc3QgZGlzayBhY2Nlc3MsIHNvIHRoYXQgdGhlIGJvb3QgZnJhbWV3b3JrIAooInN5c3RlbWQi
+KSB3b24ndCBiZSB0aHJvd24gb2ZmIHdoZW4gL2Rldi9zZGEgaXNuJ3QgcmVzcG9uZGluZyBhcyBm
+YXN0IGFzIApleHBlY3RlZC4KCldoYXQgX2RvZXNfIHNlZW0gdG8gaGVscCBhIGJpdCB3YXMgdG8g
+ZGlzYWJsZSB0aGUgdGhlIHN3YXAgZGV2aWNlLCB3aGljaCAKaXMgY29uZmlndXJlZCBhcyBhbiBl
+bmNyeXB0ZWQgZG0tZGV2aWNlIGhlcmUgLSBhbmQgc3lzdGVtZCB3YXMgYWxtb3N0IAphbHdheXMg
+c3R1bWJsaW5nIG92ZXIgdGhpcyBwYXJ0aWN1bGFyIHNlcnZpY2UgZHVyaW5nIGJvb3R1cC4gQmVj
+YXVzZSBvZiAKdGhlIEFUQSB0aW1lb3V0LCB0aGUgZG0tZGV2aWNlIGNvdWxkIG5vdCBiZSBzZXR1
+cCBjb3JyZWN0bHkgYW5kIHN5c3RlbWQgCndvdWxkIGJhaWwgb3V0IGFuZCBkcm9wIG1lIGludG8g
+YSByZWNvdmVyeSBzaGVsbC4gV2l0aG91dCB0aGUgc3dhcCBkZXZpY2UsIApzeXN0ZW1kIHdvdWxk
+IHNraXAgc2V0dGluZyB1cCBzd2FwIGFuZCBib290IGp1c3QgZmluZSAobW9zdCBvZiB0aGUgdGlt
+ZSkgCmFuZCBJIGNhbiBzZXR1cCBzd2FwIG9uY2UgdGhlIHN5c3RlbSBoYXMgYmVlbiBib290ZWQu
+IFNvLi4udGhlcmUncyB0aGF0LgoKSXQncyBzdGlsbCBhIG15c3RlcnkgdG8gbWUgd2h5IC9kZXYv
+c2RhIGlzIG9ubHkgYmVoYXZpbmcgd2VpcmQgb24gaXRzIApmaXJzdCBhY2Nlc3MuCgpJJ3ZlIGNj
+J2VkIGxpbnV4LWlkZSwgbWF5YmUgc29tZWJvZHkgaGFzIGFuIGlkZWEgb24gdGhhdD8KCmRtZXNn
+ICYgLmNvbmZpZzogIGh0dHA6Ly9uZXJkYnluYXR1cmUuZGUvYml0cy92NC4xLXJjNi8KClRoYW5r
+cywKQ2hyaXN0aWFuLgoKCj4gVW5mb3J0dW5hdGVseSBhIGdpdC1iaXNlY3QgYmV0d2VlbiB0aGVz
+ZSB0d28gdmVyc2lvbnMgd2VudCBjb21wbGV0bHkgb2ZmIAo+IHRoZSBjaGFydHMsIEkgZG9uJ3Qg
+a25vdyB3aGF0IGhhcHBlbmVkIGhlcmU6Cj4gPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PQo+IGZpcnN0IGJhZCBjb21taXQ6Cj4gCj4gMGZhMzcyYjZjOTUwMTNhZjEzMzRiM2Q1Yzli
+NWYwM2E3MGVjZWRhYiBpcyB0aGUgZmlyc3QgYmFkIGNvbW1pdAo+IGNvbW1pdCAwZmEzNzJiNmM5
+NTAxM2FmMTMzNGIzZDVjOWI1ZjAzYTcwZWNlZGFiCj4gQXV0aG9yOiBUYWthc2hpIEl3YWkgPHRp
+d2FpQHN1c2UuZGU+Cj4gRGF0ZTogICBXZWQgTWF5IDI3IDE2OjE3OjE5IDIwMTUgKzAyMDAKPiAK
+PiAgICAgQUxTQTogaGRhIC0gRml4IG5vaXNlIG9uIEFNRCByYWRlb24gMjkweCBjb250cm9sbGVy
+Cj4gPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQo+IAo+IEkgZG9uJ3QgaGF2ZSB0
+aGlzIGRyaXZlciAob3IgQUxTQSkgZXZlbiBzZWxlY3RlZC4gSSBjYW4gcmVwcm9kdWNlIHRoaXMg
+Cj4gZXJyb3IgcHJldHR5IHJlbGlhYmx5IGFuZCBJJ2QgbGlrZSB0byBhdHRlbXB0IGFub3RoZXIg
+Z2l0LWJpc2VjdAo+IHJ1biB3aGVuIEknbSBtb3JlIGF3YWtlLiBCdXQgbWF5YmUgc29tZWJvZHkg
+cmVjb2duaXplcyB0aGlzIGVycm9yIGFuZAo+IGhhcyBhIGhpbnQgd2hlcmUgdGhpcyBjb3VsZCBj
+b21lIGZyb20/Cj4gCj4gZG1lc2cgJiAuY29uZmlnOiAgaHR0cDovL25lcmRieW5hdHVyZS5kZS9i
+aXRzL3Y0LjEtcmM2Lwo+IAo+IFRoYW5rcywKPiBDaHJpc3RpYW4uCj4gLS0gCj4gQk9GSCBleGN1
+c2UgIzIyNToKPiAKPiBJdCdzIHRob3NlIGNvbXB1dGVyIHBlb3BsZSBpbiBYIHtjaXR5IG9mIHdv
+cmxkfS4gIFRoZXkga2VlcCBzdHVmZmluZyB0aGluZ3MgdXAuCj4gCgotLSAKQk9GSCBleGN1c2Ug
+IzI2MzoKCkl0J3Mgc3R1Y2sgaW4gdGhlIFdlYi4KX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX18KTGludXhwcGMtZGV2IG1haWxpbmcgbGlzdApMaW51eHBwYy1k
+ZXZAbGlzdHMub3psYWJzLm9yZwpodHRwczovL2xpc3RzLm96bGFicy5vcmcvbGlzdGluZm8vbGlu
+dXhwcGMtZGV2
