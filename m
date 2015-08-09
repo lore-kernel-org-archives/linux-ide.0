@@ -1,138 +1,145 @@
-From: Andy Smith <andy@strugglers.net>
-Subject: NCQ-related READ/WRITE frozen ATA errors with Intel C220 and Intel
- s3610 SSDs
-Date: Sun, 9 Aug 2015 04:27:56 +0000
-Message-ID: <20150809042756.GX4243@bitfolk.com>
+From: Christian Kujau <lists@nerdbynature.de>
+Subject: Re: 4.1-rc6: ATA link is slow to respond, please be patient
+Date: Sat, 8 Aug 2015 23:43:04 -0700 (PDT)
+Message-ID: <alpine.DEB.2.20.8.1508082334400.12626@trent.utfs.org>
+References: <alpine.DEB.2.20.8.1508070306080.12626@trent.utfs.org>
+ <alpine.DEB.2.20.8.1508082049490.12626@trent.utfs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bitfolk.com ([85.119.80.223]:48979 "EHLO mail.bitfolk.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751051AbbHIEpq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 9 Aug 2015 00:45:46 -0400
-Received: from andy by mail.bitfolk.com with local (Exim 4.72)
-	(envelope-from <andy@strugglers.net>)
-	id 1ZOIDE-0000eH-V7
-	for linux-ide@vger.kernel.org; Sun, 09 Aug 2015 04:27:57 +0000
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <alpine.DEB.2.20.8.1508082049490.12626@trent.utfs.org>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: linuxppc-dev@ozlabs.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-Hi,
-
-I've just put together a system based on a Supermicro X10SDV-F
-motherboard, which comes with an Intel C220 SATA controller. I've
-got two Intel DC s3610 SSDs plugged into this, and have
-intermittently been seeing the following ATA errors:
-
-Jul 23 17:14:41 snaps kernel: [68044.504092] ata2.00: exception Emask 0x0 SAct 0x3000000 SErr 0x0 action 0x6 frozen
-Jul 23 17:14:41 snaps kernel: [68044.504215] ata2.00: failed command: WRITE FPDMA QUEUED
-Jul 23 17:14:41 snaps kernel: [68044.504291] ata2.00: cmd 61/01:c0:00:a8:75/00:00:66:00:00/40 tag 24 ncq 512 out
-Jul 23 17:14:41 snaps kernel: [68044.504291]          res 40/00:01:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-Jul 23 17:14:41 snaps kernel: [68044.504357] ata2.00: status: { DRDY }
-Jul 23 17:14:41 snaps kernel: [68044.504376] ata2.00: failed command: WRITE FPDMA QUEUED
-Jul 23 17:14:41 snaps kernel: [68044.504402] ata2.00: cmd 61/08:c8:d1:b1:b5/00:00:09:00:00/40 tag 25 ncq 4096 out
-Jul 23 17:14:41 snaps kernel: [68044.504402]          res 40/00:01:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-Jul 23 17:14:41 snaps kernel: [68044.504468] ata2.00: status: { DRDY }
-Jul 23 17:14:41 snaps kernel: [68044.504488] ata2: hard resetting link
-Jul 23 17:14:42 snaps kernel: [68044.824115] ata2: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-Jul 23 17:14:42 snaps kernel: [68044.825069] ata2.00: configured for UDMA/133
-Jul 23 17:14:42 snaps kernel: [68044.825096] ata2.00: device reported invalid CHS sector 0
-Jul 23 17:14:42 snaps kernel: [68044.825123] ata2.00: device reported invalid CHS sector 0
-Jul 23 17:14:42 snaps kernel: [68044.825153] ata2: EH complete
-
-This would happen once every couple of days, not seemingly related
-to any particular level of IO load.
-
-Initially this was restricted to ata2, and after the SSDs were
-swapped around the problem then followed the drive to ata1, so some
-time was wasted asking Intel if this was a faulty drive. However
-while that was taking place similar errors started to happen with
-ata2 again, so in fact both drives are affected and the possibility
-of it being a pair of faulty drives now seems unlikely.
-
-This machine spent the first few weeks of its life with different
-SSDs in it (Crucial M5s) without problem so that suggests to me that
-the cabling etc is all okay too.
-
-I then disabled NCQ. After first booting with kernel command line
-libata.force=noncq yet still observing what looked to be NCQ still
-enabled in dmesg and /sys/block/sd?/device/queue_depth, I also wrote
-1 to /sys/block/sd?/device/queue_depth.
-
-It's now been 5 days and the problem hasn't manifested itself again.
-
-So, should I be reporting this as a bug in the kernel bugzilla and
-if so, would that be against the ahci driver?
-
-Distribution is Debian 8.1 so that comes with kernel package
-3.16.7-ckt11-1+deb8u2. I also tried kernel 4.0.8-2 from Debian
-testing with no improvement. I did not try an upstream kernel yet.
-
-$ sudo lspci -vvx -s 00:1f.2
-00:1f.2 SATA controller: Intel Corporation 8 Series/C220 Series Chipset Family 6-port SATA Controller 1 [AHCI mode] (rev 05) (prog-if 01 [AHCI 1.0])
-        Subsystem: Super Micro Computer Inc Device 086d
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
-        Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0
-        Interrupt: pin A routed to IRQ 164
-        Region 0: I/O ports at f070 [size=8]
-        Region 1: I/O ports at f060 [size=4]
-        Region 2: I/O ports at f050 [size=8]
-        Region 3: I/O ports at f040 [size=4]
-        Region 4: I/O ports at f020 [size=32]
-        Region 5: Memory at fb312000 (32-bit, non-prefetchable) [size=2K]
-        Capabilities: [80] MSI: Enable+ Count=1/1 Maskable- 64bit-
-                Address: fee002b8  Data: 0000
-        Capabilities: [70] Power Management version 3
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot+,D3cold-)
-                Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [a8] SATA HBA v1.0 BAR4 Offset=00000004
-        Kernel driver in use: ahci
-00: 86 80 02 8c 07 04 b0 02 05 01 06 01 00 00 00 00
-10: 71 f0 00 00 61 f0 00 00 51 f0 00 00 41 f0 00 00
-20: 21 f0 00 00 00 20 31 fb 00 00 00 00 d9 15 6d 08
-30: 00 00 00 00 80 00 00 00 00 00 00 00 0b 01 00 00
-
-$ for d in /dev/sd?; do sudo smartctl -i $d; done
-smartctl 6.4 2014-10-07 r4002 [x86_64-linux-3.16.0-4-amd64] (local build)
-Copyright (C) 2002-14, Bruce Allen, Christian Franke, www.smartmontools.org
-
-=== START OF INFORMATION SECTION ===
-Device Model:     INTEL SSDSC2BX016T4
-Serial Number:    BTHC511604V41P6PGN
-LU WWN Device Id: 5 5cd2e4 04b7b1bfa
-Firmware Version: G2010110
-User Capacity:    1,600,321,314,816 bytes [1.60 TB]
-Sector Sizes:     512 bytes logical, 4096 bytes physical
-Rotation Rate:    Solid State Device
-Form Factor:      2.5 inches
-Device is:        Not in smartctl database [for details use: -P showall]
-ATA Version is:   ACS-2 T13/2015-D revision 3
-SATA Version is:  SATA 2.6, 6.0 Gb/s (current: 6.0 Gb/s)
-Local Time is:    Sun Aug  9 04:24:26 2015 UTC
-SMART support is: Available - device has SMART capability.
-SMART support is: Enabled
-
-smartctl 6.4 2014-10-07 r4002 [x86_64-linux-3.16.0-4-amd64] (local build)
-Copyright (C) 2002-14, Bruce Allen, Christian Franke, www.smartmontools.org
-
-=== START OF INFORMATION SECTION ===
-Device Model:     INTEL SSDSC2BX016T4
-Serial Number:    BTHC511604SD1P6PGN
-LU WWN Device Id: 5 5cd2e4 04b7b1ba2
-Firmware Version: G2010110
-User Capacity:    1,600,321,314,816 bytes [1.60 TB]
-Sector Sizes:     512 bytes logical, 4096 bytes physical
-Rotation Rate:    Solid State Device
-Form Factor:      2.5 inches
-Device is:        Not in smartctl database [for details use: -P showall]
-ATA Version is:   ACS-2 T13/2015-D revision 3
-SATA Version is:  SATA 2.6, 6.0 Gb/s (current: 6.0 Gb/s)
-Local Time is:    Sun Aug  9 04:24:26 2015 UTC
-SMART support is: Available - device has SMART capability.
-SMART support is: Enabled
-
-Cheers,
-Andy
+T24gU2F0LCA4IEF1ZyAyMDE1LCBDaHJpc3RpYW4gS3VqYXUgd3JvdGU6Cgo+IFtBZGRpbmcgbGlu
+dXgtaWRlQHZnZXIua2VybmVsLm9yZ10KPiAKPiBPbiBGcmksIDcgQXVnIDIwMTUsIENocmlzdGlh
+biBLdWphdSB3cm90ZToKPiA+IHRoaXMgUG93ZXJCb29rIEc0IHdhcyBydW5uaW5nIDMuMTYgZm9y
+IGEgd2hpbGUgYnV0IG5vdyBJIHdhbnRlZCB0byB1cGdyYWRlIAo+ID4gdG8gbGF0ZXN0IG1haW5s
+aW5lLiBIb3dldmVyLCBkdXJpbmcgYm9vdHVwIHRoZSBmb2xsb3dpbmcgaGFwcGVuczoKPiA+IAo+
+ID4gPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQo+ID4gWyAgICAyLjIzNzEwMl0gYXRh
+MTogUEFUQSBtYXggVURNQS8xMDAgaXJxIDM5Cj4gPiBbICAgIDIuNDAxNzA4XSBhdGExLjAwOiBB
+VEEtODogU0FNU1VORyBITTA2MUdDLCBMUjEwMC0xMCwgbWF4IFVETUEvMTAwCj4gPiBbICAgIDIu
+NDAxNzY0XSBhdGExLjAwOiAxMTcyMzE0MDggc2VjdG9ycywgbXVsdGkgMTY6IExCQTQ4IAo+ID4g
+WyAgICAyLjQxNzYzM10gYXRhMS4wMDogY29uZmlndXJlZCBmb3IgVURNQS8xMDAKPiA+IFsgICA0
+NC45MTgxMDJdIGF0YTEuMDA6IGV4Y2VwdGlvbiBFbWFzayAweDAgU0FjdCAweDAgU0VyciAweDAg
+YWN0aW9uIDB4MAo+ID4gWyAgIDQ0LjkyMDQ1Ml0gYXRhMS4wMDogZmFpbGVkIGNvbW1hbmQ6IFJF
+QUQgRE1BCj4gPiBbICAgNDQuOTIyNzI1XSBhdGExLjAwOiBjbWQgYzgvMDA6ODg6NjQ6YzI6MTIv
+MDA6MDA6MDA6MDA6MDAvZTAgdGFnIDAgZG1hIDY5NjMyIGluCj4gPiBbICAgNDQuOTI3MjU3XSBh
+dGExLjAwOiBzdGF0dXM6IHsgRFJEWSB9Cj4gPiBbICAgNDkuOTcxNzg0XSBhdGExLjAwOiBxYyB0
+aW1lb3V0IChjbWQgMHhlYykKPiA+IFsgICA0OS45NzY1MjldIGF0YTEuMDA6IGZhaWxlZCB0byBJ
+REVOVElGWSAoSS9PIGVycm9yLCBlcnJfbWFzaz0weDQpCj4gPiBbICAgNDkuOTc4OTA4XSBhdGEx
+LjAwOiByZXZhbGlkYXRpb24gZmFpbGVkIChlcnJubz0tNSkKPiA+IFsgICA1NS4wMTk2NjJdIGF0
+YTE6IGxpbmsgaXMgc2xvdyB0byByZXNwb25kLCBwbGVhc2UgYmUgcGF0aWVudCAocmVhZHk9MCkK
+PiA+IFsgICA2MC4wMDc2NzddIGF0YTE6IGRldmljZSBub3QgcmVhZHkgKGVycm5vPS0xNiksIGZv
+cmNpbmcgaGFyZHJlc2V0Cj4gPiBbICAgNjAuMDEyNjcwXSBhdGExOiBzb2Z0IHJlc2V0dGluZyBs
+aW5rCj4gPiBbICAgNjAuMTkzNjM4XSBhdGExLjAwOiBjb25maWd1cmVkIGZvciBVRE1BLzEwMAo+
+ID4gWyAgIDYwLjE5NjE1OF0gYXRhMS4wMDogZGV2aWNlIHJlcG9ydGVkIGludmFsaWQgQ0hTIHNl
+Y3RvciAwCj4gPiBbICAgNjAuMTk4NjEwXSBhdGExOiBFSCBjb21wbGV0ZQo+ID4gPT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PQo+ID4gCj4gPiBUaGlzIGhhcHBlbnMgb25seSBvbmNlLCBi
+dXQgc3lzdGVtZCB0aGlua3MgdGhlcmUncyBhIGhhcmQgcHJvYmxlbSBhbmQgd2lsbCAKPiA+IGRy
+b3AgdG8gYSByZWNvdmVyeSBzaGVsbC4gSSBjYW4gc3RhcnQgc3NoZCBhbmQgbG9naW4gcmVtb3Rl
+bHkgYW5kIHRoZW4gdGhlIAo+ID4gc3lzdGVtIGFwcGVhcnMgdG8gYmUgcnVubmluZyBqdXN0IGZp
+bmUuCgpJIHBsYXllZCBhcm91bmQgd2l0aCBsaWJhdGEqIGtlcm5lbCBwYXJhbWV0ZXJzLCB0aGUg
+b25seSAic3VjY2VzcyIgSSBoYWQgCndhcyB3aXRoIGxpYmF0YS5kbWE9MCAtIHdoaWNoIGRpc2Fi
+bGVzIERNQSBhbmQgdGhlIHN5c3RlbSBib290ZWQgd2l0aG91dCAKdGhlIGVycm9yLiBCdXQgb2Yg
+Y291cnNlIHRoZSBkaXNrIHRocm91Z2hwdXQgd2FzIG11Y2ggc2xvd2VyIC0gaXMgdGhlcmUgYSAK
+d2F5IHRvIGVuYWJsZSBETUEgYWdhaW4gb25jZSB0aGUgc3lzdGVtIGlzIGJvb3RlZD8gImhkcGFy
+bSAtZCIgd291bGQgCnJldHVybiBIRElPX1NFVF9ETUEsIG9mIGNvdXJzZVswXS4KClRyaWVkIHNv
+bWV0aGluZyBtb3JlIGRyYXN0aWMgYW5kIGRpc2FibGVkIGxpYmF0YSBjb21wbGV0ZWx5IGFuZCBl
+bmFibGVkIApDT05GSUdfSURFIChhbmQgQ09ORklHX0JMS19ERVZfSURFX1BNQUMpIGFnYWluIGFu
+ZCBhIHNpbWlsYXIgZXJyb3IgYXBwZWFycyAKKHNvbWV0aW1lcykgZHVyaW5nIGJvb3R1cDoKClsg
+ICAzOS45NzEzOTJdIGlkZS1wbWFjIGxvc3QgaW50ZXJydXB0LCBkbWEgc3RhdHVzOiA4NDgwClsg
+ICAzOS45NzI3MDRdIGhkYTogbG9zdCBpbnRlcnJ1cHQKWyAgIDM5Ljk3Mzk1MV0gaGRhOiBkbWFf
+aW50cjogc3RhdHVzPTB4ZDggeyBCdXN5IH0KWyAgIDM5Ljk3NTIzMV0gaGRhOiBwb3NzaWJseSBm
+YWlsZWQgb3Bjb2RlOiAweDI1ClsgICAzOS45Nzg4NTVdIGhkYTogRE1BIGRpc2FibGVkClsgICA0
+MC4wMTkzODhdIGlkZTA6IHJlc2V0OiBzdWNjZXNzCgpCdXQgdGhlIGhvc3Qgc2VlbXMgdG8gcmVj
+b3ZlciBtb3JlIHF1aWNrbHkgYW5kIHN5c3RlbWQgd2Fzbid0IHRocm93biBvZmYgCmJ5IHRoZSBz
+bWFsbCBBVEEgZGVsYXkuIEJ1dCBETUEgZ290IGRpc2FibGVkIGFnYWluIDotXAoKSWRlYXMgd2Vs
+Y29tZSEgOi0pCgpDaHJpc3RpYW4uCgpbMF0gaHR0cHM6Ly9hdGEud2lraS5rZXJuZWwub3JnL2lu
+ZGV4LnBocC9MaWJhdGFfRkFRCgo+ID4gVGhpcyBoYXBwZW5lZCBpbiA0LjIuMC1yYzUgc28gSSB3
+ZW50IGJhY2sgYSBmZXcgdmVyc2lvbnMgYW5kIGZvdW5kIHRoYXQKPiA+IDQuMS1yYzUgd2FzIE9L
+ICh0aGUgZXJyb3IgZG9lcyBub3Qgc2hvdyB1cCBhbmQgdGhlIHN5c3RlbSBib290cyBqdXN0IGZp
+bmUpCj4gPiBhbmQgNC4xLXJjNiBpcyBub3QuCj4gPiAKPiAKPiBBZnRlciBtb3JlIGRpZ2dpbmcg
+YXJvdW5kIEkgbm90aWNlZCB0aGF0IHRoZSBzYW1lIGVycm9yICh3aXRoIAo+IGNoYW5nZWQgd29y
+ZGluZykgaGFwcGVucyB3aXRoIGEgRGViaWFuIDMuMTYuMC00LXBvd2VycGMga2VybmVsIC0gc28g
+aXQKPiBkb2Vzbid0IGFwcGVhciB0byBiZSBhIHJlY2VudCByZWdyZXNzaW9uIGFzIEkgc3VzcGVj
+dGVkIGF0IGZpcnN0Ogo+IAo+ID09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0KPiBb
+ICAgNDYuOTA3MTQ3XSBhdGExOiBkcmFpbmVkIDU3MiBieXRlcyB0byBjbGVhciBEUlEKPiBbICAg
+NDYuOTA3MTY2XSBhdGExLjAwOiBleGNlcHRpb24gRW1hc2sgMHgwIFNBY3QgMHgwIFNFcnIgMHgw
+IGFjdGlvbiAweDAKPiBbICAgNDYuOTA4NDE5XSBhdGExLjAwOiBmYWlsZWQgY29tbWFuZDogUkVB
+RCBETUEKPiBbICAgNDYuOTA5MDU4XSBhdGExLjAwOiBjbWQgYzgvMDA6ODA6OWM6Zjk6NjAvMDA6
+MDA6MDA6MDA6MDAvZTAgdGFnIDAgZG1hIDY1NTM2IGluCj4gICAgICAgICAgcmVzIDQwLzAwOmZl
+OjAwOjAwOjAwLzAwOjAwOjAwOjAwOjAwLzQwIEVtYXNrIDB4MjAgKGhvc3QgYnVzIGVycm9yKQo+
+IFsgICA0Ni45MTAzMDNdIGF0YTEuMDA6IHN0YXR1czogeyBEUkRZIH0KPiBbICAgNDYuOTcwNTc5
+XSBhdGExLjAwOiBjb25maWd1cmVkIGZvciBVRE1BLzEwMAo+IFsgICA0Ni45NzE4NTNdIGF0YTEu
+MDA6IGRldmljZSByZXBvcnRlZCBpbnZhbGlkIENIUyBzZWN0b3IgMAo+IFsgICA0Ni45NzI1MjRd
+IGF0YTE6IEVIIGNvbXBsZXRlCj4gPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PQo+
+IAo+IEFsc28sIHRoZSBlcnJvciBjYW5ub3QgcmVwZHVjZWQgYXMgcmVsaWFibHkgYXMgSSB0aG91
+Z2h0OiBzb21ldGltZXMsIHRoZSAKPiBtYWNoaW5lIGp1c3QgYm9vdHMgdy9vIGEgaGl0Y2ggLSBh
+bmQgdGhhdCBtaWdodCBiZSB0aGUgcmVhc29ucyB3aHkgbXkgCj4gYmlzZWN0IGF0dGVtcHRzIGZh
+aWxlZCBhbmQgaW5jb3JyZWN0bHkgYmxhbWVkIHRvdGFsbHkgdW5yZWxhdGVkIGNvbW1pdHM6IAo+
+IGFmdGVyIGVhY2ggImdpdCBiaXNlY3Qge2dvb2QsYmFkfSIgKCtjb21waWxpbmcpIEkgcmVib290
+ZWQgYnV0IHRoZXJlIHdhcyBhIAo+IGNoYW5jZSB0aGF0IHRoZSBzeXN0ZW0gY2FtZSB1cCBqdXN0
+IGZpbmUgLyBzaG93ZWQgdGhlIHNhbWUgQVRBIGVycm9yIGFuZCAKPiB0aHVzIGZhbHNpZmllZCB0
+aGUgZ2l0LWJpc2VjdCByZXN1bHRzLgo+IAo+IEkgbm90aWNlZCB0aGF0IHdpdGggdGhpcyBEZWJp
+YW4gMy4xNiBrZXJuZWwsIGl0IGhhcHBlbnMgbGVzcyBvZnRlbiB3aGVuIEkgCj4gdXNlIHRoZSAi
+aXJxcG9sbCIgb3B0aW9uLiBCdXQgd2l0aCA0LjItcmM1IHRoaXMgZG9lc24ndCBzZWVtIHRvIGhl
+bHAgbXVjaCwgCj4gdGhlIHN5c3RlbSBzdGlsbCBoYW5ncyBkdXJpbmcgYm9vdCBidXQgY29udGlu
+dWVzIGFmdGVyIHRoZSAiRUggY29tcGxldGUgIiAKPiBtZXNzYWdlLiBBbmQgaXQgZG9lc24ndCBh
+cHBlYXIgYWZ0ZXJ3YXJkcywgSSBjYW4gcmVhZCBmcm9tIG15IHJvb3QgZGlzayAKPiBqdXN0IGZp
+bmUgYW5kIGEgbG9uZyBTTUFSVCBjaGVjayBhbHNvIGNvbWVzIGJhY2sgZmluZS4KPiAKPiBCZWNh
+dXNlIHRoZSBlcnJvciBvbmx5IGFwcGVhcnMgdG8gaGFwcGVuIG9uIHRoZSB2ZXJ5IGZpcnN0IGFj
+Y2VzcyBhZnRlciBhIAo+IHJlYm9vdCwgSSB0cmllZCB0byBib290IHdpdGggcm9vdGRlbGF5PTMw
+IC0gYnV0IG9mIGNvdXJzZSB0aGVuIGl0IGp1c3QgCj4gd2FpdHMgImJlZm9yZSIgYWNjZXNzaW5n
+IHRoZSByb290IGRpc2suIEknZCBuZWVkIGEgbWFnaWMgb3B0aW9uIHRvIHdhaXQgYSAKPiBmZXcg
+c2Vjb25kcyAiYWZ0ZXIiIHRoZSBmaXJzdCBkaXNrIGFjY2Vzcywgc28gdGhhdCB0aGUgYm9vdCBm
+cmFtZXdvcmsgCj4gKCJzeXN0ZW1kIikgd29uJ3QgYmUgdGhyb3duIG9mZiB3aGVuIC9kZXYvc2Rh
+IGlzbid0IHJlc3BvbmRpbmcgYXMgZmFzdCBhcyAKPiBleHBlY3RlZC4KPiAKPiBXaGF0IF9kb2Vz
+XyBzZWVtIHRvIGhlbHAgYSBiaXQgd2FzIHRvIGRpc2FibGUgdGhlIHRoZSBzd2FwIGRldmljZSwg
+d2hpY2ggCj4gaXMgY29uZmlndXJlZCBhcyBhbiBlbmNyeXB0ZWQgZG0tZGV2aWNlIGhlcmUgLSBh
+bmQgc3lzdGVtZCB3YXMgYWxtb3N0IAo+IGFsd2F5cyBzdHVtYmxpbmcgb3ZlciB0aGlzIHBhcnRp
+Y3VsYXIgc2VydmljZSBkdXJpbmcgYm9vdHVwLiBCZWNhdXNlIG9mIAo+IHRoZSBBVEEgdGltZW91
+dCwgdGhlIGRtLWRldmljZSBjb3VsZCBub3QgYmUgc2V0dXAgY29ycmVjdGx5IGFuZCBzeXN0ZW1k
+IAo+IHdvdWxkIGJhaWwgb3V0IGFuZCBkcm9wIG1lIGludG8gYSByZWNvdmVyeSBzaGVsbC4gV2l0
+aG91dCB0aGUgc3dhcCBkZXZpY2UsIAo+IHN5c3RlbWQgd291bGQgc2tpcCBzZXR0aW5nIHVwIHN3
+YXAgYW5kIGJvb3QganVzdCBmaW5lIChtb3N0IG9mIHRoZSB0aW1lKSAKPiBhbmQgSSBjYW4gc2V0
+dXAgc3dhcCBvbmNlIHRoZSBzeXN0ZW0gaGFzIGJlZW4gYm9vdGVkLiBTby4uLnRoZXJlJ3MgdGhh
+dC4KPiAKPiBJdCdzIHN0aWxsIGEgbXlzdGVyeSB0byBtZSB3aHkgL2Rldi9zZGEgaXMgb25seSBi
+ZWhhdmluZyB3ZWlyZCBvbiBpdHMgCj4gZmlyc3QgYWNjZXNzLgo+IAo+IEkndmUgY2MnZWQgbGlu
+dXgtaWRlLCBtYXliZSBzb21lYm9keSBoYXMgYW4gaWRlYSBvbiB0aGF0Pwo+IAo+IGRtZXNnICYg
+LmNvbmZpZzogIGh0dHA6Ly9uZXJkYnluYXR1cmUuZGUvYml0cy92NC4xLXJjNi8KPiAKPiBUaGFu
+a3MsCj4gQ2hyaXN0aWFuLgo+IAo+IAo+ID4gVW5mb3J0dW5hdGVseSBhIGdpdC1iaXNlY3QgYmV0
+d2VlbiB0aGVzZSB0d28gdmVyc2lvbnMgd2VudCBjb21wbGV0bHkgb2ZmIAo+ID4gdGhlIGNoYXJ0
+cywgSSBkb24ndCBrbm93IHdoYXQgaGFwcGVuZWQgaGVyZToKPiA+ID09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT0KPiA+IGZpcnN0IGJhZCBjb21taXQ6Cj4gPiAKPiA+IDBmYTM3MmI2
+Yzk1MDEzYWYxMzM0YjNkNWM5YjVmMDNhNzBlY2VkYWIgaXMgdGhlIGZpcnN0IGJhZCBjb21taXQK
+PiA+IGNvbW1pdCAwZmEzNzJiNmM5NTAxM2FmMTMzNGIzZDVjOWI1ZjAzYTcwZWNlZGFiCj4gPiBB
+dXRob3I6IFRha2FzaGkgSXdhaSA8dGl3YWlAc3VzZS5kZT4KPiA+IERhdGU6ICAgV2VkIE1heSAy
+NyAxNjoxNzoxOSAyMDE1ICswMjAwCj4gPiAKPiA+ICAgICBBTFNBOiBoZGEgLSBGaXggbm9pc2Ug
+b24gQU1EIHJhZGVvbiAyOTB4IGNvbnRyb2xsZXIKPiA+ID09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT0KPiA+IAo+ID4gSSBkb24ndCBoYXZlIHRoaXMgZHJpdmVyIChvciBBTFNBKSBl
+dmVuIHNlbGVjdGVkLiBJIGNhbiByZXByb2R1Y2UgdGhpcyAKPiA+IGVycm9yIHByZXR0eSByZWxp
+YWJseSBhbmQgSSdkIGxpa2UgdG8gYXR0ZW1wdCBhbm90aGVyIGdpdC1iaXNlY3QKPiA+IHJ1biB3
+aGVuIEknbSBtb3JlIGF3YWtlLiBCdXQgbWF5YmUgc29tZWJvZHkgcmVjb2duaXplcyB0aGlzIGVy
+cm9yIGFuZAo+ID4gaGFzIGEgaGludCB3aGVyZSB0aGlzIGNvdWxkIGNvbWUgZnJvbT8KPiA+IAo+
+ID4gZG1lc2cgJiAuY29uZmlnOiAgaHR0cDovL25lcmRieW5hdHVyZS5kZS9iaXRzL3Y0LjEtcmM2
+Lwo+ID4gCj4gPiBUaGFua3MsCj4gPiBDaHJpc3RpYW4uCj4gPiAtLSAKPiA+IEJPRkggZXhjdXNl
+ICMyMjU6Cj4gPiAKPiA+IEl0J3MgdGhvc2UgY29tcHV0ZXIgcGVvcGxlIGluIFgge2NpdHkgb2Yg
+d29ybGR9LiAgVGhleSBrZWVwIHN0dWZmaW5nIHRoaW5ncyB1cC4KPiA+IAo+IAo+IC0tIAo+IEJP
+RkggZXhjdXNlICMyNjM6Cj4gCj4gSXQncyBzdHVjayBpbiB0aGUgV2ViLgo+IAoKLS0gCkJPRkgg
+ZXhjdXNlICMzMTY6CgpFbHZlcyBvbiBzdHJpa2UuIChXaHkgZG8gdGhleSBjYWxsIEVNQUcgRWxm
+IE1hZ2ljKQpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpM
+aW51eHBwYy1kZXYgbWFpbGluZyBsaXN0CkxpbnV4cHBjLWRldkBsaXN0cy5vemxhYnMub3JnCmh0
+dHBzOi8vbGlzdHMub3psYWJzLm9yZy9saXN0aW5mby9saW51eHBwYy1kZXY=
