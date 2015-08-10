@@ -1,186 +1,34 @@
-From: Christian Kujau <lists@nerdbynature.de>
-Subject: Re: 4.1-rc6: ATA link is slow to respond, please be patient (fwd)
-Date: Sun, 9 Aug 2015 22:52:17 -0700 (PDT)
-Message-ID: <alpine.DEB.2.20.8.1508092252040.12626@trent.utfs.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] libata: fix libata-core.c kernel-doc warning
+Date: Mon, 10 Aug 2015 11:44:35 -0400
+Message-ID: <20150810154435.GB23408@mtj.duckdns.org>
+References: <55C80060.8030308@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from trent.utfs.org ([94.185.90.103]:46818 "EHLO trent.utfs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752778AbbHJGBN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 10 Aug 2015 02:01:13 -0400
-Received: from trent.utfs.org (localhost [127.0.0.1])
-	by trent.utfs.org (Postfix) with ESMTP id E6E773DBE9
-	for <linux-ide@vger.kernel.org>; Mon, 10 Aug 2015 07:52:17 +0200 (CEST)
-Received: from localhost (localhost [127.0.0.1])
-	by trent.utfs.org (Postfix) with ESMTP id B8AEA3DB0A
-	for <linux-ide@vger.kernel.org>; Mon, 10 Aug 2015 07:52:17 +0200 (CEST)
+Received: from mail-yk0-f177.google.com ([209.85.160.177]:36747 "EHLO
+	mail-yk0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754525AbbHJPoi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 10 Aug 2015 11:44:38 -0400
+Content-Disposition: inline
+In-Reply-To: <55C80060.8030308@infradead.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Randy Dunlap <rdunlap@infradead.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-[Forwarding to linux-ide again, because I wasn't subscribed earlier]
+On Sun, Aug 09, 2015 at 06:37:36PM -0700, Randy Dunlap wrote:
+> From: Randy Dunlap <rdunlap@infradead.org>
+> 
+> Fix kernel-doc warning in libata-core.c:
+> 
+> Warning(..//drivers/ata/libata-core.c:4763): No description found for parameter 'tag'
+> 
+> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
 
----------- Forwarded message ----------
-Date: Sat, 8 Aug 2015 23:43:04 -0700 (PDT)
-From: Christian Kujau <lists@nerdbynature.de>
-To: linuxppc-dev@ozlabs.org
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
-Subject: Re: 4.1-rc6: ATA link is slow to respond, please be patient
+Applied to libata/for-4.3.
 
-On Sat, 8 Aug 2015, Christian Kujau wrote:
-
-> [Adding linux-ide@vger.kernel.org]
-> 
-> On Fri, 7 Aug 2015, Christian Kujau wrote:
-> > this PowerBook G4 was running 3.16 for a while but now I wanted to upgrade 
-> > to latest mainline. However, during bootup the following happens:
-> > 
-> > ===============================
-> > [    2.237102] ata1: PATA max UDMA/100 irq 39
-> > [    2.401708] ata1.00: ATA-8: SAMSUNG HM061GC, LR100-10, max UDMA/100
-> > [    2.401764] ata1.00: 117231408 sectors, multi 16: LBA48 
-> > [    2.417633] ata1.00: configured for UDMA/100
-> > [   44.918102] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-> > [   44.920452] ata1.00: failed command: READ DMA
-> > [   44.922725] ata1.00: cmd c8/00:88:64:c2:12/00:00:00:00:00/e0 tag 0 dma 69632 in
-> > [   44.927257] ata1.00: status: { DRDY }
-> > [   49.971784] ata1.00: qc timeout (cmd 0xec)
-> > [   49.976529] ata1.00: failed to IDENTIFY (I/O error, err_mask=0x4)
-> > [   49.978908] ata1.00: revalidation failed (errno=-5)
-> > [   55.019662] ata1: link is slow to respond, please be patient (ready=0)
-> > [   60.007677] ata1: device not ready (errno=-16), forcing hardreset
-> > [   60.012670] ata1: soft resetting link
-> > [   60.193638] ata1.00: configured for UDMA/100
-> > [   60.196158] ata1.00: device reported invalid CHS sector 0
-> > [   60.198610] ata1: EH complete
-> > ===============================
-> > 
-> > This happens only once, but systemd thinks there's a hard problem and will 
-> > drop to a recovery shell. I can start sshd and login remotely and then the 
-> > system appears to be running just fine.
-
-I played around with libata* kernel parameters, the only "success" I had 
-was with libata.dma=0 - which disables DMA and the system booted without 
-the error. But of course the disk throughput was much slower - is there a 
-way to enable DMA again once the system is booted? "hdparm -d" would 
-return HDIO_SET_DMA, of course[0].
-
-Tried something more drastic and disabled libata completely and enabled 
-CONFIG_IDE (and CONFIG_BLK_DEV_IDE_PMAC) again and a similar error appears 
-(sometimes) during bootup:
-
-[   39.971392] ide-pmac lost interrupt, dma status: 8480
-[   39.972704] hda: lost interrupt
-[   39.973951] hda: dma_intr: status=0xd8 { Busy }
-[   39.975231] hda: possibly failed opcode: 0x25
-[   39.978855] hda: DMA disabled
-[   40.019388] ide0: reset: success
-
-But the host seems to recover more quickly and systemd wasn't thrown off 
-by the small ATA delay. But DMA got disabled again :-\
-
-Ideas welcome! :-)
-
-Christian.
-
-[0] https://ata.wiki.kernel.org/index.php/Libata_FAQ
-
-> > This happened in 4.2.0-rc5 so I went back a few versions and found that
-> > 4.1-rc5 was OK (the error does not show up and the system boots just fine)
-> > and 4.1-rc6 is not.
-> > 
-> 
-> After more digging around I noticed that the same error (with 
-> changed wording) happens with a Debian 3.16.0-4-powerpc kernel - so it
-> doesn't appear to be a recent regression as I suspected at first:
-> 
-> ==================================
-> [   46.907147] ata1: drained 572 bytes to clear DRQ
-> [   46.907166] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-> [   46.908419] ata1.00: failed command: READ DMA
-> [   46.909058] ata1.00: cmd c8/00:80:9c:f9:60/00:00:00:00:00/e0 tag 0 dma 65536 in
->          res 40/00:fe:00:00:00/00:00:00:00:00/40 Emask 0x20 (host bus error)
-> [   46.910303] ata1.00: status: { DRDY }
-> [   46.970579] ata1.00: configured for UDMA/100
-> [   46.971853] ata1.00: device reported invalid CHS sector 0
-> [   46.972524] ata1: EH complete
-> ==================================
-> 
-> Also, the error cannot repduced as reliably as I thought: sometimes, the 
-> machine just boots w/o a hitch - and that might be the reasons why my 
-> bisect attempts failed and incorrectly blamed totally unrelated commits: 
-> after each "git bisect {good,bad}" (+compiling) I rebooted but there was a 
-> chance that the system came up just fine / showed the same ATA error and 
-> thus falsified the git-bisect results.
-> 
-> I noticed that with this Debian 3.16 kernel, it happens less often when I 
-> use the "irqpoll" option. But with 4.2-rc5 this doesn't seem to help much, 
-> the system still hangs during boot but continues after the "EH complete " 
-> message. And it doesn't appear afterwards, I can read from my root disk 
-> just fine and a long SMART check also comes back fine.
-> 
-> Because the error only appears to happen on the very first access after a 
-> reboot, I tried to boot with rootdelay=30 - but of course then it just 
-> waits "before" accessing the root disk. I'd need a magic option to wait a 
-> few seconds "after" the first disk access, so that the boot framework 
-> ("systemd") won't be thrown off when /dev/sda isn't responding as fast as 
-> expected.
-> 
-> What _does_ seem to help a bit was to disable the the swap device, which 
-> is configured as an encrypted dm-device here - and systemd was almost 
-> always stumbling over this particular service during bootup. Because of 
-> the ATA timeout, the dm-device could not be setup correctly and systemd 
-> would bail out and drop me into a recovery shell. Without the swap device, 
-> systemd would skip setting up swap and boot just fine (most of the time) 
-> and I can setup swap once the system has been booted. So...there's that.
-> 
-> It's still a mystery to me why /dev/sda is only behaving weird on its 
-> first access.
-> 
-> I've cc'ed linux-ide, maybe somebody has an idea on that?
-> 
-> dmesg & .config:  http://nerdbynature.de/bits/v4.1-rc6/
-> 
-> Thanks,
-> Christian.
-> 
-> 
-> > Unfortunately a git-bisect between these two versions went completly off 
-> > the charts, I don't know what happened here:
-> > ==================================
-> > first bad commit:
-> > 
-> > 0fa372b6c95013af1334b3d5c9b5f03a70ecedab is the first bad commit
-> > commit 0fa372b6c95013af1334b3d5c9b5f03a70ecedab
-> > Author: Takashi Iwai <tiwai@suse.de>
-> > Date:   Wed May 27 16:17:19 2015 +0200
-> > 
-> >     ALSA: hda - Fix noise on AMD radeon 290x controller
-> > ==================================
-> > 
-> > I don't have this driver (or ALSA) even selected. I can reproduce this 
-> > error pretty reliably and I'd like to attempt another git-bisect
-> > run when I'm more awake. But maybe somebody recognizes this error and
-> > has a hint where this could come from?
-> > 
-> > dmesg & .config:  http://nerdbynature.de/bits/v4.1-rc6/
-> > 
-> > Thanks,
-> > Christian.
-> > -- 
-> > BOFH excuse #225:
-> > 
-> > It's those computer people in X {city of world}.  They keep stuffing things up.
-> > 
-> 
-> -- 
-> BOFH excuse #263:
-> 
-> It's stuck in the Web.
-> 
+Thanks.
 
 -- 
-BOFH excuse #316:
-
-Elves on strike. (Why do they call EMAG Elf Magic)
+tejun
