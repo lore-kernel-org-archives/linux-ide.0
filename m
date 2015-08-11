@@ -1,40 +1,40 @@
-From: Tim Small <tim@seoss.co.uk>
+From: Andrey Korolyov <andrey@xdel.ru>
 Subject: Re: NCQ-related READ/WRITE frozen ATA errors with Intel C220 and
  Intel s3610 SSDs
-Date: Tue, 11 Aug 2015 11:15:51 +0100
-Message-ID: <55C9CB57.8040702@seoss.co.uk>
-References: <20150809042756.GX4243@bitfolk.com> <55C8C4A7.2050706@seoss.co.uk> <20150810163737.GA4243@bitfolk.com> <20150810174902.GZ4327@bitfolk.com>
+Date: Tue, 11 Aug 2015 14:28:18 +0300
+Message-ID: <CABYiri-ov_=mzoNZp_g_K0RFu+i2nG50Eg-ed+-B37ZOzvB6Og@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from relay1.allsecuredomains.com ([78.47.251.4]:59626 "EHLO
-	relay1.allsecuredomains.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933983AbbHKKP7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Aug 2015 06:15:59 -0400
-In-Reply-To: <20150810174902.GZ4327@bitfolk.com>
+Received: from mail-lb0-f180.google.com ([209.85.217.180]:36148 "EHLO
+	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964874AbbHKL2j (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Aug 2015 07:28:39 -0400
+Received: by lbbpu9 with SMTP id pu9so83933119lbb.3
+        for <linux-ide@vger.kernel.org>; Tue, 11 Aug 2015 04:28:38 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andy Smith <andy@strugglers.net>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On 10/08/15 18:49, Andy Smith wrote:
-> Do you think the next best thing to try is still a different SATA
-> controller?
+Hello,
 
-Difficult to say, if it's easy to do so I think I would (even if it's a
-temporary job just running the chassis with the case open during
-testing), as it may help to localise the problem to the SSD or chipset.
+sorry for a rude top-post and please CC me in a main discussion afterward.
 
-Getting hold of the right person at Intel might be tricky - may be worth
-asking them if there's anyone specifically at the Intel Open-Source
-Technology Center it would be worth talking to, or maybe trying to find
-someone there directly?
+Since yesterday since I found the same issue with C602 and S3710 in
+mine production and stood in horror for a couple of moments, I made a
+small amount of runs with fio to check if the issue is here or not for
+certain configuration, here are preliminary results:
 
-Tim.
+- isci in all LTS are affected, if I could use this wording in
+appearance of an obviously broken hardware counterparts,
+- setting device`s qd=1 is *not* fixing the issue for me,
+- setting noncq for a specific link closes the deal.
 
--- 
-South East Open Source Solutions Limited
-Registered in England and Wales with company number 06134732.
-Registered Office: 2 Powell Gardens, Redhill, Surrey, RH1 1TQ
-VAT number: 900 6633 53  http://seoss.co.uk/ +44-(0)1273-808309
+Therefore, I`d like to propose to either add hook from scsi code to
+set horkage_on on setting queue_depth to 1 and removing it back at
+runtime, or to reword libata faq [1], as for me there is a clear
+difference between actual NCQ disablement for a link/controller and
+setting queue depth to 1, the bus resets are still appearing in a
+second case.
+
+1. https://ata.wiki.kernel.org/index.php/Libata_FAQ
