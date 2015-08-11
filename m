@@ -1,38 +1,40 @@
-From: Andy Smith <andy@strugglers.net>
+From: Tim Small <tim@seoss.co.uk>
 Subject: Re: NCQ-related READ/WRITE frozen ATA errors with Intel C220 and
  Intel s3610 SSDs
-Date: Mon, 10 Aug 2015 17:49:02 +0000
-Message-ID: <20150810174902.GZ4327@bitfolk.com>
-References: <20150809042756.GX4243@bitfolk.com>
- <55C8C4A7.2050706@seoss.co.uk>
- <20150810163737.GA4243@bitfolk.com>
+Date: Tue, 11 Aug 2015 11:15:51 +0100
+Message-ID: <55C9CB57.8040702@seoss.co.uk>
+References: <20150809042756.GX4243@bitfolk.com> <55C8C4A7.2050706@seoss.co.uk> <20150810163737.GA4243@bitfolk.com> <20150810174902.GZ4327@bitfolk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bitfolk.com ([85.119.80.223]:37138 "EHLO mail.bitfolk.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932134AbbHJRtI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 10 Aug 2015 13:49:08 -0400
-Content-Disposition: inline
-In-Reply-To: <20150810163737.GA4243@bitfolk.com>
+Received: from relay1.allsecuredomains.com ([78.47.251.4]:59626 "EHLO
+	relay1.allsecuredomains.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933983AbbHKKP7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 11 Aug 2015 06:15:59 -0400
+In-Reply-To: <20150810174902.GZ4327@bitfolk.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tim Small <tim@seoss.co.uk>
+To: Andy Smith <andy@strugglers.net>
 Cc: linux-ide@vger.kernel.org
 
-On Mon, Aug 10, 2015 at 04:37:38PM +0000, Andy Smith wrote:
-> Offlist I had someone report that their entire batch of 3710 drives
-> was suffering this same problem when plugged into Intel C220
-> chipset; this being on a platform where they previously had other
-> Intel drives including 3500 and 3700 without issue.
+On 10/08/15 18:49, Andy Smith wrote:
+> Do you think the next best thing to try is still a different SATA
+> controller?
 
-My mistake, their chipset is actually Intel C602. They were just
-speculating that my C220 chipset may have the same issue as they are
-seeing the same problems on 3610 and 3710 drives, but not on 3500
-and 3700 for same hardware.
+Difficult to say, if it's easy to do so I think I would (even if it's a
+temporary job just running the chassis with the case open during
+testing), as it may help to localise the problem to the SSD or chipset.
 
-Do you think the next best thing to try is still a different SATA
-controller?
+Getting hold of the right person at Intel might be tricky - may be worth
+asking them if there's anyone specifically at the Intel Open-Source
+Technology Center it would be worth talking to, or maybe trying to find
+someone there directly?
 
-Cheers,
-Andy
+Tim.
+
+-- 
+South East Open Source Solutions Limited
+Registered in England and Wales with company number 06134732.
+Registered Office: 2 Powell Gardens, Redhill, Surrey, RH1 1TQ
+VAT number: 900 6633 53  http://seoss.co.uk/ +44-(0)1273-808309
