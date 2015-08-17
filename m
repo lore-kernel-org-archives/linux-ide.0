@@ -1,7 +1,8 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RFT PATCH] ia64: zx1_defconfig: convert to use libata PATA drivers
-Date: Mon, 17 Aug 2015 17:46:28 +0200
-Message-ID: <1439826388-31456-5-git-send-email-b.zolnierkie@samsung.com>
+Subject: [RFT PATCH] ia64: gensparse_defconfig: convert to use libata PATA
+ drivers
+Date: Mon, 17 Aug 2015 17:46:26 +0200
+Message-ID: <1439826388-31456-3-git-send-email-b.zolnierkie@samsung.com>
 References: <1439826388-31456-1-git-send-email-b.zolnierkie@samsung.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-reply-to: <1439826388-31456-1-git-send-email-b.zolnierkie@samsung.com>
@@ -23,42 +24,48 @@ in use:
 
 * having duplicate drivers for same hardware confuses users
 
-This patch converts zx1_defconfig to use libata PATA
-drivers.
+This patch converts gensparse_defconfig to use libata PATA
+drivers (sgiioc4 IDE host driver has no corresponding libata
+driver yet so it is not converted).
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
 Build tested only.
 If you have affected hardware please test.  Thank you.
 
- arch/ia64/configs/zx1_defconfig | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+ arch/ia64/configs/gensparse_defconfig | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/arch/ia64/configs/zx1_defconfig b/arch/ia64/configs/zx1_defconfig
-index b504c8e..1ecda7e 100644
---- a/arch/ia64/configs/zx1_defconfig
-+++ b/arch/ia64/configs/zx1_defconfig
-@@ -27,11 +27,6 @@ CONFIG_IP_MULTICAST=y
- CONFIG_NETFILTER=y
- CONFIG_BLK_DEV_LOOP=y
- CONFIG_BLK_DEV_RAM=y
--CONFIG_IDE=y
--CONFIG_BLK_DEV_IDECD=y
+diff --git a/arch/ia64/configs/gensparse_defconfig b/arch/ia64/configs/gensparse_defconfig
+index 5b4fcdd..b4da69f7 100644
+--- a/arch/ia64/configs/gensparse_defconfig
++++ b/arch/ia64/configs/gensparse_defconfig
+@@ -40,19 +40,20 @@ CONFIG_BLK_DEV_RAM=y
+ CONFIG_SGI_IOC4=y
+ CONFIG_IDE=y
+ CONFIG_BLK_DEV_IDECD=y
+-CONFIG_IDE_GENERIC=y
 -CONFIG_BLK_DEV_GENERIC=y
 -CONFIG_BLK_DEV_CMD64X=y
+-CONFIG_BLK_DEV_PIIX=y
+ CONFIG_BLK_DEV_SGIIOC4=y
 -CONFIG_SCSI=y
  CONFIG_BLK_DEV_SD=y
- CONFIG_CHR_DEV_ST=y
- CONFIG_CHR_DEV_OSST=y
-@@ -43,6 +38,9 @@ CONFIG_SCSI_LOGGING=y
+ CONFIG_CHR_DEV_ST=m
+-CONFIG_BLK_DEV_SR=m
++CONFIG_BLK_DEV_SR=y
+ CONFIG_CHR_DEV_SG=m
  CONFIG_SCSI_FC_ATTRS=y
  CONFIG_SCSI_SYM53C8XX_2=y
  CONFIG_SCSI_QLOGIC_1280=y
 +CONFIG_ATA=y
++CONFIG_ATA_PIIX=y
 +CONFIG_PATA_CMD64X=y
++CONFIG_PATA_MPIIX=y
 +CONFIG_ATA_GENERIC=y
- CONFIG_FUSION=y
- CONFIG_FUSION_SPI=y
- CONFIG_FUSION_FC=y
++CONFIG_PATA_LEGACY=y
+ CONFIG_MD=y
+ CONFIG_BLK_DEV_MD=m
+ CONFIG_MD_LINEAR=m
 -- 
 1.9.1
