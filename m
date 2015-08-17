@@ -1,115 +1,67 @@
-From: Alexandre Courbot <gnurou@gmail.com>
-Subject: Re: [PATCH v3] MIPS: Remove all the uses of custom gpio.h
-Date: Mon, 17 Aug 2015 16:41:37 +0900
-Message-ID: <CAAVeFuK00Gp5mbXAMYp0dM0AmHjeY76jS9CYNJqRS720F1zbDA@mail.gmail.com>
-References: <1438678305-25524-1-git-send-email-albeu@free.fr>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: [RFT PATCH] ia64: bigsur_defconfig: convert to use libata PATA drivers
+Date: Mon, 17 Aug 2015 17:46:24 +0200
+Message-ID: <1439826388-31456-1-git-send-email-b.zolnierkie@samsung.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ob0-f179.google.com ([209.85.214.179]:36712 "EHLO
-	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750775AbbHQHl6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Aug 2015 03:41:58 -0400
-In-Reply-To: <1438678305-25524-1-git-send-email-albeu@free.fr>
+Received: from mailout4.samsung.com ([203.254.224.34]:34349 "EHLO
+	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752794AbbHQPsM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Aug 2015 11:48:12 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alban Bedel <albeu@free.fr>
-Cc: linux-mips <linux-mips@linux-mips.org>, Ralf Baechle <ralf@linux-mips.org>, Hauke Mehrtens <hauke@hauke-m.de>, =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>, Linus Walleij <linus.walleij@linaro.org>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Florian Fainelli <florian@openwrt.org>, Manuel Lauss <manuel.lauss@gmail.com>, Joe Perches <joe@perches.com>, Daniel Walter <dwalter@google.com>, Sergey Ryazanov <ryazanov.s.a@gmail.com>, Huacai Chen <chenhc@lemote.com>, James Hartley <james.hartley@imgtec.com>, Andrew Bresticker <abrestic@chromium.org>, Paul Burton <paul.burton@imgtec.com>, Lars-Peter Clausen <lars@metafoo.de>, Brian Norris <computersforpeace@gmail.com>, Varka Bhadram <varkabhadram@gmail.com>, Wolfram Sang <wsa@the-dreams.de>, Randy Dunlap <rdunlap@infradead.org>, Simo
+To: linux-ia64@vger.kernel.org, Tony Luck <tony.luck@intel.com>, Fenghua Yu <fenghua.yu@intel.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com
 
-On Tue, Aug 4, 2015 at 5:50 PM, Alban Bedel <albeu@free.fr> wrote:
-> Currently CONFIG_ARCH_HAVE_CUSTOM_GPIO_H is defined for all MIPS
-> machines, and each machine type provides its own gpio.h. However
-> only a handful really implement the GPIO API, most just forward
-> everythings to gpiolib.
->
-> The Alchemy machine is notable as it provides a system to allow
-> implementing the GPIO API at the board level. But it is not used by
-> any board currently supported, so it can also be removed.
->
-> For most machine types we can just remove the custom gpio.h, as well
-> as the custom wrappers if some exists. Some of the code found in
-> the wrappers must be moved to the respective GPIO driver.
->
-> A few more fixes are need in some drivers as they rely on linux/gpio.h
-> to provides some machine specific definitions, or used asm/gpio.h
-> instead of linux/gpio.h for the gpio API.
->
-> Signed-off-by: Alban Bedel <albeu@free.fr>
-> ---
->
-> This patch is based on my previous serie:
-> "MIPS: ath79: Move the GPIO driver to drivers/gpio".
->
-> It supercede my previous patch named:
-> "MIPS: Remove most of the custom gpio.h"
->
-> Changelog:
-> v3: * Add the missing includes to fix the build on jz4740 machines
-> v2: * Don't remove AR7_GPIO_MAX and TITAN_GPIO_MAX, that's for another
->       patch
-> v1: * Fixed gpio_to_irq on jz4740 and rb532
->     * Cleaned up alchemy as well
->     * Removed asm/gpio.h
->
-> For testing I tried to build all mips defconfig, however my toolchain
-> couldn't handle a few configs: ip28 malta_qemu_32r6 maltasmvp_eva
-> sead3micro. If somebody can test these that would be more than welcome.
->
-> Now a few stats about the state of CONFIG_ARCH_HAVE_CUSTOM_GPIO_H
-> after appling this patch. Of the 31 supportd arch, 15 still have
-> asm/gpio.h, of these 9 are just a "#warning Include linux/gpio.h
-> instead of asm/gpio.h". So we have 6 arch left: arm, avr32, blackfin,
-> m68k, sh and unicore32. But only m68k and unicore32 really provides
-> custom wrappers, all the others only forward to gpiolib.
->
-> On the drivers side we only have 13 occurences of '#include
-> <asm/gpio.h>' left, mostly in drivers used on ARM SoC.
->
-> So the work left to phase out the legacy GPIO is really not that much
-> anymore.
->
-> Alban
-> ---
->  arch/mips/Kconfig                               |   1 -
->  arch/mips/alchemy/Kconfig                       |   7 --
->  arch/mips/alchemy/board-gpr.c                   |   1 +
->  arch/mips/alchemy/board-mtx1.c                  |   1 +
->  arch/mips/alchemy/common/Makefile               |   7 +-
->  arch/mips/alchemy/devboards/db1000.c            |   1 +
->  arch/mips/alchemy/devboards/db1300.c            |   1 +
->  arch/mips/alchemy/devboards/db1550.c            |   1 +
->  arch/mips/alchemy/devboards/pm.c                |   2 +-
->  arch/mips/ar7/gpio.c                            |   5 +-
->  arch/mips/ar7/platform.c                        |   1 -
->  arch/mips/ar7/setup.c                           |   1 -
->  arch/mips/include/asm/gpio.h                    |   6 -
->  arch/mips/include/asm/mach-ar7/ar7.h            |   4 +
->  arch/mips/include/asm/mach-ar7/gpio.h           |  41 -------
->  arch/mips/include/asm/mach-ath25/gpio.h         |  16 ---
->  arch/mips/include/asm/mach-ath79/gpio.h         |  26 -----
->  arch/mips/include/asm/mach-au1x00/gpio-au1000.h | 148 ++----------------------
->  arch/mips/include/asm/mach-au1x00/gpio.h        |  86 --------------
->  arch/mips/include/asm/mach-bcm47xx/gpio.h       |  17 ---
->  arch/mips/include/asm/mach-bcm63xx/gpio.h       |  15 ---
->  arch/mips/include/asm/mach-cavium-octeon/gpio.h |  21 ----
->  arch/mips/include/asm/mach-generic/gpio.h       |  21 ----
->  arch/mips/include/asm/mach-jz4740/gpio.h        |   2 -
->  arch/mips/include/asm/mach-lantiq/gpio.h        |  13 ---
->  arch/mips/include/asm/mach-loongson64/gpio.h    |  36 ------
->  arch/mips/include/asm/mach-pistachio/gpio.h     |  21 ----
->  arch/mips/include/asm/mach-rc32434/gpio.h       |  12 --
->  arch/mips/jz4740/board-qi_lb60.c                |   1 +
->  arch/mips/jz4740/gpio.c                         |  21 ++--
->  arch/mips/pci/pci-lantiq.c                      |   1 -
->  arch/mips/rb532/devices.c                       |   1 +
->  arch/mips/rb532/gpio.c                          |   6 +
->  arch/mips/txx9/generic/setup.c                  |  16 ---
->  drivers/ata/pata_rb532_cf.c                     |   3 +-
->  drivers/gpio/gpio-ath79.c                       |  32 -----
->  drivers/input/misc/rb532_button.c               |   1 +
->  drivers/net/ethernet/ti/cpmac.c                 |   2 +
->  38 files changed, 47 insertions(+), 551 deletions(-)
+IDE subsystem has been deprecated since 2009 and the majority
+(if not all) of Linux distributions have switched to use
+libata for ATA support exclusively.  However there are still
+some users (mostly old or/and embedded non-x86 systems) that
+have not converted from using IDE subsystem to libata PATA
+drivers.  This doesn't seem to be good thing in the long-term
+for Linux as while there is less and less PATA systems left
+in use:
 
-Acked-by: Alexandre Courbot <acourbot@nvidia.com>
+* testing efforts are divided between two subsystems
 
-Great cleanup job!
+* having duplicate drivers for same hardware confuses users
+
+This patch converts bigsur_defconfig to use libata PATA
+drivers.
+
+Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+---
+Build tested only.
+If you have affected hardware please test.  Thank you.
+
+ arch/ia64/configs/bigsur_defconfig | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/arch/ia64/configs/bigsur_defconfig b/arch/ia64/configs/bigsur_defconfig
+index b6bda18..5aba1aa 100644
+--- a/arch/ia64/configs/bigsur_defconfig
++++ b/arch/ia64/configs/bigsur_defconfig
+@@ -28,16 +28,17 @@ CONFIG_BLK_DEV_LOOP=m
+ CONFIG_BLK_DEV_CRYPTOLOOP=m
+ CONFIG_BLK_DEV_NBD=m
+ CONFIG_BLK_DEV_RAM=m
+-CONFIG_IDE=m
+-CONFIG_BLK_DEV_IDECD=m
+-CONFIG_BLK_DEV_GENERIC=m
+-CONFIG_BLK_DEV_PIIX=m
+ CONFIG_SCSI=y
+ CONFIG_BLK_DEV_SD=y
++CONFIG_BLK_DEV_SR=m
+ CONFIG_SCSI_CONSTANTS=y
+ CONFIG_SCSI_LOGGING=y
+ CONFIG_SCSI_SPI_ATTRS=m
+ CONFIG_SCSI_QLOGIC_1280=y
++CONFIG_ATA=m
++CONFIG_ATA_PIIX=m
++CONFIG_PATA_MPIIX=m
++CONFIG_ATA_GENERIC=m
+ CONFIG_MD=y
+ CONFIG_BLK_DEV_MD=m
+ CONFIG_MD_LINEAR=m
+-- 
+1.9.1
+
