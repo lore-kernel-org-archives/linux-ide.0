@@ -1,80 +1,115 @@
-From: Tony Lindgren <tony@atomide.com>
-Subject: Re: [RFT PATCH] arm: omap1_defconfig: convert to use libata PATA
- drivers
-Date: Sun, 16 Aug 2015 23:34:55 -0700
-Message-ID: <20150817063454.GF4215@atomide.com>
-References: <1439571876-13758-1-git-send-email-b.zolnierkie@samsung.com>
- <1439571876-13758-16-git-send-email-b.zolnierkie@samsung.com>
+From: Alexandre Courbot <gnurou@gmail.com>
+Subject: Re: [PATCH v3] MIPS: Remove all the uses of custom gpio.h
+Date: Mon, 17 Aug 2015 16:41:37 +0900
+Message-ID: <CAAVeFuK00Gp5mbXAMYp0dM0AmHjeY76jS9CYNJqRS720F1zbDA@mail.gmail.com>
+References: <1438678305-25524-1-git-send-email-albeu@free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:44817 "EHLO muru.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750754AbbHQGfB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 17 Aug 2015 02:35:01 -0400
-Content-Disposition: inline
-In-Reply-To: <1439571876-13758-16-git-send-email-b.zolnierkie@samsung.com>
+Received: from mail-ob0-f179.google.com ([209.85.214.179]:36712 "EHLO
+	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750775AbbHQHl6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Aug 2015 03:41:58 -0400
+In-Reply-To: <1438678305-25524-1-git-send-email-albeu@free.fr>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>, Russell King <linux@arm.linux.org.uk>, linux-omap@vger.kernel.org
+To: Alban Bedel <albeu@free.fr>
+Cc: linux-mips <linux-mips@linux-mips.org>, Ralf Baechle <ralf@linux-mips.org>, Hauke Mehrtens <hauke@hauke-m.de>, =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>, Linus Walleij <linus.walleij@linaro.org>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Florian Fainelli <florian@openwrt.org>, Manuel Lauss <manuel.lauss@gmail.com>, Joe Perches <joe@perches.com>, Daniel Walter <dwalter@google.com>, Sergey Ryazanov <ryazanov.s.a@gmail.com>, Huacai Chen <chenhc@lemote.com>, James Hartley <james.hartley@imgtec.com>, Andrew Bresticker <abrestic@chromium.org>, Paul Burton <paul.burton@imgtec.com>, Lars-Peter Clausen <lars@metafoo.de>, Brian Norris <computersforpeace@gmail.com>, Varka Bhadram <varkabhadram@gmail.com>, Wolfram Sang <wsa@the-dreams.de>, Randy Dunlap <rdunlap@infradead.org>, Simo
 
-* Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com> [150814 10:10]:
-> IDE subsystem has been deprecated since 2009 and the majority
-> (if not all) of Linux distributions have switched to use
-> libata for ATA support exclusively.  However there are still
-> some users (mostly old or/and embedded non-x86 systems) that
-> have not converted from using IDE subsystem to libata PATA
-> drivers.  This doesn't seem to be good thing in the long-term
-> for Linux as while there is less and less PATA systems left
-> in use:
-> 
-> * testing efforts are divided between two subsystems
-> 
-> * having duplicate drivers for same hardware confuses users
-> 
-> This patch converts omap1_defconfig to use libata PATA
-> drivers.
-> 
-> Cc: Tony Lindgren <tony@atomide.com>
-> Cc: linux-omap@vger.kernel.org
-> Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+On Tue, Aug 4, 2015 at 5:50 PM, Alban Bedel <albeu@free.fr> wrote:
+> Currently CONFIG_ARCH_HAVE_CUSTOM_GPIO_H is defined for all MIPS
+> machines, and each machine type provides its own gpio.h. However
+> only a handful really implement the GPIO API, most just forward
+> everythings to gpiolib.
+>
+> The Alchemy machine is notable as it provides a system to allow
+> implementing the GPIO API at the board level. But it is not used by
+> any board currently supported, so it can also be removed.
+>
+> For most machine types we can just remove the custom gpio.h, as well
+> as the custom wrappers if some exists. Some of the code found in
+> the wrappers must be moved to the respective GPIO driver.
+>
+> A few more fixes are need in some drivers as they rely on linux/gpio.h
+> to provides some machine specific definitions, or used asm/gpio.h
+> instead of linux/gpio.h for the gpio API.
+>
+> Signed-off-by: Alban Bedel <albeu@free.fr>
 > ---
-> Build tested only.
-> If you have affected hardware please test.  Thank you.
+>
+> This patch is based on my previous serie:
+> "MIPS: ath79: Move the GPIO driver to drivers/gpio".
+>
+> It supercede my previous patch named:
+> "MIPS: Remove most of the custom gpio.h"
+>
+> Changelog:
+> v3: * Add the missing includes to fix the build on jz4740 machines
+> v2: * Don't remove AR7_GPIO_MAX and TITAN_GPIO_MAX, that's for another
+>       patch
+> v1: * Fixed gpio_to_irq on jz4740 and rb532
+>     * Cleaned up alchemy as well
+>     * Removed asm/gpio.h
+>
+> For testing I tried to build all mips defconfig, however my toolchain
+> couldn't handle a few configs: ip28 malta_qemu_32r6 maltasmvp_eva
+> sead3micro. If somebody can test these that would be more than welcome.
+>
+> Now a few stats about the state of CONFIG_ARCH_HAVE_CUSTOM_GPIO_H
+> after appling this patch. Of the 31 supportd arch, 15 still have
+> asm/gpio.h, of these 9 are just a "#warning Include linux/gpio.h
+> instead of asm/gpio.h". So we have 6 arch left: arm, avr32, blackfin,
+> m68k, sh and unicore32. But only m68k and unicore32 really provides
+> custom wrappers, all the others only forward to gpiolib.
+>
+> On the drivers side we only have 13 occurences of '#include
+> <asm/gpio.h>' left, mostly in drivers used on ARM SoC.
+>
+> So the work left to phase out the legacy GPIO is really not that much
+> anymore.
+>
+> Alban
+> ---
+>  arch/mips/Kconfig                               |   1 -
+>  arch/mips/alchemy/Kconfig                       |   7 --
+>  arch/mips/alchemy/board-gpr.c                   |   1 +
+>  arch/mips/alchemy/board-mtx1.c                  |   1 +
+>  arch/mips/alchemy/common/Makefile               |   7 +-
+>  arch/mips/alchemy/devboards/db1000.c            |   1 +
+>  arch/mips/alchemy/devboards/db1300.c            |   1 +
+>  arch/mips/alchemy/devboards/db1550.c            |   1 +
+>  arch/mips/alchemy/devboards/pm.c                |   2 +-
+>  arch/mips/ar7/gpio.c                            |   5 +-
+>  arch/mips/ar7/platform.c                        |   1 -
+>  arch/mips/ar7/setup.c                           |   1 -
+>  arch/mips/include/asm/gpio.h                    |   6 -
+>  arch/mips/include/asm/mach-ar7/ar7.h            |   4 +
+>  arch/mips/include/asm/mach-ar7/gpio.h           |  41 -------
+>  arch/mips/include/asm/mach-ath25/gpio.h         |  16 ---
+>  arch/mips/include/asm/mach-ath79/gpio.h         |  26 -----
+>  arch/mips/include/asm/mach-au1x00/gpio-au1000.h | 148 ++----------------------
+>  arch/mips/include/asm/mach-au1x00/gpio.h        |  86 --------------
+>  arch/mips/include/asm/mach-bcm47xx/gpio.h       |  17 ---
+>  arch/mips/include/asm/mach-bcm63xx/gpio.h       |  15 ---
+>  arch/mips/include/asm/mach-cavium-octeon/gpio.h |  21 ----
+>  arch/mips/include/asm/mach-generic/gpio.h       |  21 ----
+>  arch/mips/include/asm/mach-jz4740/gpio.h        |   2 -
+>  arch/mips/include/asm/mach-lantiq/gpio.h        |  13 ---
+>  arch/mips/include/asm/mach-loongson64/gpio.h    |  36 ------
+>  arch/mips/include/asm/mach-pistachio/gpio.h     |  21 ----
+>  arch/mips/include/asm/mach-rc32434/gpio.h       |  12 --
+>  arch/mips/jz4740/board-qi_lb60.c                |   1 +
+>  arch/mips/jz4740/gpio.c                         |  21 ++--
+>  arch/mips/pci/pci-lantiq.c                      |   1 -
+>  arch/mips/rb532/devices.c                       |   1 +
+>  arch/mips/rb532/gpio.c                          |   6 +
+>  arch/mips/txx9/generic/setup.c                  |  16 ---
+>  drivers/ata/pata_rb532_cf.c                     |   3 +-
+>  drivers/gpio/gpio-ath79.c                       |  32 -----
+>  drivers/input/misc/rb532_button.c               |   1 +
+>  drivers/net/ethernet/ti/cpmac.c                 |   2 +
+>  38 files changed, 47 insertions(+), 551 deletions(-)
 
-All my omap1 devices are in a rack using NFSroot or MMC so
-I can't test this. Seems like a good idea to me thoug, and does
-not cause merge conflicts. So if you want to queue this via
-along with other PATA related patches, please feel free to
-add:
+Acked-by: Alexandre Courbot <acourbot@nvidia.com>
 
-Acked-by: Tony Lindgren <tony@atomide.com>
- 
->  arch/arm/configs/omap1_defconfig | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/arch/arm/configs/omap1_defconfig b/arch/arm/configs/omap1_defconfig
-> index 0c8a787..6ffc984 100644
-> --- a/arch/arm/configs/omap1_defconfig
-> +++ b/arch/arm/configs/omap1_defconfig
-> @@ -96,14 +96,14 @@ CONFIG_BLK_DEV_LOOP=y
->  CONFIG_BLK_DEV_RAM=y
->  CONFIG_BLK_DEV_RAM_COUNT=2
->  CONFIG_BLK_DEV_RAM_SIZE=8192
-> -CONFIG_IDE=m
-> -CONFIG_BLK_DEV_IDECS=m
->  CONFIG_SCSI=y
->  # CONFIG_SCSI_PROC_FS is not set
->  CONFIG_BLK_DEV_SD=y
->  CONFIG_CHR_DEV_ST=y
->  CONFIG_BLK_DEV_SR=y
->  CONFIG_CHR_DEV_SG=y
-> +CONFIG_ATA=m
-> +CONFIG_PATA_PCMCIA=m
->  CONFIG_NETDEVICES=y
->  CONFIG_TUN=y
->  CONFIG_PHYLIB=y
-> -- 
-> 1.9.1
-> 
+Great cleanup job!
