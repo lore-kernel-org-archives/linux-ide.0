@@ -1,63 +1,32 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] libata fixes for v4.2-rc7
-Date: Mon, 17 Aug 2015 15:47:48 -0400
-Message-ID: <20150817194748.GB21075@mtj.duckdns.org>
+From: "Luck, Tony" <tony.luck@intel.com>
+Subject: RE: [RFT PATCH] ia64: zx1_defconfig: convert to use libata PATA
+ drivers
+Date: Mon, 17 Aug 2015 20:41:16 +0000
+Message-ID: <3908561D78D1C84285E8C5FCA982C28F32ADECD4@ORSMSX114.amr.corp.intel.com>
+References: <1439826388-31456-1-git-send-email-b.zolnierkie@samsung.com>
+	<1439826388-31456-5-git-send-email-b.zolnierkie@samsung.com>
+ <CAA9xbM52onBKCw9i=_ar0W67651JpJnRTj6AeVsmJ4UAtzubew@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-io0-f172.google.com ([209.85.223.172]:33633 "EHLO
-	mail-io0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751025AbbHQTry (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 17 Aug 2015 15:47:54 -0400
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAA9xbM52onBKCw9i=_ar0W67651JpJnRTj6AeVsmJ4UAtzubew@mail.gmail.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: =?utf-8?B?w4ltZXJpYyBNQVNDSElOTw==?= <emeric.maschino@gmail.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: "linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>, "Yu, Fenghua" <fenghua.yu@intel.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
-Hello, Linus.
-
-Three minor device-specific fixes and revert of NCQ autosense added
-during this -rc1.  It turned out that NCQ autosense as currently
-implemented interferes with the usual error handling behavior.  It
-will be revisited in the near future.
-
-Thanks.
-
-The following changes since commit 9051bd393cf25e76dfb45409792719a854661500:
-
-  libata: Do not blacklist M510DC (2015-07-16 12:15:45 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-4.2-fixes
-
-for you to fetch changes up to f9114d357858c1429dcde022706db7443918f49f:
-
-  ata: ahci_brcmstb: Fix misuse of IS_ENABLED (2015-08-06 14:30:07 -0400)
-
-----------------------------------------------------------------
-Axel Lin (1):
-      ata: ahci_brcmstb: Fix misuse of IS_ENABLED
-
-Florian Fainelli (1):
-      ata: ahci_brcmstb: Fix warnings with CONFIG_PM_SLEEP=n
-
-Tejun Heo (3):
-      Revert "libata-eh: Set 'information' field for autosense"
-      Revert "libata: Implement support for sense data reporting"
-      Revert "libata: Implement NCQ autosense"
-
-Tomer Barletz (1):
-      sata_sx4: Check return code from pdc20621_i2c_read()
-
- drivers/ata/ahci_brcmstb.c |   6 ++-
- drivers/ata/libata-core.c  |  24 ++---------
- drivers/ata/libata-eh.c    | 105 +--------------------------------------------
- drivers/ata/libata-scsi.c  |  21 +--------
- drivers/ata/libata.h       |   6 +--
- drivers/ata/sata_sx4.c     |  16 +++++--
- drivers/scsi/scsi_error.c  |  31 -------------
- include/linux/ata.h        |  18 --------
- include/scsi/scsi_eh.h     |   1 -
- 9 files changed, 24 insertions(+), 204 deletions(-)
+PiBJJ20gcnVubmluZyBrZXJuZWxzIGNvbmZpZ3VyZWQgdGhhdCB3YXkgKGkuZS4gdXNpbmcgbGli
+YXRhIFBBVEENCj4gZHJpdmVycykgZm9yIHllYXJzIG9uIG15IGhwIHdvcmtzdGF0aW9uIHp4NjAw
+MCAoengxIGNoaXBzZXQpIHdpdGhvdXQNCj4gYXBwYXJlbnQgcHJvYmxlbXMuDQoNCkRvIHlvdSBo
+YXZlIFBBVEEgZHJpdmVzPyAgTXkgeng2MDAwIGp1c3QgaGFzIFNDU0k6DQoNCiAgc2NzaSBob3N0
+MDogaW9jMDogTFNJNTNDMTAzMCBDMCwgRndSZXY9MDEwMzIzNDFoLCBQb3J0cz0xLCBNYXhRPTI1
+NSwgSVJRPTU3DQogIHNjc2kgMDowOjA6MDogRGlyZWN0LUFjY2VzcyAgICAgSFAgMzYuNEcgTUFV
+MzAzNk5DICAgICAgICBIUEMyIFBROiAwIEFOU0k6IDMNCiAgc2NzaSB0YXJnZXQwOjA6MDogQmVn
+aW5uaW5nIERvbWFpbiBWYWxpZGF0aW9uDQogIHNjc2kgdGFyZ2V0MDowOjA6IEVuZGluZyBEb21h
+aW4gVmFsaWRhdGlvbg0KICBzY3NpIHRhcmdldDA6MDowOiBGQVNULTE2MCBXSURFIFNDU0kgMzIw
+LjAgTUIvcyBEVCBJVSBRQVMgUlRJIFdSRkxPVyBQQ09NUCAoNi4yNSBucywgb2Zmc2V0IDEyNykN
+Cg0KW1dvdyEgMzYuNEdCIC4uLiBzZWVtZWQgbGlrZSBhbiBPSyBzaXplZCBkcml2ZSBiYWNrIHdo
+ZW4gdGhhdCBtYWNoaW5lIGFycml2ZWQgaW4gbXkgbGFiLiBOb3cNCiBteSBwaG9uZSBoYXMgbW9y
+ZSB0aGFuIHR3aWNlIHRoYXQgYW1vdW50IG9mIHN0b3JhZ2UgOi0pIF0NCg0KLVRvbnkNCg==
