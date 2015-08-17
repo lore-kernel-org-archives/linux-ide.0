@@ -1,7 +1,7 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RFT PATCH] ia64: tiger_defconfig: convert to use libata PATA drivers
-Date: Mon, 17 Aug 2015 17:46:27 +0200
-Message-ID: <1439826388-31456-4-git-send-email-b.zolnierkie@samsung.com>
+Subject: [RFT PATCH] ia64: generic_defconfig: convert to use libata PATA drivers
+Date: Mon, 17 Aug 2015 17:46:25 +0200
+Message-ID: <1439826388-31456-2-git-send-email-b.zolnierkie@samsung.com>
 References: <1439826388-31456-1-git-send-email-b.zolnierkie@samsung.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-reply-to: <1439826388-31456-1-git-send-email-b.zolnierkie@samsung.com>
@@ -23,31 +23,30 @@ in use:
 
 * having duplicate drivers for same hardware confuses users
 
-This patch converts tiger_defconfig to use libata PATA
-drivers.
+This patch converts generic_defconfig to use libata PATA
+drivers (sgiioc4 IDE host driver has no corresponding libata
+driver yet so it is not converted).
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
 Build tested only.
 If you have affected hardware please test.  Thank you.
 
- arch/ia64/configs/tiger_defconfig | 13 ++++++-------
- 1 file changed, 6 insertions(+), 7 deletions(-)
+ arch/ia64/configs/generic_defconfig | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/arch/ia64/configs/tiger_defconfig b/arch/ia64/configs/tiger_defconfig
-index 192ed15..30a4416 100644
---- a/arch/ia64/configs/tiger_defconfig
-+++ b/arch/ia64/configs/tiger_defconfig
-@@ -42,19 +42,18 @@ CONFIG_BLK_DEV_LOOP=m
- CONFIG_BLK_DEV_CRYPTOLOOP=m
- CONFIG_BLK_DEV_NBD=m
- CONFIG_BLK_DEV_RAM=y
--CONFIG_IDE=y
--CONFIG_BLK_DEV_IDECD=y
+diff --git a/arch/ia64/configs/generic_defconfig b/arch/ia64/configs/generic_defconfig
+index 81f686d..f55be82 100644
+--- a/arch/ia64/configs/generic_defconfig
++++ b/arch/ia64/configs/generic_defconfig
+@@ -48,13 +48,10 @@ CONFIG_SGI_IOC4=y
+ CONFIG_SGI_XP=m
+ CONFIG_IDE=y
+ CONFIG_BLK_DEV_IDECD=y
 -CONFIG_BLK_DEV_GENERIC=y
 -CONFIG_BLK_DEV_CMD64X=y
 -CONFIG_BLK_DEV_PIIX=y
--CONFIG_SCSI=y
+ CONFIG_BLK_DEV_SGIIOC4=y
  CONFIG_BLK_DEV_SD=y
  CONFIG_CHR_DEV_ST=m
 -CONFIG_BLK_DEV_SR=m
@@ -55,9 +54,10 @@ index 192ed15..30a4416 100644
  CONFIG_CHR_DEV_SG=m
  CONFIG_SCSI_FC_ATTRS=y
  CONFIG_SCSI_SYM53C8XX_2=y
- CONFIG_SCSI_QLOGIC_1280=y
-+CONFIG_ATA=y
-+CONFIG_ATA_PIIX=y
+@@ -62,6 +59,9 @@ CONFIG_SCSI_QLOGIC_1280=y
+ CONFIG_ATA=y
+ CONFIG_ATA_PIIX=y
+ CONFIG_SATA_VITESSE=y
 +CONFIG_PATA_CMD64X=y
 +CONFIG_PATA_MPIIX=y
 +CONFIG_ATA_GENERIC=y
