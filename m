@@ -1,8 +1,8 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RFT PATCH v2] ia64: gensparse_defconfig: convert to use libata PATA
+Subject: [RFT PATCH v2] ia64: tiger_defconfig: convert to use libata PATA
  drivers
-Date: Mon, 17 Aug 2015 19:13:27 +0200
-Message-ID: <1439831608-8362-3-git-send-email-b.zolnierkie@samsung.com>
+Date: Mon, 17 Aug 2015 19:13:28 +0200
+Message-ID: <1439831608-8362-4-git-send-email-b.zolnierkie@samsung.com>
 References: <1439831608-8362-1-git-send-email-b.zolnierkie@samsung.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-reply-to: <1439831608-8362-1-git-send-email-b.zolnierkie@samsung.com>
@@ -24,9 +24,8 @@ in use:
 
 * having duplicate drivers for same hardware confuses users
 
-This patch converts gensparse_defconfig to use libata PATA
-drivers (sgiioc4 IDE host driver has no corresponding libata
-driver yet so it is not converted).
+This patch converts tiger_defconfig to use libata PATA
+drivers.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
@@ -36,22 +35,22 @@ v2:
 Build tested only.
 If you have affected hardware please test.  Thank you.
 
- arch/ia64/configs/gensparse_defconfig | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+ arch/ia64/configs/tiger_defconfig | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/arch/ia64/configs/gensparse_defconfig b/arch/ia64/configs/gensparse_defconfig
-index 5b4fcdd..7320f0e 100644
---- a/arch/ia64/configs/gensparse_defconfig
-+++ b/arch/ia64/configs/gensparse_defconfig
-@@ -40,19 +40,21 @@ CONFIG_BLK_DEV_RAM=y
- CONFIG_SGI_IOC4=y
- CONFIG_IDE=y
- CONFIG_BLK_DEV_IDECD=y
--CONFIG_IDE_GENERIC=y
+diff --git a/arch/ia64/configs/tiger_defconfig b/arch/ia64/configs/tiger_defconfig
+index 192ed15..ed795c9 100644
+--- a/arch/ia64/configs/tiger_defconfig
++++ b/arch/ia64/configs/tiger_defconfig
+@@ -42,19 +42,19 @@ CONFIG_BLK_DEV_LOOP=m
+ CONFIG_BLK_DEV_CRYPTOLOOP=m
+ CONFIG_BLK_DEV_NBD=m
+ CONFIG_BLK_DEV_RAM=y
+-CONFIG_IDE=y
+-CONFIG_BLK_DEV_IDECD=y
 -CONFIG_BLK_DEV_GENERIC=y
 -CONFIG_BLK_DEV_CMD64X=y
 -CONFIG_BLK_DEV_PIIX=y
- CONFIG_BLK_DEV_SGIIOC4=y
 -CONFIG_SCSI=y
  CONFIG_BLK_DEV_SD=y
  CONFIG_CHR_DEV_ST=m
@@ -67,7 +66,6 @@ index 5b4fcdd..7320f0e 100644
 +CONFIG_PATA_OLDPIIX=y
 +CONFIG_PATA_MPIIX=y
 +CONFIG_ATA_GENERIC=y
-+CONFIG_PATA_LEGACY=y
  CONFIG_MD=y
  CONFIG_BLK_DEV_MD=m
  CONFIG_MD_LINEAR=m
