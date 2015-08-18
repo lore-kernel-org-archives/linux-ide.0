@@ -1,32 +1,37 @@
-From: "Luck, Tony" <tony.luck@intel.com>
-Subject: RE: [RFT PATCH] ia64: zx1_defconfig: convert to use libata PATA
- drivers
-Date: Mon, 17 Aug 2015 20:41:16 +0000
-Message-ID: <3908561D78D1C84285E8C5FCA982C28F32ADECD4@ORSMSX114.amr.corp.intel.com>
+From: =?UTF-8?Q?=C3=89meric_MASCHINO?= <emeric.maschino@gmail.com>
+Subject: Re: [RFT PATCH] ia64: zx1_defconfig: convert to use libata PATA drivers
+Date: Wed, 19 Aug 2015 00:45:33 +0200
+Message-ID: <CAA9xbM7r-HfvuUg00D94rgokWhP_Qes71UAbN_24dmFpSiNtAg@mail.gmail.com>
 References: <1439826388-31456-1-git-send-email-b.zolnierkie@samsung.com>
 	<1439826388-31456-5-git-send-email-b.zolnierkie@samsung.com>
- <CAA9xbM52onBKCw9i=_ar0W67651JpJnRTj6AeVsmJ4UAtzubew@mail.gmail.com>
+	<CAA9xbM52onBKCw9i=_ar0W67651JpJnRTj6AeVsmJ4UAtzubew@mail.gmail.com>
+	<3908561D78D1C84285E8C5FCA982C28F32ADECD4@ORSMSX114.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAA9xbM52onBKCw9i=_ar0W67651JpJnRTj6AeVsmJ4UAtzubew@mail.gmail.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: =?utf-8?B?w4ltZXJpYyBNQVNDSElOTw==?= <emeric.maschino@gmail.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: "linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>, "Yu, Fenghua" <fenghua.yu@intel.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ia64-owner@vger.kernel.org>
+In-Reply-To: <3908561D78D1C84285E8C5FCA982C28F32ADECD4@ORSMSX114.amr.corp.intel.com>
+Sender: linux-ia64-owner@vger.kernel.org
+To: "Luck, Tony" <tony.luck@intel.com>
+Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, "linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>, "Yu, Fenghua" <fenghua.yu@intel.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-PiBJJ20gcnVubmluZyBrZXJuZWxzIGNvbmZpZ3VyZWQgdGhhdCB3YXkgKGkuZS4gdXNpbmcgbGli
-YXRhIFBBVEENCj4gZHJpdmVycykgZm9yIHllYXJzIG9uIG15IGhwIHdvcmtzdGF0aW9uIHp4NjAw
-MCAoengxIGNoaXBzZXQpIHdpdGhvdXQNCj4gYXBwYXJlbnQgcHJvYmxlbXMuDQoNCkRvIHlvdSBo
-YXZlIFBBVEEgZHJpdmVzPyAgTXkgeng2MDAwIGp1c3QgaGFzIFNDU0k6DQoNCiAgc2NzaSBob3N0
-MDogaW9jMDogTFNJNTNDMTAzMCBDMCwgRndSZXY9MDEwMzIzNDFoLCBQb3J0cz0xLCBNYXhRPTI1
-NSwgSVJRPTU3DQogIHNjc2kgMDowOjA6MDogRGlyZWN0LUFjY2VzcyAgICAgSFAgMzYuNEcgTUFV
-MzAzNk5DICAgICAgICBIUEMyIFBROiAwIEFOU0k6IDMNCiAgc2NzaSB0YXJnZXQwOjA6MDogQmVn
-aW5uaW5nIERvbWFpbiBWYWxpZGF0aW9uDQogIHNjc2kgdGFyZ2V0MDowOjA6IEVuZGluZyBEb21h
-aW4gVmFsaWRhdGlvbg0KICBzY3NpIHRhcmdldDA6MDowOiBGQVNULTE2MCBXSURFIFNDU0kgMzIw
-LjAgTUIvcyBEVCBJVSBRQVMgUlRJIFdSRkxPVyBQQ09NUCAoNi4yNSBucywgb2Zmc2V0IDEyNykN
-Cg0KW1dvdyEgMzYuNEdCIC4uLiBzZWVtZWQgbGlrZSBhbiBPSyBzaXplZCBkcml2ZSBiYWNrIHdo
-ZW4gdGhhdCBtYWNoaW5lIGFycml2ZWQgaW4gbXkgbGFiLiBOb3cNCiBteSBwaG9uZSBoYXMgbW9y
-ZSB0aGFuIHR3aWNlIHRoYXQgYW1vdW50IG9mIHN0b3JhZ2UgOi0pIF0NCg0KLVRvbnkNCg==
+2015-08-17 22:41 GMT+02:00 Luck, Tony <tony.luck@intel.com>:
+>
+> Do you have PATA drives?  My zx6000 just has SCSI:
+
+Yes Sir, the internal DVD drive (TEAC DV-28E-B [1]):
+
+emeric@longspeak ~ $ dmesg | grep ATA
+[    0.947229] ata1: PATA max UDMA/100 cmd 0xd58 ctl 0xd64 bmdma 0xd40 =
+irq 54
+[    1.103782] ata1.00: ATAPI: DV-28E-B, 2.2B, max UDMA/33
+
+     =C3=89meric
+
+[1] http://www.teac.co.jp/dspd/product/optical/dv-28eb.html
+--
+To unsubscribe from this list: send the line "unsubscribe linux-ia64" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
