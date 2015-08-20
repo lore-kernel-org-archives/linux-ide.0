@@ -1,26 +1,36 @@
-From: "Robert Grondahl" <christain147@gmail.com>
-Subject: Bless You
-Date: Wed, 19 Aug 2015 05:47:50 -0600
-Message-ID: <20150819113458.28F475A387A__49530.3797223189$1440006859$gmane$org@mail.holatours.com>
-Reply-To: <fiveyrsjh@ukr.net>
+From: Mark Singer <MSinger@napavalley.edu>
+Subject: (unknown)
+Date: Thu, 20 Aug 2015 00:12:49 -0700
+Message-ID: <66EA9C2C53B30B46B1D28150E6EB8FB5015BB1A6902C__33184.4531734989$1440055150$gmane$org@mail.napavalley.edu>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="Windows-1251"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.holatours.com ([190.167.194.126]:58538 "EHLO
-	mail.holatours.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752271AbbHSRxp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 19 Aug 2015 13:53:45 -0400
+Received: from mail.napavalley.edu ([209.129.252.13]:17286 "EHLO
+	mail.napavalley.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751161AbbHTHSU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 20 Aug 2015 03:18:20 -0400
+Subject: 
+Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Good day,hoping you read this email and respond to me in good time.I do not intend to solicit for funds but  your time and energy in using my own resources to assist the less privileged.I am medically confined at the moment hence I request your indulgence.
-I will give you a comprehensive brief once I hear from you.
 
-Please forward your response to my private email address:
-gudworks104@yahoo.com
 
-Thanks and reply.
 
-Robert Grondahl
+Do you need an investor?
+Our investors fund project and business. We also give out loan/credit t=
+o any individual and company at 3% interest rate yearly. For more infor=
+mation, Contact us via Email: devonfps@gmail.com=20
+
+If you need an investor or quick funding, forward your response ONLY to=
+ this E-mail: devonfps@gmail.com=20
+=2E...
+Haben Sie einen Investor brauchen?
+Unsere Investoren Fonds Projekt- und Gesch=E4fts. Wir geben auch Darleh=
+en / Kredite an jeden einzelnen und Unternehmen bei 3% Zinsen j=E4hrlic=
+h. F=FCr weitere Informationen, kontaktieren Sie uns per E-Mail: devonf=
+ps@gmail.com=20
+
+Wenn Sie ein Investor oder schnelle Finanzierung ben=F6tigen, senden Si=
+e Ihre Antwort nur auf diese E-mail: devonfps@gmail.com 
