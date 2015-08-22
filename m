@@ -1,54 +1,78 @@
-From: Hassan Ali <zoenhs@gmail.com>
-Subject: Dear Friend.
-Date: Fri, 21 Aug 2015 04:46:05 -0700
-Message-ID: <CAJOHGR05SUJ4A564ikdAcFar2bDHkzfuHHg3AhMYT=kQeDpoBw@mail.gmail.com>
-Reply-To: hassan_alwanali01@yahoo.com
+From: Vaishali Thakkar <vthakkar1994@gmail.com>
+Subject: [PATCH] ata: pata_arasam_cf: Use devm_clk_get
+Date: Sat, 22 Aug 2015 09:04:50 +0530
+Message-ID: <20150822033450.GA11692@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-la0-f67.google.com ([209.85.215.67]:32779 "EHLO
-	mail-la0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752671AbbHULqG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 21 Aug 2015 07:46:06 -0400
-Received: by labqg3 with SMTP id qg3so3352935lab.0
-        for <linux-ide@vger.kernel.org>; Fri, 21 Aug 2015 04:46:05 -0700 (PDT)
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Viresh Kumar <vireshk@kernel.org>
+Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Dear Friend,
+This patch introduces the use of managed resource function
+devm_clk_get instead of clk_get and removes corresponding call
+to clk_put in the remove function.
 
-I know that this mail will come to you as a surprise since we have not
-known or met before now, but please, I would like you to treat it like
-blood brother affair and with the urgency and secrecy it requires. I
-am Mr. Hassan Alwan Ali, an Audit staff of (C.B.N) Central Bank of
-Nigeria.
+To be compatible with the change various gotos are replaced with
+direct returns, and unneeded label is dropped.
 
+Signed-off-by: Vaishali Thakkar <vthakkar1994@gmail.com>
+---
+ drivers/ata/pata_arasan_cf.c | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
 
-An investor (name with-held) died without naming any next of kin to
-his fund he deposited in my bank. The amount is $10.5M (Ten Million
-Five hundred Thousand Dollars) and banking regulation/legislation in
-Nigeria demands that I should notify the fiscal authorities after
-three years.
-
-The above set of facts underscores my reason to seek your permission
-to have you stand in as the next of kin to the deceased.
-
-This fund will be approved and released in your favour as the next of
-kin if only you will adhere to my instruction and cooperate with me in
-one accord.
-
-I have all the legal and banking details of the deceased client that
-will facilitate our putting you forward as the claimant/beneficiary of
-the funds and ultimately transfer of the $10.5M plus interest to any
-bank account nominated by you.
-
-I am prepared to compensate you with a 35% share of the total funds
-for your efforts. The final details will be given upon receipt an
-affirmation of your desire to participate.
-
-Please contact me immediately on (hassan_alwanali01@yahoo.com) if you
-are interest in my proposal to enable me not to start scouting for
-another foreign partner.
-
-Thanks,
-Mr. Hassan Alwan Ali.
+diff --git a/drivers/ata/pata_arasan_cf.c b/drivers/ata/pata_arasan_cf.c
+index 5d9ee99..80fe0f6 100644
+--- a/drivers/ata/pata_arasan_cf.c
++++ b/drivers/ata/pata_arasan_cf.c
+@@ -834,7 +834,7 @@ static int arasan_cf_probe(struct platform_device *pdev)
+ 		return -ENOMEM;
+ 	}
+ 
+-	acdev->clk = clk_get(&pdev->dev, NULL);
++	acdev->clk = devm_clk_get(&pdev->dev, NULL);
+ 	if (IS_ERR(acdev->clk)) {
+ 		dev_warn(&pdev->dev, "Clock not found\n");
+ 		return PTR_ERR(acdev->clk);
+@@ -843,9 +843,8 @@ static int arasan_cf_probe(struct platform_device *pdev)
+ 	/* allocate host */
+ 	host = ata_host_alloc(&pdev->dev, 1);
+ 	if (!host) {
+-		ret = -ENOMEM;
+ 		dev_warn(&pdev->dev, "alloc host fail\n");
+-		goto free_clk;
++		return -ENOMEM;
+ 	}
+ 
+ 	ap = host->ports[0];
+@@ -894,7 +893,7 @@ static int arasan_cf_probe(struct platform_device *pdev)
+ 
+ 	ret = cf_init(acdev);
+ 	if (ret)
+-		goto free_clk;
++		return ret;
+ 
+ 	cf_card_detect(acdev, 0);
+ 
+@@ -904,8 +903,7 @@ static int arasan_cf_probe(struct platform_device *pdev)
+ 		return 0;
+ 
+ 	cf_exit(acdev);
+-free_clk:
+-	clk_put(acdev->clk);
++
+ 	return ret;
+ }
+ 
+@@ -916,7 +914,6 @@ static int arasan_cf_remove(struct platform_device *pdev)
+ 
+ 	ata_host_detach(host);
+ 	cf_exit(acdev);
+-	clk_put(acdev->clk);
+ 
+ 	return 0;
+ }
+-- 
+1.9.1
