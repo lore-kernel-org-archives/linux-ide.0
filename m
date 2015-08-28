@@ -1,41 +1,58 @@
-From: Guillermo Amaral <g@maral.me>
-Subject: Re: [PATCH] Add factory recertified Crucial M500s to blacklist
-Date: Wed, 26 Aug 2015 10:40:25 -0700
-Message-ID: <CAPeEpDprdG0P6qwMY1CeyN6BWLmxK5+oQ5qpKqOb7XSSaWDyTA@mail.gmail.com>
-References: <1440570553-1600-1-git-send-email-g@maral.me>
-	<1440570553-1600-2-git-send-email-g@maral.me>
-	<yq1si762hu8.fsf@sermon.lab.mkp.net>
+From: Tejun Heo <tj@kernel.org>
+Subject: [GIT PULL] libata fixes for v4.2-rc8
+Date: Fri, 28 Aug 2015 10:13:44 -0400
+Message-ID: <20150828141344.GK26785@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f51.google.com ([209.85.192.51]:36369 "EHLO
-	mail-qg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756448AbbHZRk0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 26 Aug 2015 13:40:26 -0400
-Received: by qgeb6 with SMTP id b6so130829500qge.3
-        for <linux-ide@vger.kernel.org>; Wed, 26 Aug 2015 10:40:26 -0700 (PDT)
-In-Reply-To: <yq1si762hu8.fsf@sermon.lab.mkp.net>
+Received: from mail-yk0-f174.google.com ([209.85.160.174]:33154 "EHLO
+	mail-yk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752369AbbH1ONq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 28 Aug 2015 10:13:46 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Wed, Aug 26, 2015 at 8:24 AM, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->>>>>> "Guillermo" == Guillermo A Amaral <g@maral.me> writes:
->
-> Guillermo> The Crucial M500 is known to have issues with queued TRIM
-> Guillermo> commands, the factory recertified SSDs use a different model
-> Guillermo> number naming convention which causes them to get ignored by
-> Guillermo> the blacklist.
->
-> No particular objection to the patch. But I have asked Micron for
-> details since this may affect more of the blacklist entries.
+Hello, Linus.
 
-Good idea. I was waiting for a referb M550 that's in the mail to
-confirm if it also has a similar naming convention, but your approach
-seems much more direct. :)
+Simple blacklist entry addition.
+
+Thanks.
+
+The following changes since commit f9114d357858c1429dcde022706db7443918f49f:
+
+  ata: ahci_brcmstb: Fix misuse of IS_ENABLED (2015-08-06 14:30:07 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-4.2-fixes
+
+for you to fetch changes up to 7a7184b01aa9deb86df661c6f7cbcf69a95b728c:
+
+  Add factory recertified Crucial M500s to blacklist (2015-08-26 11:30:47 -0400)
+
+----------------------------------------------------------------
+Guillermo A. Amaral (1):
+      Add factory recertified Crucial M500s to blacklist
+
+ drivers/ata/libata-core.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 19bcb80..790e0de 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4230,6 +4230,8 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
+ 	{ "Samsung SSD 8*",		NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
+ 						ATA_HORKAGE_ZERO_AFTER_TRIM, },
++	{ "FCCT*M500*",			NULL,	ATA_HORKAGE_NO_NCQ_TRIM |
++						ATA_HORKAGE_ZERO_AFTER_TRIM, },
+ 
+ 	/* devices that don't properly handle TRIM commands */
+ 	{ "SuperSSpeed S238*",		NULL,	ATA_HORKAGE_NOTRIM, },
 
 -- 
-gamaral
-http://about.me/gamaral
+tejun
