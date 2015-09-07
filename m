@@ -1,15 +1,17 @@
 From: <Yuantian.Tang@freescale.com>
-Subject: [PATCH 1/3] Revert "ahci: added support for Freescale AHCI sata"
-Date: Mon, 7 Sep 2015 16:23:14 +0800
-Message-ID: <1441614196-4284-1-git-send-email-Yuantian.Tang@freescale.com>
+Subject: [PATCH 2/3] devicetree:bindings: add devicetree bindings for Freescale AHCI
+Date: Mon, 7 Sep 2015 16:23:15 +0800
+Message-ID: <1441614196-4284-2-git-send-email-Yuantian.Tang@freescale.com>
+References: <1441614196-4284-1-git-send-email-Yuantian.Tang@freescale.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bn1on0134.outbound.protection.outlook.com ([157.56.110.134]:17248
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+Received: from mail-by2on0133.outbound.protection.outlook.com ([207.46.100.133]:42432
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753327AbbIGI3G (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 7 Sep 2015 04:29:06 -0400
+	id S1754066AbbIGI3J (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 7 Sep 2015 04:29:09 -0400
+In-Reply-To: <1441614196-4284-1-git-send-email-Yuantian.Tang@freescale.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: hdegoede@redhat.com
@@ -17,48 +19,41 @@ Cc: tj@kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devi
 
 From: Tang Yuantian <Yuantian.Tang@freescale.com>
 
-This reverts commit 5163fb62541e
-("ahci: added support for Freescale AHCI sata")
-
-The reverted patch added Freescale QorIQ AHCI sata support to
-ahci_platform driver though, but it left SoC specific settings to uboot.
-It leads to QorIQ sata heavily depending on uboot. In order to removing
-the dependency we first revert the old patch and then will add a new driver
-for QorIQ SATA.
-Since there are no LS* platforms that have been upstreamed, So
-the revert would not break anything exists.
+adds bindings for Freescale QorIQ AHCI SATA controller.
 
 Signed-off-by: Tang Yuantian <Yuantian.Tang@freescale.com>
 ---
- Documentation/devicetree/bindings/ata/ahci-platform.txt | 2 --
- drivers/ata/ahci_platform.c                             | 1 -
- 2 files changed, 3 deletions(-)
+ .../devicetree/bindings/ata/ahci-fsl-qoriq.txt      | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-index a232181..c2340ee 100644
---- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
-+++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-@@ -16,8 +16,6 @@ Required properties:
-   - "snps,dwc-ahci"
-   - "snps,exynos5440-ahci"
-   - "snps,spear-ahci"
--  - "fsl,qoriq-ahci" : for qoriq series socs which include ls1021, ls2085, etc.
--  - "fsl,<chip>-ahci" : chip could be ls1021, ls2085 etc.
-   - "generic-ahci"
- - interrupts        : <interrupt mapping for SATA IRQ>
- - reg               : <registers mapping>
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index 1befb11..04975b8 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -76,7 +76,6 @@ static const struct of_device_id ahci_of_match[] = {
- 	{ .compatible = "ibm,476gtr-ahci", },
- 	{ .compatible = "snps,dwc-ahci", },
- 	{ .compatible = "hisilicon,hisi-ahci", },
--	{ .compatible = "fsl,qoriq-ahci", },
- 	{},
- };
- MODULE_DEVICE_TABLE(of, ahci_of_match);
+diff --git a/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt b/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt
+new file mode 100644
+index 0000000..b614e3b
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt
+@@ -0,0 +1,21 @@
++Binding for Freescale QorIQ AHCI SATA Controller
++
++Required properties:
++  - reg: Physical base address and size of the controller's register area.
++  - compatible: Compatibility string. Must be 'fsl,<chip>-ahci', where
++    chip could be ls1021a, ls2085a, ls1043a etc.
++  - clocks: Input clock specifier. Refer to common clock bindings.
++  - interrupts: Interrupt specifier. Refer to interrupt binding.
++
++Optional properties:
++  - dma-coherent: Enable ACHI coherency DMA operation.
++  - reg-names: register area names when there are more then 1 regster area.
++
++Examples:
++	sata@3200000 {
++		compatible = "fsl,ls1021a-ahci";
++		reg = <0x0 0x3200000 0x0 0x10000>;
++		interrupts = <GIC_SPI 101 IRQ_TYPE_LEVEL_HIGH>;
++		clocks = <&platform_clk 1>;
++		dma-coherent;
++	};
 -- 
 2.1.0.27.g96db324
 
