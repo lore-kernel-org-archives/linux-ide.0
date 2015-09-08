@@ -1,26 +1,49 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: raid5-cache I/O path improvements
-Date: Tue, 8 Sep 2015 17:40:06 +0200
-Message-ID: <20150908154006.GA2795@lst.de>
-References: <1441603250-5119-1-git-send-email-hch@lst.de> <20150908002840.GA3196542@devbig257.prn2.facebook.com> <20150908061215.GA23833@lst.de> <20150908152546.GB13749@mtj.duckdns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 1/3] Revert "ahci: added support for Freescale AHCI sata"
+Date: Tue, 8 Sep 2015 12:31:39 -0400
+Message-ID: <20150908163139.GF13749@mtj.duckdns.org>
+References: <1441614196-4284-1-git-send-email-Yuantian.Tang@freescale.com>
+ <55ED503E.5000902@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:34454 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754740AbbIHPkI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 8 Sep 2015 11:40:08 -0400
+Received: from mail-yk0-f179.google.com ([209.85.160.179]:33658 "EHLO
+	mail-yk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754711AbbIHQbo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Sep 2015 12:31:44 -0400
 Content-Disposition: inline
-In-Reply-To: <20150908152546.GB13749@mtj.duckdns.org>
+In-Reply-To: <55ED503E.5000902@redhat.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Shaohua Li <shli@fb.com>, neilb@suse.de, linux-raid@vger.kernel.org, Kernel-team@fb.com, dan.j.williams@intel.com, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: Yuantian.Tang@freescale.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
 
-On Tue, Sep 08, 2015 at 11:25:46AM -0400, Tejun Heo wrote:
-> IIRC, some controllers and/or controllers were choking on it and it
-> didn't make any noticeable difference on rotating disks.  Maybe we can
-> try again with controller white list and enabling by default on SSds.
+On Mon, Sep 07, 2015 at 10:52:14AM +0200, Hans de Goede wrote:
+> Hi,
+> 
+> On 07-09-15 10:23, Yuantian.Tang@freescale.com wrote:
+> >From: Tang Yuantian <Yuantian.Tang@freescale.com>
+> >
+> >This reverts commit 5163fb62541e
+> >("ahci: added support for Freescale AHCI sata")
+> >
+> >The reverted patch added Freescale QorIQ AHCI sata support to
+> >ahci_platform driver though, but it left SoC specific settings to uboot.
+> >It leads to QorIQ sata heavily depending on uboot. In order to removing
+> >the dependency we first revert the old patch and then will add a new driver
+> >for QorIQ SATA.
+> >Since there are no LS* platforms that have been upstreamed, So
+> >the revert would not break anything exists.
+> >
+> >Signed-off-by: Tang Yuantian <Yuantian.Tang@freescale.com>
+> 
+> The entire series looks good to me and is:
+> 
+> Reviewed-by: Hans de Goede <hdegoede@redhat.com>
 
-I guess we could start with AHCI only as a good approximation for a not
-too crappy controller and driver.
+Applied to libata/for-4.4.
+
+Thanks.
+
+-- 
+tejun
