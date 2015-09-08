@@ -1,49 +1,64 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/3] Revert "ahci: added support for Freescale AHCI sata"
-Date: Tue, 8 Sep 2015 12:31:39 -0400
-Message-ID: <20150908163139.GF13749@mtj.duckdns.org>
-References: <1441614196-4284-1-git-send-email-Yuantian.Tang@freescale.com>
- <55ED503E.5000902@redhat.com>
+From: Shaohua Li <shli@fb.com>
+Subject: Re: raid5-cache I/O path improvements
+Date: Tue, 8 Sep 2015 09:56:22 -0700
+Message-ID: <20150908165611.GA371379@devbig257.prn2.facebook.com>
+References: <1441603250-5119-1-git-send-email-hch@lst.de>
+ <20150908002840.GA3196542@devbig257.prn2.facebook.com>
+ <20150908061215.GA23833@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yk0-f179.google.com ([209.85.160.179]:33658 "EHLO
-	mail-yk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754711AbbIHQbo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 8 Sep 2015 12:31:44 -0400
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-raid-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <55ED503E.5000902@redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <20150908061215.GA23833@lst.de>
+Sender: linux-raid-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: neilb@suse.de, linux-raid@vger.kernel.org, Kernel-team@fb.com, dan.j.williams@intel.com, Tejun Heo <tj@kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hans de Goede <hdegoede@redhat.com>
-Cc: Yuantian.Tang@freescale.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
 
-On Mon, Sep 07, 2015 at 10:52:14AM +0200, Hans de Goede wrote:
-> Hi,
+On Tue, Sep 08, 2015 at 08:12:15AM +0200, Christoph Hellwig wrote:
+> On Mon, Sep 07, 2015 at 05:28:55PM -0700, Shaohua Li wrote:
+> > Hi Christoph,
+> > Thanks for these work. Yes, I/O error handling is in the plan. We could
+> > simplify panic (people here like this option) or report error and bypass
+> > log. Any way an option is good.
 > 
-> On 07-09-15 10:23, Yuantian.Tang@freescale.com wrote:
-> >From: Tang Yuantian <Yuantian.Tang@freescale.com>
-> >
-> >This reverts commit 5163fb62541e
-> >("ahci: added support for Freescale AHCI sata")
-> >
-> >The reverted patch added Freescale QorIQ AHCI sata support to
-> >ahci_platform driver though, but it left SoC specific settings to uboot.
-> >It leads to QorIQ sata heavily depending on uboot. In order to removing
-> >the dependency we first revert the old patch and then will add a new driver
-> >for QorIQ SATA.
-> >Since there are no LS* platforms that have been upstreamed, So
-> >the revert would not break anything exists.
-> >
-> >Signed-off-by: Tang Yuantian <Yuantian.Tang@freescale.com>
+> I think the sensible thing in general is to fail the I/O.  Once we have
+> a cache devie the assumption is that a) write holes are properly handled,
+> and we b) do all kinds of optimizations based on the presensce of the
+> log device like not passing through flush requests or skippign resync.
 > 
-> The entire series looks good to me and is:
+> Having the cache device suddenly disappear will alwasy break a) and
+> require a lot of hairy code only used in failure cases to undo the
+> rest.
+
+Failing the I/O is ok too.
+ 
+> > For the patches, FUA write does simplify things a lot. However, I tried
+> > it before, the performance is quite bad in SSD. FUA is off in SATA by
+> > default, the emulation is farily slow because FLUSH request isn't NCQ
+> > command. I tried to enable FUA in SATA too, FUA write is still slow in
+> > the SSD I tested. Other than this one, other patches look good:
 > 
-> Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+> Pretty much every SSD (and modern disk driver) supports FUA.  Please
+> benchmark with libata.fua=Y, as I think the simplifcation is absolutely
+> worth it.  On my SSDs using it gives far lower latency for writes,
+> nevermind nvmdimm where it's also essential as the flush statemchine
+> increases the write latency by an order of magnitude.
+> 
+> Tejun, do you have any updates on libata vs FUA?  We onable it
+> by default for a while in 2012, but then Jeff reverted it with a rather
+> non-descriptive commit message.
+> 
+> Also NVMe or SAS SSDs will benefit heavily from the FUA bit.
 
-Applied to libata/for-4.4.
+I agree the benefit of FUA. In the system I'm testing, an Intel ssd
+supports FUA, a sandisk SSD doesn't support FUA (this is the SSD we will
+deploy for the log). This is AHCI with libata.fua=1. FUA isn't supported
+by every SSD. If the log uses FUA by default, we will have a lot of FUA
+write and performance is impacted.
 
-Thanks.
+I'll benchmark on a SSD from another vendor, which supports FUA, but FUA
+write has poor performance in my last test.
 
--- 
-tejun
+Thanks,
+Shaohua
