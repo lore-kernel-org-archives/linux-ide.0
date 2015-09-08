@@ -1,60 +1,55 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: raid5-cache I/O path improvements
-Date: Tue, 8 Sep 2015 13:34:20 -0400
-Message-ID: <20150908173420.GJ13749@mtj.duckdns.org>
-References: <1441603250-5119-1-git-send-email-hch@lst.de>
- <20150908002840.GA3196542@devbig257.prn2.facebook.com>
- <20150908061215.GA23833@lst.de>
- <20150908165611.GA371379@devbig257.prn2.facebook.com>
- <20150908170226.GI13749@mtj.duckdns.org>
- <20150908170736.GA423191@devbig257.prn2.facebook.com>
+From: Andy Smith <andy@strugglers.net>
+Subject: Re: NCQ-related READ/WRITE frozen ATA errors with Intel C220 and
+ Intel s3610 SSDs
+Date: Tue, 8 Sep 2015 21:23:46 +0000
+Message-ID: <20150908212346.GG4327@bitfolk.com>
+References: <20150809042756.GX4243@bitfolk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from bitfolk.com ([85.119.80.223]:50471 "EHLO mail.bitfolk.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751669AbbIHVXr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 8 Sep 2015 17:23:47 -0400
+Received: from andy by mail.bitfolk.com with local (Exim 4.72)
+	(envelope-from <andy@strugglers.net>)
+	id 1ZZQMk-00010c-6x
+	for linux-ide@vger.kernel.org; Tue, 08 Sep 2015 21:23:46 +0000
 Content-Disposition: inline
-In-Reply-To: <20150908170736.GA423191@devbig257.prn2.facebook.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Shaohua Li <shli@fb.com>
-Cc: Christoph Hellwig <hch@lst.de>, neilb@suse.de, linux-raid@vger.kernel.org, Kernel-team@fb.com, dan.j.williams@intel.com, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org
+In-Reply-To: <20150809042756.GX4243@bitfolk.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello,
+Hi,
 
-On Tue, Sep 08, 2015 at 10:07:36AM -0700, Shaohua Li wrote:
-> I need double confirm. But for write + flush, we aggregrate several
-> writes and do a flush; for FUA, we do every meta write with FUA. So this
-> is not apple to apple comparison.
+On Sun, Aug 09, 2015 at 04:27:56AM +0000, Andy Smith wrote:
+> I've just put together a system based on a Supermicro X10SDV-F
+> motherboard, which comes with an Intel C220 SATA controller. I've
+> got two Intel DC s3610 SSDs plugged into this, and have
+> intermittently been seeing the following ATA errors:
+> 
+> Jul 23 17:14:41 snaps kernel: [68044.504092] ata2.00: exception Emask 0x0 SAct 0x3000000 SErr 0x0 action 0x6 frozen
+> Jul 23 17:14:41 snaps kernel: [68044.504215] ata2.00: failed command: WRITE FPDMA QUEUED
+> Jul 23 17:14:41 snaps kernel: [68044.504291] ata2.00: cmd 61/01:c0:00:a8:75/00:00:66:00:00/40 tag 24 ncq 512 out
+> Jul 23 17:14:41 snaps kernel: [68044.504291]          res 40/00:01:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+> Jul 23 17:14:41 snaps kernel: [68044.504357] ata2.00: status: { DRDY }
+> Jul 23 17:14:41 snaps kernel: [68044.504376] ata2.00: failed command: WRITE FPDMA QUEUED
+> Jul 23 17:14:41 snaps kernel: [68044.504402] ata2.00: cmd 61/08:c8:d1:b1:b5/00:00:09:00:00/40 tag 25 ncq 4096 out
+> Jul 23 17:14:41 snaps kernel: [68044.504402]          res 40/00:01:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
+> Jul 23 17:14:41 snaps kernel: [68044.504468] ata2.00: status: { DRDY }
+> Jul 23 17:14:41 snaps kernel: [68044.504488] ata2: hard resetting link
+> Jul 23 17:14:42 snaps kernel: [68044.824115] ata2: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
+> Jul 23 17:14:42 snaps kernel: [68044.825069] ata2.00: configured for UDMA/133
+> Jul 23 17:14:42 snaps kernel: [68044.825096] ata2.00: device reported invalid CHS sector 0
+> Jul 23 17:14:42 snaps kernel: [68044.825123] ata2.00: device reported invalid CHS sector 0
+> Jul 23 17:14:42 snaps kernel: [68044.825153] ata2: EH complete
 
-Does that mean that upper layers are taking different actions
-depending on whether the underlying device supports FUA?  That at
-least wasn't the original model that I had on mind when implementing
-the current incarnation of REQ_FLUSH and FUA.  The only difference FUA
-was expected to make was optimizing out the flush after REQ_FUA and
-the upper layers were expected to issue REQ_FLUSH/FUA the same whether
-the device supports FUA or not.
+It turns out this was a bug in the drive firmware, apparently
+affecting all Intel DC s3610 and s3710 SSDs, and Intel have quietly
+fixed it with a firmware update:
 
-Hmmm... grep tells me that dm and md actually are branching on whether
-the underlying device supports FUA.  This is tricky.  I didn't even
-mean flush_flags to be used directly by upper layers.  For rotational
-devices, doing multiple FUAs compared multiple writes followed by
-REQ_FLUSH is probably a lot worse - the head gets moved multiple times
-likely skipping over data which can be written out while traversing
-and it's not like stalling write pipeline and draining write queue has
-much impact on hard drives.
+    https://communities.intel.com/thread/77801?start=0&tstart=0
 
-Maybe it's different on SSDs.  I'm not sure about how expensive flush
-itself would be given that a lot of write cost is paid asynchronously
-anyway during gc but flush stalls IO pipeline and that could be very
-noticeable on high iops devices.  Also, unless the implementation is
-braindead FUA IOs are unlikely to be expensive on SSDs, so maybe what
-we should do is making block layer hint upper layers regarding what's
-likely to perform better.
-
-But, ultimately, I don't think it'd be too difficult for high-depth
-SSD devices to report write-through w/o losing any performance one way
-or the other and it'd be great if we eventually can get there.
-
-Thanks.
-
--- 
-tejun
+Cheers,
+Andy
