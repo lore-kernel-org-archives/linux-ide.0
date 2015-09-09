@@ -1,55 +1,61 @@
-From: Andy Smith <andy@strugglers.net>
-Subject: Re: NCQ-related READ/WRITE frozen ATA errors with Intel C220 and
- Intel s3610 SSDs
-Date: Tue, 8 Sep 2015 21:23:46 +0000
-Message-ID: <20150908212346.GG4327@bitfolk.com>
-References: <20150809042756.GX4243@bitfolk.com>
+From: <Yuantian.Tang@freescale.com>
+Subject: [PATCH] ahci: qoriq: fixed using uninitialized variable warnings
+Date: Wed, 9 Sep 2015 17:16:22 +0800
+Message-ID: <1441790182-20248-1-git-send-email-Yuantian.Tang@freescale.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bitfolk.com ([85.119.80.223]:50471 "EHLO mail.bitfolk.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751669AbbIHVXr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 8 Sep 2015 17:23:47 -0400
-Received: from andy by mail.bitfolk.com with local (Exim 4.72)
-	(envelope-from <andy@strugglers.net>)
-	id 1ZZQMk-00010c-6x
-	for linux-ide@vger.kernel.org; Tue, 08 Sep 2015 21:23:46 +0000
-Content-Disposition: inline
-In-Reply-To: <20150809042756.GX4243@bitfolk.com>
+Received: from mail-by2on0105.outbound.protection.outlook.com ([207.46.100.105]:35415
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751374AbbIIJyw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 9 Sep 2015 05:54:52 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: hdegoede@redhat.com
+Cc: tj@kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, Tang Yuantian <Yuantian.Tang@freescale.com>
 
-Hi,
+From: Tang Yuantian <Yuantian.Tang@freescale.com>
 
-On Sun, Aug 09, 2015 at 04:27:56AM +0000, Andy Smith wrote:
-> I've just put together a system based on a Supermicro X10SDV-F
-> motherboard, which comes with an Intel C220 SATA controller. I've
-> got two Intel DC s3610 SSDs plugged into this, and have
-> intermittently been seeing the following ATA errors:
-> 
-> Jul 23 17:14:41 snaps kernel: [68044.504092] ata2.00: exception Emask 0x0 SAct 0x3000000 SErr 0x0 action 0x6 frozen
-> Jul 23 17:14:41 snaps kernel: [68044.504215] ata2.00: failed command: WRITE FPDMA QUEUED
-> Jul 23 17:14:41 snaps kernel: [68044.504291] ata2.00: cmd 61/01:c0:00:a8:75/00:00:66:00:00/40 tag 24 ncq 512 out
-> Jul 23 17:14:41 snaps kernel: [68044.504291]          res 40/00:01:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-> Jul 23 17:14:41 snaps kernel: [68044.504357] ata2.00: status: { DRDY }
-> Jul 23 17:14:41 snaps kernel: [68044.504376] ata2.00: failed command: WRITE FPDMA QUEUED
-> Jul 23 17:14:41 snaps kernel: [68044.504402] ata2.00: cmd 61/08:c8:d1:b1:b5/00:00:09:00:00/40 tag 25 ncq 4096 out
-> Jul 23 17:14:41 snaps kernel: [68044.504402]          res 40/00:01:00:00:00/00:00:00:00:00/00 Emask 0x4 (timeout)
-> Jul 23 17:14:41 snaps kernel: [68044.504468] ata2.00: status: { DRDY }
-> Jul 23 17:14:41 snaps kernel: [68044.504488] ata2: hard resetting link
-> Jul 23 17:14:42 snaps kernel: [68044.824115] ata2: SATA link up 6.0 Gbps (SStatus 133 SControl 300)
-> Jul 23 17:14:42 snaps kernel: [68044.825069] ata2.00: configured for UDMA/133
-> Jul 23 17:14:42 snaps kernel: [68044.825096] ata2.00: device reported invalid CHS sector 0
-> Jul 23 17:14:42 snaps kernel: [68044.825123] ata2.00: device reported invalid CHS sector 0
-> Jul 23 17:14:42 snaps kernel: [68044.825153] ata2: EH complete
+kbuild test robot reports the warnings:
+drivers/ata/ahci_qoriq.c: In function 'ahci_qoriq_hardreset':
+>> include/asm-generic/io.h:163:2: warning: 'px_is' may be used
+>> uninitialized in this function [-Wuninitialized]
+drivers/ata/ahci_qoriq.c:70:14: note: 'px_is' was declared here
+>> include/asm-generic/io.h:163:2: warning: 'px_cmd' may be used
+>> uninitialized in this function [-Wuninitialized]
+drivers/ata/ahci_qoriq.c:70:6: note: 'px_cmd' was declared here
 
-It turns out this was a bug in the drive firmware, apparently
-affecting all Intel DC s3610 and s3710 SSDs, and Intel have quietly
-fixed it with a firmware update:
+This patch fixed it by assigning 0 to px_is and px_cmd variables.
+This patch also remove line 'struct ccsr_ahci *reg_base' which is
+not referred by any other codes and thus a dead one.
 
-    https://communities.intel.com/thread/77801?start=0&tstart=0
+Signed-off-by: Tang Yuantian <Yuantian.Tang@freescale.com>
+---
+ drivers/ata/ahci_qoriq.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Cheers,
-Andy
+diff --git a/drivers/ata/ahci_qoriq.c b/drivers/ata/ahci_qoriq.c
+index e5e4988..f790852 100644
+--- a/drivers/ata/ahci_qoriq.c
++++ b/drivers/ata/ahci_qoriq.c
+@@ -49,7 +49,6 @@ enum ahci_qoriq_type {
+ };
+ 
+ struct ahci_qoriq_priv {
+-	struct ccsr_ahci *reg_base;
+ 	enum ahci_qoriq_type type;
+ 	void __iomem *ecc_addr;
+ };
+@@ -67,7 +66,7 @@ static int ahci_qoriq_hardreset(struct ata_link *link, unsigned int *class,
+ {
+ 	const unsigned long *timing = sata_ehc_deb_timing(&link->eh_context);
+ 	void __iomem *port_mmio = ahci_port_base(link->ap);
+-	u32 px_cmd, px_is, px_val;
++	u32 px_cmd = 0, px_is = 0, px_val;
+ 	struct ata_port *ap = link->ap;
+ 	struct ahci_port_priv *pp = ap->private_data;
+ 	struct ahci_host_priv *hpriv = ap->host->private_data;
+-- 
+2.1.0.27.g96db324
+
