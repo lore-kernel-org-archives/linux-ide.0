@@ -1,47 +1,32 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ahci: qoriq: fixed using uninitialized variable warnings
-Date: Wed, 9 Sep 2015 10:01:30 -0400
-Message-ID: <20150909140130.GB22909@mtj.duckdns.org>
-References: <1441790182-20248-1-git-send-email-Yuantian.Tang@freescale.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: raid5-cache I/O path improvements
+Date: Wed, 9 Sep 2015 17:59:41 +0200
+Message-ID: <20150909155941.GA28608@lst.de>
+References: <1441603250-5119-1-git-send-email-hch@lst.de> <20150908002840.GA3196542@devbig257.prn2.facebook.com> <20150908061215.GA23833@lst.de> <20150908165611.GA371379@devbig257.prn2.facebook.com> <20150908170226.GI13749@mtj.duckdns.org> <20150908170736.GA423191@devbig257.prn2.facebook.com> <20150908173420.GJ13749@mtj.duckdns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yk0-f179.google.com ([209.85.160.179]:32806 "EHLO
-	mail-yk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751429AbbIIOBf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Sep 2015 10:01:35 -0400
+Received: from verein.lst.de ([213.95.11.211]:38647 "EHLO newverein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752147AbbIIP7n (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 9 Sep 2015 11:59:43 -0400
 Content-Disposition: inline
-In-Reply-To: <1441790182-20248-1-git-send-email-Yuantian.Tang@freescale.com>
+In-Reply-To: <20150908173420.GJ13749@mtj.duckdns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Yuantian.Tang@freescale.com
-Cc: hdegoede@redhat.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Shaohua Li <shli@fb.com>, Christoph Hellwig <hch@lst.de>, neilb@suse.de, linux-raid@vger.kernel.org, Kernel-team@fb.com, dan.j.williams@intel.com, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org
 
-On Wed, Sep 09, 2015 at 05:16:22PM +0800, Yuantian.Tang@freescale.com wrote:
-> From: Tang Yuantian <Yuantian.Tang@freescale.com>
-> 
-> kbuild test robot reports the warnings:
-> drivers/ata/ahci_qoriq.c: In function 'ahci_qoriq_hardreset':
-> >> include/asm-generic/io.h:163:2: warning: 'px_is' may be used
-> >> uninitialized in this function [-Wuninitialized]
-> drivers/ata/ahci_qoriq.c:70:14: note: 'px_is' was declared here
-> >> include/asm-generic/io.h:163:2: warning: 'px_cmd' may be used
-> >> uninitialized in this function [-Wuninitialized]
-> drivers/ata/ahci_qoriq.c:70:6: note: 'px_cmd' was declared here
-> 
-> This patch fixed it by assigning 0 to px_is and px_cmd variables.
-> This patch also remove line 'struct ccsr_ahci *reg_base' which is
-> not referred by any other codes and thus a dead one.
+On Tue, Sep 08, 2015 at 01:34:20PM -0400, Tejun Heo wrote:
+> Hmmm... grep tells me that dm and md actually are branching on whether
+> the underlying device supports FUA.  This is tricky.  I didn't even
+> mean flush_flags to be used directly by upper layers.  For rotational
+> devices, doing multiple FUAs compared multiple writes followed by
+> REQ_FLUSH is probably a lot worse - the head gets moved multiple times
+> likely skipping over data which can be written out while traversing
+> and it's not like stalling write pipeline and draining write queue has
+> much impact on hard drives.
 
-Hmm... I think the problem here is that the complier can't know
-whether qoriq_priv->type would change across intervening function
-calls.  Maybe a better solution is caching the type in a local
-variable so that the compiler can tell that those two tests will
-always move together?  It generally isn't a good idea to clear
-variables unnecessarily as that can hide actual bugs that compiler can
-detect.
-
-Thanks.
-
--- 
-tejun
+Well, that's what we'd need to do for the raid cache as well, given
+the resulst that Shaohua sees.  Unless you have a good idea for another
+way to handle the issue we'll need to support both behaviors there.
