@@ -1,32 +1,35 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: raid5-cache I/O path improvements
-Date: Wed, 9 Sep 2015 17:59:41 +0200
-Message-ID: <20150909155941.GA28608@lst.de>
-References: <1441603250-5119-1-git-send-email-hch@lst.de> <20150908002840.GA3196542@devbig257.prn2.facebook.com> <20150908061215.GA23833@lst.de> <20150908165611.GA371379@devbig257.prn2.facebook.com> <20150908170226.GI13749@mtj.duckdns.org> <20150908170736.GA423191@devbig257.prn2.facebook.com> <20150908173420.GJ13749@mtj.duckdns.org>
+From: Li Yang <leoli@freescale.com>
+Subject: Re: [PATCH] ahci: added a new driver for supporting Freescale AHCI sata
+Date: Wed, 9 Sep 2015 18:14:55 -0500
+Message-ID: <CADRPPNT+QYqcPVaPSdKcFJg1X5hULnmEJAaAjTuFad58B6aTJA@mail.gmail.com>
+References: <1441160730-28006-1-git-send-email-Yuantian.Tang@freescale.com>
+	<55E6B3E8.80902@redhat.com>
+	<DM2PR03MB574DBC10E59CE7A8D10310DFA550@DM2PR03MB574.namprd03.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:38647 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752147AbbIIP7n (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 9 Sep 2015 11:59:43 -0400
-Content-Disposition: inline
-In-Reply-To: <20150908173420.GJ13749@mtj.duckdns.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <DM2PR03MB574DBC10E59CE7A8D10310DFA550@DM2PR03MB574.namprd03.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Yuantian Tang <Yuantian.Tang@freescale.com>
+Cc: Hans de Goede <hdegoede@redhat.com>, "tj@kernel.org" <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, devicetree@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Shaohua Li <shli@fb.com>, Christoph Hellwig <hch@lst.de>, neilb@suse.de, linux-raid@vger.kernel.org, Kernel-team@fb.com, dan.j.williams@intel.com, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org
 
-On Tue, Sep 08, 2015 at 01:34:20PM -0400, Tejun Heo wrote:
-> Hmmm... grep tells me that dm and md actually are branching on whether
-> the underlying device supports FUA.  This is tricky.  I didn't even
-> mean flush_flags to be used directly by upper layers.  For rotational
-> devices, doing multiple FUAs compared multiple writes followed by
-> REQ_FLUSH is probably a lot worse - the head gets moved multiple times
-> likely skipping over data which can be written out while traversing
-> and it's not like stalling write pipeline and draining write queue has
-> much impact on hard drives.
+On Sun, Sep 6, 2015 at 12:39 AM, Yuantian Tang
+<Yuantian.Tang@freescale.com> wrote:
+> Hi,
+>
+{snip}
+>>
+>> This will break booting new kernels with old dtb files, something which in
+>> general is considered a big non-no, I suggest adding a comment that this has
+>> been superseded by the new ahci_qoriq.c code, and maybe add a date to
+>> retire the compatible in say a year from now.
+>>
+> There is no old dtb because LS* platforms are not been upstreamed yet.
+> So I think we can safely replace it without breaking anything.
 
-Well, that's what we'd need to do for the raid cache as well, given
-the resulst that Shaohua sees.  Unless you have a good idea for another
-way to handle the issue we'll need to support both behaviors there.
+Please make sure all the internal development trees are updated
+complying to this new binding.
+
+Regards,
+Leo
