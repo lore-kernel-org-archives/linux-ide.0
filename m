@@ -1,58 +1,60 @@
-From: Li Yang <leoli@freescale.com>
-Subject: Re: [PATCH 2/3] devicetree:bindings: add devicetree bindings for
+From: Yuantian Tang <Yuantian.Tang-KZfg59tc24xl57MIdRCFDg@public.gmane.org>
+Subject: RE: [PATCH 2/3] devicetree:bindings: add devicetree bindings for
  Freescale AHCI
-Date: Wed, 9 Sep 2015 18:19:02 -0500
-Message-ID: <CADRPPNSSzWKY1P0DwyPLuTKk31YhnLxExoJX3GG+EpyWYdqSbQ@mail.gmail.com>
+Date: Thu, 10 Sep 2015 01:23:33 +0000
+Message-ID: <DM2PR03MB574940858592139F5AB3646FA510@DM2PR03MB574.namprd03.prod.outlook.com>
 References: <1441614196-4284-1-git-send-email-Yuantian.Tang@freescale.com>
 	<1441614196-4284-2-git-send-email-Yuantian.Tang@freescale.com>
+ <CADRPPNSSzWKY1P0DwyPLuTKk31YhnLxExoJX3GG+EpyWYdqSbQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lb0-f177.google.com ([209.85.217.177]:33493 "EHLO
-	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751055AbbIIXTF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Sep 2015 19:19:05 -0400
-In-Reply-To: <1441614196-4284-2-git-send-email-Yuantian.Tang@freescale.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CADRPPNSSzWKY1P0DwyPLuTKk31YhnLxExoJX3GG+EpyWYdqSbQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Language: en-US
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Li Leo <LeoLi-KZfg59tc24xl57MIdRCFDg@public.gmane.org>
+Cc: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: Yuantian Tang <Yuantian.Tang@freescale.com>
-Cc: Hans de Goede <hdegoede@redhat.com>, tj@kernel.org, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, devicetree@vger.kernel.org
 
-On Mon, Sep 7, 2015 at 3:23 AM,  <Yuantian.Tang@freescale.com> wrote:
-> From: Tang Yuantian <Yuantian.Tang@freescale.com>
->
-> adds bindings for Freescale QorIQ AHCI SATA controller.
->
-> Signed-off-by: Tang Yuantian <Yuantian.Tang@freescale.com>
-> ---
->  .../devicetree/bindings/ata/ahci-fsl-qoriq.txt      | 21 +++++++++++++++++++++
->  1 file changed, 21 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt
->
-> diff --git a/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt b/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt
-> new file mode 100644
-> index 0000000..b614e3b
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt
-> @@ -0,0 +1,21 @@
-> +Binding for Freescale QorIQ AHCI SATA Controller
-> +
-> +Required properties:
-> +  - reg: Physical base address and size of the controller's register area.
-> +  - compatible: Compatibility string. Must be 'fsl,<chip>-ahci', where
-> +    chip could be ls1021a, ls2085a, ls1043a etc.
-> +  - clocks: Input clock specifier. Refer to common clock bindings.
-> +  - interrupts: Interrupt specifier. Refer to interrupt binding.
-> +
-> +Optional properties:
-> +  - dma-coherent: Enable ACHI coherency DMA operation.
-> +  - reg-names: register area names when there are more then 1 regster area.
-
-A few typos here:
-s/ACHI/AHCI/
-s/coherency/coherent/
-s/then/than/
-s/regster/register/
-
-Regards,
-Leo
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogcGt1Lmxlb0BnbWFpbC5j
+b20gW21haWx0bzpwa3UubGVvQGdtYWlsLmNvbV0gT24gQmVoYWxmIE9mIExpIFlhbmcNCj4gU2Vu
+dDogVGh1cnNkYXksIFNlcHRlbWJlciAxMCwgMjAxNSA3OjE5IEFNDQo+IFRvOiBUYW5nIFl1YW50
+aWFuLUIyOTk4MyA8WXVhbnRpYW4uVGFuZ0BmcmVlc2NhbGUuY29tPg0KPiBDYzogSGFucyBkZSBH
+b2VkZSA8aGRlZ29lZGVAcmVkaGF0LmNvbT47IHRqQGtlcm5lbC5vcmc7IGxpbnV4LQ0KPiBpZGVA
+dmdlci5rZXJuZWwub3JnOyBsa21sIDxsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnPjsNCj4g
+ZGV2aWNldHJlZUB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogUmU6IFtQQVRDSCAyLzNdIGRl
+dmljZXRyZWU6YmluZGluZ3M6IGFkZCBkZXZpY2V0cmVlIGJpbmRpbmdzIGZvcg0KPiBGcmVlc2Nh
+bGUgQUhDSQ0KPiANCj4gT24gTW9uLCBTZXAgNywgMjAxNSBhdCAzOjIzIEFNLCAgPFl1YW50aWFu
+LlRhbmdAZnJlZXNjYWxlLmNvbT4gd3JvdGU6DQo+ID4gRnJvbTogVGFuZyBZdWFudGlhbiA8WXVh
+bnRpYW4uVGFuZ0BmcmVlc2NhbGUuY29tPg0KPiA+DQo+ID4gYWRkcyBiaW5kaW5ncyBmb3IgRnJl
+ZXNjYWxlIFFvcklRIEFIQ0kgU0FUQSBjb250cm9sbGVyLg0KPiA+DQo+ID4gU2lnbmVkLW9mZi1i
+eTogVGFuZyBZdWFudGlhbiA8WXVhbnRpYW4uVGFuZ0BmcmVlc2NhbGUuY29tPg0KPiA+IC0tLQ0K
+PiA+ICAuLi4vZGV2aWNldHJlZS9iaW5kaW5ncy9hdGEvYWhjaS1mc2wtcW9yaXEudHh0ICAgICAg
+fCAyMQ0KPiArKysrKysrKysrKysrKysrKysrKysNCj4gPiAgMSBmaWxlIGNoYW5nZWQsIDIxIGlu
+c2VydGlvbnMoKykNCj4gPiAgY3JlYXRlIG1vZGUgMTAwNjQ0IERvY3VtZW50YXRpb24vZGV2aWNl
+dHJlZS9iaW5kaW5ncy9hdGEvYWhjaS1mc2wtDQo+IHFvcmlxLnR4dA0KPiA+DQo+ID4gZGlmZiAt
+LWdpdCBhL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9hdGEvYWhjaS1mc2wtcW9y
+aXEudHh0DQo+IGIvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL2F0YS9haGNpLWZz
+bC1xb3JpcS50eHQNCj4gPiBuZXcgZmlsZSBtb2RlIDEwMDY0NA0KPiA+IGluZGV4IDAwMDAwMDAu
+LmI2MTRlM2INCj4gPiAtLS0gL2Rldi9udWxsDQo+ID4gKysrIGIvRG9jdW1lbnRhdGlvbi9kZXZp
+Y2V0cmVlL2JpbmRpbmdzL2F0YS9haGNpLWZzbC1xb3JpcS50eHQNCj4gPiBAQCAtMCwwICsxLDIx
+IEBADQo+ID4gK0JpbmRpbmcgZm9yIEZyZWVzY2FsZSBRb3JJUSBBSENJIFNBVEEgQ29udHJvbGxl
+cg0KPiA+ICsNCj4gPiArUmVxdWlyZWQgcHJvcGVydGllczoNCj4gPiArICAtIHJlZzogUGh5c2lj
+YWwgYmFzZSBhZGRyZXNzIGFuZCBzaXplIG9mIHRoZSBjb250cm9sbGVyJ3MgcmVnaXN0ZXIgYXJl
+YS4NCj4gPiArICAtIGNvbXBhdGlibGU6IENvbXBhdGliaWxpdHkgc3RyaW5nLiBNdXN0IGJlICdm
+c2wsPGNoaXA+LWFoY2knLCB3aGVyZQ0KPiA+ICsgICAgY2hpcCBjb3VsZCBiZSBsczEwMjFhLCBs
+czIwODVhLCBsczEwNDNhIGV0Yy4NCj4gPiArICAtIGNsb2NrczogSW5wdXQgY2xvY2sgc3BlY2lm
+aWVyLiBSZWZlciB0byBjb21tb24gY2xvY2sgYmluZGluZ3MuDQo+ID4gKyAgLSBpbnRlcnJ1cHRz
+OiBJbnRlcnJ1cHQgc3BlY2lmaWVyLiBSZWZlciB0byBpbnRlcnJ1cHQgYmluZGluZy4NCj4gPiAr
+DQo+ID4gK09wdGlvbmFsIHByb3BlcnRpZXM6DQo+ID4gKyAgLSBkbWEtY29oZXJlbnQ6IEVuYWJs
+ZSBBQ0hJIGNvaGVyZW5jeSBETUEgb3BlcmF0aW9uLg0KPiA+ICsgIC0gcmVnLW5hbWVzOiByZWdp
+c3RlciBhcmVhIG5hbWVzIHdoZW4gdGhlcmUgYXJlIG1vcmUgdGhlbiAxIHJlZ3N0ZXINCj4gYXJl
+YS4NCj4gDQo+IEEgZmV3IHR5cG9zIGhlcmU6DQo+IHMvQUNISS9BSENJLw0KPiBzL2NvaGVyZW5j
+eS9jb2hlcmVudC8NCj4gcy90aGVuL3RoYW4vDQo+IHMvcmVnc3Rlci9yZWdpc3Rlci8NCj4gDQpD
+YW4ndCBiZWxpZXZlIHRoZXJlIGlzIHNvIG1hbnkgdHlwb3MuIFdpbGwgZml4ZWQgaW4gZm9sbG93
+LXVwIHBhdGNoLg0KDQpUaGFua3MsDQpZdWFudGlhbg0KPiBSZWdhcmRzLA0KPiBMZW8NCg==
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
