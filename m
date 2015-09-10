@@ -1,60 +1,68 @@
-From: Yuantian Tang <Yuantian.Tang-KZfg59tc24xl57MIdRCFDg@public.gmane.org>
-Subject: RE: [PATCH 2/3] devicetree:bindings: add devicetree bindings for
- Freescale AHCI
-Date: Thu, 10 Sep 2015 01:23:33 +0000
-Message-ID: <DM2PR03MB574940858592139F5AB3646FA510@DM2PR03MB574.namprd03.prod.outlook.com>
-References: <1441614196-4284-1-git-send-email-Yuantian.Tang@freescale.com>
-	<1441614196-4284-2-git-send-email-Yuantian.Tang@freescale.com>
- <CADRPPNSSzWKY1P0DwyPLuTKk31YhnLxExoJX3GG+EpyWYdqSbQ@mail.gmail.com>
+From: Yuantian Tang <Yuantian.Tang@freescale.com>
+Subject: RE: [PATCH] ahci: qoriq: fixed using uninitialized variable warnings
+Date: Thu, 10 Sep 2015 06:17:08 +0000
+Message-ID: <DM2PR03MB574733935AECD0167EEF580FA510@DM2PR03MB574.namprd03.prod.outlook.com>
+References: <1441790182-20248-1-git-send-email-Yuantian.Tang@freescale.com>
+ <20150909140130.GB22909@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CADRPPNSSzWKY1P0DwyPLuTKk31YhnLxExoJX3GG+EpyWYdqSbQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-bn1on0119.outbound.protection.outlook.com ([157.56.110.119]:62023
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751594AbbIJGRM convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Sep 2015 02:17:12 -0400
+In-Reply-To: <20150909140130.GB22909@mtj.duckdns.org>
 Content-Language: en-US
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Li Leo <LeoLi-KZfg59tc24xl57MIdRCFDg@public.gmane.org>
-Cc: Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, lkml <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: "hdegoede@redhat.com" <hdegoede@redhat.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogcGt1Lmxlb0BnbWFpbC5j
-b20gW21haWx0bzpwa3UubGVvQGdtYWlsLmNvbV0gT24gQmVoYWxmIE9mIExpIFlhbmcNCj4gU2Vu
-dDogVGh1cnNkYXksIFNlcHRlbWJlciAxMCwgMjAxNSA3OjE5IEFNDQo+IFRvOiBUYW5nIFl1YW50
-aWFuLUIyOTk4MyA8WXVhbnRpYW4uVGFuZ0BmcmVlc2NhbGUuY29tPg0KPiBDYzogSGFucyBkZSBH
-b2VkZSA8aGRlZ29lZGVAcmVkaGF0LmNvbT47IHRqQGtlcm5lbC5vcmc7IGxpbnV4LQ0KPiBpZGVA
-dmdlci5rZXJuZWwub3JnOyBsa21sIDxsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnPjsNCj4g
-ZGV2aWNldHJlZUB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogUmU6IFtQQVRDSCAyLzNdIGRl
-dmljZXRyZWU6YmluZGluZ3M6IGFkZCBkZXZpY2V0cmVlIGJpbmRpbmdzIGZvcg0KPiBGcmVlc2Nh
-bGUgQUhDSQ0KPiANCj4gT24gTW9uLCBTZXAgNywgMjAxNSBhdCAzOjIzIEFNLCAgPFl1YW50aWFu
-LlRhbmdAZnJlZXNjYWxlLmNvbT4gd3JvdGU6DQo+ID4gRnJvbTogVGFuZyBZdWFudGlhbiA8WXVh
-bnRpYW4uVGFuZ0BmcmVlc2NhbGUuY29tPg0KPiA+DQo+ID4gYWRkcyBiaW5kaW5ncyBmb3IgRnJl
-ZXNjYWxlIFFvcklRIEFIQ0kgU0FUQSBjb250cm9sbGVyLg0KPiA+DQo+ID4gU2lnbmVkLW9mZi1i
-eTogVGFuZyBZdWFudGlhbiA8WXVhbnRpYW4uVGFuZ0BmcmVlc2NhbGUuY29tPg0KPiA+IC0tLQ0K
-PiA+ICAuLi4vZGV2aWNldHJlZS9iaW5kaW5ncy9hdGEvYWhjaS1mc2wtcW9yaXEudHh0ICAgICAg
-fCAyMQ0KPiArKysrKysrKysrKysrKysrKysrKysNCj4gPiAgMSBmaWxlIGNoYW5nZWQsIDIxIGlu
-c2VydGlvbnMoKykNCj4gPiAgY3JlYXRlIG1vZGUgMTAwNjQ0IERvY3VtZW50YXRpb24vZGV2aWNl
-dHJlZS9iaW5kaW5ncy9hdGEvYWhjaS1mc2wtDQo+IHFvcmlxLnR4dA0KPiA+DQo+ID4gZGlmZiAt
-LWdpdCBhL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9hdGEvYWhjaS1mc2wtcW9y
-aXEudHh0DQo+IGIvRG9jdW1lbnRhdGlvbi9kZXZpY2V0cmVlL2JpbmRpbmdzL2F0YS9haGNpLWZz
-bC1xb3JpcS50eHQNCj4gPiBuZXcgZmlsZSBtb2RlIDEwMDY0NA0KPiA+IGluZGV4IDAwMDAwMDAu
-LmI2MTRlM2INCj4gPiAtLS0gL2Rldi9udWxsDQo+ID4gKysrIGIvRG9jdW1lbnRhdGlvbi9kZXZp
-Y2V0cmVlL2JpbmRpbmdzL2F0YS9haGNpLWZzbC1xb3JpcS50eHQNCj4gPiBAQCAtMCwwICsxLDIx
-IEBADQo+ID4gK0JpbmRpbmcgZm9yIEZyZWVzY2FsZSBRb3JJUSBBSENJIFNBVEEgQ29udHJvbGxl
-cg0KPiA+ICsNCj4gPiArUmVxdWlyZWQgcHJvcGVydGllczoNCj4gPiArICAtIHJlZzogUGh5c2lj
-YWwgYmFzZSBhZGRyZXNzIGFuZCBzaXplIG9mIHRoZSBjb250cm9sbGVyJ3MgcmVnaXN0ZXIgYXJl
-YS4NCj4gPiArICAtIGNvbXBhdGlibGU6IENvbXBhdGliaWxpdHkgc3RyaW5nLiBNdXN0IGJlICdm
-c2wsPGNoaXA+LWFoY2knLCB3aGVyZQ0KPiA+ICsgICAgY2hpcCBjb3VsZCBiZSBsczEwMjFhLCBs
-czIwODVhLCBsczEwNDNhIGV0Yy4NCj4gPiArICAtIGNsb2NrczogSW5wdXQgY2xvY2sgc3BlY2lm
-aWVyLiBSZWZlciB0byBjb21tb24gY2xvY2sgYmluZGluZ3MuDQo+ID4gKyAgLSBpbnRlcnJ1cHRz
-OiBJbnRlcnJ1cHQgc3BlY2lmaWVyLiBSZWZlciB0byBpbnRlcnJ1cHQgYmluZGluZy4NCj4gPiAr
-DQo+ID4gK09wdGlvbmFsIHByb3BlcnRpZXM6DQo+ID4gKyAgLSBkbWEtY29oZXJlbnQ6IEVuYWJs
-ZSBBQ0hJIGNvaGVyZW5jeSBETUEgb3BlcmF0aW9uLg0KPiA+ICsgIC0gcmVnLW5hbWVzOiByZWdp
-c3RlciBhcmVhIG5hbWVzIHdoZW4gdGhlcmUgYXJlIG1vcmUgdGhlbiAxIHJlZ3N0ZXINCj4gYXJl
-YS4NCj4gDQo+IEEgZmV3IHR5cG9zIGhlcmU6DQo+IHMvQUNISS9BSENJLw0KPiBzL2NvaGVyZW5j
-eS9jb2hlcmVudC8NCj4gcy90aGVuL3RoYW4vDQo+IHMvcmVnc3Rlci9yZWdpc3Rlci8NCj4gDQpD
-YW4ndCBiZWxpZXZlIHRoZXJlIGlzIHNvIG1hbnkgdHlwb3MuIFdpbGwgZml4ZWQgaW4gZm9sbG93
-LXVwIHBhdGNoLg0KDQpUaGFua3MsDQpZdWFudGlhbg0KPiBSZWdhcmRzLA0KPiBMZW8NCg==
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+> -----Original Message-----
+> From: Tejun Heo [mailto:htejun@gmail.com] On Behalf Of Tejun Heo
+> Sent: Wednesday, September 09, 2015 10:02 PM
+> To: Tang Yuantian-B29983 <Yuantian.Tang@freescale.com>
+> Cc: hdegoede@redhat.com; linux-ide@vger.kernel.org; linux-
+> kernel@vger.kernel.org; devicetree@vger.kernel.org
+> Subject: Re: [PATCH] ahci: qoriq: fixed using uninitialized variable warnings
+> 
+> On Wed, Sep 09, 2015 at 05:16:22PM +0800, Yuantian.Tang@freescale.com
+> wrote:
+> > From: Tang Yuantian <Yuantian.Tang@freescale.com>
+> >
+> > kbuild test robot reports the warnings:
+> > drivers/ata/ahci_qoriq.c: In function 'ahci_qoriq_hardreset':
+> > >> include/asm-generic/io.h:163:2: warning: 'px_is' may be used
+> > >> uninitialized in this function [-Wuninitialized]
+> > drivers/ata/ahci_qoriq.c:70:14: note: 'px_is' was declared here
+> > >> include/asm-generic/io.h:163:2: warning: 'px_cmd' may be used
+> > >> uninitialized in this function [-Wuninitialized]
+> > drivers/ata/ahci_qoriq.c:70:6: note: 'px_cmd' was declared here
+> >
+> > This patch fixed it by assigning 0 to px_is and px_cmd variables.
+> > This patch also remove line 'struct ccsr_ahci *reg_base' which is not
+> > referred by any other codes and thus a dead one.
+> 
+> Hmm... I think the problem here is that the complier can't know whether
+> qoriq_priv->type would change across intervening function calls.  Maybe a
+> better solution is caching the type in a local variable so that the compiler can
+> tell that those two tests will always move together?  It generally isn't a good
+> idea to clear variables unnecessarily as that can hide actual bugs that compiler
+> can detect.
+> 
+I am not sure if the warning can be removed this way.
+But I will send the patch as your suggestion. 
+Unfortunately, I can't produce this warning no matter if I add -Wuninitialized.
+So please let me know if the new patch is working.
+
+Regards,
+Yuantian
+
+> Thanks.
+> 
+> --
+> tejun
