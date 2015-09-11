@@ -1,67 +1,39 @@
-From: Yuantian Tang <Yuantian.Tang@freescale.com>
-Subject: RE: [PATCH] ahci: qoriq: fixed using uninitialized variable warnings
-Date: Fri, 11 Sep 2015 05:27:25 +0000
-Message-ID: <DM2PR03MB5746E6637A2BC5081EC5428FA500@DM2PR03MB574.namprd03.prod.outlook.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] ahci: qoriq: fixed using uninitialized variable warnings
+Date: Fri, 11 Sep 2015 09:54:31 -0400
+Message-ID: <20150911135431.GP8114@mtj.duckdns.org>
 References: <1441790182-20248-1-git-send-email-Yuantian.Tang@freescale.com>
  <20150909140130.GB22909@mtj.duckdns.org>
+ <DM2PR03MB5746E6637A2BC5081EC5428FA500@DM2PR03MB574.namprd03.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bn1bbn0107.outbound.protection.outlook.com ([157.56.111.107]:39840
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750819AbbIKF1f convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Sep 2015 01:27:35 -0400
-In-Reply-To: <20150909140130.GB22909@mtj.duckdns.org>
-Content-Language: en-US
+Received: from mail-yk0-f179.google.com ([209.85.160.179]:32945 "EHLO
+	mail-yk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752698AbbIKNyf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 11 Sep 2015 09:54:35 -0400
+Content-Disposition: inline
+In-Reply-To: <DM2PR03MB5746E6637A2BC5081EC5428FA500@DM2PR03MB574.namprd03.prod.outlook.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: "hdegoede@redhat.com" <hdegoede@redhat.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+To: Yuantian Tang <Yuantian.Tang@freescale.com>
+Cc: "hdegoede@redhat.com" <hdegoede@redhat.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Fengguang Wu <fengguang.wu@intel.com>
 
-Hi Tejun,
+Hello, Yuantian.
 
-Could you please take the version 1 patch?
-The version 2 patch can't address these warnings, and the version 1 can definitely remove them.
-In this case, that would cause any hidden bugs, so no worries.
+On Fri, Sep 11, 2015 at 05:27:25AM +0000, Yuantian Tang wrote:
+> Hi Tejun,
+> 
+> Could you please take the version 1 patch?
+> The version 2 patch can't address these warnings, and the version 1 can definitely remove them.
+> In this case, that would cause any hidden bugs, so no worries.
 
-Regards,
-Yuantian
+Ugh... I really hate changes which are made to just work around
+compiler silliness.  If this is something which goes away with newer
+gcc, Fengguang can just make it as a known false positive.  Yuantian,
+which compiler are you using?
 
-> -----Original Message-----
-> From: Tejun Heo [mailto:htejun@gmail.com] On Behalf Of Tejun Heo
-> Sent: Wednesday, September 09, 2015 10:02 PM
-> To: Tang Yuantian-B29983 <Yuantian.Tang@freescale.com>
-> Cc: hdegoede@redhat.com; linux-ide@vger.kernel.org; linux-
-> kernel@vger.kernel.org; devicetree@vger.kernel.org
-> Subject: Re: [PATCH] ahci: qoriq: fixed using uninitialized variable warnings
-> 
-> On Wed, Sep 09, 2015 at 05:16:22PM +0800, Yuantian.Tang@freescale.com
-> wrote:
-> > From: Tang Yuantian <Yuantian.Tang@freescale.com>
-> >
-> > kbuild test robot reports the warnings:
-> > drivers/ata/ahci_qoriq.c: In function 'ahci_qoriq_hardreset':
-> > >> include/asm-generic/io.h:163:2: warning: 'px_is' may be used
-> > >> uninitialized in this function [-Wuninitialized]
-> > drivers/ata/ahci_qoriq.c:70:14: note: 'px_is' was declared here
-> > >> include/asm-generic/io.h:163:2: warning: 'px_cmd' may be used
-> > >> uninitialized in this function [-Wuninitialized]
-> > drivers/ata/ahci_qoriq.c:70:6: note: 'px_cmd' was declared here
-> >
-> > This patch fixed it by assigning 0 to px_is and px_cmd variables.
-> > This patch also remove line 'struct ccsr_ahci *reg_base' which is not
-> > referred by any other codes and thus a dead one.
-> 
-> Hmm... I think the problem here is that the complier can't know whether
-> qoriq_priv->type would change across intervening function calls.  Maybe a
-> better solution is caching the type in a local variable so that the compiler can
-> tell that those two tests will always move together?  It generally isn't a good
-> idea to clear variables unnecessarily as that can hide actual bugs that compiler
-> can detect.
-> 
-> Thanks.
-> 
-> --
-> tejun
+Thanks.
+
+-- 
+tejun
