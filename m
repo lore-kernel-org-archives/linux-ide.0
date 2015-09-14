@@ -1,14 +1,14 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RFT PATCH] mips: maltasmvp_eva_defconfig: convert to use libata PATA
- drivers
-Date: Mon, 14 Sep 2015 17:51:53 +0200
-Message-ID: <1442245918-27631-12-git-send-email-b.zolnierkie@samsung.com>
+Subject: [RFT PATCH] mips: malta_qemu_32r6_defconfig: convert to use libata
+ PATA drivers
+Date: Mon, 14 Sep 2015 17:51:51 +0200
+Message-ID: <1442245918-27631-10-git-send-email-b.zolnierkie@samsung.com>
 References: <1442245918-27631-1-git-send-email-b.zolnierkie@samsung.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-reply-to: <1442245918-27631-1-git-send-email-b.zolnierkie@samsung.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-mips@linux-mips.org, Ralf Baechle <ralf@linux-mips.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com, Paul Burton <paul.burton@imgtec.com>, Markos Chandras <markos.chandras@imgtec.com>, "Steven J. Hill" <Steven.Hill@imgtec.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com, Markos Chandras <markos.chandras@imgtec.com>
 List-Id: linux-ide@vger.kernel.org
 
 IDE subsystem has been deprecated since 2009 and the majority
@@ -24,25 +24,23 @@ in use:
 
 * having duplicate drivers for same hardware confuses users
 
-This patch converts maltasmvp_eva_defconfig to use libata PATA
-drivers.
+This patch converts malta_qemu_32r6_defconfig to use libata
+PATA drivers.
 
-Cc: Paul Burton <paul.burton@imgtec.com>
 Cc: Markos Chandras <markos.chandras@imgtec.com>
-Cc: Steven J. Hill <Steven.Hill@imgtec.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
 Untested.
 If you have affected hardware please test.  Thank you.
 
- arch/mips/configs/maltasmvp_eva_defconfig | 11 +++++------
+ arch/mips/configs/malta_qemu_32r6_defconfig | 11 +++++------
  1 file changed, 5 insertions(+), 6 deletions(-)
 
-diff --git a/arch/mips/configs/maltasmvp_eva_defconfig b/arch/mips/configs/maltasmvp_eva_defconfig
-index c83338a..2774ef0 100644
---- a/arch/mips/configs/maltasmvp_eva_defconfig
-+++ b/arch/mips/configs/maltasmvp_eva_defconfig
-@@ -85,15 +85,14 @@ CONFIG_NET_CLS_IND=y
+diff --git a/arch/mips/configs/malta_qemu_32r6_defconfig b/arch/mips/configs/malta_qemu_32r6_defconfig
+index 4bce1f8..7f50dd6 100644
+--- a/arch/mips/configs/malta_qemu_32r6_defconfig
++++ b/arch/mips/configs/malta_qemu_32r6_defconfig
+@@ -80,15 +80,14 @@ CONFIG_NET_CLS_IND=y
  CONFIG_DEVTMPFS=y
  CONFIG_BLK_DEV_LOOP=y
  CONFIG_BLK_DEV_CRYPTOLOOP=m
