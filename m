@@ -1,14 +1,14 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RFT PATCH] mips: malta_kvm_defconfig: convert to use libata PATA
- drivers
-Date: Mon, 14 Sep 2015 17:51:49 +0200
-Message-ID: <1442245918-27631-8-git-send-email-b.zolnierkie@samsung.com>
+Subject: [RFT PATCH] mips: malta_kvm_guest_defconfig: convert to use libata
+ PATA drivers
+Date: Mon, 14 Sep 2015 17:51:50 +0200
+Message-ID: <1442245918-27631-9-git-send-email-b.zolnierkie@samsung.com>
 References: <1442245918-27631-1-git-send-email-b.zolnierkie@samsung.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:41767 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755699AbbINPx0 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Sep 2015 11:53:26 -0400
+Received: from mailout3.samsung.com ([203.254.224.33]:38215 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754709AbbINPxh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Sep 2015 11:53:37 -0400
 In-reply-to: <1442245918-27631-1-git-send-email-b.zolnierkie@samsung.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -28,9 +28,9 @@ in use:
 
 * having duplicate drivers for same hardware confuses users
 
-This patch converts malta_kvm_defconfig to use libata PATA
-drivers (tc86c001 IDE host driver has no corresponding libata
-driver yet so it is not converted).
+This patch converts malta_kvm_guest_defconfig to use libata
+PATA drivers (tc86c001 IDE host driver has no corresponding
+libata driver yet so it is not converted).
 
 Cc: Paul Burton <paul.burton@imgtec.com>
 Cc: Markos Chandras <markos.chandras@imgtec.com>
@@ -44,15 +44,15 @@ BTW Does this platform really use tc86c001 chipset or has
 this defconfig been derived from the one already using
 tc86c001 driver?
 
- arch/mips/configs/malta_kvm_defconfig | 16 +++++++++-------
+ arch/mips/configs/malta_kvm_guest_defconfig | 16 +++++++++-------
  1 file changed, 9 insertions(+), 7 deletions(-)
 
-diff --git a/arch/mips/configs/malta_kvm_defconfig b/arch/mips/configs/malta_kvm_defconfig
-index d41742d..98f1387 100644
---- a/arch/mips/configs/malta_kvm_defconfig
-+++ b/arch/mips/configs/malta_kvm_defconfig
-@@ -248,17 +248,12 @@ CONFIG_CDROM_PKTCDVD=m
- CONFIG_ATA_OVER_ETH=m
+diff --git a/arch/mips/configs/malta_kvm_guest_defconfig b/arch/mips/configs/malta_kvm_guest_defconfig
+index a7806e8..3b5d591 100644
+--- a/arch/mips/configs/malta_kvm_guest_defconfig
++++ b/arch/mips/configs/malta_kvm_guest_defconfig
+@@ -248,17 +248,12 @@ CONFIG_ATA_OVER_ETH=m
+ CONFIG_VIRTIO_BLK=y
  CONFIG_IDE=y
  CONFIG_BLK_DEV_IDECD=y
 -CONFIG_IDE_GENERIC=y
