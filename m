@@ -1,15 +1,19 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RFT PATCH] mips: lemote2f_defconfig: convert to use libata PATA
+Subject: [RFT PATCH] mips: malta_kvm_defconfig: convert to use libata PATA
  drivers
-Date: Mon, 14 Sep 2015 17:51:47 +0200
-Message-ID: <1442245918-27631-6-git-send-email-b.zolnierkie@samsung.com>
+Date: Mon, 14 Sep 2015 17:51:49 +0200
+Message-ID: <1442245918-27631-8-git-send-email-b.zolnierkie@samsung.com>
 References: <1442245918-27631-1-git-send-email-b.zolnierkie@samsung.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mailout2.samsung.com ([203.254.224.25]:41767 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755699AbbINPx0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Sep 2015 11:53:26 -0400
 In-reply-to: <1442245918-27631-1-git-send-email-b.zolnierkie@samsung.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-mips@linux-mips.org, Ralf Baechle <ralf@linux-mips.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com, Huacai Chen <chenhc@lemote.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-mips@linux-mips.org, Ralf Baechle <ralf@linux-mips.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com, Paul Burton <paul.burton@imgtec.com>, Markos Chandras <markos.chandras@imgtec.com>, Sanjay Lal <sanjayl@kymasys.com>
 
 IDE subsystem has been deprecated since 2009 and the majority
 (if not all) of Linux distributions have switched to use
@@ -24,47 +28,63 @@ in use:
 
 * having duplicate drivers for same hardware confuses users
 
-This patch converts lemote2f_defconfig to use libata PATA
-drivers.
+This patch converts malta_kvm_defconfig to use libata PATA
+drivers (tc86c001 IDE host driver has no corresponding libata
+driver yet so it is not converted).
 
-PS This platform uses CS5536 chipset which (due to historical
-reasons) has basic support in AMD/nVidia PATA host driver and
-full support in a newer CS5536 PATA one (pata_cs5536).  Thus
-most likely this platform should switch to using the latter
-host driver.
-
-Cc: Huacai Chen <chenhc@lemote.com>
+Cc: Paul Burton <paul.burton@imgtec.com>
+Cc: Markos Chandras <markos.chandras@imgtec.com>
+Cc: Sanjay Lal <sanjayl@kymasys.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
 Build tested only.
 If you have affected hardware please test.  Thank you.
 
- arch/mips/configs/lemote2f_defconfig | 11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
+BTW Does this platform really use tc86c001 chipset or has
+this defconfig been derived from the one already using
+tc86c001 driver?
 
-diff --git a/arch/mips/configs/lemote2f_defconfig b/arch/mips/configs/lemote2f_defconfig
-index 54cc385..004cf52 100644
---- a/arch/mips/configs/lemote2f_defconfig
-+++ b/arch/mips/configs/lemote2f_defconfig
-@@ -108,16 +108,11 @@ CONFIG_BLK_DEV_LOOP=y
- CONFIG_BLK_DEV_CRYPTOLOOP=m
- CONFIG_BLK_DEV_RAM=y
- CONFIG_BLK_DEV_RAM_SIZE=8192
--# CONFIG_MISC_DEVICES is not set
--CONFIG_IDE=y
--CONFIG_IDE_TASK_IOCTL=y
--# CONFIG_IDEPCI_PCIBUS_ORDER is not set
--CONFIG_BLK_DEV_AMD74XX=y
+ arch/mips/configs/malta_kvm_defconfig | 16 +++++++++-------
+ 1 file changed, 9 insertions(+), 7 deletions(-)
+
+diff --git a/arch/mips/configs/malta_kvm_defconfig b/arch/mips/configs/malta_kvm_defconfig
+index d41742d..98f1387 100644
+--- a/arch/mips/configs/malta_kvm_defconfig
++++ b/arch/mips/configs/malta_kvm_defconfig
+@@ -248,17 +248,12 @@ CONFIG_CDROM_PKTCDVD=m
+ CONFIG_ATA_OVER_ETH=m
+ CONFIG_IDE=y
+ CONFIG_BLK_DEV_IDECD=y
+-CONFIG_IDE_GENERIC=y
+-CONFIG_BLK_DEV_GENERIC=y
+-CONFIG_BLK_DEV_PIIX=y
+-CONFIG_BLK_DEV_IT8213=m
+ CONFIG_BLK_DEV_TC86C001=m
+ CONFIG_RAID_ATTRS=m
 -CONFIG_SCSI=m
 -CONFIG_BLK_DEV_SD=m
 +CONFIG_BLK_DEV_SD=y
+ CONFIG_CHR_DEV_ST=m
+ CONFIG_CHR_DEV_OSST=m
+-CONFIG_BLK_DEV_SR=m
++CONFIG_BLK_DEV_SR=y
+ CONFIG_BLK_DEV_SR_VENDOR=y
  CONFIG_CHR_DEV_SG=m
--CONFIG_SCSI_MULTI_LUN=y
- # CONFIG_SCSI_LOWLEVEL is not set
+ CONFIG_SCSI_MULTI_LUN=y
+@@ -274,6 +269,13 @@ CONFIG_SCSI_AACRAID=m
+ CONFIG_SCSI_AIC7XXX=m
+ CONFIG_AIC7XXX_RESET_DELAY_MS=15000
+ # CONFIG_AIC7XXX_DEBUG_ENABLE is not set
 +CONFIG_ATA=y
-+CONFIG_PATA_AMD=y
++CONFIG_ATA_PIIX=y
++CONFIG_PATA_IT8213=m
++CONFIG_PATA_OLDPIIX=y
++CONFIG_PATA_MPIIX=y
++CONFIG_ATA_GENERIC=y
++CONFIG_PATA_LEGACY=y
  CONFIG_MD=y
  CONFIG_BLK_DEV_MD=m
  CONFIG_MD_LINEAR=m
 -- 
 1.9.1
+
