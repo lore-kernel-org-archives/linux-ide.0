@@ -1,13 +1,14 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RFT PATCH] mips: malta_defconfig: convert to use libata PATA drivers
-Date: Mon, 14 Sep 2015 17:51:48 +0200
-Message-ID: <1442245918-27631-7-git-send-email-b.zolnierkie@samsung.com>
+Subject: [RFT PATCH] mips: lemote2f_defconfig: convert to use libata PATA
+ drivers
+Date: Mon, 14 Sep 2015 17:51:47 +0200
+Message-ID: <1442245918-27631-6-git-send-email-b.zolnierkie@samsung.com>
 References: <1442245918-27631-1-git-send-email-b.zolnierkie@samsung.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-reply-to: <1442245918-27631-1-git-send-email-b.zolnierkie@samsung.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-mips@linux-mips.org, Ralf Baechle <ralf@linux-mips.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com, Paul Burton <paul.burton@imgtec.com>, Markos Chandras <markos.chandras@imgtec.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com, Huacai Chen <chenhc@lemote.com>
 List-Id: linux-ide@vger.kernel.org
 
 IDE subsystem has been deprecated since 2009 and the majority
@@ -23,44 +24,45 @@ in use:
 
 * having duplicate drivers for same hardware confuses users
 
-This patch converts malta_defconfig to use libata PATA
+This patch converts lemote2f_defconfig to use libata PATA
 drivers.
 
-Cc: Paul Burton <paul.burton@imgtec.com>
-Cc: Markos Chandras <markos.chandras@imgtec.com>
+PS This platform uses CS5536 chipset which (due to historical
+reasons) has basic support in AMD/nVidia PATA host driver and
+full support in a newer CS5536 PATA one (pata_cs5536).  Thus
+most likely this platform should switch to using the latter
+host driver.
+
+Cc: Huacai Chen <chenhc@lemote.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
 Build tested only.
 If you have affected hardware please test.  Thank you.
 
- arch/mips/configs/malta_defconfig | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ arch/mips/configs/lemote2f_defconfig | 11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
 
-diff --git a/arch/mips/configs/malta_defconfig b/arch/mips/configs/malta_defconfig
-index 61a4460..5afb484 100644
---- a/arch/mips/configs/malta_defconfig
-+++ b/arch/mips/configs/malta_defconfig
-@@ -241,14 +241,11 @@ CONFIG_BLK_DEV_NBD=m
+diff --git a/arch/mips/configs/lemote2f_defconfig b/arch/mips/configs/lemote2f_defconfig
+index 54cc385..004cf52 100644
+--- a/arch/mips/configs/lemote2f_defconfig
++++ b/arch/mips/configs/lemote2f_defconfig
+@@ -108,16 +108,11 @@ CONFIG_BLK_DEV_LOOP=y
+ CONFIG_BLK_DEV_CRYPTOLOOP=m
  CONFIG_BLK_DEV_RAM=y
- CONFIG_CDROM_PKTCDVD=m
- CONFIG_ATA_OVER_ETH=m
+ CONFIG_BLK_DEV_RAM_SIZE=8192
+-# CONFIG_MISC_DEVICES is not set
 -CONFIG_IDE=y
--CONFIG_BLK_DEV_IDECD=y
--CONFIG_IDE_GENERIC=y
- CONFIG_RAID_ATTRS=m
- CONFIG_BLK_DEV_SD=y
- CONFIG_CHR_DEV_ST=m
- CONFIG_CHR_DEV_OSST=m
--CONFIG_BLK_DEV_SR=m
-+CONFIG_BLK_DEV_SR=y
- CONFIG_BLK_DEV_SR_VENDOR=y
+-CONFIG_IDE_TASK_IOCTL=y
+-# CONFIG_IDEPCI_PCIBUS_ORDER is not set
+-CONFIG_BLK_DEV_AMD74XX=y
+-CONFIG_SCSI=m
+-CONFIG_BLK_DEV_SD=m
++CONFIG_BLK_DEV_SD=y
  CONFIG_CHR_DEV_SG=m
- CONFIG_SCSI_CONSTANTS=y
-@@ -265,6 +262,7 @@ CONFIG_AIC7XXX_RESET_DELAY_MS=15000
- # CONFIG_AIC7XXX_DEBUG_ENABLE is not set
- CONFIG_ATA=y
- CONFIG_ATA_PIIX=y
-+CONFIG_PATA_LEGACY=y
+-CONFIG_SCSI_MULTI_LUN=y
+ # CONFIG_SCSI_LOWLEVEL is not set
++CONFIG_ATA=y
++CONFIG_PATA_AMD=y
  CONFIG_MD=y
  CONFIG_BLK_DEV_MD=m
  CONFIG_MD_LINEAR=m
