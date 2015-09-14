@@ -1,15 +1,18 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RFT PATCH] mips: capcella_defconfig: convert to use libata PATA
- drivers
-Date: Mon, 14 Sep 2015 17:51:43 +0200
-Message-ID: <1442245918-27631-2-git-send-email-b.zolnierkie@samsung.com>
+Subject: [RFT PATCH] mips: e55_defconfig: convert to use libata PATA drivers
+Date: Mon, 14 Sep 2015 17:51:44 +0200
+Message-ID: <1442245918-27631-3-git-send-email-b.zolnierkie@samsung.com>
 References: <1442245918-27631-1-git-send-email-b.zolnierkie@samsung.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mailout2.samsung.com ([203.254.224.25]:37228 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755329AbbINPwd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Sep 2015 11:52:33 -0400
 In-reply-to: <1442245918-27631-1-git-send-email-b.zolnierkie@samsung.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-mips@linux-mips.org, Ralf Baechle <ralf@linux-mips.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-mips@linux-mips.org, Ralf Baechle <ralf@linux-mips.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com, Yoichi Yuasa <yoichi_yuasa@tripeaks.co.jp>
 
 IDE subsystem has been deprecated since 2009 and the majority
 (if not all) of Linux distributions have switched to use
@@ -24,24 +27,29 @@ in use:
 
 * having duplicate drivers for same hardware confuses users
 
-This patch converts capcella_defconfig to use libata PATA
-drivers.
+This patch converts e55_defconfig to use libata PATA drivers.
 
+PS This platform still uses "ide0=base[,ctl[,irq]]" hack in
+its defconfig.  The hack itself has been removed in 2008 and
+this platform should be converted to using PATA platform host
+driver (pata_platform) instead.
+
+Cc: Yoichi Yuasa <yoichi_yuasa@tripeaks.co.jp>
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
 Build tested only.
 If you have affected hardware please test.  Thank you.
 
- arch/mips/configs/capcella_defconfig | 6 +++---
+ arch/mips/configs/e55_defconfig | 6 +++---
  1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/arch/mips/configs/capcella_defconfig b/arch/mips/configs/capcella_defconfig
-index 5135dc0..2924ba3 100644
---- a/arch/mips/configs/capcella_defconfig
-+++ b/arch/mips/configs/capcella_defconfig
-@@ -31,9 +31,9 @@ CONFIG_NETWORK_SECMARK=y
- CONFIG_IP_SCTP=m
- CONFIG_FW_LOADER=m
+diff --git a/arch/mips/configs/e55_defconfig b/arch/mips/configs/e55_defconfig
+index 0126e66..e94d266 100644
+--- a/arch/mips/configs/e55_defconfig
++++ b/arch/mips/configs/e55_defconfig
+@@ -14,9 +14,9 @@ CONFIG_MODVERSIONS=y
+ CONFIG_MODULE_SRCVERSION_ALL=y
+ # CONFIG_BLK_DEV_BSG is not set
  CONFIG_BLK_DEV_RAM=y
 -# CONFIG_MISC_DEVICES is not set
 -CONFIG_IDE=y
@@ -49,8 +57,9 @@ index 5135dc0..2924ba3 100644
 +CONFIG_BLK_DEV_SD=y
 +CONFIG_ATA=y
 +CONFIG_PATA_LEGACY=y
- CONFIG_NETDEVICES=y
- CONFIG_PHYLIB=m
- CONFIG_MARVELL_PHY=m
+ # CONFIG_INPUT_MOUSEDEV is not set
+ # CONFIG_INPUT_KEYBOARD is not set
+ # CONFIG_INPUT_MOUSE is not set
 -- 
 1.9.1
+
