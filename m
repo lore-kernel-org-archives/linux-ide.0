@@ -1,7 +1,7 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RFT PATCH] mips: mpc30x_defconfig: convert to use libata PATA drivers
-Date: Mon, 14 Sep 2015 17:51:56 +0200
-Message-ID: <1442245918-27631-15-git-send-email-b.zolnierkie@samsung.com>
+Subject: [RFT PATCH] mips: workpad_defconfig: convert to use libata PATA drivers
+Date: Mon, 14 Sep 2015 17:51:58 +0200
+Message-ID: <1442245918-27631-17-git-send-email-b.zolnierkie@samsung.com>
 References: <1442245918-27631-1-git-send-email-b.zolnierkie@samsung.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-reply-to: <1442245918-27631-1-git-send-email-b.zolnierkie@samsung.com>
@@ -23,35 +23,32 @@ in use:
 
 * having duplicate drivers for same hardware confuses users
 
-This patch converts mpc30x_defconfig to use libata PATA
+This patch converts workpad_defconfig to use libata PATA
 drivers.
-
-PS This platform still uses "ide0=base[,ctl[,irq]]" hack in
-its defconfig.  The hack itself has been removed in 2008 and
-this platform should be converted to using PATA platform host
-driver (pata_platform) instead.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
 Build tested only.
 If you have affected hardware please test.  Thank you.
 
- arch/mips/configs/mpc30x_defconfig | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ arch/mips/configs/workpad_defconfig | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/arch/mips/configs/mpc30x_defconfig b/arch/mips/configs/mpc30x_defconfig
-index 7a34660..a2c045f 100644
---- a/arch/mips/configs/mpc30x_defconfig
-+++ b/arch/mips/configs/mpc30x_defconfig
-@@ -27,9 +27,9 @@ CONFIG_INET_XFRM_MODE_BEET=m
+diff --git a/arch/mips/configs/workpad_defconfig b/arch/mips/configs/workpad_defconfig
+index ee4b2be..1b556cd 100644
+--- a/arch/mips/configs/workpad_defconfig
++++ b/arch/mips/configs/workpad_defconfig
+@@ -28,10 +28,10 @@ CONFIG_IP_MULTICAST=y
+ # CONFIG_IPV6 is not set
  CONFIG_NETWORK_SECMARK=y
- CONFIG_CONNECTOR=m
- CONFIG_ATA_OVER_ETH=m
+ CONFIG_BLK_DEV_RAM=m
 -# CONFIG_MISC_DEVICES is not set
 -CONFIG_IDE=y
+-CONFIG_BLK_DEV_IDECS=m
 -CONFIG_IDE_GENERIC=y
 +CONFIG_BLK_DEV_SD=y
 +CONFIG_ATA=y
++CONFIG_PATA_PCMCIA=m
 +CONFIG_PATA_LEGACY=y
  CONFIG_NETDEVICES=y
  # CONFIG_NETDEV_1000 is not set
