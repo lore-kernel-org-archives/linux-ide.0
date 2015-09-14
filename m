@@ -1,16 +1,15 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RFT PATCH] mips: bigsur_defconfig: convert to use libata PATA drivers
-Date: Mon, 14 Sep 2015 17:51:42 +0200
-Message-ID: <1442245918-27631-1-git-send-email-b.zolnierkie@samsung.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:49347 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751406AbbINPwS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Sep 2015 11:52:18 -0400
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Subject: [RFT PATCH] mips: capcella_defconfig: convert to use libata PATA
+ drivers
+Date: Mon, 14 Sep 2015 17:51:43 +0200
+Message-ID: <1442245918-27631-2-git-send-email-b.zolnierkie@samsung.com>
+References: <1442245918-27631-1-git-send-email-b.zolnierkie@samsung.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-reply-to: <1442245918-27631-1-git-send-email-b.zolnierkie@samsung.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-mips@linux-mips.org, Ralf Baechle <ralf@linux-mips.org>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com
+List-Id: linux-ide@vger.kernel.org
 
 IDE subsystem has been deprecated since 2009 and the majority
 (if not all) of Linux distributions have switched to use
@@ -25,49 +24,33 @@ in use:
 
 * having duplicate drivers for same hardware confuses users
 
-This patch converts bigsur_defconfig to use libata PATA
-drivers (tc86c001 IDE host driver has no corresponding libata
-driver yet so it is not converted).
+This patch converts capcella_defconfig to use libata PATA
+drivers.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
 Build tested only.
 If you have affected hardware please test.  Thank you.
 
- arch/mips/configs/bigsur_defconfig | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ arch/mips/configs/capcella_defconfig | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/arch/mips/configs/bigsur_defconfig b/arch/mips/configs/bigsur_defconfig
-index 1cdff6b..b3e7a1b 100644
---- a/arch/mips/configs/bigsur_defconfig
-+++ b/arch/mips/configs/bigsur_defconfig
-@@ -122,20 +122,20 @@ CONFIG_EEPROM_MAX6875=y
- CONFIG_IDE=y
- CONFIG_BLK_DEV_IDECD=y
- CONFIG_BLK_DEV_IDETAPE=y
+diff --git a/arch/mips/configs/capcella_defconfig b/arch/mips/configs/capcella_defconfig
+index 5135dc0..2924ba3 100644
+--- a/arch/mips/configs/capcella_defconfig
++++ b/arch/mips/configs/capcella_defconfig
+@@ -31,9 +31,9 @@ CONFIG_NETWORK_SECMARK=y
+ CONFIG_IP_SCTP=m
+ CONFIG_FW_LOADER=m
+ CONFIG_BLK_DEV_RAM=y
+-# CONFIG_MISC_DEVICES is not set
+-CONFIG_IDE=y
 -CONFIG_IDE_GENERIC=y
--CONFIG_BLK_DEV_GENERIC=y
--CONFIG_BLK_DEV_CMD64X=y
--CONFIG_BLK_DEV_IT8213=m
- CONFIG_BLK_DEV_TC86C001=m
- CONFIG_BLK_DEV_SD=y
--CONFIG_CHR_DEV_ST=m
--CONFIG_BLK_DEV_SR=m
-+CONFIG_CHR_DEV_ST=y
-+CONFIG_BLK_DEV_SR=y
- CONFIG_BLK_DEV_SR_VENDOR=y
- CONFIG_CHR_DEV_SG=m
- CONFIG_CHR_DEV_SCH=m
- CONFIG_ATA=y
- CONFIG_SATA_SIL24=y
-+CONFIG_PATA_CMD64X=y
-+CONFIG_PATA_IT8213=m
- CONFIG_PATA_SIL680=y
-+CONFIG_ATA_GENERIC=y
++CONFIG_BLK_DEV_SD=y
++CONFIG_ATA=y
 +CONFIG_PATA_LEGACY=y
  CONFIG_NETDEVICES=y
- CONFIG_NET_ETHERNET=y
- CONFIG_MII=y
+ CONFIG_PHYLIB=m
+ CONFIG_MARVELL_PHY=m
 -- 
 1.9.1
-
