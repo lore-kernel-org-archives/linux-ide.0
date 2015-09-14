@@ -1,13 +1,13 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RFT PATCH] mips: workpad_defconfig: convert to use libata PATA drivers
-Date: Mon, 14 Sep 2015 17:51:58 +0200
-Message-ID: <1442245918-27631-17-git-send-email-b.zolnierkie@samsung.com>
+Subject: [RFT PATCH] mips: maltaup_defconfig: convert to use libata PATA drivers
+Date: Mon, 14 Sep 2015 17:51:54 +0200
+Message-ID: <1442245918-27631-13-git-send-email-b.zolnierkie@samsung.com>
 References: <1442245918-27631-1-git-send-email-b.zolnierkie@samsung.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-reply-to: <1442245918-27631-1-git-send-email-b.zolnierkie@samsung.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-mips@linux-mips.org, Ralf Baechle <ralf@linux-mips.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com, Paul Burton <paul.burton@imgtec.com>, Markos Chandras <markos.chandras@imgtec.com>, "Steven J. Hill" <Steven.Hill@imgtec.com>
 List-Id: linux-ide@vger.kernel.org
 
 IDE subsystem has been deprecated since 2009 and the majority
@@ -23,35 +23,44 @@ in use:
 
 * having duplicate drivers for same hardware confuses users
 
-This patch converts workpad_defconfig to use libata PATA
+This patch converts maltaup_defconfig to use libata PATA
 drivers.
 
+Cc: Paul Burton <paul.burton@imgtec.com>
+Cc: Markos Chandras <markos.chandras@imgtec.com>
+Cc: Steven J. Hill <Steven.Hill@imgtec.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
 Build tested only.
 If you have affected hardware please test.  Thank you.
 
- arch/mips/configs/workpad_defconfig | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ arch/mips/configs/maltaup_defconfig | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
 
-diff --git a/arch/mips/configs/workpad_defconfig b/arch/mips/configs/workpad_defconfig
-index ee4b2be..1b556cd 100644
---- a/arch/mips/configs/workpad_defconfig
-+++ b/arch/mips/configs/workpad_defconfig
-@@ -28,10 +28,10 @@ CONFIG_IP_MULTICAST=y
- # CONFIG_IPV6 is not set
- CONFIG_NETWORK_SECMARK=y
- CONFIG_BLK_DEV_RAM=m
--# CONFIG_MISC_DEVICES is not set
+diff --git a/arch/mips/configs/maltaup_defconfig b/arch/mips/configs/maltaup_defconfig
+index 6234464..9bbd221 100644
+--- a/arch/mips/configs/maltaup_defconfig
++++ b/arch/mips/configs/maltaup_defconfig
+@@ -80,15 +80,14 @@ CONFIG_NET_CLS_IND=y
+ CONFIG_DEVTMPFS=y
+ CONFIG_BLK_DEV_LOOP=y
+ CONFIG_BLK_DEV_CRYPTOLOOP=m
 -CONFIG_IDE=y
--CONFIG_BLK_DEV_IDECS=m
--CONFIG_IDE_GENERIC=y
-+CONFIG_BLK_DEV_SD=y
+-# CONFIG_IDE_PROC_FS is not set
+-# CONFIG_IDEPCI_PCIBUS_ORDER is not set
+-CONFIG_BLK_DEV_GENERIC=y
+-CONFIG_BLK_DEV_PIIX=y
+-CONFIG_SCSI=y
+ CONFIG_BLK_DEV_SD=y
+ CONFIG_CHR_DEV_SG=y
+ # CONFIG_SCSI_LOWLEVEL is not set
 +CONFIG_ATA=y
-+CONFIG_PATA_PCMCIA=m
-+CONFIG_PATA_LEGACY=y
++CONFIG_ATA_PIIX=y
++CONFIG_PATA_OLDPIIX=y
++CONFIG_PATA_MPIIX=y
++CONFIG_ATA_GENERIC=y
  CONFIG_NETDEVICES=y
- # CONFIG_NETDEV_1000 is not set
- # CONFIG_NETDEV_10000 is not set
+ # CONFIG_NET_VENDOR_3COM is not set
+ # CONFIG_NET_VENDOR_ADAPTEC is not set
 -- 
 1.9.1
