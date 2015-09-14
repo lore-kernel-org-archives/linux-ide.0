@@ -1,19 +1,15 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RFT PATCH] mips: maltaaprp_defconfig: convert to use libata PATA
+Subject: [RFT PATCH] mips: maltasmvp_eva_defconfig: convert to use libata PATA
  drivers
-Date: Mon, 14 Sep 2015 17:51:52 +0200
-Message-ID: <1442245918-27631-11-git-send-email-b.zolnierkie@samsung.com>
+Date: Mon, 14 Sep 2015 17:51:53 +0200
+Message-ID: <1442245918-27631-12-git-send-email-b.zolnierkie@samsung.com>
 References: <1442245918-27631-1-git-send-email-b.zolnierkie@samsung.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:44675 "EHLO
-	mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755831AbbINPyA (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 14 Sep 2015 11:54:00 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-reply-to: <1442245918-27631-1-git-send-email-b.zolnierkie@samsung.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-mips@linux-mips.org, Ralf Baechle <ralf@linux-mips.org>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com, Paul Burton <paul.burton@imgtec.com>, Markos Chandras <markos.chandras@imgtec.com>, "Steven J. Hill" <Steven.Hill@imgtec.com>
+List-Id: linux-ide@vger.kernel.org
 
 IDE subsystem has been deprecated since 2009 and the majority
 (if not all) of Linux distributions have switched to use
@@ -28,7 +24,7 @@ in use:
 
 * having duplicate drivers for same hardware confuses users
 
-This patch converts maltaaprp_defconfig to use libata PATA
+This patch converts maltasmvp_eva_defconfig to use libata PATA
 drivers.
 
 Cc: Paul Burton <paul.burton@imgtec.com>
@@ -36,17 +32,17 @@ Cc: Markos Chandras <markos.chandras@imgtec.com>
 Cc: Steven J. Hill <Steven.Hill@imgtec.com>
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
-Build tested only.
+Untested.
 If you have affected hardware please test.  Thank you.
 
- arch/mips/configs/maltaaprp_defconfig | 11 +++++------
+ arch/mips/configs/maltasmvp_eva_defconfig | 11 +++++------
  1 file changed, 5 insertions(+), 6 deletions(-)
 
-diff --git a/arch/mips/configs/maltaaprp_defconfig b/arch/mips/configs/maltaaprp_defconfig
-index fb042ce..a9d433a 100644
---- a/arch/mips/configs/maltaaprp_defconfig
-+++ b/arch/mips/configs/maltaaprp_defconfig
-@@ -81,15 +81,14 @@ CONFIG_NET_CLS_IND=y
+diff --git a/arch/mips/configs/maltasmvp_eva_defconfig b/arch/mips/configs/maltasmvp_eva_defconfig
+index c83338a..2774ef0 100644
+--- a/arch/mips/configs/maltasmvp_eva_defconfig
++++ b/arch/mips/configs/maltasmvp_eva_defconfig
+@@ -85,15 +85,14 @@ CONFIG_NET_CLS_IND=y
  CONFIG_DEVTMPFS=y
  CONFIG_BLK_DEV_LOOP=y
  CONFIG_BLK_DEV_CRYPTOLOOP=m
@@ -69,4 +65,3 @@ index fb042ce..a9d433a 100644
  # CONFIG_NET_VENDOR_ADAPTEC is not set
 -- 
 1.9.1
-
