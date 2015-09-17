@@ -1,37 +1,50 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2] ata: pata_macio: Fix module autoload for OF platform
+From: Luis de Bethencourt <luis@debethencourt.com>
+Subject: [PATCH v3] ata: pata_macio: Fix module autoload for OF platform
  driver
-Date: Wed, 16 Sep 2015 15:23:16 -0400
-Message-ID: <20150916192316.GA4921@mtj.duckdns.org>
-References: <20150915163114.GA5152@goodgumbo.baconseed.org>
+Date: Thu, 17 Sep 2015 13:19:45 +0200
+Message-ID: <20150917111945.GA11761@goodgumbo.baconseed.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yk0-f169.google.com ([209.85.160.169]:34017 "EHLO
-	mail-yk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751689AbbIPTXU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Sep 2015 15:23:20 -0400
+Received: from mail-wi0-f169.google.com ([209.85.212.169]:36440 "EHLO
+	mail-wi0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751421AbbIQLTr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Sep 2015 07:19:47 -0400
 Content-Disposition: inline
-In-Reply-To: <20150915163114.GA5152@goodgumbo.baconseed.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Luis de Bethencourt <luis@debethencourt.com>
-Cc: linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org, Stephen Rothwell <sfr@canb.auug.org.au>
 
-On Tue, Sep 15, 2015 at 06:31:14PM +0200, Luis de Bethencourt wrote:
-> This platform driver has a OF device ID table but the OF module
-> alias information is not created so module autoloading won't work.
-> 
-> This patch adds the missing MODULE_DEVICE_TABLE() for OF to export
-> that information so modules have the correct aliases built-in and
-> autoloading works correctly.
-> 
-> Link: https://lkml.org/lkml/2015/7/30/519
-> Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
+This platform driver has a OF device ID table but the OF module
+alias information is not created so module autoloading won't work.
 
-Applied to libata/for-4.3-fixes.
+This patch adds the missing MODULE_DEVICE_TABLE() for OF to export
+that information so modules have the correct aliases built-in and
+autoloading works correctly.
 
-Thanks!
+Link: https://lkml.org/lkml/2015/7/30/519
+Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
+---
 
+This fixes the typo error of version 2 reported by Stephen Rothwell
+https://lkml.org/lkml/2015/9/17/1
+
+ drivers/ata/pata_macio.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
+index b002858..e3d4b05 100644
+--- a/drivers/ata/pata_macio.c
++++ b/drivers/ata/pata_macio.c
+@@ -1344,6 +1344,7 @@ static struct of_device_id pata_macio_match[] =
+ 	},
+ 	{},
+ };
++MODULE_DEVICE_TABLE(of, pata_macio_match);
+ 
+ static struct macio_driver pata_macio_driver =
+ {
 -- 
-tejun
+2.4.6
+
