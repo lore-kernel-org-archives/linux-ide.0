@@ -1,37 +1,30 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ata:Check if D2H Register FIS command fails in the
- function ahci_do_softreset
-Date: Mon, 21 Sep 2015 15:02:51 -0400
-Message-ID: <20150921190251.GE13263@mtj.duckdns.org>
-References: <1442630182-25614-1-git-send-email-xerofoify@gmail.com>
+Subject: Re: [PATCH] ata:Fix error handling in the function
+ ahci_pci_reset_controller
+Date: Mon, 21 Sep 2015 15:07:54 -0400
+Message-ID: <20150921190754.GF13263@mtj.duckdns.org>
+References: <1442633267-24297-1-git-send-email-xerofoify@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yk0-f173.google.com ([209.85.160.173]:34116 "EHLO
-	mail-yk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753140AbbIUTCz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Sep 2015 15:02:55 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1442630182-25614-1-git-send-email-xerofoify@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+In-Reply-To: <1442633267-24297-1-git-send-email-xerofoify@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Nicholas Krause <xerofoify@gmail.com>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-On Fri, Sep 18, 2015 at 10:36:22PM -0400, Nicholas Krause wrote:
-> This fixes the missing error check and handling if the second D2H
-> register command fails in the function fails.
-> 
-> Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
+On Fri, Sep 18, 2015 at 11:27:47PM -0400, Nicholas Krause wrote:
+> This fixes error handling in the function ahci_pci_reset_controller
+> to properly check if the call to ahci_reset_controller fails and
+> if return -EIO to this function's caller rather then continuing
+> with this function's intended work if the controller cannot be
+> reset properly for this ahci pci based device.
 
-This isn't exactly a command execution and the success condition
-checks are performed manually afterwards.  The ignoring of command
-execution result is intentional there and the proposed change is
-likely to cause more harm than good.  Unless there are specific cases
-where the new code would behave better, I'd much rather leave it as it
-is.
+Maybe... I don't know.  What do we gain by failing resume?  Reporting
+is fine but what'd be the recovery action?
 
-Thansk.
+Thanks.
 
 -- 
 tejun
