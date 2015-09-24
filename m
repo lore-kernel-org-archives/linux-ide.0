@@ -1,39 +1,59 @@
-From: Adrian Palmer <adrian.palmer@seagate.com>
-Subject: [Announce] ZDM-Device-Mapper
-Date: Tue, 22 Sep 2015 09:56:58 -0600
-Message-ID: <CAKdFiL6BVaQcr7RHZFycKLfUSV+oLkvP9Abzy+y_3y14FwK-wQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Josh Bingaman <josh.bingaman@seagate.com>, Roger J Kassab <roger.j.kassab@seagate.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Paul Paulson <paul.paulson@seagate.com>
+From: Andrzej Hajda <a.hajda@samsung.com>
+Subject: [PATCH 03/19] libata: samsung_cf: fix handling platform_get_irq result
+Date: Thu, 24 Sep 2015 16:00:11 +0200
+Message-ID: <1443103227-25612-4-git-send-email-a.hajda@samsung.com>
+References: <1443103227-25612-1-git-send-email-a.hajda@samsung.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-reply-to: <1443103227-25612-1-git-send-email-a.hajda@samsung.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Andrzej Hajda <a.hajda@samsung.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Marek Szyprowski <m.szyprowski@samsung.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-All;
+The function can return negative value.
 
+The problem has been detected using proposed semantic patch
+scripts/coccinelle/tests/assign_signed_to_unsigned.cocci [1].
 
-Seagate is release the much requested device mapper shim for SMR.  In
-response to requests at Linux Plumber's Conference, we've make it
-available as soon as possible.
+[1]: http://permalink.gmane.org/gmane.linux.kernel/2046107
 
-We've held off releasing it to ensure stability and to remove
-frustration and reduce bring-up time to other developers who have
-shown interest in exploring SMR solutions.
+Signed-off-by: Andrzej Hajda <a.hajda@samsung.com>
+---
+Hi,
 
-We encourage testing and collaboration to make this a great product
-for the first generation of SMR drive support.
+To avoid problems with too many mail recipients I have sent whole
+patchset only to LKML. Anyway patches have no dependencies.
 
-Please reply to me directly for questions.
+Regards
+Andrzej
+---
+ drivers/ata/pata_samsung_cf.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-location:
-https://github.com/Seagate/ZDM-Device-Mapper
-
-
-
-Adrian Palmer
-Firmware Engineer II
-R&D Firmware
-Seagate, Longmont Colorado
-720-684-1307
-adrian.palmer@seagate.com
+diff --git a/drivers/ata/pata_samsung_cf.c b/drivers/ata/pata_samsung_cf.c
+index cbb5a47..e028763 100644
+--- a/drivers/ata/pata_samsung_cf.c
++++ b/drivers/ata/pata_samsung_cf.c
+@@ -510,8 +510,6 @@ static int __init pata_s3c_probe(struct platform_device *pdev)
+ 		return -ENOMEM;
+ 	}
+ 
+-	info->irq = platform_get_irq(pdev, 0);
+-
+ 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+ 
+ 	info->ide_addr = devm_ioremap_resource(dev, res);
+@@ -551,9 +549,10 @@ static int __init pata_s3c_probe(struct platform_device *pdev)
+ 
+ 	info->cpu_type = cpu_type;
+ 
++	ret = platform_get_irq(pdev, 0);
++	info->irq = ret > 0 ? ret : 0;
+ 	if (info->irq <= 0) {
+ 		ap->flags |= ATA_FLAG_PIO_POLLING;
+-		info->irq = 0;
+ 		ata_port_desc(ap, "no IRQ, using PIO polling\n");
+ 	}
+ 
+-- 
+1.9.1
