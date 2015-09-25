@@ -1,106 +1,218 @@
-From: Manuel Lauss <manuel.lauss@gmail.com>
-Subject: [RFC PATCH] ata: ahci: find eSATA ports and flag them as removable
-Date: Fri, 25 Sep 2015 13:05:01 +0200
-Message-ID: <1443179101-9870-1-git-send-email-manuel.lauss@gmail.com>
+From: Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>
+Subject: Re: linux: sata_nv: adma support
+Date: Fri, 25 Sep 2015 13:40:29 +0200
+Message-ID: <20150925114029.GH27119@pali>
+References: <201412232051.07067@pali>
+ <201508021108.52978@pali>
+ <CADLC3L3eym59Agpm2J_Oy_Eyfq=9iUTwi2BPxnLxoEM_Yx9cfw@mail.gmail.com>
+ <201508042006.57727@pali>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wi0-f173.google.com ([209.85.212.173]:35787 "EHLO
-	mail-wi0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753897AbbIYLFI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 Sep 2015 07:05:08 -0400
-Received: by wicge5 with SMTP id ge5so15600588wic.0
-        for <linux-ide@vger.kernel.org>; Fri, 25 Sep 2015 04:05:06 -0700 (PDT)
+Received: from mail-wi0-f196.google.com ([209.85.212.196]:36837 "EHLO
+	mail-wi0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754255AbbIYLkc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 25 Sep 2015 07:40:32 -0400
+Content-Disposition: inline
+In-Reply-To: <201508042006.57727@pali>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux-IDE <linux-ide@vger.kernel.org>
-Cc: Manuel Lauss <manuel.lauss@gmail.com>
+To: Robert Hancock <hancockrwd@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Robert Hancock <hancockr@shaw.ca>, Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-If the AHCI ports' HPCP or ESP bits are set, the port
-should be considered external (e.g. eSATA) and is marked
-as removable.  Userspace tools like udisks then treat it
-like an usb drive.
+On Tuesday 04 August 2015 20:06:57 Pali Roh=C3=A1r wrote:
+> On Monday 03 August 2015 05:02:15 Robert Hancock wrote:
+> > On Sun, Aug 2, 2015 at 3:08 AM, Pali Roh=C3=A1r <pali.rohar@gmail.c=
+om>
+> > wrote:
+> > > On Sunday 02 August 2015 03:45:32 Robert Hancock wrote:
+> > >> On Sat, Aug 1, 2015 at 2:09 PM, Pali Roh=C3=A1r <pali.rohar@gmai=
+l.com>
+> > >>=20
+> > >> wrote:
+> > >> > On Thursday 25 December 2014 07:22:13 Robert Hancock wrote:
+> > >> >> On Tue, Dec 23, 2014 at 1:51 PM, Pali Roh=C3=A1r
+> > >> >> <pali.rohar@gmail.com>
+> > >> >>=20
+> > >> >> wrote:
+> > >> >> > Hello,
+> > >> >> >=20
+> > >> >> > I have nvidia nforce4 motherboard with nvidia sata
+> > >> >> > controller:
+> > >> >> >=20
+> > >> >> > 00:07.0 IDE interface [0101]: NVIDIA Corporation CK804 Seri=
+al
+> > >> >> > ATA Controller [10de:0054] (rev f3)
+> > >> >> > 00:08.0 IDE interface [0101]: NVIDIA Corporation CK804 Seri=
+al
+> > >> >> > ATA Controller [10de:0055] (rev f3)
+> > >> >> >=20
+> > >> >> > I manually enabled adma mode (which is disabled by default)
+> > >> >> > by adding sata_nv.adma=3D1 to grub cmdline. In git history =
+I
+> > >> >> > found that enabling adma mode includes NCQ support and
+> > >> >> > reduced CPU overhead. It looks like adma mode is working,
+> > >> >> > but at every boot I see one same error message in dmesg:
+> > >> >> >=20
+> > >> >> > [   16.823514] ata1.00: exception Emask 0x1 SAct 0x0 SErr 0=
+x0
+> > >> >> > action 0x0
+> > >> >> > [   16.823520] ata1.00: CPB resp_flags 0x11: , CMD error
+> > >> >> > [   16.823524] ata1.00: failed command: SET FEATURES
+> > >> >> > [   16.823530] ata1.00: cmd
+> > >> >> > ef/05:fe:00:00:00/00:00:00:00:00/40 tag 16
+> > >> >> > [   16.823530]          res
+> > >> >> > 51/04:fe:00:00:00/00:00:00:00:00/40 Emask 0x1 (device error=
+)
+> > >> >> > [   16.823533] ata1.00: status: { DRDY ERR }
+> > >> >> > [   16.823535] ata1.00: error: { ABRT }
+> > >> >> >=20
+> > >> >> > When adma is disabled then this error message is not
+> > >> >> > generated.
+> > >> >>=20
+> > >> >> It looks like something is trying to issue a command to disab=
+le
+> > >> >> APM power management on the drive, and the command fails
+> > >> >> (likely because it doesn't support that command). I'm not sur=
+e
+> > >> >> where that would be coming from - I'm pretty sure the kernel
+> > >> >> doesn't issue that command itself. Something that's part of
+> > >> >> your distro perhaps?
+> > >> >>=20
+> > >> >> I don't know why it would only be failing in ADMA mode either=
+,
+> > >> >> though depending on where the command is coming from, maybe
+> > >> >> it's not being issued otherwise for some reason?
+> > >> >>=20
+> > >> >> > What does that error message means? It is critical? What is
+> > >> >> > that command SET FEATURES doing? Are there any problems wit=
+h
+> > >> >> > adma mode on nforce4 motherboards? Because I did not see an=
+y
+> > >> >> > problems (except that one error message).
+> > >> >> >=20
+> > >> >> > --
+> > >> >> > Pali Roh=C3=A1r
+> > >> >> > pali.rohar@gmail.com
+> > >> >=20
+> > >> > Hello,
+> > >> >=20
+> > >> > now after long time I did more investigation and that error is
+> > >> > reported for every connected HDD. I identified that it comes
+> > >> > from udev script
+> > >> >=20
+> > >> >  /lib/udev/rules.d/85-hdparm.rules
+> > >> >=20
+> > >> > which just call script /lib/udev/hdparm for every one connecte=
+d
+> > >> > HDD.
+> > >> >=20
+> > >> > Script /lib/udev/hdparm just call:
+> > >> >  /sbin/hdparm -B254 $DRIVE
+> > >> >=20
+> > >> > And that -B254 cause above error message in dmesg log. Output
+> > >> > from
+> > >> >=20
+> > >> > hdparm is:
+> > >> >  /dev/sda:
+> > >> >   setting Advanced Power Management level to 0xfe (254)
+> > >> >   APM_level      =3D not supported
+> > >> >=20
+> > >> > Any idea why in ADMA mode it cause above error (APM unsupporte=
+d)
+> > >> > and in non ADMA mode it is working fine? Maybe APM ATA command=
+s
+> > >> > should not be sent via ADMA?
+> > >> >=20
+> > >> > Here is another output:
+> > >> >  $ sudo hdparm -I /dev/sda | grep -i power
+> > >> > =20
+> > >> >             *    Power Management feature set
+> > >> >            =20
+> > >> >                  Power-Up In Standby feature set
+> > >> >            =20
+> > >> >             *    SET_FEATURES required to spinup after power u=
+p
+> > >> >             *    Host-initiated interface power management
+> > >>=20
+> > >> The "set features" command is a non-data command so based on our
+> > >> current knowledge, it should work in ADMA mode. However, these
+> > >> NVIDIA SATAs are black boxes, and rather buggy ones at that, so
+> > >> it's possible there's an unknown issue there.
+> > >=20
+> > > Maybe I should note that hdparm -I did not generated any error
+> > > message. I post is here because it show "Power Management feature
+> > > set" is supported by HDD. This indicate that HDD supports -B (APM=
+)
+> > > command, right?
+> >=20
+> > As far as I know, yes.
+> >=20
+> > >> The easiest way to test that would be to take out the condition
+> > >> check for qc->tf.protocol =3D=3D ATA_PROT_NODATA in
+> > >> nv_adma_use_reg_mode in drivers/ata/sata_nv.c. That would force
+> > >> it to disable ADMA for all non-data commands.
+> > >=20
+> > > Ok, as now I have just SSH access to that machine, I will do kern=
+el
+> > > patching later (when I have physical access to it).
+> > >=20
+> > >> I really don't know why Ubuntu is disabling APM on all drives on
+> > >> bootup however. Especially for laptops, that seems like a silly
+> > >> thing to do explicitly. Sounds like one of the silly things
+> > >> Ubuntu is known to do without consulting people.
+> > >=20
+> > > Looks like this comes from upstream udev/systemd project :-(
+> > > Anyway, for laptops on battery ubuntu has another set of scripts
+> > > which turn on APM (based on connected/disconnected AC adapter).
+> >=20
+> > There's no such scripts in Fedora, so either they removed it, or it=
+'s
+> > something that either Debian or Ubuntu has added in.
+> >=20
+> > > That udev script which turn off APM is called when any disk is
+> > > attached to system (so at boot time it is called for every one
+> > > disk).
+> > >=20
+> > > Now I just masked that udev script and it is no longer called...
+> > >=20
+> > > Anyway if I call hdparm -B /dev/sda I get output:
+> > >=20
+> > > APM_level      =3D not supported
+> > >=20
+> > > And important is that there is no error message in dmesg. I get i=
+t
+> > > only if I call hdparm -B with parameter (set option). But APM
+> > > should be supported, right?
+> >=20
+> > Does the get command work without ADMA enabled?
+>=20
+> I requested to boot that machine with turned off ADMA. I verified it =
+is=20
+> turned off as I found sata_nv.adma=3D0 in /proc/cmdline and file=20
+> /sys/module/sata_nv/parameters/adma contains big N.
+>=20
+> I called hdparm:
+>=20
+> $ sudo hdparm -B254 /dev/sda
+>=20
+> /dev/sda:
+>  setting Advanced Power Management level to 0xfe (254)
+>  HDIO_DRIVE_CMD failed: Input/output error
+>  APM_level      =3D not supported
+>=20
+> It failed, but I do not see any error message in dmesg. There is noth=
+ing=20
+> new in dmesg.
+>=20
+> So looks like I'm not able to set APM... But why in ADMA mode it=20
+> generates some error and in non ADMA mode no error? Strange!
+>=20
 
-Signed-off-by: Manuel Lauss <manuel.lauss@gmail.com>
---
-This is a crude hack, but works fine on my laptop. If I plug something in
-on the eSATA port, KDE pops up a windows asking me what to do with the
-new drive(s), just like it does for any random usb stick.
+Hi Robert! Any idea why in ADMA mode I get that error and in non ADMA
+not? Where could be problem?
 
-I didn't know how else to communicate to userspace that the drive is
-removable other than adding it to the removable-bit-test of ATA IDENTIFY data.
-
- drivers/ata/ahci.h        | 2 ++
- drivers/ata/libahci.c     | 6 ++++++
- drivers/ata/libata-scsi.c | 7 +++++--
- include/linux/libata.h    | 1 +
- 4 files changed, 14 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 5b8e8a0..45586c1 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -181,6 +181,8 @@ enum {
- 	PORT_CMD_ALPE		= (1 << 26), /* Aggressive Link PM enable */
- 	PORT_CMD_ATAPI		= (1 << 24), /* Device is ATAPI */
- 	PORT_CMD_FBSCP		= (1 << 22), /* FBS Capable Port */
-+	PORT_CMD_ESP		= (1 << 21), /* External Sata Port */
-+	PORT_CMD_HPCP		= (1 << 18), /* HotPlug Capable Port */
- 	PORT_CMD_PMP		= (1 << 17), /* PMP attached */
- 	PORT_CMD_LIST_ON	= (1 << 15), /* cmd list DMA engine running */
- 	PORT_CMD_FIS_ON		= (1 << 14), /* FIS DMA engine running */
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index d256a66..209c3c6 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -1469,6 +1469,7 @@ static int ahci_hardreset(struct ata_link *link, unsigned int *class,
- static void ahci_postreset(struct ata_link *link, unsigned int *class)
- {
- 	struct ata_port *ap = link->ap;
-+	struct ahci_host_priv *hpriv = ap->host->private_data;
- 	void __iomem *port_mmio = ahci_port_base(ap);
- 	u32 new_tmp, tmp;
- 
-@@ -1484,6 +1485,11 @@ static void ahci_postreset(struct ata_link *link, unsigned int *class)
- 		writel(new_tmp, port_mmio + PORT_CMD);
- 		readl(port_mmio + PORT_CMD); /* flush */
- 	}
-+
-+	/* mark esata ports */
-+	if ((tmp & PORT_CMD_HPCP) ||
-+	    ((tmp & PORT_CMD_ESP) && (hpriv->cap & HOST_CAP_SXS)))
-+		ap->pflags |= ATA_PFLAG_EXTERNAL;
- }
- 
- static unsigned int ahci_fill_sg(struct ata_queued_cmd *qc, void *cmd_tbl)
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 0d7f0da..183a57b 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -2015,8 +2015,11 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
- 
- 	VPRINTK("ENTER\n");
- 
--	/* set scsi removable (RMB) bit per ata bit */
--	if (ata_id_removable(args->id))
-+	/* set scsi removable (RMB) bit per ata bit, or if the
-+	 * AHCI port says it's external (Hotplug-capable, eSATA).
-+	 */
-+	if (ata_id_removable(args->id) ||
-+	    (args->dev->link->ap->pflags & ATA_PFLAG_EXTERNAL))
- 		hdr[1] |= (1 << 7);
- 
- 	if (args->dev->class == ATA_DEV_ZAC) {
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index c9cfbcd..83577f8 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -254,6 +254,7 @@ enum {
- 
- 	ATA_PFLAG_PIO32		= (1 << 20),  /* 32bit PIO */
- 	ATA_PFLAG_PIO32CHANGE	= (1 << 21),  /* 32bit PIO can be turned on/off */
-+	ATA_PFLAG_EXTERNAL	= (1 << 22),  /* eSATA/external port */
- 
- 	/* struct ata_queued_cmd flags */
- 	ATA_QCFLAG_ACTIVE	= (1 << 0), /* cmd not yet ack'd to scsi lyer */
--- 
-2.5.3
-
+--=20
+Pali Roh=C3=A1r
+pali.rohar@gmail.com
