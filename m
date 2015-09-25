@@ -1,38 +1,42 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 03/19] libata: samsung_cf: fix handling platform_get_irq
+From: Andrzej Hajda <a.hajda@samsung.com>
+Subject: [PATCH v2 03/19] libata: samsung_cf: fix handling platform_get_irq
  result
-Date: Thu, 24 Sep 2015 10:53:17 -0400
-Message-ID: <20150924145317.GA25415@mtj.duckdns.org>
-References: <1443103227-25612-1-git-send-email-a.hajda@samsung.com>
- <1443103227-25612-4-git-send-email-a.hajda@samsung.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Date: Fri, 25 Sep 2015 08:43:31 +0200
+Message-ID: <1443163411-25668-1-git-send-email-a.hajda@samsung.com>
+References: <20150924145317.GA25415@mtj.duckdns.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1443103227-25612-4-git-send-email-a.hajda@samsung.com>
+In-reply-to: <20150924145317.GA25415@mtj.duckdns.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Andrzej Hajda <a.hajda@samsung.com>
-Cc: linux-kernel@vger.kernel.org, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Marek Szyprowski <m.szyprowski@samsung.com>, linux-ide@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Andrzej Hajda <a.hajda@samsung.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Marek Szyprowski <m.szyprowski@samsung.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, Sep 24, 2015 at 04:00:11PM +0200, Andrzej Hajda wrote:
-> The function can return negative value.
-> 
-> The problem has been detected using proposed semantic patch
-> scripts/coccinelle/tests/assign_signed_to_unsigned.cocci [1].
-> 
-> [1]: http://permalink.gmane.org/gmane.linux.kernel/2046107
-> 
-> Signed-off-by: Andrzej Hajda <a.hajda@samsung.com>
-> ---
-> Hi,
-> 
-> To avoid problems with too many mail recipients I have sent whole
-> patchset only to LKML. Anyway patches have no dependencies.
+The function can return negative value.
 
-Can we just change s3c_ide_info->irq to int instead?
+The problem has been detected using proposed semantic patch
+scripts/coccinelle/tests/assign_signed_to_unsigned.cocci [1].
 
-Thanks.
+[1]: http://permalink.gmane.org/gmane.linux.kernel/2046107
 
+Signed-off-by: Andrzej Hajda <a.hajda@samsung.com>
+---
+v2: changed type of irq field
+---
+ drivers/ata/pata_samsung_cf.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/ata/pata_samsung_cf.c b/drivers/ata/pata_samsung_cf.c
+index cbb5a47..f6facd6 100644
+--- a/drivers/ata/pata_samsung_cf.c
++++ b/drivers/ata/pata_samsung_cf.c
+@@ -70,7 +70,7 @@ struct s3c_ide_info {
+ 	struct clk *clk;
+ 	void __iomem *ide_addr;
+ 	void __iomem *sfr_addr;
+-	unsigned int irq;
++	int irq;
+ 	enum s3c_cpu_type cpu_type;
+ 	unsigned int fifo_status_reg;
+ };
 -- 
-tejun
+1.9.1
