@@ -1,22 +1,22 @@
 From: "ST. FRANCIS OLD AGE HOME" <stfranciscathedral@gmail.com>
 Subject: BEQUEST NOTIFICATION
-Date: Sat, 3 Oct 2015 08:19:30 +0200
-Message-ID: <20151003061935.2DA8327EC02__15495.5912651078$1443853255$gmane$org@mae.263xmail.com>
+Date: Sat, 3 Oct 2015 16:27:10 +0200
+Message-ID: <20151003142716.195F727EC02__39702.6475090117$1443882463$gmane$org@mae.263xmail.com>
 Reply-To: <st.francisfoundationoldagehomecenter@outlook.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_0002_01C2A9A6.1F6C1836"
+	boundary="----=_NextPart_000_0011_01C2A9A6.4F2DE1D8"
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.131]:55330 "EHLO
+Received: from lucky1.263xmail.com ([211.157.147.130]:48643 "EHLO
 	lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751358AbbJCGUP (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 3 Oct 2015 02:20:15 -0400
+	with ESMTP id S1752705AbbJCO10 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 3 Oct 2015 10:27:26 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
 This is a multi-part message in MIME format.
 
-------=_NextPart_000_0002_01C2A9A6.1F6C1836
+------=_NextPart_000_0011_01C2A9A6.4F2DE1D8
 Content-Type: text/plain;
 	charset="Windows-1251"
 Content-Transfer-Encoding: 7bit
@@ -34,7 +34,7 @@ Elders in Council
 This email has been checked for viruses by Avast antivirus software.
 https://www.avast.com/antivirus
 
-------=_NextPart_000_0002_01C2A9A6.1F6C1836
+------=_NextPart_000_0011_01C2A9A6.4F2DE1D8
 Content-Type: application/octet-stream;
 	name="Bequest.docx"
 Content-Transfer-Encoding: base64
@@ -379,6 +379,6 @@ AAAAAAAA6CoAAHdvcmQvc3R5bGVzLnhtbFBLAQItABQABgAIAAAAIQDNNptp
 SwECLQAUAAYACAAAACEAPKqwwN8BAADbAwAAEAAAAAAAAAAAAAAAAAACNQAA
 ZG9jUHJvcHMvYXBwLnhtbFBLBQYAAAAADAAMAAkDAAAXOAAAAAA=
 
-------=_NextPart_000_0002_01C2A9A6.1F6C1836--
+------=_NextPart_000_0011_01C2A9A6.4F2DE1D8--
 
 
