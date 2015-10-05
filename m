@@ -1,29 +1,54 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 1/2] libata: only call ->done once all per-tag
-	ressources are released
-Date: Mon, 5 Oct 2015 08:01:17 +0200
-Message-ID: <20151005060117.GA2294@lst.de>
-References: <1443892871-10413-1-git-send-email-hch@lst.de> <1443892871-10413-2-git-send-email-hch@lst.de> <20151004173429.GD19652@htj.duckdns.org>
+From: Guillermo Amaral <g@maral.me>
+Subject: Kinston HyperX M.2 PCIe drives
+Date: Mon, 5 Oct 2015 09:48:45 -0700
+Message-ID: <20151005164845.GA5181@enterprise.localdomain>
+Reply-To: g@maral.me
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:52546 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751961AbbJEGBT (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 5 Oct 2015 02:01:19 -0400
+Received: from mail-io0-f173.google.com ([209.85.223.173]:35765 "EHLO
+	mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751175AbbJEQsr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 5 Oct 2015 12:48:47 -0400
+Received: by ioiz6 with SMTP id z6so191892813ioi.2
+        for <linux-ide@vger.kernel.org>; Mon, 05 Oct 2015 09:48:46 -0700 (PDT)
+Received: from localhost (201.170.46.200.dsl.dyn.telnor.net. [201.170.46.200])
+        by smtp.gmail.com with ESMTPSA id g198sm10573158ioe.6.2015.10.05.09.48.46
+        for <linux-ide@vger.kernel.org>
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 05 Oct 2015 09:48:46 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <20151004173429.GD19652@htj.duckdns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Sun, Oct 04, 2015 at 01:34:29PM -0400, Tejun Heo wrote:
-> Hmmm... has this actually been observed?  All these are run under ata
-> port lock and so is the command issue path, so even if the tag gets
-> reissued, it will have to wait till the completion path is done.
+Hi guys,
 
-No - I stumbled over this while trying to debug
-https://lkml.org/lkml/2015/6/25/620 (which could use some libata experience,
-btw), but it didn't help.  I still would like to see it fixes as similar
-patterns in SCSI drivers have caused crashes.
+So I got my hands on a Kingston HyperX M.2 PCIe drive and noticed it has
+really poor performance on Linux.
+
+I get about half write speed of a SATA III SSD and about half better
+read speed than a SATA III SSD (3/2) but somebody actually did a proper
+benchmark on Linux:
+
+  http://www.phoronix.com/scan.php?page=article&item=kingston-hyperx-pred
+
+It uses a Marvell 88SS9293 controller, I was wondering if anybody else
+has seen simiar issues with this controller or if there's a way to
+figure out what's wrong without the datasheet (since it doesn't seem to
+be publicly available).
+
+I noticed kept getting FPDMA READ errors while testing it so I disabled
+NCQ for now to avoid hangs.
+
+I would love to help get this drive working if anybody can point me in
+the right direction: I have dmesg, lcpci, hdparm output available for
+anybody interested, I can also dual-boot into a *Winfferent* OS where
+the drive works fine.
+
+Cheers,
+G
+
+-- 
+gamaral
+
