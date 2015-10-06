@@ -1,50 +1,47 @@
-From: Ralf Baechle <ralf@linux-mips.org>
-Subject: Re: [RFT PATCH] mips: bigsur_defconfig: convert to use libata PATA
- drivers
-Date: Tue, 6 Oct 2015 16:23:12 +0200
-Message-ID: <20151006142312.GA28984@linux-mips.org>
-References: <1442245918-27631-1-git-send-email-b.zolnierkie@samsung.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 1/2] libata: only call ->done once all per-tag ressources
+ are released
+Date: Tue, 6 Oct 2015 13:28:43 -0400
+Message-ID: <20151006172843.GB3931@mtj.duckdns.org>
+References: <1443892871-10413-1-git-send-email-hch@lst.de>
+ <1443892871-10413-2-git-send-email-hch@lst.de>
+ <20151004173429.GD19652@htj.duckdns.org>
+ <20151005060117.GA2294@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from eddie.linux-mips.org ([148.251.95.138]:53067 "EHLO
-	cvs.linux-mips.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751979AbbJFOXS (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Oct 2015 10:23:18 -0400
+Received: from mail-io0-f179.google.com ([209.85.223.179]:35713 "EHLO
+	mail-io0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752970AbbJFR3A (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Oct 2015 13:29:00 -0400
+Received: by ioiz6 with SMTP id z6so229486151ioi.2
+        for <linux-ide@vger.kernel.org>; Tue, 06 Oct 2015 10:28:59 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <1442245918-27631-1-git-send-email-b.zolnierkie@samsung.com>
+In-Reply-To: <20151005060117.GA2294@lst.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: linux-mips@linux-mips.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-ide@vger.kernel.org
 
-On Mon, Sep 14, 2015 at 05:51:42PM +0200, Bartlomiej Zolnierkiewicz wrote:
+Hello, Christoph.
 
-> IDE subsystem has been deprecated since 2009 and the majority
-> (if not all) of Linux distributions have switched to use
-> libata for ATA support exclusively.  However there are still
-> some users (mostly old or/and embedded non-x86 systems) that
-> have not converted from using IDE subsystem to libata PATA
-> drivers.  This doesn't seem to be good thing in the long-term
-> for Linux as while there is less and less PATA systems left
-> in use:
+On Mon, Oct 05, 2015 at 08:01:17AM +0200, Christoph Hellwig wrote:
+> On Sun, Oct 04, 2015 at 01:34:29PM -0400, Tejun Heo wrote:
+> > Hmmm... has this actually been observed?  All these are run under ata
+> > port lock and so is the command issue path, so even if the tag gets
+> > reissued, it will have to wait till the completion path is done.
 > 
-> * testing efforts are divided between two subsystems
-> 
-> * having duplicate drivers for same hardware confuses users
-> 
-> This patch converts bigsur_defconfig to use libata PATA
-> drivers (tc86c001 IDE host driver has no corresponding libata
-> driver yet so it is not converted).
-> 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-> ---
-> Build tested only.
-> If you have affected hardware please test.  Thank you.
+> No - I stumbled over this while trying to debug
+> https://lkml.org/lkml/2015/6/25/620 (which could use some libata experience,
+> btw), but it didn't help.  I still would like to see it fixes as similar
+> patterns in SCSI drivers have caused crashes.
 
-Nobody replied so I applied all 17 patches.
+So, given the locking, the bug doesn't exist.  I don't think switching
+to a safer pattern is a bad thing but the patch needs updated
+description and comment explanining that it isn't a bug fix and the
+specific ordering isn't strictly necessary.
 
-I've only too often updated the config I'm actually using to use libata
-so thanks to doing this for all configs!
+Thanks.
 
-  Ralf
+-- 
+tejun
