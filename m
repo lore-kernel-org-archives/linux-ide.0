@@ -1,65 +1,53 @@
-From: Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: [PATCH] ata: sata_rcar: Remove obsolete platform_device_id entries
-Date: Wed,  7 Oct 2015 12:57:22 +0200
-Message-ID: <1444215442-27269-1-git-send-email-geert+renesas@glider.be>
-Return-path: <linux-sh-owner@vger.kernel.org>
-Sender: linux-sh-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-sh@vger.kernel.org, Geert Uytterhoeven <geert+renesas@glider.be>
+From: Aaro Koskinen <aaro.koskinen@iki.fi>
+Subject: Re: [RFT PATCH] mips: lemote2f_defconfig: convert to use libata PATA
+ drivers
+Date: Wed, 7 Oct 2015 20:40:00 +0300
+Message-ID: <20151007173959.GC26187@blackmetal.musicnaut.iki.fi>
+References: <1442245918-27631-1-git-send-email-b.zolnierkie@samsung.com>
+ <1442245918-27631-6-git-send-email-b.zolnierkie@samsung.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1442245918-27631-6-git-send-email-b.zolnierkie@samsung.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: linux-mips@linux-mips.org, Ralf Baechle <ralf@linux-mips.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Huacai Chen <chenhc@lemote.com>
 List-Id: linux-ide@vger.kernel.org
 
-Since commit c99cd90d98a98aa1 ("ARM: shmobile: r8a7779: Remove legacy
-SoC code"), R-Car SoCs are only supported in generic DT-only ARM
-multi-platform builds.  The driver doesn't need to match platform
-devices by name anymore, hence remove the remaining platform_device_id
-entries and platform device support.
+Hi,
 
-Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
----
- drivers/ata/sata_rcar.c | 15 +++------------
- 1 file changed, 3 insertions(+), 12 deletions(-)
+On Mon, Sep 14, 2015 at 05:51:47PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> IDE subsystem has been deprecated since 2009 and the majority
+> (if not all) of Linux distributions have switched to use
+> libata for ATA support exclusively.  However there are still
+> some users (mostly old or/and embedded non-x86 systems) that
+> have not converted from using IDE subsystem to libata PATA
+> drivers.  This doesn't seem to be good thing in the long-term
+> for Linux as while there is less and less PATA systems left
+> in use:
+> 
+> * testing efforts are divided between two subsystems
+> 
+> * having duplicate drivers for same hardware confuses users
+> 
+> This patch converts lemote2f_defconfig to use libata PATA
+> drivers.
+> 
+> PS This platform uses CS5536 chipset which (due to historical
+> reasons) has basic support in AMD/nVidia PATA host driver and
+> full support in a newer CS5536 PATA one (pata_cs5536).  Thus
+> most likely this platform should switch to using the latter
+> host driver.
+> 
+> Cc: Huacai Chen <chenhc@lemote.com>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
-diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
-index 8804127b108c..d8bbe8b7c479 100644
---- a/drivers/ata/sata_rcar.c
-+++ b/drivers/ata/sata_rcar.c
-@@ -858,13 +858,6 @@ static struct of_device_id sata_rcar_match[] = {
- };
- MODULE_DEVICE_TABLE(of, sata_rcar_match);
- 
--static const struct platform_device_id sata_rcar_id_table[] = {
--	{ "sata_rcar", RCAR_GEN1_SATA }, /* Deprecated by "sata-r8a7779" */
--	{ "sata-r8a7779", RCAR_GEN1_SATA },
--	{ },
--};
--MODULE_DEVICE_TABLE(platform, sata_rcar_id_table);
--
- static int sata_rcar_probe(struct platform_device *pdev)
- {
- 	const struct of_device_id *of_id;
-@@ -884,11 +877,10 @@ static int sata_rcar_probe(struct platform_device *pdev)
- 		return -ENOMEM;
- 
- 	of_id = of_match_device(sata_rcar_match, &pdev->dev);
--	if (of_id)
--		priv->type = (enum sata_rcar_type)of_id->data;
--	else
--		priv->type = platform_get_device_id(pdev)->driver_data;
-+	if (!of_id)
-+		return -ENODEV;
- 
-+	priv->type = (enum sata_rcar_type)of_id->data;
- 	priv->clk = devm_clk_get(&pdev->dev, NULL);
- 	if (IS_ERR(priv->clk)) {
- 		dev_err(&pdev->dev, "failed to get access to sata clock\n");
-@@ -1018,7 +1010,6 @@ static const struct dev_pm_ops sata_rcar_pm_ops = {
- static struct platform_driver sata_rcar_driver = {
- 	.probe		= sata_rcar_probe,
- 	.remove		= sata_rcar_remove,
--	.id_table	= sata_rcar_id_table,
- 	.driver = {
- 		.name		= DRV_NAME,
- 		.of_match_table	= sata_rcar_match,
--- 
-1.9.1
+Maybe too late but:
 
+	Tested-by: Aaro Koskinen <aaro.koskinen@iki.fi>
+
+I also tested PATA_CS5536 and that works too, but it gives a slightly
+slower disk (27MB/s vs 33MB/s)...
+
+A.
