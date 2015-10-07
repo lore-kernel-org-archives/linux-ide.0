@@ -1,47 +1,65 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/2] libata: only call ->done once all per-tag ressources
- are released
-Date: Tue, 6 Oct 2015 13:28:43 -0400
-Message-ID: <20151006172843.GB3931@mtj.duckdns.org>
-References: <1443892871-10413-1-git-send-email-hch@lst.de>
- <1443892871-10413-2-git-send-email-hch@lst.de>
- <20151004173429.GD19652@htj.duckdns.org>
- <20151005060117.GA2294@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-io0-f179.google.com ([209.85.223.179]:35713 "EHLO
-	mail-io0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752970AbbJFR3A (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 6 Oct 2015 13:29:00 -0400
-Received: by ioiz6 with SMTP id z6so229486151ioi.2
-        for <linux-ide@vger.kernel.org>; Tue, 06 Oct 2015 10:28:59 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20151005060117.GA2294@lst.de>
-Sender: linux-ide-owner@vger.kernel.org
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Subject: [PATCH] ata: sata_rcar: Remove obsolete platform_device_id entries
+Date: Wed,  7 Oct 2015 12:57:22 +0200
+Message-ID: <1444215442-27269-1-git-send-email-geert+renesas@glider.be>
+Return-path: <linux-sh-owner@vger.kernel.org>
+Sender: linux-sh-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-sh@vger.kernel.org, Geert Uytterhoeven <geert+renesas@glider.be>
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-ide@vger.kernel.org
 
-Hello, Christoph.
+Since commit c99cd90d98a98aa1 ("ARM: shmobile: r8a7779: Remove legacy
+SoC code"), R-Car SoCs are only supported in generic DT-only ARM
+multi-platform builds.  The driver doesn't need to match platform
+devices by name anymore, hence remove the remaining platform_device_id
+entries and platform device support.
 
-On Mon, Oct 05, 2015 at 08:01:17AM +0200, Christoph Hellwig wrote:
-> On Sun, Oct 04, 2015 at 01:34:29PM -0400, Tejun Heo wrote:
-> > Hmmm... has this actually been observed?  All these are run under ata
-> > port lock and so is the command issue path, so even if the tag gets
-> > reissued, it will have to wait till the completion path is done.
-> 
-> No - I stumbled over this while trying to debug
-> https://lkml.org/lkml/2015/6/25/620 (which could use some libata experience,
-> btw), but it didn't help.  I still would like to see it fixes as similar
-> patterns in SCSI drivers have caused crashes.
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+---
+ drivers/ata/sata_rcar.c | 15 +++------------
+ 1 file changed, 3 insertions(+), 12 deletions(-)
 
-So, given the locking, the bug doesn't exist.  I don't think switching
-to a safer pattern is a bad thing but the patch needs updated
-description and comment explanining that it isn't a bug fix and the
-specific ordering isn't strictly necessary.
-
-Thanks.
-
+diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
+index 8804127b108c..d8bbe8b7c479 100644
+--- a/drivers/ata/sata_rcar.c
++++ b/drivers/ata/sata_rcar.c
+@@ -858,13 +858,6 @@ static struct of_device_id sata_rcar_match[] = {
+ };
+ MODULE_DEVICE_TABLE(of, sata_rcar_match);
+ 
+-static const struct platform_device_id sata_rcar_id_table[] = {
+-	{ "sata_rcar", RCAR_GEN1_SATA }, /* Deprecated by "sata-r8a7779" */
+-	{ "sata-r8a7779", RCAR_GEN1_SATA },
+-	{ },
+-};
+-MODULE_DEVICE_TABLE(platform, sata_rcar_id_table);
+-
+ static int sata_rcar_probe(struct platform_device *pdev)
+ {
+ 	const struct of_device_id *of_id;
+@@ -884,11 +877,10 @@ static int sata_rcar_probe(struct platform_device *pdev)
+ 		return -ENOMEM;
+ 
+ 	of_id = of_match_device(sata_rcar_match, &pdev->dev);
+-	if (of_id)
+-		priv->type = (enum sata_rcar_type)of_id->data;
+-	else
+-		priv->type = platform_get_device_id(pdev)->driver_data;
++	if (!of_id)
++		return -ENODEV;
+ 
++	priv->type = (enum sata_rcar_type)of_id->data;
+ 	priv->clk = devm_clk_get(&pdev->dev, NULL);
+ 	if (IS_ERR(priv->clk)) {
+ 		dev_err(&pdev->dev, "failed to get access to sata clock\n");
+@@ -1018,7 +1010,6 @@ static const struct dev_pm_ops sata_rcar_pm_ops = {
+ static struct platform_driver sata_rcar_driver = {
+ 	.probe		= sata_rcar_probe,
+ 	.remove		= sata_rcar_remove,
+-	.id_table	= sata_rcar_id_table,
+ 	.driver = {
+ 		.name		= DRV_NAME,
+ 		.of_match_table	= sata_rcar_match,
 -- 
-tejun
+1.9.1
+
