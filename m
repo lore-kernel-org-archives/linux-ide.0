@@ -1,53 +1,31 @@
-From: Aaro Koskinen <aaro.koskinen@iki.fi>
-Subject: Re: [RFT PATCH] mips: lemote2f_defconfig: convert to use libata PATA
- drivers
-Date: Wed, 7 Oct 2015 20:40:00 +0300
-Message-ID: <20151007173959.GC26187@blackmetal.musicnaut.iki.fi>
-References: <1442245918-27631-1-git-send-email-b.zolnierkie@samsung.com>
- <1442245918-27631-6-git-send-email-b.zolnierkie@samsung.com>
+From: Simon Horman <horms@verge.net.au>
+Subject: Re: [PATCH] ata: sata_rcar: Remove obsolete platform_device_id
+ entries
+Date: Thu, 8 Oct 2015 11:11:55 +0900
+Message-ID: <20151008021154.GC8756@verge.net.au>
+References: <1444215442-27269-1-git-send-email-geert+renesas@glider.be>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from kirsty.vergenet.net ([202.4.237.240]:44908 "EHLO
+	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751534AbbJHCL5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 7 Oct 2015 22:11:57 -0400
 Content-Disposition: inline
-In-Reply-To: <1442245918-27631-6-git-send-email-b.zolnierkie@samsung.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: linux-mips@linux-mips.org, Ralf Baechle <ralf@linux-mips.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Huacai Chen <chenhc@lemote.com>
+In-Reply-To: <1444215442-27269-1-git-send-email-geert+renesas@glider.be>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-sh@vger.kernel.org
 
-Hi,
-
-On Mon, Sep 14, 2015 at 05:51:47PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> IDE subsystem has been deprecated since 2009 and the majority
-> (if not all) of Linux distributions have switched to use
-> libata for ATA support exclusively.  However there are still
-> some users (mostly old or/and embedded non-x86 systems) that
-> have not converted from using IDE subsystem to libata PATA
-> drivers.  This doesn't seem to be good thing in the long-term
-> for Linux as while there is less and less PATA systems left
-> in use:
+On Wed, Oct 07, 2015 at 12:57:22PM +0200, Geert Uytterhoeven wrote:
+> Since commit c99cd90d98a98aa1 ("ARM: shmobile: r8a7779: Remove legacy
+> SoC code"), R-Car SoCs are only supported in generic DT-only ARM
+> multi-platform builds.  The driver doesn't need to match platform
+> devices by name anymore, hence remove the remaining platform_device_id
+> entries and platform device support.
 > 
-> * testing efforts are divided between two subsystems
-> 
-> * having duplicate drivers for same hardware confuses users
-> 
-> This patch converts lemote2f_defconfig to use libata PATA
-> drivers.
-> 
-> PS This platform uses CS5536 chipset which (due to historical
-> reasons) has basic support in AMD/nVidia PATA host driver and
-> full support in a newer CS5536 PATA one (pata_cs5536).  Thus
-> most likely this platform should switch to using the latter
-> host driver.
-> 
-> Cc: Huacai Chen <chenhc@lemote.com>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+> Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
 
-Maybe too late but:
+Acked-by: Simon Horman <horms+renesas@verge.net.au>
 
-	Tested-by: Aaro Koskinen <aaro.koskinen@iki.fi>
-
-I also tested PATA_CS5536 and that works too, but it gives a slightly
-slower disk (27MB/s vs 33MB/s)...
-
-A.
