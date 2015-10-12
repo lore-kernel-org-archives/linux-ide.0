@@ -1,37 +1,53 @@
-From: "Mr,Zaara Heyet." <geldkantor@aim.com>
-Subject: PLS I NEED YOUR HELP!
-Date: Thu, 8 Oct 2015 23:15:32 +0300 (EEST)
-Message-ID: <a9a7b1ca5188de9769ba8517ee393d10.squirrel__46696.6738611974$1444390808$gmane$org@82.79.55.74>
-Reply-To: geldkantor@aim.com
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] sata/mvebu: use #ifdef around suspend/resume code
+Date: Mon, 12 Oct 2015 15:05:27 +0200
+Message-ID: <5727002.l6plqmRKB3@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [82.79.55.74] ([82.79.55.74]:54232 "EHLO
-	server-servicii.uvvgsm.ro" rhost-flags-FAIL-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S965572AbbJILja (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 9 Oct 2015 07:39:30 -0400
+Received: from mout.kundenserver.de ([212.227.17.13]:55310 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751983AbbJLNFf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Oct 2015 09:05:35 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 
+The newly added suspend/resume implementation for ahci_mvebu causes
+a link error when CONFIG_PM_SUSPEND is disabled:
 
+ERROR: "ahci_platform_suspend_host" [drivers/ata/ahci_mvebu.ko] undefined!
+ERROR: "ahci_platform_resume_host" [drivers/ata/ahci_mvebu.ko] undefined!
 
+This adds the same #ifdef here that exists in the ahci_platform driver
+which defines the above functions.
 
-I am Mrs Zaara Heyet an oil-servicing equipment merchant, am writing this
-mail to you with tears and love from my heart of charity work i could not
-fulfill before the end of my days due to my present healness ,Please do
-not think of this letter as one of those being sent around to ask for
-money,I got your email id from our chambers of commerce while searching
-for a reliable person to help me carry out this project.
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Fixes: d6ecf1581488 ("ata: ahci_mvebu: add suspend/resume support")
 
-I have an urgent and confidential business proposition involving transfer
-of Nine Million $9,000.000.00 USD ,it will be of great benefit for both of
-us especially you as my days are number on earth. I will give you more
-details as regards this transaction as soon as you, reply me of your
-interest via my personal E-mail: hayettzaara@yahoo.com  , Thanks for your
-interested .
-
-WARNING!!WARNING!!
-This winning notification is expected to be read and/or used only by
-theindividual(s) for whom it is intended.:*********
+diff --git a/drivers/ata/ahci_mvebu.c b/drivers/ata/ahci_mvebu.c
+index 8490d37aee2a..5745bcce5e77 100644
+--- a/drivers/ata/ahci_mvebu.c
++++ b/drivers/ata/ahci_mvebu.c
+@@ -62,6 +62,7 @@ static void ahci_mvebu_regret_option(struct ahci_host_priv *hpriv)
+ 	writel(0x80, hpriv->mmio + AHCI_VENDOR_SPECIFIC_0_DATA);
+ }
+ 
++#ifdef CONFIG_PM_SUSPEND
+ static int ahci_mvebu_suspend(struct platform_device *pdev, pm_message_t state)
+ {
+ 	return ahci_platform_suspend_host(&pdev->dev);
+@@ -81,6 +82,10 @@ static int ahci_mvebu_resume(struct platform_device *pdev)
+ 
+ 	return ahci_platform_resume_host(&pdev->dev);
+ }
++#else
++#define ahci_mvebu_suspend NULL
++#define ahci_mvebu_resume NULL
++#endif
+ 
+ static const struct ata_port_info ahci_mvebu_port_info = {
+ 	.flags	   = AHCI_FLAG_COMMON,
 
