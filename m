@@ -1,53 +1,35 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] sata/mvebu: use #ifdef around suspend/resume code
-Date: Mon, 12 Oct 2015 15:05:27 +0200
-Message-ID: <5727002.l6plqmRKB3@wuerfel>
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH] sata/mvebu: use #ifdef around suspend/resume code
+Date: Mon, 12 Oct 2015 15:27:03 +0200
+Message-ID: <20151012152703.4d82bd02@free-electrons.com>
+References: <5727002.l6plqmRKB3@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:55310 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751983AbbJLNFf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Oct 2015 09:05:35 -0400
+Received: from down.free-electrons.com ([37.187.137.238]:38706 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751801AbbJLN1I (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Oct 2015 09:27:08 -0400
+In-Reply-To: <5727002.l6plqmRKB3@wuerfel>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
 
-The newly added suspend/resume implementation for ahci_mvebu causes
-a link error when CONFIG_PM_SUSPEND is disabled:
+Arnd,
 
-ERROR: "ahci_platform_suspend_host" [drivers/ata/ahci_mvebu.ko] undefined!
-ERROR: "ahci_platform_resume_host" [drivers/ata/ahci_mvebu.ko] undefined!
+On Mon, 12 Oct 2015 15:05:27 +0200, Arnd Bergmann wrote:
 
-This adds the same #ifdef here that exists in the ahci_platform driver
-which defines the above functions.
+> +#ifdef CONFIG_PM_SUSPEND
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Fixes: d6ecf1581488 ("ata: ahci_mvebu: add suspend/resume support")
+Shouldn't this be CONFIG_PM_SLEEP ?
 
-diff --git a/drivers/ata/ahci_mvebu.c b/drivers/ata/ahci_mvebu.c
-index 8490d37aee2a..5745bcce5e77 100644
---- a/drivers/ata/ahci_mvebu.c
-+++ b/drivers/ata/ahci_mvebu.c
-@@ -62,6 +62,7 @@ static void ahci_mvebu_regret_option(struct ahci_host_priv *hpriv)
- 	writel(0x80, hpriv->mmio + AHCI_VENDOR_SPECIFIC_0_DATA);
- }
- 
-+#ifdef CONFIG_PM_SUSPEND
- static int ahci_mvebu_suspend(struct platform_device *pdev, pm_message_t state)
- {
- 	return ahci_platform_suspend_host(&pdev->dev);
-@@ -81,6 +82,10 @@ static int ahci_mvebu_resume(struct platform_device *pdev)
- 
- 	return ahci_platform_resume_host(&pdev->dev);
- }
-+#else
-+#define ahci_mvebu_suspend NULL
-+#define ahci_mvebu_resume NULL
-+#endif
- 
- static const struct ata_port_info ahci_mvebu_port_info = {
- 	.flags	   = AHCI_FLAG_COMMON,
+The generic suspend/resume function in libahci_platform.c are defined
+when CONFIG_PM_SLEEP is enabled.
 
+Thomas
+-- 
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
