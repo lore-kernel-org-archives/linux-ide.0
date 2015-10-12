@@ -1,41 +1,37 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/2 v2] libata: only call ->done once all per-tag
- ressources are released
-Date: Mon, 12 Oct 2015 12:23:42 -0400
-Message-ID: <20151012162342.GD23399@mtj.duckdns.org>
-References: <1443892871-10413-1-git-send-email-hch@lst.de>
- <1443892871-10413-2-git-send-email-hch@lst.de>
- <20151004173429.GD19652@htj.duckdns.org>
- <20151008082541.GA8969@lst.de>
+From: "Mrs Hayet Zara" <hayetzaara@gmail.com>
+Subject: PLS I NEED YOUR HELP
+Date: Tue, 13 Oct 2015 00:19:48 +0300 (EEST)
+Message-ID: <8ef859dd5adb2f73cb9bb7eb6c128f87.squirrel__26674.9501497999$1444731889$gmane$org@82.79.55.74>
+Reply-To: geldkantornl@aim.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yk0-f172.google.com ([209.85.160.172]:34379 "EHLO
-	mail-yk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932076AbbJLQXp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 12 Oct 2015 12:23:45 -0400
-Received: by ykdg206 with SMTP id g206so138768220ykd.1
-        for <linux-ide@vger.kernel.org>; Mon, 12 Oct 2015 09:23:44 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20151008082541.GA8969@lst.de>
+Received: from [82.79.55.74] ([82.79.55.74]:42609 "EHLO
+	server-servicii.uvvgsm.ro" rhost-flags-FAIL-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751930AbbJMKYP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 13 Oct 2015 06:24:15 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-ide@vger.kernel.org
 
-On Thu, Oct 08, 2015 at 10:25:41AM +0200, Christoph Hellwig wrote:
-> When calling ->done before releasing resources we could run into a
-> race where the SCSI midlayer sends another command and races with
-> the resources beeing manipulated.  For libata this can't currently
-> happen as synchronization happens at a higher level, but I'd still
-> like to fix it to future proof libata and to avoid copy & paste
-> into SCSI drivers where this pattern has led to reproducible crashes.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Applied to libata/for-4.4.
 
-Thanks.
 
--- 
-tejun
+I am Mrs Zaara Heyet an oil-servicing equipment merchant, am writing this
+mail to you with tears and love from my heart of charity work i could not
+fulfill before the end of my days due to my present healness ,Please do
+not think of this letter as one of those being sent around to ask for
+money,I got your email id from our chambers of commerce while searching
+for a reliable person to help me carry out this project.
+
+I have an urgent and confidential business proposition involving transfer
+of Nine Million $9,000.000.00 USD ,it will be of great benefit for both of
+us especially you as my days are number on earth. I will give you more
+details as regards this transaction as soon as you, reply me of your
+interest via my personal E-mail: geldkantornl@aim.com , Thanks for your
+interested .
+
+WARNING!!WARNING!!
+This winning notification is expected to be read and/or used only by the
+individual(s) for whom it is intended.:**************
+
