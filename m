@@ -1,71 +1,50 @@
-From: Tang Yuantian <Yuantian.Tang@freescale.com>
-Subject: [PATCH] ahci: qoriq: Fix a compiling warning
-Date: Wed, 14 Oct 2015 16:46:52 +0800
-Message-ID: <1444812412-33321-1-git-send-email-Yuantian.Tang@freescale.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: LABBE Corentin <clabbe.montjoie@gmail.com>
+Subject: [PATCH] ata/pata_it821x: set array of const as const
+Date: Wed, 14 Oct 2015 21:18:31 +0200
+Message-ID: <1444850312-18158-1-git-send-email-clabbe.montjoie@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bl2on0103.outbound.protection.outlook.com ([65.55.169.103]:47282
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751990AbbJNIxU (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 14 Oct 2015 04:53:20 -0400
+Received: from mail-wi0-f181.google.com ([209.85.212.181]:35787 "EHLO
+	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753145AbbJNTSk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Oct 2015 15:18:40 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: hdegoede@redhat.com
-Cc: tj@kernel.org, fengguang.wu@intel.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Tang Yuantian <Yuantian.Tang@freescale.com>, Arnd Bergmann <arnd@arndb.de>
+To: b.zolnierkie@samsung.com, tj@kernel.org
+Cc: LABBE Corentin <clabbe.montjoie@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-kbuild test robot reports the warnings:
-drivers/ata/ahci_qoriq.c: In function 'ahci_qoriq_hardreset':
->> include/asm-generic/io.h:163:2: warning: 'px_is' may be used
->> uninitialized in this function [-Wuninitialized]
-drivers/ata/ahci_qoriq.c:70:14: note: 'px_is' was declared here
->> include/asm-generic/io.h:163:2: warning: 'px_cmd' may be used
->> uninitialized in this function [-Wuninitialized]
-drivers/ata/ahci_qoriq.c:70:6: note: 'px_cmd' was declared here
+Some array of const char are not set as const.
+This patch fix that.
 
-This patch fixed it by introducing a local variable.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: LABBE Corentin <clabbe.montjoie@gmail.com>
 ---
-I found this warning again on gcc version 4.8.3 20131202.
-So this warning may not go way with newer gcc version.
-I verified Arnd's suggestion and it works.
-So please apply this patch which I sent on behalf of Arnd.
+ drivers/ata/pata_it821x.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
- drivers/ata/ahci_qoriq.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ata/ahci_qoriq.c b/drivers/ata/ahci_qoriq.c
-index e5e4988..58c1a94 100644
---- a/drivers/ata/ahci_qoriq.c
-+++ b/drivers/ata/ahci_qoriq.c
-@@ -76,6 +76,7 @@ static int ahci_qoriq_hardreset(struct ata_link *link, unsigned int *class,
- 	struct ata_taskfile tf;
- 	bool online;
+diff --git a/drivers/ata/pata_it821x.c b/drivers/ata/pata_it821x.c
+index a5088ec..7a21edf 100644
+--- a/drivers/ata/pata_it821x.c
++++ b/drivers/ata/pata_it821x.c
+@@ -604,9 +604,9 @@ static void it821x_display_disk(int n, u8 *buf)
+ {
+ 	unsigned char id[41];
+ 	int mode = 0;
+-	char *mtype = "";
++	const char *mtype = "";
+ 	char mbuf[8];
+-	char *cbl = "(40 wire cable)";
++	const char *cbl = "(40 wire cable)";
+ 
+ 	static const char *types[5] = {
+ 		"RAID0", "RAID1", "RAID 0+1", "JBOD", "DISK"
+@@ -903,7 +903,7 @@ static int it821x_init_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	};
+ 
+ 	const struct ata_port_info *ppi[] = { NULL, NULL };
+-	static char *mode[2] = { "pass through", "smart" };
++	static const char *mode[2] = { "pass through", "smart" };
  	int rc;
-+	bool ls1021a_workaround = (qoriq_priv->type == AHCI_LS1021A);
  
- 	DPRINTK("ENTER\n");
- 
-@@ -92,7 +93,7 @@ static int ahci_qoriq_hardreset(struct ata_link *link, unsigned int *class,
- 	 * After the sequence is complete, software should restore the
- 	 * PxCMD and PxIS with the stored values.
- 	 */
--	if (qoriq_priv->type == AHCI_LS1021A) {
-+	if (ls1021a_workaround) {
- 		px_cmd = readl(port_mmio + PORT_CMD);
- 		px_is = readl(port_mmio + PORT_IRQ_STAT);
- 	}
-@@ -106,7 +107,7 @@ static int ahci_qoriq_hardreset(struct ata_link *link, unsigned int *class,
- 				 ahci_check_ready);
- 
- 	/* restore the PxCMD and PxIS on ls1021 */
--	if (qoriq_priv->type == AHCI_LS1021A) {
-+	if (ls1021a_workaround) {
- 		px_val = readl(port_mmio + PORT_CMD);
- 		if (px_val != px_cmd)
- 			writel(px_cmd, port_mmio + PORT_CMD);
+ 	rc = pcim_enable_device(pdev);
 -- 
-2.1.0.27.g96db324
+2.4.9
 
