@@ -1,21 +1,39 @@
-From: LABBE Corentin <clabbe.montjoie@gmail.com>
-Subject: [PATCH] ata/pata_it821x: set array of const as const
-Date: Wed, 14 Oct 2015 21:18:31 +0200
-Message-ID: <1444850312-18158-1-git-send-email-clabbe.montjoie@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH] pata_it821x: use "const char *" for string literals
+Date: Thu, 15 Oct 2015 11:10:23 -0400
+Message-ID: <20151015151023.GA27717@mtj.duckdns.org>
+References: <1444850312-18158-1-git-send-email-clabbe.montjoie@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wi0-f181.google.com ([209.85.212.181]:35787 "EHLO
-	mail-wi0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753145AbbJNTSk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 14 Oct 2015 15:18:40 -0400
+Received: from mail-yk0-f170.google.com ([209.85.160.170]:35472 "EHLO
+	mail-yk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753248AbbJOPK0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 15 Oct 2015 11:10:26 -0400
+Content-Disposition: inline
+In-Reply-To: <1444850312-18158-1-git-send-email-clabbe.montjoie@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: b.zolnierkie@samsung.com, tj@kernel.org
-Cc: LABBE Corentin <clabbe.montjoie@gmail.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: LABBE Corentin <clabbe.montjoie@gmail.com>
+Cc: b.zolnierkie@samsung.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Some array of const char are not set as const.
-This patch fix that.
+Hello,
+
+Applied with updates to title and description.
+
+Thanks.
+----- 8< -----
+>From 3a53b3bcc7af2f7ddfb682cb8efb26e40fe50fb1 Mon Sep 17 00:00:00 2001
+From: LABBE Corentin <clabbe.montjoie@gmail.com>
+Date: Wed, 14 Oct 2015 21:18:31 +0200
+
+Some string literals are pointed to by "char *".  This patch fixes
+that.
+
+tj: Updated patch title and description.
 
 Signed-off-by: LABBE Corentin <clabbe.montjoie@gmail.com>
+Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
  drivers/ata/pata_it821x.c | 6 +++---
  1 file changed, 3 insertions(+), 3 deletions(-)
@@ -46,5 +64,5 @@ index a5088ec..7a21edf 100644
  
  	rc = pcim_enable_device(pdev);
 -- 
-2.4.9
+2.4.3
 
