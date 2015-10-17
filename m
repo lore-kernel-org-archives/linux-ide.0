@@ -1,42 +1,67 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2] ata: ahci: find eSATA ports and flag them as removable
-Date: Fri, 16 Oct 2015 08:54:09 -0400
-Message-ID: <20151016125409.GA20700@htj.duckdns.org>
-References: <1443640225-11860-1-git-send-email-manuel.lauss@gmail.com>
- <20150930213910.GG2627@mtj.duckdns.org>
- <5620F09A.9010909@start.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: vinayak.kale@gmail.com
+Subject: [PATCH] libata: add support for NCQ commands for SG interface
+Date: Sat, 17 Oct 2015 17:18:39 +0530
+Message-ID: <1445082519-8160-1-git-send-email-vinayak.kale@seagate.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yk0-f181.google.com ([209.85.160.181]:35527 "EHLO
-	mail-yk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932093AbbJPMyN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 16 Oct 2015 08:54:13 -0400
-Received: by ykaz22 with SMTP id z22so80886039yka.2
-        for <linux-ide@vger.kernel.org>; Fri, 16 Oct 2015 05:54:12 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <5620F09A.9010909@start.ca>
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:36536 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751439AbbJQLtJ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 17 Oct 2015 07:49:09 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Lord <kernel@start.ca>
-Cc: Manuel Lauss <manuel.lauss@gmail.com>, linux-ide@vger.kernel.org
+To: tj@kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: sumit.g.gupta@seagate.com, Vinayak Kale <vinayak.kale@seagate.com>
 
-Hello, Mark.
+From: Vinayak Kale <vinayak.kale@seagate.com>
 
-On Fri, Oct 16, 2015 at 08:42:02AM -0400, Mark Lord wrote:
-> >Applied to libata/for-4.4.  Let's see what happens.
-> 
-> Ugh.  Yet another revert to include in my own builds, I guess.
+This patch is needed to make NCQ commands with FPDMA protocol value
+(eg READ/WRITE FPDMA) work over SCSI Generic (SG) interface.
 
-Hmmm... what other patches are you reverting?
+Signed-off-by: Vinayak Kale <vinayak.kale@seagate.com>
+---
+ drivers/ata/libata-scsi.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-> eSATA is used for permanent storage expansion with port-multipliers,
-> and having to stop command queuing frequently for useless polling
-> is gonna be a performance drain.
-
-What would poll it regularly?
-
-Thanks.
-
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 0d7f0da..5b0a5ab 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2914,12 +2914,14 @@ ata_scsi_map_proto(u8 byte1)
+ 	case 5:		/* PIO Data-out */
+ 		return ATA_PROT_PIO;
+ 
++	case 12:	/* FPDMA */
++		return ATA_PROT_NCQ;
++
+ 	case 0:		/* Hard Reset */
+ 	case 1:		/* SRST */
+ 	case 8:		/* Device Diagnostic */
+ 	case 9:		/* Device Reset */
+ 	case 7:		/* DMA Queued */
+-	case 12:	/* FPDMA */
+ 	case 15:	/* Return Response Info */
+ 	default:	/* Reserved */
+ 		break;
+@@ -2963,7 +2965,7 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
+ 			tf->hob_lbal = cdb[7];
+ 			tf->hob_lbam = cdb[9];
+ 			tf->hob_lbah = cdb[11];
+-			tf->flags |= ATA_TFLAG_LBA48;
++			tf->flags |= (ATA_TFLAG_LBA48 | ATA_TFLAG_LBA);
+ 		} else
+ 			tf->flags &= ~ATA_TFLAG_LBA48;
+ 
+@@ -2992,6 +2994,10 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
+ 		tf->command = cdb[9];
+ 	}
+ 
++	/* For NCQ commands with FPDMA protocol, copy the tag value */
++	if (tf->protocol == ATA_PROT_NCQ)
++		tf->nsect = qc->tag << 3;
++
+ 	/* enforce correct master/slave bit */
+ 	tf->device = dev->devno ?
+ 		tf->device | ATA_DEV1 : tf->device & ~ATA_DEV1;
 -- 
-tejun
+1.9.1
+
