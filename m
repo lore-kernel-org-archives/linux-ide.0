@@ -1,51 +1,56 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH] libata: add support for NCQ commands for SG interface
-Date: Sat, 17 Oct 2015 21:42:51 +0300
-Message-ID: <562296AB.4010500@cogentembedded.com>
-References: <1445082519-8160-1-git-send-email-vinayak.kale@seagate.com>
- <5622386C.2000905@cogentembedded.com>
- <CACLWs=V_XXAojGmczSQpwvswU_yrWnZSWtih9rTp1hxEEeoQTg@mail.gmail.com>
+From: Mark Lord <kernel@start.ca>
+Subject: Re: [PATCH v2] ata: ahci: find eSATA ports and flag them as removable
+Date: Sun, 18 Oct 2015 22:32:26 -0400
+Message-ID: <5624563A.7080105@start.ca>
+References: <1443640225-11860-1-git-send-email-manuel.lauss@gmail.com>
+ <20150930213910.GG2627@mtj.duckdns.org> <5620F09A.9010909@start.ca>
+ <20151016125409.GA20700@htj.duckdns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CACLWs=V_XXAojGmczSQpwvswU_yrWnZSWtih9rTp1hxEEeoQTg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Vinayak Kale <vinayak.kale@gmail.com>
-Cc: tj@kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, sumit.g.gupta@seagate.com, Vinayak Kale <vinayak.kale@seagate.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail3.start.ca ([64.140.120.243]:46054 "EHLO mail3.start.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752527AbbJSCcs (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sun, 18 Oct 2015 22:32:48 -0400
+In-Reply-To: <20151016125409.GA20700@htj.duckdns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Manuel Lauss <manuel.lauss@gmail.com>, linux-ide@vger.kernel.org
 
-On 10/17/2015 3:25 PM, Vinayak Kale wrote:
-
->>> From: Vinayak Kale <vinayak.kale@seagate.com>
->>>
->>> This patch is needed to make NCQ commands with FPDMA protocol value
->>> (eg READ/WRITE FPDMA) work over SCSI Generic (SG) interface.
->>>
->>> Signed-off-by: Vinayak Kale <vinayak.kale@seagate.com>
->>> ---
->>>    drivers/ata/libata-scsi.c | 10 ++++++++--
->>>    1 file changed, 8 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
->>> index 0d7f0da..5b0a5ab 100644
->>> --- a/drivers/ata/libata-scsi.c
->>> +++ b/drivers/ata/libata-scsi.c
+On 15-10-16 08:54 AM, Tejun Heo wrote:
+> Hello, Mark.
+>
+> On Fri, Oct 16, 2015 at 08:42:02AM -0400, Mark Lord wrote:
+>>> Applied to libata/for-4.4.  Let's see what happens.
 >>
->> [...]
->>>
->>> @@ -2963,7 +2965,7 @@ static unsigned int ata_scsi_pass_thru(struct
->>> ata_queued_cmd *qc)
->>>                          tf->hob_lbal = cdb[7];
->>>                          tf->hob_lbam = cdb[9];
->>>                          tf->hob_lbah = cdb[11];
->>> -                       tf->flags |= ATA_TFLAG_LBA48;
->>> +                       tf->flags |= (ATA_TFLAG_LBA48 | ATA_TFLAG_LBA);
->>
->>
->>     Parens not needed here.
-> That's quite neat :-) Thanks, will change it in V2.
+>> Ugh.  Yet another revert to include in my own builds, I guess.
+>
+> Hmmm... what other patches are you reverting?
 
-     Looking at this hunk again, it seems an unrelated change.
+For libata, other than this one, I only disable SATA LPM.
+But something is wrong with the Seagate 8TB drives in
+the latest kernels, so I'll have to figure that one out too
+at some point.  The drives keep dropping offline, requiring a
+system power cycle to recover.  Cause unknown.  Nothing in S.M.A.R.T.
 
-MBR, Sergei
+>> eSATA is used for permanent storage expansion with port-multipliers,
+>> and having to stop command queuing frequently for useless polling
+>> is gonna be a performance drain.
+>
+> What would poll it regularly?
+
+I though your own earlier post suggested something there,
+but I no longer have it to re-read.
+
+I'm expecting that "removable" will imply different elevator
+scheduling and more frequent journal flushing etc.
+
+But perhaps it's a bit unfair to just presume that just yet,
+so you have my apologies!
+
+But I'm still reverting/disabling this one locally.
+
+Cheers
+Mark
