@@ -1,69 +1,37 @@
-From: Vinayak Kale <vinayak.kale@gmail.com>
-Subject: Re: [PATCH] libata: add support for NCQ commands for SG interface
-Date: Mon, 19 Oct 2015 12:25:09 +0530
-Message-ID: <CACLWs=UA9rrT8_Sr1D-6m4qyXcBukt=thrGho1t+XK+TZEZwog@mail.gmail.com>
-References: <1445082519-8160-1-git-send-email-vinayak.kale@seagate.com>
- <5622386C.2000905@cogentembedded.com> <CACLWs=V_XXAojGmczSQpwvswU_yrWnZSWtih9rTp1hxEEeoQTg@mail.gmail.com>
- <562296AB.4010500@cogentembedded.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH] ahci: Add Marvell 88se91a2 device id
+Date: Tue, 20 Oct 2015 09:31:22 +0200
+Message-ID: <1445326282-90339-1-git-send-email-jthumshirn@suse.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:34356 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751424AbbJSGzt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 19 Oct 2015 02:55:49 -0400
-In-Reply-To: <562296AB.4010500@cogentembedded.com>
+Received: from mx2.suse.de ([195.135.220.15]:60518 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752335AbbJTHb2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 20 Oct 2015 03:31:28 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: tj@kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, sumit.g.gupta@seagate.com, Vinayak Kale <vinayak.kale@seagate.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>
 
-On Sun, Oct 18, 2015 at 12:12 AM, Sergei Shtylyov
-<sergei.shtylyov@cogentembedded.com> wrote:
-> On 10/17/2015 3:25 PM, Vinayak Kale wrote:
->
->>>> From: Vinayak Kale <vinayak.kale@seagate.com>
->>>>
->>>> This patch is needed to make NCQ commands with FPDMA protocol value
->>>> (eg READ/WRITE FPDMA) work over SCSI Generic (SG) interface.
->>>>
->>>> Signed-off-by: Vinayak Kale <vinayak.kale@seagate.com>
->>>> ---
->>>>    drivers/ata/libata-scsi.c | 10 ++++++++--
->>>>    1 file changed, 8 insertions(+), 2 deletions(-)
->>>>
->>>> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
->>>> index 0d7f0da..5b0a5ab 100644
->>>> --- a/drivers/ata/libata-scsi.c
->>>> +++ b/drivers/ata/libata-scsi.c
->>>
->>>
->>> [...]
->>>>
->>>>
->>>> @@ -2963,7 +2965,7 @@ static unsigned int ata_scsi_pass_thru(struct
->>>> ata_queued_cmd *qc)
->>>>                          tf->hob_lbal = cdb[7];
->>>>                          tf->hob_lbam = cdb[9];
->>>>                          tf->hob_lbah = cdb[11];
->>>> -                       tf->flags |= ATA_TFLAG_LBA48;
->>>> +                       tf->flags |= (ATA_TFLAG_LBA48 | ATA_TFLAG_LBA);
->>>
->>>
->>>
->>>     Parens not needed here.
->>
->> That's quite neat :-) Thanks, will change it in V2.
->
->
->     Looking at this hunk again, it seems an unrelated change.
+Add device id for Marvell 88se91a2
 
-I added ATA_TFLAG_LBA to tf->flags just to conform with similar piece
-of code in libata-core.c.
-FPDMA Read/Write commands run smoothly even without this flag.
-I wouldn't mind removing this change from current patch if it's deemed
-unfit here.
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ drivers/ata/ahci.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
->
-> MBR, Sergei
->
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index a466602..ff343c4 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -489,6 +489,8 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+ 	  .driver_data = board_ahci_yes_fbs },			/* 88se9172 on some Gigabyte */
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x91a0),
+ 	  .driver_data = board_ahci_yes_fbs },
++	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x91a2), 	/* 88se91a2 */
++	  .driver_data = board_ahci_yes_fbs },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x91a3),
+ 	  .driver_data = board_ahci_yes_fbs },
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_MARVELL_EXT, 0x9230),
+-- 
+1.8.5.6
+
