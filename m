@@ -1,74 +1,60 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata: add support for NCQ commands for SG interface
-Date: Thu, 22 Oct 2015 17:57:17 +0900
-Message-ID: <20151022085717.GB24379@mtj.duckdns.org>
-References: <1445082519-8160-1-git-send-email-vinayak.kale@seagate.com>
- <CACLWs=VWXTd6ZcDQCGXHkngf72RpiqDVkZKXrWJC7Rmx_giWsA@mail.gmail.com>
+From: Amitoj Kaur Chawla <amitoj1606@gmail.com>
+Subject: [PATCH v2] ide: pdc202xx_new: Replace timeval with ktime_t
+Date: Thu, 22 Oct 2015 18:15:50 +0530
+Message-ID: <20151022124550.GA18694@amitoj-Inspiron-3542>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yk0-f174.google.com ([209.85.160.174]:33592 "EHLO
-	mail-yk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756178AbbJVI5Z (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Oct 2015 04:57:25 -0400
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <y2038-bounces@lists.linaro.org>
 Content-Disposition: inline
-In-Reply-To: <CACLWs=VWXTd6ZcDQCGXHkngf72RpiqDVkZKXrWJC7Rmx_giWsA@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
+ <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
+List-Archive: <http://lists.linaro.org/pipermail/y2038/>
+List-Post: <mailto:y2038@lists.linaro.org>
+List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
+List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
+ <mailto:y2038-request@lists.linaro.org?subject=subscribe>
+Errors-To: y2038-bounces@lists.linaro.org
+Sender: "Y2038" <y2038-bounces@lists.linaro.org>
+To: outreachy-kernel@googlegroups.com
+Cc: y2038@lists.linaro.org, linux-ide@vger.kernel.org, davem@davemloft.net, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Vinayak Kale <vinayak.kale@gmail.com>
-Cc: sumit.g.gupta@seagate.com, Vinayak Kale <vinayak.kale@seagate.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hello,
-
-On Wed, Oct 21, 2015 at 10:39:32AM +0530, Vinayak Kale wrote:
-...
-> > diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> > index 0d7f0da..5b0a5ab 100644
-> > --- a/drivers/ata/libata-scsi.c
-> > +++ b/drivers/ata/libata-scsi.c
-> > @@ -2914,12 +2914,14 @@ ata_scsi_map_proto(u8 byte1)
-> >         case 5:         /* PIO Data-out */
-> >                 return ATA_PROT_PIO;
-> >
-> > +       case 12:        /* FPDMA */
-> > +               return ATA_PROT_NCQ;
-> > +
-> >         case 0:         /* Hard Reset */
-> >         case 1:         /* SRST */
-> >         case 8:         /* Device Diagnostic */
-> >         case 9:         /* Device Reset */
-> >         case 7:         /* DMA Queued */
-> > -       case 12:        /* FPDMA */
-> >         case 15:        /* Return Response Info */
-> >         default:        /* Reserved */
-> >                 break;
-> > @@ -2963,7 +2965,7 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
-> >                         tf->hob_lbal = cdb[7];
-> >                         tf->hob_lbam = cdb[9];
-> >                         tf->hob_lbah = cdb[11];
-> > -                       tf->flags |= ATA_TFLAG_LBA48;
-> > +                       tf->flags |= (ATA_TFLAG_LBA48 | ATA_TFLAG_LBA);
-> >                 } else
-> >                         tf->flags &= ~ATA_TFLAG_LBA48;
-> >
-> > @@ -2992,6 +2994,10 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
-> >                 tf->command = cdb[9];
-> >         }
-> >
-> > +       /* For NCQ commands with FPDMA protocol, copy the tag value */
-> > +       if (tf->protocol == ATA_PROT_NCQ)
-> > +               tf->nsect = qc->tag << 3;
-> > +
-> >         /* enforce correct master/slave bit */
-> >         tf->device = dev->devno ?
-> >                 tf->device | ATA_DEV1 : tf->device & ~ATA_DEV1;
->
-> Any comments on this?
-
-It looks like it'd work given that it's forcing qc->tag into
-tf->nsect.  What's the use case tho?
-
-Thanks.
-
--- 
-tejun
+VGhpcyBkcml2ZXIgdXNlcyAnc3RydWN0IHRpbWV2YWwnIHdoaWNoIHdlIGFyZSB0cnlpbmcgdG8g
+cmVtb3ZlIHNpbmNlCjMyIGJpdCB0aW1lIHR5cGVzIHdpbGwgYnJlYWsgaW4gdGhlIHllYXIgMjAz
+OCBieSByZXBsYWNpbmcgaXQgd2l0aAprdGltZV90LgoKVGhpcyBwYXRjaCBjaGFuZ2VzIGRvX2dl
+dHRpbWVvZmRheSgpIHRvIGt0aW1lX2dldCgpIGJlY2F1c2UKa3RpbWVfZ2V0KCkgcmV0dXJucyBh
+IGt0aW1lX3Qgd2hpbGUgZG9fZ2V0dGltZW9mZGF5KCkgcmV0dXJucyBzdHJ1Y3QKdGltZXZhbC4K
+ClRoaXMgcGF0Y2ggYWxzbyB1c2VzIGt0aW1lX3VzX2RlbHRhKCkgdG8gZ2V0IHRoZSBlbGFwc2Vk
+IHRpbWUuCgpTaWduZWQtb2ZmLWJ5OiBBbWl0b2ogS2F1ciBDaGF3bGEgPGFtaXRvajE2MDZAZ21h
+aWwuY29tPgotLS0KQ2hhbmdlcyBpbiB2MjoKICAgICAgICAtTW9kaWZpZWQgc3ViamVjdCBvZiBj
+b21taXQgbWVzc2FnZQoKIGRyaXZlcnMvaWRlL3BkYzIwMnh4X25ldy5jIHwgMTAgKysrKystLS0t
+LQogMSBmaWxlIGNoYW5nZWQsIDUgaW5zZXJ0aW9ucygrKSwgNSBkZWxldGlvbnMoLSkKCmRpZmYg
+LS1naXQgYS9kcml2ZXJzL2lkZS9wZGMyMDJ4eF9uZXcuYyBiL2RyaXZlcnMvaWRlL3BkYzIwMnh4
+X25ldy5jCmluZGV4IGRmNzNjYmQuLjlhZDAxNGEgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvaWRlL3Bk
+YzIwMnh4X25ldy5jCisrKyBiL2RyaXZlcnMvaWRlL3BkYzIwMnh4X25ldy5jCkBAIC0yMiw2ICsy
+Miw3IEBACiAjaW5jbHVkZSA8bGludXgvcGNpLmg+CiAjaW5jbHVkZSA8bGludXgvaW5pdC5oPgog
+I2luY2x1ZGUgPGxpbnV4L2lkZS5oPgorI2luY2x1ZGUgPGxpbnV4L2t0aW1lLmg+CiAKICNpbmNs
+dWRlIDxhc20vaW8uaD4KIApAQCAtMjQzLDEzICsyNDQsMTMgQEAgc3RhdGljIGxvbmcgcmVhZF9j
+b3VudGVyKHUzMiBkbWFfYmFzZSkKICAqLwogc3RhdGljIGxvbmcgZGV0ZWN0X3BsbF9pbnB1dF9j
+bG9jayh1bnNpZ25lZCBsb25nIGRtYV9iYXNlKQogewotCXN0cnVjdCB0aW1ldmFsIHN0YXJ0X3Rp
+bWUsIGVuZF90aW1lOworCWt0aW1lX3Qgc3RhcnRfdGltZSwgZW5kX3RpbWU7CiAJbG9uZyBzdGFy
+dF9jb3VudCwgZW5kX2NvdW50OwogCWxvbmcgcGxsX2lucHV0LCB1c2VjX2VsYXBzZWQ7CiAJdTgg
+c2NyMTsKIAogCXN0YXJ0X2NvdW50ID0gcmVhZF9jb3VudGVyKGRtYV9iYXNlKTsKLQlkb19nZXR0
+aW1lb2ZkYXkoJnN0YXJ0X3RpbWUpOworCXN0YXJ0X3RpbWUgPSBrdGltZV9nZXQoKTsKIAogCS8q
+IFN0YXJ0IHRoZSB0ZXN0IG1vZGUgKi8KIAlvdXRiKDB4MDEsIGRtYV9iYXNlICsgMHgwMSk7CkBA
+IC0yNjEsNyArMjYyLDcgQEAgc3RhdGljIGxvbmcgZGV0ZWN0X3BsbF9pbnB1dF9jbG9jayh1bnNp
+Z25lZCBsb25nIGRtYV9iYXNlKQogCW1kZWxheSgxMCk7CiAKIAllbmRfY291bnQgPSByZWFkX2Nv
+dW50ZXIoZG1hX2Jhc2UpOwotCWRvX2dldHRpbWVvZmRheSgmZW5kX3RpbWUpOworCWVuZF90aW1l
+ID0ga3RpbWVfZ2V0KCk7CiAKIAkvKiBTdG9wIHRoZSB0ZXN0IG1vZGUgKi8KIAlvdXRiKDB4MDEs
+IGRtYV9iYXNlICsgMHgwMSk7CkBAIC0yNzMsOCArMjc0LDcgQEAgc3RhdGljIGxvbmcgZGV0ZWN0
+X3BsbF9pbnB1dF9jbG9jayh1bnNpZ25lZCBsb25nIGRtYV9iYXNlKQogCSAqIENhbGN1bGF0ZSB0
+aGUgaW5wdXQgY2xvY2sgaW4gSHoKIAkgKiAodGhlIGNsb2NrIGNvdW50ZXIgaXMgMzAgYml0IHdp
+ZGUgYW5kIGNvdW50cyBkb3duKQogCSAqLwotCXVzZWNfZWxhcHNlZCA9IChlbmRfdGltZS50dl9z
+ZWMgLSBzdGFydF90aW1lLnR2X3NlYykgKiAxMDAwMDAwICsKLQkJKGVuZF90aW1lLnR2X3VzZWMg
+LSBzdGFydF90aW1lLnR2X3VzZWMpOworCXVzZWNfZWxhcHNlZCA9IGt0aW1lX3VzX2RlbHRhKGVu
+ZF90aW1lLCBzdGFydF90aW1lKTsKIAlwbGxfaW5wdXQgPSAoKHN0YXJ0X2NvdW50IC0gZW5kX2Nv
+dW50KSAmIDB4M2ZmZmZmZmYpIC8gMTAgKgogCQkoMTAwMDAwMDAgLyB1c2VjX2VsYXBzZWQpOwog
+Ci0tIAoxLjkuMQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X18KWTIwMzggbWFpbGluZyBsaXN0ClkyMDM4QGxpc3RzLmxpbmFyby5vcmcKaHR0cHM6Ly9saXN0
+cy5saW5hcm8ub3JnL21haWxtYW4vbGlzdGluZm8veTIwMzgK
