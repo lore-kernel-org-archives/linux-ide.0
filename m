@@ -1,60 +1,30 @@
-From: Amitoj Kaur Chawla <amitoj1606@gmail.com>
-Subject: [PATCH v2] ide: pdc202xx_new: Replace timeval with ktime_t
-Date: Thu, 22 Oct 2015 18:15:50 +0530
-Message-ID: <20151022124550.GA18694@amitoj-Inspiron-3542>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [Y2038] [PATCH v2] ide: pdc202xx_new: Replace timeval with ktime_t
+Date: Thu, 22 Oct 2015 14:47:23 +0200
+Message-ID: <4909398.MrlE5Sy5gL@wuerfel>
+References: <20151022124550.GA18694@amitoj-Inspiron-3542>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <y2038-bounces@lists.linaro.org>
-Content-Disposition: inline
-List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
-List-Archive: <http://lists.linaro.org/pipermail/y2038/>
-List-Post: <mailto:y2038@lists.linaro.org>
-List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
-List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=subscribe>
-Errors-To: y2038-bounces@lists.linaro.org
-Sender: "Y2038" <y2038-bounces@lists.linaro.org>
-To: outreachy-kernel@googlegroups.com
-Cc: y2038@lists.linaro.org, linux-ide@vger.kernel.org, davem@davemloft.net, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20151022124550.GA18694@amitoj-Inspiron-3542>
+Sender: linux-kernel-owner@vger.kernel.org
+To: y2038@lists.linaro.org
+Cc: Amitoj Kaur Chawla <amitoj1606@gmail.com>, outreachy-kernel@googlegroups.com, linux-ide@vger.kernel.org, davem@davemloft.net, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-VGhpcyBkcml2ZXIgdXNlcyAnc3RydWN0IHRpbWV2YWwnIHdoaWNoIHdlIGFyZSB0cnlpbmcgdG8g
-cmVtb3ZlIHNpbmNlCjMyIGJpdCB0aW1lIHR5cGVzIHdpbGwgYnJlYWsgaW4gdGhlIHllYXIgMjAz
-OCBieSByZXBsYWNpbmcgaXQgd2l0aAprdGltZV90LgoKVGhpcyBwYXRjaCBjaGFuZ2VzIGRvX2dl
-dHRpbWVvZmRheSgpIHRvIGt0aW1lX2dldCgpIGJlY2F1c2UKa3RpbWVfZ2V0KCkgcmV0dXJucyBh
-IGt0aW1lX3Qgd2hpbGUgZG9fZ2V0dGltZW9mZGF5KCkgcmV0dXJucyBzdHJ1Y3QKdGltZXZhbC4K
-ClRoaXMgcGF0Y2ggYWxzbyB1c2VzIGt0aW1lX3VzX2RlbHRhKCkgdG8gZ2V0IHRoZSBlbGFwc2Vk
-IHRpbWUuCgpTaWduZWQtb2ZmLWJ5OiBBbWl0b2ogS2F1ciBDaGF3bGEgPGFtaXRvajE2MDZAZ21h
-aWwuY29tPgotLS0KQ2hhbmdlcyBpbiB2MjoKICAgICAgICAtTW9kaWZpZWQgc3ViamVjdCBvZiBj
-b21taXQgbWVzc2FnZQoKIGRyaXZlcnMvaWRlL3BkYzIwMnh4X25ldy5jIHwgMTAgKysrKystLS0t
-LQogMSBmaWxlIGNoYW5nZWQsIDUgaW5zZXJ0aW9ucygrKSwgNSBkZWxldGlvbnMoLSkKCmRpZmYg
-LS1naXQgYS9kcml2ZXJzL2lkZS9wZGMyMDJ4eF9uZXcuYyBiL2RyaXZlcnMvaWRlL3BkYzIwMnh4
-X25ldy5jCmluZGV4IGRmNzNjYmQuLjlhZDAxNGEgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvaWRlL3Bk
-YzIwMnh4X25ldy5jCisrKyBiL2RyaXZlcnMvaWRlL3BkYzIwMnh4X25ldy5jCkBAIC0yMiw2ICsy
-Miw3IEBACiAjaW5jbHVkZSA8bGludXgvcGNpLmg+CiAjaW5jbHVkZSA8bGludXgvaW5pdC5oPgog
-I2luY2x1ZGUgPGxpbnV4L2lkZS5oPgorI2luY2x1ZGUgPGxpbnV4L2t0aW1lLmg+CiAKICNpbmNs
-dWRlIDxhc20vaW8uaD4KIApAQCAtMjQzLDEzICsyNDQsMTMgQEAgc3RhdGljIGxvbmcgcmVhZF9j
-b3VudGVyKHUzMiBkbWFfYmFzZSkKICAqLwogc3RhdGljIGxvbmcgZGV0ZWN0X3BsbF9pbnB1dF9j
-bG9jayh1bnNpZ25lZCBsb25nIGRtYV9iYXNlKQogewotCXN0cnVjdCB0aW1ldmFsIHN0YXJ0X3Rp
-bWUsIGVuZF90aW1lOworCWt0aW1lX3Qgc3RhcnRfdGltZSwgZW5kX3RpbWU7CiAJbG9uZyBzdGFy
-dF9jb3VudCwgZW5kX2NvdW50OwogCWxvbmcgcGxsX2lucHV0LCB1c2VjX2VsYXBzZWQ7CiAJdTgg
-c2NyMTsKIAogCXN0YXJ0X2NvdW50ID0gcmVhZF9jb3VudGVyKGRtYV9iYXNlKTsKLQlkb19nZXR0
-aW1lb2ZkYXkoJnN0YXJ0X3RpbWUpOworCXN0YXJ0X3RpbWUgPSBrdGltZV9nZXQoKTsKIAogCS8q
-IFN0YXJ0IHRoZSB0ZXN0IG1vZGUgKi8KIAlvdXRiKDB4MDEsIGRtYV9iYXNlICsgMHgwMSk7CkBA
-IC0yNjEsNyArMjYyLDcgQEAgc3RhdGljIGxvbmcgZGV0ZWN0X3BsbF9pbnB1dF9jbG9jayh1bnNp
-Z25lZCBsb25nIGRtYV9iYXNlKQogCW1kZWxheSgxMCk7CiAKIAllbmRfY291bnQgPSByZWFkX2Nv
-dW50ZXIoZG1hX2Jhc2UpOwotCWRvX2dldHRpbWVvZmRheSgmZW5kX3RpbWUpOworCWVuZF90aW1l
-ID0ga3RpbWVfZ2V0KCk7CiAKIAkvKiBTdG9wIHRoZSB0ZXN0IG1vZGUgKi8KIAlvdXRiKDB4MDEs
-IGRtYV9iYXNlICsgMHgwMSk7CkBAIC0yNzMsOCArMjc0LDcgQEAgc3RhdGljIGxvbmcgZGV0ZWN0
-X3BsbF9pbnB1dF9jbG9jayh1bnNpZ25lZCBsb25nIGRtYV9iYXNlKQogCSAqIENhbGN1bGF0ZSB0
-aGUgaW5wdXQgY2xvY2sgaW4gSHoKIAkgKiAodGhlIGNsb2NrIGNvdW50ZXIgaXMgMzAgYml0IHdp
-ZGUgYW5kIGNvdW50cyBkb3duKQogCSAqLwotCXVzZWNfZWxhcHNlZCA9IChlbmRfdGltZS50dl9z
-ZWMgLSBzdGFydF90aW1lLnR2X3NlYykgKiAxMDAwMDAwICsKLQkJKGVuZF90aW1lLnR2X3VzZWMg
-LSBzdGFydF90aW1lLnR2X3VzZWMpOworCXVzZWNfZWxhcHNlZCA9IGt0aW1lX3VzX2RlbHRhKGVu
-ZF90aW1lLCBzdGFydF90aW1lKTsKIAlwbGxfaW5wdXQgPSAoKHN0YXJ0X2NvdW50IC0gZW5kX2Nv
-dW50KSAmIDB4M2ZmZmZmZmYpIC8gMTAgKgogCQkoMTAwMDAwMDAgLyB1c2VjX2VsYXBzZWQpOwog
-Ci0tIAoxLjkuMQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X18KWTIwMzggbWFpbGluZyBsaXN0ClkyMDM4QGxpc3RzLmxpbmFyby5vcmcKaHR0cHM6Ly9saXN0
-cy5saW5hcm8ub3JnL21haWxtYW4vbGlzdGluZm8veTIwMzgK
+On Thursday 22 October 2015 18:15:50 Amitoj Kaur Chawla wrote:
+> This driver uses 'struct timeval' which we are trying to remove since
+> 32 bit time types will break in the year 2038 by replacing it with
+> ktime_t.
+> 
+> This patch changes do_gettimeofday() to ktime_get() because
+> ktime_get() returns a ktime_t while do_gettimeofday() returns struct
+> timeval.
+> 
+> This patch also uses ktime_us_delta() to get the elapsed time.
+> 
+> Signed-off-by: Amitoj Kaur Chawla <amitoj1606@gmail.com>
+> 
+
+Reviewed-by: Arnd Bergmann <arnd@arndb.de>
