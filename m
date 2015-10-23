@@ -1,30 +1,40 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [Y2038] [PATCH v2] ide: pdc202xx_new: Replace timeval with ktime_t
-Date: Thu, 22 Oct 2015 14:47:23 +0200
-Message-ID: <4909398.MrlE5Sy5gL@wuerfel>
-References: <20151022124550.GA18694@amitoj-Inspiron-3542>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20151022124550.GA18694@amitoj-Inspiron-3542>
-Sender: linux-kernel-owner@vger.kernel.org
-To: y2038@lists.linaro.org
-Cc: Amitoj Kaur Chawla <amitoj1606@gmail.com>, outreachy-kernel@googlegroups.com, linux-ide@vger.kernel.org, davem@davemloft.net, linux-kernel@vger.kernel.org
+From: Jaedon Shin <jaedon.shin@gmail.com>
+Subject: [PATCH 01/10] ata: ahci_brcmstb: make the driver buildable on BMIPS_GENERIC
+Date: Fri, 23 Oct 2015 10:44:14 +0900
+Message-ID: <1445564663-66824-2-git-send-email-jaedon.shin@gmail.com>
+References: <1445564663-66824-1-git-send-email-jaedon.shin@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:33093 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751976AbbJWBpQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Oct 2015 21:45:16 -0400
+In-Reply-To: <1445564663-66824-1-git-send-email-jaedon.shin@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>, Ralf Baechle <ralf@linux-mips.org>, Florian Fainelli <f.fainelli@gmail.com>, Rob Herring <robh+dt@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-mips@linux-mips.org, devicetree@vger.kernel.org, Jaedon Shin <jaedon.shin@gmail.com>
 
-On Thursday 22 October 2015 18:15:50 Amitoj Kaur Chawla wrote:
-> This driver uses 'struct timeval' which we are trying to remove since
-> 32 bit time types will break in the year 2038 by replacing it with
-> ktime_t.
-> 
-> This patch changes do_gettimeofday() to ktime_get() because
-> ktime_get() returns a ktime_t while do_gettimeofday() returns struct
-> timeval.
-> 
-> This patch also uses ktime_us_delta() to get the elapsed time.
-> 
-> Signed-off-by: Amitoj Kaur Chawla <amitoj1606@gmail.com>
-> 
+The BCM7xxx ARM and MIPS platforms share a similar hardware block for AHCI
+SATA3.
 
-Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Jaedon Shin <jaedon.shin@gmail.com>
+---
+ drivers/ata/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 15e40ee62a94..8f535a88a0c7 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -100,7 +100,7 @@ config SATA_AHCI_PLATFORM
+ 
+ config AHCI_BRCMSTB
+ 	tristate "Broadcom STB AHCI SATA support"
+-	depends on ARCH_BRCMSTB
++	depends on ARCH_BRCMSTB || BMIPS_GENERIC
+ 	help
+ 	  This option enables support for the AHCI SATA3 controller found on
+ 	  STB SoC's.
+-- 
+2.6.2
+
