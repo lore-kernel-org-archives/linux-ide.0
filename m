@@ -1,40 +1,53 @@
 From: Jaedon Shin <jaedon.shin@gmail.com>
-Subject: [PATCH 01/10] ata: ahci_brcmstb: make the driver buildable on BMIPS_GENERIC
-Date: Fri, 23 Oct 2015 10:44:14 +0900
-Message-ID: <1445564663-66824-2-git-send-email-jaedon.shin@gmail.com>
-References: <1445564663-66824-1-git-send-email-jaedon.shin@gmail.com>
+Subject: [PATCH 00/10] add support SATA for BMIPS_GENERIC
+Date: Fri, 23 Oct 2015 10:44:13 +0900
+Message-ID: <1445564663-66824-1-git-send-email-jaedon.shin@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:33093 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751976AbbJWBpQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Oct 2015 21:45:16 -0400
-In-Reply-To: <1445564663-66824-1-git-send-email-jaedon.shin@gmail.com>
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:36113 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751976AbbJWBpM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Oct 2015 21:45:12 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>, Ralf Baechle <ralf@linux-mips.org>, Florian Fainelli <f.fainelli@gmail.com>, Rob Herring <robh+dt@kernel.org>
 Cc: linux-ide@vger.kernel.org, linux-mips@linux-mips.org, devicetree@vger.kernel.org, Jaedon Shin <jaedon.shin@gmail.com>
 
-The BCM7xxx ARM and MIPS platforms share a similar hardware block for AHCI
-SATA3.
+Hi all,
 
-Signed-off-by: Jaedon Shin <jaedon.shin@gmail.com>
----
- drivers/ata/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This patch series adds support SATA for BMIPS_GENERIC.
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 15e40ee62a94..8f535a88a0c7 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -100,7 +100,7 @@ config SATA_AHCI_PLATFORM
- 
- config AHCI_BRCMSTB
- 	tristate "Broadcom STB AHCI SATA support"
--	depends on ARCH_BRCMSTB
-+	depends on ARCH_BRCMSTB || BMIPS_GENERIC
- 	help
- 	  This option enables support for the AHCI SATA3 controller found on
- 	  STB SoC's.
+Ralf,
+I request you to drop already submitted patches for NAND device nodes.
+It is merge conflicts with this patches.
+http://patchwork.linux-mips.org/patch/10577/
+http://patchwork.linux-mips.org/patch/10578/
+http://patchwork.linux-mips.org/patch/10579/
+http://patchwork.linux-mips.org/patch/10580/
+
+Jaedon Shin (10):
+  ata: ahci_brcmstb: make the driver buildable on BMIPS_GENERIC
+  ata: ahch_brcmstb: add data for port offset
+  ata: ahci_brcmstb: add support 40nm platforms
+  phy: phy_brcmstb_sata: make the driver buildable on BMIPS_GENERIC
+  phy: phy_brcmstb_sata: remove unused definitions
+  phy: phy_brcmstb_sata: add data for phy offset
+  phy: phy_brcmstb_sata: add support 40nm platforms
+  MIPS: BMIPS: brcmstb: add SATA nodes for bcm7346
+  MIPS: BMIPS: brcmstb: add SATA nodes for bcm7360
+  MIPS: BMIPS: brcmstb: add SATA nodes for bcm7362
+
+ arch/mips/boot/dts/brcm/bcm7346.dtsi      | 40 +++++++++++++++++++++++++++++++
+ arch/mips/boot/dts/brcm/bcm7360.dtsi      | 40 +++++++++++++++++++++++++++++++
+ arch/mips/boot/dts/brcm/bcm7362.dtsi      | 40 +++++++++++++++++++++++++++++++
+ arch/mips/boot/dts/brcm/bcm97346dbsmb.dts |  8 +++++++
+ arch/mips/boot/dts/brcm/bcm97360svmb.dts  |  8 +++++++
+ arch/mips/boot/dts/brcm/bcm97362svmb.dts  |  8 +++++++
+ drivers/ata/Kconfig                       |  2 +-
+ drivers/ata/ahci_brcmstb.c                | 34 +++++++++++++++++++-------
+ drivers/phy/Kconfig                       |  4 ++--
+ drivers/phy/phy-brcmstb-sata.c            | 34 ++++++++++++++++++--------
+ 10 files changed, 196 insertions(+), 22 deletions(-)
+
 -- 
 2.6.2
 
