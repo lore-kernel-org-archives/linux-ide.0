@@ -1,119 +1,99 @@
 From: Brian Norris <computersforpeace@gmail.com>
-Subject: Re: [PATCH 07/10] phy: phy_brcmstb_sata: add support 40nm platforms
-Date: Fri, 23 Oct 2015 14:09:09 -0700
-Message-ID: <20151023210909.GP13239@google.com>
+Subject: Re: [PATCH 06/10] phy: phy_brcmstb_sata: add data for phy offset
+Date: Fri, 23 Oct 2015 14:09:40 -0700
+Message-ID: <20151023210940.GQ13239@google.com>
 References: <1445564663-66824-1-git-send-email-jaedon.shin@gmail.com>
- <1445564663-66824-8-git-send-email-jaedon.shin@gmail.com>
+ <1445564663-66824-7-git-send-email-jaedon.shin@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:36053 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750765AbbJWVJN (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Oct 2015 17:09:13 -0400
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:34454 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750765AbbJWVJn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Oct 2015 17:09:43 -0400
 Content-Disposition: inline
-In-Reply-To: <1445564663-66824-8-git-send-email-jaedon.shin@gmail.com>
+In-Reply-To: <1445564663-66824-7-git-send-email-jaedon.shin@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Jaedon Shin <jaedon.shin@gmail.com>
 Cc: Tejun Heo <tj@kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>, Ralf Baechle <ralf@linux-mips.org>, Florian Fainelli <f.fainelli@gmail.com>, Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org, linux-mips@linux-mips.org, devicetree@vger.kernel.org
 
-On Fri, Oct 23, 2015 at 10:44:20AM +0900, Jaedon Shin wrote:
-> Add offsets for 40nm BMIPS based set-top box platforms.
+On Fri, Oct 23, 2015 at 10:44:19AM +0900, Jaedon Shin wrote:
+> Add data of device node for phy offset.
 > 
 > Signed-off-by: Jaedon Shin <jaedon.shin@gmail.com>
 > ---
->  drivers/phy/phy-brcmstb-sata.c | 21 ++++++++++++++-------
->  1 file changed, 14 insertions(+), 7 deletions(-)
+>  drivers/phy/phy-brcmstb-sata.c | 13 +++++++++++--
+>  1 file changed, 11 insertions(+), 2 deletions(-)
 > 
 > diff --git a/drivers/phy/phy-brcmstb-sata.c b/drivers/phy/phy-brcmstb-sata.c
-> index 41c7535d706b..1cc80743b1b6 100644
+> index 0be55dafe9ea..41c7535d706b 100644
 > --- a/drivers/phy/phy-brcmstb-sata.c
 > +++ b/drivers/phy/phy-brcmstb-sata.c
-> @@ -30,7 +30,8 @@
->  #define MAX_PORTS					2
+> @@ -42,6 +42,7 @@ struct brcm_sata_port {
+>  struct brcm_sata_phy {
+>  	struct device *dev;
+>  	void __iomem *phy_base;
+> +	u32 phy_offset;
 >  
->  /* Register offset between PHYs in PCB space */
-> -#define SATA_MDIO_REG_SPACE_SIZE			0x1000
-> +#define SATA_MDIO_REG_28NM_SPACE_SIZE			0x1000
-> +#define SATA_MDIO_REG_40NM_SPACE_SIZE			0x10
-
-Hmm, I thought there were other differences than just the offsets
-between ports when rev'ing from 40nm to 28nm. But revisiting the only
-documentation I have [1], this looks OK. I'd recommend double checking
-the other registers, even if they're currently unused though.
-
->  
->  struct brcm_sata_port {
->  	int portnum;
-> @@ -47,7 +48,7 @@ struct brcm_sata_phy {
 >  	struct brcm_sata_port phys[MAX_PORTS];
 >  };
->  
-> -enum sata_mdio_phy_regs_28nm {
-> +enum sata_mdio_phy_regs {
->  	PLL_REG_BANK_0				= 0x50,
->  	PLL_REG_BANK_0_PLLCONTROL_0		= 0x81,
->  
-> @@ -85,7 +86,7 @@ static void brcm_sata_mdio_wr(void __iomem *addr, u32 bank, u32 ofs,
->  #define FMAX_VAL_DEFAULT	0x3df
->  #define FMAX_VAL_SSC		0x83
->  
-> -static void brcm_sata_cfg_ssc_28nm(struct brcm_sata_port *port)
-> +static void brcm_sata_cfg_ssc(struct brcm_sata_port *port)
+> @@ -65,7 +66,7 @@ static inline void __iomem *brcm_sata_phy_base(struct brcm_sata_port *port)
 >  {
->  	void __iomem *base = brcm_sata_phy_base(port);
 >  	struct brcm_sata_phy *priv = port->phy_priv;
-> @@ -116,19 +117,25 @@ static int brcm_sata_phy_init(struct phy *phy)
->  {
->  	struct brcm_sata_port *port = phy_get_drvdata(phy);
 >  
-> -	brcm_sata_cfg_ssc_28nm(port);
-> +	brcm_sata_cfg_ssc(port);
->  
->  	return 0;
+> -	return priv->phy_base + (port->portnum * SATA_MDIO_REG_SPACE_SIZE);
+> +	return priv->phy_base + (port->portnum * priv->phy_offset);
 >  }
 >  
-> -static const struct phy_ops phy_ops_28nm = {
-> +static const struct phy_ops phy_ops = {
->  	.init		= brcm_sata_phy_init,
->  	.owner		= THIS_MODULE,
+>  static void brcm_sata_mdio_wr(void __iomem *addr, u32 bank, u32 ofs,
+> @@ -126,7 +127,8 @@ static const struct phy_ops phy_ops_28nm = {
 >  };
 >  
 >  static const struct of_device_id brcm_sata_phy_of_match[] = {
->  	{ .compatible	= "brcm,bcm7445-sata-phy",
-> -			.data = (void *)SATA_MDIO_REG_SPACE_SIZE },
-> +			.data = (void *)SATA_MDIO_REG_28NM_SPACE_SIZE },
-> +	{ .compatible   = "brcm,bcm7346-sata-phy",
-> +			.data = (void *)SATA_MDIO_REG_40NM_SPACE_SIZE },
-> +	{ .compatible   = "brcm,bcm7360-sata-phy",
-> +			.data = (void *)SATA_MDIO_REG_40NM_SPACE_SIZE },
-> +	{ .compatible   = "brcm,bcm7362-sata-phy",
-> +			.data = (void *)SATA_MDIO_REG_40NM_SPACE_SIZE },
-
-Like Florian suggested, this should probably be consolidated to the
-first SoC that had this core on it. I think bcm7425, but I could be
-wrong.
-
+> -	{ .compatible	= "brcm,bcm7445-sata-phy" },
+> +	{ .compatible	= "brcm,bcm7445-sata-phy",
+> +			.data = (void *)SATA_MDIO_REG_SPACE_SIZE },
 >  	{},
 >  };
 >  MODULE_DEVICE_TABLE(of, brcm_sata_phy_of_match);
-> @@ -185,7 +192,7 @@ static int brcm_sata_phy_probe(struct platform_device *pdev)
->  		port = &priv->phys[id];
->  		port->portnum = id;
->  		port->phy_priv = priv;
-> -		port->phy = devm_phy_create(dev, child, &phy_ops_28nm);
-> +		port->phy = devm_phy_create(dev, child, &phy_ops);
->  		port->ssc_en = of_property_read_bool(child, "brcm,enable-ssc");
->  		if (IS_ERR(port->phy)) {
->  			dev_err(dev, "failed to create PHY\n");
-> -- 
-> 2.6.2
-> 
+> @@ -135,6 +137,7 @@ static int brcm_sata_phy_probe(struct platform_device *pdev)
+>  {
+>  	struct device *dev = &pdev->dev;
+>  	struct device_node *dn = dev->of_node, *child;
+> +	const struct of_device_id *of_id = NULL;
+
+Drop the '= NULL', since it's unncessary. Then the compiler will
+complain if you ever end up dereferencing it before (properly)
+initializing it.
+
+>  	struct brcm_sata_phy *priv;
+>  	struct resource *res;
+>  	struct phy_provider *provider;
+> @@ -154,6 +157,12 @@ static int brcm_sata_phy_probe(struct platform_device *pdev)
+>  	if (IS_ERR(priv->phy_base))
+>  		return PTR_ERR(priv->phy_base);
+>  
+> +	of_id = of_match_node(brcm_sata_phy_of_match, dn);
+> +	if (!of_id)
+> +		return -EINVAL;
+> +
+> +	priv->phy_offset = (u32)of_id->data;
+
+Using my mental compiler, I expect you'll get warnings on 64-bit systems
+about casting from a pointer to an integer of different size. Using
+uintptr_t would get around that. And if you wanted to be really clear
+that you are purposely truncating, maybe an ugly double cast?
+
+	priv->phy_offset = (u32)(uintptr_t)of_id->data;
 
 With that:
 
 Reviewed-by: Brian Norris <computersforpeace@gmail.com>
 
-[1] https://github.com/Broadcom/stblinux-3.8/blob/master/linux/drivers/ata/sata_brcmstb_phy.c
-    https://github.com/Broadcom/stblinux-3.8/blob/master/linux/drivers/ata/sata_brcmstb.h
+> +
+>  	for_each_available_child_of_node(dn, child) {
+>  		unsigned int id;
+>  		struct brcm_sata_port *port;
+> -- 
+> 2.6.2
