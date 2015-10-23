@@ -1,50 +1,48 @@
-From: Vinayak Kale <vinayak.kale@seagate.com>
-Subject: Re: [PATCH] libata: add support for NCQ commands for SG interface
-Date: Sat, 24 Oct 2015 01:38:47 +0530
-Message-ID: <CAAtun4incLV=jMbVnkdtbSxXW-7XFYnWb=6PxLnJvwHi5HSLsQ@mail.gmail.com>
-References: <1445082519-8160-1-git-send-email-vinayak.kale@seagate.com>
-	<CACLWs=VWXTd6ZcDQCGXHkngf72RpiqDVkZKXrWJC7Rmx_giWsA@mail.gmail.com>
-	<20151022085717.GB24379@mtj.duckdns.org>
-	<CAAtun4jvUaVsGSofq5n-sJzmSf4qBsPvQ7WU6dOik4JYSMnZNw@mail.gmail.com>
-	<20151023053945.GA24618@mtj.duckdns.org>
+From: Brian Norris <computersforpeace@gmail.com>
+Subject: Re: [PATCH 00/10] add support SATA for BMIPS_GENERIC
+Date: Fri, 23 Oct 2015 13:35:11 -0700
+Message-ID: <20151023203511.GN13239@google.com>
+References: <1445564663-66824-1-git-send-email-jaedon.shin@gmail.com>
+ <20151023035817.GA18907@mtj.duckdns.org>
+ <CAGVrzcYLeoXDPkMKvAtfok1dwgGQDu06FxP05u6YiO9-nHJqqw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20151023053945.GA24618@mtj.duckdns.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Vinayak Kale <vinayak.kale@gmail.com>, Sumit Gupta <sumit.g.gupta@seagate.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:33767 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751989AbbJWUfO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Oct 2015 16:35:14 -0400
+Content-Disposition: inline
+In-Reply-To: <CAGVrzcYLeoXDPkMKvAtfok1dwgGQDu06FxP05u6YiO9-nHJqqw@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Florian Fainelli <f.fainelli@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, Jaedon Shin <jaedon.shin@gmail.com>, Kishon Vijay Abraham I <kishon@ti.com>, Ralf Baechle <ralf@linux-mips.org>, Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org, Linux-MIPS <linux-mips@linux-mips.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Kevin Cernekee <cernekee@gmail.com>
 
-Hi Tejun,
+On Thu, Oct 22, 2015 at 09:51:30PM -0700, Florian Fainelli wrote:
+> 2015-10-22 20:58 GMT-07:00 Tejun Heo <tj@kernel.org>:
+> I think we have a bit too many compatible strings defined, I need to
+> lookup tomorrow when I am back in the office which BCM7xxx started
+> featuring a SATA3 AHCI compliant core, it might be 7420, but I am not
+> sure
 
-On Fri, Oct 23, 2015 at 11:09 AM, Tejun Heo <tj@kernel.org> wrote:
-> Hello,
->
-> On Fri, Oct 23, 2015 at 10:01:35AM +0530, Vinayak Kale wrote:
->> > It looks like it'd work given that it's forcing qc->tag into
->> > tf->nsect.  What's the use case tho?
->>
->> We need to issue NCQ commands with priority bit from user space application.
->>
->> BTW, Sergei Shtylyov raised concern regarding usefulness of adding
->> ATA_TFLAG_LBA to tf->flags. Can you please comment on that as well?
->> Accordingly I will either keep it or discard it in V2. Thanks.
->
-> I like the change but can you please put that in a separate patch?
+I thought it was BCM7425, but you probably have the resources to check
+better than I do.
 
-Ok. I'll put this in a separate patch.
+There were also some small (probably mostly undocumented) bugfixes at
+some point. I think the early cores actually had problems with the
+upstream libahci. You might look at AHCI_HFLAG_DELAY_ENGINE for that, if
+you care.
 
-> Also, can you please verify that this works fine with multiple regular
-> NCQ commands in flight?
+You might also notice that the "strict-ahci" stuff we were using got
+dropped:
 
-I verified that multiple FPDMA Read/Write commands issued
-simultaneously by different processes, work fine.
-I hooked up our application's queued Read/Write APIs to fio, ran fio
-for 'random rw' over multiple processes. It worked fine.
+commit f1df8641e27b7edb978bdc7aaf50c235bc9e8be9
+Author: Hans de Goede <hdegoede@redhat.com>
+Date:   Sat Feb 22 17:22:53 2014 +0100
 
->
-> Thanks.
->
-> --
-> tejun
+    ahci_platform: Drop support for ahci-strict platform device type
+
+But that's less relevant, now that there's a proper brcmstb driver.
+
+Brian
