@@ -1,47 +1,45 @@
-From: Florian Fainelli <f.fainelli-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 04/10] phy: phy_brcmstb_sata: make the driver buildable on BMIPS_GENERIC
-Date: Thu, 22 Oct 2015 22:01:35 -0700
-Message-ID: <CAGVrzcasH-E124cxEdJV7ejseWfuev+6tPQgtiaAjUHB8gJ=KA@mail.gmail.com>
-References: <1445564663-66824-1-git-send-email-jaedon.shin@gmail.com> <1445564663-66824-5-git-send-email-jaedon.shin@gmail.com>
+From: Florian Fainelli <f.fainelli@gmail.com>
+Subject: Re: [PATCH 05/10] phy: phy_brcmstb_sata: remove unused definitions
+Date: Thu, 22 Oct 2015 22:02:02 -0700
+Message-ID: <CAGVrzcb3gbtBS8TvsJjQbRxQ=shVXgKAaTNV3p3spgEbWRgRQg@mail.gmail.com>
+References: <1445564663-66824-1-git-send-email-jaedon.shin@gmail.com> <1445564663-66824-6-git-send-email-jaedon.shin@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1445564663-66824-5-git-send-email-jaedon.shin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Jaedon Shin <jaedon.shin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kishon Vijay Abraham I <kishon-l0cyMroinI0@public.gmane.org>, Ralf Baechle <ralf-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org>, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux-MIPS <linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org>, "devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:37155 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750895AbbJWFCm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Oct 2015 01:02:42 -0400
+In-Reply-To: <1445564663-66824-6-git-send-email-jaedon.shin@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jaedon Shin <jaedon.shin@gmail.com>, Brian Norris <computersforpeace@gmail.com>, Kevin Cernekee <cernekee@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>, Ralf Baechle <ralf@linux-mips.org>, Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org, Linux-MIPS <linux-mips@linux-mips.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
 
-2015-10-22 18:44 GMT-07:00 Jaedon Shin <jaedon.shin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>:
-> The BCM7xxx ARM and MIPS platforms share a similar hardware block for AHCI
-> SATA3 PHY.
+2015-10-22 18:44 GMT-07:00 Jaedon Shin <jaedon.shin@gmail.com>:
+> Remove unused definitions.
 >
-> Signed-off-by: Jaedon Shin <jaedon.shin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Signed-off-by: Jaedon Shin <jaedon.shin@gmail.com>
 
-Acked-by: Florian Fainelli <f.fainelli-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Acked-by: Florian Fainelli <f.fainelli@gmail.com>
 
 > ---
->  drivers/phy/Kconfig | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>  drivers/phy/phy-brcmstb-sata.c | 2 --
+>  1 file changed, 2 deletions(-)
 >
-> diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
-> index 47da573d0bab..c83e48661fd7 100644
-> --- a/drivers/phy/Kconfig
-> +++ b/drivers/phy/Kconfig
-> @@ -364,11 +364,11 @@ config PHY_TUSB1210
+> diff --git a/drivers/phy/phy-brcmstb-sata.c b/drivers/phy/phy-brcmstb-sata.c
+> index 8a2cb16a1937..0be55dafe9ea 100644
+> --- a/drivers/phy/phy-brcmstb-sata.c
+> +++ b/drivers/phy/phy-brcmstb-sata.c
+> @@ -26,8 +26,6 @@
 >
->  config PHY_BRCMSTB_SATA
->         tristate "Broadcom STB SATA PHY driver"
-> -       depends on ARCH_BRCMSTB
-> +       depends on ARCH_BRCMSTB || BMIPS_GENERIC
->         depends on OF
->         select GENERIC_PHY
->         help
-> -         Enable this to support the SATA3 PHY on 28nm Broadcom STB SoCs.
-> +         Enable this to support the SATA3 PHY on 28nm or 40nm Broadcom STB SoCs.
->           Likely useful only with CONFIG_SATA_BRCMSTB enabled.
+>  #define SATA_MDIO_BANK_OFFSET                          0x23c
+>  #define SATA_MDIO_REG_OFFSET(ofs)                      ((ofs) * 4)
+> -#define SATA_MDIO_REG_SPACE_SIZE                       0x1000
+> -#define SATA_MDIO_REG_LENGTH                           0x1f00
 >
->  endmenu
+>  #define MAX_PORTS                                      2
+>
 > --
 > 2.6.2
 >
@@ -50,7 +48,3 @@ Acked-by: Florian Fainelli <f.fainelli-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
 -- 
 Florian
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
