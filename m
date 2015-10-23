@@ -1,59 +1,50 @@
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH 04/10] phy: phy_brcmstb_sata: make the driver buildable on
- BMIPS_GENERIC
-Date: Fri, 23 Oct 2015 20:17:07 +0530
-Message-ID: <562A486B.5020500@ti.com>
-References: <1445564663-66824-1-git-send-email-jaedon.shin@gmail.com>
- <1445564663-66824-5-git-send-email-jaedon.shin@gmail.com>
+From: Vinayak Kale <vinayak.kale@seagate.com>
+Subject: Re: [PATCH] libata: add support for NCQ commands for SG interface
+Date: Sat, 24 Oct 2015 01:38:47 +0530
+Message-ID: <CAAtun4incLV=jMbVnkdtbSxXW-7XFYnWb=6PxLnJvwHi5HSLsQ@mail.gmail.com>
+References: <1445082519-8160-1-git-send-email-vinayak.kale@seagate.com>
+	<CACLWs=VWXTd6ZcDQCGXHkngf72RpiqDVkZKXrWJC7Rmx_giWsA@mail.gmail.com>
+	<20151022085717.GB24379@mtj.duckdns.org>
+	<CAAtun4jvUaVsGSofq5n-sJzmSf4qBsPvQ7WU6dOik4JYSMnZNw@mail.gmail.com>
+	<20151023053945.GA24618@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:33753 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751726AbbJWOrR (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 23 Oct 2015 10:47:17 -0400
-In-Reply-To: <1445564663-66824-5-git-send-email-jaedon.shin@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20151023053945.GA24618@mtj.duckdns.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Vinayak Kale <vinayak.kale@gmail.com>, Sumit Gupta <sumit.g.gupta@seagate.com>
 List-Id: linux-ide@vger.kernel.org
-To: Jaedon Shin <jaedon.shin@gmail.com>, Tejun Heo <tj@kernel.org>, Ralf Baechle <ralf@linux-mips.org>, Florian Fainelli <f.fainelli@gmail.com>, Rob Herring <robh+dt@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-mips@linux-mips.org, devicetree@vger.kernel.org
 
-+Brian Norris
+Hi Tejun,
 
-Hi,
+On Fri, Oct 23, 2015 at 11:09 AM, Tejun Heo <tj@kernel.org> wrote:
+> Hello,
+>
+> On Fri, Oct 23, 2015 at 10:01:35AM +0530, Vinayak Kale wrote:
+>> > It looks like it'd work given that it's forcing qc->tag into
+>> > tf->nsect.  What's the use case tho?
+>>
+>> We need to issue NCQ commands with priority bit from user space application.
+>>
+>> BTW, Sergei Shtylyov raised concern regarding usefulness of adding
+>> ATA_TFLAG_LBA to tf->flags. Can you please comment on that as well?
+>> Accordingly I will either keep it or discard it in V2. Thanks.
+>
+> I like the change but can you please put that in a separate patch?
 
-On Friday 23 October 2015 07:14 AM, Jaedon Shin wrote:
-> The BCM7xxx ARM and MIPS platforms share a similar hardware block for AHCI
-> SATA3 PHY.
-> 
-> Signed-off-by: Jaedon Shin <jaedon.shin@gmail.com>
-> ---
->  drivers/phy/Kconfig | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
-> index 47da573d0bab..c83e48661fd7 100644
-> --- a/drivers/phy/Kconfig
-> +++ b/drivers/phy/Kconfig
-> @@ -364,11 +364,11 @@ config PHY_TUSB1210
->  
->  config PHY_BRCMSTB_SATA
->  	tristate "Broadcom STB SATA PHY driver"
-> -	depends on ARCH_BRCMSTB
-> +	depends on ARCH_BRCMSTB || BMIPS_GENERIC
+Ok. I'll put this in a separate patch.
 
-Nice to see the same driver is been used across multiple platforms.
-Cc'ed Brian who is the author of brcmstb-sata.c
+> Also, can you please verify that this works fine with multiple regular
+> NCQ commands in flight?
 
-Thanks
-Kishon
->  	depends on OF
->  	select GENERIC_PHY
->  	help
-> -	  Enable this to support the SATA3 PHY on 28nm Broadcom STB SoCs.
-> +	  Enable this to support the SATA3 PHY on 28nm or 40nm Broadcom STB SoCs.
->  	  Likely useful only with CONFIG_SATA_BRCMSTB enabled.
->  
->  endmenu
-> 
+I verified that multiple FPDMA Read/Write commands issued
+simultaneously by different processes, work fine.
+I hooked up our application's queued Read/Write APIs to fio, ran fio
+for 'random rw' over multiple processes. It worked fine.
+
+>
+> Thanks.
+>
+> --
+> tejun
