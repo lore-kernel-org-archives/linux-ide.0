@@ -1,66 +1,56 @@
-From: Florian Fainelli <f.fainelli@gmail.com>
-Subject: Re: [PATCH 03/10] ata: ahci_brcmstb: add support 40nm platforms
-Date: Thu, 22 Oct 2015 22:01:16 -0700
-Message-ID: <CAGVrzcZfJ448Ae64rOMmxxj8wh8w5XoYVmi66VP6y+2h6NpszA@mail.gmail.com>
-References: <1445564663-66824-1-git-send-email-jaedon.shin@gmail.com> <1445564663-66824-4-git-send-email-jaedon.shin@gmail.com>
+From: Florian Fainelli <f.fainelli-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 04/10] phy: phy_brcmstb_sata: make the driver buildable on BMIPS_GENERIC
+Date: Thu, 22 Oct 2015 22:01:35 -0700
+Message-ID: <CAGVrzcasH-E124cxEdJV7ejseWfuev+6tPQgtiaAjUHB8gJ=KA@mail.gmail.com>
+References: <1445564663-66824-1-git-send-email-jaedon.shin@gmail.com> <1445564663-66824-5-git-send-email-jaedon.shin@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-io0-f174.google.com ([209.85.223.174]:34877 "EHLO
-	mail-io0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750895AbbJWFB4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 23 Oct 2015 01:01:56 -0400
-In-Reply-To: <1445564663-66824-4-git-send-email-jaedon.shin@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1445564663-66824-5-git-send-email-jaedon.shin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Jaedon Shin <jaedon.shin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kishon Vijay Abraham I <kishon-l0cyMroinI0@public.gmane.org>, Ralf Baechle <ralf-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org>, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux-MIPS <linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org>, "devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: Jaedon Shin <jaedon.shin@gmail.com>, Brian Norris <computersforpeace@gmail.com>, Kevin Cernekee <cernekee@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>, Ralf Baechle <ralf@linux-mips.org>, Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org, Linux-MIPS <linux-mips@linux-mips.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
 
-2015-10-22 18:44 GMT-07:00 Jaedon Shin <jaedon.shin@gmail.com>:
-> Add offsets for 40nm BMIPS based set-top box platforms.
+2015-10-22 18:44 GMT-07:00 Jaedon Shin <jaedon.shin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>:
+> The BCM7xxx ARM and MIPS platforms share a similar hardware block for AHCI
+> SATA3 PHY.
 >
-> Signed-off-by: Jaedon Shin <jaedon.shin@gmail.com>
+> Signed-off-by: Jaedon Shin <jaedon.shin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+
+Acked-by: Florian Fainelli <f.fainelli-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+
 > ---
->  drivers/ata/ahci_brcmstb.c | 11 +++++++++--
->  1 file changed, 9 insertions(+), 2 deletions(-)
+>  drivers/phy/Kconfig | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 >
-> diff --git a/drivers/ata/ahci_brcmstb.c b/drivers/ata/ahci_brcmstb.c
-> index 8cf6f7d4798f..59eb526cf4f6 100644
-> --- a/drivers/ata/ahci_brcmstb.c
-> +++ b/drivers/ata/ahci_brcmstb.c
-> @@ -50,7 +50,8 @@
->    #define SATA_TOP_CTRL_2_SW_RST_RX                    BIT(2)
->    #define SATA_TOP_CTRL_2_SW_RST_TX                    BIT(3)
->    #define SATA_TOP_CTRL_2_PHY_GLOBAL_RESET             BIT(14)
-> - #define SATA_TOP_CTRL_PHY_OFFS                                0x8
-> + #define SATA_TOP_CTRL_28NM_PHY_OFFS                   0x8
-> + #define SATA_TOP_CTRL_40NM_PHY_OFFS                   0x4
->   #define SATA_TOP_MAX_PHYS                             2
->  #define SATA_TOP_CTRL_SATA_TP_OUT                      0x1c
->  #define SATA_TOP_CTRL_CLIENT_INIT_CTRL                 0x20
-> @@ -237,7 +238,13 @@ static int brcm_ahci_resume(struct device *dev)
+> diff --git a/drivers/phy/Kconfig b/drivers/phy/Kconfig
+> index 47da573d0bab..c83e48661fd7 100644
+> --- a/drivers/phy/Kconfig
+> +++ b/drivers/phy/Kconfig
+> @@ -364,11 +364,11 @@ config PHY_TUSB1210
 >
->  static const struct of_device_id ahci_of_match[] = {
->         {.compatible = "brcm,bcm7445-ahci",
-> -                       .data = (void *)SATA_TOP_CTRL_PHY_OFFS},
-> +                       .data = (void *)SATA_TOP_CTRL_28NM_PHY_OFFS},
-> +       {.compatible = "brcm,bcm7346-ahci",
-> +                       .data = (void *)SATA_TOP_CTRL_40NM_PHY_OFFS},
-> +       {.compatible = "brcm,bcm7360-ahci",
-> +                       .data = (void *)SATA_TOP_CTRL_40NM_PHY_OFFS},
-> +       {.compatible = "brcm,bcm7362-ahci",
-> +                       .data = (void *)SATA_TOP_CTRL_40NM_PHY_OFFS},
+>  config PHY_BRCMSTB_SATA
+>         tristate "Broadcom STB SATA PHY driver"
+> -       depends on ARCH_BRCMSTB
+> +       depends on ARCH_BRCMSTB || BMIPS_GENERIC
+>         depends on OF
+>         select GENERIC_PHY
+>         help
+> -         Enable this to support the SATA3 PHY on 28nm Broadcom STB SoCs.
+> +         Enable this to support the SATA3 PHY on 28nm or 40nm Broadcom STB SoCs.
+>           Likely useful only with CONFIG_SATA_BRCMSTB enabled.
+>
+>  endmenu
+> --
+> 2.6.2
+>
 
-Since you are introducing new compatible strings, you also need to
-update the binding document in Documentation/devicetree/bindings/ata/
 
-We could just use the compatible string for the first 40nm chip that
-started featuring such a SATA3 AHCI compliant core, which seems to be
-7231. Apart from the existing known workarounds (disabling NCQ, tuning
-the PHY) it seems to be largely identical across all 40nm chips.
 
-This is fine either way, and more information cannot hurt, these are
-all production chips, so we can actually look back at the history to
-know everything about them.
 -- 
 Florian
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
