@@ -1,53 +1,55 @@
 From: Jaedon Shin <jaedon.shin@gmail.com>
-Subject: [PATCH 00/10] add support SATA for BMIPS_GENERIC
-Date: Fri, 23 Oct 2015 10:44:13 +0900
-Message-ID: <1445564663-66824-1-git-send-email-jaedon.shin@gmail.com>
+Subject: [PATCH 03/10] ata: ahci_brcmstb: add support 40nm platforms
+Date: Fri, 23 Oct 2015 10:44:16 +0900
+Message-ID: <1445564663-66824-4-git-send-email-jaedon.shin@gmail.com>
+References: <1445564663-66824-1-git-send-email-jaedon.shin@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:36113 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751976AbbJWBpM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Oct 2015 21:45:12 -0400
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:33287 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751976AbbJWBp1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 22 Oct 2015 21:45:27 -0400
+In-Reply-To: <1445564663-66824-1-git-send-email-jaedon.shin@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>, Ralf Baechle <ralf@linux-mips.org>, Florian Fainelli <f.fainelli@gmail.com>, Rob Herring <robh+dt@kernel.org>
 Cc: linux-ide@vger.kernel.org, linux-mips@linux-mips.org, devicetree@vger.kernel.org, Jaedon Shin <jaedon.shin@gmail.com>
 
-Hi all,
+Add offsets for 40nm BMIPS based set-top box platforms.
 
-This patch series adds support SATA for BMIPS_GENERIC.
+Signed-off-by: Jaedon Shin <jaedon.shin@gmail.com>
+---
+ drivers/ata/ahci_brcmstb.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
-Ralf,
-I request you to drop already submitted patches for NAND device nodes.
-It is merge conflicts with this patches.
-http://patchwork.linux-mips.org/patch/10577/
-http://patchwork.linux-mips.org/patch/10578/
-http://patchwork.linux-mips.org/patch/10579/
-http://patchwork.linux-mips.org/patch/10580/
-
-Jaedon Shin (10):
-  ata: ahci_brcmstb: make the driver buildable on BMIPS_GENERIC
-  ata: ahch_brcmstb: add data for port offset
-  ata: ahci_brcmstb: add support 40nm platforms
-  phy: phy_brcmstb_sata: make the driver buildable on BMIPS_GENERIC
-  phy: phy_brcmstb_sata: remove unused definitions
-  phy: phy_brcmstb_sata: add data for phy offset
-  phy: phy_brcmstb_sata: add support 40nm platforms
-  MIPS: BMIPS: brcmstb: add SATA nodes for bcm7346
-  MIPS: BMIPS: brcmstb: add SATA nodes for bcm7360
-  MIPS: BMIPS: brcmstb: add SATA nodes for bcm7362
-
- arch/mips/boot/dts/brcm/bcm7346.dtsi      | 40 +++++++++++++++++++++++++++++++
- arch/mips/boot/dts/brcm/bcm7360.dtsi      | 40 +++++++++++++++++++++++++++++++
- arch/mips/boot/dts/brcm/bcm7362.dtsi      | 40 +++++++++++++++++++++++++++++++
- arch/mips/boot/dts/brcm/bcm97346dbsmb.dts |  8 +++++++
- arch/mips/boot/dts/brcm/bcm97360svmb.dts  |  8 +++++++
- arch/mips/boot/dts/brcm/bcm97362svmb.dts  |  8 +++++++
- drivers/ata/Kconfig                       |  2 +-
- drivers/ata/ahci_brcmstb.c                | 34 +++++++++++++++++++-------
- drivers/phy/Kconfig                       |  4 ++--
- drivers/phy/phy-brcmstb-sata.c            | 34 ++++++++++++++++++--------
- 10 files changed, 196 insertions(+), 22 deletions(-)
-
+diff --git a/drivers/ata/ahci_brcmstb.c b/drivers/ata/ahci_brcmstb.c
+index 8cf6f7d4798f..59eb526cf4f6 100644
+--- a/drivers/ata/ahci_brcmstb.c
++++ b/drivers/ata/ahci_brcmstb.c
+@@ -50,7 +50,8 @@
+   #define SATA_TOP_CTRL_2_SW_RST_RX			BIT(2)
+   #define SATA_TOP_CTRL_2_SW_RST_TX			BIT(3)
+   #define SATA_TOP_CTRL_2_PHY_GLOBAL_RESET		BIT(14)
+- #define SATA_TOP_CTRL_PHY_OFFS				0x8
++ #define SATA_TOP_CTRL_28NM_PHY_OFFS			0x8
++ #define SATA_TOP_CTRL_40NM_PHY_OFFS			0x4
+  #define SATA_TOP_MAX_PHYS				2
+ #define SATA_TOP_CTRL_SATA_TP_OUT			0x1c
+ #define SATA_TOP_CTRL_CLIENT_INIT_CTRL			0x20
+@@ -237,7 +238,13 @@ static int brcm_ahci_resume(struct device *dev)
+ 
+ static const struct of_device_id ahci_of_match[] = {
+ 	{.compatible = "brcm,bcm7445-ahci",
+-			.data = (void *)SATA_TOP_CTRL_PHY_OFFS},
++			.data = (void *)SATA_TOP_CTRL_28NM_PHY_OFFS},
++	{.compatible = "brcm,bcm7346-ahci",
++			.data = (void *)SATA_TOP_CTRL_40NM_PHY_OFFS},
++	{.compatible = "brcm,bcm7360-ahci",
++			.data = (void *)SATA_TOP_CTRL_40NM_PHY_OFFS},
++	{.compatible = "brcm,bcm7362-ahci",
++			.data = (void *)SATA_TOP_CTRL_40NM_PHY_OFFS},
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, ahci_of_match);
 -- 
 2.6.2
 
