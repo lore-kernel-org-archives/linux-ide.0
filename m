@@ -1,111 +1,64 @@
-From: Jaedon Shin <jaedon.shin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 03/10] ata: ahci_brcmstb: add support 40nm platforms
-Date: Sat, 24 Oct 2015 13:50:54 +0900
-Message-ID: <DE776F55-6D75-4AD7-B3AA-52E45C9D99C0@gmail.com>
-References: <1445564663-66824-1-git-send-email-jaedon.shin@gmail.com> <1445564663-66824-4-git-send-email-jaedon.shin@gmail.com> <20151023212558.GS13239@google.com>
+From: Jaedon Shin <jaedon.shin@gmail.com>
+Subject: Re: [PATCH 00/10] add support SATA for BMIPS_GENERIC
+Date: Sat, 24 Oct 2015 13:51:10 +0900
+Message-ID: <E3E038D1-BD83-49D8-887A-B215AA685701@gmail.com>
+References: <1445564663-66824-1-git-send-email-jaedon.shin@gmail.com> <20151023035817.GA18907@mtj.duckdns.org> <CAGVrzcYLeoXDPkMKvAtfok1dwgGQDu06FxP05u6YiO9-nHJqqw@mail.gmail.com>
 Mime-Version: 1.0 (Mac OS X Mail 9.1 \(3096.5\))
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20151023212558.GS13239-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Brian Norris <computersforpeace-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kishon Vijay Abraham I <kishon-l0cyMroinI0@public.gmane.org>, Ralf Baechle <ralf-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org>, Florian Fainelli <f.fainelli-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux MIPS Mailing List <linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org>, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:34392 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750936AbbJXEvO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 24 Oct 2015 00:51:14 -0400
+In-Reply-To: <CAGVrzcYLeoXDPkMKvAtfok1dwgGQDu06FxP05u6YiO9-nHJqqw@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Florian Fainelli <f.fainelli@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>, Ralf Baechle <ralf@linux-mips.org>, Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org, Linux-MIPS <linux-mips@linux-mips.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Brian Norris <computersforpeace@gmail.com>, Kevin Cernekee <cernekee@gmail.com>, Dragan Stancevic <dragan.stancevic@gmail.com>
 
-Hi Brian,
-
-On Oct 24, 2015, at 6:25 AM, Brian Norris <computersforpeace-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
+On Oct 23, 2015, at 1:51 PM, Florian Fainelli <f.fainelli@gmail.com> wrote:
 > 
-> Hi Jadeon,
-> 
-> Hmm, my suspicions about the PHY driver are probably meant to be applied
-> here. I don't think this change is sufficient.
-> 
-> On Fri, Oct 23, 2015 at 10:44:16AM +0900, Jaedon Shin wrote:
->> Add offsets for 40nm BMIPS based set-top box platforms.
+> 2015-10-22 20:58 GMT-07:00 Tejun Heo <tj@kernel.org>:
+>> On Fri, Oct 23, 2015 at 10:44:13AM +0900, Jaedon Shin wrote:
+>>> Hi all,
+>>> 
+>>> This patch series adds support SATA for BMIPS_GENERIC.
+>>> 
+>>> Ralf,
+>>> I request you to drop already submitted patches for NAND device nodes.
+>>> It is merge conflicts with this patches.
+>>> http://patchwork.linux-mips.org/patch/10577/
+>>> http://patchwork.linux-mips.org/patch/10578/
+>>> http://patchwork.linux-mips.org/patch/10579/
+>>> http://patchwork.linux-mips.org/patch/10580/
+>>> 
+>>> Jaedon Shin (10):
+>>>  ata: ahci_brcmstb: make the driver buildable on BMIPS_GENERIC
+>>>  ata: ahch_brcmstb: add data for port offset
+>>>  ata: ahci_brcmstb: add support 40nm platforms
 >> 
->> Signed-off-by: Jaedon Shin <jaedon.shin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
->> ---
->> drivers/ata/ahci_brcmstb.c | 11 +++++++++--
->> 1 file changed, 9 insertions(+), 2 deletions(-)
->> 
->> diff --git a/drivers/ata/ahci_brcmstb.c b/drivers/ata/ahci_brcmstb.c
->> index 8cf6f7d4798f..59eb526cf4f6 100644
->> --- a/drivers/ata/ahci_brcmstb.c
->> +++ b/drivers/ata/ahci_brcmstb.c
->> @@ -50,7 +50,8 @@
->>   #define SATA_TOP_CTRL_2_SW_RST_RX			BIT(2)
->>   #define SATA_TOP_CTRL_2_SW_RST_TX			BIT(3)
->>   #define SATA_TOP_CTRL_2_PHY_GLOBAL_RESET		BIT(14)
->> - #define SATA_TOP_CTRL_PHY_OFFS				0x8
->> + #define SATA_TOP_CTRL_28NM_PHY_OFFS			0x8
->> + #define SATA_TOP_CTRL_40NM_PHY_OFFS			0x4
+>> ata part looks fine to me.  Let me know when the other parts get in.
+>> I'll apply the ata ones to libata/for-4.4.
 > 
-> I don't remember the exact 40nm vs. 28nm map that well, but judging by
-> the code-is-the-documentation, the 28nm layout is like this:
+> There are a few comments coming on the ATA and Device Tree part, and I
+> also would like Brian Norris (who submitted the patches) to take a
+> look at these. But overall, this looks great.
 > 
-> base + 0x0C = port 0, phy control 1
-> base + 0x10 = port 0, phy control 2
-> base + 0x14 = port 1, phy control 1
-> base + 0x18 = port 1, phy control 2
-> 
-> but the 40nm layout is differnt, where the ports are interleaved:
-> 
-> base + 0x0C = port 0, phy control 1
-> base + 0x10 = port 1, phy control 1
-> base + 0x14 = port 0, phy control 2
-> base + 0x18 = port 1, phy control 2
-> 
-> So, your patch gets phy control 1 correct for both ports, but it doesn't
-> get phy control 2 correct. (Or at least, even if my guess at the 40nm
-> layout is wrong, your patch makes "port 0, phy control 2" collide with
-> "port 1, phy control 1", which is most certainly a bug.)
-> 
-> Are you sure you're testing this properly? Did you try using both ports
-> at the same time? And please, apply the same scrutiny to the PHY driver.
-> (e.g., did you test SSC? did you test both ports?)
-> 
-> Brian
+> I think we have a bit too many compatible strings defined, I need to
+> lookup tomorrow when I am back in the office which BCM7xxx started
+> featuring a SATA3 AHCI compliant core, it might be 7420, but I am not
+> sure
 > 
 
-You are right. This must be changed. 
+I agree with you. If you have good opinion, I want you to tell me.
 
-I found the 28nm chipsets have four phy interface control registers. But, 
-the the 40nm chipsets have only three registers. I did not testing with 
-two ports at the same time. It seems we should check more.
+> Thanks!
+> -- 
+> Florian
 
-Thanks.
+I will review carefully and submit v2 revision.
+
+Regards,
 
 Jaedon
-
->>  #define SATA_TOP_MAX_PHYS				2
->> #define SATA_TOP_CTRL_SATA_TP_OUT			0x1c
->> #define SATA_TOP_CTRL_CLIENT_INIT_CTRL			0x20
->> @@ -237,7 +238,13 @@ static int brcm_ahci_resume(struct device *dev)
->> 
->> static const struct of_device_id ahci_of_match[] = {
->> 	{.compatible = "brcm,bcm7445-ahci",
->> -			.data = (void *)SATA_TOP_CTRL_PHY_OFFS},
->> +			.data = (void *)SATA_TOP_CTRL_28NM_PHY_OFFS},
->> +	{.compatible = "brcm,bcm7346-ahci",
->> +			.data = (void *)SATA_TOP_CTRL_40NM_PHY_OFFS},
->> +	{.compatible = "brcm,bcm7360-ahci",
->> +			.data = (void *)SATA_TOP_CTRL_40NM_PHY_OFFS},
->> +	{.compatible = "brcm,bcm7362-ahci",
->> +			.data = (void *)SATA_TOP_CTRL_40NM_PHY_OFFS},
->> 	{},
->> };
->> MODULE_DEVICE_TABLE(of, ahci_of_match);
->> -- 
->> 2.6.2
->> 
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
->> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
