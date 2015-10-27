@@ -1,7 +1,7 @@
 From: Jaedon Shin <jaedon.shin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [v2 01/10] ata: ahci_brcmstb: add quick for broken ncq
-Date: Tue, 27 Oct 2015 15:48:02 +0900
-Message-ID: <1445928491-7320-2-git-send-email-jaedon.shin@gmail.com>
+Subject: [v2 02/10] ata: ahci_brcmstb: add support MIPS-based platforms
+Date: Tue, 27 Oct 2015 15:48:03 +0900
+Message-ID: <1445928491-7320-3-git-send-email-jaedon.shin@gmail.com>
 References: <1445928491-7320-1-git-send-email-jaedon.shin@gmail.com>
 Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1445928491-7320-1-git-send-email-jaedon.shin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
@@ -10,102 +10,60 @@ To: Brian Norris <computersforpeace-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Fl
 Cc: Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kevin Cernekee <cernekee-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dragan Stancevic <dragan.stancevic-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux-MIPS <linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org>, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jaedon Shin <jaedon.shin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
-Add quick for bronken ncq. The chipsets (eg. BCM7439A0, BCM7445A0 and
-BCM7445B0) need a workaround disabling NCQ. and it may need the
-MIPS-based set-top box platforms.
+The BCM7xxx ARM-based and MIPS-based platforms share a similar hardware
+block for AHCI SATA3.
+
+The BCM7425 is flagship chipset of 40nm class. Other MIPS-based 40nm
+chipsets has same hardware block. so the compatible string may be use
+brcm,bcm7425-ahci.
 
 Signed-off-by: Jaedon Shin <jaedon.shin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 ---
- .../devicetree/bindings/ata/brcm,sata-brcmstb.txt  |  3 ++
- drivers/ata/ahci_brcmstb.c                         | 42 ++++++++++++++++++++++
- 2 files changed, 45 insertions(+)
+ Documentation/devicetree/bindings/ata/brcm,sata-brcmstb.txt | 4 ++--
+ drivers/ata/Kconfig                                         | 2 +-
+ drivers/ata/ahci_brcmstb.c                                  | 1 +
+ 3 files changed, 4 insertions(+), 3 deletions(-)
 
 diff --git a/Documentation/devicetree/bindings/ata/brcm,sata-brcmstb.txt b/Documentation/devicetree/bindings/ata/brcm,sata-brcmstb.txt
-index 20ac9bbfa1fd..4650c0aff6b3 100644
+index 4650c0aff6b3..488a383ce202 100644
 --- a/Documentation/devicetree/bindings/ata/brcm,sata-brcmstb.txt
 +++ b/Documentation/devicetree/bindings/ata/brcm,sata-brcmstb.txt
-@@ -10,6 +10,9 @@ Required properties:
+@@ -4,8 +4,8 @@ SATA nodes are defined to describe on-chip Serial ATA controllers.
+ Each SATA controller should have its own node.
+ 
+ Required properties:
+-- compatible         : compatible list, may contain "brcm,bcm7445-ahci" and/or
+-                       "brcm,sata3-ahci"
++- compatible         : compatible list, may contain "brcm,bcm7445-ahci" or
++                       "brcm,bcm7425-ahci" or "brcm,sata3-ahci"
+ - reg                : register mappings for AHCI and SATA_TOP_CTRL
  - reg-names          : "ahci" and "top-ctrl"
  - interrupts         : interrupt mapping for SATA IRQ
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 15e40ee62a94..8f535a88a0c7 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -100,7 +100,7 @@ config SATA_AHCI_PLATFORM
  
-+Optional properties:
-+- brcm,broken-ncq    : if present, NCQ is unusable
-+
- Also see ahci-platform.txt.
- 
- Example:
+ config AHCI_BRCMSTB
+ 	tristate "Broadcom STB AHCI SATA support"
+-	depends on ARCH_BRCMSTB
++	depends on ARCH_BRCMSTB || BMIPS_GENERIC
+ 	help
+ 	  This option enables support for the AHCI SATA3 controller found on
+ 	  STB SoC's.
 diff --git a/drivers/ata/ahci_brcmstb.c b/drivers/ata/ahci_brcmstb.c
-index 14b7305d2ba0..a2df76698adb 100644
+index a2df76698adb..e53962cb48ee 100644
 --- a/drivers/ata/ahci_brcmstb.c
 +++ b/drivers/ata/ahci_brcmstb.c
-@@ -69,10 +69,15 @@
- 	(DATA_ENDIAN << DMADESC_ENDIAN_SHIFT) |		\
- 	(MMIO_ENDIAN << MMIO_ENDIAN_SHIFT))
+@@ -343,6 +343,7 @@ static int brcm_ahci_remove(struct platform_device *pdev)
  
-+enum brcm_ahci_quicks {
-+	BRCM_AHCI_QUICK_NONCQ		= BIT(0),
-+};
-+
- struct brcm_ahci_priv {
- 	struct device *dev;
- 	void __iomem *top_ctrl;
- 	u32 port_mask;
-+	u32 quicks;
+ static const struct of_device_id ahci_of_match[] = {
+ 	{.compatible = "brcm,bcm7445-ahci"},
++	{.compatible = "brcm,bcm7425-ahci"},
+ 	{},
  };
- 
- static const struct ata_port_info ahci_brcm_port_info = {
-@@ -209,6 +214,39 @@ static void brcm_sata_init(struct brcm_ahci_priv *priv)
- 			   priv->top_ctrl + SATA_TOP_CTRL_BUS_CTRL);
- }
- 
-+static void brcm_sata_quick(struct platform_device *pdev,
-+			    struct brcm_ahci_priv *priv)
-+{
-+	void __iomem *ahci;
-+	struct resource *res;
-+	u32 reg;
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ahci");
-+	ahci = devm_ioremap_resource(&pdev->dev, res);
-+	if (IS_ERR(ahci))
-+		return;
-+
-+	if (priv->quicks & BRCM_AHCI_QUICK_NONCQ) {
-+		reg  = readl(priv->top_ctrl + SATA_TOP_CTRL_BUS_CTRL);
-+		reg |= OVERRIDE_HWINIT;
-+		writel(reg, priv->top_ctrl + SATA_TOP_CTRL_BUS_CTRL);
-+
-+		/* Clear out the NCQ bit so the AHCI driver will not issue
-+		 * FPDMA/NCQ commands.
-+		 */
-+		reg = readl(ahci + HOST_CAP);
-+		reg &= ~HOST_CAP_NCQ;
-+		writel(reg, ahci + HOST_CAP);
-+
-+		reg = readl(priv->top_ctrl + SATA_TOP_CTRL_BUS_CTRL);
-+		reg &= ~OVERRIDE_HWINIT;
-+		writel(reg, priv->top_ctrl + SATA_TOP_CTRL_BUS_CTRL);
-+	}
-+
-+	devm_iounmap(&pdev->dev, ahci);
-+	devm_release_mem_region(&pdev->dev, res->start, resource_size(res));
-+}
-+
- #ifdef CONFIG_PM_SLEEP
- static int brcm_ahci_suspend(struct device *dev)
- {
-@@ -256,7 +294,11 @@ static int brcm_ahci_probe(struct platform_device *pdev)
- 	if (IS_ERR(priv->top_ctrl))
- 		return PTR_ERR(priv->top_ctrl);
- 
-+	if (of_property_read_bool(dev->of_node, "brcm,broken-ncq"))
-+		priv->quicks |= BRCM_AHCI_QUICK_NONCQ;
-+
- 	brcm_sata_init(priv);
-+	brcm_sata_quick(pdev, priv);
- 
- 	priv->port_mask = brcm_ahci_get_portmask(pdev, priv);
- 	if (!priv->port_mask)
+ MODULE_DEVICE_TABLE(of, ahci_of_match);
 -- 
 2.6.2
 
