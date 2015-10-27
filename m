@@ -1,105 +1,85 @@
-From: Florian Fainelli <f.fainelli@gmail.com>
-Subject: Re: [v2 03/10] ata: ahci_brcmstb: add quick for broken phy
-Date: Tue, 27 Oct 2015 08:54:17 -0700
-Message-ID: <562F9E29.3060806@gmail.com>
-References: <1445928491-7320-1-git-send-email-jaedon.shin@gmail.com> <1445928491-7320-4-git-send-email-jaedon.shin@gmail.com>
+From: Brian Norris <computersforpeace-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [v2 02/10] ata: ahci_brcmstb: add support MIPS-based platforms
+Date: Tue, 27 Oct 2015 09:35:03 -0700
+Message-ID: <20151027163503.GR13239@google.com>
+References: <1445928491-7320-1-git-send-email-jaedon.shin@gmail.com>
+ <1445928491-7320-3-git-send-email-jaedon.shin@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:33286 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964831AbbJ0Py7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Oct 2015 11:54:59 -0400
-In-Reply-To: <1445928491-7320-4-git-send-email-jaedon.shin@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1445928491-7320-3-git-send-email-jaedon.shin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Jaedon Shin <jaedon.shin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Florian Fainelli <f.fainelli-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kishon Vijay Abraham I <kishon-l0cyMroinI0@public.gmane.org>, Ralf Baechle <ralf-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org>, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kevin Cernekee <cernekee-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dragan Stancevic <dragan.stancevic-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux-MIPS <linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org>, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: Jaedon Shin <jaedon.shin@gmail.com>, Brian Norris <computersforpeace@gmail.com>, Tejun Heo <tj@kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>, Ralf Baechle <ralf@linux-mips.org>
-Cc: Rob Herring <robh+dt@kernel.org>, Kevin Cernekee <cernekee@gmail.com>, Dragan Stancevic <dragan.stancevic@gmail.com>, linux-ide@vger.kernel.org, Linux-MIPS <linux-mips@linux-mips.org>, devicetree@vger.kernel.org
 
-On 26/10/15 23:48, Jaedon Shin wrote:
-> Add quick for broken phy. The ARM-based 28nm chipsets have four phy
-> interface control registers and each port has two registers. But, The
-> MIPS-based 40nm chipsets have three. and there are no information and
-> documentation. The legacy version of broadcom's strict-ahci based
-> initial code did not control these registers.
-
-Qualifying this of a broken PHY is a misnomer, this is more about the
-fact that the PHY control registers have a different layout and behavior
-on 40nm vs 28nm chips, but more importantly, do not require any kind of
-configuration.
-
+On Tue, Oct 27, 2015 at 03:48:03PM +0900, Jaedon Shin wrote:
+> The BCM7xxx ARM-based and MIPS-based platforms share a similar hardware
+> block for AHCI SATA3.
 > 
-> Signed-off-by: Jaedon Shin <jaedon.shin@gmail.com>
+> The BCM7425 is flagship chipset of 40nm class. Other MIPS-based 40nm
+> chipsets has same hardware block. so the compatible string may be use
+> brcm,bcm7425-ahci.
+> 
+> Signed-off-by: Jaedon Shin <jaedon.shin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 > ---
->  Documentation/devicetree/bindings/ata/brcm,sata-brcmstb.txt |  1 +
->  drivers/ata/ahci_brcmstb.c                                  | 10 ++++++++++
->  2 files changed, 11 insertions(+)
+>  Documentation/devicetree/bindings/ata/brcm,sata-brcmstb.txt | 4 ++--
+>  drivers/ata/Kconfig                                         | 2 +-
+>  drivers/ata/ahci_brcmstb.c                                  | 1 +
+>  3 files changed, 4 insertions(+), 3 deletions(-)
 > 
 > diff --git a/Documentation/devicetree/bindings/ata/brcm,sata-brcmstb.txt b/Documentation/devicetree/bindings/ata/brcm,sata-brcmstb.txt
-> index 488a383ce202..0f0925d58188 100644
+> index 4650c0aff6b3..488a383ce202 100644
 > --- a/Documentation/devicetree/bindings/ata/brcm,sata-brcmstb.txt
 > +++ b/Documentation/devicetree/bindings/ata/brcm,sata-brcmstb.txt
-> @@ -12,6 +12,7 @@ Required properties:
+> @@ -4,8 +4,8 @@ SATA nodes are defined to describe on-chip Serial ATA controllers.
+>  Each SATA controller should have its own node.
 >  
->  Optional properties:
->  - brcm,broken-ncq    : if present, NCQ is unusable
-> +- brcm,broken-phy    : if present, to control phy interface is unusable
+>  Required properties:
+> -- compatible         : compatible list, may contain "brcm,bcm7445-ahci" and/or
+> -                       "brcm,sata3-ahci"
+> +- compatible         : compatible list, may contain "brcm,bcm7445-ahci" or
+> +                       "brcm,bcm7425-ahci" or "brcm,sata3-ahci"
 
-Same comment as in patch 1, this is something that can be known based on
-the compatible string, and the name of the property is misleading.
+If you're going to spin this series anyway, you might as well turn this
+into a list, with one compatible string per line. That way it's easier
+to expand if needed.
 
+Brian
+
+>  - reg                : register mappings for AHCI and SATA_TOP_CTRL
+>  - reg-names          : "ahci" and "top-ctrl"
+>  - interrupts         : interrupt mapping for SATA IRQ
+> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+> index 15e40ee62a94..8f535a88a0c7 100644
+> --- a/drivers/ata/Kconfig
+> +++ b/drivers/ata/Kconfig
+> @@ -100,7 +100,7 @@ config SATA_AHCI_PLATFORM
 >  
->  Also see ahci-platform.txt.
->  
+>  config AHCI_BRCMSTB
+>  	tristate "Broadcom STB AHCI SATA support"
+> -	depends on ARCH_BRCMSTB
+> +	depends on ARCH_BRCMSTB || BMIPS_GENERIC
+>  	help
+>  	  This option enables support for the AHCI SATA3 controller found on
+>  	  STB SoC's.
 > diff --git a/drivers/ata/ahci_brcmstb.c b/drivers/ata/ahci_brcmstb.c
-> index e53962cb48ee..c61303f7c7dc 100644
+> index a2df76698adb..e53962cb48ee 100644
 > --- a/drivers/ata/ahci_brcmstb.c
 > +++ b/drivers/ata/ahci_brcmstb.c
-> @@ -71,6 +71,7 @@
+> @@ -343,6 +343,7 @@ static int brcm_ahci_remove(struct platform_device *pdev)
 >  
->  enum brcm_ahci_quicks {
->  	BRCM_AHCI_QUICK_NONCQ		= BIT(0),
-> +	BRCM_AHCI_QUICK_NOPHY		= BIT(1),
-
-I would use something like BRCM_AHCI_SKIP_PHY_ENABLE or something like
-that to illustrate what this really is about.
-
+>  static const struct of_device_id ahci_of_match[] = {
+>  	{.compatible = "brcm,bcm7445-ahci"},
+> +	{.compatible = "brcm,bcm7425-ahci"},
+>  	{},
 >  };
->  
->  struct brcm_ahci_priv {
-> @@ -119,6 +120,9 @@ static void brcm_sata_phy_enable(struct brcm_ahci_priv *priv, int port)
->  	void __iomem *p;
->  	u32 reg;
->  
-> +	if (priv->quicks & BRCM_AHCI_QUICK_NOPHY)
-> +		return;
-> +
->  	/* clear PHY_DEFAULT_POWER_STATE */
->  	p = phyctrl + SATA_TOP_CTRL_PHY_CTRL_1;
->  	reg = brcm_sata_readreg(p);
-> @@ -148,6 +152,9 @@ static void brcm_sata_phy_disable(struct brcm_ahci_priv *priv, int port)
->  	void __iomem *p;
->  	u32 reg;
->  
-> +	if (priv->quicks & BRCM_AHCI_QUICK_NOPHY)
-> +		return;
-> +
->  	/* power-off the PHY digital logic */
->  	p = phyctrl + SATA_TOP_CTRL_PHY_CTRL_2;
->  	reg = brcm_sata_readreg(p);
-> @@ -297,6 +304,9 @@ static int brcm_ahci_probe(struct platform_device *pdev)
->  	if (of_property_read_bool(dev->of_node, "brcm,broken-ncq"))
->  		priv->quicks |= BRCM_AHCI_QUICK_NONCQ;
->  
-> +	if (of_property_read_bool(dev->of_node, "brcm,broken-phy"))
-> +		priv->quicks |= BRCM_AHCI_QUICK_NOPHY;
-> +
->  	brcm_sata_init(priv);
->  	brcm_sata_quick(pdev, priv);
->  
+>  MODULE_DEVICE_TABLE(of, ahci_of_match);
+> -- 
+> 2.6.2
 > 
-
-
--- 
-Florian
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
