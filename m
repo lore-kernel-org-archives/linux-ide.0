@@ -1,35 +1,33 @@
-From: vinayak.kale@gmail.com
-Subject: [PATCH] libata: enable LBA flag in taskfile for ata_scsi_pass_thru()
-Date: Tue, 27 Oct 2015 13:11:46 +0530
-Message-ID: <1445931706-9436-1-git-send-email-vinayak.kale@seagate.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: tj@kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: sumit.g.gupta@seagate.com, Vinayak Kale <vinayak.kale@seagate.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] libata: enable LBA flag in taskfile for
+ ata_scsi_pass_thru()
+Date: Tue, 27 Oct 2015 16:49:23 +0900
+Message-ID: <20151027074923.GA8783@mtj.duckdns.org>
+References: <1445931706-9436-1-git-send-email-vinayak.kale@seagate.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:35808 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752263AbbJ0Hta (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Oct 2015 03:49:30 -0400
+Content-Disposition: inline
+In-Reply-To: <1445931706-9436-1-git-send-email-vinayak.kale@seagate.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: vinayak.kale@gmail.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, sumit.g.gupta@seagate.com, Vinayak Kale <vinayak.kale@seagate.com>
 
-From: Vinayak Kale <vinayak.kale@seagate.com>
+On Tue, Oct 27, 2015 at 01:11:46PM +0530, vinayak.kale@gmail.com wrote:
+> From: Vinayak Kale <vinayak.kale@seagate.com>
+> 
+> Enable LBA in taskfile flags for ata_scsi_pass_thru()
+> 
+> Signed-off-by: Vinayak Kale <vinayak.kale@seagate.com>
 
-Enable LBA in taskfile flags for ata_scsi_pass_thru()
+Applied to libata/for-4.4.
 
-Signed-off-by: Vinayak Kale <vinayak.kale@seagate.com>
----
- drivers/ata/libata-scsi.c | 3 +++
- 1 file changed, 3 insertions(+)
+Thanks.
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index c2af592..ff75cb6 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -2949,6 +2949,9 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
- 	if ((tf->protocol = ata_scsi_map_proto(cdb[1])) == ATA_PROT_UNKNOWN)
- 		goto invalid_fld;
- 
-+	/* enable LBA */
-+	tf->flags |= ATA_TFLAG_LBA;
-+
- 	/*
- 	 * 12 and 16 byte CDBs use different offsets to
- 	 * provide the various register values.
 -- 
-1.9.1
+tejun
