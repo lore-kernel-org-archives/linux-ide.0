@@ -1,96 +1,35 @@
-From: Jaedon Shin <jaedon.shin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [v2 10/10] MIPS: BMIPS: brcmstb: add SATA/PHY nodes for bcm7362
-Date: Tue, 27 Oct 2015 15:48:11 +0900
-Message-ID: <1445928491-7320-11-git-send-email-jaedon.shin@gmail.com>
-References: <1445928491-7320-1-git-send-email-jaedon.shin@gmail.com>
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1445928491-7320-1-git-send-email-jaedon.shin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Brian Norris <computersforpeace-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Florian Fainelli <f.fainelli-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kishon Vijay Abraham I <kishon-l0cyMroinI0@public.gmane.org>, Ralf Baechle <ralf-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org>
-Cc: Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kevin Cernekee <cernekee-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dragan Stancevic <dragan.stancevic-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux-MIPS <linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org>, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jaedon Shin <jaedon.shin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+From: vinayak.kale@gmail.com
+Subject: [PATCH] libata: enable LBA flag in taskfile for ata_scsi_pass_thru()
+Date: Tue, 27 Oct 2015 13:11:46 +0530
+Message-ID: <1445931706-9436-1-git-send-email-vinayak.kale@seagate.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: tj@kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: sumit.g.gupta@seagate.com, Vinayak Kale <vinayak.kale@seagate.com>
 List-Id: linux-ide@vger.kernel.org
 
-Add AHCI and PHY device nodes to MIPS-based BCM7362 set-top box
-platform.
+From: Vinayak Kale <vinayak.kale@seagate.com>
 
-Signed-off-by: Jaedon Shin <jaedon.shin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Enable LBA in taskfile flags for ata_scsi_pass_thru()
+
+Signed-off-by: Vinayak Kale <vinayak.kale@seagate.com>
 ---
- arch/mips/boot/dts/brcm/bcm7362.dtsi     | 42 ++++++++++++++++++++++++++++++++
- arch/mips/boot/dts/brcm/bcm97362svmb.dts |  8 ++++++
- 2 files changed, 50 insertions(+)
+ drivers/ata/libata-scsi.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/arch/mips/boot/dts/brcm/bcm7362.dtsi b/arch/mips/boot/dts/brcm/bcm7362.dtsi
-index 6e65db86fc61..53b73de9066c 100644
---- a/arch/mips/boot/dts/brcm/bcm7362.dtsi
-+++ b/arch/mips/boot/dts/brcm/bcm7362.dtsi
-@@ -189,5 +189,47 @@
- 			interrupts = <66>;
- 			status = "disabled";
- 		};
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index c2af592..ff75cb6 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2949,6 +2949,9 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
+ 	if ((tf->protocol = ata_scsi_map_proto(cdb[1])) == ATA_PROT_UNKNOWN)
+ 		goto invalid_fld;
+ 
++	/* enable LBA */
++	tf->flags |= ATA_TFLAG_LBA;
 +
-+		sata: sata@181000 {
-+			compatible = "brcm,bcm7425-ahci", "brcm,sata3-ahci";
-+			reg-names = "ahci", "top-ctrl";
-+			reg = <0x181000 0xa9c>, <0x180020 0x1c>;
-+			interrupt-parent = <&periph_intc>;
-+			interrupts = <86>;
-+			#address-cells = <1>;
-+			#size-cells = <0>;
-+			brcm,broken-ncq;
-+			brcm,broken-phy;
-+			status = "disabled";
-+
-+			sata0: sata-port@0 {
-+				reg = <0>;
-+				phys = <&sata_phy0>;
-+			};
-+
-+			sata1: sata-port@1 {
-+				reg = <1>;
-+				phys = <&sata_phy1>;
-+			};
-+		};
-+
-+		sata_phy: sata-phy@1800000 {
-+			compatible = "brcm,bcm7425-sata-phy", "brcm,phy-sata3";
-+			reg = <0x180100 0x0eff>;
-+			reg-names = "phy";
-+			#address-cells = <1>;
-+			#size-cells = <0>;
-+			status = "disabled";
-+
-+			sata_phy0: sata-phy@0 {
-+				reg = <0>;
-+				#phy-cells = <0>;
-+			};
-+
-+			sata_phy1: sata-phy@1 {
-+				reg = <1>;
-+				#phy-cells = <0>;
-+			};
-+		};
- 	};
- };
-diff --git a/arch/mips/boot/dts/brcm/bcm97362svmb.dts b/arch/mips/boot/dts/brcm/bcm97362svmb.dts
-index 739c2ef5663b..ef9a69b79bc4 100644
---- a/arch/mips/boot/dts/brcm/bcm97362svmb.dts
-+++ b/arch/mips/boot/dts/brcm/bcm97362svmb.dts
-@@ -40,3 +40,11 @@
- &ohci0 {
- 	status = "okay";
- };
-+
-+&sata {
-+	status = "okay";
-+};
-+
-+&sata_phy {
-+	status = "okay";
-+};
+ 	/*
+ 	 * 12 and 16 byte CDBs use different offsets to
+ 	 * provide the various register values.
 -- 
-2.6.2
-
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+1.9.1
