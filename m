@@ -1,39 +1,22 @@
-From: Tang Yuantian <Yuantian.Tang@freescale.com>
-Subject: [PATCH 3/3] devicetree: bindings: Fixed a few typos
-Date: Thu, 29 Oct 2015 14:22:17 +0800
-Message-ID: <1446099737-41854-3-git-send-email-Yuantian.Tang@freescale.com>
-References: <1446099737-41854-1-git-send-email-Yuantian.Tang@freescale.com>
+From: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Subject: Klientskie bazi Tel/Viber/WhatsApp +79133913837 Email: mamontova260@gmail.com Skype: prodawez389 ICQ: 6288862 FOTO ONLINE: http://media.xtwind.com/images/2015/10/19/2ba70554b12778c54b6a8ac82a7cc178.png
+Date: Tue, 27 Oct 2015 23:36:47 +0600
+Message-ID: <1FE5E34904D0FF9C40450CB2264CAEDF@vger.kernel.org>
+Reply-To: "linux-ide@vger.kernel.org" <lnaumova884@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1446099737-41854-1-git-send-email-Yuantian.Tang@freescale.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: tj@kernel.org
-Cc: hdegoede@redhat.com, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Tang Yuantian <Yuantian.Tang@freescale.com>
+Content-Type: text/plain;
+	charset="utf-8";
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from [89.218.77.10] ([89.218.77.10]:42237 "EHLO proxy.localdomain"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1031016AbbJ3MTu (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 30 Oct 2015 08:19:50 -0400
+Received: from 89.218.77.10 (localhost [IPv6:::1])
+	by proxy.localdomain (Postfix) with SMTP id C990F11E6AD
+	for <linux-ide@vger.kernel.org>; Tue, 27 Oct 2015 23:45:33 +0600 (ALMT)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-There is a few typos in Freescale QorIQ AHCI bindings, This
-patch fixed them.
-
-Signed-off-by: Tang Yuantian <Yuantian.Tang@freescale.com>
----
- Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt b/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt
-index 3aafe27..032a760 100644
---- a/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt
-+++ b/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt
-@@ -8,8 +8,8 @@ Required properties:
-   - interrupts: Interrupt specifier. Refer to interrupt binding.
- 
- Optional properties:
--  - dma-coherent: Enable ACHI coherency DMA operation.
--  - reg-names: register area names when there are more then 1 regster area.
-+  - dma-coherent: Enable AHCI coherent DMA operation.
-+  - reg-names: register area names when there are more than 1 register area.
- 
- Examples:
- 	sata@3200000 {
--- 
-2.1.0.27.g96db324
+Klientskie bazi Tel/Viber/WhatsApp +79133913837 Email: mamontova260@gmail.com Skype: prodawez389 ICQ: 6288862 FOTO ONLINE: http://media.xtwind.com/images/2015/10/19/2ba70554b12778c54b6a8ac82a7cc178.png
