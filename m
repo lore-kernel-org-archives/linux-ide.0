@@ -1,51 +1,62 @@
-From: Brian Norris <computersforpeace@gmail.com>
-Subject: Re: [PATCH 03/10] ata: ahci_brcmstb: add support 40nm platforms
-Date: Mon, 26 Oct 2015 10:47:27 -0700
-Message-ID: <20151026174727.GZ13239@google.com>
-References: <1445564663-66824-1-git-send-email-jaedon.shin@gmail.com>
- <1445564663-66824-4-git-send-email-jaedon.shin@gmail.com>
- <20151023212558.GS13239@google.com>
- <DE776F55-6D75-4AD7-B3AA-52E45C9D99C0@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: vinayak.kale@gmail.com
+Subject: [PATCH v2] libata: add support for NCQ commands for SG interface
+Date: Tue, 27 Oct 2015 11:19:15 +0530
+Message-ID: <1445924955-11124-1-git-send-email-vinayak.kale@seagate.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:32769 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751655AbbJZRra (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 26 Oct 2015 13:47:30 -0400
-Content-Disposition: inline
-In-Reply-To: <DE776F55-6D75-4AD7-B3AA-52E45C9D99C0@gmail.com>
+Received: from mail-wi0-f179.google.com ([209.85.212.179]:32924 "EHLO
+	mail-wi0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752016AbbJ0FuI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Oct 2015 01:50:08 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jaedon Shin <jaedon.shin@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>, Ralf Baechle <ralf@linux-mips.org>, Florian Fainelli <f.fainelli@gmail.com>, Rob Herring <robh+dt@kernel.org>, linux-ide@vger.kernel.org, Linux MIPS Mailing List <linux-mips@linux-mips.org>, devicetree@vger.kernel.org
+To: tj@kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: sumit.g.gupta@seagate.com, Vinayak Kale <vinayak.kale@seagate.com>
 
-Hi Jaedon,
+From: Vinayak Kale <vinayak.kale@seagate.com>
 
-On Sat, Oct 24, 2015 at 01:50:54PM +0900, Jaedon Shin wrote:
-> On Oct 24, 2015, at 6:25 AM, Brian Norris <computersforpeace@gmail.com> wrote:
-> > On Fri, Oct 23, 2015 at 10:44:16AM +0900, Jaedon Shin wrote:
-> > So, your patch gets phy control 1 correct for both ports, but it doesn't
-> > get phy control 2 correct. (Or at least, even if my guess at the 40nm
-> > layout is wrong, your patch makes "port 0, phy control 2" collide with
-> > "port 1, phy control 1", which is most certainly a bug.)
-> > 
-> > Are you sure you're testing this properly? Did you try using both ports
-> > at the same time? And please, apply the same scrutiny to the PHY driver.
-> > (e.g., did you test SSC? did you test both ports?)
-> > 
-> > Brian
-> > 
-> 
-> You are right. This must be changed. 
-> 
-> I found the 28nm chipsets have four phy interface control registers. But, 
-> the the 40nm chipsets have only three registers. I did not testing with 
-> two ports at the same time. It seems we should check more.
+This patch is needed to make NCQ commands with FPDMA protocol value
+(eg READ/WRITE FPDMA) work over SCSI Generic (SG) interface.
 
-OK. So you don't just need more testing, you need to make sure the code
-actually matches the documentation at all. If there are only 3 PHY
-control registers for 40nm, then this driver (as patched by you) doesn't
-make any sense. It will need a much different patch than what you gave.
+Signed-off-by: Vinayak Kale <vinayak.kale@seagate.com>
+---
+Changes in v2:
+ - Decoupled tf->flags changes in ata_scsi_pass_thru() from this patch
+   as per Tejun's suggestion. A separate patch will be sent for that change.
 
-Brian
+ drivers/ata/libata-scsi.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 0d7f0da..c2af592 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2914,12 +2914,14 @@ ata_scsi_map_proto(u8 byte1)
+ 	case 5:		/* PIO Data-out */
+ 		return ATA_PROT_PIO;
+ 
++	case 12:	/* FPDMA */
++		return ATA_PROT_NCQ;
++
+ 	case 0:		/* Hard Reset */
+ 	case 1:		/* SRST */
+ 	case 8:		/* Device Diagnostic */
+ 	case 9:		/* Device Reset */
+ 	case 7:		/* DMA Queued */
+-	case 12:	/* FPDMA */
+ 	case 15:	/* Return Response Info */
+ 	default:	/* Reserved */
+ 		break;
+@@ -2992,6 +2994,10 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
+ 		tf->command = cdb[9];
+ 	}
+ 
++	/* For NCQ commands with FPDMA protocol, copy the tag value */
++	if (tf->protocol == ATA_PROT_NCQ)
++		tf->nsect = qc->tag << 3;
++
+ 	/* enforce correct master/slave bit */
+ 	tf->device = dev->devno ?
+ 		tf->device | ATA_DEV1 : tf->device & ~ATA_DEV1;
+-- 
+1.9.1
+
