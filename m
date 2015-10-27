@@ -1,33 +1,30 @@
-From: Jaedon Shin <jaedon.shin@gmail.com>
-Subject: [v2 08/10] MIPS: BMIPS: brcmstb: add SATA/PHY nodes for bcm7425
-Date: Tue, 27 Oct 2015 15:48:09 +0900
-Message-ID: <1445928491-7320-9-git-send-email-jaedon.shin@gmail.com>
+From: Jaedon Shin <jaedon.shin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [v2 10/10] MIPS: BMIPS: brcmstb: add SATA/PHY nodes for bcm7362
+Date: Tue, 27 Oct 2015 15:48:11 +0900
+Message-ID: <1445928491-7320-11-git-send-email-jaedon.shin@gmail.com>
 References: <1445928491-7320-1-git-send-email-jaedon.shin@gmail.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:35599 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753937AbbJ0GtG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 27 Oct 2015 02:49:06 -0400
-In-Reply-To: <1445928491-7320-1-git-send-email-jaedon.shin@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1445928491-7320-1-git-send-email-jaedon.shin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Brian Norris <computersforpeace-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Florian Fainelli <f.fainelli-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kishon Vijay Abraham I <kishon-l0cyMroinI0@public.gmane.org>, Ralf Baechle <ralf-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org>
+Cc: Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kevin Cernekee <cernekee-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dragan Stancevic <dragan.stancevic-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Linux-MIPS <linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org>, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jaedon Shin <jaedon.shin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: Brian Norris <computersforpeace@gmail.com>, Florian Fainelli <f.fainelli@gmail.com>, Tejun Heo <tj@kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>, Ralf Baechle <ralf@linux-mips.org>
-Cc: Rob Herring <robh+dt@kernel.org>, Kevin Cernekee <cernekee@gmail.com>, Dragan Stancevic <dragan.stancevic@gmail.com>, linux-ide@vger.kernel.org, Linux-MIPS <linux-mips@linux-mips.org>, devicetree@vger.kernel.org, Jaedon Shin <jaedon.shin@gmail.com>
 
-Add AHCI and PHY device nodes to MIPS-based BCM7425 set-top box
+Add AHCI and PHY device nodes to MIPS-based BCM7362 set-top box
 platform.
 
-Signed-off-by: Jaedon Shin <jaedon.shin@gmail.com>
+Signed-off-by: Jaedon Shin <jaedon.shin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 ---
- arch/mips/boot/dts/brcm/bcm7425.dtsi | 42 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 42 insertions(+)
+ arch/mips/boot/dts/brcm/bcm7362.dtsi     | 42 ++++++++++++++++++++++++++++++++
+ arch/mips/boot/dts/brcm/bcm97362svmb.dts |  8 ++++++
+ 2 files changed, 50 insertions(+)
 
-diff --git a/arch/mips/boot/dts/brcm/bcm7425.dtsi b/arch/mips/boot/dts/brcm/bcm7425.dtsi
-index 5b660b617ead..e24d41ab4e30 100644
---- a/arch/mips/boot/dts/brcm/bcm7425.dtsi
-+++ b/arch/mips/boot/dts/brcm/bcm7425.dtsi
-@@ -221,5 +221,47 @@
- 			interrupts = <73>;
+diff --git a/arch/mips/boot/dts/brcm/bcm7362.dtsi b/arch/mips/boot/dts/brcm/bcm7362.dtsi
+index 6e65db86fc61..53b73de9066c 100644
+--- a/arch/mips/boot/dts/brcm/bcm7362.dtsi
++++ b/arch/mips/boot/dts/brcm/bcm7362.dtsi
+@@ -189,5 +189,47 @@
+ 			interrupts = <66>;
  			status = "disabled";
  		};
 +
@@ -36,7 +33,7 @@ index 5b660b617ead..e24d41ab4e30 100644
 +			reg-names = "ahci", "top-ctrl";
 +			reg = <0x181000 0xa9c>, <0x180020 0x1c>;
 +			interrupt-parent = <&periph_intc>;
-+			interrupts = <40>;
++			interrupts = <86>;
 +			#address-cells = <1>;
 +			#size-cells = <0>;
 +			brcm,broken-ncq;
@@ -74,6 +71,26 @@ index 5b660b617ead..e24d41ab4e30 100644
 +		};
  	};
  };
+diff --git a/arch/mips/boot/dts/brcm/bcm97362svmb.dts b/arch/mips/boot/dts/brcm/bcm97362svmb.dts
+index 739c2ef5663b..ef9a69b79bc4 100644
+--- a/arch/mips/boot/dts/brcm/bcm97362svmb.dts
++++ b/arch/mips/boot/dts/brcm/bcm97362svmb.dts
+@@ -40,3 +40,11 @@
+ &ohci0 {
+ 	status = "okay";
+ };
++
++&sata {
++	status = "okay";
++};
++
++&sata_phy {
++	status = "okay";
++};
 -- 
 2.6.2
 
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
