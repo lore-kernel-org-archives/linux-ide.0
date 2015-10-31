@@ -1,54 +1,65 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 4/4] ahci: switch from 'threaded' to 'hardirq' interrupt
- handling
-Date: Sat, 31 Oct 2015 11:01:15 +0900
-Message-ID: <20151031020115.GI3582@mtj.duckdns.org>
-References: <20151030210924.8538.90627.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20151030210946.8538.26203.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20151031005608.GB3582@mtj.duckdns.org>
- <CAPcyv4iTwDXfDb1=kA6oNPmMJS1WbwPqdkB8LtbT6-=JV+h+7Q@mail.gmail.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [v2 06/10] phy: phy_brcmstb_sata: add data for phy version
+Date: Sat, 31 Oct 2015 16:20:24 +0100
+Message-ID: <7143236.HOM9hXl6B3@wuerfel>
+References: <1445928491-7320-1-git-send-email-jaedon.shin@gmail.com> <1445928491-7320-7-git-send-email-jaedon.shin@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:34078 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750834AbbJaCBW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 30 Oct 2015 22:01:22 -0400
-Received: by padhk11 with SMTP id hk11so89772478pad.1
-        for <linux-ide@vger.kernel.org>; Fri, 30 Oct 2015 19:01:21 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <CAPcyv4iTwDXfDb1=kA6oNPmMJS1WbwPqdkB8LtbT6-=JV+h+7Q@mail.gmail.com>
+Received: from mout.kundenserver.de ([212.227.126.187]:56928 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753390AbbJaPUj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 31 Oct 2015 11:20:39 -0400
+In-Reply-To: <1445928491-7320-7-git-send-email-jaedon.shin@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Jaedon Shin <jaedon.shin@gmail.com>
+Cc: Brian Norris <computersforpeace@gmail.com>, Florian Fainelli <f.fainelli@gmail.com>, Tejun Heo <tj@kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>, Ralf Baechle <ralf@linux-mips.org>, Rob Herring <robh+dt@kernel.org>, Kevin Cernekee <cernekee@gmail.com>, Dragan Stancevic <dragan.stancevic@gmail.com>, linux-ide@vger.kernel.org, Linux-MIPS <linux-mips@linux-mips.org>, devicetree@vger.kernel.org
 
-On Fri, Oct 30, 2015 at 06:59:14PM -0700, Dan Williams wrote:
-> On Fri, Oct 30, 2015 at 5:56 PM, Tejun Heo <tj@kernel.org> wrote:
-> > On Fri, Oct 30, 2015 at 05:09:46PM -0400, Dan Williams wrote:
-> >> For high frequency I/O the overhead of threaded interrupts impacts
-> >> performance.  Add an option to make it configurable, with the default
-> >> being hardirq.
-> >>
-> >> A quick out-of-the-box test (i.e. no affinity tuning) shows ~10% random
-> >> read performance at ~20% less cpu.  The cpu wins appear to be from
-> >> reduced lock contention.
-> >
-> > Do we need threaded irq at all?  Why not just switch to hardirq?
-> >
+On Tuesday 27 October 2015 15:48:07 Jaedon Shin wrote:
 > 
-> I can't imagine anyone doing high iops storage to also rely on the
-> ability to preempt the irq handler.  I'm assuming if someone notices
-> it missing they can scream, but otherwise hardirq seems all around
-> better.
+>  static const struct of_device_id brcm_sata_phy_of_match[] = {
+> -       { .compatible   = "brcm,bcm7445-sata-phy" },
+> +       { .compatible   = "brcm,bcm7445-sata-phy",
+> +         .data = (void *)BRCM_SATA_PHY_28NM },
+>         {},
+>  };
+>  MODULE_DEVICE_TABLE(of, brcm_sata_phy_of_match);
+> @@ -135,6 +145,7 @@ static int brcm_sata_phy_probe(struct platform_device *pdev)
+>  {
+>         struct device *dev = &pdev->dev;
+>         struct device_node *dn = dev->of_node, *child;
+> +       const struct of_device_id *of_id;
+>         struct brcm_sata_phy *priv;
+>         struct resource *res;
+>         struct phy_provider *provider;
+> @@ -154,6 +165,12 @@ static int brcm_sata_phy_probe(struct platform_device *pdev)
+>         if (IS_ERR(priv->phy_base))
+>                 return PTR_ERR(priv->phy_base);
+>  
+> +       of_id = of_match_node(brcm_sata_phy_of_match, dn);
+> +       if (of_id)
+> +               priv->version = (enum brcm_sata_phy_version)of_id->data;
+> +       else
+> +               priv->version = BRCM_SATA_PHY_28NM;
+> +
 > 
-> NVMe also has this optional via module parameter, but talking to Keith
-> he does not know of anyone using it.
 
-Let's remove it for now and do the conditional thing if anybody misses
-it.  No need to keep around dead code proactively.
+As you don't actually use that variable except to set the 'offset' for
+phy_base, it would be nicer to use a structure that you can point to:
 
-Thanks.
+struct brcm_sata_phy_data {
+	unsigned long offset;
+};
 
--- 
-tejun
+const struct brcm_sata_phy_data brcm_sata_phy_28nm = {
+	.offset = SATA_MDIO_REG_28NM_SPACE_SIZE,
+};
+
+static const struct of_device_id brcm_sata_phy_of_match[] = {
+	{ .compatible   = "brcm,bcm7445-sata-phy", .data = &brcm_sata_phy_28nm },
+	{},
+};
+
+	Arnd
