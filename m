@@ -1,33 +1,36 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] ahci: Add Marvell 88se91a2 device id
-Date: Mon, 02 Nov 2015 11:06:26 +0100
-Message-ID: <1446458786.9576.0.camel@suse.de>
-References: <1445326282-90339-1-git-send-email-jthumshirn@suse.de>
-	 <1445942894.16404.41.camel@suse.de> <20151031011628.GF3582@mtj.duckdns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2 0/2] ahci per-port msix support
+Date: Mon, 2 Nov 2015 14:23:02 -0500
+Message-ID: <20151102192302.GD9553@mtj.duckdns.org>
+References: <20151101184335.23222.22225.stgit@dwillia2-desk3.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:37816 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751310AbbKBKG2 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 2 Nov 2015 05:06:28 -0500
-In-Reply-To: <20151031011628.GF3582@mtj.duckdns.org>
+Received: from mail-yk0-f170.google.com ([209.85.160.170]:33464 "EHLO
+	mail-yk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751237AbbKBTXF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 Nov 2015 14:23:05 -0500
+Received: by ykft191 with SMTP id t191so149532247ykf.0
+        for <linux-ide@vger.kernel.org>; Mon, 02 Nov 2015 11:23:05 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <20151101184335.23222.22225.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-ide@vger.kernel.org
 
-On Sat, 2015-10-31 at 10:16 +0900, Tejun Heo wrote:
-> On Tue, Oct 27, 2015 at 11:48:14AM +0100, Johannes Thumshirn wrote:
-> > On Tue, 2015-10-20 at 09:31 +0200, Johannes Thumshirn wrote:
-> > > Add device id for Marvell 88se91a2
-> >=20
-> > Tejun, ping?
->=20
-> Oops, missed this one somehow.=C2=A0=C2=A0Applied to libata/for-4.4.
->=20
-> Thanks.
->=20
+On Sun, Nov 01, 2015 at 01:43:35PM -0500, Dan Williams wrote:
+> Changes since v1 [1]:
+> 
+> 1/ Clean up "nvec = min(nvec, n_ports);" statement (Tejun)
+> 
+> 2/ Drop threaded interrupt handling option for now.
+> 
+> [1]: http://marc.info/?l=linux-ide&m=144623970817213&w=2
 
-Thanks
+Applied to libata/for-4.4.
+
+Thanks.
+
+-- 
+tejun
