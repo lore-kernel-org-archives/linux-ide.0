@@ -1,47 +1,32 @@
-From: Alexandra Yates <alexandra.yates@linux.intel.com>
-Subject: [PATCH V2] Intel device IDs SATA
-Date: Tue,  3 Nov 2015 14:14:18 -0800
-Message-ID: <1446588858-28167-1-git-send-email-alexandra.yates@linux.intel.com>
-References: <[PATCH V2] Intel device IDs SATA>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH V2] Intel device IDs SATA
+Date: Tue, 3 Nov 2015 17:16:51 -0500
+Message-ID: <20151103221651.GD5749@mtj.duckdns.org>
+References: <1446588858-28167-1-git-send-email-alexandra.yates@linux.intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:36315 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752196AbbKCWLw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 3 Nov 2015 17:11:52 -0500
-In-Reply-To: <[PATCH V2] Intel device IDs SATA>
+Received: from mail-yk0-f174.google.com ([209.85.160.174]:35239 "EHLO
+	mail-yk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755150AbbKCWQy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Nov 2015 17:16:54 -0500
+Received: by ykek133 with SMTP id k133so41358145yke.2
+        for <linux-ide@vger.kernel.org>; Tue, 03 Nov 2015 14:16:54 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <1446588858-28167-1-git-send-email-alexandra.yates@linux.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org, linux-ide@vger.kernel.org
-Cc: Alexandra Yates <alexandra.yates@linux.intel.com>
+To: Alexandra Yates <alexandra.yates@linux.intel.com>
+Cc: linux-ide@vger.kernel.org
 
-Adding Intel codename Lewisburg platform device IDs for SATA.
+On Tue, Nov 03, 2015 at 02:14:18PM -0800, Alexandra Yates wrote:
+> Adding Intel codename Lewisburg platform device IDs for SATA.
+> 
+> Signed-off-by: Alexandra Yates <alexandra.yates@linux.intel.com>
 
-Signed-off-by: Alexandra Yates <alexandra.yates@linux.intel.com>
----
- drivers/ata/ahci.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+Applied to libata/for-4.4.
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index a466602..106e776 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -314,6 +314,16 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_VDEVICE(INTEL, 0x1f37), board_ahci_avn }, /* Avoton RAID */
- 	{ PCI_VDEVICE(INTEL, 0x1f3e), board_ahci_avn }, /* Avoton RAID */
- 	{ PCI_VDEVICE(INTEL, 0x1f3f), board_ahci_avn }, /* Avoton RAID */
-+	{ PCI_VDEVICE(INTEL, 0xa182), board_ahci }, /* Lewisburg AHCI*/
-+	{ PCI_VDEVICE(INTEL, 0xa202), board_ahci }, /* Lewisburg AHCI*/
-+	{ PCI_VDEVICE(INTEL, 0xa184), board_ahci }, /* Lewisburg RAID*/
-+	{ PCI_VDEVICE(INTEL, 0xa204), board_ahci }, /* Lewisburg RAID*/
-+	{ PCI_VDEVICE(INTEL, 0xa186), board_ahci }, /* Lewisburg RAID*/
-+	{ PCI_VDEVICE(INTEL, 0xa206), board_ahci }, /* Lewisburg RAID*/
-+	{ PCI_VDEVICE(INTEL, 0x2822), board_ahci }, /* Lewisburg RAID*/
-+	{ PCI_VDEVICE(INTEL, 0x2826), board_ahci }, /* Lewisburg RAID*/
-+	{ PCI_VDEVICE(INTEL, 0xa18e), board_ahci }, /* Lewisburg RAID*/
-+	{ PCI_VDEVICE(INTEL, 0xa20e), board_ahci }, /* Lewisburg RAID*/
- 	{ PCI_VDEVICE(INTEL, 0x2823), board_ahci }, /* Wellsburg RAID */
- 	{ PCI_VDEVICE(INTEL, 0x2827), board_ahci }, /* Wellsburg RAID */
- 	{ PCI_VDEVICE(INTEL, 0x8d02), board_ahci }, /* Wellsburg AHCI */
+Thanks.
+
 -- 
-1.9.1
-
+tejun
