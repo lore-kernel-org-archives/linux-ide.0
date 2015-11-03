@@ -1,55 +1,40 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] Intel device IDs SATA
-Date: Tue, 3 Nov 2015 14:31:44 -0500
-Message-ID: <20151103193144.GA5749@mtj.duckdns.org>
-References: <1446577791-3087-1-git-send-email-alexandra.yates@linux.intel.com>
+From: David Miller <davem@davemloft.net>
+Subject: [GIT] IDE
+Date: Tue, 03 Nov 2015 16:44:30 -0500 (EST)
+Message-ID: <20151103.164430.31403028935157072.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yk0-f171.google.com ([209.85.160.171]:35650 "EHLO
-	mail-yk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932236AbbKCTbs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Nov 2015 14:31:48 -0500
-Content-Disposition: inline
-In-Reply-To: <1446577791-3087-1-git-send-email-alexandra.yates@linux.intel.com>
+Received: from shards.monkeyblade.net ([149.20.54.216]:47960 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932492AbbKCVod (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 Nov 2015 16:44:33 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexandra Yates <alexandra.yates@linux.intel.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Nov 03, 2015 at 11:09:51AM -0800, Alexandra Yates wrote:
-> @@ -161,6 +162,13 @@ static const struct ata_port_info ahci_port_info[] = {
->  		.port_ops	= &ahci_ops,
->  	},
->  	/* by chipsets */
-> +	[board_ahci_lbg] = {
-> +		.flags		= AHCI_FLAG_COMMON,
-> +		.pio_mask	= ATA_PIO4,
-> +		.udma_mask	= ATA_UDMA6,
-> +		.port_ops	= &ahci_ops,
-> +	},
-> +
->  	[board_ahci_avn] = {
->  		.flags		= AHCI_FLAG_COMMON,
->  		.pio_mask	= ATA_PIO4,
-> @@ -314,6 +322,16 @@ static const struct pci_device_id ahci_pci_tbl[] = {
->  	{ PCI_VDEVICE(INTEL, 0x1f37), board_ahci_avn }, /* Avoton RAID */
->  	{ PCI_VDEVICE(INTEL, 0x1f3e), board_ahci_avn }, /* Avoton RAID */
->  	{ PCI_VDEVICE(INTEL, 0x1f3f), board_ahci_avn }, /* Avoton RAID */
-> +	{ PCI_VDEVICE(INTEL, 0xa182), board_ahci_lbg }, /* Lewisburg AHCI*/
-> +	{ PCI_VDEVICE(INTEL, 0xa202), board_ahci_lbg }, /* Lewisburg AHCI*/
-> +	{ PCI_VDEVICE(INTEL, 0xa184), board_ahci_lbg }, /* Lewisburg RAID*/
-> +	{ PCI_VDEVICE(INTEL, 0xa204), board_ahci_lbg }, /* Lewisburg RAID*/
-> +	{ PCI_VDEVICE(INTEL, 0xa186), board_ahci_lbg }, /* Lewisburg RAID*/
-> +	{ PCI_VDEVICE(INTEL, 0xa206), board_ahci_lbg }, /* Lewisburg RAID*/
-> +	{ PCI_VDEVICE(INTEL, 0x2822), board_ahci_lbg }, /* Lewisburg RAID*/
-> +	{ PCI_VDEVICE(INTEL, 0x2826), board_ahci_lbg }, /* Lewisburg RAID*/
-> +	{ PCI_VDEVICE(INTEL, 0xa18e), board_ahci_lbg }, /* Lewisburg RAID*/
-> +	{ PCI_VDEVICE(INTEL, 0xa20e), board_ahci_lbg }, /* Lewisburg RAID*/
 
-Just use board_ahci?
+Just a y2038 fix to the pdc202xx_new IDE driver.
 
-Thanks.
+Please pull, thanks a lot!
 
--- 
-tejun
+The following changes since commit 6a13feb9c82803e2b815eca72fa7a9f5561d7861:
+
+  Linux 4.3 (2015-11-01 16:05:25 -0800)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide.git 
+
+for you to fetch changes up to 353b39d1b1511376aca71bc3aba62831370561ca:
+
+  ide: pdc202xx_new: Replace timeval with ktime_t (2015-11-03 11:51:08 -0500)
+
+----------------------------------------------------------------
+Amitoj Kaur Chawla (1):
+      ide: pdc202xx_new: Replace timeval with ktime_t
+
+ drivers/ide/pdc202xx_new.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
