@@ -1,78 +1,74 @@
 From: Vishnu Pratap Singh <vishnu.ps@samsung.com>
-Subject: [PATCH 3/8] block/floppy.c: handle blk_register_region() return value
-Date: Fri, 06 Nov 2015 17:52:10 +0530
-Message-ID: <1446812535-10567-3-git-send-email-vishnu.ps@samsung.com>
+Subject: [PATCH 4/8] block/loop.c: handle add_disk() & blk_register_region()
+ return value
+Date: Fri, 06 Nov 2015 17:52:11 +0530
+Message-ID: <1446812535-10567-4-git-send-email-vishnu.ps@samsung.com>
 References: <437969438-9181-1-git-send-email-vishnu.ps@samsung.com>
  <1446812535-10567-1-git-send-email-vishnu.ps@samsung.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:58876 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031995AbbKFM2p (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 6 Nov 2015 07:28:45 -0500
+Received: from mailout2.samsung.com ([203.254.224.25]:59517 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1033211AbbKFMba (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 6 Nov 2015 07:31:30 -0500
 In-reply-to: <1446812535-10567-1-git-send-email-vishnu.ps@samsung.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: axboe@kernel.dk, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, jmoyer@redhat.com, minchan@kernel.org, ngupta@vflare.org, sergey.senozhatsky.work@gmail.com, davem@davemloft.net, neilb@suse.com, ulf.hansson@linaro.org, tiwai@suse.de, hare@suse.de, ming.lei@canonical.com, jarod@redhat.com, viro@zeniv.linux.org.uk, tj@kernel.org, adrian.hunter@intel.com, jonathanh@nvidia.com, grundler@chromium.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, linux-mmc@vger.kernel.org
 Cc: cpgs@samsung.com, vishu13285@gmail.com, pintu.k@samsung.com, rohit.kr@samsung.com, Vishnu Pratap Singh <vishnu.ps@samsung.com>
 
-This patch handles blk_register_region() return value.
-Earlier blk_register_region() function doesn't handle error
-cases, now it is added, so the callers of this function
-should also handle it.
+This patch handles blk_register_region() & add_disk() return value.
+Earlier these function doesn't handle error cases, now it is added,
+so the callers of this function should also handle it.
 
 Verfied on X86 based ubuntu machine.
 This patch depends on [PATCH 1/8] block/genhd.c: Add error handling
 
 Signed-off-by: Vishnu Pratap Singh <vishnu.ps@samsung.com>
 ---
- drivers/block/floppy.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+ drivers/block/loop.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/block/floppy.c b/drivers/block/floppy.c
-index 331363e..50802a6 100644
---- a/drivers/block/floppy.c
-+++ b/drivers/block/floppy.c
-@@ -4219,8 +4219,10 @@ static int __init do_floppy_init(void)
- 	if (err)
- 		goto out_unreg_blkdev;
- 
--	blk_register_region(MKDEV(FLOPPY_MAJOR, 0), 256, THIS_MODULE,
-+	err = blk_register_region(MKDEV(FLOPPY_MAJOR, 0), 256, THIS_MODULE,
- 			    floppy_find, NULL, NULL);
+diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+index 423f4ca..22e6fd0 100644
+--- a/drivers/block/loop.c
++++ b/drivers/block/loop.c
+@@ -1794,10 +1794,14 @@ static int loop_add(struct loop_device **l, int i)
+ 	disk->private_data	= lo;
+ 	disk->queue		= lo->lo_queue;
+ 	sprintf(disk->disk_name, "loop%d", i);
+-	add_disk(disk);
++	err = add_disk(disk);
 +	if (err)
-+		goto out_unreg_region;
++		goto out_free_disk;
+ 	*l = lo;
+ 	return lo->lo_number;
  
- 	for (i = 0; i < 256; i++)
- 		if (ITYPE(i))
-@@ -4250,7 +4252,7 @@ static int __init do_floppy_init(void)
- 	if (fdc_state[0].address == -1) {
- 		cancel_delayed_work(&fd_timeout);
- 		err = -ENODEV;
--		goto out_unreg_region;
-+		goto out_fdc_err;
- 	}
- #if N_FDC > 1
- 	fdc_state[1].address = FDC2;
-@@ -4261,7 +4263,7 @@ static int __init do_floppy_init(void)
- 	if (err) {
- 		cancel_delayed_work(&fd_timeout);
- 		err = -EBUSY;
--		goto out_unreg_region;
-+		goto out_fdc_region;
++out_free_disk:
++	put_disk(disk);
+ out_free_queue:
+ 	blk_cleanup_queue(lo->lo_queue);
+ out_cleanup_tags:
+@@ -1998,8 +2002,10 @@ static int __init loop_init(void)
+ 		goto misc_out;
  	}
  
- 	/* initialise drive state */
-@@ -4357,8 +4359,9 @@ out_remove_drives:
- out_release_dma:
- 	if (atomic_read(&usage_count))
- 		floppy_release_irq_and_dma();
--out_unreg_region:
-+out_fdc_err:
- 	blk_unregister_region(MKDEV(FLOPPY_MAJOR, 0), 256);
-+out_unreg_region:
- 	platform_driver_unregister(&floppy_driver);
- out_unreg_blkdev:
- 	unregister_blkdev(FLOPPY_MAJOR, "fd");
+-	blk_register_region(MKDEV(LOOP_MAJOR, 0), range,
++	err = blk_register_region(MKDEV(LOOP_MAJOR, 0), range,
+ 				  THIS_MODULE, loop_probe, NULL, NULL);
++	if (err)
++		goto out_blkdev;
+ 
+ 	/* pre-create number of devices given by config or max_loop */
+ 	mutex_lock(&loop_index_mutex);
+@@ -2010,6 +2016,8 @@ static int __init loop_init(void)
+ 	printk(KERN_INFO "loop: module loaded\n");
+ 	return 0;
+ 
++out_blkdev:
++	unregister_blkdev(LOOP_MAJOR, "loop");
+ misc_out:
+ 	misc_deregister(&loop_misc);
+ 	return err;
 -- 
 1.9.1
 
