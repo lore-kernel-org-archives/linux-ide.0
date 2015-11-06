@@ -1,15 +1,15 @@
 From: <Charles_Rose@Dell.com>
 Subject: [PATCH] ahci: Add Device ID for Intel Sunrise Point PCH
-Date: Thu, 5 Nov 2015 15:35:26 -0600
-Message-ID: <1446759326-4167-1-git-send-email-charles_rose@dell.com>
+Date: Thu, 5 Nov 2015 20:16:49 -0600
+Message-ID: <1446776209-14006-1-git-send-email-charles_rose@dell.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ausc60pc101.us.dell.com ([143.166.85.206]:40852 "EHLO
-	ausc60pc101.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756026AbbKEVpJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Nov 2015 16:45:09 -0500
+Received: from ausxipps301.us.dell.com ([143.166.148.223]:10930 "EHLO
+	ausxipps301.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031154AbbKFC00 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 5 Nov 2015 21:26:26 -0500
 Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
