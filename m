@@ -1,58 +1,95 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH] mips: sb1250_swarm_defconfig: disable IDE subsystem
-Date: Mon, 9 Nov 2015 22:08:28 +0300
-Message-ID: <5640EF2C.40907@cogentembedded.com>
-References: <1442245918-27631-1-git-send-email-b.zolnierkie@samsung.com>
- <1442245918-27631-16-git-send-email-b.zolnierkie@samsung.com>
- <alpine.LFD.2.20.1511072211330.18958@eddie.linux-mips.org>
- <20151109144932.GE22591@linux-mips.org>
- <alpine.LFD.2.20.1511091559180.10231@eddie.linux-mips.org>
- <5640D8E9.7080808@cogentembedded.com>
- <alpine.LFD.2.20.1511091827480.10231@eddie.linux-mips.org>
+From: Grant Grundler <grundler@chromium.org>
+Subject: Re: [PATCH 3/8] block/floppy.c: handle blk_register_region() return value
+Date: Mon, 9 Nov 2015 15:44:26 -0800
+Message-ID: <CANEJEGsgk3qy-Kz-tAuAGccqVcvNRNqamK7_UeKgHd7nx6LGOQ@mail.gmail.com>
+References: <437969438-9181-1-git-send-email-vishnu.ps@samsung.com>
+	<1446812535-10567-1-git-send-email-vishnu.ps@samsung.com>
+	<1446812535-10567-3-git-send-email-vishnu.ps@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lb0-f178.google.com ([209.85.217.178]:32960 "EHLO
-	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751353AbbKITId (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 Nov 2015 14:08:33 -0500
-Received: by lbbkw15 with SMTP id kw15so99969544lbb.0
-        for <linux-ide@vger.kernel.org>; Mon, 09 Nov 2015 11:08:31 -0800 (PST)
-In-Reply-To: <alpine.LFD.2.20.1511091827480.10231@eddie.linux-mips.org>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1446812535-10567-3-git-send-email-vishnu.ps@samsung.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Vishnu Pratap Singh <vishnu.ps@samsung.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, Jeff Moyer <jmoyer@redhat.com>, minchan@kernel.org, ngupta@vflare.org, sergey.senozhatsky.work@gmail.com, David Miller <davem@davemloft.net>, neilb@suse.com, Ulf Hansson <ulf.hansson@linaro.org>, tiwai@suse.de, Hannes Reinecke <hare@suse.de>, Ming Lei <ming.lei@canonical.com>, jarod@redhat.com, viro@zeniv.linux.org.uk, Tejun Heo <tj@kernel.org>, adrian.hunter@intel.com, Jon Hunter <jonathanh@nvidia.com>, Grant Grundler <grundler@chromium.org>, Linux IDE mailing list <linux-ide@vger.kernel.org>, linux-raid@vger.kernel.org, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, CPGS <cpgs@samsung.com>, vishu13285@gmail.com, pintu.k@samsung.com, rohit.kr@samsung.com
 List-Id: linux-ide@vger.kernel.org
-To: "Maciej W. Rozycki" <macro@linux-mips.org>
-Cc: Ralf Baechle <ralf@linux-mips.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-mips@linux-mips.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 11/09/2015 09:54 PM, Maciej W. Rozycki wrote:
+On Fri, Nov 6, 2015 at 4:22 AM, Vishnu Pratap Singh
+<vishnu.ps@samsung.com> wrote:
+> This patch handles blk_register_region() return value.
+> Earlier blk_register_region() function doesn't handle error
+> cases, now it is added, so the callers of this function
+> should also handle it.
+>
+> Verfied on X86 based ubuntu machine.
+> This patch depends on [PATCH 1/8] block/genhd.c: Add error handling
+>
+> Signed-off-by: Vishnu Pratap Singh <vishnu.ps@samsung.com>
+> ---
+>  drivers/block/floppy.c | 11 +++++++----
+>  1 file changed, 7 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/block/floppy.c b/drivers/block/floppy.c
+> index 331363e..50802a6 100644
+> --- a/drivers/block/floppy.c
+> +++ b/drivers/block/floppy.c
+> @@ -4219,8 +4219,10 @@ static int __init do_floppy_init(void)
+>         if (err)
+>                 goto out_unreg_blkdev;
+>
+> -       blk_register_region(MKDEV(FLOPPY_MAJOR, 0), 256, THIS_MODULE,
+> +       err = blk_register_region(MKDEV(FLOPPY_MAJOR, 0), 256, THIS_MODULE,
+>                             floppy_find, NULL, NULL);
+> +       if (err)
+> +               goto out_unreg_region;
+>
+>         for (i = 0; i < 256; i++)
+>                 if (ITYPE(i))
+> @@ -4250,7 +4252,7 @@ static int __init do_floppy_init(void)
+>         if (fdc_state[0].address == -1) {
+>                 cancel_delayed_work(&fd_timeout);
+>                 err = -ENODEV;
+> -               goto out_unreg_region;
+> +               goto out_fdc_err;
+>         }
+>  #if N_FDC > 1
+>         fdc_state[1].address = FDC2;
+> @@ -4261,7 +4263,7 @@ static int __init do_floppy_init(void)
+>         if (err) {
+>                 cancel_delayed_work(&fd_timeout);
+>                 err = -EBUSY;
+> -               goto out_unreg_region;
+> +               goto out_fdc_region;
 
->>>    I think I've been reasonably serious about my SWARM and despite issues
->>> elsewhere the onboard PATA interface is a part of the system I've never
->>> had any with.  Yes, it's limited to PIO 3, but it's not a big deal, that's
->>> still 11MB/s (and one of the 4 generic data movers present in the SoC
->>
->>     If you measure it with something like 'hdparm -t', the real speed figures
->> in the PIO modes would disappoint you. It's usually more like 3 MB/s even in
->> PIO4...
+Please drop this hunk.
 
->   Well, various factors contribute to actual figures possible to achieve,
-> the physical medium transfer speed being an important one.
+>         }
+>
+>         /* initialise drive state */
+> @@ -4357,8 +4359,9 @@ out_remove_drives:
+>  out_release_dma:
+>         if (atomic_read(&usage_count))
+>                 floppy_release_irq_and_dma();
+> -out_unreg_region:
+> +out_fdc_err:
+>         blk_unregister_region(MKDEV(FLOPPY_MAJOR, 0), 256);
+> +out_unreg_region:
 
-    Yes, of course. Yet even with MWDMA2 (same wire speed as PIO4) hdparm 
-shows about an order of magnitude higher speeds, IIRC. With the UltraDMA modes 
-it becomes even higher...
+Nit: out_unreg_region should continue to be a label for the
+unregister_region call.
 
-> That 11MB/s
-> throughput is the maximum you can ever get on the wire in PIO 3, assuming
-> data is already available to transfer and IORDY is asserted right away
-> every cycle.
+My preference would be to add a new label here so something like
+"goto out_driver_unregister" works.
 
-    Yes, I figured.
+I normally would ignore this sort of thing but this patch needs to be
+reposted as V2 anyway.
 
-[...]
+cheers,
+grant
 
->    Maciej
-
-MBR, Sergei
-
+>         platform_driver_unregister(&floppy_driver);
+>  out_unreg_blkdev:
+>         unregister_blkdev(FLOPPY_MAJOR, "fd");
+> --
+> 1.9.1
+>
