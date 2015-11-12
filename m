@@ -1,255 +1,96 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v3 1/2] ahci: per-port msix support
-Date: Wed, 11 Nov 2015 16:27:33 -0800
-Message-ID: <20151112002732.37012.5571.stgit@dwillia2-desk3.jf.intel.com>
+Subject: [PATCH v3 2/2] ahci: switch from 'threaded' to 'hardirq' interrupt
+ handling
+Date: Wed, 11 Nov 2015 16:27:38 -0800
+Message-ID: <20151112002738.37012.56239.stgit@dwillia2-desk3.jf.intel.com>
 References: <20151112002727.37012.65672.stgit@dwillia2-desk3.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:21269 "EHLO mga09.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:27723 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751911AbbKLA2B (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 11 Nov 2015 19:28:01 -0500
+	id S1751911AbbKLA2H (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 11 Nov 2015 19:28:07 -0500
 In-Reply-To: <20151112002727.37012.65672.stgit@dwillia2-desk3.jf.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: tj@kernel.org
-Cc: kernel test robot <ying.huang@linux.intel.com>, Ricardo Neri <ricardo.neri@intel.com>, linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
 
-From: Dan Williams <dan.j.williamps@intel.com>
+For high frequency I/O the overhead of threaded interrupts impacts
+performance.  A quick out-of-the-box test (i.e. no affinity tuning)
+shows ~10% random read performance at ~20% less cpu.  The cpu wins
+appear to be from reduced lock contention.
 
-Some AHCI controllers support per-port MSI-X vectors.  At the same time
-the Linux AHCI driver needs to support one-off architectures that
-implement a single MSI-X vector for all ports.  The heuristic for
-enabling AHCI ports becomes, in order of preference:
-
-1/ per-port multi-MSI-X
-
-2/ per-port multi-MSI
-
-3/ single MSI
-
-4/ single MSI-X
-
-5/ legacy INTX
-
-This all depends on AHCI implementations with potentially broken MSI-X
-requesting less vectors than the number of ports.  If this assumption is
-violated we will need to start explicitly white-listing AHCI-MSIX
-implementations.
-
-Reported-by: Ricardo Neri <ricardo.neri@intel.com>
-[ricardo: fix struct msix_entry handling]
-Reported-by: kernel test robot <ying.huang@linux.intel.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/ata/ahci.c    |   67 +++++++++++++++++++++++++++++++++----------------
- drivers/ata/ahci.h    |    2 +
- drivers/ata/libahci.c |   19 ++++++++++----
- 3 files changed, 61 insertions(+), 27 deletions(-)
+ drivers/ata/libahci.c |   34 ++++++++--------------------------
+ 1 file changed, 8 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index ff02bb4218fc..c1853c8bfdbf 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -1304,15 +1304,13 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
- #endif
- 
- /*
-- * ahci_init_msix() only implements single MSI-X support, not multiple
-- * MSI-X per-port interrupts. This is needed for host controllers that only
-- * have MSI-X support implemented, but no MSI or intx.
-+ * ahci_init_msix() - optionally enable per-port MSI-X otherwise defer
-+ * to single msi.
-  */
- static int ahci_init_msix(struct pci_dev *pdev, unsigned int n_ports,
--			  struct ahci_host_priv *hpriv)
-+			  struct ahci_host_priv *hpriv, unsigned long flags)
- {
--	int rc, nvec;
--	struct msix_entry entry = {};
-+	int nvec, i, rc;
- 
- 	/* Do not init MSI-X if MSI is disabled for the device */
- 	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
-@@ -1322,22 +1320,39 @@ static int ahci_init_msix(struct pci_dev *pdev, unsigned int n_ports,
- 	if (nvec < 0)
- 		return nvec;
- 
--	if (!nvec) {
-+	/*
-+	 * Proper MSI-X implementations will have a vector per-port.
-+	 * Barring that, we prefer single-MSI over single-MSIX.  If this
-+	 * check fails (not enough MSI-X vectors for all ports) we will
-+	 * be called again with the flag clear iff ahci_init_msi()
-+	 * fails.
-+	 */
-+	if (flags & AHCI_HFLAG_MULTI_MSIX) {
-+		if (nvec < n_ports)
-+			return -ENODEV;
-+		nvec = n_ports;
-+	} else if (nvec) {
-+		nvec = 1;
-+	} else {
-+		/*
-+		 * Emit dev_err() since this was the non-legacy irq
-+		 * method of last resort.
-+		 */
- 		rc = -ENODEV;
- 		goto fail;
- 	}
- 
--	/*
--	 * There can be more than one vector (e.g. for error detection or
--	 * hdd hotplug). Only the first vector (entry.entry = 0) is used.
--	 */
--	rc = pci_enable_msix_exact(pdev, &entry, 1);
-+	for (i = 0; i < nvec; i++)
-+		hpriv->msix[i].entry = i;
-+	rc = pci_enable_msix_exact(pdev, hpriv->msix, nvec);
- 	if (rc < 0)
- 		goto fail;
- 
--	hpriv->irq = entry.vector;
-+	if (nvec > 1)
-+		hpriv->flags |= AHCI_HFLAG_MULTI_MSIX;
-+	hpriv->irq = hpriv->msix[0].vector; /* for single msi-x */
- 
--	return 1;
-+	return nvec;
- fail:
- 	dev_err(&pdev->dev,
- 		"failed to enable MSI-X with error %d, # of vectors: %d\n",
-@@ -1401,20 +1416,25 @@ static int ahci_init_interrupts(struct pci_dev *pdev, unsigned int n_ports,
- {
- 	int nvec;
- 
-+	/*
-+	 * Try to enable per-port MSI-X.  If the host is not capable
-+	 * fall back to single MSI before finally attempting single
-+	 * MSI-X.
-+	 */
-+	nvec = ahci_init_msix(pdev, n_ports, hpriv, AHCI_HFLAG_MULTI_MSIX);
-+	if (nvec >= 0)
-+		return nvec;
-+
- 	nvec = ahci_init_msi(pdev, n_ports, hpriv);
- 	if (nvec >= 0)
- 		return nvec;
- 
--	/*
--	 * Currently, MSI-X support only implements single IRQ mode and
--	 * exists for controllers which can't do other types of IRQ. Only
--	 * set it up if MSI fails.
--	 */
--	nvec = ahci_init_msix(pdev, n_ports, hpriv);
-+	/* try single-msix */
-+	nvec = ahci_init_msix(pdev, n_ports, hpriv, 0);
- 	if (nvec >= 0)
- 		return nvec;
- 
--	/* lagacy intx interrupts */
-+	/* legacy intx interrupts */
- 	pci_intx(pdev, 1);
- 	hpriv->irq = pdev->irq;
- 
-@@ -1576,7 +1596,10 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	if (!host)
- 		return -ENOMEM;
- 	host->private_data = hpriv;
--
-+	hpriv->msix = devm_kzalloc(&pdev->dev,
-+			sizeof(struct msix_entry) * n_ports, GFP_KERNEL);
-+	if (!hpriv->msix)
-+		return -ENOMEM;
- 	ahci_init_interrupts(pdev, n_ports, hpriv);
- 
- 	if (!(hpriv->cap & HOST_CAP_SSS) || ahci_ignore_sss)
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 45586c1dbbdc..9e60c50b2103 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -242,6 +242,7 @@ enum {
- 	AHCI_HFLAG_NO_FBS		= (1 << 18), /* no FBS */
- 	AHCI_HFLAG_EDGE_IRQ		= (1 << 19), /* HOST_IRQ_STAT behaves as
- 							Edge Triggered */
-+	AHCI_HFLAG_MULTI_MSIX		= (1 << 20), /* per-port MSI-X */
- 
- 	/* ap->flags bits */
- 
-@@ -343,6 +344,7 @@ struct ahci_host_priv {
- 	 * the PHY position in this array.
- 	 */
- 	struct phy		**phys;
-+	struct msix_entry	*msix;		/* Optional MSI-X support */
- 	unsigned		nports;		/* Number of ports */
- 	void			*plat_data;	/* Other platform data */
- 	unsigned int		irq;		/* interrupt line */
 diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 096064cd6c52..0a5645fb02f8 100644
+index 0a5645fb02f8..1b6c7cc415bf 100644
 --- a/drivers/ata/libahci.c
 +++ b/drivers/ata/libahci.c
-@@ -43,6 +43,7 @@
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_cmnd.h>
- #include <linux/libata.h>
-+#include <linux/pci.h>
- #include "ahci.h"
- #include "libata.h"
- 
-@@ -2470,9 +2471,10 @@ void ahci_set_em_messages(struct ahci_host_priv *hpriv,
+@@ -1796,41 +1796,24 @@ static void ahci_port_intr(struct ata_port *ap)
+ 	ahci_handle_port_interrupt(ap, port_mmio, status);
  }
- EXPORT_SYMBOL_GPL(ahci_set_em_messages);
  
--static int ahci_host_activate_multi_irqs(struct ata_host *host, int irq,
-+static int ahci_host_activate_multi_irqs(struct ata_host *host,
- 					 struct scsi_host_template *sht)
+-static irqreturn_t ahci_port_thread_fn(int irq, void *dev_instance)
++static irqreturn_t ahci_multi_irqs_intr_hard(int irq, void *dev_instance)
  {
-+	struct ahci_host_priv *hpriv = host->private_data;
- 	int i, rc;
+ 	struct ata_port *ap = dev_instance;
+-	struct ahci_port_priv *pp = ap->private_data;
+ 	void __iomem *port_mmio = ahci_port_base(ap);
+ 	u32 status;
  
- 	rc = ata_host_start(host);
-@@ -2484,6 +2486,12 @@ static int ahci_host_activate_multi_irqs(struct ata_host *host, int irq,
- 	 */
- 	for (i = 0; i < host->n_ports; i++) {
- 		struct ahci_port_priv *pp = host->ports[i]->private_data;
-+		int irq;
-+
-+		if (hpriv->flags & AHCI_HFLAG_MULTI_MSIX)
-+			irq = hpriv->msix[i].vector;
-+		else
-+			irq = hpriv->irq + i;
+-	status = atomic_xchg(&pp->intr_status, 0);
+-	if (!status)
+-		return IRQ_NONE;
+-
+-	spin_lock_bh(ap->lock);
+-	ahci_handle_port_interrupt(ap, port_mmio, status);
+-	spin_unlock_bh(ap->lock);
+-
+-	return IRQ_HANDLED;
+-}
+-
+-static irqreturn_t ahci_multi_irqs_intr(int irq, void *dev_instance)
+-{
+-	struct ata_port *ap = dev_instance;
+-	void __iomem *port_mmio = ahci_port_base(ap);
+-	struct ahci_port_priv *pp = ap->private_data;
+-	u32 status;
+-
+ 	VPRINTK("ENTER\n");
  
- 		/* Do not receive interrupts sent by dummy ports */
- 		if (!pp) {
-@@ -2491,14 +2499,15 @@ static int ahci_host_activate_multi_irqs(struct ata_host *host, int irq,
+ 	status = readl(port_mmio + PORT_IRQ_STAT);
+ 	writel(status, port_mmio + PORT_IRQ_STAT);
+ 
+-	atomic_or(status, &pp->intr_status);
++	spin_lock(ap->lock);
++	ahci_handle_port_interrupt(ap, port_mmio, status);
++	spin_unlock(ap->lock);
+ 
+ 	VPRINTK("EXIT\n");
+ 
+-	return IRQ_WAKE_THREAD;
++	return IRQ_HANDLED;
+ }
+ 
+ static u32 ahci_handle_port_intr(struct ata_host *host, u32 irq_masked)
+@@ -2499,10 +2482,9 @@ static int ahci_host_activate_multi_irqs(struct ata_host *host,
  			continue;
  		}
  
--		rc = devm_request_threaded_irq(host->dev, irq + i,
-+		rc = devm_request_threaded_irq(host->dev, irq,
- 					       ahci_multi_irqs_intr,
- 					       ahci_port_thread_fn, 0,
- 					       pp->irq_desc, host->ports[i]);
+-		rc = devm_request_threaded_irq(host->dev, irq,
+-					       ahci_multi_irqs_intr,
+-					       ahci_port_thread_fn, 0,
+-					       pp->irq_desc, host->ports[i]);
++		rc = devm_request_irq(host->dev, irq, ahci_multi_irqs_intr_hard,
++				0, pp->irq_desc, host->ports[i]);
++
  		if (rc)
  			return rc;
--		ata_port_desc(host->ports[i], "irq %d", irq + i);
-+		ata_port_desc(host->ports[i], "irq %d", irq);
- 	}
-+
- 	return ata_host_register(host, sht);
- }
- 
-@@ -2519,8 +2528,8 @@ int ahci_host_activate(struct ata_host *host, struct scsi_host_template *sht)
- 	int irq = hpriv->irq;
- 	int rc;
- 
--	if (hpriv->flags & AHCI_HFLAG_MULTI_MSI)
--		rc = ahci_host_activate_multi_irqs(host, irq, sht);
-+	if (hpriv->flags & (AHCI_HFLAG_MULTI_MSI | AHCI_HFLAG_MULTI_MSIX))
-+		rc = ahci_host_activate_multi_irqs(host, sht);
- 	else if (hpriv->flags & AHCI_HFLAG_EDGE_IRQ)
- 		rc = ata_host_activate(host, irq, ahci_single_edge_irq_intr,
- 				       IRQF_SHARED, sht);
+ 		ata_port_desc(host->ports[i], "irq %d", irq);
 
