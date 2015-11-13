@@ -1,85 +1,116 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] ide: silence some underflow warnings
-Date: Fri, 13 Nov 2015 17:34:01 +0300
-Message-ID: <20151113143401.GC1445@mwanda>
+From: Florian Fainelli <f.fainelli@gmail.com>
+Subject: Re: [v4 00/10] add support SATA for BMIPS_GENERIC
+Date: Fri, 13 Nov 2015 12:27:26 -0800
+Message-ID: <564647AE.7070805@gmail.com>
+References: <1446213684-2625-1-git-send-email-jaedon.shin@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:22714 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753799AbbKMOeK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Nov 2015 09:34:10 -0500
-Content-Disposition: inline
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:34487 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932293AbbKMU2W (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 Nov 2015 15:28:22 -0500
+In-Reply-To: <1446213684-2625-1-git-send-email-jaedon.shin@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "David S. Miller" <davem@davemloft.net>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: Jaedon Shin <jaedon.shin@gmail.com>, Brian Norris <computersforpeace@gmail.com>, Tejun Heo <tj@kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>, Ralf Baechle <ralf@linux-mips.org>, Rob Herring <robh+dt@kernel.org>
+Cc: Kevin Cernekee <cernekee@gmail.com>, Dragan Stancevic <dragan.stancevic@gmail.com>, linux-ide@vger.kernel.org, Linux-MIPS <linux-mips@linux-mips.org>, devicetree@vger.kernel.org
 
-Back in the day we used to just say this code was root only so it was
-ok that the bounds checking was sloppy.  These days it annoys static
-checkers so we fix it.
+On 30/10/15 07:01, Jaedon Shin wrote:
+> Hi all,
+> 
+> This patch series add support SATA for BMIPS_GENERIC.
 
-In the original code "c > INT_MAX" was never true since "c" was an int.
-I am not sure what was intended so I left it alone.  But because I made
-"c" unsigned it means we don't have a warning any more.
+Sorry for the lag.
 
-The second warning is that we cap "i" but allow negatives leading to an
-underflow of the ide_disks_chs[] array.  The third set of warnings is
-because these values come from the user and we cap most of the upper
-bounds but allow negative values.  Negative cylinders doesn't make
-sense.
+Tested on 7425b2, there is a small mistake in the interrupt number for
+the AHCI controller in the 7425.dtsi file (40 -> 41, see below), after
+fixing that, I get both drives (external and internal ports) to be
+identified successfully:
 
-drivers/ide/ide.c:262 ide_set_disk_chs() warn: impossible condition '(c > ((~0 >> 1))) => (s32min-s32max > s32max)'
-drivers/ide/ide.c:270 ide_set_disk_chs() warn: check 'ide_disks_chs[i]' for negative offsets 'i' = s32min.  extra = 's32min-19'
-drivers/ide/ide.c:271 ide_set_disk_chs() warn: no lower bound on 'h'
+# dmesg | grep scsi
+<6>[    0.964097] scsi host0: brcm-ahci
+<6>[    0.967982] scsi host1: brcm-ahci
+<5>[    1.122386] scsi 0:0:0:0: Direct-Access     ATA      WDC
+WD2500AAKX-7 1H19 PQ: 0 ANSI: 5
+<5>[    1.124512] sd 0:0:0:0: Attached scsi generic sg0 type 0
+<5>[    1.411546] scsi 1:0:0:0: Direct-Access     ATA      WDC
+WD2500AAKX-7 1H19 PQ: 0 ANSI: 5
+<5>[    1.428870] sd 1:0:0:0: Attached scsi generic sg1 type 0
+#
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+And performance looks good:
 
-diff --git a/drivers/ide/ide.c b/drivers/ide/ide.c
-index f086ef3..d127ace 100644
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -178,17 +178,17 @@ MODULE_PARM_DESC(pci_clock, "PCI bus clock frequency (in MHz)");
- 
- static int ide_set_dev_param_mask(const char *s, const struct kernel_param *kp)
- {
--	int a, b, i, j = 1;
-+	unsigned int a, b, i, j = 1;
- 	unsigned int *dev_param_mask = (unsigned int *)kp->arg;
- 
- 	/* controller . device (0 or 1) [ : 1 (set) | 0 (clear) ] */
--	if (sscanf(s, "%d.%d:%d", &a, &b, &j) != 3 &&
--	    sscanf(s, "%d.%d", &a, &b) != 2)
-+	if (sscanf(s, "%u.%u:%u", &a, &b, &j) != 3 &&
-+	    sscanf(s, "%u.%u", &a, &b) != 2)
- 		return -EINVAL;
- 
- 	i = a * MAX_DRIVES + b;
- 
--	if (i >= MAX_HWIFS * MAX_DRIVES || j < 0 || j > 1)
-+	if (i >= MAX_HWIFS * MAX_DRIVES || j > 1)
- 		return -EINVAL;
- 
- 	if (j)
-@@ -246,17 +246,17 @@ static struct chs_geom ide_disks_chs[MAX_HWIFS * MAX_DRIVES];
- 
- static int ide_set_disk_chs(const char *str, struct kernel_param *kp)
- {
--	int a, b, c = 0, h = 0, s = 0, i, j = 1;
-+	unsigned int a, b, c = 0, h = 0, s = 0, i, j = 1;
- 
- 	/* controller . device (0 or 1) : Cylinders , Heads , Sectors */
- 	/* controller . device (0 or 1) : 1 (use CHS) | 0 (ignore CHS) */
--	if (sscanf(str, "%d.%d:%d,%d,%d", &a, &b, &c, &h, &s) != 5 &&
--	    sscanf(str, "%d.%d:%d", &a, &b, &j) != 3)
-+	if (sscanf(str, "%u.%u:%u,%u,%u", &a, &b, &c, &h, &s) != 5 &&
-+	    sscanf(str, "%u.%u:%u", &a, &b, &j) != 3)
- 		return -EINVAL;
- 
- 	i = a * MAX_DRIVES + b;
- 
--	if (i >= MAX_HWIFS * MAX_DRIVES || j < 0 || j > 1)
-+	if (i >= MAX_HWIFS * MAX_DRIVES || j > 1)
- 		return -EINVAL;
- 
- 	if (c > INT_MAX || h > 255 || s > 255)
+# hdparm -tT /dev/sda
+
+/dev/sda:
+[   48.557068] random: nonblocking pool is initialized
+Timing buffer-cache reads:   524 MB in 0.50 seconds = 1052111 kB/s
+Timing buffered disk reads:  358 MB in 3.00 seconds = 122132 kB/s
+# hdparm -tT /dev/sdb
+
+/dev/sdb:
+Timing buffer-cache reads:   528 MB in 0.50 seconds = 1060559 kB/s
+Timing buffered disk reads:  374 MB in 3.00 seconds = 127496 kB/s
+
+
+Tested-by: Florian Fainelli <f.fainelli@gmail.com>
+
+For interrupt numbers, computing them from the HIF_CPU_INTR1 register
+works like this this:
+
+HW IRQ# = N * 32 + M
+
+where N ranges from 0->2 and M is the bit within the 32-bits word.
+
+Thanks!
+
+> 
+> Changes in v4:
+> - remove unused properties from bcm{7425,7342,7362}.dtsi
+> 
+> Changes in v3:
+> - fix typo quirk instead of quick
+> - disable NCQ before initialzing SATA controller endianness
+> - fix misnomer controlling phy interface
+> - remove brcm,broken-ncq and brcm,broken-phy properties from devicetree
+> - use compatible string for quirks
+> - use list for compatible strings
+> - add "Acked-by:" tags
+> 
+> Changes in v2:
+> - adds quirk for ncq
+> - adds quirk for phy interface control
+> - remove unused definitions in ahci_brcmstb
+> - combines compatible string
+> 
+> Jaedon Shin (10):
+>   ata: ahci_brcmstb: add support MIPS-based platforms
+>   ata: ahci_brcmstb: add quirk for broken ncq
+>   ata: ahci_brcmstb: add quirk for different phy
+>   ata: ahci_brcmstb: remove unused definitions
+>   phy: phy_brcmstb_sata: remove duplicate definitions
+>   phy: phy_brcmstb_sata: add data for phy version
+>   phy: phy_brcmstb_sata: add support MIPS-based platforms
+>   MIPS: BMIPS: brcmstb: add SATA/PHY nodes for bcm7425
+>   MIPS: BMIPS: brcmstb: add SATA/PHY nodes for bcm7346
+>   MIPS: BMIPS: brcmstb: add SATA/PHY nodes for bcm7362
+> 
+>  .../devicetree/bindings/ata/brcm,sata-brcmstb.txt  |  4 +-
+>  .../bindings/phy/brcm,brcmstb-sata-phy.txt         |  1 +
+>  arch/mips/boot/dts/brcm/bcm7346.dtsi               | 40 +++++++++++++++
+>  arch/mips/boot/dts/brcm/bcm7362.dtsi               | 40 +++++++++++++++
+>  arch/mips/boot/dts/brcm/bcm7425.dtsi               | 40 +++++++++++++++
+>  arch/mips/boot/dts/brcm/bcm97346dbsmb.dts          |  8 +++
+>  arch/mips/boot/dts/brcm/bcm97362svmb.dts           |  8 +++
+>  drivers/ata/Kconfig                                |  2 +-
+>  drivers/ata/ahci_brcmstb.c                         | 58 +++++++++++++++++++++-
+>  drivers/phy/Kconfig                                |  4 +-
+>  drivers/phy/phy-brcmstb-sata.c                     | 47 ++++++++++++++----
+>  11 files changed, 236 insertions(+), 16 deletions(-)
+> 
+
+
+-- 
+Florian
