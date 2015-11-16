@@ -1,34 +1,46 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] Ordered SATA device IDs codename Lewisburg
-Date: Mon, 16 Nov 2015 11:25:53 -0500
-Message-ID: <20151116162553.GG18894@mtj.duckdns.org>
-References: <1446854976-9936-1-git-send-email-alexandra.yates@linux.intel.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH 4/4] ahci: switch from 'threaded' to 'hardirq' interrupt handling
+Date: Mon, 16 Nov 2015 08:29:45 -0800
+Message-ID: <CAPcyv4jaFvkZguN6+h5CBU+OfcHEsCpL7G==yQcUx0_=13TDug@mail.gmail.com>
+References: <20151030210924.8538.90627.stgit@dwillia2-desk3.amr.corp.intel.com>
+	<20151030210946.8538.26203.stgit@dwillia2-desk3.amr.corp.intel.com>
+	<20151031005608.GB3582@mtj.duckdns.org>
+	<CAPcyv4iTwDXfDb1=kA6oNPmMJS1WbwPqdkB8LtbT6-=JV+h+7Q@mail.gmail.com>
+	<20151031020115.GI3582@mtj.duckdns.org>
+	<5649DFA3.9080002@start.ca>
+	<20151116153327.GB18894@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yk0-f174.google.com ([209.85.160.174]:33959 "EHLO
-	mail-yk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753073AbbKPQZ4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Nov 2015 11:25:56 -0500
-Received: by ykfs79 with SMTP id s79so248414613ykf.1
-        for <linux-ide@vger.kernel.org>; Mon, 16 Nov 2015 08:25:56 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <1446854976-9936-1-git-send-email-alexandra.yates@linux.intel.com>
+Received: from mail-wm0-f49.google.com ([74.125.82.49]:35436 "EHLO
+	mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752261AbbKPQ3q (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 Nov 2015 11:29:46 -0500
+Received: by wmdw130 with SMTP id w130so118726939wmd.0
+        for <linux-ide@vger.kernel.org>; Mon, 16 Nov 2015 08:29:45 -0800 (PST)
+In-Reply-To: <20151116153327.GB18894@mtj.duckdns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexandra Yates <alexandra.yates@linux.intel.com>
-Cc: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Mark Lord <kernel@start.ca>, IDE/ATA development list <linux-ide@vger.kernel.org>
 
-On Fri, Nov 06, 2015 at 04:09:36PM -0800, Alexandra Yates wrote:
-> This change was to preserve the ascending order of device IDs.
-> There was an exception with the first two Lewisburg device IDs to
-> keep all device IDs of the same kind grouped by code name.
-> 
-> Signed-off-by: Alexandra Yates <alexandra.yates@linux.intel.com>
+On Mon, Nov 16, 2015 at 7:33 AM, Tejun Heo <tj@kernel.org> wrote:
+> Hello, Mark.
+>
+> On Mon, Nov 16, 2015 at 08:52:35AM -0500, Mark Lord wrote:
+>> >Let's remove it for now and do the conditional thing if anybody misses
+>> >it.  No need to keep around dead code proactively.
+>>
+>> Aren't threaded IRQs there to improve overall system real-time response?
+>> If so, it would seem a step backwards to remove them completely,
+>> especially considering the low cost of maintaining them here.
+>
+> For ahci, it was added without any justification.  It just came with
+> the MSI changes.  If there's any data indicating that this makes any
+> noticeable difference, it's easy to restore.
+>
 
-Applied to libata/for-4.4-fixes.
-
-Thanks.
-
--- 
-tejun
+Also, the non-mult-msi case has been living without threaded
+interrupts since forever.  If they were needed I expect the
+functionality would have been ported over by now.  As is this provides
+a noticeable throughput improvement.
