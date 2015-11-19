@@ -1,80 +1,100 @@
 From: Jaedon Shin <jaedon.shin@gmail.com>
-Subject: [v5 3/7] ata: ahci_brcmstb: add quirk for different phy
-Date: Thu, 19 Nov 2015 11:41:15 +0900
-Message-ID: <1447900879-1549-4-git-send-email-jaedon.shin@gmail.com>
+Subject: [v5 6/7] phy: phy_brcmstb_sata: add data for phy version
+Date: Thu, 19 Nov 2015 11:41:18 +0900
+Message-ID: <1447900879-1549-7-git-send-email-jaedon.shin@gmail.com>
 References: <1447900879-1549-1-git-send-email-jaedon.shin@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:33882 "EHLO
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:36077 "EHLO
 	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754125AbbKSCmJ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Nov 2015 21:42:09 -0500
-Received: by padhx2 with SMTP id hx2so64605293pad.1
-        for <linux-ide@vger.kernel.org>; Wed, 18 Nov 2015 18:42:09 -0800 (PST)
+	with ESMTP id S932936AbbKSCmT (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 18 Nov 2015 21:42:19 -0500
+Received: by pacdm15 with SMTP id dm15so64619476pac.3
+        for <linux-ide@vger.kernel.org>; Wed, 18 Nov 2015 18:42:19 -0800 (PST)
 In-Reply-To: <1447900879-1549-1-git-send-email-jaedon.shin@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>, Rob Herring <robh+dt@kernel.org>, Brian Norris <computersforpeace@gmail.com>, Florian Fainelli <f.fainelli@gmail.com>, linux-ide@vger.kernel.org
 Cc: Ralf Baechle <ralf@linux-mips.org>, Dragan Stancevic <dragan.stancevic@gmail.com>, Jaedon Shin <jaedon.shin@gmail.com>
 
-Add quirk for phy interface of MIPS-based chipsets. The ARM-based
-chipsets have four phy interface control registers and each port has two
-registers but the MIPS-based chipsets have three. There are no
-information and documentation.
-
-The Broadcom strict-ahci based BSP of legacy version did not control
-these registers.
+Add data of device for phy version. and 28nm version is default.
 
 Signed-off-by: Jaedon Shin <jaedon.shin@gmail.com>
 Tested-by: Florian Fainelli <f.fainelli@gmail.com>
 Acked-by: Brian Norris <computersforpeace@gmail.com>
 ---
- drivers/ata/ahci_brcmstb.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+ drivers/phy/phy-brcmstb-sata.c | 23 ++++++++++++++++++++---
+ 1 file changed, 20 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ata/ahci_brcmstb.c b/drivers/ata/ahci_brcmstb.c
-index 3bf1cf6259d7..b7cdfc8fabb7 100644
---- a/drivers/ata/ahci_brcmstb.c
-+++ b/drivers/ata/ahci_brcmstb.c
-@@ -71,6 +71,7 @@
+diff --git a/drivers/phy/phy-brcmstb-sata.c b/drivers/phy/phy-brcmstb-sata.c
+index 0be55dafe9ea..5de394f589c8 100644
+--- a/drivers/phy/phy-brcmstb-sata.c
++++ b/drivers/phy/phy-brcmstb-sata.c
+@@ -30,7 +30,11 @@
+ #define MAX_PORTS					2
  
- enum brcm_ahci_quirks {
- 	BRCM_AHCI_QUIRK_NONCQ		= BIT(0),
-+	BRCM_AHCI_QUIRK_SKIP_PHY_ENABLE	= BIT(1),
+ /* Register offset between PHYs in PCB space */
+-#define SATA_MDIO_REG_SPACE_SIZE			0x1000
++#define SATA_MDIO_REG_28NM_SPACE_SIZE			0x1000
++
++enum brcm_sata_phy_version {
++	BRCM_SATA_PHY_28NM,
++};
+ 
+ struct brcm_sata_port {
+ 	int portnum;
+@@ -42,6 +46,7 @@ struct brcm_sata_port {
+ struct brcm_sata_phy {
+ 	struct device *dev;
+ 	void __iomem *phy_base;
++	enum brcm_sata_phy_version version;
+ 
+ 	struct brcm_sata_port phys[MAX_PORTS];
+ };
+@@ -64,8 +69,12 @@ enum sata_mdio_phy_regs_28nm {
+ static inline void __iomem *brcm_sata_phy_base(struct brcm_sata_port *port)
+ {
+ 	struct brcm_sata_phy *priv = port->phy_priv;
++	u32 offset;
+ 
+-	return priv->phy_base + (port->portnum * SATA_MDIO_REG_SPACE_SIZE);
++	if (priv->version == BRCM_SATA_PHY_28NM)
++		offset = SATA_MDIO_REG_28NM_SPACE_SIZE;
++
++	return priv->phy_base + (port->portnum * offset);
+ }
+ 
+ static void brcm_sata_mdio_wr(void __iomem *addr, u32 bank, u32 ofs,
+@@ -126,7 +135,8 @@ static const struct phy_ops phy_ops_28nm = {
  };
  
- struct brcm_ahci_priv {
-@@ -119,6 +120,9 @@ static void brcm_sata_phy_enable(struct brcm_ahci_priv *priv, int port)
- 	void __iomem *p;
- 	u32 reg;
+ static const struct of_device_id brcm_sata_phy_of_match[] = {
+-	{ .compatible	= "brcm,bcm7445-sata-phy" },
++	{ .compatible	= "brcm,bcm7445-sata-phy",
++	  .data = (void *)BRCM_SATA_PHY_28NM },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, brcm_sata_phy_of_match);
+@@ -135,6 +145,7 @@ static int brcm_sata_phy_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct device_node *dn = dev->of_node, *child;
++	const struct of_device_id *of_id;
+ 	struct brcm_sata_phy *priv;
+ 	struct resource *res;
+ 	struct phy_provider *provider;
+@@ -154,6 +165,12 @@ static int brcm_sata_phy_probe(struct platform_device *pdev)
+ 	if (IS_ERR(priv->phy_base))
+ 		return PTR_ERR(priv->phy_base);
  
-+	if (priv->quirks & BRCM_AHCI_QUIRK_SKIP_PHY_ENABLE)
-+		return;
++	of_id = of_match_node(brcm_sata_phy_of_match, dn);
++	if (of_id)
++		priv->version = (enum brcm_sata_phy_version)of_id->data;
++	else
++		priv->version = BRCM_SATA_PHY_28NM;
 +
- 	/* clear PHY_DEFAULT_POWER_STATE */
- 	p = phyctrl + SATA_TOP_CTRL_PHY_CTRL_1;
- 	reg = brcm_sata_readreg(p);
-@@ -148,6 +152,9 @@ static void brcm_sata_phy_disable(struct brcm_ahci_priv *priv, int port)
- 	void __iomem *p;
- 	u32 reg;
- 
-+	if (priv->quirks & BRCM_AHCI_QUIRK_SKIP_PHY_ENABLE)
-+		return;
-+
- 	/* power-off the PHY digital logic */
- 	p = phyctrl + SATA_TOP_CTRL_PHY_CTRL_2;
- 	reg = brcm_sata_readreg(p);
-@@ -297,8 +304,10 @@ static int brcm_ahci_probe(struct platform_device *pdev)
- 	if (IS_ERR(priv->top_ctrl))
- 		return PTR_ERR(priv->top_ctrl);
- 
--	if (of_device_is_compatible(dev->of_node, "brcm,bcm7425-ahci"))
-+	if (of_device_is_compatible(dev->of_node, "brcm,bcm7425-ahci")) {
- 		priv->quirks |= BRCM_AHCI_QUIRK_NONCQ;
-+		priv->quirks |= BRCM_AHCI_QUIRK_SKIP_PHY_ENABLE;
-+	}
- 
- 	brcm_sata_quirks(pdev, priv);
- 
+ 	for_each_available_child_of_node(dn, child) {
+ 		unsigned int id;
+ 		struct brcm_sata_port *port;
 -- 
 2.6.3
 
