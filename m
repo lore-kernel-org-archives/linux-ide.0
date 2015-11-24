@@ -1,40 +1,69 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH] ahci: don't use MSI when PCI is disabled
-Date: Mon, 23 Nov 2015 20:34:30 +0100
-Message-ID: <6160865.VIglm5oKj3@wuerfel>
-References: <4754092.OYovO36g28@wuerfel> <CAPcyv4gSjWZ7OPqp9fwtc9yGV9g5AKkkCLDnU-F71XsHBgYUQA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAPcyv4gSjWZ7OPqp9fwtc9yGV9g5AKkkCLDnU-F71XsHBgYUQA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Tejun Heo <tj@kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Ricardo Neri <ricardo.neri@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+From: Geert Uytterhoeven <geert+renesas@glider.be>
+Subject: [PATCH] ata: sata_rcar: Remove obsolete platform_device_id entries
+Date: Tue, 24 Nov 2015 15:45:04 +0100
+Message-ID: <1448376304-8304-1-git-send-email-geert+renesas@glider.be>
+Return-path: <linux-sh-owner@vger.kernel.org>
+Sender: linux-sh-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-sh@vger.kernel.org, Geert Uytterhoeven <geert+renesas@glider.be>
 List-Id: linux-ide@vger.kernel.org
 
-On Monday 23 November 2015 09:25:38 Dan Williams wrote:
-> 
-> If we had an "static inline ahci_irq_vector(int port)"  helper to
-> compile out the struct msix_entry de-reference would that be
-> sufficient?
+Since commit c99cd90d98a98aa1 ("ARM: shmobile: r8a7779: Remove legacy
+SoC code"), R-Car SoCs are only supported in generic DT-only ARM
+multi-platform builds.  The driver doesn't need to match platform
+devices by name anymore, hence remove the remaining platform_device_id
+entries and platform device support.
 
-Yes, that is probably a nicer way to do it. We should then also do
-something like this:
+Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Acked-by: Simon Horman <horms+renesas@verge.net.au>
+---
+v2:
+  - Add Acked-by.
+---
+ drivers/ata/sata_rcar.c | 15 +++------------
+ 1 file changed, 3 insertions(+), 12 deletions(-)
 
-@@ -2510,7 +2513,8 @@ int ahci_host_activate(struct ata_host *host, struct scsi_host_template *sht)
- 	int irq = hpriv->irq;
- 	int rc;
+diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
+index 2b20b31f317d0509..f72d601e300aa9f8 100644
+--- a/drivers/ata/sata_rcar.c
++++ b/drivers/ata/sata_rcar.c
+@@ -862,13 +862,6 @@ static struct of_device_id sata_rcar_match[] = {
+ };
+ MODULE_DEVICE_TABLE(of, sata_rcar_match);
  
--	if (hpriv->flags & (AHCI_HFLAG_MULTI_MSI | AHCI_HFLAG_MULTI_MSIX))
-+	if (IS_ENABLED(CONFIG_PCI_MSI) && \
-+	    hpriv->flags & (AHCI_HFLAG_MULTI_MSI | AHCI_HFLAG_MULTI_MSIX))
- 		rc = ahci_host_activate_multi_irqs(host, sht);
- 	else if (hpriv->flags & AHCI_HFLAG_EDGE_IRQ)
- 		rc = ata_host_activate(host, irq, ahci_single_edge_irq_intr,
+-static const struct platform_device_id sata_rcar_id_table[] = {
+-	{ "sata_rcar", RCAR_GEN1_SATA }, /* Deprecated by "sata-r8a7779" */
+-	{ "sata-r8a7779", RCAR_GEN1_SATA },
+-	{ },
+-};
+-MODULE_DEVICE_TABLE(platform, sata_rcar_id_table);
+-
+ static int sata_rcar_probe(struct platform_device *pdev)
+ {
+ 	const struct of_device_id *of_id;
+@@ -888,11 +881,10 @@ static int sata_rcar_probe(struct platform_device *pdev)
+ 		return -ENOMEM;
+ 
+ 	of_id = of_match_device(sata_rcar_match, &pdev->dev);
+-	if (of_id)
+-		priv->type = (enum sata_rcar_type)of_id->data;
+-	else
+-		priv->type = platform_get_device_id(pdev)->driver_data;
++	if (!of_id)
++		return -ENODEV;
+ 
++	priv->type = (enum sata_rcar_type)of_id->data;
+ 	priv->clk = devm_clk_get(&pdev->dev, NULL);
+ 	if (IS_ERR(priv->clk)) {
+ 		dev_err(&pdev->dev, "failed to get access to sata clock\n");
+@@ -1022,7 +1014,6 @@ static const struct dev_pm_ops sata_rcar_pm_ops = {
+ static struct platform_driver sata_rcar_driver = {
+ 	.probe		= sata_rcar_probe,
+ 	.remove		= sata_rcar_remove,
+-	.id_table	= sata_rcar_id_table,
+ 	.driver = {
+ 		.name		= DRV_NAME,
+ 		.of_match_table	= sata_rcar_match,
+-- 
+1.9.1
 
-which will let gcc leave out the entire ahci_host_activate_multi_irqs()
-function but still flag compile errors in it even if CONFIG_PCI is
-disabled.
-
-	Arnd
