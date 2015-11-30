@@ -1,34 +1,37 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [v6 4/7] ata: ahci_brcmstb: remove unused definitions
-Date: Mon, 30 Nov 2015 09:58:14 -0500
-Message-ID: <20151130145814.GC3535@mtj.duckdns.org>
-References: <1448506595-4981-1-git-send-email-jaedon.shin@gmail.com>
- <1448506595-4981-5-git-send-email-jaedon.shin@gmail.com>
+Subject: Re: [PATCH 1/1] AHCI: Fix softreset failed issue of Port Multiplier
+Date: Mon, 30 Nov 2015 10:01:59 -0500
+Message-ID: <20151130150159.GD3535@mtj.duckdns.org>
+References: <1448540822-24175-1-git-send-email-Xiangliang.Yu@amd.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yk0-f175.google.com ([209.85.160.175]:36709 "EHLO
-	mail-yk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754509AbbK3O6R (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Nov 2015 09:58:17 -0500
-Received: by ykdr82 with SMTP id r82so185580092ykd.3
-        for <linux-ide@vger.kernel.org>; Mon, 30 Nov 2015 06:58:17 -0800 (PST)
+Received: from mail-yk0-f182.google.com ([209.85.160.182]:35839 "EHLO
+	mail-yk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754071AbbK3PCE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Nov 2015 10:02:04 -0500
 Content-Disposition: inline
-In-Reply-To: <1448506595-4981-5-git-send-email-jaedon.shin@gmail.com>
+In-Reply-To: <1448540822-24175-1-git-send-email-Xiangliang.Yu@amd.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Jaedon Shin <jaedon.shin@gmail.com>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>, Rob Herring <robh+dt@kernel.org>, Brian Norris <computersforpeace@gmail.com>, Florian Fainelli <f.fainelli@gmail.com>, linux-ide@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>, Dragan Stancevic <dragan.stancevic@gmail.com>
+To: Xiangliang Yu <Xiangliang.Yu@amd.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, SPG_Linux_Kernel@amd.com
 
-On Thu, Nov 26, 2015 at 11:56:32AM +0900, Jaedon Shin wrote:
-> Remove unused definitions, and this is to avoid confusion with MIPS-based
-> platforms.
+On Thu, Nov 26, 2015 at 08:27:02PM +0800, Xiangliang Yu wrote:
+> Current code doesn't update port value of Port Multiplier(PM) when
+> sending FIS of softreset to device, command will fail if FBS is
+> enabled.
 > 
-> Signed-off-by: Jaedon Shin <jaedon.shin@gmail.com>
-> Tested-by: Florian Fainelli <f.fainelli@gmail.com>
-> Acked-by: Brian Norris <computersforpeace@gmail.com>
+> There are two ways to fix the issue: the first is to disable FBS
+> before sending softreset command to PM device and the second is
+> to update port value of PM when sending command.
+> 
+> For the first way, i can't find any related rule in AHCI Spec. The
+> second way can avoid disabling FBS and has better performance.
+> 
+> Signed-off-by: Xiangliang Yu <Xiangliang.Yu@amd.com>
 
-Applied 2-4 to libata/for-4.5.
+Applied to libata/for-4.4-fixes w/ stable cc'd.
 
 Thanks.
 
