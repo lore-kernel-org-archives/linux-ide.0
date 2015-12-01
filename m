@@ -1,49 +1,90 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] sata_sil: disable trim
-Date: Mon, 30 Nov 2015 10:06:21 -0500
-Message-ID: <20151130150621.GE3535@mtj.duckdns.org>
-References: <alpine.LRH.2.02.1511261128250.31851@file01.intranet.prod.int.rdu2.redhat.com>
+Subject: Re: libata-core: devslp fails on ATP mSATA
+Date: Tue, 1 Dec 2015 11:17:15 -0500
+Message-ID: <20151201161715.GA12922@mtj.duckdns.org>
+References: <20151201092234.GB29791@awelinux>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yk0-f169.google.com ([209.85.160.169]:34482 "EHLO
-	mail-yk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754501AbbK3PGY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 Nov 2015 10:06:24 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <alpine.LRH.2.02.1511261128250.31851@file01.intranet.prod.int.rdu2.redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <20151201092234.GB29791@awelinux>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andreas Werner <andreas.werner@men.de>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-ide@vger.kernel.org
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Nov 26, 2015 at 12:00:59PM -0500, Mikulas Patocka wrote:
-> When I connect an Intel SSD to SATA SIL controller (PCI ID 1095:3114), any
-> TRIM command results in I/O errors being reported in the log. There is
-> other similar error reported with TRIM and the SIL controller:
-> https://bugs.centos.org/view.php?id=5880
-> 
-> Apparently the controller doesn't support TRIM commands. This patch
-> disables TRIM support on the SATA SIL controller.
-> 
-> ata7.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x0
-> ata7.00: BMDMA2 stat 0x50001
-> ata7.00: failed command: DATA SET MANAGEMENT
-> ata7.00: cmd 06/01:01:00:00:00/00:00:00:00:00/a0 tag 0 dma 512 out
->          res 51/04:01:00:00:00/00:00:00:00:00/a0 Emask 0x1 (device error)
-> ata7.00: status: { DRDY ERR }
-> ata7.00: error: { ABRT }
-> ata7.00: device reported invalid CHS sector 0
-> sd 8:0:0:0: [sdb] tag#0 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-> sd 8:0:0:0: [sdb] tag#0 Sense Key : Illegal Request [current] [descriptor]
-> sd 8:0:0:0: [sdb] tag#0 Add. Sense: Unaligned write command
-> sd 8:0:0:0: [sdb] tag#0 CDB: Write same(16) 93 08 00 00 00 00 00 21 95 88 00 20 00 00 00 00
-> blk_update_request: I/O error, dev sdb, sector 2200968
-> 
-> Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
-> Cc: stable@kernel.org
+(cc'ing Hannes and Margin)
 
-Applied to libata/for-4.4-fixes.  Thanks.
+Hello,
+
+On Tue, Dec 01, 2015 at 10:22:34AM +0100, Andreas Werner wrote:
+> Hi,
+> i have a question regarding the devslp feature in several SATA devices.
+> 
+> I currently working on an embedded board with a Freescale P1013/P1022.
+> I have a mSATA Device from ATP which is connected to the SATA port.
+> The Yocot Kernel 3.14.26 is used in the system.
+> 
+> This mSata failed with the following log messages:
+...
+> The device is not recognized by the System, and i do not have access to it.
+> 
+> I have also tested the mSATA using a 3.14 Kernel and a 4.2 Kernel on
+> a Intel Atom E3825. On this system, the mSATA is working perfectly.
+> 
+> Next test was to use a 3.4.18 Kernel (which was the old BSP) on the P1013.
+> With this Kernel the mSATA is also working correctly.
+> 
+> 
+> During some deeper debuggin in libata-core.c i find that the problem is
+> regarding the devslp.
+> 
+> /* Check and mark DevSlp capability. Get DevSlp timing variables
+> * from SATA Settings page of Identify Device Data Log.
+> */
+> if (ata_id_has_devslp(dev->id)) {
+> u8 *sata_setting = ap->sector_buf;
+> int i, j;
+> 
+> dev->flags |= ATA_DFLAG_DEVSLP;
+> err_mask = ata_read_log_page(dev,
+>         ATA_LOG_SATA_ID_DEV_DATA,
+>         ATA_LOG_SATA_SETTINGS,
+>         sata_setting,
+>         1);
+> if (err_mask)
+>  ata_dev_dbg(dev,
+>       "failed to get Identify Device Data, Emask 0x%x\n",
+>       err_mask);
+> else
+>  for (i = 0; i < ATA_LOG_DEVSLP_SIZE; i++) {
+>   j = ATA_LOG_DEVSLP_OFFSET + i;
+>   dev->devslp_timing[i] = sata_setting[j];
+>  }
+> }
+> 
+> 
+> If i comment out this code, the device is recognized correctly. I figured out
+> that only the "ata_read_log_page" return a AC_ERR_DEV, and makes the device
+> malfunction (-> failed to set xfermode).
+> 
+> I am not that familiar with SATA and did not understand why the "ata_read_log_page" can
+> corrupt my mSATA device.
+> 
+> The only thing what i can imagine is, that the Host controller does not support devslp
+> (which is the case).
+> 
+> Does anybody of you have hint for me to fixe that problem in a clean way?
+
+So, I suppose this is a fallout from 9faa643855df ("libata: use
+READ_LOG_DMA_EXT").  The description just says "we should try use it"
+but is there any benefit from using NCQ variant of read log page?  I
+mean, it's used during config and error handling, so it's not like
+queueing is gonna help anything.  It ends up issuing NCQ commands on
+controllers which don't support NCQ and causes failures on devices
+which lie about supporting the feature.
+
+Thanks.
 
 -- 
 tejun
