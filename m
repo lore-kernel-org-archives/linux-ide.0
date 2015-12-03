@@ -1,53 +1,25 @@
-From: Andreas Werner <andreas.werner@men.de>
-Subject: Re: libata-core: devslp fails on ATP mSATA
-Date: Thu, 3 Dec 2015 17:05:10 +0100
-Message-ID: <20151203160508.GH10207@awelinux>
-References: <20151201092234.GB29791@awelinux>
- <20151201161715.GA12922@mtj.duckdns.org>
- <20151201190410.GA21252@mtj.duckdns.org>
- <20151202093310.GE10207@awelinux>
- <20151202164753.GA19878@mtj.duckdns.org>
- <20151203093355.GF10207@awelinux>
- <20151203151549.GD27463@mtj.duckdns.org>
+From: Marek <mlf.conv@gmail.com>
+Subject: requesting block devices via netlink
+Date: Thu, 3 Dec 2015 17:49:56 +0100
+Message-ID: <CA+sqOsbWecJnPTew-hXm+7a02xwPXnj2L5+MmV_BBn602yFDmQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail1.bemta5.messagelabs.com ([195.245.231.150]:32024 "EHLO
-	mail1.bemta5.messagelabs.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752294AbbLCQHI (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Dec 2015 11:07:08 -0500
-Content-Disposition: inline
-In-Reply-To: <20151203151549.GD27463@mtj.duckdns.org>
+Received: from mail-wm0-f53.google.com ([74.125.82.53]:33077 "EHLO
+	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751739AbbLCQt5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 3 Dec 2015 11:49:57 -0500
+Received: by wmec201 with SMTP id c201so36387609wme.0
+        for <linux-ide@vger.kernel.org>; Thu, 03 Dec 2015 08:49:56 -0800 (PST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Andreas Werner <andreas.werner@men.de>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: linux-ide@vger.kernel.org
 
-On Thu, Dec 03, 2015 at 10:15:49AM -0500, Tejun Heo wrote:
-> Hello,
-> 
-> On Thu, Dec 03, 2015 at 10:33:55AM +0100, Andreas Werner wrote:
-> > All the other "flag" fields in the structs are used and/or reserved
-> > and it seems to be no good place for such flags.
-> 
-> You can use the port flags - ATA_FLAG_*.
-> 
-> > What I am thinking about is.
-> > 
-> > 1. Add new flag e.g. ATA_HORKAGE_NOLOG_PAGE_RD
-> 
-> ATA_FLAG_NO_LOG_PAGE?
+hi,
 
-That seems to be much more simpler than my idea :-)
-Did not see the port stuff, i was focused on the host struct.
-
-Thank you for the hint. I will prepare a Patch next week.
-
-> 
-> Thanks.
-> 
-> -- 
-> tejun
-
-Regards
-Andy
+i'd like to ask whether it's possible to request block devices via
+netlink e.g. ata devices.
+There's NETLINK_KOBJECT_UEVENT but it only seems to be for  dumping
+events to userspace. I'd like to construct a message that would allow
+me to request block devices from the kernel. Is something like this
+implemented inside the kernel.
