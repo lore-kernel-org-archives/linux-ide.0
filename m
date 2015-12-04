@@ -1,8 +1,8 @@
 From: Andreas Werner <andreas.werner@men.de>
-Subject: [v2 1/2] libata-eh.c: Introduce new ata port flag for controller
- which lockup on read log page
-Date: Fri, 4 Dec 2015 18:12:49 +0100
-Message-ID: <a6e9f8f1d473b6b1d52b8cec26dd33065ee8bb6e.1449248754.git.andreas.werner@men.de>
+Subject: [v2 2/2] ata/sata_fsl.c: add ATA_FLAG_NO_LOG_PAGE to blacklist the
+ controller for log page reads
+Date: Fri, 4 Dec 2015 18:14:14 +0100
+Message-ID: <604455d000f673d1f8f18f0e1eccc6e088d5a080.1449248754.git.andreas.werner@men.de>
 References: <cover.1449248754.git.andreas.werner@men.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -14,56 +14,59 @@ To: linux-kernel@vger.kernel.org
 Cc: linux-ide@vger.kernel.org, tj@kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Some controller lockup on a ata_read_log_page.
-Add new ata port flag ATA_FLAG_NO_LOG_PAGE which can used
-to blacklist a controller.
+Every attempt to issue a read log page command lockup the controller.
+The command is currently sent if the sata device includes the devlsp feature
+to read out the timing data.
+This attempt to read the data, locks up the controller and the device
+is not recognzied correctly (failed to set xfermode) and cannot be accessed.
 
-If this flag is set, any attempt to read a log page returns an error
-without actually issuing the command.
+This was found on Freescale P1013/P1022 and T4240 CPUs
+using a ATP IG mSATA 4GB with the devslp feature.
+
+fsl-sata ff718000.sata: Sata FSL Platform/CSB Driver init
+[    1.254195] scsi0 : sata_fsl
+[    1.256004] ata1: SATA max UDMA/133 irq 74
+[    1.370666] fsl-gianfar ethernet.3: enabled errata workarounds, flags: 0x4
+[    1.470671] fsl-gianfar ethernet.4: enabled errata workarounds, flags: 0x4
+[    1.775584] ata1: Signature Update detected @ 504 msecs
+[    1.947594] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[    1.948366] ata1.00: ATA-8: ATP IG mSATA, 20150311, max UDMA/133
+[    1.948371] ata1.00: 7732368 sectors, multi 0: LBA
+[    1.948843] ata1.00: failed to get Identify Device Data, Emask 0x1
+[    1.948857] ata1.00: failed to set xfermode (err_mask=0x40)
+[    7.467557] ata1: Signature Update detected @ 504 msecs
+[    7.639560] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[    7.651320] ata1.00: failed to get Identify Device Data, Emask 0x1
+[    7.651360] ata1.00: failed to set xfermode (err_mask=0x40)
+[    7.655628] ata1: limiting SATA link speed to 1.5 Gbps
+[    7.659458] ata1.00: limiting speed to UDMA/133:PIO3
+[   13.163554] ata1: Signature Update detected @ 504 msecs
+[   13.335558] ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+[   13.347298] ata1.00: failed to get Identify Device Data, Emask 0x1
+[   13.347334] ata1.00: failed to set xfermode (err_mask=0x40)
+[   13.351601] ata1.00: disabled
+[   13.353278] ata1: exception Emask 0x50 SAct 0x0 SErr 0x800 action 0x6 frozen t4
+[   13.359281] ata1: SError: { HostInt }
+[   13.361644] ata1: hard resetting link
 
 Signed-off-by: Andreas Werner <andreas.werner@men.de>
 ---
- drivers/ata/libata-eh.c | 9 +++++++++
- include/linux/libata.h  | 1 +
- 2 files changed, 10 insertions(+)
+ drivers/ata/sata_fsl.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index cb0508a..c59c2bc 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -1505,12 +1505,21 @@ static const char *ata_err_string(unsigned int err_mask)
- unsigned int ata_read_log_page(struct ata_device *dev, u8 log,
- 			       u8 page, void *buf, unsigned int sectors)
- {
-+	unsigned long ap_flags = dev->link->ap->flags;
- 	struct ata_taskfile tf;
- 	unsigned int err_mask;
- 	bool dma = false;
+diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+index 5389579..a723ae9 100644
+--- a/drivers/ata/sata_fsl.c
++++ b/drivers/ata/sata_fsl.c
+@@ -45,7 +45,8 @@ enum {
+ 	SATA_FSL_MAX_PRD_DIRECT	= 16,	/* Direct PRDT entries */
  
- 	DPRINTK("read log page - log 0x%x, page 0x%x\n", log, page);
+ 	SATA_FSL_HOST_FLAGS	= (ATA_FLAG_SATA | ATA_FLAG_PIO_DMA |
+-				ATA_FLAG_PMP | ATA_FLAG_NCQ | ATA_FLAG_AN),
++				   ATA_FLAG_PMP | ATA_FLAG_NCQ |
++				   ATA_FLAG_AN | ATA_FLAG_NO_LOG_PAGE),
  
-+	/*
-+	 * Return error without actually issuing the
-+	 * command on controller which e.g. lockup
-+	 * on a read log page.
-+	 */
-+	if (ap_flags & ATA_FLAG_NO_LOG_PAGE)
-+		return AC_ERR_DEV;
-+
- retry:
- 	ata_tf_init(dev, &tf);
- 	if (dev->dma_mode && ata_id_has_read_log_dma_ext(dev->id) &&
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 83577f8..600c1e0 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -210,6 +210,7 @@ enum {
- 	ATA_FLAG_SLAVE_POSS	= (1 << 0), /* host supports slave dev */
- 					    /* (doesn't imply presence) */
- 	ATA_FLAG_SATA		= (1 << 1),
-+	ATA_FLAG_NO_LOG_PAGE	= (1 << 5), /* do not issue log page read */
- 	ATA_FLAG_NO_ATAPI	= (1 << 6), /* No ATAPI support */
- 	ATA_FLAG_PIO_DMA	= (1 << 7), /* PIO cmds via DMA */
- 	ATA_FLAG_PIO_LBA48	= (1 << 8), /* Host DMA engine is LBA28 only */
+ 	SATA_FSL_MAX_CMDS	= SATA_FSL_QUEUE_DEPTH,
+ 	SATA_FSL_CMD_HDR_SIZE	= 16,	/* 4 DWORDS */
 -- 
 2.6.2
