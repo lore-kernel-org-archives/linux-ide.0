@@ -1,55 +1,44 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH] ahci: don't use MSI when PCI is disabled
-Date: Fri, 4 Dec 2015 08:37:05 -0800
-Message-ID: <CAPcyv4iooKQKYwFnpd7tg0mis=Y3C-P4z4obrwS7m=4jMN5rvQ@mail.gmail.com>
-References: <4754092.OYovO36g28@wuerfel>
-	<CAPcyv4gSjWZ7OPqp9fwtc9yGV9g5AKkkCLDnU-F71XsHBgYUQA@mail.gmail.com>
-	<6160865.VIglm5oKj3@wuerfel>
-	<2230814.fGlctTNBzj@wuerfel>
+From: Andreas Werner <andreas.werner@men.de>
+Subject: [v2 0/2] ata/libata-eh.c: introduce ATA_FLAG_NO_LOG_PAGE
+Date: Fri, 4 Dec 2015 18:12:24 +0100
+Message-ID: <cover.1449248754.git.andreas.werner@men.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yk0-f171.google.com ([209.85.160.171]:33702 "EHLO
-	mail-yk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754145AbbLDQhH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 4 Dec 2015 11:37:07 -0500
-Received: by ykdv3 with SMTP id v3so130057448ykd.0
-        for <linux-ide@vger.kernel.org>; Fri, 04 Dec 2015 08:37:05 -0800 (PST)
-In-Reply-To: <2230814.fGlctTNBzj@wuerfel>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, tj@kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, Tejun Heo <tj@kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Ricardo Neri <ricardo.neri@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Chen-Yu Tsai <wens@csie.org>
 
-On Fri, Dec 4, 2015 at 8:34 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Monday 23 November 2015 20:34:30 Arnd Bergmann wrote:
->> On Monday 23 November 2015 09:25:38 Dan Williams wrote:
->> >
->> > If we had an "static inline ahci_irq_vector(int port)"  helper to
->> > compile out the struct msix_entry de-reference would that be
->> > sufficient?
->>
->> Yes, that is probably a nicer way to do it. We should then also do
->> something like this:
->>
->> @@ -2510,7 +2513,8 @@ int ahci_host_activate(struct ata_host *host, struct scsi_host_template *sht)
->>         int irq = hpriv->irq;
->>         int rc;
->>
->> -       if (hpriv->flags & (AHCI_HFLAG_MULTI_MSI | AHCI_HFLAG_MULTI_MSIX))
->> +       if (IS_ENABLED(CONFIG_PCI_MSI) && \
->> +           hpriv->flags & (AHCI_HFLAG_MULTI_MSI | AHCI_HFLAG_MULTI_MSIX))
->>                 rc = ahci_host_activate_multi_irqs(host, sht);
->>         else if (hpriv->flags & AHCI_HFLAG_EDGE_IRQ)
->>                 rc = ata_host_activate(host, irq, ahci_single_edge_irq_intr,
->>
->> which will let gcc leave out the entire ahci_host_activate_multi_irqs()
->> function but still flag compile errors in it even if CONFIG_PCI is
->> disabled.
->>
->
-> Dan, are you going to do the ahci_irq_vector patch, or should we use my
-> original patch to fix up the build error?
+This patchset add a new ata port flag ATA_FLAG_NO_LOG_PAGE to be able
+to blacklist ports/controller which e.g. locks up on a log page read.
 
-Ah, I was about to ask you the same question.  No worries, I'll send
-out a patch with the above approach today.
+This flag is added to the sata_fsl driver which is the first affected
+one.
+
+The lockup was detected on Freescale P1013/P1022, T4240 using a ATP
+mSATA.
+The device failed during initialisation if the SATA device includes the
+devslp feature.
+
+With this patchset, we blacklist the fsl sata controller and return
+a error on any attempt to read a log page. This allows us to access
+the mSATA.
+
+Changes in v2:
+	fixed the build issue detected by the kbuild test robot
+
+Andreas Werner (2):
+  libata-eh.c: Introduce new ata port flag for controller which lockup
+    on read log page
+  ata/sata_fsl.c: add ATA_FLAG_NO_LOG_PAGE to blacklist the controller
+    for log page reads
+
+ drivers/ata/libata-eh.c | 9 +++++++++
+ drivers/ata/sata_fsl.c  | 3 ++-
+ include/linux/libata.h  | 1 +
+ 3 files changed, 12 insertions(+), 1 deletion(-)
+
+-- 
+2.6.2
