@@ -1,45 +1,39 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2] ahci: compile out msi/msix infrastructure
-Date: Mon, 7 Dec 2015 09:50:43 -0500
-Message-ID: <20151207145043.GB9175@mtj.duckdns.org>
-References: <20151206001323.35162.30974.stgit@dwillia2-desk3.jf.intel.com>
+Subject: Re: [v2 0/2] ata/libata-eh.c: introduce ATA_FLAG_NO_LOG_PAGE
+Date: Mon, 7 Dec 2015 10:26:30 -0500
+Message-ID: <20151207152630.GD9175@mtj.duckdns.org>
+References: <cover.1449248754.git.andreas.werner@men.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yk0-f174.google.com ([209.85.160.174]:33706 "EHLO
-	mail-yk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932962AbbLGOup (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Dec 2015 09:50:45 -0500
-Received: by ykdv3 with SMTP id v3so196529006ykd.0
-        for <linux-ide@vger.kernel.org>; Mon, 07 Dec 2015 06:50:44 -0800 (PST)
+Received: from mail-yk0-f180.google.com ([209.85.160.180]:34475 "EHLO
+	mail-yk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932639AbbLGP0c (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 7 Dec 2015 10:26:32 -0500
 Content-Disposition: inline
-In-Reply-To: <20151206001323.35162.30974.stgit@dwillia2-desk3.jf.intel.com>
+In-Reply-To: <cover.1449248754.git.andreas.werner@men.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Paul Gortmaker <paul.gortmaker@windriver.com>, linux-arm-kernel@lists.infradead.org, Arnd Bergmann <arnd@arndb.de>, linux-ide@vger.kernel.org
+To: Andreas Werner <andreas.werner@men.de>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Sat, Dec 05, 2015 at 04:18:44PM -0800, Dan Williams wrote:
-> Quoting Arnd:
->     The AHCI driver is used for some on-chip devices that do not use PCI
->     for probing, and it can be built even when CONFIG_PCI is disabled, but
->     that now results in a build failure:
+On Fri, Dec 04, 2015 at 06:12:24PM +0100, Andreas Werner wrote:
+> This patchset add a new ata port flag ATA_FLAG_NO_LOG_PAGE to be able
+> to blacklist ports/controller which e.g. locks up on a log page read.
 > 
->     ata/libahci.c: In function 'ahci_host_activate_multi_irqs':
->     ata/libahci.c:2475:4: error: invalid use of undefined type 'struct msix_entry'
->     ata/libahci.c:2475:21: error: dereferencing pointer to incomplete type 'struct msix_entry'
+> This flag is added to the sata_fsl driver which is the first affected
+> one.
 > 
-> Add ifdef CONFIG_PCI_MSI infrastructure to compile out the mutli-msi and
-> multi-msix code.
+> The lockup was detected on Freescale P1013/P1022, T4240 using a ATP
+> mSATA.
+> The device failed during initialisation if the SATA device includes the
+> devslp feature.
 > 
-> Reported-by: Arnd Bergmann <arnd@arndb.de>
-> Tested--by: Arnd Bergmann <arnd@arndb.de>
-> [arnd: fix up pci enabled case]
-> Reported-by: Paul Gortmaker <paul.gortmaker@windriver.com>
-> Fixes: d684a90d38e2 ("ahci: per-port msix support")
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> With this patchset, we blacklist the fsl sata controller and return
+> a error on any attempt to read a log page. This allows us to access
+> the mSATA.
 
-Applied to libata/for-4.5 w/ the typo fixed.
+Applied 1-2 to libata/for-4.4-fixes.
 
 Thanks.
 
