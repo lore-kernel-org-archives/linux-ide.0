@@ -1,48 +1,42 @@
-From: "Andy Falanga (afalanga)" <afalanga@micron.com>
-Subject: HBA isn't interpreting commands correctly
-Date: Wed, 9 Dec 2015 20:32:15 +0000
-Message-ID: <56688F83.4070803@micron.com>
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+Subject: [PATCH] drivers/ide: make ide-scan-pci.c driver explicitly non-modular
+Date: Wed, 9 Dec 2015 16:45:51 -0500
+Message-ID: <1449697551-16096-1-git-send-email-paul.gortmaker@windriver.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.micron.com ([137.201.242.129]:9010 "EHLO
-	mailout.micron.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751106AbbLIUcR (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 9 Dec 2015 15:32:17 -0500
-Received: from mail.micron.com (bowex17-a.micron.com [137.201.21.109])
-	by mailout.micron.com (8.14.4/8.14.6) with ESMTP id tB9KWGep010745
-	(version=TLSv1/SSLv3 cipher=AES256-SHA bits=256 verify=FAIL)
-	for <linux-ide@vger.kernel.org>; Wed, 9 Dec 2015 13:32:16 -0700
-Content-Language: en-US
-Content-ID: <14EE44131F28A047849E952221DFFA88@micron.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Paul Gortmaker <paul.gortmaker@windriver.com>, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-SGksDQoNClF1aWNrIHN5bm9wc2lzIG9mIHRoZSBiYWNrZ3JvdW5kLCBJIGhhdmUgbmVlZCB0byBj
-b21tdW5pY2F0ZSB3aXRoIGRyaXZlcyANCndoaWNoIHdvbid0IGdldCB0aGUgc3RhbmRhcmQgaGFu
-ZGxlczogZS5nLiAvZGV2L3NkTi4gIFRoaXMgaXMgbWFpbmx5IGR1ZSANCnRvIHdpcGVkIEZXLCBl
-dGMuICBJIG5lZWQgdG8gYmUgYWJsZSB0byBpc3N1ZSB0aGUgQVRBIERvd25sb2FkIGNvbW1hbmQu
-ICANCkluIG9yZGVyIHRvIGFjY29tcGxpc2ggdGhpcywgSSd2ZSBtb2RpZmllZCB0aGUgc3RhbmRh
-cmQgYWhjaSBkcml2ZXIgdG8gDQphbGxvdyBtZSBhY2Nlc3MgdG8gQUhDSSBwb3J0cyB3aXRoIGFu
-IFVwcGVyIExheWVyIGRyaXZlciBJJ3ZlIHdyaXR0ZW4uICANClRoZSBpZGVhIGlzIHRvIHBhc3Mg
-QVRBIGNvbW1hbmRzIGRpcmVjdGx5IHRvIHRoZSBsb3dlciBsYXllciBkcml2ZXIgDQp3aXRob3V0
-IG1hcmNoaW5nIHRocm91Z2ggdGhlIGtlcm5lbC4gIEkndmUgdGVzdGVkIHRoaXMgd2l0aCBhIFZN
-IHVzaW5nIA0KYW5kIElDSDggQUhDSSBjb250cm9sbGVyIGFuZCBhIHJlYWwgc3lzdGVtIHdpdGgg
-YSBaODcgY2hpcHNldCBhbmQgaW4gDQpib3RoIGNhc2VzIEkgY2FuIGV4ZWN1dGUgdGhlIERvd25s
-b2FkIGNvbW1hbmQgKGFuZCBJZGVudGlmeSBvciB3aGF0ZXZlcikuDQoNCkhvd2V2ZXIsIEkndmUg
-Z290IGEgWGVvbiBtb2JvIChtb2RlbCB4OGR0bC1pIHdpdGggYW4gSW50ZWwgSUNIMTBSKSANCndo
-aWNoLCBmb3Igc29tZSByZWFzb24sIGRvZXNuJ3QgZXhlY3V0ZSB0aGUgY29tbWFuZHMgY29ycmVj
-dGx5LiBUaGlzIGlzIA0KY29uZmlndXJlZCBmb3IgQUhDSSBtb2RlIGFuZCBub3QgUkFJRC4gIEkn
-bSBmb2xsb3dpbmcgdGhlIEFIQ0kgc3BlYywgDQoxLjMuMSwgZm9yIHByb3BhZ2F0aW5nIGNvbW1h
-bmQgaW5mb3JtYXRpb24gaW50byB0aGUgQ29tbWFuZCBUYWJsZSBMaXN0IA0KYW5kIENvbW1hbmQg
-SGVhZGVyLiAgQXMgbWVudGlvbmVkLCB0aGlzIGNvZGUgd29ya3MgYm90aCBpbiBhIFZNIHdpdGgg
-YW5kIA0KSUNIOCBjb250cm9sbGVyIGFuZCBhIFo4NyBNb0JvLiBIb3dldmVyLCBvbiB0aGlzIFhl
-b24gc3lzdGVtIHNvbWV0aGluZyANCmlzbid0IGJlaW5nIGNvbW11bmljYXRlZCB0byB0aGUgSEJB
-IGNvcnJlY3RseS4gIEZvciBleGFtcGxlLCB3aGVuIEkgDQppc3N1ZSBhbiBJZGVudGlmeSB0byBh
-IHdvcmtpbmcgZHJpdmUsIHRoZSBwcm90b2NvbCBhbmFseXplciBzaG93cyB0aGF0IA0KdGhlIEhC
-QSBhbmQgdGhlIGRyaXZlIG1vdmUgMjEyIGJ5dGVzIG9mIGRhdGEuICBXaGF0IHdvdWxkIGFjY291
-bnQgZm9yIA0KdGhpcz8gSW5jaWRlbnRhbGx5LCB1c2luZyBoZHBhcm0gdG8gZXhlY3V0ZSBhbiBJ
-ZGVudGlmeSBvbiBhIHdvcmtpbmcgDQpkcml2ZSB0byB0aGUgc2cgaGFuZGxlLCBkb2VzIHdvcmsu
-DQoNCkFueSBwb2ludGVycyBvciBpZGVhcyBhcmUgd2VsY29tZS4NCg0KQW5keQ==
+The Kconfig for this support is currently:
+
+config IDEPCI_PCIBUS_ORDER
+        bool "Probe IDE PCI devices in the PCI bus order (DEPRECATED)"
+
+...meaning that it currently is not being built as a module by anyone.
+Lets change the initcall to be the equivalent device_initcall, so that
+when reading the driver code, there is no doubt it is builtin-only.
+
+Unlike other similar changes, we leave the module.h header to be
+included since this code interacts with other drivers and needs to
+know what a struct module is.
+
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: linux-ide@vger.kernel.org
+Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
+
+diff --git a/drivers/ide/ide-scan-pci.c b/drivers/ide/ide-scan-pci.c
+index c3da53e7bb2b..86aa88aeb3a6 100644
+--- a/drivers/ide/ide-scan-pci.c
++++ b/drivers/ide/ide-scan-pci.c
+@@ -107,5 +107,4 @@ static int __init ide_scan_pcibus(void)
+ 
+ 	return 0;
+ }
+-
+-module_init(ide_scan_pcibus);
++device_initcall(ide_scan_pcibus);
+-- 
+2.2.1
