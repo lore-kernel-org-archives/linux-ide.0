@@ -1,43 +1,97 @@
-From: "Andy Falanga (afalanga)" <afalanga@micron.com>
-Subject: pointer arithmetic on void *
-Date: Fri, 11 Dec 2015 00:42:09 +0000
-Message-ID: <566A1B99.6040200@micron.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [v6 6/7] phy: phy_brcmstb_sata: add data for phy version
+Date: Tue, 15 Dec 2015 16:16:55 +0530
+Message-ID: <566FEF9F.6040006@ti.com>
+References: <1448506595-4981-1-git-send-email-jaedon.shin@gmail.com>
+ <1448506595-4981-7-git-send-email-jaedon.shin@gmail.com>
+ <5656E75F.9020701@cogentembedded.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout.micron.com ([137.201.242.129]:31595 "EHLO
-	mailout.micron.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750888AbbLKAmM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 10 Dec 2015 19:42:12 -0500
-Received: from mail.micron.com (bowex36-c.micron.com [137.201.85.143])
-	by mailout.micron.com (8.14.4/8.14.6) with ESMTP id tBB0gAoI019870
-	(version=TLSv1/SSLv3 cipher=AES256-SHA bits=256 verify=FAIL)
-	for <linux-ide@vger.kernel.org>; Thu, 10 Dec 2015 17:42:10 -0700
-Content-Language: en-US
-Content-ID: <6A20649C7E9A2E43B9A1C1829D2C729E@micron.com>
+Received: from bear.ext.ti.com ([192.94.94.41]:34907 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964841AbbLOKrM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 15 Dec 2015 05:47:12 -0500
+In-Reply-To: <5656E75F.9020701@cogentembedded.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Jaedon Shin <jaedon.shin@gmail.com>, Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Brian Norris <computersforpeace@gmail.com>, Florian Fainelli <f.fainelli@gmail.com>, linux-ide@vger.kernel.org
+Cc: Ralf Baechle <ralf@linux-mips.org>, Dragan Stancevic <dragan.stancevic@gmail.com>
 
-SSdtIHdvcmtpbmcgb24gdW5kZXJzdGFuZGluZyB0aGUgZmluYWwgcmVzdWx0IG9mIHRoaXMgY29k
-ZSBmcm9tIGFoY2kuYyANCihpdCdzIGxpYmFoY2kuYyBpbiBuZXdlciBrZXJuZWxzKToNCg0Kc3Ry
-dWN0IGF0YV9xdWV1ZWRfY21kIHsNCiAgICAgLi4uDQogICAgIHVuc2lnbmVkIGludCB0YWc7DQog
-ICAgIC4uLg0KfTsNCg0Kc3RydWN0IGFoY2lfcG9ydF9wcml2IHsNCiAgICAgLi4uDQogICAgIHZv
-aWQgKmNtZF90Ymw7DQogICAgIGRtYV9hZGRyX3QgY21kX3RibF9kbWE7DQogICAgIC4uLg0KfTsN
-Cg0Kc3RhdGljIHZvaWQgIGFoY2lfcWNfcHJlcCggc3RydWN0IGF0YV9xdWV1ZWRfY21kICpxYykN
-CnsNCiAgICAgLi4uDQogICAgIGNtZF90YmwgPSBwcC0+Y21kX3RibCArIHFjLT50YWcgKiBBSENJ
-X0NNRF9UQkxfU1o7DQogICAgIC4uLg0KfQ0KDQpxYyBpcyBhIHN0cnVjdCBhdGFfcXVldWVkX2Nt
-ZCBvYmplY3QuICBJJ20gYXNzdW1pbmcgcWMtPnRhZyBpcyB0aGUgUHhDSSANCnNsb3QgbnVtYmVy
-IHdoaWNoIHdhcyBmb3VuZCB0byBiZSBmcmVlIGZvciB0aGlzIGNvbW1hbmQuIFBsZWFzZSBjb3Jy
-ZWN0IA0KbWUgaWYgSSdtIHdyb25nLiAgRnVydGhlcm1vcmUsIEFIQ0lfQ01EX1RCTF9TWiBpcyBk
-ZWZpbmVkIGFzDQoNCmVudW0gew0KICAgICAuLi4NCiAgICAgQUhDSV9NQVhfU0cgICAgICAgID0g
-MTY4LCAvKiBoYXJkd2FyZSBtYXggaXMgNjRLICovDQogICAgIC4uLg0KICAgICBBSENJX0NNRF9U
-QkxfSERSX1NaICAgID0gMHg4MCwNCiAgICAgQUhDSV9DTURfVEJMX1NaICAgICAgICA9IEFIQ0lf
-Q01EX1RCTF9IRFJfU1ogKyAoQUhDSV9NQVhfU0cgKiAxNiksDQogICAgIC4uLg0KfQ0KDQpUaGUg
-Zmlyc3QgcXVlc3Rpb24gaXMsIGdpdmVuIHRoZSBhYm92ZSBkZWZpbml0aW9uIGZvciBBSENJX01B
-WF9TRywgaXMgDQp0aGlzIGEgbGltaXRhdGlvbiBmcm9tIHdpdGhpbiB0aGUgTGludXgga2VybmVs
-PyAgVGhlIGNvbW1lbnQgYWxsdWRlcyB0byANCnRoaXMgYW5kIHRoZSBzcGVjIHNheXMgNjRrIGFy
-ZSBhbGxvd2VkLg0KDQpOZXh0LCBpcyBxYy0+dGFnIHRoZSBQeENJIHNsb3QgKG9wZW4gY29tbWFu
-ZCBzbG90KT8gIFNlY29uZCwgaXMgdGhpcyANCmFyaXRobWV0aWMgc3VwcG9zZWQgdG8gZ2V0IG1l
-IHRvIHRoZSBzdGFydCBvZiBhIG5ldyBjb21tYW5kPw0KDQpBbmR5
+Hi Shin,
+
+On Thursday 26 November 2015 04:35 PM, Sergei Shtylyov wrote:
+> Hello.
+> 
+> On 11/26/2015 5:56 AM, Jaedon Shin wrote:
+> 
+>> Add data for phy version, and the default value of version is using the
+>> BRCM_SATA_PHY_28NM.
+>>
+>> Signed-off-by: Jaedon Shin <jaedon.shin@gmail.com>
+>> Tested-by: Florian Fainelli <f.fainelli@gmail.com>
+>> Acked-by: Brian Norris <computersforpeace@gmail.com>
+>> ---
+>>   drivers/phy/phy-brcmstb-sata.c | 23 ++++++++++++++++++++---
+>>   1 file changed, 20 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/phy/phy-brcmstb-sata.c b/drivers/phy/phy-brcmstb-sata.c
+>> index 0be55dafe9ea..5de394f589c8 100644
+>> --- a/drivers/phy/phy-brcmstb-sata.c
+>> +++ b/drivers/phy/phy-brcmstb-sata.c
+>> @@ -30,7 +30,11 @@
+>>   #define MAX_PORTS                    2
+>>
+>>   /* Register offset between PHYs in PCB space */
+>> -#define SATA_MDIO_REG_SPACE_SIZE            0x1000
+>> +#define SATA_MDIO_REG_28NM_SPACE_SIZE            0x1000
+>> +
+>> +enum brcm_sata_phy_version {
+>> +    BRCM_SATA_PHY_28NM,
+>> +};
+> 
+>    So an uninitialized .data field would mean the same?
+
+Are you planning to fix this?
+
+Thanks
+Kishon
+> 
+> [...]
+>> @@ -126,7 +135,8 @@ static const struct phy_ops phy_ops_28nm = {
+>>   };
+>>
+>>   static const struct of_device_id brcm_sata_phy_of_match[] = {
+>> -    { .compatible    = "brcm,bcm7445-sata-phy" },
+>> +    { .compatible    = "brcm,bcm7445-sata-phy",
+>> +      .data = (void *)BRCM_SATA_PHY_28NM },
+>>       {},
+>>   };
+>>   MODULE_DEVICE_TABLE(of, brcm_sata_phy_of_match);
+>> @@ -135,6 +145,7 @@ static int brcm_sata_phy_probe(struct platform_device *pdev)
+>>   {
+>>       struct device *dev = &pdev->dev;
+>>       struct device_node *dn = dev->of_node, *child;
+>> +    const struct of_device_id *of_id;
+>>       struct brcm_sata_phy *priv;
+>>       struct resource *res;
+>>       struct phy_provider *provider;
+>> @@ -154,6 +165,12 @@ static int brcm_sata_phy_probe(struct platform_device
+>> *pdev)
+>>       if (IS_ERR(priv->phy_base))
+>>           return PTR_ERR(priv->phy_base);
+>>
+>> +    of_id = of_match_node(brcm_sata_phy_of_match, dn);
+>> +    if (of_id)
+>> +        priv->version = (enum brcm_sata_phy_version)of_id->data;
+>> +    else
+>> +        priv->version = BRCM_SATA_PHY_28NM;
+>> +
+>>       for_each_available_child_of_node(dn, child) {
+>>           unsigned int id;
+>>           struct brcm_sata_port *port;
+> 
+> MBR, Sergei
+> 
+> 
