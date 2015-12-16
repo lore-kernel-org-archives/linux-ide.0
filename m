@@ -1,76 +1,73 @@
-From: <Yuantian.Tang@freescale.com>
-Subject: [PATCH] ahci: qoriq: Adjust the default register values on ls1021a
-Date: Wed, 16 Dec 2015 14:00:35 +0800
-Message-ID: <1450245635-8383-1-git-send-email-Yuantian.Tang@freescale.com>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH 2/3] ata: sata_dwc_460ex: add phy support
+Date: Wed, 16 Dec 2015 14:14:00 +0300
+Message-ID: <56714778.4070100@cogentembedded.com>
+References: <1450221935-6034-1-git-send-email-mans@mansr.com>
+ <1450221935-6034-2-git-send-email-mans@mansr.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bn1bon0112.outbound.protection.outlook.com ([157.56.111.112]:20132
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754623AbbLPGWP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 16 Dec 2015 01:22:15 -0500
+Received: from mail-lb0-f172.google.com ([209.85.217.172]:35011 "EHLO
+	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754577AbbLPLOE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 16 Dec 2015 06:14:04 -0500
+Received: by mail-lb0-f172.google.com with SMTP id u9so23223293lbp.2
+        for <linux-ide@vger.kernel.org>; Wed, 16 Dec 2015 03:14:03 -0800 (PST)
+In-Reply-To: <1450221935-6034-2-git-send-email-mans@mansr.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Tang Yuantian <Yuantian.Tang@freescale.com>
+To: Mans Rullgard <mans@mansr.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-From: Tang Yuantian <Yuantian.Tang@freescale.com>
+Hello.
 
-Updated the registers' values to enhance SATA performance and
-reliability on ls1021a soc.
+On 12/16/2015 2:25 AM, Mans Rullgard wrote:
 
-Signed-off-by: Tang Yuantian <Yuantian.Tang@freescale.com>
----
- drivers/ata/ahci_qoriq.c | 24 ++++++++++++++----------
- 1 file changed, 14 insertions(+), 10 deletions(-)
+> This adds support for powering on an optional PHY when activating the
+> device.
+>
+> Signed-off-by: Mans Rullgard <mans@mansr.com>
+[...]
+> diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+> index 9985749..d07aae1 100644
+> --- a/drivers/ata/sata_dwc_460ex.c
+> +++ b/drivers/ata/sata_dwc_460ex.c
+[...]
+> @@ -1318,6 +1320,21 @@ static int sata_dwc_probe(struct platform_device *ofdev)
+>   	}
+>   #endif
+>
+> +	hsdev->phy = devm_phy_optional_get(hsdev->dev, "sata-phy");
+> +	if (IS_ERR(hsdev->phy)) {
+> +		err = PTR_ERR(hsdev->phy);
+> +		hsdev->phy = NULL;
+> +		goto error_out;
+> +	}
+> +
+> +	err = phy_init(hsdev->phy);
+> +	if (err)
+> +		goto error_out;
 
-diff --git a/drivers/ata/ahci_qoriq.c b/drivers/ata/ahci_qoriq.c
-index 256d911..7bdee9b 100644
---- a/drivers/ata/ahci_qoriq.c
-+++ b/drivers/ata/ahci_qoriq.c
-@@ -34,16 +34,20 @@
- 
- /* port register default value */
- #define AHCI_PORT_PHY_1_CFG	0xa003fffe
--#define AHCI_PORT_PHY_2_CFG	0x28183411
--#define AHCI_PORT_PHY_3_CFG	0x0e081004
--#define AHCI_PORT_PHY_4_CFG	0x00480811
--#define AHCI_PORT_PHY_5_CFG	0x192c96a4
- #define AHCI_PORT_TRANS_CFG	0x08000029
--#define LS1043A_PORT_PHY2	0x28184d1f
--#define LS1043A_PORT_PHY3	0x0e081509
-+
-+/* for ls1021a */
-+#define LS1021A_PORT_PHY2	0x28183414
-+#define LS1021A_PORT_PHY3	0x0e080e06
-+#define LS1021A_PORT_PHY4	0x064a080b
-+#define LS1021A_PORT_PHY5	0x2aa86470
- 
- #define SATA_ECC_DISABLE	0x00020000
- 
-+/* for ls1043a */
-+#define LS1043A_PORT_PHY2	0x28184d1f
-+#define LS1043A_PORT_PHY3	0x0e081509
-+
- enum ahci_qoriq_type {
- 	AHCI_LS1021A,
- 	AHCI_LS1043A,
-@@ -153,10 +157,10 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
- 	case AHCI_LS1021A:
- 		writel(SATA_ECC_DISABLE, qpriv->ecc_addr);
- 		writel(AHCI_PORT_PHY_1_CFG, reg_base + PORT_PHY1);
--		writel(AHCI_PORT_PHY_2_CFG, reg_base + PORT_PHY2);
--		writel(AHCI_PORT_PHY_3_CFG, reg_base + PORT_PHY3);
--		writel(AHCI_PORT_PHY_4_CFG, reg_base + PORT_PHY4);
--		writel(AHCI_PORT_PHY_5_CFG, reg_base + PORT_PHY5);
-+		writel(LS1021A_PORT_PHY2, reg_base + PORT_PHY2);
-+		writel(LS1021A_PORT_PHY3, reg_base + PORT_PHY3);
-+		writel(LS1021A_PORT_PHY4, reg_base + PORT_PHY4);
-+		writel(LS1021A_PORT_PHY5, reg_base + PORT_PHY5);
- 		writel(AHCI_PORT_TRANS_CFG, reg_base + PORT_TRANS);
- 		break;
- 
--- 
-2.1.0.27.g96db324
+    If phy_init() fails, do we really need to call phy_exit()?
+
+> +
+> +	err = phy_power_on(hsdev->phy);
+> +	if (err)
+> +		goto error_out;
+> +
+>   	/*
+>   	 * Now, register with libATA core, this will also initiate the
+>   	 * device discovery process, invoking our port_start() handler &
+> @@ -1331,6 +1348,7 @@ static int sata_dwc_probe(struct platform_device *ofdev)
+>   	return 0;
+>
+>   error_out:
+> +	phy_exit(hsdev->phy);
+>   	iounmap(base);
+>   	return err;
+>   }
+[...]
+
+MBR, Sergei
 
