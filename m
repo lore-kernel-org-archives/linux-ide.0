@@ -1,22 +1,22 @@
 From: =?iso-8859-1?Q?M=E5ns_Rullg=E5rd?= <mans@mansr.com>
-Subject: Re: [PATCH 3/3] ata: sata_dwc_460ex: get rid of global data
-Date: Thu, 17 Dec 2015 15:57:57 +0000
-Message-ID: <yw1xsi31cbju.fsf@unicorn.mansr.com>
+Subject: Re: [PATCH 1/3] ata: sata_dwc_460ex: use "dmas" DT property to find dma channel
+Date: Thu, 17 Dec 2015 16:04:56 +0000
+Message-ID: <yw1xk2odcb87.fsf@unicorn.mansr.com>
 References: <1450221935-6034-1-git-send-email-mans@mansr.com>
-	<1450221935-6034-3-git-send-email-mans@mansr.com>
-	<1450364765.30729.139.camel@linux.intel.com>
-	<yw1x1taldrwu.fsf@unicorn.mansr.com>
-	<1450366673.30729.144.camel@linux.intel.com>
+	<yw1x1tanffqg.fsf@unicorn.mansr.com>
+	<1450364395.30729.136.camel@linux.intel.com>
+	<yw1x60zxds5k.fsf@unicorn.mansr.com>
+	<1450367702.30729.146.camel@linux.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from unicorn.mansr.com ([81.2.72.234]:45997 "EHLO unicorn.mansr.com"
+Received: from unicorn.mansr.com ([81.2.72.234]:46015 "EHLO unicorn.mansr.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934785AbbLQP6A convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Dec 2015 10:58:00 -0500
-In-Reply-To: <1450366673.30729.144.camel@linux.intel.com> (Andy Shevchenko's
-	message of "Thu, 17 Dec 2015 17:37:53 +0200")
+	id S1755010AbbLQQE5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 17 Dec 2015 11:04:57 -0500
+In-Reply-To: <1450367702.30729.146.camel@linux.intel.com> (Andy Shevchenko's
+	message of "Thu, 17 Dec 2015 17:55:02 +0200")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
@@ -24,38 +24,88 @@ Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kern
 
 Andy Shevchenko <andriy.shevchenko@linux.intel.com> writes:
 
-> On Thu, 2015-12-17 at 15:19 +0000, M=E5ns Rullg=E5rd wrote:
+> On Thu, 2015-12-17 at 15:13 +0000, M=E5ns Rullg=E5rd wrote:
 >> Andy Shevchenko <andriy.shevchenko@linux.intel.com> writes:
 >>=20
->> > On Tue, 2015-12-15 at 23:25 +0000, Mans Rullgard wrote:
->> > > This moves all global data into the driver private struct, thus
->> > > permitting multiple devices of this type to be used.
+>> > On Tue, 2015-12-15 at 23:34 +0000, M=E5ns Rullg=E5rd wrote:
+>> > > Mans Rullgard <mans@mansr.com> writes:
 >> > >=20
+>> > > > Currently this driver only works with a DesignWare DMA engine
+>> > > > which it registers manually using the second "reg" address
+>> > > > range and interrupt number from the DT node.
+>> > > >=20
+>> > > > This patch makes the driver instead use the "dmas" property if
+>> > > > present, otherwise optionally falling back on the old way so
+>> > > > existing device trees can continue to work.
+>> > > >=20
+>> > > > With this change, there is no longer any reason to depend on
+>> > > > the 460EX machine type so drop that from Kconfig.
+>> > > >=20
+>> > > > Signed-off-by: Mans Rullgard <mans@mansr.com>
+>> > > > ---
+>> > > > =A0drivers/ata/Kconfig=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0|=A0=A010 =
+++-
+>> > > > =A0drivers/ata/sata_dwc_460ex.c | 192
+>> > > > +++++++++++++++++++++++++++--
+>> > > > --------------
+>> > > > =A02 files changed, 131 insertions(+), 71 deletions(-)
+>> > >=20
+>> > > The corresponding patch for the canyonlands devicetree looks
+>> > > something
+>> > > like this.=A0=A0I don't have any such hardware or even a manual,=
+ so I
+>> > > don't
+>> > > know what values to use for the various required DT properties o=
+f
+>> > > the
+>> > > DMA controller node, nor can I test it.=A0=A0The SATA driver wor=
+ks
+>> > > with a
+>> > > different DMA controller on a Sigma Designs chip.
+>> > >=20
+>> > > diff --git a/arch/powerpc/boot/dts/canyonlands.dts
+>> > > b/arch/powerpc/boot/dts/canyonlands.dts
+>> > > index 3dc75de..959f36e 100644
+>> > > --- a/arch/powerpc/boot/dts/canyonlands.dts
+>> > > +++ b/arch/powerpc/boot/dts/canyonlands.dts
+>> > > @@ -190,12 +190,22 @@
+>> > > =A0					=A0/* DMA */ 0x2 &UIC0 0xc
+>> > > 0x4>;
+>> > > =A0		};
+>> > > =A0
+>> > > +		DMA0: dma@bffd0800 {
+>> > > +			compatible =3D "snps,dma-spear1340";
+>> > > +			reg =3D <4 0xbffd0800 0x400>;
+>> > > +			interrupt-parent =3D <&UIC3>;
+>> > > +			interrupts =3D <0x5 0x4>;
+>> > > +			#dma-cells =3D <3>;
+>> > > +			/* required properties here */
 >> >=20
->> > Nice!
+>> > You have to move the master assignments and other custom dw_dmac
+>> > properties. Maybe at some point I will fix that in dw/platform.c.
 >> >=20
->> > Btw, last time Linus complained about new warnings. Most of them I
->> > have
->> > fixed when moved to external DMA driver. Leftovers IIRC are relate=
-d
->> > to
->> > address space. Are you going to fix them? Otherwise it might be a
->> > headache for him again with strong wording to our address I
->> > suppose.
+>> > > +		};
 >>=20
->> There are some issues with __iomem annotations.=A0=A0Is that the war=
-nings
->> you refer to?=A0=A0I'm not getting any regular compiler warnings.
->>=20
+>> The current sata_dwc driver calls dw_dma_probe() with null pdata
+>> which causes the dw_dma driver to auto-detect most parameters.=A0=A0=
+It
+>> looks like simply omitting those properties here results in the same
+>> thing, although in this case dw_dma_parse_dt() leaves a
+>> devm-allocated pdata struct adrift.=A0=A0Deferring the allocation of=
+ that
+>> and changing the DT binding doc to make these properties optional fo=
+r
+>> auto-detect-capable hardware should just work.
 >
-> I guess I got them because I'am checking sparse warnings as well.
+> Yeah, I would like to allow autoconfiguration in case of DT as well a=
+nd
+> translate it to use unified device property API.
 >
-> There is the original Linus' complain.
-> http://permalink.gmane.org/gmane.linux.ide/59391
+>> Something like this:
+>
+> If it works for you, please, submit as a patch. Thanks.
 
-He's right, those casts are ugly and possibly wrong.  I was thinking of
-cleaning it up, but first I wanted to get it working at all with my
-hardware.
+I can't test it since I have no such hardware.
 
 --=20
 M=E5ns Rullg=E5rd
