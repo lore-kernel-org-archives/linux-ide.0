@@ -1,46 +1,134 @@
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: Re: [PATCH 1/3] ata: sata_dwc_460ex: use "dmas" DT property to find
- dma channel
-Date: Sat, 19 Dec 2015 19:11:55 +0200
-Message-ID: <CAHp75VfDeXgAnygJNzenmLnyonpr-bUpLV6L8R143pj7hYN9=w@mail.gmail.com>
+From: =?iso-8859-1?Q?M=E5ns_Rullg=E5rd?= <mans@mansr.com>
+Subject: Re: [PATCH 1/3] ata: sata_dwc_460ex: use "dmas" DT property to find dma channel
+Date: Sat, 19 Dec 2015 17:19:53 +0000
+Message-ID: <yw1xsi2y8ifa.fsf@unicorn.mansr.com>
 References: <1450221935-6034-1-git-send-email-mans@mansr.com>
-	<567302E8.5050303@candw.ms>
-	<yw1x7fkcdi2a.fsf@unicorn.mansr.com>
-	<5673061A.4070700@candw.ms>
-	<yw1x37v0df86.fsf@unicorn.mansr.com>
-	<56732C04.9040100@candw.ms>
-	<yw1xvb7wbowu.fsf@unicorn.mansr.com>
-	<5673F277.2050607@candw.ms>
-	<yw1xegekarp9.fsf@unicorn.mansr.com>
+	<5673061A.4070700@candw.ms> <yw1x37v0df86.fsf@unicorn.mansr.com>
+	<56732C04.9040100@candw.ms> <yw1xvb7wbowu.fsf@unicorn.mansr.com>
+	<5673F277.2050607@candw.ms> <yw1xegekarp9.fsf@unicorn.mansr.com>
 	<1450441395.30729.203.camel@linux.intel.com>
-	<yw1x37uzc45t.fsf@unicorn.mansr.com>
-	<5674271B.9090308@candw.ms>
-	<yw1xtwnfad4y.fsf@unicorn.mansr.com>
-	<56745BA4.1090607@candw.ms>
-	<yw1xpoy39yl1.fsf@unicorn.mansr.com>
-	<56748D85.4060108@candw.ms>
+	<yw1x37uzc45t.fsf@unicorn.mansr.com> <5674271B.9090308@candw.ms>
+	<yw1xtwnfad4y.fsf@unicorn.mansr.com> <56745BA4.1090607@candw.ms>
+	<yw1xpoy39yl1.fsf@unicorn.mansr.com> <56748D85.4060108@candw.ms>
 	<yw1xlh8r9wkm.fsf@unicorn.mansr.com>
 	<CAHp75VfnTp=ob9reLuUSu-AaBwDhfJWKo1kjgNWnHuC5HgL=bw@mail.gmail.com>
-	<567541EE.9010308@candw.ms>
-	<yw1x60zua1ld.fsf@unicorn.mansr.com>
+	<567541EE.9010308@candw.ms> <yw1x60zua1ld.fsf@unicorn.mansr.com>
 	<CAHp75Vdhpoqp2SeVz-MCbTVdG7V38hwW3wVCN0YPaoazyZNHOw@mail.gmail.com>
-	<yw1xwpsa8j2x.fsf@unicorn.mansr.com>
-	<56758F33.20804@candw.ms>
+	<yw1xwpsa8j2x.fsf@unicorn.mansr.com> <56758F33.20804@candw.ms>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <56758F33.20804@candw.ms>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Julian Margetson <runaway@candw.ms>
-Cc: =?UTF-8?B?TcOlbnMgUnVsbGfDpXJk?= <mans@mansr.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: multipart/mixed; boundary="=-=-="
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from unicorn.mansr.com ([81.2.72.234]:50551 "EHLO unicorn.mansr.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932651AbbLSRT4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 19 Dec 2015 12:19:56 -0500
+In-Reply-To: <56758F33.20804@candw.ms> (Julian Margetson's message of "Sat, 19
+	Dec 2015 13:09:07 -0400")
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Julian Margetson <runaway@candw.ms>
+Cc: Andy Shevchenko <andy.shevchenko@gmail.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Sat, Dec 19, 2015 at 7:09 PM, Julian Margetson <runaway@candw.ms> wrote:
+--=-=-=
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+Julian Margetson <runaway@candw.ms> writes:
+
+> On 12/19/2015 1:05 PM, M=E5ns Rullg=E5rd wrote:
+>> Andy Shevchenko <andy.shevchenko@gmail.com> writes:
+>>
+>>> On Sat, Dec 19, 2015 at 5:40 PM, M=E5ns Rullg=E5rd <mans@mansr.com> wro=
+te:
+>>>
+>>>> OK, I've found something.  The dma setup errors are benign, caused by
+>>>> the driver calling dmaengine_prep_slave_sg() even for non-dma
+>>>> operations.
+>>> I suppose the following is a quick fix to avoid preparing descriptor
+>>> for non-DMA operations (not tested anyhow)
+>>>
+>>> a/drivers/ata/sata_dwc_460ex.c
+>>> +++ b/drivers/ata/sata_dwc_460ex.c
+>>> @@ -1041,6 +1041,9 @@ static void sata_dwc_qc_prep_by_tag(struct
+>>> ata_queued_cmd *qc, u8 tag)
+>>>                  __func__, ap->port_no, get_dma_dir_descript(qc->dma_di=
+r),
+>>>                   qc->n_elem);
+>>>
+>>> +       if (!is_slave_direction(qc->dma_dir))
+>>> +               return;
+>>> +
+>>>          desc =3D dma_dwc_xfer_setup(qc);
+>>>          if (!desc) {
+>>>                  dev_err(ap->dev, "%s: dma_dwc_xfer_setup returns NULL\=
+n",
+>> I already have a better patch sitting here.
+>>
+>>>> The real error is the lock recursion that's reported
+>>>> later.  I wasn't seeing it since I was running a UP non-preempt kernel.
+>>>> With lock debugging enabled, I get the same error.  This patch should
+>>>> fix it.
+>>>> -       spin_lock_irqsave(&ap->host->lock, flags);
+>>>>          hsdevp->cmd_issued[tag] =3D cmd_issued;
+>>>> -       spin_unlock_irqrestore(&ap->host->lock, flags);
+>>>> +
+>>> This will create a second empty line, though I don't care it is so mino=
+r.
+>> The patch leaves one blank line before the following block comment.  I
+>> think it looks better that way.
+>>
+>
 > Still can't get the patch applied .
 
-It might be faster if you just edit (remove 3 lines) directly in the file.
+Sorry, didn't realise it conflicted with an intervening patch I had in
+my tree.  Try this one.
 
+--=20
+M=E5ns Rullg=E5rd
 
+--=-=-=
+Content-Type: text/x-diff
+Content-Disposition: attachment;
+ filename=0001-ata-sata_dwc_460ex-remove-incorrect-locking.patch
+
+>From 97c1cdb8a6b933bad2c35b9461c2c15935f2a514 Mon Sep 17 00:00:00 2001
+From: Mans Rullgard <mans@mansr.com>
+Date: Sat, 19 Dec 2015 15:26:23 +0000
+Subject: [PATCH] ata: sata_dwc_460ex: remove incorrect locking
+
+This lock is already taken in ata_scsi_queuecmd() a few levels up the
+call stack so attempting to take it here is an error.  Moreover, it is
+pointless in the first place since it only protects a single, atomic
+assignment.
+
+Signed-off-by: Mans Rullgard <mans@mansr.com>
+---
+ drivers/ata/sata_dwc_460ex.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+index 9985749..19d1c5e 100644
+--- a/drivers/ata/sata_dwc_460ex.c
++++ b/drivers/ata/sata_dwc_460ex.c
+@@ -995,15 +995,13 @@ static void sata_dwc_exec_command_by_tag(struct ata_port *ap,
+ 					 struct ata_taskfile *tf,
+ 					 u8 tag, u32 cmd_issued)
+ {
+-	unsigned long flags;
+ 	struct sata_dwc_device_port *hsdevp = HSDEVP_FROM_AP(ap);
+ 
+ 	dev_dbg(ap->dev, "%s cmd(0x%02x): %s tag=%d\n", __func__, tf->command,
+ 		ata_get_cmd_descript(tf->command), tag);
+ 
+-	spin_lock_irqsave(&ap->host->lock, flags);
+ 	hsdevp->cmd_issued[tag] = cmd_issued;
+-	spin_unlock_irqrestore(&ap->host->lock, flags);
++
+ 	/*
+ 	 * Clear SError before executing a new command.
+ 	 * sata_dwc_scr_write and read can not be used here. Clearing the PM
 -- 
-With Best Regards,
-Andy Shevchenko
+2.6.3
+
+
+--=-=-=--
