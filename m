@@ -1,53 +1,150 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: IO errors after "block: remove bio_get_nr_vecs()"
-Date: Mon, 21 Dec 2015 16:08:11 -0500
-Message-ID: <20151221210811.GO4026@mtj.duckdns.org>
-References: <CA+55aFwLyGifsQFdYZcWHeaHptxMqO_G25fZjer4R_yk4NtCpA@mail.gmail.com>
- <20151221065528.GA3873@htj.duckdns.org>
- <e53cb2f9d5882b0fbe82c589259bf043@lycos.com>
- <20151221193550.GM4026@mtj.duckdns.org>
- <20151221200721.GN4026@mtj.duckdns.org>
+From: Julian Margetson <runaway@candw.ms>
+Subject: Re: [PATCH] ata: sata_dwc_460ex: remove incorrect locking
+Date: Mon, 21 Dec 2015 17:42:03 -0400
+Message-ID: <5678722B.8050600@candw.ms>
+References: <1450721870-23266-1-git-send-email-mans@mansr.com>
+ <1450730477.30729.274.camel@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20151221200721.GN4026@mtj.duckdns.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Artem S. Tashkinov" <t.artem@lycos.com>
-Cc: "Artem S. Tashkinov" <t.artem@mailcity.com>, Kent Overstreet <kent.overstreet@gmail.com>, Christoph Hellwig <hch@lst.de>, Ming Lin <ming.l@ssi.samsung.com>, Jens Axboe <axboe@fb.com>, Linus Torvalds <torvalds@linux-foundation.org>, Steven Whitehouse <swhiteho@redhat.com>, IDE-ML <linux-ide@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Ming Lei <tom.leiming@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp687.redcondor.net ([208.80.206.87]:58376 "EHLO
+	smtp687.redcondor.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751434AbbLUVm0 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Dec 2015 16:42:26 -0500
+In-Reply-To: <1450730477.30729.274.camel@linux.intel.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Mans Rullgard <mans@mansr.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello, again.
+On 12/21/2015 4:41 PM, Andy Shevchenko wrote:
+> On Mon, 2015-12-21 at 18:17 +0000, Mans Rullgard wrote:
+>> This lock is already taken in ata_scsi_queuecmd() a few levels up the
+>> call stack so attempting to take it here is an error.  Moreover, it
+>> is
+>> pointless in the first place since it only protects a single, atomic
+>> assignment.
+>>
+>> Enabling lock debugging gives the following output:
+>>
+> +Julian.
+>
+> I think Julian may give his Tested-by: tag.
+>
+>> =============================================
+>> [ INFO: possible recursive locking detected ]
+>> 4.4.0-rc5+ #189 Not tainted
+>> ---------------------------------------------
+>> kworker/u2:3/37 is trying to acquire lock:
+>>   (&(&host->lock)->rlock){-.-...}, at: [<90283294>]
+>> sata_dwc_exec_command_by_tag.constprop.14+0x44/0x8c
+>>
+>> but task is already holding lock:
+>>   (&(&host->lock)->rlock){-.-...}, at: [<902761ac>]
+>> ata_scsi_queuecmd+0x2c/0x330
+>>
+>> other info that might help us debug this:
+>>   Possible unsafe locking scenario:
+>>
+>>         CPU0
+>>         ----
+>>    lock(&(&host->lock)->rlock);
+>>    lock(&(&host->lock)->rlock);
+>>
+>>   *** DEADLOCK ***
+>>   May be due to missing lock nesting notation
+>>
+>> 4 locks held by kworker/u2:3/37:
+>>   #0:  ("events_unbound"){.+.+.+}, at: [<9003a0a4>]
+>> process_one_work+0x12c/0x430
+>>   #1:  ((&entry->work)){+.+.+.}, at: [<9003a0a4>]
+>> process_one_work+0x12c/0x430
+>>   #2:  (&bdev->bd_mutex){+.+.+.}, at: [<9011fd54>]
+>> __blkdev_get+0x50/0x380
+>>   #3:  (&(&host->lock)->rlock){-.-...}, at: [<902761ac>]
+>> ata_scsi_queuecmd+0x2c/0x330
+>>
+>> stack backtrace:
+>> CPU: 0 PID: 37 Comm: kworker/u2:3 Not tainted 4.4.0-rc5+ #189
+>> Workqueue: events_unbound async_run_entry_fn
+>> Stack : 90b38e30 00000021 00000003 9b2a6040 00000000 9005f3f0
+>> 904fc8dc 00000025
+>>          906b96e4 00000000 90528648 9b3336c4 904fc8dc 9009bf18
+>> 00000002 00000004
+>>          00000000 00000000 9b3336c4 9b3336e4 904fc8dc 9003d074
+>> 00000000 90500000
+>>          9005e738 00000000 00000000 00000000 00000000 00000000
+>> 00000000 00000000
+>>          6e657665 755f7374 756f626e 0000646e 00000000 00000000
+>> 9b00ca00 9b025000
+>>            ...
+>> Call Trace:
+>> [<90009d6c>] show_stack+0x88/0xa4
+>> [<90057744>] __lock_acquire+0x1ce8/0x2154
+>> [<900583e4>] lock_acquire+0x64/0x8c
+>> [<9045ff10>] _raw_spin_lock_irqsave+0x54/0x78
+>> [<90283294>] sata_dwc_exec_command_by_tag.constprop.14+0x44/0x8c
+>> [<90283484>] sata_dwc_qc_issue+0x1a8/0x24c
+>> [<9026b39c>] ata_qc_issue+0x1f0/0x410
+>> [<90273c6c>] ata_scsi_translate+0xb4/0x200
+>> [<90276234>] ata_scsi_queuecmd+0xb4/0x330
+>> [<9025800c>] scsi_dispatch_cmd+0xd0/0x128
+>> [<90259934>] scsi_request_fn+0x58c/0x638
+>> [<901a3e50>] __blk_run_queue+0x40/0x5c
+>> [<901a83d4>] blk_queue_bio+0x27c/0x28c
+>> [<901a5914>] generic_make_request+0xf0/0x188
+>> [<901a5a54>] submit_bio+0xa8/0x194
+>> [<9011adcc>] submit_bh_wbc.isra.23+0x15c/0x17c
+>> [<9011c908>] block_read_full_page+0x3e4/0x428
+>> [<9009e2e0>] do_read_cache_page+0xac/0x210
+>> [<9009fd90>] read_cache_page+0x18/0x24
+>> [<901bbd18>] read_dev_sector+0x38/0xb0
+>> [<901bd174>] msdos_partition+0xb4/0x5c0
+>> [<901bcb8c>] check_partition+0x140/0x274
+>> [<901bba60>] rescan_partitions+0xa0/0x2b0
+>> [<9011ff68>] __blkdev_get+0x264/0x380
+>> [<901201ac>] blkdev_get+0x128/0x36c
+>> [<901b9378>] add_disk+0x3c0/0x4bc
+>> [<90268268>] sd_probe_async+0x100/0x224
+>> [<90043a44>] async_run_entry_fn+0x50/0x124
+>> [<9003a11c>] process_one_work+0x1a4/0x430
+>> [<9003a4f4>] worker_thread+0x14c/0x4fc
+>> [<900408f4>] kthread+0xd0/0xe8
+>> [<90004338>] ret_from_kernel_thread+0x14/0x1c
+>>
+>> Fixes: 62936009f35a ("[libata] Add 460EX on-chip SATA driver,
+>> sata_dwc_460ex")
+>> Signed-off-by: Mans Rullgard <mans@mansr.com>
+>> ---
+>>   drivers/ata/sata_dwc_460ex.c | 4 +---
+>>   1 file changed, 1 insertion(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/ata/sata_dwc_460ex.c
+>> b/drivers/ata/sata_dwc_460ex.c
+>> index 902034991517..7a7faca0ddcd 100644
+>> --- a/drivers/ata/sata_dwc_460ex.c
+>> +++ b/drivers/ata/sata_dwc_460ex.c
+>> @@ -924,15 +924,13 @@ static void sata_dwc_exec_command_by_tag(struct
+>> ata_port *ap,
+>>   					 struct ata_taskfile *tf,
+>>   					 u8 tag, u32 cmd_issued)
+>>   {
+>> -	unsigned long flags;
+>>   	struct sata_dwc_device_port *hsdevp = HSDEVP_FROM_AP(ap);
+>>   
+>>   	dev_dbg(ap->dev, "%s cmd(0x%02x): %s tag=%d\n", __func__,
+>> tf->command,
+>>   		ata_get_cmd_descript(tf->command), tag);
+>>   
+>> -	spin_lock_irqsave(&ap->host->lock, flags);
+>>   	hsdevp->cmd_issued[tag] = cmd_issued;
+>> -	spin_unlock_irqrestore(&ap->host->lock, flags);
+>> +
+>>   	/*
+>>   	 * Clear SError before executing a new command.
+>>   	 * sata_dwc_scr_write and read can not be used here.
+>> Clearing the PM
 
-On Mon, Dec 21, 2015 at 03:07:21PM -0500, Tejun Heo wrote:
-> Hello, Artem.
-> 
-> Can you please apply the following patch on top and see whether
-> anything changes?  If it does make the issue go away, can you please
-> revert the ".can_queue" part and test again?
+Tested-by: Julian Margetson <runaway@candw.ms>
 
-If the patch doesn't change anything, can you please try the
-followings and see which one makes difference?
 
-1. Exclude memory above 4G line with boot param "max_addr=4G".
-2. Disable highmem with "highmem=0".
-3. Try booting 64bit kernel.
-
-At the moment, the only thing I can think of which can explain the PAE
-+ bio_get_nr_vecs() situation is that the bio split code which is
-activated by the bio_get_nr_vecs() somehow messes up 64bit or high
-addresses on 32bit kernels.  I scanned for the obvious but at bio
-layer, memory is represented by struct page, so nothing obvious seems
-broken.
-
-Note that for now I'm ignoring the debug dumps from the ahci debug
-patch which indicates that the passed in addresses are all fine.  It
-is possible that the controller gets confused with certain receiving
-addresses and reports failure on later commands or maybe there is a
-different sequence of events which can encompass both that we don't
-know of yet.
-
-Thanks.
-
--- 
-tejun
