@@ -1,63 +1,50 @@
-From: "Artem S. Tashkinov" <t.artem@lycos.com>
-Subject: Re: IO errors after "block: remove =?UTF-8?Q?bio=5Fget=5Fnr=5Fvec?=
- =?UTF-8?Q?s=28=29=22?=
-Date: Mon, 21 Dec 2015 08:36:50 +0500
-Message-ID: <4d744f3cc62211dc2fcbfcf88566e3e0@lycos.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: IO errors after "block: remove bio_get_nr_vecs()"
+Date: Sun, 20 Dec 2015 23:26:13 -0500
+Message-ID: <20151221042613.GA27493@htj.duckdns.org>
 References: <CA+55aFwLyGifsQFdYZcWHeaHptxMqO_G25fZjer4R_yk4NtCpA@mail.gmail.com>
- <CACVXFVOZ+8AJwn=qyPOjzpAdfTu=AAa_oUGhqnWvU2WTANCzHg@mail.gmail.com>
- <20aa515947cdc15799f520f904ad99a2@lycos.com>
- <20151221023237.GB20661@kmo-pixel>
- <CACVXFVNw69HHR0e_T+ai-R_qf41cWNZn6_73-Dc5aSRLPuWN2g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CACVXFVNw69HHR0e_T+ai-R_qf41cWNZn6_73-Dc5aSRLPuWN2g@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Ming Lei <tom.leiming@gmail.com>
-Cc: Kent Overstreet <kent.overstreet@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Ming Lin <ming.l@ssi.samsung.com>, Jens Axboe <axboe@fb.com>, "Artem S. Tashkinov" <t.artem@mailcity.com>, Steven Whitehouse <swhiteho@redhat.com>, Tejun Heo <tj@kernel.org>, IDE-ML <linux-ide@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qg0-f48.google.com ([209.85.192.48]:34049 "EHLO
+	mail-qg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750738AbbLUE0P (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 20 Dec 2015 23:26:15 -0500
+Content-Disposition: inline
+In-Reply-To: <CA+55aFwLyGifsQFdYZcWHeaHptxMqO_G25fZjer4R_yk4NtCpA@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Kent Overstreet <kent.overstreet@gmail.com>, Christoph Hellwig <hch@lst.de>, Ming Lin <ming.l@ssi.samsung.com>, Jens Axboe <axboe@fb.com>, "Artem S. Tashkinov" <t.artem@mailcity.com>, Steven Whitehouse <swhiteho@redhat.com>, IDE-ML <linux-ide@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On 2015-12-21 08:21, Ming Lei wrote:
-> On Mon, Dec 21, 2015 at 10:25 AM, Artem S. Tashkinov wrote:
->> # cat
->> /sys/block/sda/queue/{max_hw_sectors_kb,max_sectors_kb,max_segments,max_segment_size}
->> 32767
->> 32767
->> 168
->> 65536
-> 
-> Looks it is fine, then maybe it is related with 
-> BIOVEC_PHYS_MERGEABLE(),
-> BIOVEC_SEG_BOUNDARY() or sort of thing, because dma_addr_t and
-> phys_addr_t turn to 64-bit with PAE, but 'unsigned long' and 'void *'
-> is still 32bit.
-> 
-> It was confirmed that there isn't the issue if PAE is disabled.
-> 
-> Dumping both sata/ahci hw sg table and bio's bvec might be helpful.
+Hello, Linus.
 
-Um, sorry, what exact variables/files do you want to see? I'm not an 
-expert in /sys.
+On Sun, Dec 20, 2015 at 09:51:14AM -0800, Linus Torvalds wrote:
+...
+> (Also Tejun - maybe you can see what's up - maybe that error message
+> tells you something)
 
+Hmmm... all it says is that something went wrong on the PCI side.
+
+> I'm not sure what's up with his machine, the disk doesn't seem to be
+> anyuthing particularly unusual, it looks like a 1TB Seagate Barracuda:
 > 
-> On Mon, Dec 21, 2015 at 10:32 AM, Kent Overstreet wrote:
->> 
->> oy vey. WTF's been happening in blk-merge.c?
->> 
->> Theyy're not the same bug. The bug in your thread was introduced by 
->> Jens in
->> 5014c311ba "block: fix bogus compiler warnings in blk-merge.c", where 
->> he screwed
->> up the bvprv handling - but that patch comes after the patch Artem 
->> bisected to.
->> 
->> blk_bio_segment_split() looks correct in b54ffb73ca.
+>   ata1.00: ATA-8: ST1000DM003-1CH162, CC44, max UDMA/133
 > 
-> Yes, that is why reverting 578270bfb(block: fix segment split) can make 
-> the
-> issue disappear, because 5014c311ba "block: fix bogus compiler
-> warnings in blk-merge.c" basically disables sg-merge and prevents the
-> issue from being
-> triggered.
+> which doesn't strike me as odd.
+> 
+> Looking at the dmesg, it also looks like it's a pretty normal
+> Sandybridge setup with Intel chipset. Artem, can you confirm? The PCI
+> ID for the AHCI chip seems to be (INTEL, 0x1c02).
+> 
+> Any ideas? Anybody?
+
+I wonder whether ahci is screwing up command / sg table setup in a way
+that e.g. if there are too many segments the sg table overflows into
+the neighboring one which is now being exposed by upper layer being
+fixed to send down larger commands.  Looking into it.
+
+Thanks.
+
+-- 
+tejun
