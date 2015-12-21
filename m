@@ -1,187 +1,121 @@
-From: =?iso-8859-1?Q?M=E5ns_Rullg=E5rd?= <mans@mansr.com>
-Subject: Re: [PATCH 1/3] ata: sata_dwc_460ex: use "dmas" DT property to find dma channel
-Date: Mon, 21 Dec 2015 18:16:46 +0000
-Message-ID: <yw1xd1tz650x.fsf@unicorn.mansr.com>
-References: <1450221935-6034-1-git-send-email-mans@mansr.com>
-	<567541EE.9010308@candw.ms> <yw1x60zua1ld.fsf@unicorn.mansr.com>
-	<CAHp75Vdhpoqp2SeVz-MCbTVdG7V38hwW3wVCN0YPaoazyZNHOw@mail.gmail.com>
-	<yw1xwpsa8j2x.fsf@unicorn.mansr.com> <56758F33.20804@candw.ms>
-	<yw1xsi2y8ifa.fsf@unicorn.mansr.com> <5675A84F.2070208@candw.ms>
-	<yw1xio3u8dgc.fsf@unicorn.mansr.com> <5675BB2F.6060107@candw.ms>
-	<CAHp75VdVStVWpucOVkoZHkR3zz034LvRJMQpJk-eLhoA8pjGFg@mail.gmail.com>
-	<yw1xegei893o.fsf@unicorn.mansr.com> <5675C452.2080206@candw.ms>
-	<yw1xy4cp6o4o.fsf@unicorn.mansr.com> <5676E906.1060603@candw.ms>
-	<yw1xpoy16jlt.fsf@unicorn.mansr.com>
-	<CAHp75Vedczfn7B-tOEVZi2dOExW8FiAGGA7iTkpuC2wBrsK68g@mail.gmail.com>
-	<yw1xa8p47h3w.fsf@unicorn.mansr.com>
-	<CAHp75VeT6ZssxiD-c3SqZgAcL5vFuvv4H5AVPz8sypuGkuvqRg@mail.gmail.com>
-	<yw1xwps8577f.fsf@unicorn.mansr.com>
-	<CAHp75Vcin1GXpYm-air5fV5B+jiMnB9hoByCqOvbDgd5pHRRJA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Mans Rullgard <mans@mansr.com>
+Subject: [PATCH] ata: sata_dwc_460ex: remove incorrect locking
+Date: Mon, 21 Dec 2015 18:17:50 +0000
+Message-ID: <1450721870-23266-1-git-send-email-mans@mansr.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from unicorn.mansr.com ([81.2.72.234]:54318 "EHLO unicorn.mansr.com"
+Received: from unicorn.mansr.com ([81.2.72.234]:54324 "EHLO unicorn.mansr.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750870AbbLUSQt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Dec 2015 13:16:49 -0500
-In-Reply-To: <CAHp75Vcin1GXpYm-air5fV5B+jiMnB9hoByCqOvbDgd5pHRRJA@mail.gmail.com>
-	(Andy Shevchenko's message of "Mon, 21 Dec 2015 19:24:12 +0200")
+	id S1751142AbbLUSSA (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 21 Dec 2015 13:18:00 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: Viresh Kumar <viresh.linux@gmail.com>, Julian Margetson <runaway@candw.ms>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-Andy Shevchenko <andy.shevchenko@gmail.com> writes:
+This lock is already taken in ata_scsi_queuecmd() a few levels up the
+call stack so attempting to take it here is an error.  Moreover, it is
+pointless in the first place since it only protects a single, atomic
+assignment.
 
-> On Mon, Dec 21, 2015 at 2:15 PM, M=E5ns Rullg=E5rd <mans@mansr.com> w=
-rote:
->> Andy Shevchenko <andy.shevchenko@gmail.com> writes:
->>
->>> +Viresh
->>>
->>> On Mon, Dec 21, 2015 at 2:58 AM, M=E5ns Rullg=E5rd <mans@mansr.com>=
- wrote:
->>>> Andy Shevchenko <andy.shevchenko@gmail.com> writes:
->>>>
->>>>> On Sun, Dec 20, 2015 at 8:49 PM, M=E5ns Rullg=E5rd <mans@mansr.co=
-m> wrote:
->>>>>> Julian Margetson <runaway@candw.ms> writes:
->>>>>>> On 12/20/2015 1:11 PM, M=E5ns Rullg=E5rd wrote:
->>>>>>>> Julian Margetson <runaway@candw.ms> writes:
->>>>>
->>>>>>> [   48.769671] ata3.00: failed command: READ FPDMA QUEUED
->>>>>>
->>>>>> Well, that didn't help.  I still think it's part of the problem,=
- but
->>>>>> something else must be wrong as well.  The various Master Select=
- fields
->>>>>> look like a good place to start.
->>>>>
->>>>> Master number (which is here would be either 1 or 0) should not a=
-ffect
->>>>> as long as they are connected to the same AHB bus (I would be
->>>>> surprised if they are not).
->>>>
->>>> I think they are not.  The relevant part of the block diagram for =
-the
->>>> 460EX looks something like this:
->>>>
->>>>       +-----+
->>>>       | CPU |
->>>>       +-----+
->>>>          |
->>>>  +---------------+
->>>>  |      BUS      |
->>>>  +---------------+
->>>>     |         |
->>>>  +-----+   +-----+
->>>>  | DMA |   | RAM |
->>>>  +-----+   +-----+
->>>>     |
->>>>  +------+
->>>>  | SATA |
->>>>  +------+
->>>>
->>>> The DMA-SATA link is private and ignores the address, which is the=
- only
->>>> reason the driver can possibly work (it's programming a CPU virtua=
-l
->>>> address there).
->>>
->>> If you look at the original code the SMS and DMS are programmed
->>> statically independent on DMA direction, so LLP is programmed alway=
-s
->>> to master 1. I don't think your scheme is reflecting this right. I
->>> could imagine two AHB buses, one of them connects CPU, SATA and RAM=
-,
->>> and the other CPU and DMA.
->>
->> Check the code again.  The original code swaps SMS and DMS depending=
- on
->> direction, and it sets LMS to 1.  Put differently, it always sets th=
-e
->> memory side 1 and the device side to 0.  The dw_dma driver sets SMS =
-and
->> DMS to the src/dst_master values provided through dma_request_channe=
-l()
->> regardless of the current direction and LMS always zero.
->
-> I used to have a patch to implement this in dw_dmac driver. However, =
-I
-> dropped it at some point. Seems we need it back and now I possible
-> have a good explanation why.
+Enabling lock debugging gives the following output:
 
-Are you still able to find that patch?  Shouldn't be too hard to do fro=
-m
-scratch if not.
+=============================================
+[ INFO: possible recursive locking detected ]
+4.4.0-rc5+ #189 Not tainted
+---------------------------------------------
+kworker/u2:3/37 is trying to acquire lock:
+ (&(&host->lock)->rlock){-.-...}, at: [<90283294>] sata_dwc_exec_command_by_tag.constprop.14+0x44/0x8c
 
->> If those values didn't matter, why would the fields exist in the
->> first place?
->
-> Because someone can have more than one AHB bus on the system and
-> connect DMA to all of them (up to 4).
+but task is already holding lock:
+ (&(&host->lock)->rlock){-.-...}, at: [<902761ac>] ata_scsi_queuecmd+0x2c/0x330
 
-Which apparently these guys did.  Well, not a full-blown AHB bus, but
-they seem to be using two master interfaces.
+other info that might help us debug this:
+ Possible unsafe locking scenario:
 
->>> In any case on all Intel SoCs and AVR32, and as far as I can tell o=
-n
->>> Spear13xx (Viresh?) there is not a case, that's why I hardly imagin=
-e
->>> that the problem is in master numbers by themselves.
->>
->> The 460EX is a PowerPC system.  Expect unusual topologies.
->
-> Yeah, that's right.
+       CPU0
+       ----
+  lock(&(&host->lock)->rlock);
+  lock(&(&host->lock)->rlock);
 
-BTW, there's a good reason for wiring it like this.  If the source and
-destination are on different buses, the DMA engine can do a read and a
-write in each cycle.  Otherwise the reads and writes have to be issued
-alternately.
+ *** DEADLOCK ***
+ May be due to missing lock nesting notation
 
->>>>>> Also, the manual says the LLP_SRC_EN
->>>>>> and LLP_DST_EN flags should be cleared on the last in a chain of=
- blocks.
->>>>>> The old sata_dwc driver does this whereas dw_dma does not.
->>>>>
->>>>> Easy to fix, however I can't get how it might affect.
->>>>
->>>> From the Atmel doc:
->>>>
->>>>   In Table 17-1 on page 185, all other combinations of LLPx.LOC =3D=
- 0,
->>>>   CTLx.LLP_S_EN, CFGx.RELOAD_SR, CTLx.LLP_D_EN, and CFGx.RELOAD_DS=
- are
->>>>   illegal, and causes indeterminate or erroneous behavior.
->>>
->>> I will check Synospys documentation later on.
->
-> Yes, we have to clear those bits. I will do a patch or you already ha=
-ve one?
+4 locks held by kworker/u2:3/37:
+ #0:  ("events_unbound"){.+.+.+}, at: [<9003a0a4>] process_one_work+0x12c/0x430
+ #1:  ((&entry->work)){+.+.+.}, at: [<9003a0a4>] process_one_work+0x12c/0x430
+ #2:  (&bdev->bd_mutex){+.+.+.}, at: [<9011fd54>] __blkdev_get+0x50/0x380
+ #3:  (&(&host->lock)->rlock){-.-...}, at: [<902761ac>] ata_scsi_queuecmd+0x2c/0x330
 
-I'll send the patch soon.
+stack backtrace:
+CPU: 0 PID: 37 Comm: kworker/u2:3 Not tainted 4.4.0-rc5+ #189
+Workqueue: events_unbound async_run_entry_fn
+Stack : 90b38e30 00000021 00000003 9b2a6040 00000000 9005f3f0 904fc8dc 00000025
+        906b96e4 00000000 90528648 9b3336c4 904fc8dc 9009bf18 00000002 00000004
+        00000000 00000000 9b3336c4 9b3336e4 904fc8dc 9003d074 00000000 90500000
+        9005e738 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+        6e657665 755f7374 756f626e 0000646e 00000000 00000000 9b00ca00 9b025000
+          ...
+Call Trace:
+[<90009d6c>] show_stack+0x88/0xa4
+[<90057744>] __lock_acquire+0x1ce8/0x2154
+[<900583e4>] lock_acquire+0x64/0x8c
+[<9045ff10>] _raw_spin_lock_irqsave+0x54/0x78
+[<90283294>] sata_dwc_exec_command_by_tag.constprop.14+0x44/0x8c
+[<90283484>] sata_dwc_qc_issue+0x1a8/0x24c
+[<9026b39c>] ata_qc_issue+0x1f0/0x410
+[<90273c6c>] ata_scsi_translate+0xb4/0x200
+[<90276234>] ata_scsi_queuecmd+0xb4/0x330
+[<9025800c>] scsi_dispatch_cmd+0xd0/0x128
+[<90259934>] scsi_request_fn+0x58c/0x638
+[<901a3e50>] __blk_run_queue+0x40/0x5c
+[<901a83d4>] blk_queue_bio+0x27c/0x28c
+[<901a5914>] generic_make_request+0xf0/0x188
+[<901a5a54>] submit_bio+0xa8/0x194
+[<9011adcc>] submit_bh_wbc.isra.23+0x15c/0x17c
+[<9011c908>] block_read_full_page+0x3e4/0x428
+[<9009e2e0>] do_read_cache_page+0xac/0x210
+[<9009fd90>] read_cache_page+0x18/0x24
+[<901bbd18>] read_dev_sector+0x38/0xb0
+[<901bd174>] msdos_partition+0xb4/0x5c0
+[<901bcb8c>] check_partition+0x140/0x274
+[<901bba60>] rescan_partitions+0xa0/0x2b0
+[<9011ff68>] __blkdev_get+0x264/0x380
+[<901201ac>] blkdev_get+0x128/0x36c
+[<901b9378>] add_disk+0x3c0/0x4bc
+[<90268268>] sd_probe_async+0x100/0x224
+[<90043a44>] async_run_entry_fn+0x50/0x124
+[<9003a11c>] process_one_work+0x1a4/0x430
+[<9003a4f4>] worker_thread+0x14c/0x4fc
+[<900408f4>] kthread+0xd0/0xe8
+[<90004338>] ret_from_kernel_thread+0x14/0x1c
 
->>>> Most likely nothing happens, but I think it ought to be fixed.  In=
- fact,
->>>> I have a patch already.
->>>
->>> Good. Send with Fixes tag if it's upstream ready.
->>>
->>>> Come to think of it, I have an AVR32 dev somewhere.  Maybe I shoul=
-d dust
->>>> it off.
->>>
->>> I have ATNGW100.
->>
->> I have an AT32ATK1006.  Can you suggest a good test to exercise the =
-DMA
->> engine?
->
-> On that board I tried MMC (the only available user for me), though it
-> is not reliable, I also tried the dmatest module.
+Fixes: 62936009f35a ("[libata] Add 460EX on-chip SATA driver, sata_dwc_460ex")
+Signed-off-by: Mans Rullgard <mans@mansr.com>
+---
+ drivers/ata/sata_dwc_460ex.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-Hmm, is there anywhere this damn driver actually works?  ;-)
+diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+index 902034991517..7a7faca0ddcd 100644
+--- a/drivers/ata/sata_dwc_460ex.c
++++ b/drivers/ata/sata_dwc_460ex.c
+@@ -924,15 +924,13 @@ static void sata_dwc_exec_command_by_tag(struct ata_port *ap,
+ 					 struct ata_taskfile *tf,
+ 					 u8 tag, u32 cmd_issued)
+ {
+-	unsigned long flags;
+ 	struct sata_dwc_device_port *hsdevp = HSDEVP_FROM_AP(ap);
+ 
+ 	dev_dbg(ap->dev, "%s cmd(0x%02x): %s tag=%d\n", __func__, tf->command,
+ 		ata_get_cmd_descript(tf->command), tag);
+ 
+-	spin_lock_irqsave(&ap->host->lock, flags);
+ 	hsdevp->cmd_issued[tag] = cmd_issued;
+-	spin_unlock_irqrestore(&ap->host->lock, flags);
++
+ 	/*
+ 	 * Clear SError before executing a new command.
+ 	 * sata_dwc_scr_write and read can not be used here. Clearing the PM
+-- 
+2.6.3
 
---=20
-M=E5ns Rullg=E5rd
