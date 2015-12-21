@@ -1,8 +1,8 @@
 From: Julian Margetson <runaway@candw.ms>
 Subject: Re: [PATCH 1/3] ata: sata_dwc_460ex: use "dmas" DT property to find
  dma channel
-Date: Mon, 21 Dec 2015 15:08:24 -0400
-Message-ID: <56784E28.1050209@candw.ms>
+Date: Mon, 21 Dec 2015 15:19:44 -0400
+Message-ID: <567850D0.90803@candw.ms>
 References: <1450221935-6034-1-git-send-email-mans@mansr.com>
  <yw1x60zua1ld.fsf@unicorn.mansr.com>
  <CAHp75Vdhpoqp2SeVz-MCbTVdG7V38hwW3wVCN0YPaoazyZNHOw@mail.gmail.com>
@@ -23,10 +23,10 @@ Content-Type: text/plain; charset=windows-1252;
 	format=flowed
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp618.redcondor.net ([208.80.206.18]:50548 "EHLO
-	smtp618.redcondor.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751291AbbLUTIr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Dec 2015 14:08:47 -0500
+Received: from smtp687.redcondor.net ([208.80.206.87]:38400 "EHLO
+	smtp687.redcondor.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750870AbbLUTUF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Dec 2015 14:20:05 -0500
 In-Reply-To: <yw1xzix34py1.fsf@unicorn.mansr.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -70,6 +70,6 @@ though
 >> keyboard not responding  when I start Gparted.
 > Did you disable the SATA and DMA debug messages?
 >
-Ah. Will try with debug disabled.
+It is working.
 
 
