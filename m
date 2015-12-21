@@ -1,46 +1,66 @@
 From: Ming Lei <tom.leiming@gmail.com>
-Subject: SATA IO errors after ''block: fix segment split"
-Date: Mon, 21 Dec 2015 09:25:47 +0800
-Message-ID: <CACVXFVNkpGqd+iPNyZwMaQrfVOK9fqsM+XARK1CRpiY99fsG+A@mail.gmail.com>
+Subject: Re: IO errors after "block: remove bio_get_nr_vecs()"
+Date: Mon, 21 Dec 2015 09:38:48 +0800
+Message-ID: <CACVXFVOZ+8AJwn=qyPOjzpAdfTu=AAa_oUGhqnWvU2WTANCzHg@mail.gmail.com>
+References: <CA+55aFwLyGifsQFdYZcWHeaHptxMqO_G25fZjer4R_yk4NtCpA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-io0-f194.google.com ([209.85.223.194]:33972 "EHLO
-	mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750835AbbLUBZr (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 20 Dec 2015 20:25:47 -0500
+Received: from mail-io0-f195.google.com ([209.85.223.195]:33651 "EHLO
+	mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750806AbbLUBit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 20 Dec 2015 20:38:49 -0500
+In-Reply-To: <CA+55aFwLyGifsQFdYZcWHeaHptxMqO_G25fZjer4R_yk4NtCpA@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: =?UTF-8?Q?Diethard_Jan=C3=9Fen?= <diethard.janssen@ljapunow.de>, Andre Przywara <andre.przywara@arm.com>, Tejun Heo <tj@kernel.org>, Jens Axboe <axboe@kernel.dk>, Linus Torvalds <torvalds@linux-foundation.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Kent Overstreet <kent.overstreet@gmail.com>, Christoph Hellwig <hch@lst.de>, Ming Lin <ming.l@ssi.samsung.com>, Jens Axboe <axboe@fb.com>, "Artem S. Tashkinov" <t.artem@mailcity.com>, Steven Whitehouse <swhiteho@redhat.com>, Tejun Heo <tj@kernel.org>, IDE-ML <linux-ide@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-Hi,
+On Mon, Dec 21, 2015 at 1:51 AM, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+> Kent, Jens, Christoph et al,
+>  please see this bugzilla:
+>
+>   https://bugzilla.kernel.org/show_bug.cgi?id=109661
+>
+> where Artem Tashkinov bisected his problems with 4.3 down to commit
+> b54ffb73cadc ("block: remove bio_get_nr_vecs()") that you've all
+> signed off on.
+>
+> (Also Tejun - maybe you can see what's up - maybe that error message
+> tells you something)
+>
+> I'm not sure what's up with his machine, the disk doesn't seem to be
+> anyuthing particularly unusual, it looks like a 1TB Seagate Barracuda:
+>
+>   ata1.00: ATA-8: ST1000DM003-1CH162, CC44, max UDMA/133
+>
+> which doesn't strike me as odd.
+>
+> Looking at the dmesg, it also looks like it's a pretty normal
+> Sandybridge setup with Intel chipset. Artem, can you confirm? The PCI
+> ID for the AHCI chip seems to be (INTEL, 0x1c02).
+>
+> Any ideas? Anybody?
 
-Both Andre and Diethard reported that the following kind of
-SATA write IO errors on 32bit(ARM/i386) with PAE after the
-commit 578270bfb(block: fix segment split):
+BTW, I have posted very similar issue in the link:
 
-[  103.736982] ata1.00: exception Emask 0x0 SAct 0x3ffff0 SErr 0x0
-action 0x6 frozen
-[  103.744476] ata1.00: failed command: WRITE FPDMA QUEUED
-[  103.749707] ata1.00: cmd 61/00:20:48:6b:41/08:00:0a:00:00/40 tag 4
-ncq 1048576 out
-[  103.749707]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask
-0x4 (timeout)
-[  103.764659] ata1.00: status: { DRDY }
+http://marc.info/?l=linux-ide&m=145066119623811&w=2
 
-Unfortunately I can't reproduce the issue on QEMU with i686 plus
-PAE after runing kinds of IO loads on the AHCI SATA drive.
-
-But the commit 578270bfb(block: fix segment split) is quite simple and
-straight-forward, and I can't see what is wrong with this change.
-
-Looks size of the faulted I/O is always 1Mbytes in Diethard's reports(it
-is in private email and I can show that if anyone need the logs), and seems
-it is highly possiblly related with the commit b54ffb73cadc ("block:
-remove bio_get_nr_vecs()"), which is another similar SATA report by
-Linus.
-
+Artem, I noticed from bugzillar that the hardware is i386, just
+wondering if PAE is enabled?  If yes, I am more confident
+that both the two kinds of report are similar or same.
 
 Thanks,
+
+>
+>                        Linus
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+-- 
 Ming Lei
