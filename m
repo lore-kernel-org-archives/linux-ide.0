@@ -1,89 +1,84 @@
-From: Julian Margetson <runaway@candw.ms>
-Subject: Re: [PATCH 1/3] ata: sata_dwc_460ex: use "dmas" DT property to find
- dma channel
-Date: Mon, 21 Dec 2015 15:47:08 -0400
-Message-ID: <5678573C.6050001@candw.ms>
+From: =?iso-8859-1?Q?M=E5ns_Rullg=E5rd?= <mans@mansr.com>
+Subject: Re: [PATCH 1/3] ata: sata_dwc_460ex: use "dmas" DT property to find dma channel
+Date: Mon, 21 Dec 2015 19:50:55 +0000
+Message-ID: <yw1xio3r4m3k.fsf@unicorn.mansr.com>
 References: <1450221935-6034-1-git-send-email-mans@mansr.com>
- <yw1xwpsa8j2x.fsf@unicorn.mansr.com> <56758F33.20804@candw.ms>
- <yw1xsi2y8ifa.fsf@unicorn.mansr.com> <5675A84F.2070208@candw.ms>
- <yw1xio3u8dgc.fsf@unicorn.mansr.com> <5675BB2F.6060107@candw.ms>
- <CAHp75VdVStVWpucOVkoZHkR3zz034LvRJMQpJk-eLhoA8pjGFg@mail.gmail.com>
- <yw1xegei893o.fsf@unicorn.mansr.com> <5675C452.2080206@candw.ms>
- <yw1xy4cp6o4o.fsf@unicorn.mansr.com> <5676E906.1060603@candw.ms>
- <yw1xpoy16jlt.fsf@unicorn.mansr.com>
- <CAHp75Vedczfn7B-tOEVZi2dOExW8FiAGGA7iTkpuC2wBrsK68g@mail.gmail.com>
- <CAHp75VfaHvBHhTjQVMNdOYA2kEdus-XpH6E=9i1HPSKTa-2ffA@mail.gmail.com>
- <1450716497.30729.232.camel@linux.intel.com> <56783636.80901@candw.ms>
- <CAHp75VfQ6jWm+W1kHh-4zqV28wF4OCCrBfSX8jXxsEcEYSsw5Q@mail.gmail.com>
- <567843B8.1000801@candw.ms> <yw1xzix34py1.fsf@unicorn.mansr.com>
- <567850D0.90803@candw.ms> <yw1xmvt34n63.fsf@unicorn.mansr.com>
+	<CAHp75Vdhpoqp2SeVz-MCbTVdG7V38hwW3wVCN0YPaoazyZNHOw@mail.gmail.com>
+	<yw1xwpsa8j2x.fsf@unicorn.mansr.com> <56758F33.20804@candw.ms>
+	<yw1xsi2y8ifa.fsf@unicorn.mansr.com> <5675A84F.2070208@candw.ms>
+	<yw1xio3u8dgc.fsf@unicorn.mansr.com> <5675BB2F.6060107@candw.ms>
+	<CAHp75VdVStVWpucOVkoZHkR3zz034LvRJMQpJk-eLhoA8pjGFg@mail.gmail.com>
+	<yw1xegei893o.fsf@unicorn.mansr.com> <5675C452.2080206@candw.ms>
+	<yw1xy4cp6o4o.fsf@unicorn.mansr.com> <5676E906.1060603@candw.ms>
+	<yw1xpoy16jlt.fsf@unicorn.mansr.com>
+	<CAHp75Vedczfn7B-tOEVZi2dOExW8FiAGGA7iTkpuC2wBrsK68g@mail.gmail.com>
+	<yw1xa8p47h3w.fsf@unicorn.mansr.com>
+	<CAHp75VeT6ZssxiD-c3SqZgAcL5vFuvv4H5AVPz8sypuGkuvqRg@mail.gmail.com>
+	<yw1xwps8577f.fsf@unicorn.mansr.com>
+	<CAHp75Vcin1GXpYm-air5fV5B+jiMnB9hoByCqOvbDgd5pHRRJA@mail.gmail.com>
+	<yw1xd1tz650x.fsf@unicorn.mansr.com>
+	<1450725813.30729.256.camel@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp687.redcondor.net ([208.80.206.87]:34962 "EHLO
-	smtp687.redcondor.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751264AbbLUTr2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Dec 2015 14:47:28 -0500
-In-Reply-To: <yw1xmvt34n63.fsf@unicorn.mansr.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1450725813.30729.256.camel@linux.intel.com> (Andy Shevchenko's
+	message of "Mon, 21 Dec 2015 21:23:33 +0200")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Andy Shevchenko <andy.shevchenko@gmail.com>, Viresh Kumar <viresh.linux@gmail.com>, Julian Margetson <runaway@candw.ms>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: =?UTF-8?B?TcOlbnMgUnVsbGfDpXJk?= <mans@mansr.com>
-Cc: Andy Shevchenko <andy.shevchenko@gmail.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On 12/21/2015 3:27 PM, M=E5ns Rullg=E5rd wrote:
-> Julian Margetson <runaway@candw.ms> writes:
+Andy Shevchenko <andriy.shevchenko@linux.intel.com> writes:
+
+> On Mon, 2015-12-21 at 18:16 +0000, M=E5ns Rullg=E5rd wrote:
+>> Andy Shevchenko <andy.shevchenko@gmail.com> writes:
+>>=20
+>> > On Mon, Dec 21, 2015 at 2:15 PM, M=E5ns Rullg=E5rd <mans@mansr.com=
 >
->> On 12/21/2015 2:27 PM, M=E5ns Rullg=E5rd wrote:
->>> Julian Margetson <runaway@candw.ms> writes:
->>>
->>>> On 12/21/2015 1:55 PM, Andy Shevchenko wrote:
->>>>> On Mon, Dec 21, 2015 at 7:26 PM, Julian Margetson <runaway@candw.=
-ms> wrote:
->>>>>> On 12/21/2015 12:48 PM, Andy Shevchenko wrote:
->>>>>>> On Sun, 2015-12-20 at 22:55 +0200, Andy Shevchenko wrote:
->>>>>>>> On Sun, Dec 20, 2015 at 10:17 PM, Andy Shevchenko
->>>>>>>> <andy.shevchenko@gmail.com> wrote:
->>>>>>>>> On Sun, Dec 20, 2015 at 8:49 PM, M=E5ns Rullg=E5rd <mans@mans=
-r.com>
->>>>>>>>> wrote:
->>>>>>>>> I noticed thanks to DWC_PARAMS that burst size is hardcoded t=
-o 32
->>>>>>>>> items on this board, however registers for SATA program it to=
- 64. I
->>>>>>>>> remember that I got no interrupt when I programmed transfer w=
-idth
->>>>>>>>> wrongly (64 bits against 32 bits) when I ported dw_dmac to be=
- used
->>>>>>>>> on
->>>>>>>>> Intel SoCs.
->>>>>>>> One more thing, I have a patch to monitor DMA IO, we may check=
- what
->>>>>>>> exactly the values are written / read  in DMA. I can share it
->>>>>>>> tomorrow.
->>>>>>> As promised the patch I have to debug IO of DW DMA. Didn't chec=
-k though
->>>>>>> if it applies cleanly on top of recent vanilla kernel.
->>>>> So, the original driver (with patch from M=E5ns) works, right?
->>>>>
->>>> The hard drive is recognized .
->>>> These system gets unresponsive with USB devices like the mouse and
->>>> keyboard not responding  when I start Gparted.
->>> Did you disable the SATA and DMA debug messages?
->>>
->> It is working.
-> That's good news.  Thanks a lot for helping to test this.
+>> > wrote:
+>> > > Andy Shevchenko <andy.shevchenko@gmail.com> writes:
+>> > >=A0
+>> > I used to have a patch to implement this in dw_dmac driver.
+>> > However, I
+>> > dropped it at some point. Seems we need it back and now I possible
+>> > have a good explanation why.
+>>=20
+>> Are you still able to find that patch?=A0=A0Shouldn't be too hard to=
+ do
+>> from scratch if not.
 >
-No problem.
-If you can influence anyone of the radeon guys to have a look at the=20
-ring test failure on the Sam460ex again,
-I will  be happy to help test in that area as well .
+> Yes, I found a version of it, let me mock up tomorrow something
+> working.
+>
+>>=20
+>> > > If those values didn't matter, why would the fields exist in the
+>> > > first place?
+>> >=20
+>> > Because someone can have more than one AHB bus on the system and
+>> > connect DMA to all of them (up to 4).
+>>=20
+>> Which apparently these guys did.=A0=A0Well, not a full-blown AHB bus=
+, but
+>> they seem to be using two master interfaces.
+>
+> To different buses? Intel HW uses two masters and they are quite equa=
+l
+> (at least from OS point of view, it might be HW adjusts it).
 
-http://lists.freedesktop.org/archives/dri-devel/2013-September/045050.h=
-tml
-https://lists.ozlabs.org/pipermail/linuxppc-dev/2015-February/125060.ht=
-ml
+Judging by the block diagram in the 460EX datasheet [1], and by the fac=
+t
+that the old SATA driver works despite using an invalid address, the DM=
+A
+=46IFO of the controller isn't connected to the AHB bus at all but
+directly to master 0 on the DW DMA controller.  Master 1 of the DMA
+controller is connected to the AHB bus, which is bridged to the main
+system bus.
 
+I haven't managed to find a full manual for the 460EX.
 
+[1] http://datasheet.octopart.com/PPC460EX-NUB800T-AMCC-datasheet-11553=
+412.pdf
 
+--=20
+M=E5ns Rullg=E5rd
