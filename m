@@ -1,135 +1,157 @@
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: Re: [PATCH 1/3] ata: sata_dwc_460ex: use "dmas" DT property to find
- dma channel
-Date: Mon, 21 Dec 2015 10:40:01 +0200
-Message-ID: <CAHp75VeT6ZssxiD-c3SqZgAcL5vFuvv4H5AVPz8sypuGkuvqRg@mail.gmail.com>
-References: <1450221935-6034-1-git-send-email-mans@mansr.com>
-	<yw1xpoy39yl1.fsf@unicorn.mansr.com>
-	<56748D85.4060108@candw.ms>
-	<yw1xlh8r9wkm.fsf@unicorn.mansr.com>
-	<CAHp75VfnTp=ob9reLuUSu-AaBwDhfJWKo1kjgNWnHuC5HgL=bw@mail.gmail.com>
-	<567541EE.9010308@candw.ms>
-	<yw1x60zua1ld.fsf@unicorn.mansr.com>
-	<CAHp75Vdhpoqp2SeVz-MCbTVdG7V38hwW3wVCN0YPaoazyZNHOw@mail.gmail.com>
-	<yw1xwpsa8j2x.fsf@unicorn.mansr.com>
-	<56758F33.20804@candw.ms>
-	<yw1xsi2y8ifa.fsf@unicorn.mansr.com>
-	<5675A84F.2070208@candw.ms>
-	<yw1xio3u8dgc.fsf@unicorn.mansr.com>
-	<5675BB2F.6060107@candw.ms>
-	<CAHp75VdVStVWpucOVkoZHkR3zz034LvRJMQpJk-eLhoA8pjGFg@mail.gmail.com>
-	<yw1xegei893o.fsf@unicorn.mansr.com>
-	<5675C452.2080206@candw.ms>
-	<yw1xy4cp6o4o.fsf@unicorn.mansr.com>
-	<5676E906.1060603@candw.ms>
-	<yw1xpoy16jlt.fsf@unicorn.mansr.com>
-	<CAHp75Vedczfn7B-tOEVZi2dOExW8FiAGGA7iTkpuC2wBrsK68g@mail.gmail.com>
-	<yw1xa8p47h3w.fsf@unicorn.mansr.com>
+From: Dan Aloni <dan@kernelim.com>
+Subject: Re: IO errors after "block: remove bio_get_nr_vecs()"
+Date: Mon, 21 Dec 2015 13:21:09 +0200
+Message-ID: <20151221112109.GA24782@gmail.com>
+References: <CA+55aFwLyGifsQFdYZcWHeaHptxMqO_G25fZjer4R_yk4NtCpA@mail.gmail.com>
+ <20151220181801.GA12402@lst.de>
+ <CA+55aFzVEUnfVNwSUtW3xsSOC6GDvGvE-scUasejA0G5BTi1AA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yk0-f182.google.com ([209.85.160.182]:34572 "EHLO
-	mail-yk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750881AbbLUIkC convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Dec 2015 03:40:02 -0500
-In-Reply-To: <yw1xa8p47h3w.fsf@unicorn.mansr.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: multipart/mixed; boundary="/04w6evG8XlLl3ft"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CA+55aFzVEUnfVNwSUtW3xsSOC6GDvGvE-scUasejA0G5BTi1AA@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Christoph Hellwig <hch@lst.de>, Kent Overstreet <kent.overstreet@gmail.com>, Ming Lin <ming.l@ssi.samsung.com>, Jens Axboe <axboe@fb.com>, "Artem S. Tashkinov" <t.artem@mailcity.com>, Steven Whitehouse <swhiteho@redhat.com>, Tejun Heo <tj@kernel.org>, IDE-ML <linux-ide@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: =?UTF-8?B?TcOlbnMgUnVsbGfDpXJk?= <mans@mansr.com>, Viresh Kumar <viresh.linux@gmail.com>
-Cc: Julian Margetson <runaway@candw.ms>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-+Viresh
 
-On Mon, Dec 21, 2015 at 2:58 AM, M=C3=A5ns Rullg=C3=A5rd <mans@mansr.co=
-m> wrote:
-> Andy Shevchenko <andy.shevchenko@gmail.com> writes:
->
->> On Sun, Dec 20, 2015 at 8:49 PM, M=C3=A5ns Rullg=C3=A5rd <mans@mansr=
-=2Ecom> wrote:
->>> Julian Margetson <runaway@candw.ms> writes:
->>>> On 12/20/2015 1:11 PM, M=C3=A5ns Rullg=C3=A5rd wrote:
->>>>> Julian Margetson <runaway@candw.ms> writes:
->>
->>>> [   48.769671] ata3.00: failed command: READ FPDMA QUEUED
->>>
->>> Well, that didn't help.  I still think it's part of the problem, bu=
-t
->>> something else must be wrong as well.  The various Master Select fi=
-elds
->>> look like a good place to start.
->>
->> Master number (which is here would be either 1 or 0) should not affe=
-ct
->> as long as they are connected to the same AHB bus (I would be
->> surprised if they are not).
->
-> I think they are not.  The relevant part of the block diagram for the
-> 460EX looks something like this:
->
->       +-----+
->       | CPU |
->       +-----+
->          |
->  +---------------+
->  |      BUS      |
->  +---------------+
->     |         |
->  +-----+   +-----+
->  | DMA |   | RAM |
->  +-----+   +-----+
->     |
->  +------+
->  | SATA |
->  +------+
->
-> The DMA-SATA link is private and ignores the address, which is the on=
-ly
-> reason the driver can possibly work (it's programming a CPU virtual
-> address there).
+--/04w6evG8XlLl3ft
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-If you look at the original code the SMS and DMS are programmed
-statically independent on DMA direction, so LLP is programmed always
-to master 1. I don't think your scheme is reflecting this right. I
-could imagine two AHB buses, one of them connects CPU, SATA and RAM,
-and the other CPU and DMA.
+On Sun, Dec 20, 2015 at 10:41:44AM -0800, Linus Torvalds wrote:
+>[..]
+> Sadly, without CONFIG_LOCALVERSION_AUTO, there's no way to match up
+> the dmesg files (in the same bisection tar-file as the bisection log)
+> with the actual versions.
 
-In any case on all Intel SoCs and AVR32, and as far as I can tell on
-Spear13xx (Viresh?) there is not a case, that's why I hardly imagine
-that the problem is in master numbers by themselves.
+Perhaps we can print the Git revision in a manner independent of
+CONFIG_LOCALVERSION_AUTO, using the attached patch. It will be emitted
+in the dmesg Linux banner (though not in /proc/version, that's more
+interface-ish and may break things).
 
->>> Also, the manual says the LLP_SRC_EN
->>> and LLP_DST_EN flags should be cleared on the last in a chain of bl=
-ocks.
->>> The old sata_dwc driver does this whereas dw_dma does not.
->>
->> Easy to fix, however I can't get how it might affect.
->
-> From the Atmel doc:
->
->   In Table 17-1 on page 185, all other combinations of LLPx.LOC =3D 0=
-,
->   CTLx.LLP_S_EN, CFGx.RELOAD_SR, CTLx.LLP_D_EN, and CFGx.RELOAD_DS ar=
-e
->   illegal, and causes indeterminate or erroneous behavior.
+-- 
+Dan Aloni
 
-I will check Synospys documentation later on.
+--/04w6evG8XlLl3ft
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="0001-init-version.c-add-SCM_REVISION.patch"
 
-> Most likely nothing happens, but I think it ought to be fixed.  In fa=
-ct,
-> I have a patch already.
+>From d2d4ab995911e59ba41153fade176ca805ca2db8 Mon Sep 17 00:00:00 2001
+From: Dan Aloni <dan@kernelim.com>
+Date: Mon, 21 Dec 2015 11:54:18 +0200
+Subject: [PATCH] init/version.c: add SCM revision
 
-Good. Send with Fixes tag if it's upstream ready.
+This adds a 'SCM-*' string to the Linux banner if and only if
+source control information was available during the compilation
+(such in the case of a Git bisect).
+---
+ Documentation/dontdiff  |  1 +
+ Makefile                | 11 +++++++++++
+ init/version.c          |  4 +++-
+ scripts/setlocalversion |  9 +++++++++
+ 4 files changed, 24 insertions(+), 1 deletion(-)
 
-> Come to think of it, I have an AVR32 dev somewhere.  Maybe I should d=
-ust
-> it off.
+diff --git a/Documentation/dontdiff b/Documentation/dontdiff
+index 8ea834f6b289..3dfda8883b7a 100644
+--- a/Documentation/dontdiff
++++ b/Documentation/dontdiff
+@@ -227,6 +227,7 @@ timeconst.h
+ times.h*
+ trix_boot.h
+ utsrelease.h*
++scmrevision.h*
+ vdso-syms.lds
+ vdso.lds
+ vdso32-int80-syms.lds
+diff --git a/Makefile b/Makefile
+index 4e2b18d56091..f966be40dafd 100644
+--- a/Makefile
++++ b/Makefile
+@@ -977,6 +977,7 @@ endif
+ prepare2: prepare3 outputmakefile asm-generic
+ 
+ prepare1: prepare2 $(version_h) include/generated/utsrelease.h \
++                   include/generated/scmrevision.h \
+                    include/config/auto.conf
+ 	$(cmd_crmodverdir)
+ 
+@@ -1003,6 +1004,13 @@ define filechk_utsrelease.h
+ 	(echo \#define UTS_RELEASE \"$(KERNELRELEASE)\";)
+ endef
+ 
++define filechk_scmrevision.h
++	(SCMREV=`./scripts/setlocalversion --only-print`; \
++	 if [ "x$$SCMREV" = "x" ] ; \
++	    then echo \#define KERNEL_SCM_REVISION \"\" ; \
++	    else echo \#define KERNEL_SCM_REVISION \" SCM$$SCMREV\"; fi )
++endef
++
+ define filechk_version.h
+ 	(echo \#define LINUX_VERSION_CODE $(shell                         \
+ 	expr $(VERSION) \* 65536 + 0$(PATCHLEVEL) \* 256 + 0$(SUBLEVEL)); \
+@@ -1016,6 +1024,9 @@ $(version_h): $(srctree)/Makefile FORCE
+ include/generated/utsrelease.h: include/config/kernel.release FORCE
+ 	$(call filechk,utsrelease.h)
+ 
++include/generated/scmrevision.h: include/config/kernel.release FORCE
++	$(call filechk,scmrevision.h)
++
+ PHONY += headerdep
+ headerdep:
+ 	$(Q)find $(srctree)/include/ -name '*.h' | xargs --max-args 1 \
+diff --git a/init/version.c b/init/version.c
+index fe41a63efed6..f9df083db7c8 100644
+--- a/init/version.c
++++ b/init/version.c
+@@ -11,6 +11,7 @@
+ #include <linux/uts.h>
+ #include <linux/utsname.h>
+ #include <generated/utsrelease.h>
++#include <generated/scmrevision.h>
+ #include <linux/version.h>
+ #include <linux/proc_ns.h>
+ 
+@@ -45,7 +46,8 @@ EXPORT_SYMBOL_GPL(init_uts_ns);
+ /* FIXED STRINGS! Don't touch! */
+ const char linux_banner[] =
+ 	"Linux version " UTS_RELEASE " (" LINUX_COMPILE_BY "@"
+-	LINUX_COMPILE_HOST ") (" LINUX_COMPILER ") " UTS_VERSION "\n";
++	LINUX_COMPILE_HOST ") (" LINUX_COMPILER ") " UTS_VERSION
++	KERNEL_SCM_REVISION "\n";
+ 
+ const char linux_proc_banner[] =
+ 	"%s version %s"
+diff --git a/scripts/setlocalversion b/scripts/setlocalversion
+index 63d91e22ed7c..be6a4cc6c348 100755
+--- a/scripts/setlocalversion
++++ b/scripts/setlocalversion
+@@ -20,6 +20,10 @@ if test "$1" = "--save-scmversion"; then
+ 	scm_only=true
+ 	shift
+ fi
++if test "$1" = "--only-print"; then
++	onlyprint=true
++	shift
++fi
+ if test $# -gt 0; then
+ 	srctree=$1
+ 	shift
+@@ -132,6 +136,11 @@ collect_files()
+ 	echo "$res"
+ }
+ 
++if $only_print; then
++	scm_version
++	exit
++fi
++
+ if $scm_only; then
+ 	if test ! -e .scmversion; then
+ 		res=$(scm_version)
+-- 
+2.4.3
 
-I have ATNGW100.
 
-P.S. Anyway we have to ask Julian to try the kernel with
-8b3444852a2b58129 reverted.
-
---=20
-With Best Regards,
-Andy Shevchenko
+--/04w6evG8XlLl3ft--
