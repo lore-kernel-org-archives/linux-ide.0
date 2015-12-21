@@ -1,89 +1,53 @@
-From: =?iso-8859-1?Q?M=E5ns_Rullg=E5rd?= <mans@mansr.com>
-Subject: Re: [PATCH 1/3] ata: sata_dwc_460ex: use "dmas" DT property to find dma channel
-Date: Mon, 21 Dec 2015 21:06:23 +0000
-Message-ID: <yw1xa8p34ils.fsf@unicorn.mansr.com>
-References: <1450221935-6034-1-git-send-email-mans@mansr.com>
-	<yw1x60zua1ld.fsf@unicorn.mansr.com>
-	<CAHp75Vdhpoqp2SeVz-MCbTVdG7V38hwW3wVCN0YPaoazyZNHOw@mail.gmail.com>
-	<yw1xwpsa8j2x.fsf@unicorn.mansr.com> <56758F33.20804@candw.ms>
-	<yw1xsi2y8ifa.fsf@unicorn.mansr.com> <5675A84F.2070208@candw.ms>
-	<yw1xio3u8dgc.fsf@unicorn.mansr.com> <5675BB2F.6060107@candw.ms>
-	<CAHp75VdVStVWpucOVkoZHkR3zz034LvRJMQpJk-eLhoA8pjGFg@mail.gmail.com>
-	<yw1xegei893o.fsf@unicorn.mansr.com> <5675C452.2080206@candw.ms>
-	<yw1xy4cp6o4o.fsf@unicorn.mansr.com> <5676E906.1060603@candw.ms>
-	<yw1xpoy16jlt.fsf@unicorn.mansr.com>
-	<CAHp75Vedczfn7B-tOEVZi2dOExW8FiAGGA7iTkpuC2wBrsK68g@mail.gmail.com>
-	<CAHp75VfaHvBHhTjQVMNdOYA2kEdus-XpH6E=9i1HPSKTa-2ffA@mail.gmail.com>
-	<yw1x60zs7g40.fsf@unicorn.mansr.com>
-	<1450724880.30729.250.camel@linux.intel.com>
-	<yw1xr3if4n74.fsf@unicorn.mansr.com>
-	<1450731289.30729.282.camel@linux.intel.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: IO errors after "block: remove bio_get_nr_vecs()"
+Date: Mon, 21 Dec 2015 16:08:11 -0500
+Message-ID: <20151221210811.GO4026@mtj.duckdns.org>
+References: <CA+55aFwLyGifsQFdYZcWHeaHptxMqO_G25fZjer4R_yk4NtCpA@mail.gmail.com>
+ <20151221065528.GA3873@htj.duckdns.org>
+ <e53cb2f9d5882b0fbe82c589259bf043@lycos.com>
+ <20151221193550.GM4026@mtj.duckdns.org>
+ <20151221200721.GN4026@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from unicorn.mansr.com ([81.2.72.234]:55111 "EHLO unicorn.mansr.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751013AbbLUVG0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Dec 2015 16:06:26 -0500
-In-Reply-To: <1450731289.30729.282.camel@linux.intel.com> (Andy Shevchenko's
-	message of "Mon, 21 Dec 2015 22:54:49 +0200")
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20151221200721.GN4026@mtj.duckdns.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Artem S. Tashkinov" <t.artem@lycos.com>
+Cc: "Artem S. Tashkinov" <t.artem@mailcity.com>, Kent Overstreet <kent.overstreet@gmail.com>, Christoph Hellwig <hch@lst.de>, Ming Lin <ming.l@ssi.samsung.com>, Jens Axboe <axboe@fb.com>, Linus Torvalds <torvalds@linux-foundation.org>, Steven Whitehouse <swhiteho@redhat.com>, IDE-ML <linux-ide@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Ming Lei <tom.leiming@gmail.com>
 List-Id: linux-ide@vger.kernel.org
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Andy Shevchenko <andy.shevchenko@gmail.com>, Julian Margetson <runaway@candw.ms>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com> writes:
+Hello, again.
 
->> > 4. CHECK: PROTCTL bit (documentation says that recommended value i=
-s
->> > 0x01)
->>=20
->> Any idea what the value of 0x3 used by the old sata driver means?
->> Presumably that's decided by the bus.
->
-> Nope, documentation says that it is direct representation of hprot[3:=
-1]
-> wires on the master interface. Also it refers to AMBA spec, so, if yo=
-u
-> have access to AMBA spec I think we might get it from there.
+On Mon, Dec 21, 2015 at 03:07:21PM -0500, Tejun Heo wrote:
+> Hello, Artem.
+> 
+> Can you please apply the following patch on top and see whether
+> anything changes?  If it does make the issue go away, can you please
+> revert the ".can_queue" part and test again?
 
-That's assuming AMCC didn't change something.
+If the patch doesn't change anything, can you please try the
+followings and see which one makes difference?
 
->> > 5. CHECK: Other bits in CFG register (FIFO_MODE, FCMODE)
->> > 6. CHECK: Block interrupts vs. one interrupt at the end of block
->> > chain
->> > (M=E5ns, I missed how any of them is ignored)
->>=20
->> The interrupt handler looks at the StatusTfr and StatusErr registers
->> and ignores StatusBlock.
->
-> I have to refresh my memory, since BLOCK interrupts should be enabled
-> (unmasked) separately. I have forgotten which type of interrupt is
-> generated in this case, BLOCK, or XFER after each block, or only one
-> XFER at the last block (LLP.LOC =3D 0) and BLOCK are ignored. So, wil=
-l
-> check later.
+1. Exclude memory above 4G line with boot param "max_addr=4G".
+2. Disable highmem with "highmem=0".
+3. Try booting 64bit kernel.
 
-I interpreted the, admittedly a bit vague, documentation as meaning
-BLOCK interrupts are signalled after each block and XFER interrupts
-after the last block.
+At the moment, the only thing I can think of which can explain the PAE
++ bio_get_nr_vecs() situation is that the bio split code which is
+activated by the bio_get_nr_vecs() somehow messes up 64bit or high
+addresses on 32bit kernels.  I scanned for the obvious but at bio
+layer, memory is represented by struct page, so nothing obvious seems
+broken.
 
->> > 7. AR: Test everything on Intel SoCs such as Baytrail, CherryTrail=
-,
->> > etc (SPI, UART, dmatest), AVR32 (MMC, dmatest), PPC 460EX (Onboard
->> > SATA)
->>=20
->> I can test on AVR32.=A0=A0That is as far as I know the only system I=
- have
->> with this DMA engine.
->
-> If you have Intel Haswell, BayTrail, Braswell, CherryTrail, Broadwell=
-,
-> you have it as well as long you have LPSS block there. (Most of them
-> are Atoms).
+Note that for now I'm ignoring the debug dumps from the ahci debug
+patch which indicates that the passed in addresses are all fine.  It
+is possible that the controller gets confused with certain receiving
+addresses and reports failure on later commands or maybe there is a
+different sequence of events which can encompass both that we don't
+know of yet.
 
-I don't have any of those (or any Atom hardware).
+Thanks.
 
---=20
-M=E5ns Rullg=E5rd
+-- 
+tejun
