@@ -1,84 +1,60 @@
-From: =?iso-8859-1?Q?M=E5ns_Rullg=E5rd?= <mans@mansr.com>
-Subject: Re: [PATCH 1/3] ata: sata_dwc_460ex: use "dmas" DT property to find dma channel
-Date: Mon, 21 Dec 2015 19:50:55 +0000
-Message-ID: <yw1xio3r4m3k.fsf@unicorn.mansr.com>
-References: <1450221935-6034-1-git-send-email-mans@mansr.com>
-	<CAHp75Vdhpoqp2SeVz-MCbTVdG7V38hwW3wVCN0YPaoazyZNHOw@mail.gmail.com>
-	<yw1xwpsa8j2x.fsf@unicorn.mansr.com> <56758F33.20804@candw.ms>
-	<yw1xsi2y8ifa.fsf@unicorn.mansr.com> <5675A84F.2070208@candw.ms>
-	<yw1xio3u8dgc.fsf@unicorn.mansr.com> <5675BB2F.6060107@candw.ms>
-	<CAHp75VdVStVWpucOVkoZHkR3zz034LvRJMQpJk-eLhoA8pjGFg@mail.gmail.com>
-	<yw1xegei893o.fsf@unicorn.mansr.com> <5675C452.2080206@candw.ms>
-	<yw1xy4cp6o4o.fsf@unicorn.mansr.com> <5676E906.1060603@candw.ms>
-	<yw1xpoy16jlt.fsf@unicorn.mansr.com>
-	<CAHp75Vedczfn7B-tOEVZi2dOExW8FiAGGA7iTkpuC2wBrsK68g@mail.gmail.com>
-	<yw1xa8p47h3w.fsf@unicorn.mansr.com>
-	<CAHp75VeT6ZssxiD-c3SqZgAcL5vFuvv4H5AVPz8sypuGkuvqRg@mail.gmail.com>
-	<yw1xwps8577f.fsf@unicorn.mansr.com>
-	<CAHp75Vcin1GXpYm-air5fV5B+jiMnB9hoByCqOvbDgd5pHRRJA@mail.gmail.com>
-	<yw1xd1tz650x.fsf@unicorn.mansr.com>
-	<1450725813.30729.256.camel@linux.intel.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: IO errors after "block: remove bio_get_nr_vecs()"
+Date: Mon, 21 Dec 2015 15:07:21 -0500
+Message-ID: <20151221200721.GN4026@mtj.duckdns.org>
+References: <CA+55aFwLyGifsQFdYZcWHeaHptxMqO_G25fZjer4R_yk4NtCpA@mail.gmail.com>
+ <20151221065528.GA3873@htj.duckdns.org>
+ <e53cb2f9d5882b0fbe82c589259bf043@lycos.com>
+ <20151221193550.GM4026@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1450725813.30729.256.camel@linux.intel.com> (Andy Shevchenko's
-	message of "Mon, 21 Dec 2015 21:23:33 +0200")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Andy Shevchenko <andy.shevchenko@gmail.com>, Viresh Kumar <viresh.linux@gmail.com>, Julian Margetson <runaway@candw.ms>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-yk0-f180.google.com ([209.85.160.180]:36630 "EHLO
+	mail-yk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751611AbbLUUHY (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 21 Dec 2015 15:07:24 -0500
+Content-Disposition: inline
+In-Reply-To: <20151221193550.GM4026@mtj.duckdns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "Artem S. Tashkinov" <t.artem@lycos.com>
+Cc: "Artem S. Tashkinov" <t.artem@mailcity.com>, Kent Overstreet <kent.overstreet@gmail.com>, Christoph Hellwig <hch@lst.de>, Ming Lin <ming.l@ssi.samsung.com>, Jens Axboe <axboe@fb.com>, Linus Torvalds <torvalds@linux-foundation.org>, Steven Whitehouse <swhiteho@redhat.com>, IDE-ML <linux-ide@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Ming Lei <tom.leiming@gmail.com>
 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com> writes:
+Hello, Artem.
 
-> On Mon, 2015-12-21 at 18:16 +0000, M=E5ns Rullg=E5rd wrote:
->> Andy Shevchenko <andy.shevchenko@gmail.com> writes:
->>=20
->> > On Mon, Dec 21, 2015 at 2:15 PM, M=E5ns Rullg=E5rd <mans@mansr.com=
->
->> > wrote:
->> > > Andy Shevchenko <andy.shevchenko@gmail.com> writes:
->> > >=A0
->> > I used to have a patch to implement this in dw_dmac driver.
->> > However, I
->> > dropped it at some point. Seems we need it back and now I possible
->> > have a good explanation why.
->>=20
->> Are you still able to find that patch?=A0=A0Shouldn't be too hard to=
- do
->> from scratch if not.
->
-> Yes, I found a version of it, let me mock up tomorrow something
-> working.
->
->>=20
->> > > If those values didn't matter, why would the fields exist in the
->> > > first place?
->> >=20
->> > Because someone can have more than one AHB bus on the system and
->> > connect DMA to all of them (up to 4).
->>=20
->> Which apparently these guys did.=A0=A0Well, not a full-blown AHB bus=
-, but
->> they seem to be using two master interfaces.
->
-> To different buses? Intel HW uses two masters and they are quite equa=
-l
-> (at least from OS point of view, it might be HW adjusts it).
+Can you please apply the following patch on top and see whether
+anything changes?  If it does make the issue go away, can you please
+revert the ".can_queue" part and test again?
 
-Judging by the block diagram in the 460EX datasheet [1], and by the fac=
-t
-that the old SATA driver works despite using an invalid address, the DM=
-A
-=46IFO of the controller isn't connected to the AHB bus at all but
-directly to master 0 on the DW DMA controller.  Master 1 of the DMA
-controller is connected to the AHB bus, which is bridged to the main
-system bus.
+Thanks.
 
-I haven't managed to find a full manual for the 460EX.
+---
+ drivers/ata/ahci.h    |    2 +-
+ drivers/ata/libahci.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-[1] http://datasheet.octopart.com/PPC460EX-NUB800T-AMCC-datasheet-11553=
-412.pdf
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -365,7 +365,7 @@ extern struct device_attribute *ahci_sde
+  */
+ #define AHCI_SHT(drv_name)						\
+ 	ATA_NCQ_SHT(drv_name),						\
+-	.can_queue		= AHCI_MAX_CMDS - 1,			\
++	.can_queue		= 1/*AHCI_MAX_CMDS - 1*/,		\
+ 	.sg_tablesize		= AHCI_MAX_SG,				\
+ 	.dma_boundary		= AHCI_DMA_BOUNDARY,			\
+ 	.shost_attrs		= ahci_shost_attrs,			\
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -420,7 +420,7 @@ void ahci_save_initial_config(struct dev
+ 		hpriv->saved_cap2 = cap2 = 0;
+ 
+ 	/* some chips have errata preventing 64bit use */
+-	if ((cap & HOST_CAP_64) && (hpriv->flags & AHCI_HFLAG_32BIT_ONLY)) {
++	if ((cap & HOST_CAP_64)/* && (hpriv->flags & AHCI_HFLAG_32BIT_ONLY)*/) {
+ 		dev_info(dev, "controller can't do 64bit DMA, forcing 32bit\n");
+ 		cap &= ~HOST_CAP_64;
+ 	}
 
---=20
-M=E5ns Rullg=E5rd
+-- 
+tejun
