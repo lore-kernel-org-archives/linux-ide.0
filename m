@@ -1,67 +1,75 @@
-From: "Artem S. Tashkinov" <t.artem@lycos.com>
-Subject: Re: IO errors after "block: remove =?UTF-8?Q?bio=5Fget=5Fnr=5Fvec?=
- =?UTF-8?Q?s=28=29=22?=
-Date: Tue, 22 Dec 2015 10:59:09 +0500
-Message-ID: <d1fc0d395527c836d3d0b7e5197c313e@lycos.com>
-References: <CA+55aFwLyGifsQFdYZcWHeaHptxMqO_G25fZjer4R_yk4NtCpA@mail.gmail.com>
- <20151221065528.GA3873@htj.duckdns.org>
- <e53cb2f9d5882b0fbe82c589259bf043@lycos.com>
+From: Kent Overstreet <kent.overstreet@gmail.com>
+Subject: Re: IO errors after "block: remove bio_get_nr_vecs()"
+Date: Mon, 21 Dec 2015 21:02:27 -0900
+Message-ID: <20151222060227.GD26544@kmo-pixel>
+References: <e53cb2f9d5882b0fbe82c589259bf043@lycos.com>
  <20151221193550.GM4026@mtj.duckdns.org>
  <20151221200721.GN4026@mtj.duckdns.org>
- <20151221210811.GO4026@mtj.duckdns.org> <20151222035944.GG20661@kmo-pixel>
+ <20151221210811.GO4026@mtj.duckdns.org>
+ <20151222035944.GG20661@kmo-pixel>
  <20151222052611.GA10487@xzibit.linux.bs1.fc.nec.co.jp>
  <20151222053849.GB26544@kmo-pixel>
  <62de5f2365e58309503720ec3ad2fafd@lycos.com>
  <20151222055510.GC26544@kmo-pixel>
+ <d1fc0d395527c836d3d0b7e5197c313e@lycos.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtprelay0015.b.hostedemail.com ([64.98.42.15]:59165 "EHLO
-	smtprelay.b.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751674AbbLVF7L (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Dec 2015 00:59:11 -0500
-In-Reply-To: <20151222055510.GC26544@kmo-pixel>
+Received: from mail-pf0-f170.google.com ([209.85.192.170]:35637 "EHLO
+	mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750772AbbLVGCc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Dec 2015 01:02:32 -0500
+Content-Disposition: inline
+In-Reply-To: <d1fc0d395527c836d3d0b7e5197c313e@lycos.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kent Overstreet <kent.overstreet@gmail.com>
+To: "Artem S. Tashkinov" <t.artem@lycos.com>
 Cc: Junichi Nomura <j-nomura@ce.jp.nec.com>, Tejun Heo <tj@kernel.org>, "Artem S. Tashkinov" <t.artem@mailcity.com>, Christoph Hellwig <hch@lst.de>, Ming Lin <ming.l@ssi.samsung.com>, Jens Axboe <axboe@fb.com>, Linus Torvalds <torvalds@linux-foundation.org>, Steven Whitehouse <swhiteho@redhat.com>, IDE-ML <linux-ide@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Ming Lei <tom.leiming@gmail.com>
 
-On 2015-12-22 10:55, Kent Overstreet wrote:
-> On Tue, Dec 22, 2015 at 10:52:37AM +0500, Artem S. Tashkinov wrote:
->> On 2015-12-22 10:38, Kent Overstreet wrote:
->> >On Tue, Dec 22, 2015 at 05:26:12AM +0000, Junichi Nomura wrote:
->> >>On 12/22/15 12:59, Kent Overstreet wrote:
->> >>> reproduced it with 32 bit pae:
->> >>>
->> >>>> 1. Exclude memory above 4G line with boot param "max_addr=4G".
->> >>>
->> >>> doesn't work - max_addr=1G doesn't work either
->> >>>
->> >>>> 2. Disable highmem with "highmem=0".
->> >>>
->> >>> works!
->> >>>
->> >>>> 3. Try booting 64bit kernel.
->> >>>
->> >>> works
->> >>
->> >>blk_queue_bio() does split then bounce, which makes the segment
->> >>counting based on pages before bouncing and could go wrong.
->> >>
->> >>What do you think of a patch like this?
->> >
->> >Artem, can you give this patch a try?
->> 
->> 
->> This patch ostensibly fixes the issue - at least I cannot immediately
->> reproduce it. You can count me in as "Tested-by: Artem S. Tashkinov"
+On Tue, Dec 22, 2015 at 10:59:09AM +0500, Artem S. Tashkinov wrote:
+> On 2015-12-22 10:55, Kent Overstreet wrote:
+> >On Tue, Dec 22, 2015 at 10:52:37AM +0500, Artem S. Tashkinov wrote:
+> >>On 2015-12-22 10:38, Kent Overstreet wrote:
+> >>>On Tue, Dec 22, 2015 at 05:26:12AM +0000, Junichi Nomura wrote:
+> >>>>On 12/22/15 12:59, Kent Overstreet wrote:
+> >>>>> reproduced it with 32 bit pae:
+> >>>>>
+> >>>>>> 1. Exclude memory above 4G line with boot param "max_addr=4G".
+> >>>>>
+> >>>>> doesn't work - max_addr=1G doesn't work either
+> >>>>>
+> >>>>>> 2. Disable highmem with "highmem=0".
+> >>>>>
+> >>>>> works!
+> >>>>>
+> >>>>>> 3. Try booting 64bit kernel.
+> >>>>>
+> >>>>> works
+> >>>>
+> >>>>blk_queue_bio() does split then bounce, which makes the segment
+> >>>>counting based on pages before bouncing and could go wrong.
+> >>>>
+> >>>>What do you think of a patch like this?
+> >>>
+> >>>Artem, can you give this patch a try?
+> >>
+> >>
+> >>This patch ostensibly fixes the issue - at least I cannot immediately
+> >>reproduce it. You can count me in as "Tested-by: Artem S. Tashkinov"
+> >
+> >Let's all contemplate the fact that blk_segment_map_sg() _overrunning the
+> >end of
+> >the provided sglist_ was this much of a clusterfuck to debug.
 > 
-> Let's all contemplate the fact that blk_segment_map_sg() _overrunning 
-> the end of
-> the provided sglist_ was this much of a clusterfuck to debug.
+> From the look of it this fix has nothing to do with PAE, so then why only
+> PAE users like me were affected by the original
+> (b54ffb73cadcdcff9cc1ae0e11f502407e3e2e4c) patch?
 
- From the look of it this fix has nothing to do with PAE, so then why 
-only PAE users like me were affected by the original 
-(b54ffb73cadcdcff9cc1ae0e11f502407e3e2e4c) patch?
+The amusing thing is that I doubt PAE actually requires bouncing - addressing
+limits come from the device, not the cpu.
+
+But evidently in PAE mode, the block layer is in fact bouncing bios. Probably
+from some default setting in the queue limits that no one ever looks at.
+
+The whole queue limits design is an atrocity, it leads to exactly this kind of
+crap where no one can predict the actual behaviour of any given setup.
