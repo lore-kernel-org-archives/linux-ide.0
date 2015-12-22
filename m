@@ -1,75 +1,72 @@
-From: Kent Overstreet <kent.overstreet@gmail.com>
-Subject: Re: IO errors after "block: remove bio_get_nr_vecs()"
-Date: Mon, 21 Dec 2015 21:02:27 -0900
-Message-ID: <20151222060227.GD26544@kmo-pixel>
-References: <e53cb2f9d5882b0fbe82c589259bf043@lycos.com>
- <20151221193550.GM4026@mtj.duckdns.org>
- <20151221200721.GN4026@mtj.duckdns.org>
- <20151221210811.GO4026@mtj.duckdns.org>
- <20151222035944.GG20661@kmo-pixel>
- <20151222052611.GA10487@xzibit.linux.bs1.fc.nec.co.jp>
- <20151222053849.GB26544@kmo-pixel>
- <62de5f2365e58309503720ec3ad2fafd@lycos.com>
- <20151222055510.GC26544@kmo-pixel>
- <d1fc0d395527c836d3d0b7e5197c313e@lycos.com>
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: Re: [PATCH 1/3] ata: sata_dwc_460ex: use "dmas" DT property to find
+ dma channel
+Date: Tue, 22 Dec 2015 12:58:10 +0200
+Message-ID: <1450781890.30729.298.camel@linux.intel.com>
+References: <1450221935-6034-1-git-send-email-mans@mansr.com>
+	 <yw1x60zua1ld.fsf@unicorn.mansr.com>
+	 <CAHp75Vdhpoqp2SeVz-MCbTVdG7V38hwW3wVCN0YPaoazyZNHOw@mail.gmail.com>
+	 <yw1xwpsa8j2x.fsf@unicorn.mansr.com> <56758F33.20804@candw.ms>
+	 <yw1xsi2y8ifa.fsf@unicorn.mansr.com> <5675A84F.2070208@candw.ms>
+	 <yw1xio3u8dgc.fsf@unicorn.mansr.com> <5675BB2F.6060107@candw.ms>
+	 <CAHp75VdVStVWpucOVkoZHkR3zz034LvRJMQpJk-eLhoA8pjGFg@mail.gmail.com>
+	 <yw1xegei893o.fsf@unicorn.mansr.com> <5675C452.2080206@candw.ms>
+	 <yw1xy4cp6o4o.fsf@unicorn.mansr.com> <5676E906.1060603@candw.ms>
+	 <yw1xpoy16jlt.fsf@unicorn.mansr.com>
+	 <CAHp75Vedczfn7B-tOEVZi2dOExW8FiAGGA7iTkpuC2wBrsK68g@mail.gmail.com>
+	 <CAHp75VfaHvBHhTjQVMNdOYA2kEdus-XpH6E=9i1HPSKTa-2ffA@mail.gmail.com>
+	 <yw1x60zs7g40.fsf@unicorn.mansr.com>
+	 <1450724880.30729.250.camel@linux.intel.com>
+	 <yw1xr3if4n74.fsf@unicorn.mansr.com>
+	 <1450731289.30729.282.camel@linux.intel.com>
+	 <yw1x37uv4a6l.fsf@unicorn.mansr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pf0-f170.google.com ([209.85.192.170]:35637 "EHLO
-	mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750772AbbLVGCc (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Dec 2015 01:02:32 -0500
-Content-Disposition: inline
-In-Reply-To: <d1fc0d395527c836d3d0b7e5197c313e@lycos.com>
+Received: from mga02.intel.com ([134.134.136.20]:57350 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753013AbbLVK5x (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 22 Dec 2015 05:57:53 -0500
+In-Reply-To: <yw1x37uv4a6l.fsf@unicorn.mansr.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Artem S. Tashkinov" <t.artem@lycos.com>
-Cc: Junichi Nomura <j-nomura@ce.jp.nec.com>, Tejun Heo <tj@kernel.org>, "Artem S. Tashkinov" <t.artem@mailcity.com>, Christoph Hellwig <hch@lst.de>, Ming Lin <ming.l@ssi.samsung.com>, Jens Axboe <axboe@fb.com>, Linus Torvalds <torvalds@linux-foundation.org>, Steven Whitehouse <swhiteho@redhat.com>, IDE-ML <linux-ide@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Ming Lei <tom.leiming@gmail.com>
+To: =?ISO-8859-1?Q?M=E5ns_Rullg=E5rd?= <mans@mansr.com>
+Cc: Andy Shevchenko <andy.shevchenko@gmail.com>, Julian Margetson <runaway@candw.ms>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Tue, Dec 22, 2015 at 10:59:09AM +0500, Artem S. Tashkinov wrote:
-> On 2015-12-22 10:55, Kent Overstreet wrote:
-> >On Tue, Dec 22, 2015 at 10:52:37AM +0500, Artem S. Tashkinov wrote:
-> >>On 2015-12-22 10:38, Kent Overstreet wrote:
-> >>>On Tue, Dec 22, 2015 at 05:26:12AM +0000, Junichi Nomura wrote:
-> >>>>On 12/22/15 12:59, Kent Overstreet wrote:
-> >>>>> reproduced it with 32 bit pae:
-> >>>>>
-> >>>>>> 1. Exclude memory above 4G line with boot param "max_addr=4G".
-> >>>>>
-> >>>>> doesn't work - max_addr=1G doesn't work either
-> >>>>>
-> >>>>>> 2. Disable highmem with "highmem=0".
-> >>>>>
-> >>>>> works!
-> >>>>>
-> >>>>>> 3. Try booting 64bit kernel.
-> >>>>>
-> >>>>> works
-> >>>>
-> >>>>blk_queue_bio() does split then bounce, which makes the segment
-> >>>>counting based on pages before bouncing and could go wrong.
-> >>>>
-> >>>>What do you think of a patch like this?
-> >>>
-> >>>Artem, can you give this patch a try?
-> >>
-> >>
-> >>This patch ostensibly fixes the issue - at least I cannot immediately
-> >>reproduce it. You can count me in as "Tested-by: Artem S. Tashkinov"
-> >
-> >Let's all contemplate the fact that blk_segment_map_sg() _overrunning the
-> >end of
-> >the provided sglist_ was this much of a clusterfuck to debug.
-> 
-> From the look of it this fix has nothing to do with PAE, so then why only
-> PAE users like me were affected by the original
-> (b54ffb73cadcdcff9cc1ae0e11f502407e3e2e4c) patch?
+On Tue, 2015-12-22 at 00:08 +0000, M=C3=A5ns Rullg=C3=A5rd wrote:
+> Andy Shevchenko <andriy.shevchenko@linux.intel.com> writes:
+>=20
+> > On Mon, 2015-12-21 at 19:27 +0000, M=C3=A5ns Rullg=C3=A5rd wrote:
+> > > Andy Shevchenko <andriy.shevchenko@linux.intel.com> writes:
+> > >=20
+> > > > I can share my working branch with a set of patches regarding
+> > > > to
+> > > > dw_dmac. We may do our work based on that code and after I'll
+> > > > submit
+> > > > everything to upstream. Does it sound okay for you, guys?
+> > >=20
+> > > I'm going away for the holidays, so I won't be able to do any
+> > > serious
+> > > work on this until January, but I'll keep an eye on emails and
+> > > may
+> > > even reply occasionally.=C2=A0=C2=A0Before I go, I'll publish my =
+patches so
+> > > far
+> > > whatever shape they're in.
+> >=20
+> > Okay, thanks! I will include them in my branch which I'm going to
+> > publish on GitHUB.
+>=20
+> Here's what I have: https://bitbucket.org/mansr/linux-dwc
+> Bitbucket because Github won't let me have more than one Linux
+> repo.
 
-The amusing thing is that I doubt PAE actually requires bouncing - addressing
-limits come from the device, not the cpu.
+Thanks, got it.
 
-But evidently in PAE mode, the block layer is in fact bouncing bios. Probably
-from some default setting in the queue limits that no one ever looks at.
+Will base my stuff on what you had done already.
 
-The whole queue limits design is an atrocity, it leads to exactly this kind of
-crap where no one can predict the actual behaviour of any given setup.
+--=20
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
+
