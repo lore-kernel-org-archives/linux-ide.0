@@ -1,7 +1,7 @@
 From: Kent Overstreet <kent.overstreet@gmail.com>
 Subject: Re: IO errors after "block: remove bio_get_nr_vecs()"
-Date: Mon, 21 Dec 2015 20:37:10 -0900
-Message-ID: <20151222053710.GA26544@kmo-pixel>
+Date: Mon, 21 Dec 2015 20:38:49 -0900
+Message-ID: <20151222053849.GB26544@kmo-pixel>
 References: <CA+55aFwLyGifsQFdYZcWHeaHptxMqO_G25fZjer4R_yk4NtCpA@mail.gmail.com>
  <20151221065528.GA3873@htj.duckdns.org>
  <e53cb2f9d5882b0fbe82c589259bf043@lycos.com>
@@ -12,13 +12,17 @@ References: <CA+55aFwLyGifsQFdYZcWHeaHptxMqO_G25fZjer4R_yk4NtCpA@mail.gmail.com>
  <20151222052611.GA10487@xzibit.linux.bs1.fc.nec.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:35487 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753852AbbLVFiy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Dec 2015 00:38:54 -0500
 Content-Disposition: inline
 In-Reply-To: <20151222052611.GA10487@xzibit.linux.bs1.fc.nec.co.jp>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: Junichi Nomura <j-nomura@ce.jp.nec.com>
 Cc: Tejun Heo <tj@kernel.org>, "Artem S. Tashkinov" <t.artem@lycos.com>, "Artem S. Tashkinov" <t.artem@mailcity.com>, Christoph Hellwig <hch@lst.de>, Ming Lin <ming.l@ssi.samsung.com>, Jens Axboe <axboe@fb.com>, Linus Torvalds <torvalds@linux-foundation.org>, Steven Whitehouse <swhiteho@redhat.com>, IDE-ML <linux-ide@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Ming Lei <tom.leiming@gmail.com>
-List-Id: linux-ide@vger.kernel.org
 
 On Tue, Dec 22, 2015 at 05:26:12AM +0000, Junichi Nomura wrote:
 > On 12/22/15 12:59, Kent Overstreet wrote:
@@ -41,7 +45,7 @@ On Tue, Dec 22, 2015 at 05:26:12AM +0000, Junichi Nomura wrote:
 > 
 > What do you think of a patch like this?
 
-Shit, you nailed it. Can't believe I didn't think to check that.
+Artem, can you give this patch a try?
 
 > 
 > -- 
