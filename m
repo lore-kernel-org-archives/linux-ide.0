@@ -1,59 +1,44 @@
-From: Jens Axboe <axboe@fb.com>
-Subject: Re: IO errors after "block: remove bio_get_nr_vecs()"
-Date: Tue, 22 Dec 2015 10:28:06 -0700
-Message-ID: <56798826.6000908@fb.com>
-References: <CA+55aFwLyGifsQFdYZcWHeaHptxMqO_G25fZjer4R_yk4NtCpA@mail.gmail.com>
- <20151221065528.GA3873@htj.duckdns.org>
- <e53cb2f9d5882b0fbe82c589259bf043@lycos.com>
- <20151221193550.GM4026@mtj.duckdns.org>
- <20151221200721.GN4026@mtj.duckdns.org>
- <20151221210811.GO4026@mtj.duckdns.org> <20151222035944.GG20661@kmo-pixel>
- <20151222052611.GA10487@xzibit.linux.bs1.fc.nec.co.jp>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:45047 "EHLO
-	mx0b-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753270AbbLVR2j (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Dec 2015 12:28:39 -0500
-In-Reply-To: <20151222052611.GA10487@xzibit.linux.bs1.fc.nec.co.jp>
-Sender: linux-ide-owner@vger.kernel.org
+From: Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
+Subject: [PATCH 2/2] ahci_xgene: Enable AHCI_HFLAG_EDGE_IRQ_BROKEN for APM X-Gen2 SATA host controller
+Date: Thu, 24 Dec 2015 13:01:29 +0530
+Message-ID: <1450942289-12660-3-git-send-email-stripathi@apm.com>
+References: <1450942289-12660-1-git-send-email-stripathi@apm.com>
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1450942289-12660-1-git-send-email-stripathi-qTEPVZfXA3Y@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org
+Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, mlangsdo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, jcm-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, patches-qTEPVZfXA3Y@public.gmane.org, Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: Junichi Nomura <j-nomura@ce.jp.nec.com>, Kent Overstreet <kent.overstreet@gmail.com>, Tejun Heo <tj@kernel.org>
-Cc: "Artem S. Tashkinov" <t.artem@lycos.com>, "Artem S. Tashkinov" <t.artem@mailcity.com>, Christoph Hellwig <hch@lst.de>, Ming Lin <ming.l@ssi.samsung.com>, Linus Torvalds <torvalds@linux-foundation.org>, Steven Whitehouse <swhiteho@redhat.com>, IDE-ML <linux-ide@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Ming Lei <tom.leiming@gmail.com>
 
-On 12/21/2015 10:26 PM, Junichi Nomura wrote:
-> On 12/22/15 12:59, Kent Overstreet wrote:
->> reproduced it with 32 bit pae:
->>
->>> 1. Exclude memory above 4G line with boot param "max_addr=4G".
->>
->> doesn't work - max_addr=1G doesn't work either
->>
->>> 2. Disable highmem with "highmem=0".
->>
->> works!
->>
->>> 3. Try booting 64bit kernel.
->>
->> works
->
-> blk_queue_bio() does split then bounce, which makes the segment
-> counting based on pages before bouncing and could go wrong.
+This patch enables the AHCI_HFLAG_EDGE_IRQ_BROKEN for APM
+X-Gene2 AHCI SATA host controller. Due to H/W errata, the
+HOST_IRQ_STAT misses the edge interrupt from PORT_IRQ_STAT
+when clearing the HOST_IRQ_STAT and reporting the PORT_IRQ_STAT
+at the same clock cycle.
 
-Good catch! The blk-mq parts aren't affected by this, the screw up only 
-happened in the old IO path. I've added this with the appropriate 
-tested-by from Artem, and CC stable and listed the commit that broke it:
+Signed-off-by: Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
+---
+ drivers/ata/ahci_xgene.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-commit 54efd50bfd873e2dbf784e0b21a8027ba4299a3e
-Author: Kent Overstreet <kent.overstreet@gmail.com>
-Date:   Thu Apr 23 22:37:18 2015 -0700
+diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
+index e2c6d9e..57c8463 100644
+--- a/drivers/ata/ahci_xgene.c
++++ b/drivers/ata/ahci_xgene.c
+@@ -779,7 +779,8 @@ skip_clk_phy:
+ 		hpriv->flags = AHCI_HFLAG_NO_NCQ;
+ 		break;
+ 	case XGENE_AHCI_V2:
+-		hpriv->flags |= AHCI_HFLAG_YES_FBS | AHCI_HFLAG_EDGE_IRQ;
++		hpriv->flags |= AHCI_HFLAG_YES_FBS | AHCI_HFLAG_EDGE_IRQ |
++				AHCI_HFLAG_EDGE_IRQ_BROKEN;
+ 		break;
+ 	default:
+ 		break;
+--
+1.7.1
 
-     block: make generic_make_request handle arbitrarily sized bios
-
-Thanks to all involved in nailing this down, it'll go out shortly.
-
--- 
-Jens Axboe
-
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
