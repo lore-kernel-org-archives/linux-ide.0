@@ -1,89 +1,40 @@
-From: Florian Fainelli <f.fainelli@gmail.com>
-Subject: Re: [v6 0/7] add support SATA for BMIPS_GENERIC
-Date: Thu, 24 Dec 2015 09:52:52 -0800
-Message-ID: <2D90085B-23A9-4FE6-A203-5934749B4D04@gmail.com>
-References: <1448506595-4981-1-git-send-email-jaedon.shin@gmail.com> <56769896.6060908@ti.com>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: sata_mv: Another source code review around exception handling?
+Date: Fri, 25 Dec 2015 17:00:30 +0100
+Message-ID: <567D681E.7050903@users.sourceforge.net>
+References: <566ABCD9.1060404@users.sourceforge.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:35832 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754262AbbLXRxG (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 24 Dec 2015 12:53:06 -0500
-Received: by mail-ob0-f173.google.com with SMTP id 18so189269482obc.2
-        for <linux-ide@vger.kernel.org>; Thu, 24 Dec 2015 09:53:05 -0800 (PST)
-In-Reply-To: <56769896.6060908@ti.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <566ABCD9.1060404@users.sourceforge.net>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-ide@vger.kernel.org
-To: Kishon Vijay Abraham I <kishon@ti.com>, Jaedon Shin <jaedon.shin@gmail.com>, Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Brian Norris <computersforpeace@gmail.com>, linux-ide@vger.kernel.org
-Cc: Ralf Baechle <ralf@linux-mips.org>, Dragan Stancevic <dragan.stancevic@gmail.com>
 
-On December 20, 2015 4:01:26 AM PST, Kishon Vijay Abraham I <kishon@ti.com> wrote:
->
->
->On Thursday 26 November 2015 08:26 AM, Jaedon Shin wrote:
->> Hi all,
->> 
->> This patch series add support SATA for BMIPS_GENERIC.
->> 
->> Changes in v6:
->> - change error message for invalid phy version
->> - use a flag AHCI_HFLAG_NO_NCQ instead of HOST_CAP_NCQ overriding
->> 
->> Changes in v5:
->> - uses brcm_sata_readreg and brcm_sata_writereg for HOST_CAP_NCQ
->overriding
->> - pull out already applied patches for device tree entries
->> - add "Tested-by:" and "Acked-by:" tags
->> 
->> Changes in v4:
->> - remove unused properties from bcm{7425,7342,7362}.dtsi
->> 
->> Changes in v3:
->> - fix typo quirk instead of quick
->> - disable NCQ before initialzing SATA controller endianness
->> - fix misnomer controlling phy interface
->> - remove brcm,broken-ncq and brcm,broken-phy properties from
->devicetree
->> - use compatible string for quirks
->> - use list for compatible strings
->> - add "Acked-by:" tags
->> 
->> Changes in v2:
->> - add a quirk for disable NCQ
->> - add a quirk for skip phy interface control
->> - remove unused definitions in ahci_brcmstb
->> - combine compatible string
->> 
->> Jaedon Shin (7):
->>   ata: ahci_brcmstb: add support for MIPS-based platforms
->>   ata: ahci_brcmstb: disable NCQ for MIPS-based platforms
->>   ata: ahci_brcmstb: add a quirk for MIPS-based platforms
->>   ata: ahci_brcmstb: remove unused definitions
->>   phy: phy_brcmstb_sata: remove duplicate definitions
->>   phy: phy_brcmstb_sata: add data for phy version
->>   phy: phy_brcmstb_sata: add support for MIPS-based platforms
->
->merged phy susbsystem patches to linux-phy tree.
+Hello,
 
-Thank you! Tejun, can you take the AHCI driver changes if they look good to you? Thanks!
+I have looked at the source file for the Marvell SATA support driver once more.
+I would appreciate if a specific implementation detail can be clarified there.
 
->
->Thanks
->Kishon
->> 
->>  .../devicetree/bindings/ata/brcm,sata-brcmstb.txt  |  4 +-
->>  .../bindings/phy/brcm,brcmstb-sata-phy.txt         |  1 +
->>  drivers/ata/Kconfig                                |  2 +-
->>  drivers/ata/ahci_brcmstb.c                         | 23 ++++++++++-
->>  drivers/phy/Kconfig                                |  4 +-
->>  drivers/phy/phy-brcmstb-sata.c                     | 47
->+++++++++++++++++-----
->>  6 files changed, 65 insertions(+), 16 deletions(-)
->> 
+Static source code analysis can point out that functions like the following
+are called by the mv_platform_probe() function.
+https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git/tree/drivers/ata/sata_mv.c?id=80c75a0f1d81922bf322c0634d1e1a15825a89e6#n4055
+
+* ata_host_alloc_pinfo
+  http://lxr.free-electrons.com/source/drivers/ata/libata-core.c?v=4.3#L5768
+
+* devm_kzalloc
+  http://lxr.free-electrons.com/source/include/linux/device.h?v=4.3#L645
 
 
--- 
-Sent from my Android device with K-9 Mail. Please excuse my brevity.
+The value "-ENOMEM" will be returned if one of these function calls failed.
+Can it be that any system resources (like memory) are not appropriately
+released if any calls of this sequence succeeded before the failure?
+
+
+Is the use of the single jump label "err" also suspicious here?
+
+Regards,
+Markus
