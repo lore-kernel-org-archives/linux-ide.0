@@ -1,36 +1,37 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: sata_mv: Another source code review around exception handling?
-Date: Mon, 28 Dec 2015 11:10:54 -0500
-Message-ID: <20151228161054.GR5003@mtj.duckdns.org>
-References: <566ABCD9.1060404@users.sourceforge.net>
- <567D681E.7050903@users.sourceforge.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <567D681E.7050903@users.sourceforge.net>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: SF Markus Elfring <elfring@users.sourceforge.net>
-Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+From: Insu Yun <wuninsu@gmail.com>
+Subject: [PATCH] ata: correctly handling failed allocation
+Date: Tue, 29 Dec 2015 16:21:15 -0500
+Message-ID: <1451424075-19654-1-git-send-email-wuninsu@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-yk0-f196.google.com ([209.85.160.196]:33819 "EHLO
+	mail-yk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753737AbbL2VSc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Dec 2015 16:18:32 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: tj@kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: taesoo@gatech.edu, yeongjin.jang@gatech.edu, insu@gatech.edu, changwoo@gatech.edu, Insu Yun <wuninsu@gmail.com>
 
-Hello,
+Since kzalloc can be failed in memory pressure, return error when failed.
 
-On Fri, Dec 25, 2015 at 05:00:30PM +0100, SF Markus Elfring wrote:
-> The value "-ENOMEM" will be returned if one of these function calls failed.
-> Can it be that any system resources (like memory) are not appropriately
-> released if any calls of this sequence succeeded before the failure?
+Signed-off-by: Insu Yun <wuninsu@gmail.com>
+---
+ drivers/ata/sata_sx4.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Most of those are managed resources (devm_, pcim_ and so on) and are
-released automatically when the driver detaches from the device.
-
-> Is the use of the single jump label "err" also suspicious here?
-
-And that exit label deal with resources which aren't managed - some
-just haven't grown managed variant yet while others don't fit the
-model too well.
-
-Thanks.
-
+diff --git a/drivers/ata/sata_sx4.c b/drivers/ata/sata_sx4.c
+index fab504f..48301cb 100644
+--- a/drivers/ata/sata_sx4.c
++++ b/drivers/ata/sata_sx4.c
+@@ -1396,6 +1396,8 @@ static unsigned int pdc20621_dimm_init(struct ata_host *host)
+ 		addr = 0;
+ 		length = size * 1024 * 1024;
+ 		buf = kzalloc(ECC_ERASE_BUF_SZ, GFP_KERNEL);
++		if (!buf)
++			return 1;
+ 		while (addr < length) {
+ 			pdc20621_put_to_dimm(host, buf, addr,
+ 					     ECC_ERASE_BUF_SZ);
 -- 
-tejun
+1.9.1
+
