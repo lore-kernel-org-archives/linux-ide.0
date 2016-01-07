@@ -1,55 +1,65 @@
-From: Rob Herring <robh@kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
 Subject: Re: [PATCH] ata: add AMD Seattle platform driver
-Date: Thu, 7 Jan 2016 16:56:28 -0600
-Message-ID: <20160107225628.GA4213@rob-hp-laptop>
-References: <1452200002-31590-1-git-send-email-brijesh.singh@amd.com>
- <4652600.rUhSEOUPkl@wuerfel>
+Date: Fri, 08 Jan 2016 00:42:54 +0100
+Message-ID: <4983521.tEaWggKCCv@wuerfel>
+References: <1452200002-31590-1-git-send-email-brijesh.singh@amd.com> <4652600.rUhSEOUPkl@wuerfel> <568EE596.3060005@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:58731 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752721AbcAGW4d (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 7 Jan 2016 17:56:33 -0500
-Content-Disposition: inline
-In-Reply-To: <4652600.rUhSEOUPkl@wuerfel>
+Received: from mout.kundenserver.de ([217.72.192.73]:54692 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753855AbcAGXnr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Jan 2016 18:43:47 -0500
+In-Reply-To: <568EE596.3060005@amd.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-kernel@lists.infradead.org, Brijesh Singh <brijesh.singh@amd.com>, linux-kernel@vger.kernel.org, mark.rutland@arm.com, devicetree@vger.kernel.org, pawel.moll@arm.com, ijc+devicetree@hellion.org.uk, linux-ide@vger.kernel.org, galak@codeaurora.org, tj@kernel.org
+To: Brijesh Singh <brijesh.singh@amd.com>
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, mark.rutland@arm.com, devicetree@vger.kernel.org, pawel.moll@arm.com, ijc+devicetree@hellion.org.uk, linux-ide@vger.kernel.org, robh+dt@kernel.org, galak@codeaurora.org, tj@kernel.org
 
-On Thu, Jan 07, 2016 at 10:25:38PM +0100, Arnd Bergmann wrote:
-> On Thursday 07 January 2016 14:53:22 Brijesh Singh wrote:
-> > AMD Seattle SATA controller mostly conforms to AHCI interface with some
-> > special register to control SGPIO interface. In the case of an AHCI
-> > controller, the SGPIO feature is ideally implemented using the
-> > "Enclosure Management" register of the AHCI controller, but those
-> > registeres are not implemented in the Seattle SoC. Instead SoC
-> > (Rev B0 onwards) provides a 32-bit SGPIO control register which should
-> > be programmed to control the activity, locate and fault LEDs.
-
-> > +Examples:
-> > +        sata0@e0300000 {
-> > +		compatible = "amd,seattle-ahci";
-> > +		reg = <0x0 0xe0300000 0x0 0xf0000>, <0x0 0xe0000078 0x0 0x1>;
+On Thursday 07 January 2016 16:24:22 Brijesh Singh wrote:
+> >> +
+> >> +Examples:
+> >> +        sata0@e0300000 {
+> >> +            compatible = "amd,seattle-ahci";
+> >> +            reg = <0x0 0xe0300000 0x0 0xf0000>, <0x0 0xe0000078 0x0 0x1>;
+> > 
+> > Looking at the register values, I doubt that the SGPIO is actually part of the
+> > sata device. More likely, you are pointing in the middle of an actual
+> > GPIO controller.
+> > 
 > 
-> Looking at the register values, I doubt that the SGPIO is actually part of the
-> sata device. More likely, you are pointing in the middle of an actual
-> GPIO controller.
+> That address is SGPIO control register for SATA. The current hardware implementation to control activity LED is not ideal.
 
-SGPIO is really a poor name as it has little to do with GPIO. It's a 
-serial protocol to set LED states. Still, I agree this should probably 
-be a separate node with perhaps a phandle to syscon.
- 
-> If so, please implement a GPIO driver for that device, and use the gpio-leds
-> driver to drive the LEDs. IIRC there is already a generic way to communicate
-> with the LEDs interface from libata, if not you can implement that in order
-> to keep the special case out of the platform driver.
+Of course its a control register "for" SATA, what I meant is that it's
+not part "of" the SATA IP block, which is hopefully a standard AHCI
+compliant part as required by SBSA.
 
-There is kernel support for activity LEDs, but the others you want to 
-control with ledmon/ledctl utilities rather than LED subsystem. Those 
-utilities use an enclosure management sysfs file IIRC. There's no 
-kernel support for SGPIO outside of the AHCI enclosure management 
-register (at least there wasn't 2 years ago when I last looked). 
+> A57 does not have access to GPIO's connected to backplane controller
+> instead SoC has exposed two SGPIO control registers (LSIOC_SGPIO_CONTROL0:
+> 0xE000_0078 and LSIOC_SGPIO_CONTROL1: 0xE000_007C) to A57. All we 
+> need to do is to program these registers based on the disk activity.
+> The firmware running on A5 reads the values and generate proper SGPIO
+> timing and toggles the LEDs etc.
 
-Rob
+It still sounds like SGPIO is not part of the AHCI standard spec, but
+rather a subset of a device called LSIOC.
+
+> These registers are defined in SATA0/1 DSDT resource template and also
+> documented in SoC BKDG. I just noticed that BKDG has wrong register
+> definition so will ask documentation folks to fix that.
+> 
+> This driver is using SGPIO LED control similar to sata_highbank [1]
+> except bit bang GPIO (which is done by firmware).
+> 
+> [1] http://lxr.free-electrons.com/source/drivers/ata/sata_highbank.c#L140
+
+This one is rather different: there is a single device that combines
+registers for AHCI, the PHY attached to it and the LED. This is not
+SBSA compliant of course, and it requires having a special driver.
+
+What you have instead looks like a regular AHCI implementation that
+should just work with the standard driver as long as you describe how
+it gets its LEDs.
+
+	Arnd
