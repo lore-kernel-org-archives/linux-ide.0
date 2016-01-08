@@ -1,62 +1,39 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH] ata: add AMD Seattle platform driver
-Date: Fri, 08 Jan 2016 11:59:53 -0800
-Message-ID: <1452283193.4028.84.camel@perches.com>
-References: <1452200002-31590-1-git-send-email-brijesh.singh@amd.com>
+From: Daniel Walker <danielwa@cisco.com>
+Subject: Re: [PATCH 1/2] drivers: pata_octeon_cf : Switch IO mode depending on
+ model number
+Date: Fri, 8 Jan 2016 12:11:47 -0800
+Message-ID: <56901803.209@cisco.com>
+References: <1452230332-14926-1-git-send-email-danielwa@cisco.com>
+ <20160108153049.GN1898@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtprelay0009.hostedemail.com ([216.40.44.9]:34431 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1755266AbcAHT76 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Jan 2016 14:59:58 -0500
-In-Reply-To: <1452200002-31590-1-git-send-email-brijesh.singh@amd.com>
+Received: from rcdn-iport-3.cisco.com ([173.37.86.74]:8379 "EHLO
+	rcdn-iport-3.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751213AbcAHULu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Jan 2016 15:11:50 -0500
+In-Reply-To: <20160108153049.GN1898@mtj.duckdns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brijesh Singh <brijesh.singh@amd.com>, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Cc: robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org, tj@kernel.org, devicetree@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Anil Veliyankara Madam <aveliyan@cisco.com>, xe-kernel@external.cisco.com, Shikha Jain <shikjain@cisco.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, "Chris Hall (hall)" <hall@cisco.com>
 
-On Thu, 2016-01-07 at 14:53 -0600, Brijesh Singh wrote:
-> AMD Seattle SATA controller mostly conforms to AHCI interface with so=
-me
-> special register to control SGPIO interface. In the case of an AHCI
-> controller, the SGPIO feature is ideally implemented using the
-> "Enclosure Management" register of the AHCI controller, but those
-> registeres are not implemented in the Seattle SoC. Instead SoC
-> (Rev B0 onwards) provides a 32-bit SGPIO control register which shoul=
-d
-> be programmed to control the activity, locate and fault LEDs.
+On 01/08/2016 07:30 AM, Tejun Heo wrote:
+> Hello, Daniel.
+>
+> On Thu, Jan 07, 2016 at 09:18:51PM -0800, Daniel Walker wrote:
+>> From: Anil Veliyankara Madam <aveliyan@cisco.com>
+>>
+>> Since viking flash has a problem in the MWDMA mode which causes data
+>> corruption, this patch allows the driver to detect the model number
+>> and switch the IO mode to PIO6 if it's a viking flash.
+> Hmmm... is this specific to pata_octeon_cf or should it apply to the
+> device regardless of the controller in use?
+>
+>
 
-trivia:
+It's not specific to pata_octeon_cf , it should be applied to the device 
+regardless of controller. Is there a better place to put this to cover all ?
 
-> diff --git a/drivers/ata/ahci_seattle.c b/drivers/ata/ahci_seattle.c
-[]
-> +static ssize_t seattle_transmit_led_message(struct ata_port *ap, u32=
- state,
-> +					=A0=A0=A0=A0ssize_t size)
-> +{
-> +	struct ahci_host_priv *hpriv =3D ap->host->private_data;
-> +	struct ahci_port_priv *pp =3D ap->private_data;
-> +	struct seattle_plat_data *plat_data =3D hpriv->plat_data;
-> +	unsigned long flags;
-> +	int pmp;
-> +	struct ahci_em_priv *emp;
-> +	u32 val;
-> +
-> +	/* get the slot number from the message */
-> +	pmp =3D (state & EM_MSG_LED_PMP_SLOT) >> 8;
-> +	if (pmp < EM_MAX_SLOTS)
-> +		emp =3D &pp->em_priv[pmp];
-> +	else
-> +		return -EINVAL;
-
-This is generally done using a inverted test that
-returns immediately
-
-	if (pmp >=3D EMP_MAX_SLOTS)
-		return -EINVAL;
-
-	emp =3D &pp->em_priv[pmp];
-
-
+Daniel
