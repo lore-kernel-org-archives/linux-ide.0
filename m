@@ -1,139 +1,78 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH] ata: add AMD Seattle platform driver
-Date: Fri, 08 Jan 2016 23:47:53 +0100
-Message-ID: <9923043.nz8DJ6lRiJ@wuerfel>
-References: <1452200002-31590-1-git-send-email-brijesh.singh@amd.com> <10869853.plxna0HzWE@wuerfel> <5690367E.8060609@amd.com>
+From: Danesh Petigara <dpetigara@broadcom.com>
+Subject: Re: [PATCH 3/4] drivers: ata: wake port before DMA stop for ALPM
+Date: Fri, 8 Jan 2016 15:20:44 -0800
+Message-ID: <5690444C.2090200@broadcom.com>
+References: <1452211413-1350-1-git-send-email-f.fainelli@gmail.com> <1452211413-1350-4-git-send-email-f.fainelli@gmail.com> <20160108163610.GS1898@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.133]:59666 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752251AbcAHWsu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Jan 2016 17:48:50 -0500
-In-Reply-To: <5690367E.8060609@amd.com>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:10582 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754400AbcAHXUq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Jan 2016 18:20:46 -0500
+In-Reply-To: <20160108163610.GS1898@mtj.duckdns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brijesh Singh <brijesh.singh@amd.com>
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, mark.rutland@arm.com, devicetree@vger.kernel.org, pawel.moll@arm.com, ijc+devicetree@hellion.org.uk, linux-ide@vger.kernel.org, robh+dt@kernel.org, galak@codeaurora.org, tj@kernel.org
+To: Tejun Heo <tj@kernel.org>, Florian Fainelli <f.fainelli@gmail.com>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, bcm-kernel-feedback-list@broadcom.com, computersforpeace@gmail.com, gregory.0xf0@gmail.com
 
-On Friday 08 January 2016 16:21:50 Brijesh Singh wrote:
-> >> Should I consider adding a property "sgpio-ctrl" to pass the register 
-> >> address ?
-> >>
-> >> e.g
-> >>
-> >> sata0@e0300000 {
-> >>    compatible = "amd,seattle-ahci";
-> >>    reg = <0 0xe0300000 0 0x800>;
-> >>    amd,sgpio-ctrl = <0xe0000078>;
-> >>    interrupts = <0 355 4>;
-> >>    clocks = <&sataclk_333mhz>;
-> >>    dma-coherent;
-> >> };
-> > 
-> > We generally don't refer to register locations with properties other than
-> > 'reg', so that approach would be worse. What I'd suggest you do is to
-> > have the sgpio registers in a separate device node, and use the LED
-> > binding to access it, see
-> >  
-> > Documentation/devicetree/bindings/leds/common.txt
-> > 
-> > It seems that none of the drivers/ata/ drivers use the leds interface
-> > today, but that can be added to libata-*.c whenever the appropriate
-> > properties are there.
-> >
+Hi Tejun,
+
+On 1/8/2016 8:36 AM, Tejun Heo wrote:
+> Hello,
 > 
-> libata-*.c implements the "Enclosure management" style led messages but also has hooks
-> to register a custom led control callback. Since Seattle platform does not support
-> the "Enclosure management" registers hence ata_port_info we are setting a ATA_FLAG_EM | ATA_FLAG_SW_ACIVITY 
-> to indicate that we can still handle the led messages by our registered callback. I see
-> that sata_highbank driver is doing something similar.
-
-But if the LEDs are the only thing that is special, I think it makes
-more sense to extend the generic driver. This is similar to how the
-ahci driver knows how to deal with external PHY, clk, regulator etc
-resources. All of those are not part of the AHCI spec, but are common
-enough that we want to have them done in a single driver.
-
-We really should not need a special driver just for handling LEDs
-when we already deal with more complex stuff, and we have a proper
-abstraction for LEDs in the kernel.
-
-> > 
-> > That way, any driver that ends up needing a register from this block
-> > can use the syscon interface to get hold of a mapping, and/or you can
-> > have a high-level driver to expose other functionalities. It's probably
-> > best to start doing it either entirely using syscon references from
-> > other drivers, or using no syscon references, and putting everything into
-> > a driver for the register set, but as I said it depends a lot on what
-> > else is in there.
-> > 
-> > Can you send me a register list of the 0xe0000000 segment for reference?
-> >
-> Thanks for pointing syncon, are you thinking something like this ?
+> On Thu, Jan 07, 2016 at 04:03:32PM -0800, Florian Fainelli wrote:
+>> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+>> index d61740e78d6d..b6664c579f9a 100644
+>> --- a/drivers/ata/libahci.c
+>> +++ b/drivers/ata/libahci.c
+>> @@ -595,6 +595,58 @@ int ahci_stop_engine(struct ata_port *ap)
+>>  	void __iomem *port_mmio = ahci_port_base(ap);
+>>  	u32 tmp;
+>>  
+>> +	/*
+>> +	 * On some controllers, stopping a port's DMA engine
+>> +	 * while the port is in ALPM state (partial or slumber)
+>> +	 * results in failures on subsequent DMA engine starts.
+>> +	 * For those controllers, put the port back in active
+>> +	 * state before stopping it's DMA engine.
+>> +	 */
+>> +	if (ap->flags2 & ATA_FLAG2_WAKE_BEFORE_STOP) {
+> ...
 > 
->                 sgpio0: syscon@e0000078 {
->                         compatible = "amd, seattle-sgpio", syscon";
->                         reg = <0x0 0xe0000078 0x0 0x1>;
->                 };
+> So, I'm not too comfortable with open coding ALPM switching in
+> ahci_stop_engine().  Shouldn't it be possible to update and/or
+> refactor and reuse ahci_set_lpm()?
+>
+ahci_set_lpm in it's current form cannot be used here as it also
+modifies the ALPE/ASP bits. The idea is to wake the link before DMA stop
+without changing the ALPM bits so the link can return to it's configured
+low power state when it's idle.
 
-A syscon is defined as (roughly) a group of otherwise unrelated registers
-that happen to be part of the same physical register area because the SoC
-designer couldn't find a proper abstraction for them. When you define
-a register area with a single byte in it, that is not a syscon.
+We could however update that function by introducing a new hints flag
+that allows us to skip unneeded logic for this scenario. ahci_set_lpm
+can then be called from ahci_stop_engine.
+
+>> --- a/include/linux/libata.h
+>> +++ b/include/linux/libata.h
+>> @@ -236,6 +236,8 @@ enum {
+>>  
+>>  	/* bits 24:31 of ap->flags are reserved for LLD specific flags */
+>>  
+>> +	/* struct ata_port flags2 */
+>> +	ATA_FLAG2_WAKE_BEFORE_STOP = (1 << 0), /* wake link before DMA stop */
+> 
+> What's wrong with bits 2-5 in ATA_FLAG_* space?  Also, should this be
+> a ahci priv flag?
+
+I wasn't sure whether those bits were left unused on purpose, so I did
+not use them. The point to make this a AHCI_HFLAG_ flag makes perfect sense.
 
 > 
->                 sata@e0300000 {
->                         compatible = "amd,seattle-ahci";
->                         reg = <0x0 0xe0300000 0x0 0xf0000>;
->                         interrupts = <0x0 0x163 0x4>;
->                         amd,sgpio-ctrl = <&sgpio0>;
->                         dma-coherent;
->                 };
+> Thanks.
 > 
 
+Thanks for the feedback.
 
-The sata node should list "generic-ahci" so we can bind the normal
-driver. You can leave the "amd,seattle-ahci" in addition in case we
-ever need to know the difference to work around a bug, but it's really
-not needed for the LED.
-
-> SGPIO0 (0xe0000078) and SGPIO1 (0xe000007C) does not belong to any system control register set.
-> They are meant to be used by SATA driver only and no other driver should every touch it. It almost feels
-> its just extension of the IP block but it just happened to be way out of the IP block range.
-> Other register near to 0xe000_0078 and 0xe000_007C should not be mapped by OS.
-
-That is quite normal, a lot of chips have register blocks where one
-register is meant for one device only. E.g. the clock controller may have
-one register for controlling the clocks of the AHCI device. In the old
-days, we would have hacks like what you did to turn on the clocks by poking
-the register from the SATA driver, but now we abstract those things using
-generic subsystems.
-
-I think you either want a special led controller device node that
-refers to the syscon device and exports the LEDs so they can be
-accessed by the AHCI device, or do it in the device that contains
-the registers.
-
-> But this syscon approach also brings another problem. Currently my code is pretty simple for mapping this regs
-> 
-> +       plat_data->sgpio_ctrl = devm_ioremap_resource(dev,
-> +                             platform_get_resource(pdev, IORESOURCE_MEM, 1));
-> +       if (IS_ERR(plat_data->sgpio_ctrl))
-> +               return &ahci_port_info;
-> +
-> 
-> The above code works on ACPI and DT cases. But if we go with syncon approach
-> then we need to handle DT and ACPI differently. Because sycon will provide
-> struct regmap instead of struct resources and also make reading/writing a 
-> bit different. I was trying to minimize the DT vs ACPI changes in the driver
-> (other than binding) hence I think defining two ranges in sata controller
-> reg property was much cleaner and it aligns with DSDT.
-
-Isn't this the thing that ACPI based firmware would handle using AML anyway?
-I don't think the server people would be too happy to add a new driver
-each time a SATA controller does the LEDs slightly differently, and this
-is really the kind of platform specific hack that AML is meant for.
-
-	Arnd
+Danesh
