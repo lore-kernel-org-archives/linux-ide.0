@@ -1,93 +1,68 @@
-From: Brijesh Singh <brijesh.singh@amd.com>
-Subject: Re: [PATCH] ata: add AMD Seattle platform driver
-Date: Thu, 7 Jan 2016 19:46:08 -0600
-Message-ID: <568F14E0.4060107@amd.com>
-References: <1452200002-31590-1-git-send-email-brijesh.singh@amd.com>
- <4652600.rUhSEOUPkl@wuerfel> <568EE596.3060005@amd.com>
- <4983521.tEaWggKCCv@wuerfel>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Daniel Walker <danielwa@cisco.com>
+Subject: [PATCH 1/2] drivers: pata_octeon_cf : Switch IO mode depending on model number
+Date: Thu,  7 Jan 2016 21:18:51 -0800
+Message-ID: <1452230332-14926-1-git-send-email-danielwa@cisco.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4983521.tEaWggKCCv@wuerfel>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, mark.rutland@arm.com, devicetree@vger.kernel.org, pawel.moll@arm.com, ijc+devicetree@hellion.org.uk, linux-ide@vger.kernel.org, robh+dt@kernel.org, galak@codeaurora.org, tj@kernel.org
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>
+Cc: Anil Veliyankara Madam <aveliyan@cisco.com>, xe-kernel@external.cisco.com, Shikha Jain <shikjain@cisco.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Hi,
+From: Anil Veliyankara Madam <aveliyan@cisco.com>
 
-On 01/07/2016 05:42 PM, Arnd Bergmann wrote:
-> On Thursday 07 January 2016 16:24:22 Brijesh Singh wrote:
->>>> +
->>>> +Examples:
->>>> +        sata0@e0300000 {
->>>> +            compatible = "amd,seattle-ahci";
->>>> +            reg = <0x0 0xe0300000 0x0 0xf0000>, <0x0 0xe0000078 0x0 0x1>;
->>>
->>> Looking at the register values, I doubt that the SGPIO is actually part of the
->>> sata device. More likely, you are pointing in the middle of an actual
->>> GPIO controller.
->>>
->>
->> That address is SGPIO control register for SATA. The current hardware implementation to control activity LED is not ideal.
->
-> Of course its a control register "for" SATA, what I meant is that it's
-> not part "of" the SATA IP block, which is hopefully a standard AHCI
-> compliant part as required by SBSA.
->
-Yes, its not part of SATA IP block. We just need a method of pass  SGPIO 
-control register address to driver.
+Since viking flash has a problem in the MWDMA mode which causes data
+corruption, this patch allows the driver to detect the model number
+and switch the IO mode to PIO6 if it's a viking flash.
 
-Should I consider adding a property "sgpio-ctrl" to pass the register 
-address ?
+Cc: xe-kernel@external.cisco.com
+Signed-off-by: Anil Veliyankara Madam <aveliyan@cisco.com>
+Signed-off-by: Shikha Jain <shikjain@cisco.com>
+---
+ drivers/ata/pata_octeon_cf.c | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
 
-e.g
-
-sata0@e0300000 {
-   compatible = "amd,seattle-ahci";
-   reg = <0 0xe0300000 0 0x800>;
-   amd,sgpio-ctrl = <0xe0000078>;
-   interrupts = <0 355 4>;
-   clocks = <&sataclk_333mhz>;
-   dma-coherent;
-};
-
-
->> A57 does not have access to GPIO's connected to backplane controller
->> instead SoC has exposed two SGPIO control registers (LSIOC_SGPIO_CONTROL0:
->> 0xE000_0078 and LSIOC_SGPIO_CONTROL1: 0xE000_007C) to A57. All we
->> need to do is to program these registers based on the disk activity.
->> The firmware running on A5 reads the values and generate proper SGPIO
->> timing and toggles the LEDs etc.
->
-> It still sounds like SGPIO is not part of the AHCI standard spec, but
-> rather a subset of a device called LSIOC.
->
->> These registers are defined in SATA0/1 DSDT resource template and also
->> documented in SoC BKDG. I just noticed that BKDG has wrong register
->> definition so will ask documentation folks to fix that.
->>
->> This driver is using SGPIO LED control similar to sata_highbank [1]
->> except bit bang GPIO (which is done by firmware).
->>
->> [1] http://lxr.free-electrons.com/source/drivers/ata/sata_highbank.c#L140
->
-> This one is rather different: there is a single device that combines
-> registers for AHCI, the PHY attached to it and the LED. This is not
-> SBSA compliant of course, and it requires having a special driver.
->
-> What you have instead looks like a regular AHCI implementation that
-> should just work with the standard driver as long as you describe how
-> it gets its LEDs.
->
-Yes, its regular AHCI implementation and works well with ahci_platform 
-driver. In standard ahci_platform driver activity LEDs are blinked 
-through enclosure management interface. Given the current hardware 
-limitation it seems like creating a new driver would be cleaner. I am 
-open to suggestion.
-
-Thanks for all your review feedbacks.
-
-> 	Arnd
->
+diff --git a/drivers/ata/pata_octeon_cf.c b/drivers/ata/pata_octeon_cf.c
+index 2724595..9d05bc9 100644
+--- a/drivers/ata/pata_octeon_cf.c
++++ b/drivers/ata/pata_octeon_cf.c
+@@ -826,6 +826,30 @@ static unsigned int octeon_cf_qc_issue(struct ata_queued_cmd *qc)
+ 	return 0;
+ }
+ 
++static unsigned long octeon_cf_mode_filter(struct ata_device *dev,
++						unsigned long mask)
++{
++	const char viking_model_num[] = "VRFDFC22048UCHC-TE";
++	unsigned char model_num[ATA_ID_PROD_LEN + 1];
++
++	if (dev->class != ATA_DEV_ATA)
++		return mask;
++
++	ata_id_c_string(dev->id, model_num, ATA_ID_PROD, sizeof(model_num));
++	/*
++	 * Viking flash with SMI controller causes read errors in
++	 * MWDMA modes.  Force PIO mode.
++	 */
++	if (strncmp(model_num, viking_model_num,
++				strlen(viking_model_num)) == 0) {
++		DPRINTK("Viking flash with SMI controller detected.");
++		DPRINTK("Forcing PIO mode.\n");
++		mask &= ATA_MASK_PIO;
++	}
++
++	return mask;
++}
++
+ static struct ata_port_operations octeon_cf_ops = {
+ 	.inherits		= &ata_sff_port_ops,
+ 	.check_atapi_dma	= octeon_cf_check_atapi_dma,
+@@ -835,6 +859,7 @@ static struct ata_port_operations octeon_cf_ops = {
+ 	.sff_irq_on		= octeon_cf_ata_port_noaction,
+ 	.sff_irq_clear		= octeon_cf_ata_port_noaction,
+ 	.cable_detect		= ata_cable_40wire,
++	.mode_filter		= octeon_cf_mode_filter,
+ 	.set_piomode		= octeon_cf_set_piomode,
+ 	.set_dmamode		= octeon_cf_set_dmamode,
+ 	.dev_config		= octeon_cf_dev_config,
+-- 
+2.1.4
