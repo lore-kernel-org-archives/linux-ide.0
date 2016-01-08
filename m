@@ -1,34 +1,39 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/2] drivers: pata_octeon_cf : Switch IO mode depending
- on model number
-Date: Fri, 8 Jan 2016 10:30:49 -0500
-Message-ID: <20160108153049.GN1898@mtj.duckdns.org>
-References: <1452230332-14926-1-git-send-email-danielwa@cisco.com>
+Subject: Re: [PATCH 2/2] drivers: libata-core: Use usleep_range() instead of
+ msleep() for short sleeps (<20 ms)
+Date: Fri, 8 Jan 2016 10:36:18 -0500
+Message-ID: <20160108153618.GO1898@mtj.duckdns.org>
+References: <1452230332-14926-2-git-send-email-danielwa@cisco.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yk0-f174.google.com ([209.85.160.174]:35576 "EHLO
-	mail-yk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754621AbcAHPav (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Jan 2016 10:30:51 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1452230332-14926-1-git-send-email-danielwa@cisco.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+In-Reply-To: <1452230332-14926-2-git-send-email-danielwa@cisco.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Daniel Walker <danielwa@cisco.com>
-Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Anil Veliyankara Madam <aveliyan@cisco.com>, xe-kernel@external.cisco.com, Shikha Jain <shikjain@cisco.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Anil Veliyankara Madam <aveliyan@cisco.com>, xe-kernel@external.cisco.com, Shikha Jain <shikjain@cisco.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-Hello, Daniel.
-
-On Thu, Jan 07, 2016 at 09:18:51PM -0800, Daniel Walker wrote:
+On Thu, Jan 07, 2016 at 09:18:52PM -0800, Daniel Walker wrote:
 > From: Anil Veliyankara Madam <aveliyan@cisco.com>
 > 
-> Since viking flash has a problem in the MWDMA mode which causes data
-> corruption, this patch allows the driver to detect the model number
-> and switch the IO mode to PIO6 if it's a viking flash.
+> Since msleep() may sleep longer than intended time for values less
+> than 20ms, this patch allows the use of usleep_range for waits less
+> that 20ms. usleep_range is a finer precision implementation of
+> msleep and is designed to be a drop-in replacement for udelay
+> where a precise sleep/busy-wait is unnecessary.
+> 
+> More details can be found at http://lkml.org/lkml/2007/8/3/250
+> and in Documentation/timers/timers-howto.txt.
+> 
+> This change has been done to improve the performace in PIO6 mode
+> which is used by viking flash.
+> 
+> Cc: xe-kernel@external.cisco.com
+> Signed-off-by: Anil Veliyankara Madam <aveliyan@cisco.com>
+> Signed-off-by: Shikha Jain <shikjain@cisco.com>
 
-Hmmm... is this specific to pata_octeon_cf or should it apply to the
-device regardless of the controller in use?
+Applied to libata/for-4.5.
 
 Thanks.
 
