@@ -1,70 +1,105 @@
 From: Florian Fainelli <f.fainelli@gmail.com>
-Subject: [PATCH 4/4] libata: skip debounce delay on link resume
-Date: Thu,  7 Jan 2016 16:03:33 -0800
-Message-ID: <1452211413-1350-5-git-send-email-f.fainelli@gmail.com>
+Subject: [PATCH 1/4] ata: ahci_brcmstb: enable support for ALPM
+Date: Thu,  7 Jan 2016 16:03:30 -0800
+Message-ID: <1452211413-1350-2-git-send-email-f.fainelli@gmail.com>
 References: <1452211413-1350-1-git-send-email-f.fainelli@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
 In-Reply-To: <1452211413-1350-1-git-send-email-f.fainelli@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
 To: linux-ide@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, bcm-kernel-feedback-list@broadcom.com, computersforpeace@gmail.com, gregory.0xf0@gmail.com, Danesh Petigara <dpetigara@broadcom.com>, Florian Fainelli <f.fainelli@gmail.com>
+Cc: Florian Fainelli <f.fainelli@gmail.com>, linux-kernel@vger.kernel.org, Danesh Petigara <dpetigara@broadcom.com>, bcm-kernel-feedback-list@broadcom.com, gregory.0xf0@gmail.com, computersforpeace@gmail.com, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
 From: Danesh Petigara <dpetigara@broadcom.com>
 
-The link resume logic uses a 200msec delay while debouncing
-the SControl register. The rationale behind that delay is
-to accommodate some PHYs that behave badly if their SStatus/
-SControl registers are pounded immediately on resume.
-The Broadcom STB SATA PHY does not seem to have this issue.
-This patch introduces a new link flag that allows platforms
-to skip the debounce delay if it isn't needed.
+Enable support for ALPM in the host controller's capabilities
+register. Also adjust the PLL  timeout to give it enough time
+to lock when the port exits slumber mode.
 
 Signed-off-by: Danesh Petigara <dpetigara@broadcom.com>
 Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
 ---
- drivers/ata/ahci_brcmstb.c | 1 +
- drivers/ata/libata-core.c  | 3 ++-
- include/linux/libata.h     | 1 +
- 3 files changed, 4 insertions(+), 1 deletion(-)
+ drivers/ata/ahci_brcmstb.c | 36 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 36 insertions(+)
 
 diff --git a/drivers/ata/ahci_brcmstb.c b/drivers/ata/ahci_brcmstb.c
-index e518a992e774..9d57a27944bc 100644
+index a4a0940307bc..f38a07ea59f4 100644
 --- a/drivers/ata/ahci_brcmstb.c
 +++ b/drivers/ata/ahci_brcmstb.c
-@@ -86,6 +86,7 @@ struct brcm_ahci_priv {
- static const struct ata_port_info ahci_brcm_port_info = {
- 	.flags		= AHCI_FLAG_COMMON | ATA_FLAG_NO_DIPM,
- 	.flags2		= ATA_FLAG2_WAKE_BEFORE_STOP,
-+	.link_flags	= ATA_LFLAG_NO_DB_DELAY,
- 	.pio_mask	= ATA_PIO4,
- 	.udma_mask	= ATA_UDMA6,
- 	.port_ops	= &ahci_platform_ops,
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index c6117e1ad373..b7b578522a13 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -3597,7 +3597,8 @@ int sata_link_resume(struct ata_link *link, const unsigned long *params,
- 		 * immediately after resuming.  Delay 200ms before
- 		 * debouncing.
- 		 */
--		ata_msleep(link->ap, 200);
-+		if (!(link->flags & ATA_LFLAG_NO_DB_DELAY))
-+			ata_msleep(link->ap, 200);
+@@ -53,6 +53,10 @@
+  #define SATA_TOP_CTRL_PHY_OFFS				0x8
+  #define SATA_TOP_MAX_PHYS				2
  
- 		/* is SControl restored correctly? */
- 		if ((rc = sata_scr_read(link, SCR_CONTROL, &scontrol)))
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index f278ca897274..e8b1759ff855 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -205,6 +205,7 @@ enum {
- 	ATA_LFLAG_NO_LPM	= (1 << 8), /* disable LPM on this link */
- 	ATA_LFLAG_RST_ONCE	= (1 << 9), /* limit recovery to one reset */
- 	ATA_LFLAG_CHANGED	= (1 << 10), /* LPM state changed on this link */
-+	ATA_LFLAG_NO_DB_DELAY	= (1 << 11), /* no debounce delay on link resume */
++#define SATA_FIRST_PORT_CTRL				0x700
++#define SATA_NEXT_PORT_CTRL_OFFSET			0x80
++#define SATA_PORT_PCTRL6(reg_base)			(reg_base + 0x18)
++
+ /* On big-endian MIPS, buses are reversed to big endian, so switch them back */
+ #if defined(CONFIG_MIPS) && defined(__BIG_ENDIAN)
+ #define DATA_ENDIAN			 2 /* AHCI->DDR inbound accesses */
+@@ -111,6 +115,35 @@ static inline void brcm_sata_writereg(u32 val, void __iomem *addr)
+ 		writel_relaxed(val, addr);
+ }
  
- 	/* struct ata_port flags */
- 	ATA_FLAG_SLAVE_POSS	= (1 << 0), /* host supports slave dev */
++static void brcm_sata_alpm_init(struct ahci_host_priv *hpriv)
++{
++	int i;
++	u32 bus_ctrl, port_ctrl, host_caps;
++	struct brcm_ahci_priv *priv = hpriv->plat_data;
++
++	/*Enable support for ALPM */
++	bus_ctrl = brcm_sata_readreg(priv->top_ctrl
++			+ SATA_TOP_CTRL_BUS_CTRL);
++	brcm_sata_writereg(bus_ctrl | OVERRIDE_HWINIT,
++		priv->top_ctrl + SATA_TOP_CTRL_BUS_CTRL);
++	host_caps = readl(hpriv->mmio + HOST_CAP);
++	writel(host_caps | HOST_CAP_ALPM, hpriv->mmio);
++	brcm_sata_writereg(bus_ctrl,
++		priv->top_ctrl + SATA_TOP_CTRL_BUS_CTRL);
++
++	/*
++	 * Adjust timeout to allow PLL sufficient time to lock while waking
++	 * up from slumber mode.
++	 */
++	for (i = 0, port_ctrl = SATA_FIRST_PORT_CTRL;
++	     i < SATA_TOP_MAX_PHYS;
++	     i++, port_ctrl += SATA_NEXT_PORT_CTRL_OFFSET) {
++		if (priv->port_mask & BIT(i))
++			writel(0xff1003fc,
++			       hpriv->mmio + SATA_PORT_PCTRL6(port_ctrl));
++	}
++}
++
+ static void brcm_sata_phy_enable(struct brcm_ahci_priv *priv, int port)
+ {
+ 	void __iomem *phyctrl = priv->top_ctrl + SATA_TOP_CTRL_PHY_CTRL +
+@@ -240,6 +273,7 @@ static int brcm_ahci_resume(struct device *dev)
+ 
+ 	brcm_sata_init(priv);
+ 	brcm_sata_phys_enable(priv);
++	brcm_sata_alpm_init(hpriv);
+ 	return ahci_platform_resume(dev);
+ }
+ #endif
+@@ -284,6 +318,8 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+ 		return PTR_ERR(hpriv);
+ 	hpriv->plat_data = priv;
+ 
++	brcm_sata_alpm_init(hpriv);
++
+ 	ret = ahci_platform_enable_resources(hpriv);
+ 	if (ret)
+ 		return ret;
 -- 
 2.1.0
