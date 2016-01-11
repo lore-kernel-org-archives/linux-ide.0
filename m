@@ -1,94 +1,152 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] libata changes for v4.5-rc1
-Date: Mon, 11 Jan 2016 14:41:36 -0500
-Message-ID: <20160111194136.GJ1898@mtj.duckdns.org>
+From: Danesh Petigara <dpetigara@broadcom.com>
+Subject: [PATCH v2] drivers: ata: wake port before DMA stop for ALPM
+Date: Mon, 11 Jan 2016 13:22:26 -0800
+Message-ID: <1452547346-31735-1-git-send-email-dpetigara@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yk0-f169.google.com ([209.85.160.169]:34683 "EHLO
-	mail-yk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933015AbcAKTli (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Jan 2016 14:41:38 -0500
-Content-Disposition: inline
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:53127 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933005AbcAKVTn (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Jan 2016 16:19:43 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Hans de Goede <hdegoede@redhat.com>
+To: linux-ide@vger.kernel.org, tj@kernel.org
+Cc: f.fainelli@gmail.com, computersforpeace@gmail.com, gregory.0xf0@gmail.com, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, bcm-kernel-feedback-list@broadcom.com, Danesh Petigara <dpetigara@broadcom.com>
 
-Hello, Linus.
+The AHCI driver code stops and starts port DMA engines at will
+without considering the power state of the particular port. The
+AHCI specification isn't very clear on how to handle this scenario,
+leaving implementation open to interpretation.
 
-Mostly low level driver specific changes.  Two changes are somewhat
-noteworthy.  First, Dan's patchset to support per-port msix interrupt
-handling for ahci, which was tried last cycle but had to be backed out
-due to a couple issues, is back and seems to be working fine.  Second,
-libata exception handling now uses usleep_range() instead of msleep()
-for sleeps < 20ms which can make things snappier in some corner cases.
+Broadcom's STB SATA host controller is unable to handle port DMA
+controller restarts when the port in question is in low power mode.
+When a port enters partial or slumber mode, its PHY is powered down.
+When a controller restart is requested, the controller's internal
+state machine expects the PHY to be brought back up by software which
+never happens in this case, resulting in failures.
 
-Thanks.
+To avoid this situation, logic is added to manually wake up the port
+just before its DMA engine is stopped, if the port happens to be in
+a low power state. HBA initiated power management ensures that the port
+eventually returns to its configured low power state, when the link is
+idle (as per the conditions listed in the spec). A new host flag is also
+added to ensure this logic is only exercised for hosts with the above
+limitation.
 
-The following changes since commit 4d92f0099a06ef0e36c7673f7c090f1a448b2d1b:
+Signed-off-by: Danesh Petigara <dpetigara@broadcom.com>
+Reviewed-by: Markus Mayer <mmayer@broadcom.com>
+---
+This patch is against ata/for-next branch.
 
-  ahci: Order SATA device IDs for codename Lewisburg (2015-11-16 11:22:16 -0500)
+Changes since v1 (https://lkml.org/lkml/2016/1/7/778)
+- Moved wakeup flag to AHCI_HFLAG_* space
+- Called an updated ahci_set_lpm from ahci_stop_engine to wakeup link
+- Made minor changes to commit message
 
-are available in the git repository at:
+ drivers/ata/ahci.h         |  1 +
+ drivers/ata/ahci_brcmstb.c |  1 +
+ drivers/ata/libahci.c      | 27 ++++++++++++++++++++++++++-
+ include/linux/libata.h     |  1 +
+ 4 files changed, 29 insertions(+), 1 deletion(-)
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-4.5
-
-for you to fetch changes up to e39b2bb3b72b999a04e8d295882be3255aca5ade:
-
-  libata: skip debounce delay on link resume (2016-01-08 11:50:14 -0500)
-
-----------------------------------------------------------------
-Anil Veliyankara Madam (1):
-      drivers: libata-core: Use usleep_range() instead of msleep() for short sleeps (<20 ms)
-
-Dan Williams (4):
-      ahci: per-port msix support
-      ahci: switch from 'threaded' to 'hardirq' interrupt handling
-      ahci: kill 'intr_status'
-      ahci: compile out msi/msix infrastructure
-
-Danesh Petigara (3):
-      ata: ahci_brcmstb: enable support for ALPM
-      ata: ahci_brcmstb: disable DIPM support
-      libata: skip debounce delay on link resume
-
-Geert Uytterhoeven (1):
-      ata: sata_rcar: Remove obsolete platform_device_id entries
-
-Heiner Kallweit (1):
-      ata: core: fix irq description on AHCI single irq systems
-
-Insu Yun (1):
-      sata_sx4: correctly handling failed allocation
-
-Jaedon Shin (4):
-      ata: ahci_brcmstb: disable NCQ for MIPS-based platforms
-      ata: ahci_brcmstb: add a quirk for MIPS-based platforms
-      ata: ahci_brcmstb: remove unused definitions
-      ata: ahci_brcmstb: add support for MIPS-based platforms
-
-Kouei Abe (1):
-      sata_rcar: Add compatible string for r8a7795
-
-Tang Yuantian (3):
-      ahci: qoriq: Adjust the default register values on ls1043a
-      ahci: qoriq: Update the default Rx watermark value
-      ahci: qoriq: Adjust the default register values on ls1021a
-
- .../devicetree/bindings/ata/brcm,sata-brcmstb.txt  |  4 +-
- .../devicetree/bindings/ata/sata_rcar.txt          |  1 +
- drivers/ata/Kconfig                                |  2 +-
- drivers/ata/ahci.c                                 | 67 +++++++++++++++-------
- drivers/ata/ahci.h                                 | 27 ++++++++-
- drivers/ata/ahci_brcmstb.c                         | 61 +++++++++++++++++++-
- drivers/ata/ahci_qoriq.c                           | 31 +++++++---
- drivers/ata/libahci.c                              | 46 ++++++---------
- drivers/ata/libata-core.c                          | 20 ++++++-
- drivers/ata/sata_rcar.c                            | 19 +++---
- drivers/ata/sata_sx4.c                             |  2 +
- include/linux/libata.h                             |  1 +
- 12 files changed, 198 insertions(+), 83 deletions(-)
-
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index a4faa43..a44c75d 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -250,6 +250,7 @@ enum {
+ 	AHCI_HFLAG_MULTI_MSI		= 0,
+ 	AHCI_HFLAG_MULTI_MSIX		= 0,
+ #endif
++	AHCI_HFLAG_WAKE_BEFORE_STOP	= (1 << 22), /* wake before DMA stop */
+ 
+ 	/* ap->flags bits */
+ 
+diff --git a/drivers/ata/ahci_brcmstb.c b/drivers/ata/ahci_brcmstb.c
+index b36cae2..e87bcec 100644
+--- a/drivers/ata/ahci_brcmstb.c
++++ b/drivers/ata/ahci_brcmstb.c
+@@ -317,6 +317,7 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+ 	if (IS_ERR(hpriv))
+ 		return PTR_ERR(hpriv);
+ 	hpriv->plat_data = priv;
++	hpriv->flags = AHCI_HFLAG_WAKE_BEFORE_STOP;
+ 
+ 	brcm_sata_alpm_init(hpriv);
+ 
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index eda3cf2..dee56d0 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -593,8 +593,26 @@ EXPORT_SYMBOL_GPL(ahci_start_engine);
+ int ahci_stop_engine(struct ata_port *ap)
+ {
+ 	void __iomem *port_mmio = ahci_port_base(ap);
++	struct ahci_host_priv *hpriv = ap->host->private_data;
+ 	u32 tmp;
+ 
++	/*
++	 * On some controllers, stopping a port's DMA engine
++	 * while the port is in ALPM state (partial or slumber)
++	 * results in failures on subsequent DMA engine starts.
++	 * For those controllers, put the port back in active
++	 * state before stopping it's DMA engine.
++	 */
++	if ((hpriv->flags & AHCI_HFLAG_WAKE_BEFORE_STOP) &&
++	    (ap->link.lpm_policy > ATA_LPM_MAX_POWER)) {
++		if (ahci_set_lpm(&ap->link,
++			ATA_LPM_MAX_POWER, ATA_LPM_WAKE_ONLY)) {
++			dev_err(ap->host->dev,
++				"failed to wake up port\n");
++			return -EIO;
++		}
++	}
++
+ 	tmp = readl(port_mmio + PORT_CMD);
+ 
+ 	/* check if the HBA is idle */
+@@ -689,6 +707,9 @@ static int ahci_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+ 	void __iomem *port_mmio = ahci_port_base(ap);
+ 
+ 	if (policy != ATA_LPM_MAX_POWER) {
++		/* Wakeup flag only applies to the max power policy */
++		hints &= ~ATA_LPM_WAKE_ONLY;
++
+ 		/*
+ 		 * Disable interrupts on Phy Ready. This keeps us from
+ 		 * getting woken up due to spurious phy ready
+@@ -704,7 +725,8 @@ static int ahci_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+ 		u32 cmd = readl(port_mmio + PORT_CMD);
+ 
+ 		if (policy == ATA_LPM_MAX_POWER || !(hints & ATA_LPM_HIPM)) {
+-			cmd &= ~(PORT_CMD_ASP | PORT_CMD_ALPE);
++			if (!(hints & ATA_LPM_WAKE_ONLY))
++				cmd &= ~(PORT_CMD_ASP | PORT_CMD_ALPE);
+ 			cmd |= PORT_CMD_ICC_ACTIVE;
+ 
+ 			writel(cmd, port_mmio + PORT_CMD);
+@@ -712,6 +734,9 @@ static int ahci_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
+ 
+ 			/* wait 10ms to be sure we've come out of LPM state */
+ 			ata_msleep(ap, 10);
++
++			if (hints & ATA_LPM_WAKE_ONLY)
++				return 0;
+ 		} else {
+ 			cmd |= PORT_CMD_ALPE;
+ 			if (policy == ATA_LPM_MIN_POWER)
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 088ed92..f33640e 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -525,6 +525,7 @@ enum ata_lpm_policy {
+ enum ata_lpm_hints {
+ 	ATA_LPM_EMPTY		= (1 << 0), /* port empty/probing */
+ 	ATA_LPM_HIPM		= (1 << 1), /* may use HIPM */
++	ATA_LPM_WAKE_ONLY	= (1 << 2), /* only wake up link */
+ };
+ 
+ /* forward declarations */
 -- 
-tejun
+1.9.1
+
