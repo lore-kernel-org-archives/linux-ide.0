@@ -1,147 +1,94 @@
-From: Brijesh Singh <brijesh.singh@amd.com>
-Subject: Re: [PATCH] ata: add AMD Seattle platform driver
-Date: Mon, 11 Jan 2016 12:56:02 -0600
-Message-ID: <5693FAC2.4070003@amd.com>
-References: <1452200002-31590-1-git-send-email-brijesh.singh@amd.com>
- <10869853.plxna0HzWE@wuerfel> <5690367E.8060609@amd.com>
- <9923043.nz8DJ6lRiJ@wuerfel>
+From: Tejun Heo <tj@kernel.org>
+Subject: [GIT PULL] libata changes for v4.5-rc1
+Date: Mon, 11 Jan 2016 14:41:36 -0500
+Message-ID: <20160111194136.GJ1898@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bl2on0092.outbound.protection.outlook.com ([65.55.169.92]:51090
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S934077AbcAKS6S (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 11 Jan 2016 13:58:18 -0500
-In-Reply-To: <9923043.nz8DJ6lRiJ@wuerfel>
+Received: from mail-yk0-f169.google.com ([209.85.160.169]:34683 "EHLO
+	mail-yk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933015AbcAKTli (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 11 Jan 2016 14:41:38 -0500
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: brijesh.singh@amd.com, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, mark.rutland@arm.com, devicetree@vger.kernel.org, pawel.moll@arm.com, ijc+devicetree@hellion.org.uk, linux-ide@vger.kernel.org, robh+dt@kernel.org, galak@codeaurora.org, tj@kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Hans de Goede <hdegoede@redhat.com>
 
-Hi Arnd,
+Hello, Linus.
 
-Thanks for all your valuable feedbacks.
+Mostly low level driver specific changes.  Two changes are somewhat
+noteworthy.  First, Dan's patchset to support per-port msix interrupt
+handling for ahci, which was tried last cycle but had to be backed out
+due to a couple issues, is back and seems to be working fine.  Second,
+libata exception handling now uses usleep_range() instead of msleep()
+for sleeps < 20ms which can make things snappier in some corner cases.
 
-On 01/08/2016 04:47 PM, Arnd Bergmann wrote:
->>
->> libata-*.c implements the "Enclosure management" style led messages but also has hooks
->> to register a custom led control callback. Since Seattle platform does not support
->> the "Enclosure management" registers hence ata_port_info we are setting a ATA_FLAG_EM | ATA_FLAG_SW_ACIVITY 
->> to indicate that we can still handle the led messages by our registered callback. I see
->> that sata_highbank driver is doing something similar.
-> 
-> But if the LEDs are the only thing that is special, I think it makes
-> more sense to extend the generic driver. This is similar to how the
-> ahci driver knows how to deal with external PHY, clk, regulator etc
-> resources. All of those are not part of the AHCI spec, but are common
-> enough that we want to have them done in a single driver.
-> 
-> We really should not need a special driver just for handling LEDs
-> when we already deal with more complex stuff, and we have a proper
-> abstraction for LEDs in the kernel.
-> 
+Thanks.
 
-I took a quick look at LED class and saw ledtrig-ide-disk.c (ledtrig_ide_activity). It seems this approach was used
-in deprecate ide-disk driver for blinking the activity led. Are you thinking that we implement something similar
-in libahci to control the LED blinking? Looking at current libahci gives me feeling that LED's are considered as
- part of AHCI enclosure management implementation and hence LED triggers are not exposed outside the library. 
-If I am missing something then please correct me.
- 
-> 
-> A syscon is defined as (roughly) a group of otherwise unrelated registers
-> that happen to be part of the same physical register area because the SoC
-> designer couldn't find a proper abstraction for them. When you define
-> a register area with a single byte in it, that is not a syscon.
-> 
->>
->>                 sata@e0300000 {
->>                         compatible = "amd,seattle-ahci";
->>                         reg = <0x0 0xe0300000 0x0 0xf0000>;
->>                         interrupts = <0x0 0x163 0x4>;
->>                         amd,sgpio-ctrl = <&sgpio0>;
->>                         dma-coherent;
->>                 };
->>
-> 
-> 
-> The sata node should list "generic-ahci" so we can bind the normal
-> driver. You can leave the "amd,seattle-ahci" in addition in case we
-> ever need to know the difference to work around a bug, but it's really
-> not needed for the LED.
-> 
->> SGPIO0 (0xe0000078) and SGPIO1 (0xe000007C) does not belong to any system control register set.
->> They are meant to be used by SATA driver only and no other driver should every touch it. It almost feels
->> its just extension of the IP block but it just happened to be way out of the IP block range.
->> Other register near to 0xe000_0078 and 0xe000_007C should not be mapped by OS.
-> 
-> That is quite normal, a lot of chips have register blocks where one
-> register is meant for one device only. E.g. the clock controller may have
-> one register for controlling the clocks of the AHCI device. In the old
-> days, we would have hacks like what you did to turn on the clocks by poking
-> the register from the SATA driver, but now we abstract those things using
-> generic subsystems.
-> 
-> I think you either want a special led controller device node that
-> refers to the syscon device and exports the LEDs so they can be
-> accessed by the AHCI device, or do it in the device that contains
-> the registers.
-> 
->> But this syscon approach also brings another problem. Currently my code is pretty simple for mapping this regs
->>
->> +       plat_data->sgpio_ctrl = devm_ioremap_resource(dev,
->> +                             platform_get_resource(pdev, IORESOURCE_MEM, 1));
->> +       if (IS_ERR(plat_data->sgpio_ctrl))
->> +               return &ahci_port_info;
->> +
->>
->> The above code works on ACPI and DT cases. But if we go with syncon approach
->> then we need to handle DT and ACPI differently. Because sycon will provide
->> struct regmap instead of struct resources and also make reading/writing a 
->> bit different. I was trying to minimize the DT vs ACPI changes in the driver
->> (other than binding) hence I think defining two ranges in sata controller
->> reg property was much cleaner and it aligns with DSDT.
-> 
-> Isn't this the thing that ACPI based firmware would handle using AML anyway?
-> I don't think the server people would be too happy to add a new driver
-> each time a SATA controller does the LEDs slightly differently, and this
-> is really the kind of platform specific hack that AML is meant for.
-> 
-Sorry I am not able understand your comment, Could you please explain me what you mean by AML is meant for this kind of platform specific hack ?
+The following changes since commit 4d92f0099a06ef0e36c7673f7c090f1a448b2d1b:
 
-"SATA0" and "SATA1" DSDT Resource template contains two resources (#0 SATA block register and #1 SGPIO control register).
+  ahci: Order SATA device IDs for codename Lewisburg (2015-11-16 11:22:16 -0500)
 
-Device (SATA0)
-{
-	Name(_CRS, ResourceTemplate()
-	{
-		Memory32Fixed(ReadWrite, 0xE03000000, 0x000010000)
-		Interrupt(ResourceConsumer, Level, ActiveHigh Exclusive,,,) { 387}
-		Memory32Fixed(ReadWrite, 0xE00000078, 1)
-	}
-}
+are available in the git repository at:
 
-Device (SATA1)
-{
-	Name(_CRS, ResourceTemplate()
-	{
-		Memory32Fixed(ReadWrite, 0xE0D100000, 0x000010000)
-		Interrupt(ResourceConsumer, Level, ActiveHigh Exclusive,,,) { 393}
-		Memory32Fixed(ReadWrite, 0xE0000007C, 1)
-	}
-}
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-4.5
 
-The generic ahci platform driver calls ahci_platform_get_resources() to get the resources.
-ahci_platform_get_resources() maps the resource #0. Since the SGPIO control resource is part of SATA device
-resource hence I could simply ioremap resource #1 for both DT and ACPI cases.  Since windows driver is making
-use of same DSDT hence its going to be tricky to modify the DSDT to create a new device entry for SATA LED.
+for you to fetch changes up to e39b2bb3b72b999a04e8d295882be3255aca5ade:
 
-Before creating a new driver, I did attempt to extend the existing ahci_platform driver and was able to get it working but it was not looking good hence created a new driver. One of the issue was knowing when to map
-the SGPIO control register in ACPI case. ahci_platform driver does binding based on _CLS mask so I was not sure
-whether doing ioremap of resource#1 is safe and would not cause problem on non Seattle platform. If you want then
-i can send you patch for quick comment and see if that make sense instead of adding a new driver.
+  libata: skip debounce delay on link resume (2016-01-08 11:50:14 -0500)
 
- 
-> 	Arnd
-> 
+----------------------------------------------------------------
+Anil Veliyankara Madam (1):
+      drivers: libata-core: Use usleep_range() instead of msleep() for short sleeps (<20 ms)
+
+Dan Williams (4):
+      ahci: per-port msix support
+      ahci: switch from 'threaded' to 'hardirq' interrupt handling
+      ahci: kill 'intr_status'
+      ahci: compile out msi/msix infrastructure
+
+Danesh Petigara (3):
+      ata: ahci_brcmstb: enable support for ALPM
+      ata: ahci_brcmstb: disable DIPM support
+      libata: skip debounce delay on link resume
+
+Geert Uytterhoeven (1):
+      ata: sata_rcar: Remove obsolete platform_device_id entries
+
+Heiner Kallweit (1):
+      ata: core: fix irq description on AHCI single irq systems
+
+Insu Yun (1):
+      sata_sx4: correctly handling failed allocation
+
+Jaedon Shin (4):
+      ata: ahci_brcmstb: disable NCQ for MIPS-based platforms
+      ata: ahci_brcmstb: add a quirk for MIPS-based platforms
+      ata: ahci_brcmstb: remove unused definitions
+      ata: ahci_brcmstb: add support for MIPS-based platforms
+
+Kouei Abe (1):
+      sata_rcar: Add compatible string for r8a7795
+
+Tang Yuantian (3):
+      ahci: qoriq: Adjust the default register values on ls1043a
+      ahci: qoriq: Update the default Rx watermark value
+      ahci: qoriq: Adjust the default register values on ls1021a
+
+ .../devicetree/bindings/ata/brcm,sata-brcmstb.txt  |  4 +-
+ .../devicetree/bindings/ata/sata_rcar.txt          |  1 +
+ drivers/ata/Kconfig                                |  2 +-
+ drivers/ata/ahci.c                                 | 67 +++++++++++++++-------
+ drivers/ata/ahci.h                                 | 27 ++++++++-
+ drivers/ata/ahci_brcmstb.c                         | 61 +++++++++++++++++++-
+ drivers/ata/ahci_qoriq.c                           | 31 +++++++---
+ drivers/ata/libahci.c                              | 46 ++++++---------
+ drivers/ata/libata-core.c                          | 20 ++++++-
+ drivers/ata/sata_rcar.c                            | 19 +++---
+ drivers/ata/sata_sx4.c                             |  2 +
+ include/linux/libata.h                             |  1 +
+ 12 files changed, 198 insertions(+), 83 deletions(-)
+
+-- 
+tejun
