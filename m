@@ -1,83 +1,70 @@
-From: Andy Lutomirski <luto@amacapital.net>
-Subject: Unhappy ahci controller on Dell XPS 13 9350
-Date: Tue, 12 Jan 2016 22:51:15 -0800
-Message-ID: <CALCETrU7yMvXEDhjAUShoHEhDwifJGapdw--BKxsP0jmjKGmRw@mail.gmail.com>
+From: Brijesh Singh <brijesh.singh@amd.com>
+Subject: Re: [PATCH] ata: add AMD Seattle platform driver
+Date: Wed, 13 Jan 2016 10:55:04 -0600
+Message-ID: <56968168.4010606@amd.com>
+References: <1452200002-31590-1-git-send-email-brijesh.singh@amd.com>
+ <9923043.nz8DJ6lRiJ@wuerfel> <5693FAC2.4070003@amd.com>
+ <4689728.Nn3Rl2cUeP@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <4689728.Nn3Rl2cUeP@wuerfel>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: mark.rutland@arm.com, devicetree@vger.kernel.org, brijesh.singh@amd.com, pawel.moll@arm.com, ijc+devicetree@hellion.org.uk, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, robh+dt@kernel.org, galak@codeaurora.org, tj@kernel.org, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-Hi-
+Hi,
 
-My XPS 13 9350 laptop has an nvme drive.  It has on-chip ahci
-capability, but the M.2 port isn't using it due to the aforementioned
-nvme drive using the same signal pins.
+On 01/12/2016 08:24 AM, Arnd Bergmann wrote:
+>>>
+>>> Isn't this the thing that ACPI based firmware would handle using AML anyway?
+>>> I don't think the server people would be too happy to add a new driver
+>>> each time a SATA controller does the LEDs slightly differently, and this
+>>> is really the kind of platform specific hack that AML is meant for.
+>>>
+>> Sorry I am not able understand your comment, Could you please explain me what you mean by AML is meant for this kind of platform specific hack ?
+>>
+> 
+> I meant the sgpio register should not be exposed through a resource on
+> an ACPI based system but the access be hidden behind a call into an AML
+> method.
+> 
+> You basically extend the generic AHCI driver to understand three ways of
+> blinking the LEDS:
+> 
+> a) standard AHCI enclosure management
+> b) the Linux LED subsystem using whatever LED implementation the platform provides
 
-It is very unhappy:
+Yes I could look into exploring LED implementation for DT case.
 
-[    0.230455] libata version 3.00 loaded.
-[    1.039360] ahci 0000:00:17.0: version 3.0
-[    1.039386] ahci 0000:00:17.0: forcing PORTS_IMPL to 0xff
-[    1.539388] ahci 0000:00:17.0: failed to stop engine (-5)
-[    2.039392] ahci 0000:00:17.0: failed to stop engine (-5)
-[    2.539402] ahci 0000:00:17.0: failed to stop engine (-5)
-[    2.539437] ahci 0000:00:17.0: AHCI 0001.0301 32 slots 8 ports 6
-Gbps 0xff impl SATA mode
-[    2.539440] ahci 0000:00:17.0: flags: 64bit ncq pm led clo only pio
-slum part deso sadm sds apst
-[    2.540855] scsi host0: ahci
-[    2.541455] scsi host1: ahci
-[    2.541972] scsi host2: ahci
-[    2.542504] scsi host3: ahci
-[    2.543027] scsi host4: ahci
-[    2.543550] scsi host5: ahci
-[    2.544035] scsi host6: ahci
-[    2.544565] scsi host7: ahci
-[    2.544641] ata1: SATA max UDMA/133 abar m2048@0xdc333000 port
-0xdc333100 irq 122
-[    2.544645] ata2: SATA max UDMA/133 abar m2048@0xdc333000 port
-0xdc333180 irq 122
-[    2.544648] ata3: SATA max UDMA/133 abar m2048@0xdc333000 port
-0xdc333200 irq 122
-[    2.544652] ata4: SATA max UDMA/133 abar m2048@0xdc333000 port
-0xdc333280 irq 122
-[    2.544656] ata5: SATA max UDMA/133 abar m2048@0xdc333000 port
-0xdc333300 irq 122
-[    2.544659] ata6: SATA max UDMA/133 abar m2048@0xdc333000 port
-0xdc333380 irq 122
-[    2.544662] ata7: SATA max UDMA/133 abar m2048@0xdc333000 port
-0xdc333400 irq 122
-[    2.544666] ata8: SATA max UDMA/133 abar m2048@0xdc333000 port
-0xdc333480 irq 122
-[    3.552450] ata8: failed to resume link (SControl 0)
-[    3.552471] ata8: SATA link down (SStatus 0 SControl 0)
-[    3.552491] ata7: failed to resume link (SControl 0)
-[    3.552508] ata7: SATA link down (SStatus 0 SControl 0)
-[    3.552528] ata6: failed to resume link (SControl 0)
-[    3.552548] ata6: SATA link down (SStatus 0 SControl 0)
-[    3.552567] ata5: failed to resume link (SControl 0)
-[    3.552585] ata5: SATA link down (SStatus 0 SControl 0)
-[    3.552602] ata4: failed to resume link (SControl 0)
-[    3.552616] ata4: SATA link down (SStatus 0 SControl 0)
-[    4.051472] ata2: failed to resume link (SControl FFFFFFFF)
-[    4.051493] ata2: SATA link down (SStatus FFFFFFFF SControl FFFFFFFF)
-[    4.052349] ata1: failed to resume link (SControl FFFFFFFF)
-[    4.052370] ata1: SATA link down (SStatus FFFFFFFF SControl FFFFFFFF)
-[    4.052394] ata3: failed to resume link (SControl FFFFFFFF)
-[    4.052414] ata3: SATA link down (SStatus FFFFFFFF SControl FFFFFFFF)
-[    4.556598] Write protecting the kernel read-only data: 14336k
-[   12.410784] EXT4-fs (dm-1): mounted filesystem with ordered data
-mode. Opts: (null)
-[   13.471239] EXT4-fs (nvme0n1p2): mounted filesystem with ordered
-data mode. Opts: (null)
+> c) calling into the ACPI interpreter to do platform specific hacks
 
-It has Alpine Ridge, but I don't think there's such thing as SATA over
-USB Type C.  I'd guess that that what's going on is that the ahci
-controller genuinely has zero ports enabled and the workaround for
-port_map == 0 is firing incorrectly.
+Thanks for explaining. Now I understood your comment on AML however we need to consider the following:
 
-This is Linux 4.4.
+a) activity LED blinking routines are called very frequent (10 to 100ms based on emp->state) and executing AML method that often would introduces its own overhead.
 
---Andy
+b) all BIOS vendors need to implement a new methods in their DSDT and release a new BIOS.
+
+c) other OS'es (mainly Windows) driver need to be updated.
+
+
+We don't know how many other SoC's have similar hacky implementation which can take advantage of extending generic
+AHCI driver to call into AML methods for LED blink. Given some of these causes I think having a platform driver is much cleaner. I can drop DT binding part from this driver and keep just ACPI binding.
+
+Thoughts ?
+
+-Brijesh
+
+> 
+> 	Arnd
+> 
