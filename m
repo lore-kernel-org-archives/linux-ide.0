@@ -1,117 +1,83 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: LSF/MM 2016: Call for Proposals
-Date: Tue, 12 Jan 2016 11:05:45 -0500
-Message-ID: <yq14meiye92.fsf@sermon.lab.mkp.net>
+From: Andy Lutomirski <luto@amacapital.net>
+Subject: Unhappy ahci controller on Dell XPS 13 9350
+Date: Tue, 12 Jan 2016 22:51:15 -0800
+Message-ID: <CALCETrU7yMvXEDhjAUShoHEhDwifJGapdw--BKxsP0jmjKGmRw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <owner-linux-mm@kvack.org>
-Sender: owner-linux-mm@kvack.org
-To: linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org, xfs@oss.sgi.com
-Cc: lsf-pc@lists.linux-foundation.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
+Hi-
 
-The annual Linux Storage, Filesystem and Memory Management Summit for
-2016 will be held on April 18th and 19th at the Raleigh Marriott City
-center, Raleigh, NC.
+My XPS 13 9350 laptop has an nvme drive.  It has on-chip ahci
+capability, but the M.2 port isn't using it due to the aforementioned
+nvme drive using the same signal pins.
 
-Like last year, LSF/MM will be colocated with the Linux Foundation Vault
-conference which takes place on April 20th and 21st in the same
-venue. For those that do not know, Vault is designed to be an event
-where open source storage and filesystem practitioners meet storage
-implementors and, as such, it would be of benefit for LSF/MM attendees
-to attend.
+It is very unhappy:
 
-	http://events.linuxfoundation.org/events/linux-storage-filesystem-and-mm-summit
-	http://events.linuxfoundation.org/events/vault
+[    0.230455] libata version 3.00 loaded.
+[    1.039360] ahci 0000:00:17.0: version 3.0
+[    1.039386] ahci 0000:00:17.0: forcing PORTS_IMPL to 0xff
+[    1.539388] ahci 0000:00:17.0: failed to stop engine (-5)
+[    2.039392] ahci 0000:00:17.0: failed to stop engine (-5)
+[    2.539402] ahci 0000:00:17.0: failed to stop engine (-5)
+[    2.539437] ahci 0000:00:17.0: AHCI 0001.0301 32 slots 8 ports 6
+Gbps 0xff impl SATA mode
+[    2.539440] ahci 0000:00:17.0: flags: 64bit ncq pm led clo only pio
+slum part deso sadm sds apst
+[    2.540855] scsi host0: ahci
+[    2.541455] scsi host1: ahci
+[    2.541972] scsi host2: ahci
+[    2.542504] scsi host3: ahci
+[    2.543027] scsi host4: ahci
+[    2.543550] scsi host5: ahci
+[    2.544035] scsi host6: ahci
+[    2.544565] scsi host7: ahci
+[    2.544641] ata1: SATA max UDMA/133 abar m2048@0xdc333000 port
+0xdc333100 irq 122
+[    2.544645] ata2: SATA max UDMA/133 abar m2048@0xdc333000 port
+0xdc333180 irq 122
+[    2.544648] ata3: SATA max UDMA/133 abar m2048@0xdc333000 port
+0xdc333200 irq 122
+[    2.544652] ata4: SATA max UDMA/133 abar m2048@0xdc333000 port
+0xdc333280 irq 122
+[    2.544656] ata5: SATA max UDMA/133 abar m2048@0xdc333000 port
+0xdc333300 irq 122
+[    2.544659] ata6: SATA max UDMA/133 abar m2048@0xdc333000 port
+0xdc333380 irq 122
+[    2.544662] ata7: SATA max UDMA/133 abar m2048@0xdc333000 port
+0xdc333400 irq 122
+[    2.544666] ata8: SATA max UDMA/133 abar m2048@0xdc333000 port
+0xdc333480 irq 122
+[    3.552450] ata8: failed to resume link (SControl 0)
+[    3.552471] ata8: SATA link down (SStatus 0 SControl 0)
+[    3.552491] ata7: failed to resume link (SControl 0)
+[    3.552508] ata7: SATA link down (SStatus 0 SControl 0)
+[    3.552528] ata6: failed to resume link (SControl 0)
+[    3.552548] ata6: SATA link down (SStatus 0 SControl 0)
+[    3.552567] ata5: failed to resume link (SControl 0)
+[    3.552585] ata5: SATA link down (SStatus 0 SControl 0)
+[    3.552602] ata4: failed to resume link (SControl 0)
+[    3.552616] ata4: SATA link down (SStatus 0 SControl 0)
+[    4.051472] ata2: failed to resume link (SControl FFFFFFFF)
+[    4.051493] ata2: SATA link down (SStatus FFFFFFFF SControl FFFFFFFF)
+[    4.052349] ata1: failed to resume link (SControl FFFFFFFF)
+[    4.052370] ata1: SATA link down (SStatus FFFFFFFF SControl FFFFFFFF)
+[    4.052394] ata3: failed to resume link (SControl FFFFFFFF)
+[    4.052414] ata3: SATA link down (SStatus FFFFFFFF SControl FFFFFFFF)
+[    4.556598] Write protecting the kernel read-only data: 14336k
+[   12.410784] EXT4-fs (dm-1): mounted filesystem with ordered data
+mode. Opts: (null)
+[   13.471239] EXT4-fs (nvme0n1p2): mounted filesystem with ordered
+data mode. Opts: (null)
 
-On behalf of the committee I am issuing a call for agenda proposals that
-are suitable for cross-track discussion as well as technical subjects
-for the breakout sessions.
+It has Alpine Ridge, but I don't think there's such thing as SATA over
+USB Type C.  I'd guess that that what's going on is that the ahci
+controller genuinely has zero ports enabled and the workaround for
+port_map == 0 is firing incorrectly.
 
-1) Proposals for agenda topics should be sent before February 29th, 2016
-to:
+This is Linux 4.4.
 
-	lsf-pc@lists.linux-foundation.org
-
-and cc the Linux list or lists that are relevant for the topic in
-question:
-
-	ATA:	linux-ide@vger.kernel.org
-	Block:	linux-block@vger.kernel.org
-	FS:	linux-fsdevel@vger.kernel.org
-	MM:	linux-mm@kvack.org
-	SCSI:	linux-scsi@vger.kernel.org
-
-If advance notice is required for visa applications then please send
-proposals before February 11th. The committee will complete the first
-round of selections near that date to accommodate applications.
-
-Please tag your proposal with [LSF/MM TOPIC] to make it easier to
-track. In addition, please make sure to start a new thread for each
-topic rather than following up to an existing one.
-
-Agenda topics and attendees will be selected by the program committee,
-but the final agenda will be formed by consensus of the attendees at the
-summit.
-
-We will try to cap attendance at around 25-30 per track to facilitate
-discussions, although the final numbers will depend on the room sizes at
-the venue.
-
-2) Requests to attend the summit should be sent to:
-
-	lsf-pc@lists.linux-foundation.org
-
-Please summarise what expertise you will bring to the meeting, and what
-you would like to discuss. Please also tag your email with [LSF/MM
-ATTEND] so there is less chance of it getting lost.
-
-Presentations are allowed to guide discussion, but are strongly
-discouraged. There will be no recording or audio bridge. However, we
-expect that written minutes will be published as we did in previous
-years
-
-2015:
-	https://lwn.net/Articles/lsfmm2015/
-
-2014:
-	http://lwn.net/Articles/LSFMM2014/
-
-2013:
-	http://lwn.net/Articles/548089/
-
-3) If you have feedback on last year's meeting that we can use to
-improve this year's, please also send that to:
-
-	lsf-pc@lists.linux-foundation.org
-
-Thank you on behalf of the program committee:
-
-Storage:
-	Jens Axboe (track chair)
-	James Bottomley
-	Christoph Hellwig
-	Martin K. Petersen (program chair)
-
-Filesystems:
-	Josef Bacik
-	Jan Kara
-	Jeff Layton (track chair)
-	Anna Schumaker
-	Theodore Ts'o
-	Ric Wheeler
-
-MM:
-	Mel Gorman
-	Johannes Weiner
-	Rik van Riel (track chair)
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+--Andy
