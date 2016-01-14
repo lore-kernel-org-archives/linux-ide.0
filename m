@@ -1,46 +1,40 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH] ata: add AMD Seattle platform driver
-Date: Wed, 13 Jan 2016 21:39:48 +0100
-Message-ID: <10776629.UCmL1lPAav@wuerfel>
-References: <1452200002-31590-1-git-send-email-brijesh.singh@amd.com> <4689728.Nn3Rl2cUeP@wuerfel> <56968168.4010606@amd.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+From: Suman Tripathi <stripathi@apm.com>
+Subject: [PATCH v1 0/2] ata: Fixes related to edge trigger latch for ahci_xgene driver.
+Date: Thu, 14 Jan 2016 11:00:22 +0530
+Message-ID: <1452749424-28919-1-git-send-email-stripathi@apm.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.75]:54478 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932213AbcAMUka (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Jan 2016 15:40:30 -0500
-In-Reply-To: <56968168.4010606@amd.com>
+Received: from [198.137.200.161] ([198.137.200.161]:49751 "EHLO
+	denmail01.amcc.com" rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752045AbcANFbI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jan 2016 00:31:08 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brijesh Singh <brijesh.singh@amd.com>
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, mark.rutland@arm.com, devicetree@vger.kernel.org, pawel.moll@arm.com, ijc+devicetree@hellion.org.uk, linux-ide@vger.kernel.org, robh+dt@kernel.org, galak@codeaurora.org, tj@kernel.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>
 
-On Wednesday 13 January 2016 10:55:04 Brijesh Singh wrote:
-> On 01/12/2016 08:24 AM, Arnd Bergmann wrote:
+This patch set implements a workaround for an errate in the APM
+X-Gene SATA host controller with edge interrupt. The HOST_IRQ_STAT
+misses the edge interrupt from the PORT_IRQ_STAT when clearing the
+HOST_IRQ_STAT and reporting the PORT_IRQ_STAT happens in same clock
+cycle. It also implements the capability to override generic interrupt
+handler.
 
-> > c) calling into the ACPI interpreter to do platform specific hacks
-> 
-> Thanks for explaining. Now I understood your comment on AML however we need to consider the following:
-> 
-> a) activity LED blinking routines are called very frequent (10 to 100ms based on emp->state) and executing AML method that often would introduces its own overhead.
-> 
-> b) all BIOS vendors need to implement a new methods in their DSDT and release a new BIOS.
-> 
-> c) other OS'es (mainly Windows) driver need to be updated.
-> 
-> 
-> We don't know how many other SoC's have similar hacky implementation which can take advantage of extending generic
-> AHCI driver to call into AML methods for LED blink. Given some of these causes I think having a platform driver is much cleaner. I can drop DT binding part from this driver and keep just ACPI binding.
-> 
-> Thoughts ?
+v1 change:
+* Implement the capability for LDD to override interrupt handler.
 
-I don't care what you do with ACPI, just make sure we can use the generic
-driver without any platform specific hacks for the DT case.
+* ahci_xgene driver implements the edge trigger interrupt handler.
 
-For ACPI, please talk to the respective maintainers about whether they want
-to have a custom driver for this case, or a proper abstraction in the generic
-driver.
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
 
-	Arnd
+
+Suman Tripathi (2):
+  libahci: Implement the capability to override the generic ahci
+    interrupt handler
+  ahci_xgene: Implement the workaround to fix the missing of edge
+    interrupt for HOST_IRQ_STAT
+
+ drivers/ata/ahci.h       |    2 +
+ drivers/ata/ahci_xgene.c |   84 ++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/ata/libahci.c    |   18 ++++++---
+ 3 files changed, 98 insertions(+), 6 deletions(-)
+
