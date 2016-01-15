@@ -1,36 +1,53 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata: disable forced PORTS_IMPL for >= v3.0 controllers
-Date: Fri, 15 Jan 2016 14:48:54 -0500
-Message-ID: <20160115194854.GM3520@mtj.duckdns.org>
+Subject: [PATCH v2] libata: disable forced PORTS_IMPL for >= AHCI 1.3
+Date: Fri, 15 Jan 2016 15:13:05 -0500
+Message-ID: <20160115201305.GN3520@mtj.duckdns.org>
 References: <CALCETrU7yMvXEDhjAUShoHEhDwifJGapdw--BKxsP0jmjKGmRw@mail.gmail.com>
  <20160114223732.GG3520@mtj.duckdns.org>
- <CALCETrVCfQjMQgnjpJh6YPsRF18X=XYRTb3Aoqbhe3f3ucam4w@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yk0-f172.google.com ([209.85.160.172]:35960 "EHLO
-	mail-yk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750717AbcAOTs4 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 15 Jan 2016 14:48:56 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <CALCETrVCfQjMQgnjpJh6YPsRF18X=XYRTb3Aoqbhe3f3ucam4w@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+In-Reply-To: <20160114223732.GG3520@mtj.duckdns.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Andy Lutomirski <luto@amacapital.net>
 Cc: linux-ide@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+List-Id: linux-ide@vger.kernel.org
 
-Hello,
+Some early controllers incorrectly reported zero ports in PORTS_IMPL
+register and the ahci driver fabricates PORTS_IMPL from the number of
+ports in those cases.  This hasn't mattered but with the new nvme
+controllers there are cases where zero PORTS_IMPL is valid and should
+be honored.
 
-On Thu, Jan 14, 2016 at 05:00:57PM -0800, Andy Lutomirski wrote:
-> [  +0.001350] ahci 0000:00:17.0: version 3.0
-> [  +0.000034] ahci 0000:00:17.0: forcing PORTS_IMPL to 0xff
-> 
-> My "vers" is 0x10301.
+Disable the workaround for >= AHCI 1.3.
 
-Ah, right, of course.  I was looking at the driver version, which I'm
-not even sure why we have.  Will update the patch.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Reported-by: Andy Lutomirski <luto@amacapital.net>
+Link: http://lkml.kernel.org/g/CALCETrU7yMvXEDhjAUShoHEhDwifJGapdw--BKxsP0jmjKGmRw@mail.gmail.com
+---
+Hello, Andy.
+
+Can you please see whether this one works?
 
 Thanks.
 
--- 
-tejun
+ drivers/ata/libahci.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index d61740e..a91432a 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -496,8 +496,9 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
+ 		}
+ 	}
+ 
+-	/* fabricate port_map from cap.nr_ports */
+-	if (!port_map) {
++	/* fabricate port_map from cap.nr_ports for < AHCI 1.3 */
++	if (!port_map && (!(vers >> 16) ||
++			  ((vers >> 16) == 1 && (vers & 0xFFFF) < 0x300))) {
+ 		port_map = (1 << ahci_nr_ports(cap)) - 1;
+ 		dev_warn(dev, "forcing PORTS_IMPL to 0x%x\n", port_map);
+ 
