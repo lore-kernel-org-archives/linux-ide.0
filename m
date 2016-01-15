@@ -1,55 +1,38 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH] libata: disable forced PORTS_IMPL for >= v3.0 controllers
-Date: Thu, 14 Jan 2016 17:37:32 -0500
-Message-ID: <20160114223732.GG3520@mtj.duckdns.org>
+From: Andy Lutomirski <luto@amacapital.net>
+Subject: Re: [PATCH] libata: disable forced PORTS_IMPL for >= v3.0 controllers
+Date: Thu, 14 Jan 2016 17:00:57 -0800
+Message-ID: <CALCETrVCfQjMQgnjpJh6YPsRF18X=XYRTb3Aoqbhe3f3ucam4w@mail.gmail.com>
 References: <CALCETrU7yMvXEDhjAUShoHEhDwifJGapdw--BKxsP0jmjKGmRw@mail.gmail.com>
+ <20160114223732.GG3520@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yk0-f170.google.com ([209.85.160.170]:36753 "EHLO
-	mail-yk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751621AbcANWhe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jan 2016 17:37:34 -0500
-Content-Disposition: inline
-In-Reply-To: <CALCETrU7yMvXEDhjAUShoHEhDwifJGapdw--BKxsP0jmjKGmRw@mail.gmail.com>
+Received: from mail-oi0-f41.google.com ([209.85.218.41]:34717 "EHLO
+	mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751152AbcAOBBR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jan 2016 20:01:17 -0500
+Received: by mail-oi0-f41.google.com with SMTP id k206so127328870oia.1
+        for <linux-ide@vger.kernel.org>; Thu, 14 Jan 2016 17:01:17 -0800 (PST)
+In-Reply-To: <20160114223732.GG3520@mtj.duckdns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andy Lutomirski <luto@amacapital.net>
+To: Tejun Heo <tj@kernel.org>
 Cc: linux-ide@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-Some early controllers incorrectly reported zero ports in PORTS_IMPL
-register and the ahci driver fabricates PORTS_IMPL from the number of
-ports in those cases.  This hasn't mattered but with the new nvme
-controllers there are cases where zero PORTS_IMPL is valid and should
-be honored.
+On Thu, Jan 14, 2016 at 2:37 PM, Tejun Heo <tj@kernel.org> wrote:
+> Some early controllers incorrectly reported zero ports in PORTS_IMPL
+> register and the ahci driver fabricates PORTS_IMPL from the number of
+> ports in those cases.  This hasn't mattered but with the new nvme
+> controllers there are cases where zero PORTS_IMPL is valid and should
+> be honored.
+>
+> Disable the workaround for controllers >= v3.0.
 
-Disable the workaround for controllers >= v3.0.
+I still see:
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: Andy Lutomirski <luto@amacapital.net>
-Link: http://lkml.kernel.org/g/CALCETrU7yMvXEDhjAUShoHEhDwifJGapdw--BKxsP0jmjKGmRw@mail.gmail.com
----
-Hello, Andy.
+[  +0.001350] ahci 0000:00:17.0: version 3.0
+[  +0.000034] ahci 0000:00:17.0: forcing PORTS_IMPL to 0xff
 
-Can you please test whether this fixes the issue?
+My "vers" is 0x10301.
 
-Thanks.
-
- drivers/ata/libahci.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index d61740e..4931075 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -496,8 +496,8 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
- 		}
- 	}
- 
--	/* fabricate port_map from cap.nr_ports */
--	if (!port_map) {
-+	/* fabricate port_map from cap.nr_ports for older controllers */
-+	if (!port_map && (vers >> 16) <= 2) {
- 		port_map = (1 << ahci_nr_ports(cap)) - 1;
- 		dev_warn(dev, "forcing PORTS_IMPL to 0x%x\n", port_map);
- 
+--Andy
