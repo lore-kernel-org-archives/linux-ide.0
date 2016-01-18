@@ -1,39 +1,41 @@
 From: David Miller <davem@davemloft.net>
-Subject: Re: [patch] ide: silence some underflow warnings
-Date: Mon, 18 Jan 2016 14:12:53 -0500 (EST)
-Message-ID: <20160118.141253.803019327755668580.davem@davemloft.net>
-References: <20151113143401.GC1445@mwanda>
+Subject: Re: [PATCH] drivers/ide: make ide-scan-pci.c driver explicitly
+ non-modular
+Date: Mon, 18 Jan 2016 14:13:05 -0500 (EST)
+Message-ID: <20160118.141305.2278027302620439950.davem@davemloft.net>
+References: <1449697551-16096-1-git-send-email-paul.gortmaker@windriver.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20151113143401.GC1445@mwanda>
-Sender: linux-kernel-owner@vger.kernel.org
-To: dan.carpenter@oracle.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from shards.monkeyblade.net ([149.20.54.216]:41988 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756558AbcARTNH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jan 2016 14:13:07 -0500
+In-Reply-To: <1449697551-16096-1-git-send-email-paul.gortmaker@windriver.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: paul.gortmaker@windriver.com
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Date: Fri, 13 Nov 2015 17:34:01 +0300
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
+Date: Wed, 9 Dec 2015 16:45:51 -0500
 
-> Back in the day we used to just say this code was root only so it was
-> ok that the bounds checking was sloppy.  These days it annoys static
-> checkers so we fix it.
+> The Kconfig for this support is currently:
 > 
-> In the original code "c > INT_MAX" was never true since "c" was an int.
-> I am not sure what was intended so I left it alone.  But because I made
-> "c" unsigned it means we don't have a warning any more.
+> config IDEPCI_PCIBUS_ORDER
+>         bool "Probe IDE PCI devices in the PCI bus order (DEPRECATED)"
 > 
-> The second warning is that we cap "i" but allow negatives leading to an
-> underflow of the ide_disks_chs[] array.  The third set of warnings is
-> because these values come from the user and we cap most of the upper
-> bounds but allow negative values.  Negative cylinders doesn't make
-> sense.
+> ...meaning that it currently is not being built as a module by anyone.
+> Lets change the initcall to be the equivalent device_initcall, so that
+> when reading the driver code, there is no doubt it is builtin-only.
 > 
-> drivers/ide/ide.c:262 ide_set_disk_chs() warn: impossible condition '(c > ((~0 >> 1))) => (s32min-s32max > s32max)'
-> drivers/ide/ide.c:270 ide_set_disk_chs() warn: check 'ide_disks_chs[i]' for negative offsets 'i' = s32min.  extra = 's32min-19'
-> drivers/ide/ide.c:271 ide_set_disk_chs() warn: no lower bound on 'h'
+> Unlike other similar changes, we leave the module.h header to be
+> included since this code interacts with other drivers and needs to
+> know what a struct module is.
 > 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> Cc: "David S. Miller" <davem@davemloft.net>
+> Cc: linux-ide@vger.kernel.org
+> Signed-off-by: Paul Gortmaker <paul.gortmaker@windriver.com>
 
 Applied.
