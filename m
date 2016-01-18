@@ -1,66 +1,39 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH v2] libata: disable forced PORTS_IMPL for >= AHCI 1.3
-Date: Sat, 16 Jan 2016 13:09:37 +0300
-Message-ID: <569A16E1.7010708@cogentembedded.com>
-References: <CALCETrU7yMvXEDhjAUShoHEhDwifJGapdw--BKxsP0jmjKGmRw@mail.gmail.com>
- <20160114223732.GG3520@mtj.duckdns.org>
- <20160115201305.GN3520@mtj.duckdns.org>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [patch] ide: silence some underflow warnings
+Date: Mon, 18 Jan 2016 14:12:53 -0500 (EST)
+Message-ID: <20160118.141253.803019327755668580.davem@davemloft.net>
+References: <20151113143401.GC1445@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lf0-f47.google.com ([209.85.215.47]:33949 "EHLO
-	mail-lf0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751241AbcAPKJo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Jan 2016 05:09:44 -0500
-Received: by mail-lf0-f47.google.com with SMTP id 17so93810621lfz.1
-        for <linux-ide@vger.kernel.org>; Sat, 16 Jan 2016 02:09:44 -0800 (PST)
-In-Reply-To: <20160115201305.GN3520@mtj.duckdns.org>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20151113143401.GC1445@mwanda>
+Sender: linux-kernel-owner@vger.kernel.org
+To: dan.carpenter@oracle.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Andy Lutomirski <luto@amacapital.net>
-Cc: linux-ide@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-Hello.
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Date: Fri, 13 Nov 2015 17:34:01 +0300
 
-On 1/15/2016 11:13 PM, Tejun Heo wrote:
+> Back in the day we used to just say this code was root only so it was
+> ok that the bounds checking was sloppy.  These days it annoys static
+> checkers so we fix it.
+> 
+> In the original code "c > INT_MAX" was never true since "c" was an int.
+> I am not sure what was intended so I left it alone.  But because I made
+> "c" unsigned it means we don't have a warning any more.
+> 
+> The second warning is that we cap "i" but allow negatives leading to an
+> underflow of the ide_disks_chs[] array.  The third set of warnings is
+> because these values come from the user and we cap most of the upper
+> bounds but allow negative values.  Negative cylinders doesn't make
+> sense.
+> 
+> drivers/ide/ide.c:262 ide_set_disk_chs() warn: impossible condition '(c > ((~0 >> 1))) => (s32min-s32max > s32max)'
+> drivers/ide/ide.c:270 ide_set_disk_chs() warn: check 'ide_disks_chs[i]' for negative offsets 'i' = s32min.  extra = 's32min-19'
+> drivers/ide/ide.c:271 ide_set_disk_chs() warn: no lower bound on 'h'
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-> Some early controllers incorrectly reported zero ports in PORTS_IMPL
-> register and the ahci driver fabricates PORTS_IMPL from the number of
-> ports in those cases.  This hasn't mattered but with the new nvme
-> controllers there are cases where zero PORTS_IMPL is valid and should
-> be honored.
->
-> Disable the workaround for >= AHCI 1.3.
->
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Reported-by: Andy Lutomirski <luto@amacapital.net>
-> Link: http://lkml.kernel.org/g/CALCETrU7yMvXEDhjAUShoHEhDwifJGapdw--BKxsP0jmjKGmRw@mail.gmail.com
-> ---
-> Hello, Andy.
->
-> Can you please see whether this one works?
->
-> Thanks.
->
->   drivers/ata/libahci.c |    5 +++--
->   1 file changed, 3 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-> index d61740e..a91432a 100644
-> --- a/drivers/ata/libahci.c
-> +++ b/drivers/ata/libahci.c
-> @@ -496,8 +496,9 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
->   		}
->   	}
->
-> -	/* fabricate port_map from cap.nr_ports */
-> -	if (!port_map) {
-> +	/* fabricate port_map from cap.nr_ports for < AHCI 1.3 */
-> +	if (!port_map && (!(vers >> 16) ||
-> +			  ((vers >> 16) == 1 && (vers & 0xFFFF) < 0x300))) {
-
-     Hm, won't just (vers < 0x1300) just work?
-
-MBR, Sergei
-
+Applied.
