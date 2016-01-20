@@ -1,73 +1,306 @@
-From: =?iso-8859-1?Q?M=E5ns_Rullg=E5rd?= <mans@mansr.com>
-Subject: Re: [PATCH 1/3] ata: sata_dwc_460ex: use "dmas" DT property to find dma channel
-Date: Wed, 20 Jan 2016 20:07:00 +0000
-Message-ID: <yw1xh9i8ow0r.fsf@unicorn.mansr.com>
-References: <1450221935-6034-1-git-send-email-mans@mansr.com>
-	<yw1xpoy16jlt.fsf@unicorn.mansr.com>
-	<CAHp75Vedczfn7B-tOEVZi2dOExW8FiAGGA7iTkpuC2wBrsK68g@mail.gmail.com>
-	<CAHp75VfaHvBHhTjQVMNdOYA2kEdus-XpH6E=9i1HPSKTa-2ffA@mail.gmail.com>
-	<yw1x60zs7g40.fsf@unicorn.mansr.com>
-	<1450724880.30729.250.camel@linux.intel.com>
-	<yw1xr3if4n74.fsf@unicorn.mansr.com>
-	<1450731289.30729.282.camel@linux.intel.com>
-	<yw1x37uv4a6l.fsf@unicorn.mansr.com>
-	<1450781890.30729.298.camel@linux.intel.com>
-	<yw1x4meq1xnx.fsf@unicorn.mansr.com>
-	<CAHp75VfVo+y3rwQzBaLmi4-ZemzYt2nP3eHr-fhwGf0Lzg08UQ@mail.gmail.com>
-	<1452159294.30729.405.camel@linux.intel.com>
-	<yw1xr3htz1dv.fsf@unicorn.mansr.com>
-	<1452243464.30729.430.camel@linux.intel.com>
-	<yw1xwpr4ozjq.fsf@unicorn.mansr.com>
-	<1453317808.2521.135.camel@linux.intel.com>
-	<yw1xpowwoy08.fsf@unicorn.mansr.com>
-	<CAHp75Vc__QXa=HE1Zw5yJut_sVEUs88tYTdeNxFnOVvBmB24rw@mail.gmail.com>
-	<yw1xlh7kowyo.fsf@unicorn.mansr.com>
-	<CAHp75Vftz_dAEDdG8yar==BB2spBpGozqf6UNpEDr-196J9xhg@mail.gmail.com>
+From: Brijesh Singh <brijesh.singh@amd.com>
+Subject: Re: [PATCH v2] ata: add AMD Seattle platform driver
+Date: Wed, 20 Jan 2016 15:24:04 -0600
+Message-ID: <569FFAF4.6020807@amd.com>
+References: <1452789071-4090-1-git-send-email-brijesh.singh@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from unicorn.mansr.com ([81.2.72.234]:50473 "EHLO unicorn.mansr.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751985AbcATUHE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Jan 2016 15:07:04 -0500
-In-Reply-To: <CAHp75Vftz_dAEDdG8yar==BB2spBpGozqf6UNpEDr-196J9xhg@mail.gmail.com>
-	(Andy Shevchenko's message of "Wed, 20 Jan 2016 21:51:21 +0200")
+Received: from mail-by2on0089.outbound.protection.outlook.com ([207.46.100.89]:39040
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751773AbcATV00 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 20 Jan 2016 16:26:26 -0500
+In-Reply-To: <1452789071-4090-1-git-send-email-brijesh.singh@amd.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Julian Margetson <runaway@candw.ms>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: linux-kernel@vger.kernel.org, tj@kernel.org, linux-ide@vger.kernel.org
+Cc: brijesh.singh@amd.com, hdegoede@redhat.com, arnd@arndb.de
 
-Andy Shevchenko <andy.shevchenko@gmail.com> writes:
+Hi Tejun,
 
-> On Wed, Jan 20, 2016 at 9:46 PM, M=E5ns Rullg=E5rd <mans@mansr.com> w=
-rote:
->
->>>>> One comment still regarding to lli types. We can avoid warnings b=
-y
->>>>> using (__force u32) in macros.
->>>>
->>>> But that won't give the benefits of having the types checked.
->>>
->>> You mean if we access the lli->field directly? I didn't quite get w=
-hat
->>> use case you are keeping in mind.
->>
->> Yes, accessing any of those fields directly with my patch gives a sp=
-arse
->> warning.  It's situations like these those checks are intended for.
->> Defeating them seems foolish to me.
->
-> Otherwise it makes that struct looks ugly.
-> Why not union, though it still ugly, but less.
+Ping ?
 
-What's so ugly about it?  IMO data should be declared as the type it
-actually is, and here we have fields that might have a different byte
-order from the host CPU.  The __be32 and __le32 types were invented to
-make such situations clear and allow automatic (sparse) checking.  I'd
-say the price of one small typedef is well worth it.  The actual code i=
-s
-not impacted since it must use the accessor macros anyhow.
+-Brijesh 
 
---=20
-M=E5ns Rullg=E5rd
+On 01/14/2016 10:31 AM, Brijesh Singh wrote:
+> AMD Seattle SATA controller mostly conforms to AHCI interface with some
+> special register to control SGPIO interface. In the case of an AHCI
+> controller, the SGPIO feature is ideally implemented using the
+> "Enclosure Management" register of the AHCI controller, but those
+> registeres are not implemented in the Seattle SoC. Instead SoC
+> (Rev B0 onwards) provides a 32-bit SGPIO control register which should
+> be programmed to control the activity, locate and fault LEDs.
+> 
+> The driver is based on ahci_platform driver.
+> 
+> Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
+> Acked-by: Hans de Goede <hdegoede@redhat.com>
+> CC: tj@kernel.org
+> CC: linux-ide@vger.kernel.org
+> ---
+> v1 patch and discussion is available here [1].
+> 
+> Changes since v1:
+> * use intverted test (fixes per Joe Perches review feedback)
+> * remove the DT binding, the DT support will be implemented by
+>   extending the generic driver to use LED trigger frameworks
+>   (recommend by Arnd Bergmann)
+>   
+> [1] https://lkml.org/lkml/2016/1/7/681
+> 
+>  drivers/ata/Kconfig        |   8 ++
+>  drivers/ata/Makefile       |   1 +
+>  drivers/ata/ahci_seattle.c | 210 +++++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 219 insertions(+)
+>  create mode 100644 drivers/ata/ahci_seattle.c
+> 
+> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+> index 861643ea..f2ba9c0 100644
+> --- a/drivers/ata/Kconfig
+> +++ b/drivers/ata/Kconfig
+> @@ -193,6 +193,14 @@ config SATA_FSL
+>  
+>  	  If unsure, say N.
+>  
+> +config SATA_AHCI_SEATTLE
+> +	tristate "AMD Seattle 6.0Gbps AHCI SATA host controller support"
+> +	depends on ARCH_SEATTLE
+> +	help
+> +	 This option enables support for AMD Seattle SATA host controller.
+> +
+> +	 If unsure, say N
+> +
+>  config SATA_INIC162X
+>  	tristate "Initio 162x SATA support (Very Experimental)"
+>  	depends on PCI
+> diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+> index af45eff..9c0a96a 100644
+> --- a/drivers/ata/Makefile
+> +++ b/drivers/ata/Makefile
+> @@ -4,6 +4,7 @@ obj-$(CONFIG_ATA)		+= libata.o
+>  # non-SFF interface
+>  obj-$(CONFIG_SATA_AHCI)		+= ahci.o libahci.o
+>  obj-$(CONFIG_SATA_ACARD_AHCI)	+= acard-ahci.o libahci.o
+> +obj-$(CONFIG_SATA_AHCI_SEATTLE)	+= ahci_seattle.o libahci.o libahci_platform.o
+>  obj-$(CONFIG_SATA_AHCI_PLATFORM) += ahci_platform.o libahci.o libahci_platform.o
+>  obj-$(CONFIG_SATA_FSL)		+= sata_fsl.o
+>  obj-$(CONFIG_SATA_INIC162X)	+= sata_inic162x.o
+> diff --git a/drivers/ata/ahci_seattle.c b/drivers/ata/ahci_seattle.c
+> new file mode 100644
+> index 0000000..6e702ab
+> --- /dev/null
+> +++ b/drivers/ata/ahci_seattle.c
+> @@ -0,0 +1,210 @@
+> +/*
+> + * AMD Seattle AHCI SATA driver
+> + *
+> + * Copyright (c) 2015, Advanced Micro Devices
+> + * Author: Brijesh Singh <brijesh.singh@amd.com>
+> + *
+> + * based on the AHCI SATA platform driver by Jeff Garzik and Anton Vorontsov
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License as published by
+> + * the Free Software Foundation; either version 2 of the License.
+> + *
+> + * This program is distributed in the hope that it will be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + */
+> +
+> +#include <linux/kernel.h>
+> +#include <linux/module.h>
+> +#include <linux/pm.h>
+> +#include <linux/device.h>
+> +#include <linux/of_device.h>
+> +#include <linux/platform_device.h>
+> +#include <linux/libata.h>
+> +#include <linux/ahci_platform.h>
+> +#include <linux/acpi.h>
+> +#include <linux/pci_ids.h>
+> +#include "ahci.h"
+> +
+> +/* SGPIO Control Register definition
+> + *
+> + * Bit		Type		Description
+> + * 31		RW		OD7.2 (activity)
+> + * 30		RW		OD7.1 (locate)
+> + * 29		RW		OD7.0 (fault)
+> + * 28...8	RW		OD6.2...OD0.0 (3bits per port, 1 bit per LED)
+> + * 7		RO		SGPIO feature flag
+> + * 6:4		RO		Reserved
+> + * 3:0		RO		Number of ports (0 means no port supported)
+> + */
+> +#define ACTIVITY_BIT_POS(x)		(8 + (3 * x))
+> +#define LOCATE_BIT_POS(x)		(ACTIVITY_BIT_POS(x) + 1)
+> +#define FAULT_BIT_POS(x)		(LOCATE_BIT_POS(x) + 1)
+> +
+> +#define ACTIVITY_MASK			0x00010000
+> +#define LOCATE_MASK			0x00080000
+> +#define FAULT_MASK			0x00400000
+> +
+> +#define DRV_NAME "ahci-seattle"
+> +
+> +static ssize_t seattle_transmit_led_message(struct ata_port *ap, u32 state,
+> +					    ssize_t size);
+> +
+> +struct seattle_plat_data {
+> +	void __iomem *sgpio_ctrl;
+> +};
+> +
+> +static struct ata_port_operations ahci_port_ops = {
+> +	.inherits		= &ahci_ops,
+> +};
+> +
+> +static const struct ata_port_info ahci_port_info = {
+> +	.flags		= AHCI_FLAG_COMMON,
+> +	.pio_mask	= ATA_PIO4,
+> +	.udma_mask	= ATA_UDMA6,
+> +	.port_ops	= &ahci_port_ops,
+> +};
+> +
+> +static struct ata_port_operations ahci_seattle_ops = {
+> +	.inherits		= &ahci_ops,
+> +	.transmit_led_message   = seattle_transmit_led_message,
+> +};
+> +
+> +static const struct ata_port_info ahci_port_seattle_info = {
+> +	.flags		= AHCI_FLAG_COMMON | ATA_FLAG_EM | ATA_FLAG_SW_ACTIVITY,
+> +	.link_flags	= ATA_LFLAG_SW_ACTIVITY,
+> +	.pio_mask	= ATA_PIO4,
+> +	.udma_mask	= ATA_UDMA6,
+> +	.port_ops	= &ahci_seattle_ops,
+> +};
+> +
+> +static struct scsi_host_template ahci_platform_sht = {
+> +	AHCI_SHT(DRV_NAME),
+> +};
+> +
+> +static ssize_t seattle_transmit_led_message(struct ata_port *ap, u32 state,
+> +					    ssize_t size)
+> +{
+> +	struct ahci_host_priv *hpriv = ap->host->private_data;
+> +	struct ahci_port_priv *pp = ap->private_data;
+> +	struct seattle_plat_data *plat_data = hpriv->plat_data;
+> +	unsigned long flags;
+> +	int pmp;
+> +	struct ahci_em_priv *emp;
+> +	u32 val;
+> +
+> +	/* get the slot number from the message */
+> +	pmp = (state & EM_MSG_LED_PMP_SLOT) >> 8;
+> +	if (pmp >= EM_MAX_SLOTS)
+> +		return -EINVAL;
+> +	emp = &pp->em_priv[pmp];
+> +
+> +	val = ioread32(plat_data->sgpio_ctrl);
+> +	if (state & ACTIVITY_MASK)
+> +		val |= 1 << ACTIVITY_BIT_POS((ap->port_no));
+> +	else
+> +		val &= ~(1 << ACTIVITY_BIT_POS((ap->port_no)));
+> +
+> +	if (state & LOCATE_MASK)
+> +		val |= 1 << LOCATE_BIT_POS((ap->port_no));
+> +	else
+> +		val &= ~(1 << LOCATE_BIT_POS((ap->port_no)));
+> +
+> +	if (state & FAULT_MASK)
+> +		val |= 1 << FAULT_BIT_POS((ap->port_no));
+> +	else
+> +		val &= ~(1 << FAULT_BIT_POS((ap->port_no)));
+> +
+> +	iowrite32(val, plat_data->sgpio_ctrl);
+> +
+> +	spin_lock_irqsave(ap->lock, flags);
+> +
+> +	/* save off new led state for port/slot */
+> +	emp->led_state = state;
+> +
+> +	spin_unlock_irqrestore(ap->lock, flags);
+> +
+> +	return size;
+> +}
+> +
+> +static const struct ata_port_info *ahci_seattle_get_port_info(
+> +		struct platform_device *pdev, struct ahci_host_priv *hpriv)
+> +{
+> +	struct device *dev = &pdev->dev;
+> +	struct seattle_plat_data *plat_data;
+> +	u32 val;
+> +
+> +	plat_data = devm_kzalloc(dev, sizeof(*plat_data), GFP_KERNEL);
+> +	if (IS_ERR(plat_data))
+> +		return &ahci_port_info;
+> +
+> +	plat_data->sgpio_ctrl = devm_ioremap_resource(dev,
+> +			      platform_get_resource(pdev, IORESOURCE_MEM, 1));
+> +	if (IS_ERR(plat_data->sgpio_ctrl))
+> +		return &ahci_port_info;
+> +
+> +	val = ioread32(plat_data->sgpio_ctrl);
+> +
+> +	if (!(val & 0xf))
+> +		return &ahci_port_info;
+> +
+> +	hpriv->em_loc = 0;
+> +	hpriv->em_buf_sz = 4;
+> +	hpriv->em_msg_type = EM_MSG_TYPE_LED;
+> +	hpriv->plat_data = plat_data;
+> +
+> +	dev_info(dev, "SGPIO LED control is enabled.\n");
+> +	return &ahci_port_seattle_info;
+> +}
+> +
+> +static int ahci_seattle_probe(struct platform_device *pdev)
+> +{
+> +	int rc;
+> +	struct ahci_host_priv *hpriv;
+> +
+> +	hpriv = ahci_platform_get_resources(pdev);
+> +	if (IS_ERR(hpriv))
+> +		return PTR_ERR(hpriv);
+> +
+> +	rc = ahci_platform_enable_resources(hpriv);
+> +	if (rc)
+> +		return rc;
+> +
+> +	rc = ahci_platform_init_host(pdev, hpriv,
+> +				     ahci_seattle_get_port_info(pdev, hpriv),
+> +				     &ahci_platform_sht);
+> +	if (rc)
+> +		goto disable_resources;
+> +
+> +	return 0;
+> +disable_resources:
+> +	ahci_platform_disable_resources(hpriv);
+> +	return rc;
+> +}
+> +
+> +static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_platform_suspend,
+> +			 ahci_platform_resume);
+> +
+> +static const struct acpi_device_id ahci_acpi_match[] = {
+> +	{ "AMDI0600", 0 },
+> +	{}
+> +};
+> +MODULE_DEVICE_TABLE(acpi, ahci_acpi_match);
+> +
+> +static struct platform_driver ahci_seattle_driver = {
+> +	.probe = ahci_seattle_probe,
+> +	.remove = ata_platform_remove_one,
+> +	.driver = {
+> +		.name = DRV_NAME,
+> +		.acpi_match_table = ahci_acpi_match,
+> +		.pm = &ahci_pm_ops,
+> +	},
+> +};
+> +module_platform_driver(ahci_seattle_driver);
+> +
+> +MODULE_DESCRIPTION("Seattle AHCI SATA platform driver");
+> +MODULE_AUTHOR("Brijesh Singh <brijesh.singh@amd.com>");
+> +MODULE_LICENSE("GPL");
+> +MODULE_ALIAS("platform:" DRV_NAME);
+> 
