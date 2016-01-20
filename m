@@ -1,13 +1,9 @@
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: Re: [PATCH 1/3] ata: sata_dwc_460ex: use "dmas" DT property to find
- dma channel
-Date: Wed, 20 Jan 2016 21:38:28 +0200
-Message-ID: <CAHp75Vc__QXa=HE1Zw5yJut_sVEUs88tYTdeNxFnOVvBmB24rw@mail.gmail.com>
+From: =?iso-8859-1?Q?M=E5ns_Rullg=E5rd?= <mans@mansr.com>
+Subject: Re: [PATCH 1/3] ata: sata_dwc_460ex: use "dmas" DT property to find dma channel
+Date: Wed, 20 Jan 2016 19:46:39 +0000
+Message-ID: <yw1xlh7kowyo.fsf@unicorn.mansr.com>
 References: <1450221935-6034-1-git-send-email-mans@mansr.com>
-	<yw1xegei893o.fsf@unicorn.mansr.com>
-	<5675C452.2080206@candw.ms>
-	<yw1xy4cp6o4o.fsf@unicorn.mansr.com>
-	<5676E906.1060603@candw.ms>
+	<yw1xy4cp6o4o.fsf@unicorn.mansr.com> <5676E906.1060603@candw.ms>
 	<yw1xpoy16jlt.fsf@unicorn.mansr.com>
 	<CAHp75Vedczfn7B-tOEVZi2dOExW8FiAGGA7iTkpuC2wBrsK68g@mail.gmail.com>
 	<CAHp75VfaHvBHhTjQVMNdOYA2kEdus-XpH6E=9i1HPSKTa-2ffA@mail.gmail.com>
@@ -25,47 +21,52 @@ References: <1450221935-6034-1-git-send-email-mans@mansr.com>
 	<yw1xwpr4ozjq.fsf@unicorn.mansr.com>
 	<1453317808.2521.135.camel@linux.intel.com>
 	<yw1xpowwoy08.fsf@unicorn.mansr.com>
+	<CAHp75Vc__QXa=HE1Zw5yJut_sVEUs88tYTdeNxFnOVvBmB24rw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yk0-f181.google.com ([209.85.160.181]:35721 "EHLO
-	mail-yk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753217AbcATTi3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 20 Jan 2016 14:38:29 -0500
-In-Reply-To: <yw1xpowwoy08.fsf@unicorn.mansr.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
-To: =?UTF-8?B?TcOlbnMgUnVsbGfDpXJk?= <mans@mansr.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAHp75Vc__QXa=HE1Zw5yJut_sVEUs88tYTdeNxFnOVvBmB24rw@mail.gmail.com>
+	(Andy Shevchenko's message of "Wed, 20 Jan 2016 21:38:28 +0200")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
 Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Julian Margetson <runaway@candw.ms>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+List-Id: linux-ide@vger.kernel.org
 
-On Wed, Jan 20, 2016 at 9:24 PM, M=C3=A5ns Rullg=C3=A5rd <mans@mansr.co=
-m> wrote:
-> Andy Shevchenko <andriy.shevchenko@linux.intel.com> writes:
->
->> On Wed, 2016-01-20 at 18:50 +0000, M=C3=A5ns Rullg=C3=A5rd wrote:
->>> Andy Shevchenko <andriy.shevchenko@linux.intel.com> writes:
->>>
->>> > > Tested on AVR32 (DMA driver) and Sigma SMP8642 (SATA driver).
->>> > >
->>> > > Code here:
->>> > > https://bitbucket.org/mansr/linux-dwc/branch/dwc-sata
->>> >
->>> > Thanks for testing!
->>>
->>> Have you had time to look any more at these patches?
->>
->> Not yet.
->> I will look soon for sure.
->>
->> One comment still regarding to lli types. We can avoid warnings by
->> using (__force u32) in macros.
->
-> But that won't give the benefits of having the types checked.
+Andy Shevchenko <andy.shevchenko@gmail.com> writes:
 
-You mean if we access the lli->field directly? I didn't quite get what
-use case you are keeping in mind.
+> On Wed, Jan 20, 2016 at 9:24 PM, M=E5ns Rullg=E5rd <mans@mansr.com> w=
+rote:
+>> Andy Shevchenko <andriy.shevchenko@linux.intel.com> writes:
+>>
+>>> On Wed, 2016-01-20 at 18:50 +0000, M=E5ns Rullg=E5rd wrote:
+>>>> Andy Shevchenko <andriy.shevchenko@linux.intel.com> writes:
+>>>>
+>>>> > > Tested on AVR32 (DMA driver) and Sigma SMP8642 (SATA driver).
+>>>> > >
+>>>> > > Code here:
+>>>> > > https://bitbucket.org/mansr/linux-dwc/branch/dwc-sata
+>>>> >
+>>>> > Thanks for testing!
+>>>>
+>>>> Have you had time to look any more at these patches?
+>>>
+>>> Not yet.
+>>> I will look soon for sure.
+>>>
+>>> One comment still regarding to lli types. We can avoid warnings by
+>>> using (__force u32) in macros.
+>>
+>> But that won't give the benefits of having the types checked.
+>
+> You mean if we access the lli->field directly? I didn't quite get wha=
+t
+> use case you are keeping in mind.
+
+Yes, accessing any of those fields directly with my patch gives a spars=
+e
+warning.  It's situations like these those checks are intended for.
+Defeating them seems foolish to me.
 
 --=20
-With Best Regards,
-Andy Shevchenko
+M=E5ns Rullg=E5rd
