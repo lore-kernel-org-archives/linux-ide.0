@@ -1,306 +1,117 @@
-From: Brijesh Singh <brijesh.singh@amd.com>
-Subject: Re: [PATCH v2] ata: add AMD Seattle platform driver
-Date: Wed, 20 Jan 2016 15:24:04 -0600
-Message-ID: <569FFAF4.6020807@amd.com>
-References: <1452789071-4090-1-git-send-email-brijesh.singh@amd.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 111151] New: [pata_amd][pata_acpi] Internal base address
+ register error prevents initialization of PATA drive
+Date: Thu, 21 Jan 2016 19:55:31 +0000
+Message-ID: <bug-111151-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-by2on0089.outbound.protection.outlook.com ([207.46.100.89]:39040
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751773AbcATV00 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 20 Jan 2016 16:26:26 -0500
-In-Reply-To: <1452789071-4090-1-git-send-email-brijesh.singh@amd.com>
+Received: from mail.kernel.org ([198.145.29.136]:35393 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750908AbcAUTzf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 21 Jan 2016 14:55:35 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id AD280202E9
+	for <linux-ide@vger.kernel.org>; Thu, 21 Jan 2016 19:55:34 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 4E78420328
+	for <linux-ide@vger.kernel.org>; Thu, 21 Jan 2016 19:55:32 +0000 (UTC)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org, tj@kernel.org, linux-ide@vger.kernel.org
-Cc: brijesh.singh@amd.com, hdegoede@redhat.com, arnd@arndb.de
+To: linux-ide@vger.kernel.org
 
-Hi Tejun,
+https://bugzilla.kernel.org/show_bug.cgi?id=111151
 
-Ping ?
+            Bug ID: 111151
+           Summary: [pata_amd][pata_acpi] Internal base address register
+                    error prevents initialization of PATA drive
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 4.2.0-10-generic
+          Hardware: i386
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: high
+          Priority: P1
+         Component: IDE
+          Assignee: io_ide@kernel-bugs.osdl.org
+          Reporter: andi3@gmx.net
+        Regression: No
 
--Brijesh 
+I guess this problem must have started when I replaced the mainboard of this
+old machine from a ECS Elitegroup one to a DFI NFII Ultra-AL.
 
-On 01/14/2016 10:31 AM, Brijesh Singh wrote:
-> AMD Seattle SATA controller mostly conforms to AHCI interface with some
-> special register to control SGPIO interface. In the case of an AHCI
-> controller, the SGPIO feature is ideally implemented using the
-> "Enclosure Management" register of the AHCI controller, but those
-> registeres are not implemented in the Seattle SoC. Instead SoC
-> (Rev B0 onwards) provides a 32-bit SGPIO control register which should
-> be programmed to control the activity, locate and fault LEDs.
-> 
-> The driver is based on ahci_platform driver.
-> 
-> Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
-> Acked-by: Hans de Goede <hdegoede@redhat.com>
-> CC: tj@kernel.org
-> CC: linux-ide@vger.kernel.org
-> ---
-> v1 patch and discussion is available here [1].
-> 
-> Changes since v1:
-> * use intverted test (fixes per Joe Perches review feedback)
-> * remove the DT binding, the DT support will be implemented by
->   extending the generic driver to use LED trigger frameworks
->   (recommend by Arnd Bergmann)
->   
-> [1] https://lkml.org/lkml/2016/1/7/681
-> 
->  drivers/ata/Kconfig        |   8 ++
->  drivers/ata/Makefile       |   1 +
->  drivers/ata/ahci_seattle.c | 210 +++++++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 219 insertions(+)
->  create mode 100644 drivers/ata/ahci_seattle.c
-> 
-> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-> index 861643ea..f2ba9c0 100644
-> --- a/drivers/ata/Kconfig
-> +++ b/drivers/ata/Kconfig
-> @@ -193,6 +193,14 @@ config SATA_FSL
->  
->  	  If unsure, say N.
->  
-> +config SATA_AHCI_SEATTLE
-> +	tristate "AMD Seattle 6.0Gbps AHCI SATA host controller support"
-> +	depends on ARCH_SEATTLE
-> +	help
-> +	 This option enables support for AMD Seattle SATA host controller.
-> +
-> +	 If unsure, say N
-> +
->  config SATA_INIC162X
->  	tristate "Initio 162x SATA support (Very Experimental)"
->  	depends on PCI
-> diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
-> index af45eff..9c0a96a 100644
-> --- a/drivers/ata/Makefile
-> +++ b/drivers/ata/Makefile
-> @@ -4,6 +4,7 @@ obj-$(CONFIG_ATA)		+= libata.o
->  # non-SFF interface
->  obj-$(CONFIG_SATA_AHCI)		+= ahci.o libahci.o
->  obj-$(CONFIG_SATA_ACARD_AHCI)	+= acard-ahci.o libahci.o
-> +obj-$(CONFIG_SATA_AHCI_SEATTLE)	+= ahci_seattle.o libahci.o libahci_platform.o
->  obj-$(CONFIG_SATA_AHCI_PLATFORM) += ahci_platform.o libahci.o libahci_platform.o
->  obj-$(CONFIG_SATA_FSL)		+= sata_fsl.o
->  obj-$(CONFIG_SATA_INIC162X)	+= sata_inic162x.o
-> diff --git a/drivers/ata/ahci_seattle.c b/drivers/ata/ahci_seattle.c
-> new file mode 100644
-> index 0000000..6e702ab
-> --- /dev/null
-> +++ b/drivers/ata/ahci_seattle.c
-> @@ -0,0 +1,210 @@
-> +/*
-> + * AMD Seattle AHCI SATA driver
-> + *
-> + * Copyright (c) 2015, Advanced Micro Devices
-> + * Author: Brijesh Singh <brijesh.singh@amd.com>
-> + *
-> + * based on the AHCI SATA platform driver by Jeff Garzik and Anton Vorontsov
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License as published by
-> + * the Free Software Foundation; either version 2 of the License.
-> + *
-> + * This program is distributed in the hope that it will be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + */
-> +
-> +#include <linux/kernel.h>
-> +#include <linux/module.h>
-> +#include <linux/pm.h>
-> +#include <linux/device.h>
-> +#include <linux/of_device.h>
-> +#include <linux/platform_device.h>
-> +#include <linux/libata.h>
-> +#include <linux/ahci_platform.h>
-> +#include <linux/acpi.h>
-> +#include <linux/pci_ids.h>
-> +#include "ahci.h"
-> +
-> +/* SGPIO Control Register definition
-> + *
-> + * Bit		Type		Description
-> + * 31		RW		OD7.2 (activity)
-> + * 30		RW		OD7.1 (locate)
-> + * 29		RW		OD7.0 (fault)
-> + * 28...8	RW		OD6.2...OD0.0 (3bits per port, 1 bit per LED)
-> + * 7		RO		SGPIO feature flag
-> + * 6:4		RO		Reserved
-> + * 3:0		RO		Number of ports (0 means no port supported)
-> + */
-> +#define ACTIVITY_BIT_POS(x)		(8 + (3 * x))
-> +#define LOCATE_BIT_POS(x)		(ACTIVITY_BIT_POS(x) + 1)
-> +#define FAULT_BIT_POS(x)		(LOCATE_BIT_POS(x) + 1)
-> +
-> +#define ACTIVITY_MASK			0x00010000
-> +#define LOCATE_MASK			0x00080000
-> +#define FAULT_MASK			0x00400000
-> +
-> +#define DRV_NAME "ahci-seattle"
-> +
-> +static ssize_t seattle_transmit_led_message(struct ata_port *ap, u32 state,
-> +					    ssize_t size);
-> +
-> +struct seattle_plat_data {
-> +	void __iomem *sgpio_ctrl;
-> +};
-> +
-> +static struct ata_port_operations ahci_port_ops = {
-> +	.inherits		= &ahci_ops,
-> +};
-> +
-> +static const struct ata_port_info ahci_port_info = {
-> +	.flags		= AHCI_FLAG_COMMON,
-> +	.pio_mask	= ATA_PIO4,
-> +	.udma_mask	= ATA_UDMA6,
-> +	.port_ops	= &ahci_port_ops,
-> +};
-> +
-> +static struct ata_port_operations ahci_seattle_ops = {
-> +	.inherits		= &ahci_ops,
-> +	.transmit_led_message   = seattle_transmit_led_message,
-> +};
-> +
-> +static const struct ata_port_info ahci_port_seattle_info = {
-> +	.flags		= AHCI_FLAG_COMMON | ATA_FLAG_EM | ATA_FLAG_SW_ACTIVITY,
-> +	.link_flags	= ATA_LFLAG_SW_ACTIVITY,
-> +	.pio_mask	= ATA_PIO4,
-> +	.udma_mask	= ATA_UDMA6,
-> +	.port_ops	= &ahci_seattle_ops,
-> +};
-> +
-> +static struct scsi_host_template ahci_platform_sht = {
-> +	AHCI_SHT(DRV_NAME),
-> +};
-> +
-> +static ssize_t seattle_transmit_led_message(struct ata_port *ap, u32 state,
-> +					    ssize_t size)
-> +{
-> +	struct ahci_host_priv *hpriv = ap->host->private_data;
-> +	struct ahci_port_priv *pp = ap->private_data;
-> +	struct seattle_plat_data *plat_data = hpriv->plat_data;
-> +	unsigned long flags;
-> +	int pmp;
-> +	struct ahci_em_priv *emp;
-> +	u32 val;
-> +
-> +	/* get the slot number from the message */
-> +	pmp = (state & EM_MSG_LED_PMP_SLOT) >> 8;
-> +	if (pmp >= EM_MAX_SLOTS)
-> +		return -EINVAL;
-> +	emp = &pp->em_priv[pmp];
-> +
-> +	val = ioread32(plat_data->sgpio_ctrl);
-> +	if (state & ACTIVITY_MASK)
-> +		val |= 1 << ACTIVITY_BIT_POS((ap->port_no));
-> +	else
-> +		val &= ~(1 << ACTIVITY_BIT_POS((ap->port_no)));
-> +
-> +	if (state & LOCATE_MASK)
-> +		val |= 1 << LOCATE_BIT_POS((ap->port_no));
-> +	else
-> +		val &= ~(1 << LOCATE_BIT_POS((ap->port_no)));
-> +
-> +	if (state & FAULT_MASK)
-> +		val |= 1 << FAULT_BIT_POS((ap->port_no));
-> +	else
-> +		val &= ~(1 << FAULT_BIT_POS((ap->port_no)));
-> +
-> +	iowrite32(val, plat_data->sgpio_ctrl);
-> +
-> +	spin_lock_irqsave(ap->lock, flags);
-> +
-> +	/* save off new led state for port/slot */
-> +	emp->led_state = state;
-> +
-> +	spin_unlock_irqrestore(ap->lock, flags);
-> +
-> +	return size;
-> +}
-> +
-> +static const struct ata_port_info *ahci_seattle_get_port_info(
-> +		struct platform_device *pdev, struct ahci_host_priv *hpriv)
-> +{
-> +	struct device *dev = &pdev->dev;
-> +	struct seattle_plat_data *plat_data;
-> +	u32 val;
-> +
-> +	plat_data = devm_kzalloc(dev, sizeof(*plat_data), GFP_KERNEL);
-> +	if (IS_ERR(plat_data))
-> +		return &ahci_port_info;
-> +
-> +	plat_data->sgpio_ctrl = devm_ioremap_resource(dev,
-> +			      platform_get_resource(pdev, IORESOURCE_MEM, 1));
-> +	if (IS_ERR(plat_data->sgpio_ctrl))
-> +		return &ahci_port_info;
-> +
-> +	val = ioread32(plat_data->sgpio_ctrl);
-> +
-> +	if (!(val & 0xf))
-> +		return &ahci_port_info;
-> +
-> +	hpriv->em_loc = 0;
-> +	hpriv->em_buf_sz = 4;
-> +	hpriv->em_msg_type = EM_MSG_TYPE_LED;
-> +	hpriv->plat_data = plat_data;
-> +
-> +	dev_info(dev, "SGPIO LED control is enabled.\n");
-> +	return &ahci_port_seattle_info;
-> +}
-> +
-> +static int ahci_seattle_probe(struct platform_device *pdev)
-> +{
-> +	int rc;
-> +	struct ahci_host_priv *hpriv;
-> +
-> +	hpriv = ahci_platform_get_resources(pdev);
-> +	if (IS_ERR(hpriv))
-> +		return PTR_ERR(hpriv);
-> +
-> +	rc = ahci_platform_enable_resources(hpriv);
-> +	if (rc)
-> +		return rc;
-> +
-> +	rc = ahci_platform_init_host(pdev, hpriv,
-> +				     ahci_seattle_get_port_info(pdev, hpriv),
-> +				     &ahci_platform_sht);
-> +	if (rc)
-> +		goto disable_resources;
-> +
-> +	return 0;
-> +disable_resources:
-> +	ahci_platform_disable_resources(hpriv);
-> +	return rc;
-> +}
-> +
-> +static SIMPLE_DEV_PM_OPS(ahci_pm_ops, ahci_platform_suspend,
-> +			 ahci_platform_resume);
-> +
-> +static const struct acpi_device_id ahci_acpi_match[] = {
-> +	{ "AMDI0600", 0 },
-> +	{}
-> +};
-> +MODULE_DEVICE_TABLE(acpi, ahci_acpi_match);
-> +
-> +static struct platform_driver ahci_seattle_driver = {
-> +	.probe = ahci_seattle_probe,
-> +	.remove = ata_platform_remove_one,
-> +	.driver = {
-> +		.name = DRV_NAME,
-> +		.acpi_match_table = ahci_acpi_match,
-> +		.pm = &ahci_pm_ops,
-> +	},
-> +};
-> +module_platform_driver(ahci_seattle_driver);
-> +
-> +MODULE_DESCRIPTION("Seattle AHCI SATA platform driver");
-> +MODULE_AUTHOR("Brijesh Singh <brijesh.singh@amd.com>");
-> +MODULE_LICENSE("GPL");
-> +MODULE_ALIAS("platform:" DRV_NAME);
-> 
+As there are so many different older DFIs, it's so easy to get confused by
+them.
+
+chipset: nVIDIA nForce2 Ultra 400 and nForce2 MCP
+sata|ide interface: based on Marvell 88i8030 controller chip
+
+First of all, you may NOT connect a SATA drive to the SATA port AND a PATA
+drive to Primary _Master_. (PATA to Primary _Slave_ is OK.)
+This is the crude specialty of this board, respectively of the Marvell chipset
+used: the SATA drive will appear as PATA IDE channel 0! 
+
+(NB: Can be very useful as in my case, because Victoria 3.3.3 (free) for DOS
+will _always_ hang when accessing my add-in cards; no matter whether SiI, VIA
+or Promise---tried them all. So this functionality is worth as gold, because
+otherwise I couldn't operate on a SATA drive with Victoria that way.)
+
+So why not get rid of my second add-on card and boot my Ubuntu off my onboard
+SATA? 
+
+EPIC FAIL...
+
+Couldn't find root device.
+Disconnected ALL drives BUT the SATA one with Ubuntu installed on it, plugged
+it into the onboard port - root device not found.
+I got the following, very cryptic, error:
+
+[1.916367] pata_amd 0000:00:09.0: version 0.4.1
+[1.916383] pata_amd 0000:00:09.0: can't enable device: BAR 0 [io  size 0x0008]
+not assigned
+[1.916453] pata_amd: probe of 0000:00:09.0 failed with error -22
+[2.509228] pata_acpi 0000:00:09.0: can't enable device: BAR 0 [io  size 0x0008]
+not assigned
+[2.509299] pata_acpi: probe of 0000:00:09.0 failed with error -22
+
+
+Took me quite awhile of googling, until I figured out that BAR stands for Base
+Address Register.
+OK, so it tries to enable the PATA drive via pata_amd, then as this fails, it
+tries pata_acpi.
+
+** Biggest problem: **
+pata_amd has "absolutist power" in Linux 4.
+There is no fallback if pata_amd fails.
+So blacklisting it (modprobe.blacklist=...) gets rid of the error messages but
+pretends as if the drive is not there.
+
+** Also interesting: **
+As mentioned, it does work in Victoria (DOS). Can boot off Hiren's Boot CD,
+launch Victoria, initialize the drive, read its SMART data, and everything
+else.
+
+So the SATA/IDE controller combo _works_ on that board and it's clearly a Linux
+kernel shortcoming.
+Possibly this weird SATA-showing-up-as-IDE0 thing simply hasn't been thought
+about yet.
+
+As I assume that this problem might be a VERY tough task to debug, I could even
+agree to send my physical mainboard via snail-mail to a kernel developer for
+debugging on bit level.
+Did I just make you laugh?
+Well, it's no laughing matter. First of all, I doubt that w/o such kind of
+board physically at hand (beware! they've become rare), there'll be anything to
+do about that.
+Second, another reason are the pata_amd / pata_acpi module messages which are
+WAY too sparse and non-descriptive.
+
+
+But we'll see...
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
