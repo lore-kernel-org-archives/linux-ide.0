@@ -1,137 +1,73 @@
-From: Mans Rullgard <mans@mansr.com>
-Subject: [PATCH 10/15] dmaengine: dw: pass platform data via struct dw_dma_chip
-Date: Sun, 24 Jan 2016 19:21:57 +0000
-Message-ID: <1453663322-14474-11-git-send-email-mans@mansr.com>
+From: Hans-Christian Noren Egtvedt <egtvedt@samfundet.no>
+Subject: Re: [PATCH 03/15] dmaengine: dw: rename masters to reflect actual
+ topology
+Date: Sun, 24 Jan 2016 21:09:59 +0100
+Message-ID: <20160124200959.GA15633@samfundet.no>
 References: <1453663322-14474-1-git-send-email-mans@mansr.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1453663322-14474-1-git-send-email-mans@mansr.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Viresh Kumar <vireshk@kernel.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Vinod Koul <vinod.koul@intel.com>, linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Jie Yang <yang.jie@linux.intel.com>, Liam Girdwood <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, linux-ide@vger.kernel.org, alsa-devel@alsa-project.org
+ <1453663322-14474-4-git-send-email-mans@mansr.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from cassarossa.samfundet.no ([193.35.52.29]:52194 "EHLO
+	cassarossa.samfundet.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751590AbcAXULB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 24 Jan 2016 15:11:01 -0500
+Content-Disposition: inline
+In-Reply-To: <1453663322-14474-4-git-send-email-mans@mansr.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mans Rullgard <mans@mansr.com>
+Cc: Viresh Kumar <vireshk@kernel.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Vinod Koul <vinod.koul@intel.com>, linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Haavard Skinnemoen <hskinnemoen@gmail.com>, Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Daniel Mack <daniel@zonque.org>, Haojian Zhuang <haojian.zhuang@gmail.com>, Robert Jarzmik <robert.jarzmik@free.fr>, Mark Brown <broonie@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, devicetree@vger.kernel.org, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-spi@vger.kernel.org, linux-serial@vger.kernel.org
 
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Around Sun 24 Jan 2016 19:21:50 +0000 or thereabout, Mans Rullgard wrote:
+> From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> 
+> The source and destination masters are reflecting buses or their layers to
+> where the different devices can be connected. The patch changes the master
+> names to reflect which one is related to which independently on the transfer
+> direction.
+> 
+> The outcome of the change is that the memory data width is now always limited
+> by a data width of the master which is dedicated to communicate to memory.
+> 
+> The patch will not break anything since all current users have the same data
+> width for all masters. Though it would be nice to revisit avr32 plaforms to
+> check what is the actual hardware topology is used there. It seems that it has
+> one bus and two masters on it as stated by Table 8-2, that's why everything
+> works independently on the master in use. The purpose of the sequential patch
+> is to fix the driver for configuration of more that one bus.
 
-We pass struct dw_dma_chip to the dw_dma_probe() anyway, thus we may use it to
-pass platform data as well.
+Not entirely sure what you want to have confirmed here. There are multiple
+masters and slaves on the HMATRIX internal bus on AVR32, and the DMA
+controller supports up to three simultaneous configurations.
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Signed-off-by: Mans Rullgard <mans@mansr.com>
----
- drivers/ata/sata_dwc_460ex.c          |  2 +-
- drivers/dma/dw/core.c                 |  3 ++-
- drivers/dma/dw/pci.c                  |  3 ++-
- drivers/dma/dw/platform.c             |  3 ++-
- include/linux/dma/dw.h                | 14 ++++++++------
- sound/soc/intel/common/sst-firmware.c |  2 +-
- 6 files changed, 16 insertions(+), 11 deletions(-)
+Sounds good to support configuration of more than one bus. I thought we
+always did support that? Perhaps it was a non-standard avr32 implementation.
 
-diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index 80bdcabc293f..2cb6f7e04b5c 100644
---- a/drivers/ata/sata_dwc_460ex.c
-+++ b/drivers/ata/sata_dwc_460ex.c
-@@ -1248,7 +1248,7 @@ static int sata_dwc_probe(struct platform_device *ofdev)
- 	hsdev->dma->dev = &ofdev->dev;
- 
- 	/* Initialize AHB DMAC */
--	err = dw_dma_probe(hsdev->dma, NULL);
-+	err = dw_dma_probe(hsdev->dma);
- 	if (err)
- 		goto error_dma_iomap;
- 
-diff --git a/drivers/dma/dw/core.c b/drivers/dma/dw/core.c
-index 1644d79a071a..91a6d8b304aa 100644
---- a/drivers/dma/dw/core.c
-+++ b/drivers/dma/dw/core.c
-@@ -1468,8 +1468,9 @@ EXPORT_SYMBOL(dw_dma_cyclic_free);
- 
- /*----------------------------------------------------------------------*/
- 
--int dw_dma_probe(struct dw_dma_chip *chip, struct dw_dma_platform_data *pdata)
-+int dw_dma_probe(struct dw_dma_chip *chip)
- {
-+	struct dw_dma_platform_data	*pdata = chip->pdata;
- 	struct dw_dma		*dw;
- 	bool			autocfg = false;
- 	unsigned int		dw_params;
-diff --git a/drivers/dma/dw/pci.c b/drivers/dma/dw/pci.c
-index 4c30fdd092b3..fc3b954b27da 100644
---- a/drivers/dma/dw/pci.c
-+++ b/drivers/dma/dw/pci.c
-@@ -49,8 +49,9 @@ static int dw_pci_probe(struct pci_dev *pdev, const struct pci_device_id *pid)
- 	chip->dev = &pdev->dev;
- 	chip->regs = pcim_iomap_table(pdev)[0];
- 	chip->irq = pdev->irq;
-+	chip->pdata = pdata;
- 
--	ret = dw_dma_probe(chip, pdata);
-+	ret = dw_dma_probe(chip);
- 	if (ret)
- 		return ret;
- 
-diff --git a/drivers/dma/dw/platform.c b/drivers/dma/dw/platform.c
-index fcbe57006e59..808bafdd7d48 100644
---- a/drivers/dma/dw/platform.c
-+++ b/drivers/dma/dw/platform.c
-@@ -181,6 +181,7 @@ static int dw_probe(struct platform_device *pdev)
- 		pdata = dw_dma_parse_dt(pdev);
- 
- 	chip->dev = dev;
-+	chip->pdata = pdata;
- 
- 	chip->clk = devm_clk_get(chip->dev, "hclk");
- 	if (IS_ERR(chip->clk))
-@@ -191,7 +192,7 @@ static int dw_probe(struct platform_device *pdev)
- 
- 	pm_runtime_enable(&pdev->dev);
- 
--	err = dw_dma_probe(chip, pdata);
-+	err = dw_dma_probe(chip);
- 	if (err)
- 		goto err_dw_dma_probe;
- 
-diff --git a/include/linux/dma/dw.h b/include/linux/dma/dw.h
-index 71456442ebe3..c9a3914e8a08 100644
---- a/include/linux/dma/dw.h
-+++ b/include/linux/dma/dw.h
-@@ -27,17 +27,19 @@ struct dw_dma;
-  * @regs:		memory mapped I/O space
-  * @clk:		hclk clock
-  * @dw:			struct dw_dma that is filed by dw_dma_probe()
-+ * @pdata:		pointer to platform data
-  */
- struct dw_dma_chip {
--	struct device	*dev;
--	int		irq;
--	void __iomem	*regs;
--	struct clk	*clk;
--	struct dw_dma	*dw;
-+	struct device			*dev;
-+	int				irq;
-+	void __iomem			*regs;
-+	struct clk			*clk;
-+	struct dw_dma			*dw;
-+	struct dw_dma_platform_data	*pdata;
- };
- 
- /* Export to the platform drivers */
--int dw_dma_probe(struct dw_dma_chip *chip, struct dw_dma_platform_data *pdata);
-+int dw_dma_probe(struct dw_dma_chip *chip);
- int dw_dma_remove(struct dw_dma_chip *chip);
- 
- /* DMA API extensions */
-diff --git a/sound/soc/intel/common/sst-firmware.c b/sound/soc/intel/common/sst-firmware.c
-index ef4881e7753a..25993527370b 100644
---- a/sound/soc/intel/common/sst-firmware.c
-+++ b/sound/soc/intel/common/sst-firmware.c
-@@ -203,7 +203,7 @@ static struct dw_dma_chip *dw_probe(struct device *dev, struct resource *mem,
- 
- 	chip->dev = dev;
- 
--	err = dw_dma_probe(chip, NULL);
-+	err = dw_dma_probe(chip);
- 	if (err)
- 		return ERR_PTR(err);
- 
+> The change is done in the assumption that src_master and dst_master are
+> reflecting a connection to the memory and peripheral correspondently on all
+> platforms except 460ex.
+> 
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> Signed-off-by: Mans Rullgard <mans@mansr.com>
+
+For the avr32 related stuff:
+
+Acked-by: Hans-Christian Egtvedt <egtvedt@samfundet.no>
+
+> ---
+>  Documentation/devicetree/bindings/dma/snps-dma.txt |  4 ++--
+>  arch/avr32/mach-at32ap/at32ap700x.c                | 16 ++++++++--------
+>  drivers/ata/sata_dwc_460ex.c                       |  4 ++--
+>  drivers/dma/dw/core.c                              | 15 +++++++--------
+>  drivers/dma/dw/platform.c                          | 12 ++++++------
+>  drivers/dma/dw/regs.h                              |  4 ++--
+>  drivers/spi/spi-pxa2xx-pci.c                       |  8 ++++----
+>  drivers/tty/serial/8250/8250_pci.c                 |  8 ++++----
+>  include/linux/platform_data/dma-dw.h               |  8 ++++----
+>  9 files changed, 39 insertions(+), 40 deletions(-)
+
+<snipp diff>
+
 -- 
-2.7.0
+Best regards, Hans-Christian Egtvedt
