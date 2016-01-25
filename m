@@ -1,33 +1,39 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH -v2] drivers: libata-core : blacklist a Viking flash
- model for MWDMA corruption
-Date: Mon, 25 Jan 2016 15:24:47 -0500
-Message-ID: <20160125202447.GL3628@mtj.duckdns.org>
-References: <1452552945-13609-1-git-send-email-danielwa@cisco.com>
+Subject: Re: [PATCH v2] ata: add AMD Seattle platform driver
+Date: Mon, 25 Jan 2016 15:43:00 -0500
+Message-ID: <20160125204300.GM3628@mtj.duckdns.org>
+References: <1452789071-4090-1-git-send-email-brijesh.singh@amd.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pf0-f171.google.com ([209.85.192.171]:34338 "EHLO
-	mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933130AbcAYUYt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Jan 2016 15:24:49 -0500
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:35784 "EHLO
+	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933706AbcAYUnE (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Jan 2016 15:43:04 -0500
 Content-Disposition: inline
-In-Reply-To: <1452552945-13609-1-git-send-email-danielwa@cisco.com>
+In-Reply-To: <1452789071-4090-1-git-send-email-brijesh.singh@amd.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Daniel Walker <danielwa@cisco.com>
-Cc: Chris Hall <hall@cisco.com>, Shikha Jain <shikjain@cisco.com>, xe-kernel@external.cisco.com, Anil Veliyankara Madam <aveliyan@cisco.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Brijesh Singh <brijesh.singh@amd.com>
+Cc: linux-kernel@vger.kernel.org, hdegoede@redhat.com, arnd@arndb.de, linux-ide@vger.kernel.org
 
-On Mon, Jan 11, 2016 at 02:55:45PM -0800, Daniel Walker wrote:
-> From: Shikha Jain <shikjain@cisco.com>
+On Thu, Jan 14, 2016 at 10:31:11AM -0600, Brijesh Singh wrote:
+> AMD Seattle SATA controller mostly conforms to AHCI interface with some
+> special register to control SGPIO interface. In the case of an AHCI
+> controller, the SGPIO feature is ideally implemented using the
+> "Enclosure Management" register of the AHCI controller, but those
+> registeres are not implemented in the Seattle SoC. Instead SoC
+> (Rev B0 onwards) provides a 32-bit SGPIO control register which should
+> be programmed to control the activity, locate and fault LEDs.
 > 
-> Viking flash model VRFDFC22048UCHC-TE causes data corruption in MWDMA mode.
+> The driver is based on ahci_platform driver.
 > 
-> Cc: xe-kernel@external.cisco.com
-> Signed-off-by: Shikha Jain <shikjain@cisco.com>
-> Signed-off-by: Anil Veliyankara Madam <aveliyan@cisco.com>
+> Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
+> Acked-by: Hans de Goede <hdegoede@redhat.com>
+> CC: tj@kernel.org
+> CC: linux-ide@vger.kernel.org
 
-Applied to libata/for-4.5-fixes.
+Hans, can you please review the patch?
 
 Thanks.
 
