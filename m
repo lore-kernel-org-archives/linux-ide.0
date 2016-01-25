@@ -1,91 +1,36 @@
-From: Ocean HY1 He <hehy1@lenovo.com>
-Subject: [PATCH] Let AHCI dirver skip Lenovo SWRAID controller
-Date: Mon, 25 Jan 2016 03:11:40 +0000
-Message-ID: <1453691440-42035-1-git-send-email-hehy1@lenovo.com>
+From: Viresh Kumar <viresh.kumar-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 03/15] dmaengine: dw: rename masters to reflect actual
+ topology
+Date: Mon, 25 Jan 2016 11:33:41 +0530
+Message-ID: <20160125060341.GD3183@vireshk>
+References: <1453663322-14474-1-git-send-email-mans@mansr.com>
+ <1453663322-14474-4-git-send-email-mans@mansr.com>
+ <20160124223629.GI6588@sirena.org.uk>
+ <yw1xk2myli0u.fsf@unicorn.mansr.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail1.bemta8.messagelabs.com ([216.82.243.209]:59335 "EHLO
-	mail1.bemta8.messagelabs.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753558AbcAYDUt convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sun, 24 Jan 2016 22:20:49 -0500
-Content-Language: en-US
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-spi-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <yw1xk2myli0u.fsf-OEaqT8BN2ezZK2NkWkPsZwC/G2K4zDHf@public.gmane.org>
+Sender: linux-spi-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: =?iso-8859-1?Q?M=E5ns_Rullg=E5rd?= <mans-2StjZFpD7GcAvxtiuMwx3w@public.gmane.org>
+Cc: Mark Brown <broonie-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Viresh Kumar <vireshk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Andy Shevchenko <andriy.shevchenko-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Vinod Koul <vinod.koul-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dmaengine-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Pawel Moll <pawel.moll-5wv7dgnIgG8@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Ian Campbell <ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org>, Kumar Gala <galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Haavard Skinnemoen <hskinnemoen-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Hans-Christian Egtvedt <egtvedt-BrfabpQBY5qlHtIdYg32fQ@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Daniel Mack <daniel-cYrQPVfZoowdnm+yROfE0A@public.gmane.org>, Haojian Zhuang <haojian.zhuang-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Robert Jarzmik <robert.jarzmik-GANU6spQydw@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Jiri Slaby <jslaby-IBi9RG/b67k@public.gmane.org>, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-spi-u79uwXL29TY76Z2rM5mHXA@public.gmane.orglinu
 List-Id: linux-ide@vger.kernel.org
-To: "tj@kernel.org" <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: Ocean HY1 He <hehy1@lenovo.com>
 
-Lenovo SWRAID solution is based on Intel Non-RSTE RAID controller which
-is called Lenovo SWRAID controller by set Lenovo dedicated PCI
-SVID:SDID.
+On 24-01-16, 22:38, M=E5ns Rullg=E5rd wrote:
+> I give up.  Seriously, this is impossible.  If I don't include everyb=
+ody
+> in the slightest way related to any patch in the series, I get
+> complaints that patches are missing.  If I do, the lists reject it al=
+l
+> due to too many recipients.  What the hell am I supposed to do?
 
-Because AHCI driver now take control this Lenovo SWRAID controller for
-MDRAID, Lenovo SWRAID driver fails to load later. It's not proper to
-disable AHCI driver, because system has SATA contoller used for SATA
-DVD, M.2 etc. There is no chance to load Lenovo SWRAID first, because
-almost all Linux distros load AHCI driver first during installation.
+Bcc everyone and mention that in cover-letter :)
 
-As default, when Lenovo SWRAID controller is detected, let AHCI driver
-skip it thus MDRAID is disabled. Use the boot option 'ahci.lenovo_swraid=0'
-could disable Lenovo SWRAID.
-
-Signed-off-by: Ocean He <hehy1@lenovo.com>
----
- drivers/ata/ahci.c | 33 +++++++++++++++++++++++++++++++++
- 1 file changed, 33 insertions(+)
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 594fcab..8ec51a6 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -557,6 +557,35 @@ static int marvell_enable = 1;
- module_param(marvell_enable, int, 0644);
- MODULE_PARM_DESC(marvell_enable, "Marvell SATA via AHCI (1 = enabled)");
- 
-+static int lenovo_swraid = 1;
-+module_param(lenovo_swraid, int, 0644);
-+MODULE_PARM_DESC(lenovo_swraid, "SWRAID via SATA(RAID mode) (1 = enable (default))");
-+
-+static int lenovo_swraid_enable(struct pci_dev *pdev)
-+{
-+	if (!lenovo_swraid)
-+		return 0;
-+
-+	/* Lenovo Gen6 Servers */
-+	if (pdev->vendor == PCI_VENDOR_ID_INTEL &&
-+	    (pdev->device == 0xa186 || pdev->device == 0xa206) &&
-+	    pdev->subsystem_vendor == 0x1d49) {
-+			dev_info(&pdev->dev,
-+				  "Skip SATA controller for Lenovo SWRAID.\n");
-+			return -ENODEV;
-+	}
-+
-+	/* Lenovo Gen5 Servers */
-+	if (pdev->vendor == PCI_VENDOR_ID_INTEL &&
-+	    pdev->device == 0x8d06 &&
-+	    pdev->subsystem_vendor == 0x17aa) {
-+			dev_info(&pdev->dev,
-+				  "Skip SATA controller for Lenovo SWRAID.\n");
-+			return -ENODEV;
-+	}
-+
-+	return 0;
-+}
- 
- static void ahci_pci_save_initial_config(struct pci_dev *pdev,
- 					 struct ahci_host_priv *hpriv)
-@@ -1466,6 +1495,10 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	if (pdev->vendor == PCI_VENDOR_ID_MARVELL && !marvell_enable)
- 		return -ENODEV;
- 
-+	/* Let AHCI driver skip the Lenovo SWRAID controller. */
-+	if (lenovo_swraid_enable(pdev))
-+		return -ENODEV;
-+
- 	/* Apple BIOS on MCP89 prevents us using AHCI */
- 	if (is_mcp89_apple(pdev))
- 		ahci_mcp89_apple_enable(pdev);
--- 
-1.8.3.1
+--=20
+viresh
+--
+To unsubscribe from this list: send the line "unsubscribe linux-spi" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
