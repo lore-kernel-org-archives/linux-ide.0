@@ -1,39 +1,53 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Let AHCI dirver skip Lenovo SWRAID controller
-Date: Tue, 26 Jan 2016 05:24:24 -0800
-Message-ID: <20160126132424.GA1993@infradead.org>
-References: <1453691440-42035-1-git-send-email-hehy1@lenovo.com>
- <20160125131850.64c5c22a@lxorguk.ukuu.org.uk>
- <56A76999.8050206@lenovo.com>
+From: Brijesh Singh <brijesh.singh@amd.com>
+Subject: Re: [PATCH v2] ata: add AMD Seattle platform driver
+Date: Tue, 26 Jan 2016 10:56:20 -0600
+Message-ID: <56A7A534.6040208@amd.com>
+References: <1452789071-4090-1-git-send-email-brijesh.singh@amd.com>
+ <20160125204300.GM3628@mtj.duckdns.org> <5730117.gx9ezcyLp7@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:45745 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933342AbcAZNY2 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Jan 2016 08:24:28 -0500
-Content-Disposition: inline
-In-Reply-To: <56A76999.8050206@lenovo.com>
+Received: from mail-bl2on0079.outbound.protection.outlook.com ([65.55.169.79]:36944
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S933988AbcAZQ6t (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 26 Jan 2016 11:58:49 -0500
+In-Reply-To: <5730117.gx9ezcyLp7@wuerfel>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Ocean HY1 He <hehy1@lenovo.com>
-Cc: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, "tj@kernel.org" <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Arnd Bergmann <arnd@arndb.de>, Tejun Heo <tj@kernel.org>
+Cc: brijesh.singh@amd.com, linux-kernel@vger.kernel.org, hdegoede@redhat.com, linux-ide@vger.kernel.org
 
-On Tue, Jan 26, 2016 at 12:42:43PM +0000, Ocean HY1 He wrote:
-> Hi Alan,
+Hi Arnd,
+
+On 01/26/2016 06:17 AM, Arnd Bergmann wrote:
 > 
-> Thanks for your comments!
+> I think it needs more work: The changelog describes it as a normal
+> driver, but based on the previous discussion, this is just a hack
+> to work around broken BIOS versions that can no longer be fixed in
+> the field, and there has not been a decision what the proper
+> representation should be in ACPI.
 > 
-> Lenovo SWRAID driver is a closed source driver at this time, I am afraid 
-> it's not possible to submit it to kernel.
+I am not sure if we should label this driver as a hack to workaround the
+broken BIOS. Unfortunately SoC did not implemented the enclosure management
+per spec. Its not BIOS issue.
 
-So you're violating our copyright and want help for that?  Be ashamed!
+> The patch also fails to address the devicetree based case, even though
+> we did come to a conclusion that the current behavior is a regression
+> (compared to what we had in drivers/ide/) and that there is a relatively
+> simple fix to do it right.
+> 
+I did looked at your recommendation for extending libahci to use ledtrig_ide_activity()
+but as I pointed out in previous discussion this function is missing several key features
+from EM (enclosure management) pov. e.g missing the slot number, missing the locate and fault led.
+In case of EM, each port will have at least three leds (activity, locate and fault). 
+Since these LED's are part of EM hence we need to ensure that tools like ledmon and ledctl (which uses libahci sysfs) works well.
 
-> This patch is very important and critical for Lenovo next generation 
-> Servers. I have tried to make sure this patch only impacts Lenovo 
-> dedicated hardware and add a on/off boot option to end user who may 
-> still wants using open source SWRAID(such as MDRAID).
+The main question is, what is recommended approach to override libachi enclosure managements
+transfer led messages function? A platform driver or something else.
 
-The right ting is to always use mdraid and contribute the lenovo
-superblock format to it, similar to how we support half a dozen other
-non-native formats.
+Tejun and/or Hans do you have any recommendation ?
+
+
+- Brijesh
