@@ -1,61 +1,39 @@
-From: Ocean HY1 He <hehy1@lenovo.com>
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH] Let AHCI dirver skip Lenovo SWRAID controller
-Date: Tue, 26 Jan 2016 12:42:43 +0000
-Message-ID: <56A76999.8050206@lenovo.com>
+Date: Tue, 26 Jan 2016 05:24:24 -0800
+Message-ID: <20160126132424.GA1993@infradead.org>
 References: <1453691440-42035-1-git-send-email-hehy1@lenovo.com>
  <20160125131850.64c5c22a@lxorguk.ukuu.org.uk>
+ <56A76999.8050206@lenovo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20160125131850.64c5c22a@lxorguk.ukuu.org.uk>
-Content-Language: en-US
-Content-ID: <C2ABC81E01C34940AB3B62059E7CB211@lenovo.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-Cc: "tj@kernel.org" <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:45745 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933342AbcAZNY2 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Jan 2016 08:24:28 -0500
+Content-Disposition: inline
+In-Reply-To: <56A76999.8050206@lenovo.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Ocean HY1 He <hehy1@lenovo.com>
+Cc: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, "tj@kernel.org" <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-Hi Alan,
-
-Thanks for your comments!
-
-Lenovo SWRAID driver is a closed source driver at this time, I am afraid 
-it's not possible to submit it to kernel.
-
-This patch is very important and critical for Lenovo next generation 
-Servers. I have tried to make sure this patch only impacts Lenovo 
-dedicated hardware and add a on/off boot option to end user who may 
-still wants using open source SWRAID(such as MDRAID).
-
-I am a newbie to submit patch to kernel, so I am not so clear about what
-my patch breaks. Could you kindly explain that and is there a workaround 
-or solution to avoid the break?
-
-Thanks a lot!
-
-Ocean.
-
-On 01/25/2016 09:18 PM, One Thousand Gnomes wrote:
-> On Mon, 25 Jan 2016 03:11:40 +0000
-> Ocean HY1 He <hehy1@lenovo.com> wrote:
+On Tue, Jan 26, 2016 at 12:42:43PM +0000, Ocean HY1 He wrote:
+> Hi Alan,
 > 
->> Lenovo SWRAID solution is based on Intel Non-RSTE RAID controller which
->> is called Lenovo SWRAID controller by set Lenovo dedicated PCI
->> SVID:SDID.
->>
->> Because AHCI driver now take control this Lenovo SWRAID controller for
->> MDRAID, Lenovo SWRAID driver fails to load later. It's not proper to
->> disable AHCI driver, because system has SATA contoller used for SATA
->> DVD, M.2 etc. There is no chance to load Lenovo SWRAID first, because
->> almost all Linux distros load AHCI driver first during installation.
->>
->> As default, when Lenovo SWRAID controller is detected, let AHCI driver
->> skip it thus MDRAID is disabled. Use the boot option 'ahci.lenovo_swraid=0'
->> could disable Lenovo SWRAID.
+> Thanks for your comments!
 > 
-> You need to submit the Lenovo SWRAID driver to the kernel first.
-> Otherwise this breaks things.
-> 
-> Alan
-> 
+> Lenovo SWRAID driver is a closed source driver at this time, I am afraid 
+> it's not possible to submit it to kernel.
+
+So you're violating our copyright and want help for that?  Be ashamed!
+
+> This patch is very important and critical for Lenovo next generation 
+> Servers. I have tried to make sure this patch only impacts Lenovo 
+> dedicated hardware and add a on/off boot option to end user who may 
+> still wants using open source SWRAID(such as MDRAID).
+
+The right ting is to always use mdraid and contribute the lenovo
+superblock format to it, similar to how we support half a dozen other
+non-native formats.
