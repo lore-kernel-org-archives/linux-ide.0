@@ -1,53 +1,43 @@
-From: Brijesh Singh <brijesh.singh@amd.com>
-Subject: Re: [PATCH v2] ata: add AMD Seattle platform driver
-Date: Tue, 26 Jan 2016 10:56:20 -0600
-Message-ID: <56A7A534.6040208@amd.com>
-References: <1452789071-4090-1-git-send-email-brijesh.singh@amd.com>
- <20160125204300.GM3628@mtj.duckdns.org> <5730117.gx9ezcyLp7@wuerfel>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bl2on0079.outbound.protection.outlook.com ([65.55.169.79]:36944
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S933988AbcAZQ6t (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 26 Jan 2016 11:58:49 -0500
-In-Reply-To: <5730117.gx9ezcyLp7@wuerfel>
-Sender: linux-ide-owner@vger.kernel.org
+From: Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
+Subject: [PATCH v2 0/3] ata: Fixes related to edge trigger latch for ahci_xgene driver.
+Date: Wed, 27 Jan 2016 15:19:54 +0530
+Message-ID: <1453888197-11368-1-git-send-email-stripathi@apm.com>
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, mlangsdo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, jcm-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, patches-qTEPVZfXA3Y@public.gmane.org, svtripathi-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>, Tejun Heo <tj@kernel.org>
-Cc: brijesh.singh@amd.com, linux-kernel@vger.kernel.org, hdegoede@redhat.com, linux-ide@vger.kernel.org
 
-Hi Arnd,
+This patch set implements a workaround for an errate in the APM
+X-Gene SATA host controller with edge interrupt. The HOST_IRQ_STAT
+misses the edge interrupt from the PORT_IRQ_STAT when clearing the
+HOST_IRQ_STAT and reporting the PORT_IRQ_STAT happens in same clock
+cycle. It also implements the capability to override generic interrupt
+handler.
 
-On 01/26/2016 06:17 AM, Arnd Bergmann wrote:
-> 
-> I think it needs more work: The changelog describes it as a normal
-> driver, but based on the previous discussion, this is just a hack
-> to work around broken BIOS versions that can no longer be fixed in
-> the field, and there has not been a decision what the proper
-> representation should be in ACPI.
-> 
-I am not sure if we should label this driver as a hack to workaround the
-broken BIOS. Unfortunately SoC did not implemented the enclosure management
-per spec. Its not BIOS issue.
+v1 change:
+* Implement the capability for LDD to override interrupt handler.
 
-> The patch also fails to address the devicetree based case, even though
-> we did come to a conclusion that the current behavior is a regression
-> (compared to what we had in drivers/ide/) and that there is a relatively
-> simple fix to do it right.
-> 
-I did looked at your recommendation for extending libahci to use ledtrig_ide_activity()
-but as I pointed out in previous discussion this function is missing several key features
-from EM (enclosure management) pov. e.g missing the slot number, missing the locate and fault led.
-In case of EM, each port will have at least three leds (activity, locate and fault). 
-Since these LED's are part of EM hence we need to ensure that tools like ledmon and ledctl (which uses libahci sysfs) works well.
+* ahci_xgene driver implements the edge trigger interrupt handler.
 
-The main question is, what is recommended approach to override libachi enclosure managements
-transfer led messages function? A platform driver or something else.
+v2 change:
+* Remove the AHCI_HFLAG_EDGE_IRQ frim libahci.
 
-Tejun and/or Hans do you have any recommendation ?
+Signed-off-by: Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
 
+Suman Tripathi (3):
+  ata: Remove the AHCI_HFLAG_EDGE_IRQ support from libahci.
+  libahci: Implement the capability to override the generic ahci
+    interrupt     handler.
+  ahci_xgene: Implement the workaround to fix the missing of edge
+    interrupt for HOST_IRQ_STAT.
 
-- Brijesh
+ drivers/ata/ahci.h       |    5 ++-
+ drivers/ata/ahci_xgene.c |   86 +++++++++++++++++++++++++++++++++++++++++++++-
+ drivers/ata/libahci.c    |   53 +++++-----------------------
+ 3 files changed, 98 insertions(+), 46 deletions(-)
+
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
