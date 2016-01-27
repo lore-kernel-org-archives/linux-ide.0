@@ -1,116 +1,55 @@
-From: Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
-Subject: [PATCH v2 1/3] ata: Remove the AHCI_HFLAG_EDGE_IRQ support from libahci.
-Date: Wed, 27 Jan 2016 15:19:55 +0530
-Message-ID: <1453888197-11368-2-git-send-email-stripathi@apm.com>
-References: <1453888197-11368-1-git-send-email-stripathi@apm.com>
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1453888197-11368-1-git-send-email-stripathi-qTEPVZfXA3Y@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-Cc: olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, mlangsdo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, jcm-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, patches-qTEPVZfXA3Y@public.gmane.org, svtripathi-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
+From: Mark Brown <broonie@kernel.org>
+Subject: Re: [PATCH 03/15] dmaengine: dw: rename masters to reflect actual
+ topology
+Date: Wed, 27 Jan 2016 12:47:28 +0000
+Message-ID: <20160127124728.GM6042@sirena.org.uk>
+References: <1453663322-14474-1-git-send-email-mans@mansr.com>
+ <1453663322-14474-4-git-send-email-mans@mansr.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="vdqwC0msT4ilQ2it"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mezzanine.sirena.org.uk ([106.187.55.193]:48727 "EHLO
+	mezzanine.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753966AbcA0MsL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Jan 2016 07:48:11 -0500
+Content-Disposition: inline
+In-Reply-To: <1453663322-14474-4-git-send-email-mans@mansr.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Mans Rullgard <mans@mansr.com>
+Cc: Viresh Kumar <vireshk@kernel.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Vinod Koul <vinod.koul@intel.com>, linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Haavard Skinnemoen <hskinnemoen@gmail.com>, Hans-Christian Egtvedt <egtvedt@samfundet.no>, Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Daniel Mack <daniel@zonque.org>, Haojian Zhuang <haojian.zhuang@gmail.com>, Robert Jarzmik <robert.jarzmik@free.fr>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, devicetree@vger.kernel.org, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-spi@vger.kernel.org, linux-serial@vger.kernel.org
 
-This patch removes the AHCI_HFLAG_EDGE_IRQ support from libahci.
-The upcoming patches will have the flexibility to override
-irq handlers in the LLD's. Controller's implementing a EDGE trigger
-latch can implement their own interrupt handler inside the driver.
 
-Signed-off-by: Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
----
- drivers/ata/ahci.h       |    3 +--
- drivers/ata/ahci_xgene.c |    2 +-
- drivers/ata/libahci.c    |   40 ----------------------------------------
- 3 files changed, 2 insertions(+), 43 deletions(-)
+--vdqwC0msT4ilQ2it
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index a4faa43..e9b57e8 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -240,8 +240,7 @@ enum {
- 						        error-handling stage) */
- 	AHCI_HFLAG_NO_DEVSLP		= (1 << 17), /* no device sleep */
- 	AHCI_HFLAG_NO_FBS		= (1 << 18), /* no FBS */
--	AHCI_HFLAG_EDGE_IRQ		= (1 << 19), /* HOST_IRQ_STAT behaves as
--							Edge Triggered */
-+
- #ifdef CONFIG_PCI_MSI
- 	AHCI_HFLAG_MULTI_MSI		= (1 << 20), /* multiple PCI MSIs */
- 	AHCI_HFLAG_MULTI_MSIX		= (1 << 21), /* per-port MSI-X */
-diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-index e2c6d9e..892ec74 100644
---- a/drivers/ata/ahci_xgene.c
-+++ b/drivers/ata/ahci_xgene.c
-@@ -779,7 +779,7 @@ skip_clk_phy:
- 		hpriv->flags = AHCI_HFLAG_NO_NCQ;
- 		break;
- 	case XGENE_AHCI_V2:
--		hpriv->flags |= AHCI_HFLAG_YES_FBS | AHCI_HFLAG_EDGE_IRQ;
-+		hpriv->flags |= AHCI_HFLAG_YES_FBS;
- 		break;
- 	default:
- 		break;
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index eda3cf2..08be136 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -1843,43 +1843,6 @@ static u32 ahci_handle_port_intr(struct ata_host *host, u32 irq_masked)
- 	return handled;
- }
+On Sun, Jan 24, 2016 at 07:21:50PM +0000, Mans Rullgard wrote:
+> From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+>=20
+> The source and destination masters are reflecting buses or their layers to
+> where the different devices can be connected. The patch changes the master
+> names to reflect which one is related to which independently on the trans=
+fer
+> direction.
 
--static irqreturn_t ahci_single_edge_irq_intr(int irq, void *dev_instance)
--{
--	struct ata_host *host = dev_instance;
--	struct ahci_host_priv *hpriv;
--	unsigned int rc = 0;
--	void __iomem *mmio;
--	u32 irq_stat, irq_masked;
--
--	VPRINTK("ENTER\n");
--
--	hpriv = host->private_data;
--	mmio = hpriv->mmio;
--
--	/* sigh.  0xffffffff is a valid return from h/w */
--	irq_stat = readl(mmio + HOST_IRQ_STAT);
--	if (!irq_stat)
--		return IRQ_NONE;
--
--	irq_masked = irq_stat & hpriv->port_map;
--
--	spin_lock(&host->lock);
--
--	/*
--	 * HOST_IRQ_STAT behaves as edge triggered latch meaning that
--	 * it should be cleared before all the port events are cleared.
--	 */
--	writel(irq_stat, mmio + HOST_IRQ_STAT);
--
--	rc = ahci_handle_port_intr(host, irq_masked);
--
--	spin_unlock(&host->lock);
--
--	VPRINTK("EXIT\n");
--
--	return IRQ_RETVAL(rc);
--}
--
- static irqreturn_t ahci_single_level_irq_intr(int irq, void *dev_instance)
- {
- 	struct ata_host *host = dev_instance;
-@@ -2507,9 +2470,6 @@ int ahci_host_activate(struct ata_host *host, struct scsi_host_template *sht)
+Acked-by: Mark Brown <broonie@kernel.org>
 
- 	if (hpriv->flags & (AHCI_HFLAG_MULTI_MSI | AHCI_HFLAG_MULTI_MSIX))
- 		rc = ahci_host_activate_multi_irqs(host, sht);
--	else if (hpriv->flags & AHCI_HFLAG_EDGE_IRQ)
--		rc = ata_host_activate(host, irq, ahci_single_edge_irq_intr,
--				       IRQF_SHARED, sht);
- 	else
- 		rc = ata_host_activate(host, irq, ahci_single_level_irq_intr,
- 				       IRQF_SHARED, sht);
---
-1.7.1
+--vdqwC0msT4ilQ2it
+Content-Type: application/pgp-signature; name="signature.asc"
 
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQEcBAEBCAAGBQJWqLxfAAoJECTWi3JdVIfQfrUH/0xxvyT4TCQ1uidDSVHY61/o
+UnFfWQxuPn45knqyPT9RxxZlUSBtXyp9FCvgDT4CnXmZOxa808JC9r8PGgu7G5wV
+Qej5oJaJOtK7TVaxJHkfvo7sn/D3sjwrr9oEV75oqAWW7ZQA4uav4V/Vk0c8IWKu
+Gdih9px5/e5ES2mTexPBDuH6OxqqoyRY883lPuE8hsNnxPV7Bhw2Vq5jASrwzRkn
+PZRrpodGf93bvME+Ng3DKwYujpSF+To5bMxDS7MoQ+9rDBtQY0h0ELq/axTQB8G2
+otMkKf2AW8WxqjnLFC/SUQ7AsPsdBy8c+bFnWQS1hRkdY1uYnncU7CclDkpw3UA=
+=IEOK
+-----END PGP SIGNATURE-----
+
+--vdqwC0msT4ilQ2it--
