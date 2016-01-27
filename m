@@ -1,55 +1,37 @@
-From: Mark Brown <broonie@kernel.org>
-Subject: Re: [PATCH 03/15] dmaengine: dw: rename masters to reflect actual
- topology
-Date: Wed, 27 Jan 2016 12:47:28 +0000
-Message-ID: <20160127124728.GM6042@sirena.org.uk>
-References: <1453663322-14474-1-git-send-email-mans@mansr.com>
- <1453663322-14474-4-git-send-email-mans@mansr.com>
+From: <desy.liana@bpjs-kesehatan.go.id>
+Subject: Business Proposal!!
+Date: Thu, 28 Jan 2016 00:35:55 +0100
+Message-ID: <KL1PR04MB1176591A0153B288C3DB7CFFFDD90@KL1PR04MB1176.apcprd04.prod.outlook.com>
+Reply-To: <alexchu309@yahoo.com.hk>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="vdqwC0msT4ilQ2it"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mezzanine.sirena.org.uk ([106.187.55.193]:48727 "EHLO
-	mezzanine.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753966AbcA0MsL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Jan 2016 07:48:11 -0500
-Content-Disposition: inline
-In-Reply-To: <1453663322-14474-4-git-send-email-mans@mansr.com>
+Received: from mail-pu1apc01hn0233.outbound.protection.outlook.com ([104.47.126.233]:44781
+	"EHLO APC01-PU1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S934437AbcA1AVs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Jan 2016 19:21:48 -0500
+Content-Description: Mail message body
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mans Rullgard <mans@mansr.com>
-Cc: Viresh Kumar <vireshk@kernel.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Vinod Koul <vinod.koul@intel.com>, linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Haavard Skinnemoen <hskinnemoen@gmail.com>, Hans-Christian Egtvedt <egtvedt@samfundet.no>, Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Daniel Mack <daniel@zonque.org>, Haojian Zhuang <haojian.zhuang@gmail.com>, Robert Jarzmik <robert.jarzmik@free.fr>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, devicetree@vger.kernel.org, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-spi@vger.kernel.org, linux-serial@vger.kernel.org
+To: Recipients <desy.liana@bpjs-kesehatan.go.id>
 
+How are you today? My name is Alex Chu. I work with Nanyang Commercial Bank here in Hong Kong.I have a win-win business proposal of a lifetime that is up to the tune of 17.6m (Seventeen Million, six Hundred Thousand Dollars). Please note that this business transaction is 100% risk free and will only take five working days from start to finish.Please let me know if you are interested so that I can give you details on how to go about the process.
+I await your response.
 
---vdqwC0msT4ilQ2it
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Thanks
+Alex Chu
 
-On Sun, Jan 24, 2016 at 07:21:50PM +0000, Mans Rullgard wrote:
-> From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
->=20
-> The source and destination masters are reflecting buses or their layers to
-> where the different devices can be connected. The patch changes the master
-> names to reflect which one is related to which independently on the trans=
-fer
-> direction.
+________________________________
 
-Acked-by: Mark Brown <broonie@kernel.org>
+Kartu Indonesia Sehat (KIS) adalah tanda kepesertaan Jaminan Kesehatan Nasional (JKN) untuk memperoleh pelayanan kesehatan yang komprehensif pada fasilitas kesehatan melalui mekanisme sistem rujukan berjenjang dan atas indikasi medis*.
 
---vdqwC0msT4ilQ2it
-Content-Type: application/pgp-signature; name="signature.asc"
+KIS diterbitkan oleh BPJS Kesehatan untuk seluruh peserta jaminan kesehatan termasuk penerima bantuan iuran (PBI).
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+Kepesertaan KIS ada 2 kelompok:
 
-iQEcBAEBCAAGBQJWqLxfAAoJECTWi3JdVIfQfrUH/0xxvyT4TCQ1uidDSVHY61/o
-UnFfWQxuPn45knqyPT9RxxZlUSBtXyp9FCvgDT4CnXmZOxa808JC9r8PGgu7G5wV
-Qej5oJaJOtK7TVaxJHkfvo7sn/D3sjwrr9oEV75oqAWW7ZQA4uav4V/Vk0c8IWKu
-Gdih9px5/e5ES2mTexPBDuH6OxqqoyRY883lPuE8hsNnxPV7Bhw2Vq5jASrwzRkn
-PZRrpodGf93bvME+Ng3DKwYujpSF+To5bMxDS7MoQ+9rDBtQY0h0ELq/axTQB8G2
-otMkKf2AW8WxqjnLFC/SUQ7AsPsdBy8c+bFnWQS1hRkdY1uYnncU7CclDkpw3UA=
-=IEOK
------END PGP SIGNATURE-----
+  1.  Kelompok masyarakat yang wajib mendaftar dan membayar iuran, baik membayar sendiri, ataupun berkontribusi bersama pemberi kerjanya;
+  2.  Kelompok masyarakat miskin dan tidak mampu yang didaftarkan oleh pemerintah dan iurannya dibayari oleh pemerintah
 
---vdqwC0msT4ilQ2it--
+*) Kartu lainnya: Kartu Eks Askes, Eks Jamkesmas, KJS, Kartu JKN BPJS Kesehatan, masih tetap berlaku sesuai ketentuan sepanjang belum diganti dengan Kartu Indonesia Sehat (KIS).
