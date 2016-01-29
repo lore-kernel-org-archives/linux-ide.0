@@ -1,42 +1,54 @@
-From: Dmitry Vyukov <dvyukov@google.com>
-Subject: Re: ata: BUG in ata_sff_hsm_move
-Date: Fri, 29 Jan 2016 12:59:49 +0100
-Message-ID: <CACT4Y+Y_w3msrTw46T8wGpK-j09e6VAoPFa93JSfm+5_kvBAYQ@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH libata/for-4.5-fixes] libata-sff: use WARN instead of BUG on
+ illegal host state machine state
+Date: Fri, 29 Jan 2016 07:20:57 -0500
+Message-ID: <20160129121604.GN32380@htj.duckdns.org>
 References: <CACT4Y+b_JsOxJu2EZyEf+mOXORc_zid5V1-pLZSroJVxyWdSpw@mail.gmail.com>
  <20160129115214.GM32380@htj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <20160129115214.GM32380@htj.duckdns.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
+To: Dmitry Vyukov <dvyukov@google.com>
 Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@redhat.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, syzkaller <syzkaller@googlegroups.com>, Kostya Serebryany <kcc@google.com>, Alexander Potapenko <glider@google.com>, Sasha Levin <sasha.levin@oracle.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Fri, Jan 29, 2016 at 12:52 PM, Tejun Heo <tj@kernel.org> wrote:
-> Hello, Dmitry.
->
-> On Thu, Jan 28, 2016 at 12:35:43PM +0100, Dmitry Vyukov wrote:
->> Hello,
->>
->> I episodically hit the following BUG while running syzkaller fuzzer:
->>
->> ata2: protocol 2 task_state 0 (dev_stat 0x41)
->> ------------[ cut here ]------------
->> kernel BUG at drivers/ata/libata-sff.c:1302!
-> ...
->> So the unexpected state is HSM_IDLE.
->
-> Hmmm... the port interrupt handler checks for IDLE before calling into
-> hsm_move, so the only explanation would be that something is resetting
-> it to IDLE inbetween.  ce7514526742 ("libata: prevent HSM state change
-> race between ISR and PIO") describes and fixes the same problem.  The
-> fix seems correct and I can't find anywhere else where this can
-> happen.  :(
->
-> Can you please post the kernel log leading to the BUG?  Also, I don't
-> think that condition needs to be BUG.  I'll change it to WARN.
+>From a588afc920bc50e894f6ae2874c4281c795e0979 Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj@kernel.org>
+Date: Fri, 29 Jan 2016 07:06:53 -0500
 
-Here are two logs, in both cases no kernel messages prior to the bug:
-https://gist.githubusercontent.com/dvyukov/5087d633e3620280b6c7/raw/31c9ab1ced92ac5f85cfb15eaf48ec5793c2c3a1/gistfile1.txt
-https://gist.githubusercontent.com/dvyukov/825b2e3d5fb80ae08a9a/raw/03c5a4f4c4bd9d0a304a71cda2da4c92f4b7f1ba/gistfile1.txt
+ata_sff_hsm_move() triggers BUG if it sees a host state machine state
+that it dind't expect.  The risk for data corruption when the
+condition occurs is low as it's highly unlikely that it would lead to
+spurious completion of commands.  The BUG occasionally triggered for
+subtle race conditions in the driver.  Let's downgrade it to WARN so
+that it doesn't kill the machine unnecessarily.
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Dmitry Vyukov <dvyukov@google.com>
+---
+Applied to libata/for-4.5-fixes.
+
+Thanks.
+
+ drivers/ata/libata-sff.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index cdf6215..608677d 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -1296,7 +1296,8 @@ int ata_sff_hsm_move(struct ata_port *ap, struct ata_queued_cmd *qc,
+ 		break;
+ 	default:
+ 		poll_next = 0;
+-		BUG();
++		WARN(true, "ata%d: SFF host state machine in invalid state %d",
++		     ap->print_id, ap->hsm_task_state);
+ 	}
+ 
+ 	return poll_next;
+-- 
+2.5.0
