@@ -1,35 +1,41 @@
-From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH v2] ata: add AMD Seattle platform driver
-Date: Fri, 29 Jan 2016 21:31:27 +0000
-Message-ID: <20160129213127.14ca55d5@lxorguk.ukuu.org.uk>
-References: <1452789071-4090-1-git-send-email-brijesh.singh@amd.com>
-	<5730117.gx9ezcyLp7@wuerfel>
-	<56A7A534.6040208@amd.com>
-	<3904852.c3HykPsQQ2@wuerfel>
+From: Adrian Palmer <adrian.palmer@seagate.com>
+Subject: [LSF/MM ATTEND][LSF/MM TOPIC] SMR/Zoned devices IO
+Date: Fri, 29 Jan 2016 14:41:09 -0700
+Message-ID: <CAKdFiL5WqKz2Pq3bAhPooO0jF_u6MY-9FFcGb-62O_atWyeqfQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:36756 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751615AbcA2Vbu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Jan 2016 16:31:50 -0500
-In-Reply-To: <3904852.c3HykPsQQ2@wuerfel>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: lsf-pc@lists.linux-foundation.org
+Cc: linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, linux-block@vger.kernel.org, Linux Filesystem Development List <linux-fsdevel@vger.kernel.org>, linux-raid@ver.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Brijesh Singh <brijesh.singh@amd.com>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, hdegoede@redhat.com, linux-ide@vger.kernel.org
 
-> For the ACPI case, I still think that an AML call from the AHCI driver
-> is the most logical solution. You mentioned that you believe that calling
-> into the AML interpreter up to 100 times per second is a noticeable
-> overhead, but I doubt that and would like to see actual number backing
-> that up. Note that most of the time, the status of the LEDs won't even
-> change, so the driver does not have to call into the AML while I/O
-> is in progress, or while it is stopped, only for the transition or in
-> case of locate and fault events that should be extremely rare.
+Greetings:
 
-It can also be delayed - you don't need to adjust the LED at any great
-rate - it's for a human not a machine to read.
+I would like to attend LSF/MM to continue discussion related to SMR.
 
-Alan
+Besides the SMRFFS, we've been developing a zoned device mapper (ZDM).
+I would like to gather feedback and direction.  I can provide a quick
+explanation of the architecture.  This will enable existing software
+to work on zoned devices.  Our work will initially focus on workloads
+provided by mdraid.
+
+Also, I would like to discuss the storage of the zone information in
+the kernel.  It makes little sense for the drive to be continuously
+probed, or for each app to maintain it own, possibly un-synced, copy
+of the zone information.  I'll bring along our work and
+recommendations of a solution based on Hannes' work in this area.  I
+believe we need a common stackable interface to pass along this
+information, both up the kernel, and to userland.
+
+Lastly, we are still exploring the need for an additional elevator
+besides the no-op that orders not only by time, but also zone aware
+location.  I'll have some test results by lsf/mm that we can discuss.
+
+
+Adrian Palmer
+Firmware Engineer II
+R&D Firmware
+Seagate, Longmont Colorado
+720-684-1307
+adrian.palmer@seagate.com
