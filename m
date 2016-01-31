@@ -1,52 +1,59 @@
-From: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v2 2/3] libahci: Implement the capability to override the
- generic ahci interrupt handler.
-Date: Sun, 31 Jan 2016 06:35:40 -0500
-Message-ID: <20160131113540.GX32380@htj.duckdns.org>
-References: <1453888197-11368-1-git-send-email-stripathi@apm.com>
- <1453888197-11368-3-git-send-email-stripathi@apm.com>
+From: "Muthoot Finance Pvt Ltd" <info@adovation.org>
+Subject: my subject...
+Date: Sun, 31 Jan 2016 02:43:12 +0100
+Message-ID: <20160131015932.EED5FE67B7B__28241.4134512239$1454242383$gmane$org@adovation.org>
+Reply-To: muthootfinanccehome@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1453888197-11368-3-git-send-email-stripathi-qTEPVZfXA3Y@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
-Cc: olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, mlangsdo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, jcm-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, patches-qTEPVZfXA3Y@public.gmane.org, svtripathi-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from adovation.org ([108.170.1.90]:58680 "EHLO adovation.org"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757340AbcAaMMW convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 31 Jan 2016 07:12:22 -0500
+Content-Description: Mail message body
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Recipients <info@adovation.org>
 
-On Wed, Jan 27, 2016 at 03:19:56PM +0530, Suman Tripathi wrote:
-> @@ -2466,13 +2467,19 @@ int ahci_host_activate(struct ata_host *host, struct scsi_host_template *sht)
->  {
->  	struct ahci_host_priv *hpriv = host->private_data;
->  	int irq = hpriv->irq;
-> +	irqreturn_t (*ahci_irq_handler)(int irq, void *dev_instance);
->  	int rc;
-> 
->  	if (hpriv->flags & (AHCI_HFLAG_MULTI_MSI | AHCI_HFLAG_MULTI_MSIX))
->  		rc = ahci_host_activate_multi_irqs(host, sht);
+Be informed that Muthoot Finance give out Guarantee Business Loans, Aut=
+omobile Purchase Loans, House Purchase Loans, Personal Loans at 3% inte=
+rest rate, for more info email: muthootfinanccehome@gmail.com
+=3D=3D=3D=3D
+Estar informado de que Muthoot Finanzas Dar a conocer Garanta de negoci=
+os Prstamos, Prstamos de Automviles Compra, Casa Compra prstamos, prsta=
+mos personales a tasa de inters del 3%, para obtener ms informacin emai=
+l: muthootfinanccehome@gmail.com
+=3D=3D=3D=3D
+Assunto: meu tema Ser informado de que Muthoot Finance dar empr=C3=A9st=
+imos de Garantia de Neg=C3=B3cios, Automobile Os empr=C3=A9stimos Purch=
+ase, Casa empr=C3=A9stimos Purchase, empr=C3=A9stimos pessoais na taxa =
+de juros de 3%, para mais informa=C3=A7=C3=B5es e-mail: muthootfinancce=
+home@gmail.com
+=3D=3D=3D=3D
+Nous portons =C3=A0 votre connaissance que Muthoot Finance vous donne d=
+es pr=C3=AAts d=E2=80=99affaires, pour l=E2=80=99achat des automobiles,=
+ des maisons, des pr=C3=AAts personnels, tous pour un taux d'int=C3=A9r=
+=C3=AAts de 3%, pour plus des d=C3=A9tails consultez: muthootfinancceho=
+me@gmail.com
+=3D=3D=3D=3D
+Byt informovan=C3=BD, =C5=BEe Muthoot Financie rozd=C3=A1vat z=C3=A1ruc=
+nej podnikatelsk=C3=BDch =C3=BAverov, automobilov=C3=BD N=C3=A1kup p=C3=
+=B4=C5=BEiciek, =C3=BAverov na b=C3=BDvanie, osobn=C3=A9 p=C3=B4=C5=BEi=
+cky vo v=C3=BD=C5=A1ke 3% =C3=BArokovou sadzbou, pre viac inform=C3=A1c=
+i=C3=AD e-mail: muthootfinanccehome@gmail.com
+=3D=3D=3D=3D
+Wir teilen mit, dass Muthoot Finance Firmen-Darlehen, Darlehen zur Ansc=
+haffung von Kfz-Fahrzeugen, Erwerb von Immobilien sowie pers=C3=B6nlich=
+e Darlehen zu 3% effektiven Jahreszins anbietet, weitere Informationen =
+erhalten Sie per E-Mail: muthootfinanccehome@gmail.com
+=3D=3D=3D=3D
+Det opplyses om at Muthoot Finance gir ut garanti Business l=C3=A5n, Au=
+tomobile kj=C3=B8pe l=C3=A5n, hus kj=C3=B8pe l=C3=A5n, personlige l=C3=A5=
+n p=C3=A5 3% rente, for mer info e-post: muthootfinanccehome@gmail.com
 
-You need to add { } to the if body too.  Please read CodingStyle.
+---
+This email is free from viruses and malware because avast! Antivirus pr=
+otection is active.
+https://www.avast.com/antivirus
 
-> -	else
-> -		rc = ata_host_activate(host, irq, ahci_single_level_irq_intr,
-> +	else {
-> +		ahci_irq_handler = hpriv->ahci_irq_intr ? hpriv->ahci_irq_intr :
-> +				   ahci_single_level_irq_intr;
-> +
-> +		rc = ata_host_activate(host, irq, ahci_irq_handler,
->  				       IRQF_SHARED, sht);
-> +	}
-
-Can you please make this handled the same way as ->start_engine?
-Also, maybe print out a warning message if a driver specifies both
-AHCI_HFLAG_MULTI_MSI[X] and the irq handler override?
-
-Thanks.
-
--- 
-tejun
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
