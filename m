@@ -1,59 +1,42 @@
-From: "Muthoot Finance Pvt Ltd" <info@adovation.org>
-Subject: my subject...
-Date: Fri, 29 Jan 2016 23:46:56 +0100
-Message-ID: <20160129225437.319DDD45AFE__45089.9976808161$1454155490$gmane$org@adovation.org>
-Reply-To: muthootfinanccehome@gmail.com
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH v2 1/3] ata: Remove the AHCI_HFLAG_EDGE_IRQ support from
+ libahci.
+Date: Sun, 31 Jan 2016 06:32:49 -0500
+Message-ID: <20160131113249.GW32380@htj.duckdns.org>
+References: <1453888197-11368-1-git-send-email-stripathi@apm.com>
+ <1453888197-11368-2-git-send-email-stripathi@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from adovation.org ([108.170.1.90]:49762 "EHLO adovation.org"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753945AbcA3MEW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 30 Jan 2016 07:04:22 -0500
-Content-Description: Mail message body
+Received: from mail-yk0-f194.google.com ([209.85.160.194]:33212 "EHLO
+	mail-yk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757298AbcAaLcv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 31 Jan 2016 06:32:51 -0500
+Content-Disposition: inline
+In-Reply-To: <1453888197-11368-2-git-send-email-stripathi@apm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Recipients <info@adovation.org>
+To: Suman Tripathi <stripathi@apm.com>
+Cc: olof@lixom.net, arnd@arndb.de, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com, svtripathi@gmail.com
 
-Be informed that Muthoot Finance give out Guarantee Business Loans, Aut=
-omobile Purchase Loans, House Purchase Loans, Personal Loans at 3% inte=
-rest rate, for more info email: muthootfinanccehome@gmail.com
-=3D=3D=3D=3D
-Estar informado de que Muthoot Finanzas Dar a conocer Garanta de negoci=
-os Prstamos, Prstamos de Automviles Compra, Casa Compra prstamos, prsta=
-mos personales a tasa de inters del 3%, para obtener ms informacin emai=
-l: muthootfinanccehome@gmail.com
-=3D=3D=3D=3D
-Assunto: meu tema Ser informado de que Muthoot Finance dar empr=C3=A9st=
-imos de Garantia de Neg=C3=B3cios, Automobile Os empr=C3=A9stimos Purch=
-ase, Casa empr=C3=A9stimos Purchase, empr=C3=A9stimos pessoais na taxa =
-de juros de 3%, para mais informa=C3=A7=C3=B5es e-mail: muthootfinancce=
-home@gmail.com
-=3D=3D=3D=3D
-Nous portons =C3=A0 votre connaissance que Muthoot Finance vous donne d=
-es pr=C3=AAts d=E2=80=99affaires, pour l=E2=80=99achat des automobiles,=
- des maisons, des pr=C3=AAts personnels, tous pour un taux d'int=C3=A9r=
-=C3=AAts de 3%, pour plus des d=C3=A9tails consultez: muthootfinancceho=
-me@gmail.com
-=3D=3D=3D=3D
-Byt informovan=C3=BD, =C5=BEe Muthoot Financie rozd=C3=A1vat z=C3=A1ruc=
-nej podnikatelsk=C3=BDch =C3=BAverov, automobilov=C3=BD N=C3=A1kup p=C3=
-=B4=C5=BEiciek, =C3=BAverov na b=C3=BDvanie, osobn=C3=A9 p=C3=B4=C5=BEi=
-cky vo v=C3=BD=C5=A1ke 3% =C3=BArokovou sadzbou, pre viac inform=C3=A1c=
-i=C3=AD e-mail: muthootfinanccehome@gmail.com
-=3D=3D=3D=3D
-Wir teilen mit, dass Muthoot Finance Firmen-Darlehen, Darlehen zur Ansc=
-haffung von Kfz-Fahrzeugen, Erwerb von Immobilien sowie pers=C3=B6nlich=
-e Darlehen zu 3% effektiven Jahreszins anbietet, weitere Informationen =
-erhalten Sie per E-Mail: muthootfinanccehome@gmail.com
-=3D=3D=3D=3D
-Det opplyses om at Muthoot Finance gir ut garanti Business l=C3=A5n, Au=
-tomobile kj=C3=B8pe l=C3=A5n, hus kj=C3=B8pe l=C3=A5n, personlige l=C3=A5=
-n p=C3=A5 3% rente, for mer info e-post: muthootfinanccehome@gmail.com
+On Wed, Jan 27, 2016 at 03:19:55PM +0530, Suman Tripathi wrote:
+> This patch removes the AHCI_HFLAG_EDGE_IRQ support from libahci.
+> The upcoming patches will have the flexibility to override
+> irq handlers in the LLD's. Controller's implementing a EDGE trigger
+> latch can implement their own interrupt handler inside the driver.
+> 
+> Signed-off-by: Suman Tripathi <stripathi@apm.com>
 
----
-This email is free from viruses and malware because avast! Antivirus pr=
-otection is active.
-https://www.avast.com/antivirus
+Shouldn't this patch come after the irq override is in place?
 
+1. introduce irq override.
+
+2. remove AHCI_HFLAG_EDGE_IRQ by moving the edge triggered handler to
+   ahci_xgene.
+
+3. Update xgene irq handler to address the erratum.
+
+Thanks.
+
+-- 
+tejun
