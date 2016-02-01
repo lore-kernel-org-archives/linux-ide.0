@@ -1,59 +1,154 @@
-From: "Muthoot Finance Pvt Ltd" <info@adovation.org>
-Subject: my subject...
-Date: Sun, 31 Jan 2016 02:43:12 +0100
-Message-ID: <20160131015932.EED5FE67B7B__28241.4134512239$1454242383$gmane$org@adovation.org>
-Reply-To: muthootfinanccehome@gmail.com
+From: Dmitry Vyukov <dvyukov@google.com>
+Subject: Re: ata: BUG in ata_sff_hsm_move
+Date: Mon, 1 Feb 2016 11:46:21 +0100
+Message-ID: <CACT4Y+Zf4PwWS3ACCAtfnrwGnN3DKc_yYXWcJayLjBnB8f_JVQ@mail.gmail.com>
+References: <CACT4Y+b_JsOxJu2EZyEf+mOXORc_zid5V1-pLZSroJVxyWdSpw@mail.gmail.com>
+ <20160129115214.GM32380@htj.duckdns.org> <CACT4Y+Y_w3msrTw46T8wGpK-j09e6VAoPFa93JSfm+5_kvBAYQ@mail.gmail.com>
+ <20160129122317.GO32380@htj.duckdns.org> <CACT4Y+Z5SPCKg0bMC2sD-VbCfJPOixzntb+-zfWcU5jufjygmw@mail.gmail.com>
+ <CACT4Y+axb-FagKnftWDkOynT8xWoqOw758Q9t_Whs-bZPqU1Xg@mail.gmail.com> <20160129202348.GA4534@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from adovation.org ([108.170.1.90]:58680 "EHLO adovation.org"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757340AbcAaMMW convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 31 Jan 2016 07:12:22 -0500
-Content-Description: Mail message body
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:32979 "EHLO
+	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752956AbcBAKqm (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Feb 2016 05:46:42 -0500
+Received: by mail-wm0-f46.google.com with SMTP id l66so63694372wml.0
+        for <linux-ide@vger.kernel.org>; Mon, 01 Feb 2016 02:46:42 -0800 (PST)
+In-Reply-To: <20160129202348.GA4534@mtj.duckdns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Recipients <info@adovation.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: syzkaller <syzkaller@googlegroups.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@redhat.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Kostya Serebryany <kcc@google.com>, Alexander Potapenko <glider@google.com>, Sasha Levin <sasha.levin@oracle.com>
 
-Be informed that Muthoot Finance give out Guarantee Business Loans, Aut=
-omobile Purchase Loans, House Purchase Loans, Personal Loans at 3% inte=
-rest rate, for more info email: muthootfinanccehome@gmail.com
-=3D=3D=3D=3D
-Estar informado de que Muthoot Finanzas Dar a conocer Garanta de negoci=
-os Prstamos, Prstamos de Automviles Compra, Casa Compra prstamos, prsta=
-mos personales a tasa de inters del 3%, para obtener ms informacin emai=
-l: muthootfinanccehome@gmail.com
-=3D=3D=3D=3D
-Assunto: meu tema Ser informado de que Muthoot Finance dar empr=C3=A9st=
-imos de Garantia de Neg=C3=B3cios, Automobile Os empr=C3=A9stimos Purch=
-ase, Casa empr=C3=A9stimos Purchase, empr=C3=A9stimos pessoais na taxa =
-de juros de 3%, para mais informa=C3=A7=C3=B5es e-mail: muthootfinancce=
-home@gmail.com
-=3D=3D=3D=3D
-Nous portons =C3=A0 votre connaissance que Muthoot Finance vous donne d=
-es pr=C3=AAts d=E2=80=99affaires, pour l=E2=80=99achat des automobiles,=
- des maisons, des pr=C3=AAts personnels, tous pour un taux d'int=C3=A9r=
-=C3=AAts de 3%, pour plus des d=C3=A9tails consultez: muthootfinancceho=
-me@gmail.com
-=3D=3D=3D=3D
-Byt informovan=C3=BD, =C5=BEe Muthoot Financie rozd=C3=A1vat z=C3=A1ruc=
-nej podnikatelsk=C3=BDch =C3=BAverov, automobilov=C3=BD N=C3=A1kup p=C3=
-=B4=C5=BEiciek, =C3=BAverov na b=C3=BDvanie, osobn=C3=A9 p=C3=B4=C5=BEi=
-cky vo v=C3=BD=C5=A1ke 3% =C3=BArokovou sadzbou, pre viac inform=C3=A1c=
-i=C3=AD e-mail: muthootfinanccehome@gmail.com
-=3D=3D=3D=3D
-Wir teilen mit, dass Muthoot Finance Firmen-Darlehen, Darlehen zur Ansc=
-haffung von Kfz-Fahrzeugen, Erwerb von Immobilien sowie pers=C3=B6nlich=
-e Darlehen zu 3% effektiven Jahreszins anbietet, weitere Informationen =
-erhalten Sie per E-Mail: muthootfinanccehome@gmail.com
-=3D=3D=3D=3D
-Det opplyses om at Muthoot Finance gir ut garanti Business l=C3=A5n, Au=
-tomobile kj=C3=B8pe l=C3=A5n, hus kj=C3=B8pe l=C3=A5n, personlige l=C3=A5=
-n p=C3=A5 3% rente, for mer info e-post: muthootfinanccehome@gmail.com
+On Fri, Jan 29, 2016 at 9:23 PM, Tejun Heo <tj@kernel.org> wrote:
+> Hello,
+>
+> On Fri, Jan 29, 2016 at 02:40:33PM +0100, Dmitry Vyukov wrote:
+>> It now deadlocks at this stack. It is probably not OK to call
+>> ata_sff_hsm_move holding the spinlock.
+>
+> Yeah, the locking is pretty messed up with the polling path.  Can you
+> please try the following?
 
----
-This email is free from viruses and malware because avast! Antivirus pr=
-otection is active.
-https://www.avast.com/antivirus
 
+No crashes over the weekend. We can consider this fixed.
+Thanks!
+
+
+
+> diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+> index cdf6215..7dbba38 100644
+> --- a/drivers/ata/libata-sff.c
+> +++ b/drivers/ata/libata-sff.c
+> @@ -997,12 +997,9 @@ static inline int ata_hsm_ok_in_wq(struct ata_port *ap,
+>  static void ata_hsm_qc_complete(struct ata_queued_cmd *qc, int in_wq)
+>  {
+>         struct ata_port *ap = qc->ap;
+> -       unsigned long flags;
+>
+>         if (ap->ops->error_handler) {
+>                 if (in_wq) {
+> -                       spin_lock_irqsave(ap->lock, flags);
+> -
+>                         /* EH might have kicked in while host lock is
+>                          * released.
+>                          */
+> @@ -1014,8 +1011,6 @@ static void ata_hsm_qc_complete(struct ata_queued_cmd *qc, int in_wq)
+>                                 } else
+>                                         ata_port_freeze(ap);
+>                         }
+> -
+> -                       spin_unlock_irqrestore(ap->lock, flags);
+>                 } else {
+>                         if (likely(!(qc->err_mask & AC_ERR_HSM)))
+>                                 ata_qc_complete(qc);
+> @@ -1024,10 +1019,8 @@ static void ata_hsm_qc_complete(struct ata_queued_cmd *qc, int in_wq)
+>                 }
+>         } else {
+>                 if (in_wq) {
+> -                       spin_lock_irqsave(ap->lock, flags);
+>                         ata_sff_irq_on(ap);
+>                         ata_qc_complete(qc);
+> -                       spin_unlock_irqrestore(ap->lock, flags);
+>                 } else
+>                         ata_qc_complete(qc);
+>         }
+> @@ -1048,9 +1041,10 @@ int ata_sff_hsm_move(struct ata_port *ap, struct ata_queued_cmd *qc,
+>  {
+>         struct ata_link *link = qc->dev->link;
+>         struct ata_eh_info *ehi = &link->eh_info;
+> -       unsigned long flags = 0;
+>         int poll_next;
+>
+> +       lockdep_assert_held(ap->lock);
+> +
+>         WARN_ON_ONCE((qc->flags & ATA_QCFLAG_ACTIVE) == 0);
+>
+>         /* Make sure ata_sff_qc_issue() does not throw things
+> @@ -1112,14 +1106,6 @@ int ata_sff_hsm_move(struct ata_port *ap, struct ata_queued_cmd *qc,
+>                         }
+>                 }
+>
+> -               /* Send the CDB (atapi) or the first data block (ata pio out).
+> -                * During the state transition, interrupt handler shouldn't
+> -                * be invoked before the data transfer is complete and
+> -                * hsm_task_state is changed. Hence, the following locking.
+> -                */
+> -               if (in_wq)
+> -                       spin_lock_irqsave(ap->lock, flags);
+> -
+>                 if (qc->tf.protocol == ATA_PROT_PIO) {
+>                         /* PIO data out protocol.
+>                          * send first data block.
+> @@ -1135,9 +1121,6 @@ int ata_sff_hsm_move(struct ata_port *ap, struct ata_queued_cmd *qc,
+>                         /* send CDB */
+>                         atapi_send_cdb(ap, qc);
+>
+> -               if (in_wq)
+> -                       spin_unlock_irqrestore(ap->lock, flags);
+> -
+>                 /* if polling, ata_sff_pio_task() handles the rest.
+>                  * otherwise, interrupt handler takes over from here.
+>                  */
+> @@ -1361,12 +1344,14 @@ static void ata_sff_pio_task(struct work_struct *work)
+>         u8 status;
+>         int poll_next;
+>
+> +       spin_lock_irq(ap->lock);
+> +
+>         BUG_ON(ap->sff_pio_task_link == NULL);
+>         /* qc can be NULL if timeout occurred */
+>         qc = ata_qc_from_tag(ap, link->active_tag);
+>         if (!qc) {
+>                 ap->sff_pio_task_link = NULL;
+> -               return;
+> +               goto out_unlock;
+>         }
+>
+>  fsm_start:
+> @@ -1381,11 +1366,14 @@ static void ata_sff_pio_task(struct work_struct *work)
+>          */
+>         status = ata_sff_busy_wait(ap, ATA_BUSY, 5);
+>         if (status & ATA_BUSY) {
+> +               spin_unlock_irq(ap->lock);
+>                 ata_msleep(ap, 2);
+> +               spin_lock_irq(ap->lock);
+> +
+>                 status = ata_sff_busy_wait(ap, ATA_BUSY, 10);
+>                 if (status & ATA_BUSY) {
+>                         ata_sff_queue_pio_task(link, ATA_SHORT_PAUSE);
+> -                       return;
+> +                       goto out_unlock;
+>                 }
+>         }
+>
+> @@ -1402,6 +1390,8 @@ static void ata_sff_pio_task(struct work_struct *work)
+>          */
+>         if (poll_next)
+>                 goto fsm_start;
+> +out_unlock:
+> +       spin_unlock_irq(ap->lock);
+>  }
+>
+>  /**
