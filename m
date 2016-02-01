@@ -1,53 +1,64 @@
-From: Brijesh Singh <brijesh.singh@amd.com>
-Subject: Re: [PATCH v2] ata: add AMD Seattle platform driver
-Date: Mon, 1 Feb 2016 12:56:06 -0600
-Message-ID: <56AFAA46.6090403@amd.com>
-References: <1452789071-4090-1-git-send-email-brijesh.singh@amd.com>
- <5730117.gx9ezcyLp7@wuerfel> <56A7A534.6040208@amd.com>
- <3904852.c3HykPsQQ2@wuerfel>
+From: Suman Tripathi <stripathi@apm.com>
+Subject: Re: [PATCH v2 2/3] libahci: Implement the capability to override the
+ generic ahci interrupt handler.
+Date: Mon, 1 Feb 2016 11:43:56 -0800
+Message-ID: <CAOHikRBmZ2Nk5knH7_4X+ieTYN9ubWrEwhTNAvQzq5cxWmLDJA@mail.gmail.com>
+References: <1453888197-11368-1-git-send-email-stripathi@apm.com>
+	<1453888197-11368-3-git-send-email-stripathi@apm.com>
+	<20160131113540.GX32380@htj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <3904852.c3HykPsQQ2@wuerfel>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: brijesh.singh@amd.com, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, hdegoede@redhat.com, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-yk0-f182.google.com ([209.85.160.182]:35383 "EHLO
+	mail-yk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753191AbcBATn5 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Feb 2016 14:43:57 -0500
+Received: by mail-yk0-f182.google.com with SMTP id r207so116189588ykd.2
+        for <linux-ide@vger.kernel.org>; Mon, 01 Feb 2016 11:43:56 -0800 (PST)
+In-Reply-To: <20160131113540.GX32380@htj.duckdns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Mark Langsdorf <mlangsdo@redhat.com>, Jon Masters <jcm@redhat.com>, patches <patches@apm.com>, Suman Tripathi <svtripathi@gmail.com>
 
-Hi Arnd,
-
-On 01/29/2016 03:22 PM, Arnd Bergmann wrote:
-> 
-> For the ACPI case, I still think that an AML call from the AHCI driver
-> is the most logical solution. You mentioned that you believe that calling
-> into the AML interpreter up to 100 times per second is a noticeable
-> overhead, but I doubt that and would like to see actual number backing
-> that up. Note that most of the time, the status of the LEDs won't even
-> change, so the driver does not have to call into the AML while I/O
-> is in progress, or while it is stopped, only for the transition or in
-> case of locate and fault events that should be extremely rare.
+On Sun, Jan 31, 2016 at 3:35 AM, Tejun Heo <htejun@gmail.com> wrote:
+> On Wed, Jan 27, 2016 at 03:19:56PM +0530, Suman Tripathi wrote:
+>> @@ -2466,13 +2467,19 @@ int ahci_host_activate(struct ata_host *host, struct scsi_host_template *sht)
+>>  {
+>>       struct ahci_host_priv *hpriv = host->private_data;
+>>       int irq = hpriv->irq;
+>> +     irqreturn_t (*ahci_irq_handler)(int irq, void *dev_instance);
+>>       int rc;
+>>
+>>       if (hpriv->flags & (AHCI_HFLAG_MULTI_MSI | AHCI_HFLAG_MULTI_MSIX))
+>>               rc = ahci_host_activate_multi_irqs(host, sht);
 >
-During disk activity ahci_sw_activity_blink() is called based on timer expiration (~100ms).
-I just enabled the function profiler for 'dd if=/dev/zero of=/root/tmp bs=1M count=4096' and see the output below. The function was called 37 times in 2.5s
- 
-#echo 1 > function_profile_enabled
+> You need to add { } to the if body too.  Please read CodingStyle.
+>
+>> -     else
+>> -             rc = ata_host_activate(host, irq, ahci_single_level_irq_intr,
+>> +     else {
+>> +             ahci_irq_handler = hpriv->ahci_irq_intr ? hpriv->ahci_irq_intr :
+>> +                                ahci_single_level_irq_intr;
+>> +
+>> +             rc = ata_host_activate(host, irq, ahci_irq_handler,
+>>                                      IRQF_SHARED, sht);
+>> +     }
+>
+> Can you please make this handled the same way as ->start_engine?
+> Also, maybe print out a warning message if a driver specifies both
+> AHCI_HFLAG_MULTI_MSI[X] and the irq handler override?
 
-#dd if=/dev/zero of=/root/tempfile bs=1M count=4096
-4096+0 records in
-4096+0 records out
-4294967296 bytes (4.3 GB) copied, 2.57334 s, 1.7 GB/s
+Ok Sure
+>
+> Thanks.
+>
+> --
+> tejun
 
-#echo 0 > function_profile_enabled
 
-#cat trace_stat/*
-Function                               Hit    Time            Avg             s^2
---------                               ---    ----            ---             ---
-seattle_transmit_led_message            37    25.088 us       0.678 us        0.050 us    
 
-I am not debating on your AML call recommendation, it sounds like a good idea however BIOS is already released hence its bit late to add AML methods for this. I am seeking guidance on what can be done in the given situation. I thought platform driver is one option to get this feature enabled in kernel.
-
-- Brijesh
-
-> 	Arnd
-> 
+-- 
+Thanks,
+with regards,
+Suman Tripathi
