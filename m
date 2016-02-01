@@ -1,217 +1,53 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH libata/for-4.5-fixes] libata: fix sff host state machine
- locking while polling
-Date: Mon, 1 Feb 2016 11:50:55 -0500
-Message-ID: <20160201165055.GB14091@mtj.duckdns.org>
-References: <CACT4Y+b_JsOxJu2EZyEf+mOXORc_zid5V1-pLZSroJVxyWdSpw@mail.gmail.com>
- <20160129115214.GM32380@htj.duckdns.org>
- <CACT4Y+Y_w3msrTw46T8wGpK-j09e6VAoPFa93JSfm+5_kvBAYQ@mail.gmail.com>
- <20160129122317.GO32380@htj.duckdns.org>
- <CACT4Y+Z5SPCKg0bMC2sD-VbCfJPOixzntb+-zfWcU5jufjygmw@mail.gmail.com>
- <CACT4Y+axb-FagKnftWDkOynT8xWoqOw758Q9t_Whs-bZPqU1Xg@mail.gmail.com>
- <20160129202348.GA4534@mtj.duckdns.org>
- <CACT4Y+Zf4PwWS3ACCAtfnrwGnN3DKc_yYXWcJayLjBnB8f_JVQ@mail.gmail.com>
+From: Brijesh Singh <brijesh.singh@amd.com>
+Subject: Re: [PATCH v2] ata: add AMD Seattle platform driver
+Date: Mon, 1 Feb 2016 12:56:06 -0600
+Message-ID: <56AFAA46.6090403@amd.com>
+References: <1452789071-4090-1-git-send-email-brijesh.singh@amd.com>
+ <5730117.gx9ezcyLp7@wuerfel> <56A7A534.6040208@amd.com>
+ <3904852.c3HykPsQQ2@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yk0-f194.google.com ([209.85.160.194]:36607 "EHLO
-	mail-yk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754010AbcBAQu5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Feb 2016 11:50:57 -0500
-Content-Disposition: inline
-In-Reply-To: <CACT4Y+Zf4PwWS3ACCAtfnrwGnN3DKc_yYXWcJayLjBnB8f_JVQ@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <3904852.c3HykPsQQ2@wuerfel>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: brijesh.singh@amd.com, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, hdegoede@redhat.com, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dmitry Vyukov <dvyukov@google.com>
-Cc: syzkaller <syzkaller@googlegroups.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Jeff Garzik <jgarzik@redhat.com>, Sergei Shtylyov <sshtylyov@ru.mvista.com>, Kostya Serebryany <kcc@google.com>, Alexander Potapenko <glider@google.com>, Sasha Levin <sasha.levin@oracle.com>
 
-Hello, Dmitry.
+Hi Arnd,
 
-Thanks a lot for confirming the fix.  Applied the following to
-for-4.5-fixes branch w/ stable cc'd.
-
-Thanks again!
-
------- 8< ------
->From 8eee1d3ed5b6fc8e14389567c9a6f53f82bb7224 Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj@kernel.org>
-Date: Mon, 1 Feb 2016 11:33:21 -0500
-
-The bulk of ATA host state machine is implemented by
-ata_sff_hsm_move().  The function is called from either the interrupt
-handler or, if polling, a work item.  Unlike from the interrupt path,
-the polling path calls the function without holding the host lock and
-ata_sff_hsm_move() selectively grabs the lock.
-
-This is completely broken.  If an IRQ triggers while polling is in
-progress, the two can easily race and end up accessing the hardware
-and updating state machine state at the same time.  This can put the
-state machine in an illegal state and lead to a crash like the
-following.
-
-  kernel BUG at drivers/ata/libata-sff.c:1302!
-  invalid opcode: 0000 [#1] SMP DEBUG_PAGEALLOC KASAN
-  Modules linked in:
-  CPU: 1 PID: 10679 Comm: syz-executor Not tainted 4.5.0-rc1+ #300
-  Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
-  task: ffff88002bd00000 ti: ffff88002e048000 task.ti: ffff88002e048000
-  RIP: 0010:[<ffffffff83a83409>]  [<ffffffff83a83409>] ata_sff_hsm_move+0x619/0x1c60
-  ...
-  Call Trace:
-   <IRQ>
-   [<ffffffff83a84c31>] __ata_sff_port_intr+0x1e1/0x3a0 drivers/ata/libata-sff.c:1584
-   [<ffffffff83a85611>] ata_bmdma_port_intr+0x71/0x400 drivers/ata/libata-sff.c:2877
-   [<     inline     >] __ata_sff_interrupt drivers/ata/libata-sff.c:1629
-   [<ffffffff83a85bf3>] ata_bmdma_interrupt+0x253/0x580 drivers/ata/libata-sff.c:2902
-   [<ffffffff81479f98>] handle_irq_event_percpu+0x108/0x7e0 kernel/irq/handle.c:157
-   [<ffffffff8147a717>] handle_irq_event+0xa7/0x140 kernel/irq/handle.c:205
-   [<ffffffff81484573>] handle_edge_irq+0x1e3/0x8d0 kernel/irq/chip.c:623
-   [<     inline     >] generic_handle_irq_desc include/linux/irqdesc.h:146
-   [<ffffffff811a92bc>] handle_irq+0x10c/0x2a0 arch/x86/kernel/irq_64.c:78
-   [<ffffffff811a7e4d>] do_IRQ+0x7d/0x1a0 arch/x86/kernel/irq.c:240
-   [<ffffffff86653d4c>] common_interrupt+0x8c/0x8c arch/x86/entry/entry_64.S:520
-   <EOI>
-   [<     inline     >] rcu_lock_acquire include/linux/rcupdate.h:490
-   [<     inline     >] rcu_read_lock include/linux/rcupdate.h:874
-   [<ffffffff8164b4a1>] filemap_map_pages+0x131/0xba0 mm/filemap.c:2145
-   [<     inline     >] do_fault_around mm/memory.c:2943
-   [<     inline     >] do_read_fault mm/memory.c:2962
-   [<     inline     >] do_fault mm/memory.c:3133
-   [<     inline     >] handle_pte_fault mm/memory.c:3308
-   [<     inline     >] __handle_mm_fault mm/memory.c:3418
-   [<ffffffff816efb16>] handle_mm_fault+0x2516/0x49a0 mm/memory.c:3447
-   [<ffffffff8127dc16>] __do_page_fault+0x376/0x960 arch/x86/mm/fault.c:1238
-   [<ffffffff8127e358>] trace_do_page_fault+0xe8/0x420 arch/x86/mm/fault.c:1331
-   [<ffffffff8126f514>] do_async_page_fault+0x14/0xd0 arch/x86/kernel/kvm.c:264
-   [<ffffffff86655578>] async_page_fault+0x28/0x30 arch/x86/entry/entry_64.S:986
-
-Fix it by ensuring that the polling path is holding the host lock
-before entering ata_sff_hsm_move() so that all hardware accesses and
-state updates are performed under the host lock.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-and-tested-by: Dmitry Vyukov <dvyukov@google.com>
-Link: http://lkml.kernel.org/g/CACT4Y+b_JsOxJu2EZyEf+mOXORc_zid5V1-pLZSroJVxyWdSpw@mail.gmail.com
-Cc: stable@vger.kernel.org
----
- drivers/ata/libata-sff.c | 32 +++++++++++---------------------
- 1 file changed, 11 insertions(+), 21 deletions(-)
-
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 608677d..051b615 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -997,12 +997,9 @@ static inline int ata_hsm_ok_in_wq(struct ata_port *ap,
- static void ata_hsm_qc_complete(struct ata_queued_cmd *qc, int in_wq)
- {
- 	struct ata_port *ap = qc->ap;
--	unsigned long flags;
+On 01/29/2016 03:22 PM, Arnd Bergmann wrote:
+> 
+> For the ACPI case, I still think that an AML call from the AHCI driver
+> is the most logical solution. You mentioned that you believe that calling
+> into the AML interpreter up to 100 times per second is a noticeable
+> overhead, but I doubt that and would like to see actual number backing
+> that up. Note that most of the time, the status of the LEDs won't even
+> change, so the driver does not have to call into the AML while I/O
+> is in progress, or while it is stopped, only for the transition or in
+> case of locate and fault events that should be extremely rare.
+>
+During disk activity ahci_sw_activity_blink() is called based on timer expiration (~100ms).
+I just enabled the function profiler for 'dd if=/dev/zero of=/root/tmp bs=1M count=4096' and see the output below. The function was called 37 times in 2.5s
  
- 	if (ap->ops->error_handler) {
- 		if (in_wq) {
--			spin_lock_irqsave(ap->lock, flags);
--
- 			/* EH might have kicked in while host lock is
- 			 * released.
- 			 */
-@@ -1014,8 +1011,6 @@ static void ata_hsm_qc_complete(struct ata_queued_cmd *qc, int in_wq)
- 				} else
- 					ata_port_freeze(ap);
- 			}
--
--			spin_unlock_irqrestore(ap->lock, flags);
- 		} else {
- 			if (likely(!(qc->err_mask & AC_ERR_HSM)))
- 				ata_qc_complete(qc);
-@@ -1024,10 +1019,8 @@ static void ata_hsm_qc_complete(struct ata_queued_cmd *qc, int in_wq)
- 		}
- 	} else {
- 		if (in_wq) {
--			spin_lock_irqsave(ap->lock, flags);
- 			ata_sff_irq_on(ap);
- 			ata_qc_complete(qc);
--			spin_unlock_irqrestore(ap->lock, flags);
- 		} else
- 			ata_qc_complete(qc);
- 	}
-@@ -1048,9 +1041,10 @@ int ata_sff_hsm_move(struct ata_port *ap, struct ata_queued_cmd *qc,
- {
- 	struct ata_link *link = qc->dev->link;
- 	struct ata_eh_info *ehi = &link->eh_info;
--	unsigned long flags = 0;
- 	int poll_next;
- 
-+	lockdep_assert_held(ap->lock);
-+
- 	WARN_ON_ONCE((qc->flags & ATA_QCFLAG_ACTIVE) == 0);
- 
- 	/* Make sure ata_sff_qc_issue() does not throw things
-@@ -1112,14 +1106,6 @@ int ata_sff_hsm_move(struct ata_port *ap, struct ata_queued_cmd *qc,
- 			}
- 		}
- 
--		/* Send the CDB (atapi) or the first data block (ata pio out).
--		 * During the state transition, interrupt handler shouldn't
--		 * be invoked before the data transfer is complete and
--		 * hsm_task_state is changed. Hence, the following locking.
--		 */
--		if (in_wq)
--			spin_lock_irqsave(ap->lock, flags);
--
- 		if (qc->tf.protocol == ATA_PROT_PIO) {
- 			/* PIO data out protocol.
- 			 * send first data block.
-@@ -1135,9 +1121,6 @@ int ata_sff_hsm_move(struct ata_port *ap, struct ata_queued_cmd *qc,
- 			/* send CDB */
- 			atapi_send_cdb(ap, qc);
- 
--		if (in_wq)
--			spin_unlock_irqrestore(ap->lock, flags);
--
- 		/* if polling, ata_sff_pio_task() handles the rest.
- 		 * otherwise, interrupt handler takes over from here.
- 		 */
-@@ -1362,12 +1345,14 @@ static void ata_sff_pio_task(struct work_struct *work)
- 	u8 status;
- 	int poll_next;
- 
-+	spin_lock_irq(ap->lock);
-+
- 	BUG_ON(ap->sff_pio_task_link == NULL);
- 	/* qc can be NULL if timeout occurred */
- 	qc = ata_qc_from_tag(ap, link->active_tag);
- 	if (!qc) {
- 		ap->sff_pio_task_link = NULL;
--		return;
-+		goto out_unlock;
- 	}
- 
- fsm_start:
-@@ -1382,11 +1367,14 @@ static void ata_sff_pio_task(struct work_struct *work)
- 	 */
- 	status = ata_sff_busy_wait(ap, ATA_BUSY, 5);
- 	if (status & ATA_BUSY) {
-+		spin_unlock_irq(ap->lock);
- 		ata_msleep(ap, 2);
-+		spin_lock_irq(ap->lock);
-+
- 		status = ata_sff_busy_wait(ap, ATA_BUSY, 10);
- 		if (status & ATA_BUSY) {
- 			ata_sff_queue_pio_task(link, ATA_SHORT_PAUSE);
--			return;
-+			goto out_unlock;
- 		}
- 	}
- 
-@@ -1403,6 +1391,8 @@ static void ata_sff_pio_task(struct work_struct *work)
- 	 */
- 	if (poll_next)
- 		goto fsm_start;
-+out_unlock:
-+	spin_unlock_irq(ap->lock);
- }
- 
- /**
--- 
-2.5.0
+#echo 1 > function_profile_enabled
 
+#dd if=/dev/zero of=/root/tempfile bs=1M count=4096
+4096+0 records in
+4096+0 records out
+4294967296 bytes (4.3 GB) copied, 2.57334 s, 1.7 GB/s
+
+#echo 0 > function_profile_enabled
+
+#cat trace_stat/*
+Function                               Hit    Time            Avg             s^2
+--------                               ---    ----            ---             ---
+seattle_transmit_led_message            37    25.088 us       0.678 us        0.050 us    
+
+I am not debating on your AML call recommendation, it sounds like a good idea however BIOS is already released hence its bit late to add AML methods for this. I am seeking guidance on what can be done in the given situation. I thought platform driver is one option to get this feature enabled in kernel.
+
+- Brijesh
+
+> 	Arnd
+> 
