@@ -1,61 +1,45 @@
-From: Arnd Bergmann <arnd@arndb.de>
+From: Brijesh Singh <brijesh.singh@amd.com>
 Subject: Re: [PATCH v2] ata: add AMD Seattle platform driver
-Date: Mon, 01 Feb 2016 21:14:17 +0100
-Message-ID: <5709817.yQT8N3CaLj@wuerfel>
-References: <1452789071-4090-1-git-send-email-brijesh.singh@amd.com> <3904852.c3HykPsQQ2@wuerfel> <56AFAA46.6090403@amd.com>
+Date: Mon, 1 Feb 2016 16:15:59 -0600
+Message-ID: <56AFD91F.4030008@amd.com>
+References: <1452789071-4090-1-git-send-email-brijesh.singh@amd.com>
+ <3904852.c3HykPsQQ2@wuerfel> <56AFAA46.6090403@amd.com>
+ <5709817.yQT8N3CaLj@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.73]:57748 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753209AbcBAUOh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Feb 2016 15:14:37 -0500
-In-Reply-To: <56AFAA46.6090403@amd.com>
+Received: from mail-bn1bon0082.outbound.protection.outlook.com ([157.56.111.82]:18688
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753880AbcBAWSg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 1 Feb 2016 17:18:36 -0500
+In-Reply-To: <5709817.yQT8N3CaLj@wuerfel>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brijesh Singh <brijesh.singh@amd.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, hdegoede@redhat.com, linux-ide@vger.kernel.org, Graeme Gregory <graeme@xora.org.uk>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: brijesh.singh@amd.com, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, hdegoede@redhat.com, linux-ide@vger.kernel.org, Graeme Gregory <graeme@xora.org.uk>
 
-On Monday 01 February 2016 12:56:06 Brijesh Singh wrote:
-> On 01/29/2016 03:22 PM, Arnd Bergmann wrote:
-> > 
-> > For the ACPI case, I still think that an AML call from the AHCI driver
-> > is the most logical solution. You mentioned that you believe that calling
-> > into the AML interpreter up to 100 times per second is a noticeable
-> > overhead, but I doubt that and would like to see actual number backing
-> > that up. Note that most of the time, the status of the LEDs won't even
-> > change, so the driver does not have to call into the AML while I/O
-> > is in progress, or while it is stopped, only for the transition or in
-> > case of locate and fault events that should be extremely rare.
-> >
-> During disk activity ahci_sw_activity_blink() is called based on timer expiration (~100ms).
-> I just enabled the function profiler for 'dd if=/dev/zero of=/root/tmp bs=1M count=4096' and see the output below. The function was called 37 times in 2.5s
->  
-> #echo 1 > function_profile_enabled
-> 
-> #dd if=/dev/zero of=/root/tempfile bs=1M count=4096
-> 4096+0 records in
-> 4096+0 records out
-> 4294967296 bytes (4.3 GB) copied, 2.57334 s, 1.7 GB/s
-> 
-> #echo 0 > function_profile_enabled
-> 
-> #cat trace_stat/*
-> Function                               Hit    Time            Avg             s^2
-> --------                               ---    ----            ---             ---
-> seattle_transmit_led_message            37    25.088 us       0.678 us        0.050 us    
-> 
-> I am not debating on your AML call recommendation, it sounds like a good idea however BIOS is already released hence its bit late to add AML methods for this. I am seeking guidance on what can be done in the given situation. I thought platform driver is one option to get this feature enabled in kernel.
+Hi,
 
-This is where we really need the ACPI maintainers to explain the
-general policy for dealing with firmware updates.
+> 
+> This is where we really need the ACPI maintainers to explain the
+> general policy for dealing with firmware updates.
+> 
+> I would assume that adding the feature in a later firmware version
+> is a compatible change, and the feature is non-essential (the
+> device will work fine with the generic SATA driver, except
+> the LEDs don't blink), so it's not a big deal, it's just what
+> you get for having the firmware shipped before the driver is
+> reviewed (don't do that).
+> 
 
-I would assume that adding the feature in a later firmware version
-is a compatible change, and the feature is non-essential (the
-device will work fine with the generic SATA driver, except
-the LEDs don't blink), so it's not a big deal, it's just what
-you get for having the firmware shipped before the driver is
-reviewed (don't do that).
+Agreed, the driver should have been reviewed earlier. And now changes in firmware will also require
+them changing other OSes drivers.
 
-	Arnd
+Just speaking my mind, maybe server folks will be fine without activity LED but I think "locate" and "fault" LEDs is needed.
+
+-Brijesh
+
+> 	Arnd
+> 
