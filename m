@@ -1,54 +1,61 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: Re: [PATCH v2 1/3] ata: Remove the AHCI_HFLAG_EDGE_IRQ support from libahci.
-Date: Mon, 1 Feb 2016 11:45:00 -0800
-Message-ID: <CAOHikRBbTafF68qF9n+HNo4p6bwAShZtObw8sPDe45QmG0Xxiw@mail.gmail.com>
-References: <1453888197-11368-1-git-send-email-stripathi@apm.com>
-	<1453888197-11368-2-git-send-email-stripathi@apm.com>
-	<20160131113249.GW32380@htj.duckdns.org>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v2] ata: add AMD Seattle platform driver
+Date: Mon, 01 Feb 2016 21:14:17 +0100
+Message-ID: <5709817.yQT8N3CaLj@wuerfel>
+References: <1452789071-4090-1-git-send-email-brijesh.singh@amd.com> <3904852.c3HykPsQQ2@wuerfel> <56AFAA46.6090403@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yk0-f178.google.com ([209.85.160.178]:33489 "EHLO
-	mail-yk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753163AbcBATpB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Feb 2016 14:45:01 -0500
-Received: by mail-yk0-f178.google.com with SMTP id z13so60836140ykd.0
-        for <linux-ide@vger.kernel.org>; Mon, 01 Feb 2016 11:45:00 -0800 (PST)
-In-Reply-To: <20160131113249.GW32380@htj.duckdns.org>
+Received: from mout.kundenserver.de ([217.72.192.73]:57748 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753209AbcBAUOh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Feb 2016 15:14:37 -0500
+In-Reply-To: <56AFAA46.6090403@amd.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Olof Johansson <olof@lixom.net>, Arnd Bergmann <arnd@arndb.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, Mark Langsdorf <mlangsdo@redhat.com>, Jon Masters <jcm@redhat.com>, patches <patches@apm.com>, Suman Tripathi <svtripathi@gmail.com>
+To: Brijesh Singh <brijesh.singh@amd.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, hdegoede@redhat.com, linux-ide@vger.kernel.org, Graeme Gregory <graeme@xora.org.uk>
 
-On Sun, Jan 31, 2016 at 3:32 AM, Tejun Heo <htejun@gmail.com> wrote:
-> On Wed, Jan 27, 2016 at 03:19:55PM +0530, Suman Tripathi wrote:
->> This patch removes the AHCI_HFLAG_EDGE_IRQ support from libahci.
->> The upcoming patches will have the flexibility to override
->> irq handlers in the LLD's. Controller's implementing a EDGE trigger
->> latch can implement their own interrupt handler inside the driver.
->>
->> Signed-off-by: Suman Tripathi <stripathi@apm.com>
->
-> Shouldn't this patch come after the irq override is in place?
->
-> 1. introduce irq override.
->
-> 2. remove AHCI_HFLAG_EDGE_IRQ by moving the edge triggered handler to
->    ahci_xgene.
->
-> 3. Update xgene irq handler to address the erratum.
+On Monday 01 February 2016 12:56:06 Brijesh Singh wrote:
+> On 01/29/2016 03:22 PM, Arnd Bergmann wrote:
+> > 
+> > For the ACPI case, I still think that an AML call from the AHCI driver
+> > is the most logical solution. You mentioned that you believe that calling
+> > into the AML interpreter up to 100 times per second is a noticeable
+> > overhead, but I doubt that and would like to see actual number backing
+> > that up. Note that most of the time, the status of the LEDs won't even
+> > change, so the driver does not have to call into the AML while I/O
+> > is in progress, or while it is stopped, only for the transition or in
+> > case of locate and fault events that should be extremely rare.
+> >
+> During disk activity ahci_sw_activity_blink() is called based on timer expiration (~100ms).
+> I just enabled the function profiler for 'dd if=/dev/zero of=/root/tmp bs=1M count=4096' and see the output below. The function was called 37 times in 2.5s
+>  
+> #echo 1 > function_profile_enabled
+> 
+> #dd if=/dev/zero of=/root/tempfile bs=1M count=4096
+> 4096+0 records in
+> 4096+0 records out
+> 4294967296 bytes (4.3 GB) copied, 2.57334 s, 1.7 GB/s
+> 
+> #echo 0 > function_profile_enabled
+> 
+> #cat trace_stat/*
+> Function                               Hit    Time            Avg             s^2
+> --------                               ---    ----            ---             ---
+> seattle_transmit_led_message            37    25.088 us       0.678 us        0.050 us    
+> 
+> I am not debating on your AML call recommendation, it sounds like a good idea however BIOS is already released hence its bit late to add AML methods for this. I am seeking guidance on what can be done in the given situation. I thought platform driver is one option to get this feature enabled in kernel.
 
-Thought of remove the AHCI_HFLAG_EDGE entirely first because we don't
-require it . Then implement the irq override capability.
->
-> Thanks.
->
-> --
-> tejun
+This is where we really need the ACPI maintainers to explain the
+general policy for dealing with firmware updates.
 
+I would assume that adding the feature in a later firmware version
+is a compatible change, and the feature is non-essential (the
+device will work fine with the generic SATA driver, except
+the LEDs don't blink), so it's not a big deal, it's just what
+you get for having the firmware shipped before the driver is
+reviewed (don't do that).
 
-
--- 
-Thanks,
-with regards,
-Suman Tripathi
+	Arnd
