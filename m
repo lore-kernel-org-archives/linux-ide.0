@@ -1,74 +1,126 @@
-From: Brijesh Singh <brijesh.singh@amd.com>
-Subject: Re: [PATCH v2] ata: add AMD Seattle platform driver
-Date: Tue, 2 Feb 2016 12:37:58 -0600
-Message-ID: <56B0F786.9010504@amd.com>
-References: <1452789071-4090-1-git-send-email-brijesh.singh@amd.com>
- <5709817.yQT8N3CaLj@wuerfel> <56AFD91F.4030008@amd.com>
- <4743985.XZ7D12RurV@wuerfel>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v6] SATA: OCTEON: support SATA on OCTEON platform
+Date: Tue, 02 Feb 2016 21:48:45 +0100
+Message-ID: <1930324.vU65IL0x0g@wuerfel>
+References: <1454437485-48009-1-git-send-email-Zubair.Kakakhel@imgtec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bn1bon0096.outbound.protection.outlook.com ([157.56.111.96]:36352
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754894AbcBBSke (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 2 Feb 2016 13:40:34 -0500
-In-Reply-To: <4743985.XZ7D12RurV@wuerfel>
+Received: from mout.kundenserver.de ([212.227.126.133]:53240 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932934AbcBBUtF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Feb 2016 15:49:05 -0500
+In-Reply-To: <1454437485-48009-1-git-send-email-Zubair.Kakakhel@imgtec.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: brijesh.singh@amd.com, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, hdegoede@redhat.com, linux-ide@vger.kernel.org, Graeme Gregory <graeme@xora.org.uk>
+To: Zubair Lutfullah Kakakhel <Zubair.Kakakhel@imgtec.com>
+Cc: tj@kernel.org, hdegoede@redhat.com, david.daney@cavium.com, aleksey.makarov@caviumnetworks.com, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Hi,
+On Tuesday 02 February 2016 18:24:45 Zubair Lutfullah Kakakhel wrote:
+> diff --git a/Documentation/devicetree/bindings/mips/cavium/sata-uctl.txt b/Documentation/devicetree/bindings/mips/cavium/sata-uctl.txt
+> new file mode 100644
+> index 0000000..3bd3c2f
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/mips/cavium/sata-uctl.txt
+> @@ -0,0 +1,42 @@
+> +* UCTL SATA controller glue
+> +
+> +UCTL is the bridge unit between the I/O interconnect (an internal bus)
+> +and the SATA AHCI host controller (UAHC). It performs the following functions:
+> +	- provides interfaces for the applications to access the UAHC AHCI
+> +	  registers on the CN71XX I/O space.
+> +	- provides a bridge for UAHC to fetch AHCI command table entries and data
+> +	  buffers from Level 2 Cache.
+> +	- posts interrupts to the CIU.
+> +	- contains registers that:
+> +		- control the behavior of the UAHC
+> +		- control the clock/reset generation to UAHC
+> +		- control endian swapping for all UAHC registers and DMA accesses
+>
 
-On 02/02/2016 08:08 AM, Arnd Bergmann wrote:
-> On Monday 01 February 2016 16:15:59 Brijesh Singh wrote:
->>>
->>> This is where we really need the ACPI maintainers to explain the
->>> general policy for dealing with firmware updates.
->>>
->>> I would assume that adding the feature in a later firmware version
->>> is a compatible change, and the feature is non-essential (the
->>> device will work fine with the generic SATA driver, except
->>> the LEDs don't blink), so it's not a big deal, it's just what
->>> you get for having the firmware shipped before the driver is
->>> reviewed (don't do that).
->>>
->>
->> Agreed, the driver should have been reviewed earlier. And now changes in firmware will also require
->> them changing other OSes drivers.
-> 
-> Can you explain that? I would expect the addition of some AML methods
-> to be a compatible change.
-> 
+Typically we treat those special registers as part of the device itself
+and have a single device node for the AHCI controller and that one.
 
-current DSDT entry looks like this:
+What is your reason for doing it differently here?
 
-Device (SATA0)
-{
-.....
+> index 04975b8..6bc1de6 100644
+> --- a/drivers/ata/ahci_platform.c
+> +++ b/drivers/ata/ahci_platform.c
+> @@ -76,6 +76,8 @@ static const struct of_device_id ahci_of_match[] = {
+>  	{ .compatible = "ibm,476gtr-ahci", },
+>  	{ .compatible = "snps,dwc-ahci", },
+>  	{ .compatible = "hisilicon,hisi-ahci", },
+> +	{ .compatible = "fsl,qoriq-ahci", },
+> +	{ .compatible = "cavium,octeon-7130-ahci", },
+>  	{},
 
- Name(_CRS, ResourceTemplate()
- {
-   Memory32Fixed(ReadWrite, 0xE03000000, 0x000010000)  /* SATA block address */
-   Interrupt(ResourceConsumer, Level, ActiveHigh Exclusive,,,) { 387}
-   Memory32Fixed(ReadWrite, 0xE00000078, 1)  /* SGPIO register */
-}
-  
-......
-}
+The qoriq-ahci addition seems misplaced in this patch. Maybe split
+that out into a separate patch?
 
-Windows driver folks were okay to look at second resource field to map the SGPIO register and program the
-registers to blink the LEDs. I think as per ACPI spec, its legal to pass more than one block in resource
-template and since AML method is not mandatory for non standard enclosure management hence its entirely
-possible that some BIOS vendors may not implement it at all. But if they implement and decide
-to expose either AML method or register map but not both then Windows driver may break.
+> +/**
+> + * cvmx_sata_uctl_shim_cfg
+> + * from cvmx-sata-defs.h
+> + *
+> + * Accessible by: only when A_CLKDIV_EN
+> + * Reset by: IOI reset (srst_n) or SATA_UCTL_CTL[SATA_UCTL_RST]
+> + * This register allows configuration of various shim (UCTL) features.
+> + * Fields XS_NCB_OOB_* are captured when there are no outstanding OOB errors
+> + * indicated in INTSTAT and a new OOB error arrives.
+> + * Fields XS_BAD_DMA_* are captured when there are no outstanding DMA errors
+> + * indicated in INTSTAT and a new DMA error arrives.
+> + */
+> +union cvmx_sata_uctl_shim_cfg {
+> +	uint64_t u64;
+> +	struct cvmx_sata_uctl_shim_cfg_s {
+> +	/*
+> +	 * Read/write error log for out-of-bound UAHC register access.
+> +	 * 0 = read, 1 = write.
+> +	 */
+> +	__BITFIELD_FIELD(uint64_t xs_ncb_oob_wrn               : 1,
+> +	__BITFIELD_FIELD(uint64_t reserved_57_62               : 6,
+> +	/*
 
-I believe most of BIOS vendors are using above DSDT block for SATA and by implementing the platform driver
-we could enable this feature right away in Linux OS. We do prefer to use generic driver however given the current situation platform driver seems a reasonable choice. I wish SoC designer had implemented the full 
-enclosure management per SATA spec.
+Try to avoid bitfields when defining structures that interact with
+the hardware, bitfields often cause problems with mixed-endian
+environments and don't make this easier to understand.
 
+> +static int ahci_octeon_probe(struct platform_device *pdev)
+> +{
+> +	union cvmx_sata_uctl_shim_cfg shim_cfg;
+> +	struct device *dev = &pdev->dev;
+> +	struct device_node *node = dev->of_node;
+> +	struct resource *res;
+> +	void __iomem *base;
+> +	int ret;
+> +
+> +	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+> +	if (!res) {
+> +		dev_err(&pdev->dev, "Platform resource[0] is missing\n");
+> +		return -ENODEV;
+> +	}
+> +
+> +	base = devm_ioremap_resource(&pdev->dev, res);
+> +	if (IS_ERR(base))
+> +		return PTR_ERR(base);
+> +
+> +	/* set-up endian mode */
+> +	shim_cfg.u64 = cvmx_read_csr(
+> +		(__force uint64_t)base + CVMX_SATA_UCTL_SHIM_CFG);
+> +#ifdef __BIG_ENDIAN
+> +	shim_cfg.s.dma_endian_mode = 1;
+> +	shim_cfg.s.csr_endian_mode = 1;
+> +#else
+> +	shim_cfg.s.dma_endian_mode = 0;
+> +	shim_cfg.s.csr_endian_mode = 0;
+> +#endif
+> +	shim_cfg.s.dma_read_cmd = 1; /* No allocate L2C */
+> +	cvmx_write_csr(
+> +		(__force uint64_t)base + CVMX_SATA_UCTL_SHIM_CFG, shim_cfg.u64);
+> +
 
-> 	Arnd
-> 
+Maybe add a helper function around cvmx_write_csr() that
+allows you to write to an __iomem address? Drivers should
+generally not need to use __force.
+
+	Arnd
