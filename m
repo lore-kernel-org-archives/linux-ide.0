@@ -1,56 +1,79 @@
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH v2 08/12] devicetree: bindings: add DT binding for the
- Marvell Armada 3700 SoC family
-Date: Wed, 3 Feb 2016 21:38:25 +0100
-Message-ID: <20160203213825.4fa6a0ef@free-electrons.com>
-References: <1454524889-9207-1-git-send-email-gregory.clement@free-electrons.com>
-	<1454524889-9207-9-git-send-email-gregory.clement@free-electrons.com>
+From: Gerhard Pircher <gerhard_pircher@gmx.net>
+Subject: Re: [RFT PATCH] powerpc: convert amigaone_defconfig to use libata
+ PATA drivers
+Date: Wed, 3 Feb 2016 22:17:51 +0100
+Message-ID: <56B26E7F.70307@gmx.net>
+References: <1454514630-29269-1-git-send-email-b.zolnierkie@samsung.com>
+ <1454514630-29269-12-git-send-email-b.zolnierkie@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1454524889-9207-9-git-send-email-gregory.clement@free-electrons.com>
+In-Reply-To: <1454514630-29269-12-git-send-email-b.zolnierkie@samsung.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Gregory CLEMENT <gregory.clement@free-electrons.com>
-Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, arm@kernel.org, Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, Jonathan Corbet <corbet@lwn.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, linux-serial@vger.kernel.org, Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Lior Amsalem <alior@marvell.com>, Nadav Haklai <nadavh@marvell.com>, Omri Itach <omrii@marvell.com>
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linuxppc-dev@lists.ozlabs.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Hello,
-
-On Wed,  3 Feb 2016 19:41:25 +0100, Gregory CLEMENT wrote:
-> The Marvell Armada 3700 is a family of ARMv8 CA53 SoCs. This commit
-> introduces the Device Tree binding that documents the top-level
-> compatible strings for Armada 3700 based platforms.
+Am 2016-02-03 um 16:50 schrieb Bartlomiej Zolnierkiewicz:
+> IDE subsystem has been deprecated since 2009 and the majority
+> (if not all) of Linux distributions have switched to use
+> libata for ATA support exclusively.  However there are still
+> some users (mostly old or/and embedded non-x86 systems) that
+> have not converted from using IDE subsystem to libata PATA
+> drivers.  This doesn't seem to be good thing in the long-term
+> for Linux as while there is less and less PATA systems left
+> in use:
 > 
-> Signed-off-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
+> * testing efforts are divided between two subsystems
+> 
+> * having duplicate drivers for same hardware confuses users
+> 
+> This patch converts amigaone_defconfig to use libata PATA
+> drivers.
+> 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 > ---
->  .../devicetree/bindings/arm/marvell/armada-37xx.txt      | 16 ++++++++++++++++
->  1 file changed, 16 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/arm/marvell/armada-37xx.txt
+> Build tested only.
+> If you have affected hardware please test.  Thank you.
 > 
-> diff --git a/Documentation/devicetree/bindings/arm/marvell/armada-37xx.txt b/Documentation/devicetree/bindings/arm/marvell/armada-37xx.txt
-> new file mode 100644
-> index 000000000000..17e90e8b5f76
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/arm/marvell/armada-37xx.txt
-> @@ -0,0 +1,16 @@
-> +Marvell Armada 37xx Platforms Device Tree Bindings
-> +--------------------------------------------------
-> +
-> +Boards using a SoC of the Marvell Armada 37xx family must carry the
-> +following root node property:
-> +
-> + - compatible: must contain "marvell,armada3710"
+>  arch/powerpc/configs/amigaone_defconfig | 10 ++++------
+>  1 file changed, 4 insertions(+), 6 deletions(-)
+> 
+> diff --git a/arch/powerpc/configs/amigaone_defconfig b/arch/powerpc/configs/amigaone_defconfig
+> index 84f1b41..55a4929 100644
+> --- a/arch/powerpc/configs/amigaone_defconfig
+> +++ b/arch/powerpc/configs/amigaone_defconfig
+> @@ -46,12 +46,6 @@ CONFIG_PARPORT_PC_FIFO=y
+>  CONFIG_BLK_DEV_FD=y
+>  CONFIG_BLK_DEV_LOOP=y
+>  CONFIG_BLK_DEV_RAM=y
+> -CONFIG_IDE=y
+> -CONFIG_BLK_DEV_IDECD=y
+> -# CONFIG_IDEPCI_PCIBUS_ORDER is not set
+> -CONFIG_BLK_DEV_GENERIC=y
+> -CONFIG_BLK_DEV_SIIMAGE=y
+> -CONFIG_BLK_DEV_VIA82CXXX=y
+>  CONFIG_SCSI=y
+>  CONFIG_BLK_DEV_SD=y
+>  CONFIG_CHR_DEV_ST=y
+> @@ -62,6 +56,10 @@ CONFIG_SCSI_CONSTANTS=y
+>  CONFIG_SCSI_SYM53C8XX_2=y
+>  CONFIG_SCSI_SYM53C8XX_DMA_ADDRESSING_MODE=0
+>  # CONFIG_SCSI_SYM53C8XX_MMIO is not set
+> +CONFIG_ATA=y
+> +CONFIG_PATA_SIL680=y
+> +CONFIG_PATA_VIA=y
+> +CONFIG_ATA_GENERIC=y
+>  CONFIG_NETDEVICES=y
+>  CONFIG_VORTEX=y
+>  CONFIG_8139CP=y
+> 
+Thanks for cleaning up the defconfig file!
 
-Are we sure at this point that the 3720 is a strict super-set of the
-3710 ?
+libata drivers work fine on the amigaone platform (tested on all three
+first-gen AmigaOne machines). BTW: could it be that CONFIG_ATA_SFF=y
+and CONFIG_ATA_BMDMA=y are missing in the patch?
 
-If that's not the case, then it would be somewhat weird for a platform
-using the 3720 platform to carry the marvell,armada3710 compatible
-string, no?
-
-Thomas
--- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+br,
+Gerhard
