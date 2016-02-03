@@ -1,8 +1,8 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RFT PATCH] powerpc: convert ppc6xx_defconfig to use libata PATA
+Subject: [RFT PATCH] powerpc: convert pseries_defconfig to use libata PATA
  drivers
-Date: Wed, 03 Feb 2016 16:50:27 +0100
-Message-ID: <1454514630-29269-21-git-send-email-b.zolnierkie@samsung.com>
+Date: Wed, 03 Feb 2016 16:50:29 +0100
+Message-ID: <1454514630-29269-23-git-send-email-b.zolnierkie@samsung.com>
 References: <1454514630-29269-1-git-send-email-b.zolnierkie@samsung.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-reply-to: <1454514630-29269-1-git-send-email-b.zolnierkie@samsung.com>
@@ -24,7 +24,7 @@ in use:
 
 * having duplicate drivers for same hardware confuses users
 
-This patch converts ppc6xx_defconfig to use libata PATA
+This patch converts pseries_defconfig to use libata PATA
 drivers.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
@@ -32,42 +32,33 @@ Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 Build tested only.
 If you have affected hardware please test.  Thank you.
 
- arch/powerpc/configs/ppc6xx_defconfig | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
+ arch/powerpc/configs/pseries_defconfig | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/arch/powerpc/configs/ppc6xx_defconfig b/arch/powerpc/configs/ppc6xx_defconfig
-index e5d2c3d..0d93067 100644
---- a/arch/powerpc/configs/ppc6xx_defconfig
-+++ b/arch/powerpc/configs/ppc6xx_defconfig
-@@ -378,13 +378,6 @@ CONFIG_EEPROM_AT24=m
- CONFIG_EEPROM_LEGACY=m
- CONFIG_EEPROM_MAX6875=m
- CONFIG_EEPROM_93CX6=m
+diff --git a/arch/powerpc/configs/pseries_defconfig b/arch/powerpc/configs/pseries_defconfig
+index 36871a4..9b1bc2a 100644
+--- a/arch/powerpc/configs/pseries_defconfig
++++ b/arch/powerpc/configs/pseries_defconfig
+@@ -89,10 +89,6 @@ CONFIG_BLK_DEV_NBD=m
+ CONFIG_BLK_DEV_RAM=y
+ CONFIG_BLK_DEV_RAM_SIZE=65536
+ CONFIG_VIRTIO_BLK=m
 -CONFIG_IDE=y
--CONFIG_BLK_DEV_IDECD=m
--CONFIG_IDE_TASK_IOCTL=y
--# CONFIG_IDEPCI_PCIBUS_ORDER is not set
+-CONFIG_BLK_DEV_IDECD=y
 -CONFIG_BLK_DEV_GENERIC=y
--CONFIG_BLK_DEV_IDE_PMAC=y
--CONFIG_BLK_DEV_IDE_PMAC_ATA100FIRST=y
- CONFIG_RAID_ATTRS=m
+-CONFIG_BLK_DEV_AMD74XX=y
  CONFIG_BLK_DEV_SD=y
- CONFIG_CHR_DEV_ST=m
-@@ -411,13 +404,14 @@ CONFIG_ATA=y
- CONFIG_SATA_FSL=m
- CONFIG_PDC_ADMA=m
- CONFIG_ATA_PIIX=m
-+CONFIG_PATA_MACIO=y
- CONFIG_PATA_MPC52xx=m
- CONFIG_PATA_OPTIDMA=m
- CONFIG_PATA_SCH=m
- CONFIG_PATA_VIA=m
- CONFIG_PATA_PLATFORM=m
- CONFIG_PATA_OF_PLATFORM=m
--CONFIG_ATA_GENERIC=m
+ CONFIG_CHR_DEV_ST=y
+ CONFIG_BLK_DEV_SR=y
+@@ -119,7 +115,8 @@ CONFIG_SCSI_DH_RDAC=m
+ CONFIG_SCSI_DH_ALUA=m
+ CONFIG_ATA=y
+ CONFIG_SATA_AHCI=y
+-# CONFIG_ATA_SFF is not set
++CONFIG_PATA_AMD=y
 +CONFIG_ATA_GENERIC=y
  CONFIG_MD=y
  CONFIG_BLK_DEV_MD=y
- CONFIG_MD_LINEAR=m
+ CONFIG_MD_LINEAR=y
 -- 
 1.9.1
