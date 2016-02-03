@@ -1,64 +1,145 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RFT PATCH] powerpc/85xx: convert tqm8541_defconfig to use libata PATA
- drivers
-Date: Wed, 03 Feb 2016 16:50:12 +0100
-Message-ID: <1454514630-29269-6-git-send-email-b.zolnierkie@samsung.com>
-References: <1454514630-29269-1-git-send-email-b.zolnierkie@samsung.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:33645 "EHLO
-	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755919AbcBCPwe (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Feb 2016 10:52:34 -0500
-In-reply-to: <1454514630-29269-1-git-send-email-b.zolnierkie@samsung.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Zubair Lutfullah Kakakhel <Zubair.Kakakhel@imgtec.com>
+Subject: Re: [PATCH v6] SATA: OCTEON: support SATA on OCTEON platform
+Date: Wed, 3 Feb 2016 16:02:05 +0000
+Message-ID: <56B2247D.5040501@imgtec.com>
+References: <1454437485-48009-1-git-send-email-Zubair.Kakakhel@imgtec.com>
+ <2782231.XGO9cUTm7n@wuerfel> <56B21250.5050807@imgtec.com>
+ <1725737.t6I7PsvPbL@wuerfel>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1725737.t6I7PsvPbL@wuerfel>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: tj@kernel.org, hdegoede@redhat.com, david.daney@cavium.com, aleksey.makarov@caviumnetworks.com, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linuxppc-dev@lists.ozlabs.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com, Scott Wood <oss@buserror.net>, Kumar Gala <galak@kernel.crashing.org>
 
-IDE subsystem has been deprecated since 2009 and the majority
-(if not all) of Linux distributions have switched to use
-libata for ATA support exclusively.  However there are still
-some users (mostly old or/and embedded non-x86 systems) that
-have not converted from using IDE subsystem to libata PATA
-drivers.  This doesn't seem to be good thing in the long-term
-for Linux as while there is less and less PATA systems left
-in use:
+Hi,
 
-* testing efforts are divided between two subsystems
+On 03/02/16 15:31, Arnd Bergmann wrote:
+> On Wednesday 03 February 2016 14:44:32 Zubair Lutfullah Kakakhel wrot=
+e:
+>>
+>> Possible in the example.
+>>
+>> I'll update the example to
+>>
+>>          uctl@118006c000000 {
+>>                  compatible =3D "cavium,octeon-7130-sata-uctl";
+>>                  reg =3D <0x11800 0x6c000000 0x0 0x100>;
+>>                  ranges; /* Direct mapping */
+>>                  dma-ranges;
+>>                  #address-cells =3D <1>;
+>>                  #size-cells =3D <2>;
+>>
+>>                  sata: sata@0 {
+>>                          compatible =3D "cavium,octeon-7130-ahci";
+>>                          reg =3D <0x16c00 0x00000000 0x0 0x200>;
+>>                          interrupt-parent =3D <&cibsata>;
+>>                          interrupts =3D <2 4>; /* Bit: 2, level */
+>>                  };
+>>          };
+>
+> Sorry, I should have been clearer. What I meant is
+>
+>
+>           uctl@118006c000000 {
+>                  compatible =3D "cavium,octeon-7130-sata-uctl";
+>                  reg =3D <0x11800 0x6c000000 0x0 0x100>;
+>                  ranges =3D <0   0x16c00 0x00000000   0xffffffff>;
+>                  dma-ranges;
+>                  #address-cells =3D <1>;
+>                  #size-cells =3D <1>;
+>
+>                  sata: sata@0 {
+>                          compatible =3D "cavium,octeon-7130-ahci";
+>                          reg =3D <0x00000000 0x200>;
+>                          interrupt-parent =3D <&cibsata>;
+>                          interrupts =3D <2 4>; /* Bit: 2, level */
+>                  };
+>          };
+>
+>
+> However, I realized that this would break the dma-ranges, if the
+> child device is indeed 64-bit DMA capable. When #address-cells and/or
+> #size-cells don't match between parent and child, you have to provide
+> non-empty ranges as well as dma-ranges, and the dma-ranges for
+> #address-cells=3D<1> would imply only supporting 32-bit DMA.
+>
+>
+> It could still be
+>
+>           uctl@118006c000000 {
+>                  compatible =3D "cavium,octeon-7130-sata-uctl";
+>                  reg =3D <0x11800 0x6c000000 0x0 0x100>;
+>                  ranges =3D <0 0  0x16c00 0x00000000   1 0>;
+>                  dma-ranges;
+>                  #address-cells =3D <1>;
+>                  #size-cells =3D <1>;
+>
+>                  sata: sata@0 {
+>                          compatible =3D "cavium,octeon-7130-ahci";
+>                          reg =3D <0 0  0x200>;
+>                          interrupt-parent =3D <&cibsata>;
+>                          interrupts =3D <2 4>; /* Bit: 2, level */
+>                  };
+>          };
+>
+> to have a ranges property that shows we are only translating one 4GB
+> segment of MMIO addresses into the child, but that the child has DMA
+> access to the entire CPU address space (including 64-bit wide RAM
+> as well as all MMIO).
+>
 
-* having duplicate drivers for same hardware confuses users
+The above might seem simple to the learned eye.
 
-This patch converts tqm8541_defconfig to use libata PATA
-drivers.
+But it really convolutes my head.
 
-Cc: Scott Wood <oss@buserror.net>
-Cc: Kumar Gala <galak@kernel.crashing.org>
-Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
----
-Build tested only.
-If you have affected hardware please test.  Thank you.
+The original binding from Cavium indicates direct mapping.
 
- arch/powerpc/configs/85xx/tqm8541_defconfig | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+Given the restricted child device register range, your restricted range=
+s might make sense.
 
-diff --git a/arch/powerpc/configs/85xx/tqm8541_defconfig b/arch/powerpc/configs/85xx/tqm8541_defconfig
-index bb402b3..c9b0028 100644
---- a/arch/powerpc/configs/85xx/tqm8541_defconfig
-+++ b/arch/powerpc/configs/85xx/tqm8541_defconfig
-@@ -30,9 +30,10 @@ CONFIG_MTD_CFI_AMDSTD=y
- CONFIG_BLK_DEV_LOOP=y
- CONFIG_BLK_DEV_RAM=y
- CONFIG_BLK_DEV_RAM_SIZE=32768
--CONFIG_IDE=y
--CONFIG_BLK_DEV_GENERIC=y
--CONFIG_BLK_DEV_VIA82CXXX=y
-+CONFIG_BLK_DEV_SD=y
-+CONFIG_ATA=y
-+CONFIG_PATA_VIA=y
-+CONFIG_ATA_GENERIC=y
- CONFIG_NETDEVICES=y
- CONFIG_GIANFAR=y
- CONFIG_E100=y
--- 
-1.9.1
+But I can't make sense of the mappings in the manual I have.
 
+Perhaps David Daney can give more insight on what the hardware implemen=
+ts.
+
+=C2=AF\_(=E3=83=84)_/=C2=AF
+    |__|
+    /  \
+
+Keep in mind. this sata-uctl might seem like a bus driver
+
+But it is only sitting in front of a sata ahci block.
+
+There is little need for over-engineering address ranges.
+
+Hence, I find the original binding simpler and easier to understand whe=
+n looking at the hardware manual
+
++	uctl@118006c000000 {
++		compatible =3D "cavium,octeon-7130-sata-uctl";
++		reg =3D <0x11800 0x6c000000 0x0 0x100>;
++		ranges; /* Direct mapping */
++		dma-ranges;
++		#address-cells =3D <2>;
++		#size-cells =3D <2>;
++
++		sata: sata@16c0000000000 {
++			compatible =3D "cavium,octeon-7130-ahci";
++			reg =3D <0x16c00 0x00000000 0x0 0x200>;
++			interrupt-parent =3D <&cibsata>;
++			interrupts =3D <2 4>; /* Bit: 2, level */
++		};
++	};
+
+Is it possible to let this example go in as is?
+
+Regards,
+ZubairLK
+
+> 	Arnd
+>
