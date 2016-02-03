@@ -1,8 +1,8 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RFT PATCH] powerpc/86xx: convert gef_ppc9a_defconfig to use libata
+Subject: [RFT PATCH] powerpc/86xx: convert gef_sbc310_defconfig to use libata
  PATA drivers
-Date: Wed, 03 Feb 2016 16:50:15 +0100
-Message-ID: <1454514630-29269-9-git-send-email-b.zolnierkie@samsung.com>
+Date: Wed, 03 Feb 2016 16:50:16 +0100
+Message-ID: <1454514630-29269-10-git-send-email-b.zolnierkie@samsung.com>
 References: <1454514630-29269-1-git-send-email-b.zolnierkie@samsung.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-reply-to: <1454514630-29269-1-git-send-email-b.zolnierkie@samsung.com>
@@ -24,7 +24,7 @@ in use:
 
 * having duplicate drivers for same hardware confuses users
 
-This patch converts gef_ppc9a_defconfig to use libata PATA
+This patch converts gef_sbc310_defconfig to use libata PATA
 drivers.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
@@ -32,14 +32,14 @@ Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 Build tested only.
 If you have affected hardware please test.  Thank you.
 
- arch/powerpc/configs/86xx/gef_ppc9a_defconfig | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ arch/powerpc/configs/86xx/gef_sbc310_defconfig | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/arch/powerpc/configs/86xx/gef_ppc9a_defconfig b/arch/powerpc/configs/86xx/gef_ppc9a_defconfig
-index 9792a2c..ca06080 100644
---- a/arch/powerpc/configs/86xx/gef_ppc9a_defconfig
-+++ b/arch/powerpc/configs/86xx/gef_ppc9a_defconfig
-@@ -76,13 +76,12 @@ CONFIG_BLK_DEV_NBD=m
+diff --git a/arch/powerpc/configs/86xx/gef_sbc310_defconfig b/arch/powerpc/configs/86xx/gef_sbc310_defconfig
+index cadc366..2efd871 100644
+--- a/arch/powerpc/configs/86xx/gef_sbc310_defconfig
++++ b/arch/powerpc/configs/86xx/gef_sbc310_defconfig
+@@ -76,14 +76,12 @@ CONFIG_BLK_DEV_NBD=m
  CONFIG_BLK_DEV_RAM=y
  CONFIG_BLK_DEV_RAM_SIZE=131072
  CONFIG_DS1682=y
@@ -49,7 +49,8 @@ index 9792a2c..ca06080 100644
  CONFIG_CHR_DEV_ST=y
  CONFIG_BLK_DEV_SR=y
  CONFIG_ATA=y
- CONFIG_SATA_SIL=y
+ CONFIG_SATA_SIL24=y
+-# CONFIG_ATA_SFF is not set
 +CONFIG_PATA_PCMCIA=y
  CONFIG_NETDEVICES=y
  CONFIG_BONDING=m
