@@ -1,22 +1,78 @@
-From: "dfbh41" <dfbh41@tL5280.com>
-Subject: Happy New Year's Day
-Date: Wed, 3 Feb 2016 18:48:50 +0800
-Message-ID: <201602031848503439819@tL5280.com>
-Reply-To: comebaby25@sohu.com
+From: Gregory CLEMENT <gregory.clement@free-electrons.com>
+Subject: Re: [PATCH 03/10] arm64: add Armada 3700 architecture entry
+Date: Wed, 03 Feb 2016 12:13:40 +0100
+Message-ID: <8737ta59nf.fsf@free-electrons.com>
+References: <1454436468-4241-1-git-send-email-gregory.clement@free-electrons.com>
+	<20160203142451.41381ff6@xhacker> <87k2mm5itx.fsf@free-electrons.com>
+	<4284367.sAeqrVzAbo@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="GB2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [103.40.102.123] ([103.40.102.123]:4770 "HELO tl5280.com"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1753050AbcBCKst (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 3 Feb 2016 05:48:49 -0500
+Received: from down.free-electrons.com ([37.187.137.238]:38846 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750874AbcBCLOl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Feb 2016 06:14:41 -0500
+In-Reply-To: <4284367.sAeqrVzAbo@wuerfel> (Arnd Bergmann's message of "Wed, 03
+	Feb 2016 10:11:18 +0100")
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide <linux-ide@vger.kernel.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Jisheng Zhang <jszhang@marvell.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, arm@kernel.org, Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, Jonathan Corbet <corbet@lwn.net>, Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org, linux-ide@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, linux-serial@vger.kernel.org, Jiri Slaby <jslaby@suse.com>, Tejun Heo <tj@kernel.org>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, linux-arm-kernel@lists.infradead.org
 
-uN/Qp9f2ysKjrLjf0Ke/qreioaMNCtPF1sq/zbunv6q3ore9yr2jrNa70OjE47XEsvrGt7nYvPy0
-yrvy1d/E48S/seq/zbuntcSy+sa3udi8/LTKo6y8tL/JtcO1vb/Nu6fQxc+ioaMNCs2ouf2+q9e8
-tqjOu9PKvP7NtrXdo6y439Cnv6q3or/Nu6ejrLPJvbu2qbWloaMNCs/q0a/H67zTUS0tUToyMDM2
-LTAxOTUxOQ0K1rG907nbv7TR3cq+uabE3A==
+Hi Arnd,
+=20
+ On mer., f=C3=A9vr. 03 2016, Arnd Bergmann <arnd@arndb.de> wrote:
+
+> On Wednesday 03 February 2016 08:55:22 Gregory CLEMENT wrote:
+>> >>=20
+>> >> diff --git a/arch/arm64/Kconfig.platforms b/arch/arm64/Kconfig.pl=
+atforms
+>> >> index 21074f674bde..7da341f7b90d 100644
+>> >> --- a/arch/arm64/Kconfig.platforms
+>> >> +++ b/arch/arm64/Kconfig.platforms
+>> >> @@ -1,5 +1,11 @@
+>> >>  menu "Platform selection"
+>> >> =20
+>> >> +config ARCH_ARMADA_3700
+>> >
+>> > Would it be better to use ARCH_MVEBU? IMHO, there will be more ARM=
+v8 SoCs
+>> > from our EBU, do we plan to add one CONFIG_ARMADA_yyzz for each So=
+C?
+>>=20
+>> Not for each SoC but for each family, yes. As we did for the other m=
+vebu
+>> SoC families.
+>>=20
+>
+> We tend to use a little more general config strings for arm64 than we=
+ have
+> for arm32. I think just using ARCH_MVEBU is fine here, no need to lis=
+t
+> the 3700 series separately.
+
+OK, for the arm32 mvebu SoC, the CONFIG_ARMADA_ were barely used, and
+CONFIG_ARCH_MVEBU is mostly use as a "depends on" and do not force
+anything.
+
+The only annoying point was with the irqchip, but thanks to the last
+series sent by Thomas irq-armada-370-xp.c won't be inconditionnaly buil=
+t
+if CONFIG_ARCH_MVEBU is selected.
+
+So OK I will use CONFIG_ARCH_MVEBU.
+
+Thanks,
+
+Gregory
+
+
+
+> 	Arnd
+
+--=20
+Gregory Clement, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
