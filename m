@@ -1,8 +1,7 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RFT PATCH] powerpc: convert storcenter_defconfig to use libata PATA
- drivers
-Date: Wed, 03 Feb 2016 16:50:30 +0100
-Message-ID: <1454514630-29269-24-git-send-email-b.zolnierkie@samsung.com>
+Subject: [RFT PATCH] powerpc: convert cell_defconfig to use libata PATA drivers
+Date: Wed, 03 Feb 2016 16:50:19 +0100
+Message-ID: <1454514630-29269-13-git-send-email-b.zolnierkie@samsung.com>
 References: <1454514630-29269-1-git-send-email-b.zolnierkie@samsung.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-reply-to: <1454514630-29269-1-git-send-email-b.zolnierkie@samsung.com>
@@ -24,35 +23,39 @@ in use:
 
 * having duplicate drivers for same hardware confuses users
 
-This patch converts storcenter_defconfig to use libata PATA
-drivers.
+This patch converts cell_defconfig to use libata PATA drivers.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
 Build tested only.
 If you have affected hardware please test.  Thank you.
 
- arch/powerpc/configs/storcenter_defconfig | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ arch/powerpc/configs/cell_defconfig | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/arch/powerpc/configs/storcenter_defconfig b/arch/powerpc/configs/storcenter_defconfig
-index b5db7df..adf7d26 100644
---- a/arch/powerpc/configs/storcenter_defconfig
-+++ b/arch/powerpc/configs/storcenter_defconfig
-@@ -37,12 +37,11 @@ CONFIG_NFTL_RW=y
- CONFIG_MTD_CFI=y
- CONFIG_MTD_CFI_AMDSTD=y
- CONFIG_MTD_PHYSMAP=y
+diff --git a/arch/powerpc/configs/cell_defconfig b/arch/powerpc/configs/cell_defconfig
+index db328e6..679edaa 100644
+--- a/arch/powerpc/configs/cell_defconfig
++++ b/arch/powerpc/configs/cell_defconfig
+@@ -108,16 +108,15 @@ CONFIG_UEVENT_HELPER_PATH="/sbin/hotplug"
+ CONFIG_BLK_DEV_LOOP=y
+ CONFIG_BLK_DEV_RAM=y
+ CONFIG_BLK_DEV_RAM_SIZE=131072
 -CONFIG_IDE=y
--CONFIG_BLK_DEV_VIA82CXXX=y
--CONFIG_SCSI=y
+-CONFIG_BLK_DEV_GENERIC=y
+-CONFIG_BLK_DEV_AEC62XX=y
+-CONFIG_BLK_DEV_SIIMAGE=y
  CONFIG_BLK_DEV_SD=y
- CONFIG_BLK_DEV_SR=y
- CONFIG_SCSI_SPI_ATTRS=y
-+CONFIG_ATA=y
-+CONFIG_PATA_VIA=y
+ CONFIG_BLK_DEV_SR=m
+ CONFIG_CHR_DEV_SG=y
+ CONFIG_ATA=y
+ CONFIG_SATA_PROMISE=y
++CONFIG_PATA_ARTOP=y
+ CONFIG_PATA_PDC2027X=m
++CONFIG_PATA_SIL680=y
++CONFIG_ATA_GENERIC=y
  CONFIG_MD=y
- CONFIG_BLK_DEV_MD=y
- CONFIG_MD_LINEAR=y
+ CONFIG_BLK_DEV_MD=m
+ CONFIG_MD_LINEAR=m
 -- 
 1.9.1
