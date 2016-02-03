@@ -1,8 +1,8 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RFT PATCH] powerpc/86xx: convert gef_sbc310_defconfig to use libata
- PATA drivers
-Date: Wed, 03 Feb 2016 16:50:16 +0100
-Message-ID: <1454514630-29269-10-git-send-email-b.zolnierkie@samsung.com>
+Subject: [RFT PATCH] powerpc: convert amigaone_defconfig to use libata PATA
+ drivers
+Date: Wed, 03 Feb 2016 16:50:18 +0100
+Message-ID: <1454514630-29269-12-git-send-email-b.zolnierkie@samsung.com>
 References: <1454514630-29269-1-git-send-email-b.zolnierkie@samsung.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-reply-to: <1454514630-29269-1-git-send-email-b.zolnierkie@samsung.com>
@@ -24,7 +24,7 @@ in use:
 
 * having duplicate drivers for same hardware confuses users
 
-This patch converts gef_sbc310_defconfig to use libata PATA
+This patch converts amigaone_defconfig to use libata PATA
 drivers.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
@@ -32,28 +32,36 @@ Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 Build tested only.
 If you have affected hardware please test.  Thank you.
 
- arch/powerpc/configs/86xx/gef_sbc310_defconfig | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ arch/powerpc/configs/amigaone_defconfig | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/arch/powerpc/configs/86xx/gef_sbc310_defconfig b/arch/powerpc/configs/86xx/gef_sbc310_defconfig
-index cadc366..2efd871 100644
---- a/arch/powerpc/configs/86xx/gef_sbc310_defconfig
-+++ b/arch/powerpc/configs/86xx/gef_sbc310_defconfig
-@@ -76,14 +76,12 @@ CONFIG_BLK_DEV_NBD=m
+diff --git a/arch/powerpc/configs/amigaone_defconfig b/arch/powerpc/configs/amigaone_defconfig
+index 84f1b41..55a4929 100644
+--- a/arch/powerpc/configs/amigaone_defconfig
++++ b/arch/powerpc/configs/amigaone_defconfig
+@@ -46,12 +46,6 @@ CONFIG_PARPORT_PC_FIFO=y
+ CONFIG_BLK_DEV_FD=y
+ CONFIG_BLK_DEV_LOOP=y
  CONFIG_BLK_DEV_RAM=y
- CONFIG_BLK_DEV_RAM_SIZE=131072
- CONFIG_DS1682=y
 -CONFIG_IDE=y
--CONFIG_BLK_DEV_IDECS=y
+-CONFIG_BLK_DEV_IDECD=y
+-# CONFIG_IDEPCI_PCIBUS_ORDER is not set
+-CONFIG_BLK_DEV_GENERIC=y
+-CONFIG_BLK_DEV_SIIMAGE=y
+-CONFIG_BLK_DEV_VIA82CXXX=y
+ CONFIG_SCSI=y
  CONFIG_BLK_DEV_SD=y
  CONFIG_CHR_DEV_ST=y
- CONFIG_BLK_DEV_SR=y
- CONFIG_ATA=y
- CONFIG_SATA_SIL24=y
--# CONFIG_ATA_SFF is not set
-+CONFIG_PATA_PCMCIA=y
+@@ -62,6 +56,10 @@ CONFIG_SCSI_CONSTANTS=y
+ CONFIG_SCSI_SYM53C8XX_2=y
+ CONFIG_SCSI_SYM53C8XX_DMA_ADDRESSING_MODE=0
+ # CONFIG_SCSI_SYM53C8XX_MMIO is not set
++CONFIG_ATA=y
++CONFIG_PATA_SIL680=y
++CONFIG_PATA_VIA=y
++CONFIG_ATA_GENERIC=y
  CONFIG_NETDEVICES=y
- CONFIG_BONDING=m
- CONFIG_DUMMY=m
+ CONFIG_VORTEX=y
+ CONFIG_8139CP=y
 -- 
 1.9.1
