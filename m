@@ -1,67 +1,278 @@
-From: Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>
-Subject: Re: [PATCH 01/10] serial: mvebu-uart: initial support for
- Armada-3700 serial port
-Date: Wed, 3 Feb 2016 17:05:07 +0000
-Message-ID: <20160203170506.GE1234@leverpostej>
-References: <1454436468-4241-1-git-send-email-gregory.clement@free-electrons.com>
- <1454436468-4241-2-git-send-email-gregory.clement@free-electrons.com>
- <20160202182842.GD29778@leverpostej>
- <87egct4trb.fsf@free-electrons.com>
+From: Zubair Lutfullah Kakakhel <Zubair.Kakakhel@imgtec.com>
+Subject: [PATCH v7] SATA: OCTEON: support SATA on OCTEON platform
+Date: Wed, 3 Feb 2016 17:35:15 +0000
+Message-ID: <1454520915-27948-1-git-send-email-Zubair.Kakakhel@imgtec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <87egct4trb.fsf-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Gregory CLEMENT <gregory.clement-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
-Cc: Jason Cooper <jason-NLaQJdtUoK4Be96aLqz0jA@public.gmane.org>, Andrew Lunn <andrew-g2DYL2Zd6BY@public.gmane.org>, Sebastian Hesselbarth <sebastian.hesselbarth-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, arm-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Catalin Marinas <catalin.marinas-5wv7dgnIgG8@public.gmane.org>, Will Deacon <will.deacon-5wv7dgnIgG8@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Jiri Slaby <jslaby-IBi9RG/b67k@public.gmane.org>, linux-serial-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Thomas Petazzoni <thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Wilson Ding <dingwei-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org>, Nadav Haklai <nadavh-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org>
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: tj@kernel.org, hdegoede@redhat.com
+Cc: david.daney@cavium.com, aleksey.makarov@caviumnetworks.com, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Zubair.Kakakhel@imgtec.com
 List-Id: linux-ide@vger.kernel.org
 
-On Wed, Feb 03, 2016 at 05:56:56PM +0100, Gregory CLEMENT wrote:
-> Hi Mark,
-> =20
->  On mar., f=C3=A9vr. 02 2016, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org> wro=
-te:
-> >> diff --git a/Documentation/kernel-parameters.txt b/Documentation/k=
-ernel-parameters.txt
-> >> index 87d40a72f6a1..198f6bd56e84 100644
-> >> --- a/Documentation/kernel-parameters.txt
-> >> +++ b/Documentation/kernel-parameters.txt
-> >> @@ -1058,6 +1058,12 @@ bytes respectively. Such letter suffixes ca=
-n also be entirely omitted.
-> >>  			A valid base address must be provided, and the serial
-> >>  			port must already be setup and configured.
-> >> =20
-> >> +		mvebu_uart,<addr>
-> >> +			Start an early, polled-mode console on an some mvebu
-> >> +			SoC (as the Armada-3700) serial port at the specified
-> >> +			address. The serial port must already be setup and
-> >> +			configured. Options are not yet supported.
-> >> +
-> >
-> > Does the the mvebu UART vary between platforms at all?
->=20
-> I am not sure to undersatnd your question.
->=20
-> If you asked about the UART used on the other mvebu SoCs then my answ=
-er
-> is: on all the other mvebu SoC until now third party IPs were used.
+From: Aleksey Makarov <aleksey.makarov@caviumnetworks.com>
 
-Ah, I hadn't realised that.
+The OCTEON SATA controller is currently found on cn71XX devices.
 
-> This one is the first one dedicated to an mevbu SoC and currently onl=
-y
-> used on Armada 3700 but I don't know what are the plan for the future
-> mvebu SoCs.
+Cc: Arnd Bergmann <arnd@arndb.de>
+Acked-by: Hans de Goede <hdegoede@redhat.com>
+Signed-off-by: David Daney <david.daney@cavium.com>
+Signed-off-by: Vinita Gupta <vgupta@caviumnetworks.com>
+Signed-off-by: Aleksey Makarov <aleksey.makarov@auriga.com>
+Signed-off-by: Zubair Lutfullah Kakakhel <Zubair.Kakakhel@imgtec.com>
 
-Given that, I think it would be better to use "armada3700_uart=3D" for
-now, given it doesn't cover all mvebu SoCs.
+---
+Changes in v7
+- Rebase to v4.5-rc2
+- Use #defines instead of __BITFIELD
+- Add sign off from Zubair
 
-Thanks,
-Mark.
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" i=
-n
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Changes in v6
+- Rebase to v4.5-rc1
+- Tested on utm8 by rhino labs. CN7130
+
+Changes in v5:
+- Sparse warnings are fixed
+- Device tree docs are improved
+
+Changes in v4:
+- The call to dma_coerce_mask_and_coherent() was removed as suggested
+  by Arnd Bergmann dma_mask and coherent_dma_mask are actually set
+  in the ahci_platform_init_host() (libahci_platform.c)
+
+Changes in v3:
+- Rebased to v4.0-rc2
+- Cosmetic changes
+
+Changes in v2:
+- The driver was rewritten as a driver for the UCTL SATA controller glue.
+  It allowed to get rid of the most changes in ahci_platform.c
+- Documentation for the device tree bindings was fixed.
+---
+ .../devicetree/bindings/ata/ahci-platform.txt      |   1 +
+ .../devicetree/bindings/mips/cavium/sata-uctl.txt  |  42 +++++++++
+ drivers/ata/Kconfig                                |   9 ++
+ drivers/ata/Makefile                               |   1 +
+ drivers/ata/ahci_platform.c                        |   1 +
+ drivers/ata/sata_octeon.c                          | 105 +++++++++++++++++++++
+ 6 files changed, 159 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/mips/cavium/sata-uctl.txt
+ create mode 100644 drivers/ata/sata_octeon.c
+
+diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+index c2340ee..3d84dca 100644
+--- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
++++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
+@@ -11,6 +11,7 @@ Required properties:
+ - compatible        : compatible string, one of:
+   - "allwinner,sun4i-a10-ahci"
+   - "hisilicon,hisi-ahci"
++  - "cavium,octeon-7130-ahci"
+   - "ibm,476gtr-ahci"
+   - "marvell,armada-380-ahci"
+   - "snps,dwc-ahci"
+diff --git a/Documentation/devicetree/bindings/mips/cavium/sata-uctl.txt b/Documentation/devicetree/bindings/mips/cavium/sata-uctl.txt
+new file mode 100644
+index 0000000..3bd3c2f
+--- /dev/null
++++ b/Documentation/devicetree/bindings/mips/cavium/sata-uctl.txt
+@@ -0,0 +1,42 @@
++* UCTL SATA controller glue
++
++UCTL is the bridge unit between the I/O interconnect (an internal bus)
++and the SATA AHCI host controller (UAHC). It performs the following functions:
++	- provides interfaces for the applications to access the UAHC AHCI
++	  registers on the CN71XX I/O space.
++	- provides a bridge for UAHC to fetch AHCI command table entries and data
++	  buffers from Level 2 Cache.
++	- posts interrupts to the CIU.
++	- contains registers that:
++		- control the behavior of the UAHC
++		- control the clock/reset generation to UAHC
++		- control endian swapping for all UAHC registers and DMA accesses
++
++Properties:
++
++- compatible: "cavium,octeon-7130-sata-uctl"
++
++  Compatibility with the cn7130 SOC.
++
++- reg: The base address of the UCTL register bank.
++
++- #address-cells, #size-cells, ranges and dma-ranges must be present and hold
++	suitable values to map all child nodes.
++
++Example:
++
++	uctl@118006c000000 {
++		compatible = "cavium,octeon-7130-sata-uctl";
++		reg = <0x11800 0x6c000000 0x0 0x100>;
++		ranges; /* Direct mapping */
++		dma-ranges;
++		#address-cells = <2>;
++		#size-cells = <2>;
++
++		sata: sata@16c0000000000 {
++			compatible = "cavium,octeon-7130-ahci";
++			reg = <0x16c00 0x00000000 0x0 0x200>;
++			interrupt-parent = <&cibsata>;
++			interrupts = <2 4>; /* Bit: 2, level */
++		};
++	};
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 861643ea..98c5215 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -215,6 +215,15 @@ config SATA_SIL24
+ 
+ 	  If unsure, say N.
+ 
++config SATA_OCTEON
++	tristate "Cavium Octeon Soc Serial ATA"
++	depends on SATA_AHCI_PLATFORM && CAVIUM_OCTEON_SOC
++	default y
++	help
++	  This option enables support for Cavium Octeon SoC Serial ATA.
++
++	  If unsure, say N.
++
+ config ATA_SFF
+ 	bool "ATA SFF support (for legacy IDE and PATA)"
+ 	default y
+diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
+index af45eff..dd6a036 100644
+--- a/drivers/ata/Makefile
++++ b/drivers/ata/Makefile
+@@ -7,6 +7,7 @@ obj-$(CONFIG_SATA_ACARD_AHCI)	+= acard-ahci.o libahci.o
+ obj-$(CONFIG_SATA_AHCI_PLATFORM) += ahci_platform.o libahci.o libahci_platform.o
+ obj-$(CONFIG_SATA_FSL)		+= sata_fsl.o
+ obj-$(CONFIG_SATA_INIC162X)	+= sata_inic162x.o
++obj-$(CONFIG_SATA_OCTEON)	+= sata_octeon.o
+ obj-$(CONFIG_SATA_SIL24)	+= sata_sil24.o
+ obj-$(CONFIG_SATA_DWC)		+= sata_dwc_460ex.o
+ obj-$(CONFIG_SATA_HIGHBANK)	+= sata_highbank.o libahci.o
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index 04975b8..4044233 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -76,6 +76,7 @@ static const struct of_device_id ahci_of_match[] = {
+ 	{ .compatible = "ibm,476gtr-ahci", },
+ 	{ .compatible = "snps,dwc-ahci", },
+ 	{ .compatible = "hisilicon,hisi-ahci", },
++	{ .compatible = "cavium,octeon-7130-ahci", },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, ahci_of_match);
+diff --git a/drivers/ata/sata_octeon.c b/drivers/ata/sata_octeon.c
+new file mode 100644
+index 0000000..4ea12e6
+--- /dev/null
++++ b/drivers/ata/sata_octeon.c
+@@ -0,0 +1,105 @@
++/*
++ * SATA glue for Cavium Octeon III SOCs.
++ *
++ *
++ * This file is subject to the terms and conditions of the GNU General Public
++ * License.  See the file "COPYING" in the main directory of this archive
++ * for more details.
++ *
++ * Copyright (C) 2010-2015 Cavium Networks
++ *
++ */
++
++#include <linux/module.h>
++#include <linux/dma-mapping.h>
++#include <linux/platform_device.h>
++#include <linux/of_platform.h>
++
++#include <asm/octeon/octeon.h>
++#include <asm/bitfield.h>
++
++#define CVMX_SATA_UCTL_SHIM_CFG		0xE8
++
++#define SATA_UCTL_ENDIAN_MODE_BIG	1
++#define SATA_UCTL_ENDIAN_MODE_LITTLE	0
++#define SATA_UCTL_ENDIAN_MODE_MASK	3
++
++#define SATA_UCTL_DMA_ENDIAN_MODE_SHIFT	8
++#define SATA_UCTL_CSR_ENDIAN_MODE_SHIFT	0
++#define SATA_UCTL_DMA_READ_CMD_SHIFT	12
++
++static int ahci_octeon_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct device_node *node = dev->of_node;
++	struct resource *res;
++	void __iomem *base;
++	u64 cfg;
++	int ret;
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	if (!res) {
++		dev_err(&pdev->dev, "Platform resource[0] is missing\n");
++		return -ENODEV;
++	}
++
++	base = devm_ioremap_resource(&pdev->dev, res);
++	if (IS_ERR(base))
++		return PTR_ERR(base);
++
++	cfg = cvmx_read_csr((uint64_t)base + CVMX_SATA_UCTL_SHIM_CFG);
++
++	cfg &= ~(SATA_UCTL_ENDIAN_MODE_MASK << SATA_UCTL_DMA_ENDIAN_MODE_SHIFT);
++	cfg &= ~(SATA_UCTL_ENDIAN_MODE_MASK << SATA_UCTL_CSR_ENDIAN_MODE_SHIFT);
++
++#ifdef __BIG_ENDIAN
++	cfg |= SATA_UCTL_ENDIAN_MODE_BIG << SATA_UCTL_DMA_ENDIAN_MODE_SHIFT;
++	cfg |= SATA_UCTL_ENDIAN_MODE_BIG << SATA_UCTL_CSR_ENDIAN_MODE_SHIFT;
++#else
++	cfg |= SATA_UCTL_ENDIAN_MODE_LITTLE << SATA_UCTL_DMA_ENDIAN_MODE_SHIFT;
++	cfg |= SATA_UCTL_ENDIAN_MODE_LITTLE << SATA_UCTL_CSR_ENDIAN_MODE_SHIFT;
++#endif
++
++	cfg |= 1 << SATA_UCTL_DMA_READ_CMD_SHIFT;
++
++	cvmx_write_csr((uint64_t)base + CVMX_SATA_UCTL_SHIM_CFG, cfg);
++
++	if (!node) {
++		dev_err(dev, "no device node, failed to add octeon sata\n");
++		return -ENODEV;
++	}
++
++	ret = of_platform_populate(node, NULL, NULL, dev);
++	if (ret) {
++		dev_err(dev, "failed to add ahci-platform core\n");
++		return ret;
++	}
++
++	return 0;
++}
++
++static int ahci_octeon_remove(struct platform_device *pdev)
++{
++	return 0;
++}
++
++static const struct of_device_id octeon_ahci_match[] = {
++	{ .compatible = "cavium,octeon-7130-sata-uctl", },
++	{},
++};
++MODULE_DEVICE_TABLE(of, octeon_ahci_match);
++
++static struct platform_driver ahci_octeon_driver = {
++	.probe          = ahci_octeon_probe,
++	.remove         = ahci_octeon_remove,
++	.driver         = {
++		.name   = "octeon-ahci",
++		.of_match_table = octeon_ahci_match,
++	},
++};
++
++module_platform_driver(ahci_octeon_driver);
++
++MODULE_LICENSE("GPL");
++MODULE_AUTHOR("Cavium, Inc. <support@cavium.com>");
++MODULE_DESCRIPTION("Cavium Inc. sata config.");
+-- 
+1.9.1
