@@ -1,7 +1,8 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [PATCH] powerpc: disable IDE subsystem in pq2fads_defconfig
-Date: Wed, 03 Feb 2016 16:50:28 +0100
-Message-ID: <1454514630-29269-22-git-send-email-b.zolnierkie@samsung.com>
+Subject: [RFT PATCH] powerpc: convert ppc6xx_defconfig to use libata PATA
+ drivers
+Date: Wed, 03 Feb 2016 16:50:27 +0100
+Message-ID: <1454514630-29269-21-git-send-email-b.zolnierkie@samsung.com>
 References: <1454514630-29269-1-git-send-email-b.zolnierkie@samsung.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-reply-to: <1454514630-29269-1-git-send-email-b.zolnierkie@samsung.com>
@@ -10,26 +11,63 @@ To: linuxppc-dev@lists.ozlabs.org, Benjamin Herrenschmidt <benh@kernel.crashing.
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com
 List-Id: linux-ide@vger.kernel.org
 
-This patch disables deprecated IDE subsystem in pq2fads_defconfig
-(no IDE host drivers are selected in this config so there is no valid
-reason to enable IDE subsystem itself).
+IDE subsystem has been deprecated since 2009 and the majority
+(if not all) of Linux distributions have switched to use
+libata for ATA support exclusively.  However there are still
+some users (mostly old or/and embedded non-x86 systems) that
+have not converted from using IDE subsystem to libata PATA
+drivers.  This doesn't seem to be good thing in the long-term
+for Linux as while there is less and less PATA systems left
+in use:
+
+* testing efforts are divided between two subsystems
+
+* having duplicate drivers for same hardware confuses users
+
+This patch converts ppc6xx_defconfig to use libata PATA
+drivers.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
- arch/powerpc/configs/pq2fads_defconfig | 1 -
- 1 file changed, 1 deletion(-)
+Build tested only.
+If you have affected hardware please test.  Thank you.
 
-diff --git a/arch/powerpc/configs/pq2fads_defconfig b/arch/powerpc/configs/pq2fads_defconfig
-index 3e336ee..1e77d45 100644
---- a/arch/powerpc/configs/pq2fads_defconfig
-+++ b/arch/powerpc/configs/pq2fads_defconfig
-@@ -40,7 +40,6 @@ CONFIG_MTD_CFI_I4=y
- CONFIG_MTD_CFI_INTELEXT=y
- CONFIG_MTD_PHYSMAP_OF=y
- CONFIG_BLK_DEV_LOOP=y
+ arch/powerpc/configs/ppc6xx_defconfig | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
+
+diff --git a/arch/powerpc/configs/ppc6xx_defconfig b/arch/powerpc/configs/ppc6xx_defconfig
+index e5d2c3d..0d93067 100644
+--- a/arch/powerpc/configs/ppc6xx_defconfig
++++ b/arch/powerpc/configs/ppc6xx_defconfig
+@@ -378,13 +378,6 @@ CONFIG_EEPROM_AT24=m
+ CONFIG_EEPROM_LEGACY=m
+ CONFIG_EEPROM_MAX6875=m
+ CONFIG_EEPROM_93CX6=m
 -CONFIG_IDE=y
- CONFIG_NETDEVICES=y
- CONFIG_TUN=y
- CONFIG_FS_ENET=y
+-CONFIG_BLK_DEV_IDECD=m
+-CONFIG_IDE_TASK_IOCTL=y
+-# CONFIG_IDEPCI_PCIBUS_ORDER is not set
+-CONFIG_BLK_DEV_GENERIC=y
+-CONFIG_BLK_DEV_IDE_PMAC=y
+-CONFIG_BLK_DEV_IDE_PMAC_ATA100FIRST=y
+ CONFIG_RAID_ATTRS=m
+ CONFIG_BLK_DEV_SD=y
+ CONFIG_CHR_DEV_ST=m
+@@ -411,13 +404,14 @@ CONFIG_ATA=y
+ CONFIG_SATA_FSL=m
+ CONFIG_PDC_ADMA=m
+ CONFIG_ATA_PIIX=m
++CONFIG_PATA_MACIO=y
+ CONFIG_PATA_MPC52xx=m
+ CONFIG_PATA_OPTIDMA=m
+ CONFIG_PATA_SCH=m
+ CONFIG_PATA_VIA=m
+ CONFIG_PATA_PLATFORM=m
+ CONFIG_PATA_OF_PLATFORM=m
+-CONFIG_ATA_GENERIC=m
++CONFIG_ATA_GENERIC=y
+ CONFIG_MD=y
+ CONFIG_BLK_DEV_MD=y
+ CONFIG_MD_LINEAR=m
 -- 
 1.9.1
