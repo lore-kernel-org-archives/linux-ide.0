@@ -1,60 +1,52 @@
-From: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 05/10] Documentation: dt: Tidy up the Marvell related
- files
-Date: Tue, 2 Feb 2016 15:26:37 -0600
-Message-ID: <20160202212637.GA24562@rob-hp-laptop>
+From: Jisheng Zhang <jszhang@marvell.com>
+Subject: Re: [PATCH 03/10] arm64: add Armada 3700 architecture entry
+Date: Wed, 3 Feb 2016 14:24:51 +0800
+Message-ID: <20160203142451.41381ff6@xhacker>
 References: <1454436468-4241-1-git-send-email-gregory.clement@free-electrons.com>
- <1454436468-4241-6-git-send-email-gregory.clement@free-electrons.com>
+	<1454436468-4241-4-git-send-email-gregory.clement@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1454436468-4241-6-git-send-email-gregory.clement-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Gregory CLEMENT <gregory.clement-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
-Cc: Jason Cooper <jason-NLaQJdtUoK4Be96aLqz0jA@public.gmane.org>, Andrew Lunn <andrew-g2DYL2Zd6BY@public.gmane.org>, Sebastian Hesselbarth <sebastian.hesselbarth-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, arm-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Catalin Marinas <catalin.marinas-5wv7dgnIgG8@public.gmane.org>, Will Deacon <will.deacon-5wv7dgnIgG8@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Jiri Slaby <jslaby-IBi9RG/b67k@public.gmane.org>, linux-serial-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Thomas Petazzoni <thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:22618 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751274AbcBCG3S (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Feb 2016 01:29:18 -0500
+In-Reply-To: <1454436468-4241-4-git-send-email-gregory.clement@free-electrons.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Gregory CLEMENT <gregory.clement@free-electrons.com>
+Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, arm@kernel.org, Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, Jonathan Corbet <corbet@lwn.net>, Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org, linux-ide@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org, Hans de Goede <hdegoede@redhat.com>, linux-serial@vger.kernel.org, Jiri Slaby <jslaby@suse.com>, Tejun Heo <tj@kernel.org>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, linux-arm-kernel@lists.infradead.org
 
-On Tue, Feb 02, 2016 at 07:07:43PM +0100, Gregory CLEMENT wrote:
-> Over the last releases we have added more and more Marvell related binding
-> directly in the arm directory. It's time to have our proper directory
-> inside it, and move all the files in it.
+On Tue, 2 Feb 2016 19:07:41 +0100 Gregory CLEMENT wrote:
+
+> The Armada 3700 is an mvebu ARM64 SoC using one or two Cortex-A53 cores
+> depending of the variant.
 > 
-> Signed-off-by: Gregory CLEMENT <gregory.clement-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
-> Reviewed-by: Thomas Petazzoni <thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
+> Signed-off-by: Gregory CLEMENT <gregory.clement@free-electrons.com>
+> Reviewed-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 > ---
->  .../devicetree/bindings/arm/{ => marvell}/armada-370-xp-pmsu.txt          | 0
->  Documentation/devicetree/bindings/arm/{ => marvell}/armada-370-xp.txt     | 0
->  Documentation/devicetree/bindings/arm/{ => marvell}/armada-375.txt        | 0
->  .../devicetree/bindings/arm/{ => marvell}/armada-380-mpcore-soc-ctrl.txt  | 0
->  Documentation/devicetree/bindings/arm/{ => marvell}/armada-38x.txt        | 0
->  Documentation/devicetree/bindings/arm/{ => marvell}/armada-39x.txt        | 0
->  Documentation/devicetree/bindings/arm/{ => marvell}/armada-cpu-reset.txt  | 0
->  Documentation/devicetree/bindings/arm/{ => marvell}/coherency-fabric.txt  | 0
->  Documentation/devicetree/bindings/arm/{ => marvell}/kirkwood.txt          | 0
->  Documentation/devicetree/bindings/arm/{ => marvell}/marvell,berlin.txt    | 0
->  Documentation/devicetree/bindings/arm/{ => marvell}/marvell,dove.txt      | 0
->  Documentation/devicetree/bindings/arm/{ => marvell}/marvell,kirkwood.txt  | 0
->  Documentation/devicetree/bindings/arm/{ => marvell}/mvebu-cpu-config.txt  | 0
->  .../devicetree/bindings/arm/{ => marvell}/mvebu-system-controller.txt     | 0
->  14 files changed, 0 insertions(+), 0 deletions(-)
->  rename Documentation/devicetree/bindings/arm/{ => marvell}/armada-370-xp-pmsu.txt (100%)
->  rename Documentation/devicetree/bindings/arm/{ => marvell}/armada-370-xp.txt (100%)
->  rename Documentation/devicetree/bindings/arm/{ => marvell}/armada-375.txt (100%)
->  rename Documentation/devicetree/bindings/arm/{ => marvell}/armada-380-mpcore-soc-ctrl.txt (100%)
->  rename Documentation/devicetree/bindings/arm/{ => marvell}/armada-38x.txt (100%)
->  rename Documentation/devicetree/bindings/arm/{ => marvell}/armada-39x.txt (100%)
->  rename Documentation/devicetree/bindings/arm/{ => marvell}/armada-cpu-reset.txt (100%)
->  rename Documentation/devicetree/bindings/arm/{ => marvell}/coherency-fabric.txt (100%)
->  rename Documentation/devicetree/bindings/arm/{ => marvell}/kirkwood.txt (100%)
->  rename Documentation/devicetree/bindings/arm/{ => marvell}/marvell,berlin.txt (100%)
->  rename Documentation/devicetree/bindings/arm/{ => marvell}/marvell,dove.txt (100%)
->  rename Documentation/devicetree/bindings/arm/{ => marvell}/marvell,kirkwood.txt (100%)
->  rename Documentation/devicetree/bindings/arm/{ => marvell}/mvebu-cpu-config.txt (100%)
->  rename Documentation/devicetree/bindings/arm/{ => marvell}/mvebu-system-controller.txt (100%)
+>  arch/arm64/Kconfig.platforms | 6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
+> diff --git a/arch/arm64/Kconfig.platforms b/arch/arm64/Kconfig.platforms
+> index 21074f674bde..7da341f7b90d 100644
+> --- a/arch/arm64/Kconfig.platforms
+> +++ b/arch/arm64/Kconfig.platforms
+> @@ -1,5 +1,11 @@
+>  menu "Platform selection"
+>  
+> +config ARCH_ARMADA_3700
 
-Acked-by: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Would it be better to use ARCH_MVEBU? IMHO, there will be more ARMv8 SoCs
+from our EBU, do we plan to add one CONFIG_ARMADA_yyzz for each SoC?
+
+> +	bool "Armada 3700 SoC Family"
+> +	help
+> +	  This enables support for Armada 3700 SoC Family. It is is an
+> +	  ARMv8 based chipset belonging to the mvebu family.
+> +
+>  config ARCH_BCM_IPROC
+>  	bool "Broadcom iProc SoC Family"
+>  	help
+
