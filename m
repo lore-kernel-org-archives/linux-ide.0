@@ -1,92 +1,40 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v6] SATA: OCTEON: support SATA on OCTEON platform
-Date: Wed, 03 Feb 2016 16:31:23 +0100
-Message-ID: <1725737.t6I7PsvPbL@wuerfel>
-References: <1454437485-48009-1-git-send-email-Zubair.Kakakhel@imgtec.com> <2782231.XGO9cUTm7n@wuerfel> <56B21250.5050807@imgtec.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: [PATCH] powerpc/83xx: disable IDE subsystem in mpc834x_itx_defconfig
+Date: Wed, 03 Feb 2016 16:50:07 +0100
+Message-ID: <1454514630-29269-1-git-send-email-b.zolnierkie@samsung.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:53835 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754439AbcBCPbn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Feb 2016 10:31:43 -0500
-In-Reply-To: <56B21250.5050807@imgtec.com>
+Received: from mailout3.samsung.com ([203.254.224.33]:37758 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753279AbcBCPvd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Feb 2016 10:51:33 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Zubair Lutfullah Kakakhel <Zubair.Kakakhel@imgtec.com>
-Cc: tj@kernel.org, hdegoede@redhat.com, david.daney@cavium.com, aleksey.makarov@caviumnetworks.com, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linuxppc-dev@lists.ozlabs.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com, Scott Wood <oss@buserror.net>, Kumar Gala <galak@kernel.crashing.org>
 
-On Wednesday 03 February 2016 14:44:32 Zubair Lutfullah Kakakhel wrote:
-> 
-> Possible in the example.
-> 
-> I'll update the example to
-> 
->         uctl@118006c000000 {
->                 compatible = "cavium,octeon-7130-sata-uctl";
->                 reg = <0x11800 0x6c000000 0x0 0x100>;
->                 ranges; /* Direct mapping */
->                 dma-ranges;
->                 #address-cells = <1>;
->                 #size-cells = <2>;
-> 
->                 sata: sata@0 {
->                         compatible = "cavium,octeon-7130-ahci";
->                         reg = <0x16c00 0x00000000 0x0 0x200>;
->                         interrupt-parent = <&cibsata>;
->                         interrupts = <2 4>; /* Bit: 2, level */
->                 };
->         };
+This patch disables deprecated IDE subsystem in mpc834x_itx_defconfig
+(no IDE host drivers are selected in this config so there is no valid
+reason to enable IDE subsystem itself).
 
-Sorry, I should have been clearer. What I meant is
+Cc: Scott Wood <oss@buserror.net>
+Cc: Kumar Gala <galak@kernel.crashing.org>
+Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+---
+ arch/powerpc/configs/83xx/mpc834x_itx_defconfig | 1 -
+ 1 file changed, 1 deletion(-)
 
+diff --git a/arch/powerpc/configs/83xx/mpc834x_itx_defconfig b/arch/powerpc/configs/83xx/mpc834x_itx_defconfig
+index 2a5fdcb..87fc15b 100644
+--- a/arch/powerpc/configs/83xx/mpc834x_itx_defconfig
++++ b/arch/powerpc/configs/83xx/mpc834x_itx_defconfig
+@@ -35,7 +35,6 @@ CONFIG_MTD_PHYSMAP=y
+ CONFIG_BLK_DEV_LOOP=y
+ CONFIG_BLK_DEV_RAM=y
+ CONFIG_BLK_DEV_RAM_SIZE=32768
+-CONFIG_IDE=y
+ CONFIG_BLK_DEV_SD=y
+ CONFIG_CHR_DEV_SG=y
+ CONFIG_SCSI_SPI_ATTRS=y
+-- 
+1.9.1
 
-         uctl@118006c000000 {
-                compatible = "cavium,octeon-7130-sata-uctl";
-                reg = <0x11800 0x6c000000 0x0 0x100>;
-                ranges = <0   0x16c00 0x00000000   0xffffffff>;
-                dma-ranges;
-                #address-cells = <1>;
-                #size-cells = <1>;
-
-                sata: sata@0 {
-                        compatible = "cavium,octeon-7130-ahci";
-                        reg = <0x00000000 0x200>;
-                        interrupt-parent = <&cibsata>;
-                        interrupts = <2 4>; /* Bit: 2, level */
-                };
-        };
-
-
-However, I realized that this would break the dma-ranges, if the
-child device is indeed 64-bit DMA capable. When #address-cells and/or
-#size-cells don't match between parent and child, you have to provide
-non-empty ranges as well as dma-ranges, and the dma-ranges for
-#address-cells=<1> would imply only supporting 32-bit DMA.
-
-
-It could still be
-
-         uctl@118006c000000 {
-                compatible = "cavium,octeon-7130-sata-uctl";
-                reg = <0x11800 0x6c000000 0x0 0x100>;
-                ranges = <0 0  0x16c00 0x00000000   1 0>;
-                dma-ranges;
-                #address-cells = <1>;
-                #size-cells = <1>;
-
-                sata: sata@0 {
-                        compatible = "cavium,octeon-7130-ahci";
-                        reg = <0 0  0x200>;
-                        interrupt-parent = <&cibsata>;
-                        interrupts = <2 4>; /* Bit: 2, level */
-                };
-        };
-
-to have a ranges property that shows we are only translating one 4GB
-segment of MMIO addresses into the child, but that the child has DMA
-access to the entire CPU address space (including 64-bit wide RAM
-as well as all MMIO).
-
-	Arnd
