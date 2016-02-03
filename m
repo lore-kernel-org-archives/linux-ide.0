@@ -1,8 +1,8 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RFT PATCH] powerpc/85xx: convert tqm8555_defconfig to use libata PATA
+Subject: [RFT PATCH] powerpc/85xx: convert tqm8560_defconfig to use libata PATA
  drivers
-Date: Wed, 03 Feb 2016 16:50:13 +0100
-Message-ID: <1454514630-29269-7-git-send-email-b.zolnierkie@samsung.com>
+Date: Wed, 03 Feb 2016 16:50:14 +0100
+Message-ID: <1454514630-29269-8-git-send-email-b.zolnierkie@samsung.com>
 References: <1454514630-29269-1-git-send-email-b.zolnierkie@samsung.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-reply-to: <1454514630-29269-1-git-send-email-b.zolnierkie@samsung.com>
@@ -24,7 +24,7 @@ in use:
 
 * having duplicate drivers for same hardware confuses users
 
-This patch converts tqm8555_defconfig to use libata PATA
+This patch converts tqm8560_defconfig to use libata PATA
 drivers.
 
 Cc: Scott Wood <oss@buserror.net>
@@ -34,13 +34,13 @@ Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 Build tested only.
 If you have affected hardware please test.  Thank you.
 
- arch/powerpc/configs/85xx/tqm8555_defconfig | 7 ++++---
+ arch/powerpc/configs/85xx/tqm8560_defconfig | 7 ++++---
  1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/arch/powerpc/configs/85xx/tqm8555_defconfig b/arch/powerpc/configs/85xx/tqm8555_defconfig
-index 02a931d..3d9c1c0d 100644
---- a/arch/powerpc/configs/85xx/tqm8555_defconfig
-+++ b/arch/powerpc/configs/85xx/tqm8555_defconfig
+diff --git a/arch/powerpc/configs/85xx/tqm8560_defconfig b/arch/powerpc/configs/85xx/tqm8560_defconfig
+index 633d5b7..daa6842 100644
+--- a/arch/powerpc/configs/85xx/tqm8560_defconfig
++++ b/arch/powerpc/configs/85xx/tqm8560_defconfig
 @@ -30,9 +30,10 @@ CONFIG_MTD_CFI_AMDSTD=y
  CONFIG_BLK_DEV_LOOP=y
  CONFIG_BLK_DEV_RAM=y
