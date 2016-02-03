@@ -1,278 +1,170 @@
-From: Zubair Lutfullah Kakakhel <Zubair.Kakakhel@imgtec.com>
-Subject: [PATCH v7] SATA: OCTEON: support SATA on OCTEON platform
-Date: Wed, 3 Feb 2016 17:35:15 +0000
-Message-ID: <1454520915-27948-1-git-send-email-Zubair.Kakakhel@imgtec.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: tj@kernel.org, hdegoede@redhat.com
-Cc: david.daney@cavium.com, aleksey.makarov@caviumnetworks.com, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Zubair.Kakakhel@imgtec.com
+From: Gregory CLEMENT <gregory.clement@free-electrons.com>
+Subject: [PATCH v2 00/12] Add support for the Armada 3700 SoC an mvebu ARM64 based
+Date: Wed,  3 Feb 2016 19:41:17 +0100
+Message-ID: <1454524889-9207-1-git-send-email-gregory.clement@free-electrons.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from down.free-electrons.com ([37.187.137.238]:51201 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S965792AbcBCSlh (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Feb 2016 13:41:37 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Gregory CLEMENT <gregory.clement@free-electrons.com>, arm@kernel.org, Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, Jonathan Corbet <corbet@lwn.net>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, linux-serial@vger.kernel.org, Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, linux-arm-kernel@lists.infradead.org, Lior Amsalem <alior@marvell.com>, Nadav Haklai <nadavh@marvell.com>, Omri Itach <omrii@marvell.com>
 
-From: Aleksey Makarov <aleksey.makarov@caviumnetworks.com>
+Hi,
 
-The OCTEON SATA controller is currently found on cn71XX devices.
+This series introduce the support of the Armada 3700 family: it is the
+first ARM64 SoC of the mvebu family submitted to the mainline!
 
-Cc: Arnd Bergmann <arnd@arndb.de>
-Acked-by: Hans de Goede <hdegoede@redhat.com>
-Signed-off-by: David Daney <david.daney@cavium.com>
-Signed-off-by: Vinita Gupta <vgupta@caviumnetworks.com>
-Signed-off-by: Aleksey Makarov <aleksey.makarov@auriga.com>
-Signed-off-by: Zubair Lutfullah Kakakhel <Zubair.Kakakhel@imgtec.com>
+Currently there are two members of the Armada 3700 family, the only
+difference is the number of core: the Armada 3710 comes with one
+Cortex-A53 whereas the Armada 3720 comes with 2 Cortex-A53. In this
+series we enabled only the minimum to boot, pinctrl and clock tree
+will come soon.
 
----
-Changes in v7
-- Rebase to v4.5-rc2
-- Use #defines instead of __BITFIELD
-- Add sign off from Zubair
+This is the second version of the series, see the changelog for the
+detail. The bigger change was the addition of two itqchip patches to
+be able to use the the ARCH_MVEBU for the Armada 3700 SoCs. The first
+ones is only here to have standalone series but it comes from Thomas
+Petazzoni's series:
+http://thread.gmane.org/gmane.linux.ports.arm.kernel/472625
 
-Changes in v6
-- Rebase to v4.5-rc1
-- Tested on utm8 by rhino labs. CN7130
+Then on top of it I added a small patch allowing building the kernel
+without this driver for ARM64. So now there is a dependency :/
 
-Changes in v5:
-- Sparse warnings are fixed
-- Device tree docs are improved
+Besides this the patches are pretty usual:
 
-Changes in v4:
-- The call to dma_coerce_mask_and_coherent() was removed as suggested
-  by Arnd Bergmann dma_mask and coherent_dma_mask are actually set
-  in the ahci_platform_init_host() (libahci_platform.c)
+The third patch introduces a new serial driver for the uart used on
+this SoC. The driver remains simple even if the hardware is capable of
+doing more.
 
-Changes in v3:
-- Rebased to v4.0-rc2
-- Cosmetic changes
+The forth one adapts the ahci driver to support the Armada 3700 SoC.
+The forth patch updates the binding documentation with the new
+compatible string.
 
-Changes in v2:
-- The driver was rewritten as a driver for the UCTL SATA controller glue.
-  It allowed to get rid of the most changes in ahci_platform.c
-- Documentation for the device tree bindings was fixed.
----
+The fifth patch adds a new entry Kconfig entry for this SoC family.
+
+I took the opportunity of this series to tidy up the Marvell related
+files in the binding documentation with the seventh patch.
+
+The eighth patch introduces the compatible string for the SoCs of the
+Armada 3700 family.
+
+The ninth patch could be considered as the bulk of this series: it
+adds the device tree files for the Armada 3700 SoCs and for the
+reference board.
+
+With the introduction of this new family the MAINTAINERS file, the
+Marvell README and the ARM64 defconfig files have to be updated: it is
+the purpose of the last 3 patches.
+
+The patches 3 and 4 could be taken directly by the maintainer of their
+respective subsystem as there is no dependency at all with the rest of
+the series. I think that the rest of the series should go through the
+arm-soc maintainer but in doubt I also added the ARM64 maintainer as
+suggested by get_maintainer.pl. 
+
+Thanks,
+
+Gregory
+
+Changelog:
+v1 -> v2
+- Added Rob acked-by on patches 3, 6 and 7
+- Used armada3700_uart instead of mvebu_uart for the uart driver:
+  suggested by Mark
+- In mvebu-uart, do not use anymore TTY_MAJOR, or ttyS, but dynamic
+  major and ttyMV: pointed by Alan
+- Use tty_termios_copy_hw in mvebu_uart_set_termios: suggested by Alan
+- Use ARCH_MVEBU instead of creating ARCH_ARMADA_3700: suggested by
+  Jisheng
+- Added a new irqchip pacthes to fix build on ARM64 when ARCH_MVEBU is
+  selected
+- Removed marvell,armada3700 from the device tree binding and directly
+  used marvell,armada3710 for common feature: pointed by Rob
+- Fix memory node with coorect size in armada-3720-db.dts: suggested
+  by Mark
+
+Gregory CLEMENT (9):
+  irqchip: armada-370-xp: do not enable it by default when ARCH_MVEBU is
+    selected
+  arm64: add mvebu architecture entry
+  Documentation: dt-bindings: Add a new compatible for the Armada 3700
+  Documentation: dt: Tidy up the Marvell related files
+  devicetree: bindings: add DT binding for the Marvell Armada 3700 SoC
+    family
+  arm64: dts: add the Marvell Armada 3700 family and a development board
+  MAINTAINERS: Extend dts entry for ARM64 mvebu files
+  Documentation: arm: update supported Marvell EBU processors
+  arm64: defconfig: enable Armada 3700 related config
+
+Lior Amsalem (1):
+  ata: ahci_mvebu: add support for Armada 3700 variant
+
+Thomas Petazzoni (1):
+  irqchip: armada-370-xp: add Kconfig option for the driver
+
+Wilson Ding (1):
+  serial: mvebu-uart: initial support for Armada-3700 serial port
+
+ Documentation/arm/Marvell/README                   |  13 +
+ .../arm/{ => marvell}/armada-370-xp-pmsu.txt       |   0
+ .../bindings/arm/{ => marvell}/armada-370-xp.txt   |   0
+ .../bindings/arm/{ => marvell}/armada-375.txt      |   0
+ .../bindings/arm/marvell/armada-37xx.txt           |  16 +
+ .../{ => marvell}/armada-380-mpcore-soc-ctrl.txt   |   0
+ .../bindings/arm/{ => marvell}/armada-38x.txt      |   0
+ .../bindings/arm/{ => marvell}/armada-39x.txt      |   0
+ .../arm/{ => marvell}/armada-cpu-reset.txt         |   0
+ .../arm/{ => marvell}/coherency-fabric.txt         |   0
+ .../bindings/arm/{ => marvell}/kirkwood.txt        |   0
+ .../bindings/arm/{ => marvell}/marvell,berlin.txt  |   0
+ .../bindings/arm/{ => marvell}/marvell,dove.txt    |   0
+ .../arm/{ => marvell}/marvell,kirkwood.txt         |   0
+ .../arm/{ => marvell}/mvebu-cpu-config.txt         |   0
+ .../arm/{ => marvell}/mvebu-system-controller.txt  |   0
  .../devicetree/bindings/ata/ahci-platform.txt      |   1 +
- .../devicetree/bindings/mips/cavium/sata-uctl.txt  |  42 +++++++++
- drivers/ata/Kconfig                                |   9 ++
- drivers/ata/Makefile                               |   1 +
- drivers/ata/ahci_platform.c                        |   1 +
- drivers/ata/sata_octeon.c                          | 105 +++++++++++++++++++++
- 6 files changed, 159 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/mips/cavium/sata-uctl.txt
- create mode 100644 drivers/ata/sata_octeon.c
+ .../devicetree/bindings/tty/serial/mvebu-uart.txt  |  13 +
+ Documentation/kernel-parameters.txt                |   6 +
+ MAINTAINERS                                        |   1 +
+ arch/arm64/Kconfig.platforms                       |   6 +
+ arch/arm64/boot/dts/marvell/Makefile               |   4 +
+ arch/arm64/boot/dts/marvell/armada-371x.dtsi       |  53 ++
+ arch/arm64/boot/dts/marvell/armada-3720-db.dts     |  86 +++
+ arch/arm64/boot/dts/marvell/armada-372x.dtsi       |  63 ++
+ arch/arm64/boot/dts/marvell/armada-37xx.dtsi       | 131 +++++
+ arch/arm64/configs/defconfig                       |   5 +
+ drivers/ata/ahci_mvebu.c                           |  14 +-
+ drivers/irqchip/Kconfig                            |   4 +
+ drivers/irqchip/Makefile                           |   2 +-
+ drivers/tty/serial/Kconfig                         |  22 +
+ drivers/tty/serial/Makefile                        |   1 +
+ drivers/tty/serial/mvebu-uart.c                    | 650 +++++++++++++++++++++
+ include/uapi/linux/serial_core.h                   |   3 +
+ 34 files changed, 1088 insertions(+), 6 deletions(-)
+ rename Documentation/devicetree/bindings/arm/{ => marvell}/armada-370-xp-pmsu.txt (100%)
+ rename Documentation/devicetree/bindings/arm/{ => marvell}/armada-370-xp.txt (100%)
+ rename Documentation/devicetree/bindings/arm/{ => marvell}/armada-375.txt (100%)
+ create mode 100644 Documentation/devicetree/bindings/arm/marvell/armada-37xx.txt
+ rename Documentation/devicetree/bindings/arm/{ => marvell}/armada-380-mpcore-soc-ctrl.txt (100%)
+ rename Documentation/devicetree/bindings/arm/{ => marvell}/armada-38x.txt (100%)
+ rename Documentation/devicetree/bindings/arm/{ => marvell}/armada-39x.txt (100%)
+ rename Documentation/devicetree/bindings/arm/{ => marvell}/armada-cpu-reset.txt (100%)
+ rename Documentation/devicetree/bindings/arm/{ => marvell}/coherency-fabric.txt (100%)
+ rename Documentation/devicetree/bindings/arm/{ => marvell}/kirkwood.txt (100%)
+ rename Documentation/devicetree/bindings/arm/{ => marvell}/marvell,berlin.txt (100%)
+ rename Documentation/devicetree/bindings/arm/{ => marvell}/marvell,dove.txt (100%)
+ rename Documentation/devicetree/bindings/arm/{ => marvell}/marvell,kirkwood.txt (100%)
+ rename Documentation/devicetree/bindings/arm/{ => marvell}/mvebu-cpu-config.txt (100%)
+ rename Documentation/devicetree/bindings/arm/{ => marvell}/mvebu-system-controller.txt (100%)
+ create mode 100644 Documentation/devicetree/bindings/tty/serial/mvebu-uart.txt
+ create mode 100644 arch/arm64/boot/dts/marvell/armada-371x.dtsi
+ create mode 100644 arch/arm64/boot/dts/marvell/armada-3720-db.dts
+ create mode 100644 arch/arm64/boot/dts/marvell/armada-372x.dtsi
+ create mode 100644 arch/arm64/boot/dts/marvell/armada-37xx.dtsi
+ create mode 100644 drivers/tty/serial/mvebu-uart.c
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-platform.txt b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-index c2340ee..3d84dca 100644
---- a/Documentation/devicetree/bindings/ata/ahci-platform.txt
-+++ b/Documentation/devicetree/bindings/ata/ahci-platform.txt
-@@ -11,6 +11,7 @@ Required properties:
- - compatible        : compatible string, one of:
-   - "allwinner,sun4i-a10-ahci"
-   - "hisilicon,hisi-ahci"
-+  - "cavium,octeon-7130-ahci"
-   - "ibm,476gtr-ahci"
-   - "marvell,armada-380-ahci"
-   - "snps,dwc-ahci"
-diff --git a/Documentation/devicetree/bindings/mips/cavium/sata-uctl.txt b/Documentation/devicetree/bindings/mips/cavium/sata-uctl.txt
-new file mode 100644
-index 0000000..3bd3c2f
---- /dev/null
-+++ b/Documentation/devicetree/bindings/mips/cavium/sata-uctl.txt
-@@ -0,0 +1,42 @@
-+* UCTL SATA controller glue
-+
-+UCTL is the bridge unit between the I/O interconnect (an internal bus)
-+and the SATA AHCI host controller (UAHC). It performs the following functions:
-+	- provides interfaces for the applications to access the UAHC AHCI
-+	  registers on the CN71XX I/O space.
-+	- provides a bridge for UAHC to fetch AHCI command table entries and data
-+	  buffers from Level 2 Cache.
-+	- posts interrupts to the CIU.
-+	- contains registers that:
-+		- control the behavior of the UAHC
-+		- control the clock/reset generation to UAHC
-+		- control endian swapping for all UAHC registers and DMA accesses
-+
-+Properties:
-+
-+- compatible: "cavium,octeon-7130-sata-uctl"
-+
-+  Compatibility with the cn7130 SOC.
-+
-+- reg: The base address of the UCTL register bank.
-+
-+- #address-cells, #size-cells, ranges and dma-ranges must be present and hold
-+	suitable values to map all child nodes.
-+
-+Example:
-+
-+	uctl@118006c000000 {
-+		compatible = "cavium,octeon-7130-sata-uctl";
-+		reg = <0x11800 0x6c000000 0x0 0x100>;
-+		ranges; /* Direct mapping */
-+		dma-ranges;
-+		#address-cells = <2>;
-+		#size-cells = <2>;
-+
-+		sata: sata@16c0000000000 {
-+			compatible = "cavium,octeon-7130-ahci";
-+			reg = <0x16c00 0x00000000 0x0 0x200>;
-+			interrupt-parent = <&cibsata>;
-+			interrupts = <2 4>; /* Bit: 2, level */
-+		};
-+	};
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 861643ea..98c5215 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -215,6 +215,15 @@ config SATA_SIL24
- 
- 	  If unsure, say N.
- 
-+config SATA_OCTEON
-+	tristate "Cavium Octeon Soc Serial ATA"
-+	depends on SATA_AHCI_PLATFORM && CAVIUM_OCTEON_SOC
-+	default y
-+	help
-+	  This option enables support for Cavium Octeon SoC Serial ATA.
-+
-+	  If unsure, say N.
-+
- config ATA_SFF
- 	bool "ATA SFF support (for legacy IDE and PATA)"
- 	default y
-diff --git a/drivers/ata/Makefile b/drivers/ata/Makefile
-index af45eff..dd6a036 100644
---- a/drivers/ata/Makefile
-+++ b/drivers/ata/Makefile
-@@ -7,6 +7,7 @@ obj-$(CONFIG_SATA_ACARD_AHCI)	+= acard-ahci.o libahci.o
- obj-$(CONFIG_SATA_AHCI_PLATFORM) += ahci_platform.o libahci.o libahci_platform.o
- obj-$(CONFIG_SATA_FSL)		+= sata_fsl.o
- obj-$(CONFIG_SATA_INIC162X)	+= sata_inic162x.o
-+obj-$(CONFIG_SATA_OCTEON)	+= sata_octeon.o
- obj-$(CONFIG_SATA_SIL24)	+= sata_sil24.o
- obj-$(CONFIG_SATA_DWC)		+= sata_dwc_460ex.o
- obj-$(CONFIG_SATA_HIGHBANK)	+= sata_highbank.o libahci.o
-diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-index 04975b8..4044233 100644
---- a/drivers/ata/ahci_platform.c
-+++ b/drivers/ata/ahci_platform.c
-@@ -76,6 +76,7 @@ static const struct of_device_id ahci_of_match[] = {
- 	{ .compatible = "ibm,476gtr-ahci", },
- 	{ .compatible = "snps,dwc-ahci", },
- 	{ .compatible = "hisilicon,hisi-ahci", },
-+	{ .compatible = "cavium,octeon-7130-ahci", },
- 	{},
- };
- MODULE_DEVICE_TABLE(of, ahci_of_match);
-diff --git a/drivers/ata/sata_octeon.c b/drivers/ata/sata_octeon.c
-new file mode 100644
-index 0000000..4ea12e6
---- /dev/null
-+++ b/drivers/ata/sata_octeon.c
-@@ -0,0 +1,105 @@
-+/*
-+ * SATA glue for Cavium Octeon III SOCs.
-+ *
-+ *
-+ * This file is subject to the terms and conditions of the GNU General Public
-+ * License.  See the file "COPYING" in the main directory of this archive
-+ * for more details.
-+ *
-+ * Copyright (C) 2010-2015 Cavium Networks
-+ *
-+ */
-+
-+#include <linux/module.h>
-+#include <linux/dma-mapping.h>
-+#include <linux/platform_device.h>
-+#include <linux/of_platform.h>
-+
-+#include <asm/octeon/octeon.h>
-+#include <asm/bitfield.h>
-+
-+#define CVMX_SATA_UCTL_SHIM_CFG		0xE8
-+
-+#define SATA_UCTL_ENDIAN_MODE_BIG	1
-+#define SATA_UCTL_ENDIAN_MODE_LITTLE	0
-+#define SATA_UCTL_ENDIAN_MODE_MASK	3
-+
-+#define SATA_UCTL_DMA_ENDIAN_MODE_SHIFT	8
-+#define SATA_UCTL_CSR_ENDIAN_MODE_SHIFT	0
-+#define SATA_UCTL_DMA_READ_CMD_SHIFT	12
-+
-+static int ahci_octeon_probe(struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct device_node *node = dev->of_node;
-+	struct resource *res;
-+	void __iomem *base;
-+	u64 cfg;
-+	int ret;
-+
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+	if (!res) {
-+		dev_err(&pdev->dev, "Platform resource[0] is missing\n");
-+		return -ENODEV;
-+	}
-+
-+	base = devm_ioremap_resource(&pdev->dev, res);
-+	if (IS_ERR(base))
-+		return PTR_ERR(base);
-+
-+	cfg = cvmx_read_csr((uint64_t)base + CVMX_SATA_UCTL_SHIM_CFG);
-+
-+	cfg &= ~(SATA_UCTL_ENDIAN_MODE_MASK << SATA_UCTL_DMA_ENDIAN_MODE_SHIFT);
-+	cfg &= ~(SATA_UCTL_ENDIAN_MODE_MASK << SATA_UCTL_CSR_ENDIAN_MODE_SHIFT);
-+
-+#ifdef __BIG_ENDIAN
-+	cfg |= SATA_UCTL_ENDIAN_MODE_BIG << SATA_UCTL_DMA_ENDIAN_MODE_SHIFT;
-+	cfg |= SATA_UCTL_ENDIAN_MODE_BIG << SATA_UCTL_CSR_ENDIAN_MODE_SHIFT;
-+#else
-+	cfg |= SATA_UCTL_ENDIAN_MODE_LITTLE << SATA_UCTL_DMA_ENDIAN_MODE_SHIFT;
-+	cfg |= SATA_UCTL_ENDIAN_MODE_LITTLE << SATA_UCTL_CSR_ENDIAN_MODE_SHIFT;
-+#endif
-+
-+	cfg |= 1 << SATA_UCTL_DMA_READ_CMD_SHIFT;
-+
-+	cvmx_write_csr((uint64_t)base + CVMX_SATA_UCTL_SHIM_CFG, cfg);
-+
-+	if (!node) {
-+		dev_err(dev, "no device node, failed to add octeon sata\n");
-+		return -ENODEV;
-+	}
-+
-+	ret = of_platform_populate(node, NULL, NULL, dev);
-+	if (ret) {
-+		dev_err(dev, "failed to add ahci-platform core\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static int ahci_octeon_remove(struct platform_device *pdev)
-+{
-+	return 0;
-+}
-+
-+static const struct of_device_id octeon_ahci_match[] = {
-+	{ .compatible = "cavium,octeon-7130-sata-uctl", },
-+	{},
-+};
-+MODULE_DEVICE_TABLE(of, octeon_ahci_match);
-+
-+static struct platform_driver ahci_octeon_driver = {
-+	.probe          = ahci_octeon_probe,
-+	.remove         = ahci_octeon_remove,
-+	.driver         = {
-+		.name   = "octeon-ahci",
-+		.of_match_table = octeon_ahci_match,
-+	},
-+};
-+
-+module_platform_driver(ahci_octeon_driver);
-+
-+MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Cavium, Inc. <support@cavium.com>");
-+MODULE_DESCRIPTION("Cavium Inc. sata config.");
 -- 
-1.9.1
+2.5.0
+
