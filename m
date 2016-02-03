@@ -1,14 +1,19 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RFT PATCH] powerpc: convert cell_defconfig to use libata PATA drivers
-Date: Wed, 03 Feb 2016 16:50:19 +0100
-Message-ID: <1454514630-29269-13-git-send-email-b.zolnierkie@samsung.com>
+Subject: [RFT PATCH] powerpc/85xx: convert tqm8541_defconfig to use libata PATA
+ drivers
+Date: Wed, 03 Feb 2016 16:50:12 +0100
+Message-ID: <1454514630-29269-6-git-send-email-b.zolnierkie@samsung.com>
 References: <1454514630-29269-1-git-send-email-b.zolnierkie@samsung.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mailout3.samsung.com ([203.254.224.33]:33645 "EHLO
+	mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755919AbcBCPwe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Feb 2016 10:52:34 -0500
 In-reply-to: <1454514630-29269-1-git-send-email-b.zolnierkie@samsung.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linuxppc-dev@lists.ozlabs.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linuxppc-dev@lists.ozlabs.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com, Scott Wood <oss@buserror.net>, Kumar Gala <galak@kernel.crashing.org>
 
 IDE subsystem has been deprecated since 2009 and the majority
 (if not all) of Linux distributions have switched to use
@@ -23,39 +28,37 @@ in use:
 
 * having duplicate drivers for same hardware confuses users
 
-This patch converts cell_defconfig to use libata PATA drivers.
+This patch converts tqm8541_defconfig to use libata PATA
+drivers.
 
+Cc: Scott Wood <oss@buserror.net>
+Cc: Kumar Gala <galak@kernel.crashing.org>
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
 Build tested only.
 If you have affected hardware please test.  Thank you.
 
- arch/powerpc/configs/cell_defconfig | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ arch/powerpc/configs/85xx/tqm8541_defconfig | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/arch/powerpc/configs/cell_defconfig b/arch/powerpc/configs/cell_defconfig
-index db328e6..679edaa 100644
---- a/arch/powerpc/configs/cell_defconfig
-+++ b/arch/powerpc/configs/cell_defconfig
-@@ -108,16 +108,15 @@ CONFIG_UEVENT_HELPER_PATH="/sbin/hotplug"
+diff --git a/arch/powerpc/configs/85xx/tqm8541_defconfig b/arch/powerpc/configs/85xx/tqm8541_defconfig
+index bb402b3..c9b0028 100644
+--- a/arch/powerpc/configs/85xx/tqm8541_defconfig
++++ b/arch/powerpc/configs/85xx/tqm8541_defconfig
+@@ -30,9 +30,10 @@ CONFIG_MTD_CFI_AMDSTD=y
  CONFIG_BLK_DEV_LOOP=y
  CONFIG_BLK_DEV_RAM=y
- CONFIG_BLK_DEV_RAM_SIZE=131072
+ CONFIG_BLK_DEV_RAM_SIZE=32768
 -CONFIG_IDE=y
 -CONFIG_BLK_DEV_GENERIC=y
--CONFIG_BLK_DEV_AEC62XX=y
--CONFIG_BLK_DEV_SIIMAGE=y
- CONFIG_BLK_DEV_SD=y
- CONFIG_BLK_DEV_SR=m
- CONFIG_CHR_DEV_SG=y
- CONFIG_ATA=y
- CONFIG_SATA_PROMISE=y
-+CONFIG_PATA_ARTOP=y
- CONFIG_PATA_PDC2027X=m
-+CONFIG_PATA_SIL680=y
+-CONFIG_BLK_DEV_VIA82CXXX=y
++CONFIG_BLK_DEV_SD=y
++CONFIG_ATA=y
++CONFIG_PATA_VIA=y
 +CONFIG_ATA_GENERIC=y
- CONFIG_MD=y
- CONFIG_BLK_DEV_MD=m
- CONFIG_MD_LINEAR=m
+ CONFIG_NETDEVICES=y
+ CONFIG_GIANFAR=y
+ CONFIG_E100=y
 -- 
 1.9.1
+
