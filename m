@@ -1,54 +1,22 @@
-From: Gregory CLEMENT <gregory.clement@free-electrons.com>
-Subject: Re: [PATCH 07/10] arm64: dts: add the Marvell Armada 3700 family and a development board
-Date: Wed, 03 Feb 2016 11:44:38 +0100
-Message-ID: <877fim5azt.fsf@free-electrons.com>
-References: <1454436468-4241-1-git-send-email-gregory.clement@free-electrons.com>
-	<1454436468-4241-8-git-send-email-gregory.clement@free-electrons.com>
-	<20160202183436.GE29778@leverpostej>
+From: "dfbh41" <dfbh41@tL5280.com>
+Subject: Happy New Year's Day
+Date: Wed, 3 Feb 2016 18:48:50 +0800
+Message-ID: <201602031848503439819@tL5280.com>
+Reply-To: comebaby25@sohu.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="GB2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:38113 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751395AbcBCKpM convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 3 Feb 2016 05:45:12 -0500
-In-Reply-To: <20160202183436.GE29778@leverpostej> (Mark Rutland's message of
-	"Tue, 2 Feb 2016 18:34:36 +0000")
+Received: from [103.40.102.123] ([103.40.102.123]:4770 "HELO tl5280.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+	id S1753050AbcBCKst (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 3 Feb 2016 05:48:49 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mark Rutland <mark.rutland@arm.com>
-Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, arm@kernel.org, Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, Jonathan Corbet <corbet@lwn.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, linux-serial@vger.kernel.org, Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, linux-arm-kernel@lists.infradead.org
+To: linux-ide <linux-ide@vger.kernel.org>
 
-Hi Mark,
-=20
- On mar., f=C3=A9vr. 02 2016, Mark Rutland <mark.rutland@arm.com> wrote=
-:
-
->> +	memory {
->> +		device_type =3D "memory";
->> +		/* use only 256 MB on the 512 MB available */
->> +		reg =3D <0x00000000 0x00000000 0x00000000 0x10000000>;
->> +	};
->
-> It would be good to comment as to why we can't use 256M of the memory=
-=2E
-
-Actually the comment is wrong and the size too, we do use the 512MB.
-
-I will fix it
-
-Thanks,
-
-Gregory
-
->
-> Otherwise this looks fine.
->
-> Mark.
-
---=20
-Gregory Clement, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+uN/Qp9f2ysKjrLjf0Ke/qreioaMNCtPF1sq/zbunv6q3ore9yr2jrNa70OjE47XEsvrGt7nYvPy0
+yrvy1d/E48S/seq/zbuntcSy+sa3udi8/LTKo6y8tL/JtcO1vb/Nu6fQxc+ioaMNCs2ouf2+q9e8
+tqjOu9PKvP7NtrXdo6y439Cnv6q3or/Nu6ejrLPJvbu2qbWloaMNCs/q0a/H67zTUS0tUToyMDM2
+LTAxOTUxOQ0K1rG907nbv7TR3cq+uabE3A==
