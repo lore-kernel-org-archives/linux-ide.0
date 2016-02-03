@@ -1,8 +1,8 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RFT PATCH] powerpc: convert pseries_defconfig to use libata PATA
+Subject: [RFT PATCH] powerpc: convert storcenter_defconfig to use libata PATA
  drivers
-Date: Wed, 03 Feb 2016 16:50:29 +0100
-Message-ID: <1454514630-29269-23-git-send-email-b.zolnierkie@samsung.com>
+Date: Wed, 03 Feb 2016 16:50:30 +0100
+Message-ID: <1454514630-29269-24-git-send-email-b.zolnierkie@samsung.com>
 References: <1454514630-29269-1-git-send-email-b.zolnierkie@samsung.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-reply-to: <1454514630-29269-1-git-send-email-b.zolnierkie@samsung.com>
@@ -24,7 +24,7 @@ in use:
 
 * having duplicate drivers for same hardware confuses users
 
-This patch converts pseries_defconfig to use libata PATA
+This patch converts storcenter_defconfig to use libata PATA
 drivers.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
@@ -32,31 +32,25 @@ Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 Build tested only.
 If you have affected hardware please test.  Thank you.
 
- arch/powerpc/configs/pseries_defconfig | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+ arch/powerpc/configs/storcenter_defconfig | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/arch/powerpc/configs/pseries_defconfig b/arch/powerpc/configs/pseries_defconfig
-index 36871a4..9b1bc2a 100644
---- a/arch/powerpc/configs/pseries_defconfig
-+++ b/arch/powerpc/configs/pseries_defconfig
-@@ -89,10 +89,6 @@ CONFIG_BLK_DEV_NBD=m
- CONFIG_BLK_DEV_RAM=y
- CONFIG_BLK_DEV_RAM_SIZE=65536
- CONFIG_VIRTIO_BLK=m
+diff --git a/arch/powerpc/configs/storcenter_defconfig b/arch/powerpc/configs/storcenter_defconfig
+index b5db7df..adf7d26 100644
+--- a/arch/powerpc/configs/storcenter_defconfig
++++ b/arch/powerpc/configs/storcenter_defconfig
+@@ -37,12 +37,11 @@ CONFIG_NFTL_RW=y
+ CONFIG_MTD_CFI=y
+ CONFIG_MTD_CFI_AMDSTD=y
+ CONFIG_MTD_PHYSMAP=y
 -CONFIG_IDE=y
--CONFIG_BLK_DEV_IDECD=y
--CONFIG_BLK_DEV_GENERIC=y
--CONFIG_BLK_DEV_AMD74XX=y
+-CONFIG_BLK_DEV_VIA82CXXX=y
+-CONFIG_SCSI=y
  CONFIG_BLK_DEV_SD=y
- CONFIG_CHR_DEV_ST=y
  CONFIG_BLK_DEV_SR=y
-@@ -119,7 +115,8 @@ CONFIG_SCSI_DH_RDAC=m
- CONFIG_SCSI_DH_ALUA=m
- CONFIG_ATA=y
- CONFIG_SATA_AHCI=y
--# CONFIG_ATA_SFF is not set
-+CONFIG_PATA_AMD=y
-+CONFIG_ATA_GENERIC=y
+ CONFIG_SCSI_SPI_ATTRS=y
++CONFIG_ATA=y
++CONFIG_PATA_VIA=y
  CONFIG_MD=y
  CONFIG_BLK_DEV_MD=y
  CONFIG_MD_LINEAR=y
