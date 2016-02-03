@@ -1,7 +1,8 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RFT PATCH] powerpc: convert ppc64_defconfig to use libata PATA drivers
-Date: Wed, 03 Feb 2016 16:50:25 +0100
-Message-ID: <1454514630-29269-19-git-send-email-b.zolnierkie@samsung.com>
+Subject: [RFT PATCH] powerpc: convert ppc64e_defconfig to use libata PATA
+ drivers
+Date: Wed, 03 Feb 2016 16:50:26 +0100
+Message-ID: <1454514630-29269-20-git-send-email-b.zolnierkie@samsung.com>
 References: <1454514630-29269-1-git-send-email-b.zolnierkie@samsung.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-reply-to: <1454514630-29269-1-git-send-email-b.zolnierkie@samsung.com>
@@ -23,7 +24,7 @@ in use:
 
 * having duplicate drivers for same hardware confuses users
 
-This patch converts ppc64_defconfig to use libata PATA
+This patch converts ppc64e_defconfig to use libata PATA
 drivers.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
@@ -31,32 +32,29 @@ Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 Build tested only.
 If you have affected hardware please test.  Thank you.
 
- arch/powerpc/configs/ppc64_defconfig | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+ arch/powerpc/configs/ppc64e_defconfig | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/arch/powerpc/configs/ppc64_defconfig b/arch/powerpc/configs/ppc64_defconfig
-index b041fb6..0fcab20 100644
---- a/arch/powerpc/configs/ppc64_defconfig
-+++ b/arch/powerpc/configs/ppc64_defconfig
-@@ -83,12 +83,6 @@ CONFIG_BLK_DEV_NBD=m
+diff --git a/arch/powerpc/configs/ppc64e_defconfig b/arch/powerpc/configs/ppc64e_defconfig
+index ddf9773..ec795e2 100644
+--- a/arch/powerpc/configs/ppc64e_defconfig
++++ b/arch/powerpc/configs/ppc64e_defconfig
+@@ -59,10 +59,6 @@ CONFIG_BLK_DEV_LOOP=y
+ CONFIG_BLK_DEV_NBD=m
  CONFIG_BLK_DEV_RAM=y
  CONFIG_BLK_DEV_RAM_SIZE=65536
- CONFIG_VIRTIO_BLK=m
 -CONFIG_IDE=y
 -CONFIG_BLK_DEV_IDECD=y
 -CONFIG_BLK_DEV_GENERIC=y
 -CONFIG_BLK_DEV_AMD74XX=y
--CONFIG_BLK_DEV_IDE_PMAC=y
--CONFIG_BLK_DEV_IDE_PMAC_ATA100FIRST=y
  CONFIG_BLK_DEV_SD=y
  CONFIG_CHR_DEV_ST=y
  CONFIG_BLK_DEV_SR=y
-@@ -118,6 +112,9 @@ CONFIG_SATA_AHCI=y
+@@ -79,6 +75,8 @@ CONFIG_SCSI_DEBUG=m
+ CONFIG_ATA=y
  CONFIG_SATA_SIL24=y
- CONFIG_SATA_MV=y
  CONFIG_SATA_SVW=y
 +CONFIG_PATA_AMD=y
-+CONFIG_PATA_MACIO=y
 +CONFIG_ATA_GENERIC=y
  CONFIG_MD=y
  CONFIG_BLK_DEV_MD=y
