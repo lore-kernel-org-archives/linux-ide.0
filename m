@@ -1,8 +1,8 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RFT PATCH] powerpc/85xx: convert tqm8540_defconfig to use libata PATA
- drivers
-Date: Wed, 03 Feb 2016 16:50:11 +0100
-Message-ID: <1454514630-29269-5-git-send-email-b.zolnierkie@samsung.com>
+Subject: [RFT PATCH] powerpc/85xx: convert mpc85xx_cds_defconfig to use libata
+ PATA drivers
+Date: Wed, 03 Feb 2016 16:50:09 +0100
+Message-ID: <1454514630-29269-3-git-send-email-b.zolnierkie@samsung.com>
 References: <1454514630-29269-1-git-send-email-b.zolnierkie@samsung.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-reply-to: <1454514630-29269-1-git-send-email-b.zolnierkie@samsung.com>
@@ -24,7 +24,7 @@ in use:
 
 * having duplicate drivers for same hardware confuses users
 
-This patch converts tqm8540_defconfig to use libata PATA
+This patch converts mpc85xx_cds_defconfig to use libata PATA
 drivers.
 
 Cc: Scott Wood <oss@buserror.net>
@@ -34,26 +34,25 @@ Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 Build tested only.
 If you have affected hardware please test.  Thank you.
 
- arch/powerpc/configs/85xx/tqm8540_defconfig | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ arch/powerpc/configs/85xx/mpc85xx_cds_defconfig | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/arch/powerpc/configs/85xx/tqm8540_defconfig b/arch/powerpc/configs/85xx/tqm8540_defconfig
-index 4daaf29..358d068 100644
---- a/arch/powerpc/configs/85xx/tqm8540_defconfig
-+++ b/arch/powerpc/configs/85xx/tqm8540_defconfig
-@@ -30,9 +30,10 @@ CONFIG_MTD_CFI_AMDSTD=y
+diff --git a/arch/powerpc/configs/85xx/mpc85xx_cds_defconfig b/arch/powerpc/configs/85xx/mpc85xx_cds_defconfig
+index ecb0c3b..acc5342 100644
+--- a/arch/powerpc/configs/85xx/mpc85xx_cds_defconfig
++++ b/arch/powerpc/configs/85xx/mpc85xx_cds_defconfig
+@@ -30,9 +30,9 @@ CONFIG_UEVENT_HELPER_PATH="/sbin/hotplug"
  CONFIG_BLK_DEV_LOOP=y
  CONFIG_BLK_DEV_RAM=y
  CONFIG_BLK_DEV_RAM_SIZE=32768
 -CONFIG_IDE=y
 -CONFIG_BLK_DEV_GENERIC=y
 -CONFIG_BLK_DEV_VIA82CXXX=y
-+CONFIG_BLK_DEV_SD=y
 +CONFIG_ATA=y
 +CONFIG_PATA_VIA=y
 +CONFIG_ATA_GENERIC=y
  CONFIG_NETDEVICES=y
  CONFIG_GIANFAR=y
- CONFIG_E100=y
+ CONFIG_E1000=y
 -- 
 1.9.1
