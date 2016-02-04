@@ -1,7 +1,7 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RFC PATCH 13/19] ide: remove deprecated rz1000 host driver
-Date: Thu, 04 Feb 2016 14:44:10 +0100
-Message-ID: <1454593456-3162-14-git-send-email-b.zolnierkie@samsung.com>
+Subject: [RFC PATCH 11/19] ide: remove deprecated opti621 host driver
+Date: Thu, 04 Feb 2016 14:44:08 +0100
+Message-ID: <1454593456-3162-12-git-send-email-b.zolnierkie@samsung.com>
 References: <1454593456-3162-1-git-send-email-b.zolnierkie@samsung.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-reply-to: <1454593456-3162-1-git-send-email-b.zolnierkie@samsung.com>
@@ -14,76 +14,66 @@ IDE subsystem has been deprecated since 2009 and the majority
 (if not all) of Linux distributions have switched to use
 libata for ATA support exclusively.
 
-The replacement driver (pata_rz1000) has been available since
+The replacement driver (pata_opti) has been available since
 2006 and it supports all the hardware supported by the old
-rz1000 host driver.  Also x86 defconfigs have switched to use
-libata PATA exclusively in 2008.
+opti621 host driver.
 
-Remove the deprecated rz1000 host driver.
+Remove the deprecated opti621 host driver.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
- drivers/ide/Kconfig  | 13 -------
- drivers/ide/Makefile |  1 -
- drivers/ide/rz1000.c | 99 ----------------------------------------------------
- 3 files changed, 113 deletions(-)
- delete mode 100644 drivers/ide/rz1000.c
+ drivers/ide/Kconfig   |   7 --
+ drivers/ide/Makefile  |   1 -
+ drivers/ide/opti621.c | 178 --------------------------------------------------
+ 3 files changed, 186 deletions(-)
+ delete mode 100644 drivers/ide/opti621.c
 
 diff --git a/drivers/ide/Kconfig b/drivers/ide/Kconfig
-index 35a4bed..e4794af 100644
+index 2458a1f..2341097 100644
 --- a/drivers/ide/Kconfig
 +++ b/drivers/ide/Kconfig
-@@ -314,19 +314,6 @@ config BLK_DEV_GENERIC
+@@ -314,13 +314,6 @@ config BLK_DEV_GENERIC
            This option provides generic support for various PCI IDE Chipsets
            which otherwise might not be supported.
  
--config BLK_DEV_RZ1000
--	tristate "RZ1000 chipset bugfix/support"
--	depends on X86
+-config BLK_DEV_OPTI621
+-	tristate "OPTi 82C621 chipset enhanced support"
 -	select BLK_DEV_IDEPCI
 -	help
--	  The PC-Technologies RZ1000 IDE chip is used on many common 486 and
--	  Pentium motherboards, usually along with the "Neptune" chipset.
--	  Unfortunately, it has a rather nasty design flaw that can cause
--	  severe data corruption under many conditions. Say Y here to include
--	  code which automatically detects and corrects the problem under
--	  Linux. This may slow disk throughput by a few percent, but at least
--	  things will operate 100% reliably.
+-	  This is a driver for the OPTi 82C621 EIDE controller.
+-	  Please read the comments at the top of <file:drivers/ide/opti621.c>.
 -
- config BLK_DEV_IDEDMA_PCI
- 	bool
- 	select BLK_DEV_IDEPCI
+ config BLK_DEV_RZ1000
+ 	tristate "RZ1000 chipset bugfix/support"
+ 	depends on X86
 diff --git a/drivers/ide/Makefile b/drivers/ide/Makefile
-index fa4221b..de19568 100644
+index 90b64de..9a69b97 100644
 --- a/drivers/ide/Makefile
 +++ b/drivers/ide/Makefile
-@@ -44,7 +44,6 @@ obj-$(CONFIG_BLK_DEV_IT8172)		+= it8172.o
+@@ -42,7 +42,6 @@ obj-$(CONFIG_BLK_DEV_CY82C693)		+= cy82c693.o
+ obj-$(CONFIG_BLK_DEV_HPT366)		+= hpt366.o
+ obj-$(CONFIG_BLK_DEV_IT8172)		+= it8172.o
  obj-$(CONFIG_BLK_DEV_NS87415)		+= ns87415.o
+-obj-$(CONFIG_BLK_DEV_OPTI621)		+= opti621.o
+ obj-$(CONFIG_BLK_DEV_PDC202XX_OLD)	+= pdc202xx_old.o
  obj-$(CONFIG_BLK_DEV_PDC202XX_NEW)	+= pdc202xx_new.o
  obj-$(CONFIG_BLK_DEV_PIIX)		+= piix.o
--obj-$(CONFIG_BLK_DEV_RZ1000)		+= rz1000.o
- obj-$(CONFIG_BLK_DEV_SVWKS)		+= serverworks.o
- obj-$(CONFIG_BLK_DEV_SGIIOC4)		+= sgiioc4.o
- obj-$(CONFIG_BLK_DEV_SIIMAGE)		+= siimage.o
-diff --git a/drivers/ide/rz1000.c b/drivers/ide/rz1000.c
+diff --git a/drivers/ide/opti621.c b/drivers/ide/opti621.c
 deleted file mode 100644
-index f4b66f7..0000000
---- a/drivers/ide/rz1000.c
+index 26a4500..0000000
+--- a/drivers/ide/opti621.c
 +++ /dev/null
-@@ -1,99 +0,0 @@
+@@ -1,178 +0,0 @@
 -/*
-- *  Copyright (C) 1995-1998  Linus Torvalds & author (see below)
+- *  Copyright (C) 1996-1998  Linus Torvalds & authors (see below)
 - */
 -
 -/*
-- *  Principal Author:  mlord@pobox.com (Mark Lord)
-- *
-- *  See linux/MAINTAINERS for address of current maintainer.
-- *
-- *  This file provides support for disabling the buggy read-ahead
-- *  mode of the RZ1000 IDE chipset, commonly used on Intel motherboards.
-- *
-- *  Dunno if this fixes both ports, or only the primary port (?).
+- * Authors:
+- * Jaromir Koutek <miri@punknet.cz>,
+- * Jan Harkes <jaharkes@cwi.nl>,
+- * Mark Lord <mlord@pobox.com>
+- * Some parts of code are from ali14xx.c and from rz1000.c.
 - */
 -
 -#include <linux/types.h>
@@ -91,84 +81,166 @@ index f4b66f7..0000000
 -#include <linux/kernel.h>
 -#include <linux/pci.h>
 -#include <linux/ide.h>
--#include <linux/init.h>
 -
--#define DRV_NAME "rz1000"
+-#include <asm/io.h>
 -
--static int rz1000_disable_readahead(struct pci_dev *dev)
+-#define DRV_NAME "opti621"
+-
+-#define READ_REG 0	/* index of Read cycle timing register */
+-#define WRITE_REG 1	/* index of Write cycle timing register */
+-#define CNTRL_REG 3	/* index of Control register */
+-#define STRAP_REG 5	/* index of Strap register */
+-#define MISC_REG 6	/* index of Miscellaneous register */
+-
+-static int reg_base;
+-
+-static DEFINE_SPINLOCK(opti621_lock);
+-
+-/* Write value to register reg, base of register
+- * is at reg_base (0x1f0 primary, 0x170 secondary,
+- * if not changed by PCI configuration).
+- * This is from setupvic.exe program.
+- */
+-static void write_reg(u8 value, int reg)
 -{
--	u16 reg;
--
--	if (!pci_read_config_word (dev, 0x40, &reg) &&
--	    !pci_write_config_word(dev, 0x40, reg & 0xdfff)) {
--		printk(KERN_INFO "%s: disabled chipset read-ahead "
--			"(buggy RZ1000/RZ1001)\n", pci_name(dev));
--		return 0;
--	} else {
--		printk(KERN_INFO "%s: serialized, disabled unmasking "
--			"(buggy RZ1000/RZ1001)\n", pci_name(dev));
--		return 1;
--	}
+-	inw(reg_base + 1);
+-	inw(reg_base + 1);
+-	outb(3, reg_base + 2);
+-	outb(value, reg_base + reg);
+-	outb(0x83, reg_base + 2);
 -}
 -
--static const struct ide_port_info rz1000_chipset = {
--	.name		= DRV_NAME,
--	.host_flags	= IDE_HFLAG_NO_DMA,
+-/* Read value from register reg, base of register
+- * is at reg_base (0x1f0 primary, 0x170 secondary,
+- * if not changed by PCI configuration).
+- * This is from setupvic.exe program.
+- */
+-static u8 read_reg(int reg)
+-{
+-	u8 ret = 0;
+-
+-	inw(reg_base + 1);
+-	inw(reg_base + 1);
+-	outb(3, reg_base + 2);
+-	ret = inb(reg_base + reg);
+-	outb(0x83, reg_base + 2);
+-
+-	return ret;
+-}
+-
+-static void opti621_set_pio_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+-{
+-	ide_drive_t *pair = ide_get_pair_dev(drive);
+-	unsigned long flags;
+-	unsigned long mode = drive->pio_mode, pair_mode;
+-	const u8 pio = mode - XFER_PIO_0;
+-	u8 tim, misc, addr_pio = pio, clk;
+-
+-	/* DRDY is default 2 (by OPTi Databook) */
+-	static const u8 addr_timings[2][5] = {
+-		{ 0x20, 0x10, 0x00, 0x00, 0x00 },	/* 33 MHz */
+-		{ 0x10, 0x10, 0x00, 0x00, 0x00 },	/* 25 MHz */
+-	};
+-	static const u8 data_rec_timings[2][5] = {
+-		{ 0x5b, 0x45, 0x32, 0x21, 0x20 },	/* 33 MHz */
+-		{ 0x48, 0x34, 0x21, 0x10, 0x10 }	/* 25 MHz */
+-	};
+-
+-	ide_set_drivedata(drive, (void *)mode);
+-
+-	if (pair) {
+-		pair_mode = (unsigned long)ide_get_drivedata(pair);
+-		if (pair_mode && pair_mode < mode)
+-			addr_pio = pair_mode - XFER_PIO_0;
+-	}
+-
+-	spin_lock_irqsave(&opti621_lock, flags);
+-
+-	reg_base = hwif->io_ports.data_addr;
+-
+-	/* allow Register-B */
+-	outb(0xc0, reg_base + CNTRL_REG);
+-	/* hmm, setupvic.exe does this ;-) */
+-	outb(0xff, reg_base + 5);
+-	/* if reads 0xff, adapter not exist? */
+-	(void)inb(reg_base + CNTRL_REG);
+-	/* if reads 0xc0, no interface exist? */
+-	read_reg(CNTRL_REG);
+-
+-	/* check CLK speed */
+-	clk = read_reg(STRAP_REG) & 1;
+-
+-	printk(KERN_INFO "%s: CLK = %d MHz\n", hwif->name, clk ? 25 : 33);
+-
+-	tim  = data_rec_timings[clk][pio];
+-	misc = addr_timings[clk][addr_pio];
+-
+-	/* select Index-0/1 for Register-A/B */
+-	write_reg(drive->dn & 1, MISC_REG);
+-	/* set read cycle timings */
+-	write_reg(tim, READ_REG);
+-	/* set write cycle timings */
+-	write_reg(tim, WRITE_REG);
+-
+-	/* use Register-A for drive 0 */
+-	/* use Register-B for drive 1 */
+-	write_reg(0x85, CNTRL_REG);
+-
+-	/* set address setup, DRDY timings,   */
+-	/*  and read prefetch for both drives */
+-	write_reg(misc, MISC_REG);
+-
+-	spin_unlock_irqrestore(&opti621_lock, flags);
+-}
+-
+-static const struct ide_port_ops opti621_port_ops = {
+-	.set_pio_mode		= opti621_set_pio_mode,
 -};
 -
--static int rz1000_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+-static const struct ide_port_info opti621_chipset = {
+-	.name		= DRV_NAME,
+-	.enablebits	= { {0x45, 0x80, 0x00}, {0x40, 0x08, 0x00} },
+-	.port_ops	= &opti621_port_ops,
+-	.host_flags	= IDE_HFLAG_NO_DMA,
+-	.pio_mask	= ATA_PIO4,
+-};
+-
+-static int opti621_init_one(struct pci_dev *dev, const struct pci_device_id *id)
 -{
--	struct ide_port_info d = rz1000_chipset;
--	int rc;
--
--	rc = pci_enable_device(dev);
--	if (rc)
--		return rc;
--
--	if (rz1000_disable_readahead(dev)) {
--		d.host_flags |= IDE_HFLAG_SERIALIZE;
--		d.host_flags |= IDE_HFLAG_NO_UNMASK_IRQS;
--	}
--
--	return ide_pci_init_one(dev, &d, NULL);
+-	return ide_pci_init_one(dev, &opti621_chipset, NULL);
 -}
 -
--static void rz1000_remove(struct pci_dev *dev)
--{
--	ide_pci_remove(dev);
--	pci_disable_device(dev);
--}
--
--static const struct pci_device_id rz1000_pci_tbl[] = {
--	{ PCI_VDEVICE(PCTECH, PCI_DEVICE_ID_PCTECH_RZ1000), 0 },
--	{ PCI_VDEVICE(PCTECH, PCI_DEVICE_ID_PCTECH_RZ1001), 0 },
+-static const struct pci_device_id opti621_pci_tbl[] = {
+-	{ PCI_VDEVICE(OPTI, PCI_DEVICE_ID_OPTI_82C621), 0 },
+-	{ PCI_VDEVICE(OPTI, PCI_DEVICE_ID_OPTI_82C825), 0 },
 -	{ 0, },
 -};
--MODULE_DEVICE_TABLE(pci, rz1000_pci_tbl);
+-MODULE_DEVICE_TABLE(pci, opti621_pci_tbl);
 -
--static struct pci_driver rz1000_pci_driver = {
--	.name		= "RZ1000_IDE",
--	.id_table	= rz1000_pci_tbl,
--	.probe		= rz1000_init_one,
--	.remove		= rz1000_remove,
+-static struct pci_driver opti621_pci_driver = {
+-	.name		= "Opti621_IDE",
+-	.id_table	= opti621_pci_tbl,
+-	.probe		= opti621_init_one,
+-	.remove		= ide_pci_remove,
+-	.suspend	= ide_pci_suspend,
+-	.resume		= ide_pci_resume,
 -};
 -
--static int __init rz1000_ide_init(void)
+-static int __init opti621_ide_init(void)
 -{
--	return ide_pci_register_driver(&rz1000_pci_driver);
+-	return ide_pci_register_driver(&opti621_pci_driver);
 -}
 -
--static void __exit rz1000_ide_exit(void)
+-static void __exit opti621_ide_exit(void)
 -{
--	pci_unregister_driver(&rz1000_pci_driver);
+-	pci_unregister_driver(&opti621_pci_driver);
 -}
 -
--module_init(rz1000_ide_init);
--module_exit(rz1000_ide_exit);
+-module_init(opti621_ide_init);
+-module_exit(opti621_ide_exit);
 -
--MODULE_AUTHOR("Andre Hedrick");
--MODULE_DESCRIPTION("PCI driver module for RZ1000 IDE");
+-MODULE_AUTHOR("Jaromir Koutek, Jan Harkes, Mark Lord");
+-MODULE_DESCRIPTION("PCI driver module for Opti621 IDE");
 -MODULE_LICENSE("GPL");
--
 -- 
 1.9.1
