@@ -1,778 +1,228 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RC PATCH 19/19] ide: remove deprecated icside host driver
-Date: Thu, 04 Feb 2016 14:44:16 +0100
-Message-ID: <1454593456-3162-20-git-send-email-b.zolnierkie@samsung.com>
+Subject: [RFC PATCH 17/19] ide: remove deprecated triflex host driver
+Date: Thu, 04 Feb 2016 14:44:14 +0100
+Message-ID: <1454593456-3162-18-git-send-email-b.zolnierkie@samsung.com>
 References: <1454593456-3162-1-git-send-email-b.zolnierkie@samsung.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mailout1.samsung.com ([203.254.224.24]:52826 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965233AbcBDNsR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Feb 2016 08:48:17 -0500
 In-reply-to: <1454593456-3162-1-git-send-email-b.zolnierkie@samsung.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: "David S. Miller" <davem@davemloft.net>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Alan Cox <gnomes@lxorguk.ukuu.org.uk>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, b.zolnierkie@samsung.com
-List-Id: linux-ide@vger.kernel.org
 
 IDE subsystem has been deprecated since 2009 and the majority
 (if not all) of Linux distributions have switched to use
 libata for ATA support exclusively.
 
-The replacement driver (pata_icside) has been available since
-2007 and it supports all the hardware supported by the old
-icside host driver.  Also ARM rpc_defconfig has switched to use
-libata PATA exclusively in 2007.
+The replacement driver (pata_triflex) has been available since
+2006 and it supports all the hardware supported by the old
+triflex host driver.
 
-Remove the deprecated icside host driver.
+Remove the deprecated triflex host driver.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
- drivers/ide/Kconfig  |  18 +-
- drivers/ide/Makefile |   1 -
- drivers/ide/icside.c | 691 ---------------------------------------------------
- 3 files changed, 1 insertion(+), 709 deletions(-)
- delete mode 100644 drivers/ide/icside.c
+ drivers/ide/Kconfig   |   7 ---
+ drivers/ide/Makefile  |   1 -
+ drivers/ide/triflex.c | 155 --------------------------------------------------
+ 3 files changed, 163 deletions(-)
+ delete mode 100644 drivers/ide/triflex.c
 
 diff --git a/drivers/ide/Kconfig b/drivers/ide/Kconfig
-index 0ce294b..9100755 100644
+index c92d5d1..486601c 100644
 --- a/drivers/ide/Kconfig
 +++ b/drivers/ide/Kconfig
-@@ -514,21 +514,6 @@ config BLK_DEV_IDE_TX4939
- 	depends on SOC_TX4939
- 	select BLK_DEV_IDEDMA_SFF
+@@ -360,13 +360,6 @@ config BLK_DEV_CMD64X
+ 	  Say Y here if you have an IDE controller which uses any of these
+ 	  chipsets: CMD643, CMD646, or CMD648.
  
--config BLK_DEV_IDE_ICSIDE
--	tristate "ICS IDE interface support"
--	depends on ARM && ARCH_ACORN
+-config BLK_DEV_TRIFLEX
+-	tristate "Compaq Triflex IDE support"
+-	select BLK_DEV_IDEDMA_PCI
 -	help
--	  On Acorn systems, say Y here if you wish to use the ICS IDE
--	  interface card.  This is not required for ICS partition support.
--	  If you are unsure, say N to this.
+-	  Say Y here if you have a Compaq Triflex IDE controller, such
+-	  as those commonly found on Compaq Pentium-Pro systems
 -
--config BLK_DEV_IDEDMA_ICS
--	bool "ICS DMA support"
--	depends on BLK_DEV_IDE_ICSIDE
--	help
--	  Say Y here if you want to add DMA (Direct Memory Access) support to
--	  the ICS IDE driver.
--
- config BLK_DEV_IDE_RAPIDE
- 	tristate "RapIDE interface support"
- 	depends on ARM && ARCH_ACORN
-@@ -684,8 +669,7 @@ config BLK_DEV_UMC8672
- endif
- 
- config BLK_DEV_IDEDMA
--	def_bool BLK_DEV_IDEDMA_SFF || \
--		 BLK_DEV_IDEDMA_ICS || BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA
-+	def_bool BLK_DEV_IDEDMA_SFF || BLK_DEV_IDE_AU1XXX_MDMA2_DBDMA
- 	select IDE_XFER_MODE
- 
- endif # IDE
+ config BLK_DEV_CY82C693
+ 	tristate "CY82C693 chipset support"
+ 	depends on ALPHA
 diff --git a/drivers/ide/Makefile b/drivers/ide/Makefile
-index f78616fe..385efa4 100644
+index 1ff2f8a..0f3cc1a 100644
 --- a/drivers/ide/Makefile
 +++ b/drivers/ide/Makefile
-@@ -87,7 +87,6 @@ obj-$(CONFIG_BLK_DEV_IDECS)		+= ide-cs.o
+@@ -48,7 +48,6 @@ obj-$(CONFIG_BLK_DEV_SGIIOC4)		+= sgiioc4.o
+ obj-$(CONFIG_BLK_DEV_SIIMAGE)		+= siimage.o
+ obj-$(CONFIG_BLK_DEV_SL82C105)		+= sl82c105.o
+ obj-$(CONFIG_BLK_DEV_TC86C001)		+= tc86c001.o
+-obj-$(CONFIG_BLK_DEV_TRIFLEX)		+= triflex.o
+ obj-$(CONFIG_BLK_DEV_TRM290)		+= trm290.o
+ obj-$(CONFIG_BLK_DEV_VIA82CXXX)		+= via82cxxx.o
  
- obj-$(CONFIG_BLK_DEV_PLATFORM)		+= ide_platform.o
- 
--obj-$(CONFIG_BLK_DEV_IDE_ICSIDE)	+= icside.o
- obj-$(CONFIG_BLK_DEV_IDE_RAPIDE)	+= rapide.o
- obj-$(CONFIG_BLK_DEV_PALMCHIP_BK3710)	+= palm_bk3710.o
- 
-diff --git a/drivers/ide/icside.c b/drivers/ide/icside.c
+diff --git a/drivers/ide/triflex.c b/drivers/ide/triflex.c
 deleted file mode 100644
-index 9f0a48e..0000000
---- a/drivers/ide/icside.c
+index 7f1af94..0000000
+--- a/drivers/ide/triflex.c
 +++ /dev/null
-@@ -1,691 +0,0 @@
+@@ -1,155 +0,0 @@
 -/*
-- * Copyright (c) 1996-2004 Russell King.
+- * IDE Chipset driver for the Compaq TriFlex IDE controller.
+- * 
+- * Known to work with the Compaq Workstation 5x00 series.
 - *
-- * Please note that this platform does not support 32-bit IDE IO.
+- * Copyright (C) 2002 Hewlett-Packard Development Group, L.P.
+- * Author: Torben Mathiasen <torben.mathiasen@hp.com>
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License version 2 as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+- * 
+- * Loosely based on the piix & svwks drivers.
+- *
+- * Documentation:
+- *	Not publicly available.
 - */
 -
--#include <linux/string.h>
+-#include <linux/types.h>
 -#include <linux/module.h>
--#include <linux/ioport.h>
--#include <linux/slab.h>
--#include <linux/blkdev.h>
--#include <linux/errno.h>
+-#include <linux/kernel.h>
+-#include <linux/pci.h>
 -#include <linux/ide.h>
--#include <linux/dma-mapping.h>
--#include <linux/device.h>
 -#include <linux/init.h>
--#include <linux/scatterlist.h>
--#include <linux/io.h>
 -
--#include <asm/dma.h>
--#include <asm/ecard.h>
+-#define DRV_NAME "triflex"
 -
--#define DRV_NAME "icside"
--
--#define ICS_IDENT_OFFSET		0x2280
--
--#define ICS_ARCIN_V5_INTRSTAT		0x0000
--#define ICS_ARCIN_V5_INTROFFSET		0x0004
--#define ICS_ARCIN_V5_IDEOFFSET		0x2800
--#define ICS_ARCIN_V5_IDEALTOFFSET	0x2b80
--#define ICS_ARCIN_V5_IDESTEPPING	6
--
--#define ICS_ARCIN_V6_IDEOFFSET_1	0x2000
--#define ICS_ARCIN_V6_INTROFFSET_1	0x2200
--#define ICS_ARCIN_V6_INTRSTAT_1		0x2290
--#define ICS_ARCIN_V6_IDEALTOFFSET_1	0x2380
--#define ICS_ARCIN_V6_IDEOFFSET_2	0x3000
--#define ICS_ARCIN_V6_INTROFFSET_2	0x3200
--#define ICS_ARCIN_V6_INTRSTAT_2		0x3290
--#define ICS_ARCIN_V6_IDEALTOFFSET_2	0x3380
--#define ICS_ARCIN_V6_IDESTEPPING	6
--
--struct cardinfo {
--	unsigned int dataoffset;
--	unsigned int ctrloffset;
--	unsigned int stepping;
--};
--
--static struct cardinfo icside_cardinfo_v5 = {
--	.dataoffset	= ICS_ARCIN_V5_IDEOFFSET,
--	.ctrloffset	= ICS_ARCIN_V5_IDEALTOFFSET,
--	.stepping	= ICS_ARCIN_V5_IDESTEPPING,
--};
--
--static struct cardinfo icside_cardinfo_v6_1 = {
--	.dataoffset	= ICS_ARCIN_V6_IDEOFFSET_1,
--	.ctrloffset	= ICS_ARCIN_V6_IDEALTOFFSET_1,
--	.stepping	= ICS_ARCIN_V6_IDESTEPPING,
--};
--
--static struct cardinfo icside_cardinfo_v6_2 = {
--	.dataoffset	= ICS_ARCIN_V6_IDEOFFSET_2,
--	.ctrloffset	= ICS_ARCIN_V6_IDEALTOFFSET_2,
--	.stepping	= ICS_ARCIN_V6_IDESTEPPING,
--};
--
--struct icside_state {
--	unsigned int channel;
--	unsigned int enabled;
--	void __iomem *irq_port;
--	void __iomem *ioc_base;
--	unsigned int sel;
--	unsigned int type;
--	struct ide_host *host;
--};
--
--#define ICS_TYPE_A3IN	0
--#define ICS_TYPE_A3USER	1
--#define ICS_TYPE_V6	3
--#define ICS_TYPE_V5	15
--#define ICS_TYPE_NOTYPE	((unsigned int)-1)
--
--/* ---------------- Version 5 PCB Support Functions --------------------- */
--/* Prototype: icside_irqenable_arcin_v5 (struct expansion_card *ec, int irqnr)
-- * Purpose  : enable interrupts from card
-- */
--static void icside_irqenable_arcin_v5 (struct expansion_card *ec, int irqnr)
+-static void triflex_set_mode(ide_hwif_t *hwif, ide_drive_t *drive)
 -{
--	struct icside_state *state = ec->irq_data;
+-	struct pci_dev *dev = to_pci_dev(hwif->dev);
+-	u32 triflex_timings = 0;
+-	u16 timing = 0;
+-	u8 channel_offset = hwif->channel ? 0x74 : 0x70, unit = drive->dn & 1;
 -
--	writeb(0, state->irq_port + ICS_ARCIN_V5_INTROFFSET);
--}
+-	pci_read_config_dword(dev, channel_offset, &triflex_timings);
 -
--/* Prototype: icside_irqdisable_arcin_v5 (struct expansion_card *ec, int irqnr)
-- * Purpose  : disable interrupts from card
-- */
--static void icside_irqdisable_arcin_v5 (struct expansion_card *ec, int irqnr)
--{
--	struct icside_state *state = ec->irq_data;
--
--	readb(state->irq_port + ICS_ARCIN_V5_INTROFFSET);
--}
--
--static const expansioncard_ops_t icside_ops_arcin_v5 = {
--	.irqenable	= icside_irqenable_arcin_v5,
--	.irqdisable	= icside_irqdisable_arcin_v5,
--};
--
--
--/* ---------------- Version 6 PCB Support Functions --------------------- */
--/* Prototype: icside_irqenable_arcin_v6 (struct expansion_card *ec, int irqnr)
-- * Purpose  : enable interrupts from card
-- */
--static void icside_irqenable_arcin_v6 (struct expansion_card *ec, int irqnr)
--{
--	struct icside_state *state = ec->irq_data;
--	void __iomem *base = state->irq_port;
--
--	state->enabled = 1;
--
--	switch (state->channel) {
--	case 0:
--		writeb(0, base + ICS_ARCIN_V6_INTROFFSET_1);
--		readb(base + ICS_ARCIN_V6_INTROFFSET_2);
--		break;
--	case 1:
--		writeb(0, base + ICS_ARCIN_V6_INTROFFSET_2);
--		readb(base + ICS_ARCIN_V6_INTROFFSET_1);
--		break;
--	}
--}
--
--/* Prototype: icside_irqdisable_arcin_v6 (struct expansion_card *ec, int irqnr)
-- * Purpose  : disable interrupts from card
-- */
--static void icside_irqdisable_arcin_v6 (struct expansion_card *ec, int irqnr)
--{
--	struct icside_state *state = ec->irq_data;
--
--	state->enabled = 0;
--
--	readb(state->irq_port + ICS_ARCIN_V6_INTROFFSET_1);
--	readb(state->irq_port + ICS_ARCIN_V6_INTROFFSET_2);
--}
--
--/* Prototype: icside_irqprobe(struct expansion_card *ec)
-- * Purpose  : detect an active interrupt from card
-- */
--static int icside_irqpending_arcin_v6(struct expansion_card *ec)
--{
--	struct icside_state *state = ec->irq_data;
--
--	return readb(state->irq_port + ICS_ARCIN_V6_INTRSTAT_1) & 1 ||
--	       readb(state->irq_port + ICS_ARCIN_V6_INTRSTAT_2) & 1;
--}
--
--static const expansioncard_ops_t icside_ops_arcin_v6 = {
--	.irqenable	= icside_irqenable_arcin_v6,
--	.irqdisable	= icside_irqdisable_arcin_v6,
--	.irqpending	= icside_irqpending_arcin_v6,
--};
--
--/*
-- * Handle routing of interrupts.  This is called before
-- * we write the command to the drive.
-- */
--static void icside_maskproc(ide_drive_t *drive, int mask)
--{
--	ide_hwif_t *hwif = drive->hwif;
--	struct expansion_card *ec = ECARD_DEV(hwif->dev);
--	struct icside_state *state = ecard_get_drvdata(ec);
--	unsigned long flags;
--
--	local_irq_save(flags);
--
--	state->channel = hwif->channel;
--
--	if (state->enabled && !mask) {
--		switch (hwif->channel) {
--		case 0:
--			writeb(0, state->irq_port + ICS_ARCIN_V6_INTROFFSET_1);
--			readb(state->irq_port + ICS_ARCIN_V6_INTROFFSET_2);
+-	switch (drive->dma_mode) {
+-		case XFER_MW_DMA_2:
+-			timing = 0x0103; 
 -			break;
--		case 1:
--			writeb(0, state->irq_port + ICS_ARCIN_V6_INTROFFSET_2);
--			readb(state->irq_port + ICS_ARCIN_V6_INTROFFSET_1);
+-		case XFER_MW_DMA_1:
+-			timing = 0x0203;
 -			break;
--		}
--	} else {
--		readb(state->irq_port + ICS_ARCIN_V6_INTROFFSET_2);
--		readb(state->irq_port + ICS_ARCIN_V6_INTROFFSET_1);
+-		case XFER_MW_DMA_0:
+-			timing = 0x0808;
+-			break;
+-		case XFER_SW_DMA_2:
+-		case XFER_SW_DMA_1:
+-		case XFER_SW_DMA_0:
+-			timing = 0x0f0f;
+-			break;
+-		case XFER_PIO_4:
+-			timing = 0x0202;
+-			break;
+-		case XFER_PIO_3:
+-			timing = 0x0204;
+-			break;
+-		case XFER_PIO_2:
+-			timing = 0x0404;
+-			break;
+-		case XFER_PIO_1:
+-			timing = 0x0508;
+-			break;
+-		case XFER_PIO_0:
+-			timing = 0x0808;
+-			break;
 -	}
 -
--	local_irq_restore(flags);
+-	triflex_timings &= ~(0xFFFF << (16 * unit));
+-	triflex_timings |= (timing << (16 * unit));
+-	
+-	pci_write_config_dword(dev, channel_offset, triflex_timings);
 -}
 -
--static const struct ide_port_ops icside_v6_no_dma_port_ops = {
--	.maskproc		= icside_maskproc,
+-static void triflex_set_pio_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+-{
+-	drive->dma_mode = drive->pio_mode;
+-	triflex_set_mode(hwif, drive);
+-}
+-
+-static const struct ide_port_ops triflex_port_ops = {
+-	.set_pio_mode		= triflex_set_pio_mode,
+-	.set_dma_mode		= triflex_set_mode,
 -};
 -
--#ifdef CONFIG_BLK_DEV_IDEDMA_ICS
--/*
-- * SG-DMA support.
-- *
-- * Similar to the BM-DMA, but we use the RiscPCs IOMD DMA controllers.
-- * There is only one DMA controller per card, which means that only
-- * one drive can be accessed at one time.  NOTE! We do not enforce that
-- * here, but we rely on the main IDE driver spotting that both
-- * interfaces use the same IRQ, which should guarantee this.
-- */
--
--/*
-- * Configure the IOMD to give the appropriate timings for the transfer
-- * mode being requested.  We take the advice of the ATA standards, and
-- * calculate the cycle time based on the transfer mode, and the EIDE
-- * MW DMA specs that the drive provides in the IDENTIFY command.
-- *
-- * We have the following IOMD DMA modes to choose from:
-- *
-- *	Type	Active		Recovery	Cycle
-- *	A	250 (250)	312 (550)	562 (800)
-- *	B	187		250		437
-- *	C	125 (125)	125 (375)	250 (500)
-- *	D	62		125		187
-- *
-- * (figures in brackets are actual measured timings)
-- *
-- * However, we also need to take care of the read/write active and
-- * recovery timings:
-- *
-- *			Read	Write
-- *  	Mode	Active	-- Recovery --	Cycle	IOMD type
-- *	MW0	215	50	215	480	A
-- *	MW1	80	50	50	150	C
-- *	MW2	70	25	25	120	C
-- */
--static void icside_set_dma_mode(ide_hwif_t *hwif, ide_drive_t *drive)
--{
--	unsigned long cycle_time = 0;
--	int use_dma_info = 0;
--	const u8 xfer_mode = drive->dma_mode;
--
--	switch (xfer_mode) {
--	case XFER_MW_DMA_2:
--		cycle_time = 250;
--		use_dma_info = 1;
--		break;
--
--	case XFER_MW_DMA_1:
--		cycle_time = 250;
--		use_dma_info = 1;
--		break;
--
--	case XFER_MW_DMA_0:
--		cycle_time = 480;
--		break;
--
--	case XFER_SW_DMA_2:
--	case XFER_SW_DMA_1:
--	case XFER_SW_DMA_0:
--		cycle_time = 480;
--		break;
--	}
--
--	/*
--	 * If we're going to be doing MW_DMA_1 or MW_DMA_2, we should
--	 * take care to note the values in the ID...
--	 */
--	if (use_dma_info && drive->id[ATA_ID_EIDE_DMA_TIME] > cycle_time)
--		cycle_time = drive->id[ATA_ID_EIDE_DMA_TIME];
--
--	ide_set_drivedata(drive, (void *)cycle_time);
--
--	printk(KERN_INFO "%s: %s selected (peak %luMB/s)\n",
--	       drive->name, ide_xfer_verbose(xfer_mode),
--	       2000 / (cycle_time ? cycle_time : (unsigned long) -1));
--}
--
--static const struct ide_port_ops icside_v6_port_ops = {
--	.set_dma_mode		= icside_set_dma_mode,
--	.maskproc		= icside_maskproc,
+-static const struct ide_port_info triflex_device = {
+-	.name		= DRV_NAME,
+-	.enablebits	= {{0x80, 0x01, 0x01}, {0x80, 0x02, 0x02}},
+-	.port_ops	= &triflex_port_ops,
+-	.pio_mask	= ATA_PIO4,
+-	.swdma_mask	= ATA_SWDMA2,
+-	.mwdma_mask	= ATA_MWDMA2,
 -};
 -
--static void icside_dma_host_set(ide_drive_t *drive, int on)
+-static int triflex_init_one(struct pci_dev *dev, const struct pci_device_id *id)
 -{
+-	return ide_pci_init_one(dev, &triflex_device, NULL);
 -}
 -
--static int icside_dma_end(ide_drive_t *drive)
+-static const struct pci_device_id triflex_pci_tbl[] = {
+-	{ PCI_VDEVICE(COMPAQ, PCI_DEVICE_ID_COMPAQ_TRIFLEX_IDE), 0 },
+-	{ 0, },
+-};
+-MODULE_DEVICE_TABLE(pci, triflex_pci_tbl);
+-
+-#ifdef CONFIG_PM
+-static int triflex_ide_pci_suspend(struct pci_dev *dev, pm_message_t state)
 -{
--	ide_hwif_t *hwif = drive->hwif;
--	struct expansion_card *ec = ECARD_DEV(hwif->dev);
--
--	disable_dma(ec->dma);
--
--	return get_dma_residue(ec->dma) != 0;
--}
--
--static void icside_dma_start(ide_drive_t *drive)
--{
--	ide_hwif_t *hwif = drive->hwif;
--	struct expansion_card *ec = ECARD_DEV(hwif->dev);
--
--	/* We can not enable DMA on both channels simultaneously. */
--	BUG_ON(dma_channel_active(ec->dma));
--	enable_dma(ec->dma);
--}
--
--static int icside_dma_setup(ide_drive_t *drive, struct ide_cmd *cmd)
--{
--	ide_hwif_t *hwif = drive->hwif;
--	struct expansion_card *ec = ECARD_DEV(hwif->dev);
--	struct icside_state *state = ecard_get_drvdata(ec);
--	unsigned int dma_mode;
--
--	if (cmd->tf_flags & IDE_TFLAG_WRITE)
--		dma_mode = DMA_MODE_WRITE;
--	else
--		dma_mode = DMA_MODE_READ;
--
 -	/*
--	 * We can not enable DMA on both channels.
+-	 * We must not disable or powerdown the device.
+-	 * APM bios refuses to suspend if IDE is not accessible.
 -	 */
--	BUG_ON(dma_channel_active(ec->dma));
--
--	/*
--	 * Ensure that we have the right interrupt routed.
--	 */
--	icside_maskproc(drive, 0);
--
--	/*
--	 * Route the DMA signals to the correct interface.
--	 */
--	writeb(state->sel | hwif->channel, state->ioc_base);
--
--	/*
--	 * Select the correct timing for this drive.
--	 */
--	set_dma_speed(ec->dma, (unsigned long)ide_get_drivedata(drive));
--
--	/*
--	 * Tell the DMA engine about the SG table and
--	 * data direction.
--	 */
--	set_dma_sg(ec->dma, hwif->sg_table, cmd->sg_nents);
--	set_dma_mode(ec->dma, dma_mode);
--
+-	pci_save_state(dev);
 -	return 0;
 -}
--
--static int icside_dma_test_irq(ide_drive_t *drive)
--{
--	ide_hwif_t *hwif = drive->hwif;
--	struct expansion_card *ec = ECARD_DEV(hwif->dev);
--	struct icside_state *state = ecard_get_drvdata(ec);
--
--	return readb(state->irq_port +
--		     (hwif->channel ?
--			ICS_ARCIN_V6_INTRSTAT_2 :
--			ICS_ARCIN_V6_INTRSTAT_1)) & 1;
--}
--
--static int icside_dma_init(ide_hwif_t *hwif, const struct ide_port_info *d)
--{
--	hwif->dmatable_cpu	= NULL;
--	hwif->dmatable_dma	= 0;
--
--	return 0;
--}
--
--static const struct ide_dma_ops icside_v6_dma_ops = {
--	.dma_host_set		= icside_dma_host_set,
--	.dma_setup		= icside_dma_setup,
--	.dma_start		= icside_dma_start,
--	.dma_end		= icside_dma_end,
--	.dma_test_irq		= icside_dma_test_irq,
--	.dma_lost_irq		= ide_dma_lost_irq,
--};
+-#else
+-#define triflex_ide_pci_suspend NULL
 -#endif
 -
--static int icside_dma_off_init(ide_hwif_t *hwif, const struct ide_port_info *d)
--{
--	return -EOPNOTSUPP;
--}
--
--static void icside_setup_ports(struct ide_hw *hw, void __iomem *base,
--			       struct cardinfo *info, struct expansion_card *ec)
--{
--	unsigned long port = (unsigned long)base + info->dataoffset;
--
--	hw->io_ports.data_addr	 = port;
--	hw->io_ports.error_addr	 = port + (1 << info->stepping);
--	hw->io_ports.nsect_addr	 = port + (2 << info->stepping);
--	hw->io_ports.lbal_addr	 = port + (3 << info->stepping);
--	hw->io_ports.lbam_addr	 = port + (4 << info->stepping);
--	hw->io_ports.lbah_addr	 = port + (5 << info->stepping);
--	hw->io_ports.device_addr = port + (6 << info->stepping);
--	hw->io_ports.status_addr = port + (7 << info->stepping);
--	hw->io_ports.ctl_addr	 = (unsigned long)base + info->ctrloffset;
--
--	hw->irq = ec->irq;
--	hw->dev = &ec->dev;
--}
--
--static const struct ide_port_info icside_v5_port_info = {
--	.host_flags		= IDE_HFLAG_NO_DMA,
--	.chipset		= ide_acorn,
+-static struct pci_driver triflex_pci_driver = {
+-	.name		= "TRIFLEX_IDE",
+-	.id_table	= triflex_pci_tbl,
+-	.probe		= triflex_init_one,
+-	.remove		= ide_pci_remove,
+-	.suspend	= triflex_ide_pci_suspend,
+-	.resume		= ide_pci_resume,
 -};
 -
--static int icside_register_v5(struct icside_state *state,
--			      struct expansion_card *ec)
+-static int __init triflex_ide_init(void)
 -{
--	void __iomem *base;
--	struct ide_host *host;
--	struct ide_hw hw, *hws[] = { &hw };
--	int ret;
--
--	base = ecardm_iomap(ec, ECARD_RES_MEMC, 0, 0);
--	if (!base)
--		return -ENOMEM;
--
--	state->irq_port = base;
--
--	ec->irqaddr  = base + ICS_ARCIN_V5_INTRSTAT;
--	ec->irqmask  = 1;
--
--	ecard_setirq(ec, &icside_ops_arcin_v5, state);
--
--	/*
--	 * Be on the safe side - disable interrupts
--	 */
--	icside_irqdisable_arcin_v5(ec, 0);
--
--	icside_setup_ports(&hw, base, &icside_cardinfo_v5, ec);
--
--	host = ide_host_alloc(&icside_v5_port_info, hws, 1);
--	if (host == NULL)
--		return -ENODEV;
--
--	state->host = host;
--
--	ecard_set_drvdata(ec, state);
--
--	ret = ide_host_register(host, &icside_v5_port_info, hws);
--	if (ret)
--		goto err_free;
--
--	return 0;
--err_free:
--	ide_host_free(host);
--	ecard_set_drvdata(ec, NULL);
--	return ret;
+-	return ide_pci_register_driver(&triflex_pci_driver);
 -}
 -
--static const struct ide_port_info icside_v6_port_info __initconst = {
--	.init_dma		= icside_dma_off_init,
--	.port_ops		= &icside_v6_no_dma_port_ops,
--	.host_flags		= IDE_HFLAG_SERIALIZE | IDE_HFLAG_MMIO,
--	.mwdma_mask		= ATA_MWDMA2,
--	.swdma_mask		= ATA_SWDMA2,
--	.chipset		= ide_acorn,
--};
--
--static int icside_register_v6(struct icside_state *state,
--			      struct expansion_card *ec)
+-static void __exit triflex_ide_exit(void)
 -{
--	void __iomem *ioc_base, *easi_base;
--	struct ide_host *host;
--	unsigned int sel = 0;
--	int ret;
--	struct ide_hw hw[2], *hws[] = { &hw[0], &hw[1] };
--	struct ide_port_info d = icside_v6_port_info;
--
--	ioc_base = ecardm_iomap(ec, ECARD_RES_IOCFAST, 0, 0);
--	if (!ioc_base) {
--		ret = -ENOMEM;
--		goto out;
--	}
--
--	easi_base = ioc_base;
--
--	if (ecard_resource_flags(ec, ECARD_RES_EASI)) {
--		easi_base = ecardm_iomap(ec, ECARD_RES_EASI, 0, 0);
--		if (!easi_base) {
--			ret = -ENOMEM;
--			goto out;
--		}
--
--		/*
--		 * Enable access to the EASI region.
--		 */
--		sel = 1 << 5;
--	}
--
--	writeb(sel, ioc_base);
--
--	ecard_setirq(ec, &icside_ops_arcin_v6, state);
--
--	state->irq_port   = easi_base;
--	state->ioc_base   = ioc_base;
--	state->sel	  = sel;
--
--	/*
--	 * Be on the safe side - disable interrupts
--	 */
--	icside_irqdisable_arcin_v6(ec, 0);
--
--	icside_setup_ports(&hw[0], easi_base, &icside_cardinfo_v6_1, ec);
--	icside_setup_ports(&hw[1], easi_base, &icside_cardinfo_v6_2, ec);
--
--	host = ide_host_alloc(&d, hws, 2);
--	if (host == NULL)
--		return -ENODEV;
--
--	state->host = host;
--
--	ecard_set_drvdata(ec, state);
--
--#ifdef CONFIG_BLK_DEV_IDEDMA_ICS
--	if (ec->dma != NO_DMA && !request_dma(ec->dma, DRV_NAME)) {
--		d.init_dma = icside_dma_init;
--		d.port_ops = &icside_v6_port_ops;
--		d.dma_ops  = &icside_v6_dma_ops;
--	}
--#endif
--
--	ret = ide_host_register(host, &d, hws);
--	if (ret)
--		goto err_free;
--
--	return 0;
--err_free:
--	ide_host_free(host);
--	if (d.dma_ops)
--		free_dma(ec->dma);
--	ecard_set_drvdata(ec, NULL);
--out:
--	return ret;
+-	pci_unregister_driver(&triflex_pci_driver);
 -}
 -
--static int icside_probe(struct expansion_card *ec, const struct ecard_id *id)
--{
--	struct icside_state *state;
--	void __iomem *idmem;
--	int ret;
+-module_init(triflex_ide_init);
+-module_exit(triflex_ide_exit);
 -
--	ret = ecard_request_resources(ec);
--	if (ret)
--		goto out;
--
--	state = kzalloc(sizeof(struct icside_state), GFP_KERNEL);
--	if (!state) {
--		ret = -ENOMEM;
--		goto release;
--	}
--
--	state->type	= ICS_TYPE_NOTYPE;
--
--	idmem = ecardm_iomap(ec, ECARD_RES_IOCFAST, 0, 0);
--	if (idmem) {
--		unsigned int type;
--
--		type = readb(idmem + ICS_IDENT_OFFSET) & 1;
--		type |= (readb(idmem + ICS_IDENT_OFFSET + 4) & 1) << 1;
--		type |= (readb(idmem + ICS_IDENT_OFFSET + 8) & 1) << 2;
--		type |= (readb(idmem + ICS_IDENT_OFFSET + 12) & 1) << 3;
--		ecardm_iounmap(ec, idmem);
--
--		state->type = type;
--	}
--
--	switch (state->type) {
--	case ICS_TYPE_A3IN:
--		dev_warn(&ec->dev, "A3IN unsupported\n");
--		ret = -ENODEV;
--		break;
--
--	case ICS_TYPE_A3USER:
--		dev_warn(&ec->dev, "A3USER unsupported\n");
--		ret = -ENODEV;
--		break;
--
--	case ICS_TYPE_V5:
--		ret = icside_register_v5(state, ec);
--		break;
--
--	case ICS_TYPE_V6:
--		ret = icside_register_v6(state, ec);
--		break;
--
--	default:
--		dev_warn(&ec->dev, "unknown interface type\n");
--		ret = -ENODEV;
--		break;
--	}
--
--	if (ret == 0)
--		goto out;
--
--	kfree(state);
-- release:
--	ecard_release_resources(ec);
-- out:
--	return ret;
--}
--
--static void icside_remove(struct expansion_card *ec)
--{
--	struct icside_state *state = ecard_get_drvdata(ec);
--
--	switch (state->type) {
--	case ICS_TYPE_V5:
--		/* FIXME: tell IDE to stop using the interface */
--
--		/* Disable interrupts */
--		icside_irqdisable_arcin_v5(ec, 0);
--		break;
--
--	case ICS_TYPE_V6:
--		/* FIXME: tell IDE to stop using the interface */
--		if (ec->dma != NO_DMA)
--			free_dma(ec->dma);
--
--		/* Disable interrupts */
--		icside_irqdisable_arcin_v6(ec, 0);
--
--		/* Reset the ROM pointer/EASI selection */
--		writeb(0, state->ioc_base);
--		break;
--	}
--
--	ecard_set_drvdata(ec, NULL);
--
--	kfree(state);
--	ecard_release_resources(ec);
--}
--
--static void icside_shutdown(struct expansion_card *ec)
--{
--	struct icside_state *state = ecard_get_drvdata(ec);
--	unsigned long flags;
--
--	/*
--	 * Disable interrupts from this card.  We need to do
--	 * this before disabling EASI since we may be accessing
--	 * this register via that region.
--	 */
--	local_irq_save(flags);
--	ec->ops->irqdisable(ec, 0);
--	local_irq_restore(flags);
--
--	/*
--	 * Reset the ROM pointer so that we can read the ROM
--	 * after a soft reboot.  This also disables access to
--	 * the IDE taskfile via the EASI region.
--	 */
--	if (state->ioc_base)
--		writeb(0, state->ioc_base);
--}
--
--static const struct ecard_id icside_ids[] = {
--	{ MANU_ICS,  PROD_ICS_IDE  },
--	{ MANU_ICS2, PROD_ICS2_IDE },
--	{ 0xffff, 0xffff }
--};
--
--static struct ecard_driver icside_driver = {
--	.probe		= icside_probe,
--	.remove		= icside_remove,
--	.shutdown	= icside_shutdown,
--	.id_table	= icside_ids,
--	.drv = {
--		.name	= "icside",
--	},
--};
--
--static int __init icside_init(void)
--{
--	return ecard_register_driver(&icside_driver);
--}
--
--static void __exit icside_exit(void)
--{
--	ecard_remove_driver(&icside_driver);
--}
--
--MODULE_AUTHOR("Russell King <rmk@arm.linux.org.uk>");
+-MODULE_AUTHOR("Torben Mathiasen");
+-MODULE_DESCRIPTION("PCI driver module for Compaq Triflex IDE");
 -MODULE_LICENSE("GPL");
--MODULE_DESCRIPTION("ICS IDE driver");
 -
--module_init(icside_init);
--module_exit(icside_exit);
+-
 -- 
 1.9.1
+
