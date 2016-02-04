@@ -1,64 +1,95 @@
-From: Zubair Lutfullah Kakakhel <Zubair.Kakakhel@imgtec.com>
-Subject: Re: [PATCH v7] SATA: OCTEON: support SATA on OCTEON platform
-Date: Thu, 4 Feb 2016 16:05:34 +0000
-Message-ID: <56B376CE.9010600@imgtec.com>
-References: <1454520915-27948-1-git-send-email-Zubair.Kakakhel@imgtec.com>
- <56B342FF.1090709@caviumnetworks.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+From: suman Tripathi <stripathi@apm.com>
+Subject: [PATCH v3 3/3] ahci_xgene: Implement the workaround to fix the missing of edge interrupt for HOST_IRQ_STAT.
+Date: Fri,  5 Feb 2016 02:50:26 +0530
+Message-ID: <1454620826-22554-4-git-send-email-stripathi@apm.com>
+References: <1454620826-22554-1-git-send-email-stripathi@apm.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailapp01.imgtec.com ([195.59.15.196]:18629 "EHLO
-	mailapp01.imgtec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932997AbcBDQGB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Feb 2016 11:06:01 -0500
-In-Reply-To: <56B342FF.1090709@caviumnetworks.com>
+Received: from [198.137.200.161] ([198.137.200.161]:60064 "EHLO
+	denmail01.amcc.com" rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752559AbcBDVVQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Feb 2016 16:21:16 -0500
+In-Reply-To: <1454620826-22554-1-git-send-email-stripathi@apm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Aleksey Makarov <aleksey.makarov@caviumnetworks.com>, tj@kernel.org, hdegoede@redhat.com
-Cc: david.daney@cavium.com, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com, Suman Tripathi <stripathi@apm.com>
 
-Hi,
+From: Suman Tripathi <stripathi@apm.com>
 
-Thank-you for the review.
+Due to H/W errata, the HOST_IRQ_STAT register misses the edge interrupt
+when clearing the HOST_IRQ_STAT register and hardware reporting the
+PORT_IRQ_STAT register at the same clock cycle.
 
-On 04/02/16 12:24, Aleksey Makarov wrote:
->
-> Hi Zubair,
->
->> +	void __iomem *base;
->
-> [..]
->
->> +	cfg = cvmx_read_csr((uint64_t)base + CVMX_SATA_UCTL_SHIM_CFG);
->
-> sparse will complain here.  See Documentation/sparse.txt
+Signed-off-by: Suman Tripathi <stripathi@apm.com>
+---
+ drivers/ata/ahci_xgene.c |   47 +++++++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 46 insertions(+), 1 deletions(-)
 
-Yes. sparse says
+diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
+index a56ceeb..6270bad 100644
+--- a/drivers/ata/ahci_xgene.c
++++ b/drivers/ata/ahci_xgene.c
+@@ -548,6 +548,51 @@ softreset_retry:
+ 	return rc;
+ }
 
-...
-CHECK   drivers/ata/sata_octeon.c
-drivers/ata/sata_octeon.c:50:30: warning: cast removes address space of expression
-drivers/ata/sata_octeon.c:65:25: warning: cast removes address space of expression
-...
++/**
++ * xgene_ahci_handle_broken_edge_irq - Handle the broken irq.
++ * @ata_host: Host that recieved the irq
++ * @irq_masked: HOST_IRQ_STAT value
++ *
++ * For hardware with broken edge trigger latch
++ * the HOST_IRQ_STAT register misses the edge interrupt
++ * when clearing of HOST_IRQ_STAT register and hardware
++ * reporting the PORT_IRQ_STAT register at the
++ * same clock cycle.
++ * As such, the algorithm below outlines the workaround.
++ *
++ * 1. Read HOST_IRQ_STAT register and save the state.
++ * 2. Clear the HOST_IRQ_STAT register.
++ * 3. Read back the HOST_IRQ_STAT register.
++ * 4. If HOST_IRQ_STAT register equals to zero, then
++ *    traverse the rest of port's PORT_IRQ_STAT register
++ *    to check if an interrupt is triggered at that point else
++ *    go to step 6.
++ * 5. If PORT_IRQ_STAT register of rest ports is not equal to zero
++ *    then update the state of HOST_IRQ_STAT saved in step 1.
++ * 6. Handle port interrupts.
++ * 7. Exit
++ */
++static int xgene_ahci_handle_broken_edge_irq(struct ata_host *host,
++					     u32 irq_masked)
++{
++	struct ahci_host_priv *hpriv = host->private_data;
++	void __iomem *port_mmio;
++	int i;
++
++	if (!readl(hpriv->mmio + HOST_IRQ_STAT)) {
++		for (i = 0; i < host->n_ports; i++) {
++			if (irq_masked & (1 << i))
++				continue;
++
++			port_mmio = ahci_port_base(host->ports[i]);
++			if (readl(port_mmio + PORT_IRQ_STAT))
++				irq_masked |= (1 << i);
++		}
++	}
++
++	return ahci_handle_port_intr(host, irq_masked);
++}
++
+ static irqreturn_t xgene_ahci_irq_intr(int irq, void *dev_instance)
+ {
+ 	struct ata_host *host = dev_instance;
+@@ -576,7 +621,7 @@ static irqreturn_t xgene_ahci_irq_intr(int irq, void *dev_instance)
+ 	 */
+ 	writel(irq_stat, mmio + HOST_IRQ_STAT);
 
-Use of (__force uint64_t) removes the sparse warning. But it was
-frowned upon by arnd.
+-	rc = ahci_handle_port_intr(host, irq_masked);
++	rc = xgene_ahci_handle_broken_edge_irq(host, irq_masked);
 
-He suggested a wrapper helper in asm/octeon/cvmx.h which handles iomem
-addresses and __force behind the scenes rather than in the driver.
+ 	spin_unlock(&host->lock);
 
-static inline void cvmx_write_csr_resource(void __iomem *csr_addr, uint64_t val)
-{
-	cvmx_write_csr((__force uint64_t)csr_addr, val)
-}
+--
+1.7.1
 
-Alternatives? Or should I resend with the above wrapper?
-
-Regards,
-ZubairLK
-
->
-> Thank you
-> Aleksey Makarov
->
