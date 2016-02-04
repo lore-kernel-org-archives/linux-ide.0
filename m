@@ -1,7 +1,7 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RFC PATCH 10/19] ide: remove deprecated jmicron host driver
-Date: Thu, 04 Feb 2016 14:44:07 +0100
-Message-ID: <1454593456-3162-11-git-send-email-b.zolnierkie@samsung.com>
+Subject: [RFC PATCH 12/19] ide: remove deprecated pdc202xx_old host driver
+Date: Thu, 04 Feb 2016 14:44:09 +0100
+Message-ID: <1454593456-3162-13-git-send-email-b.zolnierkie@samsung.com>
 References: <1454593456-3162-1-git-send-email-b.zolnierkie@samsung.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-reply-to: <1454593456-3162-1-git-send-email-b.zolnierkie@samsung.com>
@@ -14,231 +14,439 @@ IDE subsystem has been deprecated since 2009 and the majority
 (if not all) of Linux distributions have switched to use
 libata for ATA support exclusively.
 
-The replacement driver (pata_jmicron) has been available since
-2006 and it supports all the hardware supported by the old
-jmicron host driver.
+The replacement driver (pata_pdc202xx_old) has been available
+since 2006 and it supports all the hardware supported by the old
+pdc202xx_old host driver.
 
-Remove the deprecated jmicron host driver.
+Remove the deprecated pdc202xx_old host driver.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
- drivers/ide/Kconfig   |   7 --
- drivers/ide/Makefile  |   1 -
- drivers/ide/jmicron.c | 176 --------------------------------------------------
- 3 files changed, 184 deletions(-)
- delete mode 100644 drivers/ide/jmicron.c
+ drivers/ide/Kconfig        |  23 +--
+ drivers/ide/Makefile       |   1 -
+ drivers/ide/pdc202xx_old.c | 361 ---------------------------------------------
+ 3 files changed, 1 insertion(+), 384 deletions(-)
+ delete mode 100644 drivers/ide/pdc202xx_old.c
 
 diff --git a/drivers/ide/Kconfig b/drivers/ide/Kconfig
-index ac2b9f4..2458a1f 100644
+index 2341097..35a4bed 100644
 --- a/drivers/ide/Kconfig
 +++ b/drivers/ide/Kconfig
-@@ -420,13 +420,6 @@ config BLK_DEV_HPT366
- 	  ide-probe at boot. It is reported to support DVD II drives, by the
- 	  manufacturer.
+@@ -288,7 +288,7 @@ config IDEPCI_PCIBUS_ORDER
+ # TODO: split it on per host driver config options (or module parameters)
+ config BLK_DEV_OFFBOARD
+ 	bool "Boot off-board chipsets first support (DEPRECATED)"
+-	depends on BLK_DEV_IDEPCI && (BLK_DEV_AEC62XX || BLK_DEV_GENERIC || BLK_DEV_HPT366 || BLK_DEV_PDC202XX_NEW || BLK_DEV_PDC202XX_OLD || BLK_DEV_TC86C001)
++	depends on BLK_DEV_IDEPCI && (BLK_DEV_AEC62XX || BLK_DEV_GENERIC || BLK_DEV_HPT366 || BLK_DEV_PDC202XX_NEW || BLK_DEV_TC86C001)
+ 	help
+ 	  Normally, IDE controllers built into the motherboard (on-board
+ 	  controllers) are assigned to ide0 and ide1 while those on add-in PCI
+@@ -437,27 +437,6 @@ config BLK_DEV_NS87415
  
--config BLK_DEV_JMICRON
--	tristate "JMicron JMB36x support"
+ 	  Please read the comments at the top of <file:drivers/ide/ns87415.c>.
+ 
+-config BLK_DEV_PDC202XX_OLD
+-	tristate "PROMISE PDC202{46|62|65|67} support"
 -	select BLK_DEV_IDEDMA_PCI
 -	help
--	  Basic support for the JMicron ATA controllers. For full support
--	  use the libata drivers.
+-	  Promise Ultra33 or PDC20246
+-	  Promise Ultra66 or PDC20262
+-	  Promise Ultra100 or PDC20265/PDC20267/PDC20268
 -
- config BLK_DEV_PIIX
- 	tristate "Intel PIIX/ICH chipsets support"
+-	  This driver adds up to 4 more EIDE devices sharing a single
+-	  interrupt. This add-on card is a bootable PCI UDMA controller. Since
+-	  multiple cards can be installed and there are BIOS ROM problems that
+-	  happen if the BIOS revisions of all installed cards (three-max) do
+-	  not match, the driver attempts to do dynamic tuning of the chipset
+-	  at boot-time for max-speed.  Ultra33 BIOS 1.25 or newer is required
+-	  for more than one card.
+-
+-	  Please read the comments at the top of
+-	  <file:drivers/ide/pdc202xx_old.c>.
+-
+-	  If unsure, say N.
+-
+ config BLK_DEV_PDC202XX_NEW
+ 	tristate "PROMISE PDC202{68|69|70|71|75|76|77} support"
  	select BLK_DEV_IDEDMA_PCI
 diff --git a/drivers/ide/Makefile b/drivers/ide/Makefile
-index 94e8d17..90b64de 100644
+index 9a69b97..fa4221b 100644
 --- a/drivers/ide/Makefile
 +++ b/drivers/ide/Makefile
-@@ -41,7 +41,6 @@ obj-$(CONFIG_BLK_DEV_CMD64X)		+= cmd64x.o
- obj-$(CONFIG_BLK_DEV_CY82C693)		+= cy82c693.o
+@@ -42,7 +42,6 @@ obj-$(CONFIG_BLK_DEV_CY82C693)		+= cy82c693.o
  obj-$(CONFIG_BLK_DEV_HPT366)		+= hpt366.o
  obj-$(CONFIG_BLK_DEV_IT8172)		+= it8172.o
--obj-$(CONFIG_BLK_DEV_JMICRON)		+= jmicron.o
  obj-$(CONFIG_BLK_DEV_NS87415)		+= ns87415.o
- obj-$(CONFIG_BLK_DEV_OPTI621)		+= opti621.o
- obj-$(CONFIG_BLK_DEV_PDC202XX_OLD)	+= pdc202xx_old.o
-diff --git a/drivers/ide/jmicron.c b/drivers/ide/jmicron.c
+-obj-$(CONFIG_BLK_DEV_PDC202XX_OLD)	+= pdc202xx_old.o
+ obj-$(CONFIG_BLK_DEV_PDC202XX_NEW)	+= pdc202xx_new.o
+ obj-$(CONFIG_BLK_DEV_PIIX)		+= piix.o
+ obj-$(CONFIG_BLK_DEV_RZ1000)		+= rz1000.o
+diff --git a/drivers/ide/pdc202xx_old.c b/drivers/ide/pdc202xx_old.c
 deleted file mode 100644
-index ae6480d..0000000
---- a/drivers/ide/jmicron.c
+index 224ad46..0000000
+--- a/drivers/ide/pdc202xx_old.c
 +++ /dev/null
-@@ -1,176 +0,0 @@
--
+@@ -1,361 +0,0 @@
 -/*
-- * Copyright (C) 2006		Red Hat
+- *  Copyright (C) 1998-2002		Andre Hedrick <andre@linux-ide.org>
+- *  Copyright (C) 2006-2007, 2009	MontaVista Software, Inc.
+- *  Copyright (C) 2007-2010		Bartlomiej Zolnierkiewicz
 - *
-- *  May be copied or modified under the terms of the GNU General Public License
+- *  Portions Copyright (C) 1999 Promise Technology, Inc.
+- *  Author: Frank Tiernan (frankt@promise.com)
+- *  Released under terms of General Public License
 - */
 -
 -#include <linux/types.h>
 -#include <linux/module.h>
+-#include <linux/kernel.h>
+-#include <linux/delay.h>
+-#include <linux/blkdev.h>
 -#include <linux/pci.h>
--#include <linux/ide.h>
 -#include <linux/init.h>
+-#include <linux/ide.h>
 -
--#define DRV_NAME "jmicron"
+-#include <asm/io.h>
 -
--typedef enum {
--	PORT_PATA0 = 0,
--	PORT_PATA1 = 1,
--	PORT_SATA = 2,
--} port_type;
+-#define DRV_NAME "pdc202xx_old"
 -
--/**
-- *	jmicron_cable_detect	-	cable detection
-- *	@hwif: IDE port
-- *
-- *	Returns the cable type.
-- */
--
--static u8 jmicron_cable_detect(ide_hwif_t *hwif)
+-static void pdc202xx_set_mode(ide_hwif_t *hwif, ide_drive_t *drive)
 -{
--	struct pci_dev *pdev = to_pci_dev(hwif->dev);
+-	struct pci_dev *dev	= to_pci_dev(hwif->dev);
+-	u8 drive_pci		= 0x60 + (drive->dn << 2);
+-	const u8 speed		= drive->dma_mode;
 -
--	u32 control;
--	u32 control5;
+-	u8			AP = 0, BP = 0, CP = 0;
+-	u8			TA = 0, TB = 0, TC = 0;
 -
--	int port = hwif->channel;
--	port_type port_map[2];
+-	pci_read_config_byte(dev, drive_pci,     &AP);
+-	pci_read_config_byte(dev, drive_pci + 1, &BP);
+-	pci_read_config_byte(dev, drive_pci + 2, &CP);
 -
--	pci_read_config_dword(pdev, 0x40, &control);
+-	switch(speed) {
+-		case XFER_UDMA_5:
+-		case XFER_UDMA_4:	TB = 0x20; TC = 0x01; break;
+-		case XFER_UDMA_2:	TB = 0x20; TC = 0x01; break;
+-		case XFER_UDMA_3:
+-		case XFER_UDMA_1:	TB = 0x40; TC = 0x02; break;
+-		case XFER_UDMA_0:
+-		case XFER_MW_DMA_2:	TB = 0x60; TC = 0x03; break;
+-		case XFER_MW_DMA_1:	TB = 0x60; TC = 0x04; break;
+-		case XFER_MW_DMA_0:	TB = 0xE0; TC = 0x0F; break;
+-		case XFER_PIO_4:	TA = 0x01; TB = 0x04; break;
+-		case XFER_PIO_3:	TA = 0x02; TB = 0x06; break;
+-		case XFER_PIO_2:	TA = 0x03; TB = 0x08; break;
+-		case XFER_PIO_1:	TA = 0x05; TB = 0x0C; break;
+-		case XFER_PIO_0:
+-		default:		TA = 0x09; TB = 0x13; break;
+-	}
 -
--	/* There are two basic mappings. One has the two SATA ports merged
--	   as master/slave and the secondary as PATA, the other has only the
--	   SATA port mapped */
--	if (control & (1 << 23)) {
--		port_map[0] = PORT_SATA;
--		port_map[1] = PORT_PATA0;
+-	if (speed < XFER_SW_DMA_0) {
+-		/*
+-		 * preserve SYNC_INT / ERDDY_EN bits while clearing
+-		 * Prefetch_EN / IORDY_EN / PA[3:0] bits of register A
+-		 */
+-		AP &= ~0x3f;
+-		if (ide_pio_need_iordy(drive, speed - XFER_PIO_0))
+-			AP |= 0x20;	/* set IORDY_EN bit */
+-		if (drive->media == ide_disk)
+-			AP |= 0x10;	/* set Prefetch_EN bit */
+-		/* clear PB[4:0] bits of register B */
+-		BP &= ~0x1f;
+-		pci_write_config_byte(dev, drive_pci,     AP | TA);
+-		pci_write_config_byte(dev, drive_pci + 1, BP | TB);
 -	} else {
--		port_map[0] = PORT_SATA;
--		port_map[1] = PORT_SATA;
+-		/* clear MB[2:0] bits of register B */
+-		BP &= ~0xe0;
+-		/* clear MC[3:0] bits of register C */
+-		CP &= ~0x0f;
+-		pci_write_config_byte(dev, drive_pci + 1, BP | TB);
+-		pci_write_config_byte(dev, drive_pci + 2, CP | TC);
 -	}
--
--	/* The 365/366 may have this bit set to map the second PATA port
--	   as the internal primary channel */
--	pci_read_config_dword(pdev, 0x80, &control5);
--	if (control5 & (1<<24))
--		port_map[0] = PORT_PATA1;
--
--	/* The two ports may then be logically swapped by the firmware */
--	if (control & (1 << 22))
--		port = port ^ 1;
--
--	/*
--	 *	Now we know which physical port we are talking about we can
--	 *	actually do our cable checking etc. Thankfully we don't need
--	 *	to do the plumbing for other cases.
--	 */
--	switch (port_map[port]) {
--	case PORT_PATA0:
--		if (control & (1 << 3))	/* 40/80 pin primary */
--			return ATA_CBL_PATA40;
--		return ATA_CBL_PATA80;
--	case PORT_PATA1:
--		if (control5 & (1 << 19))	/* 40/80 pin secondary */
--			return ATA_CBL_PATA40;
--		return ATA_CBL_PATA80;
--	case PORT_SATA:
--		break;
--	}
--	/* Avoid bogus "control reaches end of non-void function" */
--	return ATA_CBL_PATA80;
 -}
 -
--static void jmicron_set_pio_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+-static void pdc202xx_set_pio_mode(ide_hwif_t *hwif, ide_drive_t *drive)
 -{
+-	drive->dma_mode = drive->pio_mode;
+-	pdc202xx_set_mode(hwif, drive);
 -}
 -
--/**
-- *	jmicron_set_dma_mode	-	set host controller for DMA mode
-- *	@hwif: port
-- *	@drive: drive
+-static int pdc202xx_test_irq(ide_hwif_t *hwif)
+-{
+-	struct pci_dev *dev	= to_pci_dev(hwif->dev);
+-	unsigned long high_16	= pci_resource_start(dev, 4);
+-	u8 sc1d			= inb(high_16 + 0x1d);
+-
+-	if (hwif->channel) {
+-		/*
+-		 * bit 7: error, bit 6: interrupting,
+-		 * bit 5: FIFO full, bit 4: FIFO empty
+-		 */
+-		return (sc1d & 0x40) ? 1 : 0;
+-	} else	{
+-		/*
+-		 * bit 3: error, bit 2: interrupting,
+-		 * bit 1: FIFO full, bit 0: FIFO empty
+-		 */
+-		return (sc1d & 0x04) ? 1 : 0;
+-	}
+-}
+-
+-static u8 pdc2026x_cable_detect(ide_hwif_t *hwif)
+-{
+-	struct pci_dev *dev = to_pci_dev(hwif->dev);
+-	u16 CIS, mask = hwif->channel ? (1 << 11) : (1 << 10);
+-
+-	pci_read_config_word(dev, 0x50, &CIS);
+-
+-	return (CIS & mask) ? ATA_CBL_PATA40 : ATA_CBL_PATA80;
+-}
+-
+-/*
+- * Set the control register to use the 66MHz system
+- * clock for UDMA 3/4/5 mode operation when necessary.
 - *
-- *	As the JMicron snoops for timings we don't need to do anything here.
+- * FIXME: this register is shared by both channels, some locking is needed
+- *
+- * It may also be possible to leave the 66MHz clock on
+- * and readjust the timing parameters.
 - */
--
--static void jmicron_set_dma_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+-static void pdc_old_enable_66MHz_clock(ide_hwif_t *hwif)
 -{
+-	unsigned long clock_reg = hwif->extra_base + 0x01;
+-	u8 clock = inb(clock_reg);
+-
+-	outb(clock | (hwif->channel ? 0x08 : 0x02), clock_reg);
 -}
 -
--static const struct ide_port_ops jmicron_port_ops = {
--	.set_pio_mode		= jmicron_set_pio_mode,
--	.set_dma_mode		= jmicron_set_dma_mode,
--	.cable_detect		= jmicron_cable_detect,
+-static void pdc_old_disable_66MHz_clock(ide_hwif_t *hwif)
+-{
+-	unsigned long clock_reg = hwif->extra_base + 0x01;
+-	u8 clock = inb(clock_reg);
+-
+-	outb(clock & ~(hwif->channel ? 0x08 : 0x02), clock_reg);
+-}
+-
+-static void pdc2026x_init_hwif(ide_hwif_t *hwif)
+-{
+-	pdc_old_disable_66MHz_clock(hwif);
+-}
+-
+-static void pdc202xx_dma_start(ide_drive_t *drive)
+-{
+-	if (drive->current_speed > XFER_UDMA_2)
+-		pdc_old_enable_66MHz_clock(drive->hwif);
+-	if (drive->media != ide_disk || (drive->dev_flags & IDE_DFLAG_LBA48)) {
+-		ide_hwif_t *hwif	= drive->hwif;
+-		struct request *rq	= hwif->rq;
+-		unsigned long high_16	= hwif->extra_base - 16;
+-		unsigned long atapi_reg	= high_16 + (hwif->channel ? 0x24 : 0x20);
+-		u32 word_count	= 0;
+-		u8 clock = inb(high_16 + 0x11);
+-
+-		outb(clock | (hwif->channel ? 0x08 : 0x02), high_16 + 0x11);
+-		word_count = (blk_rq_sectors(rq) << 8);
+-		word_count = (rq_data_dir(rq) == READ) ?
+-					word_count | 0x05000000 :
+-					word_count | 0x06000000;
+-		outl(word_count, atapi_reg);
+-	}
+-	ide_dma_start(drive);
+-}
+-
+-static int pdc202xx_dma_end(ide_drive_t *drive)
+-{
+-	if (drive->media != ide_disk || (drive->dev_flags & IDE_DFLAG_LBA48)) {
+-		ide_hwif_t *hwif	= drive->hwif;
+-		unsigned long high_16	= hwif->extra_base - 16;
+-		unsigned long atapi_reg	= high_16 + (hwif->channel ? 0x24 : 0x20);
+-		u8 clock		= 0;
+-
+-		outl(0, atapi_reg); /* zero out extra */
+-		clock = inb(high_16 + 0x11);
+-		outb(clock & ~(hwif->channel ? 0x08:0x02), high_16 + 0x11);
+-	}
+-	if (drive->current_speed > XFER_UDMA_2)
+-		pdc_old_disable_66MHz_clock(drive->hwif);
+-	return ide_dma_end(drive);
+-}
+-
+-static int init_chipset_pdc202xx(struct pci_dev *dev)
+-{
+-	unsigned long dmabase = pci_resource_start(dev, 4);
+-	u8 udma_speed_flag = 0, primary_mode = 0, secondary_mode = 0;
+-
+-	if (dmabase == 0)
+-		goto out;
+-
+-	udma_speed_flag	= inb(dmabase | 0x1f);
+-	primary_mode	= inb(dmabase | 0x1a);
+-	secondary_mode	= inb(dmabase | 0x1b);
+-	printk(KERN_INFO "%s: (U)DMA Burst Bit %sABLED " \
+-		"Primary %s Mode " \
+-		"Secondary %s Mode.\n", pci_name(dev),
+-		(udma_speed_flag & 1) ? "EN" : "DIS",
+-		(primary_mode & 1) ? "MASTER" : "PCI",
+-		(secondary_mode & 1) ? "MASTER" : "PCI" );
+-
+-	if (!(udma_speed_flag & 1)) {
+-		printk(KERN_INFO "%s: FORCING BURST BIT 0x%02x->0x%02x ",
+-			pci_name(dev), udma_speed_flag,
+-			(udma_speed_flag|1));
+-		outb(udma_speed_flag | 1, dmabase | 0x1f);
+-		printk("%sACTIVE\n", (inb(dmabase | 0x1f) & 1) ? "" : "IN");
+-	}
+-out:
+-	return 0;
+-}
+-
+-static void pdc202ata4_fixup_irq(struct pci_dev *dev, const char *name)
+-{
+-	if ((dev->class >> 8) != PCI_CLASS_STORAGE_IDE) {
+-		u8 irq = 0, irq2 = 0;
+-		pci_read_config_byte(dev, PCI_INTERRUPT_LINE, &irq);
+-		/* 0xbc */
+-		pci_read_config_byte(dev, (PCI_INTERRUPT_LINE)|0x80, &irq2);
+-		if (irq != irq2) {
+-			pci_write_config_byte(dev,
+-				(PCI_INTERRUPT_LINE)|0x80, irq);     /* 0xbc */
+-			printk(KERN_INFO "%s %s: PCI config space interrupt "
+-				"mirror fixed\n", name, pci_name(dev));
+-		}
+-	}
+-}
+-
+-#define IDE_HFLAGS_PDC202XX \
+-	(IDE_HFLAG_ERROR_STOPS_FIFO | \
+-	 IDE_HFLAG_OFF_BOARD)
+-
+-static const struct ide_port_ops pdc20246_port_ops = {
+-	.set_pio_mode		= pdc202xx_set_pio_mode,
+-	.set_dma_mode		= pdc202xx_set_mode,
+-	.test_irq		= pdc202xx_test_irq,
 -};
 -
--static const struct ide_port_info jmicron_chipset = {
--	.name		= DRV_NAME,
--	.enablebits	= { { 0x40, 0x01, 0x01 }, { 0x40, 0x10, 0x10 } },
--	.port_ops	= &jmicron_port_ops,
--	.pio_mask	= ATA_PIO5,
--	.mwdma_mask	= ATA_MWDMA2,
--	.udma_mask	= ATA_UDMA6,
+-static const struct ide_port_ops pdc2026x_port_ops = {
+-	.set_pio_mode		= pdc202xx_set_pio_mode,
+-	.set_dma_mode		= pdc202xx_set_mode,
+-	.test_irq		= pdc202xx_test_irq,
+-	.cable_detect		= pdc2026x_cable_detect,
+-};
+-
+-static const struct ide_dma_ops pdc2026x_dma_ops = {
+-	.dma_host_set		= ide_dma_host_set,
+-	.dma_setup		= ide_dma_setup,
+-	.dma_start		= pdc202xx_dma_start,
+-	.dma_end		= pdc202xx_dma_end,
+-	.dma_test_irq		= ide_dma_test_irq,
+-	.dma_lost_irq		= ide_dma_lost_irq,
+-	.dma_timer_expiry	= ide_dma_sff_timer_expiry,
+-	.dma_sff_read_status	= ide_dma_sff_read_status,
+-};
+-
+-#define DECLARE_PDC2026X_DEV(udma, sectors) \
+-	{ \
+-		.name		= DRV_NAME, \
+-		.init_chipset	= init_chipset_pdc202xx, \
+-		.init_hwif	= pdc2026x_init_hwif, \
+-		.port_ops	= &pdc2026x_port_ops, \
+-		.dma_ops	= &pdc2026x_dma_ops, \
+-		.host_flags	= IDE_HFLAGS_PDC202XX, \
+-		.pio_mask	= ATA_PIO4, \
+-		.mwdma_mask	= ATA_MWDMA2, \
+-		.udma_mask	= udma, \
+-		.max_sectors	= sectors, \
+-	}
+-
+-static const struct ide_port_info pdc202xx_chipsets[] = {
+-	{	/* 0: PDC20246 */
+-		.name		= DRV_NAME,
+-		.init_chipset	= init_chipset_pdc202xx,
+-		.port_ops	= &pdc20246_port_ops,
+-		.dma_ops	= &sff_dma_ops,
+-		.host_flags	= IDE_HFLAGS_PDC202XX,
+-		.pio_mask	= ATA_PIO4,
+-		.mwdma_mask	= ATA_MWDMA2,
+-		.udma_mask	= ATA_UDMA2,
+-	},
+-
+-	/* 1: PDC2026{2,3} */
+-	DECLARE_PDC2026X_DEV(ATA_UDMA4, 0),
+-	/* 2: PDC2026{5,7}: UDMA5, limit LBA48 requests to 256 sectors */
+-	DECLARE_PDC2026X_DEV(ATA_UDMA5, 256),
 -};
 -
 -/**
-- *	jmicron_init_one	-	pci layer discovery entry
-- *	@dev: PCI device
-- *	@id: ident table entry
+- *	pdc202xx_init_one	-	called when a PDC202xx is found
+- *	@dev: the pdc202xx device
+- *	@id: the matching pci id
 - *
-- *	Called by the PCI code when it finds a Jmicron controller.
-- *	We then use the IDE PCI generic helper to do most of the work.
+- *	Called when the PCI registration layer (or the IDE initialization)
+- *	finds a device matching our IDE device tables.
 - */
--
--static int jmicron_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+- 
+-static int pdc202xx_init_one(struct pci_dev *dev,
+-			     const struct pci_device_id *id)
 -{
--	return ide_pci_init_one(dev, &jmicron_chipset, NULL);
+-	const struct ide_port_info *d;
+-	u8 idx = id->driver_data;
+-
+-	d = &pdc202xx_chipsets[idx];
+-
+-	if (idx < 2)
+-		pdc202ata4_fixup_irq(dev, d->name);
+-
+-	if (dev->vendor == PCI_DEVICE_ID_PROMISE_20265) {
+-		struct pci_dev *bridge = dev->bus->self;
+-
+-		if (bridge &&
+-		    bridge->vendor == PCI_VENDOR_ID_INTEL &&
+-		    (bridge->device == PCI_DEVICE_ID_INTEL_I960 ||
+-		     bridge->device == PCI_DEVICE_ID_INTEL_I960RM)) {
+-			printk(KERN_INFO DRV_NAME " %s: skipping Promise "
+-				"PDC20265 attached to I2O RAID controller\n",
+-				pci_name(dev));
+-			return -ENODEV;
+-		}
+-	}
+-
+-	return ide_pci_init_one(dev, d, NULL);
 -}
 -
--/* All JMB PATA controllers have and will continue to have the same
-- * interface.  Matching vendor and device class is enough for all
-- * current and future controllers if the controller is programmed
-- * properly.
-- *
-- * If libata is configured, jmicron PCI quirk programs the controller
-- * into the correct mode.  If libata isn't configured, match known
-- * device IDs too to maintain backward compatibility.
-- */
--static struct pci_device_id jmicron_pci_tbl[] = {
--#if !defined(CONFIG_ATA) && !defined(CONFIG_ATA_MODULE)
--	{ PCI_VDEVICE(JMICRON, PCI_DEVICE_ID_JMICRON_JMB361) },
--	{ PCI_VDEVICE(JMICRON, PCI_DEVICE_ID_JMICRON_JMB363) },
--	{ PCI_VDEVICE(JMICRON, PCI_DEVICE_ID_JMICRON_JMB365) },
--	{ PCI_VDEVICE(JMICRON, PCI_DEVICE_ID_JMICRON_JMB366) },
--	{ PCI_VDEVICE(JMICRON, PCI_DEVICE_ID_JMICRON_JMB368) },
--#endif
--	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
--	  PCI_CLASS_STORAGE_IDE << 8, 0xffff00, 0 },
+-static const struct pci_device_id pdc202xx_pci_tbl[] = {
+-	{ PCI_VDEVICE(PROMISE, PCI_DEVICE_ID_PROMISE_20246), 0 },
+-	{ PCI_VDEVICE(PROMISE, PCI_DEVICE_ID_PROMISE_20262), 1 },
+-	{ PCI_VDEVICE(PROMISE, PCI_DEVICE_ID_PROMISE_20263), 1 },
+-	{ PCI_VDEVICE(PROMISE, PCI_DEVICE_ID_PROMISE_20265), 2 },
+-	{ PCI_VDEVICE(PROMISE, PCI_DEVICE_ID_PROMISE_20267), 2 },
 -	{ 0, },
 -};
+-MODULE_DEVICE_TABLE(pci, pdc202xx_pci_tbl);
 -
--MODULE_DEVICE_TABLE(pci, jmicron_pci_tbl);
--
--static struct pci_driver jmicron_pci_driver = {
--	.name		= "JMicron IDE",
--	.id_table	= jmicron_pci_tbl,
--	.probe		= jmicron_init_one,
+-static struct pci_driver pdc202xx_pci_driver = {
+-	.name		= "Promise_Old_IDE",
+-	.id_table	= pdc202xx_pci_tbl,
+-	.probe		= pdc202xx_init_one,
 -	.remove		= ide_pci_remove,
 -	.suspend	= ide_pci_suspend,
 -	.resume		= ide_pci_resume,
 -};
 -
--static int __init jmicron_ide_init(void)
+-static int __init pdc202xx_ide_init(void)
 -{
--	return ide_pci_register_driver(&jmicron_pci_driver);
+-	return ide_pci_register_driver(&pdc202xx_pci_driver);
 -}
 -
--static void __exit jmicron_ide_exit(void)
+-static void __exit pdc202xx_ide_exit(void)
 -{
--	pci_unregister_driver(&jmicron_pci_driver);
+-	pci_unregister_driver(&pdc202xx_pci_driver);
 -}
 -
--module_init(jmicron_ide_init);
--module_exit(jmicron_ide_exit);
+-module_init(pdc202xx_ide_init);
+-module_exit(pdc202xx_ide_exit);
 -
--MODULE_AUTHOR("Alan Cox");
--MODULE_DESCRIPTION("PCI driver module for the JMicron in legacy modes");
+-MODULE_AUTHOR("Andre Hedrick, Frank Tiernan, Bartlomiej Zolnierkiewicz");
+-MODULE_DESCRIPTION("PCI driver module for older Promise IDE");
 -MODULE_LICENSE("GPL");
 -- 
 1.9.1
