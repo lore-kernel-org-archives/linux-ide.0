@@ -1,7 +1,7 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RFC PATCH 11/19] ide: remove deprecated opti621 host driver
-Date: Thu, 04 Feb 2016 14:44:08 +0100
-Message-ID: <1454593456-3162-12-git-send-email-b.zolnierkie@samsung.com>
+Subject: [RFC PATCH 15/19] ide: remove deprecated sis5513 host driver
+Date: Thu, 04 Feb 2016 14:44:12 +0100
+Message-ID: <1454593456-3162-16-git-send-email-b.zolnierkie@samsung.com>
 References: <1454593456-3162-1-git-send-email-b.zolnierkie@samsung.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-reply-to: <1454593456-3162-1-git-send-email-b.zolnierkie@samsung.com>
@@ -14,233 +14,702 @@ IDE subsystem has been deprecated since 2009 and the majority
 (if not all) of Linux distributions have switched to use
 libata for ATA support exclusively.
 
-The replacement driver (pata_opti) has been available since
+The replacement driver (pata_sis) has been available since
 2006 and it supports all the hardware supported by the old
-opti621 host driver.
+sis5513 host driver.  Also x86 defconfigs have switched to
+use libata PATA exclusively in 2008.
 
-Remove the deprecated opti621 host driver.
+Remove the deprecated sis5513 host driver.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
- drivers/ide/Kconfig   |   7 --
+ drivers/ide/Kconfig   |  17 --
  drivers/ide/Makefile  |   1 -
- drivers/ide/opti621.c | 178 --------------------------------------------------
- 3 files changed, 186 deletions(-)
- delete mode 100644 drivers/ide/opti621.c
+ drivers/ide/sis5513.c | 636 --------------------------------------------------
+ 3 files changed, 654 deletions(-)
+ delete mode 100644 drivers/ide/sis5513.c
 
 diff --git a/drivers/ide/Kconfig b/drivers/ide/Kconfig
-index 2458a1f..2341097 100644
+index 1379ce6..d086f52 100644
 --- a/drivers/ide/Kconfig
 +++ b/drivers/ide/Kconfig
-@@ -314,13 +314,6 @@ config BLK_DEV_GENERIC
-           This option provides generic support for various PCI IDE Chipsets
-           which otherwise might not be supported.
+@@ -444,23 +444,6 @@ config BLK_DEV_SIIMAGE
+ 	  This driver adds PIO/(U)DMA support for the SI CMD680 and SII
+ 	  3112 (Serial ATA) chips.
  
--config BLK_DEV_OPTI621
--	tristate "OPTi 82C621 chipset enhanced support"
--	select BLK_DEV_IDEPCI
+-config BLK_DEV_SIS5513
+-	tristate "SiS5513 chipset support"
+-	depends on X86
+-	select BLK_DEV_IDEDMA_PCI
 -	help
--	  This is a driver for the OPTi 82C621 EIDE controller.
--	  Please read the comments at the top of <file:drivers/ide/opti621.c>.
+-	  This driver ensures (U)DMA support for SIS5513 chipset family based
+-	  mainboards.
 -
- config BLK_DEV_RZ1000
- 	tristate "RZ1000 chipset bugfix/support"
- 	depends on X86
+-	  The following chipsets are supported:
+-	  ATA16:  SiS5511, SiS5513
+-	  ATA33:  SiS5591, SiS5597, SiS5598, SiS5600
+-	  ATA66:  SiS530, SiS540, SiS620, SiS630, SiS640
+-	  ATA100: SiS635, SiS645, SiS650, SiS730, SiS735, SiS740,
+-	  SiS745, SiS750
+-
+-	  Please read the comments at the top of <file:drivers/ide/sis5513.c>.
+-
+ config BLK_DEV_SL82C105
+ 	tristate "Winbond SL82c105 support"
+ 	depends on (PPC || ARM)
 diff --git a/drivers/ide/Makefile b/drivers/ide/Makefile
-index 90b64de..9a69b97 100644
+index 9fe5f5f..3867f7d 100644
 --- a/drivers/ide/Makefile
 +++ b/drivers/ide/Makefile
-@@ -42,7 +42,6 @@ obj-$(CONFIG_BLK_DEV_CY82C693)		+= cy82c693.o
- obj-$(CONFIG_BLK_DEV_HPT366)		+= hpt366.o
- obj-$(CONFIG_BLK_DEV_IT8172)		+= it8172.o
- obj-$(CONFIG_BLK_DEV_NS87415)		+= ns87415.o
--obj-$(CONFIG_BLK_DEV_OPTI621)		+= opti621.o
- obj-$(CONFIG_BLK_DEV_PDC202XX_OLD)	+= pdc202xx_old.o
- obj-$(CONFIG_BLK_DEV_PDC202XX_NEW)	+= pdc202xx_new.o
+@@ -46,7 +46,6 @@ obj-$(CONFIG_BLK_DEV_PDC202XX_NEW)	+= pdc202xx_new.o
  obj-$(CONFIG_BLK_DEV_PIIX)		+= piix.o
-diff --git a/drivers/ide/opti621.c b/drivers/ide/opti621.c
+ obj-$(CONFIG_BLK_DEV_SGIIOC4)		+= sgiioc4.o
+ obj-$(CONFIG_BLK_DEV_SIIMAGE)		+= siimage.o
+-obj-$(CONFIG_BLK_DEV_SIS5513)		+= sis5513.o
+ obj-$(CONFIG_BLK_DEV_SL82C105)		+= sl82c105.o
+ obj-$(CONFIG_BLK_DEV_SLC90E66)		+= slc90e66.o
+ obj-$(CONFIG_BLK_DEV_TC86C001)		+= tc86c001.o
+diff --git a/drivers/ide/sis5513.c b/drivers/ide/sis5513.c
 deleted file mode 100644
-index 26a4500..0000000
---- a/drivers/ide/opti621.c
+index 247853e..0000000
+--- a/drivers/ide/sis5513.c
 +++ /dev/null
-@@ -1,178 +0,0 @@
+@@ -1,636 +0,0 @@
 -/*
-- *  Copyright (C) 1996-1998  Linus Torvalds & authors (see below)
+- * Copyright (C) 1999-2000	Andre Hedrick <andre@linux-ide.org>
+- * Copyright (C) 2002		Lionel Bouton <Lionel.Bouton@inet6.fr>, Maintainer
+- * Copyright (C) 2003		Vojtech Pavlik <vojtech@suse.cz>
+- * Copyright (C) 2007-2009	Bartlomiej Zolnierkiewicz
+- *
+- * May be copied or modified under the terms of the GNU General Public License
+- *
+- *
+- * Thanks :
+- *
+- * SiS Taiwan		: for direct support and hardware.
+- * Daniela Engert	: for initial ATA100 advices and numerous others.
+- * John Fremlin, Manfred Spraul, Dave Morgan, Peter Kjellerstedt	:
+- *			  for checking code correctness, providing patches.
+- *
+- *
+- * Original tests and design on the SiS620 chipset.
+- * ATA100 tests and design on the SiS735 chipset.
+- * ATA16/33 support from specs
+- * ATA133 support for SiS961/962 by L.C. Chang <lcchang@sis.com.tw>
+- * ATA133 961/962/963 fixes by Vojtech Pavlik <vojtech@suse.cz>
+- *
+- * Documentation:
+- *	SiS chipset documentation available under NDA to companies only
+- *      (not to individuals).
 - */
 -
 -/*
-- * Authors:
-- * Jaromir Koutek <miri@punknet.cz>,
-- * Jan Harkes <jaharkes@cwi.nl>,
-- * Mark Lord <mlord@pobox.com>
-- * Some parts of code are from ali14xx.c and from rz1000.c.
+- * The original SiS5513 comes from a SiS5511/55112/5513 chipset. The original
+- * SiS5513 was also used in the SiS5596/5513 chipset. Thus if we see a SiS5511
+- * or SiS5596, we can assume we see the first MWDMA-16 capable SiS5513 chip.
+- *
+- * Later SiS chipsets integrated the 5513 functionality into the NorthBridge,
+- * starting with SiS5571 and up to SiS745. The PCI ID didn't change, though. We
+- * can figure out that we have a more modern and more capable 5513 by looking
+- * for the respective NorthBridge IDs.
+- *
+- * Even later (96x family) SiS chipsets use the MuTIOL link and place the 5513
+- * into the SouthBrige. Here we cannot rely on looking up the NorthBridge PCI
+- * ID, while the now ATA-133 capable 5513 still has the same PCI ID.
+- * Fortunately the 5513 can be 'unmasked' by fiddling with some config space
+- * bits, changing its device id to the true one - 5517 for 961 and 5518 for
+- * 962/963.
 - */
 -
 -#include <linux/types.h>
 -#include <linux/module.h>
 -#include <linux/kernel.h>
 -#include <linux/pci.h>
+-#include <linux/init.h>
 -#include <linux/ide.h>
 -
--#include <asm/io.h>
+-#define DRV_NAME "sis5513"
 -
--#define DRV_NAME "opti621"
+-/* registers layout and init values are chipset family dependent */
 -
--#define READ_REG 0	/* index of Read cycle timing register */
--#define WRITE_REG 1	/* index of Write cycle timing register */
--#define CNTRL_REG 3	/* index of Control register */
--#define STRAP_REG 5	/* index of Strap register */
--#define MISC_REG 6	/* index of Miscellaneous register */
+-#define ATA_16		0x01
+-#define ATA_33		0x02
+-#define ATA_66		0x03
+-#define ATA_100a	0x04 /* SiS730/SiS550 is ATA100 with ATA66 layout */
+-#define ATA_100		0x05
+-#define ATA_133a	0x06 /* SiS961b with 133 support */
+-#define ATA_133		0x07 /* SiS962/963 */
 -
--static int reg_base;
+-static u8 chipset_family;
 -
--static DEFINE_SPINLOCK(opti621_lock);
--
--/* Write value to register reg, base of register
-- * is at reg_base (0x1f0 primary, 0x170 secondary,
-- * if not changed by PCI configuration).
-- * This is from setupvic.exe program.
+-/*
+- * Devices supported
 - */
--static void write_reg(u8 value, int reg)
+-static const struct {
+-	const char *name;
+-	u16 host_id;
+-	u8 chipset_family;
+-	u8 flags;
+-} SiSHostChipInfo[] = {
+-	{ "SiS968",	PCI_DEVICE_ID_SI_968,	ATA_133  },
+-	{ "SiS966",	PCI_DEVICE_ID_SI_966,	ATA_133  },
+-	{ "SiS965",	PCI_DEVICE_ID_SI_965,	ATA_133  },
+-	{ "SiS745",	PCI_DEVICE_ID_SI_745,	ATA_100  },
+-	{ "SiS735",	PCI_DEVICE_ID_SI_735,	ATA_100  },
+-	{ "SiS733",	PCI_DEVICE_ID_SI_733,	ATA_100  },
+-	{ "SiS635",	PCI_DEVICE_ID_SI_635,	ATA_100  },
+-	{ "SiS633",	PCI_DEVICE_ID_SI_633,	ATA_100  },
+-
+-	{ "SiS730",	PCI_DEVICE_ID_SI_730,	ATA_100a },
+-	{ "SiS550",	PCI_DEVICE_ID_SI_550,	ATA_100a },
+-
+-	{ "SiS640",	PCI_DEVICE_ID_SI_640,	ATA_66   },
+-	{ "SiS630",	PCI_DEVICE_ID_SI_630,	ATA_66   },
+-	{ "SiS620",	PCI_DEVICE_ID_SI_620,	ATA_66   },
+-	{ "SiS540",	PCI_DEVICE_ID_SI_540,	ATA_66   },
+-	{ "SiS530",	PCI_DEVICE_ID_SI_530,	ATA_66   },
+-
+-	{ "SiS5600",	PCI_DEVICE_ID_SI_5600,	ATA_33   },
+-	{ "SiS5598",	PCI_DEVICE_ID_SI_5598,	ATA_33   },
+-	{ "SiS5597",	PCI_DEVICE_ID_SI_5597,	ATA_33   },
+-	{ "SiS5591/2",	PCI_DEVICE_ID_SI_5591,	ATA_33   },
+-	{ "SiS5582",	PCI_DEVICE_ID_SI_5582,	ATA_33   },
+-	{ "SiS5581",	PCI_DEVICE_ID_SI_5581,	ATA_33   },
+-
+-	{ "SiS5596",	PCI_DEVICE_ID_SI_5596,	ATA_16   },
+-	{ "SiS5571",	PCI_DEVICE_ID_SI_5571,	ATA_16   },
+-	{ "SiS5517",	PCI_DEVICE_ID_SI_5517,	ATA_16   },
+-	{ "SiS551x",	PCI_DEVICE_ID_SI_5511,	ATA_16   },
+-};
+-
+-/* Cycle time bits and values vary across chip dma capabilities
+-   These three arrays hold the register layout and the values to set.
+-   Indexed by chipset_family and (dma_mode - XFER_UDMA_0) */
+-
+-/* {0, ATA_16, ATA_33, ATA_66, ATA_100a, ATA_100, ATA_133} */
+-static u8 cycle_time_offset[] = { 0, 0, 5, 4, 4, 0, 0 };
+-static u8 cycle_time_range[]  = { 0, 0, 2, 3, 3, 4, 4 };
+-static u8 cycle_time_value[][XFER_UDMA_6 - XFER_UDMA_0 + 1] = {
+-	{  0,  0, 0, 0, 0, 0, 0 }, /* no UDMA */
+-	{  0,  0, 0, 0, 0, 0, 0 }, /* no UDMA */
+-	{  3,  2, 1, 0, 0, 0, 0 }, /* ATA_33 */
+-	{  7,  5, 3, 2, 1, 0, 0 }, /* ATA_66 */
+-	{  7,  5, 3, 2, 1, 0, 0 }, /* ATA_100a (730 specific),
+-				      different cycle_time range and offset */
+-	{ 11,  7, 5, 4, 2, 1, 0 }, /* ATA_100 */
+-	{ 15, 10, 7, 5, 3, 2, 1 }, /* ATA_133a (earliest 691 southbridges) */
+-	{ 15, 10, 7, 5, 3, 2, 1 }, /* ATA_133 */
+-};
+-/* CRC Valid Setup Time vary across IDE clock setting 33/66/100/133
+-   See SiS962 data sheet for more detail */
+-static u8 cvs_time_value[][XFER_UDMA_6 - XFER_UDMA_0 + 1] = {
+-	{ 0, 0, 0, 0, 0, 0, 0 }, /* no UDMA */
+-	{ 0, 0, 0, 0, 0, 0, 0 }, /* no UDMA */
+-	{ 2, 1, 1, 0, 0, 0, 0 },
+-	{ 4, 3, 2, 1, 0, 0, 0 },
+-	{ 4, 3, 2, 1, 0, 0, 0 },
+-	{ 6, 4, 3, 1, 1, 1, 0 },
+-	{ 9, 6, 4, 2, 2, 2, 2 },
+-	{ 9, 6, 4, 2, 2, 2, 2 },
+-};
+-/* Initialize time, Active time, Recovery time vary across
+-   IDE clock settings. These 3 arrays hold the register value
+-   for PIO0/1/2/3/4 and DMA0/1/2 mode in order */
+-static u8 ini_time_value[][8] = {
+-	{ 0, 0, 0, 0, 0, 0, 0, 0 },
+-	{ 0, 0, 0, 0, 0, 0, 0, 0 },
+-	{ 2, 1, 0, 0, 0, 1, 0, 0 },
+-	{ 4, 3, 1, 1, 1, 3, 1, 1 },
+-	{ 4, 3, 1, 1, 1, 3, 1, 1 },
+-	{ 6, 4, 2, 2, 2, 4, 2, 2 },
+-	{ 9, 6, 3, 3, 3, 6, 3, 3 },
+-	{ 9, 6, 3, 3, 3, 6, 3, 3 },
+-};
+-static u8 act_time_value[][8] = {
+-	{  0,  0,  0,  0, 0,  0,  0, 0 },
+-	{  0,  0,  0,  0, 0,  0,  0, 0 },
+-	{  9,  9,  9,  2, 2,  7,  2, 2 },
+-	{ 19, 19, 19,  5, 4, 14,  5, 4 },
+-	{ 19, 19, 19,  5, 4, 14,  5, 4 },
+-	{ 28, 28, 28,  7, 6, 21,  7, 6 },
+-	{ 38, 38, 38, 10, 9, 28, 10, 9 },
+-	{ 38, 38, 38, 10, 9, 28, 10, 9 },
+-};
+-static u8 rco_time_value[][8] = {
+-	{  0,  0, 0,  0, 0,  0,  0, 0 },
+-	{  0,  0, 0,  0, 0,  0,  0, 0 },
+-	{  9,  2, 0,  2, 0,  7,  1, 1 },
+-	{ 19,  5, 1,  5, 2, 16,  3, 2 },
+-	{ 19,  5, 1,  5, 2, 16,  3, 2 },
+-	{ 30,  9, 3,  9, 4, 25,  6, 4 },
+-	{ 40, 12, 4, 12, 5, 34, 12, 5 },
+-	{ 40, 12, 4, 12, 5, 34, 12, 5 },
+-};
+-
+-/*
+- * Printing configuration
+- */
+-/* Used for chipset type printing at boot time */
+-static char *chipset_capability[] = {
+-	"ATA", "ATA 16",
+-	"ATA 33", "ATA 66",
+-	"ATA 100 (1st gen)", "ATA 100 (2nd gen)",
+-	"ATA 133 (1st gen)", "ATA 133 (2nd gen)"
+-};
+-
+-/*
+- * Configuration functions
+- */
+-
+-static u8 sis_ata133_get_base(ide_drive_t *drive)
 -{
--	inw(reg_base + 1);
--	inw(reg_base + 1);
--	outb(3, reg_base + 2);
--	outb(value, reg_base + reg);
--	outb(0x83, reg_base + 2);
+-	struct pci_dev *dev = to_pci_dev(drive->hwif->dev);
+-	u32 reg54 = 0;
+-
+-	pci_read_config_dword(dev, 0x54, &reg54);
+-
+-	return ((reg54 & 0x40000000) ? 0x70 : 0x40) + drive->dn * 4;
 -}
 -
--/* Read value from register reg, base of register
-- * is at reg_base (0x1f0 primary, 0x170 secondary,
-- * if not changed by PCI configuration).
-- * This is from setupvic.exe program.
-- */
--static u8 read_reg(int reg)
+-static void sis_ata16_program_timings(ide_drive_t *drive, const u8 mode)
 -{
--	u8 ret = 0;
+-	struct pci_dev *dev = to_pci_dev(drive->hwif->dev);
+-	u16 t1 = 0;
+-	u8 drive_pci = 0x40 + drive->dn * 2;
 -
--	inw(reg_base + 1);
--	inw(reg_base + 1);
--	outb(3, reg_base + 2);
--	ret = inb(reg_base + reg);
--	outb(0x83, reg_base + 2);
+-	const u16 pio_timings[]   = { 0x000, 0x607, 0x404, 0x303, 0x301 };
+-	const u16 mwdma_timings[] = { 0x008, 0x302, 0x301 };
 -
--	return ret;
+-	pci_read_config_word(dev, drive_pci, &t1);
+-
+-	/* clear active/recovery timings */
+-	t1 &= ~0x070f;
+-	if (mode >= XFER_MW_DMA_0) {
+-		if (chipset_family > ATA_16)
+-			t1 &= ~0x8000;	/* disable UDMA */
+-		t1 |= mwdma_timings[mode - XFER_MW_DMA_0];
+-	} else
+-		t1 |= pio_timings[mode - XFER_PIO_0];
+-
+-	pci_write_config_word(dev, drive_pci, t1);
 -}
 -
--static void opti621_set_pio_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+-static void sis_ata100_program_timings(ide_drive_t *drive, const u8 mode)
 -{
--	ide_drive_t *pair = ide_get_pair_dev(drive);
--	unsigned long flags;
--	unsigned long mode = drive->pio_mode, pair_mode;
--	const u8 pio = mode - XFER_PIO_0;
--	u8 tim, misc, addr_pio = pio, clk;
+-	struct pci_dev *dev = to_pci_dev(drive->hwif->dev);
+-	u8 t1, drive_pci = 0x40 + drive->dn * 2;
 -
--	/* DRDY is default 2 (by OPTi Databook) */
--	static const u8 addr_timings[2][5] = {
--		{ 0x20, 0x10, 0x00, 0x00, 0x00 },	/* 33 MHz */
--		{ 0x10, 0x10, 0x00, 0x00, 0x00 },	/* 25 MHz */
--	};
--	static const u8 data_rec_timings[2][5] = {
--		{ 0x5b, 0x45, 0x32, 0x21, 0x20 },	/* 33 MHz */
--		{ 0x48, 0x34, 0x21, 0x10, 0x10 }	/* 25 MHz */
--	};
+-	/* timing bits: 7:4 active 3:0 recovery */
+-	const u8 pio_timings[]   = { 0x00, 0x67, 0x44, 0x33, 0x31 };
+-	const u8 mwdma_timings[] = { 0x08, 0x32, 0x31 };
 -
--	ide_set_drivedata(drive, (void *)mode);
+-	if (mode >= XFER_MW_DMA_0) {
+-		u8 t2 = 0;
 -
--	if (pair) {
--		pair_mode = (unsigned long)ide_get_drivedata(pair);
--		if (pair_mode && pair_mode < mode)
--			addr_pio = pair_mode - XFER_PIO_0;
+-		pci_read_config_byte(dev, drive_pci, &t2);
+-		t2 &= ~0x80;	/* disable UDMA */
+-		pci_write_config_byte(dev, drive_pci, t2);
+-
+-		t1 = mwdma_timings[mode - XFER_MW_DMA_0];
+-	} else
+-		t1 = pio_timings[mode - XFER_PIO_0];
+-
+-	pci_write_config_byte(dev, drive_pci + 1, t1);
+-}
+-
+-static void sis_ata133_program_timings(ide_drive_t *drive, const u8 mode)
+-{
+-	struct pci_dev *dev = to_pci_dev(drive->hwif->dev);
+-	u32 t1 = 0;
+-	u8 drive_pci = sis_ata133_get_base(drive), clk, idx;
+-
+-	pci_read_config_dword(dev, drive_pci, &t1);
+-
+-	t1 &= 0xc0c00fff;
+-	clk = (t1 & 0x08) ? ATA_133 : ATA_100;
+-	if (mode >= XFER_MW_DMA_0) {
+-		t1 &= ~0x04;	/* disable UDMA */
+-		idx = mode - XFER_MW_DMA_0 + 5;
+-	} else
+-		idx = mode - XFER_PIO_0;
+-	t1 |= ini_time_value[clk][idx] << 12;
+-	t1 |= act_time_value[clk][idx] << 16;
+-	t1 |= rco_time_value[clk][idx] << 24;
+-
+-	pci_write_config_dword(dev, drive_pci, t1);
+-}
+-
+-static void sis_program_timings(ide_drive_t *drive, const u8 mode)
+-{
+-	if (chipset_family < ATA_100)		/* ATA_16/33/66/100a */
+-		sis_ata16_program_timings(drive, mode);
+-	else if (chipset_family < ATA_133)	/* ATA_100/133a */
+-		sis_ata100_program_timings(drive, mode);
+-	else					/* ATA_133 */
+-		sis_ata133_program_timings(drive, mode);
+-}
+-
+-static void config_drive_art_rwp(ide_drive_t *drive)
+-{
+-	ide_hwif_t *hwif	= drive->hwif;
+-	struct pci_dev *dev	= to_pci_dev(hwif->dev);
+-	u8 reg4bh		= 0;
+-	u8 rw_prefetch		= 0;
+-
+-	pci_read_config_byte(dev, 0x4b, &reg4bh);
+-
+-	rw_prefetch = reg4bh & ~(0x11 << drive->dn);
+-
+-	if (drive->media == ide_disk)
+-		rw_prefetch |= 0x11 << drive->dn;
+-
+-	if (reg4bh != rw_prefetch)
+-		pci_write_config_byte(dev, 0x4b, rw_prefetch);
+-}
+-
+-static void sis_set_pio_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+-{
+-	config_drive_art_rwp(drive);
+-	sis_program_timings(drive, drive->pio_mode);
+-}
+-
+-static void sis_ata133_program_udma_timings(ide_drive_t *drive, const u8 mode)
+-{
+-	struct pci_dev *dev = to_pci_dev(drive->hwif->dev);
+-	u32 regdw = 0;
+-	u8 drive_pci = sis_ata133_get_base(drive), clk, idx;
+-
+-	pci_read_config_dword(dev, drive_pci, &regdw);
+-
+-	regdw |= 0x04;
+-	regdw &= 0xfffff00f;
+-	/* check if ATA133 enable */
+-	clk = (regdw & 0x08) ? ATA_133 : ATA_100;
+-	idx = mode - XFER_UDMA_0;
+-	regdw |= cycle_time_value[clk][idx] << 4;
+-	regdw |= cvs_time_value[clk][idx] << 8;
+-
+-	pci_write_config_dword(dev, drive_pci, regdw);
+-}
+-
+-static void sis_ata33_program_udma_timings(ide_drive_t *drive, const u8 mode)
+-{
+-	struct pci_dev *dev = to_pci_dev(drive->hwif->dev);
+-	u8 drive_pci = 0x40 + drive->dn * 2, reg = 0, i = chipset_family;
+-
+-	pci_read_config_byte(dev, drive_pci + 1, &reg);
+-
+-	/* force the UDMA bit on if we want to use UDMA */
+-	reg |= 0x80;
+-	/* clean reg cycle time bits */
+-	reg &= ~((0xff >> (8 - cycle_time_range[i])) << cycle_time_offset[i]);
+-	/* set reg cycle time bits */
+-	reg |= cycle_time_value[i][mode - XFER_UDMA_0] << cycle_time_offset[i];
+-
+-	pci_write_config_byte(dev, drive_pci + 1, reg);
+-}
+-
+-static void sis_program_udma_timings(ide_drive_t *drive, const u8 mode)
+-{
+-	if (chipset_family >= ATA_133)	/* ATA_133 */
+-		sis_ata133_program_udma_timings(drive, mode);
+-	else				/* ATA_33/66/100a/100/133a */
+-		sis_ata33_program_udma_timings(drive, mode);
+-}
+-
+-static void sis_set_dma_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+-{
+-	const u8 speed = drive->dma_mode;
+-
+-	if (speed >= XFER_UDMA_0)
+-		sis_program_udma_timings(drive, speed);
+-	else
+-		sis_program_timings(drive, speed);
+-}
+-
+-static u8 sis_ata133_udma_filter(ide_drive_t *drive)
+-{
+-	struct pci_dev *dev = to_pci_dev(drive->hwif->dev);
+-	u32 regdw = 0;
+-	u8 drive_pci = sis_ata133_get_base(drive);
+-
+-	pci_read_config_dword(dev, drive_pci, &regdw);
+-
+-	/* if ATA133 disable, we should not set speed above UDMA5 */
+-	return (regdw & 0x08) ? ATA_UDMA6 : ATA_UDMA5;
+-}
+-
+-static int sis_find_family(struct pci_dev *dev)
+-{
+-	struct pci_dev *host;
+-	int i = 0;
+-
+-	chipset_family = 0;
+-
+-	for (i = 0; i < ARRAY_SIZE(SiSHostChipInfo) && !chipset_family; i++) {
+-
+-		host = pci_get_device(PCI_VENDOR_ID_SI, SiSHostChipInfo[i].host_id, NULL);
+-
+-		if (!host)
+-			continue;
+-
+-		chipset_family = SiSHostChipInfo[i].chipset_family;
+-
+-		/* Special case for SiS630 : 630S/ET is ATA_100a */
+-		if (SiSHostChipInfo[i].host_id == PCI_DEVICE_ID_SI_630) {
+-			if (host->revision >= 0x30)
+-				chipset_family = ATA_100a;
+-		}
+-		pci_dev_put(host);
+-
+-		printk(KERN_INFO DRV_NAME " %s: %s %s controller\n",
+-			pci_name(dev), SiSHostChipInfo[i].name,
+-			chipset_capability[chipset_family]);
 -	}
 -
--	spin_lock_irqsave(&opti621_lock, flags);
+-	if (!chipset_family) { /* Belongs to pci-quirks */
 -
--	reg_base = hwif->io_ports.data_addr;
+-			u32 idemisc;
+-			u16 trueid;
 -
--	/* allow Register-B */
--	outb(0xc0, reg_base + CNTRL_REG);
--	/* hmm, setupvic.exe does this ;-) */
--	outb(0xff, reg_base + 5);
--	/* if reads 0xff, adapter not exist? */
--	(void)inb(reg_base + CNTRL_REG);
--	/* if reads 0xc0, no interface exist? */
--	read_reg(CNTRL_REG);
+-			/* Disable ID masking and register remapping */
+-			pci_read_config_dword(dev, 0x54, &idemisc);
+-			pci_write_config_dword(dev, 0x54, (idemisc & 0x7fffffff));
+-			pci_read_config_word(dev, PCI_DEVICE_ID, &trueid);
+-			pci_write_config_dword(dev, 0x54, idemisc);
 -
--	/* check CLK speed */
--	clk = read_reg(STRAP_REG) & 1;
+-			if (trueid == 0x5518) {
+-				printk(KERN_INFO DRV_NAME " %s: SiS 962/963 MuTIOL IDE UDMA133 controller\n",
+-					pci_name(dev));
+-				chipset_family = ATA_133;
 -
--	printk(KERN_INFO "%s: CLK = %d MHz\n", hwif->name, clk ? 25 : 33);
+-				/* Check for 5513 compatibility mapping
+-				 * We must use this, else the port enabled code will fail,
+-				 * as it expects the enablebits at 0x4a.
+-				 */
+-				if ((idemisc & 0x40000000) == 0) {
+-					pci_write_config_dword(dev, 0x54, idemisc | 0x40000000);
+-					printk(KERN_INFO DRV_NAME " %s: Switching to 5513 register mapping\n",
+-						pci_name(dev));
+-				}
+-			}
+-	}
 -
--	tim  = data_rec_timings[clk][pio];
--	misc = addr_timings[clk][addr_pio];
+-	if (!chipset_family) { /* Belongs to pci-quirks */
 -
--	/* select Index-0/1 for Register-A/B */
--	write_reg(drive->dn & 1, MISC_REG);
--	/* set read cycle timings */
--	write_reg(tim, READ_REG);
--	/* set write cycle timings */
--	write_reg(tim, WRITE_REG);
+-			struct pci_dev *lpc_bridge;
+-			u16 trueid;
+-			u8 prefctl;
+-			u8 idecfg;
 -
--	/* use Register-A for drive 0 */
--	/* use Register-B for drive 1 */
--	write_reg(0x85, CNTRL_REG);
+-			pci_read_config_byte(dev, 0x4a, &idecfg);
+-			pci_write_config_byte(dev, 0x4a, idecfg | 0x10);
+-			pci_read_config_word(dev, PCI_DEVICE_ID, &trueid);
+-			pci_write_config_byte(dev, 0x4a, idecfg);
 -
--	/* set address setup, DRDY timings,   */
--	/*  and read prefetch for both drives */
--	write_reg(misc, MISC_REG);
+-			if (trueid == 0x5517) { /* SiS 961/961B */
 -
--	spin_unlock_irqrestore(&opti621_lock, flags);
+-				lpc_bridge = pci_get_slot(dev->bus, 0x10); /* Bus 0, Dev 2, Fn 0 */
+-				pci_read_config_byte(dev, 0x49, &prefctl);
+-				pci_dev_put(lpc_bridge);
+-
+-				if (lpc_bridge->revision == 0x10 && (prefctl & 0x80)) {
+-					printk(KERN_INFO DRV_NAME " %s: SiS 961B MuTIOL IDE UDMA133 controller\n",
+-						pci_name(dev));
+-					chipset_family = ATA_133a;
+-				} else {
+-					printk(KERN_INFO DRV_NAME " %s: SiS 961 MuTIOL IDE UDMA100 controller\n",
+-						pci_name(dev));
+-					chipset_family = ATA_100;
+-				}
+-			}
+-	}
+-
+-	return chipset_family;
 -}
 -
--static const struct ide_port_ops opti621_port_ops = {
--	.set_pio_mode		= opti621_set_pio_mode,
--};
--
--static const struct ide_port_info opti621_chipset = {
--	.name		= DRV_NAME,
--	.enablebits	= { {0x45, 0x80, 0x00}, {0x40, 0x08, 0x00} },
--	.port_ops	= &opti621_port_ops,
--	.host_flags	= IDE_HFLAG_NO_DMA,
--	.pio_mask	= ATA_PIO4,
--};
--
--static int opti621_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+-static int init_chipset_sis5513(struct pci_dev *dev)
 -{
--	return ide_pci_init_one(dev, &opti621_chipset, NULL);
+-	/* Make general config ops here
+-	   1/ tell IDE channels to operate in Compatibility mode only
+-	   2/ tell old chips to allow per drive IDE timings */
+-
+-	u8 reg;
+-	u16 regw;
+-
+-	switch (chipset_family) {
+-	case ATA_133:
+-		/* SiS962 operation mode */
+-		pci_read_config_word(dev, 0x50, &regw);
+-		if (regw & 0x08)
+-			pci_write_config_word(dev, 0x50, regw&0xfff7);
+-		pci_read_config_word(dev, 0x52, &regw);
+-		if (regw & 0x08)
+-			pci_write_config_word(dev, 0x52, regw&0xfff7);
+-		break;
+-	case ATA_133a:
+-	case ATA_100:
+-		/* Fixup latency */
+-		pci_write_config_byte(dev, PCI_LATENCY_TIMER, 0x80);
+-		/* Set compatibility bit */
+-		pci_read_config_byte(dev, 0x49, &reg);
+-		if (!(reg & 0x01))
+-			pci_write_config_byte(dev, 0x49, reg|0x01);
+-		break;
+-	case ATA_100a:
+-	case ATA_66:
+-		/* Fixup latency */
+-		pci_write_config_byte(dev, PCI_LATENCY_TIMER, 0x10);
+-
+-		/* On ATA_66 chips the bit was elsewhere */
+-		pci_read_config_byte(dev, 0x52, &reg);
+-		if (!(reg & 0x04))
+-			pci_write_config_byte(dev, 0x52, reg|0x04);
+-		break;
+-	case ATA_33:
+-		/* On ATA_33 we didn't have a single bit to set */
+-		pci_read_config_byte(dev, 0x09, &reg);
+-		if ((reg & 0x0f) != 0x00)
+-			pci_write_config_byte(dev, 0x09, reg&0xf0);
+-	case ATA_16:
+-		/* force per drive recovery and active timings
+-		   needed on ATA_33 and below chips */
+-		pci_read_config_byte(dev, 0x52, &reg);
+-		if (!(reg & 0x08))
+-			pci_write_config_byte(dev, 0x52, reg|0x08);
+-		break;
+-	}
+-
+-	return 0;
 -}
 -
--static const struct pci_device_id opti621_pci_tbl[] = {
--	{ PCI_VDEVICE(OPTI, PCI_DEVICE_ID_OPTI_82C621), 0 },
--	{ PCI_VDEVICE(OPTI, PCI_DEVICE_ID_OPTI_82C825), 0 },
+-struct sis_laptop {
+-	u16 device;
+-	u16 subvendor;
+-	u16 subdevice;
+-};
+-
+-static const struct sis_laptop sis_laptop[] = {
+-	/* devid, subvendor, subdev */
+-	{ 0x5513, 0x1043, 0x1107 },	/* ASUS A6K */
+-	{ 0x5513, 0x1734, 0x105f },	/* FSC Amilo A1630 */
+-	{ 0x5513, 0x1071, 0x8640 },     /* EasyNote K5305 */
+-	/* end marker */
+-	{ 0, }
+-};
+-
+-static u8 sis_cable_detect(ide_hwif_t *hwif)
+-{
+-	struct pci_dev *pdev = to_pci_dev(hwif->dev);
+-	const struct sis_laptop *lap = &sis_laptop[0];
+-	u8 ata66 = 0;
+-
+-	while (lap->device) {
+-		if (lap->device == pdev->device &&
+-		    lap->subvendor == pdev->subsystem_vendor &&
+-		    lap->subdevice == pdev->subsystem_device)
+-			return ATA_CBL_PATA40_SHORT;
+-		lap++;
+-	}
+-
+-	if (chipset_family >= ATA_133) {
+-		u16 regw = 0;
+-		u16 reg_addr = hwif->channel ? 0x52: 0x50;
+-		pci_read_config_word(pdev, reg_addr, &regw);
+-		ata66 = (regw & 0x8000) ? 0 : 1;
+-	} else if (chipset_family >= ATA_66) {
+-		u8 reg48h = 0;
+-		u8 mask = hwif->channel ? 0x20 : 0x10;
+-		pci_read_config_byte(pdev, 0x48, &reg48h);
+-		ata66 = (reg48h & mask) ? 0 : 1;
+-	}
+-
+-	return ata66 ? ATA_CBL_PATA80 : ATA_CBL_PATA40;
+-}
+-
+-static const struct ide_port_ops sis_port_ops = {
+-	.set_pio_mode		= sis_set_pio_mode,
+-	.set_dma_mode		= sis_set_dma_mode,
+-	.cable_detect		= sis_cable_detect,
+-};
+-
+-static const struct ide_port_ops sis_ata133_port_ops = {
+-	.set_pio_mode		= sis_set_pio_mode,
+-	.set_dma_mode		= sis_set_dma_mode,
+-	.udma_filter		= sis_ata133_udma_filter,
+-	.cable_detect		= sis_cable_detect,
+-};
+-
+-static const struct ide_port_info sis5513_chipset = {
+-	.name		= DRV_NAME,
+-	.init_chipset	= init_chipset_sis5513,
+-	.enablebits	= { {0x4a, 0x02, 0x02}, {0x4a, 0x04, 0x04} },
+-	.host_flags	= IDE_HFLAG_NO_AUTODMA,
+-	.pio_mask	= ATA_PIO4,
+-	.mwdma_mask	= ATA_MWDMA2,
+-};
+-
+-static int sis5513_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+-{
+-	struct ide_port_info d = sis5513_chipset;
+-	u8 udma_rates[] = { 0x00, 0x00, 0x07, 0x1f, 0x3f, 0x3f, 0x7f, 0x7f };
+-	int rc;
+-
+-	rc = pci_enable_device(dev);
+-	if (rc)
+-		return rc;
+-
+-	if (sis_find_family(dev) == 0)
+-		return -ENOTSUPP;
+-
+-	if (chipset_family >= ATA_133)
+-		d.port_ops = &sis_ata133_port_ops;
+-	else
+-		d.port_ops = &sis_port_ops;
+-
+-	d.udma_mask = udma_rates[chipset_family];
+-
+-	return ide_pci_init_one(dev, &d, NULL);
+-}
+-
+-static void sis5513_remove(struct pci_dev *dev)
+-{
+-	ide_pci_remove(dev);
+-	pci_disable_device(dev);
+-}
+-
+-static const struct pci_device_id sis5513_pci_tbl[] = {
+-	{ PCI_VDEVICE(SI, PCI_DEVICE_ID_SI_5513), 0 },
+-	{ PCI_VDEVICE(SI, PCI_DEVICE_ID_SI_5518), 0 },
+-	{ PCI_VDEVICE(SI, PCI_DEVICE_ID_SI_1180), 0 },
 -	{ 0, },
 -};
--MODULE_DEVICE_TABLE(pci, opti621_pci_tbl);
+-MODULE_DEVICE_TABLE(pci, sis5513_pci_tbl);
 -
--static struct pci_driver opti621_pci_driver = {
--	.name		= "Opti621_IDE",
--	.id_table	= opti621_pci_tbl,
--	.probe		= opti621_init_one,
--	.remove		= ide_pci_remove,
+-static struct pci_driver sis5513_pci_driver = {
+-	.name		= "SIS_IDE",
+-	.id_table	= sis5513_pci_tbl,
+-	.probe		= sis5513_init_one,
+-	.remove		= sis5513_remove,
 -	.suspend	= ide_pci_suspend,
 -	.resume		= ide_pci_resume,
 -};
 -
--static int __init opti621_ide_init(void)
+-static int __init sis5513_ide_init(void)
 -{
--	return ide_pci_register_driver(&opti621_pci_driver);
+-	return ide_pci_register_driver(&sis5513_pci_driver);
 -}
 -
--static void __exit opti621_ide_exit(void)
+-static void __exit sis5513_ide_exit(void)
 -{
--	pci_unregister_driver(&opti621_pci_driver);
+-	pci_unregister_driver(&sis5513_pci_driver);
 -}
 -
--module_init(opti621_ide_init);
--module_exit(opti621_ide_exit);
+-module_init(sis5513_ide_init);
+-module_exit(sis5513_ide_exit);
 -
--MODULE_AUTHOR("Jaromir Koutek, Jan Harkes, Mark Lord");
--MODULE_DESCRIPTION("PCI driver module for Opti621 IDE");
+-MODULE_AUTHOR("Lionel Bouton, L C Chang, Andre Hedrick, Vojtech Pavlik");
+-MODULE_DESCRIPTION("PCI driver module for SIS IDE");
 -MODULE_LICENSE("GPL");
 -- 
 1.9.1
