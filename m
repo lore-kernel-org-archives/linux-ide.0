@@ -1,7 +1,7 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RFC PATCH 14/19] ide: remove deprecated serverworks host driver
-Date: Thu, 04 Feb 2016 14:44:11 +0100
-Message-ID: <1454593456-3162-15-git-send-email-b.zolnierkie@samsung.com>
+Subject: [RFC PATCH 06/19] ide: remove deprecated sc1200 host driver
+Date: Thu, 04 Feb 2016 14:44:03 +0100
+Message-ID: <1454593456-3162-7-git-send-email-b.zolnierkie@samsung.com>
 References: <1454593456-3162-1-git-send-email-b.zolnierkie@samsung.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-reply-to: <1454593456-3162-1-git-send-email-b.zolnierkie@samsung.com>
@@ -14,504 +14,412 @@ IDE subsystem has been deprecated since 2009 and the majority
 (if not all) of Linux distributions have switched to use
 libata for ATA support exclusively.
 
-The replacement driver (pata_serverworks) has been available
-since 2006 and it supports all the hardware supported by the old
-serverworks host driver.
+The replacement driver (pata_sc1200) has been available since
+2006 and it supports all the hardware supported by the old
+sc1200 host driver.  Also x86 defconfigs have switched to use
+libata PATA exclusively in 2008.
 
-Remove the deprecated serverworks host driver.
+Remove the deprecated sc1200 host driver.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
- drivers/ide/Kconfig       |   7 -
- drivers/ide/Makefile      |   1 -
- drivers/ide/serverworks.c | 449 ----------------------------------------------
- 3 files changed, 457 deletions(-)
- delete mode 100644 drivers/ide/serverworks.c
+ drivers/ide/Kconfig  |   8 --
+ drivers/ide/Makefile |   1 -
+ drivers/ide/sc1200.c | 355 ---------------------------------------------------
+ 3 files changed, 364 deletions(-)
+ delete mode 100644 drivers/ide/sc1200.c
 
 diff --git a/drivers/ide/Kconfig b/drivers/ide/Kconfig
-index e4794af..1379ce6 100644
+index c6b7a74..2af2425 100644
 --- a/drivers/ide/Kconfig
 +++ b/drivers/ide/Kconfig
-@@ -428,13 +428,6 @@ config BLK_DEV_PDC202XX_NEW
- 	tristate "PROMISE PDC202{68|69|70|71|75|76|77} support"
- 	select BLK_DEV_IDEDMA_PCI
+@@ -434,14 +434,6 @@ config BLK_DEV_JMICRON
+ 	  Basic support for the JMicron ATA controllers. For full support
+ 	  use the libata drivers.
  
--config BLK_DEV_SVWKS
--	tristate "ServerWorks OSB4/CSB5/CSB6 chipsets support"
+-config BLK_DEV_SC1200
+-	tristate "National SCx200 chipset support"
+-	depends on X86_32 || COMPILE_TEST
 -	select BLK_DEV_IDEDMA_PCI
 -	help
--	  This driver adds PIO/(U)DMA support for the ServerWorks OSB4/CSB5
--	  chipsets.
+-	  This driver adds support for the on-board IDE controller on the
+-	  National SCx200 series of embedded x86 "Geode" systems.
 -
- config BLK_DEV_SGIIOC4
- 	tristate "Silicon Graphics IOC4 chipset ATA/ATAPI support"
- 	depends on (IA64_SGI_SN2 || IA64_GENERIC) && SGI_IOC4
+ config BLK_DEV_PIIX
+ 	tristate "Intel PIIX/ICH chipsets support"
+ 	select BLK_DEV_IDEDMA_PCI
 diff --git a/drivers/ide/Makefile b/drivers/ide/Makefile
-index de19568..9fe5f5f 100644
+index 960d88f..df2c031 100644
 --- a/drivers/ide/Makefile
 +++ b/drivers/ide/Makefile
-@@ -44,7 +44,6 @@ obj-$(CONFIG_BLK_DEV_IT8172)		+= it8172.o
- obj-$(CONFIG_BLK_DEV_NS87415)		+= ns87415.o
- obj-$(CONFIG_BLK_DEV_PDC202XX_NEW)	+= pdc202xx_new.o
- obj-$(CONFIG_BLK_DEV_PIIX)		+= piix.o
--obj-$(CONFIG_BLK_DEV_SVWKS)		+= serverworks.o
- obj-$(CONFIG_BLK_DEV_SGIIOC4)		+= sgiioc4.o
- obj-$(CONFIG_BLK_DEV_SIIMAGE)		+= siimage.o
- obj-$(CONFIG_BLK_DEV_SIS5513)		+= sis5513.o
-diff --git a/drivers/ide/serverworks.c b/drivers/ide/serverworks.c
+@@ -38,7 +38,6 @@ obj-$(CONFIG_BLK_DEV_AEC62XX)		+= aec62xx.o
+ obj-$(CONFIG_BLK_DEV_ALI15X3)		+= alim15x3.o
+ obj-$(CONFIG_BLK_DEV_AMD74XX)		+= amd74xx.o
+ obj-$(CONFIG_BLK_DEV_CMD64X)		+= cmd64x.o
+-obj-$(CONFIG_BLK_DEV_SC1200)		+= sc1200.o
+ obj-$(CONFIG_BLK_DEV_CY82C693)		+= cy82c693.o
+ obj-$(CONFIG_BLK_DEV_DELKIN)		+= delkin_cb.o
+ obj-$(CONFIG_BLK_DEV_HPT366)		+= hpt366.o
+diff --git a/drivers/ide/sc1200.c b/drivers/ide/sc1200.c
 deleted file mode 100644
-index a97affc..0000000
---- a/drivers/ide/serverworks.c
+index a5b7018..0000000
+--- a/drivers/ide/sc1200.c
 +++ /dev/null
-@@ -1,449 +0,0 @@
+@@ -1,355 +0,0 @@
 -/*
-- * Copyright (C) 1998-2000 Michel Aubry
-- * Copyright (C) 1998-2000 Andrzej Krzysztofowicz
-- * Copyright (C) 1998-2000 Andre Hedrick <andre@linux-ide.org>
-- * Copyright (C) 2007-2010 Bartlomiej Zolnierkiewicz
-- * Portions copyright (c) 2001 Sun Microsystems
+- * Copyright (C) 2000-2002		Mark Lord <mlord@pobox.com>
+- * Copyright (C)      2007		Bartlomiej Zolnierkiewicz
 - *
+- * May be copied or modified under the terms of the GNU General Public License
 - *
-- * RCC/ServerWorks IDE driver for Linux
-- *
-- *   OSB4: `Open South Bridge' IDE Interface (fn 1)
-- *         supports UDMA mode 2 (33 MB/s)
-- *
-- *   CSB5: `Champion South Bridge' IDE Interface (fn 1)
-- *         all revisions support UDMA mode 4 (66 MB/s)
-- *         revision A2.0 and up support UDMA mode 5 (100 MB/s)
-- *
-- *         *** The CSB5 does not provide ANY register ***
-- *         *** to detect 80-conductor cable presence. ***
-- *
-- *   CSB6: `Champion South Bridge' IDE Interface (optional: third channel)
-- *
-- *   HT1000: AKA BCM5785 - Hypertransport Southbridge for Opteron systems. IDE
-- *   controller same as the CSB6. Single channel ATA100 only.
+- * Development of this chipset driver was funded
+- * by the nice folks at National Semiconductor.
 - *
 - * Documentation:
-- *	Available under NDA only. Errata info very hard to get.
-- *
+- *	Available from National Semiconductor
 - */
 -
--#include <linux/types.h>
 -#include <linux/module.h>
+-#include <linux/types.h>
 -#include <linux/kernel.h>
+-#include <linux/slab.h>
 -#include <linux/pci.h>
--#include <linux/ide.h>
 -#include <linux/init.h>
+-#include <linux/ide.h>
+-#include <linux/pm.h>
 -
 -#include <asm/io.h>
 -
--#define DRV_NAME "serverworks"
+-#define DRV_NAME "sc1200"
 -
--#define SVWKS_CSB5_REVISION_NEW	0x92 /* min PCI_REVISION_ID for UDMA5 (A2.0) */
--#define SVWKS_CSB6_REVISION	0xa0 /* min PCI_REVISION_ID for UDMA4 (A1.0) */
+-#define SC1200_REV_A	0x00
+-#define SC1200_REV_B1	0x01
+-#define SC1200_REV_B3	0x02
+-#define SC1200_REV_C1	0x03
+-#define SC1200_REV_D1	0x04
 -
--/* Seagate Barracuda ATA IV Family drives in UDMA mode 5
-- * can overrun their FIFOs when used with the CSB5 */
--static const char *svwks_bad_ata100[] = {
--	"ST320011A",
--	"ST340016A",
--	"ST360021A",
--	"ST380021A",
--	NULL
--};
+-#define PCI_CLK_33	0x00
+-#define PCI_CLK_48	0x01
+-#define PCI_CLK_66	0x02
+-#define PCI_CLK_33A	0x03
 -
--static int check_in_drive_lists (ide_drive_t *drive, const char **list)
+-static unsigned short sc1200_get_pci_clock (void)
 -{
--	char *m = (char *)&drive->id[ATA_ID_PROD];
+-	unsigned char chip_id, silicon_revision;
+-	unsigned int pci_clock;
+-	/*
+-	 * Check the silicon revision, as not all versions of the chip
+-	 * have the register with the fast PCI bus timings.
+-	 */
+-	chip_id = inb (0x903c);
+-	silicon_revision = inb (0x903d);
 -
--	while (*list)
--		if (!strcmp(*list++, m))
--			return 1;
--	return 0;
--}
--
--static u8 svwks_udma_filter(ide_drive_t *drive)
--{
--	struct pci_dev *dev = to_pci_dev(drive->hwif->dev);
--
--	if (dev->device == PCI_DEVICE_ID_SERVERWORKS_HT1000IDE) {
--		return 0x1f;
--	} else if (dev->revision < SVWKS_CSB5_REVISION_NEW) {
--		return 0x07;
+-	// Read the fast pci clock frequency
+-	if (chip_id == 0x04 && silicon_revision < SC1200_REV_B1) {
+-		pci_clock = PCI_CLK_33;
 -	} else {
--		u8 btr = 0, mode, mask;
+-		// check clock generator configuration (cfcc)
+-		// the clock is in bits 8 and 9 of this word
 -
--		pci_read_config_byte(dev, 0x5A, &btr);
--		mode = btr & 0x3;
--
--		/* If someone decides to do UDMA133 on CSB5 the same
--		   issue will bite so be inclusive */
--		if (mode > 2 && check_in_drive_lists(drive, svwks_bad_ata100))
--			mode = 2;
--
--		switch(mode) {
--		case 3:	 mask = 0x3f; break;
--		case 2:	 mask = 0x1f; break;
--		case 1:	 mask = 0x07; break;
--		default: mask = 0x00; break;
--		}
--
--		return mask;
+-		pci_clock = inw (0x901e);
+-		pci_clock >>= 8;
+-		pci_clock &= 0x03;
+-		if (pci_clock == PCI_CLK_33A)
+-			pci_clock = PCI_CLK_33;
 -	}
+-	return pci_clock;
 -}
 -
--static u8 svwks_csb_check (struct pci_dev *dev)
+-/*
+- * Here are the standard PIO mode 0-4 timings for each "format".
+- * Format-0 uses fast data reg timings, with slower command reg timings.
+- * Format-1 uses fast timings for all registers, but won't work with all drives.
+- */
+-static const unsigned int sc1200_pio_timings[4][5] =
+-	{{0x00009172, 0x00012171, 0x00020080, 0x00032010, 0x00040010},	// format0  33Mhz
+-	 {0xd1329172, 0x71212171, 0x30200080, 0x20102010, 0x00100010},	// format1, 33Mhz
+-	 {0xfaa3f4f3, 0xc23232b2, 0x513101c1, 0x31213121, 0x10211021},	// format1, 48Mhz
+-	 {0xfff4fff4, 0xf35353d3, 0x814102f1, 0x42314231, 0x11311131}};	// format1, 66Mhz
+-
+-/*
+- * After chip reset, the PIO timings are set to 0x00009172, which is not valid.
+- */
+-//#define SC1200_BAD_PIO(timings) (((timings)&~0x80000000)==0x00009172)
+-
+-static void sc1200_tunepio(ide_drive_t *drive, u8 pio)
 -{
--	switch (dev->device) {
--		case PCI_DEVICE_ID_SERVERWORKS_CSB5IDE:
--		case PCI_DEVICE_ID_SERVERWORKS_CSB6IDE:
--		case PCI_DEVICE_ID_SERVERWORKS_CSB6IDE2:
--		case PCI_DEVICE_ID_SERVERWORKS_HT1000IDE:
--			return 1;
--		default:
--			break;
--	}
--	return 0;
+-	ide_hwif_t *hwif = drive->hwif;
+-	struct pci_dev *pdev = to_pci_dev(hwif->dev);
+-	unsigned int basereg = hwif->channel ? 0x50 : 0x40, format = 0;
+-
+-	pci_read_config_dword(pdev, basereg + 4, &format);
+-	format = (format >> 31) & 1;
+-	if (format)
+-		format += sc1200_get_pci_clock();
+-	pci_write_config_dword(pdev, basereg + ((drive->dn & 1) << 3),
+-			       sc1200_pio_timings[format][pio]);
 -}
 -
--static void svwks_set_pio_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+-/*
+- *	The SC1200 specifies that two drives sharing a cable cannot mix
+- *	UDMA/MDMA.  It has to be one or the other, for the pair, though
+- *	different timings can still be chosen for each drive.  We could
+- *	set the appropriate timing bits on the fly, but that might be
+- *	a bit confusing.  So, for now we statically handle this requirement
+- *	by looking at our mate drive to see what it is capable of, before
+- *	choosing a mode for our own drive.
+- */
+-static u8 sc1200_udma_filter(ide_drive_t *drive)
 -{
--	static const u8 pio_modes[] = { 0x5d, 0x47, 0x34, 0x22, 0x20 };
--	static const u8 drive_pci[] = { 0x41, 0x40, 0x43, 0x42 };
+-	ide_hwif_t *hwif = drive->hwif;
+-	ide_drive_t *mate = ide_get_pair_dev(drive);
+-	u16 *mateid;
+-	u8 mask = hwif->ultra_mask;
 -
--	struct pci_dev *dev = to_pci_dev(hwif->dev);
--	const u8 pio = drive->pio_mode - XFER_PIO_0;
+-	if (mate == NULL)
+-		goto out;
+-	mateid = mate->id;
 -
--	pci_write_config_byte(dev, drive_pci[drive->dn], pio_modes[pio]);
--
--	if (svwks_csb_check(dev)) {
--		u16 csb_pio = 0;
--
--		pci_read_config_word(dev, 0x4a, &csb_pio);
--
--		csb_pio &= ~(0x0f << (4 * drive->dn));
--		csb_pio |= (pio << (4 * drive->dn));
--
--		pci_write_config_word(dev, 0x4a, csb_pio);
+-	if (ata_id_has_dma(mateid) && __ide_dma_bad_drive(mate) == 0) {
+-		if ((mateid[ATA_ID_FIELD_VALID] & 4) &&
+-		    (mateid[ATA_ID_UDMA_MODES] & 7))
+-			goto out;
+-		if (mateid[ATA_ID_MWDMA_MODES] & 7)
+-			mask = 0;
 -	}
+-out:
+-	return mask;
 -}
 -
--static void svwks_set_dma_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+-static void sc1200_set_dma_mode(ide_hwif_t *hwif, ide_drive_t *drive)
 -{
--	static const u8 udma_modes[]		= { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05 };
--	static const u8 dma_modes[]		= { 0x77, 0x21, 0x20 };
--	static const u8 drive_pci2[]		= { 0x45, 0x44, 0x47, 0x46 };
+-	struct pci_dev		*dev = to_pci_dev(hwif->dev);
+-	unsigned int		reg, timings;
+-	unsigned short		pci_clock;
+-	unsigned int		basereg = hwif->channel ? 0x50 : 0x40;
+-	const u8		mode = drive->dma_mode;
 -
--	struct pci_dev *dev	= to_pci_dev(hwif->dev);
--	const u8 speed		= drive->dma_mode;
--	u8 unit			= drive->dn & 1;
+-	static const u32 udma_timing[3][3] = {
+-		{ 0x00921250, 0x00911140, 0x00911030 },
+-		{ 0x00932470, 0x00922260, 0x00922140 },
+-		{ 0x009436a1, 0x00933481, 0x00923261 },
+-	};
 -
--	u8 ultra_enable	 = 0, ultra_timing = 0, dma_timing = 0;
+-	static const u32 mwdma_timing[3][3] = {
+-		{ 0x00077771, 0x00012121, 0x00002020 },
+-		{ 0x000bbbb2, 0x00024241, 0x00013131 },
+-		{ 0x000ffff3, 0x00035352, 0x00015151 },
+-	};
 -
--	pci_read_config_byte(dev, (0x56|hwif->channel), &ultra_timing);
--	pci_read_config_byte(dev, 0x54, &ultra_enable);
+-	pci_clock = sc1200_get_pci_clock();
 -
--	ultra_timing	&= ~(0x0F << (4*unit));
--	ultra_enable	&= ~(0x01 << drive->dn);
+-	/*
+-	 * Note that each DMA mode has several timings associated with it.
+-	 * The correct timing depends on the fast PCI clock freq.
+-	 */
 -
--	if (speed >= XFER_UDMA_0) {
--		dma_timing   |= dma_modes[2];
--		ultra_timing |= (udma_modes[speed - XFER_UDMA_0] << (4 * unit));
--		ultra_enable |= (0x01 << drive->dn);
--	} else if (speed >= XFER_MW_DMA_0)
--		dma_timing   |= dma_modes[speed - XFER_MW_DMA_0];
+-	if (mode >= XFER_UDMA_0)
+-		timings =  udma_timing[pci_clock][mode - XFER_UDMA_0];
+-	else
+-		timings = mwdma_timing[pci_clock][mode - XFER_MW_DMA_0];
 -
--	pci_write_config_byte(dev, drive_pci2[drive->dn], dma_timing);
--	pci_write_config_byte(dev, (0x56|hwif->channel), ultra_timing);
--	pci_write_config_byte(dev, 0x54, ultra_enable);
+-	if ((drive->dn & 1) == 0) {
+-		pci_read_config_dword(dev, basereg + 4, &reg);
+-		timings |= reg & 0x80000000;	/* preserve PIO format bit */
+-		pci_write_config_dword(dev, basereg + 4, timings);
+-	} else
+-		pci_write_config_dword(dev, basereg + 12, timings);
 -}
 -
--static int init_chipset_svwks(struct pci_dev *dev)
+-/*  Replacement for the standard ide_dma_end action in
+- *  dma_proc.
+- *
+- *  returns 1 on error, 0 otherwise
+- */
+-static int sc1200_dma_end(ide_drive_t *drive)
 -{
--	unsigned int reg;
--	u8 btr;
+-	ide_hwif_t *hwif = drive->hwif;
+-	unsigned long dma_base = hwif->dma_base;
+-	u8 dma_stat;
 -
--	/* force Master Latency Timer value to 64 PCICLKs */
--	pci_write_config_byte(dev, PCI_LATENCY_TIMER, 0x40);
+-	dma_stat = inb(dma_base+2);		/* get DMA status */
 -
--	/* OSB4 : South Bridge and IDE */
--	if (dev->device == PCI_DEVICE_ID_SERVERWORKS_OSB4IDE) {
--		struct pci_dev *isa_dev =
--			pci_get_device(PCI_VENDOR_ID_SERVERWORKS,
--					PCI_DEVICE_ID_SERVERWORKS_OSB4, NULL);
--		if (isa_dev) {
--			pci_read_config_dword(isa_dev, 0x64, &reg);
--			reg &= ~0x00002000; /* disable 600ns interrupt mask */
--			if(!(reg & 0x00004000))
--				printk(KERN_DEBUG DRV_NAME " %s: UDMA not BIOS "
--					"enabled.\n", pci_name(dev));
--			reg |=  0x00004000; /* enable UDMA/33 support */
--			pci_write_config_dword(isa_dev, 0x64, reg);
--			pci_dev_put(isa_dev);
--		}
+-	if (!(dma_stat & 4))
+-		printk(" ide_dma_end dma_stat=%0x err=%x newerr=%x\n",
+-		  dma_stat, ((dma_stat&7)!=4), ((dma_stat&2)==2));
+-
+-	outb(dma_stat|0x1b, dma_base+2);	/* clear the INTR & ERROR bits */
+-	outb(inb(dma_base)&~1, dma_base);	/* !! DO THIS HERE !! stop DMA */
+-
+-	return (dma_stat & 7) != 4;		/* verify good DMA status */
+-}
+-
+-/*
+- * sc1200_set_pio_mode() handles setting of PIO modes
+- * for both the chipset and drive.
+- *
+- * All existing BIOSs for this chipset guarantee that all drives
+- * will have valid default PIO timings set up before we get here.
+- */
+-
+-static void sc1200_set_pio_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+-{
+-	int		mode = -1;
+-	const u8	pio = drive->pio_mode - XFER_PIO_0;
+-
+-	/*
+-	 * bad abuse of ->set_pio_mode interface
+-	 */
+-	switch (pio) {
+-		case 200: mode = XFER_UDMA_0;	break;
+-		case 201: mode = XFER_UDMA_1;	break;
+-		case 202: mode = XFER_UDMA_2;	break;
+-		case 100: mode = XFER_MW_DMA_0;	break;
+-		case 101: mode = XFER_MW_DMA_1;	break;
+-		case 102: mode = XFER_MW_DMA_2;	break;
+-	}
+-	if (mode != -1) {
+-		printk("SC1200: %s: changing (U)DMA mode\n", drive->name);
+-		ide_dma_off_quietly(drive);
+-		if (ide_set_dma_mode(drive, mode) == 0 &&
+-		    (drive->dev_flags & IDE_DFLAG_USING_DMA))
+-			hwif->dma_ops->dma_host_set(drive, 1);
+-		return;
 -	}
 -
--	/* setup CSB5/CSB6 : South Bridge and IDE option RAID */
--	else if ((dev->device == PCI_DEVICE_ID_SERVERWORKS_CSB5IDE) ||
--		 (dev->device == PCI_DEVICE_ID_SERVERWORKS_CSB6IDE) ||
--		 (dev->device == PCI_DEVICE_ID_SERVERWORKS_CSB6IDE2)) {
+-	sc1200_tunepio(drive, pio);
+-}
 -
--		/* Third Channel Test */
--		if (!(PCI_FUNC(dev->devfn) & 1)) {
--			struct pci_dev * findev = NULL;
--			u32 reg4c = 0;
--			findev = pci_get_device(PCI_VENDOR_ID_SERVERWORKS,
--				PCI_DEVICE_ID_SERVERWORKS_CSB5, NULL);
--			if (findev) {
--				pci_read_config_dword(findev, 0x4C, &reg4c);
--				reg4c &= ~0x000007FF;
--				reg4c |=  0x00000040;
--				reg4c |=  0x00000020;
--				pci_write_config_dword(findev, 0x4C, reg4c);
--				pci_dev_put(findev);
--			}
--			outb_p(0x06, 0x0c00);
--			dev->irq = inb_p(0x0c01);
--		} else {
--			struct pci_dev * findev = NULL;
--			u8 reg41 = 0;
+-#ifdef CONFIG_PM
+-struct sc1200_saved_state {
+-	u32 regs[8];
+-};
 -
--			findev = pci_get_device(PCI_VENDOR_ID_SERVERWORKS,
--					PCI_DEVICE_ID_SERVERWORKS_CSB6, NULL);
--			if (findev) {
--				pci_read_config_byte(findev, 0x41, &reg41);
--				reg41 &= ~0x40;
--				pci_write_config_byte(findev, 0x41, reg41);
--				pci_dev_put(findev);
--			}
--			/*
--			 * This is a device pin issue on CSB6.
--			 * Since there will be a future raid mode,
--			 * early versions of the chipset require the
--			 * interrupt pin to be set, and it is a compatibility
--			 * mode issue.
--			 */
--			if ((dev->class >> 8) == PCI_CLASS_STORAGE_IDE)
--				dev->irq = 0;
--		}
--//		pci_read_config_dword(dev, 0x40, &pioreg)
--//		pci_write_config_dword(dev, 0x40, 0x99999999);
--//		pci_read_config_dword(dev, 0x44, &dmareg);
--//		pci_write_config_dword(dev, 0x44, 0xFFFFFFFF);
--		/* setup the UDMA Control register
--		 *
--		 * 1. clear bit 6 to enable DMA
--		 * 2. enable DMA modes with bits 0-1
--		 * 	00 : legacy
--		 * 	01 : udma2
--		 * 	10 : udma2/udma4
--		 * 	11 : udma2/udma4/udma5
+-static int sc1200_suspend (struct pci_dev *dev, pm_message_t state)
+-{
+-	printk("SC1200: suspend(%u)\n", state.event);
+-
+-	/*
+-	 * we only save state when going from full power to less
+-	 */
+-	if (state.event == PM_EVENT_ON) {
+-		struct ide_host *host = pci_get_drvdata(dev);
+-		struct sc1200_saved_state *ss = host->host_priv;
+-		unsigned int r;
+-
+-		/*
+-		 * save timing registers
+-		 * (this may be unnecessary if BIOS also does it)
 -		 */
--		pci_read_config_byte(dev, 0x5A, &btr);
--		btr &= ~0x40;
--		if (!(PCI_FUNC(dev->devfn) & 1))
--			btr |= 0x2;
--		else
--			btr |= (dev->revision >= SVWKS_CSB5_REVISION_NEW) ? 0x3 : 0x2;
--		pci_write_config_byte(dev, 0x5A, btr);
--	}
--	/* Setup HT1000 SouthBridge Controller - Single Channel Only */
--	else if (dev->device == PCI_DEVICE_ID_SERVERWORKS_HT1000IDE) {
--		pci_read_config_byte(dev, 0x5A, &btr);
--		btr &= ~0x40;
--		btr |= 0x3;
--		pci_write_config_byte(dev, 0x5A, btr);
+-		for (r = 0; r < 8; r++)
+-			pci_read_config_dword(dev, 0x40 + r * 4, &ss->regs[r]);
 -	}
 -
+-	pci_disable_device(dev);
+-	pci_set_power_state(dev, pci_choose_state(dev, state));
 -	return 0;
 -}
 -
--static u8 ata66_svwks_svwks(ide_hwif_t *hwif)
+-static int sc1200_resume (struct pci_dev *dev)
 -{
--	return ATA_CBL_PATA80;
+-	struct ide_host *host = pci_get_drvdata(dev);
+-	struct sc1200_saved_state *ss = host->host_priv;
+-	unsigned int r;
+-	int i;
+-
+-	i = pci_enable_device(dev);
+-	if (i)
+-		return i;
+-
+-	/*
+-	 * restore timing registers
+-	 * (this may be unnecessary if BIOS also does it)
+-	 */
+-	for (r = 0; r < 8; r++)
+-		pci_write_config_dword(dev, 0x40 + r * 4, ss->regs[r]);
+-
+-	return 0;
 -}
+-#endif
 -
--/* On Dell PowerEdge servers with a CSB5/CSB6, the top two bits
-- * of the subsystem device ID indicate presence of an 80-pin cable.
-- * Bit 15 clear = secondary IDE channel does not have 80-pin cable.
-- * Bit 15 set   = secondary IDE channel has 80-pin cable.
-- * Bit 14 clear = primary IDE channel does not have 80-pin cable.
-- * Bit 14 set   = primary IDE channel has 80-pin cable.
-- */
--static u8 ata66_svwks_dell(ide_hwif_t *hwif)
--{
--	struct pci_dev *dev = to_pci_dev(hwif->dev);
--
--	if (dev->subsystem_vendor == PCI_VENDOR_ID_DELL &&
--	    dev->vendor	== PCI_VENDOR_ID_SERVERWORKS &&
--	    (dev->device == PCI_DEVICE_ID_SERVERWORKS_CSB5IDE ||
--	     dev->device == PCI_DEVICE_ID_SERVERWORKS_CSB6IDE))
--		return ((1 << (hwif->channel + 14)) &
--			dev->subsystem_device) ? ATA_CBL_PATA80 : ATA_CBL_PATA40;
--	return ATA_CBL_PATA40;
--}
--
--/* Sun Cobalt Alpine hardware avoids the 80-pin cable
-- * detect issue by attaching the drives directly to the board.
-- * This check follows the Dell precedent (how scary is that?!)
-- *
-- * WARNING: this only works on Alpine hardware!
-- */
--static u8 ata66_svwks_cobalt(ide_hwif_t *hwif)
--{
--	struct pci_dev *dev = to_pci_dev(hwif->dev);
--
--	if (dev->subsystem_vendor == PCI_VENDOR_ID_SUN &&
--	    dev->vendor	== PCI_VENDOR_ID_SERVERWORKS &&
--	    dev->device == PCI_DEVICE_ID_SERVERWORKS_CSB5IDE)
--		return ((1 << (hwif->channel + 14)) &
--			dev->subsystem_device) ? ATA_CBL_PATA80 : ATA_CBL_PATA40;
--	return ATA_CBL_PATA40;
--}
--
--static u8 svwks_cable_detect(ide_hwif_t *hwif)
--{
--	struct pci_dev *dev = to_pci_dev(hwif->dev);
--
--	/* Server Works */
--	if (dev->subsystem_vendor == PCI_VENDOR_ID_SERVERWORKS)
--		return ata66_svwks_svwks (hwif);
--	
--	/* Dell PowerEdge */
--	if (dev->subsystem_vendor == PCI_VENDOR_ID_DELL)
--		return ata66_svwks_dell (hwif);
--
--	/* Cobalt Alpine */
--	if (dev->subsystem_vendor == PCI_VENDOR_ID_SUN)
--		return ata66_svwks_cobalt (hwif);
--
--	/* Per Specified Design by OEM, and ASIC Architect */
--	if ((dev->device == PCI_DEVICE_ID_SERVERWORKS_CSB6IDE) ||
--	    (dev->device == PCI_DEVICE_ID_SERVERWORKS_CSB6IDE2))
--		return ATA_CBL_PATA80;
--
--	return ATA_CBL_PATA40;
--}
--
--static const struct ide_port_ops osb4_port_ops = {
--	.set_pio_mode		= svwks_set_pio_mode,
--	.set_dma_mode		= svwks_set_dma_mode,
+-static const struct ide_port_ops sc1200_port_ops = {
+-	.set_pio_mode		= sc1200_set_pio_mode,
+-	.set_dma_mode		= sc1200_set_dma_mode,
+-	.udma_filter		= sc1200_udma_filter,
 -};
 -
--static const struct ide_port_ops svwks_port_ops = {
--	.set_pio_mode		= svwks_set_pio_mode,
--	.set_dma_mode		= svwks_set_dma_mode,
--	.udma_filter		= svwks_udma_filter,
--	.cable_detect		= svwks_cable_detect,
+-static const struct ide_dma_ops sc1200_dma_ops = {
+-	.dma_host_set		= ide_dma_host_set,
+-	.dma_setup		= ide_dma_setup,
+-	.dma_start		= ide_dma_start,
+-	.dma_end		= sc1200_dma_end,
+-	.dma_test_irq		= ide_dma_test_irq,
+-	.dma_lost_irq		= ide_dma_lost_irq,
+-	.dma_timer_expiry	= ide_dma_sff_timer_expiry,
+-	.dma_sff_read_status	= ide_dma_sff_read_status,
 -};
 -
--static const struct ide_port_info serverworks_chipsets[] = {
--	{	/* 0: OSB4 */
--		.name		= DRV_NAME,
--		.init_chipset	= init_chipset_svwks,
--		.port_ops	= &osb4_port_ops,
--		.pio_mask	= ATA_PIO4,
--		.mwdma_mask	= ATA_MWDMA2,
--		.udma_mask	= 0x00, /* UDMA is problematic on OSB4 */
--	},
--	{	/* 1: CSB5 */
--		.name		= DRV_NAME,
--		.init_chipset	= init_chipset_svwks,
--		.port_ops	= &svwks_port_ops,
--		.pio_mask	= ATA_PIO4,
--		.mwdma_mask	= ATA_MWDMA2,
--		.udma_mask	= ATA_UDMA5,
--	},
--	{	/* 2: CSB6 */
--		.name		= DRV_NAME,
--		.init_chipset	= init_chipset_svwks,
--		.port_ops	= &svwks_port_ops,
--		.pio_mask	= ATA_PIO4,
--		.mwdma_mask	= ATA_MWDMA2,
--		.udma_mask	= ATA_UDMA5,
--	},
--	{	/* 3: CSB6-2 */
--		.name		= DRV_NAME,
--		.init_chipset	= init_chipset_svwks,
--		.port_ops	= &svwks_port_ops,
--		.host_flags	= IDE_HFLAG_SINGLE,
--		.pio_mask	= ATA_PIO4,
--		.mwdma_mask	= ATA_MWDMA2,
--		.udma_mask	= ATA_UDMA5,
--	},
--	{	/* 4: HT1000 */
--		.name		= DRV_NAME,
--		.init_chipset	= init_chipset_svwks,
--		.port_ops	= &svwks_port_ops,
--		.host_flags	= IDE_HFLAG_SINGLE,
--		.pio_mask	= ATA_PIO4,
--		.mwdma_mask	= ATA_MWDMA2,
--		.udma_mask	= ATA_UDMA5,
--	}
+-static const struct ide_port_info sc1200_chipset = {
+-	.name		= DRV_NAME,
+-	.port_ops	= &sc1200_port_ops,
+-	.dma_ops	= &sc1200_dma_ops,
+-	.host_flags	= IDE_HFLAG_SERIALIZE |
+-			  IDE_HFLAG_POST_SET_MODE |
+-			  IDE_HFLAG_ABUSE_DMA_MODES,
+-	.pio_mask	= ATA_PIO4,
+-	.mwdma_mask	= ATA_MWDMA2,
+-	.udma_mask	= ATA_UDMA2,
 -};
 -
--/**
-- *	svwks_init_one	-	called when a OSB/CSB is found
-- *	@dev: the svwks device
-- *	@id: the matching pci id
-- *
-- *	Called when the PCI registration layer (or the IDE initialization)
-- *	finds a device matching our IDE device tables.
-- */
-- 
--static int svwks_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+-static int sc1200_init_one(struct pci_dev *dev, const struct pci_device_id *id)
 -{
--	struct ide_port_info d;
--	u8 idx = id->driver_data;
+-	struct sc1200_saved_state *ss = NULL;
+-	int rc;
 -
--	d = serverworks_chipsets[idx];
+-#ifdef CONFIG_PM
+-	ss = kmalloc(sizeof(*ss), GFP_KERNEL);
+-	if (ss == NULL)
+-		return -ENOMEM;
+-#endif
+-	rc = ide_pci_init_one(dev, &sc1200_chipset, ss);
+-	if (rc)
+-		kfree(ss);
 -
--	if (idx == 1)
--		d.host_flags |= IDE_HFLAG_CLEAR_SIMPLEX;
--	else if (idx == 2 || idx == 3) {
--		if ((PCI_FUNC(dev->devfn) & 1) == 0) {
--			if (pci_resource_start(dev, 0) != 0x01f1)
--				d.host_flags |= IDE_HFLAG_NON_BOOTABLE;
--			d.host_flags |= IDE_HFLAG_SINGLE;
--		} else
--			d.host_flags &= ~IDE_HFLAG_SINGLE;
--	}
--
--	return ide_pci_init_one(dev, &d, NULL);
+-	return rc;
 -}
 -
--static const struct pci_device_id svwks_pci_tbl[] = {
--	{ PCI_VDEVICE(SERVERWORKS, PCI_DEVICE_ID_SERVERWORKS_OSB4IDE),   0 },
--	{ PCI_VDEVICE(SERVERWORKS, PCI_DEVICE_ID_SERVERWORKS_CSB5IDE),   1 },
--	{ PCI_VDEVICE(SERVERWORKS, PCI_DEVICE_ID_SERVERWORKS_CSB6IDE),   2 },
--	{ PCI_VDEVICE(SERVERWORKS, PCI_DEVICE_ID_SERVERWORKS_CSB6IDE2),  3 },
--	{ PCI_VDEVICE(SERVERWORKS, PCI_DEVICE_ID_SERVERWORKS_HT1000IDE), 4 },
+-static const struct pci_device_id sc1200_pci_tbl[] = {
+-	{ PCI_VDEVICE(NS, PCI_DEVICE_ID_NS_SCx200_IDE), 0},
 -	{ 0, },
 -};
--MODULE_DEVICE_TABLE(pci, svwks_pci_tbl);
+-MODULE_DEVICE_TABLE(pci, sc1200_pci_tbl);
 -
--static struct pci_driver svwks_pci_driver = {
--	.name		= "Serverworks_IDE",
--	.id_table	= svwks_pci_tbl,
--	.probe		= svwks_init_one,
+-static struct pci_driver sc1200_pci_driver = {
+-	.name		= "SC1200_IDE",
+-	.id_table	= sc1200_pci_tbl,
+-	.probe		= sc1200_init_one,
 -	.remove		= ide_pci_remove,
--	.suspend	= ide_pci_suspend,
--	.resume		= ide_pci_resume,
+-#ifdef CONFIG_PM
+-	.suspend	= sc1200_suspend,
+-	.resume		= sc1200_resume,
+-#endif
 -};
 -
--static int __init svwks_ide_init(void)
+-static int __init sc1200_ide_init(void)
 -{
--	return ide_pci_register_driver(&svwks_pci_driver);
+-	return ide_pci_register_driver(&sc1200_pci_driver);
 -}
 -
--static void __exit svwks_ide_exit(void)
+-static void __exit sc1200_ide_exit(void)
 -{
--	pci_unregister_driver(&svwks_pci_driver);
+-	pci_unregister_driver(&sc1200_pci_driver);
 -}
 -
--module_init(svwks_ide_init);
--module_exit(svwks_ide_exit);
+-module_init(sc1200_ide_init);
+-module_exit(sc1200_ide_exit);
 -
--MODULE_AUTHOR("Michael Aubry. Andrzej Krzysztofowicz, Andre Hedrick, Bartlomiej Zolnierkiewicz");
--MODULE_DESCRIPTION("PCI driver module for Serverworks OSB4/CSB5/CSB6 IDE");
+-MODULE_AUTHOR("Mark Lord");
+-MODULE_DESCRIPTION("PCI driver module for NS SC1200 IDE");
 -MODULE_LICENSE("GPL");
 -- 
 1.9.1
