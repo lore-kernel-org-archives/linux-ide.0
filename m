@@ -1,372 +1,378 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RFC PATCH 03/19] ide: remove deprecated cs5530 host driver
-Date: Thu, 04 Feb 2016 14:44:00 +0100
-Message-ID: <1454593456-3162-4-git-send-email-b.zolnierkie@samsung.com>
+Subject: [RFC PATCH 05/19] ide: remove deprecated cs5536 host driver
+Date: Thu, 04 Feb 2016 14:44:02 +0100
+Message-ID: <1454593456-3162-6-git-send-email-b.zolnierkie@samsung.com>
 References: <1454593456-3162-1-git-send-email-b.zolnierkie@samsung.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:45429 "EHLO
-	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934122AbcBDNpp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Feb 2016 08:45:45 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-reply-to: <1454593456-3162-1-git-send-email-b.zolnierkie@samsung.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: "David S. Miller" <davem@davemloft.net>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Alan Cox <gnomes@lxorguk.ukuu.org.uk>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, b.zolnierkie@samsung.com
+List-Id: linux-ide@vger.kernel.org
 
 IDE subsystem has been deprecated since 2009 and the majority
 (if not all) of Linux distributions have switched to use
 libata for ATA support exclusively.
 
-The replacement driver (pata_cs5530) has been available since
-2006 and it supports all the hardware supported by the old
-cs5530 host driver.  Also x86 defconfigs have switched to use
+The replacement driver (pata_cs5536) has been available since
+2007 and it supports all the hardware supported by the old
+cs5536 host driver.  Also x86 defconfigs have switched to use
 libata PATA exclusively in 2008.
 
-Remove the depracated cs5530 host driver.
+Remove the deprecated cs5536 host driver.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
  drivers/ide/Kconfig  |  10 --
  drivers/ide/Makefile |   1 -
- drivers/ide/cs5530.c | 295 ---------------------------------------------------
- 3 files changed, 306 deletions(-)
- delete mode 100644 drivers/ide/cs5530.c
+ drivers/ide/cs5536.c | 306 ---------------------------------------------------
+ 3 files changed, 317 deletions(-)
+ delete mode 100644 drivers/ide/cs5536.c
 
 diff --git a/drivers/ide/Kconfig b/drivers/ide/Kconfig
-index f340763..5cd7675 100644
+index d056aa5..c6b7a74 100644
 --- a/drivers/ide/Kconfig
 +++ b/drivers/ide/Kconfig
 @@ -403,16 +403,6 @@ config BLK_DEV_CY82C693
  	  This driver adds detection and support for the CY82C693 chipset
  	  used on Digital's PC-Alpha 164SX boards.
  
--config BLK_DEV_CS5530
--	tristate "Cyrix/National Semiconductor CS5530 MediaGX chipset support"
--	depends on X86_32 || COMPILE_TEST
+-config BLK_DEV_CS5536
+-	tristate "CS5536 chipset support"
+-	depends on X86_32
 -	select BLK_DEV_IDEDMA_PCI
 -	help
--	  Include support for UDMA on the Cyrix MediaGX 5530 chipset. This
--	  will automatically be detected and configured if found.
+-	  This option enables support for the AMD CS5536
+-	  companion chip used with the Geode LX processor family.
 -
--	  It is safe to say Y to this question.
+-	  If unsure, say N.
 -
- config BLK_DEV_CS5535
- 	tristate "AMD CS5535 chipset support"
- 	depends on X86_32
+ config BLK_DEV_HPT366
+ 	tristate "HPT36X/37X chipset support"
+ 	select BLK_DEV_IDEDMA_PCI
 diff --git a/drivers/ide/Makefile b/drivers/ide/Makefile
-index a1d2257..719879f 100644
+index a0b8ade0..960d88f 100644
 --- a/drivers/ide/Makefile
 +++ b/drivers/ide/Makefile
 @@ -38,7 +38,6 @@ obj-$(CONFIG_BLK_DEV_AEC62XX)		+= aec62xx.o
  obj-$(CONFIG_BLK_DEV_ALI15X3)		+= alim15x3.o
  obj-$(CONFIG_BLK_DEV_AMD74XX)		+= amd74xx.o
  obj-$(CONFIG_BLK_DEV_CMD64X)		+= cmd64x.o
--obj-$(CONFIG_BLK_DEV_CS5530)		+= cs5530.o
- obj-$(CONFIG_BLK_DEV_CS5535)		+= cs5535.o
- obj-$(CONFIG_BLK_DEV_CS5536)		+= cs5536.o
+-obj-$(CONFIG_BLK_DEV_CS5536)		+= cs5536.o
  obj-$(CONFIG_BLK_DEV_SC1200)		+= sc1200.o
-diff --git a/drivers/ide/cs5530.c b/drivers/ide/cs5530.c
+ obj-$(CONFIG_BLK_DEV_CY82C693)		+= cy82c693.o
+ obj-$(CONFIG_BLK_DEV_DELKIN)		+= delkin_cb.o
+diff --git a/drivers/ide/cs5536.c b/drivers/ide/cs5536.c
 deleted file mode 100644
-index 6537159..0000000
---- a/drivers/ide/cs5530.c
+index de9185d..0000000
+--- a/drivers/ide/cs5536.c
 +++ /dev/null
-@@ -1,295 +0,0 @@
+@@ -1,306 +0,0 @@
 -/*
-- * Copyright (C) 2000			Andre Hedrick <andre@linux-ide.org>
-- * Copyright (C) 2000			Mark Lord <mlord@pobox.com>
-- * Copyright (C) 2007			Bartlomiej Zolnierkiewicz
+- * CS5536 PATA support
+- * (C) 2007 Martin K. Petersen <mkp@mkp.net>
+- * (C) 2009 Bartlomiej Zolnierkiewicz
 - *
-- * May be copied or modified under the terms of the GNU General Public License
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License version 2 as
+- * published by the Free Software Foundation.
 - *
-- * Development of this chipset driver was funded
-- * by the nice folks at National Semiconductor.
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 - *
 - * Documentation:
-- *	CS5530 documentation available from National Semiconductor.
+- *	Available from AMD web site.
+- *
+- * The IDE timing registers for the CS5536 live in the Geode Machine
+- * Specific Register file and not PCI config space.  Most BIOSes
+- * virtualize the PCI registers so the chip looks like a standard IDE
+- * controller.  Unfortunately not all implementations get this right.
+- * In particular some have problems with unaligned accesses to the
+- * virtualized PCI registers.  This driver always does full dword
+- * writes to work around the issue.  Also, in case of a bad BIOS this
+- * driver can be loaded with the "msr=1" parameter which forces using
+- * the Machine Specific Registers to configure the device.
 - */
 -
--#include <linux/module.h>
--#include <linux/types.h>
 -#include <linux/kernel.h>
+-#include <linux/module.h>
 -#include <linux/pci.h>
 -#include <linux/init.h>
 -#include <linux/ide.h>
+-#include <asm/msr.h>
 -
--#include <asm/io.h>
+-#define DRV_NAME	"cs5536"
 -
--#define DRV_NAME "cs5530"
+-enum {
+-	MSR_IDE_CFG		= 0x51300010,
+-	PCI_IDE_CFG		= 0x40,
 -
--/*
-- * Here are the standard PIO mode 0-4 timings for each "format".
-- * Format-0 uses fast data reg timings, with slower command reg timings.
-- * Format-1 uses fast timings for all registers, but won't work with all drives.
-- */
--static unsigned int cs5530_pio_timings[2][5] = {
--	{0x00009172, 0x00012171, 0x00020080, 0x00032010, 0x00040010},
--	{0xd1329172, 0x71212171, 0x30200080, 0x20102010, 0x00100010}
+-	CFG			= 0,
+-	DTC			= 2,
+-	CAST			= 3,
+-	ETC			= 4,
+-
+-	IDE_CFG_CHANEN		= (1 << 1),
+-	IDE_CFG_CABLE		= (1 << 17) | (1 << 16),
+-
+-	IDE_D0_SHIFT		= 24,
+-	IDE_D1_SHIFT		= 16,
+-	IDE_DRV_MASK		= 0xff,
+-
+-	IDE_CAST_D0_SHIFT	= 6,
+-	IDE_CAST_D1_SHIFT	= 4,
+-	IDE_CAST_DRV_MASK	= 0x3,
+-
+-	IDE_CAST_CMD_SHIFT	= 24,
+-	IDE_CAST_CMD_MASK	= 0xff,
+-
+-	IDE_ETC_UDMA_MASK	= 0xc0,
 -};
 -
--/*
-- * After chip reset, the PIO timings are set to 0x0000e132, which is not valid.
-- */
--#define CS5530_BAD_PIO(timings) (((timings)&~0x80000000)==0x0000e132)
--#define CS5530_BASEREG(hwif)	(((hwif)->dma_base & ~0xf) + ((hwif)->channel ? 0x30 : 0x20))
+-static int use_msr;
+-
+-static int cs5536_read(struct pci_dev *pdev, int reg, u32 *val)
+-{
+-	if (unlikely(use_msr)) {
+-		u32 dummy;
+-
+-		rdmsr(MSR_IDE_CFG + reg, *val, dummy);
+-		return 0;
+-	}
+-
+-	return pci_read_config_dword(pdev, PCI_IDE_CFG + reg * 4, val);
+-}
+-
+-static int cs5536_write(struct pci_dev *pdev, int reg, int val)
+-{
+-	if (unlikely(use_msr)) {
+-		wrmsr(MSR_IDE_CFG + reg, val, 0);
+-		return 0;
+-	}
+-
+-	return pci_write_config_dword(pdev, PCI_IDE_CFG + reg * 4, val);
+-}
+-
+-static void cs5536_program_dtc(ide_drive_t *drive, u8 tim)
+-{
+-	struct pci_dev *pdev = to_pci_dev(drive->hwif->dev);
+-	int dshift = (drive->dn & 1) ? IDE_D1_SHIFT : IDE_D0_SHIFT;
+-	u32 dtc;
+-
+-	cs5536_read(pdev, DTC, &dtc);
+-	dtc &= ~(IDE_DRV_MASK << dshift);
+-	dtc |= tim << dshift;
+-	cs5536_write(pdev, DTC, dtc);
+-}
 -
 -/**
-- *	cs5530_set_pio_mode	-	set host controller for PIO mode
-- *	@hwif: port
-- *	@drive: drive
+- *	cs5536_cable_detect	-	detect cable type
+- *	@hwif: Port to detect on
 - *
-- *	Handles setting of PIO mode for the chipset.
+- *	Perform cable detection for ATA66 capable cable.
 - *
-- *	The init_hwif_cs5530() routine guarantees that all drives
-- *	will have valid default PIO timings set up before we get here.
+- *	Returns a cable type.
 - */
 -
--static void cs5530_set_pio_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+-static u8 cs5536_cable_detect(ide_hwif_t *hwif)
 -{
--	unsigned long basereg = CS5530_BASEREG(hwif);
--	unsigned int format = (inl(basereg + 4) >> 31) & 1;
+-	struct pci_dev *pdev = to_pci_dev(hwif->dev);
+-	u32 cfg;
+-
+-	cs5536_read(pdev, CFG, &cfg);
+-
+-	if (cfg & IDE_CFG_CABLE)
+-		return ATA_CBL_PATA80;
+-	else
+-		return ATA_CBL_PATA40;
+-}
+-
+-/**
+- *	cs5536_set_pio_mode		-	PIO timing setup
+- *	@hwif: ATA port
+- *	@drive: ATA device
+- */
+-
+-static void cs5536_set_pio_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+-{
+-	static const u8 drv_timings[5] = {
+-		0x98, 0x55, 0x32, 0x21, 0x20,
+-	};
+-
+-	static const u8 addr_timings[5] = {
+-		0x2, 0x1, 0x0, 0x0, 0x0,
+-	};
+-
+-	static const u8 cmd_timings[5] = {
+-		0x99, 0x92, 0x90, 0x22, 0x20,
+-	};
+-
+-	struct pci_dev *pdev = to_pci_dev(hwif->dev);
+-	ide_drive_t *pair = ide_get_pair_dev(drive);
+-	int cshift = (drive->dn & 1) ? IDE_CAST_D1_SHIFT : IDE_CAST_D0_SHIFT;
+-	unsigned long timings = (unsigned long)ide_get_drivedata(drive);
+-	u32 cast;
 -	const u8 pio = drive->pio_mode - XFER_PIO_0;
+-	u8 cmd_pio = pio;
 -
--	outl(cs5530_pio_timings[format][pio], basereg + ((drive->dn & 1)<<3));
+-	if (pair)
+-		cmd_pio = min_t(u8, pio, pair->pio_mode - XFER_PIO_0);
+-
+-	timings &= (IDE_DRV_MASK << 8);
+-	timings |= drv_timings[pio];
+-	ide_set_drivedata(drive, (void *)timings);
+-
+-	cs5536_program_dtc(drive, drv_timings[pio]);
+-
+-	cs5536_read(pdev, CAST, &cast);
+-
+-	cast &= ~(IDE_CAST_DRV_MASK << cshift);
+-	cast |= addr_timings[pio] << cshift;
+-
+-	cast &= ~(IDE_CAST_CMD_MASK << IDE_CAST_CMD_SHIFT);
+-	cast |= cmd_timings[cmd_pio] << IDE_CAST_CMD_SHIFT;
+-
+-	cs5536_write(pdev, CAST, cast);
 -}
 -
 -/**
-- *	cs5530_udma_filter	-	UDMA filter
-- *	@drive: drive
-- *
-- *	cs5530_udma_filter() does UDMA mask filtering for the given drive
-- *	taking into the consideration capabilities of the mate device.
-- *
-- *	The CS5530 specifies that two drives sharing a cable cannot mix
-- *	UDMA/MDMA.  It has to be one or the other, for the pair, though
-- *	different timings can still be chosen for each drive.  We could
-- *	set the appropriate timing bits on the fly, but that might be
-- *	a bit confusing.  So, for now we statically handle this requirement
-- *	by looking at our mate drive to see what it is capable of, before
-- *	choosing a mode for our own drive.
-- *
-- *	Note: This relies on the fact we never fail from UDMA to MWDMA2
-- *	but instead drop to PIO.
+- *	cs5536_set_dma_mode		-	DMA timing setup
+- *	@hwif: ATA port
+- *	@drive: ATA device
 - */
 -
--static u8 cs5530_udma_filter(ide_drive_t *drive)
+-static void cs5536_set_dma_mode(ide_hwif_t *hwif, ide_drive_t *drive)
 -{
--	ide_hwif_t *hwif = drive->hwif;
--	ide_drive_t *mate = ide_get_pair_dev(drive);
--	u16 *mateid;
--	u8 mask = hwif->ultra_mask;
+-	static const u8 udma_timings[6] = {
+-		0xc2, 0xc1, 0xc0, 0xc4, 0xc5, 0xc6,
+-	};
 -
--	if (mate == NULL)
--		goto out;
--	mateid = mate->id;
+-	static const u8 mwdma_timings[3] = {
+-		0x67, 0x21, 0x20,
+-	};
 -
--	if (ata_id_has_dma(mateid) && __ide_dma_bad_drive(mate) == 0) {
--		if ((mateid[ATA_ID_FIELD_VALID] & 4) &&
--		    (mateid[ATA_ID_UDMA_MODES] & 7))
--			goto out;
--		if (mateid[ATA_ID_MWDMA_MODES] & 7)
--			mask = 0;
+-	struct pci_dev *pdev = to_pci_dev(hwif->dev);
+-	int dshift = (drive->dn & 1) ? IDE_D1_SHIFT : IDE_D0_SHIFT;
+-	unsigned long timings = (unsigned long)ide_get_drivedata(drive);
+-	u32 etc;
+-	const u8 mode = drive->dma_mode;
+-
+-	cs5536_read(pdev, ETC, &etc);
+-
+-	if (mode >= XFER_UDMA_0) {
+-		etc &= ~(IDE_DRV_MASK << dshift);
+-		etc |= udma_timings[mode - XFER_UDMA_0] << dshift;
+-	} else { /* MWDMA */
+-		etc &= ~(IDE_ETC_UDMA_MASK << dshift);
+-		timings &= IDE_DRV_MASK;
+-		timings |= mwdma_timings[mode - XFER_MW_DMA_0] << 8;
+-		ide_set_drivedata(drive, (void *)timings);
 -	}
--out:
--	return mask;
+-
+-	cs5536_write(pdev, ETC, etc);
 -}
 -
--static void cs5530_set_dma_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+-static void cs5536_dma_start(ide_drive_t *drive)
 -{
--	unsigned long basereg;
--	unsigned int reg, timings = 0;
+-	unsigned long timings = (unsigned long)ide_get_drivedata(drive);
 -
--	switch (drive->dma_mode) {
--		case XFER_UDMA_0:	timings = 0x00921250; break;
--		case XFER_UDMA_1:	timings = 0x00911140; break;
--		case XFER_UDMA_2:	timings = 0x00911030; break;
--		case XFER_MW_DMA_0:	timings = 0x00077771; break;
--		case XFER_MW_DMA_1:	timings = 0x00012121; break;
--		case XFER_MW_DMA_2:	timings = 0x00002020; break;
--	}
--	basereg = CS5530_BASEREG(hwif);
--	reg = inl(basereg + 4);			/* get drive0 config register */
--	timings |= reg & 0x80000000;		/* preserve PIO format bit */
--	if ((drive-> dn & 1) == 0) {		/* are we configuring drive0? */
--		outl(timings, basereg + 4);	/* write drive0 config register */
--	} else {
--		if (timings & 0x00100000)
--			reg |=  0x00100000;	/* enable UDMA timings for both drives */
--		else
--			reg &= ~0x00100000;	/* disable UDMA timings for both drives */
--		outl(reg, basereg + 4);		/* write drive0 config register */
--		outl(timings, basereg + 12);	/* write drive1 config register */
--	}
+-	if (drive->current_speed < XFER_UDMA_0 &&
+-	    (timings >> 8) != (timings & IDE_DRV_MASK))
+-		cs5536_program_dtc(drive, timings >> 8);
+-
+-	ide_dma_start(drive);
 -}
 -
--/**
-- *	init_chipset_5530	-	set up 5530 bridge
-- *	@dev: PCI device
-- *
-- *	Initialize the cs5530 bridge for reliable IDE DMA operation.
-- */
--
--static int init_chipset_cs5530(struct pci_dev *dev)
+-static int cs5536_dma_end(ide_drive_t *drive)
 -{
--	struct pci_dev *master_0 = NULL, *cs5530_0 = NULL;
+-	int ret = ide_dma_end(drive);
+-	unsigned long timings = (unsigned long)ide_get_drivedata(drive);
 -
--	if (pci_resource_start(dev, 4) == 0)
--		return -EFAULT;
+-	if (drive->current_speed < XFER_UDMA_0 &&
+-	    (timings >> 8) != (timings & IDE_DRV_MASK))
+-		cs5536_program_dtc(drive, timings & IDE_DRV_MASK);
 -
--	dev = NULL;
--	while ((dev = pci_get_device(PCI_VENDOR_ID_CYRIX, PCI_ANY_ID, dev)) != NULL) {
--		switch (dev->device) {
--			case PCI_DEVICE_ID_CYRIX_PCI_MASTER:
--				master_0 = pci_dev_get(dev);
--				break;
--			case PCI_DEVICE_ID_CYRIX_5530_LEGACY:
--				cs5530_0 = pci_dev_get(dev);
--				break;
--		}
--	}
--	if (!master_0) {
--		printk(KERN_ERR DRV_NAME ": unable to locate PCI MASTER function\n");
--		goto out;
--	}
--	if (!cs5530_0) {
--		printk(KERN_ERR DRV_NAME ": unable to locate CS5530 LEGACY function\n");
--		goto out;
--	}
--
--	/*
--	 * Enable BusMaster and MemoryWriteAndInvalidate for the cs5530:
--	 * -->  OR 0x14 into 16-bit PCI COMMAND reg of function 0 of the cs5530
--	 */
--
--	pci_set_master(cs5530_0);
--	pci_try_set_mwi(cs5530_0);
--
--	/*
--	 * Set PCI CacheLineSize to 16-bytes:
--	 * --> Write 0x04 into 8-bit PCI CACHELINESIZE reg of function 0 of the cs5530
--	 */
--
--	pci_write_config_byte(cs5530_0, PCI_CACHE_LINE_SIZE, 0x04);
--
--	/*
--	 * Disable trapping of UDMA register accesses (Win98 hack):
--	 * --> Write 0x5006 into 16-bit reg at offset 0xd0 of function 0 of the cs5530
--	 */
--
--	pci_write_config_word(cs5530_0, 0xd0, 0x5006);
--
--	/*
--	 * Bit-1 at 0x40 enables MemoryWriteAndInvalidate on internal X-bus:
--	 * The other settings are what is necessary to get the register
--	 * into a sane state for IDE DMA operation.
--	 */
--
--	pci_write_config_byte(master_0, 0x40, 0x1e);
--
--	/* 
--	 * Set max PCI burst size (16-bytes seems to work best):
--	 *	   16bytes: set bit-1 at 0x41 (reg value of 0x16)
--	 *	all others: clear bit-1 at 0x41, and do:
--	 *	  128bytes: OR 0x00 at 0x41
--	 *	  256bytes: OR 0x04 at 0x41
--	 *	  512bytes: OR 0x08 at 0x41
--	 *	 1024bytes: OR 0x0c at 0x41
--	 */
--
--	pci_write_config_byte(master_0, 0x41, 0x14);
--
--	/*
--	 * These settings are necessary to get the chip
--	 * into a sane state for IDE DMA operation.
--	 */
--
--	pci_write_config_byte(master_0, 0x42, 0x00);
--	pci_write_config_byte(master_0, 0x43, 0xc1);
--
--out:
--	pci_dev_put(master_0);
--	pci_dev_put(cs5530_0);
--	return 0;
+-	return ret;
 -}
 -
--/**
-- *	init_hwif_cs5530	-	initialise an IDE channel
-- *	@hwif: IDE to initialize
-- *
-- *	This gets invoked by the IDE driver once for each channel. It
-- *	performs channel-specific pre-initialization before drive probing.
-- */
--
--static void init_hwif_cs5530 (ide_hwif_t *hwif)
--{
--	unsigned long basereg;
--	u32 d0_timings;
--
--	basereg = CS5530_BASEREG(hwif);
--	d0_timings = inl(basereg + 0);
--	if (CS5530_BAD_PIO(d0_timings))
--		outl(cs5530_pio_timings[(d0_timings >> 31) & 1][0], basereg + 0);
--	if (CS5530_BAD_PIO(inl(basereg + 8)))
--		outl(cs5530_pio_timings[(d0_timings >> 31) & 1][0], basereg + 8);
--}
--
--static const struct ide_port_ops cs5530_port_ops = {
--	.set_pio_mode		= cs5530_set_pio_mode,
--	.set_dma_mode		= cs5530_set_dma_mode,
--	.udma_filter		= cs5530_udma_filter,
+-static const struct ide_port_ops cs5536_port_ops = {
+-	.set_pio_mode		= cs5536_set_pio_mode,
+-	.set_dma_mode		= cs5536_set_dma_mode,
+-	.cable_detect		= cs5536_cable_detect,
 -};
 -
--static const struct ide_port_info cs5530_chipset = {
+-static const struct ide_dma_ops cs5536_dma_ops = {
+-	.dma_host_set		= ide_dma_host_set,
+-	.dma_setup		= ide_dma_setup,
+-	.dma_start		= cs5536_dma_start,
+-	.dma_end		= cs5536_dma_end,
+-	.dma_test_irq		= ide_dma_test_irq,
+-	.dma_lost_irq		= ide_dma_lost_irq,
+-	.dma_timer_expiry	= ide_dma_sff_timer_expiry,
+-	.dma_sff_read_status	= ide_dma_sff_read_status,
+-};
+-
+-static const struct ide_port_info cs5536_info = {
 -	.name		= DRV_NAME,
--	.init_chipset	= init_chipset_cs5530,
--	.init_hwif	= init_hwif_cs5530,
--	.port_ops	= &cs5530_port_ops,
--	.host_flags	= IDE_HFLAG_SERIALIZE |
--			  IDE_HFLAG_POST_SET_MODE,
+-	.port_ops	= &cs5536_port_ops,
+-	.dma_ops	= &cs5536_dma_ops,
+-	.host_flags	= IDE_HFLAG_SINGLE,
 -	.pio_mask	= ATA_PIO4,
 -	.mwdma_mask	= ATA_MWDMA2,
--	.udma_mask	= ATA_UDMA2,
+-	.udma_mask	= ATA_UDMA5,
 -};
 -
--static int cs5530_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+-/**
+- *	cs5536_init_one
+- *	@dev: PCI device
+- *	@id: Entry in match table
+- */
+-
+-static int cs5536_init_one(struct pci_dev *dev, const struct pci_device_id *id)
 -{
--	return ide_pci_init_one(dev, &cs5530_chipset, NULL);
+-	u32 cfg;
+-
+-	if (use_msr)
+-		printk(KERN_INFO DRV_NAME ": Using MSR regs instead of PCI\n");
+-
+-	cs5536_read(dev, CFG, &cfg);
+-
+-	if ((cfg & IDE_CFG_CHANEN) == 0) {
+-		printk(KERN_ERR DRV_NAME ": disabled by BIOS\n");
+-		return -ENODEV;
+-	}
+-
+-	return ide_pci_init_one(dev, &cs5536_info, NULL);
 -}
 -
--static const struct pci_device_id cs5530_pci_tbl[] = {
--	{ PCI_VDEVICE(CYRIX, PCI_DEVICE_ID_CYRIX_5530_IDE), 0 },
--	{ 0, },
+-static const struct pci_device_id cs5536_pci_tbl[] = {
+-	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_CS5536_IDE), },
+-	{ },
 -};
--MODULE_DEVICE_TABLE(pci, cs5530_pci_tbl);
 -
--static struct pci_driver cs5530_pci_driver = {
--	.name		= "CS5530 IDE",
--	.id_table	= cs5530_pci_tbl,
--	.probe		= cs5530_init_one,
+-static struct pci_driver cs5536_pci_driver = {
+-	.name		= DRV_NAME,
+-	.id_table	= cs5536_pci_tbl,
+-	.probe		= cs5536_init_one,
 -	.remove		= ide_pci_remove,
 -	.suspend	= ide_pci_suspend,
 -	.resume		= ide_pci_resume,
 -};
 -
--static int __init cs5530_ide_init(void)
--{
--	return ide_pci_register_driver(&cs5530_pci_driver);
--}
+-module_pci_driver(cs5536_pci_driver);
 -
--static void __exit cs5530_ide_exit(void)
--{
--	pci_unregister_driver(&cs5530_pci_driver);
--}
--
--module_init(cs5530_ide_init);
--module_exit(cs5530_ide_exit);
--
--MODULE_AUTHOR("Mark Lord");
--MODULE_DESCRIPTION("PCI driver module for Cyrix/NS 5530 IDE");
+-MODULE_AUTHOR("Martin K. Petersen, Bartlomiej Zolnierkiewicz");
+-MODULE_DESCRIPTION("low-level driver for the CS5536 IDE controller");
 -MODULE_LICENSE("GPL");
+-MODULE_DEVICE_TABLE(pci, cs5536_pci_tbl);
+-
+-module_param_named(msr, use_msr, int, 0644);
+-MODULE_PARM_DESC(msr, "Force using MSR to configure IDE function (Default: 0)");
 -- 
 1.9.1
-
