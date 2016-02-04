@@ -1,425 +1,296 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RFC PATCH 06/19] ide: remove deprecated sc1200 host driver
-Date: Thu, 04 Feb 2016 14:44:03 +0100
-Message-ID: <1454593456-3162-7-git-send-email-b.zolnierkie@samsung.com>
+Subject: [RFC PATCH 04/19] ide: remove deprecated cs5535 host driver
+Date: Thu, 04 Feb 2016 14:44:01 +0100
+Message-ID: <1454593456-3162-5-git-send-email-b.zolnierkie@samsung.com>
 References: <1454593456-3162-1-git-send-email-b.zolnierkie@samsung.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mailout2.samsung.com ([203.254.224.25]:56906 "EHLO
+	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934070AbcBDNpv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 4 Feb 2016 08:45:51 -0500
 In-reply-to: <1454593456-3162-1-git-send-email-b.zolnierkie@samsung.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: "David S. Miller" <davem@davemloft.net>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Alan Cox <gnomes@lxorguk.ukuu.org.uk>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, b.zolnierkie@samsung.com
-List-Id: linux-ide@vger.kernel.org
 
 IDE subsystem has been deprecated since 2009 and the majority
 (if not all) of Linux distributions have switched to use
 libata for ATA support exclusively.
 
-The replacement driver (pata_sc1200) has been available since
+The replacement driver (pata_cs5535) has been available since
 2006 and it supports all the hardware supported by the old
-sc1200 host driver.  Also x86 defconfigs have switched to use
+cs5535 host driver.  Also x86 defconfigs have switched to use
 libata PATA exclusively in 2008.
 
-Remove the deprecated sc1200 host driver.
+Remove the deprecated cs5535 host driver.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
- drivers/ide/Kconfig  |   8 --
+ drivers/ide/Kconfig  |  10 ---
  drivers/ide/Makefile |   1 -
- drivers/ide/sc1200.c | 355 ---------------------------------------------------
- 3 files changed, 364 deletions(-)
- delete mode 100644 drivers/ide/sc1200.c
+ drivers/ide/cs5535.c | 219 ---------------------------------------------------
+ 3 files changed, 230 deletions(-)
+ delete mode 100644 drivers/ide/cs5535.c
 
 diff --git a/drivers/ide/Kconfig b/drivers/ide/Kconfig
-index c6b7a74..2af2425 100644
+index 5cd7675..d056aa5 100644
 --- a/drivers/ide/Kconfig
 +++ b/drivers/ide/Kconfig
-@@ -434,14 +434,6 @@ config BLK_DEV_JMICRON
- 	  Basic support for the JMicron ATA controllers. For full support
- 	  use the libata drivers.
+@@ -403,16 +403,6 @@ config BLK_DEV_CY82C693
+ 	  This driver adds detection and support for the CY82C693 chipset
+ 	  used on Digital's PC-Alpha 164SX boards.
  
--config BLK_DEV_SC1200
--	tristate "National SCx200 chipset support"
--	depends on X86_32 || COMPILE_TEST
+-config BLK_DEV_CS5535
+-	tristate "AMD CS5535 chipset support"
+-	depends on X86_32
 -	select BLK_DEV_IDEDMA_PCI
 -	help
--	  This driver adds support for the on-board IDE controller on the
--	  National SCx200 series of embedded x86 "Geode" systems.
+-	  Include support for UDMA on the NSC/AMD CS5535 companion chipset.
+-	  This will automatically be detected and configured if found.
 -
- config BLK_DEV_PIIX
- 	tristate "Intel PIIX/ICH chipsets support"
- 	select BLK_DEV_IDEDMA_PCI
+-	  It is safe to say Y to this question.
+-
+ config BLK_DEV_CS5536
+ 	tristate "CS5536 chipset support"
+ 	depends on X86_32
 diff --git a/drivers/ide/Makefile b/drivers/ide/Makefile
-index 960d88f..df2c031 100644
+index 719879f..a0b8ade0 100644
 --- a/drivers/ide/Makefile
 +++ b/drivers/ide/Makefile
 @@ -38,7 +38,6 @@ obj-$(CONFIG_BLK_DEV_AEC62XX)		+= aec62xx.o
  obj-$(CONFIG_BLK_DEV_ALI15X3)		+= alim15x3.o
  obj-$(CONFIG_BLK_DEV_AMD74XX)		+= amd74xx.o
  obj-$(CONFIG_BLK_DEV_CMD64X)		+= cmd64x.o
--obj-$(CONFIG_BLK_DEV_SC1200)		+= sc1200.o
+-obj-$(CONFIG_BLK_DEV_CS5535)		+= cs5535.o
+ obj-$(CONFIG_BLK_DEV_CS5536)		+= cs5536.o
+ obj-$(CONFIG_BLK_DEV_SC1200)		+= sc1200.o
  obj-$(CONFIG_BLK_DEV_CY82C693)		+= cy82c693.o
- obj-$(CONFIG_BLK_DEV_DELKIN)		+= delkin_cb.o
- obj-$(CONFIG_BLK_DEV_HPT366)		+= hpt366.o
-diff --git a/drivers/ide/sc1200.c b/drivers/ide/sc1200.c
+diff --git a/drivers/ide/cs5535.c b/drivers/ide/cs5535.c
 deleted file mode 100644
-index a5b7018..0000000
---- a/drivers/ide/sc1200.c
+index 3bc5b9a..0000000
+--- a/drivers/ide/cs5535.c
 +++ /dev/null
-@@ -1,355 +0,0 @@
+@@ -1,219 +0,0 @@
 -/*
-- * Copyright (C) 2000-2002		Mark Lord <mlord@pobox.com>
-- * Copyright (C)      2007		Bartlomiej Zolnierkiewicz
+- * Copyright (C) 2004-2005 Advanced Micro Devices, Inc.
+- * Copyright (C)      2007 Bartlomiej Zolnierkiewicz
 - *
-- * May be copied or modified under the terms of the GNU General Public License
+- * History:
+- * 09/20/2005 - Jaya Kumar <jayakumar.ide@gmail.com>
+- * - Reworked tuneproc, set_drive, misc mods to prep for mainline
+- * - Work was sponsored by CIS (M) Sdn Bhd.
+- * Ported to Kernel 2.6.11 on June 26, 2005 by
+- *   Wolfgang Zuleger <wolfgang.zuleger@gmx.de>
+- *   Alexander Kiausch <alex.kiausch@t-online.de>
+- * Originally developed by AMD for 2.4/2.6
 - *
 - * Development of this chipset driver was funded
-- * by the nice folks at National Semiconductor.
+- * by the nice folks at National Semiconductor/AMD.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of the GNU General Public License version 2 as published by
+- * the Free Software Foundation.
 - *
 - * Documentation:
-- *	Available from National Semiconductor
+- *  CS5535 documentation available from AMD
 - */
 -
 -#include <linux/module.h>
--#include <linux/types.h>
--#include <linux/kernel.h>
--#include <linux/slab.h>
 -#include <linux/pci.h>
--#include <linux/init.h>
 -#include <linux/ide.h>
--#include <linux/pm.h>
 -
--#include <asm/io.h>
+-#define DRV_NAME "cs5535"
 -
--#define DRV_NAME "sc1200"
+-#define MSR_ATAC_BASE		0x51300000
+-#define ATAC_GLD_MSR_CAP	(MSR_ATAC_BASE+0)
+-#define ATAC_GLD_MSR_CONFIG	(MSR_ATAC_BASE+0x01)
+-#define ATAC_GLD_MSR_SMI	(MSR_ATAC_BASE+0x02)
+-#define ATAC_GLD_MSR_ERROR	(MSR_ATAC_BASE+0x03)
+-#define ATAC_GLD_MSR_PM		(MSR_ATAC_BASE+0x04)
+-#define ATAC_GLD_MSR_DIAG	(MSR_ATAC_BASE+0x05)
+-#define ATAC_IO_BAR		(MSR_ATAC_BASE+0x08)
+-#define ATAC_RESET		(MSR_ATAC_BASE+0x10)
+-#define ATAC_CH0D0_PIO		(MSR_ATAC_BASE+0x20)
+-#define ATAC_CH0D0_DMA		(MSR_ATAC_BASE+0x21)
+-#define ATAC_CH0D1_PIO		(MSR_ATAC_BASE+0x22)
+-#define ATAC_CH0D1_DMA		(MSR_ATAC_BASE+0x23)
+-#define ATAC_PCI_ABRTERR	(MSR_ATAC_BASE+0x24)
+-#define ATAC_BM0_CMD_PRIM	0x00
+-#define ATAC_BM0_STS_PRIM	0x02
+-#define ATAC_BM0_PRD		0x04
+-#define CS5535_CABLE_DETECT	0x48
 -
--#define SC1200_REV_A	0x00
--#define SC1200_REV_B1	0x01
--#define SC1200_REV_B3	0x02
--#define SC1200_REV_C1	0x03
--#define SC1200_REV_D1	0x04
+-/* Format I PIO settings. We separate out cmd and data for safer timings */
 -
--#define PCI_CLK_33	0x00
--#define PCI_CLK_48	0x01
--#define PCI_CLK_66	0x02
--#define PCI_CLK_33A	0x03
+-static unsigned int cs5535_pio_cmd_timings[5] =
+-{ 0xF7F4, 0x53F3, 0x13F1, 0x5131, 0x1131 };
+-static unsigned int cs5535_pio_dta_timings[5] =
+-{ 0xF7F4, 0xF173, 0x8141, 0x5131, 0x1131 };
 -
--static unsigned short sc1200_get_pci_clock (void)
+-static unsigned int cs5535_mwdma_timings[3] =
+-{ 0x7F0FFFF3, 0x7F035352, 0x7f024241 };
+-
+-static unsigned int cs5535_udma_timings[5] =
+-{ 0x7F7436A1, 0x7F733481, 0x7F723261, 0x7F713161, 0x7F703061 };
+-
+-/* Macros to check if the register is the reset value -  reset value is an
+-   invalid timing and indicates the register has not been set previously */
+-
+-#define CS5535_BAD_PIO(timings) ( (timings&~0x80000000UL) == 0x00009172 )
+-#define CS5535_BAD_DMA(timings) ( (timings & 0x000FFFFF) == 0x00077771 )
+-
+-/****
+- *	cs5535_set_speed         -     Configure the chipset to the new speed
+- *	@drive: Drive to set up
+- *	@speed: desired speed
+- *
+- *	cs5535_set_speed() configures the chipset to a new speed.
+- */
+-static void cs5535_set_speed(ide_drive_t *drive, const u8 speed)
 -{
--	unsigned char chip_id, silicon_revision;
--	unsigned int pci_clock;
--	/*
--	 * Check the silicon revision, as not all versions of the chip
--	 * have the register with the fast PCI bus timings.
--	 */
--	chip_id = inb (0x903c);
--	silicon_revision = inb (0x903d);
+-	u32 reg = 0, dummy;
+-	u8 unit = drive->dn & 1;
 -
--	// Read the fast pci clock frequency
--	if (chip_id == 0x04 && silicon_revision < SC1200_REV_B1) {
--		pci_clock = PCI_CLK_33;
+-	/* Set the PIO timings */
+-	if (speed < XFER_SW_DMA_0) {
+-		ide_drive_t *pair = ide_get_pair_dev(drive);
+-		u8 cmd, pioa;
+-
+-		cmd = pioa = speed - XFER_PIO_0;
+-
+-		if (pair) {
+-			u8 piob = pair->pio_mode - XFER_PIO_0;
+-
+-			if (piob < cmd)
+-				cmd = piob;
+-		}
+-
+-		/* Write the speed of the current drive */
+-		reg = (cs5535_pio_cmd_timings[cmd] << 16) |
+-			cs5535_pio_dta_timings[pioa];
+-		wrmsr(unit ? ATAC_CH0D1_PIO : ATAC_CH0D0_PIO, reg, 0);
+-
+-		/* And if nessesary - change the speed of the other drive */
+-		rdmsr(unit ?  ATAC_CH0D0_PIO : ATAC_CH0D1_PIO, reg, dummy);
+-
+-		if (((reg >> 16) & cs5535_pio_cmd_timings[cmd]) !=
+-			cs5535_pio_cmd_timings[cmd]) {
+-			reg &= 0x0000FFFF;
+-			reg |= cs5535_pio_cmd_timings[cmd] << 16;
+-			wrmsr(unit ? ATAC_CH0D0_PIO : ATAC_CH0D1_PIO, reg, 0);
+-		}
+-
+-		/* Set bit 31 of the DMA register for PIO format 1 timings */
+-		rdmsr(unit ?  ATAC_CH0D1_DMA : ATAC_CH0D0_DMA, reg, dummy);
+-		wrmsr(unit ? ATAC_CH0D1_DMA : ATAC_CH0D0_DMA,
+-					reg | 0x80000000UL, 0);
 -	} else {
--		// check clock generator configuration (cfcc)
--		// the clock is in bits 8 and 9 of this word
+-		rdmsr(unit ? ATAC_CH0D1_DMA : ATAC_CH0D0_DMA, reg, dummy);
 -
--		pci_clock = inw (0x901e);
--		pci_clock >>= 8;
--		pci_clock &= 0x03;
--		if (pci_clock == PCI_CLK_33A)
--			pci_clock = PCI_CLK_33;
+-		reg &= 0x80000000UL;  /* Preserve the PIO format bit */
+-
+-		if (speed >= XFER_UDMA_0 && speed <= XFER_UDMA_4)
+-			reg |= cs5535_udma_timings[speed - XFER_UDMA_0];
+-		else if (speed >= XFER_MW_DMA_0 && speed <= XFER_MW_DMA_2)
+-			reg |= cs5535_mwdma_timings[speed - XFER_MW_DMA_0];
+-		else
+-			return;
+-
+-		wrmsr(unit ? ATAC_CH0D1_DMA : ATAC_CH0D0_DMA, reg, 0);
 -	}
--	return pci_clock;
 -}
 -
--/*
-- * Here are the standard PIO mode 0-4 timings for each "format".
-- * Format-0 uses fast data reg timings, with slower command reg timings.
-- * Format-1 uses fast timings for all registers, but won't work with all drives.
-- */
--static const unsigned int sc1200_pio_timings[4][5] =
--	{{0x00009172, 0x00012171, 0x00020080, 0x00032010, 0x00040010},	// format0  33Mhz
--	 {0xd1329172, 0x71212171, 0x30200080, 0x20102010, 0x00100010},	// format1, 33Mhz
--	 {0xfaa3f4f3, 0xc23232b2, 0x513101c1, 0x31213121, 0x10211021},	// format1, 48Mhz
--	 {0xfff4fff4, 0xf35353d3, 0x814102f1, 0x42314231, 0x11311131}};	// format1, 66Mhz
--
--/*
-- * After chip reset, the PIO timings are set to 0x00009172, which is not valid.
-- */
--//#define SC1200_BAD_PIO(timings) (((timings)&~0x80000000)==0x00009172)
--
--static void sc1200_tunepio(ide_drive_t *drive, u8 pio)
--{
--	ide_hwif_t *hwif = drive->hwif;
--	struct pci_dev *pdev = to_pci_dev(hwif->dev);
--	unsigned int basereg = hwif->channel ? 0x50 : 0x40, format = 0;
--
--	pci_read_config_dword(pdev, basereg + 4, &format);
--	format = (format >> 31) & 1;
--	if (format)
--		format += sc1200_get_pci_clock();
--	pci_write_config_dword(pdev, basereg + ((drive->dn & 1) << 3),
--			       sc1200_pio_timings[format][pio]);
--}
--
--/*
-- *	The SC1200 specifies that two drives sharing a cable cannot mix
-- *	UDMA/MDMA.  It has to be one or the other, for the pair, though
-- *	different timings can still be chosen for each drive.  We could
-- *	set the appropriate timing bits on the fly, but that might be
-- *	a bit confusing.  So, for now we statically handle this requirement
-- *	by looking at our mate drive to see what it is capable of, before
-- *	choosing a mode for our own drive.
-- */
--static u8 sc1200_udma_filter(ide_drive_t *drive)
--{
--	ide_hwif_t *hwif = drive->hwif;
--	ide_drive_t *mate = ide_get_pair_dev(drive);
--	u16 *mateid;
--	u8 mask = hwif->ultra_mask;
--
--	if (mate == NULL)
--		goto out;
--	mateid = mate->id;
--
--	if (ata_id_has_dma(mateid) && __ide_dma_bad_drive(mate) == 0) {
--		if ((mateid[ATA_ID_FIELD_VALID] & 4) &&
--		    (mateid[ATA_ID_UDMA_MODES] & 7))
--			goto out;
--		if (mateid[ATA_ID_MWDMA_MODES] & 7)
--			mask = 0;
--	}
--out:
--	return mask;
--}
--
--static void sc1200_set_dma_mode(ide_hwif_t *hwif, ide_drive_t *drive)
--{
--	struct pci_dev		*dev = to_pci_dev(hwif->dev);
--	unsigned int		reg, timings;
--	unsigned short		pci_clock;
--	unsigned int		basereg = hwif->channel ? 0x50 : 0x40;
--	const u8		mode = drive->dma_mode;
--
--	static const u32 udma_timing[3][3] = {
--		{ 0x00921250, 0x00911140, 0x00911030 },
--		{ 0x00932470, 0x00922260, 0x00922140 },
--		{ 0x009436a1, 0x00933481, 0x00923261 },
--	};
--
--	static const u32 mwdma_timing[3][3] = {
--		{ 0x00077771, 0x00012121, 0x00002020 },
--		{ 0x000bbbb2, 0x00024241, 0x00013131 },
--		{ 0x000ffff3, 0x00035352, 0x00015151 },
--	};
--
--	pci_clock = sc1200_get_pci_clock();
--
--	/*
--	 * Note that each DMA mode has several timings associated with it.
--	 * The correct timing depends on the fast PCI clock freq.
--	 */
--
--	if (mode >= XFER_UDMA_0)
--		timings =  udma_timing[pci_clock][mode - XFER_UDMA_0];
--	else
--		timings = mwdma_timing[pci_clock][mode - XFER_MW_DMA_0];
--
--	if ((drive->dn & 1) == 0) {
--		pci_read_config_dword(dev, basereg + 4, &reg);
--		timings |= reg & 0x80000000;	/* preserve PIO format bit */
--		pci_write_config_dword(dev, basereg + 4, timings);
--	} else
--		pci_write_config_dword(dev, basereg + 12, timings);
--}
--
--/*  Replacement for the standard ide_dma_end action in
-- *  dma_proc.
+-/**
+- *	cs5535_set_dma_mode	-	set host controller for DMA mode
+- *	@hwif: port
+- *	@drive: drive
 - *
-- *  returns 1 on error, 0 otherwise
+- *	Programs the chipset for DMA mode.
 - */
--static int sc1200_dma_end(ide_drive_t *drive)
+-
+-static void cs5535_set_dma_mode(ide_hwif_t *hwif, ide_drive_t *drive)
 -{
--	ide_hwif_t *hwif = drive->hwif;
--	unsigned long dma_base = hwif->dma_base;
--	u8 dma_stat;
--
--	dma_stat = inb(dma_base+2);		/* get DMA status */
--
--	if (!(dma_stat & 4))
--		printk(" ide_dma_end dma_stat=%0x err=%x newerr=%x\n",
--		  dma_stat, ((dma_stat&7)!=4), ((dma_stat&2)==2));
--
--	outb(dma_stat|0x1b, dma_base+2);	/* clear the INTR & ERROR bits */
--	outb(inb(dma_base)&~1, dma_base);	/* !! DO THIS HERE !! stop DMA */
--
--	return (dma_stat & 7) != 4;		/* verify good DMA status */
+-	cs5535_set_speed(drive, drive->dma_mode);
 -}
 -
--/*
-- * sc1200_set_pio_mode() handles setting of PIO modes
-- * for both the chipset and drive.
+-/**
+- *	cs5535_set_pio_mode	-	set host controller for PIO mode
+- *	@hwif: port
+- *	@drive: drive
 - *
-- * All existing BIOSs for this chipset guarantee that all drives
-- * will have valid default PIO timings set up before we get here.
+- *	A callback from the upper layers for PIO-only tuning.
 - */
 -
--static void sc1200_set_pio_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+-static void cs5535_set_pio_mode(ide_hwif_t *hwif, ide_drive_t *drive)
 -{
--	int		mode = -1;
--	const u8	pio = drive->pio_mode - XFER_PIO_0;
--
--	/*
--	 * bad abuse of ->set_pio_mode interface
--	 */
--	switch (pio) {
--		case 200: mode = XFER_UDMA_0;	break;
--		case 201: mode = XFER_UDMA_1;	break;
--		case 202: mode = XFER_UDMA_2;	break;
--		case 100: mode = XFER_MW_DMA_0;	break;
--		case 101: mode = XFER_MW_DMA_1;	break;
--		case 102: mode = XFER_MW_DMA_2;	break;
--	}
--	if (mode != -1) {
--		printk("SC1200: %s: changing (U)DMA mode\n", drive->name);
--		ide_dma_off_quietly(drive);
--		if (ide_set_dma_mode(drive, mode) == 0 &&
--		    (drive->dev_flags & IDE_DFLAG_USING_DMA))
--			hwif->dma_ops->dma_host_set(drive, 1);
--		return;
--	}
--
--	sc1200_tunepio(drive, pio);
+-	cs5535_set_speed(drive, drive->pio_mode);
 -}
 -
--#ifdef CONFIG_PM
--struct sc1200_saved_state {
--	u32 regs[8];
--};
--
--static int sc1200_suspend (struct pci_dev *dev, pm_message_t state)
+-static u8 cs5535_cable_detect(ide_hwif_t *hwif)
 -{
--	printk("SC1200: suspend(%u)\n", state.event);
+-	struct pci_dev *dev = to_pci_dev(hwif->dev);
+-	u8 bit;
 -
--	/*
--	 * we only save state when going from full power to less
--	 */
--	if (state.event == PM_EVENT_ON) {
--		struct ide_host *host = pci_get_drvdata(dev);
--		struct sc1200_saved_state *ss = host->host_priv;
--		unsigned int r;
+-	/* if a 80 wire cable was detected */
+-	pci_read_config_byte(dev, CS5535_CABLE_DETECT, &bit);
 -
--		/*
--		 * save timing registers
--		 * (this may be unnecessary if BIOS also does it)
--		 */
--		for (r = 0; r < 8; r++)
--			pci_read_config_dword(dev, 0x40 + r * 4, &ss->regs[r]);
--	}
--
--	pci_disable_device(dev);
--	pci_set_power_state(dev, pci_choose_state(dev, state));
--	return 0;
+-	return (bit & 1) ? ATA_CBL_PATA80 : ATA_CBL_PATA40;
 -}
 -
--static int sc1200_resume (struct pci_dev *dev)
--{
--	struct ide_host *host = pci_get_drvdata(dev);
--	struct sc1200_saved_state *ss = host->host_priv;
--	unsigned int r;
--	int i;
--
--	i = pci_enable_device(dev);
--	if (i)
--		return i;
--
--	/*
--	 * restore timing registers
--	 * (this may be unnecessary if BIOS also does it)
--	 */
--	for (r = 0; r < 8; r++)
--		pci_write_config_dword(dev, 0x40 + r * 4, ss->regs[r]);
--
--	return 0;
--}
--#endif
--
--static const struct ide_port_ops sc1200_port_ops = {
--	.set_pio_mode		= sc1200_set_pio_mode,
--	.set_dma_mode		= sc1200_set_dma_mode,
--	.udma_filter		= sc1200_udma_filter,
+-static const struct ide_port_ops cs5535_port_ops = {
+-	.set_pio_mode		= cs5535_set_pio_mode,
+-	.set_dma_mode		= cs5535_set_dma_mode,
+-	.cable_detect		= cs5535_cable_detect,
 -};
 -
--static const struct ide_dma_ops sc1200_dma_ops = {
--	.dma_host_set		= ide_dma_host_set,
--	.dma_setup		= ide_dma_setup,
--	.dma_start		= ide_dma_start,
--	.dma_end		= sc1200_dma_end,
--	.dma_test_irq		= ide_dma_test_irq,
--	.dma_lost_irq		= ide_dma_lost_irq,
--	.dma_timer_expiry	= ide_dma_sff_timer_expiry,
--	.dma_sff_read_status	= ide_dma_sff_read_status,
--};
--
--static const struct ide_port_info sc1200_chipset = {
+-static const struct ide_port_info cs5535_chipset = {
 -	.name		= DRV_NAME,
--	.port_ops	= &sc1200_port_ops,
--	.dma_ops	= &sc1200_dma_ops,
--	.host_flags	= IDE_HFLAG_SERIALIZE |
--			  IDE_HFLAG_POST_SET_MODE |
--			  IDE_HFLAG_ABUSE_DMA_MODES,
+-	.port_ops	= &cs5535_port_ops,
+-	.host_flags	= IDE_HFLAG_SINGLE | IDE_HFLAG_POST_SET_MODE,
 -	.pio_mask	= ATA_PIO4,
 -	.mwdma_mask	= ATA_MWDMA2,
--	.udma_mask	= ATA_UDMA2,
+-	.udma_mask	= ATA_UDMA4,
 -};
 -
--static int sc1200_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+-static int cs5535_init_one(struct pci_dev *dev, const struct pci_device_id *id)
 -{
--	struct sc1200_saved_state *ss = NULL;
--	int rc;
--
--#ifdef CONFIG_PM
--	ss = kmalloc(sizeof(*ss), GFP_KERNEL);
--	if (ss == NULL)
--		return -ENOMEM;
--#endif
--	rc = ide_pci_init_one(dev, &sc1200_chipset, ss);
--	if (rc)
--		kfree(ss);
--
--	return rc;
+-	return ide_pci_init_one(dev, &cs5535_chipset, NULL);
 -}
 -
--static const struct pci_device_id sc1200_pci_tbl[] = {
--	{ PCI_VDEVICE(NS, PCI_DEVICE_ID_NS_SCx200_IDE), 0},
+-static const struct pci_device_id cs5535_pci_tbl[] = {
+-	{ PCI_VDEVICE(NS, PCI_DEVICE_ID_NS_CS5535_IDE), 0 },
+-	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_CS5535_IDE), },
 -	{ 0, },
 -};
--MODULE_DEVICE_TABLE(pci, sc1200_pci_tbl);
 -
--static struct pci_driver sc1200_pci_driver = {
--	.name		= "SC1200_IDE",
--	.id_table	= sc1200_pci_tbl,
--	.probe		= sc1200_init_one,
+-MODULE_DEVICE_TABLE(pci, cs5535_pci_tbl);
+-
+-static struct pci_driver cs5535_pci_driver = {
+-	.name		= "CS5535_IDE",
+-	.id_table	= cs5535_pci_tbl,
+-	.probe		= cs5535_init_one,
 -	.remove		= ide_pci_remove,
--#ifdef CONFIG_PM
--	.suspend	= sc1200_suspend,
--	.resume		= sc1200_resume,
--#endif
+-	.suspend	= ide_pci_suspend,
+-	.resume		= ide_pci_resume,
 -};
 -
--static int __init sc1200_ide_init(void)
+-static int __init cs5535_ide_init(void)
 -{
--	return ide_pci_register_driver(&sc1200_pci_driver);
+-	return ide_pci_register_driver(&cs5535_pci_driver);
 -}
 -
--static void __exit sc1200_ide_exit(void)
+-static void __exit cs5535_ide_exit(void)
 -{
--	pci_unregister_driver(&sc1200_pci_driver);
+-	pci_unregister_driver(&cs5535_pci_driver);
 -}
 -
--module_init(sc1200_ide_init);
--module_exit(sc1200_ide_exit);
+-module_init(cs5535_ide_init);
+-module_exit(cs5535_ide_exit);
 -
--MODULE_AUTHOR("Mark Lord");
--MODULE_DESCRIPTION("PCI driver module for NS SC1200 IDE");
+-MODULE_AUTHOR("AMD");
+-MODULE_DESCRIPTION("PCI driver module for AMD/NS CS5535 IDE");
 -MODULE_LICENSE("GPL");
 -- 
 1.9.1
+
