@@ -1,7 +1,7 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RFC PATCH 05/19] ide: remove deprecated cs5536 host driver
-Date: Thu, 04 Feb 2016 14:44:02 +0100
-Message-ID: <1454593456-3162-6-git-send-email-b.zolnierkie@samsung.com>
+Subject: [RFC PATCH 07/19] ide: remove deprecated delkin_cb host driver
+Date: Thu, 04 Feb 2016 14:44:04 +0100
+Message-ID: <1454593456-3162-8-git-send-email-b.zolnierkie@samsung.com>
 References: <1454593456-3162-1-git-send-email-b.zolnierkie@samsung.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-reply-to: <1454593456-3162-1-git-send-email-b.zolnierkie@samsung.com>
@@ -14,365 +14,236 @@ IDE subsystem has been deprecated since 2009 and the majority
 (if not all) of Linux distributions have switched to use
 libata for ATA support exclusively.
 
-The replacement driver (pata_cs5536) has been available since
+The replacement driver (pata_ninja32) has been available since
 2007 and it supports all the hardware supported by the old
-cs5536 host driver.  Also x86 defconfigs have switched to use
-libata PATA exclusively in 2008.
+delkin_cb host driver.
 
-Remove the deprecated cs5536 host driver.
+Remove the deprecated delkin_cb host driver.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
- drivers/ide/Kconfig  |  10 --
- drivers/ide/Makefile |   1 -
- drivers/ide/cs5536.c | 306 ---------------------------------------------------
- 3 files changed, 317 deletions(-)
- delete mode 100644 drivers/ide/cs5536.c
+ drivers/ide/Kconfig     |   7 --
+ drivers/ide/Makefile    |   1 -
+ drivers/ide/delkin_cb.c | 181 ------------------------------------------------
+ 3 files changed, 189 deletions(-)
+ delete mode 100644 drivers/ide/delkin_cb.c
 
 diff --git a/drivers/ide/Kconfig b/drivers/ide/Kconfig
-index d056aa5..c6b7a74 100644
+index 2af2425..6c16375 100644
 --- a/drivers/ide/Kconfig
 +++ b/drivers/ide/Kconfig
-@@ -403,16 +403,6 @@ config BLK_DEV_CY82C693
- 	  This driver adds detection and support for the CY82C693 chipset
- 	  used on Digital's PC-Alpha 164SX boards.
+@@ -107,13 +107,6 @@ config BLK_DEV_IDECS
+ 	  Support for Compact Flash cards, outboard IDE disks, tape drives,
+ 	  and CD-ROM drives connected through a PCMCIA card.
  
--config BLK_DEV_CS5536
--	tristate "CS5536 chipset support"
--	depends on X86_32
--	select BLK_DEV_IDEDMA_PCI
+-config BLK_DEV_DELKIN
+-	tristate "Cardbus IDE support (Delkin/ASKA/Workbit)"
+-	depends on CARDBUS && PCI
 -	help
--	  This option enables support for the AMD CS5536
--	  companion chip used with the Geode LX processor family.
+-	  Support for Delkin, ASKA, and Workbit Cardbus CompactFlash
+-	  Adapters.  This may also work for similar SD and XD adapters.
 -
--	  If unsure, say N.
--
- config BLK_DEV_HPT366
- 	tristate "HPT36X/37X chipset support"
- 	select BLK_DEV_IDEDMA_PCI
+ config BLK_DEV_IDECD
+ 	tristate "Include IDE/ATAPI CDROM support"
+ 	select IDE_ATAPI
 diff --git a/drivers/ide/Makefile b/drivers/ide/Makefile
-index a0b8ade0..960d88f 100644
+index df2c031..e582431 100644
 --- a/drivers/ide/Makefile
 +++ b/drivers/ide/Makefile
-@@ -38,7 +38,6 @@ obj-$(CONFIG_BLK_DEV_AEC62XX)		+= aec62xx.o
- obj-$(CONFIG_BLK_DEV_ALI15X3)		+= alim15x3.o
+@@ -39,7 +39,6 @@ obj-$(CONFIG_BLK_DEV_ALI15X3)		+= alim15x3.o
  obj-$(CONFIG_BLK_DEV_AMD74XX)		+= amd74xx.o
  obj-$(CONFIG_BLK_DEV_CMD64X)		+= cmd64x.o
--obj-$(CONFIG_BLK_DEV_CS5536)		+= cs5536.o
- obj-$(CONFIG_BLK_DEV_SC1200)		+= sc1200.o
  obj-$(CONFIG_BLK_DEV_CY82C693)		+= cy82c693.o
- obj-$(CONFIG_BLK_DEV_DELKIN)		+= delkin_cb.o
-diff --git a/drivers/ide/cs5536.c b/drivers/ide/cs5536.c
+-obj-$(CONFIG_BLK_DEV_DELKIN)		+= delkin_cb.o
+ obj-$(CONFIG_BLK_DEV_HPT366)		+= hpt366.o
+ obj-$(CONFIG_BLK_DEV_IT8172)		+= it8172.o
+ obj-$(CONFIG_BLK_DEV_IT8213)		+= it8213.o
+diff --git a/drivers/ide/delkin_cb.c b/drivers/ide/delkin_cb.c
 deleted file mode 100644
-index de9185d..0000000
---- a/drivers/ide/cs5536.c
+index 300daab..0000000
+--- a/drivers/ide/delkin_cb.c
 +++ /dev/null
-@@ -1,306 +0,0 @@
+@@ -1,181 +0,0 @@
 -/*
-- * CS5536 PATA support
-- * (C) 2007 Martin K. Petersen <mkp@mkp.net>
-- * (C) 2009 Bartlomiej Zolnierkiewicz
+- *  Created 20 Oct 2004 by Mark Lord
 - *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License version 2 as
-- * published by the Free Software Foundation.
+- *  Basic support for Delkin/ASKA/Workbit Cardbus CompactFlash adapter
 - *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
+- *  Modeled after the 16-bit PCMCIA driver: ide-cs.c
 - *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+- *  This is slightly peculiar, in that it is a PCI driver,
+- *  but is NOT an IDE PCI driver -- the IDE layer does not directly
+- *  support hot insertion/removal of PCI interfaces, so this driver
+- *  is unable to use the IDE PCI interfaces.  Instead, it uses the
+- *  same interfaces as the ide-cs (PCMCIA) driver uses.
+- *  On the plus side, the driver is also smaller/simpler this way.
 - *
-- * Documentation:
-- *	Available from AMD web site.
-- *
-- * The IDE timing registers for the CS5536 live in the Geode Machine
-- * Specific Register file and not PCI config space.  Most BIOSes
-- * virtualize the PCI registers so the chip looks like a standard IDE
-- * controller.  Unfortunately not all implementations get this right.
-- * In particular some have problems with unaligned accesses to the
-- * virtualized PCI registers.  This driver always does full dword
-- * writes to work around the issue.  Also, in case of a bad BIOS this
-- * driver can be loaded with the "msr=1" parameter which forces using
-- * the Machine Specific Registers to configure the device.
+- *  This file is subject to the terms and conditions of the GNU General Public
+- *  License.  See the file COPYING in the main directory of this archive for
+- *  more details.
 - */
 -
--#include <linux/kernel.h>
+-#include <linux/types.h>
 -#include <linux/module.h>
--#include <linux/pci.h>
--#include <linux/init.h>
 -#include <linux/ide.h>
--#include <asm/msr.h>
+-#include <linux/init.h>
+-#include <linux/pci.h>
 -
--#define DRV_NAME	"cs5536"
+-#include <asm/io.h>
 -
--enum {
--	MSR_IDE_CFG		= 0x51300010,
--	PCI_IDE_CFG		= 0x40,
--
--	CFG			= 0,
--	DTC			= 2,
--	CAST			= 3,
--	ETC			= 4,
--
--	IDE_CFG_CHANEN		= (1 << 1),
--	IDE_CFG_CABLE		= (1 << 17) | (1 << 16),
--
--	IDE_D0_SHIFT		= 24,
--	IDE_D1_SHIFT		= 16,
--	IDE_DRV_MASK		= 0xff,
--
--	IDE_CAST_D0_SHIFT	= 6,
--	IDE_CAST_D1_SHIFT	= 4,
--	IDE_CAST_DRV_MASK	= 0x3,
--
--	IDE_CAST_CMD_SHIFT	= 24,
--	IDE_CAST_CMD_MASK	= 0xff,
--
--	IDE_ETC_UDMA_MASK	= 0xc0,
--};
--
--static int use_msr;
--
--static int cs5536_read(struct pci_dev *pdev, int reg, u32 *val)
--{
--	if (unlikely(use_msr)) {
--		u32 dummy;
--
--		rdmsr(MSR_IDE_CFG + reg, *val, dummy);
--		return 0;
--	}
--
--	return pci_read_config_dword(pdev, PCI_IDE_CFG + reg * 4, val);
--}
--
--static int cs5536_write(struct pci_dev *pdev, int reg, int val)
--{
--	if (unlikely(use_msr)) {
--		wrmsr(MSR_IDE_CFG + reg, val, 0);
--		return 0;
--	}
--
--	return pci_write_config_dword(pdev, PCI_IDE_CFG + reg * 4, val);
--}
--
--static void cs5536_program_dtc(ide_drive_t *drive, u8 tim)
--{
--	struct pci_dev *pdev = to_pci_dev(drive->hwif->dev);
--	int dshift = (drive->dn & 1) ? IDE_D1_SHIFT : IDE_D0_SHIFT;
--	u32 dtc;
--
--	cs5536_read(pdev, DTC, &dtc);
--	dtc &= ~(IDE_DRV_MASK << dshift);
--	dtc |= tim << dshift;
--	cs5536_write(pdev, DTC, dtc);
--}
--
--/**
-- *	cs5536_cable_detect	-	detect cable type
-- *	@hwif: Port to detect on
+-/*
+- * No chip documentation has yet been found,
+- * so these configuration values were pulled from
+- * a running Win98 system using "debug".
+- * This gives around 3MByte/second read performance,
+- * which is about 2/3 of what the chip is capable of.
 - *
-- *	Perform cable detection for ATA66 capable cable.
-- *
-- *	Returns a cable type.
+- * There is also a 4KByte mmio region on the card,
+- * but its purpose has yet to be reverse-engineered.
 - */
+-static const u8 setup[] = {
+-	0x00, 0x05, 0xbe, 0x01, 0x20, 0x8f, 0x00, 0x00,
+-	0xa4, 0x1f, 0xb3, 0x1b, 0x00, 0x00, 0x00, 0x80,
+-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+-	0x00, 0x00, 0x00, 0x00, 0xa4, 0x83, 0x02, 0x13,
+-};
 -
--static u8 cs5536_cable_detect(ide_hwif_t *hwif)
+-static const struct ide_port_ops delkin_cb_port_ops = {
+-	.quirkproc		= ide_undecoded_slave,
+-};
+-
+-static int delkin_cb_init_chipset(struct pci_dev *dev)
 -{
--	struct pci_dev *pdev = to_pci_dev(hwif->dev);
--	u32 cfg;
+-	unsigned long base = pci_resource_start(dev, 0);
+-	int i;
 -
--	cs5536_read(pdev, CFG, &cfg);
+-	outb(0x02, base + 0x1e);	/* set nIEN to block interrupts */
+-	inb(base + 0x17);		/* read status to clear interrupts */
 -
--	if (cfg & IDE_CFG_CABLE)
--		return ATA_CBL_PATA80;
--	else
--		return ATA_CBL_PATA40;
--}
--
--/**
-- *	cs5536_set_pio_mode		-	PIO timing setup
-- *	@hwif: ATA port
-- *	@drive: ATA device
-- */
--
--static void cs5536_set_pio_mode(ide_hwif_t *hwif, ide_drive_t *drive)
--{
--	static const u8 drv_timings[5] = {
--		0x98, 0x55, 0x32, 0x21, 0x20,
--	};
--
--	static const u8 addr_timings[5] = {
--		0x2, 0x1, 0x0, 0x0, 0x0,
--	};
--
--	static const u8 cmd_timings[5] = {
--		0x99, 0x92, 0x90, 0x22, 0x20,
--	};
--
--	struct pci_dev *pdev = to_pci_dev(hwif->dev);
--	ide_drive_t *pair = ide_get_pair_dev(drive);
--	int cshift = (drive->dn & 1) ? IDE_CAST_D1_SHIFT : IDE_CAST_D0_SHIFT;
--	unsigned long timings = (unsigned long)ide_get_drivedata(drive);
--	u32 cast;
--	const u8 pio = drive->pio_mode - XFER_PIO_0;
--	u8 cmd_pio = pio;
--
--	if (pair)
--		cmd_pio = min_t(u8, pio, pair->pio_mode - XFER_PIO_0);
--
--	timings &= (IDE_DRV_MASK << 8);
--	timings |= drv_timings[pio];
--	ide_set_drivedata(drive, (void *)timings);
--
--	cs5536_program_dtc(drive, drv_timings[pio]);
--
--	cs5536_read(pdev, CAST, &cast);
--
--	cast &= ~(IDE_CAST_DRV_MASK << cshift);
--	cast |= addr_timings[pio] << cshift;
--
--	cast &= ~(IDE_CAST_CMD_MASK << IDE_CAST_CMD_SHIFT);
--	cast |= cmd_timings[cmd_pio] << IDE_CAST_CMD_SHIFT;
--
--	cs5536_write(pdev, CAST, cast);
--}
--
--/**
-- *	cs5536_set_dma_mode		-	DMA timing setup
-- *	@hwif: ATA port
-- *	@drive: ATA device
-- */
--
--static void cs5536_set_dma_mode(ide_hwif_t *hwif, ide_drive_t *drive)
--{
--	static const u8 udma_timings[6] = {
--		0xc2, 0xc1, 0xc0, 0xc4, 0xc5, 0xc6,
--	};
--
--	static const u8 mwdma_timings[3] = {
--		0x67, 0x21, 0x20,
--	};
--
--	struct pci_dev *pdev = to_pci_dev(hwif->dev);
--	int dshift = (drive->dn & 1) ? IDE_D1_SHIFT : IDE_D0_SHIFT;
--	unsigned long timings = (unsigned long)ide_get_drivedata(drive);
--	u32 etc;
--	const u8 mode = drive->dma_mode;
--
--	cs5536_read(pdev, ETC, &etc);
--
--	if (mode >= XFER_UDMA_0) {
--		etc &= ~(IDE_DRV_MASK << dshift);
--		etc |= udma_timings[mode - XFER_UDMA_0] << dshift;
--	} else { /* MWDMA */
--		etc &= ~(IDE_ETC_UDMA_MASK << dshift);
--		timings &= IDE_DRV_MASK;
--		timings |= mwdma_timings[mode - XFER_MW_DMA_0] << 8;
--		ide_set_drivedata(drive, (void *)timings);
+-	for (i = 0; i < sizeof(setup); ++i) {
+-		if (setup[i])
+-			outb(setup[i], base + i);
 -	}
 -
--	cs5536_write(pdev, ETC, etc);
+-	return 0;
 -}
 -
--static void cs5536_dma_start(ide_drive_t *drive)
--{
--	unsigned long timings = (unsigned long)ide_get_drivedata(drive);
--
--	if (drive->current_speed < XFER_UDMA_0 &&
--	    (timings >> 8) != (timings & IDE_DRV_MASK))
--		cs5536_program_dtc(drive, timings >> 8);
--
--	ide_dma_start(drive);
--}
--
--static int cs5536_dma_end(ide_drive_t *drive)
--{
--	int ret = ide_dma_end(drive);
--	unsigned long timings = (unsigned long)ide_get_drivedata(drive);
--
--	if (drive->current_speed < XFER_UDMA_0 &&
--	    (timings >> 8) != (timings & IDE_DRV_MASK))
--		cs5536_program_dtc(drive, timings & IDE_DRV_MASK);
--
--	return ret;
--}
--
--static const struct ide_port_ops cs5536_port_ops = {
--	.set_pio_mode		= cs5536_set_pio_mode,
--	.set_dma_mode		= cs5536_set_dma_mode,
--	.cable_detect		= cs5536_cable_detect,
+-static const struct ide_port_info delkin_cb_port_info = {
+-	.port_ops		= &delkin_cb_port_ops,
+-	.host_flags		= IDE_HFLAG_IO_32BIT | IDE_HFLAG_UNMASK_IRQS |
+-				  IDE_HFLAG_NO_DMA,
+-	.irq_flags		= IRQF_SHARED,
+-	.init_chipset		= delkin_cb_init_chipset,
+-	.chipset		= ide_pci,
 -};
 -
--static const struct ide_dma_ops cs5536_dma_ops = {
--	.dma_host_set		= ide_dma_host_set,
--	.dma_setup		= ide_dma_setup,
--	.dma_start		= cs5536_dma_start,
--	.dma_end		= cs5536_dma_end,
--	.dma_test_irq		= ide_dma_test_irq,
--	.dma_lost_irq		= ide_dma_lost_irq,
--	.dma_timer_expiry	= ide_dma_sff_timer_expiry,
--	.dma_sff_read_status	= ide_dma_sff_read_status,
--};
--
--static const struct ide_port_info cs5536_info = {
--	.name		= DRV_NAME,
--	.port_ops	= &cs5536_port_ops,
--	.dma_ops	= &cs5536_dma_ops,
--	.host_flags	= IDE_HFLAG_SINGLE,
--	.pio_mask	= ATA_PIO4,
--	.mwdma_mask	= ATA_MWDMA2,
--	.udma_mask	= ATA_UDMA5,
--};
--
--/**
-- *	cs5536_init_one
-- *	@dev: PCI device
-- *	@id: Entry in match table
-- */
--
--static int cs5536_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+-static int delkin_cb_probe(struct pci_dev *dev, const struct pci_device_id *id)
 -{
--	u32 cfg;
+-	struct ide_host *host;
+-	unsigned long base;
+-	int rc;
+-	struct ide_hw hw, *hws[] = { &hw };
 -
--	if (use_msr)
--		printk(KERN_INFO DRV_NAME ": Using MSR regs instead of PCI\n");
--
--	cs5536_read(dev, CFG, &cfg);
--
--	if ((cfg & IDE_CFG_CHANEN) == 0) {
--		printk(KERN_ERR DRV_NAME ": disabled by BIOS\n");
--		return -ENODEV;
+-	rc = pci_enable_device(dev);
+-	if (rc) {
+-		printk(KERN_ERR "delkin_cb: pci_enable_device failed (%d)\n", rc);
+-		return rc;
 -	}
+-	rc = pci_request_regions(dev, "delkin_cb");
+-	if (rc) {
+-		printk(KERN_ERR "delkin_cb: pci_request_regions failed (%d)\n", rc);
+-		pci_disable_device(dev);
+-		return rc;
+-	}
+-	base = pci_resource_start(dev, 0);
 -
--	return ide_pci_init_one(dev, &cs5536_info, NULL);
+-	delkin_cb_init_chipset(dev);
+-
+-	memset(&hw, 0, sizeof(hw));
+-	ide_std_init_ports(&hw, base + 0x10, base + 0x1e);
+-	hw.irq = dev->irq;
+-	hw.dev = &dev->dev;
+-
+-	rc = ide_host_add(&delkin_cb_port_info, hws, 1, &host);
+-	if (rc)
+-		goto out_disable;
+-
+-	pci_set_drvdata(dev, host);
+-
+-	return 0;
+-
+-out_disable:
+-	pci_release_regions(dev);
+-	pci_disable_device(dev);
+-	return rc;
 -}
 -
--static const struct pci_device_id cs5536_pci_tbl[] = {
--	{ PCI_VDEVICE(AMD, PCI_DEVICE_ID_AMD_CS5536_IDE), },
--	{ },
+-static void
+-delkin_cb_remove (struct pci_dev *dev)
+-{
+-	struct ide_host *host = pci_get_drvdata(dev);
+-
+-	ide_host_remove(host);
+-
+-	pci_release_regions(dev);
+-	pci_disable_device(dev);
+-}
+-
+-#ifdef CONFIG_PM
+-static int delkin_cb_suspend(struct pci_dev *dev, pm_message_t state)
+-{
+-	pci_save_state(dev);
+-	pci_disable_device(dev);
+-	pci_set_power_state(dev, pci_choose_state(dev, state));
+-
+-	return 0;
+-}
+-
+-static int delkin_cb_resume(struct pci_dev *dev)
+-{
+-	struct ide_host *host = pci_get_drvdata(dev);
+-	int rc;
+-
+-	pci_set_power_state(dev, PCI_D0);
+-
+-	rc = pci_enable_device(dev);
+-	if (rc)
+-		return rc;
+-
+-	pci_restore_state(dev);
+-	pci_set_master(dev);
+-
+-	if (host->init_chipset)
+-		host->init_chipset(dev);
+-
+-	return 0;
+-}
+-#else
+-#define delkin_cb_suspend NULL
+-#define delkin_cb_resume NULL
+-#endif
+-
+-static struct pci_device_id delkin_cb_pci_tbl[] = {
+-	{ 0x1145, 0xf021, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+-	{ 0x1145, 0xf024, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+-	{ 0, },
+-};
+-MODULE_DEVICE_TABLE(pci, delkin_cb_pci_tbl);
+-
+-static struct pci_driver delkin_cb_pci_driver = {
+-	.name		= "Delkin-ASKA-Workbit Cardbus IDE",
+-	.id_table	= delkin_cb_pci_tbl,
+-	.probe		= delkin_cb_probe,
+-	.remove		= delkin_cb_remove,
+-	.suspend	= delkin_cb_suspend,
+-	.resume		= delkin_cb_resume,
 -};
 -
--static struct pci_driver cs5536_pci_driver = {
--	.name		= DRV_NAME,
--	.id_table	= cs5536_pci_tbl,
--	.probe		= cs5536_init_one,
--	.remove		= ide_pci_remove,
--	.suspend	= ide_pci_suspend,
--	.resume		= ide_pci_resume,
--};
+-module_pci_driver(delkin_cb_pci_driver);
 -
--module_pci_driver(cs5536_pci_driver);
--
--MODULE_AUTHOR("Martin K. Petersen, Bartlomiej Zolnierkiewicz");
--MODULE_DESCRIPTION("low-level driver for the CS5536 IDE controller");
+-MODULE_AUTHOR("Mark Lord");
+-MODULE_DESCRIPTION("Basic support for Delkin/ASKA/Workbit Cardbus IDE");
 -MODULE_LICENSE("GPL");
--MODULE_DEVICE_TABLE(pci, cs5536_pci_tbl);
 -
--module_param_named(msr, use_msr, int, 0644);
--MODULE_PARM_DESC(msr, "Force using MSR to configure IDE function (Default: 0)");
 -- 
 1.9.1
