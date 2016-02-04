@@ -1,7 +1,7 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RFC PATCH 07/19] ide: remove deprecated delkin_cb host driver
-Date: Thu, 04 Feb 2016 14:44:04 +0100
-Message-ID: <1454593456-3162-8-git-send-email-b.zolnierkie@samsung.com>
+Subject: [RFC PATCH 08/19] ide: remove deprecated it8213 host driver
+Date: Thu, 04 Feb 2016 14:44:05 +0100
+Message-ID: <1454593456-3162-9-git-send-email-b.zolnierkie@samsung.com>
 References: <1454593456-3162-1-git-send-email-b.zolnierkie@samsung.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-reply-to: <1454593456-3162-1-git-send-email-b.zolnierkie@samsung.com>
@@ -14,236 +14,270 @@ IDE subsystem has been deprecated since 2009 and the majority
 (if not all) of Linux distributions have switched to use
 libata for ATA support exclusively.
 
-The replacement driver (pata_ninja32) has been available since
-2007 and it supports all the hardware supported by the old
-delkin_cb host driver.
+The replacement driver (pata_it8213) has been available since
+2006 and it supports all the hardware supported by the old
+it8213 host driver.
 
-Remove the deprecated delkin_cb host driver.
+Remove the deprecated it8213 host driver.
 
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
- drivers/ide/Kconfig     |   7 --
- drivers/ide/Makefile    |   1 -
- drivers/ide/delkin_cb.c | 181 ------------------------------------------------
- 3 files changed, 189 deletions(-)
- delete mode 100644 drivers/ide/delkin_cb.c
+ drivers/ide/Kconfig  |   6 --
+ drivers/ide/Makefile |   1 -
+ drivers/ide/it8213.c | 216 ---------------------------------------------------
+ 3 files changed, 223 deletions(-)
+ delete mode 100644 drivers/ide/it8213.c
 
 diff --git a/drivers/ide/Kconfig b/drivers/ide/Kconfig
-index 2af2425..6c16375 100644
+index 6c16375..e8e2e6d 100644
 --- a/drivers/ide/Kconfig
 +++ b/drivers/ide/Kconfig
-@@ -107,13 +107,6 @@ config BLK_DEV_IDECS
- 	  Support for Compact Flash cards, outboard IDE disks, tape drives,
- 	  and CD-ROM drives connected through a PCMCIA card.
+@@ -442,12 +442,6 @@ config BLK_DEV_IT8172
+ 	  This driver adds support for the IDE controller on the
+ 	  IT8172 System Controller.
  
--config BLK_DEV_DELKIN
--	tristate "Cardbus IDE support (Delkin/ASKA/Workbit)"
--	depends on CARDBUS && PCI
+-config BLK_DEV_IT8213
+-	tristate "IT8213 IDE support"
+-	select BLK_DEV_IDEDMA_PCI
 -	help
--	  Support for Delkin, ASKA, and Workbit Cardbus CompactFlash
--	  Adapters.  This may also work for similar SD and XD adapters.
+-	 This driver adds support for the ITE 8213 IDE controller.
 -
- config BLK_DEV_IDECD
- 	tristate "Include IDE/ATAPI CDROM support"
- 	select IDE_ATAPI
+ config BLK_DEV_IT821X
+ 	tristate "IT821X IDE support"
+ 	select BLK_DEV_IDEDMA_PCI
 diff --git a/drivers/ide/Makefile b/drivers/ide/Makefile
-index df2c031..e582431 100644
+index e582431..03a5398 100644
 --- a/drivers/ide/Makefile
 +++ b/drivers/ide/Makefile
-@@ -39,7 +39,6 @@ obj-$(CONFIG_BLK_DEV_ALI15X3)		+= alim15x3.o
- obj-$(CONFIG_BLK_DEV_AMD74XX)		+= amd74xx.o
- obj-$(CONFIG_BLK_DEV_CMD64X)		+= cmd64x.o
+@@ -41,7 +41,6 @@ obj-$(CONFIG_BLK_DEV_CMD64X)		+= cmd64x.o
  obj-$(CONFIG_BLK_DEV_CY82C693)		+= cy82c693.o
--obj-$(CONFIG_BLK_DEV_DELKIN)		+= delkin_cb.o
  obj-$(CONFIG_BLK_DEV_HPT366)		+= hpt366.o
  obj-$(CONFIG_BLK_DEV_IT8172)		+= it8172.o
- obj-$(CONFIG_BLK_DEV_IT8213)		+= it8213.o
-diff --git a/drivers/ide/delkin_cb.c b/drivers/ide/delkin_cb.c
+-obj-$(CONFIG_BLK_DEV_IT8213)		+= it8213.o
+ obj-$(CONFIG_BLK_DEV_IT821X)		+= it821x.o
+ obj-$(CONFIG_BLK_DEV_JMICRON)		+= jmicron.o
+ obj-$(CONFIG_BLK_DEV_NS87415)		+= ns87415.o
+diff --git a/drivers/ide/it8213.c b/drivers/ide/it8213.c
 deleted file mode 100644
-index 300daab..0000000
---- a/drivers/ide/delkin_cb.c
+index 6b92846..0000000
+--- a/drivers/ide/it8213.c
 +++ /dev/null
-@@ -1,181 +0,0 @@
+@@ -1,216 +0,0 @@
 -/*
-- *  Created 20 Oct 2004 by Mark Lord
+- * ITE 8213 IDE driver
 - *
-- *  Basic support for Delkin/ASKA/Workbit Cardbus CompactFlash adapter
-- *
-- *  Modeled after the 16-bit PCMCIA driver: ide-cs.c
-- *
-- *  This is slightly peculiar, in that it is a PCI driver,
-- *  but is NOT an IDE PCI driver -- the IDE layer does not directly
-- *  support hot insertion/removal of PCI interfaces, so this driver
-- *  is unable to use the IDE PCI interfaces.  Instead, it uses the
-- *  same interfaces as the ide-cs (PCMCIA) driver uses.
-- *  On the plus side, the driver is also smaller/simpler this way.
-- *
-- *  This file is subject to the terms and conditions of the GNU General Public
-- *  License.  See the file COPYING in the main directory of this archive for
-- *  more details.
+- * Copyright (C) 2006 Jack Lee
+- * Copyright (C) 2006 Alan Cox
+- * Copyright (C) 2007 Bartlomiej Zolnierkiewicz
 - */
 -
+-#include <linux/kernel.h>
 -#include <linux/types.h>
 -#include <linux/module.h>
+-#include <linux/pci.h>
 -#include <linux/ide.h>
 -#include <linux/init.h>
--#include <linux/pci.h>
 -
--#include <asm/io.h>
+-#define DRV_NAME "it8213"
 -
--/*
-- * No chip documentation has yet been found,
-- * so these configuration values were pulled from
-- * a running Win98 system using "debug".
-- * This gives around 3MByte/second read performance,
-- * which is about 2/3 of what the chip is capable of.
+-/**
+- *	it8213_set_pio_mode	-	set host controller for PIO mode
+- *	@hwif: port
+- *	@drive: drive
 - *
-- * There is also a 4KByte mmio region on the card,
-- * but its purpose has yet to be reverse-engineered.
+- *	Set the interface PIO mode.
 - */
--static const u8 setup[] = {
--	0x00, 0x05, 0xbe, 0x01, 0x20, 0x8f, 0x00, 0x00,
--	0xa4, 0x1f, 0xb3, 0x1b, 0x00, 0x00, 0x00, 0x80,
--	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
--	0x00, 0x00, 0x00, 0x00, 0xa4, 0x83, 0x02, 0x13,
+-
+-static void it8213_set_pio_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+-{
+-	struct pci_dev *dev	= to_pci_dev(hwif->dev);
+-	int is_slave		= drive->dn & 1;
+-	int master_port		= 0x40;
+-	int slave_port		= 0x44;
+-	unsigned long flags;
+-	u16 master_data;
+-	u8 slave_data;
+-	static DEFINE_SPINLOCK(tune_lock);
+-	int control = 0;
+-	const u8 pio = drive->pio_mode - XFER_PIO_0;
+-
+-	static const u8 timings[][2] = {
+-					{ 0, 0 },
+-					{ 0, 0 },
+-					{ 1, 0 },
+-					{ 2, 1 },
+-					{ 2, 3 }, };
+-
+-	spin_lock_irqsave(&tune_lock, flags);
+-	pci_read_config_word(dev, master_port, &master_data);
+-
+-	if (pio > 1)
+-		control |= 1;	/* Programmable timing on */
+-	if (drive->media != ide_disk)
+-		control |= 4;	/* ATAPI */
+-	if (ide_pio_need_iordy(drive, pio))
+-		control |= 2;	/* IORDY */
+-	if (is_slave) {
+-		master_data |=  0x4000;
+-		master_data &= ~0x0070;
+-		if (pio > 1)
+-			master_data = master_data | (control << 4);
+-		pci_read_config_byte(dev, slave_port, &slave_data);
+-		slave_data = slave_data & 0xf0;
+-		slave_data = slave_data | (timings[pio][0] << 2) | timings[pio][1];
+-	} else {
+-		master_data &= ~0x3307;
+-		if (pio > 1)
+-			master_data = master_data | control;
+-		master_data = master_data | (timings[pio][0] << 12) | (timings[pio][1] << 8);
+-	}
+-	pci_write_config_word(dev, master_port, master_data);
+-	if (is_slave)
+-		pci_write_config_byte(dev, slave_port, slave_data);
+-	spin_unlock_irqrestore(&tune_lock, flags);
+-}
+-
+-/**
+- *	it8213_set_dma_mode	-	set host controller for DMA mode
+- *	@hwif: port
+- *	@drive: drive
+- *
+- *	Tune the ITE chipset for the DMA mode.
+- */
+-
+-static void it8213_set_dma_mode(ide_hwif_t *hwif, ide_drive_t *drive)
+-{
+-	struct pci_dev *dev	= to_pci_dev(hwif->dev);
+-	u8 maslave		= 0x40;
+-	int a_speed		= 3 << (drive->dn * 4);
+-	int u_flag		= 1 << drive->dn;
+-	int v_flag		= 0x01 << drive->dn;
+-	int w_flag		= 0x10 << drive->dn;
+-	int u_speed		= 0;
+-	u16			reg4042, reg4a;
+-	u8			reg48, reg54, reg55;
+-	const u8 speed		= drive->dma_mode;
+-
+-	pci_read_config_word(dev, maslave, &reg4042);
+-	pci_read_config_byte(dev, 0x48, &reg48);
+-	pci_read_config_word(dev, 0x4a, &reg4a);
+-	pci_read_config_byte(dev, 0x54, &reg54);
+-	pci_read_config_byte(dev, 0x55, &reg55);
+-
+-	if (speed >= XFER_UDMA_0) {
+-		u8 udma = speed - XFER_UDMA_0;
+-
+-		u_speed = min_t(u8, 2 - (udma & 1), udma) << (drive->dn * 4);
+-
+-		if (!(reg48 & u_flag))
+-			pci_write_config_byte(dev, 0x48, reg48 | u_flag);
+-		if (speed >= XFER_UDMA_5)
+-			pci_write_config_byte(dev, 0x55, (u8) reg55|w_flag);
+-		else
+-			pci_write_config_byte(dev, 0x55, (u8) reg55 & ~w_flag);
+-
+-		if ((reg4a & a_speed) != u_speed)
+-			pci_write_config_word(dev, 0x4a, (reg4a & ~a_speed) | u_speed);
+-		if (speed > XFER_UDMA_2) {
+-			if (!(reg54 & v_flag))
+-				pci_write_config_byte(dev, 0x54, reg54 | v_flag);
+-		} else
+-			pci_write_config_byte(dev, 0x54, reg54 & ~v_flag);
+-	} else {
+-		const u8 mwdma_to_pio[] = { 0, 3, 4 };
+-
+-		if (reg48 & u_flag)
+-			pci_write_config_byte(dev, 0x48, reg48 & ~u_flag);
+-		if (reg4a & a_speed)
+-			pci_write_config_word(dev, 0x4a, reg4a & ~a_speed);
+-		if (reg54 & v_flag)
+-			pci_write_config_byte(dev, 0x54, reg54 & ~v_flag);
+-		if (reg55 & w_flag)
+-			pci_write_config_byte(dev, 0x55, (u8) reg55 & ~w_flag);
+-
+-		if (speed >= XFER_MW_DMA_0)
+-			drive->pio_mode =
+-				mwdma_to_pio[speed - XFER_MW_DMA_0] + XFER_PIO_0;
+-		else
+-			drive->pio_mode = XFER_PIO_2; /* for SWDMA2 */
+-
+-		it8213_set_pio_mode(hwif, drive);
+-	}
+-}
+-
+-static u8 it8213_cable_detect(ide_hwif_t *hwif)
+-{
+-	struct pci_dev *dev = to_pci_dev(hwif->dev);
+-	u8 reg42h = 0;
+-
+-	pci_read_config_byte(dev, 0x42, &reg42h);
+-
+-	return (reg42h & 0x02) ? ATA_CBL_PATA40 : ATA_CBL_PATA80;
+-}
+-
+-static const struct ide_port_ops it8213_port_ops = {
+-	.set_pio_mode		= it8213_set_pio_mode,
+-	.set_dma_mode		= it8213_set_dma_mode,
+-	.cable_detect		= it8213_cable_detect,
 -};
 -
--static const struct ide_port_ops delkin_cb_port_ops = {
--	.quirkproc		= ide_undecoded_slave,
+-static const struct ide_port_info it8213_chipset = {
+-	.name		= DRV_NAME,
+-	.enablebits	= { {0x41, 0x80, 0x80} },
+-	.port_ops	= &it8213_port_ops,
+-	.host_flags	= IDE_HFLAG_SINGLE,
+-	.pio_mask	= ATA_PIO4,
+-	.swdma_mask	= ATA_SWDMA2_ONLY,
+-	.mwdma_mask	= ATA_MWDMA12_ONLY,
+-	.udma_mask	= ATA_UDMA6,
 -};
 -
--static int delkin_cb_init_chipset(struct pci_dev *dev)
+-/**
+- *	it8213_init_one	-	pci layer discovery entry
+- *	@dev: PCI device
+- *	@id: ident table entry
+- *
+- *	Called by the PCI code when it finds an ITE8213 controller. As
+- *	this device follows the standard interfaces we can use the
+- *	standard helper functions to do almost all the work for us.
+- */
+-
+-static int it8213_init_one(struct pci_dev *dev, const struct pci_device_id *id)
 -{
--	unsigned long base = pci_resource_start(dev, 0);
--	int i;
--
--	outb(0x02, base + 0x1e);	/* set nIEN to block interrupts */
--	inb(base + 0x17);		/* read status to clear interrupts */
--
--	for (i = 0; i < sizeof(setup); ++i) {
--		if (setup[i])
--			outb(setup[i], base + i);
--	}
--
--	return 0;
+-	return ide_pci_init_one(dev, &it8213_chipset, NULL);
 -}
 -
--static const struct ide_port_info delkin_cb_port_info = {
--	.port_ops		= &delkin_cb_port_ops,
--	.host_flags		= IDE_HFLAG_IO_32BIT | IDE_HFLAG_UNMASK_IRQS |
--				  IDE_HFLAG_NO_DMA,
--	.irq_flags		= IRQF_SHARED,
--	.init_chipset		= delkin_cb_init_chipset,
--	.chipset		= ide_pci,
--};
--
--static int delkin_cb_probe(struct pci_dev *dev, const struct pci_device_id *id)
--{
--	struct ide_host *host;
--	unsigned long base;
--	int rc;
--	struct ide_hw hw, *hws[] = { &hw };
--
--	rc = pci_enable_device(dev);
--	if (rc) {
--		printk(KERN_ERR "delkin_cb: pci_enable_device failed (%d)\n", rc);
--		return rc;
--	}
--	rc = pci_request_regions(dev, "delkin_cb");
--	if (rc) {
--		printk(KERN_ERR "delkin_cb: pci_request_regions failed (%d)\n", rc);
--		pci_disable_device(dev);
--		return rc;
--	}
--	base = pci_resource_start(dev, 0);
--
--	delkin_cb_init_chipset(dev);
--
--	memset(&hw, 0, sizeof(hw));
--	ide_std_init_ports(&hw, base + 0x10, base + 0x1e);
--	hw.irq = dev->irq;
--	hw.dev = &dev->dev;
--
--	rc = ide_host_add(&delkin_cb_port_info, hws, 1, &host);
--	if (rc)
--		goto out_disable;
--
--	pci_set_drvdata(dev, host);
--
--	return 0;
--
--out_disable:
--	pci_release_regions(dev);
--	pci_disable_device(dev);
--	return rc;
--}
--
--static void
--delkin_cb_remove (struct pci_dev *dev)
--{
--	struct ide_host *host = pci_get_drvdata(dev);
--
--	ide_host_remove(host);
--
--	pci_release_regions(dev);
--	pci_disable_device(dev);
--}
--
--#ifdef CONFIG_PM
--static int delkin_cb_suspend(struct pci_dev *dev, pm_message_t state)
--{
--	pci_save_state(dev);
--	pci_disable_device(dev);
--	pci_set_power_state(dev, pci_choose_state(dev, state));
--
--	return 0;
--}
--
--static int delkin_cb_resume(struct pci_dev *dev)
--{
--	struct ide_host *host = pci_get_drvdata(dev);
--	int rc;
--
--	pci_set_power_state(dev, PCI_D0);
--
--	rc = pci_enable_device(dev);
--	if (rc)
--		return rc;
--
--	pci_restore_state(dev);
--	pci_set_master(dev);
--
--	if (host->init_chipset)
--		host->init_chipset(dev);
--
--	return 0;
--}
--#else
--#define delkin_cb_suspend NULL
--#define delkin_cb_resume NULL
--#endif
--
--static struct pci_device_id delkin_cb_pci_tbl[] = {
--	{ 0x1145, 0xf021, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
--	{ 0x1145, 0xf024, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+-static const struct pci_device_id it8213_pci_tbl[] = {
+-	{ PCI_VDEVICE(ITE, PCI_DEVICE_ID_ITE_8213), 0 },
 -	{ 0, },
 -};
--MODULE_DEVICE_TABLE(pci, delkin_cb_pci_tbl);
 -
--static struct pci_driver delkin_cb_pci_driver = {
--	.name		= "Delkin-ASKA-Workbit Cardbus IDE",
--	.id_table	= delkin_cb_pci_tbl,
--	.probe		= delkin_cb_probe,
--	.remove		= delkin_cb_remove,
--	.suspend	= delkin_cb_suspend,
--	.resume		= delkin_cb_resume,
+-MODULE_DEVICE_TABLE(pci, it8213_pci_tbl);
+-
+-static struct pci_driver it8213_pci_driver = {
+-	.name		= "ITE8213_IDE",
+-	.id_table	= it8213_pci_tbl,
+-	.probe		= it8213_init_one,
+-	.remove		= ide_pci_remove,
+-	.suspend	= ide_pci_suspend,
+-	.resume		= ide_pci_resume,
 -};
 -
--module_pci_driver(delkin_cb_pci_driver);
+-static int __init it8213_ide_init(void)
+-{
+-	return ide_pci_register_driver(&it8213_pci_driver);
+-}
 -
--MODULE_AUTHOR("Mark Lord");
--MODULE_DESCRIPTION("Basic support for Delkin/ASKA/Workbit Cardbus IDE");
+-static void __exit it8213_ide_exit(void)
+-{
+-	pci_unregister_driver(&it8213_pci_driver);
+-}
+-
+-module_init(it8213_ide_init);
+-module_exit(it8213_ide_exit);
+-
+-MODULE_AUTHOR("Jack Lee, Alan Cox");
+-MODULE_DESCRIPTION("PCI driver module for the ITE 8213");
 -MODULE_LICENSE("GPL");
--
 -- 
 1.9.1
