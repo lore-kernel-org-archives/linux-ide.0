@@ -1,38 +1,49 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] AHCI: Workaround for ThunderX Errata#22536
-Date: Fri, 5 Feb 2016 12:04:23 -0500
-Message-ID: <20160205170423.GE4401@htj.duckdns.org>
-References: <1454539065-16891-1-git-send-email-tchalamarla@caviumnetworks.com>
+From: Brijesh Singh <brijesh.singh@amd.com>
+Subject: Re: [PATCH v2] ata: add AMD Seattle platform driver
+Date: Fri, 5 Feb 2016 11:23:23 -0600
+Message-ID: <56B4DA8B.2050609@amd.com>
+References: <1452789071-4090-1-git-send-email-brijesh.singh@amd.com>
+ <4743985.XZ7D12RurV@wuerfel> <56B0F786.9010504@amd.com>
+ <3134806.iILWebdeN8@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yk0-f176.google.com ([209.85.160.176]:33071 "EHLO
-	mail-yk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753557AbcBEREY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Feb 2016 12:04:24 -0500
-Content-Disposition: inline
-In-Reply-To: <1454539065-16891-1-git-send-email-tchalamarla@caviumnetworks.com>
+Received: from mail-bl2on0068.outbound.protection.outlook.com ([65.55.169.68]:60220
+	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752669AbcBER0B (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 5 Feb 2016 12:26:01 -0500
+In-Reply-To: <3134806.iILWebdeN8@wuerfel>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tchalamarla@caviumnetworks.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: brijesh.singh@amd.com, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, hdegoede@redhat.com, linux-ide@vger.kernel.org, Graeme Gregory <graeme@xora.org.uk>
 
-Hello, Tirumalesh.
+Hi,
 
-On Wed, Feb 03, 2016 at 02:37:45PM -0800, tchalamarla@caviumnetworks.com wrote:
-> From: Tirumalesh Chalamarla <tchalamarla@caviumnetworks.com>
+>> }
+>>
+>> Windows driver folks were okay to look at second resource field to map the SGPIO register and program the
+>> registers to blink the LEDs. I think as per ACPI spec, its legal to pass more than one block in resource
+>> template and since AML method is not mandatory for non standard enclosure management hence its entirely
+>> possible that some BIOS vendors may not implement it at all. But if they implement and decide
+>> to expose either AML method or register map but not both then Windows driver may break.
 > 
-> Due to Errata in some versions of ThunderX,
-> HOST_IRQ_STAT is neither EDGE nor LEVEL,
-> ThunderX needs a special sequence for handling interrupt.
-> The patch attempts to satisfy the need.
+> I don't have access to the Windows source code. Is this in the
+> architecture-independent part of their kernel, or only done on ARM64?
+> How do they decide what the second memory range is for?
+> 
+> If this is now a de-facto extension to the PCI_CLASS_STORAGE_SATA_AHCI binding,
+> it should probably be put into the next version of the AHCI spec, and then
+> there is no problem using it.
+> 
+I don't have Windows code either and do not know the implementation details. I was told by the AMD folks 
+working on Windows drivers for Seattle that they do not need any changes in BIOS DSDT to get the LEDs blinking.
 
-Please take a look at the following patchset and coordinate with
-Suman.
+This is not a de-facto extension of SATA_AHCI binding, you can call this method as a SoC hack to support the LEDs.
+We are working with whatever BIOS is already available to enable the LEDs blinking.
 
- http://lkml.kernel.org/g/1454620826-22554-2-git-send-email-stripathi@apm.com
-
-Thanks.
-
--- 
-tejun
+> 
+> 	Arnd
+> 
