@@ -1,75 +1,64 @@
 From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v2] ata: add AMD Seattle platform driver
-Date: Fri, 05 Feb 2016 15:50:51 +0100
-Message-ID: <3134806.iILWebdeN8@wuerfel>
-References: <1452789071-4090-1-git-send-email-brijesh.singh@amd.com> <4743985.XZ7D12RurV@wuerfel> <56B0F786.9010504@amd.com>
+Subject: Re: [PATCH v7] SATA: OCTEON: support SATA on OCTEON platform
+Date: Fri, 05 Feb 2016 16:10:40 +0100
+Message-ID: <4427989.vm6oM7UICv@wuerfel>
+References: <1454520915-27948-1-git-send-email-Zubair.Kakakhel@imgtec.com> <56B342FF.1090709@caviumnetworks.com> <56B376CE.9010600@imgtec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.74]:50443 "EHLO
+Received: from mout.kundenserver.de ([217.72.192.75]:58257 "EHLO
 	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750958AbcBEOvM (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Feb 2016 09:51:12 -0500
-In-Reply-To: <56B0F786.9010504@amd.com>
+	with ESMTP id S1751076AbcBEPLI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 5 Feb 2016 10:11:08 -0500
+In-Reply-To: <56B376CE.9010600@imgtec.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brijesh Singh <brijesh.singh@amd.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, hdegoede@redhat.com, linux-ide@vger.kernel.org, Graeme Gregory <graeme@xora.org.uk>
+To: Zubair Lutfullah Kakakhel <Zubair.Kakakhel@imgtec.com>
+Cc: Aleksey Makarov <aleksey.makarov@caviumnetworks.com>, tj@kernel.org, hdegoede@redhat.com, david.daney@cavium.com, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Tuesday 02 February 2016 12:37:58 Brijesh Singh wrote:
-> Hi,
+On Thursday 04 February 2016 16:05:34 Zubair Lutfullah Kakakhel wrote:
+> Thank-you for the review.
 > 
-> On 02/02/2016 08:08 AM, Arnd Bergmann wrote:
-> > On Monday 01 February 2016 16:15:59 Brijesh Singh wrote:
-> >>>
-> >>> This is where we really need the ACPI maintainers to explain the
-> >>> general policy for dealing with firmware updates.
-> >>>
-> >>> I would assume that adding the feature in a later firmware version
-> >>> is a compatible change, and the feature is non-essential (the
-> >>> device will work fine with the generic SATA driver, except
-> >>> the LEDs don't blink), so it's not a big deal, it's just what
-> >>> you get for having the firmware shipped before the driver is
-> >>> reviewed (don't do that).
-> >>>
-> >>
-> >> Agreed, the driver should have been reviewed earlier. And now changes in firmware will also require
-> >> them changing other OSes drivers.
-> > 
-> > Can you explain that? I would expect the addition of some AML methods
-> > to be a compatible change.
-> > 
+> On 04/02/16 12:24, Aleksey Makarov wrote:
+> >
+> > Hi Zubair,
+> >
+> >> +    void __iomem *base;
+> >
+> > [..]
+> >
+> >> +    cfg = cvmx_read_csr((uint64_t)base + CVMX_SATA_UCTL_SHIM_CFG);
+> >
+> > sparse will complain here.  See Documentation/sparse.txt
 > 
-> current DSDT entry looks like this:
+> Yes. sparse says
 > 
-> Device (SATA0)
+> ...
+> CHECK   drivers/ata/sata_octeon.c
+> drivers/ata/sata_octeon.c:50:30: warning: cast removes address space of expression
+> drivers/ata/sata_octeon.c:65:25: warning: cast removes address space of expression
+> ...
+> 
+> Use of (__force uint64_t) removes the sparse warning. But it was
+> frowned upon by arnd.
+> 
+> He suggested a wrapper helper in asm/octeon/cvmx.h which handles iomem
+> addresses and __force behind the scenes rather than in the driver.
+
+Obviously I was not suggesting to remove the __force without fixing
+the address space mismatch first.
+
+> static inline void cvmx_write_csr_resource(void __iomem *csr_addr, uint64_t val)
 > {
-> .....
-> 
->  Name(_CRS, ResourceTemplate()
->  {
->    Memory32Fixed(ReadWrite, 0xE03000000, 0x000010000)  /* SATA block address */
->    Interrupt(ResourceConsumer, Level, ActiveHigh Exclusive,,,) { 387}
->    Memory32Fixed(ReadWrite, 0xE00000078, 1)  /* SGPIO register */
-> }
->   
-> ......
+>         cvmx_write_csr((__force uint64_t)csr_addr, val)
 > }
 > 
-> Windows driver folks were okay to look at second resource field to map the SGPIO register and program the
-> registers to blink the LEDs. I think as per ACPI spec, its legal to pass more than one block in resource
-> template and since AML method is not mandatory for non standard enclosure management hence its entirely
-> possible that some BIOS vendors may not implement it at all. But if they implement and decide
-> to expose either AML method or register map but not both then Windows driver may break.
+> Alternatives? Or should I resend with the above wrapper?
 
-I don't have access to the Windows source code. Is this in the
-architecture-independent part of their kernel, or only done on ARM64?
-How do they decide what the second memory range is for?
-
-If this is now a de-facto extension to the PCI_CLASS_STORAGE_SATA_AHCI binding,
-it should probably be put into the next version of the AHCI spec, and then
-there is no problem using it.
-
+Maybe just name it cvmx_writeq()? This is close enough to the normal
+writeq, except it does not serialize against DMA or spinlocks as
+writeq does, and it assumes that the device is the same endianess
+as the CPU, whereas writeq assumes that devices are fixed-endian.
 
 	Arnd
