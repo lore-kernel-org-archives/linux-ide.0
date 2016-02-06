@@ -1,13 +1,13 @@
 From: suman Tripathi <stripathi@apm.com>
-Subject: [PATCH v4 2/3] ata: Remove the AHCI_HFLAG_EDGE_IRQ support from libahci.
-Date: Sat,  6 Feb 2016 11:25:23 +0530
-Message-ID: <1454738124-9351-3-git-send-email-stripathi@apm.com>
+Subject: [PATCH v4 3/3] ahci_xgene: Implement the workaround to fix the missing of the edge interrupt for the HOST_IRQ_STAT.
+Date: Sat,  6 Feb 2016 11:25:24 +0530
+Message-ID: <1454738124-9351-4-git-send-email-stripathi@apm.com>
 References: <1454738124-9351-1-git-send-email-stripathi@apm.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [198.137.200.161] ([198.137.200.161]:58583 "EHLO
+Received: from [198.137.200.161] ([198.137.200.161]:58587 "EHLO
 	denmail01.amcc.com" rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751443AbcBFF4J (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 6 Feb 2016 00:56:09 -0500
+	with ESMTP id S1751448AbcBFF4P (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 6 Feb 2016 00:56:15 -0500
 In-Reply-To: <1454738124-9351-1-git-send-email-stripathi@apm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -16,158 +16,80 @@ Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@list
 
 From: Suman Tripathi <stripathi@apm.com>
 
-This patch removes the AHCI_HFLAG_EDGE_IRQ support from libahci.
-The flexibility to override the irq handles in the LLD's are
-already present, so controller's implementing a edge trigger latch
-can implement their own interrupt handler inside the driver.
+Due to H/W errata, the HOST_IRQ_STAT register misses the edge interrupt
+when clearing the HOST_IRQ_STAT register and hardware reporting the
+PORT_IRQ_STAT register happens to be at the same clock cycle.
 
 Signed-off-by: Suman Tripathi <stripathi@apm.com>
 ---
- drivers/ata/ahci.h       |    3 +--
- drivers/ata/ahci_xgene.c |   40 +++++++++++++++++++++++++++++++++++++++-
- drivers/ata/libahci.c    |   43 +------------------------------------------
- 3 files changed, 41 insertions(+), 45 deletions(-)
+ drivers/ata/ahci_xgene.c |   47 +++++++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 46 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index e64bdad..89d146e 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -240,8 +240,7 @@ enum {
- 						        error-handling stage) */
- 	AHCI_HFLAG_NO_DEVSLP		= (1 << 17), /* no device sleep */
- 	AHCI_HFLAG_NO_FBS		= (1 << 18), /* no FBS */
--	AHCI_HFLAG_EDGE_IRQ		= (1 << 19), /* HOST_IRQ_STAT behaves as
--							Edge Triggered */
-+
- #ifdef CONFIG_PCI_MSI
- 	AHCI_HFLAG_MULTI_MSI		= (1 << 20), /* multiple PCI MSIs */
- 	AHCI_HFLAG_MULTI_MSIX		= (1 << 21), /* per-port MSI-X */
 diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-index e2c6d9e..38cbabd 100644
+index 38cbabd..2fc6b38 100644
 --- a/drivers/ata/ahci_xgene.c
 +++ b/drivers/ata/ahci_xgene.c
-@@ -548,6 +548,43 @@ softreset_retry:
+@@ -548,6 +548,51 @@ softreset_retry:
  	return rc;
  }
 
-+static irqreturn_t xgene_ahci_irq_intr(int irq, void *dev_instance)
++/**
++ * xgene_ahci_handle_broken_edge_irq - Handle the broken irq.
++ * @ata_host: Host that recieved the irq
++ * @irq_masked: HOST_IRQ_STAT value
++ *
++ * For hardware with broken edge trigger latch
++ * the HOST_IRQ_STAT register misses the edge interrupt
++ * when clearing of HOST_IRQ_STAT register and hardware
++ * reporting the PORT_IRQ_STAT register at the
++ * same clock cycle.
++ * As such, the algorithm below outlines the workaround.
++ *
++ * 1. Read HOST_IRQ_STAT register and save the state.
++ * 2. Clear the HOST_IRQ_STAT register.
++ * 3. Read back the HOST_IRQ_STAT register.
++ * 4. If HOST_IRQ_STAT register equals to zero, then
++ *    traverse the rest of port's PORT_IRQ_STAT register
++ *    to check if an interrupt is triggered at that point else
++ *    go to step 6.
++ * 5. If PORT_IRQ_STAT register of rest ports is not equal to zero
++ *    then update the state of HOST_IRQ_STAT saved in step 1.
++ * 6. Handle port interrupts.
++ * 7. Exit
++ */
++static int xgene_ahci_handle_broken_edge_irq(struct ata_host *host,
++					     u32 irq_masked)
 +{
-+	struct ata_host *host = dev_instance;
-+	struct ahci_host_priv *hpriv;
-+	unsigned int rc = 0;
-+	void __iomem *mmio;
-+	u32 irq_stat, irq_masked;
++	struct ahci_host_priv *hpriv = host->private_data;
++	void __iomem *port_mmio;
++	int i;
 +
-+	VPRINTK("ENTER\n");
++	if (!readl(hpriv->mmio + HOST_IRQ_STAT)) {
++		for (i = 0; i < host->n_ports; i++) {
++			if (irq_masked & (1 << i))
++				continue;
 +
-+	hpriv = host->private_data;
-+	mmio = hpriv->mmio;
++			port_mmio = ahci_port_base(host->ports[i]);
++			if (readl(port_mmio + PORT_IRQ_STAT))
++				irq_masked |= (1 << i);
++		}
++	}
 +
-+	/* sigh.  0xffffffff is a valid return from h/w */
-+	irq_stat = readl(mmio + HOST_IRQ_STAT);
-+	if (!irq_stat)
-+		return IRQ_NONE;
-+
-+	irq_masked = irq_stat & hpriv->port_map;
-+
-+	spin_lock(&host->lock);
-+
-+	/*
-+	 * HOST_IRQ_STAT behaves as edge triggered latch meaning that
-+	 * it should be cleared before all the port events are cleared.
-+	 */
-+	writel(irq_stat, mmio + HOST_IRQ_STAT);
-+
-+	rc = ahci_handle_port_intr(host, irq_masked);
-+
-+	spin_unlock(&host->lock);
-+
-+	VPRINTK("EXIT\n");
-+
-+	return IRQ_RETVAL(rc);
++	return ahci_handle_port_intr(host, irq_masked);
 +}
 +
- static struct ata_port_operations xgene_ahci_v1_ops = {
- 	.inherits = &ahci_ops,
- 	.host_stop = xgene_ahci_host_stop,
-@@ -779,7 +816,8 @@ skip_clk_phy:
- 		hpriv->flags = AHCI_HFLAG_NO_NCQ;
- 		break;
- 	case XGENE_AHCI_V2:
--		hpriv->flags |= AHCI_HFLAG_YES_FBS | AHCI_HFLAG_EDGE_IRQ;
-+		hpriv->flags |= AHCI_HFLAG_YES_FBS;
-+		hpriv->ahci_irq_handler = xgene_ahci_irq_intr;
- 		break;
- 	default:
- 		break;
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index d45a7a5..c64f0db 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -113,8 +113,6 @@ static ssize_t ahci_store_em_buffer(struct device *dev,
- 				    const char *buf, size_t size);
- static ssize_t ahci_show_em_supported(struct device *dev,
- 				      struct device_attribute *attr, char *buf);
--static irqreturn_t ahci_single_edge_irq_intr(int irq, void *dev_instance);
--
- static irqreturn_t ahci_single_level_irq_intr(int irq, void *dev_instance);
-
- static DEVICE_ATTR(ahci_host_caps, S_IRUGO, ahci_show_host_caps, NULL);
-@@ -517,9 +515,7 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
- 		hpriv->start_engine = ahci_start_engine;
-
- 	if (!hpriv->ahci_irq_handler)
--		hpriv->ahci_irq_handler = (hpriv->flags & AHCI_HFLAG_EDGE_IRQ) ?
--					   ahci_single_edge_irq_intr :
--					   ahci_single_level_irq_intr;
-+		hpriv->ahci_irq_handler = ahci_single_level_irq_intr;
- }
- EXPORT_SYMBOL_GPL(ahci_save_initial_config);
-
-@@ -1852,43 +1848,6 @@ u32 ahci_handle_port_intr(struct ata_host *host, u32 irq_masked)
- }
- EXPORT_SYMBOL_GPL(ahci_handle_port_intr);
-
--static irqreturn_t ahci_single_edge_irq_intr(int irq, void *dev_instance)
--{
--	struct ata_host *host = dev_instance;
--	struct ahci_host_priv *hpriv;
--	unsigned int rc = 0;
--	void __iomem *mmio;
--	u32 irq_stat, irq_masked;
--
--	VPRINTK("ENTER\n");
--
--	hpriv = host->private_data;
--	mmio = hpriv->mmio;
--
--	/* sigh.  0xffffffff is a valid return from h/w */
--	irq_stat = readl(mmio + HOST_IRQ_STAT);
--	if (!irq_stat)
--		return IRQ_NONE;
--
--	irq_masked = irq_stat & hpriv->port_map;
--
--	spin_lock(&host->lock);
--
--	/*
--	 * HOST_IRQ_STAT behaves as edge triggered latch meaning that
--	 * it should be cleared before all the port events are cleared.
--	 */
--	writel(irq_stat, mmio + HOST_IRQ_STAT);
--
--	rc = ahci_handle_port_intr(host, irq_masked);
--
--	spin_unlock(&host->lock);
--
--	VPRINTK("EXIT\n");
--
--	return IRQ_RETVAL(rc);
--}
--
- static irqreturn_t ahci_single_level_irq_intr(int irq, void *dev_instance)
+ static irqreturn_t xgene_ahci_irq_intr(int irq, void *dev_instance)
  {
  	struct ata_host *host = dev_instance;
+@@ -576,7 +621,7 @@ static irqreturn_t xgene_ahci_irq_intr(int irq, void *dev_instance)
+ 	 */
+ 	writel(irq_stat, mmio + HOST_IRQ_STAT);
+
+-	rc = ahci_handle_port_intr(host, irq_masked);
++	rc = xgene_ahci_handle_broken_edge_irq(host, irq_masked);
+
+ 	spin_unlock(&host->lock);
+
 --
 1.7.1
 
