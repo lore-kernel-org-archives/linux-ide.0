@@ -1,51 +1,31 @@
-From: suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
-Subject: [PATCH v4 0/3] ata: Fixes related to edge trigger latch for the ahci_xgene_driver.
-Date: Sat,  6 Feb 2016 11:25:21 +0530
-Message-ID: <1454738124-9351-1-git-send-email-stripathi@apm.com>
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org
-Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, mlangsdo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, jcm-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, patches-qTEPVZfXA3Y@public.gmane.org, Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH v2 03/12] serial: mvebu-uart: initial support for
+ Armada-3700 serial port
+Date: Sat, 6 Feb 2016 23:17:47 -0800
+Message-ID: <20160207071747.GA14010@kroah.com>
+References: <1454524889-9207-1-git-send-email-gregory.clement@free-electrons.com>
+ <1454524889-9207-4-git-send-email-gregory.clement@free-electrons.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:59510 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751499AbcBGHRs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Feb 2016 02:17:48 -0500
+Content-Disposition: inline
+In-Reply-To: <1454524889-9207-4-git-send-email-gregory.clement@free-electrons.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Gregory CLEMENT <gregory.clement@free-electrons.com>
+Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, arm@kernel.org, Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, Jonathan Corbet <corbet@lwn.net>, Jiri Slaby <jslaby@suse.com>, linux-serial@vger.kernel.org, Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, linux-arm-kernel@lists.infradead.org, Lior Amsalem <alior@marvell.com>, Nadav Haklai <nadavh@marvell.com>, Omri Itach <omrii@marvell.com>, Wilson Ding <dingwei@marvell.com>
 
-From: Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
+On Wed, Feb 03, 2016 at 07:41:20PM +0100, Gregory CLEMENT wrote:
+> +static struct console mvebu_uart_console = {
+> +	.name	= "ttyS",
 
-This patch set implements a workaround for an errate in the APM
-X-Gene SATA host controller with edge interrupt. The HOST_IRQ_STAT
-misses the edge interrupt from the PORT_IRQ_STAT when clearing the
-HOST_IRQ_STAT and reporting the PORT_IRQ_STAT happens in same clock
-cycle. It also implements the capability to override generic interrupt
-handler.
+You aren't ttyS, that's a reserved name for a different chip, please use
+a new name and major/minor numbers.
 
-v1 change:
-* Implement the capability for LDD to override interrupt handler.
+thanks,
 
-* ahci_xgene driver implements the edge trigger interrupt handler.
-
-v2 change:
-* Remove the AHCI_HFLAG_EDGE_IRQ frim libahci.
-
-v3 change:
-* Reorder the patch sequence.
-
-v4 change:
-* Incorporate Tejun's changes.
-
-Signed-off-by: Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
-
-Suman Tripathi (3):
-  libahci: Implement the capability to override the generic ahci
-    interrupt     handler.
-  ata: Remove the AHCI_HFLAG_EDGE_IRQ support from libahci.
-  ahci_xgene: Implement the workaround to fix the missing of the edge
-      interrupt for the HOST_IRQ_STAT.
-
- drivers/ata/ahci.h       |    5 ++-
- drivers/ata/ahci_xgene.c |   85 +++++++++++++++++++++++++++++++++++++++++++++-
- drivers/ata/libahci.c    |   62 +++++++++------------------------
- 3 files changed, 104 insertions(+), 48 deletions(-)
-
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+greg k-h
