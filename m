@@ -1,42 +1,169 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] ide: icside: remove incorrect initconst annotation
-Date: Mon,  8 Feb 2016 15:31:45 +0100
-Message-ID: <1454941909-2778808-1-git-send-email-arnd@arndb.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "David S. Miller" <davem@davemloft.net>
-Cc: linux-arm-kernel@lists.infradead.org, Arnd Bergmann <arnd@arndb.de>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Gregory CLEMENT <gregory.clement@free-electrons.com>
+Subject: [PATCH v3 00/12] Add support for the Armada 3700 SoC an mvebu ARM64 based
+Date: Mon,  8 Feb 2016 18:14:08 +0100
+Message-ID: <1454951660-13289-1-git-send-email-gregory.clement@free-electrons.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from down.free-electrons.com ([37.187.137.238]:43985 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754560AbcBHROe (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 8 Feb 2016 12:14:34 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Gregory CLEMENT <gregory.clement@free-electrons.com>, arm@kernel.org, Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, Jonathan Corbet <corbet@lwn.net>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, linux-serial@vger.kernel.org, Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, linux-arm-kernel@lists.infradead.org, Lior Amsalem <alior@marvell.com>, Nadav Haklai <nadavh@marvell.com>, Omri Itach <omrii@marvell.com>
 
-The icside_probe function can be called for hotplugged devices, so
-its reference to the __initconst icside_v6_port_info variable
-may be invalid, as Kbuild points out:
+This series introduce the support of the Armada 3700 family: it is the
+first ARM64 SoC of the mvebu family submitted to the mainline!
 
-WARNING: drivers/ide/icside.o(.text+0x338): Section mismatch in reference from the function icside_probe()
- to the (unknown reference) .init.rodata:(unknown)
+Currently there are two members of the Armada 3700 family, the only
+difference is the number of core: the Armada 3710 comes with one
+Cortex-A53 whereas the Armada 3720 comes with 2 Cortex-A53. In this
+series we enabled only the minimum to boot, pinctrl and clock tree
+will come soon.
 
-Interestingly, this problem only shows up with clang but not
-with gcc, which optimizes out the __initconst variable.
+The changes in this third version are very small (see the changelog).
 
-This removes the incorrect annotation.
+The first two patches patches are here to be able to use the the
+ARCH_MVEBU for the Armada 3700 SoCs. The first ones is only here to
+have standalone series but it comes from Thomas Petazzoni's series:
+http://thread.gmane.org/gmane.linux.ports.arm.kernel/472625
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/ide/icside.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+The third patch introduces a new serial driver for the uart used on
+this SoC. The driver remains simple even if the hardware is capable of
+doing more.
 
-diff --git a/drivers/ide/icside.c b/drivers/ide/icside.c
-index 9f0a48e39b8a..80e933b296f6 100644
---- a/drivers/ide/icside.c
-+++ b/drivers/ide/icside.c
-@@ -451,7 +451,7 @@ err_free:
- 	return ret;
- }
- 
--static const struct ide_port_info icside_v6_port_info __initconst = {
-+static const struct ide_port_info icside_v6_port_info = {
- 	.init_dma		= icside_dma_off_init,
- 	.port_ops		= &icside_v6_no_dma_port_ops,
- 	.host_flags		= IDE_HFLAG_SERIALIZE | IDE_HFLAG_MMIO,
+The forth one adapts the ahci driver to support the Armada 3700 SoC.
+The forth patch updates the binding documentation with the new
+compatible string.
+
+The fifth patch adds a new entry Kconfig entry for this SoC family.
+
+I took the opportunity of this series to tidy up the Marvell related
+files in the binding documentation with the seventh patch.
+
+The eighth patch introduces the compatible string for the SoCs of the
+Armada 3700 family.
+
+The ninth patch could be considered as the bulk of this series: it
+adds the device tree files for the Armada 3700 SoCs and for the
+reference board.
+
+With the introduction of this new family the MAINTAINERS file, the
+Marvell README and the ARM64 defconfig files have to be updated: it is
+the purpose of the last 3 patches.
+
+The patches 3 and 4 could be taken directly by the maintainer of their
+respective subsystem as there is no dependency at all with the rest of
+the series. I think that the rest of the series should go through the
+arm-soc maintainer but in doubt I also added the ARM64 maintainer as
+suggested by get_maintainer.pl.
+
+Thanks,
+
+Gregory
+
+Changelog:
+v1 -> v2
+- Added Rob acked-by on patches 3, 6 and 7
+- Used armada3700_uart instead of mvebu_uart for the uart driver:
+  suggested by Mark
+- In mvebu-uart, do not use anymore TTY_MAJOR, or ttyS, but dynamic
+  major and ttyMV: pointed by Alan
+- Use tty_termios_copy_hw in mvebu_uart_set_termios: suggested by Alan
+- Use ARCH_MVEBU instead of creating ARCH_ARMADA_3700: suggested by
+  Jisheng
+- Added a new irqchip pacthes to fix build on ARM64 when ARCH_MVEBU is
+  selected
+- Removed marvell,armada3700 from the device tree binding and directly
+  used marvell,armada3710 for common feature: pointed by Rob
+- Fix memory node with coorect size in armada-3720-db.dts: suggested
+  by Mark
+
+v2 -> v3
+- Renamed the remaining ttyS into ttyMV: reported by Greg KH
+- Fixed the order of the compatible in the example of the binding
+  documentation: pointed by Rob
+- Fix a typo in Kconfig entry: pointed by Thomas Petazzoni
+
+Gregory CLEMENT (9):
+  irqchip: armada-370-xp: do not enable it by default when ARCH_MVEBU is
+    selected
+  arm64: add mvebu architecture entry
+  Documentation: dt-bindings: Add a new compatible for the Armada 3700
+  Documentation: dt: Tidy up the Marvell related files
+  devicetree: bindings: add DT binding for the Marvell Armada 3700 SoC
+    family
+  arm64: dts: add the Marvell Armada 3700 family and a development board
+  MAINTAINERS: Extend dts entry for ARM64 mvebu files
+  Documentation: arm: update supported Marvell EBU processors
+  arm64: defconfig: enable Armada 3700 related config
+
+Lior Amsalem (1):
+  ata: ahci_mvebu: add support for Armada 3700 variant
+
+Thomas Petazzoni (1):
+  irqchip: armada-370-xp: add Kconfig option for the driver
+
+Wilson Ding (1):
+  serial: mvebu-uart: initial support for Armada-3700 serial port
+
+ Documentation/arm/Marvell/README                   |  13 +
+ .../arm/{ => marvell}/armada-370-xp-pmsu.txt       |   0
+ .../bindings/arm/{ => marvell}/armada-370-xp.txt   |   0
+ .../bindings/arm/{ => marvell}/armada-375.txt      |   0
+ .../bindings/arm/marvell/armada-37xx.txt           |  16 +
+ .../{ => marvell}/armada-380-mpcore-soc-ctrl.txt   |   0
+ .../bindings/arm/{ => marvell}/armada-38x.txt      |   0
+ .../bindings/arm/{ => marvell}/armada-39x.txt      |   0
+ .../arm/{ => marvell}/armada-cpu-reset.txt         |   0
+ .../arm/{ => marvell}/coherency-fabric.txt         |   0
+ .../bindings/arm/{ => marvell}/kirkwood.txt        |   0
+ .../bindings/arm/{ => marvell}/marvell,berlin.txt  |   0
+ .../bindings/arm/{ => marvell}/marvell,dove.txt    |   0
+ .../arm/{ => marvell}/marvell,kirkwood.txt         |   0
+ .../arm/{ => marvell}/mvebu-cpu-config.txt         |   0
+ .../arm/{ => marvell}/mvebu-system-controller.txt  |   0
+ .../devicetree/bindings/ata/ahci-platform.txt      |   1 +
+ .../devicetree/bindings/tty/serial/mvebu-uart.txt  |  13 +
+ Documentation/kernel-parameters.txt                |   6 +
+ MAINTAINERS                                        |   1 +
+ arch/arm64/Kconfig.platforms                       |   6 +
+ arch/arm64/boot/dts/marvell/Makefile               |   4 +
+ arch/arm64/boot/dts/marvell/armada-371x.dtsi       |  53 ++
+ arch/arm64/boot/dts/marvell/armada-3720-db.dts     |  86 +++
+ arch/arm64/boot/dts/marvell/armada-372x.dtsi       |  63 ++
+ arch/arm64/boot/dts/marvell/armada-37xx.dtsi       | 131 +++++
+ arch/arm64/configs/defconfig                       |   5 +
+ drivers/ata/ahci_mvebu.c                           |  14 +-
+ drivers/irqchip/Kconfig                            |   4 +
+ drivers/irqchip/Makefile                           |   2 +-
+ drivers/tty/serial/Kconfig                         |  22 +
+ drivers/tty/serial/Makefile                        |   1 +
+ drivers/tty/serial/mvebu-uart.c                    | 650 +++++++++++++++++++++
+ include/uapi/linux/serial_core.h                   |   3 +
+ 34 files changed, 1088 insertions(+), 6 deletions(-)
+ rename Documentation/devicetree/bindings/arm/{ => marvell}/armada-370-xp-pmsu.txt (100%)
+ rename Documentation/devicetree/bindings/arm/{ => marvell}/armada-370-xp.txt (100%)
+ rename Documentation/devicetree/bindings/arm/{ => marvell}/armada-375.txt (100%)
+ create mode 100644 Documentation/devicetree/bindings/arm/marvell/armada-37xx.txt
+ rename Documentation/devicetree/bindings/arm/{ => marvell}/armada-380-mpcore-soc-ctrl.txt (100%)
+ rename Documentation/devicetree/bindings/arm/{ => marvell}/armada-38x.txt (100%)
+ rename Documentation/devicetree/bindings/arm/{ => marvell}/armada-39x.txt (100%)
+ rename Documentation/devicetree/bindings/arm/{ => marvell}/armada-cpu-reset.txt (100%)
+ rename Documentation/devicetree/bindings/arm/{ => marvell}/coherency-fabric.txt (100%)
+ rename Documentation/devicetree/bindings/arm/{ => marvell}/kirkwood.txt (100%)
+ rename Documentation/devicetree/bindings/arm/{ => marvell}/marvell,berlin.txt (100%)
+ rename Documentation/devicetree/bindings/arm/{ => marvell}/marvell,dove.txt (100%)
+ rename Documentation/devicetree/bindings/arm/{ => marvell}/marvell,kirkwood.txt (100%)
+ rename Documentation/devicetree/bindings/arm/{ => marvell}/mvebu-cpu-config.txt (100%)
+ rename Documentation/devicetree/bindings/arm/{ => marvell}/mvebu-system-controller.txt (100%)
+ create mode 100644 Documentation/devicetree/bindings/tty/serial/mvebu-uart.txt
+ create mode 100644 arch/arm64/boot/dts/marvell/armada-371x.dtsi
+ create mode 100644 arch/arm64/boot/dts/marvell/armada-3720-db.dts
+ create mode 100644 arch/arm64/boot/dts/marvell/armada-372x.dtsi
+ create mode 100644 arch/arm64/boot/dts/marvell/armada-37xx.dtsi
+ create mode 100644 drivers/tty/serial/mvebu-uart.c
+
 -- 
-2.7.0
+2.5.0
+
