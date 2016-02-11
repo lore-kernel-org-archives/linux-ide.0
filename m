@@ -1,22 +1,101 @@
-From: "Ms. Golan" <g_garcia@muniplibre.gob.pe>
-Subject: Very Urgent!!!!
-Date: Sun, 07 Feb 2016 15:24:13 +0530
-Message-ID: <20160207095455.0809C1A87527__47942.9212901325$1455196204$gmane$org@mail.muniplibre.gob.pe>
-Reply-To: goe009@qq.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.muniplibre.gob.pe ([201.131.221.122]:54816 "EHLO
-	[201.131.221.122]" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752970AbcBKNJq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Feb 2016 08:09:46 -0500
-Content-Description: Mail message body
-Sender: linux-ide-owner@vger.kernel.org
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] libata: fix HDIO_GET_32BIT ioctl
+Date: Thu, 11 Feb 2016 14:16:27 +0100
+Message-ID: <1455196595-3466120-1-git-send-email-arnd@arndb.de>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-arm-kernel@lists.infradead.org, Arnd Bergmann <arnd@arndb.de>, Soohoon Lee <Soohoon.Lee@f5.com>, stable@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Recipient <g_garcia@muniplibre.gob.pe>
 
-  I am Ms.Golan I am getting in touch with you regarding an extremely important and urgent matter.If you would oblige me the opportunity,shall provide you with details upon your response
+As reported by Soohoon Lee, the HDIO_GET_32BIT ioctl does not
+work correctly in compat mode with libata.
 
-Faithfully,
-Ms. Golan
+I have investigated the issue further and found multiple problems
+that all appeared with the same commit that originally introduced
+HDIO_GET_32BIT handling in libata back in linux-2.6.8 and presumably
+also linux-2.4, as the code uses "copy_to_user(arg, &val, 1)" to copy
+a 'long' variable containing either 0 or 1 to user space.
+
+The problems with this are:
+
+* On big-endian machines, this will always write a zero because it
+  stores the wrong byte into user space.
+
+* In compat mode, the upper three bytes of the variable are updated
+  by the compat_hdio_ioctl() function, but they now contain
+  uninitialized stack data.
+
+* The hdparm tool calling this ioctl uses a 'static long' variable
+  to store the result. This means at least the upper bytes are
+  initialized to zero, but calling another ioctl like HDIO_GET_MULTCOUNT
+  would fill them with data that remains stale when the low byte
+  is overwritten. Fortunately libata doesn't implement any of the
+  affected ioctl commands, so this would only happen when we query
+  both an IDE and an ATA device in the same command such as
+  "hdparm -N -c /dev/hda /dev/sda"
+
+* The libata code for unknown reasons started using ATA_IOC_GET_IO32
+  and ATA_IOC_SET_IO32 as aliases for HDIO_GET_32BIT and HDIO_SET_32BIT,
+  while the ioctl commands that were added later use the normal
+  HDIO_* names. This is harmless but rather confusing.
+
+This addresses all four issues by changing the code to use put_user()
+on an 'unsigned long' variable in HDIO_GET_32BIT, like the IDE subsystem
+does, and by clarifying the names of the ioctl commands.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Reported-by: Soohoon Lee <Soohoon.Lee@f5.com>
+Tested-by: Soohoon Lee <Soohoon.Lee@f5.com>
+Cc: stable@vger.kernel.org
+---
+ drivers/ata/libata-scsi.c | 11 +++++------
+ include/linux/ata.h       |  4 ++--
+ 2 files changed, 7 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 7e959f90c020..e417e1a1d02c 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -675,19 +675,18 @@ static int ata_ioc32(struct ata_port *ap)
+ int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *scsidev,
+ 		     int cmd, void __user *arg)
+ {
+-	int val = -EINVAL, rc = -EINVAL;
++	unsigned long val;
++	int rc = -EINVAL;
+ 	unsigned long flags;
+ 
+ 	switch (cmd) {
+-	case ATA_IOC_GET_IO32:
++	case HDIO_GET_32BIT:
+ 		spin_lock_irqsave(ap->lock, flags);
+ 		val = ata_ioc32(ap);
+ 		spin_unlock_irqrestore(ap->lock, flags);
+-		if (copy_to_user(arg, &val, 1))
+-			return -EFAULT;
+-		return 0;
++		return put_user(val, (unsigned long __user *)arg);
+ 
+-	case ATA_IOC_SET_IO32:
++	case HDIO_SET_32BIT:
+ 		val = (unsigned long) arg;
+ 		rc = 0;
+ 		spin_lock_irqsave(ap->lock, flags);
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index d2992bfa1706..c1a2f345cbe6 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -487,8 +487,8 @@ enum ata_tf_protocols {
+ };
+ 
+ enum ata_ioctls {
+-	ATA_IOC_GET_IO32	= 0x309,
+-	ATA_IOC_SET_IO32	= 0x324,
++	ATA_IOC_GET_IO32	= 0x309, /* HDIO_GET_32BIT */
++	ATA_IOC_SET_IO32	= 0x324, /* HDIO_SET_32BIT */
+ };
+ 
+ /* core structures */
+-- 
+2.7.0
