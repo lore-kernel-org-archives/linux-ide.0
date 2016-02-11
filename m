@@ -1,31 +1,38 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata: fix HDIO_GET_32BIT ioctl
-Date: Thu, 11 Feb 2016 10:10:30 -0500
-Message-ID: <20160211151030.GW3741@mtj.duckdns.org>
-References: <1455196595-3466120-1-git-send-email-arnd@arndb.de>
+Subject: Re: [Patch v9] SATA: OCTEON: support SATA on OCTEON platform
+Date: Thu, 11 Feb 2016 10:15:51 -0500
+Message-ID: <20160211151551.GX3741@mtj.duckdns.org>
+References: <1455198788-24754-1-git-send-email-Zubair.Kakakhel@imgtec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-yw0-f179.google.com ([209.85.161.179]:35606 "EHLO
+	mail-yw0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750799AbcBKPPw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Feb 2016 10:15:52 -0500
 Content-Disposition: inline
-In-Reply-To: <1455196595-3466120-1-git-send-email-arnd@arndb.de>
-Sender: stable-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-kernel@lists.infradead.org, Soohoon Lee <Soohoon.Lee@f5.com>, stable@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <1455198788-24754-1-git-send-email-Zubair.Kakakhel@imgtec.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Zubair Lutfullah Kakakhel <Zubair.Kakakhel@imgtec.com>
+Cc: hdegoede@redhat.com, david.daney@cavium.com, aleksey.makarov@caviumnetworks.com, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-mips@linux-mips.org, ralf@linux-mips.org
 
-On Thu, Feb 11, 2016 at 02:16:27PM +0100, Arnd Bergmann wrote:
-> As reported by Soohoon Lee, the HDIO_GET_32BIT ioctl does not
-> work correctly in compat mode with libata.
+On Thu, Feb 11, 2016 at 01:53:08PM +0000, Zubair Lutfullah Kakakhel wrote:
+> From: Aleksey Makarov <aleksey.makarov@caviumnetworks.com>
 > 
-> I have investigated the issue further and found multiple problems
-> that all appeared with the same commit that originally introduced
-> HDIO_GET_32BIT handling in libata back in linux-2.6.8 and presumably
-> also linux-2.4, as the code uses "copy_to_user(arg, &val, 1)" to copy
-> a 'long' variable containing either 0 or 1 to user space.
+> The OCTEON SATA controller is currently found on cn71XX devices.
+> 
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Acked-by: Hans de Goede <hdegoede@redhat.com>
+> Acked-by: Rob Herring <robh@kernel.org>
+> Signed-off-by: David Daney <david.daney@cavium.com>
+> Signed-off-by: Vinita Gupta <vgupta@caviumnetworks.com>
+> Signed-off-by: Aleksey Makarov <aleksey.makarov@auriga.com>
+> Signed-off-by: Zubair Lutfullah Kakakhel <Zubair.Kakakhel@imgtec.com>
 
-Applied to libata/for-4.5-fixes.
+Applied to libata/for-4.6.
 
-Thanks a lot!
+Thanks.
 
 -- 
 tejun
