@@ -1,94 +1,40 @@
-From: Robert Richter <rric@kernel.org>
-Subject: Re: [PATCH V2] AHCI: Workaround for ThunderX Errata#22536
-Date: Tue, 16 Feb 2016 22:14:10 +0100
-Message-ID: <20160216211410.GI25086@rric.localdomain>
-References: <1455319230-30201-1-git-send-email-tchalamarla@caviumnetworks.com>
- <20160214170152.GC3965@htj.duckdns.org>
- <56C147B2.9010303@caviumnetworks.com>
- <20160215183041.GH3965@htj.duckdns.org>
- <20160216144250.GD31343@rric.localdomain>
- <56C37524.5090000@caviumnetworks.com>
- <56C37AD3.4030407@caviumnetworks.com>
- <56C37D94.8080403@caviumnetworks.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v4 03/12] serial: mvebu-uart: initial support for Armada-3700 serial port
+Date: Tue, 16 Feb 2016 22:20:51 +0100
+Message-ID: <3647094.zzYms58VAY@wuerfel>
+References: <1455646502-23834-1-git-send-email-gregory.clement@free-electrons.com> <1455646502-23834-4-git-send-email-gregory.clement@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:34855 "EHLO
-	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752179AbcBPVOO (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Feb 2016 16:14:14 -0500
-Content-Disposition: inline
-In-Reply-To: <56C37D94.8080403@caviumnetworks.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1455646502-23834-4-git-send-email-gregory.clement@free-electrons.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Gregory CLEMENT <gregory.clement@free-electrons.com>
+Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, arm@kernel.org, Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, Jonathan Corbet <corbet@lwn.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, linux-serial@vger.kernel.org, Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, linux-arm-kernel@lists.infradead.org, Lior Amsalem <alior@marvell.com>, Nadav Haklai <nadavh@marvell.com>, Omri Itach <omrii@marvell.com>, Wilson Ding <dingwei@marvell.com>
 List-Id: linux-ide@vger.kernel.org
-To: Tirumalesh Chalamarla <tchalamarla@caviumnetworks.com>
-Cc: David Daney <ddaney@caviumnetworks.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, stripathi@apm.com, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 
-On 16.02.16 11:50:44, Tirumalesh Chalamarla wrote:
+On Tuesday 16 February 2016 19:14:53 Gregory CLEMENT wrote:
 > 
-> 
-> On 02/16/2016 11:38 AM, David Daney wrote:
-> >On 02/16/2016 11:14 AM, Tirumalesh Chalamarla wrote:
-> >>
-> >>
-> >>On 02/16/2016 06:42 AM, Robert Richter wrote:
-> >>>On 15.02.16 13:30:41, Tejun Heo wrote:
-> >>>>On Sun, Feb 14, 2016 at 07:36:18PM -0800, Tirumalesh Chalamarla wrote:
-> >>>>>There is no need for special Driver, AHCI is sufficient for
-> >>>>>ThunderX, the
-> >>>>>file only contains this interrupt handler,
-> >>>>>is it preferable if this interrupt handler in libahci.c with others,
-> >>>>>instead
-> >>>>>of separate file?
-> >>>>
-> >>>>Yeap, just fold it in ahci.c with surrounding #ifdef guard.
-> >>>
-> >>>Yes, please use #ifdef CONFIG_CAVIUM_ERRATUM_22536 ... and add a
-> >>>kconfig entry for this to arch/arm64/Kconfig.
-> >>>
-> >>Are you sure, this is not a workaround that is based on alternative
-> >>framework rather on pci device and vendor
-> >>
-> >>do you think CONFIG_ARCH_THUNDER a good alternative?
-> >
-> >No.  CONFIG_ARCH_THUNDER should be removed all together.
-> >
-> >Grouping a bunch of unrelated features under a single config variable
-> >creates a very brittle system.  What are you going to do when a new
-> >hardware revision is released?  Create CONFIG_ARCH_THUNDER2?  Which one
-> >of these two would you select if building a kernel?  It is a choice that
-> >we don't want to force users (kernel builders) to have to waste mental
-> >energy on.
-> >
-> >Instead, let's try to make things work out of the box without having to
-> >set a bunch of random config variables.
-> >
-> >If a generic arm64 kernel won't get too bloated, I would suggest just
-> >enabling the compilation of the code unconditionally (at least for
-> >arm64).  The use of the code would still be gated by the PCI version
-> >probe that is part of the patch.
-> >
-> 
-> exactly, that is my initial choice with v1, and only depends on vendor and
-> device id.
-> 
-> but it seems a config is needed. how about ARCH_ARM64 then?
+> +config SERIAL_MVEBU_UART
+> +       bool "Marvell EBU serial port support"
+> +       select SERIAL_CORE
 
-CONFIG_CAVIUM_ERRATUM_22536 is exactly that you need. It is not only
-used for core interrupts, e.g. also for gicv3 devices (and now also
-for ahci). Non-core errata (e.g. CONFIG_CAVIUM_ERRATUM_23144) are not
-enabled in the arm64 cpu errata framework (not handled in
-arch/arm64/kernel/cpu_errata.c).
+It would be nice to make this a tristate option with
 
-Thus,
+	depends on ARCH_MVEBU || COMPILE_TEST
 
-#ifdef CONFIG_CAVIUM_ERRATUM_22536
-	if (pdev->vendor == 0x177d && pdev->device == 0xa01c)
-		ahci_thunderx_init(&pdev->dev, hpriv);
-#endif
+so we can build it in an allmodconfig kernel as a standalone module
+like the other drivers.
 
-is the correct enablement of the workaround by device id.
+> +
+> +config SERIAL_MVEBU_CONSOLE
+> +       bool "Console on Marvell EBU serial port"
+> +       depends on SERIAL_MVEBU_UART
 
-And, CAVIUM_ERRATUM_* is very easy to handle, enable and document.
+then this one must become
 
--Robert
+	depends on SERIAL_MVEBU_UART
+
+so it does not get enabled if the driver is not builtin.
+
+	Arnd
