@@ -1,78 +1,101 @@
-From: Tirumalesh Chalamarla <tchalamarla@caviumnetworks.com>
-Subject: Re: [PATCH V2] AHCI: Workaround for ThunderX Errata#22536
-Date: Tue, 16 Feb 2016 11:50:44 -0800
-Message-ID: <56C37D94.8080403@caviumnetworks.com>
-References: <1455319230-30201-1-git-send-email-tchalamarla@caviumnetworks.com>
- <20160214170152.GC3965@htj.duckdns.org> <56C147B2.9010303@caviumnetworks.com>
- <20160215183041.GH3965@htj.duckdns.org>
- <20160216144250.GD31343@rric.localdomain>
- <56C37524.5090000@caviumnetworks.com> <56C37AD3.4030407@caviumnetworks.com>
+From: <tchalamarla@caviumnetworks.com>
+Subject: [PATCH V3] AHCI: Workaround for ThunderX Errata#22536
+Date: Tue, 16 Feb 2016 12:08:49 -0800
+Message-ID: <1455653329-4934-1-git-send-email-tchalamarla@caviumnetworks.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bl2on0074.outbound.protection.outlook.com ([65.55.169.74]:42104
-	"EHLO na01-bl2-obe.outbound.protection.outlook.com"
+Received: from mail-bn1bon0084.outbound.protection.outlook.com ([157.56.111.84]:36001
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751872AbcBPTux (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 16 Feb 2016 14:50:53 -0500
-In-Reply-To: <56C37AD3.4030407@caviumnetworks.com>
+	id S1753355AbcBPUJB (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 Feb 2016 15:09:01 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Daney <ddaney@caviumnetworks.com>
-Cc: Robert Richter <rric@kernel.org>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, stripathi@apm.com, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+To: tj@kernel.org
+Cc: stripathi@apm.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, tchalamarla@caviumnetworks.com
 
+From: Tirumalesh Chalamarla <tchalamarla@caviumnetworks.com>
 
+Due to Errata in ThunderX, HOST_IRQ_STAT should be
+cleared before leaving the interrupt handler.
+The patch attempts to satisfy the need.
 
-On 02/16/2016 11:38 AM, David Daney wrote:
-> On 02/16/2016 11:14 AM, Tirumalesh Chalamarla wrote:
->>
->>
->> On 02/16/2016 06:42 AM, Robert Richter wrote:
->>> On 15.02.16 13:30:41, Tejun Heo wrote:
->>>> On Sun, Feb 14, 2016 at 07:36:18PM -0800, Tirumalesh Chalamarla wrote:
->>>>> There is no need for special Driver, AHCI is sufficient for
->>>>> ThunderX, the
->>>>> file only contains this interrupt handler,
->>>>> is it preferable if this interrupt handler in libahci.c with others,
->>>>> instead
->>>>> of separate file?
->>>>
->>>> Yeap, just fold it in ahci.c with surrounding #ifdef guard.
->>>
->>> Yes, please use #ifdef CONFIG_CAVIUM_ERRATUM_22536 ... and add a
->>> kconfig entry for this to arch/arm64/Kconfig.
->>>
->> Are you sure, this is not a workaround that is based on alternative
->> framework rather on pci device and vendor
->>
->> do you think CONFIG_ARCH_THUNDER a good alternative?
->
-> No.  CONFIG_ARCH_THUNDER should be removed all together.
->
-> Grouping a bunch of unrelated features under a single config variable
-> creates a very brittle system.  What are you going to do when a new
-> hardware revision is released?  Create CONFIG_ARCH_THUNDER2?  Which one
-> of these two would you select if building a kernel?  It is a choice that
-> we don't want to force users (kernel builders) to have to waste mental
-> energy on.
->
-> Instead, let's try to make things work out of the box without having to
-> set a bunch of random config variables.
->
-> If a generic arm64 kernel won't get too bloated, I would suggest just
-> enabling the compilation of the code unconditionally (at least for
-> arm64).  The use of the code would still be gated by the PCI version
-> probe that is part of the patch.
->
+Changes from V2:
+	- removed newfile
+	- code is now under CONFIG_ARM64
 
-exactly, that is my initial choice with v1, and only depends on vendor 
-and device id.
+Changes from V1:
+	- Rebased on top of libata/for-4.6
+        - Moved ThunderX intr handler to new file
 
-but it seems a config is needed. how about ARCH_ARM64 then?
+Signed-off-by: Tirumalesh Chalamarla <tchalamarla@caviumnetworks.com>
+---
+ drivers/ata/ahci.c | 44 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 44 insertions(+)
 
-Thanks,
-Tirumalesh.
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index 546a369..c8496fc 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1325,6 +1325,44 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
+ {}
+ #endif
+ 
++#ifdef CONFIG_ARM64
++/* Due to ERRATA#22536, ThunderX need to handle
++ * HOST_IRQ_STAT differently.
++ * Work around is to make sure all pending IRQs
++ * are served before leaving handler
++ */
++static irqreturn_t ahci_thunderx_irq_handler(int irq, void *dev_instance)
++{
++	struct ata_host *host = dev_instance;
++	struct ahci_host_priv *hpriv;
++	unsigned int rc = 0;
++	void __iomem *mmio;
++	u32 irq_stat, irq_masked;
++	unsigned int handled = 1;
++
++	VPRINTK("ENTER\n");
++	hpriv = host->private_data;
++	mmio = hpriv->mmio;
++	irq_stat = readl(mmio + HOST_IRQ_STAT);
++	if (!irq_stat)
++		return IRQ_NONE;
++
++	do {
++		irq_masked = irq_stat & hpriv->port_map;
++		spin_lock(&host->lock);
++		rc = ahci_handle_port_intr(host, irq_masked);
++		if (!rc)
++			handled = 0;
++		writel(irq_stat, mmio + HOST_IRQ_STAT);
++		irq_stat = readl(mmio + HOST_IRQ_STAT);
++		spin_unlock(&host->lock);
++	} while (irq_stat);
++	VPRINTK("EXIT\n");
++
++	return IRQ_RETVAL(handled);
++}
++#endif
++
+ /*
+  * ahci_init_msix() - optionally enable per-port MSI-X otherwise defer
+  * to single msi.
+@@ -1560,6 +1598,12 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (ahci_broken_devslp(pdev))
+ 		hpriv->flags |= AHCI_HFLAG_NO_DEVSLP;
+ 
++#ifdef CONFIG_ARM64
++	/* this should be done before save config*/
++	if (pdev->vendor == 0x177d && pdev->device == 0xa01c)
++		hpriv->irq_handler = ahci_thunderx_irq_handler;
++#endif
++
+ 	/* save initial config */
+ 	ahci_pci_save_initial_config(pdev, hpriv);
+ 
+-- 
+2.1.0
 
-> David Daney
->
