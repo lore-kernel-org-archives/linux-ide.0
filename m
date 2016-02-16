@@ -1,46 +1,55 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH v4 03/12] serial: mvebu-uart: initial support for Armada-3700 serial port
-Date: Tue, 16 Feb 2016 22:35:14 +0100
-Message-ID: <2634634.yW5ZfZDXSz@wuerfel>
-References: <1455646502-23834-1-git-send-email-gregory.clement@free-electrons.com> <3647094.zzYms58VAY@wuerfel> <20160216222706.6b1d3375@free-electrons.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [RFC PATCH] sata_via: Apply WD workaround only when needed
+Date: Tue, 16 Feb 2016 16:42:53 -0500
+Message-ID: <20160216214253.GR3741@mtj.duckdns.org>
+References: <1455570107-11520-1-git-send-email-linux@rainbow-software.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.135]:55192 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755561AbcBPVgK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Feb 2016 16:36:10 -0500
-In-Reply-To: <20160216222706.6b1d3375@free-electrons.com>
+Received: from mail-yk0-f179.google.com ([209.85.160.179]:35344 "EHLO
+	mail-yk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751375AbcBPVmz (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 16 Feb 2016 16:42:55 -0500
+Content-Disposition: inline
+In-Reply-To: <1455570107-11520-1-git-send-email-linux@rainbow-software.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-arm-kernel@lists.infradead.org
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Mark Rutland <mark.rutland@arm.com>, Andrew Lunn <andrew@lunn.ch>, Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, Nadav Haklai <nadavh@marvell.com>, linux-ide@vger.kernel.org, Lior Amsalem <alior@marvell.com>, Jonathan Corbet <corbet@lwn.net>, arm@kernel.org, linux-serial@vger.kernel.org, Jiri Slaby <jslaby@suse.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, devicetree@vger.kernel.org, Jason Cooper <jason@lakedaemon.net>, Omri Itach <omrii@marvell.com>, Hans de Goede <hdegoede@redhat.com>, Gregory CLEMENT <gregory.clement@free-electrons.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Wilson Ding <dingwei@marvell.com>
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: linux-ide@vger.kernel.org, Joseph Chan <JosephChan@via.com.tw>, Kernel development list <linux-kernel@vger.kernel.org>
 
-On Tuesday 16 February 2016 22:27:06 Thomas Petazzoni wrote:
-> Arnd,
-> 
-> On Tue, 16 Feb 2016 22:20:51 +0100, Arnd Bergmann wrote:
-> 
-> > > +config SERIAL_MVEBU_CONSOLE
-> > > +       bool "Console on Marvell EBU serial port"
-> > > +       depends on SERIAL_MVEBU_UART
-> > 
-> > then this one must become
-> > 
-> >       depends on SERIAL_MVEBU_UART
-> > 
-> > so it does not get enabled if the driver is not builtin.
-> 
-> Hm, what's the different between "depends on SERIAL_MVEBU_UART" and
-> "depends on SERIAL_MVEBU_UART" ? Is it the late time that causes my
-> eyes to misunderstand what you mean, or some typo on your side ? 
-> 
+Hello, Ondrej.
 
+On Mon, Feb 15, 2016 at 10:01:47PM +0100, Ondrej Zary wrote:
+> The first hdparm is slower because of the error:
+> [   80.964060] ata5.00: exception Emask 0x12 SAct 0x0 SErr 0x1000500 action 0x6
+> [   80.964095] ata5.00: BMDMA stat 0x5
+> [   80.964108] ata5: SError: { UnrecovData Proto TrStaTrns }
+> [   80.964125] ata5.00: failed command: READ DMA EXT
+> [   80.964143] ata5.00: cmd 25/00:90:00:00:00/00:04:00:00:00/e0 tag 0 dma 598016 in
+>          res 51/84:af:df:00:00/84:03:00:00:00/e0 Emask 0x12 (ATA bus error)
+> [   80.964173] ata5.00: status: { DRDY ERR }
+> [   80.964185] ata5.00: error: { ICRC ABRT }
+> [   80.964209] ata5: hard resetting link
+> [   81.284056] ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+> [   81.300531] ata5.00: configured for UDMA/133
+> [   81.300569] ata5: Incompatible drive (WD?): enabling workaround
+> [   81.300598] ata5: EH complete
 
-typo: I meant
+Hmm... I like the workaround but wish the kernel weren't generating
+the above output.  How about doing something like the following?
 
-	depends on SERIAL_MVEBU_UART=y
+svia_error_handler()
+{
+	if (workaround hasn't been applied yet &&
+	    the conditions match for the workaround) {
+		apply the workaround;
+		mark as such;
+		print informational message;
+		set ATA_EHI_QUIET;
+	}
 
+	ata_sff_error_handler(ap);
+}
 
-	Arnd
+-- 
+tejun
