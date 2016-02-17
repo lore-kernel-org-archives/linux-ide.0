@@ -1,72 +1,76 @@
-From: David Daney <ddaney@caviumnetworks.com>
-Subject: Re: [PATCH V2] AHCI: Workaround for ThunderX Errata#22536
-Date: Wed, 17 Feb 2016 10:57:50 -0800
-Message-ID: <56C4C2AE.90009@caviumnetworks.com>
-References: <1455319230-30201-1-git-send-email-tchalamarla@caviumnetworks.com> <20160214170152.GC3965@htj.duckdns.org> <56C147B2.9010303@caviumnetworks.com> <20160215183041.GH3965@htj.duckdns.org> <20160216144250.GD31343@rric.localdomain> <56C37524.5090000@caviumnetworks.com> <56C37AD3.4030407@caviumnetworks.com> <56C37D94.8080403@caviumnetworks.com> <20160216211410.GI25086@rric.localdomain> <56C3AD1C.2000003@caviumnetworks.com> <20160217112931.GB31970@arm.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: re: libata: Implement disk shock protection support
+Date: Wed, 17 Feb 2016 22:24:35 +0300
+Message-ID: <20160217192435.GA14960@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20160217112931.GB31970@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Will Deacon <will.deacon@arm.com>
-Cc: Tirumalesh Chalamarla <tchalamarla@caviumnetworks.com>, stripathi@apm.com, David Daney <ddaney@caviumnetworks.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, Robert Richter <rric@kernel.org>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:25958 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030231AbcBQTYv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Feb 2016 14:24:51 -0500
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: eo@nebensachen.de
+Cc: linux-ide@vger.kernel.org
 
-On 02/17/2016 03:29 AM, Will Deacon wrote:
-> On Tue, Feb 16, 2016 at 03:13:32PM -0800, Tirumalesh Chalamarla wrote:
->> On 02/16/2016 01:14 PM, Robert Richter wrote:
->>> CONFIG_CAVIUM_ERRATUM_22536 is exactly that you need. It is not only
->>> used for core interrupts, e.g. also for gicv3 devices (and now also
->>> for ahci). Non-core errata (e.g. CONFIG_CAVIUM_ERRATUM_23144) are not
->>> enabled in the arm64 cpu errata framework (not handled in
->>> arch/arm64/kernel/cpu_errata.c).
->>>
->>> Thus,
->>>
->>> #ifdef CONFIG_CAVIUM_ERRATUM_22536
->>> 	if (pdev->vendor == 0x177d && pdev->device == 0xa01c)
->>> 		ahci_thunderx_init(&pdev->dev, hpriv);
->>> #endif
->>>
->>> is the correct enablement of the workaround by device id.
->>>
->>> And, CAVIUM_ERRATUM_* is very easy to handle, enable and document.
->>>
->> The code will only run for Thunder and AHCI, becuase its PCI.
->
-> Well, the guards also serve as documentation for exactly why we're having
-> to do something special here, so I'd say go ahead and add
-> CONFIG_CAVIUM_ERRATUM_22536 and update
-> Documentation/arm64/silicon-errata.txt accordingly.
->
+Hello Elias Oltmanns,
 
-If the ahci/ata maintainers insist, we can add that.
+The patch 45fabbb77bd9: "libata: Implement disk shock protection
+support" from Sep 21, 2008, leads to the following Smatch
+warning:
 
-<sarcasm>
-Should we also add some CONFIG_ variables for:
+  drivers/ata/libata-scsi.c:206 ata_scsi_park_show()
+  warn: inconsistent returns 'irqsave:flags'.
+	  Locked on:   line 206
+	  Unlocked on: line 206
 
-   ahci_mcp89_apple_enable()
-   ahci_sb600_enable_64bit()
-   ahci_p5wdh_workaround()
-   .
-   .
-   .
+drivers/ata/libata-scsi.c
+   170  static ssize_t ata_scsi_park_show(struct device *device,
+   171                                    struct device_attribute *attr, char *buf)
+   172  {
+   173          struct scsi_device *sdev = to_scsi_device(device);
+   174          struct ata_port *ap;
+   175          struct ata_link *link;
+   176          struct ata_device *dev;
+   177          unsigned long flags, now;
+   178          unsigned int uninitialized_var(msecs);
+   179          int rc = 0;
+   180  
+   181          ap = ata_shost_to_port(sdev->host);
+   182  
+   183          spin_lock_irqsave(ap->lock, flags);
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   184          dev = ata_scsi_find_dev(ap, sdev);
+   185          if (!dev) {
+   186                  rc = -ENODEV;
+   187                  goto unlock;
+   188          }
+   189          if (dev->flags & ATA_DFLAG_NO_UNLOAD) {
+   190                  rc = -EOPNOTSUPP;
+   191                  goto unlock;
+   192          }
+   193  
+   194          link = dev->link;
+   195          now = jiffies;
+   196          if (ap->pflags & ATA_PFLAG_EH_IN_PROGRESS &&
+   197              link->eh_context.unloaded_mask & (1 << dev->devno) &&
+   198              time_after(dev->unpark_deadline, now))
+   199                  msecs = jiffies_to_msecs(dev->unpark_deadline - now);
+   200          else
+   201                  msecs = 0;
+   202  
+   203  unlock:
+   204          spin_unlock_irq(ap->lock);
+                ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Surely we would wish to give people the flexibility to trim that code 
-out of the driver if they know that it is not needed.
+This should almost certainly be spin_unlock_irqrestore().
 
-And don't even get me started on drivers/pci/quirks.c ...
+   205  
+   206          return rc ? rc : snprintf(buf, 20, "%u\n", msecs);
+   207  }
 
-</sarcasm>
 
-
->
->
-> Will
->
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
->
+regards,
+dan carpenter
