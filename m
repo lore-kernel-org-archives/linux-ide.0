@@ -1,55 +1,38 @@
-From: Gregory CLEMENT <gregory.clement@free-electrons.com>
-Subject: Re: [PATCH v4 00/12] Add support for the Armada 3700 SoC an mvebu ARM64 based
-Date: Wed, 17 Feb 2016 17:03:15 +0100
-Message-ID: <87a8mzs4sc.fsf@free-electrons.com>
-References: <1455646502-23834-1-git-send-email-gregory.clement@free-electrons.com>
-	<2699923.cugyhCaCQy@wuerfel>
+From: Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [PATCH V3] AHCI: Workaround for ThunderX Errata#22536
+Date: Wed, 17 Feb 2016 17:12:04 +0100 (CET)
+Message-ID: <alpine.DEB.2.11.1602171710350.19512@nanos>
+References: <1455653329-4934-1-git-send-email-tchalamarla@caviumnetworks.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:60065 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1030189AbcBQQDS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Feb 2016 11:03:18 -0500
-In-Reply-To: <2699923.cugyhCaCQy@wuerfel> (Arnd Bergmann's message of "Tue, 16
-	Feb 2016 22:22:11 +0100")
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1455653329-4934-1-git-send-email-tchalamarla@caviumnetworks.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: tchalamarla@caviumnetworks.com
+Cc: tj@kernel.org, stripathi@apm.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, arm@kernel.org, Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, Jonathan Corbet <corbet@lwn.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, linux-serial@vger.kernel.org, Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, linux-arm-kernel@lists.infradead.org, Lior Amsalem <alior@marvell.com>, Nadav Haklai <nadavh@marvell.com>, Omri Itach <omrii@marvell.com>
 
-Hi Arnd,
-=20
- On mar., f=C3=A9vr. 16 2016, Arnd Bergmann <arnd@arndb.de> wrote:
+On Tue, 16 Feb 2016, tchalamarla@caviumnetworks.com wrote:
+> +#ifdef CONFIG_ARM64
+> +/* Due to ERRATA#22536, ThunderX need to handle
+> + * HOST_IRQ_STAT differently.
+> + * Work around is to make sure all pending IRQs
+> + * are served before leaving handler
+> + */
+> +static irqreturn_t ahci_thunderx_irq_handler(int irq, void *dev_instance)
+> +{
+> +	struct ata_host *host = dev_instance;
+> +	struct ahci_host_priv *hpriv;
+> +	unsigned int rc = 0;
+> +	void __iomem *mmio;
+> +	u32 irq_stat, irq_masked;
+> +	unsigned int handled = 1;
+> +
+> +	VPRINTK("ENTER\n");
 
-> On Tuesday 16 February 2016 19:14:50 Gregory CLEMENT wrote:
->> This series introduce the support of the Armada 3700 family: it is t=
-he
->> first ARM64 SoC of the mvebu family submitted to the mainline!
->>=20
->> Currently there are two members of the Armada 3700 family, the only
->> difference is the number of core: the Armada 3710 comes with one
->> Cortex-A53 whereas the Armada 3720 comes with 2 Cortex-A53. In this
->> series we enabled only the minimum to boot, pinctrl and clock tree
->> will come soon.
->>=20
->
-> Whole series
->
-> Acked-by: Arnd Bergmann <arnd@arndb.de>
-
-Great!
-
-I am going to do a first pull requests for the mvebu arm64. Let me know
-if I do it correctly.
+Come on. This VPRINK stuff is really pointless. Enable irq tracepoints, they
+already track the enter/exit of interrupt handlers ....
 
 Thanks,
 
-Gregory
-
---=20
-Gregory Clement, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+	tglx
