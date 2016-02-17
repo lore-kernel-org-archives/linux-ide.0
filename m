@@ -1,34 +1,55 @@
-From: Alban <albeu@free.fr>
-Subject: Re: [PATCH] pata-rb532-cf: get rid of the irq_to_gpio() call
-Date: Wed, 17 Feb 2016 13:40:30 +0100
-Message-ID: <20160217134030.29e4c6d7@tock>
-References: <1455710300-30920-1-git-send-email-juhosg@openwrt.org>
+From: Gregory CLEMENT <gregory.clement@free-electrons.com>
+Subject: Re: [PATCH v4 00/12] Add support for the Armada 3700 SoC an mvebu ARM64 based
+Date: Wed, 17 Feb 2016 17:03:15 +0100
+Message-ID: <87a8mzs4sc.fsf@free-electrons.com>
+References: <1455646502-23834-1-git-send-email-gregory.clement@free-electrons.com>
+	<2699923.cugyhCaCQy@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1455710300-30920-1-git-send-email-juhosg@openwrt.org>
-Sender: stable-owner@vger.kernel.org
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: Aban Bedel <albeu@free.fr>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>, Arnd Bergmann <arnd@arndb.de>, stable@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from down.free-electrons.com ([37.187.137.238]:60065 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1030189AbcBQQDS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 17 Feb 2016 11:03:18 -0500
+In-Reply-To: <2699923.cugyhCaCQy@wuerfel> (Arnd Bergmann's message of "Tue, 16
+	Feb 2016 22:22:11 +0100")
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, arm@kernel.org, Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, Jonathan Corbet <corbet@lwn.net>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, linux-serial@vger.kernel.org, Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, linux-arm-kernel@lists.infradead.org, Lior Amsalem <alior@marvell.com>, Nadav Haklai <nadavh@marvell.com>, Omri Itach <omrii@marvell.com>
 
-On Wed, 17 Feb 2016 12:58:20 +0100
-Gabor Juhos <juhosg@openwrt.org> wrote:
+Hi Arnd,
+=20
+ On mar., f=C3=A9vr. 16 2016, Arnd Bergmann <arnd@arndb.de> wrote:
 
-> The RB532 platform specific irq_to_gpio() implementation has been
-> removed with commit 832f5dacfa0b ("MIPS: Remove all the uses of
-> custom gpio.h"). Now the platform uses the generic stub which causes
-> the following error:
-> 
->   pata-rb532-cf pata-rb532-cf: no GPIO found for irq149
->   pata-rb532-cf: probe of pata-rb532-cf failed with error -2
-> 
-> Drop the irq_to_gpio() call and get the GPIO number from platform
-> data instead. After this change, the driver works again:
+> On Tuesday 16 February 2016 19:14:50 Gregory CLEMENT wrote:
+>> This series introduce the support of the Armada 3700 family: it is t=
+he
+>> first ARM64 SoC of the mvebu family submitted to the mainline!
+>>=20
+>> Currently there are two members of the Armada 3700 family, the only
+>> difference is the number of core: the Armada 3710 comes with one
+>> Cortex-A53 whereas the Armada 3720 comes with 2 Cortex-A53. In this
+>> series we enabled only the minimum to boot, pinctrl and clock tree
+>> will come soon.
+>>=20
+>
+> Whole series
+>
+> Acked-by: Arnd Bergmann <arnd@arndb.de>
 
-I think it would be preferable to move this driver to use the gpiod
-API. The changes needed should be about the same size and it would
-be a much more future proof fix.
+Great!
 
-Alban
+I am going to do a first pull requests for the mvebu arm64. Let me know
+if I do it correctly.
+
+Thanks,
+
+Gregory
+
+--=20
+Gregory Clement, Free Electrons
+Kernel, drivers, real-time and embedded Linux
+development, consulting, training and support.
+http://free-electrons.com
