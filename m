@@ -1,57 +1,83 @@
-From: Will Deacon <will.deacon@arm.com>
-Subject: Re: [PATCH V2] AHCI: Workaround for ThunderX Errata#22536
-Date: Wed, 17 Feb 2016 11:29:32 +0000
-Message-ID: <20160217112931.GB31970@arm.com>
-References: <1455319230-30201-1-git-send-email-tchalamarla@caviumnetworks.com>
- <20160214170152.GC3965@htj.duckdns.org>
- <56C147B2.9010303@caviumnetworks.com>
- <20160215183041.GH3965@htj.duckdns.org>
- <20160216144250.GD31343@rric.localdomain>
- <56C37524.5090000@caviumnetworks.com>
- <56C37AD3.4030407@caviumnetworks.com>
- <56C37D94.8080403@caviumnetworks.com>
- <20160216211410.GI25086@rric.localdomain>
- <56C3AD1C.2000003@caviumnetworks.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:59771 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161224AbcBQL30 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 17 Feb 2016 06:29:26 -0500
-Content-Disposition: inline
-In-Reply-To: <56C3AD1C.2000003@caviumnetworks.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Gabor Juhos <juhosg@openwrt.org>
+Subject: [PATCH] pata-rb532-cf: get rid of the irq_to_gpio() call
+Date: Wed, 17 Feb 2016 12:58:20 +0100
+Message-ID: <1455710300-30920-1-git-send-email-juhosg@openwrt.org>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, Gabor Juhos <juhosg@openwrt.org>, Alban Bedel <albeu@free.fr>, Ralf Baechle <ralf@linux-mips.org>, Arnd Bergmann <arnd@arndb.de>, stable@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tirumalesh Chalamarla <tchalamarla@caviumnetworks.com>
-Cc: Robert Richter <rric@kernel.org>, stripathi@apm.com, David Daney <ddaney@caviumnetworks.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, linux-arm-kernel@lists.infradead.org
 
-On Tue, Feb 16, 2016 at 03:13:32PM -0800, Tirumalesh Chalamarla wrote:
-> On 02/16/2016 01:14 PM, Robert Richter wrote:
-> >CONFIG_CAVIUM_ERRATUM_22536 is exactly that you need. It is not only
-> >used for core interrupts, e.g. also for gicv3 devices (and now also
-> >for ahci). Non-core errata (e.g. CONFIG_CAVIUM_ERRATUM_23144) are not
-> >enabled in the arm64 cpu errata framework (not handled in
-> >arch/arm64/kernel/cpu_errata.c).
-> >
-> >Thus,
-> >
-> >#ifdef CONFIG_CAVIUM_ERRATUM_22536
-> >	if (pdev->vendor == 0x177d && pdev->device == 0xa01c)
-> >		ahci_thunderx_init(&pdev->dev, hpriv);
-> >#endif
-> >
-> >is the correct enablement of the workaround by device id.
-> >
-> >And, CAVIUM_ERRATUM_* is very easy to handle, enable and document.
-> >
-> The code will only run for Thunder and AHCI, becuase its PCI.
+The RB532 platform specific irq_to_gpio() implementation has been
+removed with commit 832f5dacfa0b ("MIPS: Remove all the uses of
+custom gpio.h"). Now the platform uses the generic stub which causes
+the following error:
 
-Well, the guards also serve as documentation for exactly why we're having
-to do something special here, so I'd say go ahead and add
-CONFIG_CAVIUM_ERRATUM_22536 and update
-Documentation/arm64/silicon-errata.txt accordingly.
+  pata-rb532-cf pata-rb532-cf: no GPIO found for irq149
+  pata-rb532-cf: probe of pata-rb532-cf failed with error -2
 
+Drop the irq_to_gpio() call and get the GPIO number from platform
+data instead. After this change, the driver works again:
 
+  scsi host0: pata-rb532-cf
+  ata1: PATA max PIO4 irq 149
+  ata1.00: CFA: CF 1GB, 20080820, max MWDMA4
+  ata1.00: 1989792 sectors, multi 0: LBA
+  ata1.00: configured for PIO4
+  scsi 0:0:0:0: Direct-Access     ATA      CF 1GB           0820 PQ: 0\
+  ANSI: 5
+  sd 0:0:0:0: [sda] 1989792 512-byte logical blocks: (1.01 GB/971 MiB)
+  sd 0:0:0:0: [sda] Write Protect is off
+  sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't\
+  support DPO or FUA
+   sda: sda1 sda2
+  sd 0:0:0:0: [sda] Attached SCSI disk
 
-Will
+Fixes: 832f5dacfa0b ("MIPS: Remove all the uses of custom gpio.h")
+Cc: Alban Bedel <albeu@free.fr>
+Cc: Ralf Baechle <ralf@linux-mips.org>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+---
+ drivers/ata/pata_rb532_cf.c |   11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/pata_rb532_cf.c b/drivers/ata/pata_rb532_cf.c
+index 12fe0f3..c8b6a78 100644
+--- a/drivers/ata/pata_rb532_cf.c
++++ b/drivers/ata/pata_rb532_cf.c
+@@ -32,6 +32,8 @@
+ #include <linux/libata.h>
+ #include <scsi/scsi_host.h>
+ 
++#include <asm/mach-rc32434/rb.h>
++
+ #define DRV_NAME	"pata-rb532-cf"
+ #define DRV_VERSION	"0.1.0"
+ #define DRV_DESC	"PATA driver for RouterBOARD 532 Compact Flash"
+@@ -107,6 +109,7 @@ static int rb532_pata_driver_probe(struct platform_device *pdev)
+ 	int gpio;
+ 	struct resource *res;
+ 	struct ata_host *ah;
++	struct cf_device *pdata;
+ 	struct rb532_cf_info *info;
+ 	int ret;
+ 
+@@ -122,7 +125,13 @@ static int rb532_pata_driver_probe(struct platform_device *pdev)
+ 		return -ENOENT;
+ 	}
+ 
+-	gpio = irq_to_gpio(irq);
++	pdata = dev_get_platdata(&pdev->dev);
++	if (!pdata) {
++		dev_err(&pdev->dev, "no platform data specified\n");
++		return -EINVAL;
++	}
++
++	gpio = pdata->gpio_pin;
+ 	if (gpio < 0) {
+ 		dev_err(&pdev->dev, "no GPIO found for irq%d\n", irq);
+ 		return -ENOENT;
+-- 
+1.7.10
