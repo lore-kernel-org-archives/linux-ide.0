@@ -1,83 +1,34 @@
-From: Gabor Juhos <juhosg@openwrt.org>
-Subject: [PATCH] pata-rb532-cf: get rid of the irq_to_gpio() call
-Date: Wed, 17 Feb 2016 12:58:20 +0100
-Message-ID: <1455710300-30920-1-git-send-email-juhosg@openwrt.org>
+From: Alban <albeu@free.fr>
+Subject: Re: [PATCH] pata-rb532-cf: get rid of the irq_to_gpio() call
+Date: Wed, 17 Feb 2016 13:40:30 +0100
+Message-ID: <20160217134030.29e4c6d7@tock>
+References: <1455710300-30920-1-git-send-email-juhosg@openwrt.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1455710300-30920-1-git-send-email-juhosg@openwrt.org>
 Sender: stable-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, Gabor Juhos <juhosg@openwrt.org>, Alban Bedel <albeu@free.fr>, Ralf Baechle <ralf@linux-mips.org>, Arnd Bergmann <arnd@arndb.de>, stable@vger.kernel.org
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: Aban Bedel <albeu@free.fr>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>, Arnd Bergmann <arnd@arndb.de>, stable@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-The RB532 platform specific irq_to_gpio() implementation has been
-removed with commit 832f5dacfa0b ("MIPS: Remove all the uses of
-custom gpio.h"). Now the platform uses the generic stub which causes
-the following error:
+On Wed, 17 Feb 2016 12:58:20 +0100
+Gabor Juhos <juhosg@openwrt.org> wrote:
 
-  pata-rb532-cf pata-rb532-cf: no GPIO found for irq149
-  pata-rb532-cf: probe of pata-rb532-cf failed with error -2
+> The RB532 platform specific irq_to_gpio() implementation has been
+> removed with commit 832f5dacfa0b ("MIPS: Remove all the uses of
+> custom gpio.h"). Now the platform uses the generic stub which causes
+> the following error:
+> 
+>   pata-rb532-cf pata-rb532-cf: no GPIO found for irq149
+>   pata-rb532-cf: probe of pata-rb532-cf failed with error -2
+> 
+> Drop the irq_to_gpio() call and get the GPIO number from platform
+> data instead. After this change, the driver works again:
 
-Drop the irq_to_gpio() call and get the GPIO number from platform
-data instead. After this change, the driver works again:
+I think it would be preferable to move this driver to use the gpiod
+API. The changes needed should be about the same size and it would
+be a much more future proof fix.
 
-  scsi host0: pata-rb532-cf
-  ata1: PATA max PIO4 irq 149
-  ata1.00: CFA: CF 1GB, 20080820, max MWDMA4
-  ata1.00: 1989792 sectors, multi 0: LBA
-  ata1.00: configured for PIO4
-  scsi 0:0:0:0: Direct-Access     ATA      CF 1GB           0820 PQ: 0\
-  ANSI: 5
-  sd 0:0:0:0: [sda] 1989792 512-byte logical blocks: (1.01 GB/971 MiB)
-  sd 0:0:0:0: [sda] Write Protect is off
-  sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't\
-  support DPO or FUA
-   sda: sda1 sda2
-  sd 0:0:0:0: [sda] Attached SCSI disk
-
-Fixes: 832f5dacfa0b ("MIPS: Remove all the uses of custom gpio.h")
-Cc: Alban Bedel <albeu@free.fr>
-Cc: Ralf Baechle <ralf@linux-mips.org>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
----
- drivers/ata/pata_rb532_cf.c |   11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/ata/pata_rb532_cf.c b/drivers/ata/pata_rb532_cf.c
-index 12fe0f3..c8b6a78 100644
---- a/drivers/ata/pata_rb532_cf.c
-+++ b/drivers/ata/pata_rb532_cf.c
-@@ -32,6 +32,8 @@
- #include <linux/libata.h>
- #include <scsi/scsi_host.h>
- 
-+#include <asm/mach-rc32434/rb.h>
-+
- #define DRV_NAME	"pata-rb532-cf"
- #define DRV_VERSION	"0.1.0"
- #define DRV_DESC	"PATA driver for RouterBOARD 532 Compact Flash"
-@@ -107,6 +109,7 @@ static int rb532_pata_driver_probe(struct platform_device *pdev)
- 	int gpio;
- 	struct resource *res;
- 	struct ata_host *ah;
-+	struct cf_device *pdata;
- 	struct rb532_cf_info *info;
- 	int ret;
- 
-@@ -122,7 +125,13 @@ static int rb532_pata_driver_probe(struct platform_device *pdev)
- 		return -ENOENT;
- 	}
- 
--	gpio = irq_to_gpio(irq);
-+	pdata = dev_get_platdata(&pdev->dev);
-+	if (!pdata) {
-+		dev_err(&pdev->dev, "no platform data specified\n");
-+		return -EINVAL;
-+	}
-+
-+	gpio = pdata->gpio_pin;
- 	if (gpio < 0) {
- 		dev_err(&pdev->dev, "no GPIO found for irq%d\n", irq);
- 		return -ENOENT;
--- 
-1.7.10
+Alban
