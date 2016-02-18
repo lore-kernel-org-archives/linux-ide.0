@@ -1,44 +1,144 @@
-From: Gabor Juhos <juhosg@openwrt.org>
-Subject: Re: [PATCH] pata-rb532-cf: get rid of the irq_to_gpio() call
-Date: Thu, 18 Feb 2016 11:05:35 +0100
-Message-ID: <56C5976F.9030904@openwrt.org>
-References: <1455710300-30920-1-git-send-email-juhosg@openwrt.org>
- <20160217134030.29e4c6d7@tock>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: Re: [PATCH 5/7] ahci: Convert driver to use modern PM hooks
+Date: Thu, 18 Feb 2016 12:45:05 +0200
+Message-ID: <CAHp75Vc0F=-5Whiw_CO+_YeL=HsN=GiGprKRd2q9vx_kqT02HA@mail.gmail.com>
+References: <1455785657-22924-1-git-send-email-mika.westerberg@linux.intel.com>
+	<1455785657-22924-6-git-send-email-mika.westerberg@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20160217134030.29e4c6d7@tock>
-Sender: stable-owner@vger.kernel.org
-To: Alban <albeu@free.fr>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>, Arnd Bergmann <arnd@arndb.de>, stable@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1455785657-22924-6-git-send-email-mika.westerberg@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-Hi Alban,
+On Thu, Feb 18, 2016 at 10:54 AM, Mika Westerberg
+<mika.westerberg@linux.intel.com> wrote:
+> In order to add support for runtime PM to the ahci driver we first need to
+> convert the driver to use modern non-legacy system suspend hooks. There
+> should be no functional changes.
+>
 
-> On Wed, 17 Feb 2016 12:58:20 +0100
-> Gabor Juhos <juhosg@openwrt.org> wrote:
-> 
->> The RB532 platform specific irq_to_gpio() implementation has been
->> removed with commit 832f5dacfa0b ("MIPS: Remove all the uses of
->> custom gpio.h"). Now the platform uses the generic stub which causes
->> the following error:
->>
->>   pata-rb532-cf pata-rb532-cf: no GPIO found for irq149
->>   pata-rb532-cf: probe of pata-rb532-cf failed with error -2
->>
->> Drop the irq_to_gpio() call and get the GPIO number from platform
->> data instead. After this change, the driver works again:
-> 
-> I think it would be preferable to move this driver to use the gpiod
-> API. The changes needed should be about the same size and it would
-> be a much more future proof fix.
+One comment below, otherwise:
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
 
-The sole purpose of this patch is that to fix the breakage introduced in
-832f5dacfa0b. Before that change, the driver was working without using the gpiod
-API, and it is working again after this change.
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> ---
+>  drivers/ata/ahci.c | 49 ++++++++++++++++++++++---------------------------
+>  1 file changed, 22 insertions(+), 27 deletions(-)
+>
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index 546a3692774f..44f9d1c09bbe 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -93,9 +93,9 @@ static void ahci_mcp89_apple_enable(struct pci_dev *pdev);
+>  static bool is_mcp89_apple(struct pci_dev *pdev);
+>  static int ahci_p5wdh_hardreset(struct ata_link *link, unsigned int *class,
+>                                 unsigned long deadline);
+> -#ifdef CONFIG_PM
+> -static int ahci_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg);
+> -static int ahci_pci_device_resume(struct pci_dev *pdev);
+> +#ifdef CONFIG_PM_SLEEP
+> +static int ahci_pci_device_suspend(struct device *dev);
+> +static int ahci_pci_device_resume(struct device *dev);
+>  #endif
+>
+>  static struct scsi_host_template ahci_sht = {
+> @@ -557,16 +557,16 @@ static const struct pci_device_id ahci_pci_tbl[] = {
+>         { }     /* terminate list */
+>  };
+>
+> +static const struct dev_pm_ops ahci_pci_pm_ops = {
+> +       SET_SYSTEM_SLEEP_PM_OPS(ahci_pci_device_suspend, ahci_pci_device_resume)
+> +};
+>
+>  static struct pci_driver ahci_pci_driver = {
+>         .name                   = DRV_NAME,
+>         .id_table               = ahci_pci_tbl,
+>         .probe                  = ahci_init_one,
+>         .remove                 = ata_pci_remove_one,
+> -#ifdef CONFIG_PM
+> -       .suspend                = ahci_pci_device_suspend,
+> -       .resume                 = ahci_pci_device_resume,
+> -#endif
+> +       .driver.pm              = &ahci_pci_pm_ops,
 
-Converting the driver to use the gpiod API needs more changes. Even if that is
-preferable it should be implemented in separate patch(es) in my opinion.
+Please, do this in several assignments, since to support older compilers.
 
--Gabor
+>  };
+>
+>  #if defined(CONFIG_PATA_MARVELL) || defined(CONFIG_PATA_MARVELL_MODULE)
+> @@ -794,44 +794,39 @@ static int ahci_avn_hardreset(struct ata_link *link, unsigned int *class,
+>  }
+>
+>
+> -#ifdef CONFIG_PM
+> -static int ahci_pci_device_suspend(struct pci_dev *pdev, pm_message_t mesg)
+> +#ifdef CONFIG_PM_SLEEP
+> +static int ahci_pci_device_suspend(struct device *dev)
+>  {
+> +       struct pci_dev *pdev = to_pci_dev(dev);
+>         struct ata_host *host = pci_get_drvdata(pdev);
+>         struct ahci_host_priv *hpriv = host->private_data;
+>         void __iomem *mmio = hpriv->mmio;
+>         u32 ctl;
+>
+> -       if (mesg.event & PM_EVENT_SUSPEND &&
+> -           hpriv->flags & AHCI_HFLAG_NO_SUSPEND) {
+> +       if (hpriv->flags & AHCI_HFLAG_NO_SUSPEND) {
+>                 dev_err(&pdev->dev,
+>                         "BIOS update required for suspend/resume\n");
+>                 return -EIO;
+>         }
+>
+> -       if (mesg.event & PM_EVENT_SLEEP) {
+> -               /* AHCI spec rev1.1 section 8.3.3:
+> -                * Software must disable interrupts prior to requesting a
+> -                * transition of the HBA to D3 state.
+> -                */
+> -               ctl = readl(mmio + HOST_CTL);
+> -               ctl &= ~HOST_IRQ_EN;
+> -               writel(ctl, mmio + HOST_CTL);
+> -               readl(mmio + HOST_CTL); /* flush */
+> -       }
+> +       /* AHCI spec rev1.1 section 8.3.3:
+> +        * Software must disable interrupts prior to requesting a
+> +        * transition of the HBA to D3 state.
+> +        */
+> +       ctl = readl(mmio + HOST_CTL);
+> +       ctl &= ~HOST_IRQ_EN;
+> +       writel(ctl, mmio + HOST_CTL);
+> +       readl(mmio + HOST_CTL); /* flush */
+>
+> -       return ata_pci_device_suspend(pdev, mesg);
+> +       return ata_host_suspend(host, PMSG_SUSPEND);
+>  }
+>
+> -static int ahci_pci_device_resume(struct pci_dev *pdev)
+> +static int ahci_pci_device_resume(struct device *dev)
+>  {
+> +       struct pci_dev *pdev = to_pci_dev(dev);
+>         struct ata_host *host = pci_get_drvdata(pdev);
+>         int rc;
+>
+> -       rc = ata_pci_device_do_resume(pdev);
+> -       if (rc)
+> -               return rc;
+> -
+>         /* Apple BIOS helpfully mangles the registers on resume */
+>         if (is_mcp89_apple(pdev))
+>                 ahci_mcp89_apple_enable(pdev);
+> --
+> 2.7.0
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+-- 
+With Best Regards,
+Andy Shevchenko
