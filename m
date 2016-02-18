@@ -1,74 +1,58 @@
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH 0/7] Runtime PM support for AHCI host controller driver
-Date: Thu, 18 Feb 2016 10:54:10 +0200
-Message-ID: <1455785657-22924-1-git-send-email-mika.westerberg@linux.intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-block@vger.kernel.org
-Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Mika Westerberg <mika.westerberg@linux.intel.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Re: libata: Implement disk shock protection support
+Date: Thu, 18 Feb 2016 10:45:59 +0100
+Message-ID: <8760xmic6g.fsf@denkblock.local>
+References: <20160217192435.GA14960@mwanda>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.nebensachen.de ([5.45.99.250]:53235 "EHLO
+	mail.nebensachen.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1425940AbcBRJxs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Feb 2016 04:53:48 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: linux-ide@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
-Hi,
+Hi Dan,
 
-Linux already supports runtime PM of disks (drivers/scsi/sd.c) so that
-after certain amount of idle time the disk is suspended automatically. This
-series extends the support to AHCI host controllers. Whenever SATA ports
-are determined to be idle (all children are runtime suspended) the host
-controller is also suspended.
+On 17 February 2016 at 20:24 CET, Dan Carpenter wrote:
+> Hello Elias Oltmanns,
+> The patch 45fabbb77bd9: "libata: Implement disk shock protection
+> support" from Sep 21, 2008, leads to the following Smatch
+> warning:
+> 
+>   drivers/ata/libata-scsi.c:206 ata_scsi_park_show()
+>   warn: inconsistent returns 'irqsave:flags'.
+> 	  Locked on:   line 206
+> 	  Unlocked on: line 206
+> 
+> drivers/ata/libata-scsi.c
+>    170  static ssize_t ata_scsi_park_show(struct device *device,
+>    171                                    struct device_attribute *attr, char *buf)
+>    172  {
+[...]
+>    183          spin_lock_irqsave(ap->lock, flags);
+>                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[...]
+>    204          spin_unlock_irq(ap->lock);
+>                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+> 
+> This should almost certainly be spin_unlock_irqrestore().
 
-On recent Intel CPUs like Broxton this allows the CPU to go low power idle
-states like S0ix runtime (given that all necessary blocks are also in their
-correesponding low power states).
+since this is an accessor function for a sysfs attribute (see:
+DEVICE_ATTR(unload_heads, S_IRUGO | S_IWUSR,
+	    ata_scsi_park_show, ata_scsi_park_store);
+at line 269), it will only ever be called from process context, in my
+estimation. So, I suggest using spin_lock_irq() rather than the
+_irqsave() variant. The same goes for the ata_scsi_park_store()
+function.
 
-Patches [1-2/7] fix a lockup where disk is runtime suspended and the system
-is put to sleep. They are independent of the rest of the series.
+Thanks for pointing out the inconsistency. Even though the patch itself
+is quite straight forward, I won't have time to even compile test it
+before the weekend.
 
-Patch [3/7] makes it possible for SATA ports to be runtime suspended when
-there is not disk connected. For example on Lenovo Yoga 900 there are two
-SATA ports which only one of them has disk connected. This patch allows the
-host controller to runtime suspend whenever the disk is idle.
+Regards,
 
-Rest of the patches bring runtime PM support for the AHCI driver. By
-default runtime PM is blocked and needs to be unblocked from userspace
-(following what other PCI drivers do). I've used following script to
-unblock runtime PM for the whole stack (with 15 seconds of idle time):
-
-------8<------8<------8<------8<------8<------8<------8<------
-#!/bin/sh
-
-TIMEOUT=${1:-15}
-HOST=$(lspci -D | grep "SATA controller" | cut -f 1 -d ' ')
-DISK=sda
-
-# Enable runtime PM for all SATA ports
-for port in /sys/bus/pci/devices/$HOST/ata*; do
-	echo auto > $port/power/control
-done
-# Then for the host controller
-echo auto > /sys/bus/pci/devices/$HOST/power/control
-
-# And last for the disk
-echo auto > /sys/block/$DISK/device/power/control
-echo $(($TIMEOUT * 1000)) > /sys/block/$DISK/device/power/autosuspend_delay_ms
-------8<------8<------8<------8<------8<------8<------8<------
-
-Mika Westerberg (7):
-  block: Add blk_set_runtime_active()
-  scsi: Set request queue runtime PM status back to active on resume
-  scsi: Drop runtime PM usage count after host is added
-  ahci: Cache host controller version
-  ahci: Convert driver to use modern PM hooks
-  ahci: Add functions to manage runtime PM of AHCI ports
-  ahci: Add runtime PM support for the host controller
-
- block/blk-core.c       |  24 ++++++++++++
- drivers/ata/ahci.c     | 102 +++++++++++++++++++++++++++++++++++--------------
- drivers/ata/ahci.h     |   1 +
- drivers/ata/libahci.c  |  55 +++++++++++++++++++++++---
- drivers/scsi/hosts.c   |   7 ++++
- drivers/scsi/scsi_pm.c |  10 +++++
- include/linux/blkdev.h |   2 +
- 7 files changed, 167 insertions(+), 34 deletions(-)
-
--- 
-2.7.0
+Elias
