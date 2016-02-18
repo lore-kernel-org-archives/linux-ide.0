@@ -1,32 +1,32 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 5/7] ahci: Convert driver to use modern PM hooks
-Date: Thu, 18 Feb 2016 06:41:24 -0800
-Message-ID: <20160218144124.GA8145@infradead.org>
-References: <1455785657-22924-1-git-send-email-mika.westerberg@linux.intel.com>
- <1455785657-22924-6-git-send-email-mika.westerberg@linux.intel.com>
- <CAHp75Vc0F=-5Whiw_CO+_YeL=HsN=GiGprKRd2q9vx_kqT02HA@mail.gmail.com>
- <20160218131246.GF6479@mtj.duckdns.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] pata-rb532-cf: get rid of the irq_to_gpio() call
+Date: Thu, 18 Feb 2016 11:28:11 -0500
+Message-ID: <20160218162811.GA13177@mtj.duckdns.org>
+References: <1455710300-30920-1-git-send-email-juhosg@openwrt.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-yk0-f180.google.com ([209.85.160.180]:34826 "EHLO
+	mail-yk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946877AbcBRQ2N (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Feb 2016 11:28:13 -0500
 Content-Disposition: inline
-In-Reply-To: <20160218131246.GF6479@mtj.duckdns.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Andy Shevchenko <andy.shevchenko@gmail.com>, Mika Westerberg <mika.westerberg@linux.intel.com>, linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+In-Reply-To: <1455710300-30920-1-git-send-email-juhosg@openwrt.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: linux-ide@vger.kernel.org, Alban Bedel <albeu@free.fr>, Ralf Baechle <ralf@linux-mips.org>, Arnd Bergmann <arnd@arndb.de>, stable@vger.kernel.org
 
-On Thu, Feb 18, 2016 at 08:12:46AM -0500, Tejun Heo wrote:
-> On Thu, Feb 18, 2016 at 12:45:05PM +0200, Andy Shevchenko wrote:
-> > > +       .driver.pm              = &ahci_pci_pm_ops,
-> > 
-> > Please, do this in several assignments, since to support older compilers.
-> 
-> Can you please elaborate?  That's a single assignment.  Are there
-> compilers which can't do that?
+On Wed, Feb 17, 2016 at 12:58:20PM +0100, Gabor Juhos wrote:
+> The RB532 platform specific irq_to_gpio() implementation has been
+> removed with commit 832f5dacfa0b ("MIPS: Remove all the uses of
+> custom gpio.h"). Now the platform uses the generic stub which causes
+> the following error:
 
-Old gcc (I think 4.4 is the last one) needs:
+Applied to libata/for-4.5-fixes.  As for the gpiod API conversion,
+please do that in separate patches.
 
-	.driver = {
-		.pm		= &ahci_pci_pm_ops,
-	},
+Thanks.
+
+-- 
+tejun
