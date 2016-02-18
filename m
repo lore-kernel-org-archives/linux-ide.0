@@ -1,53 +1,90 @@
-From: Alexandra Yates <alexandra.yates@linux.intel.com>
-Subject: [PATCH] Adding Intel Lewisburg device IDs for SATA
-Date: Wed, 17 Feb 2016 19:36:20 -0800
-Message-ID: <1455766580-31458-1-git-send-email-alexandra.yates@linux.intel.com>
-References: <Adding-Intel-Lewisburg-device-IDs-for-SATA>
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH 1/7] block: Add blk_set_runtime_active()
+Date: Thu, 18 Feb 2016 10:54:11 +0200
+Message-ID: <1455785657-22924-2-git-send-email-mika.westerberg@linux.intel.com>
+References: <1455785657-22924-1-git-send-email-mika.westerberg@linux.intel.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:29506 "EHLO mga04.intel.com"
+Received: from mga14.intel.com ([192.55.52.115]:33669 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423890AbcBRDcM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 17 Feb 2016 22:32:12 -0500
-In-Reply-To: <Adding-Intel-Lewisburg-device-IDs-for-SATA>
+	id S1750926AbcBRIyV (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 18 Feb 2016 03:54:21 -0500
+In-Reply-To: <1455785657-22924-1-git-send-email-mika.westerberg@linux.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Alexandra Yates <alexandra.yates@linux.intel.com>
+To: linux-block@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Mika Westerberg <mika.westerberg@linux.intel.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-This patch complements the list of device IDs previously
-added for lewisburg sata.
+If block device is left runtime suspended during system suspend, resume
+hook of the driver typically corrects runtime PM status of the device back
+to "active" after it is resumed. However, this is not enough as queue's
+runtime PM status is still "suspended". As long as it is in this state
+blk_pm_peek_request() returns NULL and thus prevents new requests to be
+processed.
 
-Signed-off-by: Alexandra Yates <alexandra.yates@linux.intel.com>
+Add new function blk_set_runtime_active() that can be used to force the
+queue status back to "active" as needed.
+
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 ---
- drivers/ata/ahci.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ block/blk-core.c       | 24 ++++++++++++++++++++++++
+ include/linux/blkdev.h |  2 ++
+ 2 files changed, 26 insertions(+)
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 546a369..b6263b3 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -367,15 +367,21 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_VDEVICE(INTEL, 0xa107), board_ahci }, /* Sunrise Point-H RAID */
- 	{ PCI_VDEVICE(INTEL, 0xa10f), board_ahci }, /* Sunrise Point-H RAID */
- 	{ PCI_VDEVICE(INTEL, 0x2822), board_ahci }, /* Lewisburg RAID*/
-+	{ PCI_VDEVICE(INTEL, 0x2823), board_ahci }, /* Lewisburg AHCI*/
- 	{ PCI_VDEVICE(INTEL, 0x2826), board_ahci }, /* Lewisburg RAID*/
-+	{ PCI_VDEVICE(INTEL, 0x2827), board_ahci }, /* Lewisburg RAID*/
- 	{ PCI_VDEVICE(INTEL, 0xa182), board_ahci }, /* Lewisburg AHCI*/
- 	{ PCI_VDEVICE(INTEL, 0xa184), board_ahci }, /* Lewisburg RAID*/
- 	{ PCI_VDEVICE(INTEL, 0xa186), board_ahci }, /* Lewisburg RAID*/
- 	{ PCI_VDEVICE(INTEL, 0xa18e), board_ahci }, /* Lewisburg RAID*/
-+	{ PCI_VDEVICE(INTEL, 0xa1d2), board_ahci }, /* Lewisburg RAID*/
-+	{ PCI_VDEVICE(INTEL, 0xa1d6), board_ahci }, /* Lewisburg RAID*/
- 	{ PCI_VDEVICE(INTEL, 0xa202), board_ahci }, /* Lewisburg AHCI*/
- 	{ PCI_VDEVICE(INTEL, 0xa204), board_ahci }, /* Lewisburg RAID*/
- 	{ PCI_VDEVICE(INTEL, 0xa206), board_ahci }, /* Lewisburg RAID*/
- 	{ PCI_VDEVICE(INTEL, 0xa20e), board_ahci }, /* Lewisburg RAID*/
-+	{ PCI_VDEVICE(INTEL, 0xa252), board_ahci }, /* Lewisburg RAID*/
-+	{ PCI_VDEVICE(INTEL, 0xa256), board_ahci }, /* Lewisburg RAID*/
+diff --git a/block/blk-core.c b/block/blk-core.c
+index b83d29755b5a..d0c6f4c92cb6 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -3529,6 +3529,30 @@ void blk_post_runtime_resume(struct request_queue *q, int err)
+ 	spin_unlock_irq(q->queue_lock);
+ }
+ EXPORT_SYMBOL(blk_post_runtime_resume);
++
++/**
++ * blk_set_runtime_active - Force runtime status of the queue to be active
++ * @q: the queue of the device
++ *
++ * If the device is left runtime suspended during system suspend the resume
++ * hook typically resumes the device and corrects runtime status
++ * accordingly. However, that does not affect the queue runtime PM status
++ * which is still "suspended". This prevents processing requests from the
++ * queue.
++ *
++ * This function can be used in driver's resume hook to correct queue
++ * runtime PM status and re-enable peeking requests from the queue. It
++ * should be called before first request is added to the queue.
++ */
++void blk_set_runtime_active(struct request_queue *q)
++{
++	spin_lock_irq(q->queue_lock);
++	q->rpm_status = RPM_ACTIVE;
++	pm_runtime_mark_last_busy(q->dev);
++	pm_request_autosuspend(q->dev);
++	spin_unlock_irq(q->queue_lock);
++}
++EXPORT_SYMBOL(blk_set_runtime_active);
+ #endif
  
- 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
- 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
+ int __init blk_dev_init(void)
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 4571ef1a12a9..40c0241a6f28 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1029,6 +1029,7 @@ extern int blk_pre_runtime_suspend(struct request_queue *q);
+ extern void blk_post_runtime_suspend(struct request_queue *q, int err);
+ extern void blk_pre_runtime_resume(struct request_queue *q);
+ extern void blk_post_runtime_resume(struct request_queue *q, int err);
++extern void blk_set_runtime_active(struct request_queue *q);
+ #else
+ static inline void blk_pm_runtime_init(struct request_queue *q,
+ 	struct device *dev) {}
+@@ -1039,6 +1040,7 @@ static inline int blk_pre_runtime_suspend(struct request_queue *q)
+ static inline void blk_post_runtime_suspend(struct request_queue *q, int err) {}
+ static inline void blk_pre_runtime_resume(struct request_queue *q) {}
+ static inline void blk_post_runtime_resume(struct request_queue *q, int err) {}
++extern inline void blk_set_runtime_active(struct request_queue *q) {}
+ #endif
+ 
+ /*
 -- 
-1.9.1
+2.7.0
 
