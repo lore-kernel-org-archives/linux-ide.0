@@ -1,55 +1,65 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH] pata-rb532-cf: get rid of the irq_to_gpio() call
-Date: Thu, 18 Feb 2016 17:46:59 +0100
-Message-ID: <61574946.qI16Kz5bLp@wuerfel>
-References: <1455710300-30920-1-git-send-email-juhosg@openwrt.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH libata/for-4.6] libata: fix unbalanced
+ spin_lock_irqsave/spin_unlock_irq() in ata_scsi_park_show()
+Date: Thu, 18 Feb 2016 11:54:18 -0500
+Message-ID: <20160218165418.GE13177@mtj.duckdns.org>
+References: <20160217192435.GA14960@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1455710300-30920-1-git-send-email-juhosg@openwrt.org>
-Sender: stable-owner@vger.kernel.org
-To: Gabor Juhos <juhosg@openwrt.org>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Alban Bedel <albeu@free.fr>, Ralf Baechle <ralf@linux-mips.org>, stable@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-yw0-f182.google.com ([209.85.161.182]:36506 "EHLO
+	mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946282AbcBRQyU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 18 Feb 2016 11:54:20 -0500
+Received: by mail-yw0-f182.google.com with SMTP id e63so45182025ywc.3
+        for <linux-ide@vger.kernel.org>; Thu, 18 Feb 2016 08:54:19 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <20160217192435.GA14960@mwanda>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: eo@nebensachen.de, linux-ide@vger.kernel.org
 
-On Wednesday 17 February 2016 12:58:20 Gabor Juhos wrote:
-> The RB532 platform specific irq_to_gpio() implementation has been
-> removed with commit 832f5dacfa0b ("MIPS: Remove all the uses of
-> custom gpio.h"). Now the platform uses the generic stub which causes
-> the following error:
-> 
->   pata-rb532-cf pata-rb532-cf: no GPIO found for irq149
->   pata-rb532-cf: probe of pata-rb532-cf failed with error -2
-> 
-> Drop the irq_to_gpio() call and get the GPIO number from platform
-> data instead. After this change, the driver works again:
-> 
->   scsi host0: pata-rb532-cf
->   ata1: PATA max PIO4 irq 149
->   ata1.00: CFA: CF 1GB, 20080820, max MWDMA4
->   ata1.00: 1989792 sectors, multi 0: LBA
->   ata1.00: configured for PIO4
->   scsi 0:0:0:0: Direct-Access     ATA      CF 1GB           0820 PQ: 0\
->   ANSI: 5
->   sd 0:0:0:0: [sda] 1989792 512-byte logical blocks: (1.01 GB/971 MiB)
->   sd 0:0:0:0: [sda] Write Protect is off
->   sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't\
->   support DPO or FUA
->    sda: sda1 sda2
->   sd 0:0:0:0: [sda] Attached SCSI disk
-> 
-> Fixes: 832f5dacfa0b ("MIPS: Remove all the uses of custom gpio.h")
-> Cc: Alban Bedel <albeu@free.fr>
-> Cc: Ralf Baechle <ralf@linux-mips.org>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: <stable@vger.kernel.org>
-> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
+>From 3948b6f2b7677165324afe52c3bd0088ca7c776c Mon Sep 17 00:00:00 2001
+From: Tejun Heo <tj@kernel.org>
+Date: Thu, 18 Feb 2016 11:50:37 -0500
 
-Acked-by: Arnd Bergmann <arnd@arndb.de>
+ata_scsi_park_show() was pairing spin_lock_irqsave() with
+spin_unlock_irq().  As the function is always called with irq enabled,
+it didn't actually break anything.  Use spin_lock_irq() instead.
 
-The patch looks good, but I now saw that drivers/pcmcia/db1xxx_ss.c
-must have been broken by the same patch as this one, and it probably
-needs a similar fix.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Elias Oltmanns <eo@nebensachen.de>
+---
+Applied to libata/for-4.6.
 
-	Arnd
+Thanks.
+
+ drivers/ata/libata-scsi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index e417e1a..567859c 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -174,13 +174,13 @@ static ssize_t ata_scsi_park_show(struct device *device,
+ 	struct ata_port *ap;
+ 	struct ata_link *link;
+ 	struct ata_device *dev;
+-	unsigned long flags, now;
++	unsigned long now;
+ 	unsigned int uninitialized_var(msecs);
+ 	int rc = 0;
+ 
+ 	ap = ata_shost_to_port(sdev->host);
+ 
+-	spin_lock_irqsave(ap->lock, flags);
++	spin_lock_irq(ap->lock);
+ 	dev = ata_scsi_find_dev(ap, sdev);
+ 	if (!dev) {
+ 		rc = -ENODEV;
+-- 
+2.5.0
+
+i
