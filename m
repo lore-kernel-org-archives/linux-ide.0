@@ -1,25 +1,55 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 0/7] Runtime PM support for AHCI host controller driver
-Date: Thu, 18 Feb 2016 11:40:29 -0500
-Message-ID: <20160218164029.GC13177@mtj.duckdns.org>
-References: <1455785657-22924-1-git-send-email-mika.westerberg@linux.intel.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH] pata-rb532-cf: get rid of the irq_to_gpio() call
+Date: Thu, 18 Feb 2016 17:46:59 +0100
+Message-ID: <61574946.qI16Kz5bLp@wuerfel>
+References: <1455710300-30920-1-git-send-email-juhosg@openwrt.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1455785657-22924-1-git-send-email-mika.westerberg@linux.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1455710300-30920-1-git-send-email-juhosg@openwrt.org>
+Sender: stable-owner@vger.kernel.org
+To: Gabor Juhos <juhosg@openwrt.org>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Alban Bedel <albeu@free.fr>, Ralf Baechle <ralf@linux-mips.org>, stable@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Hello,
+On Wednesday 17 February 2016 12:58:20 Gabor Juhos wrote:
+> The RB532 platform specific irq_to_gpio() implementation has been
+> removed with commit 832f5dacfa0b ("MIPS: Remove all the uses of
+> custom gpio.h"). Now the platform uses the generic stub which causes
+> the following error:
+> 
+>   pata-rb532-cf pata-rb532-cf: no GPIO found for irq149
+>   pata-rb532-cf: probe of pata-rb532-cf failed with error -2
+> 
+> Drop the irq_to_gpio() call and get the GPIO number from platform
+> data instead. After this change, the driver works again:
+> 
+>   scsi host0: pata-rb532-cf
+>   ata1: PATA max PIO4 irq 149
+>   ata1.00: CFA: CF 1GB, 20080820, max MWDMA4
+>   ata1.00: 1989792 sectors, multi 0: LBA
+>   ata1.00: configured for PIO4
+>   scsi 0:0:0:0: Direct-Access     ATA      CF 1GB           0820 PQ: 0\
+>   ANSI: 5
+>   sd 0:0:0:0: [sda] 1989792 512-byte logical blocks: (1.01 GB/971 MiB)
+>   sd 0:0:0:0: [sda] Write Protect is off
+>   sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't\
+>   support DPO or FUA
+>    sda: sda1 sda2
+>   sd 0:0:0:0: [sda] Attached SCSI disk
+> 
+> Fixes: 832f5dacfa0b ("MIPS: Remove all the uses of custom gpio.h")
+> Cc: Alban Bedel <albeu@free.fr>
+> Cc: Ralf Baechle <ralf@linux-mips.org>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Gabor Juhos <juhosg@openwrt.org>
 
-Patchset looks good to me.  Once Jens acks the first patch, I'll apply
-the whole series to libata/for-4.6 w/ the field initialization
-updated.
+Acked-by: Arnd Bergmann <arnd@arndb.de>
 
-Thanks.
+The patch looks good, but I now saw that drivers/pcmcia/db1xxx_ss.c
+must have been broken by the same patch as this one, and it probably
+needs a similar fix.
 
--- 
-tejun
+	Arnd
