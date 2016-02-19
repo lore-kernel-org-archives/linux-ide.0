@@ -1,71 +1,35 @@
-From: Julian Calaby <julian.calaby@gmail.com>
-Subject: Re: [PATCH 3/7] scsi: Drop runtime PM usage count after host is added
-Date: Fri, 19 Feb 2016 09:50:50 +1100
-Message-ID: <CAGRGNgUzUDWQ3jDfUuaf8x4G_zsZYe1p2=e_kDR4FkcMp5bUvg@mail.gmail.com>
-References: <1455785657-22924-1-git-send-email-mika.westerberg@linux.intel.com>
- <1455785657-22924-4-git-send-email-mika.westerberg@linux.intel.com>
+From: Elias Oltmanns <eo@nebensachen.de>
+Subject: Re: [PATCH libata/for-4.6] libata: fix unbalanced spin_lock_irqsave/spin_unlock_irq() in ata_scsi_park_show()
+Date: Fri, 19 Feb 2016 07:49:57 +0100
+Message-ID: <87ziuxgpnu.fsf@denkblock.local>
+References: <20160217192435.GA14960@mwanda>
+	<20160218165418.GE13177@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1455785657-22924-4-git-send-email-mika.westerberg@linux.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.nebensachen.de ([5.45.99.250]:53318 "EHLO
+	mail.nebensachen.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161212AbcBSGuB (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Feb 2016 01:50:01 -0500
+In-Reply-To: <20160218165418.GE13177@mtj.duckdns.org> (Tejun Heo's message of
+	"Thu, 18 Feb 2016 11:54:18 -0500")
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>, linux-ide@vger.kernel.org
 
-Hi Mika,
+On 18 February 2016 at 17:54 CET, Tejun Heo wrote:
+>> From 3948b6f2b7677165324afe52c3bd0088ca7c776c Mon Sep 17 00:00:00 2001
+> From: Tejun Heo <tj@kernel.org>
+> Date: Thu, 18 Feb 2016 11:50:37 -0500
+> 
+> ata_scsi_park_show() was pairing spin_lock_irqsave() with
+> spin_unlock_irq().  As the function is always called with irq enabled,
+> it didn't actually break anything.  Use spin_lock_irq() instead.
 
-On Thu, Feb 18, 2016 at 7:54 PM, Mika Westerberg
-<mika.westerberg@linux.intel.com> wrote:
-> Runtime PM of the SCSI host is already handled by calls to
-> scsi_autopm_get_host() and scsi_autopm_put_host() from appropriate places
-> whenever the host needs to be powered on. This works fine when there is
-> device connected to the host as once it runtime suspends the host will too.
->
-> However, if there is no device connected the host is never runtime
-> suspended (the usage counter is always 0).
->
-> Allow runtime suspend of host even if it has no devices connected by
-> calling scsi_autopm_put_host() at the end of scsi_add_host_with_dma(). We
-> temporarily increase runtime PM usage counter first so call to
-> scsi_autopm_put_host() will result idle request to be scheduled for the
-> device.
->
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> ---
->  drivers/scsi/hosts.c | 7 +++++++
->  1 file changed, 7 insertions(+)
->
-> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-> index 82ac1cd818ac..e46bf4d152a0 100644
-> --- a/drivers/scsi/hosts.c
-> +++ b/drivers/scsi/hosts.c
-> @@ -250,6 +250,12 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
->         if (error)
->                 goto out_destroy_freelist;
->
-> +       /*
-> +        * Increase usage count temporarily here so that calling
-> +        * scsi_autopm_put_host() will trigger runtime idle if there is
-> +        * nothing else preventing suspending the device.
-> +        */
-> +       pm_runtime_get_noresume(&shost->shost_gendev);
->         pm_runtime_set_active(&shost->shost_gendev);
->         pm_runtime_enable(&shost->shost_gendev);
->         device_enable_async_suspend(&shost->shost_gendev);
-> @@ -290,6 +296,7 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
->                 goto out_destroy_host;
->
->         scsi_proc_host_add(shost);
-> +       scsi_autopm_put_host(shost);
+Thanks for taking care of this. As I stated earlier, I'd suggest exactly
+the same change for ata_scsc_park_store() too, though.
 
-Would it be cleaner to export the code that runs when the usage
-counter decrements and call it here?
+Regards,
 
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+Elias
