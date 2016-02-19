@@ -1,41 +1,210 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH libata/for-4.6] libata: fix unbalanced
- spin_lock_irqsave/spin_unlock_irq() in ata_scsi_park_show()
-Date: Fri, 19 Feb 2016 11:01:48 -0500
-Message-ID: <20160219160148.GJ13177@mtj.duckdns.org>
-References: <20160217192435.GA14960@mwanda>
- <20160218165418.GE13177@mtj.duckdns.org>
- <87ziuxgpnu.fsf@denkblock.local>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: [PATCH] sata_via: Apply WD workaround only when needed on VT6421
+Date: Sat, 20 Feb 2016 00:08:08 +0100
+Message-ID: <1455923288-1767-1-git-send-email-linux@rainbow-software.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f172.google.com ([209.85.161.172]:33966 "EHLO
-	mail-yw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423897AbcBSQBu (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 19 Feb 2016 11:01:50 -0500
-Received: by mail-yw0-f172.google.com with SMTP id h129so70858024ywb.1
-        for <linux-ide@vger.kernel.org>; Fri, 19 Feb 2016 08:01:50 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <87ziuxgpnu.fsf@denkblock.local>
+Received: from ns.gsystem.sk ([62.176.172.50]:48092 "EHLO gsystem.sk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1162022AbcBSXI3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 19 Feb 2016 18:08:29 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Elias Oltmanns <eo@nebensachen.de>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Joseph Chan <JosephChan@via.com.tw>, Kernel development list <linux-kernel@vger.kernel.org>
 
-On Fri, Feb 19, 2016 at 07:49:57AM +0100, Elias Oltmanns wrote:
-> On 18 February 2016 at 17:54 CET, Tejun Heo wrote:
-> >> From 3948b6f2b7677165324afe52c3bd0088ca7c776c Mon Sep 17 00:00:00 2001
-> > From: Tejun Heo <tj@kernel.org>
-> > Date: Thu, 18 Feb 2016 11:50:37 -0500
-> > 
-> > ata_scsi_park_show() was pairing spin_lock_irqsave() with
-> > spin_unlock_irq().  As the function is always called with irq enabled,
-> > it didn't actually break anything.  Use spin_lock_irq() instead.
-> 
-> Thanks for taking care of this. As I stated earlier, I'd suggest exactly
-> the same change for ata_scsc_park_store() too, though.
+Currently, workaround for broken WD drives is applied always, slowing
+down all drives. And it has a bug - it's not applied after resume.
 
-Send a patch?
+Apply the workaround only if the error really appears
+(SErr == 0x1000500). This allows unaffected drives to run at full speed
+(provided that no affected drive is connected to the controller).
+Also make sure the workaround is re-applied on resume.
 
+Tested on VT6421.
+As SCR registers access is known to cause problems on VT6420 (and I
+don't have it to test), keep the workaround applied always on VT6420.
+
+Unaffected drive (Hitachi HDS721680PLA380):
+Before:
+$ hdparm -t --direct /dev/sdb
+/dev/sdb:
+ Timing O_DIRECT disk reads: 160 MB in  3.01 seconds =  53.16 MB/sec
+
+After:
+$ hdparm -t --direct /dev/sdb
+/dev/sdb:
+ Timing O_DIRECT disk reads: 200 MB in  3.01 seconds =  66.47 MB/sec
+
+Affected drive (WDC WD5003ABYX-18WERA0):
+Before:
+$ hdparm -t --direct /dev/sda
+
+/dev/sda:
+ Timing O_DIRECT disk reads: 180 MB in  3.02 seconds =  59.51 MB/sec
+
+After:
+$ hdparm -t --direct /dev/sdb
+/dev/sdb:
+ Timing O_DIRECT disk reads: 156 MB in  3.03 seconds =  51.48 MB/sec
+$ hdparm -t --direct /dev/sdb
+/dev/sdb:
+ Timing O_DIRECT disk reads: 180 MB in  3.02 seconds =  59.64 MB/sec
+
+The first hdparm is slower because of the error:
+[   50.408042] ata5: Incompatible drive: enabling workaround. This slows down transfer rate to ~60 MB/s
+[   50.728052] ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+[   50.744834] ata5.00: configured for UDMA/133
+
+Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+---
+ drivers/ata/sata_via.c |   79 +++++++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 72 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
+index 17d31fc..a58511d 100644
+--- a/drivers/ata/sata_via.c
++++ b/drivers/ata/sata_via.c
+@@ -73,7 +73,14 @@ enum {
+ 	SATA_EXT_PHY		= (1 << 6), /* 0==use PATA, 1==ext phy */
+ };
+ 
++struct svia_priv {
++	bool			wd_workaround;
++};
++
+ static int svia_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
++#ifdef CONFIG_PM_SLEEP
++static int svia_pci_device_resume(struct pci_dev *pdev);
++#endif
+ static int svia_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val);
+ static int svia_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val);
+ static int vt8251_scr_read(struct ata_link *link, unsigned int scr, u32 *val);
+@@ -85,6 +92,7 @@ static void vt6420_bmdma_start(struct ata_queued_cmd *qc);
+ static int vt6421_pata_cable_detect(struct ata_port *ap);
+ static void vt6421_set_pio_mode(struct ata_port *ap, struct ata_device *adev);
+ static void vt6421_set_dma_mode(struct ata_port *ap, struct ata_device *adev);
++static void vt6421_error_handler(struct ata_port *ap);
+ 
+ static const struct pci_device_id svia_pci_tbl[] = {
+ 	{ PCI_VDEVICE(VIA, 0x5337), vt6420 },
+@@ -105,7 +113,7 @@ static struct pci_driver svia_pci_driver = {
+ 	.probe			= svia_init_one,
+ #ifdef CONFIG_PM_SLEEP
+ 	.suspend		= ata_pci_device_suspend,
+-	.resume			= ata_pci_device_resume,
++	.resume			= svia_pci_device_resume,
+ #endif
+ 	.remove			= ata_pci_remove_one,
+ };
+@@ -137,6 +145,7 @@ static struct ata_port_operations vt6421_sata_ops = {
+ 	.inherits		= &svia_base_ops,
+ 	.scr_read		= svia_scr_read,
+ 	.scr_write		= svia_scr_write,
++	.error_handler		= vt6421_error_handler,
+ };
+ 
+ static struct ata_port_operations vt8251_ops = {
+@@ -536,7 +545,36 @@ static int vt8251_prepare_host(struct pci_dev *pdev, struct ata_host **r_host)
+ 	return 0;
+ }
+ 
+-static void svia_configure(struct pci_dev *pdev, int board_id)
++static void svia_wd_fix(struct pci_dev *pdev)
++{
++	u8 tmp8;
++
++	pci_read_config_byte(pdev, 0x52, &tmp8);
++	pci_write_config_byte(pdev, 0x52, tmp8 | BIT(2));
++}
++
++static void vt6421_error_handler(struct ata_port *ap)
++{
++	struct svia_priv *hpriv = ap->host->private_data;
++	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
++	u32 serror;
++
++	/* see svia_configure() for description */
++	if (!hpriv->wd_workaround) {
++		svia_scr_read(&ap->link, SCR_ERROR, &serror);
++		if (serror == 0x1000500) {
++			ata_port_warn(ap, "Incompatible drive: enabling workaround. This slows down transfer rate to ~60 MB/s");
++			svia_wd_fix(pdev);
++			hpriv->wd_workaround = true;
++			ap->link.eh_context.i.flags |= ATA_EHI_QUIET;
++		}
++	}
++
++	ata_sff_error_handler(ap);
++}
++
++static void svia_configure(struct pci_dev *pdev, int board_id,
++			   struct svia_priv *hpriv)
+ {
+ 	u8 tmp8;
+ 
+@@ -593,11 +631,15 @@ static void svia_configure(struct pci_dev *pdev, int board_id)
+ 	 * https://bugzilla.kernel.org/show_bug.cgi?id=15173
+ 	 * http://article.gmane.org/gmane.linux.ide/46352
+ 	 * http://thread.gmane.org/gmane.linux.kernel/1062139
++	 *
++	 * As the fix slows down data transfer, apply it only if the error
++	 * actually appears - see vt6421_error_handler()
++	 * Apply the fix always on vt6420 as we don't know if SCR_ERROR can be
++	 * read safely.
+ 	 */
+-	if (board_id == vt6420 || board_id == vt6421) {
+-		pci_read_config_byte(pdev, 0x52, &tmp8);
+-		tmp8 |= 1 << 2;
+-		pci_write_config_byte(pdev, 0x52, tmp8);
++	if (board_id == vt6420) {
++		svia_wd_fix(pdev);
++		hpriv->wd_workaround = true;
+ 	}
+ }
+ 
+@@ -608,6 +650,7 @@ static int svia_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	struct ata_host *host = NULL;
+ 	int board_id = (int) ent->driver_data;
+ 	const unsigned *bar_sizes;
++	struct svia_priv *hpriv;
+ 
+ 	ata_print_version_once(&pdev->dev, DRV_VERSION);
+ 
+@@ -647,11 +690,33 @@ static int svia_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (rc)
+ 		return rc;
+ 
+-	svia_configure(pdev, board_id);
++	hpriv = devm_kzalloc(&pdev->dev, sizeof(*hpriv), GFP_KERNEL);
++	if (!hpriv)
++		return -ENOMEM;
++	host->private_data = hpriv;
++
++	svia_configure(pdev, board_id, hpriv);
+ 
+ 	pci_set_master(pdev);
+ 	return ata_host_activate(host, pdev->irq, ata_bmdma_interrupt,
+ 				 IRQF_SHARED, &svia_sht);
+ }
+ 
++#ifdef CONFIG_PM_SLEEP
++static int svia_pci_device_resume(struct pci_dev *pdev)
++{
++	struct ata_host *host = pci_get_drvdata(pdev);
++	int rc;
++
++	rc = ata_pci_device_do_resume(pdev);
++	if (rc)
++		return rc;
++
++	svia_wd_fix(pdev);
++	ata_host_resume(host);
++
++	return 0;
++}
++#endif
++
+ module_pci_driver(svia_pci_driver);
 -- 
-tejun
+Ondrej Zary
+
