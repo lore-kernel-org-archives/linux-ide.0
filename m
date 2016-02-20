@@ -1,16 +1,12 @@
 From: Ondrej Zary <linux@rainbow-software.org>
-Subject: [PATCH] sata_via: Apply WD workaround only when needed on VT6421
-Date: Sat, 20 Feb 2016 00:08:08 +0100
-Message-ID: <1455923288-1767-1-git-send-email-linux@rainbow-software.org>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.gsystem.sk ([62.176.172.50]:48092 "EHLO gsystem.sk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1162022AbcBSXI3 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 19 Feb 2016 18:08:29 -0500
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Subject: [PATCH v2] sata_via: Apply WD workaround only when needed on VT6421
+Date: Sat, 20 Feb 2016 12:01:53 +0100
+Message-ID: <1455966113-7320-1-git-send-email-linux@rainbow-software.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-ide@vger.kernel.org
 Cc: Tejun Heo <tj@kernel.org>, Joseph Chan <JosephChan@via.com.tw>, Kernel development list <linux-kernel@vger.kernel.org>
+List-Id: linux-ide@vger.kernel.org
 
 Currently, workaround for broken WD drives is applied always, slowing
 down all drives. And it has a bug - it's not applied after resume.
@@ -57,11 +53,14 @@ The first hdparm is slower because of the error:
 
 Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 ---
- drivers/ata/sata_via.c |   79 +++++++++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 72 insertions(+), 7 deletions(-)
+Changes in v2: added missing check in svia_pci_device_resume() so the
+workaround is re-applied only when marked as such
+---
+ drivers/ata/sata_via.c |   81 +++++++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 74 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
-index 17d31fc..a58511d 100644
+index 17d31fc..9804054 100644
 --- a/drivers/ata/sata_via.c
 +++ b/drivers/ata/sata_via.c
 @@ -73,7 +73,14 @@ enum {
@@ -170,7 +169,7 @@ index 17d31fc..a58511d 100644
  
  	ata_print_version_once(&pdev->dev, DRV_VERSION);
  
-@@ -647,11 +690,33 @@ static int svia_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+@@ -647,11 +690,35 @@ static int svia_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
  	if (rc)
  		return rc;
  
@@ -191,13 +190,15 @@ index 17d31fc..a58511d 100644
 +static int svia_pci_device_resume(struct pci_dev *pdev)
 +{
 +	struct ata_host *host = pci_get_drvdata(pdev);
++	struct svia_priv *hpriv = host->private_data;
 +	int rc;
 +
 +	rc = ata_pci_device_do_resume(pdev);
 +	if (rc)
 +		return rc;
 +
-+	svia_wd_fix(pdev);
++	if (hpriv->wd_workaround)
++		svia_wd_fix(pdev);
 +	ata_host_resume(host);
 +
 +	return 0;
@@ -207,4 +208,3 @@ index 17d31fc..a58511d 100644
  module_pci_driver(svia_pci_driver);
 -- 
 Ondrej Zary
-
