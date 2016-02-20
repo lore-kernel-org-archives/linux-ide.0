@@ -1,210 +1,86 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: [PATCH v2] sata_via: Apply WD workaround only when needed on VT6421
-Date: Sat, 20 Feb 2016 12:01:53 +0100
-Message-ID: <1455966113-7320-1-git-send-email-linux@rainbow-software.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, Joseph Chan <JosephChan@via.com.tw>, Kernel development list <linux-kernel@vger.kernel.org>
+From: Anurag Kumar Vulisha <anurag.kumar.vulisha@xilinx.com>
+Subject: [RFC PATCH] drivers: ata: Read Rx water mark value from device-tree
+Date: Sat, 20 Feb 2016 18:48:22 +0530
+Message-ID: <1455974302-7082-1-git-send-email-anuragku@xilinx.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-cys01nam02on0087.outbound.protection.outlook.com ([104.47.37.87]:12238
+	"EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757173AbcBTNdz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 20 Feb 2016 08:33:55 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: robh+dt@kernel.org, pawel.moll@arm.com, mark.rutland@arm.com, ijc+devicetree@hellion.org.uk, galak@codeaurora.org, tj@kernel.org
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, anirudh@xilinx.com, svemula@xilinx.com, punnaia@xilinx.com, Anurag Kumar Vulisha <anuragku@xilinx.com>
 
-Currently, workaround for broken WD drives is applied always, slowing
-down all drives. And it has a bug - it's not applied after resume.
+This patch updates the driver to read the RX FIFO watermark value
+from device tree. This read value is used by the driver for programming
+FIFO RxWaterMark level, which sets the minimum number of free
+locations within the RX FIFO.When the rx fifo level crosses the
+programmed watermark level, sata controller will transmit HOLDS to
+the device asking it to wait.
 
-Apply the workaround only if the error really appears
-(SErr == 0x1000500). This allows unaffected drives to run at full speed
-(provided that no affected drive is connected to the controller).
-Also make sure the workaround is re-applied on resume.
-
-Tested on VT6421.
-As SCR registers access is known to cause problems on VT6420 (and I
-don't have it to test), keep the workaround applied always on VT6420.
-
-Unaffected drive (Hitachi HDS721680PLA380):
-Before:
-$ hdparm -t --direct /dev/sdb
-/dev/sdb:
- Timing O_DIRECT disk reads: 160 MB in  3.01 seconds =  53.16 MB/sec
-
-After:
-$ hdparm -t --direct /dev/sdb
-/dev/sdb:
- Timing O_DIRECT disk reads: 200 MB in  3.01 seconds =  66.47 MB/sec
-
-Affected drive (WDC WD5003ABYX-18WERA0):
-Before:
-$ hdparm -t --direct /dev/sda
-
-/dev/sda:
- Timing O_DIRECT disk reads: 180 MB in  3.02 seconds =  59.51 MB/sec
-
-After:
-$ hdparm -t --direct /dev/sdb
-/dev/sdb:
- Timing O_DIRECT disk reads: 156 MB in  3.03 seconds =  51.48 MB/sec
-$ hdparm -t --direct /dev/sdb
-/dev/sdb:
- Timing O_DIRECT disk reads: 180 MB in  3.02 seconds =  59.64 MB/sec
-
-The first hdparm is slower because of the error:
-[   50.408042] ata5: Incompatible drive: enabling workaround. This slows down transfer rate to ~60 MB/s
-[   50.728052] ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-[   50.744834] ata5.00: configured for UDMA/133
-
-Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+Signed-off-by: Anurag Kumar Vulisha <anuragku@xilinx.com>
 ---
-Changes in v2: added missing check in svia_pci_device_resume() so the
-workaround is re-applied only when marked as such
----
- drivers/ata/sata_via.c |   81 +++++++++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 74 insertions(+), 7 deletions(-)
+ .../devicetree/bindings/ata/ahci-ceva.txt          |    2 ++
+ drivers/ata/ahci_ceva.c                            |   10 +++++++++-
+ 2 files changed, 11 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
-index 17d31fc..9804054 100644
---- a/drivers/ata/sata_via.c
-+++ b/drivers/ata/sata_via.c
-@@ -73,7 +73,14 @@ enum {
- 	SATA_EXT_PHY		= (1 << 6), /* 0==use PATA, 1==ext phy */
+diff --git a/Documentation/devicetree/bindings/ata/ahci-ceva.txt b/Documentation/devicetree/bindings/ata/ahci-ceva.txt
+index 7ca8b97..7e48dfc 100644
+--- a/Documentation/devicetree/bindings/ata/ahci-ceva.txt
++++ b/Documentation/devicetree/bindings/ata/ahci-ceva.txt
+@@ -8,6 +8,7 @@ Required properties:
+ 
+ Optional properties:
+   - ceva,broken-gen2: limit to gen1 speed instead of gen2.
++  - ceva,rx-watermark: RX fifo water mark level for SATA controller.
+ 
+ Examples:
+ 	ahci@fd0c0000 {
+@@ -17,4 +18,5 @@ Examples:
+ 		interrupts = <0 133 4>;
+ 		clocks = <&clkc SATA_CLK_ID>;
+ 		ceva,broken-gen2;
++		ceva,rx-watermark = <0x40>;
+ 	};
+diff --git a/drivers/ata/ahci_ceva.c b/drivers/ata/ahci_ceva.c
+index 207649d..ea01f7d 100644
+--- a/drivers/ata/ahci_ceva.c
++++ b/drivers/ata/ahci_ceva.c
+@@ -88,6 +88,7 @@
+ struct ceva_ahci_priv {
+ 	struct platform_device *ahci_pdev;
+ 	int flags;
++	u32 rx_watermark;
  };
  
-+struct svia_priv {
-+	bool			wd_workaround;
-+};
-+
- static int svia_init_one(struct pci_dev *pdev, const struct pci_device_id *ent);
-+#ifdef CONFIG_PM_SLEEP
-+static int svia_pci_device_resume(struct pci_dev *pdev);
-+#endif
- static int svia_scr_read(struct ata_link *link, unsigned int sc_reg, u32 *val);
- static int svia_scr_write(struct ata_link *link, unsigned int sc_reg, u32 val);
- static int vt8251_scr_read(struct ata_link *link, unsigned int scr, u32 *val);
-@@ -85,6 +92,7 @@ static void vt6420_bmdma_start(struct ata_queued_cmd *qc);
- static int vt6421_pata_cable_detect(struct ata_port *ap);
- static void vt6421_set_pio_mode(struct ata_port *ap, struct ata_device *adev);
- static void vt6421_set_dma_mode(struct ata_port *ap, struct ata_device *adev);
-+static void vt6421_error_handler(struct ata_port *ap);
+ static struct ata_port_operations ahci_ceva_ops = {
+@@ -147,7 +148,7 @@ static void ahci_ceva_setup(struct ahci_host_priv *hpriv)
+ 		writel(tmp, mmio + AHCI_VEND_PP5C);
  
- static const struct pci_device_id svia_pci_tbl[] = {
- 	{ PCI_VDEVICE(VIA, 0x5337), vt6420 },
-@@ -105,7 +113,7 @@ static struct pci_driver svia_pci_driver = {
- 	.probe			= svia_init_one,
- #ifdef CONFIG_PM_SLEEP
- 	.suspend		= ata_pci_device_suspend,
--	.resume			= ata_pci_device_resume,
-+	.resume			= svia_pci_device_resume,
- #endif
- 	.remove			= ata_pci_remove_one,
- };
-@@ -137,6 +145,7 @@ static struct ata_port_operations vt6421_sata_ops = {
- 	.inherits		= &svia_base_ops,
- 	.scr_read		= svia_scr_read,
- 	.scr_write		= svia_scr_write,
-+	.error_handler		= vt6421_error_handler,
- };
+ 		/* Rx Watermark setting  */
+-		tmp = PTC_RX_WM_VAL | PTC_RSVD;
++		tmp = cevapriv->rx_watermark | PTC_RSVD;
+ 		writel(tmp, mmio + AHCI_VEND_PTC);
  
- static struct ata_port_operations vt8251_ops = {
-@@ -536,7 +545,36 @@ static int vt8251_prepare_host(struct pci_dev *pdev, struct ata_host **r_host)
- 	return 0;
- }
+ 		/* Default to Gen 2 Speed and Gen 1 if Gen2 is broken */
+@@ -187,6 +188,13 @@ static int ceva_ahci_probe(struct platform_device *pdev)
+ 	if (of_property_read_bool(np, "ceva,broken-gen2"))
+ 		cevapriv->flags = CEVA_FLAG_BROKEN_GEN2;
  
--static void svia_configure(struct pci_dev *pdev, int board_id)
-+static void svia_wd_fix(struct pci_dev *pdev)
-+{
-+	u8 tmp8;
-+
-+	pci_read_config_byte(pdev, 0x52, &tmp8);
-+	pci_write_config_byte(pdev, 0x52, tmp8 | BIT(2));
-+}
-+
-+static void vt6421_error_handler(struct ata_port *ap)
-+{
-+	struct svia_priv *hpriv = ap->host->private_data;
-+	struct pci_dev *pdev = to_pci_dev(ap->host->dev);
-+	u32 serror;
-+
-+	/* see svia_configure() for description */
-+	if (!hpriv->wd_workaround) {
-+		svia_scr_read(&ap->link, SCR_ERROR, &serror);
-+		if (serror == 0x1000500) {
-+			ata_port_warn(ap, "Incompatible drive: enabling workaround. This slows down transfer rate to ~60 MB/s");
-+			svia_wd_fix(pdev);
-+			hpriv->wd_workaround = true;
-+			ap->link.eh_context.i.flags |= ATA_EHI_QUIET;
-+		}
++	/* Read RX WATERMARK value from device tree */
++	if (of_property_read_u32(np, "ceva,rx-watermark",
++				&cevapriv->rx_watermark) < 0) {
++		/* using default RX water mark, if not in device tree */
++		cevapriv->rx_watermark = PTC_RX_WM_VAL;
 +	}
 +
-+	ata_sff_error_handler(ap);
-+}
-+
-+static void svia_configure(struct pci_dev *pdev, int board_id,
-+			   struct svia_priv *hpriv)
- {
- 	u8 tmp8;
+ 	hpriv->plat_data = cevapriv;
  
-@@ -593,11 +631,15 @@ static void svia_configure(struct pci_dev *pdev, int board_id)
- 	 * https://bugzilla.kernel.org/show_bug.cgi?id=15173
- 	 * http://article.gmane.org/gmane.linux.ide/46352
- 	 * http://thread.gmane.org/gmane.linux.kernel/1062139
-+	 *
-+	 * As the fix slows down data transfer, apply it only if the error
-+	 * actually appears - see vt6421_error_handler()
-+	 * Apply the fix always on vt6420 as we don't know if SCR_ERROR can be
-+	 * read safely.
- 	 */
--	if (board_id == vt6420 || board_id == vt6421) {
--		pci_read_config_byte(pdev, 0x52, &tmp8);
--		tmp8 |= 1 << 2;
--		pci_write_config_byte(pdev, 0x52, tmp8);
-+	if (board_id == vt6420) {
-+		svia_wd_fix(pdev);
-+		hpriv->wd_workaround = true;
- 	}
- }
- 
-@@ -608,6 +650,7 @@ static int svia_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	struct ata_host *host = NULL;
- 	int board_id = (int) ent->driver_data;
- 	const unsigned *bar_sizes;
-+	struct svia_priv *hpriv;
- 
- 	ata_print_version_once(&pdev->dev, DRV_VERSION);
- 
-@@ -647,11 +690,35 @@ static int svia_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	if (rc)
- 		return rc;
- 
--	svia_configure(pdev, board_id);
-+	hpriv = devm_kzalloc(&pdev->dev, sizeof(*hpriv), GFP_KERNEL);
-+	if (!hpriv)
-+		return -ENOMEM;
-+	host->private_data = hpriv;
-+
-+	svia_configure(pdev, board_id, hpriv);
- 
- 	pci_set_master(pdev);
- 	return ata_host_activate(host, pdev->irq, ata_bmdma_interrupt,
- 				 IRQF_SHARED, &svia_sht);
- }
- 
-+#ifdef CONFIG_PM_SLEEP
-+static int svia_pci_device_resume(struct pci_dev *pdev)
-+{
-+	struct ata_host *host = pci_get_drvdata(pdev);
-+	struct svia_priv *hpriv = host->private_data;
-+	int rc;
-+
-+	rc = ata_pci_device_do_resume(pdev);
-+	if (rc)
-+		return rc;
-+
-+	if (hpriv->wd_workaround)
-+		svia_wd_fix(pdev);
-+	ata_host_resume(host);
-+
-+	return 0;
-+}
-+#endif
-+
- module_pci_driver(svia_pci_driver);
+ 	/* CEVA specific initialization */
 -- 
-Ondrej Zary
+1.7.1
+
