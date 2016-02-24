@@ -1,88 +1,111 @@
-From: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [RFC PATCH] drivers: ata: Read Rx water mark value from
- device-tree
-Date: Tue, 23 Feb 2016 13:29:42 -0600
-Message-ID: <20160223192942.GA6235@rob-hp-laptop>
-References: <1455974302-7082-1-git-send-email-anuragku@xilinx.com>
- <18251200.Xfr10N5eWq@wuerfel>
- <3802E9A6666DF54886E2B9CBF743BA9825E01009@XAP-PVEXMBX01.xlnx.xilinx.com>
- <8540232.vQE3WQTD95@wuerfel>
- <3802E9A6666DF54886E2B9CBF743BA9825E0117F@XAP-PVEXMBX01.xlnx.xilinx.com>
+From: Tirumalesh Chalamarla <tchalamarla@caviumnetworks.com>
+Subject: Re: [PATCH V3] AHCI: Workaround for ThunderX Errata#22536
+Date: Tue, 23 Feb 2016 16:00:31 -0800
+Message-ID: <56CCF29F.8030105@caviumnetworks.com>
+References: <1455653329-4934-1-git-send-email-tchalamarla@caviumnetworks.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <3802E9A6666DF54886E2B9CBF743BA9825E0117F-4lKfpRxZ5enZMOc0yg5rMog+Gb3gawCHQz34XiSyOiE@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Anurag Kumar Vulisha <anurag.kumar.vulisha-gjFFaj9aHVfQT0dZR+AlfA@public.gmane.org>
-Cc: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, "pawel.moll-5wv7dgnIgG8@public.gmane.org" <pawel.moll-5wv7dgnIgG8@public.gmane.org>, "mark.rutland-5wv7dgnIgG8@public.gmane.org" <mark.rutland-5wv7dgnIgG8@public.gmane.org>, "ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org" <ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org>, "galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org" <galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Anirudha Sarangi <anirudh-gjFFaj9aHVfQT0dZR+AlfA@public.gmane.org>, Srikanth Vemula <svemula-gjFFaj9aHVfQT0dZR+AlfA@public.gmane.org>, Punnaiah Choudary Kalluri <punnaia-gjFFaj9aHVfQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-bn1bon0074.outbound.protection.outlook.com ([157.56.111.74]:57256
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751866AbcBXAAi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 23 Feb 2016 19:00:38 -0500
+In-Reply-To: <1455653329-4934-1-git-send-email-tchalamarla@caviumnetworks.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: tj@kernel.org
+Cc: stripathi@apm.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 
-On Tue, Feb 23, 2016 at 03:29:55PM +0000, Anurag Kumar Vulisha wrote:
-> Hi Arnd,
-> 
-> > -----Original Message-----
-> > From: Arnd Bergmann [mailto:arnd-r2nGTMty4D4@public.gmane.org]
-> > Sent: Tuesday, February 23, 2016 3:51 PM
-> > To: Anurag Kumar Vulisha
-> > Cc: robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org; pawel.moll-5wv7dgnIgG8@public.gmane.org; mark.rutland-5wv7dgnIgG8@public.gmane.org;
-> > ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org; galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org; tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org;
-> > devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; linux-
-> > ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; Anirudha Sarangi; Srikanth Vemula; Punnaiah Choudary
-> > Kalluri
-> > Subject: Re: [RFC PATCH] drivers: ata: Read Rx water mark value from device-
-> > tree
-> > 
-> > On Tuesday 23 February 2016 05:58:32 Anurag Kumar Vulisha wrote:
-> > > >
-> > > > I don't know what is appropriate because I have no idea what
-> > > > Rxwatermark is good for. Can you try describing why we can't just
-> > > > set it to the correct value for everyone automatically?
-> > > >
-> > >
-> > > This RX watermark level sets the minimum number of free locations
-> > > within the RX FIFO .When the rx fifo level crosses the programmed
-> > > watermark level ,sata controller  will transmit HOLDS to the device asking it
-> > to wait. This happens when dma reads the rx fifo data slower than the device
-> > is sending the data. Note that it can take some time for the HOLDs to get to
-> > the other end and in the time there must be enough room in the FIFO to
-> > absorb all data that could arrive from the device.
-> > > Currently we are using 0x40 for this value, which works fine with all
-> > > hardware designs  we are currently having. But hoping that this value
-> > > may vary for future silicon versions, I wanted to make this as a configurable
-> > value. So for this reason I thought of moving it either to device-tree or
-> > making it as a module_param() property.
-> > >
-> > 
-> > Ok, so if this depends on the silicon version, your initial approach would be
-> > better than the module_param.
-> > 
-> > I would probably make this dependent on the compatible string instead, and
-> > have a table in the device driver that uses a specific value for each variant of
-> > the device, but either way should be fine.
-> > 
-> > Having a separate property is most appropriate if for each hardware revision
-> > there is exactly one ideal value, while a table in the driver makes more sense
-> > if this takes a bit of tuning and the driver might choose to optimize it
-> > differently based on other constraints, such as its own interrupt handler
-> > implementation.
-> > 
-> 
-> Since we are  currently having one value in common for all the hardware and also changing
-> the rx water mark does not require any changes other than vendor specific PTC register update ,
-> I think it would be better  to  use device tree property for that rx watermark value. Doing
-> this makes the updating of rx watermark value easy, if any changes required.
-> 
-> In future, if any silicon version rx water mark value doesn't work with the current versions,
-> then  I will do as you said by maintaining the table in device driver. But at present  I feel
-> that single rx watermark property in device tree would be enough, since it works with all the
-> hardware versions we have.
+Hi Tejun,
 
-If you currently have no reason to modify it now, then add it later when 
-you actually have a use case.
+Any more comments on this?
 
-Rob
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
+Tirumalesh.
+
+
+On 02/16/2016 12:08 PM, tchalamarla@caviumnetworks.com wrote:
+> From: Tirumalesh Chalamarla <tchalamarla@caviumnetworks.com>
+>
+> Due to Errata in ThunderX, HOST_IRQ_STAT should be
+> cleared before leaving the interrupt handler.
+> The patch attempts to satisfy the need.
+>
+> Changes from V2:
+> 	- removed newfile
+> 	- code is now under CONFIG_ARM64
+>
+> Changes from V1:
+> 	- Rebased on top of libata/for-4.6
+>          - Moved ThunderX intr handler to new file
+>
+> Signed-off-by: Tirumalesh Chalamarla <tchalamarla@caviumnetworks.com>
+> ---
+>   drivers/ata/ahci.c | 44 ++++++++++++++++++++++++++++++++++++++++++++
+>   1 file changed, 44 insertions(+)
+>
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index 546a369..c8496fc 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -1325,6 +1325,44 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
+>   {}
+>   #endif
+>
+> +#ifdef CONFIG_ARM64
+> +/* Due to ERRATA#22536, ThunderX need to handle
+> + * HOST_IRQ_STAT differently.
+> + * Work around is to make sure all pending IRQs
+> + * are served before leaving handler
+> + */
+> +static irqreturn_t ahci_thunderx_irq_handler(int irq, void *dev_instance)
+> +{
+> +	struct ata_host *host = dev_instance;
+> +	struct ahci_host_priv *hpriv;
+> +	unsigned int rc = 0;
+> +	void __iomem *mmio;
+> +	u32 irq_stat, irq_masked;
+> +	unsigned int handled = 1;
+> +
+> +	VPRINTK("ENTER\n");
+> +	hpriv = host->private_data;
+> +	mmio = hpriv->mmio;
+> +	irq_stat = readl(mmio + HOST_IRQ_STAT);
+> +	if (!irq_stat)
+> +		return IRQ_NONE;
+> +
+> +	do {
+> +		irq_masked = irq_stat & hpriv->port_map;
+> +		spin_lock(&host->lock);
+> +		rc = ahci_handle_port_intr(host, irq_masked);
+> +		if (!rc)
+> +			handled = 0;
+> +		writel(irq_stat, mmio + HOST_IRQ_STAT);
+> +		irq_stat = readl(mmio + HOST_IRQ_STAT);
+> +		spin_unlock(&host->lock);
+> +	} while (irq_stat);
+> +	VPRINTK("EXIT\n");
+> +
+> +	return IRQ_RETVAL(handled);
+> +}
+> +#endif
+> +
+>   /*
+>    * ahci_init_msix() - optionally enable per-port MSI-X otherwise defer
+>    * to single msi.
+> @@ -1560,6 +1598,12 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+>   	if (ahci_broken_devslp(pdev))
+>   		hpriv->flags |= AHCI_HFLAG_NO_DEVSLP;
+>
+> +#ifdef CONFIG_ARM64
+> +	/* this should be done before save config*/
+> +	if (pdev->vendor == 0x177d && pdev->device == 0xa01c)
+> +		hpriv->irq_handler = ahci_thunderx_irq_handler;
+> +#endif
+> +
+>   	/* save initial config */
+>   	ahci_pci_save_initial_config(pdev, hpriv);
+>
+>
