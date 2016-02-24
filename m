@@ -1,111 +1,91 @@
-From: Tirumalesh Chalamarla <tchalamarla@caviumnetworks.com>
-Subject: Re: [PATCH V3] AHCI: Workaround for ThunderX Errata#22536
-Date: Tue, 23 Feb 2016 16:00:31 -0800
-Message-ID: <56CCF29F.8030105@caviumnetworks.com>
-References: <1455653329-4934-1-git-send-email-tchalamarla@caviumnetworks.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: rcar_sata DMA warnings on Salvator-X
+Date: Wed, 24 Feb 2016 13:42:33 +0100
+Message-ID: <CAMuHMdU0=_TJVfy=-zXWHkfJSWH_fJULBrL8J9T60QS48WbYcQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bn1bon0074.outbound.protection.outlook.com ([157.56.111.74]:57256
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751866AbcBXAAi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 23 Feb 2016 19:00:38 -0500
-In-Reply-To: <1455653329-4934-1-git-send-email-tchalamarla@caviumnetworks.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-renesas-soc-owner@vger.kernel.org>
+Sender: linux-renesas-soc-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Vladimir Barinov <vladimir.barinov@cogentembedded.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, linux-renesas-soc@vger.kernel.org, dmaengine@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org
-Cc: stripathi@apm.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 
-Hi Tejun,
+With CONFIG_DMA_API_DEBUG=y, I sometimes get the below warning
+on r8a7795/salvator-x. My tree is based on renesas-drivers-2016-02-23-v4.5-rc5.
 
-Any more comments on this?
+sata_rcar ee300000.sata: DMA-API: cpu touching an active dma mapped
+cacheline [cln=0x000000000090fba0]
+------------[ cut here ]------------
+WARNING: at lib/dma-debug.c:604
+Modules linked in:
 
-Thanks,
-Tirumalesh.
+CPU: 3 PID: 1619 Comm: bash Tainted: G        W
+4.5.0-rc5-salvator-x-04682-g420edda42525a16f-dirty #541
+Hardware name: Renesas Salvator-X board based on r8a7795 (DT)
+task: ffffffc03bb30200 ti: ffffffc03b170000 task.ti: ffffffc03b170000
+PC is at debug_dma_assert_idle+0x180/0x1d0
+LR is at debug_dma_assert_idle+0x180/0x1d0
+pc : [<ffffff8004222b00>] lr : [<ffffff8004222b00>] pstate: 60000145
+sp : ffffffc03b173c20
+x29: ffffffc03b173c20 x28: 00e00000487ddfd3
+x27: ffffffc03bb98010 x26: 0000000000000000
+x25: ffffffc03bb98010 x24: 0000000000000140
+x23: ffffff80047219b8 x22: ffffff80047a1000
+x21: ffffff80046f1000 x20: ffffff8004721000
+x19: ffffffc6fb048b00 x18: 0000000000000000
+x17: 0000007f841b8150 x16: 00000000004e5428
+x15: ffffffffffffffff x14: 6863616320646570
+x13: 70616d20616d6420 x12: 657669746361206e
+x11: 6120676e69686375 x10: 6f7420757063203a
+x9 : 4950412d414d4420 x8 : 30303078303d6e6c
+x7 : 635b20656e696c65 x6 : ffffff800474e4a5
+x5 : 0000000000000000 x4 : 0000000000000000
+x3 : 0000000000000000 x2 : 00000000dead4ead
+x1 : ffffff8004703108 x0 : 0000000000000066
 
+---[ end trace 435efaf33e0249ee ]---
+Call trace:
+Exception stack(0xffffffc03b173a60 to 0xffffffc03b173b80)
+3a60: ffffffc6fb048b00 ffffff8004721000 ffffffc03b173c20 ffffff8004222b00
+3a80: ffffff8004770c80 0000000000000000 000000000000c434 0000000000000002
+3aa0: ffffffc03b173ac0 ffffff8004703138 ffffff80045f39d7 0000000000000004
+3ac0: ffffffc03b173b60 ffffff80040d3bf4 ffffffc6fb048b00 ffffff8004721000
+3ae0: ffffff80046f1000 ffffff80047a1000 ffffff80047219b8 0000000000000140
+3b00: 0000000000000066 ffffff8004703108 00000000dead4ead 0000000000000000
+3b20: 0000000000000000 0000000000000000 ffffff800474e4a5 635b20656e696c65
+3b40: 30303078303d6e6c 4950412d414d4420 6f7420757063203a 6120676e69686375
+3b60: 657669746361206e 70616d20616d6420 6863616320646570 ffffffffffffffff
+[<ffffff8004222b00>] debug_dma_assert_idle+0x180/0x1d0
+[<ffffff800412b0fc>] wp_page_copy.isra.109+0xfc/0x57c
+[<ffffff800412f118>] handle_mm_fault+0x125c/0x1300
+[<ffffff8004092894>] do_page_fault+0x184/0x328
+[<ffffff8004082250>] do_mem_abort+0x40/0x9c
+Exception stack(0xffffffc03b173e30 to 0xffffffc03b173f50)
+3e20:                                   0000000000000000 0000000000000003
+3e40: ffffffffffffffff 00000000004b7844 ffffffc03b173e70 ffffff8004483be8
+3e60: 0000000000000000 ffffff80040aa2f0 ffffffc03b173e80 ffffff80040aa2f8
+3e80: 0000000000000000 ffffff80040854f0 0000000000000000 000000000000067b
+3ea0: ffffffffffffffff 0000007f841b8158 0000000020000000 0000000000000015
+3ec0: 0000000000000000 ffffff80040854f0 000000000054d668 0000000000000028
+3ee0: 00000000fffffff7 0000000000000001 00000000004f2160 0000808080008000
+3f00: 0080008080800000 cecdfefeff08ff30 000000000000009a cdfefeff12cecece
+3f20: ff7f7f7f7fffffff 0101010101010101 0000000000000008 ffffffffffffffff
+3f40: ffffffffffff0000 ffffffffffffffff
+[<ffffff8004085124>] el0_da+0x18/0x1c
+Mapped at:
+ [<ffffff8004220a08>] dma_entry_alloc+0x98/0xac
+ [<ffffff8004222390>] debug_dma_alloc_coherent+0x48/0xe0
+ [<ffffff8004292458>] dmam_alloc_coherent+0xa8/0xf8
+ [<ffffff80042c7568>] ata_bmdma_port_start+0x40/0x5c
+ [<ffffff80042b66f4>] ata_host_start+0xf8/0x19c
 
-On 02/16/2016 12:08 PM, tchalamarla@caviumnetworks.com wrote:
-> From: Tirumalesh Chalamarla <tchalamarla@caviumnetworks.com>
->
-> Due to Errata in ThunderX, HOST_IRQ_STAT should be
-> cleared before leaving the interrupt handler.
-> The patch attempts to satisfy the need.
->
-> Changes from V2:
-> 	- removed newfile
-> 	- code is now under CONFIG_ARM64
->
-> Changes from V1:
-> 	- Rebased on top of libata/for-4.6
->          - Moved ThunderX intr handler to new file
->
-> Signed-off-by: Tirumalesh Chalamarla <tchalamarla@caviumnetworks.com>
-> ---
->   drivers/ata/ahci.c | 44 ++++++++++++++++++++++++++++++++++++++++++++
->   1 file changed, 44 insertions(+)
->
-> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-> index 546a369..c8496fc 100644
-> --- a/drivers/ata/ahci.c
-> +++ b/drivers/ata/ahci.c
-> @@ -1325,6 +1325,44 @@ static inline void ahci_gtf_filter_workaround(struct ata_host *host)
->   {}
->   #endif
->
-> +#ifdef CONFIG_ARM64
-> +/* Due to ERRATA#22536, ThunderX need to handle
-> + * HOST_IRQ_STAT differently.
-> + * Work around is to make sure all pending IRQs
-> + * are served before leaving handler
-> + */
-> +static irqreturn_t ahci_thunderx_irq_handler(int irq, void *dev_instance)
-> +{
-> +	struct ata_host *host = dev_instance;
-> +	struct ahci_host_priv *hpriv;
-> +	unsigned int rc = 0;
-> +	void __iomem *mmio;
-> +	u32 irq_stat, irq_masked;
-> +	unsigned int handled = 1;
-> +
-> +	VPRINTK("ENTER\n");
-> +	hpriv = host->private_data;
-> +	mmio = hpriv->mmio;
-> +	irq_stat = readl(mmio + HOST_IRQ_STAT);
-> +	if (!irq_stat)
-> +		return IRQ_NONE;
-> +
-> +	do {
-> +		irq_masked = irq_stat & hpriv->port_map;
-> +		spin_lock(&host->lock);
-> +		rc = ahci_handle_port_intr(host, irq_masked);
-> +		if (!rc)
-> +			handled = 0;
-> +		writel(irq_stat, mmio + HOST_IRQ_STAT);
-> +		irq_stat = readl(mmio + HOST_IRQ_STAT);
-> +		spin_unlock(&host->lock);
-> +	} while (irq_stat);
-> +	VPRINTK("EXIT\n");
-> +
-> +	return IRQ_RETVAL(handled);
-> +}
-> +#endif
-> +
->   /*
->    * ahci_init_msix() - optionally enable per-port MSI-X otherwise defer
->    * to single msi.
-> @@ -1560,6 +1598,12 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
->   	if (ahci_broken_devslp(pdev))
->   		hpriv->flags |= AHCI_HFLAG_NO_DEVSLP;
->
-> +#ifdef CONFIG_ARM64
-> +	/* this should be done before save config*/
-> +	if (pdev->vendor == 0x177d && pdev->device == 0xa01c)
-> +		hpriv->irq_handler = ahci_thunderx_irq_handler;
-> +#endif
-> +
->   	/* save initial config */
->   	ahci_pci_save_initial_config(pdev, hpriv);
->
->
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
