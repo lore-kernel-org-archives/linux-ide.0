@@ -1,57 +1,151 @@
-From: Simon Horman <horms@verge.net.au>
-Subject: Re: [PATCH] SATA: rcar: add device tree support for r8a7792
-Date: Thu, 25 Feb 2016 18:40:51 +0900
-Message-ID: <20160225094051.GB28141@verge.net.au>
-References: <1456362985-24137-1-git-send-email-horms+renesas@verge.net.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: [RFC PATCH] sata_via: Implement hotplug for VT6421
+Date: Thu, 25 Feb 2016 17:22:25 +0100
+Message-ID: <1456417345-1843-1-git-send-email-linux@rainbow-software.org>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from kirsty.vergenet.net ([202.4.237.240]:50437 "EHLO
-	kirsty.vergenet.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760365AbcBYJkz (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 25 Feb 2016 04:40:55 -0500
-Content-Disposition: inline
-In-Reply-To: <1456362985-24137-1-git-send-email-horms+renesas@verge.net.au>
+Received: from ns.gsystem.sk ([62.176.172.50]:47973 "EHLO gsystem.sk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753373AbcBYQWi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 25 Feb 2016 11:22:38 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-renesas-soc@vger.kernel.org, Magnus Damm <magnus.damm@gmail.com>, devicetree@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Kernel development list <linux-kernel@vger.kernel.org>
 
-On Thu, Feb 25, 2016 at 10:16:25AM +0900, Simon Horman wrote:
-> Simply document new compatibility string.
-> As a previous patch adds a generic R-Car Gen2 compatibility string
-> there appears to be no need for a driver updates.
-> 
-> By documenting this compat sting it may be used in DTSs shipped, for
-> example as part of ROMs. It must be used in conjunction with the Gen2
-> fallback compat string. At this time there are no known differences between
-> the r8a7792 IP block and that implemented by the driver for the Gen2
-> fallback compat string. Thus there is no need to update the driver as the
-> use of the Gen2 fallback compat string will activate the correct code in
-> the current driver while leaving the option for r8a7792-specific driver
-> code to be activated in an updated driver should the need arise.
-> 
-> Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
-> ---
->  Documentation/devicetree/bindings/ata/sata_rcar.txt | 1 +
->  1 file changed, 1 insertion(+)
-> 
->  Based on the for-next branch of the libata tree
+Enable IRQ on hotplug and add an interrupt handler to handle it.
 
-I seem to have omitted the patch to add the fallback binding.
-I'll respin. In the mean time please ignore this patch.
+This allows hotplug to work:
+ata5: exception Emask 0x10 SAct 0x0 SErr 0x70000 action 0xe frozen
+ata5: SError: { PHYRdyChg PHYInt CommWake }
+ata5: hard resetting link
+ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
+ata5.00: LPM support broken, forcing max_power
+ata5.00: ATA-7: WDC WD800JD-75MSA3, 10.01E04, max UDMA/133
+ata5.00: 156250000 sectors, multi 0: LBA48 NCQ (depth 0/32)
+ata5.00: LPM support broken, forcing max_power
+ata5.00: configured for UDMA/133
+ata5: EH complete
+scsi 4:0:0:0: Direct-Access     ATA      WDC WD800JD-75MS 1E04 PQ: 0 ANSI: 5
+sd 4:0:0:0: [sdb] 156250000 512-byte logical blocks: (80.0 GB/74.5 GiB)
+sd 4:0:0:0: [sdb] Write Protect is off
+sd 4:0:0:0: [sdb] Mode Sense: 00 3a 00 00
+sd 4:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+sd 4:0:0:0: Attached scsi generic sg1 type 0
+sd 4:0:0:0: [sdb] Attached SCSI disk
 
-> diff --git a/Documentation/devicetree/bindings/ata/sata_rcar.txt b/Documentation/devicetree/bindings/ata/sata_rcar.txt
-> index 0764f9ab63dc..539dbdfba8de 100644
-> --- a/Documentation/devicetree/bindings/ata/sata_rcar.txt
-> +++ b/Documentation/devicetree/bindings/ata/sata_rcar.txt
-> @@ -7,6 +7,7 @@ Required properties:
->  			  - "renesas,sata-r8a7790-es1" for R-Car H2 ES1
->  			  - "renesas,sata-r8a7790" for R-Car H2 other than ES1
->  			  - "renesas,sata-r8a7791" for R-Car M2-W
-> +			  - "renesas,sata-r8a7792" for R-Car V2H
->  			  - "renesas,sata-r8a7793" for R-Car M2-N
->  			  - "renesas,sata-r8a7795" for R-Car H3
->  - reg			: address and length of the SATA registers;
-> -- 
-> 2.7.0.rc3.207.g0ac5344
+And also hot unplug:
+ata5: exception Emask 0x10 SAct 0x0 SErr 0x1b0000 action 0xe frozen
+ata5: SError: { PHYRdyChg PHYInt 10B8B Dispar }
+ata5: hard resetting link
+ata5: SATA link down (SStatus 0 SControl 310)
+ata5: hard resetting link
+ata5: SATA link down (SStatus 0 SControl 310)
+ata5: hard resetting link
+ata5: SATA link down (SStatus 0 SControl 310)
+ata5.00: disabled
+ata5: EH complete
+ata5.00: detaching (SCSI 4:0:0:0)
+sd 4:0:0:0: [sdb] Synchronizing SCSI cache
+sd 4:0:0:0: [sdb] Synchronize Cache(10) failed: Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+sd 4:0:0:0: [sdb] Stopping disk
+sd 4:0:0:0: [sdb] Start/Stop Unit failed: Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+
+Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+---
+ drivers/ata/sata_via.c |   52 ++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 50 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
+index 9804054..0636d84 100644
+--- a/drivers/ata/sata_via.c
++++ b/drivers/ata/sata_via.c
+@@ -61,6 +61,7 @@ enum {
+ 	SATA_CHAN_ENAB		= 0x40, /* SATA channel enable */
+ 	SATA_INT_GATE		= 0x41, /* SATA interrupt gating */
+ 	SATA_NATIVE_MODE	= 0x42, /* Native mode enable */
++	SVIA_MISC_3		= 0x46,	/* Miscellaneous Control III */
+ 	PATA_UDMA_TIMING	= 0xB3, /* PATA timing for DMA/ cable detect */
+ 	PATA_PIO_TIMING		= 0xAB, /* PATA timing register */
+ 
+@@ -71,6 +72,8 @@ enum {
+ 	NATIVE_MODE_ALL		= (1 << 7) | (1 << 6) | (1 << 5) | (1 << 4),
+ 
+ 	SATA_EXT_PHY		= (1 << 6), /* 0==use PATA, 1==ext phy */
++
++	SATA_HOTPLUG		= (1 << 5), /* enable IRQ on hotplug */
+ };
+ 
+ struct svia_priv {
+@@ -553,6 +556,37 @@ static void svia_wd_fix(struct pci_dev *pdev)
+ 	pci_write_config_byte(pdev, 0x52, tmp8 | BIT(2));
+ }
+ 
++static irqreturn_t vt6421_interrupt(int irq, void *dev_instance)
++{
++	struct ata_host *host = dev_instance;
++	irqreturn_t rc = ata_bmdma_interrupt(irq, dev_instance);
++
++	/* if the IRQ was not handled, it might be a hotplug IRQ */
++	if (rc != IRQ_HANDLED) {
++		u32 serror;
++		unsigned long flags;
++
++		spin_lock_irqsave(&host->lock, flags);
++		/* check for hotplug on port 0 */
++		svia_scr_read(&host->ports[0]->link, SCR_ERROR, &serror);
++		if (serror & SERR_PHYRDY_CHG) {
++			ata_ehi_hotplugged(&host->ports[0]->link.eh_info);
++			ata_port_freeze(host->ports[0]);
++			rc = IRQ_HANDLED;
++		}
++		/* check for hotplug on port 1 */
++		svia_scr_read(&host->ports[1]->link, SCR_ERROR, &serror);
++		if (serror & SERR_PHYRDY_CHG) {
++			ata_ehi_hotplugged(&host->ports[1]->link.eh_info);
++			ata_port_freeze(host->ports[1]);
++			rc = IRQ_HANDLED;
++		}
++		spin_unlock_irqrestore(&host->lock, flags);
++	}
++
++	return rc;
++}
++
+ static void vt6421_error_handler(struct ata_port *ap)
+ {
+ 	struct svia_priv *hpriv = ap->host->private_data;
+@@ -610,6 +644,16 @@ static void svia_configure(struct pci_dev *pdev, int board_id,
+ 		pci_write_config_byte(pdev, SATA_NATIVE_MODE, tmp8);
+ 	}
+ 
++	/* enable IRQ on hotplug */
++	pci_read_config_byte(pdev, SVIA_MISC_3, &tmp8);
++	if ((tmp8 & SATA_HOTPLUG) != SATA_HOTPLUG) {
++		dev_dbg(&pdev->dev,
++			"enabling SATA hotplug (0x%x)\n",
++			(int) tmp8);
++		tmp8 |= SATA_HOTPLUG;
++		pci_write_config_byte(pdev, SVIA_MISC_3, tmp8);
++	}
++
+ 	/*
+ 	 * vt6420/1 has problems talking to some drives.  The following
+ 	 * is the fix from Joseph Chan <JosephChan@via.com.tw>.
+@@ -698,8 +742,12 @@ static int svia_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	svia_configure(pdev, board_id, hpriv);
+ 
+ 	pci_set_master(pdev);
+-	return ata_host_activate(host, pdev->irq, ata_bmdma_interrupt,
+-				 IRQF_SHARED, &svia_sht);
++	if (board_id == vt6421)
++		return ata_host_activate(host, pdev->irq, vt6421_interrupt,
++					 IRQF_SHARED, &svia_sht);
++	else
++		return ata_host_activate(host, pdev->irq, ata_bmdma_interrupt,
++					 IRQF_SHARED, &svia_sht);
+ }
+ 
+ #ifdef CONFIG_PM_SLEEP
+-- 
+Ondrej Zary
+
