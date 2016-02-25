@@ -1,30 +1,33 @@
-From: Laura Abbott <labbott@redhat.com>
-Subject: [REGRESSION] 8a3e33cf92c7 "ata: ahci: find eSATA ports and flag them
- as removable" changes userspace behavior
-Date: Thu, 25 Feb 2016 09:12:26 -0800
-Message-ID: <56CF35FA.1070500@redhat.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2] sata_via: Apply WD workaround only when needed on
+ VT6421
+Date: Thu, 25 Feb 2016 13:18:22 -0500
+Message-ID: <20160225181822.GA6092@mtj.duckdns.org>
+References: <1455966113-7320-1-git-send-email-linux@rainbow-software.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49793 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760941AbcBYRMe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 25 Feb 2016 12:12:34 -0500
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1455966113-7320-1-git-send-email-linux@rainbow-software.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: linux-ide@vger.kernel.org, Joseph Chan <JosephChan@via.com.tw>, Kernel development list <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Manuel Lauss <manuel.lauss@gmail.com>
-Cc: linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-Hi,
+On Sat, Feb 20, 2016 at 12:01:53PM +0100, Ondrej Zary wrote:
+> Currently, workaround for broken WD drives is applied always, slowing
+> down all drives. And it has a bug - it's not applied after resume.
+> 
+> Apply the workaround only if the error really appears
+> (SErr == 0x1000500). This allows unaffected drives to run at full speed
+> (provided that no affected drive is connected to the controller).
+> Also make sure the workaround is re-applied on resume.
+...
+> Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 
-We received a bugzilla report https://bugzilla.redhat.com/show_bug.cgi?id=1310682
-of partitions being automounted unexpectedly. Testing showed that
-8a3e33cf92c7 ("ata: ahci: find eSATA ports and flag them as removable") was responsible.
-This seems to be classified as 'breaking' userspace given that this behavior results
-in partitions that were previously unmounted now being being mounted unwanted
-automatically which is unwanted behavior for the user. Can we revert this patch or
-give a fix to change this behavior?
+Applied to libata/for-4.6.
 
-Thanks,
-Laura
+Thanks.
+
+-- 
+tejun
