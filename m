@@ -1,151 +1,30 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: [RFC PATCH] sata_via: Implement hotplug for VT6421
-Date: Thu, 25 Feb 2016 17:22:25 +0100
-Message-ID: <1456417345-1843-1-git-send-email-linux@rainbow-software.org>
+From: Laura Abbott <labbott@redhat.com>
+Subject: [REGRESSION] 8a3e33cf92c7 "ata: ahci: find eSATA ports and flag them
+ as removable" changes userspace behavior
+Date: Thu, 25 Feb 2016 09:12:26 -0800
+Message-ID: <56CF35FA.1070500@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from ns.gsystem.sk ([62.176.172.50]:47973 "EHLO gsystem.sk"
+Received: from mx1.redhat.com ([209.132.183.28]:49793 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753373AbcBYQWi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 25 Feb 2016 11:22:38 -0500
+	id S1760941AbcBYRMe (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 25 Feb 2016 12:12:34 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, Kernel development list <linux-kernel@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>, Manuel Lauss <manuel.lauss@gmail.com>
+Cc: linux-ide@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-Enable IRQ on hotplug and add an interrupt handler to handle it.
+Hi,
 
-This allows hotplug to work:
-ata5: exception Emask 0x10 SAct 0x0 SErr 0x70000 action 0xe frozen
-ata5: SError: { PHYRdyChg PHYInt CommWake }
-ata5: hard resetting link
-ata5: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-ata5.00: LPM support broken, forcing max_power
-ata5.00: ATA-7: WDC WD800JD-75MSA3, 10.01E04, max UDMA/133
-ata5.00: 156250000 sectors, multi 0: LBA48 NCQ (depth 0/32)
-ata5.00: LPM support broken, forcing max_power
-ata5.00: configured for UDMA/133
-ata5: EH complete
-scsi 4:0:0:0: Direct-Access     ATA      WDC WD800JD-75MS 1E04 PQ: 0 ANSI: 5
-sd 4:0:0:0: [sdb] 156250000 512-byte logical blocks: (80.0 GB/74.5 GiB)
-sd 4:0:0:0: [sdb] Write Protect is off
-sd 4:0:0:0: [sdb] Mode Sense: 00 3a 00 00
-sd 4:0:0:0: [sdb] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-sd 4:0:0:0: Attached scsi generic sg1 type 0
-sd 4:0:0:0: [sdb] Attached SCSI disk
+We received a bugzilla report https://bugzilla.redhat.com/show_bug.cgi?id=1310682
+of partitions being automounted unexpectedly. Testing showed that
+8a3e33cf92c7 ("ata: ahci: find eSATA ports and flag them as removable") was responsible.
+This seems to be classified as 'breaking' userspace given that this behavior results
+in partitions that were previously unmounted now being being mounted unwanted
+automatically which is unwanted behavior for the user. Can we revert this patch or
+give a fix to change this behavior?
 
-And also hot unplug:
-ata5: exception Emask 0x10 SAct 0x0 SErr 0x1b0000 action 0xe frozen
-ata5: SError: { PHYRdyChg PHYInt 10B8B Dispar }
-ata5: hard resetting link
-ata5: SATA link down (SStatus 0 SControl 310)
-ata5: hard resetting link
-ata5: SATA link down (SStatus 0 SControl 310)
-ata5: hard resetting link
-ata5: SATA link down (SStatus 0 SControl 310)
-ata5.00: disabled
-ata5: EH complete
-ata5.00: detaching (SCSI 4:0:0:0)
-sd 4:0:0:0: [sdb] Synchronizing SCSI cache
-sd 4:0:0:0: [sdb] Synchronize Cache(10) failed: Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
-sd 4:0:0:0: [sdb] Stopping disk
-sd 4:0:0:0: [sdb] Start/Stop Unit failed: Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
-
-Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
----
- drivers/ata/sata_via.c |   52 ++++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 50 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
-index 9804054..0636d84 100644
---- a/drivers/ata/sata_via.c
-+++ b/drivers/ata/sata_via.c
-@@ -61,6 +61,7 @@ enum {
- 	SATA_CHAN_ENAB		= 0x40, /* SATA channel enable */
- 	SATA_INT_GATE		= 0x41, /* SATA interrupt gating */
- 	SATA_NATIVE_MODE	= 0x42, /* Native mode enable */
-+	SVIA_MISC_3		= 0x46,	/* Miscellaneous Control III */
- 	PATA_UDMA_TIMING	= 0xB3, /* PATA timing for DMA/ cable detect */
- 	PATA_PIO_TIMING		= 0xAB, /* PATA timing register */
- 
-@@ -71,6 +72,8 @@ enum {
- 	NATIVE_MODE_ALL		= (1 << 7) | (1 << 6) | (1 << 5) | (1 << 4),
- 
- 	SATA_EXT_PHY		= (1 << 6), /* 0==use PATA, 1==ext phy */
-+
-+	SATA_HOTPLUG		= (1 << 5), /* enable IRQ on hotplug */
- };
- 
- struct svia_priv {
-@@ -553,6 +556,37 @@ static void svia_wd_fix(struct pci_dev *pdev)
- 	pci_write_config_byte(pdev, 0x52, tmp8 | BIT(2));
- }
- 
-+static irqreturn_t vt6421_interrupt(int irq, void *dev_instance)
-+{
-+	struct ata_host *host = dev_instance;
-+	irqreturn_t rc = ata_bmdma_interrupt(irq, dev_instance);
-+
-+	/* if the IRQ was not handled, it might be a hotplug IRQ */
-+	if (rc != IRQ_HANDLED) {
-+		u32 serror;
-+		unsigned long flags;
-+
-+		spin_lock_irqsave(&host->lock, flags);
-+		/* check for hotplug on port 0 */
-+		svia_scr_read(&host->ports[0]->link, SCR_ERROR, &serror);
-+		if (serror & SERR_PHYRDY_CHG) {
-+			ata_ehi_hotplugged(&host->ports[0]->link.eh_info);
-+			ata_port_freeze(host->ports[0]);
-+			rc = IRQ_HANDLED;
-+		}
-+		/* check for hotplug on port 1 */
-+		svia_scr_read(&host->ports[1]->link, SCR_ERROR, &serror);
-+		if (serror & SERR_PHYRDY_CHG) {
-+			ata_ehi_hotplugged(&host->ports[1]->link.eh_info);
-+			ata_port_freeze(host->ports[1]);
-+			rc = IRQ_HANDLED;
-+		}
-+		spin_unlock_irqrestore(&host->lock, flags);
-+	}
-+
-+	return rc;
-+}
-+
- static void vt6421_error_handler(struct ata_port *ap)
- {
- 	struct svia_priv *hpriv = ap->host->private_data;
-@@ -610,6 +644,16 @@ static void svia_configure(struct pci_dev *pdev, int board_id,
- 		pci_write_config_byte(pdev, SATA_NATIVE_MODE, tmp8);
- 	}
- 
-+	/* enable IRQ on hotplug */
-+	pci_read_config_byte(pdev, SVIA_MISC_3, &tmp8);
-+	if ((tmp8 & SATA_HOTPLUG) != SATA_HOTPLUG) {
-+		dev_dbg(&pdev->dev,
-+			"enabling SATA hotplug (0x%x)\n",
-+			(int) tmp8);
-+		tmp8 |= SATA_HOTPLUG;
-+		pci_write_config_byte(pdev, SVIA_MISC_3, tmp8);
-+	}
-+
- 	/*
- 	 * vt6420/1 has problems talking to some drives.  The following
- 	 * is the fix from Joseph Chan <JosephChan@via.com.tw>.
-@@ -698,8 +742,12 @@ static int svia_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	svia_configure(pdev, board_id, hpriv);
- 
- 	pci_set_master(pdev);
--	return ata_host_activate(host, pdev->irq, ata_bmdma_interrupt,
--				 IRQF_SHARED, &svia_sht);
-+	if (board_id == vt6421)
-+		return ata_host_activate(host, pdev->irq, vt6421_interrupt,
-+					 IRQF_SHARED, &svia_sht);
-+	else
-+		return ata_host_activate(host, pdev->irq, ata_bmdma_interrupt,
-+					 IRQF_SHARED, &svia_sht);
- }
- 
- #ifdef CONFIG_PM_SLEEP
--- 
-Ondrej Zary
-
+Thanks,
+Laura
