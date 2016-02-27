@@ -1,45 +1,27 @@
-From: scott.lawson@intel.com
-Subject: [PATCH] AHCI: Remove obsolete Intel Lewisburg SATA RAID device IDs
-Date: Fri, 26 Feb 2016 10:09:52 -0800
-Message-ID: <1456510192-27184-1-git-send-email-scott.lawson@intel.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [RFC] AHCI: Remove conflicting Intel Lewisburg 3rd-party SATA
+ RAID device IDs
+Date: Sat, 27 Feb 2016 00:51:29 -0800
+Message-ID: <20160227085129.GA26010@infradead.org>
+References: <1456510169-27138-1-git-send-email-scott.lawson@intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:44401 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755218AbcB0CJE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 26 Feb 2016 21:09:04 -0500
+Received: from bombadil.infradead.org ([198.137.202.9]:41914 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753316AbcB0Ivb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 Feb 2016 03:51:31 -0500
+Content-Disposition: inline
+In-Reply-To: <1456510169-27138-1-git-send-email-scott.lawson@intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Scott Lawson <scott.lawson@intel.com>
+To: scott.lawson@intel.com
+Cc: tj@kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Scott Lawson <scott.lawson@intel.com>
+On Fri, Feb 26, 2016 at 10:09:29AM -0800, scott.lawson@intel.com wrote:
+> From: Scott Lawson <scott.lawson@intel.com>
+> 
+> These PCI device IDs in the AHCI driver conflict with proprietary drivers,
+> preventing them from loading.
 
-These PCI device IDs have been removed from the Intel Lewisburg design
-specification. They are no longer needed.
-
-Signed-off-by: Scott Lawson <scott.lawson@intel.com>
----
- drivers/ata/ahci.c | 4 ----
- 1 file changed, 4 deletions(-)
-
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index 546a369..97c41b3 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -369,13 +369,9 @@ static const struct pci_device_id ahci_pci_tbl[] = {
- 	{ PCI_VDEVICE(INTEL, 0x2822), board_ahci }, /* Lewisburg RAID*/
- 	{ PCI_VDEVICE(INTEL, 0x2826), board_ahci }, /* Lewisburg RAID*/
- 	{ PCI_VDEVICE(INTEL, 0xa182), board_ahci }, /* Lewisburg AHCI*/
--	{ PCI_VDEVICE(INTEL, 0xa184), board_ahci }, /* Lewisburg RAID*/
- 	{ PCI_VDEVICE(INTEL, 0xa186), board_ahci }, /* Lewisburg RAID*/
--	{ PCI_VDEVICE(INTEL, 0xa18e), board_ahci }, /* Lewisburg RAID*/
- 	{ PCI_VDEVICE(INTEL, 0xa202), board_ahci }, /* Lewisburg AHCI*/
--	{ PCI_VDEVICE(INTEL, 0xa204), board_ahci }, /* Lewisburg RAID*/
- 	{ PCI_VDEVICE(INTEL, 0xa206), board_ahci }, /* Lewisburg RAID*/
--	{ PCI_VDEVICE(INTEL, 0xa20e), board_ahci }, /* Lewisburg RAID*/
- 
- 	/* JMicron 360/1/3/5/6, match class to avoid IDE function */
- 	{ PCI_VENDOR_ID_JMICRON, PCI_ANY_ID, PCI_ANY_ID, PCI_ANY_ID,
--- 
-1.9.1
-
+And that's a good thing!
