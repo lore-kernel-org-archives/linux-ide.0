@@ -1,32 +1,51 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [REGRESSION] 8a3e33cf92c7 "ata: ahci: find eSATA ports and flag
- them as removable" changes userspace behavior
-Date: Sat, 27 Feb 2016 08:08:49 -0500
-Message-ID: <20160227130849.GG3965@htj.duckdns.org>
-References: <56CF35FA.1070500@redhat.com>
- <CAOLZvyG4JAdir0F1b2V==qdkM0+NvqxviQeqZ86t=0rbqys7oQ@mail.gmail.com>
- <56CFAF2E.4050001@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <56CFAF2E.4050001@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Laura Abbott <labbott@redhat.com>
-Cc: Manuel Lauss <manuel.lauss@gmail.com>, Linux-IDE <linux-ide@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+From: Manuel Lauss <manuel.lauss@gmail.com>
+Subject: [PATCH] ata: ahci: don't mark HotPlugCapable Ports as external/removable
+Date: Sat, 27 Feb 2016 16:10:05 +0100
+Message-ID: <1456585805-897872-1-git-send-email-manuel.lauss@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:33572 "EHLO
+	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756529AbcB0PKK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 Feb 2016 10:10:10 -0500
+Received: by mail-wm0-f41.google.com with SMTP id g62so105462353wme.0
+        for <linux-ide@vger.kernel.org>; Sat, 27 Feb 2016 07:10:09 -0800 (PST)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Linux-IDE <linux-ide@vger.kernel.org>
+Cc: Tejun Heo <tj@kernel.org>, Laura Abbott <labbott@redhat.com>, Manuel Lauss <manuel.lauss@gmail.com>
 
-Hello,
+The HPCP bit is set by bioses for on-board sata ports either because
+they think sata is hotplug capable in general or to allow Windows
+to display a "device eject" icon on ports which are routed to an
+external connector bracket.
 
-On Thu, Feb 25, 2016 at 05:49:34PM -0800, Laura Abbott wrote:
-> At least one user reported that this fixed the issue and he said
-> you could add
-> 
-> Tested-by: Bob Schultz <bob@engineer.com>
+However in Redhat Bugzilla #1310682, users report that with kernel 4.4,
+where this bit test first appeared, a lot of partitions on sata drives
+are now mounted automatically.
 
-Great, Manuel, can you please send a proper patch?
+This patch should fix redhat and a lot of other distros which
+unconditionally automount all devices which have the "removable"
+bit set.
 
-Thanks.
+Signed-off-by: Manuel Lauss <manuel.lauss@gmail.com>
+---
+ drivers/ata/libahci.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 4029679..e029e3c 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -1164,8 +1164,7 @@ static void ahci_port_init(struct device *dev, struct ata_port *ap,
+ 
+ 	/* mark esata ports */
+ 	tmp = readl(port_mmio + PORT_CMD);
+-	if ((tmp & PORT_CMD_HPCP) ||
+-	    ((tmp & PORT_CMD_ESP) && (hpriv->cap & HOST_CAP_SXS)))
++	if ((tmp & PORT_CMD_ESP) && (hpriv->cap & HOST_CAP_SXS))
+ 		ap->pflags |= ATA_PFLAG_EXTERNAL;
+ }
+ 
 -- 
-tejun
+2.7.2
+
