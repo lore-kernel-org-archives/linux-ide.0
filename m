@@ -1,32 +1,30 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC] AHCI: Remove conflicting Intel Lewisburg 3rd-party SATA
- RAID device IDs
-Date: Sat, 27 Feb 2016 06:20:33 -0500
-Message-ID: <20160227112033.GX3965@htj.duckdns.org>
-References: <1456510169-27138-1-git-send-email-scott.lawson@intel.com>
+Subject: Re: [REGRESSION] 8a3e33cf92c7 "ata: ahci: find eSATA ports and flag
+ them as removable" changes userspace behavior
+Date: Sat, 27 Feb 2016 08:08:49 -0500
+Message-ID: <20160227130849.GG3965@htj.duckdns.org>
+References: <56CF35FA.1070500@redhat.com>
+ <CAOLZvyG4JAdir0F1b2V==qdkM0+NvqxviQeqZ86t=0rbqys7oQ@mail.gmail.com>
+ <56CFAF2E.4050001@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-oi0-f42.google.com ([209.85.218.42]:35083 "EHLO
-	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756176AbcB0LUf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 Feb 2016 06:20:35 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1456510169-27138-1-git-send-email-scott.lawson@intel.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <56CFAF2E.4050001@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Laura Abbott <labbott@redhat.com>
+Cc: Manuel Lauss <manuel.lauss@gmail.com>, Linux-IDE <linux-ide@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: scott.lawson@intel.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Feb 26, 2016 at 10:09:29AM -0800, scott.lawson@intel.com wrote:
-> From: Scott Lawson <scott.lawson@intel.com>
+Hello,
+
+On Thu, Feb 25, 2016 at 05:49:34PM -0800, Laura Abbott wrote:
+> At least one user reported that this fixed the issue and he said
+> you could add
 > 
-> These PCI device IDs in the AHCI driver conflict with proprietary drivers,
-> preventing them from loading.
+> Tested-by: Bob Schultz <bob@engineer.com>
 
-So, the default ahci driver can't attach if these PCI IDs are in use?
-I don't think breaking the upstream kernel for a proprietary driver is
-a good idea.
+Great, Manuel, can you please send a proper patch?
 
 Thanks.
 
