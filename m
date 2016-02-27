@@ -1,51 +1,44 @@
-From: Manuel Lauss <manuel.lauss@gmail.com>
-Subject: [PATCH] ata: ahci: don't mark HotPlugCapable Ports as external/removable
-Date: Sat, 27 Feb 2016 16:10:05 +0100
-Message-ID: <1456585805-897872-1-git-send-email-manuel.lauss@gmail.com>
+From: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Subject: =?utf-8?Q?=D0=9A=D0=9B=D0=98=D0=95=D0=9D=D0=A2=D0=A1=D0?=
+	=?utf-8?Q?=9A=D0=98=D0=95_=D0=91=D0=90=D0=97=D0=AB!_=D0?=
+	=?utf-8?Q?=A2=D0=B5=D0=BB=5CViber=5CWhatsapp=3A_+79133913?=
+	=?utf-8?Q?837_Email=3A_abelozerov39=40gmail=2Ecom_Skype?=
+	=?utf-8?Q?=3A_prodawez389?=
+Date: Sun, 28 Feb 2016 03:39:19 +0600
+Message-ID: <2AD165BA36E2CD0ED2D79E21D5F4AFC4@vger.kernel.org>
+Reply-To: "linux-ide@vger.kernel.org" <abelozerov39@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wm0-f41.google.com ([74.125.82.41]:33572 "EHLO
-	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756529AbcB0PKK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 27 Feb 2016 10:10:10 -0500
-Received: by mail-wm0-f41.google.com with SMTP id g62so105462353wme.0
-        for <linux-ide@vger.kernel.org>; Sat, 27 Feb 2016 07:10:09 -0800 (PST)
+Received: from vps.top-kek.ru ([185.46.11.41]:33423 "EHLO top-kek.ru"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S2992655AbcB1Brt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 27 Feb 2016 20:47:49 -0500
+Received: from 185.46.11.41 (localhost [127.0.0.1])
+	by top-kek.ru (Postfix) with SMTP id 2C32D6A68E
+	for <linux-ide@vger.kernel.org>; Sun, 28 Feb 2016 00:39:20 +0300 (MSK)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linux-IDE <linux-ide@vger.kernel.org>
-Cc: Tejun Heo <tj@kernel.org>, Laura Abbott <labbott@redhat.com>, Manuel Lauss <manuel.lauss@gmail.com>
+To: linux-ide@vger.kernel.org
 
-The HPCP bit is set by bioses for on-board sata ports either because
-they think sata is hotplug capable in general or to allow Windows
-to display a "device eject" icon on ports which are routed to an
-external connector bracket.
+=D0=9A=D0=9B=D0=98=D0=95=D0=9D=D0=A2=D0=A1=D0=9A=D0=98=D0=95 =D0=91=D0=90=
+=D0=97=D0=AB!
 
-However in Redhat Bugzilla #1310682, users report that with kernel 4.4,
-where this bit test first appeared, a lot of partitions on sata drives
-are now mounted automatically.
-
-This patch should fix redhat and a lot of other distros which
-unconditionally automount all devices which have the "removable"
-bit set.
-
-Signed-off-by: Manuel Lauss <manuel.lauss@gmail.com>
----
- drivers/ata/libahci.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index 4029679..e029e3c 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -1164,8 +1164,7 @@ static void ahci_port_init(struct device *dev, struct ata_port *ap,
- 
- 	/* mark esata ports */
- 	tmp = readl(port_mmio + PORT_CMD);
--	if ((tmp & PORT_CMD_HPCP) ||
--	    ((tmp & PORT_CMD_ESP) && (hpriv->cap & HOST_CAP_SXS)))
-+	if ((tmp & PORT_CMD_ESP) && (hpriv->cap & HOST_CAP_SXS))
- 		ap->pflags |= ATA_PFLAG_EXTERNAL;
- }
- 
--- 
-2.7.2
-
+=D0=A1=D0=BE=D0=B1=D0=B5=D1=80=D0=B5=D0=BC =D0=B4=D0=BB=D1=8F =D0=92=D0=
+=B0=D1=81 =D0=BF=D0=BE =D0=B8=D0=BD=D1=82=D0=B5=D1=80=D0=BD=D0=B5=D1=82=
+ =D0=B1=D0=B0=D0=B7=D1=83 =D0=B4=D0=B0=D0=BD=D0=BD=D1=8B=D1=85 =D0=BF=D0=
+=BE=D1=82=D0=B5=D0=BD=D1=86=D0=B8=D0=B0=D0=BB=D1=8C=D0=BD=D1=8B=D1=85 =D0=
+=BA=D0=BB=D0=B8=D0=B5=D0=BD=D1=82=D0=BE=D0=B2=20
+=D0=B4=D0=BB=D1=8F =D0=92=D0=B0=D1=88=D0=B5=D0=B3=D0=BE =D0=91=D0=B8=D0=
+=B7=D0=BD=D0=B5=D1=81=D0=B0!
+=D0=9C=D0=BD=D0=BE=D0=B3=D0=BE! =D0=91=D1=8B=D1=81=D1=82=D1=80=D0=BE! =D0=
+=9D=D0=B5=D0=B4=D0=BE=D1=80=D0=BE=D0=B3=D0=BE!=20
+=D0=A3=D0=B7=D0=BD=D0=B0=D0=B9=D1=82=D0=B5 =D0=BE=D0=B1 =D1=8D=D1=82=D0=
+=BE=D0=BC =D0=BF=D0=BE=D0=B4=D1=80=D0=BE=D0=B1=D0=BD=D0=B5=D0=B5 =D0=BF=
+=D0=BE=20
+=D0=A2=D0=B5=D0=BB: +79133913837
+Viber: +79133913837
+Whatsapp: +79133913837
+Skype: prodawez389
+Email: abelozerov39@gmail.com
