@@ -1,44 +1,36 @@
-From: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Subject: =?utf-8?Q?=D0=9A=D0=9B=D0=98=D0=95=D0=9D=D0=A2=D0=A1=D0?=
-	=?utf-8?Q?=9A=D0=98=D0=95_=D0=91=D0=90=D0=97=D0=AB!_=D0?=
-	=?utf-8?Q?=A2=D0=B5=D0=BB=5CViber=5CWhatsapp=3A_+79133913?=
-	=?utf-8?Q?837_Email=3A_abelozerov39=40gmail=2Ecom_Skype?=
-	=?utf-8?Q?=3A_prodawez389?=
-Date: Sun, 28 Feb 2016 03:39:19 +0600
-Message-ID: <2AD165BA36E2CD0ED2D79E21D5F4AFC4@vger.kernel.org>
-Reply-To: "linux-ide@vger.kernel.org" <abelozerov39@gmail.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] AHCI: Remove obsolete Intel Lewisburg SATA RAID device
+ IDs
+Date: Sun, 28 Feb 2016 05:10:03 -0800
+Message-ID: <20160228131003.GA21800@infradead.org>
+References: <1456510192-27184-1-git-send-email-scott.lawson@intel.com>
+ <20160227085154.GB26010@infradead.org>
+ <20160227111855.GW3965@htj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from vps.top-kek.ru ([185.46.11.41]:33423 "EHLO top-kek.ru"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S2992655AbcB1Brt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Sat, 27 Feb 2016 20:47:49 -0500
-Received: from 185.46.11.41 (localhost [127.0.0.1])
-	by top-kek.ru (Postfix) with SMTP id 2C32D6A68E
-	for <linux-ide@vger.kernel.org>; Sun, 28 Feb 2016 00:39:20 +0300 (MSK)
+Received: from bombadil.infradead.org ([198.137.202.9]:57046 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757046AbcB1NKF (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 28 Feb 2016 08:10:05 -0500
+Content-Disposition: inline
+In-Reply-To: <20160227111855.GW3965@htj.duckdns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, scott.lawson@intel.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-=D0=9A=D0=9B=D0=98=D0=95=D0=9D=D0=A2=D0=A1=D0=9A=D0=98=D0=95 =D0=91=D0=90=
-=D0=97=D0=AB!
+On Sat, Feb 27, 2016 at 06:18:55AM -0500, Tejun Heo wrote:
+> On Sat, Feb 27, 2016 at 12:51:54AM -0800, Christoph Hellwig wrote:
+> > On Fri, Feb 26, 2016 at 10:09:52AM -0800, scott.lawson@intel.com wrote:
+> > > From: Scott Lawson <scott.lawson@intel.com>
+> > > 
+> > > These PCI device IDs have been removed from the Intel Lewisburg design
+> > > specification. They are no longer needed.
+> > 
+> > Let's keep them just in case..
+> 
+> Out of curiosity, any specific reasons to do so?
 
-=D0=A1=D0=BE=D0=B1=D0=B5=D1=80=D0=B5=D0=BC =D0=B4=D0=BB=D1=8F =D0=92=D0=
-=B0=D1=81 =D0=BF=D0=BE =D0=B8=D0=BD=D1=82=D0=B5=D1=80=D0=BD=D0=B5=D1=82=
- =D0=B1=D0=B0=D0=B7=D1=83 =D0=B4=D0=B0=D0=BD=D0=BD=D1=8B=D1=85 =D0=BF=D0=
-=BE=D1=82=D0=B5=D0=BD=D1=86=D0=B8=D0=B0=D0=BB=D1=8C=D0=BD=D1=8B=D1=85 =D0=
-=BA=D0=BB=D0=B8=D0=B5=D0=BD=D1=82=D0=BE=D0=B2=20
-=D0=B4=D0=BB=D1=8F =D0=92=D0=B0=D1=88=D0=B5=D0=B3=D0=BE =D0=91=D0=B8=D0=
-=B7=D0=BD=D0=B5=D1=81=D0=B0!
-=D0=9C=D0=BD=D0=BE=D0=B3=D0=BE! =D0=91=D1=8B=D1=81=D1=82=D1=80=D0=BE! =D0=
-=9D=D0=B5=D0=B4=D0=BE=D1=80=D0=BE=D0=B3=D0=BE!=20
-=D0=A3=D0=B7=D0=BD=D0=B0=D0=B9=D1=82=D0=B5 =D0=BE=D0=B1 =D1=8D=D1=82=D0=
-=BE=D0=BC =D0=BF=D0=BE=D0=B4=D1=80=D0=BE=D0=B1=D0=BD=D0=B5=D0=B5 =D0=BF=
-=D0=BE=20
-=D0=A2=D0=B5=D0=BB: +79133913837
-Viber: +79133913837
-Whatsapp: +79133913837
-Skype: prodawez389
-Email: abelozerov39@gmail.com
+If it's been added to the driver I'd expect at least prototype hardware
+to already be out there.
