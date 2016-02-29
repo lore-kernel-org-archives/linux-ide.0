@@ -1,36 +1,60 @@
-From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-Subject: Re: [RFC] AHCI: Remove conflicting Intel Lewisburg 3rd-party SATA
- RAID device IDs
-Date: Mon, 29 Feb 2016 16:31:03 +0000
-Message-ID: <20160229163103.00504b12@lxorguk.ukuu.org.uk>
-References: <20160227112033.GX3965 () htj ! duckdns ! org>
-	<1456737781-13494-1-git-send-email-hehy1@lenovo.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH V3] AHCI: Workaround for ThunderX Errata#22536
+Date: Mon, 29 Feb 2016 16:12:23 -0500
+Message-ID: <20160229211223.GZ3965@htj.duckdns.org>
+References: <1455653329-4934-1-git-send-email-tchalamarla@caviumnetworks.com>
+ <alpine.DEB.2.11.1602171710350.19512@nanos>
+ <56CF64B9.4080605@caviumnetworks.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1456737781-13494-1-git-send-email-hehy1@lenovo.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Ocean HY1 He <hehy1@lenovo.com>
-Cc: "tj@kernel.org" <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qg0-f68.google.com ([209.85.192.68]:33453 "EHLO
+	mail-qg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750719AbcB2VMZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Feb 2016 16:12:25 -0500
+Content-Disposition: inline
+In-Reply-To: <56CF64B9.4080605@caviumnetworks.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tirumalesh Chalamarla <tchalamarla@caviumnetworks.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>, stripathi@apm.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 
-On Mon, 29 Feb 2016 09:28:19 +0000
-Ocean HY1 He <hehy1@lenovo.com> wrote:
+Hello,
 
-> Hi Tejun,
+Sorry about the delay.
+
+On Thu, Feb 25, 2016 at 12:31:53PM -0800, Tirumalesh Chalamarla wrote:
+> On 02/17/2016 08:12 AM, Thomas Gleixner wrote:
+> >On Tue, 16 Feb 2016, tchalamarla@caviumnetworks.com wrote:
+> >>+#ifdef CONFIG_ARM64
+> >>+/* Due to ERRATA#22536, ThunderX need to handle
+> >>+ * HOST_IRQ_STAT differently.
+> >>+ * Work around is to make sure all pending IRQs
+> >>+ * are served before leaving handler
+> >>+ */
+> >>+static irqreturn_t ahci_thunderx_irq_handler(int irq, void *dev_instance)
+> >>+{
+> >>+	struct ata_host *host = dev_instance;
+> >>+	struct ahci_host_priv *hpriv;
+> >>+	unsigned int rc = 0;
+> >>+	void __iomem *mmio;
+> >>+	u32 irq_stat, irq_masked;
+> >>+	unsigned int handled = 1;
+> >>+
+> >>+	VPRINTK("ENTER\n");
+> >
+> >Come on. This VPRINK stuff is really pointless. Enable irq tracepoints, they
+> >already track the enter/exit of interrupt handlers ....
 > 
-> According to Intel Lewisburg PCH EDS, SATA RAID controller has two types
-> of DIDs: RSTe RAID and 3rd Party RAID. RSTe RAID shoud be drived by AHCI
-> driver and used to construct MDRAID. These 3rd Party RAID IDs are reserved
-> for other 3rd Party RAID drivers for variety.
-> 
-> So, I think it's a bug to let AHCI driver supporting 3rd Party RAID IDs.
-> And it should be ok to remove these existed device IDs.
+> sure. waiting for some more comments if any.
 
-We have already had this discussion before. I'm surprised it has come
-back again, this time via Intel. If Lenovo wants their RAID supported in
-Linux then contribute it open source to the kernel. You've been told this
-clearly before.
+Yeah, VPRINTK way predates tracepoints and is kinda silly at this
+point.  That said, it's used relatively consistently across libata and
+some people still use it for debugging.  We can replace them with
+proper tracepoints but that's a work for another patchset.  For now,
+let's leave it in for consistency with counterparts.
 
-Alan
+Thanks.
+
+-- 
+tejun
