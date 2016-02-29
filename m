@@ -1,44 +1,46 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ata: ahci: don't mark HotPlugCapable Ports as
- external/removable
-Date: Mon, 29 Feb 2016 16:20:08 -0500
-Message-ID: <20160229212008.GB3965@htj.duckdns.org>
-References: <1456585805-897872-1-git-send-email-manuel.lauss@gmail.com>
+From: Tirumalesh Chalamarla <tchalamarla@caviumnetworks.com>
+Subject: Re: [PATCH V3] AHCI: Workaround for ThunderX Errata#22536
+Date: Mon, 29 Feb 2016 14:00:00 -0800
+Message-ID: <56D4BF60.8010508@caviumnetworks.com>
+References: <1455653329-4934-1-git-send-email-tchalamarla@caviumnetworks.com>
+ <20160229211704.GA3965@htj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f44.google.com ([209.85.192.44]:36320 "EHLO
-	mail-qg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750763AbcB2VUK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 29 Feb 2016 16:20:10 -0500
-Received: by mail-qg0-f44.google.com with SMTP id y9so128149871qgd.3
-        for <linux-ide@vger.kernel.org>; Mon, 29 Feb 2016 13:20:10 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <1456585805-897872-1-git-send-email-manuel.lauss@gmail.com>
+Received: from mail-by2on0086.outbound.protection.outlook.com ([207.46.100.86]:59744
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750910AbcB2WAH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:00:07 -0500
+In-Reply-To: <20160229211704.GA3965@htj.duckdns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Manuel Lauss <manuel.lauss@gmail.com>
-Cc: Linux-IDE <linux-ide@vger.kernel.org>, Laura Abbott <labbott@redhat.com>
-
-On Sat, Feb 27, 2016 at 04:10:05PM +0100, Manuel Lauss wrote:
-> The HPCP bit is set by bioses for on-board sata ports either because
-> they think sata is hotplug capable in general or to allow Windows
-> to display a "device eject" icon on ports which are routed to an
-> external connector bracket.
-> 
-> However in Redhat Bugzilla #1310682, users report that with kernel 4.4,
-> where this bit test first appeared, a lot of partitions on sata drives
-> are now mounted automatically.
-> 
-> This patch should fix redhat and a lot of other distros which
-> unconditionally automount all devices which have the "removable"
-> bit set.
-> 
-> Signed-off-by: Manuel Lauss <manuel.lauss@gmail.com>
-
-Applied to libata/for-4.5-fixes w/ stable cc'd.
+To: Tejun Heo <tj@kernel.org>
+Cc: stripathi@apm.com, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 
 Thanks.
 
--- 
-tejun
+
+On 02/29/2016 01:17 PM, Tejun Heo wrote:
+> On Tue, Feb 16, 2016 at 12:08:49PM -0800, tchalamarla@caviumnetworks.com wrote:
+>> From: Tirumalesh Chalamarla <tchalamarla@caviumnetworks.com>
+>>
+>> Due to Errata in ThunderX, HOST_IRQ_STAT should be
+>> cleared before leaving the interrupt handler.
+>> The patch attempts to satisfy the need.
+>>
+>> Changes from V2:
+>> 	- removed newfile
+>> 	- code is now under CONFIG_ARM64
+>>
+>> Changes from V1:
+>> 	- Rebased on top of libata/for-4.6
+>>          - Moved ThunderX intr handler to new file
+>>
+>> Signed-off-by: Tirumalesh Chalamarla <tchalamarla@caviumnetworks.com>
+>
+> Applied to libata/for-4.5-fixes w/ minor adjustments to comments.
+>
+> Thanks.
+>
