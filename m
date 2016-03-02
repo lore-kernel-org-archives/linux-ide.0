@@ -1,55 +1,51 @@
-From: Michal Simek <michal.simek-gjFFaj9aHVfQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [RFC PATCH] drivers: ata: Read Rx water mark value from
- device-tree
-Date: Wed, 2 Mar 2016 12:51:44 +0100
-Message-ID: <56D6D3D0.9030408@xilinx.com>
-References: <1455974302-7082-1-git-send-email-anuragku@xilinx.com>
- <3012728.7zDNPtQ7kR@wuerfel> <56D6B217.2000701@xilinx.com>
- <1798710.nJonRpmlxx@wuerfel>
+From: Mark Lord <mlord@pobox.com>
+Subject: Re: [report] sata_qstor.c: ancient pointer math bug
+Date: Wed, 2 Mar 2016 09:28:40 -0500
+Message-ID: <56D6F898.7@pobox.com>
+References: <20160302094458.GA5213@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1798710.nJonRpmlxx@wuerfel>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Michal Simek <michal.simek-gjFFaj9aHVfQT0dZR+AlfA@public.gmane.org>
-Cc: Anurag Kumar Vulisha <anuragku-gjFFaj9aHVfQT0dZR+AlfA@public.gmane.org>, Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, =?UTF-8?Q?S=c3=b6ren_Brinkmann?= <soren.brinkmann-gjFFaj9aHVfQT0dZR+AlfA@public.gmane.org>, "pawel.moll-5wv7dgnIgG8@public.gmane.org" <pawel.moll-5wv7dgnIgG8@public.gmane.org>, "mark.rutland-5wv7dgnIgG8@public.gmane.org" <mark.rutland-5wv7dgnIgG8@public.gmane.org>, "ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org" <ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org>, "galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org" <galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Anirudha Sarangi <anirudh-gjFFaj9aHVfQT0dZR+AlfA@public.gmane.org>, Srikanth Vemula <svemula-gjFFaj9aHVfQT0dZR+AlfA@public.gmane.org>, Punnaiah Choudary Kalluri <punnaia-gjFFaj9aHVfQT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from pb-sasl0.int.icgroup.com ([208.72.237.25]:60658 "EHLO
+	sasl.smtp.pobox.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752131AbcCBOiH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Mar 2016 09:38:07 -0500
+In-Reply-To: <20160302094458.GA5213@mwanda>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: linux-ide@vger.kernel.org
 
-On 2.3.2016 12:42, Arnd Bergmann wrote:
-> On Wednesday 02 March 2016 10:27:51 Michal Simek wrote:
->>
->> No problem with default value in driver. Something has to be setup.
->> Reset value based on reg spec I was checking is 0x20. Based on our
->> testing we saw some issues that's why 0x40 was setup as default value.
->> There is a need to be able to configure this value for example for
->> testing different values that's why I think module parameter should be
->> the right way to go.
-> 
-> I don't object to the module parameter, but I don't understand how important
-> that kind of testing is to normal users. Who would set it, aside from
-> the person writing that driver to come up with the correct default?
-> 
->> If this should be DT parameters there should be different ceva IP which
->> allows different fifo size and different watermark level to be setup by
->> user.
->>
->> What do you think? Does it sound reasonable.
-> 
-> Having a property for the actual hardware fifo size once you get
-> different implementations seems like the correct approach, but it's
-> moot as long as all implementations are hardwired to 128 entries.
+On 16-03-02 04:44 AM, Dan Carpenter wrote:
+..
+> drivers/ata/sata_qstor.c
+>     252  static unsigned int qs_fill_sg(struct ata_queued_cmd *qc)
+>     253  {
+>     254          struct scatterlist *sg;
+>     255          struct ata_port *ap = qc->ap;
+>     256          struct qs_port_priv *pp = ap->private_data;
+>     257          u8 *prd = pp->pkt + QS_CPB_BYTES;
+>     258          unsigned int si;
+>     259
+>     260          for_each_sg(qc->sg, sg, qc->n_elem, si) {
+>     261                  u64 addr;
+>     262                  u32 len;
+>     263
+>     264                  addr = sg_dma_address(sg);
+>     265                  *(__le64 *)prd = cpu_to_le64(addr);
+>     266                  prd += sizeof(u64);
+>     267
+>     268                  len = sg_dma_len(sg);
+>     269                  *(__le32 *)prd = cpu_to_le32(len);
+>     270                  prd += sizeof(u64);
+>
+> This is almost certainly a cut and paste bug where prd += sizeof(u32)
+> was intended.  Probably no one cares at this point though...
 
-yep right now and we don't know what can happen in future. I just wanted
-to point to example where this property can be specified or wired to
-particular compatible string.
-
-Anurag: Please make it as module parameter instead of DT parameter.
-
-Thanks,
-Michal
-
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+No, the hardware really does want sizeof(u64) in both places above.
+A PRD entry is 16 bytes in total.
+-- 
+Mark Lord
+Real-Time Remedies Inc.
+mlord@pobox.com
