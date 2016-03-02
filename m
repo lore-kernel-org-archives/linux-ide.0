@@ -1,20 +1,20 @@
-From: Mark Lord <mlord@pobox.com>
+From: Mark Lord <kernel@start.ca>
 Subject: Re: [report] sata_qstor.c: ancient pointer math bug
-Date: Wed, 2 Mar 2016 09:28:40 -0500
-Message-ID: <56D6F898.7@pobox.com>
+Date: Wed, 2 Mar 2016 09:30:40 -0500
+Message-ID: <56D6F910.7000300@start.ca>
 References: <20160302094458.GA5213@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pb-sasl0.int.icgroup.com ([208.72.237.25]:60658 "EHLO
-	sasl.smtp.pobox.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752131AbcCBOiH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 2 Mar 2016 09:38:07 -0500
+Received: from mail3.start.ca ([64.140.120.243]:48660 "EHLO mail3.start.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751365AbcCBOoI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 2 Mar 2016 09:44:08 -0500
 In-Reply-To: <20160302094458.GA5213@mwanda>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>, Mark Lord <mlord@pobox.com>
 Cc: linux-ide@vger.kernel.org
 
 On 16-03-02 04:44 AM, Dan Carpenter wrote:
