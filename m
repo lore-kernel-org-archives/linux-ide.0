@@ -1,40 +1,38 @@
-From: Wolfram Sang <wsa@the-dreams.de>
-Subject: [PATCH 1/6] ide: palm_bk3710: test clock rate to avoid division by 0
-Date: Wed,  2 Mar 2016 23:33:32 +0100
-Message-ID: <1456958018-7849-2-git-send-email-wsa@the-dreams.de>
-References: <1456958018-7849-1-git-send-email-wsa@the-dreams.de>
+From: Simon Horman <horms+renesas@verge.net.au>
+Subject: [PATCH] ata: sata_rcar: Use ARCH_RENESAS
+Date: Thu,  3 Mar 2016 10:28:50 +0900
+Message-ID: <1456968530-19635-1-git-send-email-horms+renesas@verge.net.au>
 Return-path: <linux-renesas-soc-owner@vger.kernel.org>
-In-Reply-To: <1456958018-7849-1-git-send-email-wsa@the-dreams.de>
 Sender: linux-renesas-soc-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-renesas-soc@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-renesas-soc@vger.kernel.org, Magnus Damm <magnus.damm@gmail.com>, Simon Horman <horms+renesas@verge.net.au>
 List-Id: linux-ide@vger.kernel.org
 
-From: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Make use of ARCH_RENESAS in place of ARCH_SHMOBILE.
 
-The clk API may return 0 on clk_get_rate, so we should check the result before
-using it as a divisor.
+This is part of an ongoing process to migrate from ARCH_SHMOBILE to
+ARCH_RENESAS the motivation for which being that RENESAS seems to be a more
+appropriate name than SHMOBILE for the majority of Renesas ARM based SoCs.
 
-Signed-off-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 ---
+ drivers/ata/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Should go individually via subsystem tree.
+ Based on libata/master
 
- drivers/ide/palm_bk3710.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/ide/palm_bk3710.c b/drivers/ide/palm_bk3710.c
-index 8012e43bf8f618..46427ea01753b4 100644
---- a/drivers/ide/palm_bk3710.c
-+++ b/drivers/ide/palm_bk3710.c
-@@ -325,6 +325,8 @@ static int __init palm_bk3710_probe(struct platform_device *pdev)
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 861643ea91b5..f1f83e9bf425 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -355,7 +355,7 @@ config SATA_PROMISE
  
- 	clk_enable(clk);
- 	rate = clk_get_rate(clk);
-+	if (!rate)
-+		return -EINVAL;
+ config SATA_RCAR
+ 	tristate "Renesas R-Car SATA support"
+-	depends on ARCH_SHMOBILE || COMPILE_TEST
++	depends on ARCH_RENESAS || COMPILE_TEST
+ 	help
+ 	  This option enables support for Renesas R-Car Serial ATA.
  
- 	/* NOTE:  round *down* to meet minimum timings; we count in clocks */
- 	ideclk_period = 1000000000UL / rate;
 -- 
-2.7.0
+2.1.4
