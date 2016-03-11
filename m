@@ -1,51 +1,58 @@
-From: agun djumhedi yunus <agun@tangerangkota.go.id>
-Subject: Lainatarjous
-Date: Thu, 10 Mar 2016 19:45:07 +0700 (WIB)
-Message-ID: <1604804344.925855.1457613907866.JavaMail.zimbra@tangerangkota.go.id>
-Reply-To: Gloucestershire Credit Union <gloucestcredit_union@outlook.com>
+From: "Lawson, Scott" <scott.lawson@intel.com>
+Subject: RE: [PATCH] AHCI: Remove obsolete Intel Lewisburg SATA RAID device
+ IDs
+Date: Fri, 11 Mar 2016 02:17:22 +0000
+Message-ID: <25D872D72B010441A7C6B485BAB2DEF10108E57A@ORSMSX102.amr.corp.intel.com>
+References: <1456510192-27184-1-git-send-email-scott.lawson@intel.com>
+ <20160227085154.GB26010@infradead.org>
+ <20160227111855.GW3965@htj.duckdns.org>
+ <20160228131003.GA21800@infradead.org>
+ <20160228131646.GK3965@htj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [103.50.218.124] ([103.50.218.124]:41107 "EHLO
-	mail.tangerangkota.go.id" rhost-flags-FAIL-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1750883AbcCJNEF convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 10 Mar 2016 08:04:05 -0500
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20160228131646.GK3965@htj.duckdns.org>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@infradead.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
+Hello:
+
+There shouldn't be any hardware dependencies on these device IDs out there. I've checked with the author of the specification these IDs are published in, and he said that they never corresponded to any existing or planned hardware. (That begs the question of why they appeared in an earlier version of the specification in the first place, but that's something we need work out internally.)
+
+There really is no advantage to keeping them around, and no reasonable "just in case" scenario that they would be useful for.
+
+-Scott Lawson 
 
 
-Gloucestershire Credit Union on luotonanto yritys, joka tekee lainat ja=
- rahoituspalveluja yrityksille, yhteisty=C3=B6h=C3=B6n yhteis=C3=B6j=C3=
-=A4, sijoittajat, liiketoiminta miehet ja naiset, velallisten my=C3=B6s=
- rahasto projekti e.t.c
+-----Original Message-----
+From: Tejun Heo [mailto:htejun@gmail.com] On Behalf Of Tejun Heo
+Sent: Sunday, February 28, 2016 05:17
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Lawson, Scott <scott.lawson@intel.com>; linux-ide@vger.kernel.org; linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] AHCI: Remove obsolete Intel Lewisburg SATA RAID device IDs
 
-Tarvitsetko lainaa 2% korolla?
-Alkaen =E2=82=AC 10,000.00 sen =E2=82=AC 500,000.000.00 min Max.
-Riippumatta siviilis=C3=A4=C3=A4ty ja uskonto.
+Hello,
 
-Ota yhteytt=C3=A4 s=C3=A4hk=C3=B6postitse: gloucestcredit_union@outlook=
-=2Ecom
+On Sun, Feb 28, 2016 at 05:10:03AM -0800, Christoph Hellwig wrote:
+> On Sat, Feb 27, 2016 at 06:18:55AM -0500, Tejun Heo wrote:
+> > On Sat, Feb 27, 2016 at 12:51:54AM -0800, Christoph Hellwig wrote:
+> > > On Fri, Feb 26, 2016 at 10:09:52AM -0800, scott.lawson@intel.com wrote:
+> > > > From: Scott Lawson <scott.lawson@intel.com>
+> > > > 
+> > > > These PCI device IDs have been removed from the Intel Lewisburg 
+> > > > design specification. They are no longer needed.
+> > > 
+> > > Let's keep them just in case..
+> > 
+> > Out of curiosity, any specific reasons to do so?
+> 
+> If it's been added to the driver I'd expect at least prototype 
+> hardware to already be out there.
 
-seuraavat tiedot.
+I see.  Scott, can you please clarify the situation?
 
-* Koko nimi:
-* Osoite:
-* Lainam=C3=A4=C3=A4r=C3=A4 tarvitaan:
-* Laina Kesto:
-* Lainan tarkoitus:
-* Maa:
-* Puhelin:
-* Kuukausitulot:
-* Sukupuoli:
-* Ammatti:
-=C2=A0
-Toivomme vilpitt=C3=B6m=C3=A4sti kuulla sinusta niin tehd=C3=A4 syliss=C3=
-=A4 rahoituspalveluja teille.
-
-Vilpitt=C3=B6m=C3=A4sti sinun
-
-Van Parson.
-
+Thanks.
