@@ -1,48 +1,51 @@
-From: Ulrich Hecht <ulrich.hecht+renesas@gmail.com>
-Subject: [PATCH 1/2] ARM: dts: r8a7793: Add SATA controller node
-Date: Wed, 16 Mar 2016 18:11:07 +0100
-Message-ID: <1458148268-22028-2-git-send-email-ulrich.hecht+renesas@gmail.com>
-References: <1458148268-22028-1-git-send-email-ulrich.hecht+renesas@gmail.com>
-Return-path: <linux-renesas-soc-owner@vger.kernel.org>
-In-Reply-To: <1458148268-22028-1-git-send-email-ulrich.hecht+renesas@gmail.com>
-Sender: linux-renesas-soc-owner@vger.kernel.org
-To: horms@verge.net.au
-Cc: linux-renesas-soc@vger.kernel.org, linux-ide@vger.kernel.org, magnus.damm@gmail.com, Ulrich Hecht <ulrich.hecht+renesas@gmail.com>
+From: Joerg Roedel <joro@8bytes.org>
+Subject: Re: DMAR error messages after 'shutdown -r'.
+Date: Wed, 16 Mar 2016 18:46:08 +0100
+Message-ID: <20160316174608.GF2195@8bytes.org>
+References: <38172.1455047940@turing-police.cc.vt.edu>
+ <20160216164745.GZ18805@8bytes.org>
+ <22265.1457386917@turing-police.cc.vt.edu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from 8bytes.org ([81.169.241.247]:41889 "EHLO theia.8bytes.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753687AbcCPRqL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 16 Mar 2016 13:46:11 -0400
+Content-Disposition: inline
+In-Reply-To: <22265.1457386917@turing-police.cc.vt.edu>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Valdis.Kletnieks@vt.edu
+Cc: Hans de Goede <hdegoede@redhat.com>, Tejun Heo <tj@kernel.org>, iommu@lists.linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-Adds SATA device node to r8a7793.dtsi.
+On Mon, Mar 07, 2016 at 04:41:57PM -0500, Valdis.Kletnieks@vt.edu wrote:
+> 
+> lspci says:
+> 00:1f.2 SATA controller: Intel Corporation 7 Series Chipset Family 6-port SATA Controller [AHCI mode] (rev 04)
+> 
+> Not sure why I only see it on reboots - that means that when powering up, the kernel
+> gets handed a device config it likes, but when rebooting, something is leaving the
+> device in a config the kernel doesn't want to see.
 
-Signed-off-by: Ulrich Hecht <ulrich.hecht+renesas@gmail.com>
----
- arch/arm/boot/dts/r8a7793.dtsi | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+Okay, so the BIOS defines one RMRR entry:
 
-diff --git a/arch/arm/boot/dts/r8a7793.dtsi b/arch/arm/boot/dts/r8a7793.dtsi
-index 3ebe7d4..abb6851 100644
---- a/arch/arm/boot/dts/r8a7793.dtsi
-+++ b/arch/arm/boot/dts/r8a7793.dtsi
-@@ -775,6 +775,22 @@
- 		status = "disabled";
- 	};
- 
-+	sata0: sata@ee300000 {
-+		compatible = "renesas,sata-r8a7793";
-+		reg = <0 0xee300000 0 0x2000>;
-+		interrupts = <0 105 IRQ_TYPE_LEVEL_HIGH>;
-+		clocks = <&mstp8_clks R8A7793_CLK_SATA0>;
-+		status = "disabled";
-+	};
-+
-+	sata1: sata@ee500000 {
-+		compatible = "renesas,sata-r8a7793";
-+		reg = <0 0xee500000 0 0x2000>;
-+		interrupts = <0 106 IRQ_TYPE_LEVEL_HIGH>;
-+		clocks = <&mstp8_clks R8A7793_CLK_SATA1>;
-+		status = "disabled";
-+	};
-+
- 	qspi: spi@e6b10000 {
- 		compatible = "renesas,qspi-r8a7793", "renesas,qspi";
- 		reg = <0 0xe6b10000 0 0x2c>;
--- 
-2.6.4
+	DMAR: RMRR base: 0x000000cdb11000 end: 0x000000cdb30fff
+
+But the device-scope doesn't seem to match any existing devices in your
+system. At least no device gets the RMRR mappings later on.
+
+That doesn't really matter, as the the fault-address of 0xcdacd000 is
+outside of the defined RMRR range anyway.
+
+Looking at the fault-address as system physical, is would be in this
+range of system memory:
+
+	BIOS-e820: [mem 0x00000000cd99b000-0x00000000ce3a0fff] reserved
+
+Which is reserved for BIOS use. This looks very much like a missing RMRR
+entry for that range, that has the sata controler in its device scope.
+
+
+	Joerg
+
