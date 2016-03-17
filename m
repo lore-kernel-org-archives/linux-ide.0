@@ -1,59 +1,61 @@
-From: Brijesh Singh <brijesh.singh@amd.com>
-Subject: Re: [PATCH v2] ata: add AMD Seattle platform driver
-Date: Wed, 16 Mar 2016 15:12:53 -0500
-Message-ID: <56E9BE45.8030101@amd.com>
-References: <1452789071-4090-1-git-send-email-brijesh.singh@amd.com>
- <20160125204300.GM3628@mtj.duckdns.org> <56A73E39.70109@redhat.com>
+From: Simon Horman <horms@verge.net.au>
+Subject: Re: [PATCH 1/2] ARM: dts: r8a7793: Add SATA controller node
+Date: Thu, 17 Mar 2016 10:23:53 +0900
+Message-ID: <20160317012353.GE17728@verge.net.au>
+References: <1458148268-22028-1-git-send-email-ulrich.hecht+renesas@gmail.com>
+ <1458148268-22028-2-git-send-email-ulrich.hecht+renesas@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bn1on0096.outbound.protection.outlook.com ([157.56.110.96]:11200
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750953AbcCPVuN (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 16 Mar 2016 17:50:13 -0400
-In-Reply-To: <56A73E39.70109@redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-renesas-soc-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1458148268-22028-2-git-send-email-ulrich.hecht+renesas@gmail.com>
+Sender: linux-renesas-soc-owner@vger.kernel.org
+To: Ulrich Hecht <ulrich.hecht+renesas@gmail.com>
+Cc: linux-renesas-soc@vger.kernel.org, linux-ide@vger.kernel.org, magnus.damm@gmail.com
 List-Id: linux-ide@vger.kernel.org
-To: Hans de Goede <hdegoede@redhat.com>, Tejun Heo <tj@kernel.org>
-Cc: brijesh.singh@amd.com, linux-kernel@vger.kernel.org, arnd@arndb.de, linux-ide@vger.kernel.org
 
-Hi Tejun,
-
-
-On 01/26/2016 03:36 AM, Hans de Goede wrote:
-> Hi,
+On Wed, Mar 16, 2016 at 06:11:07PM +0100, Ulrich Hecht wrote:
+> Adds SATA device node to r8a7793.dtsi.
 > 
-> On 25-01-16 21:43, Tejun Heo wrote:
->> On Thu, Jan 14, 2016 at 10:31:11AM -0600, Brijesh Singh wrote:
->>> AMD Seattle SATA controller mostly conforms to AHCI interface with some
->>> special register to control SGPIO interface. In the case of an AHCI
->>> controller, the SGPIO feature is ideally implemented using the
->>> "Enclosure Management" register of the AHCI controller, but those
->>> registeres are not implemented in the Seattle SoC. Instead SoC
->>> (Rev B0 onwards) provides a 32-bit SGPIO control register which should
->>> be programmed to control the activity, locate and fault LEDs.
->>>
->>> The driver is based on ahci_platform driver.
->>>
->>> Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
->>> Acked-by: Hans de Goede <hdegoede@redhat.com>
->>> CC: tj@kernel.org
->>> CC: linux-ide@vger.kernel.org
->>
->> Hans, can you please review the patch?
+> Signed-off-by: Ulrich Hecht <ulrich.hecht+renesas@gmail.com>
+> ---
+>  arch/arm/boot/dts/r8a7793.dtsi | 16 ++++++++++++++++
+>  1 file changed, 16 insertions(+)
 > 
-> Done, driver looks good to me:
-> 
-> Acked-by: Hans de Goede <hdegoede@redhat.com>
->
+> diff --git a/arch/arm/boot/dts/r8a7793.dtsi b/arch/arm/boot/dts/r8a7793.dtsi
+> index 3ebe7d4..abb6851 100644
+> --- a/arch/arm/boot/dts/r8a7793.dtsi
+> +++ b/arch/arm/boot/dts/r8a7793.dtsi
+> @@ -775,6 +775,22 @@
+>  		status = "disabled";
+>  	};
+>  
+> +	sata0: sata@ee300000 {
+> +		compatible = "renesas,sata-r8a7793";
+> +		reg = <0 0xee300000 0 0x2000>;
+> +		interrupts = <0 105 IRQ_TYPE_LEVEL_HIGH>;
+> +		clocks = <&mstp8_clks R8A7793_CLK_SATA0>;
 
-Can we please pull this patch ? If needed then I can rebase to the tip. Given the current HW and BIOS limitation, platform driver seems like a right choice.
+I think you also need a power domains property:
 
-Thanks
-Brijesh
- 
-> Regards,
-> 
-> Hans
+		power-domains = <&cpg_clocks>;
+
+> +		status = "disabled";
+> +	};
+> +
+> +	sata1: sata@ee500000 {
+> +		compatible = "renesas,sata-r8a7793";
+> +		reg = <0 0xee500000 0 0x2000>;
+> +		interrupts = <0 106 IRQ_TYPE_LEVEL_HIGH>;
+> +		clocks = <&mstp8_clks R8A7793_CLK_SATA1>;
+
+Here too.
+
+> +		status = "disabled";
+> +	};
+> +
+>  	qspi: spi@e6b10000 {
+>  		compatible = "renesas,qspi-r8a7793", "renesas,qspi";
+>  		reg = <0 0xe6b10000 0 0x2c>;
+> -- 
+> 2.6.4
