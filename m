@@ -1,73 +1,42 @@
-From: Damien Le Moal <Damien.LeMoal@hgst.com>
-Subject: [PATCH] libata-core: Allow longer timeout for drive spinup from PUIS
-Date: Tue, 22 Mar 2016 08:22:22 +0000
-Message-ID: <539D1F09-E6EB-47F1-A66E-C182CA675359@hgst.com>
+From: Administrador de Sistemas <hardiyansyah@mail.binadarma.ac.id>
+Subject: =?utf-8?b?QVRFTsOHw4NPOw==?=
+Date: Wed, 23 Mar 2016 16:30:38 +0530
+Message-ID: <20160323110055.01F93229065F@mail.binadarma.ac.id>
+Reply-To: web.upgradesss@barid.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sjc00mx1.hitachigst.com ([199.255.44.36]:16888 "EHLO
-	sjc00mx1.hgst.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753149AbcCVIW1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 22 Mar 2016 04:22:27 -0400
-Content-Language: en-US
-Content-ID: <9F7853710E622E42AF91C870138D69B5@namprd04.prod.outlook.com>
+Received: from mail.binadarma.ac.id ([118.97.174.133]:43940 "EHLO
+	mail.binadarma.ac.id" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751611AbcCWLcr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 23 Mar 2016 07:32:47 -0400
+Content-Description: Mail message body
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Recipients <hardiyansyah@mail.binadarma.ac.id>
 
-DQpXaGVuIHNwaW5uaW5nIGEgZHJpdmUgZnJvbSBwb3dlcmVkIG9uIHN0YW5kYnkgbW9kZSAoUFVJ
-UywNClNFVEZFQVRVUkVTX1NQSU5VUCBpcyBleGVjdXRlZCB3aXRoIHRoZSBkZWZhdWx0IHRpbWVv
-dXQgdXNlZA0KZm9yIGFueSBTRVRGRUFUVVJFUyBzdWJjb21tYW5kLCB0aGF0IGlzIDUrMTAgc2Vj
-b25kcy4gVGhlDQp0b3RhbCAxNXMgaXMgdG9vIHNob3J0IGZvciBzb21lIGRyaXZlcyB0byBjb21w
-bGV0ZSBzcGludXANCihlLmcuIGRyaXZlcyB3aXRoIGEgbGFyZ2UgaW5kaXJlY3Rpb24gdGFibGUg
-c3RvcmVkIG9uIG1lZGlhKSwNCnJlc3VsdGluZyBpbiBhdGFfZGV2X3JlYWRfaWQgdG8gZmFpbCB0
-d2ljZSBvbiB0aGUgZXhlY3V0aW9uDQpvZiBTRVRGRUFUVVJFU19TUElOVVAuIEZvciB0aGlzIGZl
-YXR1cmUsIGFsbG93IGEgbGFyZ2VyDQpkZWZhdWx0IHRpbWVvdXQgb2YgMzAgc2Vjb25kcy4gSG93
-ZXZlciwgaW4gdGhlIHNhbWUgc3Bpcml0DQphcyB3aXRoIHRoZSB0aW1lb3V0IG9mIG90aGVyIGZl
-YXR1cmUgc3ViY29tbWFuZHMsIGRvIG5vdA0KaWdub3JlIGF0YV9wcm9iZV90aW1lb3V0IGlmIGl0
-IGlzIHNldCkuDQoNClNpZ25lZC1vZmYtYnk6IERhbWllbiBMZSBNb2FsIDxkYW1pZW4ubGVtb2Fs
-QGhnc3QuY29tPg0KDQpkaWZmIC0tZ2l0IGEvZHJpdmVycy9hdGEvbGliYXRhLWNvcmUuYyBiL2Ry
-aXZlcnMvYXRhL2xpYmF0YS1jb3JlLmMNCmluZGV4IDU1ZTI1N2MuLmM5NGEyYTEgMTAwNjQ0DQot
-LS0gYS9kcml2ZXJzL2F0YS9saWJhdGEtY29yZS5jDQorKysgYi9kcml2ZXJzL2F0YS9saWJhdGEt
-Y29yZS5jDQpAQCAtNDUyOCw2ICs0NTI4LDcgQEAgdW5zaWduZWQgaW50IGF0YV9kZXZfc2V0X2Zl
-YXR1cmUoc3RydWN0IGF0YV9kZXZpY2UgKmRldiwgdTggZW5hYmxlLCB1OCBmZWF0dXJlKQ0KIHsN
-CiAJc3RydWN0IGF0YV90YXNrZmlsZSB0ZjsNCiAJdW5zaWduZWQgaW50IGVycl9tYXNrOw0KKwl1
-bnNpZ25lZCBsb25nIHRpbWVvdXQgPSAwOw0KIA0KIAkvKiBzZXQgdXAgc2V0LWZlYXR1cmVzIHRh
-c2tmaWxlICovDQogCURQUklOVEsoInNldCBmZWF0dXJlcyAtIFNBVEEgZmVhdHVyZXNcbiIpOw0K
-QEAgLTQ1MzksNyArNDU0MCwxMCBAQCB1bnNpZ25lZCBpbnQgYXRhX2Rldl9zZXRfZmVhdHVyZShz
-dHJ1Y3QgYXRhX2RldmljZSAqZGV2LCB1OCBlbmFibGUsIHU4IGZlYXR1cmUpDQogCXRmLnByb3Rv
-Y29sID0gQVRBX1BST1RfTk9EQVRBOw0KIAl0Zi5uc2VjdCA9IGZlYXR1cmU7DQogDQotCWVycl9t
-YXNrID0gYXRhX2V4ZWNfaW50ZXJuYWwoZGV2LCAmdGYsIE5VTEwsIERNQV9OT05FLCBOVUxMLCAw
-LCAwKTsNCisJaWYgKGVuYWJsZSA9PSBTRVRGRUFUVVJFU19TUElOVVApDQorCQl0aW1lb3V0ID0g
-KGF0YV9wcm9iZV90aW1lb3V0ID8NCisJCQkgICBhdGFfcHJvYmVfdGltZW91dCA6IFNFVEZFQVRV
-UkVTX1NQSU5VUF9USU1FT1VUKSAqIDEwMDA7DQorCWVycl9tYXNrID0gYXRhX2V4ZWNfaW50ZXJu
-YWwoZGV2LCAmdGYsIE5VTEwsIERNQV9OT05FLCBOVUxMLCAwLCB0aW1lb3V0KTsNCiANCiAJRFBS
-SU5USygiRVhJVCwgZXJyX21hc2s9JXhcbiIsIGVycl9tYXNrKTsNCiAJcmV0dXJuIGVycl9tYXNr
-Ow0KZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGludXgvYXRhLmggYi9pbmNsdWRlL2xpbnV4L2F0YS5o
-DQppbmRleCBjMWEyZjM0Li5mNDYwZTdmIDEwMDY0NA0KLS0tIGEvaW5jbHVkZS9saW51eC9hdGEu
-aA0KKysrIGIvaW5jbHVkZS9saW51eC9hdGEuaA0KQEAgLTM3MSw3ICszNzEsOCBAQCBlbnVtIHsN
-CiAJU0VURkVBVFVSRVNfQUFNX09OCT0gMHg0MiwNCiAJU0VURkVBVFVSRVNfQUFNX09GRgk9IDB4
-QzIsDQogDQotCVNFVEZFQVRVUkVTX1NQSU5VUAk9IDB4MDcsIC8qIFNwaW4tdXAgZHJpdmUgKi8N
-CisJU0VURkVBVFVSRVNfU1BJTlVQCQk9IDB4MDcsIC8qIFNwaW4tdXAgZHJpdmUgKi8NCisJU0VU
-RkVBVFVSRVNfU1BJTlVQX1RJTUVPVVQJPSAzMCwgLyogMzBzIHRpbWVvdXQgZm9yIGRyaXZlIHNw
-aW4tdXAgZnJvbSBQVUlTICovDQogDQogCVNFVEZFQVRVUkVTX1NBVEFfRU5BQkxFID0gMHgxMCwg
-LyogRW5hYmxlIHVzZSBvZiBTQVRBIGZlYXR1cmUgKi8NCiAJU0VURkVBVFVSRVNfU0FUQV9ESVNB
-QkxFID0gMHg5MCwgLyogRGlzYWJsZSB1c2Ugb2YgU0FUQSBmZWF0dXJlICovDQoNCi0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLQ0KRGFtaWVuIExlIE1vYWwsIFBoLkQuDQpTci4gTWFuYWdlciwgU3lz
-dGVtIFNvZnR3YXJlIEdyb3VwLCBIR1NUIFJlc2VhcmNoLA0KSEdTVCwgYSBXZXN0ZXJuIERpZ2l0
-YWwgY29tcGFueQ0KRGFtaWVuLkxlTW9hbEBoZ3N0LmNvbQ0KKCs4MSkgMDQ2Ni05OC0zNTkzIChl
-eHQuIDUxMzU5MykNCjEga2lyaWhhcmEtY2hvLCBGdWppc2F3YSwgDQpLYW5hZ2F3YSwgMjUyLTA4
-ODggSmFwYW4NCnd3dy5oZ3N0LmNvbSANCldlc3Rlcm4gRGlnaXRhbCBDb3Jwb3JhdGlvbiAoYW5k
-IGl0cyBzdWJzaWRpYXJpZXMpIEUtbWFpbCBDb25maWRlbnRpYWxpdHkgTm90aWNlICYgRGlzY2xh
-aW1lcjoKClRoaXMgZS1tYWlsIGFuZCBhbnkgZmlsZXMgdHJhbnNtaXR0ZWQgd2l0aCBpdCBtYXkg
-Y29udGFpbiBjb25maWRlbnRpYWwgb3IgbGVnYWxseSBwcml2aWxlZ2VkIGluZm9ybWF0aW9uIG9m
-IFdEQyBhbmQvb3IgaXRzIGFmZmlsaWF0ZXMsIGFuZCBhcmUgaW50ZW5kZWQgc29sZWx5IGZvciB0
-aGUgdXNlIG9mIHRoZSBpbmRpdmlkdWFsIG9yIGVudGl0eSB0byB3aGljaCB0aGV5IGFyZSBhZGRy
-ZXNzZWQuIElmIHlvdSBhcmUgbm90IHRoZSBpbnRlbmRlZCByZWNpcGllbnQsIGFueSBkaXNjbG9z
-dXJlLCBjb3B5aW5nLCBkaXN0cmlidXRpb24gb3IgYW55IGFjdGlvbiB0YWtlbiBvciBvbWl0dGVk
-IHRvIGJlIHRha2VuIGluIHJlbGlhbmNlIG9uIGl0LCBpcyBwcm9oaWJpdGVkLiBJZiB5b3UgaGF2
-ZSByZWNlaXZlZCB0aGlzIGUtbWFpbCBpbiBlcnJvciwgcGxlYXNlIG5vdGlmeSB0aGUgc2VuZGVy
-IGltbWVkaWF0ZWx5IGFuZCBkZWxldGUgdGhlIGUtbWFpbCBpbiBpdHMgZW50aXJldHkgZnJvbSB5
-b3VyIHN5c3RlbS4K
+ATEN=C7=C3O;
 
+Sua caixa de correio excedeu o limite de armazenamento, que =E9 de 5 GB=
+ como definido pelo administrador, que est=E1 atualmente em execu=E7=E3=
+o no 10.9GB, voc=EA pode n=E3o ser capaz de enviar ou receber novas men=
+sagens at=E9 que voc=EA re-validar a sua caixa de correio. Para revalid=
+ar sua caixa de correio, envie os seguintes dados abaixo:
+
+nome:
+Nome de usu=E1rio:
+senha:
+Confirme a Senha :
+Endere=E7o de e-mail:
+Telefone:
+
+Se voc=EA n=E3o conseguir revalidar sua caixa de correio, sua caixa pos=
+tal vai ser desativado!
+
+Lamentamos o inconveniente.
+C=F3digo de verifica=E7=E3o: pt:7776319>2016
+Correio T=E9cnico Suporte =A92016
+
+obrigado
+Administrador de Sistemas
