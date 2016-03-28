@@ -1,46 +1,49 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH v2] ata: sata_rcar: add gen[23] fallback compatibility strings
-Date: Fri, 25 Mar 2016 08:49:29 +0100
-Message-ID: <CAMuHMdX+bNRxNweSfJRm+FX+_KQSD_Q++BcegmLULSVL7kpM-A@mail.gmail.com>
-References: <1458871280-19330-1-git-send-email-horms+renesas@verge.net.au>
+From: David Miller <davem@davemloft.net>
+Subject: [GIT] IDE
+Date: Mon, 28 Mar 2016 15:45:25 -0400 (EDT)
+Message-ID: <20160328.154525.965454271200417711.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-renesas-soc-owner@vger.kernel.org>
-In-Reply-To: <1458871280-19330-1-git-send-email-horms+renesas@verge.net.au>
-Sender: linux-renesas-soc-owner@vger.kernel.org
-To: Simon Horman <horms+renesas@verge.net.au>
-Cc: Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, linux-renesas-soc@vger.kernel.org, Magnus Damm <magnus.damm@gmail.com>
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from shards.monkeyblade.net ([149.20.54.216]:49432 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753567AbcC1Tp1 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Mar 2016 15:45:27 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Mar 25, 2016 at 3:01 AM, Simon Horman
-<horms+renesas@verge.net.au> wrote:
-> Add fallback compatibility string for R-Car Gen 2 and 3.
->
-> In the case of Renesas R-Car hardware we know that there are generations of
-> SoCs, e.g. Gen 1 and 2. But beyond that its not clear what the relationship
-> between IP blocks might be. For example, I believe that r8a7790 is older
-> than r8a7791 but that doesn't imply that the latter is a descendant of the
-> former or vice versa.
->
-> We can, however, by examining the documentation and behaviour of the
-> hardware at run-time observe that the current driver implementation appears
-> to be compatible with the IP blocks on SoCs within a given generation.
->
-> For the above reasons and convenience when enabling new SoCs a
-> per-generation fallback compatibility string scheme being adopted for
-> drivers for Renesas SoCs.
->
-> Signed-off-by: Simon Horman <horms+renesas@verge.net.au>
 
-Acked-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Just two small changes:
 
-Gr{oetje,eeting}s,
+1) Remove bogus init annotation in icside, from Arnd Bergmann.
 
-                        Geert
+2) Don't use zero clock rates in palm_bk3710 driver, from Wolfram
+   Sang.
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+Please pull, thanks a lot!
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+The following changes since commit 142b9e6c9de0fd7c0dff9a1d4a25390de46abf5e:
+
+  x86/kallsyms: fix GOLD link failure with new relative kallsyms table format (2016-03-20 13:52:37 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide.git 
+
+for you to fetch changes up to 0d7ef45cdeebcc95d581703f45f6de7b2ee89b8d:
+
+  ide: palm_bk3710: test clock rate to avoid division by 0 (2016-03-20 16:59:27 -0400)
+
+----------------------------------------------------------------
+Arnd Bergmann (1):
+      ide: icside: remove incorrect initconst annotation
+
+Wolfram Sang (1):
+      ide: palm_bk3710: test clock rate to avoid division by 0
+
+ drivers/ide/icside.c      | 2 +-
+ drivers/ide/palm_bk3710.c | 2 ++
+ 2 files changed, 3 insertions(+), 1 deletion(-)
