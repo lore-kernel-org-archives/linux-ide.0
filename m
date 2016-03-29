@@ -1,85 +1,70 @@
-From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-Subject: Re: [RFC PATCH 2/3] ata: ahci-platform: Add ports-implemented dt
- bindings.
-Date: Tue, 29 Mar 2016 18:10:03 +0100
-Message-ID: <56FAB6EB.6040802@linaro.org>
-References: <1459257075-21393-1-git-send-email-srinivas.kandagatla@linaro.org>
- <1459257075-21393-3-git-send-email-srinivas.kandagatla@linaro.org>
- <CAL_JsqLhSz1qWj01mAAg4X89hb4LnYB-CjJ2d1JW=jJw66Oq=g@mail.gmail.com>
- <56FA947A.5080806@linaro.org>
- <CAL_JsqLR2GFuveVJj9u9RPAyHvgrF=TUPQXFVBH_BO3BXNx_vw@mail.gmail.com>
+From: Duc Dang <dhdang@apm.com>
+Subject: Re: [PATCH] arm64: dts: apm: Fix compatible string for X-Gene 2 SATA
+ controller DTS node
+Date: Tue, 29 Mar 2016 12:11:21 -0700
+Message-ID: <CADaLNDnU7UJOOFs9euPP035iJX5b1-p7jLoKB5f0Sn==Ec3sYA@mail.gmail.com>
+References: <1459245294-22678-1-git-send-email-rsahu@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:34560 "EHLO
-	mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751229AbcC2RKH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Mar 2016 13:10:07 -0400
-Received: by mail-wm0-f49.google.com with SMTP id p65so149040517wmp.1
-        for <linux-ide@vger.kernel.org>; Tue, 29 Mar 2016 10:10:06 -0700 (PDT)
-In-Reply-To: <CAL_JsqLR2GFuveVJj9u9RPAyHvgrF=TUPQXFVBH_BO3BXNx_vw@mail.gmail.com>
+Received: from mail-io0-f178.google.com ([209.85.223.178]:33855 "EHLO
+	mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753944AbcC2TL7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 29 Mar 2016 15:11:59 -0400
+Received: by mail-io0-f178.google.com with SMTP id e3so36943392ioa.1
+        for <linux-ide@vger.kernel.org>; Tue, 29 Mar 2016 12:11:58 -0700 (PDT)
+In-Reply-To: <1459245294-22678-1-git-send-email-rsahu@apm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Rob Herring <robh+dt@kernel.org>
-Cc: Tejun Heo <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Andy Gross <andy.gross@linaro.org>, Hans de Goede <hdegoede@redhat.com>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-arm-msm <linux-arm-msm@vger.kernel.org>, linux-soc@vger.kernel.org, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, jmaggard10@gmail.com
+To: Rameshwar Prasad Sahu <rsahu@apm.com>
+Cc: Olof Johansson <olof@lixom.net>, tj@kernel.org, Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Devicetree List <devicetree@vger.kernel.org>, linux-arm <linux-arm-kernel@lists.infradead.org>, ddutile@redhat.com, Jon Masters <jcm@redhat.com>, patches <patches@apm.com>
 
+On Tue, Mar 29, 2016 at 2:54 AM, Rameshwar Prasad Sahu <rsahu@apm.com> wrote:
+> Fix X-Gene SATA controller compatible string for Merlin board.
+>
+> Signed-off-by: Rameshwar Prasad Sahu <rsahu@apm.com>
+> Acked-by: Suman Tripathi <stripathi@apm.com>
 
+I will queue this patch into xgene-next tree.
 
-On 29/03/16 18:07, Rob Herring wrote:
-> On Tue, Mar 29, 2016 at 9:43 AM, Srinivas Kandagatla
-> <srinivas.kandagatla@linaro.org> wrote:
->>
->>
->> On 29/03/16 15:11, Rob Herring wrote:
->>>
->>> On Tue, Mar 29, 2016 at 8:11 AM, Srinivas Kandagatla
->>> <srinivas.kandagatla@linaro.org> wrote:
->>>>
->>>> On some SOCs PORTS_IMPL register value is never programmed by the BIOS
->>>
->>>
->>> s/BIOS/firmware/
->>
->> BIOS is the word used in the AHCI SPECS so want to stick to this.
+> ---
+>  arch/arm64/boot/dts/apm/apm-shadowcat.dtsi |    6 +++---
+>  1 files changed, 3 insertions(+), 3 deletions(-)
 >
-> The spec being Intel's also says it is a PCI device... BIOS is a type
-> of firmware.
-Ofcourse.
+> diff --git a/arch/arm64/boot/dts/apm/apm-shadowcat.dtsi b/arch/arm64/boot/dts/apm/apm-shadowcat.dtsi
+> index 5d87a3d..74d971e 100644
+> --- a/arch/arm64/boot/dts/apm/apm-shadowcat.dtsi
+> +++ b/arch/arm64/boot/dts/apm/apm-shadowcat.dtsi
+> @@ -524,7 +524,7 @@
+>                 };
 >
-> [...]
+>                 sata1: sata@1a000000 {
+> -                       compatible = "apm,xgene-ahci";
+> +                       compatible = "apm,xgene-ahci-v2";
+>                         reg = <0x0 0x1a000000 0x0 0x1000>,
+>                               <0x0 0x1f200000 0x0 0x1000>,
+>                               <0x0 0x1f20d000 0x0 0x1000>,
+> @@ -534,7 +534,7 @@
+>                 };
 >
->>>> +       sata0: sata@29000000 { /* Qualcomm APQ8064 */
->>>
->>>
->>> Do you really need another example just for this?
->>>
->>>> +               compatible = "generic-ahci";
->>>
->>>
->>> Where's your chip specific compatible string? You would not require a
->>> DT update to fix this if you had that.
->>
->>
->> Possibly, But we really are not doing anything specific in the ahci driver
->> which is not generic, that might be the reason why we skipped this in the
->> first place.
->>
->> I agree we could solve this issue in more than one way, The only advantage
->> of this new bindings would be to other platforms benefiting from this
->> workaround would not have to keep adding a new compatible string into the
->> ahci-platform driver.
->>
->> Like Annapurna Alpine platform seems to have the same issue.
->>
->> Am ok to do it either way.
+>                 sata2: sata@1a200000 {
+> -                       compatible = "apm,xgene-ahci";
+> +                       compatible = "apm,xgene-ahci-v2";
+>                         reg = <0x0 0x1a200000 0x0 0x1000>,
+>                               <0x0 0x1f210000 0x0 0x1000>,
+>                               <0x0 0x1f21d000 0x0 0x1000>,
+> @@ -544,7 +544,7 @@
+>                 };
 >
-> I'm saying do both. Adding ports-implemented is fine, but add an SoC
-> compatible string (in the dts, not the driver).
-That sounds Good, I will add compatible string in DT and implement 
-ports-implemented.
+>                 sata3: sata@1a400000 {
+> -                       compatible = "apm,xgene-ahci";
+> +                       compatible = "apm,xgene-ahci-v2";
+>                         reg = <0x0 0x1a400000 0x0 0x1000>,
+>                               <0x0 0x1f220000 0x0 0x1000>,
+>                               <0x0 0x1f22d000 0x0 0x1000>,
+> --
+> 1.7.1
+>
 
---srini
->
-> Rob
->
+Regards,
+Duc Dang.
