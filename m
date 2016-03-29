@@ -1,49 +1,63 @@
-From: David Miller <davem@davemloft.net>
-Subject: [GIT] IDE
-Date: Mon, 28 Mar 2016 15:45:25 -0400 (EDT)
-Message-ID: <20160328.154525.965454271200417711.davem@davemloft.net>
+From: Rameshwar Prasad Sahu <rsahu@apm.com>
+Subject: [PATCH] arm64: dts: apm: Fix compatible string for X-Gene 2 SATA
+ controller DTS node
+Date: Tue, 29 Mar 2016 15:24:54 +0530
+Message-ID: <1459245294-22678-1-git-send-email-rsahu@apm.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:49432 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753567AbcC1Tp1 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 28 Mar 2016 15:45:27 -0400
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: devicetree@vger.kernel.org, linux-scsi@vger.kernel.org, jcm@redhat.com, Rameshwar Prasad Sahu <rsahu@apm.com>, patches@apm.com, linux-ide@vger.kernel.org, ddutile@redhat.com, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
+Fix X-Gene SATA controller compatible string for Merlin board.
 
-Just two small changes:
+Signed-off-by: Rameshwar Prasad Sahu <rsahu@apm.com>
+Acked-by: Suman Tripathi <stripathi@apm.com>
+---
+ arch/arm64/boot/dts/apm/apm-shadowcat.dtsi |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-1) Remove bogus init annotation in icside, from Arnd Bergmann.
+diff --git a/arch/arm64/boot/dts/apm/apm-shadowcat.dtsi b/arch/arm64/boot/dts/apm/apm-shadowcat.dtsi
+index 5d87a3d..74d971e 100644
+--- a/arch/arm64/boot/dts/apm/apm-shadowcat.dtsi
++++ b/arch/arm64/boot/dts/apm/apm-shadowcat.dtsi
+@@ -524,7 +524,7 @@
+ 		};
 
-2) Don't use zero clock rates in palm_bk3710 driver, from Wolfram
-   Sang.
+ 		sata1: sata@1a000000 {
+-			compatible = "apm,xgene-ahci";
++			compatible = "apm,xgene-ahci-v2";
+ 			reg = <0x0 0x1a000000 0x0 0x1000>,
+ 			      <0x0 0x1f200000 0x0 0x1000>,
+ 			      <0x0 0x1f20d000 0x0 0x1000>,
+@@ -534,7 +534,7 @@
+ 		};
 
-Please pull, thanks a lot!
+ 		sata2: sata@1a200000 {
+-			compatible = "apm,xgene-ahci";
++			compatible = "apm,xgene-ahci-v2";
+ 			reg = <0x0 0x1a200000 0x0 0x1000>,
+ 			      <0x0 0x1f210000 0x0 0x1000>,
+ 			      <0x0 0x1f21d000 0x0 0x1000>,
+@@ -544,7 +544,7 @@
+ 		};
 
-The following changes since commit 142b9e6c9de0fd7c0dff9a1d4a25390de46abf5e:
-
-  x86/kallsyms: fix GOLD link failure with new relative kallsyms table format (2016-03-20 13:52:37 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide.git 
-
-for you to fetch changes up to 0d7ef45cdeebcc95d581703f45f6de7b2ee89b8d:
-
-  ide: palm_bk3710: test clock rate to avoid division by 0 (2016-03-20 16:59:27 -0400)
-
-----------------------------------------------------------------
-Arnd Bergmann (1):
-      ide: icside: remove incorrect initconst annotation
-
-Wolfram Sang (1):
-      ide: palm_bk3710: test clock rate to avoid division by 0
-
- drivers/ide/icside.c      | 2 +-
- drivers/ide/palm_bk3710.c | 2 ++
- 2 files changed, 3 insertions(+), 1 deletion(-)
+ 		sata3: sata@1a400000 {
+-			compatible = "apm,xgene-ahci";
++			compatible = "apm,xgene-ahci-v2";
+ 			reg = <0x0 0x1a400000 0x0 0x1000>,
+ 			      <0x0 0x1f220000 0x0 0x1000>,
+ 			      <0x0 0x1f22d000 0x0 0x1000>,
+--
+1.7.1
