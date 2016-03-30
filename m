@@ -1,31 +1,28 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] LibATA: Fixup awkward whitespace in warning by removing
- line continuation.
-Date: Wed, 30 Mar 2016 13:01:41 -0400
-Message-ID: <20160330170141.GF7822@mtj.duckdns.org>
-References: <1458509226-24080-1-git-send-email-linux@eikelenboom.it>
+From: "Carthy. Moore" <ctm67@gignet23.ee.tn>
+Subject: We need your product,
+Date: Wed, 30 Mar 2016 18:26:51 +0100
+Message-ID: <BLUPR18MB045235C83A7E77ACB59B1A858C980@BLUPR18MB0452.namprd18.prod.outlook.com>
+Reply-To: <carthymooree@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f177.google.com ([209.85.161.177]:34334 "EHLO
-	mail-yw0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755136AbcC3RBp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Mar 2016 13:01:45 -0400
-Received: by mail-yw0-f177.google.com with SMTP id h129so66208785ywb.1
-        for <linux-ide@vger.kernel.org>; Wed, 30 Mar 2016 10:01:44 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <1458509226-24080-1-git-send-email-linux@eikelenboom.it>
+Received: from mail-bn1hn0254.outbound.protection.outlook.com ([157.56.110.254]:26720
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752247AbcC3R1O convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Mar 2016 13:27:14 -0400
+Content-Description: Mail message body
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sander Eikelenboom <linux@eikelenboom.it>
-Cc: stripathi@apm.com, linux-ide@vger.kernel.org
+To: Recipients <ctm67@gignet23.ee.tn>
 
-On Sun, Mar 20, 2016 at 10:27:06PM +0100, Sander Eikelenboom wrote:
-> Signed-off-by: Sander Eikelenboom <linux@eikelenboom.it>
+Hello,
 
-Applied to libata/for-4.7.
+We need your product, so get back to us with 
 
-Thanks.
+your quotation and your best price list.
 
--- 
-tejun
+Regards.
+
+Carthy.
