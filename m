@@ -1,44 +1,49 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata-core: Allow longer timeout for drive spinup from
- PUIS
-Date: Wed, 30 Mar 2016 14:38:46 -0400
-Message-ID: <20160330183846.GK7822@mtj.duckdns.org>
-References: <539D1F09-E6EB-47F1-A66E-C182CA675359@hgst.com>
+Subject: Re: [RFC PATCH 1/3] libahci: save port map for forced port map
+Date: Wed, 30 Mar 2016 14:57:06 -0400
+Message-ID: <20160330185706.GQ7822@mtj.duckdns.org>
+References: <1459257075-21393-1-git-send-email-srinivas.kandagatla@linaro.org>
+ <1459257075-21393-2-git-send-email-srinivas.kandagatla@linaro.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f172.google.com ([209.85.161.172]:36522 "EHLO
-	mail-yw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753984AbcC3Sis (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Mar 2016 14:38:48 -0400
-Received: by mail-yw0-f172.google.com with SMTP id g3so69430249ywa.3
-        for <linux-ide@vger.kernel.org>; Wed, 30 Mar 2016 11:38:48 -0700 (PDT)
+Received: from mail-yw0-f193.google.com ([209.85.161.193]:35956 "EHLO
+	mail-yw0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752267AbcC3S5I (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Mar 2016 14:57:08 -0400
 Content-Disposition: inline
-In-Reply-To: <539D1F09-E6EB-47F1-A66E-C182CA675359@hgst.com>
+In-Reply-To: <1459257075-21393-2-git-send-email-srinivas.kandagatla@linaro.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Damien Le Moal <Damien.LeMoal@hgst.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+Cc: linux-ide@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, Andy Gross <andy.gross@linaro.org>, Hans de Goede <hdegoede@redhat.com>, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-soc@vger.kernel.org, linux-arm-kernel@lists.infradead.org, jmaggard10@gmail.com
 
-Hello, Damien.
+Hello,
 
-On Tue, Mar 22, 2016 at 08:22:22AM +0000, Damien Le Moal wrote:
-> diff --git a/include/linux/ata.h b/include/linux/ata.h
-> index c1a2f34..f460e7f 100644
-> --- a/include/linux/ata.h
-> +++ b/include/linux/ata.h
-> @@ -371,7 +371,8 @@ enum {
->  	SETFEATURES_AAM_ON	= 0x42,
->  	SETFEATURES_AAM_OFF	= 0xC2,
->  
-> -	SETFEATURES_SPINUP	= 0x07, /* Spin-up drive */
-> +	SETFEATURES_SPINUP		= 0x07, /* Spin-up drive */
-> +	SETFEATURES_SPINUP_TIMEOUT	= 30, /* 30s timeout for drive spin-up from PUIS */
+On Tue, Mar 29, 2016 at 02:11:13PM +0100, Srinivas Kandagatla wrote:
+> In usecases where force_port_map is used saved_port_map is never set,
+> resulting in not programming the PORTS_IMPL register as part of intial
+> config. This patch fixes this by setting it to port_map even in case
+> where force_port_map is used, making it more inline with other parts of
+> the code.
+> 
+> Signed-off-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+> ---
+>  drivers/ata/libahci.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+> index 3982054..a5d7c1c 100644
+> --- a/drivers/ata/libahci.c
+> +++ b/drivers/ata/libahci.c
+> @@ -507,6 +507,7 @@ void ahci_save_initial_config(struct device *dev, struct ahci_host_priv *hpriv)
+>  		dev_info(dev, "forcing port_map 0x%x -> 0x%x\n",
+>  			 port_map, hpriv->force_port_map);
+>  		port_map = hpriv->force_port_map;
+> +		hpriv->saved_port_map = port_map;
 
-Other timeout constants are defined in msecs.  Let's do the same here.
-Also, can you please send the email as plain-text without the base64
-encoding?  If you can't, please send the patch as an attachment
-instead.
+So, the only change it'd cause is making the driver write the forced
+value to the PI register.  Does that make sense?
 
 Thanks.
 
