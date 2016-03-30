@@ -1,33 +1,31 @@
-From: heinz.krahl@arcor.de
-Subject: Donation:contact davidcarolm@yahoo.com.hk
-Date: Wed, 30 Mar 2016 03:34:14 +0200 (CEST)
-Message-ID: <1991478898.877999.1459301654215.JavaMail.ngmail@webmail12.arcor-online.net>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] LibATA: Fixup awkward whitespace in warning by removing
+ line continuation.
+Date: Wed, 30 Mar 2016 13:01:41 -0400
+Message-ID: <20160330170141.GF7822@mtj.duckdns.org>
+References: <1458509226-24080-1-git-send-email-linux@eikelenboom.it>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-in-14.arcor-online.net ([151.189.21.54]:49015 "EHLO
-	mail-in-14.arcor-online.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752940AbcC3BeQ convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 29 Mar 2016 21:34:16 -0400
+Received: from mail-yw0-f177.google.com ([209.85.161.177]:34334 "EHLO
+	mail-yw0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755136AbcC3RBp (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 30 Mar 2016 13:01:45 -0400
+Received: by mail-yw0-f177.google.com with SMTP id h129so66208785ywb.1
+        for <linux-ide@vger.kernel.org>; Wed, 30 Mar 2016 10:01:44 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <1458509226-24080-1-git-send-email-linux@eikelenboom.it>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: info@web.de
+To: Sander Eikelenboom <linux@eikelenboom.it>
+Cc: stripathi@apm.com, linux-ide@vger.kernel.org
 
-Attention:
-We are donating to you 1,500,000 GBP, from David and Carol Martin =A333=
-million lottery, won January 2016.
-Your email was selected as one of the lucky five (5) recipient to be do=
-nated to.
+On Sun, Mar 20, 2016 at 10:27:06PM +0100, Sander Eikelenboom wrote:
+> Signed-off-by: Sander Eikelenboom <linux@eikelenboom.it>
 
-Please provide the following information for claims
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-*Full Name:
-*Telephone Number:
-*Age:
-*Country:
-reply to us on
-davidcarolm@yahoo.com.hk
+Applied to libata/for-4.7.
+
+Thanks.
+
+-- 
+tejun
