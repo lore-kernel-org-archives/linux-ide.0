@@ -1,138 +1,190 @@
-From: Damien Le Moal <Damien.LeMoal@hgst.com>
-Subject: Re: [PATCH] libata-core: Allow longer timeout for drive spinup from
- PUIS
-Date: Sat, 2 Apr 2016 12:23:02 +0000
-Message-ID: <D088F533-0243-4414-9B03-BC177DC1D35C@hgst.com>
-References: <539D1F09-E6EB-47F1-A66E-C182CA675359@hgst.com>
- <20160330183846.GK7822@mtj.duckdns.org>
-Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_002_D088F533024344149B03BC177DC1D35Chgstcom_"
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sjc00mx1.hitachigst.com ([199.255.44.36]:52081 "EHLO
-	sjc00mx1.hgst.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751971AbcDBMXH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 2 Apr 2016 08:23:07 -0400
-In-Reply-To: <20160330183846.GK7822@mtj.duckdns.org>
-Content-Language: en-US
-Sender: linux-ide-owner@vger.kernel.org
+From: Shaun Tancheff <shaun@tancheff.com>
+Subject: [PATCH 03/12] BUG: Losing bits on request.cmd_flags
+Date: Mon,  4 Apr 2016 12:06:07 +0700
+Message-ID: <1459746376-27983-4-git-send-email-shaun@tancheff.com>
+References: <1459746376-27983-1-git-send-email-shaun@tancheff.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1459746376-27983-1-git-send-email-shaun@tancheff.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Jens Axboe <axboe@fb.com>, Shaun Tancheff <shaun@tancheff.com>, Shaun Tancheff <shaun.tancheff@seagate.com>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
---_002_D088F533024344149B03BC177DC1D35Chgstcom_
-Content-Type: text/plain; charset="iso-8859-1"
-Content-ID: <E05DC030C9BD97438C6C2C4E249DE73B@namprd04.prod.outlook.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+In a few places a temporary value smaller than a cmd_flags
+is used to test for bits and or build up a new cmd_flags.
 
+Change to use explicit u64 values where appropriate.
 
-Tejun,
+Signed-off-by: Shaun Tancheff <shaun.tancheff@seagate.com>
+---
+ block/blk-core.c         | 17 ++++++++++-------
+ block/blk-merge.c        |  2 +-
+ block/blk-mq.c           |  2 +-
+ block/cfq-iosched.c      |  2 +-
+ block/elevator.c         |  4 ++--
+ include/linux/elevator.h |  4 ++--
+ 6 files changed, 17 insertions(+), 14 deletions(-)
 
->On Tue, Mar 22, 2016 at 08:22:22AM +0000, Damien Le Moal wrote:
->> diff --git a/include/linux/ata.h b/include/linux/ata.h
->> index c1a2f34..f460e7f 100644
->> --- a/include/linux/ata.h
->> +++ b/include/linux/ata.h
->> @@ -371,7 +371,8 @@ enum {
->>  	SETFEATURES_AAM_ON	=3D 0x42,
->>  	SETFEATURES_AAM_OFF	=3D 0xC2,
->>  =
-
->> -	SETFEATURES_SPINUP	=3D 0x07, /* Spin-up drive */
->> +	SETFEATURES_SPINUP		=3D 0x07, /* Spin-up drive */
->> +	SETFEATURES_SPINUP_TIMEOUT	=3D 30, /* 30s timeout for drive spin-up fr=
-om PUIS */
->
->Other timeout constants are defined in msecs.  Let's do the same here.
->Also, can you please send the email as plain-text without the base64
->encoding?  If you can't, please send the patch as an attachment
->instead.
-
-Sorry about the email format (I am sending emails in plain text, but my
-Outlook exchange client/exchange server does not seem to be respecting
-that format).
-
-Here is the patch as attachment, reworked to define the timeout in
-milliseconds as you suggested.
-
-Thank you.
-
-Best regards.
-
-
---
-Damien Le Moal, Ph.D.
-Sr Manager, System Software Group, WW Research,
-HGST, a Western Digital company
-Damien.LeMoal@hgst.com
-Tel: (+81) 0466-98-3593 (Ext. 51-3593)
-1 kirihara-cho, Fujisawa, Kanagawa, 252-0888 Japan
-www.hgst.com <http://www.hgst.com>
-Western Digital Corporation (and its subsidiaries) E-mail Confidentiality N=
-otice & Disclaimer:
-
-This e-mail and any files transmitted with it may contain confidential or l=
-egally privileged information of WDC and/or its affiliates, and are intende=
-d solely for the use of the individual or entity to which they are addresse=
-d. If you are not the intended recipient, any disclosure, copying, distribu=
-tion or any action taken or omitted to be taken in reliance on it, is prohi=
-bited. If you have received this e-mail in error, please notify the sender =
-immediately and delete the e-mail in its entirety from your system.
-
---_002_D088F533024344149B03BC177DC1D35Chgstcom_
-Content-Type: application/octet-stream;
-	name="set-features-spinup-timeout.patch"
-Content-Description: set-features-spinup-timeout.patch
-Content-Disposition: attachment;
-	filename="set-features-spinup-timeout.patch"; size=2361;
-	creation-date="Sat, 02 Apr 2016 12:23:02 GMT";
-	modification-date="Sat, 02 Apr 2016 12:23:02 GMT"
-Content-ID: <584CBA0415EBC645B149ECBF83392F2C@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: base64
-
-Y29tbWl0IGM3NWFiNjdkY2JmNWFjMWU4OGFiZDk2N2IwN2EwMjc5YWI0ODg1NTkKQXV0aG9yOiBE
-YW1pZW4gTGUgTW9hbCA8ZGFtaWVuLmxlbW9hbEBoZ3N0LmNvbT4KRGF0ZTogICBUdWUgTWFyIDIy
-IDEwOjM2OjQ4IDIwMTYgKzA5MDAKCiAgICBsaWJhdGEtY29yZTogQWxsb3cgbG9uZ2VyIHRpbWVv
-dXQgZm9yIGRyaXZlIHNwaW51cCBmcm9tIFBVSVMKICAgIAogICAgV2hlbiBzcGlubmluZyB1cCBh
-IGRyaXZlIGZyb20gcG93ZXJlZCBvbiBzdGFuZGJ5IG1vZGUgKFBVSVMpLAogICAgU0VURkVBVFVS
-RVNfU1BJTlVQIGlzIGV4ZWN1dGVkIHdpdGggdGhlIGRlZmF1bHQgdGltZW91dCB1c2VkCiAgICBm
-b3IgYW55IFNFVEZFQVRVUkVTIHN1YmNvbW1hbmQsIHRoYXQgaXMgNSsxMCBzZWNvbmRzLiBUaGUK
-ICAgIHRvdGFsIDE1cyBpcyB0b28gc2hvcnQgZm9yIHNvbWUgZHJpdmVzIHRvIGNvbXBsZXRlIHNw
-aW51cAogICAgKGUuZy4gZHJpdmVzIHdpdGggYSBsYXJnZSBpbmRpcmVjdGlvbiB0YWJsZSBzdG9y
-ZWQgb24gbWVkaWEpLAogICAgcmVzdWx0aW5nIGluIGF0YV9kZXZfcmVhZF9pZCB0byBmYWlsIHR3
-aWNlIG9uIHRoZSBleGVjdXRpb24KICAgIG9mIFNFVEZFQVRVUkVTX1NQSU5VUC4gRm9yIHRoaXMg
-ZmVhdHVyZSwgYWxsb3cgYSBsYXJnZXIKICAgIGRlZmF1bHQgdGltZW91dCBvZiAzMCBzZWNvbmRz
-LiBIb3dldmVyLCBpbiB0aGUgc2FtZSBzcGlyaXQKICAgIGFzIHdpdGggdGhlIHRpbWVvdXQgb2Yg
-b3RoZXIgZmVhdHVyZSBzdWJjb21tYW5kcywgZG8gbm90CiAgICBpZ25vcmUgYXRhX3Byb2JlX3Rp
-bWVvdXQgaWYgaXQgaXMgc2V0KS4KICAgIAogICAgU2lnbmVkLW9mZi1ieTogRGFtaWVuIExlIE1v
-YWwgPGRhbWllbi5sZW1vYWxAaGdzdC5jb20+CgpkaWZmIC0tZ2l0IGEvZHJpdmVycy9hdGEvbGli
-YXRhLWNvcmUuYyBiL2RyaXZlcnMvYXRhL2xpYmF0YS1jb3JlLmMKaW5kZXggNTVlMjU3Yy4uYzk0
-YTJhMSAxMDA2NDQKLS0tIGEvZHJpdmVycy9hdGEvbGliYXRhLWNvcmUuYworKysgYi9kcml2ZXJz
-L2F0YS9saWJhdGEtY29yZS5jCkBAIC00NTI4LDYgKzQ1MjgsNyBAQCB1bnNpZ25lZCBpbnQgYXRh
-X2Rldl9zZXRfZmVhdHVyZShzdHJ1Y3QgYXRhX2RldmljZSAqZGV2LCB1OCBlbmFibGUsIHU4IGZl
-YXR1cmUpCiB7CiAJc3RydWN0IGF0YV90YXNrZmlsZSB0ZjsKIAl1bnNpZ25lZCBpbnQgZXJyX21h
-c2s7CisJdW5zaWduZWQgbG9uZyB0aW1lb3V0ID0gMDsKIAogCS8qIHNldCB1cCBzZXQtZmVhdHVy
-ZXMgdGFza2ZpbGUgKi8KIAlEUFJJTlRLKCJzZXQgZmVhdHVyZXMgLSBTQVRBIGZlYXR1cmVzXG4i
-KTsKQEAgLTQ1MzksNyArNDU0MCwxMCBAQCB1bnNpZ25lZCBpbnQgYXRhX2Rldl9zZXRfZmVhdHVy
-ZShzdHJ1Y3QgYXRhX2RldmljZSAqZGV2LCB1OCBlbmFibGUsIHU4IGZlYXR1cmUpCiAJdGYucHJv
-dG9jb2wgPSBBVEFfUFJPVF9OT0RBVEE7CiAJdGYubnNlY3QgPSBmZWF0dXJlOwogCi0JZXJyX21h
-c2sgPSBhdGFfZXhlY19pbnRlcm5hbChkZXYsICZ0ZiwgTlVMTCwgRE1BX05PTkUsIE5VTEwsIDAs
-IDApOworCWlmIChlbmFibGUgPT0gU0VURkVBVFVSRVNfU1BJTlVQKQorCQl0aW1lb3V0ID0gYXRh
-X3Byb2JlX3RpbWVvdXQgPworCQkJICBhdGFfcHJvYmVfdGltZW91dCAqIDEwMDAgOiBTRVRGRUFU
-VVJFU19TUElOVVBfVElNRU9VVDsKKwllcnJfbWFzayA9IGF0YV9leGVjX2ludGVybmFsKGRldiwg
-JnRmLCBOVUxMLCBETUFfTk9ORSwgTlVMTCwgMCwgdGltZW91dCk7CiAKIAlEUFJJTlRLKCJFWElU
-LCBlcnJfbWFzaz0leFxuIiwgZXJyX21hc2spOwogCXJldHVybiBlcnJfbWFzazsKZGlmZiAtLWdp
-dCBhL2luY2x1ZGUvbGludXgvYXRhLmggYi9pbmNsdWRlL2xpbnV4L2F0YS5oCmluZGV4IGMxYTJm
-MzQuLmY0NjBlN2YgMTAwNjQ0Ci0tLSBhL2luY2x1ZGUvbGludXgvYXRhLmgKKysrIGIvaW5jbHVk
-ZS9saW51eC9hdGEuaApAQCAtMzcxLDcgKzM3MSw4IEBAIGVudW0gewogCVNFVEZFQVRVUkVTX0FB
-TV9PTgk9IDB4NDIsCiAJU0VURkVBVFVSRVNfQUFNX09GRgk9IDB4QzIsCiAKLQlTRVRGRUFUVVJF
-U19TUElOVVAJPSAweDA3LCAvKiBTcGluLXVwIGRyaXZlICovCisJU0VURkVBVFVSRVNfU1BJTlVQ
-CQk9IDB4MDcsIC8qIFNwaW4tdXAgZHJpdmUgKi8KKwlTRVRGRUFUVVJFU19TUElOVVBfVElNRU9V
-VAk9IDMwMDAwLCAvKiAzMHMgdGltZW91dCBmb3IgZHJpdmUgc3Bpbi11cCBmcm9tIFBVSVMgKi8K
-IAogCVNFVEZFQVRVUkVTX1NBVEFfRU5BQkxFID0gMHgxMCwgLyogRW5hYmxlIHVzZSBvZiBTQVRB
-IGZlYXR1cmUgKi8KIAlTRVRGRUFUVVJFU19TQVRBX0RJU0FCTEUgPSAweDkwLCAvKiBEaXNhYmxl
-IHVzZSBvZiBTQVRBIGZlYXR1cmUgKi8K
-
---_002_D088F533024344149B03BC177DC1D35Chgstcom_--
+diff --git a/block/blk-core.c b/block/blk-core.c
+index e4b1269..3413604 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -959,7 +959,7 @@ static void __freed_request(struct request_list *rl, int sync)
+  * A request has just been released.  Account for it, update the full and
+  * congestion status, wake up any waiters.   Called under q->queue_lock.
+  */
+-static void freed_request(struct request_list *rl, unsigned int flags)
++static void freed_request(struct request_list *rl, u64 flags)
+ {
+ 	struct request_queue *q = rl->q;
+ 	int sync = rw_is_sync(flags);
+@@ -1054,7 +1054,7 @@ static struct io_context *rq_ioc(struct bio *bio)
+ /**
+  * __get_request - get a free request
+  * @rl: request list to allocate from
+- * @rw_flags: RW and SYNC flags
++ * @rw: RW and SYNC flags
+  * @bio: bio to allocate request for (can be %NULL)
+  * @gfp_mask: allocation mask
+  *
+@@ -1065,7 +1065,7 @@ static struct io_context *rq_ioc(struct bio *bio)
+  * Returns ERR_PTR on failure, with @q->queue_lock held.
+  * Returns request pointer on success, with @q->queue_lock *not held*.
+  */
+-static struct request *__get_request(struct request_list *rl, int rw_flags,
++static struct request *__get_request(struct request_list *rl, unsigned long rw,
+ 				     struct bio *bio, gfp_t gfp_mask)
+ {
+ 	struct request_queue *q = rl->q;
+@@ -1073,6 +1073,7 @@ static struct request *__get_request(struct request_list *rl, int rw_flags,
+ 	struct elevator_type *et = q->elevator->type;
+ 	struct io_context *ioc = rq_ioc(bio);
+ 	struct io_cq *icq = NULL;
++	u64 rw_flags = rw;
+ 	const bool is_sync = rw_is_sync(rw_flags) != 0;
+ 	int may_queue;
+ 
+@@ -1237,7 +1238,8 @@ rq_starved:
+  * Returns ERR_PTR on failure, with @q->queue_lock held.
+  * Returns request pointer on success, with @q->queue_lock *not held*.
+  */
+-static struct request *get_request(struct request_queue *q, int rw_flags,
++static struct request *get_request(struct request_queue *q,
++				   unsigned long rw_flags,
+ 				   struct bio *bio, gfp_t gfp_mask)
+ {
+ 	const bool is_sync = rw_is_sync(rw_flags) != 0;
+@@ -1490,7 +1492,7 @@ void __blk_put_request(struct request_queue *q, struct request *req)
+ 	 * it didn't come out of our reserved rq pools
+ 	 */
+ 	if (req->cmd_flags & REQ_ALLOCED) {
+-		unsigned int flags = req->cmd_flags;
++		u64 flags = req->cmd_flags;
+ 		struct request_list *rl = blk_rq_rl(req);
+ 
+ 		BUG_ON(!list_empty(&req->queuelist));
+@@ -1711,7 +1713,8 @@ static blk_qc_t blk_queue_bio(struct request_queue *q, struct bio *bio)
+ {
+ 	const bool sync = !!(bio->bi_rw & REQ_SYNC);
+ 	struct blk_plug *plug;
+-	int el_ret, rw_flags, where = ELEVATOR_INSERT_SORT;
++	u64 rw_flags;
++	int el_ret, where = ELEVATOR_INSERT_SORT;
+ 	struct request *req;
+ 	unsigned int request_count = 0;
+ 
+@@ -2248,7 +2251,7 @@ EXPORT_SYMBOL_GPL(blk_insert_cloned_request);
+  */
+ unsigned int blk_rq_err_bytes(const struct request *rq)
+ {
+-	unsigned int ff = rq->cmd_flags & REQ_FAILFAST_MASK;
++	u64 ff = rq->cmd_flags & REQ_FAILFAST_MASK;
+ 	unsigned int bytes = 0;
+ 	struct bio *bio;
+ 
+diff --git a/block/blk-merge.c b/block/blk-merge.c
+index 2613531..fec37e1 100644
+--- a/block/blk-merge.c
++++ b/block/blk-merge.c
+@@ -604,7 +604,7 @@ static int ll_merge_requests_fn(struct request_queue *q, struct request *req,
+  */
+ void blk_rq_set_mixed_merge(struct request *rq)
+ {
+-	unsigned int ff = rq->cmd_flags & REQ_FAILFAST_MASK;
++	u64 ff = rq->cmd_flags & REQ_FAILFAST_MASK;
+ 	struct bio *bio;
+ 
+ 	if (rq->cmd_flags & REQ_MIXED_MERGE)
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 56c0a72..8b41ad6 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -159,7 +159,7 @@ bool blk_mq_can_queue(struct blk_mq_hw_ctx *hctx)
+ EXPORT_SYMBOL(blk_mq_can_queue);
+ 
+ static void blk_mq_rq_ctx_init(struct request_queue *q, struct blk_mq_ctx *ctx,
+-			       struct request *rq, unsigned int rw_flags)
++			       struct request *rq, u64 rw_flags)
+ {
+ 	if (blk_queue_io_stat(q))
+ 		rw_flags |= REQ_IO_STAT;
+diff --git a/block/cfq-iosched.c b/block/cfq-iosched.c
+index 1f9093e..e11a220 100644
+--- a/block/cfq-iosched.c
++++ b/block/cfq-iosched.c
+@@ -4262,7 +4262,7 @@ static inline int __cfq_may_queue(struct cfq_queue *cfqq)
+ 	return ELV_MQUEUE_MAY;
+ }
+ 
+-static int cfq_may_queue(struct request_queue *q, int rw)
++static int cfq_may_queue(struct request_queue *q, u64 rw)
+ {
+ 	struct cfq_data *cfqd = q->elevator->elevator_data;
+ 	struct task_struct *tsk = current;
+diff --git a/block/elevator.c b/block/elevator.c
+index c3555c9..7c0a59c 100644
+--- a/block/elevator.c
++++ b/block/elevator.c
+@@ -511,7 +511,7 @@ void elv_merge_requests(struct request_queue *q, struct request *rq,
+ 			     struct request *next)
+ {
+ 	struct elevator_queue *e = q->elevator;
+-	const int next_sorted = next->cmd_flags & REQ_SORTED;
++	const int next_sorted = !!(next->cmd_flags & REQ_SORTED);
+ 
+ 	if (next_sorted && e->type->ops.elevator_merge_req_fn)
+ 		e->type->ops.elevator_merge_req_fn(q, rq, next);
+@@ -717,7 +717,7 @@ void elv_put_request(struct request_queue *q, struct request *rq)
+ 		e->type->ops.elevator_put_req_fn(rq);
+ }
+ 
+-int elv_may_queue(struct request_queue *q, int rw)
++int elv_may_queue(struct request_queue *q, u64 rw)
+ {
+ 	struct elevator_queue *e = q->elevator;
+ 
+diff --git a/include/linux/elevator.h b/include/linux/elevator.h
+index 638b324..a06cca4 100644
+--- a/include/linux/elevator.h
++++ b/include/linux/elevator.h
+@@ -26,7 +26,7 @@ typedef int (elevator_dispatch_fn) (struct request_queue *, int);
+ typedef void (elevator_add_req_fn) (struct request_queue *, struct request *);
+ typedef struct request *(elevator_request_list_fn) (struct request_queue *, struct request *);
+ typedef void (elevator_completed_req_fn) (struct request_queue *, struct request *);
+-typedef int (elevator_may_queue_fn) (struct request_queue *, int);
++typedef int (elevator_may_queue_fn) (struct request_queue *, u64);
+ 
+ typedef void (elevator_init_icq_fn) (struct io_cq *);
+ typedef void (elevator_exit_icq_fn) (struct io_cq *);
+@@ -134,7 +134,7 @@ extern struct request *elv_former_request(struct request_queue *, struct request
+ extern struct request *elv_latter_request(struct request_queue *, struct request *);
+ extern int elv_register_queue(struct request_queue *q);
+ extern void elv_unregister_queue(struct request_queue *q);
+-extern int elv_may_queue(struct request_queue *, int);
++extern int elv_may_queue(struct request_queue *, u64);
+ extern void elv_completed_request(struct request_queue *, struct request *);
+ extern int elv_set_request(struct request_queue *q, struct request *rq,
+ 			   struct bio *bio, gfp_t gfp_mask);
+-- 
+1.9.1
 
