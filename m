@@ -1,147 +1,81 @@
-From: Shaun Tancheff <shaun.tancheff@seagate.com>
-Subject: Re: [PATCH 00/12] Block support for zoned drives
-Date: Mon, 4 Apr 2016 15:13:44 +0700
-Message-ID: <CAJVOszBtQuZznc41rEv1x5fFf2fVJdpcd4DwxRsBzSXihhg+LA@mail.gmail.com>
-References: <1459746376-27983-1-git-send-email-shaun@tancheff.com> <57021877.1070609@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx0b-00003501.pphosted.com ([67.231.152.68]:52450 "EHLO
-	mx0b-00003501.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752717AbcDDIOF convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 4 Apr 2016 04:14:05 -0400
-Received: from pps.filterd (m0075033.ppops.net [127.0.0.1])
-	by mx0b-00003501.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u348Bs78015765
-	for <linux-ide@vger.kernel.org>; Mon, 4 Apr 2016 04:14:04 -0400
-Received: from mail-yw0-f175.google.com (mail-yw0-f175.google.com [209.85.161.175])
-	by mx0b-00003501.pphosted.com with ESMTP id 223mhv8014-12
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-ide@vger.kernel.org>; Mon, 04 Apr 2016 04:14:03 -0400
-Received: by mail-yw0-f175.google.com with SMTP id g127so241892894ywf.2
-        for <linux-ide@vger.kernel.org>; Mon, 04 Apr 2016 01:14:03 -0700 (PDT)
-In-Reply-To: <57021877.1070609@suse.de>
-Sender: linux-ide-owner@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 06/14] libata-eh: Set 'information' field for autosense
+Date: Mon,  4 Apr 2016 11:43:59 +0200
+Message-ID: <1459763047-125551-7-git-send-email-hare@suse.de>
+References: <1459763047-125551-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1459763047-125551-1-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Hannes Reinecke <hare@suse.de>
 List-Id: linux-ide@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Shaun Tancheff <shaun@tancheff.com>, linux-ide@vger.kernel.org, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>
 
-On Mon, Apr 4, 2016 at 2:32 PM, Hannes Reinecke <hare@suse.de> wrote:
-> On 04/04/2016 07:06 AM, Shaun Tancheff wrote:
->> As Host Aware drives are becoming available we would like to be able
->> to make use of such drives. This series is also intended to be suita=
-ble
->> for use by Host Managed drives.
->>
->> The following series is hopefully a reasonable start at adding such
->> support.
->>
->> ZAC/ZBC drives add new commands. Some of this support is already in
->> progress by Hannes Reinecke <hare@suse.de>. This patch finishes up a
->> couple of scsi <-> ata translations. These patches will be re-worked
->> or dropped in favor of Hannes' next release.
->>
->> With the ZAC support in place adding some additional flags to struct=
- bio
->> to identify the new drive requests (Report zones, Open/Close/Reset z=
-ones).
->>
->> With the bio support in place there are two new users added. The fir=
-st
->> user is an ioctl the second user is a device mapper target.
->> The user space tools for the ioctl is intended to be acceptable for
->> inclusion by util-linux. Initial patches for 2.20.1 and 2.21.1
->> can be found here:
->> https://urldefense.proofpoint.com/v2/url?u=3Dhttps-3A__github.com_Se=
-agate_ZDM-2DDevice-2DMapper_tree_master_patches_util-2Dlinux&d=3DCwID-g=
-&c=3DIGDlg0lD0b-nebmJJ0Kp8A&r=3DWg5NqlNlVTT7Ugl8V50qIHLe856QW0qfG3WVYGO=
-rWzA&m=3D4-JH1zADrs_TK5Uu77zQ1VSbAHgw5wTORr6yOSgYD5M&s=3DRDPFmAeTZPfhBJ=
-m7NWJ98rZLNz6XK6fUaEfuddyReH8&e=3D
->>
->> Please consider the new device mapper target, as an RFC.
->>
->> Patch "Limit bio_endio recursion" is based on an older patch that wa=
-s
->> not picked up. It is not strictly necessary but it does reduce stack
->> usage, especially for badly behaved DM targets that return
->> DM_MAPIO_REQUEUE too frequently.
->>
->> Patch "Use PID to seed Stream Id" depends on:
->> https://urldefense.proofpoint.com/v2/url?u=3Dhttps-3A__lkml.kernel.o=
-rg_r_1457107853-2D8689-2D1-2Dgit-2Dsend-2Demail-2Daxboe-40fb.com&d=3DCw=
-ID-g&c=3DIGDlg0lD0b-nebmJJ0Kp8A&r=3DWg5NqlNlVTT7Ugl8V50qIHLe856QW0qfG3W=
-VYGOrWzA&m=3D4-JH1zADrs_TK5Uu77zQ1VSbAHgw5wTORr6yOSgYD5M&s=3DIN4c2F-7PS=
-BRdZ48Vd9a9ErYT6ZC8LU9Gz64JkCkR4o&e=3D
->>
->> Patch "Block Zoned Control for Userspace" is a hold over for user sp=
-ace
->> tools that have not been updated to use the new block ioctl. The pat=
-ch
->> will be dropped when zdm-tools is updated and sd-tools is replaced
->> with util-linux.
->>
->> This series is based on Linus v4.5 kernel.
->>
->> Code is also available on github here:
->> https://urldefense.proofpoint.com/v2/url?u=3Dhttps-3A__github.com_Se=
-agate_ZDM-2DDevice-2DMapper&d=3DCwID-g&c=3DIGDlg0lD0b-nebmJJ0Kp8A&r=3DW=
-g5NqlNlVTT7Ugl8V50qIHLe856QW0qfG3WVYGOrWzA&m=3D4-JH1zADrs_TK5Uu77zQ1VSb=
-AHgw5wTORr6yOSgYD5M&s=3DORjeO0XATR5F7vYAssdTzdmSeRV3svNBuoL63WOtcno&e=3D
->>
->> And a fork of Linus kernel with ZDM branches is available here:
->> https://urldefense.proofpoint.com/v2/url?u=3Dhttps-3A__github.com_st=
-ancheff_linux&d=3DCwID-g&c=3DIGDlg0lD0b-nebmJJ0Kp8A&r=3DWg5NqlNlVTT7Ugl=
-8V50qIHLe856QW0qfG3WVYGOrWzA&m=3D4-JH1zADrs_TK5Uu77zQ1VSbAHgw5wTORr6yOS=
-gYD5M&s=3DHGzFkskoVEIBv0BMxTwLpzVxLZsAqiLNEUKWeqK_Xgk&e=3D
->>
->> Shaun Tancheff (12):
->>   Add ZBC <-> ZAC xlat support for report, open, close, reset, finis=
-h
->>   ata-scsi: Translate ReportZones result to big endian
->>   BUG: Losing bits on request.cmd_flags
->>   Add bio/request flags for using ZBC/ZAC commands
->>   Add ioctl to issue ZBC/ZAC commands via block layer
->>   Add ata pass-through path for ZAC commands.
->>   ZDM: New DM target 'zoned'
->>   RAID 4/5/6: Indicate parity blocks as 'META'
->>   RAID 4/5/6: Fine-grained TRIM enable for ZDM
->>   Limit bio_endio recursion
->>   Stream Id: Use PID to seed Stream Id construction.
->>   Block Zoned Control for Userspace
->>
-> Please hold off with this series for the moment.
+If NCQ autosense or the sense data reporting feature is enabled
+the LBA of the offending command should be stored in the sense
+data 'information' field.
 
-Sure no problem, I was planning to re-base on top of your patchset.
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/ata/libata-eh.c   |  2 ++
+ drivers/ata/libata-scsi.c | 17 +++++++++++++++++
+ drivers/ata/libata.h      |  3 +++
+ 3 files changed, 22 insertions(+)
 
-Just hopping to get some early feedback on the struct bio changes...
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 1a009d7..d33e7b8 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -1856,6 +1856,8 @@ void ata_eh_analyze_ncq_error(struct ata_link *link)
+ 		asc = (qc->result_tf.auxiliary >> 8) & 0xff;
+ 		ascq = qc->result_tf.auxiliary & 0xff;
+ 		ata_scsi_set_sense(qc->scsicmd, sense_key, asc, ascq);
++		ata_scsi_set_sense_information(dev, qc->scsicmd,
++					       &qc->result_tf);
+ 		qc->flags |= ATA_QCFLAG_SENSE_VALID;
+ 	}
+ 
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index de593d8..e43ca29 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -280,6 +280,23 @@ void ata_scsi_set_sense(struct scsi_cmnd *cmd, u8 sk, u8 asc, u8 ascq)
+ 	scsi_build_sense_buffer(0, cmd->sense_buffer, sk, asc, ascq);
+ }
+ 
++void ata_scsi_set_sense_information(struct ata_device *dev,
++				    struct scsi_cmnd *cmd,
++				    const struct ata_taskfile *tf)
++{
++	u64 information;
++
++	if (!cmd)
++		return;
++
++	information = ata_tf_read_block(tf, dev);
++	if (information == (u64)-1)
++		return;
++
++	scsi_set_sense_information(cmd->sense_buffer,
++				   SCSI_SENSE_BUFFERSIZE, information);
++}
++
+ static ssize_t
+ ata_scsi_em_message_store(struct device *dev, struct device_attribute *attr,
+ 			  const char *buf, size_t count)
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 507c22f..dbc6760 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -139,6 +139,9 @@ extern int ata_scsi_add_hosts(struct ata_host *host,
+ extern void ata_scsi_scan_host(struct ata_port *ap, int sync);
+ extern int ata_scsi_offline_dev(struct ata_device *dev);
+ extern void ata_scsi_set_sense(struct scsi_cmnd *cmd, u8 sk, u8 asc, u8 ascq);
++extern void ata_scsi_set_sense_information(struct ata_device *dev,
++					   struct scsi_cmnd *cmd,
++					   const struct ata_taskfile *tf);
+ extern void ata_scsi_media_change_notify(struct ata_device *dev);
+ extern void ata_scsi_hotplug(struct work_struct *work);
+ extern void ata_schedule_scsi_eh(struct Scsi_Host *shost);
+-- 
+1.8.5.6
 
-> I've just finished up porting my ZAC/ZBC patchset and will be posting=
- an
-> update shortly.
-> I'm happy to integrate any of your fixes.
-
-Thanks!
-
->
-> Cheers,
->
-> Hannes
-> --
-> Dr. Hannes Reinecke                   zSeries & Storage
-> hare@suse.de                          +49 911 74053 688
-> SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-> GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnbe=
-rg)
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-block=
-" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=3D=
-http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=3DCwID-g&c=3DIGDlg0lD0=
-b-nebmJJ0Kp8A&r=3DWg5NqlNlVTT7Ugl8V50qIHLe856QW0qfG3WVYGOrWzA&m=3D4-JH1=
-zADrs_TK5Uu77zQ1VSbAHgw5wTORr6yOSgYD5M&s=3DNjPE1IDNgJ6Y4TNHshx_mgv4CeKI=
-vcYlEW0FVxUFnNc&e=3D
-
---=20
-Shaun Tancheff
