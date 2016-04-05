@@ -1,38 +1,39 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 00/14] libata: SATL update
-Date: Mon, 4 Apr 2016 21:54:34 +0200
-Message-ID: <5702C67A.4070203@suse.de>
-References: <1459763047-125551-1-git-send-email-hare@suse.de>
- <20160404154652.GT7822@mtj.duckdns.org>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 03/12] BUG: Losing bits on request.cmd_flags
+Date: Mon, 04 Apr 2016 22:08:50 -0400
+Message-ID: <yq1zit8bydp.fsf@sermon.lab.mkp.net>
+References: <1459746376-27983-1-git-send-email-shaun@tancheff.com>
+	<1459746376-27983-4-git-send-email-shaun@tancheff.com>
+	<x49pou5s6yg.fsf@segfault.boston.devel.redhat.com>
+	<CAJVOszAK5w4qsrKcUot8rm9nZ65hXeUm5YomQU3fT-fARCGXjA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20160404154652.GT7822@mtj.duckdns.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <CAJVOszAK5w4qsrKcUot8rm9nZ65hXeUm5YomQU3fT-fARCGXjA@mail.gmail.com>
+	(Shaun Tancheff's message of "Mon, 4 Apr 2016 23:06:03 +0700")
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Shaun Tancheff <shaun.tancheff@seagate.com>
+Cc: Jens Axboe <axboe@fb.com>, linux-scsi@vger.kernel.org, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-ide@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, Shaun Tancheff <shaun@tancheff.com>
 List-Id: linux-ide@vger.kernel.org
 
-On 04/04/2016 05:46 PM, Tejun Heo wrote:
-> Hello, Hannes.
->=20
-> Applied the series to libata/for-4.7-zac with cosmetic updates
-> ((s64)-1 -> UINT64_MAX, kbuild warning fixes and other formatting
-> updates).
->=20
-Tejun, you are my hero :-)
+>>>>> "Shaun" == Shaun Tancheff <shaun.tancheff@seagate.com> writes:
 
-Cheers,
+Shaun> Oh, okay. It became an issue in the next patch where some
+Shaun> internal cmd_flags temporaries where stored in 32 bit values.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Shaun> I will fix patch/subject.
+
+There's a pending patch set from Mike Christie that cleans all this
+up. Please use that as baseline.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
