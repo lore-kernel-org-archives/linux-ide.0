@@ -1,35 +1,86 @@
-From: Shaun Tancheff <shaun.tancheff@seagate.com>
-Subject: Re: [PATCH 03/12] BUG: Losing bits on request.cmd_flags
-Date: Tue, 5 Apr 2016 17:39:05 +0700
-Message-ID: <CAJVOszBXs1hw9ng6=-jVBJs+3JaTaybF0XcM+Cn8Y_Ddh5xDTg@mail.gmail.com>
-References: <1459746376-27983-1-git-send-email-shaun@tancheff.com>
- <1459746376-27983-4-git-send-email-shaun@tancheff.com> <x49pou5s6yg.fsf@segfault.boston.devel.redhat.com>
- <CAJVOszAK5w4qsrKcUot8rm9nZ65hXeUm5YomQU3fT-fARCGXjA@mail.gmail.com> <yq1zit8bydp.fsf@sermon.lab.mkp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <yq1zit8bydp.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Jeff Moyer <jmoyer@redhat.com>, Shaun Tancheff <shaun@tancheff.com>, linux-ide@vger.kernel.org, dm-devel@redhat.com, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>
+From: Shaun Tancheff <shaun@tancheff.com>
+Subject: [PATCH v2 0/3] Block BIO support for zoned devices
+Date: Wed,  6 Apr 2016 02:29:25 +0700
+Message-ID: <1459884568-12091-1-git-send-email-shaun@tancheff.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pf0-f171.google.com ([209.85.192.171]:35296 "EHLO
+	mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751511AbcDETat (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Apr 2016 15:30:49 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Jens Axboe <axboe@fb.com>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, Shaun Tancheff <shaun@tancheff.com>
 
-On Tue, Apr 5, 2016 at 9:08 AM, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->>>>>> "Shaun" == Shaun Tancheff <shaun.tancheff@seagate.com> writes:
->
-> Shaun> Oh, okay. It became an issue in the next patch where some
-> Shaun> internal cmd_flags temporaries where stored in 32 bit values.
->
-> Shaun> I will fix patch/subject.
->
-> There's a pending patch set from Mike Christie that cleans all this
-> up. Please use that as baseline.
+As Host Aware drives are becoming available we would like to be able
+to make use of such drives. This series is also intended to be suitable
+for use by Host Managed drives.
 
-Given Mike Christie's patches this is not needed.
-Thanks!
+The following series is hopefully a reasonable start at adding such
+support.
 
-> --
-> Martin K. Petersen      Oracle Linux Engineering
+ZAC/ZBC drives add new commands. Most of this support is queued for 4.7.
+The first patch is a minor tweak to include open and close zone support
+for compatibility with devices following the Host Managed specification.
+
+With the ZAC support in place adding some additional flags to struct bio
+to identify the new drive requests (Report zones, Open/Close/Reset zones).
+
+With the bio support in place there are two new users added. The first
+user is an ioctl included here.
+
+The second user is a new device mapper target to follow in a separate
+series.
+
+Changes since v1:
+ * Updated to v4.6-rc2
+ 
+ * Re based on  separate operations from flags in the bio/request structs
+    https://lkml.kernel.org/r/1456343292-14535-1-git-send-email-mchristi@redhat.com
+ 
+ * Re based on libata: SATL update: 
+    https://lkml.kernel.org/r/1459763047-125551-1-git-send-email-hare@suse.de
+     
+ * Re based on libata: ZAC support: 
+    https://lkml.kernel.org/r/1459763271-125856-1-git-send-email-hare@suse.de
+ 
+ * Re based on Update version of write stream ID patchset
+    https://lkml.kernel.org/r/1457107853-8689-1-git-send-email-axboe@fb.com
+
+  * Patches covered by the above series have been dropped and the series is
+    split into 2 parts: Block support patches and Device Mapper RFC.
+
+And a fork of Linus kernel with branches off v4.6-rc2 is available here:
+https://github.com/stancheff/linux
+  branch: v4.6-rc2+op
+  branch: v4.6-rc2+op+zbc
+  branch: v4.6-rc2+op+zbc+sid
+  branch: v4.6-rc2+op+zbc+sid+zdm
+
+ZDM code and user space is also available on github here:
+https://github.com/Seagate/ZDM-Device-Mapper
+
+Shaun Tancheff (3):
+  Add ZBC <-> ZAC xlat support for report, open, close, reset, finish
+  Add bio/request flags for using ZBC/ZAC commands
+  Add ioctl to issue ZBC/ZAC commands via block layer
+
+ MAINTAINERS                       |   9 ++
+ block/blk-lib.c                   | 125 +++++++++++++++++++++
+ block/ioctl.c                     | 113 +++++++++++++++++++
+ drivers/ata/libata-scsi.c         |   5 +-
+ drivers/scsi/sd.c                 | 107 ++++++++++++++++++
+ drivers/scsi/sd.h                 |   1 +
+ include/linux/blk_types.h         |  17 ++-
+ include/linux/blkzoned_api.h      |  25 +++++
+ include/scsi/scsi_device.h        |   1 +
+ include/uapi/linux/Kbuild         |   1 +
+ include/uapi/linux/blkzoned_api.h | 221 ++++++++++++++++++++++++++++++++++++++
+ include/uapi/linux/fs.h           |   1 +
+ 12 files changed, 623 insertions(+), 3 deletions(-)
+ create mode 100644 include/linux/blkzoned_api.h
+ create mode 100644 include/uapi/linux/blkzoned_api.h
+
 -- 
-Shaun Tancheff
+1.9.1
+
