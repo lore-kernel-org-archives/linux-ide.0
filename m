@@ -1,184 +1,62 @@
-From: Shaun Tancheff <shaun@tancheff.com>
-Subject: [PATCH v2 3/3] Add ioctl to issue ZBC/ZAC commands via block layer
-Date: Wed,  6 Apr 2016 02:29:28 +0700
-Message-ID: <1459884568-12091-4-git-send-email-shaun@tancheff.com>
-References: <1459884568-12091-1-git-send-email-shaun@tancheff.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:34176 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759759AbcDETa6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Apr 2016 15:30:58 -0400
-In-Reply-To: <1459884568-12091-1-git-send-email-shaun@tancheff.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/4] libata: implement ZBC IN translation
+Date: Wed, 6 Apr 2016 09:51:26 +0200
+Message-ID: <5704BFFE.4050200@suse.de>
+References: <1459763271-125856-1-git-send-email-hare@suse.de>
+ <1459763271-125856-2-git-send-email-hare@suse.de>
+ <20160404154924.GU7822@mtj.duckdns.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20160404154924.GU7822@mtj.duckdns.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Jens Axboe <axboe@fb.com>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, Shaun Tancheff <shaun@tancheff.com>, Shaun Tancheff <shaun.tancheff@seagate.com>
 
-Add New ioctl types
-    BLKREPORT    - Issue Report Zones to device.
-    BLKOPENZONE  - Issue an Zone Action: Open Zone command.
-    BLKCLOSEZONE - Issue an Zone Action: Close Zone command.
-    BLKRESETZONE - Issue an Zone Action: Reset Zone command.
+On 04/04/2016 05:49 PM, Tejun Heo wrote:
+> On Mon, Apr 04, 2016 at 11:47:48AM +0200, Hannes Reinecke wrote:
+>> +/*
+>=20
+> /**
+>=20
+>> + * ata_scsi_report_zones_complete
+>> + *
+>> + * Convert T-13 little-endian field representation into
+>> + * T-10 big-endian field representation.
+>> + */
+>> +static void ata_scsi_report_zones_complete(struct ata_queued_cmd *q=
+c)
+>> +{
+>> +	struct scsi_cmnd *scmd =3D qc->scsicmd;
+>> +	struct sg_mapping_iter miter;
+>> +	unsigned long flags;
+>> +	unsigned int bytes =3D 0;
+>> +
+>> +	sg_miter_start(&miter, scsi_sglist(scmd), scsi_sg_count(scmd),
+>> +		       SG_MITER_TO_SG | SG_MITER_ATOMIC);
+>> +
+>> +	local_irq_save(flags);
+>> +	while (sg_miter_next(&miter)) {
+>> +		unsigned int offset =3D 0;
+>=20
+> Not this patch's fault but ugh........  :(
+>=20
+I know. I've been asking the very same questions to T-13.
+But apparently it's by design ... gnaa.
 
-Signed-off-by: Shaun Tancheff <shaun.tancheff@seagate.com>
----
- block/ioctl.c                     | 113 ++++++++++++++++++++++++++++++++++++++
- include/uapi/linux/blkzoned_api.h |   6 ++
- 2 files changed, 119 insertions(+)
+Cheers,
 
-diff --git a/block/ioctl.c b/block/ioctl.c
-index d8996bb..67c03d0 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -8,6 +8,7 @@
- #include <linux/backing-dev.h>
- #include <linux/fs.h>
- #include <linux/blktrace_api.h>
-+#include <linux/blkzoned_api.h>
- #include <linux/pr.h>
- #include <asm/uaccess.h>
- 
-@@ -195,6 +196,112 @@ int blkdev_reread_part(struct block_device *bdev)
- }
- EXPORT_SYMBOL(blkdev_reread_part);
- 
-+static int blk_zoned_report_ioctl(struct block_device *bdev, fmode_t mode,
-+		void __user *parg)
-+{
-+	int error = -EFAULT;
-+	gfp_t gfp = GFP_KERNEL;
-+	struct bdev_zone_report_io *zone_iodata = NULL;
-+	int order = 0;
-+	struct page *pgs = NULL;
-+	u32 alloc_size = PAGE_SIZE;
-+	unsigned long bi_rw = 0;
-+	u8 opt = 0;
-+
-+	if (!(mode & FMODE_READ))
-+		return -EBADF;
-+
-+	zone_iodata = (void *)get_zeroed_page(gfp);
-+	if (!zone_iodata) {
-+		error = -ENOMEM;
-+		goto report_zones_out;
-+	}
-+	if (copy_from_user(zone_iodata, parg, sizeof(*zone_iodata))) {
-+		error = -EFAULT;
-+		goto report_zones_out;
-+	}
-+	if (zone_iodata->data.in.return_page_count > alloc_size) {
-+		int npages;
-+
-+		alloc_size = zone_iodata->data.in.return_page_count;
-+		npages = (alloc_size + PAGE_SIZE - 1) / PAGE_SIZE;
-+		order =  ilog2(roundup_pow_of_two(npages));
-+		pgs = alloc_pages(gfp, order);
-+		if (pgs) {
-+			void *mem = page_address(pgs);
-+
-+			if (!mem) {
-+				error = -ENOMEM;
-+				goto report_zones_out;
-+			}
-+			memset(mem, 0, alloc_size);
-+			memcpy(mem, zone_iodata, sizeof(*zone_iodata));
-+			free_page((unsigned long)zone_iodata);
-+			zone_iodata = mem;
-+		} else {
-+			/* Result requires DMA capable memory */
-+			pr_err("Not enough memory available for request.\n");
-+			error = -ENOMEM;
-+			goto report_zones_out;
-+		}
-+	}
-+	opt = zone_iodata->data.in.report_option & 0x7F;
-+	if (zone_iodata->data.in.report_option & ZOPT_USE_ATA_PASS)
-+		bi_rw |= REQ_META;
-+
-+	error = blkdev_issue_zone_report(bdev, bi_rw,
-+			zone_iodata->data.in.zone_locator_lba, opt,
-+			pgs ? pgs : virt_to_page(zone_iodata),
-+			alloc_size, GFP_KERNEL);
-+
-+	if (error)
-+		goto report_zones_out;
-+
-+	if (copy_to_user(parg, zone_iodata, alloc_size))
-+		error = -EFAULT;
-+
-+report_zones_out:
-+	if (pgs)
-+		__free_pages(pgs, order);
-+	else if (zone_iodata)
-+		free_page((unsigned long)zone_iodata);
-+	return error;
-+}
-+
-+static int blk_zoned_action_ioctl(struct block_device *bdev, fmode_t mode,
-+				  unsigned int cmd, unsigned long arg)
-+{
-+	unsigned long bi_rw = 0;
-+
-+	if (!(mode & FMODE_WRITE))
-+		return -EBADF;
-+
-+	/*
-+	 * When acting on zones we explicitly disallow using a partition.
-+	 */
-+	if (bdev != bdev->bd_contains) {
-+		pr_err("%s: All zone operations disallowed on this device\n",
-+			__func__);
-+		return -EFAULT;
-+	}
-+
-+	switch (cmd) {
-+	case BLKOPENZONE:
-+		bi_rw |= REQ_OPEN_ZONE;
-+		break;
-+	case BLKCLOSEZONE:
-+		bi_rw |= REQ_CLOSE_ZONE;
-+		break;
-+	case BLKRESETZONE:
-+		bi_rw |= REQ_RESET_ZONE;
-+		break;
-+	default:
-+		pr_err("%s: Unknown action: %u\n", __func__, cmd);
-+		WARN_ON(1);
-+	}
-+	return blkdev_issue_zone_action(bdev, bi_rw, arg, GFP_KERNEL);
-+}
-+
- static int blk_ioctl_discard(struct block_device *bdev, fmode_t mode,
- 		unsigned long arg, unsigned long flags)
- {
-@@ -598,6 +705,12 @@ int blkdev_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
- 	case BLKTRACESETUP:
- 	case BLKTRACETEARDOWN:
- 		return blk_trace_ioctl(bdev, cmd, argp);
-+	case BLKREPORT:
-+		return blk_zoned_report_ioctl(bdev, mode, argp);
-+	case BLKOPENZONE:
-+	case BLKCLOSEZONE:
-+	case BLKRESETZONE:
-+		return blk_zoned_action_ioctl(bdev, mode, cmd, arg);
- 	case BLKDAXGET:
- 		return put_int(arg, !!(bdev->bd_inode->i_flags & S_DAX));
- 		break;
-diff --git a/include/uapi/linux/blkzoned_api.h b/include/uapi/linux/blkzoned_api.h
-index 189e925..2007b56 100644
---- a/include/uapi/linux/blkzoned_api.h
-+++ b/include/uapi/linux/blkzoned_api.h
-@@ -212,4 +212,10 @@ struct bdev_zone_report_io {
- 	} data;
- } __packed;
- 
-+/* continuing from uapi/linux/fs.h: */
-+#define BLKREPORT	_IOWR(0x12, 130, struct bdev_zone_report_io)
-+#define BLKOPENZONE	_IO(0x12, 131)
-+#define BLKCLOSEZONE	_IO(0x12, 132)
-+#define BLKRESETZONE	_IO(0x12, 133)
-+
- #endif /* _UAPI_BLKZONED_API_H */
--- 
-1.9.1
-
+Hannes
+--=20
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
