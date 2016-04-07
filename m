@@ -1,45 +1,99 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata-core: Allow longer timeout for drive spinup from
- PUIS
-Date: Thu, 7 Apr 2016 13:46:36 -0400
-Message-ID: <20160407174636.GG7822@mtj.duckdns.org>
-References: <539D1F09-E6EB-47F1-A66E-C182CA675359@hgst.com>
- <20160330183846.GK7822@mtj.duckdns.org>
- <D088F533-0243-4414-9B03-BC177DC1D35C@hgst.com>
- <20160404161809.GY7822@mtj.duckdns.org>
- <EA6FA468-118B-43C2-B6CE-2658650AE544@hgst.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: Re: [PATCH] ata: sata_dwc_460ex: fix sata_dwc_460ex when using dma transfers
+Date: Thu, 7 Apr 2016 20:47:32 +0300
+Message-ID: <CAHp75VeeyG=V8oM=HV9iVJEvbFKCeycx2tWscz_J4T8RDVCO6Q@mail.gmail.com>
+References: <1459956836-8213-1-git-send-email-chunkeey@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f181.google.com ([209.85.161.181]:36820 "EHLO
-	mail-yw0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752738AbcDGRqj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Apr 2016 13:46:39 -0400
-Received: by mail-yw0-f181.google.com with SMTP id o66so14723098ywc.3
-        for <linux-ide@vger.kernel.org>; Thu, 07 Apr 2016 10:46:38 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <EA6FA468-118B-43C2-B6CE-2658650AE544@hgst.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1459956836-8213-1-git-send-email-chunkeey@googlemail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, =?UTF-8?B?TcOlbnMgUnVsbGfDpXJk?= <mans@mansr.com>, stable@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Damien Le Moal <Damien.LeMoal@hgst.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hello,
+On Wed, Apr 6, 2016 at 6:33 PM, Christian Lamparter
+<chunkeey@googlemail.com> wrote:
+> This patch allows sata_dwc_460ex to work with non-ncq, dma i/o.
+> Previously, the driver dumped the following warning:
+>
+>  ------------[ cut here ]------------
+> WARNING: at c01f3d50 [verbose debug info unavailable]
+> CPU: 0 PID: 315 Comm: kworker/u2:2 Not tainted 4.4.6 #18
+> Workqueue: events_unbound async_run_entry_fn
+> NIP [c01f3d50] ata_sff_qc_issue+0x1d8/0x204
+> LR [c01f3bbc] ata_sff_qc_issue+0x44/0x204
+> Call Trace:
+> [cf6a98c0] [c01f3bbc] ata_sff_qc_issue+0x44/0x204 (unreliable)
+> [cf6a98e0] [c01f4e38] sata_dwc_qc_issue+0x270/0x298
+> [cf6a9950] [c01e24f4] ata_qc_issue+0x2f0/0x364
+>
+> and was unable to access the drive. The issue is that
+> ata_sff_qc_issue can only handle PIO. This patch replaces
+> the it with ata_bmdma_qc_issue which handles DMA transfers
+> and can fallback to PIO when needed.
+>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+> ---
+> Note: I have a system with a APM82181 (which is a ppc460ex derivative=
+).
+> It's the SoC in the WD MyBook Live NAS.
+>
+> The driver has other issues as well... e.g:
+>
+> Unable to handle kernel paging request for data at address 0x00000004
+> Faulting instruction address: 0xc01f2640
+> Oops: Kernel access of bad area, sig: 11 [#1]
+> CPU: 0 PID: 1 Comm: swapper Not tainted 4.4.6 #42
+> NIP [c01f2640] sata_dwc_probe+0x1a8/0x2dc
+> LR [c01f2640] sata_dwc_probe+0x1a8/0x2dc
+> Call Trace:
+> [cf435d60] [c01f2640] sata_dwc_probe+0x1a8/0x2dc (unreliable)
+> [cf435dc0] [c01c5728] platform_drv_probe+0x34/0x70
+> (This is due to hsdev->dma being NULL, as it was never allocated
+> or set).
+>
+> However, this has been fixed (including fixes to dwc's
+> DMA) by Mans Rullgard. His repo is available from:
+> <https://bitbucket.org/mansr/linux-dwc/branch/dwc-sata>
+>
+> Note2: NCQ seems to freezes the controller. Not sure what's
+> going on. I can post a separate patch to disable it, if requested.
 
-On Thu, Apr 07, 2016 at 01:22:19AM +0000, Damien Le Moal wrote:
-> >Applied to libata/for-4.7.  Can you please use git format-patch to
-> >generate the patch file from next time?
->=20
-> Thanks !
-> For the patch, I used =E2=80=9Cgit show xxx > file=E2=80=9D...
-> Is this not correct ? Should I be using a =E2=80=9C=E2=80=94pretty=3D=
-xxx=E2=80=9D formatting ?
+Thanks for the patch. Like I said before please check the branch we
+have and jump in in testing / suggesting better fixes. Please, also
+keep M=C3=A5ns and me in Cc list regarding this driver.
 
-I always use git format-patch.  For a single patch, you can simply do
-"git format-patch HEAD^".
+> ---
+>  drivers/ata/sata_dwc_460ex.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460e=
+x.c
+> index e7a47aa..234f50d 100644
+> --- a/drivers/ata/sata_dwc_460ex.c
+> +++ b/drivers/ata/sata_dwc_460ex.c
+> @@ -1113,7 +1113,9 @@ static unsigned int sata_dwc_qc_issue(struct at=
+a_queued_cmd *qc)
+>                 sata_dwc_exec_command_by_tag(ap, &qc->tf, qc->tag,
+>                                              SATA_DWC_CMD_ISSUED_PEND=
+);
+>         } else {
+> -               ata_sff_qc_issue(qc);
+> +               /* Sync ata_port with qc->tag */
+> +               ap->link.active_tag =3D qc->tag;
+> +               return ata_bmdma_qc_issue(qc);
+>         }
+>         return 0;
+>  }
+> --
+> 2.8.0.rc3
+>
 
-Thanks.
+
 
 --=20
-tejun
+With Best Regards,
+Andy Shevchenko
