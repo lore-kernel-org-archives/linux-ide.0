@@ -1,49 +1,79 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] libata-core: Allow longer timeout for drive spinup from
- PUIS
-Date: Thu, 07 Apr 2016 07:00:23 -0400
-Message-ID: <1460026823.20949.2.camel@HansenPartnership.com>
-References: <539D1F09-E6EB-47F1-A66E-C182CA675359@hgst.com>
-	 <20160330183846.GK7822@mtj.duckdns.org>
-	 <D088F533-0243-4414-9B03-BC177DC1D35C@hgst.com>
-	 <20160404161809.GY7822@mtj.duckdns.org>
-	 <EA6FA468-118B-43C2-B6CE-2658650AE544@hgst.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: Re: [PATCH] sata_dwc_460ex: fix burst transaction length
+Date: Thu, 7 Apr 2016 20:37:59 +0300
+Message-ID: <CAHp75VeDRY93cAzLtwf_er_jGvt8D4HAcNxQuywc8KhvaWjP1g@mail.gmail.com>
+References: <1459982695-32394-1-git-send-email-chunkeey@googlemail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:53684 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755384AbcDGLAb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Apr 2016 07:00:31 -0400
-In-Reply-To: <EA6FA468-118B-43C2-B6CE-2658650AE544@hgst.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1459982695-32394-1-git-send-email-chunkeey@googlemail.com>
+Sender: stable-owner@vger.kernel.org
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, =?UTF-8?B?TcOlbnMgUnVsbGfDpXJk?= <mans@mansr.com>, stable@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Damien Le Moal <Damien.LeMoal@hgst.com>, Tejun Heo <tj@kernel.org>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Thu, 2016-04-07 at 01:22 +0000, Damien Le Moal wrote:
-> Tejun,
->=20
-> > Applied to libata/for-4.7.  Can you please use git format-patch to
-> > generate the patch file from next time?
->=20
-> Thanks !
-> For the patch, I used =E2=80=9Cgit show xxx > file=E2=80=9D...
-> Is this not correct ? Should I be using a =E2=80=9C=E2=80=94pretty=3D=
-xxx=E2=80=9D formatting ?
+On Thu, Apr 7, 2016 at 1:44 AM, Christian Lamparter
+<chunkeey@googlemail.com> wrote:
+> According to DesignWare DW_ahb_dmac Databook page 159,
+> both SRC_MSIZE and DEST_MSIZE values "are not related to
+> AHB bus mater HBURST bus".
+>
+> The hardware uses these values as a unit of TR_WIDTHs.
+> As both TR_WIDTHs are hardcoded to 4 Bytes, the MSIZEs
+> should be 16, so the burst transaction length will be:
+> 64 Bytes.
 
-If you want to use git show, then you need --pretty=3Demail (depending =
-on
-whether you want to add the commit statistics, you can also add --stat=20
---patch).
+Thanks for the patch.
 
-If you have a patch series, it's often better to use
+Yes, M=C3=A5ns and I have a branch [1] to bring this driver working bac=
+k.
+This change is there already.
+I would appreciate if you can test this on bare metal.
 
-git-format-patch -n --cover-letter
+[1] https://bitbucket.org/andy-shev/linux/branch/topic%2Fdw%2Fsata
 
-Which generates a set of numbered files for the entire patch series.
+>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
+> ---
+>  drivers/ata/sata_dwc_460ex.c | 7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460e=
+x.c
+> index 2fc1516..52f0614 100644
+> --- a/drivers/ata/sata_dwc_460ex.c
+> +++ b/drivers/ata/sata_dwc_460ex.c
+> @@ -58,7 +58,8 @@
+>  #define NO_IRQ         0
+>  #endif
+>
+> -#define AHB_DMA_BRST_DFLT      64      /* 16 data items burst length=
+*/
+> +#define AHB_DMA_BRST_DFLT      64
+> +#define BRST_TRANS_LEN_DFLT    16
+>
+>  enum {
+>         SATA_DWC_MAX_PORTS =3D 1,
+> @@ -381,8 +382,8 @@ static struct dma_async_tx_descriptor *dma_dwc_xf=
+er_setup(struct ata_queued_cmd
+>         }
+>
+>         sconf.direction =3D qc->dma_dir;
+> -       sconf.src_maxburst =3D AHB_DMA_BRST_DFLT;
+> -       sconf.dst_maxburst =3D AHB_DMA_BRST_DFLT;
+> +       sconf.src_maxburst =3D BRST_TRANS_LEN_DFLT;
+> +       sconf.dst_maxburst =3D BRST_TRANS_LEN_DFLT;
+>         sconf.src_addr_width =3D DMA_SLAVE_BUSWIDTH_4_BYTES;
+>         sconf.dst_addr_width =3D DMA_SLAVE_BUSWIDTH_4_BYTES;
+>
+> --
+> 2.8.0.rc3
+>
 
-James
 
 
+--=20
+With Best Regards,
+Andy Shevchenko
