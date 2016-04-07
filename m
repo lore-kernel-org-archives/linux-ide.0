@@ -1,52 +1,47 @@
-From: Christian Lamparter <chunkeey@googlemail.com>
-Subject: [PATCH] sata_dwc_460ex: fix burst transaction length
-Date: Thu,  7 Apr 2016 00:44:55 +0200
-Message-ID: <1459982695-32394-1-git-send-email-chunkeey@googlemail.com>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
-Cc: Christian Lamparter <chunkeey@googlemail.com>, tj@kernel.org, mans@mansr.com, stable@vger.kernel.org
+From: Damien Le Moal <Damien.LeMoal@hgst.com>
+Subject: Re: [PATCH] libata-core: Allow longer timeout for drive spinup from
+ PUIS
+Date: Thu, 7 Apr 2016 01:22:19 +0000
+Message-ID: <EA6FA468-118B-43C2-B6CE-2658650AE544@hgst.com>
+References: <539D1F09-E6EB-47F1-A66E-C182CA675359@hgst.com>
+ <20160330183846.GK7822@mtj.duckdns.org>
+ <D088F533-0243-4414-9B03-BC177DC1D35C@hgst.com>
+ <20160404161809.GY7822@mtj.duckdns.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from sjc00mx2.hgst.com ([199.255.44.37]:14463 "EHLO
+	sjc00mx2.hgst.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754585AbcDGBiK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Apr 2016 21:38:10 -0400
+In-Reply-To: <20160404161809.GY7822@mtj.duckdns.org>
+Content-Language: en-US
+Content-ID: <2DF4C068B8E300448A95CCA6794C9F27@namprd04.prod.outlook.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-According to DesignWare DW_ahb_dmac Databook page 159,
-both SRC_MSIZE and DEST_MSIZE values "are not related to
-AHB bus mater HBURST bus".
+DQpUZWp1biwNCg0KPkFwcGxpZWQgdG8gbGliYXRhL2Zvci00LjcuICBDYW4geW91IHBsZWFzZSB1
+c2UgZ2l0IGZvcm1hdC1wYXRjaCB0bw0KPmdlbmVyYXRlIHRoZSBwYXRjaCBmaWxlIGZyb20gbmV4
+dCB0aW1lPw0KDQpUaGFua3MgIQ0KRm9yIHRoZSBwYXRjaCwgSSB1c2VkIOKAnGdpdCBzaG93IHh4
+eCA+IGZpbGXigJ0uLi4NCklzIHRoaXMgbm90IGNvcnJlY3QgPyBTaG91bGQgSSBiZSB1c2luZyBh
+IOKAnOKAlHByZXR0eT14eHjigJ0gZm9ybWF0dGluZyA/DQoNCkJlc3QgcmVnYXJkcy4NCg0KLS0N
+CkRhbWllbiBMZSBNb2FsLCBQaC5ELg0KU3IgTWFuYWdlciwgU3lzdGVtIFNvZnR3YXJlIEdyb3Vw
+LCBXVyBSZXNlYXJjaCwNCkhHU1QsIGEgV2VzdGVybiBEaWdpdGFsIGNvbXBhbnkNCkRhbWllbi5M
+ZU1vYWxAaGdzdC5jb20NClRlbDogKCs4MSkgMDQ2Ni05OC0zNTkzIChFeHQuIDUxLTM1OTMpDQox
+IGtpcmloYXJhLWNobywgRnVqaXNhd2EsIEthbmFnYXdhLCAyNTItMDg4OCBKYXBhbg0Kd3d3Lmhn
+c3QuY29tIDxodHRwOi8vd3d3Lmhnc3QuY29tPg0KDQpXZXN0ZXJuIERpZ2l0YWwgQ29ycG9yYXRp
+b24gKGFuZCBpdHMgc3Vic2lkaWFyaWVzKSBFLW1haWwgQ29uZmlkZW50aWFsaXR5IE5vdGljZSAm
+IERpc2NsYWltZXI6CgpUaGlzIGUtbWFpbCBhbmQgYW55IGZpbGVzIHRyYW5zbWl0dGVkIHdpdGgg
+aXQgbWF5IGNvbnRhaW4gY29uZmlkZW50aWFsIG9yIGxlZ2FsbHkgcHJpdmlsZWdlZCBpbmZvcm1h
+dGlvbiBvZiBXREMgYW5kL29yIGl0cyBhZmZpbGlhdGVzLCBhbmQgYXJlIGludGVuZGVkIHNvbGVs
+eSBmb3IgdGhlIHVzZSBvZiB0aGUgaW5kaXZpZHVhbCBvciBlbnRpdHkgdG8gd2hpY2ggdGhleSBh
+cmUgYWRkcmVzc2VkLiBJZiB5b3UgYXJlIG5vdCB0aGUgaW50ZW5kZWQgcmVjaXBpZW50LCBhbnkg
+ZGlzY2xvc3VyZSwgY29weWluZywgZGlzdHJpYnV0aW9uIG9yIGFueSBhY3Rpb24gdGFrZW4gb3Ig
+b21pdHRlZCB0byBiZSB0YWtlbiBpbiByZWxpYW5jZSBvbiBpdCwgaXMgcHJvaGliaXRlZC4gSWYg
+eW91IGhhdmUgcmVjZWl2ZWQgdGhpcyBlLW1haWwgaW4gZXJyb3IsIHBsZWFzZSBub3RpZnkgdGhl
+IHNlbmRlciBpbW1lZGlhdGVseSBhbmQgZGVsZXRlIHRoZSBlLW1haWwgaW4gaXRzIGVudGlyZXR5
+IGZyb20geW91ciBzeXN0ZW0uCg==
 
-The hardware uses these values as a unit of TR_WIDTHs.
-As both TR_WIDTHs are hardcoded to 4 Bytes, the MSIZEs
-should be 16, so the burst transaction length will be:
-64 Bytes.
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
----
- drivers/ata/sata_dwc_460ex.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index 2fc1516..52f0614 100644
---- a/drivers/ata/sata_dwc_460ex.c
-+++ b/drivers/ata/sata_dwc_460ex.c
-@@ -58,7 +58,8 @@
- #define NO_IRQ		0
- #endif
- 
--#define AHB_DMA_BRST_DFLT	64	/* 16 data items burst length*/
-+#define AHB_DMA_BRST_DFLT	64
-+#define BRST_TRANS_LEN_DFLT	16
- 
- enum {
- 	SATA_DWC_MAX_PORTS = 1,
-@@ -381,8 +382,8 @@ static struct dma_async_tx_descriptor *dma_dwc_xfer_setup(struct ata_queued_cmd
- 	}
- 
- 	sconf.direction = qc->dma_dir;
--	sconf.src_maxburst = AHB_DMA_BRST_DFLT;
--	sconf.dst_maxburst = AHB_DMA_BRST_DFLT;
-+	sconf.src_maxburst = BRST_TRANS_LEN_DFLT;
-+	sconf.dst_maxburst = BRST_TRANS_LEN_DFLT;
- 	sconf.src_addr_width = DMA_SLAVE_BUSWIDTH_4_BYTES;
- 	sconf.dst_addr_width = DMA_SLAVE_BUSWIDTH_4_BYTES;
- 
--- 
-2.8.0.rc3
