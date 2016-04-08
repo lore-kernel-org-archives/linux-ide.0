@@ -1,99 +1,32 @@
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: Re: [PATCH] ata: sata_dwc_460ex: fix sata_dwc_460ex when using dma transfers
-Date: Thu, 7 Apr 2016 20:47:32 +0300
-Message-ID: <CAHp75VeeyG=V8oM=HV9iVJEvbFKCeycx2tWscz_J4T8RDVCO6Q@mail.gmail.com>
-References: <1459956836-8213-1-git-send-email-chunkeey@googlemail.com>
+From: AKINWUMI <urr@adminnfo3.website.tk>
+Subject: FROM: MR. OLIVER SENO!!
+Date: Fri, 8 Apr 2016 11:53:25 -0700
+Message-ID: <SN1PR17MB04953F577693AEC057EA726BD0910@SN1PR17MB0495.namprd17.prod.outlook.com>
+Reply-To: <officeosenol@yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1459956836-8213-1-git-send-email-chunkeey@googlemail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, =?UTF-8?B?TcOlbnMgUnVsbGfDpXJk?= <mans@mansr.com>, stable@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-by2hn0254.outbound.protection.outlook.com ([207.46.100.254]:23976
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1758807AbcDHTYQ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Apr 2016 15:24:16 -0400
+Content-Description: Mail message body
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Recipients <urr@adminnfo3.website.tk>
 
-On Wed, Apr 6, 2016 at 6:33 PM, Christian Lamparter
-<chunkeey@googlemail.com> wrote:
-> This patch allows sata_dwc_460ex to work with non-ncq, dma i/o.
-> Previously, the driver dumped the following warning:
->
->  ------------[ cut here ]------------
-> WARNING: at c01f3d50 [verbose debug info unavailable]
-> CPU: 0 PID: 315 Comm: kworker/u2:2 Not tainted 4.4.6 #18
-> Workqueue: events_unbound async_run_entry_fn
-> NIP [c01f3d50] ata_sff_qc_issue+0x1d8/0x204
-> LR [c01f3bbc] ata_sff_qc_issue+0x44/0x204
-> Call Trace:
-> [cf6a98c0] [c01f3bbc] ata_sff_qc_issue+0x44/0x204 (unreliable)
-> [cf6a98e0] [c01f4e38] sata_dwc_qc_issue+0x270/0x298
-> [cf6a9950] [c01e24f4] ata_qc_issue+0x2f0/0x364
->
-> and was unable to access the drive. The issue is that
-> ata_sff_qc_issue can only handle PIO. This patch replaces
-> the it with ata_bmdma_qc_issue which handles DMA transfers
-> and can fallback to PIO when needed.
->
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Christian Lamparter <chunkeey@googlemail.com>
-> ---
-> Note: I have a system with a APM82181 (which is a ppc460ex derivative=
-).
-> It's the SoC in the WD MyBook Live NAS.
->
-> The driver has other issues as well... e.g:
->
-> Unable to handle kernel paging request for data at address 0x00000004
-> Faulting instruction address: 0xc01f2640
-> Oops: Kernel access of bad area, sig: 11 [#1]
-> CPU: 0 PID: 1 Comm: swapper Not tainted 4.4.6 #42
-> NIP [c01f2640] sata_dwc_probe+0x1a8/0x2dc
-> LR [c01f2640] sata_dwc_probe+0x1a8/0x2dc
-> Call Trace:
-> [cf435d60] [c01f2640] sata_dwc_probe+0x1a8/0x2dc (unreliable)
-> [cf435dc0] [c01c5728] platform_drv_probe+0x34/0x70
-> (This is due to hsdev->dma being NULL, as it was never allocated
-> or set).
->
-> However, this has been fixed (including fixes to dwc's
-> DMA) by Mans Rullgard. His repo is available from:
-> <https://bitbucket.org/mansr/linux-dwc/branch/dwc-sata>
->
-> Note2: NCQ seems to freezes the controller. Not sure what's
-> going on. I can post a separate patch to disable it, if requested.
+Dear Sir.
 
-Thanks for the patch. Like I said before please check the branch we
-have and jump in in testing / suggesting better fixes. Please, also
-keep M=C3=A5ns and me in Cc list regarding this driver.
+I bring you greetings. My name is Mr.Oliver Seno Lim, I am a staff of Abbey National Plc. London and heading our regional office in West Africa. Our late customer named Engr.Ben W.westland, made a fixed deposit amount of US$7Million.He did not declare any next of kin in any of his paper work, I want you as a foreigner to stand as the beneficiary to transfer this funds out of my bank into your account, after the successful transfer, we shall share in the ratio of 30% for you, 70%for me. Should you be interested please send me your information:
 
-> ---
->  drivers/ata/sata_dwc_460ex.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460e=
-x.c
-> index e7a47aa..234f50d 100644
-> --- a/drivers/ata/sata_dwc_460ex.c
-> +++ b/drivers/ata/sata_dwc_460ex.c
-> @@ -1113,7 +1113,9 @@ static unsigned int sata_dwc_qc_issue(struct at=
-a_queued_cmd *qc)
->                 sata_dwc_exec_command_by_tag(ap, &qc->tf, qc->tag,
->                                              SATA_DWC_CMD_ISSUED_PEND=
-);
->         } else {
-> -               ata_sff_qc_issue(qc);
-> +               /* Sync ata_port with qc->tag */
-> +               ap->link.active_tag =3D qc->tag;
-> +               return ata_bmdma_qc_issue(qc);
->         }
->         return 0;
->  }
-> --
-> 2.8.0.rc3
->
+1,Full names.
+2,current residential address.
+3,Tele/Fax numbers./your work.
+ 
+   
+All I need from you is your readiness, trustworthiness and edication. Please email me directly on my private email address: officeosenol@yahoo.com) so we can begin arrangements and I would give you more information on how we would handle this venture and once i hear from you i will give you information of the bank for the transferring funds on your name.
 
-
-
---=20
-With Best Regards,
-Andy Shevchenko
+Regards,
+Mr.Oliver Seno Lim 
