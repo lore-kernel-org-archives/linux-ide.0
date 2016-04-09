@@ -1,32 +1,34 @@
-From: AKINWUMI <urr@adminnfo3.website.tk>
-Subject: FROM: MR. OLIVER SENO!!
-Date: Fri, 8 Apr 2016 11:53:25 -0700
-Message-ID: <SN1PR17MB04953F577693AEC057EA726BD0910@SN1PR17MB0495.namprd17.prod.outlook.com>
-Reply-To: <officeosenol@yahoo.com>
+From: "Jeff Allen" <jinjerdinss@zoho.com>
+Subject: need customers?
+Date: Sat, 09 Apr 2016 11:05:51 +0200
+Message-ID: <70656b5bb229bf88448dacb811ef9c29@lindyfishingtackle.com>
+Reply-To: hanmeimei10@aliyun.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; format=flowed; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-by2hn0254.outbound.protection.outlook.com ([207.46.100.254]:23976
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1758807AbcDHTYQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Apr 2016 15:24:16 -0400
-Content-Description: Mail message body
+Received: from bily.3783838.com ([77.81.104.22]:42893 "EHLO bily.3783838.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754017AbcDIPw4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Sat, 9 Apr 2016 11:52:56 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Recipients <urr@adminnfo3.website.tk>
+To: linux-ide@vger.kernel.org
 
-Dear Sir.
+Hey,
 
-I bring you greetings. My name is Mr.Oliver Seno Lim, I am a staff of Abbey National Plc. London and heading our regional office in West Africa. Our late customer named Engr.Ben W.westland, made a fixed deposit amount of US$7Million.He did not declare any next of kin in any of his paper work, I want you as a foreigner to stand as the beneficiary to transfer this funds out of my bank into your account, after the successful transfer, we shall share in the ratio of 30% for you, 70%for me. Should you be interested please send me your information:
+Greeting!!
 
-1,Full names.
-2,current residential address.
-3,Tele/Fax numbers./your work.
- 
-   
-All I need from you is your readiness, trustworthiness and edication. Please email me directly on my private email address: officeosenol@yahoo.com) so we can begin arrangements and I would give you more information on how we would handle this venture and once i hear from you i will give you information of the bank for the transferring funds on your name.
+Do you need to increase your sales?
+Do you need more clients leads?
+Do you need our marketing services?
 
-Regards,
-Mr.Oliver Seno Lim 
+No matter you are selling products or services, we can generate you new
+leads from our marketing service.
+
+If you need more information please contact us today.
+
+Thanks,
+Jeff Allen
+Contact: xxianyus@sina.com
+
