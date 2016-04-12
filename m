@@ -1,65 +1,199 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv2 03/14] libsas: Define ATA_CMD_NCQ_NON_DATA
-Date: Tue, 12 Apr 2016 12:25:46 +0200
-Message-ID: <570CCD2A.6000806@suse.de>
-References: <1460443678-57934-1-git-send-email-hare@suse.de>
- <1460443678-57934-4-git-send-email-hare@suse.de>
- <570CC7F6.1020607@huawei.com>
+From: Shaun Tancheff <shaun.tancheff@seagate.com>
+Subject: Re: [PATCHv2 11/14] libata: Implement ZBC OUT translation
+Date: Wed, 13 Apr 2016 01:54:23 +0700
+Message-ID: <CAJVOszCF7NHMkXYGJJXCeBPue2QNYrMF5_aLnADKpkugp6So1g@mail.gmail.com>
+References: <1460443678-57934-1-git-send-email-hare@suse.de> <1460443678-57934-12-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:45713 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751181AbcDLKZv (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 12 Apr 2016 06:25:51 -0400
-In-Reply-To: <570CC7F6.1020607@huawei.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1460443678-57934-12-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: John Garry <john.garry@huawei.com>, Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On 04/12/2016 12:03 PM, John Garry wrote:
-> On 12/04/2016 07:47, Hannes Reinecke wrote:
->> Define the NCQ NON DATA command and update libsas to handle it
->> correctly.
->>
->> Signed-off-by: Hannes Reinecke <hare@suse.com>
->> ---
->>   drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 1 +
->>   drivers/scsi/isci/request.c            | 3 ++-
->>   drivers/scsi/libsas/sas_ata.c          | 3 ++-
->>   drivers/scsi/mvsas/mv_sas.c            | 3 ++-
->>   drivers/scsi/pm8001/pm8001_sas.c       | 3 ++-
->>   include/linux/ata.h                    | 1 +
->>   include/trace/events/libata.h          | 1 +
->>   7 files changed, 11 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
->> b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
->> index fc2e767..ebaf5ab 100644
->> --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
->> +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
->> @@ -1575,6 +1575,7 @@ static u8 get_ata_protocol(u8 cmd, int
->> direction)
->>       case ATA_CMD_FPDMA_READ:
->>       case ATA_CMD_FPMDA_RECV:
->>       case ATA_CMD_FPDMA_SEND:
->> +    case ATA_CMD_NCQ_NON_DATA:
->>       return SATA_PROTOCOL_FPDMA;
->>
->=20
-> I'm going to double-check this. It may correspond to
-> SATA_PROTOCOL_NONDATA, and not SATA_PROTOCOL_FPDMA.
->=20
-Thanks. The spec is not exactly clear in that regard...
+On Tue, Apr 12, 2016 at 1:47 PM, Hannes Reinecke <hare@suse.de> wrote:
+> ZAC drives implement a 'ZAC Management Out' command template,
+> which maps onto the ZBC OUT command.
+>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>  drivers/ata/libata-eh.c       |  1 +
+>  drivers/ata/libata-scsi.c     | 67 +++++++++++++++++++++++++++++++++++++++++++
+>  drivers/ata/libata-trace.c    | 16 +++++++++++
+>  include/linux/ata.h           |  7 +++++
+>  include/trace/events/libata.h |  1 +
+>  5 files changed, 92 insertions(+)
+>
+> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+> index 4932ce5..4c2bf7f 100644
+> --- a/drivers/ata/libata-eh.c
+> +++ b/drivers/ata/libata-eh.c
+> @@ -2503,6 +2503,7 @@ const char *ata_get_cmd_descript(u8 command)
+>                 { ATA_CMD_REQ_SENSE_DATA,       "REQUEST SENSE DATA EXT" },
+>                 { ATA_CMD_SANITIZE_DEVICE,      "SANITIZE DEVICE" },
+>                 { ATA_CMD_ZAC_MGMT_IN,          "ZAC MANAGEMENT IN" },
+> +               { ATA_CMD_ZAC_MGMT_OUT,         "ZAC MANAGEMENT OUT" },
+>                 { ATA_CMD_READ_LONG,            "READ LONG (with retries)" },
+>                 { ATA_CMD_READ_LONG_ONCE,       "READ LONG (without retries)" },
+>                 { ATA_CMD_WRITE_LONG,           "WRITE LONG (with retries)" },
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index 3e402a8..ef696a3 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -3471,6 +3471,70 @@ invalid_param_len:
+>         return 1;
+>  }
+>
+> +static unsigned int ata_scsi_zbc_out_xlat(struct ata_queued_cmd *qc)
+> +{
+> +       struct ata_taskfile *tf = &qc->tf;
+> +       struct scsi_cmnd *scmd = qc->scsicmd;
+> +       struct ata_device *dev = qc->dev;
+> +       const u8 *cdb = scmd->cmnd;
+> +       u8 reset_all, sa;
+> +       u64 block;
+> +       u32 n_block;
+> +       u16 fp = (u16)-1;
+> +
+> +       if (unlikely(scmd->cmd_len < 16)) {
+> +               fp = 15;
+> +               goto invalid_fld;
+> +       }
+> +
+> +       sa = cdb[1] & 0x1f;
+> +       if ((sa != ZO_CLOSE_ZONE) && (sa != ZO_FINISH_ZONE) &&
+> +           (sa != ZO_OPEN_ZONE) && (sa != ZO_RESET_WRITE_POINTER)) {
+> +               fp = 1;
+> +               goto invalid_fld;
+> +       }
+> +
+> +       scsi_16_lba_len(cdb, &block, &n_block);
+> +       if (n_block) {
+> +               /*
+> +                * ZAC MANAGEMENT OUT doesn't define any length
+> +                */
+> +               goto invalid_param_len;
+> +       }
+> +       if (block > dev->n_sectors)
+> +               goto out_of_range;
+> +
+> +       reset_all = cdb[14] & 0x1;
+> +
+> +       tf->protocol = ATA_PROT_NODATA;
+> +       tf->command = ATA_CMD_ZAC_MGMT_OUT;
+> +       tf->feature = sa;
+> +       tf->hob_feature = reset_all & 0x1;
+> +
+> +       tf->lbah = (block >> 16) & 0xff;
+> +       tf->lbam = (block >> 8) & 0xff;
+> +       tf->lbal = block & 0xff;
+> +       tf->hob_lbah = (block >> 40) & 0xff;
+> +       tf->hob_lbam = (block >> 32) & 0xff;
+> +       tf->hob_lbal = (block >> 24) & 0xff;
+> +       tf->device = ATA_LBA;
+> +       tf->flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE | ATA_TFLAG_LBA48;
+> +
+> +       return 0;
+> +
+> + invalid_fld:
+> +       ata_scsi_set_invalid_field(qc->dev, scmd, fp, 0xff);
+> +       return 1;
+> + out_of_range:
+> +       /* "Logical Block Address out of range" */
+> +       ata_scsi_set_sense(qc->dev, scmd, ILLEGAL_REQUEST, 0x21, 0x00);
+> +       return 1;
+> +invalid_param_len:
+> +       /* "Parameter list length error" */
+> +       ata_scsi_set_sense(qc->dev, scmd, ILLEGAL_REQUEST, 0x1a, 0x0);
+> +       return 1;
+> +}
+> +
+>  /**
+>   *     ata_mselect_caching - Simulate MODE SELECT for caching info page
+>   *     @qc: Storage for translated ATA taskfile
+> @@ -3789,6 +3853,9 @@ static inline ata_xlat_func_t ata_get_xlat_func(struct ata_device *dev, u8 cmd)
+>         case ZBC_IN:
+>                 return ata_scsi_zbc_in_xlat;
+>
+> +       case ZBC_OUT:
+> +               return ata_scsi_zbc_out_xlat;
+> +
+>         case START_STOP:
+>                 return ata_scsi_start_stop_xlat;
+>         }
+> diff --git a/drivers/ata/libata-trace.c b/drivers/ata/libata-trace.c
+> index 9caeabd..1111ba7 100644
+> --- a/drivers/ata/libata-trace.c
+> +++ b/drivers/ata/libata-trace.c
+> @@ -197,6 +197,22 @@ libata_trace_parse_subcmd(struct trace_seq *p, unsigned char cmd,
+>                         break;
+>                 }
+>                 break;
+> +       case ATA_CMD_ZAC_MGMT_OUT:
+> +               switch (feature) {
+> +               case ATA_SUBCMD_ZAC_MGMT_OUT_CLOSE_ZONE:
+> +                       trace_seq_printf(p, " CLOSE_ZONE");
+> +                       break;
+> +               case ATA_SUBCMD_ZAC_MGMT_OUT_FINISH_ZONE:
+> +                       trace_seq_printf(p, " FINISH_ZONE");
+> +                       break;
+> +               case ATA_SUBCMD_ZAC_MGMT_OUT_OPEN_ZONE:
+> +                       trace_seq_printf(p, " OPEN_ZONE");
+> +                       break;
+> +               case ATA_SUBCMD_ZAC_MGMT_OUT_RESET_WRITE_POINTER:
+> +                       trace_seq_printf(p, " RESET_WRITE_POINTER");
+> +                       break;
+> +               }
+> +               break;
+>         }
+>         trace_seq_putc(p, 0);
+>
+> diff --git a/include/linux/ata.h b/include/linux/ata.h
+> index 2f01ba9..e3bf9a3 100644
+> --- a/include/linux/ata.h
+> +++ b/include/linux/ata.h
+> @@ -303,6 +303,7 @@ enum {
+>         ATA_CMD_REQ_SENSE_DATA  = 0x0B,
+>         ATA_CMD_SANITIZE_DEVICE = 0xB4,
+>         ATA_CMD_ZAC_MGMT_IN     = 0x4A,
+> +       ATA_CMD_ZAC_MGMT_OUT    = 0x9F,
+>
+>         /* marked obsolete in the ATA/ATAPI-7 spec */
+>         ATA_CMD_RESTORE         = 0x10,
+> @@ -323,6 +324,12 @@ enum {
+>         /* Subcmds for ATA_CMD_ZAC_MGMT_IN */
+>         ATA_SUBCMD_ZAC_MGMT_IN_REPORT_ZONES = 0x00,
+>
+> +       /* Subcmds for ATA_CMD_ZAC_MGMT_OUT */
+> +       ATA_SUBCMD_ZAC_MGMT_OUT_CLOSE_ZONE = 0x01,
+> +       ATA_SUBCMD_ZAC_MGMT_OUT_FINISH_ZONE = 0x02,
+> +       ATA_SUBCMD_ZAC_MGMT_OUT_OPEN_ZONE = 0x03,
+> +       ATA_SUBCMD_ZAC_MGMT_OUT_RESET_WRITE_POINTER = 0x04,
+> +
+>         /* READ_LOG_EXT pages */
+>         ATA_LOG_DIRECTORY       = 0x0,
+>         ATA_LOG_SATA_NCQ        = 0x10,
+> diff --git a/include/trace/events/libata.h b/include/trace/events/libata.h
+> index b966417..3032edc 100644
+> --- a/include/trace/events/libata.h
+> +++ b/include/trace/events/libata.h
+> @@ -99,6 +99,7 @@
+>                  ata_opcode_name(ATA_CMD_REQ_SENSE_DATA),       \
+>                  ata_opcode_name(ATA_CMD_SANITIZE_DEVICE),      \
+>                  ata_opcode_name(ATA_CMD_ZAC_MGMT_IN),          \
+> +                ata_opcode_name(ATA_CMD_ZAC_MGMT_OUT),         \
+>                  ata_opcode_name(ATA_CMD_RESTORE),              \
+>                  ata_opcode_name(ATA_CMD_READ_LONG),            \
+>                  ata_opcode_name(ATA_CMD_READ_LONG_ONCE),       \
+> --
+> 1.8.5.6
+>
 
-Cheers,
+Thanks for adding Open/Close/Finish.
 
-Hannes
---=20
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
+Reviewed-by: Shaun Tancheff <shaun.tancheff@seagate.com>
+Tested-by: Shaun Tancheff <shaun.tancheff@seagate.com>
+
+-- 
+Shaun Tancheff
