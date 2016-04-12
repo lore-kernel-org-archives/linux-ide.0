@@ -1,77 +1,113 @@
-From: Rameshwar Sahu <rsahu-qTEPVZfXA3Y@public.gmane.org>
-Subject: Re: [PATCH] arm64: dts: apm: Fix compatible string for X-Gene 2 SATA
- controller DTS node
-Date: Mon, 11 Apr 2016 14:44:43 +0530
-Message-ID: <CAFd313y-VV1Kk754b=fV0-kToMz=7Y=COqwSJQh=agYaLjUzyw@mail.gmail.com>
-References: <1459245294-22678-1-git-send-email-rsahu@apm.com>
-	<CADaLNDnU7UJOOFs9euPP035iJX5b1-p7jLoKB5f0Sn==Ec3sYA@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CADaLNDnU7UJOOFs9euPP035iJX5b1-p7jLoKB5f0Sn==Ec3sYA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Olof Johansson <olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org>
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, Duc Dang <dhdang-qTEPVZfXA3Y@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Devicetree List <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-arm <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, ddutile-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, Jon Masters <jcm-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, patches <patches-qTEPVZfXA3Y@public.gmane.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCHv2 02/14] libsas: enable FPDMA SEND/RECEIVE
+Date: Tue, 12 Apr 2016 08:47:46 +0200
+Message-ID: <1460443678-57934-3-git-send-email-hare@suse.de>
+References: <1460443678-57934-1-git-send-email-hare@suse.de>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:59590 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755568AbcDLGsQ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 12 Apr 2016 02:48:16 -0400
+In-Reply-To: <1460443678-57934-1-git-send-email-hare@suse.de>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-Hi Olof,
+Update libsas and dependent drivers to handle FPDMA
+SEND/RECEIVE correctly.
 
-On Wed, Mar 30, 2016 at 12:41 AM, Duc Dang <dhdang-qTEPVZfXA3Y@public.gmane.org> wrote:
->
-> On Tue, Mar 29, 2016 at 2:54 AM, Rameshwar Prasad Sahu <rsahu-qTEPVZfXA3Y@public.gmane.org> wrote:
-> > Fix X-Gene SATA controller compatible string for Merlin board.
-> >
-> > Signed-off-by: Rameshwar Prasad Sahu <rsahu-qTEPVZfXA3Y@public.gmane.org>
-> > Acked-by: Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
->
-> I will queue this patch into xgene-next tree.
->
-> > ---
-> >  arch/arm64/boot/dts/apm/apm-shadowcat.dtsi |    6 +++---
-> >  1 files changed, 3 insertions(+), 3 deletions(-)
-> >
-> > diff --git a/arch/arm64/boot/dts/apm/apm-shadowcat.dtsi b/arch/arm64/boot/dts/apm/apm-shadowcat.dtsi
-> > index 5d87a3d..74d971e 100644
-> > --- a/arch/arm64/boot/dts/apm/apm-shadowcat.dtsi
-> > +++ b/arch/arm64/boot/dts/apm/apm-shadowcat.dtsi
-> > @@ -524,7 +524,7 @@
-> >                 };
-> >
-> >                 sata1: sata@1a000000 {
-> > -                       compatible = "apm,xgene-ahci";
-> > +                       compatible = "apm,xgene-ahci-v2";
-> >                         reg = <0x0 0x1a000000 0x0 0x1000>,
-> >                               <0x0 0x1f200000 0x0 0x1000>,
-> >                               <0x0 0x1f20d000 0x0 0x1000>,
-> > @@ -534,7 +534,7 @@
-> >                 };
-> >
-> >                 sata2: sata@1a200000 {
-> > -                       compatible = "apm,xgene-ahci";
-> > +                       compatible = "apm,xgene-ahci-v2";
-> >                         reg = <0x0 0x1a200000 0x0 0x1000>,
-> >                               <0x0 0x1f210000 0x0 0x1000>,
-> >                               <0x0 0x1f21d000 0x0 0x1000>,
-> > @@ -544,7 +544,7 @@
-> >                 };
-> >
-> >                 sata3: sata@1a400000 {
-> > -                       compatible = "apm,xgene-ahci";
-> > +                       compatible = "apm,xgene-ahci-v2";
-> >                         reg = <0x0 0x1a400000 0x0 0x1000>,
-> >                               <0x0 0x1f220000 0x0 0x1000>,
-> >                               <0x0 0x1f22d000 0x0 0x1000>,
-> > --
-> > 1.7.1
-> >
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 2 ++
+ drivers/scsi/isci/request.c            | 4 +++-
+ drivers/scsi/libsas/sas_ata.c          | 6 ++++--
+ drivers/scsi/mvsas/mv_sas.c            | 4 +++-
+ drivers/scsi/pm8001/pm8001_sas.c       | 4 +++-
+ 5 files changed, 15 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index b733747..fc2e767 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -1573,6 +1573,8 @@ static u8 get_ata_protocol(u8 cmd, int direction)
+ 	switch (cmd) {
+ 	case ATA_CMD_FPDMA_WRITE:
+ 	case ATA_CMD_FPDMA_READ:
++	case ATA_CMD_FPMDA_RECV:
++	case ATA_CMD_FPDMA_SEND:
+ 	return SATA_PROTOCOL_FPDMA;
+ 
+ 	case ATA_CMD_ID_ATA:
+diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
+index cfd0084..29456e0 100644
+--- a/drivers/scsi/isci/request.c
++++ b/drivers/scsi/isci/request.c
+@@ -3169,7 +3169,9 @@ static enum sci_status isci_request_stp_request_construct(struct isci_request *i
+ 	status = sci_io_request_construct_basic_sata(ireq);
+ 
+ 	if (qc && (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
+-		   qc->tf.command == ATA_CMD_FPDMA_READ)) {
++		   qc->tf.command == ATA_CMD_FPDMA_READ ||
++		   qc->tf.command == ATA_CMD_FPDMA_RECV ||
++		   qc->tf.command == ATA_CMD_FPDMA_SEND)) {
+ 		fis->sector_count = qc->tag << 3;
+ 		ireq->tc->type.stp.ncq_tag = qc->tag;
+ 	}
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 9c706d8..fe1cd26 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -205,7 +205,9 @@ static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
+ 	task->task_done = sas_ata_task_done;
+ 
+ 	if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
+-	    qc->tf.command == ATA_CMD_FPDMA_READ) {
++	    qc->tf.command == ATA_CMD_FPDMA_READ ||
++	    qc->tf.command == ATA_CMD_FPDMA_RECV ||
++	    qc->tf.command == ATA_CMD_FPDMA_SEND) {
+ 		/* Need to zero out the tag libata assigned us */
+ 		qc->tf.nsect = 0;
+ 	}
+@@ -548,7 +550,7 @@ static struct ata_port_operations sas_sata_ops = {
+ 
+ static struct ata_port_info sata_port_info = {
+ 	.flags = ATA_FLAG_SATA | ATA_FLAG_PIO_DMA | ATA_FLAG_NCQ |
+-		 ATA_FLAG_SAS_HOST,
++		 ATA_FLAG_SAS_HOST | ATA_FLAG_FPDMA_AUX,
+ 	.pio_mask = ATA_PIO4,
+ 	.mwdma_mask = ATA_MWDMA2,
+ 	.udma_mask = ATA_UDMA6,
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index 83cd3ea..db37149 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -429,7 +429,9 @@ static u32 mvs_get_ncq_tag(struct sas_task *task, u32 *tag)
+ 
+ 	if (qc) {
+ 		if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
+-			qc->tf.command == ATA_CMD_FPDMA_READ) {
++		    qc->tf.command == ATA_CMD_FPDMA_READ ||
++		    qc->tf.command == ATA_CMD_FPDMA_RECV ||
++		    qc->tf.command == ATA_CMD_FPDMA_SEND) {
+ 			*tag = qc->tag;
+ 			return 1;
+ 		}
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+index 949198c..62abd98 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -280,7 +280,9 @@ u32 pm8001_get_ncq_tag(struct sas_task *task, u32 *tag)
+ 	struct ata_queued_cmd *qc = task->uldd_task;
+ 	if (qc) {
+ 		if (qc->tf.command == ATA_CMD_FPDMA_WRITE ||
+-			qc->tf.command == ATA_CMD_FPDMA_READ) {
++		    qc->tf.command == ATA_CMD_FPDMA_READ ||
++		    qc->tf.command == ATA_CMD_FPDMA_RECV ||
++		    qc->tf.command == ATA_CMD_FPDMA_SEND) {
+ 			*tag = qc->tag;
+ 			return 1;
+ 		}
+-- 
+1.8.5.6
 
-Any comments on this patch ??
->
->
-> Regards,
-> Duc Dang.
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
