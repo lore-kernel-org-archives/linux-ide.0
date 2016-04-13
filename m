@@ -1,24 +1,39 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHv2 09/14] libata: fixup ZAC device disabling
-Date: Wed, 13 Apr 2016 14:09:47 -0400
-Message-ID: <20160413180947.GF3676@htj.duckdns.org>
-References: <1460443678-57934-1-git-send-email-hare@suse.de>
- <1460443678-57934-10-git-send-email-hare@suse.de>
+Subject: Re: [PATCH v2] ata: add AMD Seattle platform driver
+Date: Wed, 13 Apr 2016 15:15:25 -0400
+Message-ID: <20160413191525.GB20142@htj.duckdns.org>
+References: <1452789071-4090-1-git-send-email-brijesh.singh@amd.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-yw0-f194.google.com ([209.85.161.194]:33975 "EHLO
+	mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752348AbcDMTPd (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Apr 2016 15:15:33 -0400
 Content-Disposition: inline
-In-Reply-To: <1460443678-57934-10-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+In-Reply-To: <1452789071-4090-1-git-send-email-brijesh.singh@amd.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Brijesh Singh <brijesh.singh@amd.com>
+Cc: linux-kernel@vger.kernel.org, hdegoede@redhat.com, arnd@arndb.de, linux-ide@vger.kernel.org
 
-On Tue, Apr 12, 2016 at 08:47:53AM +0200, Hannes Reinecke wrote:
-> libata device disabling is ... curious. So add the correct
-> definitions that we can disable ZAC devices properly.
+On Thu, Jan 14, 2016 at 10:31:11AM -0600, Brijesh Singh wrote:
+> AMD Seattle SATA controller mostly conforms to AHCI interface with some
+> special register to control SGPIO interface. In the case of an AHCI
+> controller, the SGPIO feature is ideally implemented using the
+> "Enclosure Management" register of the AHCI controller, but those
+> registeres are not implemented in the Seattle SoC. Instead SoC
+> (Rev B0 onwards) provides a 32-bit SGPIO control register which should
+> be programmed to control the activity, locate and fault LEDs.
+> 
+> The driver is based on ahci_platform driver.
+> 
+> Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
+> Acked-by: Hans de Goede <hdegoede@redhat.com>
+> CC: tj@kernel.org
+> CC: linux-ide@vger.kernel.org
 
-Fold into an earlier patch?
+Applied to libata/for-4.6-fixes.
 
 Thanks.
 
