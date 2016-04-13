@@ -1,36 +1,32 @@
-From: Wilfred Kabore <wkabore56@gmail.com>
-Subject: URGENT REPLY FOR MORE DETAILS
-Date: Wed, 13 Apr 2016 17:29:16 +0200
-Message-ID: <CACqwvZgXNF9nekF_Zt-MsVv_DXEZ3hX_Uan40KfNsMStUYnAdg@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCHv2 05/14] libata: NCQ Encapsulation for READ LOG DMA EXT
+Date: Wed, 13 Apr 2016 14:07:35 -0400
+Message-ID: <20160413180735.GD3676@htj.duckdns.org>
+References: <1460443678-57934-1-git-send-email-hare@suse.de>
+ <1460443678-57934-6-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ig0-f194.google.com ([209.85.213.194]:36816 "EHLO
-	mail-ig0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752048AbcDMP3T (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Apr 2016 11:29:19 -0400
-Received: by mail-ig0-f194.google.com with SMTP id kb1so6985802igb.3
-        for <linux-ide@vger.kernel.org>; Wed, 13 Apr 2016 08:29:19 -0700 (PDT)
+Received: from mail-yw0-f193.google.com ([209.85.161.193]:36693 "EHLO
+	mail-yw0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751211AbcDMSHi (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Apr 2016 14:07:38 -0400
+Content-Disposition: inline
+In-Reply-To: <1460443678-57934-6-git-send-email-hare@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+
+On Tue, Apr 12, 2016 at 08:47:49AM +0200, Hannes Reinecke wrote:
+> Recent devices can use NCQ encapsulation for READ LOG DMA EXT,
+> so we should be using it if available.
+
+Does this have any actual benefits than being new and shiny?  It's
+being called from EH path where we know that no other commands are in
+flight.
+
+Thanks.
 
 -- 
-Hello Dear,
-
-Greetings and hope this email finds you well?
-
-I am Dr. Wilfred Kabore, the  chief Medical consultant at a reputable
-clinic here in Ouagadougou, Burkina Faso and I have a Patient who
-hails from the Republic of philippines but unfortunately is in coma
-right now due to complications from a Cancer disease and she has the
-sum of $4.7 Million United States (Four Million seven Hundred
-Thousand) Dollars she wants me to guide you on, so that her Bank can
-transfer it to you for charity purposes.
-
-Please, I will like you to contact me for further details as this is a
-very sensitive issue that needs urgent attention from you.
-
-Best Regards,
-
-Dr. Wilfred Kabore on behalf of
-Mrs. Sismer Shirley Acojedo
+tejun
