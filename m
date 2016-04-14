@@ -1,115 +1,48 @@
-From: Shaun Tancheff <shaun.tancheff@seagate.com>
-Subject: Re: [PATCHv2 13/14] libata: support device-managed ZAC devices
-Date: Thu, 14 Apr 2016 03:50:04 +0700
-Message-ID: <CAJVOszC3WOQ+TgfyV5Z6krPtZOR1YBkS7ghtqcXr4Vt2aug9aQ@mail.gmail.com>
-References: <1460443678-57934-1-git-send-email-hare@suse.de> <1460443678-57934-14-git-send-email-hare@suse.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCHv2 05/14] libata: NCQ Encapsulation for READ LOG DMA EXT
+Date: Thu, 14 Apr 2016 07:44:19 +0200
+Message-ID: <570F2E33.3080709@suse.de>
+References: <1460443678-57934-1-git-send-email-hare@suse.de>
+ <1460443678-57934-6-git-send-email-hare@suse.de>
+ <20160413180735.GD3676@htj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1460443678-57934-14-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:45880 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752959AbcDNFoZ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 14 Apr 2016 01:44:25 -0400
+In-Reply-To: <20160413180735.GD3676@htj.duckdns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On Tue, Apr 12, 2016 at 1:47 PM, Hannes Reinecke <hare@suse.de> wrote:
-> Device-managed ZAC devices just set the zoned capabilities field
-> in INQUIRY byte 69 (cf ACS-4). This corresponds to the 'zoned'
-> field in the block device characteristics VPD page.
-> As this is only defined in SPC-5/SBC-4 we also need to update
-> the supported SCSI version descriptor.
->
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/ata/libata-scsi.c | 19 ++++++++++---------
->  include/linux/ata.h       |  5 +++++
->  2 files changed, 15 insertions(+), 9 deletions(-)
->
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index 5f1fc03..a92fbe9 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -2082,14 +2082,14 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
->                 0x00,
->                 0xA0,   /* SAM-5 (no version claimed) */
->
-> -               0x04,
-> -               0xC0,   /* SBC-3 (no version claimed) */
-> +               0x06,
-> +               0x00,   /* SBC-4 (no version claimed) */
->
-> -               0x04,
-> -               0x60,   /* SPC-4 (no version claimed) */
-> +               0x05,
-> +               0xC0,   /* SPC-5 (no version claimed) */
->
->                 0x60,
-> -               0x20,   /* ZBC (no version claimed) */
-> +               0x24,   /* ZBC r05 */
->         };
->
->         u8 hdr[] = {
-> @@ -2109,10 +2109,8 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
->             (args->dev->link->ap->pflags & ATA_PFLAG_EXTERNAL))
->                 hdr[1] |= (1 << 7);
->
-> -       if (args->dev->class == ATA_DEV_ZAC) {
-> +       if (args->dev->class == ATA_DEV_ZAC)
->                 hdr[0] = TYPE_ZBC;
-> -               hdr[2] = 0x6; /* ZBC is defined in SPC-4 */
-> -       }
->
->         memcpy(rbuf, hdr, sizeof(hdr));
->         memcpy(&rbuf[8], "ATA     ", 8);
-> @@ -2126,7 +2124,7 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
->         if (rbuf[32] == 0 || rbuf[32] == ' ')
->                 memcpy(&rbuf[32], "n/a ", 4);
->
-> -       if (args->dev->class == ATA_DEV_ZAC)
-> +       if (ata_id_zoned_cap(args->id) || args->dev->class == ATA_DEV_ZAC)
->                 memcpy(rbuf + 58, versions_zbc, sizeof(versions_zbc));
->         else
->                 memcpy(rbuf + 58, versions, sizeof(versions));
-> @@ -2322,12 +2320,15 @@ static unsigned int ata_scsiop_inq_b1(struct ata_scsi_args *args, u8 *rbuf)
->  {
->         int form_factor = ata_id_form_factor(args->id);
->         int media_rotation_rate = ata_id_rotation_rate(args->id);
-> +       u8 zoned = ata_id_zoned_cap(args->id);
->
->         rbuf[1] = 0xb1;
->         rbuf[3] = 0x3c;
->         rbuf[4] = media_rotation_rate >> 8;
->         rbuf[5] = media_rotation_rate;
->         rbuf[7] = form_factor;
-> +       if (zoned)
-> +               rbuf[8] = (zoned << 4);
->
->         return 0;
->  }
-> diff --git a/include/linux/ata.h b/include/linux/ata.h
-> index 3fb2d7d..439be2a 100644
-> --- a/include/linux/ata.h
-> +++ b/include/linux/ata.h
-> @@ -932,6 +932,11 @@ static inline bool ata_id_is_ssd(const u16 *id)
->         return id[ATA_ID_ROT_SPEED] == 0x01;
->  }
->
-> +static inline u8 ata_id_zoned_cap(const u16 *id)
-> +{
-> +       return (id[ATA_ID_ADDITIONAL_SUPP] & 0x3);
-> +}
-> +
->  static inline bool ata_id_pio_need_iordy(const u16 *id, const u8 pio)
->  {
->         /* CF spec. r4.1 Table 22 says no IORDY on PIO5 and PIO6. */
-> --
-> 1.8.5.6
->
-This also covers Host aware zoned drives.
+On 04/13/2016 08:07 PM, Tejun Heo wrote:
+> On Tue, Apr 12, 2016 at 08:47:49AM +0200, Hannes Reinecke wrote:
+>> Recent devices can use NCQ encapsulation for READ LOG DMA EXT,
+>> so we should be using it if available.
+>=20
+> Does this have any actual benefits than being new and shiny?  It's
+> being called from EH path where we know that no other commands are in
+> flight.
+>=20
+Hehe. No, it isn't, if you look closely.
+(Or make that: it _shouldn't_, and I've messed it up)
+(That's what the 'fpdma' parameter is for)
 
-Reviewed-by: Shaun Tancheff <shaun.tancheff@seagate.com>
-Tested-by: Shaun Tancheff <shaun.tancheff@seagate.com>
+The benefit is not so much for normal operations, but it'll give us
+a performance improvements on SMR drives where we need to issue
+READ LOG DMA EXT rather frequently. There we really want to have
+them as NCQ commands.
 
-Regards,
+Cheers,
 
-Shaun Tancheff
+Hannes
+--=20
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
