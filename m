@@ -1,76 +1,63 @@
-From: Matthias Brugger <mbrugger@suse.com>
-Subject: Re: [PATCH v2] ata: add AMD Seattle platform driver
-Date: Thu, 14 Apr 2016 11:08:36 +0200
-Message-ID: <570F5E14.9020403@suse.com>
-References: <1452789071-4090-1-git-send-email-brijesh.singh@amd.com>
- <5709817.yQT8N3CaLj@wuerfel> <20160316210713.GI21104@mtj.duckdns.org>
- <31951835.kMFH9CgruZ@wuerfel> <56EC4AB8.7040901@amd.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: re: libata: check zero power ready status for ZPODD
+Date: Thu, 14 Apr 2016 12:30:22 +0300
+Message-ID: <20160414093022.GA16431@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.nue.novell.com ([195.135.221.5]:41197 "EHLO
-	smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753378AbcDNJJR (ORCPT
-	<rfc822;groupwise-linux-ide@vger.kernel.org:0:0>);
-	Thu, 14 Apr 2016 05:09:17 -0400
-In-Reply-To: <56EC4AB8.7040901@amd.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:42266 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752219AbcDNJak (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Apr 2016 05:30:40 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brijesh Singh <brijesh.singh@amd.com>, Arnd Bergmann <arnd@arndb.de>, Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, hdegoede@redhat.com, linux-ide@vger.kernel.org, Graeme Gregory <graeme@xora.org.uk>
+To: aaron.lu@intel.com
+Cc: linux-ide@vger.kernel.org
 
-Hi Brijesh,
+Hello Aaron Lu,
 
-On 18/03/16 19:36, Brijesh Singh wrote:
-> Hi Tejun,
->
-> On 03/17/2016 12:36 PM, Arnd Bergmann wrote:
->> On Wednesday 16 March 2016 14:07:13 Tejun Heo wrote:
->>> Hello, Arnd.
->>>
->>> On Mon, Feb 01, 2016 at 09:14:17PM +0100, Arnd Bergmann wrote:
->>>>> I am not debating on your AML call recommendation, it sounds like
->>>>> a good idea however BIOS is already released hence its bit late to
->>>>> add AML methods for this. I am seeking guidance on what can be
->>>>> done in the given situation. I thought platform driver is one
->>>>> option to get this feature enabled in kernel.
->>>
->>>> This is where we really need the ACPI maintainers to explain the
->>>> general policy for dealing with firmware updates.
->>>>
->>>> I would assume that adding the feature in a later firmware version
->>>> is a compatible change, and the feature is non-essential (the
->>>> device will work fine with the generic SATA driver, except
->>>> the LEDs don't blink), so it's not a big deal, it's just what
->>>> you get for having the firmware shipped before the driver is
->>>> reviewed (don't do that).
->>>
->>> So, if it were x86, I'd commit the custom driver without thinking too
->>> much as ata drivers have always been working around bios issues (there
->>> often wasn't any other recourse).  If the hardware is already out
->>> there and it's not too easy to roll out bios updates, from libata
->>> side, I'm okay with having a custom driver to work around that.  What
->>> do you think?
->>
->>
->> It's your call in the end. My main objection is to the fact that
->> I have suggested a clean implementation for the normal DT based
->> path that also fixes existing platforms that used to work in the
->> past and were broken by the (long-ago) move from drivers/ide to
->> drivers/ata, Brijesh has not implemented that but has instead
->> continued pushing the hack for the ACPI mode that is still
->> experimental on ARM64.
->>
->
-> I am helping a customer who want EM support in a distro (using ACPI mode). Since its difficult to update
-> the bios hence can I request to pull this driver. The driver solves the ACPI usecases.
->
-> As per DT is concerned, will look into driver/ide and led framework but since I am not very familiar with
-> driver/ide and led framework hence it will take sometime to design and implement the DT cases.
->
+The patch 3dc67440d99b: "libata: check zero power ready status for
+ZPODD" from Jan 15, 2013, leads to the following static checker
+warning:
 
-Did you made any progress on the DT part?
+	drivers/ata/libata-zpodd.c:97 zpready()
+	error: uninitialized symbol 'sense_key'.
 
-Regards,
-Matthias
+drivers/ata/libata-zpodd.c
+    88  /* Test if ODD is zero power ready by sense code */
+    89  static bool zpready(struct ata_device *dev)
+    90  {
+    91          u8 sense_key, *sense_buf;
+    92          unsigned int ret, asc, ascq, add_len;
+    93          struct zpodd *zpodd = dev->zpodd;
+    94  
+    95          ret = atapi_eh_tur(dev, &sense_key);
+    96  
+    97          if (!ret || sense_key != NOT_READY)
+    98                  return false;
+
+It's not clear what is going on here.  atapi_eh_tur() returns 0 on
+success or a bit mask on error.  If the AC_ERR_DEV (which is BIT(0)) bit
+is set and no other bits then we set "&sense_key" otherwise it is
+uninitialized.
+
+So maybe the test should be:
+
+	if (ret != AC_ERR_DEV || sense_key != NOT_READY)
+		return false;
+
+That would silence the uninitialized variable warning but it's sort of
+weird.  You would normall expect to return for errors and continue if
+ret were zero.
+
+	if (ret && !(ret == AC_ERR_DEV && ...
+
+    99  
+   100          sense_buf = dev->link->ap->sector_buf;
+   101          ret = atapi_eh_request_sense(dev, sense_buf, sense_key);
+   102          if (ret)
+   103                  return false;
+
+regards,
+dan carpenter
