@@ -1,39 +1,41 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHv2 09/14] libata: fixup ZAC device disabling
-Date: Thu, 14 Apr 2016 11:43:55 -0400
-Message-ID: <20160414154355.GC12583@htj.duckdns.org>
-References: <1460443678-57934-1-git-send-email-hare@suse.de>
- <1460443678-57934-10-git-send-email-hare@suse.de>
- <20160413180947.GF3676@htj.duckdns.org>
- <570F2F13.2040509@suse.de>
+Subject: Re: [PATCH] pata_artop: Use ioread8.
+Date: Thu, 14 Apr 2016 11:45:17 -0400
+Message-ID: <20160414154517.GD12583@htj.duckdns.org>
+References: <1460618763-1712-1-git-send-email-ysato@users.sourceforge.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:36818 "EHLO
-	mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932214AbcDNPn5 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Apr 2016 11:43:57 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <570F2F13.2040509@suse.de>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <1460618763-1712-1-git-send-email-ysato@users.sourceforge.jp>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Yoshinori Sato <ysato@users.sourceforge.jp>
+Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On Thu, Apr 14, 2016 at 07:48:03AM +0200, Hannes Reinecke wrote:
-> On 04/13/2016 08:09 PM, Tejun Heo wrote:
-> > On Tue, Apr 12, 2016 at 08:47:53AM +0200, Hannes Reinecke wrote:
-> >> libata device disabling is ... curious. So add the correct
-> >> definitions that we can disable ZAC devices properly.
-> > 
-> > Fold into an earlier patch?
-> > 
-> That earlier patch would be commit
-> 9162c6579bf90b3f5ddb7e3a6c6fa946c1b4cbeb
-> ("libata: Implement ATA_DEV_ZAC"), which got merged
-> in 2014 ...
+Hello,
 
-Ah, right you are.
+On Thu, Apr 14, 2016 at 04:26:03PM +0900, Yoshinori Sato wrote:
+> Support for non x86 targets.
+
+Being a bit more detailed would be nice.
+
+> Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
+> ---
+>  drivers/ata/pata_artop.c | 16 +++++++++++++---
+>  1 file changed, 13 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/ata/pata_artop.c b/drivers/ata/pata_artop.c
+> index 96c05c9..3731dea 100644
+> --- a/drivers/ata/pata_artop.c
+> +++ b/drivers/ata/pata_artop.c
+> @@ -340,6 +340,18 @@ static void atp8xx_fixup(struct pci_dev *pdev)
+>  	}
+>  }
+>  
+> +static int is_fast(struct pci_dev *pdev)
+
+Can you please make the name a bit more descriptive?
 
 Thanks.
 
