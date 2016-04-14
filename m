@@ -1,54 +1,70 @@
-From: Yoshinori Sato <ysato@users.sourceforge.jp>
-Subject: [PATCH] pata_artop: Use ioread8.
-Date: Thu, 14 Apr 2016 16:26:03 +0900
-Message-ID: <1460618763-1712-1-git-send-email-ysato@users.sourceforge.jp>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>
-Cc: Yoshinori Sato <ysato@users.sourceforge.jp>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCHv2 03/14] libsas: Define ATA_CMD_NCQ_NON_DATA
+Date: Thu, 14 Apr 2016 10:06:49 +0100
+Message-ID: <570F5DA9.7050205@huawei.com>
+References: <1460443678-57934-1-git-send-email-hare@suse.de>
+ <1460443678-57934-4-git-send-email-hare@suse.de>
+ <570CC7F6.1020607@huawei.com> <570CCD2A.6000806@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:57424 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752614AbcDNJHQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Apr 2016 05:07:16 -0400
+In-Reply-To: <570CCD2A.6000806@suse.de>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-Support for non x86 targets.
+On 12/04/2016 11:25, Hannes Reinecke wrote:
+> On 04/12/2016 12:03 PM, John Garry wrote:
+>> On 12/04/2016 07:47, Hannes Reinecke wrote:
+>>> Define the NCQ NON DATA command and update libsas to handle it
+>>> correctly.
+>>>
+>>> Signed-off-by: Hannes Reinecke <hare@suse.com>
+>>> ---
+>>>    drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 1 +
+>>>    drivers/scsi/isci/request.c            | 3 ++-
+>>>    drivers/scsi/libsas/sas_ata.c          | 3 ++-
+>>>    drivers/scsi/mvsas/mv_sas.c            | 3 ++-
+>>>    drivers/scsi/pm8001/pm8001_sas.c       | 3 ++-
+>>>    include/linux/ata.h                    | 1 +
+>>>    include/trace/events/libata.h          | 1 +
+>>>    7 files changed, 11 insertions(+), 4 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+>>> b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+>>> index fc2e767..ebaf5ab 100644
+>>> --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+>>> +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+>>> @@ -1575,6 +1575,7 @@ static u8 get_ata_protocol(u8 cmd, int
+>>> direction)
+>>>        case ATA_CMD_FPDMA_READ:
+>>>        case ATA_CMD_FPMDA_RECV:
+>>>        case ATA_CMD_FPDMA_SEND:
+>>> +    case ATA_CMD_NCQ_NON_DATA:
+>>>        return SATA_PROTOCOL_FPDMA;
+>>>
+>>
+>> I'm going to double-check this. It may correspond to
+>> SATA_PROTOCOL_NONDATA, and not SATA_PROTOCOL_FPDMA.
+>>
 
-Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
----
- drivers/ata/pata_artop.c | 16 +++++++++++++---
- 1 file changed, 13 insertions(+), 3 deletions(-)
+So I got confirmation that SATA_PROTOCOL_FPDMA is correct for this type 
+of command and we do support it.
 
-diff --git a/drivers/ata/pata_artop.c b/drivers/ata/pata_artop.c
-index 96c05c9..3731dea 100644
---- a/drivers/ata/pata_artop.c
-+++ b/drivers/ata/pata_artop.c
-@@ -340,6 +340,18 @@ static void atp8xx_fixup(struct pci_dev *pdev)
- 	}
- }
- 
-+static int is_fast(struct pci_dev *pdev)
-+{
-+	int ret = 0;
-+	void __iomem *addr;
-+
-+	addr = pci_iomap(pdev, 4, 1);
-+	if (ioread8(addr) & 0x10)
-+		ret = 1;
-+	pci_iounmap(pdev, addr);
-+
-+	return ret;
-+}
- /**
-  *	artop_init_one - Register ARTOP ATA PCI device with kernel services
-  *	@pdev: PCI device to register
-@@ -398,10 +410,8 @@ static int artop_init_one (struct pci_dev *pdev, const struct pci_device_id *id)
- 	else if (id->driver_data == 1)	/* 6260 */
- 		ppi[0] = &info_626x;
- 	else if (id->driver_data == 2)	{ /* 6280 or 6280 + fast */
--		unsigned long io = pci_resource_start(pdev, 4);
--
- 		ppi[0] = &info_628x;
--		if (inb(io) & 0x10)
-+		if (is_fast(pdev))
- 			ppi[0] = &info_628x_fast;
- 	}
- 
--- 
-2.7.0
+If we want to test is it ok just to take this patchset and the other 
+advised prerequisite patchsets?
+
+> Thanks. The spec is not exactly clear in that regard...
+>
+> Cheers,
+>
+> Hannes
+>
+
+
