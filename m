@@ -1,70 +1,76 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [PATCHv2 03/14] libsas: Define ATA_CMD_NCQ_NON_DATA
-Date: Thu, 14 Apr 2016 10:06:49 +0100
-Message-ID: <570F5DA9.7050205@huawei.com>
-References: <1460443678-57934-1-git-send-email-hare@suse.de>
- <1460443678-57934-4-git-send-email-hare@suse.de>
- <570CC7F6.1020607@huawei.com> <570CCD2A.6000806@suse.de>
+From: Matthias Brugger <mbrugger@suse.com>
+Subject: Re: [PATCH v2] ata: add AMD Seattle platform driver
+Date: Thu, 14 Apr 2016 11:08:36 +0200
+Message-ID: <570F5E14.9020403@suse.com>
+References: <1452789071-4090-1-git-send-email-brijesh.singh@amd.com>
+ <5709817.yQT8N3CaLj@wuerfel> <20160316210713.GI21104@mtj.duckdns.org>
+ <31951835.kMFH9CgruZ@wuerfel> <56EC4AB8.7040901@amd.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:57424 "EHLO
-	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752614AbcDNJHQ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Apr 2016 05:07:16 -0400
-In-Reply-To: <570CCD2A.6000806@suse.de>
+Received: from smtp.nue.novell.com ([195.135.221.5]:41197 "EHLO
+	smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753378AbcDNJJR (ORCPT
+	<rfc822;groupwise-linux-ide@vger.kernel.org:0:0>);
+	Thu, 14 Apr 2016 05:09:17 -0400
+In-Reply-To: <56EC4AB8.7040901@amd.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+To: Brijesh Singh <brijesh.singh@amd.com>, Arnd Bergmann <arnd@arndb.de>, Tejun Heo <tj@kernel.org>
+Cc: linux-kernel@vger.kernel.org, hdegoede@redhat.com, linux-ide@vger.kernel.org, Graeme Gregory <graeme@xora.org.uk>
 
-On 12/04/2016 11:25, Hannes Reinecke wrote:
-> On 04/12/2016 12:03 PM, John Garry wrote:
->> On 12/04/2016 07:47, Hannes Reinecke wrote:
->>> Define the NCQ NON DATA command and update libsas to handle it
->>> correctly.
+Hi Brijesh,
+
+On 18/03/16 19:36, Brijesh Singh wrote:
+> Hi Tejun,
+>
+> On 03/17/2016 12:36 PM, Arnd Bergmann wrote:
+>> On Wednesday 16 March 2016 14:07:13 Tejun Heo wrote:
+>>> Hello, Arnd.
 >>>
->>> Signed-off-by: Hannes Reinecke <hare@suse.com>
->>> ---
->>>    drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 1 +
->>>    drivers/scsi/isci/request.c            | 3 ++-
->>>    drivers/scsi/libsas/sas_ata.c          | 3 ++-
->>>    drivers/scsi/mvsas/mv_sas.c            | 3 ++-
->>>    drivers/scsi/pm8001/pm8001_sas.c       | 3 ++-
->>>    include/linux/ata.h                    | 1 +
->>>    include/trace/events/libata.h          | 1 +
->>>    7 files changed, 11 insertions(+), 4 deletions(-)
+>>> On Mon, Feb 01, 2016 at 09:14:17PM +0100, Arnd Bergmann wrote:
+>>>>> I am not debating on your AML call recommendation, it sounds like
+>>>>> a good idea however BIOS is already released hence its bit late to
+>>>>> add AML methods for this. I am seeking guidance on what can be
+>>>>> done in the given situation. I thought platform driver is one
+>>>>> option to get this feature enabled in kernel.
 >>>
->>> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
->>> b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
->>> index fc2e767..ebaf5ab 100644
->>> --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
->>> +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
->>> @@ -1575,6 +1575,7 @@ static u8 get_ata_protocol(u8 cmd, int
->>> direction)
->>>        case ATA_CMD_FPDMA_READ:
->>>        case ATA_CMD_FPMDA_RECV:
->>>        case ATA_CMD_FPDMA_SEND:
->>> +    case ATA_CMD_NCQ_NON_DATA:
->>>        return SATA_PROTOCOL_FPDMA;
+>>>> This is where we really need the ACPI maintainers to explain the
+>>>> general policy for dealing with firmware updates.
+>>>>
+>>>> I would assume that adding the feature in a later firmware version
+>>>> is a compatible change, and the feature is non-essential (the
+>>>> device will work fine with the generic SATA driver, except
+>>>> the LEDs don't blink), so it's not a big deal, it's just what
+>>>> you get for having the firmware shipped before the driver is
+>>>> reviewed (don't do that).
 >>>
+>>> So, if it were x86, I'd commit the custom driver without thinking too
+>>> much as ata drivers have always been working around bios issues (there
+>>> often wasn't any other recourse).  If the hardware is already out
+>>> there and it's not too easy to roll out bios updates, from libata
+>>> side, I'm okay with having a custom driver to work around that.  What
+>>> do you think?
 >>
->> I'm going to double-check this. It may correspond to
->> SATA_PROTOCOL_NONDATA, and not SATA_PROTOCOL_FPDMA.
 >>
-
-So I got confirmation that SATA_PROTOCOL_FPDMA is correct for this type 
-of command and we do support it.
-
-If we want to test is it ok just to take this patchset and the other 
-advised prerequisite patchsets?
-
-> Thanks. The spec is not exactly clear in that regard...
+>> It's your call in the end. My main objection is to the fact that
+>> I have suggested a clean implementation for the normal DT based
+>> path that also fixes existing platforms that used to work in the
+>> past and were broken by the (long-ago) move from drivers/ide to
+>> drivers/ata, Brijesh has not implemented that but has instead
+>> continued pushing the hack for the ACPI mode that is still
+>> experimental on ARM64.
+>>
 >
-> Cheers,
+> I am helping a customer who want EM support in a distro (using ACPI mode). Since its difficult to update
+> the bios hence can I request to pull this driver. The driver solves the ACPI usecases.
 >
-> Hannes
+> As per DT is concerned, will look into driver/ide and led framework but since I am not very familiar with
+> driver/ide and led framework hence it will take sometime to design and implement the DT cases.
 >
 
+Did you made any progress on the DT part?
 
+Regards,
+Matthias
