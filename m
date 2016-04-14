@@ -1,75 +1,44 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv2 03/14] libsas: Define ATA_CMD_NCQ_NON_DATA
-Date: Thu, 14 Apr 2016 11:39:04 +0200
-Message-ID: <570F6538.40107@suse.de>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCHv2 05/14] libata: NCQ Encapsulation for READ LOG DMA EXT
+Date: Thu, 14 Apr 2016 11:43:38 -0400
+Message-ID: <20160414154338.GB12583@htj.duckdns.org>
 References: <1460443678-57934-1-git-send-email-hare@suse.de>
- <1460443678-57934-4-git-send-email-hare@suse.de>
- <570CC7F6.1020607@huawei.com> <570CCD2A.6000806@suse.de>
- <570F5DA9.7050205@huawei.com>
+ <1460443678-57934-6-git-send-email-hare@suse.de>
+ <20160413180735.GD3676@htj.duckdns.org>
+ <570F2E33.3080709@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38733 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752834AbcDNJjL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 14 Apr 2016 05:39:11 -0400
-In-Reply-To: <570F5DA9.7050205@huawei.com>
+Received: from mail-qg0-f67.google.com ([209.85.192.67]:36559 "EHLO
+	mail-qg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932272AbcDNPnk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Apr 2016 11:43:40 -0400
+Content-Disposition: inline
+In-Reply-To: <570F2E33.3080709@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: John Garry <john.garry@huawei.com>, Tejun Heo <tj@kernel.org>
+To: Hannes Reinecke <hare@suse.de>
 Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On 04/14/2016 11:06 AM, John Garry wrote:
-> On 12/04/2016 11:25, Hannes Reinecke wrote:
->> On 04/12/2016 12:03 PM, John Garry wrote:
->>> On 12/04/2016 07:47, Hannes Reinecke wrote:
->>>> Define the NCQ NON DATA command and update libsas to handle it
->>>> correctly.
->>>>
->>>> Signed-off-by: Hannes Reinecke <hare@suse.com>
->>>> ---
->>>>    drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 1 +
->>>>    drivers/scsi/isci/request.c            | 3 ++-
->>>>    drivers/scsi/libsas/sas_ata.c          | 3 ++-
->>>>    drivers/scsi/mvsas/mv_sas.c            | 3 ++-
->>>>    drivers/scsi/pm8001/pm8001_sas.c       | 3 ++-
->>>>    include/linux/ata.h                    | 1 +
->>>>    include/trace/events/libata.h          | 1 +
->>>>    7 files changed, 11 insertions(+), 4 deletions(-)
->>>>
->>>> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
->>>> b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
->>>> index fc2e767..ebaf5ab 100644
->>>> --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
->>>> +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
->>>> @@ -1575,6 +1575,7 @@ static u8 get_ata_protocol(u8 cmd, int
->>>> direction)
->>>>        case ATA_CMD_FPDMA_READ:
->>>>        case ATA_CMD_FPMDA_RECV:
->>>>        case ATA_CMD_FPDMA_SEND:
->>>> +    case ATA_CMD_NCQ_NON_DATA:
->>>>        return SATA_PROTOCOL_FPDMA;
->>>>
->>>
->>> I'm going to double-check this. It may correspond to
->>> SATA_PROTOCOL_NONDATA, and not SATA_PROTOCOL_FPDMA.
->>>
->=20
-> So I got confirmation that SATA_PROTOCOL_FPDMA is correct for this
-> type of command and we do support it.
->=20
-> If we want to test is it ok just to take this patchset and the other
-> advised prerequisite patchsets?
->=20
-Yes, that should be sufficient.
+Hello, Hannes.
 
-Cheers,
+On Thu, Apr 14, 2016 at 07:44:19AM +0200, Hannes Reinecke wrote:
+> Hehe. No, it isn't, if you look closely.
+> (Or make that: it _shouldn't_, and I've messed it up)
+> (That's what the 'fpdma' parameter is for)
+> 
+> The benefit is not so much for normal operations, but it'll give us
+> a performance improvements on SMR drives where we need to issue
+> READ LOG DMA EXT rather frequently. There we really want to have
+> them as NCQ commands.
 
-Hannes
---=20
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
+I'm still a bit confused.  Isn't it part of EH?  If so, the path is
+never traveled with other commands in flight and thus whether a
+command is NCQ or not doesn't make any difference.  The only thing
+it'd do is making devices which advertise the capability but don't get
+it quite right fail.
+
+Thanks.
+
+-- 
+tejun
