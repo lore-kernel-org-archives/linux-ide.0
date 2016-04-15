@@ -1,100 +1,51 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: libata: check zero power ready status for ZPODD
-Date: Fri, 15 Apr 2016 10:34:08 +0800
-Message-ID: <57105320.20208@intel.com>
-References: <20160414093022.GA16431@mwanda>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCHv2 05/14] libata: NCQ Encapsulation for READ LOG DMA EXT
+Date: Fri, 15 Apr 2016 14:32:25 +0200
+Message-ID: <5710DF59.5060103@suse.de>
+References: <1460443678-57934-1-git-send-email-hare@suse.de>
+ <1460443678-57934-6-git-send-email-hare@suse.de>
+ <20160413180735.GD3676@htj.duckdns.org> <570F2E33.3080709@suse.de>
+ <20160414154338.GB12583@htj.duckdns.org> <570FBE74.2040202@suse.com>
+ <20160414160750.GF12583@htj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:36405 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752779AbcDOCeL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 14 Apr 2016 22:34:11 -0400
-In-Reply-To: <20160414093022.GA16431@mwanda>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <20160414160750.GF12583@htj.duckdns.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.com>
+Cc: linux-ide@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: linux-ide@vger.kernel.org
 
-On 04/14/2016 05:30 PM, Dan Carpenter wrote:
-> Hello Aaron Lu,
-> 
-> The patch 3dc67440d99b: "libata: check zero power ready status for
-> ZPODD" from Jan 15, 2013, leads to the following static checker
-> warning:
-> 
-> 	drivers/ata/libata-zpodd.c:97 zpready()
-> 	error: uninitialized symbol 'sense_key'.
-> 
-> drivers/ata/libata-zpodd.c
->     88  /* Test if ODD is zero power ready by sense code */
->     89  static bool zpready(struct ata_device *dev)
+On 04/14/2016 06:07 PM, Tejun Heo wrote:
+> On Thu, Apr 14, 2016 at 05:59:48PM +0200, Hannes Reinecke wrote:
+>> For this patch, yes, you are right.
+>> However, the ZAC enablement patches later on submit READ LOG EXT com=
+mands
+>> (for REPORT ZONES), and _they_ benefit from NCQ encapsulation.
+>=20
+> Umm... so, you can't use ata_exec_internal() outside of EH context.
+>=20
+Right, I've checked the overall situation.
+Yes, there is an NCQ encapsulation for READ LOG EXT, but indeed we
+cannot sensibly use it from an EH context.
+And the only other position where we would need it is during device
+initialisation, which is hardly performance critical.
 
-This function returns true if ODD is zero power ready, false otherwise.
+So I'll be dropping this patch from the next round of submissions
+and will just keep the command definitions.
 
->     90  {
->     91          u8 sense_key, *sense_buf;
->     92          unsigned int ret, asc, ascq, add_len;
->     93          struct zpodd *zpodd = dev->zpodd;
->     94  
->     95          ret = atapi_eh_tur(dev, &sense_key);
->     96  
->     97          if (!ret || sense_key != NOT_READY)
->     98                  return false;
+Cheers,
 
-The pre-condition that the ODD can be considered zero power ready is:
-there is no medium inside(hence, atapi_eh_tur should return a failure)
-and the sense_key is set to NOT_READY. If the pre-condition is not
-met as is checked by the above if, we return false.
-
-> 
-> It's not clear what is going on here.  atapi_eh_tur() returns 0 on
-> success or a bit mask on error.  If the AC_ERR_DEV (which is BIT(0)) bit
-> is set and no other bits then we set "&sense_key" otherwise it is
-> uninitialized.
-
-Good point, thanks for the catch.
-
-> 
-> So maybe the test should be:
-> 
-> 	if (ret != AC_ERR_DEV || sense_key != NOT_READY)
-> 		return false;
-
-I think I will simply set sense_key to zero beforehand instead of
-changing the condition logic here, and it follows the other usage of the
-atapi_eh_tur in atapi_eh_clear_ua where the sense_key is also set to 0
-beforehand.
-
-
->From dda5c9306920ef973c9bf42db7723b86ab8b2930 Mon Sep 17 00:00:00 2001
-From: Aaron Lu <aaron.lu@intel.com>
-Date: Fri, 15 Apr 2016 10:30:32 +0800
-Subject: [PATCH] libata: zpodd: initialize sense_key
-
-The sense_key could be uninitialized after the call to atapi_eh_tur so
-initialize it beforehand.
-
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Aaron Lu <aaron.lu@intel.com>
----
- drivers/ata/libata-zpodd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/ata/libata-zpodd.c b/drivers/ata/libata-zpodd.c
-index f3a65a3140d3..b0d3ea5f4769 100644
---- a/drivers/ata/libata-zpodd.c
-+++ b/drivers/ata/libata-zpodd.c
-@@ -88,7 +88,7 @@ static enum odd_mech_type zpodd_get_mech_type(struct ata_device *dev)
- /* Test if ODD is zero power ready by sense code */
- static bool zpready(struct ata_device *dev)
- {
--	u8 sense_key, *sense_buf;
-+	u8 sense_key = 0, *sense_buf;
- 	unsigned int ret, asc, ascq, add_len;
- 	struct zpodd *zpodd = dev->zpodd;
- 
--- 
-2.5.5
-
+Hannes
+--=20
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
