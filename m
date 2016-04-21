@@ -1,7 +1,7 @@
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1 04/23] ata: sata_dwc_460ex: burst size must be in items not bytes
-Date: Thu, 21 Apr 2016 21:15:25 +0300
-Message-ID: <1461262544-115408-5-git-send-email-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 08/23] ata: sata_dwc_460ex: don't call ata_sff_qc_issue() on DMA commands
+Date: Thu, 21 Apr 2016 21:15:29 +0300
+Message-ID: <1461262544-115408-9-git-send-email-andriy.shevchenko@linux.intel.com>
 References: <1461262544-115408-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1461262544-115408-1-git-send-email-andriy.shevchenko@linux.intel.com>
@@ -10,38 +10,33 @@ To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Rob Herring <robh+dt@k
 Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 List-Id: linux-ide@vger.kernel.org
 
-The burst size as defined by DMAengine API is in items of address width. Derive
-burst size from AHB_DMA_BRST_DFLT (64 bytes) by dividing it to
-DMA_SLAVE_BUSWIDTH_4_BYTES (4 bytes) that gives us 16 items.
+ata_sff_qc_issue() can't handle DMA commands and thus we have to avoid it for
+them. Do call ata_bmdma_qc_issue() instead for this case.
 
+Suggested-by: Christian Lamparter <chunkeey@googlemail.com>
 Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/ata/sata_dwc_460ex.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/ata/sata_dwc_460ex.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index aee8873..4cac27d 100644
+index 038e5fb..845c35d 100644
 --- a/drivers/ata/sata_dwc_460ex.c
 +++ b/drivers/ata/sata_dwc_460ex.c
-@@ -65,7 +65,7 @@
- #define NO_IRQ		0
- #endif
+@@ -1061,10 +1061,12 @@ static unsigned int sata_dwc_qc_issue(struct ata_queued_cmd *qc)
+ 			__func__, tag, qc->ap->link.sactive, sactive);
  
--#define AHB_DMA_BRST_DFLT	64	/* 16 data items burst length*/
-+#define AHB_DMA_BRST_DFLT	64	/* 16 data items burst length */
- 
- enum {
- 	SATA_DWC_MAX_PORTS = 1,
-@@ -318,8 +318,8 @@ static struct dma_async_tx_descriptor *dma_dwc_xfer_setup(struct ata_queued_cmd
+ 		ap->ops->sff_tf_load(ap, &qc->tf);
+-		sata_dwc_exec_command_by_tag(ap, &qc->tf, qc->tag,
++		sata_dwc_exec_command_by_tag(ap, &qc->tf, tag,
+ 					     SATA_DWC_CMD_ISSUED_PEND);
++	} else if (ata_is_dma(qc->tf.protocol)) {
++		return ata_bmdma_qc_issue(qc);
+ 	} else {
+-		ata_sff_qc_issue(qc);
++		return ata_sff_qc_issue(qc);
  	}
- 
- 	sconf.direction = qc->dma_dir;
--	sconf.src_maxburst = AHB_DMA_BRST_DFLT;
--	sconf.dst_maxburst = AHB_DMA_BRST_DFLT;
-+	sconf.src_maxburst = AHB_DMA_BRST_DFLT / 4;	/* in items */
-+	sconf.dst_maxburst = AHB_DMA_BRST_DFLT / 4;	/* in items */
- 	sconf.src_addr_width = DMA_SLAVE_BUSWIDTH_4_BYTES;
- 	sconf.dst_addr_width = DMA_SLAVE_BUSWIDTH_4_BYTES;
- 
+ 	return 0;
+ }
 -- 
 2.8.0.rc3
