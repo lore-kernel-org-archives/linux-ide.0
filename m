@@ -1,63 +1,83 @@
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1 20/23] ata: sata_dwc_460ex: tidy up sata_dwc_clear_dmacr()
-Date: Thu, 21 Apr 2016 21:15:41 +0300
-Message-ID: <1461262544-115408-21-git-send-email-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 17/23] ata: sata_dwc_460ex: supply physical address of FIFO to DMA
+Date: Thu, 21 Apr 2016 21:15:38 +0300
+Message-ID: <1461262544-115408-18-git-send-email-andriy.shevchenko@linux.intel.com>
 References: <1461262544-115408-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:39081 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754087AbcDUSP7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 21 Apr 2016 14:15:59 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1461262544-115408-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, Christian Lamparter <chunkeey@googlemail.com>, =?UTF-8?q?M=C3=A5ns=20Rullg=C3=A5rd?= <mans@mansr.com>, Julian Margetson <runaway@candw.ms>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+List-Id: linux-ide@vger.kernel.org
 
-From: Mans Rullgard <mans@mansr.com>
+DMA operates with physical addresses which is not exactly the same as ioremap()
+returns.
 
-This consolidates the reads from each of the if/else branches
-to one place making the code a lot nicer to look at.
+Introduce variable to keep physical address of the SATA FIFO register and
+supply it when prepare DMA channel.
 
-Signed-off-by: Mans Rullgard <mans@mansr.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/ata/sata_dwc_460ex.c | 14 ++++++--------
- 1 file changed, 6 insertions(+), 8 deletions(-)
+ drivers/ata/sata_dwc_460ex.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index 2029f43..0ef72e4 100644
+index 42248b2..7810405 100644
 --- a/drivers/ata/sata_dwc_460ex.c
 +++ b/drivers/ata/sata_dwc_460ex.c
-@@ -729,15 +729,14 @@ DONE:
- static void sata_dwc_clear_dmacr(struct sata_dwc_device_port *hsdevp, u8 tag)
- {
- 	struct sata_dwc_device *hsdev = HSDEV_FROM_HSDEVP(hsdevp);
-+	u32 dmacr = sata_dwc_readl(&hsdev->sata_dwc_regs->dmacr);
+@@ -100,7 +100,7 @@ struct sata_dwc_regs {
+ 	u32 versionr;		/* Version Register */
+ 	u32 idr;		/* ID Register */
+ 	u32 unimpl[192];	/* Unimplemented */
+-	u32 dmadr[256];	/* FIFO Locations in DMA Mode */
++	u32 dmadr[256];		/* FIFO Locations in DMA Mode */
+ };
  
- 	if (hsdevp->dma_pending[tag] == SATA_DWC_DMA_PENDING_RX) {
--		sata_dwc_writel(&hsdev->sata_dwc_regs->dmacr,
--			SATA_DWC_DMACR_RX_CLEAR(
--				sata_dwc_readl(&hsdev->sata_dwc_regs->dmacr)));
-+		dmacr = SATA_DWC_DMACR_RX_CLEAR(dmacr);
-+		sata_dwc_writel(&hsdev->sata_dwc_regs->dmacr, dmacr);
- 	} else if (hsdevp->dma_pending[tag] == SATA_DWC_DMA_PENDING_TX) {
--		sata_dwc_writel(&hsdev->sata_dwc_regs->dmacr,
--			SATA_DWC_DMACR_TX_CLEAR(
--				sata_dwc_readl(&hsdev->sata_dwc_regs->dmacr)));
-+		dmacr = SATA_DWC_DMACR_TX_CLEAR(dmacr);
-+		sata_dwc_writel(&hsdev->sata_dwc_regs->dmacr, dmacr);
- 	} else {
- 		/*
- 		 * This should not happen, it indicates the driver is out of
-@@ -745,8 +744,7 @@ static void sata_dwc_clear_dmacr(struct sata_dwc_device_port *hsdevp, u8 tag)
- 		 */
- 		dev_err(hsdev->dev,
- 			"%s DMA protocol RX and TX DMA not pending tag=0x%02x pending=%d dmacr: 0x%08x\n",
--			__func__, tag, hsdevp->dma_pending[tag],
--			sata_dwc_readl(&hsdev->sata_dwc_regs->dmacr));
-+			__func__, tag, hsdevp->dma_pending[tag], dmacr);
- 		sata_dwc_writel(&hsdev->sata_dwc_regs->dmacr,
- 				SATA_DWC_DMACR_TXRXCH_CLEAR);
+ enum {
+@@ -149,6 +149,7 @@ struct sata_dwc_device {
+ 	u32			sactive_issued;
+ 	u32			sactive_queued;
+ 	struct phy		*phy;
++	phys_addr_t		dmadr;
+ #ifdef CONFIG_SATA_DWC_OLD_DMA
+ 	struct dw_dma_chip	*dma;
+ #endif
+@@ -380,15 +381,14 @@ static struct dma_async_tx_descriptor *dma_dwc_xfer_setup(struct ata_queued_cmd
+ 	struct ata_port *ap = qc->ap;
+ 	struct sata_dwc_device_port *hsdevp = HSDEVP_FROM_AP(ap);
+ 	struct sata_dwc_device *hsdev = HSDEV_FROM_AP(ap);
+-	dma_addr_t addr = (dma_addr_t)&hsdev->sata_dwc_regs->dmadr;
+ 	struct dma_slave_config sconf;
+ 	struct dma_async_tx_descriptor *desc;
+ 
+ 	if (qc->dma_dir == DMA_DEV_TO_MEM) {
+-		sconf.src_addr = addr;
++		sconf.src_addr = hsdev->dmadr;
+ 		sconf.device_fc = false;
+ 	} else {	/* DMA_MEM_TO_DEV */
+-		sconf.dst_addr = addr;
++		sconf.dst_addr = hsdev->dmadr;
+ 		sconf.device_fc = false;
  	}
+ 
+@@ -411,8 +411,8 @@ static struct dma_async_tx_descriptor *dma_dwc_xfer_setup(struct ata_queued_cmd
+ 	desc->callback = dma_dwc_xfer_done;
+ 	desc->callback_param = hsdev;
+ 
+-	dev_dbg(hsdev->dev, "%s sg: 0x%p, count: %d addr: %pad\n",
+-		__func__, qc->sg, qc->n_elem, &addr);
++	dev_dbg(hsdev->dev, "%s sg: 0x%p, count: %d addr: %pa\n", __func__,
++		qc->sg, qc->n_elem, &hsdev->dmadr);
+ 
+ 	return desc;
+ }
+@@ -1249,6 +1249,7 @@ static int sata_dwc_probe(struct platform_device *ofdev)
+ 
+ 	/* Synopsys DWC SATA specific Registers */
+ 	hsdev->sata_dwc_regs = base + SATA_DWC_REG_OFFSET;
++	hsdev->dmadr = res->start + SATA_DWC_REG_OFFSET + offsetof(struct sata_dwc_regs, dmadr);
+ 
+ 	/* Setup port */
+ 	host->ports[0]->ioaddr.cmd_addr = base;
 -- 
 2.8.0.rc3
-
