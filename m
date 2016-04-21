@@ -1,63 +1,63 @@
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1 13/23] ata: sata_dwc_460ex: remove empty libata callback
-Date: Thu, 21 Apr 2016 21:15:34 +0300
-Message-ID: <1461262544-115408-14-git-send-email-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 20/23] ata: sata_dwc_460ex: tidy up sata_dwc_clear_dmacr()
+Date: Thu, 21 Apr 2016 21:15:41 +0300
+Message-ID: <1461262544-115408-21-git-send-email-andriy.shevchenko@linux.intel.com>
 References: <1461262544-115408-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:39081 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754087AbcDUSP7 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Thu, 21 Apr 2016 14:15:59 -0400
 In-Reply-To: <1461262544-115408-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, Christian Lamparter <chunkeey@googlemail.com>, =?UTF-8?q?M=C3=A5ns=20Rullg=C3=A5rd?= <mans@mansr.com>, Julian Margetson <runaway@candw.ms>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, Christian Lamparter <chunkeey@googlemail.com>, =?UTF-8?q?M=C3=A5ns=20Rullg=C3=A5rd?= <mans@mansr.com>, Julian Margetson <runaway@candw.ms>
 
 From: Mans Rullgard <mans@mansr.com>
 
-The sata_dwc_qc_prep() does nothing.  Use the default ata_noop_qc_prep
-instead.
+This consolidates the reads from each of the if/else branches
+to one place making the code a lot nicer to look at.
 
 Signed-off-by: Mans Rullgard <mans@mansr.com>
 ---
- drivers/ata/sata_dwc_460ex.c | 22 ----------------------
- 1 file changed, 22 deletions(-)
+ drivers/ata/sata_dwc_460ex.c | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index 5bec790..571ecd1 100644
+index 2029f43..0ef72e4 100644
 --- a/drivers/ata/sata_dwc_460ex.c
 +++ b/drivers/ata/sata_dwc_460ex.c
-@@ -1134,27 +1134,6 @@ static unsigned int sata_dwc_qc_issue(struct ata_queued_cmd *qc)
- 	return 0;
- }
- 
--/*
-- * Function : sata_dwc_qc_prep
-- * arguments : ata_queued_cmd *qc
-- * Return value : None
-- * qc_prep for a particular queued command
-- */
--
--static void sata_dwc_qc_prep(struct ata_queued_cmd *qc)
--{
--	if ((qc->dma_dir == DMA_NONE) || (qc->tf.protocol == ATA_PROT_PIO))
--		return;
--
--#ifdef DEBUG_NCQ
--	if (qc->tag > 0)
--		dev_info(qc->ap->dev, "%s: qc->tag=%d ap->active_tag=0x%08x\n",
--			 __func__, qc->tag, qc->ap->link.active_tag);
--
--	return ;
--#endif
--}
--
- static void sata_dwc_error_handler(struct ata_port *ap)
+@@ -729,15 +729,14 @@ DONE:
+ static void sata_dwc_clear_dmacr(struct sata_dwc_device_port *hsdevp, u8 tag)
  {
- 	ata_sff_error_handler(ap);
-@@ -1214,7 +1193,6 @@ static struct ata_port_operations sata_dwc_ops = {
- 	.error_handler		= sata_dwc_error_handler,
- 	.hardreset		= sata_dwc_hardreset,
+ 	struct sata_dwc_device *hsdev = HSDEV_FROM_HSDEVP(hsdevp);
++	u32 dmacr = sata_dwc_readl(&hsdev->sata_dwc_regs->dmacr);
  
--	.qc_prep		= sata_dwc_qc_prep,
- 	.qc_issue		= sata_dwc_qc_issue,
- 
- 	.scr_read		= sata_dwc_scr_read,
+ 	if (hsdevp->dma_pending[tag] == SATA_DWC_DMA_PENDING_RX) {
+-		sata_dwc_writel(&hsdev->sata_dwc_regs->dmacr,
+-			SATA_DWC_DMACR_RX_CLEAR(
+-				sata_dwc_readl(&hsdev->sata_dwc_regs->dmacr)));
++		dmacr = SATA_DWC_DMACR_RX_CLEAR(dmacr);
++		sata_dwc_writel(&hsdev->sata_dwc_regs->dmacr, dmacr);
+ 	} else if (hsdevp->dma_pending[tag] == SATA_DWC_DMA_PENDING_TX) {
+-		sata_dwc_writel(&hsdev->sata_dwc_regs->dmacr,
+-			SATA_DWC_DMACR_TX_CLEAR(
+-				sata_dwc_readl(&hsdev->sata_dwc_regs->dmacr)));
++		dmacr = SATA_DWC_DMACR_TX_CLEAR(dmacr);
++		sata_dwc_writel(&hsdev->sata_dwc_regs->dmacr, dmacr);
+ 	} else {
+ 		/*
+ 		 * This should not happen, it indicates the driver is out of
+@@ -745,8 +744,7 @@ static void sata_dwc_clear_dmacr(struct sata_dwc_device_port *hsdevp, u8 tag)
+ 		 */
+ 		dev_err(hsdev->dev,
+ 			"%s DMA protocol RX and TX DMA not pending tag=0x%02x pending=%d dmacr: 0x%08x\n",
+-			__func__, tag, hsdevp->dma_pending[tag],
+-			sata_dwc_readl(&hsdev->sata_dwc_regs->dmacr));
++			__func__, tag, hsdevp->dma_pending[tag], dmacr);
+ 		sata_dwc_writel(&hsdev->sata_dwc_regs->dmacr,
+ 				SATA_DWC_DMACR_TXRXCH_CLEAR);
+ 	}
 -- 
 2.8.0.rc3
+
