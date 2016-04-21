@@ -1,240 +1,58 @@
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1 11/23] ata: sata_dwc_460ex: get rid of global data
-Date: Thu, 21 Apr 2016 21:15:32 +0300
-Message-ID: <1461262544-115408-12-git-send-email-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 02/23] ata: sata_dwc_460ex: fix crash on offline links
+ without an attached drive
+Date: Thu, 21 Apr 2016 21:15:23 +0300
+Message-ID: <1461262544-115408-3-git-send-email-andriy.shevchenko@linux.intel.com>
 References: <1461262544-115408-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 In-Reply-To: <1461262544-115408-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, Christian Lamparter <chunkeey@googlemail.com>, =?UTF-8?q?M=C3=A5ns=20Rullg=C3=A5rd?= <mans@mansr.com>, Julian Margetson <runaway@candw.ms>
 List-Id: linux-ide@vger.kernel.org
 
-From: Mans Rullgard <mans@mansr.com>
-
-This moves all global data into the driver private struct, thus
-permitting multiple devices of this type to be used.
-
-The core_scr_read/write() functions are replaced with equivalent
-calls to the existing sata_dwc_scr_read/write().
-
-Signed-off-by: Mans Rullgard <mans@mansr.com>
----
- drivers/ata/sata_dwc_460ex.c | 79 ++++++++++++++++----------------------------
- 1 file changed, 29 insertions(+), 50 deletions(-)
-
-diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index 4d23fbd..8e7c1b0 100644
---- a/drivers/ata/sata_dwc_460ex.c
-+++ b/drivers/ata/sata_dwc_460ex.c
-@@ -146,6 +146,8 @@ struct sata_dwc_device {
- 	struct ata_host		*host;
- 	u8 __iomem		*reg_base;
- 	struct sata_dwc_regs	*sata_dwc_regs;	/* DW Synopsys SATA specific */
-+	u32			sactive_issued;
-+	u32			sactive_queued;
- 	struct phy		*phy;
- #ifdef CONFIG_SATA_DWC_OLD_DMA
- 	struct dw_dma_chip	*dma;
-@@ -190,14 +192,6 @@ enum {
- 	SATA_DWC_DMA_PENDING_RX		= 2,
- };
- 
--struct sata_dwc_host_priv {
--	void	__iomem	 *scr_addr_sstatus;
--	u32	sata_dwc_sactive_issued ;
--	u32	sata_dwc_sactive_queued ;
--};
--
--static struct sata_dwc_host_priv host_pvt;
--
- /*
-  * Prototypes
-  */
-@@ -457,21 +451,11 @@ static int sata_dwc_scr_write(struct ata_link *link, unsigned int scr, u32 val)
- 	return 0;
- }
- 
--static u32 core_scr_read(unsigned int scr)
--{
--	return in_le32(host_pvt.scr_addr_sstatus + (scr * 4));
--}
--
--static void core_scr_write(unsigned int scr, u32 val)
--{
--	out_le32(host_pvt.scr_addr_sstatus + (scr * 4), val);
--}
--
--static void clear_serror(void)
-+static void clear_serror(struct ata_port *ap)
- {
- 	u32 val;
--	val = core_scr_read(SCR_ERROR);
--	core_scr_write(SCR_ERROR, val);
-+	sata_dwc_scr_read(&ap->link, SCR_ERROR, &val);
-+	sata_dwc_scr_write(&ap->link, SCR_ERROR, val);
- }
- 
- static void clear_interrupt_bit(struct sata_dwc_device *hsdev, u32 bit)
-@@ -498,7 +482,7 @@ static void sata_dwc_error_intr(struct ata_port *ap,
- 
- 	ata_ehi_clear_desc(ehi);
- 
--	serror = core_scr_read(SCR_ERROR);
-+	sata_dwc_scr_read(&ap->link, SCR_ERROR, &serror);
- 	status = ap->ops->sff_check_status(ap);
- 
- 	tag = ap->link.active_tag;
-@@ -509,7 +493,7 @@ static void sata_dwc_error_intr(struct ata_port *ap,
- 		hsdevp->dma_pending[tag], hsdevp->cmd_issued[tag]);
- 
- 	/* Clear error register and interrupt bit */
--	clear_serror();
-+	clear_serror(ap);
- 	clear_interrupt_bit(hsdev, SATA_DWC_INTPR_ERR);
- 
- 	/* This is the only error happening now.  TODO check for exact error */
-@@ -548,7 +532,7 @@ static irqreturn_t sata_dwc_isr(int irq, void *dev_instance)
- 	int handled, num_processed, port = 0;
- 	uint intpr, sactive, sactive2, tag_mask;
- 	struct sata_dwc_device_port *hsdevp;
--	host_pvt.sata_dwc_sactive_issued = 0;
-+	hsdev->sactive_issued = 0;
- 
- 	spin_lock_irqsave(&host->lock, flags);
- 
-@@ -577,7 +561,7 @@ static irqreturn_t sata_dwc_isr(int irq, void *dev_instance)
- 		if (hsdevp->cmd_issued[tag] != SATA_DWC_CMD_ISSUED_PEND)
- 			dev_warn(ap->dev, "CMD tag=%d not pending?\n", tag);
- 
--		host_pvt.sata_dwc_sactive_issued |= qcmd_tag_to_mask(tag);
-+		hsdev->sactive_issued |= qcmd_tag_to_mask(tag);
- 
- 		qc = ata_qc_from_tag(ap, tag);
- 		/*
-@@ -591,11 +575,11 @@ static irqreturn_t sata_dwc_isr(int irq, void *dev_instance)
- 		handled = 1;
- 		goto DONE;
- 	}
--	sactive = core_scr_read(SCR_ACTIVE);
--	tag_mask = (host_pvt.sata_dwc_sactive_issued | sactive) ^ sactive;
-+	sata_dwc_scr_read(&ap->link, SCR_ACTIVE, &sactive);
-+	tag_mask = (hsdev->sactive_issued | sactive) ^ sactive;
- 
- 	/* If no sactive issued and tag_mask is zero then this is not NCQ */
--	if (host_pvt.sata_dwc_sactive_issued == 0 && tag_mask == 0) {
-+	if (hsdev->sactive_issued == 0 && tag_mask == 0) {
- 		if (ap->link.active_tag == ATA_TAG_POISON)
- 			tag = 0;
- 		else
-@@ -665,22 +649,19 @@ DRVSTILLBUSY:
- 	 */
- 
- 	 /* process completed commands */
--	sactive = core_scr_read(SCR_ACTIVE);
--	tag_mask = (host_pvt.sata_dwc_sactive_issued | sactive) ^ sactive;
-+	sata_dwc_scr_read(&ap->link, SCR_ACTIVE, &sactive);
-+	tag_mask = (hsdev->sactive_issued | sactive) ^ sactive;
- 
--	if (sactive != 0 || (host_pvt.sata_dwc_sactive_issued) > 1 || \
--							tag_mask > 1) {
-+	if (sactive != 0 || hsdev->sactive_issued > 1 || tag_mask > 1) {
- 		dev_dbg(ap->dev,
- 			"%s NCQ:sactive=0x%08x  sactive_issued=0x%08x tag_mask=0x%08x\n",
--			__func__, sactive, host_pvt.sata_dwc_sactive_issued,
--			tag_mask);
-+			__func__, sactive, hsdev->sactive_issued, tag_mask);
- 	}
- 
--	if ((tag_mask | (host_pvt.sata_dwc_sactive_issued)) != \
--					(host_pvt.sata_dwc_sactive_issued)) {
-+	if ((tag_mask | hsdev->sactive_issued) != hsdev->sactive_issued) {
- 		dev_warn(ap->dev,
--			 "Bad tag mask?  sactive=0x%08x (host_pvt.sata_dwc_sactive_issued)=0x%08x  tag_mask=0x%08x\n",
--			 sactive, host_pvt.sata_dwc_sactive_issued, tag_mask);
-+			 "Bad tag mask?  sactive=0x%08x sactive_issued=0x%08x  tag_mask=0x%08x\n",
-+			 sactive, hsdev->sactive_issued, tag_mask);
- 	}
- 
- 	/* read just to clear ... not bad if currently still busy */
-@@ -742,7 +723,7 @@ STILLBUSY:
- 	 * we were processing --we read status as part of processing a completed
- 	 * command).
- 	 */
--	sactive2 = core_scr_read(SCR_ACTIVE);
-+	sata_dwc_scr_read(&ap->link, SCR_ACTIVE, &sactive2);
- 	if (sactive2 != sactive) {
- 		dev_dbg(ap->dev,
- 			"More completed - sactive=0x%x sactive2=0x%x\n",
-@@ -828,8 +809,9 @@ static int sata_dwc_qc_complete(struct ata_port *ap, struct ata_queued_cmd *qc,
- 	u8 status = 0;
- 	u32 mask = 0x0;
- 	u8 tag = qc->tag;
-+	struct sata_dwc_device *hsdev = HSDEV_FROM_AP(ap);
- 	struct sata_dwc_device_port *hsdevp = HSDEVP_FROM_AP(ap);
--	host_pvt.sata_dwc_sactive_queued = 0;
-+	hsdev->sactive_queued = 0;
- 	dev_dbg(ap->dev, "%s checkstatus? %x\n", __func__, check_status);
- 
- 	if (hsdevp->dma_pending[tag] == SATA_DWC_DMA_PENDING_TX)
-@@ -842,10 +824,8 @@ static int sata_dwc_qc_complete(struct ata_port *ap, struct ata_queued_cmd *qc,
- 
- 	/* clear active bit */
- 	mask = (~(qcmd_tag_to_mask(tag)));
--	host_pvt.sata_dwc_sactive_queued = (host_pvt.sata_dwc_sactive_queued) \
--						& mask;
--	host_pvt.sata_dwc_sactive_issued = (host_pvt.sata_dwc_sactive_issued) \
--						& mask;
-+	hsdev->sactive_queued = hsdev->sactive_queued & mask;
-+	hsdev->sactive_issued = hsdev->sactive_issued & mask;
- 	ata_qc_complete(qc);
- 	return 0;
- }
-@@ -974,7 +954,7 @@ static int sata_dwc_port_start(struct ata_port *ap)
- 	}
- 
- 	/* Clear any error bits before libata starts issuing commands */
--	clear_serror();
-+	clear_serror(ap);
- 	ap->private_data = hsdevp;
- 	dev_dbg(ap->dev, "%s: done\n", __func__);
- 	return 0;
-@@ -1025,7 +1005,7 @@ static void sata_dwc_exec_command_by_tag(struct ata_port *ap,
- 	 * managed SError register for the disk needs to be done before the
- 	 * task file is loaded.
- 	 */
--	clear_serror();
-+	clear_serror(ap);
- 	ata_sff_exec_command(ap, tf);
- }
- 
-@@ -1078,7 +1058,7 @@ static void sata_dwc_bmdma_start_by_tag(struct ata_queued_cmd *qc, u8 tag)
- 	sata_dwc_tf_dump(ap, &qc->tf);
- 
- 	if (start_dma) {
--		reg = core_scr_read(SCR_ERROR);
-+		sata_dwc_scr_read(&ap->link, SCR_ERROR, &reg);
- 		if (reg & SATA_DWC_SERROR_ERR_BITS) {
- 			dev_err(ap->dev, "%s: ****** SError=0x%08x ******\n",
- 				__func__, reg);
-@@ -1140,9 +1120,9 @@ static unsigned int sata_dwc_qc_issue(struct ata_queued_cmd *qc)
- 	}
- 
- 	if (ata_is_ncq(qc->tf.protocol)) {
--		sactive = core_scr_read(SCR_ACTIVE);
-+		sata_dwc_scr_read(&ap->link, SCR_ACTIVE, &sactive);
- 		sactive |= (0x00000001 << tag);
--		core_scr_write(SCR_ACTIVE, sactive);
-+		sata_dwc_scr_write(&ap->link, SCR_ACTIVE, sactive);
- 
- 		dev_dbg(qc->ap->dev,
- 			"%s: tag=%d ap->link.sactive = 0x%08x sactive=0x%08x\n",
-@@ -1300,7 +1280,6 @@ static int sata_dwc_probe(struct platform_device *ofdev)
- 	/* Setup port */
- 	host->ports[0]->ioaddr.cmd_addr = base;
- 	host->ports[0]->ioaddr.scr_addr = base + SATA_DWC_SCR_OFFSET;
--	host_pvt.scr_addr_sstatus = base + SATA_DWC_SCR_OFFSET;
- 	sata_dwc_setup_port(&host->ports[0]->ioaddr, (unsigned long)base);
- 
- 	/* Read the ID and Version Registers */
--- 
-2.8.0.rc3
+RnJvbTogQ2hyaXN0aWFuIExhbXBhcnRlciA8Y2h1bmtlZXlAZ29vZ2xlbWFpbC5jb20+CgpUaGlz
+IHBhdGNoIGZpeGVzIE1hY2hpbmUgQ2hlY2sgIkRhdGEgV3JpdGUgUExCIEVycm9yIiB3aGljaCBo
+YXBwZW5zCndoZW4gbGliYXRhLXNmZidzIGF0YV9zZmZfZGV2X3NlbGVjdCBpcyB0cnlpbmcgdG8g
+d3JpdGUgaW50byB0aGUKZGV2aWNlX2FkZHIgaW4gb3JkZXIgdG8gc2VsZWN0IGEgZHJpdmUuIEhv
+d2V2ZXIsIFNBVEEgaGFzIG5vIG1hc3RlcgpvciBzbGF2ZSBkZXZpY2VzIGxpa2UgdGhlIG9sZCBB
+VEEgQnVzLCB0aGVyZWZvcmUgc2VsZWN0aW5nIGEKZGlmZmVyZW50IGRyaXZlIGlzIGtpbmQgb2Yg
+cG9pbnRsZXNzLgoKRGF0YSBXcml0ZSBQTEIgRXJyb3IKT29wczogTWFjaGluZSBjaGVjaywgc2ln
+OiA3IFsjMV0KUG93ZXJQQyA0NHggUGxhdGZvcm0KTW9kdWxlcyBsaW5rZWQgaW46CkNQVTogMCBQ
+SUQ6IDUwOCBDb21tOiBzY3NpX2VoXzAgTm90IHRhaW50ZWQgNC42LjAtcmMzLW5leHQtMjAxNjA0
+MTIrICMxMApbLi4uXQpOSVAgW2MwMjdlODIwXSBhdGFfc2ZmX2Rldl9zZWxlY3QrMHgzYy8weDQ0
+CkxSIFtjMDI3ZTgxMF0gYXRhX3NmZl9kZXZfc2VsZWN0KzB4MmMvMHg0NApDYWxsIFRyYWNlOgpb
+Y2VjMzFjZDBdIFtjMDI3ZGEwMF0gYXRhX3NmZl9wb3N0cmVzZXQrMHg0MC8weGI0ICh1bnJlbGlh
+YmxlKQpbY2VjMzFjZTBdIFtjMDI3YTAzY10gYXRhX2VoX3Jlc2V0KzB4NWNjLzB4OTI4CltjZWMz
+MWQ2MF0gW2MwMjdhODQwXSBhdGFfZWhfcmVjb3ZlcisweDMzMC8weDEwYmMKW2NlYzMxZGYwXSBb
+YzAyN2JhZTBdIGF0YV9kb19laCsweDRjLzB4YTQKWy4uLl0KClNpZ25lZC1vZmYtYnk6IENocmlz
+dGlhbiBMYW1wYXJ0ZXIgPGNodW5rZWV5QGdvb2dsZW1haWwuY29tPgotLS0KIGRyaXZlcnMvYXRh
+L3NhdGFfZHdjXzQ2MGV4LmMgfCA3ICsrKysrKysKIDEgZmlsZSBjaGFuZ2VkLCA3IGluc2VydGlv
+bnMoKykKCmRpZmYgLS1naXQgYS9kcml2ZXJzL2F0YS9zYXRhX2R3Y180NjBleC5jIGIvZHJpdmVy
+cy9hdGEvc2F0YV9kd2NfNDYwZXguYwppbmRleCA1MjEzZTIyLi43Zjk1Mzg5IDEwMDY0NAotLS0g
+YS9kcml2ZXJzL2F0YS9zYXRhX2R3Y180NjBleC5jCisrKyBiL2RyaXZlcnMvYXRhL3NhdGFfZHdj
+XzQ2MGV4LmMKQEAgLTExMzQsNiArMTEzNCwxMSBAQCBzdGF0aWMgaW50IHNhdGFfZHdjX2hhcmRy
+ZXNldChzdHJ1Y3QgYXRhX2xpbmsgKmxpbmssIHVuc2lnbmVkIGludCAqY2xhc3MsCiAJcmV0dXJu
+IHJldDsKIH0KIAorc3RhdGljIHZvaWQgc2F0YV9kd2NfZGV2X3NlbGVjdChzdHJ1Y3QgYXRhX3Bv
+cnQgKmFwLCB1bnNpZ25lZCBpbnQgZGV2aWNlKQoreworCS8qIFNBVEEgRFdDIGlzIG1hc3RlciBv
+bmx5ICovCit9CisKIC8qCiAgKiBzY3NpIG1pZC1sYXllciBhbmQgbGliYXRhIGludGVyZmFjZSBz
+dHJ1Y3R1cmVzCiAgKi8KQEAgLTExNjQsNiArMTE2OSw4IEBAIHN0YXRpYyBzdHJ1Y3QgYXRhX3Bv
+cnRfb3BlcmF0aW9ucyBzYXRhX2R3Y19vcHMgPSB7CiAJLnBvcnRfc3RhcnQJCT0gc2F0YV9kd2Nf
+cG9ydF9zdGFydCwKIAkucG9ydF9zdG9wCQk9IHNhdGFfZHdjX3BvcnRfc3RvcCwKIAorCS5zZmZf
+ZGV2X3NlbGVjdAkJPSBzYXRhX2R3Y19kZXZfc2VsZWN0LAorCiAJLmJtZG1hX3NldHVwCQk9IHNh
+dGFfZHdjX2JtZG1hX3NldHVwLAogCS5ibWRtYV9zdGFydAkJPSBzYXRhX2R3Y19ibWRtYV9zdGFy
+dCwKIH07Ci0tIAoyLjguMC5yYzMKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fCkxpbnV4cHBjLWRldiBtYWlsaW5nIGxpc3QKTGludXhwcGMtZGV2QGxpc3Rz
+Lm96bGFicy5vcmcKaHR0cHM6Ly9saXN0cy5vemxhYnMub3JnL2xpc3RpbmZvL2xpbnV4cHBjLWRl
+dg==
