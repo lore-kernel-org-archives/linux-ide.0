@@ -1,51 +1,100 @@
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1 23/23] powerpc/4xx: Device tree update for the 460ex DWC SATA
-Date: Thu, 21 Apr 2016 21:15:44 +0300
-Message-ID: <1461262544-115408-24-git-send-email-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 01/23] ata: sata_dwc_460ex: remove incorrect locking
+Date: Thu, 21 Apr 2016 21:15:22 +0300
+Message-ID: <1461262544-115408-2-git-send-email-andriy.shevchenko@linux.intel.com>
 References: <1461262544-115408-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 In-Reply-To: <1461262544-115408-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, Christian Lamparter <chunkeey@googlemail.com>, =?UTF-8?q?M=C3=A5ns=20Rullg=C3=A5rd?= <mans@mansr.com>, Julian Margetson <runaway@candw.ms>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 List-Id: linux-ide@vger.kernel.org
 
-Device tree update for the Applied micro processor 460ex on-chip SATA to use
-"dmas" property.
-
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- arch/powerpc/boot/dts/canyonlands.dts | 15 ++++++++++++---
- 1 file changed, 12 insertions(+), 3 deletions(-)
-
-diff --git a/arch/powerpc/boot/dts/canyonlands.dts b/arch/powerpc/boot/dts/canyonlands.dts
-index 3dc75de..549c24c 100644
---- a/arch/powerpc/boot/dts/canyonlands.dts
-+++ b/arch/powerpc/boot/dts/canyonlands.dts
-@@ -190,12 +190,21 @@
- 					 /* DMA */ 0x2 &UIC0 0xc 0x4>;
- 		};
- 
-+		AHBDMA: dma@bffd0800 {
-+			compatible = "snps,dma-spear1340";
-+			reg = <4 0xbffd0800 0x400>;
-+			interrupt-parent = <&UIC3>;
-+			interrupts = <0x5 0x4>;
-+			#dma-cells = <3>;
-+		};
-+
- 		SATA0: sata@bffd1000 {
- 			compatible = "amcc,sata-460ex";
--			reg = <4 0xbffd1000 0x800 4 0xbffd0800 0x400>;
-+			reg = <4 0xbffd1000 0x800>;
- 			interrupt-parent = <&UIC3>;
--			interrupts = <0x0 0x4       /* SATA */
--				      0x5 0x4>;     /* AHBDMA */
-+			interrupts = <0x0 0x4>;
-+			dmas = <&AHBDMA 0 1 0>;
-+			dma-names = "sata-dma";
- 		};
- 
- 		POB0: opb {
--- 
-2.8.0.rc3
+RnJvbTogTWFucyBSdWxsZ2FyZCA8bWFuc0BtYW5zci5jb20+CgpUaGlzIGxvY2sgaXMgYWxyZWFk
+eSB0YWtlbiBpbiBhdGFfc2NzaV9xdWV1ZWNtZCgpIGEgZmV3IGxldmVscyB1cCB0aGUKY2FsbCBz
+dGFjayBzbyBhdHRlbXB0aW5nIHRvIHRha2UgaXQgaGVyZSBpcyBhbiBlcnJvci4gIE1vcmVvdmVy
+LCBpdCBpcwpwb2ludGxlc3MgaW4gdGhlIGZpcnN0IHBsYWNlIHNpbmNlIGl0IG9ubHkgcHJvdGVj
+dHMgYSBzaW5nbGUsIGF0b21pYwphc3NpZ25tZW50LgoKRW5hYmxpbmcgbG9jayBkZWJ1Z2dpbmcg
+Z2l2ZXMgdGhlIGZvbGxvd2luZyBvdXRwdXQ6Cgo9PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT0KWyBJTkZPOiBwb3NzaWJsZSByZWN1cnNpdmUgbG9ja2luZyBkZXRl
+Y3RlZCBdCjQuNC4wLXJjNSsgIzE4OSBOb3QgdGFpbnRlZAotLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0Ka3dvcmtlci91MjozLzM3IGlzIHRyeWluZyB0byBhY3F1
+aXJlIGxvY2s6CiAoJigmaG9zdC0+bG9jayktPnJsb2NrKXstLi0uLi59LCBhdDogWzw5MDI4MzI5
+ND5dIHNhdGFfZHdjX2V4ZWNfY29tbWFuZF9ieV90YWcuY29uc3Rwcm9wLjE0KzB4NDQvMHg4YwoK
+YnV0IHRhc2sgaXMgYWxyZWFkeSBob2xkaW5nIGxvY2s6CiAoJigmaG9zdC0+bG9jayktPnJsb2Nr
+KXstLi0uLi59LCBhdDogWzw5MDI3NjFhYz5dIGF0YV9zY3NpX3F1ZXVlY21kKzB4MmMvMHgzMzAK
+Cm90aGVyIGluZm8gdGhhdCBtaWdodCBoZWxwIHVzIGRlYnVnIHRoaXM6CiBQb3NzaWJsZSB1bnNh
+ZmUgbG9ja2luZyBzY2VuYXJpbzoKCiAgICAgICBDUFUwCiAgICAgICAtLS0tCiAgbG9jaygmKCZo
+b3N0LT5sb2NrKS0+cmxvY2spOwogIGxvY2soJigmaG9zdC0+bG9jayktPnJsb2NrKTsKCiAqKiog
+REVBRExPQ0sgKioqCiBNYXkgYmUgZHVlIHRvIG1pc3NpbmcgbG9jayBuZXN0aW5nIG5vdGF0aW9u
+Cgo0IGxvY2tzIGhlbGQgYnkga3dvcmtlci91MjozLzM3OgogIzA6ICAoImV2ZW50c191bmJvdW5k
+Iil7LisuKy4rfSwgYXQ6IFs8OTAwM2EwYTQ+XSBwcm9jZXNzX29uZV93b3JrKzB4MTJjLzB4NDMw
+CiAjMTogICgoJmVudHJ5LT53b3JrKSl7Ky4rLisufSwgYXQ6IFs8OTAwM2EwYTQ+XSBwcm9jZXNz
+X29uZV93b3JrKzB4MTJjLzB4NDMwCiAjMjogICgmYmRldi0+YmRfbXV0ZXgpeysuKy4rLn0sIGF0
+OiBbPDkwMTFmZDU0Pl0gX19ibGtkZXZfZ2V0KzB4NTAvMHgzODAKICMzOiAgKCYoJmhvc3QtPmxv
+Y2spLT5ybG9jayl7LS4tLi4ufSwgYXQ6IFs8OTAyNzYxYWM+XSBhdGFfc2NzaV9xdWV1ZWNtZCsw
+eDJjLzB4MzMwCgpzdGFjayBiYWNrdHJhY2U6CkNQVTogMCBQSUQ6IDM3IENvbW06IGt3b3JrZXIv
+dTI6MyBOb3QgdGFpbnRlZCA0LjQuMC1yYzUrICMxODkKV29ya3F1ZXVlOiBldmVudHNfdW5ib3Vu
+ZCBhc3luY19ydW5fZW50cnlfZm4KU3RhY2sgOiA5MGIzOGUzMCAwMDAwMDAyMSAwMDAwMDAwMyA5
+YjJhNjA0MCAwMDAwMDAwMCA5MDA1ZjNmMCA5MDRmYzhkYyAwMDAwMDAyNQogICAgICAgIDkwNmI5
+NmU0IDAwMDAwMDAwIDkwNTI4NjQ4IDliMzMzNmM0IDkwNGZjOGRjIDkwMDliZjE4IDAwMDAwMDAy
+IDAwMDAwMDA0CiAgICAgICAgMDAwMDAwMDAgMDAwMDAwMDAgOWIzMzM2YzQgOWIzMzM2ZTQgOTA0
+ZmM4ZGMgOTAwM2QwNzQgMDAwMDAwMDAgOTA1MDAwMDAKICAgICAgICA5MDA1ZTczOCAwMDAwMDAw
+MCAwMDAwMDAwMCAwMDAwMDAwMCAwMDAwMDAwMCAwMDAwMDAwMCAwMDAwMDAwMCAwMDAwMDAwMAog
+ICAgICAgIDZlNjU3NjY1IDc1NWY3Mzc0IDc1NmY2MjZlIDAwMDA2NDZlIDAwMDAwMDAwIDAwMDAw
+MDAwIDliMDBjYTAwIDliMDI1MDAwCiAgICAgICAgICAuLi4KQ2FsbCBUcmFjZToKWzw5MDAwOWQ2
+Yz5dIHNob3dfc3RhY2srMHg4OC8weGE0Cls8OTAwNTc3NDQ+XSBfX2xvY2tfYWNxdWlyZSsweDFj
+ZTgvMHgyMTU0Cls8OTAwNTgzZTQ+XSBsb2NrX2FjcXVpcmUrMHg2NC8weDhjCls8OTA0NWZmMTA+
+XSBfcmF3X3NwaW5fbG9ja19pcnFzYXZlKzB4NTQvMHg3OApbPDkwMjgzMjk0Pl0gc2F0YV9kd2Nf
+ZXhlY19jb21tYW5kX2J5X3RhZy5jb25zdHByb3AuMTQrMHg0NC8weDhjCls8OTAyODM0ODQ+XSBz
+YXRhX2R3Y19xY19pc3N1ZSsweDFhOC8weDI0YwpbPDkwMjZiMzljPl0gYXRhX3FjX2lzc3VlKzB4
+MWYwLzB4NDEwCls8OTAyNzNjNmM+XSBhdGFfc2NzaV90cmFuc2xhdGUrMHhiNC8weDIwMApbPDkw
+Mjc2MjM0Pl0gYXRhX3Njc2lfcXVldWVjbWQrMHhiNC8weDMzMApbPDkwMjU4MDBjPl0gc2NzaV9k
+aXNwYXRjaF9jbWQrMHhkMC8weDEyOApbPDkwMjU5OTM0Pl0gc2NzaV9yZXF1ZXN0X2ZuKzB4NThj
+LzB4NjM4Cls8OTAxYTNlNTA+XSBfX2Jsa19ydW5fcXVldWUrMHg0MC8weDVjCls8OTAxYTgzZDQ+
+XSBibGtfcXVldWVfYmlvKzB4MjdjLzB4MjhjCls8OTAxYTU5MTQ+XSBnZW5lcmljX21ha2VfcmVx
+dWVzdCsweGYwLzB4MTg4Cls8OTAxYTVhNTQ+XSBzdWJtaXRfYmlvKzB4YTgvMHgxOTQKWzw5MDEx
+YWRjYz5dIHN1Ym1pdF9iaF93YmMuaXNyYS4yMysweDE1Yy8weDE3YwpbPDkwMTFjOTA4Pl0gYmxv
+Y2tfcmVhZF9mdWxsX3BhZ2UrMHgzZTQvMHg0MjgKWzw5MDA5ZTJlMD5dIGRvX3JlYWRfY2FjaGVf
+cGFnZSsweGFjLzB4MjEwCls8OTAwOWZkOTA+XSByZWFkX2NhY2hlX3BhZ2UrMHgxOC8weDI0Cls8
+OTAxYmJkMTg+XSByZWFkX2Rldl9zZWN0b3IrMHgzOC8weGIwCls8OTAxYmQxNzQ+XSBtc2Rvc19w
+YXJ0aXRpb24rMHhiNC8weDVjMApbPDkwMWJjYjhjPl0gY2hlY2tfcGFydGl0aW9uKzB4MTQwLzB4
+Mjc0Cls8OTAxYmJhNjA+XSByZXNjYW5fcGFydGl0aW9ucysweGEwLzB4MmIwCls8OTAxMWZmNjg+
+XSBfX2Jsa2Rldl9nZXQrMHgyNjQvMHgzODAKWzw5MDEyMDFhYz5dIGJsa2Rldl9nZXQrMHgxMjgv
+MHgzNmMKWzw5MDFiOTM3OD5dIGFkZF9kaXNrKzB4M2MwLzB4NGJjCls8OTAyNjgyNjg+XSBzZF9w
+cm9iZV9hc3luYysweDEwMC8weDIyNApbPDkwMDQzYTQ0Pl0gYXN5bmNfcnVuX2VudHJ5X2ZuKzB4
+NTAvMHgxMjQKWzw5MDAzYTExYz5dIHByb2Nlc3Nfb25lX3dvcmsrMHgxYTQvMHg0MzAKWzw5MDAz
+YTRmND5dIHdvcmtlcl90aHJlYWQrMHgxNGMvMHg0ZmMKWzw5MDA0MDhmND5dIGt0aHJlYWQrMHhk
+MC8weGU4Cls8OTAwMDQzMzg+XSByZXRfZnJvbV9rZXJuZWxfdGhyZWFkKzB4MTQvMHgxYwoKRml4
+ZXM6IDYyOTM2MDA5ZjM1YSAoIltsaWJhdGFdIEFkZCA0NjBFWCBvbi1jaGlwIFNBVEEgZHJpdmVy
+LCBzYXRhX2R3Y180NjBleCIpClNpZ25lZC1vZmYtYnk6IE1hbnMgUnVsbGdhcmQgPG1hbnNAbWFu
+c3IuY29tPgotLS0KIGRyaXZlcnMvYXRhL3NhdGFfZHdjXzQ2MGV4LmMgfCA0ICstLS0KIDEgZmls
+ZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMyBkZWxldGlvbnMoLSkKCmRpZmYgLS1naXQgYS9k
+cml2ZXJzL2F0YS9zYXRhX2R3Y180NjBleC5jIGIvZHJpdmVycy9hdGEvc2F0YV9kd2NfNDYwZXgu
+YwppbmRleCAyY2I2ZjdlLi41MjEzZTIyIDEwMDY0NAotLS0gYS9kcml2ZXJzL2F0YS9zYXRhX2R3
+Y180NjBleC5jCisrKyBiL2RyaXZlcnMvYXRhL3NhdGFfZHdjXzQ2MGV4LmMKQEAgLTkyNCwxNSAr
+OTI0LDEzIEBAIHN0YXRpYyB2b2lkIHNhdGFfZHdjX2V4ZWNfY29tbWFuZF9ieV90YWcoc3RydWN0
+IGF0YV9wb3J0ICphcCwKIAkJCQkJIHN0cnVjdCBhdGFfdGFza2ZpbGUgKnRmLAogCQkJCQkgdTgg
+dGFnLCB1MzIgY21kX2lzc3VlZCkKIHsKLQl1bnNpZ25lZCBsb25nIGZsYWdzOwogCXN0cnVjdCBz
+YXRhX2R3Y19kZXZpY2VfcG9ydCAqaHNkZXZwID0gSFNERVZQX0ZST01fQVAoYXApOwogCiAJZGV2
+X2RiZyhhcC0+ZGV2LCAiJXMgY21kKDB4JTAyeCk6ICVzIHRhZz0lZFxuIiwgX19mdW5jX18sIHRm
+LT5jb21tYW5kLAogCQlhdGFfZ2V0X2NtZF9kZXNjcmlwdCh0Zi0+Y29tbWFuZCksIHRhZyk7CiAK
+LQlzcGluX2xvY2tfaXJxc2F2ZSgmYXAtPmhvc3QtPmxvY2ssIGZsYWdzKTsKIAloc2RldnAtPmNt
+ZF9pc3N1ZWRbdGFnXSA9IGNtZF9pc3N1ZWQ7Ci0Jc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmYXAt
+Pmhvc3QtPmxvY2ssIGZsYWdzKTsKKwogCS8qCiAJICogQ2xlYXIgU0Vycm9yIGJlZm9yZSBleGVj
+dXRpbmcgYSBuZXcgY29tbWFuZC4KIAkgKiBzYXRhX2R3Y19zY3Jfd3JpdGUgYW5kIHJlYWQgY2Fu
+IG5vdCBiZSB1c2VkIGhlcmUuIENsZWFyaW5nIHRoZSBQTQotLSAKMi44LjAucmMzCgpfX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpMaW51eHBwYy1kZXYgbWFp
+bGluZyBsaXN0CkxpbnV4cHBjLWRldkBsaXN0cy5vemxhYnMub3JnCmh0dHBzOi8vbGlzdHMub3ps
+YWJzLm9yZy9saXN0aW5mby9saW51eHBwYy1kZXY=
