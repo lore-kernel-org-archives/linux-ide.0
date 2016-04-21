@@ -1,7 +1,7 @@
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1 14/23] ata: sata_dwc_460ex: get rid of some pointless casts
-Date: Thu, 21 Apr 2016 21:15:35 +0300
-Message-ID: <1461262544-115408-15-git-send-email-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 10/23] ata: sata_dwc_460ex: add phy support
+Date: Thu, 21 Apr 2016 21:15:31 +0300
+Message-ID: <1461262544-115408-11-git-send-email-andriy.shevchenko@linux.intel.com>
 References: <1461262544-115408-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1461262544-115408-1-git-send-email-andriy.shevchenko@linux.intel.com>
@@ -11,68 +11,106 @@ List-Id: linux-ide@vger.kernel.org
 
 From: Mans Rullgard <mans@mansr.com>
 
-Casting a pointer to unsigned long only to immediately cast it back
-to a pointer makes no sense.  Fix this.
-
+This adds support for powering on an optional PHY when activating the
+device.
 
 Signed-off-by: Mans Rullgard <mans@mansr.com>
 ---
- drivers/ata/sata_dwc_460ex.c | 30 +++++++++++++++---------------
- 1 file changed, 15 insertions(+), 15 deletions(-)
+ drivers/ata/Kconfig          |  1 +
+ drivers/ata/sata_dwc_460ex.c | 22 ++++++++++++++++++++++
+ 2 files changed, 23 insertions(+)
 
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index ede126d..41b0725 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -313,6 +313,7 @@ config ATA_PIIX
+ 
+ config SATA_DWC
+ 	tristate "DesignWare Cores SATA support"
++	select GENERIC_PHY
+ 	help
+ 	  This option enables support for the on-chip SATA controller of the
+ 	  AppliedMicro processor 460EX.
 diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index 571ecd1..9e8271d 100644
+index daaa8a6..4d23fbd 100644
 --- a/drivers/ata/sata_dwc_460ex.c
 +++ b/drivers/ata/sata_dwc_460ex.c
-@@ -844,26 +844,26 @@ static void sata_dwc_enable_interrupts(struct sata_dwc_device *hsdev)
- 		in_le32(&hsdev->sata_dwc_regs->errmr));
- }
+@@ -35,6 +35,7 @@
+ #include <linux/of_irq.h>
+ #include <linux/of_platform.h>
+ #include <linux/platform_device.h>
++#include <linux/phy/phy.h>
+ #include <linux/libata.h>
+ #include <linux/slab.h>
  
--static void sata_dwc_setup_port(struct ata_ioports *port, unsigned long base)
-+static void sata_dwc_setup_port(struct ata_ioports *port, void __iomem *base)
+@@ -145,6 +146,7 @@ struct sata_dwc_device {
+ 	struct ata_host		*host;
+ 	u8 __iomem		*reg_base;
+ 	struct sata_dwc_regs	*sata_dwc_regs;	/* DW Synopsys SATA specific */
++	struct phy		*phy;
+ #ifdef CONFIG_SATA_DWC_OLD_DMA
+ 	struct dw_dma_chip	*dma;
+ #endif
+@@ -948,6 +950,10 @@ static int sata_dwc_port_start(struct ata_port *ap)
+ 	if (err)
+ 		goto CLEANUP_ALLOC;
+ 
++	err = phy_power_on(hsdev->phy);
++	if (err)
++		goto CLEANUP_ALLOC;
++
+ 	for (i = 0; i < SATA_DWC_QCMD_MAX; i++)
+ 		hsdevp->cmd_issued[i] = SATA_DWC_CMD_ISSUED_NOT;
+ 
+@@ -983,11 +989,13 @@ CLEANUP:
+ static void sata_dwc_port_stop(struct ata_port *ap)
  {
--	port->cmd_addr = (void __iomem *)base + 0x00;
--	port->data_addr = (void __iomem *)base + 0x00;
-+	port->cmd_addr		= base + 0x00;
-+	port->data_addr		= base + 0x00;
+ 	struct sata_dwc_device_port *hsdevp = HSDEVP_FROM_AP(ap);
++	struct sata_dwc_device *hsdev = HSDEV_FROM_AP(ap);
  
--	port->error_addr = (void __iomem *)base + 0x04;
--	port->feature_addr = (void __iomem *)base + 0x04;
-+	port->error_addr	= base + 0x04;
-+	port->feature_addr	= base + 0x04;
+ 	dev_dbg(ap->dev, "%s: ap->id = %d\n", __func__, ap->print_id);
  
--	port->nsect_addr = (void __iomem *)base + 0x08;
-+	port->nsect_addr	= base + 0x08;
+ 	dmaengine_terminate_all(hsdevp->chan);
+ 	dma_release_channel(hsdevp->chan);
++	phy_power_off(hsdev->phy);
  
--	port->lbal_addr = (void __iomem *)base + 0x0c;
--	port->lbam_addr = (void __iomem *)base + 0x10;
--	port->lbah_addr = (void __iomem *)base + 0x14;
-+	port->lbal_addr		= base + 0x0c;
-+	port->lbam_addr		= base + 0x10;
-+	port->lbah_addr		= base + 0x14;
+ 	kfree(hsdevp);
+ 	ap->private_data = NULL;
+@@ -1323,6 +1331,17 @@ static int sata_dwc_probe(struct platform_device *ofdev)
+ 	}
+ #endif
  
--	port->device_addr = (void __iomem *)base + 0x18;
--	port->command_addr = (void __iomem *)base + 0x1c;
--	port->status_addr = (void __iomem *)base + 0x1c;
-+	port->device_addr	= base + 0x18;
-+	port->command_addr	= base + 0x1c;
-+	port->status_addr	= base + 0x1c;
++	hsdev->phy = devm_phy_optional_get(hsdev->dev, "sata-phy");
++	if (IS_ERR(hsdev->phy)) {
++		err = PTR_ERR(hsdev->phy);
++		hsdev->phy = NULL;
++		goto error_out;
++	}
++
++	err = phy_init(hsdev->phy);
++	if (err)
++		goto error_out;
++
+ 	/*
+ 	 * Now, register with libATA core, this will also initiate the
+ 	 * device discovery process, invoking our port_start() handler &
+@@ -1336,6 +1355,7 @@ static int sata_dwc_probe(struct platform_device *ofdev)
+ 	return 0;
  
--	port->altstatus_addr = (void __iomem *)base + 0x20;
--	port->ctl_addr = (void __iomem *)base + 0x20;
-+	port->altstatus_addr	= base + 0x20;
-+	port->ctl_addr		= base + 0x20;
+ error_out:
++	phy_exit(hsdev->phy);
+ 	iounmap(base);
+ 	return err;
  }
+@@ -1348,6 +1368,8 @@ static int sata_dwc_remove(struct platform_device *ofdev)
  
- static int sata_dwc_dma_get_channel(struct sata_dwc_device_port *hsdevp)
-@@ -1253,7 +1253,7 @@ static int sata_dwc_probe(struct platform_device *ofdev)
- 	/* Setup port */
- 	host->ports[0]->ioaddr.cmd_addr = base;
- 	host->ports[0]->ioaddr.scr_addr = base + SATA_DWC_SCR_OFFSET;
--	sata_dwc_setup_port(&host->ports[0]->ioaddr, (unsigned long)base);
-+	sata_dwc_setup_port(&host->ports[0]->ioaddr, base);
+ 	ata_host_detach(host);
  
- 	/* Read the ID and Version Registers */
- 	idr = in_le32(&hsdev->sata_dwc_regs->idr);
++	phy_exit(hsdev->phy);
++
+ #ifdef CONFIG_SATA_DWC_OLD_DMA
+ 	/* Free SATA DMA resources */
+ 	sata_dwc_dma_exit_old(hsdev);
 -- 
 2.8.0.rc3
