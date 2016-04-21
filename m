@@ -1,7 +1,7 @@
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1 17/23] ata: sata_dwc_460ex: supply physical address of FIFO to DMA
-Date: Thu, 21 Apr 2016 21:15:38 +0300
-Message-ID: <1461262544-115408-18-git-send-email-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 21/23] ata: sata_dwc_460ex: use devm_ioremap
+Date: Thu, 21 Apr 2016 21:15:42 +0300
+Message-ID: <1461262544-115408-22-git-send-email-andriy.shevchenko@linux.intel.com>
 References: <1461262544-115408-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1461262544-115408-1-git-send-email-andriy.shevchenko@linux.intel.com>
@@ -10,74 +10,111 @@ To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Rob Herring <robh+dt@k
 Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 List-Id: linux-ide@vger.kernel.org
 
-DMA operates with physical addresses which is not exactly the same as ioremap()
-returns.
+This simplifies error handling and cleanup by using devm to manage
+IO mappings.
 
-Introduce variable to keep physical address of the SATA FIFO register and
-supply it when prepare DMA channel.
-
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Signed-off-by: Mans Rullgard <mans@mansr.com>
 ---
- drivers/ata/sata_dwc_460ex.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+ drivers/ata/sata_dwc_460ex.c | 30 +++++++++++-------------------
+ 1 file changed, 11 insertions(+), 19 deletions(-)
 
 diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index 42248b2..7810405 100644
+index 0ef72e4..44dca8c 100644
 --- a/drivers/ata/sata_dwc_460ex.c
 +++ b/drivers/ata/sata_dwc_460ex.c
-@@ -100,7 +100,7 @@ struct sata_dwc_regs {
- 	u32 versionr;		/* Version Register */
- 	u32 idr;		/* ID Register */
- 	u32 unimpl[192];	/* Unimplemented */
--	u32 dmadr[256];	/* FIFO Locations in DMA Mode */
-+	u32 dmadr[256];		/* FIFO Locations in DMA Mode */
- };
- 
- enum {
-@@ -149,6 +149,7 @@ struct sata_dwc_device {
+@@ -139,7 +139,6 @@ struct sata_dwc_device {
+ 	struct device		*dev;		/* generic device struct */
+ 	struct ata_probe_ent	*pe;		/* ptr to probe-ent */
+ 	struct ata_host		*host;
+-	u8 __iomem		*reg_base;
+ 	struct sata_dwc_regs __iomem *sata_dwc_regs;	/* DW SATA specific */
  	u32			sactive_issued;
  	u32			sactive_queued;
- 	struct phy		*phy;
-+	phys_addr_t		dmadr;
- #ifdef CONFIG_SATA_DWC_OLD_DMA
- 	struct dw_dma_chip	*dma;
- #endif
-@@ -380,15 +381,14 @@ static struct dma_async_tx_descriptor *dma_dwc_xfer_setup(struct ata_queued_cmd
- 	struct ata_port *ap = qc->ap;
- 	struct sata_dwc_device_port *hsdevp = HSDEVP_FROM_AP(ap);
- 	struct sata_dwc_device *hsdev = HSDEV_FROM_AP(ap);
--	dma_addr_t addr = (dma_addr_t)&hsdev->sata_dwc_regs->dmadr;
- 	struct dma_slave_config sconf;
- 	struct dma_async_tx_descriptor *desc;
+@@ -242,7 +241,7 @@ static int sata_dwc_dma_init_old(struct platform_device *pdev,
+ 				 struct sata_dwc_device *hsdev)
+ {
+ 	struct device_node *np = pdev->dev.of_node;
+-	int err;
++	struct resource *res;
  
- 	if (qc->dma_dir == DMA_DEV_TO_MEM) {
--		sconf.src_addr = addr;
-+		sconf.src_addr = hsdev->dmadr;
- 		sconf.device_fc = false;
- 	} else {	/* DMA_MEM_TO_DEV */
--		sconf.dst_addr = addr;
-+		sconf.dst_addr = hsdev->dmadr;
- 		sconf.device_fc = false;
+ 	hsdev->dma = devm_kzalloc(&pdev->dev, sizeof(*hsdev->dma), GFP_KERNEL);
+ 	if (!hsdev->dma)
+@@ -258,21 +257,16 @@ static int sata_dwc_dma_init_old(struct platform_device *pdev,
  	}
  
-@@ -411,8 +411,8 @@ static struct dma_async_tx_descriptor *dma_dwc_xfer_setup(struct ata_queued_cmd
- 	desc->callback = dma_dwc_xfer_done;
- 	desc->callback_param = hsdev;
+ 	/* Get physical SATA DMA register base address */
+-	hsdev->dma->regs = of_iomap(np, 1);
+-	if (!hsdev->dma->regs) {
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
++	hsdev->dma->regs = devm_ioremap_resource(&pdev->dev, res);
++	if (IS_ERR(hsdev->dma->regs)) {
+ 		dev_err(&pdev->dev,
+ 			"ioremap failed for AHBDMA register address\n");
+-		return -ENODEV;
++		return PTR_ERR(hsdev->dma->regs);
+ 	}
  
--	dev_dbg(hsdev->dev, "%s sg: 0x%p, count: %d addr: %pad\n",
--		__func__, qc->sg, qc->n_elem, &addr);
-+	dev_dbg(hsdev->dev, "%s sg: 0x%p, count: %d addr: %pa\n", __func__,
-+		qc->sg, qc->n_elem, &hsdev->dmadr);
- 
- 	return desc;
+ 	/* Initialize AHB DMAC */
+-	err = dw_dma_probe(hsdev->dma);
+-	if (err) {
+-		iounmap(hsdev->dma->regs);
+-		return err;
+-	}
+-
+-	return 0;
++	return dw_dma_probe(hsdev->dma);
  }
-@@ -1249,6 +1249,7 @@ static int sata_dwc_probe(struct platform_device *ofdev)
+ 
+ static void sata_dwc_dma_exit_old(struct sata_dwc_device *hsdev)
+@@ -281,7 +275,6 @@ static void sata_dwc_dma_exit_old(struct sata_dwc_device *hsdev)
+ 		return;
+ 
+ 	dw_dma_remove(hsdev->dma);
+-	iounmap(hsdev->dma->regs);
+ }
+ 
+ #endif
+@@ -1221,6 +1214,7 @@ static int sata_dwc_probe(struct platform_device *ofdev)
+ 	struct ata_port_info pi = sata_dwc_port_info[0];
+ 	const struct ata_port_info *ppi[] = { &pi, NULL };
+ 	struct device_node *np = ofdev->dev.of_node;
++	struct resource *res;
+ 
+ 	/* Allocate DWC SATA device */
+ 	host = ata_host_alloc_pinfo(&ofdev->dev, ppi, SATA_DWC_MAX_PORTS);
+@@ -1231,13 +1225,13 @@ static int sata_dwc_probe(struct platform_device *ofdev)
+ 	host->private_data = hsdev;
+ 
+ 	/* Ioremap SATA registers */
+-	base = of_iomap(np, 0);
+-	if (!base) {
++	res = platform_get_resource(ofdev, IORESOURCE_MEM, 0);
++	base = devm_ioremap_resource(&ofdev->dev, res);
++	if (IS_ERR(base)) {
+ 		dev_err(&ofdev->dev,
+ 			"ioremap failed for SATA register address\n");
+-		return -ENODEV;
++		return PTR_ERR(base);
+ 	}
+-	hsdev->reg_base = base;
+ 	dev_dbg(&ofdev->dev, "ioremap done for SATA register address\n");
  
  	/* Synopsys DWC SATA specific Registers */
- 	hsdev->sata_dwc_regs = base + SATA_DWC_REG_OFFSET;
-+	hsdev->dmadr = res->start + SATA_DWC_REG_OFFSET + offsetof(struct sata_dwc_regs, dmadr);
+@@ -1302,7 +1296,6 @@ static int sata_dwc_probe(struct platform_device *ofdev)
  
- 	/* Setup port */
- 	host->ports[0]->ioaddr.cmd_addr = base;
+ error_out:
+ 	phy_exit(hsdev->phy);
+-	iounmap(base);
+ 	return err;
+ }
+ 
+@@ -1321,7 +1314,6 @@ static int sata_dwc_remove(struct platform_device *ofdev)
+ 	sata_dwc_dma_exit_old(hsdev);
+ #endif
+ 
+-	iounmap(hsdev->reg_base);
+ 	dev_dbg(&ofdev->dev, "done\n");
+ 	return 0;
+ }
 -- 
 2.8.0.rc3
