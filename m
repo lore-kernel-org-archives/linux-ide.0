@@ -1,47 +1,63 @@
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1 22/23] ata: sata_dwc_460ex: make debug messages neat
-Date: Thu, 21 Apr 2016 21:15:43 +0300
-Message-ID: <1461262544-115408-23-git-send-email-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 13/23] ata: sata_dwc_460ex: remove empty libata callback
+Date: Thu, 21 Apr 2016 21:15:34 +0300
+Message-ID: <1461262544-115408-14-git-send-email-andriy.shevchenko@linux.intel.com>
 References: <1461262544-115408-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1461262544-115408-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, Christian Lamparter <chunkeey@googlemail.com>, =?UTF-8?q?M=C3=A5ns=20Rullg=C3=A5rd?= <mans@mansr.com>, Julian Margetson <runaway@candw.ms>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 List-Id: linux-ide@vger.kernel.org
 
-There is a duplication in the debug messages when accessing SCR registers.
-Remove duplication to make the messages neat.
+From: Mans Rullgard <mans@mansr.com>
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+The sata_dwc_qc_prep() does nothing.  Use the default ata_noop_qc_prep
+instead.
+
+Signed-off-by: Mans Rullgard <mans@mansr.com>
 ---
- drivers/ata/sata_dwc_460ex.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/ata/sata_dwc_460ex.c | 22 ----------------------
+ 1 file changed, 22 deletions(-)
 
 diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index 44dca8c..2d73cdf 100644
+index 5bec790..571ecd1 100644
 --- a/drivers/ata/sata_dwc_460ex.c
 +++ b/drivers/ata/sata_dwc_460ex.c
-@@ -414,16 +414,16 @@ static int sata_dwc_scr_read(struct ata_link *link, unsigned int scr, u32 *val)
- 	}
- 
- 	*val = sata_dwc_readl(link->ap->ioaddr.scr_addr + (scr * 4));
--	dev_dbg(link->ap->dev, "%s: id=%d reg=%d val=val=0x%08x\n",
--		__func__, link->ap->print_id, scr, *val);
-+	dev_dbg(link->ap->dev, "%s: id=%d reg=%d val=0x%08x\n", __func__,
-+		link->ap->print_id, scr, *val);
- 
+@@ -1134,27 +1134,6 @@ static unsigned int sata_dwc_qc_issue(struct ata_queued_cmd *qc)
  	return 0;
  }
  
- static int sata_dwc_scr_write(struct ata_link *link, unsigned int scr, u32 val)
+-/*
+- * Function : sata_dwc_qc_prep
+- * arguments : ata_queued_cmd *qc
+- * Return value : None
+- * qc_prep for a particular queued command
+- */
+-
+-static void sata_dwc_qc_prep(struct ata_queued_cmd *qc)
+-{
+-	if ((qc->dma_dir == DMA_NONE) || (qc->tf.protocol == ATA_PROT_PIO))
+-		return;
+-
+-#ifdef DEBUG_NCQ
+-	if (qc->tag > 0)
+-		dev_info(qc->ap->dev, "%s: qc->tag=%d ap->active_tag=0x%08x\n",
+-			 __func__, qc->tag, qc->ap->link.active_tag);
+-
+-	return ;
+-#endif
+-}
+-
+ static void sata_dwc_error_handler(struct ata_port *ap)
  {
--	dev_dbg(link->ap->dev, "%s: id=%d reg=%d val=val=0x%08x\n",
--		__func__, link->ap->print_id, scr, val);
-+	dev_dbg(link->ap->dev, "%s: id=%d reg=%d val=0x%08x\n", __func__,
-+		link->ap->print_id, scr, val);
- 	if (scr > SCR_NOTIFICATION) {
- 		dev_err(link->ap->dev, "%s: Incorrect SCR offset 0x%02x\n",
- 			 __func__, scr);
+ 	ata_sff_error_handler(ap);
+@@ -1214,7 +1193,6 @@ static struct ata_port_operations sata_dwc_ops = {
+ 	.error_handler		= sata_dwc_error_handler,
+ 	.hardreset		= sata_dwc_hardreset,
+ 
+-	.qc_prep		= sata_dwc_qc_prep,
+ 	.qc_issue		= sata_dwc_qc_issue,
+ 
+ 	.scr_read		= sata_dwc_scr_read,
 -- 
 2.8.0.rc3
