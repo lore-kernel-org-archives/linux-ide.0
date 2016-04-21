@@ -1,58 +1,47 @@
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1 02/23] ata: sata_dwc_460ex: fix crash on offline links
- without an attached drive
-Date: Thu, 21 Apr 2016 21:15:23 +0300
-Message-ID: <1461262544-115408-3-git-send-email-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 22/23] ata: sata_dwc_460ex: make debug messages neat
+Date: Thu, 21 Apr 2016 21:15:43 +0300
+Message-ID: <1461262544-115408-23-git-send-email-andriy.shevchenko@linux.intel.com>
 References: <1461262544-115408-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1461262544-115408-1-git-send-email-andriy.shevchenko@linux.intel.com>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: "Linuxppc-dev"
- <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, Christian Lamparter <chunkeey@googlemail.com>, =?UTF-8?q?M=C3=A5ns=20Rullg=C3=A5rd?= <mans@mansr.com>, Julian Margetson <runaway@candw.ms>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 List-Id: linux-ide@vger.kernel.org
 
-RnJvbTogQ2hyaXN0aWFuIExhbXBhcnRlciA8Y2h1bmtlZXlAZ29vZ2xlbWFpbC5jb20+CgpUaGlz
-IHBhdGNoIGZpeGVzIE1hY2hpbmUgQ2hlY2sgIkRhdGEgV3JpdGUgUExCIEVycm9yIiB3aGljaCBo
-YXBwZW5zCndoZW4gbGliYXRhLXNmZidzIGF0YV9zZmZfZGV2X3NlbGVjdCBpcyB0cnlpbmcgdG8g
-d3JpdGUgaW50byB0aGUKZGV2aWNlX2FkZHIgaW4gb3JkZXIgdG8gc2VsZWN0IGEgZHJpdmUuIEhv
-d2V2ZXIsIFNBVEEgaGFzIG5vIG1hc3RlcgpvciBzbGF2ZSBkZXZpY2VzIGxpa2UgdGhlIG9sZCBB
-VEEgQnVzLCB0aGVyZWZvcmUgc2VsZWN0aW5nIGEKZGlmZmVyZW50IGRyaXZlIGlzIGtpbmQgb2Yg
-cG9pbnRsZXNzLgoKRGF0YSBXcml0ZSBQTEIgRXJyb3IKT29wczogTWFjaGluZSBjaGVjaywgc2ln
-OiA3IFsjMV0KUG93ZXJQQyA0NHggUGxhdGZvcm0KTW9kdWxlcyBsaW5rZWQgaW46CkNQVTogMCBQ
-SUQ6IDUwOCBDb21tOiBzY3NpX2VoXzAgTm90IHRhaW50ZWQgNC42LjAtcmMzLW5leHQtMjAxNjA0
-MTIrICMxMApbLi4uXQpOSVAgW2MwMjdlODIwXSBhdGFfc2ZmX2Rldl9zZWxlY3QrMHgzYy8weDQ0
-CkxSIFtjMDI3ZTgxMF0gYXRhX3NmZl9kZXZfc2VsZWN0KzB4MmMvMHg0NApDYWxsIFRyYWNlOgpb
-Y2VjMzFjZDBdIFtjMDI3ZGEwMF0gYXRhX3NmZl9wb3N0cmVzZXQrMHg0MC8weGI0ICh1bnJlbGlh
-YmxlKQpbY2VjMzFjZTBdIFtjMDI3YTAzY10gYXRhX2VoX3Jlc2V0KzB4NWNjLzB4OTI4CltjZWMz
-MWQ2MF0gW2MwMjdhODQwXSBhdGFfZWhfcmVjb3ZlcisweDMzMC8weDEwYmMKW2NlYzMxZGYwXSBb
-YzAyN2JhZTBdIGF0YV9kb19laCsweDRjLzB4YTQKWy4uLl0KClNpZ25lZC1vZmYtYnk6IENocmlz
-dGlhbiBMYW1wYXJ0ZXIgPGNodW5rZWV5QGdvb2dsZW1haWwuY29tPgotLS0KIGRyaXZlcnMvYXRh
-L3NhdGFfZHdjXzQ2MGV4LmMgfCA3ICsrKysrKysKIDEgZmlsZSBjaGFuZ2VkLCA3IGluc2VydGlv
-bnMoKykKCmRpZmYgLS1naXQgYS9kcml2ZXJzL2F0YS9zYXRhX2R3Y180NjBleC5jIGIvZHJpdmVy
-cy9hdGEvc2F0YV9kd2NfNDYwZXguYwppbmRleCA1MjEzZTIyLi43Zjk1Mzg5IDEwMDY0NAotLS0g
-YS9kcml2ZXJzL2F0YS9zYXRhX2R3Y180NjBleC5jCisrKyBiL2RyaXZlcnMvYXRhL3NhdGFfZHdj
-XzQ2MGV4LmMKQEAgLTExMzQsNiArMTEzNCwxMSBAQCBzdGF0aWMgaW50IHNhdGFfZHdjX2hhcmRy
-ZXNldChzdHJ1Y3QgYXRhX2xpbmsgKmxpbmssIHVuc2lnbmVkIGludCAqY2xhc3MsCiAJcmV0dXJu
-IHJldDsKIH0KIAorc3RhdGljIHZvaWQgc2F0YV9kd2NfZGV2X3NlbGVjdChzdHJ1Y3QgYXRhX3Bv
-cnQgKmFwLCB1bnNpZ25lZCBpbnQgZGV2aWNlKQoreworCS8qIFNBVEEgRFdDIGlzIG1hc3RlciBv
-bmx5ICovCit9CisKIC8qCiAgKiBzY3NpIG1pZC1sYXllciBhbmQgbGliYXRhIGludGVyZmFjZSBz
-dHJ1Y3R1cmVzCiAgKi8KQEAgLTExNjQsNiArMTE2OSw4IEBAIHN0YXRpYyBzdHJ1Y3QgYXRhX3Bv
-cnRfb3BlcmF0aW9ucyBzYXRhX2R3Y19vcHMgPSB7CiAJLnBvcnRfc3RhcnQJCT0gc2F0YV9kd2Nf
-cG9ydF9zdGFydCwKIAkucG9ydF9zdG9wCQk9IHNhdGFfZHdjX3BvcnRfc3RvcCwKIAorCS5zZmZf
-ZGV2X3NlbGVjdAkJPSBzYXRhX2R3Y19kZXZfc2VsZWN0LAorCiAJLmJtZG1hX3NldHVwCQk9IHNh
-dGFfZHdjX2JtZG1hX3NldHVwLAogCS5ibWRtYV9zdGFydAkJPSBzYXRhX2R3Y19ibWRtYV9zdGFy
-dCwKIH07Ci0tIAoyLjguMC5yYzMKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fCkxpbnV4cHBjLWRldiBtYWlsaW5nIGxpc3QKTGludXhwcGMtZGV2QGxpc3Rz
-Lm96bGFicy5vcmcKaHR0cHM6Ly9saXN0cy5vemxhYnMub3JnL2xpc3RpbmZvL2xpbnV4cHBjLWRl
-dg==
+There is a duplication in the debug messages when accessing SCR registers.
+Remove duplication to make the messages neat.
+
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/ata/sata_dwc_460ex.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+index 44dca8c..2d73cdf 100644
+--- a/drivers/ata/sata_dwc_460ex.c
++++ b/drivers/ata/sata_dwc_460ex.c
+@@ -414,16 +414,16 @@ static int sata_dwc_scr_read(struct ata_link *link, unsigned int scr, u32 *val)
+ 	}
+ 
+ 	*val = sata_dwc_readl(link->ap->ioaddr.scr_addr + (scr * 4));
+-	dev_dbg(link->ap->dev, "%s: id=%d reg=%d val=val=0x%08x\n",
+-		__func__, link->ap->print_id, scr, *val);
++	dev_dbg(link->ap->dev, "%s: id=%d reg=%d val=0x%08x\n", __func__,
++		link->ap->print_id, scr, *val);
+ 
+ 	return 0;
+ }
+ 
+ static int sata_dwc_scr_write(struct ata_link *link, unsigned int scr, u32 val)
+ {
+-	dev_dbg(link->ap->dev, "%s: id=%d reg=%d val=val=0x%08x\n",
+-		__func__, link->ap->print_id, scr, val);
++	dev_dbg(link->ap->dev, "%s: id=%d reg=%d val=0x%08x\n", __func__,
++		link->ap->print_id, scr, val);
+ 	if (scr > SCR_NOTIFICATION) {
+ 		dev_err(link->ap->dev, "%s: Incorrect SCR offset 0x%02x\n",
+ 			 __func__, scr);
+-- 
+2.8.0.rc3
