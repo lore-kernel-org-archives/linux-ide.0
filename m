@@ -1,7 +1,7 @@
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1 03/23] ata: sata_dwc_460ex: set dma_boundary to 0x1fff
-Date: Thu, 21 Apr 2016 21:15:24 +0300
-Message-ID: <1461262544-115408-4-git-send-email-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 04/23] ata: sata_dwc_460ex: burst size must be in items not bytes
+Date: Thu, 21 Apr 2016 21:15:25 +0300
+Message-ID: <1461262544-115408-5-git-send-email-andriy.shevchenko@linux.intel.com>
 References: <1461262544-115408-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1461262544-115408-1-git-send-email-andriy.shevchenko@linux.intel.com>
@@ -10,40 +10,38 @@ To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Rob Herring <robh+dt@k
 Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 List-Id: linux-ide@vger.kernel.org
 
-The original code states:
+The burst size as defined by DMAengine API is in items of address width. Derive
+burst size from AHB_DMA_BRST_DFLT (64 bytes) by dividing it to
+DMA_SLAVE_BUSWIDTH_4_BYTES (4 bytes) that gives us 16 items.
 
-	Make sure a LLI block is not created that will span 8K max FIS
-	boundary. If the block spans such a FIS boundary, there is a chance
-	that a DMA burst will cross that boundary -- this results in an error
-	in the host controller.
-
-Since we have switched to generic DMAengine API we satisfy above by setting
-dma_boundary value to 0x1fff.
-
-Suggested-by: Mans Rullgard <mans@mansr.com>
 Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/ata/sata_dwc_460ex.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ drivers/ata/sata_dwc_460ex.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index 7f95389..aee8873 100644
+index aee8873..4cac27d 100644
 --- a/drivers/ata/sata_dwc_460ex.c
 +++ b/drivers/ata/sata_dwc_460ex.c
-@@ -1151,7 +1151,13 @@ static struct scsi_host_template sata_dwc_sht = {
- 	 */
- 	.sg_tablesize		= LIBATA_MAX_PRD,
- 	/* .can_queue		= ATA_MAX_QUEUE, */
--	.dma_boundary		= ATA_DMA_BOUNDARY,
-+	/*
-+	 * Make sure a LLI block is not created that will span 8K max FIS
-+	 * boundary. If the block spans such a FIS boundary, there is a chance
-+	 * that a DMA burst will cross that boundary -- this results in an
-+	 * error in the host controller.
-+	 */
-+	.dma_boundary		= 0x1fff /* ATA_DMA_BOUNDARY */,
- };
+@@ -65,7 +65,7 @@
+ #define NO_IRQ		0
+ #endif
  
- static struct ata_port_operations sata_dwc_ops = {
+-#define AHB_DMA_BRST_DFLT	64	/* 16 data items burst length*/
++#define AHB_DMA_BRST_DFLT	64	/* 16 data items burst length */
+ 
+ enum {
+ 	SATA_DWC_MAX_PORTS = 1,
+@@ -318,8 +318,8 @@ static struct dma_async_tx_descriptor *dma_dwc_xfer_setup(struct ata_queued_cmd
+ 	}
+ 
+ 	sconf.direction = qc->dma_dir;
+-	sconf.src_maxburst = AHB_DMA_BRST_DFLT;
+-	sconf.dst_maxburst = AHB_DMA_BRST_DFLT;
++	sconf.src_maxburst = AHB_DMA_BRST_DFLT / 4;	/* in items */
++	sconf.dst_maxburst = AHB_DMA_BRST_DFLT / 4;	/* in items */
+ 	sconf.src_addr_width = DMA_SLAVE_BUSWIDTH_4_BYTES;
+ 	sconf.dst_addr_width = DMA_SLAVE_BUSWIDTH_4_BYTES;
+ 
 -- 
 2.8.0.rc3
