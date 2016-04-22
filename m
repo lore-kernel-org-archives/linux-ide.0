@@ -1,64 +1,46 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH v1 03/23] ata: sata_dwc_460ex: set dma_boundary to 0x1fff
-Date: Fri, 22 Apr 2016 16:13:00 +0300
-Message-ID: <571A235C.5070007@cogentembedded.com>
-References: <1461262544-115408-1-git-send-email-andriy.shevchenko@linux.intel.com>
- <1461262544-115408-4-git-send-email-andriy.shevchenko@linux.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lf0-f52.google.com ([209.85.215.52]:33136 "EHLO
-	mail-lf0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752744AbcDVNNF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Apr 2016 09:13:05 -0400
-Received: by mail-lf0-f52.google.com with SMTP id e190so79080845lfe.0
-        for <linux-ide@vger.kernel.org>; Fri, 22 Apr 2016 06:13:05 -0700 (PDT)
-In-Reply-To: <1461262544-115408-4-git-send-email-andriy.shevchenko@linux.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Thomas Petazzoni <thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
+Subject: [PATCH 0/5] ata: add support for Marvell Armada 7K/8K AHCI
+Date: Fri, 22 Apr 2016 16:32:36 +0200
+Message-ID: <1461335561-18363-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Ian Campbell <ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org>, Pawel Moll <pawel.moll-5wv7dgnIgG8@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Kumar Gala <galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Nadav Haklai <nadavh-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org>, Lior Amsalem <alior-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org>, Hanna Hawa <hannah-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org>, Yehuda Yitschak <yehuday-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org>, Jason Cooper <jason-NLaQJdtUoK4Be96aLqz0jA@public.gmane.org>, Andrew Lunn <andrew-g2DYL2Zd6BY@public.gmane.org>, Sebastian Hesselbarth <sebastian.hesselbarth-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Gregory Clement <gregory.clement-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Thomas Petazzoni <thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, Christian Lamparter <chunkeey@googlemail.com>, =?UTF-8?B?TcOlbnMgUnVsbGfDpXJk?= <mans@mansr.com>, Julian Margetson <runaway@candw.ms>
 
-Hello.
+Hello,
 
-On 04/21/2016 09:15 PM, Andy Shevchenko wrote:
+The following small series adds support for the Marvell Armada 7K/8K
+AHCI controller. This controller is a standard AHCI controller, so not
+much is needed, except that it uses a non-default port offset and
+length. Due to this, some preparatory patches are used to make it
+possible to override the default port offset/length used by the AHCI
+core.
 
-> The original code states:
->
-> 	Make sure a LLI block is not created that will span 8K max FIS
-> 	boundary. If the block spans such a FIS boundary, there is a chance
-> 	that a DMA burst will cross that boundary -- this results in an error
-> 	in the host controller.
->
-> Since we have switched to generic DMAengine API we satisfy above by setting
-> dma_boundary value to 0x1fff.
->
-> Suggested-by: Mans Rullgard <mans@mansr.com>
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> ---
->   drivers/ata/sata_dwc_460ex.c | 8 +++++++-
->   1 file changed, 7 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-> index 7f95389..aee8873 100644
-> --- a/drivers/ata/sata_dwc_460ex.c
-> +++ b/drivers/ata/sata_dwc_460ex.c
-> @@ -1151,7 +1151,13 @@ static struct scsi_host_template sata_dwc_sht = {
->   	 */
->   	.sg_tablesize		= LIBATA_MAX_PRD,
->   	/* .can_queue		= ATA_MAX_QUEUE, */
-> -	.dma_boundary		= ATA_DMA_BOUNDARY,
-> +	/*
-> +	 * Make sure a LLI block is not created that will span 8K max FIS
-> +	 * boundary. If the block spans such a FIS boundary, there is a chance
-> +	 * that a DMA burst will cross that boundary -- this results in an
-> +	 * error in the host controller.
-> +	 */
-> +	.dma_boundary		= 0x1fff /* ATA_DMA_BOUNDARY */,
+Thanks!
 
-    Not ~0x1fff?
+Thomas
 
-[...]
+Thomas Petazzoni (5):
+  ata: ahci: add support for non-standard port offset/length
+  ata: acard-ahci: use the new port_{offset,length} members
+  ata: ahci_ceva: use the new port_{offset,length} members
+  ata: ahci_mvebu: add support for Armada 8K
+  dt-bindings: ata: add compatible string for Armada 8K to ahci-platform
 
-MBR, Sergei
+ Documentation/devicetree/bindings/ata/ahci-platform.txt | 1 +
+ drivers/ata/acard-ahci.c                                | 3 ++-
+ drivers/ata/ahci.c                                      | 5 +++--
+ drivers/ata/ahci.h                                      | 7 ++++++-
+ drivers/ata/ahci_ceva.c                                 | 5 ++---
+ drivers/ata/ahci_mvebu.c                                | 5 +++++
+ drivers/ata/libahci_platform.c                          | 7 ++++++-
+ 7 files changed, 25 insertions(+), 8 deletions(-)
 
+-- 
+2.6.4
+
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
