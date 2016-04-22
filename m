@@ -1,46 +1,52 @@
-From: Thomas Petazzoni <thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
-Subject: [PATCH 0/5] ata: add support for Marvell Armada 7K/8K AHCI
-Date: Fri, 22 Apr 2016 16:32:36 +0200
-Message-ID: <1461335561-18363-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Ian Campbell <ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org>, Pawel Moll <pawel.moll-5wv7dgnIgG8@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Kumar Gala <galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Nadav Haklai <nadavh-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org>, Lior Amsalem <alior-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org>, Hanna Hawa <hannah-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org>, Yehuda Yitschak <yehuday-eYqpPyKDWXRBDgjK7y7TUQ@public.gmane.org>, Jason Cooper <jason-NLaQJdtUoK4Be96aLqz0jA@public.gmane.org>, Andrew Lunn <andrew-g2DYL2Zd6BY@public.gmane.org>, Sebastian Hesselbarth <sebastian.hesselbarth-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Gregory Clement <gregory.clement-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>, Thomas Petazzoni <thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: [PATCH 4/5] ata: ahci_mvebu: add support for Armada 8K
+Date: Fri, 22 Apr 2016 16:32:40 +0200
+Message-ID: <1461335561-18363-5-git-send-email-thomas.petazzoni@free-electrons.com>
+References: <1461335561-18363-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from down.free-electrons.com ([37.187.137.238]:41751 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754378AbcDVOcu (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 22 Apr 2016 10:32:50 -0400
+In-Reply-To: <1461335561-18363-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Kumar Gala <galak@codeaurora.org>
+Cc: linux-ide@vger.kernel.org, Nadav Haklai <nadavh@marvell.com>, Lior Amsalem <alior@marvell.com>, Hanna Hawa <hannah@marvell.com>, Yehuda Yitschak <yehuday@marvell.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Gregory Clement <gregory.clement@free-electrons.com>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 
-Hello,
+This commit adds support for the AHCI controller found in the Armada
+7K/8K ARM64 SoCs. This controller uses non-standard port offset and
+port length values, which explains why some special handling is
+needed.
 
-The following small series adds support for the Marvell Armada 7K/8K
-AHCI controller. This controller is a standard AHCI controller, so not
-much is needed, except that it uses a non-default port offset and
-length. Due to this, some preparatory patches are used to make it
-possible to override the default port offset/length used by the AHCI
-core.
+Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+---
+ drivers/ata/ahci_mvebu.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-Thanks!
-
-Thomas
-
-Thomas Petazzoni (5):
-  ata: ahci: add support for non-standard port offset/length
-  ata: acard-ahci: use the new port_{offset,length} members
-  ata: ahci_ceva: use the new port_{offset,length} members
-  ata: ahci_mvebu: add support for Armada 8K
-  dt-bindings: ata: add compatible string for Armada 8K to ahci-platform
-
- Documentation/devicetree/bindings/ata/ahci-platform.txt | 1 +
- drivers/ata/acard-ahci.c                                | 3 ++-
- drivers/ata/ahci.c                                      | 5 +++--
- drivers/ata/ahci.h                                      | 7 ++++++-
- drivers/ata/ahci_ceva.c                                 | 5 ++---
- drivers/ata/ahci_mvebu.c                                | 5 +++++
- drivers/ata/libahci_platform.c                          | 7 ++++++-
- 7 files changed, 25 insertions(+), 8 deletions(-)
-
+diff --git a/drivers/ata/ahci_mvebu.c b/drivers/ata/ahci_mvebu.c
+index de7128d..b1d1d64 100644
+--- a/drivers/ata/ahci_mvebu.c
++++ b/drivers/ata/ahci_mvebu.c
+@@ -120,6 +120,10 @@ static int ahci_mvebu_probe(struct platform_device *pdev)
+ 
+ 		ahci_mvebu_mbus_config(hpriv, dram);
+ 		ahci_mvebu_regret_option(hpriv);
++	} else if (of_device_is_compatible(pdev->dev.of_node,
++					   "marvell,armada-8k-ahci")) {
++		hpriv->port_offset = 0x10000;
++		hpriv->port_length = 0x10000;
+ 	}
+ 
+ 	rc = ahci_platform_init_host(pdev, hpriv, &ahci_mvebu_port_info,
+@@ -137,6 +141,7 @@ disable_resources:
+ static const struct of_device_id ahci_mvebu_of_match[] = {
+ 	{ .compatible = "marvell,armada-380-ahci", },
+ 	{ .compatible = "marvell,armada-3700-ahci", },
++	{ .compatible = "marvell,armada-8k-ahci", },
+ 	{ },
+ };
+ MODULE_DEVICE_TABLE(of, ahci_mvebu_of_match);
 -- 
 2.6.4
 
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
