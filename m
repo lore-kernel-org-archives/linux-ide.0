@@ -1,22 +1,26 @@
 From: Julian Margetson <runaway@candw.ms>
 Subject: Re: [PATCH v1 00/23] ata: sata_dwc_460ex: make it working again
-Date: Sat, 23 Apr 2016 11:44:09 -0400
-Message-ID: <571B9849.2040406@candw.ms>
+Date: Sat, 23 Apr 2016 11:44:22 -0400
+Message-ID: <571B9856.5050404@candw.ms>
 References: <1461262544-115408-1-git-send-email-andriy.shevchenko@linux.intel.com>
  <1939944.iP9HDO4haS@debian64> <571A0204.4050508@candw.ms>
  <25199607.HghKfF60Bt@debian64> <571B6444.9060505@candw.ms>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------000502080704070404010403"
-Return-path: <linux-kernel-owner@vger.kernel.org>
+ boundary="------------090902000802090400010501"
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from smtp618.redcondor.net ([208.80.206.18]:58116 "EHLO
+	smtp618.redcondor.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751455AbcDWPpQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 23 Apr 2016 11:45:16 -0400
 In-Reply-To: <571B6444.9060505@candw.ms>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: Christian Lamparter <chunkeey@googlemail.com>
 Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, =?UTF-8?B?TcOlbnMgUnVsbGfDpXJk?= <mans@mansr.com>
-List-Id: linux-ide@vger.kernel.org
 
 This is a multi-part message in MIME format.
---------------000502080704070404010403
+--------------090902000802090400010501
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 8bit
 
@@ -162,13 +166,13 @@ On 4/23/2016 8:02 AM, Julian Margetson wrote:
 >
 >
 Test with kernel compiled with no other sata controllers included.
-Freshly formatted harddrive  with one ntfs partition. MS-DOs partition 
+Freshly formatted harddrive  with one ntfs partition. MS-DOS partition 
 table.
 Booted from USB thumb drive.
 Keyboard and mouse freeze as soon as gparted is run.
 
 
---------------000502080704070404010403
+--------------090902000802090400010501
 Content-Type: text/plain; charset=UTF-8;
  name="sam460ex_dmesg_8.log"
 Content-Transfer-Encoding: base64
@@ -1452,7 +1456,7 @@ MzY4OF0gRVhUNC1mcyAoc2RiMyk6IHdhcm5pbmc6IG1vdW50aW5nIHVuY2hlY2tlZCBmcywg
 cnVubmluZyBlMmZzY2sgaXMgcmVjb21tZW5kZWQKWyAgMTc5LjcyNTk5NF0gRVhUNC1mcyAo
 c2RiMyk6IG1vdW50ZWQgZmlsZXN5c3RlbSB3aXRob3V0IGpvdXJuYWwuIE9wdHM6IChudWxs
 KQo=
---------------000502080704070404010403
+--------------090902000802090400010501
 Content-Type: text/plain; charset=UTF-8;
  name="Sam460ex_8.log"
 Content-Transfer-Encoding: base64
@@ -2387,4 +2391,5 @@ ZHdjIDRiZmZkMTAwMC5zYXRhOiBzYXRhX2R3Y19lcnJvcl9pbnRyIFNDUl9FUlJPUj0weDAw
 MDIwMDAwIGludHByPTB4MDAwMDAwODggc3RhdHVzPTB4MDAwMDAwZDAgZG1hX2ludHA9MTg3
 IHBlbmRpbmc9MiBpc3N1ZWQ9MQ0KWyAgNDk3LjYyMDgyM10gYXRhMS4wMDogZXhjZXB0aW9u
 IEVtYXNrIDB4MCBTQWN0IDB4MCBTRXJyIDB4Mg==
---------------000502080704070404010403--
+--------------090902000802090400010501--
+
