@@ -1,74 +1,32 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCHv3 13/14] libata: support device-managed ZAC devices
-Date: Mon, 25 Apr 2016 15:17:16 +0300
-Message-ID: <c14d4d8f-4d8f-9c8e-a00c-5cb5010bb66f@cogentembedded.com>
-References: <1461581156-92581-1-git-send-email-hare@suse.de>
- <1461581156-92581-14-git-send-email-hare@suse.de>
+From: Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH 5/5] dt-bindings: ata: add compatible string for Armada
+ 8K to ahci-platform
+Date: Mon, 25 Apr 2016 07:47:02 -0500
+Message-ID: <20160425124702.GA1324@rob-hp-laptop>
+References: <1461335561-18363-1-git-send-email-thomas.petazzoni@free-electrons.com>
+ <1461335561-18363-6-git-send-email-thomas.petazzoni@free-electrons.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1461581156-92581-14-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:49954 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932231AbcDYMrI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 25 Apr 2016 08:47:08 -0400
+Content-Disposition: inline
+In-Reply-To: <1461335561-18363-6-git-send-email-thomas.petazzoni@free-electrons.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, devicetree@vger.kernel.org, Ian Campbell <ijc+devicetree@hellion.org.uk>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Kumar Gala <galak@codeaurora.org>, linux-ide@vger.kernel.org, Nadav Haklai <nadavh@marvell.com>, Lior Amsalem <alior@marvell.com>, Hanna Hawa <hannah@marvell.com>, Yehuda Yitschak <yehuday@marvell.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Gregory Clement <gregory.clement@free-electrons.com>
 
-Hello.
-
-On 4/25/2016 1:45 PM, Hannes Reinecke wrote:
-
-> Device-managed ZAC devices just set the zoned capabilities field
-> in INQUIRY byte 69 (cf ACS-4). This corresponds to the 'zoned'
-> field in the block device characteristics VPD page.
-> As this is only defined in SPC-5/SBC-4 we also need to update
-> the supported SCSI version descriptor.
->
-> Reviewed-by: Shaun Tancheff <shaun.tancheff@seagate.com>
-> Tested-by: Shaun Tancheff <shaun.tancheff@seagate.com>
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
+On Fri, Apr 22, 2016 at 04:32:41PM +0200, Thomas Petazzoni wrote:
+> In order to support the AHCI controller found in the Marvell Armada
+> 7K/8K, a new compatible string is introduced in the Device Tree
+> binding for AHCI platform controllers.
+> 
+> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
 > ---
->  drivers/ata/libata-scsi.c | 19 ++++++++++---------
->  include/linux/ata.h       |  5 +++++
->  2 files changed, 15 insertions(+), 9 deletions(-)
->
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index 43403aa..96abd42 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-[...]
-> @@ -2322,12 +2320,15 @@ static unsigned int ata_scsiop_inq_b1(struct ata_scsi_args *args, u8 *rbuf)
->  {
->  	int form_factor = ata_id_form_factor(args->id);
->  	int media_rotation_rate = ata_id_rotation_rate(args->id);
-> +	u8 zoned = ata_id_zoned_cap(args->id);
->
->  	rbuf[1] = 0xb1;
->  	rbuf[3] = 0x3c;
->  	rbuf[4] = media_rotation_rate >> 8;
->  	rbuf[5] = media_rotation_rate;
->  	rbuf[7] = form_factor;
-> +	if (zoned)
-> +		rbuf[8] = (zoned << 4);
+>  Documentation/devicetree/bindings/ata/ahci-platform.txt | 1 +
+>  1 file changed, 1 insertion(+)
 
-    Parens not needed here...
-
-[...]
-> diff --git a/include/linux/ata.h b/include/linux/ata.h
-> index e627032..ac1cb93 100644
-> --- a/include/linux/ata.h
-> +++ b/include/linux/ata.h
-> @@ -935,6 +935,11 @@ static inline bool ata_id_is_ssd(const u16 *id)
->  	return id[ATA_ID_ROT_SPEED] == 0x01;
->  }
->
-> +static inline u8 ata_id_zoned_cap(const u16 *id)
-> +{
-> +	return (id[ATA_ID_ADDITIONAL_SUPP] & 0x3);
-
-    And here as well...
-
-[...]
-
-MBR, Sergei
-
+Acked-by: Rob Herring <robh@kernel.org>
