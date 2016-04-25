@@ -1,32 +1,36 @@
-From: Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH 5/5] dt-bindings: ata: add compatible string for Armada
- 8K to ahci-platform
-Date: Mon, 25 Apr 2016 07:47:02 -0500
-Message-ID: <20160425124702.GA1324@rob-hp-laptop>
-References: <1461335561-18363-1-git-send-email-thomas.petazzoni@free-electrons.com>
- <1461335561-18363-6-git-send-email-thomas.petazzoni@free-electrons.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCHv3 00/14] libata: ZAC support
+Date: Mon, 25 Apr 2016 16:16:27 -0400
+Message-ID: <20160425201627.GI7822@mtj.duckdns.org>
+References: <1461581156-92581-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:49954 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932231AbcDYMrI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 25 Apr 2016 08:47:08 -0400
+Received: from mail-yw0-f169.google.com ([209.85.161.169]:36824 "EHLO
+	mail-yw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933160AbcDYUQ3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Apr 2016 16:16:29 -0400
 Content-Disposition: inline
-In-Reply-To: <1461335561-18363-6-git-send-email-thomas.petazzoni@free-electrons.com>
+In-Reply-To: <1461581156-92581-1-git-send-email-hare@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, devicetree@vger.kernel.org, Ian Campbell <ijc+devicetree@hellion.org.uk>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Kumar Gala <galak@codeaurora.org>, linux-ide@vger.kernel.org, Nadav Haklai <nadavh@marvell.com>, Lior Amsalem <alior@marvell.com>, Hanna Hawa <hannah@marvell.com>, Yehuda Yitschak <yehuday@marvell.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Gregory Clement <gregory.clement@free-electrons.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: linux-ide@vger.kernel.org, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
-On Fri, Apr 22, 2016 at 04:32:41PM +0200, Thomas Petazzoni wrote:
-> In order to support the AHCI controller found in the Marvell Armada
-> 7K/8K, a new compatible string is introduced in the Device Tree
-> binding for AHCI platform controllers.
+Hello,
+
+On Mon, Apr 25, 2016 at 12:45:42PM +0200, Hannes Reinecke wrote:
+> here's a patchset implementing ZAC support for libata.
 > 
-> Signed-off-by: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> ---
->  Documentation/devicetree/bindings/ata/ahci-platform.txt | 1 +
->  1 file changed, 1 insertion(+)
+> This is the second part of a larger patchset for ZAC/ZBC support;
+> it requires the scsi trace fixes queued for in mkp/4.7/scsi-queue and
+> the patchset 'libata: SATL update' queued in tj/for-4.7-zac.
 
-Acked-by: Rob Herring <robh@kernel.org>
+The patches look good from libata side.  If others are okay with it, I
+can pull mkp/4.7/scsi-queue into tj/for-4.7-zac and apply this series
+on top of it.
+
+Thanks.
+
+-- 
+tejun
