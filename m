@@ -1,120 +1,77 @@
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v2 01/23] ata: sata_dwc_460ex: remove incorrect locking
-Date: Tue, 26 Apr 2016 12:03:02 +0300
-Message-ID: <1461661404-1952-2-git-send-email-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 10/23] ata: sata_dwc_460ex: add phy support
+Date: Tue, 26 Apr 2016 12:03:11 +0300
+Message-ID: <1461661404-1952-11-git-send-email-andriy.shevchenko@linux.intel.com>
 References: <1461661404-1952-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 In-Reply-To: <1461661404-1952-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, Christian Lamparter <chunkeey@googlemail.com>, =?UTF-8?q?M=C3=A5ns=20Rullg=C3=A5rd?= <mans@mansr.com>, Julian Margetson <runaway@candw.ms>
 List-Id: linux-ide@vger.kernel.org
 
-From: Mans Rullgard <mans@mansr.com>
-
-This lock is already taken in ata_scsi_queuecmd() a few levels up the
-call stack so attempting to take it here is an error.  Moreover, it is
-pointless in the first place since it only protects a single, atomic
-assignment.
-
-Enabling lock debugging gives the following output:
-
-=============================================
-[ INFO: possible recursive locking detected ]
-4.4.0-rc5+ #189 Not tainted
----------------------------------------------
-kworker/u2:3/37 is trying to acquire lock:
- (&(&host->lock)->rlock){-.-...}, at: [<90283294>] sata_dwc_exec_command_by_tag.constprop.14+0x44/0x8c
-
-but task is already holding lock:
- (&(&host->lock)->rlock){-.-...}, at: [<902761ac>] ata_scsi_queuecmd+0x2c/0x330
-
-other info that might help us debug this:
- Possible unsafe locking scenario:
-
-       CPU0
-       ----
-  lock(&(&host->lock)->rlock);
-  lock(&(&host->lock)->rlock);
-
- *** DEADLOCK ***
- May be due to missing lock nesting notation
-
-4 locks held by kworker/u2:3/37:
- #0:  ("events_unbound"){.+.+.+}, at: [<9003a0a4>] process_one_work+0x12c/0x430
- #1:  ((&entry->work)){+.+.+.}, at: [<9003a0a4>] process_one_work+0x12c/0x430
- #2:  (&bdev->bd_mutex){+.+.+.}, at: [<9011fd54>] __blkdev_get+0x50/0x380
- #3:  (&(&host->lock)->rlock){-.-...}, at: [<902761ac>] ata_scsi_queuecmd+0x2c/0x330
-
-stack backtrace:
-CPU: 0 PID: 37 Comm: kworker/u2:3 Not tainted 4.4.0-rc5+ #189
-Workqueue: events_unbound async_run_entry_fn
-Stack : 90b38e30 00000021 00000003 9b2a6040 00000000 9005f3f0 904fc8dc 00000025
-        906b96e4 00000000 90528648 9b3336c4 904fc8dc 9009bf18 00000002 00000004
-        00000000 00000000 9b3336c4 9b3336e4 904fc8dc 9003d074 00000000 90500000
-        9005e738 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-        6e657665 755f7374 756f626e 0000646e 00000000 00000000 9b00ca00 9b025000
-          ...
-Call Trace:
-[<90009d6c>] show_stack+0x88/0xa4
-[<90057744>] __lock_acquire+0x1ce8/0x2154
-[<900583e4>] lock_acquire+0x64/0x8c
-[<9045ff10>] _raw_spin_lock_irqsave+0x54/0x78
-[<90283294>] sata_dwc_exec_command_by_tag.constprop.14+0x44/0x8c
-[<90283484>] sata_dwc_qc_issue+0x1a8/0x24c
-[<9026b39c>] ata_qc_issue+0x1f0/0x410
-[<90273c6c>] ata_scsi_translate+0xb4/0x200
-[<90276234>] ata_scsi_queuecmd+0xb4/0x330
-[<9025800c>] scsi_dispatch_cmd+0xd0/0x128
-[<90259934>] scsi_request_fn+0x58c/0x638
-[<901a3e50>] __blk_run_queue+0x40/0x5c
-[<901a83d4>] blk_queue_bio+0x27c/0x28c
-[<901a5914>] generic_make_request+0xf0/0x188
-[<901a5a54>] submit_bio+0xa8/0x194
-[<9011adcc>] submit_bh_wbc.isra.23+0x15c/0x17c
-[<9011c908>] block_read_full_page+0x3e4/0x428
-[<9009e2e0>] do_read_cache_page+0xac/0x210
-[<9009fd90>] read_cache_page+0x18/0x24
-[<901bbd18>] read_dev_sector+0x38/0xb0
-[<901bd174>] msdos_partition+0xb4/0x5c0
-[<901bcb8c>] check_partition+0x140/0x274
-[<901bba60>] rescan_partitions+0xa0/0x2b0
-[<9011ff68>] __blkdev_get+0x264/0x380
-[<901201ac>] blkdev_get+0x128/0x36c
-[<901b9378>] add_disk+0x3c0/0x4bc
-[<90268268>] sd_probe_async+0x100/0x224
-[<90043a44>] async_run_entry_fn+0x50/0x124
-[<9003a11c>] process_one_work+0x1a4/0x430
-[<9003a4f4>] worker_thread+0x14c/0x4fc
-[<900408f4>] kthread+0xd0/0xe8
-[<90004338>] ret_from_kernel_thread+0x14/0x1c
-
-Fixes: 62936009f35a ("[libata] Add 460EX on-chip SATA driver, sata_dwc_460ex")
-Tested-by: Christian Lamparter <chunkeey@googlemail.com>
-Signed-off-by: Mans Rullgard <mans@mansr.com>
----
- drivers/ata/sata_dwc_460ex.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
-
-diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index 2cb6f7e..5213e22 100644
---- a/drivers/ata/sata_dwc_460ex.c
-+++ b/drivers/ata/sata_dwc_460ex.c
-@@ -924,15 +924,13 @@ static void sata_dwc_exec_command_by_tag(struct ata_port *ap,
- 					 struct ata_taskfile *tf,
- 					 u8 tag, u32 cmd_issued)
- {
--	unsigned long flags;
- 	struct sata_dwc_device_port *hsdevp = HSDEVP_FROM_AP(ap);
- 
- 	dev_dbg(ap->dev, "%s cmd(0x%02x): %s tag=%d\n", __func__, tf->command,
- 		ata_get_cmd_descript(tf->command), tag);
- 
--	spin_lock_irqsave(&ap->host->lock, flags);
- 	hsdevp->cmd_issued[tag] = cmd_issued;
--	spin_unlock_irqrestore(&ap->host->lock, flags);
-+
- 	/*
- 	 * Clear SError before executing a new command.
- 	 * sata_dwc_scr_write and read can not be used here. Clearing the PM
--- 
-2.8.0.rc3
+RnJvbTogTWFucyBSdWxsZ2FyZCA8bWFuc0BtYW5zci5jb20+CgpUaGlzIGFkZHMgc3VwcG9ydCBm
+b3IgcG93ZXJpbmcgb24gYW4gb3B0aW9uYWwgUEhZIHdoZW4gYWN0aXZhdGluZyB0aGUKZGV2aWNl
+LgoKVGVzdGVkLWJ5OiBDaHJpc3RpYW4gTGFtcGFydGVyIDxjaHVua2VleUBnb29nbGVtYWlsLmNv
+bT4KU2lnbmVkLW9mZi1ieTogTWFucyBSdWxsZ2FyZCA8bWFuc0BtYW5zci5jb20+Ci0tLQogZHJp
+dmVycy9hdGEvS2NvbmZpZyAgICAgICAgICB8ICAxICsKIGRyaXZlcnMvYXRhL3NhdGFfZHdjXzQ2
+MGV4LmMgfCAyMiArKysrKysrKysrKysrKysrKysrKysrCiAyIGZpbGVzIGNoYW5nZWQsIDIzIGlu
+c2VydGlvbnMoKykKCmRpZmYgLS1naXQgYS9kcml2ZXJzL2F0YS9LY29uZmlnIGIvZHJpdmVycy9h
+dGEvS2NvbmZpZwppbmRleCBlZGUxMjZkLi40MWIwNzI1IDEwMDY0NAotLS0gYS9kcml2ZXJzL2F0
+YS9LY29uZmlnCisrKyBiL2RyaXZlcnMvYXRhL0tjb25maWcKQEAgLTMxMyw2ICszMTMsNyBAQCBj
+b25maWcgQVRBX1BJSVgKIAogY29uZmlnIFNBVEFfRFdDCiAJdHJpc3RhdGUgIkRlc2lnbldhcmUg
+Q29yZXMgU0FUQSBzdXBwb3J0IgorCXNlbGVjdCBHRU5FUklDX1BIWQogCWhlbHAKIAkgIFRoaXMg
+b3B0aW9uIGVuYWJsZXMgc3VwcG9ydCBmb3IgdGhlIG9uLWNoaXAgU0FUQSBjb250cm9sbGVyIG9m
+IHRoZQogCSAgQXBwbGllZE1pY3JvIHByb2Nlc3NvciA0NjBFWC4KZGlmZiAtLWdpdCBhL2RyaXZl
+cnMvYXRhL3NhdGFfZHdjXzQ2MGV4LmMgYi9kcml2ZXJzL2F0YS9zYXRhX2R3Y180NjBleC5jCmlu
+ZGV4IDIwMGFmMzYuLjRiOGVkZWQgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvYXRhL3NhdGFfZHdjXzQ2
+MGV4LmMKKysrIGIvZHJpdmVycy9hdGEvc2F0YV9kd2NfNDYwZXguYwpAQCAtMzUsNiArMzUsNyBA
+QAogI2luY2x1ZGUgPGxpbnV4L29mX2lycS5oPgogI2luY2x1ZGUgPGxpbnV4L29mX3BsYXRmb3Jt
+Lmg+CiAjaW5jbHVkZSA8bGludXgvcGxhdGZvcm1fZGV2aWNlLmg+CisjaW5jbHVkZSA8bGludXgv
+cGh5L3BoeS5oPgogI2luY2x1ZGUgPGxpbnV4L2xpYmF0YS5oPgogI2luY2x1ZGUgPGxpbnV4L3Ns
+YWIuaD4KIApAQCAtMTQ1LDYgKzE0Niw3IEBAIHN0cnVjdCBzYXRhX2R3Y19kZXZpY2UgewogCXN0
+cnVjdCBhdGFfaG9zdAkJKmhvc3Q7CiAJdTggX19pb21lbQkJKnJlZ19iYXNlOwogCXN0cnVjdCBz
+YXRhX2R3Y19yZWdzCSpzYXRhX2R3Y19yZWdzOwkvKiBEVyBTeW5vcHN5cyBTQVRBIHNwZWNpZmlj
+ICovCisJc3RydWN0IHBoeQkJKnBoeTsKICNpZmRlZiBDT05GSUdfU0FUQV9EV0NfT0xEX0RNQQog
+CXN0cnVjdCBkd19kbWFfY2hpcAkqZG1hOwogI2VuZGlmCkBAIC05NDgsNiArOTUwLDEwIEBAIHN0
+YXRpYyBpbnQgc2F0YV9kd2NfcG9ydF9zdGFydChzdHJ1Y3QgYXRhX3BvcnQgKmFwKQogCWlmIChl
+cnIpCiAJCWdvdG8gQ0xFQU5VUF9BTExPQzsKIAorCWVyciA9IHBoeV9wb3dlcl9vbihoc2Rldi0+
+cGh5KTsKKwlpZiAoZXJyKQorCQlnb3RvIENMRUFOVVBfQUxMT0M7CisKIAlmb3IgKGkgPSAwOyBp
+IDwgU0FUQV9EV0NfUUNNRF9NQVg7IGkrKykKIAkJaHNkZXZwLT5jbWRfaXNzdWVkW2ldID0gU0FU
+QV9EV0NfQ01EX0lTU1VFRF9OT1Q7CiAKQEAgLTk4MywxMSArOTg5LDEzIEBAIENMRUFOVVA6CiBz
+dGF0aWMgdm9pZCBzYXRhX2R3Y19wb3J0X3N0b3Aoc3RydWN0IGF0YV9wb3J0ICphcCkKIHsKIAlz
+dHJ1Y3Qgc2F0YV9kd2NfZGV2aWNlX3BvcnQgKmhzZGV2cCA9IEhTREVWUF9GUk9NX0FQKGFwKTsK
+KwlzdHJ1Y3Qgc2F0YV9kd2NfZGV2aWNlICpoc2RldiA9IEhTREVWX0ZST01fQVAoYXApOwogCiAJ
+ZGV2X2RiZyhhcC0+ZGV2LCAiJXM6IGFwLT5pZCA9ICVkXG4iLCBfX2Z1bmNfXywgYXAtPnByaW50
+X2lkKTsKIAogCWRtYWVuZ2luZV90ZXJtaW5hdGVfYWxsKGhzZGV2cC0+Y2hhbik7CiAJZG1hX3Jl
+bGVhc2VfY2hhbm5lbChoc2RldnAtPmNoYW4pOworCXBoeV9wb3dlcl9vZmYoaHNkZXYtPnBoeSk7
+CiAKIAlrZnJlZShoc2RldnApOwogCWFwLT5wcml2YXRlX2RhdGEgPSBOVUxMOwpAQCAtMTMyMSw2
+ICsxMzI5LDE3IEBAIHN0YXRpYyBpbnQgc2F0YV9kd2NfcHJvYmUoc3RydWN0IHBsYXRmb3JtX2Rl
+dmljZSAqb2ZkZXYpCiAJfQogI2VuZGlmCiAKKwloc2Rldi0+cGh5ID0gZGV2bV9waHlfb3B0aW9u
+YWxfZ2V0KGhzZGV2LT5kZXYsICJzYXRhLXBoeSIpOworCWlmIChJU19FUlIoaHNkZXYtPnBoeSkp
+IHsKKwkJZXJyID0gUFRSX0VSUihoc2Rldi0+cGh5KTsKKwkJaHNkZXYtPnBoeSA9IE5VTEw7CisJ
+CWdvdG8gZXJyb3Jfb3V0OworCX0KKworCWVyciA9IHBoeV9pbml0KGhzZGV2LT5waHkpOworCWlm
+IChlcnIpCisJCWdvdG8gZXJyb3Jfb3V0OworCiAJLyoKIAkgKiBOb3csIHJlZ2lzdGVyIHdpdGgg
+bGliQVRBIGNvcmUsIHRoaXMgd2lsbCBhbHNvIGluaXRpYXRlIHRoZQogCSAqIGRldmljZSBkaXNj
+b3ZlcnkgcHJvY2VzcywgaW52b2tpbmcgb3VyIHBvcnRfc3RhcnQoKSBoYW5kbGVyICYKQEAgLTEz
+MzQsNiArMTM1Myw3IEBAIHN0YXRpYyBpbnQgc2F0YV9kd2NfcHJvYmUoc3RydWN0IHBsYXRmb3Jt
+X2RldmljZSAqb2ZkZXYpCiAJcmV0dXJuIDA7CiAKIGVycm9yX291dDoKKwlwaHlfZXhpdChoc2Rl
+di0+cGh5KTsKIAlpb3VubWFwKGJhc2UpOwogCXJldHVybiBlcnI7CiB9CkBAIC0xMzQ2LDYgKzEz
+NjYsOCBAQCBzdGF0aWMgaW50IHNhdGFfZHdjX3JlbW92ZShzdHJ1Y3QgcGxhdGZvcm1fZGV2aWNl
+ICpvZmRldikKIAogCWF0YV9ob3N0X2RldGFjaChob3N0KTsKIAorCXBoeV9leGl0KGhzZGV2LT5w
+aHkpOworCiAjaWZkZWYgQ09ORklHX1NBVEFfRFdDX09MRF9ETUEKIAkvKiBGcmVlIFNBVEEgRE1B
+IHJlc291cmNlcyAqLwogCXNhdGFfZHdjX2RtYV9leGl0X29sZChoc2Rldik7Ci0tIAoyLjguMC5y
+YzMKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCkxpbnV4
+cHBjLWRldiBtYWlsaW5nIGxpc3QKTGludXhwcGMtZGV2QGxpc3RzLm96bGFicy5vcmcKaHR0cHM6
+Ly9saXN0cy5vemxhYnMub3JnL2xpc3RpbmZvL2xpbnV4cHBjLWRldg==
