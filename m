@@ -1,7 +1,7 @@
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v2 23/23] powerpc/4xx: Device tree update for the 460ex DWC SATA
-Date: Tue, 26 Apr 2016 12:03:24 +0300
-Message-ID: <1461661404-1952-24-git-send-email-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 04/23] ata: sata_dwc_460ex: burst size must be in items not bytes
+Date: Tue, 26 Apr 2016 12:03:05 +0300
+Message-ID: <1461661404-1952-5-git-send-email-andriy.shevchenko@linux.intel.com>
 References: <1461661404-1952-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1461661404-1952-1-git-send-email-andriy.shevchenko@linux.intel.com>
@@ -10,43 +10,39 @@ To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Rob Herring <robh+dt@k
 Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 List-Id: linux-ide@vger.kernel.org
 
-Device tree update for the Applied micro processor 460ex on-chip SATA to use
-"dmas" property.
+The burst size as defined by DMAengine API is in items of address width. Derive
+burst size from AHB_DMA_BRST_DFLT (64 bytes) by dividing it to
+DMA_SLAVE_BUSWIDTH_4_BYTES (4 bytes) that gives us 16 items.
 
-Acked-by: Rob Herring <robh@kernel.org>
+Tested-by: Christian Lamparter <chunkeey@googlemail.com>
 Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- arch/powerpc/boot/dts/canyonlands.dts | 15 ++++++++++++---
- 1 file changed, 12 insertions(+), 3 deletions(-)
+ drivers/ata/sata_dwc_460ex.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/arch/powerpc/boot/dts/canyonlands.dts b/arch/powerpc/boot/dts/canyonlands.dts
-index 3dc75de..549c24c 100644
---- a/arch/powerpc/boot/dts/canyonlands.dts
-+++ b/arch/powerpc/boot/dts/canyonlands.dts
-@@ -190,12 +190,21 @@
- 					 /* DMA */ 0x2 &UIC0 0xc 0x4>;
- 		};
+diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+index aee8873..4cac27d 100644
+--- a/drivers/ata/sata_dwc_460ex.c
++++ b/drivers/ata/sata_dwc_460ex.c
+@@ -65,7 +65,7 @@
+ #define NO_IRQ		0
+ #endif
  
-+		AHBDMA: dma@bffd0800 {
-+			compatible = "snps,dma-spear1340";
-+			reg = <4 0xbffd0800 0x400>;
-+			interrupt-parent = <&UIC3>;
-+			interrupts = <0x5 0x4>;
-+			#dma-cells = <3>;
-+		};
-+
- 		SATA0: sata@bffd1000 {
- 			compatible = "amcc,sata-460ex";
--			reg = <4 0xbffd1000 0x800 4 0xbffd0800 0x400>;
-+			reg = <4 0xbffd1000 0x800>;
- 			interrupt-parent = <&UIC3>;
--			interrupts = <0x0 0x4       /* SATA */
--				      0x5 0x4>;     /* AHBDMA */
-+			interrupts = <0x0 0x4>;
-+			dmas = <&AHBDMA 0 1 0>;
-+			dma-names = "sata-dma";
- 		};
+-#define AHB_DMA_BRST_DFLT	64	/* 16 data items burst length*/
++#define AHB_DMA_BRST_DFLT	64	/* 16 data items burst length */
  
- 		POB0: opb {
+ enum {
+ 	SATA_DWC_MAX_PORTS = 1,
+@@ -318,8 +318,8 @@ static struct dma_async_tx_descriptor *dma_dwc_xfer_setup(struct ata_queued_cmd
+ 	}
+ 
+ 	sconf.direction = qc->dma_dir;
+-	sconf.src_maxburst = AHB_DMA_BRST_DFLT;
+-	sconf.dst_maxburst = AHB_DMA_BRST_DFLT;
++	sconf.src_maxburst = AHB_DMA_BRST_DFLT / 4;	/* in items */
++	sconf.dst_maxburst = AHB_DMA_BRST_DFLT / 4;	/* in items */
+ 	sconf.src_addr_width = DMA_SLAVE_BUSWIDTH_4_BYTES;
+ 	sconf.dst_addr_width = DMA_SLAVE_BUSWIDTH_4_BYTES;
+ 
 -- 
 2.8.0.rc3
