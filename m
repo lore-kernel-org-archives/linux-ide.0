@@ -1,57 +1,48 @@
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v2 12/23] ata: sata_dwc_460ex: correct HOSTDEV{P}_FROM_*() macros
-Date: Tue, 26 Apr 2016 12:03:13 +0300
-Message-ID: <1461661404-1952-13-git-send-email-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 22/23] ata: sata_dwc_460ex: make debug messages neat
+Date: Tue, 26 Apr 2016 12:03:23 +0300
+Message-ID: <1461661404-1952-23-git-send-email-andriy.shevchenko@linux.intel.com>
 References: <1461661404-1952-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:42965 "EHLO mga04.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752327AbcDZJDf (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 26 Apr 2016 05:03:35 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1461661404-1952-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, Christian Lamparter <chunkeey@googlemail.com>, =?UTF-8?q?M=C3=A5ns=20Rullg=C3=A5rd?= <mans@mansr.com>, Julian Margetson <runaway@candw.ms>
 Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+List-Id: linux-ide@vger.kernel.org
 
-Here we refactor HOSTDEV{P}_FROM_*() macros to fit one line and fix the
-definition of HSDEV_FROM_HSDEVP() where wrong name of the parameter waas used.
+There is a duplication in the debug messages when accessing SCR registers.
+Remove duplication to make the messages neat.
 
 Tested-by: Christian Lamparter <chunkeey@googlemail.com>
 Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/ata/sata_dwc_460ex.c | 17 ++++++-----------
- 1 file changed, 6 insertions(+), 11 deletions(-)
+ drivers/ata/sata_dwc_460ex.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index 24837d6..2258baf 100644
+index 6f145f8..00c2af1 100644
 --- a/drivers/ata/sata_dwc_460ex.c
 +++ b/drivers/ata/sata_dwc_460ex.c
-@@ -168,18 +168,13 @@ struct sata_dwc_device_port {
- };
+@@ -414,16 +414,16 @@ static int sata_dwc_scr_read(struct ata_link *link, unsigned int scr, u32 *val)
+ 	}
  
- /*
-- * Commonly used DWC SATA driver Macros
-+ * Commonly used DWC SATA driver macros
-  */
--#define HSDEV_FROM_HOST(host)  ((struct sata_dwc_device *)\
--					(host)->private_data)
--#define HSDEV_FROM_AP(ap)  ((struct sata_dwc_device *)\
--					(ap)->host->private_data)
--#define HSDEVP_FROM_AP(ap)   ((struct sata_dwc_device_port *)\
--					(ap)->private_data)
--#define HSDEV_FROM_QC(qc)	((struct sata_dwc_device *)\
--					(qc)->ap->host->private_data)
--#define HSDEV_FROM_HSDEVP(p)	((struct sata_dwc_device *)\
--						(hsdevp)->hsdev)
-+#define HSDEV_FROM_HOST(host)	((struct sata_dwc_device *)(host)->private_data)
-+#define HSDEV_FROM_AP(ap)	((struct sata_dwc_device *)(ap)->host->private_data)
-+#define HSDEVP_FROM_AP(ap)	((struct sata_dwc_device_port *)(ap)->private_data)
-+#define HSDEV_FROM_QC(qc)	((struct sata_dwc_device *)(qc)->ap->host->private_data)
-+#define HSDEV_FROM_HSDEVP(p)	((struct sata_dwc_device *)(p)->hsdev)
+ 	*val = sata_dwc_readl(link->ap->ioaddr.scr_addr + (scr * 4));
+-	dev_dbg(link->ap->dev, "%s: id=%d reg=%d val=val=0x%08x\n",
+-		__func__, link->ap->print_id, scr, *val);
++	dev_dbg(link->ap->dev, "%s: id=%d reg=%d val=0x%08x\n", __func__,
++		link->ap->print_id, scr, *val);
  
- enum {
- 	SATA_DWC_CMD_ISSUED_NOT		= 0,
+ 	return 0;
+ }
+ 
+ static int sata_dwc_scr_write(struct ata_link *link, unsigned int scr, u32 val)
+ {
+-	dev_dbg(link->ap->dev, "%s: id=%d reg=%d val=val=0x%08x\n",
+-		__func__, link->ap->print_id, scr, val);
++	dev_dbg(link->ap->dev, "%s: id=%d reg=%d val=0x%08x\n", __func__,
++		link->ap->print_id, scr, val);
+ 	if (scr > SCR_NOTIFICATION) {
+ 		dev_err(link->ap->dev, "%s: Incorrect SCR offset 0x%02x\n",
+ 			 __func__, scr);
 -- 
 2.8.0.rc3
-
