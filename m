@@ -1,37 +1,69 @@
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v2 16/23] ata: sata_dwc_460ex: add __iomem to register base pointer
-Date: Tue, 26 Apr 2016 12:03:17 +0300
-Message-ID: <1461661404-1952-17-git-send-email-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 14/23] ata: sata_dwc_460ex: get rid of some pointless casts
+Date: Tue, 26 Apr 2016 12:03:15 +0300
+Message-ID: <1461661404-1952-15-git-send-email-andriy.shevchenko@linux.intel.com>
 References: <1461661404-1952-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 In-Reply-To: <1461661404-1952-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, Christian Lamparter <chunkeey@googlemail.com>, =?UTF-8?q?M=C3=A5ns=20Rullg=C3=A5rd?= <mans@mansr.com>, Julian Margetson <runaway@candw.ms>
 List-Id: linux-ide@vger.kernel.org
 
-From: Mans Rullgard <mans@mansr.com>
-
-The pointer to the mmio register base is missing the __iomem
-annotation.  Fix this.
-
-Tested-by: Christian Lamparter <chunkeey@googlemail.com>
-Signed-off-by: Mans Rullgard <mans@mansr.com>
----
- drivers/ata/sata_dwc_460ex.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index 90e3e14..25e00f2 100644
---- a/drivers/ata/sata_dwc_460ex.c
-+++ b/drivers/ata/sata_dwc_460ex.c
-@@ -145,7 +145,7 @@ struct sata_dwc_device {
- 	struct ata_probe_ent	*pe;		/* ptr to probe-ent */
- 	struct ata_host		*host;
- 	u8 __iomem		*reg_base;
--	struct sata_dwc_regs	*sata_dwc_regs;	/* DW Synopsys SATA specific */
-+	struct sata_dwc_regs __iomem *sata_dwc_regs;	/* DW SATA specific */
- 	u32			sactive_issued;
- 	u32			sactive_queued;
- 	struct phy		*phy;
--- 
-2.8.0.rc3
+RnJvbTogTWFucyBSdWxsZ2FyZCA8bWFuc0BtYW5zci5jb20+CgpDYXN0aW5nIGEgcG9pbnRlciB0
+byB1bnNpZ25lZCBsb25nIG9ubHkgdG8gaW1tZWRpYXRlbHkgY2FzdCBpdCBiYWNrCnRvIGEgcG9p
+bnRlciBtYWtlcyBubyBzZW5zZS4gIEZpeCB0aGlzLgoKVGVzdGVkLWJ5OiBDaHJpc3RpYW4gTGFt
+cGFydGVyIDxjaHVua2VleUBnb29nbGVtYWlsLmNvbT4KU2lnbmVkLW9mZi1ieTogTWFucyBSdWxs
+Z2FyZCA8bWFuc0BtYW5zci5jb20+Ci0tLQogZHJpdmVycy9hdGEvc2F0YV9kd2NfNDYwZXguYyB8
+IDMwICsrKysrKysrKysrKysrKy0tLS0tLS0tLS0tLS0tLQogMSBmaWxlIGNoYW5nZWQsIDE1IGlu
+c2VydGlvbnMoKyksIDE1IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvYXRhL3Nh
+dGFfZHdjXzQ2MGV4LmMgYi9kcml2ZXJzL2F0YS9zYXRhX2R3Y180NjBleC5jCmluZGV4IDNhOWRk
+ODIuLjI5MTJlNGQgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvYXRhL3NhdGFfZHdjXzQ2MGV4LmMKKysr
+IGIvZHJpdmVycy9hdGEvc2F0YV9kd2NfNDYwZXguYwpAQCAtODQ0LDI2ICs4NDQsMjYgQEAgc3Rh
+dGljIHZvaWQgc2F0YV9kd2NfZW5hYmxlX2ludGVycnVwdHMoc3RydWN0IHNhdGFfZHdjX2Rldmlj
+ZSAqaHNkZXYpCiAJCWluX2xlMzIoJmhzZGV2LT5zYXRhX2R3Y19yZWdzLT5lcnJtcikpOwogfQog
+Ci1zdGF0aWMgdm9pZCBzYXRhX2R3Y19zZXR1cF9wb3J0KHN0cnVjdCBhdGFfaW9wb3J0cyAqcG9y
+dCwgdW5zaWduZWQgbG9uZyBiYXNlKQorc3RhdGljIHZvaWQgc2F0YV9kd2Nfc2V0dXBfcG9ydChz
+dHJ1Y3QgYXRhX2lvcG9ydHMgKnBvcnQsIHZvaWQgX19pb21lbSAqYmFzZSkKIHsKLQlwb3J0LT5j
+bWRfYWRkciA9ICh2b2lkIF9faW9tZW0gKiliYXNlICsgMHgwMDsKLQlwb3J0LT5kYXRhX2FkZHIg
+PSAodm9pZCBfX2lvbWVtICopYmFzZSArIDB4MDA7CisJcG9ydC0+Y21kX2FkZHIJCT0gYmFzZSAr
+IDB4MDA7CisJcG9ydC0+ZGF0YV9hZGRyCQk9IGJhc2UgKyAweDAwOwogCi0JcG9ydC0+ZXJyb3Jf
+YWRkciA9ICh2b2lkIF9faW9tZW0gKiliYXNlICsgMHgwNDsKLQlwb3J0LT5mZWF0dXJlX2FkZHIg
+PSAodm9pZCBfX2lvbWVtICopYmFzZSArIDB4MDQ7CisJcG9ydC0+ZXJyb3JfYWRkcgk9IGJhc2Ug
+KyAweDA0OworCXBvcnQtPmZlYXR1cmVfYWRkcgk9IGJhc2UgKyAweDA0OwogCi0JcG9ydC0+bnNl
+Y3RfYWRkciA9ICh2b2lkIF9faW9tZW0gKiliYXNlICsgMHgwODsKKwlwb3J0LT5uc2VjdF9hZGRy
+CT0gYmFzZSArIDB4MDg7CiAKLQlwb3J0LT5sYmFsX2FkZHIgPSAodm9pZCBfX2lvbWVtICopYmFz
+ZSArIDB4MGM7Ci0JcG9ydC0+bGJhbV9hZGRyID0gKHZvaWQgX19pb21lbSAqKWJhc2UgKyAweDEw
+OwotCXBvcnQtPmxiYWhfYWRkciA9ICh2b2lkIF9faW9tZW0gKiliYXNlICsgMHgxNDsKKwlwb3J0
+LT5sYmFsX2FkZHIJCT0gYmFzZSArIDB4MGM7CisJcG9ydC0+bGJhbV9hZGRyCQk9IGJhc2UgKyAw
+eDEwOworCXBvcnQtPmxiYWhfYWRkcgkJPSBiYXNlICsgMHgxNDsKIAotCXBvcnQtPmRldmljZV9h
+ZGRyID0gKHZvaWQgX19pb21lbSAqKWJhc2UgKyAweDE4OwotCXBvcnQtPmNvbW1hbmRfYWRkciA9
+ICh2b2lkIF9faW9tZW0gKiliYXNlICsgMHgxYzsKLQlwb3J0LT5zdGF0dXNfYWRkciA9ICh2b2lk
+IF9faW9tZW0gKiliYXNlICsgMHgxYzsKKwlwb3J0LT5kZXZpY2VfYWRkcgk9IGJhc2UgKyAweDE4
+OworCXBvcnQtPmNvbW1hbmRfYWRkcgk9IGJhc2UgKyAweDFjOworCXBvcnQtPnN0YXR1c19hZGRy
+CT0gYmFzZSArIDB4MWM7CiAKLQlwb3J0LT5hbHRzdGF0dXNfYWRkciA9ICh2b2lkIF9faW9tZW0g
+KiliYXNlICsgMHgyMDsKLQlwb3J0LT5jdGxfYWRkciA9ICh2b2lkIF9faW9tZW0gKiliYXNlICsg
+MHgyMDsKKwlwb3J0LT5hbHRzdGF0dXNfYWRkcgk9IGJhc2UgKyAweDIwOworCXBvcnQtPmN0bF9h
+ZGRyCQk9IGJhc2UgKyAweDIwOwogfQogCiBzdGF0aWMgaW50IHNhdGFfZHdjX2RtYV9nZXRfY2hh
+bm5lbChzdHJ1Y3Qgc2F0YV9kd2NfZGV2aWNlX3BvcnQgKmhzZGV2cCkKQEAgLTEyNTEsNyArMTI1
+MSw3IEBAIHN0YXRpYyBpbnQgc2F0YV9kd2NfcHJvYmUoc3RydWN0IHBsYXRmb3JtX2RldmljZSAq
+b2ZkZXYpCiAJLyogU2V0dXAgcG9ydCAqLwogCWhvc3QtPnBvcnRzWzBdLT5pb2FkZHIuY21kX2Fk
+ZHIgPSBiYXNlOwogCWhvc3QtPnBvcnRzWzBdLT5pb2FkZHIuc2NyX2FkZHIgPSBiYXNlICsgU0FU
+QV9EV0NfU0NSX09GRlNFVDsKLQlzYXRhX2R3Y19zZXR1cF9wb3J0KCZob3N0LT5wb3J0c1swXS0+
+aW9hZGRyLCAodW5zaWduZWQgbG9uZyliYXNlKTsKKwlzYXRhX2R3Y19zZXR1cF9wb3J0KCZob3N0
+LT5wb3J0c1swXS0+aW9hZGRyLCBiYXNlKTsKIAogCS8qIFJlYWQgdGhlIElEIGFuZCBWZXJzaW9u
+IFJlZ2lzdGVycyAqLwogCWlkciA9IGluX2xlMzIoJmhzZGV2LT5zYXRhX2R3Y19yZWdzLT5pZHIp
+OwotLSAKMi44LjAucmMzCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fXwpMaW51eHBwYy1kZXYgbWFpbGluZyBsaXN0CkxpbnV4cHBjLWRldkBsaXN0cy5vemxh
+YnMub3JnCmh0dHBzOi8vbGlzdHMub3psYWJzLm9yZy9saXN0aW5mby9saW51eHBwYy1kZXY=
