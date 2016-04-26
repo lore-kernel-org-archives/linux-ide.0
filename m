@@ -1,84 +1,41 @@
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v2 17/23] ata: sata_dwc_460ex: supply physical address of FIFO to DMA
-Date: Tue, 26 Apr 2016 12:03:18 +0300
-Message-ID: <1461661404-1952-18-git-send-email-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 05/23] ata: sata_dwc_460ex: DMA is always a flow controller
+Date: Tue, 26 Apr 2016 12:03:06 +0300
+Message-ID: <1461661404-1952-6-git-send-email-andriy.shevchenko@linux.intel.com>
 References: <1461661404-1952-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 In-Reply-To: <1461661404-1952-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, Christian Lamparter <chunkeey@googlemail.com>, =?UTF-8?q?M=C3=A5ns=20Rullg=C3=A5rd?= <mans@mansr.com>, Julian Margetson <runaway@candw.ms>
 Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 List-Id: linux-ide@vger.kernel.org
 
-DMA operates with physical addresses which is not exactly the same as ioremap()
-returns.
-
-Introduce variable to keep physical address of the SATA FIFO register and
-supply it when prepare DMA channel.
-
-Tested-by: Christian Lamparter <chunkeey@googlemail.com>
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/ata/sata_dwc_460ex.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index 25e00f2..7b73728 100644
---- a/drivers/ata/sata_dwc_460ex.c
-+++ b/drivers/ata/sata_dwc_460ex.c
-@@ -100,7 +100,7 @@ struct sata_dwc_regs {
- 	u32 versionr;		/* Version Register */
- 	u32 idr;		/* ID Register */
- 	u32 unimpl[192];	/* Unimplemented */
--	u32 dmadr[256];	/* FIFO Locations in DMA Mode */
-+	u32 dmadr[256];		/* FIFO Locations in DMA Mode */
- };
- 
- enum {
-@@ -149,6 +149,7 @@ struct sata_dwc_device {
- 	u32			sactive_issued;
- 	u32			sactive_queued;
- 	struct phy		*phy;
-+	phys_addr_t		dmadr;
- #ifdef CONFIG_SATA_DWC_OLD_DMA
- 	struct dw_dma_chip	*dma;
- #endif
-@@ -380,15 +381,14 @@ static struct dma_async_tx_descriptor *dma_dwc_xfer_setup(struct ata_queued_cmd
- 	struct ata_port *ap = qc->ap;
- 	struct sata_dwc_device_port *hsdevp = HSDEVP_FROM_AP(ap);
- 	struct sata_dwc_device *hsdev = HSDEV_FROM_AP(ap);
--	dma_addr_t addr = (dma_addr_t)&hsdev->sata_dwc_regs->dmadr;
- 	struct dma_slave_config sconf;
- 	struct dma_async_tx_descriptor *desc;
- 
- 	if (qc->dma_dir == DMA_DEV_TO_MEM) {
--		sconf.src_addr = addr;
-+		sconf.src_addr = hsdev->dmadr;
- 		sconf.device_fc = false;
- 	} else {	/* DMA_MEM_TO_DEV */
--		sconf.dst_addr = addr;
-+		sconf.dst_addr = hsdev->dmadr;
- 		sconf.device_fc = false;
- 	}
- 
-@@ -411,8 +411,8 @@ static struct dma_async_tx_descriptor *dma_dwc_xfer_setup(struct ata_queued_cmd
- 	desc->callback = dma_dwc_xfer_done;
- 	desc->callback_param = hsdev;
- 
--	dev_dbg(hsdev->dev, "%s sg: 0x%p, count: %d addr: %pad\n",
--		__func__, qc->sg, qc->n_elem, &addr);
-+	dev_dbg(hsdev->dev, "%s sg: 0x%p, count: %d addr: %pa\n", __func__,
-+		qc->sg, qc->n_elem, &hsdev->dmadr);
- 
- 	return desc;
- }
-@@ -1247,6 +1247,7 @@ static int sata_dwc_probe(struct platform_device *ofdev)
- 
- 	/* Synopsys DWC SATA specific Registers */
- 	hsdev->sata_dwc_regs = base + SATA_DWC_REG_OFFSET;
-+	hsdev->dmadr = res->start + SATA_DWC_REG_OFFSET + offsetof(struct sata_dwc_regs, dmadr);
- 
- 	/* Setup port */
- 	host->ports[0]->ioaddr.cmd_addr = base;
--- 
-2.8.0.rc3
+SW4gdGhlIG9yaWdpbmFsIGNvZGUgdGhlIERNQSBpcyBhbHdheXMgYSBmbG93IGNvbnRyb2xsZXIu
+IFNldCB0aGlzIGFjY29yZGluZ2x5CmluIHVwZGF0ZWQgY29kZS4KClRlc3RlZC1ieTogQ2hyaXN0
+aWFuIExhbXBhcnRlciA8Y2h1bmtlZXlAZ29vZ2xlbWFpbC5jb20+ClNpZ25lZC1vZmYtYnk6IEFu
+ZHkgU2hldmNoZW5rbyA8YW5kcml5LnNoZXZjaGVua29AbGludXguaW50ZWwuY29tPgotLS0KIGRy
+aXZlcnMvYXRhL3NhdGFfZHdjXzQ2MGV4LmMgfCAyICstCiAxIGZpbGUgY2hhbmdlZCwgMSBpbnNl
+cnRpb24oKyksIDEgZGVsZXRpb24oLSkKCmRpZmYgLS1naXQgYS9kcml2ZXJzL2F0YS9zYXRhX2R3
+Y180NjBleC5jIGIvZHJpdmVycy9hdGEvc2F0YV9kd2NfNDYwZXguYwppbmRleCA0Y2FjMjdkLi4x
+MjUwZTE4IDEwMDY0NAotLS0gYS9kcml2ZXJzL2F0YS9zYXRhX2R3Y180NjBleC5jCisrKyBiL2Ry
+aXZlcnMvYXRhL3NhdGFfZHdjXzQ2MGV4LmMKQEAgLTMxMSw3ICszMTEsNyBAQCBzdGF0aWMgc3Ry
+dWN0IGRtYV9hc3luY190eF9kZXNjcmlwdG9yICpkbWFfZHdjX3hmZXJfc2V0dXAoc3RydWN0IGF0
+YV9xdWV1ZWRfY21kCiAKIAlpZiAocWMtPmRtYV9kaXIgPT0gRE1BX0RFVl9UT19NRU0pIHsKIAkJ
+c2NvbmYuc3JjX2FkZHIgPSBhZGRyOwotCQlzY29uZi5kZXZpY2VfZmMgPSB0cnVlOworCQlzY29u
+Zi5kZXZpY2VfZmMgPSBmYWxzZTsKIAl9IGVsc2UgewkvKiBETUFfTUVNX1RPX0RFViAqLwogCQlz
+Y29uZi5kc3RfYWRkciA9IGFkZHI7CiAJCXNjb25mLmRldmljZV9mYyA9IGZhbHNlOwotLSAKMi44
+LjAucmMzCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpM
+aW51eHBwYy1kZXYgbWFpbGluZyBsaXN0CkxpbnV4cHBjLWRldkBsaXN0cy5vemxhYnMub3JnCmh0
+dHBzOi8vbGlzdHMub3psYWJzLm9yZy9saXN0aW5mby9saW51eHBwYy1kZXY=
