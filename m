@@ -1,87 +1,46 @@
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v2 07/23] ata: sata_dwc_460ex: skip dma setup for non-dma commands
-Date: Tue, 26 Apr 2016 12:03:08 +0300
-Message-ID: <1461661404-1952-8-git-send-email-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 08/23] ata: sata_dwc_460ex: don't call ata_sff_qc_issue()
+ on DMA commands
+Date: Tue, 26 Apr 2016 12:03:09 +0300
+Message-ID: <1461661404-1952-9-git-send-email-andriy.shevchenko@linux.intel.com>
 References: <1461661404-1952-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 In-Reply-To: <1461661404-1952-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
 To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, Christian Lamparter <chunkeey@googlemail.com>, =?UTF-8?q?M=C3=A5ns=20Rullg=C3=A5rd?= <mans@mansr.com>, Julian Margetson <runaway@candw.ms>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 List-Id: linux-ide@vger.kernel.org
 
-From: Mans Rullgard <mans@mansr.com>
-
-Calling dmaengine_prep_slave_sg() for non-dma ATA commands is
-unnecessary at best and could be harmful if the dma driver reacts
-badly to this.  It also causes this driver to print a bogus error
-message in these cases.
-
-This patch changes sata_dwc_qc_issue() to only do the dma setup
-for dma commands and also reports an error to libata if if fails.
-
-Tested-by: Christian Lamparter <chunkeey@googlemail.com>
-Signed-off-by: Mans Rullgard <mans@mansr.com>
----
- drivers/ata/sata_dwc_460ex.c | 35 +++++++++--------------------------
- 1 file changed, 9 insertions(+), 26 deletions(-)
-
-diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index 1250e18..038e5fb 100644
---- a/drivers/ata/sata_dwc_460ex.c
-+++ b/drivers/ata/sata_dwc_460ex.c
-@@ -1023,36 +1023,12 @@ static void sata_dwc_bmdma_start(struct ata_queued_cmd *qc)
- 	sata_dwc_bmdma_start_by_tag(qc, tag);
- }
- 
--/*
-- * Function : sata_dwc_qc_prep_by_tag
-- * arguments : ata_queued_cmd *qc, u8 tag
-- * Return value : None
-- * qc_prep for a particular queued command based on tag
-- */
--static void sata_dwc_qc_prep_by_tag(struct ata_queued_cmd *qc, u8 tag)
--{
--	struct dma_async_tx_descriptor *desc;
--	struct ata_port *ap = qc->ap;
--	struct sata_dwc_device_port *hsdevp = HSDEVP_FROM_AP(ap);
--
--	dev_dbg(ap->dev, "%s: port=%d dma dir=%s n_elem=%d\n",
--		__func__, ap->port_no, get_dma_dir_descript(qc->dma_dir),
--		 qc->n_elem);
--
--	desc = dma_dwc_xfer_setup(qc);
--	if (!desc) {
--		dev_err(ap->dev, "%s: dma_dwc_xfer_setup returns NULL\n",
--			__func__);
--		return;
--	}
--	hsdevp->desc[tag] = desc;
--}
--
- static unsigned int sata_dwc_qc_issue(struct ata_queued_cmd *qc)
- {
- 	u32 sactive;
- 	u8 tag = qc->tag;
- 	struct ata_port *ap = qc->ap;
-+	struct sata_dwc_device_port *hsdevp = HSDEVP_FROM_AP(ap);
- 
- #ifdef DEBUG_NCQ
- 	if (qc->tag > 0 || ap->link.sactive > 1)
-@@ -1066,7 +1042,14 @@ static unsigned int sata_dwc_qc_issue(struct ata_queued_cmd *qc)
- 
- 	if (!ata_is_ncq(qc->tf.protocol))
- 		tag = 0;
--	sata_dwc_qc_prep_by_tag(qc, tag);
-+
-+	if (ata_is_dma(qc->tf.protocol)) {
-+		hsdevp->desc[tag] = dma_dwc_xfer_setup(qc);
-+		if (!hsdevp->desc[tag])
-+			return AC_ERR_SYSTEM;
-+	} else {
-+		hsdevp->desc[tag] = NULL;
-+	}
- 
- 	if (ata_is_ncq(qc->tf.protocol)) {
- 		sactive = core_scr_read(SCR_ACTIVE);
--- 
-2.8.0.rc3
+YXRhX3NmZl9xY19pc3N1ZSgpIGNhbid0IGhhbmRsZSBETUEgY29tbWFuZHMgYW5kIHRodXMgd2Ug
+aGF2ZSB0byBhdm9pZCBpdCBmb3IKdGhlbS4gRG8gY2FsbCBhdGFfYm1kbWFfcWNfaXNzdWUoKSBp
+bnN0ZWFkIGZvciB0aGlzIGNhc2UuIE5vdGUgdGhhdCB0aGUgZm9ybWVyCm9uZSBkaXN0aW5ndWlz
+aGVzIFBJTyBhbmQgRE1BIG1vZGUgYW5kIGJlaGF2ZXMgYWNjb3JkaW5nbHkuCgpTdWdnZXN0ZWQt
+Ynk6IENocmlzdGlhbiBMYW1wYXJ0ZXIgPGNodW5rZWV5QGdvb2dsZW1haWwuY29tPgpTaWduZWQt
+b2ZmLWJ5OiBBbmR5IFNoZXZjaGVua28gPGFuZHJpeS5zaGV2Y2hlbmtvQGxpbnV4LmludGVsLmNv
+bT4KLS0tCiBkcml2ZXJzL2F0YS9zYXRhX2R3Y180NjBleC5jIHwgNCArKy0tCiAxIGZpbGUgY2hh
+bmdlZCwgMiBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2RyaXZl
+cnMvYXRhL3NhdGFfZHdjXzQ2MGV4LmMgYi9kcml2ZXJzL2F0YS9zYXRhX2R3Y180NjBleC5jCmlu
+ZGV4IDAzOGU1ZmIuLmYxYTRkNDkgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvYXRhL3NhdGFfZHdjXzQ2
+MGV4LmMKKysrIGIvZHJpdmVycy9hdGEvc2F0YV9kd2NfNDYwZXguYwpAQCAtMTA2MSwxMCArMTA2
+MSwxMCBAQCBzdGF0aWMgdW5zaWduZWQgaW50IHNhdGFfZHdjX3FjX2lzc3VlKHN0cnVjdCBhdGFf
+cXVldWVkX2NtZCAqcWMpCiAJCQlfX2Z1bmNfXywgdGFnLCBxYy0+YXAtPmxpbmsuc2FjdGl2ZSwg
+c2FjdGl2ZSk7CiAKIAkJYXAtPm9wcy0+c2ZmX3RmX2xvYWQoYXAsICZxYy0+dGYpOwotCQlzYXRh
+X2R3Y19leGVjX2NvbW1hbmRfYnlfdGFnKGFwLCAmcWMtPnRmLCBxYy0+dGFnLAorCQlzYXRhX2R3
+Y19leGVjX2NvbW1hbmRfYnlfdGFnKGFwLCAmcWMtPnRmLCB0YWcsCiAJCQkJCSAgICAgU0FUQV9E
+V0NfQ01EX0lTU1VFRF9QRU5EKTsKIAl9IGVsc2UgewotCQlhdGFfc2ZmX3FjX2lzc3VlKHFjKTsK
+KwkJcmV0dXJuIGF0YV9ibWRtYV9xY19pc3N1ZShxYyk7CiAJfQogCXJldHVybiAwOwogfQotLSAK
+Mi44LjAucmMzCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+XwpMaW51eHBwYy1kZXYgbWFpbGluZyBsaXN0CkxpbnV4cHBjLWRldkBsaXN0cy5vemxhYnMub3Jn
+Cmh0dHBzOi8vbGlzdHMub3psYWJzLm9yZy9saXN0aW5mby9saW51eHBwYy1kZXY=
