@@ -1,46 +1,49 @@
-From: Damien Le Moal <Damien.LeMoal@hgst.com>
+From: Hannes Reinecke <hare@suse.de>
 Subject: Re: [PATCHv3 00/14] libata: ZAC support
-Date: Tue, 26 Apr 2016 00:42:33 +0000
-Message-ID: <4CCE9B16-A756-4C57-8C49-B4CD66DE73DE@hgst.com>
+Date: Tue, 26 Apr 2016 07:47:54 +0200
+Message-ID: <571F010A.2010105@suse.de>
 References: <1461581156-92581-1-git-send-email-hare@suse.de>
+ <4CCE9B16-A756-4C57-8C49-B4CD66DE73DE@hgst.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sjc00mx1.hgst.com ([199.255.44.36]:62055 "EHLO
-	sjc00mx1.hgst.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750750AbcDZAmh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 25 Apr 2016 20:42:37 -0400
-In-Reply-To: <1461581156-92581-1-git-send-email-hare@suse.de>
-Content-Language: en-US
-Content-ID: <8DE3EAF7CB1411439DAE1BA2E2A2A3BB@namprd04.prod.outlook.com>
+Received: from mx2.suse.de ([195.135.220.15]:49390 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750869AbcDZFr6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 26 Apr 2016 01:47:58 -0400
+In-Reply-To: <4CCE9B16-A756-4C57-8C49-B4CD66DE73DE@hgst.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Tejun Heo <tj@kernel.org>
+To: Damien Le Moal <Damien.LeMoal@hgst.com>, Tejun Heo <tj@kernel.org>
 Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Shaun Tancheff <shaun.tancheff@seagate.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-DQpIYW5uZXMsDQoNCj5IaSBhbGwsDQo+DQo+aGVyZSdzIGEgcGF0Y2hzZXQgaW1wbGVtZW50aW5n
-IFpBQyBzdXBwb3J0IGZvciBsaWJhdGEuDQo+DQo+VGhpcyBpcyB0aGUgc2Vjb25kIHBhcnQgb2Yg
-YSBsYXJnZXIgcGF0Y2hzZXQgZm9yIFpBQy9aQkMgc3VwcG9ydDsNCj5pdCByZXF1aXJlcyB0aGUg
-c2NzaSB0cmFjZSBmaXhlcyBxdWV1ZWQgZm9yIGluIG1rcC80Ljcvc2NzaS1xdWV1ZSBhbmQNCj50
-aGUgcGF0Y2hzZXQgJ2xpYmF0YTogU0FUTCB1cGRhdGUnIHF1ZXVlZCBpbiB0ai9mb3ItNC43LXph
-Yy4NCj5UaGUgZnVsbCBwYXRjaHNldCBjYW4gYmUgZm91bmQgYXQ6DQo+DQo+Z2l0Lmtlcm5lbC5v
-cmcvaGFyZS9zY3NpLWRldmVsL2gvemJjLnY2DQoNCkkgZG8gbm90IHNlZSBhIHpiYy52NiBicmFu
-Y2ggaW4geW91ciBzY3NpLWRldmVsIHRyZWUuLi4NCg0KDQpDaGVlcnMuDQoNCi0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLQ0KRGFtaWVuIExlIE1vYWwsIFBoLkQuDQpTci4gTWFuYWdlciwgU3lzdGVt
-IFNvZnR3YXJlIEdyb3VwLCBIR1NUIFJlc2VhcmNoLA0KSEdTVCwgYSBXZXN0ZXJuIERpZ2l0YWwg
-Y29tcGFueQ0KRGFtaWVuLkxlTW9hbEBoZ3N0LmNvbQ0KKCs4MSkgMDQ2Ni05OC0zNTkzIChleHQu
-IDUxMzU5MykNCjEga2lyaWhhcmEtY2hvLCBGdWppc2F3YSwgDQpLYW5hZ2F3YSwgMjUyLTA4ODgg
-SmFwYW4NCnd3dy5oZ3N0LmNvbQ0KDQpXZXN0ZXJuIERpZ2l0YWwgQ29ycG9yYXRpb24gKGFuZCBp
-dHMgc3Vic2lkaWFyaWVzKSBFLW1haWwgQ29uZmlkZW50aWFsaXR5IE5vdGljZSAmIERpc2NsYWlt
-ZXI6CgpUaGlzIGUtbWFpbCBhbmQgYW55IGZpbGVzIHRyYW5zbWl0dGVkIHdpdGggaXQgbWF5IGNv
-bnRhaW4gY29uZmlkZW50aWFsIG9yIGxlZ2FsbHkgcHJpdmlsZWdlZCBpbmZvcm1hdGlvbiBvZiBX
-REMgYW5kL29yIGl0cyBhZmZpbGlhdGVzLCBhbmQgYXJlIGludGVuZGVkIHNvbGVseSBmb3IgdGhl
-IHVzZSBvZiB0aGUgaW5kaXZpZHVhbCBvciBlbnRpdHkgdG8gd2hpY2ggdGhleSBhcmUgYWRkcmVz
-c2VkLiBJZiB5b3UgYXJlIG5vdCB0aGUgaW50ZW5kZWQgcmVjaXBpZW50LCBhbnkgZGlzY2xvc3Vy
-ZSwgY29weWluZywgZGlzdHJpYnV0aW9uIG9yIGFueSBhY3Rpb24gdGFrZW4gb3Igb21pdHRlZCB0
-byBiZSB0YWtlbiBpbiByZWxpYW5jZSBvbiBpdCwgaXMgcHJvaGliaXRlZC4gSWYgeW91IGhhdmUg
-cmVjZWl2ZWQgdGhpcyBlLW1haWwgaW4gZXJyb3IsIHBsZWFzZSBub3RpZnkgdGhlIHNlbmRlciBp
-bW1lZGlhdGVseSBhbmQgZGVsZXRlIHRoZSBlLW1haWwgaW4gaXRzIGVudGlyZXR5IGZyb20geW91
-ciBzeXN0ZW0uCg==
+On 04/26/2016 02:42 AM, Damien Le Moal wrote:
+>=20
+> Hannes,
+>=20
+>> Hi all,
+>>
+>> here's a patchset implementing ZAC support for libata.
+>>
+>> This is the second part of a larger patchset for ZAC/ZBC support;
+>> it requires the scsi trace fixes queued for in mkp/4.7/scsi-queue an=
+d
+>> the patchset 'libata: SATL update' queued in tj/for-4.7-zac.
+>> The full patchset can be found at:
+>>
+>> git.kernel.org/hare/scsi-devel/h/zbc.v6
+>=20
+> I do not see a zbc.v6 branch in your scsi-devel tree...
+>=20
+You do now :-)
 
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=C3=BCrnberg)
