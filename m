@@ -1,77 +1,59 @@
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v2 10/23] ata: sata_dwc_460ex: add phy support
-Date: Tue, 26 Apr 2016 12:03:11 +0300
-Message-ID: <1461661404-1952-11-git-send-email-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 20/23] ata: sata_dwc_460ex: tidy up sata_dwc_clear_dmacr()
+Date: Tue, 26 Apr 2016 12:03:21 +0300
+Message-ID: <1461661404-1952-21-git-send-email-andriy.shevchenko@linux.intel.com>
 References: <1461661404-1952-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1461661404-1952-1-git-send-email-andriy.shevchenko@linux.intel.com>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: "Linuxppc-dev"
- <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, Christian Lamparter <chunkeey@googlemail.com>, =?UTF-8?q?M=C3=A5ns=20Rullg=C3=A5rd?= <mans@mansr.com>, Julian Margetson <runaway@candw.ms>
 List-Id: linux-ide@vger.kernel.org
 
-RnJvbTogTWFucyBSdWxsZ2FyZCA8bWFuc0BtYW5zci5jb20+CgpUaGlzIGFkZHMgc3VwcG9ydCBm
-b3IgcG93ZXJpbmcgb24gYW4gb3B0aW9uYWwgUEhZIHdoZW4gYWN0aXZhdGluZyB0aGUKZGV2aWNl
-LgoKVGVzdGVkLWJ5OiBDaHJpc3RpYW4gTGFtcGFydGVyIDxjaHVua2VleUBnb29nbGVtYWlsLmNv
-bT4KU2lnbmVkLW9mZi1ieTogTWFucyBSdWxsZ2FyZCA8bWFuc0BtYW5zci5jb20+Ci0tLQogZHJp
-dmVycy9hdGEvS2NvbmZpZyAgICAgICAgICB8ICAxICsKIGRyaXZlcnMvYXRhL3NhdGFfZHdjXzQ2
-MGV4LmMgfCAyMiArKysrKysrKysrKysrKysrKysrKysrCiAyIGZpbGVzIGNoYW5nZWQsIDIzIGlu
-c2VydGlvbnMoKykKCmRpZmYgLS1naXQgYS9kcml2ZXJzL2F0YS9LY29uZmlnIGIvZHJpdmVycy9h
-dGEvS2NvbmZpZwppbmRleCBlZGUxMjZkLi40MWIwNzI1IDEwMDY0NAotLS0gYS9kcml2ZXJzL2F0
-YS9LY29uZmlnCisrKyBiL2RyaXZlcnMvYXRhL0tjb25maWcKQEAgLTMxMyw2ICszMTMsNyBAQCBj
-b25maWcgQVRBX1BJSVgKIAogY29uZmlnIFNBVEFfRFdDCiAJdHJpc3RhdGUgIkRlc2lnbldhcmUg
-Q29yZXMgU0FUQSBzdXBwb3J0IgorCXNlbGVjdCBHRU5FUklDX1BIWQogCWhlbHAKIAkgIFRoaXMg
-b3B0aW9uIGVuYWJsZXMgc3VwcG9ydCBmb3IgdGhlIG9uLWNoaXAgU0FUQSBjb250cm9sbGVyIG9m
-IHRoZQogCSAgQXBwbGllZE1pY3JvIHByb2Nlc3NvciA0NjBFWC4KZGlmZiAtLWdpdCBhL2RyaXZl
-cnMvYXRhL3NhdGFfZHdjXzQ2MGV4LmMgYi9kcml2ZXJzL2F0YS9zYXRhX2R3Y180NjBleC5jCmlu
-ZGV4IDIwMGFmMzYuLjRiOGVkZWQgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvYXRhL3NhdGFfZHdjXzQ2
-MGV4LmMKKysrIGIvZHJpdmVycy9hdGEvc2F0YV9kd2NfNDYwZXguYwpAQCAtMzUsNiArMzUsNyBA
-QAogI2luY2x1ZGUgPGxpbnV4L29mX2lycS5oPgogI2luY2x1ZGUgPGxpbnV4L29mX3BsYXRmb3Jt
-Lmg+CiAjaW5jbHVkZSA8bGludXgvcGxhdGZvcm1fZGV2aWNlLmg+CisjaW5jbHVkZSA8bGludXgv
-cGh5L3BoeS5oPgogI2luY2x1ZGUgPGxpbnV4L2xpYmF0YS5oPgogI2luY2x1ZGUgPGxpbnV4L3Ns
-YWIuaD4KIApAQCAtMTQ1LDYgKzE0Niw3IEBAIHN0cnVjdCBzYXRhX2R3Y19kZXZpY2UgewogCXN0
-cnVjdCBhdGFfaG9zdAkJKmhvc3Q7CiAJdTggX19pb21lbQkJKnJlZ19iYXNlOwogCXN0cnVjdCBz
-YXRhX2R3Y19yZWdzCSpzYXRhX2R3Y19yZWdzOwkvKiBEVyBTeW5vcHN5cyBTQVRBIHNwZWNpZmlj
-ICovCisJc3RydWN0IHBoeQkJKnBoeTsKICNpZmRlZiBDT05GSUdfU0FUQV9EV0NfT0xEX0RNQQog
-CXN0cnVjdCBkd19kbWFfY2hpcAkqZG1hOwogI2VuZGlmCkBAIC05NDgsNiArOTUwLDEwIEBAIHN0
-YXRpYyBpbnQgc2F0YV9kd2NfcG9ydF9zdGFydChzdHJ1Y3QgYXRhX3BvcnQgKmFwKQogCWlmIChl
-cnIpCiAJCWdvdG8gQ0xFQU5VUF9BTExPQzsKIAorCWVyciA9IHBoeV9wb3dlcl9vbihoc2Rldi0+
-cGh5KTsKKwlpZiAoZXJyKQorCQlnb3RvIENMRUFOVVBfQUxMT0M7CisKIAlmb3IgKGkgPSAwOyBp
-IDwgU0FUQV9EV0NfUUNNRF9NQVg7IGkrKykKIAkJaHNkZXZwLT5jbWRfaXNzdWVkW2ldID0gU0FU
-QV9EV0NfQ01EX0lTU1VFRF9OT1Q7CiAKQEAgLTk4MywxMSArOTg5LDEzIEBAIENMRUFOVVA6CiBz
-dGF0aWMgdm9pZCBzYXRhX2R3Y19wb3J0X3N0b3Aoc3RydWN0IGF0YV9wb3J0ICphcCkKIHsKIAlz
-dHJ1Y3Qgc2F0YV9kd2NfZGV2aWNlX3BvcnQgKmhzZGV2cCA9IEhTREVWUF9GUk9NX0FQKGFwKTsK
-KwlzdHJ1Y3Qgc2F0YV9kd2NfZGV2aWNlICpoc2RldiA9IEhTREVWX0ZST01fQVAoYXApOwogCiAJ
-ZGV2X2RiZyhhcC0+ZGV2LCAiJXM6IGFwLT5pZCA9ICVkXG4iLCBfX2Z1bmNfXywgYXAtPnByaW50
-X2lkKTsKIAogCWRtYWVuZ2luZV90ZXJtaW5hdGVfYWxsKGhzZGV2cC0+Y2hhbik7CiAJZG1hX3Jl
-bGVhc2VfY2hhbm5lbChoc2RldnAtPmNoYW4pOworCXBoeV9wb3dlcl9vZmYoaHNkZXYtPnBoeSk7
-CiAKIAlrZnJlZShoc2RldnApOwogCWFwLT5wcml2YXRlX2RhdGEgPSBOVUxMOwpAQCAtMTMyMSw2
-ICsxMzI5LDE3IEBAIHN0YXRpYyBpbnQgc2F0YV9kd2NfcHJvYmUoc3RydWN0IHBsYXRmb3JtX2Rl
-dmljZSAqb2ZkZXYpCiAJfQogI2VuZGlmCiAKKwloc2Rldi0+cGh5ID0gZGV2bV9waHlfb3B0aW9u
-YWxfZ2V0KGhzZGV2LT5kZXYsICJzYXRhLXBoeSIpOworCWlmIChJU19FUlIoaHNkZXYtPnBoeSkp
-IHsKKwkJZXJyID0gUFRSX0VSUihoc2Rldi0+cGh5KTsKKwkJaHNkZXYtPnBoeSA9IE5VTEw7CisJ
-CWdvdG8gZXJyb3Jfb3V0OworCX0KKworCWVyciA9IHBoeV9pbml0KGhzZGV2LT5waHkpOworCWlm
-IChlcnIpCisJCWdvdG8gZXJyb3Jfb3V0OworCiAJLyoKIAkgKiBOb3csIHJlZ2lzdGVyIHdpdGgg
-bGliQVRBIGNvcmUsIHRoaXMgd2lsbCBhbHNvIGluaXRpYXRlIHRoZQogCSAqIGRldmljZSBkaXNj
-b3ZlcnkgcHJvY2VzcywgaW52b2tpbmcgb3VyIHBvcnRfc3RhcnQoKSBoYW5kbGVyICYKQEAgLTEz
-MzQsNiArMTM1Myw3IEBAIHN0YXRpYyBpbnQgc2F0YV9kd2NfcHJvYmUoc3RydWN0IHBsYXRmb3Jt
-X2RldmljZSAqb2ZkZXYpCiAJcmV0dXJuIDA7CiAKIGVycm9yX291dDoKKwlwaHlfZXhpdChoc2Rl
-di0+cGh5KTsKIAlpb3VubWFwKGJhc2UpOwogCXJldHVybiBlcnI7CiB9CkBAIC0xMzQ2LDYgKzEz
-NjYsOCBAQCBzdGF0aWMgaW50IHNhdGFfZHdjX3JlbW92ZShzdHJ1Y3QgcGxhdGZvcm1fZGV2aWNl
-ICpvZmRldikKIAogCWF0YV9ob3N0X2RldGFjaChob3N0KTsKIAorCXBoeV9leGl0KGhzZGV2LT5w
-aHkpOworCiAjaWZkZWYgQ09ORklHX1NBVEFfRFdDX09MRF9ETUEKIAkvKiBGcmVlIFNBVEEgRE1B
-IHJlc291cmNlcyAqLwogCXNhdGFfZHdjX2RtYV9leGl0X29sZChoc2Rldik7Ci0tIAoyLjguMC5y
-YzMKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCkxpbnV4
-cHBjLWRldiBtYWlsaW5nIGxpc3QKTGludXhwcGMtZGV2QGxpc3RzLm96bGFicy5vcmcKaHR0cHM6
-Ly9saXN0cy5vemxhYnMub3JnL2xpc3RpbmZvL2xpbnV4cHBjLWRldg==
+From: Mans Rullgard <mans@mansr.com>
+
+This consolidates the reads from each of the if/else branches
+to one place making the code a lot nicer to look at.
+
+Tested-by: Christian Lamparter <chunkeey@googlemail.com>
+Signed-off-by: Mans Rullgard <mans@mansr.com>
+---
+ drivers/ata/sata_dwc_460ex.c | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+index 2e3222f..92f4008 100644
+--- a/drivers/ata/sata_dwc_460ex.c
++++ b/drivers/ata/sata_dwc_460ex.c
+@@ -729,15 +729,14 @@ DONE:
+ static void sata_dwc_clear_dmacr(struct sata_dwc_device_port *hsdevp, u8 tag)
+ {
+ 	struct sata_dwc_device *hsdev = HSDEV_FROM_HSDEVP(hsdevp);
++	u32 dmacr = sata_dwc_readl(&hsdev->sata_dwc_regs->dmacr);
+ 
+ 	if (hsdevp->dma_pending[tag] == SATA_DWC_DMA_PENDING_RX) {
+-		sata_dwc_writel(&hsdev->sata_dwc_regs->dmacr,
+-			SATA_DWC_DMACR_RX_CLEAR(
+-				sata_dwc_readl(&hsdev->sata_dwc_regs->dmacr)));
++		dmacr = SATA_DWC_DMACR_RX_CLEAR(dmacr);
++		sata_dwc_writel(&hsdev->sata_dwc_regs->dmacr, dmacr);
+ 	} else if (hsdevp->dma_pending[tag] == SATA_DWC_DMA_PENDING_TX) {
+-		sata_dwc_writel(&hsdev->sata_dwc_regs->dmacr,
+-			SATA_DWC_DMACR_TX_CLEAR(
+-				sata_dwc_readl(&hsdev->sata_dwc_regs->dmacr)));
++		dmacr = SATA_DWC_DMACR_TX_CLEAR(dmacr);
++		sata_dwc_writel(&hsdev->sata_dwc_regs->dmacr, dmacr);
+ 	} else {
+ 		/*
+ 		 * This should not happen, it indicates the driver is out of
+@@ -745,8 +744,7 @@ static void sata_dwc_clear_dmacr(struct sata_dwc_device_port *hsdevp, u8 tag)
+ 		 */
+ 		dev_err(hsdev->dev,
+ 			"%s DMA protocol RX and TX DMA not pending tag=0x%02x pending=%d dmacr: 0x%08x\n",
+-			__func__, tag, hsdevp->dma_pending[tag],
+-			sata_dwc_readl(&hsdev->sata_dwc_regs->dmacr));
++			__func__, tag, hsdevp->dma_pending[tag], dmacr);
+ 		sata_dwc_writel(&hsdev->sata_dwc_regs->dmacr,
+ 				SATA_DWC_DMACR_TXRXCH_CLEAR);
+ 	}
+-- 
+2.8.0.rc3
