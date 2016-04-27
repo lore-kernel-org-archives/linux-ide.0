@@ -1,69 +1,115 @@
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v2 14/23] ata: sata_dwc_460ex: get rid of some pointless casts
-Date: Tue, 26 Apr 2016 12:03:15 +0300
-Message-ID: <1461661404-1952-15-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1461661404-1952-1-git-send-email-andriy.shevchenko@linux.intel.com>
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH 1/5] ata: ahci: add support for non-standard port
+ offset/length
+Date: Wed, 27 Apr 2016 14:22:50 +0200
+Message-ID: <20160427142250.12764279@free-electrons.com>
+References: <1461335561-18363-1-git-send-email-thomas.petazzoni@free-electrons.com>
+	<1461335561-18363-2-git-send-email-thomas.petazzoni@free-electrons.com>
+	<20160422175936.GU7822@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <1461661404-1952-1-git-send-email-andriy.shevchenko@linux.intel.com>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: "Linuxppc-dev"
- <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, Christian Lamparter <chunkeey@googlemail.com>, =?UTF-8?q?M=C3=A5ns=20Rullg=C3=A5rd?= <mans@mansr.com>, Julian Margetson <runaway@candw.ms>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from down.free-electrons.com ([37.187.137.238]:53959 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751241AbcD0MW7 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 27 Apr 2016 08:22:59 -0400
+In-Reply-To: <20160422175936.GU7822@mtj.duckdns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Hans de Goede <hdegoede@redhat.com>, devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Kumar Gala <galak@codeaurora.org>, linux-ide@vger.kernel.org, Nadav Haklai <nadavh@marvell.com>, Lior Amsalem <alior@marvell.com>, Hanna Hawa <hannah@marvell.com>, Yehuda Yitschak <yehuday@marvell.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Gregory Clement <gregory.clement@free-electrons.com>
 
-RnJvbTogTWFucyBSdWxsZ2FyZCA8bWFuc0BtYW5zci5jb20+CgpDYXN0aW5nIGEgcG9pbnRlciB0
-byB1bnNpZ25lZCBsb25nIG9ubHkgdG8gaW1tZWRpYXRlbHkgY2FzdCBpdCBiYWNrCnRvIGEgcG9p
-bnRlciBtYWtlcyBubyBzZW5zZS4gIEZpeCB0aGlzLgoKVGVzdGVkLWJ5OiBDaHJpc3RpYW4gTGFt
-cGFydGVyIDxjaHVua2VleUBnb29nbGVtYWlsLmNvbT4KU2lnbmVkLW9mZi1ieTogTWFucyBSdWxs
-Z2FyZCA8bWFuc0BtYW5zci5jb20+Ci0tLQogZHJpdmVycy9hdGEvc2F0YV9kd2NfNDYwZXguYyB8
-IDMwICsrKysrKysrKysrKysrKy0tLS0tLS0tLS0tLS0tLQogMSBmaWxlIGNoYW5nZWQsIDE1IGlu
-c2VydGlvbnMoKyksIDE1IGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvYXRhL3Nh
-dGFfZHdjXzQ2MGV4LmMgYi9kcml2ZXJzL2F0YS9zYXRhX2R3Y180NjBleC5jCmluZGV4IDNhOWRk
-ODIuLjI5MTJlNGQgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvYXRhL3NhdGFfZHdjXzQ2MGV4LmMKKysr
-IGIvZHJpdmVycy9hdGEvc2F0YV9kd2NfNDYwZXguYwpAQCAtODQ0LDI2ICs4NDQsMjYgQEAgc3Rh
-dGljIHZvaWQgc2F0YV9kd2NfZW5hYmxlX2ludGVycnVwdHMoc3RydWN0IHNhdGFfZHdjX2Rldmlj
-ZSAqaHNkZXYpCiAJCWluX2xlMzIoJmhzZGV2LT5zYXRhX2R3Y19yZWdzLT5lcnJtcikpOwogfQog
-Ci1zdGF0aWMgdm9pZCBzYXRhX2R3Y19zZXR1cF9wb3J0KHN0cnVjdCBhdGFfaW9wb3J0cyAqcG9y
-dCwgdW5zaWduZWQgbG9uZyBiYXNlKQorc3RhdGljIHZvaWQgc2F0YV9kd2Nfc2V0dXBfcG9ydChz
-dHJ1Y3QgYXRhX2lvcG9ydHMgKnBvcnQsIHZvaWQgX19pb21lbSAqYmFzZSkKIHsKLQlwb3J0LT5j
-bWRfYWRkciA9ICh2b2lkIF9faW9tZW0gKiliYXNlICsgMHgwMDsKLQlwb3J0LT5kYXRhX2FkZHIg
-PSAodm9pZCBfX2lvbWVtICopYmFzZSArIDB4MDA7CisJcG9ydC0+Y21kX2FkZHIJCT0gYmFzZSAr
-IDB4MDA7CisJcG9ydC0+ZGF0YV9hZGRyCQk9IGJhc2UgKyAweDAwOwogCi0JcG9ydC0+ZXJyb3Jf
-YWRkciA9ICh2b2lkIF9faW9tZW0gKiliYXNlICsgMHgwNDsKLQlwb3J0LT5mZWF0dXJlX2FkZHIg
-PSAodm9pZCBfX2lvbWVtICopYmFzZSArIDB4MDQ7CisJcG9ydC0+ZXJyb3JfYWRkcgk9IGJhc2Ug
-KyAweDA0OworCXBvcnQtPmZlYXR1cmVfYWRkcgk9IGJhc2UgKyAweDA0OwogCi0JcG9ydC0+bnNl
-Y3RfYWRkciA9ICh2b2lkIF9faW9tZW0gKiliYXNlICsgMHgwODsKKwlwb3J0LT5uc2VjdF9hZGRy
-CT0gYmFzZSArIDB4MDg7CiAKLQlwb3J0LT5sYmFsX2FkZHIgPSAodm9pZCBfX2lvbWVtICopYmFz
-ZSArIDB4MGM7Ci0JcG9ydC0+bGJhbV9hZGRyID0gKHZvaWQgX19pb21lbSAqKWJhc2UgKyAweDEw
-OwotCXBvcnQtPmxiYWhfYWRkciA9ICh2b2lkIF9faW9tZW0gKiliYXNlICsgMHgxNDsKKwlwb3J0
-LT5sYmFsX2FkZHIJCT0gYmFzZSArIDB4MGM7CisJcG9ydC0+bGJhbV9hZGRyCQk9IGJhc2UgKyAw
-eDEwOworCXBvcnQtPmxiYWhfYWRkcgkJPSBiYXNlICsgMHgxNDsKIAotCXBvcnQtPmRldmljZV9h
-ZGRyID0gKHZvaWQgX19pb21lbSAqKWJhc2UgKyAweDE4OwotCXBvcnQtPmNvbW1hbmRfYWRkciA9
-ICh2b2lkIF9faW9tZW0gKiliYXNlICsgMHgxYzsKLQlwb3J0LT5zdGF0dXNfYWRkciA9ICh2b2lk
-IF9faW9tZW0gKiliYXNlICsgMHgxYzsKKwlwb3J0LT5kZXZpY2VfYWRkcgk9IGJhc2UgKyAweDE4
-OworCXBvcnQtPmNvbW1hbmRfYWRkcgk9IGJhc2UgKyAweDFjOworCXBvcnQtPnN0YXR1c19hZGRy
-CT0gYmFzZSArIDB4MWM7CiAKLQlwb3J0LT5hbHRzdGF0dXNfYWRkciA9ICh2b2lkIF9faW9tZW0g
-KiliYXNlICsgMHgyMDsKLQlwb3J0LT5jdGxfYWRkciA9ICh2b2lkIF9faW9tZW0gKiliYXNlICsg
-MHgyMDsKKwlwb3J0LT5hbHRzdGF0dXNfYWRkcgk9IGJhc2UgKyAweDIwOworCXBvcnQtPmN0bF9h
-ZGRyCQk9IGJhc2UgKyAweDIwOwogfQogCiBzdGF0aWMgaW50IHNhdGFfZHdjX2RtYV9nZXRfY2hh
-bm5lbChzdHJ1Y3Qgc2F0YV9kd2NfZGV2aWNlX3BvcnQgKmhzZGV2cCkKQEAgLTEyNTEsNyArMTI1
-MSw3IEBAIHN0YXRpYyBpbnQgc2F0YV9kd2NfcHJvYmUoc3RydWN0IHBsYXRmb3JtX2RldmljZSAq
-b2ZkZXYpCiAJLyogU2V0dXAgcG9ydCAqLwogCWhvc3QtPnBvcnRzWzBdLT5pb2FkZHIuY21kX2Fk
-ZHIgPSBiYXNlOwogCWhvc3QtPnBvcnRzWzBdLT5pb2FkZHIuc2NyX2FkZHIgPSBiYXNlICsgU0FU
-QV9EV0NfU0NSX09GRlNFVDsKLQlzYXRhX2R3Y19zZXR1cF9wb3J0KCZob3N0LT5wb3J0c1swXS0+
-aW9hZGRyLCAodW5zaWduZWQgbG9uZyliYXNlKTsKKwlzYXRhX2R3Y19zZXR1cF9wb3J0KCZob3N0
-LT5wb3J0c1swXS0+aW9hZGRyLCBiYXNlKTsKIAogCS8qIFJlYWQgdGhlIElEIGFuZCBWZXJzaW9u
-IFJlZ2lzdGVycyAqLwogCWlkciA9IGluX2xlMzIoJmhzZGV2LT5zYXRhX2R3Y19yZWdzLT5pZHIp
-OwotLSAKMi44LjAucmMzCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fXwpMaW51eHBwYy1kZXYgbWFpbGluZyBsaXN0CkxpbnV4cHBjLWRldkBsaXN0cy5vemxh
-YnMub3JnCmh0dHBzOi8vbGlzdHMub3psYWJzLm9yZy9saXN0aW5mby9saW51eHBwYy1kZXY=
+Hello,
+
+Thanks for your review and feedback!
+
+On Fri, 22 Apr 2016 13:59:36 -0400, Tejun Heo wrote:
+
+> On Fri, Apr 22, 2016 at 04:32:37PM +0200, Thomas Petazzoni wrote:
+> > @@ -1714,10 +1714,11 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+> >  
+> >  	for (i = 0; i < host->n_ports; i++) {
+> >  		struct ata_port *ap = host->ports[i];
+> > +		unsigned int offset =
+> > +			hpriv->port_offset + ap->port_no * hpriv->port_length;
+> >  
+> >  		ata_port_pbar_desc(ap, ahci_pci_bar, -1, "abar");
+> > -		ata_port_pbar_desc(ap, ahci_pci_bar,
+> > -				   0x100 + ap->port_no * 0x80, "port");
+> > +		ata_port_pbar_desc(ap, ahci_pci_bar, offset, "port");
+> 
+> Doesn't this just affect ahci_platform?
+
+No, because the main source of the problem is the ahci_port_base()
+function, which is used all over the place in libahci.c (which is used
+by all AHCI drivers, not only ahci_platform drivers). And this
+ahci_port_base() currently hardcodes the 0x100 / 0x80 values:
+
+429 static inline void __iomem *__ahci_port_base(struct ata_host *host,
+430                                              unsigned int port_no)
+431 {
+432         struct ahci_host_priv *hpriv = host->private_data;
+433         void __iomem *mmio = hpriv->mmio;
+434 
+435         return mmio + 0x100 + (port_no * 0x80);
+436 }
+437 
+438 static inline void __iomem *ahci_port_base(struct ata_port *ap)
+439 {
+440         return __ahci_port_base(ap->host, ap->port_no);
+441 }
+
+In essence all what we want to change is the __ahci_port_base()
+function so that it doesn't use hardcoded values.
+
+>  Why is ahci_init_one() being updated?
+
+The idea why ahci_init_one() was updated is also to remove hardcoded
+values. Once we have the correct values in the ahci_host_priv, why not
+use them everywhere instead of keeping some hardcoded values?
+
+> Also, who's setting port_offet and port_length for non-platform ahci
+> drivers?
+
+This is obviously a mistake in my proposal. And the non-platform
+drivers are allocating manually their ahci_host_priv structure, which
+makes it a bit difficult/annoying to initialize those new fields.
+
+I see a few possibilities:
+
+ 1/ Adjust all the drivers allocating manually an ahci_host_priv
+    structure, and make sure they initialize the fields to their default
+    values.
+
+ 2/ Add a new helper function that allows to allocate the
+    ahci_host_priv structure and initialize it with sane default values,
+    and use this helper in all drivers.
+
+ 3/ Add a flag in ahci_host_priv that tells whether non-standard port
+    offset/length are to be used. This is the most minimal solution,
+    but also maybe not the nicest one.
+
+> If this needs to be configurable, wouldn't it be better to just let it
+> be specified per port?
+
+How could it be per-port? The base for a port is calculated as:
+
+	base + <port_offset> + (port_no * <port_length>)
+
+So, port_offset is clearly not per-port, there's only one of them. And
+if we were to make <port_length> a per-port property, then the formula
+would become a lot more complicated: we would have to iterate over each
+port, and see what is the length of the register area for each of them,
+to calculate the base address of the registers for the n-th port. This
+is clearly a complexity that is not needed for my use case: all ports
+have the same register area length, it's just that this length is
+non-standard.
+
+Best regards,
+
+Thomas
+-- 
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
