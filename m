@@ -1,51 +1,71 @@
-From: maryjanesogrub <maryjanesogrub123@gmail.com>
-Subject: Listing from maryjanesogrub
-Date: Mon,  2 May 2016 22:13:10 -0700 (MST)
-Message-ID: <20160503051310.1DA7B38A413@shared5.precisionpros.com>
+From: Tom Yan <tom.ty89@gmail.com>
+Subject: Re: [PATCH 1/3] libata-scsi: Set CmdQue=1 when NCQ is enabled
+Date: Tue, 3 May 2016 17:50:14 +0800
+Message-ID: <CAGnHSEk_5C167fBkOk1gPwqLJ2sJn35nAfnJVb_ddNZvitV6xg@mail.gmail.com>
+References: <5727b4e8.c923620a.641f4.17a2@mx.google.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shared5.precisionpros.com ([67.59.131.61]:53680 "EHLO
-	shared5.precisionpros.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750974AbcECFUU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 May 2016 01:20:20 -0400
+Received: from mail-yw0-f194.google.com ([209.85.161.194]:33651 "EHLO
+	mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752047AbcECJuP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 May 2016 05:50:15 -0400
+In-Reply-To: <5727b4e8.c923620a.641f4.17a2@mx.google.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, kay.sievers@novell.com, geraldsc@de.ibm.com, stefan.haberland@de.ibm.com, horst.hummel@de.ibm.com, shbader@de.ibm.com, hcegtvedt@atmel.com, dedekind@infradead.org, dedekind@linutronix.de
+To: tj@kernel.org, linux-ide@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
 
-Your friend, maryjanesogrub, has sent along the following link:
-http://www.midwestrealty.net/listingview.php?listingID=1128
+Btw I wonder if the CmdQue bit should be statically set to 1 instead.
+It is not specified in the SAT standard (as of SAT-4 Rev. 05a) that
+the bit should be correlated to ATA NCQ. Neither does the kernel care
+about the bit (or the 'queue_type' sysfs file), apparently. However,
+it seems that there is still an advantage to have the bit set to 1
+even when we, for example, need `libata.force=noncq` for some reason:
 
-Comment:
-JOB POSITION AVAILABLE - APPLY NOW!
-WE'RE HIRING: Data Entry Workers Earn $500 up to $1000 Daily 
-(No Experience Required)
+https://github.com/YanVugenfirer/kvm-guest-drivers-windows/issues/63#issuecomment-216480833
 
-Good Day,
+What do you guys think? Is there any concern (with rigid reasoning)
+over setting the bit statically to 1?
 
-You recently expressed an interest in obtaining a
-position you could do from the comfort of your own home.
-I am happy to let you know that I found a great company
-that will help you get started working online.
-
-Visit our website here:
-
-http://link.limo/1jqz
-
-The scope of the work is very simple.
-You can work as little or as much as you want
-depending on how much you want your paycheck to be
-
-No background experience is needed because you
-will be given a detailed step-by-step training in
-all the job fields along with all the resources you
-needed to help you get started immediately.
-
-Visit our website here:
-
-http://link.limo/1jqz
-
-If you're serious about this position, though,
-then I encourage you to take action immediately.
-We only have a few openings left, and we expect them
-to fill up fast. This really is a great opportunity!
-
-THANKS
+On 3 May 2016 at 04:13,  <tom.ty89@gmail.com> wrote:
+> From: Tom Yan <tom.ty89@gmail.com>
+>
+> https://bugzilla.kernel.org/show_bug.cgi?id=105931
+>
+> This might look trivial at first sight. However, it can be
+> important to have the bit set accordingly when the device/SATL is
+> SCSI-passthrough'd to a virtual machine with scsi-block in qemu:
+>
+> https://github.com/YanVugenfirer/kvm-guest-drivers-windows/issues/63#issuecomment-216199929
+> Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+>
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index 567859c..cd30f11 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -2007,7 +2007,10 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
+>                 0,
+>                 0x5,    /* claim SPC-3 version compatibility */
+>                 2,
+> -               95 - 4
+> +               95 - 4,
+> +               0,
+> +               0,
+> +               0
+>         };
+>
+>         VPRINTK("ENTER\n");
+> @@ -2024,6 +2027,9 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
+>                 hdr[2] = 0x6; /* ZBC is defined in SPC-4 */
+>         }
+>
+> +       if (ata_ncq_enabled(args->dev))
+> +               hdr[7] |= (1 << 1);
+> +
+>         memcpy(rbuf, hdr, sizeof(hdr));
+>         memcpy(&rbuf[8], "ATA     ", 8);
+>         ata_id_string(args->id, &rbuf[16], ATA_ID_PROD, 16);
+> --
+> 2.8.2
+>
