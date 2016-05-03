@@ -1,45 +1,51 @@
-From: tom.ty89@gmail.com
-Subject: [PATCH 3/3] libata-scsi: Do not partially report ATA read look-ahead
-Date: Tue,  3 May 2016 04:13:21 +0800
-Message-ID: <5727b4ef.c923620a.641f4.17b3@mx.google.com>
-References: <1462220001-2566-1-git-send-email-me>
+From: maryjanesogrub <maryjanesogrub123@gmail.com>
+Subject: Listing from maryjanesogrub
+Date: Mon,  2 May 2016 22:13:10 -0700 (MST)
+Message-ID: <20160503051310.1DA7B38A413@shared5.precisionpros.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:34278 "EHLO
-	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755146AbcEBUNi (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 2 May 2016 16:13:38 -0400
-In-Reply-To: <1462220001-2566-1-git-send-email-me>
+Received: from shared5.precisionpros.com ([67.59.131.61]:53680 "EHLO
+	shared5.precisionpros.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750974AbcECFUU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 3 May 2016 01:20:20 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org, linux-ide@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
+To: linux-ide@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, kay.sievers@novell.com, geraldsc@de.ibm.com, stefan.haberland@de.ibm.com, horst.hummel@de.ibm.com, shbader@de.ibm.com, hcegtvedt@atmel.com, dedekind@infradead.org, dedekind@linutronix.de
 
-From: Tom Yan <tom.ty89@gmail.com>
+Your friend, maryjanesogrub, has sent along the following link:
+http://www.midwestrealty.net/listingview.php?listingID=1128
 
-Nothing in the kernel actually makes use of the DRA bit in SCSI
-MODE SENSE. Neither is there a sysfs file (like 'cache_type' for
-WCE) that allows users to change the bit nor SCSI-ATA Translation
-that can toggle the ATA feature.
+Comment:
+JOB POSITION AVAILABLE - APPLY NOW!
+WE'RE HIRING: Data Entry Workers Earn $500 up to $1000 Daily 
+(No Experience Required)
 
-Hence removing the MODE SENSE SCSI-ATA Translation that is only
-triggered by the change of WCE to avoid silliness like this:
-https://bugzilla.kernel.org/show_bug.cgi?id=105861#c2
+Good Day,
 
-Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+You recently expressed an interest in obtaining a
+position you could do from the comfort of your own home.
+I am happy to let you know that I found a great company
+that will help you get started working online.
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 0295c38..8c07db8 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -2316,8 +2316,6 @@ static unsigned int ata_msense_caching(u16 *id, u8 *buf, bool changeable)
- 	modecpy(buf, def_cache_mpage, sizeof(def_cache_mpage), changeable);
- 	if (changeable || ata_id_wcache_enabled(id))
- 		buf[2] |= (1 << 2);	/* write cache enable */
--	if (!changeable && !ata_id_rahead_enabled(id))
--		buf[12] |= (1 << 5);	/* disable read ahead */
- 	return sizeof(def_cache_mpage);
- }
- 
--- 
-2.8.2
+Visit our website here:
 
+http://link.limo/1jqz
+
+The scope of the work is very simple.
+You can work as little or as much as you want
+depending on how much you want your paycheck to be
+
+No background experience is needed because you
+will be given a detailed step-by-step training in
+all the job fields along with all the resources you
+needed to help you get started immediately.
+
+Visit our website here:
+
+http://link.limo/1jqz
+
+If you're serious about this position, though,
+then I encourage you to take action immediately.
+We only have a few openings left, and we expect them
+to fill up fast. This really is a great opportunity!
+
+THANKS
