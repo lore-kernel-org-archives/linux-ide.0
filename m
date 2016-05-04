@@ -1,91 +1,105 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH 2/3] libata-scsi: Fix SCSI INQUIRY version descriptor
-Date: Tue, 3 May 2016 14:19:26 -0400
-Message-ID: <5728EBAE.2080200@interlog.com>
-References: <1462220001-2566-1-git-send-email-me>
- <5727b4ec.c923620a.641f4.17aa@mx.google.com>
-Reply-To: dgilbert@interlog.com
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Subject: Re: [PATCH v2 00/23] ata: sata_dwc_460ex: make it working again
+Date: Wed, 4 May 2016 15:22:51 +0300
+Message-ID: <CAHp75VeeosHAxhXnWY7rc5o969TDyHPRWGdV7kh1_uR+TBa=aA@mail.gmail.com>
+References: <1461661404-1952-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <5727b4ec.c923620a.641f4.17aa@mx.google.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: tom.ty89@gmail.com, tj@kernel.org, linux-ide@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:36349 "EHLO
+	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751423AbcEDMWw convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 May 2016 08:22:52 -0400
+In-Reply-To: <1461661404-1952-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, "open list:LINUX FOR POWERPC PA SEMI PWRFICIENT" <linuxppc-dev@lists.ozlabs.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Christian Lamparter <chunkeey@googlemail.com>, =?UTF-8?B?TcOlbnMgUnVsbGfDpXJk?= <mans@mansr.com>, Julian Margetson <runaway@candw.ms>, Vinod Koul <vinod.koul@intel.com>
 
-On 2016-05-02 04:13 PM, tom.ty89@gmail.com wrote:
-> From: Tom Yan <tom.ty89@gmail.com>
+On Tue, Apr 26, 2016 at 12:03 PM, Andy Shevchenko
+<andriy.shevchenko@linux.intel.com> wrote:
+> The last approach in the commit 8b3444852a2b ("sata_dwc_460ex: move t=
+o generic
+> DMA driver") to switch to generic DMA engine API wasn't tested on bar=
+e metal.
+> Besides that we expecting new board support coming with the same SATA=
+ IP but
+> with different DMA.
 >
-> https://bugzilla.kernel.org/show_bug.cgi?id=106931
-> Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+> This series is targetting the following things:
+> - a few bug fixes to the original driver
+> - a part to fix the DMA engine usage and in particularly dw_dmac driv=
+er
+> - move driver to use generic PHY and "dmas" property which leads to u=
+pdate in DTS
 >
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index cd30f11..0295c38 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -1985,8 +1985,8 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
->   		0x03,
->   		0x20,	/* SBC-2 (no version claimed) */
+> The driver has been tested myself on Sam460ex and WD MyBookLive (apol=
+lo3g)
+> boards. In any case I ask Christian, M=C3=A5ns, and Julian to indepen=
+dently test and
+> provide Tested-by tag or an error report.
 >
-> -		0x02,
-> -		0x60	/* SPC-3 (no version claimed) */
-> +		0x03,
-> +		0x00	/* SPC-3 (no version claimed) */
->   	};
->   	const u8 versions_zbc[] = {
->   		0x00,
+> Series depends on previously published but not yet fully applied seri=
+es [1].
+>
+> The patches are also available via public branch [2].
+>
+> [1] http://www.spinics.net/lists/dmaengine/msg09250.html
+> [2] https://bitbucket.org/andy-shev/linux/branch/topic%2Fdw%2Fsata
 >
 
-SPC-3 was standardized in 2005 (ANSI INCITS 408-2005) and there
-is a more recent standard: SPC-4 (ANSI INCITS 513-2015). And
-my guess is that libata-scsi supports many things introduced
-in SPC-4 . If you switch to SPC-4 then the "version" field in
-the standard INQUIRY response (byte 2) should be changed to 6.
+Tejun, since Vinod applied all necessary patches into his tree, the
+series now has just a dependency to whatever branch / tag he marks for
+it.
+Do we have a chance to see the SATA series be applied in your tree?
 
-Also SBC-2 is old (ANSI INCITS 405-2005) and should be updated
-to SBC-3 (ANSI INCITS 514-2014). Again many features supported
-by libata-scsi didn't exist in SBC-2.
+> Since v1:
+> - simplify patch 8 (David Laight)
+> - add Tested-by and Acked-by tags
+>
+> Andy Shevchenko (11):
+>   ata: sata_dwc_460ex: set dma_boundary to 0x1fff
+>   ata: sata_dwc_460ex: burst size must be in items not bytes
+>   ata: sata_dwc_460ex: DMA is always a flow controller
+>   ata: sata_dwc_460ex: select only core part of DMA driver
+>   ata: sata_dwc_460ex: don't call ata_sff_qc_issue() on DMA commands
+>   ata: sata_dwc_460ex: correct HOSTDEV{P}_FROM_*() macros
+>   ata: sata_dwc_460ex: supply physical address of FIFO to DMA
+>   ata: sata_dwc_460ex: switch to new dmaengine_terminate_* API
+>   ata: sata_dwc_460ex: use devm_ioremap
+>   ata: sata_dwc_460ex: make debug messages neat
+>   powerpc/4xx: Device tree update for the 460ex DWC SATA
+>
+> Christian Lamparter (1):
+>   ata: sata_dwc_460ex: fix crash on offline links without an attached
+>     drive
+>
+> Mans Rullgard (11):
+>   ata: sata_dwc_460ex: remove incorrect locking
+>   ata: sata_dwc_460ex: skip dma setup for non-dma commands
+>   ata: sata_dwc_460ex: use "dmas" DT property to find dma channel
+>   ata: sata_dwc_460ex: add phy support
+>   ata: sata_dwc_460ex: get rid of global data
+>   ata: sata_dwc_460ex: remove empty libata callback
+>   ata: sata_dwc_460ex: get rid of some pointless casts
+>   ata: sata_dwc_460ex: get rid of incorrect cast
+>   ata: sata_dwc_460ex: add __iomem to register base pointer
+>   ata: sata_dwc_460ex: use readl/writel_relaxed()
+>   ata: sata_dwc_460ex: tidy up sata_dwc_clear_dmacr()
+>
+>  arch/powerpc/boot/dts/canyonlands.dts |  15 +-
+>  drivers/ata/Kconfig                   |  12 +-
+>  drivers/ata/sata_dwc_460ex.c          | 552 +++++++++++++++++-------=
+----------
+>  3 files changed, 305 insertions(+), 274 deletions(-)
+>
+> --
+> 2.8.0.rc3
+>
 
-And libata-scsi is a SCSI to ATA Translation (SAT) layer and
-there are standards for that, take your pick: SAT (ANSI INCITS
-431-2007), SAT-2 (ANSI INCITS 465-2010) or SAT-3 (ANSI INCITS
-517-2015).
 
 
-Suggestion:
-   Version descriptors             value
-----------------------------------------
-     SAM-5 (no version claimed)    0x00a0
-     SPC-4 (no version claimed)    0x0460
-     SBC-3 (no version claimed)    0x04c0
-     SAT-3 (no version claimed)    0x1ee0
-
-Plus byte 2 of INQUIRY response: 0x6
-
-Doug Gilbert
-
-
-BTW in lk 4.6.0-rc5 I see this for a directly connected SATA SSD:
-
-# sg_inq -d /dev/sg0
-standard INQUIRY:
-   PQual=0  Device_type=0  RMB=0  LU_CONG=0  version=0x05  [SPC-3]
-   [AERC=0]  [TrmTsk=0]  NormACA=0  HiSUP=0  Resp_data_format=2
-   SCCS=0  ACC=0  TPGS=0  3PC=0  Protect=0  [BQue=0]
-   EncServ=0  MultiP=0  [MChngr=0]  [ACKREQQ=0]  Addr16=0
-   [RelAdr=0]  WBus16=0  Sync=0  [Linked=0]  [TranDis=0]  CmdQue=0
-   [SPI: Clocking=0x0  QAS=0  IUS=0]
-     length=96 (0x60)   Peripheral device type: disk
-  Vendor identification: ATA
-  Product identification: INTEL SSDSC2BW18
-  Product revision level: DC32
-  Unit serial number:
-
-   Version descriptors:
-     SAM-3 (no version claimed)
-     SBC-2 (no version claimed)
-     SPC-2 (no version claimed)
-
-
+--=20
+With Best Regards,
+Andy Shevchenko
