@@ -1,105 +1,32 @@
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: Re: [PATCH v2 00/23] ata: sata_dwc_460ex: make it working again
-Date: Wed, 4 May 2016 15:22:51 +0300
-Message-ID: <CAHp75VeeosHAxhXnWY7rc5o969TDyHPRWGdV7kh1_uR+TBa=aA@mail.gmail.com>
-References: <1461661404-1952-1-git-send-email-andriy.shevchenko@linux.intel.com>
+From: "hj@haowenjv.com" <hj@haowenjv.com>
+Subject: What time payment to you?
+Date: Fri, 6 May 2016 17:14:19 +0800
+Message-ID: <201605061714196563877@haowenjv.com>
+Reply-To: comebaby25@sohu.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="GB2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-oi0-f53.google.com ([209.85.218.53]:36349 "EHLO
-	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751423AbcEDMWw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 4 May 2016 08:22:52 -0400
-In-Reply-To: <1461661404-1952-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Received: from [69.165.64.149] ([69.165.64.149]:45115 "EHLO mail.haowenjv.com"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1751232AbcEFJYH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 6 May 2016 05:24:07 -0400
+Received: from I4TWEUGNTQH3EAM (unknown [219.136.11.122])
+	by mail.haowenjv.com (Postfix) with ESMTPA id D0EB44820
+	for <linux-ide@vger.kernel.org>; Fri,  6 May 2016 17:14:02 +0800 (CST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, "open list:LINUX FOR POWERPC PA SEMI PWRFICIENT" <linuxppc-dev@lists.ozlabs.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Christian Lamparter <chunkeey@googlemail.com>, =?UTF-8?B?TcOlbnMgUnVsbGfDpXJk?= <mans@mansr.com>, Julian Margetson <runaway@candw.ms>, Vinod Koul <vinod.koul@intel.com>
+To: linux-ide <linux-ide@vger.kernel.org>
 
-On Tue, Apr 26, 2016 at 12:03 PM, Andy Shevchenko
-<andriy.shevchenko@linux.intel.com> wrote:
-> The last approach in the commit 8b3444852a2b ("sata_dwc_460ex: move t=
-o generic
-> DMA driver") to switch to generic DMA engine API wasn't tested on bar=
-e metal.
-> Besides that we expecting new board support coming with the same SATA=
- IP but
-> with different DMA.
->
-> This series is targetting the following things:
-> - a few bug fixes to the original driver
-> - a part to fix the DMA engine usage and in particularly dw_dmac driv=
-er
-> - move driver to use generic PHY and "dmas" property which leads to u=
-pdate in DTS
->
-> The driver has been tested myself on Sam460ex and WD MyBookLive (apol=
-lo3g)
-> boards. In any case I ask Christian, M=C3=A5ns, and Julian to indepen=
-dently test and
-> provide Tested-by tag or an error report.
->
-> Series depends on previously published but not yet fully applied seri=
-es [1].
->
-> The patches are also available via public branch [2].
->
-> [1] http://www.spinics.net/lists/dmaengine/msg09250.html
-> [2] https://bitbucket.org/andy-shev/linux/branch/topic%2Fdw%2Fsata
->
-
-Tejun, since Vinod applied all necessary patches into his tree, the
-series now has just a dependency to whatever branch / tag he marks for
-it.
-Do we have a chance to see the SATA series be applied in your tree?
-
-> Since v1:
-> - simplify patch 8 (David Laight)
-> - add Tested-by and Acked-by tags
->
-> Andy Shevchenko (11):
->   ata: sata_dwc_460ex: set dma_boundary to 0x1fff
->   ata: sata_dwc_460ex: burst size must be in items not bytes
->   ata: sata_dwc_460ex: DMA is always a flow controller
->   ata: sata_dwc_460ex: select only core part of DMA driver
->   ata: sata_dwc_460ex: don't call ata_sff_qc_issue() on DMA commands
->   ata: sata_dwc_460ex: correct HOSTDEV{P}_FROM_*() macros
->   ata: sata_dwc_460ex: supply physical address of FIFO to DMA
->   ata: sata_dwc_460ex: switch to new dmaengine_terminate_* API
->   ata: sata_dwc_460ex: use devm_ioremap
->   ata: sata_dwc_460ex: make debug messages neat
->   powerpc/4xx: Device tree update for the 460ex DWC SATA
->
-> Christian Lamparter (1):
->   ata: sata_dwc_460ex: fix crash on offline links without an attached
->     drive
->
-> Mans Rullgard (11):
->   ata: sata_dwc_460ex: remove incorrect locking
->   ata: sata_dwc_460ex: skip dma setup for non-dma commands
->   ata: sata_dwc_460ex: use "dmas" DT property to find dma channel
->   ata: sata_dwc_460ex: add phy support
->   ata: sata_dwc_460ex: get rid of global data
->   ata: sata_dwc_460ex: remove empty libata callback
->   ata: sata_dwc_460ex: get rid of some pointless casts
->   ata: sata_dwc_460ex: get rid of incorrect cast
->   ata: sata_dwc_460ex: add __iomem to register base pointer
->   ata: sata_dwc_460ex: use readl/writel_relaxed()
->   ata: sata_dwc_460ex: tidy up sata_dwc_clear_dmacr()
->
->  arch/powerpc/boot/dts/canyonlands.dts |  15 +-
->  drivers/ata/Kconfig                   |  12 +-
->  drivers/ata/sata_dwc_460ex.c          | 552 +++++++++++++++++-------=
-----------
->  3 files changed, 305 insertions(+), 274 deletions(-)
->
-> --
-> 2.8.0.rc3
->
-
-
-
---=20
-With Best Regards,
-Andy Shevchenko
+zeLDs7/Nu6e/qreiz7XNs6O6DQoqIMO/zOzL0cv3uf3N8rn6zeLQ0NK1xL+x6r/Nu6fQxc+io6zP
+tc2z0rvM7LXEuaTX98G/tdbSu7j20rXO8dSx0ru49tTCtcTL0cv3wb+how0KKiDDv8zstqjKsaGi
+tqjBv9fUtq/Su7bU0rvNtrXdv6q3otDFzca549bBxPq1xMS/seq/zbuno6zDv8zsx+HLydT2vNMz
+uPbRr8XMo6zJ9dbBuPy24NGvxcyhow0KKiC89cnZ1NpCMkLGvcyotci0/bXEyrG85KOs1bm74bjf
+sLq30dPDtcTNtsjro6zU9rzTwM/Usbmku/28q9DUo6zIw9DCyta/7MvZyOvDxaGjvbW1zc3iw7O/
+zbunv6q3orPJsb6how0KKiDO0su+zqrG89K1zOG5qdeo0rW94r72t72wuMzXss23/s7xo6zSu8zX
+zerV+8+1zbO7r7/Nu6e/qreit72wuKOsuPy808qhyrHKocGmo6zC+tfj1tC089DNxvPStcO/zOy1
+xM3GuePBv6Oss9DFtbGj1c/Qp7n7oaMNCiogu/q74cH0uPjE+qGjzai5/c7Sw8e5q8u+yO28/s+1
+zbPSu7j20MfG2rP20fnGt7Wlo6yz9raptaW1xL/Nu6e089PQyMvU2qGjxL/HsMirufrB+centuC8
+0sbz0rXV/dTaytXS5qGjDQrW97av18nRr8jIz9+801EtLVGjujIwMzYwMTk1MTnD4rfRzqrE+tHd
+yr6hoyANCsGqz7W157uwo7oxODAyNDAyNTk1Nw==
