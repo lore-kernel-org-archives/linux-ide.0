@@ -1,32 +1,52 @@
-From: "hj@haowenjv.com" <hj@haowenjv.com>
-Subject: What time payment to you?
-Date: Fri, 6 May 2016 17:14:19 +0800
-Message-ID: <201605061714196563877@haowenjv.com>
-Reply-To: comebaby25@sohu.com
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCHv3 00/14] libata: ZAC support
+Date: Fri, 6 May 2016 13:05:36 +0200
+Message-ID: <572C7A80.4000903@suse.de>
+References: <1461581156-92581-1-git-send-email-hare@suse.de>
+ <20160425201627.GI7822@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="GB2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [69.165.64.149] ([69.165.64.149]:45115 "EHLO mail.haowenjv.com"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1751232AbcEFJYH (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 6 May 2016 05:24:07 -0400
-Received: from I4TWEUGNTQH3EAM (unknown [219.136.11.122])
-	by mail.haowenjv.com (Postfix) with ESMTPA id D0EB44820
-	for <linux-ide@vger.kernel.org>; Fri,  6 May 2016 17:14:02 +0800 (CST)
+Received: from mx2.suse.de ([195.135.220.15]:51714 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751695AbcEFLFk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 6 May 2016 07:05:40 -0400
+In-Reply-To: <20160425201627.GI7822@mtj.duckdns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide <linux-ide@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
-zeLDs7/Nu6e/qreiz7XNs6O6DQoqIMO/zOzL0cv3uf3N8rn6zeLQ0NK1xL+x6r/Nu6fQxc+io6zP
-tc2z0rvM7LXEuaTX98G/tdbSu7j20rXO8dSx0ru49tTCtcTL0cv3wb+how0KKiDDv8zstqjKsaGi
-tqjBv9fUtq/Su7bU0rvNtrXdv6q3otDFzca549bBxPq1xMS/seq/zbuno6zDv8zsx+HLydT2vNMz
-uPbRr8XMo6zJ9dbBuPy24NGvxcyhow0KKiC89cnZ1NpCMkLGvcyotci0/bXEyrG85KOs1bm74bjf
-sLq30dPDtcTNtsjro6zU9rzTwM/Usbmku/28q9DUo6zIw9DCyta/7MvZyOvDxaGjvbW1zc3iw7O/
-zbunv6q3orPJsb6how0KKiDO0su+zqrG89K1zOG5qdeo0rW94r72t72wuMzXss23/s7xo6zSu8zX
-zerV+8+1zbO7r7/Nu6e/qreit72wuKOsuPy808qhyrHKocGmo6zC+tfj1tC089DNxvPStcO/zOy1
-xM3GuePBv6Oss9DFtbGj1c/Qp7n7oaMNCiogu/q74cH0uPjE+qGjzai5/c7Sw8e5q8u+yO28/s+1
-zbPSu7j20MfG2rP20fnGt7Wlo6yz9raptaW1xL/Nu6e089PQyMvU2qGjxL/HsMirufrB+centuC8
-0sbz0rXV/dTaytXS5qGjDQrW97av18nRr8jIz9+801EtLVGjujIwMzYwMTk1MTnD4rfRzqrE+tHd
-yr6hoyANCsGqz7W157uwo7oxODAyNDAyNTk1Nw==
+On 04/25/2016 10:16 PM, Tejun Heo wrote:
+> Hello,
+>=20
+> On Mon, Apr 25, 2016 at 12:45:42PM +0200, Hannes Reinecke wrote:
+>> here's a patchset implementing ZAC support for libata.
+>>
+>> This is the second part of a larger patchset for ZAC/ZBC support;
+>> it requires the scsi trace fixes queued for in mkp/4.7/scsi-queue an=
+d
+>> the patchset 'libata: SATL update' queued in tj/for-4.7-zac.
+>=20
+> The patches look good from libata side.  If others are okay with it, =
+I
+> can pull mkp/4.7/scsi-queue into tj/for-4.7-zac and apply this series
+> on top of it.
+>=20
+Ping?
+
+I can easily split off the libsas bits into a different patchset if
+this turns out to be an issue.
+But it would be really good if this could make it 4.7, it will help
+further integration a _lot_.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
