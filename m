@@ -1,43 +1,45 @@
-From: Joseph Salisbury <joseph.salisbury@canonical.com>
-Subject: [v4.4-rc1 Regression] scsi: use host wide tags by default
-Date: Fri, 6 May 2016 09:53:57 -0400
-Message-ID: <572CA1F5.2040200@canonical.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 1/1] libata-scsi: use %*ph to dump small buffers
+Date: Fri,  6 May 2016 21:40:40 +0300
+Message-ID: <1462560040-103475-1-git-send-email-andriy.shevchenko@linux.intel.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:42015 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757850AbcEFNyE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 6 May 2016 09:54:04 -0400
+Received: from mga11.intel.com ([192.55.52.93]:56070 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758152AbcEFSko (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 6 May 2016 14:40:44 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>, James Bottomley <JBottomley@Odin.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-Hello Christoph,
+Replace custom approach by %*ph specifier to dump small buffers in hex format.
 
-A kernel bug report was opened against Ubuntu [0].  After a kernel
-bisect, it was found that reverting the following commit resolved this bug:
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/ata/libata-scsi.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-commit 64d513ac31bd02a3c9b69ef04444f36c196f9a9d
-Author: Christoph Hellwig <hch@lst.de>
-Date:   Thu Oct 8 09:28:04 2015 +0100
-
-    scsi: use host wide tags by default
-
-
-The regression was introduced as of v4.4-rc1.
-
-I was hoping to get your feedback, since you are the patch author.  Do
-you think gathering any additional data will help diagnose this issue,
-or would it be best to submit a revert request?
-      
-
-Thanks,
-    
-Joe
-
-[0] http://pad.lv/1561830
-
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index c7d0fc1..5bef807 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3646,14 +3646,11 @@ static inline void ata_scsi_dump_cdb(struct ata_port *ap,
+ {
+ #ifdef ATA_DEBUG
+ 	struct scsi_device *scsidev = cmd->device;
+-	u8 *scsicmd = cmd->cmnd;
+ 
+-	DPRINTK("CDB (%u:%d,%d,%d) %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
++	DPRINTK("CDB (%u:%d,%d,%d) %9ph\n",
+ 		ap->print_id,
+ 		scsidev->channel, scsidev->id, scsidev->lun,
+-		scsicmd[0], scsicmd[1], scsicmd[2], scsicmd[3],
+-		scsicmd[4], scsicmd[5], scsicmd[6], scsicmd[7],
+-		scsicmd[8]);
++		cmd->cmnd);
+ #endif
+ }
+ 
+-- 
+2.8.1
 
