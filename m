@@ -1,52 +1,43 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv3 00/14] libata: ZAC support
-Date: Fri, 6 May 2016 13:05:36 +0200
-Message-ID: <572C7A80.4000903@suse.de>
-References: <1461581156-92581-1-git-send-email-hare@suse.de>
- <20160425201627.GI7822@mtj.duckdns.org>
+From: Joseph Salisbury <joseph.salisbury@canonical.com>
+Subject: [v4.4-rc1 Regression] scsi: use host wide tags by default
+Date: Fri, 6 May 2016 09:53:57 -0400
+Message-ID: <572CA1F5.2040200@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:51714 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751695AbcEFLFk (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Fri, 6 May 2016 07:05:40 -0400
-In-Reply-To: <20160425201627.GI7822@mtj.duckdns.org>
+Received: from youngberry.canonical.com ([91.189.89.112]:42015 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757850AbcEFNyE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 6 May 2016 09:54:04 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>, James Bottomley <JBottomley@Odin.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On 04/25/2016 10:16 PM, Tejun Heo wrote:
-> Hello,
->=20
-> On Mon, Apr 25, 2016 at 12:45:42PM +0200, Hannes Reinecke wrote:
->> here's a patchset implementing ZAC support for libata.
->>
->> This is the second part of a larger patchset for ZAC/ZBC support;
->> it requires the scsi trace fixes queued for in mkp/4.7/scsi-queue an=
-d
->> the patchset 'libata: SATL update' queued in tj/for-4.7-zac.
->=20
-> The patches look good from libata side.  If others are okay with it, =
-I
-> can pull mkp/4.7/scsi-queue into tj/for-4.7-zac and apply this series
-> on top of it.
->=20
-Ping?
+Hello Christoph,
 
-I can easily split off the libsas bits into a different patchset if
-this turns out to be an issue.
-But it would be really good if this could make it 4.7, it will help
-further integration a _lot_.
+A kernel bug report was opened against Ubuntu [0].  After a kernel
+bisect, it was found that reverting the following commit resolved this bug:
 
-Cheers,
+commit 64d513ac31bd02a3c9b69ef04444f36c196f9a9d
+Author: Christoph Hellwig <hch@lst.de>
+Date:   Thu Oct 8 09:28:04 2015 +0100
 
-Hannes
---=20
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG N=FCrnberg)
+    scsi: use host wide tags by default
+
+
+The regression was introduced as of v4.4-rc1.
+
+I was hoping to get your feedback, since you are the patch author.  Do
+you think gathering any additional data will help diagnose this issue,
+or would it be best to submit a revert request?
+      
+
+Thanks,
+    
+Joe
+
+[0] http://pad.lv/1561830
+
+
