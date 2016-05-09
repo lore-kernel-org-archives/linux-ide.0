@@ -1,30 +1,44 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v1 1/1] libata-scsi: use %*ph to dump small buffers
-Date: Mon, 9 May 2016 12:31:15 -0400
-Message-ID: <20160509163115.GG7110@mtj.duckdns.org>
-References: <1462560040-103475-1-git-send-email-andriy.shevchenko@linux.intel.com>
+Subject: Re: [PATCHv3 00/14] libata: ZAC support
+Date: Mon, 9 May 2016 12:38:22 -0400
+Message-ID: <20160509163822.GH7110@mtj.duckdns.org>
+References: <1461581156-92581-1-git-send-email-hare@suse.de>
+ <20160425201627.GI7822@mtj.duckdns.org>
+ <572C7A80.4000903@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f171.google.com ([209.85.161.171]:35961 "EHLO
-	mail-yw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750983AbcEIQbt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 9 May 2016 12:31:49 -0400
-Received: by mail-yw0-f171.google.com with SMTP id o66so291280153ywc.3
-        for <linux-ide@vger.kernel.org>; Mon, 09 May 2016 09:31:48 -0700 (PDT)
+Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1462560040-103475-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <572C7A80.4000903@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: linux-ide@vger.kernel.org, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: linux-ide@vger.kernel.org
 
-On Fri, May 06, 2016 at 09:40:40PM +0300, Andy Shevchenko wrote:
-> Replace custom approach by %*ph specifier to dump small buffers in hex format.
+On Fri, May 06, 2016 at 01:05:36PM +0200, Hannes Reinecke wrote:
+> On 04/25/2016 10:16 PM, Tejun Heo wrote:
+> > Hello,
+> > 
+> > On Mon, Apr 25, 2016 at 12:45:42PM +0200, Hannes Reinecke wrote:
+> >> here's a patchset implementing ZAC support for libata.
+> >>
+> >> This is the second part of a larger patchset for ZAC/ZBC support;
+> >> it requires the scsi trace fixes queued for in mkp/4.7/scsi-queue and
+> >> the patchset 'libata: SATL update' queued in tj/for-4.7-zac.
+> > 
+> > The patches look good from libata side.  If others are okay with it, I
+> > can pull mkp/4.7/scsi-queue into tj/for-4.7-zac and apply this series
+> > on top of it.
+> > 
+> Ping?
 > 
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> I can easily split off the libsas bits into a different patchset if
+> this turns out to be an issue.
+> But it would be really good if this could make it 4.7, it will help
+> further integration a _lot_.
 
-Applied to libata/for-4.7.
+Pulled in mkp/4.7/scsi-queue into libata/for-4.7-zac and applied the
+patches on top.
 
 Thanks.
 
