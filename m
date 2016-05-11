@@ -1,61 +1,50 @@
 From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH] ata: dwc: add DMADEVICES dependency
-Date: Wed, 11 May 2016 15:32:18 +0200
-Message-ID: <3357570.y2pHcSUkFV@wuerfel>
-References: <1462970683-451525-1-git-send-email-arnd@arndb.de> <4546329.1O9421M58I@wuerfel> <yw1xd1oshgvq.fsf@unicorn.mansr.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Subject: [PATCH v2] ata: dwc: add DMADEVICES dependency
+Date: Wed, 11 May 2016 15:42:08 +0200
+Message-ID: <1462974151-1467200-1-git-send-email-arnd@arndb.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.135]:55336 "EHLO
+Received: from mout.kundenserver.de ([217.72.192.75]:59101 "EHLO
 	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932593AbcEKNcc convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 May 2016 09:32:32 -0400
-In-Reply-To: <yw1xd1oshgvq.fsf@unicorn.mansr.com>
+	with ESMTP id S1751765AbcEKNmr (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 11 May 2016 09:42:47 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: =?ISO-8859-1?Q?M=E5ns_Rullg=E5rd?= <mans@mansr.com>
-Cc: Tejun Heo <tj@kernel.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, Mans Rullgard <mans@mansr.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wednesday 11 May 2016 14:19:05 M=E5ns Rullg=E5rd wrote:
-> Arnd Bergmann <arnd@arndb.de> writes:
->=20
-> > On Wednesday 11 May 2016 13:57:08 M=E5ns Rullg=E5rd wrote:
-> >> > diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-> >> > index 41b0725e58ad..8f7a4a4d2566 100644
-> >> > --- a/drivers/ata/Kconfig
-> >> > +++ b/drivers/ata/Kconfig
-> >> > @@ -322,7 +322,7 @@ config SATA_DWC
-> >> >
-> >> >  config SATA_DWC_OLD_DMA
-> >> >       bool "Support old device trees"
-> >> > -     depends on SATA_DWC
-> >> > +     depends on SATA_DWC && DMADEVICES
-> >> >       select DW_DMAC_CORE
-> >> >       default y if 460EX
-> >> >       help
-> >> > --=20
-> >>=20
-> >> Isn't the proper fix here to have DW_DMAC_CORE select DMADEVICES?
-> >
-> > No, all dmaengine drivers depend on DMADEVICES, so that would
-> > cause a circular dependency.
-> >
-> > The normal behavior for DMA slave drivers is to use the generic
-> > DMA API and have a dependency on DMADEVICES but not on a particular
-> > DMA engine implementation. In this case, the driver uses an exporte=
-d
-> > interface of the dw_dma driver directly, so we also need to select
-> > that one, but it doesn't mean we can skip the normal dependency.
->=20
-> OK, but then shouldn't the main SATA_DWC have this dependency since i=
-t
-> uses the DMA API?
->=20
+The dwc_460ex SATA driver has become available on non-powerpc architectures
+and may cause randconfig build errors when CONFIG_DMADEVICES is not set
+and SATA_DWC_OLD_DMA is enabled:
 
-Right, I missed that and thought only the SATA_DWC_OLD_DMA variant
-used dmaengine at all. I'll send a new version of my patch then.
+warning: (SATA_DWC_OLD_DMA) selects DW_DMAC_CORE which has unmet direct dependencies (DMADEVICES)
+ERROR: "dw_dma_probe" [drivers/ata/sata_dwc_460ex.ko] undefined!
+ERROR: "dw_dma_remove" [drivers/ata/sata_dwc_460ex.ko] undefined!
 
-Thanks,
+This adds an explcit Kconfig dependency to CONFIG_SATA_DWC so we
+cannot run into broken configurations. While it would also be
+possible to build the driver with both CONFIG_DMADEVICES
+and SATA_DWC_OLD_DMA disabled, that case is not useful because
+there is no fallback to PIO mode when the DMA engine is not
+usable.
 
-	Arnd
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Fixes: 50b433753df6 ("ata: sata_dwc_460ex: use "dmas" DT property to find dma channel")
+---
+ drivers/ata/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 41b0725e58ad..e2dc4c045146 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -313,6 +313,7 @@ config ATA_PIIX
+ 
+ config SATA_DWC
+ 	tristate "DesignWare Cores SATA support"
++	depends on DMADEVICES
+ 	select GENERIC_PHY
+ 	help
+ 	  This option enables support for the on-chip SATA controller of the
+-- 
+2.7.0
+
