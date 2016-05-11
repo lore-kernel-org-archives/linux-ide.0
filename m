@@ -1,54 +1,39 @@
-From: Mason <slash.tmp@free.fr>
-Subject: Re: [PATCH v2 00/23] ata: sata_dwc_460ex: make it working again
-Date: Wed, 11 May 2016 16:55:47 +0200
-Message-ID: <573347F3.2080104@free.fr>
-References: <1461661404-1952-1-git-send-email-andriy.shevchenko@linux.intel.com>
- <CAHp75VeeosHAxhXnWY7rc5o969TDyHPRWGdV7kh1_uR+TBa=aA@mail.gmail.com>
- <20160508200008.GM4775@htj.duckdns.org>
- <20160509010952.GN4775@htj.duckdns.org>
- <CAHp75VeMkZOZgGj2b3tHw7h7V42qM9dCz1qWs8nQENBMGWuZHQ@mail.gmail.com>
- <yw1xmvnziofc.fsf@unicorn.mansr.com> <20160509190536.GK7110@mtj.duckdns.org>
- <CAHp75Vf6kivRBd+9nMUU-sLPrA3ctiwvXnqrAFHX3XJWPeNO1Q@mail.gmail.com>
- <20160510060440.GF2274@localhost> <20160510163022.GL7110@mtj.duckdns.org>
- <5732EA75.4070002@free.fr> <5732FE8E.9000605@free.fr>
- <yw1xlh3ghn8n.fsf@unicorn.mansr.com>
+From: "Alfred" <alfred_weiyun@sina.com>
+Subject: Your company import from China, we help in logistics field.
+Date: Thu, 12 May 2016 00:47:06 +0800
+Message-ID: <201605120047068062467@a.hfbgch.com>
+Reply-To: alfred_weiyun@sina.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="GB2312"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp2-g21.free.fr ([212.27.42.2]:29998 "EHLO smtp2-g21.free.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932090AbcEKO4H (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 11 May 2016 10:56:07 -0400
-In-Reply-To: <yw1xlh3ghn8n.fsf@unicorn.mansr.com>
+Received: from [121.50.168.63] ([121.50.168.63]:42939 "EHLO a.hfbgch.com"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1751391AbcEKQ5O (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 11 May 2016 12:57:14 -0400
+Received: from lmnoopq (unknown [121.15.119.57])
+	by a.hfbgch.com (Postfix) with ESMTPA id AA8B944CE2
+	for <linux-ide@vger.kernel.org>; Thu, 12 May 2016 00:47:07 +0800 (CST)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Mans Rullgard <mans@mansr.com>
-Cc: Tejun Heo <tj@kernel.org>, Vinod Koul <vinod.koul@intel.com>, Andy Shevchenko <andy.shevchenko@gmail.com>, Sebastian Frias <sf84@laposte.net>, linux-ide@vger.kernel.org
+To: linux-ide <linux-ide@vger.kernel.org>
 
-On 11/05/2016 13:01, M=E5ns Rullg=E5rd wrote:
-
-> Mason wrote:
->=20
->> Mans, did you intend to upstream your tangox-dma.c DMA driver?
->=20
-> Yes, that's the idea, though I haven't yet updated it to work with
-> tango4.  This SATA driver also needs a small addition to handle the D=
-MA
-> glue.  Now that the dust has settled a bit around these fixes, I can =
-get
-> back to that.
-
-I may have an obsolete version of the driver, but I saw that you
-would sometimes call wmb() after writel().
-
-I thought writel() includes an implicit write barrier?
-And that one uses writel_relaxed() if the barrier is not needed?
-
-Did I misunderstand?
-
-Somewhat related discussions:
-http://thread.gmane.org/gmane.linux.ports.arm.kernel/117626
-http://billauer.co.il/blog/2014/08/wmb-rmb-mmiomb-effects/
-
-Regards.
+RGVhciBTaXJzOg0KICAgIA0KICAgIEhvdyBhcmUgeW91IGRvaW5nPw0KDQogICAgVGhlIHNlY29u
+ZCB0byB5b3UuDQoNCiAgICBEbyB5b3VyIGNvbXBhbnkgaGF2ZSB0aGUgZ29vZHMgaW1wb3J0ZWQg
+ZnJvbSBDaGluYT9PdXIgY29tcGFueSBpcyBhIGZyZWlnaHQgZm9yd2FyZGluZyBjb21wYW55IGlu
+IHNoZW56aGVuLCBDaGluYS4NCg0KICAgIFNlcnZpY2UsIHNhZmV0eSBpcyB0aGUgbW9zdCBwYXkg
+YXR0ZW50aW9uIHRvIG91ciBjb21wYW55LklmIHRoZXJlIGlzIHByb21vdGlvbiBwcmljZSB3ZSB3
+aWxsIGFjY29yZGluZyB0byB0aGUgcHJvbW90aW9uIHByaWNlIHF1b3RhdGlvbiBmb3IgeW91LlNv
+IHRoZSBwdXJjaGFzZSBpcyBtYWRlIG91dCwgcGxlYXNlIGdpdmUgbWUgeW91ciBwYWNraW5nIGxp
+c3QuSSBjYW4gb2ZmZXIgeW91IHRoZSBtb3N0IHByZWZlcmVudGlhbCBwcmljZSBhdCB0aGF0IHRp
+bWUuDQoNCiAgICBJZiBuZWVkZWQsd2UnbGwgYmUgcGxlYXNlZCB0byBnaXZlIHlvdSBvdXIgYmVz
+dCBzZXJ2aWNlIQ0KDQogICBIYXZlIGEgZ3JlYXQgZGF5Lg0KDQoNCi0tLS0tLS0tLS0tLS0tLQ0K
+DQpBbGZyZWQNCg0KDQpTaGVuemhlbiBEb25nZGEgRnJlaWdodCBhZ2VuY3kgQ08uLCBMVEQNCg0K
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQoNClRlbDo4Ni03NTUtNjE5
+NjEzNzANCg0KTW9io7o4Ni0xODkyOTM5MzgzNg0KDQpGYXijujg2LTc1NS0yOTE5NjY2MQ0KDQpF
+bWFpbKO6YWxmcmVkX3dlaXl1bkBzaW5hLmNvbSAgICAgICAgc2FsZXMyQGRkaHkxNjguY29tDQoN
+ClNLWVBFOmRkaHkxNjggICAgICBRUToxNTU5NDg5NTI2DQoNCldlYqO6d3d3LmRkaHkxNjguY29t
+DQoNCkFkZHJlc3M6IDUxNiBCYWlzaGl3ZWkgTG9naXN0aWNzIFBhcmsgRnV3ZWkNCiAgICAgICAg
+IENvbW11bml0eSBGdXlvbmcgU3RyZWV0DQogICAgICAgICBCYW8nYW4gRGlzdHJpY3QsDQogICAg
+ICAgICBTaGVuemhlbqOsNTE4MTAzIENoaW5h
