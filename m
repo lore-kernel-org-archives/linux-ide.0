@@ -1,39 +1,50 @@
-From: "Alfred" <alfred_weiyun@sina.com>
-Subject: Your company import from China, we help in logistics field.
-Date: Thu, 12 May 2016 00:47:06 +0800
-Message-ID: <201605120047068062467@a.hfbgch.com>
-Reply-To: alfred_weiyun@sina.com
+From: "Mr. Ragner Henderson" <p2@1qa2ws3ed.synergize.co>
+Subject: URGENT RESPONSE NEEDED, PLEASE REPLY....
+Date: Thu, 12 May 2016 07:10:01 -0700
+Message-ID: <PN1PR01MB0174B5525FF632D4D0742098F3730__40222.6908634931$1463063250$gmane$org@PN1PR01MB0174.INDPRD01.PROD.OUTLOOK.COM>
+Reply-To: <mr.ragnerhenderson@yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="GB2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [121.50.168.63] ([121.50.168.63]:42939 "EHLO a.hfbgch.com"
-	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
-	id S1751391AbcEKQ5O (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 11 May 2016 12:57:14 -0400
-Received: from lmnoopq (unknown [121.15.119.57])
-	by a.hfbgch.com (Postfix) with ESMTPA id AA8B944CE2
-	for <linux-ide@vger.kernel.org>; Thu, 12 May 2016 00:47:07 +0800 (CST)
+Received: from mail-bo1ind01hn0224.outbound.protection.outlook.com ([104.47.101.224]:40873
+	"EHLO IND01-BO1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751901AbcELO0f convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 May 2016 10:26:35 -0400
+Content-Description: Mail message body
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide <linux-ide@vger.kernel.org>
+To: Recipients <p2@1qa2ws3ed.synergize.co>
 
-RGVhciBTaXJzOg0KICAgIA0KICAgIEhvdyBhcmUgeW91IGRvaW5nPw0KDQogICAgVGhlIHNlY29u
-ZCB0byB5b3UuDQoNCiAgICBEbyB5b3VyIGNvbXBhbnkgaGF2ZSB0aGUgZ29vZHMgaW1wb3J0ZWQg
-ZnJvbSBDaGluYT9PdXIgY29tcGFueSBpcyBhIGZyZWlnaHQgZm9yd2FyZGluZyBjb21wYW55IGlu
-IHNoZW56aGVuLCBDaGluYS4NCg0KICAgIFNlcnZpY2UsIHNhZmV0eSBpcyB0aGUgbW9zdCBwYXkg
-YXR0ZW50aW9uIHRvIG91ciBjb21wYW55LklmIHRoZXJlIGlzIHByb21vdGlvbiBwcmljZSB3ZSB3
-aWxsIGFjY29yZGluZyB0byB0aGUgcHJvbW90aW9uIHByaWNlIHF1b3RhdGlvbiBmb3IgeW91LlNv
-IHRoZSBwdXJjaGFzZSBpcyBtYWRlIG91dCwgcGxlYXNlIGdpdmUgbWUgeW91ciBwYWNraW5nIGxp
-c3QuSSBjYW4gb2ZmZXIgeW91IHRoZSBtb3N0IHByZWZlcmVudGlhbCBwcmljZSBhdCB0aGF0IHRp
-bWUuDQoNCiAgICBJZiBuZWVkZWQsd2UnbGwgYmUgcGxlYXNlZCB0byBnaXZlIHlvdSBvdXIgYmVz
-dCBzZXJ2aWNlIQ0KDQogICBIYXZlIGEgZ3JlYXQgZGF5Lg0KDQoNCi0tLS0tLS0tLS0tLS0tLQ0K
-DQpBbGZyZWQNCg0KDQpTaGVuemhlbiBEb25nZGEgRnJlaWdodCBhZ2VuY3kgQ08uLCBMVEQNCg0K
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQoNClRlbDo4Ni03NTUtNjE5
-NjEzNzANCg0KTW9io7o4Ni0xODkyOTM5MzgzNg0KDQpGYXijujg2LTc1NS0yOTE5NjY2MQ0KDQpF
-bWFpbKO6YWxmcmVkX3dlaXl1bkBzaW5hLmNvbSAgICAgICAgc2FsZXMyQGRkaHkxNjguY29tDQoN
-ClNLWVBFOmRkaHkxNjggICAgICBRUToxNTU5NDg5NTI2DQoNCldlYqO6d3d3LmRkaHkxNjguY29t
-DQoNCkFkZHJlc3M6IDUxNiBCYWlzaGl3ZWkgTG9naXN0aWNzIFBhcmsgRnV3ZWkNCiAgICAgICAg
-IENvbW11bml0eSBGdXlvbmcgU3RyZWV0DQogICAgICAgICBCYW8nYW4gRGlzdHJpY3QsDQogICAg
-ICAgICBTaGVuemhlbqOsNTE4MTAzIENoaW5h
+Dear Friend,
+
+Pardon me for not having the pleasure of knowing your mindset before ma=
+king you this offer and it is utterly confidential and genuine by virtu=
+e of its nature I write to solicit your assistance in a funds transfer =
+deal involving =A315.2M.This fund has been stashed out of the excess pr=
+ofit made last 2years by my branch office of  the Co-operative Bank Plc=
+ here in United Kingdom which I am the manager.
+
+I have already submitted an approved end-of-the-year report for the yea=
+r 2015 to my head office here in Manchester UK. and they will never kno=
+w of this excess.
+
+I have since then, placed this amount on a Non-Investment Account witho=
+ut a beneficiary. Upon your response, I will configure your name on our=
+ database as holder of the Non-Investment Account. I will then guide yo=
+u on how to apply to my head office for the Account Closure/bank-to-ban=
+k remittance of the funds to your designated bank account.
+If you concur with this proposal, I intend for you to retain 30% of the=
+ funds while 70% shall be for me. Kindly forward your response to me im=
+mediately to my private mail box: (mr.ragnerhenderson@yahoo.com) thank =
+you.
+
+With Regards,
+
+Mr. Ragner Henderson.
+
+---
+This email has been checked for viruses by Avast antivirus software.
+https://www.avast.com/antivirus
+
