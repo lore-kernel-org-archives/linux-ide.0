@@ -1,44 +1,78 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2] ata: dwc: add DMADEVICES dependency
-Date: Thu, 12 May 2016 12:04:57 -0400
-Message-ID: <20160512160457.GV4775@htj.duckdns.org>
-References: <1462974151-1467200-1-git-send-email-arnd@arndb.de>
+From: Damien Le Moal <Damien.LeMoal@hgst.com>
+Subject: Re: [PATCHv3 12/14] libata: NCQ encapsulation for ZAC MANAGEMENT OUT
+Date: Fri, 13 May 2016 08:32:18 +0000
+Message-ID: <81AF36B5-A610-4E04-A4E7-F9DB47D6E73F@hgst.com>
+References: <1461581156-92581-1-git-send-email-hare@suse.de>
+ <1461581156-92581-13-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qg0-f67.google.com ([209.85.192.67]:33170 "EHLO
-	mail-qg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751648AbcELQXb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 12 May 2016 12:23:31 -0400
-Content-Disposition: inline
-In-Reply-To: <1462974151-1467200-1-git-send-email-arnd@arndb.de>
+Received: from sjc00mx1.hgst.com ([199.255.44.36]:19812 "EHLO
+	sjc00mx1.hgst.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751394AbcEMIcW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 13 May 2016 04:32:22 -0400
+In-Reply-To: <1461581156-92581-13-git-send-email-hare@suse.de>
+Content-Language: en-US
+Content-ID: <C53E48AE846B304EB353D279874B4A08@namprd04.prod.outlook.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Mans Rullgard <mans@mansr.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, Tejun Heo <tj@kernel.org>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.com>
 
-On Wed, May 11, 2016 at 03:42:08PM +0200, Arnd Bergmann wrote:
-> The dwc_460ex SATA driver has become available on non-powerpc architectures
-> and may cause randconfig build errors when CONFIG_DMADEVICES is not set
-> and SATA_DWC_OLD_DMA is enabled:
-> 
-> warning: (SATA_DWC_OLD_DMA) selects DW_DMAC_CORE which has unmet direct dependencies (DMADEVICES)
-> ERROR: "dw_dma_probe" [drivers/ata/sata_dwc_460ex.ko] undefined!
-> ERROR: "dw_dma_remove" [drivers/ata/sata_dwc_460ex.ko] undefined!
-> 
-> This adds an explcit Kconfig dependency to CONFIG_SATA_DWC so we
-> cannot run into broken configurations. While it would also be
-> possible to build the driver with both CONFIG_DMADEVICES
-> and SATA_DWC_OLD_DMA disabled, that case is not useful because
-> there is no fallback to PIO mode when the DMA engine is not
-> usable.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Fixes: 50b433753df6 ("ata: sata_dwc_460ex: use "dmas" DT property to find dma channel")
+DQpIYW5uZXMsDQoNCj5BZGQgTkNRIGVuY2Fwc3VsYXRpb24gZm9yIFpBQyBNQU5BR0VNRU5UIE9V
+VCBhbmQgZXZhbHVhdGUNCj5OQ1EgTm9uLURhdGEgbG9nIHBhZ2VzIHRvIGZpZ3VyZSBvdXQgaWYg
+TkNRIGVuY2Fwc3VsYXRpb24NCj5pcyBzdXBwb3J0ZWQuDQouLi4NCj5kaWZmIC0tZ2l0IGEvZHJp
+dmVycy9hdGEvbGliYXRhLXNjc2kuYyBiL2RyaXZlcnMvYXRhL2xpYmF0YS1zY3NpLmMNCj5pbmRl
+eCA2YWZkMDg0Li40MzQwM2FhIDEwMDY0NA0KPi0tLSBhL2RyaXZlcnMvYXRhL2xpYmF0YS1zY3Np
+LmMNCj4rKysgYi9kcml2ZXJzL2F0YS9saWJhdGEtc2NzaS5jDQo+QEAgLTM1MDYsMTEgKzM1MDYs
+MTkgQEAgc3RhdGljIHVuc2lnbmVkIGludCBhdGFfc2NzaV96YmNfb3V0X3hsYXQoc3RydWN0IGF0
+YV9xdWV1ZWRfY21kICpxYykNCj4gDQo+IAlyZXNldF9hbGwgPSBjZGJbMTRdICYgMHgxOw0KPiAN
+Cj4tCXRmLT5wcm90b2NvbCA9IEFUQV9QUk9UX05PREFUQTsNCj4tCXRmLT5jb21tYW5kID0gQVRB
+X0NNRF9aQUNfTUdNVF9PVVQ7DQo+LQl0Zi0+ZmVhdHVyZSA9IHNhOw0KPi0JdGYtPmhvYl9mZWF0
+dXJlID0gcmVzZXRfYWxsICYgMHgxOw0KPi0NCj4rCWlmIChhdGFfbmNxX2VuYWJsZWQocWMtPmRl
+dikgJiYNCj4rCSAgICBhdGFfZnBkbWFfemFjX21nbXRfb3V0X3N1cHBvcnRlZChxYy0+ZGV2KSkg
+ew0KPisJCXRmLT5wcm90b2NvbCA9IEFUQV9QUk9UX05DUTsNCj4rCQl0Zi0+Y29tbWFuZCA9IEFU
+QV9DTURfTkNRX05PTl9EQVRBOw0KPisJCXRmLT5ob2JfbnNlY3QgPSBBVEFfU1VCQ01EX05DUV9O
+T05fREFUQV9aQUNfTUdNVF9PVVQ7DQo+KwkJdGYtPm5zZWN0ID0gcWMtPnRhZyA8PCAzOw0KPisJ
+CXRmLT5hdXhpbGlhcnkgPSBzYSB8IChyZXNldF9hbGwgJiAweDEpIDw8IDg7DQo+Kwl9IGVsc2Ug
+ew0KPisJCXRmLT5wcm90b2NvbCA9IEFUQV9QUk9UX05PREFUQTsNCj4rCQl0Zi0+Y29tbWFuZCA9
+IEFUQV9DTURfWkFDX01HTVRfT1VUOw0KPisJCXRmLT5mZWF0dXJlID0gc2E7DQo+KwkJdGYtPmhv
+Yl9mZWF0dXJlID0gcmVzZXRfYWxsICYgMHgxOw0KPisJfQ0KDQpDYWxscyB0byBhdGFfaXNfZGF0
+YShwcm90KSBmb3IgQVRBX1BST1RfTkNRIHRhc2sgZmlsZXMgd2lsbCBhbHdheXMNCnJldHVybiAi
+dHJ1ZSIsIGV2ZW4gaWYgdGhlIGNvbW1hbmQgaXMgQVRBX0NNRF9OQ1FfTk9OX0RBVEEgKGJlY2F1
+c2UNCnRoZSBETUEgcHJvdCBmbGFnIGlzIGFsd2F5cyBzZXQgYnkgYXRhX3Byb3RfZmxhZ3MgZm9y
+IE5DUSBwcm90b2NvbCkuDQpUaGlzIHJlc3VsdCBpbiBhbGwgdGhlIEFUQV9DTURfWkFDX01HTVRf
+T1VUIGNvbW1hbmRzIHRvIGZhaWwgaW4NCmF0YV9xY19pc3N1ZSBiZWNhdXNlIG9mIHRoZSBjaGVj
+azogDQoNCiAgICAgICAgaWYgKFdBUk5fT05fT05DRShhdGFfaXNfZGF0YShwcm90KSAmJg0KICAg
+ICAgICAgICAgICAgICAgICAgICAgICghcWMtPnNnIHx8ICFxYy0+bl9lbGVtIHx8ICFxYy0+bmJ5
+dGVzKSkpDQogICAgICAgICAgICAgICAgZ290byBzeXNfZXJyOw0KDQoNCkkgYW0gbm90IHN1cmUg
+dGhlIGJlc3Qgd2F5IHRvIGZpeCB0aGlzLi4uIEhhY2tpbmcgYXRhX3FjX2lzc3VlIHVzaW5nIHRo
+ZSBwcm90b2NvbA0KQU5EIGNvbW1hbmQgY29kZSB0byBkZWZpbmUgYSBib29sICJpc19kYXRhIiBw
+cmV2ZW50cyB0aGUgZXJyb3IgYnV0IGF0YV9pc19kYXRhIGlzDQphbHNvIHVzZWQgaW4gZGlmZmVy
+ZW50IGRyaXZlcnMgc28gYSBtb3JlIHNvbGlkIGZpeCBzZWVtIG5lY2Vzc2FyeS4NCg0KQWRkaW5n
+IGEgbmV3IEFUQV9QUk9UX05DUV9OT0RBVEEgZm9yIEFUQV9DTURfTkNRX05PTl9EQVRBIHdvdWxk
+IGJlIGJldHRlciwgYnV0IHRoaXMNCmRvZXMgbm90IHJlYWxseSBjb3JyZXNwb25kIHRvIGFueXRo
+aW5nIGluIHRoZSBzdGFuZGFyZHMuIEFuZCB3aXRoIHRoaXMsIHRoZSBlcnJvcg0KbW92ZXMgdG8g
+dGhlIGNvbW1hbmQgc2cgZG1hIHNldHVwIGNvbXBsYWluaW5nIHRoYXQgdGhlIERNQSBkaXJlY3Rp
+b24gaXMgbm90IGtub3duLg0KQW55IGlkZWFzID8NCg0KDQpBbHNvLCB0aGUgIiYgMHgxIiBpbiAi
+dGYtPmF1eGlsaWFyeSA9IHNhIHwgKHJlc2V0X2FsbCAmIDB4MSkgPDwgODsiIGlzIG5vdCBuZWNl
+c3NhcnkNCnNpbmNlIHJlc2V0X2FsbCBpcyBpbml0aWFsaXplZCBhbHJlYWR5IGFzICJyZXNldF9h
+bGwgPSBjZGJbMTRdICYgMHgxOyINCg0KQmVzdCByZWdhcmRzLg0KDQotLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0NCkRhbWllbiBMZSBNb2FsLCBQaC5ELg0KU3IuIE1hbmFnZXIsIFN5c3RlbSBTb2Z0
+d2FyZSBHcm91cCwgSEdTVCBSZXNlYXJjaCwNCkhHU1QsIGEgV2VzdGVybiBEaWdpdGFsIGNvbXBh
+bnkNCkRhbWllbi5MZU1vYWxAaGdzdC5jb20NCigrODEpIDA0NjYtOTgtMzU5MyAoZXh0LiA1MTM1
+OTMpDQoxIGtpcmloYXJhLWNobywgRnVqaXNhd2EsIA0KS2FuYWdhd2EsIDI1Mi0wODg4IEphcGFu
+DQp3d3cuaGdzdC5jb20NCldlc3Rlcm4gRGlnaXRhbCBDb3Jwb3JhdGlvbiAoYW5kIGl0cyBzdWJz
+aWRpYXJpZXMpIEUtbWFpbCBDb25maWRlbnRpYWxpdHkgTm90aWNlICYgRGlzY2xhaW1lcjoKClRo
+aXMgZS1tYWlsIGFuZCBhbnkgZmlsZXMgdHJhbnNtaXR0ZWQgd2l0aCBpdCBtYXkgY29udGFpbiBj
+b25maWRlbnRpYWwgb3IgbGVnYWxseSBwcml2aWxlZ2VkIGluZm9ybWF0aW9uIG9mIFdEQyBhbmQv
+b3IgaXRzIGFmZmlsaWF0ZXMsIGFuZCBhcmUgaW50ZW5kZWQgc29sZWx5IGZvciB0aGUgdXNlIG9m
+IHRoZSBpbmRpdmlkdWFsIG9yIGVudGl0eSB0byB3aGljaCB0aGV5IGFyZSBhZGRyZXNzZWQuIElm
+IHlvdSBhcmUgbm90IHRoZSBpbnRlbmRlZCByZWNpcGllbnQsIGFueSBkaXNjbG9zdXJlLCBjb3B5
+aW5nLCBkaXN0cmlidXRpb24gb3IgYW55IGFjdGlvbiB0YWtlbiBvciBvbWl0dGVkIHRvIGJlIHRh
+a2VuIGluIHJlbGlhbmNlIG9uIGl0LCBpcyBwcm9oaWJpdGVkLiBJZiB5b3UgaGF2ZSByZWNlaXZl
+ZCB0aGlzIGUtbWFpbCBpbiBlcnJvciwgcGxlYXNlIG5vdGlmeSB0aGUgc2VuZGVyIGltbWVkaWF0
+ZWx5IGFuZCBkZWxldGUgdGhlIGUtbWFpbCBpbiBpdHMgZW50aXJldHkgZnJvbSB5b3VyIHN5c3Rl
+bS4K
 
-Applied to libata/for-4.7-dw.
-
-Thanks.
-
--- 
-tejun
