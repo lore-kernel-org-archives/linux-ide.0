@@ -1,45 +1,58 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: UBSAN: Undefined behaviour in block/blk-mq.c:1459:27 with
- pata_amd
-Date: Mon, 16 May 2016 09:55:31 -0600
-Message-ID: <5739ED73.4020009@kernel.dk>
-References: <alpine.LRH.2.20.1605121902440.4797@math.ut.ee>
- <22191628.vH7YQZ1hRO@amdc1976>
+From: Tejun Heo <tj@kernel.org>
+Subject: [GIT PULL] libata changes for v4.7-rc1
+Date: Tue, 17 May 2016 17:07:11 -0700
+Message-ID: <20160518000711.GA5632@htj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-ig0-f172.google.com ([209.85.213.172]:36861 "EHLO
-	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752202AbcEPPze (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 16 May 2016 11:55:34 -0400
-Received: by mail-ig0-f172.google.com with SMTP id qe5so52230886igc.1
-        for <linux-ide@vger.kernel.org>; Mon, 16 May 2016 08:55:34 -0700 (PDT)
-In-Reply-To: <22191628.vH7YQZ1hRO@amdc1976>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Meelis Roos <mroos@linux.ee>
-Cc: Linux Kernel list <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-block@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
-On 05/13/2016 09:31 AM, Bartlomiej Zolnierkiewicz wrote:
-> Does the patch below help?
->
-> From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-> Subject: [PATCH] blk-mq: fix undefined behaviour in order_to_size()
->
-> When this_order variable in blk_mq_init_rq_map() becomes zero
-> the code incorrectly decrements the variable and passes the result
-> to order_to_size() helper causing undefined behaviour:
->
->   UBSAN: Undefined behaviour in block/blk-mq.c:1459:27
->   shift exponent 4294967295 is too large for 32-bit type 'unsigned int'
->   CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.6.0-rc6-00072-g33656a1 #22
->
-> Fix the code by checking this_order variable for not having the zero
-> value first.
+Hello, Linus.
 
-Thanks Bart, added for 4.7.
+Trivial changes except for special case timeout bumping.  I have two
+more libata branches which depend on SCSI and dmaengine tree
+respectively.  I'll send pull requests for them once the prerequisite
+trees are pulled in.
+
+Thanks.
+
+The following changes since commit 535dac4ab5f42e040e8405b31e309a6b6d4eee57:
+
+  ata: add AMD Seattle platform driver (2016-04-13 15:14:24 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-4.7
+
+for you to fetch changes up to f8d1a93930a754c4ea27238ae1c0fb2356d12e9a:
+
+  Merge branch 'for-4.6-fixes' into for-4.7 (2016-05-13 17:20:48 -0400)
+
+----------------------------------------------------------------
+Andy Shevchenko (1):
+      libata-scsi: use %*ph to dump small buffers
+
+Damien Le Moal (1):
+      libata-core: Allow longer timeout for drive spinup from PUIS
+
+Masanari Iida (1):
+      treewide: Fix typos in libata.xml
+
+Sander Eikelenboom (1):
+      libata: Fixup awkward whitespace in warning by removing line continuation.
+
+Tejun Heo (1):
+      Merge branch 'for-4.6-fixes' into for-4.7
+
+ drivers/ata/libahci.c     |  4 ++--
+ drivers/ata/libata-core.c | 22 +++++++++++++---------
+ drivers/ata/libata-scsi.c |  9 +++------
+ include/linux/ata.h       |  3 ++-
+ 4 files changed, 20 insertions(+), 18 deletions(-)
 
 -- 
-Jens Axboe
-
+tejun
