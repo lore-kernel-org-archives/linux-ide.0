@@ -1,49 +1,52 @@
 From: Damien Le Moal <Damien.LeMoal@hgst.com>
-Subject: [PATCH 0/3] ZAC fixes
-Date: Wed, 18 May 2016 00:53:04 +0000
-Message-ID: <BL2PR04MB19696D0FCFD09EE954C8F2B29F490@BL2PR04MB1969.namprd04.prod.outlook.com>
+Subject: [PATCH 1/3] libata-scsi: Fix translation of REPORT ZONES command
+Date: Wed, 18 May 2016 00:53:18 +0000
+Message-ID: <BL2PR04MB19693FF61F004AA64A6541BC9F490@BL2PR04MB1969.namprd04.prod.outlook.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from sjc00mx1.hgst.com ([199.255.44.36]:30730 "EHLO
+Received: from sjc00mx1.hgst.com ([199.255.44.36]:43885 "EHLO
 	sjc00mx1.hgst.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751513AbcERAxI convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 May 2016 20:53:08 -0400
+	with ESMTP id S1751513AbcERAxV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 17 May 2016 20:53:21 -0400
 Content-Language: en-US
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Hannes Reinecke <hare@suse.com>
 
+Set reporting options when translating REPORT ZONES
+commmand to ATA NCQ.
 
-3 patches to go on top of for-4.7-zac (and Hannes zbc.v6 branch) fixing 
-several problems with the NCQ encapsulation of ZAC commands.
-The first two are trivial bug fixes.
+Signed-off-by: Damien Le Moal <damien.lemoal@hgst.com>
+---
+  drivers/ata/libata-scsi.c | 4 ++--
+  1 file changed, 2 insertions(+), 2 deletions(-)
 
-The third one addresses problems with ATA_CMD_NCQ_NON_DATA command 
-processing: this command has no data but ata_is_data and ata_is_dma 
-return true, leading to 100% failure on issue for this command. This is 
-fixed by changing the interface of ata_is_data and ata_is_dma to also 
-allow testing the command code of a task file. For consistency, it may 
-be good to change in the same manner the interface of all ata_is_xxx 
-functions.
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index b86af14..8b375c7 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3454,7 +3454,7 @@ static unsigned int ata_scsi_zbc_in_xlat(struct 
+ata_queued_cmd *qc)
+  		goto invalid_param_len;
+  	}
+  	sect = n_block / 512;
+-	options = cdb[14];
++	options = cdb[14] & 0xbf;
 
-Damien Le Moal (3):
-   libata-scsi: Fix translation of REPORT ZONES command
-   libata-scsi: Fix ZBC management out command translation
-   libata: Fix ATA_CMD_NCQ_NON_DATA processing
-
-  drivers/ata/libata-core.c    |  4 ++--
-  drivers/ata/libata-scsi.c    | 14 +++++++-------
-  drivers/ata/libata-sff.c     | 10 +++++-----
-  drivers/ata/pata_arasan_cf.c |  4 ++--
-  drivers/ata/sata_dwc_460ex.c |  6 +++---
-  drivers/ata/sata_inic162x.c  |  4 ++--
-  drivers/ata/sata_sil.c       |  4 ++--
-  drivers/ata/sata_sil24.c     |  4 ++--
-  include/linux/libata.h       | 18 ++++++++++++++----
-  9 files changed, 39 insertions(+), 29 deletions(-)
-
+  	if (ata_ncq_enabled(qc->dev) &&
+  	    ata_fpdma_zac_mgmt_in_supported(qc->dev)) {
+@@ -3464,7 +3464,7 @@ static unsigned int ata_scsi_zbc_in_xlat(struct 
+ata_queued_cmd *qc)
+  		tf->nsect = qc->tag << 3;
+  		tf->feature = sect & 0xff;
+  		tf->hob_feature = (sect >> 8) & 0xff;
+-		tf->auxiliary = ATA_SUBCMD_ZAC_MGMT_IN_REPORT_ZONES;
++		tf->auxiliary = ATA_SUBCMD_ZAC_MGMT_IN_REPORT_ZONES | (options << 8);
+  	} else {
+  		tf->command = ATA_CMD_ZAC_MGMT_IN;
+  		tf->feature = ATA_SUBCMD_ZAC_MGMT_IN_REPORT_ZONES;
 -- 
 2.5.5
 
