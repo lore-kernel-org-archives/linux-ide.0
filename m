@@ -1,53 +1,45 @@
-From: Javier Martinez Canillas <javier@osg.samsung.com>
-Subject: [PATCH] ata: Use IS_ENABLED() instead of checking for built-in or module
-Date: Wed, 18 May 2016 16:11:28 -0400
-Message-ID: <1463602288-10393-1-git-send-email-javier@osg.samsung.com>
+From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH 0/5] ata: add support for Marvell Armada 7K/8K AHCI
+Date: Thu, 19 May 2016 10:19:54 +0200
+Message-ID: <20160519101954.64c4291a@free-electrons.com>
+References: <1461335561-18363-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lists.s-osg.org ([54.187.51.154]:60585 "EHLO lists.s-osg.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752006AbcERULn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 18 May 2016 16:11:43 -0400
+Received: from down.free-electrons.com ([37.187.137.238]:48915 "EHLO
+	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753570AbcESIT6 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 May 2016 04:19:58 -0400
+In-Reply-To: <1461335561-18363-1-git-send-email-thomas.petazzoni@free-electrons.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Javier Martinez Canillas <javier@osg.samsung.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+To: Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Kumar Gala <galak@codeaurora.org>
+Cc: linux-ide@vger.kernel.org, Nadav Haklai <nadavh@marvell.com>, Lior Amsalem <alior@marvell.com>, Hanna Hawa <hannah@marvell.com>, Yehuda Yitschak <yehuday@marvell.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Gregory Clement <gregory.clement@free-electrons.com>
 
-The IS_ENABLED() macro checks if a Kconfig symbol has been enabled either
-built-in or as a module, use that macro instead of open coding the same.
+Tejun,
 
-Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
----
+On Fri, 22 Apr 2016 16:32:36 +0200, Thomas Petazzoni wrote:
 
- drivers/ata/ahci.c         | 2 +-
- drivers/ata/pata_marvell.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+> The following small series adds support for the Marvell Armada 7K/8K
+> AHCI controller. This controller is a standard AHCI controller, so not
+> much is needed, except that it uses a non-default port offset and
+> length. Due to this, some preparatory patches are used to make it
+> possible to override the default port offset/length used by the AHCI
+> core.
 
-diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
-index a83bbcc58b4c..90eabaf81215 100644
---- a/drivers/ata/ahci.c
-+++ b/drivers/ata/ahci.c
-@@ -580,7 +580,7 @@ static struct pci_driver ahci_pci_driver = {
- 	},
- };
- 
--#if defined(CONFIG_PATA_MARVELL) || defined(CONFIG_PATA_MARVELL_MODULE)
-+#if IS_ENABLED(CONFIG_PATA_MARVELL)
- static int marvell_enable;
- #else
- static int marvell_enable = 1;
-diff --git a/drivers/ata/pata_marvell.c b/drivers/ata/pata_marvell.c
-index ae9feb1ba8f7..ff468a6fd8dd 100644
---- a/drivers/ata/pata_marvell.c
-+++ b/drivers/ata/pata_marvell.c
-@@ -146,7 +146,7 @@ static int marvell_init_one (struct pci_dev *pdev, const struct pci_device_id *i
- 	if (pdev->device == 0x6101)
- 		ppi[1] = &ata_dummy_port_info;
- 
--#if defined(CONFIG_SATA_AHCI) || defined(CONFIG_SATA_AHCI_MODULE)
-+#if IS_ENABLED(CONFIG_SATA_AHCI)
- 	if (!marvell_pata_active(pdev)) {
- 		printk(KERN_INFO DRV_NAME ": PATA port not active, deferring to AHCI driver.\n");
- 		return -ENODEV;
+I recently learned that the non-standard port base/length is considered
+as an HW issue, and it will be fixed in upcoming revisions of the SoC.
+We are not interested in supporting the previous revisions that have
+this bug, so I'm withdrawing this patch series.
+
+Sorry for the noise and time spent there, I was not aware of the fact
+that this issue would be fixed in HW.
+
+Best regards,
+
+Thomas
 -- 
-2.5.5
-
+Thomas Petazzoni, CTO, Free Electrons
+Embedded Linux, Kernel and Android engineering
+http://free-electrons.com
