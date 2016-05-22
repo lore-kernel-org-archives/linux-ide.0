@@ -1,45 +1,39 @@
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH 0/5] ata: add support for Marvell Armada 7K/8K AHCI
-Date: Thu, 19 May 2016 10:19:54 +0200
-Message-ID: <20160519101954.64c4291a@free-electrons.com>
-References: <1461335561-18363-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:48915 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753570AbcESIT6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 19 May 2016 04:19:58 -0400
-In-Reply-To: <1461335561-18363-1-git-send-email-thomas.petazzoni@free-electrons.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [PATCH 24/54] MAINTAINERS: Add file patterns for ata device tree bindings
+Date: Sun, 22 May 2016 11:06:01 +0200
+Message-ID: <1463907991-7916-25-git-send-email-geert@linux-m68k.org>
+References: <1463907991-7916-1-git-send-email-geert@linux-m68k.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1463907991-7916-1-git-send-email-geert@linux-m68k.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Kumar Gala <galak@codeaurora.org>
-Cc: linux-ide@vger.kernel.org, Nadav Haklai <nadavh@marvell.com>, Lior Amsalem <alior@marvell.com>, Hanna Hawa <hannah@marvell.com>, Yehuda Yitschak <yehuday@marvell.com>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Gregory Clement <gregory.clement@free-electrons.com>
 
-Tejun,
+Submitters of device tree binding documentation may forget to CC
+the subsystem maintainer if this is missing.
 
-On Fri, 22 Apr 2016 16:32:36 +0200, Thomas Petazzoni wrote:
+Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
+---
+Please apply this patch directly if you want to be involved in device
+tree binding documentation for your subsystem.
+---
+ MAINTAINERS | 1 +
+ 1 file changed, 1 insertion(+)
 
-> The following small series adds support for the Marvell Armada 7K/8K
-> AHCI controller. This controller is a standard AHCI controller, so not
-> much is needed, except that it uses a non-default port offset and
-> length. Due to this, some preparatory patches are used to make it
-> possible to override the default port offset/length used by the AHCI
-> core.
-
-I recently learned that the non-standard port base/length is considered
-as an HW issue, and it will be fixed in upcoming revisions of the SoC.
-We are not interested in supporting the previous revisions that have
-this bug, so I'm withdrawing this patch series.
-
-Sorry for the noise and time spent there, I was not aware of the fact
-that this issue would be fixed in HW.
-
-Best regards,
-
-Thomas
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 82c82a72cb9cf02a..cf54ff0c9c168e26 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -6754,6 +6754,7 @@ M:	Tejun Heo <tj@kernel.org>
+ L:	linux-ide@vger.kernel.org
+ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git
+ S:	Maintained
++F:	Documentation/devicetree/bindings/ata/
+ F:	drivers/ata/
+ F:	include/linux/ata.h
+ F:	include/linux/libata.h
 -- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux, Kernel and Android engineering
-http://free-electrons.com
+1.9.1
