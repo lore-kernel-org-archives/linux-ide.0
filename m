@@ -1,77 +1,43 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] libata sata_dwc_460ex changes for v4.7-rc1
-Date: Mon, 23 May 2016 11:09:34 -0400
-Message-ID: <20160523150934.GB5873@mtj.duckdns.org>
+From: Peter Rabbitson <rabbit+list@rabbit.us>
+Subject: Kernel option to disable TRIM/discard system-wide?
+Date: Mon, 23 May 2016 23:01:26 +0200
+Message-ID: <57436FA6.1010801@rabbit.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f194.google.com ([209.85.161.194]:33556 "EHLO
-	mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752477AbcEWPJg (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 May 2016 11:09:36 -0400
-Content-Disposition: inline
+Received: from mujunyku.leporine.io ([113.212.96.195]:54487 "EHLO
+	mujunyku.leporine.io" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751009AbcEWVKQ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 23 May 2016 17:10:16 -0400
+Received: from [10.0.13.10] (unknown [10.0.13.10])
+	by mujunyku.leporine.io (Postfix) with ESMTP id F317FF41DA
+	for <linux-ide@vger.kernel.org>; Mon, 23 May 2016 21:01:27 +0000 (UTC)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Andy Shevchenko <andy.shevchenko@gmail.com>
+To: linux-ide@vger.kernel.org
 
-Hello, Linus.
+Hello!
 
-Patches to bring sata_dwc_460ex up to snuff.  It's a separate pull
-request because it depends on dmaengine dw platform changes which are
-now in mainline.
+I have looked through the archives, but can not find anything even 
+remotely related to the subject:
 
-Thanks.
+I want to disable trim on my system for good - yet there seems to be no 
+kernel boot parameter for this.
 
-The following changes since commit 3a14c66d43d018baed96ceb74f9ab548878c09b8:
+My rationale is simple: I want best data integrity guarantees, followed 
+by better battery-life + mechanical robustness (I throw my laptop around 
+a lot), and only last am I concerned about performance.
 
-  dmaengine: dw: pass platform data via struct dw_dma_chip (2016-05-02 15:31:05 +0530)
+There seem to be a new TRIM-related bug discovered every couple months 
+for quite some time now. Combined with the "metadata leak via dm-crypt" 
+makes it a no-brainer decision that I want to avoid TRIM system-wide.
 
-are available in the git repository at:
+I currently have my sytsem configured properly, but I am concerned a 
+future OS upgrade will introduce some well meaning cron-job or something 
+along these lines that will re-enable discards without me ever noticing.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-4.7-dw
+Is there a boot parameter I can hard-code for forward-compatible peace 
+of mind?
 
-for you to fetch changes up to 7598469a6184e1017a77ebe78b5b66c52a6afc1c:
-
-  ata: dwc: add DMADEVICES dependency (2016-05-12 12:04:13 -0400)
-
-----------------------------------------------------------------
-Andy Shevchenko (11):
-      ata: sata_dwc_460ex: set dma_boundary to 0x1fff
-      ata: sata_dwc_460ex: burst size must be in items not bytes
-      ata: sata_dwc_460ex: DMA is always a flow controller
-      ata: sata_dwc_460ex: select only core part of DMA driver
-      ata: sata_dwc_460ex: don't call ata_sff_qc_issue() on DMA commands
-      ata: sata_dwc_460ex: correct HOSTDEV{P}_FROM_*() macros
-      ata: sata_dwc_460ex: switch to new dmaengine_terminate_* API
-      ata: sata_dwc_460ex: use devm_ioremap
-      ata: sata_dwc_460ex: supply physical address of FIFO to DMA
-      ata: sata_dwc_460ex: make debug messages neat
-      powerpc/4xx: Device tree update for the 460ex DWC SATA
-
-Arnd Bergmann (1):
-      ata: dwc: add DMADEVICES dependency
-
-Christian Lamparter (1):
-      ata: sata_dwc_460ex: fix crash on offline links without an attached drive
-
-Mans Rullgard (11):
-      ata: sata_dwc_460ex: remove incorrect locking
-      ata: sata_dwc_460ex: skip dma setup for non-dma commands
-      ata: sata_dwc_460ex: use "dmas" DT property to find dma channel
-      ata: sata_dwc_460ex: add phy support
-      ata: sata_dwc_460ex: get rid of global data
-      ata: sata_dwc_460ex: remove empty libata callback
-      ata: sata_dwc_460ex: get rid of some pointless casts
-      ata: sata_dwc_460ex: get rid of incorrect cast
-      ata: sata_dwc_460ex: add __iomem to register base pointer
-      ata: sata_dwc_460ex: use readl/writel_relaxed()
-      ata: sata_dwc_460ex: tidy up sata_dwc_clear_dmacr()
-
- arch/powerpc/boot/dts/canyonlands.dts |  15 +-
- drivers/ata/Kconfig                   |  13 +-
- drivers/ata/sata_dwc_460ex.c          | 552 +++++++++++++++++-----------------
- 3 files changed, 306 insertions(+), 274 deletions(-)
-
--- 
-tejun
+Thank you!
