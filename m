@@ -1,26 +1,27 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] pata_atiixp: fix trivial indentation misalignment on if
- statement
-Date: Fri, 27 May 2016 11:23:02 -0400
-Message-ID: <20160527152302.GJ23194@mtj.duckdns.org>
-References: <1463398503-19751-1-git-send-email-colin.king@canonical.com>
+Subject: Re: [PATCH 24/54] MAINTAINERS: Add file patterns for ata device tree
+ bindings
+Date: Fri, 27 May 2016 11:26:33 -0400
+Message-ID: <20160527152633.GK23194@mtj.duckdns.org>
+References: <1463907991-7916-1-git-send-email-geert@linux-m68k.org>
+ <1463907991-7916-25-git-send-email-geert@linux-m68k.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1463398503-19751-1-git-send-email-colin.king@canonical.com>
+In-Reply-To: <1463907991-7916-25-git-send-email-geert@linux-m68k.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Jiri Kosina <trivial@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Mon, May 16, 2016 at 12:35:03PM +0100, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
+On Sun, May 22, 2016 at 11:06:01AM +0200, Geert Uytterhoeven wrote:
+> Submitters of device tree binding documentation may forget to CC
+> the subsystem maintainer if this is missing.
 > 
-> Remove extraneous space on if statement and on the following line,
-> trivial fix, no functional change
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: linux-ide@vger.kernel.org
 
 Applied to libata/for-4.8.
 
