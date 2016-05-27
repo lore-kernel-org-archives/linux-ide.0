@@ -1,32 +1,44 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: Kernel option to disable TRIM/discard system-wide?
-Date: Thu, 26 May 2016 22:52:21 -0400
-Message-ID: <yq1oa7syzyy.fsf@sermon.lab.mkp.net>
-References: <57436FA6.1010801@rabbit.us> <5745A24D.2010601@rabbit.us>
+From: Mason <slash.tmp@free.fr>
+Subject: sata_dwc_460ex driver
+Date: Fri, 27 May 2016 16:54:14 +0200
+Message-ID: <57485F96.8010001@free.fr>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:31378 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932228AbcE0Cwh (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 26 May 2016 22:52:37 -0400
-In-Reply-To: <5745A24D.2010601@rabbit.us> (Peter Rabbitson's message of "Wed,
-	25 May 2016 15:02:05 +0200")
+Received: from smtp2-g21.free.fr ([212.27.42.2]:33616 "EHLO smtp2-g21.free.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752585AbcE0Oym (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Fri, 27 May 2016 10:54:42 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Peter Rabbitson <rabbit+list@rabbit.us>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>, Hans de Goede <hdegoede@redhat.com>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Mans Rullgard <mans@mansr.com>, Christian Lamparter <chunkeey@gmail.com>, Srinivas Kandagatla <srinivas.kandagatla@linaro.org>, Andy Gross <andy.gross@linaro.org>, Kishon Vijay Abraham <kishon@ti.com>, Sebastian Frias <sf84@laposte.net>
 
->>>>> "Peter" == Peter Rabbitson <rabbit+list@rabbit.us> writes:
+Hello everyone,
 
->> I want to disable trim on my system for good - yet there seems to be
->> no kernel boot parameter for this.
+I'm working on a SoC which embeds an IP block from Synopsys labeled
+Synopsys DesignWare Cores Serial ATA AHCI Core, aka DWC_ahsata
+(DWC SATA AHCI Host 6Gb/s AXI Interface).
 
-There's no global way to disable TRIM but you can disable it on a
-per-device basis by setting /sys/block/sdN/queue/discard_max_bytes to
-0. You can force queued TRIM off with noncqtrim if that makes you feel
-better. However, we haven't blacklisted any drives due to TRIM problems
-in about a year.
+Would the sata_dwc_460ex driver support this DWC_ahsata hardware?
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+I suppose I would also need to enable AHCI support, right?
+
+What is the difference between SATA_AHCI and SATA_AHCI_PLATFORM ?
+
+SATA_AHCI          = 971db06e09231
+SATA_AHCI_PLATFORM = 1c2a49f61785e
+
+If I understand correctly, SATA_AHCI is for platforms with a PCI bus,
+while SATA_AHCI_PLATFORM is for other platforms. I probably want the
+latter then?
+
+On the analog side, the SATA PHY is also made by Synopsys.
+Do I need to enable a specific driver?
+I didn't see anything relevant in drivers/phy
+
+(The documentation mentions 11 registers for tweaking the controller,
+but maybe it's the boot-loader's job to set this up correctly?)
+
+Regards.
