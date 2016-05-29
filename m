@@ -1,58 +1,49 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
-Subject: Re: [PATCH] scsi: fix race between simultaneous decrements of
- ->host_failed
-Date: Sun, 29 May 2016 08:41:13 -0700
-Message-ID: <1464536473.2287.6.camel@linux.vnet.ibm.com>
-References: <1464407471-3712-1-git-send-email-fangwei1@huawei.com>
-	 <20160529065452.GA21677@infradead.org>
+From: Peter Rabbitson <rabbit+list@rabbit.us>
+Subject: Re: Kernel option to disable TRIM/discard system-wide?
+Date: Sun, 29 May 2016 18:25:15 +0200
+Message-ID: <574B17EB.50108@rabbit.us>
+References: <57436FA6.1010801@rabbit.us> <5745A24D.2010601@rabbit.us>
+ <yq1oa7syzyy.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from e37.co.us.ibm.com ([32.97.110.158]:47350 "EHLO
-	e37.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752703AbcE2PlU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 May 2016 11:41:20 -0400
-Received: from localhost
-	by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-ide@vger.kernel.org> from <jejb@linux.vnet.ibm.com>;
-	Sun, 29 May 2016 09:41:19 -0600
-In-Reply-To: <20160529065452.GA21677@infradead.org>
+Received: from mujunyku.leporine.io ([113.212.96.195]:55172 "EHLO
+	mujunyku.leporine.io" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752680AbcE2QZW (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 May 2016 12:25:22 -0400
+In-Reply-To: <yq1oa7syzyy.fsf@sermon.lab.mkp.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Wei Fang <fangwei1@huawei.com>
-Cc: tj@kernel.org, martin.petersen@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-ide@vger.kernel.org
 
-On Sat, 2016-05-28 at 23:54 -0700, Christoph Hellwig wrote:
-> On Sat, May 28, 2016 at 11:51:11AM +0800, Wei Fang wrote:
-> > async_sas_ata_eh(), which will call scsi_eh_finish_cmd() in some 
-> > case, would be performed simultaneously in 
-> > sas_ata_strategy_handler(). In this case, ->host_failed may be 
-> > decreased simultaneously in scsi_eh_finish_cmd() on different CPUs,
-> > and become abnormal.
-> > 
-> > It will lead to permanently inequal between ->host_failed and
-> >  ->host_busy. Then SCSI error handler thread won't become running,
-> > SCSI errors after that won't be handled forever.
-> > 
-> > Use atomic type for ->host_failed to fix this race.
-> 
-> Looks fine,
+On 05/27/2016 04:52 AM, Martin K. Petersen wrote:
+>>>>>> "Peter" == Peter Rabbitson <rabbit+list@rabbit.us> writes:
+>
+>>> I want to disable trim on my system for good - yet there seems to be
+>>> no kernel boot parameter for this.
+>
+> There's no global way to disable TRIM but you can disable it on a
+> per-device basis by setting /sys/block/sdN/queue/discard_max_bytes to
+> 0.
 
-Actually, it doesn't look fine at all.  The same mechanism that's
-supposed to protect the host_failed decrement is also supposed to
-protect the list_move_tail().  If there's a problem with the former
-then we're also in danger of corrupting the list.
+That would be sufficient for me - I can enforce this with a udev rule.
 
-Can we go back to the theory of what the problem is, since it's not
-spelled out very clearly in the change log.  Our usual reason for not
-requiring locking in eh routines is that the eh is single threaded on
-the eh thread per host, so any host manipulations can't have
-concurrency problems.  In this case, the sas_ata routines are trying to
-be clever and use asynchronous workqueues for the port error handler
-and you theorise that these can execute concurrently on two CPUs, thus
-causing the problem?
+However what you propose does not currently work:
 
-James
+root@Ahasver:~# cat /sys/block/sda/queue/discard_max_bytes
+2147450880
 
+root@Ahasver:~# echo 0 > /sys/block/sda/queue/discard_max_bytes
+-bash: /sys/block/sda/queue/discard_max_bytes: Permission denied
 
+root@Ahasver:~# uname -a
+Linux Ahasver 3.16.0-4-amd64 #1 SMP Debian 3.16.7-ckt20-1+deb8u4 
+(2016-02-29) x86_64 GNU/Linux
+
+root@Ahasver:~# dpkg -l linux-image-3.16.0-4-amd64 | grep ii
+ii  linux-image-3.16.0-4-amd64 3.16.7-ckt20-1+deb8u4 amd64        Linux 
+3.16 for 64-bit PCs
+
+What am I missing?
