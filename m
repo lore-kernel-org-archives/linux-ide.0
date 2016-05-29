@@ -1,49 +1,37 @@
-From: Peter Rabbitson <rabbit+list@rabbit.us>
-Subject: Re: Kernel option to disable TRIM/discard system-wide?
-Date: Sun, 29 May 2016 18:25:15 +0200
-Message-ID: <574B17EB.50108@rabbit.us>
-References: <57436FA6.1010801@rabbit.us> <5745A24D.2010601@rabbit.us>
- <yq1oa7syzyy.fsf@sermon.lab.mkp.net>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] scsi: fix race between simultaneous decrements of
+ ->host_failed
+Date: Sun, 29 May 2016 11:06:49 -0700
+Message-ID: <20160529180649.GA6486@infradead.org>
+References: <1464407471-3712-1-git-send-email-fangwei1@huawei.com>
+ <20160529065452.GA21677@infradead.org>
+ <1464536473.2287.6.camel@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mujunyku.leporine.io ([113.212.96.195]:55172 "EHLO
-	mujunyku.leporine.io" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752680AbcE2QZW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 29 May 2016 12:25:22 -0400
-In-Reply-To: <yq1oa7syzyy.fsf@sermon.lab.mkp.net>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1464536473.2287.6.camel@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: James Bottomley <jejb@linux.vnet.ibm.com>
+Cc: Wei Fang <fangwei1@huawei.com>, tj@kernel.org, martin.petersen@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-ide@vger.kernel.org
 
-On 05/27/2016 04:52 AM, Martin K. Petersen wrote:
->>>>>> "Peter" == Peter Rabbitson <rabbit+list@rabbit.us> writes:
->
->>> I want to disable trim on my system for good - yet there seems to be
->>> no kernel boot parameter for this.
->
-> There's no global way to disable TRIM but you can disable it on a
-> per-device basis by setting /sys/block/sdN/queue/discard_max_bytes to
-> 0.
+On Sun, May 29, 2016 at 08:41:13AM -0700, James Bottomley wrote:
+> Actually, it doesn't look fine at all.  The same mechanism that's
+> supposed to protect the host_failed decrement is also supposed to
+> protect the list_move_tail().  If there's a problem with the former
+> then we're also in danger of corrupting the list.
 
-That would be sufficient for me - I can enforce this with a udev rule.
+No, that's not the case.  eh_entry is used for two things:
 
-However what you propose does not currently work:
+ a) shost->eh_cmd_q, which is used to queue up command for the EH
+    thread, and is locked using the host lock.
+ b) various on-stack lists in the EH thread
 
-root@Ahasver:~# cat /sys/block/sda/queue/discard_max_bytes
-2147450880
+scsi_eh_finish_cmd is only called for case b) as all EH thread
+implementations move the commands from eh_cmd_q to a local list
+as the very first thing.
 
-root@Ahasver:~# echo 0 > /sys/block/sda/queue/discard_max_bytes
--bash: /sys/block/sda/queue/discard_max_bytes: Permission denied
-
-root@Ahasver:~# uname -a
-Linux Ahasver 3.16.0-4-amd64 #1 SMP Debian 3.16.7-ckt20-1+deb8u4 
-(2016-02-29) x86_64 GNU/Linux
-
-root@Ahasver:~# dpkg -l linux-image-3.16.0-4-amd64 | grep ii
-ii  linux-image-3.16.0-4-amd64 3.16.7-ckt20-1+deb8u4 amd64        Linux 
-3.16 for 64-bit PCs
-
-What am I missing?
+host_fail on the other hand is incremented under the host_lock
+in scsi_eh_scmd_add, but decremented without any lock from the
+EH thread.
