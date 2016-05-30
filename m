@@ -1,59 +1,72 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
+From: Wei Fang <fangwei1@huawei.com>
 Subject: Re: [PATCH] scsi: fix race between simultaneous decrements of
  ->host_failed
-Date: Sun, 29 May 2016 12:15:39 -0700
-Message-ID: <1464549339.2287.30.camel@linux.vnet.ibm.com>
+Date: Mon, 30 May 2016 15:27:27 +0800
+Message-ID: <574BEB5F.5090509@huawei.com>
 References: <1464407471-3712-1-git-send-email-fangwei1@huawei.com>
-	 <20160529065452.GA21677@infradead.org>
-	 <1464536473.2287.6.camel@linux.vnet.ibm.com>
-	 <20160529180649.GA6486@infradead.org>
+ <20160529065452.GA21677@infradead.org>
+ <1464536473.2287.6.camel@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20160529180649.GA6486@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Wei Fang <fangwei1@huawei.com>, tj@kernel.org, martin.petersen@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([58.251.152.64]:6115 "EHLO
+	szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932141AbcE3H24 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 30 May 2016 03:28:56 -0400
+In-Reply-To: <1464536473.2287.6.camel@linux.vnet.ibm.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: James Bottomley <jejb@linux.vnet.ibm.com>, Christoph Hellwig <hch@infradead.org>
+Cc: tj@kernel.org, martin.petersen@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sun, 2016-05-29 at 11:06 -0700, Christoph Hellwig wrote:
-> On Sun, May 29, 2016 at 08:41:13AM -0700, James Bottomley wrote:
-> > Actually, it doesn't look fine at all.  The same mechanism that's
-> > supposed to protect the host_failed decrement is also supposed to
-> > protect the list_move_tail().  If there's a problem with the former
-> > then we're also in danger of corrupting the list.
+Hi James, Christoph,
+
+On 2016/5/29 23:41, James Bottomley wrote:
+> On Sat, 2016-05-28 at 23:54 -0700, Christoph Hellwig wrote:
+>> On Sat, May 28, 2016 at 11:51:11AM +0800, Wei Fang wrote:
+>>> async_sas_ata_eh(), which will call scsi_eh_finish_cmd() in some 
+>>> case, would be performed simultaneously in 
+>>> sas_ata_strategy_handler(). In this case, ->host_failed may be 
+>>> decreased simultaneously in scsi_eh_finish_cmd() on different CPUs,
+>>> and become abnormal.
+>>>
+>>> It will lead to permanently inequal between ->host_failed and
+>>>  ->host_busy. Then SCSI error handler thread won't become running,
+>>> SCSI errors after that won't be handled forever.
+>>>
+>>> Use atomic type for ->host_failed to fix this race.
+>>
+>> Looks fine,
 > 
-> No, that's not the case.  eh_entry is used for two things:
+> Actually, it doesn't look fine at all.  The same mechanism that's
+> supposed to protect the host_failed decrement is also supposed to
+> protect the list_move_tail().  If there's a problem with the former
+> then we're also in danger of corrupting the list.
+
+Scmd is moved to local eh_done_q list here, and I checked that the
+list won't be touched concurrently.
+
+> Can we go back to the theory of what the problem is, since it's not
+> spelled out very clearly in the change log.  Our usual reason for not
+> requiring locking in eh routines is that the eh is single threaded on
+> the eh thread per host, so any host manipulations can't have
+> concurrency problems.  In this case, the sas_ata routines are trying to
+> be clever and use asynchronous workqueues for the port error handler
+> and you theorise that these can execute concurrently on two CPUs, thus
+> causing the problem?
+
+Yes, it's the case. The works of the port error handler are added to
+system_unbound_wq, and will be performed concurrently on different CPUs.
+We have already met that problem on our machine.
+
+Thanks,
+Wei
+
+> James
 > 
->  a) shost->eh_cmd_q, which is used to queue up command for the EH
->     thread, and is locked using the host lock.
->  b) various on-stack lists in the EH thread
-
-Actually, no, in the ata error handler case we have per port queues
-which are part of the struct ata_port, so it's neither a) nor b).
-
-However, because the ata_port is per sas domain device, and the
-sas_ata_strategy_handler fires off one async thread per domain device,
-we're concurrency safe on the per-ata_port queues.
-
-Just checking some of the other scsi eh assumptions this may be
-violating.
-
-James
-
-
-> scsi_eh_finish_cmd is only called for case b) as all EH thread
-> implementations move the commands from eh_cmd_q to a local list
-> as the very first thing.
 > 
-> host_fail on the other hand is incremented under the host_lock
-> in scsi_eh_scmd_add, but decremented without any lock from the
-> EH thread.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> .
 > 
 
