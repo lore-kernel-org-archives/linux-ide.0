@@ -1,33 +1,34 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: Kernel option to disable TRIM/discard system-wide?
-Date: Tue, 31 May 2016 23:05:41 -0400
-Message-ID: <yq1mvn5vcai.fsf@sermon.lab.mkp.net>
-References: <57436FA6.1010801@rabbit.us> <5745A24D.2010601@rabbit.us>
-	<yq1oa7syzyy.fsf@sermon.lab.mkp.net> <574B17EB.50108@rabbit.us>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH v2 1/2] scsi: fix race between simultaneous decrements of ->host_failed
+Date: Tue, 31 May 2016 20:21:16 -0700
+Message-ID: <CAPcyv4jtwg9J7WDzf2y5Uq-p8vthG+F6Zo+NLT=qYQcA9qqtCQ@mail.gmail.com>
+References: <1464683898-9877-1-git-send-email-fangwei1@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:27010 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752896AbcFADFw (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 May 2016 23:05:52 -0400
-In-Reply-To: <574B17EB.50108@rabbit.us> (Peter Rabbitson's message of "Sun, 29
-	May 2016 18:25:15 +0200")
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1464683898-9877-1-git-send-email-fangwei1@huawei.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Wei Fang <fangwei1@huawei.com>
+Cc: Tejun Heo <tj@kernel.org>, jejb@linux.vnet.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, Jonathan Corbet <corbet@lwn.net>, Christoph Hellwig <hch@infradead.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-doc@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Peter Rabbitson <rabbit+list@rabbit.us>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org
 
->>>>> "Peter" == Peter Rabbitson <rabbit+list@rabbit.us> writes:
+On Tue, May 31, 2016 at 1:38 AM, Wei Fang <fangwei1@huawei.com> wrote:
+> sas_ata_strategy_handler() adds the works of the ata error handler
+> to system_unbound_wq. This workqueue asynchronously runs work items,
+> so the ata error handler will be performed concurrently on different
+> CPUs. In this case, ->host_failed will be decreased simultaneously in
+> scsi_eh_finish_cmd() on different CPUs, and become abnormal.
+>
+> It will lead to permanently inequal between ->host_failed and
+>  ->host_busy, and scsi error handler thread won't become running.
+> IO errors after that won't be handled forever.
+>
+> Use atomic type for ->host_failed to fix this race.
+>
+> This fixes the problem introduced in
+> commit 50824d6c5657 ("[SCSI] libsas: async ata-eh").
+>
+> Reviewed-by: Christoph Hellwig <hch@infradead.org>
+> Signed-off-by: Wei Fang <fangwei1@huawei.com>
 
-Peter> root@Ahasver:~# echo 0 > /sys/block/sda/queue/discard_max_bytes
-Peter> -bash: /sys/block/sda/queue/discard_max_bytes: Permission denied
-
-Peter> What am I missing?
-
-Your kernel is too old. Try:
-
-echo -n disabled > /sys/block/sda/device/scsi_disk/*/provisioning_mode
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Acked-by: Dan Williams <dan.j.williams@intel.com>
