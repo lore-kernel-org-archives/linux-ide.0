@@ -1,36 +1,33 @@
-From: Wei Fang <fangwei1@huawei.com>
-Subject: Re: [PATCH v2 1/2] scsi: fix race between simultaneous decrements of
- ->host_failed
-Date: Wed, 1 Jun 2016 09:20:38 +0800
-Message-ID: <574E3866.50108@huawei.com>
-References: <1464683898-9877-1-git-send-email-fangwei1@huawei.com>
- <20160531143302.GA4251@mtj.duckdns.org>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: Kernel option to disable TRIM/discard system-wide?
+Date: Tue, 31 May 2016 23:05:41 -0400
+Message-ID: <yq1mvn5vcai.fsf@sermon.lab.mkp.net>
+References: <57436FA6.1010801@rabbit.us> <5745A24D.2010601@rabbit.us>
+	<yq1oa7syzyy.fsf@sermon.lab.mkp.net> <574B17EB.50108@rabbit.us>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-doc-owner@vger.kernel.org>
-In-Reply-To: <20160531143302.GA4251@mtj.duckdns.org>
-Sender: linux-doc-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, corbet@lwn.net, hch@infradead.org, dan.j.williams@intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:27010 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752896AbcFADFw (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 31 May 2016 23:05:52 -0400
+In-Reply-To: <574B17EB.50108@rabbit.us> (Peter Rabbitson's message of "Sun, 29
+	May 2016 18:25:15 +0200")
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Peter Rabbitson <rabbit+list@rabbit.us>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org
 
-Hi, Tejun,
+>>>>> "Peter" == Peter Rabbitson <rabbit+list@rabbit.us> writes:
 
-On 2016/5/31 22:33, Tejun Heo wrote:
-> On Tue, May 31, 2016 at 04:38:17PM +0800, Wei Fang wrote:
->> sas_ata_strategy_handler() adds the works of the ata error handler
->> to system_unbound_wq. This workqueue asynchronously runs work items,
-> 
-> Are there more than one error handling work items per host?
+Peter> root@Ahasver:~# echo 0 > /sys/block/sda/queue/discard_max_bytes
+Peter> -bash: /sys/block/sda/queue/discard_max_bytes: Permission denied
 
-The ata error handler here means async_sas_ata_eh(), every port will
-execute it's own async_sas_ata_eh() in sas_ata_strategy_handler().
+Peter> What am I missing?
 
-Thanks,
-Wei
+Your kernel is too old. Try:
 
-> 
-> Thanks.
-> 
+echo -n disabled > /sys/block/sda/device/scsi_disk/*/provisioning_mode
 
+-- 
+Martin K. Petersen	Oracle Linux Engineering
