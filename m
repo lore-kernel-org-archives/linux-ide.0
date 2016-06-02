@@ -1,41 +1,47 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
-Subject: Re: [PATCH v2 1/2] scsi: fix race between simultaneous decrements
- of ->host_failed
-Date: Wed, 01 Jun 2016 11:38:54 -0400
-Message-ID: <1464795534.23285.4.camel@linux.vnet.ibm.com>
+From: Wei Fang <fangwei1@huawei.com>
+Subject: Re: [PATCH v2 1/2] scsi: fix race between simultaneous decrements of
+ ->host_failed
+Date: Thu, 2 Jun 2016 09:58:30 +0800
+Message-ID: <574F92C6.6050607@huawei.com>
 References: <1464683898-9877-1-git-send-email-fangwei1@huawei.com>
-	 <BF6B9AADDDF11740967545E971C7C0DE6B861A22@MAIL1.pickering.lenbrook.com>
-	 <38efc40d-fec9-3278-abb8-2a78c4146a8c@sandisk.com>
+ <1464789971.23285.1.camel@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <38efc40d-fec9-3278-abb8-2a78c4146a8c@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, Kevin Groeneveld <KGroeneveld@lenbrook.com>, Wei Fang <fangwei1@huawei.com>, "tj@kernel.org" <tj@kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "corbet@lwn.net" <corbet@lwn.net>
-Cc: "hch@infradead.org" <hch@infradead.org>, "dan.j.williams@intel.com" <dan.j.williams@intel.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:7615 "EHLO
+	szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751708AbcFBB7g (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 1 Jun 2016 21:59:36 -0400
+In-Reply-To: <1464789971.23285.1.camel@linux.vnet.ibm.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: James Bottomley <jejb@linux.vnet.ibm.com>, tj@kernel.org, martin.petersen@oracle.com, corbet@lwn.net
+Cc: hch@infradead.org, dan.j.williams@intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org
 
-On Wed, 2016-06-01 at 08:29 -0700, Bart Van Assche wrote:
-> On 06/01/2016 07:36 AM, Kevin Groeneveld wrote:
-> > > Subject: [PATCH v2 1/2] scsi: fix race between simultaneous
-> > > decrements of ->host_failed
-> > 
-> > I wonder if this could be related to 
-> > http://www.spinics.net/lists/linux-scsi/msg86808.html?
-> > 
-> > I never did get to the bottom of that.  If I have time I hope to
-> > retest my scsi hang issue with this patch.
+Hi, James,
+
+On 2016/6/1 22:06, James Bottomley wrote:
+> On Tue, 2016-05-31 at 16:38 +0800, Wei Fang wrote:
+>> sas_ata_strategy_handler() adds the works of the ata error handler
+>> to system_unbound_wq. This workqueue asynchronously runs work items,
+>> so the ata error handler will be performed concurrently on different
+>> CPUs. In this case, ->host_failed will be decreased simultaneously in
+>> scsi_eh_finish_cmd() on different CPUs, and become abnormal.
+>>
+>> It will lead to permanently inequal between ->host_failed and
+>>  ->host_busy, and scsi error handler thread won't become running.
+>> IO errors after that won't be handled forever.
+>>
+>> Use atomic type for ->host_failed to fix this race.
 > 
-> I've never seen that hang with the ib_srp driver (which is a SCSI 
-> LLD). That probably means that the SATA code uses the SCSI error 
-> handler in another way than other SCSI LLDs.
+> As I said previously, you don't need atomics to do this, could you just
+> remove the decrement in scsi_eh_finish_command() and zero the counter
+> after the strategy handler completes.
+> 
 
-It's the ata_sas error handler, which is split between libsas and
-libata.  It does one thread of execution per ata port when the strategy
-handler is invoked.  This behaviour is pretty much unique at the
-moment.
+OK, I'll send v3 later.
 
-James
-
+Thanks,
+Wei
 
