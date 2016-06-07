@@ -1,40 +1,49 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Lenovo A740 gave up waiting for root device with kernels >= 4.3
-Date: Tue, 7 Jun 2016 09:11:42 -0500
-Message-ID: <20160607141142.GV31708@htj.duckdns.org>
-References: <87vb1mwz73.fsf@fsfe.org>
- <CAA=40861-zFKancJ3w5Zia2v9bpaN4TY3bw7Hi8G=97z_30qVA@mail.gmail.com>
- <20160606135422.GU31708@htj.duckdns.org>
- <87porue7n6.fsf@mm.st>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Ben Dooks <ben.dooks@codethink.co.uk>
+Subject: [PATCH] ata: sata_mv: fix mis-conversion in mv_write_cached_reg()
+Date: Tue,  7 Jun 2016 17:49:09 +0100
+Message-ID: <1465318149-21029-1-git-send-email-ben.dooks@codethink.co.uk>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-oi0-f52.google.com ([209.85.218.52]:33904 "EHLO
-	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932270AbcFGOLo (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Jun 2016 10:11:44 -0400
-Received: by mail-oi0-f52.google.com with SMTP id e72so278262356oib.1
-        for <linux-ide@vger.kernel.org>; Tue, 07 Jun 2016 07:11:44 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <87porue7n6.fsf@mm.st>
+Received: from 82-70-136-246.dsl.in-addr.zen.co.uk ([82.70.136.246]:36358 "EHLO
+	rainbowdash.ducie.codethink.co.uk" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1161164AbcFGQtP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Jun 2016 12:49:15 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Kevin Brubeck Unhammer <unhammer@fsfe.org>
-Cc: "Navin P.S" <navinp1912@gmail.com>, linux-ide@vger.kernel.org
+To: linux-kernel@lists.codethink.co.uk
+Cc: Ben Dooks <ben.dooks@codethink.co.uk>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 
-On Mon, Jun 06, 2016 at 04:03:57PM +0200, Kevin Brubeck Unhammer wrote:
-> dmesg from 4.2 is attached; from 4.6 I'm not sure how to get it =E2=80=
-=A6
->=20
-> perhaps I could mount a USB-stick through a
-> /etc/initramfs-tools/scripts/init-premount/ script, I'll try this lat=
-er
-> (I'm travelling this week, so might be a bit delayed).
+Fix the signed issue in mv_write_cached_reg() where the laddr
+is assigned from a (long)addr instead of (unsigned long)addr.
 
-You can also use serial or netconsole.
+Fixes the following warnings:
 
-Thanks.
+drivers/ata/sata_mv.c:989:26: warning: cast removes address space of expression
+drivers/ata/sata_mv.c:989:26: warning: cast removes address space of expression
+drivers/ata/sata_mv.c:989:26: warning: cast removes address space of expression
+drivers/ata/sata_mv.c:989:26: warning: cast removes address space of expression
 
---=20
-tejun
+Signed-off-by: Ben Dooks <ben.dooks@codethink.co.uk>
+---
+Cc: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
+---
+ drivers/ata/sata_mv.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index bd74ee5..745489a 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -986,7 +986,7 @@ static inline void mv_write_cached_reg(void __iomem *addr, u32 *old, u32 new)
+ 		 * Looks like a lot of fuss, but it avoids an unnecessary
+ 		 * +1 usec read-after-write delay for unaffected registers.
+ 		 */
+-		laddr = (long)addr & 0xffff;
++		laddr = (unsigned long)addr & 0xffff;
+ 		if (laddr >= 0x300 && laddr <= 0x33c) {
+ 			laddr &= 0x000f;
+ 			if (laddr == 0x4 || laddr == 0xc) {
+-- 
+2.8.1
+
