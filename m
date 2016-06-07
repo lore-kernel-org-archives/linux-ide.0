@@ -1,58 +1,40 @@
-From: Wei Fang <fangwei1@huawei.com>
-Subject: [PATCH v4 2/2] Documentation/scsi: update scsi_eh.txt about ->host_failed
-Date: Tue, 7 Jun 2016 14:53:57 +0800
-Message-ID: <1465282437-10653-2-git-send-email-fangwei1@huawei.com>
-References: <1465282437-10653-1-git-send-email-fangwei1@huawei.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Lenovo A740 gave up waiting for root device with kernels >= 4.3
+Date: Tue, 7 Jun 2016 09:11:42 -0500
+Message-ID: <20160607141142.GV31708@htj.duckdns.org>
+References: <87vb1mwz73.fsf@fsfe.org>
+ <CAA=40861-zFKancJ3w5Zia2v9bpaN4TY3bw7Hi8G=97z_30qVA@mail.gmail.com>
+ <20160606135422.GU31708@htj.duckdns.org>
+ <87porue7n6.fsf@mm.st>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:45055 "EHLO
-	szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751500AbcFGGrB (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Jun 2016 02:47:01 -0400
-In-Reply-To: <1465282437-10653-1-git-send-email-fangwei1@huawei.com>
+Received: from mail-oi0-f52.google.com ([209.85.218.52]:33904 "EHLO
+	mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932270AbcFGOLo (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 7 Jun 2016 10:11:44 -0400
+Received: by mail-oi0-f52.google.com with SMTP id e72so278262356oib.1
+        for <linux-ide@vger.kernel.org>; Tue, 07 Jun 2016 07:11:44 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <87porue7n6.fsf@mm.st>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, corbet@lwn.net
-Cc: hch@infradead.org, dan.j.williams@intel.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org, Wei Fang <fangwei1@huawei.com>
+To: Kevin Brubeck Unhammer <unhammer@fsfe.org>
+Cc: "Navin P.S" <navinp1912@gmail.com>, linux-ide@vger.kernel.org
 
-Update the new concurrency rules of ->host_failed.
+On Mon, Jun 06, 2016 at 04:03:57PM +0200, Kevin Brubeck Unhammer wrote:
+> dmesg from 4.2 is attached; from 4.6 I'm not sure how to get it =E2=80=
+=A6
+>=20
+> perhaps I could mount a USB-stick through a
+> /etc/initramfs-tools/scripts/init-premount/ script, I'll try this lat=
+er
+> (I'm travelling this week, so might be a bit delayed).
 
-Signed-off-by: Wei Fang <fangwei1@huawei.com>
----
- Documentation/scsi/scsi_eh.txt |    8 ++++++--
- 1 files changed, 6 insertions(+), 2 deletions(-)
+You can also use serial or netconsole.
 
-diff --git a/Documentation/scsi/scsi_eh.txt b/Documentation/scsi/scsi_eh.txt
-index 8638f61..37eca00 100644
---- a/Documentation/scsi/scsi_eh.txt
-+++ b/Documentation/scsi/scsi_eh.txt
-@@ -263,19 +263,23 @@ scmd->allowed.
- 
-  3. scmd recovered
-     ACTION: scsi_eh_finish_cmd() is invoked to EH-finish scmd
--	- shost->host_failed--
- 	- clear scmd->eh_eflags
- 	- scsi_setup_cmd_retry()
- 	- move from local eh_work_q to local eh_done_q
-     LOCKING: none
-+    CONCURRENCY: at most one thread per separate eh_work_q to
-+		 keep queue manipulation lockless
- 
-  4. EH completes
-     ACTION: scsi_eh_flush_done_q() retries scmds or notifies upper
--	    layer of failure.
-+	    layer of failure. May be called concurrently but must have
-+	    a no more than one thread per separate eh_work_q to
-+	    manipulate the queue locklessly
- 	- scmd is removed from eh_done_q and scmd->eh_entry is cleared
- 	- if retry is necessary, scmd is requeued using
-           scsi_queue_insert()
- 	- otherwise, scsi_finish_command() is invoked for scmd
-+	- zero shost->host_failed
-     LOCKING: queue or finish function performs appropriate locking
- 
- 
--- 
-1.7.1
+Thanks.
 
+--=20
+tejun
