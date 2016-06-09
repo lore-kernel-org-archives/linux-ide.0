@@ -1,172 +1,227 @@
-From: Gregory CLEMENT <gregory.clement@free-electrons.com>
-Subject: Re: [PATCH v3 4/7] arm: use the new LED disk activity trigger
-Date: Thu, 09 Jun 2016 09:18:30 +0200
-Message-ID: <871t46q189.fsf@free-electrons.com>
+From: Jacek Anaszewski <j.anaszewski@samsung.com>
+Subject: Re: [PATCH v3 1/7] leds: convert IDE trigger to common disk trigger
+Date: Thu, 09 Jun 2016 09:29:45 +0200
+Message-ID: <57591AE9.7060009@samsung.com>
 References: <20160608223000.433-1-linz@li-pro.net>
-	<20160608223000.433-4-linz@li-pro.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from down.free-electrons.com ([37.187.137.238]:46956 "EHLO
-	mail.free-electrons.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751433AbcFIHSn (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Jun 2016 03:18:43 -0400
-In-Reply-To: <20160608223000.433-4-linz@li-pro.net> (Stephan Linz's message of
-	"Thu, 9 Jun 2016 00:29:39 +0200")
+Received: from mailout4.w1.samsung.com ([210.118.77.14]:15700 "EHLO
+	mailout4.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423277AbcFIH3v (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 9 Jun 2016 03:29:51 -0400
+In-reply-to: <20160608223000.433-1-linz@li-pro.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Stephan Linz <linz@li-pro.net>
-Cc: linux-leds@vger.kernel.org, linux-ide@vger.kernel.org, =?utf-8?Q?Ben?= =?utf-8?Q?o=C3=AEt?= Cousson <bcousson@baylibre.com>, Tony Lindgren <tony@atomide.com>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Russell King <linux@armlinux.org.uk>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Sekhar Nori <nsekhar@ti.com>, Kevin Hilman <khilman@kernel.org>, Daniel Mack <daniel@zonque.org>, Haojian Zhuang <haojian.zhuang@gmail.com>, Robert Jarzmik <robert.jarzmik@free.fr>, linux-omap@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-leds@vger.kernel.org, linux-ide@vger.kernel.org, Joseph Jezak <josejx@gentoo.org>, Nico Macrionitis <acrux@cruxppc.org>, =?UTF-8?B?SsO2cmcgU29tbWVy?= <joerg@alea.gnuu.de>, Richard Purdie <rpurdie@rpsys.net>, Tejun Heo <tj@kernel.org>, "David S. Miller" <davem@davemloft.net>, linux-kernel@vger.kernel.org
 
 Hi Stephan,
- 
- On jeu., juin 09 2016, Stephan Linz <linz@li-pro.net> wrote:
 
-> - dts: rename 'ide-disk' to 'disk-activity'
-> - platform: rename 'ide-disk' to 'disk-activity'
-> - defconfig: rename 'LEDS_TRIGGER_IDE_DISK' to 'LEDS_TRIGGER_DISK'
->
-> Signed-off-by: Stephan Linz <linz@li-pro.net>
-> ---
+Thanks for the patch.
 
-I don't comment about the change itslef but if the change is OK for the
-dt and led maintainer then you will have to split this patch in 3 chunks
-(on for each subystem):
+Generally it looks ok, with one exception: we have to keep
+ide-disk trigger, so as not to break existing users.
+Please just register two triggers in ledtrig_disk_init,
+similarly as it was done for mtd trigger:
 
->  arch/arm/boot/dts/am57xx-beagle-x15.dts  | 2 +-
-for omap
-
->  arch/arm/boot/dts/kirkwood-ns2lite.dts   | 2 +-
->  arch/arm/boot/dts/kirkwood-topkick.dts   | 2 +-
-for mvebu
-
->  arch/arm/configs/collie_defconfig        | 2 +-
->  arch/arm/configs/ixp4xx_defconfig        | 2 +-
-for pxa
-
->  arch/arm/mach-davinci/board-dm644x-evm.c | 2 +-
->  arch/arm/mach-omap1/board-osk.c          | 2 +-
-for omap
-
->  arch/arm/mach-pxa/spitz.c                | 2 +-
-for pxa
+drivers/leds/trigger/ledtrig-mtd.c
 
 Thanks,
+Jacek Anaszewski
 
-Gregory
 
->  8 files changed, 8 insertions(+), 8 deletions(-)
+On 06/09/2016 12:29 AM, Stephan Linz wrote:
+> This patch converts the IDE specific LED trigger to a generic disk
+> activity LED trigger. The libata core is now a trigger source just
+> like before the IDE disk driver. It's merely a replacement of the
+> string ide by disk.
 >
-> diff --git a/arch/arm/boot/dts/am57xx-beagle-x15.dts b/arch/arm/boot/dts/am57xx-beagle-x15.dts
-> index 81d6c30..c4d04c5 100644
-> --- a/arch/arm/boot/dts/am57xx-beagle-x15.dts
-> +++ b/arch/arm/boot/dts/am57xx-beagle-x15.dts
-> @@ -86,7 +86,7 @@
->  		led@3 {
->  			label = "beagle-x15:usr3";
->  			gpios = <&gpio7 15 GPIO_ACTIVE_HIGH>;
-> -			linux,default-trigger = "ide-disk";
-> +			linux,default-trigger = "disk-activity";
->  			default-state = "off";
->  		};
->  	};
-> diff --git a/arch/arm/boot/dts/kirkwood-ns2lite.dts b/arch/arm/boot/dts/kirkwood-ns2lite.dts
-> index 1f2ca60..2c661ad 100644
-> --- a/arch/arm/boot/dts/kirkwood-ns2lite.dts
-> +++ b/arch/arm/boot/dts/kirkwood-ns2lite.dts
-> @@ -26,7 +26,7 @@
->  		blue-sata {
->  			label = "ns2:blue:sata";
->  			gpios = <&gpio0 30 GPIO_ACTIVE_LOW>;
-> -			linux,default-trigger = "ide-disk";
-> +			linux,default-trigger = "disk-activity";
->  		};
->  	};
->  };
-> diff --git a/arch/arm/boot/dts/kirkwood-topkick.dts b/arch/arm/boot/dts/kirkwood-topkick.dts
-> index f5c8c0d..1e9a721 100644
-> --- a/arch/arm/boot/dts/kirkwood-topkick.dts
-> +++ b/arch/arm/boot/dts/kirkwood-topkick.dts
-> @@ -129,7 +129,7 @@
->  		disk {
->  			label = "topkick:yellow:disk";
->  			gpios = <&gpio0 21 GPIO_ACTIVE_LOW>;
-> -			linux,default-trigger = "ide-disk";
-> +			linux,default-trigger = "disk-activity";
->  		};
->  		system2 {
->  			label = "topkick:red:system";
-> diff --git a/arch/arm/configs/collie_defconfig b/arch/arm/configs/collie_defconfig
-> index 6c56ad0..52dbad5 100644
-> --- a/arch/arm/configs/collie_defconfig
-> +++ b/arch/arm/configs/collie_defconfig
-> @@ -76,7 +76,7 @@ CONFIG_LEDS_CLASS=y
->  CONFIG_LEDS_LOCOMO=y
->  CONFIG_LEDS_TRIGGERS=y
->  CONFIG_LEDS_TRIGGER_TIMER=y
-> -CONFIG_LEDS_TRIGGER_IDE_DISK=y
-> +CONFIG_LEDS_TRIGGER_DISK=y
->  # CONFIG_DNOTIFY is not set
->  CONFIG_VFAT_FS=y
->  CONFIG_TMPFS=y
-> diff --git a/arch/arm/configs/ixp4xx_defconfig b/arch/arm/configs/ixp4xx_defconfig
-> index 24636cf..cf4918a 100644
-> --- a/arch/arm/configs/ixp4xx_defconfig
-> +++ b/arch/arm/configs/ixp4xx_defconfig
-> @@ -180,7 +180,7 @@ CONFIG_LEDS_FSG=y
->  CONFIG_LEDS_GPIO=y
->  CONFIG_LEDS_TRIGGERS=y
->  CONFIG_LEDS_TRIGGER_TIMER=y
-> -CONFIG_LEDS_TRIGGER_IDE_DISK=y
-> +CONFIG_LEDS_TRIGGER_DISK=y
->  CONFIG_LEDS_TRIGGER_HEARTBEAT=y
->  CONFIG_RTC_CLASS=y
->  CONFIG_RTC_DRV_ISL1208=y
-> diff --git a/arch/arm/mach-davinci/board-dm644x-evm.c b/arch/arm/mach-davinci/board-dm644x-evm.c
-> index 68cc099..ab47b8e 100644
-> --- a/arch/arm/mach-davinci/board-dm644x-evm.c
-> +++ b/arch/arm/mach-davinci/board-dm644x-evm.c
-> @@ -288,7 +288,7 @@ static struct gpio_led evm_leds[] = {
->  	{ .name = "DS2", .active_low = 1,
->  		.default_trigger = "mmc0", },
->  	{ .name = "DS1", .active_low = 1,
-> -		.default_trigger = "ide-disk", },
-> +		.default_trigger = "disk-activity", },
->  };
->  
->  static const struct gpio_led_platform_data evm_led_data = {
-> diff --git a/arch/arm/mach-omap1/board-osk.c b/arch/arm/mach-omap1/board-osk.c
-> index 209aecb..4dfb995 100644
-> --- a/arch/arm/mach-omap1/board-osk.c
-> +++ b/arch/arm/mach-omap1/board-osk.c
-> @@ -172,7 +172,7 @@ static struct gpio_led tps_leds[] = {
->  	 * Also, D9 requires non-battery power.
->  	 */
->  	{ .gpio = OSK_TPS_GPIO_LED_D9, .name = "d9",
-> -			.default_trigger = "ide-disk", },
-> +			.default_trigger = "disk-activity", },
->  	{ .gpio = OSK_TPS_GPIO_LED_D2, .name = "d2", },
->  	{ .gpio = OSK_TPS_GPIO_LED_D3, .name = "d3", .active_low = 1,
->  			.default_trigger = "heartbeat", },
-> diff --git a/arch/arm/mach-pxa/spitz.c b/arch/arm/mach-pxa/spitz.c
-> index bd7cd8b..1080580 100644
-> --- a/arch/arm/mach-pxa/spitz.c
-> +++ b/arch/arm/mach-pxa/spitz.c
-> @@ -464,7 +464,7 @@ static struct gpio_led spitz_gpio_leds[] = {
->  	},
->  	{
->  		.name			= "spitz:green:hddactivity",
-> -		.default_trigger	= "ide-disk",
-> +		.default_trigger	= "disk-activity",
->  		.gpio			= SPITZ_GPIO_LED_GREEN,
->  	},
->  };
-> -- 
-> 2.8.4
+> The patch is taken from http://dev.gentoo.org/~josejx/ata.patch and i=
+s
+> widely used by any ibook/powerbook owners with great satisfaction.
+> Likewise, it is very often used successfully on different ARM platfor=
+ms.
+>
+> The original patch was split into different parts to clarify platform
+> independent and dependent changes.
+>
+> Cc: Joseph Jezak <josejx@gentoo.org>
+> Cc: Nico Macrionitis <acrux@cruxppc.org>
+> Cc: J=C3=B6rg Sommer <joerg@alea.gnuu.de>
+> Cc: Richard Purdie <rpurdie@rpsys.net>
+> Cc: Jacek Anaszewski <j.anaszewski@samsung.com>
+> Signed-off-by: Stephan Linz <linz@li-pro.net>
+> ---
+> Changes in v3:
+>    - Port to kernel 4.x
+>    - Split into platform independent and dependent parts.
+>
+> v2: https://patchwork.ozlabs.org/patch/117485/
+> v1: http://dev.gentoo.org/~josejx/ata.patch
+> ---
+>   drivers/ata/libata-core.c                            |  4 ++++
+>   drivers/ide/ide-disk.c                               |  2 +-
+>   drivers/leds/leds-hp6xx.c                            |  2 +-
+>   drivers/leds/trigger/Kconfig                         |  8 ++++----
+>   drivers/leds/trigger/Makefile                        |  2 +-
+>   .../trigger/{ledtrig-ide-disk.c =3D> ledtrig-disk.c}   | 20 +++++++=
++++----------
+>   include/linux/leds.h                                 |  6 +++---
+>   7 files changed, 24 insertions(+), 20 deletions(-)
+>   rename drivers/leds/trigger/{ledtrig-ide-disk.c =3D> ledtrig-disk.c=
+} (50%)
+>
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 6be7770..2eca572 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -69,6 +69,7 @@
+>   #include <asm/unaligned.h>
+>   #include <linux/cdrom.h>
+>   #include <linux/ratelimit.h>
+> +#include <linux/leds.h>
+>   #include <linux/pm_runtime.h>
+>   #include <linux/platform_device.h>
+>
+> @@ -5072,6 +5073,9 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
+>   {
+>   	struct ata_port *ap =3D qc->ap;
+>
+> +	/* Trigger the LED (if available) */
+> +	ledtrig_disk_activity();
+> +
+>   	/* XXX: New EH and old EH use different mechanisms to
+>   	 * synchronize EH with regular execution path.
+>   	 *
+> diff --git a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
+> index 05dbcce..5ceb176 100644
+> --- a/drivers/ide/ide-disk.c
+> +++ b/drivers/ide/ide-disk.c
+> @@ -186,7 +186,7 @@ static ide_startstop_t ide_do_rw_disk(ide_drive_t=
+ *drive, struct request *rq,
+>   	BUG_ON(drive->dev_flags & IDE_DFLAG_BLOCKED);
+>   	BUG_ON(rq->cmd_type !=3D REQ_TYPE_FS);
+>
+> -	ledtrig_ide_activity();
+> +	ledtrig_disk_activity();
+>
+>   	pr_debug("%s: %sing: block=3D%llu, sectors=3D%u\n",
+>   		 drive->name, rq_data_dir(rq) =3D=3D READ ? "read" : "writ",
+> diff --git a/drivers/leds/leds-hp6xx.c b/drivers/leds/leds-hp6xx.c
+> index a6b8db0..137969f 100644
+> --- a/drivers/leds/leds-hp6xx.c
+> +++ b/drivers/leds/leds-hp6xx.c
+> @@ -50,7 +50,7 @@ static struct led_classdev hp6xx_red_led =3D {
+>
+>   static struct led_classdev hp6xx_green_led =3D {
+>   	.name			=3D "hp6xx:green",
+> -	.default_trigger	=3D "ide-disk",
+> +	.default_trigger	=3D "disk-activity",
+>   	.brightness_set		=3D hp6xxled_green_set,
+>   	.flags			=3D LED_CORE_SUSPENDRESUME,
+>   };
+> diff --git a/drivers/leds/trigger/Kconfig b/drivers/leds/trigger/Kcon=
+fig
+> index 9893d91..3f9ddb9 100644
+> --- a/drivers/leds/trigger/Kconfig
+> +++ b/drivers/leds/trigger/Kconfig
+> @@ -33,12 +33,12 @@ config LEDS_TRIGGER_ONESHOT
+>
+>   	  If unsure, say Y.
+>
+> -config LEDS_TRIGGER_IDE_DISK
+> -	bool "LED IDE Disk Trigger"
+> -	depends on IDE_GD_ATA
+> +config LEDS_TRIGGER_DISK
+> +	bool "LED Disk Trigger"
+> +	depends on IDE_GD_ATA || ATA
+>   	depends on LEDS_TRIGGERS
+>   	help
+> -	  This allows LEDs to be controlled by IDE disk activity.
+> +	  This allows LEDs to be controlled by disk activity.
+>   	  If unsure, say Y.
+>
+>   config LEDS_TRIGGER_MTD
+> diff --git a/drivers/leds/trigger/Makefile b/drivers/leds/trigger/Mak=
+efile
+> index 8cc64a4..a72c43c 100644
+> --- a/drivers/leds/trigger/Makefile
+> +++ b/drivers/leds/trigger/Makefile
+> @@ -1,6 +1,6 @@
+>   obj-$(CONFIG_LEDS_TRIGGER_TIMER)	+=3D ledtrig-timer.o
+>   obj-$(CONFIG_LEDS_TRIGGER_ONESHOT)	+=3D ledtrig-oneshot.o
+> -obj-$(CONFIG_LEDS_TRIGGER_IDE_DISK)	+=3D ledtrig-ide-disk.o
+> +obj-$(CONFIG_LEDS_TRIGGER_DISK)		+=3D ledtrig-disk.o
+>   obj-$(CONFIG_LEDS_TRIGGER_MTD)		+=3D ledtrig-mtd.o
+>   obj-$(CONFIG_LEDS_TRIGGER_HEARTBEAT)	+=3D ledtrig-heartbeat.o
+>   obj-$(CONFIG_LEDS_TRIGGER_BACKLIGHT)	+=3D ledtrig-backlight.o
+> diff --git a/drivers/leds/trigger/ledtrig-ide-disk.c b/drivers/leds/t=
+rigger/ledtrig-disk.c
+> similarity index 50%
+> rename from drivers/leds/trigger/ledtrig-ide-disk.c
+> rename to drivers/leds/trigger/ledtrig-disk.c
+> index 15123d3..7a1fe44 100644
+> --- a/drivers/leds/trigger/ledtrig-ide-disk.c
+> +++ b/drivers/leds/trigger/ledtrig-disk.c
+> @@ -1,5 +1,5 @@
+>   /*
+> - * LED IDE-Disk Activity Trigger
+> + * LED Disk Activity Trigger
+>    *
+>    * Copyright 2006 Openedhand Ltd.
+>    *
+> @@ -17,20 +17,20 @@
+>
+>   #define BLINK_DELAY 30
+>
+> -DEFINE_LED_TRIGGER(ledtrig_ide);
+> +DEFINE_LED_TRIGGER(ledtrig_disk);
+>
+> -void ledtrig_ide_activity(void)
+> +void ledtrig_disk_activity(void)
+>   {
+> -	unsigned long ide_blink_delay =3D BLINK_DELAY;
+> +	unsigned long disk_blink_delay =3D BLINK_DELAY;
+>
+> -	led_trigger_blink_oneshot(ledtrig_ide,
+> -				  &ide_blink_delay, &ide_blink_delay, 0);
+> +	led_trigger_blink_oneshot(ledtrig_disk,
+> +				  &disk_blink_delay, &disk_blink_delay, 0);
+>   }
+> -EXPORT_SYMBOL(ledtrig_ide_activity);
+> +EXPORT_SYMBOL(ledtrig_disk_activity);
+>
+> -static int __init ledtrig_ide_init(void)
+> +static int __init ledtrig_disk_init(void)
+>   {
+> -	led_trigger_register_simple("ide-disk", &ledtrig_ide);
+> +	led_trigger_register_simple("disk-activity", &ledtrig_disk);
+>   	return 0;
+>   }
+> -device_initcall(ledtrig_ide_init);
+> +device_initcall(ledtrig_disk_init);
+> diff --git a/include/linux/leds.h b/include/linux/leds.h
+> index d2b1306..28a3ef5 100644
+> --- a/include/linux/leds.h
+> +++ b/include/linux/leds.h
+> @@ -324,10 +324,10 @@ static inline void *led_get_trigger_data(struct=
+ led_classdev *led_cdev)
+>   #endif /* CONFIG_LEDS_TRIGGERS */
+>
+>   /* Trigger specific functions */
+> -#ifdef CONFIG_LEDS_TRIGGER_IDE_DISK
+> -extern void ledtrig_ide_activity(void);
+> +#ifdef CONFIG_LEDS_TRIGGER_DISK
+> +extern void ledtrig_disk_activity(void);
+>   #else
+> -static inline void ledtrig_ide_activity(void) {}
+> +static inline void ledtrig_disk_activity(void) {}
+>   #endif
+>
+>   #ifdef CONFIG_LEDS_TRIGGER_MTD
 >
 
--- 
-Gregory Clement, Free Electrons
-Kernel, drivers, real-time and embedded Linux
-development, consulting, training and support.
-http://free-electrons.com
+
