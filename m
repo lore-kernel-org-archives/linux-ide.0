@@ -1,171 +1,124 @@
-From: Stephan Linz <linz-LlUBiLVY8XKsTnJN9+BGXg@public.gmane.org>
-Subject: [PATCH v4 3/7] powerpc: use the new LED disk activity trigger
-Date: Fri, 10 Jun 2016 07:59:58 +0200
-Message-ID: <20160610060021.12382-3-linz@li-pro.net>
+From: Stephan Linz <linz@li-pro.net>
+Subject: [PATCH v4 5/7] mips: use the new LED disk activity trigger
+Date: Fri, 10 Jun 2016 08:00:00 +0200
+Message-ID: <20160610060021.12382-5-linz@li-pro.net>
 References: <20160610060021.12382-1-linz@li-pro.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20160610060021.12382-1-linz-LlUBiLVY8XKsTnJN9+BGXg@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: linux-leds-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: Stephan Linz <linz-LlUBiLVY8XKsTnJN9+BGXg@public.gmane.org>, Joseph Jezak <josejx-aBrp7R+bbdUdnm+yROfE0A@public.gmane.org>, =?UTF-8?q?J=C3=B6rg=20Sommer?= <joerg-au2b9oQwubsjnolme5KbmQ@public.gmane.org>, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Pawel Moll <pawel.moll-5wv7dgnIgG8@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Ian Campbell <ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org>, Kumar Gala <galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Benjamin Herrenschmidt <benh-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, Michael Ellerman <mpe-Gsx/Oe8HsFggBc27wqDAHg@public.gmane.org>, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linuxppc-dev-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mo4-p00-ob.smtp.rzone.de ([81.169.146.219]:51843 "EHLO
+	mo4-p00-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750888AbcFJGCM (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jun 2016 02:02:12 -0400
+In-Reply-To: <20160610060021.12382-1-linz@li-pro.net>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-leds@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: Stephan Linz <linz@li-pro.net>, Ralf Baechle <ralf@linux-mips.org>, linux-mips@linux-mips.org, linux-kernel@vger.kernel.org
 
-- dts: rename 'ide-disk' to 'disk-activity'
-- defconfig: rename 'ADB_PMU_LED_IDE' to 'ADB_PMU_LED_DISK'
+- platform: rename 'ide-disk' to 'disk-activity'
+- defconfig: rename 'LEDS_TRIGGER_IDE_DISK' to 'LEDS_TRIGGER_DISK'
 
-Cc: Joseph Jezak <josejx-aBrp7R+bbdUdnm+yROfE0A@public.gmane.org>
-Cc: J=C3=B6rg Sommer <joerg-au2b9oQwubsjnolme5KbmQ@public.gmane.org>
-Signed-off-by: Stephan Linz <linz-LlUBiLVY8XKsTnJN9+BGXg@public.gmane.org>
+Signed-off-by: Stephan Linz <linz@li-pro.net>
 ---
- arch/powerpc/boot/dts/mpc8315erdb.dts |  2 +-
- arch/powerpc/boot/dts/mpc8377_rdb.dts |  2 +-
- arch/powerpc/boot/dts/mpc8378_rdb.dts |  2 +-
- arch/powerpc/boot/dts/mpc8379_rdb.dts |  2 +-
- arch/powerpc/configs/pmac32_defconfig |  2 +-
- arch/powerpc/configs/ppc6xx_defconfig |  2 +-
- drivers/macintosh/Kconfig             | 13 ++++++-------
- drivers/macintosh/via-pmu-led.c       |  4 ++--
- 8 files changed, 14 insertions(+), 15 deletions(-)
+ arch/mips/configs/malta_qemu_32r6_defconfig | 2 +-
+ arch/mips/configs/maltaaprp_defconfig       | 2 +-
+ arch/mips/configs/maltasmvp_eva_defconfig   | 2 +-
+ arch/mips/configs/maltaup_defconfig         | 2 +-
+ arch/mips/configs/rbtx49xx_defconfig        | 2 +-
+ arch/mips/txx9/generic/setup.c              | 2 +-
+ arch/mips/txx9/rbtx4939/setup.c             | 2 +-
+ 7 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/arch/powerpc/boot/dts/mpc8315erdb.dts b/arch/powerpc/boot/=
-dts/mpc8315erdb.dts
-index 4354684..ca5139e 100644
---- a/arch/powerpc/boot/dts/mpc8315erdb.dts
-+++ b/arch/powerpc/boot/dts/mpc8315erdb.dts
-@@ -472,7 +472,7 @@
-=20
- 		hdd {
- 			gpios =3D <&mcu_pio 1 0>;
--			linux,default-trigger =3D "ide-disk";
-+			linux,default-trigger =3D "disk-activity";
- 		};
+diff --git a/arch/mips/configs/malta_qemu_32r6_defconfig b/arch/mips/configs/malta_qemu_32r6_defconfig
+index 7f50dd6..65f140e 100644
+--- a/arch/mips/configs/malta_qemu_32r6_defconfig
++++ b/arch/mips/configs/malta_qemu_32r6_defconfig
+@@ -146,7 +146,7 @@ CONFIG_NEW_LEDS=y
+ CONFIG_LEDS_CLASS=y
+ CONFIG_LEDS_TRIGGERS=y
+ CONFIG_LEDS_TRIGGER_TIMER=y
+-CONFIG_LEDS_TRIGGER_IDE_DISK=y
++CONFIG_LEDS_TRIGGER_DISK=y
+ CONFIG_LEDS_TRIGGER_HEARTBEAT=y
+ CONFIG_LEDS_TRIGGER_BACKLIGHT=y
+ CONFIG_LEDS_TRIGGER_DEFAULT_ON=y
+diff --git a/arch/mips/configs/maltaaprp_defconfig b/arch/mips/configs/maltaaprp_defconfig
+index a9d433a..799c433 100644
+--- a/arch/mips/configs/maltaaprp_defconfig
++++ b/arch/mips/configs/maltaaprp_defconfig
+@@ -147,7 +147,7 @@ CONFIG_NEW_LEDS=y
+ CONFIG_LEDS_CLASS=y
+ CONFIG_LEDS_TRIGGERS=y
+ CONFIG_LEDS_TRIGGER_TIMER=y
+-CONFIG_LEDS_TRIGGER_IDE_DISK=y
++CONFIG_LEDS_TRIGGER_DISK=y
+ CONFIG_LEDS_TRIGGER_HEARTBEAT=y
+ CONFIG_LEDS_TRIGGER_BACKLIGHT=y
+ CONFIG_LEDS_TRIGGER_DEFAULT_ON=y
+diff --git a/arch/mips/configs/maltasmvp_eva_defconfig b/arch/mips/configs/maltasmvp_eva_defconfig
+index 2774ef0..3184600 100644
+--- a/arch/mips/configs/maltasmvp_eva_defconfig
++++ b/arch/mips/configs/maltasmvp_eva_defconfig
+@@ -152,7 +152,7 @@ CONFIG_NEW_LEDS=y
+ CONFIG_LEDS_CLASS=y
+ CONFIG_LEDS_TRIGGERS=y
+ CONFIG_LEDS_TRIGGER_TIMER=y
+-CONFIG_LEDS_TRIGGER_IDE_DISK=y
++CONFIG_LEDS_TRIGGER_DISK=y
+ CONFIG_LEDS_TRIGGER_HEARTBEAT=y
+ CONFIG_LEDS_TRIGGER_BACKLIGHT=y
+ CONFIG_LEDS_TRIGGER_DEFAULT_ON=y
+diff --git a/arch/mips/configs/maltaup_defconfig b/arch/mips/configs/maltaup_defconfig
+index 9bbd221..a79107d 100644
+--- a/arch/mips/configs/maltaup_defconfig
++++ b/arch/mips/configs/maltaup_defconfig
+@@ -146,7 +146,7 @@ CONFIG_NEW_LEDS=y
+ CONFIG_LEDS_CLASS=y
+ CONFIG_LEDS_TRIGGERS=y
+ CONFIG_LEDS_TRIGGER_TIMER=y
+-CONFIG_LEDS_TRIGGER_IDE_DISK=y
++CONFIG_LEDS_TRIGGER_DISK=y
+ CONFIG_LEDS_TRIGGER_HEARTBEAT=y
+ CONFIG_LEDS_TRIGGER_BACKLIGHT=y
+ CONFIG_LEDS_TRIGGER_DEFAULT_ON=y
+diff --git a/arch/mips/configs/rbtx49xx_defconfig b/arch/mips/configs/rbtx49xx_defconfig
+index f8bf9b4..43d55e5 100644
+--- a/arch/mips/configs/rbtx49xx_defconfig
++++ b/arch/mips/configs/rbtx49xx_defconfig
+@@ -90,7 +90,7 @@ CONFIG_NEW_LEDS=y
+ CONFIG_LEDS_CLASS=y
+ CONFIG_LEDS_GPIO=y
+ CONFIG_LEDS_TRIGGERS=y
+-CONFIG_LEDS_TRIGGER_IDE_DISK=y
++CONFIG_LEDS_TRIGGER_DISK=y
+ CONFIG_LEDS_TRIGGER_HEARTBEAT=y
+ CONFIG_RTC_CLASS=y
+ CONFIG_RTC_INTF_DEV_UIE_EMUL=y
+diff --git a/arch/mips/txx9/generic/setup.c b/arch/mips/txx9/generic/setup.c
+index 108f8a8..ada92db 100644
+--- a/arch/mips/txx9/generic/setup.c
++++ b/arch/mips/txx9/generic/setup.c
+@@ -727,7 +727,7 @@ void __init txx9_iocled_init(unsigned long baseaddr,
+ 	int i;
+ 	static char *default_triggers[] __initdata = {
+ 		"heartbeat",
+-		"ide-disk",
++		"disk-activity",
+ 		"nand-disk",
+ 		NULL,
  	};
- };
-diff --git a/arch/powerpc/boot/dts/mpc8377_rdb.dts b/arch/powerpc/boot/=
-dts/mpc8377_rdb.dts
-index 2b4b653..e326139 100644
---- a/arch/powerpc/boot/dts/mpc8377_rdb.dts
-+++ b/arch/powerpc/boot/dts/mpc8377_rdb.dts
-@@ -496,7 +496,7 @@
-=20
- 		hdd {
- 			gpios =3D <&mcu_pio 1 0>;
--			linux,default-trigger =3D "ide-disk";
-+			linux,default-trigger =3D "disk-activity";
- 		};
+diff --git a/arch/mips/txx9/rbtx4939/setup.c b/arch/mips/txx9/rbtx4939/setup.c
+index 3703040..8b93730 100644
+--- a/arch/mips/txx9/rbtx4939/setup.c
++++ b/arch/mips/txx9/rbtx4939/setup.c
+@@ -215,7 +215,7 @@ static int __init rbtx4939_led_probe(struct platform_device *pdev)
+ 	int i;
+ 	static char *default_triggers[] __initdata = {
+ 		"heartbeat",
+-		"ide-disk",
++		"disk-activity",
+ 		"nand-disk",
  	};
- };
-diff --git a/arch/powerpc/boot/dts/mpc8378_rdb.dts b/arch/powerpc/boot/=
-dts/mpc8378_rdb.dts
-index 74b6a53..71842fc 100644
---- a/arch/powerpc/boot/dts/mpc8378_rdb.dts
-+++ b/arch/powerpc/boot/dts/mpc8378_rdb.dts
-@@ -480,7 +480,7 @@
-=20
- 		hdd {
- 			gpios =3D <&mcu_pio 1 0>;
--			linux,default-trigger =3D "ide-disk";
-+			linux,default-trigger =3D "disk-activity";
- 		};
- 	};
- };
-diff --git a/arch/powerpc/boot/dts/mpc8379_rdb.dts b/arch/powerpc/boot/=
-dts/mpc8379_rdb.dts
-index 3b5cbac..e442a29 100644
---- a/arch/powerpc/boot/dts/mpc8379_rdb.dts
-+++ b/arch/powerpc/boot/dts/mpc8379_rdb.dts
-@@ -446,7 +446,7 @@
-=20
- 		hdd {
- 			gpios =3D <&mcu_pio 1 0>;
--			linux,default-trigger =3D "ide-disk";
-+			linux,default-trigger =3D "disk-activity";
- 		};
- 	};
- };
-diff --git a/arch/powerpc/configs/pmac32_defconfig b/arch/powerpc/confi=
-gs/pmac32_defconfig
-index ea8705f..3f6c9a6 100644
---- a/arch/powerpc/configs/pmac32_defconfig
-+++ b/arch/powerpc/configs/pmac32_defconfig
-@@ -158,7 +158,7 @@ CONFIG_ADB=3Dy
- CONFIG_ADB_CUDA=3Dy
- CONFIG_ADB_PMU=3Dy
- CONFIG_ADB_PMU_LED=3Dy
--CONFIG_ADB_PMU_LED_IDE=3Dy
-+CONFIG_ADB_PMU_LED_DISK=3Dy
- CONFIG_PMAC_APM_EMU=3Dm
- CONFIG_PMAC_MEDIABAY=3Dy
- CONFIG_PMAC_BACKLIGHT=3Dy
-diff --git a/arch/powerpc/configs/ppc6xx_defconfig b/arch/powerpc/confi=
-gs/ppc6xx_defconfig
-index 99ccbeba..1dde0be 100644
---- a/arch/powerpc/configs/ppc6xx_defconfig
-+++ b/arch/powerpc/configs/ppc6xx_defconfig
-@@ -442,7 +442,7 @@ CONFIG_ADB=3Dy
- CONFIG_ADB_CUDA=3Dy
- CONFIG_ADB_PMU=3Dy
- CONFIG_ADB_PMU_LED=3Dy
--CONFIG_ADB_PMU_LED_IDE=3Dy
-+CONFIG_ADB_PMU_LED_DISK=3Dy
- CONFIG_PMAC_APM_EMU=3Dy
- CONFIG_PMAC_MEDIABAY=3Dy
- CONFIG_PMAC_BACKLIGHT=3Dy
-diff --git a/drivers/macintosh/Kconfig b/drivers/macintosh/Kconfig
-index 3e8b29e..d28690f 100644
---- a/drivers/macintosh/Kconfig
-+++ b/drivers/macintosh/Kconfig
-@@ -96,19 +96,18 @@ config ADB_PMU_LED
- 	  Support the front LED on Power/iBooks as a generic LED that can
- 	  be triggered by any of the supported triggers. To get the
- 	  behaviour of the old CONFIG_BLK_DEV_IDE_PMAC_BLINK, select this
--	  and the ide-disk LED trigger and configure appropriately through
--	  sysfs.
-+	  and the disk LED trigger and configure appropriately through sysfs.
-=20
--config ADB_PMU_LED_IDE
--	bool "Use front LED as IDE LED by default"
-+config ADB_PMU_LED_DISK
-+	bool "Use front LED as DISK LED by default"
- 	depends on ADB_PMU_LED
- 	depends on LEDS_CLASS
- 	depends on IDE_GD_ATA
- 	select LEDS_TRIGGERS
--	select LEDS_TRIGGER_IDE_DISK
-+	select LEDS_TRIGGER_DISK
- 	help
--	  This option makes the front LED default to the IDE trigger
--	  so that it blinks on IDE activity.
-+	  This option makes the front LED default to the disk trigger
-+	  so that it blinks on disk activity.
-=20
- config PMAC_SMU
- 	bool "Support for SMU  based PowerMacs"
-diff --git a/drivers/macintosh/via-pmu-led.c b/drivers/macintosh/via-pm=
-u-led.c
-index 19c3718..ae067ab 100644
---- a/drivers/macintosh/via-pmu-led.c
-+++ b/drivers/macintosh/via-pmu-led.c
-@@ -73,8 +73,8 @@ static void pmu_led_set(struct led_classdev *led_cdev=
-,
-=20
- static struct led_classdev pmu_led =3D {
- 	.name =3D "pmu-led::front",
--#ifdef CONFIG_ADB_PMU_LED_IDE
--	.default_trigger =3D "ide-disk",
-+#ifdef CONFIG_ADB_PMU_LED_DISK
-+	.default_trigger =3D "disk-activity",
- #endif
- 	.brightness_set =3D pmu_led_set,
- };
---=20
+ 
+-- 
 2.8.4
 
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" i=
-n
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
