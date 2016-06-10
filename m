@@ -1,32 +1,55 @@
-From: Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH v4 2/7] leds: documentation: 'ide-disk' to 'disk-activity'
-Date: Fri, 10 Jun 2016 13:07:08 -0500
-Message-ID: <20160610180708.GA1598@rob-hp-laptop>
-References: <20160610060021.12382-1-linz@li-pro.net>
- <20160610060021.12382-2-linz@li-pro.net>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [RFC] [PATCH 0/3] Convert ipr to use
+ ata_port_operations->error_handler
+Date: Fri, 10 Jun 2016 16:33:09 -0500
+Message-ID: <575B3215.5070602@linux.vnet.ibm.com>
+References: <CAOS58YO65A8TpH22tEdM4SUcn8ncpY1f_YFMzomCN09OvhoRaQ@mail.gmail.com>
+ <57470450.3070000@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20160610060021.12382-2-linz@li-pro.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Stephan Linz <linz@li-pro.net>
-Cc: linux-leds@vger.kernel.org, linux-ide@vger.kernel.org, Joseph Jezak <josejx@gentoo.org>, =?iso-8859-1?Q?J=F6rg?= Sommer <joerg@alea.gnuu.de>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Jonathan Corbet <corbet@lwn.net>, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:2727 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752068AbcFJVdO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jun 2016 17:33:14 -0400
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+	by mx0b-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u5ALT0NW073606
+	for <linux-ide@vger.kernel.org>; Fri, 10 Jun 2016 17:33:14 -0400
+Received: from e19.ny.us.ibm.com (e19.ny.us.ibm.com [129.33.205.209])
+	by mx0b-001b2d01.pphosted.com with ESMTP id 23g1e5nk5x-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-ide@vger.kernel.org>; Fri, 10 Jun 2016 17:33:13 -0400
+Received: from localhost
+	by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-ide@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+	Fri, 10 Jun 2016 17:33:13 -0400
+In-Reply-To: <57470450.3070000@linux.vnet.ibm.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
 
-On Fri, Jun 10, 2016 at 07:59:57AM +0200, Stephan Linz wrote:
-> Cc: Joseph Jezak <josejx@gentoo.org>
-> Cc: J=F6rg Sommer <joerg@alea.gnuu.de>
-> Signed-off-by: Stephan Linz <linz@li-pro.net>
-> ---
->  Documentation/devicetree/bindings/leds/common.txt    | 3 ++-
->  Documentation/devicetree/bindings/leds/leds-gpio.txt | 4 ++--
->  Documentation/laptops/asus-laptop.txt                | 2 +-
->  Documentation/leds/leds-class.txt                    | 2 +-
->  4 files changed, 6 insertions(+), 5 deletions(-)
+On 05/26/2016 09:12 AM, Brian King wrote:
+> On 05/25/2016 02:32 PM, Tejun Heo wrote:
+>> Hello, Brian.
+>>
+>> So, of all the ata drivers, ipr seems to be the only driver which
+>> doesn't implement ata_port_opeations->error_handler and thus depends
+>> on the old error handling path. I'm wondering whether it'd be possible
+>> to convert ipr to implement ->error_handler and drop the old path.
+>> Would that be difficult?
+> 
+> Last time I looked at that there were a number of challenges in doing that,
+> but let me take another look and see if we can figure out a way to do that.
 
-I'm not copied on the kernel change, but as long as the kernel still=20
-handles ide-disk as you indicated:
+Here is an initial attempt to do this conversion. Probably plenty of bugs
+in it, and more testing is needed before this would be ready to apply.
 
-Acked-by: Rob Herring <robh@kernel.org>
+-Brian
+
+
+-- 
+Brian King
+Power Linux I/O
+IBM Linux Technology Center
+
