@@ -1,53 +1,76 @@
-From: Stephan Linz <linz@li-pro.net>
-Subject: [PATCH v4 6/7] parisc: use the new LED disk activity trigger
-Date: Fri, 10 Jun 2016 08:00:01 +0200
-Message-ID: <20160610060021.12382-6-linz@li-pro.net>
-References: <20160610060021.12382-1-linz@li-pro.net>
+From: Shaun Tancheff <shaun@tancheff.com>
+Subject: [PATCH v3 0/3] Block layer support ZAC/ZBC commands
+Date: Fri, 10 Jun 2016 02:10:23 -0500
+Message-ID: <1465542626-26536-1-git-send-email-shaun@tancheff.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mo4-p00-ob.smtp.rzone.de ([81.169.146.161]:63068 "EHLO
-	mo4-p00-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752289AbcFJGCd (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jun 2016 02:02:33 -0400
-In-Reply-To: <20160610060021.12382-1-linz@li-pro.net>
+Received: from smtp81.mediacombb.net ([68.66.77.81]:34936 "EHLO
+	dsmdc-mail-smtp.mcomdc.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751833AbcFJHLL (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 10 Jun 2016 03:11:11 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-leds@vger.kernel.org, linux-ide@vger.kernel.org
-Cc: Stephan Linz <linz@li-pro.net>, "James E.J. Bottomley" <jejb@parisc-linux.org>, Helge Deller <deller@gmx.de>, linux-parisc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Shaun Tancheff <shaun@tancheff.com>, Jens Axboe <axboe@kernel.dk>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Jeff Layton <jlayton@poochiereds.net>, "J . Bruce Fields" <bfields@fieldses.org>
 
-- platform: rename 'ide-disk' to 'disk-activity'
+Hi Jens,
 
-Signed-off-by: Stephan Linz <linz@li-pro.net>
----
- arch/parisc/configs/generic-32bit_defconfig | 2 +-
- arch/parisc/configs/generic-64bit_defconfig | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+This series is on your for-next branch.
 
-diff --git a/arch/parisc/configs/generic-32bit_defconfig b/arch/parisc/configs/generic-32bit_defconfig
-index 5b04d70..8688ba7 100644
---- a/arch/parisc/configs/generic-32bit_defconfig
-+++ b/arch/parisc/configs/generic-32bit_defconfig
-@@ -214,7 +214,7 @@ CONFIG_NEW_LEDS=y
- CONFIG_LEDS_CLASS=y
- CONFIG_LEDS_TRIGGERS=y
- CONFIG_LEDS_TRIGGER_TIMER=y
--CONFIG_LEDS_TRIGGER_IDE_DISK=y
-+CONFIG_LEDS_TRIGGER_DISK=y
- CONFIG_LEDS_TRIGGER_HEARTBEAT=y
- CONFIG_LEDS_TRIGGER_DEFAULT_ON=y
- CONFIG_DMADEVICES=y
-diff --git a/arch/parisc/configs/generic-64bit_defconfig b/arch/parisc/configs/generic-64bit_defconfig
-index e945c08..7e07926 100644
---- a/arch/parisc/configs/generic-64bit_defconfig
-+++ b/arch/parisc/configs/generic-64bit_defconfig
-@@ -231,7 +231,7 @@ CONFIG_LEDS_CLASS=y
- CONFIG_LEDS_TRIGGERS=y
- CONFIG_LEDS_TRIGGER_TIMER=y
- CONFIG_LEDS_TRIGGER_ONESHOT=y
--CONFIG_LEDS_TRIGGER_IDE_DISK=y
-+CONFIG_LEDS_TRIGGER_DISK=y
- CONFIG_LEDS_TRIGGER_HEARTBEAT=m
- CONFIG_LEDS_TRIGGER_BACKLIGHT=m
- CONFIG_LEDS_TRIGGER_DEFAULT_ON=m
+As Host Aware drives are becoming available we would like to be able
+to make use of such drives. This series is also intended to be suitable
+for use by Host Managed drives.
+
+ZAC/ZBC drives add new commands for discovering and working with Zones.
+
+This extends the ZAC/ZBC support up to the block layer.
+
+Patches for util-linux can be found here:
+https://github.com/Seagate/ZDM-Device-Mapper/tree/master/patches/util-linux
+
+Using BIOs to issue ZBC commands allows DM targets (such as ZDM) or
+file-systems such as btrfs or nilfs2 to extend their block allocation
+schemes and issue discards that are zone aware.
+
+A perhaps non-obvious approach is that a conventional drive will 
+returns a descriptor with a single large conventional zone.
+
+The last patch dealing with ata16 passthrough is to workaround HBA SAS 
+controllers that don't support ZBC. It will be dropped now that firmware
+updates are starting to appear.
+
+V3:
+ - Rebase on Mike Cristie's separate bio operations
+ - Update blkzoned_api.h to include report zones PARTIAL bit.
+ - Use zoned report reserved bit for ata-passthrough flag.
+
+V2:
+ - Changed bi_rw to op_flags clarify sepeartion of bio op from flags.
+ - Fixed memory leak in blkdev_issue_zone_report failing to put_bio().
+ - Documented opt in blkdev_issue_zone_report.
+ - Moved include/uapi/linux/fs.h changes to patch 3
+ - Fixed commit message for first patch in series.
+
+Shaun Tancheff (3):
+  Add bio/request flags for using ZBC/ZAC commands
+  Add ioctl to issue ZBC/ZAC commands via block layer
+  Add ata pass-through path for ZAC commands.
+
+ MAINTAINERS                       |   9 ++
+ block/blk-lib.c                   |  98 +++++++++++++++++
+ block/ioctl.c                     | 142 ++++++++++++++++++++++++
+ drivers/scsi/sd.c                 | 139 ++++++++++++++++++++++-
+ drivers/scsi/sd.h                 |   1 +
+ include/linux/ata.h               |  15 +++
+ include/linux/bio.h               |   4 +-
+ include/linux/blk_types.h         |  16 ++-
+ include/linux/blkzoned_api.h      |  25 +++++
+ include/uapi/linux/Kbuild         |   1 +
+ include/uapi/linux/blkzoned_api.h | 224 ++++++++++++++++++++++++++++++++++++++
+ include/uapi/linux/fs.h           |   1 +
+ 12 files changed, 671 insertions(+), 4 deletions(-)
+ create mode 100644 include/linux/blkzoned_api.h
+ create mode 100644 include/uapi/linux/blkzoned_api.h
+
 -- 
-2.8.4
+2.8.1
 
