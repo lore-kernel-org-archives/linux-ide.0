@@ -1,32 +1,36 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2] Add support for SCT Write Same
-Date: Mon, 13 Jun 2016 01:02:43 -0700
-Message-ID: <20160613080243.GB26544@infradead.org>
-References: <1465453967-11085-1-git-send-email-shaun@tancheff.com>
- <1465453967-11085-2-git-send-email-shaun@tancheff.com>
- <20160609092212.GA7459@infradead.org>
- <CAJVOszAO7YxznaUNs1+HaN=aRaA3yPiQDYHSQw+To6BKMEL++A@mail.gmail.com>
+From: Sekhar Nori <nsekhar@ti.com>
+Subject: Re: [PATCH v4 4/7] arm: use the new LED disk activity trigger
+Date: Mon, 13 Jun 2016 13:42:16 +0530
+Message-ID: <575E6AE0.3040907@ti.com>
+References: <20160610060021.12382-1-linz@li-pro.net>
+ <20160610060021.12382-4-linz@li-pro.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:33252 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965072AbcFMICp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 13 Jun 2016 04:02:45 -0400
-Content-Disposition: inline
-In-Reply-To: <CAJVOszAO7YxznaUNs1+HaN=aRaA3yPiQDYHSQw+To6BKMEL++A@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20160610060021.12382-4-linz@li-pro.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Stephan Linz <linz@li-pro.net>, linux-leds@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: =?UTF-8?Q?Beno=c3=aet_Cousson?= <bcousson@baylibre.com>, Tony Lindgren <tony@atomide.com>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Russell King <linux@armlinux.org.uk>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Kevin Hilman <khilman@kernel.org>, Daniel Mack <daniel@zonque.org>, Haojian Zhuang <haojian.zhuang@gmail.com>, Robert Jarzmik <robert.jarzmik@free.fr>, linux-omap@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Shaun Tancheff <shaun.tancheff@seagate.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Shaun Tancheff <shaun@tancheff.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Tejun Heo <tj@kernel.org>
 
-On Thu, Jun 09, 2016 at 10:24:40PM -0500, Shaun Tancheff wrote:
-> >  - The plain page_address above looks harmful, how do we know that
-> >    the page is mapped into kernel memory?  This might actually be broken
-> >    already, though.
+On Friday 10 June 2016 11:29 AM, Stephan Linz wrote:
+> - dts: rename 'ide-disk' to 'disk-activity'
+> - platform: rename 'ide-disk' to 'disk-activity'
+> - defconfig: rename 'LEDS_TRIGGER_IDE_DISK' to 'LEDS_TRIGGER_DISK'
 > 
-> I think it just happens to work because it's always used with a recently
-> allocated page. Fixing it to include the (possible) offset is just a good thing.
+> Signed-off-by: Stephan Linz <linz@li-pro.net>
+> ---
+>  arch/arm/boot/dts/am57xx-beagle-x15.dts  | 2 +-
+>  arch/arm/boot/dts/kirkwood-ns2lite.dts   | 2 +-
+>  arch/arm/boot/dts/kirkwood-topkick.dts   | 2 +-
+>  arch/arm/configs/collie_defconfig        | 2 +-
+>  arch/arm/configs/ixp4xx_defconfig        | 2 +-
+>  arch/arm/mach-davinci/board-dm644x-evm.c | 2 +-
 
-I haven't spent much time with libata recently, but what prevents an
-arbitrary user page ending up here through SG_IO?
+For the mach-davinci change:
+
+Acked-by: Sekhar Nori <nsekhar@ti.com>
+
+Thanks,
+Sekhar
