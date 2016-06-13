@@ -1,69 +1,39 @@
-From: Helge Deller <deller@gmx.de>
-Subject: Re: [PATCH v4 6/7] parisc: use the new LED disk activity trigger
-Date: Mon, 13 Jun 2016 15:24:42 +0200
-Message-ID: <575EB41A.4000306@gmx.de>
-References: <20160610060021.12382-1-linz@li-pro.net>
- <20160610060021.12382-6-linz@li-pro.net> <575E6712.8030403@samsung.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [RFC] [PATCH 0/3] Convert ipr to use
+ ata_port_operations->error_handler
+Date: Mon, 13 Jun 2016 18:15:24 -0400
+Message-ID: <20160613221524.GK31708@htj.duckdns.org>
+References: <CAOS58YO65A8TpH22tEdM4SUcn8ncpY1f_YFMzomCN09OvhoRaQ@mail.gmail.com>
+ <57470450.3070000@linux.vnet.ibm.com>
+ <575B3215.5070602@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-parisc-owner@vger.kernel.org>
-In-Reply-To: <575E6712.8030403@samsung.com>
-Sender: linux-parisc-owner@vger.kernel.org
-To: Jacek Anaszewski <j.anaszewski@samsung.com>, "James E.J. Bottomley" <jejb@parisc-linux.org>
-Cc: Stephan Linz <linz@li-pro.net>, "linux-leds@vger.kernel.org" <linux-leds@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-parisc@vger.kernel.org" <linux-parisc@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <575B3215.5070602@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-Hi Jacek,
-
-On 13.06.2016 09:56, Jacek Anaszewski wrote:
-> For consistency reasons this patch should be merged through LED tree,
-> but I need an ack for this. Hedge, James?
-
-Ok, sure.
-
-> On 06/10/2016 08:00 AM, Stephan Linz wrote:
->> - platform: rename 'ide-disk' to 'disk-activity'
->>
->> Signed-off-by: Stephan Linz <linz@li-pro.net>
-
-Acked-by: Helge Deller <deller@gmx.de>
-
-Thanks for the patch!
-Helge
-
->> ---
->>   arch/parisc/configs/generic-32bit_defconfig | 2 +-
->>   arch/parisc/configs/generic-64bit_defconfig | 2 +-
->>   2 files changed, 2 insertions(+), 2 deletions(-)
->>
->> diff --git a/arch/parisc/configs/generic-32bit_defconfig b/arch/parisc/configs/generic-32bit_defconfig
->> index 5b04d70..8688ba7 100644
->> --- a/arch/parisc/configs/generic-32bit_defconfig
->> +++ b/arch/parisc/configs/generic-32bit_defconfig
->> @@ -214,7 +214,7 @@ CONFIG_NEW_LEDS=y
->>   CONFIG_LEDS_CLASS=y
->>   CONFIG_LEDS_TRIGGERS=y
->>   CONFIG_LEDS_TRIGGER_TIMER=y
->> -CONFIG_LEDS_TRIGGER_IDE_DISK=y
->> +CONFIG_LEDS_TRIGGER_DISK=y
->>   CONFIG_LEDS_TRIGGER_HEARTBEAT=y
->>   CONFIG_LEDS_TRIGGER_DEFAULT_ON=y
->>   CONFIG_DMADEVICES=y
->> diff --git a/arch/parisc/configs/generic-64bit_defconfig b/arch/parisc/configs/generic-64bit_defconfig
->> index e945c08..7e07926 100644
->> --- a/arch/parisc/configs/generic-64bit_defconfig
->> +++ b/arch/parisc/configs/generic-64bit_defconfig
->> @@ -231,7 +231,7 @@ CONFIG_LEDS_CLASS=y
->>   CONFIG_LEDS_TRIGGERS=y
->>   CONFIG_LEDS_TRIGGER_TIMER=y
->>   CONFIG_LEDS_TRIGGER_ONESHOT=y
->> -CONFIG_LEDS_TRIGGER_IDE_DISK=y
->> +CONFIG_LEDS_TRIGGER_DISK=y
->>   CONFIG_LEDS_TRIGGER_HEARTBEAT=m
->>   CONFIG_LEDS_TRIGGER_BACKLIGHT=m
->>   CONFIG_LEDS_TRIGGER_DEFAULT_ON=m
->>
+On Fri, Jun 10, 2016 at 04:33:09PM -0500, Brian King wrote:
+> On 05/26/2016 09:12 AM, Brian King wrote:
+> > On 05/25/2016 02:32 PM, Tejun Heo wrote:
+> >> Hello, Brian.
+> >>
+> >> So, of all the ata drivers, ipr seems to be the only driver which
+> >> doesn't implement ata_port_opeations->error_handler and thus depends
+> >> on the old error handling path. I'm wondering whether it'd be possible
+> >> to convert ipr to implement ->error_handler and drop the old path.
+> >> Would that be difficult?
+> > 
+> > Last time I looked at that there were a number of challenges in doing that,
+> > but let me take another look and see if we can figure out a way to do that.
 > 
-> 
+> Here is an initial attempt to do this conversion. Probably plenty of bugs
+> in it, and more testing is needed before this would be ready to apply.
 
+Thanks a lot for working on this. :)
+
+-- 
+tejun
