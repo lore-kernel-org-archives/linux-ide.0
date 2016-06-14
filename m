@@ -1,39 +1,43 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC] [PATCH 0/3] Convert ipr to use
- ata_port_operations->error_handler
-Date: Mon, 13 Jun 2016 18:15:24 -0400
-Message-ID: <20160613221524.GK31708@htj.duckdns.org>
-References: <CAOS58YO65A8TpH22tEdM4SUcn8ncpY1f_YFMzomCN09OvhoRaQ@mail.gmail.com>
- <57470450.3070000@linux.vnet.ibm.com>
- <575B3215.5070602@linux.vnet.ibm.com>
+From: weiyj_lk@163.com
+Subject: [PATCH] ata: fix return value check in ahci_seattle_get_port_info()
+Date: Tue, 14 Jun 2016 00:26:49 +0000
+Message-ID: <1465864009-26774-1-git-send-email-weiyj_lk@163.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <575B3215.5070602@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from m12-14.163.com ([220.181.12.14]:42459 "EHLO m12-14.163.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1422645AbcFNA1B (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 13 Jun 2016 20:27:01 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Brijesh Singh <brijesh.singh@amd.com>
+Cc: Wei Yongjun <yongjun_wei@trendmicro.com.cn>, linux-ide@vger.kernel.org
 
-On Fri, Jun 10, 2016 at 04:33:09PM -0500, Brian King wrote:
-> On 05/26/2016 09:12 AM, Brian King wrote:
-> > On 05/25/2016 02:32 PM, Tejun Heo wrote:
-> >> Hello, Brian.
-> >>
-> >> So, of all the ata drivers, ipr seems to be the only driver which
-> >> doesn't implement ata_port_opeations->error_handler and thus depends
-> >> on the old error handling path. I'm wondering whether it'd be possible
-> >> to convert ipr to implement ->error_handler and drop the old path.
-> >> Would that be difficult?
-> > 
-> > Last time I looked at that there were a number of challenges in doing that,
-> > but let me take another look and see if we can figure out a way to do that.
-> 
-> Here is an initial attempt to do this conversion. Probably plenty of bugs
-> in it, and more testing is needed before this would be ready to apply.
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-Thanks a lot for working on this. :)
+In case of error, the function devm_kzalloc() returns NULL pointer
+not ERR_PTR(). The IS_ERR() test in the return value check should
+be replaced with NULL test.
 
--- 
-tejun
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+---
+ drivers/ata/ahci_seattle.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/ata/ahci_seattle.c b/drivers/ata/ahci_seattle.c
+index 6e702ab..1d31c0c 100644
+--- a/drivers/ata/ahci_seattle.c
++++ b/drivers/ata/ahci_seattle.c
+@@ -137,7 +137,7 @@ static const struct ata_port_info *ahci_seattle_get_port_info(
+ 	u32 val;
+ 
+ 	plat_data = devm_kzalloc(dev, sizeof(*plat_data), GFP_KERNEL);
+-	if (IS_ERR(plat_data))
++	if (!plat_data)
+ 		return &ahci_port_info;
+ 
+ 	plat_data->sgpio_ctrl = devm_ioremap_resource(dev,
+
+
