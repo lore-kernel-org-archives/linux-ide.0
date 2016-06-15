@@ -1,23 +1,17 @@
 From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 Subject: Re: [PATCH resend] libata:fix kernel panic when hotplug
-Date: Wed, 15 Jun 2016 14:10:00 +0300
-Message-ID: <d8d7b09d-e608-cba9-a5c0-237029940dbb@cogentembedded.com>
+Date: Wed, 15 Jun 2016 14:11:45 +0300
+Message-ID: <e4187af0-e278-9ba0-780b-eb1206c441f6@cogentembedded.com>
 References: <1465982132-26151-1-git-send-email-dingxiang@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lf0-f44.google.com ([209.85.215.44]:33375 "EHLO
-	mail-lf0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753132AbcFOLKE (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Jun 2016 07:10:04 -0400
-Received: by mail-lf0-f44.google.com with SMTP id f6so10239692lfg.0
-        for <linux-ide@vger.kernel.org>; Wed, 15 Jun 2016 04:10:03 -0700 (PDT)
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1465982132-26151-1-git-send-email-dingxiang@huawei.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: DingXiang <dingxiang@huawei.com>, tj@kernel.org, linux-ide@vger.kernel.org, fangwei1@huawei.com, miaoxie@huawei.com, wangyijing@huawei.com, zhangaihua1@huawei.com, zhaohongjiang@huawei.com, houtao1@huawei.com
 Cc: linux-kernel@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
 On 6/15/2016 12:15 PM, DingXiang wrote:
 
@@ -69,27 +63,9 @@ On 6/15/2016 12:15 PM, DingXiang wrote:
 >
 > Signed-off-by:Dingxiang <dingxiang@huawei.com>
 > Signed-off-by:Chenqilin <chenqilin2@huawei.com>
-> ---
->  drivers/ata/libata-eh.c | 8 ++++++--
->  1 file changed, 6 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-> index 61dc7a9..ac5ec4d 100644
-> --- a/drivers/ata/libata-eh.c
-> +++ b/drivers/ata/libata-eh.c
-> @@ -816,8 +816,12 @@ void ata_scsi_port_error_handler(struct Scsi_Host *host, struct ata_port *ap)
->
->  	if (ap->pflags & ATA_PFLAG_LOADING)
->  		ap->pflags &= ~ATA_PFLAG_LOADING;
-> -	else if (ap->pflags & ATA_PFLAG_SCSI_HOTPLUG)
-> -		schedule_delayed_work(&ap->hotplug_task, 0);
-> +	else if (ap->pflags & ATA_PFLAG_SCSI_HOTPLUG){
-> +		if(ap->flags & ATA_FLAG_SAS_HOST)
 
-    Please run your patches thru scripts/checkpatch.pl; space is needed after 
-*if*.
+    Space is needed after colon in the above 2 lines as well.
 
 [...]
 
 MBR, Sergei
-
