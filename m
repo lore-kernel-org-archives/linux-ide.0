@@ -1,37 +1,41 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ata: fix return value check in
- ahci_seattle_get_port_info()
-Date: Wed, 15 Jun 2016 14:31:21 -0400
-Message-ID: <20160615182752.GK24102@mtj.duckdns.org>
-References: <1465864009-26774-1-git-send-email-weiyj_lk@163.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f181.google.com ([209.85.161.181]:34180 "EHLO
-	mail-yw0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161084AbcFOScD (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 15 Jun 2016 14:32:03 -0400
-Received: by mail-yw0-f181.google.com with SMTP id c72so21452247ywb.1
-        for <linux-ide@vger.kernel.org>; Wed, 15 Jun 2016 11:32:02 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <1465864009-26774-1-git-send-email-weiyj_lk@163.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: suman-tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
+Subject: [PATCH] ata: ahci_platform: Add ACPI support for APM X-Gene AHCI controller v3 hardware.
+Date: Wed, 15 Jun 2016 17:44:00 -0600
+Message-ID: <1466034240-22694-1-git-send-email-stripathi@apm.com>
+References: <stripathi@apm.com>
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <stripathi-qTEPVZfXA3Y@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org, tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org
+Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, mlangsdo-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, jcm-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, patches-qTEPVZfXA3Y@public.gmane.org, suman-tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: weiyj_lk@163.com
-Cc: Brijesh Singh <brijesh.singh@amd.com>, Wei Yongjun <yongjun_wei@trendmicro.com.cn>, linux-ide@vger.kernel.org
 
-On Tue, Jun 14, 2016 at 12:26:49AM +0000, weiyj_lk@163.com wrote:
-> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-> 
-> In case of error, the function devm_kzalloc() returns NULL pointer
-> not ERR_PTR(). The IS_ERR() test in the return value check should
-> be replaced with NULL test.
-> 
-> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+This patch adds ACPI support for APM X-Gene AHCI controller in
+ahci_platform driver for v3 hardware. APM X-Gene AHCI controller
+v3 hardware is fully compliant with ahci_platform driver and requires
+no workaround quirk.
 
-Applied to libata/for-4.7-fixes.
+Signed-off-by: Suman Tripathi <stripathi-qTEPVZfXA3Y@public.gmane.org>
+---
+ drivers/ata/ahci_platform.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Thanks.
+diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+index 62a04c8..3395baf 100644
+--- a/drivers/ata/ahci_platform.c
++++ b/drivers/ata/ahci_platform.c
+@@ -86,6 +86,7 @@ MODULE_DEVICE_TABLE(of, ahci_of_match);
 
--- 
-tejun
+ static const struct acpi_device_id ahci_acpi_match[] = {
+ 	{ ACPI_DEVICE_CLASS(PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff) },
++	{ "APMC0D33", 0},
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(acpi, ahci_acpi_match);
+--
+1.7.1
+
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
