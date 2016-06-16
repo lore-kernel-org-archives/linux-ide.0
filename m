@@ -1,137 +1,55 @@
 From: Yendapally Reddy Dhananjaya Reddy <yendapally.reddy@broadcom.com>
-Subject: [PATCH 5/7] ata: ahci_brcm: Add support for Broadcom NSP SoC
-Date: Thu, 16 Jun 2016 09:53:33 -0400
-Message-ID: <1466085215-10246-6-git-send-email-yendapally.reddy@broadcom.com>
+Subject: [PATCH 3/7] dt-bindings: phy: Add documentation for NSP SATA PHY
+Date: Thu, 16 Jun 2016 09:53:31 -0400
+Message-ID: <1466085215-10246-4-git-send-email-yendapally.reddy@broadcom.com>
 References: <1466085215-10246-1-git-send-email-yendapally.reddy@broadcom.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
 In-Reply-To: <1466085215-10246-1-git-send-email-yendapally.reddy@broadcom.com>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
 To: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Brian Norris <computersforpeace@gmail.com>, Gregory Fong <gregory.0xf0@gmail.com>, Florian Fainelli <f.fainelli@gmail.com>, Russell King <linux@armlinux.org.uk>, Ray Jui <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>, Tejun Heo <tj@kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>, Jaedon Shin <jaedon.shin@gmail.com>, Anup Patel <anup.patel@broadcom.com>
-Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, bcm-kernel-feedback-list@broadcom.com, linux-ide@vger.kernel.org, Yendapally Reddy Dhananjaya Reddy <yendapally.reddy@broadcom.com>
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Yendapally Reddy Dhananjaya Reddy <yendapally.reddy@broadcom.com>, bcm-kernel-feedback-list@broadcom.com, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-Add SATA3 support for Broadcom NSP SoC
+Add documentation for SATA PHY available in Broadcom's
+NSP SoC.
 
 Signed-off-by: Yendapally Reddy Dhananjaya Reddy <yendapally.reddy@broadcom.com>
 ---
- drivers/ata/Kconfig     |  2 +-
- drivers/ata/ahci_brcm.c | 46 ++++++++++++++++++++++++++++++++++++----------
- 2 files changed, 37 insertions(+), 11 deletions(-)
+ Documentation/devicetree/bindings/phy/brcm-sata-phy.txt | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-index 8fe06e6..2c8be74 100644
---- a/drivers/ata/Kconfig
-+++ b/drivers/ata/Kconfig
-@@ -100,7 +100,7 @@ config SATA_AHCI_PLATFORM
+diff --git a/Documentation/devicetree/bindings/phy/brcm-sata-phy.txt b/Documentation/devicetree/bindings/phy/brcm-sata-phy.txt
+index d023120..6ccce09 100644
+--- a/Documentation/devicetree/bindings/phy/brcm-sata-phy.txt
++++ b/Documentation/devicetree/bindings/phy/brcm-sata-phy.txt
+@@ -5,6 +5,7 @@ Required properties:
+      "brcm,bcm7425-sata-phy"
+      "brcm,bcm7445-sata-phy"
+      "brcm,iproc-ns2-sata-phy"
++     "brcm,iproc-nsp-sata-phy"
+      "brcm,phy-sata3"
+ - address-cells: should be 1
+ - size-cells: should be 0
+@@ -22,7 +23,8 @@ Sub-nodes required properties:
  
- config AHCI_BRCM
- 	tristate "Broadcom AHCI SATA support"
--	depends on ARCH_BRCMSTB || BMIPS_GENERIC
-+	depends on ARCH_BRCMSTB || BMIPS_GENERIC || ARCH_BCM_NSP
- 	help
- 	  This option enables support for the AHCI SATA3 controller found on
- 	  Broadcom SoC's.
-diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
-index e87bcec..6f8a734 100644
---- a/drivers/ata/ahci_brcm.c
-+++ b/drivers/ata/ahci_brcm.c
-@@ -71,6 +71,12 @@
- 	(DATA_ENDIAN << DMADESC_ENDIAN_SHIFT) |		\
- 	(MMIO_ENDIAN << MMIO_ENDIAN_SHIFT))
+ Sub-nodes optional properties:
+ - brcm,enable-ssc: use spread spectrum clocking (SSC) on this port
+-     This property is not applicable for "brcm,iproc-ns2-sata-phy".
++     This property is not applicable for "brcm,iproc-ns2-sata-phy" and
++     "brcm,iproc-nsp-sata-phy".
  
-+enum brcm_ahci_version {
-+	BRCM_SATA_BCM7425 = 1,
-+	BRCM_SATA_BCM7445,
-+	BRCM_SATA_NSP,
-+};
-+
- enum brcm_ahci_quirks {
- 	BRCM_AHCI_QUIRK_NO_NCQ		= BIT(0),
- 	BRCM_AHCI_QUIRK_SKIP_PHY_ENABLE	= BIT(1),
-@@ -81,6 +87,7 @@ struct brcm_ahci_priv {
- 	void __iomem *top_ctrl;
- 	u32 port_mask;
- 	u32 quirks;
-+	enum brcm_ahci_version version;
- };
- 
- static const struct ata_port_info ahci_brcm_port_info = {
-@@ -247,9 +254,19 @@ static u32 brcm_ahci_get_portmask(struct platform_device *pdev,
- 
- static void brcm_sata_init(struct brcm_ahci_priv *priv)
- {
-+	void __iomem *ctrl = priv->top_ctrl + SATA_TOP_CTRL_BUS_CTRL;
-+
- 	/* Configure endianness */
--	brcm_sata_writereg(BUS_CTRL_ENDIAN_CONF,
--			   priv->top_ctrl + SATA_TOP_CTRL_BUS_CTRL);
-+	if (priv->version ==  BRCM_SATA_NSP) {
-+		u32 data = brcm_sata_readreg(ctrl);
-+
-+		data &= ~((0x03 << DMADATA_ENDIAN_SHIFT) |
-+			(0x03 << DMADESC_ENDIAN_SHIFT));
-+		data |= (0x02 << DMADATA_ENDIAN_SHIFT) |
-+			(0x02 << DMADESC_ENDIAN_SHIFT);
-+		brcm_sata_writereg(data, ctrl);
-+	} else
-+		brcm_sata_writereg(BUS_CTRL_ENDIAN_CONF, ctrl);
- }
- 
- #ifdef CONFIG_PM_SLEEP
-@@ -282,8 +299,17 @@ static struct scsi_host_template ahci_platform_sht = {
- 	AHCI_SHT(DRV_NAME),
- };
- 
-+static const struct of_device_id ahci_of_match[] = {
-+	{.compatible = "brcm,bcm7425-ahci", .data = (void *)BRCM_SATA_BCM7425},
-+	{.compatible = "brcm,bcm7445-ahci", .data = (void *)BRCM_SATA_BCM7445},
-+	{.compatible = "brcm,bcm-nsp-ahci", .data = (void *)BRCM_SATA_NSP},
-+	{},
-+};
-+MODULE_DEVICE_TABLE(of, ahci_of_match);
-+
- static int brcm_ahci_probe(struct platform_device *pdev)
- {
-+	const struct of_device_id *of_id;
- 	struct device *dev = &pdev->dev;
- 	struct brcm_ahci_priv *priv;
- 	struct ahci_host_priv *hpriv;
-@@ -293,6 +319,12 @@ static int brcm_ahci_probe(struct platform_device *pdev)
- 	priv = devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
- 	if (!priv)
- 		return -ENOMEM;
-+
-+	of_id = of_match_node(ahci_of_match, pdev->dev.of_node);
-+	if (!of_id)
-+		return -ENODEV;
-+
-+	priv->version = (enum brcm_ahci_version)of_id->data;
- 	priv->dev = dev;
- 
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "top-ctrl");
-@@ -300,7 +332,8 @@ static int brcm_ahci_probe(struct platform_device *pdev)
- 	if (IS_ERR(priv->top_ctrl))
- 		return PTR_ERR(priv->top_ctrl);
- 
--	if (of_device_is_compatible(dev->of_node, "brcm,bcm7425-ahci")) {
-+	if ((priv->version == BRCM_SATA_BCM7425) ||
-+		(priv->version == BRCM_SATA_NSP)) {
- 		priv->quirks |= BRCM_AHCI_QUIRK_NO_NCQ;
- 		priv->quirks |= BRCM_AHCI_QUIRK_SKIP_PHY_ENABLE;
- 	}
-@@ -354,13 +387,6 @@ static int brcm_ahci_remove(struct platform_device *pdev)
- 	return 0;
- }
- 
--static const struct of_device_id ahci_of_match[] = {
--	{.compatible = "brcm,bcm7425-ahci"},
--	{.compatible = "brcm,bcm7445-ahci"},
--	{},
--};
--MODULE_DEVICE_TABLE(of, ahci_of_match);
--
- static SIMPLE_DEV_PM_OPS(ahci_brcm_pm_ops, brcm_ahci_suspend, brcm_ahci_resume);
- 
- static struct platform_driver brcm_ahci_driver = {
+ Example:
+ 	sata-phy@f0458100 {
 -- 
 2.1.0
