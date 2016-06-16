@@ -1,49 +1,41 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH] ata: ahci_platform: Add ACPI support for APM X-Gene AHCI controller v3 hardware.
-Date: Thu, 16 Jun 2016 08:54:09 +0200
-Message-ID: <6691907.FIx2xYmxSs@wuerfel>
-References: <stripathi@apm.com> <1466034240-22694-1-git-send-email-stripathi@apm.com>
+From: Robert Jarzmik <robert.jarzmik@free.fr>
+Subject: Re: [PATCH v4 4/7] arm: use the new LED disk activity trigger
+Date: Thu, 16 Jun 2016 09:16:04 +0200
+Message-ID: <87bn31a9jf.fsf@belgarion.home>
+References: <20160610060021.12382-1-linz@li-pro.net>
+	<20160610060021.12382-4-linz@li-pro.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.73]:49571 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751275AbcFPGxF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Jun 2016 02:53:05 -0400
-In-Reply-To: <1466034240-22694-1-git-send-email-stripathi@apm.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20160610060021.12382-4-linz@li-pro.net> (Stephan Linz's message
+	of "Fri, 10 Jun 2016 07:59:59 +0200")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Stephan Linz <linz@li-pro.net>
+Cc: linux-leds@vger.kernel.org, linux-ide@vger.kernel.org, =?utf-8?Q?Ben?= =?utf-8?Q?o=C3=AEt?= Cousson <bcousson@baylibre.com>, Tony Lindgren <tony@atomide.com>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Russell King <linux@armlinux.org.uk>, Jason Cooper <jason@lakedaemon.net>, Andrew Lunn <andrew@lunn.ch>, Gregory Clement <gregory.clement@free-electrons.com>, Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>, Sekhar Nori <nsekhar@ti.com>, Kevin Hilman <khilman@kernel.org>, Daniel Mack <daniel@zonque.org>, Haojian Zhuang <haojian.zhuang@gmail.com>, linux-omap@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: suman-tripathi <stripathi@apm.com>
-Cc: olof@lixom.net, tj@kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, mlangsdo@redhat.com, jcm@redhat.com, patches@apm.com
 
-On Wednesday, June 15, 2016 5:44:00 PM CEST suman-tripathi wrote:
-> This patch adds ACPI support for APM X-Gene AHCI controller in
-> ahci_platform driver for v3 hardware. APM X-Gene AHCI controller
-> v3 hardware is fully compliant with ahci_platform driver and requires
-> no workaround quirk.
-> 
-> Signed-off-by: Suman Tripathi <stripathi@apm.com>
+Stephan Linz <linz@li-pro.net> writes:
+
+> - dts: rename 'ide-disk' to 'disk-activity'
+> - platform: rename 'ide-disk' to 'disk-activity'
+> - defconfig: rename 'LEDS_TRIGGER_IDE_DISK' to 'LEDS_TRIGGER_DISK'
+>
+> Signed-off-by: Stephan Linz <linz@li-pro.net>
 > ---
->  drivers/ata/ahci_platform.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-> index 62a04c8..3395baf 100644
-> --- a/drivers/ata/ahci_platform.c
-> +++ b/drivers/ata/ahci_platform.c
-> @@ -86,6 +86,7 @@ MODULE_DEVICE_TABLE(of, ahci_of_match);
-> 
->  static const struct acpi_device_id ahci_acpi_match[] = {
->         { ACPI_DEVICE_CLASS(PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff) },
-> +       { "APMC0D33", 0},
->         {},
->  };
->  MODULE_DEVICE_TABLE(acpi, ahci_acpi_match);
-> 
+>  arch/arm/boot/dts/am57xx-beagle-x15.dts  | 2 +-
+>  arch/arm/boot/dts/kirkwood-ns2lite.dts   | 2 +-
+>  arch/arm/boot/dts/kirkwood-topkick.dts   | 2 +-
+>  arch/arm/configs/collie_defconfig        | 2 +-
+>  arch/arm/configs/ixp4xx_defconfig        | 2 +-
+>  arch/arm/mach-davinci/board-dm644x-evm.c | 2 +-
+>  arch/arm/mach-omap1/board-osk.c          | 2 +-
+>  arch/arm/mach-pxa/spitz.c                | 2 +-
+>  8 files changed, 8 insertions(+), 8 deletions(-)
 
-Doesn't the ACPI_DEVICE_CLASS entry take care of this? I thought it had been
-added specifically for this purpose. It doesn't seem right to add vendor
-specific entries for generic hardware in each generic driver.
+For mach-pxa:
+Acked-by: Robert Jarzmik <robert.jarzmik@free.fr>
 
-	Arnd
+Cheers.
+
+--
+Robert
