@@ -1,40 +1,31 @@
-From: Florian Fainelli <florian.fainelli-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-Subject: Re: [PATCH 4/7] ata: ahci_brcmstb: rename to support across Broadcom
- SoC's
-Date: Thu, 16 Jun 2016 09:26:57 -0700
-Message-ID: <5762D351.1050705@broadcom.com>
+From: Florian Fainelli <florian.fainelli@broadcom.com>
+Subject: Re: [PATCH 6/7] phy: Add SATA3 PHY support for Broadcom NSP SoC
+Date: Thu, 16 Jun 2016 09:27:34 -0700
+Message-ID: <5762D376.7090308@broadcom.com>
 References: <1466085215-10246-1-git-send-email-yendapally.reddy@broadcom.com>
- <1466085215-10246-5-git-send-email-yendapally.reddy@broadcom.com>
+ <1466085215-10246-7-git-send-email-yendapally.reddy@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1466085215-10246-5-git-send-email-yendapally.reddy-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Yendapally Reddy Dhananjaya Reddy <yendapally.reddy-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Pawel Moll <pawel.moll-5wv7dgnIgG8@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Ian Campbell <ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org>, Kumar Gala <galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Brian Norris <computersforpeace-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Gregory Fong <gregory.0xf0-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Florian Fainelli <f.fainelli-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Russell King <linux-I+IVW8TIWO2tmTQ+vhA3Yw@public.gmane.org>, Ray Jui <rjui-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Scott Branden <sbranden-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Jon Mason <jonmason-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kishon Vijay Abraham I <kishon-l0cyMroinI0@public.gmane.org>, Jaedon Shin <jaedon.shin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Anup Patel <anup.patel-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-Cc: devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, bcm-kernel-feedback-list-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pf0-f175.google.com ([209.85.192.175]:33336 "EHLO
+	mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754490AbcFPQ1i (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 16 Jun 2016 12:27:38 -0400
+Received: by mail-pf0-f175.google.com with SMTP id i123so17682870pfg.0
+        for <linux-ide@vger.kernel.org>; Thu, 16 Jun 2016 09:27:37 -0700 (PDT)
+In-Reply-To: <1466085215-10246-7-git-send-email-yendapally.reddy@broadcom.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Yendapally Reddy Dhananjaya Reddy <yendapally.reddy@broadcom.com>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Brian Norris <computersforpeace@gmail.com>, Gregory Fong <gregory.0xf0@gmail.com>, Florian Fainelli <f.fainelli@gmail.com>, Russell King <linux@armlinux.org.uk>, Ray Jui <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>, Tejun Heo <tj@kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>, Jaedon Shin <jaedon.shin@gmail.com>, Anup Patel <anup.patel@broadcom.com>
+Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, bcm-kernel-feedback-list@broadcom.com, linux-ide@vger.kernel.org
 
 On 06/16/2016 06:53 AM, Yendapally Reddy Dhananjaya Reddy wrote:
-> Rename the existing Broadcom STB ahci driver to common
-> Broadcom SATA3 driver to share this across Broadcom SoCs.
+> This patch adds support for Broadcom NSP SATA3 PHY in existing
+> Broadcom SATA PHY driver.
 > 
-> Signed-off-by: Yendapally Reddy Dhananjaya Reddy <yendapally.reddy-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+> Signed-off-by: Yendapally Reddy Dhananjaya Reddy <yendapally.reddy@broadcom.com>
 
-There is currently nothing referencing AHCI_BRCMSTB in the in-tree
-defconfigs, but we should coordinate this change with this patch:
-
-https://patchwork.kernel.org/patch/9130007/
-
-which I have queued locally to send for 4.8, if we know this is going to
-be accepted for 4.8, then I can update the patch above.
-
-Other than that:
-
-Acked-by: Florian Fainelli <f.fainelli-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Acked-by: Florian Fainelli <f.fainelli@gmail.com>
 -- 
 Florian
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
