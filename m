@@ -1,7 +1,7 @@
 From: Yendapally Reddy Dhananjaya Reddy <yendapally.reddy@broadcom.com>
-Subject: [PATCH 1/7] dt-bindings: ata: rename brcm,sata-brcmstb.txt to brcm,sata-brcm.txt
-Date: Thu, 16 Jun 2016 09:53:29 -0400
-Message-ID: <1466085215-10246-2-git-send-email-yendapally.reddy@broadcom.com>
+Subject: [PATCH 7/7] ARM: dts: nsp: Add sata device tree entry
+Date: Thu, 16 Jun 2016 09:53:35 -0400
+Message-ID: <1466085215-10246-8-git-send-email-yendapally.reddy@broadcom.com>
 References: <1466085215-10246-1-git-send-email-yendapally.reddy@broadcom.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1466085215-10246-1-git-send-email-yendapally.reddy@broadcom.com>
@@ -10,39 +10,89 @@ To: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutl
 Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, bcm-kernel-feedback-list@broadcom.com, linux-ide@vger.kernel.org, Yendapally Reddy Dhananjaya Reddy <yendapally.reddy@broadcom.com>
 List-Id: linux-ide@vger.kernel.org
 
-Renames the dt bindings document of Broadcom STB ahci driver to
-common Broadcom ahci driver bindings document
+Add sata support to the Northstar Plus SoC device tree.
 
 Signed-off-by: Yendapally Reddy Dhananjaya Reddy <yendapally.reddy@broadcom.com>
 ---
- .../bindings/ata/{brcm,sata-brcmstb.txt => brcm,sata-brcm.txt}    | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
- rename Documentation/devicetree/bindings/ata/{brcm,sata-brcmstb.txt => brcm,sata-brcm.txt} (81%)
+ arch/arm/boot/dts/bcm-nsp.dtsi   | 42 ++++++++++++++++++++++++++++++++++++++++
+ arch/arm/boot/dts/bcm958625k.dts | 12 ++++++++++++
+ 2 files changed, 54 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/ata/brcm,sata-brcmstb.txt b/Documentation/devicetree/bindings/ata/brcm,sata-brcm.txt
-similarity index 81%
-rename from Documentation/devicetree/bindings/ata/brcm,sata-brcmstb.txt
-rename to Documentation/devicetree/bindings/ata/brcm,sata-brcm.txt
-index 6087283..126ee13 100644
---- a/Documentation/devicetree/bindings/ata/brcm,sata-brcmstb.txt
-+++ b/Documentation/devicetree/bindings/ata/brcm,sata-brcm.txt
-@@ -1,13 +1,13 @@
--* Broadcom SATA3 AHCI Controller for STB
-+* Broadcom SATA3 AHCI Controller
+diff --git a/arch/arm/boot/dts/bcm-nsp.dtsi b/arch/arm/boot/dts/bcm-nsp.dtsi
+index def9e78..71ececf 100644
+--- a/arch/arm/boot/dts/bcm-nsp.dtsi
++++ b/arch/arm/boot/dts/bcm-nsp.dtsi
+@@ -266,6 +266,48 @@
+ 			      <0x30028 0x04>,
+ 			      <0x3f408 0x04>;
+ 		};
++
++		sata_phy: sata_phy@40100 {
++			compatible = "brcm,iproc-nsp-sata-phy";
++			reg = <0x40100 0x340>;
++			reg-names = "phy";
++			#address-cells = <1>;
++			#size-cells = <0>;
++
++			sata_phy0: sata-phy@0 {
++				reg = <0>;
++				#phy-cells = <0>;
++				status = "disabled";
++			};
++
++			sata_phy1: sata-phy@1 {
++				reg = <1>;
++				#phy-cells = <0>;
++				status = "disabled";
++			};
++		};
++
++		sata: ahci@41000 {
++			compatible = "brcm,bcm-nsp-ahci";
++			reg-names = "ahci", "top-ctrl";
++			reg = <0x41000 0x1000>, <0x40020 0x1c>;
++			interrupts = <GIC_SPI 159 IRQ_TYPE_LEVEL_HIGH>;
++			#address-cells = <1>;
++			#size-cells = <0>;
++			status = "disabled";
++
++			sata0: sata-port@0 {
++				reg = <0>;
++				phys = <&sata_phy0>;
++				phy-names = "sata-phy";
++			};
++
++			sata1: sata-port@1 {
++				reg = <1>;
++				phys = <&sata_phy1>;
++				phy-names = "sata-phy";
++			};
++		};
+ 	};
  
- SATA nodes are defined to describe on-chip Serial ATA controllers.
- Each SATA controller should have its own node.
+ 	pcie0: pcie@18012000 {
+diff --git a/arch/arm/boot/dts/bcm958625k.dts b/arch/arm/boot/dts/bcm958625k.dts
+index e298450..2d84226 100644
+--- a/arch/arm/boot/dts/bcm958625k.dts
++++ b/arch/arm/boot/dts/bcm958625k.dts
+@@ -68,6 +68,18 @@
+ 	status = "okay";
+ };
  
- Required properties:
- - compatible         : should be one or more of
--                       "brcm,bcm7425-ahci"
--                       "brcm,bcm7445-ahci"
--                       "brcm,sata3-ahci"
-+			"brcm,bcm7425-ahci"
-+			"brcm,bcm7445-ahci"
-+			"brcm,sata3-ahci"
- - reg                : register mappings for AHCI and SATA_TOP_CTRL
- - reg-names          : "ahci" and "top-ctrl"
- - interrupts         : interrupt mapping for SATA IRQ
++&sata_phy0 {
++	status = "okay";
++};
++
++&sata_phy1 {
++	status = "okay";
++};
++
++&sata {
++	status = "okay";
++};
++
+ &nand {
+ 	nandcs@0 {
+ 		compatible = "brcm,nandcs";
 -- 
 2.1.0
