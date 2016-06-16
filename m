@@ -1,7 +1,7 @@
 From: Yendapally Reddy Dhananjaya Reddy <yendapally.reddy@broadcom.com>
-Subject: [PATCH 7/7] ARM: dts: nsp: Add sata device tree entry
-Date: Thu, 16 Jun 2016 09:53:35 -0400
-Message-ID: <1466085215-10246-8-git-send-email-yendapally.reddy@broadcom.com>
+Subject: [PATCH 5/7] ata: ahci_brcm: Add support for Broadcom NSP SoC
+Date: Thu, 16 Jun 2016 09:53:33 -0400
+Message-ID: <1466085215-10246-6-git-send-email-yendapally.reddy@broadcom.com>
 References: <1466085215-10246-1-git-send-email-yendapally.reddy@broadcom.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1466085215-10246-1-git-send-email-yendapally.reddy@broadcom.com>
@@ -10,89 +10,128 @@ To: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutl
 Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, bcm-kernel-feedback-list@broadcom.com, linux-ide@vger.kernel.org, Yendapally Reddy Dhananjaya Reddy <yendapally.reddy@broadcom.com>
 List-Id: linux-ide@vger.kernel.org
 
-Add sata support to the Northstar Plus SoC device tree.
+Add SATA3 support for Broadcom NSP SoC
 
 Signed-off-by: Yendapally Reddy Dhananjaya Reddy <yendapally.reddy@broadcom.com>
 ---
- arch/arm/boot/dts/bcm-nsp.dtsi   | 42 ++++++++++++++++++++++++++++++++++++++++
- arch/arm/boot/dts/bcm958625k.dts | 12 ++++++++++++
- 2 files changed, 54 insertions(+)
+ drivers/ata/Kconfig     |  2 +-
+ drivers/ata/ahci_brcm.c | 46 ++++++++++++++++++++++++++++++++++++----------
+ 2 files changed, 37 insertions(+), 11 deletions(-)
 
-diff --git a/arch/arm/boot/dts/bcm-nsp.dtsi b/arch/arm/boot/dts/bcm-nsp.dtsi
-index def9e78..71ececf 100644
---- a/arch/arm/boot/dts/bcm-nsp.dtsi
-+++ b/arch/arm/boot/dts/bcm-nsp.dtsi
-@@ -266,6 +266,48 @@
- 			      <0x30028 0x04>,
- 			      <0x3f408 0x04>;
- 		};
-+
-+		sata_phy: sata_phy@40100 {
-+			compatible = "brcm,iproc-nsp-sata-phy";
-+			reg = <0x40100 0x340>;
-+			reg-names = "phy";
-+			#address-cells = <1>;
-+			#size-cells = <0>;
-+
-+			sata_phy0: sata-phy@0 {
-+				reg = <0>;
-+				#phy-cells = <0>;
-+				status = "disabled";
-+			};
-+
-+			sata_phy1: sata-phy@1 {
-+				reg = <1>;
-+				#phy-cells = <0>;
-+				status = "disabled";
-+			};
-+		};
-+
-+		sata: ahci@41000 {
-+			compatible = "brcm,bcm-nsp-ahci";
-+			reg-names = "ahci", "top-ctrl";
-+			reg = <0x41000 0x1000>, <0x40020 0x1c>;
-+			interrupts = <GIC_SPI 159 IRQ_TYPE_LEVEL_HIGH>;
-+			#address-cells = <1>;
-+			#size-cells = <0>;
-+			status = "disabled";
-+
-+			sata0: sata-port@0 {
-+				reg = <0>;
-+				phys = <&sata_phy0>;
-+				phy-names = "sata-phy";
-+			};
-+
-+			sata1: sata-port@1 {
-+				reg = <1>;
-+				phys = <&sata_phy1>;
-+				phy-names = "sata-phy";
-+			};
-+		};
- 	};
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 8fe06e6..2c8be74 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -100,7 +100,7 @@ config SATA_AHCI_PLATFORM
  
- 	pcie0: pcie@18012000 {
-diff --git a/arch/arm/boot/dts/bcm958625k.dts b/arch/arm/boot/dts/bcm958625k.dts
-index e298450..2d84226 100644
---- a/arch/arm/boot/dts/bcm958625k.dts
-+++ b/arch/arm/boot/dts/bcm958625k.dts
-@@ -68,6 +68,18 @@
- 	status = "okay";
+ config AHCI_BRCM
+ 	tristate "Broadcom AHCI SATA support"
+-	depends on ARCH_BRCMSTB || BMIPS_GENERIC
++	depends on ARCH_BRCMSTB || BMIPS_GENERIC || ARCH_BCM_NSP
+ 	help
+ 	  This option enables support for the AHCI SATA3 controller found on
+ 	  Broadcom SoC's.
+diff --git a/drivers/ata/ahci_brcm.c b/drivers/ata/ahci_brcm.c
+index e87bcec..6f8a734 100644
+--- a/drivers/ata/ahci_brcm.c
++++ b/drivers/ata/ahci_brcm.c
+@@ -71,6 +71,12 @@
+ 	(DATA_ENDIAN << DMADESC_ENDIAN_SHIFT) |		\
+ 	(MMIO_ENDIAN << MMIO_ENDIAN_SHIFT))
+ 
++enum brcm_ahci_version {
++	BRCM_SATA_BCM7425 = 1,
++	BRCM_SATA_BCM7445,
++	BRCM_SATA_NSP,
++};
++
+ enum brcm_ahci_quirks {
+ 	BRCM_AHCI_QUIRK_NO_NCQ		= BIT(0),
+ 	BRCM_AHCI_QUIRK_SKIP_PHY_ENABLE	= BIT(1),
+@@ -81,6 +87,7 @@ struct brcm_ahci_priv {
+ 	void __iomem *top_ctrl;
+ 	u32 port_mask;
+ 	u32 quirks;
++	enum brcm_ahci_version version;
  };
  
-+&sata_phy0 {
-+	status = "okay";
-+};
+ static const struct ata_port_info ahci_brcm_port_info = {
+@@ -247,9 +254,19 @@ static u32 brcm_ahci_get_portmask(struct platform_device *pdev,
+ 
+ static void brcm_sata_init(struct brcm_ahci_priv *priv)
+ {
++	void __iomem *ctrl = priv->top_ctrl + SATA_TOP_CTRL_BUS_CTRL;
 +
-+&sata_phy1 {
-+	status = "okay";
-+};
+ 	/* Configure endianness */
+-	brcm_sata_writereg(BUS_CTRL_ENDIAN_CONF,
+-			   priv->top_ctrl + SATA_TOP_CTRL_BUS_CTRL);
++	if (priv->version ==  BRCM_SATA_NSP) {
++		u32 data = brcm_sata_readreg(ctrl);
 +
-+&sata {
-+	status = "okay";
++		data &= ~((0x03 << DMADATA_ENDIAN_SHIFT) |
++			(0x03 << DMADESC_ENDIAN_SHIFT));
++		data |= (0x02 << DMADATA_ENDIAN_SHIFT) |
++			(0x02 << DMADESC_ENDIAN_SHIFT);
++		brcm_sata_writereg(data, ctrl);
++	} else
++		brcm_sata_writereg(BUS_CTRL_ENDIAN_CONF, ctrl);
+ }
+ 
+ #ifdef CONFIG_PM_SLEEP
+@@ -282,8 +299,17 @@ static struct scsi_host_template ahci_platform_sht = {
+ 	AHCI_SHT(DRV_NAME),
+ };
+ 
++static const struct of_device_id ahci_of_match[] = {
++	{.compatible = "brcm,bcm7425-ahci", .data = (void *)BRCM_SATA_BCM7425},
++	{.compatible = "brcm,bcm7445-ahci", .data = (void *)BRCM_SATA_BCM7445},
++	{.compatible = "brcm,bcm-nsp-ahci", .data = (void *)BRCM_SATA_NSP},
++	{},
 +};
++MODULE_DEVICE_TABLE(of, ahci_of_match);
 +
- &nand {
- 	nandcs@0 {
- 		compatible = "brcm,nandcs";
+ static int brcm_ahci_probe(struct platform_device *pdev)
+ {
++	const struct of_device_id *of_id;
+ 	struct device *dev = &pdev->dev;
+ 	struct brcm_ahci_priv *priv;
+ 	struct ahci_host_priv *hpriv;
+@@ -293,6 +319,12 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+ 	priv = devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
+ 	if (!priv)
+ 		return -ENOMEM;
++
++	of_id = of_match_node(ahci_of_match, pdev->dev.of_node);
++	if (!of_id)
++		return -ENODEV;
++
++	priv->version = (enum brcm_ahci_version)of_id->data;
+ 	priv->dev = dev;
+ 
+ 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "top-ctrl");
+@@ -300,7 +332,8 @@ static int brcm_ahci_probe(struct platform_device *pdev)
+ 	if (IS_ERR(priv->top_ctrl))
+ 		return PTR_ERR(priv->top_ctrl);
+ 
+-	if (of_device_is_compatible(dev->of_node, "brcm,bcm7425-ahci")) {
++	if ((priv->version == BRCM_SATA_BCM7425) ||
++		(priv->version == BRCM_SATA_NSP)) {
+ 		priv->quirks |= BRCM_AHCI_QUIRK_NO_NCQ;
+ 		priv->quirks |= BRCM_AHCI_QUIRK_SKIP_PHY_ENABLE;
+ 	}
+@@ -354,13 +387,6 @@ static int brcm_ahci_remove(struct platform_device *pdev)
+ 	return 0;
+ }
+ 
+-static const struct of_device_id ahci_of_match[] = {
+-	{.compatible = "brcm,bcm7425-ahci"},
+-	{.compatible = "brcm,bcm7445-ahci"},
+-	{},
+-};
+-MODULE_DEVICE_TABLE(of, ahci_of_match);
+-
+ static SIMPLE_DEV_PM_OPS(ahci_brcm_pm_ops, brcm_ahci_suspend, brcm_ahci_resume);
+ 
+ static struct platform_driver brcm_ahci_driver = {
 -- 
 2.1.0
