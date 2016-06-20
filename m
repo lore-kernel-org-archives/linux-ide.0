@@ -1,62 +1,78 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 4/6] ata: fixup ATA_PROT_NODATA
-Date: Mon, 20 Jun 2016 13:39:14 +0200
-Message-ID: <1466422756-126637-5-git-send-email-hare@suse.de>
+Subject: [PATCH 1/6] libata: use ata_is_ncq() accessors
+Date: Mon, 20 Jun 2016 13:39:11 +0200
+Message-ID: <1466422756-126637-2-git-send-email-hare@suse.de>
 References: <1466422756-126637-1-git-send-email-hare@suse.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35421 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:35401 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754686AbcFTLyM (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Mon, 20 Jun 2016 07:54:12 -0400
+	id S1754686AbcFTLyE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 20 Jun 2016 07:54:04 -0400
 In-Reply-To: <1466422756-126637-1-git-send-email-hare@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: Damien Le Moal <damien.lemoal@hgst.com>, linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Cc: Damien Le Moal <damien.lemoal@hgst.com>, linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-The taskfile protocol is a numeric value, and can not be ORed.
+Use accessor functions instead of the raw value.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
+ drivers/ata/libahci.c     | 2 +-
  drivers/ata/libata-core.c | 4 ++--
- drivers/ata/libata-eh.c   | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/ata/libata-scsi.c | 4 ++--
+ 3 files changed, 5 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 71b0719..3e69c20 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -1975,7 +1975,7 @@ unsigned int ahci_qc_issue(struct ata_queued_cmd *qc)
+ 	 */
+ 	pp->active_link = qc->dev->link;
+ 
+-	if (qc->tf.protocol == ATA_PROT_NCQ)
++	if (ata_is_ncq(qc->tf.protocol))
+ 		writel(1 << qc->tag, port_mmio + PORT_SCR_ACT);
+ 
+ 	if (pp->fbs_enabled && pp->fbs_last_dev != qc->dev->link->pmp) {
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index e798915..d200102 100644
+index 6be7770..e798915 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -1238,7 +1238,7 @@ static int ata_read_native_max_address(struct ata_device *dev, u64 *max_sectors)
- 	} else
- 		tf.command = ATA_CMD_READ_NATIVE_MAX;
+@@ -4842,7 +4842,7 @@ int ata_std_qc_defer(struct ata_queued_cmd *qc)
+ {
+ 	struct ata_link *link = qc->dev->link;
  
--	tf.protocol |= ATA_PROT_NODATA;
-+	tf.protocol = ATA_PROT_NODATA;
- 	tf.device |= ATA_LBA;
+-	if (qc->tf.protocol == ATA_PROT_NCQ) {
++	if (ata_is_ncq(qc->tf.protocol)) {
+ 		if (!ata_tag_valid(link->active_tag))
+ 			return 0;
+ 	} else {
+@@ -5007,7 +5007,7 @@ void __ata_qc_complete(struct ata_queued_cmd *qc)
+ 		ata_sg_clean(qc);
  
- 	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, 0);
-@@ -1297,7 +1297,7 @@ static int ata_set_max_sectors(struct ata_device *dev, u64 new_sectors)
- 		tf.device |= (new_sectors >> 24) & 0xf;
+ 	/* command should be marked inactive atomically with qc completion */
+-	if (qc->tf.protocol == ATA_PROT_NCQ) {
++	if (ata_is_ncq(qc->tf.protocol)) {
+ 		link->sactive &= ~(1 << qc->tag);
+ 		if (!link->sactive)
+ 			ap->nr_active_links--;
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index bfec66f..94bcd76 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3125,8 +3125,8 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
+ 		tf->command = cdb[9];
  	}
  
--	tf.protocol |= ATA_PROT_NODATA;
-+	tf.protocol = ATA_PROT_NODATA;
- 	tf.device |= ATA_LBA;
+-	/* For NCQ commands with FPDMA protocol, copy the tag value */
+-	if (tf->protocol == ATA_PROT_NCQ)
++	/* For NCQ commands copy the tag value */
++	if (ata_is_ncq(tf->protocol))
+ 		tf->nsect = qc->tag << 3;
  
- 	tf.lbal = (new_sectors >> 0) & 0xff;
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 61dc7a9..7832e55 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -3177,7 +3177,7 @@ static void ata_eh_park_issue_cmd(struct ata_device *dev, int park)
- 	}
- 
- 	tf.flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
--	tf.protocol |= ATA_PROT_NODATA;
-+	tf.protocol = ATA_PROT_NODATA;
- 	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, 0);
- 	if (park && (err_mask || tf.lbal != 0xc4)) {
- 		ata_dev_err(dev, "head unload failed!\n");
+ 	/* enforce correct master/slave bit */
 -- 
 1.8.5.6
 
