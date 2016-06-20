@@ -1,35 +1,64 @@
-From: Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH 3/7] dt-bindings: phy: Add documentation for NSP SATA PHY
-Date: Mon, 20 Jun 2016 08:13:46 -0500
-Message-ID: <20160620131346.GA25967@rob-hp-laptop>
-References: <1466085215-10246-1-git-send-email-yendapally.reddy@broadcom.com>
- <1466085215-10246-4-git-send-email-yendapally.reddy@broadcom.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-Content-Disposition: inline
-In-Reply-To: <1466085215-10246-4-git-send-email-yendapally.reddy@broadcom.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Yendapally Reddy Dhananjaya Reddy <yendapally.reddy@broadcom.com>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org, Florian Fainelli <f.fainelli@gmail.com>, Scott Branden <sbranden@broadcom.com>, Pawel Moll <pawel.moll@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>, Russell King <linux@armlinux.org.uk>, Kishon Vijay Abraham I <kishon@ti.com>, linux-ide@vger.kernel.org, Jaedon Shin <jaedon.shin@gmail.com>, linux-arm-kernel@lists.infradead.org, Gregory Fong <gregory.0xf0@gmail.com>, Kumar Gala <galak@codeaurora.org>, Tejun Heo <tj@kernel.org>, bcm-kernel-feedback-list@broadcom.com, Brian Norris <computersforpeace@gmail.com>, linux-kernel@vger.kernel.org, Anup Patel <anup.patel@broadcom.com>
+From: Shaun Tancheff <shaun@tancheff.com>
+Subject: [PATCH v3] Add support for Write Same via SCT
+Date: Mon, 20 Jun 2016 10:03:47 -0500
+Message-ID: <1466435028-13886-1-git-send-email-shaun@tancheff.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Shaun Tancheff <shaun@tancheff.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, Jun 16, 2016 at 09:53:31AM -0400, Yendapally Reddy Dhananjaya Reddy wrote:
-> Add documentation for SATA PHY available in Broadcom's
-> NSP SoC.
-> 
-> Signed-off-by: Yendapally Reddy Dhananjaya Reddy <yendapally.reddy@broadcom.com>
-> ---
->  Documentation/devicetree/bindings/phy/brcm-sata-phy.txt | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
+At some point the method of issuing Write Same for ATA drives changed.
+Currently write same is commonly available via SCT so expose the SCT
+capabilities and use SCT Write Same if available.
 
-Acked-by: Rob Herring <robh@kernel.org>
+This is useful for zoned based media that prefers to support discard
+with lbprz set, aka discard zeroes data by mapping discard operations to 
+reset write pointer operations. Conventional zones that do not support 
+reset write pointer can still honor the discard zeroes data by issuing
+a write same over the zone.
+
+After reviewing the commits around no_write_same heuristics it seems
+that decoupling the status quo will cause more harm than good as it 
+seems that broken SATL logic around WRITE SAME is quite common and 
+perhaps not surprising as the command appears to have been removed
+after ATA-2 and essentially deprecated somewhere around 1997.
+
+Here the approach is to flag a secondary code path that uses SCT to
+perform WRITE SAME and then infer the proper action based on the
+UNMAP flag and the reported capability.
+
+Before this patch the only valid code path is with UNMAP set and 
+TRIM available.
+
+With this patch if UNMAP is not set or TRIM is not available then
+fall back to SCT WRITE SAME, if it is available.
+
+In this way it would be possible to mimic lbprz for devices that 
+support TRIM but fail to zero blocks reliably. For example a
+file-system or DM target could issue a write same w/o unmap followed
+by an trim.
+
+This patch is also at
+https://github.com/stancheff/linux.git
+git@github.com:stancheff/linux.git
+branch: v4.7-rc2+sct-write-same.v3
+
+v3:
+ - Demux UNMAP/TRIM from WRITE SAME
+ - Add offset from scatterlist to page address.
+v2:
+ - Remove fugly ata hacking from sd.c
+
+Shaun Tancheff (1):
+  Add support for SCT Write Same
+
+ drivers/ata/libata-scsi.c  | 80 +++++++++++++++++++++++++++++++++++-----------
+ drivers/scsi/sd.c          |  2 +-
+ include/linux/ata.h        | 43 +++++++++++++++++++++++++
+ include/scsi/scsi_device.h |  1 +
+ 4 files changed, 106 insertions(+), 20 deletions(-)
+
+-- 
+2.8.1
+
