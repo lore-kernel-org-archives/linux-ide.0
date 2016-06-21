@@ -1,29 +1,55 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v3] Add support for SCT Write Same
-Date: Tue, 21 Jun 2016 14:41:44 +0200
-Message-ID: <20160621124144.GD1689@lst.de>
-References: <1466435028-13886-1-git-send-email-shaun@tancheff.com> <1466435028-13886-2-git-send-email-shaun@tancheff.com>
+From: Mark Rutland <mark.rutland@arm.com>
+Subject: Re: [PATCH v3 2/7] leds: documentation: 'ide-disk' to 'disk-activity'
+Date: Tue, 21 Jun 2016 16:05:32 +0100
+Message-ID: <20160621150532.GG3302@leverpostej>
+References: <20160608223000.433-1-linz@li-pro.net>
+ <20160608223000.433-2-linz@li-pro.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:41217 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751635AbcFUPFi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 21 Jun 2016 11:05:38 -0400
 Content-Disposition: inline
-In-Reply-To: <1466435028-13886-2-git-send-email-shaun@tancheff.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Shaun Tancheff <shaun@tancheff.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, Shaun Tancheff <shaun.tancheff@seagate.com>
+In-Reply-To: <20160608223000.433-2-linz@li-pro.net>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Stephan Linz <linz@li-pro.net>
+Cc: linux-leds@vger.kernel.org, linux-ide@vger.kernel.org, Joseph Jezak <josejx@gentoo.org>, Nico Macrionitis <acrux@cruxppc.org>, =?utf-8?B?SsO2cmc=?= Sommer <joerg@alea.gnuu.de>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Jonathan Corbet <corbet@lwn.net>, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org
 
-On Mon, Jun 20, 2016 at 10:03:48AM -0500, Shaun Tancheff wrote:
-> index bfec66f..3dcc29e 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -1204,6 +1204,9 @@ static int ata_scsi_dev_config(struct scsi_device *sdev,
->  	if (!ata_id_has_unload(dev->id))
->  		dev->flags |= ATA_DFLAG_NO_UNLOAD;
->  
-> +	if (ata_id_sct_write_same(dev->id))
-> +		sdev->sct_write_same = 1;
-> +
+On Thu, Jun 09, 2016 at 12:29:37AM +0200, Stephan Linz wrote:
+> Cc: Joseph Jezak <josejx@gentoo.org>
+> Cc: Nico Macrionitis <acrux@cruxppc.org>
+> Cc: J=C3=B6rg Sommer <joerg@alea.gnuu.de>
+> Signed-off-by: Stephan Linz <linz@li-pro.net>
+> ---
+>  Documentation/devicetree/bindings/leds/common.txt    | 2 +-
+>  Documentation/devicetree/bindings/leds/leds-gpio.txt | 2 +-
+>  Documentation/laptops/asus-laptop.txt                | 2 +-
+>  Documentation/leds/leds-class.txt                    | 2 +-
+>  4 files changed, 4 insertions(+), 4 deletions(-)
+>=20
+> diff --git a/Documentation/devicetree/bindings/leds/common.txt b/Docu=
+mentation/devicetree/bindings/leds/common.txt
+> index af10678..1e97169 100644
+> --- a/Documentation/devicetree/bindings/leds/common.txt
+> +++ b/Documentation/devicetree/bindings/leds/common.txt
+> @@ -26,7 +26,7 @@ Optional properties for child nodes:
+>       "default-on" - LED will turn on (but for leds-gpio see "default=
+-state"
+>  		    property in Documentation/devicetree/bindings/gpio/led.txt)
+>       "heartbeat" - LED "double" flashes at a load average based rate
+> -     "ide-disk" - LED indicates disk activity
+> +     "disk-activity" - LED indicates disk activity
+>       "timer" - LED flashes at a fixed, configurable rate
 
-No need scsi_device flags for libata internal data.  You need to expose
-your capabilities through the SCSI protocol to the SCSI midlayer.
+We should not break the binding.
+
+Code must continue to support "ide-disk", though we can mark it
+deprecated in the binding documentation, and update the in-kernel dts
+files to use "disk-activity".
+
+Thanks,
+Mark.
