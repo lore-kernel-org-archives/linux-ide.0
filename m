@@ -1,29 +1,29 @@
-From: Jacek Anaszewski <j.anaszewski@samsung.com>
-Subject: Re: [PATCH v3 1/7] leds: convert IDE trigger to common disk trigger
-Date: Tue, 21 Jun 2016 09:13:59 +0200
-Message-ID: <5768E937.80206@samsung.com>
-References: <20160608223000.433-1-linz@li-pro.net>
- <5767AAF0.7080608@samsung.com> <57686003.7030100@li-pro.net>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v3] Add support for SCT Write Same
+Date: Tue, 21 Jun 2016 14:41:44 +0200
+Message-ID: <20160621124144.GD1689@lst.de>
+References: <1466435028-13886-1-git-send-email-shaun@tancheff.com> <1466435028-13886-2-git-send-email-shaun@tancheff.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-reply-to: <57686003.7030100@li-pro.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linz@li-pro.net
-Cc: linux-leds@vger.kernel.org, linux-ide@vger.kernel.org, Joseph Jezak <josejx@gentoo.org>, Nico Macrionitis <acrux@cruxppc.org>, =?UTF-8?B?SsO2cmcgU29tbWVy?= <joerg@alea.gnuu.de>, Richard Purdie <rpurdie@rpsys.net>, Tejun Heo <tj@kernel.org>, "David S. Miller" <davem@davemloft.net>, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1466435028-13886-2-git-send-email-shaun@tancheff.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Shaun Tancheff <shaun@tancheff.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, Shaun Tancheff <shaun.tancheff@seagate.com>
 List-Id: linux-ide@vger.kernel.org
 
-Hi Stephan,
+On Mon, Jun 20, 2016 at 10:03:48AM -0500, Shaun Tancheff wrote:
+> index bfec66f..3dcc29e 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -1204,6 +1204,9 @@ static int ata_scsi_dev_config(struct scsi_device *sdev,
+>  	if (!ata_id_has_unload(dev->id))
+>  		dev->flags |= ATA_DFLAG_NO_UNLOAD;
+>  
+> +	if (ata_id_sct_write_same(dev->id))
+> +		sdev->sct_write_same = 1;
+> +
 
-On 06/20/2016 11:28 PM, Stephan Linz wrote:
-> Hi Jacek,
->
-> thanks a lot. Can you tell me, when the LED for-next branch will merge
-> into mainline?
-
-If everything will go as usually then the merge window will start
-in four weeks.
-
-Best regards,
-Jacek Anaszewski
+No need scsi_device flags for libata internal data.  You need to expose
+your capabilities through the SCSI protocol to the SCSI midlayer.
