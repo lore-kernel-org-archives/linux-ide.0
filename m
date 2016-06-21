@@ -1,55 +1,44 @@
-From: Mark Rutland <mark.rutland@arm.com>
-Subject: Re: [PATCH v3 2/7] leds: documentation: 'ide-disk' to 'disk-activity'
-Date: Tue, 21 Jun 2016 16:05:32 +0100
-Message-ID: <20160621150532.GG3302@leverpostej>
-References: <20160608223000.433-1-linz@li-pro.net>
- <20160608223000.433-2-linz@li-pro.net>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 3/6] ata: add ata_is_fpdma() accessor
+Date: Tue, 21 Jun 2016 11:45:54 -0400
+Message-ID: <20160621154554.GG3262@mtj.duckdns.org>
+References: <1466422756-126637-1-git-send-email-hare@suse.de>
+ <1466422756-126637-4-git-send-email-hare@suse.de>
+ <20160620154249.GK3262@mtj.duckdns.org>
+ <5768D566.9070207@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:41217 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751635AbcFUPFi (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 21 Jun 2016 11:05:38 -0400
+Received: from mail-yw0-f173.google.com ([209.85.161.173]:33644 "EHLO
+	mail-yw0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750731AbcFUPwc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Jun 2016 11:52:32 -0400
+Received: by mail-yw0-f173.google.com with SMTP id v77so17724414ywg.0
+        for <linux-ide@vger.kernel.org>; Tue, 21 Jun 2016 08:52:31 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <20160608223000.433-2-linz@li-pro.net>
+In-Reply-To: <5768D566.9070207@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Stephan Linz <linz@li-pro.net>
-Cc: linux-leds@vger.kernel.org, linux-ide@vger.kernel.org, Joseph Jezak <josejx@gentoo.org>, Nico Macrionitis <acrux@cruxppc.org>, =?utf-8?B?SsO2cmc=?= Sommer <joerg@alea.gnuu.de>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Jonathan Corbet <corbet@lwn.net>, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Damien Le Moal <damien.lemoal@hgst.com>, linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On Thu, Jun 09, 2016 at 12:29:37AM +0200, Stephan Linz wrote:
-> Cc: Joseph Jezak <josejx@gentoo.org>
-> Cc: Nico Macrionitis <acrux@cruxppc.org>
-> Cc: J=C3=B6rg Sommer <joerg@alea.gnuu.de>
-> Signed-off-by: Stephan Linz <linz@li-pro.net>
-> ---
->  Documentation/devicetree/bindings/leds/common.txt    | 2 +-
->  Documentation/devicetree/bindings/leds/leds-gpio.txt | 2 +-
->  Documentation/laptops/asus-laptop.txt                | 2 +-
->  Documentation/leds/leds-class.txt                    | 2 +-
->  4 files changed, 4 insertions(+), 4 deletions(-)
->=20
-> diff --git a/Documentation/devicetree/bindings/leds/common.txt b/Docu=
-mentation/devicetree/bindings/leds/common.txt
-> index af10678..1e97169 100644
-> --- a/Documentation/devicetree/bindings/leds/common.txt
-> +++ b/Documentation/devicetree/bindings/leds/common.txt
-> @@ -26,7 +26,7 @@ Optional properties for child nodes:
->       "default-on" - LED will turn on (but for leds-gpio see "default=
--state"
->  		    property in Documentation/devicetree/bindings/gpio/led.txt)
->       "heartbeat" - LED "double" flashes at a load average based rate
-> -     "ide-disk" - LED indicates disk activity
-> +     "disk-activity" - LED indicates disk activity
->       "timer" - LED flashes at a fixed, configurable rate
+Hello,
 
-We should not break the binding.
+On Tue, Jun 21, 2016 at 07:49:26AM +0200, Hannes Reinecke wrote:
+> Yes. Most of the SATA drivers (with the exception of ahci) don't know
+> about NCQ NON DATA commands, so they use the test for 'NCQ' as a
+> shorthand for 'NCQ command with DMA data'.
+> With the introduction of the ATA_PROT_NODATA protocol variable these two
+> are no longer equivalent, as you can have NCQ commands without DMA.
+> As I haven't vetted any of those adapters for NCQ NON DATA commands, and
+> these driver internally also assume that any NCQ command will have
+> DMA-able data, I thought it prudent to introduce an ata_is_fpdma() flag,
+> which retains the original meaning of ata_is_ncq().
 
-Code must continue to support "ide-disk", though we can mark it
-deprecated in the binding documentation, and update the in-kernel dts
-files to use "disk-activity".
+In that case, the patch description needs to be way beefier.  As it
+is, it looks like a trivial cleanup patch which it isn't.
 
-Thanks,
-Mark.
+Thanks.
+
+-- 
+tejun
