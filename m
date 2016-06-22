@@ -1,68 +1,56 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH] ata: ahci_platform: Add ACPI support for APM X-Gene AHCI
- controller v3 hardware.
-Date: Wed, 22 Jun 2016 12:18:33 +0200
-Message-ID: <5402203.QaZloJIEAM@wuerfel>
-References: <stripathi@apm.com>
- <CAOHikRCB4c79okd0q3=Lqwk7LKwZ6EDnWfHRH_oXokrB4PHcyw@mail.gmail.com>
- <CAOHikRDUH-PK4JfS8pUR+or=XTwDHBejFTGy33V20HKMMTUaPg@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <CAOHikRDUH-PK4JfS8pUR+or=XTwDHBejFTGy33V20HKMMTUaPg@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: linux-arm-kernel@lists.infradead.org
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Mark Langsdorf <mlangsdo@redhat.com>, Suman Tripathi <stripathi@apm.com>, Jon Masters <jcm@redhat.com>, Olof Johansson <olof@lixom.net>, patches <patches@apm.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>
+From: Yendapally Reddy Dhananjaya Reddy <yendapally.reddy-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Subject: [PATCH v4 0/3] pwm support for Broadcom iProc SoC's
+Date: Wed, 22 Jun 2016 07:29:44 -0400
+Message-ID: <1466594987-26537-1-git-send-email-yendapally.reddy@broadcom.com>
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Pawel Moll <pawel.moll-5wv7dgnIgG8@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Ian Campbell <ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org>, Kumar Gala <galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Brian Norris <computersforpeace-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Gregory Fong <gregory.0xf0-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Florian Fainelli <f.fainelli-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Russell King <linux-I+IVW8TIWO2tmTQ+vhA3Yw@public.gmane.org>, Ray Jui <rjui-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Scott Branden <sbranden-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Jon Mason <jonmason-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kishon Vijay Abraham I <kishon-l0cyMroinI0@public.gmane.org>, Jaedon Shin <jaedon.shin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Anup Patel <anup.patel-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Cc: devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, bcm-kernel-feedback-list-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Yendapally Reddy Dhananjaya Reddy <yendapally.reddy-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Tuesday, June 21, 2016 4:31:38 PM CEST Suman Tripathi wrote:
-> On Tue, Jun 21, 2016 at 11:08 AM, Suman Tripathi <stripathi@apm.com> wrote:
-> > On Wed, Jun 15, 2016 at 11:54 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> >>
-> >> On Wednesday, June 15, 2016 5:44:00 PM CEST suman-tripathi wrote:
-> >> > This patch adds ACPI support for APM X-Gene AHCI controller in
-> >> > ahci_platform driver for v3 hardware. APM X-Gene AHCI controller
-> >> > v3 hardware is fully compliant with ahci_platform driver and requires
-> >> > no workaround quirk.
-> >> >
-> >> > Signed-off-by: Suman Tripathi <stripathi@apm.com>
-> >> > ---
-> >> >  drivers/ata/ahci_platform.c |    1 +
-> >> >  1 files changed, 1 insertions(+), 0 deletions(-)
-> >> >
-> >> > diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-> >> > index 62a04c8..3395baf 100644
-> >> > --- a/drivers/ata/ahci_platform.c
-> >> > +++ b/drivers/ata/ahci_platform.c
-> >> > @@ -86,6 +86,7 @@ MODULE_DEVICE_TABLE(of, ahci_of_match);
-> >> >
-> >> >  static const struct acpi_device_id ahci_acpi_match[] = {
-> >> >         { ACPI_DEVICE_CLASS(PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff) },
-> >> > +       { "APMC0D33", 0},
-> >> >         {},
-> >> >  };
-> >> >  MODULE_DEVICE_TABLE(acpi, ahci_acpi_match);
-> >> >
-> >>
-> >> Doesn't the ACPI_DEVICE_CLASS entry take care of this? I thought it had been
-> >
-> >
-> > yeah it also works. Just thought that we need something different as
-> > our's is a non-PCI SATA.
-> 
-> Are you suggesting to introduce a new class ACPI_DEVICE_CLASS for
-> non-pci ahci ? or to reuse the existing PCI_CLASS_STORAGE_SATA_AHCI ?
+This patchset contains the pwm support for the Broadcom's iProc SoC's.
 
-This was specifically introduced for non-PCI devices, so it should
-just work.
+The first patch provides the documentation details and the
+second patch contains the controller support details. The third patch
+contains the enable method for Northstar Plus SoC.
 
-	Arnd
+This patch series has been tested on NSP bcm958625HR board.
+The pwm is not enabled for this board as the pins are open and not used.
+
+This patch series is based on v4.7.0-rc1 and is available from github
+repo: https://github.com/Broadcom/cygnus-linux.git
+branch: iproc-pwm-v4
+
+
+Changes since v3
+Addressed comments from Scott to include COMPILE_TEST
+
+Changes since v2
+Rebased on v4.7.0-rc1
+
+Changes since v1
+Addressed the review comments from Thierry
+ 1. Use separate driver for iProc SoC's.
+ 2. Added Robs ack to the Documentation patch
+
+Yendapally Reddy Dhananjaya Reddy (3):
+  Documentation: dt: Add Broadcom iproc pwm controller binding
+  pwm: iproc: Add support for Broadcom iproc pwm controller
+  ARM: dts: NSP: Add PWM Support to DT
+
+ .../devicetree/bindings/pwm/brcm,iproc-pwm.txt     |  21 ++
+ arch/arm/boot/dts/bcm-nsp.dtsi                     |   8 +
+ drivers/pwm/Kconfig                                |  10 +
+ drivers/pwm/Makefile                               |   1 +
+ drivers/pwm/pwm-bcm-iproc.c                        | 327 +++++++++++++++++++++
+ 5 files changed, 367 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pwm/brcm,iproc-pwm.txt
+ create mode 100644 drivers/pwm/pwm-bcm-iproc.c
+
+-- 
+2.1.0
+
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
