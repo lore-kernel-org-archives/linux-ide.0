@@ -1,124 +1,68 @@
-From: Stephan Linz <linz@li-pro.net>
-Subject: Re: [PATCH v3 2/7] leds: documentation: 'ide-disk' to 'disk-activity'
-Date: Wed, 22 Jun 2016 18:05:26 +0200
-Message-ID: <576AB746.70509@li-pro.net>
-References: <20160608223000.433-1-linz@li-pro.net>
- <20160608223000.433-2-linz@li-pro.net> <20160621150532.GG3302@leverpostej>
- <576A447F.2020002@samsung.com>
-Reply-To: linz@li-pro.net
+From: Scott Branden <scott.branden-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Subject: Re: [PATCH v4 0/3] pwm support for Broadcom iProc SoC's
+Date: Wed, 22 Jun 2016 10:06:26 -0700
+Message-ID: <576AC592.7030805@broadcom.com>
+References: <1466594987-26537-1-git-send-email-yendapally.reddy@broadcom.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="det7WpJRGBXnIDQaRLwwQTsGNKTBLFrsv"
-Return-path: <linux-leds-owner@vger.kernel.org>
-In-Reply-To: <576A447F.2020002@samsung.com>
-Sender: linux-leds-owner@vger.kernel.org
-To: Jacek Anaszewski <j.anaszewski@samsung.com>, Mark Rutland <mark.rutland@arm.com>
-Cc: linux-leds@vger.kernel.org, linux-ide@vger.kernel.org, Joseph Jezak <josejx@gentoo.org>, Nico Macrionitis <acrux@cruxppc.org>, =?UTF-8?Q?J=c3=b6rg_Sommer?= <joerg@alea.gnuu.de>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Jonathan Corbet <corbet@lwn.net>, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1466594987-26537-1-git-send-email-yendapally.reddy-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Yendapally Reddy Dhananjaya Reddy <yendapally.reddy-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Pawel Moll <pawel.moll-5wv7dgnIgG8@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Ian Campbell <ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org>, Kumar Gala <galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Brian Norris <computersforpeace-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Gregory Fong <gregory.0xf0-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Florian Fainelli <f.fainelli-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Russell King <linux-I+IVW8TIWO2tmTQ+vhA3Yw@public.gmane.org>, Ray Jui <rjui-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Scott Branden <sbranden-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Jon Mason <jonmason-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kishon Vijay Abraham I <kishon-l0cyMroinI0@public.gmane.org>, Jaedon Shin <jaedon.shin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Anup Patel <anup.patel-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Cc: devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, bcm-kernel-feedback-list-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---det7WpJRGBXnIDQaRLwwQTsGNKTBLFrsv
-Content-Type: multipart/mixed; boundary="nwxCnXaECChvFEg7jirCtVJvtLpcbJXmP"
-From: Stephan Linz <linz@li-pro.net>
-Reply-To: linz@li-pro.net
-To: Jacek Anaszewski <j.anaszewski@samsung.com>,
- Mark Rutland <mark.rutland@arm.com>
-Cc: linux-leds@vger.kernel.org, linux-ide@vger.kernel.org,
- Joseph Jezak <josejx@gentoo.org>, Nico Macrionitis <acrux@cruxppc.org>,
- =?UTF-8?Q?J=c3=b6rg_Sommer?= <joerg@alea.gnuu.de>,
- Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>,
- Ian Campbell <ijc+devicetree@hellion.org.uk>,
- Kumar Gala <galak@codeaurora.org>, Jonathan Corbet <corbet@lwn.net>,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-doc@vger.kernel.org
-Message-ID: <576AB746.70509@li-pro.net>
-Subject: Re: [PATCH v3 2/7] leds: documentation: 'ide-disk' to 'disk-activity'
-References: <20160608223000.433-1-linz@li-pro.net>
- <20160608223000.433-2-linz@li-pro.net> <20160621150532.GG3302@leverpostej>
- <576A447F.2020002@samsung.com>
-In-Reply-To: <576A447F.2020002@samsung.com>
+Hi Dhanajaya,
 
---nwxCnXaECChvFEg7jirCtVJvtLpcbJXmP
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Patch series looks good.
 
-Hi Jacek,
+Acked-by: Scott Branden <scott.branden-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
 
-Am 22.06.2016 um 09:55 schrieb Jacek Anaszewski:
-> On 06/21/2016 05:05 PM, Mark Rutland wrote:
->> On Thu, Jun 09, 2016 at 12:29:37AM +0200, Stephan Linz wrote:
->>> Cc: Joseph Jezak <josejx@gentoo.org>
->>> Cc: Nico Macrionitis <acrux@cruxppc.org>
->>> Cc: J=C3=B6rg Sommer <joerg@alea.gnuu.de>
->>> Signed-off-by: Stephan Linz <linz@li-pro.net>
->>> ---
->>>   Documentation/devicetree/bindings/leds/common.txt    | 2 +-
->>>   Documentation/devicetree/bindings/leds/leds-gpio.txt | 2 +-
->>>   Documentation/laptops/asus-laptop.txt                | 2 +-
->>>   Documentation/leds/leds-class.txt                    | 2 +-
->>>   4 files changed, 4 insertions(+), 4 deletions(-)
->>>
->>> diff --git a/Documentation/devicetree/bindings/leds/common.txt
->>> b/Documentation/devicetree/bindings/leds/common.txt
->>> index af10678..1e97169 100644
->>> --- a/Documentation/devicetree/bindings/leds/common.txt
->>> +++ b/Documentation/devicetree/bindings/leds/common.txt
->>> @@ -26,7 +26,7 @@ Optional properties for child nodes:
->>>        "default-on" - LED will turn on (but for leds-gpio see
->>> "default-state"
->>>               property in
->>> Documentation/devicetree/bindings/gpio/led.txt)
->>>        "heartbeat" - LED "double" flashes at a load average based rat=
-e
->>> -     "ide-disk" - LED indicates disk activity
->>> +     "disk-activity" - LED indicates disk activity
->>>        "timer" - LED flashes at a fixed, configurable rate
->>
->> We should not break the binding.
->>
->> Code must continue to support "ide-disk", though we can mark it
->> deprecated in the binding documentation, and update the in-kernel dts
->> files to use "disk-activity".
->=20
-> The code in the version 4 of the patchset supports also "ide-disk".
->=20
-> Stephan, could you send a new version of this patch, with preserved
-> "ide-disk" property, marked as deprecated?
+On 16-06-22 04:29 AM, Yendapally Reddy Dhananjaya Reddy wrote:
+> This patchset contains the pwm support for the Broadcom's iProc SoC's.
+>
+> The first patch provides the documentation details and the
+> second patch contains the controller support details. The third patch
+> contains the enable method for Northstar Plus SoC.
+>
+> This patch series has been tested on NSP bcm958625HR board.
+> The pwm is not enabled for this board as the pins are open and not used.
+>
+> This patch series is based on v4.7.0-rc1 and is available from github
+> repo: https://github.com/Broadcom/cygnus-linux.git
+> branch: iproc-pwm-v4
+>
+>
+> Changes since v3
+> Addressed comments from Scott to include COMPILE_TEST
+>
+> Changes since v2
+> Rebased on v4.7.0-rc1
+>
+> Changes since v1
+> Addressed the review comments from Thierry
+>   1. Use separate driver for iProc SoC's.
+>   2. Added Robs ack to the Documentation patch
+>
+> Yendapally Reddy Dhananjaya Reddy (3):
+>    Documentation: dt: Add Broadcom iproc pwm controller binding
+>    pwm: iproc: Add support for Broadcom iproc pwm controller
+>    ARM: dts: NSP: Add PWM Support to DT
+>
+>   .../devicetree/bindings/pwm/brcm,iproc-pwm.txt     |  21 ++
+>   arch/arm/boot/dts/bcm-nsp.dtsi                     |   8 +
+>   drivers/pwm/Kconfig                                |  10 +
+>   drivers/pwm/Makefile                               |   1 +
+>   drivers/pwm/pwm-bcm-iproc.c                        | 327 +++++++++++++++++++++
+>   5 files changed, 367 insertions(+)
+>   create mode 100644 Documentation/devicetree/bindings/pwm/brcm,iproc-pwm.txt
+>   create mode 100644 drivers/pwm/pwm-bcm-iproc.c
+>
 
-Yes, I can. I'll submit a new v5 patch set. You can pick out then the
-right patch for the LED for-next branch, okay?
-
-
-br,
-Stephan
-
->=20
-
-
---nwxCnXaECChvFEg7jirCtVJvtLpcbJXmP--
-
---det7WpJRGBXnIDQaRLwwQTsGNKTBLFrsv
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-iQIcBAEBAgAGBQJXardGAAoJEFebNK/earQ5TmYQAKMnz1ahazaX5NiwvyqqqBFs
-XzIi6cPvFpf9dzyGc4jbqRD8iRgW6Y+/CUnBnXLHn594A+gGps1e9GmLHQBMF7nn
-QB0tFBRZN5DhuFMj+TAEKYM3VW/BwoUkYogxSdSfiaVl/B8Zp+1B4+ooxpeoIPbR
-uhQGu6PiQbGTzUYLylGm0g5MO4Y5uxfznrwtjhppIu/m9MH2Ev4LmB4SUOcmM8Yn
-L0dLB7YIS19pznctfn8lnwX4dq/h+QPnowCLbofDP/nCIOx1zL11z4Mx/GnEhPFs
-7acwLJLFyISxj9wMzMmZ6fh4QTNW9KPUkVkEsQgetZMzRfJN5US17UksXRZBajXc
-oZqKnGcIEsQ8Km8/8cDtuhw07qurwDMyB9Dm4YAKSVyv+LHtnXS3YcUKenaJne7I
-c+eyMZHg5yvEX5WaoimayPEYdoqnTnM/uLPiU5hTX4k4BWSRoA4EI+/5hnXWg4Kx
-VrHklSqAtfYGdmMhqCQmm1PVqZWb50azP75mCOTxq1MgnLDfvOfkul54BZ9PE+uX
-95VQRTHF/mQSUJWCHbDO7XPxP49hvuDGgBDSxMjBLnIOX4/6Ck55tI5EPYin37N4
-4eUNjXnOjQdl7pt2BT4A5qgtPMfUNnY29FQNYUDxwBAEO66I1lfdbIK3M0oYrRpN
-WqSSk312OFM3rTSX8RzL
-=IC6S
------END PGP SIGNATURE-----
-
---det7WpJRGBXnIDQaRLwwQTsGNKTBLFrsv--
+Regards,
+Scott
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
