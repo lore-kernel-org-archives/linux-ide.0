@@ -1,68 +1,59 @@
-From: Shaun Tancheff <shaun.tancheff@seagate.com>
-Subject: Re: [PATCH v3] Add support for SCT Write Same
-Date: Tue, 21 Jun 2016 22:01:56 -0500
-Message-ID: <CAJVOszBXjw67-pu-vVtY_RfYqeEFMBH1nhWkjPcgV0SO0Vv4nQ@mail.gmail.com>
-References: <1466435028-13886-1-git-send-email-shaun@tancheff.com>
- <1466435028-13886-2-git-send-email-shaun@tancheff.com> <yq17fdi2bb8.fsf@sermon.lab.mkp.net>
+From: Jacek Anaszewski <j.anaszewski@samsung.com>
+Subject: Re: [PATCH v3 2/7] leds: documentation: 'ide-disk' to 'disk-activity'
+Date: Wed, 22 Jun 2016 09:55:43 +0200
+Message-ID: <576A447F.2020002@samsung.com>
+References: <20160608223000.433-1-linz@li-pro.net>
+ <20160608223000.433-2-linz@li-pro.net> <20160621150532.GG3302@leverpostej>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx0b-00003501.pphosted.com ([67.231.152.68]:9854 "EHLO
-	mx0a-000cda01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751862AbcFVDGU (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 21 Jun 2016 23:06:20 -0400
-Received: from pps.filterd (m0075030.ppops.net [127.0.0.1])
-	by mx0b-00003501.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u5M30ihR025968
-	for <linux-ide@vger.kernel.org>; Tue, 21 Jun 2016 23:02:16 -0400
-Received: from mail-qk0-f197.google.com (mail-qk0-f197.google.com [209.85.220.197])
-	by mx0b-00003501.pphosted.com with ESMTP id 23qjd5g0ek-4
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-ide@vger.kernel.org>; Tue, 21 Jun 2016 23:02:16 -0400
-Received: by mail-qk0-f197.google.com with SMTP id 134so96271734qkd.1
-        for <linux-ide@vger.kernel.org>; Tue, 21 Jun 2016 20:02:16 -0700 (PDT)
-In-Reply-To: <yq17fdi2bb8.fsf@sermon.lab.mkp.net>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-reply-to: <20160621150532.GG3302@leverpostej>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mark Rutland <mark.rutland@arm.com>, Stephan Linz <linz@li-pro.net>
+Cc: linux-leds@vger.kernel.org, linux-ide@vger.kernel.org, Joseph Jezak <josejx@gentoo.org>, Nico Macrionitis <acrux@cruxppc.org>, =?UTF-8?B?SsO2cmcgU29tbWVy?= <joerg@alea.gnuu.de>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Jonathan Corbet <corbet@lwn.net>, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Shaun Tancheff <shaun@tancheff.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>
 
-On Tue, Jun 21, 2016 at 9:43 PM, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->>>>>> "Shaun" == Shaun Tancheff <shaun@tancheff.com> writes:
+On 06/21/2016 05:05 PM, Mark Rutland wrote:
+> On Thu, Jun 09, 2016 at 12:29:37AM +0200, Stephan Linz wrote:
+>> Cc: Joseph Jezak <josejx@gentoo.org>
+>> Cc: Nico Macrionitis <acrux@cruxppc.org>
+>> Cc: J=C3=B6rg Sommer <joerg@alea.gnuu.de>
+>> Signed-off-by: Stephan Linz <linz@li-pro.net>
+>> ---
+>>   Documentation/devicetree/bindings/leds/common.txt    | 2 +-
+>>   Documentation/devicetree/bindings/leds/leds-gpio.txt | 2 +-
+>>   Documentation/laptops/asus-laptop.txt                | 2 +-
+>>   Documentation/leds/leds-class.txt                    | 2 +-
+>>   4 files changed, 4 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/Documentation/devicetree/bindings/leds/common.txt b/Doc=
+umentation/devicetree/bindings/leds/common.txt
+>> index af10678..1e97169 100644
+>> --- a/Documentation/devicetree/bindings/leds/common.txt
+>> +++ b/Documentation/devicetree/bindings/leds/common.txt
+>> @@ -26,7 +26,7 @@ Optional properties for child nodes:
+>>        "default-on" - LED will turn on (but for leds-gpio see "defau=
+lt-state"
+>>   		    property in Documentation/devicetree/bindings/gpio/led.txt)
+>>        "heartbeat" - LED "double" flashes at a load average based ra=
+te
+>> -     "ide-disk" - LED indicates disk activity
+>> +     "disk-activity" - LED indicates disk activity
+>>        "timer" - LED flashes at a fixed, configurable rate
 >
-> Shaun> SATA drives may support write same via SCT. This is useful for
-> Shaun> setting the drive contents to a specific pattern (0's).
+> We should not break the binding.
 >
-> As indicated a while back, my preference would be for you to add support
-> for REPORT SUPPORTED OPERATION CODES. It's fine that you keep the RSOC
-> response simple and only list WRITE SAME(10/16). But I want to avoid
-> having different heuristics for libata's SCSI-ATA translation and for
-> hardware controller ditto.
->
-> Shaun> If UNMAP is not set or TRIM is not available
->
-> Please do not conflate the two. We have the appropriate fallbacks at the
-> block layer. It happens to be the same command descriptor but it is two
-> very different implementations at the device level.
->
-> If the UNMAP bit is set you need to issue a DSM TRIM. If the device does
-> not support TRIM you need to return ILLEGAL REQUEST/INVALID FIELD IN
-> CDB.
->
-> If the UNMAP bit is not set then it's a regular WRITE SAME and should be
-> issued using SCT WRITE SAME. If the device does not support SCT WRITE
-> SAME you need to return ILLEGAL REQUEST/INVALID FIELD IN CDB.
+> Code must continue to support "ide-disk", though we can mark it
+> deprecated in the binding documentation, and update the in-kernel dts
+> files to use "disk-activity".
 
-Thanks for the clarification and the review.
-I will work on support for REPORT SUPPORTED OPERATION CODES and
-handle the WRITE SAME following the UNMAP as you described.
+The code in the version 4 of the patchset supports also "ide-disk".
 
-Thanks!
+Stephan, could you send a new version of this patch, with preserved
+"ide-disk" property, marked as deprecated?
 
-> --
-> Martin K. Petersen      Oracle Linux Engineering
-
-
-
--- 
-Shaun Tancheff
+--=20
+Best regards,
+Jacek Anaszewski
