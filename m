@@ -1,68 +1,68 @@
-From: Mark Rutland <mark.rutland@arm.com>
-Subject: Re: [PATCH v3 2/7] leds: documentation: 'ide-disk' to 'disk-activity'
-Date: Wed, 22 Jun 2016 11:16:04 +0100
-Message-ID: <20160622101603.GC25837@leverpostej>
-References: <20160608223000.433-1-linz@li-pro.net>
- <20160608223000.433-2-linz@li-pro.net>
- <20160621150532.GG3302@leverpostej>
- <576A447F.2020002@samsung.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH] ata: ahci_platform: Add ACPI support for APM X-Gene AHCI
+ controller v3 hardware.
+Date: Wed, 22 Jun 2016 12:18:33 +0200
+Message-ID: <5402203.QaZloJIEAM@wuerfel>
+References: <stripathi@apm.com>
+ <CAOHikRCB4c79okd0q3=Lqwk7LKwZ6EDnWfHRH_oXokrB4PHcyw@mail.gmail.com>
+ <CAOHikRDUH-PK4JfS8pUR+or=XTwDHBejFTGy33V20HKMMTUaPg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-leds-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <576A447F.2020002@samsung.com>
-Sender: linux-leds-owner@vger.kernel.org
-To: Jacek Anaszewski <j.anaszewski@samsung.com>
-Cc: Stephan Linz <linz@li-pro.net>, linux-leds@vger.kernel.org, linux-ide@vger.kernel.org, Joseph Jezak <josejx@gentoo.org>, Nico Macrionitis <acrux@cruxppc.org>, =?utf-8?B?SsO2cmc=?= Sommer <joerg@alea.gnuu.de>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Jonathan Corbet <corbet@lwn.net>, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <CAOHikRDUH-PK4JfS8pUR+or=XTwDHBejFTGy33V20HKMMTUaPg@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: linux-arm-kernel@lists.infradead.org
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Mark Langsdorf <mlangsdo@redhat.com>, Suman Tripathi <stripathi@apm.com>, Jon Masters <jcm@redhat.com>, Olof Johansson <olof@lixom.net>, patches <patches@apm.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Tejun Heo <tj@kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Wed, Jun 22, 2016 at 09:55:43AM +0200, Jacek Anaszewski wrote:
-> On 06/21/2016 05:05 PM, Mark Rutland wrote:
-> >On Thu, Jun 09, 2016 at 12:29:37AM +0200, Stephan Linz wrote:
-> >>Cc: Joseph Jezak <josejx@gentoo.org>
-> >>Cc: Nico Macrionitis <acrux@cruxppc.org>
-> >>Cc: J=C3=B6rg Sommer <joerg@alea.gnuu.de>
-> >>Signed-off-by: Stephan Linz <linz@li-pro.net>
-> >>---
-> >>  Documentation/devicetree/bindings/leds/common.txt    | 2 +-
-> >>  Documentation/devicetree/bindings/leds/leds-gpio.txt | 2 +-
-> >>  Documentation/laptops/asus-laptop.txt                | 2 +-
-> >>  Documentation/leds/leds-class.txt                    | 2 +-
-> >>  4 files changed, 4 insertions(+), 4 deletions(-)
+On Tuesday, June 21, 2016 4:31:38 PM CEST Suman Tripathi wrote:
+> On Tue, Jun 21, 2016 at 11:08 AM, Suman Tripathi <stripathi@apm.com> wrote:
+> > On Wed, Jun 15, 2016 at 11:54 PM, Arnd Bergmann <arnd@arndb.de> wrote:
 > >>
-> >>diff --git a/Documentation/devicetree/bindings/leds/common.txt b/Do=
-cumentation/devicetree/bindings/leds/common.txt
-> >>index af10678..1e97169 100644
-> >>--- a/Documentation/devicetree/bindings/leds/common.txt
-> >>+++ b/Documentation/devicetree/bindings/leds/common.txt
-> >>@@ -26,7 +26,7 @@ Optional properties for child nodes:
-> >>       "default-on" - LED will turn on (but for leds-gpio see "defa=
-ult-state"
-> >>  		    property in Documentation/devicetree/bindings/gpio/led.txt)
-> >>       "heartbeat" - LED "double" flashes at a load average based r=
-ate
-> >>-     "ide-disk" - LED indicates disk activity
-> >>+     "disk-activity" - LED indicates disk activity
-> >>       "timer" - LED flashes at a fixed, configurable rate
+> >> On Wednesday, June 15, 2016 5:44:00 PM CEST suman-tripathi wrote:
+> >> > This patch adds ACPI support for APM X-Gene AHCI controller in
+> >> > ahci_platform driver for v3 hardware. APM X-Gene AHCI controller
+> >> > v3 hardware is fully compliant with ahci_platform driver and requires
+> >> > no workaround quirk.
+> >> >
+> >> > Signed-off-by: Suman Tripathi <stripathi@apm.com>
+> >> > ---
+> >> >  drivers/ata/ahci_platform.c |    1 +
+> >> >  1 files changed, 1 insertions(+), 0 deletions(-)
+> >> >
+> >> > diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+> >> > index 62a04c8..3395baf 100644
+> >> > --- a/drivers/ata/ahci_platform.c
+> >> > +++ b/drivers/ata/ahci_platform.c
+> >> > @@ -86,6 +86,7 @@ MODULE_DEVICE_TABLE(of, ahci_of_match);
+> >> >
+> >> >  static const struct acpi_device_id ahci_acpi_match[] = {
+> >> >         { ACPI_DEVICE_CLASS(PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff) },
+> >> > +       { "APMC0D33", 0},
+> >> >         {},
+> >> >  };
+> >> >  MODULE_DEVICE_TABLE(acpi, ahci_acpi_match);
+> >> >
+> >>
+> >> Doesn't the ACPI_DEVICE_CLASS entry take care of this? I thought it had been
 > >
-> >We should not break the binding.
 > >
-> >Code must continue to support "ide-disk", though we can mark it
-> >deprecated in the binding documentation, and update the in-kernel dt=
-s
-> >files to use "disk-activity".
->=20
-> The code in the version 4 of the patchset supports also "ide-disk".
+> > yeah it also works. Just thought that we need something different as
+> > our's is a non-PCI SATA.
+> 
+> Are you suggesting to introduce a new class ACPI_DEVICE_CLASS for
+> non-pci ahci ? or to reuse the existing PCI_CLASS_STORAGE_SATA_AHCI ?
 
-Ah, sorry, I missed v4.
+This was specifically introduced for non-PCI devices, so it should
+just work.
 
-> Stephan, could you send a new version of this patch, with preserved
-> "ide-disk" property, marked as deprecated?
-
-With that, feel free to add:
-
-Acked-by: Mark Rutland <mark.rutland@arm.com>
-
-Thanks,
-Mark.
+	Arnd
