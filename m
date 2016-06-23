@@ -1,57 +1,71 @@
-From: Brian Norris <computersforpeace-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH v4 2/3] pwm: iproc: Add support for Broadcom iproc pwm
- controller
-Date: Wed, 22 Jun 2016 10:31:26 -0700
-Message-ID: <20160622173126.GA74558@google.com>
-References: <1466594987-26537-1-git-send-email-yendapally.reddy@broadcom.com>
- <1466594987-26537-3-git-send-email-yendapally.reddy@broadcom.com>
+From: Jacek Anaszewski <j.anaszewski@samsung.com>
+Subject: Re: [PATCH v3 2/7] leds: documentation: 'ide-disk' to 'disk-activity'
+Date: Thu, 23 Jun 2016 08:40:39 +0200
+Message-ID: <576B8467.3060407@samsung.com>
+References: <20160608223000.433-1-linz@li-pro.net>
+ <20160608223000.433-2-linz@li-pro.net> <20160621150532.GG3302@leverpostej>
+ <576A447F.2020002@samsung.com> <576AB746.70509@li-pro.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1466594987-26537-3-git-send-email-yendapally.reddy-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Yendapally Reddy Dhananjaya Reddy <yendapally.reddy-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-Cc: Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Pawel Moll <pawel.moll-5wv7dgnIgG8@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Ian Campbell <ijc+devicetree-KcIKpvwj1kUDXYZnReoRVg@public.gmane.org>, Kumar Gala <galak-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Gregory Fong <gregory.0xf0-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Florian Fainelli <f.fainelli-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Russell King <linux-I+IVW8TIWO2tmTQ+vhA3Yw@public.gmane.org>, Ray Jui <rjui-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Scott Branden <sbranden-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Jon Mason <jonmason-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Kishon Vijay Abraham I <kishon-l0cyMroinI0@public.gmane.org>, Jaedon Shin <jaedon.shin-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Anup Patel <anup.patel-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, bcm-kernel-feedback-list-dY08KVG/lbpWk0Htik3J/w@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Boris Brezillon <boris.brezillon-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-leds-owner@vger.kernel.org>
+In-reply-to: <576AB746.70509@li-pro.net>
+Sender: linux-leds-owner@vger.kernel.org
+To: linz@li-pro.net
+Cc: Mark Rutland <mark.rutland@arm.com>, linux-leds@vger.kernel.org, linux-ide@vger.kernel.org, Joseph Jezak <josejx@gentoo.org>, Nico Macrionitis <acrux@cruxppc.org>, =?UTF-8?B?SsO2cmcgU29tbWVy?= <joerg@alea.gnuu.de>, Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Jonathan Corbet <corbet@lwn.net>, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Wed, Jun 22, 2016 at 07:29:46AM -0400, Yendapally Reddy Dhananjaya Reddy wrote:
-> Add support for the PWM controller present in Broadcom's iProc
-> family of SoCs. This driver is derived from the pwm-bcm-kona
-> driver, with changes to the register offsets and bit positions.
-> It has been tested on the  Northstar+ bcm958625HR board.
-> 
-> Signed-off-by: Yendapally Reddy Dhananjaya Reddy <yendapally.reddy-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-> ---
->  drivers/pwm/Kconfig         |  10 ++
->  drivers/pwm/Makefile        |   1 +
->  drivers/pwm/pwm-bcm-iproc.c | 327 ++++++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 338 insertions(+)
->  create mode 100644 drivers/pwm/pwm-bcm-iproc.c
-> 
-[...]
-> diff --git a/drivers/pwm/pwm-bcm-iproc.c b/drivers/pwm/pwm-bcm-iproc.c
-> new file mode 100644
-> index 0000000..952c457
-> --- /dev/null
-> +++ b/drivers/pwm/pwm-bcm-iproc.c
-> @@ -0,0 +1,327 @@
-[...]
-> +static const struct pwm_ops iproc_pwm_ops = {
-> +	.config = iproc_pwmc_config_check,
-> +	.set_polarity = iproc_pwmc_set_polarity,
-> +	.enable = iproc_pwmc_enable,
-> +	.disable = iproc_pwmc_disable,
-> +	.owner = THIS_MODULE,
-> +};
+On 06/22/2016 06:05 PM, Stephan Linz wrote:
+> Hi Jacek,
+>
+> Am 22.06.2016 um 09:55 schrieb Jacek Anaszewski:
+>> On 06/21/2016 05:05 PM, Mark Rutland wrote:
+>>> On Thu, Jun 09, 2016 at 12:29:37AM +0200, Stephan Linz wrote:
+>>>> Cc: Joseph Jezak <josejx@gentoo.org>
+>>>> Cc: Nico Macrionitis <acrux@cruxppc.org>
+>>>> Cc: J=C3=B6rg Sommer <joerg@alea.gnuu.de>
+>>>> Signed-off-by: Stephan Linz <linz@li-pro.net>
+>>>> ---
+>>>>    Documentation/devicetree/bindings/leds/common.txt    | 2 +-
+>>>>    Documentation/devicetree/bindings/leds/leds-gpio.txt | 2 +-
+>>>>    Documentation/laptops/asus-laptop.txt                | 2 +-
+>>>>    Documentation/leds/leds-class.txt                    | 2 +-
+>>>>    4 files changed, 4 insertions(+), 4 deletions(-)
+>>>>
+>>>> diff --git a/Documentation/devicetree/bindings/leds/common.txt
+>>>> b/Documentation/devicetree/bindings/leds/common.txt
+>>>> index af10678..1e97169 100644
+>>>> --- a/Documentation/devicetree/bindings/leds/common.txt
+>>>> +++ b/Documentation/devicetree/bindings/leds/common.txt
+>>>> @@ -26,7 +26,7 @@ Optional properties for child nodes:
+>>>>         "default-on" - LED will turn on (but for leds-gpio see
+>>>> "default-state"
+>>>>                property in
+>>>> Documentation/devicetree/bindings/gpio/led.txt)
+>>>>         "heartbeat" - LED "double" flashes at a load average based=
+ rate
+>>>> -     "ide-disk" - LED indicates disk activity
+>>>> +     "disk-activity" - LED indicates disk activity
+>>>>         "timer" - LED flashes at a fixed, configurable rate
+>>>
+>>> We should not break the binding.
+>>>
+>>> Code must continue to support "ide-disk", though we can mark it
+>>> deprecated in the binding documentation, and update the in-kernel d=
+ts
+>>> files to use "disk-activity".
+>>
+>> The code in the version 4 of the patchset supports also "ide-disk".
+>>
+>> Stephan, could you send a new version of this patch, with preserved
+>> "ide-disk" property, marked as deprecated?
+>
+> Yes, I can. I'll submit a new v5 patch set. You can pick out then the
+> right patch for the LED for-next branch, okay?
 
-Have you considered trying the new apply() callback instead of
-config()/set_polarity()/enable()/disable()?
+You don't need to submit whole patch set, only the affected patch.
 
-[...]
-
-Brian
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--=20
+Best regards,
+Jacek Anaszewski
