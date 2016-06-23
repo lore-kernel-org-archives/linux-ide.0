@@ -1,65 +1,127 @@
-From: Yendapally Reddy Dhananjaya Reddy <yendapally.reddy@broadcom.com>
-Subject: Re: [PATCH v4 2/3] pwm: iproc: Add support for Broadcom iproc pwm controller
-Date: Thu, 23 Jun 2016 23:16:27 +0530
-Message-ID: <CAL2FKYmz+EgKkq201X-e+980yMMtn8v3R_fC=3Hg=L1WX_NtSw@mail.gmail.com>
+From: Stephan Linz <linz@li-pro.net>
+Subject: [PATCH v5] leds: documentation: 'ide-disk' to 'disk-activity'
+Date: Thu, 23 Jun 2016 21:38:46 +0200
+Message-ID: <20160623193857.14538-1-linz@li-pro.net>
+References: <576B8467.3060407@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-io0-f169.google.com ([209.85.223.169]:35677 "EHLO
-	mail-io0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751447AbcFWRq3 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 Jun 2016 13:46:29 -0400
-Received: by mail-io0-f169.google.com with SMTP id f30so77987395ioj.2
-        for <linux-ide@vger.kernel.org>; Thu, 23 Jun 2016 10:46:29 -0700 (PDT)
+Received: from mo4-p00-ob.smtp.rzone.de ([81.169.146.160]:51454 "EHLO
+	mo4-p00-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751014AbcFWTj3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 23 Jun 2016 15:39:29 -0400
+In-Reply-To: <576B8467.3060407@samsung.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Brian Norris <computersforpeace@gmail.com>, Thierry Reding <thierry.reding@gmail.com>
-Cc: Rob Herring <robh+dt@kernel.org>, Pawel Moll <pawel.moll@arm.com>, Mark Rutland <mark.rutland@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>, Kumar Gala <galak@codeaurora.org>, Gregory Fong <gregory.0xf0@gmail.com>, Florian Fainelli <f.fainelli@gmail.com>, Russell King <linux@armlinux.org.uk>, Ray Jui <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>, Tejun Heo <tj@kernel.org>, Kishon Vijay Abraham I <kishon@ti.com>, Jaedon Shin <jaedon.shin@gmail.com>, Anup Patel <anup.patel@broadcom.com>, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>, linux-ide@vger.kernel.org, Boris Brezillon <boris.brezillon@free-electrons.com>
+To: linux-leds@vger.kernel.org, linux-ide@vger.kernel.org
+Cc: Stephan Linz <linz@li-pro.net>, Joseph Jezak <josejx@gentoo.org>, =?UTF-8?q?J=C3=B6rg=20Sommer?= <joerg@alea.gnuu.de>, Mark Rutland <mark.rutland@arm.com>, Jacek Anaszewski <j.anaszewski@samsung.com>, Richard Purdie <rpurdie@rpsys.net>, Rob Herring <robh+dt@kernel.org>, Jonathan Corbet <corbet@lwn.net>, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org
 
-Hi Brian,
+Cc: Joseph Jezak <josejx@gentoo.org>
+Cc: J=C3=B6rg Sommer <joerg@alea.gnuu.de>
+Cc: Mark Rutland <mark.rutland@arm.com>
+Signed-off-by: Stephan Linz <linz@li-pro.net>
+Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Jacek Anaszewski <j.anaszewski@samsung.com>
+---
+Changes in v5:
+  - Keep documentation for the old 'ide-disk' device tree
+    binding, but mark as deprecated and refer to the new
+    trigger 'disk-activity'.
 
+Changes in v4:
+  - Keep the 'ide-disk' trigger and add a second one
+    for 'disk-activity'.
 
-On Wed, Jun 22, 2016 at 11:01 PM, Brian Norris
-<computersforpeace@gmail.com> wrote:
-> On Wed, Jun 22, 2016 at 07:29:46AM -0400, Yendapally Reddy Dhananjaya Reddy wrote:
->> Add support for the PWM controller present in Broadcom's iProc
->> family of SoCs. This driver is derived from the pwm-bcm-kona
->> driver, with changes to the register offsets and bit positions.
->> It has been tested on the  Northstar+ bcm958625HR board.
->>
->> Signed-off-by: Yendapally Reddy Dhananjaya Reddy <yendapally.reddy@broadcom.com>
->> ---
->>  drivers/pwm/Kconfig         |  10 ++
->>  drivers/pwm/Makefile        |   1 +
->>  drivers/pwm/pwm-bcm-iproc.c | 327 ++++++++++++++++++++++++++++++++++++++++++++
->>  3 files changed, 338 insertions(+)
->>  create mode 100644 drivers/pwm/pwm-bcm-iproc.c
->>
-> [...]
->> diff --git a/drivers/pwm/pwm-bcm-iproc.c b/drivers/pwm/pwm-bcm-iproc.c
->> new file mode 100644
->> index 0000000..952c457
->> --- /dev/null
->> +++ b/drivers/pwm/pwm-bcm-iproc.c
->> @@ -0,0 +1,327 @@
-> [...]
->> +static const struct pwm_ops iproc_pwm_ops = {
->> +     .config = iproc_pwmc_config_check,
->> +     .set_polarity = iproc_pwmc_set_polarity,
->> +     .enable = iproc_pwmc_enable,
->> +     .disable = iproc_pwmc_disable,
->> +     .owner = THIS_MODULE,
->> +};
->
-> Have you considered trying the new apply() callback instead of
-> config()/set_polarity()/enable()/disable()?
->
+Changes in v3:
+  - Port to kernel 4.x
+  - Split into platform independent and dependent parts.
 
-I will make it and provide a v5 version patches.
+v2: https://patchwork.ozlabs.org/patch/117485/
+v1: http://dev.gentoo.org/~josejx/ata.patch
+---
+ Documentation/devicetree/bindings/leds/common.txt    | 5 ++++-
+ Documentation/devicetree/bindings/leds/leds-gpio.txt | 4 ++--
+ Documentation/laptops/asus-laptop.txt                | 2 +-
+ Documentation/leds/leds-class.txt                    | 2 +-
+ 4 files changed, 8 insertions(+), 5 deletions(-)
 
-Thanks
-Dhananjay
+diff --git a/Documentation/devicetree/bindings/leds/common.txt b/Docume=
+ntation/devicetree/bindings/leds/common.txt
+index af10678..1c32e31 100644
+--- a/Documentation/devicetree/bindings/leds/common.txt
++++ b/Documentation/devicetree/bindings/leds/common.txt
+@@ -25,8 +25,11 @@ Optional properties for child nodes:
+ 		   system
+      "default-on" - LED will turn on (but for leds-gpio see "default-s=
+tate"
+ 		    property in Documentation/devicetree/bindings/gpio/led.txt)
++     "disk-activity" - LED indicates disk activity, the old name "ide-=
+disk" is
++                       still valid for backward compatibility
+      "heartbeat" - LED "double" flashes at a load average based rate
+-     "ide-disk" - LED indicates disk activity
++     "ide-disk" - LED indicates IDE disk activity (deprecated), do not=
+ use for
++                  new implementation, use the new "disk-activity" name=
+ instead
+      "timer" - LED flashes at a fixed, configurable rate
+=20
+ - led-max-microamp : Maximum LED supply current in microamperes. This =
+property
+diff --git a/Documentation/devicetree/bindings/leds/leds-gpio.txt b/Doc=
+umentation/devicetree/bindings/leds/leds-gpio.txt
+index cbbeb18..5b1b43a 100644
+--- a/Documentation/devicetree/bindings/leds/leds-gpio.txt
++++ b/Documentation/devicetree/bindings/leds/leds-gpio.txt
+@@ -33,9 +33,9 @@ Examples:
+ leds {
+ 	compatible =3D "gpio-leds";
+ 	hdd {
+-		label =3D "IDE Activity";
++		label =3D "Disk Activity";
+ 		gpios =3D <&mcu_pio 0 GPIO_ACTIVE_LOW>;
+-		linux,default-trigger =3D "ide-disk";
++		linux,default-trigger =3D "disk-activity";
+ 	};
+=20
+ 	fault {
+diff --git a/Documentation/laptops/asus-laptop.txt b/Documentation/lapt=
+ops/asus-laptop.txt
+index 79a1bc6..5f28587 100644
+--- a/Documentation/laptops/asus-laptop.txt
++++ b/Documentation/laptops/asus-laptop.txt
+@@ -72,7 +72,7 @@ LEDs
+     echo 1 >  /sys/class/leds/asus::mail/brightness
+   will switch the mail LED on.
+   You can also know if they are on/off by reading their content and us=
+e
+-  kernel triggers like ide-disk or heartbeat.
++  kernel triggers like disk-activity or heartbeat.
+=20
+ Backlight
+ ---------
+diff --git a/Documentation/leds/leds-class.txt b/Documentation/leds/led=
+s-class.txt
+index 44f5e6b..f1f7ec9 100644
+--- a/Documentation/leds/leds-class.txt
++++ b/Documentation/leds/leds-class.txt
+@@ -11,7 +11,7 @@ brightness support so will just be turned on for non-=
+zero brightness settings.
+ The class also introduces the optional concept of an LED trigger. A tr=
+igger
+ is a kernel based source of led events. Triggers can either be simple =
+or
+ complex. A simple trigger isn't configurable and is designed to slot i=
+nto
+-existing subsystems with minimal additional code. Examples are the ide=
+-disk,
++existing subsystems with minimal additional code. Examples are the dis=
+k-activity,
+ nand-disk and sharpsl-charge triggers. With led triggers disabled, the=
+ code
+ optimises away.
+=20
+--=20
+2.9.0
 
-> [...]
->
-> Brian
