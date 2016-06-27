@@ -1,135 +1,68 @@
-From: Jacek Anaszewski <j.anaszewski-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-Subject: Re: [PATCH v6] leds: documentation: 'ide-disk' to 'disk-activity'
-Date: Mon, 27 Jun 2016 09:04:13 +0200
-Message-ID: <5770CFED.4090300@samsung.com>
-References: <20160624171704.13399-1-linz@li-pro.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-reply-to: <20160624171704.13399-1-linz-LlUBiLVY8XKsTnJN9+BGXg@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Stephan Linz <linz-LlUBiLVY8XKsTnJN9+BGXg@public.gmane.org>
-Cc: linux-leds-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Joseph Jezak <josejx-aBrp7R+bbdUdnm+yROfE0A@public.gmane.org>, =?UTF-8?B?SsO2cmcgU29tbWVy?= <joerg-au2b9oQwubsjnolme5KbmQ@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Richard Purdie <rpurdie-Fm38FmjxZ/leoWH0uzbU5w@public.gmane.org>, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-doc-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: [PATCH] sparc64: sparc64_defconfig: convert to use libata PATA drivers
+Date: Mon, 27 Jun 2016 14:23:52 +0200
+Message-ID: <1467030232-10027-1-git-send-email-b.zolnierkie@samsung.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mailout1.samsung.com ([203.254.224.24]:58976 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751634AbcF0MY3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 27 Jun 2016 08:24:29 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: sparclinux@vger.kernel.org, "David S. Miller" <davem@davemloft.net>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com
 
-Hi Stephan,
+IDE subsystem has been deprecated since 2009 and the majority
+(if not all) of Linux distributions have switched to use
+libata for ATA support exclusively.  However there are still
+some users (mostly old or/and embedded non-x86 systems) that
+have not converted from using IDE subsystem to libata PATA
+drivers.  This doesn't seem to be good thing in the long-term
+for Linux as while there is less and less PATA systems left
+in use:
 
-On 06/24/2016 07:16 PM, Stephan Linz wrote:
-> Cc: Joseph Jezak <josejx-aBrp7R+bbdUdnm+yROfE0A@public.gmane.org>
-> Cc: J=C3=B6rg Sommer <joerg-au2b9oQwubsjnolme5KbmQ@public.gmane.org>
-> Cc: Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>
-> Signed-off-by: Stephan Linz <linz-LlUBiLVY8XKsTnJN9+BGXg@public.gmane.org>
-> Acked-by: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-> Signed-off-by: Jacek Anaszewski <j.anaszewski-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org>
-> ---
-> Changes in v6:
->    - Reorganize v5.
->
-> Changes in v5:
->    - Keep documentation for the old 'ide-disk' device tree
->      binding, but mark as deprecated and refer to the new
->      trigger 'disk-activity'.
->
-> Changes in v4:
->    - Keep the 'ide-disk' trigger and add a second one
->      for 'disk-activity'.
->
-> Changes in v3:
->    - Port to kernel 4.x
->    - Split into platform independent and dependent parts.
->
-> v2: https://patchwork.ozlabs.org/patch/117485/
-> v1: http://dev.gentoo.org/~josejx/ata.patch
-> ---
->   Documentation/devicetree/bindings/leds/common.txt    | 4 +++-
->   Documentation/devicetree/bindings/leds/leds-gpio.txt | 4 ++--
->   Documentation/laptops/asus-laptop.txt                | 2 +-
->   Documentation/leds/leds-class.txt                    | 2 +-
->   4 files changed, 7 insertions(+), 5 deletions(-)
->
-> diff --git a/Documentation/devicetree/bindings/leds/common.txt b/Docu=
-mentation/devicetree/bindings/leds/common.txt
-> index af10678..93ef6e6 100644
-> --- a/Documentation/devicetree/bindings/leds/common.txt
-> +++ b/Documentation/devicetree/bindings/leds/common.txt
-> @@ -26,7 +26,9 @@ Optional properties for child nodes:
->        "default-on" - LED will turn on (but for leds-gpio see "defaul=
-t-state"
->   		    property in Documentation/devicetree/bindings/gpio/led.txt)
->        "heartbeat" - LED "double" flashes at a load average based rat=
-e
-> -     "ide-disk" - LED indicates disk activity
-> +     "disk-activity" - LED indicates disk activity
-> +     "ide-disk" - LED indicates IDE disk activity (deprecated),
-> +                  in new implementations use "disk-activity"
->        "timer" - LED flashes at a fixed, configurable rate
->
->   - led-max-microamp : Maximum LED supply current in microamperes. Th=
-is property
-> diff --git a/Documentation/devicetree/bindings/leds/leds-gpio.txt b/D=
-ocumentation/devicetree/bindings/leds/leds-gpio.txt
-> index cbbeb18..5b1b43a 100644
-> --- a/Documentation/devicetree/bindings/leds/leds-gpio.txt
-> +++ b/Documentation/devicetree/bindings/leds/leds-gpio.txt
-> @@ -33,9 +33,9 @@ Examples:
->   leds {
->   	compatible =3D "gpio-leds";
->   	hdd {
-> -		label =3D "IDE Activity";
-> +		label =3D "Disk Activity";
->   		gpios =3D <&mcu_pio 0 GPIO_ACTIVE_LOW>;
-> -		linux,default-trigger =3D "ide-disk";
-> +		linux,default-trigger =3D "disk-activity";
->   	};
->
->   	fault {
-> diff --git a/Documentation/laptops/asus-laptop.txt b/Documentation/la=
-ptops/asus-laptop.txt
-> index 79a1bc6..5f28587 100644
-> --- a/Documentation/laptops/asus-laptop.txt
-> +++ b/Documentation/laptops/asus-laptop.txt
-> @@ -72,7 +72,7 @@ LEDs
->       echo 1 >  /sys/class/leds/asus::mail/brightness
->     will switch the mail LED on.
->     You can also know if they are on/off by reading their content and=
- use
-> -  kernel triggers like ide-disk or heartbeat.
-> +  kernel triggers like disk-activity or heartbeat.
->
->   Backlight
->   ---------
-> diff --git a/Documentation/leds/leds-class.txt b/Documentation/leds/l=
-eds-class.txt
-> index 44f5e6b..f1f7ec9 100644
-> --- a/Documentation/leds/leds-class.txt
-> +++ b/Documentation/leds/leds-class.txt
-> @@ -11,7 +11,7 @@ brightness support so will just be turned on for no=
-n-zero brightness settings.
->   The class also introduces the optional concept of an LED trigger. A=
- trigger
->   is a kernel based source of led events. Triggers can either be simp=
-le or
->   complex. A simple trigger isn't configurable and is designed to slo=
-t into
-> -existing subsystems with minimal additional code. Examples are the i=
-de-disk,
-> +existing subsystems with minimal additional code. Examples are the d=
-isk-activity,
->   nand-disk and sharpsl-charge triggers. With led triggers disabled, =
-the code
->   optimises away.
->
->
+* testing efforts are divided between two subsystems
 
-Applied, thanks.
+* having duplicate drivers for same hardware confuses users
 
---=20
-Best regards,
-Jacek Anaszewski
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" i=
-n
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This patch converts sparc64_defconfig to use libata PATA
+drivers.
+
+Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+---
+Build tested only.
+If you have affected hardware please test.  Thank you.
+
+ arch/sparc/configs/sparc64_defconfig | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/arch/sparc/configs/sparc64_defconfig b/arch/sparc/configs/sparc64_defconfig
+index e4bbc76..41609ad 100644
+--- a/arch/sparc/configs/sparc64_defconfig
++++ b/arch/sparc/configs/sparc64_defconfig
+@@ -68,19 +68,17 @@ CONFIG_CDROM_PKTCDVD=m
+ CONFIG_CDROM_PKTCDVD_WCACHE=y
+ CONFIG_ATA_OVER_ETH=m
+ CONFIG_SUNVDC=m
+-CONFIG_IDE=y
+-CONFIG_BLK_DEV_IDECD=y
+-CONFIG_BLK_DEV_ALI15X3=y
+ CONFIG_RAID_ATTRS=m
+-CONFIG_SCSI=y
+ CONFIG_BLK_DEV_SD=y
+-CONFIG_BLK_DEV_SR=m
++CONFIG_BLK_DEV_SR=y
+ CONFIG_BLK_DEV_SR_VENDOR=y
+ CONFIG_CHR_DEV_SG=m
+ CONFIG_SCSI_MULTI_LUN=y
+ CONFIG_SCSI_CONSTANTS=y
+ CONFIG_SCSI_SPI_ATTRS=y
+ CONFIG_SCSI_FC_ATTRS=y
++CONFIG_ATA=y
++CONFIG_PATA_ALI=y
+ CONFIG_MD=y
+ CONFIG_BLK_DEV_MD=m
+ CONFIG_MD_LINEAR=m
+-- 
+1.9.1
+
