@@ -1,49 +1,86 @@
-From: tom.ty89@gmail.com
-Subject: [PATCH v2 2/2] libata-scsi: do not respond with "invalid field" for FORMAT UNIT
-Date: Tue,  5 Jul 2016 14:45:56 +0800
-Message-ID: <577b57b3.5b4c620a.37648.6c91@mx.google.com>
-References: <20160705064556.909-1-me>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20160705064556.909-1-me>
-Sender: linux-scsi-owner@vger.kernel.org
-To: tj@kernel.org, martin.petersen@oracle.com, sergei.shtylyov@cogentembedded.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
+From: Graeme Gregory <gg@slimlogic.co.uk>
+Subject: Re: [PATCH] ata: ahci_platform: Add ACPI support for APM X-Gene AHCI
+ controller v3 hardware.
+Date: Tue, 5 Jul 2016 10:07:47 +0100
+Message-ID: <20160705090747.GC18338@xora-haswell.xora.org.uk>
+References: <stripathi@apm.com>
+ <1466034240-22694-1-git-send-email-stripathi@apm.com>
+ <6691907.FIx2xYmxSs@wuerfel>
+ <CAOHikRCB4c79okd0q3=Lqwk7LKwZ6EDnWfHRH_oXokrB4PHcyw@mail.gmail.com>
+ <CAOHikRDUH-PK4JfS8pUR+or=XTwDHBejFTGy33V20HKMMTUaPg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:44052 "EHLO
+	out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754189AbcGEJHv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Jul 2016 05:07:51 -0400
+Content-Disposition: inline
+In-Reply-To: <CAOHikRDUH-PK4JfS8pUR+or=XTwDHBejFTGy33V20HKMMTUaPg@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Suman Tripathi <stripathi@apm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Mark Langsdorf <mlangsdo@redhat.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jon Masters <jcm@redhat.com>, patches <patches@apm.com>, Tejun Heo <tj@kernel.org>, Olof Johansson <olof@lixom.net>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
 
-From: Tom Yan <tom.ty89@gmail.com>
+On Tue, Jun 21, 2016 at 04:31:38PM -0700, Suman Tripathi wrote:
+> Hi Arnd,
+> 
+> On Tue, Jun 21, 2016 at 11:08 AM, Suman Tripathi <stripathi@apm.com> wrote:
+> > On Wed, Jun 15, 2016 at 11:54 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> >>
+> >> On Wednesday, June 15, 2016 5:44:00 PM CEST suman-tripathi wrote:
+> >> > This patch adds ACPI support for APM X-Gene AHCI controller in
+> >> > ahci_platform driver for v3 hardware. APM X-Gene AHCI controller
+> >> > v3 hardware is fully compliant with ahci_platform driver and requires
+> >> > no workaround quirk.
+> >> >
+> >> > Signed-off-by: Suman Tripathi <stripathi@apm.com>
+> >> > ---
+> >> >  drivers/ata/ahci_platform.c |    1 +
+> >> >  1 files changed, 1 insertions(+), 0 deletions(-)
+> >> >
+> >> > diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
+> >> > index 62a04c8..3395baf 100644
+> >> > --- a/drivers/ata/ahci_platform.c
+> >> > +++ b/drivers/ata/ahci_platform.c
+> >> > @@ -86,6 +86,7 @@ MODULE_DEVICE_TABLE(of, ahci_of_match);
+> >> >
+> >> >  static const struct acpi_device_id ahci_acpi_match[] = {
+> >> >         { ACPI_DEVICE_CLASS(PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff) },
+> >> > +       { "APMC0D33", 0},
+> >> >         {},
+> >> >  };
+> >> >  MODULE_DEVICE_TABLE(acpi, ahci_acpi_match);
+> >> >
+> >>
+> >> Doesn't the ACPI_DEVICE_CLASS entry take care of this? I thought it had been
+> >
+> >
+> > yeah it also works. Just thought that we need something different as
+> > our's is a non-PCI SATA.
+> 
+> Are you suggesting to introduce a new class ACPI_DEVICE_CLASS for
+> non-pci ahci ? or to reuse the existing PCI_CLASS_STORAGE_SATA_AHCI ?
 
-It does not make sense and is confusing to respond with "Invalid
-field in CDB" while we have no support at all implemented for
-FORMAT UNIT. It is decent to let it go to the default, which
-will respond with "Invalid command operation code" instead.
+This was discussed when AMD Seattle SoC had the same issue and it was
+decided in standards body and on LKML that using PCI device classes for
+non PCI devices was fine.
 
-Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+Example from Overdrive DSDT
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 029e738..ac5676e 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -307,7 +307,7 @@ static void ata_scsi_set_invalid_field(struct ata_device *dev,
- 				       struct scsi_cmnd *cmd, u16 field, u8 bit)
- {
- 	ata_scsi_set_sense(dev, cmd, ILLEGAL_REQUEST, 0x24, 0x0);
--	/* "Invalid field in cbd" */
-+	/* "Invalid field in CDB" */
- 	scsi_set_sense_field_pointer(cmd->sense_buffer, SCSI_SENSE_BUFFERSIZE,
- 				     field, bit, 1);
- }
-@@ -4045,11 +4045,6 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd)
- 	args.done = cmd->scsi_done;
- 
- 	switch(scsicmd[0]) {
--	/* TODO: worth improving? */
--	case FORMAT_UNIT:
--		ata_scsi_invalid_field(dev, cmd, 0);
--		break;
--
- 	case INQUIRY:
- 		if (scsicmd[1] & 2)		   /* is CmdDt set?  */
- 		    ata_scsi_invalid_field(dev, cmd, 1);
--- 
-2.9.0
+Device (AHC0)
+{
+  Name (_HID, "AMDI0600")  // _HID: Hardware ID
+  Name (_UID, 0x00)  // _UID: Unique ID
+  Name (_CCA, 0x01) // _CCA: Cache Coherency Attribute
+  Name (_CLS,
+    Package (0x03) // _CLS: Class Code
+    {
+      0x01,
+      0x06,
+      0x01
+    })
+  ...
+
+Graeme
 
