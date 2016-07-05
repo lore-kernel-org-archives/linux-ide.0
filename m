@@ -1,98 +1,66 @@
-From: Suman Tripathi <stripathi@apm.com>
-Subject: Re: [PATCH] ata: ahci_platform: Add ACPI support for APM X-Gene AHCI
- controller v3 hardware.
-Date: Tue, 5 Jul 2016 11:01:21 -0700
-Message-ID: <CAOHikRCZ=YCH6fy9KObf_Cb5fiNBNcHtW3yW5+6=4pCCVaKA_A@mail.gmail.com>
-References: <stripathi@apm.com> <1466034240-22694-1-git-send-email-stripathi@apm.com>
- <6691907.FIx2xYmxSs@wuerfel> <CAOHikRCB4c79okd0q3=Lqwk7LKwZ6EDnWfHRH_oXokrB4PHcyw@mail.gmail.com>
- <CAOHikRDUH-PK4JfS8pUR+or=XTwDHBejFTGy33V20HKMMTUaPg@mail.gmail.com> <20160705090747.GC18338@xora-haswell.xora.org.uk>
+From: Tom Yan <tom.ty89@gmail.com>
+Subject: Re: [PATCH v2 1/2] libata-scsi: improve TRIM translation
+Date: Wed, 6 Jul 2016 03:10:51 +0800
+Message-ID: <CAGnHSEkoJPzi0qQbu2SjqYehFW9o1g8d-mm=jYuQk=YgBKa8Yw@mail.gmail.com>
+References: <577b57b0.5b4c620a.37648.6c8d@mx.google.com> <6f5400ce-58c8-d52c-9ce5-a1450b52599e@cogentembedded.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qt0-f170.google.com ([209.85.216.170]:34413 "EHLO
-	mail-qt0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754882AbcGESBW (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Jul 2016 14:01:22 -0400
-Received: by mail-qt0-f170.google.com with SMTP id m2so104981720qtd.1
-        for <linux-ide@vger.kernel.org>; Tue, 05 Jul 2016 11:01:22 -0700 (PDT)
-In-Reply-To: <20160705090747.GC18338@xora-haswell.xora.org.uk>
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:32996 "EHLO
+	mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752302AbcGETKx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 5 Jul 2016 15:10:53 -0400
+In-Reply-To: <6f5400ce-58c8-d52c-9ce5-a1450b52599e@cogentembedded.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Graeme Gregory <gg@slimlogic.co.uk>
-Cc: Arnd Bergmann <arnd@arndb.de>, "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>, Mark Langsdorf <mlangsdo@redhat.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, Jon Masters <jcm@redhat.com>, patches <patches@apm.com>, Tejun Heo <tj@kernel.org>, Olof Johansson <olof@lixom.net>, linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: tj@kernel.org, martin.petersen@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, Jul 5, 2016 at 2:07 AM, Graeme Gregory <gg@slimlogic.co.uk> wrote:
->
-> On Tue, Jun 21, 2016 at 04:31:38PM -0700, Suman Tripathi wrote:
-> > Hi Arnd,
-> >
-> > On Tue, Jun 21, 2016 at 11:08 AM, Suman Tripathi <stripathi@apm.com> wrote:
-> > > On Wed, Jun 15, 2016 at 11:54 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> > >>
-> > >> On Wednesday, June 15, 2016 5:44:00 PM CEST suman-tripathi wrote:
-> > >> > This patch adds ACPI support for APM X-Gene AHCI controller in
-> > >> > ahci_platform driver for v3 hardware. APM X-Gene AHCI controller
-> > >> > v3 hardware is fully compliant with ahci_platform driver and requires
-> > >> > no workaround quirk.
-> > >> >
-> > >> > Signed-off-by: Suman Tripathi <stripathi@apm.com>
-> > >> > ---
-> > >> >  drivers/ata/ahci_platform.c |    1 +
-> > >> >  1 files changed, 1 insertions(+), 0 deletions(-)
-> > >> >
-> > >> > diff --git a/drivers/ata/ahci_platform.c b/drivers/ata/ahci_platform.c
-> > >> > index 62a04c8..3395baf 100644
-> > >> > --- a/drivers/ata/ahci_platform.c
-> > >> > +++ b/drivers/ata/ahci_platform.c
-> > >> > @@ -86,6 +86,7 @@ MODULE_DEVICE_TABLE(of, ahci_of_match);
-> > >> >
-> > >> >  static const struct acpi_device_id ahci_acpi_match[] = {
-> > >> >         { ACPI_DEVICE_CLASS(PCI_CLASS_STORAGE_SATA_AHCI, 0xffffff) },
-> > >> > +       { "APMC0D33", 0},
-> > >> >         {},
-> > >> >  };
-> > >> >  MODULE_DEVICE_TABLE(acpi, ahci_acpi_match);
-> > >> >
-> > >>
-> > >> Doesn't the ACPI_DEVICE_CLASS entry take care of this? I thought it had been
-> > >
-> > >
-> > > yeah it also works. Just thought that we need something different as
-> > > our's is a non-PCI SATA.
-> >
-> > Are you suggesting to introduce a new class ACPI_DEVICE_CLASS for
-> > non-pci ahci ? or to reuse the existing PCI_CLASS_STORAGE_SATA_AHCI ?
->
-> This was discussed when AMD Seattle SoC had the same issue and it was
-> decided in standards body and on LKML that using PCI device classes for
-> non PCI devices was fine.
->
-> Example from Overdrive DSDT
->
-> Device (AHC0)
-> {
->   Name (_HID, "AMDI0600")  // _HID: Hardware ID
->   Name (_UID, 0x00)  // _UID: Unique ID
->   Name (_CCA, 0x01) // _CCA: Cache Coherency Attribute
->   Name (_CLS,
->     Package (0x03) // _CLS: Class Code
->     {
->       0x01,
->       0x06,
->       0x01
->     })
+Well it is exactly what the patch does. We no longer do the "divide it
+by 8" thing each time we want to know the now defined TRIM_RANGE_NUM.
 
+ata_set_lba_range_entries() has only been used by
+ata_scsi_write_same_xlat()
+(http://lxr.free-electrons.com/ident?i=ata_set_lba_range_entries,
+although the comment of it seems to tell otherwise). That's why I
+(could) changed the function itself and the param ("512")
+ata_scsi_write_same_xlat() passes to it.
 
-Got it. Will do the same. Thanks !!
+On 5 July 2016 at 19:04, Sergei Shtylyov
+<sergei.shtylyov@cogentembedded.com> wrote:
+> Hello.
 >
->   ...
+> On 7/5/2016 9:45 AM, tom.ty89@gmail.com wrote:
 >
-> Graeme
+>> From: Tom Yan <tom.ty89@gmail.com>
+>>
+>> Define TRIM_RANGE_SIZE and TRIM_RANGE_NUM so that the corresponding
+>> functions can be more generalized. Also, conform to SBC by rejecting
+>> WRITE SAME (16) commands with number of blocks that exceeds the limit
+>> that is defined in the SATL.
+>>
+>> Signed-off-by: Tom Yan <tom.ty89@gmail.com>
 >
-
-
-
--- 
-Thanks,
-with regards,
-Suman Tripathi
+>
+> [...]
+>
+>> diff --git a/include/linux/ata.h b/include/linux/ata.h
+>> index 99346be..0971c3f 100644
+>> --- a/include/linux/ata.h
+>> +++ b/include/linux/ata.h
+>> @@ -1071,7 +1071,7 @@ static inline unsigned
+>> ata_set_lba_range_entries(void *_buffer,
+>>         __le64 *buffer = _buffer;
+>>         unsigned i = 0, used_bytes;
+>>
+>> -       while (i < buf_size / 8 ) { /* 6-byte LBA + 2-byte range per entry
+>> */
+>> +       while (i < buf_size) {
+>
+>
+>    BTW, this change doesn't seem to be documented in the patch description?
+>
+> [...]
+>
+> MBR, Sergei
+>
