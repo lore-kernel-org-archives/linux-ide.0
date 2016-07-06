@@ -1,67 +1,47 @@
-From: "tj@kernel.org" <tj@kernel.org>
-Subject: Re: BUG: INTx is assered unexpectly when unload AHCI driver with
- MSIx support.
-Date: Wed, 6 Jul 2016 09:52:36 -0400
-Message-ID: <20160706135236.GG3262@mtj.duckdns.org>
-References: <HK2PR03MB173248BF420102DE4E54BD6EFC3A0@HK2PR03MB1732.apcprd03.prod.outlook.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: tom.ty89@gmail.com
+Subject: [PATCH v3 1/2] libata-scsi: reject WRITE SAME (16) with n_block that exceeds limit
+Date: Thu,  7 Jul 2016 00:44:39 +0800
+Message-ID: <577d3580.46c0620a.b8b1b.ffff9a01@mx.google.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f195.google.com ([209.85.161.195]:35308 "EHLO
-	mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754917AbcGFNwj (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Jul 2016 09:52:39 -0400
-Content-Disposition: inline
-In-Reply-To: <HK2PR03MB173248BF420102DE4E54BD6EFC3A0@HK2PR03MB1732.apcprd03.prod.outlook.com>
+Received: from mail-pa0-f68.google.com ([209.85.220.68]:33791 "EHLO
+	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753813AbcGFQot (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Jul 2016 12:44:49 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pang Raymond <Raymond_rule@hotmail.com>
-Cc: linux ide <linux-ide@vger.kernel.org>, linux kernel <linux-kernel@vger.kernel.org>
+To: tj@kernel.org, martin.petersen@oracle.com, sergei.shtylyov@cogentembedded.com
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
 
-Hello,
+From: Tom Yan <tom.ty89@gmail.com>
 
-(Can you please flow the text a bit below 80 column when you reply?)
+Currently if a WRITE SAME (16) command is issued to the SATL with
+"number of blocks" that is larger than the "Maximum write same length"
+(which is the maximum number of blocks per TRIM command allowed in
+libata, currently 65535 * 512 / 8 blocks), the SATL will accept the
+command and translate it to a TRIM command with the upper limit.
 
-On Wed, Jul 06, 2016 at 02:51:47AM +0000, Pang Raymond wrote:
-> Why does the phenomenon appear?
-> 	Two factors cause this problem.
-> 		1. In MSIx's irq handler
-> 		   (ahci_multi_irqs_intr_hard()), we do not clear
-> 		   GHC.IS register which presents which ports need
-> 		   interrupt service.  static irqreturn_t
-> 		   ahci_multi_irqs_intr_hard(int irq, void
-> 		   *dev_instance)
-> 			{
-> 				//  omitting unconcerned codes here
-> 				// ...				
-> 				// here we just clear PxIS register, not clear GHC.IS
-> 				status = readl(port_mmio + PORT_IRQ_STAT);
-> 				writel(status, port_mmio + PORT_IRQ_STAT);
-> 				// ...
-> 			}
-> 		2. In PCI subsystem, after Disable MSIx, INTx is
->		   enabled automatically.
-> 			void pci_msix_shutdown(struct pci_dev *dev)
-> 			{
-> 				// omitting unconcerned codes here
-> 				// ...				
-> 				// after Disable MSIx, enable INTx imediately
-> 				pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
-> 				pci_intx_for_msi(dev, 1);
-> 				dev->msix_enabled = 0;
-> 				pcibios_alloc_irq(dev);
-> 			}
->
-> When Kernel enables INTx(I mean clearing PCI configure space
-> Rx04.bit10), controller will find GHC.IS is not Zero (because driver
-> haven't cleared GHC.IS after servicing MSIx interrupt), so it
-> believes some SATA ports need interrupt servicing and asserts INTx
-> interrupt.
+However, according to SBC (as of sbc4r11.pdf), the "device server"
+should terminate the command with "Invalid field in CBD" in that case.
 
-Looks like you debugged the problem.  Care to write up and test a
-patch?
+Signed-off-by: Tom Yan <tom.ty89@gmail.com>
 
-Thanks a lot!
-
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index bfec66f..a1f061a 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3305,7 +3305,11 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
+ 		goto invalid_param_len;
+ 
+ 	buf = page_address(sg_page(scsi_sglist(scmd)));
+-	size = ata_set_lba_range_entries(buf, 512, block, n_block);
++
++	if (n_block <= 65535 * 512 / 8)
++		size = ata_set_lba_range_entries(buf, 512, block, n_block);
++	else
++		goto invalid_fld;
+ 
+ 	if (ata_ncq_enabled(dev) && ata_fpdma_dsm_supported(dev)) {
+ 		/* Newer devices support queued TRIM commands */
 -- 
-tejun
+2.9.0
+
