@@ -1,29 +1,67 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2 2/2] libata-scsi: do not respond with "invalid field"
- for FORMAT UNIT
-Date: Wed, 6 Jul 2016 09:39:49 -0400
-Message-ID: <20160706133949.GE3262@mtj.duckdns.org>
-References: <577b57b3.5b4c620a.37648.6c91@mx.google.com>
- <77f27e3b-afe6-2aa9-7d42-e054a7f65bb0@cogentembedded.com>
- <CAGnHSEm2YEA2fg93w0jDR_Jou5MhxRH30RSLUqoQc_6Fg6s-Hg@mail.gmail.com>
- <20160705223906.GD25394@htj.duckdns.org>
- <CAGnHSEnuCTP4R1EwB0UPW1S_=GzWjbaxyKW9JK7oKGMpzyrX7w@mail.gmail.com>
+From: "tj@kernel.org" <tj@kernel.org>
+Subject: Re: BUG: INTx is assered unexpectly when unload AHCI driver with
+ MSIx support.
+Date: Wed, 6 Jul 2016 09:52:36 -0400
+Message-ID: <20160706135236.GG3262@mtj.duckdns.org>
+References: <HK2PR03MB173248BF420102DE4E54BD6EFC3A0@HK2PR03MB1732.apcprd03.prod.outlook.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-yw0-f195.google.com ([209.85.161.195]:35308 "EHLO
+	mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754917AbcGFNwj (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Jul 2016 09:52:39 -0400
 Content-Disposition: inline
-In-Reply-To: <CAGnHSEnuCTP4R1EwB0UPW1S_=GzWjbaxyKW9JK7oKGMpzyrX7w@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tom Yan <tom.ty89@gmail.com>
-Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, martin.petersen@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+In-Reply-To: <HK2PR03MB173248BF420102DE4E54BD6EFC3A0@HK2PR03MB1732.apcprd03.prod.outlook.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Pang Raymond <Raymond_rule@hotmail.com>
+Cc: linux ide <linux-ide@vger.kernel.org>, linux kernel <linux-kernel@vger.kernel.org>
 
-On Wed, Jul 06, 2016 at 06:40:32AM +0000, Tom Yan wrote:
-> Um it's not mainly about in caps or not, but more about wrongly spelled as cbd.
+Hello,
 
-Heh, right, so please just note it in the description.
+(Can you please flow the text a bit below 80 column when you reply?)
 
-Thanks.
+On Wed, Jul 06, 2016 at 02:51:47AM +0000, Pang Raymond wrote:
+> Why does the phenomenon appear?
+> 	Two factors cause this problem.
+> 		1. In MSIx's irq handler
+> 		   (ahci_multi_irqs_intr_hard()), we do not clear
+> 		   GHC.IS register which presents which ports need
+> 		   interrupt service.  static irqreturn_t
+> 		   ahci_multi_irqs_intr_hard(int irq, void
+> 		   *dev_instance)
+> 			{
+> 				//  omitting unconcerned codes here
+> 				// ...				
+> 				// here we just clear PxIS register, not clear GHC.IS
+> 				status = readl(port_mmio + PORT_IRQ_STAT);
+> 				writel(status, port_mmio + PORT_IRQ_STAT);
+> 				// ...
+> 			}
+> 		2. In PCI subsystem, after Disable MSIx, INTx is
+>		   enabled automatically.
+> 			void pci_msix_shutdown(struct pci_dev *dev)
+> 			{
+> 				// omitting unconcerned codes here
+> 				// ...				
+> 				// after Disable MSIx, enable INTx imediately
+> 				pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
+> 				pci_intx_for_msi(dev, 1);
+> 				dev->msix_enabled = 0;
+> 				pcibios_alloc_irq(dev);
+> 			}
+>
+> When Kernel enables INTx(I mean clearing PCI configure space
+> Rx04.bit10), controller will find GHC.IS is not Zero (because driver
+> haven't cleared GHC.IS after servicing MSIx interrupt), so it
+> believes some SATA ports need interrupt servicing and asserts INTx
+> interrupt.
+
+Looks like you debugged the problem.  Care to write up and test a
+patch?
+
+Thanks a lot!
 
 -- 
 tejun
