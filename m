@@ -1,42 +1,45 @@
-From: tom.ty89@gmail.com
-Subject: [PATCH resend 1/2] libata-scsi: do not respond with "invalid field" for FORMAT UNIT
-Date: Thu,  7 Jul 2016 01:13:08 +0800
-Message-ID: <577d3c35.949b620a.2f8b5.ffffb1c4@mx.google.com>
+From: Tom Yan <tom.ty89@gmail.com>
+Subject: Re: [PATCH v3 1/2] libata-scsi: reject WRITE SAME (16) with n_block
+ that exceeds limit
+Date: Thu, 7 Jul 2016 01:18:29 +0800
+Message-ID: <CAGnHSE=98o1O8i4iBhoDUPiNRHJ-JLEdNRLfYb=hxZdGPmnSxQ@mail.gmail.com>
+References: <577d3580.46c0620a.b8b1b.ffff9a01@mx.google.com> <41a56c06-cc57-698c-6b05-779094093714@cogentembedded.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f67.google.com ([209.85.220.67]:36686 "EHLO
-	mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752150AbcGFRNb (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Jul 2016 13:13:31 -0400
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:34804 "EHLO
+	mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752728AbcGFRSb (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 6 Jul 2016 13:18:31 -0400
+In-Reply-To: <41a56c06-cc57-698c-6b05-779094093714@cogentembedded.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org, martin.petersen@oracle.com, sergei.shtylyov@cogentembedded.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: Tejun Heo <tj@kernel.org>, martin.petersen@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-From: Tom Yan <tom.ty89@gmail.com>
+I am so sorry. Now I hate acronym. v5 coming. :-)
 
-It does not make sense and is confusing to respond with "Invalid
-field in CDB" while we have no support at all implemented for
-FORMAT UNIT. It is decent to let it go to the default, which
-will respond with "Invalid command operation code" instead.
-
-Signed-off-by: Tom Yan <tom.ty89@gmail.com>
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index bfec66f..f1125fd 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -4039,11 +4039,6 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd)
- 	args.done = cmd->scsi_done;
- 
- 	switch(scsicmd[0]) {
--	/* TODO: worth improving? */
--	case FORMAT_UNIT:
--		ata_scsi_invalid_field(dev, cmd, 0);
--		break;
--
- 	case INQUIRY:
- 		if (scsicmd[1] & 2)		   /* is CmdDt set?  */
- 		    ata_scsi_invalid_field(dev, cmd, 1);
--- 
-2.9.0
-
+On 7 July 2016 at 01:02, Sergei Shtylyov
+<sergei.shtylyov@cogentembedded.com> wrote:
+> On 07/06/2016 07:44 PM, tom.ty89@gmail.com wrote:
+>
+>> From: Tom Yan <tom.ty89@gmail.com>
+>>
+>> Currently if a WRITE SAME (16) command is issued to the SATL with
+>> "number of blocks" that is larger than the "Maximum write same length"
+>> (which is the maximum number of blocks per TRIM command allowed in
+>> libata, currently 65535 * 512 / 8 blocks), the SATL will accept the
+>> command and translate it to a TRIM command with the upper limit.
+>>
+>> However, according to SBC (as of sbc4r11.pdf), the "device server"
+>> should terminate the command with "Invalid field in CBD" in that case.
+>
+>
+>    CDB again. :-)
+>
+>> Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+>
+> [...]
+>
+> MBR, Sergei
+>
