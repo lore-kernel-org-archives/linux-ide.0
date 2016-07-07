@@ -1,10 +1,10 @@
 From: tom.ty89@gmail.com
-Subject: [PATCH 2/2] libata-scsi: do not return t10 designator if drive has WWN
-Date: Thu,  7 Jul 2016 06:12:13 +0800
-Message-ID: <577d824d.a10c420a.da50c.ffff9544@mx.google.com>
-References: <20160706221213.1928-1-me>
+Subject: [PATCH 2/2] libata-scsi: better style in ata_msense_caching()
+Date: Thu,  7 Jul 2016 09:43:34 +0800
+Message-ID: <577db3cf.0a6a620a.c3774.1508@mx.google.com>
+References: <20160707014334.1031-1-me>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <20160706221213.1928-1-me>
+In-Reply-To: <20160707014334.1031-1-me>
 Sender: linux-scsi-owner@vger.kernel.org
 To: tj@kernel.org
 Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
@@ -12,62 +12,29 @@ List-Id: linux-ide@vger.kernel.org
 
 From: Tom Yan <tom.ty89@gmail.com>
 
-SAT (as of sat4r05f.pdf) only requires the t10 designator if the
-drive does not support/have WWN. Besides, we already have the ATA
-information VPD.
-
 Signed-off-by: Tom Yan <tom.ty89@gmail.com>
 
 diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 9f478ad..84b3d42 100644
+index bfec66f..e3f5751 100644
 --- a/drivers/ata/libata-scsi.c
 +++ b/drivers/ata/libata-scsi.c
-@@ -2210,21 +2210,6 @@ static unsigned int ata_scsiop_inq_83(struct ata_scsi_args *args, u8 *rbuf)
- 	rbuf[1] = 0x83;			/* this page code */
- 	num = 4;
- 
--	/* SAT defined lu model and serial numbers descriptor */
--	/* piv=0, assoc=lu, code_set=ACSII, designator=t10 vendor id */
--	rbuf[num + 0] = 2;
--	rbuf[num + 1] = 1;
--	rbuf[num + 3] = sat_model_serial_desc_len;
--	num += 4;
--	memcpy(rbuf + num, "ATA     ", 8);
--	num += 8;
--	ata_id_string(args->id, (unsigned char *) rbuf + num, ATA_ID_PROD,
--		      ATA_ID_PROD_LEN);
--	num += ATA_ID_PROD_LEN;
--	ata_id_string(args->id, (unsigned char *) rbuf + num, ATA_ID_SERNO,
--		      ATA_ID_SERNO_LEN);
--	num += ATA_ID_SERNO_LEN;
--
- 	if (ata_id_has_wwn(args->id)) {
- 		/* SAT defined lu world wide name */
- 		/* piv=0, assoc=lu, code_set=binary, designator=NAA */
-@@ -2236,6 +2221,23 @@ static unsigned int ata_scsiop_inq_83(struct ata_scsi_args *args, u8 *rbuf)
- 			      ATA_ID_WWN, ATA_ID_WWN_LEN);
- 		num += ATA_ID_WWN_LEN;
- 	}
+@@ -2424,10 +2424,12 @@ static void modecpy(u8 *dest, const u8 *src, int n, bool changeable)
+ static unsigned int ata_msense_caching(u16 *id, u8 *buf, bool changeable)
+ {
+ 	modecpy(buf, def_cache_mpage, sizeof(def_cache_mpage), changeable);
+-	if (changeable || ata_id_wcache_enabled(id))
+-		buf[2] |= (1 << 2);	/* write cache enable */
+-	if (!changeable && !ata_id_rahead_enabled(id))
+-		buf[12] |= (1 << 5);	/* disable read ahead */
++	if (changeable)
++		buf[2] |= (1 << 2); /* ata_mselect_caching() */
 +	else {
-+		/* SAT defined lu model and serial numbers descriptor */
-+		/* piv=0, assoc=lu, code_set=ACSII, designator=t10 vendor id */
-+		rbuf[num + 0] = 2;
-+		rbuf[num + 1] = 1;
-+		rbuf[num + 3] = sat_model_serial_desc_len;
-+		num += 4;
-+		memcpy(rbuf + num, "ATA     ", 8);
-+		num += 8;
-+		ata_id_string(args->id, (unsigned char *) rbuf + num, ATA_ID_PROD,
-+			      ATA_ID_PROD_LEN);
-+		num += ATA_ID_PROD_LEN;
-+		ata_id_string(args->id, (unsigned char *) rbuf + num, ATA_ID_SERNO,
-+			      ATA_ID_SERNO_LEN);
-+		num += ATA_ID_SERNO_LEN;
++		buf[2] |= (ata_id_wcache_enabled(id) << 2);	/* write cache enable */
++		buf[12] |= (!ata_id_rahead_enabled(id) << 5);	/* disable read ahead */
 +	}
-+
- 	rbuf[3] = num - 4;    /* page len (assume less than 256 bytes) */
- 	return 0;
+ 	return sizeof(def_cache_mpage);
  }
+ 
 -- 
 2.9.0
 
