@@ -1,51 +1,54 @@
-From: tom.ty89@gmail.com
-Subject: [PATCH 1/2] libata-scsi: fix SET FEATURES "filtering" for ata_msense_caching()
-Date: Thu,  7 Jul 2016 09:43:33 +0800
-Message-ID: <577db3cc.0a6a620a.c3774.1502@mx.google.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
-To: tj@kernel.org
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH 2/2] libata-scsi: do not return t10 designator if drive
+ has WWN
+Date: Thu, 7 Jul 2016 13:51:31 +0300
+Message-ID: <ca90988b-2c3d-44e2-f993-640e472da403@cogentembedded.com>
+References: <20160706221213.1928-1-me>
+ <577d824d.a10c420a.da50c.ffff9544@mx.google.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-lf0-f44.google.com ([209.85.215.44]:33236 "EHLO
+	mail-lf0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750817AbcGGKvf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 7 Jul 2016 06:51:35 -0400
+Received: by mail-lf0-f44.google.com with SMTP id f6so8775055lfg.0
+        for <linux-ide@vger.kernel.org>; Thu, 07 Jul 2016 03:51:34 -0700 (PDT)
+In-Reply-To: <577d824d.a10c420a.da50c.ffff9544@mx.google.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: tom.ty89@gmail.com, tj@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-From: Tom Yan <tom.ty89@gmail.com>
+Hello.
 
-Without this fix, the DRA bit of the caching mode page would not
-be updated when the read look-ahead feature is toggled (e.g. with
-`smartctl --set`), but will only be until, for example, the write
-cache feature is touched.
+On 7/7/2016 1:12 AM, tom.ty89@gmail.com wrote:
 
-Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+> From: Tom Yan <tom.ty89@gmail.com>
+>
+> SAT (as of sat4r05f.pdf) only requires the t10 designator if the
+> drive does not support/have WWN. Besides, we already have the ATA
+> information VPD.
+>
+> Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+>
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index 9f478ad..84b3d42 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+[...]
+> @@ -2236,6 +2221,23 @@ static unsigned int ata_scsiop_inq_83(struct ata_scsi_args *args, u8 *rbuf)
+>  			      ATA_ID_WWN, ATA_ID_WWN_LEN);
+>  		num += ATA_ID_WWN_LEN;
+>  	}
+> +	else {
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 6be7770..077daf0 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5127,7 +5127,9 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
- 		switch (qc->tf.command) {
- 		case ATA_CMD_SET_FEATURES:
- 			if (qc->tf.feature != SETFEATURES_WC_ON &&
--			    qc->tf.feature != SETFEATURES_WC_OFF)
-+			    qc->tf.feature != SETFEATURES_WC_OFF &&
-+			    qc->tf.feature != SETFEATURES_RA_ON &&
-+			    qc->tf.feature != SETFEATURES_RA_OFF)
- 				break;
- 			/* fall through */
- 		case ATA_CMD_INIT_DEV_PARAMS: /* CHS translation changed */
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index 99346be..2d68793 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -409,6 +409,9 @@ enum {
- 	SETFEATURES_WC_ON	= 0x02, /* Enable write cache */
- 	SETFEATURES_WC_OFF	= 0x82, /* Disable write cache */
- 
-+	SETFEATURES_RA_ON	= 0xaa, /* Enable read look-ahead */
-+	SETFEATURES_RA_OFF	= 0x55, /* Disable read look-ahead */
-+
- 	/* Enable/Disable Automatic Acoustic Management */
- 	SETFEATURES_AAM_ON	= 0x42,
- 	SETFEATURES_AAM_OFF	= 0xC2,
--- 
-2.9.0
+    CodingStyle, should be:
+
+	} else {
+
+[...]
+
+MBR, Sergei
 
