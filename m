@@ -1,80 +1,64 @@
-From: Tom Yan <tom.ty89@gmail.com>
-Subject: Re: [RFC] libata-scsi: introducing SANITIZE translation
-Date: Sat, 9 Jul 2016 00:20:24 +0800
-Message-ID: <CAGnHSE=8HEZ8AnDGjdOAhaA8f117GdbZZNhbQQOCYYM1b-8PvQ@mail.gmail.com>
-References: <577e843e.0a86620a.59167.ffffb899@mx.google.com> <1467910054.2322.7.camel@HansenPartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: [RFT PATCH] sh: landisk_defconfig: convert to use libata PATA drivers
+Date: Fri, 08 Jul 2016 18:43:40 +0200
+Message-ID: <1467996225-25498-1-git-send-email-b.zolnierkie@samsung.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qt0-f195.google.com ([209.85.216.195]:35649 "EHLO
-	mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932798AbcGHQUZ (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Jul 2016 12:20:25 -0400
-In-Reply-To: <1467910054.2322.7.camel@HansenPartnership.com>
+Received: from mailout1.samsung.com ([203.254.224.24]:39557 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755732AbcGHQo4 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Jul 2016 12:44:56 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Tejun Heo <tj@kernel.org>, martin.petersen@oracle.com, dgilbert@interlog.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-sh@vger.kernel.org, Yoshinori Sato <ysato@users.sourceforge.jp>, Rich Felker <dalias@libc.org>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com
 
-To be honest, that sounds like FUD to me.
+IDE subsystem has been deprecated since 2009 and the majority
+(if not all) of Linux distributions have switched to use
+libata for ATA support exclusively.  However there are still
+some users (mostly old or/and embedded non-x86 systems) that
+have not converted from using IDE subsystem to libata PATA
+drivers.  This doesn't seem to be good thing in the long-term
+for Linux as while there is less and less PATA systems left
+in use:
 
-The exact reason why this can "safely" be introduced to the SATL is
-that, it is a "one-shot" command that would only be triggered by the
-user through a user space utility. It's nothing like TRIM that would
-be triggered by the filesystem layer or so "from time to time", which
-might cost users "unexpected" data loss. It is also nothing like
-SECURE ERASE (which vendors had to abuse to provide equivalence of
-BLOCK ERASE and CRYPTOGRAPHIC ERASE for SSDs and drives that does
-hardware encryption) that requires the drive to be locked before you
-can issue an erase command.
+* testing efforts are divided between two subsystems
 
-Certainly you can expect users to pack an ATA PASS-THROUGH command
-themselves and issued it with sg_raw or so, or hdparm to be patched to
-support the full feature set (including the "optional"
-FREEZE/ANTIFREEZE sub-feature), but I don't see how these would be
-reasons that the translation should not be introduced to the kernel,
-so that we can make good use of its existing SATL infrastructure and
-sg_sanitize.
+* having duplicate drivers for same hardware confuses users
 
-Whether it is "secure" enough to use the implementation would be the
-user's call. To be frank, saying that implementing it in the "SAT-way"
-would make it untrustable doesn't make any sense to me, especially
-when the way the feature set works is considered.
+This patch converts landisk_defconfig to use libata PATA
+drivers.
 
-On 8 July 2016 at 00:47, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
-> On Fri, 2016-07-08 at 00:32 +0800, tom.ty89@gmail.com wrote:
->> From: Tom Yan <tom.ty89@gmail.com>
->>
->> With this patch, users can make use of the SANITIZE DEVICE feature
->> set through utility like sg_sanitize.
->>
->> Support for BLOCK ERASE, CRYPTOGRAPHIC ERASE and EXIT FAILURE MODE
->> has been implemented. Support for OVERWRITE that involves a
->> parameter list has been left out for now.
->>
->> Further support for command with IMMED bit set to zero, REQUEST
->> SENSE translation for user-space status polling, and support
->> checking in IDENTIFY DEVICE data log (return proper sense data
->> when designated method is not supported) should be implemented
->> in the future as well.
->>
->> `sg_sanitize -e -B|-C|-F /dev/sdX` should work fine with this.
->
-> Why on earth would you want to do this?  If your intent is to sanitise
-> the disk using a cryptographic erase you presumably have a real
-> security need for doing it and, knowing what goes into most SAT layers,
-> I'd not really trust any SAT for this operation, so for an underlying
-> SATA device I'd use ATA_16 to send a real ACS-2 SANITIZE command.
->
-> Just as a general note about our SAT layer: Adding little used features
-> is an invitation to bloat it with buggy implementations which makes it
-> harder to understand and bug prone for odd and unlikely use cases,
-> which then take ages to diagnose and track down.  The only things which
-> should be in the SAT is what the Linux SCSI subsystem would actually
-> use.  For everything else, if the user cares enough, they'll send down
-> an encapsulated ATA command.
->
-> James
->
->
+Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+---
+Build tested only.
+If you have affected hardware please test.  Thank you.
+
+ arch/sh/configs/landisk_defconfig | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
+
+diff --git a/arch/sh/configs/landisk_defconfig b/arch/sh/configs/landisk_defconfig
+index 6783f3131..e8a028a 100644
+--- a/arch/sh/configs/landisk_defconfig
++++ b/arch/sh/configs/landisk_defconfig
+@@ -32,14 +32,11 @@ CONFIG_ATALK=m
+ CONFIG_UEVENT_HELPER_PATH="/sbin/hotplug"
+ CONFIG_BLK_DEV_LOOP=y
+ CONFIG_BLK_DEV_RAM=y
+-CONFIG_IDE=y
+-CONFIG_BLK_DEV_IDECD=y
+-CONFIG_BLK_DEV_OFFBOARD=y
+-CONFIG_BLK_DEV_GENERIC=y
+-CONFIG_BLK_DEV_AEC62XX=y
+-CONFIG_SCSI=y
+ CONFIG_BLK_DEV_SD=y
+-CONFIG_SCSI_MULTI_LUN=y
++CONFIG_BLK_DEV_SR=y
++CONFIG_ATA=y
++CONFIG_PATA_ARTOP=y
++CONFIG_ATA_GENERIC=y
+ CONFIG_MD=y
+ CONFIG_BLK_DEV_MD=m
+ CONFIG_MD_LINEAR=m
+-- 
+1.9.1
+
