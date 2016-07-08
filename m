@@ -1,127 +1,122 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: Re: [RFC PATCH 00/19] ide: remove deprecated host drivers (part 1)
-Date: Fri, 08 Jul 2016 19:07:46 +0200
-Message-ID: <3317462.LGzQYRpeb4@amdc1976>
-References: <1454593456-3162-1-git-send-email-b.zolnierkie@samsung.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [RFC] libata-scsi: introducing SANITIZE translation
+Date: Fri, 08 Jul 2016 10:29:31 -0700
+Message-ID: <1467998971.2343.10.camel@HansenPartnership.com>
+References: <577e843e.0a86620a.59167.ffffb899@mx.google.com>
+	 <1467910054.2322.7.camel@HansenPartnership.com>
+	 <CAGnHSE=8HEZ8AnDGjdOAhaA8f117GdbZZNhbQQOCYYM1b-8PvQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:40607 "EHLO
-	mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932961AbcGHRIp (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Jul 2016 13:08:45 -0400
-In-reply-to: <1454593456-3162-1-git-send-email-b.zolnierkie@samsung.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54736 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755256AbcGHR3f (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Jul 2016 13:29:35 -0400
+In-Reply-To: <CAGnHSE=8HEZ8AnDGjdOAhaA8f117GdbZZNhbQQOCYYM1b-8PvQ@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "David S. Miller" <davem@davemloft.net>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Alan Cox <gnomes@lxorguk.ukuu.org.uk>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+To: Tom Yan <tom.ty89@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, martin.petersen@oracle.com, dgilbert@interlog.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+
+On Sat, 2016-07-09 at 00:20 +0800, Tom Yan wrote:
+> To be honest, that sounds like FUD to me.
+
+If argument is to be in acronyms, it's KISS.
+
+> The exact reason why this can "safely" be introduced to the SATL is
+> that, it is a "one-shot" command that would only be triggered by the
+> user through a user space utility. It's nothing like TRIM that would
+> be triggered by the filesystem layer or so "from time to time", which
+> might cost users "unexpected" data loss. It is also nothing like
+> SECURE ERASE (which vendors had to abuse to provide equivalence of
+> BLOCK ERASE and CRYPTOGRAPHIC ERASE for SSDs and drives that does
+> hardware encryption) that requires the drive to be locked before you
+> can issue an erase command.
+
+OK, since you ignore the argument about maintenance: safety for us
+means that it doesn't bitrot as an almost never used addition.  The
+reason our SATL should only support the commands Linux uses is
+precisely because if it's used often we get immediate notice of when we
+break it.  This maintenance burden means that adding stuff isn't free
+so we should have some utility bar before we do it.  Just "because we
+can" doesn't seem to rise to that.
+
+> Certainly you can expect users to pack an ATA PASS-THROUGH command
+> themselves and issued it with sg_raw or so, or hdparm to be patched 
+> to support the full feature set (including the "optional"
+> FREEZE/ANTIFREEZE sub-feature), but I don't see how these would be
+> reasons that the translation should not be introduced to the kernel,
+> so that we can make good use of its existing SATL infrastructure and
+> sg_sanitize.
+
+Or we could simply patch sg_sanitze to issue the ATA_16 pass through
+when it sees a sata device ...
+
+> Whether it is "secure" enough to use the implementation would be the
+> user's call. To be frank, saying that implementing it in the "SAT
+> -way"
+> would make it untrustable doesn't make any sense to me, especially
+> when the way the feature set works is considered.
+
+To be honest, I bet real security people won't even trust the drive
+firmware.  Their answer will still be dd random patterns to prevent
+easy retrieval then crush the drive to prevent forensic retrieval.
+
+James
 
 
-Hi Dave,
-
-What is your opinion on this patchset?
-
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
-
-On Thursday, February 04, 2016 02:43:57 PM Bartlomiej Zolnierkiewicz wrote:
-> Hi,
-> 
-> IDE subsystem has been deprecated since 2009 and the majority
-> (if not all) of Linux distributions have switched to use
-> libata for ATA support exclusively.
-> 
-> This patchset removes IDE host drivers that:
-> - have been replaced by their corresponding libata PATA host
->   drivers (which have been available since 2006/2007)
-> - are not used by any defconfig
-> 
-> Having duplicated drivers for the same hardware doesn't seem
-> to be good thing in the long-term perspective for Linux as
-> - testing efforts are divided between two drivers/subsystems
->   (while there is less and less PATA systems left in use)
-> - having two drivers for the same hardware confuses users
-> 
-> Please note that all the hardware supported by IDE host drivers
-> nominated for removal remains supported by correspoding libata
-> PATA host drivers.
-> 
-> PS If this patchset is accepted I would like to continue
-> removal of IDE host drivers in part 2 which will happen after
-> remaining defconfigs which still are using IDE host drivers
-> get converted to use corresponding libata PATA host drivers.
-> 
-> Best regards,
+> On 8 July 2016 at 00:47, James Bottomley
+> <James.Bottomley@hansenpartnership.com> wrote:
+> > On Fri, 2016-07-08 at 00:32 +0800, tom.ty89@gmail.com wrote:
+> > > From: Tom Yan <tom.ty89@gmail.com>
+> > > 
+> > > With this patch, users can make use of the SANITIZE DEVICE
+> > > feature
+> > > set through utility like sg_sanitize.
+> > > 
+> > > Support for BLOCK ERASE, CRYPTOGRAPHIC ERASE and EXIT FAILURE
+> > > MODE
+> > > has been implemented. Support for OVERWRITE that involves a
+> > > parameter list has been left out for now.
+> > > 
+> > > Further support for command with IMMED bit set to zero, REQUEST
+> > > SENSE translation for user-space status polling, and support
+> > > checking in IDENTIFY DEVICE data log (return proper sense data
+> > > when designated method is not supported) should be implemented
+> > > in the future as well.
+> > > 
+> > > `sg_sanitize -e -B|-C|-F /dev/sdX` should work fine with this.
+> > 
+> > Why on earth would you want to do this?  If your intent is to
+> > sanitise
+> > the disk using a cryptographic erase you presumably have a real
+> > security need for doing it and, knowing what goes into most SAT
+> > layers,
+> > I'd not really trust any SAT for this operation, so for an
+> > underlying
+> > SATA device I'd use ATA_16 to send a real ACS-2 SANITIZE command.
+> > 
+> > Just as a general note about our SAT layer: Adding little used
+> > features
+> > is an invitation to bloat it with buggy implementations which makes
+> > it
+> > harder to understand and bug prone for odd and unlikely use cases,
+> > which then take ages to diagnose and track down.  The only things
+> > which
+> > should be in the SAT is what the Linux SCSI subsystem would
+> > actually
+> > use.  For everything else, if the user cares enough, they'll send
+> > down
+> > an encapsulated ATA command.
+> > 
+> > James
+> > 
+> > 
 > --
-> Bartlomiej Zolnierkiewicz
-> Samsung R&D Institute Poland
-> Samsung Electronics
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-> 
-> Bartlomiej Zolnierkiewicz (19):
->   ide: remove deprecated atiixp host driver
->   ide: remove deprecated cs5520 host driver
->   ide: remove deprecated cs5530 host driver
->   ide: remove deprecated cs5535 host driver
->   ide: remove deprecated cs5536 host driver
->   ide: remove deprecated sc1200 host driver
->   ide: remove deprecated delkin_cb host driver
->   ide: remove deprecated it8213 host driver
->   ide: remove deprecated it821x host driver
->   ide: remove deprecated jmicron host driver
->   ide: remove deprecated opti621 host driver
->   ide: remove deprecated pdc202xx_old host driver
->   ide: remove deprecated rz1000 host driver
->   ide: remove deprecated serverworks host driver
->   ide: remove deprecated sis5513 host driver
->   ide: remove deprecated slc90e66 host driver
->   ide: remove deprecated triflex host driver
->   ide: remove deprecated ide-pnp host driver
->   ide: remove deprecated icside host driver
-> 
->  drivers/ide/Kconfig        | 200 +------------
->  drivers/ide/Makefile       |  19 --
->  drivers/ide/atiixp.c       | 211 -------------
->  drivers/ide/cs5520.c       | 168 -----------
->  drivers/ide/cs5530.c       | 295 -------------------
->  drivers/ide/cs5535.c       | 219 --------------
->  drivers/ide/cs5536.c       | 306 -------------------
->  drivers/ide/delkin_cb.c    | 181 ------------
->  drivers/ide/icside.c       | 691 -------------------------------------------
->  drivers/ide/ide-pnp.c      | 100 -------
->  drivers/ide/it8213.c       | 216 --------------
->  drivers/ide/it821x.c       | 715 ---------------------------------------------
->  drivers/ide/jmicron.c      | 176 -----------
->  drivers/ide/opti621.c      | 178 -----------
->  drivers/ide/pdc202xx_old.c | 361 -----------------------
->  drivers/ide/rz1000.c       |  99 -------
->  drivers/ide/sc1200.c       | 355 ----------------------
->  drivers/ide/serverworks.c  | 449 ----------------------------
->  drivers/ide/sis5513.c      | 636 ----------------------------------------
->  drivers/ide/slc90e66.c     | 181 ------------
->  drivers/ide/triflex.c      | 155 ----------
->  21 files changed, 2 insertions(+), 5909 deletions(-)
->  delete mode 100644 drivers/ide/atiixp.c
->  delete mode 100644 drivers/ide/cs5520.c
->  delete mode 100644 drivers/ide/cs5530.c
->  delete mode 100644 drivers/ide/cs5535.c
->  delete mode 100644 drivers/ide/cs5536.c
->  delete mode 100644 drivers/ide/delkin_cb.c
->  delete mode 100644 drivers/ide/icside.c
->  delete mode 100644 drivers/ide/ide-pnp.c
->  delete mode 100644 drivers/ide/it8213.c
->  delete mode 100644 drivers/ide/it821x.c
->  delete mode 100644 drivers/ide/jmicron.c
->  delete mode 100644 drivers/ide/opti621.c
->  delete mode 100644 drivers/ide/pdc202xx_old.c
->  delete mode 100644 drivers/ide/rz1000.c
->  delete mode 100644 drivers/ide/sc1200.c
->  delete mode 100644 drivers/ide/serverworks.c
->  delete mode 100644 drivers/ide/sis5513.c
->  delete mode 100644 drivers/ide/slc90e66.c
->  delete mode 100644 drivers/ide/triflex.c
 
