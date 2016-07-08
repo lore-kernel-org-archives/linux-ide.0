@@ -1,44 +1,81 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [RESEND PATCH] arm: assabet_defconfig: disable IDE subsystem
-Date: Fri, 08 Jul 2016 22:23:48 +0200
-Message-ID: <2773873.Jjn1O47GXr@wuerfel>
-References: <1467991490-24895-1-git-send-email-b.zolnierkie@samsung.com>
+From: Aaro Koskinen <aaro.koskinen@iki.fi>
+Subject: Re: [PATCH v2] arm: omap1_defconfig: convert to use libata PATA
+ drivers
+Date: Sat, 9 Jul 2016 01:06:53 +0300
+Message-ID: <20160708220653.GB14630@raspberrypi.musicnaut.iki.fi>
+References: <1467985859-23500-1-git-send-email-b.zolnierkie@samsung.com>
+ <1467985859-23500-2-git-send-email-b.zolnierkie@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <1467991490-24895-1-git-send-email-b.zolnierkie@samsung.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: linux-arm-kernel@lists.infradead.org
-Cc: Russell King <linux@arm.linux.org.uk>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Olof Johansson <olof@lixom.net>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1467985859-23500-2-git-send-email-b.zolnierkie@samsung.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: arm@kernel.org, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>, Russell King <linux@arm.linux.org.uk>, linux-omap@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-On Friday, July 8, 2016 5:24:41 PM CEST Bartlomiej Zolnierkiewicz wrote:
-> This patch disables deprecated IDE subsystem in assabet_defconfig
-> (no IDE host drivers are selected in this config so there is no
-> valid reason to enable IDE subsystem itself).
+Hi,
+
+On Fri, Jul 08, 2016 at 03:50:59PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> IDE subsystem has been deprecated since 2009 and the majority
+> (if not all) of Linux distributions have switched to use
+> libata for ATA support exclusively.  However there are still
+> some users (mostly old or/and embedded non-x86 systems) that
+> have not converted from using IDE subsystem to libata PATA
+> drivers.  This doesn't seem to be good thing in the long-term
+> for Linux as while there is less and less PATA systems left
+> in use:
 > 
-> Cc: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+> * testing efforts are divided between two subsystems
+> 
+> * having duplicate drivers for same hardware confuses users
+> 
+> This patch converts omap1_defconfig to use libata PATA
+> drivers.
+> 
+> Cc: linux-omap@vger.kernel.org
+> Acked-by: Tony Lindgren <tony@atomide.com>
 > Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
-I think the series makes a lot of sense. I have checked your assertions
-in the changelogs and found no flaws in your logic, so I think we should
-take them all through arm-soc unless there are other concerns.
+I have been using ATA/PATA_PCMCIA on OMAP1 already for a while, so:
 
-Do you have a list of ARM defconfigs that keep using CONFIG_IDE and
-how you determined that they need it?
+Acked-by: Aaro Koskinen <aaro.koskinen@iki.fi>
 
-I know that ARCH_RPC/ARCH_ACORN has a couple of special drivers that
-have no libata replacement, are there any others like that, or are
-they all platforms that should in theory work with libata but need
-testing?
+A.
 
-	Arnd
+> ---
+> v2:
+> - added Acked-by tag from Tony
+> 
+>  arch/arm/configs/omap1_defconfig | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/arch/arm/configs/omap1_defconfig b/arch/arm/configs/omap1_defconfig
+> index 0c8a787..6ffc984 100644
+> --- a/arch/arm/configs/omap1_defconfig
+> +++ b/arch/arm/configs/omap1_defconfig
+> @@ -96,14 +96,14 @@ CONFIG_BLK_DEV_LOOP=y
+>  CONFIG_BLK_DEV_RAM=y
+>  CONFIG_BLK_DEV_RAM_COUNT=2
+>  CONFIG_BLK_DEV_RAM_SIZE=8192
+> -CONFIG_IDE=m
+> -CONFIG_BLK_DEV_IDECS=m
+>  CONFIG_SCSI=y
+>  # CONFIG_SCSI_PROC_FS is not set
+>  CONFIG_BLK_DEV_SD=y
+>  CONFIG_CHR_DEV_ST=y
+>  CONFIG_BLK_DEV_SR=y
+>  CONFIG_CHR_DEV_SG=y
+> +CONFIG_ATA=m
+> +CONFIG_PATA_PCMCIA=m
+>  CONFIG_NETDEVICES=y
+>  CONFIG_TUN=y
+>  CONFIG_PHYLIB=y
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-omap" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
