@@ -1,36 +1,80 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RESEND PATCH] arm: shannon_defconfig: disable IDE subsystem
-Date: Fri, 08 Jul 2016 17:24:49 +0200
-Message-ID: <1467991490-24895-9-git-send-email-b.zolnierkie@samsung.com>
-References: <1467991490-24895-1-git-send-email-b.zolnierkie@samsung.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-reply-to: <1467991490-24895-1-git-send-email-b.zolnierkie@samsung.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-arm-kernel@lists.infradead.org
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>, Russell King <linux@arm.linux.org.uk>, b.zolnierkie@samsung.com, Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+From: Tom Yan <tom.ty89@gmail.com>
+Subject: Re: [RFC] libata-scsi: introducing SANITIZE translation
+Date: Sat, 9 Jul 2016 00:20:24 +0800
+Message-ID: <CAGnHSE=8HEZ8AnDGjdOAhaA8f117GdbZZNhbQQOCYYM1b-8PvQ@mail.gmail.com>
+References: <577e843e.0a86620a.59167.ffffb899@mx.google.com> <1467910054.2322.7.camel@HansenPartnership.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:35649 "EHLO
+	mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932798AbcGHQUZ (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Jul 2016 12:20:25 -0400
+In-Reply-To: <1467910054.2322.7.camel@HansenPartnership.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Tejun Heo <tj@kernel.org>, martin.petersen@oracle.com, dgilbert@interlog.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-This patch disables deprecated IDE subsystem in shannon_defconfig
-(no IDE host drivers are selected in this config so there is no
-valid reason to enable IDE subsystem itself).
+To be honest, that sounds like FUD to me.
 
-Cc: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
----
- arch/arm/configs/shannon_defconfig | 1 -
- 1 file changed, 1 deletion(-)
+The exact reason why this can "safely" be introduced to the SATL is
+that, it is a "one-shot" command that would only be triggered by the
+user through a user space utility. It's nothing like TRIM that would
+be triggered by the filesystem layer or so "from time to time", which
+might cost users "unexpected" data loss. It is also nothing like
+SECURE ERASE (which vendors had to abuse to provide equivalence of
+BLOCK ERASE and CRYPTOGRAPHIC ERASE for SSDs and drives that does
+hardware encryption) that requires the drive to be locked before you
+can issue an erase command.
 
-diff --git a/arch/arm/configs/shannon_defconfig b/arch/arm/configs/shannon_defconfig
-index b0b9694..e523956 100644
---- a/arch/arm/configs/shannon_defconfig
-+++ b/arch/arm/configs/shannon_defconfig
-@@ -25,7 +25,6 @@ CONFIG_MTD_CFI_AMDSTD=y
- CONFIG_MTD_SA1100=y
- CONFIG_BLK_DEV_RAM=y
- CONFIG_BLK_DEV_RAM_SIZE=8192
--CONFIG_IDE=m
- CONFIG_NETDEVICES=y
- CONFIG_NET_ETHERNET=y
- CONFIG_NET_PCMCIA=y
--- 
-1.9.1
+Certainly you can expect users to pack an ATA PASS-THROUGH command
+themselves and issued it with sg_raw or so, or hdparm to be patched to
+support the full feature set (including the "optional"
+FREEZE/ANTIFREEZE sub-feature), but I don't see how these would be
+reasons that the translation should not be introduced to the kernel,
+so that we can make good use of its existing SATL infrastructure and
+sg_sanitize.
+
+Whether it is "secure" enough to use the implementation would be the
+user's call. To be frank, saying that implementing it in the "SAT-way"
+would make it untrustable doesn't make any sense to me, especially
+when the way the feature set works is considered.
+
+On 8 July 2016 at 00:47, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+> On Fri, 2016-07-08 at 00:32 +0800, tom.ty89@gmail.com wrote:
+>> From: Tom Yan <tom.ty89@gmail.com>
+>>
+>> With this patch, users can make use of the SANITIZE DEVICE feature
+>> set through utility like sg_sanitize.
+>>
+>> Support for BLOCK ERASE, CRYPTOGRAPHIC ERASE and EXIT FAILURE MODE
+>> has been implemented. Support for OVERWRITE that involves a
+>> parameter list has been left out for now.
+>>
+>> Further support for command with IMMED bit set to zero, REQUEST
+>> SENSE translation for user-space status polling, and support
+>> checking in IDENTIFY DEVICE data log (return proper sense data
+>> when designated method is not supported) should be implemented
+>> in the future as well.
+>>
+>> `sg_sanitize -e -B|-C|-F /dev/sdX` should work fine with this.
+>
+> Why on earth would you want to do this?  If your intent is to sanitise
+> the disk using a cryptographic erase you presumably have a real
+> security need for doing it and, knowing what goes into most SAT layers,
+> I'd not really trust any SAT for this operation, so for an underlying
+> SATA device I'd use ATA_16 to send a real ACS-2 SANITIZE command.
+>
+> Just as a general note about our SAT layer: Adding little used features
+> is an invitation to bloat it with buggy implementations which makes it
+> harder to understand and bug prone for odd and unlikely use cases,
+> which then take ages to diagnose and track down.  The only things which
+> should be in the SAT is what the Linux SCSI subsystem would actually
+> use.  For everything else, if the user cares enough, they'll send down
+> an encapsulated ATA command.
+>
+> James
+>
+>
