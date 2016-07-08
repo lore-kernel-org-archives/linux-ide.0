@@ -1,48 +1,38 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [RESEND PATCH] arm: badge4_defconfig: disable IDE subsystem
-Date: Fri, 08 Jul 2016 17:24:42 +0200
-Message-ID: <1467991490-24895-2-git-send-email-b.zolnierkie@samsung.com>
+Subject: [RESEND PATCH] arm: pxa255-idp_defconfig: disable IDE subsystem
+Date: Fri, 08 Jul 2016 17:24:48 +0200
+Message-ID: <1467991490-24895-8-git-send-email-b.zolnierkie@samsung.com>
 References: <1467991490-24895-1-git-send-email-b.zolnierkie@samsung.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-reply-to: <1467991490-24895-1-git-send-email-b.zolnierkie@samsung.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-arm-kernel@lists.infradead.org
-Cc: Russell King <linux@arm.linux.org.uk>, Arnd Bergmann <arnd@arndb.de>, b.zolnierkie@samsung.com, Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Olof Johansson <olof@lixom.net>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>, Russell King <linux@arm.linux.org.uk>, b.zolnierkie@samsung.com, Daniel Mack <daniel@zonque.org>, Haojian Zhuang <haojian.zhuang@gmail.com>, Robert Jarzmik <robert.jarzmik@free.fr>
 List-Id: linux-ide@vger.kernel.org
 
-This patch disables deprecated IDE subsystem in badge4_defconfig
-(no IDE host drivers are selected in this config so there is no
-valid reason to enable IDE subsystem itself).
+This patch disables deprecated IDE subsystem in pxa255-idp_defconfig
+(no IDE host drivers are selected in this config so there is no valid
+reason to enable IDE subsystem itself).
 
-Cc: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+Cc: Daniel Mack <daniel@zonque.org>
+Cc: Haojian Zhuang <haojian.zhuang@gmail.com>
+Cc: Robert Jarzmik <robert.jarzmik@free.fr>
 Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 ---
- arch/arm/configs/badge4_defconfig | 2 --
- 1 file changed, 2 deletions(-)
+ arch/arm/configs/pxa255-idp_defconfig | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/arch/arm/configs/badge4_defconfig b/arch/arm/configs/badge4_defconfig
-index d590098..2a604aa 100644
---- a/arch/arm/configs/badge4_defconfig
-+++ b/arch/arm/configs/badge4_defconfig
-@@ -42,8 +42,6 @@ CONFIG_MTD_SA1100=y
- CONFIG_PARPORT=m
- CONFIG_BLK_DEV_LOOP=y
- CONFIG_BLK_DEV_NBD=m
--CONFIG_IDE=m
--CONFIG_BLK_DEV_IDECD=m
- CONFIG_SCSI=y
- CONFIG_BLK_DEV_SD=y
- CONFIG_CHR_DEV_ST=m
+diff --git a/arch/arm/configs/pxa255-idp_defconfig b/arch/arm/configs/pxa255-idp_defconfig
+index 917a070b..088627a 100644
+--- a/arch/arm/configs/pxa255-idp_defconfig
++++ b/arch/arm/configs/pxa255-idp_defconfig
+@@ -28,7 +28,6 @@ CONFIG_MTD_CFI_GEOMETRY=y
+ # CONFIG_MTD_MAP_BANK_WIDTH_2 is not set
+ # CONFIG_MTD_CFI_I1 is not set
+ CONFIG_MTD_CFI_INTELEXT=y
+-CONFIG_IDE=y
+ CONFIG_NETDEVICES=y
+ CONFIG_NET_ETHERNET=y
+ CONFIG_SMC91X=y
 -- 
 1.9.1
