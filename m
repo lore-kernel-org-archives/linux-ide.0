@@ -1,55 +1,44 @@
-From: Tom Yan <tom.ty89@gmail.com>
-Subject: Re: [RFC] libata-scsi: introducing SANITIZE translation
-Date: Fri, 8 Jul 2016 19:38:03 +0000
-Message-ID: <CAGnHSEkLer=GRZxoc=AmS7J_oe945hSdUV2TisSuvfXdCPQ2Ow@mail.gmail.com>
-References: <577e843e.0a86620a.59167.ffffb899@mx.google.com>
- <1467910054.2322.7.camel@HansenPartnership.com> <CAGnHSE=8HEZ8AnDGjdOAhaA8f117GdbZZNhbQQOCYYM1b-8PvQ@mail.gmail.com>
- <1467998971.2343.10.camel@HansenPartnership.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [RESEND PATCH] arm: assabet_defconfig: disable IDE subsystem
+Date: Fri, 08 Jul 2016 22:23:48 +0200
+Message-ID: <2773873.Jjn1O47GXr@wuerfel>
+References: <1467991490-24895-1-git-send-email-b.zolnierkie@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qt0-f173.google.com ([209.85.216.173]:33869 "EHLO
-	mail-qt0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755400AbcGHTiF (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Jul 2016 15:38:05 -0400
-In-Reply-To: <1467998971.2343.10.camel@HansenPartnership.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <1467991490-24895-1-git-send-email-b.zolnierkie@samsung.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: linux-arm-kernel@lists.infradead.org
+Cc: Russell King <linux@arm.linux.org.uk>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Olof Johansson <olof@lixom.net>
 List-Id: linux-ide@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Tejun Heo <tj@kernel.org>, martin.petersen@oracle.com, dgilbert@interlog.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 8 July 2016 at 17:29, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
->
-> OK, since you ignore the argument about maintenance: safety for us
-> means that it doesn't bitrot as an almost never used addition.  The
-> reason our SATL should only support the commands Linux uses is
-> precisely because if it's used often we get immediate notice of when we
-> break it.  This maintenance burden means that adding stuff isn't free
-> so we should have some utility bar before we do it.  Just "because we
-> can" doesn't seem to rise to that.
->
+On Friday, July 8, 2016 5:24:41 PM CEST Bartlomiej Zolnierkiewicz wrote:
+> This patch disables deprecated IDE subsystem in assabet_defconfig
+> (no IDE host drivers are selected in this config so there is no
+> valid reason to enable IDE subsystem itself).
+> 
+> Cc: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
-Well yeah it might rot just like other parts of the current SATL, but
-at least its rot would be self-contained. I don't really find it "an
-almost never used addition" btw. It's just a handy feature set that no
-one has implemented any interface for users to make use of it.
+I think the series makes a lot of sense. I have checked your assertions
+in the changelogs and found no flaws in your logic, so I think we should
+take them all through arm-soc unless there are other concerns.
 
->
-> Or we could simply patch sg_sanitze to issue the ATA_16 pass through
-> when it sees a sata device ...
->
+Do you have a list of ARM defconfigs that keep using CONFIG_IDE and
+how you determined that they need it?
 
-Ugh that sounds ugly to me. Anyway that's off-topic.
+I know that ARCH_RPC/ARCH_ACORN has a couple of special drivers that
+have no libata replacement, are there any others like that, or are
+they all platforms that should in theory work with libata but need
+testing?
 
->
-> To be honest, I bet real security people won't even trust the drive
-> firmware.  Their answer will still be dd random patterns to prevent
-> easy retrieval then crush the drive to prevent forensic retrieval.
->
-
-You know what, I don't think the feature set is totally about
-"security" anyway. It's just a handy way quickly (that's partly why I
-didn't bother to implement translation for OVERWRITE) erase all the
-data. Also, whether one considers it secure enough or not would be
-purely his opinion under the usage context of his own, as always.
+	Arnd
