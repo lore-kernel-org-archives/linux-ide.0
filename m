@@ -1,81 +1,40 @@
-From: Aaro Koskinen <aaro.koskinen@iki.fi>
-Subject: Re: [PATCH v2] arm: omap1_defconfig: convert to use libata PATA
- drivers
-Date: Sat, 9 Jul 2016 01:06:53 +0300
-Message-ID: <20160708220653.GB14630@raspberrypi.musicnaut.iki.fi>
-References: <1467985859-23500-1-git-send-email-b.zolnierkie@samsung.com>
- <1467985859-23500-2-git-send-email-b.zolnierkie@samsung.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [RFC] libata-scsi: introducing SANITIZE translation
+Date: Fri, 08 Jul 2016 17:49:58 -0700
+Message-ID: <1468025398.2390.24.camel@HansenPartnership.com>
+References: <577e843e.0a86620a.59167.ffffb899@mx.google.com>
+	 <1467910054.2322.7.camel@HansenPartnership.com>
+	 <CAGnHSE=8HEZ8AnDGjdOAhaA8f117GdbZZNhbQQOCYYM1b-8PvQ@mail.gmail.com>
+	 <1467998971.2343.10.camel@HansenPartnership.com>
+	 <CAGnHSEkLer=GRZxoc=AmS7J_oe945hSdUV2TisSuvfXdCPQ2Ow@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1467985859-23500-2-git-send-email-b.zolnierkie@samsung.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: arm@kernel.org, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Olof Johansson <olof@lixom.net>, Russell King <linux@arm.linux.org.uk>, linux-omap@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:57106 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932223AbcGIAuA (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 8 Jul 2016 20:50:00 -0400
+In-Reply-To: <CAGnHSEkLer=GRZxoc=AmS7J_oe945hSdUV2TisSuvfXdCPQ2Ow@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tom Yan <tom.ty89@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, martin.petersen@oracle.com, dgilbert@interlog.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi,
+On Fri, 2016-07-08 at 19:38 +0000, Tom Yan wrote:
+> On 8 July 2016 at 17:29, James Bottomley
+> <James.Bottomley@hansenpartnership.com> wrote:
+> > Or we could simply patch sg_sanitze to issue the ATA_16 pass 
+> > through when it sees a sata device ...
+> > 
+> 
+> Ugh that sounds ugly to me. Anyway that's off-topic.
 
-On Fri, Jul 08, 2016 at 03:50:59PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> IDE subsystem has been deprecated since 2009 and the majority
-> (if not all) of Linux distributions have switched to use
-> libata for ATA support exclusively.  However there are still
-> some users (mostly old or/and embedded non-x86 systems) that
-> have not converted from using IDE subsystem to libata PATA
-> drivers.  This doesn't seem to be good thing in the long-term
-> for Linux as while there is less and less PATA systems left
-> in use:
-> 
-> * testing efforts are divided between two subsystems
-> 
-> * having duplicate drivers for same hardware confuses users
-> 
-> This patch converts omap1_defconfig to use libata PATA
-> drivers.
-> 
-> Cc: linux-omap@vger.kernel.org
-> Acked-by: Tony Lindgren <tony@atomide.com>
-> Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Not really.  The point is that you've proposed something as an addition
+to the kernel that can also be done in userspace.  Checking if it can
+work easily there is like a barrier to entry.  If it works, then fine,
+we're done.  If it throws up problems then we reconsider the kernel
+route.
 
-I have been using ATA/PATA_PCMCIA on OMAP1 already for a while, so:
+James
 
-Acked-by: Aaro Koskinen <aaro.koskinen@iki.fi>
-
-A.
-
-> ---
-> v2:
-> - added Acked-by tag from Tony
-> 
->  arch/arm/configs/omap1_defconfig | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/arch/arm/configs/omap1_defconfig b/arch/arm/configs/omap1_defconfig
-> index 0c8a787..6ffc984 100644
-> --- a/arch/arm/configs/omap1_defconfig
-> +++ b/arch/arm/configs/omap1_defconfig
-> @@ -96,14 +96,14 @@ CONFIG_BLK_DEV_LOOP=y
->  CONFIG_BLK_DEV_RAM=y
->  CONFIG_BLK_DEV_RAM_COUNT=2
->  CONFIG_BLK_DEV_RAM_SIZE=8192
-> -CONFIG_IDE=m
-> -CONFIG_BLK_DEV_IDECS=m
->  CONFIG_SCSI=y
->  # CONFIG_SCSI_PROC_FS is not set
->  CONFIG_BLK_DEV_SD=y
->  CONFIG_CHR_DEV_ST=y
->  CONFIG_BLK_DEV_SR=y
->  CONFIG_CHR_DEV_SG=y
-> +CONFIG_ATA=m
-> +CONFIG_PATA_PCMCIA=m
->  CONFIG_NETDEVICES=y
->  CONFIG_TUN=y
->  CONFIG_PHYLIB=y
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-omap" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
