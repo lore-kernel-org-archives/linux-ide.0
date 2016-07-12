@@ -1,33 +1,35 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH resend 2/2] libata-scsi: correct SPC version descriptor
-Date: Tue, 12 Jul 2016 10:55:20 -0400
-Message-ID: <20160712145520.GG3190@htj.duckdns.org>
-References: <20160712132935.1811-1-me>
- <5784f0c7.8469620a.ab9e4.ffff999d@mx.google.com>
+Subject: Re: [PATCH] ata: hpt366: fix incorrect mask when checking at
+ cmd_high_time
+Date: Tue, 12 Jul 2016 11:03:22 -0400
+Message-ID: <20160712150322.GI3190@htj.duckdns.org>
+References: <1468322179-9398-1-git-send-email-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qk0-f181.google.com ([209.85.220.181]:36792 "EHLO
+	mail-qk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932083AbcGLPDa (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Jul 2016 11:03:30 -0400
 Content-Disposition: inline
-In-Reply-To: <5784f0c7.8469620a.ab9e4.ffff999d@mx.google.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: tom.ty89@gmail.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+In-Reply-To: <1468322179-9398-1-git-send-email-colin.king@canonical.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Colin King <colin.king@canonical.com>
+Cc: kernel-tram@lists.ubuntu.com, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Jul 12, 2016 at 09:29:35PM +0800, tom.ty89@gmail.com wrote:
-> From: Tom Yan <tom.ty89@gmail.com>
+On Tue, Jul 12, 2016 at 12:16:19PM +0100, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
 > 
-> The comment suggests we should be having an SPC-3 version descriptor
-> but the 0260h is the code for "SPC-2 (no version claimed)". Correct
-> it to 0300h so that it has the "SPC-3 (no version claimed)" descriptor.
+> According to the HPT366 data sheet, PCI config space dword 0x40-0x43
+> bits 11:8 specify the primary drive cmd_high_time, however,
+> currently just 3 bits of the 4 are being used because the mask
+> is 0x700 and not 0x0f00.  Fix the mask, allowing for the 40MHz clock
+> to be detected.
 > 
-> Note that we are claiming SPC-3 version compatibility in the VERSION
-> field of the standard INQUIRY data. Therefore, I assume the typo was
-> on the code but not on the comment.
-> 
-> Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-Applied 1-2 to libata/for-4.8.
+Applied to libata/for-4.8.
 
 Thanks.
 
