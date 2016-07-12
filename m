@@ -1,66 +1,51 @@
-From: Colin Ian King <colin.king@canonical.com>
-Subject: Re: [PATCH] ata: hpt366: fix incorrect mask when checking at
- cmd_high_time
-Date: Tue, 12 Jul 2016 12:33:12 +0100
-Message-ID: <5784D578.9000702@canonical.com>
-References: <1468322179-9398-1-git-send-email-colin.king@canonical.com>
- <2928643.x6ZsLjxZ9e@amdc1976>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <2928643.x6ZsLjxZ9e@amdc1976>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+From: tom.ty89@gmail.com
+Subject: [PATCH v2 1/2] libata-scsi: fix SET FEATURES "filtering" for ata_msense_caching()
+Date: Tue, 12 Jul 2016 21:28:22 +0800
+Message-ID: <5784f083.465c620a.e5292.ffffbf2e@mx.google.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
+To: tj@kernel.org, sergei.shtylyov@cogentembedded.com
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-On 12/07/16 12:27, Bartlomiej Zolnierkiewicz wrote:
-> 
-> Hi,
-> 
-> On Tuesday, July 12, 2016 12:16:19 PM Colin King wrote:
->> From: Colin Ian King <colin.king@canonical.com>
->>
->> According to the HPT366 data sheet, PCI config space dword 0x40-0x43
->> bits 11:8 specify the primary drive cmd_high_time, however,
->> currently just 3 bits of the 4 are being used because the mask
->> is 0x700 and not 0x0f00.  Fix the mask, allowing for the 40MHz clock
->> to be detected.
->>
->> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> 
-> Acked-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-> 
-> Thanks for the patch, could you also fix also the old driver
-> (drivers/ide/hpt366.c)?
+From: Tom Yan <tom.ty89@gmail.com>
 
-Yep, patch already sent.
+Without this fix, the DRA bit of the caching mode page would not
+be updated when the read look-ahead feature is toggled (e.g. with
+`smartctl --set`), but will only be until, for example, the write
+cache feature is touched.
 
-https://lkml.org/lkml/2016/7/12/199
+Signed-off-by: Tom Yan <tom.ty89@gmail.com>
 
-> 
-> Best regards,
-> --
-> Bartlomiej Zolnierkiewicz
-> Samsung R&D Institute Poland
-> Samsung Electronics
-> 
->> ---
->>  drivers/ata/pata_hpt366.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/ata/pata_hpt366.c b/drivers/ata/pata_hpt366.c
->> index e5fb752..a219a50 100644
->> --- a/drivers/ata/pata_hpt366.c
->> +++ b/drivers/ata/pata_hpt366.c
->> @@ -368,7 +368,7 @@ static int hpt36x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
->>  
->>  	/* PCI clocking determines the ATA timing values to use */
->>  	/* info_hpt366 is safe against re-entry so we can scribble on it */
->> -	switch ((reg1 & 0x700) >> 8) {
->> +	switch ((reg1 & 0xf00) >> 8) {
->>  	case 9:
->>  		hpriv = &hpt366_40;
->>  		break;
-> 
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 6be7770..077daf0 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -5127,7 +5127,9 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
+ 		switch (qc->tf.command) {
+ 		case ATA_CMD_SET_FEATURES:
+ 			if (qc->tf.feature != SETFEATURES_WC_ON &&
+-			    qc->tf.feature != SETFEATURES_WC_OFF)
++			    qc->tf.feature != SETFEATURES_WC_OFF &&
++			    qc->tf.feature != SETFEATURES_RA_ON &&
++			    qc->tf.feature != SETFEATURES_RA_OFF)
+ 				break;
+ 			/* fall through */
+ 		case ATA_CMD_INIT_DEV_PARAMS: /* CHS translation changed */
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index 99346be..2d68793 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -409,6 +409,9 @@ enum {
+ 	SETFEATURES_WC_ON	= 0x02, /* Enable write cache */
+ 	SETFEATURES_WC_OFF	= 0x82, /* Disable write cache */
+ 
++	SETFEATURES_RA_ON	= 0xaa, /* Enable read look-ahead */
++	SETFEATURES_RA_OFF	= 0x55, /* Disable read look-ahead */
++
+ 	/* Enable/Disable Automatic Acoustic Management */
+ 	SETFEATURES_AAM_ON	= 0x42,
+ 	SETFEATURES_AAM_OFF	= 0xC2,
+-- 
+2.9.0
+
