@@ -1,23 +1,46 @@
-From: <jushin@mie-takada-hj.ed.jp>
-Subject: business interest
-Date: Tue, 12 Jul 2016 01:24:25 -0700
-Message-ID: <201607120824.u6C8MNdJ011818@isv3.mie-takada-hj.ed.jp>
-Reply-To: sergeimalyukov@militarysurfacedeployment.net
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] ide: hpt366: fix incorrect mask when checking at cmd_high_time
+Date: Tue, 12 Jul 2016 11:59:39 +0100
+Message-ID: <1468321179-7647-1-git-send-email-colin.king@canonical.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from isv3.mie-takada-hj.ed.jp ([153.150.18.36]:39333 "EHLO
-	isv3.mie-takada-hj.ed.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751984AbcGLIYt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Jul 2016 04:24:49 -0400
-Content-Description: Mail message body
+Received: from youngberry.canonical.com ([91.189.89.112]:50235 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932095AbcGLLAR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Jul 2016 07:00:17 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Recipients <jushin@mie-takada-hj.ed.jp>
+To: "David S . Miller" <davem@davemloft.net>, linux-ide@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-Kindly permit me to crave your indulgence by introducing a project that might have something to do with you or a member of your immediate or extended family. I am Sergei Malyukov, I am the Director heading the accounting and audit department of the PJSC LUKOIL Moscow Russia. You can check out my details from my company official website below.Yearly we receive returned investment dividend warrants issued by our company to shareholders and investors. These warrants have accumulated to a very substantial value which is the reason I'm soliciting your attention as the investment in question has something to do with either you or a member of your extended family.I propose with your active cooperation to file for re-issue of these warrants in your name by you confirming your interest, Kindly send
-  reply only to: sergeimalyukov@outlook.com to signify your interest and i shall tell you more details.
+From: Colin Ian King <colin.king@canonical.com>
 
-Sergei Malyukov.
-PJSC LUKOIL, Moscow Russia
+According to the HPT366 data sheet, PCI config space dword 0x40-0x43
+bits 11:8 specify the primary drive cmd_high_time, however,
+currently just 3 bits of the 4 are being used because the mask
+is 0x07 and not 0x0f.  Fix the mask, allowing for the 40MHz clock
+to be detected.
+
+Also add in missing space between switch and parenthesis to clean
+up a checkpatch warning.
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/ide/hpt366.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/ide/hpt366.c b/drivers/ide/hpt366.c
+index f94baad..f1dc6b6 100644
+--- a/drivers/ide/hpt366.c
++++ b/drivers/ide/hpt366.c
+@@ -1012,7 +1012,7 @@ static int init_chipset_hpt366(struct pci_dev *dev)
+ 		pci_read_config_dword(dev, 0x40, &itr1);
+ 
+ 		/* Detect PCI clock by looking at cmd_high_time. */
+-		switch((itr1 >> 8) & 0x07) {
++		switch ((itr1 >> 8) & 0x0f) {
+ 			case 0x09:
+ 				pci_clk = 40;
+ 				break;
+-- 
+2.8.1
+
