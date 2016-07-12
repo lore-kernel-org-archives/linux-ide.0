@@ -1,46 +1,39 @@
-From: "tj@kernel.org" <tj@kernel.org>
-Subject: Re: =?utf-8?B?562U5aSNOiBCVUc6IElOVHggaQ==?= =?utf-8?Q?s?= assered
- unexpectly when unload AHCI driver with MSIx support.
-Date: Tue, 12 Jul 2016 13:30:03 -0400
-Message-ID: <20160712173003.GM3190@htj.duckdns.org>
-References: <HK2PR03MB173248BF420102DE4E54BD6EFC3A0@HK2PR03MB1732.apcprd03.prod.outlook.com>
- <20160706135236.GG3262@mtj.duckdns.org>
- <HK2PR03MB1732DE50EA9D44F23481968AFC3F0@HK2PR03MB1732.apcprd03.prod.outlook.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: tom.ty89@gmail.com
+Subject: [PATCH] libata-scsi: fix D_SENSE bit relection in control mode page
+Date: Wed, 13 Jul 2016 01:35:58 +0800
+Message-ID: <57852a86.460b420a.faeba.0b28@mx.google.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qt0-f174.google.com ([209.85.216.174]:35719 "EHLO
-	mail-qt0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754218AbcGLRaL (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Jul 2016 13:30:11 -0400
-Content-Disposition: inline
-In-Reply-To: <HK2PR03MB1732DE50EA9D44F23481968AFC3F0@HK2PR03MB1732.apcprd03.prod.outlook.com>
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:33291 "EHLO
+	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752557AbcGLRgN (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 12 Jul 2016 13:36:13 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pang Raymond <Raymond_rule@hotmail.com>
-Cc: linux ide <linux-ide@vger.kernel.org>, linux kernel <linux-kernel@vger.kernel.org>
+To: tj@kernel.org, hare@suse.de
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
 
-Hello,
+From: Tom Yan <tom.ty89@gmail.com>
 
-On Mon, Jul 11, 2016 at 05:16:00AM +0000, Pang Raymond wrote:
-> static irqreturn_t  ahci_multi_irqs_intr_hard(int irq,
-> void *dev_instance)
-> {
->       //  omitting unconcerned codes here
->       //  ...
->            status = readl(port_mmio + PORT_IRQ_STAT);
->            writel(status, port_mmio + PORT_IRQ_STAT);
-> 
->       // add patch code here.
-> +         writel(1 << ap->port_no, ap->host->iomap + HOST_IRQ_STAT);
-> 
->       // ...
+The bit should always be set to 1 when the requested version of
+page is "changeable" because we've made it so in ata_mselect_control().
+Also, it should always be set to 1 if ATA_DFLAG_D_SENSE is set (when
+the requested version of page is "current" or "default").
 
-I think it'd be better to avoid adding stuff to the hot path.  This
-only matters when the device is shut down, right?  Can't it just be
-cleared in the driver cleanup path?
+Signed-off-by: Tom Yan <tom.ty89@gmail.com>
 
-Thanks.
-
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index bfec66f..7e24f0a 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2446,7 +2446,7 @@ static unsigned int ata_msense_ctl_mode(struct ata_device *dev, u8 *buf,
+ 					bool changeable)
+ {
+ 	modecpy(buf, def_control_mpage, sizeof(def_control_mpage), changeable);
+-	if (changeable && (dev->flags & ATA_DFLAG_D_SENSE))
++	if (changeable || (dev->flags & ATA_DFLAG_D_SENSE))
+ 		buf[2] |= (1 << 2);	/* Descriptor sense requested */
+ 	return sizeof(def_control_mpage);
+ }
 -- 
-tejun
+2.9.0
+
