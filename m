@@ -1,68 +1,426 @@
-From: Russell King - ARM Linux <linux@armlinux.org.uk>
-Subject: Re: [RESEND PATCH] arm: assabet_defconfig: disable IDE subsystem
-Date: Wed, 13 Jul 2016 18:45:12 +0100
-Message-ID: <20160713174512.GB1041@n2100.armlinux.org.uk>
-References: <1467991490-24895-1-git-send-email-b.zolnierkie@samsung.com>
- <2773873.Jjn1O47GXr@wuerfel>
- <4818149.nzRaU7vJQE@amdc1976>
- <4264651.gPKphdYuCx@wuerfel>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 130821] New: !!Apple icloud Customer Care Number
+ 1-800-969-0621!! Apple icloud Customer Care Telephone Number Usa Canada!!
+Date: Wed, 13 Jul 2016 18:18:46 +0000
+Message-ID: <bug-130821-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from pandora.armlinux.org.uk ([78.32.30.218]:54078 "EHLO
-	pandora.armlinux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750987AbcGMRph (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Jul 2016 13:45:37 -0400
-Content-Disposition: inline
-In-Reply-To: <4264651.gPKphdYuCx@wuerfel>
+Received: from mail.kernel.org ([198.145.29.136]:41694 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751138AbcGMSTC (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 13 Jul 2016 14:19:02 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id DCE5C202A1
+	for <linux-ide@vger.kernel.org>; Wed, 13 Jul 2016 18:18:49 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id BCD342027D
+	for <linux-ide@vger.kernel.org>; Wed, 13 Jul 2016 18:18:46 +0000 (UTC)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-kernel@lists.infradead.org, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Olof Johansson <olof@lixom.net>, Kevin Hilman <khilman@baylibre.com>, "Nori, Sekhar" <nsekhar@ti.com>
+To: linux-ide@vger.kernel.org
 
-On Wed, Jul 13, 2016 at 04:37:31PM +0200, Arnd Bergmann wrote:
-> On Wednesday, July 13, 2016 12:59:23 PM CEST Bartlomiej Zolnierkiewicz wrote:
-> > 
-> > On Friday, July 08, 2016 10:23:48 PM Arnd Bergmann wrote:
-> > > On Friday, July 8, 2016 5:24:41 PM CEST Bartlomiej Zolnierkiewicz wrote:
-> > > > This patch disables deprecated IDE subsystem in assabet_defconfig
-> > > > (no IDE host drivers are selected in this config so there is no
-> > > > valid reason to enable IDE subsystem itself).
-> > > > 
-> > > > Cc: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-> > > > Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-> > > 
-> > > I think the series makes a lot of sense. I have checked your assertions
-> > > in the changelogs and found no flaws in your logic, so I think we should
-> > > take them all through arm-soc unless there are other concerns.
-> > 
-> > Thank you.
-> > 
-> > Should I resend everything or just patches that were not reposted yet
-> > (the ones that were marked as RFT initially and got no feedback)?
-> 
-> I'd be fine with just getting a pull request with all the patches that
-> had no negative feedback and that were not already applied (if any).
+https://bugzilla.kernel.org/show_bug.cgi?id=130821
 
-I'd actually say be very careful about this - there's a big difference
-between the ATA subsystem and IDE subsystem.  I've had situations with
-old platforms where stuff works with IDE and not ATA.
+            Bug ID: 130821
+           Summary: !!Apple icloud Customer Care Number 1-800-969-0621!!
+                    Apple icloud Customer Care Telephone Number Usa
+                    Canada!!
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: dded
+          Hardware: Alpha
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: IDE
+          Assignee: io_ide@kernel-bugs.osdl.org
+          Reporter: carry.jh@yandex.com
+        Regression: No
 
-For example, using the CY82C693 driver used to work with the IDE
-subsystem before it got broken on ARM systems with DMA disabled (because
-the CY82C693 deadlocks the PCI bus on any BM-DMA).  From what I remember,
-ATA provided no easy way to disable DMA on such interfaces.
+!!Apple icloud Customer Care Number 1-800-969-0621!! Apple icloud Customer Care
+Telephone Number Usa Canada!!
 
-I also looked at using ATA on EBSA110, and it was far from trivial due
-to munged address lines and access size problems: with IDE, it was
-easy to work around by redirecting the in*/out* appropriately on a
-per-driver basis.  I forget exactly why ATA didn't work, but it didn't
-and I came to the conclusion that it was not feasible to fix.
+!``@<Dew>*@*@*!Usa Apple icloud customer care number Apple icloud Customer
+Support Number Apple icloud +1-800-969-0621) for all type help by How to
+contact Apple icloud by phone Apple icloud customer support number Apple icloud
+tech support phone number usa, Apple icloud toll free phone number
++1-800-969-0621) Apple icloud tech support number usa Apple icloud technical
+support phone number usa Apple icloud customer service phone number usa Apple
+icloud Tech Support Number,Apple icloud customer service phone number usa,APPLE
+ICLOUD tech support phone number, Intuit APPLE ICLOUD Tech Support Phone
+Number, APPLE ICLOUD Help Desk Phone Number, APPLE ICLOUD tech support number,
+APPLE ICLOUD technical support phone number, @@@ APPLE ICLOUD phone number,
+APPLE ICLOUD technical support number, APPLE ICLOUD support phone number, APPLE
+ICLOUD technical support, APPLE ICLOUD Customer Service Phone Number, APPLE
+ICLOUD Customer Service Number, APPLE ICLOUD Customer Support Phone Number,
+APPLE ICLOUD Customer Support Number, @@1-800-969-0621)@@ APPLE ICLOUD Customer
+Service Helpline Number, APPLE ICLOUD Customer Care Number, APPLE ICLOUD
+support team phone number, @@1-800-969-0621)@@APPLE ICLOUD help number-APPLE
+ICLOUD Helpline Number; APPLE ICLOUD help phone number-APPLE ICLOUD Helpline
+Number, APPLE ICLOUD Tech Support Toll free Number, APPLE ICLOUD Support
+Telephone Number, APPLE ICLOUD Tech Support Telephone number, APPLE ICLOUD Tech
+Support contact number, APPLE ICLOUD support contact number, APPLE ICLOUD
+technical support contact number. Call, +1-800-969-0621) APPLE ICLOUD tech
+support phone number, Intuit APPLE ICLOUD Tech Support Phone Number, APPLE
+ICLOUD Help Desk Phone Number, APPLE ICLOUD tech support number, APPLE ICLOUD
+technical support phone number, APPLE ICLOUD phone number, APPLE ICLOUD
+technical support number, APPLE ICLOUD support phone number. It is very popular
+toll free number 1-800-969-0621) which provide by APPLE ICLOUD technical
+support, APPLE ICLOUD Customer Service Phone Number, APPLE ICLOUD Customer
+Service Number, APPLE ICLOUD Customer Support Phone Number, APPLE ICLOUD
+Customer Support Number, APPLE ICLOUD Customer Service Helpline Number, APPLE
+ICLOUD Customer Care Number, APPLE ICLOUD support team phone number. Call,
+APPLE ICLOUD tech support phone number, Intuit APPLE ICLOUD Tech Support Phone
+Number, APPLE ICLOUD Help Desk Phone Number, APPLE ICLOUD tech support number,
+APPLE ICLOUD technical support phone number, APPLE ICLOUD phone number, APPLE
+ICLOUD technical support number, APPLE ICLOUD support phone number, APPLE
+ICLOUD technical support, APPLE ICLOUD Customer Service Phone Number, APPLE
+ICLOUD Customer Service Number, APPLE ICLOUD Customer Support Phone Number,
+APPLE ICLOUD Customer Support Number, APPLE ICLOUD Customer Service Helpline
+Number, APPLE ICLOUD Customer Care Number, APPLE ICLOUD support team phone
+number, #APPLE ICLOUD Tech Support Phone +1-800-969-0621) Number APPLE ICLOUD
+customer support number APPLE ICLOUD 1-800-969-0621) technical support APPLE
+ICLOUD support phone number APPLE ICLOUD tech support toll free number in usa
+APPLE ICLOUD tech support phone number APPLE ICLOUD tech support phone number
+free APPLE ICLOUD technical support phone number APPLE ICLOUD technologies
+phone number APPLE ICLOUD telephone support number APPLE ICLOUD support contact
+number APPLE ICLOUD 1-800-969-0621) customer support phone number APPLE ICLOUD
+1-800-969-0621) problems APPLE ICLOUD 1-800-969-0621) tech support APPLE ICLOUD
+1-800-969-0621) technical support APPLE ICLOUD 1-800-969-0621) toll free number
+APPLE ICLOUD com customer service phone number APPLE ICLOUD contact phone
+number APPLE ICLOUD contact telephone number APPLE ICLOUD customer service
+contact number APPLE ICLOUD customer service email APPLE ICLOUD customer
+service phone number APPLE ICLOUD customer service telephone number APPLE
+ICLOUD customer services email APPLE ICLOUD customer support email address
+APPLE ICLOUD customer support number APPLE ICLOUD customer support phone number
+APPLE ICLOUD 1-800-969-0621) tech support assistant APPLE ICLOUD support
+assistant APPLE ICLOUD tech support +APPLE ICLOUD 1-800-969-0621) +online
++support +APPLE ICLOUD+support+number +APPLE ICLOUD+online+support APPLE ICLOUD
+1-800-969-0621) number technical support APPLE ICLOUD 1-800-969-0621) service
+number APPLE ICLOUD 1-800-969-0621) support contact phone number APPLE ICLOUD
+1-800-969-0621) telephone support number telephone number APPLE ICLOUD
+1-800-969-0621) customer service number APPLE ICLOUD 1-800-969-0621) compaq
+APPLE ICLOUD 1-800-969-0621) support APPLE ICLOUD 1-800-969-0621) compaq
+support APPLE ICLOUD 1-800-969-0621) customer service APPLE ICLOUD
+1-800-969-0621) contact phone number APPLE ICLOUD 1-800-969-0621) customer
+phone number APPLE ICLOUD 1-800-969-0621) customer services number APPLE ICLOUD
+1-800-969-0621) customer support telephone number APPLE ICLOUD 1-800-969-0621)
+support online APPLE ICLOUD 1-800-969-0621) tech support APPLE ICLOUD
+1-800-969-0621) service phone number APPLE ICLOUD 1-800-969-0621) support
+customer service number APPLE ICLOUD 1-800-969-0621) tech support phone numbers
+APPLE ICLOUD 1-800-969-0621) technical support contact number APPLE ICLOUD
+1-800-969-0621) telephone number customer service number APPLE ICLOUD
+1-800-969-0621) tech support online APPLE ICLOUD 1-800-969-0621) tech support
+APPLE ICLOUD 1-800-969-0621) customer support APPLE ICLOUD 1-800-969-0621)
+customer service APPLE ICLOUD 1-800-969-0621) online support APPLE ICLOUD
+1-800-969-0621) phone number customer support APPLE ICLOUD 1-800-969-0621)
+support telephone numbers APPLE ICLOUD 1-800-969-0621) technical support
+numbers APPLE ICLOUD 1-800-969-0621) usa support telephone number APPLE ICLOUD
+1-800-969-0621) support APPLE ICLOUD 1-800-969-0621) support APPLE ICLOUD
+support APPLE ICLOUD 1-800-969-0621) tech support&&^^Call, +1-800-969-0621) for
+all type help by How to contact Apple icloud by phone Apple icloud customer
+support number Apple icloud tech support phone number usa, Apple icloud toll
+free phone number +1-800-969-0621) Apple icloud tech support number usa Apple
+icloud technical support phone number usa Apple icloud customer service phone
+number usa Apple icloud Tech Support Number,Apple icloud customer service phone
+number usa,APPLE ICLOUD tech support phone number, Intuit APPLE ICLOUD Tech
+Support Phone Number, APPLE ICLOUD Help Desk Phone Number, APPLE ICLOUD tech
+support number, APPLE ICLOUD technical support phone number, @@@ APPLE ICLOUD
+phone number, APPLE ICLOUD technical support number, APPLE ICLOUD support phone
+number, APPLE ICLOUD technical support, APPLE ICLOUD Customer Service Phone
+Number, APPLE ICLOUD Customer Service Number, APPLE ICLOUD Customer Support
+Phone Number, APPLE ICLOUD Customer Support Number, @@1-800-969-0621)@@ APPLE
+ICLOUD Customer Service Helpline Number, APPLE ICLOUD Customer Care Number,
+APPLE ICLOUD support team phone number, @@1-800-969-0621)@@APPLE ICLOUD help
+number-APPLE ICLOUD Helpline Number; APPLE ICLOUD help phone number-APPLE
+ICLOUD Helpline Number, APPLE ICLOUD Tech Support Toll free Number, APPLE
+ICLOUD Support Telephone Number, APPLE ICLOUD Tech Support Telephone number,
+APPLE ICLOUD Tech Support contact number, APPLE ICLOUD support contact number,
+APPLE ICLOUD technical support contact number. Call, +1-800-969-0621) APPLE
+ICLOUD tech support phone number, Intuit APPLE ICLOUD Tech Support Phone
+Number, APPLE ICLOUD Help Desk Phone Number, APPLE ICLOUD tech support number,
+APPLE ICLOUD technical support phone number, APPLE ICLOUD phone number, APPLE
+ICLOUD technical support number, APPLE ICLOUD support phone number. It is very
+popular toll free number 1-800-969-0621) which provide by APPLE ICLOUD
+technical support, APPLE ICLOUD Customer Service Phone Number, APPLE ICLOUD
+Customer Service Number, APPLE ICLOUD Customer Support Phone Number, APPLE
+ICLOUD Customer Support Number, APPLE ICLOUD Customer Service Helpline Number,
+APPLE ICLOUD Customer Care Number, APPLE ICLOUD support team phone number.
+Call, APPLE ICLOUD tech support phone number, Intuit APPLE ICLOUD Tech Support
+Phone Number, APPLE ICLOUD Help Desk Phone Number, APPLE ICLOUD tech support
+number, APPLE ICLOUD technical support phone number, APPLE ICLOUD phone number,
+APPLE ICLOUD technical support number, APPLE ICLOUD support phone number, APPLE
+ICLOUD technical support, APPLE ICLOUD Customer Service Phone Number, APPLE
+ICLOUD Customer Service Number, APPLE ICLOUD Customer Support Phone Number,
+APPLE ICLOUD Customer Support Number, APPLE ICLOUD Customer Service Helpline
+Number, APPLE ICLOUD Customer Care Number, APPLE ICLOUD support team phone
+number, #APPLE ICLOUD Tech Support Phone +1-800-969-0621) Number APPLE ICLOUD
+customer support number APPLE ICLOUD 1-800-969-0621) technical support APPLE
+ICLOUD support phone number APPLE ICLOUD tech support toll free number in usa
+APPLE ICLOUD tech support phone number APPLE ICLOUD tech support phone number
+free APPLE ICLOUD technical support phone number APPLE ICLOUD technologies
+phone number APPLE ICLOUD telephone support number APPLE ICLOUD support contact
+number APPLE ICLOUD 1-800-969-0621) customer support phone number APPLE ICLOUD
+1-800-969-0621) problems APPLE ICLOUD 1-800-969-0621) tech support APPLE ICLOUD
+1-800-969-0621) technical support APPLE ICLOUD 1-800-969-0621) toll free number
+APPLE ICLOUD com customer service phone number APPLE ICLOUD contact phone
+number APPLE ICLOUD contact telephone number APPLE ICLOUD customer service
+contact number APPLE ICLOUD customer service email APPLE ICLOUD customer
+service phone number APPLE ICLOUD customer service telephone number APPLE
+ICLOUD customer services email APPLE ICLOUD customer support email address
+APPLE ICLOUD customer support number APPLE ICLOUD customer support phone number
+APPLE ICLOUD 1-800-969-0621) tech support assistant APPLE ICLOUD support
+assistant APPLE ICLOUD tech support +APPLE ICLOUD 1-800-969-0621) +online
++support +APPLE ICLOUD+support+number +APPLE ICLOUD+online+support APPLE ICLOUD
+1-800-969-0621) number technical support APPLE ICLOUD 1-800-969-0621) service
+number APPLE ICLOUD 1-800-969-0621) support contact phone number APPLE ICLOUD
+1-800-969-0621) telephone support number telephone number APPLE ICLOUD
+1-800-969-0621) customer service number APPLE ICLOUD 1-800-969-0621) compaq
+APPLE ICLOUD 1-800-969-0621) support APPLE ICLOUD 1-800-969-0621) compaq
+support APPLE ICLOUD 1-800-969-0621) customer service APPLE ICLOUD
+1-800-969-0621) contact phone number APPLE ICLOUD 1-800-969-0621) customer
+phone number APPLE ICLOUD 1-800-969-0621) customer services number APPLE ICLOUD
+1-800-969-0621) customer support telephone number APPLE ICLOUD 1-800-969-0621)
+support online APPLE ICLOUD 1-800-969-0621) tech support APPLE ICLOUD
+1-800-969-0621) service phone number APPLE ICLOUD 1-800-969-0621) support
+customer service number APPLE ICLOUD 1-800-969-0621) tech support phone numbers
+APPLE ICLOUD 1-800-969-0621) technical support contact number APPLE ICLOUD
+1-800-969-0621) telephone number customer service number APPLE ICLOUD
+1-800-969-0621) tech support online APPLE ICLOUD 1-800-969-0621) tech support
+APPLE ICLOUD 1-800-969-0621) customer support APPLE ICLOUD 1-800-969-0621)
+customer service APPLE ICLOUD 1-800-969-0621) online support APPLE ICLOUD
+1-800-969-0621) phone number customer support APPLE ICLOUD 1-800-969-0621)
+support telephone numbers APPLE ICLOUD 1-800-969-0621) technical support
+numbers APPLE ICLOUD 1-800-969-0621) usa support telephone number APPLE ICLOUD
+1-800-969-0621) support APPLE ICLOUD 1-800-969-0621) support APPLE ICLOUD
+support APPLE ICLOUD 1-800-969-0621) tech support&&^^Call, +1-800-969-0621) for
+all type help by How to contact Apple icloud by phone Apple icloud customer
+support number Apple icloud tech support phone number usa, Apple icloud toll
+free phone number +1-800-969-0621) Apple icloud tech support number usa Apple
+icloud technical support phone number usa Apple icloud customer service phone
+number usa Apple icloud Tech Support Number,Apple icloud customer service phone
+number usa,APPLE ICLOUD tech support phone number, Intuit APPLE ICLOUD Tech
+Support Phone Number, APPLE ICLOUD Help Desk Phone Number, APPLE ICLOUD tech
+support number, APPLE ICLOUD technical support phone number, @@@ APPLE ICLOUD
+phone number, APPLE ICLOUD technical support number, APPLE ICLOUD support phone
+number, APPLE ICLOUD technical support, APPLE ICLOUD Customer Service Phone
+Number, APPLE ICLOUD Customer Service Number, APPLE ICLOUD Customer Support
+Phone Number, APPLE ICLOUD Customer Support Number, @@1-800-969-0621)@@ APPLE
+ICLOUD Customer Service Helpline Number, APPLE ICLOUD Customer Care Number,
+APPLE ICLOUD support team phone number, @@1-800-969-0621)@@APPLE ICLOUD help
+number-APPLE ICLOUD Helpline Number; APPLE ICLOUD help phone number-APPLE
+ICLOUD Helpline Number, APPLE ICLOUD Tech Support Toll free Number, APPLE
+ICLOUD Support Telephone Number, APPLE ICLOUD Tech Support Telephone number,
+APPLE ICLOUD Tech Support contact number, APPLE ICLOUD support contact number,
+APPLE ICLOUD technical support contact number. Call, +1-800-969-0621) APPLE
+ICLOUD tech support phone number, Intuit APPLE ICLOUD Tech Support Phone
+Number, APPLE ICLOUD Help Desk Phone Number, APPLE ICLOUD tech support number,
+APPLE ICLOUD technical support phone number, APPLE ICLOUD phone number, APPLE
+ICLOUD technical support number, APPLE ICLOUD support phone number. It is very
+popular toll free number 1-800-969-0621) which provide by APPLE ICLOUD
+technical support, APPLE ICLOUD Customer Service Phone Number, APPLE ICLOUD
+Customer Service Number, APPLE ICLOUD Customer Support Phone Number, APPLE
+ICLOUD Customer Support Number, APPLE ICLOUD Customer Service Helpline Number,
+APPLE ICLOUD Customer Care Number, APPLE ICLOUD support team phone number.
+Call, APPLE ICLOUD tech support phone number, Intuit APPLE ICLOUD Tech Support
+Phone Number, APPLE ICLOUD Help Desk Phone Number, APPLE ICLOUD tech support
+number, APPLE ICLOUD technical support phone number, APPLE ICLOUD phone number,
+APPLE ICLOUD technical support number, APPLE ICLOUD support phone number, APPLE
+ICLOUD technical support, APPLE ICLOUD Customer Service Phone Number, APPLE
+ICLOUD Customer Service Number, APPLE ICLOUD Customer Support Phone Number,
+APPLE ICLOUD Customer Support Number, APPLE ICLOUD Customer Service Helpline
+Number, APPLE ICLOUD Customer Care Number, APPLE ICLOUD support team phone
+number, #APPLE ICLOUD Tech Support Phone +1-800-969-0621) Number APPLE ICLOUD
+customer support number APPLE ICLOUD 1-800-969-0621) technical support APPLE
+ICLOUD support phone number APPLE ICLOUD tech support toll free number in usa
+APPLE ICLOUD tech support phone number APPLE ICLOUD tech support phone number
+free APPLE ICLOUD technical support phone number APPLE ICLOUD technologies
+phone number APPLE ICLOUD telephone support number APPLE ICLOUD support contact
+number APPLE ICLOUD 1-800-969-0621) customer support phone number APPLE ICLOUD
+1-800-969-0621) problems APPLE ICLOUD 1-800-969-0621) tech support APPLE ICLOUD
+1-800-969-0621) technical support APPLE ICLOUD 1-800-969-0621) toll free number
+APPLE ICLOUD com customer service phone number APPLE ICLOUD contact phone
+number APPLE ICLOUD contact telephone number APPLE ICLOUD customer service
+contact number APPLE ICLOUD customer service email APPLE ICLOUD customer
+service phone number APPLE ICLOUD customer service telephone number APPLE
+ICLOUD customer services email APPLE ICLOUD customer support email address
+APPLE ICLOUD customer support number APPLE ICLOUD customer support phone number
+APPLE ICLOUD 1-800-969-0621) tech support assistant APPLE ICLOUD support
+assistant APPLE ICLOUD tech support +APPLE ICLOUD 1-800-969-0621) +online
++support +APPLE ICLOUD+support+number +APPLE ICLOUD+online+support APPLE ICLOUD
+1-800-969-0621) number technical support APPLE ICLOUD 1-800-969-0621) service
+number APPLE ICLOUD 1-800-969-0621) support contact phone number APPLE ICLOUD
+1-800-969-0621) telephone support number telephone number APPLE ICLOUD
+1-800-969-0621) customer service number APPLE ICLOUD 1-800-969-0621) compaq
+APPLE ICLOUD 1-800-969-0621) support APPLE ICLOUD 1-800-969-0621) compaq
+support APPLE ICLOUD 1-800-969-0621) customer service APPLE ICLOUD
+1-800-969-0621) contact phone number APPLE ICLOUD 1-800-969-0621) customer
+phone number APPLE ICLOUD 1-800-969-0621) customer services number APPLE ICLOUD
+1-800-969-0621) customer support telephone number APPLE ICLOUD 1-800-969-0621)
+support online APPLE ICLOUD 1-800-969-0621) tech support APPLE ICLOUD
+1-800-969-0621) service phone number APPLE ICLOUD 1-800-969-0621) support
+customer service number APPLE ICLOUD 1-800-969-0621) tech support phone numbers
+APPLE ICLOUD 1-800-969-0621) technical support contact number APPLE ICLOUD
+1-800-969-0621) telephone number customer service number APPLE ICLOUD
+1-800-969-0621) tech support online APPLE ICLOUD 1-800-969-0621) tech support
+APPLE ICLOUD 1-800-969-0621) customer support APPLE ICLOUD 1-800-969-0621)
+customer service APPLE ICLOUD 1-800-969-0621) online support APPLE ICLOUD
+1-800-969-0621) phone number customer support APPLE ICLOUD 1-800-969-0621)
+support telephone numbers APPLE ICLOUD 1-800-969-0621) technical support
+numbers APPLE ICLOUD 1-800-969-0621) usa support telephone number APPLE ICLOUD
+1-800-969-0621) support APPLE ICLOUD 1-800-969-0621) support APPLE ICLOUD
+support APPLE ICLOUD 1-800-969-0621) tech support&&^^Call, +1-800-969-0621) for
+all type help by How to contact Apple icloud by phone Apple icloud customer
+support number Apple icloud tech support phone number usa, Apple icloud toll
+free phone number +1-800-969-0621) Apple icloud tech support number usa Apple
+icloud technical support phone number usa Apple icloud customer service phone
+number usa Apple icloud Tech Support Number,Apple icloud customer service phone
+number usa,APPLE ICLOUD tech support phone number, Intuit APPLE ICLOUD Tech
+Support Phone Number, APPLE ICLOUD Help Desk Phone Number, APPLE ICLOUD tech
+support number, APPLE ICLOUD technical support phone number, @@@ APPLE ICLOUD
+phone number, APPLE ICLOUD technical support number, APPLE ICLOUD support phone
+number, APPLE ICLOUD technical support, APPLE ICLOUD Customer Service Phone
+Number, APPLE ICLOUD Customer Service Number, APPLE ICLOUD Customer Support
+Phone Number, APPLE ICLOUD Customer Support Number, @@1-800-969-0621)@@ APPLE
+ICLOUD Customer Service Helpline Number, APPLE ICLOUD Customer Care Number,
+APPLE ICLOUD support team phone number, @@1-800-969-0621)@@APPLE ICLOUD help
+number-APPLE ICLOUD Helpline Number; APPLE ICLOUD help phone number-APPLE
+ICLOUD Helpline Number, APPLE ICLOUD Tech Support Toll free Number, APPLE
+ICLOUD Support Telephone Number, APPLE ICLOUD Tech Support Telephone number,
+APPLE ICLOUD Tech Support contact number, APPLE ICLOUD support contact number,
+APPLE ICLOUD technical support contact number. Call, +1-800-969-0621) APPLE
+ICLOUD tech support phone number, Intuit APPLE ICLOUD Tech Support Phone
+Number, APPLE ICLOUD Help Desk Phone Number, APPLE ICLOUD tech support number,
+APPLE ICLOUD technical support phone number, APPLE ICLOUD phone number, APPLE
+ICLOUD technical support number, APPLE ICLOUD support phone number. It is very
+popular toll free number 1-800-969-0621) which provide by APPLE ICLOUD
+technical support, APPLE ICLOUD Customer Service Phone Number, APPLE ICLOUD
+Customer Service Number, APPLE ICLOUD Customer Support Phone Number, APPLE
+ICLOUD Customer Support Number, APPLE ICLOUD Customer Service Helpline Number,
+APPLE ICLOUD Customer Care Number, APPLE ICLOUD support team phone number.
+Call, APPLE ICLOUD tech support phone number, Intuit APPLE ICLOUD Tech Support
+Phone Number, APPLE ICLOUD Help Desk Phone Number, APPLE ICLOUD tech support
+number, APPLE ICLOUD technical support phone number, APPLE ICLOUD phone number,
+APPLE ICLOUD technical support number, APPLE ICLOUD support phone number, APPLE
+ICLOUD technical support, APPLE ICLOUD Customer Service Phone Number, APPLE
+ICLOUD Customer Service Number, APPLE ICLOUD Customer Support Phone Number,
+APPLE ICLOUD Customer Support Number, APPLE ICLOUD Customer Service Helpline
+Number, APPLE ICLOUD Customer Care Number, APPLE ICLOUD support team phone
+number, #APPLE ICLOUD Tech Support Phone +1-800-969-0621) Number APPLE ICLOUD
+customer support number APPLE ICLOUD 1-800-969-0621) technical support APPLE
+ICLOUD support phone number APPLE ICLOUD tech support toll free number in usa
+APPLE ICLOUD tech support phone number APPLE ICLOUD tech support phone number
+free APPLE ICLOUD technical support phone number APPLE ICLOUD technologies
+phone number APPLE ICLOUD telephone support number APPLE ICLOUD support contact
+number APPLE ICLOUD 1-800-969-0621) customer support phone number APPLE ICLOUD
+1-800-969-0621) problems APPLE ICLOUD 1-800-969-0621) tech support APPLE ICLOUD
+1-800-969-0621) technical support APPLE ICLOUD 1-800-969-0621) toll free number
+APPLE ICLOUD com customer service phone number APPLE ICLOUD contact phone
+number APPLE ICLOUD contact telephone number APPLE ICLOUD customer service
+contact number APPLE ICLOUD customer service email APPLE ICLOUD customer
+service phone number APPLE ICLOUD customer service telephone number APPLE
+ICLOUD customer services email APPLE ICLOUD customer support email address
+APPLE ICLOUD customer support number APPLE ICLOUD customer support phone number
+APPLE ICLOUD 1-800-969-0621) tech support assistant APPLE ICLOUD support
+assistant APPLE ICLOUD support phone number, APPLE ICLOUD technical support,
+APPLE ICLOUD Customer Service Phone Number, APPLE ICLOUD Customer Service
+Number, APPLE ICLOUD Customer Support Phone Number, APPLE ICLOUD Customer
+Support Number, APPLE ICLOUD Customer Service Helpline Number, APPLE ICLOUD
+Customer Care Number, APPLE ICLOUD support team phone number, #APPLE ICLOUD
+Tech Support Phone +1-800-969-0621) Number APPLE ICLOUD customer support number
+APPLE ICLOUD 1-800-969-0621) technical support APPLE ICLOUD support phone
+number APPLE ICLOUD tech support toll free number in usa APPLE ICLOUD tech
+support phone number APPLE ICLOUD tech support phone number free APPLE ICLOUD
+technical support phone number APPLE ICLOUD technologies phone number APPLE
+ICLOUD telephone support number APPLE ICLOUD support contact number APPLE
+ICLOUD 1-800-969-0621) customer support phone number APPLE ICLOUD
+1-800-969-0621) problems APPLE ICLOUD 1-800-969-0621) tech support APPLE ICLOUD
+1-800-969-0621) technical support APPLE ICLOUD 1-800-969-0621) toll free number
+APPLE ICLOUD com customer service phone number APPLE ICLOUD contact phone
+number APPLE ICLOUD contact telephone number APPLE ICLOUD customer service
+contact number APPLE ICLOUD customer service email APPLE ICLOUD customer
+service phone number APPLE ICLOUD customer service telephone number APPLE
+ICLOUD customer services email APPLE ICLOUD customer support email address
+APPLE ICLOUD customer support number APPLE ICLOUD customer support phone number
+APPLE ICLOUD 1-800-969-0621) tech support assistant APPLE ICLOUD support
+assistant APPLE ICLOUD tech support +APPLE ICLOUD 1-800-969-0621) +online
++support +APPLE ICLOUD+support+number +APPLE ICLOUD+online+support APPLE ICLOUD
+1-800-969-0621) number technical support APPLE ICLOUD 1-800-969-0621) service
+number APPLE ICLOUD 1-800-969-0621) support contact phone number APPLE ICLOUD
+1-800-969-0621) telephone support number telephone number APPLE ICLOUD
+1-800-969-0621) customer service number APPLE ICLOUD 1-800-969-0621) compaq
+APPLE ICLOUD 1-800-969-0621) support APPLE ICLOUD 1-800-969-0621) compaq
+support APPLE ICLOUD 1-800-969-0621) customer service APPLE ICLOUD
+1-800-969-0621) contact phone number APPLE ICLOUD 1-800-969-0621) customer
+phone number APPLE ICLOUD 1-800-969-0621) customer services number APPLE ICLOUD
+1-800-969-0621) customer support telephone number APPLE ICLOUD 1-800-969-0621)
+support online APPLE ICLOUD 1-800-969-0621) tech support APPLE ICLOUD
+1-800-969-0621) service phone number APPLE ICLOUD 1-800-969-0621) support
+customer service number APPLE ICLOUD 1-800-969-0621) tech support phone numbers
+APPLE ICLOUD 1-800-969-0621) technical support contact number APPLE ICLOUD
+1-800-969-0621) telephone number customer service number APPLE ICLOUD
+1-800-969-0621) tech support online APPLE ICLOUD 1-800-969-0621) tech support
+APPLE ICLOUD 1-800-969-0621) customer support APPLE ICLOUD 1-800-969-0621)
+customer service APPLE ICLOUD 1-800-969-0621) online support APPLE ICLOUD
+1-800-969-0621) phone number customer support APPLE ICLOUD 1-800-969-0621)
+support telephone numbers APPLE ICLOUD 1-800-969-0621) technical support
+numbers APPLE ICLOUD 1-800-969-0621) usa support telephone number APPLE ICLOUD
+1-800-969-0621) support APPLE ICLOUD 1-800-969-0621) support APPLE ICLOUD
+support APPLE ICLOUD 1-800-969-0621) tech support&&^^Call, +1-800-969-0621) for
+all type help by How to contact Apple icloud by phone Apple icloud customer
+support number Apple icloud tech support phone number usa, Apple icloud toll
+free phone number APPLE ICLOUD tech support +APPLE ICLOUD 1-800-969-0621)
++online +support +APPLE ICLOUD+support+number +APPLE ICLOUD+online+support
+APPLE ICLOUD 1-800-969-0621) number technical support APPLE ICLOUD
+1-800-969-0621) service number APPLE ICLOUD 1-800-969-0621) support contact
+phone number APPLE ICLOUD 1-800-969-0621) telephone support number telephone
+number APPLE ICLOUD 1-800-969-0621) customer service number APPLE ICLOUD
+1-800-969-0621) compaq APPLE ICLOUD 1-800-969-0621) support APPLE ICLOUD
+1-800-969-0621) compaq support APPLE ICLOUD 1-800-969-0621) customer service
+APPLE ICLOUD 1-800-969-0621) contact phone number APPLE ICLOUD 1-800-969-0621)
+customer phone number APPLE ICLOUD 1-800-969-0621) customer services number
+APPLE ICLOUD 1-800-969-0621) customer support telephone number APPLE ICLOUD
+1-800-969-0621) support online APPLE ICLOUD 1-800-969-0621) tech support APPLE
+ICLOUD 1-800-969-0621) service phone number APPLE ICLOUD 1-800-969-0621)
+support customer service number APPLE ICLOUD 1-800-969-0621) tech support phone
+numbers APPLE ICLOUD 1-800-969-0621) technical support contact number
++1-800-969-0621) Apple icloud tech support number usa Apple icloud technical
+support phone number usa Apple icloud customer service phone number usa Apple
+icloud Tech Support Number,Apple icloud customer service phone number usa,APPLE
+ICLOUD tech support phone number, Intuit APPLE ICLOUD Tech Support Phone
+Number, APPLE ICLOUD Help Desk Phone Number, APPLE ICLOUD tech support number,
+APPLE ICLOUD technical support phone number, @@@ APPLE ICLOUD phone number,
+APPLE ICLOUD technical support number, APPLE ICLOUD support phone number, APPLE
+ICLOUD technical support, APPLE ICLOUD Customer Service Phone Number, APPLE
+ICLOUD Customer Service Number, APPLE ICLOUD Customer Support Phone Number,
+APPLE ICLOUD Customer Support Number, @@1-800-969-0621)@@ APPLE ICLOUD Customer
+Service Helpline Number, APPLE ICLOUD Customer Care Number, APPLE ICLOUD
+support team phone number, @@1-800-969-0621)@@APPLE ICLOUD help number-APPLE
+ICLOUD Helpline Number; APPLE ICLOUD help phone number-APPLE ICLOUD Helpline
+Number, APPLE ICLOUD Tech Support Toll free Number, APPLE ICLOUD Support
+Telephone Number, APPLE ICLOUD Tech Support Telephone number, APPLE ICLOUD Tech
+Support contact number, APPLE ICLOUD support contact number, APPLE ICLOUD
+technical support contact number. Call, +1-800-969-0621) APPLE ICLOUD tech
+support phone number, Intuit APPLE ICLOUD Tech Support Phone Number, APPLE
+ICLOUD Help Desk Phone Number, APPLE ICLOUD tech support number, APPLE ICLOUD
+technical support phone number, APPLE ICLOUD phone number, APPLE ICLOUD
+technical support number, APPLE ICLOUD support phone number. It is very popular
+toll free number 1-800-969-0621) which provide by APPLE ICLOUD technical
+support, APPLE ICLOUD Customer Service Phone Number, APPLE ICLOUD Customer
+Service Number, APPLE ICLOUD Customer Support Phone Number, APPLE ICLOUD
+Customer Support Number, APPLE ICLOUD Customer Service Helpline Number, APPLE
+ICLOUD Customer Care Number, APPLE ICLOUD support team phone number. Call,
+APPLE ICLOUD tech support phone number, Intuit APPLE ICLOUD Tech Support Phone
+Number, APPLE ICLOUD Help Desk Phone Number, APPLE ICLOUD tech support number,
+APPLE ICLOUD technical support phone number, APPLE ICLOUD phone number, APPLE
+ICLOUD technical support number,
 
-So, please don't assume that ATA can be simply slotted in instead of
-IDE.
+https://bugzilla.kernel.org/show_bug.cgi?id=130801
 
 -- 
-RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
-FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
-according to speedtest.net.
+You are receiving this mail because:
+You are watching the assignee of the bug.
