@@ -1,34 +1,34 @@
 From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 126231] New: Office @++{1-844-723-2329}}microsoft office 365
- technical support phone number
-Date: Wed, 13 Jul 2016 14:49:40 +0000
-Message-ID: <bug-126231-11633@https.bugzilla.kernel.org/>
+Subject: [Bug 127301] New: ++++SuPpOrTs free ~~caLl 18.5.5.332..........4042
+ ZOHO technical support phone number
+Date: Wed, 13 Jul 2016 15:56:01 +0000
+Message-ID: <bug-127301-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:41632 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:54182 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751310AbcGMOtx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Wed, 13 Jul 2016 10:49:53 -0400
+	id S1751073AbcGMP5H (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 13 Jul 2016 11:57:07 -0400
 Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 03F96202AE
-	for <linux-ide@vger.kernel.org>; Wed, 13 Jul 2016 14:49:42 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 31852202A1
-	for <linux-ide@vger.kernel.org>; Wed, 13 Jul 2016 14:49:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 22A0A20268
+	for <linux-ide@vger.kernel.org>; Wed, 13 Jul 2016 15:56:04 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 12B712021F
+	for <linux-ide@vger.kernel.org>; Wed, 13 Jul 2016 15:56:02 +0000 (UTC)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=126231
+https://bugzilla.kernel.org/show_bug.cgi?id=127301
 
-            Bug ID: 126231
-           Summary: Office @++{1-844-723-2329}}microsoft office 365
+            Bug ID: 127301
+           Summary: ++++SuPpOrTs free ~~caLl 18.5.5.332..........4042 ZOHO
                     technical support phone number
            Product: IO/Storage
            Version: 2.5
-    Kernel Version: 2
+    Kernel Version: 2.2
           Hardware: All
                 OS: Linux
               Tree: Mainline
@@ -37,93 +37,116 @@ https://bugzilla.kernel.org/show_bug.cgi?id=126231
           Priority: P1
          Component: IDE
           Assignee: io_ide@kernel-bugs.osdl.org
-          Reporter: remboden3@gmail.com
+          Reporter: masddad@yahoo.com
         Regression: No
 
-1-800-929-1150 microsoft office 365 customer support
-1-800-929-1150 microsoft office 365 customer support phone number
-1-800-929-1150 microsoft office 365 help number
-1-800-929-1150 microsoft office 365 help phone number
-microsoft office 365 phone support
-microsoft office 365 support number 1-800-929-1150
-microsoft office 365 support phone 1-800-929-1150
-microsoft office 365 support phone number 1-800-929-1150
-microsoft office 365 tech support 1-800-929-1150
-microsoft office 365 tech support phone number 1-800-929-1150
-microsoft office 365 technical support 1-800-929-1150
-microsoft office 365 technical support number
-microsoft office 365 technical support phone number
-microsoft office contact number 1-800-929-1150
-microsoft office contact number usa
-microsoft office contact phone number
-microsoft office customer service
-microsoft office customer service number
-microsoft office customer service phone number
-microsoft office customer support number
-microsoft office customer support phone
-microsoft office customer support phone number
-microsoft office help desk phone number
-microsoft office help phone number
-microsoft office outlook support phone number
-microsoft office phone number support
-microsoft office phone support
-microsoft office phone support number
-microsoft office support number usa
-microsoft office support phone
-microsoft office support phone number
-microsoft office support phone number usa
-microsoft office tech support number
-microsoft office tech support phone
-microsoft office tech support phone number
-microsoft office tech support phone numbers
-microsoft office technical support number
-microsoft office technical support phone number
-microsoft office technical support phone number usa
-microsoft office technical support telephone number
-microsoft online support phone number
-microsoft outllok 2010 technical support phone number
-microsoft outlook 2007 support number
-microsoft outlook 2010 support phone number
-microsoft outlook 2010 technical support
-microsoft outlook 2010 technical support phone number
-microsoft outlook 2013 technical support number
-microsoft outlook 365 technical support phone number
-microsoft outlook contact number
-microsoft outlook customer service
-microsoft outlook customer service number
-microsoft outlook customer service phone number
-microsoft outlook customer support
-microsoft outlook customer support number
-microsoft outlook customer support phone number
-microsoft outlook email sign in support number
-microsoft outlook email signature support number
-microsoft outlook email support number
-microsoft outlook email support phone number
-microsoft outlook email technical support number
-microsoft outlook express tech support phone number
-microsoft outlook exprss technical support phone number
-microsoft outlook help desk phone number
-microsoft outlook help phone number
-microsoft outlook help support
-microsoft outlook phone number support
-microsoft outlook phone support
-microsoft outlook support contact phone number
-microsoft outlook support number
-microsoft outlook support phone
-microsoft outlook support phone number
-microsoft outlook support telephone number
-microsoft outlook tech support number
-microsoft outlook tech support phone number
-microsoft outlook technical support
-microsoft outlook technical support number
-microsoft outlook technical support phone number
-microsoft phone number customer service
-microsoft phone number for support
-microsoft phone number for tech support
-microsoft phone number support
-microsoft phone number tech support
-microsoft phone number technical support
-microsoft phone support number
+Call service plus ++1-844-332-4042 ZOHO support phone number ZOHO customer care
+service phone number ZOHO support support phone number ZOHO customer support
+phone number Call service plus 18 44 332 4042 ZOHO support phone number ZOHO
+customer care service phone number ZOHO support support phone number ZOHO
+customer support phone number !CANADA+++++-----GGGGGYDasbnd ZOHO customer
+suppOrt number usaasdaa UCanaDa..@1855-332-4042(USA), 855-332-4042(CANADA),
+1855-332-4042(US)@ZOHO telephone support@))))!@ $$@$$$ ZOHO computer support
+number +@$$$@$$$@$@))))!@1855-332-4042(USA), 1855-332-4042(CANADA),
+1855-332-4042(US)@USA CALL ZOHO Tech Support Phone Number, ZOHO Customer
+service number... +@$$$@$$$@$@))@1-855-332-4042@USA CALL ZOHO Tech Support
+Phone Number, ZOHO Customer service number..
+++@@@helpline@@USA_CALL_1-855-332-4042_ZOHO
+_MAIL_TECHNICAL_SUPPORT_PHONE_NUMBER,CUSTOMER_SERVICE_NUMBER_USA ? $CALL
+%%USA((1-855-332-4042))_!!ZOHO tech Support Number @1-855-332-4042@ ZOHO Tech
+Support Phone Number Call wireless 1-855-332-4042 1-855-332-4042 ZOHO Tech
+Support Phone Number Canada ZOHO customer service number1-855-332-4042 ZOHO
+support number, ZOHO support, ZOHO support, ZOHO tech support, ZOHO technical
+support, ZOHO customer service number, ZOHO customer service, ZOHO tech support
+number, ##ZOHO support center##, ZOHO support number, hewlett packard support,
+ZOHO contact number, ZOHO phone number, ZOHO help and support, ZOHO customer
+support, ZOHO help, ZOHO technical support number, ZOHO support phone number,
+hewlett packard customer service, ZOHO mails support, ZOHO customer service
+phone number, ZOHO number, ZOHO customer care, ZOHO contact, ZOHO tech support
+phone number, ZOHO support chat, ZOHO customer support number, ZOHO customer
+care number, contact ZOHO support, ZOHO help, ZOHO phone, ZOHO support phone
+number, ZOHO customer support phone number, ZOHO tech support, ZOHO phone
+support, ZOHO technical support phone number, ZOHO laptop support number,
+hewlett packard mail support, ZOHO helpline, ZOHO telephone support, ZOHO
+online support, ZOHO support contact, ZOHO chat support, hewlett packard phone
+number, ZOHO customer service, ZOHO tech support number, ZOHO product support,
+hewlett packard customer service phone number, ZOHO computer support number,
+ZOHO support contact number, ZOHO support mail, ZOHO computer support, ZOHO
+tech support chat, ZOHO helpline number, ZOHO laptop support, hewlett packard
+tech support, ZOHO online chat, hewlett packard technical support, ZOHO help
+line, phone number for ZOHO support, hewlett packard support phone number, ZOHO
+technical support, hewlett packard customer service number, ZOHO service
+number, hewlett packard helpline, ZOHO customer care no, ZOHO customer service
+number, ZOHO help number, ZOHO customer service phone number, ZOHO 1855 number,
+ZOHO support phone, ZOHO support line, hewlett packard contact number, ZOHO
+tech support phone number, ZOHO customer support phone number, ZOHO mails help,
+call ZOHO support, ##ZOHO support## chat, hewlett packard support number,
+hewlett packard tech support number, ZOHO support telephone number, hewlett
+packard tech support phone number, call ZOHO , ZOHO contact support, hewlett
+packard technical support phone number, ZOHO support centre, hewlett packard
+customer support, ZOHO desktop support, ZOHO laptop customer service, contact
+ZOHO support, ZOHO pc support, ZOHO laptop customer care number, ZOHO support
+for mails, ZOHO customer care, ZOHO customer care phone number, hewlett packard
+help, phone number for ZOHO , ZOHO online help, ZOHO laptop customer care, ZOHO
+helpline phone number, ZOHO customer support, ZOHO technical support chat, ZOHO
+computer help, ZOHO support numbers, ZOHO technical support contact number,
+ZOHO telephone number, ZOHO technical support phone number, ZOHO helpline, ZOHO
+support mails, ZOHO support online, ZOHO contact number, ZOHO help phone
+number, ZOHO customer care number, contact hewlett packard by phone, ZOHO phone
+support, hewlett packard mails support, ZOHO tech support phone, ZOHO technical
+help, ZOHO laptop tech support number, contact ZOHO by phone, ZOHO support
+call, ZOHO computers support, hewlett packard customer service telephone
+number, phone number for hewlett packard, ZOHO online support chat, ZOHO laptop
+customer service number, ZOHO online chat support, ZOHO mails customer service,
+hewlett packard customer service phone, ZOHO laptop tech support, ZOHO service
+phone number, hewlett packard mail help, phone number for ZOHO mails, ZOHO
+troubleshooting phone number, ZOHO 855 number, hewlett packard technical
+support number, contact ZOHO support phone, phone number for ZOHO support, ZOHO
+customer support chat, ZOHO help and support number, contact hewlett packard,
+ZOHO laptop support phone number, ZOHO mails customer service phone number,
+ZOHO laptop customer service phone number, ZOHO computer support phone number,
+ZOHO pavilion support, ZOHO computer customer service, ZOHO customer services,
+hewlett packard telephone number, ZOHO helpline no, ZOHO help desk number,
+contact ZOHO support phone number, hewlett packard contact, ZOHO phone numbers,
+ZOHO mails customer care number, ZOHO help and support, contact ZOHO technical
+support, ZOHO contact numbers, contact ZOHO support chat, call ZOHO tech
+support, ZOHO customer service phone, ZOHO help support, ZOHO computer tech
+support, ZOHO assistance phone number, ZOHO customer service telephone number,
+hewlett packard mail support phone number, ZOHO contact support number, ZOHO
+support center phone number, ZOHO support phone numbers, tech support for ZOHO
+, ZOHO it support, ZOHO laptop helpline, ZOHO technical, ZOHO laptop technical
+support number, ZOHO mails tech support phone number, ZOHO mails support phone
+number, hewlett packard help desk phone number, ZOHO computer tech support
+phone number, ZOHO customer service number for laptop, ZOHO helpline number,
+contact ZOHO support by phone, hewlett packard support center, ZOHO laptop
+customer care no, ZOHO support telephone number, ZOHO support services, ZOHO
+customer service number for mails, ZOHO product support number, ZOHO laptop
+tech support phone number, ZOHO helpline phone number, contact ZOHO customer
+support, hewlett packard customer support phone number, ZOHO mails technical
+support, ZOHO customer care center, support for ZOHO mails, ZOHO support
+center, phone number for ZOHO tech support, ZOHO desktop customer care number,
+ZOHO laptops support, ZOHO online support, ZOHO phone number, hewlett packard
+mails support phone number, technical support for ZOHO mails phone number, ZOHO
+help center phone number, contact ZOHO tech support, call ZOHO support, ZOHO
+mails customer support, ZOHO computer customer service number, ZOHO mails
+helpline, ZOHO customer care contact number, ZOHO laptop help, ZOHO computer
+customer service phone number, phone number for hewlett packard customer
+service, hewlett packard 855 number, ZOHO help phone number, ZOHO mails help
+phone number, ZOHO phone number for customer service, ZOHO computer technical
+support phone number, customer service ZOHO , ZOHO support technical support
+number, contact number for ZOHO , ZOHO computers support phone number, ZOHO
+mails support number, ZOHO technical support number, contact ZOHO tech support
+by phone, ZOHO computer customer care number, ZOHO 855 number, call ZOHO
+customer service, ZOHO help center, ZOHO computers customer service, ZOHO help
+desk, hewlett packard computer support, ZOHO mails technical support number,
+ZOHO help desk phone number, ZOHO support phone, ZOHO contact help, contact
+ZOHO laptop support, ZOHO customer service contact number, support for ZOHO
+mail, ZOHO customer care no, ZOHO computer phone number, ZOHO tech help, ZOHO
+pc support number, ZOHO laptop customer support, ZOHO desktop support number,
+support ZOHO mail, ZOHO support hours, number for ZOHO support, ZOHO support
+customer service number, ZOHO contact phone number, customer service number for
+ZOHO mails, ZOHO computers help, ZOHO tech support contact number, ZOHO phone
+support number...
 
 -- 
 You are receiving this mail because:
