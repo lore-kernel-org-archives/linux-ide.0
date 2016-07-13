@@ -1,70 +1,130 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [RESEND PATCH] arm: assabet_defconfig: disable IDE subsystem
-Date: Wed, 13 Jul 2016 16:37:31 +0200
-Message-ID: <4264651.gPKphdYuCx@wuerfel>
-References: <1467991490-24895-1-git-send-email-b.zolnierkie@samsung.com>
- <2773873.Jjn1O47GXr@wuerfel> <4818149.nzRaU7vJQE@amdc1976>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 126231] New: Office @++{1-844-723-2329}}microsoft office 365
+ technical support phone number
+Date: Wed, 13 Jul 2016 14:49:40 +0000
+Message-ID: <bug-126231-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <4818149.nzRaU7vJQE@amdc1976>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: linux-arm-kernel@lists.infradead.org
-Cc: Russell King <linux@arm.linux.org.uk>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>, Kevin Hilman <khilman@baylibre.com>, "Nori, Sekhar" <nsekhar@ti.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Olof Johansson <olof@lixom.net>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:41632 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751310AbcGMOtx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Wed, 13 Jul 2016 10:49:53 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 03F96202AE
+	for <linux-ide@vger.kernel.org>; Wed, 13 Jul 2016 14:49:42 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 31852202A1
+	for <linux-ide@vger.kernel.org>; Wed, 13 Jul 2016 14:49:41 +0000 (UTC)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On Wednesday, July 13, 2016 12:59:23 PM CEST Bartlomiej Zolnierkiewicz wrote:
-> 
-> On Friday, July 08, 2016 10:23:48 PM Arnd Bergmann wrote:
-> > On Friday, July 8, 2016 5:24:41 PM CEST Bartlomiej Zolnierkiewicz wrote:
-> > > This patch disables deprecated IDE subsystem in assabet_defconfig
-> > > (no IDE host drivers are selected in this config so there is no
-> > > valid reason to enable IDE subsystem itself).
-> > > 
-> > > Cc: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
-> > > Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-> > 
-> > I think the series makes a lot of sense. I have checked your assertions
-> > in the changelogs and found no flaws in your logic, so I think we should
-> > take them all through arm-soc unless there are other concerns.
-> 
-> Thank you.
-> 
-> Should I resend everything or just patches that were not reposted yet
-> (the ones that were marked as RFT initially and got no feedback)?
+https://bugzilla.kernel.org/show_bug.cgi?id=126231
 
-I'd be fine with just getting a pull request with all the patches that
-had no negative feedback and that were not already applied (if any).
+            Bug ID: 126231
+           Summary: Office @++{1-844-723-2329}}microsoft office 365
+                    technical support phone number
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 2
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: IDE
+          Assignee: io_ide@kernel-bugs.osdl.org
+          Reporter: remboden3@gmail.com
+        Regression: No
 
-> > Do you have a list of ARM defconfigs that keep using CONFIG_IDE and
-> > how you determined that they need it?
-> 
-> The only such defconfig is davinci_all_defconfig which uses
-> palm_bk3710 host driver (CONFIG_BLK_DEV_PALMCHIP_BK3710).
-> 
-> > I know that ARCH_RPC/ARCH_ACORN has a couple of special drivers that
-> > have no libata replacement, are there any others like that, or are
-> > they all platforms that should in theory work with libata but need
-> > testing?
-> 
-> All platforms except ARCH_ACORN, ARCH_DAVINCI & ARCH_RPC should work
-> with libata.
+1-800-929-1150 microsoft office 365 customer support
+1-800-929-1150 microsoft office 365 customer support phone number
+1-800-929-1150 microsoft office 365 help number
+1-800-929-1150 microsoft office 365 help phone number
+microsoft office 365 phone support
+microsoft office 365 support number 1-800-929-1150
+microsoft office 365 support phone 1-800-929-1150
+microsoft office 365 support phone number 1-800-929-1150
+microsoft office 365 tech support 1-800-929-1150
+microsoft office 365 tech support phone number 1-800-929-1150
+microsoft office 365 technical support 1-800-929-1150
+microsoft office 365 technical support number
+microsoft office 365 technical support phone number
+microsoft office contact number 1-800-929-1150
+microsoft office contact number usa
+microsoft office contact phone number
+microsoft office customer service
+microsoft office customer service number
+microsoft office customer service phone number
+microsoft office customer support number
+microsoft office customer support phone
+microsoft office customer support phone number
+microsoft office help desk phone number
+microsoft office help phone number
+microsoft office outlook support phone number
+microsoft office phone number support
+microsoft office phone support
+microsoft office phone support number
+microsoft office support number usa
+microsoft office support phone
+microsoft office support phone number
+microsoft office support phone number usa
+microsoft office tech support number
+microsoft office tech support phone
+microsoft office tech support phone number
+microsoft office tech support phone numbers
+microsoft office technical support number
+microsoft office technical support phone number
+microsoft office technical support phone number usa
+microsoft office technical support telephone number
+microsoft online support phone number
+microsoft outllok 2010 technical support phone number
+microsoft outlook 2007 support number
+microsoft outlook 2010 support phone number
+microsoft outlook 2010 technical support
+microsoft outlook 2010 technical support phone number
+microsoft outlook 2013 technical support number
+microsoft outlook 365 technical support phone number
+microsoft outlook contact number
+microsoft outlook customer service
+microsoft outlook customer service number
+microsoft outlook customer service phone number
+microsoft outlook customer support
+microsoft outlook customer support number
+microsoft outlook customer support phone number
+microsoft outlook email sign in support number
+microsoft outlook email signature support number
+microsoft outlook email support number
+microsoft outlook email support phone number
+microsoft outlook email technical support number
+microsoft outlook express tech support phone number
+microsoft outlook exprss technical support phone number
+microsoft outlook help desk phone number
+microsoft outlook help phone number
+microsoft outlook help support
+microsoft outlook phone number support
+microsoft outlook phone support
+microsoft outlook support contact phone number
+microsoft outlook support number
+microsoft outlook support phone
+microsoft outlook support phone number
+microsoft outlook support telephone number
+microsoft outlook tech support number
+microsoft outlook tech support phone number
+microsoft outlook technical support
+microsoft outlook technical support number
+microsoft outlook technical support phone number
+microsoft phone number customer service
+microsoft phone number for support
+microsoft phone number for tech support
+microsoft phone number support
+microsoft phone number tech support
+microsoft phone number technical support
+microsoft phone support number
 
-Adding Sekhar and Kevin for DaVinci: At first sight, palm_bk3710 looks
-fairly straightforward (meaning someone has to do a few day's work)
-to convert into a libata driver.
-
-As this is on on-chip controller that is part of a dm644x and dm646x,
-it should also not be hard to test (as long as someone can find
-a hard drive to plug in).
-
-	Arnd
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
