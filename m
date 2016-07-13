@@ -1,22 +1,61 @@
-From: <jushin@mie-takada-hj.ed.jp>
-Subject: business interest
-Date: Sun, 10 Jul 2016 18:52:02 -0700
-Message-ID: <201607110152.u6B1oA1x009130__43299.5848510929$1468399591$gmane$org@isv3.mie-takada-hj.ed.jp>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: Re: [RESEND PATCH] arm: assabet_defconfig: disable IDE subsystem
+Date: Wed, 13 Jul 2016 12:59:23 +0200
+Message-ID: <4818149.nzRaU7vJQE@amdc1976>
+References: <1467991490-24895-1-git-send-email-b.zolnierkie@samsung.com>
+ <2773873.Jjn1O47GXr@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from isv3.mie-takada-hj.ed.jp ([153.150.18.36]:39701 "EHLO
-	isv3.mie-takada-hj.ed.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753006AbcGMIok convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Jul 2016 04:44:40 -0400
-Content-Description: Mail message body
+Received: from mailout1.samsung.com ([203.254.224.24]:45734 "EHLO
+	mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751058AbcGMLAs (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 13 Jul 2016 07:00:48 -0400
+In-reply-to: <2773873.Jjn1O47GXr@wuerfel>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Recipients <jushin@mie-takada-hj.ed.jp>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org, Russell King <linux@arm.linux.org.uk>, Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Olof Johansson <olof@lixom.net>
 
-Kindly permit me to crave your indulgence by introducing a project that might have something to do with you or a member of your immediate or extended family. I am Sergei Malyukov, I am the Director heading the accounting and audit department of the PJSC LUKOIL Moscow Russia. You can check out my details from my company official website below.Yearly we receive returned investment dividend warrants issued by our company to shareholders and investors. These warrants have accumulated to a very substantial value which is the reason I'm soliciting your attention as the investment in question has something to do with either you or a member of your extended family.I propose with your active cooperation to file for re-issue of these warrants in your name by you confirming your interest, Kindly send
-  reply only to: sergeimalyukov@outlook.com to signify your interest and i shall tell you more details.
 
-Sergei Malyukov.
-PJSC LUKOIL, Moscow Russia
+Hi,
+
+On Friday, July 08, 2016 10:23:48 PM Arnd Bergmann wrote:
+> On Friday, July 8, 2016 5:24:41 PM CEST Bartlomiej Zolnierkiewicz wrote:
+> > This patch disables deprecated IDE subsystem in assabet_defconfig
+> > (no IDE host drivers are selected in this config so there is no
+> > valid reason to enable IDE subsystem itself).
+> > 
+> > Cc: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+> > Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+> 
+> I think the series makes a lot of sense. I have checked your assertions
+> in the changelogs and found no flaws in your logic, so I think we should
+> take them all through arm-soc unless there are other concerns.
+
+Thank you.
+
+Should I resend everything or just patches that were not reposted yet
+(the ones that were marked as RFT initially and got no feedback)?
+
+> Do you have a list of ARM defconfigs that keep using CONFIG_IDE and
+> how you determined that they need it?
+
+The only such defconfig is davinci_all_defconfig which uses
+palm_bk3710 host driver (CONFIG_BLK_DEV_PALMCHIP_BK3710).
+
+> I know that ARCH_RPC/ARCH_ACORN has a couple of special drivers that
+> have no libata replacement, are there any others like that, or are
+> they all platforms that should in theory work with libata but need
+> testing?
+
+All platforms except ARCH_ACORN, ARCH_DAVINCI & ARCH_RPC should work
+with libata.
+
+Best regards,
+--
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
+
