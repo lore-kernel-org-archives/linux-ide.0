@@ -1,108 +1,46 @@
-From: Hannes Reinecke <hare@suse.com>
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH 04/10] ata: add ata_is_fpdma() accessor
-Date: Thu, 14 Jul 2016 17:15:51 +0200
-Message-ID: <5787ACA7.9050808@suse.com>
+Date: Thu, 14 Jul 2016 11:19:13 -0400
+Message-ID: <20160714151913.GL15005@htj.duckdns.org>
 References: <1468454751-12466-1-git-send-email-hch@lst.de>
  <1468454751-12466-5-git-send-email-hch@lst.de>
  <20160714143756.GF15005@htj.duckdns.org>
+ <5787ACA7.9050808@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from smtp.nue.novell.com ([195.135.221.5]:41477 "EHLO
-	smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751113AbcGNPQP (ORCPT
-	<rfc822;groupwise-linux-ide@vger.kernel.org:0:0>);
-	Thu, 14 Jul 2016 11:16:15 -0400
-In-Reply-To: <20160714143756.GF15005@htj.duckdns.org>
+Received: from mail-yw0-f174.google.com ([209.85.161.174]:34674 "EHLO
+	mail-yw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751051AbcGNPTP (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jul 2016 11:19:15 -0400
+Received: by mail-yw0-f174.google.com with SMTP id i12so75091177ywa.1
+        for <linux-ide@vger.kernel.org>; Thu, 14 Jul 2016 08:19:14 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <5787ACA7.9050808@suse.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>
-Cc: damien.lemoal@hgst.com, linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+To: Hannes Reinecke <hare@suse.com>
+Cc: Christoph Hellwig <hch@lst.de>, damien.lemoal@hgst.com, linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-On 07/14/2016 04:37 PM, Tejun Heo wrote:
-> Hello,
-> 
-> I'm still a bit confused about this patch.
-> 
-> On Thu, Jul 14, 2016 at 09:05:45AM +0900, Christoph Hellwig wrote:
->> diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
->> index a723ae9..acfb865 100644
->> --- a/drivers/ata/sata_fsl.c
->> +++ b/drivers/ata/sata_fsl.c
->> @@ -534,7 +534,7 @@ static void sata_fsl_qc_prep(struct ata_queued_cmd *qc)
->>  	VPRINTK("Dumping cfis : 0x%x, 0x%x, 0x%x\n",
->>  		cd->cfis[0], cd->cfis[1], cd->cfis[2]);
->>  
->> -	if (qc->tf.protocol == ATA_PROT_NCQ) {
->> +	if (ata_is_fpdma(qc->tf.protocol)) {
-> 
-> ata_is_fpdma() tests NCQ or DMA.  Is this right?
-> 
-Yes. The 'sata_fsl' driver has no means (or at least none which I could
-detect) allowing it to send NCQ NON-DATA commands.
-So for this driver the check for ncq is actually a check for fpdma.
+Hello, Hannes.
 
->> --- a/drivers/ata/sata_mv.c
->> +++ b/drivers/ata/sata_mv.c
->> @@ -1173,7 +1173,7 @@ static void mv_set_irq_coalescing(struct ata_host *host,
->>  static void mv_start_edma(struct ata_port *ap, void __iomem *port_mmio,
->>  			 struct mv_port_priv *pp, u8 protocol)
->>  {
->> -	int want_ncq = (protocol == ATA_PROT_NCQ);
->> +	int want_ncq = (ata_is_fpdma(protocol));
-> 
-> Let's get rid of the parentheses while at it.
-> 
-Okay.
+On Thu, Jul 14, 2016 at 05:15:51PM +0200, Hannes Reinecke wrote:
+> >> +static inline bool ata_is_fpdma(u8 prot)
+> >> +{
+> >> +	return ata_prot_flags(prot) & ATA_PROT_FLAG_FPDMA;
+> >> +}
+> > 
+> > ???
+> > 
+> Yeah, strictly speaking there is no need for ATA_PROT_FLAG_FPDMA.
+> I'll be removing it if you insist.
 
->>  
->>  	if (pp->pp_flags & MV_PP_FLAG_EDMA_EN) {
->>  		int using_ncq = ((pp->pp_flags & MV_PP_FLAG_NCQ_EN) != 0);
->> @@ -2156,8 +2156,7 @@ static void mv_qc_prep_iie(struct ata_queued_cmd *qc)
->>  	unsigned in_index;
->>  	u32 flags = 0;
->>  
->> -	if ((tf->protocol != ATA_PROT_DMA) &&
->> -	    (tf->protocol != ATA_PROT_NCQ))
->> +	if (!ata_is_fpdma(tf->protocol))
-> 
-> This is actually testing !DMA && !NCQ and an equivalent conversion but
-> the rest aren't.
-> 
-Yes.
+No, it's just really confusing to have a function named ata_is_fpdma()
+and then have it test whether the protocol is NCQ or DMA.  If you
+wanna do that, name it ata_is_dma_or_fpdma().  ata_is_fpdma() should
+test (prot & ATA_PROT_FLAG_FPDMA) == ATA_PROT_FLAG_FPDMA.
 
->> diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
->> index 734f563..89e36aa 100644
->> --- a/drivers/ata/sata_nv.c
->> +++ b/drivers/ata/sata_nv.c
->> @@ -1407,7 +1407,7 @@ static void nv_adma_qc_prep(struct ata_queued_cmd *qc)
->>  	cpb->next_cpb_idx	= 0;
->>  
->>  	/* turn on NCQ flags for NCQ commands */
->> -	if (qc->tf.protocol == ATA_PROT_NCQ)
->> +	if (ata_is_fpdma(qc->tf.protocol))
->>  		ctl_flags |= NV_CPB_CTL_QUEUE | NV_CPB_CTL_FPDMA;
-> 
-> And I don't know why testing NCQ or DMA would be safe for places like
-> this.
-> 
-Again, this driver cannot handle NCQ NON-DATA command, so it always has
-to assume that NCQ _actually_ means FPDMA.
+Thanks.
 
->> +	ATA_PROT_FLAG_FPDMA	= ATA_PROT_FLAG_NCQ | ATA_PROT_FLAG_DMA,
-> ...
->> +static inline bool ata_is_fpdma(u8 prot)
->> +{
->> +	return ata_prot_flags(prot) & ATA_PROT_FLAG_FPDMA;
->> +}
-> 
-> ???
-> 
-Yeah, strictly speaking there is no need for ATA_PROT_FLAG_FPDMA.
-I'll be removing it if you insist.
-
-Cheers,
-
-Hannes
-
+-- 
+tejun
