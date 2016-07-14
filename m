@@ -1,86 +1,61 @@
-From: Tom Yan <tom.ty89@gmail.com>
-Subject: Fluctuating "acceptance" on requested data length in SATA/AHCI
-Date: Fri, 15 Jul 2016 03:10:40 +0800
-Message-ID: <CAGnHSEkPkm3z3Aj+Aaj2p7ZK-UEo0dvXE+6Cj8SdKCt_L7Ei=w@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: tom.ty89@gmail.com
+Subject: [PATCH] ata: make lba_{28,48}_ok() use ATA_MAX_SECTORS{,_LBA48}
+Date: Fri, 15 Jul 2016 05:09:02 +0800
+Message-ID: <e2abe167a66a18daa44e0fb7bf39f5a8da0f5bf0.1468530378.git.tom.ty89@gmail.com>
+References: <91a6bb6f4c04eb617a49d9a51f261b661c179de0.1468384890.git.tom.ty89@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qt0-f176.google.com ([209.85.216.176]:34172 "EHLO
-	mail-qt0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751084AbcGNTKl (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jul 2016 15:10:41 -0400
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:33970 "EHLO
+	mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751150AbcGNVJK (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jul 2016 17:09:10 -0400
+Received: by mail-pf0-f196.google.com with SMTP id g202so5345831pfb.1
+        for <linux-ide@vger.kernel.org>; Thu, 14 Jul 2016 14:09:10 -0700 (PDT)
+In-Reply-To: <91a6bb6f4c04eb617a49d9a51f261b661c179de0.1468384890.git.tom.ty89@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-block@vger.kernel.org, dgilbert@interlog.com, Tejun Heo <tj@kernel.org>, martin.petersen@oracle.com
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
 
-So I recently been doing some experiment on different storage hosts
-(AHCI and UAS) to see how certain block layer limits in the kernel and
-so matters on them. I notice some behavior in SATA/AHCI which bothers
-me a bit.
+From: Tom Yan <tom.ty89@gmail.com>
 
-I have been testing with `sg_raw` by issuing READ (10/16) commands.
-But before that I needed to hack it a bit because it does a weird
-check on the allowed data length, where the allowed value is
-ridiculously small:
+Since we set ATA_MAX_SECTORS_LBA48 to 65535 to avoid the corner case
+in some drives that commands with "count" set to 0000h (which
+reprsents 65536) does not work as expected, lba_48_ok(), which is
+used for number-of-blocks checking when libata pack commands, should
+use the same limit as well. In fact, there is no reason for the two
+functions not to use the macros anyway.
 
-diff --git a/sg_raw.c~ b/sg_raw.c
-...
--            if (n < 0 || n > MAX_SCSI_DXLEN) {
-+            if (n < 0) {
-...
--            if (n < 0 || n > MAX_SCSI_DXLEN) {
-+            if (n < 0) {
-...
+Signed-off-by: Tom Yan <tom.ty89@gmail.com>
 
-First I tested on the drive connected with an SATA/UAS adapter. The
-upper limit on the requested data length is CONSISTENTLY (I mean on
-the same adapter) 8192 * 512 bytes:
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index 99346be..f87287a 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -46,7 +46,7 @@ enum {
+ 	ATA_MAX_SECTORS_128	= 128,
+ 	ATA_MAX_SECTORS		= 256,
+ 	ATA_MAX_SECTORS_1024    = 1024,
+-	ATA_MAX_SECTORS_LBA48	= 65535,/* TODO: 65536? */
++	ATA_MAX_SECTORS_LBA48	= 65535,/* avoid count to be 0000h */
+ 	ATA_MAX_SECTORS_TAPE	= 65535,
+ 
+ 	ATA_ID_WORDS		= 256,
+@@ -1095,13 +1095,13 @@ static inline bool ata_ok(u8 status)
+ static inline bool lba_28_ok(u64 block, u32 n_block)
+ {
+ 	/* check the ending block number: must be LESS THAN 0x0fffffff */
+-	return ((block + n_block) < ((1 << 28) - 1)) && (n_block <= 256);
++	return ((block + n_block) < ((1 << 28) - 1)) && (n_block <= ATA_MAX_SECTORS);
+ }
+ 
+ static inline bool lba_48_ok(u64 block, u32 n_block)
+ {
+ 	/* check the ending block number */
+-	return ((block + n_block - 1) < ((u64)1 << 48)) && (n_block <= 65536);
++	return ((block + n_block - 1) < ((u64)1 << 48)) && (n_block <= ATA_MAX_SECTORS_LBA48);
+ }
+ 
+ #define sata_pmp_gscr_vendor(gscr)	((gscr)[SATA_PMP_GSCR_PROD_ID] & 0xffff)
+-- 
+2.9.0
 
-
-[tom@localhost ~]$ sudo sg_raw -r 0x3ffe00 -o /dev/null /dev/sdc 88 00
-00 00 00 00 00 00 00 00 00 00 1f ff 00 00
-SCSI Status: Good
-
-Writing 4193792 bytes of data to /dev/null
-[tom@localhost ~]$ sudo sg_raw -r 0x400000 -o /dev/null /dev/sdc 88 00
-00 00 00 00 00 00 00 00 00 00 20 00 00 00
-SCSI Status: Good
-
-Writing 4194304 bytes of data to /dev/null
-[tom@localhost ~]$ sudo sg_raw -r 0x400200 -o /dev/null /dev/sdc 88 00
-00 00 00 00 00 00 00 00 00 00 20 01 00 00
-do_scsi_pt: Invalid argument
-
-
-I had to hacked the kernel by changing SCSI_DEFAULT_MAX_SECTORS, which
-currently determines "max_hw_sectors" of UAS device, from 1024 to
-65535, otherwise the allowed length will be bounded by
-"max_hw_sectors". See the sg_io() in block/scsi_ioctl.c.
-("max_sectors" was hence allowed to bump to 65535 by the Optimal
-Transfer Length reported in the adapter's VPD.)
-
-However, when I test on the exact same drive (which is the "system
-drive", btw), with it connected to a AHCI SATA port on my motherboard
-(Intel H87), the allowed requested length would be fluctuating:
-
-...
-[tom@localhost ~]$ sudo sg_raw -r 0x140000 -o /dev/null /dev/sda 88 00
-00 00 00 00 00 00 00 00 00 00 0a 00 00 00
-do_scsi_pt: Invalid argument
-[tom@localhost ~]$ sudo sg_raw -r 0x140000 -o /dev/null /dev/sda 88 00
-00 00 00 00 00 00 00 00 00 00 0a 00 00 00
-SCSI Status: Good
-
-Writing 1310720 bytes of data to /dev/null
-...
-
-
-I hadn't been able to "locate" a sensible and/or solid point where the
-fluctuation start, but I did notice that the chance of "failure" would
-rise with the requested length. Also, if I boot with
-`libata.force=noncq`, the failure seems to start off from a lower
-point.
-
-So is that an expected characteristic of SATA/AHCI? Or does that hint
-that there is something wrong in the kernel? And btw, should any block
-limit be set according to this? For example, max_sectors?
