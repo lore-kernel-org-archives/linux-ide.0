@@ -1,49 +1,39 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [patch] ide: missing break statement in set_timings_mdma()
-Date: Thu, 14 Jul 2016 06:40:02 -0500
-Message-ID: <1468496402.20552.107.camel@kernel.crashing.org>
-References: <20160714104802.GI18175@mwanda>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH 06/10] libata-eh: decode all taskfile protocols
+Date: Thu, 14 Jul 2016 14:51:28 +0300
+Message-ID: <7a548386-8ac6-24da-e158-affc6ad769c2@cogentembedded.com>
+References: <1468454751-12466-1-git-send-email-hch@lst.de>
+ <1468454751-12466-7-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <20160714104802.GI18175@mwanda>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>, "David S. Miller" <davem@davemloft.net>
-Cc: Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, linux-ide@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-lf0-f50.google.com ([209.85.215.50]:36419 "EHLO
+	mail-lf0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750739AbcGNLva (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jul 2016 07:51:30 -0400
+Received: by mail-lf0-f50.google.com with SMTP id q132so61324297lfe.3
+        for <linux-ide@vger.kernel.org>; Thu, 14 Jul 2016 04:51:30 -0700 (PDT)
+In-Reply-To: <1468454751-12466-7-git-send-email-hch@lst.de>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, tj@kernel.org
+Cc: hare@suse.com, damien.lemoal@hgst.com, linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-On Thu, 2016-07-14 at 13:48 +0300, Dan Carpenter wrote:
-> There was clearly supposed to be a break statement here.=C2=A0=C2=A0C=
-urrently we
-> use the k2 ata timings instead of sh ata ones we intended.=C2=A0=C2=A0=
-Probably no
-> one has this hardware anymore so it likely doesn't make a difference
-> beyond the static checker warning.
->=20
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Hello.
 
-Acked-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+On 7/14/2016 3:05 AM, Christoph Hellwig wrote:
 
-Should probably also:
+> From: Hannes Reinecke <hare@suse.de>
+>
+> Some taskfile protocol values where missing in ata_eh_link_report().
 
-CC: stable@vger.kernel.org
+    Were -- perhaps Tejun could fix...
 
-> diff --git a/drivers/ide/pmac.c b/drivers/ide/pmac.c
-> index 7f0434f..0c5d3a9 100644
-> --- a/drivers/ide/pmac.c
-> +++ b/drivers/ide/pmac.c
-> @@ -707,6 +707,7 @@ set_timings_mdma(ide_drive_t *drive, int intf_typ=
-e, u32 *timings, u32 *timings2,
-> =C2=A0		*timings =3D ((*timings) & ~TR_133_PIOREG_MDMA_MASK) | tr;
-> =C2=A0		*timings2 =3D (*timings2) & ~TR_133_UDMAREG_UDMA_EN;
-> =C2=A0		}
-> +		break;
-> =C2=A0	case controller_un_ata6:
-> =C2=A0	case controller_k2_ata6: {
-> =C2=A0		/* 100Mhz cell */
---
-To unsubscribe from this list: send the line "unsubscribe kernel-janito=
-rs" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+[...]
+
+MBR, Sergei
+
