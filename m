@@ -1,61 +1,41 @@
-From: tom.ty89@gmail.com
-Subject: [PATCH] ata: make lba_{28,48}_ok() use ATA_MAX_SECTORS{,_LBA48}
-Date: Fri, 15 Jul 2016 05:09:02 +0800
-Message-ID: <e2abe167a66a18daa44e0fb7bf39f5a8da0f5bf0.1468530378.git.tom.ty89@gmail.com>
-References: <91a6bb6f4c04eb617a49d9a51f261b661c179de0.1468384890.git.tom.ty89@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Fluctuating "acceptance" on requested data length in SATA/AHCI
+Date: Thu, 14 Jul 2016 17:09:03 -0400
+Message-ID: <20160714210903.GA3078@mtj.duckdns.org>
+References: <CAGnHSEkPkm3z3Aj+Aaj2p7ZK-UEo0dvXE+6Cj8SdKCt_L7Ei=w@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:33970 "EHLO
-	mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751150AbcGNVJK (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jul 2016 17:09:10 -0400
-Received: by mail-pf0-f196.google.com with SMTP id g202so5345831pfb.1
-        for <linux-ide@vger.kernel.org>; Thu, 14 Jul 2016 14:09:10 -0700 (PDT)
-In-Reply-To: <91a6bb6f4c04eb617a49d9a51f261b661c179de0.1468384890.git.tom.ty89@gmail.com>
+Received: from mail-qt0-f170.google.com ([209.85.216.170]:36753 "EHLO
+	mail-qt0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751150AbcGNVJH (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jul 2016 17:09:07 -0400
+Content-Disposition: inline
+In-Reply-To: <CAGnHSEkPkm3z3Aj+Aaj2p7ZK-UEo0dvXE+6Cj8SdKCt_L7Ei=w@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org
-Cc: linux-ide@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
+To: Tom Yan <tom.ty89@gmail.com>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-block@vger.kernel.org, dgilbert@interlog.com, martin.petersen@oracle.com
 
-From: Tom Yan <tom.ty89@gmail.com>
+On Fri, Jul 15, 2016 at 03:10:40AM +0800, Tom Yan wrote:
+> I hadn't been able to "locate" a sensible and/or solid point where the
+> fluctuation start, but I did notice that the chance of "failure" would
+> rise with the requested length. Also, if I boot with
+> `libata.force=noncq`, the failure seems to start off from a lower
+> point.
+> 
+> So is that an expected characteristic of SATA/AHCI? Or does that hint
+> that there is something wrong in the kernel? And btw, should any block
+> limit be set according to this? For example, max_sectors?
 
-Since we set ATA_MAX_SECTORS_LBA48 to 65535 to avoid the corner case
-in some drives that commands with "count" set to 0000h (which
-reprsents 65536) does not work as expected, lba_48_ok(), which is
-used for number-of-blocks checking when libata pack commands, should
-use the same limit as well. In fact, there is no reason for the two
-functions not to use the macros anyway.
+Host controllers and drivers have constraints other than max transfer
+size such as max scatter gather table entries (how many disconnected
+sections can be transferred on one command) and DMA boundary (the
+memory boundary that a single DMA transfer can't cross), so if you go
+to the high command size, it isn't surprising that commands of the
+same length succeed sometimes while not on others.
 
-Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+Thanks.
 
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index 99346be..f87287a 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -46,7 +46,7 @@ enum {
- 	ATA_MAX_SECTORS_128	= 128,
- 	ATA_MAX_SECTORS		= 256,
- 	ATA_MAX_SECTORS_1024    = 1024,
--	ATA_MAX_SECTORS_LBA48	= 65535,/* TODO: 65536? */
-+	ATA_MAX_SECTORS_LBA48	= 65535,/* avoid count to be 0000h */
- 	ATA_MAX_SECTORS_TAPE	= 65535,
- 
- 	ATA_ID_WORDS		= 256,
-@@ -1095,13 +1095,13 @@ static inline bool ata_ok(u8 status)
- static inline bool lba_28_ok(u64 block, u32 n_block)
- {
- 	/* check the ending block number: must be LESS THAN 0x0fffffff */
--	return ((block + n_block) < ((1 << 28) - 1)) && (n_block <= 256);
-+	return ((block + n_block) < ((1 << 28) - 1)) && (n_block <= ATA_MAX_SECTORS);
- }
- 
- static inline bool lba_48_ok(u64 block, u32 n_block)
- {
- 	/* check the ending block number */
--	return ((block + n_block - 1) < ((u64)1 << 48)) && (n_block <= 65536);
-+	return ((block + n_block - 1) < ((u64)1 << 48)) && (n_block <= ATA_MAX_SECTORS_LBA48);
- }
- 
- #define sata_pmp_gscr_vendor(gscr)	((gscr)[SATA_PMP_GSCR_PROD_ID] & 0xffff)
 -- 
-2.9.0
-
+tejun
