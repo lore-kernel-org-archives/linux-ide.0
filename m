@@ -1,41 +1,36 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: Fluctuating "acceptance" on requested data length in SATA/AHCI
-Date: Thu, 14 Jul 2016 17:09:03 -0400
-Message-ID: <20160714210903.GA3078@mtj.duckdns.org>
-References: <CAGnHSEkPkm3z3Aj+Aaj2p7ZK-UEo0dvXE+6Cj8SdKCt_L7Ei=w@mail.gmail.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 06/10] libata-eh: decode all taskfile protocols
+Date: Thu, 14 Jul 2016 16:08:43 -0700
+Message-ID: <20160714230843.GA14093@infradead.org>
+References: <1468454751-12466-1-git-send-email-hch@lst.de>
+ <1468454751-12466-7-git-send-email-hch@lst.de>
+ <20160714144809.GH15005@htj.duckdns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qt0-f170.google.com ([209.85.216.170]:36753 "EHLO
-	mail-qt0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751150AbcGNVJH (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jul 2016 17:09:07 -0400
+Received: from bombadil.infradead.org ([198.137.202.9]:36379 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750893AbcGNXIq (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 14 Jul 2016 19:08:46 -0400
 Content-Disposition: inline
-In-Reply-To: <CAGnHSEkPkm3z3Aj+Aaj2p7ZK-UEo0dvXE+6Cj8SdKCt_L7Ei=w@mail.gmail.com>
+In-Reply-To: <20160714144809.GH15005@htj.duckdns.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tom Yan <tom.ty89@gmail.com>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-block@vger.kernel.org, dgilbert@interlog.com, martin.petersen@oracle.com
+To: Tejun Heo <tj@kernel.org>
+Cc: hare@suse.com, damien.lemoal@hgst.com, linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-On Fri, Jul 15, 2016 at 03:10:40AM +0800, Tom Yan wrote:
-> I hadn't been able to "locate" a sensible and/or solid point where the
-> fluctuation start, but I did notice that the chance of "failure" would
-> rise with the requested length. Also, if I boot with
-> `libata.force=noncq`, the failure seems to start off from a lower
-> point.
+On Thu, Jul 14, 2016 at 10:48:09AM -0400, Tejun Heo wrote:
+> On Thu, Jul 14, 2016 at 09:05:47AM +0900, Christoph Hellwig wrote:
+> > From: Hannes Reinecke <hare@suse.de>
+> > 
+> > Some taskfile protocol values where missing in ata_eh_link_report().
+> > 
+> > Signed-off-by: Hannes Reinecke <hare@suse.de>
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > 
-> So is that an expected characteristic of SATA/AHCI? Or does that hint
-> that there is something wrong in the kernel? And btw, should any block
-> limit be set according to this? For example, max_sectors?
+> Applied 5-6 to libata/for-4.8.
+> 
+> For the rest, I'll wait for the response on 4.
 
-Host controllers and drivers have constraints other than max transfer
-size such as max scatter gather table entries (how many disconnected
-sections can be transferred on one command) and DMA boundary (the
-memory boundary that a single DMA transfer can't cross), so if you go
-to the high command size, it isn't surprising that commands of the
-same length succeed sometimes while not on others.
-
-Thanks.
-
--- 
-tejun
+FYI, 8-10 are totally independent of 4.  While 5 kinda depends on 4
+to work correctly, but I also don't actually see it in your tree.
