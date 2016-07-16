@@ -1,56 +1,159 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/3] libata: remove ata_is_nodata
-Date: Sat, 16 Jul 2016 22:16:41 +0900
-Message-ID: <1468675003-13701-2-git-send-email-hch@lst.de>
+Subject: [PATCH 3/3] ata: define ATA_PROT_* in terms of ATA_PROT_FLAG_*
+Date: Sat, 16 Jul 2016 22:16:43 +0900
+Message-ID: <1468675003-13701-4-git-send-email-hch@lst.de>
 References: <1468675003-13701-1-git-send-email-hch@lst.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:50481 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:50485 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751593AbcGPNQs (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Jul 2016 09:16:48 -0400
+	with ESMTP id S1751511AbcGPNQx (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 16 Jul 2016 09:16:53 -0400
 In-Reply-To: <1468675003-13701-1-git-send-email-hch@lst.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: tj@kernel.org
 Cc: linux-ide@vger.kernel.org
 
-The only caller an just check for !ata_is_data instead.
+This avoid the need to always translate between the two in ata_prot_flags
+and generally cleans up the taskfile protocol usage.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/ata/libata-core.c | 2 +-
- include/linux/libata.h    | 5 -----
- 2 files changed, 1 insertion(+), 6 deletions(-)
+ drivers/ata/sata_dwc_460ex.c |  2 +-
+ include/linux/ata.h          | 28 +++++++++++++++++-----------
+ include/linux/libata.h       | 42 +++++-------------------------------------
+ 3 files changed, 23 insertions(+), 49 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 522848a..0749f71 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -5044,7 +5044,7 @@ static void ata_verify_xfer(struct ata_queued_cmd *qc)
+diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+index fa1530a..b051c03 100644
+--- a/drivers/ata/sata_dwc_460ex.c
++++ b/drivers/ata/sata_dwc_460ex.c
+@@ -281,7 +281,7 @@ static void sata_dwc_dma_exit_old(struct sata_dwc_device *hsdev)
+ 
+ static const char *get_prot_descript(u8 protocol)
  {
- 	struct ata_device *dev = qc->dev;
+-	switch ((enum ata_tf_protocols)protocol) {
++	switch (protocol) {
+ 	case ATA_PROT_NODATA:
+ 		return "ATA no data";
+ 	case ATA_PROT_PIO:
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index 35857d1..2ee6aa5 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -523,17 +523,23 @@ enum {
+ 	SERR_DEV_XCHG		= (1 << 26), /* device exchanged */
+ };
  
--	if (ata_is_nodata(qc->tf.protocol))
-+	if (!ata_is_data(qc->tf.protocol))
- 		return;
+-enum ata_tf_protocols {
+-	/* ATA taskfile protocols */
+-	ATA_PROT_UNKNOWN,	/* unknown/invalid */
+-	ATA_PROT_NODATA,	/* no data */
+-	ATA_PROT_PIO,		/* PIO data xfer */
+-	ATA_PROT_DMA,		/* DMA */
+-	ATA_PROT_NCQ,		/* NCQ */
+-	ATA_PROT_NCQ_NODATA,	/* NCQ no data */
+-	ATAPI_PROT_NODATA,	/* packet command, no data */
+-	ATAPI_PROT_PIO,		/* packet command, PIO data xfer*/
+-	ATAPI_PROT_DMA,		/* packet command with special DMA sauce */
++enum ata_prot_flags {
++	/* protocol flags */
++	ATA_PROT_FLAG_PIO	= (1 << 0), /* is PIO */
++	ATA_PROT_FLAG_DMA	= (1 << 1), /* is DMA */
++	ATA_PROT_FLAG_NCQ	= (1 << 2), /* is NCQ */
++	ATA_PROT_FLAG_ATAPI	= (1 << 3), /* is ATAPI */
++
++	/* taskfile protocols */
++	ATA_PROT_UNKNOWN	= (u8)-1,
++	ATA_PROT_NODATA		= 0,
++	ATA_PROT_PIO		= ATA_PROT_FLAG_PIO,
++	ATA_PROT_DMA		= ATA_PROT_FLAG_DMA,
++	ATA_PROT_NCQ_NODATA	= ATA_PROT_FLAG_NCQ,
++	ATA_PROT_NCQ		= ATA_PROT_FLAG_DMA | ATA_PROT_FLAG_NCQ,
++	ATAPI_PROT_NODATA	= ATA_PROT_FLAG_ATAPI,
++	ATAPI_PROT_PIO		= ATA_PROT_FLAG_ATAPI | ATA_PROT_FLAG_PIO,
++	ATAPI_PROT_DMA		= ATA_PROT_FLAG_ATAPI | ATA_PROT_FLAG_DMA,
+ };
  
- 	if ((dev->mwdma_mask || dev->udma_mask) && ata_is_pio(qc->tf.protocol))
+ enum ata_ioctls {
 diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 1abd669..283b6be 100644
+index 5838fbf..e37d4f9 100644
 --- a/include/linux/libata.h
 +++ b/include/linux/libata.h
-@@ -1070,11 +1070,6 @@ static inline bool ata_is_atapi(u8 prot)
- 	return ata_prot_flags(prot) & ATA_PROT_FLAG_ATAPI;
- }
+@@ -146,12 +146,6 @@ enum {
+ 	ATA_TFLAG_FUA		= (1 << 5), /* enable FUA */
+ 	ATA_TFLAG_POLLING	= (1 << 6), /* set nIEN to 1 and use polling */
  
--static inline bool ata_is_nodata(u8 prot)
+-	/* protocol flags */
+-	ATA_PROT_FLAG_PIO	= (1 << 0), /* is PIO */
+-	ATA_PROT_FLAG_DMA	= (1 << 1), /* is DMA */
+-	ATA_PROT_FLAG_NCQ	= (1 << 2), /* is NCQ */
+-	ATA_PROT_FLAG_ATAPI	= (1 << 3), /* is ATAPI */
+-
+ 	/* struct ata_device stuff */
+ 	ATA_DFLAG_LBA		= (1 << 0), /* device supports LBA */
+ 	ATA_DFLAG_LBA48		= (1 << 1), /* device supports LBA48 */
+@@ -1038,55 +1032,29 @@ extern const unsigned long sata_deb_timing_long[];
+ extern struct ata_port_operations ata_dummy_port_ops;
+ extern const struct ata_port_info ata_dummy_port_info;
+ 
+-/*
+- * protocol tests
+- */
+-static inline unsigned int ata_prot_flags(u8 prot)
 -{
--	return !(ata_prot_flags(prot) & ATA_PROT_FLAG_DATA);
+-	switch (prot) {
+-	case ATA_PROT_NODATA:
+-		return 0;
+-	case ATA_PROT_PIO:
+-		return ATA_PROT_FLAG_PIO;
+-	case ATA_PROT_DMA:
+-		return ATA_PROT_FLAG_DMA;
+-	case ATA_PROT_NCQ:
+-		return ATA_PROT_FLAG_DMA | ATA_PROT_FLAG_NCQ;
+-	case ATA_PROT_NCQ_NODATA:
+-		return ATA_PROT_FLAG_NCQ;
+-	case ATAPI_PROT_NODATA:
+-		return ATA_PROT_FLAG_ATAPI;
+-	case ATAPI_PROT_PIO:
+-		return ATA_PROT_FLAG_ATAPI | ATA_PROT_FLAG_PIO;
+-	case ATAPI_PROT_DMA:
+-		return ATA_PROT_FLAG_ATAPI | ATA_PROT_FLAG_DMA;
+-	}
+-	return 0;
 -}
 -
+ static inline bool ata_is_atapi(u8 prot)
+ {
+-	return ata_prot_flags(prot) & ATA_PROT_FLAG_ATAPI;
++	return prot & ATA_PROT_FLAG_ATAPI;
+ }
+ 
  static inline bool ata_is_pio(u8 prot)
  {
- 	return ata_prot_flags(prot) & ATA_PROT_FLAG_PIO;
+-	return ata_prot_flags(prot) & ATA_PROT_FLAG_PIO;
++	return prot & ATA_PROT_FLAG_PIO;
+ }
+ 
+ static inline bool ata_is_dma(u8 prot)
+ {
+-	return ata_prot_flags(prot) & ATA_PROT_FLAG_DMA;
++	return prot & ATA_PROT_FLAG_DMA;
+ }
+ 
+ static inline bool ata_is_ncq(u8 prot)
+ {
+-	return ata_prot_flags(prot) & ATA_PROT_FLAG_NCQ;
++	return prot & ATA_PROT_FLAG_NCQ;
+ }
+ 
+ static inline bool ata_is_data(u8 prot)
+ {
+-	return ata_prot_flags(prot) & (ATA_PROT_FLAG_PIO | ATA_PROT_FLAG_DMA);
++	return prot & (ATA_PROT_FLAG_PIO | ATA_PROT_FLAG_DMA);
+ }
+ 
+ static inline int is_multi_taskfile(struct ata_taskfile *tf)
 -- 
 2.1.4
 
