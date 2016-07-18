@@ -1,36 +1,80 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH 1/3] libata: remove ata_is_nodata
-Date: Sun, 17 Jul 2016 14:21:37 +0300
-Message-ID: <bc51a9a9-1825-b324-e81e-e28f74d80bd5@cogentembedded.com>
-References: <1468675003-13701-1-git-send-email-hch@lst.de>
- <1468675003-13701-2-git-send-email-hch@lst.de>
- <e0ac8d8b-0d56-ef71-5d77-969798df5735@cogentembedded.com>
- <20160717012607.GA10263@lst.de>
+From: Sekhar Nori <nsekhar@ti.com>
+Subject: Re: [RESEND PATCH] arm: assabet_defconfig: disable IDE subsystem
+Date: Mon, 18 Jul 2016 20:15:08 +0530
+Message-ID: <578CEB74.2080002@ti.com>
+References: <1467991490-24895-1-git-send-email-b.zolnierkie@samsung.com>
+ <2773873.Jjn1O47GXr@wuerfel> <4818149.nzRaU7vJQE@amdc1976>
+ <4264651.gPKphdYuCx@wuerfel> <m27fcn3pb1.fsf@baylibre.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lf0-f43.google.com ([209.85.215.43]:36041 "EHLO
-	mail-lf0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750865AbcGQLVk (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 17 Jul 2016 07:21:40 -0400
-Received: by mail-lf0-f43.google.com with SMTP id g62so4617109lfe.3
-        for <linux-ide@vger.kernel.org>; Sun, 17 Jul 2016 04:21:39 -0700 (PDT)
-In-Reply-To: <20160717012607.GA10263@lst.de>
+Received: from comal.ext.ti.com ([198.47.26.152]:33729 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751832AbcGROpx (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Mon, 18 Jul 2016 10:45:53 -0400
+In-Reply-To: <m27fcn3pb1.fsf@baylibre.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: tj@kernel.org, linux-ide@vger.kernel.org
+To: Kevin Hilman <khilman@baylibre.com>, Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Russell King <linux@arm.linux.org.uk>, Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Olof Johansson <olof@lixom.net>
 
-On 7/17/2016 4:26 AM, Christoph Hellwig wrote:
-
->>> The only caller an just check for !ata_is_data instead.
+On Friday 15 July 2016 08:45 PM, Kevin Hilman wrote:
+> Arnd Bergmann <arnd@arndb.de> writes:
+> 
+>> On Wednesday, July 13, 2016 12:59:23 PM CEST Bartlomiej Zolnierkiewicz wrote:
+>>>
+>>> On Friday, July 08, 2016 10:23:48 PM Arnd Bergmann wrote:
+>>>> On Friday, July 8, 2016 5:24:41 PM CEST Bartlomiej Zolnierkiewicz wrote:
+>>>>> This patch disables deprecated IDE subsystem in assabet_defconfig
+>>>>> (no IDE host drivers are selected in this config so there is no
+>>>>> valid reason to enable IDE subsystem itself).
+>>>>>
+>>>>> Cc: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+>>>>> Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+>>>>
+>>>> I think the series makes a lot of sense. I have checked your assertions
+>>>> in the changelogs and found no flaws in your logic, so I think we should
+>>>> take them all through arm-soc unless there are other concerns.
+>>>
+>>> Thank you.
+>>>
+>>> Should I resend everything or just patches that were not reposted yet
+>>> (the ones that were marked as RFT initially and got no feedback)?
 >>
->>    s/ca/can/?
->
-> Yes.
+>> I'd be fine with just getting a pull request with all the patches that
+>> had no negative feedback and that were not already applied (if any).
+>>
+>>>> Do you have a list of ARM defconfigs that keep using CONFIG_IDE and
+>>>> how you determined that they need it?
+>>>
+>>> The only such defconfig is davinci_all_defconfig which uses
+>>> palm_bk3710 host driver (CONFIG_BLK_DEV_PALMCHIP_BK3710).
+>>>
+>>>> I know that ARCH_RPC/ARCH_ACORN has a couple of special drivers that
+>>>> have no libata replacement, are there any others like that, or are
+>>>> they all platforms that should in theory work with libata but need
+>>>> testing?
+>>>
+>>> All platforms except ARCH_ACORN, ARCH_DAVINCI & ARCH_RPC should work
+>>> with libata.
+>>
+>> Adding Sekhar and Kevin for DaVinci: At first sight, palm_bk3710 looks
+>> fairly straightforward (meaning someone has to do a few day's work)
+>> to convert into a libata driver.
+>>
+>> As this is on on-chip controller that is part of a dm644x and dm646x,
+>> it should also not be hard to test (as long as someone can find
+>> a hard drive to plug in).
+> 
+> I have a hard drive, but don't have any dm64xx hardware anymore to test
+> this.  My last working dm644x board died last year.
 
-     Sorry, I meant s/an/can/. :-)
+I have a working DM6446 EVM. I was able to connect a hard drive to it
+and do some basic tests with v4.6 kernel.
 
-MBR, Sergei
+I will look into converting the driver to libata. Might take some time
+because this is unfamiliar territory for me.
 
+Thanks,
+Sekhar
