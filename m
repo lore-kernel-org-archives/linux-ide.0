@@ -1,36 +1,40 @@
-From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] ata: hpt366: fix incorrect mask when checking at
- cmd_high_time
-Date: Mon, 18 Jul 2016 21:14:41 +0100
-Message-ID: <20160718211441.086dfbef@lxorguk.ukuu.org.uk>
-References: <1468322179-9398-1-git-send-email-colin.king@canonical.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] ata: make lba_{28,48}_ok() use ATA_MAX_SECTORS{,_LBA48}
+Date: Mon, 18 Jul 2016 18:25:50 -0400
+Message-ID: <20160718222550.GJ3078@mtj.duckdns.org>
+References: <91a6bb6f4c04eb617a49d9a51f261b661c179de0.1468384890.git.tom.ty89@gmail.com>
+ <e2abe167a66a18daa44e0fb7bf39f5a8da0f5bf0.1468530378.git.tom.ty89@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:51958 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752513AbcGRUO7 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jul 2016 16:14:59 -0400
-In-Reply-To: <1468322179-9398-1-git-send-email-colin.king@canonical.com>
+Received: from mail-pa0-f67.google.com ([209.85.220.67]:34040 "EHLO
+	mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751290AbcGRWZy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 18 Jul 2016 18:25:54 -0400
+Received: by mail-pa0-f67.google.com with SMTP id hh10so39793pac.1
+        for <linux-ide@vger.kernel.org>; Mon, 18 Jul 2016 15:25:53 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <e2abe167a66a18daa44e0fb7bf39f5a8da0f5bf0.1468530378.git.tom.ty89@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: kernel-tram@lists.ubuntu.com, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: tom.ty89@gmail.com
+Cc: linux-ide@vger.kernel.org
 
-On Tue, 12 Jul 2016 12:16:19 +0100
-Colin King <colin.king@canonical.com> wrote:
-
-> From: Colin Ian King <colin.king@canonical.com>
+On Fri, Jul 15, 2016 at 05:09:02AM +0800, tom.ty89@gmail.com wrote:
+> From: Tom Yan <tom.ty89@gmail.com>
 > 
-> According to the HPT366 data sheet, PCI config space dword 0x40-0x43
-> bits 11:8 specify the primary drive cmd_high_time, however,
-> currently just 3 bits of the 4 are being used because the mask
-> is 0x700 and not 0x0f00.  Fix the mask, allowing for the 40MHz clock
-> to be detected.
+> Since we set ATA_MAX_SECTORS_LBA48 to 65535 to avoid the corner case
+> in some drives that commands with "count" set to 0000h (which
+> reprsents 65536) does not work as expected, lba_48_ok(), which is
+> used for number-of-blocks checking when libata pack commands, should
+> use the same limit as well. In fact, there is no reason for the two
+> functions not to use the macros anyway.
+> 
+> Signed-off-by: Tom Yan <tom.ty89@gmail.com>
 
-Is this tested on real hardware ? I learned long ago never to blindly
-trust IDE data sheets. It looks right but if anyone actually has a 40MHz
-PCI bus box with an HPT366 it would be good to test.
+Applied to libata/for-4.8.
 
-Alan
+Thanks.
+
+-- 
+tejun
