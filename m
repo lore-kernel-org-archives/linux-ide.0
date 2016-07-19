@@ -1,60 +1,36 @@
-From: Wei Yongjun <weiyj_lk@163.com>
-Subject: [PATCH -next] ata: sata_dwc_460ex: remove redundant dev_err call
-Date: Tue, 19 Jul 2016 11:27:53 +0000
-Message-ID: <1468927673-437-1-git-send-email-weiyj_lk@163.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH -next] ata: sata_dwc_460ex: remove redundant dev_err call
+Date: Tue, 19 Jul 2016 14:32:49 -0400
+Message-ID: <20160719183249.GK3078@mtj.duckdns.org>
+References: <1468927673-437-1-git-send-email-weiyj_lk@163.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from m12-12.163.com ([220.181.12.12]:42515 "EHLO m12-12.163.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753009AbcGSL2E (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 19 Jul 2016 07:28:04 -0400
+Received: from mail-pa0-f66.google.com ([209.85.220.66]:36805 "EHLO
+	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753846AbcGSScv (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Jul 2016 14:32:51 -0400
+Received: by mail-pa0-f66.google.com with SMTP id ez1so1750252pab.3
+        for <linux-ide@vger.kernel.org>; Tue, 19 Jul 2016 11:32:51 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <1468927673-437-1-git-send-email-weiyj_lk@163.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Wei Yongjun <yongjun_wei@trendmicro.com.cn>, linux-ide@vger.kernel.org
+To: Wei Yongjun <weiyj_lk@163.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Wei Yongjun <yongjun_wei@trendmicro.com.cn>, linux-ide@vger.kernel.org
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+On Tue, Jul 19, 2016 at 11:27:53AM +0000, Wei Yongjun wrote:
+> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> 
+> There is a error message within devm_ioremap_resource
+> already, so remove the dev_err call to avoid redundant
+> error message.
+> 
+> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-There is a error message within devm_ioremap_resource
-already, so remove the dev_err call to avoid redundant
-error message.
+Applied to libata/for-4.8.
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- drivers/ata/sata_dwc_460ex.c | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
+Thanks.
 
-diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
-index fa1530a..62ead5a 100644
---- a/drivers/ata/sata_dwc_460ex.c
-+++ b/drivers/ata/sata_dwc_460ex.c
-@@ -259,11 +259,8 @@ static int sata_dwc_dma_init_old(struct platform_device *pdev,
- 	/* Get physical SATA DMA register base address */
- 	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
- 	hsdev->dma->regs = devm_ioremap_resource(&pdev->dev, res);
--	if (IS_ERR(hsdev->dma->regs)) {
--		dev_err(&pdev->dev,
--			"ioremap failed for AHBDMA register address\n");
-+	if (IS_ERR(hsdev->dma->regs))
- 		return PTR_ERR(hsdev->dma->regs);
--	}
- 
- 	/* Initialize AHB DMAC */
- 	return dw_dma_probe(hsdev->dma);
-@@ -1227,11 +1224,8 @@ static int sata_dwc_probe(struct platform_device *ofdev)
- 	/* Ioremap SATA registers */
- 	res = platform_get_resource(ofdev, IORESOURCE_MEM, 0);
- 	base = devm_ioremap_resource(&ofdev->dev, res);
--	if (IS_ERR(base)) {
--		dev_err(&ofdev->dev,
--			"ioremap failed for SATA register address\n");
-+	if (IS_ERR(base))
- 		return PTR_ERR(base);
--	}
- 	dev_dbg(&ofdev->dev, "ioremap done for SATA register address\n");
- 
- 	/* Synopsys DWC SATA specific Registers */
-
-
+-- 
+tejun
