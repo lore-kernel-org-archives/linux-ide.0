@@ -1,36 +1,66 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH -next] ata: sata_dwc_460ex: remove redundant dev_err call
-Date: Tue, 19 Jul 2016 14:32:49 -0400
-Message-ID: <20160719183249.GK3078@mtj.duckdns.org>
-References: <1468927673-437-1-git-send-email-weiyj_lk@163.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pa0-f66.google.com ([209.85.220.66]:36805 "EHLO
-	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753846AbcGSScv (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 19 Jul 2016 14:32:51 -0400
-Received: by mail-pa0-f66.google.com with SMTP id ez1so1750252pab.3
-        for <linux-ide@vger.kernel.org>; Tue, 19 Jul 2016 11:32:51 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <1468927673-437-1-git-send-email-weiyj_lk@163.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: tom.ty89@gmail.com
+Subject: [PATCH v4] libata-scsi: better style in ata_msense_*()
+Date: Wed, 20 Jul 2016 04:39:28 +0800
+Message-ID: <578e9008.4500420a.2d828.d131@mx.google.com>
+References: <5784f28c.c4d0620a.69372.3df2@mx.google.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <5784f28c.c4d0620a.69372.3df2@mx.google.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: tj@kernel.org, sergei.shtylyov@cogentembedded.com
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
 List-Id: linux-ide@vger.kernel.org
-To: Wei Yongjun <weiyj_lk@163.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Wei Yongjun <yongjun_wei@trendmicro.com.cn>, linux-ide@vger.kernel.org
 
-On Tue, Jul 19, 2016 at 11:27:53AM +0000, Wei Yongjun wrote:
-> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
-> 
-> There is a error message within devm_ioremap_resource
-> already, so remove the dev_err call to avoid redundant
-> error message.
-> 
-> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+From: Tom Yan <tom.ty89@gmail.com>
 
-Applied to libata/for-4.8.
+`changeable` is the "version" of mode page requested by the user.
+It will be less confusing/misleading if we do not check it
+"together" with the setting bits of the drive.
 
-Thanks.
+Not to mention that we currently have ata_mselect_*() implemented
+in a way that each of them will serve exclusively a particular bit
+on each page. The old style will hence make the condition look even
+more unnecessarily arcane if the ata_msense_*() is reflecting more
+than one bit.
 
+Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index bf4cb21..b00521b 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2424,10 +2424,12 @@ static void modecpy(u8 *dest, const u8 *src, int n, bool changeable)
+ static unsigned int ata_msense_caching(u16 *id, u8 *buf, bool changeable)
+ {
+ 	modecpy(buf, def_cache_mpage, sizeof(def_cache_mpage), changeable);
+-	if (changeable || ata_id_wcache_enabled(id))
+-		buf[2] |= (1 << 2);	/* write cache enable */
+-	if (!changeable && !ata_id_rahead_enabled(id))
+-		buf[12] |= (1 << 5);	/* disable read ahead */
++	if (changeable) {
++		buf[2] |= (1 << 2);	/* ata_mselect_caching() */
++	} else {
++		buf[2] |= (ata_id_wcache_enabled(id) << 2);	/* write cache enable */
++		buf[12] |= (!ata_id_rahead_enabled(id) << 5);	/* disable read ahead */
++	}
+ 	return sizeof(def_cache_mpage);
+ }
+ 
+@@ -2446,8 +2448,13 @@ static unsigned int ata_msense_control(struct ata_device *dev, u8 *buf,
+ 					bool changeable)
+ {
+ 	modecpy(buf, def_control_mpage, sizeof(def_control_mpage), changeable);
+-	if (changeable || (dev->flags & ATA_DFLAG_D_SENSE))
+-		buf[2] |= (1 << 2);	/* Descriptor sense requested */
++	if (changeable) {
++		buf[2] |= (1 << 2);	/* ata_mselect_control() */
++	} else {
++		bool d_sense = (dev->flags & ATA_DFLAG_D_SENSE);
++
++		buf[2] |= (d_sense << 2);	/* descriptor format sense data */
++	}
+ 	return sizeof(def_control_mpage);
+ }
+ 
 -- 
-tejun
+2.9.0
+
