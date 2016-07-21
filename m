@@ -1,61 +1,60 @@
-From: Tom Yan <tom.ty89@gmail.com>
-Subject: Re: [PATCH] libata: add parentheses to avoid a gcc warning
-Date: Thu, 21 Jul 2016 17:41:50 +0800
-Message-ID: <CAGnHSEnNytfMyiiJ_AqK=QLO=hVdPU-HE8a+bk75m-0_UoguFg@mail.gmail.com>
-References: <20160721074023.1522219-1-arnd@arndb.de>
+From: Tejun Heo <tj@kernel.org>
+Subject: [GIT PULL] libata fixes for v4.7-rc7
+Date: Thu, 21 Jul 2016 13:36:31 -0400
+Message-ID: <20160721173631.GC23759@htj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20160721074023.1522219-1-arnd@arndb.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:33200 "EHLO
+	mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753383AbcGURgf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jul 2016 13:36:35 -0400
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
 
-The commit has been reverted. The parentheses are actually necessary
-since `!=` is of higher precedence than `&`. My bad.
+Hello, Linus.
 
-On 21 July 2016 at 15:40, Arnd Bergmann <arnd@arndb.de> wrote:
-> gcc-6.1 warns about possibly ambiguous code that was newly added
-> to libata:
->
-> drivers/ata/libata-scsi.c: In function 'ata_mselect_caching':
-> drivers/ata/libata-scsi.c:3637:28: error: suggest parentheses around comparison in operand of '&' [-Werror=parentheses]
-> drivers/ata/libata-scsi.c: In function 'ata_mselect_control':
-> drivers/ata/libata-scsi.c:3702:28: error: suggest parentheses around comparison in operand of '&' [-Werror=parentheses]
->
-> The code is fine, and it's not really ambigous to human readers,
-> but let's shut up the warning anyway by adding the parentheses
-> that gcc suggests.
->
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Fixes: 9b7844a8c34a ("libata-scsi: fix read-only bits checking in ata_mselect_*()")
-> ---
->  drivers/ata/libata-scsi.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index fa9d16fe295c..8ad4b237f342 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -3634,7 +3634,7 @@ static int ata_mselect_caching(struct ata_queued_cmd *qc,
->                 /* Check the first byte */
->                 if (i == 0) {
->                         /* except the WCE bit */
-> -                       if (mpage[i + 2] & 0xfb != buf[i] & 0xfb) {
-> +                       if ((mpage[i + 2] & 0xfb) != (buf[i] & 0xfb)) {
->                                 *fp = i;
->                                 return -EINVAL;
->                         } else {
-> @@ -3699,7 +3699,7 @@ static int ata_mselect_control(struct ata_queued_cmd *qc,
->                 /* Check the first byte */
->                 if (i == 0) {
->                         /* except the D_SENSE bit */
-> -                       if (mpage[i + 2] & 0xfb != buf[i] & 0xfb) {
-> +                       if ((mpage[i + 2] & 0xfb) != (buf[i] & 0xfb)) {
->                                 *fp = i;
->                                 return -EINVAL;
->                         } else {
-> --
-> 2.9.0
->
+Another fallout from max_sectors bump a couple years ago.  The lite-on
+optical drive times out on large requests.
+
+Thanks.
+
+The following changes since commit 76bf3441ad6584ddc3aea1501927f21b21ba3a3a:
+
+  ata: sata_mv: fix mis-conversion in mv_write_cached_reg() (2016-06-17 12:15:17 -0400)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-4.7-fixes
+
+for you to fetch changes up to 1488a1e3828d60d74c9b802a05e24c0487babe4e:
+
+  libata: LITE-ON CX1-JB256-HP needs lower max_sectors (2016-07-18 18:40:00 -0400)
+
+----------------------------------------------------------------
+Tejun Heo (1):
+      libata: LITE-ON CX1-JB256-HP needs lower max_sectors
+
+ drivers/ata/libata-core.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 6be7770..31c183a 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4314,6 +4314,12 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+ 	 */
+ 	{ "ST380013AS",		"3.20",		ATA_HORKAGE_MAX_SEC_1024 },
+ 
++	/*
++	 * Device times out with higher max sects.
++	 * https://bugzilla.kernel.org/show_bug.cgi?id=121671
++	 */
++	{ "LITEON CX1-JB256-HP", NULL,		ATA_HORKAGE_MAX_SEC_1024 },
++
+ 	/* Devices we expect to fail diagnostics */
+ 
+ 	/* Devices where NCQ should be avoided */
