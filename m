@@ -1,60 +1,84 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] libata fixes for v4.7-rc7
-Date: Thu, 21 Jul 2016 13:36:31 -0400
-Message-ID: <20160721173631.GC23759@htj.duckdns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: tom.ty89@gmail.com
+Subject: [PATCH resend 1/5] libata-scsi: minor cleanup in ata_mselect_*()
+Date: Fri, 22 Jul 2016 02:41:50 +0800
+Message-ID: <af84a796696f2f366d330595d1a818e8daeb86d8.1469126217.git.tom.ty89@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:33200 "EHLO
-	mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753383AbcGURgf (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jul 2016 13:36:35 -0400
-Content-Disposition: inline
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:36662 "EHLO
+	mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752410AbcGUSm3 (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jul 2016 14:42:29 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: tj@kernel.org, hare@suse.de, sergei.shtylyov@cogentembedded.com, arnd@arndb.de
+Cc: sfr@canb.auug.org.au, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-next@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
 
-Hello, Linus.
+From: Tom Yan <tom.ty89@gmail.com>
 
-Another fallout from max_sectors bump a couple years ago.  The lite-on
-optical drive times out on large requests.
+1. Removed a repeated bit masking in ata_mselect_control()
+2. Moved `wce`/`d_sense` assignment below the page validity checks
+3. Added/Removed empty lines where appropriate
 
-Thanks.
+Signed-off-by: Tom Yan <tom.ty89@gmail.com>
 
-The following changes since commit 76bf3441ad6584ddc3aea1501927f21b21ba3a3a:
-
-  ata: sata_mv: fix mis-conversion in mv_write_cached_reg() (2016-06-17 12:15:17 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-4.7-fixes
-
-for you to fetch changes up to 1488a1e3828d60d74c9b802a05e24c0487babe4e:
-
-  libata: LITE-ON CX1-JB256-HP needs lower max_sectors (2016-07-18 18:40:00 -0400)
-
-----------------------------------------------------------------
-Tejun Heo (1):
-      libata: LITE-ON CX1-JB256-HP needs lower max_sectors
-
- drivers/ata/libata-core.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 6be7770..31c183a 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4314,6 +4314,12 @@ static const struct ata_blacklist_entry ata_device_blacklist [] = {
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 2bdb5da..eb5e8ff 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3618,7 +3618,6 @@ static int ata_mselect_caching(struct ata_queued_cmd *qc,
+ 	 * The first two bytes of def_cache_mpage are a header, so offsets
+ 	 * in mpage are off by 2 compared to buf.  Same for len.
  	 */
- 	{ "ST380013AS",		"3.20",		ATA_HORKAGE_MAX_SEC_1024 },
+-
+ 	if (len != CACHE_MPAGE_LEN - 2) {
+ 		if (len < CACHE_MPAGE_LEN - 2)
+ 			*fp = len;
+@@ -3627,8 +3626,6 @@ static int ata_mselect_caching(struct ata_queued_cmd *qc,
+ 		return -EINVAL;
+ 	}
  
-+	/*
-+	 * Device times out with higher max sects.
-+	 * https://bugzilla.kernel.org/show_bug.cgi?id=121671
-+	 */
-+	{ "LITEON CX1-JB256-HP", NULL,		ATA_HORKAGE_MAX_SEC_1024 },
+-	wce = buf[0] & (1 << 2);
+-
+ 	/*
+ 	 * Check that read-only bits are not modified.
+ 	 */
+@@ -3642,6 +3639,8 @@ static int ata_mselect_caching(struct ata_queued_cmd *qc,
+ 		}
+ 	}
+ 
++	wce = buf[0] & (1 << 2);
 +
- 	/* Devices we expect to fail diagnostics */
+ 	tf->flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
+ 	tf->protocol = ATA_PROT_NODATA;
+ 	tf->nsect = 0;
+@@ -3674,7 +3673,6 @@ static int ata_mselect_control(struct ata_queued_cmd *qc,
+ 	 * The first two bytes of def_control_mpage are a header, so offsets
+ 	 * in mpage are off by 2 compared to buf.  Same for len.
+ 	 */
+-
+ 	if (len != CONTROL_MPAGE_LEN - 2) {
+ 		if (len < CONTROL_MPAGE_LEN - 2)
+ 			*fp = len;
+@@ -3683,8 +3681,6 @@ static int ata_mselect_control(struct ata_queued_cmd *qc,
+ 		return -EINVAL;
+ 	}
  
- 	/* Devices where NCQ should be avoided */
+-	d_sense = buf[0] & (1 << 2);
+-
+ 	/*
+ 	 * Check that read-only bits are not modified.
+ 	 */
+@@ -3697,7 +3693,10 @@ static int ata_mselect_control(struct ata_queued_cmd *qc,
+ 			return -EINVAL;
+ 		}
+ 	}
+-	if (d_sense & (1 << 2))
++
++	d_sense = buf[0] & (1 << 2);
++
++	if (d_sense)
+ 		dev->flags |= ATA_DFLAG_D_SENSE;
+ 	else
+ 		dev->flags &= ~ATA_DFLAG_D_SENSE;
+-- 
+2.9.0
+
