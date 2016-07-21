@@ -1,35 +1,35 @@
 From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 136231] New: Describing << : 1~855~709~2847  Epson Printer Tech
- Support Phone Number
-Date: Thu, 21 Jul 2016 18:59:43 +0000
-Message-ID: <bug-136231-11633@https.bugzilla.kernel.org/>
+Subject: [Bug 137141] New: netgear router@@-1-855-7092847))))netgear
+ @router@tech@support@number@@
+Date: Thu, 21 Jul 2016 20:35:22 +0000
+Message-ID: <bug-137141-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:35456 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:48732 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752395AbcGUS7r (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Thu, 21 Jul 2016 14:59:47 -0400
+	id S1753926AbcGUUf1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 21 Jul 2016 16:35:27 -0400
 Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id B7BD2204E7
-	for <linux-ide@vger.kernel.org>; Thu, 21 Jul 2016 18:59:45 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 8946520412
-	for <linux-ide@vger.kernel.org>; Thu, 21 Jul 2016 18:59:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3A2D220515
+	for <linux-ide@vger.kernel.org>; Thu, 21 Jul 2016 20:35:24 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id E50772050E
+	for <linux-ide@vger.kernel.org>; Thu, 21 Jul 2016 20:35:22 +0000 (UTC)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=136231
+https://bugzilla.kernel.org/show_bug.cgi?id=3D137141
 
-            Bug ID: 136231
-           Summary: Describing << : 1~855~709~2847  Epson Printer Tech
-                    Support Phone Number
+            Bug ID: 137141
+           Summary: netgear router@@-1-855-7092847))))netgear
+                    @router@tech@support@number@@
            Product: IO/Storage
            Version: 2.5
-    Kernel Version: Describing << : 1~855~709~2847  Epson Printer Tech
-                    Support Phone Number
+    Kernel Version: netgear router@@-1-855-7092847))))netgear
+                    @router@tech@support@number@@
           Hardware: All
                 OS: Linux
               Tree: Mainline
@@ -41,91 +41,290 @@ https://bugzilla.kernel.org/show_bug.cgi?id=136231
           Reporter: shahshyam057@gmail.com
         Regression: No
 
-((moti))Call @@@++ USA I8557O92847 EPSON p.r.i.n.t.e.r t.e.c.h s.u.p.p.o.r.t
-p.h.o.n.e n.u.m.b.e.r u.s.a. C.a.l.l EPSON h.e.l.p d.e.s.k n.u.m.b.e.r
-n.u.m.b.e.r C.a.n.a.d.a EPSON s.u.p.p.o.r.t p.h.o.n.e n.u.m.b.r usa USA 1
-I8557O92847 EPSON p.r.i.n.t.e.r t.e.c.h s.u.p.p.o.r.t p.h.o.n.e n.u.m.b.e.r
-u.s.a. C.a.l.l EPSON h.e.l.p d.e.s.k n.u.m.b.e.r n.u.m.b.e.r C.a.n.a.d.a EPSON
-s.u.p.p.o.r.t p.h.o.n.e n.u.m.b.r usa canada 1-1855-709-2847 USA, EPSON printer
-Tech Support phone number,EPSON technical support phone number 1 I8557O92847
-.EPSON Tech Support Number EPSON Tech EPSON tech support, EPSON tech support
-number, EPSON tech support phone number, EPSON technical support, EPSON
-technical support number, EPSON technical support phone number, EPSON tech
-support number, EPSON support number, EPSON Tech support phone number, EPSON
-support phone number, EPSON technical support phone number, EPSON technical
-support number,Support Phone Number for EPSON printer Phone Number for EPSON
-CustomerService Technical Support Telephone Number EPSON printer support number
-EPSON EPSON printer tech support number EPSON EPSON printer technical support
-number EPSON EPSON printer technical support phone number EPSON EPSON printer
-customer service number EPSON EPSON internet security technical support EPSON
-technical support phone number EPSON EPSON tech support phone number EPSON
-EPSON customer support phone number I-855-709-2847 EPSON EPSON printer support
-phone number EPSON EPSON support phone EPSON tech support EPSON customer
-support EPSON phone support EPSON support number EPSON EPSON technical support
-EPSON printer customer support phone number EPSON EPSON printer tech support
-phone number EPSON contact EPSON support EPSON printer technical support phone
-number ~!~I8557092847++ EPSON EPSON phone number EPSON tech support EPSON
-support ticket EPSON customer support number EPSON EPSON tech support number
-EPSON EPSON technical support number EPSON EPSON support center EPSON telephone
-support call EPSON support EPSON printer support support EPSON EPSON billing
-support EPSON printer technical support number EPSON support EPSON printer
-EPSON online support EPSON contact support EPSON printer support number EPSON
-EPSON printer customer support number EPSON EPSON printer tech support number
-EPSON support for EPSON EPSON phone number EPSON EPSON customer service phone
-number EPSON EPSON contact phone number EPSON EPSON printer phone number EPSON
-EPSON printer customer service phone number EPSON phone number EPSON for EPSON
-customer service EPSON software phone number EPSON phone number EPSON for EPSON
-EPSON customer service telephone number EPSON EPSON helpline phone number EPSON
-EPSON contact number EPSON EPSON customer service number EPSON EPSON customer
-service phone number ~!~I8557092847++ EPSON us EPSON customer service phone
-number EPSON usa EPSON telephone number EPSON EPSON phone number EPSON usa
-EPSON printer contact number EPSON EPSON number EPSON EPSON contact number
-EPSON usa EPSON printer helpline number EPSON EPSON helpline number EPSON EPSON
-customer number EPSON EPSON printer customer service number EPSON EPSON contact
-telephone number EPSON contact number EPSON for EPSON EPSON software contact
-number EPSON EPSON toll free number EPSON EPSON telephone number EPSON uk EPSON
-registration number EPSON EPSON toll free number EPSON usa EPSON customer
-service EPSON software customer service contact EPSON customer service EPSON
-customer service phone EPSON printer customer service EPSON service EPSON
-printer technical support EPSON printer customer support EPSON technical
-support reviews telephone EPSON printer EPSON tech support phone number EPSON
-EPSON printer tech support phone number EPSON EPSON printer customer service
-EPSON technical support phone number EPSON EPSON printer free printer support
-EPSON customer service billing EPSON customer service email address EPSON
-customer service reviews contact EPSON customer service EPSON tech support
-number EPSON usa EPSON printer support number EPSON EPSON printer contact
-number EPSON EPSON customer service phone number EPSON EPSON technical support
-usa EPSON technical support number EPSON EPSON tech support phone EPSON tech
-support number EPSON EPSON customer service telephone number EPSON EPSON
-printer customer support number EPSON EPSON printer phone number EPSON EPSON
-printer online support EPSON customer service number EPSON EPSON tech support
-center EPSON customer service EPSON software customer service EPSON customer
-care number EPSON usa EPSON customer number EPSON EPSON customer support number
-EPSON EPSON customer care number EPSON EPSON customer care toll free number
-EPSON EPSON tech support EPSON technical support EPSON printer support EPSON
-printer tech support EPSON support center EPSON.com customer service EPSON
-printer customer care number EPSON EPSON customer care EPSON phone number EPSON
-phone number EPSON for EPSON customer service EPSON phone support EPSON phone
-number EPSON tech support EPSON support phone number EPSON contact EPSON by
-phone EPSON contact phone number EPSON EPSON helpline phone number EPSON EPSON
-printer phone EPSON printer for phone EPSON contact number EPSON EPSON contact
-support contact EPSON printer EPSON contact number EPSON usa EPSON toll free
-number EPSON EPSON telephone number EPSON EPSON toll free number EPSON usa
-EPSON printer support services technical support for printer EPSON EPSON
-customer service phone number EPSON usa EPSON printer customer care number
-EPSON usa EPSON customer care number EPSON EPSON customer care center EPSON
-customer support EPSON customer support phone EPSON customer help EPSON
-customer & technical support EPSON customer portal EPSON customer care phone
-number EPSON usa EPSON customer care email EPSON helpline EPSON tech support
-contact EPSON customer care toll free EPSON printer customer service number
-EPSON EPSON printer protection norton printer customer service number EPSON
-EPSON software customer service number EPSON EPSON hotline customer service
-phone number EPSON EPSON customer service phone number EPSON us how to contact
-EPSON by email EPSON free phone support EPSON printer technical support number
-EPSON EPSON printer technical support help desk phone number EPSON EPSON
-technical support number EPSON toll free number EPSON EPSON printer customer
-support phone number EPSON EPSON printer customer
+!Epson Printer@@@Tech ++.+1-855.709.2847)
++.+phone@number@@epson@printer@technical@support@n !Epson Printer@@@Tec=
+h
+++.+1-855.709.2847) +.+phone@number@@epson@printer@technical@support@n!=
+!Help
+Printer@@@Tech ++..+1-855.709.2847)
++.+phone@number@@epson@printer@technical@support@number@Uk !!Help
+Printer@@@Tech ++..+1-855.709.2847)
++.+phone@number@@epson@printer@technical@support@number@Uk !!Epson
+Printer@@@Tech ++..+1-855.709.2847)
++.+phone@number@@brother@printer@technical@support@number@Uk !!Epson
+Printer@@@Tech ++.+1-855.709.2847)
++.+phone@number@@epson@printer@technical@support@number@Uk !!Epson
+Printer@@@Tech +++1-855.709.2847)
+++phone@number@@epson@printer@technical@support@number@Uk Epson Tech (2=
+9) Epson
+printer help, Epson help line, Epson customer support help desk, Epson =
+printers
+help, Epson help desk, Epson help, Epson printer help phone number
+1-855.709.2847) , Epson help desk phone number 1-855.709.2847) , Epson =
+printer
+help line, Epson printer help number 1-855.709.2847) , Epson help line =
+phone
+number 1-855.709.2847) , Epson help number 1-855.709.2847) , Epson prin=
+ter help
+desk, Epson technical help, help with Epson printer, Epson printer help=
+ online,
+Epson help phone number 1-855.709.2847) , Epson printers help desk, Eps=
+on
+printer number 1-855.709.2847)  for help, Epson online help=E2=80=A6 Ep=
+son Drivers (22)
+Epson printer drivers, Epson support drivers, Epson drivers for printer=
+s, Epson
+printers drivers, Epson support and drivers, Epson drivers and support,=
+ drivers
+Epson printers, Epson drivers printers, Epson inkjet printer driver, Ep=
+son
+wireless printer driver, printer Epson driver, Epson printer drivers su=
+pport,
+Epson photocopier drivers, Epson driver support, Epson printer driver s=
+upport,
+Epson support & driver, Epson drivers support, Epson printers support d=
+rivers,
+www Epson com support drivers, Epson drivers Uk=E2=80=A6 Printer Custom=
+er (25) Epson
+printer customer service, Epson printers customer service, Epson printe=
+r
+customer service number 1-855.709.2847) , Epson printer customer suppor=
+t, Epson
+printer customer service phone number 1-855.709.2847) , Epson printers =
+customer
+service phone number 1-855.709.2847) , Epson printer customer service p=
+hone,
+Epson printers customer support, phone number 1-855.709.2847)  for Epso=
+n
+printer customer service, Epson printer customer support phone number
+1-855.709.2847) , customer service Epson printers, brother printer cust=
+omer
+support, brother printer customer service phone number 1-855.709.2847) =
+,
+brother printer customer service number 1-855.709.2847) , kodak printer
+customer service number 1-855.709.2847) , brother printer customer supp=
+ort
+phone number 1-855.709.2847) , brother printers customer support number
+1-855.709.2847) , brother printer customer service support, brother pri=
+nters
+customer service number 1-855.709.2847) , brother printer customer supp=
+ort
+number 1-855.709.2847) =E2=80=A6 Epson Technical (22) Epson technical s=
+upport, Epson
+printer technical support, Epson technical support phone number 1-855.7=
+09.2847)
+, Epson technical support number 1-855.709.2847) , Epson printers techn=
+ical
+support, Epson technical support phone, Epson printer technical support=
+ phone
+number 1-855.709.2847) , Epson printer technical support number 1-855.7=
+09.2847)
+, Epson technical support hours, technical support for Epson printers, =
+Epson
+printers technical support phone number 1-855.709.2847) , contact Epson
+technical support, Epson cameras technical support, Epson technical sup=
+port
+phone number 1-855.709.2847)  Uk, Epson technical support canada, Epson=
+ camera
+technical support, Epson technical support Uktralia, Epson Uk technical
+support, Epson Uk technical support phone number 1-855.709.2847) , Epso=
+n
+Uktralia technical support=E2=80=A6 Support number 1-855.709.2847) (17)=
+ Epson support
+number 1-855.709.2847) , Epson printer support number 1-855.709.2847) ,=
+ Epson
+support phone number 1-855.709.2847) , Epson printers support number
+1-855.709.2847) , Epson phone support number 1-855.709.2847) , Epson ca=
+meras
+support phone number 1-855.709.2847) , Epson imagerunner support phone =
+number
+1-855.709.2847) , printer support number 1-855.709.2847) , brother prin=
+ter
+support number 1-855.709.2847) , Epson camera support number 1-855.709.=
+2847) ,
+brother printer tech support number 1-855.709.2847) , brother printer t=
+echnical
+support number 1-855.709.2847) , brother printer support telephone numb=
+er
+1-855.709.2847) , brother printer technical support telephone number
+1-855.709.2847) , brother printer support number 1-855.709.2847)  us, E=
+pson
+camera support phone number 1-855.709.2847) , Epson uk support number
+1-855.709.2847)  Install Epson (36) install Epson printer, Epson printe=
+r
+installation, Epson printer installer, Epson printer install, installin=
+g Epson
+printer, install printer HP, instal Epson printer, Epson printers insta=
+ll,
+Epson printers installation, installing a Epson printer, Epson install =
+printer,
+installer Epson printer, install driver for Epson printer, Epson printe=
+r driver
+install, Epson printer installation without cd, Epson driver install, i=
+nstaller
+printer HP, instal printer HP, install Epson scanner, Epson install dri=
+ver=E2=80=A6
+Customer Service (12) Epson customer service, Epson customer service ph=
+one,
+customer service HP, Epson customer services, Epson customer service ho=
+urs,
+Epson Uk customer service, Epson customer service Uk, Epson customer se=
+rvice
+canada, Epson customer service Uktralia, Epson uk customer service, Eps=
+on
+canada customer service, Epson singapore customer service Troubleshooti=
+ng Epson
+(16) Epson printers troubleshooting, Epson printer troubleshooting, Eps=
+on
+troubleshooting printer, troubleshoot Epson printer, troubleshooting Ep=
+son
+printers, Epson printer troubleshoot, Epson troubleshooting phone numbe=
+r
+1-855.709.2847) , troubleshoot Epson printer problems, Epson printers
+troubleshooting pixma, troubleshooting Epson printer, Epson mp830
+troubleshooting, Epson mp620 troubleshooting, troubleshooting for Epson
+printers, Epson printer troubleshooter, troubleshooting printer HP, how=
+ to
+troubleshoot Epson printer Center Epson (38) Epson service center, Epso=
+n
+service centers, Epson support center, Epson service center phone numbe=
+r
+1-855.709.2847) , Epson pixma service center, Epson customer support ce=
+nter,
+Epson service center number 1-855.709.2847) , Epson repair center, Epso=
+n call
+center number 1-855.709.2847) , Epson customer service center, Epson ca=
+ll
+center, Epson camera service center, Epson service center contact numbe=
+r
+1-855.709.2847) , Epson print center, Epson center, Epson camera repair=
+ center,
+Epson service center locations, call center HP, Epson contact service c=
+enter,
+Epson servicing center=E2=80=A6 Epson Helpline (23) Epson printer helpl=
+ine, Epson
+helpline, Epson helpline number 1-855.709.2847) , Epson printers helpli=
+ne
+number 1-855.709.2847) , Epson printer helpline phone number 1-855.709.=
+2847) ,
+Epson printer helpline number 1-855.709.2847) , Epson printers helpline=
+, Epson
+pixma helpline, Epson helpline no, Epson printer helpline no, Epson cam=
+era
+helpline, Epson printer helpline uk, Epson helpline uk, Epson helpline
+Uktralia, Epson camera helpline number 1-855.709.2847) , Epson helpline=
+ number
+1-855.709.2847)  delhi, Epson helpline number 1-855.709.2847)  india, E=
+pson
+printers helpline number 1-855.709.2847)  india, Epson printer helpline=
+ number
+1-855.709.2847)  india, Epson uk helpline=E2=80=A6 number 1-855.709.284=
+7)  Customer (7)
+Epson customer service number 1-855.709.2847) , Epson customer service =
+phone
+number 1-855.709.2847) , Epson customer support number 1-855.709.2847) =
+, Epson
+pixma customer service phone number 1-855.709.2847) , Epson customer su=
+pport
+phone number 1-855.709.2847) , phone number 1-855.709.2847)  Epson cust=
+omer
+service, Epson fax machine customer support number 1-855.709.2847)  Pri=
+nter
+Phone (15) Epson printer support phone number 1-855.709.2847) , Epson p=
+rinter
+support phone, Epson printer tech support phone number 1-855.709.2847) =
+, Epson
+printer phone support, Epson printers phone number 1-855.709.2847) , Ep=
+son
+printers tech support phone number 1-855.709.2847) , Epson printer phon=
+e number
+1-855.709.2847) , Epson printers support phone number 1-855.709.2847) ,=
+ phone
+number 1-855.709.2847)  for Epson printer support, phone number 1-855.7=
+09.2847)
+ for Epson printers, brother printer support phone number 1-855.709.284=
+7) ,
+brother printer tech support phone number 1-855.709.2847) , brother pri=
+nter
+technical support phone number 1-855.709.2847) , brother printer tech s=
+upport
+phone, brother printer phone support number 1-855.709.2847)  Center Pri=
+nter
+(19) Epson printer service center, Epson printers service center, Epson=
+ printer
+service center phone number 1-855.709.2847) , Epson printer service cen=
+ter
+number 1-855.709.2847) , Epson printers service center number 1-855.709=
+=2E2847) ,
+Epson printer repair center, Epson printer service centers, service cen=
+ter
+printer HP, service center for Epson printer, Epson printers repair cen=
+ter,
+service center Epson printer, Epson printer call center number 1-855.70=
+9.2847)
+, Epson printer service center locations, Epson printer service center =
+mumbai,
+authorized Epson printer repair centers, Epson printer repair center lo=
+cations,
+Epson printer repair centers, Epson printer service center singapore, E=
+pson
+printer call center number 1-855.709.2847)  india Epson Care (38) Epson
+customer care number 1-855.709.2847) , Epson customer care, Epson print=
+er
+customer care, Epson printers customer care number 1-855.709.2847) , Ep=
+son
+printer customer care number 1-855.709.2847) , Epson customer care no, =
+Epson
+printers customer care, Epson customer care center, Epson printers cust=
+omer
+care no, Epson customer care center contact number 1-855.709.2847) , Ep=
+son
+printer customer care no, Epson care center, customer care number
+1-855.709.2847)  of Epson printer, Epson customer care phone number
+1-855.709.2847) , Epson care, Epson customer care delhi, Epson india cu=
+stomer
+care, Epson customer care number 1-855.709.2847)  india, Epson printers=
+ india
+customer care, Epson printer customer care delhi=E2=80=A6 Contact Epson=
+ (25) Epson
+contact number 1-855.709.2847) , Epson contact, contact HP, contact Eps=
+on
+customer support, Epson support contact, contact Epson support, contact=
+ Epson
+support phone number 1-855.709.2847) , Epson contact support, Epson sup=
+port
+contact number 1-855.709.2847) , contact Epson customer service, Epson =
+contact
+phone number 1-855.709.2847) , contact Epson by phone, Epson contacts, =
+Epson
+contact details, Epson Uk contact number 1-855.709.2847) , Epson camera=
+ contact
+number 1-855.709.2847) , Epson contact info, how to contact Epson custo=
+mer
+service, Epson contact number 1-855.709.2847)  Uk, Epson camera contact=
+=E2=80=A6 Epson
+Toll (21) Epson toll free number 1-855.709.2847) , Epson toll free no, =
+Epson
+toll free, Epson toll free tech support, Epson customer care number
+1-855.709.2847)  toll free, Epson service toll free number 1-855.709.28=
+47) ,
+Epson toll free number 1-855.709.2847)  india, Epson customer care toll=
+ free
+number 1-855.709.2847) , Epson toll free number 1-855.709.2847)  in del=
+hi,
+Epson india toll free, Epson toll free number 1-855.709.2847)  in india=
+, Epson
+service center toll free number 1-855.709.2847) , Epson scanner toll fr=
+ee
+number 1-855.709.2847) , Epson india toll free number 1-855.709.2847) ,=
+ Epson
+india toll free no, Epson camera toll free number 1-855.709.2847) , Eps=
+on toll
+free number 1-855.709.2847)  chennai, Epson customer care toll free num=
+ber
+1-855.709.2847)  india, Epson toll free india, Epson toll free no Uk=E2=
+=80=A6
 
--- 
+--=20
 You are receiving this mail because:
 You are watching the assignee of the bug.
