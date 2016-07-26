@@ -1,27 +1,26 @@
 From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] ide-tape: fix misprint in failure handling in
- idetape_init()
-Date: Tue, 26 Jul 2016 15:26:11 -0700 (PDT)
-Message-ID: <20160726.152611.2020576477783367199.davem@davemloft.net>
-References: <1461967872-14968-1-git-send-email-khoroshilov@ispras.ru>
+Subject: Re: [patch] ide: missing break statement in set_timings_mdma()
+Date: Tue, 26 Jul 2016 15:26:24 -0700 (PDT)
+Message-ID: <20160726.152624.1129190524778208462.davem@davemloft.net>
+References: <20160714104802.GI18175@mwanda>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1461967872-14968-1-git-send-email-khoroshilov@ispras.ru>
-Sender: linux-kernel-owner@vger.kernel.org
-To: khoroshilov@ispras.ru
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <20160714104802.GI18175@mwanda>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: dan.carpenter@oracle.com
+Cc: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au, linux-ide@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, kernel-janitors@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-From: Alexey Khoroshilov <khoroshilov@ispras.ru>
-Date: Sat, 30 Apr 2016 01:11:12 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Date: Thu, 14 Jul 2016 13:48:02 +0300
 
-> If driver_register() failed there is no sense to call driver_unregister().
-> unregister_chrdev() should be called here.
+> There was clearly supposed to be a break statement here.  Currently we
+> use the k2 ata timings instead of sh ata ones we intended.  Probably no
+> one has this hardware anymore so it likely doesn't make a difference
+> beyond the static checker warning.
 > 
-> Found by Linux Driver Verification project (linuxtesting.org).
-> 
-> Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
 Applied.
