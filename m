@@ -1,26 +1,37 @@
 From: David Miller <davem@davemloft.net>
-Subject: Re: [patch] ide: missing break statement in set_timings_mdma()
-Date: Tue, 26 Jul 2016 15:26:24 -0700 (PDT)
-Message-ID: <20160726.152624.1129190524778208462.davem@davemloft.net>
-References: <20160714104802.GI18175@mwanda>
+Subject: Re: [PATCH] ide: hpt366: fix incorrect mask when checking at
+ cmd_high_time
+Date: Tue, 26 Jul 2016 15:26:17 -0700 (PDT)
+Message-ID: <20160726.152617.309548003660454771.davem@davemloft.net>
+References: <1468321179-7647-1-git-send-email-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <20160714104802.GI18175@mwanda>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: dan.carpenter@oracle.com
-Cc: benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au, linux-ide@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, kernel-janitors@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from shards.monkeyblade.net ([184.105.139.130]:42056 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758677AbcGZW0S (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 26 Jul 2016 18:26:18 -0400
+In-Reply-To: <1468321179-7647-1-git-send-email-colin.king@canonical.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: colin.king@canonical.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Date: Thu, 14 Jul 2016 13:48:02 +0300
+From: Colin King <colin.king@canonical.com>
+Date: Tue, 12 Jul 2016 11:59:39 +0100
 
-> There was clearly supposed to be a break statement here.  Currently we
-> use the k2 ata timings instead of sh ata ones we intended.  Probably no
-> one has this hardware anymore so it likely doesn't make a difference
-> beyond the static checker warning.
+> From: Colin Ian King <colin.king@canonical.com>
 > 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> According to the HPT366 data sheet, PCI config space dword 0x40-0x43
+> bits 11:8 specify the primary drive cmd_high_time, however,
+> currently just 3 bits of the 4 are being used because the mask
+> is 0x07 and not 0x0f.  Fix the mask, allowing for the 40MHz clock
+> to be detected.
+> 
+> Also add in missing space between switch and parenthesis to clean
+> up a checkpatch warning.
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
 Applied.
