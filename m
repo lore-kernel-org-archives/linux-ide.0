@@ -1,36 +1,53 @@
-From: Tom Yan <tom.ty89@gmail.com>
-Subject: Re: [PATCH resend 5/5] libata-scsi: fix MODE SELECT translation for
- Control mode page
-Date: Thu, 28 Jul 2016 05:00:00 +0800
-Message-ID: <CAGnHSEnPM8tOs-hUk--Hb_bdgZVH+3UO4Pk+CFS-cQ4_gW8kww@mail.gmail.com>
-References: <af84a796696f2f366d330595d1a818e8daeb86d8.1469126217.git.tom.ty89@gmail.com>
- <b2ae6752649bc02641d38fee75ee35a59e8466d8.1469126217.git.tom.ty89@gmail.com>
- <fc2946598c92137f65636b0fd7e50dc71a089fa1.1469126217.git.tom.ty89@gmail.com>
- <14bd98eb08ddf86be28f558817bed3cd27c397cd.1469126217.git.tom.ty89@gmail.com>
- <2ed3f3aba21a4b815e9497e6aeba497280f9f333.1469126217.git.tom.ty89@gmail.com>
- <20160721212600.GF23759@htj.duckdns.org> <CAGnHSEnSQcxcaJopGnVusC9Q41qHKkdr4QQDmymFSxVEH6zvPQ@mail.gmail.com>
- <20160725183055.GD19588@mtj.duckdns.org>
+From: David Miller <davem@davemloft.net>
+Subject: [GIT] IDE
+Date: Fri, 29 Jul 2016 10:57:52 -0700 (PDT)
+Message-ID: <20160729.105752.576720640744458862.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20160725183055.GD19588@mtj.duckdns.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Hannes Reinecke <hare@suse.de>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Arnd Bergmann <arnd@arndb.de>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-next@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from shards.monkeyblade.net ([184.105.139.130]:51772 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751695AbcG2R5z (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Fri, 29 Jul 2016 13:57:55 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Yes, because it touches an actual ATA drive setting, while D_SENSE is
-merely a "software setting" stored in dev->flags to make the kernel
-response differently when build sense data.
 
-On 26 July 2016 at 02:30, Tejun Heo <tj@kernel.org> wrote:
-> On Fri, Jul 22, 2016 at 05:50:18AM +0800, Tom Yan wrote:
->> As I've mentioned in the comment/message, there is no ATA command
->> needed to be sent to the device, since it only toggles a bit in
->> dev->flags. See that there is no ata_taskfile constructed in
->> ata_mselect_control().
->
-> But ata_mselect_caching() contructs a tf?
->
-> --
-> tejun
+Just a couple small bug fixes, nothing overly exciting in
+here.
+
+Please pull, thanks a lot!
+
+The following changes since commit 107df03203bb66de56e2caec3bde6d22b55480c5:
+
+  Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net (2016-07-23 15:44:31 +0900)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/davem/ide 
+
+for you to fetch changes up to d4f8c2e0f827a0b3a322c449ac331ae41feeb359:
+
+  ide: missing break statement in set_timings_mdma() (2016-07-26 15:25:31 -0700)
+
+----------------------------------------------------------------
+Alexey Khoroshilov (1):
+      ide-tape: fix misprint in failure handling in idetape_init()
+
+Colin Ian King (1):
+      ide: hpt366: fix incorrect mask when checking at cmd_high_time
+
+Dan Carpenter (1):
+      ide: missing break statement in set_timings_mdma()
+
+Julia Lawall (1):
+      cmd640: add __init attribute
+
+ drivers/ide/cmd640.c   | 2 +-
+ drivers/ide/hpt366.c   | 2 +-
+ drivers/ide/ide-tape.c | 6 +++---
+ drivers/ide/pmac.c     | 1 +
+ 4 files changed, 6 insertions(+), 5 deletions(-)
