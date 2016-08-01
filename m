@@ -1,39 +1,43 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: System lockup with misc ATAPI commands on VT6415
-Date: Mon, 1 Aug 2016 11:01:30 -0400
-Message-ID: <20160801150130.GC2542@mtj.duckdns.org>
-References: <20160801002718.38a0d88d@raspberrypi>
+Subject: Re: [PATCH] silence warning in drivers/ata/libata-scsi.c when
+ building W=1
+Date: Mon, 1 Aug 2016 11:04:29 -0400
+Message-ID: <20160801150429.GD2542@mtj.duckdns.org>
+References: <8997.1470022114@turing-police.cc.vt.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qk0-f180.google.com ([209.85.220.180]:34963 "EHLO
-	mail-qk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752395AbcHAPB6 (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Aug 2016 11:01:58 -0400
-Received: by mail-qk0-f180.google.com with SMTP id s63so147965197qkb.2
-        for <linux-ide@vger.kernel.org>; Mon, 01 Aug 2016 08:01:32 -0700 (PDT)
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:33301 "EHLO
+	mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752395AbcHAPEc (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Mon, 1 Aug 2016 11:04:32 -0400
 Content-Disposition: inline
-In-Reply-To: <20160801002718.38a0d88d@raspberrypi>
+In-Reply-To: <8997.1470022114@turing-police.cc.vt.edu>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Alexander Kandaurov <aakandaurov@yandex.ru>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Valdis Kletnieks <Valdis.Kletnieks@vt.edu>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello, Alexander.
+On Sun, Jul 31, 2016 at 11:28:34PM -0400, Valdis Kletnieks wrote:
+> When building with W=1, we get these warnings:
+> 
+> drivers/ata/libata-scsi.c: In function 'ata_mselect_caching':
+> drivers/ata/libata-scsi.c:3637:28: warning: suggest parentheses around comparison in operand of '&' [-Wparentheses]
+>     if (mpage[i + 2] & 0xfb != buf[i] & 0xfb) {
+>                        ~~~~~^~~~~~~~~
+> drivers/ata/libata-scsi.c: In function 'ata_mselect_control':
+> drivers/ata/libata-scsi.c:3702:28: warning: suggest parentheses around comparison in operand of '&' [-Wparentheses]
+>     if (mpage[i + 2] & 0xfb != buf[i] & 0xfb) {
+>                        ~~~~~^~~~~~~~~
+> 
+> So give them the extra () and make things a bit clearer for both the
+> compiler and programmer...
+> 
+> Signed-off-by: Valdis Kletnieks <valdis.kletnieks@vt.edu>
 
-On Mon, Aug 01, 2016 at 12:27:18AM +0500, Alexander Kandaurov wrote:
-> A possible fix to this issue could be using PIO for the misc ATAPI
-> commands for this controller as is done in sata_promise.c, but what
-> confuses me here is that two other systems perform well in similar
-> conditions, so this could possibly be specifically some Linux bug.
+The offending commit got already reverted.
 
-Thanks a lot for the detailed investigation.  It could well be some
-peculiarities from the way linux driver behave but given how long the
-controller has been out of production, I'd be completely happy with a
-crude PIO hammer fix.  It's not like these misc commands benefit a lot
-from DMA anyway.
-
-Thanks.
+Thanks!
 
 -- 
 tejun
