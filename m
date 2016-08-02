@@ -1,52 +1,42 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH 0063/1285] Replace numeric parameter like 0444 with macro
-Date: Tue, 2 Aug 2016 14:30:48 +0300
-Message-ID: <5391e340-1285-574d-1979-a19571341eb5@cogentembedded.com>
-References: <20160802103759.17958-1-baolex.ni@intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Baole Ni <baolex.ni@intel.com>
+Subject: [PATCH 0247/1285] Replace numeric parameter like 0444 with macro
+Date: Tue,  2 Aug 2016 18:53:01 +0800
+Message-ID: <20160802105301.30206-1-baolex.ni@intel.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lf0-f45.google.com ([209.85.215.45]:36551 "EHLO
-	mail-lf0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755408AbcHBLcX (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 2 Aug 2016 07:32:23 -0400
-Received: by mail-lf0-f45.google.com with SMTP id g62so135947971lfe.3
-        for <linux-ide@vger.kernel.org>; Tue, 02 Aug 2016 04:30:51 -0700 (PDT)
-In-Reply-To: <20160802103759.17958-1-baolex.ni@intel.com>
+Received: from mga04.intel.com ([192.55.52.120]:27436 "EHLO mga04.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755830AbcHBLdK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 2 Aug 2016 07:33:10 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Baole Ni <baolex.ni@intel.com>, b.zolnierkie@samsung.com, tj@kernel.org, lenb@kernel.org, x86@kernel.org, hpa@zytor.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, chuansheng.liu@intel.com, travis@sgi.com
+To: davem@davemloft.net, linux@roeck-us.net, airlied@linux.ie, kgene@kernel.org, k.kozlowski@samsung.com, dougthompson@xmission.com, bp@alien8.de
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, chuansheng.liu@intel.com, baolex.ni@intel.com, aduggan@synaptics.com, dianders@chromium.org
 
-Hello.
+I find that the developers often just specified the numeric value
+when calling a macro which is defined with a parameter for access permission.
+As we know, these numeric value for access permission have had the corresponding macro,
+and that using macro can improve the robustness and readability of the code,
+thus, I suggest replacing the numeric parameter with the macro.
 
-On 8/2/2016 1:37 PM, Baole Ni wrote:
+Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+Signed-off-by: Baole Ni <baolex.ni@intel.com>
+---
+ drivers/ide/ide-gd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> I find that the developers often just specified the numeric value
-> when calling a macro which is defined with a parameter for access permission.
-> As we know, these numeric value for access permission have had the corresponding macro,
-> and that using macro can improve the robustness and readability of the code,
-> thus, I suggest replacing the numeric parameter with the macro.
->
-> Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
-> Signed-off-by: Baole Ni <baolex.ni@intel.com>
-> ---
->  drivers/ata/pata_legacy.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/ata/pata_legacy.c b/drivers/ata/pata_legacy.c
-> index bce2a8c..1dc0beb 100644
-> --- a/drivers/ata/pata_legacy.c
-> +++ b/drivers/ata/pata_legacy.c
-> @@ -76,7 +76,7 @@
->  #define NR_HOST 6
->
->  static int all;
-> -module_param(all, int, 0444);
-> +module_param(all, int, S_IRUSR | S_IRGRP | S_IROTH);
-
-    There's S_IRUGO for this case, no?
-
-MBR, Sergei
+diff --git a/drivers/ide/ide-gd.c b/drivers/ide/ide-gd.c
+index 838996a..ed03e32 100644
+--- a/drivers/ide/ide-gd.c
++++ b/drivers/ide/ide-gd.c
+@@ -24,7 +24,7 @@
+ /* module parameters */
+ static DEFINE_MUTEX(ide_gd_mutex);
+ static unsigned long debug_mask;
+-module_param(debug_mask, ulong, 0644);
++module_param(debug_mask, ulong, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+ 
+ static DEFINE_MUTEX(ide_disk_ref_mutex);
+ 
+-- 
+2.9.2
 
