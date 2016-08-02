@@ -1,42 +1,50 @@
-From: Baole Ni <baolex.ni@intel.com>
-Subject: [PATCH 0246/1285] Replace numeric parameter like 0444 with macro
-Date: Tue,  2 Aug 2016 18:52:57 +0800
-Message-ID: <20160802105257.30140-1-baolex.ni@intel.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:63050 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755758AbcHBLaj (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-	Tue, 2 Aug 2016 07:30:39 -0400
-Sender: linux-ide-owner@vger.kernel.org
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH 0063/1285] Replace numeric parameter like 0444 with macro
+Date: Tue, 2 Aug 2016 15:32:57 +0300
+Message-ID: <a4bf3836-1ffa-9f83-6e8f-998c99d5b507@cogentembedded.com>
+References: <20160802103759.17958-1-baolex.ni@intel.com>
+ <5391e340-1285-574d-1979-a19571341eb5@cogentembedded.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <5391e340-1285-574d-1979-a19571341eb5@cogentembedded.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Baole Ni <baolex.ni@intel.com>, b.zolnierkie@samsung.com, tj@kernel.org, lenb@kernel.org, x86@kernel.org, hpa@zytor.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, chuansheng.liu@intel.com, travis@sgi.com
 List-Id: linux-ide@vger.kernel.org
-To: bp@alien8.de, davem@davemloft.net, linux@roeck-us.net, airlied@linux.ie, kgene@kernel.org, k.kozlowski@samsung.com, dougthompson@xmission.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, chuansheng.liu@intel.com, baolex.ni@intel.com, aduggan@synaptics.com, dianders@chromium.org
 
-I find that the developers often just specified the numeric value
-when calling a macro which is defined with a parameter for access permission.
-As we know, these numeric value for access permission have had the corresponding macro,
-and that using macro can improve the robustness and readability of the code,
-thus, I suggest replacing the numeric parameter with the macro.
+Hello.
 
-Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
-Signed-off-by: Baole Ni <baolex.ni@intel.com>
----
- drivers/ide/ide-cd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On 8/2/2016 2:30 PM, Sergei Shtylyov wrote:
 
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index ef907fd..78f4059 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -1719,7 +1719,7 @@ static const struct block_device_operations idecd_ops = {
- 
- /* module options */
- static unsigned long debug_mask;
--module_param(debug_mask, ulong, 0644);
-+module_param(debug_mask, ulong, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
- 
- MODULE_DESCRIPTION("ATAPI CD-ROM Driver");
- 
--- 
-2.9.2
+>> I find that the developers often just specified the numeric value
+>> when calling a macro which is defined with a parameter for access permission.
+>> As we know, these numeric value for access permission have had the
+>> corresponding macro,
+>> and that using macro can improve the robustness and readability of the code,
+>> thus, I suggest replacing the numeric parameter with the macro.
+>>
+>> Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+>> Signed-off-by: Baole Ni <baolex.ni@intel.com>
+>> ---
+>>  drivers/ata/pata_legacy.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/ata/pata_legacy.c b/drivers/ata/pata_legacy.c
+>> index bce2a8c..1dc0beb 100644
+>> --- a/drivers/ata/pata_legacy.c
+>> +++ b/drivers/ata/pata_legacy.c
+>> @@ -76,7 +76,7 @@
+>>  #define NR_HOST 6
+>>
+>>  static int all;
+>> -module_param(all, int, 0444);
+>> +module_param(all, int, S_IRUSR | S_IRGRP | S_IROTH);
+>
+>    There's S_IRUGO for this case, no?
 
+    Sending 1285 patches with the same subject also was a bad idea. You need a 
+subsystem/driver prefix in order to somehow differ them.
+
+MBR, Sergei
