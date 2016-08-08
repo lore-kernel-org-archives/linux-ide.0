@@ -1,37 +1,24 @@
-From: Tom Yan <tom.ty89@gmail.com>
-Subject: Regarding AHCI_MAX_SG and (ATA_HORKAGE_MAX_SEC_1024)
-Date: Sun, 7 Aug 2016 22:10:17 +0800
-Message-ID: <CAGnHSEnsfmO8ydLZGBmEXgRCYTZfy+sR3knCWfBhCz6_vLZMEw@mail.gmail.com>
+From: "Friedrich And Annand Mayrhofer" <americo.freitas@inss.gov.br>
+Subject: Charity Project !!!
+Date: Mon, 08 Aug 2016 01:50:45 +0100
+Message-ID: <20160808010234.F0460157CF65__20331.0423800305$1470618377$gmane$org@mx.inss.gov.br>
+Reply-To: friedrich_mayehofe@foxmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, dmilburn@redhat.com
-Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mx.inss.gov.br ([200.152.40.7]:23336 "EHLO mx.inss.gov.br"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751884AbcHHBF4 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 7 Aug 2016 21:05:56 -0400
+Content-Description: Mail message body
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Recipients <americo.freitas@inss.gov.br>
 
-So the (not so) recent bump of BLK_DEF_MAX_SECTORS from 1024 to 2560
-(commit d2be537c3ba3) seemed to have caused trouble to some of the ATA
-devices, which were then worked around with ATA_HORKAGE_MAX_SEC_1024.
+My wife and I have awarded you with a donation of $ 1,000,000.00 Dollars from part of our Jackpot Lottery of 50 Million Dollars, respond with your  
+details for claims.
 
-However, I am suspecting that the bump of BLK_DEF_MAX_SECTORS is not
-the "real" cause of the trouble, but the fact that AHCI_MAX_SG has
-been set to a weird value of 168 (with a comment "hardware max is
-64K", which neither seem to make any sense).
+We await your earliest response and God Bless you.
 
-AHCI_MAX_SG is used to set the sg_tablesize (i.e. max_segments,
-apparently), which is apparently used to derive the actual "request
-size" (that is, if it is lower than max_sectors(_kb), it will be the
-limiting factor instead).
-
-For example, no matter if the drive has max_sectors set to 2560, or to
-65535 (by adding it as the Optimal Transfer Length to libata's SATL,
-which is also max_hw_sectors that is set from ATA_MAX_SECTORS_LBA48),
-"avgrq-sz" in `iostat` will be capped at 1344 (168 * 8).
-
-However, if I change AHCI_MAX_SG to 128 (which is also the
-sg_tablesize set in libata.h from LIBATA_MAX_PRD), "avgrq-sz" in
-`iostat` will be capped at 1024 (128 * 8), which should make
-ATA_HORKAGE_MAX_SEC_1024 unnecessary.
-
-So why has AHCI_MAX_SG been set to 168 anyway?
+Friedrich And Annand Mayrhofer.
