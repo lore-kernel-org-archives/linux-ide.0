@@ -1,64 +1,57 @@
-From: tom.ty89@gmail.com
-Subject: [PATCH 2/2] libata: do not set max_sectors for LBA48 device
-Date: Tue,  9 Aug 2016 18:31:42 +0800
-Message-ID: <e821f2b2223669535ae68e377c89c17c5c0237cf.1470738284.git.tom.ty89@gmail.com>
-References: <1dc8fff2418744a7c4bf824f789017228ac15624.1470738284.git.tom.ty89@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <1dc8fff2418744a7c4bf824f789017228ac15624.1470738284.git.tom.ty89@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: tj@kernel.org
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
+From: <lramos.prof@yahoo.com.br>
+Subject: [PATCH] Fix interface autodetection in legacy IDE driver
+Date: Tue, 9 Aug 2016 10:47:11 +0000 (UTC)
+Message-ID: <1370547790.13391287.1470739631878.JavaMail.yahoo@mail.yahoo.com>
+References: <1370547790.13391287.1470739631878.JavaMail.yahoo.ref@mail.yahoo.com>
+Reply-To: <lramos.prof@yahoo.com.br>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from nm46-vm7.bullet.mail.gq1.yahoo.com ([67.195.87.175]:46466 "EHLO
+	nm46-vm7.bullet.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750804AbcHIK4o (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Aug 2016 06:56:44 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: "davem@davemloft.net" <davem@davemloft.net>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-From: Tom Yan <tom.ty89@gmail.com>
+This patch fixes the automatic setting of ide_generic.probe_mask,
+when it is set to zero (like when default options are used) AND
+the PCI subsystem has detected primary and/or secondary interfaces.
 
-Along with commit 1dc8fff24187 ("libata-scsi: do not call
-blk_queue_max_hw_sectors()"), devices with LBA48 support will have
-max_sectors set to SCSI_DEFAULT_MAX_SECTORS (currently 1024), by
-the scsi driver.
+The effect is that those interfaces go undetected under those
+conditions.
 
-Note that the "max_sectors" here is actually the block layer limit
-"max_hw_sectors", while the block layer limit "max_sectors" (which
-is upper-bounded by "max_hw_sectors") will be set to
-BLK_DEF_MAX_SECTORS (currently 2560) by the scsi disk driver, since
-our SATL does not report an Optimal Transfer Length.
+The former implementation misunderstands the information detected by
+the PCI subsystem, and may only work if one use ide_generic.probe_mask
+set to 0x3f (or 0x03, minimally), like the suggestion echoed to the
+console.
 
-Therefore, it should make more sense to have the "max_sectors" here
-set to SCSI_DEFAULT_MAX_SECTORS, so that both of the block layer
-limits will be set to 1024, than to have "max_hw_sectors" set to
-65535 and have "max_sectors" set to 2560. Not to mention that
-neither of them seems to be a "safe" value (see
-ATA_HORKAGE_MAX_SEC_1024).
+Probably this has been stayed under the radar because everybody
+migrated to libata. Anyway, IMHO it's worth to fix it, as the code isn't
+entirely dead.
 
-Besides, it is in doubt that whether having max_sectors (for a
-single drive, which is our case) set to a value higher than 1024
-would actually improve performance anyway.
+If I'm not wrong, this change applies to kernels from 2009 up to now.
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 0749f71..2a08458 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -2408,7 +2408,6 @@ int ata_dev_configure(struct ata_device *dev)
- 
- 	/* initialize to-be-configured parameters */
- 	dev->flags &= ~ATA_DFLAG_CFG_MASK;
--	dev->max_sectors = 0;
- 	dev->cdb_len = 0;
- 	dev->n_sectors = 0;
- 	dev->cylinders = 0;
-@@ -2610,10 +2609,8 @@ int ata_dev_configure(struct ata_device *dev)
- 				     dma_dir_string);
- 	}
- 
--	/* determine max_sectors */
--	dev->max_sectors = ATA_MAX_SECTORS;
--	if (dev->flags & ATA_DFLAG_LBA48)
--		dev->max_sectors = ATA_MAX_SECTORS_LBA48;
-+	if (!(dev->flags & ATA_DFLAG_LBA48))
-+		dev->max_sectors = ATA_MAX_SECTORS;
- 
- 	/* Limit PATA drive on SATA cable bridge transfers to udma5,
- 	   200 sectors */
+Signed-off-by: Luiz Carlos Ramos <lramos.prof@yahoo.com.br>
+---
+diff --git a/drivers/ide/ide-generic.c b/drivers/ide/ide-generic.c
+index 54d7c4685d23aa5e62ce606e7b994a57bb54b08a..419818a39c270d3ad219e8f7b5df56a9aea3d640 100644
+--- a/drivers/ide/ide-generic.c
++++ b/drivers/ide/ide-generic.c
+@@ -96,10 +96,10 @@ static int __init ide_generic_init(void)
+printk(KERN_INFO DRV_NAME ": please use \"probe_mask=0x3f\" "
+"module parameter for probing all legacy ISA IDE ports\n");
+
+-               if (primary == 0)
++               if (primary)
+probe_mask |= 0x1;
+
+-               if (secondary == 0)
++               if (secondary)
+probe_mask |= 0x2;
+} else
+printk(KERN_INFO DRV_NAME ": enforcing probing of I/O ports "
 -- 
-2.9.2
-
+2.8.2
