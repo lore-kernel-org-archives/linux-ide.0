@@ -1,59 +1,59 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: Regarding AHCI_MAX_SG and (ATA_HORKAGE_MAX_SEC_1024)
-Date: Tue, 9 Aug 2016 23:26:13 -0400
-Message-ID: <20160810032613.GA25053@mtj.duckdns.org>
-References: <CAGnHSEnsfmO8ydLZGBmEXgRCYTZfy+sR3knCWfBhCz6_vLZMEw@mail.gmail.com>
+Subject: Re: [PATCH resend 5/5] libata-scsi: fix MODE SELECT translation for
+ Control mode page
+Date: Tue, 9 Aug 2016 23:38:38 -0400
+Message-ID: <20160810033838.GB25053@mtj.duckdns.org>
+References: <af84a796696f2f366d330595d1a818e8daeb86d8.1469126217.git.tom.ty89@gmail.com>
+ <b2ae6752649bc02641d38fee75ee35a59e8466d8.1469126217.git.tom.ty89@gmail.com>
+ <fc2946598c92137f65636b0fd7e50dc71a089fa1.1469126217.git.tom.ty89@gmail.com>
+ <14bd98eb08ddf86be28f558817bed3cd27c397cd.1469126217.git.tom.ty89@gmail.com>
+ <2ed3f3aba21a4b815e9497e6aeba497280f9f333.1469126217.git.tom.ty89@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-yb0-f194.google.com ([209.85.213.194]:33187 "EHLO
+	mail-yb0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932550AbcHJDim (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Aug 2016 23:38:42 -0400
 Content-Disposition: inline
-In-Reply-To: <CAGnHSEnsfmO8ydLZGBmEXgRCYTZfy+sR3knCWfBhCz6_vLZMEw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tom Yan <tom.ty89@gmail.com>
-Cc: linux-ide@vger.kernel.org, dmilburn@redhat.com, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <2ed3f3aba21a4b815e9497e6aeba497280f9f333.1469126217.git.tom.ty89@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: tom.ty89@gmail.com
+Cc: hare@suse.de, sergei.shtylyov@cogentembedded.com, arnd@arndb.de, sfr@canb.auug.org.au, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-next@vger.kernel.org
 
-Hello, Tom.
-
-On Sun, Aug 07, 2016 at 10:10:17PM +0800, Tom Yan wrote:
-> So the (not so) recent bump of BLK_DEF_MAX_SECTORS from 1024 to 2560
-> (commit d2be537c3ba3) seemed to have caused trouble to some of the ATA
-> devices, which were then worked around with ATA_HORKAGE_MAX_SEC_1024.
+On Fri, Jul 22, 2016 at 02:41:54AM +0800, tom.ty89@gmail.com wrote:
+> From: Tom Yan <tom.ty89@gmail.com>
 > 
-> However, I am suspecting that the bump of BLK_DEF_MAX_SECTORS is not
-> the "real" cause of the trouble, but the fact that AHCI_MAX_SG has
-> been set to a weird value of 168 (with a comment "hardware max is
-> 64K", which neither seem to make any sense).
-
-Hmmm.. why not?  The hardware limit is 64k and the driver is using a
-lower limit of 168 most likely because it doesn't make noticeable
-difference beyond certain point and it determines the size of
-contiguous memory which has to be allocated for the command table.
-Each sg entry is 16 bytes.  Pushing it to the hardware limit would
-require an order 9 allocation for each port.
-
-> AHCI_MAX_SG is used to set the sg_tablesize (i.e. max_segments,
-> apparently), which is apparently used to derive the actual "request
-> size" (that is, if it is lower than max_sectors(_kb), it will be the
-> limiting factor instead).
->
-> For example, no matter if the drive has max_sectors set to 2560, or to
-> 65535 (by adding it as the Optimal Transfer Length to libata's SATL,
-> which is also max_hw_sectors that is set from ATA_MAX_SECTORS_LBA48),
-> "avgrq-sz" in `iostat` will be capped at 1344 (168 * 8).
-
-Not necessarily.  A single sg entry can point to an area larger than
-PAGE_SIZE.
-
-> However, if I change AHCI_MAX_SG to 128 (which is also the
-> sg_tablesize set in libata.h from LIBATA_MAX_PRD), "avgrq-sz" in
-> `iostat` will be capped at 1024 (128 * 8), which should make
-> ATA_HORKAGE_MAX_SEC_1024 unnecessary.
+> scsi_done() was called repeatedly and apparently because of that,
+> the kernel would call trace when we touch the Control mode page:
 > 
-> So why has AHCI_MAX_SG been set to 168 anyway?
+> Call Trace:
+>  [<ffffffff812ea0d2>] dump_stack+0x63/0x81
+>  [<ffffffff81079cfb>] __warn+0xcb/0xf0
+>  [<ffffffff81079e2d>] warn_slowpath_null+0x1d/0x20
+>  [<ffffffffa00f51b0>] ata_eh_finish+0xe0/0xf0 [libata]
+>  [<ffffffffa00fb830>] sata_pmp_error_handler+0x640/0xa50 [libata]
+>  [<ffffffffa00470ed>] ahci_error_handler+0x1d/0x70 [libahci]
+>  [<ffffffffa00f55f0>] ata_scsi_port_error_handler+0x430/0x770 [libata]
+>  [<ffffffffa00eff8d>] ? ata_scsi_cmd_error_handler+0xdd/0x160 [libata]
+>  [<ffffffffa00f59d7>] ata_scsi_error+0xa7/0xf0 [libata]
+>  [<ffffffffa00913ba>] scsi_error_handler+0xaa/0x560 [scsi_mod]
+>  [<ffffffffa0091310>] ? scsi_eh_get_sense+0x180/0x180 [scsi_mod]
+>  [<ffffffff81098eb8>] kthread+0xd8/0xf0
+>  [<ffffffff815d913f>] ret_from_fork+0x1f/0x40
+>  [<ffffffff81098de0>] ? kthread_worker_fn+0x170/0x170
+> ---[ end trace 8b7501047e928a17 ]---
+> 
+> Removed the unnecessary code and let ata_scsi_translate() do the job.
+> 
+> Also, since ata_mselect_control() has no ATA command to send to the
+> device, ata_scsi_mode_select_xlat() should return 1 for it, so that
+> ata_scsi_translate() will finish early to avoid ata_qc_issue().
+> 
+> Signed-off-by: Tom Yan <tom.ty89@gmail.com>
 
-As written above, that probably makes the ahci command table size
-nicely aligned.
+Applied to libata/for-4.9.
 
 Thanks.
 
