@@ -1,58 +1,59 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/1] Add CPU temperature sensor support for i.MX53
-Date: Tue, 9 Aug 2016 23:10:21 -0400
-Message-ID: <20160810031021.GZ25053@mtj.duckdns.org>
-References: <1470209756-32705-1-git-send-email-fabien.lahoudere@collabora.co.uk>
+Subject: Re: Regarding AHCI_MAX_SG and (ATA_HORKAGE_MAX_SEC_1024)
+Date: Tue, 9 Aug 2016 23:26:13 -0400
+Message-ID: <20160810032613.GA25053@mtj.duckdns.org>
+References: <CAGnHSEnsfmO8ydLZGBmEXgRCYTZfy+sR3knCWfBhCz6_vLZMEw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f195.google.com ([209.85.161.195]:35471 "EHLO
-	mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932697AbcHJDKY (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Aug 2016 23:10:24 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1470209756-32705-1-git-send-email-fabien.lahoudere@collabora.co.uk>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <CAGnHSEnsfmO8ydLZGBmEXgRCYTZfy+sR3knCWfBhCz6_vLZMEw@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tom Yan <tom.ty89@gmail.com>
+Cc: linux-ide@vger.kernel.org, dmilburn@redhat.com, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Fabien Lahoudere <fabien.lahoudere@collabora.co.uk>
-Cc: Csaba Kertesz <csaba.kertesz@vincit.fi>, "open list:LIBATA SUBSYSTEM (Serial and Parallel ATA drivers)" <linux-ide@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 
-Hello, Fabien.
+Hello, Tom.
 
-Is $SUBJ right?  CPU temperature?
-
-On Wed, Aug 03, 2016 at 09:35:56AM +0200, Fabien Lahoudere wrote:
-> From: Csaba Kertesz <csaba.kertesz@vincit.fi>
+On Sun, Aug 07, 2016 at 10:10:17PM +0800, Tom Yan wrote:
+> So the (not so) recent bump of BLK_DEF_MAX_SECTORS from 1024 to 2560
+> (commit d2be537c3ba3) seemed to have caused trouble to some of the ATA
+> devices, which were then worked around with ATA_HORKAGE_MAX_SEC_1024.
 > 
-> The original patch was made by Richard Zhu for kernel 2.6.x:
+> However, I am suspecting that the bump of BLK_DEF_MAX_SECTORS is not
+> the "real" cause of the trouble, but the fact that AHCI_MAX_SG has
+> been set to a weird value of 168 (with a comment "hardware max is
+> 64K", which neither seem to make any sense).
+
+Hmmm.. why not?  The hardware limit is 64k and the driver is using a
+lower limit of 168 most likely because it doesn't make noticeable
+difference beyond certain point and it determines the size of
+contiguous memory which has to be allocated for the command table.
+Each sg entry is 16 bytes.  Pushing it to the hardware limit would
+require an order 9 allocation for each port.
+
+> AHCI_MAX_SG is used to set the sg_tablesize (i.e. max_segments,
+> apparently), which is apparently used to derive the actual "request
+> size" (that is, if it is lower than max_sectors(_kb), it will be the
+> limiting factor instead).
+>
+> For example, no matter if the drive has max_sectors set to 2560, or to
+> 65535 (by adding it as the Optimal Transfer Length to libata's SATL,
+> which is also max_hw_sectors that is set from ATA_MAX_SECTORS_LBA48),
+> "avgrq-sz" in `iostat` will be capped at 1344 (168 * 8).
+
+Not necessarily.  A single sg entry can point to an area larger than
+PAGE_SIZE.
+
+> However, if I change AHCI_MAX_SG to 128 (which is also the
+> sg_tablesize set in libata.h from LIBATA_MAX_PRD), "avgrq-sz" in
+> `iostat` will be capped at 1024 (128 * 8), which should make
+> ATA_HORKAGE_MAX_SEC_1024 unnecessary.
 > 
-> ENGR00134041-MX53-Add-the-SATA-AHCI-temperature-monitor.patch
-> 
-> The old source code was migrated to the new kernel 3.x. The concept of
-> value reading was changed a bit:
-> 
-> 1. The new 3.x kernel functions (imx_phy_reg_read, imx_phy_reg_write) use
->    16 bit registers while the original implementation used 32 bit integers
->    for this purpose.
+> So why has AHCI_MAX_SG been set to 168 anyway?
 
-The description seems pretty dated.
-
-> 2. The communication is guarded against infinite loop to give up a certain
->    register reading after 100000 attempts. This number comes from the
->    original implementation. A new variable (read_attempt) is introduced to
->    count the trials.
-
-That's a very high number for a retry counter.
-
-> +/* SATA AHCI temperature monitor */
-> +static ssize_t sata_ahci_current_tmp(struct device *dev, struct device_attribute
-
-Abbreviating temperature to tmp probably isn't the best idea.
-
-Patch looks good to me except for the above nits; however, I wonder
-whether it being a one-off sysfs attribute is the right approach.
-Don't we have subsystems and interfaces for things like temperature
-readings?
+As written above, that probably makes the ahci command table size
+nicely aligned.
 
 Thanks.
 
