@@ -1,8 +1,7 @@
 From: <patrice.chotard@st.com>
-Subject: [PATCH 2/2] ARM: dts: STiH407-family: Add ports-implemented property
- in sata nodes
-Date: Wed, 10 Aug 2016 17:37:30 +0200
-Message-ID: <1470843450-20068-3-git-send-email-patrice.chotard@st.com>
+Subject: [PATCH 1/2] ahci: st: Add ports-implemented property in support
+Date: Wed, 10 Aug 2016 17:37:29 +0200
+Message-ID: <1470843450-20068-2-git-send-email-patrice.chotard@st.com>
 References: <1470843450-20068-1-git-send-email-patrice.chotard@st.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -25,35 +24,35 @@ List-Id: linux-ide@vger.kernel.org
 From: Patrice Chotard <patrice.chotard@st.com>
 
 Despite ST AHCI version = 1.3, reading HOST_PORTS_IMPL
-returns 0. So force HOST_PORTS_IMPL to 1 by using
-ports-implemented DT property.
+returns 0. So force_port_map to 1 by using ports-implemented
+DT property.
 
 Signed-off-by: Patrice Chotard <patrice.chotard@st.com>
 ---
- arch/arm/boot/dts/stih407-family.dtsi | 4 ++++
+ drivers/ata/ahci_st.c | 4 ++++
  1 file changed, 4 insertions(+)
 
-diff --git a/arch/arm/boot/dts/stih407-family.dtsi b/arch/arm/boot/dts/stih407-family.dtsi
-index d294e82..36d40f0 100644
---- a/arch/arm/boot/dts/stih407-family.dtsi
-+++ b/arch/arm/boot/dts/stih407-family.dtsi
-@@ -608,6 +608,8 @@
- 			clock-names = "ahci_clk";
- 			clocks = <&clk_s_c0_flexgen CLK_ICN_REG>;
+diff --git a/drivers/ata/ahci_st.c b/drivers/ata/ahci_st.c
+index 8ff428f..bc345f2 100644
+--- a/drivers/ata/ahci_st.c
++++ b/drivers/ata/ahci_st.c
+@@ -147,6 +147,7 @@ static struct scsi_host_template ahci_platform_sht = {
  
-+			ports-implemented = <0x1>;
+ static int st_ahci_probe(struct platform_device *pdev)
+ {
++	struct device *dev = &pdev->dev;
+ 	struct st_ahci_drv_data *drv_data;
+ 	struct ahci_host_priv *hpriv;
+ 	int err;
+@@ -170,6 +171,9 @@ static int st_ahci_probe(struct platform_device *pdev)
+ 
+ 	st_ahci_configure_oob(hpriv->mmio);
+ 
++	of_property_read_u32(dev->of_node,
++			     "ports-implemented", &hpriv->force_port_map);
 +
- 			status = "disabled";
- 		};
- 
-@@ -631,6 +633,8 @@
- 			clock-names = "ahci_clk";
- 			clocks = <&clk_s_c0_flexgen CLK_ICN_REG>;
- 
-+			ports-implemented = <0x1>;
-+
- 			status = "disabled";
- 		};
- 
+ 	err = ahci_platform_init_host(pdev, hpriv, &st_ahci_port_info,
+ 				      &ahci_platform_sht);
+ 	if (err) {
 -- 
 1.9.1
