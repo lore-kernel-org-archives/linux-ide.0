@@ -1,46 +1,59 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2 2/2] libata-core: do not set dev->max_sectors for
- LBA48 devices
-Date: Wed, 10 Aug 2016 00:10:42 -0400
-Message-ID: <20160810041042.GH25053@mtj.duckdns.org>
-References: <5eceeb9ad825beb87db03b0989f746dfbe0cf3fe.1470753817.git.tom.ty89@gmail.com>
- <10c4d38005e24bb477b5182d4fc17879139f14d9.1470753817.git.tom.ty89@gmail.com>
+From: <patrice.chotard@st.com>
+Subject: [PATCH 2/2] ARM: dts: STiH407-family: Add ports-implemented property
+ in sata nodes
+Date: Wed, 10 Aug 2016 17:37:30 +0200
+Message-ID: <1470843450-20068-3-git-send-email-patrice.chotard@st.com>
+References: <1470843450-20068-1-git-send-email-patrice.chotard@st.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <10c4d38005e24bb477b5182d4fc17879139f14d9.1470753817.git.tom.ty89@gmail.com>
-Sender: linux-block-owner@vger.kernel.org
-To: tom.ty89@gmail.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <1470843450-20068-1-git-send-email-patrice.chotard@st.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Tejun Heo <tj@kernel.org>, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: patrice.chotard@st.com, kernel@stlinux.com
 List-Id: linux-ide@vger.kernel.org
 
-Hello,
+From: Patrice Chotard <patrice.chotard@st.com>
 
-On Tue, Aug 09, 2016 at 10:45:47PM +0800, tom.ty89@gmail.com wrote:
-> From: Tom Yan <tom.ty89@gmail.com>
-> 
-> Currently block layer limit max_hw_sectors is set to
-> ATA_MAX_SECTORS_LBA48 (65535), for devices with LBA48 support.
-> 
-> However, block layer limit max_sectors (which is the effective
-> one; also adjustable, upper-bounded by max_hw_sectors) is set to
-> BLK_DEF_MAX_SECTORS (currently 2560) by the scsi disk driver,
-> since libata's SATL does not report an Optimal Transfer Length.
-> 
-> This does not make much sense, especially when the current
-> BLK_DEF_MAX_SECTORS appears to be unsafe for some ATA devices
-> (see ATA_HORKAGE_MAX_SEC_1024). Truth is, the current value
-> appears to be arbitrary anyway. See commit d2be537c3ba3
-> ("block: bump BLK_DEF_MAX_SECTORS to 2560").
-> 
-> Therefore, avoid setting dev->max_sectors when it is strictly
-> necessary. Leave it as 0 otherwise, so that both block layer
-> limits will remain as SCSI_DEFAULT_MAX_SECTORS (currently 1024).
+Despite ST AHCI version = 1.3, reading HOST_PORTS_IMPL
+returns 0. So force HOST_PORTS_IMPL to 1 by using
+ports-implemented DT property.
 
-These changes feel rather gratuitous.  What's the upside here?
+Signed-off-by: Patrice Chotard <patrice.chotard@st.com>
+---
+ arch/arm/boot/dts/stih407-family.dtsi | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-Thanks.
-
+diff --git a/arch/arm/boot/dts/stih407-family.dtsi b/arch/arm/boot/dts/stih407-family.dtsi
+index d294e82..36d40f0 100644
+--- a/arch/arm/boot/dts/stih407-family.dtsi
++++ b/arch/arm/boot/dts/stih407-family.dtsi
+@@ -608,6 +608,8 @@
+ 			clock-names = "ahci_clk";
+ 			clocks = <&clk_s_c0_flexgen CLK_ICN_REG>;
+ 
++			ports-implemented = <0x1>;
++
+ 			status = "disabled";
+ 		};
+ 
+@@ -631,6 +633,8 @@
+ 			clock-names = "ahci_clk";
+ 			clocks = <&clk_s_c0_flexgen CLK_ICN_REG>;
+ 
++			ports-implemented = <0x1>;
++
+ 			status = "disabled";
+ 		};
+ 
 -- 
-tejun
+1.9.1
