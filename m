@@ -1,124 +1,46 @@
-From: Luiz Carlos Ramos <lramos.prof@yahoo.com.br>
-Subject: Re: [PATCH] Fix interface autodetection in legacy IDE driver
-Date: Tue, 9 Aug 2016 20:51:07 -0300
-Message-ID: <20160809235107.GA11332@giustizia>
-References: <1370547790.13391287.1470739631878.JavaMail.yahoo.ref@mail.yahoo.com>
- <1370547790.13391287.1470739631878.JavaMail.yahoo@mail.yahoo.com>
- <041bab68-35ac-a319-e353-a48ce43eafb8@cogentembedded.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Shaun Tancheff <shaun@tancheff.com>
+Subject: [PATCH v5 0/2] Add support for SCT Write Same
+Date: Tue,  9 Aug 2016 20:00:27 -0500
+Message-ID: <1470790829-3793-1-git-send-email-shaun@tancheff.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nm23-vm1.bullet.mail.bf1.yahoo.com ([98.139.213.141]:59778 "EHLO
-	nm23-vm1.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750909AbcHIX4p (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Aug 2016 19:56:45 -0400
-Content-Disposition: inline
-In-Reply-To: <041bab68-35ac-a319-e353-a48ce43eafb8@cogentembedded.com>
+Received: from smtp78.mediacombb.net ([68.66.77.78]:58546 "EHLO
+	dsmdc-mail-smtp.mcomdc.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751119AbcHJBAy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Tue, 9 Aug 2016 21:00:54 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Cc: "davem@davemloft.net" <davem@davemloft.net>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Shaun Tancheff <shaun@tancheff.com>, Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>, Josh Bingaman <josh.bingaman@seagate.com>
 
-Sergei:
+At some point the method of issuing Write Same for ATA drives changed.
+Currently write same is commonly available via SCT so expose the SCT
+capabilities and use SCT Write Same when it is available.
 
-Many thanks for your patience and careful review! I apologize for
-those mistakes.
+This is useful for zoned based media that prefers to support discard
+with lbprz set, aka discard zeroes data by mapping discard operations to
+reset write pointer operations. Conventional zones that do not support
+reset write pointer can still honor the discard zeroes data by issuing
+a write same over the zone.
 
-Here I'll send a hopefully corrected version:
+It may also be nice to know if various controllers that currently
+disable WRITE SAME will work with the SCT Write Same code path:
+  aacraid, arcmsr, megaraid, 3w-9xxx, 3w-sas, 3w-xxxx, gdth, hpsa, ips,
+  megaraid, pmcraid, storvsc_drv
 
+This patch against v4.8-rc1 is also at 
 
+https://github.com/stancheff/linux/tree/v4.8-rc1+ws.v5
 
+git@github.com:stancheff/linux.git v4.8-rc1+ws.v5
 
+Shaun Tancheff (2):
+  Use kmap_atomic when rewriting attached page
+  Add support for SCT Write Same
 
-This patch fixes the automatic setting of ide_generic.probe_mask,
-when it is set to zero (like when default options are used) AND
-the PCI subsystem has detected primary and/or secondary interfaces.
+ drivers/ata/libata-scsi.c | 240 ++++++++++++++++++++++++++++++++++++++++------
+ include/linux/ata.h       |  69 ++++++++-----
+ 2 files changed, 252 insertions(+), 57 deletions(-)
 
-The effect is that those IDE interfaces go undetected under those
-conditions.
-
-The former implementation misunderstands the information detected by
-the PCI subsystem, and may only work if one use ide_generic.probe_mask
-set to 0x3f (or 0x03, minimally), like the suggestion echoed to the
-console.
-
-Signed-off-by: Luiz Carlos Ramos <lramos.prof@yahoo.com.br>
----
- drivers/ide/ide-generic.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ide/ide-generic.c b/drivers/ide/ide-generic.c
-index 54d7c4685d23aa5e62ce606e7b994a57bb54b08a..419818a39c270d3ad219e8f7b5df56a9aea3d640 100644
---- a/drivers/ide/ide-generic.c
-+++ b/drivers/ide/ide-generic.c
-@@ -96,10 +96,10 @@ static int __init ide_generic_init(void)
- 		printk(KERN_INFO DRV_NAME ": please use \"probe_mask=0x3f\" "
- 		     "module parameter for probing all legacy ISA IDE ports\n");
- 
--		if (primary == 0)
-+		if (primary)
- 			probe_mask |= 0x1;
- 
--		if (secondary == 0)
-+		if (secondary)
- 			probe_mask |= 0x2;
- 	} else
- 		printk(KERN_INFO DRV_NAME ": enforcing probing of I/O ports "
 -- 
-2.8.2
+2.8.1
 
-
-
-On Tue, Aug 09, 2016 at 04:50:15PM +0300, Sergei Shtylyov wrote:
-> Hello.
-> 
-> On 08/09/2016 01:47 PM, lramos.prof@yahoo.com.br wrote:
-> 
-> >This patch fixes the automatic setting of ide_generic.probe_mask,
-> >when it is set to zero (like when default options are used) AND
-> >the PCI subsystem has detected primary and/or secondary interfaces.
-> >
-> >The effect is that those interfaces go undetected under those
-> >conditions.
-> >
-> >The former implementation misunderstands the information detected by
-> >the PCI subsystem, and may only work if one use ide_generic.probe_mask
-> >set to 0x3f (or 0x03, minimally), like the suggestion echoed to the
-> >console.
-> >
-> >Probably this has been stayed under the radar because everybody
-> 
->    Has stayed, maybe?
-> 
-> >migrated to libata. Anyway, IMHO it's worth to fix it, as the code isn't
-> >entirely dead.
-> >
-> >If I'm not wrong, this change applies to kernels from 2009 up to now.
-> >
-> >Signed-off-by: Luiz Carlos Ramos <lramos.prof@yahoo.com.br>
-> >---
-> >diff --git a/drivers/ide/ide-generic.c b/drivers/ide/ide-generic.c
-> >index 54d7c4685d23aa5e62ce606e7b994a57bb54b08a..419818a39c270d3ad219e8f7b5df56a9aea3d640 100644
-> >--- a/drivers/ide/ide-generic.c
-> >+++ b/drivers/ide/ide-generic.c
-> >@@ -96,10 +96,10 @@ static int __init ide_generic_init(void)
-> >printk(KERN_INFO DRV_NAME ": please use \"probe_mask=0x3f\" "
-> >"module parameter for probing all legacy ISA IDE ports\n");
-> >
-> >-               if (primary == 0)
-> >+               if (primary)
-> >probe_mask |= 0x1;
-> 
->    Your patch is line wrapped...
-> 
-> >
-> >-               if (secondary == 0)
-> >+               if (secondary)
-> >probe_mask |= 0x2;
-> >} else
-> >printk(KERN_INFO DRV_NAME ": enforcing probing of I/O ports "
-> 
->    ... and whitespace damaged too. :-(
-> 
-> MBR, Sergei
-> 
