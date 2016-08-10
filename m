@@ -1,380 +1,84 @@
-From: Tom Yan <tom.ty89@gmail.com>
-Subject: Re: [PATCH v5 2/2] Add support for SCT Write Same
-Date: Wed, 10 Aug 2016 06:31:16 +0000
-Message-ID: <CAGnHSEkJtUH6BkLoNB7v1DkF8ffaUf3RX+m=QzMU0-OmG0ZwFw@mail.gmail.com>
-References: <1470790829-3793-1-git-send-email-shaun@tancheff.com> <1470790829-3793-3-git-send-email-shaun@tancheff.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2 2/2] libata-core: do not set dev->max_sectors for
+ LBA48 devices
+Date: Wed, 10 Aug 2016 11:22:41 -0400
+Message-ID: <20160810152241.GJ25053@mtj.duckdns.org>
+References: <5eceeb9ad825beb87db03b0989f746dfbe0cf3fe.1470753817.git.tom.ty89@gmail.com>
+ <10c4d38005e24bb477b5182d4fc17879139f14d9.1470753817.git.tom.ty89@gmail.com>
+ <20160810041042.GH25053@mtj.duckdns.org>
+ <CAGnHSE=z78AjDC13XKk_WnkQcjFHWGcatciwoJJYW-97a0qWjQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1470790829-3793-3-git-send-email-shaun@tancheff.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Shaun Tancheff <shaun@tancheff.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>, Josh Bingaman <josh.bingaman@seagate.com>, Shaun Tancheff <shaun.tancheff@seagate.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:34946 "EHLO
+	mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S938883AbcHJTAf (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Wed, 10 Aug 2016 15:00:35 -0400
+Content-Disposition: inline
+In-Reply-To: <CAGnHSE=z78AjDC13XKk_WnkQcjFHWGcatciwoJJYW-97a0qWjQ@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tom Yan <tom.ty89@gmail.com>
+Cc: jmoyer@redhat.com, axboe@fb.com, martin.petersen@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 
-I don't really know about SCT Write Same but there is one concern I
-could I think of.
+Hello, Tom.
 
-libata's SATL would report a maximum write same length base on the
-number of sectors a one-block TRIM payload can describe at most, which
-is 65535 * 64 = 4194240 (see ata_scsiop_inq_b0 in libata-scsi.c). If
-the drive does not support TRIM, it will not report such length. That
-is technically fine, as per SBC standard, and I suppose the SCSI disk
-driver would use SD_MAX_WS16_BLOCKS = 0x7fffff (8388607).
+On Wed, Aug 10, 2016 at 04:32:39PM +0800, Tom Yan wrote:
+> I have to admit that libata may not be the right place to deal with my
+> concern over the current BLK_DEF_MAX_SECTORS, which seems non-sensical
+> to me. In the original commit message:
+> 
+> (d2be537c3ba3, "block: bump BLK_DEF_MAX_SECTORS to 2560")
+> "A value of 2560 (1280k) will accommodate a 10-data-disk stripe write
+> with chunk size 128k...a value of 1280 does not show a big performance
+> difference from 512, but will hopefully help software RAID setups
+> using SATA disks, as reported by Christoph."
+> 
+> So I have no idea at all why the bump was allowed. What so special
 
-However, are both of the limits fine for SCT Write Same? Any alignment
-concern? Also, is such "inconsistency" acceptable?
+In general, people are okay with upping the limits as long as there
+are actual use cases which can benefit.  The devices are getting
+constantly faster and the hardware limits are going up along with it
+after all.
 
-On 10 August 2016 at 01:00, Shaun Tancheff <shaun@tancheff.com> wrote:
-> SATA drives may support write same via SCT. This is useful
-> for setting the drive contents to a specific pattern (0's).
+> about "10-data-disk stripe write with chunk size 128k", that we would
+> want to make a block layer general default base on that?
+
+It's not special.  It's just an actual use case which can benefit from
+the raised limit.
+
+> The macro appeared to be used by the aoeblk driver only. Yet since a
+> later commit (ca369d51b3e1, "block/sd: Fix device-imposed transfer
+> length limits"), the scsi disk driver will use it to set the effective
+> max_sectors(_kb) for devices that does not report Optimal Transfer
+> Length in the Block Limit VPD (which is the case of libata's SATL).
 >
-> Translate a SCSI WRITE SAME command to be either a DSM TRIM command or
-> an SCT Write Same command.
+> So the consequence is, ATA drives with max_hw_sectors(_kb) (i.e.
+> dev->max_sectors set in libata-core.c) set to higher than
+> BLK_DEF_MAX_SECTORS will end up having it as the effective
+> max_sectors. Not only the value is non-sensical, but also the logic.
+> (Btw, ATA_HORKAGE_MAX_SEC_LBA48 will sort of become ineffective
+> because of this.)
 >
-> Based on the UNMAP flag:
->   - When set translate to DSM TRIM
->   - When not set translate to SCT Write Same
->
-> Signed-off-by: Shaun Tancheff <shaun.tancheff@seagate.com>
-> ---
-> v5:
->  - Addressed review comments
->  - Report support for ZBC only for zoned devices.
->  - kmap page during rewrite
->  - Fix unmap set to require trim or error, if not unmap then sct write
->    same or error.
-> v4:
->  - Added partial MAINTENANCE_IN opcode simulation
->  - Dropped all changes in drivers/scsi/*
->  - Changed to honor the UNMAP flag -> TRIM, no UNMAP -> SCT.
-> v3:
->  - Demux UNMAP/TRIM from WRITE SAME
-> v2:
->  - Remove fugly ata hacking from sd.c
-> ---
->  drivers/ata/libata-scsi.c | 189 +++++++++++++++++++++++++++++++++++++++-------
->  include/linux/ata.h       |  43 +++++++++++
->  2 files changed, 205 insertions(+), 27 deletions(-)
->
-> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> index a71067a..99b0e6c 100644
-> --- a/drivers/ata/libata-scsi.c
-> +++ b/drivers/ata/libata-scsi.c
-> @@ -1159,8 +1159,6 @@ static void ata_scsi_sdev_config(struct scsi_device *sdev)
->  {
->         sdev->use_10_for_rw = 1;
->         sdev->use_10_for_ms = 1;
-> -       sdev->no_report_opcodes = 1;
-> -       sdev->no_write_same = 1;
->
->         /* Schedule policy is determined by ->qc_defer() callback and
->          * it needs to see every deferred qc.  Set dev_blocked to 1 to
-> @@ -3325,6 +3323,41 @@ static unsigned int ata_format_dsm_trim_descr(struct scatterlist *sg, u32 num,
->         return used_bytes;
->  }
->
-> +/**
-> + * ata_format_dsm_trim_descr() - SATL Write Same to ATA SCT Write Same
-> + * @sg: Scatter / Gather list attached to command.
-> + * @lba: Starting sector
-> + * @num: Number of bytes to be zero'd.
-> + *
-> + * Rewrite the WRITE SAME descriptor to be an SCT Write Same formatted
-> + * descriptor.
-> + * NOTE: Writes a pattern (0's) in the foreground.
-> + *       Large write-same requents can timeout.
-> + */
-> +static void ata_format_sct_write_same(struct scatterlist *sg, u64 lba, u64 num)
-> +{
-> +       void *ptr = kmap_atomic(sg_page(sg));
-> +       u16 *sctpg = ptr + sg->offset;
-> +
-> +       put_unaligned_le16(0x0002,  &sctpg[0]); /* SCT_ACT_WRITE_SAME */
-> +       put_unaligned_le16(0x0101,  &sctpg[1]); /* WRITE PTRN FG */
-> +       put_unaligned_le64(lba,     &sctpg[2]);
-> +       put_unaligned_le64(num,     &sctpg[6]);
-> +       put_unaligned_le32(0u,      &sctpg[10]);
-> +
-> +       kunmap_atomic(ptr);
-> +}
-> +
-> +/**
-> + * ata_scsi_write_same_xlat() - SATL Write Same to ATA SCT Write Same
-> + * @qc: Command to be translated
-> + *
-> + * Translate a SCSI WRITE SAME command to be either a DSM TRIM command or
-> + * an SCT Write Same command.
-> + * Based on WRITE SAME has the UNMAP flag
-> + *   When set translate to DSM TRIM
-> + *   When clear translate to SCT Write Same
-> + */
->  static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
->  {
->         struct ata_taskfile *tf = &qc->tf;
-> @@ -3338,6 +3371,7 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
->         u32 size;
->         u16 fp;
->         u8 bp = 0xff;
-> +       u8 unmap = cdb[1] & 0x8;
->
->         /* we may not issue DMA commands if no DMA mode is set */
->         if (unlikely(!dev->dma_mode))
-> @@ -3350,10 +3384,23 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
->         scsi_16_lba_len(cdb, &block, &n_block);
->
->         /* for now we only support WRITE SAME with the unmap bit set */
-> -       if (unlikely(!(cdb[1] & 0x8))) {
-> -               fp = 1;
-> -               bp = 3;
-> -               goto invalid_fld;
-> +       if (unmap) {
-> +               if ((dev->horkage & ATA_HORKAGE_NOTRIM) ||
-> +                   !ata_id_has_trim(dev->id)) {
-> +                       fp = 1;
-> +                       bp = 3;
-> +                       goto invalid_fld;
-> +               }
-> +               if (n_block > 0xffff * trmax) {
-> +                       fp = 2;
-> +                       goto invalid_fld;
-> +               }
-> +       } else {
-> +               if (!ata_id_sct_write_same(dev->id)) {
-> +                       fp = 1;
-> +                       bp = 3;
-> +                       goto invalid_fld;
-> +               }
->         }
->
->         /*
-> @@ -3364,30 +3411,42 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
->                 goto invalid_param_len;
->
->         sg = scsi_sglist(scmd);
-> -       if (n_block <= 0xffff * cmax) {
-> +       if (unmap) {
->                 size = ata_format_dsm_trim_descr(sg, trmax, block, n_block);
-> +               if (ata_ncq_enabled(dev) && ata_fpdma_dsm_supported(dev)) {
-> +                       /* Newer devices support queued TRIM commands */
-> +                       tf->protocol = ATA_PROT_NCQ;
-> +                       tf->command = ATA_CMD_FPDMA_SEND;
-> +                       tf->hob_nsect = ATA_SUBCMD_FPDMA_SEND_DSM & 0x1f;
-> +                       tf->nsect = qc->tag << 3;
-> +                       tf->hob_feature = (size / 512) >> 8;
-> +                       tf->feature = size / 512;
-> +
-> +                       tf->auxiliary = 1;
-> +               } else {
-> +                       tf->protocol = ATA_PROT_DMA;
-> +                       tf->hob_feature = 0;
-> +                       tf->feature = ATA_DSM_TRIM;
-> +                       tf->hob_nsect = (size / 512) >> 8;
-> +                       tf->nsect = size / 512;
-> +                       tf->command = ATA_CMD_DSM;
-> +               }
->         } else {
-> -               fp = 2;
-> -               goto invalid_fld;
-> -       }
-> -
-> -       if (ata_ncq_enabled(dev) && ata_fpdma_dsm_supported(dev)) {
-> -               /* Newer devices support queued TRIM commands */
-> -               tf->protocol = ATA_PROT_NCQ;
-> -               tf->command = ATA_CMD_FPDMA_SEND;
-> -               tf->hob_nsect = ATA_SUBCMD_FPDMA_SEND_DSM & 0x1f;
-> -               tf->nsect = qc->tag << 3;
-> -               tf->hob_feature = (size / 512) >> 8;
-> -               tf->feature = size / 512;
-> +               ata_format_sct_write_same(sg, block, n_block);
->
-> -               tf->auxiliary = 1;
-> -       } else {
-> -               tf->protocol = ATA_PROT_DMA;
->                 tf->hob_feature = 0;
-> -               tf->feature = ATA_DSM_TRIM;
-> -               tf->hob_nsect = (size / 512) >> 8;
-> -               tf->nsect = size / 512;
-> -               tf->command = ATA_CMD_DSM;
-> +               tf->feature = 0;
-> +               tf->hob_nsect = 0;
-> +               tf->nsect = 1;
-> +               tf->lbah = 0;
-> +               tf->lbam = 0;
-> +               tf->lbal = ATA_CMD_STANDBYNOW1;
-> +               tf->hob_lbah = 0;
-> +               tf->hob_lbam = 0;
-> +               tf->hob_lbal = 0;
-> +               tf->device = ATA_CMD_STANDBYNOW1;
-> +               tf->protocol = ATA_PROT_DMA;
-> +               tf->command = ATA_CMD_WRITE_LOG_DMA_EXT;
->         }
->
->         tf->flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE | ATA_TFLAG_LBA48 |
-> @@ -3411,6 +3470,76 @@ invalid_opcode:
->  }
->
->  /**
-> + *     ata_scsiop_maint_in - Simulate a subset of MAINTENANCE_IN
-> + *     @args: device MAINTENANCE_IN data / SCSI command of interest.
-> + *     @rbuf: Response buffer, to which simulated SCSI cmd output is sent.
-> + *
-> + *     Yields a subset to satisfy scsi_report_opcode()
-> + *
-> + *     LOCKING:
-> + *     spin_lock_irqsave(host lock)
-> + */
-> +static unsigned int ata_scsiop_maint_in(struct ata_scsi_args *args, u8 *rbuf)
-> +{
-> +       struct ata_device *dev = args->dev;
-> +       u8 *cdb = args->cmd->cmnd;
-> +       u8 supported = 0;
-> +       unsigned int err = 0;
-> +
-> +       if (cdb[2] != 1) {
-> +               ata_dev_warn(dev, "invalid command format %d\n", cdb[2]);
-> +               err = 2;
-> +               goto out;
-> +       }
-> +       switch (cdb[3]) {
-> +       case INQUIRY:
-> +       case MODE_SENSE:
-> +       case MODE_SENSE_10:
-> +       case READ_CAPACITY:
-> +       case SERVICE_ACTION_IN_16:
-> +       case REPORT_LUNS:
-> +       case REQUEST_SENSE:
-> +       case SYNCHRONIZE_CACHE:
-> +       case REZERO_UNIT:
-> +       case SEEK_6:
-> +       case SEEK_10:
-> +       case TEST_UNIT_READY:
-> +       case SEND_DIAGNOSTIC:
-> +       case MAINTENANCE_IN:
-> +       case READ_6:
-> +       case READ_10:
-> +       case READ_16:
-> +       case WRITE_6:
-> +       case WRITE_10:
-> +       case WRITE_16:
-> +       case ATA_12:
-> +       case ATA_16:
-> +       case VERIFY:
-> +       case VERIFY_16:
-> +       case MODE_SELECT:
-> +       case MODE_SELECT_10:
-> +       case START_STOP:
-> +               supported = 3;
-> +               break;
-> +       case WRITE_SAME_16:
-> +               if (ata_id_sct_write_same(dev->id))
-> +                       supported = 3;
-> +               break;
-> +       case ZBC_IN:
-> +       case ZBC_OUT:
-> +               if (ata_id_zoned_cap(dev->id) ||
-> +                   dev->class == ATA_DEV_ZAC)
-> +                       supported = 3;
-> +               break;
-> +       default:
-> +               break;
-> +       }
-> +out:
-> +       rbuf[1] = supported; /* supported */
-> +       return err;
-> +}
-> +
-> +/**
->   *     ata_scsi_report_zones_complete - convert ATA output
->   *     @qc: command structure returning the data
->   *
-> @@ -4190,6 +4319,13 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd)
->                         ata_scsi_invalid_field(dev, cmd, 1);
->                 break;
->
-> +       case MAINTENANCE_IN:
-> +               if (scsicmd[1] == MI_REPORT_SUPPORTED_OPERATION_CODES)
-> +                       ata_scsi_rbuf_fill(&args, ata_scsiop_maint_in);
-> +               else
-> +                       ata_scsi_invalid_field(dev, cmd, 1);
-> +               break;
-> +
->         /* all other commands */
->         default:
->                 ata_scsi_set_sense(dev, cmd, ILLEGAL_REQUEST, 0x20, 0x0);
-> @@ -4222,7 +4358,6 @@ int ata_scsi_add_hosts(struct ata_host *host, struct scsi_host_template *sht)
->                 shost->max_lun = 1;
->                 shost->max_channel = 1;
->                 shost->max_cmd_len = 16;
-> -               shost->no_write_same = 1;
->
->                 /* Schedule policy is determined by ->qc_defer()
->                  * callback and it needs to see every deferred qc.
-> diff --git a/include/linux/ata.h b/include/linux/ata.h
-> index 45a1d71..fdb1803 100644
-> --- a/include/linux/ata.h
-> +++ b/include/linux/ata.h
-> @@ -105,6 +105,7 @@ enum {
->         ATA_ID_CFA_KEY_MGMT     = 162,
->         ATA_ID_CFA_MODES        = 163,
->         ATA_ID_DATA_SET_MGMT    = 169,
-> +       ATA_ID_SCT_CMD_XPORT    = 206,
->         ATA_ID_ROT_SPEED        = 217,
->         ATA_ID_PIO4             = (1 << 1),
->
-> @@ -789,6 +790,48 @@ static inline bool ata_id_sense_reporting_enabled(const u16 *id)
->  }
->
->  /**
-> + *
-> + * Word: 206 - SCT Command Transport
-> + *    15:12 - Vendor Specific
-> + *     11:6 - Reserved
-> + *        5 - SCT Command Transport Data Tables supported
-> + *        4 - SCT Command Transport Features Control supported
-> + *        3 - SCT Command Transport Error Recovery Control supported
-> + *        2 - SCT Command Transport Write Same supported
-> + *        1 - SCT Command Transport Long Sector Access supported
-> + *        0 - SCT Command Transport supported
-> + */
-> +static inline bool ata_id_sct_data_tables(const u16 *id)
-> +{
-> +       return id[ATA_ID_SCT_CMD_XPORT] & (1 << 5) ? true : false;
-> +}
-> +
-> +static inline bool ata_id_sct_features_ctrl(const u16 *id)
-> +{
-> +       return id[ATA_ID_SCT_CMD_XPORT] & (1 << 4) ? true : false;
-> +}
-> +
-> +static inline bool ata_id_sct_error_recovery_ctrl(const u16 *id)
-> +{
-> +       return id[ATA_ID_SCT_CMD_XPORT] & (1 << 3) ? true : false;
-> +}
-> +
-> +static inline bool ata_id_sct_write_same(const u16 *id)
-> +{
-> +       return id[ATA_ID_SCT_CMD_XPORT] & (1 << 2) ? true : false;
-> +}
-> +
-> +static inline bool ata_id_sct_long_sector_access(const u16 *id)
-> +{
-> +       return id[ATA_ID_SCT_CMD_XPORT] & (1 << 1) ? true : false;
-> +}
-> +
-> +static inline bool ata_id_sct_supported(const u16 *id)
-> +{
-> +       return id[ATA_ID_SCT_CMD_XPORT] & (1 << 0) ? true : false;
-> +}
-> +
-> +/**
->   *     ata_id_major_version    -       get ATA level of drive
->   *     @id: Identify data
->   *
-> --
-> 2.8.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Now let's just come back to libata. I've thought of reporting
+> dev->max_sectors as Optimal Transfer Length in the SATL. However, I am
+> not sure if it is a safe thing to do, because we set it as high as
+> 65535 for devices with LBA48 devices. Does such a high max_sectors
+> ever make sense in libata's case?
+
+libata is just exposing whatever the underlying hardware supports.
+Whether that should be exposed as optimal transfer length is a
+different matter.
+
+> That's why I took the approach of the USB Attached SCSI driver. That
+> is, we only explicitly set max_hw_sectors in cases that is strictly
+> necessary (e.g. no LBA48 support, horkages). Otherwise we'll leave
+> request queue as-is.
+
+I see.  Alright, let's do that.  Can you please respin the patch with
+more detailed description?
+
+Thanks.
+
+-- 
+tejun
