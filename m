@@ -1,48 +1,53 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: Potential race condition in drivers/ata/sata_mv.ko
-Date: Thu, 11 Aug 2016 12:26:50 -0400
-Message-ID: <20160811162650.GB2695@mtj.duckdns.org>
-References: <8d7d8958-1a77-7c39-d008-fb6362e15d57@ispras.ru>
- <20160810035133.GD25053@mtj.duckdns.org>
- <904de563-24df-768a-9642-5aab5ed18f5e@ispras.ru>
+Subject: Re: [PATCH 1/2] ahci: disable correct irq for dymmy ports
+Date: Thu, 11 Aug 2016 12:36:37 -0400
+Message-ID: <20160811163637.GD2695@mtj.duckdns.org>
+References: <1470925562-28914-1-git-send-email-hch@lst.de>
+ <1470925562-28914-2-git-send-email-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-yw0-f194.google.com ([209.85.161.194]:33045 "EHLO
+	mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932586AbcHKQgk (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Aug 2016 12:36:40 -0400
+Received: by mail-yw0-f194.google.com with SMTP id z8so41836ywa.0
+        for <linux-ide@vger.kernel.org>; Thu, 11 Aug 2016 09:36:39 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <904de563-24df-768a-9642-5aab5ed18f5e@ispras.ru>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Pavel Andrianov <andrianov@ispras.ru>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org, Vaishali Thakkar <vaishali.thakkar@oracle.com>
+In-Reply-To: <1470925562-28914-2-git-send-email-hch@lst.de>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-ide@vger.kernel.org
 
-On Thu, Aug 11, 2016 at 05:18:31PM +0300, Pavel Andrianov wrote:
-> Hi!
-> 
-> I have found such example:
-> 
-> ... ->
-> 
-> ata_exec_internal_sg ->
-> 
->     ata_qc_issue ->
-> 
->         mv_qc_issue ->
-> 
->             mv_clear_and_enable_port_irqs ->
-> 
->                 mv_enable_port_irqs ->
-> 
->                     mv_set_main_irq_mask
-> 
-> 
-> ata_exec_internal_sg acquires spin_lock(ap->lock) and call of the last
-> function mv_set_main_irq_mask is with this lock. mv_interrupt acquires
-> spin_lock(host->lock) before call of the same function. I am not sure is it
-> correct to add one more spin_lock or move a call of request_irq in
-> ata_host_activate, thus I can not easily fix the issue.
+Hello, Christoph.
 
-ap->lock and host->lock point to the the same lock.  The only reason
-ap->lock is a pointer is for SAS.
+On Thu, Aug 11, 2016 at 07:26:01AM -0700, Christoph Hellwig wrote:
+> irq already contains the interrupt number for the port, don't add the port
+> index to it.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/ata/libahci.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+> index 7461a58..dcf2c72 100644
+> --- a/drivers/ata/libahci.c
+> +++ b/drivers/ata/libahci.c
+> @@ -2524,7 +2524,7 @@ static int ahci_host_activate_multi_irqs(struct ata_host *host,
+>  
+>  		/* Do not receive interrupts sent by dummy ports */
+>  		if (!pp) {
+> -			disable_irq(irq + i);
+> +			disable_irq(irq);
+>  			continue;
+>  		}
+
+I'm not following.  The driver at that point has irqs in the range
+[@irq, @irq + @host->n_ports - 1] and is trying to activate them and
+the above code block disables irq for a port which should be skipped.
+Why wouldn't it need to be indexed?
 
 Thanks.
 
