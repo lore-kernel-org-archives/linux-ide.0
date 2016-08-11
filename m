@@ -1,90 +1,49 @@
-From: tom.ty89@gmail.com
-Subject: [RFC] libata-scsi: make sure Maximum Write Same Length is not too large
-Date: Thu, 11 Aug 2016 16:26:39 +0800
-Message-ID: <833713246c1a70d85150289c1537797d6f7dd606.1470903899.git.tom.ty89@gmail.com>
-Return-path: <linux-block-owner@vger.kernel.org>
-Sender: linux-block-owner@vger.kernel.org
-To: tj@kernel.org, shaun.tancheff@seagate.com, shaun@tancheff.com, martin.petersen@oracle.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
+From: Tom Yan <tom.ty89@gmail.com>
+Subject: Re: [PATCH v5 2/2] Add support for SCT Write Same
+Date: Thu, 11 Aug 2016 16:46:31 +0800
+Message-ID: <CAGnHSE=u1fPLVt4h_VxnCqHTx_YgyQhPGoiXgkoVd1jhrAogiw@mail.gmail.com>
+References: <1470790829-3793-1-git-send-email-shaun@tancheff.com>
+ <1470790829-3793-3-git-send-email-shaun@tancheff.com> <CAGnHSEkJtUH6BkLoNB7v1DkF8ffaUf3RX+m=QzMU0-OmG0ZwFw@mail.gmail.com>
+ <CAGnHSEkQXN5+6_OLQZEREWp1+W8kn8=ew=oH52oSsV7CaZwOBQ@mail.gmail.com>
+ <CAJVOszAQZ_ukCkdBkkn5_iEPUCQKLBF=o-o0v+U=cWiOgQNSRg@mail.gmail.com>
+ <CAGnHSE=EnhLwzfuu4wY=WbsA4PJ5tNfwBqErjLL10ea8d3EiGg@mail.gmail.com> <yq1lh04rs8z.fsf@sermon.lab.mkp.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq1lh04rs8z.fsf@sermon.lab.mkp.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Shaun Tancheff <shaun.tancheff@seagate.com>, Shaun Tancheff <shaun@tancheff.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>, Josh Bingaman <josh.bingaman@seagate.com>
 List-Id: linux-ide@vger.kernel.org
 
-From: Tom Yan <tom.ty89@gmail.com>
+On 11 August 2016 at 09:47, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>
+> Tom> so we can at most allow only a 2-block (well, or 3-block) payload.
+>
+> We tried turning on multi block payloads and it was a massive disaster.
+> Many drives reported that they supported 8 block payloads but actually
+> didn't. Instead of playing the blacklist game we capped it at a single
+> sector.
 
-Currently we advertise Maximum Write Same Length based on the
-maximum number of sectors that one-block TRIM payload can cover.
-The field are used to derived discard_max_bytes and
-write_same_max_bytes limits in the block layer, which currently can
-at max be 0xffffffff (32-bit).
+I don't know, apparently Windows does multi block payloads though (at
+least that's how it advertise on the simulated VPD).
 
-However, with a AF 4Kn drive, the derived limits would be 65535 *
-64 * 4096 = 0x3fffc0000 (34-bit). Therefore, we now devide
-ATA_MAX_TRIM_RNUM with (logical sector size / 512), so that the
-derived limits will not overflow.
+What I meant was it will not make a big difference in our case anyway.
+Given the 32-bit representation limitation, we could be at best using
+a full 2-block payload. So let's not do 2 but 1? Fine :P
 
-The limits are now also consistent among drives with different
-logical sector sizes. (Although that may or may not be what we
-want ultimately when the SCSI / block layer allows larger
-representation in the future.)
+>
+> Many drives from different vendors were affected by this. So we'd have
+> to make multi block payloads an explicit opt-in like we did for
+> discard_zeroes_data. However, given that "big" discards are mainly done
+> synchronously when creating filesystems, I am not sure there is any real
+> benefit to this.
+>
 
-Although 4Kn ATA SSDs may not be a thing on the market yet, this
-patch is necessary for forthcoming SCT Write Same translation
-support, which could be available on traditional HDDs where 4Kn is
-already a thing. Also it should not change the current behavior on
-drives with 512-byte logical sectors.
+Probably. Perhaps it could make a difference upon deletion of some
+really big files (though the logical sectors used may not be
+continuous anyway).
 
-Note: this patch is not about AF 512e drives.
-Signed-off-by: Tom Yan <tom.ty89@gmail.com>
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index be9c76c..dcadcaf 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -2295,6 +2295,7 @@ static unsigned int ata_scsiop_inq_89(struct ata_scsi_args *args, u8 *rbuf)
- static unsigned int ata_scsiop_inq_b0(struct ata_scsi_args *args, u8 *rbuf)
- {
- 	u16 min_io_sectors;
-+	u32 sector_size;
- 
- 	rbuf[1] = 0xb0;
- 	rbuf[3] = 0x3c;		/* required VPD size with unmap support */
-@@ -2309,17 +2310,27 @@ static unsigned int ata_scsiop_inq_b0(struct ata_scsi_args *args, u8 *rbuf)
- 	min_io_sectors = 1 << ata_id_log2_per_physical_sector(args->id);
- 	put_unaligned_be16(min_io_sectors, &rbuf[6]);
- 
--	/*
--	 * Optimal unmap granularity.
--	 *
--	 * The ATA spec doesn't even know about a granularity or alignment
--	 * for the TRIM command.  We can leave away most of the unmap related
--	 * VPD page entries, but we have specifify a granularity to signal
--	 * that we support some form of unmap - in thise case via WRITE SAME
--	 * with the unmap bit set.
--	 */
-+	sector_size = ata_id_logical_sector_size(args->id);
- 	if (ata_id_has_trim(args->id)) {
--		put_unaligned_be64(65535 * ATA_MAX_TRIM_RNUM, &rbuf[36]);
-+		/*
-+		 * Maximum write same length.
-+		 *
-+		 * Avoid overflow in discard_max_bytes and write_same_max_bytes
-+		 * with AF 4Kn drives. Also make them consistent among drives
-+		 * with different logical sector sizes.
-+		 */
-+		put_unaligned_be64(65535 * ATA_MAX_TRIM_RNUM /
-+				   (sector_size / 512), &rbuf[36]);
-+
-+		/*
-+		 * Optimal unmap granularity.
-+		 *
-+		 * The ATA spec doesn't even know about a granularity or alignment
-+		 * for the TRIM command.  We can leave away most of the unmap related
-+		 * VPD page entries, but we have specifify a granularity to signal
-+		 * that we support some form of unmap - in thise case via WRITE SAME
-+		 * with the unmap bit set.
-+		 */
- 		put_unaligned_be32(1, &rbuf[28]);
- 	}
- 
--- 
-2.9.2
-
+> --
+> Martin K. Petersen      Oracle Linux Engineering
