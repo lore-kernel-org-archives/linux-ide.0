@@ -1,37 +1,50 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 2/2] ahci: also use a per-port lock for the multi-MSIX case
-Date: Thu, 11 Aug 2016 07:26:02 -0700
-Message-ID: <1470925562-28914-3-git-send-email-hch@lst.de>
-References: <1470925562-28914-1-git-send-email-hch@lst.de>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:58304 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752212AbcHKO0H (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Aug 2016 10:26:07 -0400
-In-Reply-To: <1470925562-28914-1-git-send-email-hch@lst.de>
-Sender: linux-ide-owner@vger.kernel.org
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Potential race condition in drivers/ata/sata_mv.ko
+Date: Thu, 11 Aug 2016 12:26:50 -0400
+Message-ID: <20160811162650.GB2695@mtj.duckdns.org>
+References: <8d7d8958-1a77-7c39-d008-fb6362e15d57@ispras.ru>
+ <20160810035133.GD25053@mtj.duckdns.org>
+ <904de563-24df-768a-9642-5aab5ed18f5e@ispras.ru>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <904de563-24df-768a-9642-5aab5ed18f5e@ispras.ru>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Pavel Andrianov <andrianov@ispras.ru>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org, Vaishali Thakkar <vaishali.thakkar@oracle.com>
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org
-Cc: linux-ide@vger.kernel.org
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/ata/libahci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Thu, Aug 11, 2016 at 05:18:31PM +0300, Pavel Andrianov wrote:
+> Hi!
+> 
+> I have found such example:
+> 
+> ... ->
+> 
+> ata_exec_internal_sg ->
+> 
+>     ata_qc_issue ->
+> 
+>         mv_qc_issue ->
+> 
+>             mv_clear_and_enable_port_irqs ->
+> 
+>                 mv_enable_port_irqs ->
+> 
+>                     mv_set_main_irq_mask
+> 
+> 
+> ata_exec_internal_sg acquires spin_lock(ap->lock) and call of the last
+> function mv_set_main_irq_mask is with this lock. mv_interrupt acquires
+> spin_lock(host->lock) before call of the same function. I am not sure is it
+> correct to add one more spin_lock or move a call of request_irq in
+> ata_host_activate, thus I can not easily fix the issue.
 
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index dcf2c72..5a1329e 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -2378,7 +2378,7 @@ static int ahci_port_start(struct ata_port *ap)
- 	/*
- 	 * Switch to per-port locking in case each port has its own MSI vector.
- 	 */
--	if (hpriv->flags & AHCI_HFLAG_MULTI_MSI) {
-+	if (hpriv->flags & (AHCI_HFLAG_MULTI_MSI | AHCI_HFLAG_MULTI_MSIX)) {
- 		spin_lock_init(&pp->lock);
- 		ap->lock = &pp->lock;
- 	}
+ap->lock and host->lock point to the the same lock.  The only reason
+ap->lock is a pointer is for SAS.
+
+Thanks.
+
 -- 
-2.1.4
-
+tejun
