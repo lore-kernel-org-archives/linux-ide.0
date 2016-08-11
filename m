@@ -1,90 +1,66 @@
-From: Tom Yan <tom.ty89@gmail.com>
-Subject: Re: [PATCH v2 2/2] libata-core: do not set dev->max_sectors for LBA48 devices
-Date: Thu, 11 Aug 2016 17:30:59 +0800
-Message-ID: <CAGnHSEn3pXR33Ju+mr0DYdE0G7kNhxNCbvocX1pZXvYfxx5+3A@mail.gmail.com>
-References: <5eceeb9ad825beb87db03b0989f746dfbe0cf3fe.1470753817.git.tom.ty89@gmail.com>
- <10c4d38005e24bb477b5182d4fc17879139f14d9.1470753817.git.tom.ty89@gmail.com>
- <20160810041042.GH25053@mtj.duckdns.org> <CAGnHSE=z78AjDC13XKk_WnkQcjFHWGcatciwoJJYW-97a0qWjQ@mail.gmail.com>
- <yq1twesq8lm.fsf@sermon.lab.mkp.net>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH 1/2] ahci: st: Add ports-implemented property in support
+Date: Thu, 11 Aug 2016 14:04:17 +0300
+Message-ID: <72e008b8-25dd-ae87-fd8c-b9e60b6fb1a8@cogentembedded.com>
+References: <1470843450-20068-1-git-send-email-patrice.chotard@st.com>
+ <1470843450-20068-2-git-send-email-patrice.chotard@st.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <yq1twesq8lm.fsf@sermon.lab.mkp.net>
-Sender: linux-block-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Tejun Heo <tj@kernel.org>, jmoyer@redhat.com, axboe@fb.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:34286 "EHLO
+	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750888AbcHKLEU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Aug 2016 07:04:20 -0400
+Received: by mail-wm0-f46.google.com with SMTP id q128so3600974wma.1
+        for <linux-ide@vger.kernel.org>; Thu, 11 Aug 2016 04:04:20 -0700 (PDT)
+In-Reply-To: <1470843450-20068-2-git-send-email-patrice.chotard@st.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: patrice.chotard@st.com, Tejun Heo <tj@kernel.org>, linux-arm-kernel@lists.infradead.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: kernel@stlinux.com
 
-On 11 August 2016 at 11:37, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->>>>>> "Tom" == Tom Yan <tom.ty89@gmail.com> writes:
+On 8/10/2016 6:37 PM, patrice.chotard@st.com wrote:
+
+> From: Patrice Chotard <patrice.chotard@st.com>
 >
-> I don't agree with conflating the optimal transfer size and the maximum
-> supported ditto. Submitting the largest possible I/O to a device does
-> not guarantee that you get the best overall performance.
+> Despite ST AHCI version = 1.3, reading HOST_PORTS_IMPL
+> returns 0. So force_port_map to 1 by using ports-implemented
+> DT property.
 >
->  - max_hw_sectors is gated by controller DMA constraints.
+> Signed-off-by: Patrice Chotard <patrice.chotard@st.com>
+> ---
+>  drivers/ata/ahci_st.c | 4 ++++
+>  1 file changed, 4 insertions(+)
 >
->  - max_dev_sectors is set for devices that explicitly report a transfer
->    length limit.
+> diff --git a/drivers/ata/ahci_st.c b/drivers/ata/ahci_st.c
+> index 8ff428f..bc345f2 100644
+> --- a/drivers/ata/ahci_st.c
+> +++ b/drivers/ata/ahci_st.c
+> @@ -147,6 +147,7 @@ static struct scsi_host_template ahci_platform_sht = {
 >
->  - max_sectors, the soft limit for filesystem read/write requests,
->    should be left at BLK_DEF_MAX_SECTORS unless the device explicitly
->    requests transfers to be aligned multiples of a different value
->    (typically the internal stripe size in large arrays).
+>  static int st_ahci_probe(struct platform_device *pdev)
+>  {
+> +	struct device *dev = &pdev->dev;
 
-Shouldn't we use Maximum Transfer Length to derive max_sectors (and
-get rid of the almost useless max_dev_sectors)? Honestly it looks
-pretty non-sensical to me that the SCSI disk driver uses Optimal
-Transfer Length for max_sectors. Also in libata's case, this make
-setting the effective max_sectors (e.g. see ATA_HORKAGE_MAX_SEC_LBA48)
-impossible if we do not want to touch io_opt.
+    Why? You could just use 'pdev'.
 
-It would look to me that our block layer simply have a flawed design
-if we really need to derive both io_opt and max_sectors from the same
-field.
-
+>  	struct st_ahci_drv_data *drv_data;
+>  	struct ahci_host_priv *hpriv;
+>  	int err;
+> @@ -170,6 +171,9 @@ static int st_ahci_probe(struct platform_device *pdev)
 >
-> The point of BLK_DEF_MAX_SECTORS is to offer a reasonable default for
-> common workloads unless otherwise instructed by the storage device.
+>  	st_ahci_configure_oob(hpriv->mmio);
 >
-> We can have a discussion about what the right value for
-> BLK_DEF_MAX_SECTORS should be. It has gone up over time but it used to
-> be the case that permitting large transfers significantly impacted
-> interactive I/O performance. And finding a sweet spot that works for a
-> wide variety of hardware, interconnects and workloads is obviously
-> non-trivial.
->
+> +	of_property_read_u32(dev->of_node,
 
-If BLK_DEF_MAX_SECTORS is supposed to be used as a fallback, then it
-should be a safe value, especially when max_sectors_kb can be adjusted
-through sysfs.
+    pdev->dev.of_node
 
-But the biggest problem isn't on bumping it, but the value picked is
-totally irrational for a general default. I mean, given that it was
-1024 (512k), try to double it? Fine. Try to quadruple it? Alright.
-We'll need to deal with some alignment / boundary issue (like the
-typical 65535 vs 65536 case)? Okay let's do it. But what's the sense
-in picking a random RAID configuartion as the base to decide the
-default? Also, if max_sectors need to concern about the number of
-disks used and chunk sizes in a RAID configuartion, it should be
-calculated in the device-mapper layer or a specific driver or so.
-Changing a block layer default won't help anyway. Say 2560 will
-accomodate a 10-disk 128k-chunk RAID. What about a 12-disk 128k-chunk
-RAID then? Why not just decide the value base on an 8-disk 128k-chunk
-RAID, which HAPPENED to be a double of 1024 as well?
+> +			     "ports-implemented", &hpriv->force_port_map);
+> +
+>  	err = ahci_platform_init_host(pdev, hpriv, &st_ahci_port_info,
+>  				      &ahci_platform_sht);
+>  	if (err) {
 
-It does not make sense that the SCSI disk driver uses it as the
-fallback either. SCSI host templates that does not have max_sectors
-set (as well as some specific driver) will use
-SCSI_DEFAULT_MAX_SECTORS as the fallback, for such hosts
-max_hw_sectors will be 1024, where the current BLK_DEF_MAX_SECTORS
-cannot apply as max_sectors anyway. So we should use also
-SCSI_DEFAULT_MAX_SECTORS in the SCSI disk driver as fallback for
-max_sectors. If the value is considered to low even as a safe
-fallback, then it should be bumped appropriately. (Or we might want to
-replace it with BLK_DEF_MAX_SECTORS everywhere in the SCSI layer, that
-said, after the value is fixed.)
+MBR, Sergei
 
-> --
-> Martin K. Petersen      Oracle Linux Engineering
