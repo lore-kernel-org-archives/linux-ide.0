@@ -1,54 +1,55 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2 2/2] libata-core: do not set dev->max_sectors for LBA48 devices
-Date: Wed, 10 Aug 2016 23:37:25 -0400
-Message-ID: <yq1twesq8lm.fsf@sermon.lab.mkp.net>
-References: <5eceeb9ad825beb87db03b0989f746dfbe0cf3fe.1470753817.git.tom.ty89@gmail.com>
-	<10c4d38005e24bb477b5182d4fc17879139f14d9.1470753817.git.tom.ty89@gmail.com>
-	<20160810041042.GH25053@mtj.duckdns.org>
-	<CAGnHSE=z78AjDC13XKk_WnkQcjFHWGcatciwoJJYW-97a0qWjQ@mail.gmail.com>
+From: Tom Yan <tom.ty89@gmail.com>
+Subject: Re: [PATCH v5 2/2] Add support for SCT Write Same
+Date: Thu, 11 Aug 2016 16:04:06 +0800
+Message-ID: <CAGnHSEn9EXvyBMqmS5sPYLcBwKnATcd97oW0PFmYRvUA+CGzxw@mail.gmail.com>
+References: <1470790829-3793-1-git-send-email-shaun@tancheff.com>
+ <1470790829-3793-3-git-send-email-shaun@tancheff.com> <CAGnHSEkJtUH6BkLoNB7v1DkF8ffaUf3RX+m=QzMU0-OmG0ZwFw@mail.gmail.com>
+ <CAGnHSEkQXN5+6_OLQZEREWp1+W8kn8=ew=oH52oSsV7CaZwOBQ@mail.gmail.com>
+ <CAJVOszAQZ_ukCkdBkkn5_iEPUCQKLBF=o-o0v+U=cWiOgQNSRg@mail.gmail.com>
+ <CAGnHSE=EnhLwzfuu4wY=WbsA4PJ5tNfwBqErjLL10ea8d3EiGg@mail.gmail.com> <CAJVOszCWtwgDY=H4YC4-z4Wau6Wgx6PfPQ_rhPGs7trSHfEtEQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <CAGnHSE=z78AjDC13XKk_WnkQcjFHWGcatciwoJJYW-97a0qWjQ@mail.gmail.com>
-	(Tom Yan's message of "Wed, 10 Aug 2016 16:32:39 +0800")
-Sender: linux-block-owner@vger.kernel.org
-To: Tom Yan <tom.ty89@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, jmoyer@redhat.com, axboe@fb.com, martin.petersen@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:35200 "EHLO
+	mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932369AbcHKIEI (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Thu, 11 Aug 2016 04:04:08 -0400
+In-Reply-To: <CAJVOszCWtwgDY=H4YC4-z4Wau6Wgx6PfPQ_rhPGs7trSHfEtEQ@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Shaun Tancheff <shaun.tancheff@seagate.com>, martin.petersen@oracle.com
+Cc: Shaun Tancheff <shaun@tancheff.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>, Josh Bingaman <josh.bingaman@seagate.com>
 
->>>>> "Tom" == Tom Yan <tom.ty89@gmail.com> writes:
+On 11 August 2016 at 02:29, Shaun Tancheff <shaun.tancheff@seagate.com> wrote:
+>>
+>> You are talking about an AF 4Kn drive I suppose? For a 512e drive it
+>> should be only ~2G.
+>
+> I stand corrected. Since all the kernel math is 512 byte sectors you are
+> absolutely correct and this isn't an issue at all.
+>
+> We should report SD_MAX_WS16_BLOCKS when only SCT
+> is available and 4194240 when TRIM is available.
 
-Tom,
+Why would you come up with such decision/conclusion? I thought
+SD_MAX_WS16_BLOCKS could even be too big for 512e drive (~4G per WRITE
+SAME command)?
 
-Tom> Now let's just come back to libata. I've thought of reporting dev->
-Tom> max_sectors as Optimal Transfer Length in the SATL. However, I am
-Tom> not sure if it is a safe thing to do, because we set it as high as
-Tom> 65535 for devices with LBA48 devices. Does such a high max_sectors
-Tom> ever make sense in libata's case?
+If 4194240 (~2G per command) isn't too big for SCT Write Same, then we
+shoud probably stick with it in both cases (when only SCT Write Same
+is available / when TRIM is also available) to maintain consistency.
 
-I don't agree with conflating the optimal transfer size and the maximum
-supported ditto. Submitting the largest possible I/O to a device does
-not guarantee that you get the best overall performance.
+Also Maximum Write Same Length should be multiplied by the actual
+logical sector size of the drive, which would be 4096 in the case of
+4Kn drives. (If the kernel isn't doing that, it's simply a bug.)
 
- - max_hw_sectors is gated by controller DMA constraints.
+Therefore, if I haven't missed anything, we'll need to divide
+ATA_MAX_TRIM_RNUM by (logical sector size / 512) anyway, otherwise
+discard_max_bytes and write_same_max_bytes would overflow with 4Kn
+drive (i.e. Maximum Write Same Length needs to be <= 0xffffffff /
+4096). 4Kn SSDs may not be a thing on the market yet, but apparently
+it's a different story for traditional HDDs, and SCT Write Same isn't
+only available on SSDs. The division should not change the current
+behaviour on drives with 512-byte logical sectors.
 
- - max_dev_sectors is set for devices that explicitly report a transfer
-   length limit.
-
- - max_sectors, the soft limit for filesystem read/write requests,
-   should be left at BLK_DEF_MAX_SECTORS unless the device explicitly
-   requests transfers to be aligned multiples of a different value
-   (typically the internal stripe size in large arrays).
-
-The point of BLK_DEF_MAX_SECTORS is to offer a reasonable default for
-common workloads unless otherwise instructed by the storage device.
-
-We can have a discussion about what the right value for
-BLK_DEF_MAX_SECTORS should be. It has gone up over time but it used to
-be the case that permitting large transfers significantly impacted
-interactive I/O performance. And finding a sweet spot that works for a
-wide variety of hardware, interconnects and workloads is obviously
-non-trivial.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+I'll be sending a patch on that.
