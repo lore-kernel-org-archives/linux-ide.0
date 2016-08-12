@@ -1,282 +1,93 @@
-From: Fabien Lahoudere <fabien.lahoudere@collabora.co.uk>
-Subject: [PATCH 1/1] Add imx53 SATA temperature sensor support
-Date: Fri, 12 Aug 2016 15:18:10 +0200
-Message-ID: <1471007890-14618-1-git-send-email-fabien.lahoudere@collabora.co.uk>
-References: <20160810031021.GZ25053@mtj.duckdns.org>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bhuna.collabora.co.uk ([46.235.227.227]:46190 "EHLO
-	bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752233AbcHLNSy (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Aug 2016 09:18:54 -0400
-In-Reply-To: <20160810031021.GZ25053@mtj.duckdns.org>
-Sender: linux-ide-owner@vger.kernel.org
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH 1/2] libata-scsi: use dev->max_sectors from libata-core
+ appropriately
+Date: Fri, 12 Aug 2016 16:42:18 +0300
+Message-ID: <f7fcf6b0-8d12-c2ae-2c51-a9071fd89f7c@cogentembedded.com>
+References: <911c68378b91bf275a4bbed5717b4639641d7029.1471002480.git.tom.ty89@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <911c68378b91bf275a4bbed5717b4639641d7029.1471002480.git.tom.ty89@gmail.com>
+Sender: linux-block-owner@vger.kernel.org
+To: tom.ty89@gmail.com, tj@kernel.org, martin.petersen@oracle.com
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-Cc: Csaba Kertesz <csaba.kertesz@vincit.fi>, Fabien Lahoudere <fabien.lahoudere@collabora.co.uk>, Tejun Heo <tj@kernel.org>, "open list:LIBATA SUBSYSTEM Serial and
-	Parallel ATA drivers" <linux-ide@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 
-From: Csaba Kertesz <csaba.kertesz@vincit.fi>
+On 08/12/2016 02:56 PM, tom.ty89@gmail.com wrote:
 
-Add a hwmon entry to get the temperature from the die of imx53
-SATA.
+> From: Tom Yan <tom.ty89@gmail.com>
+>
+> Currently we use dev->max_sectors to set max_hw_sectors, which
+> is actually supposed to be a host controller limit (that get set
 
-The original patch was made by Richard Zhu for kernel 2.6.x:
-ENGR00134041-MX53-Add-the-SATA-AHCI-temperature-monitor.patch
+    Gets.
 
-Signed-off-by: Fabien Lahoudere <fabien.lahoudere@collabora.co.uk>
----
- drivers/ata/ahci_imx.c | 225 +++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 225 insertions(+)
+> by the host controller driver like ahci, and if not it would be
+> the fallback SCSI_DEFAULT_MAX_SECTORS).
+>
+> That means we have been doing the wrong thing. Therefore, use it
+> to set the correct request queue limit that is used to report
+> device limit: max_dev_sectors.
+>
+> For disk devices, it is reported through the Maximum Transfer Length
+> field on the Block Limits VPD to the SCSI disk driver, which will
+> then set and make use of max_dev_sectors.
+>
+> For cdrom devices, since they are not supposed to have any VPD, and
+> neither will the SCSI cdrom (sr) driver touch any of the max sectors
+> limits, we are hence setting the limit directly in libata-scsi.
+>
+> Note that when max_dev_sectors is larger than max_hw_sectors, it
+> does not have any effect. Therefore, setting dev->max_sectors to
+> ATA_MAX_SECTORS_LBA48 will only have some effect when the host
+> driver has set max_hw_sectors to a value that is as large as that.
+>
+> This should not matter for typical devices, since according to our
+> past experience, 1024 (the current SCSI_DEFAULT_MAX_SECTORS) is a
+> decent and safe value for max_sectors. ATA_MAX_SECTORS_LBA48 has
+> actually appeared to be too large for some devices.
+>
+> Also note that ATA_HORKAGE_MAX_SEC_LBA48 is not supposed to work
+> automatically anyway, even when max_hw_sectors is as high as 65535,
+> since the effective max_sectors will be set by the SCSI disk driver.
+>
+> Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+>
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index be9c76c..4e2d8e7 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -1204,14 +1204,26 @@ static int ata_scsi_dev_config(struct scsi_device *sdev,
+>  	if (!ata_id_has_unload(dev->id))
+>  		dev->flags |= ATA_DFLAG_NO_UNLOAD;
+>
+> -	/* configure max sectors */
+> -	blk_queue_max_hw_sectors(q, dev->max_sectors);
+> -
+>  	if (dev->class == ATA_DEV_ATAPI) {
+>  		void *buf;
+>
+>  		sdev->sector_size = ATA_SECT_SIZE;
+>
+> +		/*
+> +		 * We are setting the limit here merely because CD/DVD device does not
+> +		 * have Block Limits VPD.
+> +		 *
+> +		 * Supposedly dev->max_sectors should be left shifted by
+> +		 * (ilog2(sdev->sector_size) - 9). But since ATAPI class device has a
+> +		 * static logical sector size of 512 (ATA_SECT_SIZE), the shift became
+> +		 * unnecessary.
+> +		 */
+> +		q->limits.max_dev_sectors = dev->max_sectors;
+> +		/* Make max_dev_sectors effective by adjusting max_sectors accordingly,
+> +		   while leave max_hw_sectors, which is supposed to be host controller
+> +		   limit, untouched. */
 
-diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
-index 3f3a7db..a2a8c63 100644
---- a/drivers/ata/ahci_imx.c
-+++ b/drivers/ata/ahci_imx.c
-@@ -26,6 +26,9 @@
- #include <linux/mfd/syscon.h>
- #include <linux/mfd/syscon/imx6q-iomuxc-gpr.h>
- #include <linux/libata.h>
-+#include <linux/hwmon.h>
-+#include <linux/hwmon-sysfs.h>
-+#include <linux/thermal.h>
- #include "ahci.h"
- 
- #define DRV_NAME "ahci-imx"
-@@ -214,6 +217,210 @@ static int imx_sata_phy_reset(struct ahci_host_priv *hpriv)
- 	return timeout ? 0 : -ETIMEDOUT;
- }
- 
-+enum {
-+	/* SATA PHY Register */
-+	SATA_PHY_CR_CLOCK_CRCMP_LT_LIMIT = 0x0001,
-+	SATA_PHY_CR_CLOCK_DAC_CTL = 0x0008,
-+	SATA_PHY_CR_CLOCK_RTUNE_CTL = 0x0009,
-+	SATA_PHY_CR_CLOCK_ADC_OUT = 0x000A,
-+	SATA_PHY_CR_CLOCK_MPLL_TST = 0x0017,
-+};
-+
-+/* SATA AHCI temperature monitor */
-+static int sata_ahci_read_temperature(void *dev, int *temp)
-+{
-+	u16 mpll_test_reg, rtune_ctl_reg, dac_ctl_reg, adc_out_reg, read_sum;
-+	u32 str1, str2, str3, str4, index, read_attempt;
-+	const u32 attempt_limit = 100;
-+	int m1, m2, a;
-+	struct ahci_host_priv *hpriv = dev_get_drvdata(dev);
-+	void __iomem *mmio = hpriv->mmio;
-+
-+	/* check rd-wr to reg */
-+	read_sum = 0;
-+	imx_phy_reg_addressing(SATA_PHY_CR_CLOCK_CRCMP_LT_LIMIT, mmio);
-+	imx_phy_reg_write(read_sum, mmio);
-+	imx_phy_reg_read(&read_sum, mmio);
-+	if ((read_sum & 0xffff) != 0)
-+		dev_err(dev, "Read/Write REG error, 0x%x!\n", read_sum);
-+
-+	imx_phy_reg_write(0x5A5A, mmio);
-+	imx_phy_reg_read(&read_sum, mmio);
-+	if ((read_sum & 0xffff) != 0x5A5A)
-+		dev_err(dev, "Read/Write REG error, 0x%x!\n", read_sum);
-+
-+	imx_phy_reg_write(0x1234, mmio);
-+	imx_phy_reg_read(&read_sum, mmio);
-+	if ((read_sum & 0xffff) != 0x1234)
-+		dev_err(dev, "Read/Write REG error, 0x%x!\n", read_sum);
-+
-+	/* start temperature test */
-+	imx_phy_reg_addressing(SATA_PHY_CR_CLOCK_MPLL_TST, mmio);
-+	imx_phy_reg_read(&mpll_test_reg, mmio);
-+	imx_phy_reg_addressing(SATA_PHY_CR_CLOCK_RTUNE_CTL, mmio);
-+	imx_phy_reg_read(&rtune_ctl_reg, mmio);
-+	imx_phy_reg_addressing(SATA_PHY_CR_CLOCK_DAC_CTL, mmio);
-+	imx_phy_reg_read(&dac_ctl_reg, mmio);
-+
-+	/* mpll_tst.meas_iv   ([12:2]) */
-+	str1 = (mpll_test_reg >> 2) & 0x7FF;
-+	/* rtune_ctl.mode     ([1:0]) */
-+	str2 = (rtune_ctl_reg) & 0x3;
-+	/* dac_ctl.dac_mode   ([14:12]) */
-+	str3 = (dac_ctl_reg >> 12)  & 0x7;
-+	/* rtune_ctl.sel_atbp ([4]) */
-+	str4 = (rtune_ctl_reg >> 4);
-+
-+	/* Calculate the m1 */
-+	/* mpll_tst.meas_iv */
-+	mpll_test_reg = (mpll_test_reg & 0xE03) | (512) << 2;
-+	/* rtune_ctl.mode */
-+	rtune_ctl_reg = (rtune_ctl_reg & 0xFFC) | (1);
-+	/* dac_ctl.dac_mode */
-+	dac_ctl_reg = (dac_ctl_reg & 0x8FF) | (4) << 12;
-+	/* rtune_ctl.sel_atbp */
-+	rtune_ctl_reg = (rtune_ctl_reg & 0xFEF) | (0) << 4;
-+
-+	imx_phy_reg_addressing(SATA_PHY_CR_CLOCK_MPLL_TST, mmio);
-+	imx_phy_reg_write(mpll_test_reg, mmio);
-+	imx_phy_reg_addressing(SATA_PHY_CR_CLOCK_DAC_CTL, mmio);
-+	imx_phy_reg_write(dac_ctl_reg, mmio);
-+	imx_phy_reg_addressing(SATA_PHY_CR_CLOCK_RTUNE_CTL, mmio);
-+	imx_phy_reg_write(rtune_ctl_reg, mmio);
-+
-+	/* two dummy read */
-+	index = 0;
-+	read_attempt = 0;
-+	adc_out_reg = 0;
-+	imx_phy_reg_addressing(SATA_PHY_CR_CLOCK_ADC_OUT, mmio);
-+	while (index < 2) {
-+		imx_phy_reg_read(&adc_out_reg, mmio);
-+		/* check if valid */
-+		if (adc_out_reg & 0x400)
-+			index++;
-+
-+		read_attempt++;
-+		if (read_attempt > attempt_limit) {
-+			dev_err(dev, "Read REG more than %d times!\n",
-+				attempt_limit);
-+			break;
-+		}
-+	}
-+
-+	index = 0;
-+	read_attempt = 0;
-+	read_sum = 0;
-+	while (index < 80) {
-+		imx_phy_reg_read(&adc_out_reg, mmio);
-+		if (adc_out_reg & 0x400) {
-+			read_sum = read_sum + (adc_out_reg & 0x3FF);
-+			index++;
-+		}
-+		read_attempt++;
-+		if (read_attempt > attempt_limit) {
-+			dev_err(dev, "Read REG more than %d times!\n",
-+				attempt_limit);
-+			break;
-+		}
-+	}
-+	/* Use the U32 to make 1000 precision */
-+	m1 = (read_sum * 1000) / 80;
-+
-+	/* Calculate the m2 */
-+	/* rtune_ctl.sel_atbp */
-+	rtune_ctl_reg = (rtune_ctl_reg & 0xFEF) | (1) << 4;
-+	imx_phy_reg_addressing(SATA_PHY_CR_CLOCK_RTUNE_CTL, mmio);
-+	imx_phy_reg_write(rtune_ctl_reg, mmio);
-+
-+	/* two dummy read */
-+	index = 0;
-+	read_attempt = 0;
-+	imx_phy_reg_addressing(SATA_PHY_CR_CLOCK_ADC_OUT, mmio);
-+	while (index < 2) {
-+		imx_phy_reg_read(&adc_out_reg, mmio);
-+		/* check if valid */
-+		if (adc_out_reg & 0x400)
-+			index++;
-+
-+		read_attempt++;
-+		if (read_attempt > attempt_limit) {
-+			dev_err(dev, "Read REG more than %d times!\n",
-+				attempt_limit);
-+			break;
-+		}
-+	}
-+
-+	index = 0;
-+	read_attempt = 0;
-+	read_sum = 0;
-+	while (index < 80) {
-+		imx_phy_reg_read(&adc_out_reg, mmio);
-+		if (adc_out_reg & 0x400) {
-+			read_sum = read_sum + (adc_out_reg & 0x3FF);
-+			index++;
-+		}
-+		read_attempt++;
-+		if (read_attempt > attempt_limit) {
-+			dev_err(dev, "Read REG more than %d times!\n",
-+				attempt_limit);
-+			break;
-+		}
-+	}
-+	/* Use the U32 to make 1000 precision */
-+	m2 = (read_sum * 1000) / 80;
-+
-+	/* restore the status  */
-+	/* mpll_tst.meas_iv */
-+	mpll_test_reg = (mpll_test_reg & 0xE03) | (str1) << 2;
-+	/* rtune_ctl.mode */
-+	rtune_ctl_reg = (rtune_ctl_reg & 0xFFC) | (str2);
-+	/* dac_ctl.dac_mode */
-+	dac_ctl_reg = (dac_ctl_reg & 0x8FF) | (str3) << 12;
-+	/* rtune_ctl.sel_atbp */
-+	rtune_ctl_reg = (rtune_ctl_reg & 0xFEF) | (str4) << 4;
-+
-+	imx_phy_reg_addressing(SATA_PHY_CR_CLOCK_MPLL_TST, mmio);
-+	imx_phy_reg_write(mpll_test_reg, mmio);
-+	imx_phy_reg_addressing(SATA_PHY_CR_CLOCK_DAC_CTL, mmio);
-+	imx_phy_reg_write(dac_ctl_reg, mmio);
-+	imx_phy_reg_addressing(SATA_PHY_CR_CLOCK_RTUNE_CTL, mmio);
-+	imx_phy_reg_write(rtune_ctl_reg, mmio);
-+
-+	/* Compute temperature */
-+	if (!(m2 / 1000))
-+		m2 = 1000;
-+	a = (m2 - m1) / (m2/1000);
-+	*temp = ((-559) * a * a) / 1000 + (1379) * a + (-458000);
-+
-+	return 0;
-+}
-+
-+static ssize_t sata_ahci_show_temp(struct device *dev,
-+				   struct device_attribute *da,
-+				   char *buf)
-+{
-+	unsigned int temp = 0;
-+	int err;
-+
-+	err = sata_ahci_read_temperature(dev, &temp);
-+	if (err < 0)
-+		return err;
-+
-+	return sprintf(buf, "%u\n", temp);
-+}
-+
-+static const struct thermal_zone_of_device_ops fsl_sata_ahci_of_thermal_ops = {
-+	.get_temp = sata_ahci_read_temperature,
-+};
-+
-+static SENSOR_DEVICE_ATTR(temp1_input, S_IRUGO, sata_ahci_show_temp, NULL, 0);
-+
-+static struct attribute *fsl_sata_ahci_attrs[] = {
-+	&sensor_dev_attr_temp1_input.dev_attr.attr,
-+	NULL
-+};
-+ATTRIBUTE_GROUPS(fsl_sata_ahci);
-+
- static int imx_sata_enable(struct ahci_host_priv *hpriv)
- {
- 	struct imx_ahci_priv *imxpriv = hpriv->plat_data;
-@@ -597,6 +804,24 @@ static int imx_ahci_probe(struct platform_device *pdev)
- 	if (ret)
- 		return ret;
- 
-+	if (imxpriv->type == AHCI_IMX53) {
-+		/* Add the temperature monitor */
-+		struct device *hwmon_dev;
-+
-+		hwmon_dev =
-+			devm_hwmon_device_register_with_groups(dev,
-+							"sata_ahci",
-+							hpriv,
-+							fsl_sata_ahci_groups);
-+		if (IS_ERR(hwmon_dev)) {
-+			ret = PTR_ERR(hwmon_dev);
-+			goto disable_clk;
-+		}
-+		devm_thermal_zone_of_sensor_register(hwmon_dev, 0, hwmon_dev,
-+					     &fsl_sata_ahci_of_thermal_ops);
-+		dev_info(dev, "%s: sensor 'sata_ahci'\n", dev_name(hwmon_dev));
-+	}
-+
- 	ret = imx_sata_enable(hpriv);
- 	if (ret)
- 		goto disable_clk;
--- 
-2.7.4
+    Why 2 different comment styles? The previous comment's style is actually 
+preferred in the kernel.
+
+[...]
+
+MBR, Sergei
 
