@@ -1,72 +1,56 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH 1/2] libata-scsi: use dev->max_sectors from libata-core
- appropriately
-Date: Sat, 13 Aug 2016 13:10:15 +0300
-Message-ID: <e5daafbb-e0f4-94fa-6edf-8ba0c9cced88@cogentembedded.com>
-References: <911c68378b91bf275a4bbed5717b4639641d7029.1471002480.git.tom.ty89@gmail.com>
- <f7fcf6b0-8d12-c2ae-2c51-a9071fd89f7c@cogentembedded.com>
- <CAGnHSEn36OgegFJHzojOPYiMzfiLe6eDgSofYHGgmtmdoUQbww@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: SATA port multipliers and max_channel
+Date: Sat, 13 Aug 2016 08:50:17 -0400
+Message-ID: <20160813125017.GR2695@mtj.duckdns.org>
+References: <CALjAwximVtXe8BYBpqOXST9UkR79vCdrNd2PMAQYnYaXYPx_Xg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <CAGnHSEn36OgegFJHzojOPYiMzfiLe6eDgSofYHGgmtmdoUQbww@mail.gmail.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Tom Yan <tom.ty89@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-yw0-f195.google.com ([209.85.161.195]:32804 "EHLO
+	mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752210AbcHMMuV (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 Aug 2016 08:50:21 -0400
+Received: by mail-yw0-f195.google.com with SMTP id z8so541641ywa.0
+        for <linux-ide@vger.kernel.org>; Sat, 13 Aug 2016 05:50:21 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <CALjAwximVtXe8BYBpqOXST9UkR79vCdrNd2PMAQYnYaXYPx_Xg@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sitsofe Wheeler <sitsofe@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Hello.
+Hello, Sitsofe.
 
-On 8/12/2016 5:36 PM, Tom Yan wrote:
+On Sat, Aug 13, 2016 at 09:56:17AM +0100, Sitsofe Wheeler wrote:
+> I was browsing through the kernel while looking at
+> https://github.com/systemd/systemd/issues/3943#issuecomment-239608897
+> and I noticed that in libata-scsi.c shost->max_channel is set to 1.
 
->>> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
->>> index be9c76c..4e2d8e7 100644
->>> --- a/drivers/ata/libata-scsi.c
->>> +++ b/drivers/ata/libata-scsi.c
->>> @@ -1204,14 +1204,26 @@ static int ata_scsi_dev_config(struct scsi_device
->>> *sdev,
->>>         if (!ata_id_has_unload(dev->id))
->>>                 dev->flags |= ATA_DFLAG_NO_UNLOAD;
->>>
->>> -       /* configure max sectors */
->>> -       blk_queue_max_hw_sectors(q, dev->max_sectors);
->>> -
->>>         if (dev->class == ATA_DEV_ATAPI) {
->>>                 void *buf;
->>>
->>>                 sdev->sector_size = ATA_SECT_SIZE;
->>>
->>> +               /*
->>> +                * We are setting the limit here merely because CD/DVD
->>> device does not
->>> +                * have Block Limits VPD.
->>> +                *
->>> +                * Supposedly dev->max_sectors should be left shifted by
->>> +                * (ilog2(sdev->sector_size) - 9). But since ATAPI class
->>> device has a
->>> +                * static logical sector size of 512 (ATA_SECT_SIZE), the
->>> shift became
->>> +                * unnecessary.
->>> +                */
->>> +               q->limits.max_dev_sectors = dev->max_sectors;
->>> +               /* Make max_dev_sectors effective by adjusting max_sectors
->>> accordingly,
->>> +                  while leave max_hw_sectors, which is supposed to be
->>> host controller
->>> +                  limit, untouched. */
->>
->>
->>    Why 2 different comment styles? The previous comment's style is actually
->> preferred in the kernel.
->>
->
-> I just tried to follow the styles of the existing comments. Apparently
-> the first style is used for multi-paragraph comments, while the other
-> one is used for single-paragraph one.
+That number traces back to the original implementation when there was
+neither PMP support or the sysfs knobs.  I don't know why it was set
+to 1 as 0 seems like the right number.  Probably a mistake thinking
+that the number means the number of channels.
 
-    Nevertheless, only the 1st comment is formatted in the preferred manner; 
-see Documentation/CodingStyle, chapter 8.
+> Further, if a SATA port multiplier is being used aren't channels used
+> to represent the port multiplier ports
+> (http://lxr.free-electrons.com/source/drivers/ata/libata-scsi.c?v=4.6#L3726
+> )? If so does max_channel need to be increased to one less than
+> SATA_PMP_MAX_PORTS? If so, would this explain the results seen in
 
-MBR, Sergei
+Yeah, that sounds right.  I don't have a working PM anymore and can't
+test it.  It'd be great if you can spin up the patch and test it if
+you have one available.
 
+> https://www.usenix.org/system/files/fastpw13-paper7_0.pdf ?
+
+libata EH works mostly independent from SCSI layer and the channel
+thing could affect is only the sysfs representation part.  As for the
+paper, a lot of port multipliers just show shitty error handling
+behavior.  Back in the day, I tested quite a few of early hardware
+while developing for it and it was just a nightmare.  PMs didn't
+really catch on and the PMs didn't have the chance to mature properly.
+
+Thanks.
+
+-- 
+tejun
