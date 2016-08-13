@@ -1,35 +1,33 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [RFC] libata-scsi: make sure Maximum Write Same Length is not too large
-Date: Fri, 12 Aug 2016 18:15:30 -0400
-Message-ID: <yq1wpjlljlp.fsf@sermon.lab.mkp.net>
-References: <833713246c1a70d85150289c1537797d6f7dd606.1470903899.git.tom.ty89@gmail.com>
-	<yq1r39upy7p.fsf@sermon.lab.mkp.net>
-	<CAGnHSE=E1Bj99EciXrDS31n4Q4VcRL0sDJ2t4ynx0bHgp5RNtw@mail.gmail.com>
-	<yq1lh01n1ul.fsf@sermon.lab.mkp.net>
-	<CAJVOszDDC39ge6d3h+uy1wtxMBv95_V1eWofumya_G5zg21OrQ@mail.gmail.com>
+From: Sitsofe Wheeler <sitsofe@gmail.com>
+Subject: SATA port multipliers and max_channel
+Date: Sat, 13 Aug 2016 09:56:17 +0100
+Message-ID: <CALjAwximVtXe8BYBpqOXST9UkR79vCdrNd2PMAQYnYaXYPx_Xg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:16584 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751372AbcHLWPt (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Fri, 12 Aug 2016 18:15:49 -0400
-In-Reply-To: <CAJVOszDDC39ge6d3h+uy1wtxMBv95_V1eWofumya_G5zg21OrQ@mail.gmail.com>
-	(Shaun Tancheff's message of "Fri, 12 Aug 2016 16:49:06 -0500")
+Received: from mail-ua0-f195.google.com ([209.85.217.195]:35569 "EHLO
+	mail-ua0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751644AbcHMI4T (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 Aug 2016 04:56:19 -0400
+Received: by mail-ua0-f195.google.com with SMTP id 109so689139uat.2
+        for <linux-ide@vger.kernel.org>; Sat, 13 Aug 2016 01:56:18 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Shaun Tancheff <shaun.tancheff@seagate.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Tom Yan <tom.ty89@gmail.com>, Tejun Heo <tj@kernel.org>, Shaun Tancheff <shaun@tancheff.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+To: tj@kernel.org, linux-ide@vger.kernel.org
 
->>>>> "Shaun" == Shaun Tancheff <shaun.tancheff@seagate.com> writes:
+Hi,
 
-Shaun,
+I was browsing through the kernel while looking at
+https://github.com/systemd/systemd/issues/3943#issuecomment-239608897
+and I noticed that in libata-scsi.c shost->max_channel is set to 1.
+I'm unsure as to why it's one rather than 0 because it doesn't look
+like two channels are used and the code in
+http://lxr.free-electrons.com/source/drivers/scsi/scsi_error.c#L1595
+loops over the 0th channel.
 
-Shaun> Ah, I think I am understanding now. When the sector size is 4K
-Shaun> the minimum page sent with WRITE SAME will be 4K.
-
-Correct. We'll always transfer one logical block of data as required by
-the spec.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Further, if a SATA port multiplier is being used aren't channels used
+to represent the port multiplier ports
+(http://lxr.free-electrons.com/source/drivers/ata/libata-scsi.c?v=4.6#L3726
+)? If so does max_channel need to be increased to one less than
+SATA_PMP_MAX_PORTS? If so, would this explain the results seen in
+https://www.usenix.org/system/files/fastpw13-paper7_0.pdf ?
