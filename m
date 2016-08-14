@@ -1,36 +1,45 @@
-From: Tom Yan <tom.ty89@gmail.com>
+From: Pavel Machek <pavel@ucw.cz>
 Subject: Re: Regression - SATA disks behind USB ones on v4.8-rc1, breaking
  boot. [Re: Who reordered my disks (probably v4.8-rc1 problem)]
-Date: Sun, 14 Aug 2016 18:07:40 +0800
-Message-ID: <CAGnHSEm-Gww1-bmqZMz6guFDnByUuCFiCLhdrK_LETBH3qcb1Q@mail.gmail.com>
-References: <20160813190340.GA29989@amd> <20160814092044.GA20392@amd>
- <CAGnHSEmtgGO5QjfamnN0VPOO2w-4GrZQvPnbkBVdtWBPTnLieA@mail.gmail.com> <20160814100102.GA31847@amd>
+Date: Sun, 14 Aug 2016 12:14:38 +0200
+Message-ID: <20160814101438.GA27772@amd>
+References: <20160813190340.GA29989@amd>
+ <20160814092044.GA20392@amd>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:34485 "EHLO
-	mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752728AbcHNKHm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 Aug 2016 06:07:42 -0400
-In-Reply-To: <20160814100102.GA31847@amd>
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:43646 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751442AbcHNKPR (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 Aug 2016 06:15:17 -0400
+Content-Disposition: inline
+In-Reply-To: <20160814092044.GA20392@amd>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Pavel Machek <pavel@ucw.cz>
-Cc: kernel list <linux-kernel@vger.kernel.org>, james harvey <jamespharvey20@gmail.com>, regressions@leemhuis.info, hdegoede@redhat.com, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, gregkh@linuxfoundation.org, linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>, Alan Stern <stern@rowland.harvard.edu>
+To: kernel list <linux-kernel@vger.kernel.org>, jamespharvey20@gmail.com, regressions@leemhuis.info
+Cc: hdegoede@redhat.com, tj@kernel.org, linux-ide@vger.kernel.org, gregkh@linuxfoundation.org, linux-usb@vger.kernel.org, oliver@neukum.org, stern@rowland.harvard.edu
 
-On 14 August 2016 at 18:01, Pavel Machek <pavel@ucw.cz> wrote:
->
-> Since SATA support was merged, certainly since v2.4, and from way
-> before /dev/disk/by-id existed.
+On Sun 2016-08-14 11:20:44, Pavel Machek wrote:
+> Hi!
+> 
+> > It seems that in v4.8-rc0, /dev/sdX got reordered, and now USB devices
+> > are probed before SATA drivers. That is pretty anti-social. It
+> > broke my boot on my primary machine, and unfortunately due to BIOS
+> > problems (keyboard does not work when connected through a hub) it is
+> > less fun than it should be.
+> 
+> If you know which commit caused	the reordering, that would be helpful.
+> 
+> v4.1 seems to be ok: SATA disk is sda, as expected.
+> 
+> v4.4 seems to be ok: SATA disk is sda, as expected.
 
-I have no idea how "SATA before USB" had been done in the past (if it
-was ever a thing in the kernel), but that has not been the case since
-at least v3.0 AFAIR.
+v4.6 seems to be ok.
 
->
-> People may not run udev, and you can't use /dev/disk/by-id on kernel
-> command line.
->
+v4.7 SATA disk is sde, behind USB card readers. Not helpful.
 
-No, but you can always use root=PARTUUID=, that's built into the
-kernel. (root=UUID= requires udev or so though).
+Ouch. So we have 'stable' kernel with this. Much more fun :-(.
+									Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
