@@ -1,64 +1,52 @@
 From: Tom Yan <tom.ty89@gmail.com>
-Subject: Re: [RFC] libata-scsi: make sure Maximum Write Same Length is not too large
-Date: Sun, 14 Aug 2016 17:23:45 +0800
-Message-ID: <CAGnHSEnycyCRy=SHXs+fQx8mwaQwLtAKO1thH6yYscbBkL2+VQ@mail.gmail.com>
-References: <833713246c1a70d85150289c1537797d6f7dd606.1470903899.git.tom.ty89@gmail.com>
- <yq1r39upy7p.fsf@sermon.lab.mkp.net> <CAGnHSE=E1Bj99EciXrDS31n4Q4VcRL0sDJ2t4ynx0bHgp5RNtw@mail.gmail.com>
- <yq1lh01n1ul.fsf@sermon.lab.mkp.net>
+Subject: Re: Regression - SATA disks behind USB ones on v4.8-rc1, breaking
+ boot. [Re: Who reordered my disks (probably v4.8-rc1 problem)]
+Date: Sun, 14 Aug 2016 17:34:18 +0800
+Message-ID: <CAGnHSEmtgGO5QjfamnN0VPOO2w-4GrZQvPnbkBVdtWBPTnLieA@mail.gmail.com>
+References: <20160813190340.GA29989@amd> <20160814092044.GA20392@amd>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:34105 "EHLO
-	mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751631AbcHNJXq (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 Aug 2016 05:23:46 -0400
-In-Reply-To: <yq1lh01n1ul.fsf@sermon.lab.mkp.net>
+Received: from mail-qt0-f170.google.com ([209.85.216.170]:35887 "EHLO
+	mail-qt0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751681AbcHNJeU (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 Aug 2016 05:34:20 -0400
+In-Reply-To: <20160814092044.GA20392@amd>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Tejun Heo <tj@kernel.org>, Shaun Tancheff <shaun.tancheff@seagate.com>, Shaun Tancheff <shaun@tancheff.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+To: Pavel Machek <pavel@ucw.cz>
+Cc: kernel list <linux-kernel@vger.kernel.org>, jamespharvey20@gmail.com, regressions@leemhuis.info, hdegoede@redhat.com, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, gregkh@linuxfoundation.org, linux-usb@vger.kernel.org, oliver@neukum.org, stern@rowland.harvard.edu
 
-On 13 August 2016 at 04:56, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->>>>>> "Tom" == Tom Yan <tom.ty89@gmail.com> writes:
->
-> Tom,
->
->>> put_unaligned_be64(65535 * ATA_MAX_TRIM_RNUM / (sector_size / 512), &rbuf[36]);
->
-> How many 8-byte ranges fit in a 4096-byte sector?
+Since when it is expected that SATA disks will always be probed before
+USB disks? We can't guarantee that even if we make sure all ata
+drivers are loaded before usb-storage/uas. That's why we need
+consistent namings (e.g. /dev/disk/by-id/*).
 
-The thing is, as of ACS-4, blocks that carry DSM/TRIM LBA Range
-Entries are always 512-byte. Honestly, I have no idea how that would
-work on a 4Kn SSD, if it is / will ever be a thing.
-
-Anyway I was NOT trying to bump the number entries allowed, but
-instead to decrease it accordingly for the increased sector size, only
-to make sure that the Maximum Write Same Length advertised here is
-gonna overflow the 32-bit limit when it is converted to a
-representation in bytes (i.e. discard_max_bytes and
-write_same_max_bytes), and probably also, the bio size.
-
-It's also a suggestion from me for Shaun to determine how the Maximum
-Write Same Length to be advertised, so that the size in bytes covered
-by a single SCT Write Same will stay at ~2G in spite of the logical
-sector size.
-
+On 14 August 2016 at 17:20, Pavel Machek <pavel@ucw.cz> wrote:
+> Hi!
 >
-> Tom> So were you trying to pointing out something I am still missing, or
-> Tom> were you merely confirming I was right?
+>> It seems that in v4.8-rc0, /dev/sdX got reordered, and now USB devices
+>> are probed before SATA drivers. That is pretty anti-social. It
+>> broke my boot on my primary machine, and unfortunately due to BIOS
+>> problems (keyboard does not work when connected through a hub) it is
+>> less fun than it should be.
 >
-> I suggest you drop ATA_MAX_TRIM_RNUM and do:
+> If you know which commit caused the reordering, that would be helpful.
 >
-> enum {
->      ATA_TRIM_BLOCKS_PER_RANGE = 65535, /* 0xffff blocks per range desc. */
->      ATA_TRIM_RANGE_SIZE_SHIFT = 3,     /* range descriptor is 8 bytes */
-> };
+> v4.1 seems to be ok: SATA disk is sda, as expected.
 >
-> put_unaligned_be64(ATA_TRIM_BLOCKS_PER_RANGE *
->                    sector_size >> ATA_TRIM_RANGE_SIZE_SHIFT, &rbuf[36]);
+> v4.4 seems to be ok: SATA disk is sda, as expected.
 >
-> Might be worthwhile to create an ata_max_lba_range_blocks() wrapper.
+> I'll test v4.6 next.
 >
+> v4.8-rc1: SATA disk is sde, behind USB card readers. Not helpful.
+>
+> Best regards,
+>                                                                         Pavel
 > --
-> Martin K. Petersen      Oracle Linux Engineering
+> (english) http://www.livejournal.com/~pavelmachek
+> (cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
