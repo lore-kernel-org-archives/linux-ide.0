@@ -1,39 +1,42 @@
-From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
+From: Pavel Machek <pavel@ucw.cz>
 Subject: Re: Regression - SATA disks behind USB ones on v4.8-rc1, breaking
  boot. [Re: Who reordered my disks (probably v4.8-rc1 problem)]
-Date: Sun, 14 Aug 2016 17:09:05 +0100
-Message-ID: <20160814170905.485fbb24@lxorguk.ukuu.org.uk>
-References: <20160813190340.GA29989@amd>
-	<20160814092044.GA20392@amd>
-	<CAGnHSEmtgGO5QjfamnN0VPOO2w-4GrZQvPnbkBVdtWBPTnLieA@mail.gmail.com>
+Date: Sun, 14 Aug 2016 18:13:11 +0200
+Message-ID: <20160814161311.GA8699@amd>
+References: <20160814120327.GA8292@amd>
+ <Pine.LNX.4.44L0.1608141055350.22463-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:48890 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752783AbcHNQJm (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 Aug 2016 12:09:42 -0400
-In-Reply-To: <CAGnHSEmtgGO5QjfamnN0VPOO2w-4GrZQvPnbkBVdtWBPTnLieA@mail.gmail.com>
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:50521 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752661AbcHNQNO (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 Aug 2016 12:13:14 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.1608141055350.22463-100000@netrider.rowland.org>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tom Yan <tom.ty89@gmail.com>
-Cc: Pavel Machek <pavel@ucw.cz>, kernel list <linux-kernel@vger.kernel.org>, jamespharvey20@gmail.com, regressions@leemhuis.info, hdegoede@redhat.com, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, gregkh@linuxfoundation.org, linux-usb@vger.kernel.org, oliver@neukum.org, stern@rowland.harvard.edu
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Greg KH <gregkh@linuxfoundation.org>, David Lang <david@lang.hm>, Tom Yan <tom.ty89@gmail.com>, kernel list <linux-kernel@vger.kernel.org>, james harvey <jamespharvey20@gmail.com>, regressions@leemhuis.info, hdegoede@redhat.com, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>
 
-On Sun, 14 Aug 2016 17:34:18 +0800
-Tom Yan <tom.ty89@gmail.com> wrote:
+On Sun 2016-08-14 10:56:54, Alan Stern wrote:
+> On Sun, 14 Aug 2016, Pavel Machek wrote:
+> 
+> > > That being said, it would be great if the original reporter could use
+> > > 'git bisect' and let the linux-usb and linux-scsi mailing list know what
+> > > the offending patch is, and we can take it from there.
+> > 
+> > Original reporter is me :-(.
+> > 
+> > Yes, I can do bisect, if required. I'd like some kind of confirmation
+> > that it happens on other systems...
+> 
+> Can you post a kernel log from one of those unsuccessful boots
+> (netconsole or something or the sort)?
 
-> Since when it is expected that SATA disks will always be probed before
-> USB disks? We can't guarantee that even if we make sure all ata
-> drivers are loaded before usb-storage/uas. That's why we need
-> consistent namings (e.g. /dev/disk/by-id/*).
-
-It hasn't. It isn't even true on older kernels and can depend on all
-sorts of things. I have boxes that will put the USB first, and a 10
-second google search says I'm not alone
-
-http://serverfault.com/questions/322946/ensure-usb-disk-is-never-sda-even-when-booting-from-it
-
-So your "regression" goes back to at least 2011.
-
-Alan
+Even scrollback does not seem to work well on modern kernels. So
+sorry, no easy way to get a kernel log :-(.
+								Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
