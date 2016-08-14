@@ -1,56 +1,45 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: SATA port multipliers and max_channel
-Date: Sat, 13 Aug 2016 08:50:17 -0400
-Message-ID: <20160813125017.GR2695@mtj.duckdns.org>
-References: <CALjAwximVtXe8BYBpqOXST9UkR79vCdrNd2PMAQYnYaXYPx_Xg@mail.gmail.com>
+From: Tom Yan <tom.ty89@gmail.com>
+Subject: Re: [PATCH v2 2/2] sd: check BLK_DEF_MAX_SECTORS against max_dev_sectors
+Date: Sun, 14 Aug 2016 17:00:52 +0800
+Message-ID: <CAGnHSE=yBrBCbyKMNKBpZHRX7YKR-TV-s5YybvTKW18_gcrAbw@mail.gmail.com>
+References: <60518e90d462d4cbb1c528914eac64e2fe124717.1471011949.git.tom.ty89@gmail.com>
+ <974f3a0aa9e82caf067353fd7d7119c07d7e98c1.1471011949.git.tom.ty89@gmail.com> <yq11t1tmzxb.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f195.google.com ([209.85.161.195]:32804 "EHLO
-	mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752210AbcHMMuV (ORCPT
-	<rfc822;linux-ide@vger.kernel.org>); Sat, 13 Aug 2016 08:50:21 -0400
-Received: by mail-yw0-f195.google.com with SMTP id z8so541641ywa.0
-        for <linux-ide@vger.kernel.org>; Sat, 13 Aug 2016 05:50:21 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <CALjAwximVtXe8BYBpqOXST9UkR79vCdrNd2PMAQYnYaXYPx_Xg@mail.gmail.com>
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:33215 "EHLO
+	mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753128AbcHNJAy (ORCPT
+	<rfc822;linux-ide@vger.kernel.org>); Sun, 14 Aug 2016 05:00:54 -0400
+In-Reply-To: <yq11t1tmzxb.fsf@sermon.lab.mkp.net>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Sitsofe Wheeler <sitsofe@gmail.com>
-Cc: linux-ide@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 
-Hello, Sitsofe.
+On 13 August 2016 at 05:37, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>
+> It would be pretty unusual for a device that is smart enough to report a
+> transfer length limit to be constrained to 1 MB and change.
+>
 
-On Sat, Aug 13, 2016 at 09:56:17AM +0100, Sitsofe Wheeler wrote:
-> I was browsing through the kernel while looking at
-> https://github.com/systemd/systemd/issues/3943#issuecomment-239608897
-> and I noticed that in libata-scsi.c shost->max_channel is set to 1.
+Well, it is done pretty much for libata's SATL. Also since
+opt_xfer_blocks is checked against dev_max, I think it makes sense in
+logic that we do the equivalence for BLK_DEF_MAX_SECTORS. Not to
+mention that since we check rw_max against the controller limit, no
+reason not to make sure we check it against the device limit in both
+cases.
 
-That number traces back to the original implementation when there was
-neither PMP support or the sysfs knobs.  I don't know why it was set
-to 1 as 0 seems like the right number.  Probably a mistake thinking
-that the number means the number of channels.
+>
+> If you want to fix this please drop the braces and do:
+>
+>                 rw_max = min(BLK_DEF_MAX_SECTORS, q->limits.max_dev_sectors);
 
-> Further, if a SATA port multiplier is being used aren't channels used
-> to represent the port multiplier ports
-> (http://lxr.free-electrons.com/source/drivers/ata/libata-scsi.c?v=4.6#L3726
-> )? If so does max_channel need to be increased to one less than
-> SATA_PMP_MAX_PORTS? If so, would this explain the results seen in
+That won't really work. min_t() would, though the line is gonna be a
+bit long; not sure if I can/should simply cast the type (unsigned int)
+to BLK_DEF_MAX_SECTORS. And which braces are you referring to?
 
-Yeah, that sounds right.  I don't have a working PM anymore and can't
-test it.  It'd be great if you can spin up the patch and test it if
-you have one available.
-
-> https://www.usenix.org/system/files/fastpw13-paper7_0.pdf ?
-
-libata EH works mostly independent from SCSI layer and the channel
-thing could affect is only the sysfs representation part.  As for the
-paper, a lot of port multipliers just show shitty error handling
-behavior.  Back in the day, I tested quite a few of early hardware
-while developing for it and it was just a nightmare.  PMs didn't
-really catch on and the PMs didn't have the chance to mature properly.
-
-Thanks.
-
--- 
-tejun
+>
+> --
+> Martin K. Petersen      Oracle Linux Engineering
