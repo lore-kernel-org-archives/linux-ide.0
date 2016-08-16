@@ -1,39 +1,88 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [RFC] libata-scsi: make sure Maximum Write Same Length is not too large
-Date: Tue, 16 Aug 2016 00:15:15 -0400
-Message-ID: <yq18tvxl57w.fsf@sermon.lab.mkp.net>
-References: <833713246c1a70d85150289c1537797d6f7dd606.1470903899.git.tom.ty89@gmail.com>
-	<yq1r39upy7p.fsf@sermon.lab.mkp.net>
-	<CAGnHSE=E1Bj99EciXrDS31n4Q4VcRL0sDJ2t4ynx0bHgp5RNtw@mail.gmail.com>
-	<yq1lh01n1ul.fsf@sermon.lab.mkp.net>
-	<CAGnHSEnycyCRy=SHXs+fQx8mwaQwLtAKO1thH6yYscbBkL2+VQ@mail.gmail.com>
+From: <robert.berry@minneapolismn.gov>
+Subject: (unknown)
+Date: Mon, 16 Aug 2016 23:57:46 0000
+Message-ID: <000101d1f819$fcc99fc8$c0a80001@hinet.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <CAGnHSEnycyCRy=SHXs+fQx8mwaQwLtAKO1thH6yYscbBkL2+VQ@mail.gmail.com>
-	(Tom Yan's message of "Sun, 14 Aug 2016 17:23:45 +0800")
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tom Yan <tom.ty89@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Tejun Heo <tj@kernel.org>, Shaun Tancheff <shaun.tancheff@seagate.com>, Shaun Tancheff <shaun@tancheff.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Content-Type: application/zip; name="leulinux-ide.zip"
+Content-Transfer-Encoding: base64
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from ws214.zone31-163-153.zaural.ru ([31.163.153.214]:52370 "HELO
+	hinet.net" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+	id S1750917AbcHPR5w (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+	Tue, 16 Aug 2016 13:57:52 -0400
+Subject: 
+Content-Disposition: attachment
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide <linux-ide@vger.kernel.org>
 
->>>>> "Tom" == Tom Yan <tom.ty89@gmail.com> writes:
-
-Tom,
-
-Tom> The thing is, as of ACS-4, blocks that carry DSM/TRIM LBA Range
-Tom> Entries are always 512-byte.
-
-Lovely. And SAT conveniently ignores this entirely.
-
-Tom> Honestly, I have no idea how that would work on a 4Kn SSD, if it is
-Tom> / will ever be a thing.
-
-Highly unlikely.
-
-But I guess you would have to report 8 512-byte ranges in the 4Kn
-case. And then rely on the patch we talked about to clamp the number of
-sectors based on the block layer limit.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+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
+emlwUEsFBgAAAAABAAEAOwAAACUPAAAAAA==
