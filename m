@@ -1,48 +1,39 @@
 From: Tom Yan <tom.ty89@gmail.com>
-Subject: Re: [PATCH] ata: do not hard code limit in ata_set_lba_range_entries()
-Date: Mon, 22 Aug 2016 20:53:14 +0000
-Message-ID: <CAGnHSEm18o-8ZRhyFnyQ22rUm+gJLWwJyxoA-iSJnkM3k4oHHQ@mail.gmail.com>
-References: <e35afc461c9a79f568f2bcd4ef2cd1e07fb50082.1471890326.git.tom.ty89@gmail.com>
- <CAJ48U8UsFFD=fb6WQEVAam9-9RajVjLNrgiKmXCXvkCFOg2JnQ@mail.gmail.com>
- <CAGnHSE=Laj5kpFNJ-EqdN-NTUQJyOmwYtjWM7iLqGxDRqMSoxA@mail.gmail.com> <CAJVOszC2sp0=GA02ZB00s46F84XfU7DvzNSravyhbjxY651ozQ@mail.gmail.com>
+Subject: Re: [PATCH v6 3/4] SCT Write Same / DSM Trim
+Date: Mon, 22 Aug 2016 20:57:52 +0000
+Message-ID: <CAGnHSEn64mQt=ujSRCN_1pfzHXSDqe=esvZZ1mv-3oPxNZMFLQ@mail.gmail.com>
+References: <20160822042321.24367-1-shaun@tancheff.com> <20160822042321.24367-4-shaun@tancheff.com>
+ <CAGnHSEn95Z8wKfq1Nf0ntKSzze-ScP5WeAahziD5Sk0QfmEXyw@mail.gmail.com>
+ <CAGnHSEmFMx1Q6mRV-hXwR4_08OvvSR1xcxoT1dLjVMvOHYY_+g@mail.gmail.com>
+ <CAJVOszCvXwjJCEwxOG0GhN9wq+Axq15zW7Ja=EybyZLRZBYkpA@mail.gmail.com>
+ <CAGnHSE=-kqLyQQ4dZ1=VQ=iBectjHmbF7wg_bxUJ_k+H6nq8bA@mail.gmail.com>
+ <CAJVOszCjjjx39GsdFtKAdwVRG0dJ0Frf4MKSQVHorA_qSZzR7w@mail.gmail.com> <CAGnHSEkOm3nmmeHMQ5Jok2v2Up3ygNE5AE0sjkFTY26_4PTKvg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <CAJVOszC2sp0=GA02ZB00s46F84XfU7DvzNSravyhbjxY651ozQ@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAGnHSEkOm3nmmeHMQ5Jok2v2Up3ygNE5AE0sjkFTY26_4PTKvg@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Shaun Tancheff <shaun.tancheff@seagate.com>
-Cc: Shaun Tancheff <shaun@tancheff.com>, Tejun Heo <tj@kernel.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Shaun Tancheff <shaun@tancheff.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Damien Le Moal <damien.lemoal@hgst.com>, Hannes Reinecke <hare@suse.de>, Josh Bingaman <josh.bingaman@seagate.com>, Hannes Reinecke <hare@suse.com>
 List-Id: linux-ide@vger.kernel.org
 
-On 22 August 2016 at 20:32, Shaun Tancheff <shaun.tancheff@seagate.com> wrote:
-> On Mon, Aug 22, 2016 at 3:07 PM, Tom Yan <tom.ty89@gmail.com> wrote:
->> I don't see how that's possible. count / n_block will always be
->> smaller than 65535 * ATA_MAX_TRIM_RNUM(64) = 4194240. Not to mention
->> that isn't even a "buffer limit" anyway. By SG_IO do you mean like
->> SCSI Write Same commands that issued with sg_write_same or so? If
->> that's the case, that's what exactly commit 5c79097a28c2
->> ("libata-scsi: reject WRITE SAME (16) with n_block that exceeds
->> limit") is for.
+On 22 August 2016 at 18:52, Tom Yan <tom.ty89@gmail.com> wrote:
 >
-> Ah, I see. You are guarding the only user of ata_set_lba_range_entries().
-
-Yup. It is the only right thing to do anyway, that we leave the
-function "open" and guard per context when we use it. Say if
-ata_set_lba_range_entries() is gonna be a function that is shared by
-others, it would only make this commit more important. As I said, we
-did not guard it with a certain buffer limit, but merely redundantly
-guard it with a ("humanized") limit that applies to TRIM only.
-
-> Still if you are going to do that you have to alert any new user that they
-> must have an appropriately sized buffer to be overwriting.
+> For the "payload block size" that is "always" 512-byte as per the same
+> spec, I don't think we need to concern about it. I think it only
+> matters if we want to enable multi-block TRIM payload according to the
+> reported limit in IDENTIFY DEVICE data. Probably it merely means that
+> the "each of the blocks" in the reported limit will always mean 64
+> TRIM entries, even on 4Kn drives, instead of 512.
 >
-> Better to move it out of ata.h then the limit the scope of accidental
-> misuse?
 
-I am not sure if it is really necessary but that's fine to me. I see
-that you have been doing it in your SCT Write Same patch series.
-Probably I can/should just leave the move to you?
+Actually that's what we assumed in our current code that forms the DSM
+command as well. See how (hob_)feature for queued TRIM and how
+(hob_)nsect for non-queued TRIM are set in ata_scsi_write_same_xlat in
+libata-scsi ('size / 512').
 
->
-> Regards,
-> Shaun
+So if you are going to increase the payload block size per logical
+sector size (in other word, you assume that the payload block size is
+_expected_ to be the logical block size, in spite of what ACS told,
+you'll need to adjust how the aforementioned fields in the ATA
+taskfile are set as well.
