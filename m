@@ -1,39 +1,158 @@
 From: Tom Yan <tom.ty89@gmail.com>
-Subject: Re: [PATCH v6 3/4] SCT Write Same / DSM Trim
-Date: Mon, 22 Aug 2016 20:57:52 +0000
-Message-ID: <CAGnHSEn64mQt=ujSRCN_1pfzHXSDqe=esvZZ1mv-3oPxNZMFLQ@mail.gmail.com>
-References: <20160822042321.24367-1-shaun@tancheff.com> <20160822042321.24367-4-shaun@tancheff.com>
- <CAGnHSEn95Z8wKfq1Nf0ntKSzze-ScP5WeAahziD5Sk0QfmEXyw@mail.gmail.com>
- <CAGnHSEmFMx1Q6mRV-hXwR4_08OvvSR1xcxoT1dLjVMvOHYY_+g@mail.gmail.com>
- <CAJVOszCvXwjJCEwxOG0GhN9wq+Axq15zW7Ja=EybyZLRZBYkpA@mail.gmail.com>
- <CAGnHSE=-kqLyQQ4dZ1=VQ=iBectjHmbF7wg_bxUJ_k+H6nq8bA@mail.gmail.com>
- <CAJVOszCjjjx39GsdFtKAdwVRG0dJ0Frf4MKSQVHorA_qSZzR7w@mail.gmail.com> <CAGnHSEkOm3nmmeHMQ5Jok2v2Up3ygNE5AE0sjkFTY26_4PTKvg@mail.gmail.com>
+Subject: Re: [PATCH v6 1/4] libata: Safely overwrite attached page in WRITE
+ SAME xlat
+Date: Mon, 22 Aug 2016 21:20:08 +0000
+Message-ID: <CAGnHSEnMS+wYWiwLxoYsTDOoVb9qJ=gZbcQmhsZumiO+wbQi4A@mail.gmail.com>
+References: <20160822042321.24367-1-shaun@tancheff.com> <20160822042321.24367-2-shaun@tancheff.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAGnHSEkOm3nmmeHMQ5Jok2v2Up3ygNE5AE0sjkFTY26_4PTKvg@mail.gmail.com>
+In-Reply-To: <20160822042321.24367-2-shaun@tancheff.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Shaun Tancheff <shaun.tancheff@seagate.com>
-Cc: Shaun Tancheff <shaun@tancheff.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Damien Le Moal <damien.lemoal@hgst.com>, Hannes Reinecke <hare@suse.de>, Josh Bingaman <josh.bingaman@seagate.com>, Hannes Reinecke <hare@suse.com>
+To: Shaun Tancheff <shaun@tancheff.com>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Damien Le Moal <damien.lemoal@hgst.com>, Hannes Reinecke <hare@suse.de>, Josh Bingaman <josh.bingaman@seagate.com>, Hannes Reinecke <hare@suse.com>, Shaun Tancheff <shaun.tancheff@seagate.com>
 List-Id: linux-ide@vger.kernel.org
 
-On 22 August 2016 at 18:52, Tom Yan <tom.ty89@gmail.com> wrote:
+On 22 August 2016 at 04:23, Shaun Tancheff <shaun@tancheff.com> wrote:
+> Safely overwriting the attached page to ATA format from the SCSI formatted
+> variant.
 >
-> For the "payload block size" that is "always" 512-byte as per the same
-> spec, I don't think we need to concern about it. I think it only
-> matters if we want to enable multi-block TRIM payload according to the
-> reported limit in IDENTIFY DEVICE data. Probably it merely means that
-> the "each of the blocks" in the reported limit will always mean 64
-> TRIM entries, even on 4Kn drives, instead of 512.
+> Signed-off-by: Shaun Tancheff <shaun.tancheff@seagate.com>
+> ---
+> v6:
+>  - Fix bisect bug reported by Tom Yan <tom.ty89@gmail.com>
+>  - Change to use sg_copy_from_buffer as per Christoph Hellwig <hch@lst.de>
+> v5:
+>  - Added prep patch to work with non-page aligned scatterlist pages
+>    and use kmap_atomic() to lock page during modification.
 >
+>  drivers/ata/libata-scsi.c | 56 ++++++++++++++++++++++++++++++++++++++++++-----
+>  include/linux/ata.h       | 26 ----------------------
+>  2 files changed, 51 insertions(+), 31 deletions(-)
+>
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index e207b33..7990cb2 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -3282,6 +3282,54 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
+>         return 1;
+>  }
+>
+> +/**
+> + * ata_format_dsm_trim_descr() - SATL Write Same to DSM Trim
+> + * @cmd: SCSI command being translated
+> + * @num: Maximum number of entries (nominally 64).
+> + * @sector: Starting sector
+> + * @count: Total Range of request
+> + *
+> + * Rewrite the WRITE SAME descriptor to be a DSM TRIM little-endian formatted
+> + * descriptor.
+> + *
+> + * Upto 64 entries of the format:
+> + *   63:48 Range Length
+> + *   47:0  LBA
+> + *
+> + *  Range Length of 0 is ignored.
+> + *  LBA's should be sorted order and not overlap.
+> + *
+> + * NOTE: this is the same format as ADD LBA(S) TO NV CACHE PINNED SET
+> + */
+> +static unsigned int ata_format_dsm_trim_descr(struct scsi_cmnd *cmd, u32 num,
+> +                                             u64 sector, u32 count)
+> +{
+> +       __le64 *buffer;
+> +       u32 i = 0, used_bytes;
+> +       unsigned long flags;
+> +
+> +       BUILD_BUG_ON(512 > ATA_SCSI_RBUF_SIZE);
 
-Actually that's what we assumed in our current code that forms the DSM
-command as well. See how (hob_)feature for queued TRIM and how
-(hob_)nsect for non-queued TRIM are set in ata_scsi_write_same_xlat in
-libata-scsi ('size / 512').
+Why do we want to check "512" (a literal number) against
+ATA_SCSI_RBUF_SIZE here?
 
-So if you are going to increase the payload block size per logical
-sector size (in other word, you assume that the payload block size is
-_expected_ to be the logical block size, in spite of what ACS told,
-you'll need to adjust how the aforementioned fields in the ATA
-taskfile are set as well.
+> +
+> +       spin_lock_irqsave(&ata_scsi_rbuf_lock, flags);
+> +       buffer = ((void *)ata_scsi_rbuf);
+> +       while (i < num) {
+> +               u64 entry = sector |
+> +                       ((u64)(count > 0xffff ? 0xffff : count) << 48);
+> +               buffer[i++] = __cpu_to_le64(entry);
+> +               if (count <= 0xffff)
+> +                       break;
+> +               count -= 0xffff;
+> +               sector += 0xffff;
+> +       }
+> +
+> +       used_bytes = ALIGN(i * 8, 512);
+> +       memset(buffer + i, 0, used_bytes - i * 8);
+> +       sg_copy_from_buffer(scsi_sglist(cmd), scsi_sg_count(cmd), buffer, 512);
+> +       spin_unlock_irqrestore(&ata_scsi_rbuf_lock, flags);
+> +
+> +       return used_bytes;
+> +}
+> +
+>  static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
+>  {
+>         struct ata_taskfile *tf = &qc->tf;
+> @@ -3290,8 +3338,8 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
+>         const u8 *cdb = scmd->cmnd;
+>         u64 block;
+>         u32 n_block;
+> +       const u32 trmax = ATA_MAX_TRIM_RNUM;
+>         u32 size;
+> -       void *buf;
+>         u16 fp;
+>         u8 bp = 0xff;
+>
+> @@ -3319,10 +3367,8 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
+>         if (!scsi_sg_count(scmd))
+>                 goto invalid_param_len;
+>
+> -       buf = page_address(sg_page(scsi_sglist(scmd)));
+> -
+> -       if (n_block <= 65535 * ATA_MAX_TRIM_RNUM) {
+> -               size = ata_set_lba_range_entries(buf, ATA_MAX_TRIM_RNUM, block, n_block);
+> +       if (n_block <= 0xffff * trmax) {
+> +               size = ata_format_dsm_trim_descr(scmd, trmax, block, n_block);
+>         } else {
+>                 fp = 2;
+>                 goto invalid_fld;
+> diff --git a/include/linux/ata.h b/include/linux/ata.h
+> index adbc812..45a1d71 100644
+> --- a/include/linux/ata.h
+> +++ b/include/linux/ata.h
+> @@ -1071,32 +1071,6 @@ static inline void ata_id_to_hd_driveid(u16 *id)
+>  #endif
+>  }
+>
+> -/*
+> - * Write LBA Range Entries to the buffer that will cover the extent from
+> - * sector to sector + count.  This is used for TRIM and for ADD LBA(S)
+> - * TO NV CACHE PINNED SET.
+> - */
+> -static inline unsigned ata_set_lba_range_entries(void *_buffer,
+> -               unsigned num, u64 sector, unsigned long count)
+> -{
+> -       __le64 *buffer = _buffer;
+> -       unsigned i = 0, used_bytes;
+> -
+> -       while (i < num) {
+> -               u64 entry = sector |
+> -                       ((u64)(count > 0xffff ? 0xffff : count) << 48);
+> -               buffer[i++] = __cpu_to_le64(entry);
+> -               if (count <= 0xffff)
+> -                       break;
+> -               count -= 0xffff;
+> -               sector += 0xffff;
+> -       }
+> -
+> -       used_bytes = ALIGN(i * 8, 512);
+> -       memset(buffer + i, 0, used_bytes - i * 8);
+> -       return used_bytes;
+> -}
+> -
+>  static inline bool ata_ok(u8 status)
+>  {
+>         return ((status & (ATA_BUSY | ATA_DRDY | ATA_DF | ATA_DRQ | ATA_ERR))
+> --
+> 2.9.3
+>
