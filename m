@@ -1,7 +1,7 @@
 From: Shaun Tancheff <shaun@tancheff.com>
-Subject: [PATCH v6 3/4] SCT Write Same / DSM Trim
-Date: Sun, 21 Aug 2016 23:23:20 -0500
-Message-ID: <20160822042321.24367-4-shaun@tancheff.com>
+Subject: [PATCH v6 1/4] libata: Safely overwrite attached page in WRITE SAME xlat
+Date: Sun, 21 Aug 2016 23:23:18 -0500
+Message-ID: <20160822042321.24367-2-shaun@tancheff.com>
 References: <20160822042321.24367-1-shaun@tancheff.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20160822042321.24367-1-shaun@tancheff.com>
@@ -10,187 +10,140 @@ To: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 Cc: Shaun Tancheff <shaun@tancheff.com>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, Tom Yan <tom.ty89@gmail.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Damien Le Moal <damien.lemoal@hgst.com>, Hannes Reinecke <hare@suse.de>, Josh Bingaman <josh.bingaman@seagate.com>, Hannes Reinecke <hare@suse.com>, Shaun Tancheff <shaun.tancheff@seagate.com>
 List-Id: linux-ide@vger.kernel.org
 
-Correct handling of devices with sector_size other that 512 bytes.
+Safely overwriting the attached page to ATA format from the SCSI formatted
+variant.
 
 Signed-off-by: Shaun Tancheff <shaun.tancheff@seagate.com>
 ---
-In the case of a 4Kn device sector_size it is possible to describe a much
-larger DSM Trim than the current fixed default of 512 bytes.
-
-This patch assumes the minimum descriptor is sector_size and fills out
-the descriptor accordingly.
-
-The ACS-2 specification is quite clear that the DSM command payload is
-sized as number of 512 byte transfers so a 4Kn device will operate
-correctly without this patch.
-
+v6:
+ - Fix bisect bug reported by Tom Yan <tom.ty89@gmail.com>
+ - Change to use sg_copy_from_buffer as per Christoph Hellwig <hch@lst.de>
 v5:
- - Added support for a sector_size descriptor other than 512 bytes.
+ - Added prep patch to work with non-page aligned scatterlist pages
+   and use kmap_atomic() to lock page during modification.
 
- drivers/ata/libata-scsi.c | 85 +++++++++++++++++++++++++++++++----------------
- 1 file changed, 57 insertions(+), 28 deletions(-)
+ drivers/ata/libata-scsi.c | 56 ++++++++++++++++++++++++++++++++++++++++++-----
+ include/linux/ata.h       | 26 ----------------------
+ 2 files changed, 51 insertions(+), 31 deletions(-)
 
 diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index ebf1a04..37f456e 100644
+index e207b33..7990cb2 100644
 --- a/drivers/ata/libata-scsi.c
 +++ b/drivers/ata/libata-scsi.c
-@@ -3283,7 +3283,7 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
- /**
-  * ata_format_dsm_trim_descr() - SATL Write Same to DSM Trim
-  * @cmd: SCSI command being translated
-- * @num: Maximum number of entries (nominally 64).
-+ * @trmax: Maximum number of entries that will fit in sector_size bytes.
-  * @sector: Starting sector
-  * @count: Total Range of request in logical sectors
-  *
-@@ -3298,63 +3298,80 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
-  *  LBA's should be sorted order and not overlap.
-  *
-  * NOTE: this is the same format as ADD LBA(S) TO NV CACHE PINNED SET
-+ *
-+ * Return: Number of bytes copied into sglist.
-  */
--static unsigned int ata_format_dsm_trim_descr(struct scsi_cmnd *cmd, u32 num,
--					      u64 sector, u32 count)
-+static size_t ata_format_dsm_trim_descr(struct scsi_cmnd *cmd, u32 trmax,
-+					u64 sector, u32 count)
- {
--	__le64 *buffer;
--	u32 i = 0, used_bytes;
-+	struct scsi_device *sdp = cmd->device;
-+	size_t len = sdp->sector_size;
-+	size_t r;
-+	__le64 *buf;
-+	u32 i = 0;
- 	unsigned long flags;
- 
--	BUILD_BUG_ON(512 > ATA_SCSI_RBUF_SIZE);
-+	WARN_ON(len > ATA_SCSI_RBUF_SIZE);
-+
-+	if (len > ATA_SCSI_RBUF_SIZE)
-+		len = ATA_SCSI_RBUF_SIZE;
- 
- 	spin_lock_irqsave(&ata_scsi_rbuf_lock, flags);
--	buffer = ((void *)ata_scsi_rbuf);
--	while (i < num) {
-+	buf = ((void *)ata_scsi_rbuf);
-+	memset(buf, 0, len);
-+	while (i < trmax) {
- 		u64 entry = sector |
- 			((u64)(count > 0xffff ? 0xffff : count) << 48);
--		buffer[i++] = __cpu_to_le64(entry);
-+		buf[i++] = __cpu_to_le64(entry);
- 		if (count <= 0xffff)
- 			break;
- 		count -= 0xffff;
- 		sector += 0xffff;
- 	}
--
--	used_bytes = ALIGN(i * 8, 512);
--	memset(buffer + i, 0, used_bytes - i * 8);
--	sg_copy_from_buffer(scsi_sglist(cmd), scsi_sg_count(cmd), buffer, 512);
-+	r = sg_copy_from_buffer(scsi_sglist(cmd), scsi_sg_count(cmd), buf, len);
- 	spin_unlock_irqrestore(&ata_scsi_rbuf_lock, flags);
- 
--	return used_bytes;
-+	return r;
+@@ -3282,6 +3282,54 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
+ 	return 1;
  }
  
- /**
-  * ata_format_dsm_trim_descr() - SATL Write Same to ATA SCT Write Same
-  * @cmd: SCSI command being translated
-  * @lba: Starting sector
-- * @num: Number of logical sectors to be zero'd.
-+ * @num: Number of sectors to be zero'd.
-  *
-- * Rewrite the WRITE SAME descriptor to be an SCT Write Same formatted
-+ * Rewrite the WRITE SAME payload to be an SCT Write Same formatted
-  * descriptor.
-  * NOTE: Writes a pattern (0's) in the foreground.
-- *       Large write-same requents can timeout.
++/**
++ * ata_format_dsm_trim_descr() - SATL Write Same to DSM Trim
++ * @cmd: SCSI command being translated
++ * @num: Maximum number of entries (nominally 64).
++ * @sector: Starting sector
++ * @count: Total Range of request
 + *
-+ * Return: Number of bytes copied into sglist.
-  */
--static void ata_format_sct_write_same(struct scsi_cmnd *cmd, u64 lba, u64 num)
-+static size_t ata_format_sct_write_same(struct scsi_cmnd *cmd, u64 lba, u64 num)
- {
--	u16 *sctpg;
-+	struct scsi_device *sdp = cmd->device;
-+	size_t len = sdp->sector_size;
-+	size_t r;
-+	u16 *buf;
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&ata_scsi_rbuf_lock, flags);
--	sctpg = ((void *)ata_scsi_rbuf);
-+	buf = ((void *)ata_scsi_rbuf);
++ * Rewrite the WRITE SAME descriptor to be a DSM TRIM little-endian formatted
++ * descriptor.
++ *
++ * Upto 64 entries of the format:
++ *   63:48 Range Length
++ *   47:0  LBA
++ *
++ *  Range Length of 0 is ignored.
++ *  LBA's should be sorted order and not overlap.
++ *
++ * NOTE: this is the same format as ADD LBA(S) TO NV CACHE PINNED SET
++ */
++static unsigned int ata_format_dsm_trim_descr(struct scsi_cmnd *cmd, u32 num,
++					      u64 sector, u32 count)
++{
++	__le64 *buffer;
++	u32 i = 0, used_bytes;
++	unsigned long flags;
 +
-+	put_unaligned_le16(0x0002,  &buf[0]); /* SCT_ACT_WRITE_SAME */
-+	put_unaligned_le16(0x0101,  &buf[1]); /* WRITE PTRN FG */
-+	put_unaligned_le64(lba,     &buf[2]);
-+	put_unaligned_le64(num,     &buf[6]);
-+	put_unaligned_le32(0u,      &buf[10]); /* pattern */
++	BUILD_BUG_ON(512 > ATA_SCSI_RBUF_SIZE);
 +
-+	WARN_ON(len > ATA_SCSI_RBUF_SIZE);
- 
--	put_unaligned_le16(0x0002,  &sctpg[0]); /* SCT_ACT_WRITE_SAME */
--	put_unaligned_le16(0x0101,  &sctpg[1]); /* WRITE PTRN FG */
--	put_unaligned_le64(lba,     &sctpg[2]);
--	put_unaligned_le64(num,     &sctpg[6]);
--	put_unaligned_le32(0u,      &sctpg[10]);
-+	if (len > ATA_SCSI_RBUF_SIZE)
-+		len = ATA_SCSI_RBUF_SIZE;
- 
--	sg_copy_from_buffer(scsi_sglist(cmd), scsi_sg_count(cmd), sctpg, 512);
-+	r = sg_copy_from_buffer(scsi_sglist(cmd), scsi_sg_count(cmd), buf, len);
- 	spin_unlock_irqrestore(&ata_scsi_rbuf_lock, flags);
++	spin_lock_irqsave(&ata_scsi_rbuf_lock, flags);
++	buffer = ((void *)ata_scsi_rbuf);
++	while (i < num) {
++		u64 entry = sector |
++			((u64)(count > 0xffff ? 0xffff : count) << 48);
++		buffer[i++] = __cpu_to_le64(entry);
++		if (count <= 0xffff)
++			break;
++		count -= 0xffff;
++		sector += 0xffff;
++	}
 +
-+	return r;
- }
- 
- /**
-@@ -3371,11 +3388,13 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
++	used_bytes = ALIGN(i * 8, 512);
++	memset(buffer + i, 0, used_bytes - i * 8);
++	sg_copy_from_buffer(scsi_sglist(cmd), scsi_sg_count(cmd), buffer, 512);
++	spin_unlock_irqrestore(&ata_scsi_rbuf_lock, flags);
++
++	return used_bytes;
++}
++
+ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
  {
  	struct ata_taskfile *tf = &qc->tf;
- 	struct scsi_cmnd *scmd = qc->scsicmd;
-+	struct scsi_device *sdp = scmd->device;
-+	size_t len = sdp->sector_size;
- 	struct ata_device *dev = qc->dev;
+@@ -3290,8 +3338,8 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
  	const u8 *cdb = scmd->cmnd;
  	u64 block;
  	u32 n_block;
--	const u32 trmax = ATA_MAX_TRIM_RNUM;
-+	const u32 trmax = len >> 3;
++	const u32 trmax = ATA_MAX_TRIM_RNUM;
  	u32 size;
+-	void *buf;
  	u16 fp;
  	u8 bp = 0xff;
-@@ -3420,8 +3439,16 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
+ 
+@@ -3319,10 +3367,8 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
  	if (!scsi_sg_count(scmd))
  		goto invalid_param_len;
  
-+	/*
-+	 * size must match sector size in bytes
-+	 * For DATA SET MANAGEMENT TRIM in ACS-2 nsect (aka count)
-+	 * is defined as number of 512 byte blocks to be transferred.
-+	 */
- 	if (unmap) {
- 		size = ata_format_dsm_trim_descr(scmd, trmax, block, n_block);
-+		if (size != len)
-+			goto invalid_param_len;
-+
- 		if (ata_ncq_enabled(dev) && ata_fpdma_dsm_supported(dev)) {
- 			/* Newer devices support queued TRIM commands */
- 			tf->protocol = ATA_PROT_NCQ;
-@@ -3441,7 +3468,9 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
- 			tf->command = ATA_CMD_DSM;
- 		}
+-	buf = page_address(sg_page(scsi_sglist(scmd)));
+-
+-	if (n_block <= 65535 * ATA_MAX_TRIM_RNUM) {
+-		size = ata_set_lba_range_entries(buf, ATA_MAX_TRIM_RNUM, block, n_block);
++	if (n_block <= 0xffff * trmax) {
++		size = ata_format_dsm_trim_descr(scmd, trmax, block, n_block);
  	} else {
--		ata_format_sct_write_same(scmd, block, n_block);
-+		size = ata_format_sct_write_same(scmd, block, n_block);
-+		if (size != len)
-+			goto invalid_param_len;
+ 		fp = 2;
+ 		goto invalid_fld;
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index adbc812..45a1d71 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -1071,32 +1071,6 @@ static inline void ata_id_to_hd_driveid(u16 *id)
+ #endif
+ }
  
- 		tf->hob_feature = 0;
- 		tf->feature = 0;
+-/*
+- * Write LBA Range Entries to the buffer that will cover the extent from
+- * sector to sector + count.  This is used for TRIM and for ADD LBA(S)
+- * TO NV CACHE PINNED SET.
+- */
+-static inline unsigned ata_set_lba_range_entries(void *_buffer,
+-		unsigned num, u64 sector, unsigned long count)
+-{
+-	__le64 *buffer = _buffer;
+-	unsigned i = 0, used_bytes;
+-
+-	while (i < num) {
+-		u64 entry = sector |
+-			((u64)(count > 0xffff ? 0xffff : count) << 48);
+-		buffer[i++] = __cpu_to_le64(entry);
+-		if (count <= 0xffff)
+-			break;
+-		count -= 0xffff;
+-		sector += 0xffff;
+-	}
+-
+-	used_bytes = ALIGN(i * 8, 512);
+-	memset(buffer + i, 0, used_bytes - i * 8);
+-	return used_bytes;
+-}
+-
+ static inline bool ata_ok(u8 status)
+ {
+ 	return ((status & (ATA_BUSY | ATA_DRDY | ATA_DF | ATA_DRQ | ATA_ERR))
 -- 
 2.9.3
