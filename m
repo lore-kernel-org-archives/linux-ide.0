@@ -1,65 +1,59 @@
 From: Tom Yan <tom.ty89@gmail.com>
-Subject: Re: [PATCH v6 1/4] libata: Safely overwrite attached page in WRITE
- SAME xlat
-Date: Tue, 23 Aug 2016 09:04:38 +0000
-Message-ID: <CAGnHSEkONd-XJx9TKSVqeBaOXaZANBtNn9kQyRbXf735CsMqZg@mail.gmail.com>
-References: <20160822042321.24367-1-shaun@tancheff.com> <20160822042321.24367-2-shaun@tancheff.com>
- <CAGnHSEnMS+wYWiwLxoYsTDOoVb9qJ=gZbcQmhsZumiO+wbQi4A@mail.gmail.com>
- <CAJVOszBVXftz9hqmOgWG5DvxW7cQjFPUFaGygWcj_exgNwT4=w@mail.gmail.com>
- <CAGnHSE=t1qg5ukA7btSwD=AaQZB6W6bmF9HMC_K2JsCqoSNGVg@mail.gmail.com>
- <CAJVOszBP_JLgKUsknSmG+AuCVW8VEB4VUuaTNQ-MrE9B0nuXBg@mail.gmail.com>
- <CAGnHSEmsgp93X85-bgFyV0CdQbvdMHZsWj6e=VNH_7dUDUewHA@mail.gmail.com>
- <CAJVOszD8HDqQMxyAnU=Yh6UDA+KE13u7Mq6s248uguRf-uUkYg@mail.gmail.com>
- <CAGnHSEn7M9Kmse+_JFFCgvZY5TqZt1TDzXGhKaqimog4OKiktg@mail.gmail.com> <CAJVOszDu8WfoSysar=a5vvKb8ADtGb2faR=dGJm9vtvC_OSeUQ@mail.gmail.com>
+Subject: Re: [PATCH] ata: do not hard code limit in ata_set_lba_range_entries()
+Date: Tue, 23 Aug 2016 09:36:27 +0000
+Message-ID: <CAGnHSE=Lsb-L-nd8OHQpVPDe1JkURjnXoA26ZQ7bH1GBEPAAtA@mail.gmail.com>
+References: <e35afc461c9a79f568f2bcd4ef2cd1e07fb50082.1471890326.git.tom.ty89@gmail.com>
+ <CAJ48U8UsFFD=fb6WQEVAam9-9RajVjLNrgiKmXCXvkCFOg2JnQ@mail.gmail.com>
+ <CAGnHSE=Laj5kpFNJ-EqdN-NTUQJyOmwYtjWM7iLqGxDRqMSoxA@mail.gmail.com>
+ <CAJVOszC2sp0=GA02ZB00s46F84XfU7DvzNSravyhbjxY651ozQ@mail.gmail.com>
+ <CAGnHSEm18o-8ZRhyFnyQ22rUm+gJLWwJyxoA-iSJnkM3k4oHHQ@mail.gmail.com>
+ <CAJ48U8XDb7S2WPSDBtn+VUoRb70u6SmgbPFhm-NC2jx6CmE2mw@mail.gmail.com>
+ <CAGnHSEn470B0ecDdMSY29W4Or3jD_NPoUAku_09o=X9Tn6vSpw@mail.gmail.com> <CAJVOszB7cyUcE+A_EUw0OnvdO3iGFW9sG45R2Ng1Ea_Q7YxaQA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:35953 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757310AbcHWJG7 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 23 Aug 2016 05:06:59 -0400
-In-Reply-To: <CAJVOszDu8WfoSysar=a5vvKb8ADtGb2faR=dGJm9vtvC_OSeUQ@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <CAJVOszB7cyUcE+A_EUw0OnvdO3iGFW9sG45R2Ng1Ea_Q7YxaQA@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 To: Shaun Tancheff <shaun.tancheff@seagate.com>
-Cc: Shaun Tancheff <shaun@tancheff.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Damien Le Moal <damien.lemoal@hgst.com>, Hannes Reinecke <hare@suse.de>, Josh Bingaman <josh.bingaman@seagate.com>, Hannes Reinecke <hare@suse.com>
+Cc: Shaun Tancheff <shaun@tancheff.com>, Tejun Heo <tj@kernel.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 
-There's comment about `rq->__data_len` in sd.c (and blkdev.h,
-definition of struct `request`). Apparently it is "internal only" (in
-terms of the kernel).
-
-As for `cmd->transfersize`, it's probably talking about the CDB
-itself. Although different commands have CDB of various lengths (much
-shorter than 512-byte), but I guess when the actual command is sent to
-the device, we will still transfer it in a full logical block for some
-reason.
-
-Anyway these will not have anything to do with how we form the TRIM
-payload. The SATL simply read the LBA (starting offset) and NUMBER OF
-BLOCK (to TRIM) field in the CDB and pack ranges according to that.
-All we care is the actual TRIM limit of the ATA device (and
-conservative concern on bogus ones).
-
-On 23 August 2016 at 08:42, Shaun Tancheff <shaun.tancheff@seagate.com> wrote:
-> On Tue, Aug 23, 2016 at 2:53 AM, Tom Yan <tom.ty89@gmail.com> wrote:
->> On 23 August 2016 at 06:20, Shaun Tancheff <shaun.tancheff@seagate.com> wrote:
->>> On Tue, Aug 23, 2016 at 12:26 AM, Tom Yan <tom.ty89@gmail.com> wrote:
->>>
->>>> It is always 1 merely because we prefer sticking to that. Say we want
->>>> to enable multi-block payload now, it won't be 1 anymore.
->>>
->>> Sorry, I though that DSM TRIM is using 512 bytes here because
->>> WRITE_SAME_16 has a payload of a single logical sector.
->>
->> Nope, SCSI Write Same commands does not have payload (or in SCSI
->> terms, parameter list / data-out buffer).
+On 23 August 2016 at 09:18, Shaun Tancheff <shaun.tancheff@seagate.com> wrote:
+> On Tue, Aug 23, 2016 at 3:37 AM, Tom Yan <tom.ty89@gmail.com> wrote:
+>> On 23 August 2016 at 07:30, Shaun Tancheff <shaun@tancheff.com> wrote:
 >
-> Hmm. Not sure about T10, but that's not how I read
-> sd_setup_write_same_cmnd(), it always setups up a transfer of
-> sector_size for scsi_init_io().
+>> If we really want/need to avoid hitting some real buffer limit (e.g.
+>> maximum length of scatter/gather list?), then we should in some way
+>> check n_block against that. If it is too large we then return
+>> used_bytes = 0 (optionally with some follow-up to add a response to
+>> such return value or so).
 >
-> As I understand things, this is how the cmd's sglist is populated and why
-> this should be using sg_copy_from_buffer() rather than open coding
-> to the page.
+> Yes there is a real buffer limit, I can think of these two options:
+> 1- Assume the setups from sd_setup_discard_cmnd() and/
+>    or sd_setup_write_same_cmnd() are providing an sglist of
+>    sdp->sector_size via scsi_init_io()
+
+That sounds completely wrong. The scatter/gather list we are talking
+about here has nothing to do with the SCSI or block layer anymore. The
+SATL has _already_ parsed the SCSI Write Same (16) command and is
+packing ranges/payload according to that in this stage. If there is
+any limit it would probably the max_segment allowed by the host driver
+(e.g. ahci).
+
+It doesn't seem to make sense to me either that we would need to
+prevent sglist overflow in such level. Doesn't that mean we would need
+to do the same checking (specifically, as in hard coding checks in all
+kinds of procedures) in every use of scatter/gather list? That doesn't
+sound right at all.
+
+>
+> 2- Find (or write) a suitable sg_get_size(sgl, nents) to walk the
+>     sglist and calculate the available buffer size.
+>
+> #2 sounds like more fun but I'm not sure it's what people would prefer to see.
+
+No idea if such thing exists / makes sense at all.
+
+>
 > --
-> Shaun Tancheff
+> Shaun
