@@ -1,54 +1,101 @@
 From: Tom Yan <tom.ty89@gmail.com>
-Subject: Re: [PATCH v6 2/4] Add support for SCT Write Same
-Date: Tue, 23 Aug 2016 07:57:50 +0000
-Message-ID: <CAGnHSEmDrgH7MrQ0bviJ62VV4r2dASpp9pSxFO_RAmPrfkATsg@mail.gmail.com>
-References: <20160822042321.24367-1-shaun@tancheff.com> <20160822042321.24367-3-shaun@tancheff.com>
- <CAGnHSE=KijjA8ZBhNBQZH-5CeC1w4vu8wWob4Mm9tTKVNSL_GQ@mail.gmail.com>
- <CAJVOszBPL4LM8MYMyrmnfFBqqdV6E3OCpShn12KKFv8E+tSL8Q@mail.gmail.com>
- <CAGnHSEnZe0iipr2hO=QDSq6s7+5JoevXvPNes=WP7gwToFzHsw@mail.gmail.com>
- <CAJVOszAHcuyLoSJwmKvK5vgM8aLqfQJsaw=Vx7K66wMEaqmu_A@mail.gmail.com>
- <CAGnHSEm5Ur-7eCj-_mJsTeDwxhkGHPERAodebDS7rRg0AvGn3Q@mail.gmail.com>
- <CAJVOszC_MfPtGTR05p=qSHjY_wu4ziMMAqgra7Pu0tQYoxa-Kg@mail.gmail.com>
- <CAGnHSEmLq0qcg8_LZBCqFYJohZORBSe58SSjC3sK7cCf=0g9EQ@mail.gmail.com> <CAJVOszCU63Dahdu6ZoKGgbWwwma=Mq5zji4j8ya=57NCwFUB_w@mail.gmail.com>
+Subject: Re: [PATCH] ata: do not hard code limit in ata_set_lba_range_entries()
+Date: Tue, 23 Aug 2016 08:37:24 +0000
+Message-ID: <CAGnHSEn470B0ecDdMSY29W4Or3jD_NPoUAku_09o=X9Tn6vSpw@mail.gmail.com>
+References: <e35afc461c9a79f568f2bcd4ef2cd1e07fb50082.1471890326.git.tom.ty89@gmail.com>
+ <CAJ48U8UsFFD=fb6WQEVAam9-9RajVjLNrgiKmXCXvkCFOg2JnQ@mail.gmail.com>
+ <CAGnHSE=Laj5kpFNJ-EqdN-NTUQJyOmwYtjWM7iLqGxDRqMSoxA@mail.gmail.com>
+ <CAJVOszC2sp0=GA02ZB00s46F84XfU7DvzNSravyhbjxY651ozQ@mail.gmail.com>
+ <CAGnHSEm18o-8ZRhyFnyQ22rUm+gJLWwJyxoA-iSJnkM3k4oHHQ@mail.gmail.com> <CAJ48U8XDb7S2WPSDBtn+VUoRb70u6SmgbPFhm-NC2jx6CmE2mw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAJVOszCU63Dahdu6ZoKGgbWwwma=Mq5zji4j8ya=57NCwFUB_w@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Shaun Tancheff <shaun.tancheff@seagate.com>
-Cc: Shaun Tancheff <shaun@tancheff.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Damien Le Moal <damien.lemoal@hgst.com>, Hannes Reinecke <hare@suse.de>, Josh Bingaman <josh.bingaman@seagate.com>, Hannes Reinecke <hare@suse.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <CAJ48U8XDb7S2WPSDBtn+VUoRb70u6SmgbPFhm-NC2jx6CmE2mw@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+To: Shaun Tancheff <shaun@tancheff.com>
+Cc: Shaun Tancheff <shaun.tancheff@seagate.com>, Tejun Heo <tj@kernel.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Hmm,
+On 23 August 2016 at 07:30, Shaun Tancheff <shaun@tancheff.com> wrote:
+>
+> But  the "humanized" limit is the one you just added and proceeded to
+> change ata_set_lba_range_entries(). You changed from a buffer size
+> to use "num" instead and now you want to remove the protection
+> entirely?
 
-On 22 August 2016 at 18:00, Shaun Tancheff <shaun.tancheff@seagate.com> wrote:
+I am not sure about what you are talking about here. What I did is
+just to avoid setting an (inappropriate and unnecessary) hard-coded
+limit (with the original while-condition) for i (the unaligned buffer
+size) in this general (in the sense that TRIM payload is _not always_
+of one 512-byte block, even if we may want to forever practice that in
+our kernel) function.
+
+If we really want/need to avoid hitting some real buffer limit (e.g.
+maximum length of scatter/gather list?), then we should in some way
+check n_block against that. If it is too large we then return
+used_bytes = 0 (optionally with some follow-up to add a response to
+such return value or so).
+
+We advertise 4194240 as Maximum Write Same Length so that the
+SCSI/block layer will know how to split the discard request, and then
+we make sure that the SATL reject SCSI commands (that is not issued
+through the discard / write same ioctl but with SG_IO /
+sg_write_same). That's all we really need to do, end of story.
+
 >
-> Timeout for WS is 120 seconds so we should be fine there.
+> Why not just change to put this in front of ata_set_lba_range_entries()
 >
-> The number to look for is the:
->    Max. Sustained Transfer Rate OD (MB/s): 190 8TB (180 5TB)
+> if (n_block > 65535 * ATA_MAX_TRIM_RNUM) {
+>      fp = 2;
+>     goto invalid_fld;
+> }
+
+Well you can change the if-else clause to that. Apparently you've been
+doing that in your patch series. But that has nothing to do with what
+I am fixing here. Neither does it affect the actual behavior.
+
 >
-> Which means the above drives should complete a 2G write in
-> about 10 to 11 seconds.
+> And then restore ata_set_lba_range_entries() to how it looked
+> before you changed it in commit:
 >
-> If these were 4Kn drives and we allowed a 16G max then it
-> would be 80-90 seconds, assuming the write speed didn't
-> get any better.
+> 2983860c7 (libata-scsi: avoid repeated calculation of number of TRIM ranges)
+
+I don't see how it is relevant at all. Though I should have introduced
+_this_ patch before that to save some work. Unfortunately I wasn't
+aware how ugly ata_set_lba_range_entries was.
+
 >
-> So holding the maximum to around 2G is probably the best
-> overall, in my opinion.
+> Then you can have ata_set_lba_range_entries() take the buffer size ...
+> something like the following would be fine:
+>
+>       size = ata_set_lba_range_entries(buf, scmd->device->sector_size,
+> block, n_block);
+>
+> Now things are happily protected against both exceeding the b0 limit(s) and
+> overflowing the sglist buffer.
+
+We have no reason at all to bring the logical sector size in here.
+Only if in future ACS standards it is stated that payload block are
+counted in logical block size instead of statically 512, we would only
+need to make the now static "512" in ALIGN() in to 4096.
+
+For possible sglist buffer overflow, see what I mentioned above about
+checking n_block and return 0. We would not want to do it with the
+original while-way anyway. All it does would be to truncate larger
+request and partially complete it silently.
+
+Can you tell exactly how the size of the sglist buffer is limited?
+AFAIK it has nothing to do with logical sector size. I doubt that we
+will ever cause an overflow, given how conservative we have been on
+the size of TRIM payload. We would probably ignore the reported value
+once it is larger than 16 or so, if we would ever enable multi-block
+payload in the future.
+
+Realistically speaking, I sent this patch not really to get the
+function ready for multi-block payload (neither I have mentioned that
+in the commit message), but just to make the code proper and avoid
+silly effort (and confusion caused) you and I spent in our patches.
+
 >
 > --
-> Shaun Tancheff
-
-On 23 August 2016 at 06:11, Shaun Tancheff <shaun.tancheff@seagate.com> wrote:
->
-> I had thought the conclusion was leave b0 as is and let the WS10 limit
-> take effect per Martin.
-
-If that's your final call then you do not need to add the check for
-SCT Write Same. (But please make sure that the check for TRIM does not
-go away)
-
-> --
-> Shaun Tancheff
+> Shaun
