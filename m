@@ -1,72 +1,73 @@
-From: Tom Yan <tom.ty89@gmail.com>
-Subject: Re: [PATCH v6 2/4] Add support for SCT Write Same
-Date: Wed, 24 Aug 2016 14:10:06 +0800
-Message-ID: <CAGnHSEnEUu0E3rQmyB3+wjUK8v-Ojg8xpKxMMZoiXHdfWwuhkg@mail.gmail.com>
-References: <20160822042321.24367-1-shaun@tancheff.com> <20160822042321.24367-3-shaun@tancheff.com>
- <CAGnHSEmVbkJ30uNbW1O-Wh4E7RKbf+OojxRYjWanMYH_OrvHnA@mail.gmail.com>
- <CAJVOszDck0HOVKdnqG=wWyE9G=gGwmouh-YF2RL93AJHvbSTcg@mail.gmail.com> <CAGnHSEmQz9tLrUjE4UF_Taa6tUjO1X22o5GcU79KFPXHaOTGOg@mail.gmail.com>
+From: <mariobronti@gmail.com>
+Subject: (unknown)
+Date: Tue, 24 Aug 2016 21:57:20 0000
+Message-ID: <000101d1fe52$7cee5da4$c0a80001@cm-84.210.221.88.getinternet.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAGnHSEmQz9tLrUjE4UF_Taa6tUjO1X22o5GcU79KFPXHaOTGOg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Shaun Tancheff <shaun.tancheff@seagate.com>
-Cc: Shaun Tancheff <shaun@tancheff.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Damien Le Moal <damien.lemoal@hgst.com>, Hannes Reinecke <hare@suse.de>, Josh Bingaman <josh.bingaman@seagate.com>, Hannes Reinecke <hare@suse.com>
+Content-Type: application/zip; name="kuslinux-ide.zip"
+Content-Transfer-Encoding: base64
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from cm-84.210.221.88.getinternet.no ([84.210.221.88]:49730 "HELO
+        cm-84.210.221.88.getinternet.no" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with SMTP id S933067AbcHXP5a (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 24 Aug 2016 11:57:30 -0400
+Subject: 
+Content-Disposition: attachment
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Btw, I wonder if you need to memset your buffer with 0 first, like
-what is done in ata_scsi_rbuf_get.
-
-On 24 August 2016 at 13:57, Tom Yan <tom.ty89@gmail.com> wrote:
-> Never mind. I was a bit lightheaded.
->
-> Anyway I don't think you should use ata_scsi_rbuf. It is a buffer
-> created and used for ata_scsi_simulate, which interacts with the SCSI
-> layer but not the ATA device (v.s. ata_scsi_translate). You should
-> probably create buffer inside ata_format_dsm_trim_descr() and
-> ata_format_sct_write_same() of size(s) you need.
->
-> On 23 August 2016 at 18:56, Shaun Tancheff <shaun.tancheff@seagate.com> wrote:
->> On Tue, Aug 23, 2016 at 5:37 AM, Tom Yan <tom.ty89@gmail.com> wrote:
->>> On 22 August 2016 at 04:23, Shaun Tancheff <shaun@tancheff.com> wrote:
->>>> +/**
->>>> + * ata_format_dsm_trim_descr() - SATL Write Same to ATA SCT Write Same
->>>> + * @cmd: SCSI command being translated
->>>> + * @lba: Starting sector
->>>> + * @num: Number of logical sectors to be zero'd.
->>>> + *
->>>> + * Rewrite the WRITE SAME descriptor to be an SCT Write Same formatted
->>>> + * descriptor.
->>>> + * NOTE: Writes a pattern (0's) in the foreground.
->>>> + *       Large write-same requents can timeout.
->>>> + */
->>>> +static void ata_format_sct_write_same(struct scsi_cmnd *cmd, u64 lba, u64 num)
->>>> +{
->>>> +       u16 *sctpg;
->>>> +       unsigned long flags;
->>>> +
->>>> +       spin_lock_irqsave(&ata_scsi_rbuf_lock, flags);
->>>> +       sctpg = ((void *)ata_scsi_rbuf);
->>>
->>> Because ata_scsi_rbuf is of a fixed size of ATA_SCSI_RBUF_SIZE.
->>>
->>> #define ATA_SCSI_RBUF_SIZE      4096
->>> ...
->>> static u8 ata_scsi_rbuf[ATA_SCSI_RBUF_SIZE];
->>>
->>>> +
->>>> +       put_unaligned_le16(0x0002,  &sctpg[0]); /* SCT_ACT_WRITE_SAME */
->>>> +       put_unaligned_le16(0x0101,  &sctpg[1]); /* WRITE PTRN FG */
->>>> +       put_unaligned_le64(lba,     &sctpg[2]);
->>>> +       put_unaligned_le64(num,     &sctpg[6]);
->>>> +       put_unaligned_le32(0u,      &sctpg[10]);
->>>> +
->>>> +       sg_copy_from_buffer(scsi_sglist(cmd), scsi_sg_count(cmd), sctpg, 512);
->>>
->>> You have no reason to use 512 here instead of ATA_SCSI_RBUF_SIZE this time.
->>
->> Ah .. because SCT Write Same is a fixed 512 byte transfer?
->> Ah .. because I only have 512 bytes to copy?
->>
->>>> +       spin_unlock_irqrestore(&ata_scsi_rbuf_lock, flags);
->>>> +}
+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
+AADECwAAAAA=
