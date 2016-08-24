@@ -1,73 +1,202 @@
-From: <mariobronti@gmail.com>
-Subject: (unknown)
-Date: Tue, 24 Aug 2016 21:57:20 0000
-Message-ID: <000101d1fe52$7cee5da4$c0a80001@cm-84.210.221.88.getinternet.no>
-Mime-Version: 1.0
-Content-Type: application/zip; name="kuslinux-ide.zip"
-Content-Transfer-Encoding: base64
+From: Shaun Tancheff <shaun@tancheff.com>
+Subject: [PATCH v6 3/4 RESEND] SCT Write Same / DSM Trim
+Date: Wed, 24 Aug 2016 13:08:14 -0500
+Message-ID: <20160824180814.24708-1-shaun@tancheff.com>
+References: <0c9c5a80-813b-31f0-355d-2e08e452dd01@suse.de>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from cm-84.210.221.88.getinternet.no ([84.210.221.88]:49730 "HELO
-        cm-84.210.221.88.getinternet.no" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with SMTP id S933067AbcHXP5a (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 24 Aug 2016 11:57:30 -0400
-Subject: 
-Content-Disposition: attachment
+Received: from mail-it0-f68.google.com ([209.85.214.68]:34602 "EHLO
+        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754129AbcHXTAN (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 24 Aug 2016 15:00:13 -0400
+In-Reply-To: <0c9c5a80-813b-31f0-355d-2e08e452dd01@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Shaun Tancheff <shaun@tancheff.com>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, Tom Yan <tom.ty89@gmail.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Damien Le Moal <damien.lemoal@hgst.com>, Josh Bingaman <josh.bingaman@seagate.com>, Hannes Reinecke <hare@suse.com>, Shaun Tancheff <shaun.tancheff@seagate.com>
 
-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
-AADECwAAAAA=
+Correct handling of devices with sector_size other that 512 bytes.
+
+In the case of a 4Kn device sector_size it is possible to describe a much
+larger DSM Trim than the current fixed default of 512 bytes.
+
+This patch assumes the minimum descriptor is sector_size and fills out
+the descriptor accordingly.
+
+The ACS-2 specification is quite clear that the DSM command payload is
+sized as number of 512 byte transfers so a 4Kn device will operate
+correctly without this patch.
+
+Signed-off-by: Shaun Tancheff <shaun.tancheff@seagate.com>
+---
+v5:
+ - Reshuffled descripton.
+ - Added support for a sector_size descriptor other than 512 bytes.
+
+ drivers/ata/libata-scsi.c | 85 +++++++++++++++++++++++++++++++----------------
+ 1 file changed, 57 insertions(+), 28 deletions(-)
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index ebf1a04..37f456e 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3283,7 +3283,7 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
+ /**
+  * ata_format_dsm_trim_descr() - SATL Write Same to DSM Trim
+  * @cmd: SCSI command being translated
+- * @num: Maximum number of entries (nominally 64).
++ * @trmax: Maximum number of entries that will fit in sector_size bytes.
+  * @sector: Starting sector
+  * @count: Total Range of request in logical sectors
+  *
+@@ -3298,63 +3298,80 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
+  *  LBA's should be sorted order and not overlap.
+  *
+  * NOTE: this is the same format as ADD LBA(S) TO NV CACHE PINNED SET
++ *
++ * Return: Number of bytes copied into sglist.
+  */
+-static unsigned int ata_format_dsm_trim_descr(struct scsi_cmnd *cmd, u32 num,
+-					      u64 sector, u32 count)
++static size_t ata_format_dsm_trim_descr(struct scsi_cmnd *cmd, u32 trmax,
++					u64 sector, u32 count)
+ {
+-	__le64 *buffer;
+-	u32 i = 0, used_bytes;
++	struct scsi_device *sdp = cmd->device;
++	size_t len = sdp->sector_size;
++	size_t r;
++	__le64 *buf;
++	u32 i = 0;
+ 	unsigned long flags;
+ 
+-	BUILD_BUG_ON(512 > ATA_SCSI_RBUF_SIZE);
++	WARN_ON(len > ATA_SCSI_RBUF_SIZE);
++
++	if (len > ATA_SCSI_RBUF_SIZE)
++		len = ATA_SCSI_RBUF_SIZE;
+ 
+ 	spin_lock_irqsave(&ata_scsi_rbuf_lock, flags);
+-	buffer = ((void *)ata_scsi_rbuf);
+-	while (i < num) {
++	buf = ((void *)ata_scsi_rbuf);
++	memset(buf, 0, len);
++	while (i < trmax) {
+ 		u64 entry = sector |
+ 			((u64)(count > 0xffff ? 0xffff : count) << 48);
+-		buffer[i++] = __cpu_to_le64(entry);
++		buf[i++] = __cpu_to_le64(entry);
+ 		if (count <= 0xffff)
+ 			break;
+ 		count -= 0xffff;
+ 		sector += 0xffff;
+ 	}
+-
+-	used_bytes = ALIGN(i * 8, 512);
+-	memset(buffer + i, 0, used_bytes - i * 8);
+-	sg_copy_from_buffer(scsi_sglist(cmd), scsi_sg_count(cmd), buffer, 512);
++	r = sg_copy_from_buffer(scsi_sglist(cmd), scsi_sg_count(cmd), buf, len);
+ 	spin_unlock_irqrestore(&ata_scsi_rbuf_lock, flags);
+ 
+-	return used_bytes;
++	return r;
+ }
+ 
+ /**
+  * ata_format_dsm_trim_descr() - SATL Write Same to ATA SCT Write Same
+  * @cmd: SCSI command being translated
+  * @lba: Starting sector
+- * @num: Number of logical sectors to be zero'd.
++ * @num: Number of sectors to be zero'd.
+  *
+- * Rewrite the WRITE SAME descriptor to be an SCT Write Same formatted
++ * Rewrite the WRITE SAME payload to be an SCT Write Same formatted
+  * descriptor.
+  * NOTE: Writes a pattern (0's) in the foreground.
+- *       Large write-same requents can timeout.
++ *
++ * Return: Number of bytes copied into sglist.
+  */
+-static void ata_format_sct_write_same(struct scsi_cmnd *cmd, u64 lba, u64 num)
++static size_t ata_format_sct_write_same(struct scsi_cmnd *cmd, u64 lba, u64 num)
+ {
+-	u16 *sctpg;
++	struct scsi_device *sdp = cmd->device;
++	size_t len = sdp->sector_size;
++	size_t r;
++	u16 *buf;
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&ata_scsi_rbuf_lock, flags);
+-	sctpg = ((void *)ata_scsi_rbuf);
++	buf = ((void *)ata_scsi_rbuf);
++
++	put_unaligned_le16(0x0002,  &buf[0]); /* SCT_ACT_WRITE_SAME */
++	put_unaligned_le16(0x0101,  &buf[1]); /* WRITE PTRN FG */
++	put_unaligned_le64(lba,     &buf[2]);
++	put_unaligned_le64(num,     &buf[6]);
++	put_unaligned_le32(0u,      &buf[10]); /* pattern */
++
++	WARN_ON(len > ATA_SCSI_RBUF_SIZE);
+ 
+-	put_unaligned_le16(0x0002,  &sctpg[0]); /* SCT_ACT_WRITE_SAME */
+-	put_unaligned_le16(0x0101,  &sctpg[1]); /* WRITE PTRN FG */
+-	put_unaligned_le64(lba,     &sctpg[2]);
+-	put_unaligned_le64(num,     &sctpg[6]);
+-	put_unaligned_le32(0u,      &sctpg[10]);
++	if (len > ATA_SCSI_RBUF_SIZE)
++		len = ATA_SCSI_RBUF_SIZE;
+ 
+-	sg_copy_from_buffer(scsi_sglist(cmd), scsi_sg_count(cmd), sctpg, 512);
++	r = sg_copy_from_buffer(scsi_sglist(cmd), scsi_sg_count(cmd), buf, len);
+ 	spin_unlock_irqrestore(&ata_scsi_rbuf_lock, flags);
++
++	return r;
+ }
+ 
+ /**
+@@ -3371,11 +3388,13 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
+ {
+ 	struct ata_taskfile *tf = &qc->tf;
+ 	struct scsi_cmnd *scmd = qc->scsicmd;
++	struct scsi_device *sdp = scmd->device;
++	size_t len = sdp->sector_size;
+ 	struct ata_device *dev = qc->dev;
+ 	const u8 *cdb = scmd->cmnd;
+ 	u64 block;
+ 	u32 n_block;
+-	const u32 trmax = ATA_MAX_TRIM_RNUM;
++	const u32 trmax = len >> 3;
+ 	u32 size;
+ 	u16 fp;
+ 	u8 bp = 0xff;
+@@ -3420,8 +3439,16 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
+ 	if (!scsi_sg_count(scmd))
+ 		goto invalid_param_len;
+ 
++	/*
++	 * size must match sector size in bytes
++	 * For DATA SET MANAGEMENT TRIM in ACS-2 nsect (aka count)
++	 * is defined as number of 512 byte blocks to be transferred.
++	 */
+ 	if (unmap) {
+ 		size = ata_format_dsm_trim_descr(scmd, trmax, block, n_block);
++		if (size != len)
++			goto invalid_param_len;
++
+ 		if (ata_ncq_enabled(dev) && ata_fpdma_dsm_supported(dev)) {
+ 			/* Newer devices support queued TRIM commands */
+ 			tf->protocol = ATA_PROT_NCQ;
+@@ -3441,7 +3468,9 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
+ 			tf->command = ATA_CMD_DSM;
+ 		}
+ 	} else {
+-		ata_format_sct_write_same(scmd, block, n_block);
++		size = ata_format_sct_write_same(scmd, block, n_block);
++		if (size != len)
++			goto invalid_param_len;
+ 
+ 		tf->hob_feature = 0;
+ 		tf->feature = 0;
+-- 
+2.9.3
+
