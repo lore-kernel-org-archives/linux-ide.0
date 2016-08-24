@@ -1,87 +1,67 @@
 From: Tom Yan <tom.ty89@gmail.com>
-Subject: Re: [PATCH v6 1/4] libata: Safely overwrite attached page in WRITE
- SAME xlat
-Date: Wed, 24 Aug 2016 13:31:03 +0800
-Message-ID: <CAGnHSEntXZzZ8qU4ha+F8NvpXBjWNUE=9a_dKjTyiCuSyXpEHQ@mail.gmail.com>
-References: <20160822042321.24367-1-shaun@tancheff.com> <20160822042321.24367-2-shaun@tancheff.com>
- <CAGnHSEnMS+wYWiwLxoYsTDOoVb9qJ=gZbcQmhsZumiO+wbQi4A@mail.gmail.com>
- <CAJVOszBVXftz9hqmOgWG5DvxW7cQjFPUFaGygWcj_exgNwT4=w@mail.gmail.com>
- <CAGnHSE=t1qg5ukA7btSwD=AaQZB6W6bmF9HMC_K2JsCqoSNGVg@mail.gmail.com>
- <CAJVOszBP_JLgKUsknSmG+AuCVW8VEB4VUuaTNQ-MrE9B0nuXBg@mail.gmail.com>
- <CAGnHSEmsgp93X85-bgFyV0CdQbvdMHZsWj6e=VNH_7dUDUewHA@mail.gmail.com>
- <CAJVOszD8HDqQMxyAnU=Yh6UDA+KE13u7Mq6s248uguRf-uUkYg@mail.gmail.com>
- <CAGnHSEn7M9Kmse+_JFFCgvZY5TqZt1TDzXGhKaqimog4OKiktg@mail.gmail.com> <yq1vayqdeng.fsf@sermon.lab.mkp.net>
+Subject: Re: [PATCH v6 2/4] Add support for SCT Write Same
+Date: Wed, 24 Aug 2016 13:57:09 +0800
+Message-ID: <CAGnHSEmQz9tLrUjE4UF_Taa6tUjO1X22o5GcU79KFPXHaOTGOg@mail.gmail.com>
+References: <20160822042321.24367-1-shaun@tancheff.com> <20160822042321.24367-3-shaun@tancheff.com>
+ <CAGnHSEmVbkJ30uNbW1O-Wh4E7RKbf+OojxRYjWanMYH_OrvHnA@mail.gmail.com> <CAJVOszDck0HOVKdnqG=wWyE9G=gGwmouh-YF2RL93AJHvbSTcg@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:33422 "EHLO
-        mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750960AbcHXFqN (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 24 Aug 2016 01:46:13 -0400
-In-Reply-To: <yq1vayqdeng.fsf@sermon.lab.mkp.net>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAJVOszDck0HOVKdnqG=wWyE9G=gGwmouh-YF2RL93AJHvbSTcg@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Shaun Tancheff <shaun.tancheff@seagate.com>
+Cc: Shaun Tancheff <shaun@tancheff.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Damien Le Moal <damien.lemoal@hgst.com>, Hannes Reinecke <hare@suse.de>, Josh Bingaman <josh.bingaman@seagate.com>, Hannes Reinecke <hare@suse.com>
 List-Id: linux-ide@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Shaun Tancheff <shaun.tancheff@seagate.com>, Shaun Tancheff <shaun@tancheff.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, Damien Le Moal <damien.lemoal@hgst.com>, Hannes Reinecke <hare@suse.de>, Josh Bingaman <josh.bingaman@seagate.com>, Hannes Reinecke <hare@suse.com>
 
-On 24 August 2016 at 11:33, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->>>>>> "Tom" == Tom Yan <tom.ty89@gmail.com> writes:
+Never mind. I was a bit lightheaded.
+
+Anyway I don't think you should use ata_scsi_rbuf. It is a buffer
+created and used for ata_scsi_simulate, which interacts with the SCSI
+layer but not the ATA device (v.s. ata_scsi_translate). You should
+probably create buffer inside ata_format_dsm_trim_descr() and
+ata_format_sct_write_same() of size(s) you need.
+
+On 23 August 2016 at 18:56, Shaun Tancheff <shaun.tancheff@seagate.com> wrote:
+> On Tue, Aug 23, 2016 at 5:37 AM, Tom Yan <tom.ty89@gmail.com> wrote:
+>> On 22 August 2016 at 04:23, Shaun Tancheff <shaun@tancheff.com> wrote:
+>>> +/**
+>>> + * ata_format_dsm_trim_descr() - SATL Write Same to ATA SCT Write Same
+>>> + * @cmd: SCSI command being translated
+>>> + * @lba: Starting sector
+>>> + * @num: Number of logical sectors to be zero'd.
+>>> + *
+>>> + * Rewrite the WRITE SAME descriptor to be an SCT Write Same formatted
+>>> + * descriptor.
+>>> + * NOTE: Writes a pattern (0's) in the foreground.
+>>> + *       Large write-same requents can timeout.
+>>> + */
+>>> +static void ata_format_sct_write_same(struct scsi_cmnd *cmd, u64 lba, u64 num)
+>>> +{
+>>> +       u16 *sctpg;
+>>> +       unsigned long flags;
+>>> +
+>>> +       spin_lock_irqsave(&ata_scsi_rbuf_lock, flags);
+>>> +       sctpg = ((void *)ata_scsi_rbuf);
+>>
+>> Because ata_scsi_rbuf is of a fixed size of ATA_SCSI_RBUF_SIZE.
+>>
+>> #define ATA_SCSI_RBUF_SIZE      4096
+>> ...
+>> static u8 ata_scsi_rbuf[ATA_SCSI_RBUF_SIZE];
+>>
+>>> +
+>>> +       put_unaligned_le16(0x0002,  &sctpg[0]); /* SCT_ACT_WRITE_SAME */
+>>> +       put_unaligned_le16(0x0101,  &sctpg[1]); /* WRITE PTRN FG */
+>>> +       put_unaligned_le64(lba,     &sctpg[2]);
+>>> +       put_unaligned_le64(num,     &sctpg[6]);
+>>> +       put_unaligned_le32(0u,      &sctpg[10]);
+>>> +
+>>> +       sg_copy_from_buffer(scsi_sglist(cmd), scsi_sg_count(cmd), sctpg, 512);
+>>
+>> You have no reason to use 512 here instead of ATA_SCSI_RBUF_SIZE this time.
 >
-> Tom> Nope, SCSI Write Same commands does not have payload (or in SCSI
-> Tom> terms, parameter list / data-out buffer).
+> Ah .. because SCT Write Same is a fixed 512 byte transfer?
+> Ah .. because I only have 512 bytes to copy?
 >
-> WRITE SAME has a a payload of 1 logical block (unless NDOB is set but we
-> have had no good reason to support that yet).
-
-Interesting, I wasn't aware of the bit. I just didn't see any
-parameter list defined for any of the Write Same commands. Ah wait, it
-carries the pattern (the "same") and so.
-
-Hmm, it doesn't seem like the translation implemented in this patch
-series cares about the payload though?
-
->
-> UNMAP has a payload that varies based on the number of range
-> descriptors. The SCSI disk driver only ever issues a single descriptor
-> but since libata doesn't support UNMAP this doesn't really come into
-> play.
->
-> Ideally there would be a way to distinguish between device limits for
-> WRITE SAME with the UNMAP bit and for "regular" WRITE SAME. One way to
-> do that would be to transition the libata discard implementation over to
-> single-range UNMAP, fill out the relevant VPD page B0 fields and leave
-> the WRITE SAME bits for writing zeroes.
->
-> One reason that has not been particularly compelling is that the WRITE
-> SAME payload buffer does double duty to hold the ATA DSM TRIM range
-
-Huh? Why would the SATL care about its payload buffer for TRIM (i.e.
-when the UNMAP bit is set)? Doesn't it just read the LBA and NUMBER OF
-BLOCKS field and pack TRIM ranges/payload according to that?
-
-> descriptors and matches the required ATA payload size. Whereas the UNMAP
-
-Why would it need to "matches the required ATA payload size"?
-
-> command would only provide 24 bytes of TRIM range space.
-
-I don't really follow. The UNMAP descriptor has LBA (8 bytes / 64-bit)
-and NUMBER OF BLOCKS (4 bytes / 32-bit) field of the same length as
-Write Same (16). Even if the SCSI disk driver will only send one
-descriptor, it should work as good as Write Same (16).
-
->
-> Also, please be careful with transfer lengths, __data_len, etc. As
-> mentioned, the transfer length WRITE SAME is typically 512 bytes and
-> that's the number of bytes that need to be DMA'ed and transferred over
-> the wire by the controller. But from a command completion perspective we
-> need to complete however many bytes the command acted upon. Unlike reads
-> and writes there is not a 1:1 mapping between the transfer length and
-> the affected area. So we do a bit of magic after the buffer has been
-> mapped to ensure that the completion byte count matches the number of
-> blocks that were affected by the command rather than the size of the
-> data buffer in bytes.
->
-> --
-> Martin K. Petersen      Oracle Linux Engineering
+>>> +       spin_unlock_irqrestore(&ata_scsi_rbuf_lock, flags);
+>>> +}
