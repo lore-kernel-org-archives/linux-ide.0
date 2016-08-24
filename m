@@ -1,202 +1,109 @@
-From: Shaun Tancheff <shaun@tancheff.com>
-Subject: [PATCH v6 3/4 RESEND] SCT Write Same / DSM Trim
-Date: Wed, 24 Aug 2016 13:08:14 -0500
-Message-ID: <20160824180814.24708-1-shaun@tancheff.com>
-References: <0c9c5a80-813b-31f0-355d-2e08e452dd01@suse.de>
+From: Shaun Tancheff <shaun.tancheff@seagate.com>
+Subject: Re: [PATCH v6 1/4] libata: Safely overwrite attached page in WRITE
+ SAME xlat
+Date: Wed, 24 Aug 2016 16:28:16 -0500
+Message-ID: <CAJVOszC96Z0KUcYgnaana-6_+tzvJTSBEucKDxLRMeRw6gdXcg@mail.gmail.com>
+References: <20160822042321.24367-1-shaun@tancheff.com> <20160822042321.24367-2-shaun@tancheff.com>
+ <CAGnHSEnMS+wYWiwLxoYsTDOoVb9qJ=gZbcQmhsZumiO+wbQi4A@mail.gmail.com>
+ <CAJVOszBVXftz9hqmOgWG5DvxW7cQjFPUFaGygWcj_exgNwT4=w@mail.gmail.com>
+ <CAGnHSE=t1qg5ukA7btSwD=AaQZB6W6bmF9HMC_K2JsCqoSNGVg@mail.gmail.com>
+ <CAJVOszBP_JLgKUsknSmG+AuCVW8VEB4VUuaTNQ-MrE9B0nuXBg@mail.gmail.com>
+ <CAGnHSEmsgp93X85-bgFyV0CdQbvdMHZsWj6e=VNH_7dUDUewHA@mail.gmail.com>
+ <CAJVOszD8HDqQMxyAnU=Yh6UDA+KE13u7Mq6s248uguRf-uUkYg@mail.gmail.com>
+ <CAGnHSEn7M9Kmse+_JFFCgvZY5TqZt1TDzXGhKaqimog4OKiktg@mail.gmail.com>
+ <yq1vayqdeng.fsf@sermon.lab.mkp.net> <CAGnHSEntXZzZ8qU4ha+F8NvpXBjWNUE=9a_dKjTyiCuSyXpEHQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-it0-f68.google.com ([209.85.214.68]:34602 "EHLO
-        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754129AbcHXTAN (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 24 Aug 2016 15:00:13 -0400
-In-Reply-To: <0c9c5a80-813b-31f0-355d-2e08e452dd01@suse.de>
+Received: from mx0b-00003501.pphosted.com ([67.231.152.68]:36903 "EHLO
+        mx0a-000cda01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1755637AbcHXVnM (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 24 Aug 2016 17:43:12 -0400
+Received: from pps.filterd (m0075032.ppops.net [127.0.0.1])
+        by mx0b-00003501.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u7OLP5XR021347
+        for <linux-ide@vger.kernel.org>; Wed, 24 Aug 2016 17:28:38 -0400
+Received: from mail-yw0-f198.google.com (mail-yw0-f198.google.com [209.85.161.198])
+        by mx0b-00003501.pphosted.com with ESMTP id 251fmwjfnj-17
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+        for <linux-ide@vger.kernel.org>; Wed, 24 Aug 2016 17:28:37 -0400
+Received: by mail-yw0-f198.google.com with SMTP id r9so52532631ywg.0
+        for <linux-ide@vger.kernel.org>; Wed, 24 Aug 2016 14:28:37 -0700 (PDT)
+In-Reply-To: <CAGnHSEntXZzZ8qU4ha+F8NvpXBjWNUE=9a_dKjTyiCuSyXpEHQ@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Shaun Tancheff <shaun@tancheff.com>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, Tom Yan <tom.ty89@gmail.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Damien Le Moal <damien.lemoal@hgst.com>, Josh Bingaman <josh.bingaman@seagate.com>, Hannes Reinecke <hare@suse.com>, Shaun Tancheff <shaun.tancheff@seagate.com>
+To: Tom Yan <tom.ty89@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Shaun Tancheff <shaun@tancheff.com>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, Damien Le Moal <damien.lemoal@hgst.com>, Hannes Reinecke <hare@suse.de>, Josh Bingaman <josh.bingaman@seagate.com>, Hannes Reinecke <hare@suse.com>
 
-Correct handling of devices with sector_size other that 512 bytes.
+On Wed, Aug 24, 2016 at 12:31 AM, Tom Yan <tom.ty89@gmail.com> wrote:
+> On 24 August 2016 at 11:33, Martin K. Petersen
+> <martin.petersen@oracle.com> wrote:
+>>>>>>> "Tom" == Tom Yan <tom.ty89@gmail.com> writes:
+>>
+>> Tom> Nope, SCSI Write Same commands does not have payload (or in SCSI
+>> Tom> terms, parameter list / data-out buffer).
+>>
+>> WRITE SAME has a a payload of 1 logical block (unless NDOB is set but we
+>> have had no good reason to support that yet).
+>
+> Interesting, I wasn't aware of the bit. I just didn't see any
+> parameter list defined for any of the Write Same commands. Ah wait, it
+> carries the pattern (the "same") and so.
+>
+> Hmm, it doesn't seem like the translation implemented in this patch
+> series cares about the payload though?
 
-In the case of a 4Kn device sector_size it is possible to describe a much
-larger DSM Trim than the current fixed default of 512 bytes.
+As repeated here and elsewhere the payload is:
+    scsi_sglist(cmd)
+and it was put there by scsi_init_io() when it called scsi_init_sgtable()
 
-This patch assumes the minimum descriptor is sector_size and fills out
-the descriptor accordingly.
+>> UNMAP has a payload that varies based on the number of range
+>> descriptors. The SCSI disk driver only ever issues a single descriptor
+>> but since libata doesn't support UNMAP this doesn't really come into
+>> play.
+>>
+>> Ideally there would be a way to distinguish between device limits for
+>> WRITE SAME with the UNMAP bit and for "regular" WRITE SAME. One way to
+>> do that would be to transition the libata discard implementation over to
+>> single-range UNMAP, fill out the relevant VPD page B0 fields and leave
+>> the WRITE SAME bits for writing zeroes.
+>>
+>> One reason that has not been particularly compelling is that the WRITE
+>> SAME payload buffer does double duty to hold the ATA DSM TRIM range
+>
+> Huh? Why would the SATL care about its payload buffer for TRIM (i.e.
+> when the UNMAP bit is set)? Doesn't it just read the LBA and NUMBER OF
+> BLOCKS field and pack TRIM ranges/payload according to that?
+>
+>> descriptors and matches the required ATA payload size. Whereas the UNMAP
+>
+> Why would it need to "matches the required ATA payload size"?
+>
+>> command would only provide 24 bytes of TRIM range space.
+>
+> I don't really follow. The UNMAP descriptor has LBA (8 bytes / 64-bit)
+> and NUMBER OF BLOCKS (4 bytes / 32-bit) field of the same length as
+> Write Same (16). Even if the SCSI disk driver will only send one
+> descriptor, it should work as good as Write Same (16).
 
-The ACS-2 specification is quite clear that the DSM command payload is
-sized as number of 512 byte transfers so a 4Kn device will operate
-correctly without this patch.
+The "payload" is the data block transferred with the command.
+The "descriptor" is, in this context, the contents of the payload as
+it "describes" what the action the command is supposed to perform.
 
-Signed-off-by: Shaun Tancheff <shaun.tancheff@seagate.com>
----
-v5:
- - Reshuffled descripton.
- - Added support for a sector_size descriptor other than 512 bytes.
+The "payload" contains the "descriptor" that "describes" how
+DSM TRIM should determine which logical blocks it should UNMAP.
 
- drivers/ata/libata-scsi.c | 85 +++++++++++++++++++++++++++++++----------------
- 1 file changed, 57 insertions(+), 28 deletions(-)
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index ebf1a04..37f456e 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3283,7 +3283,7 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
- /**
-  * ata_format_dsm_trim_descr() - SATL Write Same to DSM Trim
-  * @cmd: SCSI command being translated
-- * @num: Maximum number of entries (nominally 64).
-+ * @trmax: Maximum number of entries that will fit in sector_size bytes.
-  * @sector: Starting sector
-  * @count: Total Range of request in logical sectors
-  *
-@@ -3298,63 +3298,80 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
-  *  LBA's should be sorted order and not overlap.
-  *
-  * NOTE: this is the same format as ADD LBA(S) TO NV CACHE PINNED SET
-+ *
-+ * Return: Number of bytes copied into sglist.
-  */
--static unsigned int ata_format_dsm_trim_descr(struct scsi_cmnd *cmd, u32 num,
--					      u64 sector, u32 count)
-+static size_t ata_format_dsm_trim_descr(struct scsi_cmnd *cmd, u32 trmax,
-+					u64 sector, u32 count)
- {
--	__le64 *buffer;
--	u32 i = 0, used_bytes;
-+	struct scsi_device *sdp = cmd->device;
-+	size_t len = sdp->sector_size;
-+	size_t r;
-+	__le64 *buf;
-+	u32 i = 0;
- 	unsigned long flags;
- 
--	BUILD_BUG_ON(512 > ATA_SCSI_RBUF_SIZE);
-+	WARN_ON(len > ATA_SCSI_RBUF_SIZE);
-+
-+	if (len > ATA_SCSI_RBUF_SIZE)
-+		len = ATA_SCSI_RBUF_SIZE;
- 
- 	spin_lock_irqsave(&ata_scsi_rbuf_lock, flags);
--	buffer = ((void *)ata_scsi_rbuf);
--	while (i < num) {
-+	buf = ((void *)ata_scsi_rbuf);
-+	memset(buf, 0, len);
-+	while (i < trmax) {
- 		u64 entry = sector |
- 			((u64)(count > 0xffff ? 0xffff : count) << 48);
--		buffer[i++] = __cpu_to_le64(entry);
-+		buf[i++] = __cpu_to_le64(entry);
- 		if (count <= 0xffff)
- 			break;
- 		count -= 0xffff;
- 		sector += 0xffff;
- 	}
--
--	used_bytes = ALIGN(i * 8, 512);
--	memset(buffer + i, 0, used_bytes - i * 8);
--	sg_copy_from_buffer(scsi_sglist(cmd), scsi_sg_count(cmd), buffer, 512);
-+	r = sg_copy_from_buffer(scsi_sglist(cmd), scsi_sg_count(cmd), buf, len);
- 	spin_unlock_irqrestore(&ata_scsi_rbuf_lock, flags);
- 
--	return used_bytes;
-+	return r;
- }
- 
- /**
-  * ata_format_dsm_trim_descr() - SATL Write Same to ATA SCT Write Same
-  * @cmd: SCSI command being translated
-  * @lba: Starting sector
-- * @num: Number of logical sectors to be zero'd.
-+ * @num: Number of sectors to be zero'd.
-  *
-- * Rewrite the WRITE SAME descriptor to be an SCT Write Same formatted
-+ * Rewrite the WRITE SAME payload to be an SCT Write Same formatted
-  * descriptor.
-  * NOTE: Writes a pattern (0's) in the foreground.
-- *       Large write-same requents can timeout.
-+ *
-+ * Return: Number of bytes copied into sglist.
-  */
--static void ata_format_sct_write_same(struct scsi_cmnd *cmd, u64 lba, u64 num)
-+static size_t ata_format_sct_write_same(struct scsi_cmnd *cmd, u64 lba, u64 num)
- {
--	u16 *sctpg;
-+	struct scsi_device *sdp = cmd->device;
-+	size_t len = sdp->sector_size;
-+	size_t r;
-+	u16 *buf;
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&ata_scsi_rbuf_lock, flags);
--	sctpg = ((void *)ata_scsi_rbuf);
-+	buf = ((void *)ata_scsi_rbuf);
-+
-+	put_unaligned_le16(0x0002,  &buf[0]); /* SCT_ACT_WRITE_SAME */
-+	put_unaligned_le16(0x0101,  &buf[1]); /* WRITE PTRN FG */
-+	put_unaligned_le64(lba,     &buf[2]);
-+	put_unaligned_le64(num,     &buf[6]);
-+	put_unaligned_le32(0u,      &buf[10]); /* pattern */
-+
-+	WARN_ON(len > ATA_SCSI_RBUF_SIZE);
- 
--	put_unaligned_le16(0x0002,  &sctpg[0]); /* SCT_ACT_WRITE_SAME */
--	put_unaligned_le16(0x0101,  &sctpg[1]); /* WRITE PTRN FG */
--	put_unaligned_le64(lba,     &sctpg[2]);
--	put_unaligned_le64(num,     &sctpg[6]);
--	put_unaligned_le32(0u,      &sctpg[10]);
-+	if (len > ATA_SCSI_RBUF_SIZE)
-+		len = ATA_SCSI_RBUF_SIZE;
- 
--	sg_copy_from_buffer(scsi_sglist(cmd), scsi_sg_count(cmd), sctpg, 512);
-+	r = sg_copy_from_buffer(scsi_sglist(cmd), scsi_sg_count(cmd), buf, len);
- 	spin_unlock_irqrestore(&ata_scsi_rbuf_lock, flags);
-+
-+	return r;
- }
- 
- /**
-@@ -3371,11 +3388,13 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
- {
- 	struct ata_taskfile *tf = &qc->tf;
- 	struct scsi_cmnd *scmd = qc->scsicmd;
-+	struct scsi_device *sdp = scmd->device;
-+	size_t len = sdp->sector_size;
- 	struct ata_device *dev = qc->dev;
- 	const u8 *cdb = scmd->cmnd;
- 	u64 block;
- 	u32 n_block;
--	const u32 trmax = ATA_MAX_TRIM_RNUM;
-+	const u32 trmax = len >> 3;
- 	u32 size;
- 	u16 fp;
- 	u8 bp = 0xff;
-@@ -3420,8 +3439,16 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
- 	if (!scsi_sg_count(scmd))
- 		goto invalid_param_len;
- 
-+	/*
-+	 * size must match sector size in bytes
-+	 * For DATA SET MANAGEMENT TRIM in ACS-2 nsect (aka count)
-+	 * is defined as number of 512 byte blocks to be transferred.
-+	 */
- 	if (unmap) {
- 		size = ata_format_dsm_trim_descr(scmd, trmax, block, n_block);
-+		if (size != len)
-+			goto invalid_param_len;
-+
- 		if (ata_ncq_enabled(dev) && ata_fpdma_dsm_supported(dev)) {
- 			/* Newer devices support queued TRIM commands */
- 			tf->protocol = ATA_PROT_NCQ;
-@@ -3441,7 +3468,9 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
- 			tf->command = ATA_CMD_DSM;
- 		}
- 	} else {
--		ata_format_sct_write_same(scmd, block, n_block);
-+		size = ata_format_sct_write_same(scmd, block, n_block);
-+		if (size != len)
-+			goto invalid_param_len;
- 
- 		tf->hob_feature = 0;
- 		tf->feature = 0;
+>> Also, please be careful with transfer lengths, __data_len, etc. As
+>> mentioned, the transfer length WRITE SAME is typically 512 bytes and
+>> that's the number of bytes that need to be DMA'ed and transferred over
+>> the wire by the controller. But from a command completion perspective we
+>> need to complete however many bytes the command acted upon. Unlike reads
+>> and writes there is not a 1:1 mapping between the transfer length and
+>> the affected area. So we do a bit of magic after the buffer has been
+>> mapped to ensure that the completion byte count matches the number of
+>> blocks that were affected by the command rather than the size of the
+>> data buffer in bytes.
+>>
+>> --
+>> Martin K. Petersen      Oracle Linux Engineering
 -- 
-2.9.3
-
+Shaun Tancheff
