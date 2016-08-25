@@ -1,33 +1,76 @@
-From: Shaun Tancheff <shaun@tancheff.com>
-Subject: Re: [PATCH] ata: do not hard code limit in ata_set_lba_range_entries()
-Date: Thu, 25 Aug 2016 03:42:42 -0500
-Message-ID: <CAJ48U8Vojc=kzSbjjmM9y7DE0tCUk_GqdY_kLf+NY07VfefvDQ@mail.gmail.com>
-References: <e35afc461c9a79f568f2bcd4ef2cd1e07fb50082.1471890326.git.tom.ty89@gmail.com>
- <CAJ48U8UsFFD=fb6WQEVAam9-9RajVjLNrgiKmXCXvkCFOg2JnQ@mail.gmail.com>
- <CAGnHSE=Laj5kpFNJ-EqdN-NTUQJyOmwYtjWM7iLqGxDRqMSoxA@mail.gmail.com>
- <CAJVOszC2sp0=GA02ZB00s46F84XfU7DvzNSravyhbjxY651ozQ@mail.gmail.com>
- <CAGnHSEm18o-8ZRhyFnyQ22rUm+gJLWwJyxoA-iSJnkM3k4oHHQ@mail.gmail.com>
- <CAJ48U8XDb7S2WPSDBtn+VUoRb70u6SmgbPFhm-NC2jx6CmE2mw@mail.gmail.com>
- <CAGnHSEn470B0ecDdMSY29W4Or3jD_NPoUAku_09o=X9Tn6vSpw@mail.gmail.com>
- <CAJVOszB7cyUcE+A_EUw0OnvdO3iGFW9sG45R2Ng1Ea_Q7YxaQA@mail.gmail.com>
- <CAGnHSE=Lsb-L-nd8OHQpVPDe1JkURjnXoA26ZQ7bH1GBEPAAtA@mail.gmail.com>
- <CAGnHSEmZdVy2Xp_wK8n+89mD18NPAqcy5UBhhDEy5RAAC7c+vA@mail.gmail.com>
- <CAJVOszBcuNouJk28nr1smPYJfEhE_9LjD0UgOiG31ApgrXzGJg@mail.gmail.com> <CAGnHSEn3d7s3Tw9MT9Vos+0QBRnnj_gqKorcC56SzOxkK5NN-w@mail.gmail.com>
+From: Tom Yan <tom.ty89@gmail.com>
+Subject: Re: [PATCH v6 3/4 RESEND] SCT Write Same / DSM Trim
+Date: Thu, 25 Aug 2016 17:30:04 +0800
+Message-ID: <CAGnHSEmsYSo6prXSoaiVSshAA0ma6+NcDo9CmsEeBqdSTJisaw@mail.gmail.com>
+References: <0c9c5a80-813b-31f0-355d-2e08e452dd01@suse.de> <20160824180814.24708-1-shaun@tancheff.com>
+ <CAGnHSEmVbpaE6pr2JX=bAH0wpz6U7xnT--2BXoWGeKJZT6TwBQ@mail.gmail.com> <CAJVOszDp6P1Qaw43c1X-mONmqxmBkNjMKSOz+y41B6n+PJas9A@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <CAGnHSEn3d7s3Tw9MT9Vos+0QBRnnj_gqKorcC56SzOxkK5NN-w@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tom Yan <tom.ty89@gmail.com>
-Cc: Shaun Tancheff <shaun.tancheff@seagate.com>, Tejun Heo <tj@kernel.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:34590 "EHLO
+        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756422AbcHYJaL (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 25 Aug 2016 05:30:11 -0400
+In-Reply-To: <CAJVOszDp6P1Qaw43c1X-mONmqxmBkNjMKSOz+y41B6n+PJas9A@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Shaun Tancheff <shaun.tancheff@seagate.com>
+Cc: Shaun Tancheff <shaun@tancheff.com>, Hannes Reinecke <hare@suse.de>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Damien Le Moal <damien.lemoal@hgst.com>, Josh Bingaman <josh.bingaman@seagate.com>, Hannes Reinecke <hare@suse.com>
 
-Tom,
+On 25 August 2016 at 16:03, Shaun Tancheff <shaun.tancheff@seagate.com> wrote:
+> On Thu, Aug 25, 2016 at 2:01 AM, Tom Yan <tom.ty89@gmail.com> wrote:
+>> Really please just drop this patch. There is no rational reason for
+>> you to associate the maximum payload size to the logical sector size.
+>
+> Been over this many, many times now. It has to do with the size of
+> the buffer setup through WRITE SAME in drivers/scsi/sd.c
 
-In my opinion this patch you submitted is simply making the code less
-safe against a buffer overflow without a sufficiently good reason.
+Is it because we are re-using the scatter-gather list that the the sd
+driver used for issuing write same / unmap commands to our SATL for
+issuing ATA commands from our SATL to the AHCI host / ATA device? And
+that the scatter-gather list cannot be extended on-demand? (Which
+sounds pathetically defected)
 
-In future please comment on other patches as replies to those patches.
-Mixing them together is just confusing.
+>
+>> And please stop using the ATA SCSI Response Buffer (ata_scsi_rbuf)
+>> that is used for response to the SCSI layer for SCSI commands that
+>> won't really interact with the ATA device (i.e. triggers an ATA
+>> command), while ata_format_sct_write_same() and
+>> ata_scsi_write_same_xlat() are used for constructing payload that is
+>> going to be send to the ATA device. Can't you even see that these are
+>> of different direction to different layer?
+>
+> Adding a new global buffer where there is one there already is
 
---Shaun
+I never said global. On the contrary I almost explicitly stated that
+you should not use a global buffer for that (and let
+ata_format_sct_write_same() and ata_scsi_write_same_xlat() share it).
+
+> kind of silly. The buffer already has a perfectly acceptable
+> spinlock and the time spent copying data around is trivially
+> small in comparison to the I/O operation so there is not
+> likely to be any contention over the buffer.
+>
+> It is memory. Why do you think ata_scsi_rbuf is so special?
+
+Practically it _might_ work just fine. But your are messing up the
+whole layer/logic model by doing that.
+
+But seriously, never mind. It's almost hilarious that:
+
+1. Martin has been insisting on that we should stay at 1-block
+payload, while he then conveniently ignore the fact that ACS
+specifically instructed vendors to report the payload limit in
+IDENTIFY DEVICE data in terms of 512-byte block (in other word, always
+the maximum number of ranges the device can handle divided by 64), and
+suggested that we should statically advertise 8-block payload (in
+512-byte / ACS sense) for 4Kn devices.
+
+2. And then you conveniently convert his idea on the Maximum Write
+Same Length to the buffer size limit, without even taking care of the
+VPD field.
+
+And this is just _one_ example.
+
+I am really done doing this. I'll just let others conveniently review
+it and let the series through. Sorry for all the annoyance.
