@@ -1,43 +1,37 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v6 0/4] SCT Write Same
-Date: Thu, 25 Aug 2016 11:28:11 -0400
-Message-ID: <20160825152811.GA20479@htj.duckdns.org>
-References: <20160822042321.24367-1-shaun@tancheff.com>
+From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
+Subject: [PATCH]pata_ninja32: Avoid corrupting status flags
+Date: Tue, 30 Aug 2016 16:47:02 +0100
+Message-ID: <20160830164702.26e5e9b4@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yb0-f195.google.com ([209.85.213.195]:34465 "EHLO
-        mail-yb0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759634AbcHYP2t (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 25 Aug 2016 11:28:49 -0400
-Content-Disposition: inline
-In-Reply-To: <20160822042321.24367-1-shaun@tancheff.com>
+Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:52086 "EHLO
+        lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755906AbcH3PrN (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 30 Aug 2016 11:47:13 -0400
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Shaun Tancheff <shaun@tancheff.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Tom Yan <tom.ty89@gmail.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Damien Le Moal <damien.lemoal@hgst.com>, Hannes Reinecke <hare@suse.de>, Josh Bingaman <josh.bingaman@seagate.com>, Hannes Reinecke <hare@suse.com>
+To: linux-ide@vger.kernel.org, tj@kernel.org
 
-Hello,
+From: Alan Cox <alan@linux.intel.com>
 
-On Sun, Aug 21, 2016 at 11:23:17PM -0500, Shaun Tancheff wrote:
-> At some point the method of issuing Write Same for ATA drives changed.
-> Currently write same is commonly available via SCT so expose the SCT
-> capabilities and use SCT Write Same when it is available.
-> 
-> This is useful for zoned based media that prefers to support discard
-> with lbprz set, aka discard zeroes data by mapping discard operations to
-> reset write pointer operations. Conventional zones that do not support
-> reset write pointer can still honor the discard zeroes data by issuing
-> a write same over the zone.
-> 
-> It may also be nice to know if various controllers that currently
-> disable WRITE SAME will work with the SCT Write Same code path:
->   aacraid, arcmsr, megaraid, 3w-9xxx, 3w-sas, 3w-xxxx, gdth, hpsa, ips,
->   megaraid, pmcraid, storvsc_drv
+Ninja32 needs to set some flags to indicate it does 32bit IO. However it currently assigns this which
+loses the initializing flag and causes a warning spew. Fix it to use a logical or as is intended.
+    
+Signed-off-by: Alan Cox <alan@linux.intel.com>
+Tested-by: Ellmar Stelnberger <estellnb@elstel.org>
 
-Applied 1-4 to libata/for-4.9.
-
-Thanks.
-
--- 
-tejun
+diff --git a/drivers/ata/pata_ninja32.c b/drivers/ata/pata_ninja32.c
+index 633aa29..44f97ad 100644
+--- a/drivers/ata/pata_ninja32.c
++++ b/drivers/ata/pata_ninja32.c
+@@ -144,7 +144,7 @@ static int ninja32_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ 	ap->ioaddr.altstatus_addr = base + 0x1E;
+ 	ap->ioaddr.bmdma_addr = base;
+ 	ata_sff_std_ports(&ap->ioaddr);
+-	ap->pflags = ATA_PFLAG_PIO32 | ATA_PFLAG_PIO32CHANGE;
++	ap->pflags |= ATA_PFLAG_PIO32 | ATA_PFLAG_PIO32CHANGE;
+ 
+ 	ninja32_program(base);
+ 	/* FIXME: Should we disable them at remove ? */
