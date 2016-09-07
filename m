@@ -1,47 +1,46 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ahci: use pci_alloc_irq_vectors
-Date: Tue, 6 Sep 2016 12:39:46 -0400
-Message-ID: <20160906163946.GB24268@htj.duckdns.org>
-References: <1473088905-27670-1-git-send-email-hch@lst.de>
- <1473088905-27670-2-git-send-email-hch@lst.de>
+From: Alaine Kamba <dansekou101@gmail.com>
+Subject: GET BACK TO ME IMMEDIATELY.
+Date: Wed, 7 Sep 2016 09:39:34 +0200
+Message-ID: <CAD1MCdyuUHwaPE8f16VxoRKt6eE1SH0uejQeH0038uTUnb2YDw@mail.gmail.com>
+Reply-To: alainekamba1@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f195.google.com ([209.85.161.195]:33837 "EHLO
-        mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756084AbcIFQjt (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 6 Sep 2016 12:39:49 -0400
-Received: by mail-yw0-f195.google.com with SMTP id j1so2899273ywb.1
-        for <linux-ide@vger.kernel.org>; Tue, 06 Sep 2016 09:39:49 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <1473088905-27670-2-git-send-email-hch@lst.de>
+Received: from mail-it0-f67.google.com ([209.85.214.67]:32829 "EHLO
+        mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756488AbcIGHjh (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 7 Sep 2016 03:39:37 -0400
+Received: by mail-it0-f67.google.com with SMTP id g185so459824ith.0
+        for <linux-ide@vger.kernel.org>; Wed, 07 Sep 2016 00:39:37 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: dan.j.williamps@intel.com, rrichter@cavium.com, linux-ide@vger.kernel.org
 
-On Mon, Sep 05, 2016 at 05:21:45PM +0200, Christoph Hellwig wrote:
-> Use the new pci_alloc_irq_vectors API to allocate MSI-X and MSI vectors.
-> The big advantage over the old code is that we can use the same API for
-> MSI and MSI-X, and that we don't need to store the MSI-X vector mapping
-> in driver-private data structures.
-> 
-> This first conversion keeps the probe order as-is: MSI-X multi vector,
-> MSI multi vector, MSI single vector, MSI-X single vector and last a
-> single least legacy interrupt line.  There is one small change of
-> behavior: we now check the "MSI Revert to Single Message" flag for
-> MSI-X in addition to MSI.
-> 
-> Because the API to find the Linux IRQ number for a MSI/MSI-X vector
-> is PCI specific, but libahaci is bus-agnostic I had to a
-> get_irq_vector function pointer to struct ahci_host_priv.  The
-> alternative would be to move the multi-vector case of ahci_host_activate
-> to ahci.c and just call ata_host_activate directly from the others
-> users of ahci_host_activate.
+Dear,
 
-Applied to libata/for-4.9 after pulling in the mainline.
+My name is Mr Alaine Kamba, I am the Bill and Exchange (assistant)
+Manager of Bank of Africa Ouagadougou, Burkina Faso. In my department
+I discovered an abandoned sum of eighteen million three hundred
+thousand United State of American dollars (18.3MILLION USA DOLLARS) in
+an account that belongs to one of our foreign customer who died in
+airline that crashed on 4th October 2001.
 
-Thanks.
+Since I got information about his death I have been expecting his next
+of kin to come over and claim his money because we can not release it
+unless somebody applies for it as the next of kin or relation to the
+deceased as indicated in our banking guidelines, but unfortunately we
+learnt that all his supposed next of kin or relation died alongside
+with him in the plane crash leaving nobody behind for the claim. It is
+therefore upon this discovery that I decided to make this business
+proposal to you and release the money to you as next of kin or
+relation to the deceased for safety and subsequent disbursement since
+nobody is coming for it and I don't want the money to go into the bank
+treasury as unclaimed bill.
 
--- 
-tejun
+You will be entitled with 40% of the total sum while 60% will be for
+me after which I will visit your Country to invest my own share when
+the fund is successfully transferred into your account, Please I would
+like you to keep this transaction confidential and as a top secret as
+you may wish to know that I am a bank official.
+
+Yours sincerely,
+Mr Alaine Kamba.
