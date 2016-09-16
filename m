@@ -1,37 +1,35 @@
 From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 161041] New: >> >>>> >>USA @ JEET1.8.0.0.9.1.9.0.9.9.2.>> >>>>
- >>  < QuickBooks Support PHONE Number @ Suppport Phone Number>> >>>> >>
-Date: Fri, 16 Sep 2016 13:21:57 +0000
-Message-ID: <bug-161041-11633@https.bugzilla.kernel.org/>
+Subject: [Bug 161371] New: SuPpORT+++((++1-800-919-0992) < QuickBooks Support
+ phone number  < QuickBooks enterprise Phone number
+Date: Fri, 16 Sep 2016 13:35:38 +0000
+Message-ID: <bug-161371-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51034 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:56316 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751180AbcIPNWE (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 16 Sep 2016 09:22:04 -0400
+        id S1757667AbcIPNfr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 16 Sep 2016 09:35:47 -0400
 Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id 6A996205C7
-        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 13:22:01 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-        by mail.kernel.org (Postfix) with ESMTP id 2AC2A2054A
-        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 13:21:58 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTP id 0C4552060A
+        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 13:35:43 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+        by mail.kernel.org (Postfix) with ESMTP id 5D9DA20621
+        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 13:35:38 +0000 (UTC)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=161041
+https://bugzilla.kernel.org/show_bug.cgi?id=161371
 
-            Bug ID: 161041
-           Summary: >> >>>> >>USA @ JEET1.8.0.0.9.1.9.0.9.9.2.>> >>>> >>
-                    < QuickBooks Support PHONE Number @ Suppport Phone
-                    Number>> >>>> >>
+            Bug ID: 161371
+           Summary: SuPpORT+++((++1-800-919-0992) < QuickBooks Support
+                    phone number  < QuickBooks enterprise Phone number
            Product: IO/Storage
            Version: 2.5
-    Kernel Version: >> >>>> >>USA @ JEET1.8.0.0.9.1.9.0.9.9.2.>> >>>> >>
-                    < QuickBooks Support PHONE Number @ Suppport Phone
-                    Number>> >>>> >>
+    Kernel Version: SuPpORT+++((++1-800-919-0992) < QuickBooks Support
+                    phone number  < QuickBooks enterprise Phone number
           Hardware: All
                 OS: Linux
               Tree: Mainline
@@ -40,14 +38,15 @@ https://bugzilla.kernel.org/show_bug.cgi?id=161041
           Priority: P1
          Component: IDE
           Assignee: io_ide@kernel-bugs.osdl.org
-          Reporter: deepika009@mail.com
+          Reporter: deepika010@mail.com
         Regression: No
 
-Created attachment 236341
-  --> https://bugzilla.kernel.org/attachment.cgi?id=236341&action=edit
->> >>>> >>USA @ JEET1.8.0.0.9.1.9.0.9.9.2.>> >>>> >>  < QuickBooks Support PHONE Number @ Suppport Phone Number>> >>>> >>
+Created attachment 236561
+  --> https://bugzilla.kernel.org/attachment.cgi?id=236561&action=edit
+Quickbooks enterprise customer service number
 
->> >>>> >>USA @ JEET1.8.0.0.9.1.9.0.9.9.2.>> >>>> >>  < QuickBooks Support PHONE Number @ Suppport Phone Number>> >>>> >>
+SuPpORT+++((++1-800-919-0992) < QuickBooks Support phone number  < QuickBooks
+enterprise Phone number
 
 
 Call (Toll Free)+1800 919 0992 QuickBooks Technical Support Phone
