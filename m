@@ -1,35 +1,35 @@
 From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 160661]
- New:=?UTF-8?Q?=20=E0=A4=B0=20=E0=A4=B2=20=E0=A4=B8=20=E0=A4=B5=20=7E=7E=7E=7E=201800=2D349=2D6921=20QuickBooks=20Desktop=20Support=20Number?=
-Date: Fri, 16 Sep 2016 12:59:12 +0000
-Message-ID: <bug-160661-11633@https.bugzilla.kernel.org/>
+Subject: [Bug 160731]
+ New:=?UTF-8?Q?=20=E0=A4=B0=20=E0=A4=B2=20=E0=A4=B8=20=E0=A4=B5=20=7E=7E=7E=7E=201800=2D349=2D6921=20QuickBooks=20Enterprise=20Support=20Number?=
+Date: Fri, 16 Sep 2016 13:01:28 +0000
+Message-ID: <bug-160731-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36404 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:36822 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751083AbcIPM7Q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 16 Sep 2016 08:59:16 -0400
+        id S1752877AbcIPNBg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 16 Sep 2016 09:01:36 -0400
 Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id 5200E20569
-        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 12:59:14 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-        by mail.kernel.org (Postfix) with ESMTP id 6F85A20552
-        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 12:59:12 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTP id 278532054C
+        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 13:01:33 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+        by mail.kernel.org (Postfix) with ESMTP id 6DB2D2052C
+        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 13:01:28 +0000 (UTC)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=160661
+https://bugzilla.kernel.org/show_bug.cgi?id=160731
 
-            Bug ID: 160661
-           Summary: र ल स व ~~~~ 1800-349-6921 QuickBooks Desktop Support
-                    Number
+            Bug ID: 160731
+           Summary: र ल स व ~~~~ 1800-349-6921 QuickBooks Enterprise
+                    Support Number
            Product: IO/Storage
            Version: 2.5
-    Kernel Version: र ल स व ~~~~ 1800-349-6921 QuickBooks Desktop Support
-                    Number
+    Kernel Version: र ल स व ~~~~ 1800-349-6921 QuickBooks Enterprise
+                    Support Number
           Hardware: All
                 OS: Linux
               Tree: Mainline
