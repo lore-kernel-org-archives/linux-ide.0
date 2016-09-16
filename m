@@ -1,35 +1,35 @@
 From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 158711] New: QuickBooks Customer Service Number 1800-349-6921
- QuickBooks Customer Support Number
-Date: Fri, 16 Sep 2016 11:48:43 +0000
-Message-ID: <bug-158711-11633@https.bugzilla.kernel.org/>
+Subject: [Bug 158731] New: QuickBooks Technical Support Number 1800-349-6921
+ QuickBooks Tech Support Number
+Date: Fri, 16 Sep 2016 11:49:38 +0000
+Message-ID: <bug-158731-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44548 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:44584 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757290AbcIPLsr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 16 Sep 2016 07:48:47 -0400
+        id S1757290AbcIPLtm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 16 Sep 2016 07:49:42 -0400
 Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id B56D4205C7
-        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 11:48:45 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTP id 3C936205C7
+        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 11:49:40 +0000 (UTC)
 Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-        by mail.kernel.org (Postfix) with ESMTP id 53F26204E7
-        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 11:48:43 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTP id CB8A2204E7
+        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 11:49:38 +0000 (UTC)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=158711
+https://bugzilla.kernel.org/show_bug.cgi?id=158731
 
-            Bug ID: 158711
-           Summary: QuickBooks Customer Service Number 1800-349-6921
-                    QuickBooks Customer Support Number
+            Bug ID: 158731
+           Summary: QuickBooks Technical Support Number 1800-349-6921
+                    QuickBooks Tech Support Number
            Product: IO/Storage
            Version: 2.5
-    Kernel Version: QuickBooks Customer Service Number 1800-349-6921
-                    QuickBooks Customer Support Number
+    Kernel Version: QuickBooks Technical Support Number 1800-349-6921
+                    QuickBooks Tech Support Number
           Hardware: All
                 OS: Linux
               Tree: Mainline
