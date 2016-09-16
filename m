@@ -1,35 +1,35 @@
 From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 159541] New: QuickBooks Support PHone Number 1800-349-6921
- QUickBOoks PHone Number
-Date: Fri, 16 Sep 2016 12:14:51 +0000
-Message-ID: <bug-159541-11633@https.bugzilla.kernel.org/>
+Subject: [Bug 159561] New: QuickBooks Phone Number 1800-349-6921 QuickBooks
+ Support Phone Number
+Date: Fri, 16 Sep 2016 12:15:42 +0000
+Message-ID: <bug-159561-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51142 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:51296 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752856AbcIPMOz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 16 Sep 2016 08:14:55 -0400
+        id S1752856AbcIPMPq (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 16 Sep 2016 08:15:46 -0400
 Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id 0270120571
-        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 12:14:53 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTP id 6B2D520571
+        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 12:15:44 +0000 (UTC)
 Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-        by mail.kernel.org (Postfix) with ESMTP id 9390620562
-        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 12:14:51 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTP id E4C1520562
+        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 12:15:42 +0000 (UTC)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=159541
+https://bugzilla.kernel.org/show_bug.cgi?id=159561
 
-            Bug ID: 159541
-           Summary: QuickBooks Support PHone Number 1800-349-6921
-                    QUickBOoks PHone Number
+            Bug ID: 159561
+           Summary: QuickBooks Phone Number 1800-349-6921 QuickBooks
+                    Support Phone Number
            Product: IO/Storage
            Version: 2.5
-    Kernel Version: QuickBooks Support PHone Number 1800-349-6921
-                    QUickBOoks PHone Number
+    Kernel Version: QuickBooks Phone Number 1800-349-6921 QuickBooks
+                    Support Phone Number
           Hardware: All
                 OS: Linux
               Tree: Mainline
