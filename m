@@ -1,35 +1,35 @@
 From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 157591] New: QPML +1877-778-8714 Quickbooks SUpport Phone
- Number, Quickbooks tech support number
-Date: Fri, 16 Sep 2016 11:10:44 +0000
-Message-ID: <bug-157591-11633@https.bugzilla.kernel.org/>
+Subject: [Bug 158591] New: QuickBooks Enterprise Support Number 1800-349-6921
+ QuickBooks Error Support Number
+Date: Fri, 16 Sep 2016 11:45:45 +0000
+Message-ID: <bug-158591-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:34266 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:44118 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934024AbcIPLK4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 16 Sep 2016 07:10:56 -0400
+        id S1759475AbcIPLpt (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 16 Sep 2016 07:45:49 -0400
 Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id D2016205CB
-        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 11:10:48 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTP id EC1B820531
+        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 11:45:46 +0000 (UTC)
 Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-        by mail.kernel.org (Postfix) with ESMTP id 5AF66205B8
-        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 11:10:44 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTP id 90A4520434
+        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 11:45:45 +0000 (UTC)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=157591
+https://bugzilla.kernel.org/show_bug.cgi?id=158591
 
-            Bug ID: 157591
-           Summary: QPML +1877-778-8714 Quickbooks SUpport Phone Number,
-                    Quickbooks tech support number
+            Bug ID: 158591
+           Summary: QuickBooks Enterprise Support Number 1800-349-6921
+                    QuickBooks Error Support Number
            Product: IO/Storage
            Version: 2.5
-    Kernel Version: QPML +1877-778-8714 Quickbooks SUpport Phone Number,
-                    Quickbooks tech support number
+    Kernel Version: QuickBooks Enterprise Support Number 1800-349-6921
+                    QuickBooks Error Support Number
           Hardware: All
                 OS: Linux
               Tree: Mainline
@@ -38,107 +38,118 @@ https://bugzilla.kernel.org/show_bug.cgi?id=157591
           Priority: P1
          Component: IDE
           Assignee: io_ide@kernel-bugs.osdl.org
-          Reporter: malikmeena943@gmail.com
+          Reporter: ajayrudelee@gmail.com
         Regression: No
 
-Created attachment 234101
-  --> https://bugzilla.kernel.org/attachment.cgi?id=234101&action=edit
-QPML +1877-778-8714 Quickbooks SUpport Phone Number, Quickbooks tech support
-number
+1 800-349-6921 Quickbooks pro- technical -support -number herehide] 1 ::~Help
+Usa@ 1-800-349-6921...((( Quickbooks ERROR tech support phone number... 2
+::~Help Usa@ 1-800-349-6921...((( Quickbooks ERROR tech support number... 3
+::~Help Usa@ 1-800-349-6921...((( Quickbooks ERROR customer support number... 4
+Intuit Help... 1-800-349-6921 Quickbooks ERROR tech support phone number ,
+Quickbooks ERROR technical support phone number 5 Intuit Help... 1-800-349-6921
+Quickbooks ERROR tech support phone number , Quickbooks ERROR technical support
+phone number 6 Intuit Help... 1-800-349-6921 Quickbooks ERROR tech support
+phone number , Quickbooks ERROR technical support phone number ~Help Usa@
+1-800-349-6921...((( Quickbooks ERROR tech support phone number...[edit] ~Help
+Usa@ 1-800-349-6921...((( Quickbooks ERROR tech support number...[edit] ==
+~Help Usa@ 1-800-349-6921...((( Quickbooks ERROR tech support phone number..==.
+~Help Usa@ 1-800-349-6921...(((
+https://www.linkedin.com/company/1-855-924-9509-intuit-quickbooks-customer-tech-support-service-number
+Quickbooks ERROR tech support phone number...[edit] ~Help Usa@
+1-800-349-6921...((( Quickbooks ERROR tech support number...[edit] ~Help Usa@
+1-800-349-6921...((( Quickbooks ERROR tech support number...[edit] ==~Help Usa@
+1-800-349-6921...((( Quickbooks ERROR technical support phone number... ~Help
+Usa@ 1-800-349-6921...((( Quickbooks ERROR technical support phone
+number...[edit] ~Help Usa@ 1-800-349-6921...((( https://youtu.be/RZnReJzNoko
+Quickbooks ERROR technical support phone number...[edit] ~Help Usa@
+1-800-349-6921...((( Quickbooks ERROR technical support number... ~Help Usa@
+1-800-349-6921...((( Quickbooks ERROR technical support number... ~Help Usa@
+1-800-349-6921...((( Quickbooks ERROR technical support number...== ~Help Usa@
+Describe california@dail **))@18~00.349~6921(((@USA Quickbooks Error Pro
+Support Phone Number, Quickbooks Error Customer care phone number.
+here.california@dail **))@18~00.349~6921(((@USA Quickbooks Error Pro Support
+Phone Number, Quickbooks Error Pro Customer care phone number..
+@@@!!!!!+++password +++IssUE @@@@@@@@@@@@++======++Quickbooks Error Pro
+customer support phone number,Quickbooks Error technical support number usa
+Canada:rINGAAAAAA!!!!!!++++18~00349~6921++++++ Quickbooks Error Pro tech
+SUPPORT phone number Quickbooks Error tech support customer support phone
+number CANADA:rom+!!!!!++18~00349~6921 @+*+ Quickbooks Error Pro tech SUPPORT
+phone number Quickbooks Error tech support customer support phone number
+UCanaDa..@18~00349~6921@Quickbooks Error telephone support@))))!@
+18~00349~6921$$@$$$ Quickbooks Error computer support number
++@$$$@$$$@$@))))!@18~00349~6921@USA CALL Quickbooks Error Pro Tech Support
+Phone Number, Quickbooks Error Pro Customer service number...
++@$$$@$$$@$@))@18~00349~6921@USA CALL Quickbooks Error Pro Tech Support Phone
+Number, Quickbooks Error Pro Customer service number..
+++@@@helpline@@USA_CALL_18~00349~6921_Quickbooks
+Error_Pro_TECHNICAL_SUPPORT_PHONE_NUMBER,CUSTOMER_SERVICE_NUMBER_USA ? $CALL
+%%USA((18~00349~6921))_!!Quickbooks Error Pro tech Support Number
+@1[8~44349~6921@ https://youtu.be/RZnReJzNoko Quickbooks Error Pro Tech Support
+Phone Number] Call wireless 18~00349~6921 18~00349~6921 Quickbooks Error Tech
+Support Phone Number Canada Quickbooks Error Pro customer service
+number18~00349~6921 Quickbooks Error support number, Quickbooks Error support,
+Quickbooks Error Pro support, Quickbooks Error tech support, Quickbooks Error
+technical support, Quickbooks Error customer service number, Quickbooks Error
+customer service, Quickbooks Error tech support number, ##Quickbooks Error
+support center##, Quickbooks Error Pro support number, hewlett packard support,
+Quickbooks Error contact number, Quickbooks Error phone number
 
-QPML +1877-778-8714 Quickbooks SUpport Phone Number, Quickbooks tech support
-number, Quickbooks technical support support number, Quickbooks support number,
-Quickbooks support Phone Number, Quickbooks support telePhone Number,
-Quickbooks 24 hour support number, Quickbooks customer support support number,
-Quickbooks customer service support number, Quickbooks official number,
-Quickbooks official support number, Quickbooks 877 support number, Quickbooks
-toll free number, 877 number for Quickbooks support, Quickbooks 24/7 support
-Phone Number Quickbooks support Phone Number,Quickbooks support Phone
-Number,Quickbooks help Phone Number, Quickbooks technical Support
-Number.Quickbooks Support Number, Quickbooks Phone Number, Quickbooks HELP DESK
-number, Quickbooks customer Support Number, Quickbooks customer support Phone
-Number, Quickbooks customer service Phone Number, Quickbooks customer service
-Phone Number, Quickbooks support Phone Number. Help@Call
-1-877-778-8714/.Quickbooks 24/7 support Phone Number,Quickbooks telePhone
-Number for support? call 1877-778-8714@./Quickbooks support number, Quickbooks
-support Phone Number, Quickbooks support telePhone Number,,telePhone Number for
-Quickbooks online support,Quickbooks official Support Number,Quickbooks
-official number,Quickbooks official Phone Number,,,Phone Number for Quickbooks
-support,,Quickbooks 24/7 support Phone Number,,Quickbooks Support
-Number,Quickbooks telePhone Number for support QB SUPPORT ON ((1-877-778-8714))
-Quickbooks Phone Number AND Quickbooks SUPPORT Phone Number Online Support For
-(((1+877+778+8714)!!! Quickbooks ((Technical)) Support Phone Number,,
-Quickbooks HELP DESK Phone Number Online Support For (((1+877+778+8714)!!!
-Quickbooks ((Technical)) Support Phone Number,, Quickbooks HELP DESK Phone
-Number Helpline TECH ))1-877-778-8714((Quickbooks technical support Phone
-Number Quickbooks Phone Number QB SUPPORT ON ((1-877-778-8714)) Quickbooks
-Phone Number AND Quickbooks SUPPORT Phone Number Quickbooks Toll Free,
-Intuit@(1-877-778-8714)@ Quickbooks HELP DESK Phone Number vides online
-solution for all USA/CANADA clients. For any help of query call 1 877 778 8714
-to get all Quickbooks account solution. @@Call, 1-877-778-8714 for all type
-help by Quickbooks HELP DESK Phone Number, Intuit Quickbooks HELP DESK Phone
-Number, Quickbooks Help Desk Phone Number, Quickbooks HELP DESK number,
-Quickbooks technical support Phone Number,@@@ Quickbooks Phone Number,
-Quickbooks technical Support Number, Quickbooks support Phone Number,
-Quickbooks technical support, Quickbooks Customer Service Phone Number,
-Quickbooks Customer Service Number, Quickbooks Customer Support Phone Number,
-Quickbooks Customer Support Number,@@@@ Quickbooks Customer Service Helpline
-Number, Quickbooks Customer Care Number, Quickbooks support team Phone Number,
-@@@@@ Quickbooks help number-Quickbooks Helpline Number; Quickbooks help Phone
-Number-Quickbooks Helpline Number, Quickbooks HELP DESK Toll free Number,
-Quickbooks Support TelePhone Number, Quickbooks HELP DESK TelePhone Number,
-Quickbooks HELP DESK support number, Quickbooks support support number,
-Quickbooks technical support support number. Helpline TECH ))1-877+778+8714((
-Quickbooks Enterprise technical support Phone Number 1-877+778+8714 Quickbooks
-Enterprise POS Phone Number 1877+778+8714 QB SUPPORT ON ((1-877+778+8714))
-Quickbooks Enterprise Phone Number AND Quickbooks Enterprise SUPPORT Phone
-Number Quickbooks Enterprise Toll Free, Intuit@(1-877+778+8714)@ Quickbooks
-Enterprise Tech Support Phone Number POSvides online solution for all
-USA/CANADA clients. For any help of query call 1 877+778+8714 to get all
-Quickbooks Enterprise account solution. @@Call, 1-877+778+8714 for all type
-help by Quickbooks Enterprise tech support Phone Number, Intuit Quickbooks
-Enterprise Tech Support Phone Number, Quickbooks Enterprise Help Desk Phone
-Number, Quickbooks Enterprise tech Support Number, Quickbooks Enterprise
-technical support Phone Number,@@@ Quickbooks Enterprise Phone Number,
-Quickbooks Enterprise technical Support Number, Quickbooks Enterprise support
-Phone Number, Quickbooks Enterprise technical support, Quickbooks Enterprise
-Customer Service Phone Number, Quickbooks Enterprise Customer Service Number,
-Quickbooks Enterprise Customer Support Phone Number, Quickbooks Enterprise
-Customer Support Number,@@@@ Quickbooks Enterprise Customer Service Helpline
-Number, Quickbooks Enterprise Customer Care Number, Quickbooks Enterprise
-support team Phone Number, @@@@@ Quickbooks Enterprise help number- Quickbooks
-Enterprise Helpline Number; Quickbooks Enterprise help Phone Number- Quickbooks
-Enterprise Helpline Number, Quickbooks Enterprise Tech Support Toll free
-Number, Quickbooks Enterprise Support TelePhone Number, Quickbooks Enterprise
-Tech Support TelePhone Number, Quickbooks Enterprise Tech Support support
-number, Quickbooks Enterprise support support number, Quickbooks Enterprise
-technical support support number. Call, Quickbooks Enterprise tech support
-Phone Number, Intuit Quickbooks Enterprise Tech Support Phone Number,
-Quickbooks Enterprise Help Desk Phone Number, Quickbooks Enterprise tech
-Support Number, Quickbooks Enterprise technical support Phone Number,
-Quickbooks Enterprise Phone Number, Quickbooks Enterprise technical Support
-Number, Quickbooks Enterprise support Phone Number. It is very popular toll
-free number which POSvide by Quickbooks Enterprise technical support,
-Quickbooks Enterprise Customer Service Phone Number, Quickbooks Enterprise
-Customer Service Number, Quickbooks Enterprise Customer Support Phone Number,
-Quickbooks Enterprise Customer Support Number, Quickbooks Enterprise Customer
-Service Helpline Number, Quickbooks Enterprise Customer Care Number, Quickbooks
-Enterprise support team Phone Number. Call, Quickbooks Enterprise tech support
-Phone Number, Intuit Quickbooks Enterprise Tech Support Phone Number,
-Quickbooks Enterprise Help Desk Phone Number, Quickbooks Enterprise tech
-Support Number, Quickbooks Enterprise technical support Phone Number,
-Quickbooks Enterprise Phone Number, Quickbooks Enterprise technical Support
-Number, Quickbooks Enterprise support Phone Number, Quickbooks Enterprise
-technical support, Quickbooks Enterprise Customer Service Phone Number,
-Quickbooks Enterprise Customer Service Number, Quickbooks Enterprise Customer
-Support Phone Number, Quickbooks Enterprise Customer Support Number, Quickbooks
-Enterprise Customer Service Helpline Number,Describe USA intuit Help
-@@1+877+778+8714@@ Quickbooks PREMIER technical support Phone Number
-1-877-778-8714 Quickbooks PREMIER customer service Phone Number usa here.USA
-intuit Help @@1+877+778+8714@@ Quickbooks PREMIER technical support Phone
-Number 1-877-778-8714 Quickbooks PREMIER customer service Phone Number usa #
-Quickbooks PREMIER Toll Free, @(+1.877.778.8714)@-: Quickbooks PREMIER Tech
-Support Phone Number PREMIERvides online solution for all USA/CANADA clients.
+Quickbooks ERROR technical support contact number,Quickbooks ERROR contact
+number,Quickbooks ERROR contact phone number,Quickbooks ERROR contact telephone
+number,Quickbooks ERROR 24 hour contact number,Quickbooks ERROR customer
+support contact number,Quickbooks ERROR customer service contact number,
+https://www.linkedin.com/company/1-855-924-9509-intuit-quickbooks-customer-tech-support-service-number
+Quickbooks ERROR official number,Quickbooks ERROR official contact
+number,Quickbooks ERROR 800 contact number,Quickbooks ERROR toll free
+number,800 number for Quickbooks ERROR support,Quickbooks ERROR 24/7 support
+phone number Quickbooks ERROR PRO support phone number,Quickbooks ERROR PRO
+support phone number,Quickbooks ERROR PRO help phone number,Quickbooks ERROR
+PRO technical support number.Quickbooks ERROR PRO support number,Quickbooks
+ERROR PRO phone number,Quickbooks ERROR PRO tech support number,Quickbooks
+ERROR PRO customer support number,Quickbooks ERROR PRO customer support phone
+number,Quickbooks ERROR PRO customer service phone number,Quickbooks ERROR PRO
+payroll customer service phone number,Quickbooks ERROR PRO support phone
+number. Help@Call 1- 800-349-6921/.Quickbooks ERROR 24/7 support phone
+number,Quickbooks ERROR telephone number for support call
+1800-349-6921@./https://www.linkedin.com/company/1-855-924-9509-intuit-quickbooks-customer-tech-support-service-number
+Quickbooks ERROR contact number,Quickbooks ERROR contact phone
+number,Quickbooks ERROR contact telephone numbertelephone number for Quickbooks
+ERROR online support,Quickbooks ERROR official support number,Quickbooks ERROR
+official number,Quickbooks ERROR payroll official phone number,phone number for
+Quickbooks ERROR payroll supportQuickbooks ERROR 24/7 support phone
+numberQuickbooks ERROR support Quickbooks ERROR Online Activation Quickbooks
+ERROR Online BackupQuickBooks technical support number, QuickBooks support
+phone number, QuickBooks technical support, QuickBooks Customer Service Phone
+Number, QuickBooks Customer Service Number, QuickBooks Customer Support Phone
+Number, QuickBooks Customer Support Number,@@@@ QuickBooks Customer Service
+Helpline Number, QuickBooks Customer Care Number, QuickBooks support team phone
+number, @@@@@ QuickBooks help number-QuickBooks Helpline Number; QuickBooks
+help phone number-QuickBooks Helpline Number, QuickBooks Tech Support Toll free
+Number, QuickBooks Support Telephone Number
+
+QuickBooks Tech Support Telephone number, QuickBooks Tech Support contact
+number, QuickBooks support contact number, QuickBooks technical support contact
+number. Call, QuickBooks tech support phone number, Intuit QuickBooks Tech
+Support Phone Number, QuickBooks Help Desk Phone Number, QuickBooks tech
+support number, QuickBooks technical support phone number, QuickBooks phone
+number, QuickBooks technical support number, QuickBooks support phone number.
+It is very popular toll free number which POSvide by QuickBooks technical
+support,
+https://www.linkedin.com/company/1-855-924-9509-intuit-quickbooks-customer-tech-support-service-number
+QuickBooks Customer Service Phone Number, QuickBooks Customer Service Number,
+QuickBooks Customer Support Phone Number, QuickBooks Customer Support Number,
+QuickBooks Customer Service Helpline Number, QuickBooks Customer Care Number,
+QuickBooks support team phone number. Call, QuickBooks tech support phone
+number, Intuit QuickBooks Tech Support Phone Number, QuickBooks Help Desk Phone
+Number, QuickBooks tech support number, QuickBooks technical support phone
+number, QuickBooks phone number, QuickBooks technical support number,
+QuickBooks support phone number, QuickBooks technical support
+
+QuickBooks Customer Service Phone Number, QuickBooks Customer Service Number,
+QuickBooks Customer Support Phone Number, QuickBooks Customer Support Number,
+QuickBooks Customer Service Helpline Number, QuickBooks Customer Care Number,
+QuickBooks support team phone number, QuickBooks help number-QuickBooks
+Helpline Number; QuickBooks help phone number, QuickBooks Helpline Number
 
 -- 
 You are receiving this mail because:
