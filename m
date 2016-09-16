@@ -1,35 +1,35 @@
 From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 158981] New: QuickBooks Pro Error Support Number 1800-349-6921
- QuickBooks POS Error Support Number
-Date: Fri, 16 Sep 2016 11:56:53 +0000
-Message-ID: <bug-158981-11633@https.bugzilla.kernel.org/>
+Subject: [Bug 159011] New: QuickBooks Payroll Support Number 1800-349-6921
+ QuickBooks Desktop Support Number
+Date: Fri, 16 Sep 2016 11:58:00 +0000
+Message-ID: <bug-159011-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:46088 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:46340 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754814AbcIPL45 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 16 Sep 2016 07:56:57 -0400
+        id S1757753AbcIPL6E (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 16 Sep 2016 07:58:04 -0400
 Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id 6B891205DA
-        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 11:56:55 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTP id 61C24205DA
+        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 11:58:02 +0000 (UTC)
 Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-        by mail.kernel.org (Postfix) with ESMTP id 1261C205D6
-        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 11:56:54 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTP id E66A5205D6
+        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 11:58:00 +0000 (UTC)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=158981
+https://bugzilla.kernel.org/show_bug.cgi?id=159011
 
-            Bug ID: 158981
-           Summary: QuickBooks Pro Error Support Number 1800-349-6921
-                    QuickBooks POS Error Support Number
+            Bug ID: 159011
+           Summary: QuickBooks Payroll Support Number 1800-349-6921
+                    QuickBooks Desktop Support Number
            Product: IO/Storage
            Version: 2.5
-    Kernel Version: QuickBooks Pro Error Support Number 1800-349-6921
-                    QuickBooks POS Error Support Number
+    Kernel Version: QuickBooks Payroll Support Number 1800-349-6921
+                    QuickBooks Desktop Support Number
           Hardware: All
                 OS: Linux
               Tree: Mainline
