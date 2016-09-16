@@ -1,35 +1,35 @@
 From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 159251] New: QUickBooks Enterprise Error SUpport Number
- 1800-349-6921 QuickBooks Cloud Hosting Support Number
-Date: Fri, 16 Sep 2016 12:05:19 +0000
-Message-ID: <bug-159251-11633@https.bugzilla.kernel.org/>
+Subject: [Bug 159281] New: QuickBooks Error Support Number -349-6921
+ QuickBooks Enterprise Tech Support Number
+Date: Fri, 16 Sep 2016 12:06:36 +0000
+Message-ID: <bug-159281-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:48346 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:48636 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934425AbcIPMFY (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 16 Sep 2016 08:05:24 -0400
+        id S934616AbcIPMGn (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 16 Sep 2016 08:06:43 -0400
 Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id AD899205DA
-        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 12:05:22 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-        by mail.kernel.org (Postfix) with ESMTP id 3ECBC205DD
-        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 12:05:20 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTP id 4AE6920386
+        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 12:06:40 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+        by mail.kernel.org (Postfix) with ESMTP id DF083203E3
+        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 12:06:36 +0000 (UTC)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=159251
+https://bugzilla.kernel.org/show_bug.cgi?id=159281
 
-            Bug ID: 159251
-           Summary: QUickBooks Enterprise Error SUpport Number
-                    1800-349-6921 QuickBooks Cloud Hosting Support Number
+            Bug ID: 159281
+           Summary: QuickBooks Error Support Number -349-6921 QuickBooks
+                    Enterprise Tech Support Number
            Product: IO/Storage
            Version: 2.5
-    Kernel Version: QUickBooks Enterprise Error SUpport Number
-                    1800-349-6921 QuickBooks Cloud Hosting Support Number
+    Kernel Version: QuickBooks Error Support Number -349-6921 QuickBooks
+                    Enterprise Tech Support Number
           Hardware: All
                 OS: Linux
               Tree: Mainline
