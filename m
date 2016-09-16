@@ -1,35 +1,35 @@
 From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 159041] New: QuickBooks Desktop Support Number 1800-349*-6921
- QuickBooks Payroll Support Number
-Date: Fri, 16 Sep 2016 11:58:53 +0000
-Message-ID: <bug-159041-11633@https.bugzilla.kernel.org/>
+Subject: [Bug 159081] New: QuickBooks Payroll Tech Support Number
+ 1800-349-6921 QuickBooks Desktop Tech Support Number
+Date: Fri, 16 Sep 2016 11:59:43 +0000
+Message-ID: <bug-159081-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:46742 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:47156 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934302AbcIPL65 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 16 Sep 2016 07:58:57 -0400
+        id S934589AbcIPL7u (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 16 Sep 2016 07:59:50 -0400
 Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id 46C79205DA
-        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 11:58:55 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-        by mail.kernel.org (Postfix) with ESMTP id D2807205DE
-        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 11:58:53 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTP id E273D205DF
+        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 11:59:47 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+        by mail.kernel.org (Postfix) with ESMTP id 3942B205D6
+        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 11:59:44 +0000 (UTC)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=159041
+https://bugzilla.kernel.org/show_bug.cgi?id=159081
 
-            Bug ID: 159041
-           Summary: QuickBooks Desktop Support Number 1800-349*-6921
-                    QuickBooks Payroll Support Number
+            Bug ID: 159081
+           Summary: QuickBooks Payroll Tech Support Number 1800-349-6921
+                    QuickBooks Desktop Tech Support Number
            Product: IO/Storage
            Version: 2.5
-    Kernel Version: QuickBooks Desktop Support Number 1800-349*-6921
-                    QuickBooks Payroll Support Number
+    Kernel Version: QuickBooks Payroll Tech Support Number 1800-349-6921
+                    QuickBooks Desktop Tech Support Number
           Hardware: All
                 OS: Linux
               Tree: Mainline
