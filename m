@@ -1,35 +1,35 @@
 From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 159581] New: QuickBooks Service Phone Number 1800-349-6921
- QuickBooks Error 6000 Support Number
-Date: Fri, 16 Sep 2016 12:16:42 +0000
-Message-ID: <bug-159581-11633@https.bugzilla.kernel.org/>
+Subject: [Bug 160661]
+ New:=?UTF-8?Q?=20=E0=A4=B0=20=E0=A4=B2=20=E0=A4=B8=20=E0=A4=B5=20=7E=7E=7E=7E=201800=2D349=2D6921=20QuickBooks=20Desktop=20Support=20Number?=
+Date: Fri, 16 Sep 2016 12:59:12 +0000
+Message-ID: <bug-160661-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51570 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:36404 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757357AbcIPMQp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 16 Sep 2016 08:16:45 -0400
+        id S1751083AbcIPM7Q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 16 Sep 2016 08:59:16 -0400
 Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id C8EDA20571
-        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 12:16:43 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTP id 5200E20569
+        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 12:59:14 +0000 (UTC)
 Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-        by mail.kernel.org (Postfix) with ESMTP id 6CEB2203AB
-        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 12:16:42 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTP id 6F85A20552
+        for <linux-ide@vger.kernel.org>; Fri, 16 Sep 2016 12:59:12 +0000 (UTC)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=159581
+https://bugzilla.kernel.org/show_bug.cgi?id=160661
 
-            Bug ID: 159581
-           Summary: QuickBooks Service Phone Number 1800-349-6921
-                    QuickBooks Error 6000 Support Number
+            Bug ID: 160661
+           Summary: र ल स व ~~~~ 1800-349-6921 QuickBooks Desktop Support
+                    Number
            Product: IO/Storage
            Version: 2.5
-    Kernel Version: QuickBooks Service Phone Number 1800-349-6921
-                    QuickBooks Error 6000 Support Number
+    Kernel Version: र ल स व ~~~~ 1800-349-6921 QuickBooks Desktop Support
+                    Number
           Hardware: All
                 OS: Linux
               Tree: Mainline
