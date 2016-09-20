@@ -1,45 +1,48 @@
-From: Patrice Chotard <patrice.chotard@st.com>
-Subject: Re: [PATCH 07/19] ahci: st: Remove STiH416 dt example
-Date: Mon, 19 Sep 2016 09:19:45 +0200
-Message-ID: <2d5feb77-49ed-1a2c-5195-82d4a1db38a8@st.com>
-References: <1473859677-9231-1-git-send-email-peter.griffin@linaro.org>
- <1473859677-9231-8-git-send-email-peter.griffin@linaro.org>
- <20160916155449.GB26371@htj.duckdns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
+From: Harman Kalra <harman4linux@gmail.com>
+Subject: [PATCH] ata: sata_mv: Replacing dma_pool_alloc and memset with a single call  dma_pool_zalloc.
+Date: Wed, 21 Sep 2016 01:14:40 +0530
+Message-ID: <1474400680-12254-1-git-send-email-harman4linux@gmail.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx08-00178001.pphosted.com ([91.207.212.93]:49106 "EHLO
-        mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1756367AbcISHUU (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 19 Sep 2016 03:20:20 -0400
-In-Reply-To: <20160916155449.GB26371@htj.duckdns.org>
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:33260 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751501AbcITTot (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 20 Sep 2016 15:44:49 -0400
+Received: by mail-pf0-f196.google.com with SMTP id q2so1341871pfj.0
+        for <linux-ide@vger.kernel.org>; Tue, 20 Sep 2016 12:44:48 -0700 (PDT)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Peter Griffin <peter.griffin@linaro.org>
-Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, kernel@stlinux.com, devicetree@vger.kernel.org, lee.jones@linaro.org, robh+dt@kernel.org, linux-ide@vger.kernel.org
+To: tj@kernel.org, linux-ide@vger.kernel.org
+Cc: Harman Kalra <harman4linux@gmail.com>
 
+Replacing dma_pool_alloc and memset with a single call to dma_pool_zalloc
 
+Signed-off-by: Harman Kalra <harman4linux@gmail.com>
+---
+ drivers/ata/sata_mv.c |    6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-On 09/16/2016 05:54 PM, Tejun Heo wrote:
-> On Wed, Sep 14, 2016 at 02:27:45PM +0100, Peter Griffin wrote:
->> This platform is being removed from the kernel so remove
->> the dt example.
->>
->> Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
->> Cc: <tj@kernel.org>
->> Cc: <robh+dt@kernel.org>
->> Cc: <linux-ide@vger.kernel.org>
-> 
-> This is gonna go through dt tree, right?  If it should go through
-> libata, please let me know.
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index 745489a..efc48bf 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -1727,15 +1727,13 @@ static int mv_port_start(struct ata_port *ap)
+ 		return -ENOMEM;
+ 	ap->private_data = pp;
+ 
+-	pp->crqb = dma_pool_alloc(hpriv->crqb_pool, GFP_KERNEL, &pp->crqb_dma);
++	pp->crqb = dma_pool_zalloc(hpriv->crqb_pool, GFP_KERNEL, &pp->crqb_dma);
+ 	if (!pp->crqb)
+ 		return -ENOMEM;
+-	memset(pp->crqb, 0, MV_CRQB_Q_SZ);
+ 
+-	pp->crpb = dma_pool_alloc(hpriv->crpb_pool, GFP_KERNEL, &pp->crpb_dma);
++	pp->crpb = dma_pool_zalloc(hpriv->crpb_pool, GFP_KERNEL, &pp->crpb_dma);
+ 	if (!pp->crpb)
+ 		goto out_port_free_dma_mem;
+-	memset(pp->crpb, 0, MV_CRPB_Q_SZ);
+ 
+ 	/* 6041/6081 Rev. "C0" (and newer) are okay with async notify */
+ 	if (hpriv->hp_flags & MV_HP_ERRATA_60X1C0)
+-- 
+1.7.9.5
 
-Hi Tejun
-
-I will take care of this patch and include it in the next STi DT pull request.
-
-Thanks
-
-> 
-> Thanks.
-> 
