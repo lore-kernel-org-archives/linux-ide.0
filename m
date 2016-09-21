@@ -1,33 +1,33 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ata: sata_mv: Replacing dma_pool_alloc and memset with a
- single call  dma_pool_zalloc.
-Date: Tue, 20 Sep 2016 16:08:23 -0400
-Message-ID: <20160920200823.GD17513@htj.duckdns.org>
-References: <1474400680-12254-1-git-send-email-harman4linux@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f195.google.com ([209.85.161.195]:35867 "EHLO
-        mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753696AbcITUIZ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 20 Sep 2016 16:08:25 -0400
-Received: by mail-yw0-f195.google.com with SMTP id v2so1146952ywg.3
-        for <linux-ide@vger.kernel.org>; Tue, 20 Sep 2016 13:08:25 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <1474400680-12254-1-git-send-email-harman4linux@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+From: Harman Kalra <harman4linux@gmail.com>
+Subject: [PATCH] Use PTR_ERR_OR_ZERO rather than if(IS_ERR(...)) + PTR_ERR. Use PTR_ERR_OR_ZERO rather than if(IS_ERR(...)) + PTR_ERR.
+Date: Thu, 22 Sep 2016 01:18:31 +0530
+Message-ID: <1474487311-3897-1-git-send-email-harman4linux@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Harman Kalra <harman4linux@gmail.com>
 List-Id: linux-ide@vger.kernel.org
-To: Harman Kalra <harman4linux@gmail.com>
-Cc: linux-ide@vger.kernel.org
 
-On Wed, Sep 21, 2016 at 01:14:40AM +0530, Harman Kalra wrote:
-> Replacing dma_pool_alloc and memset with a single call to dma_pool_zalloc
-> 
-> Signed-off-by: Harman Kalra <harman4linux@gmail.com>
+Signed-off-by: Harman Kalra <harman4linux@gmail.com>
+---
+ drivers/ata/pata_at91.c |    4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-Applied to libata/for-4.9.
-
-Thanks.
-
+diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
+index 9f27b14..1611e0e 100644
+--- a/drivers/ata/pata_at91.c
++++ b/drivers/ata/pata_at91.c
+@@ -347,10 +347,8 @@ static int at91sam9_smc_fields_init(struct device *dev)
+ 
+ 	field.reg = AT91SAM9_SMC_MODE(AT91SAM9_SMC_GENERIC);
+ 	fields.mode = devm_regmap_field_alloc(dev, smc, field);
+-	if (IS_ERR(fields.mode))
+-		return PTR_ERR(fields.mode);
+ 
+-	return 0;
++	return PTR_ERR_OR_ZERO(fields.mode);
+ }
+ 
+ static int pata_at91_probe(struct platform_device *pdev)
 -- 
-tejun
+1.7.9.5
