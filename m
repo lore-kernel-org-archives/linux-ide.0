@@ -1,33 +1,34 @@
 From: Harman Kalra <harman4linux@gmail.com>
-Subject: [PATCH] Use PTR_ERR_OR_ZERO rather than if(IS_ERR(...)) + PTR_ERR. Use PTR_ERR_OR_ZERO rather than if(IS_ERR(...)) + PTR_ERR.
-Date: Thu, 22 Sep 2016 01:18:31 +0530
-Message-ID: <1474487311-3897-1-git-send-email-harman4linux@gmail.com>
+Subject: [PATCH] ata: Replace BUG() with BUG_ON().
+Date: Thu, 22 Sep 2016 01:29:48 +0530
+Message-ID: <1474487988-4207-1-git-send-email-harman4linux@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: tj@kernel.org
+To: b.zolnierkie@samsung.com, tj@kernel.org
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Harman Kalra <harman4linux@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
+Replace BUG() with BUG_ON().
+Caught by coccinelle.
+
 Signed-off-by: Harman Kalra <harman4linux@gmail.com>
 ---
- drivers/ata/pata_at91.c |    4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/ata/pata_octeon_cf.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/ata/pata_at91.c b/drivers/ata/pata_at91.c
-index 9f27b14..1611e0e 100644
---- a/drivers/ata/pata_at91.c
-+++ b/drivers/ata/pata_at91.c
-@@ -347,10 +347,8 @@ static int at91sam9_smc_fields_init(struct device *dev)
+diff --git a/drivers/ata/pata_octeon_cf.c b/drivers/ata/pata_octeon_cf.c
+index 2724595..475a006 100644
+--- a/drivers/ata/pata_octeon_cf.c
++++ b/drivers/ata/pata_octeon_cf.c
+@@ -152,8 +152,7 @@ static void octeon_cf_set_piomode(struct ata_port *ap, struct ata_device *dev)
+ 		div = 8;
+ 	T = (int)((1000000000000LL * div) / octeon_get_io_clock_rate());
  
- 	field.reg = AT91SAM9_SMC_MODE(AT91SAM9_SMC_GENERIC);
- 	fields.mode = devm_regmap_field_alloc(dev, smc, field);
--	if (IS_ERR(fields.mode))
--		return PTR_ERR(fields.mode);
+-	if (ata_timing_compute(dev, dev->pio_mode, &timing, T, T))
+-		BUG();
++	BUG_ON(ata_timing_compute(dev, dev->pio_mode, &timing, T, T));
  
--	return 0;
-+	return PTR_ERR_OR_ZERO(fields.mode);
- }
- 
- static int pata_at91_probe(struct platform_device *pdev)
+ 	t1 = timing.setup;
+ 	if (t1)
 -- 
 1.7.9.5
