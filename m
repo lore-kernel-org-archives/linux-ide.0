@@ -1,37 +1,33 @@
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Subject: RE: ATA failure regression
-Date: Fri, 23 Sep 2016 10:10:17 +0000
-Message-ID: <8520D5D51A55D047800579B094147198258E4869@XAP-PVEXMBX01.xlnx.xilinx.com>
-References: <DM5PR12MB17698A0E873273577E60A97BA0C80@DM5PR12MB1769.namprd12.prod.outlook.com>
+From: Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH 07/19] ahci: st: Remove STiH416 dt example
+Date: Fri, 23 Sep 2016 10:07:23 -0500
+Message-ID: <20160923150723.GC9176@rob-hp-laptop>
+References: <1473859677-9231-1-git-send-email-peter.griffin@linaro.org>
+ <1473859677-9231-8-git-send-email-peter.griffin@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <DM5PR12MB17698A0E873273577E60A97BA0C80@DM5PR12MB1769.namprd12.prod.outlook.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Shah, Nehal-bakulchandra" <Nehal-bakulchandra.Shah@amd.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "holler@ahsoftware.de" <holler@ahsoftware.de>, "tj@kernel.org" <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
-Cc: "Deucher, Alexander" <Alexander.Deucher@amd.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:33090 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1035010AbcIWPHZ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 23 Sep 2016 11:07:25 -0400
+Content-Disposition: inline
+In-Reply-To: <1473859677-9231-8-git-send-email-peter.griffin@linaro.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Peter Griffin <peter.griffin@linaro.org>
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, kernel@stlinux.com, patrice.chotard@st.com, devicetree@vger.kernel.org, lee.jones@linaro.org, tj@kernel.org, linux-ide@vger.kernel.org
 
-> Hi All,
->=20
-> Resending this wider audience
->=20
-> Currently I am working on AMD future platform.  I am hitting the same bug=
- of
-> ATA Failure Regression reported in past.
-> (https://patchwork.kernel.org/patch/6875661/) or
-> http://lkml.iu.edu/hypermail/linux/kernel/1507.3/01961.html
->=20
-> I am newbie to this and because of this Ubuntu  16.04 is not booting. If =
-disable
-> IOMMU and MSI obviously it works but that is not solution. Even when I bi=
-sected
-> it boiled to same place which was mentioned in past discussion.
->=20
-So here when you are disabling MSI, it is working with legacy interrupts or=
- MSI-X.
-Can you post the end sata device lscpi -xxx -vvv content.=20
+On Wed, Sep 14, 2016 at 02:27:45PM +0100, Peter Griffin wrote:
+> This platform is being removed from the kernel so remove
+> the dt example.
+> 
+> Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
+> Cc: <tj@kernel.org>
+> Cc: <robh+dt@kernel.org>
+> Cc: <linux-ide@vger.kernel.org>
+> ---
+>  Documentation/devicetree/bindings/ata/ahci-st.txt | 15 ---------------
+>  1 file changed, 15 deletions(-)
 
-Bharat
+Acked-by: Rob Herring <robh@kernel.org>
