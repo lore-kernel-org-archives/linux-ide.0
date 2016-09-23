@@ -1,33 +1,37 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: small libata cleanup
-Date: Thu, 22 Sep 2016 11:51:34 -0400
-Message-ID: <20160922155134.GC1892@htj.duckdns.org>
-References: <1474555790-8716-1-git-send-email-hch@lst.de>
+From: "Shah, Nehal-bakulchandra" <Nehal-bakulchandra.Shah@amd.com>
+Subject: RE: ATA failure regression
+Date: Fri, 23 Sep 2016 09:25:51 +0000
+Message-ID: <DM5PR12MB17698A0E873273577E60A97BA0C80@DM5PR12MB1769.namprd12.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f176.google.com ([209.85.161.176]:35394 "EHLO
-        mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757860AbcIVPvg (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 22 Sep 2016 11:51:36 -0400
-Received: by mail-yw0-f176.google.com with SMTP id u82so93808290ywc.2
-        for <linux-ide@vger.kernel.org>; Thu, 22 Sep 2016 08:51:36 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <1474555790-8716-1-git-send-email-hch@lst.de>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "holler@ahsoftware.de" <holler@ahsoftware.de>, "tj@kernel.org" <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Cc: "Deucher, Alexander" <Alexander.Deucher@amd.com>
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-ide@vger.kernel.org
 
-On Thu, Sep 22, 2016 at 07:49:48AM -0700, Christoph Hellwig wrote:
-> Hi Tejun,
-> 
-> this series cleans up the few architecture libata-portmap.h headers we
-> have, and removes the odd asm-generic/libata-portmap.h one.
+Hi All,
 
-Applied 1-2 to libata/for-4.9.
+Resending this wider audience=20
 
-Thanks.
+Currently I am working on AMD future platform.  I am hitting the same bug o=
+f ATA Failure Regression reported in past.
+(https://patchwork.kernel.org/patch/6875661/) or http://lkml.iu.edu/hyperma=
+il/linux/kernel/1507.3/01961.html
 
--- 
-tejun
+I am newbie to this and because of this Ubuntu  16.04 is not booting. If di=
+sable IOMMU and MSI obviously it works but that is not solution. Even when =
+I bisected it boiled to same place which was mentioned in past discussion.
+
+Now my question is there anything required to be done for this future platf=
+orm in order to make above patch working because it is already present in U=
+buntu 16.04 kernel i.e. 4.4 kernel.
+
+Please help me to debug this issue.
+
+Looking forward to hear from you.
+
+Thanks and Regards
+Nehal Shah
