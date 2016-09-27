@@ -1,32 +1,54 @@
 From: Adam Manzanares <adam.manzanares@hgst.com>
-Subject: [PATCH 0/3] Enabling ATA Command Priorities
-Date: Tue, 27 Sep 2016 11:14:53 -0700
-Message-ID: <1475000096-6148-1-git-send-email-adam.manzanares@hgst.com>
+Subject: [PATCH 1/3] block: Add iocontext priority to request
+Date: Tue, 27 Sep 2016 11:14:54 -0700
+Message-ID: <1475000096-6148-2-git-send-email-adam.manzanares@hgst.com>
+References: <1475000096-6148-1-git-send-email-adam.manzanares@hgst.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <1475000096-6148-1-git-send-email-adam.manzanares@hgst.com>
 Sender: linux-block-owner@vger.kernel.org
 To: axboe@kernel.dk, tj@kernel.org
 Cc: linux-block@vger.kernel.org, linux-ide@vger.kernel.org, Adam Manzanares <adam.manzanares@hgst.com>
 List-Id: linux-ide@vger.kernel.org
 
-This patch builds ATA commands with high priority if the iocontext
-of a process is set to real time. The goal of the patch is to
-improve tail latencies of workloads that use higher queue depths.
+Patch adds association between iocontext and a request.
 
-Adam Manzanares (3):
-  block: Add iocontext priority to request
-  ata: Enabling ATA Command Priorities
-  ata: ATA Command Priority Disabled By Default
+Signed-off-by: Adam Manzanares <adam.manzanares@hgst.com>
+---
+ block/blk-core.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
- drivers/ata/libahci.c     |  1 +
- drivers/ata/libata-core.c | 35 +++++++++++++++++++++-
- drivers/ata/libata-scsi.c | 74 ++++++++++++++++++++++++++++++++++++++++++++++-
- drivers/ata/libata.h      |  2 +-
- include/linux/ata.h       |  6 ++++
- include/linux/libata.h    | 27 +++++++++++++++++
- 6 files changed, 142 insertions(+), 3 deletions(-)
-
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 36c7ac3..9c6d733 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -33,6 +33,7 @@
+ #include <linux/ratelimit.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/blk-cgroup.h>
++#include <linux/ioprio.h>
+ 
+ #define CREATE_TRACE_POINTS
+ #include <trace/events/block.h>
+@@ -1648,6 +1649,7 @@ out:
+ 
+ void init_request_from_bio(struct request *req, struct bio *bio)
+ {
++	struct io_context *ioc = rq_ioc(bio);
+ 	req->cmd_type = REQ_TYPE_FS;
+ 
+ 	req->cmd_flags |= bio->bi_opf & REQ_COMMON_MASK;
+@@ -1657,6 +1659,9 @@ void init_request_from_bio(struct request *req, struct bio *bio)
+ 	req->errors = 0;
+ 	req->__sector = bio->bi_iter.bi_sector;
+ 	req->ioprio = bio_prio(bio);
++	if (ioc)
++		req->ioprio = ioprio_best(req->ioprio, ioc->ioprio);
++
+ 	blk_rq_bio_prep(req->q, req, bio);
+ }
+ 
 -- 
 2.1.4
 
