@@ -1,60 +1,37 @@
-From: <yuantian.tang@nxp.com>
-Subject: [PATCH] ahci: qoriq: Revert "ahci: qoriq: Disable NCQ on ls2080a SoC"
-Date: Wed, 28 Sep 2016 09:46:12 +0800
-Message-ID: <1475027172-21012-1-git-send-email-yuantian.tang@nxp.com>
+From: Adam Manzanares <Adam.Manzanares@hgst.com>
+Subject: Re: [PATCH 0/3] Enabling ATA Command Priorities
+Date: Wed, 28 Sep 2016 03:43:32 +0000
+Message-ID: <5C8FF242-7C7B-442E-A6FF-89878366F154@hgst.com>
+References: <1475000096-6148-1-git-send-email-adam.manzanares@hgst.com>
+ <20160928020610.GA28998@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0041.outbound.protection.outlook.com ([104.47.38.41]:2020
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1756481AbcI1CbO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 27 Sep 2016 22:31:14 -0400
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:13410 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751701AbcI1Dng (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 27 Sep 2016 23:43:36 -0400
+In-Reply-To: <20160928020610.GA28998@infradead.org>
+Content-Language: en-US
+Content-ID: <AECD3B843CF8FE44B3A6BE84B7537511@namprd04.prod.outlook.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org, linux-ide@vger.kernel.org
-Cc: Tang Yuantian <Yuantian.Tang@nxp.com>, Tang Yuantian <yuantian.tang@nxp.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "axboe@kernel.dk" <axboe@kernel.dk>, "tj@kernel.org" <tj@kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-From: Tang Yuantian <Yuantian.Tang@nxp.com>
-
-This reverts commit 640847298e2b7f19 ("ahci: qoriq: Disable NCQ
-on ls2080a SoC")
-
-The erratum has been fixed in ls2080a v2.0 and later soc.
-Since ls2080a v1.0 has rarely been released, it can be safely
-reverted.
-
-Signed-off-by: Tang Yuantian <yuantian.tang@nxp.com>
----
- drivers/ata/ahci_qoriq.c | 8 +-------
- 1 file changed, 1 insertion(+), 7 deletions(-)
-
-diff --git a/drivers/ata/ahci_qoriq.c b/drivers/ata/ahci_qoriq.c
-index 7bdee9b..2342fca 100644
---- a/drivers/ata/ahci_qoriq.c
-+++ b/drivers/ata/ahci_qoriq.c
-@@ -137,7 +137,7 @@ static struct ata_port_operations ahci_qoriq_ops = {
- 	.hardreset	= ahci_qoriq_hardreset,
- };
- 
--static struct ata_port_info ahci_qoriq_port_info = {
-+static const struct ata_port_info ahci_qoriq_port_info = {
- 	.flags		= AHCI_FLAG_COMMON | ATA_FLAG_NCQ,
- 	.pio_mask	= ATA_PIO4,
- 	.udma_mask	= ATA_UDMA6,
-@@ -221,12 +221,6 @@ static int ahci_qoriq_probe(struct platform_device *pdev)
- 	if (rc)
- 		goto disable_resources;
- 
--	/* Workaround for ls2080a */
--	if (qoriq_priv->type == AHCI_LS2080A) {
--		hpriv->flags |= AHCI_HFLAG_NO_NCQ;
--		ahci_qoriq_port_info.flags &= ~ATA_FLAG_NCQ;
--	}
--
- 	rc = ahci_platform_init_host(pdev, hpriv, &ahci_qoriq_port_info,
- 				     &ahci_qoriq_sht);
- 	if (rc)
--- 
-2.1.0.27.g96db324
-
+SSBwcmVmZXIgaGF2aW5nIHRoZSBmZWF0dXJlIGNvbmRpdGlvbmFsIHNvIHlvdSBjYW4gdXNlIHRo
+ZSBDRlEgc2NoZWR1bGVyIHdpdGggSS9PIHByaW9yaXRpZXMgYXMgaXMuIElmIHlvdSBkZWNpZGUg
+dG8gZW5hYmxlIHRoZSBmZWF0dXJlIHRoZW4gdGhlIHByaW9yaXRpZXMgd2lsbCBiZSBwYXNzZWQg
+ZG93biB0byB0aGUgZHJpdmUgaW4gYWRkaXRpb24gdG8gdGhlIHdvcmsgdGhhdCB0aGUgQ0ZRIHNj
+aGVkdWxlciBkb2VzLiBTaW5jZSB0aGlzIGZlYXR1cmUgbWF5IGNoYW5nZSB0aGUgdXNlciBwZXJj
+ZWl2ZWQgcGVyZm9ybWFuY2Ugb2YgdGhlIGRldmljZSBJIHdhbnQgdG8gbWFrZSBzdXJlIHRoZXkg
+a25vdyB3aGF0IHRoZXkgYXJlIGdldHRpbmcgaW50by4NCg0KDQoNCg0KDQpPbiA5LzI3LzE2LCA3
+OjA2IFBNLCAiQ2hyaXN0b3BoIEhlbGx3aWciIDxoY2hAaW5mcmFkZWFkLm9yZz4gd3JvdGU6DQoN
+Cj5UaGUgc2VyaWVzIGxvb2tzIGZpbmUgdG8gbWU6DQo+DQo+UmV2aWV3ZWQtYnk6IENocmlzdG9w
+aCBIZWxsd2lnIDxoY2hAbHN0LmRlPg0KPg0KPlRoZSBvbmx5IHF1ZXN0aW9uIGlzIGlmIHdlIG5l
+ZWQgdG8gYm90aGVyIHdpdGggdGhlIGxhc3QgcGF0Y2ggdG8NCj5tYWtlIHRoZSBmZWF0dXJlIGNv
+bmRpdGlvbmFsIGF0IGFsbCwgZ2l2ZW4gdGhhdCB3ZSBib3RoIG5lZWQgaGFyZHdhcmUNCj5zdXBw
+b3J0IGFuZCBhcHBsaWNhdGlvbnMgb3B0aW5nIGludG8gdXNpbmcgSS9PIHByaW9yaXRpZXMgdG8g
+ZXZlbiB1c2UNCj5pdC4gIEJ1dCBpZiB5b3UgZmVlbCBpdCdzIHNhZmVyIHRoYXQgd2F5IHRoZSB1
+bmFibGUgY2VydGFpbmx5IGRvZXNuJ3QNCj5odXJ0Lg0K
