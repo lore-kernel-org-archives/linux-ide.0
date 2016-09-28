@@ -1,24 +1,60 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/3] Enabling ATA Command Priorities
-Date: Tue, 27 Sep 2016 19:06:10 -0700
-Message-ID: <20160928020610.GA28998@infradead.org>
-References: <1475000096-6148-1-git-send-email-adam.manzanares@hgst.com>
+From: <yuantian.tang@nxp.com>
+Subject: [PATCH] ahci: qoriq: Revert "ahci: qoriq: Disable NCQ on ls2080a SoC"
+Date: Wed, 28 Sep 2016 09:46:12 +0800
+Message-ID: <1475027172-21012-1-git-send-email-yuantian.tang@nxp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1475000096-6148-1-git-send-email-adam.manzanares@hgst.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Adam Manzanares <adam.manzanares@hgst.com>
-Cc: axboe@kernel.dk, tj@kernel.org, linux-block@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-bl2nam02on0041.outbound.protection.outlook.com ([104.47.38.41]:2020
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1756481AbcI1CbO (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 27 Sep 2016 22:31:14 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: tj@kernel.org, linux-ide@vger.kernel.org
+Cc: Tang Yuantian <Yuantian.Tang@nxp.com>, Tang Yuantian <yuantian.tang@nxp.com>
 
-The series looks fine to me:
+From: Tang Yuantian <Yuantian.Tang@nxp.com>
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+This reverts commit 640847298e2b7f19 ("ahci: qoriq: Disable NCQ
+on ls2080a SoC")
 
-The only question is if we need to bother with the last patch to
-make the feature conditional at all, given that we both need hardware
-support and applications opting into using I/O priorities to even use
-it.  But if you feel it's safer that way the unable certainly doesn't
-hurt.
+The erratum has been fixed in ls2080a v2.0 and later soc.
+Since ls2080a v1.0 has rarely been released, it can be safely
+reverted.
+
+Signed-off-by: Tang Yuantian <yuantian.tang@nxp.com>
+---
+ drivers/ata/ahci_qoriq.c | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
+
+diff --git a/drivers/ata/ahci_qoriq.c b/drivers/ata/ahci_qoriq.c
+index 7bdee9b..2342fca 100644
+--- a/drivers/ata/ahci_qoriq.c
++++ b/drivers/ata/ahci_qoriq.c
+@@ -137,7 +137,7 @@ static struct ata_port_operations ahci_qoriq_ops = {
+ 	.hardreset	= ahci_qoriq_hardreset,
+ };
+ 
+-static struct ata_port_info ahci_qoriq_port_info = {
++static const struct ata_port_info ahci_qoriq_port_info = {
+ 	.flags		= AHCI_FLAG_COMMON | ATA_FLAG_NCQ,
+ 	.pio_mask	= ATA_PIO4,
+ 	.udma_mask	= ATA_UDMA6,
+@@ -221,12 +221,6 @@ static int ahci_qoriq_probe(struct platform_device *pdev)
+ 	if (rc)
+ 		goto disable_resources;
+ 
+-	/* Workaround for ls2080a */
+-	if (qoriq_priv->type == AHCI_LS2080A) {
+-		hpriv->flags |= AHCI_HFLAG_NO_NCQ;
+-		ahci_qoriq_port_info.flags &= ~ATA_FLAG_NCQ;
+-	}
+-
+ 	rc = ahci_platform_init_host(pdev, hpriv, &ahci_qoriq_port_info,
+ 				     &ahci_qoriq_sht);
+ 	if (rc)
+-- 
+2.1.0.27.g96db324
+
