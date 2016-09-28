@@ -1,37 +1,82 @@
-From: Adam Manzanares <Adam.Manzanares@hgst.com>
-Subject: Re: [PATCH 0/3] Enabling ATA Command Priorities
-Date: Wed, 28 Sep 2016 03:43:32 +0000
-Message-ID: <5C8FF242-7C7B-442E-A6FF-89878366F154@hgst.com>
-References: <1475000096-6148-1-git-send-email-adam.manzanares@hgst.com>
- <20160928020610.GA28998@infradead.org>
+From: "Shah, Nehal-bakulchandra" <Nehal-bakulchandra.Shah@amd.com>
+Subject: RE: ATA failure regression
+Date: Wed, 28 Sep 2016 05:45:08 +0000
+Message-ID: <MWHPR12MB177486F96C515BCAEADC7D70A0CF0@MWHPR12MB1774.namprd12.prod.outlook.com>
+References: <DM5PR12MB17698A0E873273577E60A97BA0C80@DM5PR12MB1769.namprd12.prod.outlook.com>
+ <8520D5D51A55D047800579B094147198258E4869@XAP-PVEXMBX01.xlnx.xilinx.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:13410 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751701AbcI1Dng (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 27 Sep 2016 23:43:36 -0400
-In-Reply-To: <20160928020610.GA28998@infradead.org>
+Received: from mail-by2nam01on0062.outbound.protection.outlook.com ([104.47.34.62]:63143
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752398AbcI1FpL (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 28 Sep 2016 01:45:11 -0400
 Content-Language: en-US
-Content-ID: <AECD3B843CF8FE44B3A6BE84B7537511@namprd04.prod.outlook.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "axboe@kernel.dk" <axboe@kernel.dk>, "tj@kernel.org" <tj@kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc: "Deucher, Alexander" <Alexander.Deucher@amd.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "holler@ahsoftware.de" <holler@ahsoftware.de>, "tj@kernel.org" <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-SSBwcmVmZXIgaGF2aW5nIHRoZSBmZWF0dXJlIGNvbmRpdGlvbmFsIHNvIHlvdSBjYW4gdXNlIHRo
-ZSBDRlEgc2NoZWR1bGVyIHdpdGggSS9PIHByaW9yaXRpZXMgYXMgaXMuIElmIHlvdSBkZWNpZGUg
-dG8gZW5hYmxlIHRoZSBmZWF0dXJlIHRoZW4gdGhlIHByaW9yaXRpZXMgd2lsbCBiZSBwYXNzZWQg
-ZG93biB0byB0aGUgZHJpdmUgaW4gYWRkaXRpb24gdG8gdGhlIHdvcmsgdGhhdCB0aGUgQ0ZRIHNj
-aGVkdWxlciBkb2VzLiBTaW5jZSB0aGlzIGZlYXR1cmUgbWF5IGNoYW5nZSB0aGUgdXNlciBwZXJj
-ZWl2ZWQgcGVyZm9ybWFuY2Ugb2YgdGhlIGRldmljZSBJIHdhbnQgdG8gbWFrZSBzdXJlIHRoZXkg
-a25vdyB3aGF0IHRoZXkgYXJlIGdldHRpbmcgaW50by4NCg0KDQoNCg0KDQpPbiA5LzI3LzE2LCA3
-OjA2IFBNLCAiQ2hyaXN0b3BoIEhlbGx3aWciIDxoY2hAaW5mcmFkZWFkLm9yZz4gd3JvdGU6DQoN
-Cj5UaGUgc2VyaWVzIGxvb2tzIGZpbmUgdG8gbWU6DQo+DQo+UmV2aWV3ZWQtYnk6IENocmlzdG9w
-aCBIZWxsd2lnIDxoY2hAbHN0LmRlPg0KPg0KPlRoZSBvbmx5IHF1ZXN0aW9uIGlzIGlmIHdlIG5l
-ZWQgdG8gYm90aGVyIHdpdGggdGhlIGxhc3QgcGF0Y2ggdG8NCj5tYWtlIHRoZSBmZWF0dXJlIGNv
-bmRpdGlvbmFsIGF0IGFsbCwgZ2l2ZW4gdGhhdCB3ZSBib3RoIG5lZWQgaGFyZHdhcmUNCj5zdXBw
-b3J0IGFuZCBhcHBsaWNhdGlvbnMgb3B0aW5nIGludG8gdXNpbmcgSS9PIHByaW9yaXRpZXMgdG8g
-ZXZlbiB1c2UNCj5pdC4gIEJ1dCBpZiB5b3UgZmVlbCBpdCdzIHNhZmVyIHRoYXQgd2F5IHRoZSB1
-bmFibGUgY2VydGFpbmx5IGRvZXNuJ3QNCj5odXJ0Lg0K
+Hi=20
+
+Can someone please help me to debug this issue?
+
+Regards
+Nehal
+
+-----Original Message-----
+From: Shah, Nehal-bakulchandra=20
+Sent: Monday, September 26, 2016 3:45 PM
+To: 'Bharat Kumar Gogada' <bharat.kumar.gogada@xilinx.com>
+Cc: Deucher, Alexander <Alexander.Deucher@amd.com>; linux-pci@vger.kernel.o=
+rg; holler@ahsoftware.de; tj@kernel.org; linux-ide@vger.kernel.org; linux-k=
+ernel@vger.kernel.org
+Subject: RE: ATA failure regression
+
+Hi Bharat
+
+Thanks for the reply. I have observed following thing
+
+If IOMMU is enabled in BIOS and I use following option FCH SATA Debug Optio=
+ns --> Unused SATA Port Auto Shut Down Disabled. Issue is not happening. I =
+have attached dmesg and lspci output with this option
+
+Also I have attached lspci log with IOMMU disabled.
+
+When issue is happening I am not able to take lspci logs as it stops in ini=
+tramfs itself. I will try to get.
+
+
+Thanks
+
+Nehal
+-----Original Message-----
+From: Bharat Kumar Gogada [mailto:bharat.kumar.gogada@xilinx.com]
+Sent: Friday, September 23, 2016 3:40 PM
+To: Shah, Nehal-bakulchandra <Nehal-bakulchandra.Shah@amd.com>; linux-kerne=
+l@vger.kernel.org; linux-pci@vger.kernel.org; holler@ahsoftware.de; tj@kern=
+el.org; linux-ide@vger.kernel.org
+Cc: Deucher, Alexander <Alexander.Deucher@amd.com>
+Subject: RE: ATA failure regression
+
+> Hi All,
+>=20
+> Resending this wider audience
+>=20
+> Currently I am working on AMD future platform.  I am hitting the same=20
+> bug of ATA Failure Regression reported in past.
+> (https://patchwork.kernel.org/patch/6875661/) or=20
+> http://lkml.iu.edu/hypermail/linux/kernel/1507.3/01961.html
+>=20
+> I am newbie to this and because of this Ubuntu  16.04 is not booting.=20
+> If disable IOMMU and MSI obviously it works but that is not solution.=20
+> Even when I bisected it boiled to same place which was mentioned in past =
+discussion.
+>=20
+So here when you are disabling MSI, it is working with legacy interrupts or=
+ MSI-X.
+Can you post the end sata device lscpi -xxx -vvv content.=20
+
+Bharat
