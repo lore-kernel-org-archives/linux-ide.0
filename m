@@ -1,33 +1,27 @@
-From: "tj@kernel.org" <tj@kernel.org>
-Subject: Re: ATA failure regression
-Date: Thu, 29 Sep 2016 10:22:29 +0200
-Message-ID: <20160929082229.GA11087@mtj.duckdns.org>
-References: <DM5PR12MB17698A0E873273577E60A97BA0C80@DM5PR12MB1769.namprd12.prod.outlook.com>
- <8520D5D51A55D047800579B094147198258E4869@XAP-PVEXMBX01.xlnx.xilinx.com>
- <MWHPR12MB177486F96C515BCAEADC7D70A0CF0@MWHPR12MB1774.namprd12.prod.outlook.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 1/3] block: Add iocontext priority to request
+Date: Thu, 29 Sep 2016 10:40:59 +0200
+Message-ID: <20160929084059.GB11087@mtj.duckdns.org>
+References: <1475000096-6148-1-git-send-email-adam.manzanares@hgst.com>
+ <1475000096-6148-2-git-send-email-adam.manzanares@hgst.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yb0-f175.google.com ([209.85.213.175]:34649 "EHLO
-        mail-yb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751670AbcI2IWd (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 29 Sep 2016 04:22:33 -0400
+Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <MWHPR12MB177486F96C515BCAEADC7D70A0CF0@MWHPR12MB1774.namprd12.prod.outlook.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <1475000096-6148-2-git-send-email-adam.manzanares@hgst.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Adam Manzanares <adam.manzanares@hgst.com>
+Cc: axboe@kernel.dk, linux-block@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Shah, Nehal-bakulchandra" <Nehal-bakulchandra.Shah@amd.com>
-Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>, "Deucher, Alexander" <Alexander.Deucher@amd.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "holler@ahsoftware.de" <holler@ahsoftware.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
 Hello,
 
-On Wed, Sep 28, 2016 at 05:45:08AM +0000, Shah, Nehal-bakulchandra wrote:
-> Can someone please help me to debug this issue?
+On Tue, Sep 27, 2016 at 11:14:54AM -0700, Adam Manzanares wrote:
+> Patch adds association between iocontext and a request.
+> 
+> Signed-off-by: Adam Manzanares <adam.manzanares@hgst.com>
 
-The only thing I can do from libata side is disbling msi on the
-affected platform, but the problem doesn't seem confined to ahci, so
-probably the right thing to do for now is disabling msi on the
-platform?
+Can you please describe how this may impact existing usages?
 
 Thanks.
 
