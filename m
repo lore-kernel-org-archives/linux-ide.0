@@ -1,38 +1,36 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ahci: qoriq: Revert "ahci: qoriq: Disable NCQ on ls2080a
- SoC"
-Date: Thu, 29 Sep 2016 11:58:02 +0200
-Message-ID: <20160929095802.GA24034@mtj.duckdns.org>
-References: <1475027172-21012-1-git-send-email-yuantian.tang@nxp.com>
- <20160929085525.GE11087@mtj.duckdns.org>
- <DB6PR0402MB2837BA24F4CB8D137FA16574F0CE0@DB6PR0402MB2837.eurprd04.prod.outlook.com>
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: ATA failure regression
+Date: Thu, 29 Sep 2016 08:25:58 -0300
+Message-ID: <20160929112558.GA24350@khazad-dum.debian.net>
+References: <DM5PR12MB17698A0E873273577E60A97BA0C80@DM5PR12MB1769.namprd12.prod.outlook.com>
+ <8520D5D51A55D047800579B094147198258E4869@XAP-PVEXMBX01.xlnx.xilinx.com>
+ <MWHPR12MB177486F96C515BCAEADC7D70A0CF0@MWHPR12MB1774.namprd12.prod.outlook.com>
+ <20160929082229.GA11087@mtj.duckdns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f195.google.com ([209.85.161.195]:33744 "EHLO
-        mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754661AbcI2J6K (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 29 Sep 2016 05:58:10 -0400
-Received: by mail-yw0-f195.google.com with SMTP id g192so2744132ywh.0
-        for <linux-ide@vger.kernel.org>; Thu, 29 Sep 2016 02:58:10 -0700 (PDT)
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <DB6PR0402MB2837BA24F4CB8D137FA16574F0CE0@DB6PR0402MB2837.eurprd04.prod.outlook.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <20160929082229.GA11087@mtj.duckdns.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "tj@kernel.org" <tj@kernel.org>
+Cc: "Shah, Nehal-bakulchandra" <Nehal-bakulchandra.Shah@amd.com>, Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>, "Deucher, Alexander" <Alexander.Deucher@amd.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "holler@ahsoftware.de" <holler@ahsoftware.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: "Y.T. Tang" <yuantian.tang@nxp.com>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hello,
+On Thu, 29 Sep 2016, tj@kernel.org wrote:
+> On Wed, Sep 28, 2016 at 05:45:08AM +0000, Shah, Nehal-bakulchandra wrote:
+> > Can someone please help me to debug this issue?
+> 
+> The only thing I can do from libata side is disbling msi on the
+> affected platform, but the problem doesn't seem confined to ahci, so
+> probably the right thing to do for now is disabling msi on the
+> platform?
 
-On Thu, Sep 29, 2016 at 09:07:18AM +0000, Y.T. Tang wrote:
-> In reality, customer will not get any ls2080a v1.0 soc. Neither
-> apply to any products. If blacklisting v2.0, we need to check the
-> soc version which is not suitable in the driver.  Anyway, reverting
-> this commit won't create any side effect.
+Actually, according to Shah's post from the 26th to this thread,
+everything works just fine even with the IOMMU enabled, as long as the
+system is configured to NOT auto-shutdown unused SATA ports.
 
-Can you please include this in the commit description?
-
-Thanks.
+That seems to give some extra avenues at fixing/working around the
+issue, maybe?
 
 -- 
-tejun
+  Henrique Holschuh
