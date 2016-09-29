@@ -1,36 +1,42 @@
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+From: "tj@kernel.org" <tj@kernel.org>
 Subject: Re: ATA failure regression
-Date: Thu, 29 Sep 2016 08:25:58 -0300
-Message-ID: <20160929112558.GA24350@khazad-dum.debian.net>
+Date: Thu, 29 Sep 2016 13:33:11 +0200
+Message-ID: <20160929113311.GA26566@mtj.duckdns.org>
 References: <DM5PR12MB17698A0E873273577E60A97BA0C80@DM5PR12MB1769.namprd12.prod.outlook.com>
  <8520D5D51A55D047800579B094147198258E4869@XAP-PVEXMBX01.xlnx.xilinx.com>
  <MWHPR12MB177486F96C515BCAEADC7D70A0CF0@MWHPR12MB1774.namprd12.prod.outlook.com>
  <20160929082229.GA11087@mtj.duckdns.org>
+ <20160929112558.GA24350@khazad-dum.debian.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-pci-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20160929082229.GA11087@mtj.duckdns.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "tj@kernel.org" <tj@kernel.org>
-Cc: "Shah, Nehal-bakulchandra" <Nehal-bakulchandra.Shah@amd.com>, Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>, "Deucher, Alexander" <Alexander.Deucher@amd.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "holler@ahsoftware.de" <holler@ahsoftware.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <20160929112558.GA24350@khazad-dum.debian.net>
+Sender: linux-pci-owner@vger.kernel.org
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: "Shah, Nehal-bakulchandra" <Nehal-bakulchandra.Shah@amd.com>, Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>, "Deucher, Alexander" <Alexander.Deucher@amd.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "holler@ahsoftware.de" <holler@ahsoftware.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Dan Williams <dan.j.williamps@intel.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, 29 Sep 2016, tj@kernel.org wrote:
-> On Wed, Sep 28, 2016 at 05:45:08AM +0000, Shah, Nehal-bakulchandra wrote:
-> > Can someone please help me to debug this issue?
+Hello,
+
+(cc'ing Dan, hi!)
+
+On Thu, Sep 29, 2016 at 08:25:58AM -0300, Henrique de Moraes Holschuh wrote:
+> Actually, according to Shah's post from the 26th to this thread,
+> everything works just fine even with the IOMMU enabled, as long as the
+> system is configured to NOT auto-shutdown unused SATA ports.
 > 
-> The only thing I can do from libata side is disbling msi on the
-> affected platform, but the problem doesn't seem confined to ahci, so
-> probably the right thing to do for now is disabling msi on the
-> platform?
+> That seems to give some extra avenues at fixing/working around the
+> issue, maybe?
 
-Actually, according to Shah's post from the 26th to this thread,
-everything works just fine even with the IOMMU enabled, as long as the
-system is configured to NOT auto-shutdown unused SATA ports.
+Hmm... it could be that the multiple msix routing gets screwed when
+the bios disables unoccupied ports.  Dan, can you please look into
+this?  Shah is seeing ahci failing during boot on an AMD platform with
+msi enabled.  If disabling of unoccupied ports is turned off in bios,
+the problem goes away.  Maybe we're mapping the irqs incorrectly in
+such cases?
 
-That seems to give some extra avenues at fixing/working around the
-issue, maybe?
+Thanks.
 
 -- 
-  Henrique Holschuh
+tejun
