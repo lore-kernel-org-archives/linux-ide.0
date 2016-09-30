@@ -1,42 +1,66 @@
-From: "tj@kernel.org" <tj@kernel.org>
-Subject: Re: ATA failure regression
-Date: Thu, 29 Sep 2016 13:33:11 +0200
-Message-ID: <20160929113311.GA26566@mtj.duckdns.org>
-References: <DM5PR12MB17698A0E873273577E60A97BA0C80@DM5PR12MB1769.namprd12.prod.outlook.com>
- <8520D5D51A55D047800579B094147198258E4869@XAP-PVEXMBX01.xlnx.xilinx.com>
- <MWHPR12MB177486F96C515BCAEADC7D70A0CF0@MWHPR12MB1774.namprd12.prod.outlook.com>
- <20160929082229.GA11087@mtj.duckdns.org>
- <20160929112558.GA24350@khazad-dum.debian.net>
+From: <yuantian.tang@nxp.com>
+Subject: [PATCH v2] ahci: qoriq: Revert "ahci: qoriq: Disable NCQ on ls2080a SoC"
+Date: Fri, 30 Sep 2016 14:13:13 +0800
+Message-ID: <1475215993-329-1-git-send-email-yuantian.tang@nxp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pci-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20160929112558.GA24350@khazad-dum.debian.net>
-Sender: linux-pci-owner@vger.kernel.org
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: "Shah, Nehal-bakulchandra" <Nehal-bakulchandra.Shah@amd.com>, Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>, "Deucher, Alexander" <Alexander.Deucher@amd.com>, "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "holler@ahsoftware.de" <holler@ahsoftware.de>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Dan Williams <dan.j.williamps@intel.com>
+Content-Type: text/plain
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-cys01nam02on0073.outbound.protection.outlook.com ([104.47.37.73]:55072
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750842AbcI3G62 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 30 Sep 2016 02:58:28 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: tj@kernel.org, linux-ide@vger.kernel.org
+Cc: Tang Yuantian <Yuantian.Tang@nxp.com>, Tang Yuantian <yuantian.tang@nxp.com>
 
-Hello,
+From: Tang Yuantian <Yuantian.Tang@nxp.com>
 
-(cc'ing Dan, hi!)
+This reverts commit 640847298e2b7f19 ("ahci: qoriq: Disable NCQ
+on ls2080a SoC")
 
-On Thu, Sep 29, 2016 at 08:25:58AM -0300, Henrique de Moraes Holschuh wrote:
-> Actually, according to Shah's post from the 26th to this thread,
-> everything works just fine even with the IOMMU enabled, as long as the
-> system is configured to NOT auto-shutdown unused SATA ports.
-> 
-> That seems to give some extra avenues at fixing/working around the
-> issue, maybe?
+The erratum has been fixed in ls2080a v2.0 and later soc.
+In reality, customer will not get any ls2080a v1.0 soc. Neither apply
+to any products. So reverting this commit won't create any side effect.
 
-Hmm... it could be that the multiple msix routing gets screwed when
-the bios disables unoccupied ports.  Dan, can you please look into
-this?  Shah is seeing ahci failing during boot on an AMD platform with
-msi enabled.  If disabling of unoccupied ports is turned off in bios,
-the problem goes away.  Maybe we're mapping the irqs incorrectly in
-such cases?
+Blacklisting v2.0 could also be a option, but that needs to check the
+soc version which is not suitable in the driver.
 
-Thanks.
+Signed-off-by: Tang Yuantian <yuantian.tang@nxp.com>
+---
+v2:
+	- refined the commit message
 
+ drivers/ata/ahci_qoriq.c | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
+
+diff --git a/drivers/ata/ahci_qoriq.c b/drivers/ata/ahci_qoriq.c
+index 925c4b6..1eba8df 100644
+--- a/drivers/ata/ahci_qoriq.c
++++ b/drivers/ata/ahci_qoriq.c
+@@ -136,7 +136,7 @@ static struct ata_port_operations ahci_qoriq_ops = {
+ 	.hardreset	= ahci_qoriq_hardreset,
+ };
+ 
+-static struct ata_port_info ahci_qoriq_port_info = {
++static const struct ata_port_info ahci_qoriq_port_info = {
+ 	.flags		= AHCI_FLAG_COMMON | ATA_FLAG_NCQ,
+ 	.pio_mask	= ATA_PIO4,
+ 	.udma_mask	= ATA_UDMA6,
+@@ -221,12 +221,6 @@ static int ahci_qoriq_probe(struct platform_device *pdev)
+ 	if (rc)
+ 		goto disable_resources;
+ 
+-	/* Workaround for ls2080a */
+-	if (qoriq_priv->type == AHCI_LS2080A) {
+-		hpriv->flags |= AHCI_HFLAG_NO_NCQ;
+-		ahci_qoriq_port_info.flags &= ~ATA_FLAG_NCQ;
+-	}
+-
+ 	rc = ahci_platform_init_host(pdev, hpriv, &ahci_qoriq_port_info,
+ 				     &ahci_qoriq_sht);
+ 	if (rc)
 -- 
-tejun
+2.1.0.27.g96db324
+
