@@ -1,84 +1,83 @@
-From: "Y.T. Tang" <yuantian.tang@nxp.com>
-Subject: RE: [PATCH] ahci: qoriq: Revert "ahci: qoriq: Disable NCQ on ls2080a
- SoC"
-Date: Fri, 30 Sep 2016 06:29:25 +0000
-Message-ID: <DB6PR0402MB2837CD00CECD4FDEA52A988EF0C10@DB6PR0402MB2837.eurprd04.prod.outlook.com>
-References: <1475215954-48395-1-git-send-email-yuantian.tang@nxp.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 1/3] block: Add iocontext priority to request
+Date: Sun, 2 Oct 2016 10:53:21 +0200
+Message-ID: <20161002085321.GA13648@mtj.duckdns.org>
+References: <1475000096-6148-1-git-send-email-adam.manzanares@hgst.com>
+ <1475000096-6148-2-git-send-email-adam.manzanares@hgst.com>
+ <20160929084059.GB11087@mtj.duckdns.org>
+ <20160930160216.GA13637@hgst.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-db5eur01on0053.outbound.protection.outlook.com ([104.47.2.53]:20475
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932348AbcI3TE0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 30 Sep 2016 15:04:26 -0400
-In-Reply-To: <1475215954-48395-1-git-send-email-yuantian.tang@nxp.com>
-Content-Language: en-US
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20160930160216.GA13637@hgst.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Adam Manzanares <adam.manzanares@hgst.com>
+Cc: axboe@kernel.dk, linux-block@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "Y.T. Tang" <yuantian.tang@nxp.com>, "tj@kernel.org" <tj@kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Please ignore this, it is a duplicated patch.
+Hello, Adam.
 
-Regards,
-Yuantian
+On Fri, Sep 30, 2016 at 09:02:17AM -0700, Adam Manzanares wrote:
+> I'll start with the changes I made and work my way through a grep of            
+> ioprio. Please add or correct any of the assumptions I have made.               
 
-> -----Original Message-----
-> From: yuantian.tang@nxp.com [mailto:yuantian.tang@nxp.com]
-> Sent: Friday, September 30, 2016 2:13 PM
-> To: tj@kernel.org; linux-ide@vger.kernel.org
-> Cc: Y.T. Tang <yuantian.tang@nxp.com>; Y.T. Tang <yuantian.tang@nxp.com>
-> Subject: [PATCH] ahci: qoriq: Revert "ahci: qoriq: Disable NCQ on ls2080a=
- SoC"
->=20
-> From: Tang Yuantian <Yuantian.Tang@nxp.com>
->=20
-> This reverts commit 640847298e2b7f19 ("ahci: qoriq: Disable NCQ on ls2080=
-a
-> SoC")
->=20
-> The erratum has been fixed in ls2080a v2.0 and later soc.
-> In reality, customer will not get any ls2080a v1.0 soc. Neither apply to =
-any
-> products. So reverting this commit won't create any side effect.
->=20
-> Blacklisting v2.0 could also be a option, but that needs to check the soc
-> version which is not suitable in the driver.
->=20
-> Signed-off-by: Tang Yuantian <yuantian.tang@nxp.com>
-> ---
->  drivers/ata/ahci_qoriq.c | 8 +-------
->  1 file changed, 1 insertion(+), 7 deletions(-)
->=20
-> diff --git a/drivers/ata/ahci_qoriq.c b/drivers/ata/ahci_qoriq.c index
-> 925c4b6..1eba8df 100644
-> --- a/drivers/ata/ahci_qoriq.c
-> +++ b/drivers/ata/ahci_qoriq.c
-> @@ -136,7 +136,7 @@ static struct ata_port_operations ahci_qoriq_ops =3D =
-{
->  	.hardreset	=3D ahci_qoriq_hardreset,
->  };
->=20
-> -static struct ata_port_info ahci_qoriq_port_info =3D {
-> +static const struct ata_port_info ahci_qoriq_port_info =3D {
->  	.flags		=3D AHCI_FLAG_COMMON | ATA_FLAG_NCQ,
->  	.pio_mask	=3D ATA_PIO4,
->  	.udma_mask	=3D ATA_UDMA6,
-> @@ -221,12 +221,6 @@ static int ahci_qoriq_probe(struct platform_device
-> *pdev)
->  	if (rc)
->  		goto disable_resources;
->=20
-> -	/* Workaround for ls2080a */
-> -	if (qoriq_priv->type =3D=3D AHCI_LS2080A) {
-> -		hpriv->flags |=3D AHCI_HFLAG_NO_NCQ;
-> -		ahci_qoriq_port_info.flags &=3D ~ATA_FLAG_NCQ;
-> -	}
-> -
->  	rc =3D ahci_platform_init_host(pdev, hpriv, &ahci_qoriq_port_info,
->  				     &ahci_qoriq_sht);
->  	if (rc)
-> --
-> 2.1.0.27.g96db324
+Well, it looks like you're the one who's most familiar with ioprio
+handling at this point. :)
 
+> In blk-core, the behavior before the patch is to get the ioprio for the request 
+> from the bio. The only references I found to bio_set_prio are in bcache. Both   
+> of these references are in low priority operations (gc, bg writeback) so the    
+> iopriority of the bio is set to IO_PRIOCLASS_IDLE in these cases.               
+>                                                                                 
+> A kernel thread is used to submit these bios so the ioprio is going to come     
+> from the current running task if the iocontext exists. This could be a problem  
+> if we have set a task with high priority and some background work ends up       
+> getting generated in the bcache layer. I propose that we check if the           
+> iopriority of the bio is valid and if so, then we keep the priorirty from the   
+> bio.                                                                            
+
+I wonder whether the right thing to do is adding bio->bi_ioprio which
+is initialized on bio submission and carried through req->ioprio.
+
+> The second area that I see a potential problem is in the merging code code in   
+> blk-core when a bio is queued. If there is a request that is mergeable then     
+> the merge code takes the highest priority of the bio and the request. This      
+> could wipe out the values set by bio_set_prio. I think it would be              
+> best to set the request as non mergeable when we see that it is a high          
+> priority IO request.                                                            
+
+The current behavior should be fine for most non-pathological cases
+but I have no objection to not merging ios with differing priorities.
+
+> The third area that is of interest is in the CFQ scheduler and the ioprio is    
+> only used in the case of async IO and I found that the priority is only         
+> obtained from the task and not from the request. This leads me to believe that  
+> the changes made in the blk-core to add the priority to the request will not    
+> impact the CFQ scheduler. 
+>
+> The fourth area that might be concerning is the drivers. virtio_block copies    
+> the request priority into a virtual block request. I am assuming that this      
+> eventually makes it to another device driver so we don't need to worry about    
+> this. null block device driver also uses the ioprio, but this is also not a     
+> concern. lightnvm also sets the ioprio to build a request that is passed onto   
+> another driver. The last driver that uses the request ioprio is the fusion      
+> mptsas driver and I don't understand how it is using the ioprio. From what I    
+> can tell it is taking a request of IOPRIO_CLASS_NONE with data of 0x7 and       
+> calling this high priority IO. This could be impacted by the code I have        
+> proposed, but I believe the authors intended to treat this particular ioprio    
+> value as high priority. The driver will pass the request to the device          
+> with high priority if the appropriate ioprio values is seen on the request.     
+>                                                                                 
+> The fifth area that I noticed may be impacted is file systems. btrfs uses low   
+> priority IO for read ahead. Ext4 uses ioprio for journaling. Both of these      
+> issues are not a problem because the ioprio is set on the task and not on a     
+> bio.
+
+Yeah, looks good to me.  Care to include a brief summary of expected
+(non)impacts in the patch description?
+
+Thanks.
+
+-- 
+tejun
