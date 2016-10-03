@@ -1,83 +1,179 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/3] block: Add iocontext priority to request
-Date: Sun, 2 Oct 2016 10:53:21 +0200
-Message-ID: <20161002085321.GA13648@mtj.duckdns.org>
-References: <1475000096-6148-1-git-send-email-adam.manzanares@hgst.com>
- <1475000096-6148-2-git-send-email-adam.manzanares@hgst.com>
- <20160929084059.GB11087@mtj.duckdns.org>
- <20160930160216.GA13637@hgst.com>
+From: "FedEx International MailService"
+        <ryan.stokes@tennesseeinternationalpageants.com>
+Subject: Problems with item delivery, n.000773940
+Date: Mon, 3 Oct 2016 18:24:53 +0000
+Message-ID: <190f257cd2a0fd2383bf7f5362430459@tennesseeinternationalpageants.com>
+Reply-To: "FedEx International MailService"
+          <ryan.stokes@tennesseeinternationalpageants.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20160930160216.GA13637@hgst.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Adam Manzanares <adam.manzanares@hgst.com>
-Cc: axboe@kernel.dk, linux-block@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: multipart/mixed;
+        boundary="b1_52a21ebb59b0cde313e5153567aee775"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from p3nlsmtpcp01-01.prod.phx3.secureserver.net ([184.168.200.138]:54466
+        "EHLO p3nlsmtpcp01-01.prod.phx3.secureserver.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752658AbcJCSZy (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Mon, 3 Oct 2016 14:25:54 -0400
+Received: from haitipageants by p3plcpnl0224.prod.phx3.secureserver.net with local (Exim 4.87)
+        (envelope-from <haitipageants@p3plcpnl0224.prod.phx3.secureserver.net>)
+        id 1br7v3-0002e4-1y
+        for linux-ide@vger.kernel.org; Mon, 03 Oct 2016 11:24:53 -0700
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello, Adam.
+--b1_52a21ebb59b0cde313e5153567aee775
+Content-Type: text/plain; charset=us-ascii
 
-On Fri, Sep 30, 2016 at 09:02:17AM -0700, Adam Manzanares wrote:
-> I'll start with the changes I made and work my way through a grep of            
-> ioprio. Please add or correct any of the assumptions I have made.               
+Dear Customer,
 
-Well, it looks like you're the one who's most familiar with ioprio
-handling at this point. :)
+This is to confirm that one or more of your parcels has been shipped.
+Shipment Label is attached to email.
 
-> In blk-core, the behavior before the patch is to get the ioprio for the request 
-> from the bio. The only references I found to bio_set_prio are in bcache. Both   
-> of these references are in low priority operations (gc, bg writeback) so the    
-> iopriority of the bio is set to IO_PRIOCLASS_IDLE in these cases.               
->                                                                                 
-> A kernel thread is used to submit these bios so the ioprio is going to come     
-> from the current running task if the iocontext exists. This could be a problem  
-> if we have set a task with high priority and some background work ends up       
-> getting generated in the bcache layer. I propose that we check if the           
-> iopriority of the bio is valid and if so, then we keep the priorirty from the   
-> bio.                                                                            
+Yours sincerely,
+Ryan Stokes,
+Station Manager.
 
-I wonder whether the right thing to do is adding bio->bi_ioprio which
-is initialized on bio submission and carried through req->ioprio.
 
-> The second area that I see a potential problem is in the merging code code in   
-> blk-core when a bio is queued. If there is a request that is mergeable then     
-> the merge code takes the highest priority of the bio and the request. This      
-> could wipe out the values set by bio_set_prio. I think it would be              
-> best to set the request as non mergeable when we see that it is a high          
-> priority IO request.                                                            
+--b1_52a21ebb59b0cde313e5153567aee775
+Content-Type: application/zip; name="FedEx_ID_000773940.zip"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename=FedEx_ID_000773940.zip
 
-The current behavior should be fine for most non-pathological cases
-but I have no objection to not merging ios with differing priorities.
+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
 
-> The third area that is of interest is in the CFQ scheduler and the ioprio is    
-> only used in the case of async IO and I found that the priority is only         
-> obtained from the task and not from the request. This leads me to believe that  
-> the changes made in the blk-core to add the priority to the request will not    
-> impact the CFQ scheduler. 
->
-> The fourth area that might be concerning is the drivers. virtio_block copies    
-> the request priority into a virtual block request. I am assuming that this      
-> eventually makes it to another device driver so we don't need to worry about    
-> this. null block device driver also uses the ioprio, but this is also not a     
-> concern. lightnvm also sets the ioprio to build a request that is passed onto   
-> another driver. The last driver that uses the request ioprio is the fusion      
-> mptsas driver and I don't understand how it is using the ioprio. From what I    
-> can tell it is taking a request of IOPRIO_CLASS_NONE with data of 0x7 and       
-> calling this high priority IO. This could be impacted by the code I have        
-> proposed, but I believe the authors intended to treat this particular ioprio    
-> value as high priority. The driver will pass the request to the device          
-> with high priority if the appropriate ioprio values is seen on the request.     
->                                                                                 
-> The fifth area that I noticed may be impacted is file systems. btrfs uses low   
-> priority IO for read ahead. Ext4 uses ioprio for journaling. Both of these      
-> issues are not a problem because the ioprio is set on the task and not on a     
-> bio.
 
-Yeah, looks good to me.  Care to include a brief summary of expected
-(non)impacts in the patch description?
+--b1_52a21ebb59b0cde313e5153567aee775--
 
-Thanks.
-
--- 
-tejun
