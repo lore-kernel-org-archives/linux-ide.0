@@ -1,42 +1,139 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/3] block: Add iocontext priority to request
-Date: Tue, 4 Oct 2016 16:52:27 -0400
-Message-ID: <20161004205227.GL4205@htj.duckdns.org>
-References: <1475000096-6148-1-git-send-email-adam.manzanares@hgst.com>
- <1475000096-6148-2-git-send-email-adam.manzanares@hgst.com>
- <20160929084059.GB11087@mtj.duckdns.org>
- <20160930160216.GA13637@hgst.com>
- <20161002085321.GA13648@mtj.duckdns.org>
- <20161004154917.GA4764@hgst.com>
+From: Adam Manzanares <adam.manzanares@hgst.com>
+Subject: [PATCH v2 2/2] block: Add iocontext priority to request
+Date: Wed, 5 Oct 2016 12:00:07 -0700
+Message-ID: <1475694007-11999-3-git-send-email-adam.manzanares@hgst.com>
+References: <1475694007-11999-1-git-send-email-adam.manzanares@hgst.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20161004154917.GA4764@hgst.com>
+In-Reply-To: <1475694007-11999-1-git-send-email-adam.manzanares@hgst.com>
 Sender: linux-block-owner@vger.kernel.org
-To: Adam Manzanares <adam.manzanares@hgst.com>
-Cc: axboe@kernel.dk, linux-block@vger.kernel.org, linux-ide@vger.kernel.org
+To: axboe@kernel.dk, tj@kernel.org
+Cc: linux-block@vger.kernel.org, linux-ide@vger.kernel.org, Adam Manzanares <adam.manzanares@hgst.com>
 List-Id: linux-ide@vger.kernel.org
 
-Hello, Adam.
+Patch adds an association between iocontext ioprio and the ioprio of
+a request. This feature is only enabled if a queue flag is set to
+indicate that requests should have ioprio associated with them. The
+queue flag is exposed as the req_prio queue sysfs entry.
 
-On Tue, Oct 04, 2016 at 08:49:18AM -0700, Adam Manzanares wrote:
-> > I wonder whether the right thing to do is adding bio->bi_ioprio which
-> > is initialized on bio submission and carried through req->ioprio.
-> 
-> I looked around and thought about this and I'm not sure if this will help. 
-> I dug into the bio submission code and I thought generic_make_request was 
-> the best place to save the ioprio information. This is quite close in 
-> the call stack to init_request_from bio. Bcache sets the bio priority before 
-> the submission, so we would have to check to see if the bio priority was 
-> valid on bio submission leaving us with the same problem. Leaving the 
-> priority in the upper bits of bio->bi_rw is fine with me. It may help to 
-> have the bio->bi_ioprio for clarity, but I think we will still face the 
-> issue of having to check if this value is set when we submit the bio or 
-> init the request so I'm leaning towards leaving it as is.
+Signed-off-by: Adam Mananzanares <adam.manzanares@hgst.com>
+---
+ block/blk-core.c       |  8 +++++++-
+ block/blk-sysfs.c      | 32 ++++++++++++++++++++++++++++++++
+ include/linux/blkdev.h |  2 ++
+ 3 files changed, 41 insertions(+), 1 deletion(-)
 
-I see.  Thanks for looking into it.  It's icky that we don't have a
-clear path of propagating ioprio but let's save that for another day.
-
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 36c7ac3..17c3ce5 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -33,6 +33,7 @@
+ #include <linux/ratelimit.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/blk-cgroup.h>
++#include <linux/ioprio.h>
+ 
+ #define CREATE_TRACE_POINTS
+ #include <trace/events/block.h>
+@@ -1648,6 +1649,7 @@ out:
+ 
+ void init_request_from_bio(struct request *req, struct bio *bio)
+ {
++	struct io_context *ioc = rq_ioc(bio);
+ 	req->cmd_type = REQ_TYPE_FS;
+ 
+ 	req->cmd_flags |= bio->bi_opf & REQ_COMMON_MASK;
+@@ -1656,7 +1658,11 @@ void init_request_from_bio(struct request *req, struct bio *bio)
+ 
+ 	req->errors = 0;
+ 	req->__sector = bio->bi_iter.bi_sector;
+-	req->ioprio = bio_prio(bio);
++	if (blk_queue_req_prio(req->q))
++		req->ioprio = ioprio_best(bio_prio(bio), ioc->ioprio);
++	else
++		req->ioprio = bio_prio(bio);
++
+ 	blk_rq_bio_prep(req->q, req, bio);
+ }
+ 
+diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+index f87a7e7..268a71a 100644
+--- a/block/blk-sysfs.c
++++ b/block/blk-sysfs.c
+@@ -384,6 +384,31 @@ static ssize_t queue_dax_show(struct request_queue *q, char *page)
+ 	return queue_var_show(blk_queue_dax(q), page);
+ }
+ 
++static ssize_t queue_req_prio_show(struct request_queue *q, char *page)
++{
++	return queue_var_show(blk_queue_req_prio(q), page);
++}
++
++static ssize_t queue_req_prio_store(struct request_queue *q, const char *page,
++				    size_t count)
++{
++	unsigned long req_prio_on;
++	ssize_t ret;
++
++	ret = queue_var_store(&req_prio_on, page, count);
++	if (ret < 0)
++		return ret;
++
++	spin_lock_irq(q->queue_lock);
++	if (req_prio_on)
++		queue_flag_set(QUEUE_FLAG_REQ_PRIO, q);
++	else
++		queue_flag_clear(QUEUE_FLAG_REQ_PRIO, q);
++	spin_unlock_irq(q->queue_lock);
++
++	return ret;
++}
++
+ static struct queue_sysfs_entry queue_requests_entry = {
+ 	.attr = {.name = "nr_requests", .mode = S_IRUGO | S_IWUSR },
+ 	.show = queue_requests_show,
+@@ -526,6 +551,12 @@ static struct queue_sysfs_entry queue_dax_entry = {
+ 	.show = queue_dax_show,
+ };
+ 
++static struct queue_sysfs_entry queue_req_prio_entry = {
++	.attr = {.name = "req_prio", .mode = S_IRUGO | S_IWUSR },
++	.show = queue_req_prio_show,
++	.store = queue_req_prio_store,
++};
++
+ static struct attribute *default_attrs[] = {
+ 	&queue_requests_entry.attr,
+ 	&queue_ra_entry.attr,
+@@ -553,6 +584,7 @@ static struct attribute *default_attrs[] = {
+ 	&queue_poll_entry.attr,
+ 	&queue_wc_entry.attr,
+ 	&queue_dax_entry.attr,
++	&queue_req_prio_entry.attr,
+ 	NULL,
+ };
+ 
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index e79055c..23e1e2d 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -505,6 +505,7 @@ struct request_queue {
+ #define QUEUE_FLAG_FUA	       24	/* device supports FUA writes */
+ #define QUEUE_FLAG_FLUSH_NQ    25	/* flush not queueuable */
+ #define QUEUE_FLAG_DAX         26	/* device supports DAX */
++#define QUEUE_FLAG_REQ_PRIO    27	/* Use iocontext ioprio */
+ 
+ #define QUEUE_FLAG_DEFAULT	((1 << QUEUE_FLAG_IO_STAT) |		\
+ 				 (1 << QUEUE_FLAG_STACKABLE)	|	\
+@@ -595,6 +596,7 @@ static inline void queue_flag_clear(unsigned int flag, struct request_queue *q)
+ #define blk_queue_secure_erase(q) \
+ 	(test_bit(QUEUE_FLAG_SECERASE, &(q)->queue_flags))
+ #define blk_queue_dax(q)	test_bit(QUEUE_FLAG_DAX, &(q)->queue_flags)
++#define blk_queue_req_prio(q)	test_bit(QUEUE_FLAG_REQ_PRIO, &(q)->queue_flags)
+ 
+ #define blk_noretry_request(rq) \
+ 	((rq)->cmd_flags & (REQ_FAILFAST_DEV|REQ_FAILFAST_TRANSPORT| \
 -- 
-tejun
+2.1.4
+
