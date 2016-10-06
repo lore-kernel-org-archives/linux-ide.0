@@ -1,41 +1,42 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 1/2] ata: Enabling ATA Command Priorities
-Date: Thu, 6 Oct 2016 08:23:27 +0200
-Message-ID: <17c2ca01-0144-fc7d-1024-5f9cff3cd6ee@suse.de>
+Subject: Re: [PATCH v2 2/2] block: Add iocontext priority to request
+Date: Thu, 6 Oct 2016 08:24:54 +0200
+Message-ID: <5e96d531-8636-8e63-0ea8-e134676109c2@suse.de>
 References: <1475694007-11999-1-git-send-email-adam.manzanares@hgst.com>
- <1475694007-11999-2-git-send-email-adam.manzanares@hgst.com>
+ <1475694007-11999-3-git-send-email-adam.manzanares@hgst.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49236 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:49293 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934041AbcJFGXa (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Thu, 6 Oct 2016 02:23:30 -0400
-In-Reply-To: <1475694007-11999-2-git-send-email-adam.manzanares@hgst.com>
+        id S1751711AbcJFGY4 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Thu, 6 Oct 2016 02:24:56 -0400
+In-Reply-To: <1475694007-11999-3-git-send-email-adam.manzanares@hgst.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Adam Manzanares <adam.manzanares@hgst.com>, axboe@kernel.dk, tj@kernel.org
 Cc: linux-block@vger.kernel.org, linux-ide@vger.kernel.org
 
 On 10/05/2016 09:00 PM, Adam Manzanares wrote:
-> This patch checks to see if an ATA device supports NCQ command priorities.
-> If so and the user has specified an iocontext that indicates IO_PRIO_CLASS_RT
-> and also enables request priorities in the block queue then we build a tf
-> with a high priority command.
+> Patch adds an association between iocontext ioprio and the ioprio of
+> a request. This feature is only enabled if a queue flag is set to
+> indicate that requests should have ioprio associated with them. The
+> queue flag is exposed as the req_prio queue sysfs entry.
 >
-> This patch depends on patch block-Add-iocontext-priority-to-request
->
-> Signed-off-by: Adam Manzanares <adam.manzanares@hgst.com>
+> Signed-off-by: Adam Mananzanares <adam.manzanares@hgst.com>
 > ---
->  drivers/ata/libata-core.c | 35 ++++++++++++++++++++++++++++++++++-
->  drivers/ata/libata-scsi.c | 10 +++++++++-
->  drivers/ata/libata.h      |  2 +-
->  include/linux/ata.h       |  6 ++++++
->  include/linux/libata.h    | 18 ++++++++++++++++++
->  5 files changed, 68 insertions(+), 3 deletions(-)
+>  block/blk-core.c       |  8 +++++++-
+>  block/blk-sysfs.c      | 32 ++++++++++++++++++++++++++++++++
+>  include/linux/blkdev.h |  2 ++
+>  3 files changed, 41 insertions(+), 1 deletion(-)
 >
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+As the previous patch depends on this one it should actually be the 
+first in the series.
+
+But other than that:
+
+Reviewed-by: Hannes Reinecke <hare@xuse.com>
 
 Cheers,
 
