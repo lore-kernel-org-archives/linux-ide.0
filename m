@@ -1,67 +1,63 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [PATCH v2 2/2] block: Add iocontext priority to request
-Date: Thu, 06 Oct 2016 15:46:00 -0400
-Message-ID: <x49d1jdi7lz.fsf@segfault.boston.devel.redhat.com>
-References: <1475694007-11999-1-git-send-email-adam.manzanares@hgst.com>
-        <1475694007-11999-3-git-send-email-adam.manzanares@hgst.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 176931] New: ata failed to IDENTIFY, suspected regression
+Date: Fri, 07 Oct 2016 04:13:33 +0000
+Message-ID: <bug-176931-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38180 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.29.136]:36258 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933370AbcJFTqD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Thu, 6 Oct 2016 15:46:03 -0400
-In-Reply-To: <1475694007-11999-3-git-send-email-adam.manzanares@hgst.com>
-        (Adam Manzanares's message of "Wed, 5 Oct 2016 12:00:07 -0700")
+        id S1751689AbcJGENg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 7 Oct 2016 00:13:36 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+        by mail.kernel.org (Postfix) with ESMTP id 1666420397
+        for <linux-ide@vger.kernel.org>; Fri,  7 Oct 2016 04:13:35 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+        by mail.kernel.org (Postfix) with ESMTP id B474320394
+        for <linux-ide@vger.kernel.org>; Fri,  7 Oct 2016 04:13:33 +0000 (UTC)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Adam Manzanares <adam.manzanares@hgst.com>
-Cc: axboe@kernel.dk, tj@kernel.org, linux-block@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hi, Adam,
+https://bugzilla.kernel.org/show_bug.cgi?id=176931
 
-Adam Manzanares <adam.manzanares@hgst.com> writes:
+            Bug ID: 176931
+           Summary: ata failed to IDENTIFY, suspected regression
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 4.8
+          Hardware: x86-64
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: low
+          Priority: P1
+         Component: IDE
+          Assignee: io_ide@kernel-bugs.osdl.org
+          Reporter: be11f157cd19c4a2ba1e9c70a38b1a74@protonmail.com
+        Regression: No
 
-> Patch adds an association between iocontext ioprio and the ioprio of
-> a request. This feature is only enabled if a queue flag is set to
-> indicate that requests should have ioprio associated with them. The
-> queue flag is exposed as the req_prio queue sysfs entry.
->
-> Signed-off-by: Adam Mananzanares <adam.manzanares@hgst.com>
+I have a old hard drive that shows up as this in lspci:
 
-I like the idea of the patch, but I have a few comments.
+IDE Interface: NVIDIA Corporation MCP78S [GeForce 8200] SATA Controller
+(non-AHCI mode) (rev a1)
 
-First, don't add a tunable, there's no need for it.  (And in the future,
-if you do add tunables, document them.)  That should make your patch
-much smaller.
+When I try to boot the machine with kernel 4.8, it will tell me that it cannot
+mount /dev/sda3 on root, and that the available choices only include sr0. The
+output before that says something along the lines of
 
-> @@ -1648,6 +1649,7 @@ out:
->  
->  void init_request_from_bio(struct request *req, struct bio *bio)
->  {
-> +	struct io_context *ioc = rq_ioc(bio);
+ata1: failed to IDENTIFY
 
-That can return NULL, and you blindly dereference it later.
+However, the exact same kernel .config(using default options when `make`
+prompts) with kernel 4.7.6 works fine.
 
-> @@ -1656,7 +1658,11 @@ void init_request_from_bio(struct request *req, struct bio *bio)
->  
->  	req->errors = 0;
->  	req->__sector = bio->bi_iter.bi_sector;
-> -	req->ioprio = bio_prio(bio);
-> +	if (blk_queue_req_prio(req->q))
-> +		req->ioprio = ioprio_best(bio_prio(bio), ioc->ioprio);
-> +	else
-> +		req->ioprio = bio_prio(bio);
-> +
+I can offer SSH(root) access and type commands manually for you if that
+breaks(but I can only type manually during EST non-business hours). SSH is set
+to autostart if you need to reboot the machine. I have a live CD on hand. The
+machine has no important data on it so you don't have to worry about breaking
+something. Send me a public key if you're interested.
 
-If the bio actually has an ioprio (only happens for bcache at this
-point), you should use it.  Something like this:
-
-        req->ioprio = bio_prio(bio);
-        if (!req->ioprio && ioc)
-		req->ioprio = ioc->ioprio;
-
-Finally, please re-order your series as Hannes suggested.
-
-Thanks!
-Jeff
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
