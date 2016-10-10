@@ -1,82 +1,38 @@
-From: <yuantian.tang@nxp.com>
-Subject: [PATCH] ahci: qoriq: added ls1046a platform support
-Date: Sun, 9 Oct 2016 16:51:04 +0800
-Message-ID: <1476003064-47306-1-git-send-email-yuantian.tang@nxp.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 176931] ata failed to IDENTIFY, suspected regression
+Date: Mon, 10 Oct 2016 13:04:41 +0000
+Message-ID: <bug-176931-11633-LJdq2sTmTz@https.bugzilla.kernel.org/>
+References: <bug-176931-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0055.outbound.protection.outlook.com ([104.47.38.55]:53248
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932129AbcJIJgl (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Sun, 9 Oct 2016 05:36:41 -0400
+Received: from mail.kernel.org ([198.145.29.136]:60008 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751895AbcJJNLW (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Mon, 10 Oct 2016 09:11:22 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+        by mail.kernel.org (Postfix) with ESMTP id 042B420160
+        for <linux-ide@vger.kernel.org>; Mon, 10 Oct 2016 13:04:45 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+        by mail.kernel.org (Postfix) with ESMTP id 882C72017E
+        for <linux-ide@vger.kernel.org>; Mon, 10 Oct 2016 13:04:41 +0000 (UTC)
+In-Reply-To: <bug-176931-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Tang Yuantian <Yuantian.Tang@nxp.com>, Tang Yuantian <yuantian.tang@nxp.com>
+To: linux-ide@vger.kernel.org
 
-From: Tang Yuantian <Yuantian.Tang@nxp.com>
+https://bugzilla.kernel.org/show_bug.cgi?id=176931
 
-Ls1046a is a new introduced soc which supports ATA3.0.
+Tejun Heo <tj@kernel.org> changed:
 
-Signed-off-by: Tang Yuantian <yuantian.tang@nxp.com>
----
- drivers/ata/ahci_qoriq.c | 16 +++++++++++++---
- 1 file changed, 13 insertions(+), 3 deletions(-)
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |tj@kernel.org
 
-diff --git a/drivers/ata/ahci_qoriq.c b/drivers/ata/ahci_qoriq.c
-index 1eba8df..9884c8c 100644
---- a/drivers/ata/ahci_qoriq.c
-+++ b/drivers/ata/ahci_qoriq.c
-@@ -46,11 +46,13 @@
- #define LS1021A_AXICC_ADDR	0xC0
- 
- #define SATA_ECC_DISABLE	0x00020000
-+#define LS1046A_SATA_ECC_DIS	0x80000000
- 
- enum ahci_qoriq_type {
- 	AHCI_LS1021A,
- 	AHCI_LS1043A,
- 	AHCI_LS2080A,
-+	AHCI_LS1046A,
- };
- 
- struct ahci_qoriq_priv {
-@@ -63,6 +65,7 @@ static const struct of_device_id ahci_qoriq_of_match[] = {
- 	{ .compatible = "fsl,ls1021a-ahci", .data = (void *)AHCI_LS1021A},
- 	{ .compatible = "fsl,ls1043a-ahci", .data = (void *)AHCI_LS1043A},
- 	{ .compatible = "fsl,ls2080a-ahci", .data = (void *)AHCI_LS2080A},
-+	{ .compatible = "fsl,ls1046a-ahci", .data = (void *)AHCI_LS1046A},
- 	{},
- };
- MODULE_DEVICE_TABLE(of, ahci_qoriq_of_match);
-@@ -175,6 +178,13 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
- 		writel(AHCI_PORT_TRANS_CFG, reg_base + PORT_TRANS);
- 		writel(AHCI_PORT_AXICC_CFG, reg_base + PORT_AXICC);
- 		break;
-+
-+	case AHCI_LS1046A:
-+		writel(LS1046A_SATA_ECC_DIS, qpriv->ecc_addr);
-+		writel(AHCI_PORT_PHY_1_CFG, reg_base + PORT_PHY1);
-+		writel(AHCI_PORT_TRANS_CFG, reg_base + PORT_TRANS);
-+		writel(AHCI_PORT_AXICC_CFG, reg_base + PORT_AXICC);
-+		break;
- 	}
- 
- 	return 0;
-@@ -204,9 +214,9 @@ static int ahci_qoriq_probe(struct platform_device *pdev)
- 
- 	qoriq_priv->type = (enum ahci_qoriq_type)of_id->data;
- 
--	if (qoriq_priv->type == AHCI_LS1021A) {
--		res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
--				"sata-ecc");
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM,
-+			"sata-ecc");
-+	if (res) {
- 		qoriq_priv->ecc_addr = devm_ioremap_resource(dev, res);
- 		if (IS_ERR(qoriq_priv->ecc_addr))
- 			return PTR_ERR(qoriq_priv->ecc_addr);
+--- Comment #1 from Tejun Heo <tj@kernel.org> ---
+Does booting with "irqpoll" boot option change anything?
+
 -- 
-2.1.0.27.g96db324
-
+You are receiving this mail because:
+You are watching the assignee of the bug.
