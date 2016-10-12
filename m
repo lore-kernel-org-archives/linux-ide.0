@@ -1,66 +1,62 @@
-From: Adam Manzanares <adam.manzanares@hgst.com>
-Subject: [PATCH v3 0/2] Enabling ATA Command Priorities
-Date: Tue, 11 Oct 2016 13:40:25 -0700
-Message-ID: <1476218427-4021-1-git-send-email-adam.manzanares@hgst.com>
+From: Luiz Carlos Ramos <lramos.prof@yahoo.com.br>
+Subject: [PATCH] Fix interface autodetection in legacy IDE driver (trial #2)
+Date: Tue, 11 Oct 2016 22:12:45 -0300
+Message-ID: <20161012011245.GA22684@giustizia>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:39341 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753121AbcJKUpk (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 11 Oct 2016 16:45:40 -0400
+Received: from nm27-vm3.bullet.mail.ne1.yahoo.com ([98.138.91.157]:38433 "EHLO
+        nm27-vm3.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752109AbcJLBR4 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 11 Oct 2016 21:17:56 -0400
+Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: axboe@kernel.dk, tj@kernel.org
-Cc: linux-block@vger.kernel.org, linux-ide@vger.kernel.org, Adam Manzanares <adam.manzanares@hgst.com>
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-This patch builds ATA commands with high priority if the iocontext
-of a process is set to real time. The goal of the patch is to
-improve tail latencies of workloads that use higher queue depths.
+Hello,
 
-This patch has been tested with an Ultrastar HE8 HDD and cuts the 
-the p99.99 tail latency of foreground IO from 2s down to 72ms when
-using the deadline scheduler. This patch works independently of the
-scheduler so it can be used with all of the currently available 
-request based schedulers. 
+This humble patch was sent one or two months before, and had no actions,
+except for a colleague reply which friendly pointed out some formatting
+problems (which were solved in a second message).
 
-Foreground IO, for the previously described results, is an async fio job 
-submitting 4K read requests at a QD of 1 to the HDD. The foreground IO is set 
-with the iopriority class of real time. The background workload is another fio
-job submitting read requests at a QD of 32 to the same HDD with default 
-iopriority.
+It relates to an old code, the legacy IDE driver, but the bug it
+addresses is real. The code, although rarely used, is
+still there to be compiled if one chooses to do so (like me).
 
-This feature is enabled by setting a queue flag that is exposed as a sysfs
-entry named rq_ioc_prio. If this feature is enabled, and the submission 
-iocontext exists, and the bio_prio is not valid then the request ioprio is
-set to the iocontext prio.
+Also, the fix has a very low risk of present collateral effects IMHO.
+It is already compiled and tested in some embedded machines.
 
-v3:
- - Removed null dereference issue in blk-core
- - Renamed queue sysfs entries for clarity
- - Added documentation for sysfs queue entry
+So, again IMHO, it is worth be fixed.
 
-v2:
- - Add queue flag to set iopriority going to the request
- - If queue flag set, send iopriority class to ata_build_rw_tf
- - Remove redundant code in ata_ncq_prio_enabled function.
+This email is a second trial with it. I hope it can help the one or two
+guys out there which are still running the legacy IDE driver and
+haven't noticed the former email.
 
+Best regards,
 
-Adam Manzanares (2):
-  block: Add iocontext priority to request
-  ata: Enabling ATA Command Priorities
+Signed-off-by: Luiz Carlos Ramos <lramos.prof@yahoo.com.br>
+---
+ drivers/ide/ide-generic.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
- Documentation/block/queue-sysfs.txt | 12 ++++++++++++
- block/blk-core.c                    |  5 +++++
- block/blk-sysfs.c                   | 32 ++++++++++++++++++++++++++++++++
- drivers/ata/libata-core.c           | 35 ++++++++++++++++++++++++++++++++++-
- drivers/ata/libata-scsi.c           | 10 +++++++++-
- drivers/ata/libata.h                |  2 +-
- include/linux/ata.h                 |  6 ++++++
- include/linux/blkdev.h              |  3 +++
- include/linux/libata.h              | 18 ++++++++++++++++++
- 9 files changed, 120 insertions(+), 3 deletions(-)
-
+diff --git a/drivers/ide/ide-generic.c b/drivers/ide/ide-generic.c
+index 54d7c4685d23aa5e62ce606e7b994a57bb54b08a..419818a39c270d3ad219e8f7b5df56a9aea3d640 100644
+--- a/drivers/ide/ide-generic.c
++++ b/drivers/ide/ide-generic.c
+@@ -96,10 +96,10 @@ static int __init ide_generic_init(void)
+ 		printk(KERN_INFO DRV_NAME ": please use \"probe_mask=0x3f\" "
+ 		     "module parameter for probing all legacy ISA IDE ports\n");
+ 
+-		if (primary == 0)
++		if (primary)
+ 			probe_mask |= 0x1;
+ 
+-		if (secondary == 0)
++		if (secondary)
+ 			probe_mask |= 0x2;
+ 	} else
+ 		printk(KERN_INFO DRV_NAME ": enforcing probing of I/O ports "
 -- 
-2.1.4
+2.8.2
 
