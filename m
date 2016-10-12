@@ -1,62 +1,37 @@
-From: Luiz Carlos Ramos <lramos.prof@yahoo.com.br>
-Subject: [PATCH] Fix interface autodetection in legacy IDE driver (trial #2)
-Date: Tue, 11 Oct 2016 22:12:45 -0300
-Message-ID: <20161012011245.GA22684@giustizia>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH v3 1/2] block: Add iocontext priority to request
+Date: Wed, 12 Oct 2016 08:49:54 -0600
+Message-ID: <4b60fe5d-113f-9361-bbae-7473002500ba@kernel.dk>
+References: <1476218427-4021-1-git-send-email-adam.manzanares@hgst.com>
+ <1476218427-4021-2-git-send-email-adam.manzanares@hgst.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nm27-vm3.bullet.mail.ne1.yahoo.com ([98.138.91.157]:38433 "EHLO
-        nm27-vm3.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752109AbcJLBR4 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 11 Oct 2016 21:17:56 -0400
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <1476218427-4021-2-git-send-email-adam.manzanares@hgst.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Adam Manzanares <adam.manzanares@hgst.com>, tj@kernel.org
+Cc: linux-block@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-Hello,
+On 10/11/2016 02:40 PM, Adam Manzanares wrote:
+> Patch adds an association between iocontext ioprio and the ioprio of
+> a request. This feature is only enabled if a queue flag is set to
+> indicate that requests should have ioprio associated with them. The
+> queue flag is exposed as the req_prio queue sysfs entry.
 
-This humble patch was sent one or two months before, and had no actions,
-except for a colleague reply which friendly pointed out some formatting
-problems (which were solved in a second message).
+Honestly, I don't get this patchset. For the normal file system path, we
+inherit the iocontext priority into the bio. That in turns gets
+inherited by the request. Why is this any different?
 
-It relates to an old code, the legacy IDE driver, but the bug it
-addresses is real. The code, although rarely used, is
-still there to be compiled if one chooses to do so (like me).
+It'd be much cleaner to just have 'rq' inherit the IO priority from the
+io context when the 'rq' is allocated, and ensuring that we inherit and
+override this if the bio has one set instead. It should already work
+like that.
 
-Also, the fix has a very low risk of present collateral effects IMHO.
-It is already compiled and tested in some embedded machines.
+And in no way should we add some sysfs file to control this, that is
+nuts.
 
-So, again IMHO, it is worth be fixed.
-
-This email is a second trial with it. I hope it can help the one or two
-guys out there which are still running the legacy IDE driver and
-haven't noticed the former email.
-
-Best regards,
-
-Signed-off-by: Luiz Carlos Ramos <lramos.prof@yahoo.com.br>
----
- drivers/ide/ide-generic.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/ide/ide-generic.c b/drivers/ide/ide-generic.c
-index 54d7c4685d23aa5e62ce606e7b994a57bb54b08a..419818a39c270d3ad219e8f7b5df56a9aea3d640 100644
---- a/drivers/ide/ide-generic.c
-+++ b/drivers/ide/ide-generic.c
-@@ -96,10 +96,10 @@ static int __init ide_generic_init(void)
- 		printk(KERN_INFO DRV_NAME ": please use \"probe_mask=0x3f\" "
- 		     "module parameter for probing all legacy ISA IDE ports\n");
- 
--		if (primary == 0)
-+		if (primary)
- 			probe_mask |= 0x1;
- 
--		if (secondary == 0)
-+		if (secondary)
- 			probe_mask |= 0x2;
- 	} else
- 		printk(KERN_INFO DRV_NAME ": enforcing probing of I/O ports "
 -- 
-2.8.2
+Jens Axboe
 
