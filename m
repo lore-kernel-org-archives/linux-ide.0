@@ -1,101 +1,41 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [GIT PULL] libata changes for v4.9-rc1
-Date: Thu, 13 Oct 2016 20:59:31 -0400
-Message-ID: <20161014005931.GK32534@mtj.duckdns.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 176931] ata failed to IDENTIFY, suspected regression
+Date: Fri, 14 Oct 2016 03:15:53 +0000
+Message-ID: <bug-176931-11633-6Vfs7eoSxh@https.bugzilla.kernel.org/>
+References: <bug-176931-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:34689 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755218AbcJNA7v (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 13 Oct 2016 20:59:51 -0400
-Content-Disposition: inline
+Received: from mail.kernel.org ([198.145.29.136]:38882 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756473AbcJNDQD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Thu, 13 Oct 2016 23:16:03 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+        by mail.kernel.org (Postfix) with ESMTP id 0040B203E9
+        for <linux-ide@vger.kernel.org>; Fri, 14 Oct 2016 03:15:57 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+        by mail.kernel.org (Postfix) with ESMTP id 2F58F203EB
+        for <linux-ide@vger.kernel.org>; Fri, 14 Oct 2016 03:15:54 +0000 (UTC)
+In-Reply-To: <bug-176931-11633@https.bugzilla.kernel.org/>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello, Linus.
+https://bugzilla.kernel.org/show_bug.cgi?id=176931
 
-libata changes for v4.9.
+be11f157cd19c4a2ba1e9c70a38b1a74@protonmail.com changed:
 
-* Write same support added.
-* Minor ahci MSIX irq handling updates.
-* Non-critical SCSI command translation fixes.
-* Controller specific changes.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |RESOLVED
+         Resolution|---                         |OBSOLETE
 
-The branch contains a pull of v4.8-rc5 to avoid conflicts between ahci
-irq handling fixes merged through for-4.8-fixes and the ahci msix irq
-handling updates.
-
-Thanks.
-
-The following changes since commit bc4dee5aa72723632a1f83fd0d3720066c93b433:
-
-  Merge branch 'linus' of git://git.kernel.org/pub/scm/linux/kernel/git/herbert/crypto-2.6 (2016-09-05 11:10:00 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-4.9
-
-for you to fetch changes up to 1ce788d24268a33513d832d9030ceab93f1c2ce2:
-
-  ahci: qoriq: Revert "ahci: qoriq: Disable NCQ on ls2080a SoC" (2016-09-30 10:28:51 +0200)
-
-----------------------------------------------------------------
-Christoph Hellwig (4):
-      ahci: also use a per-port lock for the multi-MSIX case
-      ahci: use pci_alloc_irq_vectors
-      libata: remove unused definitions from <asm/libata-portmap.h>
-      libata: remove <asm-generic/libata-portmap.h>
-
-Harman Kalra (3):
-      ata: sata_mv: Replacing dma_pool_alloc and memset with a single call dma_pool_zalloc.
-      ata: Replace BUG() with BUG_ON().
-      pata_at91: Use PTR_ERR_OR_ZERO rather than if(IS_ERR(...)) + PTR_ERR
-
-Patrice Chotard (2):
-      ahci: st: Add ports-implemented property in support
-      ARM: dts: STiH407-family: Add ports-implemented property in sata nodes
-
-Shaun Tancheff (5):
-      libata: Safely overwrite attached page in WRITE SAME xlat
-      libata: Add support for SCT Write Same
-      libata: SCT Write Same / DSM Trim
-      libata: SCT Write Same handle ATA_DFLAG_PIO
-      libata: Some drives failing on SCT Write Same
-
-Tang Yuantian (3):
-      ahci: qoriq: adjust sata parameter
-      ahci: qoriq: enable snoopable sata read and write
-      ahci: qoriq: Revert "ahci: qoriq: Disable NCQ on ls2080a SoC"
-
-Tejun Heo (1):
-      Merge branch 'master' into for-4.9
-
-Tom Yan (2):
-      libata-scsi: use u8 array to store mode page copy
-      libata-scsi: fix MODE SELECT translation for Control mode page
-
- arch/arm/boot/dts/stih407-family.dtsi          |   4 +
- arch/arm64/boot/dts/freescale/fsl-ls1043a.dtsi |   3 +-
- arch/arm64/boot/dts/freescale/fsl-ls2080a.dtsi |   2 +
- arch/ia64/include/asm/libata-portmap.h         |   4 -
- arch/powerpc/include/asm/libata-portmap.h      |   4 -
- drivers/ata/ahci.c                             | 149 +++----------
- drivers/ata/ahci.h                             |  24 +--
- drivers/ata/ahci_qoriq.c                       |  20 +-
- drivers/ata/ahci_st.c                          |   4 +
- drivers/ata/libahci.c                          |   9 +-
- drivers/ata/libata-scsi.c                      | 288 ++++++++++++++++++++++---
- drivers/ata/pata_at91.c                        |   4 +-
- drivers/ata/pata_octeon_cf.c                   |   3 +-
- drivers/ata/sata_mv.c                          |   6 +-
- include/asm-generic/libata-portmap.h           |   7 -
- include/linux/ata.h                            |  69 +++---
- include/linux/libata.h                         |   3 +-
- 17 files changed, 365 insertions(+), 238 deletions(-)
- delete mode 100644 include/asm-generic/libata-portmap.h
+--- Comment #2 from be11f157cd19c4a2ba1e9c70a38b1a74@protonmail.com ---
+Thank you for your help, it seems that it works with or without irqpoll on
+linux 4.8.1. I'm not sure if 4.8 still matters anymore. Tell me if you still
+want to test on 4.8
 
 -- 
-tejun
+You are receiving this mail because:
+You are watching the assignee of the bug.
