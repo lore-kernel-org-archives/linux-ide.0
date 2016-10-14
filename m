@@ -1,41 +1,26 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 176931] ata failed to IDENTIFY, suspected regression
-Date: Fri, 14 Oct 2016 03:15:53 +0000
-Message-ID: <bug-176931-11633-6Vfs7eoSxh@https.bugzilla.kernel.org/>
-References: <bug-176931-11633@https.bugzilla.kernel.org/>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v5 2/4] fusion: remove iopriority handling
+Date: Thu, 13 Oct 2016 22:34:49 -0700
+Message-ID: <20161014053449.GA16510@infradead.org>
+References: <1476399631-5799-1-git-send-email-adam.manzanares@hgst.com>
+ <1476399631-5799-3-git-send-email-adam.manzanares@hgst.com>
+ <CAJVOszDaOiDN1nMW7X6pgEkjSkE9+hNE0doUc-hweJc-qtAu3w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38882 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756473AbcJNDQD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Thu, 13 Oct 2016 23:16:03 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id 0040B203E9
-        for <linux-ide@vger.kernel.org>; Fri, 14 Oct 2016 03:15:57 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-        by mail.kernel.org (Postfix) with ESMTP id 2F58F203EB
-        for <linux-ide@vger.kernel.org>; Fri, 14 Oct 2016 03:15:54 +0000 (UTC)
-In-Reply-To: <bug-176931-11633@https.bugzilla.kernel.org/>
+Received: from bombadil.infradead.org ([198.137.202.9]:52935 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754409AbcJNFfD (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 14 Oct 2016 01:35:03 -0400
+Content-Disposition: inline
+In-Reply-To: <CAJVOszDaOiDN1nMW7X6pgEkjSkE9+hNE0doUc-hweJc-qtAu3w@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Shaun Tancheff <shaun.tancheff@seagate.com>
+Cc: Adam Manzanares <adam.manzanares@hgst.com>, Jens Axboe <axboe@kernel.dk>, Tejun Heo <tj@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Christie <mchristi@redhat.com>, Toshi Kani <toshi.kani@hpe.com>, Ming Lei <ming.lei@canonical.com>, Sathya Prakash <sathya.prakash@broadcom.com>, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, linux-block@vger.kernel.org, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, Adam Manzanares <adam.manzanares@wdc.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=176931
+> Style wise you can further remove the extra parens around
+>   SCpnt->device->tagged_supported
+> As well as the now redundant braces.
 
-be11f157cd19c4a2ba1e9c70a38b1a74@protonmail.com changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-         Resolution|---                         |OBSOLETE
-
---- Comment #2 from be11f157cd19c4a2ba1e9c70a38b1a74@protonmail.com ---
-Thank you for your help, it seems that it works with or without irqpoll on
-linux 4.8.1. I'm not sure if 4.8 still matters anymore. Tell me if you still
-want to test on 4.8
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+I did send a patch looking just like that earlier :)
