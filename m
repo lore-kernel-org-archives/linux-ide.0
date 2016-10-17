@@ -1,223 +1,45 @@
-From: Adam Manzanares <adam.manzanares@hgst.com>
-Subject: [PATCH v6 2/3] ata: Enabling ATA Command Priorities
-Date: Mon, 17 Oct 2016 11:27:29 -0700
-Message-ID: <1476728850-2309-3-git-send-email-adam.manzanares@hgst.com>
-References: <1476728850-2309-1-git-send-email-adam.manzanares@hgst.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: use pci_alloc_irq_vectors issues
+Date: Mon, 17 Oct 2016 21:28:58 +0200
+Message-ID: <20161017192858.GA25429@lst.de>
+References: <CA+i8gKJ1BnOE8tOzxfbFJcG1qa9XchiDBQSGZUHUOch6byi+tQ@mail.gmail.com> <20161017080103.GA8732@lst.de> <CA+i8gK+dxqJgAcANzsHecE4dD4tGARuaNka-29nZWdrRUL=+Hw@mail.gmail.com> <20161017092621.GA11124@lst.de> <CA+i8gKK55YWL0SsB0UL89TL1XAgySvFwhmU=c+fTpkGo_s4XTA@mail.gmail.com> <20161017103442.GA12240@lst.de> <CA+i8gKJkhTjBAPbuceToHD3YJuPHkLhs-joso-vuJzuHRF5OLg@mail.gmail.com> <20161017120234.GA14105@lst.de> <CA+i8gK+UfUmKtYpXH1cObd3_5WWje397pgQqW5SmwFg8ms+aLw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:11975 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758219AbcJQS1u (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 17 Oct 2016 14:27:50 -0400
-In-Reply-To: <1476728850-2309-1-git-send-email-adam.manzanares@hgst.com>
+Received: from verein.lst.de ([213.95.11.211]:60627 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S965005AbcJQT3A (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Mon, 17 Oct 2016 15:29:00 -0400
+Content-Disposition: inline
+In-Reply-To: <CA+i8gK+UfUmKtYpXH1cObd3_5WWje397pgQqW5SmwFg8ms+aLw@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: axboe@kernel.dk, tj@kernel.org, dan.j.williams@intel.com, hare@suse.de, martin.petersen@oracle.com, mchristi@redhat.com, toshi.kani@hpe.com, ming.lei@canonical.com, sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com
-Cc: linux-block@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, Adam Manzanares <adam.manzanares@hgst.com>
+To: Emmanuel Benisty <benisty.e@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>, tj@kernel.org, linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
 
-This patch checks to see if an ATA device supports NCQ command priorities.
-If so and the user has specified an iocontext that indicates
-IO_PRIO_CLASS_RT then we build a tf with a high priority command.
+Hi Emmanuel,
 
-This is done to improve the tail latency of commands that are high
-priority by passing priority to the device.
+I think I have an idea now - we are accidentally hitting the per-port
+MSI vector case because your SSD only has one AHCI "port".  Can you
+try the below patch:
 
-Signed-off-by: Adam Manzanares <adam.manzanares@hgst.com>
----
- drivers/ata/libata-core.c | 35 ++++++++++++++++++++++++++++++++++-
- drivers/ata/libata-scsi.c |  6 +++++-
- drivers/ata/libata.h      |  2 +-
- include/linux/ata.h       |  6 ++++++
- include/linux/libata.h    | 18 ++++++++++++++++++
- 5 files changed, 64 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 223a770..181b530 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -739,6 +739,7 @@ u64 ata_tf_read_block(const struct ata_taskfile *tf, struct ata_device *dev)
-  *	@n_block: Number of blocks
-  *	@tf_flags: RW/FUA etc...
-  *	@tag: tag
-+ *	@class: IO priority class
-  *
-  *	LOCKING:
-  *	None.
-@@ -753,7 +754,7 @@ u64 ata_tf_read_block(const struct ata_taskfile *tf, struct ata_device *dev)
-  */
- int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
- 		    u64 block, u32 n_block, unsigned int tf_flags,
--		    unsigned int tag)
-+		    unsigned int tag, int class)
- {
- 	tf->flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
- 	tf->flags |= tf_flags;
-@@ -785,6 +786,12 @@ int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
- 		tf->device = ATA_LBA;
- 		if (tf->flags & ATA_TFLAG_FUA)
- 			tf->device |= 1 << 7;
-+
-+		if (ata_ncq_prio_enabled(dev)) {
-+			if (class == IOPRIO_CLASS_RT)
-+				tf->hob_nsect |= ATA_PRIO_HIGH <<
-+						 ATA_SHIFT_PRIO;
-+		}
- 	} else if (dev->flags & ATA_DFLAG_LBA) {
- 		tf->flags |= ATA_TFLAG_LBA;
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index ba5f11c..3c2f92b 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1413,6 +1413,7 @@ static int ahci_init_msi(struct pci_dev *pdev, unsigned int n_ports,
+ 	if (hpriv->flags & AHCI_HFLAG_NO_MSI)
+ 		return -ENODEV;
  
-@@ -2156,6 +2163,30 @@ static void ata_dev_config_ncq_non_data(struct ata_device *dev)
++	if (n_ports > 1) {
+ 	/*
+ 	 * If number of MSIs is less than number of ports then Sharing Last
+ 	 * Message mode could be enforced. In this case assume that advantage
+@@ -1434,6 +1435,7 @@ static int ahci_init_msi(struct pci_dev *pdev, unsigned int n_ports,
+ 		printk(KERN_INFO "ahci: MRSM is on, fallback to single MSI\n");
+ 		pci_free_irq_vectors(pdev);
  	}
- }
- 
-+static void ata_dev_config_ncq_prio(struct ata_device *dev)
-+{
-+	struct ata_port *ap = dev->link->ap;
-+	unsigned int err_mask;
-+
-+	err_mask = ata_read_log_page(dev,
-+				     ATA_LOG_SATA_ID_DEV_DATA,
-+				     ATA_LOG_SATA_SETTINGS,
-+				     ap->sector_buf,
-+				     1);
-+	if (err_mask) {
-+		ata_dev_dbg(dev,
-+			    "failed to get Identify Device data, Emask 0x%x\n",
-+			    err_mask);
-+		return;
 +	}
-+
-+	if (ap->sector_buf[ATA_LOG_NCQ_PRIO_OFFSET] & BIT(3))
-+		dev->flags |= ATA_DFLAG_NCQ_PRIO;
-+	else
-+		ata_dev_dbg(dev, "SATA page does not support priority\n");
-+
-+}
-+
- static int ata_dev_config_ncq(struct ata_device *dev,
- 			       char *desc, size_t desc_sz)
- {
-@@ -2205,6 +2236,8 @@ static int ata_dev_config_ncq(struct ata_device *dev,
- 			ata_dev_config_ncq_send_recv(dev);
- 		if (ata_id_has_ncq_non_data(dev->id))
- 			ata_dev_config_ncq_non_data(dev);
-+		if (ata_id_has_ncq_prio(dev->id))
-+			ata_dev_config_ncq_prio(dev);
- 	}
  
- 	return 0;
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 9cceb4a..2bccc3c 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -50,6 +50,7 @@
- #include <linux/uaccess.h>
- #include <linux/suspend.h>
- #include <asm/unaligned.h>
-+#include <linux/ioprio.h>
- 
- #include "libata.h"
- #include "libata-transport.h"
-@@ -1755,6 +1756,8 @@ static unsigned int ata_scsi_rw_xlat(struct ata_queued_cmd *qc)
- {
- 	struct scsi_cmnd *scmd = qc->scsicmd;
- 	const u8 *cdb = scmd->cmnd;
-+	struct request *rq = scmd->request;
-+	int class = IOPRIO_PRIO_CLASS(req_get_ioprio(rq));
- 	unsigned int tf_flags = 0;
- 	u64 block;
- 	u32 n_block;
-@@ -1821,7 +1824,8 @@ static unsigned int ata_scsi_rw_xlat(struct ata_queued_cmd *qc)
- 	qc->nbytes = n_block * scmd->device->sector_size;
- 
- 	rc = ata_build_rw_tf(&qc->tf, qc->dev, block, n_block, tf_flags,
--			     qc->tag);
-+			     qc->tag, class);
-+
- 	if (likely(rc == 0))
- 		return 0;
- 
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 3b301a4..8f3a559 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -66,7 +66,7 @@ extern u64 ata_tf_to_lba48(const struct ata_taskfile *tf);
- extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev, int tag);
- extern int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
- 			   u64 block, u32 n_block, unsigned int tf_flags,
--			   unsigned int tag);
-+			   unsigned int tag, int class);
- extern u64 ata_tf_read_block(const struct ata_taskfile *tf,
- 			     struct ata_device *dev);
- extern unsigned ata_exec_internal(struct ata_device *dev,
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index fdb1803..af6859b 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -348,6 +348,7 @@ enum {
- 	ATA_LOG_DEVSLP_DETO	  = 0x01,
- 	ATA_LOG_DEVSLP_VALID	  = 0x07,
- 	ATA_LOG_DEVSLP_VALID_MASK = 0x80,
-+	ATA_LOG_NCQ_PRIO_OFFSET   = 0x09,
- 
- 	/* NCQ send and receive log */
- 	ATA_LOG_NCQ_SEND_RECV_SUBCMDS_OFFSET	= 0x00,
-@@ -940,6 +941,11 @@ static inline bool ata_id_has_ncq_non_data(const u16 *id)
- 	return id[ATA_ID_SATA_CAPABILITY_2] & BIT(5);
- }
- 
-+static inline bool ata_id_has_ncq_prio(const u16 *id)
-+{
-+	return id[ATA_ID_SATA_CAPABILITY] & BIT(12);
-+}
-+
- static inline bool ata_id_has_trim(const u16 *id)
- {
- 	if (ata_id_major_version(id) >= 7 &&
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 616eef4..1a524cf 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -166,6 +166,7 @@ enum {
- 	ATA_DFLAG_NO_UNLOAD	= (1 << 17), /* device doesn't support unload */
- 	ATA_DFLAG_UNLOCK_HPA	= (1 << 18), /* unlock HPA */
- 	ATA_DFLAG_NCQ_SEND_RECV = (1 << 19), /* device supports NCQ SEND and RECV */
-+	ATA_DFLAG_NCQ_PRIO	= (1 << 20), /* device supports NCQ priority */
- 	ATA_DFLAG_INIT_MASK	= (1 << 24) - 1,
- 
- 	ATA_DFLAG_DETACH	= (1 << 24),
-@@ -342,7 +343,9 @@ enum {
- 	ATA_SHIFT_PIO		= 0,
- 	ATA_SHIFT_MWDMA		= ATA_SHIFT_PIO + ATA_NR_PIO_MODES,
- 	ATA_SHIFT_UDMA		= ATA_SHIFT_MWDMA + ATA_NR_MWDMA_MODES,
-+	ATA_SHIFT_PRIO		= 6,
- 
-+	ATA_PRIO_HIGH		= 2,
- 	/* size of buffer to pad xfers ending on unaligned boundaries */
- 	ATA_DMA_PAD_SZ		= 4,
- 
-@@ -1610,6 +1613,21 @@ static inline int ata_ncq_enabled(struct ata_device *dev)
- 			      ATA_DFLAG_NCQ)) == ATA_DFLAG_NCQ;
- }
- 
-+/**
-+ *	ata_ncq_prio_enabled - Test whether NCQ prio is enabled
-+ *	@dev: ATA device to test for
-+ *
-+ *	LOCKING:
-+ *	spin_lock_irqsave(host lock)
-+ *
-+ *	RETURNS:
-+ *	1 if NCQ prio is enabled for @dev, 0 otherwise.
-+ */
-+static inline int ata_ncq_prio_enabled(struct ata_device *dev)
-+{
-+	return (dev->flags & ATA_DFLAG_NCQ_PRIO) == ATA_DFLAG_NCQ_PRIO;
-+}
-+
- static inline bool ata_fpdma_dsm_supported(struct ata_device *dev)
- {
- 	return (dev->flags & ATA_DFLAG_NCQ_SEND_RECV) &&
--- 
-2.1.4
-
+ 	/*
+ 	 * -ENOSPC indicated we don't have enough vectors.  Don't bother trying
