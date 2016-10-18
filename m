@@ -1,22 +1,73 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: use pci_alloc_irq_vectors issues
-Date: Mon, 17 Oct 2016 22:55:17 +0200
-Message-ID: <20161017205517.GA27244@lst.de>
-References: <20161017080103.GA8732@lst.de> <CA+i8gK+dxqJgAcANzsHecE4dD4tGARuaNka-29nZWdrRUL=+Hw@mail.gmail.com> <20161017092621.GA11124@lst.de> <CA+i8gKK55YWL0SsB0UL89TL1XAgySvFwhmU=c+fTpkGo_s4XTA@mail.gmail.com> <20161017103442.GA12240@lst.de> <CA+i8gKJkhTjBAPbuceToHD3YJuPHkLhs-joso-vuJzuHRF5OLg@mail.gmail.com> <20161017120234.GA14105@lst.de> <CA+i8gK+UfUmKtYpXH1cObd3_5WWje397pgQqW5SmwFg8ms+aLw@mail.gmail.com> <20161017192858.GA25429@lst.de> <CA+i8gKJ6dyxHm-5_=Xdm=HusyxsHVbqTphGzMp1zBTMut=yygQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pci-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CA+i8gKJ6dyxHm-5_=Xdm=HusyxsHVbqTphGzMp1zBTMut=yygQ@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Emmanuel Benisty <benisty.e@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, tj@kernel.org, linux-ide@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH] ahci: only try to use multi-MSI mode if there is more than 1 port
+Date: Tue, 18 Oct 2016 09:00:52 +0200
+Message-ID: <1476774052-12662-1-git-send-email-hch@lst.de>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:52471 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757533AbcJRHA5 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 18 Oct 2016 03:00:57 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: tj@kernel.org
+Cc: benisty.e@gmail.com, linux-ide@vger.kernel.org
 
-On Mon, Oct 17, 2016 at 10:51:44PM +0200, Emmanuel Benisty wrote:
-> This patch solved the issue, thanks a lot.
+We should only try to allocate multiple MSI or MSI-X vectors if the device
+actually has multiple ports.  Otherwise pci_alloc_irq_vectors will return
+a single vector due to n_ports = 1, in which case we shouldn't set the
+AHCI_HFLAG_MULTI_MSI flag.
 
-Thanks for testing!
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Fixes: 0b9e2988 ("ahci: use pci_alloc_irq_vectors")
+Reported-by: Emmanuel Benisty <benisty.e@gmail.com>
+Tested-by: Emmanuel Benisty <benisty.e@gmail.com>
+---
+ drivers/ata/ahci.c | 31 +++++++++++++++++--------------
+ 1 file changed, 17 insertions(+), 14 deletions(-)
 
-I'll resend it to Tejun with proper indentation and a changelog
-tomorrow.
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index ba5f11c..ed311a0 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1418,21 +1418,24 @@ static int ahci_init_msi(struct pci_dev *pdev, unsigned int n_ports,
+ 	 * Message mode could be enforced. In this case assume that advantage
+ 	 * of multipe MSIs is negated and use single MSI mode instead.
+ 	 */
+-	nvec = pci_alloc_irq_vectors(pdev, n_ports, INT_MAX,
+-			PCI_IRQ_MSIX | PCI_IRQ_MSI);
+-	if (nvec > 0) {
+-		if (!(readl(hpriv->mmio + HOST_CTL) & HOST_MRSM)) {
+-			hpriv->get_irq_vector = ahci_get_irq_vector;
+-			hpriv->flags |= AHCI_HFLAG_MULTI_MSI;
+-			return nvec;
+-		}
++	if (n_ports > 1) {
++		nvec = pci_alloc_irq_vectors(pdev, n_ports, INT_MAX,
++				PCI_IRQ_MSIX | PCI_IRQ_MSI);
++		if (nvec > 0) {
++			if (!(readl(hpriv->mmio + HOST_CTL) & HOST_MRSM)) {
++				hpriv->get_irq_vector = ahci_get_irq_vector;
++				hpriv->flags |= AHCI_HFLAG_MULTI_MSI;
++				return nvec;
++			}
+ 
+-		/*
+-		 * Fallback to single MSI mode if the controller enforced MRSM
+-		 * mode.
+-		 */
+-		printk(KERN_INFO "ahci: MRSM is on, fallback to single MSI\n");
+-		pci_free_irq_vectors(pdev);
++			/*
++			 * Fallback to single MSI mode if the controller
++			 * enforced MRSM mode.
++			 */
++			printk(KERN_INFO
++				"ahci: MRSM is on, fallback to single MSI\n");
++			pci_free_irq_vectors(pdev);
++		}
+ 	}
+ 
+ 	/*
+-- 
+2.1.4
+
