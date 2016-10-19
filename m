@@ -1,36 +1,26 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2 1/1] ahci: imx: Add imx53 SATA temperature sensor
- support
-Date: Wed, 19 Oct 2016 13:31:37 -0400
-Message-ID: <20161019173137.GE18532@htj.duckdns.org>
-References: <1476699520-29531-1-git-send-email-fabien.lahoudere@collabora.co.uk>
+Subject: Re: [PATCH] ahci: qoriq: added ls1046a platform support
+Date: Wed, 19 Oct 2016 13:33:14 -0400
+Message-ID: <20161019173314.GF18532@htj.duckdns.org>
+References: <1476003064-47306-1-git-send-email-yuantian.tang@nxp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f194.google.com ([209.85.161.194]:33525 "EHLO
-        mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S938820AbcJSRbk (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 19 Oct 2016 13:31:40 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1476699520-29531-1-git-send-email-fabien.lahoudere@collabora.co.uk>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <1476003064-47306-1-git-send-email-yuantian.tang@nxp.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: yuantian.tang@nxp.com
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Fabien Lahoudere <fabien.lahoudere@collabora.co.uk>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Csaba Kertesz <csaba.kertesz@vincit.fi>
 
-On Mon, Oct 17, 2016 at 12:18:40PM +0200, Fabien Lahoudere wrote:
-> From: Csaba Kertesz <csaba.kertesz@vincit.fi>
+On Sun, Oct 09, 2016 at 04:51:04PM +0800, yuantian.tang@nxp.com wrote:
+> From: Tang Yuantian <Yuantian.Tang@nxp.com>
 > 
-> Add a hwmon entry to get the temperature from the die of imx53
-> SATA.
+> Ls1046a is a new introduced soc which supports ATA3.0.
 > 
-> The original patch was made by Richard Zhu for kernel 2.6.x:
-> ENGR00134041-MX53-Add-the-SATA-AHCI-temperature-monitor.patch
-> 
-> Signed-off-by: Fabien Lahoudere <fabien.lahoudere@collabora.co.uk>
+> Signed-off-by: Tang Yuantian <yuantian.tang@nxp.com>
 
-Looks fine to me but can you please cc someone familiar with thermal
-driver so that we can get an ack from them?
+Applied to libata/for-4.10.
 
 Thanks.
 
