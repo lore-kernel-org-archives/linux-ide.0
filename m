@@ -1,110 +1,224 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH 2/5] nvme: rename "pci" operations to "mmio"
-Date: Fri, 21 Oct 2016 17:25:32 -0700
-Message-ID: <147709593202.3733.18343149615618494644.stgit@dwillia2-desk3.amr.corp.intel.com>
+Subject: [PATCH 4/5] nvme: move common definitions to pci.h
+Date: Fri, 21 Oct 2016 17:25:44 -0700
+Message-ID: <147709594393.3733.9930397374718830592.stgit@dwillia2-desk3.amr.corp.intel.com>
 References: <147709592108.3733.7194541797066785254.stgit@dwillia2-desk3.amr.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:54160 "EHLO mga06.intel.com"
+Received: from mga14.intel.com ([192.55.52.115]:46412 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935716AbcJVA2g (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 21 Oct 2016 20:28:36 -0400
+        id S935716AbcJVA2q (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 21 Oct 2016 20:28:46 -0400
 In-Reply-To: <147709592108.3733.7194541797066785254.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: tj@kernel.org
 Cc: keith.busch@intel.com, linux-ide@vger.kernel.org, hch@lst.de, linux-nvme@lists.infradead.org
 
-In preparation for adding a platform_device nvme host, rename to a more
-generic "mmio" prefix.
+A platform-driver for nvme resources needs access to struct nvme_dev and
+other definitions that are currently local to pci.c.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/nvme/host/pci.c |   30 +++++++++++++++---------------
- 1 file changed, 15 insertions(+), 15 deletions(-)
+ drivers/nvme/host/pci.c |   69 +-----------------------------------
+ drivers/nvme/host/pci.h |   89 +++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 90 insertions(+), 68 deletions(-)
+ create mode 100644 drivers/nvme/host/pci.h
 
 diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
-index 0fc99f0f2571..8c4330b95be8 100644
+index ea1c623ed257..418ccc1c0cf7 100644
 --- a/drivers/nvme/host/pci.c
 +++ b/drivers/nvme/host/pci.c
-@@ -771,7 +771,7 @@ static int nvme_poll(struct blk_mq_hw_ctx *hctx, unsigned int tag)
- 	return 0;
- }
+@@ -45,6 +45,7 @@
+ #include <asm/unaligned.h>
  
--static void nvme_pci_submit_async_event(struct nvme_ctrl *ctrl, int aer_idx)
-+static void nvme_mmio_submit_async_event(struct nvme_ctrl *ctrl, int aer_idx)
+ #include "nvme.h"
++#include "pci.h"
+ 
+ #define NVME_Q_DEPTH		1024
+ #define NVME_AQ_DEPTH		256
+@@ -66,86 +67,18 @@ MODULE_PARM_DESC(use_cmb_sqes, "use controller's memory buffer for I/O SQes");
+ 
+ static struct workqueue_struct *nvme_workq;
+ 
+-struct nvme_dev;
+ struct nvme_queue;
+ 
+ static int nvme_reset(struct nvme_dev *dev);
+ static void nvme_process_cq(struct nvme_queue *nvmeq);
+ static void nvme_dev_disable(struct nvme_dev *dev, bool shutdown);
+ 
+-struct nvme_dev_ops {
+-	int (*enable)(struct nvme_dev *dev);
+-	void (*disable)(struct nvme_dev *dev);
+-	int (*map_irq)(struct nvme_dev *dev, int nr_io_queues);
+-	int (*q_irq)(struct nvme_queue *q);
+-	int (*is_enabled)(struct nvme_dev *dev);
+-	int (*is_offline)(struct nvme_dev *dev);
+-	bool (*is_present)(struct nvme_dev *dev);
+-};
+-
+-/*
+- * Represents an NVM Express device.  Each nvme_dev is a PCI function.
+- */
+-struct nvme_dev {
+-	struct nvme_queue **queues;
+-	struct blk_mq_tag_set tagset;
+-	struct blk_mq_tag_set admin_tagset;
+-	u32 __iomem *dbs;
+-	struct device *dev;
+-	struct dma_pool *prp_page_pool;
+-	struct dma_pool *prp_small_pool;
+-	unsigned queue_count;
+-	unsigned online_queues;
+-	unsigned max_qid;
+-	int q_depth;
+-	u32 db_stride;
+-	void __iomem *bar;
+-	struct work_struct reset_work;
+-	struct work_struct remove_work;
+-	struct timer_list watchdog_timer;
+-	struct mutex shutdown_lock;
+-	bool subsystem;
+-	void __iomem *cmb;
+-	dma_addr_t cmb_dma_addr;
+-	u64 cmb_size;
+-	u32 cmbsz;
+-	struct nvme_ctrl ctrl;
+-	struct completion ioq_wait;
+-	const struct resource *res;
+-	const struct nvme_dev_ops *ops;
+-};
+-
+ static inline struct nvme_dev *to_nvme_dev(struct nvme_ctrl *ctrl)
  {
- 	struct nvme_dev *dev = to_nvme_dev(ctrl);
- 	struct nvme_queue *nvmeq = dev->queues[0];
-@@ -1704,7 +1704,7 @@ static void nvme_release_prp_pools(struct nvme_dev *dev)
- 	dma_pool_destroy(dev->prp_small_pool);
+ 	return container_of(ctrl, struct nvme_dev, ctrl);
  }
  
--static void nvme_pci_free_ctrl(struct nvme_ctrl *ctrl)
-+static void nvme_mmio_free_ctrl(struct nvme_ctrl *ctrl)
- {
- 	struct nvme_dev *dev = to_nvme_dev(ctrl);
- 
-@@ -1826,38 +1826,38 @@ static int nvme_reset(struct nvme_dev *dev)
- 	return 0;
- }
- 
--static int nvme_pci_reg_read32(struct nvme_ctrl *ctrl, u32 off, u32 *val)
-+static int nvme_mmio_reg_read32(struct nvme_ctrl *ctrl, u32 off, u32 *val)
- {
- 	*val = readl(to_nvme_dev(ctrl)->bar + off);
- 	return 0;
- }
- 
--static int nvme_pci_reg_write32(struct nvme_ctrl *ctrl, u32 off, u32 val)
-+static int nvme_mmio_reg_write32(struct nvme_ctrl *ctrl, u32 off, u32 val)
- {
- 	writel(val, to_nvme_dev(ctrl)->bar + off);
- 	return 0;
- }
- 
--static int nvme_pci_reg_read64(struct nvme_ctrl *ctrl, u32 off, u64 *val)
-+static int nvme_mmio_reg_read64(struct nvme_ctrl *ctrl, u32 off, u64 *val)
- {
- 	*val = readq(to_nvme_dev(ctrl)->bar + off);
- 	return 0;
- }
- 
--static int nvme_pci_reset_ctrl(struct nvme_ctrl *ctrl)
-+static int nvme_mmio_reset_ctrl(struct nvme_ctrl *ctrl)
- {
- 	return nvme_reset(to_nvme_dev(ctrl));
- }
- 
--static const struct nvme_ctrl_ops nvme_pci_ctrl_ops = {
--	.name			= "pcie",
-+static const struct nvme_ctrl_ops nvme_mmio_ctrl_ops = {
-+	.name			= "mmio",
- 	.module			= THIS_MODULE,
--	.reg_read32		= nvme_pci_reg_read32,
--	.reg_write32		= nvme_pci_reg_write32,
--	.reg_read64		= nvme_pci_reg_read64,
--	.reset_ctrl		= nvme_pci_reset_ctrl,
--	.free_ctrl		= nvme_pci_free_ctrl,
--	.submit_async_event	= nvme_pci_submit_async_event,
-+	.reg_read32		= nvme_mmio_reg_read32,
-+	.reg_write32		= nvme_mmio_reg_write32,
-+	.reg_read64		= nvme_mmio_reg_read64,
-+	.reset_ctrl		= nvme_mmio_reset_ctrl,
-+	.free_ctrl		= nvme_mmio_free_ctrl,
-+	.submit_async_event	= nvme_mmio_submit_async_event,
- };
- 
- static int nvme_dev_map(struct nvme_dev *dev)
-@@ -1912,7 +1912,7 @@ static int nvme_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	if (result)
- 		goto put_pci;
- 
--	result = nvme_init_ctrl(&dev->ctrl, &pdev->dev, &nvme_pci_ctrl_ops,
-+	result = nvme_init_ctrl(&dev->ctrl, &pdev->dev, &nvme_mmio_ctrl_ops,
- 			id->driver_data);
- 	if (result)
- 		goto release_pools;
+ /*
+- * An NVM Express queue.  Each device has at least two (one for admin
+- * commands and one for I/O commands).
+- */
+-struct nvme_queue {
+-	struct device *q_dmadev;
+-	struct nvme_dev *dev;
+-	char irqname[24];	/* nvme4294967295-65535\0 */
+-	spinlock_t q_lock;
+-	struct nvme_command *sq_cmds;
+-	struct nvme_command __iomem *sq_cmds_io;
+-	volatile struct nvme_completion *cqes;
+-	struct blk_mq_tags **tags;
+-	dma_addr_t sq_dma_addr;
+-	dma_addr_t cq_dma_addr;
+-	u32 __iomem *q_db;
+-	u16 q_depth;
+-	s16 cq_vector;
+-	u16 sq_tail;
+-	u16 cq_head;
+-	u16 qid;
+-	u8 cq_phase;
+-	u8 cqe_seen;
+-};
+-
+-/*
+  * The nvme_iod describes the data in an I/O, including the list of PRP
+  * entries.  You can't see it in this data structure because C doesn't let
+  * me express that.  Use nvme_init_iod to ensure there's enough space
+diff --git a/drivers/nvme/host/pci.h b/drivers/nvme/host/pci.h
+new file mode 100644
+index 000000000000..62b658abb886
+--- /dev/null
++++ b/drivers/nvme/host/pci.h
+@@ -0,0 +1,89 @@
++/*
++ * Copyright (c) 2011-2016, Intel Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ */
++
++#ifndef __NVME_PCI_H__
++#define __NVME_PCI_H__
++#include <linux/blk-mq.h>
++
++struct nvme_queue;
++struct nvme_dev;
++struct resource;
++struct device;
++
++struct nvme_dev_ops {
++	int (*enable)(struct nvme_dev *dev);
++	void (*disable)(struct nvme_dev *dev);
++	int (*map_irq)(struct nvme_dev *dev, int nr_io_queues);
++	int (*q_irq)(struct nvme_queue *q);
++	int (*is_enabled)(struct nvme_dev *dev);
++	int (*is_offline)(struct nvme_dev *dev);
++	bool (*is_present)(struct nvme_dev *dev);
++};
++
++/*
++ * Represents an NVM Express device.  Each nvme_dev is a PCI function.
++ */
++struct nvme_dev {
++	struct nvme_queue **queues;
++	struct blk_mq_tag_set tagset;
++	struct blk_mq_tag_set admin_tagset;
++	u32 __iomem *dbs;
++	struct device *dev;
++	struct dma_pool *prp_page_pool;
++	struct dma_pool *prp_small_pool;
++	unsigned queue_count;
++	unsigned online_queues;
++	unsigned max_qid;
++	int q_depth;
++	u32 db_stride;
++	void __iomem *bar;
++	struct work_struct reset_work;
++	struct work_struct remove_work;
++	struct timer_list watchdog_timer;
++	struct mutex shutdown_lock;
++	bool subsystem;
++	void __iomem *cmb;
++	dma_addr_t cmb_dma_addr;
++	u64 cmb_size;
++	u32 cmbsz;
++	struct nvme_ctrl ctrl;
++	struct completion ioq_wait;
++	const struct resource *res;
++	const struct nvme_dev_ops *ops;
++};
++
++/*
++ * An NVM Express queue.  Each device has at least two (one for admin
++ * commands and one for I/O commands).
++ */
++struct nvme_queue {
++	struct device *q_dmadev;
++	struct nvme_dev *dev;
++	char irqname[24];	/* nvme4294967295-65535\0 */
++	spinlock_t q_lock;
++	struct nvme_command *sq_cmds;
++	struct nvme_command __iomem *sq_cmds_io;
++	volatile struct nvme_completion *cqes;
++	struct blk_mq_tags **tags;
++	dma_addr_t sq_dma_addr;
++	dma_addr_t cq_dma_addr;
++	u32 __iomem *q_db;
++	u16 q_depth;
++	s16 cq_vector;
++	u16 sq_tail;
++	u16 cq_head;
++	u16 qid;
++	u8 cq_phase;
++	u8 cqe_seen;
++};
++#endif /* __NVME_PCI_H__ */
 
