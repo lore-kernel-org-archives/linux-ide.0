@@ -1,33 +1,42 @@
-From: Jarkko Nikula <jarkko.nikula@linux.intel.com>
-Subject: Re: Regression with 0b9e2988ab22 ("ahci: use pci_alloc_irq_vectors")
-Date: Fri, 21 Oct 2016 17:05:06 +0300
-Message-ID: <fe5f1324-a06f-9d53-5d91-7508742fbf5c@linux.intel.com>
-References: <9d293889-3215-403b-bdf9-c24b684f18f0@linux.intel.com>
- <20161021132709.GA18825@lst.de>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH 0/5] ahci: nvme remap support
+Date: Fri, 21 Oct 2016 17:25:21 -0700
+Message-ID: <147709592108.3733.7194541797066785254.stgit@dwillia2-desk3.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20161021132709.GA18825@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-ide@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mga05.intel.com ([192.55.52.43]:62736 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935716AbcJVA2Y (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Fri, 21 Oct 2016 20:28:24 -0400
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: tj@kernel.org
+Cc: keith.busch@intel.com, linux-ide@vger.kernel.org, hch@lst.de, linux-nvme@lists.infradead.org
 
-On 10/21/2016 04:27 PM, Christoph Hellwig wrote:
-> Hi Jarkko,
->
-> please try the two fixes queue up in the libata tree for this:
->
-> https://git.kernel.org/cgit/linux/kernel/git/tj/libata.git/log/?h=for-4.9-fixes
->
-Great! Commit 17a51f12cfbd ("ahci: only try to use multi-MSI mode if 
-there is more than 1 port") fixed the non-working SATA on a machine with 
-single port and it continues using MSI.
+Some Intel ahci implementations have the capability to expose another
+pci-express device's memory resources through an ahci memory bar.  Add
+the enabling to detect these configurations and register the resources
+for the nvme driver to consume. Otherwise, the nvme device is
+effectively hidden from the kernel for this configuration.
 
-Another machine with more ports still uses IO-APIC (was using MSI before 
-0b9e2988ab22 ("ahci: use pci_alloc_irq_vectors")). Then I applied 
-a478b097474c ("ahci: fix nvec check") but didn't see changes.
+---
 
--- 
-Jarkko
+Dan Williams (5):
+      ahci: nvme remap support
+      nvme: rename "pci" operations to "mmio"
+      nvme: introduce nvme_dev_ops
+      nvme: move common definitions to pci.h
+      nvme: ahci remap support
+
+ drivers/ata/Kconfig        |   11 +
+ drivers/ata/ahci.c         |  165 +++++++++++++++++++++
+ drivers/ata/ahci.h         |   14 ++
+ drivers/nvme/host/Makefile |    2 
+ drivers/nvme/host/ahci.c   |  198 +++++++++++++++++++++++++
+ drivers/nvme/host/pci.c    |  344 +++++++++++++++++++++++---------------------
+ drivers/nvme/host/pci.h    |   98 +++++++++++++
+ 7 files changed, 664 insertions(+), 168 deletions(-)
+ create mode 100644 drivers/nvme/host/ahci.c
+ create mode 100644 drivers/nvme/host/pci.h
