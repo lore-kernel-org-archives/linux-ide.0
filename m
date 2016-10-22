@@ -1,68 +1,38 @@
-From: Steven Moore <zgpt66p@cplonetie.me>
-Subject: Get A Part Time Job Today
-Date: Sat, 22 Oct 2016 04:54:36 -0700
-Message-ID: <BLUPR14MB03228939813B5A25667172D9D6D70__9784.80198323286$1477140050$gmane$org@BLUPR14MB0322.namprd14.prod.outlook.com>
-Reply-To: <231101xyz@gmail.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] ahci: use pci_alloc_irq_vectors
+Date: Sat, 22 Oct 2016 16:11:23 +0200
+Message-ID: <20161022141123.GA25500@lst.de>
+References: <1473088905-27670-1-git-send-email-hch@lst.de> <1473088905-27670-2-git-send-email-hch@lst.de> <20160906163946.GB24268@htj.duckdns.org> <20161020154722.GH22012@rric.localdomain> <20161021125918.GA18082@lst.de> <20161021140106.GU25086@rric.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-cys01nam02hn0222.outbound.protection.outlook.com ([104.47.37.222]:27036
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S936453AbcJVMkJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Sat, 22 Oct 2016 08:40:09 -0400
-Content-Description: Mail message body
+Received: from verein.lst.de ([213.95.11.211]:56828 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934258AbcJVOL0 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Sat, 22 Oct 2016 10:11:26 -0400
+Content-Disposition: inline
+In-Reply-To: <20161021140106.GU25086@rric.localdomain>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Recipients <zgpt66p@cplonetie.me>
+To: Robert Richter <rric@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Robert Richter <robert.richter@cavium.com>, Auger Eric <eric.auger@redhat.com>, Marc Zyngier <marc.zyngier@arm.com>, linux-ide@vger.kernel.org, dan.j.williamps@intel.com, Tejun Heo <tj@kernel.org>, linux-arm-kernel@lists.infradead.org
 
-Hello
- =
+Hi Robert,
 
- =
+is this a controller that's using MSI-X?
 
-My Name is Steven Moore.We seek the service of a Secret Shopper in our apex=
--consult Organization. The assignment will pay  per duty .You can make $200=
- everyday , depends on how fast you able to take up your work. I am sure yo=
-u cannot spend more than 1-2 hours per day on your assignment . No Money or=
- Fee is required to become secret shopper.
- =
+If so can you try the patch below?
 
- =
-
- =
-
-KINDLY SEND YOUR INFORMATION BELOW IF INTERESTED:
- =
-
- =
-
- =
-
-Your Name:
-Street Address: ( Not PO. BOX )
-Apartment Number:
-City: State:
-Zip Code:  =
-
-Country:
-Cell/Home phone number:
-Age:
-Present working Status:
- =
-
-You can also vist our website to Regrister online:
- =
-
- =
-
-http://www.apex-consult.net/
- =
-
- =
-
-Regards,
-Steven Moore
-231101xyz@gmail.com
-=20
+diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+index ba5f11c..5fe852d 100644
+--- a/drivers/ata/ahci.c
++++ b/drivers/ata/ahci.c
+@@ -1617,7 +1617,7 @@ static int ahci_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		/* legacy intx interrupts */
+ 		pci_intx(pdev, 1);
+ 	}
+-	hpriv->irq = pdev->irq;
++	hpriv->irq = pci_irq_vector(pdev, 0);
+ 
+ 	if (!(hpriv->cap & HOST_CAP_SSS) || ahci_ignore_sss)
+ 		host->flags |= ATA_HOST_PARALLEL_SCAN;
