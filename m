@@ -1,29 +1,68 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 0/5] ahci: nvme remap support
-Date: Sat, 22 Oct 2016 08:50:38 +0200
-Message-ID: <20161022065038.GA8547@lst.de>
-References: <147709592108.3733.7194541797066785254.stgit@dwillia2-desk3.amr.corp.intel.com>
+From: Steven Moore <zgpt66p@cplonetie.me>
+Subject: Get A Part Time Job Today
+Date: Sat, 22 Oct 2016 04:54:36 -0700
+Message-ID: <BLUPR14MB03228939813B5A25667172D9D6D70__9784.80198323286$1477140050$gmane$org@BLUPR14MB0322.namprd14.prod.outlook.com>
+Reply-To: <231101xyz@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:55704 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752102AbcJVGul (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Sat, 22 Oct 2016 02:50:41 -0400
-Content-Disposition: inline
-In-Reply-To: <147709592108.3733.7194541797066785254.stgit@dwillia2-desk3.amr.corp.intel.com>
+Received: from mail-cys01nam02hn0222.outbound.protection.outlook.com ([104.47.37.222]:27036
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S936453AbcJVMkJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Sat, 22 Oct 2016 08:40:09 -0400
+Content-Description: Mail message body
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: tj@kernel.org, keith.busch@intel.com, linux-ide@vger.kernel.org, hch@lst.de, linux-nvme@lists.infradead.org
+To: Recipients <zgpt66p@cplonetie.me>
 
-On Fri, Oct 21, 2016 at 05:25:21PM -0700, Dan Williams wrote:
-> Some Intel ahci implementations have the capability to expose another
-> pci-express device's memory resources through an ahci memory bar.  Add
-> the enabling to detect these configurations and register the resources
-> for the nvme driver to consume. Otherwise, the nvme device is
-> effectively hidden from the kernel for this configuration.
+Hello
+ =
 
-Honestly I think this is just too ugly to live. I think people getting
-tricked by Intel into buying this piece of junk will just have to live
-with AHCI mode.
+ =
+
+My Name is Steven Moore.We seek the service of a Secret Shopper in our apex=
+-consult Organization. The assignment will pay  per duty .You can make $200=
+ everyday , depends on how fast you able to take up your work. I am sure yo=
+u cannot spend more than 1-2 hours per day on your assignment . No Money or=
+ Fee is required to become secret shopper.
+ =
+
+ =
+
+ =
+
+KINDLY SEND YOUR INFORMATION BELOW IF INTERESTED:
+ =
+
+ =
+
+ =
+
+Your Name:
+Street Address: ( Not PO. BOX )
+Apartment Number:
+City: State:
+Zip Code:  =
+
+Country:
+Cell/Home phone number:
+Age:
+Present working Status:
+ =
+
+You can also vist our website to Regrister online:
+ =
+
+ =
+
+http://www.apex-consult.net/
+ =
+
+ =
+
+Regards,
+Steven Moore
+231101xyz@gmail.com
+=20
