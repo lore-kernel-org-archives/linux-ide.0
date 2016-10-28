@@ -1,38 +1,35 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC PATCH] ata: piix: wait for end of asynchronous probing
- before
-Date: Thu, 27 Oct 2016 14:59:35 -0400
-Message-ID: <20161027185935.GA17657@htj.duckdns.org>
-References: <1476722704-12839-1-git-send-email-clabbe.montjoie@gmail.com>
- <20161019172848.GD18532@htj.duckdns.org>
- <CAL_Jsq+HPd2Ftm7cDD4rpT6jx=EgS9nX+_WiwRcxhpPbi=85xQ@mail.gmail.com>
+From: Charles Machalow <csm10495@gmail.com>
+Subject: Possible Bug In ATA/SCSI Fixed Sense
+Date: Fri, 28 Oct 2016 11:34:22 -0700
+Message-ID: <CANSCoS8aVbdcb7ZCxcW57FrqKr_k+OuHt0ZFzPLNQRQMZj_Gww@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAL_Jsq+HPd2Ftm7cDD4rpT6jx=EgS9nX+_WiwRcxhpPbi=85xQ@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Rob Herring <robh@kernel.org>
-Cc: Corentin Labbe <clabbe.montjoie@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qk0-f175.google.com ([209.85.220.175]:35448 "EHLO
+        mail-qk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S941632AbcJ1Sen (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 28 Oct 2016 14:34:43 -0400
+Received: by mail-qk0-f175.google.com with SMTP id z190so96639928qkc.2
+        for <linux-ide@vger.kernel.org>; Fri, 28 Oct 2016 11:34:43 -0700 (PDT)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org
 
-Hello, Rob.
+Hi all,
 
-On Thu, Oct 27, 2016 at 01:55:19PM -0500, Rob Herring wrote:
-> Seems like this is mixing async drv probe and async scsi scan and the
-> problem is in the latter? I don't think async drv probe should have
-> any problems. If a driver probe starts some async operation, then it
-> seems to me that it is its responsibility to wait for completion in
-> remove().
+As of Linux commit 14970f204b1993af7459d5bd34aaff38dfee6670, In
+drivers/ata/libata-scsi.c in ata_gen_passthru_sense() line 1087,
+desc[0] is set to tf->feature. This makes sense to me however 4 lines
+below the same item in the array is set to 0.
 
-I'm not sure about that.  The async operation synchronization isn't
-per-driver or module.  Both during boot and module operations, they're
-synchronized globally, which makes sense given its purpose and that's
-also why we don't see these brekages without this debug option.  It
-doesn't make sense to me to add a whole new set of behaviors just for
-a debug option.
+One of these lines must be unintended as no matter what the field will
+always be 0 though for a couple lines it is set to tf-feature.
 
-Thanks.
+I think that line 1091 is at fault because if I send down a nop
+command, feature (error in this case) should be set to 4 in the
+returned current task file.
 
--- 
-tejun
+Thanks!
+
+- Charlie Scott Machalow
