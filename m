@@ -1,41 +1,43 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: Possible Bug In ATA/SCSI Fixed Sense
-Date: Mon, 31 Oct 2016 09:58:40 -0600
-Message-ID: <20161031155840.GA24605@mtj.duckdns.org>
-References: <CANSCoS8aVbdcb7ZCxcW57FrqKr_k+OuHt0ZFzPLNQRQMZj_Gww@mail.gmail.com>
+Subject: Re: sata_sil24: swiotlb buffer is full ?
+Date: Mon, 31 Oct 2016 10:18:25 -0600
+Message-ID: <20161031161825.GA26364@mtj.duckdns.org>
+References: <8b6da1a2-ca9c-e15a-10a8-f3cda092698c@shaw.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pf0-f177.google.com ([209.85.192.177]:33358 "EHLO
-        mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752446AbcJaP6n (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 31 Oct 2016 11:58:43 -0400
-Received: by mail-pf0-f177.google.com with SMTP id d2so3663304pfd.0
-        for <linux-ide@vger.kernel.org>; Mon, 31 Oct 2016 08:58:43 -0700 (PDT)
+Received: from mail-pf0-f174.google.com ([209.85.192.174]:33101 "EHLO
+        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933675AbcJaQS2 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 31 Oct 2016 12:18:28 -0400
 Content-Disposition: inline
-In-Reply-To: <CANSCoS8aVbdcb7ZCxcW57FrqKr_k+OuHt0ZFzPLNQRQMZj_Gww@mail.gmail.com>
+In-Reply-To: <8b6da1a2-ca9c-e15a-10a8-f3cda092698c@shaw.ca>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Charles Machalow <csm10495@gmail.com>
-Cc: linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+To: Andrew Ryder <tireman@shaw.ca>
+Cc: linux-ide@vger.kernel.org, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, linux-kernel@vger.kernel.org
 
 Hello,
 
-On Fri, Oct 28, 2016 at 11:34:22AM -0700, Charles Machalow wrote:
-> As of Linux commit 14970f204b1993af7459d5bd34aaff38dfee6670, In
-> drivers/ata/libata-scsi.c in ata_gen_passthru_sense() line 1087,
-> desc[0] is set to tf->feature. This makes sense to me however 4 lines
-> below the same item in the array is set to 0.
+On Sat, Oct 29, 2016 at 11:40:29PM -0400, Andrew Ryder wrote:
+> I have some disks attached to a "Silicon Image, Inc. SiI 3124 PCI-X Serial
+> ATA Controller" and it repeatedly locks up the system with the message
+> whenever there is heavy disk i/o. The system the controller is attached to
+> is a via EPIA-M910 board.
 > 
-> One of these lines must be unintended as no matter what the field will
-> always be 0 though for a couple lines it is set to tf-feature.
+> sata_sil24: 0000:06:03.0: swiotlb buffer is full: 65536 bytes)
+> DMA: Out of SW-IOMMU space for 65536 bytes at device .."
+> sata_sil24 0000:06:03.0: swiotlb buffer is full (sz: 65536 bytes .."
 > 
-> I think that line 1091 is at fault because if I send down a nop
-> command, feature (error in this case) should be set to 4 in the
-> returned current task file.
+> For the past week I have been running with two additional boot parameters
+> (iommu=allowdac swiotlb=131072) which seem to have solved the issue, but I
+> was curious if this is a driver bug or not?
 
-This looks to be from 11093cb1ef56 ("libata-scsi: generate correct ATA
-pass-through sense").  Hannes?
+(cc'ing swiotbl maintainer, hi!)
+
+That looks like iotlb area running out.  I don't think there's much to
+be done from driver side and we've traditionally been pretty bad at
+handling iotlb errors.  Konrad, do you have any ideas?
 
 Thanks.
 
