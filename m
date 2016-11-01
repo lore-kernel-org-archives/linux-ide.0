@@ -1,45 +1,34 @@
-From: Bram Matthys <syzop@vulnscan.org>
-Subject: Re: Write performance 50% compared to Windows
-Date: Tue, 01 Nov 2016 14:55:44 +0100
-Message-ID: <84eaee69c190c1acdce494bd18de1200@mail.vulnscan.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] libata-scsi: Fixup ata_gen_passthru_sense()
+Date: Tue, 1 Nov 2016 11:33:47 -0600
+Message-ID: <20161101173347.GB16704@mtj.duckdns.org>
+References: <1477944418-110380-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.vulnscan.org ([149.210.174.15]:49614 "EHLO
-        mail.vulnscan.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1424360AbcKANzr (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 1 Nov 2016 09:55:47 -0400
-Received: from mail.vulnscan.org ([149.210.174.15])
-        by mail.vulnscan.org with esmtp (Exim 4.84_2)
-        (envelope-from <syzop@vulnscan.org>)
-        id 1c1ZXU-00009q-TV
-        for linux-ide@vger.kernel.org; Tue, 01 Nov 2016 14:55:45 +0100
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:34439 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751949AbcKARdu (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 1 Nov 2016 13:33:50 -0400
+Received: by mail-pf0-f196.google.com with SMTP id y68so6318177pfb.1
+        for <linux-ide@vger.kernel.org>; Tue, 01 Nov 2016 10:33:49 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <1477944418-110380-1-git-send-email-hare@suse.de>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Charles Machalow <csm10495@gmail.com>, linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-Hi Daniel,
+On Mon, Oct 31, 2016 at 09:06:58PM +0100, Hannes Reinecke wrote:
+> There's a typo in ata_gen_passthru_sense(), where the first byte
+> would be overwritten incorrectly later on.
+> 
+> Reported-by: Charles Machalow <csm10495@gmail.com>
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
 
-Daniel Fraga schreef op 2016-11-01 14:03:
-> On Tue, 01 Nov 2016 11:37:42 +0100
-> Bram Matthys <syzop@vulnscan.org> wrote:
->
->> I have a Samsung SSD 850 EVO 4TB and under Linux I'm only getting
->> ~240MB/s write speed. On Windows it's 490MB/s (yes, without cache).
->> The read speed is the same on both Linux and Windows, though. Both 
->> are
->> 512MB/s.
->
-> 	Just curious: are you using the "deadline" scheduler? What file
-> system? Ext4?
+Applied to libata/for-4.9-fixes with stable cc'd.
 
-Yes, the deadline scheduler.
+Thanks.
 
-On Linux I'm writing directly to /dev/sda, no file system.
-
-Regards,
-
-Bram
-
+-- 
+tejun
