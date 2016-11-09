@@ -1,75 +1,111 @@
-From: <lucia.germino@unibas.it>
-Subject: 64002 linux-ide
-Date: Wed, 09 Nov 2016 09:40:24 -0000
-Message-ID: <147868442434.17361.13310700536742026543@candw.ag>
+From: Rameshwar Sahu <rsahu@apm.com>
+Subject: Re: [PATCH] ata: xgene: Enable NCQ support for APM X-Gene SATA
+ controller hardware v1.1
+Date: Wed, 9 Nov 2016 17:09:14 +0530
+Message-ID: <CAFd313yibujm+yzeVUZFrLwT8vwbDYN+DJmsAQ7rWUNXUb2ixw@mail.gmail.com>
+References: <1476962064-8775-1-git-send-email-rsahu@apm.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="MESSAGE_509122388_linux-ide.zip"
-Content-Transfer-Encoding: base64
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 206-214-15-78.candw.ag ([206.214.15.78]:50416 "HELO candw.ag"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-        id S1750967AbcKIJks (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 9 Nov 2016 04:40:48 -0500
-Content-Disposition: attachment
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <1476962064-8775-1-git-send-email-rsahu@apm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Olof Johansson <olof@lixom.net>, tj@kernel.org, Arnd Bergmann <arnd@arndb.de>
+Cc: Devicetree List <devicetree@vger.kernel.org>, mlangsdo@redhat.com, linux-scsi@vger.kernel.org, Jon Masters <jcm@redhat.com>, Rameshwar Prasad Sahu <rsahu@apm.com>, patches <patches@apm.com>, linux-ide@vger.kernel.org, linux-arm <linux-arm-kernel@lists.infradead.org>
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
 
-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
-AAAASwwAAAAA
+Hi Olof/Tejun,
+
+On Thu, Oct 20, 2016 at 4:44 PM, Rameshwar Prasad Sahu <rsahu@apm.com> wrote:
+>
+> This patch enables NCQ support for APM X-Gene SATA controller
+> hardware v1.1 that was broken with hardware v1.0.
+>
+> Signed-off-by: Rameshwar Prasad Sahu <rsahu@apm.com>
+> ---
+>  drivers/ata/ahci_xgene.c |   14 ++++++++------
+>  1 files changed, 8 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
+> index 73b19b2..8b88be9 100644
+> --- a/drivers/ata/ahci_xgene.c
+> +++ b/drivers/ata/ahci_xgene.c
+> @@ -87,6 +87,7 @@
+>
+>  enum xgene_ahci_version {
+>         XGENE_AHCI_V1 = 1,
+> +       XGENE_AHCI_V1_1,
+>         XGENE_AHCI_V2,
+>  };
+>
+> @@ -734,6 +735,7 @@ static struct scsi_host_template ahci_platform_sht = {
+>  #ifdef CONFIG_ACPI
+>  static const struct acpi_device_id xgene_ahci_acpi_match[] = {
+>         { "APMC0D0D", XGENE_AHCI_V1},
+> +       { "APMC0D67", XGENE_AHCI_V1_1},
+>         { "APMC0D32", XGENE_AHCI_V2},
+>         {},
+>  };
+> @@ -742,6 +744,7 @@ MODULE_DEVICE_TABLE(acpi, xgene_ahci_acpi_match);
+>
+>  static const struct of_device_id xgene_ahci_of_match[] = {
+>         {.compatible = "apm,xgene-ahci", .data = (void *) XGENE_AHCI_V1},
+> +       {.compatible = "apm,xgene-ahci-v1-1", .data = (void *) XGENE_AHCI_V1_1},
+>         {.compatible = "apm,xgene-ahci-v2", .data = (void *) XGENE_AHCI_V2},
+>         {},
+>  };
+> @@ -755,8 +758,7 @@ static int xgene_ahci_probe(struct platform_device *pdev)
+>         struct resource *res;
+>         const struct of_device_id *of_devid;
+>         enum xgene_ahci_version version = XGENE_AHCI_V1;
+> -       const struct ata_port_info *ppi[] = { &xgene_ahci_v1_port_info,
+> -                                             &xgene_ahci_v2_port_info };
+> +       const struct ata_port_info *ppi;
+>         int rc;
+>
+>         hpriv = ahci_platform_get_resources(pdev);
+> @@ -821,8 +823,6 @@ static int xgene_ahci_probe(struct platform_device *pdev)
+>                                 dev_warn(&pdev->dev, "%s: Error reading device info. Assume version1\n",
+>                                         __func__);
+>                                 version = XGENE_AHCI_V1;
+> -                       } else if (info->valid & ACPI_VALID_CID) {
+> -                               version = XGENE_AHCI_V2;
+>                         }
+>                 }
+>         }
+> @@ -858,18 +858,20 @@ skip_clk_phy:
+>
+>         switch (version) {
+>         case XGENE_AHCI_V1:
+> +               ppi = &xgene_ahci_v1_port_info;
+>                 hpriv->flags = AHCI_HFLAG_NO_NCQ;
+>                 break;
+>         case XGENE_AHCI_V2:
+> +               ppi = &xgene_ahci_v2_port_info;
+>                 hpriv->flags |= AHCI_HFLAG_YES_FBS;
+>                 hpriv->irq_handler = xgene_ahci_irq_intr;
+>                 break;
+>         default:
+> +               ppi = &xgene_ahci_v1_port_info;
+>                 break;
+>         }
+>
+> -       rc = ahci_platform_init_host(pdev, hpriv, ppi[version - 1],
+> -                                    &ahci_platform_sht);
+> +       rc = ahci_platform_init_host(pdev, hpriv, ppi, &ahci_platform_sht);
+>         if (rc)
+>                 goto disable_resources;
+>
+> --
+> 1.7.1
+
+
+Any comment on above patch ??
