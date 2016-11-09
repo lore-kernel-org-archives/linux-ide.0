@@ -1,101 +1,75 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH 3/4] pata: imx: add support of setting timings for PIO
- modes
-Date: Wed, 9 Nov 2016 12:39:13 +0300
-Message-ID: <23fb0678-db2a-a0ff-65a3-3174720b0ee8@cogentembedded.com>
-References: <20161109005638.17691-1-vz@mleia.com>
- <20161109005638.17691-4-vz@mleia.com>
+From: <lucia.germino@unibas.it>
+Subject: 64002 linux-ide
+Date: Wed, 09 Nov 2016 09:40:24 -0000
+Message-ID: <147868442434.17361.13310700536742026543@candw.ag>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: application/zip; name="MESSAGE_509122388_linux-ide.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lf0-f49.google.com ([209.85.215.49]:33124 "EHLO
-        mail-lf0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751332AbcKIJj2 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 9 Nov 2016 04:39:28 -0500
-Received: by mail-lf0-f49.google.com with SMTP id c13so159665937lfg.0
-        for <linux-ide@vger.kernel.org>; Wed, 09 Nov 2016 01:39:16 -0800 (PST)
-In-Reply-To: <20161109005638.17691-4-vz@mleia.com>
+Received: from 206-214-15-78.candw.ag ([206.214.15.78]:50416 "HELO candw.ag"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+        id S1750967AbcKIJks (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 9 Nov 2016 04:40:48 -0500
+Content-Disposition: attachment
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Vladimir Zapolskiy <vz@mleia.com>, Tejun Heo <tj@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hello.
-
-On 11/9/2016 3:56 AM, Vladimir Zapolskiy wrote:
-
-> The controller is capable to operate in up to PIO4 mode, however
-> before the change the driver relies on timing settings done by
-> a bootloader for PIO0 mode only. The change adds more flexibility
-> in PIO mode selection at runtime and makes the driver to work even if
-                                                         ^^ not needed
-
-> bootloader does not preset ATA timings.
->
-> Signed-off-by: Vladimir Zapolskiy <vz@mleia.com>
-> ---
->  drivers/ata/pata_imx.c | 47 ++++++++++++++++++++++++++++++++++++++++++++++-
->  1 file changed, 46 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/ata/pata_imx.c b/drivers/ata/pata_imx.c
-> index 00df18b..8f13c9f 100644
-> --- a/drivers/ata/pata_imx.c
-> +++ b/drivers/ata/pata_imx.c
-[...]
-> @@ -31,6 +40,10 @@
->  #define PATA_IMX_DRIVE_DATA		0xA0
->  #define PATA_IMX_DRIVE_CONTROL		0xD8
->
-> +static u32 pio_t4[] = { 30,  20,  15,  10,  10 };
-> +static u32 pio_t9[] = { 20,  15,  10,  10,  10 };
-> +static u32 pio_tA[] = { 35,  35,  35,  35,  35 };
-
-    Perhaps it makes sense to extend the 'struct ata_timing'...
-
-[...]
-> @@ -38,11 +51,43 @@ struct pata_imx_priv {
->  	u32 ata_ctl;
->  };
->
-> +static void pata_imx_set_timing(struct ata_device *adev,
-> +				struct pata_imx_priv *priv)
-> +{
-> +	struct ata_timing timing;
-> +	unsigned long clkrate;
-> +	u32 T, mode;
-> +
-> +	clkrate = clk_get_rate(priv->clk);
-> +
-> +	if (adev->pio_mode < XFER_PIO_0 || adev->pio_mode > XFER_PIO_4 ||
-> +	    !clkrate)
-> +		return;
-> +
-> +	T = 1000000000 / clkrate;
-> +	ata_timing_compute(adev, adev->pio_mode, &timing, T * 1000, 0);
-> +
-> +	mode = adev->pio_mode - XFER_PIO_0;
-> +
-> +	writeb(3, priv->host_regs + PATA_IMX_ATA_TIME_OFF);
-> +	writeb(3, priv->host_regs + PATA_IMX_ATA_TIME_ON);
-
-    What do those registers mean?
-
-> +	writeb(timing.setup, priv->host_regs + PATA_IMX_ATA_TIME_1);
-> +	writeb(timing.act8b, priv->host_regs + PATA_IMX_ATA_TIME_2W);
-> +	writeb(timing.act8b, priv->host_regs + PATA_IMX_ATA_TIME_2R);
-> +	writeb(1, priv->host_regs + PATA_IMX_ATA_TIME_PIO_RDX);
-
-    And this one?
-
-> +
-> +	writeb(pio_t4[mode] / T + 1, priv->host_regs + PATA_IMX_ATA_TIME_4);
-> +	writeb(pio_t9[mode] / T + 1, priv->host_regs + PATA_IMX_ATA_TIME_9);
-> +	writeb(pio_tA[mode] / T + 1, priv->host_regs + PATA_IMX_ATA_TIME_AX);
-
-    DIV_ROUND_UP(x, T)?
-
-[...]
-
-MBR, Sergei
-
+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
+AAAASwwAAAAA
