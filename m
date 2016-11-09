@@ -1,77 +1,72 @@
-From: Vladimir Zapolskiy <vz@mleia.com>
-Subject: [PATCH 2/4] pata: imx: set controller PIO mode with .set_piomode callback
-Date: Wed,  9 Nov 2016 02:56:36 +0200
-Message-ID: <20161109005638.17691-3-vz@mleia.com>
-References: <20161109005638.17691-1-vz@mleia.com>
+From: <beautyink@live.nl>
+Subject: 30577 linux-ide
+Date: Wed, 09 Nov 2016 03:00:39 -0000
+Message-ID: <147866043933.20194.16957725690997625951@redewsp.com.br>
+Mime-Version: 1.0
+Content-Type: application/zip; name="MESSAGE_599190573_linux-ide.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mleia.com ([178.79.152.223]:50577 "EHLO mail.mleia.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754024AbcKIA4m (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 8 Nov 2016 19:56:42 -0500
-In-Reply-To: <20161109005638.17691-1-vz@mleia.com>
+Received: from 37-109-99-138.redewsp.com.br ([138.99.109.37]:59232 "HELO
+        redewsp.com.br" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with SMTP id S1751095AbcKIDAq (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 8 Nov 2016 22:00:46 -0500
+Content-Disposition: attachment
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Convert .set_mode callback function to more specific .set_piomode,
-the driver does not have support of DMA modes, thus a simpler version
-of the callback is preferred.
-
-Signed-off-by: Vladimir Zapolskiy <vz@mleia.com>
----
- drivers/ata/pata_imx.c | 27 ++++++++-------------------
- 1 file changed, 8 insertions(+), 19 deletions(-)
-
-diff --git a/drivers/ata/pata_imx.c b/drivers/ata/pata_imx.c
-index 203e309..00df18b 100644
---- a/drivers/ata/pata_imx.c
-+++ b/drivers/ata/pata_imx.c
-@@ -38,28 +38,17 @@ struct pata_imx_priv {
- 	u32 ata_ctl;
- };
- 
--static int pata_imx_set_mode(struct ata_link *link, struct ata_device **unused)
-+static void pata_imx_set_piomode(struct ata_port *ap, struct ata_device *adev)
- {
--	struct ata_device *dev;
--	struct ata_port *ap = link->ap;
- 	struct pata_imx_priv *priv = ap->host->private_data;
- 	u32 val;
- 
--	ata_for_each_dev(dev, link, ENABLED) {
--		dev->pio_mode = dev->xfer_mode = XFER_PIO_0;
--		dev->xfer_shift = ATA_SHIFT_PIO;
--		dev->flags |= ATA_DFLAG_PIO;
--
--		val = __raw_readl(priv->host_regs + PATA_IMX_ATA_CONTROL);
--		if (ata_pio_need_iordy(dev))
--			val |= PATA_IMX_ATA_CTRL_IORDY_EN;
--		else
--			val &= ~PATA_IMX_ATA_CTRL_IORDY_EN;
--		__raw_writel(val, priv->host_regs + PATA_IMX_ATA_CONTROL);
--
--		ata_dev_info(dev, "configured for PIO\n");
--	}
--	return 0;
-+	val = __raw_readl(priv->host_regs + PATA_IMX_ATA_CONTROL);
-+	if (ata_pio_need_iordy(adev))
-+		val |= PATA_IMX_ATA_CTRL_IORDY_EN;
-+	else
-+		val &= ~PATA_IMX_ATA_CTRL_IORDY_EN;
-+	__raw_writel(val, priv->host_regs + PATA_IMX_ATA_CONTROL);
- }
- 
- static struct scsi_host_template pata_imx_sht = {
-@@ -70,7 +59,7 @@ static struct ata_port_operations pata_imx_port_ops = {
- 	.inherits		= &ata_sff_port_ops,
- 	.sff_data_xfer		= ata_sff_data_xfer_noirq,
- 	.cable_detect		= ata_cable_unknown,
--	.set_mode		= pata_imx_set_mode,
-+	.set_piomode		= pata_imx_set_piomode,
- };
- 
- static void pata_imx_setup_port(struct ata_ioports *ioaddr)
--- 
-2.10.2
-
+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
