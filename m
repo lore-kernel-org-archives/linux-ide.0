@@ -1,54 +1,36 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC PATCH v3 1/2] Add support for eXclusive Page Frame
- Ownership (XPFO)
-Date: Fri, 4 Nov 2016 07:50:40 -0700
-Message-ID: <20161104145040.GA24930@infradead.org>
-References: <20160914071901.8127-1-juerg.haefliger@hpe.com>
- <20161104144534.14790-1-juerg.haefliger@hpe.com>
- <20161104144534.14790-2-juerg.haefliger@hpe.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20161104144534.14790-2-juerg.haefliger@hpe.com>
-Sender: owner-linux-mm@kvack.org
-To: Juerg Haefliger <juerg.haefliger@hpe.com>
-Cc: linux-kernel@vger.kernel.org, linux-mm@kvack.org, kernel-hardening@lists.openwall.com, linux-x86_64@vger.kernel.org, vpk@cs.columbia.edu, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org
+From: Vladimir Zapolskiy <vz@mleia.com>
+Subject: [PATCH 0/4] pata: imx: set timings for PIO modes up to PIO4
+Date: Wed,  9 Nov 2016 02:56:34 +0200
+Message-ID: <20161109005638.17691-1-vz@mleia.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mleia.com ([178.79.152.223]:50568 "EHLO mail.mleia.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754016AbcKIA4l (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 8 Nov 2016 19:56:41 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: linux-ide@vger.kernel.org
 
-The libata parts here really need to be split out and the proper list
-and maintainer need to be Cc'ed.
+The changeset adds support of PIO modes up to PIO4 by setting
+necessary timings in the driver, before the change it is assumed
+that the timings are always set by a bootloader once and thus
+only one possible PIO mode has been supported (PIO0). With
+this change the driver can be used on boards without ATA controller
+configuration done by a bootloader.
 
-> diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-> index 051b6158d1b7..58af734be25d 100644
-> --- a/drivers/ata/libata-sff.c
-> +++ b/drivers/ata/libata-sff.c
-> @@ -715,7 +715,7 @@ static void ata_pio_sector(struct ata_queued_cmd *qc)
->  
->  	DPRINTK("data %s\n", qc->tf.flags & ATA_TFLAG_WRITE ? "write" : "read");
->  
-> -	if (PageHighMem(page)) {
-> +	if (PageHighMem(page) || xpfo_page_is_unmapped(page)) {
->  		unsigned long flags;
->  
->  		/* FIXME: use a bounce buffer */
-> @@ -860,7 +860,7 @@ static int __atapi_pio_bytes(struct ata_queued_cmd *qc, unsigned int bytes)
->  
->  	DPRINTK("data %s\n", qc->tf.flags & ATA_TFLAG_WRITE ? "write" : "read");
->  
-> -	if (PageHighMem(page)) {
-> +	if (PageHighMem(page) || xpfo_page_is_unmapped(page)) {
->  		unsigned long flags;
->  
->  		/* FIXME: use bounce buffer */
-> diff --git a/include/linux/highmem.h b/include/linux/highmem.h
+The change is tested on a legacy i.MX31 board with an HDD connected
+by a 40-pin flat cable.
 
-This is just piling one nasty hack on top of another.  libata should
-just use the highmem case unconditionally, as it is the correct thing
-to do for all cases.
+Vladimir Zapolskiy (4):
+  pata: imx: sort headers out
+  pata: imx: set controller PIO mode with .set_piomode callback
+  pata: imx: add support of setting timings for PIO modes
+  pata: imx: support controller modes up to PIO4
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+ drivers/ata/pata_imx.c | 82 +++++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 57 insertions(+), 25 deletions(-)
+
+-- 
+2.10.2
+
