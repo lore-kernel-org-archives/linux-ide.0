@@ -1,92 +1,47 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 3/4] pata: imx: add support of setting timings for PIO
- modes
-Date: Thu, 10 Nov 2016 11:10:39 -0500
-Message-ID: <20161110161039.GA26105@htj.duckdns.org>
-References: <20161109005638.17691-1-vz@mleia.com>
- <20161109005638.17691-4-vz@mleia.com>
- <23fb0678-db2a-a0ff-65a3-3174720b0ee8@cogentembedded.com>
- <ed9bacd7-b6f4-811b-c082-ae4235a747c6@mleia.com>
+From: Rameshwar Sahu <rsahu-qTEPVZfXA3Y@public.gmane.org>
+Subject: Re: [PATCH] ata: xgene: Enable NCQ support for APM X-Gene SATA
+ controller hardware v1.1
+Date: Fri, 11 Nov 2016 13:36:28 +0530
+Message-ID: <CAFd313ycmpdp7wHCVRJrigJV31hLwBGOo=FNENwgFnNKyVkQBA@mail.gmail.com>
+References: <1469524857-3720-1-git-send-email-rsahu@apm.com>
+ <CAFd313x-mXpy0N3aKx2rfoag1FNOrN-LzKb5UHkY2L+GGc0B-A@mail.gmail.com> <20161109164531.GA14630@htj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yb0-f194.google.com ([209.85.213.194]:36546 "EHLO
-        mail-yb0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934685AbcKJQKm (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 10 Nov 2016 11:10:42 -0500
-Received: by mail-yb0-f194.google.com with SMTP id d128so5159586ybh.3
-        for <linux-ide@vger.kernel.org>; Thu, 10 Nov 2016 08:10:41 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <ed9bacd7-b6f4-811b-c082-ae4235a747c6@mleia.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20161109164531.GA14630-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: Olof Johansson <olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Devicetree List <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-arm <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, Don Dutile <ddutile-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jon Masters <jcm-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, patches <patches-qTEPVZfXA3Y@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: Vladimir Zapolskiy <vz@mleia.com>
-Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org
 
-Hello, Vladimir, Sergei.
+Hi Tejun,
 
-On Thu, Nov 10, 2016 at 03:33:22AM +0200, Vladimir Zapolskiy wrote:
-> thank you for review, I see that Tejun has applied the changes,
-> anyway I'll answer your questions.
+On Wed, Nov 9, 2016 at 10:15 PM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
+> Hello,
+>
+> On Wed, Sep 14, 2016 at 04:15:00PM +0530, Rameshwar Sahu wrote:
+>> > @@ -821,8 +823,6 @@ static int xgene_ahci_probe(struct platform_device
+>> > *pdev)
+>> >                                 dev_warn(&pdev->dev, "%s: Error reading
+>> > device info. Assume version1\n",
+>> >                                         __func__);
+>> >                                 version = XGENE_AHCI_V1;
+>> > -                       } else if (info->valid & ACPI_VALID_CID) {
+>> > -                               version = XGENE_AHCI_V2;
+>
+> Can you please explain this part a bit?  Everything else looks good to
+> me.
 
-Oh, please submit incremental patches as necessary.
-
-> > > @@ -31,6 +40,10 @@
-> > >  #define PATA_IMX_DRIVE_DATA        0xA0
-> > >  #define PATA_IMX_DRIVE_CONTROL        0xD8
-> > > 
-> > > +static u32 pio_t4[] = { 30,  20,  15,  10,  10 };
-> > > +static u32 pio_t9[] = { 20,  15,  10,  10,  10 };
-> > > +static u32 pio_tA[] = { 35,  35,  35,  35,  35 };
-> > 
-> >    Perhaps it makes sense to extend the 'struct ata_timing'...
-> > 
-> > [...]
-> 
-> As you guess the numbers are taken right from the ATAPI spec,
-> however I haven't found the second ATA controller driver sumbitted
-> upstream, which reuses these timings, so probably generalization
-> is not needed here. Anyway I would prefer if maintainers do it,
-> if they think that it makes sense.
-
-Given that its usage isn't likely to be further expanded, I don't
-think it matters that much either way, but it does make sense to put
-them in ata_timing.  I'd be happy to apply such a patch.
-
-> >    What do those registers mean?
-> 
-> You may find a better description from i.MX27 or i.MX31 Reference Manual
-> than my retelling, the docs are open.
-> 
-> toff/ton timings are used to avoid bus contention when switching
-> BUFFER_EN signal and data writing period. AFAIK these timings are
-> specific to the controller only.
-> 
-> > > +    writeb(timing.setup, priv->host_regs + PATA_IMX_ATA_TIME_1);
-> > > +    writeb(timing.act8b, priv->host_regs + PATA_IMX_ATA_TIME_2W);
-> > > +    writeb(timing.act8b, priv->host_regs + PATA_IMX_ATA_TIME_2R);
-> > > +    writeb(1, priv->host_regs + PATA_IMX_ATA_TIME_PIO_RDX);
-> > 
-> >    And this one?
-> 
-> This is trd timing from the ATA/ATAPI spec, "Read Data Valid to IORDY
-> active", its minimal value is defined as 0.
-
-Add comments for these explanations maybe?
-
-> > > +
-> > > +    writeb(pio_t4[mode] / T + 1, priv->host_regs + PATA_IMX_ATA_TIME_4);
-> > > +    writeb(pio_t9[mode] / T + 1, priv->host_regs + PATA_IMX_ATA_TIME_9);
-> > > +    writeb(pio_tA[mode] / T + 1, priv->host_regs +
-> > > PATA_IMX_ATA_TIME_AX);
-> > 
-> >    DIV_ROUND_UP(x, T)?
-> 
-> Yes, it is reasonable.
-
-And also for this cleanup?
-
-Thanks.
-
--- 
-tejun
+Here we should not assume XGENE_AHCI_V2 always in case of having valid
+_CID in ACPI table.
+I need to remove this assumption because V1_1 has also valid _CID for
+backward compatibly with v1.
+>
+> Thanks.
+>
+> --
+> tejun
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
