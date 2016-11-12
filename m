@@ -1,47 +1,85 @@
-From: Rameshwar Sahu <rsahu-qTEPVZfXA3Y@public.gmane.org>
-Subject: Re: [PATCH] ata: xgene: Enable NCQ support for APM X-Gene SATA
- controller hardware v1.1
-Date: Fri, 11 Nov 2016 13:36:28 +0530
-Message-ID: <CAFd313ycmpdp7wHCVRJrigJV31hLwBGOo=FNENwgFnNKyVkQBA@mail.gmail.com>
-References: <1469524857-3720-1-git-send-email-rsahu@apm.com>
- <CAFd313x-mXpy0N3aKx2rfoag1FNOrN-LzKb5UHkY2L+GGc0B-A@mail.gmail.com> <20161109164531.GA14630@htj.duckdns.org>
+From: <lucia.germino@unibas.it>
+Subject: 42805 linux-ide
+Date: Sat, 12 Nov 2016 14:28:22 -0000
+Message-ID: <147896090269.28085.8787658923134542055@ucom.am>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20161109164531.GA14630-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Olof Johansson <olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Devicetree List <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-arm <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, Don Dutile <ddutile-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jon Masters <jcm-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, patches <patches-qTEPVZfXA3Y@public.gmane.org>
+Content-Type: application/zip; name="MESSAGE_47440230_linux-ide.zip"
+Content-Transfer-Encoding: base64
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from host-34.65.136.141.ucom.am ([141.136.65.34]:44822 "HELO ucom.am"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+        id S965799AbcKLO21 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Sat, 12 Nov 2016 09:28:27 -0500
+Content-Disposition: attachment
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-Hi Tejun,
-
-On Wed, Nov 9, 2016 at 10:15 PM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> Hello,
->
-> On Wed, Sep 14, 2016 at 04:15:00PM +0530, Rameshwar Sahu wrote:
->> > @@ -821,8 +823,6 @@ static int xgene_ahci_probe(struct platform_device
->> > *pdev)
->> >                                 dev_warn(&pdev->dev, "%s: Error reading
->> > device info. Assume version1\n",
->> >                                         __func__);
->> >                                 version = XGENE_AHCI_V1;
->> > -                       } else if (info->valid & ACPI_VALID_CID) {
->> > -                               version = XGENE_AHCI_V2;
->
-> Can you please explain this part a bit?  Everything else looks good to
-> me.
-
-Here we should not assume XGENE_AHCI_V2 always in case of having valid
-_CID in ACPI table.
-I need to remove this assumption because V1_1 has also valid _CID for
-backward compatibly with v1.
->
-> Thanks.
->
-> --
-> tejun
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+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
+AAAAAFBLBQYAAAAAAQABAFgAAACXDgAAAAA=
