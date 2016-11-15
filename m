@@ -1,56 +1,27 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ata: xgene: Enable NCQ support for APM X-Gene SATA
- controller hardware v1.1
-Date: Tue, 15 Nov 2016 11:21:18 -0500
-Message-ID: <20161115162118.GA30547@htj.duckdns.org>
-References: <1469524857-3720-1-git-send-email-rsahu@apm.com>
- <CAFd313x-mXpy0N3aKx2rfoag1FNOrN-LzKb5UHkY2L+GGc0B-A@mail.gmail.com>
- <20161109164531.GA14630@htj.duckdns.org>
- <CAFd313ycmpdp7wHCVRJrigJV31hLwBGOo=FNENwgFnNKyVkQBA@mail.gmail.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 0/5] ahci: nvme remap support
+Date: Tue, 15 Nov 2016 19:52:07 +0100
+Message-ID: <20161115185207.GB5854@lst.de>
+References: <147709592108.3733.7194541797066785254.stgit@dwillia2-desk3.amr.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f193.google.com ([209.85.161.193]:35389 "EHLO
-        mail-yw0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751665AbcKOQVV (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 15 Nov 2016 11:21:21 -0500
+Received: from verein.lst.de ([213.95.11.211]:60801 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751081AbcKOSwJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 15 Nov 2016 13:52:09 -0500
 Content-Disposition: inline
-In-Reply-To: <CAFd313ycmpdp7wHCVRJrigJV31hLwBGOo=FNENwgFnNKyVkQBA@mail.gmail.com>
+In-Reply-To: <147709592108.3733.7194541797066785254.stgit@dwillia2-desk3.amr.corp.intel.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Rameshwar Sahu <rsahu@apm.com>
-Cc: Olof Johansson <olof@lixom.net>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Devicetree List <devicetree@vger.kernel.org>, linux-arm <linux-arm-kernel@lists.infradead.org>, Don Dutile <ddutile@redhat.com>, Jon Masters <jcm@redhat.com>, patches <patches@apm.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: tj@kernel.org, keith.busch@intel.com, linux-ide@vger.kernel.org, linux-nvme@lists.infradead.org
 
-Hello, Rameshwar.
+As it's been a few weeks since this initial posting:  What's the
+status of either getting the magic chipset handshake mode published
+to take the chipset out of this degraded mode, or implementing a bridge
+driver like VMD?
 
-On Fri, Nov 11, 2016 at 01:36:28PM +0530, Rameshwar Sahu wrote:
-> Hi Tejun,
-> 
-> On Wed, Nov 9, 2016 at 10:15 PM, Tejun Heo <tj@kernel.org> wrote:
-> > Hello,
-> >
-> > On Wed, Sep 14, 2016 at 04:15:00PM +0530, Rameshwar Sahu wrote:
-> >> > @@ -821,8 +823,6 @@ static int xgene_ahci_probe(struct platform_device
-> >> > *pdev)
-> >> >                                 dev_warn(&pdev->dev, "%s: Error reading
-> >> > device info. Assume version1\n",
-> >> >                                         __func__);
-> >> >                                 version = XGENE_AHCI_V1;
-> >> > -                       } else if (info->valid & ACPI_VALID_CID) {
-> >> > -                               version = XGENE_AHCI_V2;
-> >
-> > Can you please explain this part a bit?  Everything else looks good to
-> > me.
-> 
-> Here we should not assume XGENE_AHCI_V2 always in case of having valid
-> _CID in ACPI table.
-> I need to remove this assumption because V1_1 has also valid _CID for
-> backward compatibly with v1.
-
-Can you please repost with the above explanation added to the commit
-message?
-
-Thanks!
-
--- 
-tejun
+It seems devices supporting this "slow down the devices and make life
+hell for the OS" mode are getting more common, so we'll have to do
+something about it.
