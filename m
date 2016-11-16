@@ -1,27 +1,56 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 0/5] ahci: nvme remap support
-Date: Tue, 15 Nov 2016 19:52:07 +0100
-Message-ID: <20161115185207.GB5854@lst.de>
-References: <147709592108.3733.7194541797066785254.stgit@dwillia2-desk3.amr.corp.intel.com>
+From: <yuantian.tang@nxp.com>
+Subject: [PATCH 2/2] ahci: qoriq: report warning when ecc register is missing
+Date: Wed, 16 Nov 2016 11:11:19 +0800
+Message-ID: <1479265879-48840-2-git-send-email-yuantian.tang@nxp.com>
+References: <1479265879-48840-1-git-send-email-yuantian.tang@nxp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:60801 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751081AbcKOSwJ (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 15 Nov 2016 13:52:09 -0500
-Content-Disposition: inline
-In-Reply-To: <147709592108.3733.7194541797066785254.stgit@dwillia2-desk3.amr.corp.intel.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <1479265879-48840-1-git-send-email-yuantian.tang@nxp.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Tang Yuantian <yuantian.tang@nxp.com>
 List-Id: linux-ide@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: tj@kernel.org, keith.busch@intel.com, linux-ide@vger.kernel.org, linux-nvme@lists.infradead.org
 
-As it's been a few weeks since this initial posting:  What's the
-status of either getting the magic chipset handshake mode published
-to take the chipset out of this degraded mode, or implementing a bridge
-driver like VMD?
+From: Tang Yuantian <Yuantian.Tang@nxp.com>
 
-It seems devices supporting this "slow down the devices and make life
-hell for the OS" mode are getting more common, so we'll have to do
-something about it.
+For ls1021a and ls1046a socs, sata ecc must be disabled.
+If ecc register is not found in sata node in dts, report
+a warning.
+
+Signed-off-by: Tang Yuantian <yuantian.tang@nxp.com>
+---
+ drivers/ata/ahci_qoriq.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/ata/ahci_qoriq.c b/drivers/ata/ahci_qoriq.c
+index 45c88de..66eb4b5 100644
+--- a/drivers/ata/ahci_qoriq.c
++++ b/drivers/ata/ahci_qoriq.c
+@@ -158,6 +158,7 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
+ 
+ 	switch (qpriv->type) {
+ 	case AHCI_LS1021A:
++		WARN_ON(!qpriv->ecc_addr);
+ 		writel(SATA_ECC_DISABLE, qpriv->ecc_addr);
+ 		writel(AHCI_PORT_PHY_1_CFG, reg_base + PORT_PHY1);
+ 		writel(LS1021A_PORT_PHY2, reg_base + PORT_PHY2);
+@@ -185,6 +186,7 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
+ 		break;
+ 
+ 	case AHCI_LS1046A:
++		WARN_ON(!qpriv->ecc_addr);
+ 		writel(LS1046A_SATA_ECC_DIS, qpriv->ecc_addr);
+ 		writel(AHCI_PORT_PHY_1_CFG, reg_base + PORT_PHY1);
+ 		writel(AHCI_PORT_TRANS_CFG, reg_base + PORT_TRANS);
+-- 
+2.1.0.27.g96db324
