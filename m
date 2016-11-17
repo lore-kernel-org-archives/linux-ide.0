@@ -1,15 +1,17 @@
 From: <yuantian.tang@nxp.com>
-Subject: [PATCH 1/2] dt-bindings: ahci-fsl-qoriq: added explanation for reg-names
-Date: Thu, 17 Nov 2016 15:59:19 +0800
-Message-ID: <1479369560-9188-1-git-send-email-yuantian.tang@nxp.com>
+Subject: [PATCH 2/2] arm64: dts: updated sata node on ls1046a dts
+Date: Thu, 17 Nov 2016 15:59:20 +0800
+Message-ID: <1479369560-9188-2-git-send-email-yuantian.tang@nxp.com>
+References: <1479369560-9188-1-git-send-email-yuantian.tang@nxp.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0084.outbound.protection.outlook.com ([104.47.32.84]:33294
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam03on0067.outbound.protection.outlook.com ([104.47.42.67]:56800
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750746AbcKQIMb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Thu, 17 Nov 2016 03:12:31 -0500
+        id S1751884AbcKQIMg (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Thu, 17 Nov 2016 03:12:36 -0500
+In-Reply-To: <1479369560-9188-1-git-send-email-yuantian.tang@nxp.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: tj@kernel.org
@@ -17,26 +19,29 @@ Cc: robh+dt@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com, will.deac
 
 From: Tang Yuantian <Yuantian.Tang@nxp.com>
 
-Added explanation for reg-names to make it more clear.
+On ls1046a soc, sata ecc should be disabled. So added sata ecc
+register address so that driver can get this information.
 
 Signed-off-by: Tang Yuantian <yuantian.tang@nxp.com>
 ---
- Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt | 2 ++
- 1 file changed, 2 insertions(+)
+ arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt b/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt
-index fc33ca0..80cf10c 100644
---- a/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt
-+++ b/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt
-@@ -10,6 +10,8 @@ Required properties:
- Optional properties:
-   - dma-coherent: Enable AHCI coherent DMA operation.
-   - reg-names: register area names when there are more than 1 register area.
-+		example: 'ahci' is for sata controller register.
-+			 'sata-ecc' is for sata ecc register.
+diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi
+index 38806ca..88aaaf1 100644
+--- a/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi
++++ b/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi
+@@ -507,7 +507,9 @@
  
- Examples:
- 	sata@3200000 {
+ 		sata: sata@3200000 {
+ 			compatible = "fsl,ls1046a-ahci";
+-			reg = <0x0 0x3200000 0x0 0x10000>;
++			reg = <0x0 0x3200000 0x0 0x10000>,
++			    <0x0 0x20140520 0x0 0x4>;
++			reg-names = "ahci", "sata-ecc";
+ 			interrupts = <GIC_SPI 69 IRQ_TYPE_LEVEL_HIGH>;
+ 			clocks = <&clockgen 4 1>;
+ 		};
 -- 
 2.1.0.27.g96db324
 
