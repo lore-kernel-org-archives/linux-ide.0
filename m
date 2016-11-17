@@ -1,16 +1,16 @@
 From: Michael Ellerman <patch-notifications@ellerman.id.au>
-Subject: Re: [RFT] powerpc: convert pseries_defconfig to use libata PATA drivers
-Date: Thu, 17 Nov 2016 23:04:15 +1100 (AEDT)
-Message-ID: <3tKKYC2r75z9t1C@ozlabs.org>
-References: <1454514630-29269-23-git-send-email-b.zolnierkie@samsung.com>
+Subject: Re: [RFT] powerpc: convert ppc6xx_defconfig to use libata PATA drivers
+Date: Thu, 17 Nov 2016 23:04:13 +1100 (AEDT)
+Message-ID: <3tKKYB4QhRz9t1T@ozlabs.org>
+References: <1454514630-29269-21-git-send-email-b.zolnierkie@samsung.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1454514630-29269-23-git-send-email-b.zolnierkie@samsung.com>
+In-Reply-To: <1454514630-29269-21-git-send-email-b.zolnierkie@samsung.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linuxppc-dev@lists.ozlabs.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>
 Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com
 List-Id: linux-ide@vger.kernel.org
 
-On Wed, 2016-03-02 at 15:50:29 UTC, Bartlomiej Zolnierkiewicz wrote:
+On Wed, 2016-03-02 at 15:50:27 UTC, Bartlomiej Zolnierkiewicz wrote:
 > IDE subsystem has been deprecated since 2009 and the majority
 > (if not all) of Linux distributions have switched to use
 > libata for ATA support exclusively.  However there are still
@@ -24,13 +24,13 @@ On Wed, 2016-03-02 at 15:50:29 UTC, Bartlomiej Zolnierkiewicz wrote:
 > 
 > * having duplicate drivers for same hardware confuses users
 > 
-> This patch converts pseries_defconfig to use libata PATA
+> This patch converts ppc6xx_defconfig to use libata PATA
 > drivers.
 > 
 > Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
 Applied to powerpc next, thanks.
 
-https://git.kernel.org/powerpc/c/80269fe4203432168dae6e49770d64
+https://git.kernel.org/powerpc/c/7f10fe36369068341aff05c067a786
 
 cheers
