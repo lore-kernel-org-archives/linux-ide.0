@@ -1,76 +1,42 @@
-From: <mitch_128@hotmail.com>
-Subject: 14298 linux-ide
-Date: Thu, 17 Nov 2016 06:54:23 -0000
-Message-ID: <147936566325.11648.11773542100005249506@mastercabo.com.br>
+From: <yuantian.tang@nxp.com>
+Subject: [PATCH 1/2] dt-bindings: ahci-fsl-qoriq: added explanation for reg-names
+Date: Thu, 17 Nov 2016 15:59:19 +0800
+Message-ID: <1479369560-9188-1-git-send-email-yuantian.tang@nxp.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="EMAIL_261637948_linux-ide.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 186-216-88-43.ian-wr.mastercabo.com.br ([186.216.88.43]:48675
-        "HELO mastercabo.com.br" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with SMTP id S938799AbcKQGy3 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 17 Nov 2016 01:54:29 -0500
-Content-Disposition: attachment
+Received: from mail-sn1nam01on0084.outbound.protection.outlook.com ([104.47.32.84]:33294
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750746AbcKQIMb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Thu, 17 Nov 2016 03:12:31 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: tj@kernel.org
+Cc: robh+dt@kernel.org, mark.rutland@arm.com, catalin.marinas@arm.com, will.deacon@arm.com, shawnguo@kernel.org, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Tang Yuantian <Yuantian.Tang@nxp.com>, Tang Yuantian <yuantian.tang@nxp.com>
 
-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
-AIEMAAAAAA==
+From: Tang Yuantian <Yuantian.Tang@nxp.com>
+
+Added explanation for reg-names to make it more clear.
+
+Signed-off-by: Tang Yuantian <yuantian.tang@nxp.com>
+---
+ Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt b/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt
+index fc33ca0..80cf10c 100644
+--- a/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt
++++ b/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt
+@@ -10,6 +10,8 @@ Required properties:
+ Optional properties:
+   - dma-coherent: Enable AHCI coherent DMA operation.
+   - reg-names: register area names when there are more than 1 register area.
++		example: 'ahci' is for sata controller register.
++			 'sata-ecc' is for sata ecc register.
+ 
+ Examples:
+ 	sata@3200000 {
+-- 
+2.1.0.27.g96db324
+
