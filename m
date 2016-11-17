@@ -1,35 +1,25 @@
 From: Michael Ellerman <patch-notifications@ellerman.id.au>
-Subject: Re: [RFT] powerpc: convert cell_defconfig to use libata PATA drivers
-Date: Thu, 17 Nov 2016 23:04:06 +1100 (AEDT)
-Message-ID: <3tKKY24gL9z9t1C@ozlabs.org>
-References: <1454514630-29269-13-git-send-email-b.zolnierkie@samsung.com>
+Subject: Re: powerpc: disable IDE subsystem in pasemi_defconfig
+Date: Thu, 17 Nov 2016 23:04:04 +1100 (AEDT)
+Message-ID: <3tKKY06RKtz9t1d@ozlabs.org>
+References: <1454514630-29269-17-git-send-email-b.zolnierkie@samsung.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1454514630-29269-13-git-send-email-b.zolnierkie@samsung.com>
+In-Reply-To: <1454514630-29269-17-git-send-email-b.zolnierkie@samsung.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linuxppc-dev@lists.ozlabs.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com
+Cc: Olof Johansson <olof@lixom.net>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com
 List-Id: linux-ide@vger.kernel.org
 
-On Wed, 2016-03-02 at 15:50:19 UTC, Bartlomiej Zolnierkiewicz wrote:
-> IDE subsystem has been deprecated since 2009 and the majority
-> (if not all) of Linux distributions have switched to use
-> libata for ATA support exclusively.  However there are still
-> some users (mostly old or/and embedded non-x86 systems) that
-> have not converted from using IDE subsystem to libata PATA
-> drivers.  This doesn't seem to be good thing in the long-term
-> for Linux as while there is less and less PATA systems left
-> in use:
+On Wed, 2016-03-02 at 15:50:23 UTC, Bartlomiej Zolnierkiewicz wrote:
+> This patch disables deprecated IDE subsystem in pasemi_defconfig
+> (no IDE host drivers are selected in this config so there is no valid
+> reason to enable IDE subsystem itself).
 > 
-> * testing efforts are divided between two subsystems
-> 
-> * having duplicate drivers for same hardware confuses users
-> 
-> This patch converts cell_defconfig to use libata PATA drivers.
-> 
+> Cc: Olof Johansson <olof@lixom.net>
 > Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
 Applied to powerpc next, thanks.
 
-https://git.kernel.org/powerpc/c/8020c1220dd4ff324698668f067746
+https://git.kernel.org/powerpc/c/23bf36cd120f97e85ce089c841197f
 
 cheers
