@@ -1,62 +1,148 @@
 From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 185531] pata_hpt366 irq xx: nobody cared
-Date: Sat, 19 Nov 2016 07:15:48 +0000
-Message-ID: <bug-185531-11633-JNxQyQvgZr@https.bugzilla.kernel.org/>
-References: <bug-185531-11633@https.bugzilla.kernel.org/>
+Subject: [Bug 188141] New: PCI0680 can't work reliably in UDMA mode over 33
+Date: Sat, 19 Nov 2016 07:46:38 +0000
+Message-ID: <bug-188141-11633@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:49736 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:50562 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751280AbcKSHPw (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Sat, 19 Nov 2016 02:15:52 -0500
+        id S1751280AbcKSHqm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Sat, 19 Nov 2016 02:46:42 -0500
 Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id 6509720414
-        for <linux-ide@vger.kernel.org>; Sat, 19 Nov 2016 07:15:50 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTP id 991602040F
+        for <linux-ide@vger.kernel.org>; Sat, 19 Nov 2016 07:46:40 +0000 (UTC)
 Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-        by mail.kernel.org (Postfix) with ESMTP id 3D7C2203A4
-        for <linux-ide@vger.kernel.org>; Sat, 19 Nov 2016 07:15:49 +0000 (UTC)
-In-Reply-To: <bug-185531-11633@https.bugzilla.kernel.org/>
+        by mail.kernel.org (Postfix) with ESMTP id EC1F7203DA
+        for <linux-ide@vger.kernel.org>; Sat, 19 Nov 2016 07:46:38 +0000 (UTC)
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=185531
+https://bugzilla.kernel.org/show_bug.cgi?id=188141
 
---- Comment #1 from Ilario Gottardello <ilario.gottardello@gmail.com> ---
-Upgraded ubuntu tu 16.10, problem remains:
+            Bug ID: 188141
+           Summary: PCI0680 can't work reliably in UDMA mode over 33
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 4.8.0-27-generic #29-Ubuntu SMP Thu Oct 20 21:03:13
+                    UTC 2016 x86_64 x86_64 x86_64 GNU/Linux
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: high
+          Priority: P1
+         Component: IDE
+          Assignee: io_ide@kernel-bugs.osdl.org
+          Reporter: ilario.gottardello@gmail.com
+        Regression: No
 
-[  157.920408] irq 19: nobody cared (try booting with the "irqpoll" option)
-[  157.920412] CPU: 2 PID: 0 Comm: swapper/2 Tainted: P           OE  
-4.8.0-27-generic #29-Ubuntu
-[  157.920413] Hardware name: System manufacturer System Product Name/P8H67-V,
-BIOS 3707 07/12/2013
-[  157.920414]  0000000000200086 49f34aec7d2664cd ffff929caf283e78
-ffffffffb342f5b2
-[  157.920416]  ffff929c9f6bb400 ffff929c9f6bb4b4 ffff929caf283ea8
-ffffffffb30e2b65
-[  157.920417]  ffff929c9f6bb400 0000000000000000 ffffffffb3f5a100
-0000000000000072
-[  157.920419] Call Trace:
-[  157.920419]  <IRQ>  [<ffffffffb342f5b2>] dump_stack+0x63/0x81
-[  157.920429]  [<ffffffffb30e2b65>] __report_bad_irq+0x35/0xc0
-[  157.920430]  [<ffffffffb30e2ef3>] note_interrupt+0x243/0x290
-[  157.920431]  [<ffffffffb30e0014>] handle_irq_event_percpu+0x54/0x80
-[  157.920433]  [<ffffffffb30e007e>] handle_irq_event+0x3e/0x60
-[  157.920433]  [<ffffffffb30e35ef>] handle_fasteoi_irq+0x9f/0x150
-[  157.920435]  [<ffffffffb303021a>] handle_irq+0x1a/0x30
-[  157.920437]  [<ffffffffb38a18db>] do_IRQ+0x4b/0xd0
-[  157.920439]  [<ffffffffb389f9c2>] common_interrupt+0x82/0x82
-[  157.920439]  <EOI>  [<ffffffffb371d29f>] ? cpuidle_enter_state+0x11f/0x2c0
-[  157.920443]  [<ffffffffb371d477>] cpuidle_enter+0x17/0x20
-[  157.920445]  [<ffffffffb30c791a>] call_cpuidle+0x2a/0x50
-[  157.920445]  [<ffffffffb30c7d00>] cpu_startup_entry+0x2a0/0x350
-[  157.920447]  [<ffffffffb30518a1>] start_secondary+0x151/0x190
-[  157.920448] handlers:
-[  157.920450] [<ffffffffb3638d90>] ata_bmdma_interrupt
-[  157.920451] [<ffffffffb3638d90>] ata_bmdma_interrupt
-[  157.920452] Disabling IRQ #19
+Subsituting an HPT366 IDE controller with a Silicon Image, Inc. PCI0680 Ultra
+ATA-133 Host Controller (rev 02) (so same pci slot / cables / hard drives), it
+immediately fails to read data from the disks, slowing down the link to
+UDMA/33.
+Here the log on dmesg:
+
+[  526.912245] ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+[  526.912252] ata3.00: failed command: READ DMA EXT
+[  526.912258] ata3.00: cmd 25/00:00:4f:98:ee/00:04:01:00:00/e0 tag 0 dma
+524288 in
+                        res 40/00:00:00:4f:c2/00:00:00:00:00/00 Emask 0x4
+(timeout)                                                                       
+[  526.912261] ata3.00: status: { DRDY }
+[  531.951419] ata3: link is slow to respond, please be patient (ready=0)
+[  536.930691] ata3: device not ready (errno=-16), forcing hardreset
+[  536.930705] ata3: soft resetting link
+[  537.145123] ata3.00: configured for UDMA/133
+[  537.145138] ata3: EH complete
+[  569.918070] ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+[  569.918076] ata3.00: failed command: READ DMA
+[  569.918083] ata3.00: cmd c8/00:50:ef:ba:2f/00:00:00:00:00/e1 tag 0 dma 40960
+in
+                        res 40/00:00:00:4f:c2/00:00:00:00:00/00 Emask 0x4
+(timeout)                                                                       
+[  569.918086] ata3.00: status: { DRDY }
+[  574.957860] ata3: link is slow to respond, please be patient (ready=0)
+[  579.945773] ata3: device not ready (errno=-16), forcing hardreset
+[  579.945788] ata3: soft resetting link
+[  580.159919] ata3.00: configured for UDMA/133
+[  580.159933] ata3: EH complete
+[  612.924604] ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+[  612.924610] ata3.00: failed command: READ DMA EXT
+[  612.924616] ata3.00: cmd 25/00:00:4f:10:da/00:04:01:00:00/e0 tag 0 dma
+524288 in
+                        res 40/00:00:00:4f:c2/00:00:00:00:00/00 Emask 0x4
+(timeout)                                                                       
+[  612.924619] ata3.00: status: { DRDY }
+[  617.968302] ata3: link is slow to respond, please be patient (ready=0)
+[  622.948039] ata3: device not ready (errno=-16), forcing hardreset
+[  622.948053] ata3: soft resetting link
+[  623.162218] ata3.00: configured for UDMA/133
+[  623.162232] ata3: EH complete
+[  655.930086] ata3.00: limiting speed to UDMA/100:PIO4
+[  655.930089] ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+[  655.930095] ata3.00: failed command: READ DMA EXT
+[  655.930101] ata3.00: cmd 25/00:a8:8f:4e:a8/00:02:01:00:00/e0 tag 0 dma
+348160 in
+                        res 40/00:00:00:4f:c2/00:00:00:00:00/00 Emask 0x4
+(timeout)                                                                       
+[  655.930104] ata3.00: status: { DRDY }
+[  660.933621] ata3: link is slow to respond, please be patient (ready=0)
+[  665.985242] ata3: device not ready (errno=-16), forcing hardreset
+[  665.985256] ata3: soft resetting link
+[  666.180539] ata3.00: configured for UDMA/100
+[  666.180553] ata3: EH complete
+[  698.934573] ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+[  698.934580] ata3.00: failed command: READ DMA EXT
+[  698.934586] ata3.00: cmd 25/00:00:f7:ad:aa/00:08:01:00:00/e0 tag 0 dma
+1048576 in
+                        res 40/00:00:00:4f:c2/00:00:00:00:00/00 Emask 0x4
+(timeout)
+[  698.934589] ata3.00: status: { DRDY }
+[  703.986089] ata3: link is slow to respond, please be patient (ready=0)
+[  708.969586] ata3: device not ready (errno=-16), forcing hardreset
+[  708.969600] ata3: soft resetting link
+[  709.164047] ata3.00: configured for UDMA/100
+[  709.164063] ata3: EH complete
+[  741.938477] ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+[  741.938484] ata3.00: failed command: READ DMA EXT
+[  741.938489] ata3.00: cmd 25/00:00:47:9f:a3/00:08:01:00:00/e0 tag 0 dma
+1048576 in
+                        res 40/00:00:00:4f:c2/00:00:00:00:00/00 Emask 0x4
+(timeout)
+[  741.938492] ata3.00: status: { DRDY }
+[  746.977880] ata3: link is slow to respond, please be patient (ready=0)
+[  751.957395] ata3: device not ready (errno=-16), forcing hardreset
+[  751.957410] ata3: soft resetting link
+[  752.152040] ata3.00: configured for UDMA/100
+[  752.152055] ata3: EH complete
+[  784.941944] ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+[  784.941951] ata3.00: failed command: READ DMA EXT
+[  784.941958] ata3.00: cmd 25/00:08:47:ac:da/00:04:01:00:00/e0 tag 0 dma
+528384 in
+                        res 40/00:00:00:4f:c2/00:00:00:00:00/00 Emask 0x4
+(timeout)
+[  784.941961] ata3.00: status: { DRDY }
+[  789.985298] ata3: link is slow to respond, please be patient (ready=0)
+[  794.988755] ata3: device not ready (errno=-16), forcing hardreset
+[  794.988768] ata3: soft resetting link
+[  795.183363] ata3.00: configured for UDMA/100
+[  795.183377] ata3: EH complete
+[  827.945045] ata3.00: limiting speed to UDMA/33:PIO4
+[  827.945047] ata3.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+[  827.945051] ata3.00: failed command: READ DMA
+[  827.945055] ata3.00: cmd c8/00:58:9f:ed:a4/00:00:00:00:00/e1 tag 0 dma 45056
+in
+                        res 40/00:00:00:4f:c2/00:00:00:00:00/00 Emask 0x4
+(timeout)
+[  827.945056] ata3.00: status: { DRDY }
+[  832.996422] ata3: link is slow to respond, please be patient (ready=0)
+[  837.983822] ata3: device not ready (errno=-16), forcing hardreset
+[  837.983836] ata3: soft resetting link
+[  838.178364] ata3.00: configured for UDMA/33
+[  838.178377] ata3: EH complete
 
 -- 
 You are receiving this mail because:
