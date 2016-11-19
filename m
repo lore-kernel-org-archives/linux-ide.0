@@ -1,52 +1,40 @@
-From: Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH 1/2] dt-bindings: ahci-fsl-qoriq: added explanation for
- reg-names
-Date: Fri, 18 Nov 2016 08:21:38 -0600
-Message-ID: <20161118142138.jwehwhevgkhi6hww@rob-hp-laptop>
-References: <1479369560-9188-1-git-send-email-yuantian.tang@nxp.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [PATCH 0/5] ahci: nvme remap support
+Date: Fri, 18 Nov 2016 22:12:00 -0800
+Message-ID: <CAPcyv4ge6OO+N619t48m_aCNSEX1aEipP18E6_fvurmu5nr40w@mail.gmail.com>
+References: <147709592108.3733.7194541797066785254.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <20161115185207.GB5854@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-Content-Disposition: inline
-In-Reply-To: <1479369560-9188-1-git-send-email-yuantian.tang@nxp.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: yuantian.tang@nxp.com
-Cc: mark.rutland@arm.com, devicetree@vger.kernel.org, catalin.marinas@arm.com, will.deacon@arm.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, tj@kernel.org, shawnguo@kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:33693 "EHLO
+        mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750982AbcKSGMC (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sat, 19 Nov 2016 01:12:02 -0500
+Received: by mail-oi0-f45.google.com with SMTP id 128so111339990oih.0
+        for <linux-ide@vger.kernel.org>; Fri, 18 Nov 2016 22:12:02 -0800 (PST)
+In-Reply-To: <20161115185207.GB5854@lst.de>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Tejun Heo <tj@kernel.org>, Keith Busch <keith.busch@intel.com>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-nvme@lists.infradead.org
 
-On Thu, Nov 17, 2016 at 03:59:19PM +0800, yuantian.tang@nxp.com wrote:
-> From: Tang Yuantian <Yuantian.Tang@nxp.com>
-> 
-> Added explanation for reg-names to make it more clear.
-> 
-> Signed-off-by: Tang Yuantian <yuantian.tang@nxp.com>
-> ---
->  Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt b/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt
-> index fc33ca0..80cf10c 100644
-> --- a/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt
-> +++ b/Documentation/devicetree/bindings/ata/ahci-fsl-qoriq.txt
-> @@ -10,6 +10,8 @@ Required properties:
->  Optional properties:
->    - dma-coherent: Enable AHCI coherent DMA operation.
->    - reg-names: register area names when there are more than 1 register area.
-> +		example: 'ahci' is for sata controller register.
-> +			 'sata-ecc' is for sata ecc register.
+On Tue, Nov 15, 2016 at 10:52 AM, Christoph Hellwig <hch@lst.de> wrote:
+> As it's been a few weeks since this initial posting:  What's the
+> status of either getting the magic chipset handshake mode published
+> to take the chipset out of this degraded mode, or implementing a bridge
+> driver like VMD?
 
-This is not an example, but should be exactly what names are used.
+The setting is done via write-once registers (once per reset), so
+there is no mechanism for an OS to undo it.
 
-When is there more than one area? That should be defined by the 
-compatible string and spelled out here.
+> It seems devices supporting this "slow down the devices and make life
+> hell for the OS" mode are getting more common, so we'll have to do
+> something about it.
 
-Rob
+To my knowledge all platforms that ship this configuration now already
+ship a BIOS, or have an updated BIOS available, that allows the
+platform to be placed into AHCI mode.
+
+Setting the controller to AHCI mode is the best option for running
+Linux on these systems.
