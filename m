@@ -1,38 +1,31 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ahci: always fall back to single-MSI mode
-Date: Mon, 21 Nov 2016 11:08:08 -0500
-Message-ID: <20161121160808.GA20883@htj.duckdns.org>
-References: <1479474546-4413-1-git-send-email-hch@lst.de>
+From: "U /  N" <douglas.sandrone@virginmedia.com>
+Subject: (( UNO/WBO ))
+Date: Wed, 23 Nov 2016 15:13:19 +0000
+Message-ID: <20161123151331.JUEG2125.aamtaout04-winn.ispmail.ntl.com@Curric2k12.thackley.local>
+Reply-To: sarahamadi1970@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f196.google.com ([209.85.161.196]:36348 "EHLO
-        mail-yw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754190AbcKUQIK (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 21 Nov 2016 11:08:10 -0500
-Received: by mail-yw0-f196.google.com with SMTP id r204so28098553ywb.3
-        for <linux-ide@vger.kernel.org>; Mon, 21 Nov 2016 08:08:10 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <1479474546-4413-1-git-send-email-hch@lst.de>
+Received: from queueout04-winn.ispmail.ntl.com ([81.103.221.58]:47191 "EHLO
+        queueout04-winn.ispmail.ntl.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S938747AbcKWPXD (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 23 Nov 2016 10:23:03 -0500
+Content-Description: Mail message body
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: michael@michaelmarley.com, linux-ide@vger.kernel.org
+To: Recipients <douglas.sandrone@virginmedia.com>
 
-On Fri, Nov 18, 2016 at 02:09:06PM +0100, Christoph Hellwig wrote:
-> Don't try to guess what the errors from pci_irq_alloc_vectors mean, as
-> that's too fragile.  Instead always try allocating a single vector
-> when multi-MSI mode fails.  This makes various intel Desktop and
-> Laptop CPUs use MSI again.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reported-by: Michael Marley <michael@michaelmarley.com>
-> Tested-by: Michael Marley <michael@michaelmarley.com>
-> Fixes: 0b9e2988ab22 ("ahci: use pci_alloc_irq_vectors")
+Congratulations Beneficiary,
 
-Applied to libata/for-4.9-fixes.
 
-Thanks.
+For more information please contact:
 
--- 
-tejun
+Name: Mrs. Sarah Amadi
+Email: sarahamadi1970@gmail.com
+
+
+Yours Faithfully,
+
+Mr. Wu Hongbo
+Under-Secretary-General for Economic and Social Affairs
