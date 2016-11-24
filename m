@@ -1,16 +1,14 @@
 From: Preetham Chandru Ramchandra <pchandru@nvidia.com>
-Subject: [PATCH v2 3/3] dt-bindings: ata: ahci_tegra: Add tegra210 AHCI
-Date: Thu, 24 Nov 2016 13:13:38 +0530
-Message-ID: <1479973418-21351-4-git-send-email-pchandru@nvidia.com>
-References: <1479973418-21351-1-git-send-email-pchandru@nvidia.com>
+Subject: [PATCH v2 0/3] ADD AHCI support for tegra210
+Date: Thu, 24 Nov 2016 13:13:35 +0530
+Message-ID: <1479973418-21351-1-git-send-email-pchandru@nvidia.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from nat-hk.nvidia.com ([203.18.50.4]:7040 "EHLO
-        hkmmgate102.nvidia.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751830AbcKXHpk (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 24 Nov 2016 02:45:40 -0500
-In-Reply-To: <1479973418-21351-1-git-send-email-pchandru@nvidia.com>
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:7360 "EHLO
+        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751830AbcKXHqu (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 24 Nov 2016 02:46:50 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: tj@kernel.org, swarren@wwwdotorg.org, thierry.reding@gmail.com, preetham260@gmail.com
@@ -18,80 +16,20 @@ Cc: ldewangan@nvidia.com, linux-ide@vger.kernel.org, vbyravarasu@nvidia.com, pku
 
 From: Preetham Chandru R <pchandru@nvidia.com>
 
-Signed-off-by: Preetham Chandru R <pchandru@nvidia.com>
+1. ADD AHCI support for tegra210
+2. Add support to disable DIPM, HIPM, DevSlp,
+   partial, slumber, NCQ features from DT.
+3. Extend the tegra AHCI controller device tree binding with tegra210
 ---
- .../bindings/ata/nvidia,tegra124-ahci.txt          | 48 ++++++++++++++++------
- 1 file changed, 36 insertions(+), 12 deletions(-)
+Preetham Chandru R (3):
+  ata: ahci_tegra: add support for tegra210
+  ata: ahci_tegra: Add support to disable features
+  dt-bindings: ata: ahci_tegra: Add tegra210 AHCI support
 
-diff --git a/Documentation/devicetree/bindings/ata/nvidia,tegra124-ahci.txt b/Documentation/devicetree/bindings/ata/nvidia,tegra124-ahci.txt
-index 66c83c3..446214f 100644
---- a/Documentation/devicetree/bindings/ata/nvidia,tegra124-ahci.txt
-+++ b/Documentation/devicetree/bindings/ata/nvidia,tegra124-ahci.txt
-@@ -1,9 +1,9 @@
--Tegra124 SoC SATA AHCI controller
-+Tegra SoC SATA AHCI controller
- 
- Required properties :
--- compatible : For Tegra124, must contain "nvidia,tegra124-ahci".  Otherwise,
--  must contain '"nvidia,<chip>-ahci", "nvidia,tegra124-ahci"', where <chip>
--  is tegra132.
-+- compatible : Must be one of:
-+  - Tegra124 : "nvidia,tegra124-ahci"
-+  - Tegra210 : "nvidia,tegra210-ahci"
- - reg : Should contain 2 entries:
-   - AHCI register set (SATA BAR5)
-   - SATA register set
-@@ -13,8 +13,6 @@ Required properties :
- - clock-names : Must include the following entries:
-   - sata
-   - sata-oob
--  - cml1
--  - pll_e
- - resets : Must contain an entry for each entry in reset-names.
-   See ../reset/reset.txt for details.
- - reset-names : Must include the following entries:
-@@ -24,9 +22,35 @@ Required properties :
- - phys : Must contain an entry for each entry in phy-names.
-   See ../phy/phy-bindings.txt for details.
- - phy-names : Must include the following entries:
--  - sata-phy : XUSB PADCTL SATA PHY
--- hvdd-supply : Defines the SATA HVDD regulator
--- vddio-supply : Defines the SATA VDDIO regulator
--- avdd-supply : Defines the SATA AVDD regulator
--- target-5v-supply : Defines the SATA 5V power regulator
--- target-12v-supply : Defines the SATA 12V power regulator
-+  - For T124:
-+    - sata-phy : XUSB PADCTL SATA PHY
-+  - For T210:
-+    - sata-0
-+- For T124:
-+  - hvdd-supply : Defines the SATA HVDD regulator
-+  - vddio-supply : Defines the SATA VDDIO regulator
-+  - avdd-supply : Defines the SATA AVDD regulator
-+  - target-5v-supply : Defines the SATA 5V power regulator
-+- For T210:
-+  - l0-hvddio-sata-supply : Defines the SATA HVDDIO regulator
-+  - l0-dvddio-sata-supply : Defines the SATA DVDDIO regulator
-+  - hvdd-pex-pll-e-supply : Defines the PEX PLL_E regulator
-+  - dvdd-sata-pll-supply  : Defines the SATA PLL regulator
-+  - hvdd-sata-supply      : Defines the SATA HVDD regulator
-+- nvidia,disable-features : Must include the following entries:
-+  - devslp
-+  - dipm
-+
-+Optional properties:
-+- clock-names :
-+  - cml1 :
-+    cml1 clock is required by phy so it is optional to define
-+    here as phy driver will be enabling this clock.
-+  - pll_e :
-+    pll_e is the parent of cml1 clock so it is optional to define
-+    here as phy driver will be enabling this clock.
-+- nvidia,disable-features :
-+  - hipm
-+  - ncq
-+  - partial
-+  - slumber
+ .../bindings/ata/nvidia,tegra124-ahci.txt          |  48 +-
+ drivers/ata/ahci_tegra.c                           | 581 ++++++++++++++++-----
+ 2 files changed, 483 insertions(+), 146 deletions(-)
+
 -- 
 2.1.4
 
