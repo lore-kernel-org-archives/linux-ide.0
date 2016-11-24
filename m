@@ -1,62 +1,97 @@
-From: <obsexitos@gmail.com>
-Subject: 26728 linux-ide
-Date: Thu, 24 Nov 2016 06:07:30 -0000
-Message-ID: <147996765012.6552.2154085931848118603@migtel.net.br>
+From: Preetham Chandru Ramchandra <pchandru@nvidia.com>
+Subject: [PATCH v2 3/3] dt-bindings: ata: ahci_tegra: Add tegra210 AHCI
+Date: Thu, 24 Nov 2016 13:13:38 +0530
+Message-ID: <1479973418-21351-4-git-send-email-pchandru@nvidia.com>
+References: <1479973418-21351-1-git-send-email-pchandru@nvidia.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="INFO_763192453704_linux-ide.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from dynamic.migtel.net.br ([131.108.186.155]:57044 "HELO
-        migtel.net.br" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with SMTP id S1750762AbcKXGHj (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 24 Nov 2016 01:07:39 -0500
-Content-Disposition: attachment
+Received: from nat-hk.nvidia.com ([203.18.50.4]:7040 "EHLO
+        hkmmgate102.nvidia.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751830AbcKXHpk (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 24 Nov 2016 02:45:40 -0500
+In-Reply-To: <1479973418-21351-1-git-send-email-pchandru@nvidia.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: tj@kernel.org, swarren@wwwdotorg.org, thierry.reding@gmail.com, preetham260@gmail.com
+Cc: ldewangan@nvidia.com, linux-ide@vger.kernel.org, vbyravarasu@nvidia.com, pkunapuli@nvidia.com, Preetham Chandru R <pchandru@nvidia.com>
 
-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
+From: Preetham Chandru R <pchandru@nvidia.com>
+
+Signed-off-by: Preetham Chandru R <pchandru@nvidia.com>
+---
+ .../bindings/ata/nvidia,tegra124-ahci.txt          | 48 ++++++++++++++++------
+ 1 file changed, 36 insertions(+), 12 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/ata/nvidia,tegra124-ahci.txt b/Documentation/devicetree/bindings/ata/nvidia,tegra124-ahci.txt
+index 66c83c3..446214f 100644
+--- a/Documentation/devicetree/bindings/ata/nvidia,tegra124-ahci.txt
++++ b/Documentation/devicetree/bindings/ata/nvidia,tegra124-ahci.txt
+@@ -1,9 +1,9 @@
+-Tegra124 SoC SATA AHCI controller
++Tegra SoC SATA AHCI controller
+ 
+ Required properties :
+-- compatible : For Tegra124, must contain "nvidia,tegra124-ahci".  Otherwise,
+-  must contain '"nvidia,<chip>-ahci", "nvidia,tegra124-ahci"', where <chip>
+-  is tegra132.
++- compatible : Must be one of:
++  - Tegra124 : "nvidia,tegra124-ahci"
++  - Tegra210 : "nvidia,tegra210-ahci"
+ - reg : Should contain 2 entries:
+   - AHCI register set (SATA BAR5)
+   - SATA register set
+@@ -13,8 +13,6 @@ Required properties :
+ - clock-names : Must include the following entries:
+   - sata
+   - sata-oob
+-  - cml1
+-  - pll_e
+ - resets : Must contain an entry for each entry in reset-names.
+   See ../reset/reset.txt for details.
+ - reset-names : Must include the following entries:
+@@ -24,9 +22,35 @@ Required properties :
+ - phys : Must contain an entry for each entry in phy-names.
+   See ../phy/phy-bindings.txt for details.
+ - phy-names : Must include the following entries:
+-  - sata-phy : XUSB PADCTL SATA PHY
+-- hvdd-supply : Defines the SATA HVDD regulator
+-- vddio-supply : Defines the SATA VDDIO regulator
+-- avdd-supply : Defines the SATA AVDD regulator
+-- target-5v-supply : Defines the SATA 5V power regulator
+-- target-12v-supply : Defines the SATA 12V power regulator
++  - For T124:
++    - sata-phy : XUSB PADCTL SATA PHY
++  - For T210:
++    - sata-0
++- For T124:
++  - hvdd-supply : Defines the SATA HVDD regulator
++  - vddio-supply : Defines the SATA VDDIO regulator
++  - avdd-supply : Defines the SATA AVDD regulator
++  - target-5v-supply : Defines the SATA 5V power regulator
++- For T210:
++  - l0-hvddio-sata-supply : Defines the SATA HVDDIO regulator
++  - l0-dvddio-sata-supply : Defines the SATA DVDDIO regulator
++  - hvdd-pex-pll-e-supply : Defines the PEX PLL_E regulator
++  - dvdd-sata-pll-supply  : Defines the SATA PLL regulator
++  - hvdd-sata-supply      : Defines the SATA HVDD regulator
++- nvidia,disable-features : Must include the following entries:
++  - devslp
++  - dipm
++
++Optional properties:
++- clock-names :
++  - cml1 :
++    cml1 clock is required by phy so it is optional to define
++    here as phy driver will be enabling this clock.
++  - pll_e :
++    pll_e is the parent of cml1 clock so it is optional to define
++    here as phy driver will be enabling this clock.
++- nvidia,disable-features :
++  - hipm
++  - ncq
++  - partial
++  - slumber
+-- 
+2.1.4
+
