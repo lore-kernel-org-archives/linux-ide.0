@@ -1,61 +1,62 @@
-From: <robert.berry@minneapolismn.gov>
-Subject: 54299 linux-ide
-Date: Thu, 24 Nov 2016 17:09:43 -0000
-Message-ID: <148000738372.6554.14819441869333231609@224.79.112.185.dyn.akiwifi.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [RESEND PATCH] arm: assabet_defconfig: disable IDE subsystem
+Date: Fri, 25 Nov 2016 23:22:33 +0100
+Message-ID: <2979452.etgg2fh1hR@wuerfel>
+References: <1467991490-24895-1-git-send-email-b.zolnierkie@samsung.com> <2291876.8LAt3RcuXX@amdc3058> <1512445.DtnT51NQqg@amdc3058>
 Mime-Version: 1.0
-Content-Type: application/zip; name="INFO_994466_linux-ide.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 224.79.112.185.dyn.akiwifi.com ([185.112.79.224]:44328 "HELO
-        224.79.112.185.dyn.akiwifi.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with SMTP id S1756694AbcKXRJs (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 24 Nov 2016 12:09:48 -0500
-Content-Disposition: attachment
+Received: from mout.kundenserver.de ([212.227.126.133]:58347 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751070AbcKYWXx (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 25 Nov 2016 17:23:53 -0500
+In-Reply-To: <1512445.DtnT51NQqg@amdc3058>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: linux-arm-kernel@lists.infradead.org
+Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Russell King - ARM Linux <linux@armlinux.org.uk>, Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>, Kevin Hilman <khilman@baylibre.com>, "Nori, Sekhar" <nsekhar@ti.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Olof Johansson <olof@lixom.net>
 
-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
+On Monday, October 31, 2016 7:24:46 PM CET Bartlomiej Zolnierkiewicz wrote:
+> On Monday, October 31, 2016 07:14:13 PM Bartlomiej Zolnierkiewicz wrote:
+> > On Monday, October 31, 2016 03:46:22 PM Russell King - ARM Linux wrote:
+> > > On Wed, Oct 26, 2016 at 07:01:12PM +0200, Bartlomiej Zolnierkiewicz wrote:
+> > > > > I'd be fine with just getting a pull request with all the patches that
+> > > > > had no negative feedback and that were not already applied (if any).
+> > > > 
+> > > > Here it is (sorry for taking so long).
+> > > 
+> > > I've just been digging in the dmesg logs from when I was using the
+> > > Assabet+Neponset as my firewall, and it was having to use the IDE
+> > > ide-cs driver rather than the pata pcmcia driver.
+> > > 
+> > > I don't recall whether the pata pcmcia driver was a problem or not,
+> > > as the PCMCIA interface can't cope with _any_ 32-bit accesses.  I
+> > > think PATA tries to use the "highest" possible access size by
+> > > default...
+> > 
+> > It doesn't actually - it defaults to 16-bits for PIO data access and
+> > you must explicitly enable 32-bits using ATA_PFLAG_PIO32 port flag
+> > (pata_pcmcia doesn't set it so it should be okay).  Also taskfile
+> > registers are accessed using 8-bits access by default transport
+> > functions (which are used by pata_pcmcia).
+> 
+> Please also note that:
+> 
+> - assebet_defconfig currently doesn't even enable ide-cs
+>   (CONFIG_BLK_DEV_IDECS) in the mainline kernel
+> 
+> - neponset_defconfig doesn't even enable IDE (CONFIG_IDE)
+>   in the mainline kernel
+> 
+> so there is no risk of breaking anything.. 
+
+I noticed this older pull request in my todo folder, my interpretation
+is that the concern was resolved and we simply missed it.
+
+I've pulled it into next/defconfig for v4.10 now, with the above
+in the merge commit text for reference.
+
+Thanks,
+
+	Arnd
