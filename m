@@ -1,80 +1,69 @@
-From: <beautyink@live.nl>
-Subject: (unknown)
-Date: Sun, 27 Nov 2016 14:25:40 -0000
-Message-ID: <148025674021.729.13785105619487895662@hinet.net>
-Mime-Version: 1.0
-Content-Type: application/zip; name="MESSAGE_412161257221478_linux-ide.zip"
-Content-Transfer-Encoding: base64
+From: Vladimir Zapolskiy <vz@mleia.com>
+Subject: [PATCH] ata: disable port while unloading ATA controller driver
+Date: Mon, 28 Nov 2016 01:18:56 +0200
+Message-ID: <20161127231856.11466-1-vz@mleia.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from 118-171-76-21.dynamic.hinet.net ([118.171.76.21]:33814 "HELO
-        hinet.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-        id S1751042AbcK0OZr (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Sun, 27 Nov 2016 09:25:47 -0500
-Content-Disposition: attachment
-Subject: 
+Received: from mleia.com ([178.79.152.223]:50908 "EHLO mail.mleia.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752693AbcK0XTm (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Sun, 27 Nov 2016 18:19:42 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org
 
-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
+While removing ATA controller driver ata_port_detach() sets
+ATA_PFLAG_UNLOADING flag and charges the error handler, however actual
+port disabling does not happen due to unset ATA_PFLAG_EH_PENDING flag.
+
+To take care about clean port removal and ATA_PFLAG_EH_PENDING flag
+setting it is sufficient to replace ata_port_schedule_eh() call with
+ata_port_freeze().
+
+The problem is reported by an assertion in ata_port_detach(),
+if a controller driver is unloaded manually or on boot with
+DEBUG_TEST_DRIVER_REMOVE option enabled:
+
+  # rmmod ahci_imx
+  WARNING: CPU: 2 PID: 379 at drivers/ata/libata-core.c:6484 ata_port_detach+0x11c/0x12c
+  Modules linked in: ahci_imx(-) i2c_imx
+  CPU: 2 PID: 379 Comm: rmmod Not tainted 4.9.0-rc6+ #66
+  Hardware name: Freescale i.MX6 Quad/DualLite (Device Tree)
+  Backtrace:
+  [<>] (dump_backtrace) from [<>] (show_stack+0x18/0x1c)
+  [<>] (show_stack) from [<>] (dump_stack+0xb4/0xe8)
+  [<>] (dump_stack) from [<>] (__warn+0xd8/0x104)
+  [<>] (__warn) from [<>] (warn_slowpath_null+0x28/0x30)
+  [<>] (warn_slowpath_null) from [<>] (ata_port_detach+0x11c/0x12c)
+  [<>] (ata_port_detach) from [<>] (ata_platform_remove_one+0x2c/0x44)
+  [<>] (ata_platform_remove_one) from [<>] (platform_drv_remove+0x2c/0x44)
+  [<>] (platform_drv_remove) from [<>] (__device_release_driver+0x90/0x12c)
+  [<>] (__device_release_driver) from [<>] (driver_detach+0xc0/0xc4)
+  [<>] (driver_detach) from [<>] (bus_remove_driver+0x64/0xdc)
+  [<>] (bus_remove_driver) from [<>] (driver_unregister+0x30/0x50)
+  [<>] (driver_unregister) from [<>] (platform_driver_unregister+0x14/0x18)
+  [<>] (platform_driver_unregister) from [<>] (imx_ahci_driver_exit+0x14/0x1c [ahci_imx])
+  [<>] (imx_ahci_driver_exit [ahci_imx]) from [<>] (SyS_delete_module+0x140/0x1f4)
+  [<>] (SyS_delete_module) from [<>] (ret_fast_syscall+0x0/0x1c)
+
+Signed-off-by: Vladimir Zapolskiy <vz@mleia.com>
+---
+ drivers/ata/libata-core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 43842fd..6d64fe3 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -6505,7 +6505,7 @@ static void ata_port_detach(struct ata_port *ap)
+ 	/* tell EH we're leaving & flush EH */
+ 	spin_lock_irqsave(ap->lock, flags);
+ 	ap->pflags |= ATA_PFLAG_UNLOADING;
+-	ata_port_schedule_eh(ap);
++	ata_port_freeze(ap);
+ 	spin_unlock_irqrestore(ap->lock, flags);
+ 
+ 	/* wait till EH commits suicide */
+-- 
+2.10.2
+
