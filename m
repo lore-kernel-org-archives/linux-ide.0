@@ -1,62 +1,52 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [RESEND PATCH] arm: assabet_defconfig: disable IDE subsystem
-Date: Fri, 25 Nov 2016 23:22:33 +0100
-Message-ID: <2979452.etgg2fh1hR@wuerfel>
-References: <1467991490-24895-1-git-send-email-b.zolnierkie@samsung.com> <2291876.8LAt3RcuXX@amdc3058> <1512445.DtnT51NQqg@amdc3058>
+From: <obsexitos@gmail.com>
+Subject: (unknown)
+Date: Sun, 27 Nov 2016 07:04:10 -0000
+Message-ID: <148023025074.594.11869510720602890695@168-195-3-241.dynamic.jlinftelecom.net.br>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
+Content-Type: application/zip; name="INFO_006036_linux-ide.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.133]:58347 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751070AbcKYWXx (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 25 Nov 2016 17:23:53 -0500
-In-Reply-To: <1512445.DtnT51NQqg@amdc3058>
+Received: from 168-195-3-241.dynamic.jlinftelecom.net.br ([168.195.3.241]:4679
+        "HELO 168-195-3-241.dynamic.jlinftelecom.net.br" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with SMTP id S1751671AbcK0HEW (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 27 Nov 2016 02:04:22 -0500
+Subject: 
+Content-Disposition: attachment
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-arm-kernel@lists.infradead.org
-Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Russell King - ARM Linux <linux@armlinux.org.uk>, Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>, Kevin Hilman <khilman@baylibre.com>, "Nori, Sekhar" <nsekhar@ti.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Olof Johansson <olof@lixom.net>
+To: linux-ide@vger.kernel.org
 
-On Monday, October 31, 2016 7:24:46 PM CET Bartlomiej Zolnierkiewicz wrote:
-> On Monday, October 31, 2016 07:14:13 PM Bartlomiej Zolnierkiewicz wrote:
-> > On Monday, October 31, 2016 03:46:22 PM Russell King - ARM Linux wrote:
-> > > On Wed, Oct 26, 2016 at 07:01:12PM +0200, Bartlomiej Zolnierkiewicz wrote:
-> > > > > I'd be fine with just getting a pull request with all the patches that
-> > > > > had no negative feedback and that were not already applied (if any).
-> > > > 
-> > > > Here it is (sorry for taking so long).
-> > > 
-> > > I've just been digging in the dmesg logs from when I was using the
-> > > Assabet+Neponset as my firewall, and it was having to use the IDE
-> > > ide-cs driver rather than the pata pcmcia driver.
-> > > 
-> > > I don't recall whether the pata pcmcia driver was a problem or not,
-> > > as the PCMCIA interface can't cope with _any_ 32-bit accesses.  I
-> > > think PATA tries to use the "highest" possible access size by
-> > > default...
-> > 
-> > It doesn't actually - it defaults to 16-bits for PIO data access and
-> > you must explicitly enable 32-bits using ATA_PFLAG_PIO32 port flag
-> > (pata_pcmcia doesn't set it so it should be okay).  Also taskfile
-> > registers are accessed using 8-bits access by default transport
-> > functions (which are used by pata_pcmcia).
-> 
-> Please also note that:
-> 
-> - assebet_defconfig currently doesn't even enable ide-cs
->   (CONFIG_BLK_DEV_IDECS) in the mainline kernel
-> 
-> - neponset_defconfig doesn't even enable IDE (CONFIG_IDE)
->   in the mainline kernel
-> 
-> so there is no risk of breaking anything.. 
-
-I noticed this older pull request in my todo folder, my interpretation
-is that the concern was resolved and we simply missed it.
-
-I've pulled it into next/defconfig for v4.10 now, with the above
-in the merge commit text for reference.
-
-Thanks,
-
-	Arnd
+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
+AAA=
