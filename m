@@ -1,102 +1,109 @@
-From: Matthew Whitehead <tedheadster@gmail.com>
-Subject: [PATCH] pata_legacy: Allow disabling of legacy PATA device probes on non-PCI systems
-Date: Tue, 29 Nov 2016 12:53:02 -0500
-Message-ID: <1480441982-20992-1-git-send-email-tedheadster@gmail.com>
+From: Vladimir Zapolskiy <vz@mleia.com>
+Subject: Re: [PATCH] ata: disable port while unloading ATA controller driver
+Date: Tue, 29 Nov 2016 20:54:11 +0200
+Message-ID: <09c7866c-ecd4-f48a-5112-6cf3c6786cd9@mleia.com>
+References: <20161127231856.11466-1-vz@mleia.com>
+ <20161128183425.GA19096@htj.duckdns.org>
+ <a498fb9f-822e-45aa-aac1-c7afae7a44e3@mleia.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qt0-f194.google.com ([209.85.216.194]:36826 "EHLO
-        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755862AbcK2RxK (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 29 Nov 2016 12:53:10 -0500
-Received: by mail-qt0-f194.google.com with SMTP id n34so16529118qtb.3
-        for <linux-ide@vger.kernel.org>; Tue, 29 Nov 2016 09:53:10 -0800 (PST)
+Received: from mleia.com ([178.79.152.223]:57342 "EHLO mail.mleia.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751979AbcK2SyP (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 29 Nov 2016 13:54:15 -0500
+In-Reply-To: <a498fb9f-822e-45aa-aac1-c7afae7a44e3@mleia.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: Matthew Whitehead <tedheadster@gmail.com>
+To: Tejun Heo <tj@kernel.org>
+Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org
 
-If there is no PCI bus detected in drivers/ata/pata_legacy.c, it registers all the
-common legacy PATA devices. This includes I/O ports (0x1f0, 0x170, 0x1e8, 0x168, 0x1e0, 0x160)
-and also their associated interrupts (14,15,11,10,8,12).
+Hello Tejun,
 
-Unfortunately, on such systems those interrupt lines are at a premium because there is no
-PCI alternative. This patch allows you to disable individual port/interrupt pairs by providing
-a list of ports to skip allocating.
+On 11/29/2016 01:51 AM, Vladimir Zapolskiy wrote:
+> Hello Tejun,
+> 
+> On 11/28/2016 08:34 PM, Tejun Heo wrote:
+>> Hello, Vladimir.
+>>
+>> On Mon, Nov 28, 2016 at 01:18:56AM +0200, Vladimir Zapolskiy wrote:
+>>> While removing ATA controller driver ata_port_detach() sets 
+>>> ATA_PFLAG_UNLOADING flag and charges the error handler, however
+>>> actual port disabling does not happen due to unset
+>>> ATA_PFLAG_EH_PENDING flag.
+>>>
+>>> To take care about clean port removal and ATA_PFLAG_EH_PENDING
+>>> flag setting it is sufficient to replace ata_port_schedule_eh()
+>>> call with ata_port_freeze().
+>>
+>> Hmm... this explanation doesn't really make sense to me. 
+>> ATA_PFLAG_EH_PENDING is set by at_eh_set_pending() which is the same 
+>> for both ata_port_schedule_eh() and ata_port_freeze().
+> 
+> correct, ATA_PFLAG_EH_PENDING is set by ata_eh_set_pending(),
+> you caused me doubt, and my analysis is crap...
+> 
+>> There gotta me something else going on here.  Any chance you can
+>> track down why EH isn't running?
+>>
+> 
+> I've tested the unmodified master branch with a different kernel config
+> and on another but similar board (SabreSD) powered by the same iMX6Q
+> SoC, and I can not reproduce this problem, but I still experience it
+> on the SabreAuto board, I'll trace the kernel on it over JTAG tomorrow.
+> 
 
-modprobe pata_legacy ignore_ports=0x1e8,0x168,0x1e0,0x160
+tracing on the board shows a race between driver initialization and
+deinitialization, when async_port_probe() is scheduled after driver
+removal, this causes the reported problem.
 
-Signed-off-by: Matthew Whitehead <tedheadster@gmail.com>
----
- drivers/ata/pata_legacy.c |   32 +++++++++++++++++++++++++-------
- 1 files changed, 25 insertions(+), 7 deletions(-)
+Since it is a race, it should be possible to fuzz the kernel by
+introducing a delay (e.g. in ata_port_probe()) to get enough time
+to reproduce the problem reliably and to verify a fix.
 
-diff --git a/drivers/ata/pata_legacy.c b/drivers/ata/pata_legacy.c
-index 4fe9d21..753c7ce 100644
---- a/drivers/ata/pata_legacy.c
-+++ b/drivers/ata/pata_legacy.c
-@@ -130,6 +130,8 @@ static struct legacy_data legacy_data[NR_HOST];
- static struct ata_host *legacy_host[NR_HOST];
- static int nr_legacy_host;
- 
-+static int ignore_ports[NR_HOST];
-+static int ignore_ports_count;
- 
- static int probe_all;		/* Set to check all ISA port ranges */
- static int ht6560a;		/* HT 6560A on primary 1, second 2, both 3 */
-@@ -1168,6 +1170,17 @@ static __init void probe_qdi_vlb(void)
- 	}
- }
- 
-+int find_port(int port)
-+{
-+	int i;
-+	for (i = 0 ; i < ignore_ports_count; i++) {
-+		if (port == ignore_ports[i])
-+			return 1;
-+	}
-+	return 0;
-+}
-+		
-+
- /**
-  *	legacy_init		-	attach legacy interfaces
-  *
-@@ -1212,17 +1225,22 @@ static __init int legacy_init(void)
- 	if (winbond == 1)
- 		winbond = 0x130;	/* Default port, alt is 1B0 */
- 
--	if (primary == 0 || all)
-+	if ((primary == 0 || all) && (!find_port(0x1F0)))
- 		legacy_probe_add(0x1F0, 14, UNKNOWN, 0);
--	if (secondary == 0 || all)
-+	if ((secondary == 0 || all) && (!find_port(0x170)))
- 		legacy_probe_add(0x170, 15, UNKNOWN, 0);
- 
- 	if (probe_all || !pci_present) {
- 		/* ISA/VLB extra ports */
--		legacy_probe_add(0x1E8, 11, UNKNOWN, 0);
--		legacy_probe_add(0x168, 10, UNKNOWN, 0);
--		legacy_probe_add(0x1E0, 8, UNKNOWN, 0);
--		legacy_probe_add(0x160, 12, UNKNOWN, 0);
-+
-+		if (!find_port(0x1E0))
-+			legacy_probe_add(0x1E8, 11, UNKNOWN, 0);
-+		if (!find_port(0x168))
-+			legacy_probe_add(0x168, 10, UNKNOWN, 0);
-+		if (!find_port(0x1E0))
-+			legacy_probe_add(0x1E0, 8, UNKNOWN, 0);
-+		if (!find_port(0x160))
-+			legacy_probe_add(0x160, 12, UNKNOWN, 0);
- 	}
- 
- 	if (opti82c46x)
-@@ -1272,6 +1290,6 @@ module_param(qdi, int, 0);
- module_param(winbond, int, 0);
- module_param(pio_mask, int, 0);
- module_param(iordy_mask, int, 0);
--
-+module_param_array(ignore_ports, int, &ignore_ports_count, 0444);
- module_init(legacy_init);
- module_exit(legacy_exit);
--- 
-1.7.1
+imx_ahci_probe()
+  ahci_platform_init_host()
+    ata_host_alloc_pinfo()
+      ata_host_alloc()
+        ata_port_alloc()    ---> sets ATA_PFLAG_INITIALIZING flag
+          ata_link_init()
+          ....
+    ahci_host_activate()
+      ata_host_activate()
+        ata_host_start()
+          ata_eh_freeze_port()
+        ata_port_desc()
+        ata_host_register() ---> schedules async_port_probe()
+  ....
+
+*** at this point the driver probe is completed, thus it can be removed ***
+
+ata_platform_remove_one()    ==  imx_ahci_driver.remove()
+  ata_port_detach()
+    ata_port_schedule_eh()
+      ata_std_sched_eh()    ---> return, ATA_PFLAG_EH_PENDING flag is not set
+    ata_port_wait_eh()      ---> return, port cleanup work is not done
+
+*** warning is printed out ***
+
+async_port_probe()          ---- scheduled too late
+  ata_port_probe()
+    __ata_port_probe()      ---> now ATA_PFLAG_INITIALIZING flag unset
+      ata_port_schedule_eh()
+        ata_std_sched_eh()
+
+
+It also explains why ata_port_schedule_eh() inside ata_port_detach()
+replaced by ata_port_abort() with unconditional ATA_PFLAG_EH_PENDING
+flag setting does not produce the warning, but still I'm not sure
+that resource and state clean-ups are done correctly under the race.
+
+If you buy this analysis sketch, it may take another day or two for
+me to prepare a proper fix, or, if you have enough time and desire,
+you may implement the fix on your own.
+
+--
+With best wishes,
+Vladimir
 
