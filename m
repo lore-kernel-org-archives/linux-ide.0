@@ -1,57 +1,52 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ata: disable port while unloading ATA controller driver
-Date: Tue, 29 Nov 2016 15:44:13 -0500
-Message-ID: <20161129204413.GC4959@htj.duckdns.org>
-References: <20161127231856.11466-1-vz@mleia.com>
- <20161128183425.GA19096@htj.duckdns.org>
- <a498fb9f-822e-45aa-aac1-c7afae7a44e3@mleia.com>
- <09c7866c-ecd4-f48a-5112-6cf3c6786cd9@mleia.com>
- <20161129190025.GC22330@htj.duckdns.org>
- <cf257dae-7811-0338-3b59-050f34c1ae29@mleia.com>
+Subject: Re: [PATCH] pata_legacy: Allow disabling of legacy PATA device
+ probes on non-PCI systems
+Date: Tue, 29 Nov 2016 15:46:02 -0500
+Message-ID: <20161129204602.GD4959@htj.duckdns.org>
+References: <1480441982-20992-1-git-send-email-tedheadster@gmail.com>
+ <20161129194158.GB4959@htj.duckdns.org>
+ <CAP8WD_ZxS0TMzHB+=3Gohw39+S2hQbm-pucuYPYK6JUhFWVd5A@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f195.google.com ([209.85.161.195]:33720 "EHLO
-        mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751537AbcK2UoP (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 29 Nov 2016 15:44:15 -0500
-Received: by mail-yw0-f195.google.com with SMTP id s68so13180919ywg.0
-        for <linux-ide@vger.kernel.org>; Tue, 29 Nov 2016 12:44:15 -0800 (PST)
+Received: from mail-yw0-f196.google.com ([209.85.161.196]:34693 "EHLO
+        mail-yw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751991AbcK2UqE (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 29 Nov 2016 15:46:04 -0500
+Received: by mail-yw0-f196.google.com with SMTP id a10so13167271ywa.1
+        for <linux-ide@vger.kernel.org>; Tue, 29 Nov 2016 12:46:04 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <cf257dae-7811-0338-3b59-050f34c1ae29@mleia.com>
+In-Reply-To: <CAP8WD_ZxS0TMzHB+=3Gohw39+S2hQbm-pucuYPYK6JUhFWVd5A@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Vladimir Zapolskiy <vz@mleia.com>
-Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org
+To: whiteheadm@acm.org
+Cc: linux-ide@vger.kernel.org, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
 
-Hello, Vladimir.
+Hello,
 
-On Tue, Nov 29, 2016 at 10:04:14PM +0200, Vladimir Zapolskiy wrote:
-> > Not really.  Is this from the unloading test config?
+On Tue, Nov 29, 2016 at 03:12:31PM -0500, tedheadster wrote:
+> > Can you please give a concrete example of a machine and situation
+> > where this would be useful?
+> >
 > 
-> Correct, I always get the warning with CONFIG_DEBUG_TEST_DRIVER_REMOVE
-> option enabled.
 > 
-> I understand that a working solution might be just to disable the
-> option rather than handle this case, however because it is wanted
-> to test other drivers for potential errors also (e.g. the same ATA
-> controller driver regardless of the false positive in the ATA core), 
-> in my opinion the issue should not be ignored.
-
-So, the problem is that CONFIG_DEBUG_TEST_DRIVER_REMOVE is introducing
-a condition which isn't otherwise possible, so it's triggering pseudo
-bugs.  The solution here is to make CONFIG_DEBUG_TEST_DRIVER_REMOVE
-flush async calls before trying to remove the driver.
-
-> > Control doesn't get passed to userland until async probings are
-> > flushed, so this shouldn't normally be possible.
-> > 
+> Sure, my regression testing i486 system has this problem. It only has
+> an EISA bus, no PCI. I had to apply the patch to be able to put even
+> 2-3 cards in it. It had run out of IRQs.
 > 
-> I'm not an expert in ATA, can you please show me the synchronization
-> point?
+> This testing helped uncover a long time kernel bug that now has a patch.
+> 
+> http://git.kernel.org/cgit/linux/kernel/git/tip/tip.git/commit/?id=fc0e81b2bea0ebceb71889b61d2240856141c9ee
+> 
+> Please check the linux-kernel mailing list thread "What exactly do
+> 32-bit x86 exceptions push on the stack in the CS slot?" for more
+> details.
+> 
+> https://lkml.org/lkml/2016/11/19/308
 
-async_synchronize_full() call in kernel_init() for booting and in
-delete_module() for module unloading.
+I see.  Yeah, I don't have any objections to the change although I do
+wish it were easier / automatic.  That said, given how niche it is, it
+most likely won't matter.  Bartlomiej, what do you think?
 
 Thanks.
 
