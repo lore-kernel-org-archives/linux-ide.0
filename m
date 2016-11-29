@@ -1,68 +1,59 @@
-From: Vladimir Zapolskiy <vz@mleia.com>
-Subject: Re: [PATCH] ata: disable port while unloading ATA controller driver
-Date: Tue, 29 Nov 2016 01:51:40 +0200
-Message-ID: <a498fb9f-822e-45aa-aac1-c7afae7a44e3@mleia.com>
-References: <20161127231856.11466-1-vz@mleia.com>
- <20161128183425.GA19096@htj.duckdns.org>
+From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?=
+        <u.kleine-koenig@pengutronix.de>
+Subject: [PATCH] ata: sata_mv: check for errors when parsing nr-ports from dt
+Date: Tue, 29 Nov 2016 12:13:38 +0100
+Message-ID: <20161129111338.19389-1-u.kleine-koenig@pengutronix.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mleia.com ([178.79.152.223]:54224 "EHLO mail.mleia.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932414AbcK1Xvp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Mon, 28 Nov 2016 18:51:45 -0500
-In-Reply-To: <20161128183425.GA19096@htj.duckdns.org>
+Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:33743 "EHLO
+        metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754053AbcK2LN7 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 29 Nov 2016 06:13:59 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, kernel@pengutronix.de
 
-Hello Tejun,
+If the nr-ports property is missing ata_host_alloc_pinfo is called with
+n_ports = 0. This results in host->ports[0] = NULL which later makes
+mv_init_host() oops when dereferencing this pointer.
 
-On 11/28/2016 08:34 PM, Tejun Heo wrote:
-> Hello, Vladimir.
-> 
-> On Mon, Nov 28, 2016 at 01:18:56AM +0200, Vladimir Zapolskiy wrote:
->> While removing ATA controller driver ata_port_detach() sets 
->> ATA_PFLAG_UNLOADING flag and charges the error handler, however
->> actual port disabling does not happen due to unset
->> ATA_PFLAG_EH_PENDING flag.
->> 
->> To take care about clean port removal and ATA_PFLAG_EH_PENDING
->> flag setting it is sufficient to replace ata_port_schedule_eh()
->> call with ata_port_freeze().
-> 
-> Hmm... this explanation doesn't really make sense to me. 
-> ATA_PFLAG_EH_PENDING is set by at_eh_set_pending() which is the same 
-> for both ata_port_schedule_eh() and ata_port_freeze().
+Instead be a bit more cooperative and fail the probing with an error
+message.
 
-correct, ATA_PFLAG_EH_PENDING is set by ata_eh_set_pending(),
-you caused me doubt, and my analysis is crap...
+Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
+---
+ drivers/ata/sata_mv.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
 
-> There gotta me something else going on here.  Any chance you can
-> track down why EH isn't running?
-> 
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index efc48bf89d51..823e938c9a78 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -4090,7 +4090,20 @@ static int mv_platform_probe(struct platform_device *pdev)
+ 
+ 	/* allocate host */
+ 	if (pdev->dev.of_node) {
+-		of_property_read_u32(pdev->dev.of_node, "nr-ports", &n_ports);
++		rc = of_property_read_u32(pdev->dev.of_node, "nr-ports",
++					   &n_ports);
++		if (rc) {
++			dev_err(&pdev->dev,
++				"error parsing nr-ports property: %d\n", rc);
++			return rc;
++		}
++
++		if (n_ports <= 0) {
++			dev_err(&pdev->dev, "nr-ports must be positive: %d\n",
++				n_ports);
++			return -EINVAL;
++		}
++
+ 		irq = irq_of_parse_and_map(pdev->dev.of_node, 0);
+ 	} else {
+ 		mv_platform_data = dev_get_platdata(&pdev->dev);
+-- 
+2.10.2
 
-I've tested the unmodified master branch with a different kernel config
-and on another but similar board (SabreSD) powered by the same iMX6Q
-SoC, and I can not reproduce this problem, but I still experience it
-on the SabreAuto board, I'll trace the kernel on it over JTAG tomorrow.
-
-Sorry for the noise, the reported problem is unlikely related to ATA
-subsystem, because in parallel there are some other funny reported
-issues like:
-
-  Unable to handle kernel paging request at virtual address 70732f34
-  pgd = e5c04000
-  [70732f34] *pgd=00000000
-  Internal error: Oops: 5 [#1] SMP ARM
-  CPU: 3 PID: 218 Comm: udevd Not tainted 4.9.0-rc7 #5
-  Hardware name: Freescale i.MX6 Quad/DualLite (Device Tree)
-  task: e6a48c40 task.stack: e5c02000
-  PC is at __lock_acquire+0xd8/0x1ba0
-  LR is at 0x1
-
---
-With best wishes,
-Vladimir
