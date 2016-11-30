@@ -1,82 +1,54 @@
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH,v2] pata_legacy: Allow disabling of legacy PATA device
+From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] pata_legacy: Allow disabling of legacy PATA device
  probes on non-PCI systems
-Date: Wed, 30 Nov 2016 20:24:56 +0300
-Message-ID: <a4bf2511-c9bc-1680-6c91-81af0805ac40@cogentembedded.com>
-References: <1480440386-20400-1-git-send-email-tedheadster@gmail.com>
- <1480526456-15797-1-git-send-email-tedheadster@gmail.com>
+Date: Wed, 30 Nov 2016 18:15:39 +0000
+Message-ID: <20161130181539.59cbec41@lxorguk.ukuu.org.uk>
+References: <1480441982-20992-1-git-send-email-tedheadster@gmail.com>
+        <84a95190-9e30-81ac-5f23-744243ba7fce@cogentembedded.com>
+        <20161130145322.252f7403@lxorguk.ukuu.org.uk>
+        <CAP8WD_boGwPZCEPE8hA-AhQnHChrbaM+74LTUy-9__s6ex56Sg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lf0-f44.google.com ([209.85.215.44]:35164 "EHLO
-        mail-lf0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758554AbcK3RZB (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 30 Nov 2016 12:25:01 -0500
-Received: by mail-lf0-f44.google.com with SMTP id b14so151956713lfg.2
-        for <linux-ide@vger.kernel.org>; Wed, 30 Nov 2016 09:25:00 -0800 (PST)
-In-Reply-To: <1480526456-15797-1-git-send-email-tedheadster@gmail.com>
+Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:58646 "EHLO
+        lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753112AbcK3SPt (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 30 Nov 2016 13:15:49 -0500
+In-Reply-To: <CAP8WD_boGwPZCEPE8hA-AhQnHChrbaM+74LTUy-9__s6ex56Sg@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Matthew Whitehead <tedheadster@gmail.com>, linux-ide@vger.kernel.org, tj@kernel.org, b.zolnierkie@samsung.com, gnomes@lxorguk.ukuu.org.uk
+To: tedheadster <tedheadster@gmail.com>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, linux-ide@vger.kernel.org
 
-Hello.
+On Wed, 30 Nov 2016 10:03:47 -0500
+tedheadster <tedheadster@gmail.com> wrote:
 
-On 11/30/2016 08:20 PM, Matthew Whitehead wrote:
+> On Wed, Nov 30, 2016 at 9:53 AM, One Thousand Gnomes
+> <gnomes@lxorguk.ukuu.org.uk> wrote:
+> > On Wed, 30 Nov 2016 16:11:39 +0300
+> > Sergei Shtylyov <sergei.shtylyov@cogentembedded.com> wrote:
+> >  
+> >> Hello.
+> >>
+> >> On 11/29/2016 08:53 PM, Matthew Whitehead wrote:
+> >>  
+> >> > If there is no PCI bus detected in drivers/ata/pata_legacy.c, it registers all the
+> >> > common legacy PATA devices. This includes I/O ports (0x1f0, 0x170, 0x1e8, 0x168, 0x1e0, 0x160)
+> >> > and also their associated interrupts (14,15,11,10,8,12).
+> >> >
+> >> > Unfortunately, on such systems those interrupt lines are at a premium because there is no
+> >> > PCI alternative. This patch allows you to disable individual port/interrupt pairs by providing
+> >> > a list of ports to skip allocating.  
+> >
+> > In what situation do you actually hit this. The probes should fail so the
+> > interrupt shouldn't end up allocated.
+> >  
+> 
+> Alan,
+>   on my hardware it grabbed all those interrupts, showing up in
+> /proc/interrupts very clearly.
 
-> If there is no PCI bus detected in drivers/ata/pata_legacy.c, it registers all
-> the common legacy PATA devices. This includes I/O ports (0x1f0, 0x170, 0x1e8,
-> 0x168, 0x1e0, 0x160) and also their associated interrupts (14,15,11,10,8,12).
->
-> Unfortunately, on such systems those interrupt lines are at a premium because
-> there is no PCI alternative. This patch allows you to disable individual
-> port/interrupt pairs by providing a list of ports to skip allocating.
->
-> modprobe pata_legacy ignore_ports=0x1e8,0x168,0x1e0,0x160
->
-> Signed-off-by: Matthew Whitehead <tedheadster@gmail.com>
-> ---
->  drivers/ata/pata_legacy.c |   30 ++++++++++++++++++++++++------
->  1 files changed, 24 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/ata/pata_legacy.c b/drivers/ata/pata_legacy.c
-> index 4fe9d21..65a33b4 100644
-> --- a/drivers/ata/pata_legacy.c
-> +++ b/drivers/ata/pata_legacy.c
-> @@ -130,6 +130,8 @@ static struct legacy_data legacy_data[NR_HOST];
->  static struct ata_host *legacy_host[NR_HOST];
->  static int nr_legacy_host;
->
-> +static int ignore_ports[NR_HOST];
-> +static int ignore_ports_count;
+Do you have a dmesg of the boot ?
 
-    It's ignore_port_count if my grammar serves still. :-)
-
->
->  static int probe_all;		/* Set to check all ISA port ranges */
->  static int ht6560a;		/* HT 6560A on primary 1, second 2, both 3 */
-> @@ -1168,6 +1170,16 @@ static __init void probe_qdi_vlb(void)
->  	}
->  }
->
-> +static bool port_ignored(int port)
-> +{
-> +	int i;
-
-    Need empty line here.
-
-> +	for (i = 0; i < ignore_ports_count; i++) {
-> +		if (port == ignore_ports[i])
-> +			return 1;
-
-    s/1/true/.
-
-> +	}
-> +	return 0;
-
-    s/0/false/.
-
-[...]
-
-MBR, Sergei
-
+Alan
