@@ -1,64 +1,66 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] pata_legacy: Allow disabling of legacy PATA device
- probes on non-PCI systems
-Date: Wed, 30 Nov 2016 15:22:01 -0500
-Message-ID: <20161130202201.GA15989@htj.duckdns.org>
-References: <1480441982-20992-1-git-send-email-tedheadster@gmail.com>
- <84a95190-9e30-81ac-5f23-744243ba7fce@cogentembedded.com>
- <20161130145322.252f7403@lxorguk.ukuu.org.uk>
- <CAP8WD_boGwPZCEPE8hA-AhQnHChrbaM+74LTUy-9__s6ex56Sg@mail.gmail.com>
+From: Dennis Chen <dennis.chen@arm.com>
+Subject: [PATCH] PCI:MSI Return -ENOSPC when requested vectors is not enough
+Date: Thu, 1 Dec 2016 10:15:04 +0800
+Message-ID: <1480558504-18691-1-git-send-email-dennis.chen@arm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yb0-f194.google.com ([209.85.213.194]:35518 "EHLO
-        mail-yb0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753868AbcK3UWD (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 30 Nov 2016 15:22:03 -0500
-Received: by mail-yb0-f194.google.com with SMTP id d59so2596431ybi.2
-        for <linux-ide@vger.kernel.org>; Wed, 30 Nov 2016 12:22:03 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <CAP8WD_boGwPZCEPE8hA-AhQnHChrbaM+74LTUy-9__s6ex56Sg@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: linux-pci@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Steve Capper <steve.capper@arm.com>, Marc Zyngier <marc.zyngier@arm.com>, Tom Long Nguyen <tom.l.nguyen@intel.com>, Bjorn Helgaas <bhelgaas@google.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, Dennis Chen <dennis.chen@arm.com>, nd@arm.com, Christoph Hellwig <hch@lst.de>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
-To: whiteheadm@acm.org
-Cc: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, linux-ide@vger.kernel.org
 
-Hello,
+The __pci_enable_msi_range() should return -ENOSPC instead of -EINVAL
+when the device doesn't have enough vectors as required, just as the 
+MSI-X vector allocator does in __pci_enable_msix_range(). Otherwise, 
+some drivers depending on that return value will probably fallback to
+the legacy interrupt directly, for example, in commit 17a51f12cfbd2814
+("ahci: only try to use multi-MSI mode if there is more than 1 port"), the
+ahci driver will fallback to single MSI mode only when the return value
+is -ENOSPC in case of required vectors is not enough, else the driver will
+use legacy interrupt which has been observed on a x86 box with 6-port SATA
+controller.
 
-On Wed, Nov 30, 2016 at 10:03:47AM -0500, tedheadster wrote:
->   on my hardware it grabbed all those interrupts, showing up in
-> /proc/interrupts very clearly.
+With this patch, when a MSI-capable device doesn't have enough MSI
+vectors as requested, it will fallback to single MSI mode while not
+legacy interrupt.
 
-Can you please see whether the following patch makes a difference?
+Signed-off-by: Dennis Chen <dennis.chen@arm.com>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Tom Long Nguyen <tom.l.nguyen@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Marc Zyngier <marc.zyngier@arm.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Steve Capper <steve.capper@arm.com>
+Cc: linux-ide@vger.kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
+---
+ drivers/pci/msi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks.
-
-diff --git a/drivers/ata/pata_legacy.c b/drivers/ata/pata_legacy.c
-index bce2a8c..fdc2b4f 100644
---- a/drivers/ata/pata_legacy.c
-+++ b/drivers/ata/pata_legacy.c
-@@ -962,6 +962,9 @@ static __init int legacy_init_one(struct legacy_probe *probe)
- 	if (IS_ERR(pdev))
- 		return PTR_ERR(pdev);
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index ad70507..da37113 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1084,7 +1084,7 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
+ 	if (nvec < 0)
+ 		return nvec;
+ 	if (nvec < minvec)
+-		return -EINVAL;
++		return -ENOSPC;
  
-+	if (!devres_open_group(&pdev->dev, NULL, GFP_KERNEL))
-+		return -ENOMEM;
-+
- 	ret = -EBUSY;
- 	if (devm_request_region(&pdev->dev, io, 8, "pata_legacy") == NULL ||
- 	    devm_request_region(&pdev->dev, io + 0x0206, 1,
-@@ -1008,12 +1011,14 @@ static __init int legacy_init_one(struct legacy_probe *probe)
- 		if (!ata_dev_absent(dev)) {
- 			legacy_host[probe->slot] = host;
- 			ld->platform_dev = pdev;
-+			devres_remove_group(&pdev->dev, NULL);
- 			return 0;
- 		}
- 	}
- 	ata_host_detach(host);
- fail:
- 	platform_device_unregister(pdev);
-+	devres_release_group(&pdev->dev, NULL);
- 	return ret;
- }
- 
+ 	if (nvec > maxvec)
+ 		nvec = maxvec;
+-- 
+2.7.4
