@@ -1,79 +1,86 @@
-From: tedheadster <tedheadster@gmail.com>
-Subject: Re: [PATCH] pata_legacy: Allow disabling of legacy PATA device probes
- on non-PCI systems
-Date: Fri, 2 Dec 2016 08:37:04 -0500
-Message-ID: <CAP8WD_bPns6hGPWUUGbRd_20+bHX460p5szrfCP4bKr9k76wsQ@mail.gmail.com>
-References: <1480441982-20992-1-git-send-email-tedheadster@gmail.com>
- <84a95190-9e30-81ac-5f23-744243ba7fce@cogentembedded.com> <20161130145322.252f7403@lxorguk.ukuu.org.uk>
- <CAP8WD_boGwPZCEPE8hA-AhQnHChrbaM+74LTUy-9__s6ex56Sg@mail.gmail.com> <20161130181539.59cbec41@lxorguk.ukuu.org.uk>
-Reply-To: whiteheadm@acm.org
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Forcing a CAP register value to make booting more reliable on
+ the Acer Aspire Switch Alpha 12 tablet
+Date: Fri, 2 Dec 2016 11:11:46 -0500
+Message-ID: <20161202161146.GA6033@htj.duckdns.org>
+References: <CAFaEeaFuQCya0HrQNSQe1f1HZ18B=iCAoXKcxdhxv3uq_OzHFA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f175.google.com ([209.85.161.175]:36674 "EHLO
-        mail-yw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757459AbcLBNhZ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 2 Dec 2016 08:37:25 -0500
-Received: by mail-yw0-f175.google.com with SMTP id a10so217476811ywa.3
-        for <linux-ide@vger.kernel.org>; Fri, 02 Dec 2016 05:37:25 -0800 (PST)
-In-Reply-To: <20161130181539.59cbec41@lxorguk.ukuu.org.uk>
+Received: from mail-yw0-f179.google.com ([209.85.161.179]:36281 "EHLO
+        mail-yw0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750912AbcLBQLv (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 2 Dec 2016 11:11:51 -0500
+Received: by mail-yw0-f179.google.com with SMTP id a10so219934075ywa.3
+        for <linux-ide@vger.kernel.org>; Fri, 02 Dec 2016 08:11:51 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <CAFaEeaFuQCya0HrQNSQe1f1HZ18B=iCAoXKcxdhxv3uq_OzHFA@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-Cc: Tejun Heo <tj@kernel.org>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, linux-ide@vger.kernel.org
+To: Sui Chen <suichen6@gmail.com>
+Cc: linux-ide@vger.kernel.org
 
-Alan,
+Hello,
 
->> Alan,
->>   on my hardware it grabbed all those interrupts, showing up in
->> /proc/interrupts very clearly.
->
-> Do you have a dmesg of the boot ?
->
+On Thu, Dec 01, 2016 at 05:57:55PM -0600, Sui Chen wrote:
+> When the SSD is detected the following lines can be seen in the dmesg
+> output:
+>    [    1.347021] ahci 0000:00:17.0: version 3.0
+>    [    1.365569] ahci 0000:00:17.0: AHCI 0001.0301 32 slots 3 ports 6 Gbps
+> 0x7 impl SATA mode
+>    [    1.367519] ahci 0000:00:17.0: flags: 64bit ncq pm led clo only pio
+> slum part deso sadm sds apst
+>    [    1.377574] scsi host0: ahci
+>    [    1.379465] scsi host1: ahci
+>    [    1.381373] scsi host2: ahci
+>    [    1.383060] ata1: SATA max UDMA/133 abar m2048@0xb1648000 port
+> 0xb1648100 irq 124
+>    [    1.384665] ata2: SATA max UDMA/133 abar m2048@0xb1648000 port
+> 0xb1648180 irq 124
+>    [    1.386305] ata3: SATA max UDMA/133 abar m2048@0xb1648000 port
+> 0xb1648200 irq 124
+> 
+> However, when the SSD is not detecting:
+>    [    1.337065] ahci 0000:00:17.0: version 3.0
+> -> [    1.343206] ahci 0000:00:17.0: implemented port map (0x7) contains
+> more ports than nr_ports (2), using nr_ports
+> -> [    1.351165] ahci 0000:00:17.0: AHCI 0001.0301 32 slots 2 ports 6 Gbps
+> *0x0* impl SATA mode
+>    [    1.352323] ahci 0000:00:17.0: flags: 64bit ncq pm led clo only pio
+> slum part deso sadm sds apst
+>    [    1.355960] scsi host0: ahci
+>    [    1.357292] scsi host1: ahci
+> -> [    1.358405] ata1: *DUMMY*
+> -> [    1.359466] ata2: *DUMMY*
 
-Here is the relevant dmesg information and also the /proc/interrupts results:
+That looks like BIOS messing up initial setup.
 
-dmesg info:
+> One can note the differences in the marked lines in the dmesg output when
+> the SSD is not detecting: 1) nr_ports becomes 2 instead of 3; 2) ATA1 and
+> ATA2 are both DUMMY.
+> 
+> Adding the following lines in the function "ahci_save_initial_config" in
+> file libahci.c, line 453 seems to fix this for now:
+>     if ((cap & 0xC734FF00) == 0xC734FF00) {
+>         dev_info(dev, "Forcing CAP to 0xC734FF02 and port_map to 0x7!\n");
+>         hpriv->saved_cap = cap = 0xC734FF02;
+>         hpriv->saved_port_map = port_map = 0x7;
+>     }
+> 
+> What the code does is to force port_map to become 0x7 and saved_cap to
+> become 0xC734FF02. Actually, when the SSD is detecting the cap register
+> holds a value of 0xC734FF02 but when it fails, cap can be either 0xC734FF01
+> or 0xC734FF00.
+> 
+> My questions are:
+> Is this a bad way of solving this or possibly damage the computer?
+> Could this also possibly be related to the BIOS of the specific computer?
 
-[   22.534587] scsi host0: pata_legacy
-[   22.566618] ata1: PATA max PIO4 cmd 0x1f0 ctl 0x3f6 irq 14
-[   22.730639] ata1.00: ATA-4: QUANTUM FIREBALL CR8.4A, A5U.1200, max UDMA/66
-[   22.730639] ata1.00: 16514064 sectors, multi 0: LBA
-[   22.730639] ata1.00: configured for PIO
-[   22.738601] scsi 0:0:0:0: Direct-Access     ATA      QUANTUM
-FIREBALL 1200 PQ: 0 ANSI: 5
-[   22.798627] sd 0:0:0:0: [sda] 16514064 512-byte logical blocks:
-(8.45 GB/7.87 GiB)
-[   22.818640] sd 0:0:0:0: [sda] Write Protect is off
-[   22.818640] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-[   22.830629] sd 0:0:0:0: [sda] Write cache: enabled, read cache:
-enabled, doesn't support DPO or FUA
-[   22.934729]  sda: sda1 sda2 sda3 sda4
-[   23.062648] sd 0:0:0:0: [sda] Attached SCSI disk
-[   23.162640] scsi host1: pata_legacy
-[   23.186648] ata2: PATA max PIO4 cmd 0x170 ctl 0x376 irq 15
-[   23.494643] scsi host2: pata_legacy
-[   23.518656] ata3: PATA max PIO4 cmd 0x1e8 ctl 0x3ee irq 11
-[   23.830691] scsi host3: pata_legacy
-[   23.854692] ata4: PATA max PIO4 cmd 0x168 ctl 0x36e irq 10
-[   24.086711] genirq: Flags mismatch irq 8. 00000000 (pata_legacy.4)
-vs. 00000000 (rtc0)
-[   24.190692] scsi host4: pata_legacy
-[   24.214697] ata5: PATA max PIO4 cmd 0x160 ctl 0x366 irq 12
+We have a bunch of system-specific workarounds implemented in ahci.c.
+Look for DMI_MATCH().  I think this can be handled the same way.
+Match the system and just override CAP to the sane value.
 
-/proc/interrupts info :
+Thanks.
 
-           CPU0
-  0:      49060    XT-PIC  timer
-...
- 10:          0    XT-PIC  pata_legacy.3
- 11:          0    XT-PIC  pata_legacy.2
- 12:          0    XT-PIC  pata_legacy.5
- 14:      41233    XT-PIC  pata_legacy.0
- 15:          0    XT-PIC  pata_legacy.1
-...
-
-Tejun: I will build a kernel with your patches today and let you know
-the results.
-
-- Matthew
+-- 
+tejun
