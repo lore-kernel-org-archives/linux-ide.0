@@ -1,123 +1,94 @@
-From: Jeff Layton <jlayton@poochiereds.net>
-Subject: LSF/MM 2017: Call for Proposals
-Date: Thu, 01 Dec 2016 09:11:46 -0500
-Message-ID: <1480601506.2511.7.camel@poochiereds.net>
+From: Sui Chen <suichen6@gmail.com>
+Subject: Forcing CAP register value to make booting more reliable on the Acer
+ Aspire Switch Alpha 12 tablet
+Date: Thu, 1 Dec 2016 18:05:49 -0600
+Message-ID: <90940a43-e37f-4c26-b2ca-170090a045bb@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <owner-linux-mm@kvack.org>
-Sender: owner-linux-mm@kvack.org
-To: linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, ceph-devel@vger.kernel.org, linux-nvme@lists.infradead.org
-Cc: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:32790 "EHLO
+        mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752147AbcLBAFv (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 1 Dec 2016 19:05:51 -0500
+Received: by mail-oi0-f45.google.com with SMTP id w63so249311871oiw.0
+        for <linux-ide@vger.kernel.org>; Thu, 01 Dec 2016 16:05:51 -0800 (PST)
+Received: from ?IPv6:2620:105:b004:e100:6984:4fd8:afb8:69d? ([2620:105:b004:e100:6984:4fd8:afb8:69d])
+        by smtp.googlemail.com with ESMTPSA id p48sm835127ota.18.2016.12.01.16.05.50
+        for <linux-ide@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 01 Dec 2016 16:05:50 -0800 (PST)
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: linux-ide@vger.kernel.org
 
-The annual Linux Storage, Filesystem and Memory Management (LSF/MM)
-Summit for 2017 will be held on March 20th and 21st at the Hyatt
-Cambridge, Cambridge, MA. LSF/MM is an invitation-only technical
-workshop to map out improvements to the Linux storage, filesystem and
-memory management subsystems that will make their way into the mainline
-kernel within the coming years.
+Hello, Linux-IDE mailing list,
 
-    http://events.linuxfoundation.org/events/linux-storage-filesystem-and-mm-summit
+I recently bought an Acer Aspire Switch Alpha 12 (Model Number: SA5-271) 
+2-in-1 convertible computer. This computer has an Intel Skylake i5-6200U 
+processor and a Lite-On CV1-8B256 SSD.
 
-Like last year, LSF/MM will be colocated with the Linux Foundation Vault
-conference which takes place on March 22nd and 23rd in the same Venue.
-For those that do not know, Vault is designed to be an event where open
-source storage and filesystem practitioners meet storage implementors
-and, as such, it would be of benefit for LSF/MM attendees to attend.
+I noticed that the kernel will intermittently fail to detect the SSD as 
+/dev/sda and may be fixed by changing seemingly unrelated settings in 
+the BIOS (such as clearing secure boot databases) or with a "dirty hack" 
+in libahci.c (tested on Kernel 4.8). When the SSD is not detected, the 
+kernel will print an alert saying "Gave Up waiting for root device. 
+Alert! /dev/disk/by-uuid/ does not exist. Dropping to a shell." Typing 
+"blkid" in the initramfs shell shows no devices either.
 
-Unlike past years, Vault admission is not free for LSF/MM attendees this
-year unless they're giving a talk. There is a discount for LSF/MM
-attendees, however we would also like to encourage folks to submit talk
-proposals to speak at the Vault conference.
+When the SSD is detected the following lines can be seen in the dmesg 
+output:
+    [    1.347021] ahci 0000:00:17.0: version 3.0
+    [    1.365569] ahci 0000:00:17.0: AHCI 0001.0301 32 slots 3 ports 6 
+Gbps 0x7 impl SATA mode
+    [    1.367519] ahci 0000:00:17.0: flags: 64bit ncq pm led clo only 
+pio slum part deso sadm sds apst
+    [    1.377574] scsi host0: ahci
+    [    1.379465] scsi host1: ahci
+    [    1.381373] scsi host2: ahci
+    [    1.383060] ata1: SATA max UDMA/133 abar m2048@0xb1648000 port 
+0xb1648100 irq 124
+    [    1.384665] ata2: SATA max UDMA/133 abar m2048@0xb1648000 port 
+0xb1648180 irq 124
+    [    1.386305] ata3: SATA max UDMA/133 abar m2048@0xb1648000 port 
+0xb1648200 irq 124
 
-    http://events.linuxfoundation.org/events/vault
+However, when the SSD is not detecting:
+    [    1.337065] ahci 0000:00:17.0: version 3.0
+-> [    1.343206] ahci 0000:00:17.0: implemented port map (0x7) contains 
+more ports than nr_ports (2), using nr_ports
+-> [    1.351165] ahci 0000:00:17.0: AHCI 0001.0301 32 slots 2 ports 6 
+Gbps 0x0 impl SATA mode
+    [    1.352323] ahci 0000:00:17.0: flags: 64bit ncq pm led clo only 
+pio slum part deso sadm sds apst
+    [    1.355960] scsi host0: ahci
+    [    1.357292] scsi host1: ahci
+-> [    1.358405] ata1: DUMMY
+-> [    1.359466] ata2: DUMMY
 
-On behalf of the committee I am issuing a call for agenda proposals that
-are suitable for cross-track discussion as well as technical subjects
-for the breakout sessions.
+One can note the differences in the marked lines in the dmesg output 
+when the SSD is not detecting: 1) nr_ports becomes 2 instead of 3; 2) 
+ATA1 and ATA2 are both DUMMY.
 
-If advance notice is required for visa applications then please point
-that out in your proposal or request to attend, and submit the topic
-as soon as possible.
 
-1) Proposals for agenda topics should be sent before January 15th, 2016
-to:
+Adding the following lines in the function "ahci_save_initial_config" in 
+file libahci.c, line 453 seems to fix this for now:
+     if ((cap & 0xC734FF00) == 0xC734FF00) {
+         dev_info(dev, "Forcing CAP to 0xC734FF02 and port_map to 0x7!\n");
+         hpriv->saved_cap = cap = 0xC734FF02;
+         hpriv->saved_port_map = port_map = 0x7;
+     }
 
-    lsf-pc@lists.linux-foundation.org
+What the code does is to force port_map to become 0x7 and saved_cap to 
+become 0xC734FF02. Actually, when the SSD is detecting the cap register 
+holds a value of 0xC734FF02 but when it fails, cap can be either 
+0xC734FF01 or 0xC734FF00.
 
-and cc the Linux list or lists that are relevant for the topic in
-question:
+My questions are:
+Is this a bad way of solving this; can it possibly damage the computer?
+Could this be possibly related to the BIOS of the specific computer?
 
-    ATA:   linux-ide@vger.kernel.org
-    Block: linux-block@vger.kernel.org
-    FS:    linux-fsdevel@vger.kernel.org
-    MM:    linux-mm@kvack.org
-    SCSI:  linux-scsi@vger.kernel.org
-    NVMe:  linux-nvme@lists.infradead.org
+Thank you so much!
+2016-12-01
+Sui
 
-Please tag your proposal with [LSF/MM TOPIC] to make it easier to track.
-In addition, please make sure to start a new thread for each topic
-rather than following up to an existing one.  Agenda topics and
-attendees will be selected by the program committee, but the final
-agenda will be formed by consensus of the attendees on the day.
-
-2) Requests to attend the summit for those that are not proposing a
-topic should be sent to:
-
-    lsf-pc@lists.linux-foundation.org
-
-Please summarise what expertise you will bring to the meeting, and what
-you would like to discuss. Please also tag your email with [LSF/MM
-ATTEND] and send it as a new thread so there is less chance of it
-getting lost.
-
-We will try to cap attendance at around 25-30 per track to facilitate
-discussions although the final numbers will depend on the room sizes at
-the venue.
-
-Brief presentations are allowed to guide discussion, but are strongly
-discouraged. There will be no recording or audio bridge. However, we
-expect that written minutes will be published as we did in previous
-years:
-
-2016: https://lwn.net/Articles/lsfmm2016/
-
-2015: https://lwn.net/Articles/lsfmm2015/
-
-2014: http://lwn.net/Articles/LSFMM2014/
-
-2013: http://lwn.net/Articles/548089/
-
-3) If you have feedback on last year's meeting that we can use to
-improve this year's, please also send that to:
-
-    lsf-pc@lists.linux-foundation.org
-
-Thank you on behalf of the program committee:
-
-Storage:
-    James Bottomley
-    Martin K. Petersen (track chair)
-    Sagi Grimberg
-
-Filesystems:
-    Anna Schumaker
-    Chris Mason
-    Eric Sandeen
-    Jan Kara
-    Jeff Layton (summit chair)
-    Josef Bacik (track chair)
-    Trond Myklebust
-
-MM:
-    Johannes Weiner
-    Rik van Riel (track chair)
--- 
-Jeff Layton <jlayton@poochiereds.net>
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
