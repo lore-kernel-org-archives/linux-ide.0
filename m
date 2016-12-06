@@ -1,35 +1,80 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: detect and warn about ahci-remapped NVMe devices
-Date: Mon, 5 Dec 2016 14:33:27 -0500
-Message-ID: <20161205193327.GB30331@mtj.duckdns.org>
-References: <1480703463-17489-1-git-send-email-hch@lst.de>
+From: Adam Manzanares <adam.manzanares@hgst.com>
+Subject: [PATCH v7 0/4] Enabling ATA Command Priorities
+Date: Tue, 6 Dec 2016 09:18:01 -0800
+Message-ID: <1481044685-2803-1-git-send-email-adam.manzanares@hgst.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:36229 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751223AbcLETdb (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 5 Dec 2016 14:33:31 -0500
-Received: by mail-pg0-f65.google.com with SMTP id x23so17317342pgx.3
-        for <linux-ide@vger.kernel.org>; Mon, 05 Dec 2016 11:33:31 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <1480703463-17489-1-git-send-email-hch@lst.de>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: axboe@kernel.dk, hare@suse.de, mchristi@redhat.com, dan.j.williams@intel.com, martin.petersen@oracle.com, toshi.kani@hpe.com, damien.lemoal@hgst.com, ming.lei@canonical.com, tj@kernel.org
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Adam Manzanares <adam.manzanares@wdc.com>
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: dan.j.williams@intel.com, linux-ide@vger.kernel.org, linux-nvme@lists.infradead.org
 
-Hello,
+From: Adam Manzanares <adam.manzanares@wdc.com>
 
-On Fri, Dec 02, 2016 at 07:31:00PM +0100, Christoph Hellwig wrote:
-> Just a small band-aid to detect the AHCI-remapped NVMe devices
-> for now.  Hopefully we'll eventually get a fake PCIe root port
-> driver ala VMD for them.
+This patch builds ATA commands with high priority if the iocontext of a process
+is set to real time. The goal of the patch is to improve tail latencies of 
+workloads that use higher queue depths. This requires setting the iocontext 
+ioprio on the request when it is initialized
 
-Applied 1-3 to libata/for-4.10.  Fixed the dup constant definition in
-0002.
+This patch has been tested with an Ultrastar HE8 HDD and cuts the 
+the p99.99 tail latency of foreground IO from 2s down to 72ms when
+using the deadline scheduler. This patch works independently of the
+scheduler so it can be used with all of the currently available 
+request based schedulers. 
 
-Thanks.
+Foreground IO, for the previously described results, is an async fio job 
+submitting 4K read requests at a QD of 1 to the HDD. The foreground IO is set 
+with the iopriority class of real time. The background workload is another fio
+job submitting read requests at a QD of 32 to the same HDD with default 
+iopriority.
+
+This feature is enabled for ATA devices by setting the ata ncq_prio_enable 
+device attribute to 1. An ATA device is also checked to see if the device 
+supports per command priority.
+
+v7:
+ - Run ncq prio support check when sysfs variable set (zero day bug fix)
+ - Fixes from TJ merged in
+ - Merge fix for linux-next incorporated
+
+v6:
+ - Removed fusion mpt sas prio related code deletion
+ - Renamed ata device attribute that enables priority cmds to the device
+
+v5:
+ - Updated block patch commit message to indicate the why and not the how
+v4:
+ - Added blk_rq_set_prio function to associate request prio with ioc prio
+ - In init_request_from_bio use bio_prio if it is valid
+ - Added ata enable_prio dev attribute to sysfs to enable prioritized commands
+
+v3:
+ - Removed null dereference issue in blk-core
+ - Renamed queue sysfs entries for clarity
+ - Added documentation for sysfs queue entry
+
+v2:
+ - Add queue flag to set iopriority going to the request
+ - If queue flag set, send iopriority class to ata_build_rw_tf
+ - Remove redundant code in ata_ncq_prio_enabled function.
+
+
+Adam Manzanares (4):
+  block: Add iocontext priority to request
+  ata: Enabling ATA Command Priorities
+  ata: ATA Command Priority Disabled By Default
+  ata: set ncq_prio_enabled iff device has support
+
+ block/blk-core.c          |  4 ++-
+ drivers/ata/libahci.c     |  1 +
+ drivers/ata/libata-core.c | 33 ++++++++++++++++++-
+ drivers/ata/libata-scsi.c | 84 ++++++++++++++++++++++++++++++++++++++++++++++-
+ drivers/ata/libata.h      |  3 +-
+ include/linux/ata.h       |  6 ++++
+ include/linux/blkdev.h    | 14 ++++++++
+ include/linux/libata.h    |  5 +++
+ 8 files changed, 146 insertions(+), 4 deletions(-)
 
 -- 
-tejun
+2.7.4
