@@ -1,80 +1,94 @@
 From: Adam Manzanares <adam.manzanares@hgst.com>
-Subject: [PATCH v7 0/4] Enabling ATA Command Priorities
-Date: Tue, 6 Dec 2016 09:18:01 -0800
-Message-ID: <1481044685-2803-1-git-send-email-adam.manzanares@hgst.com>
+Subject: [PATCH v7 4/4] ata: set ncq_prio_enabled iff device has support
+Date: Tue, 6 Dec 2016 09:18:05 -0800
+Message-ID: <1481044685-2803-5-git-send-email-adam.manzanares@hgst.com>
+References: <1481044685-2803-1-git-send-email-adam.manzanares@hgst.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-sn1nam01on0058.outbound.protection.outlook.com ([104.47.32.58]:56148
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751180AbcLFRdp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 6 Dec 2016 12:33:45 -0500
+In-Reply-To: <1481044685-2803-1-git-send-email-adam.manzanares@hgst.com>
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: axboe@kernel.dk, hare@suse.de, mchristi@redhat.com, dan.j.williams@intel.com, martin.petersen@oracle.com, toshi.kani@hpe.com, damien.lemoal@hgst.com, ming.lei@canonical.com, tj@kernel.org
 Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Adam Manzanares <adam.manzanares@wdc.com>
-List-Id: linux-ide@vger.kernel.org
 
 From: Adam Manzanares <adam.manzanares@wdc.com>
 
-This patch builds ATA commands with high priority if the iocontext of a process
-is set to real time. The goal of the patch is to improve tail latencies of 
-workloads that use higher queue depths. This requires setting the iocontext 
-ioprio on the request when it is initialized
+We previously had a check to see if the device has support for
+prioritized ncq commands and a check to see if a device flag
+is set, through a sysfs variable, in order to send a prioritized
+command.
 
-This patch has been tested with an Ultrastar HE8 HDD and cuts the 
-the p99.99 tail latency of foreground IO from 2s down to 72ms when
-using the deadline scheduler. This patch works independently of the
-scheduler so it can be used with all of the currently available 
-request based schedulers. 
+This patch only allows the sysfs variable to be set if the device
+supports prioritized commands enabling one check in ata_build_rw_tf
+in order to determine whether or not to send a prioritized command.
 
-Foreground IO, for the previously described results, is an async fio job 
-submitting 4K read requests at a QD of 1 to the HDD. The foreground IO is set 
-with the iopriority class of real time. The background workload is another fio
-job submitting read requests at a QD of 32 to the same HDD with default 
-iopriority.
+This patch depends on ata: ATA Command Priority Disabled By Default
 
-This feature is enabled for ATA devices by setting the ata ncq_prio_enable 
-device attribute to 1. An ATA device is also checked to see if the device 
-supports per command priority.
+tj: Minor subject and formatting updates.
 
-v7:
- - Run ncq prio support check when sysfs variable set (zero day bug fix)
- - Fixes from TJ merged in
- - Merge fix for linux-next incorporated
+Signed-off-by: Adam Manzanares <adam.manzanares@wdc.com>
+---
+ drivers/ata/libata-core.c |  3 +--
+ drivers/ata/libata-scsi.c | 21 +++++++++++++++------
+ 2 files changed, 16 insertions(+), 8 deletions(-)
 
-v6:
- - Removed fusion mpt sas prio related code deletion
- - Renamed ata device attribute that enables priority cmds to the device
-
-v5:
- - Updated block patch commit message to indicate the why and not the how
-v4:
- - Added blk_rq_set_prio function to associate request prio with ioc prio
- - In init_request_from_bio use bio_prio if it is valid
- - Added ata enable_prio dev attribute to sysfs to enable prioritized commands
-
-v3:
- - Removed null dereference issue in blk-core
- - Renamed queue sysfs entries for clarity
- - Added documentation for sysfs queue entry
-
-v2:
- - Add queue flag to set iopriority going to the request
- - If queue flag set, send iopriority class to ata_build_rw_tf
- - Remove redundant code in ata_ncq_prio_enabled function.
-
-
-Adam Manzanares (4):
-  block: Add iocontext priority to request
-  ata: Enabling ATA Command Priorities
-  ata: ATA Command Priority Disabled By Default
-  ata: set ncq_prio_enabled iff device has support
-
- block/blk-core.c          |  4 ++-
- drivers/ata/libahci.c     |  1 +
- drivers/ata/libata-core.c | 33 ++++++++++++++++++-
- drivers/ata/libata-scsi.c | 84 ++++++++++++++++++++++++++++++++++++++++++++++-
- drivers/ata/libata.h      |  3 +-
- include/linux/ata.h       |  6 ++++
- include/linux/blkdev.h    | 14 ++++++++
- include/linux/libata.h    |  5 +++
- 8 files changed, 146 insertions(+), 4 deletions(-)
-
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index f6a631a..324e76e 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -787,8 +787,7 @@ int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
+ 		if (tf->flags & ATA_TFLAG_FUA)
+ 			tf->device |= 1 << 7;
+ 
+-		if ((dev->flags & ATA_DFLAG_NCQ_PRIO) &&
+-		    (dev->flags & ATA_DFLAG_NCQ_PRIO_ENABLE)) {
++		if (dev->flags & ATA_DFLAG_NCQ_PRIO_ENABLE) {
+ 			if (class == IOPRIO_CLASS_RT)
+ 				tf->hob_nsect |= ATA_PRIO_HIGH <<
+ 						 ATA_SHIFT_PRIO;
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 328a601..c24cbf1 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -317,17 +317,26 @@ static ssize_t ata_ncq_prio_enable_store(struct device *device,
+ 
+ 	ap = ata_shost_to_port(sdev->host);
+ 
+-	spin_lock_irqsave(ap->lock, flags);
+ 	dev = ata_scsi_find_dev(ap, sdev);
+-	if (unlikely(!dev)) {
+-		rc = -ENODEV;
+-		goto unlock;
++	if (unlikely(!dev))
++		return  -ENODEV;
++
++	if (!(dev->flags & ATA_DFLAG_NCQ_PRIO)) {
++		if (ata_id_has_ncq_prio(dev->id))
++			ata_dev_config_ncq_prio(dev);
+ 	}
+ 
+-	if (input)
++	spin_lock_irqsave(ap->lock, flags);
++	if (input) {
++		if (!(dev->flags & ATA_DFLAG_NCQ_PRIO)) {
++			rc = -EOPNOTSUPP;
++			goto unlock;
++		}
++
+ 		dev->flags |= ATA_DFLAG_NCQ_PRIO_ENABLE;
+-	else
++	} else {
+ 		dev->flags &= ~ATA_DFLAG_NCQ_PRIO_ENABLE;
++	}
+ 
+ unlock:
+ 	spin_unlock_irqrestore(ap->lock, flags);
 -- 
 2.7.4
+
