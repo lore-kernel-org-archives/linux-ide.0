@@ -1,16 +1,16 @@
 From: Adam Manzanares <adam.manzanares@hgst.com>
-Subject: [PATCH v7 4/4] ata: set ncq_prio_enabled iff device has support
-Date: Tue, 6 Dec 2016 09:18:05 -0800
-Message-ID: <1481044685-2803-5-git-send-email-adam.manzanares@hgst.com>
+Subject: [PATCH v7 3/4] ata: ATA Command Priority Disabled By Default
+Date: Tue, 6 Dec 2016 09:18:04 -0800
+Message-ID: <1481044685-2803-4-git-send-email-adam.manzanares@hgst.com>
 References: <1481044685-2803-1-git-send-email-adam.manzanares@hgst.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0058.outbound.protection.outlook.com ([104.47.32.58]:56148
+Received: from mail-sn1nam01on0073.outbound.protection.outlook.com ([104.47.32.73]:41504
         "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751180AbcLFRdp (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Tue, 6 Dec 2016 12:33:45 -0500
+        id S1751689AbcLFRfD (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 6 Dec 2016 12:35:03 -0500
 In-Reply-To: <1481044685-2803-1-git-send-email-adam.manzanares@hgst.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
@@ -19,76 +19,155 @@ Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.ke
 
 From: Adam Manzanares <adam.manzanares@wdc.com>
 
-We previously had a check to see if the device has support for
-prioritized ncq commands and a check to see if a device flag
-is set, through a sysfs variable, in order to send a prioritized
-command.
+Add a sysfs entry to turn on priority information being passed
+to a ATA device. By default this feature is turned off.
 
-This patch only allows the sysfs variable to be set if the device
-supports prioritized commands enabling one check in ata_build_rw_tf
-in order to determine whether or not to send a prioritized command.
+This patch depends on ata: Enabling ATA Command Priorities
 
-This patch depends on ata: ATA Command Priority Disabled By Default
-
-tj: Minor subject and formatting updates.
+tj: Renamed ncq_prio_on to ncq_prio_enable and removed trivial
+    ata_ncq_prio_on() and open-coded the test.
 
 Signed-off-by: Adam Manzanares <adam.manzanares@wdc.com>
 ---
- drivers/ata/libata-core.c |  3 +--
- drivers/ata/libata-scsi.c | 21 +++++++++++++++------
- 2 files changed, 16 insertions(+), 8 deletions(-)
+ drivers/ata/libahci.c     |  1 +
+ drivers/ata/libata-core.c |  3 ++-
+ drivers/ata/libata-scsi.c | 69 +++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/libata.h    |  2 ++
+ 4 files changed, 74 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 0d028ea..ee7db31 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -140,6 +140,7 @@ EXPORT_SYMBOL_GPL(ahci_shost_attrs);
+ struct device_attribute *ahci_sdev_attrs[] = {
+ 	&dev_attr_sw_activity,
+ 	&dev_attr_unload_heads,
++	&dev_attr_ncq_prio_enable,
+ 	NULL
+ };
+ EXPORT_SYMBOL_GPL(ahci_sdev_attrs);
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index f6a631a..324e76e 100644
+index 5d16363..f6a631a 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -787,8 +787,7 @@ int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
+@@ -787,7 +787,8 @@ int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
  		if (tf->flags & ATA_TFLAG_FUA)
  			tf->device |= 1 << 7;
  
--		if ((dev->flags & ATA_DFLAG_NCQ_PRIO) &&
--		    (dev->flags & ATA_DFLAG_NCQ_PRIO_ENABLE)) {
-+		if (dev->flags & ATA_DFLAG_NCQ_PRIO_ENABLE) {
+-		if (dev->flags & ATA_DFLAG_NCQ_PRIO) {
++		if ((dev->flags & ATA_DFLAG_NCQ_PRIO) &&
++		    (dev->flags & ATA_DFLAG_NCQ_PRIO_ENABLE)) {
  			if (class == IOPRIO_CLASS_RT)
  				tf->hob_nsect |= ATA_PRIO_HIGH <<
  						 ATA_SHIFT_PRIO;
 diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 328a601..c24cbf1 100644
+index 2bccc3c..328a601 100644
 --- a/drivers/ata/libata-scsi.c
 +++ b/drivers/ata/libata-scsi.c
-@@ -317,17 +317,26 @@ static ssize_t ata_ncq_prio_enable_store(struct device *device,
+@@ -271,6 +271,74 @@ DEVICE_ATTR(unload_heads, S_IRUGO | S_IWUSR,
+ 	    ata_scsi_park_show, ata_scsi_park_store);
+ EXPORT_SYMBOL_GPL(dev_attr_unload_heads);
  
- 	ap = ata_shost_to_port(sdev->host);
- 
--	spin_lock_irqsave(ap->lock, flags);
- 	dev = ata_scsi_find_dev(ap, sdev);
--	if (unlikely(!dev)) {
--		rc = -ENODEV;
--		goto unlock;
-+	if (unlikely(!dev))
-+		return  -ENODEV;
++static ssize_t ata_ncq_prio_enable_show(struct device *device,
++					struct device_attribute *attr,
++					char *buf)
++{
++	struct scsi_device *sdev = to_scsi_device(device);
++	struct ata_port *ap;
++	struct ata_device *dev;
++	bool ncq_prio_enable;
++	int rc = 0;
 +
-+	if (!(dev->flags & ATA_DFLAG_NCQ_PRIO)) {
-+		if (ata_id_has_ncq_prio(dev->id))
-+			ata_dev_config_ncq_prio(dev);
- 	}
- 
--	if (input)
-+	spin_lock_irqsave(ap->lock, flags);
-+	if (input) {
-+		if (!(dev->flags & ATA_DFLAG_NCQ_PRIO)) {
-+			rc = -EOPNOTSUPP;
-+			goto unlock;
-+		}
++	ap = ata_shost_to_port(sdev->host);
 +
- 		dev->flags |= ATA_DFLAG_NCQ_PRIO_ENABLE;
--	else
-+	} else {
- 		dev->flags &= ~ATA_DFLAG_NCQ_PRIO_ENABLE;
++	spin_lock_irq(ap->lock);
++	dev = ata_scsi_find_dev(ap, sdev);
++	if (!dev) {
++		rc = -ENODEV;
++		goto unlock;
 +	}
++
++	ncq_prio_enable = dev->flags & ATA_DFLAG_NCQ_PRIO_ENABLE;
++
++unlock:
++	spin_unlock_irq(ap->lock);
++
++	return rc ? rc : snprintf(buf, 20, "%u\n", ncq_prio_enable);
++}
++
++static ssize_t ata_ncq_prio_enable_store(struct device *device,
++					 struct device_attribute *attr,
++					 const char *buf, size_t len)
++{
++	struct scsi_device *sdev = to_scsi_device(device);
++	struct ata_port *ap;
++	struct ata_device *dev;
++	long int input;
++	unsigned long flags;
++	int rc;
++
++	rc = kstrtol(buf, 10, &input);
++	if (rc)
++		return rc;
++	if ((input < 0) || (input > 1))
++		return -EINVAL;
++
++	ap = ata_shost_to_port(sdev->host);
++
++	spin_lock_irqsave(ap->lock, flags);
++	dev = ata_scsi_find_dev(ap, sdev);
++	if (unlikely(!dev)) {
++		rc = -ENODEV;
++		goto unlock;
++	}
++
++	if (input)
++		dev->flags |= ATA_DFLAG_NCQ_PRIO_ENABLE;
++	else
++		dev->flags &= ~ATA_DFLAG_NCQ_PRIO_ENABLE;
++
++unlock:
++	spin_unlock_irqrestore(ap->lock, flags);
++
++	return rc ? rc : len;
++}
++
++DEVICE_ATTR(ncq_prio_enable, S_IRUGO | S_IWUSR,
++	    ata_ncq_prio_enable_show, ata_ncq_prio_enable_store);
++EXPORT_SYMBOL_GPL(dev_attr_ncq_prio_enable);
++
+ void ata_scsi_set_sense(struct ata_device *dev, struct scsi_cmnd *cmd,
+ 			u8 sk, u8 asc, u8 ascq)
+ {
+@@ -402,6 +470,7 @@ EXPORT_SYMBOL_GPL(dev_attr_sw_activity);
  
- unlock:
- 	spin_unlock_irqrestore(ap->lock, flags);
+ struct device_attribute *ata_common_sdev_attrs[] = {
+ 	&dev_attr_unload_heads,
++	&dev_attr_ncq_prio_enable,
+ 	NULL
+ };
+ EXPORT_SYMBOL_GPL(ata_common_sdev_attrs);
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 90b69a6..c170be5 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -167,6 +167,7 @@ enum {
+ 	ATA_DFLAG_UNLOCK_HPA	= (1 << 18), /* unlock HPA */
+ 	ATA_DFLAG_NCQ_SEND_RECV = (1 << 19), /* device supports NCQ SEND and RECV */
+ 	ATA_DFLAG_NCQ_PRIO	= (1 << 20), /* device supports NCQ priority */
++	ATA_DFLAG_NCQ_PRIO_ENABLE = (1 << 21), /* Priority cmds sent to dev */
+ 	ATA_DFLAG_INIT_MASK	= (1 << 24) - 1,
+ 
+ 	ATA_DFLAG_DETACH	= (1 << 24),
+@@ -545,6 +546,7 @@ typedef void (*ata_postreset_fn_t)(struct ata_link *link, unsigned int *classes)
+ 
+ extern struct device_attribute dev_attr_link_power_management_policy;
+ extern struct device_attribute dev_attr_unload_heads;
++extern struct device_attribute dev_attr_ncq_prio_enable;
+ extern struct device_attribute dev_attr_em_message_type;
+ extern struct device_attribute dev_attr_em_message;
+ extern struct device_attribute dev_attr_sw_activity;
 -- 
 2.7.4
 
