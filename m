@@ -1,60 +1,205 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v7 0/4] Enabling ATA Command Priorities
-Date: Tue, 6 Dec 2016 13:37:33 -0500
-Message-ID: <20161206183733.GA26314@mtj.duckdns.org>
+From: Adam Manzanares <adam.manzanares@hgst.com>
+Subject: [PATCH v7 2/4] ata: Enabling ATA Command Priorities
+Date: Tue, 6 Dec 2016 09:18:03 -0800
+Message-ID: <1481044685-2803-3-git-send-email-adam.manzanares@hgst.com>
 References: <1481044685-2803-1-git-send-email-adam.manzanares@hgst.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:35683 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751488AbcLFShg (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 6 Dec 2016 13:37:36 -0500
-Content-Disposition: inline
+Received: from mail-co1nam03on0060.outbound.protection.outlook.com ([104.47.40.60]:52096
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751166AbcLFSuK (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 6 Dec 2016 13:50:10 -0500
 In-Reply-To: <1481044685-2803-1-git-send-email-adam.manzanares@hgst.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Adam Manzanares <adam.manzanares@hgst.com>
-Cc: axboe@kernel.dk, hare@suse.de, mchristi@redhat.com, dan.j.williams@intel.com, martin.petersen@oracle.com, toshi.kani@hpe.com, damien.lemoal@hgst.com, ming.lei@canonical.com, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Adam Manzanares <adam.manzanares@wdc.com>
+To: axboe@kernel.dk, hare@suse.de, mchristi@redhat.com, dan.j.williams@intel.com, martin.petersen@oracle.com, toshi.kani@hpe.com, damien.lemoal@hgst.com, ming.lei@canonical.com, tj@kernel.org
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Adam Manzanares <adam.manzanares@wdc.com>
 
-Adam,
+From: Adam Manzanares <adam.manzanares@wdc.com>
 
-On Tue, Dec 06, 2016 at 09:18:01AM -0800, Adam Manzanares wrote:
-> From: Adam Manzanares <adam.manzanares@wdc.com>
-> 
-> This patch builds ATA commands with high priority if the iocontext of a process
-> is set to real time. The goal of the patch is to improve tail latencies of 
-> workloads that use higher queue depths. This requires setting the iocontext 
-> ioprio on the request when it is initialized
-> 
-> This patch has been tested with an Ultrastar HE8 HDD and cuts the 
-> the p99.99 tail latency of foreground IO from 2s down to 72ms when
-> using the deadline scheduler. This patch works independently of the
-> scheduler so it can be used with all of the currently available 
-> request based schedulers. 
-> 
-> Foreground IO, for the previously described results, is an async fio job 
-> submitting 4K read requests at a QD of 1 to the HDD. The foreground IO is set 
-> with the iopriority class of real time. The background workload is another fio
-> job submitting read requests at a QD of 32 to the same HDD with default 
-> iopriority.
-> 
-> This feature is enabled for ATA devices by setting the ata ncq_prio_enable 
-> device attribute to 1. An ATA device is also checked to see if the device 
-> supports per command priority.
-> 
-> v7:
->  - Run ncq prio support check when sysfs variable set (zero day bug fix)
->  - Fixes from TJ merged in
->  - Merge fix for linux-next incorporated
+This patch checks to see if an ATA device supports NCQ command priorities.
+If so and the user has specified an iocontext that indicates
+IO_PRIO_CLASS_RT then we build a tf with a high priority command.
 
-The previous version has already been merged into libata/for-4.10.
-Can you please send me an incremental patch on top of it?  The tree
-can be fetched from
+This is done to improve the tail latency of commands that are high
+priority by passing priority to the device.
 
- git://git.kernel.org/pub/scm/linux/kernel/git/tj/libata.git for-4.10
+tj: Removed trivial ata_ncq_prio_enabled() and open-coded the test.
 
-Thanks.
+Signed-off-by: Adam Manzanares <adam.manzanares@wdc.com>
+---
+ drivers/ata/libata-core.c | 33 ++++++++++++++++++++++++++++++++-
+ drivers/ata/libata-scsi.c |  6 +++++-
+ drivers/ata/libata.h      |  3 ++-
+ include/linux/ata.h       |  6 ++++++
+ include/linux/libata.h    |  3 +++
+ 5 files changed, 48 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 223a770..5d16363 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -739,6 +739,7 @@ u64 ata_tf_read_block(const struct ata_taskfile *tf, struct ata_device *dev)
+  *	@n_block: Number of blocks
+  *	@tf_flags: RW/FUA etc...
+  *	@tag: tag
++ *	@class: IO priority class
+  *
+  *	LOCKING:
+  *	None.
+@@ -753,7 +754,7 @@ u64 ata_tf_read_block(const struct ata_taskfile *tf, struct ata_device *dev)
+  */
+ int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
+ 		    u64 block, u32 n_block, unsigned int tf_flags,
+-		    unsigned int tag)
++		    unsigned int tag, int class)
+ {
+ 	tf->flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
+ 	tf->flags |= tf_flags;
+@@ -785,6 +786,12 @@ int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
+ 		tf->device = ATA_LBA;
+ 		if (tf->flags & ATA_TFLAG_FUA)
+ 			tf->device |= 1 << 7;
++
++		if (dev->flags & ATA_DFLAG_NCQ_PRIO) {
++			if (class == IOPRIO_CLASS_RT)
++				tf->hob_nsect |= ATA_PRIO_HIGH <<
++						 ATA_SHIFT_PRIO;
++		}
+ 	} else if (dev->flags & ATA_DFLAG_LBA) {
+ 		tf->flags |= ATA_TFLAG_LBA;
+ 
+@@ -2156,6 +2163,30 @@ static void ata_dev_config_ncq_non_data(struct ata_device *dev)
+ 	}
+ }
+ 
++void ata_dev_config_ncq_prio(struct ata_device *dev)
++{
++	struct ata_port *ap = dev->link->ap;
++	unsigned int err_mask;
++
++	err_mask = ata_read_log_page(dev,
++				     ATA_LOG_SATA_ID_DEV_DATA,
++				     ATA_LOG_SATA_SETTINGS,
++				     ap->sector_buf,
++				     1);
++	if (err_mask) {
++		ata_dev_dbg(dev,
++			    "failed to get Identify Device data, Emask 0x%x\n",
++			    err_mask);
++		return;
++	}
++
++	if (ap->sector_buf[ATA_LOG_NCQ_PRIO_OFFSET] & BIT(3))
++		dev->flags |= ATA_DFLAG_NCQ_PRIO;
++	else
++		ata_dev_dbg(dev, "SATA page does not support priority\n");
++
++}
++
+ static int ata_dev_config_ncq(struct ata_device *dev,
+ 			       char *desc, size_t desc_sz)
+ {
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 9cceb4a..2bccc3c 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -50,6 +50,7 @@
+ #include <linux/uaccess.h>
+ #include <linux/suspend.h>
+ #include <asm/unaligned.h>
++#include <linux/ioprio.h>
+ 
+ #include "libata.h"
+ #include "libata-transport.h"
+@@ -1755,6 +1756,8 @@ static unsigned int ata_scsi_rw_xlat(struct ata_queued_cmd *qc)
+ {
+ 	struct scsi_cmnd *scmd = qc->scsicmd;
+ 	const u8 *cdb = scmd->cmnd;
++	struct request *rq = scmd->request;
++	int class = IOPRIO_PRIO_CLASS(req_get_ioprio(rq));
+ 	unsigned int tf_flags = 0;
+ 	u64 block;
+ 	u32 n_block;
+@@ -1821,7 +1824,8 @@ static unsigned int ata_scsi_rw_xlat(struct ata_queued_cmd *qc)
+ 	qc->nbytes = n_block * scmd->device->sector_size;
+ 
+ 	rc = ata_build_rw_tf(&qc->tf, qc->dev, block, n_block, tf_flags,
+-			     qc->tag);
++			     qc->tag, class);
++
+ 	if (likely(rc == 0))
+ 		return 0;
+ 
+diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+index 3b301a4..03d0908 100644
+--- a/drivers/ata/libata.h
++++ b/drivers/ata/libata.h
+@@ -66,7 +66,7 @@ extern u64 ata_tf_to_lba48(const struct ata_taskfile *tf);
+ extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev, int tag);
+ extern int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
+ 			   u64 block, u32 n_block, unsigned int tf_flags,
+-			   unsigned int tag);
++			   unsigned int tag, int class);
+ extern u64 ata_tf_read_block(const struct ata_taskfile *tf,
+ 			     struct ata_device *dev);
+ extern unsigned ata_exec_internal(struct ata_device *dev,
+@@ -85,6 +85,7 @@ extern int ata_dev_reread_id(struct ata_device *dev, unsigned int readid_flags);
+ extern int ata_dev_revalidate(struct ata_device *dev, unsigned int new_class,
+ 			      unsigned int readid_flags);
+ extern int ata_dev_configure(struct ata_device *dev);
++extern void ata_dev_config_ncq_prio(struct ata_device *dev);
+ extern int sata_down_spd_limit(struct ata_link *link, u32 spd_limit);
+ extern int ata_down_xfermask_limit(struct ata_device *dev, unsigned int sel);
+ extern unsigned int ata_dev_set_feature(struct ata_device *dev,
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index fdb1803..af6859b 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -348,6 +348,7 @@ enum {
+ 	ATA_LOG_DEVSLP_DETO	  = 0x01,
+ 	ATA_LOG_DEVSLP_VALID	  = 0x07,
+ 	ATA_LOG_DEVSLP_VALID_MASK = 0x80,
++	ATA_LOG_NCQ_PRIO_OFFSET   = 0x09,
+ 
+ 	/* NCQ send and receive log */
+ 	ATA_LOG_NCQ_SEND_RECV_SUBCMDS_OFFSET	= 0x00,
+@@ -940,6 +941,11 @@ static inline bool ata_id_has_ncq_non_data(const u16 *id)
+ 	return id[ATA_ID_SATA_CAPABILITY_2] & BIT(5);
+ }
+ 
++static inline bool ata_id_has_ncq_prio(const u16 *id)
++{
++	return id[ATA_ID_SATA_CAPABILITY] & BIT(12);
++}
++
+ static inline bool ata_id_has_trim(const u16 *id)
+ {
+ 	if (ata_id_major_version(id) >= 7 &&
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 616eef4..90b69a6 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -166,6 +166,7 @@ enum {
+ 	ATA_DFLAG_NO_UNLOAD	= (1 << 17), /* device doesn't support unload */
+ 	ATA_DFLAG_UNLOCK_HPA	= (1 << 18), /* unlock HPA */
+ 	ATA_DFLAG_NCQ_SEND_RECV = (1 << 19), /* device supports NCQ SEND and RECV */
++	ATA_DFLAG_NCQ_PRIO	= (1 << 20), /* device supports NCQ priority */
+ 	ATA_DFLAG_INIT_MASK	= (1 << 24) - 1,
+ 
+ 	ATA_DFLAG_DETACH	= (1 << 24),
+@@ -342,7 +343,9 @@ enum {
+ 	ATA_SHIFT_PIO		= 0,
+ 	ATA_SHIFT_MWDMA		= ATA_SHIFT_PIO + ATA_NR_PIO_MODES,
+ 	ATA_SHIFT_UDMA		= ATA_SHIFT_MWDMA + ATA_NR_MWDMA_MODES,
++	ATA_SHIFT_PRIO		= 6,
+ 
++	ATA_PRIO_HIGH		= 2,
+ 	/* size of buffer to pad xfers ending on unaligned boundaries */
+ 	ATA_DMA_PAD_SZ		= 4,
+ 
 -- 
-tejun
+2.7.4
+
