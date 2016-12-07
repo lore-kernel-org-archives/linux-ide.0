@@ -1,77 +1,30 @@
-From: Nicolai Stange <nicstange@gmail.com>
-Subject: [PATCH] libata-scsi: disable SCT Write Same for the moment
-Date: Wed,  7 Dec 2016 22:21:33 +0100
-Message-ID: <20161207212133.3463-1-nicstange@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] libata-scsi: disable SCT Write Same for the moment
+Date: Wed, 7 Dec 2016 16:32:22 -0500
+Message-ID: <20161207213222.GC22296@htj.duckdns.org>
+References: <20161207212133.3463-1-nicstange@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wj0-f194.google.com ([209.85.210.194]:33066 "EHLO
-        mail-wj0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752918AbcLGVWu (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 7 Dec 2016 16:22:50 -0500
+Received: from mail-qt0-f195.google.com ([209.85.216.195]:36826 "EHLO
+        mail-qt0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932503AbcLGVcY (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 7 Dec 2016 16:32:24 -0500
+Content-Disposition: inline
+In-Reply-To: <20161207212133.3463-1-nicstange@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Shaun Tancheff <shaun.tancheff@seagate.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Nicolai Stange <nicstange@gmail.com>
+To: Nicolai Stange <nicstange@gmail.com>
+Cc: Shaun Tancheff <shaun.tancheff@seagate.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-SCT Write Same support had been introduced with
-commit 7b2030942859 ("libata: Add support for SCT Write Same")
+On Wed, Dec 07, 2016 at 10:21:33PM +0100, Nicolai Stange wrote:
+> It can certainly be fixed, but the final release is quite close -- so
+> disable SCT Write Same for all ATA devices rather than introducing some
+> SCT key buffer allocation schemes at this point.
 
-Some problems, namely excessive userspace segfaults, had been reported at
+Applied to libata/for-4.9-fixes.  Will push out soon.
 
-  http://lkml.kernel.org/r/20160908192736.GA4356@gmail.com
+Thanks.
 
-This lead to commit 0ce1b18c42a5 ("libata: Some drives failing on
-SCT Write Same") which strived to disable SCT Write Same on !ZAC devices.
-Due to the way this was done and to the logic in sd_config_write_same(),
-this didn't work for those devices that have
-->max_ws_blocks > SD_MAX_WS10_BLOCKS: for these, ->no_write_same and
-->max_write_same_sectors would still be non-zero,
-but ->ws10 == ->ws16 == 0. This would cause sd_setup_write_same_cmnd() to
-demultiplex REQ_OP_WRITE_SAME requests to WRITE_SAME, and these in turn
-aren't supported by libata-scsi:
-
-  EXT4-fs (dm-1): Delayed block allocation failed for inode 2625094 at
-                  logical offset 2032 with max blocks 2 with error 121
-  EXT4-fs (dm-1): This should not happen!! Data will be lost
-
-121 == EREMOTEIO is what scsi_io_completion() asserts in case of
-invalid opcodes.
-
-Back to the original problem of userspace segfaults: this can be tracked
-down to ata_format_sct_write_same() overwriting the input page. Sometimes,
-this page is ZERO_PAGE(0) which ceases to be filled with zeros from that
-point on. Since ZERO_PAGE(0) is used for userspace .bss mappings, code of
-the following is doomed:
-
-  static char *a = NULL; /* .bss */
-  ...
-  if (a)
-    *a = 'a';
-
-This problem is not solved by disabling SCT Write Same for !ZAC devices
-only.
-
-It can certainly be fixed, but the final release is quite close -- so
-disable SCT Write Same for all ATA devices rather than introducing some
-SCT key buffer allocation schemes at this point.
-
-Fixes: 7b2030942859 ("libata: Add support for SCT Write Same")
-Signed-off-by: Nicolai Stange <nicstange@gmail.com>
----
- drivers/ata/libata-scsi.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 982bcfc..c9abb87 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1234,6 +1234,7 @@ static void ata_scsi_sdev_config(struct scsi_device *sdev)
- {
- 	sdev->use_10_for_rw = 1;
- 	sdev->use_10_for_ms = 1;
-+	sdev->no_write_same = 1;
- 
- 	/* Schedule policy is determined by ->qc_defer() callback and
- 	 * it needs to see every deferred qc.  Set dev_blocked to 1 to
 -- 
-2.10.2
-
+tejun
