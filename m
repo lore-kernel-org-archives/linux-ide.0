@@ -1,50 +1,77 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: LSF/MM 2017: Call for Proposals
-Date: Wed, 07 Dec 2016 06:57:06 -0800
-Message-ID: <1481122626.2354.14.camel@HansenPartnership.com>
-References: <1480601506.2511.7.camel@poochiereds.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <1480601506.2511.7.camel@poochiereds.net>
-Sender: owner-linux-mm@kvack.org
-To: Jeff Layton <jlayton@poochiereds.net>, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, ceph-devel@vger.kernel.org, linux-nvme@lists.infradead.org
-Cc: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
+From: Nicolai Stange <nicstange@gmail.com>
+Subject: [PATCH] libata-scsi: disable SCT Write Same for the moment
+Date: Wed,  7 Dec 2016 22:21:33 +0100
+Message-ID: <20161207212133.3463-1-nicstange@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-wj0-f194.google.com ([209.85.210.194]:33066 "EHLO
+        mail-wj0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752918AbcLGVWu (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 7 Dec 2016 16:22:50 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Shaun Tancheff <shaun.tancheff@seagate.com>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, Nicolai Stange <nicstange@gmail.com>
 
-On Thu, 2016-12-01 at 09:11 -0500, Jeff Layton wrote:
-> 1) Proposals for agenda topics should be sent before January 15th, 
-> 2016 to:
-> 
->     lsf-pc@lists.linux-foundation.org
-> 
-> and cc the Linux list or lists that are relevant for the topic in
-> question:
-> 
->     ATA:   linux-ide@vger.kernel.org
->     Block: linux-block@vger.kernel.org
->     FS:    linux-fsdevel@vger.kernel.org
->     MM:    linux-mm@kvack.org
->     SCSI:  linux-scsi@vger.kernel.org
->     NVMe:  linux-nvme@lists.infradead.org
-> 
-> Please tag your proposal with [LSF/MM TOPIC] to make it easier to 
-> track.
+SCT Write Same support had been introduced with
+commit 7b2030942859 ("libata: Add support for SCT Write Same")
 
-Just on this point, since there seems to be a lot of confusion: lsf-pc
-is the list for contacting the programme committee, so you cannot
-subscribe to it.
+Some problems, namely excessive userspace segfaults, had been reported at
 
-There is no -discuss equivalent, like kernel summit has, because we
-expect you to cc the relevant existing mailing list and have the
-discussion there instead rather than expecting people to subscribe to a
-new list.
+  http://lkml.kernel.org/r/20160908192736.GA4356@gmail.com
 
-James
+This lead to commit 0ce1b18c42a5 ("libata: Some drives failing on
+SCT Write Same") which strived to disable SCT Write Same on !ZAC devices.
+Due to the way this was done and to the logic in sd_config_write_same(),
+this didn't work for those devices that have
+->max_ws_blocks > SD_MAX_WS10_BLOCKS: for these, ->no_write_same and
+->max_write_same_sectors would still be non-zero,
+but ->ws10 == ->ws16 == 0. This would cause sd_setup_write_same_cmnd() to
+demultiplex REQ_OP_WRITE_SAME requests to WRITE_SAME, and these in turn
+aren't supported by libata-scsi:
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+  EXT4-fs (dm-1): Delayed block allocation failed for inode 2625094 at
+                  logical offset 2032 with max blocks 2 with error 121
+  EXT4-fs (dm-1): This should not happen!! Data will be lost
+
+121 == EREMOTEIO is what scsi_io_completion() asserts in case of
+invalid opcodes.
+
+Back to the original problem of userspace segfaults: this can be tracked
+down to ata_format_sct_write_same() overwriting the input page. Sometimes,
+this page is ZERO_PAGE(0) which ceases to be filled with zeros from that
+point on. Since ZERO_PAGE(0) is used for userspace .bss mappings, code of
+the following is doomed:
+
+  static char *a = NULL; /* .bss */
+  ...
+  if (a)
+    *a = 'a';
+
+This problem is not solved by disabling SCT Write Same for !ZAC devices
+only.
+
+It can certainly be fixed, but the final release is quite close -- so
+disable SCT Write Same for all ATA devices rather than introducing some
+SCT key buffer allocation schemes at this point.
+
+Fixes: 7b2030942859 ("libata: Add support for SCT Write Same")
+Signed-off-by: Nicolai Stange <nicstange@gmail.com>
+---
+ drivers/ata/libata-scsi.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 982bcfc..c9abb87 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1234,6 +1234,7 @@ static void ata_scsi_sdev_config(struct scsi_device *sdev)
+ {
+ 	sdev->use_10_for_rw = 1;
+ 	sdev->use_10_for_ms = 1;
++	sdev->no_write_same = 1;
+ 
+ 	/* Schedule policy is determined by ->qc_defer() callback and
+ 	 * it needs to see every deferred qc.  Set dev_blocked to 1 to
+-- 
+2.10.2
+
