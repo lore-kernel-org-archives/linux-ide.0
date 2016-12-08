@@ -1,51 +1,42 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: LSF/MM 2017: Call for Proposals
-Date: Thu, 8 Dec 2016 16:37:40 +0100
-Message-ID: <20161208153740.GF26530@dhcp22.suse.cz>
-References: <1480601506.2511.7.camel@poochiereds.net>
- <1481122626.2354.14.camel@HansenPartnership.com>
- <20161208122619.GA26535@dhcp22.suse.cz>
- <1481211043.2361.1.camel@HansenPartnership.com>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: Re: [RFC PATCH 00/19] ide: remove deprecated host drivers (part 1)
+Date: Thu, 08 Dec 2016 17:15:16 +0100
+Message-ID: <5007114.YSRHeGyTgl@amdc3058>
+References: <1454593456-3162-1-git-send-email-b.zolnierkie@samsung.com>
+ <3280015.pSoKvQuVNQ@amdc3058>
+ <20161208.102308.460750923427290066.davem@davemloft.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <1481211043.2361.1.camel@HansenPartnership.com>
-Sender: owner-linux-mm@kvack.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jeff Layton <jlayton@poochiereds.net>, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, ceph-devel@vger.kernel.org, linux-nvme@lists.infradead.org, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mailout2.samsung.com ([203.254.224.25]:53357 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753207AbcLHQPU (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 8 Dec 2016 11:15:20 -0500
+In-reply-to: <20161208.102308.460750923427290066.davem@davemloft.net>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, tj@kernel.org, gnomes@lxorguk.ukuu.org.uk, sergei.shtylyov@cogentembedded.com
 
-On Thu 08-12-16 07:30:43, James Bottomley wrote:
-> On Thu, 2016-12-08 at 13:26 +0100, Michal Hocko wrote:
-> > On Wed 07-12-16 06:57:06, James Bottomley wrote:
-> > [...]
-> > > Just on this point, since there seems to be a lot of confusion: lsf
-> > > -pc
-> > > is the list for contacting the programme committee, so you cannot
-> > > subscribe to it.
-> > > 
-> > > There is no -discuss equivalent, like kernel summit has, because we
-> > > expect you to cc the relevant existing mailing list and have the
-> > > discussion there instead rather than expecting people to subscribe
-> > > to a
-> > > new list.
-> > 
-> > There used to be lsf@lists.linux-foundation.org. Is it not active
-> > anymore?
+On Thursday, December 08, 2016 10:23:08 AM David Miller wrote:
+> From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+> Date: Thu, 08 Dec 2016 14:42:12 +0100
 > 
-> Not until we get the list of invitees sorted out.  And then it's only
-> for stuff actually to do with lsf (like logistics, bof or session
-> requests or other meetups).  Any technical stuff should still be cc'd
-> to the relevant mailing list.
+> > Ping.. since there was no negative (or any other) feedback I think that
+> > this can be put into -next for some wider exposure..
+> 
+> I'm not going to apply this and break things on people, sorry.
 
-OK, I tend to forget about that. Thanks for the clarification!
--- 
-Michal Hocko
-SUSE Labs
+People building their own kernels with their own kernel config files
+and still using IDE drivers (deprecated in 2009 BTW) will have to
+update their setups to libata but otherwise nothing is supposed to
+break.  So could you please explain in more detail what do you mean
+by "break things on people"?
 
+Best regards,
 --
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
+
