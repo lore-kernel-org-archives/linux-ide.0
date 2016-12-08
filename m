@@ -1,28 +1,46 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [RFC PATCH 00/19] ide: remove deprecated host drivers (part 1)
-Date: Thu, 08 Dec 2016 10:23:08 -0500 (EST)
-Message-ID: <20161208.102308.460750923427290066.davem@davemloft.net>
-References: <1454593456-3162-1-git-send-email-b.zolnierkie@samsung.com>
-        <3317462.LGzQYRpeb4@amdc1976>
-        <3280015.pSoKvQuVNQ@amdc3058>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: LSF/MM 2017: Call for Proposals
+Date: Thu, 08 Dec 2016 07:30:43 -0800
+Message-ID: <1481211043.2361.1.camel@HansenPartnership.com>
+References: <1480601506.2511.7.camel@poochiereds.net>
+	 <1481122626.2354.14.camel@HansenPartnership.com>
+	 <20161208122619.GA26535@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:32770 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751905AbcLHPXK (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 8 Dec 2016 10:23:10 -0500
-In-Reply-To: <3280015.pSoKvQuVNQ@amdc3058>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20161208122619.GA26535@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Jeff Layton <jlayton@poochiereds.net>, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, ceph-devel@vger.kernel.org, linux-nvme@lists.infradead.org, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
 List-Id: linux-ide@vger.kernel.org
-To: b.zolnierkie@samsung.com
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, tj@kernel.org, gnomes@lxorguk.ukuu.org.uk, sergei.shtylyov@cogentembedded.com
 
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Date: Thu, 08 Dec 2016 14:42:12 +0100
+On Thu, 2016-12-08 at 13:26 +0100, Michal Hocko wrote:
+> On Wed 07-12-16 06:57:06, James Bottomley wrote:
+> [...]
+> > Just on this point, since there seems to be a lot of confusion: lsf
+> > -pc
+> > is the list for contacting the programme committee, so you cannot
+> > subscribe to it.
+> > 
+> > There is no -discuss equivalent, like kernel summit has, because we
+> > expect you to cc the relevant existing mailing list and have the
+> > discussion there instead rather than expecting people to subscribe
+> > to a
+> > new list.
+> 
+> There used to be lsf@lists.linux-foundation.org. Is it not active
+> anymore?
 
-> Ping.. since there was no negative (or any other) feedback I think that
-> this can be put into -next for some wider exposure..
+Not until we get the list of invitees sorted out.  And then it's only
+for stuff actually to do with lsf (like logistics, bof or session
+requests or other meetups).  Any technical stuff should still be cc'd
+to the relevant mailing list.
 
-I'm not going to apply this and break things on people, sorry.
+James
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
