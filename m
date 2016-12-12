@@ -1,94 +1,97 @@
-From: Sekhar Nori <nsekhar@ti.com>
-Subject: Re: [RESEND PATCH] arm: assabet_defconfig: disable IDE subsystem
-Date: Mon, 12 Dec 2016 19:24:47 +0530
-Message-ID: <8ea5971a-338d-e8b9-6be8-8fe2658fc04d@ti.com>
-References: <1467991490-24895-1-git-send-email-b.zolnierkie@samsung.com>
- <m27fcn3pb1.fsf@baylibre.com> <578CEB74.2080002@ti.com>
- <5370936.ZbqF1HU8Jz@amdc3058>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] pata_legacy: Allow disabling of legacy PATA device
+ probes on non-PCI systems
+Date: Mon, 12 Dec 2016 12:01:54 -0500
+Message-ID: <20161212170154.GA13864@htj.duckdns.org>
+References: <1480441982-20992-1-git-send-email-tedheadster@gmail.com>
+ <84a95190-9e30-81ac-5f23-744243ba7fce@cogentembedded.com>
+ <20161130145322.252f7403@lxorguk.ukuu.org.uk>
+ <CAP8WD_boGwPZCEPE8hA-AhQnHChrbaM+74LTUy-9__s6ex56Sg@mail.gmail.com>
+ <20161130202201.GA15989@htj.duckdns.org>
+ <CAP8WD_bZWeLBhLXqJG5uDwBe+zBubw+A+ecSuaihOuwvw9QoCQ@mail.gmail.com>
+ <20161202170705.GB6033@htj.duckdns.org>
+ <CAP8WD_bUW9cAAQpvenL73sxvpoxNYwZdRqpj92YWEyanK51+0g@mail.gmail.com>
+ <20161205192310.GA30331@mtj.duckdns.org>
+ <CAP8WD_becq+h2=-g7t-6Pp1psmkCCvdB0YUcg+wYPocUP4dYdw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from fllnx209.ext.ti.com ([198.47.19.16]:51422 "EHLO
-        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752583AbcLLNze (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 12 Dec 2016 08:55:34 -0500
-In-Reply-To: <5370936.ZbqF1HU8Jz@amdc3058>
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:36602 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752188AbcLLRB5 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 12 Dec 2016 12:01:57 -0500
+Received: by mail-qt0-f196.google.com with SMTP id n34so10595134qtb.3
+        for <linux-ide@vger.kernel.org>; Mon, 12 Dec 2016 09:01:56 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <CAP8WD_becq+h2=-g7t-6Pp1psmkCCvdB0YUcg+wYPocUP4dYdw@mail.gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: Kevin Hilman <khilman@baylibre.com>, Arnd Bergmann <arnd@arndb.de>, linux-arm-kernel@lists.infradead.org, Russell King <linux@arm.linux.org.uk>, Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Olof Johansson <olof@lixom.net>
+To: whiteheadm@acm.org
+Cc: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, linux-ide@vger.kernel.org
 
-Hi Bartlomiej,
+Hello,
 
-On Monday 12 December 2016 06:15 PM, Bartlomiej Zolnierkiewicz wrote:
+On Fri, Dec 09, 2016 at 12:57:02PM -0500, tedheadster wrote:
+> ​Tejun,
+>   here is the patch I applied:
 > 
-> Hi,
+> diff --git a/drivers/ata/pata_legacy.c b/drivers/ata/pata_legacy.c
+> index 4fe9d21..5c6c578 100644
+> --- a/drivers/ata/pata_legacy.c
+> +++ b/drivers/ata/pata_legacy.c
+> @@ -963,6 +963,9 @@ static __init int legacy_init_one(struct legacy_probe
+> *probe)
+>         if (IS_ERR(pdev))
+>                 return PTR_ERR(pdev);
 > 
-> On Monday, July 18, 2016 08:15:08 PM Sekhar Nori wrote:
->> On Friday 15 July 2016 08:45 PM, Kevin Hilman wrote:
->>> Arnd Bergmann <arnd@arndb.de> writes:
->>>
->>>> On Wednesday, July 13, 2016 12:59:23 PM CEST Bartlomiej Zolnierkiewicz wrote:
->>>>>
->>>>> On Friday, July 08, 2016 10:23:48 PM Arnd Bergmann wrote:
->>>>>> On Friday, July 8, 2016 5:24:41 PM CEST Bartlomiej Zolnierkiewicz wrote:
->>>>>>> This patch disables deprecated IDE subsystem in assabet_defconfig
->>>>>>> (no IDE host drivers are selected in this config so there is no
->>>>>>> valid reason to enable IDE subsystem itself).
->>>>>>>
->>>>>>> Cc: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
->>>>>>> Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
->>>>>>
->>>>>> I think the series makes a lot of sense. I have checked your assertions
->>>>>> in the changelogs and found no flaws in your logic, so I think we should
->>>>>> take them all through arm-soc unless there are other concerns.
->>>>>
->>>>> Thank you.
->>>>>
->>>>> Should I resend everything or just patches that were not reposted yet
->>>>> (the ones that were marked as RFT initially and got no feedback)?
->>>>
->>>> I'd be fine with just getting a pull request with all the patches that
->>>> had no negative feedback and that were not already applied (if any).
->>>>
->>>>>> Do you have a list of ARM defconfigs that keep using CONFIG_IDE and
->>>>>> how you determined that they need it?
->>>>>
->>>>> The only such defconfig is davinci_all_defconfig which uses
->>>>> palm_bk3710 host driver (CONFIG_BLK_DEV_PALMCHIP_BK3710).
->>>>>
->>>>>> I know that ARCH_RPC/ARCH_ACORN has a couple of special drivers that
->>>>>> have no libata replacement, are there any others like that, or are
->>>>>> they all platforms that should in theory work with libata but need
->>>>>> testing?
->>>>>
->>>>> All platforms except ARCH_ACORN, ARCH_DAVINCI & ARCH_RPC should work
->>>>> with libata.
->>>>
->>>> Adding Sekhar and Kevin for DaVinci: At first sight, palm_bk3710 looks
->>>> fairly straightforward (meaning someone has to do a few day's work)
->>>> to convert into a libata driver.
->>>>
->>>> As this is on on-chip controller that is part of a dm644x and dm646x,
->>>> it should also not be hard to test (as long as someone can find
->>>> a hard drive to plug in).
->>>
->>> I have a hard drive, but don't have any dm64xx hardware anymore to test
->>> this.  My last working dm644x board died last year.
->>
->> I have a working DM6446 EVM. I was able to connect a hard drive to it
->> and do some basic tests with v4.6 kernel.
->>
->> I will look into converting the driver to libata. Might take some time
->> because this is unfamiliar territory for me.
-> 
-> Do you need some help with it?
-> 
-> I can provide you with draft driver patch if you want.
+> +       if (!devres_open_group(&pdev->dev, legacy_init_one, GFP_KERNEL))
+> +               return -ENOMEM;
 
-A draft driver patch will really help. I can test/debug. Otherwise, not
-sure when I will really be able to get to this.
+Can you please drop the explicit group open/remove/release?
 
-Regards,
-Sekhar
+>         ret = -EBUSY;
+>         if (devm_request_region(&pdev->dev, io, 8, "pata_legacy") == NULL ||
+>             devm_request_region(&pdev->dev, io + 0x0206, 1,
+> @@ -1009,11 +1012,14 @@ static __init int legacy_init_one(struct
+> legacy_probe *probe)
+>                 if (!ata_dev_absent(dev)) {
+>                         legacy_host[probe->slot] = host;
+>                         ld->platform_dev = pdev;
+> +                       devres_remove_group(&pdev->dev, legacy_init_one);
+>                         return 0;
+>                 }
+>         }
+>         ata_host_detach(host);
+>  fail:
+> +       devres_release_group(&pdev->dev, legacy_init_one);
+> +       printk("XXX pata_legacy: unregistering platform dev %p\n", pdev);
+>         platform_device_unregister(pdev);
+
+So, the thing is that when the platform device is released here, it
+should automatically trigger release of all resources attached to it
+through...
+
+>         return ret;
+>  }
+> diff --git a/drivers/base/core.c b/drivers/base/core.c
+> index a235085..8e8948e 100644
+> --- a/drivers/base/core.c
+> +++ b/drivers/base/core.c
+> @@ -214,6 +214,7 @@ static void device_release(struct kobject *kobj)
+>          * is deleted but alive, so release devres here to avoid
+>          * possible memory leak.
+>          */
+> +       printk("XXX device_release: invoking devres_release_all\n");
+>         devres_release_all(dev);
+
+the devres_release_all() call here.
+
+Can you please try to verify that devres_release_all() is being
+invoked from platform device release?  I'll try to see if I can repro
+the problem here.
+
+thanks.
+
+-- 
+tejun
