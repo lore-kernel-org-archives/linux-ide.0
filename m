@@ -1,100 +1,96 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: Re: [PATCH] pata_legacy: Allow disabling of legacy PATA device probes
- on non-PCI systems
-Date: Mon, 12 Dec 2016 13:21:56 +0100
-Message-ID: <2575141.gMpqs59WaB@amdc3058>
-References: <1480441982-20992-1-git-send-email-tedheadster@gmail.com>
- <20161202170705.GB6033@htj.duckdns.org>
- <CAP8WD_bUW9cAAQpvenL73sxvpoxNYwZdRqpj92YWEyanK51+0g@mail.gmail.com>
+Subject: Re: [RESEND PATCH] arm: assabet_defconfig: disable IDE subsystem
+Date: Mon, 12 Dec 2016 13:45:03 +0100
+Message-ID: <5370936.ZbqF1HU8Jz@amdc3058>
+References: <1467991490-24895-1-git-send-email-b.zolnierkie@samsung.com>
+ <m27fcn3pb1.fsf@baylibre.com> <578CEB74.2080002@ti.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:42947 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750712AbcLLMcA (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 12 Dec 2016 07:32:00 -0500
-Received: from epcpsbgm2new.samsung.com (epcpsbgm2 [203.254.230.27])
- by mailout4.samsung.com
- (Oracle Communications Messaging Server 7.0.5.31.0 64bit (built May  5 2014))
- with ESMTP id <0OI201RNGNOM9PA0@mailout4.samsung.com> for
- linux-ide@vger.kernel.org; Mon, 12 Dec 2016 21:21:58 +0900 (KST)
-In-reply-to: <CAP8WD_bUW9cAAQpvenL73sxvpoxNYwZdRqpj92YWEyanK51+0g@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-reply-to: <578CEB74.2080002@ti.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Sekhar Nori <nsekhar@ti.com>
+Cc: Russell King <linux@arm.linux.org.uk>, Arnd Bergmann <arnd@arndb.de>, Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>, Kevin Hilman <khilman@baylibre.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Olof Johansson <olof@lixom.net>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
-To: whiteheadm@acm.org
-Cc: Tejun Heo <tj@kernel.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, linux-ide@vger.kernel.org
 
 
 Hi,
 
-On Monday, December 05, 2016 09:19:35 AM tedheadster wrote:
-> Tejun,
->   that new patch worked better.
+On Monday, July 18, 2016 08:15:08 PM Sekhar Nori wrote:
+> On Friday 15 July 2016 08:45 PM, Kevin Hilman wrote:
+> > Arnd Bergmann <arnd@arndb.de> writes:
+> > 
+> >> On Wednesday, July 13, 2016 12:59:23 PM CEST Bartlomiej Zolnierkiewicz wrote:
+> >>>
+> >>> On Friday, July 08, 2016 10:23:48 PM Arnd Bergmann wrote:
+> >>>> On Friday, July 8, 2016 5:24:41 PM CEST Bartlomiej Zolnierkiewicz wrote:
+> >>>>> This patch disables deprecated IDE subsystem in assabet_defconfig
+> >>>>> (no IDE host drivers are selected in this config so there is no
+> >>>>> valid reason to enable IDE subsystem itself).
+> >>>>>
+> >>>>> Cc: Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
+> >>>>> Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+> >>>>
+> >>>> I think the series makes a lot of sense. I have checked your assertions
+> >>>> in the changelogs and found no flaws in your logic, so I think we should
+> >>>> take them all through arm-soc unless there are other concerns.
+> >>>
+> >>> Thank you.
+> >>>
+> >>> Should I resend everything or just patches that were not reposted yet
+> >>> (the ones that were marked as RFT initially and got no feedback)?
+> >>
+> >> I'd be fine with just getting a pull request with all the patches that
+> >> had no negative feedback and that were not already applied (if any).
+> >>
+> >>>> Do you have a list of ARM defconfigs that keep using CONFIG_IDE and
+> >>>> how you determined that they need it?
+> >>>
+> >>> The only such defconfig is davinci_all_defconfig which uses
+> >>> palm_bk3710 host driver (CONFIG_BLK_DEV_PALMCHIP_BK3710).
+> >>>
+> >>>> I know that ARCH_RPC/ARCH_ACORN has a couple of special drivers that
+> >>>> have no libata replacement, are there any others like that, or are
+> >>>> they all platforms that should in theory work with libata but need
+> >>>> testing?
+> >>>
+> >>> All platforms except ARCH_ACORN, ARCH_DAVINCI & ARCH_RPC should work
+> >>> with libata.
+> >>
+> >> Adding Sekhar and Kevin for DaVinci: At first sight, palm_bk3710 looks
+> >> fairly straightforward (meaning someone has to do a few day's work)
+> >> to convert into a libata driver.
+> >>
+> >> As this is on on-chip controller that is part of a dm644x and dm646x,
+> >> it should also not be hard to test (as long as someone can find
+> >> a hard drive to plug in).
+> > 
+> > I have a hard drive, but don't have any dm64xx hardware anymore to test
+> > this.  My last working dm644x board died last year.
 > 
-> Here is the dmesg output:
+> I have a working DM6446 EVM. I was able to connect a hard drive to it
+> and do some basic tests with v4.6 kernel.
 > 
-> [   34.347350] scsi0 : pata_legacy
-> [   34.367366] ata1: PATA max PIO4 cmd 0x1f0 ctl 0x3f6 irq 14
-> [   34.523330] ata1.00: ATA-4: QUANTUM FIREBALL CR8.4A, A5U.1200, max UDMA/66
-> [   34.524804] ata1.00: 16514064 sectors, multi 0: LBA
-> [   34.525747] ata1.00: configured for PIO
-> [   34.569330] scsi 0:0:0:0: Direct-Access     ATA      QUANTUM
-> FIREBALL A5U. PQ: 0 ANSI: 5
-> [   34.655313] sd 0:0:0:0: [sda] 16514064 512-byte logical blocks:
-> (8.45 GB/7.87 GiB)
-> [   34.674309] sd 0:0:0:0: [sda] Write Protect is off
-> [   34.675683] sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> [   34.689347] sd 0:0:0:0: [sda] Write cache: enabled, read cache:
-> enabled, doesn't support DPO or FUA
-> [   34.691283] sd 0:0:0:0: Attached scsi generic sg0 type 0
-> [   34.800293]  sda: sda1 sda2 sda3 sda4
-> [   34.890325] sd 0:0:0:0: [sda] Attached SCSI disk
-> [   34.976270] scsi1 : pata_legacy
-> [   34.999263] ata2: PATA max PIO4 cmd 0x170 ctl 0x376 irq 15
-> [   35.448191] scsi2 : pata_legacy
-> [   35.486192] ata3: PATA max PIO4 cmd 0x1e8 ctl 0x3ee irq 11
-> [   35.997114] scsi3 : pata_legacy
-> [   36.051103] ata4: PATA max PIO4 cmd 0x168 ctl 0x36e irq 10
-> [   36.384057] genirq: Flags mismatch irq 8. 00000000 (platform) vs.
-> 00000000 (rtc0)
-> [   36.571024] scsi4 : pata_legacy
-> [   36.626014] ata5: PATA max PIO4 cmd 0x160 ctl 0x366 irq 12
-> [   42.143223] EXT4-fs (sda4): mounting ext3 file system using the
-> ext4 subsystem
-> 
-> and /proc/interrupts looks good:
-> 
->            CPU0
->   0:     558552    XT-PIC-XT-PIC    timer
->   1:        337    XT-PIC-XT-PIC    i8042
->   2:          0    XT-PIC-XT-PIC    cascade
->   4:          1    XT-PIC-XT-PIC
->   8:          0    XT-PIC-XT-PIC    rtc0
->  14:      51538    XT-PIC-XT-PIC    platform
+> I will look into converting the driver to libata. Might take some time
+> because this is unfamiliar territory for me.
 
-Thank you for testing.
+Do you need some help with it?
 
-Tejun, is this information sufficient to fix the issue or do you still
-want Matthew to test your last debug patch?
+I can provide you with draft driver patch if you want.
 
-[ http://marc.info/?l=linux-ide&m=148096582017930&w=2 ]
-
-> I would still like to get my patch in. If you have a motherboard where
-> you cannot disable the secondary hard drive controllers, the
-> pata_legacy driver will detect them and allocate the interrupt. Some
-
-If there are no devices attached to the controller, the driver will
-free the resources so I don't quite get what would be the issue here.
-Could you please explain it more?
-
-> way to disable this behavior is useful.
-> 
-> - Matthew
+I'm also on #kernel IRC channel in case you have some questions..
 
 Best regards,
 --
 Bartlomiej Zolnierkiewicz
 Samsung R&D Institute Poland
 Samsung Electronics
-
