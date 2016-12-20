@@ -1,41 +1,40 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] set a base index for libsas based ata devices
-Date: Tue, 20 Dec 2016 10:30:34 -0800
-Message-ID: <1482258634.2475.20.camel@HansenPartnership.com>
-References: <CAF2xp_F3ea-n4R8jG8UpHEE3YmvKN7UWBAn36_QXMg-e34tY_w@mail.gmail.com>
+From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <uwe@kleine-koenig.org>
+Subject: [PATCH] ata: sata_mv: fix module license specification
+Date: Tue, 20 Dec 2016 22:15:22 +0100
+Message-ID: <20161220211522.25856-1-uwe@kleine-koenig.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:47502 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1756379AbcLTSbP (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 20 Dec 2016 13:31:15 -0500
-In-Reply-To: <CAF2xp_F3ea-n4R8jG8UpHEE3YmvKN7UWBAn36_QXMg-e34tY_w@mail.gmail.com>
+Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:57791 "EHLO
+        metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1756977AbcLTVP2 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 20 Dec 2016 16:15:28 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Peter Chang <dpf@google.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org
 
-On Tue, 2016-12-20 at 10:15 -0800, Peter Chang wrote:
-> we discovered this when futzing w/ the queue depth parameter for ata
-> disks behind the pm8006 controller. setting depth == 1 should disable
-> ncq, but the sysfs part silently fails and we continue sending the
-> fpdma command variants. no one else probably cares about the 
-> disabling ncq path, but we do like to test.
+The header allows GPL v2 only, so declare "GPL v2" for MODULE_LICENSE
 
-I'd actually disagree with this assertion; it's why tagging (what you
-mean by ncq) and queue depth are separate.  Queue depth represents the
-number of outstanding commands we sent on the wire; however, it often
-excludes things like sense probes and error handling commands, so
-tagged depth==1 is a different operating environment from untagged. 
- Some transports actually have no untagged variant nowadays, so it's
-physically impossible to disable tagging.
+Signed-off-by: Uwe Kleine-König <uwe@kleine-koenig.org>
+---
+ drivers/ata/sata_mv.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-James
-
-> anyway, adding both the ide and scsi lists because i'm not quite sure
-> there's a separate libsas list and a single commit seems better for
-> this.
-
-
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index 823e938c9a78..bcbfe23a45f6 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -4526,7 +4526,7 @@ static void __exit mv_exit(void)
+ 
+ MODULE_AUTHOR("Brett Russ");
+ MODULE_DESCRIPTION("SCSI low-level driver for Marvell SATA controllers");
+-MODULE_LICENSE("GPL");
++MODULE_LICENSE("GPL v2");
+ MODULE_DEVICE_TABLE(pci, mv_pci_tbl);
+ MODULE_VERSION(DRV_VERSION);
+ MODULE_ALIAS("platform:" DRV_NAME);
+-- 
+2.10.2
 
