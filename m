@@ -1,76 +1,70 @@
-From: Mikko Perttunen <cyndis-/1wQRMveznE@public.gmane.org>
-Subject: Re: [v2,2/3] ata: ahci_tegra: Add support to disable features
-Date: Wed, 21 Dec 2016 11:31:22 +0200
-Message-ID: <268c0db6-e172-0430-b5e0-a04e74c6ee9d@kapsi.fi>
+From: Preetham Chandru <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
+Subject: RE: [v2,2/3] ata: ahci_tegra: Add support to disable features
+Date: Wed, 21 Dec 2016 09:37:20 +0000
+Message-ID: <30a997894e6b4530b27f9d5102c79366@bgmail103.nvidia.com>
 References: <1479973418-21351-3-git-send-email-pchandru@nvidia.com>
  <bb810105-4196-0594-d378-3c6a7a94b475@nvidia.com>
  <209a3fbeaf094dd992220b850cc62692@bgmail103.nvidia.com>
+ <268c0db6-e172-0430-b5e0-a04e74c6ee9d@kapsi.fi>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <209a3fbeaf094dd992220b850cc62692-7W72rfoJkVnYuxH7O460wFaTQe2KTcn/@public.gmane.org>
+In-Reply-To: <268c0db6-e172-0430-b5e0-a04e74c6ee9d-/1wQRMveznE@public.gmane.org>
+Content-Language: en-US
 Sender: linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Preetham Chandru <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Mikko Perttunen <mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "swarren-3lzwWm7+Weoh9ZMKESR00Q@public.gmane.org" <swarren-3lzwWm7+Weoh9ZMKESR00Q@public.gmane.org>, "thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "preetham260-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <preetham260-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+To: Mikko Perttunen <cyndis-/1wQRMveznE@public.gmane.org>, Mikko Perttunen <mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "swarren-3lzwWm7+Weoh9ZMKESR00Q@public.gmane.org" <swarren-3lzwWm7+Weoh9ZMKESR00Q@public.gmane.org>, "thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "preetham260-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <preetham260-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Cc: Laxman Dewangan <ldewangan-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Venu Byravarasu <vbyravarasu-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Pavan Kunapuli <pkunapuli-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
 
-On 21.12.2016 11:12, Preetham Chandru wrote:
->
->
->> -----Original Message-----
->> From: Mikko Perttunen
->> Sent: Monday, November 28, 2016 6:09 PM
->> To: Preetham Chandru; tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org; swarren-3lzwWm7+Weoh9ZMKESR00Q@public.gmane.org;
->> thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org; preetham260-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
->> Cc: Laxman Dewangan; linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; Venu Byravarasu; Pavan
->> Kunapuli; linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
->> Subject: Re: [v2,2/3] ata: ahci_tegra: Add support to disable features
->>
->> On 24.11.2016 09:43, PREETHAM RAMACHANDRA wrote:
->>> From: Preetham Chandru R <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
->>>
->>> Add support to disable DIPM, HIPM, DevSlp, partial, slumber and NCQ
->>> features from DT. By default these features are enabled.
->>>
->>
->> Why are these features disabled? Are they broken on all Tegra210 chips,
->> broken on specific boards or do they require some support from the driver
->> that is not there?
->>
->> Most likely we should hardcode the disabled features into the driver instead
->> of reading them from the device tree.
->>
->
-> Yes, currently DevSlp and DIPM features are broken for t210 and t124 but devslp is fixed for tegra186.
->  Also I thought it would be nice to provide similar options for other features as well.
-> Since we do not support hotplug this would help us in debugging if we face issues with certain drives during kernel boot.
-> We can disable features we think are causing issues and retry.
-
-We should put this data into the soc_data struct in the driver, since it 
-is easily determined from just the compatibility string; for example
-
-struct tegra_ahci_soc {
-	...
-	uint32_t quirks;
-};
-
-then
-
-.quirks = NO_DEVSLP | NO_DIPM
-
-or the other way around and list the features that we want to enable. 
-This is also quite easy to change to test.
-
-The device tree should also only contain information that describes the 
-hardware itself, and nothing related to any specific driver's operation; 
-so if there's a possibility that some feature is not working due to a 
-driver issue, then the device tree definitely should not contain any 
-entry disabling that feature.
-
-(The downstream kernel can of course carry such features as patches on 
-top, if required for some reason - but naturally it increases 
-maintenance effort)
-
-Thanks,
-Mikko.
+Pi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+RnJvbTogTWlra28gUGVydHR1bmVuIFttYWls
+dG86Y3luZGlzQGthcHNpLmZpXQ0KPlNlbnQ6IFdlZG5lc2RheSwgRGVjZW1iZXIgMjEsIDIwMTYg
+MzowMSBQTQ0KPlRvOiBQcmVldGhhbSBDaGFuZHJ1OyBNaWtrbyBQZXJ0dHVuZW47IHRqQGtlcm5l
+bC5vcmc7DQo+c3dhcnJlbkB3d3dkb3Rvcmcub3JnOyB0aGllcnJ5LnJlZGluZ0BnbWFpbC5jb207
+DQo+cHJlZXRoYW0yNjBAZ21haWwuY29tDQo+Q2M6IExheG1hbiBEZXdhbmdhbjsgbGludXgtaWRl
+QHZnZXIua2VybmVsLm9yZzsgVmVudSBCeXJhdmFyYXN1OyBQYXZhbg0KPkt1bmFwdWxpOyBsaW51
+eC10ZWdyYUB2Z2VyLmtlcm5lbC5vcmcNCj5TdWJqZWN0OiBSZTogW3YyLDIvM10gYXRhOiBhaGNp
+X3RlZ3JhOiBBZGQgc3VwcG9ydCB0byBkaXNhYmxlIGZlYXR1cmVzDQo+DQo+T24gMjEuMTIuMjAx
+NiAxMToxMiwgUHJlZXRoYW0gQ2hhbmRydSB3cm90ZToNCj4+DQo+Pg0KPj4+IC0tLS0tT3JpZ2lu
+YWwgTWVzc2FnZS0tLS0tDQo+Pj4gRnJvbTogTWlra28gUGVydHR1bmVuDQo+Pj4gU2VudDogTW9u
+ZGF5LCBOb3ZlbWJlciAyOCwgMjAxNiA2OjA5IFBNDQo+Pj4gVG86IFByZWV0aGFtIENoYW5kcnU7
+IHRqQGtlcm5lbC5vcmc7IHN3YXJyZW5Ad3d3ZG90b3JnLm9yZzsNCj4+PiB0aGllcnJ5LnJlZGlu
+Z0BnbWFpbC5jb207IHByZWV0aGFtMjYwQGdtYWlsLmNvbQ0KPj4+IENjOiBMYXhtYW4gRGV3YW5n
+YW47IGxpbnV4LWlkZUB2Z2VyLmtlcm5lbC5vcmc7IFZlbnUgQnlyYXZhcmFzdTsNCj4+PiBQYXZh
+biBLdW5hcHVsaTsgbGludXgtdGVncmFAdmdlci5rZXJuZWwub3JnDQo+Pj4gU3ViamVjdDogUmU6
+IFt2MiwyLzNdIGF0YTogYWhjaV90ZWdyYTogQWRkIHN1cHBvcnQgdG8gZGlzYWJsZQ0KPj4+IGZl
+YXR1cmVzDQo+Pj4NCj4+PiBPbiAyNC4xMS4yMDE2IDA5OjQzLCBQUkVFVEhBTSBSQU1BQ0hBTkRS
+QSB3cm90ZToNCj4+Pj4gRnJvbTogUHJlZXRoYW0gQ2hhbmRydSBSIDxwY2hhbmRydUBudmlkaWEu
+Y29tPg0KPj4+Pg0KPj4+PiBBZGQgc3VwcG9ydCB0byBkaXNhYmxlIERJUE0sIEhJUE0sIERldlNs
+cCwgcGFydGlhbCwgc2x1bWJlciBhbmQgTkNRDQo+Pj4+IGZlYXR1cmVzIGZyb20gRFQuIEJ5IGRl
+ZmF1bHQgdGhlc2UgZmVhdHVyZXMgYXJlIGVuYWJsZWQuDQo+Pj4+DQo+Pj4NCj4+PiBXaHkgYXJl
+IHRoZXNlIGZlYXR1cmVzIGRpc2FibGVkPyBBcmUgdGhleSBicm9rZW4gb24gYWxsIFRlZ3JhMjEw
+DQo+Pj4gY2hpcHMsIGJyb2tlbiBvbiBzcGVjaWZpYyBib2FyZHMgb3IgZG8gdGhleSByZXF1aXJl
+IHNvbWUgc3VwcG9ydCBmcm9tDQo+Pj4gdGhlIGRyaXZlciB0aGF0IGlzIG5vdCB0aGVyZT8NCj4+
+Pg0KPj4+IE1vc3QgbGlrZWx5IHdlIHNob3VsZCBoYXJkY29kZSB0aGUgZGlzYWJsZWQgZmVhdHVy
+ZXMgaW50byB0aGUgZHJpdmVyDQo+Pj4gaW5zdGVhZCBvZiByZWFkaW5nIHRoZW0gZnJvbSB0aGUg
+ZGV2aWNlIHRyZWUuDQo+Pj4NCj4+DQo+PiBZZXMsIGN1cnJlbnRseSBEZXZTbHAgYW5kIERJUE0g
+ZmVhdHVyZXMgYXJlIGJyb2tlbiBmb3IgdDIxMCBhbmQgdDEyNCBidXQNCj5kZXZzbHAgaXMgZml4
+ZWQgZm9yIHRlZ3JhMTg2Lg0KPj4gIEFsc28gSSB0aG91Z2h0IGl0IHdvdWxkIGJlIG5pY2UgdG8g
+cHJvdmlkZSBzaW1pbGFyIG9wdGlvbnMgZm9yIG90aGVyDQo+ZmVhdHVyZXMgYXMgd2VsbC4NCj4+
+IFNpbmNlIHdlIGRvIG5vdCBzdXBwb3J0IGhvdHBsdWcgdGhpcyB3b3VsZCBoZWxwIHVzIGluIGRl
+YnVnZ2luZyBpZiB3ZSBmYWNlDQo+aXNzdWVzIHdpdGggY2VydGFpbiBkcml2ZXMgZHVyaW5nIGtl
+cm5lbCBib290Lg0KPj4gV2UgY2FuIGRpc2FibGUgZmVhdHVyZXMgd2UgdGhpbmsgYXJlIGNhdXNp
+bmcgaXNzdWVzIGFuZCByZXRyeS4NCj4NCj5XZSBzaG91bGQgcHV0IHRoaXMgZGF0YSBpbnRvIHRo
+ZSBzb2NfZGF0YSBzdHJ1Y3QgaW4gdGhlIGRyaXZlciwgc2luY2UgaXQgaXMNCj5lYXNpbHkgZGV0
+ZXJtaW5lZCBmcm9tIGp1c3QgdGhlIGNvbXBhdGliaWxpdHkgc3RyaW5nOyBmb3IgZXhhbXBsZQ0K
+Pg0KPnN0cnVjdCB0ZWdyYV9haGNpX3NvYyB7DQo+CS4uLg0KPgl1aW50MzJfdCBxdWlya3M7DQo+
+fTsNCj4NCj50aGVuDQo+DQo+LnF1aXJrcyA9IE5PX0RFVlNMUCB8IE5PX0RJUE0NCj4NCj5vciB0
+aGUgb3RoZXIgd2F5IGFyb3VuZCBhbmQgbGlzdCB0aGUgZmVhdHVyZXMgdGhhdCB3ZSB3YW50IHRv
+IGVuYWJsZS4NCj5UaGlzIGlzIGFsc28gcXVpdGUgZWFzeSB0byBjaGFuZ2UgdG8gdGVzdC4NCj4N
+Cj5UaGUgZGV2aWNlIHRyZWUgc2hvdWxkIGFsc28gb25seSBjb250YWluIGluZm9ybWF0aW9uIHRo
+YXQgZGVzY3JpYmVzIHRoZQ0KPmhhcmR3YXJlIGl0c2VsZiwgYW5kIG5vdGhpbmcgcmVsYXRlZCB0
+byBhbnkgc3BlY2lmaWMgZHJpdmVyJ3Mgb3BlcmF0aW9uOyBzbyBpZg0KPnRoZXJlJ3MgYSBwb3Nz
+aWJpbGl0eSB0aGF0IHNvbWUgZmVhdHVyZSBpcyBub3Qgd29ya2luZyBkdWUgdG8gYSBkcml2ZXIg
+aXNzdWUsDQo+dGhlbiB0aGUgZGV2aWNlIHRyZWUgZGVmaW5pdGVseSBzaG91bGQgbm90IGNvbnRh
+aW4gYW55IGVudHJ5IGRpc2FibGluZyB0aGF0DQo+ZmVhdHVyZS4NCj4NCj4oVGhlIGRvd25zdHJl
+YW0ga2VybmVsIGNhbiBvZiBjb3Vyc2UgY2Fycnkgc3VjaCBmZWF0dXJlcyBhcyBwYXRjaGVzIG9u
+IHRvcCwNCj5pZiByZXF1aXJlZCBmb3Igc29tZSByZWFzb24gLSBidXQgbmF0dXJhbGx5IGl0IGlu
+Y3JlYXNlcyBtYWludGVuYW5jZSBlZmZvcnQpDQo+DQoNCk9rLCBzb3VuZHMgZ29vZCB0byBtZS4g
+V2lsbCBtb3ZlIGl0IHRvIHNvY19kYXRhIHN0cnVjdHVyZS4NCg0KPlRoYW5rcywNCj5NaWtrby4N
+Cg==
