@@ -1,40 +1,36 @@
-From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <uwe@kleine-koenig.org>
-Subject: [PATCH] ata: sata_mv: fix module license specification
-Date: Tue, 20 Dec 2016 22:15:22 +0100
-Message-ID: <20161220211522.25856-1-uwe@kleine-koenig.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] set a base index for libsas based ata devices
+Date: Wed, 21 Dec 2016 00:03:42 -0800
+Message-ID: <20161221080342.GA21557@infradead.org>
+References: <CAF2xp_F3ea-n4R8jG8UpHEE3YmvKN7UWBAn36_QXMg-e34tY_w@mail.gmail.com>
+ <1482258634.2475.20.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:57791 "EHLO
-        metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1756977AbcLTVP2 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 20 Dec 2016 16:15:28 -0500
+Received: from bombadil.infradead.org ([198.137.202.9]:56101 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750912AbcLUIDo (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 21 Dec 2016 03:03:44 -0500
+Content-Disposition: inline
+In-Reply-To: <1482258634.2475.20.camel@HansenPartnership.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Peter Chang <dpf@google.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 
-The header allows GPL v2 only, so declare "GPL v2" for MODULE_LICENSE
+On Tue, Dec 20, 2016 at 10:30:34AM -0800, James Bottomley wrote:
+> I'd actually disagree with this assertion; it's why tagging (what you
+> mean by ncq) and queue depth are separate.  Queue depth represents the
+> number of outstanding commands we sent on the wire; however, it often
+> excludes things like sense probes and error handling commands, so
+> tagged depth==1 is a different operating environment from untagged. 
+>  Some transports actually have no untagged variant nowadays, so it's
+> physically impossible to disable tagging.
 
-Signed-off-by: Uwe Kleine-König <uwe@kleine-koenig.org>
----
- drivers/ata/sata_mv.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Yes.  We have the queue_type sysfs file that also used to be writeable
+and allow changing the queue type, but it's never been used for
+anything.
 
-diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
-index 823e938c9a78..bcbfe23a45f6 100644
---- a/drivers/ata/sata_mv.c
-+++ b/drivers/ata/sata_mv.c
-@@ -4526,7 +4526,7 @@ static void __exit mv_exit(void)
- 
- MODULE_AUTHOR("Brett Russ");
- MODULE_DESCRIPTION("SCSI low-level driver for Marvell SATA controllers");
--MODULE_LICENSE("GPL");
-+MODULE_LICENSE("GPL v2");
- MODULE_DEVICE_TABLE(pci, mv_pci_tbl);
- MODULE_VERSION(DRV_VERSION);
- MODULE_ALIAS("platform:" DRV_NAME);
--- 
-2.10.2
-
+For debugging you can clear the tagged_supported flag in the driver,
+but there should be no reason for doing that during normal operation
+for a SAS HBA driver.
