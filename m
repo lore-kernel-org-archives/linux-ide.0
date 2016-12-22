@@ -1,93 +1,73 @@
-From: Preetham Chandru <pchandru-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Subject: RE: [v2,3/3] dt-bindings: ata: ahci_tegra: Add tegra210 AHCI
-Date: Thu, 22 Dec 2016 08:50:33 +0000
-Message-ID: <495555c092c640108328c6ae2283b7aa@bgmail103.nvidia.com>
-References: <1479973418-21351-4-git-send-email-pchandru@nvidia.com>
- <bdc5d888-0d9f-fed2-8a74-c42ae7e6b810@nvidia.com>
- <bc12a764-ddc3-84cf-aa43-3900d1e78021@nvidia.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] pata_legacy: Allow disabling of legacy PATA device
+ probes on non-PCI systems
+Date: Thu, 22 Dec 2016 11:37:11 -0500
+Message-ID: <20161222163711.GB29161@htj.duckdns.org>
+References: <CAP8WD_boGwPZCEPE8hA-AhQnHChrbaM+74LTUy-9__s6ex56Sg@mail.gmail.com>
+ <20161130202201.GA15989@htj.duckdns.org>
+ <CAP8WD_bZWeLBhLXqJG5uDwBe+zBubw+A+ecSuaihOuwvw9QoCQ@mail.gmail.com>
+ <20161202170705.GB6033@htj.duckdns.org>
+ <CAP8WD_bUW9cAAQpvenL73sxvpoxNYwZdRqpj92YWEyanK51+0g@mail.gmail.com>
+ <20161205192310.GA30331@mtj.duckdns.org>
+ <CAP8WD_becq+h2=-g7t-6Pp1psmkCCvdB0YUcg+wYPocUP4dYdw@mail.gmail.com>
+ <20161212170154.GA13864@htj.duckdns.org>
+ <CAP8WD_YMtnsuYmJHGz1eLmrQNemsB1Z6Soyb6f72brAfMNUNeg@mail.gmail.com>
+ <CAP8WD_ZoJgrdsDZNR4uN8HWESO5MyuNc1xN_F2an8GfP8nKcLA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <bc12a764-ddc3-84cf-aa43-3900d1e78021-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>
-Content-Language: en-US
-Sender: linux-tegra-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Jonathan Hunter <jonathanh-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, Mikko Perttunen <mperttunen-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "swarren-3lzwWm7+Weoh9ZMKESR00Q@public.gmane.org" <swarren-3lzwWm7+Weoh9ZMKESR00Q@public.gmane.org>, "thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <thierry.reding-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "preetham260-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <preetham260-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Laxman Dewangan <ldewangan-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Venu Byravarasu <vbyravarasu-DDmLM1+adcrQT0dZR+AlfA@public.gmane.org>, "linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-tegra-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-yw0-f194.google.com ([209.85.161.194]:33133 "EHLO
+        mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S936060AbcLVQhT (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 22 Dec 2016 11:37:19 -0500
+Received: by mail-yw0-f194.google.com with SMTP id s68so15151045ywg.0
+        for <linux-ide@vger.kernel.org>; Thu, 22 Dec 2016 08:37:13 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <CAP8WD_ZoJgrdsDZNR4uN8HWESO5MyuNc1xN_F2an8GfP8nKcLA@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: whiteheadm@acm.org
+Cc: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, linux-ide@vger.kernel.org
 
-DQo+LS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj5Gcm9tOiBKb25hdGhhbiBIdW50ZXINCj5T
-ZW50OiBNb25kYXksIE5vdmVtYmVyIDI4LCAyMDE2IDc6MjIgUE0NCj5UbzogTWlra28gUGVydHR1
-bmVuOyBQcmVldGhhbSBDaGFuZHJ1OyB0akBrZXJuZWwub3JnOw0KPnN3YXJyZW5Ad3d3ZG90b3Jn
-Lm9yZzsgdGhpZXJyeS5yZWRpbmdAZ21haWwuY29tOw0KPnByZWV0aGFtMjYwQGdtYWlsLmNvbQ0K
-PkNjOiBMYXhtYW4gRGV3YW5nYW47IGxpbnV4LWlkZUB2Z2VyLmtlcm5lbC5vcmc7IFZlbnUgQnly
-YXZhcmFzdTsgUGF2YW4NCj5LdW5hcHVsaTsgbGludXgtdGVncmFAdmdlci5rZXJuZWwub3JnDQo+
-U3ViamVjdDogUmU6IFt2MiwzLzNdIGR0LWJpbmRpbmdzOiBhdGE6IGFoY2lfdGVncmE6IEFkZCB0
-ZWdyYTIxMCBBSENJDQo+DQo+DQo+T24gMjgvMTEvMTYgMTM6MDUsIE1pa2tvIFBlcnR0dW5lbiB3
-cm90ZToNCj4+IE9uIDI0LjExLjIwMTYgMDk6NDMsIFBSRUVUSEFNIFJBTUFDSEFORFJBIHdyb3Rl
-Og0KPj4+IEZyb206IFByZWV0aGFtIENoYW5kcnUgUiA8cGNoYW5kcnVAbnZpZGlhLmNvbT4NCj4N
-Cj5JIGRpZCBub3QgcmVjZWl2ZSB0aGUgb3JpZ2luYWwgKHBsZWFzZSBDQyBsaW51eC10ZWdyYSBh
-cyB3ZWxsIGlmIHlvdSBkaWQgbm90DQo+b3JpZ2luYWxseSksIGJ1dCB0aGVyZSBzaG91bGQgYmUg
-c29tZSBkZXNjcmlwdGlvbiBoZXJlLg0KPg0KPj4+IFNpZ25lZC1vZmYtYnk6IFByZWV0aGFtIENo
-YW5kcnUgUiA8cGNoYW5kcnVAbnZpZGlhLmNvbT4NCj4+PiAtLS0NCj4+PiAgLi4uL2JpbmRpbmdz
-L2F0YS9udmlkaWEsdGVncmExMjQtYWhjaS50eHQgICAgICAgICAgfCA0OA0KPj4+ICsrKysrKysr
-KysrKysrKystLS0tLS0NCj4+PiAgMSBmaWxlIGNoYW5nZWQsIDM2IGluc2VydGlvbnMoKyksIDEy
-IGRlbGV0aW9ucygtKQ0KPj4+DQo+Pj4gZGlmZiAtLWdpdA0KPj4+IGEvRG9jdW1lbnRhdGlvbi9k
-ZXZpY2V0cmVlL2JpbmRpbmdzL2F0YS9udmlkaWEsdGVncmExMjQtYWhjaS50eHQNCj4+PiBiL0Rv
-Y3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9hdGEvbnZpZGlhLHRlZ3JhMTI0LWFoY2ku
-dHh0DQo+Pj4gaW5kZXggNjZjODNjMy4uNDQ2MjE0ZiAxMDA2NDQNCj4+PiAtLS0gYS9Eb2N1bWVu
-dGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvYXRhL252aWRpYSx0ZWdyYTEyNC1haGNpLnR4dA0K
-Pj4+ICsrKyBiL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9hdGEvbnZpZGlhLHRl
-Z3JhMTI0LWFoY2kudHh0DQo+Pj4gQEAgLTEsOSArMSw5IEBADQo+Pj4gLVRlZ3JhMTI0IFNvQyBT
-QVRBIEFIQ0kgY29udHJvbGxlcg0KPj4+ICtUZWdyYSBTb0MgU0FUQSBBSENJIGNvbnRyb2xsZXIN
-Cj4+Pg0KPj4+ICBSZXF1aXJlZCBwcm9wZXJ0aWVzIDoNCj4+PiAtLSBjb21wYXRpYmxlIDogRm9y
-IFRlZ3JhMTI0LCBtdXN0IGNvbnRhaW4gIm52aWRpYSx0ZWdyYTEyNC1haGNpIi4NCj4+PiBPdGhl
-cndpc2UsDQo+Pj4gLSAgbXVzdCBjb250YWluICcibnZpZGlhLDxjaGlwPi1haGNpIiwgIm52aWRp
-YSx0ZWdyYTEyNC1haGNpIicsIHdoZXJlDQo+Pj4gPGNoaXA+DQo+Pj4gLSAgaXMgdGVncmExMzIu
-DQo+Pj4gKy0gY29tcGF0aWJsZSA6IE11c3QgYmUgb25lIG9mOg0KPj4+ICsgIC0gVGVncmExMjQg
-OiAibnZpZGlhLHRlZ3JhMTI0LWFoY2kiDQo+Pj4gKyAgLSBUZWdyYTIxMCA6ICJudmlkaWEsdGVn
-cmEyMTAtYWhjaSINCj4+PiAgLSByZWcgOiBTaG91bGQgY29udGFpbiAyIGVudHJpZXM6DQo+Pj4g
-ICAgLSBBSENJIHJlZ2lzdGVyIHNldCAoU0FUQSBCQVI1KQ0KPj4+ICAgIC0gU0FUQSByZWdpc3Rl
-ciBzZXQNCj4+DQo+PiBJIHRoaW5rIHlvdSBhZGRlZCBhIG5ldyBzZXQgaW4gdGhlIGZpcnN0IHBh
-dGNoLCBBVVg7IHlvdSBzaG91bGQgYWRkIGl0DQo+PiBoZXJlIGFzIHdlbGwuDQo+Pg0KPj4+IEBA
-IC0xMyw4ICsxMyw2IEBAIFJlcXVpcmVkIHByb3BlcnRpZXMgOg0KPj4+ICAtIGNsb2NrLW5hbWVz
-IDogTXVzdCBpbmNsdWRlIHRoZSBmb2xsb3dpbmcgZW50cmllczoNCj4+PiAgICAtIHNhdGENCj4+
-PiAgICAtIHNhdGEtb29iDQo+Pj4gLSAgLSBjbWwxDQo+Pj4gLSAgLSBwbGxfZQ0KPj4+ICAtIHJl
-c2V0cyA6IE11c3QgY29udGFpbiBhbiBlbnRyeSBmb3IgZWFjaCBlbnRyeSBpbiByZXNldC1uYW1l
-cy4NCj4+PiAgICBTZWUgLi4vcmVzZXQvcmVzZXQudHh0IGZvciBkZXRhaWxzLg0KPj4+ICAtIHJl
-c2V0LW5hbWVzIDogTXVzdCBpbmNsdWRlIHRoZSBmb2xsb3dpbmcgZW50cmllczoNCj4+PiBAQCAt
-MjQsOSArMjIsMzUgQEAgUmVxdWlyZWQgcHJvcGVydGllcyA6DQo+Pj4gIC0gcGh5cyA6IE11c3Qg
-Y29udGFpbiBhbiBlbnRyeSBmb3IgZWFjaCBlbnRyeSBpbiBwaHktbmFtZXMuDQo+Pj4gICAgU2Vl
-IC4uL3BoeS9waHktYmluZGluZ3MudHh0IGZvciBkZXRhaWxzLg0KPj4+ICAtIHBoeS1uYW1lcyA6
-IE11c3QgaW5jbHVkZSB0aGUgZm9sbG93aW5nIGVudHJpZXM6DQo+Pj4gLSAgLSBzYXRhLXBoeSA6
-IFhVU0IgUEFEQ1RMIFNBVEEgUEhZDQo+Pj4gLS0gaHZkZC1zdXBwbHkgOiBEZWZpbmVzIHRoZSBT
-QVRBIEhWREQgcmVndWxhdG9yDQo+Pj4gLS0gdmRkaW8tc3VwcGx5IDogRGVmaW5lcyB0aGUgU0FU
-QSBWRERJTyByZWd1bGF0b3INCj4+PiAtLSBhdmRkLXN1cHBseSA6IERlZmluZXMgdGhlIFNBVEEg
-QVZERCByZWd1bGF0b3INCj4+PiAtLSB0YXJnZXQtNXYtc3VwcGx5IDogRGVmaW5lcyB0aGUgU0FU
-QSA1ViBwb3dlciByZWd1bGF0b3INCj4+PiAtLSB0YXJnZXQtMTJ2LXN1cHBseSA6IERlZmluZXMg
-dGhlIFNBVEEgMTJWIHBvd2VyIHJlZ3VsYXRvcg0KPj4+ICsgIC0gRm9yIFQxMjQ6DQo+Pj4gKyAg
-ICAtIHNhdGEtcGh5IDogWFVTQiBQQURDVEwgU0FUQSBQSFkNCj4+PiArICAtIEZvciBUMjEwOg0K
-Pj4+ICsgICAgLSBzYXRhLTANCj4+PiArLSBGb3IgVDEyNDoNCj4+PiArICAtIGh2ZGQtc3VwcGx5
-IDogRGVmaW5lcyB0aGUgU0FUQSBIVkREIHJlZ3VsYXRvcg0KPj4+ICsgIC0gdmRkaW8tc3VwcGx5
-IDogRGVmaW5lcyB0aGUgU0FUQSBWRERJTyByZWd1bGF0b3INCj4+PiArICAtIGF2ZGQtc3VwcGx5
-IDogRGVmaW5lcyB0aGUgU0FUQSBBVkREIHJlZ3VsYXRvcg0KPj4+ICsgIC0gdGFyZ2V0LTV2LXN1
-cHBseSA6IERlZmluZXMgdGhlIFNBVEEgNVYgcG93ZXIgcmVndWxhdG9yDQo+Pj4gKy0gRm9yIFQy
-MTA6DQo+Pj4gKyAgLSBsMC1odmRkaW8tc2F0YS1zdXBwbHkgOiBEZWZpbmVzIHRoZSBTQVRBIEhW
-RERJTyByZWd1bGF0b3INCj4+PiArICAtIGwwLWR2ZGRpby1zYXRhLXN1cHBseSA6IERlZmluZXMg
-dGhlIFNBVEEgRFZERElPIHJlZ3VsYXRvcg0KPj4+ICsgIC0gaHZkZC1wZXgtcGxsLWUtc3VwcGx5
-IDogRGVmaW5lcyB0aGUgUEVYIFBMTF9FIHJlZ3VsYXRvcg0KPj4+ICsgIC0gZHZkZC1zYXRhLXBs
-bC1zdXBwbHkgIDogRGVmaW5lcyB0aGUgU0FUQSBQTEwgcmVndWxhdG9yDQo+Pj4gKyAgLSBodmRk
-LXNhdGEtc3VwcGx5ICAgICAgOiBEZWZpbmVzIHRoZSBTQVRBIEhWREQgcmVndWxhdG9yDQo+Pj4g
-Ky0gbnZpZGlhLGRpc2FibGUtZmVhdHVyZXMgOiBNdXN0IGluY2x1ZGUgdGhlIGZvbGxvd2luZyBl
-bnRyaWVzOg0KPj4+ICsgIC0gZGV2c2xwDQo+Pj4gKyAgLSBkaXBtDQo+DQo+TXkgdW5kZXJzdGFu
-ZGluZyBpcyB0aGF0IHRoZSBBSENJIGNvbnRyb2xsZXIgcmVxdWlyZXMgdGhlIFNBVEEgcG93ZXJn
-YXRlDQo+dG8gYmUgZW5hYmxlZC4gTm93IHdlIGhhdmUgc3VwcG9ydCBmb3IgcG93ZXJnYXRlcyB2
-aWEgdGhlIGdlbnBkDQo+ZnJhbWV3b3JrIHdlIHNob3VsZCBhZGQgdGhlICdwb3dlci1kb21haW5z
-JyBwcm9wZXJ0eSBmb3IgdGhpcyBkZXZpY2UuDQo+DQo+RG8geW91IGtub3cgaWYgdGhlcmUgaXMg
-YW55IHNlcXVlbmNpbmcgcmVxdWlyZW1lbnQgd2l0aCByZWdhcmQgdG8gcG93ZXJpbmcNCj5vbiB0
-aGUgYWJvdmUgcmFpbHMgYW5kIHRoZSBwb3dlcmdhdGU/IElmIG5vdCB3ZSBzaG91bGQgY2hlY2sg
-YXMgd2Ugc2hvdWxkDQo+ZW5zdXJlIHRoYXQgd2UgaGF2ZSB0aGUgcHJvcGVyIHNlcXVlbmNpbmcu
-DQo+DQoNCkFsbCB0aGUgcmVndWxhdG9ycyBtZW50aW9uZWQgdW5kZXIgVDIxMCBzZWN0aW9uIGFy
-ZSByZWxhdGVkIHRvIHBoeSBhbmQgdGhleSBuZWVkIHRvIGJlIGVuYWJsZWQgZmlyc3QuICANCkkg
-d2lsbCBhZGQgdGhlIHBvd2VyLWRvbWFpbiBzdXBwb3J0IGZvciBBSENJIGluIGEgZGlmZmVyZW50
-IHBhdGNoLiANCg0KPkNoZWVycw0KPkpvbg0KPg0KPi0tDQo+bnZwdWJsaWMNCg0KDQo=
+Hello,
+
+On Mon, Dec 19, 2016 at 09:12:49PM -0500, tedheadster wrote:
+> Tejun,
+>   apologies this took a while. Here is the patch I _think_ you were
+> asking me to test:
+> 
+> diff --git a/drivers/ata/pata_legacy.c b/drivers/ata/pata_legacy.c
+> index bce2a8c..bfa63d1 100644
+> --- a/drivers/ata/pata_legacy.c
+> +++ b/drivers/ata/pata_legacy.c
+> @@ -1008,12 +1008,15 @@ static __init int legacy_init_one(struct
+> legacy_probe *probe)
+>         if (!ata_dev_absent(dev)) {
+>             legacy_host[probe->slot] = host;
+>             ld->platform_dev = pdev;
+> +                       devres_remove_group(&pdev->dev, legacy_init_one);
+>             return 0;
+>         }
+>     }
+>         ata_host_detach(host);
+>  fail:
+>           platform_device_unregister(pdev);
+> +       devres_release_group(&pdev->dev, legacy_init_one);
+> +       printk("XXX pata_legacy: unregistering platform dev %p\n", pdev);
+>     return ret;
+
+The thing I'm puzzled about and can't reproduce here is that the
+platform_device_unregister() call on the fail path should release the
+irq resources without the explicit devres group operations.  I can
+write up tracking each step but it'd probably be easier on your side
+to track down why it's not getting called.
+
+So, pata_legacy doesn't need anything changed, but in the probe fail
+path, platform_device_unregister() should trigger
+driver/base/core.c::device_release() which calls devres_release_all()
+and release the irqs.
+
+Thanks.
+
+-- 
+tejun
