@@ -1,90 +1,131 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] Fix interface autodetection in legacy IDE driver
- (trial #2)
-Date: Tue, 27 Dec 2016 11:41:12 -0500 (EST)
-Message-ID: <20161227.114112.712597535585873594.davem@davemloft.net>
-References: <3010789.Juyl7C8p5j@amdc3058>
-        <CGME20161227160622epcas5p2a189b390c21eb504de419505781d3dcd@epcas5p2.samsung.com>
-        <6997612.Sd3D1QNmYZ@amdc3058>
+From: Jeff Layton <jlayton@poochiereds.net>
+Subject: LSF/MM 2017: Call for Proposals
+Date: Tue, 27 Dec 2016 12:19:07 -0500
+Message-ID: <1482859147.2771.5.camel@poochiereds.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:38388 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754145AbcL0QlO (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 27 Dec 2016 11:41:14 -0500
-In-Reply-To: <6997612.Sd3D1QNmYZ@amdc3058>
-Sender: linux-ide-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
+To: linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, ceph-devel@vger.kernel.org, linux-nvme@lists.infradead.org
+Cc: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
 List-Id: linux-ide@vger.kernel.org
-To: b.zolnierkie@samsung.com
-Cc: lramos.prof@yahoo.com.br, linux-ide@vger.kernel.org, petkovbb@gmail.com
 
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Date: Tue, 27 Dec 2016 17:06:19 +0100
+We initially sent this pretty early this year, so this is a resend in           
+case anyone missed the first posting. The call for topics and attendance        
+requests is open until January 15th, 2017.
 
-> On Tuesday, December 27, 2016 11:08:24 AM Bartlomiej Zolnierkiewicz wrote:
->> 
->> Hi,
->> 
->> On Monday, December 26, 2016 11:47:24 AM David Miller wrote:
->> > From: Luiz Carlos Ramos <lramos.prof@yahoo.com.br>
->> > Date: Tue, 11 Oct 2016 22:12:45 -0300
->> > 
->> > > This humble patch was sent one or two months before, and had no actions,
->> > > except for a colleague reply which friendly pointed out some formatting
->> > > problems (which were solved in a second message).
->> > > 
->> > > It relates to an old code, the legacy IDE driver, but the bug it
->> > > addresses is real. The code, although rarely used, is
->> > > still there to be compiled if one chooses to do so (like me).
->> > > 
->> > > Also, the fix has a very low risk of present collateral effects IMHO.
->> > > It is already compiled and tested in some embedded machines.
->> > > 
->> > > So, again IMHO, it is worth be fixed.
->> > > 
->> > > This email is a second trial with it. I hope it can help the one or two
->> > > guys out there which are still running the legacy IDE driver and
->> > > haven't noticed the former email.
->> > > 
->> > > Best regards,
->> > > 
->> > > Signed-off-by: Luiz Carlos Ramos <lramos.prof@yahoo.com.br>
->> > 
->> > This bug was introduced by commit
->> > 20df429dd6671804999493baf2952f82582869fa ("ide-generic: handle probing
->> > of legacy io-ports v5") which seems poorly tested.
->> 
->> Please always cc: the original commit author.
->> 
->> > Applied and queued up for -stable, th anks.
->> 
->> For some reason I've never got the discussed patch from
->> linux-ide ML though I now have found in the patchwork:
->> 
->> https://patchwork.ozlabs.org/patch/680975/
->> 
->> The patch is incorrect.  If you have PCI IDE devices (like in
->> the case described in the situation being "fixed" by the patch)
->> you should use the correct PCI IDE host driver for proper
->> operation and not ide-generic host driver (the latter still can
->> be used by using kernel parameters).
-> 
-> Moreover this patch introduces a regression.  In the situation
-> when there are no PCI IDE devices and the probing should be done
-> automatically (for the first two legacy IDE ports) it will be no
-> longer done.
-> 
-> Now back to the using correct PCI IDE host drivers - Luiz what
-> are the systems that you need this patch on?  Could you please
-> get 'lspci -nn' command output from them?
+The original message follows:
 
-The original code before the patch in question probed the interfaces
-unconditionally, probe_mask was a static int set to "0x03".
+----------------------8<------------------------
 
-Commit 20df429dd6671804999493baf2952f82582869fa changed the default
-behavior, as well as adding a new module parameter whose behavior
-makes no sense at all.  Inverted bit logic?  Give me a break.
+The annual Linux Storage, Filesystem and Memory Management (LSF/MM)
+Summit for 2017 will be held on March 20th and 21st at the Hyatt
+Cambridge, Cambridge, MA. LSF/MM is an invitation-only technical
+workshop to map out improvements to the Linux storage, filesystem and
+memory management subsystems that will make their way into the mainline
+kernel within the coming years.
 
-Sorry, no, the fix is correct and I'm pushing it to Linus.
+    http://events.linuxfoundation.org/events/linux-storage-filesystem-and-mm-summit
+
+Like last year, LSF/MM will be colocated with the Linux Foundation Vault
+conference which takes place on March 22nd and 23rd in the same Venue.
+For those that do not know, Vault is designed to be an event where open
+source storage and filesystem practitioners meet storage implementors
+and, as such, it would be of benefit for LSF/MM attendees to attend.
+
+Unlike past years, Vault admission is not free for LSF/MM attendees this
+year unless they're giving a talk. There is a discount for LSF/MM
+attendees, however we would also like to encourage folks to submit talk
+proposals to speak at the Vault conference.
+
+    http://events.linuxfoundation.org/events/vault
+
+On behalf of the committee I am issuing a call for agenda proposals that
+are suitable for cross-track discussion as well as technical subjects
+for the breakout sessions.
+
+If advance notice is required for visa applications then please point
+that out in your proposal or request to attend, and submit the topic
+as soon as possible.
+
+1) Proposals for agenda topics should be sent before January 15th, 2016
+to:
+
+    lsf-pc@lists.linux-foundation.org
+
+and cc the Linux list or lists that are relevant for the topic in
+question:
+
+    ATA:   linux-ide@vger.kernel.org
+    Block: linux-block@vger.kernel.org
+    FS:    linux-fsdevel@vger.kernel.org
+    MM:    linux-mm@kvack.org
+    SCSI:  linux-scsi@vger.kernel.org
+    NVMe:  linux-nvme@lists.infradead.org
+
+Please tag your proposal with [LSF/MM TOPIC] to make it easier to track.
+In addition, please make sure to start a new thread for each topic
+rather than following up to an existing one.  Agenda topics and
+attendees will be selected by the program committee, but the final
+agenda will be formed by consensus of the attendees on the day.
+
+2) Requests to attend the summit for those that are not proposing a
+topic should be sent to:
+
+    lsf-pc@lists.linux-foundation.org
+
+Please summarise what expertise you will bring to the meeting, and what
+you would like to discuss. Please also tag your email with [LSF/MM
+ATTEND] and send it as a new thread so there is less chance of it
+getting lost.
+
+We will try to cap attendance at around 25-30 per track to facilitate
+discussions although the final numbers will depend on the room sizes at
+the venue.
+
+Brief presentations are allowed to guide discussion, but are strongly
+discouraged. There will be no recording or audio bridge. However, we
+expect that written minutes will be published as we did in previous
+years:
+
+2016: https://lwn.net/Articles/lsfmm2016/
+
+2015: https://lwn.net/Articles/lsfmm2015/
+
+2014: http://lwn.net/Articles/LSFMM2014/
+
+2013: http://lwn.net/Articles/548089/
+
+3) If you have feedback on last year's meeting that we can use to
+improve this year's, please also send that to:
+
+    lsf-pc@lists.linux-foundation.org
+
+Thank you on behalf of the program committee:
+
+Storage:
+    James Bottomley
+    Martin K. Petersen (track chair)
+    Sagi Grimberg
+
+Filesystems:
+    Anna Schumaker
+    Chris Mason
+    Eric Sandeen
+    Jan Kara
+    Jeff Layton (summit chair)
+    Josef Bacik (track chair)
+    Trond Myklebust
+
+MM:
+    Johannes Weiner
+    Rik van Riel (track chair)
+-- 
+Jeff Layton <jlayton@poochiereds.net>
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
