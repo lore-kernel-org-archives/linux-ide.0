@@ -1,54 +1,40 @@
-From: Shawn Guo <shawnguo-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 2/2] arm64: dts: updated sata node on ls1046a dts
-Date: Fri, 30 Dec 2016 10:36:07 +0800
-Message-ID: <20161230023606.GJ6177@dragon>
-References: <1479369560-9188-1-git-send-email-yuantian.tang@nxp.com>
- <1479369560-9188-2-git-send-email-yuantian.tang@nxp.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1479369560-9188-2-git-send-email-yuantian.tang-3arQi8VN3Tc@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: yuantian.tang-3arQi8VN3Tc@public.gmane.org
-Cc: tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, catalin.marinas-5wv7dgnIgG8@public.gmane.org, will.deacon-5wv7dgnIgG8@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+From: Bhumika Goyal <bhumirks@gmail.com>
+Subject: [PATCH] ide: palm_bk3710: add __initdata to palm_bk3710_port_info
+Date: Fri, 30 Dec 2016 14:50:02 +0530
+Message-ID: <1483089602-6016-1-git-send-email-bhumirks@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: julia.lawall@lip6.fr, davem@davemloft.net, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Bhumika Goyal <bhumirks@gmail.com>
 List-Id: linux-ide@vger.kernel.org
 
-On Thu, Nov 17, 2016 at 03:59:20PM +0800, yuantian.tang-3arQi8VN3Tc@public.gmane.org wrote:
-> From: Tang Yuantian <Yuantian.Tang-3arQi8VN3Tc@public.gmane.org>
-> 
-> On ls1046a soc, sata ecc should be disabled. So added sata ecc
+The object palm_bk3710_port_info of type ide_port_info is never
+referenced anywhere after initialization by palm_bk3710_probe. It is
+also passed as a parameter to ide_host_add which is called from the init
+function but this call doesn't store the object reference anywhere, and
+it only dereferences the values of the fields. Therefore add __initdata
+to its declaration.
 
-disabled or enabled?
+Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+---
 
-Shawn
+Compiled, but not tested
 
-> register address so that driver can get this information.
-> 
-> Signed-off-by: Tang Yuantian <yuantian.tang-3arQi8VN3Tc@public.gmane.org>
-> ---
->  arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi b/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi
-> index 38806ca..88aaaf1 100644
-> --- a/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi
-> +++ b/arch/arm64/boot/dts/freescale/fsl-ls1046a.dtsi
-> @@ -507,7 +507,9 @@
->  
->  		sata: sata@3200000 {
->  			compatible = "fsl,ls1046a-ahci";
-> -			reg = <0x0 0x3200000 0x0 0x10000>;
-> +			reg = <0x0 0x3200000 0x0 0x10000>,
-> +			    <0x0 0x20140520 0x0 0x4>;
-> +			reg-names = "ahci", "sata-ecc";
->  			interrupts = <GIC_SPI 69 IRQ_TYPE_LEVEL_HIGH>;
->  			clocks = <&clockgen 4 1>;
->  		};
-> -- 
-> 2.1.0.27.g96db324
-> 
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ drivers/ide/palm_bk3710.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/ide/palm_bk3710.c b/drivers/ide/palm_bk3710.c
+index 46427ea..157f2d1 100644
+--- a/drivers/ide/palm_bk3710.c
++++ b/drivers/ide/palm_bk3710.c
+@@ -300,7 +300,7 @@ static int palm_bk3710_init_dma(ide_hwif_t *hwif, const struct ide_port_info *d)
+ 	.cable_detect		= palm_bk3710_cable_detect,
+ };
+ 
+-static struct ide_port_info palm_bk3710_port_info = {
++static struct ide_port_info palm_bk3710_port_info __initdata = {
+ 	.init_dma		= palm_bk3710_init_dma,
+ 	.port_ops		= &palm_bk3710_ports_ops,
+ 	.dma_ops		= &sff_dma_ops,
+-- 
+1.9.1
