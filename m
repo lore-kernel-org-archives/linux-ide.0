@@ -1,52 +1,36 @@
 From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: [PATCH 0/3] ata: add m68k/Atari Falcon PATA support
-Date: Fri, 30 Dec 2016 15:01:15 +0100
-Message-ID: <1483106478-1382-1-git-send-email-b.zolnierkie@samsung.com>
-References: <CGME20161230140139epcas5p160eda5a6a77be084e21f12002c85cc2a@epcas5p1.samsung.com>
-Return-path: <linux-m68k-owner@vger.kernel.org>
-Sender: linux-m68k-owner@vger.kernel.org
+Subject: [PATCH 1/3] ata: allow subsystem to be used on m68k arch
+Date: Fri, 30 Dec 2016 15:01:16 +0100
+Message-ID: <1483106478-1382-2-git-send-email-b.zolnierkie@samsung.com>
+References: <1483106478-1382-1-git-send-email-b.zolnierkie@samsung.com>
+ <CGME20161230140141epcas5p161d9467e10e294f502863b5347e351d5@epcas5p1.samsung.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-reply-to: <1483106478-1382-1-git-send-email-b.zolnierkie@samsung.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
 Cc: Geert Uytterhoeven <geert@linux-m68k.org>, Michael Schmitz <schmitzmic@gmail.com>, linux-ide@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org, b.zolnierkie@samsung.com
 List-Id: linux-ide@vger.kernel.org
 
-Hi,
+When libata was merged m68k lacked IOMAP support.  This has not been
+true for a long time now so allow subsystem to be used on m68k.
 
-This patchset adds m68k/Atari Falcon PATA support to libata.
-The major difference in the new libata's pata_falcon host
-driver when compared to legacy IDE's falconide host driver is
-that we are using polled PIO mode and thus avoiding the need
-for STDMA locking magic altogether.
+Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+---
+ drivers/ata/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Tested under ARAnyM emulator.
-
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
-
-
-Bartlomiej Zolnierkiewicz (3):
-  ata: allow subsystem to be used on m68k arch
-  ata: pass queued command to ->sff_data_xfer method
-  ata: add Atari Falcon PATA controller driver
-
- drivers/ata/Kconfig           |  11 ++-
- drivers/ata/Makefile          |   1 +
- drivers/ata/libata-sff.c      |  29 +++----
- drivers/ata/pata_at91.c       |   6 +-
- drivers/ata/pata_bf54x.c      |   7 +-
- drivers/ata/pata_ep93xx.c     |   4 +-
- drivers/ata/pata_falcon.c     | 184 ++++++++++++++++++++++++++++++++++++++++++
- drivers/ata/pata_ixp4xx_cf.c  |   4 +-
- drivers/ata/pata_legacy.c     |  15 ++--
- drivers/ata/pata_octeon_cf.c  |  12 +--
- drivers/ata/pata_pcmcia.c     |   6 +-
- drivers/ata/pata_samsung_cf.c |   4 +-
- drivers/ata/sata_rcar.c       |   4 +-
- include/linux/libata.h        |   8 +-
- 14 files changed, 247 insertions(+), 48 deletions(-)
- create mode 100644 drivers/ata/pata_falcon.c
-
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 2c8be74..da19fc9 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -14,7 +14,7 @@ menuconfig ATA
+ 	tristate "Serial ATA and Parallel ATA drivers (libata)"
+ 	depends on HAS_IOMEM
+ 	depends on BLOCK
+-	depends on !(M32R || M68K || S390) || BROKEN
++	depends on !(M32R || S390) || BROKEN
+ 	select SCSI
+ 	select GLOB
+ 	---help---
 -- 
 1.9.1
