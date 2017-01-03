@@ -1,56 +1,37 @@
-From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] pata_legacy: Allow disabling of legacy PATA device
- probes on non-PCI systems
-Date: Tue, 3 Jan 2017 17:34:42 +0000
-Message-ID: <20170103173442.00a514cc@lxorguk.ukuu.org.uk>
-References: <20161202170705.GB6033@htj.duckdns.org>
-        <CAP8WD_bUW9cAAQpvenL73sxvpoxNYwZdRqpj92YWEyanK51+0g@mail.gmail.com>
-        <20161205192310.GA30331@mtj.duckdns.org>
-        <CAP8WD_becq+h2=-g7t-6Pp1psmkCCvdB0YUcg+wYPocUP4dYdw@mail.gmail.com>
-        <20161212170154.GA13864@htj.duckdns.org>
-        <CAP8WD_YMtnsuYmJHGz1eLmrQNemsB1Z6Soyb6f72brAfMNUNeg@mail.gmail.com>
-        <CAP8WD_ZoJgrdsDZNR4uN8HWESO5MyuNc1xN_F2an8GfP8nKcLA@mail.gmail.com>
-        <20161222163711.GB29161@htj.duckdns.org>
-        <CAP8WD_ay1uKc0JLPr8MWQKT2N=rdqeH+hKkOCVMt76NcmK4hAA@mail.gmail.com>
-        <CAP8WD_agt=peX28+d_oTXhEOd_9ogMScO7h8xd1hTTsHzWz_Vg@mail.gmail.com>
-        <20161222192256.GE31216@htj.duckdns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:40192 "EHLO
-        lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1760057AbdACRfy (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jan 2017 12:35:54 -0500
-In-Reply-To: <20161222192256.GE31216@htj.duckdns.org>
-Sender: linux-ide-owner@vger.kernel.org
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [PATCH 2/6] ata: SATA_HIGHBANK should depend on HAS_DMA
+Date: Tue,  3 Jan 2017 19:09:45 +0100
+Message-ID: <1483466989-9091-3-git-send-email-geert@linux-m68k.org>
+References: <1483466989-9091-1-git-send-email-geert@linux-m68k.org>
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <1483466989-9091-1-git-send-email-geert@linux-m68k.org>
+Sender: linux-m68k-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: linux-ide@vger.kernel.org, linux-m68k@vger.kernel.org, linux-kernel@vger.kernel.org, Geert Uytterhoeven <geert@linux-m68k.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: whiteheadm@acm.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, linux-ide@vger.kernel.org
 
-On Thu, 22 Dec 2016 14:22:56 -0500
-Tejun Heo <tj@kernel.org> wrote:
+If NO_DMA=y:
 
-> Hello,
-> 
-> On Thu, Dec 22, 2016 at 01:30:23PM -0500, tedheadster wrote:
-> > > I think this driver should either not be considered 'platform' or it
-> > > should make a call to free_irq() on failures.
-> > >  
-> > 
-> > The question is: who is responsible to free an irq from a device
-> > registered using platform_device_register_simple()? Is it the driver
-> > or the platform code?  
-> 
-> Sorry, I wasn't clear.  There's a rudimentary garbage collector devm
-> which tracks all the resources associated with a device.  The previous
-> patch that I sent you which created an explict resource group and
-> released it uses the same mechanism.  When any device gets destroyed,
-> it should release all associated resources and I was wondering why
-> that wasn't happening without the explicit group operations.  I'll
-> write up a debug patch to track down what's going on. 
+    ERROR: "bad_dma_ops" [drivers/ata/sata_highbank.ko] undefined!
 
-Almost certainly libata leaking a reference to the device so it doesn't
-think it's gone away.
+Add a dependency on HAS_DMA to fix this.
 
-Alan
+Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+---
+ drivers/ata/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 7b36b791078a4806..275dbbded6dbe03b 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -344,6 +344,7 @@ config SATA_DWC_VDEBUG
+ 
+ config SATA_HIGHBANK
+ 	tristate "Calxeda Highbank SATA support"
++	depends on HAS_DMA
+ 	depends on ARCH_HIGHBANK || COMPILE_TEST
+ 	help
+ 	  This option enables support for the Calxeda Highbank SoC's
+-- 
+1.9.1
