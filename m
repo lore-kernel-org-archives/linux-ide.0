@@ -1,76 +1,56 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH 0/3] ata: add m68k/Atari Falcon PATA support
-Date: Tue, 3 Jan 2017 11:49:16 +0100
-Message-ID: <CAMuHMdVpnhTNSRZ1h-q8+d0wjDKSHtev0eyVoVxYWhf0DCD+zg@mail.gmail.com>
-References: <CGME20161230140139epcas5p160eda5a6a77be084e21f12002c85cc2a@epcas5p1.samsung.com>
- <1483106478-1382-1-git-send-email-b.zolnierkie@samsung.com>
+From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] pata_legacy: Allow disabling of legacy PATA device
+ probes on non-PCI systems
+Date: Tue, 3 Jan 2017 17:34:42 +0000
+Message-ID: <20170103173442.00a514cc@lxorguk.ukuu.org.uk>
+References: <20161202170705.GB6033@htj.duckdns.org>
+        <CAP8WD_bUW9cAAQpvenL73sxvpoxNYwZdRqpj92YWEyanK51+0g@mail.gmail.com>
+        <20161205192310.GA30331@mtj.duckdns.org>
+        <CAP8WD_becq+h2=-g7t-6Pp1psmkCCvdB0YUcg+wYPocUP4dYdw@mail.gmail.com>
+        <20161212170154.GA13864@htj.duckdns.org>
+        <CAP8WD_YMtnsuYmJHGz1eLmrQNemsB1Z6Soyb6f72brAfMNUNeg@mail.gmail.com>
+        <CAP8WD_ZoJgrdsDZNR4uN8HWESO5MyuNc1xN_F2an8GfP8nKcLA@mail.gmail.com>
+        <20161222163711.GB29161@htj.duckdns.org>
+        <CAP8WD_ay1uKc0JLPr8MWQKT2N=rdqeH+hKkOCVMt76NcmK4hAA@mail.gmail.com>
+        <CAP8WD_agt=peX28+d_oTXhEOd_9ogMScO7h8xd1hTTsHzWz_Vg@mail.gmail.com>
+        <20161222192256.GE31216@htj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1483106478-1382-1-git-send-email-b.zolnierkie@samsung.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: Tejun Heo <tj@kernel.org>, Michael Schmitz <schmitzmic@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, linux-m68k <linux-m68k@lists.linux-m68k.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:40192 "EHLO
+        lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1760057AbdACRfy (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 3 Jan 2017 12:35:54 -0500
+In-Reply-To: <20161222192256.GE31216@htj.duckdns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: whiteheadm@acm.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, linux-ide@vger.kernel.org
 
-Hi Bartlomiej,
+On Thu, 22 Dec 2016 14:22:56 -0500
+Tejun Heo <tj@kernel.org> wrote:
 
-On Fri, Dec 30, 2016 at 3:01 PM, Bartlomiej Zolnierkiewicz
-<b.zolnierkie@samsung.com> wrote:
-> This patchset adds m68k/Atari Falcon PATA support to libata.
+> Hello,
+> 
+> On Thu, Dec 22, 2016 at 01:30:23PM -0500, tedheadster wrote:
+> > > I think this driver should either not be considered 'platform' or it
+> > > should make a call to free_irq() on failures.
+> > >  
+> > 
+> > The question is: who is responsible to free an irq from a device
+> > registered using platform_device_register_simple()? Is it the driver
+> > or the platform code?  
+> 
+> Sorry, I wasn't clear.  There's a rudimentary garbage collector devm
+> which tracks all the resources associated with a device.  The previous
+> patch that I sent you which created an explict resource group and
+> released it uses the same mechanism.  When any device gets destroyed,
+> it should release all associated resources and I was wondering why
+> that wasn't happening without the explicit group operations.  I'll
+> write up a debug patch to track down what's going on. 
 
-Thanks for your series!
+Almost certainly libata leaking a reference to the device so it doesn't
+think it's gone away.
 
-That leaves us with 4 to go ;-)
-
-    CONFIG_BLK_DEV_GAYLE
-    CONFIG_BLK_DEV_BUDDHA
-    CONFIG_BLK_DEV_MAC_IDE
-    CONFIG_BLK_DEV_Q40IDE
-
-Note that using libata instead of the legacy IDE driver increases kernel size.
-
-After enabling libata:
-
-    CONFIG_ATA=y
-    CONFIG_ATA_VERBOSE_ERROR=y
-    CONFIG_ATA_SFF=y
-    CONFIG_PATA_FALCON=y
-
-an atari_defconfig kernel grew by:
-
-    add/remove: 775/0 grow/shrink: 753/41 up/down: 98999/-242 (98757)
-
-After disabling CONFIG_IDE:
-
-    add/remove: 0/589 grow/shrink: 0/12 up/down: 0/-62835 (-62835)
-
-So the net result is:
-
-    add/remove: 775/589 grow/shrink: 749/51 up/down: 98886/-62964 (35922)
-
-Disabling CONFIG_ATA_VERBOSE_ERROR saved 1380 bytes, which is less than the
-value advertised by Kconfig (6KB).
-
-> The major difference in the new libata's pata_falcon host
-> driver when compared to legacy IDE's falconide host driver is
-> that we are using polled PIO mode and thus avoiding the need
-> for STDMA locking magic altogether.
-
-I'll let the Atari experts (Michael?) comment on that...
-
-> Tested under ARAnyM emulator.
-
-Works indeed fine on ARAnyM.
-Unfortunately I can't test it on real hardware...
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Alan
