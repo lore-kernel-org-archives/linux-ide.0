@@ -1,48 +1,46 @@
-From: =?UTF-8?q?Micha=C5=82=20K=C4=99pie=C5=84?= <kernel@kempniu.pl>
-Subject: [PATCH] ata: ahci_xgene: free structure returned by acpi_get_object_info()
-Date: Thu,  5 Jan 2017 15:14:01 +0100
-Message-ID: <20170105141401.4896-1-kernel@kempniu.pl>
+From: Michael Schmitz <schmitzmic@gmail.com>
+Subject: Re: [PATCH 0/3] ata: add m68k/Atari Falcon PATA support
+Date: Fri, 6 Jan 2017 10:01:49 +1300
+Message-ID: <CAOmrzkJP6s34DPOHd4OFFx=CXko35Kt=CfeDZthOPvKDJy-9YA@mail.gmail.com>
+References: <CGME20161230140139epcas5p160eda5a6a77be084e21f12002c85cc2a@epcas5p1.samsung.com>
+ <1483106478-1382-1-git-send-email-b.zolnierkie@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:33915 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1032590AbdAEOOU (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 5 Jan 2017 09:14:20 -0500
-Received: by mail-lf0-f67.google.com with SMTP id d16so35354349lfb.1
-        for <linux-ide@vger.kernel.org>; Thu, 05 Jan 2017 06:14:14 -0800 (PST)
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <1483106478-1382-1-git-send-email-b.zolnierkie@samsung.com>
+Sender: linux-m68k-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: Tejun Heo <tj@kernel.org>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-ide@vger.kernel.org, Linux/m68k <linux-m68k@lists.linux-m68k.org>, Linux Kernel Development <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-acpi_get_object_info() allocates the returned structure, which the
-caller has to free when the call succeeds.  Free it when appropriate.
+Hi Bartlomiej,
 
-Fixes: c9802a4be661 ("ata: ahci_xgene: Add AHCI Support for 2nd HW version of APM X-Gene SoC AHCI SATA Host controller.")
-Signed-off-by: Michał Kępień <kernel@kempniu.pl>
----
- drivers/ata/ahci_xgene.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+thanks for caring to support our legacy PATA systems!
 
-diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-index 73b19b277138..c2b5941d9184 100644
---- a/drivers/ata/ahci_xgene.c
-+++ b/drivers/ata/ahci_xgene.c
-@@ -821,8 +821,10 @@ static int xgene_ahci_probe(struct platform_device *pdev)
- 				dev_warn(&pdev->dev, "%s: Error reading device info. Assume version1\n",
- 					__func__);
- 				version = XGENE_AHCI_V1;
--			} else if (info->valid & ACPI_VALID_CID) {
--				version = XGENE_AHCI_V2;
-+			} else {
-+				if (info->valid & ACPI_VALID_CID)
-+					version = XGENE_AHCI_V2;
-+				kfree(info);
- 			}
- 		}
- 	}
--- 
-2.11.0
+On Sat, Dec 31, 2016 at 3:01 AM, Bartlomiej Zolnierkiewicz
+<b.zolnierkie@samsung.com> wrote:
+> Hi,
+>
+> This patchset adds m68k/Atari Falcon PATA support to libata.
+> The major difference in the new libata's pata_falcon host
+> driver when compared to legacy IDE's falconide host driver is
+> that we are using polled PIO mode and thus avoiding the need
+> for STDMA locking magic altogether.
 
+I don't suppose this is the default libata mode for PIO?
+
+How is polling implemented in libata? Sleeping for something
+approximating the average seek latency shouldn't hurt but spinning
+wont be acceptable for a low performance single CPU architecture like
+the Falcon.
+
+> Tested under ARAnyM emulator.
+
+Not sure that the emulator is really feature complete enough - I'll
+get this tested on my Falcon in the next few weeks. I'm a bit worried
+about IDE still generating interrupts on seek completion (did you spot
+anything like that, Geert?).
+
+Cheers,
+
+  Michael
