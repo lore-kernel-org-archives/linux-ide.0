@@ -1,31 +1,32 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 0/6] ata: Missing HAS_DMA dependencies
-Date: Fri, 6 Jan 2017 11:37:17 -0500
-Message-ID: <20170106163717.GA16083@mtj.duckdns.org>
-References: <1483466989-9091-1-git-send-email-geert@linux-m68k.org>
+Subject: Re: [PATCH] ata: ahci_xgene: free structure returned by
+ acpi_get_object_info()
+Date: Fri, 6 Jan 2017 11:39:48 -0500
+Message-ID: <20170106163948.GB16083@mtj.duckdns.org>
+References: <20170105141401.4896-1-kernel@kempniu.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:34589 "EHLO
-        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936778AbdAFQhj (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 6 Jan 2017 11:37:39 -0500
+Received: from mail-qt0-f196.google.com ([209.85.216.196]:35521 "EHLO
+        mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754063AbdAFQjw (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 6 Jan 2017 11:39:52 -0500
 Content-Disposition: inline
-In-Reply-To: <1483466989-9091-1-git-send-email-geert@linux-m68k.org>
+In-Reply-To: <20170105141401.4896-1-kernel@kempniu.pl>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org, linux-m68k@vger.kernel.org, linux-kernel@vger.kernel.org
+To: =?utf-8?B?TWljaGHFgiBLxJlwaWXFhA==?= <kernel@kempniu.pl>
+Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Jan 03, 2017 at 07:09:43PM +0100, Geert Uytterhoeven wrote:
-> 	Hi all,
+On Thu, Jan 05, 2017 at 03:14:01PM +0100, Michał Kępień wrote:
+> acpi_get_object_info() allocates the returned structure, which the
+> caller has to free when the call succeeds.  Free it when appropriate.
 > 
-> Bartlomiej's "[PATCH 1/3] ata: allow subsystem to be used on m68k arch"
-> exposed a few missing dependencies on HAS_DMA. This series allows to
-> build again "allmodconfig" and "allyesconfig" kernels tailored for
-> Sun-3, which sets NO_DMA=y.
+> Fixes: c9802a4be661 ("ata: ahci_xgene: Add AHCI Support for 2nd HW version of APM X-Gene SoC AHCI SATA Host controller.")
+> Signed-off-by: Michał Kępień <kernel@kempniu.pl>
 
-Applied to 1-6 to libata/for-4.11.
+Applied to libata/for-4.11.
 
 Thanks.
 
