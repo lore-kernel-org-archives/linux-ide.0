@@ -1,46 +1,33 @@
-From: Michael Schmitz <schmitzmic@gmail.com>
-Subject: Re: [PATCH 0/3] ata: add m68k/Atari Falcon PATA support
-Date: Fri, 6 Jan 2017 10:01:49 +1300
-Message-ID: <CAOmrzkJP6s34DPOHd4OFFx=CXko35Kt=CfeDZthOPvKDJy-9YA@mail.gmail.com>
-References: <CGME20161230140139epcas5p160eda5a6a77be084e21f12002c85cc2a@epcas5p1.samsung.com>
- <1483106478-1382-1-git-send-email-b.zolnierkie@samsung.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 0/6] ata: Missing HAS_DMA dependencies
+Date: Fri, 6 Jan 2017 11:37:17 -0500
+Message-ID: <20170106163717.GA16083@mtj.duckdns.org>
+References: <1483466989-9091-1-git-send-email-geert@linux-m68k.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <1483106478-1382-1-git-send-email-b.zolnierkie@samsung.com>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: Tejun Heo <tj@kernel.org>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-ide@vger.kernel.org, Linux/m68k <linux-m68k@lists.linux-m68k.org>, Linux Kernel Development <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qk0-f195.google.com ([209.85.220.195]:34589 "EHLO
+        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S936778AbdAFQhj (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 6 Jan 2017 11:37:39 -0500
+Content-Disposition: inline
+In-Reply-To: <1483466989-9091-1-git-send-email-geert@linux-m68k.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, linux-ide@vger.kernel.org, linux-m68k@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi Bartlomiej,
+On Tue, Jan 03, 2017 at 07:09:43PM +0100, Geert Uytterhoeven wrote:
+> 	Hi all,
+> 
+> Bartlomiej's "[PATCH 1/3] ata: allow subsystem to be used on m68k arch"
+> exposed a few missing dependencies on HAS_DMA. This series allows to
+> build again "allmodconfig" and "allyesconfig" kernels tailored for
+> Sun-3, which sets NO_DMA=y.
 
-thanks for caring to support our legacy PATA systems!
+Applied to 1-6 to libata/for-4.11.
 
-On Sat, Dec 31, 2016 at 3:01 AM, Bartlomiej Zolnierkiewicz
-<b.zolnierkie@samsung.com> wrote:
-> Hi,
->
-> This patchset adds m68k/Atari Falcon PATA support to libata.
-> The major difference in the new libata's pata_falcon host
-> driver when compared to legacy IDE's falconide host driver is
-> that we are using polled PIO mode and thus avoiding the need
-> for STDMA locking magic altogether.
+Thanks.
 
-I don't suppose this is the default libata mode for PIO?
-
-How is polling implemented in libata? Sleeping for something
-approximating the average seek latency shouldn't hurt but spinning
-wont be acceptable for a low performance single CPU architecture like
-the Falcon.
-
-> Tested under ARAnyM emulator.
-
-Not sure that the emulator is really feature complete enough - I'll
-get this tested on my Falcon in the next few weeks. I'm a bit worried
-about IDE still generating interrupts on seek completion (did you spot
-anything like that, Geert?).
-
-Cheers,
-
-  Michael
+-- 
+tejun
