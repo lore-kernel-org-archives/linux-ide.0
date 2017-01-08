@@ -1,29 +1,41 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/3] ata: allow subsystem to be used on m68k arch
-Date: Sun, 8 Jan 2017 02:08:23 -0800
-Message-ID: <20170108100823.GD25268@infradead.org>
-References: <1483106478-1382-1-git-send-email-b.zolnierkie@samsung.com>
- <1483106478-1382-2-git-send-email-b.zolnierkie@samsung.com>
- <20161230141249.GA4543@infradead.org>
- <CGME20161230171438epcas1p3c1d8ea8e4c77d796b81f7130c5e61d3f@epcas1p3.samsung.com>
- <3484511.F6TxDiWTi4@amdc3058>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [V1] ata: sata_mv:- Handle return value of devm_ioremap.
+Date: Sun, 8 Jan 2017 13:49:22 -0500
+Message-ID: <20170108184922.GC9403@mtj.duckdns.org>
+References: <1481564607-9626-1-git-send-email-arvind.yadav.cs@gmail.com>
+ <20170106204620.GD29909@mtj.duckdns.org>
+ <CAHp75Vf79R8H89npEPjbWkWqPXEKAiJ4Yru98T5nYK0x+FZuxw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:33441 "EHLO
+        mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752378AbdAHSt3 (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Sun, 8 Jan 2017 13:49:29 -0500
 Content-Disposition: inline
-In-Reply-To: <3484511.F6TxDiWTi4@amdc3058>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Tejun Heo <tj@kernel.org>, Geert Uytterhoeven <geert@linux-m68k.org>, Michael Schmitz <schmitzmic@gmail.com>, linux-ide@vger.kernel.org, linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org
+In-Reply-To: <CAHp75Vf79R8H89npEPjbWkWqPXEKAiJ4Yru98T5nYK0x+FZuxw@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc: Arvind Yadav <arvind.yadav.cs@gmail.com>, linux-ide@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Fri, Dec 30, 2016 at 06:14:36PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> * m32r: I don't know why it was restricted but it builds fine nowadays
->   (I will fix it later in incremental patch)
+On Sat, Jan 07, 2017 at 12:52:57AM +0200, Andy Shevchenko wrote:
+> On Fri, Jan 6, 2017 at 10:46 PM, Tejun Heo <tj@kernel.org> wrote:
+> > On Mon, Dec 12, 2016 at 11:13:27PM +0530, Arvind Yadav wrote:
+> >> Here, If devm_ioremap will fail. It will return NULL.
+> >> Then hpriv->base = NULL - 0x20000; Kernel can run into
+> >> a NULL-pointer dereference. This error check will avoid
+> >> NULL pointer dereference.
+> >>
+> >> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+> >
+> > Applied to libata/for-4.10-fixes.
 > 
-> * s390: no PATA hardware, legacy IDE subsystem is also not supported
+> Hold on, why not to convert to devm_ioremap_resource() ?
 
-s390 now has PCIe support, so PATA could be attached through a PCIe to
-PCI bridge in theory.  And while that is very theoretical not having
-arch ifdefs is still something we should strive for, so I'd suggest
-removing the condition entirely.
+Care to send the patch?
+
+Thanks.
+
+-- 
+tejun
