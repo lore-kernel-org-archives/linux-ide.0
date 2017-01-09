@@ -1,59 +1,28 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata-eh: Use switch() instead of sparse array for
- protocol strings
-Date: Mon, 9 Jan 2017 14:41:00 -0500
-Message-ID: <20170109194100.GH12827@mtj.duckdns.org>
-References: <1483973368-6828-1-git-send-email-geert@linux-m68k.org>
- <20170109152319.GA12827@mtj.duckdns.org>
- <CAMuHMdW6KPq6-7vmpTTv_M30zbqkdVbewgaOaCqYT+UzXpGU9Q@mail.gmail.com>
- <20170109160424.GB12827@mtj.duckdns.org>
- <CAMuHMdV3n9rq8eTjwxKzRLroF2YJYi2qvCzQ4eDhDEkGB=4dLw@mail.gmail.com>
- <20170109172723.GA30423@infradead.org>
- <20170109173154.GE12827@mtj.duckdns.org>
- <CAMuHMdXfFAyyT2VWwmG3sHu_Ufqzoz39O95rXDUCvHaD9HQFZA@mail.gmail.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH] Fix interface autodetection in legacy IDE driver
+ (trial #2)
+Date: Mon, 09 Jan 2017 15:25:43 -0500 (EST)
+Message-ID: <20170109.152543.2104649985463993961.davem@davemloft.net>
+References: <20161230005232.GA9069@giustizia>
+        <CGME20161230160554epcas1p3830e973edb084440f85e5bb24dbf1f1f@epcas1p3.samsung.com>
+        <2007222.eymCZIUvPG@amdc3058>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:35719 "EHLO
-        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S969056AbdAITlH (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 9 Jan 2017 14:41:07 -0500
-Content-Disposition: inline
-In-Reply-To: <CAMuHMdXfFAyyT2VWwmG3sHu_Ufqzoz39O95rXDUCvHaD9HQFZA@mail.gmail.com>
+Received: from shards.monkeyblade.net ([184.105.139.130]:49874 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752144AbdAIUZo (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 9 Jan 2017 15:25:44 -0500
+In-Reply-To: <2007222.eymCZIUvPG@amdc3058>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Christoph Hellwig <hch@infradead.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: b.zolnierkie@samsung.com
+Cc: lramos.prof@yahoo.com.br, linux-ide@vger.kernel.org, petkovbb@gmail.com
 
-Hello, Geert.
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Date: Fri, 30 Dec 2016 17:05:51 +0100
 
-On Mon, Jan 09, 2017 at 07:25:31PM +0100, Geert Uytterhoeven wrote:
-> On Mon, Jan 9, 2017 at 6:31 PM, Tejun Heo <tj@kernel.org> wrote:
-> > On Mon, Jan 09, 2017 at 09:27:23AM -0800, Christoph Hellwig wrote:
-> >> On Mon, Jan 09, 2017 at 05:30:02PM +0100, Geert Uytterhoeven wrote:
-> >> > > ata_force_param_buf is __initdata and shouldn't really matter.
-> >> >
-> >> > It mainly matters because of e.g. bootloader limitations.
-> >>
-> >> Do we need a full 4k for the force parameters?  What would a typical
-> >> command line for it look like?
-> >
-> > Maybe a couple hundreds bytes at max, but it's a bit weird to restrict
-> > this given that it is bss, not gigantic and __initdata.  What kind of
-> > bootloader limitations are we talking about?
-> 
-> Some boot loaders start overwriting themselves or the passed DTB if the
-> kernel becomes too big.
-> If I'm not mistaken, bss is still expanded early (verified, increasing bss
-> can trigger the above problem).
+> Yes, it was a conscious decision.
 
-So, to avoid that, we can just kmalloc and kfree the buffer, but it
-seems like a silly complication to work around bugs in some
-bootloaders.  There are many places in kernel where we're liberal
-about __initdata which is great.  I'm not sure complicating all those
-places for a broken bootloader is a good idea.
-
-Thanks.
-
--- 
-tejun
+I understand things now, I'll revert this change, thanks everyone.
