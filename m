@@ -1,34 +1,30 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH 1/3] ata: allow subsystem to be used on m68k arch
-Date: Mon, 9 Jan 2017 17:15:21 +0100
-Message-ID: <CAMuHMdVU_emd1BJPDM=9fjM6QmoWmTu36cJ4APmBrpioSNVh_A@mail.gmail.com>
-References: <CGME20161230140141epcas5p161d9467e10e294f502863b5347e351d5@epcas5p1.samsung.com>
- <1483106478-1382-1-git-send-email-b.zolnierkie@samsung.com> <1483106478-1382-2-git-send-email-b.zolnierkie@samsung.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] libata-eh: Use switch() instead of sparse array for
+ protocol strings
+Date: Mon, 9 Jan 2017 08:21:43 -0800
+Message-ID: <20170109162143.GA11959@infradead.org>
+References: <1483973368-6828-1-git-send-email-geert@linux-m68k.org>
+ <20170109152319.GA12827@mtj.duckdns.org>
+ <CAMuHMdW6KPq6-7vmpTTv_M30zbqkdVbewgaOaCqYT+UzXpGU9Q@mail.gmail.com>
+ <20170109160424.GB12827@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1483106478-1382-2-git-send-email-b.zolnierkie@samsung.com>
+Content-Disposition: inline
+In-Reply-To: <20170109160424.GB12827@mtj.duckdns.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: Tejun Heo <tj@kernel.org>, Michael Schmitz <schmitzmic@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, linux-m68k <linux-m68k@lists.linux-m68k.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-On Fri, Dec 30, 2016 at 3:01 PM, Bartlomiej Zolnierkiewicz
-<b.zolnierkie@samsung.com> wrote:
-> When libata was merged m68k lacked IOMAP support.  This has not been
-> true for a long time now so allow subsystem to be used on m68k.
->
-> Signed-off-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+On Mon, Jan 09, 2017 at 11:04:24AM -0500, Tejun Heo wrote:
+> ata_force_param_buf is __initdata and shouldn't really matter.
+> ata_scsi_rbuf, hmmm, idk.  Maybe we can allocate it dynamically when
+> registering the first ATA device so that systems w/o them can avoid
+> the wastage.
 
-Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Having it global is kinda weird anyway.  But looking the code none
+of the commands actually using is in the paging path, so it could
+simply be replaced with a dynamic allocation in ata_scsi_rbuf_fill
+for the actually needed size, which often will be very small,
+or sometimes even 0.
