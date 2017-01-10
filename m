@@ -1,31 +1,33 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: libata: remove the global response buffer
-Date: Tue, 10 Jan 2017 10:56:57 -0500
-Message-ID: <20170110155657.GA6666@htj.duckdns.org>
-References: <1484037708-654-1-git-send-email-hch@lst.de>
+Subject: Re: [PATCH 1/1] libata: Fix ATA request sense
+Date: Tue, 10 Jan 2017 10:59:06 -0500
+Message-ID: <20170110155906.GB6666@htj.duckdns.org>
+References: <1482110260-14551-1-git-send-email-damien.lemoal@wdc.com>
+ <20170106204416.GC29909@mtj.duckdns.org>
+ <4ecc1395-3ac9-3381-3a90-b8fb58b46923@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:32850 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932476AbdAJP5B (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 10 Jan 2017 10:57:01 -0500
-Received: by mail-pf0-f196.google.com with SMTP id 127so29553981pfg.0
-        for <linux-ide@vger.kernel.org>; Tue, 10 Jan 2017 07:57:01 -0800 (PST)
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:36772 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932476AbdAJP7P (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 10 Jan 2017 10:59:15 -0500
+Received: by mail-pf0-f193.google.com with SMTP id b22so13173887pfd.3
+        for <linux-ide@vger.kernel.org>; Tue, 10 Jan 2017 07:59:15 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <1484037708-654-1-git-send-email-hch@lst.de>
+In-Reply-To: <4ecc1395-3ac9-3381-3a90-b8fb58b46923@wdc.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: geert@linux-m68k.org, linux-ide@vger.kernel.org
+To: Damien Le Moal <damien.lemoal@wdc.com>
+Cc: linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-On Tue, Jan 10, 2017 at 09:41:42AM +0100, Christoph Hellwig wrote:
-> Avoid the need for a global 4k buffer by allocating no response buffer
-> for commands that don't return data, a small on-stack one for the ATAPI
-> fixup, or a kmalloced one for all other emulated commands.
+On Tue, Jan 10, 2017 at 09:54:44AM +0900, Damien Le Moal wrote:
+> Should we send this patch to stable too ?
+> This bug does break applications on kernels 4.7 to 4.9 (e.g. libzbc test
+> suite and many tools we have using SGIO to directly send ATA commands to
+> SATA disks). I suspect sg-utils and hdparm may be affected in some way too.
 
-Applied 1-5 to libata/for-4.11.  Will wait for the updated version of
-the last patch.
+Already marked for stable.
 
 Thanks.
 
