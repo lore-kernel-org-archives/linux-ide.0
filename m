@@ -1,147 +1,112 @@
-From: Michael Schmitz <schmitzmic@gmail.com>
-Subject: Re: [PATCH 0/3] ata: add m68k/Atari Falcon PATA support
-Date: Wed, 11 Jan 2017 09:02:36 +1300
-Message-ID: <CAOmrzkJfQu6PuCpyyRJL8PNvSYxYO42F-k8jEYf2d1-5C28A_A@mail.gmail.com>
-References: <CGME20161230140139epcas5p160eda5a6a77be084e21f12002c85cc2a@epcas5p1.samsung.com>
- <1483106478-1382-1-git-send-email-b.zolnierkie@samsung.com>
- <CAOmrzkJP6s34DPOHd4OFFx=CXko35Kt=CfeDZthOPvKDJy-9YA@mail.gmail.com> <3939493.HXZ6C33pKV@amdc3058>
+From: Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
+Subject: Re: [LFS/MM TOPIC][LFS/MM ATTEND]: - Storage Stack and Driver Testing
+ methodology.
+Date: Tue, 10 Jan 2017 22:40:53 +0000
+Message-ID: <CO2PR04MB2184DB653C04FB620B41435486670@CO2PR04MB2184.namprd04.prod.outlook.com>
+References: <CO2PR04MB218427BF42159B20FB26F74186670@CO2PR04MB2184.namprd04.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <3939493.HXZ6C33pKV@amdc3058>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Cc: Tejun Heo <tj@kernel.org>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-ide@vger.kernel.org, Linux/m68k <linux-m68k@lists.linux-m68k.org>, Linux Kernel Development <linux-kernel@vger.kernel.org>, Andreas Schwab <schwab@linux-m68k.org>
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <CO2PR04MB218427BF42159B20FB26F74186670@CO2PR04MB2184.namprd04.prod.outlook.com>
+Content-Language: en-US
+Sender: linux-block-owner@vger.kernel.org
+To: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
+Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
 
-Bartlomiej,
+Resending it at as a plain text.
 
+From: Chaitanya Kulkarni
+Sent: Tuesday, January 10, 2017 2:37 PM
+To: lsf-pc@lists.linux-foundation.org
+Cc: linux-fsdevel@vger.kernel.org; linux-block@vger.kernel.org; linux-nvme@=
+lists.infradead.org; linux-scsi@vger.kernel.org; linux-ide@vger.kernel.org
+Subject: [LFS/MM TOPIC][LFS/MM ATTEND]: - Storage Stack and Driver Testing =
+methodology.
+=A0=20
 
->> How is polling implemented in libata? Sleeping for something
->> approximating the average seek latency shouldn't hurt but spinning
->> wont be acceptable for a low performance single CPU architecture like
->> the Falcon.
->
-> You can find actual implementation in libata-sff.c.
->
-> Please see ata_sff_pio_task() for the main polling logic:
->
-> fsm_start:
->         WARN_ON_ONCE(ap->hsm_task_state == HSM_ST_IDLE);
->
->         /*
->          * This is purely heuristic.  This is a fast path.
->          * Sometimes when we enter, BSY will be cleared in
->          * a chk-status or two.  If not, the drive is probably seeking
->          * or something.  Snooze for a couple msecs, then
->          * chk-status again.  If still busy, queue delayed work.
->          */
->         status = ata_sff_busy_wait(ap, ATA_BUSY, 5);
->         if (status & ATA_BUSY) {
->                 spin_unlock_irq(ap->lock);
->                 ata_msleep(ap, 2);
->                 spin_lock_irq(ap->lock);
->
->                 status = ata_sff_busy_wait(ap, ATA_BUSY, 10);
->                 if (status & ATA_BUSY) {
->                         ata_sff_queue_pio_task(link, ATA_SHORT_PAUSE);
->                         goto out_unlock;
->                 }
->         }
->
->         /*
->          * hsm_move() may trigger another command to be processed.
->          * clean the link beforehand.
->          */
->         ap->sff_pio_task_link = NULL;
->         /* move the HSM */
->         poll_next = ata_sff_hsm_move(ap, qc, status, 1);
->
->         /* another command or interrupt handler
->          * may be running at this point.
->          */
->         if (poll_next)
->                 goto fsm_start;
-> out_unlock:
->
->
-> ata_sff_busy_wait()'s last argument is number of 10uS waits so
-> first check (50uS) should be quite quick.  If device is still
-> busy we sleep for 2ms.  Then we quickly (100uS) busy wait and
-> if needed  queue delayed work (with ATA_SHORT_PAUSE == 16 ms
-> delay).
->
-> Overall the current heuristic looks fine and spinning should be
-> minimal.
+Hi Folks,
 
-Thanks, that looks entirely reasonable.
+I would like to propose a general discussion on Storage stack and device dr=
+iver testing.
 
->> > Tested under ARAnyM emulator.
->>
->> Not sure that the emulator is really feature complete enough - I'll
->> get this tested on my Falcon in the next few weeks. I'm a bit worried
->
-> Great!
->
->> about IDE still generating interrupts on seek completion (did you spot
->> anything like that, Geert?).
->>
->> Cheers,
->>
->>   Michael
->
-> BTW according to comment in arch/m68k/atari/stdma.c:
->
-> /* On the Falcon, the IDE bus uses just the ACSI/Floppy interrupt, but */
-> /* not the ST-DMA chip itself. So falhd.c needs not to lock the        */
-> /* chip. The interrupt is routed to falhd.c if IDE is configured, the  */
-> /* model is a Falcon and the interrupt was caused by the HD controller */
-> /* (can be determined by looking at its status register).              */
+Purpose:-
+-------------
+The main objective of this discussion is to address the need for=A0
+a Unified Test Automation Framework which can be used by different subsyste=
+ms
+in the kernel in order to improve the overall development and stability
+of the storage stack.
 
-That comment is probably incorrect in part. Blame Linus :-)
+For Example:-=A0
+>From my previous experience, I've worked on the NVMe driver testing last ye=
+ar and we
+have developed simple unit test framework
+=A0(https://github.com/linux-nvme/nvme-cli/tree/master/tests).=A0
+In current implementation Upstream NVMe Driver supports following subsystem=
+s:-
+1. PCI Host.
+2. RDMA Target.
+3. Fiber Channel Target (in progress).
+Today due to lack of centralized automated test framework NVMe Driver testi=
+ng is=A0
+scattered and performed using the combination of various utilities like nvm=
+e-cli/tests,=A0
+nvmet-cli, shell scripts (git://git.infradead.org/nvme-fabrics.git nvmf-sel=
+ftests) etc.
 
-Seriously though - that comment dates back to the dark ages (when m68k
-was an entirely separate port and the IDE driver was indeed named
-falhd.c). That would have been even before 2.2 or 2.4 times. The
-comment just never got updated.
+In order to improve overall driver stability with various subsystems, it wi=
+ll be beneficial
+to have a Unified Test Automation Framework (UTAF) which will centralize ov=
+erall
+testing.=A0
 
-What is still correct is that the IDE driver does use the interrupt
-only, not the ST-DMA chip. And a single IDE interrupt can be correctly
-assigned to IDE by looking at the status register.
+This topic will allow developers from various subsystem engage in the discu=
+ssion about=A0
+how to collaborate efficiently instead of having discussions on lengthy ema=
+il threads.
 
-With the SCSI (and IIRC also floppy) interrupts, we don't have direct
-access to the status registers without disturbing the state of the DMA
-though. Unless we know for definite that either chips have raised the
-interrupt (and DMA ops are in flight), we must not touch the DMA chip
-at all.
+Participants:-
+------------------
+I'd like to invite developers from different subsystems to discuss an appro=
+ach towards=A0
+a unified testing methodology for storage stack and device drivers belongs =
+to=A0
+different subsystems.
 
-The case I'm worried about is both IDE and SCSI raising an interrupt.
-We don't currently mask the IDE/ST-DMA interrupt so a stacked
-interrupt must be processed in the same pass as the initial interrupt
-or it will get dropped. We'd have to peek at the DMA registers to
-check the SCSI or floppy interrupt status, and we just can't safely do
-that. So races of this kind are currently prevented by including IDE
-in the IRQ locking process.
+Topics for Discussion:-
+------------------------------
+As a part of discussion following are some of the key points which we can f=
+ocus on:-
+1. What are the common components of the kernel used by the various subsyst=
+ems?
+2. What are the potential target drivers which can benefit from this approa=
+ch?=A0
+=A0 (e.g. NVMe, NVMe Over Fabric, Open Channel Solid State Drives etc.)
+3. What are the desired features that can be implemented in this Framework?
+=A0 (code coverage, unit tests, stress testings, regression, generating Coc=
+cinelle reports etc.)=A0
+4. Desirable Report generation mechanism?
+5. Basic performance validation?
+6. Whether QEMU can be used to emulate some of the H/W functionality to cre=
+ate a test=A0
+=A0 platform? (Optional subsystem specific)
 
-Whether it's possible to mask the interrupt, do one pass, unmask and
-process the second interrupt I don't know. Maybe Andreas does?
+Some background about myself I'm Chaitanya Kulkarni, I worked as a team lea=
+d=A0
+which was responsible for delivering scalable multiplatform Automated Test=
+=A0
+Framework for device drivers testing at HGST. It's been used for more than =
+1 year on=A0
+Linux/Windows for unit testing/regression/performance validation of the NVM=
+e Linux and
+Windows driver successfully. I've also recently started contributing=A0to t=
+he=A0
 
-Cheers,
+NVMe Host and NVMe over Fabrics Target driver.
 
-  Michael
+Regards,
+-Chaitanya
 
-
-> it should be okay to use IDE at the same time as SCSI/Floppy which
-> is what the new driver does (the old one is serialized operations by
-> ST-DMA related IRQ handling magic).
->
-> Also the comment itself may need some fixups as on Falcon it is SCSI
-> not ACSI (according to the earlier comment in same file) and the old
-> IDE host driver name is not falhd.c but falconide.c.
->
-> Best regards,
-> --
-> Bartlomiej Zolnierkiewicz
-> Samsung R&D Institute Poland
-> Samsung Electronics
->
+     =
