@@ -1,32 +1,31 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2] libata: switch to dynamic allocation insted of
- ata_scsi_rbuf
-Date: Tue, 10 Jan 2017 11:06:23 -0500
-Message-ID: <20170110160623.GC6666@htj.duckdns.org>
-References: <1484064272-24129-1-git-send-email-hch@lst.de>
+Subject: Re: [PATCH 0/3] ata: add m68k/Atari Falcon PATA support
+Date: Tue, 10 Jan 2017 11:09:31 -0500
+Message-ID: <20170110160931.GD6666@htj.duckdns.org>
+References: <CGME20161230140139epcas5p160eda5a6a77be084e21f12002c85cc2a@epcas5p1.samsung.com>
+ <1483106478-1382-1-git-send-email-b.zolnierkie@samsung.com>
+ <CAMuHMdVpnhTNSRZ1h-q8+d0wjDKSHtev0eyVoVxYWhf0DCD+zg@mail.gmail.com>
+ <3908219.8toGAOhnv9@amdc3058>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:36174 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965989AbdAJQG0 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 10 Jan 2017 11:06:26 -0500
-Received: by mail-pf0-f196.google.com with SMTP id b22so13200033pfd.3
-        for <linux-ide@vger.kernel.org>; Tue, 10 Jan 2017 08:06:26 -0800 (PST)
+Return-path: <linux-m68k-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1484064272-24129-1-git-send-email-hch@lst.de>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <3908219.8toGAOhnv9@amdc3058>
+Sender: linux-m68k-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>, Michael Schmitz <schmitzmic@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, linux-m68k <linux-m68k@lists.linux-m68k.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: geert@linux-m68k.org, linux-ide@vger.kernel.org
 
-On Tue, Jan 10, 2017 at 05:04:32PM +0100, Christoph Hellwig wrote:
-> Note of the emulated commands in the pageout/pagein path, so just do
-> a GFP_NOIO dynamic allocation.
+Hello,
+
+On Mon, Jan 09, 2017 at 05:11:12PM +0100, Bartlomiej Zolnierkiewicz wrote:
+> > Disabling CONFIG_ATA_VERBOSE_ERROR saved 1380 bytes, which is less than the
+> > value advertised by Kconfig (6KB).
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> If it is only ~1kB nowadays I would vote for making the error logging always
+> verbose and just removing CONFIG_ATA_VERBOSE_ERROR, Tejun?
 
-Applied to libata/for-4.11.
+No objection from me.
 
 Thanks.
 
