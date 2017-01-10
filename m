@@ -1,50 +1,66 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] libata-eh: Use switch() instead of sparse array for
- protocol strings
-Date: Mon, 9 Jan 2017 15:31:07 -0500
-Message-ID: <20170109203107.GO12827@mtj.duckdns.org>
-References: <1483973368-6828-1-git-send-email-geert@linux-m68k.org>
- <20170109152319.GA12827@mtj.duckdns.org>
- <CAMuHMdW6KPq6-7vmpTTv_M30zbqkdVbewgaOaCqYT+UzXpGU9Q@mail.gmail.com>
- <20170109160424.GB12827@mtj.duckdns.org>
- <CAMuHMdV3n9rq8eTjwxKzRLroF2YJYi2qvCzQ4eDhDEkGB=4dLw@mail.gmail.com>
- <20170109172723.GA30423@infradead.org>
- <20170109173154.GE12827@mtj.duckdns.org>
- <CAMuHMdXfFAyyT2VWwmG3sHu_Ufqzoz39O95rXDUCvHaD9HQFZA@mail.gmail.com>
- <20170109194100.GH12827@mtj.duckdns.org>
- <CAMuHMdUVtQOJYfQsspSk9+v-4abGf+OTSMWEfzXvGLu9namqZg@mail.gmail.com>
+From: Damien Le Moal <damien.lemoal@wdc.com>
+Subject: Re: [PATCH 1/1] libata: Fix ATA request sense
+Date: Tue, 10 Jan 2017 09:54:44 +0900
+Message-ID: <4ecc1395-3ac9-3381-3a90-b8fb58b46923@wdc.com>
+References: <1482110260-14551-1-git-send-email-damien.lemoal@wdc.com>
+ <20170106204416.GC29909@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAMuHMdUVtQOJYfQsspSk9+v-4abGf+OTSMWEfzXvGLu9namqZg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Christoph Hellwig <hch@infradead.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:21297 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1032762AbdAJAyz (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 9 Jan 2017 19:54:55 -0500
+In-Reply-To: <20170106204416.GC29909@mtj.duckdns.org>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: linux-ide@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Hello,
 
-On Mon, Jan 09, 2017 at 09:28:12PM +0100, Geert Uytterhoeven wrote:
-> > So, to avoid that, we can just kmalloc and kfree the buffer, but it
-> > seems like a silly complication to work around bugs in some
-> > bootloaders.  There are many places in kernel where we're liberal
-> > about __initdata which is great.  I'm not sure complicating all those
-> > places for a broken bootloader is a good idea.
+Tejun,
+
+On 1/7/17 05:44, Tejun Heo wrote:
+> On Mon, Dec 19, 2016 at 10:17:40AM +0900, Damien Le Moal wrote:
+>> For an ATA device supporting the sense data reporting feature set,
+>> a failed command will trigger the execution of ata_eh_request_sense if
+>> the result task file of the failed command has the ATA_SENSE bit set
+>> (sense data available bit). ata_eh_request_sense executes the
+>> REQUEST SENSE DATA EXT command to retrieve the sense data of the failed
+>> command. On success of REQUEST SENSE DATA EXT, the ATA_SENSE bit will
+>> NOT be set (the command succeeded) but ata_eh_request_sense
+>> nevertheless tests the availability of sense data by testing that bit
+>> presence in the result tf of the REQUEST SENSE DATA EXT command.
+>> This leads to a falsy assume that request sense data failed and to the
+>> warning message:
+>>
+>> atax.xx: request sense failed stat 50 emask 0
+>>
+>> Upon success of REQUEST SENSE DATA EXT, set the ATA_SENSE bit in the
+>> result task file command so that sense data can be returned by
+>> ata_eh_request_sense.
+>>
+>> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 > 
-> Sure. We cannot avoid that kernels (esp. multiplatform) keep on growing.
-> 
-> But when I see a new 4KiB-sized buffer, i'm always suspicious...
-> A few years ago, I caught someone miscalculating shifts, leading
-> to a static buffer that was 256 times larger than intended ;-)
+> Applied to libata/for-4.10-fixes with patch description updated as
+> suggested by Sergei.
 
-Oh, sure, things like the protocol string table are just stupid and
-it's great that you caught it.  I just don't think it makes sense to
-scrutinize bss __initdata.  It's not in kernel image and goes away
-once the kernel boots.  It's okay to a bit liberal with them for the
-sake of simplicity.
+Thank you.
 
-Thanks.
+Should we send this patch to stable too ?
+This bug does break applications on kernels 4.7 to 4.9 (e.g. libzbc test
+suite and many tools we have using SGIO to directly send ATA commands to
+SATA disks). I suspect sg-utils and hdparm may be affected in some way too.
+
+Best regards.
 
 -- 
-tejun
+Damien Le Moal, Ph.D.
+Sr. Manager, System Software Research Group,
+Western Digital Corporation
+Damien.LeMoal@wdc.com
+(+81) 0466-98-3593 (ext. 513593)
+1 kirihara-cho, Fujisawa,
+Kanagawa, 252-0888 Japan
+www.wdc.com, www.hgst.com
