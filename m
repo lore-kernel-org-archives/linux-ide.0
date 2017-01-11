@@ -1,53 +1,63 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [LFS/MM TOPIC][LFS/MM ATTEND]: - Storage Stack and Driver Testing
- methodology.
-Date: Wed, 11 Jan 2017 10:40:41 +0100
-Message-ID: <0ac6509a-738b-e1f4-871c-13fd62cf9cca@suse.de>
-References: <CO2PR04MB218427BF42159B20FB26F74186670@CO2PR04MB2184.namprd04.prod.outlook.com>
- <CO2PR04MB2184DB653C04FB620B41435486670@CO2PR04MB2184.namprd04.prod.outlook.com>
- <20170111091945.GD6286@linux-x5ow.site>
- <20170111092447.GA13600@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170111092447.GA13600@infradead.org>
-Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] ahci: imx: fix building without hwmon or thermal
+Date: Wed, 11 Jan 2017 14:36:16 +0100
+Message-ID: <20170111133652.3715437-1-arnd@arndb.de>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.17.24]:60453 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966666AbdAKNhK (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 11 Jan 2017 08:37:10 -0500
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Fabien Lahoudere <fabien.lahoudere@collabora.co.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 01/11/2017 10:24 AM, Christoph Hellwig wrote:
-> On Wed, Jan 11, 2017 at 10:19:45AM +0100, Johannes Thumshirn wrote:
->> Well, something I was thinking about but didn't find enough time to actually
->> implement is making a xfstestes like test suite written using sg3_utils for
->> SCSI.
-> 
-> Ronnie's libiscsi testsuite can use SG_IO for a new years now:
-> 
-> https://github.com/sahlberg/libiscsi/tree/master/test-tool
-> 
-> and has been very useful to find bus in various protocol
-> implementations.
-> 
->> This idea could very well be extented to NVMe
-> 
-> Chaitanya suite is doing something similar for NVMe, although the
-> coverage is still much more limited so far.
-> 
-One of the discussion points here indeed would be if we want to go in
-the direction of a protocol-specific testsuites (of which we already
-have several) or if it makes sense to move to functional testing.
+When CONFIG_HWMON is disabled, we now get a link failure:
 
-And if we can have a common interface / documentation on how these
-things should run.
+ERROR: "devm_hwmon_device_register_with_groups" [drivers/ata/ahci_imx.ko] undefined!
+drivers/ata/ahci_imx.o: In function `imx_ahci_probe':
+ahci_imx.c:(.text.imx_ahci_probe+0x304): undefined reference to `devm_thermal_zone_of_sensor_register'
 
-Cheers,
+This makes the code calling into the hwmon subsystem compile-time
+conditional, and adds a Kconfig dependency to avoid the corner
+case of having HWMON=m and AHCI_IMX=y, by forcing AHCI_IMX=m in this
+case. The thermal subsystem already has a check in its header, but
+that also doesn't cover the THERMAL=m case, so we need a somewhat
+complex Kconfig expression to handle all cases.
 
-Hannes
+Fixes: 54643a83b41a ("ahci: imx: Add imx53 SATA temperature sensor support")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/ata/Kconfig    | 1 +
+ drivers/ata/ahci_imx.c | 3 ++-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
+index 78c002021029..70b57d2229d6 100644
+--- a/drivers/ata/Kconfig
++++ b/drivers/ata/Kconfig
+@@ -129,6 +129,7 @@ config AHCI_ST
+ config AHCI_IMX
+ 	tristate "Freescale i.MX AHCI SATA support"
+ 	depends on MFD_SYSCON && (ARCH_MXC || COMPILE_TEST)
++	depends on (HWMON && (THERMAL || !THERMAL_OF)) || !HWMON
+ 	help
+ 	  This option enables support for the Freescale i.MX SoC's
+ 	  onboard AHCI SATA.
+diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+index 420f065978dc..787567e840bd 100644
+--- a/drivers/ata/ahci_imx.c
++++ b/drivers/ata/ahci_imx.c
+@@ -774,7 +774,8 @@ static int imx_ahci_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		return ret;
+ 
+-	if (imxpriv->type == AHCI_IMX53) {
++	if (imxpriv->type == AHCI_IMX53 &&
++	    IS_ENABLED(CONFIG_HWMON)) {
+ 		/* Add the temperature monitor */
+ 		struct device *hwmon_dev;
+ 
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+2.9.0
+
