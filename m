@@ -1,85 +1,86 @@
-From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-Subject: Re: [PATCH] ahci: imx: fix building without hwmon or thermal
-Date: Wed, 11 Jan 2017 15:16:44 +0100
-Message-ID: <3181052.yXLkhGQIbt@amdc3058>
-References: <CGME20170111133703epcas4p39c0af66a9642a4904fbecbbac2367b7d@epcas4p3.samsung.com>
- <20170111133652.3715437-1-arnd@arndb.de>
+From: Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: [PATCH] PCI:MSI Return -ENOSPC when requested vectors is not
+ enough
+Date: Wed, 11 Jan 2017 12:18:53 -0600
+Message-ID: <20170111181853.GA14532@bhelgaas-glaptop.roam.corp.google.com>
+References: <1480558504-18691-1-git-send-email-dennis.chen@arm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7Bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:50863 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966936AbdAKOQy (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Wed, 11 Jan 2017 09:16:54 -0500
-In-reply-to: <20170111133652.3715437-1-arnd@arndb.de>
+Received: from mail.kernel.org ([198.145.29.136]:54146 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751163AbdAKSS6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 11 Jan 2017 13:18:58 -0500
+Content-Disposition: inline
+In-Reply-To: <1480558504-18691-1-git-send-email-dennis.chen@arm.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Tejun Heo <tj@kernel.org>, Fabien Lahoudere <fabien.lahoudere@collabora.co.uk>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Dennis Chen <dennis.chen@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Steve Capper <steve.capper@arm.com>, Marc Zyngier <marc.zyngier@arm.com>, Tom Long Nguyen <tom.l.nguyen@intel.com>, Bjorn Helgaas <bhelgaas@google.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, nd@arm.com, Christoph Hellwig <hch@lst.de>, linux-arm-kernel@lists.infradead.org
 
+On Thu, Dec 01, 2016 at 10:15:04AM +0800, Dennis Chen wrote:
+> The __pci_enable_msi_range() should return -ENOSPC instead of -EINVAL
+> when the device doesn't have enough vectors as required, just as the 
+> MSI-X vector allocator does in __pci_enable_msix_range(). Otherwise, 
+> some drivers depending on that return value will probably fallback to
+> the legacy interrupt directly, for example, in commit 17a51f12cfbd2814
+> ("ahci: only try to use multi-MSI mode if there is more than 1 port"), the
+> ahci driver will fallback to single MSI mode only when the return value
+> is -ENOSPC in case of required vectors is not enough, else the driver will
+> use legacy interrupt which has been observed on a x86 box with 6-port SATA
+> controller.
 
-Hi,
+Unless Christoph objects, I'll apply this, but I don't understand the
+situation with 17a51f12cfbd.  That commit doesn't check for EINVAL or
+ENOSPC so I don't know what the connection with this patch is.
 
-On Wednesday, January 11, 2017 02:36:16 PM Arnd Bergmann wrote:
-> When CONFIG_HWMON is disabled, we now get a link failure:
+I know Christoph said he changed something in ahci to treat all errors
+the same, but I don't know where that is, either.
+
+If there's a revision of Linus' tree that is broken, please give the
+details so I can at least describe which versions are broken, when it
+got fixed by Christoph, and figure out whether we need stable
+backports or anything.
+
+Bjorn
+
+> With this patch, when a MSI-capable device doesn't have enough MSI
+> vectors as requested, it will fallback to single MSI mode while not
+> legacy interrupt.
 > 
-> ERROR: "devm_hwmon_device_register_with_groups" [drivers/ata/ahci_imx.ko] undefined!
-> drivers/ata/ahci_imx.o: In function `imx_ahci_probe':
-> ahci_imx.c:(.text.imx_ahci_probe+0x304): undefined reference to `devm_thermal_zone_of_sensor_register'
-> 
-> This makes the code calling into the hwmon subsystem compile-time
-> conditional, and adds a Kconfig dependency to avoid the corner
-> case of having HWMON=m and AHCI_IMX=y, by forcing AHCI_IMX=m in this
-> case. The thermal subsystem already has a check in its header, but
-> that also doesn't cover the THERMAL=m case, so we need a somewhat
-> complex Kconfig expression to handle all cases.
-> 
-> Fixes: 54643a83b41a ("ahci: imx: Add imx53 SATA temperature sensor support")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-
-Looks fine to me (I see that this is the same solution as for
-TOUCHSCREEN_SUN4I from commit 4a6155a46565 but without hard
-dependency on HWMON).
-
-Thanks for fixing this.
-
-Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-
-Best regards,
---
-Bartlomiej Zolnierkiewicz
-Samsung R&D Institute Poland
-Samsung Electronics
-
+> Signed-off-by: Dennis Chen <dennis.chen@arm.com>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Tom Long Nguyen <tom.l.nguyen@intel.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Cc: Marc Zyngier <marc.zyngier@arm.com>
+> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Steve Capper <steve.capper@arm.com>
+> Cc: linux-ide@vger.kernel.org
+> Cc: linux-arm-kernel@lists.infradead.org
 > ---
->  drivers/ata/Kconfig    | 1 +
->  drivers/ata/ahci_imx.c | 3 ++-
->  2 files changed, 3 insertions(+), 1 deletion(-)
+>  drivers/pci/msi.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/drivers/ata/Kconfig b/drivers/ata/Kconfig
-> index 78c002021029..70b57d2229d6 100644
-> --- a/drivers/ata/Kconfig
-> +++ b/drivers/ata/Kconfig
-> @@ -129,6 +129,7 @@ config AHCI_ST
->  config AHCI_IMX
->  	tristate "Freescale i.MX AHCI SATA support"
->  	depends on MFD_SYSCON && (ARCH_MXC || COMPILE_TEST)
-> +	depends on (HWMON && (THERMAL || !THERMAL_OF)) || !HWMON
->  	help
->  	  This option enables support for the Freescale i.MX SoC's
->  	  onboard AHCI SATA.
-> diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
-> index 420f065978dc..787567e840bd 100644
-> --- a/drivers/ata/ahci_imx.c
-> +++ b/drivers/ata/ahci_imx.c
-> @@ -774,7 +774,8 @@ static int imx_ahci_probe(struct platform_device *pdev)
->  	if (ret)
->  		return ret;
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index ad70507..da37113 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -1084,7 +1084,7 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
+>  	if (nvec < 0)
+>  		return nvec;
+>  	if (nvec < minvec)
+> -		return -EINVAL;
+> +		return -ENOSPC;
 >  
-> -	if (imxpriv->type == AHCI_IMX53) {
-> +	if (imxpriv->type == AHCI_IMX53 &&
-> +	    IS_ENABLED(CONFIG_HWMON)) {
->  		/* Add the temperature monitor */
->  		struct device *hwmon_dev;
-
+>  	if (nvec > maxvec)
+>  		nvec = maxvec;
+> -- 
+> 2.7.4
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
