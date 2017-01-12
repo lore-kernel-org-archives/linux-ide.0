@@ -1,86 +1,88 @@
-From: Bjorn Helgaas <helgaas@kernel.org>
-Subject: Re: [PATCH] PCI:MSI Return -ENOSPC when requested vectors is not
- enough
-Date: Wed, 11 Jan 2017 12:18:53 -0600
-Message-ID: <20170111181853.GA14532@bhelgaas-glaptop.roam.corp.google.com>
-References: <1480558504-18691-1-git-send-email-dennis.chen@arm.com>
+From: Sagi Grimberg <sagi@grimberg.me>
+Subject: Re: [Lsf-pc] [LFS/MM TOPIC][LFS/MM ATTEND]: - Storage Stack and
+ Driver Testing methodology.
+Date: Thu, 12 Jan 2017 13:01:35 +0200
+Message-ID: <74f07f96-4741-1bbc-d570-1aea0a31b41e@grimberg.me>
+References: <CO2PR04MB218427BF42159B20FB26F74186670@CO2PR04MB2184.namprd04.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54146 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751163AbdAKSS6 (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Wed, 11 Jan 2017 13:18:58 -0500
-Content-Disposition: inline
-In-Reply-To: <1480558504-18691-1-git-send-email-dennis.chen@arm.com>
+Received: from merlin.infradead.org ([205.233.59.134]:43202 "EHLO
+        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750932AbdALLBs (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Thu, 12 Jan 2017 06:01:48 -0500
+In-Reply-To: <CO2PR04MB218427BF42159B20FB26F74186670@CO2PR04MB2184.namprd04.prod.outlook.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Dennis Chen <dennis.chen@arm.com>
-Cc: linux-pci@vger.kernel.org, linux-ide@vger.kernel.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Steve Capper <steve.capper@arm.com>, Marc Zyngier <marc.zyngier@arm.com>, Tom Long Nguyen <tom.l.nguyen@intel.com>, Bjorn Helgaas <bhelgaas@google.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Tejun Heo <tj@kernel.org>, nd@arm.com, Christoph Hellwig <hch@lst.de>, linux-arm-kernel@lists.infradead.org
+To: Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
+Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Thu, Dec 01, 2016 at 10:15:04AM +0800, Dennis Chen wrote:
-> The __pci_enable_msi_range() should return -ENOSPC instead of -EINVAL
-> when the device doesn't have enough vectors as required, just as the 
-> MSI-X vector allocator does in __pci_enable_msix_range(). Otherwise, 
-> some drivers depending on that return value will probably fallback to
-> the legacy interrupt directly, for example, in commit 17a51f12cfbd2814
-> ("ahci: only try to use multi-MSI mode if there is more than 1 port"), the
-> ahci driver will fallback to single MSI mode only when the return value
-> is -ENOSPC in case of required vectors is not enough, else the driver will
-> use legacy interrupt which has been observed on a x86 box with 6-port SATA
-> controller.
 
-Unless Christoph objects, I'll apply this, but I don't understand the
-situation with 17a51f12cfbd.  That commit doesn't check for EINVAL or
-ENOSPC so I don't know what the connection with this patch is.
+> Hi Folks,
+>
+> I would like to propose a general discussion on Storage stack and device driver testing.
 
-I know Christoph said he changed something in ahci to treat all errors
-the same, but I don't know where that is, either.
+I think its very useful and needed.
 
-If there's a revision of Linus' tree that is broken, please give the
-details so I can at least describe which versions are broken, when it
-got fixed by Christoph, and figure out whether we need stable
-backports or anything.
+> Purpose:-
+> -------------
+> The main objective of this discussion is to address the need for
+> a Unified Test Automation Framework which can be used by different subsystems
+> in the kernel in order to improve the overall development and stability
+> of the storage stack.
+>
+> For Example:-
+> From my previous experience, I've worked on the NVMe driver testing last year and we
+> have developed simple unit test framework
+>  (https://github.com/linux-nvme/nvme-cli/tree/master/tests).
+> In current implementation Upstream NVMe Driver supports following subsystems:-
+> 1. PCI Host.
+> 2. RDMA Target.
+> 3. Fiber Channel Target (in progress).
+> Today due to lack of centralized automated test framework NVMe Driver testing is
+> scattered and performed using the combination of various utilities like nvme-cli/tests,
+> nvmet-cli, shell scripts (git://git.infradead.org/nvme-fabrics.git nvmf-selftests) etc.
+>
+> In order to improve overall driver stability with various subsystems, it will be beneficial
+> to have a Unified Test Automation Framework (UTAF) which will centralize overall
+> testing.
+>
+> This topic will allow developers from various subsystem engage in the discussion about
+> how to collaborate efficiently instead of having discussions on lengthy email threads.
 
-Bjorn
+While a unified test framework for all sounds great, I suspect that the
+difference might be too large. So I think that for this framework to be
+maintainable, it needs to be carefully designed such that we don't have
+too much code churn.
 
-> With this patch, when a MSI-capable device doesn't have enough MSI
-> vectors as requested, it will fallback to single MSI mode while not
-> legacy interrupt.
-> 
-> Signed-off-by: Dennis Chen <dennis.chen@arm.com>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Tom Long Nguyen <tom.l.nguyen@intel.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Cc: Marc Zyngier <marc.zyngier@arm.com>
-> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Steve Capper <steve.capper@arm.com>
-> Cc: linux-ide@vger.kernel.org
-> Cc: linux-arm-kernel@lists.infradead.org
-> ---
->  drivers/pci/msi.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index ad70507..da37113 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -1084,7 +1084,7 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
->  	if (nvec < 0)
->  		return nvec;
->  	if (nvec < minvec)
-> -		return -EINVAL;
-> +		return -ENOSPC;
->  
->  	if (nvec > maxvec)
->  		nvec = maxvec;
-> -- 
-> 2.7.4
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+For example we should start by classifying tests and then see where
+sharing is feasible:
+
+1. basic management - I think not a lot can be shared
+2. spec compliance - again, not much sharing here
+3. data-verification - probably everything can be shared
+4. basic performance - probably a lot can be shared
+5. vectored-io - probably everything can be shared
+6. error handling - I can think of some sharing that can be used.
+
+This repository can also store some useful tracing scripts (ebpf and
+friends) that are useful for performance analysis.
+
+So I think that for this to happen, we can start with the shared
+test under block/, then migrate proto specific tests into
+scsi/, nvme/, and then add transport specific tests so
+we can have something like:
+
+├── block
+├── lib
+├── nvme
+│   ├── fabrics
+│   │   ├── loop
+│   │   └── rdma
+│   └── pci
+└── scsi
+     ├── fc
+     └── iscsi
+
+Thoughts?
