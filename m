@@ -1,38 +1,74 @@
 From: Bartosz Golaszewski <bgolaszewski@baylibre.com>
-Subject: [PATCH 09/10] ARM: dts: da850: add the SATA node
-Date: Fri, 13 Jan 2017 13:38:03 +0100
-Message-ID: <1484311084-31547-10-git-send-email-bgolaszewski@baylibre.com>
+Subject: [PATCH 06/10] sata: ahci_da850: implement a softreset quirk
+Date: Fri, 13 Jan 2017 13:38:00 +0100
+Message-ID: <1484311084-31547-7-git-send-email-bgolaszewski@baylibre.com>
 References: <1484311084-31547-1-git-send-email-bgolaszewski@baylibre.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
 In-Reply-To: <1484311084-31547-1-git-send-email-bgolaszewski@baylibre.com>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
 To: Kevin Hilman <khilman@kernel.org>, Sekhar Nori <nsekhar@ti.com>, Patrick Titiano <ptitiano@baylibre.com>, Michael Turquette <mturquette@baylibre.com>, Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Russell King <linux@armlinux.org.uk>, David Lechner <david@lechnology.com>
-Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Bartosz Golaszewski <bgolaszewski@baylibre.com>
+Cc: linux-ide@vger.kernel.org, Bartosz Golaszewski <bgolaszewski@baylibre.com>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Add the SATA node to the da850 device tree.
+There's an issue with the da850 SATA controller: if port multiplier
+support is compiled in, but we're connecting the drive directly to
+the SATA port on the board, the drive can't be detected.
+
+To make SATA work on the da850-lcdk board: first try to softreset
+with pmp - if the operation fails with -EBUSY, retry without pmp.
 
 Signed-off-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
 ---
- arch/arm/boot/dts/da850.dtsi | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/ata/ahci_da850.c | 22 +++++++++++++++++++++-
+ 1 file changed, 21 insertions(+), 1 deletion(-)
 
-diff --git a/arch/arm/boot/dts/da850.dtsi b/arch/arm/boot/dts/da850.dtsi
-index 1f6a47d..f5086b1 100644
---- a/arch/arm/boot/dts/da850.dtsi
-+++ b/arch/arm/boot/dts/da850.dtsi
-@@ -427,6 +427,12 @@
- 			phy-names = "usb-phy";
- 			status = "disabled";
- 		};
-+		sata: ahci@0x218000 {
-+			compatible = "ti,da850-ahci";
-+			reg = <0x218000 0x2000>, <0x22c018 0x4>;
-+			interrupts = <67>;
-+			status = "disabled";
-+		};
- 		mdio: mdio@224000 {
- 			compatible = "ti,davinci_mdio";
- 			#address-cells = <1>;
+diff --git a/drivers/ata/ahci_da850.c b/drivers/ata/ahci_da850.c
+index 5930af81..bb9eb4c 100644
+--- a/drivers/ata/ahci_da850.c
++++ b/drivers/ata/ahci_da850.c
+@@ -54,11 +54,31 @@ static void da850_sata_init(struct device *dev, void __iomem *pwrdn_reg,
+ 	writel(val, ahci_base + SATA_P0PHYCR_REG);
+ }
+ 
++static int ahci_da850_softreset(struct ata_link *link,
++				unsigned int *class, unsigned long deadline)
++{
++	int pmp, ret;
++
++	pmp = sata_srst_pmp(link);
++
++	ret = ahci_do_softreset(link, class, pmp, deadline, ahci_check_ready);
++	if (pmp && ret == -EBUSY)
++		return ahci_do_softreset(link, class, 0,
++					 deadline, ahci_check_ready);
++
++	return ret;
++}
++
++static struct ata_port_operations ahci_da850_port_ops = {
++	.inherits = &ahci_platform_ops,
++	.softreset = ahci_da850_softreset,
++};
++
+ static const struct ata_port_info ahci_da850_port_info = {
+ 	.flags		= AHCI_FLAG_COMMON,
+ 	.pio_mask	= ATA_PIO4,
+ 	.udma_mask	= ATA_UDMA6,
+-	.port_ops	= &ahci_platform_ops,
++	.port_ops	= &ahci_da850_port_ops,
+ };
+ 
+ static struct scsi_host_template ahci_platform_sht = {
 -- 
 2.9.3
