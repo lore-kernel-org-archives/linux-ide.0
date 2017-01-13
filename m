@@ -1,59 +1,63 @@
-From: Sekhar Nori <nsekhar@ti.com>
-Subject: Re: [PATCH 00/10] ARM: da850-lcdk: add SATA support
-Date: Fri, 13 Jan 2017 20:02:52 +0530
-Message-ID: <fa513599-1ac1-51e9-4da3-f4ed61ba0ce2@ti.com>
+From: David Lechner <david-nq/r/kbU++upp/zk7JDF2g@public.gmane.org>
+Subject: Re: [PATCH 03/10] devicetree: bindings: add bindings for ahci-da850
+Date: Fri, 13 Jan 2017 13:25:31 -0600
+Message-ID: <35ff358d-9b17-b2be-38d8-6a51cdddc1a1@lechnology.com>
 References: <1484311084-31547-1-git-send-email-bgolaszewski@baylibre.com>
+ <1484311084-31547-4-git-send-email-bgolaszewski@baylibre.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-In-Reply-To: <1484311084-31547-1-git-send-email-bgolaszewski@baylibre.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Bartosz Golaszewski <bgolaszewski@baylibre.com>, Kevin Hilman <khilman@kernel.org>, Patrick Titiano <ptitiano@baylibre.com>, Michael Turquette <mturquette@baylibre.com>, Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Russell King <linux@armlinux.org.uk>, David Lechner <david@lechnology.com>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1484311084-31547-4-git-send-email-bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bartosz Golaszewski <bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Kevin Hilman <khilman-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Sekhar Nori <nsekhar-l0cyMroinI0@public.gmane.org>, Patrick Titiano <ptitiano-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Michael Turquette <mturquette-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Russell King <linux-I+IVW8TIWO2tmTQ+vhA3Yw@public.gmane.org>
+Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
 
-On Friday 13 January 2017 06:07 PM, Bartosz Golaszewski wrote:
-> This series contains all the changes necessary to make SATA work on
-> the da850-lcdk board.
-> 
-> The first patch adds a clock lookup entry required for the ahci core
-> to retrieve a functional clock.
-> 
-> The second enables relevant config options for all davinci boards.
-> 
-> The third adds device tree bindings for the ahci_da850 driver.
-> 
-> The fourth adds a workaround for a SATA controller instability we
-> detected after increasing the PLL0 frequency for proper LCD
-> controller support.
-> 
-> Patches 5 through 7 extend the ahci_da850 driver - add DT support,
-> un-hardcode the clock multiplier value and add a workaround for
-> a quirk present on the da850 SATA controller.
-> 
-> Patches 8-10 add the device tree changes required to probe the driver.
-> 
-> I'm posting the series as a whole to give all reviewers the full
-> picture and visibility of the changes required, if needed I can resend
-> the patches separately.
+On 01/13/2017 06:37 AM, Bartosz Golaszewski wrote:
+> Add DT bindings for the TI DA850 AHCI SATA controller.
+>
+> Signed-off-by: Bartosz Golaszewski <bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
+> ---
+>  .../devicetree/bindings/ata/ahci-da850.txt          | 21 +++++++++++++++++++++
+>  1 file changed, 21 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/ata/ahci-da850.txt
+>
+> diff --git a/Documentation/devicetree/bindings/ata/ahci-da850.txt b/Documentation/devicetree/bindings/ata/ahci-da850.txt
+> new file mode 100644
+> index 0000000..d07c241
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ata/ahci-da850.txt
+> @@ -0,0 +1,21 @@
+> +Device tree binding for the TI DA850 AHCI SATA Controller
+> +---------------------------------------------------------
+> +
+> +Required properties:
+> +  - compatible: must be "ti,da850-ahci"
+> +  - reg: physical base addresses and sizes of the controller's register areas
+> +  - interrupts: interrupt specifier (refer to the interrupt binding)
+> +
+> +Optional properties:
+> +  - clocks: clock specifier (refer to the common clock binding)
+> +  - da850,clk_multiplier: the multiplier for the reference clock needed
+> +                          for 1.5GHz PLL output
 
-I just tested this series on my LCDK board using a Western Digital SATA
-HDD and it works great with some basic read / write tests. Thanks!
+A clock multiplier property seems redundant if you are specifying a 
+clock. It should be possible to get the rate from the clock to determine 
+which multiplier is needed.
 
-For the non-platform patches which I wont be queuing:
+> +
+> +Example:
+> +
+> +	sata: ahci@0x218000 {
+> +		compatible = "ti,da850-ahci";
+> +		reg = <0x218000 0x2000>, <0x22c018 0x4>;
+> +		interrupts = <67>;
+> +		da850,clk_multiplier = <7>;
+> +	};
+>
 
-Tested-by: Sekhar Nori <nsekhar@ti.com>
-
-I will take a look at the series closely next week.
-
-Thanks,
-Sekhar
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
