@@ -1,63 +1,47 @@
-From: Bartosz Golaszewski <bgolaszewski@baylibre.com>
-Subject: [PATCH 08/10] ARM: dts: da850: add pinmux settings for the SATA controller
-Date: Fri, 13 Jan 2017 13:38:02 +0100
-Message-ID: <1484311084-31547-9-git-send-email-bgolaszewski@baylibre.com>
+From: Bartosz Golaszewski <bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
+Subject: [PATCH 10/10] ARM: dts: da850-lcdk: enable the SATA node
+Date: Fri, 13 Jan 2017 13:38:04 +0100
+Message-ID: <1484311084-31547-11-git-send-email-bgolaszewski@baylibre.com>
 References: <1484311084-31547-1-git-send-email-bgolaszewski@baylibre.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:36477 "EHLO
-        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751444AbdAMMkL (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Fri, 13 Jan 2017 07:40:11 -0500
-Received: by mail-wm0-f51.google.com with SMTP id c85so63097598wmi.1
-        for <linux-ide@vger.kernel.org>; Fri, 13 Jan 2017 04:39:10 -0800 (PST)
-In-Reply-To: <1484311084-31547-1-git-send-email-bgolaszewski@baylibre.com>
-Sender: linux-ide-owner@vger.kernel.org
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1484311084-31547-1-git-send-email-bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Kevin Hilman <khilman-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Sekhar Nori <nsekhar-l0cyMroinI0@public.gmane.org>, Patrick Titiano <ptitiano-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Michael Turquette <mturquette-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Russell King <linux-I+IVW8TIWO2tmTQ+vhA3Yw@public.gmane.org>, David Lechner <david-nq/r/kbU++upp/zk7JDF2g@public.gmane.org>
+Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Bartosz Golaszewski <bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
 List-Id: linux-ide@vger.kernel.org
-To: Kevin Hilman <khilman@kernel.org>, Sekhar Nori <nsekhar@ti.com>, Patrick Titiano <ptitiano@baylibre.com>, Michael Turquette <mturquette@baylibre.com>, Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Russell King <linux@armlinux.org.uk>, David Lechner <david@lechnology.com>
-Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Bartosz Golaszewski <bgolaszewski@baylibre.com>
 
-Add pinmux sub-nodes for all muxed SATA pins.
+Enable the SATA node for da850-lcdk. We omit the pinctrl property on
+purpose - the muxed SATA pins are not hooked up to anything
+SATA-related on the lcdk.
 
-Signed-off-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
+The REFCLKN/P rate on the board is 100MHz, so we need a multiplier of
+15 for 1.5GHz PLL rate.
+
+Signed-off-by: Bartosz Golaszewski <bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
 ---
- arch/arm/boot/dts/da850.dtsi | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+ arch/arm/boot/dts/da850-lcdk.dts | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/arch/arm/boot/dts/da850.dtsi b/arch/arm/boot/dts/da850.dtsi
-index 104155d..1f6a47d 100644
---- a/arch/arm/boot/dts/da850.dtsi
-+++ b/arch/arm/boot/dts/da850.dtsi
-@@ -78,6 +78,30 @@
- 					0x10 0x00220000 0x00ff0000
- 				>;
- 			};
-+			sata_cp_det_pin: pinmux_sata_cp_det_pin {
-+				pinctrl-single,bits = <
-+					/* SATA_CP_DET */
-+					0x0c 0x00000000 0xf0000000
-+				>;
-+			};
-+			sata_mp_switch_pin: pinmux_sata_mp_switch_pin {
-+				pinctrl-single,bits = <
-+					/* SATA_MP_SWITCH */
-+					0x0c 0x00000000 0x0f000000
-+				>;
-+			};
-+			sata_cp_pod_pin: pinmux_sata_cp_pod_pin {
-+				pinctrl-single,bits = <
-+					/* SATA_CP_POD */
-+					0x10 0x40000000 0xf0000000
-+				>;
-+			};
-+			sata_led_pin: pinmux_sata_led_pin {
-+				pinctrl-single,bits = <
-+					/* SATA_LED */
-+					0x10 0x04000000 0x0f000000
-+				>;
-+			};
- 			i2c0_pins: pinmux_i2c0_pins {
- 				pinctrl-single,bits = <
- 					/* I2C0_SDA,I2C0_SCL */
+diff --git a/arch/arm/boot/dts/da850-lcdk.dts b/arch/arm/boot/dts/da850-lcdk.dts
+index afcb482..1e638da 100644
+--- a/arch/arm/boot/dts/da850-lcdk.dts
++++ b/arch/arm/boot/dts/da850-lcdk.dts
+@@ -105,6 +105,11 @@
+ 	status = "okay";
+ };
+ 
++&sata {
++	status = "okay";
++	da850,clk_multiplier = <15>;
++};
++
+ &mdio {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&mdio_pins>;
 -- 
 2.9.3
 
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
