@@ -1,29 +1,23 @@
-From: Sekhar Nori <nsekhar@ti.com>
-Subject: Re: [PATCH v2 12/14] ARM: dts: da850: add pinmux settings for the
- SATA controller
-Date: Wed, 18 Jan 2017 15:09:59 +0530
-Message-ID: <09c88e31-0fd4-15f3-fc0c-25b34b41783b@ti.com>
-References: <1484655976-25382-1-git-send-email-bgolaszewski@baylibre.com>
- <1484655976-25382-13-git-send-email-bgolaszewski@baylibre.com>
+From: tester@aldems.lv
+Subject: =?utf-8?q?Gesch=C3=A4ftsvorschlag?=
+Date: Sun, 15 Jan 2017 04:52:50 +0530
+Message-ID: <1484436417102132344@mail>
+Reply-To: arnoldkristoferson101@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1484655976-25382-13-git-send-email-bgolaszewski@baylibre.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bartosz Golaszewski <bgolaszewski@baylibre.com>, Kevin Hilman <khilman@kernel.org>, Patrick Titiano <ptitiano@baylibre.com>, Michael Turquette <mturquette@baylibre.com>, Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Russell King <linux@armlinux.org.uk>, David Lechner <david@lechnology.com>
-Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail.aldems.lv ([93.177.192.35]:50960 "EHLO aldems.lv"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752517AbdARKNz (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Wed, 18 Jan 2017 05:13:55 -0500
+Content-Description: Mail message body
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Recipients <tester@aldems.lv>
 
-Hi Bartosz,
+Lieber Freund.
 
-On Tuesday 17 January 2017 05:56 PM, Bartosz Golaszewski wrote:
-> Add pinmux sub-nodes for all muxed SATA pins.
-> 
-> Signed-off-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
+Erlauben Sie mir, auf diese Weise auf Sie zuzugehen. Ich bin Dr. Arnold Kristofferson, ein US-Auftragnehmer, der mit Nichtkämpfer US Marine in Ba'qubah, Irak arbeitet. Ich habe die Summe von 10,6 Millionen Dollar, die ich aus einem Rohöl-Deal gemacht habe, und ich möchte, dass Sie mir helfen, es zu erhalten. Da ich hier auf offizieller Kapazität arbeite, kann ich diesen Fonds nicht bei mir behalten und dies ist mein einziger Grund für die Kontaktaufnahme mit Ihnen. Wenn Sie interessiert sind und Sie diesen Fonds in Ihrer Kapazität erhalten können, melden Sie sich bitte bei mir, damit ich Ihnen weitere Details geben kann, wie Sie dieses Geld für mich erhalten können. Bitte erreichen Sie mich per E-Mail: arnoldkristoferson101@gmail.com
+Mit freundlichen Grüßen.
 
-Since these are all unused at this time, we should drop adding them
-until a time someone really needs these.
-
-Thanks,
-Sekhar
