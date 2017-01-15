@@ -1,44 +1,42 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 04/10] sata: hardreset: retry if phys link is down
-Date: Sun, 15 Jan 2017 18:10:49 -0500
-Message-ID: <20170115231049.GC14446@mtj.duckdns.org>
+From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 06/10] sata: ahci_da850: implement a softreset quirk
+Date: Sun, 15 Jan 2017 18:12:08 -0500
+Message-ID: <20170115231208.GD14446@mtj.duckdns.org>
 References: <1484311084-31547-1-git-send-email-bgolaszewski@baylibre.com>
- <1484311084-31547-5-git-send-email-bgolaszewski@baylibre.com>
+ <1484311084-31547-7-git-send-email-bgolaszewski@baylibre.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-io0-f193.google.com ([209.85.223.193]:35801 "EHLO
-        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751087AbdAOXK5 (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Sun, 15 Jan 2017 18:10:57 -0500
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <1484311084-31547-5-git-send-email-bgolaszewski@baylibre.com>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <1484311084-31547-7-git-send-email-bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bartosz Golaszewski <bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
+Cc: Kevin Hilman <khilman-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Sekhar Nori <nsekhar-l0cyMroinI0@public.gmane.org>, Patrick Titiano <ptitiano-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Michael Turquette <mturquette-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Russell King <linux-I+IVW8TIWO2tmTQ+vhA3Yw@public.gmane.org>, David Lechner <david-nq/r/kbU++upp/zk7JDF2g@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
 List-Id: linux-ide@vger.kernel.org
-To: Bartosz Golaszewski <bgolaszewski@baylibre.com>
-Cc: Kevin Hilman <khilman@kernel.org>, Sekhar Nori <nsekhar@ti.com>, Patrick Titiano <ptitiano@baylibre.com>, Michael Turquette <mturquette@baylibre.com>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Russell King <linux@armlinux.org.uk>, David Lechner <david@lechnology.com>, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 
-Hello,
+On Fri, Jan 13, 2017 at 01:38:00PM +0100, Bartosz Golaszewski wrote:
+> +static int ahci_da850_softreset(struct ata_link *link,
+> +				unsigned int *class, unsigned long deadline)
+> +{
+> +	int pmp, ret;
+> +
+> +	pmp = sata_srst_pmp(link);
+> +
+> +	ret = ahci_do_softreset(link, class, pmp, deadline, ahci_check_ready);
+> +	if (pmp && ret == -EBUSY)
+> +		return ahci_do_softreset(link, class, 0,
+> +					 deadline, ahci_check_ready);
+> +
+> +	return ret;
+> +}
 
-On Fri, Jan 13, 2017 at 01:37:58PM +0100, Bartosz Golaszewski wrote:
-> The sata core driver already retries to resume the link because some
-> controllers ignore writes to the SControl register.
-> 
-> We have a use case with the da850 SATA controller where at PLL0
-> frequency of 456MHz (needed to properly service the LCD controller)
-> the chip becomes unstable and the hardreset operation is ignored the
-> first time 50% of times.
-> 
-> Retrying just the resume operation doesn't work - we need to issue
-> the phy/wake reset again to make it work.
-> 
-> If ata_phys_link_offline() returns true in sata_link_hardreset(),
-> retry a couple times before really giving up.
-
-I think it'd be better to implement the driver specific implementation
-rather than changing the behavior for everybody.
+Please add some comments explaining what's going on.
 
 Thanks.
 
 -- 
 tejun
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
