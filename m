@@ -1,49 +1,77 @@
-From: Bartosz Golaszewski <bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
-Subject: Re: [PATCH 09/10] ARM: dts: da850: add the SATA node
-Date: Mon, 16 Jan 2017 11:03:23 +0100
-Message-ID: <CAMpxmJX3PD=YFMSWHHLzGoubLB0S7s1s4XyjD6RVtm9YYjuyTw@mail.gmail.com>
+From: Bartosz Golaszewski <bgolaszewski@baylibre.com>
+Subject: Re: [PATCH 03/10] devicetree: bindings: add bindings for ahci-da850
+Date: Mon, 16 Jan 2017 11:13:16 +0100
+Message-ID: <CAMpxmJUau9BgAOhacPvcA=NwyE6-yEfDgPdcCZ_JCuNH-amJSA@mail.gmail.com>
 References: <1484311084-31547-1-git-send-email-bgolaszewski@baylibre.com>
- <1484311084-31547-10-git-send-email-bgolaszewski@baylibre.com> <4eb4ada8-1d2d-2fa1-7961-21da56ea0082@lechnology.com>
+ <1484311084-31547-4-git-send-email-bgolaszewski@baylibre.com> <35ff358d-9b17-b2be-38d8-6a51cdddc1a1@lechnology.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4eb4ada8-1d2d-2fa1-7961-21da56ea0082-nq/r/kbU++upp/zk7JDF2g@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: David Lechner <david-nq/r/kbU++upp/zk7JDF2g@public.gmane.org>
-Cc: Kevin Hilman <khilman-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Sekhar Nori <nsekhar-l0cyMroinI0@public.gmane.org>, Patrick Titiano <ptitiano-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Michael Turquette <mturquette-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Russell King <linux-I+IVW8TIWO2tmTQ+vhA3Yw@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-devicetree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, arm-soc <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-it0-f50.google.com ([209.85.214.50]:36986 "EHLO
+        mail-it0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751372AbdAPKNR (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 16 Jan 2017 05:13:17 -0500
+Received: by mail-it0-f50.google.com with SMTP id r185so79840183ita.0
+        for <linux-ide@vger.kernel.org>; Mon, 16 Jan 2017 02:13:17 -0800 (PST)
+In-Reply-To: <35ff358d-9b17-b2be-38d8-6a51cdddc1a1@lechnology.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: David Lechner <david@lechnology.com>
+Cc: Kevin Hilman <khilman@kernel.org>, Sekhar Nori <nsekhar@ti.com>, Patrick Titiano <ptitiano@baylibre.com>, Michael Turquette <mturquette@baylibre.com>, Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Russell King <linux@armlinux.org.uk>, linux-ide@vger.kernel.org, linux-devicetree <devicetree@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, arm-soc <linux-arm-kernel@lists.infradead.org>
 
-2017-01-13 20:36 GMT+01:00 David Lechner <david-nq/r/kbU++upp/zk7JDF2g@public.gmane.org>:
-> On 01/13/2017 06:38 AM, Bartosz Golaszewski wrote:
+2017-01-13 20:25 GMT+01:00 David Lechner <david@lechnology.com>:
+> On 01/13/2017 06:37 AM, Bartosz Golaszewski wrote:
 >>
->> Add the SATA node to the da850 device tree.
+>> Add DT bindings for the TI DA850 AHCI SATA controller.
 >>
->> Signed-off-by: Bartosz Golaszewski <bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
+>> Signed-off-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
 >> ---
->>  arch/arm/boot/dts/da850.dtsi | 6 ++++++
->>  1 file changed, 6 insertions(+)
+>>  .../devicetree/bindings/ata/ahci-da850.txt          | 21
+>> +++++++++++++++++++++
+>>  1 file changed, 21 insertions(+)
+>>  create mode 100644 Documentation/devicetree/bindings/ata/ahci-da850.txt
 >>
->> diff --git a/arch/arm/boot/dts/da850.dtsi b/arch/arm/boot/dts/da850.dtsi
->> index 1f6a47d..f5086b1 100644
->> --- a/arch/arm/boot/dts/da850.dtsi
->> +++ b/arch/arm/boot/dts/da850.dtsi
->> @@ -427,6 +427,12 @@
->>                         phy-names = "usb-phy";
->>                         status = "disabled";
->>                 };
->> +               sata: ahci@0x218000 {
+>> diff --git a/Documentation/devicetree/bindings/ata/ahci-da850.txt
+>> b/Documentation/devicetree/bindings/ata/ahci-da850.txt
+>> new file mode 100644
+>> index 0000000..d07c241
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/ata/ahci-da850.txt
+>> @@ -0,0 +1,21 @@
+>> +Device tree binding for the TI DA850 AHCI SATA Controller
+>> +---------------------------------------------------------
+>> +
+>> +Required properties:
+>> +  - compatible: must be "ti,da850-ahci"
+>> +  - reg: physical base addresses and sizes of the controller's register
+>> areas
+>> +  - interrupts: interrupt specifier (refer to the interrupt binding)
+>> +
+>> +Optional properties:
+>> +  - clocks: clock specifier (refer to the common clock binding)
+>> +  - da850,clk_multiplier: the multiplier for the reference clock needed
+>> +                          for 1.5GHz PLL output
 >
 >
-> 0x needs to be omitted.
->
->         sata: ahci@218000 {
+> A clock multiplier property seems redundant if you are specifying a clock.
+> It should be possible to get the rate from the clock to determine which
+> multiplier is needed.
 >
 
-Will fix in v2.
+I probably should have named it differently. This is not a multiplier
+of a clock derived from PLL0 or PLL1. Instead it's a value set by
+writing to the Port PHY Control Register (MPY bits) of the SATA
+controller that configures the multiplier for the external low-jitter
+clock. On the lcdk the signals (REFCLKP, REFCLKN) are provided by
+CDCM61001 (SATA OSCILLATOR component on the schematics).
+
+I'll find a better name and comment the property accordingly.
+
+FYI: the da850 platform does not use the common clock framework, so I
+don't specify the clock property on the sata node in the device tree.
+Instead I add the clock lookup entry in patch [01/10]. This is
+transparent for AHCI which can get the clock as usual by calling
+clk_get() in ahci_platform_get_resources().
 
 Thanks,
 Bartosz Golaszewski
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
