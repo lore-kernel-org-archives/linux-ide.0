@@ -1,56 +1,60 @@
 From: David Lechner <david@lechnology.com>
-Subject: davinci common clock framework (was Re: [PATCH 03/10] devicetree:
- bindings: add bindings for ahci-da850)
-Date: Tue, 17 Jan 2017 12:31:56 -0600
-Message-ID: <ee95c747-4e24-4cad-80d2-b13f2e704122@lechnology.com>
-References: <1484311084-31547-1-git-send-email-bgolaszewski@baylibre.com>
- <1484311084-31547-4-git-send-email-bgolaszewski@baylibre.com>
- <35ff358d-9b17-b2be-38d8-6a51cdddc1a1@lechnology.com>
- <CAMpxmJUau9BgAOhacPvcA=NwyE6-yEfDgPdcCZ_JCuNH-amJSA@mail.gmail.com>
- <d8406f53-b97d-ca9a-f7d1-94ce5b7064f7@ti.com>
- <CAMpxmJW9ns-aG=4zYHcV5-2b_TdmJ7q+Ap1jdyoxstZjWYRL2A@mail.gmail.com>
- <fb93275e-73ad-513b-6ac8-a39bbe43fd5c@lechnology.com>
- <37c826cc-9804-291e-a7b2-a512b59524fd@ti.com>
+Subject: Re: [PATCH v2 01/14] devicetree: bindings: add bindings for
+ ahci-da850
+Date: Tue, 17 Jan 2017 12:35:31 -0600
+Message-ID: <7e3c8946-2a19-3e11-c071-b3737554005c@lechnology.com>
+References: <1484655976-25382-1-git-send-email-bgolaszewski@baylibre.com>
+ <1484655976-25382-2-git-send-email-bgolaszewski@baylibre.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <37c826cc-9804-291e-a7b2-a512b59524fd@ti.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sekhar Nori <nsekhar@ti.com>, Bartosz Golaszewski <bgolaszewski@baylibre.com>
-Cc: Kevin Hilman <khilman@kernel.org>, Patrick Titiano <ptitiano@baylibre.com>, Michael Turquette <mturquette@baylibre.com>, Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Russell King <linux@armlinux.org.uk>, linux-ide@vger.kernel.org, linux-devicetree <devicetree@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, arm-soc <linux-arm-kernel@lists.infradead.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from vern.gendns.com ([206.190.152.46]:55611 "EHLO vern.gendns.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750866AbdAQSfb (ORCPT <rfc822;linux-ide@vger.kernel.org>);
+        Tue, 17 Jan 2017 13:35:31 -0500
+In-Reply-To: <1484655976-25382-2-git-send-email-bgolaszewski@baylibre.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Bartosz Golaszewski <bgolaszewski@baylibre.com>, Kevin Hilman <khilman@kernel.org>, Sekhar Nori <nsekhar@ti.com>, Patrick Titiano <ptitiano@baylibre.com>, Michael Turquette <mturquette@baylibre.com>, Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Russell King <linux@armlinux.org.uk>
+Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 
-On 01/17/2017 06:00 AM, Sekhar Nori wrote:
-> On Tuesday 17 January 2017 12:17 AM, David Lechner wrote:
->> On 01/16/2017 08:30 AM, Bartosz Golaszewski wrote:
->>> 2017-01-16 13:45 GMT+01:00 Sekhar Nori <nsekhar@ti.com>:
->>>> On Monday 16 January 2017 03:43 PM, Bartosz Golaszewski wrote:
->>>
->>> It's true that once davinci gets ported (is this planned?) to using
->>> the common clock framework, we could just create a fixed-clock node in
->>> da850-lcdk for the SATA oscillator, so the new property is redundant.
->>>
->>
->> I have some commits[1] where I started on converting da850 to use the
->> common clock framework. But, I don't know anything about other davinci
->> family devices, so I don't think I could really take that to completion
->> without lots of help.
+On 01/17/2017 06:26 AM, Bartosz Golaszewski wrote:
+> Add DT bindings for the TI DA850 AHCI SATA controller.
 >
-> I can help with testing, reviewing and filling in any missing
-> information. But I wont have time to write the code itself.
+> Signed-off-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
+> ---
+>  Documentation/devicetree/bindings/ata/ahci-da850.txt | 18 ++++++++++++++++++
+>  1 file changed, 18 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/ata/ahci-da850.txt
 >
->>
->> [1]: https://github.com/dlech/ev3dev-kernel/commits/wip-20160509
->
-> I see that you have made a copy of the keystone PSC driver. I think you
-> will need pretty strong reasons to not use the same driver with some
-> customization for DaVinci.
+> diff --git a/Documentation/devicetree/bindings/ata/ahci-da850.txt b/Documentation/devicetree/bindings/ata/ahci-da850.txt
+> new file mode 100644
+> index 0000000..e7111b4
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ata/ahci-da850.txt
+> @@ -0,0 +1,18 @@
+> +Device tree binding for the TI DA850 AHCI SATA Controller
+> +---------------------------------------------------------
+> +
+> +Required properties:
+> +  - compatible: must be "ti,da850-ahci"
+> +  - reg: physical base addresses and sizes of the controller's register areas
+> +  - interrupts: interrupt specifier (refer to the interrupt binding)
+> +
+> +Optional properties:
+> +  - clocks: clock specifier (refer to the common clock binding)
+
+Won't you also need a clock-names property since there are two clocks?
+
+> +
+> +Example:
+> +
+> +	sata: ahci@218000 {
+> +		compatible = "ti,da850-ahci";
+> +		reg = <0x218000 0x2000>, <0x22c018 0x4>;
+> +		interrupts = <67>;
+> +	};
 >
 
-It has been a while since I looked at this, but as I recall, the device 
-tree bindings for keystone are horrible and make no sense. So, I made 
-new bindings that make more sense. But since we can't break backwards 
-compatibility in device tree, I made a new driver rather than having the 
-mess of supporting two very different bindings in one driver. I don't 
-know if that is a strong enough reason, but that is why I did it. :-)
+It would be nice to have clocks and clock-names in the example as well.
