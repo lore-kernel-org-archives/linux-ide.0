@@ -1,8 +1,7 @@
 From: Bartosz Golaszewski <bgolaszewski@baylibre.com>
-Subject: [PATCH v2 08/14] sata: ahci-da850: implement a workaround for the
- softreset quirk
-Date: Tue, 17 Jan 2017 13:26:10 +0100
-Message-ID: <1484655976-25382-9-git-send-email-bgolaszewski@baylibre.com>
+Subject: [PATCH v2 06/14] ARM: davinci: da850: model the SATA refclk
+Date: Tue, 17 Jan 2017 13:26:08 +0100
+Message-ID: <1484655976-25382-7-git-send-email-bgolaszewski@baylibre.com>
 References: <1484655976-25382-1-git-send-email-bgolaszewski@baylibre.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,65 +21,89 @@ To: Kevin Hilman <khilman@kernel.org>, Sekhar Nori <nsekhar@ti.com>, Patrick Tit
 Cc: linux-ide@vger.kernel.org, Bartosz Golaszewski <bgolaszewski@baylibre.com>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-There's an issue with the da850 SATA controller: if port multiplier
-support is compiled in, but we're connecting the drive directly to
-the SATA port on the board, the drive can't be detected.
-
-To make SATA work on the da850-lcdk board: first try to softreset
-with pmp - if the operation fails with -EBUSY, retry without pmp.
+Register a dummy clock modelling the external SATA oscillator for
+da850 DT mode. For non-DT boot we don't register the clock - instead
+we rely on the default MPY value defined in the da850 ahci driver (as
+is done currently).
 
 Signed-off-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
 ---
- drivers/ata/ahci_da850.c | 33 ++++++++++++++++++++++++++++++++-
- 1 file changed, 32 insertions(+), 1 deletion(-)
+ arch/arm/mach-davinci/da8xx-dt.c           |  8 ++++++++
+ arch/arm/mach-davinci/devices-da8xx.c      | 23 +++++++++++++++++++++++
+ arch/arm/mach-davinci/include/mach/da8xx.h |  1 +
+ 3 files changed, 32 insertions(+)
 
-diff --git a/drivers/ata/ahci_da850.c b/drivers/ata/ahci_da850.c
-index c071701..e0dc089 100644
---- a/drivers/ata/ahci_da850.c
-+++ b/drivers/ata/ahci_da850.c
-@@ -54,11 +54,42 @@ static void da850_sata_init(struct device *dev, void __iomem *pwrdn_reg,
- 	writel(val, ahci_base + SATA_P0PHYCR_REG);
+diff --git a/arch/arm/mach-davinci/da8xx-dt.c b/arch/arm/mach-davinci/da8xx-dt.c
+index b83e5d1..13137cb 100644
+--- a/arch/arm/mach-davinci/da8xx-dt.c
++++ b/arch/arm/mach-davinci/da8xx-dt.c
+@@ -61,6 +61,14 @@ static void __init da850_init_machine(void)
+ 		pr_warn("%s: registering USB 1.1 PHY clock failed: %d",
+ 			__func__, ret);
+ 
++	if (of_machine_is_compatible("ti,da850-evm") ||
++	    of_machine_is_compatible("ti,da850-lcdk")) {
++		ret = da850_register_sata_refclk(100000000);
++		if (ret)
++			pr_warn("%s: registering SATA_REFCLK clock failed: %d",
++				__func__, ret);
++	}
++
+ 	of_platform_default_populate(NULL, da850_auxdata_lookup, NULL);
+ 	davinci_pm_init();
+ }
+diff --git a/arch/arm/mach-davinci/devices-da8xx.c b/arch/arm/mach-davinci/devices-da8xx.c
+index c2457b3..2bb5b69 100644
+--- a/arch/arm/mach-davinci/devices-da8xx.c
++++ b/arch/arm/mach-davinci/devices-da8xx.c
+@@ -24,6 +24,7 @@
+ #include <mach/common.h>
+ #include <mach/time.h>
+ #include <mach/da8xx.h>
++#include <mach/clock.h>
+ #include "cpuidle.h"
+ #include "sram.h"
+ 
+@@ -1023,6 +1024,28 @@ int __init da8xx_register_spi_bus(int instance, unsigned num_chipselect)
  }
  
-+static int ahci_da850_softreset(struct ata_link *link,
-+				unsigned int *class, unsigned long deadline)
-+{
-+	int pmp, ret;
-+
-+	pmp = sata_srst_pmp(link);
-+
-+	/*
-+	 * There's an issue with the SATA controller on da850 SoCs: if we
-+	 * enable Port Multiplier support, but the drive is connected directly
-+	 * to the board, it can't be detected. As a workaround: if PMP is
-+	 * enabled, we first call ahci_do_softreset() and pass it the result of
-+	 * sata_srst_pmp(). If this call fails, we retry with pmp = 0.
-+	 */
-+	ret = ahci_do_softreset(link, class, pmp, deadline, ahci_check_ready);
-+	if (pmp && ret == -EBUSY)
-+		return ahci_do_softreset(link, class, 0,
-+					 deadline, ahci_check_ready);
-+
-+	return ret;
-+}
-+
-+static struct ata_port_operations ahci_da850_port_ops = {
-+	.inherits = &ahci_platform_ops,
-+	.softreset = ahci_da850_softreset,
-+	/*
-+	 * No need to override .pmp_softreset - it's only used for actual
-+	 * PMP-enabled ports.
-+	 */
+ #ifdef CONFIG_ARCH_DAVINCI_DA850
++static struct clk sata_refclk = {
++	.name		= "sata_refclk",
++	.set_rate	= davinci_simple_set_rate,
 +};
 +
- static const struct ata_port_info ahci_da850_port_info = {
- 	.flags		= AHCI_FLAG_COMMON,
- 	.pio_mask	= ATA_PIO4,
- 	.udma_mask	= ATA_UDMA6,
--	.port_ops	= &ahci_platform_ops,
-+	.port_ops	= &ahci_da850_port_ops,
- };
- 
- static struct scsi_host_template ahci_platform_sht = {
++static struct clk_lookup sata_refclk_lookup =
++		CLK("ahci_da850", "refclk", &sata_refclk);
++
++int __init da850_register_sata_refclk(int rate)
++{
++	int ret;
++
++	sata_refclk.rate = rate;
++	ret = clk_register(&sata_refclk);
++	if (ret)
++		return ret;
++
++	clkdev_add(&sata_refclk_lookup);
++
++	return 0;
++}
++
+ static struct resource da850_sata_resources[] = {
+ 	{
+ 		.start	= DA850_SATA_BASE,
+diff --git a/arch/arm/mach-davinci/include/mach/da8xx.h b/arch/arm/mach-davinci/include/mach/da8xx.h
+index 85ff218..7e46422 100644
+--- a/arch/arm/mach-davinci/include/mach/da8xx.h
++++ b/arch/arm/mach-davinci/include/mach/da8xx.h
+@@ -95,6 +95,7 @@ int da8xx_register_usb11(struct da8xx_ohci_root_hub *pdata);
+ int da8xx_register_usb_refclkin(int rate);
+ int da8xx_register_usb20_phy_clk(bool use_usb_refclkin);
+ int da8xx_register_usb11_phy_clk(bool use_usb_refclkin);
++int da850_register_sata_refclk(int rate);
+ int da8xx_register_emac(void);
+ int da8xx_register_uio_pruss(void);
+ int da8xx_register_lcdc(struct da8xx_lcdc_platform_data *pdata);
 -- 
 2.9.3
