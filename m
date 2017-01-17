@@ -1,103 +1,92 @@
-From: Bartosz Golaszewski <bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v2 09/14] sata: ahci: export ahci_do_hardreset() locally
-Date: Tue, 17 Jan 2017 13:26:11 +0100
-Message-ID: <1484655976-25382-10-git-send-email-bgolaszewski@baylibre.com>
+From: Bartosz Golaszewski <bgolaszewski@baylibre.com>
+Subject: [PATCH v2 10/14] sata: ahci-da850: add a workaround for controller instability
+Date: Tue, 17 Jan 2017 13:26:12 +0100
+Message-ID: <1484655976-25382-11-git-send-email-bgolaszewski@baylibre.com>
 References: <1484655976-25382-1-git-send-email-bgolaszewski@baylibre.com>
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1484655976-25382-1-git-send-email-bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Kevin Hilman <khilman-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Sekhar Nori <nsekhar-l0cyMroinI0@public.gmane.org>, Patrick Titiano <ptitiano-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Michael Turquette <mturquette-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Russell King <linux-I+IVW8TIWO2tmTQ+vhA3Yw@public.gmane.org>, David Lechner <david-nq/r/kbU++upp/zk7JDF2g@public.gmane.org>
-Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Bartosz Golaszewski <bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-wm0-f49.google.com ([74.125.82.49]:37656 "EHLO
+        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751385AbdAQM1I (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jan 2017 07:27:08 -0500
+Received: by mail-wm0-f49.google.com with SMTP id c206so220275563wme.0
+        for <linux-ide@vger.kernel.org>; Tue, 17 Jan 2017 04:27:07 -0800 (PST)
+In-Reply-To: <1484655976-25382-1-git-send-email-bgolaszewski@baylibre.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Kevin Hilman <khilman@kernel.org>, Sekhar Nori <nsekhar@ti.com>, Patrick Titiano <ptitiano@baylibre.com>, Michael Turquette <mturquette@baylibre.com>, Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Russell King <linux@armlinux.org.uk>, David Lechner <david@lechnology.com>
+Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Bartosz Golaszewski <bgolaszewski@baylibre.com>
 
-We need a way to retrieve the information about the online state of
-the link in the ahci-da850 driver.
+We have a use case with the da850 SATA controller where at PLL0
+frequency of 456MHz (needed to properly service the LCD controller)
+the chip becomes unstable and the hardreset operation is ignored the
+first time 50% of times.
 
-Create a new function: ahci_do_hardreset() which is called from
-ahci_hardreset() for backwards compatibility, but has an additional
-argument: 'online' - which can be used to check if the link is online
-after this function returns.
+The sata core driver already retries to resume the link because some
+controllers ignore writes to the SControl register, but just retrying
+the resume operation doesn't work - we need to issue he phy/wake reset
+again to make it work.
 
-The new routine will be used in the ahci-da850 driver to avoid code
-duplication when implementing a workaround for tha da850 SATA
-controller quirk/instability.
+Reimplement ahci_hardreset() in the driver and poke the controller a
+couple times before really giving up.
 
-Signed-off-by: Bartosz Golaszewski <bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
+Signed-off-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
 ---
- drivers/ata/ahci.h    |  3 +++
- drivers/ata/libahci.c | 18 +++++++++++++-----
- 2 files changed, 16 insertions(+), 5 deletions(-)
+ drivers/ata/ahci_da850.c | 28 +++++++++++++++++++++++++++-
+ 1 file changed, 27 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 0cc08f8..5db6ab2 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -398,6 +398,9 @@ int ahci_do_softreset(struct ata_link *link, unsigned int *class,
- 		      int pmp, unsigned long deadline,
- 		      int (*check_ready)(struct ata_link *link));
+diff --git a/drivers/ata/ahci_da850.c b/drivers/ata/ahci_da850.c
+index e0dc089..a7a7161 100644
+--- a/drivers/ata/ahci_da850.c
++++ b/drivers/ata/ahci_da850.c
+@@ -16,7 +16,8 @@
+ #include <linux/ahci_platform.h>
+ #include "ahci.h"
  
-+int ahci_do_hardreset(struct ata_link *link, unsigned int *class,
-+		      unsigned long deadline, bool *online);
-+
- unsigned int ahci_qc_issue(struct ata_queued_cmd *qc);
- int ahci_stop_engine(struct ata_port *ap);
- void ahci_start_fis_rx(struct ata_port *ap);
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index ee7db31..3159f9e 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -1519,8 +1519,8 @@ static int ahci_pmp_retry_softreset(struct ata_link *link, unsigned int *class,
- 	return rc;
+-#define DRV_NAME "ahci_da850"
++#define DRV_NAME		"ahci_da850"
++#define HARDRESET_RETRIES	5
+ 
+ /* SATA PHY Control Register offset from AHCI base */
+ #define SATA_P0PHYCR_REG	0x178
+@@ -76,6 +77,29 @@ static int ahci_da850_softreset(struct ata_link *link,
+ 	return ret;
  }
  
--static int ahci_hardreset(struct ata_link *link, unsigned int *class,
--			  unsigned long deadline)
-+int ahci_do_hardreset(struct ata_link *link, unsigned int *class,
-+		      unsigned long deadline, bool *online)
- {
- 	const unsigned long *timing = sata_ehc_deb_timing(&link->eh_context);
- 	struct ata_port *ap = link->ap;
-@@ -1528,7 +1528,6 @@ static int ahci_hardreset(struct ata_link *link, unsigned int *class,
- 	struct ahci_host_priv *hpriv = ap->host->private_data;
- 	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
- 	struct ata_taskfile tf;
--	bool online;
- 	int rc;
- 
- 	DPRINTK("ENTER\n");
-@@ -1540,17 +1539,26 @@ static int ahci_hardreset(struct ata_link *link, unsigned int *class,
- 	tf.command = ATA_BUSY;
- 	ata_tf_to_fis(&tf, 0, 0, d2h_fis);
- 
--	rc = sata_link_hardreset(link, timing, deadline, &online,
-+	rc = sata_link_hardreset(link, timing, deadline, online,
- 				 ahci_check_ready);
- 
- 	hpriv->start_engine(ap);
- 
--	if (online)
-+	if (*online)
- 		*class = ahci_dev_classify(ap);
- 
- 	DPRINTK("EXIT, rc=%d, class=%u\n", rc, *class);
- 	return rc;
- }
-+EXPORT_SYMBOL_GPL(ahci_do_hardreset);
-+
-+static int ahci_hardreset(struct ata_link *link, unsigned int *class,
-+			  unsigned long deadline)
++static int ahci_da850_hardreset(struct ata_link *link,
++				unsigned int *class, unsigned long deadline)
 +{
++	int ret, retry = HARDRESET_RETRIES;
 +	bool online;
 +
-+	return ahci_do_hardreset(link, class, deadline, &online);
++	/*
++	 * In order to correctly service the LCD controller of the da850 SoC,
++	 * we increased the PLL0 frequency to 456MHz from the default 300MHz.
++	 *
++	 * This made the SATA controller unstable and the hardreset operation
++	 * does not always succeed the first time. Before really giving up to
++	 * bring up the link, retry the reset a couple times.
++	 */
++	do {
++		ret = ahci_do_hardreset(link, class, deadline, &online);
++		if (online)
++			return ret;
++	} while (retry--);
++
++	return ret;
 +}
++
+ static struct ata_port_operations ahci_da850_port_ops = {
+ 	.inherits = &ahci_platform_ops,
+ 	.softreset = ahci_da850_softreset,
+@@ -83,6 +107,8 @@ static struct ata_port_operations ahci_da850_port_ops = {
+ 	 * No need to override .pmp_softreset - it's only used for actual
+ 	 * PMP-enabled ports.
+ 	 */
++	.hardreset = ahci_da850_hardreset,
++	.pmp_hardreset = ahci_da850_hardreset,
+ };
  
- static void ahci_postreset(struct ata_link *link, unsigned int *class)
- {
+ static const struct ata_port_info ahci_da850_port_info = {
 -- 
 2.9.3
 
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
