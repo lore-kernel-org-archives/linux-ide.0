@@ -1,45 +1,113 @@
-From: Bartosz Golaszewski <bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
-Subject: Re: [PATCH 00/10] ARM: da850-lcdk: add SATA support
-Date: Tue, 17 Jan 2017 13:34:24 +0100
-Message-ID: <CAMpxmJVdFhzLGmY8maUo8k1Gzgwp+2ivFD8VqG3SbspFoXNvbw@mail.gmail.com>
-References: <1484311084-31547-1-git-send-email-bgolaszewski@baylibre.com>
+From: Rameshwar Sahu <rsahu@apm.com>
+Subject: Re: [PATCH v2] ata: xgene: Enable NCQ support for APM X-Gene SATA
+ controller hardware v1.1
+Date: Tue, 17 Jan 2017 20:25:21 +0530
+Message-ID: <CAFd313wajZzZWGQy20obf4k_7RO43Q10NiBa-8TVYxo3J93inA@mail.gmail.com>
+References: <1479462345-13942-1-git-send-email-rsahu@apm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1484311084-31547-1-git-send-email-bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Kevin Hilman <khilman-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Sekhar Nori <nsekhar-l0cyMroinI0@public.gmane.org>, Patrick Titiano <ptitiano-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Michael Turquette <mturquette-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Russell King <linux-I+IVW8TIWO2tmTQ+vhA3Yw@public.gmane.org>, David Lechner <david-nq/r/kbU++upp/zk7JDF2g@public.gmane.org>
-Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-devicetree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, arm-soc <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, Bartosz Golaszewski <bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-qt0-f169.google.com ([209.85.216.169]:34085 "EHLO
+        mail-qt0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751150AbdAQOzY (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jan 2017 09:55:24 -0500
+Received: by mail-qt0-f169.google.com with SMTP id l7so161715403qtd.1
+        for <linux-ide@vger.kernel.org>; Tue, 17 Jan 2017 06:55:24 -0800 (PST)
+In-Reply-To: <1479462345-13942-1-git-send-email-rsahu@apm.com>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Olof Johansson <olof@lixom.net>, Tejun Heo <tj@kernel.org>, Arnd Bergmann <arnd@arndb.de>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Devicetree List <devicetree@vger.kernel.org>, linux-arm <linux-arm-kernel@lists.infradead.org>, mlangsdo@redhat.com, Jon Masters <jcm@redhat.com>, patches <patches@apm.com>, Rameshwar Prasad Sahu <rsahu@apm.com>
 
-2017-01-13 13:37 GMT+01:00 Bartosz Golaszewski <bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>:
-> This series contains all the changes necessary to make SATA work on
-> the da850-lcdk board.
+Hi Tejun,
+
+On Fri, Nov 18, 2016 at 3:15 PM, Rameshwar Prasad Sahu <rsahu@apm.com> wrote:
+> This patch enables NCQ support for APM X-Gene SATA controller hardware v1.1
+> that was broken with hardware v1.0. Second thing, here we should not assume
+> XGENE_AHCI_V2 always in case of having valid _CID in ACPI table. I need to
+> remove this assumption because V1_1 also has a valid _CID for backward
+> compatibly with v1.
 >
-> The first patch adds a clock lookup entry required for the ahci core
-> to retrieve a functional clock.
+> v2 changes:
+>         1. Changed patch description
 >
-> The second enables relevant config options for all davinci boards.
+> Signed-off-by: Rameshwar Prasad Sahu <rsahu@apm.com>
+> ---
+>  drivers/ata/ahci_xgene.c |   14 ++++++++------
+>  1 files changed, 8 insertions(+), 6 deletions(-)
 >
-> The third adds device tree bindings for the ahci_da850 driver.
+> diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
+> index 73b19b2..8b88be9 100644
+> --- a/drivers/ata/ahci_xgene.c
+> +++ b/drivers/ata/ahci_xgene.c
+> @@ -87,6 +87,7 @@
 >
-> The fourth adds a workaround for a SATA controller instability we
-> detected after increasing the PLL0 frequency for proper LCD
-> controller support.
+>  enum xgene_ahci_version {
+>         XGENE_AHCI_V1 = 1,
+> +       XGENE_AHCI_V1_1,
+>         XGENE_AHCI_V2,
+>  };
 >
-> Patches 5 through 7 extend the ahci_da850 driver - add DT support,
-> un-hardcode the clock multiplier value and add a workaround for
-> a quirk present on the da850 SATA controller.
+> @@ -734,6 +735,7 @@ static struct scsi_host_template ahci_platform_sht = {
+>  #ifdef CONFIG_ACPI
+>  static const struct acpi_device_id xgene_ahci_acpi_match[] = {
+>         { "APMC0D0D", XGENE_AHCI_V1},
+> +       { "APMC0D67", XGENE_AHCI_V1_1},
+>         { "APMC0D32", XGENE_AHCI_V2},
+>         {},
+>  };
+> @@ -742,6 +744,7 @@ MODULE_DEVICE_TABLE(acpi, xgene_ahci_acpi_match);
 >
-> Patches 8-10 add the device tree changes required to probe the driver.
+>  static const struct of_device_id xgene_ahci_of_match[] = {
+>         {.compatible = "apm,xgene-ahci", .data = (void *) XGENE_AHCI_V1},
+> +       {.compatible = "apm,xgene-ahci-v1-1", .data = (void *) XGENE_AHCI_V1_1},
+>         {.compatible = "apm,xgene-ahci-v2", .data = (void *) XGENE_AHCI_V2},
+>         {},
+>  };
+> @@ -755,8 +758,7 @@ static int xgene_ahci_probe(struct platform_device *pdev)
+>         struct resource *res;
+>         const struct of_device_id *of_devid;
+>         enum xgene_ahci_version version = XGENE_AHCI_V1;
+> -       const struct ata_port_info *ppi[] = { &xgene_ahci_v1_port_info,
+> -                                             &xgene_ahci_v2_port_info };
+> +       const struct ata_port_info *ppi;
+>         int rc;
 >
-> I'm posting the series as a whole to give all reviewers the full
-> picture and visibility of the changes required, if needed I can resend
-> the patches separately.
+>         hpriv = ahci_platform_get_resources(pdev);
+> @@ -821,8 +823,6 @@ static int xgene_ahci_probe(struct platform_device *pdev)
+>                                 dev_warn(&pdev->dev, "%s: Error reading device info. Assume version1\n",
+>                                         __func__);
+>                                 version = XGENE_AHCI_V1;
+> -                       } else if (info->valid & ACPI_VALID_CID) {
+> -                               version = XGENE_AHCI_V2;
+>                         }
+>                 }
+>         }
+> @@ -858,18 +858,20 @@ skip_clk_phy:
+>
+>         switch (version) {
+>         case XGENE_AHCI_V1:
+> +               ppi = &xgene_ahci_v1_port_info;
+>                 hpriv->flags = AHCI_HFLAG_NO_NCQ;
+>                 break;
+>         case XGENE_AHCI_V2:
+> +               ppi = &xgene_ahci_v2_port_info;
+>                 hpriv->flags |= AHCI_HFLAG_YES_FBS;
+>                 hpriv->irq_handler = xgene_ahci_irq_intr;
+>                 break;
+>         default:
+> +               ppi = &xgene_ahci_v1_port_info;
+>                 break;
+>         }
+>
+> -       rc = ahci_platform_init_host(pdev, hpriv, ppi[version - 1],
+> -                                    &ahci_platform_sht);
+> +       rc = ahci_platform_init_host(pdev, hpriv, ppi, &ahci_platform_sht);
+>         if (rc)
+>                 goto disable_resources;
+>
+> --
+> 1.7.1
 >
 
-Superseded by v2.
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Any comments on this patch ??
