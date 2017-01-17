@@ -1,8 +1,8 @@
 From: Bartosz Golaszewski <bgolaszewski@baylibre.com>
-Subject: [PATCH v2 04/14] sata: ahci-da850: get the sata clock using a
- connector id
-Date: Tue, 17 Jan 2017 13:26:06 +0100
-Message-ID: <1484655976-25382-5-git-send-email-bgolaszewski@baylibre.com>
+Subject: [PATCH v2 08/14] sata: ahci-da850: implement a workaround for the
+ softreset quirk
+Date: Tue, 17 Jan 2017 13:26:10 +0100
+Message-ID: <1484655976-25382-9-git-send-email-bgolaszewski@baylibre.com>
 References: <1484655976-25382-1-git-send-email-bgolaszewski@baylibre.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,48 +22,65 @@ To: Kevin Hilman <khilman@kernel.org>, Sekhar Nori <nsekhar@ti.com>, Patrick Tit
 Cc: linux-ide@vger.kernel.org, Bartosz Golaszewski <bgolaszewski@baylibre.com>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-In preparation for using two clocks in the driver (the sysclk2-based
-clock and the external REFCLK), check if we got a functional clock
-after calling ahci_platform_get_resources(). If not, retry calling
-get_clk() with con_id specified.
+There's an issue with the da850 SATA controller: if port multiplier
+support is compiled in, but we're connecting the drive directly to
+the SATA port on the board, the drive can't be detected.
+
+To make SATA work on the da850-lcdk board: first try to softreset
+with pmp - if the operation fails with -EBUSY, retry without pmp.
 
 Signed-off-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
 ---
- drivers/ata/ahci_da850.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+ drivers/ata/ahci_da850.c | 33 ++++++++++++++++++++++++++++++++-
+ 1 file changed, 32 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/ata/ahci_da850.c b/drivers/ata/ahci_da850.c
-index 267a3d3..18f57c2 100644
+index c071701..e0dc089 100644
 --- a/drivers/ata/ahci_da850.c
 +++ b/drivers/ata/ahci_da850.c
-@@ -71,12 +71,28 @@ static int ahci_da850_probe(struct platform_device *pdev)
- 	struct ahci_host_priv *hpriv;
- 	struct resource *res;
- 	void __iomem *pwrdn_reg;
-+	struct clk *clk;
- 	int rc;
+@@ -54,11 +54,42 @@ static void da850_sata_init(struct device *dev, void __iomem *pwrdn_reg,
+ 	writel(val, ahci_base + SATA_P0PHYCR_REG);
+ }
  
- 	hpriv = ahci_platform_get_resources(pdev);
- 	if (IS_ERR(hpriv))
- 		return PTR_ERR(hpriv);
- 
++static int ahci_da850_softreset(struct ata_link *link,
++				unsigned int *class, unsigned long deadline)
++{
++	int pmp, ret;
++
++	pmp = sata_srst_pmp(link);
++
 +	/*
-+	 * Internally ahci_platform_get_resources() calls clk_get(dev, NULL)
-+	 * when trying to obtain the first clock. This SATA controller uses
-+	 * two clocks for which we specify two connector ids. If we don't
-+	 * have a clock at this point - call clk_get() again with
-+	 * con_id = "sata".
++	 * There's an issue with the SATA controller on da850 SoCs: if we
++	 * enable Port Multiplier support, but the drive is connected directly
++	 * to the board, it can't be detected. As a workaround: if PMP is
++	 * enabled, we first call ahci_do_softreset() and pass it the result of
++	 * sata_srst_pmp(). If this call fails, we retry with pmp = 0.
 +	 */
-+	if (!hpriv->clks[0]) {
-+		clk = clk_get(dev, "sata");
-+		if (IS_ERR(clk))
-+			return PTR_ERR(clk);
++	ret = ahci_do_softreset(link, class, pmp, deadline, ahci_check_ready);
++	if (pmp && ret == -EBUSY)
++		return ahci_do_softreset(link, class, 0,
++					 deadline, ahci_check_ready);
 +
-+		hpriv->clks[0] = clk;
-+	}
++	return ret;
++}
 +
- 	rc = ahci_platform_enable_resources(hpriv);
- 	if (rc)
- 		return rc;
++static struct ata_port_operations ahci_da850_port_ops = {
++	.inherits = &ahci_platform_ops,
++	.softreset = ahci_da850_softreset,
++	/*
++	 * No need to override .pmp_softreset - it's only used for actual
++	 * PMP-enabled ports.
++	 */
++};
++
+ static const struct ata_port_info ahci_da850_port_info = {
+ 	.flags		= AHCI_FLAG_COMMON,
+ 	.pio_mask	= ATA_PIO4,
+ 	.udma_mask	= ATA_UDMA6,
+-	.port_ops	= &ahci_platform_ops,
++	.port_ops	= &ahci_da850_port_ops,
+ };
+ 
+ static struct scsi_host_template ahci_platform_sht = {
 -- 
 2.9.3
