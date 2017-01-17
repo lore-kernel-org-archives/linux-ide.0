@@ -1,46 +1,41 @@
 From: Bartosz Golaszewski <bgolaszewski@baylibre.com>
-Subject: [PATCH v2 01/14] devicetree: bindings: add bindings for ahci-da850
-Date: Tue, 17 Jan 2017 13:26:03 +0100
-Message-ID: <1484655976-25382-2-git-send-email-bgolaszewski@baylibre.com>
+Subject: [PATCH v2 02/14] ARM: davinci_all_defconfig: enable SATA modules
+Date: Tue, 17 Jan 2017 13:26:04 +0100
+Message-ID: <1484655976-25382-3-git-send-email-bgolaszewski@baylibre.com>
 References: <1484655976-25382-1-git-send-email-bgolaszewski@baylibre.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-wm0-f42.google.com ([74.125.82.42]:37425 "EHLO
+        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751252AbdAQM0p (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jan 2017 07:26:45 -0500
+Received: by mail-wm0-f42.google.com with SMTP id c206so220265110wme.0
+        for <linux-ide@vger.kernel.org>; Tue, 17 Jan 2017 04:26:45 -0800 (PST)
 In-Reply-To: <1484655976-25382-1-git-send-email-bgolaszewski@baylibre.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+List-Id: linux-ide@vger.kernel.org
 To: Kevin Hilman <khilman@kernel.org>, Sekhar Nori <nsekhar@ti.com>, Patrick Titiano <ptitiano@baylibre.com>, Michael Turquette <mturquette@baylibre.com>, Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Russell King <linux@armlinux.org.uk>, David Lechner <david@lechnology.com>
 Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Bartosz Golaszewski <bgolaszewski@baylibre.com>
-List-Id: linux-ide@vger.kernel.org
 
-Add DT bindings for the TI DA850 AHCI SATA controller.
+Add the da850-ahci driver to davinci defconfig.
 
 Signed-off-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
 ---
- Documentation/devicetree/bindings/ata/ahci-da850.txt | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/ata/ahci-da850.txt
+ arch/arm/configs/davinci_all_defconfig | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-da850.txt b/Documentation/devicetree/bindings/ata/ahci-da850.txt
-new file mode 100644
-index 0000000..e7111b4
---- /dev/null
-+++ b/Documentation/devicetree/bindings/ata/ahci-da850.txt
-@@ -0,0 +1,18 @@
-+Device tree binding for the TI DA850 AHCI SATA Controller
-+---------------------------------------------------------
-+
-+Required properties:
-+  - compatible: must be "ti,da850-ahci"
-+  - reg: physical base addresses and sizes of the controller's register areas
-+  - interrupts: interrupt specifier (refer to the interrupt binding)
-+
-+Optional properties:
-+  - clocks: clock specifier (refer to the common clock binding)
-+
-+Example:
-+
-+	sata: ahci@218000 {
-+		compatible = "ti,da850-ahci";
-+		reg = <0x218000 0x2000>, <0x22c018 0x4>;
-+		interrupts = <67>;
-+	};
+diff --git a/arch/arm/configs/davinci_all_defconfig b/arch/arm/configs/davinci_all_defconfig
+index 8806754..a1b9c58 100644
+--- a/arch/arm/configs/davinci_all_defconfig
++++ b/arch/arm/configs/davinci_all_defconfig
+@@ -78,6 +78,8 @@ CONFIG_IDE=m
+ CONFIG_BLK_DEV_PALMCHIP_BK3710=m
+ CONFIG_SCSI=m
+ CONFIG_BLK_DEV_SD=m
++CONFIG_ATA=m
++CONFIG_AHCI_DA850=m
+ CONFIG_NETDEVICES=y
+ CONFIG_NETCONSOLE=y
+ CONFIG_TUN=m
 -- 
 2.9.3
+
