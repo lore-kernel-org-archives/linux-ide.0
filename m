@@ -1,92 +1,41 @@
 From: Bartosz Golaszewski <bgolaszewski@baylibre.com>
-Subject: [PATCH v2 10/14] sata: ahci-da850: add a workaround for controller instability
-Date: Tue, 17 Jan 2017 13:26:12 +0100
-Message-ID: <1484655976-25382-11-git-send-email-bgolaszewski@baylibre.com>
+Subject: [PATCH v2 14/14] ARM: dts: da850-lcdk: enable the SATA node
+Date: Tue, 17 Jan 2017 13:26:16 +0100
+Message-ID: <1484655976-25382-15-git-send-email-bgolaszewski@baylibre.com>
 References: <1484655976-25382-1-git-send-email-bgolaszewski@baylibre.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:37656 "EHLO
-        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751385AbdAQM1I (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Tue, 17 Jan 2017 07:27:08 -0500
-Received: by mail-wm0-f49.google.com with SMTP id c206so220275563wme.0
-        for <linux-ide@vger.kernel.org>; Tue, 17 Jan 2017 04:27:07 -0800 (PST)
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1484655976-25382-1-git-send-email-bgolaszewski@baylibre.com>
-Sender: linux-ide-owner@vger.kernel.org
-List-Id: linux-ide@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Kevin Hilman <khilman@kernel.org>, Sekhar Nori <nsekhar@ti.com>, Patrick Titiano <ptitiano@baylibre.com>, Michael Turquette <mturquette@baylibre.com>, Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Russell King <linux@armlinux.org.uk>, David Lechner <david@lechnology.com>
 Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Bartosz Golaszewski <bgolaszewski@baylibre.com>
+List-Id: linux-ide@vger.kernel.org
 
-We have a use case with the da850 SATA controller where at PLL0
-frequency of 456MHz (needed to properly service the LCD controller)
-the chip becomes unstable and the hardreset operation is ignored the
-first time 50% of times.
+Enable the SATA node for da850-lcdk. We omit the pinctrl property on
+purpose - the muxed SATA pins are not hooked up to anything
+SATA-related on the lcdk.
 
-The sata core driver already retries to resume the link because some
-controllers ignore writes to the SControl register, but just retrying
-the resume operation doesn't work - we need to issue he phy/wake reset
-again to make it work.
-
-Reimplement ahci_hardreset() in the driver and poke the controller a
-couple times before really giving up.
+The REFCLKN/P rate on the board is 100MHz, so we need a multiplier of
+15 for 1.5GHz PLL rate.
 
 Signed-off-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
 ---
- drivers/ata/ahci_da850.c | 28 +++++++++++++++++++++++++++-
- 1 file changed, 27 insertions(+), 1 deletion(-)
+ arch/arm/boot/dts/da850-lcdk.dts | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/ata/ahci_da850.c b/drivers/ata/ahci_da850.c
-index e0dc089..a7a7161 100644
---- a/drivers/ata/ahci_da850.c
-+++ b/drivers/ata/ahci_da850.c
-@@ -16,7 +16,8 @@
- #include <linux/ahci_platform.h>
- #include "ahci.h"
- 
--#define DRV_NAME "ahci_da850"
-+#define DRV_NAME		"ahci_da850"
-+#define HARDRESET_RETRIES	5
- 
- /* SATA PHY Control Register offset from AHCI base */
- #define SATA_P0PHYCR_REG	0x178
-@@ -76,6 +77,29 @@ static int ahci_da850_softreset(struct ata_link *link,
- 	return ret;
- }
- 
-+static int ahci_da850_hardreset(struct ata_link *link,
-+				unsigned int *class, unsigned long deadline)
-+{
-+	int ret, retry = HARDRESET_RETRIES;
-+	bool online;
-+
-+	/*
-+	 * In order to correctly service the LCD controller of the da850 SoC,
-+	 * we increased the PLL0 frequency to 456MHz from the default 300MHz.
-+	 *
-+	 * This made the SATA controller unstable and the hardreset operation
-+	 * does not always succeed the first time. Before really giving up to
-+	 * bring up the link, retry the reset a couple times.
-+	 */
-+	do {
-+		ret = ahci_do_hardreset(link, class, deadline, &online);
-+		if (online)
-+			return ret;
-+	} while (retry--);
-+
-+	return ret;
-+}
-+
- static struct ata_port_operations ahci_da850_port_ops = {
- 	.inherits = &ahci_platform_ops,
- 	.softreset = ahci_da850_softreset,
-@@ -83,6 +107,8 @@ static struct ata_port_operations ahci_da850_port_ops = {
- 	 * No need to override .pmp_softreset - it's only used for actual
- 	 * PMP-enabled ports.
- 	 */
-+	.hardreset = ahci_da850_hardreset,
-+	.pmp_hardreset = ahci_da850_hardreset,
+diff --git a/arch/arm/boot/dts/da850-lcdk.dts b/arch/arm/boot/dts/da850-lcdk.dts
+index afcb482..fbeee3c 100644
+--- a/arch/arm/boot/dts/da850-lcdk.dts
++++ b/arch/arm/boot/dts/da850-lcdk.dts
+@@ -105,6 +105,10 @@
+ 	status = "okay";
  };
  
- static const struct ata_port_info ahci_da850_port_info = {
++&sata {
++	status = "okay";
++};
++
+ &mdio {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&mdio_pins>;
 -- 
 2.9.3
-
