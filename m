@@ -1,47 +1,41 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2] ata: xgene: Enable NCQ support for APM X-Gene SATA
- controller hardware v1.1
-Date: Wed, 18 Jan 2017 11:23:08 -0800
-Message-ID: <20170118192308.GC9171@mtj.duckdns.org>
-References: <1479462345-13942-1-git-send-email-rsahu@apm.com>
- <CAFd313wajZzZWGQy20obf4k_7RO43Q10NiBa-8TVYxo3J93inA@mail.gmail.com>
+Subject: Re: command emulation fix
+Date: Wed, 18 Jan 2017 11:17:50 -0800
+Message-ID: <20170118191750.GA9171@mtj.duckdns.org>
+References: <1484412602-11801-1-git-send-email-hch@lst.de>
+ <20170115230723.GB14446@mtj.duckdns.org>
+ <20170116152120.GA16072@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:34096 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753012AbdART0q (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Wed, 18 Jan 2017 14:26:46 -0500
+Received: by mail-pg0-f65.google.com with SMTP id t6so2074780pgt.1
+        for <linux-ide@vger.kernel.org>; Wed, 18 Jan 2017 11:26:46 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <CAFd313wajZzZWGQy20obf4k_7RO43Q10NiBa-8TVYxo3J93inA@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Rameshwar Sahu <rsahu@apm.com>
-Cc: Devicetree List <devicetree@vger.kernel.org>, mlangsdo@redhat.com, Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, Jon Masters <jcm@redhat.com>, patches <patches@apm.com>, linux-ide@vger.kernel.org, Olof Johansson <olof@lixom.net>, linux-arm <linux-arm-kernel@lists.infradead.org>
+In-Reply-To: <20170116152120.GA16072@lst.de>
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-ide@vger.kernel.org
 
 Hello,
 
-On Tue, Jan 17, 2017 at 08:25:21PM +0530, Rameshwar Sahu wrote:
-> Hi Tejun,
+On Mon, Jan 16, 2017 at 04:21:20PM +0100, Christoph Hellwig wrote:
+> On Sun, Jan 15, 2017 at 06:07:23PM -0500, Tejun Heo wrote:
+> > Ugh... I don't know.  What we had previously is always guaranteed to
+> > work.  I'm not really liking the fact that we're adding a possibility
+> > of failure here.  Even if we do mempool, we would still have to
+> > protect it with a spinlock as mempool only guarantees one allocation
+> > at a time.  Until we have a better solution, can we please revert back
+> > to where we were at least for the buffers needed from atomic context?
 > 
-> On Fri, Nov 18, 2016 at 3:15 PM, Rameshwar Prasad Sahu <rsahu@apm.com> wrote:
-> > This patch enables NCQ support for APM X-Gene SATA controller hardware v1.1
-> > that was broken with hardware v1.0. Second thing, here we should not assume
-> > XGENE_AHCI_V2 always in case of having valid _CID in ACPI table. I need to
-> > remove this assumption because V1_1 also has a valid _CID for backward
-> > compatibly with v1.
-> >
-> > v2 changes:
-> >         1. Changed patch description
-> >
-> > Signed-off-by: Rameshwar Prasad Sahu <rsahu@apm.com>
+> In that case you'll need to drop all but the first patch from the series
+> as ->queuecommand can always be called from atomic context.
 
-Hmm... I don't have the patch in my queue.  Can you please resend it?
+I reverted just the last patch.  The rest should be fine, right?
 
 Thanks.
 
