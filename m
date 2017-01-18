@@ -1,43 +1,119 @@
-From: Bartosz Golaszewski <bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v3 12/13] ARM: dts: da850: add the SATA node
-Date: Wed, 18 Jan 2017 14:20:00 +0100
-Message-ID: <1484745601-4769-13-git-send-email-bgolaszewski@baylibre.com>
+From: Bartosz Golaszewski <bgolaszewski@baylibre.com>
+Subject: [PATCH v3 06/13] ARM: davinci: da850: model the SATA refclk
+Date: Wed, 18 Jan 2017 14:19:54 +0100
+Message-ID: <1484745601-4769-7-git-send-email-bgolaszewski@baylibre.com>
 References: <1484745601-4769-1-git-send-email-bgolaszewski@baylibre.com>
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1484745601-4769-1-git-send-email-bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Kevin Hilman <khilman-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Sekhar Nori <nsekhar-l0cyMroinI0@public.gmane.org>, Patrick Titiano <ptitiano-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Michael Turquette <mturquette-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Russell King <linux-I+IVW8TIWO2tmTQ+vhA3Yw@public.gmane.org>, David Lechner <david-nq/r/kbU++upp/zk7JDF2g@public.gmane.org>
-Cc: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, Bartosz Golaszewski <bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1484745601-4769-1-git-send-email-bgolaszewski@baylibre.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kevin Hilman <khilman@kernel.org>, Sekhar Nori <nsekhar@ti.com>, Patrick Titiano <ptitiano@baylibre.com>, Michael Turquette <mturquette@baylibre.com>, Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Russell King <linux@armlinux.org.uk>, David Lechner <david@lechnology.com>
+Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Bartosz Golaszewski <bgolaszewski@baylibre.com>
 List-Id: linux-ide@vger.kernel.org
 
-Add the SATA node to the da850 device tree.
+Register a dummy clock modelling the external SATA oscillator for
+da850 (both DT and board file mode).
 
-Signed-off-by: Bartosz Golaszewski <bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
+Signed-off-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
 ---
- arch/arm/boot/dts/da850.dtsi | 6 ++++++
- 1 file changed, 6 insertions(+)
+ arch/arm/mach-davinci/da8xx-dt.c           |  8 ++++++++
+ arch/arm/mach-davinci/devices-da8xx.c      | 29 +++++++++++++++++++++++++++++
+ arch/arm/mach-davinci/include/mach/da8xx.h |  1 +
+ 3 files changed, 38 insertions(+)
 
-diff --git a/arch/arm/boot/dts/da850.dtsi b/arch/arm/boot/dts/da850.dtsi
-index 104155d..e9bf30e 100644
---- a/arch/arm/boot/dts/da850.dtsi
-+++ b/arch/arm/boot/dts/da850.dtsi
-@@ -403,6 +403,12 @@
- 			phy-names = "usb-phy";
- 			status = "disabled";
- 		};
-+		sata: ahci@218000 {
-+			compatible = "ti,da850-ahci";
-+			reg = <0x218000 0x2000>, <0x22c018 0x4>;
-+			interrupts = <67>;
-+			status = "disabled";
-+		};
- 		mdio: mdio@224000 {
- 			compatible = "ti,davinci_mdio";
- 			#address-cells = <1>;
+diff --git a/arch/arm/mach-davinci/da8xx-dt.c b/arch/arm/mach-davinci/da8xx-dt.c
+index b83e5d1..0f981b5 100644
+--- a/arch/arm/mach-davinci/da8xx-dt.c
++++ b/arch/arm/mach-davinci/da8xx-dt.c
+@@ -50,6 +50,9 @@ static struct of_dev_auxdata da850_auxdata_lookup[] __initdata = {
+ 
+ static void __init da850_init_machine(void)
+ {
++        /* All existing boards use 100MHz SATA refclkpn */
++        static const unsigned long sata_refclkpn = 100 * 1000 * 1000;
++
+ 	int ret;
+ 
+ 	ret = da8xx_register_usb20_phy_clk(false);
+@@ -61,6 +64,11 @@ static void __init da850_init_machine(void)
+ 		pr_warn("%s: registering USB 1.1 PHY clock failed: %d",
+ 			__func__, ret);
+ 
++        ret = da850_register_sata_refclk(sata_refclkpn);
++        if (ret)
++		pr_warn("%s: registering SATA REFCLK failed: %d",
++			__func__, ret);
++
+ 	of_platform_default_populate(NULL, da850_auxdata_lookup, NULL);
+ 	davinci_pm_init();
+ }
+diff --git a/arch/arm/mach-davinci/devices-da8xx.c b/arch/arm/mach-davinci/devices-da8xx.c
+index c2457b3..cfceb32 100644
+--- a/arch/arm/mach-davinci/devices-da8xx.c
++++ b/arch/arm/mach-davinci/devices-da8xx.c
+@@ -24,6 +24,7 @@
+ #include <mach/common.h>
+ #include <mach/time.h>
+ #include <mach/da8xx.h>
++#include <mach/clock.h>
+ #include "cpuidle.h"
+ #include "sram.h"
+ 
+@@ -1023,6 +1024,28 @@ int __init da8xx_register_spi_bus(int instance, unsigned num_chipselect)
+ }
+ 
+ #ifdef CONFIG_ARCH_DAVINCI_DA850
++static struct clk sata_refclk = {
++	.name		= "sata_refclk",
++	.set_rate	= davinci_simple_set_rate,
++};
++
++static struct clk_lookup sata_refclk_lookup =
++		CLK("ahci_da850", "refclk", &sata_refclk);
++
++int __init da850_register_sata_refclk(int rate)
++{
++	int ret;
++
++	sata_refclk.rate = rate;
++	ret = clk_register(&sata_refclk);
++	if (ret)
++		return ret;
++
++	clkdev_add(&sata_refclk_lookup);
++
++	return 0;
++}
++
+ static struct resource da850_sata_resources[] = {
+ 	{
+ 		.start	= DA850_SATA_BASE,
+@@ -1055,9 +1078,15 @@ static struct platform_device da850_sata_device = {
+ 
+ int __init da850_register_sata(unsigned long refclkpn)
+ {
++	int ret;
++
+ 	/* please see comment in drivers/ata/ahci_da850.c */
+ 	BUG_ON(refclkpn != 100 * 1000 * 1000);
+ 
++	ret = da850_register_sata_refclk(refclkpn);
++	if (ret)
++		return ret;
++
+ 	return platform_device_register(&da850_sata_device);
+ }
+ #endif
+diff --git a/arch/arm/mach-davinci/include/mach/da8xx.h b/arch/arm/mach-davinci/include/mach/da8xx.h
+index 85ff218..7e46422 100644
+--- a/arch/arm/mach-davinci/include/mach/da8xx.h
++++ b/arch/arm/mach-davinci/include/mach/da8xx.h
+@@ -95,6 +95,7 @@ int da8xx_register_usb11(struct da8xx_ohci_root_hub *pdata);
+ int da8xx_register_usb_refclkin(int rate);
+ int da8xx_register_usb20_phy_clk(bool use_usb_refclkin);
+ int da8xx_register_usb11_phy_clk(bool use_usb_refclkin);
++int da850_register_sata_refclk(int rate);
+ int da8xx_register_emac(void);
+ int da8xx_register_uio_pruss(void);
+ int da8xx_register_lcdc(struct da8xx_lcdc_platform_data *pdata);
 -- 
 2.9.3
-
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
