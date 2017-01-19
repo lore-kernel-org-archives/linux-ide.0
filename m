@@ -1,8 +1,7 @@
 From: Bartosz Golaszewski <bgolaszewski@baylibre.com>
-Subject: [PATCH v4 04/14] sata: ahci-da850: get the sata clock using a
- connection id
-Date: Thu, 19 Jan 2017 14:29:38 +0100
-Message-ID: <1484832588-18413-5-git-send-email-bgolaszewski@baylibre.com>
+Subject: [PATCH v4 07/14] sata: ahci-da850: add device tree match table
+Date: Thu, 19 Jan 2017 14:29:41 +0100
+Message-ID: <1484832588-18413-8-git-send-email-bgolaszewski@baylibre.com>
 References: <1484832588-18413-1-git-send-email-bgolaszewski@baylibre.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,48 +21,36 @@ To: Kevin Hilman <khilman@kernel.org>, Sekhar Nori <nsekhar@ti.com>, Patrick Tit
 Cc: linux-ide@vger.kernel.org, Bartosz Golaszewski <bgolaszewski@baylibre.com>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-In preparation for using two clocks in the driver (the sysclk2-based
-clock and the external REFCLK), check if we got a functional clock
-after calling ahci_platform_get_resources(). If not, retry calling
-clk_get() with con_id specified.
+We're using device tree for da850-lcdk. Add the match table to allow
+to probe the driver.
 
 Signed-off-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
 ---
- drivers/ata/ahci_da850.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+ drivers/ata/ahci_da850.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
 diff --git a/drivers/ata/ahci_da850.c b/drivers/ata/ahci_da850.c
-index 267a3d3..8cfdc86 100644
+index 8cfdc86..7f5328f 100644
 --- a/drivers/ata/ahci_da850.c
 +++ b/drivers/ata/ahci_da850.c
-@@ -71,12 +71,28 @@ static int ahci_da850_probe(struct platform_device *pdev)
- 	struct ahci_host_priv *hpriv;
- 	struct resource *res;
- 	void __iomem *pwrdn_reg;
-+	struct clk *clk;
- 	int rc;
+@@ -121,11 +121,18 @@ static int ahci_da850_probe(struct platform_device *pdev)
+ static SIMPLE_DEV_PM_OPS(ahci_da850_pm_ops, ahci_platform_suspend,
+ 			 ahci_platform_resume);
  
- 	hpriv = ahci_platform_get_resources(pdev);
- 	if (IS_ERR(hpriv))
- 		return PTR_ERR(hpriv);
- 
-+	/*
-+	 * Internally ahci_platform_get_resources() calls clk_get(dev, NULL)
-+	 * when trying to obtain the first clock. This SATA controller uses
-+	 * two clocks for which we specify two connection ids. If we don't
-+	 * have a clock at this point - call clk_get() again with
-+	 * con_id = "sata".
-+	 */
-+	if (!hpriv->clks[0]) {
-+		clk = clk_get(dev, "sata");
-+		if (IS_ERR(clk))
-+			return PTR_ERR(clk);
++static const struct of_device_id ahci_da850_of_match[] = {
++	{ .compatible = "ti,da850-ahci", },
++	{ },
++};
++MODULE_DEVICE_TABLE(of, ahci_da850_of_match);
 +
-+		hpriv->clks[0] = clk;
-+	}
-+
- 	rc = ahci_platform_enable_resources(hpriv);
- 	if (rc)
- 		return rc;
+ static struct platform_driver ahci_da850_driver = {
+ 	.probe = ahci_da850_probe,
+ 	.remove = ata_platform_remove_one,
+ 	.driver = {
+ 		.name = DRV_NAME,
++		.of_match_table = ahci_da850_of_match,
+ 		.pm = &ahci_da850_pm_ops,
+ 	},
+ };
 -- 
 2.9.3
