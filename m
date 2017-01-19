@@ -1,40 +1,31 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: command emulation fix
-Date: Thu, 19 Jan 2017 15:23:16 -0500
-Message-ID: <20170119202316.GA25390@mtj.duckdns.org>
-References: <1484412602-11801-1-git-send-email-hch@lst.de>
- <20170115230723.GB14446@mtj.duckdns.org>
- <20170116152120.GA16072@lst.de>
- <20170118191750.GA9171@mtj.duckdns.org>
- <20170119143551.GA31203@lst.de>
+Subject: Re: linux-next 20170117 - lockdep whines and BUGs in
+ ata_scsi_rbuf_fill()
+Date: Thu, 19 Jan 2017 15:24:32 -0500
+Message-ID: <20170119202432.GB25390@mtj.duckdns.org>
+References: <21348.1484810915@turing-police.cc.vt.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pf0-f178.google.com ([209.85.192.178]:34424 "EHLO
-        mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753872AbdASUXX (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Thu, 19 Jan 2017 15:23:23 -0500
-Received: by mail-pf0-f178.google.com with SMTP id e4so15989794pfg.1
-        for <linux-ide@vger.kernel.org>; Thu, 19 Jan 2017 12:23:23 -0800 (PST)
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20170119143551.GA31203@lst.de>
-Sender: linux-ide-owner@vger.kernel.org
+In-Reply-To: <21348.1484810915@turing-police.cc.vt.edu>
+Sender: linux-kernel-owner@vger.kernel.org
+To: valdis.kletnieks@vt.edu
+Cc: Christoph Hellwig <hch@lst.de>, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-ide@vger.kernel.org
 
-Hello, Christoph.
-
-On Thu, Jan 19, 2017 at 03:35:51PM +0100, Christoph Hellwig wrote:
-> On Wed, Jan 18, 2017 at 11:17:50AM -0800, Tejun Heo wrote:
-> > I reverted just the last patch.  The rest should be fine, right?
+On Thu, Jan 19, 2017 at 02:28:35AM -0500, valdis.kletnieks@vt.edu wrote:
+> linux-next 20170110 didn't exhibit this.
 > 
-> Yes.  And personally I think the last one is also fine, but we
-> seem to disagree.
+> Am seeing at boot a lockdep whine, followed by 3 BUGs. ata_scsi_rbuf_fill() is
+> in the traceback for all of them.    'git log' hints that it's one of 6 commits
+> against drivers/ata/libata-scsi.c by Christoph, but none of them spring out
+> as being the guilty party.  This ring any bells, or should I start
+> cherrypicking reverts and bisecting?
+> 
+> (-dirty due to a local patch to net/ipv6/addrconf.c for a VPN issue)
 
-Yeah, it is probably fine but I just feel weird about changing the
-code to introduce a possible failure case.  Let's leave it as-is for
-now.
+Reverted the offending commit yesterday.  It should be fine now.
 
 Thanks.
 
