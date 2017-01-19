@@ -1,39 +1,86 @@
-From: Bartosz Golaszewski <bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
-Subject: Re: [PATCH v3 06/13] ARM: davinci: da850: model the SATA refclk
-Date: Thu, 19 Jan 2017 14:31:56 +0100
-Message-ID: <CAMpxmJXBx4TUd-T3zuTY=VD=YAZf5kaq1fqbGTOzZrgnLosp1A@mail.gmail.com>
-References: <1484745601-4769-1-git-send-email-bgolaszewski@baylibre.com>
- <1484745601-4769-7-git-send-email-bgolaszewski@baylibre.com> <ff4deee6-9700-fff3-be96-0ad2f008914b@lechnology.com>
+From: Bartosz Golaszewski <bgolaszewski@baylibre.com>
+Subject: [PATCH v4 08/14] sata: ahci-da850: implement a workaround for the
+ softreset quirk
+Date: Thu, 19 Jan 2017 14:29:42 +0100
+Message-ID: <1484832588-18413-9-git-send-email-bgolaszewski@baylibre.com>
+References: <1484832588-18413-1-git-send-email-bgolaszewski@baylibre.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <ff4deee6-9700-fff3-be96-0ad2f008914b-nq/r/kbU++upp/zk7JDF2g@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: David Lechner <david-nq/r/kbU++upp/zk7JDF2g@public.gmane.org>
-Cc: Kevin Hilman <khilman-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Sekhar Nori <nsekhar-l0cyMroinI0@public.gmane.org>, Patrick Titiano <ptitiano-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Michael Turquette <mturquette-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Russell King <linux-I+IVW8TIWO2tmTQ+vhA3Yw@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-devicetree <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, LKML <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, arm-soc <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+In-Reply-To: <1484832588-18413-1-git-send-email-bgolaszewski@baylibre.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Kevin Hilman <khilman@kernel.org>, Sekhar Nori <nsekhar@ti.com>, Patrick Titiano <ptitiano@baylibre.com>, Michael Turquette <mturquette@baylibre.com>, Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Russell King <linux@armlinux.org.uk>, David Lechner <david@lechnology.com>
+Cc: linux-ide@vger.kernel.org, Bartosz Golaszewski <bgolaszewski@baylibre.com>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-2017-01-18 18:26 GMT+01:00 David Lechner <david-nq/r/kbU++upp/zk7JDF2g@public.gmane.org>:
-> On 01/18/2017 07:19 AM, Bartosz Golaszewski wrote:
->>
->>  int __init da850_register_sata(unsigned long refclkpn)
->>  {
->> +       int ret;
->> +
->>         /* please see comment in drivers/ata/ahci_da850.c */
->>         BUG_ON(refclkpn != 100 * 1000 * 1000);
->
->
-> This BUG_ON() should be removed since the sata driver can now handle other
-> clock frequencies.
->
+There's an issue with the da850 SATA controller: if port multiplier
+support is compiled in, but we're connecting the drive directly to
+the SATA port on the board, the drive can't be detected.
 
-I did that in a separate patch coming after the ahci changes to keep
-the series bisectable.
+To make SATA work on the da850-lcdk board: first try to softreset
+with pmp - if the operation fails with -EBUSY, retry without pmp.
 
-Thanks,
-Bartosz Golaszewski
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
+---
+ drivers/ata/ahci_da850.c | 33 ++++++++++++++++++++++++++++++++-
+ 1 file changed, 32 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/ata/ahci_da850.c b/drivers/ata/ahci_da850.c
+index 7f5328f..11dd87e 100644
+--- a/drivers/ata/ahci_da850.c
++++ b/drivers/ata/ahci_da850.c
+@@ -54,11 +54,42 @@ static void da850_sata_init(struct device *dev, void __iomem *pwrdn_reg,
+ 	writel(val, ahci_base + SATA_P0PHYCR_REG);
+ }
+ 
++static int ahci_da850_softreset(struct ata_link *link,
++				unsigned int *class, unsigned long deadline)
++{
++	int pmp, ret;
++
++	pmp = sata_srst_pmp(link);
++
++	/*
++	 * There's an issue with the SATA controller on da850 SoCs: if we
++	 * enable Port Multiplier support, but the drive is connected directly
++	 * to the board, it can't be detected. As a workaround: if PMP is
++	 * enabled, we first call ahci_do_softreset() and pass it the result of
++	 * sata_srst_pmp(). If this call fails, we retry with pmp = 0.
++	 */
++	ret = ahci_do_softreset(link, class, pmp, deadline, ahci_check_ready);
++	if (pmp && ret == -EBUSY)
++		return ahci_do_softreset(link, class, 0,
++					 deadline, ahci_check_ready);
++
++	return ret;
++}
++
++static struct ata_port_operations ahci_da850_port_ops = {
++	.inherits = &ahci_platform_ops,
++	.softreset = ahci_da850_softreset,
++	/*
++	 * No need to override .pmp_softreset - it's only used for actual
++	 * PMP-enabled ports.
++	 */
++};
++
+ static const struct ata_port_info ahci_da850_port_info = {
+ 	.flags		= AHCI_FLAG_COMMON,
+ 	.pio_mask	= ATA_PIO4,
+ 	.udma_mask	= ATA_UDMA6,
+-	.port_ops	= &ahci_platform_ops,
++	.port_ops	= &ahci_da850_port_ops,
+ };
+ 
+ static struct scsi_host_template ahci_platform_sht = {
+-- 
+2.9.3
