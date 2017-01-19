@@ -1,130 +1,35 @@
 From: Bartosz Golaszewski <bgolaszewski@baylibre.com>
-Subject: [PATCH v4 06/14] ARM: davinci: da850: model the SATA refclk
-Date: Thu, 19 Jan 2017 14:29:40 +0100
-Message-ID: <1484832588-18413-7-git-send-email-bgolaszewski@baylibre.com>
+Subject: [PATCH v4 05/14] ARM: davinci: da850: add con_id for the SATA clock
+Date: Thu, 19 Jan 2017 14:29:39 +0100
+Message-ID: <1484832588-18413-6-git-send-email-bgolaszewski@baylibre.com>
 References: <1484832588-18413-1-git-send-email-bgolaszewski@baylibre.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1484832588-18413-1-git-send-email-bgolaszewski@baylibre.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Kevin Hilman <khilman@kernel.org>, Sekhar Nori <nsekhar@ti.com>, Patrick Titiano <ptitiano@baylibre.com>, Michael Turquette <mturquette@baylibre.com>, Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Russell King <linux@armlinux.org.uk>, David Lechner <david@lechnology.com>
-Cc: linux-ide@vger.kernel.org, Bartosz Golaszewski <bgolaszewski@baylibre.com>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Bartosz Golaszewski <bgolaszewski@baylibre.com>
 List-Id: linux-ide@vger.kernel.org
 
-Register a dummy clock modelling the external SATA oscillator for
-da850 (both DT and board file mode).
+The ahci-da850 SATA driver is now capable of retrieving clocks by
+con_id. Add the connection id for the sysclk2-derived SATA clock.
 
 Signed-off-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
 ---
- arch/arm/mach-davinci/da8xx-dt.c           |  8 ++++++++
- arch/arm/mach-davinci/devices-da8xx.c      | 29 +++++++++++++++++++++++++++++
- arch/arm/mach-davinci/include/mach/da8xx.h |  1 +
- 3 files changed, 38 insertions(+)
+ arch/arm/mach-davinci/da850.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/arch/arm/mach-davinci/da8xx-dt.c b/arch/arm/mach-davinci/da8xx-dt.c
-index b83e5d1..55342ca 100644
---- a/arch/arm/mach-davinci/da8xx-dt.c
-+++ b/arch/arm/mach-davinci/da8xx-dt.c
-@@ -50,6 +50,9 @@ static struct of_dev_auxdata da850_auxdata_lookup[] __initdata = {
- 
- static void __init da850_init_machine(void)
- {
-+	/* All existing boards use 100MHz SATA refclkpn */
-+	static const unsigned long sata_refclkpn = 100 * 1000 * 1000;
-+
- 	int ret;
- 
- 	ret = da8xx_register_usb20_phy_clk(false);
-@@ -61,6 +64,11 @@ static void __init da850_init_machine(void)
- 		pr_warn("%s: registering USB 1.1 PHY clock failed: %d",
- 			__func__, ret);
- 
-+	ret = da850_register_sata_refclk(sata_refclkpn);
-+	if (ret)
-+		pr_warn("%s: registering SATA REFCLK failed: %d",
-+			__func__, ret);
-+
- 	of_platform_default_populate(NULL, da850_auxdata_lookup, NULL);
- 	davinci_pm_init();
- }
-diff --git a/arch/arm/mach-davinci/devices-da8xx.c b/arch/arm/mach-davinci/devices-da8xx.c
-index c2457b3..cfceb32 100644
---- a/arch/arm/mach-davinci/devices-da8xx.c
-+++ b/arch/arm/mach-davinci/devices-da8xx.c
-@@ -24,6 +24,7 @@
- #include <mach/common.h>
- #include <mach/time.h>
- #include <mach/da8xx.h>
-+#include <mach/clock.h>
- #include "cpuidle.h"
- #include "sram.h"
- 
-@@ -1023,6 +1024,28 @@ int __init da8xx_register_spi_bus(int instance, unsigned num_chipselect)
- }
- 
- #ifdef CONFIG_ARCH_DAVINCI_DA850
-+static struct clk sata_refclk = {
-+	.name		= "sata_refclk",
-+	.set_rate	= davinci_simple_set_rate,
-+};
-+
-+static struct clk_lookup sata_refclk_lookup =
-+		CLK("ahci_da850", "refclk", &sata_refclk);
-+
-+int __init da850_register_sata_refclk(int rate)
-+{
-+	int ret;
-+
-+	sata_refclk.rate = rate;
-+	ret = clk_register(&sata_refclk);
-+	if (ret)
-+		return ret;
-+
-+	clkdev_add(&sata_refclk_lookup);
-+
-+	return 0;
-+}
-+
- static struct resource da850_sata_resources[] = {
- 	{
- 		.start	= DA850_SATA_BASE,
-@@ -1055,9 +1078,15 @@ static struct platform_device da850_sata_device = {
- 
- int __init da850_register_sata(unsigned long refclkpn)
- {
-+	int ret;
-+
- 	/* please see comment in drivers/ata/ahci_da850.c */
- 	BUG_ON(refclkpn != 100 * 1000 * 1000);
- 
-+	ret = da850_register_sata_refclk(refclkpn);
-+	if (ret)
-+		return ret;
-+
- 	return platform_device_register(&da850_sata_device);
- }
- #endif
-diff --git a/arch/arm/mach-davinci/include/mach/da8xx.h b/arch/arm/mach-davinci/include/mach/da8xx.h
-index 85ff218..7e46422 100644
---- a/arch/arm/mach-davinci/include/mach/da8xx.h
-+++ b/arch/arm/mach-davinci/include/mach/da8xx.h
-@@ -95,6 +95,7 @@ int da8xx_register_usb11(struct da8xx_ohci_root_hub *pdata);
- int da8xx_register_usb_refclkin(int rate);
- int da8xx_register_usb20_phy_clk(bool use_usb_refclkin);
- int da8xx_register_usb11_phy_clk(bool use_usb_refclkin);
-+int da850_register_sata_refclk(int rate);
- int da8xx_register_emac(void);
- int da8xx_register_uio_pruss(void);
- int da8xx_register_lcdc(struct da8xx_lcdc_platform_data *pdata);
+diff --git a/arch/arm/mach-davinci/da850.c b/arch/arm/mach-davinci/da850.c
+index 1d873d1..dbf1daa 100644
+--- a/arch/arm/mach-davinci/da850.c
++++ b/arch/arm/mach-davinci/da850.c
+@@ -571,7 +571,7 @@ static struct clk_lookup da850_clks[] = {
+ 	CLK("spi_davinci.0",	NULL,		&spi0_clk),
+ 	CLK("spi_davinci.1",	NULL,		&spi1_clk),
+ 	CLK("vpif",		NULL,		&vpif_clk),
+-	CLK("ahci_da850",		NULL,		&sata_clk),
++	CLK("ahci_da850",	"sata",		&sata_clk),
+ 	CLK("davinci-rproc.0",	NULL,		&dsp_clk),
+ 	CLK(NULL,		NULL,		&ehrpwm_clk),
+ 	CLK("ehrpwm.0",		"fck",		&ehrpwm0_clk),
 -- 
 2.9.3
