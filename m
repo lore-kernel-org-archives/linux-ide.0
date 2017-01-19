@@ -1,7 +1,7 @@
 From: Bartosz Golaszewski <bgolaszewski@baylibre.com>
-Subject: [PATCH v4 10/14] sata: ahci-da850: add a workaround for controller instability
-Date: Thu, 19 Jan 2017 14:29:44 +0100
-Message-ID: <1484832588-18413-11-git-send-email-bgolaszewski@baylibre.com>
+Subject: [PATCH v4 09/14] sata: ahci: export ahci_do_hardreset() locally
+Date: Thu, 19 Jan 2017 14:29:43 +0100
+Message-ID: <1484832588-18413-10-git-send-email-bgolaszewski@baylibre.com>
 References: <1484832588-18413-1-git-send-email-bgolaszewski@baylibre.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1484832588-18413-1-git-send-email-bgolaszewski@baylibre.com>
@@ -10,76 +10,89 @@ To: Kevin Hilman <khilman@kernel.org>, Sekhar Nori <nsekhar@ti.com>, Patrick Tit
 Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Bartosz Golaszewski <bgolaszewski@baylibre.com>
 List-Id: linux-ide@vger.kernel.org
 
-We have a use case with the da850 SATA controller where at PLL0
-frequency of 456MHz (needed to properly service the LCD controller)
-the chip becomes unstable and the hardreset operation is ignored the
-first time 50% of times.
+We need a way to retrieve the information about the online state of
+the link in the ahci-da850 driver.
 
-The sata core driver already retries to resume the link because some
-controllers ignore writes to the SControl register, but just retrying
-the resume operation doesn't work - we need to issue he phy/wake reset
-again to make it work.
+Create a new function: ahci_do_hardreset() which is called from
+ahci_hardreset() for backwards compatibility, but has an additional
+argument: 'online' - which can be used to check if the link is online
+after this function returns.
 
-Reimplement ahci_hardreset() in the driver and poke the controller a
-couple times before really giving up.
+The new routine will be used in the ahci-da850 driver to avoid code
+duplication when implementing a workaround for tha da850 SATA
+controller quirk/instability.
 
 Signed-off-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
 ---
- drivers/ata/ahci_da850.c | 28 +++++++++++++++++++++++++++-
- 1 file changed, 27 insertions(+), 1 deletion(-)
+ drivers/ata/ahci.h    |  3 +++
+ drivers/ata/libahci.c | 18 +++++++++++++-----
+ 2 files changed, 16 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/ata/ahci_da850.c b/drivers/ata/ahci_da850.c
-index 11dd87e..0b2b1a4 100644
---- a/drivers/ata/ahci_da850.c
-+++ b/drivers/ata/ahci_da850.c
-@@ -16,7 +16,8 @@
- #include <linux/ahci_platform.h>
- #include "ahci.h"
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index 0cc08f8..5db6ab2 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -398,6 +398,9 @@ int ahci_do_softreset(struct ata_link *link, unsigned int *class,
+ 		      int pmp, unsigned long deadline,
+ 		      int (*check_ready)(struct ata_link *link));
  
--#define DRV_NAME "ahci_da850"
-+#define DRV_NAME		"ahci_da850"
-+#define HARDRESET_RETRIES	5
- 
- /* SATA PHY Control Register offset from AHCI base */
- #define SATA_P0PHYCR_REG	0x178
-@@ -76,6 +77,29 @@ static int ahci_da850_softreset(struct ata_link *link,
- 	return ret;
++int ahci_do_hardreset(struct ata_link *link, unsigned int *class,
++		      unsigned long deadline, bool *online);
++
+ unsigned int ahci_qc_issue(struct ata_queued_cmd *qc);
+ int ahci_stop_engine(struct ata_port *ap);
+ void ahci_start_fis_rx(struct ata_port *ap);
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index ee7db31..3159f9e 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -1519,8 +1519,8 @@ static int ahci_pmp_retry_softreset(struct ata_link *link, unsigned int *class,
+ 	return rc;
  }
  
-+static int ahci_da850_hardreset(struct ata_link *link,
-+				unsigned int *class, unsigned long deadline)
+-static int ahci_hardreset(struct ata_link *link, unsigned int *class,
+-			  unsigned long deadline)
++int ahci_do_hardreset(struct ata_link *link, unsigned int *class,
++		      unsigned long deadline, bool *online)
+ {
+ 	const unsigned long *timing = sata_ehc_deb_timing(&link->eh_context);
+ 	struct ata_port *ap = link->ap;
+@@ -1528,7 +1528,6 @@ static int ahci_hardreset(struct ata_link *link, unsigned int *class,
+ 	struct ahci_host_priv *hpriv = ap->host->private_data;
+ 	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
+ 	struct ata_taskfile tf;
+-	bool online;
+ 	int rc;
+ 
+ 	DPRINTK("ENTER\n");
+@@ -1540,17 +1539,26 @@ static int ahci_hardreset(struct ata_link *link, unsigned int *class,
+ 	tf.command = ATA_BUSY;
+ 	ata_tf_to_fis(&tf, 0, 0, d2h_fis);
+ 
+-	rc = sata_link_hardreset(link, timing, deadline, &online,
++	rc = sata_link_hardreset(link, timing, deadline, online,
+ 				 ahci_check_ready);
+ 
+ 	hpriv->start_engine(ap);
+ 
+-	if (online)
++	if (*online)
+ 		*class = ahci_dev_classify(ap);
+ 
+ 	DPRINTK("EXIT, rc=%d, class=%u\n", rc, *class);
+ 	return rc;
+ }
++EXPORT_SYMBOL_GPL(ahci_do_hardreset);
++
++static int ahci_hardreset(struct ata_link *link, unsigned int *class,
++			  unsigned long deadline)
 +{
-+	int ret, retry = HARDRESET_RETRIES;
 +	bool online;
 +
-+	/*
-+	 * In order to correctly service the LCD controller of the da850 SoC,
-+	 * we increased the PLL0 frequency to 456MHz from the default 300MHz.
-+	 *
-+	 * This made the SATA controller unstable and the hardreset operation
-+	 * does not always succeed the first time. Before really giving up to
-+	 * bring up the link, retry the reset a couple times.
-+	 */
-+	do {
-+		ret = ahci_do_hardreset(link, class, deadline, &online);
-+		if (online)
-+			return ret;
-+	} while (retry--);
-+
-+	return ret;
++	return ahci_do_hardreset(link, class, deadline, &online);
 +}
-+
- static struct ata_port_operations ahci_da850_port_ops = {
- 	.inherits = &ahci_platform_ops,
- 	.softreset = ahci_da850_softreset,
-@@ -83,6 +107,8 @@ static struct ata_port_operations ahci_da850_port_ops = {
- 	 * No need to override .pmp_softreset - it's only used for actual
- 	 * PMP-enabled ports.
- 	 */
-+	.hardreset = ahci_da850_hardreset,
-+	.pmp_hardreset = ahci_da850_hardreset,
- };
  
- static const struct ata_port_info ahci_da850_port_info = {
+ static void ahci_postreset(struct ata_link *link, unsigned int *class)
+ {
 -- 
 2.9.3
