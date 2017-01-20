@@ -1,70 +1,83 @@
-From: "Y.T. Tang" <yuantian.tang-3arQi8VN3Tc@public.gmane.org>
-Subject: RE: [PATCH] ahci: qoriq: added ls2088a platforms support
-Date: Fri, 20 Jan 2017 03:05:57 +0000
-Message-ID: <DB6PR0402MB283718AD367DBE4E6EEEE31FF0710@DB6PR0402MB2837.eurprd04.prod.outlook.com>
-References: <1484633521-10938-1-git-send-email-yuantian.tang@nxp.com>
- <20170118195351.GD9171@mtj.duckdns.org>
+From: <yuantian.tang@nxp.com>
+Subject: [PATCH 1/3 v2] ahci: qoriq: added a condition to enable dma coherence
+Date: Fri, 20 Jan 2017 14:59:34 +0800
+Message-ID: <1484895576-40379-1-git-send-email-yuantian.tang@nxp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20170118195351.GD9171-qYNAdHglDFBN0TnZuCh8vA@public.gmane.org>
-Content-Language: en-US
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: "robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "mark.rutland-5wv7dgnIgG8@public.gmane.org" <mark.rutland-5wv7dgnIgG8@public.gmane.org>, "linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: tj@kernel.org
+Cc: mathieu.poirier@linaro.org, robin.murphy@arm.com, robh+dt@kernel.org, mark.rutland@arm.com, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Tang Yuantian <Yuantian.Tang@nxp.com>, Tang Yuantian <yuantian.tang@nxp.com>
 List-Id: linux-ide@vger.kernel.org
 
+From: Tang Yuantian <Yuantian.Tang@nxp.com>
 
+Enable DMA coherence in SATA controller on condition that
+dma-coherent property exists in sata node in DTS.
 
-> -----Original Message-----
-> From: Tejun Heo [mailto:htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org] On Behalf Of Tejun Heo
-> Sent: Thursday, January 19, 2017 3:54 AM
-> To: Y.T. Tang <yuantian.tang-3arQi8VN3Tc@public.gmane.org>
-> Cc: robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org; mark.rutland-5wv7dgnIgG8@public.gmane.org; linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org;
-> devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; linux-arm-
-> kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-> Subject: Re: [PATCH] ahci: qoriq: added ls2088a platforms support
->=20
-> On Tue, Jan 17, 2017 at 02:12:01PM +0800, yuantian.tang-3arQi8VN3Tc@public.gmane.org wrote:
-> > From: Tang Yuantian <Yuantian.Tang-3arQi8VN3Tc@public.gmane.org>
-> >
-> > Ls2088a is new introduced arm-based soc with sata support with
-> > following features:
-> > 1. Complies with the serial ATA 3.0 specification and the AHCI 1.3.1
-> >    specification
-> > 2. Contains a high-speed descriptor-based DMA controller 3. Supports
-> > the following:
-> >    a. Speeds of 1.5 Gb/s (first-generation SATA), 3 Gb/s
-> >       (second-generation SATA), and 6 Gb/s (third-generation SATA)
-> >    b. FIS-based switching
-> >    c. Native command queuing (NCQ) commands
-> >    d. Port multiplier operation
-> >    e. Asynchronous notification
-> >    f. SATA BIST mode
-> >
-> > Signed-off-by: Tang Yuantian <yuantian.tang-3arQi8VN3Tc@public.gmane.org>
->=20
-> Reverted due to build failure.  Did you even try to compile it before
-> submission?  We all make mistakes and that's fine but this one seems a bi=
-t
-> too careless.  Please don't do this.
->=20
+Signed-off-by: Tang Yuantian <yuantian.tang@nxp.com>
+---
+v2:
+  - use of_dma_is_coherent() instead of open-coding.
 
-Sorry for the trouble.
-I never send a patch without testing.  This patch depends on other two patc=
-hes which I sent a long time ago which I thought they were merged.
-Anyway, my mistake.
-I will resend all the patches with correct order.
+ drivers/ata/ahci_qoriq.c | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
 
-Regards,
-Yuantian
-
-> Thanks.
->=20
-> --
-> tejun
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/ata/ahci_qoriq.c b/drivers/ata/ahci_qoriq.c
+index 9884c8c..01ef662 100644
+--- a/drivers/ata/ahci_qoriq.c
++++ b/drivers/ata/ahci_qoriq.c
+@@ -59,6 +59,7 @@ struct ahci_qoriq_priv {
+ 	struct ccsr_ahci *reg_base;
+ 	enum ahci_qoriq_type type;
+ 	void __iomem *ecc_addr;
++	bool is_dmacoherent;
+ };
+ 
+ static const struct of_device_id ahci_qoriq_of_match[] = {
+@@ -164,26 +165,31 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
+ 		writel(LS1021A_PORT_PHY4, reg_base + PORT_PHY4);
+ 		writel(LS1021A_PORT_PHY5, reg_base + PORT_PHY5);
+ 		writel(AHCI_PORT_TRANS_CFG, reg_base + PORT_TRANS);
+-		writel(AHCI_PORT_AXICC_CFG, reg_base + LS1021A_AXICC_ADDR);
++		if (qpriv->is_dmacoherent)
++			writel(AHCI_PORT_AXICC_CFG,
++					reg_base + LS1021A_AXICC_ADDR);
+ 		break;
+ 
+ 	case AHCI_LS1043A:
+ 		writel(AHCI_PORT_PHY_1_CFG, reg_base + PORT_PHY1);
+ 		writel(AHCI_PORT_TRANS_CFG, reg_base + PORT_TRANS);
+-		writel(AHCI_PORT_AXICC_CFG, reg_base + PORT_AXICC);
++		if (qpriv->is_dmacoherent)
++			writel(AHCI_PORT_AXICC_CFG, reg_base + PORT_AXICC);
+ 		break;
+ 
+ 	case AHCI_LS2080A:
+ 		writel(AHCI_PORT_PHY_1_CFG, reg_base + PORT_PHY1);
+ 		writel(AHCI_PORT_TRANS_CFG, reg_base + PORT_TRANS);
+-		writel(AHCI_PORT_AXICC_CFG, reg_base + PORT_AXICC);
++		if (qpriv->is_dmacoherent)
++			writel(AHCI_PORT_AXICC_CFG, reg_base + PORT_AXICC);
+ 		break;
+ 
+ 	case AHCI_LS1046A:
+ 		writel(LS1046A_SATA_ECC_DIS, qpriv->ecc_addr);
+ 		writel(AHCI_PORT_PHY_1_CFG, reg_base + PORT_PHY1);
+ 		writel(AHCI_PORT_TRANS_CFG, reg_base + PORT_TRANS);
+-		writel(AHCI_PORT_AXICC_CFG, reg_base + PORT_AXICC);
++		if (qpriv->is_dmacoherent)
++			writel(AHCI_PORT_AXICC_CFG, reg_base + PORT_AXICC);
+ 		break;
+ 	}
+ 
+@@ -221,6 +227,7 @@ static int ahci_qoriq_probe(struct platform_device *pdev)
+ 		if (IS_ERR(qoriq_priv->ecc_addr))
+ 			return PTR_ERR(qoriq_priv->ecc_addr);
+ 	}
++	qoriq_priv->is_dmacoherent = of_dma_is_coherent(np);
+ 
+ 	rc = ahci_platform_enable_resources(hpriv);
+ 	if (rc)
+-- 
+2.1.0.27.g96db324
