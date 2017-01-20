@@ -1,69 +1,52 @@
 From: Bartosz Golaszewski <bgolaszewski@baylibre.com>
-Subject: [PATCH v5 04/14] sata: ahci-da850: get the sata clock using a
- connection id
-Date: Fri, 20 Jan 2017 12:21:55 +0100
-Message-ID: <1484911325-23425-5-git-send-email-bgolaszewski@baylibre.com>
+Subject: [PATCH v5 07/14] sata: ahci-da850: add device tree match table
+Date: Fri, 20 Jan 2017 12:21:58 +0100
+Message-ID: <1484911325-23425-8-git-send-email-bgolaszewski@baylibre.com>
 References: <1484911325-23425-1-git-send-email-bgolaszewski@baylibre.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:38862 "EHLO
+        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751964AbdATLWS (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 20 Jan 2017 06:22:18 -0500
+Received: by mail-wm0-f52.google.com with SMTP id r144so38517211wme.1
+        for <linux-ide@vger.kernel.org>; Fri, 20 Jan 2017 03:22:17 -0800 (PST)
 In-Reply-To: <1484911325-23425-1-git-send-email-bgolaszewski@baylibre.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Kevin Hilman <khilman@kernel.org>, Sekhar Nori <nsekhar@ti.com>, Patrick Titiano <ptitiano@baylibre.com>, Michael Turquette <mturquette@baylibre.com>, Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Russell King <linux@armlinux.org.uk>, David Lechner <david@lechnology.com>
-Cc: linux-ide@vger.kernel.org, Bartosz Golaszewski <bgolaszewski@baylibre.com>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Kevin Hilman <khilman@kernel.org>, Sekhar Nori <nsekhar@ti.com>, Patrick Titiano <ptitiano@baylibre.com>, Michael Turquette <mturquette@baylibre.com>, Tejun Heo <tj@kernel.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Russell King <linux@armlinux.org.uk>, David Lechner <david@lechnology.com>
+Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Bartosz Golaszewski <bgolaszewski@baylibre.com>
 
-In preparation for using two clocks in the driver (the sysclk2-based
-clock and the external REFCLK), check if we got a functional clock
-after calling ahci_platform_get_resources(). If not, retry calling
-clk_get() with con_id specified.
+We're using device tree for da850-lcdk. Add the match table to allow
+to probe the driver.
 
 Signed-off-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
 ---
- drivers/ata/ahci_da850.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+ drivers/ata/ahci_da850.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
 diff --git a/drivers/ata/ahci_da850.c b/drivers/ata/ahci_da850.c
-index 267a3d3..8cfdc86 100644
+index 8cfdc86..7f5328f 100644
 --- a/drivers/ata/ahci_da850.c
 +++ b/drivers/ata/ahci_da850.c
-@@ -71,12 +71,28 @@ static int ahci_da850_probe(struct platform_device *pdev)
- 	struct ahci_host_priv *hpriv;
- 	struct resource *res;
- 	void __iomem *pwrdn_reg;
-+	struct clk *clk;
- 	int rc;
+@@ -121,11 +121,18 @@ static int ahci_da850_probe(struct platform_device *pdev)
+ static SIMPLE_DEV_PM_OPS(ahci_da850_pm_ops, ahci_platform_suspend,
+ 			 ahci_platform_resume);
  
- 	hpriv = ahci_platform_get_resources(pdev);
- 	if (IS_ERR(hpriv))
- 		return PTR_ERR(hpriv);
- 
-+	/*
-+	 * Internally ahci_platform_get_resources() calls clk_get(dev, NULL)
-+	 * when trying to obtain the first clock. This SATA controller uses
-+	 * two clocks for which we specify two connection ids. If we don't
-+	 * have a clock at this point - call clk_get() again with
-+	 * con_id = "sata".
-+	 */
-+	if (!hpriv->clks[0]) {
-+		clk = clk_get(dev, "sata");
-+		if (IS_ERR(clk))
-+			return PTR_ERR(clk);
++static const struct of_device_id ahci_da850_of_match[] = {
++	{ .compatible = "ti,da850-ahci", },
++	{ },
++};
++MODULE_DEVICE_TABLE(of, ahci_da850_of_match);
 +
-+		hpriv->clks[0] = clk;
-+	}
-+
- 	rc = ahci_platform_enable_resources(hpriv);
- 	if (rc)
- 		return rc;
+ static struct platform_driver ahci_da850_driver = {
+ 	.probe = ahci_da850_probe,
+ 	.remove = ata_platform_remove_one,
+ 	.driver = {
+ 		.name = DRV_NAME,
++		.of_match_table = ahci_da850_of_match,
+ 		.pm = &ahci_da850_pm_ops,
+ 	},
+ };
 -- 
 2.9.3
+
