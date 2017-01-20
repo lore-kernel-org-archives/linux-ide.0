@@ -1,7 +1,7 @@
 From: Bartosz Golaszewski <bgolaszewski@baylibre.com>
-Subject: [PATCH v5 06/14] ARM: davinci: da850: model the SATA refclk
-Date: Fri, 20 Jan 2017 12:21:57 +0100
-Message-ID: <1484911325-23425-7-git-send-email-bgolaszewski@baylibre.com>
+Subject: [PATCH v5 01/14] devicetree: bindings: add bindings for ahci-da850
+Date: Fri, 20 Jan 2017 12:21:52 +0100
+Message-ID: <1484911325-23425-2-git-send-email-bgolaszewski@baylibre.com>
 References: <1484911325-23425-1-git-send-email-bgolaszewski@baylibre.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1484911325-23425-1-git-send-email-bgolaszewski@baylibre.com>
@@ -10,110 +10,34 @@ To: Kevin Hilman <khilman@kernel.org>, Sekhar Nori <nsekhar@ti.com>, Patrick Tit
 Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Bartosz Golaszewski <bgolaszewski@baylibre.com>
 List-Id: linux-ide@vger.kernel.org
 
-Register a fixed rate clock modelling the external SATA oscillator
-for da850 (both DT and board file mode).
+Add DT bindings for the TI DA850 AHCI SATA controller.
 
 Signed-off-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
 ---
- arch/arm/mach-davinci/da8xx-dt.c           |  8 ++++++++
- arch/arm/mach-davinci/devices-da8xx.c      | 29 +++++++++++++++++++++++++++++
- arch/arm/mach-davinci/include/mach/da8xx.h |  1 +
- 3 files changed, 38 insertions(+)
+ Documentation/devicetree/bindings/ata/ahci-da850.txt | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/ata/ahci-da850.txt
 
-diff --git a/arch/arm/mach-davinci/da8xx-dt.c b/arch/arm/mach-davinci/da8xx-dt.c
-index b83e5d1..55342ca 100644
---- a/arch/arm/mach-davinci/da8xx-dt.c
-+++ b/arch/arm/mach-davinci/da8xx-dt.c
-@@ -50,6 +50,9 @@ static struct of_dev_auxdata da850_auxdata_lookup[] __initdata = {
- 
- static void __init da850_init_machine(void)
- {
-+	/* All existing boards use 100MHz SATA refclkpn */
-+	static const unsigned long sata_refclkpn = 100 * 1000 * 1000;
+diff --git a/Documentation/devicetree/bindings/ata/ahci-da850.txt b/Documentation/devicetree/bindings/ata/ahci-da850.txt
+new file mode 100644
+index 0000000..268fe87
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ata/ahci-da850.txt
+@@ -0,0 +1,15 @@
++Device tree binding for the TI DA850 AHCI SATA Controller
++---------------------------------------------------------
 +
- 	int ret;
- 
- 	ret = da8xx_register_usb20_phy_clk(false);
-@@ -61,6 +64,11 @@ static void __init da850_init_machine(void)
- 		pr_warn("%s: registering USB 1.1 PHY clock failed: %d",
- 			__func__, ret);
- 
-+	ret = da850_register_sata_refclk(sata_refclkpn);
-+	if (ret)
-+		pr_warn("%s: registering SATA REFCLK failed: %d",
-+			__func__, ret);
++Required properties:
++  - compatible: must be "ti,da850-ahci"
++  - reg: physical base addresses and sizes of the controller's register areas
++  - interrupts: interrupt specifier (refer to the interrupt binding)
 +
- 	of_platform_default_populate(NULL, da850_auxdata_lookup, NULL);
- 	davinci_pm_init();
- }
-diff --git a/arch/arm/mach-davinci/devices-da8xx.c b/arch/arm/mach-davinci/devices-da8xx.c
-index c2457b3..cfceb32 100644
---- a/arch/arm/mach-davinci/devices-da8xx.c
-+++ b/arch/arm/mach-davinci/devices-da8xx.c
-@@ -24,6 +24,7 @@
- #include <mach/common.h>
- #include <mach/time.h>
- #include <mach/da8xx.h>
-+#include <mach/clock.h>
- #include "cpuidle.h"
- #include "sram.h"
- 
-@@ -1023,6 +1024,28 @@ int __init da8xx_register_spi_bus(int instance, unsigned num_chipselect)
- }
- 
- #ifdef CONFIG_ARCH_DAVINCI_DA850
-+static struct clk sata_refclk = {
-+	.name		= "sata_refclk",
-+	.set_rate	= davinci_simple_set_rate,
-+};
++Example:
 +
-+static struct clk_lookup sata_refclk_lookup =
-+		CLK("ahci_da850", "refclk", &sata_refclk);
-+
-+int __init da850_register_sata_refclk(int rate)
-+{
-+	int ret;
-+
-+	sata_refclk.rate = rate;
-+	ret = clk_register(&sata_refclk);
-+	if (ret)
-+		return ret;
-+
-+	clkdev_add(&sata_refclk_lookup);
-+
-+	return 0;
-+}
-+
- static struct resource da850_sata_resources[] = {
- 	{
- 		.start	= DA850_SATA_BASE,
-@@ -1055,9 +1078,15 @@ static struct platform_device da850_sata_device = {
- 
- int __init da850_register_sata(unsigned long refclkpn)
- {
-+	int ret;
-+
- 	/* please see comment in drivers/ata/ahci_da850.c */
- 	BUG_ON(refclkpn != 100 * 1000 * 1000);
- 
-+	ret = da850_register_sata_refclk(refclkpn);
-+	if (ret)
-+		return ret;
-+
- 	return platform_device_register(&da850_sata_device);
- }
- #endif
-diff --git a/arch/arm/mach-davinci/include/mach/da8xx.h b/arch/arm/mach-davinci/include/mach/da8xx.h
-index 85ff218..7e46422 100644
---- a/arch/arm/mach-davinci/include/mach/da8xx.h
-+++ b/arch/arm/mach-davinci/include/mach/da8xx.h
-@@ -95,6 +95,7 @@ int da8xx_register_usb11(struct da8xx_ohci_root_hub *pdata);
- int da8xx_register_usb_refclkin(int rate);
- int da8xx_register_usb20_phy_clk(bool use_usb_refclkin);
- int da8xx_register_usb11_phy_clk(bool use_usb_refclkin);
-+int da850_register_sata_refclk(int rate);
- int da8xx_register_emac(void);
- int da8xx_register_uio_pruss(void);
- int da8xx_register_lcdc(struct da8xx_lcdc_platform_data *pdata);
++	sata: sata@218000 {
++		compatible = "ti,da850-ahci";
++		reg = <0x218000 0x2000>, <0x22c018 0x4>;
++		interrupts = <67>;
++	};
 -- 
 2.9.3
