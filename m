@@ -1,56 +1,44 @@
 From: Darren Stevens <darren@stevens-zone.net>
-Subject: [PATCH] libata-sff: Don't scan disabled ports when checking for
- legacy mode.
-Date: Fri, 20 Jan 2017 17:58:21 +0000 (GMT)
-Message-ID: <497610a8448.441e0a10@auth.smtp.1and1.co.uk>
+Subject: [PATCH] libata:pata_atiixp: Don't use unconnected secondary port
+ on SB600/SB700
+Date: Fri, 20 Jan 2017 18:03:32 +0000 (GMT)
+Message-ID: <497611d4655.7b408682@auth.smtp.1and1.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.74]:57860 "EHLO
+Received: from mout.kundenserver.de ([217.72.192.74]:49797 "EHLO
         mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752574AbdATSES (ORCPT
+        with ESMTP id S1752630AbdATSES (ORCPT
         <rfc822;linux-ide@vger.kernel.org>); Fri, 20 Jan 2017 13:04:18 -0500
 Received: from mintppc.lan ([86.156.215.177]) by mrelayeu.kundenserver.de
- (mreue104 [212.227.15.179]) with ESMTPA (Nemesis) id 0MfIB0-1csD6C3ezC-00Oq9B
- for <linux-ide@vger.kernel.org>; Fri, 20 Jan 2017 19:04:14 +0100
+ (mreue104 [212.227.15.179]) with ESMTPA (Nemesis) id 0Lzrl5-1cQ3A40w8R-0155vM
+ for <linux-ide@vger.kernel.org>; Fri, 20 Jan 2017 19:04:15 +0100
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 To: linux-ide@vger.kernel.org
 
-libata-sff.c checks for legacy mode by testing if both primary
-and secondary ports on a controller are in legacy mode and selects
-legacy if either one is. However on some southbridge chips (e.g
-AMD SB600/SB700) the secondary port is not wired, and when it is 
-disabled by setting the disable bit in the PCI header it appears
-as a fixed legacy port.
-Prevent incorrect detection by not testing ports that are marked
-as 'dummy'
+The SB600 and SB700 southbridge chips from ATI/AMD only have
+connections for the primary IDE port. As these chips have unique
+pci device ID's use these to mark the secondary port as 'dummy'
 
 Signed-off-by: Darren Stevens <darren@stevens-zone.net>
 ---
 
-diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
-index 051b615..05f688a 100644
---- a/drivers/ata/libata-sff.c
-+++ b/drivers/ata/libata-sff.c
-@@ -2429,9 +2429,16 @@ int ata_pci_sff_activate_host(struct ata_host *host,
-    if ((pdev->class >> 8) == PCI_CLASS_STORAGE_IDE) {
-        u8 tmp8, mask;
+diff --git a/drivers/ata/pata_atiixp.c b/drivers/ata/pata_atiixp.c
+index 49d705c..588c473 100644
+--- a/drivers/ata/pata_atiixp.c
++++ b/drivers/ata/pata_atiixp.c
+@@ -278,6 +278,11 @@ static int atiixp_init_one(struct pci_dev *pdev, const
+struct pci_device_id *id)
+    };
+    const struct ata_port_info *ppi[] = { &info, &info };
  
--       /* TODO: What if one channel is in native mode ... */
-+       /*
-+        * ATA spec says we should use legacy mode when one
-+        * port is in legacy mode, but disabled ports on some
-+        * PCI hosts appear as fixed legacy ports, e.g SB600/700
-+        * on which the secondary port is not wired, so
-+        * ignore ports that we've marked as 'dummy' during
-+        * this check
-+        */
-        pci_read_config_byte(pdev, PCI_CLASS_PROG, &tmp8);
--       mask = (1 << 2) | (1 << 0);
-+       mask = (! ata_port_is_dummy(host->ports[1]) << 2) | (!
-ata_port_is_dummy(host->ports[0]) << 0);
-        if ((tmp8 & mask) != mask)
-            legacy_mode = 1;
-    }
++   if((pdev->device == PCI_DEVICE_ID_ATI_IXP600_IDE) ||
++       (pdev->device == PCI_DEVICE_ID_ATI_IXP700_IDE))
++       /* SB600/700 don't have secondary port wired */
++       ppi[1] = &ata_dummy_port_info;
++
+    return ata_pci_bmdma_init_one(pdev, ppi, &atiixp_sht, NULL,
+                      ATA_HOST_PARALLEL_SCAN);
+ }
 
