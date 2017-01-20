@@ -1,80 +1,107 @@
-From: <yuantian.tang@nxp.com>
-Subject: [PATCH 3/3 v2] ahci: qoriq: added ls2088a platforms support
-Date: Fri, 20 Jan 2017 14:59:36 +0800
-Message-ID: <1484895576-40379-3-git-send-email-yuantian.tang@nxp.com>
-References: <1484895576-40379-1-git-send-email-yuantian.tang@nxp.com>
+From: Michael Schmitz <schmitzmic@gmail.com>
+Subject: Re: [PATCH 0/3] ata: add m68k/Atari Falcon PATA support
+Date: Fri, 20 Jan 2017 20:49:26 +1300
+Message-ID: <b1b409e0-9243-83a6-8379-50f933c97477@gmail.com>
+References: <CGME20161230140139epcas5p160eda5a6a77be084e21f12002c85cc2a@epcas5p1.samsung.com>
+ <1483106478-1382-1-git-send-email-b.zolnierkie@samsung.com>
+ <CAOmrzkJP6s34DPOHd4OFFx=CXko35Kt=CfeDZthOPvKDJy-9YA@mail.gmail.com>
+ <3939493.HXZ6C33pKV@amdc3058>
+ <CAOmrzkJfQu6PuCpyyRJL8PNvSYxYO42F-k8jEYf2d1-5C28A_A@mail.gmail.com>
+ <alpine.LNX.2.00.1701111053340.22260@nippy.intranet>
+ <c55cb48c-7200-9577-974b-3c080e141907@gmail.com>
+ <alpine.LNX.2.00.1701151046500.352@nippy.intranet>
+ <a637f52e-d70a-4b10-3998-9db5c2534d83@gmail.com>
+ <alpine.LNX.2.00.1701151541230.7981@nippy.intranet>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0088.outbound.protection.outlook.com ([104.47.33.88]:26023
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751403AbdATHNI (ORCPT <rfc822;linux-ide@vger.kernel.org>);
-        Fri, 20 Jan 2017 02:13:08 -0500
-In-Reply-To: <1484895576-40379-1-git-send-email-yuantian.tang@nxp.com>
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:34283 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751393AbdATHto (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Fri, 20 Jan 2017 02:49:44 -0500
+In-Reply-To: <alpine.LNX.2.00.1701151541230.7981@nippy.intranet>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: tj@kernel.org
-Cc: mathieu.poirier@linaro.org, robin.murphy@arm.com, robh+dt@kernel.org, mark.rutland@arm.com, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Tang Yuantian <Yuantian.Tang@nxp.com>, Tang Yuantian <yuantian.tang@nxp.com>
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Tejun Heo <tj@kernel.org>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-ide@vger.kernel.org, Linux/m68k <linux-m68k@lists.linux-m68k.org>, Linux Kernel Development <linux-kernel@vger.kernel.org>, Andreas Schwab <schwab@linux-m68k.org>
 
-From: Tang Yuantian <Yuantian.Tang@nxp.com>
+Hi Finn,
 
-Ls2088a is new introduced arm-based soc with sata support with
-following features:
-1. Complies with the serial ATA 3.0 specification and the AHCI 1.3.1
-   specification
-2. Contains a high-speed descriptor-based DMA controller
-3. Supports the following:
-   a. Speeds of 1.5 Gb/s (first-generation SATA), 3 Gb/s
-      (second-generation SATA), and 6 Gb/s (third-generation SATA)
-   b. FIS-based switching
-   c. Native command queuing (NCQ) commands
-   d. Port multiplier operation
-   e. Asynchronous notification
-   f. SATA BIST mode
+Am 15.01.2017 um 17:42 schrieb Finn Thain:
 
-Signed-off-by: Tang Yuantian <yuantian.tang@nxp.com>
----
-v2:
-  - no change
+>> No, we can't check either FDC or SCSI interrupts (or indeed any chip 
+>> registers) without touching the ST-DMA. The moment we select a FDC or 
+>> SCSI register for read, DMA is terminated no questions asked.
+>>
+> 
+> Perhaps we can convert DMA operations to PDMA (by polling with local irqs 
+> disabled) and avoid the whole problem of interrupt handlers executing 
+> during DMA transfers. The docs suggest that it is doable.
+> 
+> "Poll or service the Disk Driver Controller interrupt on the MK68901 MFP 
+> General Purpose I/O Register to detect the completion of a WD1772 FDC 
+> command. Do not poll the FDC Busy or DMA Sector Count Zero status bits." 
+> -- ST HW Spec, p. 36.
+> http://dev-docs.atariforge.org/files/ST_HW_Spec_1-7-1986.pdf
 
- drivers/ata/ahci_qoriq.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+The MFP interrupt in question is the same as the one used by IDE
+(wired-OR of IDE, FDC and SCSI), so we would still have to figure out
+where the interrupt originated. Polling instead of taking the interrupt
+does not change that fundamental problem (unless I'm missing something).
 
-diff --git a/drivers/ata/ahci_qoriq.c b/drivers/ata/ahci_qoriq.c
-index 137b1c7..85d8332 100644
---- a/drivers/ata/ahci_qoriq.c
-+++ b/drivers/ata/ahci_qoriq.c
-@@ -53,6 +53,7 @@ enum ahci_qoriq_type {
- 	AHCI_LS1043A,
- 	AHCI_LS2080A,
- 	AHCI_LS1046A,
-+	AHCI_LS2088A,
- };
- 
- struct ahci_qoriq_priv {
-@@ -67,6 +68,7 @@ static const struct of_device_id ahci_qoriq_of_match[] = {
- 	{ .compatible = "fsl,ls1043a-ahci", .data = (void *)AHCI_LS1043A},
- 	{ .compatible = "fsl,ls2080a-ahci", .data = (void *)AHCI_LS2080A},
- 	{ .compatible = "fsl,ls1046a-ahci", .data = (void *)AHCI_LS1046A},
-+	{ .compatible = "fsl,ls2088a-ahci", .data = (void *)AHCI_LS2088A},
- 	{},
- };
- MODULE_DEVICE_TABLE(of, ahci_qoriq_of_match);
-@@ -198,6 +200,13 @@ static int ahci_qoriq_phy_init(struct ahci_host_priv *hpriv)
- 		if (qpriv->is_dmacoherent)
- 			writel(AHCI_PORT_AXICC_CFG, reg_base + PORT_AXICC);
- 		break;
-+
-+	case AHCI_LS2088A:
-+		writel(AHCI_PORT_PHY_1_CFG, reg_base + PORT_PHY1);
-+		writel(AHCI_PORT_TRANS_CFG, reg_base + PORT_TRANS);
-+		if (qpriv->is_dmacoherent)
-+			writel(AHCI_PORT_AXICC_CFG, reg_base + PORT_AXICC);
-+		break;
- 	}
- 
- 	return 0;
--- 
-2.1.0.27.g96db324
+> 
+> On page 18 there is an algorithm for floppy writes which is interesting.
+
+That one (and the ACSI algorithm which would apply to SCSI for Falcon)
+does suggest it won't be possible to peek at the sector count register
+to detect end of DMA. The addendum (note 841017G) makes it clear that a
+write to the DMA mode register is required to look at the status
+register error bit (which might terminate DMA).
+
+Maybe the DMA address register can be used to check for DMA completion
+... it's used to check for residual or lost bytes anyway so that appears
+to work. And the FDC driver does use the same strategy to check if
+enough track data have been read.
+
+Leaves the case where DMA hasn't completed but may have been aborted by
+a NCR5380 interrupt. I suppose we can detect that by checking for any
+change in the DMA address while repeatedly reading the DMA address
+register. No change means the DMA has got stuck. Not exactly pretty but
+all I can come up with.
+
+> 
+> I suspect that we will need to keep the FDC idle during SCSI transfers 
+> (and vice versa) much as the present stdma.c lock does.
+> 
+> "The interrupt outputs of the internal floppy disk controller and the 
+> external ACSI DMA port are logically OR'ed. The pin of the MFP GPIP will 
+> read as a '0' if either the FDC or a selected ACSI device controller is 
+> asserting its interrupt request."
+> -- ACSI/DMA Integration Guide, p.16.
+> http://dev-docs.atariforge.org/files/ACSI_DMA_Guide_6-28-1991.pdf
+
+On Falcon, the IDE interrupt is also OR'ed to the above two interrupt
+lines, hence the need for including IDE in the locking scheme there.
+
+> 
+> Polling the logically OR'ed interrupt sources to detect end-of-DMA will 
+> not be reliable unless we disable those sources that aren't relevant. 
+> Otherwise we access the DMA registers too early (which IIUC would kill the 
+> transfer). I'm afraid we shall have to expect that a few transfers will be 
+> interrupted by other devices in this way, and carefully check for this. 
+> 
+> For example, the 5380 SCSI bus reset interrupt is not maskable, which 
+> could affect FDC transfers. If this terminated the polling for DMA 
+> completion, the FDC driver then has to access the FDC registers and 
+> confirm that the transfer was not terminated early.
+> 
+
+We'll have to make sure FDC and SCSI don't clash in their DMA and
+interrupt use.
+
+Cheers,
+
+	Michael
+
 
