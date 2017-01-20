@@ -1,7 +1,7 @@
 From: Bartosz Golaszewski <bgolaszewski@baylibre.com>
-Subject: [PATCH v5 01/14] devicetree: bindings: add bindings for ahci-da850
-Date: Fri, 20 Jan 2017 12:21:52 +0100
-Message-ID: <1484911325-23425-2-git-send-email-bgolaszewski@baylibre.com>
+Subject: [PATCH v5 12/14] ARM: davinci: remove BUG_ON() from da850_register_sata()
+Date: Fri, 20 Jan 2017 12:22:03 +0100
+Message-ID: <1484911325-23425-13-git-send-email-bgolaszewski@baylibre.com>
 References: <1484911325-23425-1-git-send-email-bgolaszewski@baylibre.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1484911325-23425-1-git-send-email-bgolaszewski@baylibre.com>
@@ -10,34 +10,26 @@ To: Kevin Hilman <khilman@kernel.org>, Sekhar Nori <nsekhar@ti.com>, Patrick Tit
 Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Bartosz Golaszewski <bgolaszewski@baylibre.com>
 List-Id: linux-ide@vger.kernel.org
 
-Add DT bindings for the TI DA850 AHCI SATA controller.
+The ahci driver now supports other refclk clock rates.
 
 Signed-off-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
 ---
- Documentation/devicetree/bindings/ata/ahci-da850.txt | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/ata/ahci-da850.txt
+ arch/arm/mach-davinci/devices-da8xx.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-da850.txt b/Documentation/devicetree/bindings/ata/ahci-da850.txt
-new file mode 100644
-index 0000000..268fe87
---- /dev/null
-+++ b/Documentation/devicetree/bindings/ata/ahci-da850.txt
-@@ -0,0 +1,15 @@
-+Device tree binding for the TI DA850 AHCI SATA Controller
-+---------------------------------------------------------
-+
-+Required properties:
-+  - compatible: must be "ti,da850-ahci"
-+  - reg: physical base addresses and sizes of the controller's register areas
-+  - interrupts: interrupt specifier (refer to the interrupt binding)
-+
-+Example:
-+
-+	sata: sata@218000 {
-+		compatible = "ti,da850-ahci";
-+		reg = <0x218000 0x2000>, <0x22c018 0x4>;
-+		interrupts = <67>;
-+	};
+diff --git a/arch/arm/mach-davinci/devices-da8xx.c b/arch/arm/mach-davinci/devices-da8xx.c
+index cfceb32..7cf529f 100644
+--- a/arch/arm/mach-davinci/devices-da8xx.c
++++ b/arch/arm/mach-davinci/devices-da8xx.c
+@@ -1080,9 +1080,6 @@ int __init da850_register_sata(unsigned long refclkpn)
+ {
+ 	int ret;
+ 
+-	/* please see comment in drivers/ata/ahci_da850.c */
+-	BUG_ON(refclkpn != 100 * 1000 * 1000);
+-
+ 	ret = da850_register_sata_refclk(refclkpn);
+ 	if (ret)
+ 		return ret;
 -- 
 2.9.3
