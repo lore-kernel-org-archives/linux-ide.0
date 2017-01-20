@@ -1,47 +1,39 @@
-From: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH v5 00/14] ARM: da850-lcdk: add SATA support
-Date: Fri, 20 Jan 2017 08:28:43 -0500
-Message-ID: <20170120132843.GA31487@mtj.duckdns.org>
-References: <1484911325-23425-1-git-send-email-bgolaszewski@baylibre.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 1/3 v2] ahci: qoriq: added a condition to enable dma
+ coherence
+Date: Fri, 20 Jan 2017 08:34:29 -0500
+Message-ID: <20170120133429.GB31487@mtj.duckdns.org>
+References: <1484895576-40379-1-git-send-email-yuantian.tang@nxp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
 Content-Disposition: inline
-In-Reply-To: <1484911325-23425-1-git-send-email-bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bartosz Golaszewski <bgolaszewski-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>
-Cc: Kevin Hilman <khilman-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Sekhar Nori <nsekhar-l0cyMroinI0@public.gmane.org>, Patrick Titiano <ptitiano-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Michael Turquette <mturquette-rdvid1DuHRBWk0Htik3J/w@public.gmane.org>, Rob Herring <robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Russell King <linux-I+IVW8TIWO2tmTQ+vhA3Yw@public.gmane.org>, David Lechner <david-nq/r/kbU++upp/zk7JDF2g@public.gmane.org>, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
+In-Reply-To: <1484895576-40379-1-git-send-email-yuantian.tang@nxp.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: yuantian.tang@nxp.com
+Cc: mark.rutland@arm.com, devicetree@vger.kernel.org, mathieu.poirier@linaro.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, robh+dt@kernel.org, robin.murphy@arm.com, linux-arm-kernel@lists.infradead.org
 List-Id: linux-ide@vger.kernel.org
 
-On Fri, Jan 20, 2017 at 12:21:51PM +0100, Bartosz Golaszewski wrote:
-> This series contains all the changes necessary to make SATA work on
-> the da850-lcdk board.
+On Fri, Jan 20, 2017 at 02:59:34PM +0800, yuantian.tang@nxp.com wrote:
+> From: Tang Yuantian <Yuantian.Tang@nxp.com>
 > 
-> The first patch adds DT bindings for the ahci-da850 driver.
+> Enable DMA coherence in SATA controller on condition that
+> dma-coherent property exists in sata node in DTS.
 > 
-> The second enables relevant modules in davinci_all_defconfig.
-> 
-> Patches 03/14-06/14 modify the way the clocks are handled regarding
-> SATA on the da850 platform. We modify the ahci driver to retrieve
-> the clock via con_id and model the external SATA oscillator as
-> a real clock.
-> 
-> Patches 07/14-11/14 extend the ahci-da850 driver. Add DT support,
-> implement workarounds necessary to make SATA work on the da850-lcdk
-> board and un-hardcode the external clock multiplier.
+> Signed-off-by: Tang Yuantian <yuantian.tang@nxp.com>
 
-Please feel free to add
-
- Acked-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-
-to the all libata patches.  Please let me know how the patches should
-be routed once other parts are settled.
+Applied to libata/for-4.11.
 
 Thanks.
 
 -- 
 tejun
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
