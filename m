@@ -1,7 +1,7 @@
 From: Bartosz Golaszewski <bgolaszewski@baylibre.com>
-Subject: [PATCH v5 12/14] ARM: davinci: remove BUG_ON() from da850_register_sata()
-Date: Fri, 20 Jan 2017 12:22:03 +0100
-Message-ID: <1484911325-23425-13-git-send-email-bgolaszewski@baylibre.com>
+Subject: [PATCH v5 13/14] ARM: dts: da850: add the SATA node
+Date: Fri, 20 Jan 2017 12:22:04 +0100
+Message-ID: <1484911325-23425-14-git-send-email-bgolaszewski@baylibre.com>
 References: <1484911325-23425-1-git-send-email-bgolaszewski@baylibre.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1484911325-23425-1-git-send-email-bgolaszewski@baylibre.com>
@@ -10,26 +10,29 @@ To: Kevin Hilman <khilman@kernel.org>, Sekhar Nori <nsekhar@ti.com>, Patrick Tit
 Cc: linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Bartosz Golaszewski <bgolaszewski@baylibre.com>
 List-Id: linux-ide@vger.kernel.org
 
-The ahci driver now supports other refclk clock rates.
+Add the SATA node to the da850 device tree.
 
 Signed-off-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
 ---
- arch/arm/mach-davinci/devices-da8xx.c | 3 ---
- 1 file changed, 3 deletions(-)
+ arch/arm/boot/dts/da850.dtsi | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/arch/arm/mach-davinci/devices-da8xx.c b/arch/arm/mach-davinci/devices-da8xx.c
-index cfceb32..7cf529f 100644
---- a/arch/arm/mach-davinci/devices-da8xx.c
-+++ b/arch/arm/mach-davinci/devices-da8xx.c
-@@ -1080,9 +1080,6 @@ int __init da850_register_sata(unsigned long refclkpn)
- {
- 	int ret;
- 
--	/* please see comment in drivers/ata/ahci_da850.c */
--	BUG_ON(refclkpn != 100 * 1000 * 1000);
--
- 	ret = da850_register_sata_refclk(refclkpn);
- 	if (ret)
- 		return ret;
+diff --git a/arch/arm/boot/dts/da850.dtsi b/arch/arm/boot/dts/da850.dtsi
+index 104155d..3b5fd41e 100644
+--- a/arch/arm/boot/dts/da850.dtsi
++++ b/arch/arm/boot/dts/da850.dtsi
+@@ -403,6 +403,12 @@
+ 			phy-names = "usb-phy";
+ 			status = "disabled";
+ 		};
++		sata: sata@218000 {
++			compatible = "ti,da850-ahci";
++			reg = <0x218000 0x2000>, <0x22c018 0x4>;
++			interrupts = <67>;
++			status = "disabled";
++		};
+ 		mdio: mdio@224000 {
+ 			compatible = "ti,davinci_mdio";
+ 			#address-cells = <1>;
 -- 
 2.9.3
