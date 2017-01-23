@@ -1,7 +1,8 @@
 From: Bartosz Golaszewski <bgolaszewski@baylibre.com>
-Subject: [PATCH v6 01/14] devicetree: bindings: add bindings for ahci-da850
-Date: Mon, 23 Jan 2017 18:00:43 +0100
-Message-ID: <1485190856-4711-2-git-send-email-bgolaszewski@baylibre.com>
+Subject: [PATCH v6 04/14] sata: ahci-da850: get the sata clock using a
+ connection id
+Date: Mon, 23 Jan 2017 18:00:46 +0100
+Message-ID: <1485190856-4711-5-git-send-email-bgolaszewski@baylibre.com>
 References: <1485190856-4711-1-git-send-email-bgolaszewski@baylibre.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,37 +22,49 @@ To: Kevin Hilman <khilman@kernel.org>, Sekhar Nori <nsekhar@ti.com>, Patrick Tit
 Cc: linux-ide@vger.kernel.org, Bartosz Golaszewski <bgolaszewski@baylibre.com>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-Add DT bindings for the TI DA850 AHCI SATA controller.
+In preparation for using two clocks in the driver (the sysclk2-based
+clock and the external REFCLK), check if we got a functional clock
+after calling ahci_platform_get_resources(). If not, retry calling
+clk_get() with con_id specified.
 
 Signed-off-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
+Acked-by: Tejun Heo <tj@kernel.org>
 ---
- Documentation/devicetree/bindings/ata/ahci-da850.txt | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/ata/ahci-da850.txt
+ drivers/ata/ahci_da850.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/ata/ahci-da850.txt b/Documentation/devicetree/bindings/ata/ahci-da850.txt
-new file mode 100644
-index 0000000..5f81934
---- /dev/null
-+++ b/Documentation/devicetree/bindings/ata/ahci-da850.txt
-@@ -0,0 +1,18 @@
-+Device tree binding for the TI DA850 AHCI SATA Controller
-+---------------------------------------------------------
+diff --git a/drivers/ata/ahci_da850.c b/drivers/ata/ahci_da850.c
+index 267a3d3..8cfdc86 100644
+--- a/drivers/ata/ahci_da850.c
++++ b/drivers/ata/ahci_da850.c
+@@ -71,12 +71,28 @@ static int ahci_da850_probe(struct platform_device *pdev)
+ 	struct ahci_host_priv *hpriv;
+ 	struct resource *res;
+ 	void __iomem *pwrdn_reg;
++	struct clk *clk;
+ 	int rc;
+ 
+ 	hpriv = ahci_platform_get_resources(pdev);
+ 	if (IS_ERR(hpriv))
+ 		return PTR_ERR(hpriv);
+ 
++	/*
++	 * Internally ahci_platform_get_resources() calls clk_get(dev, NULL)
++	 * when trying to obtain the first clock. This SATA controller uses
++	 * two clocks for which we specify two connection ids. If we don't
++	 * have a clock at this point - call clk_get() again with
++	 * con_id = "sata".
++	 */
++	if (!hpriv->clks[0]) {
++		clk = clk_get(dev, "sata");
++		if (IS_ERR(clk))
++			return PTR_ERR(clk);
 +
-+Required properties:
-+  - compatible: must be "ti,da850-ahci"
-+  - reg: physical base addresses and sizes of the two register regions
-+         used by the controller: the register map as defined by the
-+         AHCI 1.1 standard and the Power Down Control Register (PWRDN)
-+         for enabling/disabling the SATA clock receiver
-+  - interrupts: interrupt specifier (refer to the interrupt binding)
++		hpriv->clks[0] = clk;
++	}
 +
-+Example:
-+
-+	sata: sata@218000 {
-+		compatible = "ti,da850-ahci";
-+		reg = <0x218000 0x2000>, <0x22c018 0x4>;
-+		interrupts = <67>;
-+	};
+ 	rc = ahci_platform_enable_resources(hpriv);
+ 	if (rc)
+ 		return rc;
 -- 
 2.9.3
