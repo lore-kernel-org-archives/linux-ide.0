@@ -1,67 +1,88 @@
-From: "tj@kernel.org" <tj@kernel.org>
-Subject: [PATCH] pata_octeon_cf: remove unused local variables from
- octeon_cf_set_piomode()
-Date: Mon, 23 Jan 2017 14:31:18 -0500
-Message-ID: <20170123193118.GB7820@htj.duckdns.org>
-References: <VI1PR08MB1022E4D2E06B02E7B6BFCB5E9C720@VI1PR08MB1022.eurprd08.prod.outlook.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v2] libata-sff: Don't scan disabled ports when checking
+ for legacy mode.
+Date: Mon, 23 Jan 2017 14:41:14 -0500
+Message-ID: <20170123194114.GC7820@htj.duckdns.org>
+References: <4978ca2860b.2931a5b8@auth.smtp.1and1.co.uk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:36290 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750714AbdAWTcQ (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jan 2017 14:32:16 -0500
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:36433 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750714AbdAWTlS (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jan 2017 14:41:18 -0500
+Received: by mail-pg0-f67.google.com with SMTP id 75so14455971pgf.3
+        for <linux-ide@vger.kernel.org>; Mon, 23 Jan 2017 11:41:18 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <VI1PR08MB1022E4D2E06B02E7B6BFCB5E9C720@VI1PR08MB1022.eurprd08.prod.outlook.com>
+In-Reply-To: <4978ca2860b.2931a5b8@auth.smtp.1and1.co.uk>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: David Binderman <dcb314@hotmail.com>
-Cc: "b.zolnierkie@samsung.com" <b.zolnierkie@samsung.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Darren Stevens <darren@stevens-zone.net>
+Cc: linux-ide@vger.kernel.org, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 
->From d786b91f422c6ad4c0d9bb9c1bef2dd5008e3d9d Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj@kernel.org>
-Date: Mon, 23 Jan 2017 14:28:51 -0500
+Hello,
 
-@t1 and @t2i are calculated along with @t2 but never used.  Drop them.
+I did some minor edits and applied the following to libata/for-4.11.
+When you're attaching the patch next time, please attach the whole
+output of git-format-patch; otherwise, I have to stitch them back
+together.
 
+Thanks.
+------ 8< ------
+>From 589d572671fe7ca342d25cde07a0e310a6912971 Mon Sep 17 00:00:00 2001
+From: Darren Stevens <darren@stevens-zone.net>
+Date: Mon, 23 Jan 2017 14:33:36 -0500
+Subject: [PATCH] libata-sff: Don't scan disabled ports when checking for
+ legacy mode.
+
+libata-sff.c checks for legacy mode by testing if both primary and
+secondary ports on a controller are in legacy mode and selects legacy
+if either one is. However on some south bridge chips (e.g AMD
+SB600/SB700) the secondary port is not wired, and when it is disabled
+by setting the disable bit in the PCI header it appears as a fixed
+legacy port.
+
+Prevent incorrect detection by not testing ports that are marked as
+'dummy'
+
+tj: Addressed Sergei's review points.  Other style edits.
+
+Signed-off-by: Darren Stevens <darren@stevens-zone.net>
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: David Binderman <dcb314@hotmail.com>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 ---
-Applied to libata/for-4.11.  Thanks.
+ drivers/ata/libata-sff.c | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
 
- drivers/ata/pata_octeon_cf.c | 8 --------
- 1 file changed, 8 deletions(-)
-
-diff --git a/drivers/ata/pata_octeon_cf.c b/drivers/ata/pata_octeon_cf.c
-index e94e7ca..f524a90 100644
---- a/drivers/ata/pata_octeon_cf.c
-+++ b/drivers/ata/pata_octeon_cf.c
-@@ -138,9 +138,7 @@ static void octeon_cf_set_piomode(struct ata_port *ap, struct ata_device *dev)
- 	int trh;
- 	int pause;
- 	/* These names are timing parameters from the ATA spec */
--	int t1;
- 	int t2;
--	int t2i;
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index 4441b5c..2bd92dc 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -2428,11 +2428,21 @@ int ata_pci_sff_activate_host(struct ata_host *host,
+ 		return rc;
  
- 	/*
- 	 * A divisor value of four will overflow the timing fields at
-@@ -154,15 +152,9 @@ static void octeon_cf_set_piomode(struct ata_port *ap, struct ata_device *dev)
+ 	if ((pdev->class >> 8) == PCI_CLASS_STORAGE_IDE) {
+-		u8 tmp8, mask;
++		u8 tmp8, mask = 0;
  
- 	BUG_ON(ata_timing_compute(dev, dev->pio_mode, &timing, T, T));
- 
--	t1 = timing.setup;
--	if (t1)
--		t1--;
- 	t2 = timing.active;
- 	if (t2)
- 		t2--;
--	t2i = timing.act8b;
--	if (t2i)
--		t2i--;
- 
- 	trh = ns_to_tim_reg(div, 20);
- 	if (trh)
+-		/* TODO: What if one channel is in native mode ... */
++		/*
++		 * ATA spec says we should use legacy mode when one
++		 * port is in legacy mode, but disabled ports on some
++		 * PCI hosts appear as fixed legacy ports, e.g SB600/700
++		 * on which the secondary port is not wired, so
++		 * ignore ports that are marked as 'dummy' during
++		 * this check
++		 */
+ 		pci_read_config_byte(pdev, PCI_CLASS_PROG, &tmp8);
+-		mask = (1 << 2) | (1 << 0);
++		if (!ata_port_is_dummy(host->ports[0]))
++			mask |= (1 << 0);
++		if (!ata_port_is_dummy(host->ports[1]))
++			mask |= (1 << 2);
+ 		if ((tmp8 & mask) != mask)
+ 			legacy_mode = 1;
+ 	}
 -- 
 2.9.3
 
