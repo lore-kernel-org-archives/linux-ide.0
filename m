@@ -1,7 +1,7 @@
 From: Bartosz Golaszewski <bgolaszewski@baylibre.com>
-Subject: [PATCH v6 09/14] sata: ahci: export ahci_do_hardreset() locally
-Date: Mon, 23 Jan 2017 18:00:51 +0100
-Message-ID: <1485190856-4711-10-git-send-email-bgolaszewski@baylibre.com>
+Subject: [PATCH v6 06/14] ARM: davinci: da850: model the SATA refclk
+Date: Mon, 23 Jan 2017 18:00:48 +0100
+Message-ID: <1485190856-4711-7-git-send-email-bgolaszewski@baylibre.com>
 References: <1485190856-4711-1-git-send-email-bgolaszewski@baylibre.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,90 +21,110 @@ To: Kevin Hilman <khilman@kernel.org>, Sekhar Nori <nsekhar@ti.com>, Patrick Tit
 Cc: linux-ide@vger.kernel.org, Bartosz Golaszewski <bgolaszewski@baylibre.com>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
 
-We need a way to retrieve the information about the online state of
-the link in the ahci-da850 driver.
-
-Create a new function: ahci_do_hardreset() which is called from
-ahci_hardreset() for backwards compatibility, but has an additional
-argument: 'online' - which can be used to check if the link is online
-after this function returns.
-
-The new routine will be used in the ahci-da850 driver to avoid code
-duplication when implementing a workaround for tha da850 SATA
-controller quirk/instability.
+Register a fixed rate clock modelling the external SATA oscillator
+for da850 (both DT and board file mode).
 
 Signed-off-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
-Acked-by: Tejun Heo <tj@kernel.org>
 ---
- drivers/ata/ahci.h    |  3 +++
- drivers/ata/libahci.c | 18 +++++++++++++-----
- 2 files changed, 16 insertions(+), 5 deletions(-)
+ arch/arm/mach-davinci/da8xx-dt.c           |  8 ++++++++
+ arch/arm/mach-davinci/devices-da8xx.c      | 29 +++++++++++++++++++++++++++++
+ arch/arm/mach-davinci/include/mach/da8xx.h |  1 +
+ 3 files changed, 38 insertions(+)
 
-diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
-index 0cc08f8..5db6ab2 100644
---- a/drivers/ata/ahci.h
-+++ b/drivers/ata/ahci.h
-@@ -398,6 +398,9 @@ int ahci_do_softreset(struct ata_link *link, unsigned int *class,
- 		      int pmp, unsigned long deadline,
- 		      int (*check_ready)(struct ata_link *link));
+diff --git a/arch/arm/mach-davinci/da8xx-dt.c b/arch/arm/mach-davinci/da8xx-dt.c
+index b83e5d1..55342ca 100644
+--- a/arch/arm/mach-davinci/da8xx-dt.c
++++ b/arch/arm/mach-davinci/da8xx-dt.c
+@@ -50,6 +50,9 @@ static struct of_dev_auxdata da850_auxdata_lookup[] __initdata = {
  
-+int ahci_do_hardreset(struct ata_link *link, unsigned int *class,
-+		      unsigned long deadline, bool *online);
-+
- unsigned int ahci_qc_issue(struct ata_queued_cmd *qc);
- int ahci_stop_engine(struct ata_port *ap);
- void ahci_start_fis_rx(struct ata_port *ap);
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index ee7db31..3159f9e 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -1519,8 +1519,8 @@ static int ahci_pmp_retry_softreset(struct ata_link *link, unsigned int *class,
- 	return rc;
- }
- 
--static int ahci_hardreset(struct ata_link *link, unsigned int *class,
--			  unsigned long deadline)
-+int ahci_do_hardreset(struct ata_link *link, unsigned int *class,
-+		      unsigned long deadline, bool *online)
+ static void __init da850_init_machine(void)
  {
- 	const unsigned long *timing = sata_ehc_deb_timing(&link->eh_context);
- 	struct ata_port *ap = link->ap;
-@@ -1528,7 +1528,6 @@ static int ahci_hardreset(struct ata_link *link, unsigned int *class,
- 	struct ahci_host_priv *hpriv = ap->host->private_data;
- 	u8 *d2h_fis = pp->rx_fis + RX_FIS_D2H_REG;
- 	struct ata_taskfile tf;
--	bool online;
- 	int rc;
- 
- 	DPRINTK("ENTER\n");
-@@ -1540,17 +1539,26 @@ static int ahci_hardreset(struct ata_link *link, unsigned int *class,
- 	tf.command = ATA_BUSY;
- 	ata_tf_to_fis(&tf, 0, 0, d2h_fis);
- 
--	rc = sata_link_hardreset(link, timing, deadline, &online,
-+	rc = sata_link_hardreset(link, timing, deadline, online,
- 				 ahci_check_ready);
- 
- 	hpriv->start_engine(ap);
- 
--	if (online)
-+	if (*online)
- 		*class = ahci_dev_classify(ap);
- 
- 	DPRINTK("EXIT, rc=%d, class=%u\n", rc, *class);
- 	return rc;
- }
-+EXPORT_SYMBOL_GPL(ahci_do_hardreset);
++	/* All existing boards use 100MHz SATA refclkpn */
++	static const unsigned long sata_refclkpn = 100 * 1000 * 1000;
 +
-+static int ahci_hardreset(struct ata_link *link, unsigned int *class,
-+			  unsigned long deadline)
+ 	int ret;
+ 
+ 	ret = da8xx_register_usb20_phy_clk(false);
+@@ -61,6 +64,11 @@ static void __init da850_init_machine(void)
+ 		pr_warn("%s: registering USB 1.1 PHY clock failed: %d",
+ 			__func__, ret);
+ 
++	ret = da850_register_sata_refclk(sata_refclkpn);
++	if (ret)
++		pr_warn("%s: registering SATA REFCLK failed: %d",
++			__func__, ret);
++
+ 	of_platform_default_populate(NULL, da850_auxdata_lookup, NULL);
+ 	davinci_pm_init();
+ }
+diff --git a/arch/arm/mach-davinci/devices-da8xx.c b/arch/arm/mach-davinci/devices-da8xx.c
+index c2457b3..cfceb32 100644
+--- a/arch/arm/mach-davinci/devices-da8xx.c
++++ b/arch/arm/mach-davinci/devices-da8xx.c
+@@ -24,6 +24,7 @@
+ #include <mach/common.h>
+ #include <mach/time.h>
+ #include <mach/da8xx.h>
++#include <mach/clock.h>
+ #include "cpuidle.h"
+ #include "sram.h"
+ 
+@@ -1023,6 +1024,28 @@ int __init da8xx_register_spi_bus(int instance, unsigned num_chipselect)
+ }
+ 
+ #ifdef CONFIG_ARCH_DAVINCI_DA850
++static struct clk sata_refclk = {
++	.name		= "sata_refclk",
++	.set_rate	= davinci_simple_set_rate,
++};
++
++static struct clk_lookup sata_refclk_lookup =
++		CLK("ahci_da850", "refclk", &sata_refclk);
++
++int __init da850_register_sata_refclk(int rate)
 +{
-+	bool online;
++	int ret;
 +
-+	return ahci_do_hardreset(link, class, deadline, &online);
++	sata_refclk.rate = rate;
++	ret = clk_register(&sata_refclk);
++	if (ret)
++		return ret;
++
++	clkdev_add(&sata_refclk_lookup);
++
++	return 0;
 +}
++
+ static struct resource da850_sata_resources[] = {
+ 	{
+ 		.start	= DA850_SATA_BASE,
+@@ -1055,9 +1078,15 @@ static struct platform_device da850_sata_device = {
  
- static void ahci_postreset(struct ata_link *link, unsigned int *class)
+ int __init da850_register_sata(unsigned long refclkpn)
  {
++	int ret;
++
+ 	/* please see comment in drivers/ata/ahci_da850.c */
+ 	BUG_ON(refclkpn != 100 * 1000 * 1000);
+ 
++	ret = da850_register_sata_refclk(refclkpn);
++	if (ret)
++		return ret;
++
+ 	return platform_device_register(&da850_sata_device);
+ }
+ #endif
+diff --git a/arch/arm/mach-davinci/include/mach/da8xx.h b/arch/arm/mach-davinci/include/mach/da8xx.h
+index 85ff218..7e46422 100644
+--- a/arch/arm/mach-davinci/include/mach/da8xx.h
++++ b/arch/arm/mach-davinci/include/mach/da8xx.h
+@@ -95,6 +95,7 @@ int da8xx_register_usb11(struct da8xx_ohci_root_hub *pdata);
+ int da8xx_register_usb_refclkin(int rate);
+ int da8xx_register_usb20_phy_clk(bool use_usb_refclkin);
+ int da8xx_register_usb11_phy_clk(bool use_usb_refclkin);
++int da850_register_sata_refclk(int rate);
+ int da8xx_register_emac(void);
+ int da8xx_register_uio_pruss(void);
+ int da8xx_register_lcdc(struct da8xx_lcdc_platform_data *pdata);
 -- 
 2.9.3
