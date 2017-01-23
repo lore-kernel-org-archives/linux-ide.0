@@ -1,40 +1,71 @@
-From: Joyes Dadi <"YD."@biscuit.ocn.ne.jp>
-Subject: Urgent Please,,
-Date: Mon, 23 Jan 2017 23:07:49 +0900 (JST)
-Message-ID: <1028184183.25784289.1485180469689.JavaMail.root__3204.82533793456$1485181296$gmane$org@biscuit.ocn.ne.jp>
-Reply-To: Joyes Dadi <joyesdadi767@citromail.hu>
+From: Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH v5 01/14] devicetree: bindings: add bindings for
+ ahci-da850
+Date: Mon, 23 Jan 2017 09:49:31 -0600
+Message-ID: <20170123154931.zyrcg5grqvia435t@rob-hp-laptop>
+References: <1484911325-23425-1-git-send-email-bgolaszewski@baylibre.com>
+ <1484911325-23425-2-git-send-email-bgolaszewski@baylibre.com>
+ <5615fb6b-af26-c2fb-1f97-416548a9faaf@ti.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-2022-JP
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mbkd0331.ocn.ad.jp ([153.149.236.32]:32863 "EHLO
-        mbkd0331.ocn.ad.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751220AbdAWOUz (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jan 2017 09:20:55 -0500
+Received: from mail-ot0-f193.google.com ([74.125.82.193]:35035 "EHLO
+        mail-ot0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750714AbdAWPtd (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jan 2017 10:49:33 -0500
+Content-Disposition: inline
+In-Reply-To: <5615fb6b-af26-c2fb-1f97-416548a9faaf@ti.com>
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
+To: Sekhar Nori <nsekhar@ti.com>
+Cc: Bartosz Golaszewski <bgolaszewski@baylibre.com>, Kevin Hilman <khilman@kernel.org>, Patrick Titiano <ptitiano@baylibre.com>, Michael Turquette <mturquette@baylibre.com>, Tejun Heo <tj@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Russell King <linux@armlinux.org.uk>, David Lechner <david@lechnology.com>, linux-ide@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 
-Good Day Dear,
+On Fri, Jan 20, 2017 at 07:02:08PM +0530, Sekhar Nori wrote:
+> Hi Rob,
+> 
+> On Friday 20 January 2017 04:51 PM, Bartosz Golaszewski wrote:
+> > Add DT bindings for the TI DA850 AHCI SATA controller.
+> > 
+> > Signed-off-by: Bartosz Golaszewski <bgolaszewski@baylibre.com>
+> 
+> Could you ack this binding?
 
-My name is Ms. Joyes Dadi, I am glad you are reading this letter and I hope
-we will start our communication and I know that this message will look strange,
-surprising and probably unbelievable to you, but it is the reality. I want to
-make a donation of money to you.
+First I'm seeing it that I recall and v5? That either means the DT list 
+wasn't copied or new versions are being sent out faster than can be 
+reviewed. Sending new versions puts you at the back of the queue.
 
-I contact you by the will of God. I am a firm German woman specialized in
-mining gold and diamonds in Africa. But now, I'm very sick of a cancer. My
-husband died in an accident two years ago with our two children and now I have
-cancer of the esophagus that damaged almost all the cells in my system/agencies
-and I'll die soon according to my doctor.
+> 
+> Thanks,
+> Sekhar
+> 
+> > ---
+> >  Documentation/devicetree/bindings/ata/ahci-da850.txt | 15 +++++++++++++++
+> >  1 file changed, 15 insertions(+)
+> >  create mode 100644 Documentation/devicetree/bindings/ata/ahci-da850.txt
+> > 
+> > diff --git a/Documentation/devicetree/bindings/ata/ahci-da850.txt b/Documentation/devicetree/bindings/ata/ahci-da850.txt
+> > new file mode 100644
+> > index 0000000..268fe87
+> > --- /dev/null
+> > +++ b/Documentation/devicetree/bindings/ata/ahci-da850.txt
+> > @@ -0,0 +1,15 @@
+> > +Device tree binding for the TI DA850 AHCI SATA Controller
+> > +---------------------------------------------------------
+> > +
+> > +Required properties:
+> > +  - compatible: must be "ti,da850-ahci"
+> > +  - reg: physical base addresses and sizes of the controller's register areas
 
-My most concern now is, we grew up in the orphanage and were married in
-orphanage. If I die this deposited fund will soon be left alone in the hand of
-the bank, and I do want to it that  way. Please, if you can be reliable and
-sincere to accept my humble proposal; I have (10.5Millions Euro) in a fixed
-deposit account; I will order the Bank to transfer the money into your account
-in your country immediately, and then you will take the fund to  your country
-and invest it to the orphanage homes Please, answer as quickly as possible.
+Need to state how many and what the regions are.
 
-God bless you.
-Ms. Joyes Dadi
-Email: joyesdadi767@citromail.hu
+> > +  - interrupts: interrupt specifier (refer to the interrupt binding)
+> > +
+> > +Example:
+> > +
+> > +	sata: sata@218000 {
+> > +		compatible = "ti,da850-ahci";
+> > +		reg = <0x218000 0x2000>, <0x22c018 0x4>;
+> > +		interrupts = <67>;
+> > +	};
+> > 
+> 
