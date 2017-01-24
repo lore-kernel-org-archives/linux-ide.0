@@ -1,44 +1,57 @@
-From: tedheadster <tedheadster@gmail.com>
-Subject: Re: [PATCH] pata_legacy: Allow disabling of legacy PATA device probes
- on non-PCI systems
-Date: Mon, 23 Jan 2017 18:57:34 -0500
-Message-ID: <CAP8WD_aya3junhovXtc=iUaaX43=Y1s8-eya_LvN_BQjXGLbew@mail.gmail.com>
-References: <CAP8WD_ZoJgrdsDZNR4uN8HWESO5MyuNc1xN_F2an8GfP8nKcLA@mail.gmail.com>
- <20161222163711.GB29161@htj.duckdns.org> <CAP8WD_ay1uKc0JLPr8MWQKT2N=rdqeH+hKkOCVMt76NcmK4hAA@mail.gmail.com>
- <CAP8WD_agt=peX28+d_oTXhEOd_9ogMScO7h8xd1hTTsHzWz_Vg@mail.gmail.com>
- <20161222192256.GE31216@htj.duckdns.org> <20170103173442.00a514cc@lxorguk.ukuu.org.uk>
- <CAP8WD_bS61spyQkd7cvktFf_dPc0wgNZ8qEa7GVrXgUobHQdvw@mail.gmail.com>
- <20170119213737.GB25133@mtj.duckdns.org> <CAP8WD_Y1HmuMots4HcQ06gQfs0fCh1W_y=Qa0As3MX1YA+LEKg@mail.gmail.com>
- <20170120191946.GA9280@mtj.duckdns.org> <20170120193828.GB9280@mtj.duckdns.org>
- <CAMHSBOVS+ehZkHG7nnUS9qQoDXKmsiBUEhBbPb=3qA2-ZaQ2Ow@mail.gmail.com>
-Reply-To: whiteheadm@acm.org
+From: Kefeng Wang <wangkefeng.wang@huawei.com>
+Subject: [PATCH] ata: pata_of_platform: using of_property_read_u32() helper
+Date: Tue, 24 Jan 2017 20:08:29 +0800
+Message-ID: <1485259709-16487-1-git-send-email-wangkefeng.wang@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from mail-yw0-f195.google.com ([209.85.161.195]:33226 "EHLO
-        mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751869AbdAWX5z (ORCPT
-        <rfc822;linux-ide@vger.kernel.org>); Mon, 23 Jan 2017 18:57:55 -0500
-Received: by mail-yw0-f195.google.com with SMTP id u68so19003739ywg.0
-        for <linux-ide@vger.kernel.org>; Mon, 23 Jan 2017 15:57:55 -0800 (PST)
-In-Reply-To: <CAMHSBOVS+ehZkHG7nnUS9qQoDXKmsiBUEhBbPb=3qA2-ZaQ2Ow@mail.gmail.com>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:54582 "EHLO
+        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750847AbdAXMMe (ORCPT
+        <rfc822;linux-ide@vger.kernel.org>); Tue, 24 Jan 2017 07:12:34 -0500
 Sender: linux-ide-owner@vger.kernel.org
 List-Id: linux-ide@vger.kernel.org
-To: Gwendal Grignou <gwendal@google.com>
-Cc: Tejun Heo <tj@kernel.org>, One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, Kefeng Wang <wangkefeng.wang@huawei.com>, Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>, Hans de Goede <hdegoede@redhat.com>
 
-Gwendal,
+Using better of_property_read_u32() than generic of_get_property().
 
->> Also, it looks like there is a ref leak on the transport device
->> itself.  Its release function never gets called and thus the parent
->> device (ata_port) stays pinned too.
-> That's the root cause of pata port not released. Can we run your debug
-> code one more time, enabling ap->tdev.kobj.release_debug?
->
+Cc: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com> 
+Cc: Hans de Goede <hdegoede@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>
+Signed-off-by: Kefeng Wang <wangkefeng.wang@huawei.com>
+---
+ drivers/ata/pata_of_platform.c | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
 
-I'm building the debug kernel because I have the test hardware, but
-I'm not quite sure what I need to do to enable
-ap->tdev.kobj.release_debug. Tejun's patch enables kobj.release_debug,
-but I'm not sure if that is the same thing you want. Please advise.
+diff --git a/drivers/ata/pata_of_platform.c b/drivers/ata/pata_of_platform.c
+index b6b7af8..201a32d 100644
+--- a/drivers/ata/pata_of_platform.c
++++ b/drivers/ata/pata_of_platform.c
+@@ -32,7 +32,6 @@ static int pata_of_platform_probe(struct platform_device *ofdev)
+ 	unsigned int reg_shift = 0;
+ 	int pio_mode = 0;
+ 	int pio_mask;
+-	const u32 *prop;
+ 
+ 	ret = of_address_to_resource(dn, 0, &io_res);
+ 	if (ret) {
+@@ -50,13 +49,9 @@ static int pata_of_platform_probe(struct platform_device *ofdev)
+ 
+ 	irq_res = platform_get_resource(ofdev, IORESOURCE_IRQ, 0);
+ 
+-	prop = of_get_property(dn, "reg-shift", NULL);
+-	if (prop)
+-		reg_shift = be32_to_cpup(prop);
++	of_property_read_u32(dn, "reg-shift", &reg_shift);
+ 
+-	prop = of_get_property(dn, "pio-mode", NULL);
+-	if (prop) {
+-		pio_mode = be32_to_cpup(prop);
++	if (!of_property_read_u32(dn, "pio-mode", &pio_mode)) {
+ 		if (pio_mode > 6) {
+ 			dev_err(&ofdev->dev, "invalid pio-mode\n");
+ 			return -EINVAL;
+-- 
+1.7.12.4
 
-- Matthew
